@@ -66,7 +66,7 @@ GLFWwindow* Ermine::Window::InitWindow(int width, int height, const char* title)
     }
 
     glfwMakeContextCurrent(window);
-    glfwSetFramebufferSizeCallback(window, [](GLFWwindow* window, int width, int height)
+    glfwSetFramebufferSizeCallback(window, []([[maybe_unused]] GLFWwindow* window, int width, int height)
     {
        glViewport(0,0,width,height); 
     });

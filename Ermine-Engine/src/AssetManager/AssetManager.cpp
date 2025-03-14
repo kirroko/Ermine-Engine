@@ -69,7 +69,6 @@ std::shared_ptr<graphics::Shader> AssetManager::LoadShader(const std::string& ve
     if (!shader->IsValid())
     {
         EE_CORE_ERROR("Failed to load shader: {0} | {1}", vertexPath, fragmentPath);
-        assert(true, "Failed to load shader");
         return nullptr;
     }
     

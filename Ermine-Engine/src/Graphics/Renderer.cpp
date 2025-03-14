@@ -24,7 +24,7 @@ using namespace Ermine::graphics;
  * @param view view matrix
  * @param projection projection matrix
  */
-void Renderer::Update(const Mtx44& view, const Mtx44& projection)
+void Renderer::Update([[maybe_unused]] const Mtx44& view, [[maybe_unused]] const Mtx44& projection)
 {
     for (auto& entity : m_Entities)
     {
@@ -32,14 +32,16 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
         auto& mesh = ECS::GetInstance().GetComponent<Mesh>(entity);
         auto& material = ECS::GetInstance().GetComponent<Material>(entity);
 
+        
         glm::mat4 model = glm::mat4(1.0f);
         glm::mat4 _view = glm::lookAt(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         glm::mat4 _projection = glm::perspective(glm::radians(45.0f), 16.0f / 9.0f, 0.1f, 100.0f);
         glm::mat4 mvp = _projection * _view * model;
+        // Mtx44 mvp = projection * view * trans.transform_matrix;
         GLint mvp_location = glGetUniformLocation(material.m_shader->GetRendererID(),"MVP");
 
         material.m_shader->Bind();
-        glUniformMatrix4fv(mvp_location, 1, GL_FALSE, (const GLfloat*) &mvp);
+        glUniformMatrix4fv(mvp_location, 1, GL_FALSE, &mvp[0][0]);
 
         Draw(mesh.vertex_array, mesh.index_buffer, material.m_shader);
     }

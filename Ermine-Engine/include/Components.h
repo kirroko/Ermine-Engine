@@ -32,7 +32,7 @@ namespace Ermine
 	*************************************************************************/
 	struct Transform
 	{
-		Mtx44 transform_matrix {};
+		Mtx44 transform_matrix {1.0f}; // Identity matrix
 		Vec3 position;
 		Vec3 rotation; // Euler angles in degrees
 		Vec3 scale;

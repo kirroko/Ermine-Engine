@@ -16,13 +16,11 @@ Copyright (C) 2025 TwoJumpingRabbits
 #include "ECS.h"
 #include "Components.h"
 #include "EditorCamera.h"
-#include "FrameController.h"
 #include "Input.h"
 #include "Logger.h"
 #include "Renderer.h"
 #include "VertexBuffer.h"
 #include "GLFW/glfw3.h"
-#include "glm/mat4x4.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/glm.hpp"
 
@@ -129,7 +127,7 @@ void Engine::Shutdown()
     s_isInitialized = false;
 }
 
-void Engine::Update(float deltaTime, GLFWwindow* windowContext)
+void Engine::Update(float deltaTime, [[maybe_unused]] GLFWwindow* windowContext)
 {
     if (!s_isInitialized)
         return;
@@ -155,15 +153,18 @@ void Engine::Render(GLFWwindow* window)
 
     glClear(GL_COLOR_BUFFER_BIT);
 
+    Mtx44 view = s_EditorCamera->GetViewMatrix();
+    Mtx44 proj = s_EditorCamera->GetProjectionMatrix();
+    
     // Draw
-    ECS::GetInstance().GetSystem<graphics::Renderer>()->Update(Mtx44(),Mtx44());
+    ECS::GetInstance().GetSystem<graphics::Renderer>()->Update(view,proj);
 
     glfwSwapBuffers(window);
     glfwPollEvents();
 }
 
 // Free to use for testing purposes
-void Engine::Dummy(GLFWwindow* wwindow)
+void Engine::Dummy([[maybe_unused]] GLFWwindow* wwindow)
 {
     // graphics::VertexBuffer vertex_buffer(vertices, sizeof(vertices));
     //
@@ -193,23 +194,23 @@ void Engine::Dummy(GLFWwindow* wwindow)
     // ECS::GetInstance().AddComponent(entity, Mesh(std::make_shared<graphics::VertexArray>(vao),std::make_shared<graphics::VertexBuffer>(vbo),std::make_shared<graphics::IndexBuffer>(ibo))); // Basically passing the ID of the VAO, VBO, and IBO
     // ECS::GetInstance().AddComponent(entity, Material(shader));
     
-    FrameController frame_controller(300.0f,60.0f);
-    while (!glfwWindowShouldClose(wwindow))
-    {
-        frame_controller.BeginFrame();
-        int width, height;
-        glfwGetFramebufferSize(wwindow, &width, &height);
-        const float ratio = width / (float) height;
- 
-        glViewport(0, 0, width, height);
-        glClear(GL_COLOR_BUFFER_BIT);
-        
-        glm::mat4 model = glm::mat4(1.0f);
-        glm::mat4 view = glm::lookAt(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-        glm::mat4 projection = glm::perspective(glm::radians(45.0f), 16.0f / 9.0f, 0.1f, 100.0f);
-        glm::mat4 mvp = projection * view * model;
-
-        ECS::GetInstance().GetSystem<graphics::Renderer>()->Update(Mtx44(),Mtx44());
+    // FrameController frame_controller(300.0f,60.0f);
+    // while (!glfwWindowShouldClose(wwindow))
+    // {
+    //     frame_controller.BeginFrame();
+    //     int width, height;
+    //     glfwGetFramebufferSize(wwindow, &width, &height);
+    //     const float ratio = width / (float) height;
+    //
+    //     glViewport(0, 0, width, height);
+    //     glClear(GL_COLOR_BUFFER_BIT);
+    //     
+    //     glm::mat4 model = glm::mat4(1.0f);
+    //     glm::mat4 view = glm::lookAt(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    //     glm::mat4 projection = glm::perspective(glm::radians(45.0f), 16.0f / 9.0f, 0.1f, 100.0f);
+    //     glm::mat4 mvp = projection * view * model;
+    //
+    //     ECS::GetInstance().GetSystem<graphics::Renderer>()->Update(Mtx44(),Mtx44());
         // glUseProgram(shader->GetRendererID());
         // glUniformMatrix4fv(mvp_location, 1, GL_FALSE, (const GLfloat*) &mvp);
         // vao.Bind();
@@ -221,11 +222,11 @@ void Engine::Dummy(GLFWwindow* wwindow)
         // glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(ibo.GetCount()), GL_UNSIGNED_INT, 0);
         // glDrawArrays(GL_TRIANGLES, 0, 3);
  
-        glfwSwapBuffers(wwindow);
-        glfwPollEvents();
-
-        if (GLFW_PRESS == glfwGetKey(wwindow, GLFW_KEY_ESCAPE)) {
-            glfwSetWindowShouldClose(wwindow, 1);
-        }
-    }
+        // glfwSwapBuffers(wwindow);
+        // glfwPollEvents();
+        //
+        // if (GLFW_PRESS == glfwGetKey(wwindow, GLFW_KEY_ESCAPE)) {
+        //     glfwSetWindowShouldClose(wwindow, 1);
+        // }
+    // }
 }

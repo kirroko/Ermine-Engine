@@ -20,5 +20,8 @@
 Build
 Debug
 Release
-Assets/obj
+Build/*/bin
 Ermine.sln.DotSettings.user
+ThirdParty/imgui/bin/
+ThirdParty/GLFW/bin/
+ThirdParty/Glad/bin/
