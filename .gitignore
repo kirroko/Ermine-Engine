@@ -17,12 +17,8 @@
 *.pch
 *.recipe
 *.html
-bin
-bin-int
+Build
 Debug
 Release
 Assets/obj
-Ukemochi.sln.DotSettings.user
-Ukemochi-Game/Resources/Scripts/Ukemochi-Scripting.dll
-Ukemochi-Engine/vendor/Mono/MonoLib.zip
-Ukemochi-Game/Resources/Scripts/Assembly-CSharp.dll
+Ermine.sln.DotSettings.user

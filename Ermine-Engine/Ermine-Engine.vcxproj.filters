@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="include">
+      <UniqueIdentifier>{89AF369E-F58E-B539-FEA6-40106A051C9B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{2DAB880B-99B4-887C-2230-9F7C8E38947C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\AssetManager">
+      <UniqueIdentifier>{D7F065A7-C3E9-84F9-EC1B-6A7ED8736405}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\ECS">
+      <UniqueIdentifier>{F76D2FA9-634D-AE44-6C65-391BD8C314A6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Graphics">
+      <UniqueIdentifier>{0D564864-F9B8-D708-A23E-10BF8E80A38B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Logger">
+      <UniqueIdentifier>{5CCC981E-4884-DA6B-B18B-B3C79D62755C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Math">
+      <UniqueIdentifier>{261422CF-12E1-7CDA-3BFA-6A822726B268}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Utility">
+      <UniqueIdentifier>{70464FB2-DCFB-C7A7-65F0-C17ED1A4BEAB}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Window">
+      <UniqueIdentifier>{74C3D837-607B-1A85-C982-F3E0B559B575}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\AssetManager.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Camera.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Component.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Components.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ECS.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\EditorCamera.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Engine.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\EngineAPI.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Entity.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\FrameController.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\IndexBuffer.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Input.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Logger.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\MathUtils.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Matrix3x3.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Matrix4x4.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\PreCompile.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Registry.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Renderer.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Shader.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Systems.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Texture.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Vector2D.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Vector3D.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\VertexArray.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\VertexBuffer.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Window.h">
+      <Filter>include</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\AssetManager\AssetManager.cpp">
+      <Filter>src\AssetManager</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ECS\Component.cpp">
+      <Filter>src\ECS</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ECS\ECS.cpp">
+      <Filter>src\ECS</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ECS\Entity.cpp">
+      <Filter>src\ECS</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ECS\Systems.cpp">
+      <Filter>src\ECS</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Engine.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Graphics\Camera.cpp">
+      <Filter>src\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Graphics\IndexBuffer.cpp">
+      <Filter>src\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Graphics\Renderer.cpp">
+      <Filter>src\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Graphics\Shader.cpp">
+      <Filter>src\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Graphics\Texture.cpp">
+      <Filter>src\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Graphics\VertexArray.cpp">
+      <Filter>src\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Graphics\VertexBuffer.cpp">
+      <Filter>src\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Logger\Logger.cpp">
+      <Filter>src\Logger</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Math\Matrix3x3.cpp">
+      <Filter>src\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Math\Matrix4x4.cpp">
+      <Filter>src\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Math\Vector2D.cpp">
+      <Filter>src\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Math\Vector3D.cpp">
+      <Filter>src\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="src\PreCompile.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Utility\EditorCamera.cpp">
+      <Filter>src\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Utility\FrameController.cpp">
+      <Filter>src\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Utility\Input.cpp">
+      <Filter>src\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Window\Window.cpp">
+      <Filter>src\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="src\dllmain.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="include\Component.tpp">
+      <Filter>include</Filter>
+    </None>
+    <None Include="include\ECS.tpp">
+      <Filter>include</Filter>
+    </None>
+    <None Include="include\MathUtils.tpp">
+      <Filter>include</Filter>
+    </None>
+    <None Include="include\Registry.tpp">
+      <Filter>include</Filter>
+    </None>
+    <None Include="include\Systems.tpp">
+      <Filter>include</Filter>
+    </None>
+  </ItemGroup>
+</Project>

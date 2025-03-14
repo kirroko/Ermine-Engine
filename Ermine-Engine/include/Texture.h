@@ -1,0 +1,50 @@
+/* Start Header ************************************************************************/
+/*!
+\file       Texture.h
+\author     Wong Jun Yu, Kean, keanwng\@gmail.com
+\date       09/03/2025
+\brief      This file contains the declaration of the Texture class.
+            This file is used to load and bind textures to the renderer.
+Copyright (C) 2025 TwoJumpingRabbits
+*/
+/* End Header **************************************************************************/
+
+#pragma once
+#include "PreCompile.h"
+#include <glad/glad.h>
+
+namespace Ermine::graphics
+{
+    class Texture
+    {
+        GLuint m_RendererID;
+        std::string m_filePath;
+        unsigned char* m_LocalBuffer;
+        int m_Width, m_Height, m_BPP;
+    public:
+        /**
+         * @brief Construct a new Texture object
+         */
+        Texture(const std::string& filePath);
+        /**
+         * @brief Destroy the Texture object
+         */
+        ~Texture();
+
+        /**
+         * @brief check if the texture is valid
+         * @return true if the texture is valid, false otherwise
+         */
+        bool IsValid() const;
+
+        /**
+         * @brief Bind the texture
+         * @param slot the slot to bind the texture to
+         */
+        void Bind(unsigned int slot = 0) const;
+        /**
+         * @brief Unbind the texture
+         */
+        void Unbind() const;
+    };
+}
