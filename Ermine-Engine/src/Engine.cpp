@@ -16,6 +16,7 @@ Copyright (C) 2025 TwoJumpingRabbits
 #include "ECS.h"
 #include "Components.h"
 #include "EditorCamera.h"
+#include "FrameController.h"
 #include "GeometryFactory.h"
 #include "Input.h"
 #include "Logger.h"
@@ -49,6 +50,8 @@ bool Engine::Init(GLFWwindow* windowContext)
     EnableMemoryLeakChecking();
 
     Input::Init(windowContext);
+
+    FrameController::Init(120.f, 60.f);
     
     ECS::GetInstance().Init();
     EE_CORE_INFO("ECS Initialized");
@@ -80,7 +83,7 @@ bool Engine::Init(GLFWwindow* windowContext)
     ECS::GetInstance().AddComponent(entity, graphics::GeometryFactory::CreateCube(1,1,1));
     ECS::GetInstance().AddComponent(entity, Material(shader, texture));
 
-    s_EditorCamera = std::make_unique<editor::EditorCamera>();
+    // s_EditorCamera = std::make_unique<editor::EditorCamera>();
 
     glClearColor(0.2f,0.3f,0.3f,1.0f); // Background color
     
@@ -99,19 +102,29 @@ void Engine::Shutdown()
     s_isInitialized = false;
 }
 
-void Engine::Update(float deltaTime, [[maybe_unused]] GLFWwindow* windowContext)
+void Engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 {
     if (!s_isInitialized)
         return;
 
     // Update input states
     Input::Update();
+
+    // Update FrameController
+    FrameController::BeginFrame();
+
+    while (FrameController::ShouldUpdateFixed())
+    {
+        // Fixed update logic here
+    }
+
+    // Other non-fixed logic here
     
     // Update editor camera
-    if (s_EditorCamera)
-    {
-        s_EditorCamera->Update(deltaTime);
-    }
+    // if (s_EditorCamera)
+    // {
+    //     s_EditorCamera->Update(deltaTime);
+    // }
 }
 
 void Engine::Render(GLFWwindow* window)
@@ -125,11 +138,11 @@ void Engine::Render(GLFWwindow* window)
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    Mtx44 view = s_EditorCamera->GetViewMatrix();
-    Mtx44 proj = s_EditorCamera->GetProjectionMatrix();
+    // Mtx44 view = s_EditorCamera->GetViewMatrix();
+    // Mtx44 proj = s_EditorCamera->GetProjectionMatrix();
     
     // Draw
-    ECS::GetInstance().GetSystem<graphics::Renderer>()->Update(view,proj);
+    ECS::GetInstance().GetSystem<graphics::Renderer>()->Update();
 
     glfwSwapBuffers(window);
     glfwPollEvents();

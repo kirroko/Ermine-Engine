@@ -20,71 +20,59 @@ Copyright (C) 2025 TwoJumpingRabbits
 
 using namespace Ermine;
 
-FrameController::FrameController(float targetFPS, float fixedFPS) : m_targetDeltaTime(1.0f/ targetFPS), m_fixedDeltaTime(1.0f/ fixedFPS),
-    m_deltaTime(0.0f), m_accumulator(0.0f), m_fpsTimer(0.0f), m_FPS(0.0f), m_frameCount(0)
+void FrameController::Init(float targetFPS, float fixedFPS)
 {
-    m_last_frame_time = glfwGetTime();
+    s_targetDeltaTime = 1.0f / targetFPS;
+    s_fixedDeltaTime = 1.0f / fixedFPS;
+    s_deltaTime = 0.0f;
+    s_accumulator = 0.0f;
+    s_framePacing = false;
+    s_fpsTimer = 0.0f;
+    s_FPS = 0.0f;
+    s_frameCount = 0;
+    s_last_frame_time = glfwGetTime();
+    EE_CORE_INFO("FrameController initialized with targetFPS: {0}, fixedFPS: {1}", targetFPS, fixedFPS);
 }
 
 void FrameController::BeginFrame()
 {
     auto currentTime = glfwGetTime();
-    m_deltaTime = static_cast<float>(currentTime - m_last_frame_time);
-    m_last_frame_time = currentTime;
+    s_deltaTime = static_cast<float>(currentTime - s_last_frame_time);
+    s_last_frame_time = currentTime;
     
-    m_accumulator += m_deltaTime;
+    s_accumulator += s_deltaTime;
     
-    // if (m_deltaTime < m_targetDeltaTime) // Sleep if we are too fast to save CPU
-    // {
-    //     float sleepTime = m_targetDeltaTime - m_deltaTime;
-    //     std::this_thread::sleep_for(std::chrono::duration<float>(sleepTime));
-    // }
-
-    m_fpsTimer += m_deltaTime;
-    ++m_frameCount;
-
-    if (m_fpsTimer >= 1.0f)
+    if (s_framePacing && s_deltaTime < s_targetDeltaTime) // Sleep if we are too fast to save CPU
     {
-        m_FPS = static_cast<float>(m_frameCount) / m_fpsTimer;
+        float sleepTime = s_targetDeltaTime - s_deltaTime;
+        std::this_thread::sleep_for(std::chrono::duration<float>(sleepTime));
+    }
+
+    s_fpsTimer += s_deltaTime;
+    ++s_frameCount;
+
+    if (s_fpsTimer >= 1.0f)
+    {
+        s_FPS = static_cast<float>(s_frameCount) / s_fpsTimer;
         std::ostringstream oss;
-        oss << std::fixed << std::setprecision(2) << m_FPS;
+        oss << std::fixed << std::setprecision(2) << s_FPS;
         std::string fpsString = oss.str();
         
         EE_CORE_INFO("FPS: {0}", fpsString);
 
-        m_fpsTimer = .0f;
-        m_frameCount = 0; 
+        s_fpsTimer = .0f;
+        s_frameCount = 0; 
     }
 }
 
 bool FrameController::ShouldUpdateFixed()
 {
-    if (m_accumulator >= m_fixedDeltaTime)
+    if (s_accumulator >= s_fixedDeltaTime)
     {
-        m_accumulator -= m_fixedDeltaTime;
+        s_accumulator -= s_fixedDeltaTime;
         return true;
     }
     return false;
-}
-
-float FrameController::GetDeltaTime() const
-{
-    return m_deltaTime;
-}
-
-float FrameController::GetFixedDeltaTime() const
-{
-    return m_fixedDeltaTime;
-}
-
-float FrameController::GetInterpolationAlpha() const
-{
-    return m_accumulator / m_fixedDeltaTime;
-}
-
-float FrameController::GetFPS() const
-{
-    return m_FPS;
 }
 
 

@@ -26,10 +26,8 @@ namespace Ermine::graphics
         /**
          * @brief Update the game objects to the screen.
          * 
-         * @param view The view matrix
-         * @param projection The projection matrix
          */
-        void Update(const Mtx44& view, const Mtx44& projection);
+        void Update();
         
         /**
          * @brief Draw the game objects to the screen.

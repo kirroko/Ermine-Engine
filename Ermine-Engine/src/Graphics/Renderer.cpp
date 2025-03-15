@@ -26,7 +26,7 @@ using namespace Ermine::graphics;
  * @param view view matrix
  * @param projection projection matrix
  */
-void Renderer::Update([[maybe_unused]] const Mtx44& view, [[maybe_unused]] const Mtx44& projection)
+void Renderer::Update()
 {
     for (auto& entity : m_Entities)
     {

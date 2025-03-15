@@ -29,7 +29,7 @@ namespace Ermine::Engine
     /** 
      * @brief Run the game loop
      */
-    EE_API void Update(float deltaTime, GLFWwindow* windowContext);
+    EE_API void Update(GLFWwindow* windowContext);
 
     /**
      * @brief Render the game
