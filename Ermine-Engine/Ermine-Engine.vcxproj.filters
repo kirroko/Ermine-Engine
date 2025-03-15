@@ -60,6 +60,9 @@
     <ClInclude Include="include\FrameController.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\GeometryFactory.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\IndexBuffer.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -132,6 +135,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\Graphics\Camera.cpp">
+      <Filter>src\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Graphics\GeometryFactory.cpp">
       <Filter>src\Graphics</Filter>
     </ClCompile>
     <ClCompile Include="src\Graphics\IndexBuffer.cpp">

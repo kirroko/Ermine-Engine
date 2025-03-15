@@ -83,6 +83,8 @@ GLFWwindow* Ermine::Window::InitWindow(int width, int height, const char* title)
     
     glfwSwapInterval(1); // Enable V-Sync
 
+    glEnable(GL_DEPTH_TEST);
+
     std::string glRenderer = std::string(reinterpret_cast<const char*>(glGetString(GL_RENDERER)));
     std::string glVersion = std::string(reinterpret_cast<const char*>(glGetString(GL_VERSION)));
     EE_CORE_TRACE("Renderer: {0}", glRenderer);

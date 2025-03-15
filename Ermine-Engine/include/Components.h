@@ -105,11 +105,11 @@ namespace Ermine
 	struct Material
 	{
 		std::shared_ptr<graphics::Shader> m_shader;
-		// graphics::Texture m_texture;
+		std::shared_ptr<graphics::Texture> m_texture;
 
 		Material() = default;
 		
-		Material(const std::shared_ptr<graphics::Shader>& shader) : m_shader(shader)
+		Material(const std::shared_ptr<graphics::Shader>& shader, const std::shared_ptr<graphics::Texture>& texture) : m_shader(shader), m_texture(texture)
 		{}
 	};
 }

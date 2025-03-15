@@ -16,10 +16,10 @@ Copyright (C) 2025 TwoJumpingRabbits
 #include "ECS.h"
 #include "Components.h"
 #include "EditorCamera.h"
+#include "GeometryFactory.h"
 #include "Input.h"
 #include "Logger.h"
 #include "Renderer.h"
-#include "VertexBuffer.h"
 #include "GLFW/glfw3.h"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/glm.hpp"
@@ -30,26 +30,6 @@ namespace Ermine::Engine
 {
     static bool s_isInitialized = false;
     static std::unique_ptr<editor::EditorCamera> s_EditorCamera = nullptr;
-
-    // TODO: Might what to encapsulate this somewhere?
-    typedef struct Vertex
-    {
-        Vec3 pos;
-        Vec3 col;
-    } Vertex;
-
-    static const Vertex vertices[4] =
-    {
-        { { 0.5f, 0.5f, 0.0f }, { 1.f, 0.f, 0.f }, },
-        { { 0.5f, -0.5f, 0.0f }, { 0.f, 1.f, 0.f }, },
-        { { -0.5f,  -0.5f, 0.0f }, { 0.f, 0.f, 1.f }, },
-        { { -0.5f,0.5f,0.0f}, {1.f,1.f,0.f} }
-    };
-
-    static const unsigned int indices[6] ={
-        0, 1, 3,
-        1, 2, 3
-    };
     
     void EnableMemoryLeakChecking(int breakAlloc = -1)
     {
@@ -93,20 +73,12 @@ bool Engine::Init(GLFWwindow* windowContext)
     ECS::GetInstance().SetSystemSignature<graphics::Renderer>(sig);
 
     // Create graphics resources
-    auto vao = std::make_shared<graphics::VertexArray>();
-    auto vbo = std::make_shared<graphics::VertexBuffer>(vertices, sizeof(vertices));
     auto shader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/vertex.glsl", "../Resources/Shaders/fragment.glsl");
-    
-    vao->LinkAttribute(0, 3, GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, pos));
-    vao->LinkAttribute(1, 3, GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, col));
-    vbo->Unbind();
-    
-    auto ibo = std::make_shared<graphics::IndexBuffer>(indices, sizeof(indices));
-    
+    auto texture = AssetManager::GetInstance().LoadTexture("../Resources/Textures/greybox_grey_grid.png");
     auto entity = ECS::GetInstance().CreateEntity();
-    ECS::GetInstance().AddComponent(entity, Transform());
-    ECS::GetInstance().AddComponent(entity, Mesh(vao,vbo,ibo));
-    ECS::GetInstance().AddComponent(entity, Material(shader));
+    ECS::GetInstance().AddComponent(entity, Transform(Vec3(0,0,-1),Vec3(0,45,90),Vec3(1,1,1)));
+    ECS::GetInstance().AddComponent(entity, graphics::GeometryFactory::CreateCube(1,1,1));
+    ECS::GetInstance().AddComponent(entity, Material(shader, texture));
 
     s_EditorCamera = std::make_unique<editor::EditorCamera>();
 
@@ -151,7 +123,7 @@ void Engine::Render(GLFWwindow* window)
     glfwGetFramebufferSize(window, &width, &height);
     glViewport(0,0,width,height);
 
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     Mtx44 view = s_EditorCamera->GetViewMatrix();
     Mtx44 proj = s_EditorCamera->GetProjectionMatrix();
