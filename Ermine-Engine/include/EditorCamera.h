@@ -38,10 +38,10 @@ namespace Ermine::editor
         void UpdateProjectionMatrix();
         void ProcessKeyboardInput(float deltaTime);
         void ProcessMouseMovement();
-
-    private:
+        void ProcessScrollWheel(float yOffset);
+        
         // Camera attributes
-        Vector3D m_Position{0.0f, 1.0f, 5.0f};
+        Vector3D m_Position{0.0f, 0.0f, 3.0f};
         Vector3D m_Front{0.0f, 0.0f, -1.0f};
         Vector3D m_Up{0.0f, 1.0f, 0.0f};
         Vector3D m_Right{1.0f, 0.0f, 0.0f};

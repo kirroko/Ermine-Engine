@@ -10,8 +10,9 @@ Copyright (C) 2025 TwoJumpingRabbits
 #include "PreCompile.h"
 #include "EditorCamera.h"
 
-#include <algorithm>
+#include <glm/ext/matrix_transform.hpp>
 
+#include "FrameController.h"
 #include "Input.h"
 #include "MathUtils.h"
 
@@ -28,7 +29,9 @@ void EditorCamera::Update(float deltaTime)
 {
     ProcessKeyboardInput(deltaTime);
     ProcessMouseMovement();
+    ProcessScrollWheel(Input::GetMouseScrollOffset());
     UpdateViewMatrix();
+    UpdateProjectionMatrix();
 }
 
 void EditorCamera::SetPerspective(float fov, float aspectRatio, float nearClip, float farClip)
@@ -70,7 +73,10 @@ void EditorCamera::UpdateViewMatrix()
     m_Up = up;
     
     // Create the view matrix
-    Mtx44LookAt(m_ViewMatrix, m_Position, m_Position + m_Front, m_Up);
+    // TODO: Change this to in built math function
+    glm::mat4 tempLookAtMatrix = glm::lookAt(glm::vec3(m_Position.x,m_Position.y,m_Position.z), glm::vec3(m_Position.x + m_Front.x, m_Position.y + m_Front.y, m_Position.z + m_Front.z), glm::vec3(m_Up.x, m_Up.y, m_Up.z));
+    m_ViewMatrix = Mtx44(&tempLookAtMatrix[0][0]);
+    // Mtx44LookAt(m_ViewMatrix, m_Position, m_Position + m_Front, m_Up);
 }
 
 void EditorCamera::UpdateProjectionMatrix()
@@ -82,17 +88,17 @@ void EditorCamera::ProcessKeyboardInput(float deltaTime)
 {
     float velocity = m_MovementSpeed * deltaTime;
 
-    if (Input::IsKeyPressed(GLFW_KEY_W))
+    if (Input::IsKeyDown(GLFW_KEY_W))
         m_Position = m_Position + m_Front * velocity;
-    if (Input::IsKeyPressed(GLFW_KEY_S))
+    if (Input::IsKeyDown(GLFW_KEY_S))
         m_Position = m_Position - m_Front * velocity;
-    if (Input::IsKeyPressed(GLFW_KEY_A))
+    if (Input::IsKeyDown(GLFW_KEY_A))
         m_Position = m_Position - m_Right * velocity;
-    if (Input::IsKeyPressed(GLFW_KEY_D))
+    if (Input::IsKeyDown(GLFW_KEY_D))
         m_Position = m_Position + m_Right * velocity;
-    if (Input::IsKeyPressed(GLFW_KEY_Q))
+    if (Input::IsKeyDown(GLFW_KEY_Q))
         m_Position = m_Position - m_WorldUp * velocity;
-    if (Input::IsKeyPressed(GLFW_KEY_E))
+    if (Input::IsKeyDown(GLFW_KEY_E))
         m_Position = m_Position + m_WorldUp * velocity;
 }
 
@@ -102,7 +108,6 @@ void EditorCamera::ProcessMouseMovement()
     if (Input::IsMouseButtonDown(GLFW_MOUSE_BUTTON_RIGHT))
     {
         double xpos = Input::GetMouseX(), ypos = Input::GetMouseY();
-        // glfwGetCursorPos(window, &xpos, &ypos);
         
         if (m_FirstMouse)
         {
@@ -131,4 +136,12 @@ void EditorCamera::ProcessMouseMovement()
     {
         m_FirstMouse = true;
     }
+}
+
+void EditorCamera::ProcessScrollWheel(float yOffset)
+{
+    m_FOV -= yOffset * FrameController::GetFixedDeltaTime();
+    m_FOV = std::max(m_FOV, 1.0f);
+    m_FOV = std::min(m_FOV, 45.0f);
+    Input::ResetMouseScrollOffset();
 }

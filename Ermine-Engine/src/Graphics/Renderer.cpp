@@ -15,7 +15,6 @@ Copyright (C) 2025 TwoJumpingRabbits
 #include "Logger.h"
 #include "Components.h"
 #include "MathUtils.h"
-#include "GLFW/glfw3.h"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/glm.hpp"
 
@@ -23,10 +22,8 @@ using namespace Ermine::graphics;
 
 /**
  * @brief Update all mesh entities and draw them
- * @param view view matrix
- * @param projection projection matrix
  */
-void Renderer::Update()
+void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 {
     for (auto& entity : m_Entities)
     {
@@ -49,8 +46,8 @@ void Renderer::Update()
 
         material.m_shader->Bind();
         material.m_shader->SetUniform4fv("model", &model[0][0]);
-        material.m_shader->SetUniform4fv("view", &_view[0][0]);
-        material.m_shader->SetUniform4fv("projection", &_projection[0][0]);
+        material.m_shader->SetUniform4fv("view", &view.m2[0][0]);
+        material.m_shader->SetUniform4fv("projection", &projection.m2[0][0]);
         
         Draw(mesh.vertex_array, mesh.index_buffer, material.m_shader);
     }

@@ -25,9 +25,8 @@ namespace Ermine::graphics
     public:
         /**
          * @brief Update the game objects to the screen.
-         * 
          */
-        void Update();
+        void Update(const Mtx44& view, const Mtx44& projection);
         
         /**
          * @brief Draw the game objects to the screen.

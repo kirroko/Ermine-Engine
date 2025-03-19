@@ -20,6 +20,7 @@ namespace Ermine
     float Input::s_LastMouseY = 0.0f;
     float Input::s_MouseDeltaX = 0.0f;
     float Input::s_MouseDeltaY = 0.0f;
+    float Input::s_MouseScrollOffset = 0.0f;
     std::unordered_map<int, bool> Input::s_PreviousKeyStates;
     std::unordered_map<int, bool> Input::s_PreviousMouseButtonStates;
 
@@ -31,6 +32,12 @@ namespace Ermine
             EE_CORE_ERROR("Input system initialized with null window!");
             return;
         }
+
+        // Scroll callback
+        glfwSetScrollCallback(window, [](GLFWwindow* window, double offsetX, double offsetY)
+        {
+           s_MouseScrollOffset += static_cast<float>(offsetY); 
+        });
         
         double mouseX, mouseY;
         glfwGetCursorPos(s_Window, &mouseX, &mouseY);
@@ -174,6 +181,16 @@ namespace Ermine
     float Input::GetMouseY()
     {
         return GetMousePosition().second;
+    }
+
+    float Input::GetMouseScrollOffset()
+    {
+        return s_MouseScrollOffset;
+    }
+
+    void Input::ResetMouseScrollOffset()
+    {
+        s_MouseScrollOffset = 0.0f;
     }
 
     std::pair<float, float> Input::GetMouseDelta()

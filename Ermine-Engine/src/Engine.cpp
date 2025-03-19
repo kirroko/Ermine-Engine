@@ -75,6 +75,12 @@ bool Engine::Init(GLFWwindow* windowContext)
     sig.set(ECS::GetInstance().GetComponentType<Material>());
     ECS::GetInstance().SetSystemSignature<graphics::Renderer>(sig);
 
+    glfwSetFramebufferSizeCallback(windowContext, []([[maybe_unused]] GLFWwindow* window, int width, int height)
+    {
+        s_EditorCamera->SetViewportSize(static_cast<float>(width),static_cast<float>(height));
+        glViewport(0,0,width,height); 
+    });
+
     // Create graphics resources
     auto shader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/vertex.glsl", "../Resources/Shaders/fragment.glsl");
     auto texture = AssetManager::GetInstance().LoadTexture("../Resources/Textures/greybox_grey_grid.png");
@@ -83,7 +89,12 @@ bool Engine::Init(GLFWwindow* windowContext)
     ECS::GetInstance().AddComponent(entity, graphics::GeometryFactory::CreateCube(1,1,1));
     ECS::GetInstance().AddComponent(entity, Material(shader, texture));
 
-    // s_EditorCamera = std::make_unique<editor::EditorCamera>();
+    auto entity2 = ECS::GetInstance().CreateEntity();
+    ECS::GetInstance().AddComponent(entity2, Transform(Vec3(-1,1,-2),Vec3(0,0,0),Vec3(1,1,1)));
+    ECS::GetInstance().AddComponent(entity2, graphics::GeometryFactory::CreateCube(1,1,1));
+    ECS::GetInstance().AddComponent(entity2, Material(shader, texture));
+
+    s_EditorCamera = std::make_unique<editor::EditorCamera>(45.0f);
 
     glClearColor(0.2f,0.3f,0.3f,1.0f); // Background color
     
@@ -121,10 +132,10 @@ void Engine::Update([[maybe_unused]] GLFWwindow* windowContext)
     // Other non-fixed logic here
     
     // Update editor camera
-    // if (s_EditorCamera)
-    // {
-    //     s_EditorCamera->Update(deltaTime);
-    // }
+    if (s_EditorCamera)
+    {
+        s_EditorCamera->Update(FrameController::GetDeltaTime());
+    }
 }
 
 void Engine::Render(GLFWwindow* window)
@@ -136,13 +147,13 @@ void Engine::Render(GLFWwindow* window)
     glfwGetFramebufferSize(window, &width, &height);
     glViewport(0,0,width,height);
 
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    ECS::GetInstance().GetSystem<graphics::Renderer>()->Clear();
 
-    // Mtx44 view = s_EditorCamera->GetViewMatrix();
-    // Mtx44 proj = s_EditorCamera->GetProjectionMatrix();
+    Mtx44 view = s_EditorCamera->GetViewMatrix();
+    Mtx44 proj = s_EditorCamera->GetProjectionMatrix();
     
     // Draw
-    ECS::GetInstance().GetSystem<graphics::Renderer>()->Update();
+    ECS::GetInstance().GetSystem<graphics::Renderer>()->Update(view, proj);
 
     glfwSwapBuffers(window);
     glfwPollEvents();

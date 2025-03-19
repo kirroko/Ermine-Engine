@@ -38,7 +38,7 @@ GLFWwindow* Ermine::Window::InitWindow(int width, int height, const char* title)
     }
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
@@ -66,13 +66,9 @@ GLFWwindow* Ermine::Window::InitWindow(int width, int height, const char* title)
     }
 
     glfwMakeContextCurrent(window);
-    glfwSetFramebufferSizeCallback(window, []([[maybe_unused]] GLFWwindow* window, int width, int height)
-    {
-       glViewport(0,0,width,height); 
-    });
 
     // We'll like to initialize GLAD as well...
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+    if (!gladLoadGL())
     {
         EE_CORE_ERROR("Failed to initialize GLAD!");
         glfwTerminate(); // GLAD failed, shouldn't continue to run
