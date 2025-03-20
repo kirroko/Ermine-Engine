@@ -91,7 +91,7 @@ Ermine::Mesh GeometryFactory::CreateCube(float width, float height, float depth)
             auto vbo = std::make_shared<VertexBuffer>(vertices.data(), vertices.size() * sizeof(Vertex));
 
             vao->LinkAttribute(0, 3, GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, pos));
-            vao->LinkAttribute(1, 3, GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, col));
+            vao->LinkAttribute(1, 3, GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, norms));
             vao->LinkAttribute(2, 2, GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, tex));
             vbo->Unbind();
 
@@ -129,7 +129,7 @@ Ermine::Mesh GeometryFactory::CreateQuad(float width, float height)
     auto vbo = std::make_shared<VertexBuffer>(vertices.data(), vertices.size() * sizeof(Vertex));
 
     vao->LinkAttribute(0, 3, GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, pos));
-    vao->LinkAttribute(1, 3, GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, col));
+    vao->LinkAttribute(1, 3, GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, norms));
     vao->LinkAttribute(2, 2, GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, tex));
     vbo->Unbind();
 
@@ -208,7 +208,7 @@ Ermine::Mesh GeometryFactory::CreateSphere(float radius, unsigned int sectors, u
     auto vbo = std::make_shared<VertexBuffer>(vertices.data(), vertices.size() * sizeof(Vertex));
 
     vao->LinkAttribute(0, 3, GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, pos));
-    vao->LinkAttribute(1, 3, GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, col));
+    vao->LinkAttribute(1, 3, GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, norms));
     vao->LinkAttribute(2, 2, GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, tex));
     vbo->Unbind();
 

@@ -15,6 +15,7 @@ Copyright (C) 2025 TwoJumpingRabbits
 #include <glm/glm.hpp>
 #include <glad/glad.h>
 
+#include "Matrix3x3.h"
 #include "Matrix4x4.h"
 
 namespace Ermine::graphics
@@ -88,13 +89,34 @@ namespace Ermine::graphics
          * @param value The value to set
          */
         void SetUniform1f(const std::string& name, float value);
-    
+
+        /**
+         * @brief Set the uniform value of the shader
+         * @param name The name of the uniform
+         * @param value The value to set
+         */
+        void SetUniform3f(const ::std::string& name, const glm::vec3& value);
+
+        /**
+         * @brief Set the uniform value of the shader
+         * @param name The name of the uniform
+         * @param value The value to set
+         */
+        void SetUniform4f(const std::string& name, const glm::vec4& value);
+
+        /**
+         * @brief Set the uniform value of the shader
+         * @param name The name of the uniform
+         * @param value The value to set
+         */
+        void SetUniformMatrix3fv(const std::string& name, const Mtx33& value);
+
         /**
          * @biref Set the uniform value of the shader
          * @param name The name of the uniform
          * @param matrix The matrix to set
          */
-        void SetUniform4fv(const std::string& name, const Mtx44& matrix);
+        void SetUniformMatrix4fv(const std::string& name, const Mtx44& matrix);
 
         /**
          * @biref return the renderer ID

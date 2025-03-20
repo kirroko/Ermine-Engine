@@ -213,4 +213,14 @@ namespace Ermine
      The input matrix to invert.
     *************************************************************************/
     void Mtx33Inverse(Matrix3x3* pResult, float* determinant, const Matrix3x3& pMtx);
+
+   /*!***********************************************************************
+   \brief
+    Invert the given matrix and return the inverse.
+   \param[in] pMtx
+    The input matrix to invert.
+   \return
+    The inverse matrix. If the matrix is not invertible, returns an identity matrix.
+   *************************************************************************/
+    Matrix3x3 Mtx33GetInverse(const Matrix3x3& pMtx);
 }

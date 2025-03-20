@@ -34,7 +34,7 @@ namespace Ermine
         }
 
         // Scroll callback
-        glfwSetScrollCallback(window, [](GLFWwindow* window, double offsetX, double offsetY)
+        glfwSetScrollCallback(window, []([[maybe_unused]] GLFWwindow* window, [[maybe_unused]] double offsetX, double offsetY)
         {
            s_MouseScrollOffset += static_cast<float>(offsetY); 
         });

@@ -105,6 +105,9 @@
     <ClInclude Include="include\Vector3D.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\Vector4D.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\VertexArray.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -171,6 +174,9 @@
       <Filter>src\Math</Filter>
     </ClCompile>
     <ClCompile Include="src\Math\Vector3D.cpp">
+      <Filter>src\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Math\Vector4D.cpp">
       <Filter>src\Math</Filter>
     </ClCompile>
     <ClCompile Include="src\PreCompile.cpp">

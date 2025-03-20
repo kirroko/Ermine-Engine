@@ -12,6 +12,7 @@ Copyright (C) 2025 TwoJumpingRabbits
 #include "Shader.h"
 
 #include "Logger.h"
+#include "Matrix3x3.h"
 #include "glad/glad.h"
 
 using namespace Ermine::graphics;
@@ -200,9 +201,39 @@ void Shader::SetUniform1f(const std::string& name, float value)
 /**
  * @brief Set the uniform value of the shader
  * @param name The name of the uniform
+ * @param value The value to set
+ */
+void Shader::SetUniform3f(const std::string& name, const glm::vec3& value)
+{
+    glUniform3f(GetUniformLocation(name), value.x, value.y, value.z);
+}
+
+/**
+ * @brief Set the uniform value of the shader
+ * @param name The name of the uniform
+ * @param value The value to set
+ */
+void Shader::SetUniform4f(const std::string& name, const glm::vec4& value)
+{
+    glUniform4f(GetUniformLocation(name), value.x, value.y, value.z, value.w);
+}
+
+/**
+ * @brief Set the uniform value of the shader
+ * @param name The name of the uniform
+ * @param value The value to set
+ */
+void Shader::SetUniformMatrix3fv(const std::string& name, const Mtx33& value)
+{
+    glUniformMatrix3fv(GetUniformLocation(name), 1, GL_FALSE, &value.m2[0][0]);
+}
+
+/**
+ * @brief Set the uniform value of the shader
+ * @param name The name of the uniform
  * @param matrix The value to set
  */
-void Shader::SetUniform4fv(const std::string& name, const Mtx44& matrix)
+void Shader::SetUniformMatrix4fv(const std::string& name, const Mtx44& matrix)
 {
     glUniformMatrix4fv(GetUniformLocation(name), 1, GL_FALSE, &matrix.m2[0][0]);
 }

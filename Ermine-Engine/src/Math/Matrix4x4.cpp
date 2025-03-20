@@ -143,7 +143,7 @@ namespace Ermine
     *************************************************************************/
     void Mtx44Translate(Matrix4x4& pResult, float x, float y, float z)
     {
-        Mtx44Identity(pResult);
+        // Mtx44Identity(pResult);
         pResult.m03 = x;
         pResult.m13 = y;
         pResult.m23 = z;
@@ -159,7 +159,7 @@ namespace Ermine
     *************************************************************************/
     void Mtx44RotXRad(Matrix4x4& pResult, float angle)
     {
-        Mtx44Identity(pResult);
+        // Mtx44Identity(pResult);
         pResult.m11 = cosf(angle);
         pResult.m12 = -sinf(angle);
         pResult.m21 = sinf(angle);
@@ -176,7 +176,7 @@ namespace Ermine
     *************************************************************************/
     void Mtx44RotYRad(Matrix4x4& pResult, float angle)
     {
-        Mtx44Identity(pResult);
+        // Mtx44Identity(pResult);
         pResult.m00 = cosf(angle);
         pResult.m02 = sinf(angle);
         pResult.m20 = -sinf(angle);
@@ -193,7 +193,7 @@ namespace Ermine
     *************************************************************************/
     void Mtx44RotZRad(Matrix4x4& pResult, float angle)
     {
-        Mtx44Identity(pResult);
+        // Mtx44Identity(pResult);
         pResult.m00 = cosf(angle);
         pResult.m01 = -sinf(angle);
         pResult.m10 = sinf(angle);
@@ -214,7 +214,7 @@ namespace Ermine
     *************************************************************************/
     void Mtx44Scale(Matrix4x4& pResult, float x, float y, float z)
     {
-        Mtx44Identity(pResult);
+        // Mtx44Identity(pResult);
         pResult.m00 = x;
         pResult.m11 = y;
         pResult.m22 = z;

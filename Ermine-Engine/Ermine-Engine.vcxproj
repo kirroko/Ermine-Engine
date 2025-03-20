@@ -136,6 +136,7 @@ xcopy /Q /E /Y /I ..\Resources ..\Build\bin\Release-windows-x86_64\Resources</Co
     <ClInclude Include="include\Texture.h" />
     <ClInclude Include="include\Vector2D.h" />
     <ClInclude Include="include\Vector3D.h" />
+    <ClInclude Include="include\Vector4D.h" />
     <ClInclude Include="include\VertexArray.h" />
     <ClInclude Include="include\VertexBuffer.h" />
     <ClInclude Include="include\Window.h" />
@@ -160,6 +161,7 @@ xcopy /Q /E /Y /I ..\Resources ..\Build\bin\Release-windows-x86_64\Resources</Co
     <ClCompile Include="src\Math\Matrix4x4.cpp" />
     <ClCompile Include="src\Math\Vector2D.cpp" />
     <ClCompile Include="src\Math\Vector3D.cpp" />
+    <ClCompile Include="src\Math\Vector4D.cpp" />
     <ClCompile Include="src\PreCompile.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>

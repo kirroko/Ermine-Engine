@@ -23,6 +23,11 @@ namespace Ermine::graphics
         int m_Width, m_Height, m_BPP;
     public:
         /**
+         * @brief Default Construct
+         */
+        Texture();
+        
+        /**
          * @brief Construct a new Texture object
          */
         Texture(const std::string& filePath);

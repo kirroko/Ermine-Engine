@@ -247,4 +247,45 @@ namespace Ermine
 
         *pResult = inverse;
     }
+
+    /*!***********************************************************************
+       \brief
+        Invert the given matrix and return the inverse.
+       \param[in] pMtx
+        The input matrix to invert.
+       \return
+        The inverse matrix. If the matrix is not invertible, returns an identity matrix.
+       *************************************************************************/
+    Matrix3x3 Mtx33GetInverse(const Matrix3x3& pMtx)
+       {
+        // Calculate the determinant (det(M))
+        float determinant = pMtx.m00 * (pMtx.m11 * pMtx.m22 - pMtx.m21 * pMtx.m12)
+            - pMtx.m01 * (pMtx.m10 * pMtx.m22 - pMtx.m20 * pMtx.m12)
+            + pMtx.m02 * (pMtx.m10 * pMtx.m21 - pMtx.m20 * pMtx.m11);
+
+        // Check if matrix is invertible
+        if (determinant == 0.0f)
+        {
+         // Return identity matrix if not invertible
+         Matrix3x3 identity;
+         Mtx33Identity(identity);
+         return identity;
+        }
+
+        // Calculate the inverse (1 / det(M) * adj(M))
+        Matrix3x3 inverse;
+        inverse.m00 = (pMtx.m11 * pMtx.m22 - pMtx.m21 * pMtx.m12) / determinant;
+        inverse.m01 = (pMtx.m21 * pMtx.m02 - pMtx.m01 * pMtx.m22) / determinant;
+        inverse.m02 = (pMtx.m01 * pMtx.m12 - pMtx.m11 * pMtx.m02) / determinant;
+
+        inverse.m10 = (pMtx.m20 * pMtx.m12 - pMtx.m10 * pMtx.m22) / determinant;
+        inverse.m11 = (pMtx.m00 * pMtx.m22 - pMtx.m20 * pMtx.m02) / determinant;
+        inverse.m12 = (pMtx.m10 * pMtx.m02 - pMtx.m00 * pMtx.m12) / determinant;
+
+        inverse.m20 = (pMtx.m10 * pMtx.m21 - pMtx.m20 * pMtx.m11) / determinant;
+        inverse.m21 = (pMtx.m20 * pMtx.m01 - pMtx.m00 * pMtx.m21) / determinant;
+        inverse.m22 = (pMtx.m00 * pMtx.m11 - pMtx.m10 * pMtx.m01) / determinant;
+
+        return inverse;
+       }
 }

@@ -25,7 +25,7 @@ int main()
     if (window == nullptr)
         return -1;
 
-    if (!Engine::Init(window))
+    if (!Engine::Init(window)) // if engine fails to initialize
         return -1;
     
     bool running = true;

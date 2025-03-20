@@ -57,7 +57,7 @@ bool Engine::Init(GLFWwindow* windowContext)
     EE_CORE_INFO("ECS Initialized");
     EE_CORE_TRACE("Begin Registering of Components and Systems...");
     
-    // TODO: Register all components and systems here, limit of 32 components
+    // TODO: Register all components here, limit of 32 components
     ECS::GetInstance().RegisterComponent<Transform>();
     ECS::GetInstance().RegisterComponent<Rigidbody3D>();
     ECS::GetInstance().RegisterComponent<Mesh>();
@@ -93,6 +93,11 @@ bool Engine::Init(GLFWwindow* windowContext)
     ECS::GetInstance().AddComponent(entity2, Transform(Vec3(-1,1,-2),Vec3(0,0,0),Vec3(1,1,1)));
     ECS::GetInstance().AddComponent(entity2, graphics::GeometryFactory::CreateCube(1,1,1));
     ECS::GetInstance().AddComponent(entity2, Material(shader, texture));
+    
+    auto entity3 = ECS::GetInstance().CreateEntity();
+    ECS::GetInstance().AddComponent(entity3, Transform(Vec3(1,1,-3),Vec3(0,0,0),Vec3(1,1,1)));
+    ECS::GetInstance().AddComponent(entity3, graphics::GeometryFactory::CreateSphere());
+    ECS::GetInstance().AddComponent(entity3, Material(shader, texture));
 
     s_EditorCamera = std::make_unique<editor::EditorCamera>(45.0f);
 

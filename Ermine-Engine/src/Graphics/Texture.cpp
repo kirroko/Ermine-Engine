@@ -18,6 +18,13 @@ Copyright (C) 2025 TwoJumpingRabbits
 using namespace Ermine::graphics;
 
 /**
+ * @brief Default Constructor
+ */
+Texture::Texture() : m_RendererID(0), m_LocalBuffer(nullptr), m_Width(0), m_Height(0), m_BPP(0)
+{
+}
+
+/**
  * @brief Constructor for the Texture system
  * @param filePath The file path of the texture
  */

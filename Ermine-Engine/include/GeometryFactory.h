@@ -23,7 +23,7 @@ namespace Ermine::graphics
         struct Vertex
         {
             Vec3 pos;
-            Vec3 col;
+            Vec3 norms;
             Vec2 tex;
         };
         GeometryFactory() = default;
