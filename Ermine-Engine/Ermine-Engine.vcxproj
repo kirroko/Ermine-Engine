@@ -140,6 +140,7 @@ xcopy /Q /E /Y /I ..\Resources ..\Build\bin\Release-windows-x86_64\Resources</Co
     <ClInclude Include="include\VertexArray.h" />
     <ClInclude Include="include\VertexBuffer.h" />
     <ClInclude Include="include\Window.h" />
+    <ClInclude Include="src\Utility\JobSystem.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\AssetManager\AssetManager.cpp" />
@@ -168,6 +169,7 @@ xcopy /Q /E /Y /I ..\Resources ..\Build\bin\Release-windows-x86_64\Resources</Co
     <ClCompile Include="src\Utility\EditorCamera.cpp" />
     <ClCompile Include="src\Utility\FrameController.cpp" />
     <ClCompile Include="src\Utility\Input.cpp" />
+    <ClCompile Include="src\Utility\JobSystem.cpp" />
     <ClCompile Include="src\Window\Window.cpp" />
     <ClCompile Include="src\dllmain.cpp" />
   </ItemGroup>

@@ -22,6 +22,12 @@ Copyright (C) 2025 TwoJumpingRabbits
 #include <memory>
 #include <bitset>
 
+#include <functional>
+#include <future>
+#include <mutex>
+#include <condition_variable>
+#include <atomic>
+
 #include <vector>
 #include <array>
 #include <queue>

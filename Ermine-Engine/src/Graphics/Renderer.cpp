@@ -38,9 +38,6 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
         model = glm::rotate(model, radian(trans.rotation.y), glm::vec3(0, 1, 0));
         model  = glm::rotate(model, radian(trans.rotation.z), glm::vec3(0, 0, 1));
         model = glm::scale(model, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
-        // glm::mat4 _view = glm::lookAt(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-        // glm::mat4 _projection = glm::perspective(glm::radians(45.0f), 16.0f / 9.0f, 0.1f, 100.0f);
-        // glm::mat4 mvp = _projection * _view * model;
 
         material.m_texture->Bind();
 

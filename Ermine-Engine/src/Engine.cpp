@@ -122,6 +122,8 @@ void Engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 {
     if (!s_isInitialized)
         return;
+    
+    glfwPollEvents();
 
     // Update input states
     Input::Update();
@@ -161,7 +163,6 @@ void Engine::Render(GLFWwindow* window)
     ECS::GetInstance().GetSystem<graphics::Renderer>()->Update(view, proj);
 
     glfwSwapBuffers(window);
-    glfwPollEvents();
 }
 
 // Free to use for testing purposes
