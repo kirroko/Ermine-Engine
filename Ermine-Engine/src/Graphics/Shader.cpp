@@ -49,7 +49,7 @@ GLint Shader::GetUniformLocation(const std::string& name)
  */
 GLuint Shader::CompileShader(GLenum type, const std::string& source)
 {
-    EE_CORE_TRACE("Compiling shader: {0}", source);
+    // EE_CORE_TRACE("Compiling shader: {0}", source);
     GLuint shader = glCreateShader(type);
     const char* src = source.c_str();
     glShaderSource(shader, 1, &src, nullptr);

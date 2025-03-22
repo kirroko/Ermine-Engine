@@ -11,6 +11,8 @@ Copyright (C) 2025 TwoJumpingRabbits
 #include "PreCompile.h"
 #include "JobSystem.h"
 
+#include "Logger.h"
+
 using namespace Ermine::job;
 
 /**
@@ -32,7 +34,7 @@ ThreadPool::ThreadPool(size_t numThreads)
 {
     for (size_t i = 0; i < numThreads; ++i) // For the number of threads, create a worker
     {
-        m_workers.emplace_back([this]()
+        m_workers.emplace_back([this, i]()
         {
            while (true)
            {
@@ -45,7 +47,10 @@ ThreadPool::ThreadPool(size_t numThreads)
                    });
 
                    if (m_stop && m_jobQueue.empty())
-                       return;
+                   {
+                       EE_CORE_TRACE("Worker thread {0} stopped.", i);
+                       break;
+                   }
 
                    // Get the highest priority job
                    job = GetHighestPriorityJob();
@@ -70,14 +75,20 @@ ThreadPool::ThreadPool(size_t numThreads)
  */
 ThreadPool::~ThreadPool()
 {
-    std::unique_lock lock(m_queueMutex);
-    m_stop = true;
+    WaitForCounter();
+    {
+        std::unique_lock lock(m_queueMutex);
+        m_stop = true;
+        EE_CORE_TRACE("Notifying all worker threads to stop.");
+        m_condition.notify_all();
+    }
     
-    m_condition.notify_all();
     for (std::thread& worker : m_workers)
     {
-        worker.join();
+        if (worker.joinable())
+            worker.join();
     }
+    EE_CORE_INFO("All worker threads joined. Completed shutdown.");
 }
 
 /**
@@ -99,7 +110,10 @@ void ThreadPool::EnqueueJob(const Declaration& job)
 void Ermine::job::Initialize(size_t numThreads)
 {
     if (!g_pThreadPool)
+    {
+        EE_CORE_INFO("Job system initialized with {0} threads", numThreads);
         g_pThreadPool = new ThreadPool(numThreads);
+    }
 }
 
 /**
@@ -109,6 +123,7 @@ void Ermine::job::Shutdown()
 {
     if (g_pThreadPool)
     {
+        EE_CORE_TRACE("Shutting down job system...");
         delete g_pThreadPool;
         g_pThreadPool = nullptr;
     }
