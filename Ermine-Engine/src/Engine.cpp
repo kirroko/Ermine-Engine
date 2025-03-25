@@ -103,51 +103,7 @@ bool Engine::Init(GLFWwindow* windowContext)
     ECS::GetInstance().AddComponent(entity3, Material(shader, texture));
 
     s_EditorCamera = std::make_unique<editor::EditorCamera>(45.0f);
-
-    // Test the jobs system
-    constexpr int NUM_JOBS = 100;
-    job::Declaration jobs[NUM_JOBS];
-
-    // Simple job function that just prints its job ID
-    auto jobFunction = [](uintptr_t param)
-    {
-        int jobId = static_cast<int>(param);
-        EE_CORE_INFO("Job {0} executing on thread {1}", jobId, std::hash<std::thread::id>()(std::this_thread::get_id()));
-
-        // Simulate some work
-        std::this_thread::sleep_for(std::chrono::milliseconds(10 + jobId % 50));
-    };
-
-    // Create jobs with different priporities
-    for (int i = 0; i < NUM_JOBS; ++i)
-    {
-        jobs[i].m_pEntry = jobFunction;
-        jobs[i].m_param = static_cast<uintptr_t>(i);
-
-        if (i % 10 == 0)
-            jobs[i].m_priority = job::Priority::CRITICAL;
-        else if (i % 5 == 0)
-            jobs[i].m_priority = job::Priority::HIGH;
-        else if (i % 3 == 0)
-            jobs[i].m_priority = job::Priority::LOW;
-        else
-            jobs[i].m_priority = job::Priority::NORMAL;
-    }
-
-    // Test single job
-    EE_CORE_INFO("Testing single job...");
-    job::KickJobAndWait(jobs[0]);
-
-    // Test multiple jobs
-    EE_CORE_INFO("Testing multiple jobs...");
-    auto startTime = std::chrono::high_resolution_clock::now();
-    job::KickJobsAndWait(NUM_JOBS,jobs);
-    auto endTime = std::chrono::high_resolution_clock::now();
-
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
-
-    EE_CORE_INFO("All jobs completed in {0}ms", duration);
-
+    
     glClearColor(0.2f,0.3f,0.3f,1.0f); // Background color
     
     EE_CORE_INFO("Systems and components registered successfully, Engine Initialized");
@@ -173,11 +129,11 @@ void Engine::Update([[maybe_unused]] GLFWwindow* windowContext)
     if (!s_isInitialized)
         return;
     
-    glfwPollEvents();
-
     // Update input states
     Input::Update();
-
+    
+    glfwPollEvents();
+    
     // Update FrameController
     FrameController::BeginFrame();
 
@@ -187,7 +143,7 @@ void Engine::Update([[maybe_unused]] GLFWwindow* windowContext)
     }
 
     // Other non-fixed logic here
-    if (Input::IsKeyPressed(GLFW_KEY_F1)) // Kick a job
+    if (Input::IsKeyPressed(GLFW_KEY_1)) // Kick a job
     {
         job::Declaration job;
         job.m_pEntry = [](uintptr_t param)

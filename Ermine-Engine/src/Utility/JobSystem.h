@@ -122,11 +122,23 @@ namespace Ermine::job
     void KickJobs(int count, const Declaration aDecl[]);
 
     /**
+     * @brief Check if all jobs are completed without blocking
+     * @return true if all jobs are completed, false otherwise
+     */
+    bool AreJobsCompleted();
+
+    /**
      * @brief Wait for all jobs to complete
      */
     void WaitForCounter();
 
-    // kick jobs and wait for completion
+    /**
+     * @brief Wait for all jobs to complete with a timeout
+     * @param ms The timeout in milliseconds
+     * @return true if all jobs completed, false otherwise
+     */
+    bool WaitForCounterWithTimeout(uint32_t ms);
+    
     /**
      * @brief kick a job to the job system to run and wait for completion
      * @param decl a small data structure that contains the job to run

@@ -154,6 +154,15 @@ void Ermine::job::KickJobs(int count, const Declaration aDecl[])
 }
 
 /**
+ * @brief Check if all jobs are completed without blocking
+ * @return true if all jobs are completed, false otherwise
+ */
+bool Ermine::job::AreJobsCompleted()
+{
+    return g_jobCounter.count <= 0;
+}
+
+/**
  * @brief Wait for all jobs to complete
  */
 void Ermine::job::WaitForCounter()
@@ -162,6 +171,20 @@ void Ermine::job::WaitForCounter()
     g_jobCounter.condition.wait(lock, []()
     {
        return g_jobCounter.count.load() == 0; 
+    });
+}
+
+/**
+ * @brief Wait for all jobs to complete with a timeout
+ * @param ms The timeout in milliseconds
+ * @return true if all jobs completed, false otherwise
+ */
+bool Ermine::job::WaitForCounterWithTimeout(uint32_t ms)
+{
+    std::unique_lock<std::mutex> lock(g_jobCounter.mutex);
+    return g_jobCounter.condition.wait_for(lock, std::chrono::milliseconds(ms), []()
+    {
+        return g_jobCounter.count <= 0;
     });
 }
 

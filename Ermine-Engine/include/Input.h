@@ -3,7 +3,8 @@
 \file       Input.h
 \author     Wong Jun Yu, Kean, keanwng\@gmail.com
 \date       12/03/2025
-\brief      This file contains the Input system for handling keyboard and mouse input.
+\brief      This file contains the Input system for handling keyboard, mouse and gamepad input.
+            This file is used to manage the input system for the engine.
 Copyright (C) 2025 TwoJumpingRabbits
 */
 /* End Header **************************************************************************/
@@ -18,6 +19,31 @@ namespace Ermine
     class EE_API Input
     {
     public:
+        // Gamepad
+        /*!
+        \brief Checks if a gamepad button is currently pressed.
+        \param JoystickID The ID of the joystick (GLFW_JOYSTICK_1 through GLFW_JOYSTICK_16).
+        \param ButtonID The button ID to check.
+        \return True if the button is pressed, false otherwise.
+        */
+        static bool IsGamepadButtonPressed(int JoystickID, int ButtonID);
+
+        /*!
+        \brief Checks if a gamepad button is triggered (pressed for the first time).
+        \param JoystickID The ID of the joystick (GLFW_JOYSTICK_1 through GLFW_JOYSTICK_16).
+        \param ButtonID The button ID to check.
+        \return True if the button is triggered, false otherwise.
+        */
+        static bool IsGamepadButtonTriggered(int JoystickID, int ButtonID);
+
+        /*!
+        \brief Gets the joystick axes values.
+        \param JoystickID The ID of the joystick (GLFW_JOYSTICK_1 through GLFW_JOYSTICK_16).
+        \param deadzone The deadzone value for the joystick axes.
+        \return A vector of float values representing joystick axis positions, or empty if joystick is not present.
+        */
+        static std::vector<float> GetJoystickAxes(int JoystickID, float deadzone);
+        
         // Keyboard
         /**
          * @brief Check if the key is pressed
@@ -88,7 +114,14 @@ namespace Ermine
         static std::pair<float, float> GetMouseDelta();
         
         // Initialization
+        /**
+         * @brief Initialize the input system
+         * @param window The window to initialize the input system with
+         */
         static void Init(GLFWwindow* window);
+        /**
+         * @brief Update the input system
+         */
         static void Update();
         
     private:

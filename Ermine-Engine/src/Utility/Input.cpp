@@ -24,6 +24,34 @@ namespace Ermine
     std::unordered_map<int, bool> Input::s_PreviousKeyStates;
     std::unordered_map<int, bool> Input::s_PreviousMouseButtonStates;
 
+    /**
+     * @brief Load the contents of a file into a buffer.
+     * @param filepath The path to the file to load.
+     * @return The contents of the file as a buffer.
+     */
+    const char* load_file_contents(const char* filepath) { // TODO: Move this to a utility file
+        FILE* file = fopen(filepath, "rb"); // TODO: Replace deprecated fopen
+        if (!file) {
+            EE_CORE_ERROR("Failed to open file: {0}", filepath);
+            return nullptr;
+        }
+            
+        fseek(file, 0, SEEK_END);
+        long size = ftell(file);
+        rewind(file);
+            
+        char* buffer = new char[size + 1];
+        size_t read = fread(buffer, 1, size, file);
+        buffer[read] = '\0';
+            
+        fclose(file);
+        return buffer;
+    }
+
+    /**
+     * @brief Initialize the input system
+     * @param window The window to initialize the input system with
+     */
     void Input::Init(GLFWwindow* window)
     {
         s_Window = window;
@@ -43,10 +71,19 @@ namespace Ermine
         glfwGetCursorPos(s_Window, &mouseX, &mouseY);
         s_LastMouseX = static_cast<float>(mouseX);
         s_LastMouseY = static_cast<float>(mouseY);
+
+        if (const char* keyMap = load_file_contents("../Resources/gamecontrollerdb.txt"))
+        {
+            EE_CORE_TRACE("Loading game controller database...");
+            glfwUpdateGamepadMappings(keyMap);
+        }
         
         EE_CORE_INFO("Input system initialized");
     }
 
+    /**
+     * @brief Update the input system
+     */
     void Input::Update()
     {
         // Update mouse delta
@@ -72,6 +109,100 @@ namespace Ermine
         }
     }
 
+    /*!
+    \brief Checks if a gamepad button is currently pressed.
+    \param JoystickID The ID of the joystick (GLFW_JOYSTICK_1 through GLFW_JOYSTICK_16).
+    \param ButtonID The button ID to check.
+    \return True if the button is pressed, false otherwise.
+    */
+    bool Input::IsGamepadButtonPressed(int JoystickID, int ButtonID)
+    {
+        if (!glfwJoystickIsGamepad(JoystickID))
+            return false;
+
+        GLFWgamepadstate state;
+        if (glfwGetGamepadState(JoystickID,&state) && ButtonID >= 0 && ButtonID <= GLFW_GAMEPAD_BUTTON_LAST)
+        {
+            return state.buttons[ButtonID] == GLFW_PRESS;
+        }
+
+        return false;
+    }
+
+    /*!
+    \brief Checks if a gamepad button is triggered (pressed for the first time).
+    \param JoystickID The ID of the joystick (GLFW_JOYSTICK_1 through GLFW_JOYSTICK_16).
+    \param ButtonID The button ID to check.
+    \return True if the button is triggered, false otherwise.
+    */
+    bool Input::IsGamepadButtonTriggered(int JoystickID, int ButtonID)
+    {
+        if (!glfwJoystickIsGamepad(JoystickID))
+            return false;
+
+        GLFWgamepadstate state;
+        int uniqueKey = (JoystickID << 16) | ButtonID;
+        if (glfwGetGamepadState(JoystickID,&state) && ButtonID >=0 && ButtonID <= GLFW_GAMEPAD_BUTTON_LAST)
+        {
+            if (state.buttons[ButtonID] == GLFW_PRESS && !s_PreviousKeyStates[uniqueKey])
+            {
+                s_PreviousKeyStates[uniqueKey] = true;
+                return true;
+            }
+        }
+
+        if (state.buttons[ButtonID] == GLFW_RELEASE)
+        {
+            s_PreviousKeyStates[uniqueKey] = false;
+        }
+		
+        return false;
+    }
+    
+    /*!
+    \brief Gets the joystick axes values.
+    \param JoystickID The ID of the joystick (GLFW_JOYSTICK_1 through GLFW_JOYSTICK_16).
+    \param deadzone The deadzone value for the joystick axes.
+    \return A vector of float values representing joystick axis positions, or empty if joystick is not present.
+    */
+    std::vector<float> Input::GetJoystickAxes(int JoystickID, float deadzone)
+    {
+        // Clamp deadzone to valid range [0.0, 1.0]
+        deadzone = std::max(0.0f,std::min(deadzone,1.0f));
+		
+        int axesCount;
+        const float* axes = glfwGetJoystickAxes(JoystickID, &axesCount);
+    
+        if (axes == nullptr)
+            return {};
+
+        // Convert the raw pointer to a vector with deadzone applied
+        std::vector<float> processedAxes;
+        processedAxes.reserve(axesCount);
+
+        for (int i = 0; i < axesCount; ++i)
+        {
+            float value = axes[i];
+
+            // Apply deadzone
+            if (std::abs(value) < deadzone)
+            {
+                value = 0.0f;
+            }
+            else
+            {
+                // Rescale the values outside deadzone to full range
+                // This creates a smooth transition from deadzone to max value
+                float sign = (value > 0.0f) ? 1.0f : -1.0f;
+                value = sign * (std::abs(value) - deadzone) / (1.0f - deadzone);
+            }
+
+            processedAxes.push_back(value);
+        }
+		
+        return processedAxes;
+    }
+    
     bool Input::IsKeyPressed(int keyCode)
     {
         if (!s_Window)

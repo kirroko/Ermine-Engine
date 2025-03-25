@@ -34,7 +34,7 @@ int main()
         Engine::Update(window);
         Engine::Render(window);
     
-        if (Input::IsKeyDown(GLFW_KEY_ESCAPE))
+        if (Input::IsKeyPressed(GLFW_KEY_ESCAPE))
             running = false;
     }
 
