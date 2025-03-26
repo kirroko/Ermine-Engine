@@ -7,7 +7,14 @@ project "Fmod"
 
 	files
 	{
-		"inc/fmod.hpp"
+	    "inc/**.h",
+		"inc/**.hpp"
+	}
+
+	links
+	{
+	    "lib/fmod_vc.lib",
+	    "lib/fmodL_vc.lib"
 	}
 
 

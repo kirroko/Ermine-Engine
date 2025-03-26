@@ -10,7 +10,6 @@ Copyright (C) 2025 TwoJumpingRabbits
 /* End Header **************************************************************************/
 
 #pragma once
-#include "Window.h"
 #include "Matrix4x4.h"
 
 namespace Ermine::editor

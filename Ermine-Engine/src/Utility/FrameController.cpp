@@ -48,6 +48,7 @@ void FrameController::BeginFrame()
         std::this_thread::sleep_for(std::chrono::duration<float>(sleepTime));
     }
 
+    // Calculate FPS
     s_fpsTimer += s_deltaTime;
     ++s_frameCount;
 

@@ -15,6 +15,7 @@ Copyright (C) 2025 TwoJumpingRabbits
 #include "FrameController.h"
 #include "Input.h"
 #include "MathUtils.h"
+#include "GLFW/glfw3.h"
 
 using namespace Ermine::editor;
 

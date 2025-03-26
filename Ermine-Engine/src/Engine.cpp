@@ -21,14 +21,12 @@ Copyright (C) 2025 TwoJumpingRabbits
 #include "Input.h"
 #include "Logger.h"
 #include "Renderer.h"
-#include "GLFW/glfw3.h"
-#include "glm/gtc/matrix_transform.hpp"
-#include "glm/glm.hpp"
-#include "Utility/JobSystem.h"
+#include "EditorGUI.h"
+#include "JobSystem.h"
 
 using namespace Ermine;
 
-namespace Ermine::Engine
+namespace Ermine::engine
 {
     static bool s_isInitialized = false;
     static std::unique_ptr<editor::EditorCamera> s_EditorCamera = nullptr;
@@ -43,7 +41,7 @@ namespace Ermine::Engine
     }
 }
 
-bool Engine::Init(GLFWwindow* windowContext)
+bool engine::Init(GLFWwindow* windowContext)
 {
     if (s_isInitialized) // Already initialized
         return true;
@@ -111,7 +109,7 @@ bool Engine::Init(GLFWwindow* windowContext)
     return true;
 }
 
-void Engine::Shutdown()
+void engine::Shutdown()
 {
     // By right, ECS should shut all its systems down via each systems destructor
     if (!s_isInitialized)
@@ -124,25 +122,32 @@ void Engine::Shutdown()
     s_isInitialized = false;
 }
 
-void Engine::Update([[maybe_unused]] GLFWwindow* windowContext)
+void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 {
     if (!s_isInitialized)
         return;
     
-    // Update input states
+    // 1. Update input states
     Input::Update();
     
-    glfwPollEvents();
+    glfwPollEvents(); // Do not move me above Input::Update - Friendly Adviser
     
     // Update FrameController
     FrameController::BeginFrame();
 
+    // 2. Game state update 
     while (FrameController::ShouldUpdateFixed())
     {
         // Fixed update logic here
     }
 
     // Other non-fixed logic here
+    // Update editor camera
+    if (s_EditorCamera) // Safety first
+        s_EditorCamera->Update(FrameController::GetDeltaTime());
+
+
+    // TODO: Testing, Remember to remove
     if (Input::IsKeyPressed(GLFW_KEY_1)) // Kick a job
     {
         job::Declaration job;
@@ -162,18 +167,13 @@ void Engine::Update([[maybe_unused]] GLFWwindow* windowContext)
         auto endTime = std::chrono::high_resolution_clock::now();
         
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
-
+        
         EE_CORE_INFO("a job completed in {0}ms", duration);
     }
     
-    // Update editor camera
-    if (s_EditorCamera)
-    {
-        s_EditorCamera->Update(FrameController::GetDeltaTime());
-    }
 }
 
-void Engine::Render(GLFWwindow* window)
+void engine::Render(GLFWwindow* window)
 {
     if (!s_isInitialized)
         return;
@@ -184,17 +184,19 @@ void Engine::Render(GLFWwindow* window)
 
     ECS::GetInstance().GetSystem<graphics::Renderer>()->Clear();
 
+    
     Mtx44 view = s_EditorCamera->GetViewMatrix();
     Mtx44 proj = s_EditorCamera->GetProjectionMatrix();
     
     // Draw
     ECS::GetInstance().GetSystem<graphics::Renderer>()->Update(view, proj);
-
+    editor::EditorGUI::Render(); // Render the ImGUI context on-top of the scene
+    
     glfwSwapBuffers(window);
 }
 
 // Free to use for testing purposes
-void Engine::Dummy([[maybe_unused]] GLFWwindow* wwindow)
+void engine::Dummy([[maybe_unused]] GLFWwindow* wwindow)
 {
     // graphics::VertexBuffer vertex_buffer(vertices, sizeof(vertices));
     //

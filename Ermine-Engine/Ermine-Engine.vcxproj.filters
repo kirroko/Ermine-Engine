@@ -16,6 +16,9 @@
     <Filter Include="src\Graphics">
       <UniqueIdentifier>{0D564864-F9B8-D708-A23E-10BF8E80A38B}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\ImGUI">
+      <UniqueIdentifier>{D70922B3-4374-D629-8CB2-87CFF85BB47E}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Logger">
       <UniqueIdentifier>{5CCC981E-4884-DA6B-B18B-B3C79D62755C}</UniqueIdentifier>
     </Filter>
@@ -48,6 +51,9 @@
     <ClInclude Include="include\EditorCamera.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\EditorGUI.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\Engine.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -67,6 +73,9 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\Input.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\JobSystem.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\Logger.h">
@@ -161,6 +170,9 @@
     <ClCompile Include="src\Graphics\VertexBuffer.cpp">
       <Filter>src\Graphics</Filter>
     </ClCompile>
+    <ClCompile Include="src\ImGUI\EditorGUI.cpp">
+      <Filter>src\ImGUI</Filter>
+    </ClCompile>
     <ClCompile Include="src\Logger\Logger.cpp">
       <Filter>src\Logger</Filter>
     </ClCompile>
@@ -189,6 +201,9 @@
       <Filter>src\Utility</Filter>
     </ClCompile>
     <ClCompile Include="src\Utility\Input.cpp">
+      <Filter>src\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Utility\JobSystem.cpp">
       <Filter>src\Utility</Filter>
     </ClCompile>
     <ClCompile Include="src\Window\Window.cpp">

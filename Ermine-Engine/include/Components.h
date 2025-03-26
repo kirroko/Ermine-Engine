@@ -13,8 +13,6 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #pragma once
 
-#include <utility>
-
 #include "PreCompile.h"
 #include "Matrix4x4.h" // Vector3D included
 

@@ -13,7 +13,7 @@ Copyright (C) 2025 TwoJumpingRabbits
 #include "EngineAPI.h"
 #include "GLFW/glfw3.h"
 
-namespace Ermine::Engine
+namespace Ermine::engine
 {
     /**
      * @brief Initialize the engine, load all resources

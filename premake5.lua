@@ -4,21 +4,27 @@ workspace "Ermine"
     startproject "Ermine-Editor"
 
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
+fmod_dll = "ThirdParty/Fmod/lib/fmod.dll"
 
 -- Include directories relative to root folder (solution directory)
 IncludeDir = {}
 IncludeDir["GLFW"] = "ThirdParty/GLFW/include"
 IncludeDir["Glad"] = "ThirdParty/Glad/include"
-IncludeDir["ImGui"] = "ThirdParty/ImGui"
+IncludeDir["ImGui"] = "ThirdParty/imgui"
 IncludeDir["glm"] = "ThirdParty/glm"
 IncludeDir["spdlog"] = "ThirdParty/spdlog/include"
 IncludeDir["stb"] = "ThirdParty/stb"
+
+-- Libraries
+LibraryDir = {}
+LibraryDir["Fmod"] = "ThirdParty/Fmod/lib"
 
 -- External libraries
 group "Dependencies"
     include "ThirdParty/GLFW"
     include "ThirdParty/Glad"
-    include "ThirdParty/ImGui"
+    include "ThirdParty/imgui"
+    include "ThirdParty/Fmod"
 group ""
 
 -- Engine Project
@@ -51,7 +57,13 @@ project "Ermine-Engine"
         "%{IncludeDir.ImGui}",
         "%{IncludeDir.glm}",
         "%{IncludeDir.spdlog}",
-        "%{IncludeDir.stb}"
+        "%{IncludeDir.stb}",
+        "%{IncludeDir.Fmod}"
+    }
+
+    libdirs
+    {
+        "%{LibraryDir.Fmod}"
     }
 
     links
@@ -59,12 +71,14 @@ project "Ermine-Engine"
         "GLFW",
         "Glad",
         "ImGui",
+        "fmod_vc",
         "opengl32.lib"
     }
 
     postbuildcommands
     {
         ("{COPY} %{cfg.buildtarget.relpath} ../Build/bin/" .. outputdir .. "/Ermine-Editor"),
+        ("{COPY} " .. fmod_dll .. "../Build/bin/" .. outputdir .. "/Ermine-Editor"),
         ("{COPYDIR} ../Resources ../Build/bin/" .. outputdir .. "/Resources")
     }
 
@@ -120,16 +134,13 @@ project "Ermine-Editor"
         "%{IncludeDir.ImGui}",
         "%{IncludeDir.glm}",
         "%{IncludeDir.spdlog}",
-        "%{IncludeDir.stb}"
+        "%{IncludeDir.stb}",
+        "%{IncludeDir.Fmod}"
     }
 
     links
     {
-        "Ermine-Engine",
-        "GLFW",
-        "Glad",
-        "ImGui",
-        "opengl32.lib"
+        "Ermine-Engine"
     }
 
     filter "system:windows"

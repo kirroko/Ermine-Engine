@@ -10,6 +10,10 @@ project "ImGui"
 		"imconfig.h",
 		"imgui.h",
 		"imgui.cpp",
+		"imgui_impl_glfw.cpp",
+		"imgui_impl_glfw.h",
+		"imgui_impl_opengl3.cpp",
+		"imgui_impl_opengl3.h",
 		"imgui_impl_opengl3_loader.h",
 		"imgui_draw.cpp",
 		"imgui_internal.h",
@@ -19,13 +23,17 @@ project "ImGui"
 		"imstb_truetype.h",
 		"imgui_demo.cpp",
 		"imgui_tables.cpp"
+	}
 
-
+	includedirs
+	{
+	    ".",
+	    "../GLFW/include"
 	}
 
 	filter "system:windows"
 		systemversion "latest"
-		staticruntime "On" --staticly linking the runtime libraries
+		staticruntime "off" 
 
 
 	filter "configurations:Debug"
