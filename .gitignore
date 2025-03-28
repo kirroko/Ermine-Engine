@@ -2,7 +2,6 @@
 *.suo
 *.db
 *.pdb
-*.exe
 *.ilk
 .vs
 .idea
