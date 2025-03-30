@@ -12,6 +12,8 @@ Copyright (C) 2025 TwoJumpingRabbits
 #pragma once
 #include "PreCompile.h"
 
+#include "imgui.h"
+
 struct GLFWwindow;
 
 namespace Ermine
@@ -135,5 +137,8 @@ namespace Ermine
         // Track previous frame's key/mouse button states
         static std::unordered_map<int, bool> s_PreviousKeyStates;
         static std::unordered_map<int, bool> s_PreviousMouseButtonStates;
+
+		// Helper function to convert GLFW key to ImGui key
+        static ImGuiKey GlfwKeyToImguiKey(int key);
     };
 }

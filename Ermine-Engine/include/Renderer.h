@@ -23,6 +23,27 @@ namespace Ermine::graphics
     class Renderer : public System
     {
     public:
+        struct OffscreenBuffer
+        {
+			unsigned int FBO; // Frame Buffer Object
+            unsigned int ColorTexture;
+			unsigned int RBO; // Render Buffer Object
+
+            // Viewport size
+            int width;
+            int height;
+        };
+
+        /**
+		 * @brief Create an offscreen buffer for viewport/scene rendering
+		 * @param width The width of the offscreen buffer
+		 * @param height The height of the offscreen buffer
+		 * @return OffscreenBuffer The offscreen buffer
+         */
+        OffscreenBuffer Create(const int& width, const int& height);
+
+		std::shared_ptr<OffscreenBuffer> GetOffscreenBuffer() const { return m_OffscreenBuffer; }
+
         /**
          * @brief Update the game objects to the screen.
          */
@@ -37,5 +58,7 @@ namespace Ermine::graphics
          * @brief Clear the screen.
          */
         void Clear() const;
+    private:
+		std::shared_ptr<OffscreenBuffer> m_OffscreenBuffer;
     };
 }

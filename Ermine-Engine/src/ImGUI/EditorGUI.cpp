@@ -13,12 +13,102 @@ Copyright (C) 2025 TwoJumpingRabbits
 #include "EditorGUI.h"
 #include "Logger.h"
 
-#include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 
+#include "ECS.h"
+#include "EditorCamera.h"
+#include "FrameController.h"
+#include "Input.h"
+#include "Renderer.h"
+
 using namespace Ermine::editor;
 
+void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
+{
+    ImGui::BeginMainMenuBar();
+    if (ImGui::BeginMenu("File"))
+    {
+        if (ImGui::MenuItem("Open", "Ctrl+O"))
+        {
+			EE_CORE_INFO("Open file clicked");
+            // Code to open a file, the scene?
+        }
+        if (ImGui::MenuItem("Save", "Ctrl+S"))
+        {
+            EE_CORE_INFO("Save file clicked");
+            // Code to save a file, maybe the scene
+        }
+        if (ImGui::MenuItem("Exit", "Alt+F4"))
+        {
+			EE_CORE_INFO("Exit clicked");
+			// Code to exit the application
+			glfwSetWindowShouldClose(windowContext, GLFW_TRUE);
+        }
+		ImGui::EndMenu();
+    }
+
+    if (ImGui::BeginMenu("Edit"))
+    {
+		if (ImGui::MenuItem("Undo", "Ctrl+Z"))
+		{
+			EE_CORE_INFO("Undo clicked");
+			// Code to undo
+		}
+		if (ImGui::MenuItem("Redo", "Ctrl+Y"))
+		{
+			EE_CORE_INFO("Redo clicked");
+			// Code to redo
+		}
+		ImGui::EndMenu();
+    }
+
+    ImGui::EndMainMenuBar();
+}
+
+// This function is called before rendering the scene
+void EditorGUI::ViewPortWindow(bool &show)
+{
+    ImGui::Begin("Scene Viewer", &show);
+
+    // Obtain available context region in the window (viewport size)
+	ImVec2 viewport_size = ImGui::GetContentRegionAvail();
+
+    // Ensure the viewport size is within an acceptable range
+    constexpr int minSize = 1;
+    int max_size;
+    glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_size);
+
+    viewport_size.x = std::clamp(viewport_size.x, static_cast<float>(minSize), static_cast<float>(max_size));
+    viewport_size.y = std::clamp(viewport_size.y, static_cast<float>(minSize), static_cast<float>(max_size));
+
+    static bool first_time = true;
+    if (first_time)
+    {
+		ECS::GetInstance().GetSystem<graphics::Renderer>()->Create(static_cast<int>(viewport_size.x), static_cast<int>(viewport_size.y));
+        first_time = false;
+    }
+	const auto offscreen_buffer = ECS::GetInstance().GetSystem<graphics::Renderer>()->GetOffscreenBuffer();
+	offscreen_buffer->width = static_cast<int>(viewport_size.x);
+	offscreen_buffer->height = static_cast<int>(viewport_size.y);
+
+	EditorCamera::GetInstance().SetViewportSize(viewport_size.x, viewport_size.y);
+
+	ImGui::Image(offscreen_buffer->ColorTexture, viewport_size, ImVec2(0, 1), ImVec2(1, 0));
+
+    if (ImGui::IsWindowHovered())
+    {
+	    EditorCamera::GetInstance().ProcessMouseMovement();
+		EditorCamera::GetInstance().ProcessKeyboardInput(FrameController::GetDeltaTime());
+		EditorCamera::GetInstance().ProcessScrollWheel(Input::GetMouseScrollOffset());
+    }
+	ImGui::End();
+}
+
+/**
+ * @brief Initialize the ImGUI context
+ * @param window The window to initialize the ImGUI context
+ */
 void EditorGUI::Init(GLFWwindow* window)
 {
     // Setup Dear ImGUI context
@@ -54,12 +144,60 @@ void EditorGUI::Init(GLFWwindow* window)
     ImGui_ImplOpenGL3_Init("#version 460");
 }
 
-void EditorGUI::Update()
+/**
+ * @brief Check if the ImGUI context is initialized
+ */
+bool EditorGUI::IsInit()
+{
+	return ImGui::GetCurrentContext() != nullptr;
+}
+
+void EditorGUI::DockingWindow()
+{
+	// Create a dock space window inside the main viewport (i.e. the entire window)
+	ImGuiViewport* Viewport = ImGui::GetMainViewport();
+	ImGui::SetNextWindowPos(Viewport->WorkPos);
+	ImGui::SetNextWindowSize(Viewport->WorkSize);
+	ImGui::SetNextWindowViewport(Viewport->ID);
+
+	// 2. Create a main dock space in your main render loop
+	ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoTitleBar
+		| ImGuiWindowFlags_NoCollapse
+		| ImGuiWindowFlags_NoDocking
+		| ImGuiWindowFlags_NoResize
+		| ImGuiWindowFlags_NoMove
+		| ImGuiWindowFlags_NoBringToFrontOnFocus;
+
+	// optionally disable background if you want a clean area
+	ImGui::SetNextWindowBgAlpha(0.0f);
+
+	// Remove docking flag from the dockspace window so it behaves as a container
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+	ImGui::Begin("MainDockSpace", nullptr, windowFlags);
+
+	// Pass docking ID to create the dock space
+	ImGuiID dockSpaceId = ImGui::GetID("MyDockSpace");
+	ImGui::DockSpace(dockSpaceId, ImVec2(0.0f, 0.0f));
+
+	ImGui::End();
+	ImGui::PopStyleVar(2);
+}
+
+void EditorGUI::Update(GLFWwindow* windowContext)
 {
     // start a new ImGui Frame
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
+
+	DockingWindow();
+
+    // Windows that imgui has to render
+    TopMenuBar(windowContext);
+    static bool showSceneViewer = true;
+    if (showSceneViewer)
+		ViewPortWindow(showSceneViewer);
 
     static bool show_demo_window = true;
     if (show_demo_window)

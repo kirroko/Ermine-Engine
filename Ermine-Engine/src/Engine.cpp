@@ -26,10 +26,10 @@ Copyright (C) 2025 TwoJumpingRabbits
 
 using namespace Ermine;
 
-namespace Ermine::engine
+namespace
 {
-    static bool s_isInitialized = false;
-    static std::unique_ptr<editor::EditorCamera> s_EditorCamera = nullptr;
+	bool s_isInitialized = false;
+    //std::unique_ptr<editor::EditorCamera> s_EditorCamera = nullptr;
     
     void EnableMemoryLeakChecking(int breakAlloc = -1)
     {
@@ -78,7 +78,9 @@ bool engine::Init(GLFWwindow* windowContext)
 
     glfwSetFramebufferSizeCallback(windowContext, []([[maybe_unused]] GLFWwindow* window, int width, int height)
     {
-        s_EditorCamera->SetViewportSize(static_cast<float>(width),static_cast<float>(height));
+#ifdef _DEBUG
+        editor::EditorCamera::GetInstance().SetViewportSize(static_cast<float>(width),static_cast<float>(height));
+#endif
         glViewport(0,0,width,height); 
     });
 
@@ -100,7 +102,7 @@ bool engine::Init(GLFWwindow* windowContext)
     ECS::GetInstance().AddComponent(entity3, graphics::GeometryFactory::CreateSphere());
     ECS::GetInstance().AddComponent(entity3, Material(shader, texture));
 
-    s_EditorCamera = std::make_unique<editor::EditorCamera>(45.0f);
+    //s_EditorCamera = std::make_unique<editor::EditorCamera>(45.0f);
     
     glClearColor(0.2f,0.3f,0.3f,1.0f); // Background color
     
@@ -111,11 +113,9 @@ bool engine::Init(GLFWwindow* windowContext)
 
 void engine::Shutdown()
 {
-    // By right, ECS should shut all its systems down via each systems destructor
+	// By right, ECS helps shut all systems down via each system's destructor, while the rest of the singleton classes will be destroyed by the OS
     if (!s_isInitialized)
         return;
-
-    s_EditorCamera.reset();
 
     job::Shutdown();
     
@@ -143,34 +143,7 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 
     // Other non-fixed logic here
     // Update editor camera
-    if (s_EditorCamera) // Safety first
-        s_EditorCamera->Update(FrameController::GetDeltaTime());
-
-
-    // TODO: Testing, Remember to remove
-    if (Input::IsKeyPressed(GLFW_KEY_1)) // Kick a job
-    {
-        job::Declaration job;
-        job.m_pEntry = [](uintptr_t param)
-        {
-            int jobId = static_cast<int>(param);
-            EE_CORE_INFO("Job {0} executing on thread {1}", jobId, std::hash<std::thread::id>()(std::this_thread::get_id()));
-
-            // Simulate some work
-            std::this_thread::sleep_for(std::chrono::milliseconds(10 + jobId % 50));
-        };
-        job.m_param = static_cast<uintptr_t>(1);
-        job.m_priority = job::Priority::NORMAL;
-
-        auto startTime = std::chrono::high_resolution_clock::now();
-        job::KickJobAndWait(job);
-        auto endTime = std::chrono::high_resolution_clock::now();
-        
-        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
-        
-        EE_CORE_INFO("a job completed in {0}ms", duration);
-    }
-    
+    editor::EditorCamera::GetInstance().Update();
 }
 
 void engine::Render(GLFWwindow* window)
@@ -183,14 +156,15 @@ void engine::Render(GLFWwindow* window)
     glViewport(0,0,width,height);
 
     ECS::GetInstance().GetSystem<graphics::Renderer>()->Clear();
-
     
-    Mtx44 view = s_EditorCamera->GetViewMatrix();
-    Mtx44 proj = s_EditorCamera->GetProjectionMatrix();
+    Mtx44 view = editor::EditorCamera::GetInstance().GetViewMatrix();
+    Mtx44 proj = editor::EditorCamera::GetInstance().GetProjectionMatrix();
     
     // Draw
     ECS::GetInstance().GetSystem<graphics::Renderer>()->Update(view, proj);
-    editor::EditorGUI::Render(); // Render the ImGUI context on-top of the scene
+
+    if (editor::EditorGUI::IsInit())
+		editor::EditorGUI::Render(); // Render the ImGUI context on-top of the scene
     
     glfwSwapBuffers(window);
 }

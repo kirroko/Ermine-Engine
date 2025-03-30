@@ -17,27 +17,98 @@ namespace Ermine::editor
     class EditorCamera
     {
     public:
+		/**
+		 * @brief Get the singleton instance of the EditorCamera
+		 * @return EditorCamera& The singleton instance
+		 */
+		static EditorCamera& GetInstance()
+		{
+			static EditorCamera instance;
+			return instance;
+		}
+
+		// Delete copy constructor and assignment operator
+		EditorCamera(const EditorCamera&) = delete;
+		EditorCamera& operator=(const EditorCamera&) = delete;
+
+		/**
+		 * @brief Construct a new Editor Camera object
+		 * @param fov The field of view
+		 * @param aspectRatio The aspect ratio
+		 * @param near The near plane
+		 * @param far The far plane
+		 */
         EditorCamera(float fov = 45.0f, float aspectRatio = 16.0f/9.0f, float near = 0.1f, float far = 1000.0f);
 
-        void Update(float deltaTime);
+		/**
+		 * @brief Update the camera
+		 */
+        void Update();
 
         // Getters for view and projection matrices
+		/**
+		 * @brief Get the view matrix
+		 * @return const Mtx44& The view matrix
+		 */
         const Mtx44& GetViewMatrix() const { return m_ViewMatrix;}
-        const Mtx44& GetProjectionMatrix() const { return m_ProjectionMatrix; }
+		/**
+		 * @brief Get the projection matrix
+		 * @return const Mtx44& The projection matrix
+		 */
+		const Mtx44& GetProjectionMatrix() const { return m_ProjectionMatrix; }
 
         // Camera controls
+		/**
+		 * @brief Set the position of the camera
+		 * @param position The new position
+		 */
         void SetPosition(const Vector3D& position) { m_Position = position; }
-        Vector3D GetPosition() const { return m_Position; }
+		/**
+		 * @brief Get the position of the camera
+		 * @return Vector3D The position of the camera
+		 */
+		Vector3D GetPosition() const { return m_Position; }
 
+		/**
+		 * @brief Set the perspective of the camera
+		 * @param fov The field of view
+		 * @param aspectRatio The aspect ratio
+		 * @param near The near plane
+		 * @param far The far plane
+		 */
         void SetPerspective(float fov, float aspectRatio, float near, float far);
+		/**
+		 * @brief Set the viewport size
+		 * @param width The width of the viewport
+		 * @param height The height of the viewport
+		 */
         void SetViewportSize(float width, float height);
 
+		/**
+		 * @brief Process keyboard input to move the camera
+		 * @param deltaTime The time between frames
+		 */
+		void ProcessKeyboardInput(float deltaTime);
+		/**
+		 * @brief Process mouse movement to rotate the camera
+		 */
+		void ProcessMouseMovement();
+		/**
+		 * @brief Process scroll wheel to zoom the camera
+		 * @param yOffset The offset of the scroll wheel
+		 */
+		void ProcessScrollWheel(float yOffset);
+
     private:
-        void UpdateViewMatrix();
-        void UpdateProjectionMatrix();
-        void ProcessKeyboardInput(float deltaTime);
-        void ProcessMouseMovement();
-        void ProcessScrollWheel(float yOffset);
+		/**
+		 * @brief Update the view matrix
+		 */
+		void UpdateViewMatrix();
+		/**
+		 * @brief Update the projection matrix
+		 */
+		void UpdateProjectionMatrix();
+
         
         // Camera attributes
         Vector3D m_Position{0.0f, 0.0f, 3.0f};

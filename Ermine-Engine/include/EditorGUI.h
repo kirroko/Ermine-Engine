@@ -11,15 +11,26 @@ Copyright (C) 2025 TwoJumpingRabbits
 /* End Header **************************************************************************/
 
 #pragma once
+#include "imgui.h"
 #include "GLFW/glfw3.h"
 
 namespace Ermine::editor
 {
     /**
- * @brief The EditorGUI class, function just like a wrapper for the ImGUI library
- */
+	 * @brief The EditorGUI class, function just like a wrapper for the ImGUI library
+	 */
     class EE_API EditorGUI
     {
+		/**
+		 * @brief Top menu bar for the editor
+		 */
+        static void TopMenuBar(GLFWwindow* windowContext);
+
+		/**
+		 * @brief Show the viewport for the editor
+		 * @param show 
+		 */
+		static void ViewPortWindow(bool& show);
     public:
         /**
          * @brief Initialize the ImGUI context
@@ -27,10 +38,16 @@ namespace Ermine::editor
          */
         static void Init(GLFWwindow* window);
 
-        /**
+		/**
+		 * @brief Check if the ImGUI context is initialized
+		 */
+        static bool IsInit();
+		static void DockingWindow();
+
+		/**
         * @brief Update the ImGUI context (Render)
         */
-        static void Update();
+        static void Update(GLFWwindow* windowContext);
 
         /**
          * @brief Render the ImGUI context

@@ -28,22 +28,25 @@ int main()
     if (!engine::Init(window)) // if engine fails to initialize
         return -1;
 
+#ifdef _DEBUG
     editor::EditorGUI::Init(window);
-    
+#endif
+
     bool running = true;
     while (running && !Window::ShouldCloseWindow(window))
     {
         engine::Update(window);
 
-        editor::EditorGUI::Update();
-        
+#ifdef _DEBUG
+        editor::EditorGUI::Update(window);
+#endif
+
         engine::Render(window);
-    
-        if (Input::IsKeyPressed(GLFW_KEY_ESCAPE))
-            running = false;
     }
 
+#ifdef _DEBUG
     editor::EditorGUI::ShutDown();
+#endif
     engine::Shutdown();
     Window::ShutDownWindow(window);
     

@@ -29,17 +29,23 @@ namespace Ermine
         static std::shared_ptr<spdlog::logger> s_ClientLogger;
     };
 
+// Logging levels:
+// TRACE (Capture execution of code)
+// INFO (Capture an event that occurred)
+// WARN (Indicate unexpected event, disrupt or delay)
+// ERROR (Capture a system interfering with functionalities)
+// FATAL (Capture a system crash)
 // Core logger macros
 #define EE_CORE_TRACE(...)    ::Ermine::Logger::GetCoreLogger()->trace(__VA_ARGS__)
 #define EE_CORE_INFO(...)     ::Ermine::Logger::GetCoreLogger()->info(__VA_ARGS__)
 #define EE_CORE_WARN(...)     ::Ermine::Logger::GetCoreLogger()->warn(__VA_ARGS__)
 #define EE_CORE_ERROR(...)    ::Ermine::Logger::GetCoreLogger()->error(__VA_ARGS__)
-#define EE_CORE_FATAL(...)    ::Ermine::Logger::GetCoreLogger()->fatal(__VA_ARGS__)
+#define EE_CORE_FATAL(...)    ::Ermine::Logger::GetCoreLogger()->critical(__VA_ARGS__)
 
 // Client logger macros
 #define EE_TRACE(...)         ::Ermine::Logger::GetClientLogger()->trace(__VA_ARGS__)
 #define EE_INFO(...)          ::Ermine::Logger::GetClientLogger()->info(__VA_ARGS__)
 #define EE_WARN(...)          ::Ermine::Logger::GetClientLogger()->warn(__VA_ARGS__)
 #define EE_ERROR(...)         ::Ermine::Logger::GetClientLogger()->error(__VA_ARGS__)
-#define EE_FATAL(...)         ::Ermine::Logger::GetClientLogger()->fatal(__VA_ARGS__)
+#define EE_FATAL(...)         ::Ermine::Logger::GetClientLogger()->critical(__VA_ARGS__)
 }
