@@ -44,6 +44,16 @@ GLenum glCheckError_(const char* file, int line)
 }
 #define glCheckError() glCheckError_(__FILE__, __LINE__)
 
+Renderer::~Renderer()
+{
+	if (m_OffscreenBuffer)
+	{
+		glDeleteFramebuffers(1, &m_OffscreenBuffer->FBO);
+		glDeleteTextures(1, &m_OffscreenBuffer->ColorTexture);
+		glDeleteRenderbuffers(1, &m_OffscreenBuffer->RBO);
+	}
+}
+
 /**
  * @brief Create an offscreen buffer for viewport/scene rendering
  * @param width The width of the offscreen buffer

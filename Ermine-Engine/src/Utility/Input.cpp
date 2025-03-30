@@ -12,6 +12,7 @@ Copyright (C) 2025 TwoJumpingRabbits
 #include "Input.h"
 #include <GLFW/glfw3.h>
 
+#include "AssetManager.h"
 #include "imgui.h"
 #include "Logger.h"
 
@@ -25,30 +26,6 @@ namespace Ermine
 	float Input::s_MouseScrollOffset = 0.0f;
 	std::unordered_map<int, bool> Input::s_PreviousKeyStates;
 	std::unordered_map<int, bool> Input::s_PreviousMouseButtonStates;
-
-	/**
-	 * @brief Load the contents of a file into a buffer.
-	 * @param filepath The path to the file to load.
-	 * @return The contents of the file as a buffer.
-	 */
-	const char* load_file_contents(const char* filepath) { // TODO: Move this to a utility file
-		FILE* file = fopen(filepath, "rb"); // TODO: Replace deprecated fopen
-		if (!file) {
-			EE_CORE_ERROR("Failed to open file: {0}", filepath);
-			return nullptr;
-		}
-
-		fseek(file, 0, SEEK_END);
-		long size = ftell(file);
-		rewind(file);
-
-		char* buffer = new char[size + 1];
-		size_t read = fread(buffer, 1, size, file);
-		buffer[read] = '\0';
-
-		fclose(file);
-		return buffer;
-	}
 
 	/**
 	 * @brief Initialize the input system
@@ -119,7 +96,7 @@ namespace Ermine
 		s_LastMouseX = static_cast<float>(mouseX);
 		s_LastMouseY = static_cast<float>(mouseY);
 
-		if (const char* keyMap = load_file_contents("../Resources/gamecontrollerdb.txt"))
+		if (const char* keyMap = AssetManager::GetInstance().load_file_contents("../Resources/gamecontrollerdb.txt"))
 		{
 			EE_CORE_TRACE("Loading game controller database...");
 			glfwUpdateGamepadMappings(keyMap);

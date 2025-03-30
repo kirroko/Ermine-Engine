@@ -65,6 +65,13 @@ public:
          */
         std::shared_ptr<graphics::Shader> GetShader(const std::string& shaderName);
 
+        /**
+         * @brief Load the contents of a file into a buffer.
+         * @param filepath The path to the file to load.
+         * @return The contents of the file as a buffer.
+         */
+        const char* load_file_contents(const char* filepath);
+
         // Clear all loaded assets
         void Clear();
     };

@@ -34,6 +34,8 @@ namespace Ermine::graphics
             int height;
         };
 
+        ~Renderer();
+
         /**
 		 * @brief Create an offscreen buffer for viewport/scene rendering
 		 * @param width The width of the offscreen buffer

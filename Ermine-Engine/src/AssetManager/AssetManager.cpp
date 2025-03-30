@@ -87,3 +87,34 @@ std::shared_ptr<graphics::Shader> AssetManager::GetShader(const std::string& sha
     auto it = m_shaders.find(shaderName);
     return it != m_shaders.end() ? it->second : nullptr;
 }
+
+/**
+ * @brief Load the contents of a file into a buffer.
+ * @param filepath The path to the file to load.
+ * @return The contents of the file as a buffer.
+ */
+const char* AssetManager::load_file_contents(const char* filepath)
+{
+    std::ifstream file(filepath, std::ios::ate | std::ios::binary);
+    if (!file.is_open())
+    {
+        EE_CORE_ERROR("Failed to open file: {0}", filepath);
+        return nullptr;
+    }
+
+    std::streamsize size = file.tellg();
+    file.seekg(0, std::ios::beg);
+
+    if (size <= 0)
+    {
+        EE_CORE_ERROR("File is empty or cannot determine size: {0}", filepath);
+        return nullptr;
+    }
+
+    auto buffer = new char[size + 1];
+    file.read(buffer, size);
+    buffer[size] = '\0';
+
+    file.close();
+    return buffer;
+}

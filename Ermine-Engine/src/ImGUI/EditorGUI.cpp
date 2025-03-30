@@ -88,7 +88,7 @@ void EditorGUI::ViewPortWindow(bool &show)
 		ECS::GetInstance().GetSystem<graphics::Renderer>()->Create(static_cast<int>(viewport_size.x), static_cast<int>(viewport_size.y));
         first_time = false;
     }
-	const auto offscreen_buffer = ECS::GetInstance().GetSystem<graphics::Renderer>()->GetOffscreenBuffer();
+	const auto offscreen_buffer = ECS::GetInstance().GetSystem<graphics::Renderer>()->GetOffscreenBuffer(); // released at the end of the scope
 	offscreen_buffer->width = static_cast<int>(viewport_size.x);
 	offscreen_buffer->height = static_cast<int>(viewport_size.y);
 
