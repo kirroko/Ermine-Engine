@@ -34,7 +34,7 @@ namespace Ermine::graphics
             int height;
         };
 
-        ~Renderer();
+        //~Renderer();
 
         /**
 		 * @brief Create an offscreen buffer for viewport/scene rendering

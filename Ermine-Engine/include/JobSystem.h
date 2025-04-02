@@ -5,6 +5,10 @@
 \date       21/03/2025
 \brief      This file contains the declaration of the job system.
             This file is used to manage the job system for the engine using thread pools
+            Steps to create your own task/job to process
+            1. You'll need to create your params (Either primitive type or a struct to hold your values
+            2. Write your lambda functions that the job will process (Don't capture anything to lambda, use the jobparams to retain/pass values)
+            3. Now Create a declaration/s to pass to the job system to 'Kick' off
             
 Copyright (C) 2025 TwoJumpingRabbits
 */
