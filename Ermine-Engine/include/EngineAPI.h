@@ -1,7 +1,7 @@
 /* Start Header ************************************************************************/
 /*!
 \file       EngineAPI.h
-\author     Wong Jun Yu, Kean, keanwng\@gmail.com
+\author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu
 \date       Mar 9, 2025
 \brief      Defines the macro for the engine's API
 

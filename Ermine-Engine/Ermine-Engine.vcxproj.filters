@@ -25,6 +25,9 @@
     <Filter Include="src\Math">
       <UniqueIdentifier>{261422CF-12E1-7CDA-3BFA-6A822726B268}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Object">
+      <UniqueIdentifier>{13A4AE24-FF5B-F071-6863-C9CD543A8B62}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Utility">
       <UniqueIdentifier>{70464FB2-DCFB-C7A7-65F0-C17ED1A4BEAB}</UniqueIdentifier>
     </Filter>
@@ -64,6 +67,9 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\FrameController.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\GameObject.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\GeometryFactory.h">
@@ -190,6 +196,9 @@
     </ClCompile>
     <ClCompile Include="src\Math\Vector4D.cpp">
       <Filter>src\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Object\GameObject.cpp">
+      <Filter>src\Object</Filter>
     </ClCompile>
     <ClCompile Include="src\PreCompile.cpp">
       <Filter>src</Filter>

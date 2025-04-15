@@ -1,11 +1,14 @@
 /* Start Header ************************************************************************/
 /*!
 \file       Window.cpp
-\author     Wong Jun Yu, Kean, keanwng\@gmail.com
+\author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu
 \date       09/03/2025
 \brief      This file contains the definition of the Window system.
             This file is used to create a window using GLFW.
-Copyright (C) 2025 TwoJumpingRabbits
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents without the
+prior written consent of DigiPen Institute of Technology is prohibited.
 */
 /* End Header **************************************************************************/
 

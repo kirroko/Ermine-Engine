@@ -1,11 +1,11 @@
 /* Start Header ************************************************************************/
 /*!
 \file       EditorCamera.h
-\author     Wong Jun Yu, Kean, keanwng\@gmail.com
+\author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu
 \date       11/03/2025
 \brief      This file contains the declaration of the EditorCamera class.
             Provides camera functionality for the editor view.
-Copyright (C) 2025 TwoJumpingRabbits
+Copyright (C) 2025 DigiPen Institute of Technology.
 */
 /* End Header **************************************************************************/
 
