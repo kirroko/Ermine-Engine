@@ -19,7 +19,7 @@ namespace Ermine
 {
 	using EntityID = unsigned long long int;       // A type alias representing Entity type (Their ID)
 	using ComponentTypeID = unsigned char; // A type alias representing Component type (Their ID)
-	constexpr EntityID MAX_ENTITIES = 2501;   // Maximum number of entities that can be registered
+	constexpr EntityID MAX_ENTITIES = 2501;   // Maximum number of entities that can be registered TODO: Here's to increase entities count
 	constexpr ComponentTypeID MAX_COMPONENTS = 32; // Maximum number of components that can be registered
 	using SignatureID = std::bitset<MAX_COMPONENTS>; // a type alias representing components bit signature (0x111 to represent 3 components)
 
@@ -34,7 +34,7 @@ namespace Ermine
 	public:
 		EntityManager()
 		{
-			for (std::size_t entity = 0; entity < MAX_ENTITIES; ++entity)
+			for (std::size_t entity = 1; entity <= MAX_ENTITIES; ++entity)
 			{
 				m_AvailableEntities.push(entity);
 			}

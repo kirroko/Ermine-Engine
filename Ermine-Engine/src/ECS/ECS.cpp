@@ -54,22 +54,34 @@ namespace Ermine
 		m_EntityManager.reset(new EntityManager());
 	}
 
-	/**
-	 * @brief Clone an entity
-	 * @param entity The entity to clone
-	 * @return The ID of the new entity
-	 */
-	EntityID ECS::CloneEntity(EntityID entity)
-	{
-		EntityID newEntity = m_EntityManager->CreateEntity();
+    /**
+    * @brief Clone an entity
+    * @param entity The entity to clone
+    * @return The ID of the new entity
+    */
+  //  EntityID ECS::CloneEntity(EntityID entity)
+  //  {
+		//EntityID newEntity = m_EntityManager->CreateEntity();
 
-		SignatureID originalSignature = m_EntityManager->GetSignature(entity);
-		m_EntityManager->SetSignature(newEntity, originalSignature);
+		//SignatureID originalSignature = m_EntityManager->GetSignature(entity);
+		//m_EntityManager->SetSignature(newEntity, originalSignature);
 
-		// TODO: Keep updating components as the list grows
+	 //   // Iterate through all possible components
+	 //   for (const auto& [componentName, componentType] : m_ComponentManager->GetComponentTypes())
+	 //   {
+		//	// Check if the entity has the component
+		//	if (m_ComponentManager->HasComponent(entity,componentName))
+		//	{
+		//		// Get the component data from the original entity
+		//		auto& originalComponent = m_ComponentManager->GetComponent(entity);
 
-		return newEntity;
-	}
+		//		// Add the component to the new entity with the same data
+		//		m_ComponentManager->AddComponent(newEntity, originalComponent);
+		//	}
+	 //   }
+
+		//return newEntity;
+  //  }
 
 	unsigned long int ECS::GetLivingEntityCount() const
 	{

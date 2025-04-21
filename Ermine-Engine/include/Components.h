@@ -35,7 +35,7 @@ namespace Ermine
 		Vec3 rotation; // Euler angles in degrees
 		Vec3 scale;
 
-		Transform(const Vec3& pos = Vec3(), const Vec3& rot = Vec3(), const Vec3& scl = Vec3(1.f,1.f,1.f)) : position(pos), rotation(rot), scale(scl)
+		explicit Transform(const Vec3& pos = Vec3(), const Vec3& rot = Vec3(), const Vec3& scl = Vec3(1.f,1.f,1.f)) : position(pos), rotation(rot), scale(scl)
 		{
 		}
 	};

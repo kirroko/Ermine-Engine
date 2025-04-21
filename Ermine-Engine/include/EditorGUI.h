@@ -45,6 +45,10 @@ namespace Ermine::editor
 		 * @brief Check if the ImGUI context is initialized
 		 */
         static bool IsInit();
+
+		/**
+		 * @brief Dock the ImGUI window
+		 */
 		static void DockingWindow();
 
 		/**

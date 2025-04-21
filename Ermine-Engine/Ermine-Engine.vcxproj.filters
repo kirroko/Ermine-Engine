@@ -72,6 +72,9 @@
     <ClInclude Include="include\GameObject.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\GameObjectFactory.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\GeometryFactory.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -198,6 +201,9 @@
       <Filter>src\Math</Filter>
     </ClCompile>
     <ClCompile Include="src\Object\GameObject.cpp">
+      <Filter>src\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Object\GameObjectFactory.cpp">
       <Filter>src\Object</Filter>
     </ClCompile>
     <ClCompile Include="src\PreCompile.cpp">

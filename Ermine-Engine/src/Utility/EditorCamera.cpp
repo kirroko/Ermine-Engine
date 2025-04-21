@@ -108,7 +108,6 @@ void EditorCamera::UpdateViewMatrix()
 	m_Up = up;
 
 	// Create the view matrix
-	// TODO: Change this to in built math function
 	glm::mat4 tempLookAtMatrix = glm::lookAt(glm::vec3(m_Position.x, m_Position.y, m_Position.z), glm::vec3(m_Position.x + m_Front.x, m_Position.y + m_Front.y, m_Position.z + m_Front.z), glm::vec3(m_Up.x, m_Up.y, m_Up.z));
 	m_ViewMatrix = Mtx44(&tempLookAtMatrix[0][0]);
 	// Mtx44LookAt(m_ViewMatrix, m_Position, m_Position + m_Front, m_Up);

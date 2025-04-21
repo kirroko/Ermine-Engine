@@ -42,6 +42,12 @@ namespace Ermine
 		template <typename T>
 		ComponentTypeID GetComponentType();
 
+		/**
+		 * @brief Get the component types
+		 * @return A reference to the component types
+		 */
+		std::unordered_map<const char*, ComponentTypeID>& GetComponentTypes() { return m_ComponentTypes; }
+
 		// Add a component to an entity
 		template<typename T>
 		void AddComponent(EntityID entity, T component);
@@ -65,6 +71,15 @@ namespace Ermine
 			// Return true if the entity is present in the component array
 			return componentArray->HasEntity(entity);
 		}
+
+		//bool HasComponent(EntityID entity, const char* componentName) const
+		//{
+		//	auto it = m_ComponentArrays.find(componentName);
+		//	if (it != m_ComponentArrays.end())
+		//		return true;
+
+		//	return false;
+		//}
 	};
 }
 #include "Component.tpp"

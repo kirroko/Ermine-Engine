@@ -19,8 +19,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 namespace Ermine
 {
 	/**
-	 * @brief Register a component
-	 * @param entity The entity to add the component to
+	 * @brief Get the component array of type T
 	 */
 	template <typename T>
 	std::shared_ptr<ComponentArray<T>> ComponentManager::GetComponentArray()
@@ -32,7 +31,6 @@ namespace Ermine
 
 	/**
 	 * @brief Register a component
-	 * @param entity The entity to add the component to
 	 */
 	template <typename T>
 	void ComponentManager::RegisterComponent()
@@ -48,7 +46,6 @@ namespace Ermine
 
 	/**
 	 * @brief Get the component type ID of a component
-	 * @param entity The entity to add the component to
 	 */
 	template <typename T>
 	ComponentTypeID ComponentManager::GetComponentType()
@@ -63,6 +60,7 @@ namespace Ermine
 	/**
 	 * @brief Add a component to an entity
 	 * @param entity The entity to add the component to
+	 * @param component The component to add
 	 */
 	template <typename T>
 	void ComponentManager::AddComponent(EntityID entity, T component)
