@@ -27,6 +27,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "EditorGUI.h"
 #include "JobSystem.h"
 
+#include <random> // Include for random number generation
+
 using namespace Ermine;
 
 namespace
@@ -44,74 +46,91 @@ namespace
     }
 }
 
+
 bool engine::Init(GLFWwindow* windowContext)
 {
-    if (s_isInitialized) // Already initialized
-        return true;
+   if (s_isInitialized) // Already initialized
+       return true;
 
-    EnableMemoryLeakChecking();
+   EnableMemoryLeakChecking();
 
-    Input::Init(windowContext);
+   Input::Init(windowContext);
 
-    FrameController::Init(120.f, 60.f);
+   FrameController::Init(120.f, 60.f);
 
-    job::Initialize();
-    
-    ECS::GetInstance().Init();
-    EE_CORE_INFO("ECS Initialized");
-    EE_CORE_TRACE("Begin Registering of Components and Systems...");
-    
-    // TODO: Register all components here, limit of 32 components
-    ECS::GetInstance().RegisterComponent<Transform>();
-    ECS::GetInstance().RegisterComponent<Rigidbody3D>();
-    ECS::GetInstance().RegisterComponent<Mesh>();
-    ECS::GetInstance().RegisterComponent<Material>();
-    
-    // TODO: Register all systems here, no limits
-    // ReSharper disable once CppExpressionWithoutSideEffects
-    ECS::GetInstance().RegisterSystem<graphics::Renderer>();
-    
-    // TODO: Set the signature for the system as required
-    // For Graphics/Renderer system
-    SignatureID sig;
-    sig.set(ECS::GetInstance().GetComponentType<Transform>());
-    sig.set(ECS::GetInstance().GetComponentType<Mesh>());
-    sig.set(ECS::GetInstance().GetComponentType<Material>());
-    ECS::GetInstance().SetSystemSignature<graphics::Renderer>(sig);
+   graphics::GPUProfiler::Init(150); // Track last 150 frames
 
-    glfwSetFramebufferSizeCallback(windowContext, []([[maybe_unused]] GLFWwindow* window, int width, int height)
-    {
+   job::Initialize();
+   
+   ECS::GetInstance().Init();
+   EE_CORE_INFO("ECS Initialized");
+   EE_CORE_TRACE("Begin Registering of Components and Systems...");
+   
+   // TODO: Register all components here, limit of 32 components
+   ECS::GetInstance().RegisterComponent<Transform>();
+   ECS::GetInstance().RegisterComponent<Rigidbody3D>();
+   ECS::GetInstance().RegisterComponent<Mesh>();
+   ECS::GetInstance().RegisterComponent<Material>();
+   
+   // TODO: Register all systems here, no limits
+   ECS::GetInstance().RegisterSystem<graphics::Renderer>();
+   
+   // TODO: Set the signature for the system as required
+   // For Graphics/Renderer system
+   SignatureID sig;
+   sig.set(ECS::GetInstance().GetComponentType<Transform>());
+   sig.set(ECS::GetInstance().GetComponentType<Mesh>());
+   sig.set(ECS::GetInstance().GetComponentType<Material>());
+   ECS::GetInstance().SetSystemSignature<graphics::Renderer>(sig);
+
+   glfwSetFramebufferSizeCallback(windowContext, []([[maybe_unused]] GLFWwindow* window, int width, int height)
+   {
 #ifdef _DEBUG
-        editor::EditorCamera::GetInstance().SetViewportSize(static_cast<float>(width),static_cast<float>(height));
+       editor::EditorCamera::GetInstance().SetViewportSize(static_cast<float>(width),static_cast<float>(height));
 #endif
-        glViewport(0,0,width,height); 
-    });
+       glViewport(0,0,width,height); 
+   });
 
-    // Create graphics resources
-    auto shader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/vertex.glsl", "../Resources/Shaders/fragment.glsl");
-    auto texture = AssetManager::GetInstance().LoadTexture("../Resources/Textures/greybox_grey_grid.png");
-    auto entity = ECS::GetInstance().CreateEntity();
-    ECS::GetInstance().AddComponent(entity, Transform(Vec3(0,0,-1),Vec3(0,45,90),Vec3(1,1,1)));
-    ECS::GetInstance().AddComponent(entity, graphics::GeometryFactory::CreateCube(1,1,1));
-    ECS::GetInstance().AddComponent(entity, Material(shader, texture));
+   // Create graphics resources
+   auto shader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/vertex.glsl", "../Resources/Shaders/fragment.glsl");
+   auto texture = AssetManager::GetInstance().LoadTexture("../Resources/Textures/greybox_grey_grid.png");
 
-    auto entity2 = ECS::GetInstance().CreateEntity();
-    ECS::GetInstance().AddComponent(entity2, Transform(Vec3(-1,1,-2),Vec3(0,0,0),Vec3(1,1,1)));
-    ECS::GetInstance().AddComponent(entity2, graphics::GeometryFactory::CreateCube(1,1,1));
-    ECS::GetInstance().AddComponent(entity2, Material(shader, texture));
-    
-    auto entity3 = ECS::GetInstance().CreateEntity();
-    ECS::GetInstance().AddComponent(entity3, Transform(Vec3(1,1,-3),Vec3(0,0,0),Vec3(1,1,1)));
-    ECS::GetInstance().AddComponent(entity3, graphics::GeometryFactory::CreateSphere());
-    ECS::GetInstance().AddComponent(entity3, Material(shader, texture));
+   // Random number generation setup
+   //std::random_device rd;
+   //std::mt19937 gen(rd());
+   //std::uniform_real_distribution<float> posDist(-10.0f, 10.0f); // Random positions between -10 and 10
+   //std::uniform_real_distribution<float> rotDist(0.0f, 360.0f);  // Random rotations between 0 and 360
 
-    //s_EditorCamera = std::make_unique<editor::EditorCamera>(45.0f);
-    
-    glClearColor(0.2f,0.3f,0.3f,1.0f); // Background color
-    
-    EE_CORE_INFO("Systems and components registered successfully, Engine Initialized");
-    s_isInitialized = true;
-    return true;
+   //for (int i = 0; i < 1000; ++i)
+   //{
+   //    auto entity = ECS::GetInstance().CreateEntity();
+   //    Vec3 randomPosition(posDist(gen), posDist(gen), posDist(gen));
+   //    Vec3 randomRotation(rotDist(gen), rotDist(gen), rotDist(gen));
+   //    ECS::GetInstance().AddComponent(entity, Transform(randomPosition, randomRotation, Vec3(1.0f, 1.0f, 1.0f)));
+   //    ECS::GetInstance().AddComponent(entity, graphics::GeometryFactory::CreateCube(1.0f, 1.0f, 1.0f));
+   //    ECS::GetInstance().AddComponent(entity, Material(shader, texture));
+   //}
+
+   auto entity = ECS::GetInstance().CreateEntity();
+   ECS::GetInstance().AddComponent(entity, Transform(Vec3(0, 0, -1), Vec3(0, 45, 90), Vec3(1, 1, 1)));
+   ECS::GetInstance().AddComponent(entity, graphics::GeometryFactory::CreateCube(1, 1, 1));
+   ECS::GetInstance().AddComponent(entity, Material(shader, texture));
+
+   auto entity2 = ECS::GetInstance().CreateEntity();
+   ECS::GetInstance().AddComponent(entity2, Transform(Vec3(-1, 1, -2), Vec3(0, 0, 0), Vec3(1, 1, 1)));
+   ECS::GetInstance().AddComponent(entity2, graphics::GeometryFactory::CreateCube(1, 1, 1));
+   ECS::GetInstance().AddComponent(entity2, Material(shader, texture));
+
+   auto entity3 = ECS::GetInstance().CreateEntity();
+   ECS::GetInstance().AddComponent(entity3, Transform(Vec3(1, 1, -3), Vec3(0, 0, 0), Vec3(1, 1, 1)));
+   ECS::GetInstance().AddComponent(entity3, graphics::GeometryFactory::CreateSphere());
+   ECS::GetInstance().AddComponent(entity3, Material(shader, texture));
+
+   glClearColor(0.2f,0.3f,0.3f,1.0f); // Background color
+   
+   EE_CORE_INFO("Systems and components registered successfully, Engine Initialized");
+   s_isInitialized = true;
+   return true;
 }
 
 void engine::Shutdown()
@@ -119,6 +138,8 @@ void engine::Shutdown()
 	// By right, ECS helps shut all systems down via each system's destructor, while the rest of the singleton classes will be destroyed by the OS
     if (!s_isInitialized)
         return;
+
+    graphics::GPUProfiler::Shutdown();
 
     job::Shutdown();
     
@@ -129,6 +150,8 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 {
     if (!s_isInitialized)
         return;
+
+    graphics::GPUProfiler::BeginFrame();
     
     // 1. Update input states
     Input::Update();
@@ -168,6 +191,8 @@ void engine::Render(GLFWwindow* window)
 
     if (editor::EditorGUI::IsInit())
 		editor::EditorGUI::Render(); // Render the ImGUI context on-top of the scene
+
+    graphics::GPUProfiler::EndFrame();
     
     glfwSwapBuffers(window);
 }

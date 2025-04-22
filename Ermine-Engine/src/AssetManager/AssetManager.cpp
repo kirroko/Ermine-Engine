@@ -14,6 +14,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "PreCompile.h"
 #include "AssetManager.h"
 
+#include "GPUProfiler.h"
 #include "Logger.h"
 
 using namespace Ermine;
@@ -25,6 +26,7 @@ using namespace Ermine;
  */
 std::shared_ptr<graphics::Texture> AssetManager::LoadTexture(const std::string& filePath)
 {
+    
     EE_CORE_TRACE("Loading texture: {0}", filePath);
     auto it = m_textures.find(filePath);
     if (it != m_textures.end()) // If the texture is already loaded

@@ -18,6 +18,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
+#include "GPUProfiler.h"
+
 using namespace Ermine::graphics;
 
 /**
@@ -49,6 +51,7 @@ Texture::Texture(const std::string& filePath) : m_filePath(filePath)
         EE_CORE_WARN("Failed to load texture: {0}", filePath);
         return;
     }
+    GPUProfiler::TrackMemoryAllocation(m_Width * m_Height * 4, "Texture");
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_Width, m_Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_LocalBuffer);
     glGenerateMipmap(GL_TEXTURE_2D);
 
@@ -60,7 +63,8 @@ Texture::Texture(const std::string& filePath) : m_filePath(filePath)
  */
 Texture::~Texture()
 {
-     glDeleteTextures(1, &m_RendererID);
+	GPUProfiler::TrackMemoryDeallocation(m_Width * m_Height * 4, "Texture");
+	glDeleteTextures(1, &m_RendererID);
 }
 
 /**

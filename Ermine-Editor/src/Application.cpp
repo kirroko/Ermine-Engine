@@ -41,9 +41,8 @@ int main()
     {
         engine::Update(window);
 
-#ifdef _DEBUG
-        editor::EditorGUI::Update(window);
-#endif
+        if (editor::EditorGUI::IsInit())
+            editor::EditorGUI::Update(window); // Update the ImGUI context
 
         engine::Render(window);
     }
@@ -51,6 +50,7 @@ int main()
 #ifdef _DEBUG
     editor::EditorGUI::ShutDown();
 #endif
+
     engine::Shutdown();
     Window::ShutDownWindow(window);
     

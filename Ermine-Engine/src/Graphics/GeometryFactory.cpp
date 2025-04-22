@@ -28,79 +28,80 @@ using namespace Ermine::graphics;
 Ermine::Mesh GeometryFactory::CreateCube(float width, float height, float depth)
 {
     float w = width * 0.5f;
-            float h = height * 0.5f;
-            float d = depth * 0.5f;
+    float h = height * 0.5f;
+    float d = depth * 0.5f;
 
-            std::vector<Vertex> vertices = {
-                // Front face
-                {{-w, -h,  d}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}}, // 0
-                {{ w, -h,  d}, {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f}}, // 1
-                {{ w,  h,  d}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}}, // 2
-                {{-w,  h,  d}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}}, // 3
-            
-                // Back face
-                {{ w, -h, -d}, {0.0f, 0.0f, -1.0f}, {0.0f, 0.0f}}, // 4
-                {{-w, -h, -d}, {0.0f, 0.0f, -1.0f}, {1.0f, 0.0f}}, // 5
-                {{-w,  h, -d}, {0.0f, 0.0f, -1.0f}, {1.0f, 1.0f}}, // 6
-                {{ w,  h, -d}, {0.0f, 0.0f, -1.0f}, {0.0f, 1.0f}}, // 7
-            
-                // Top face
-                {{-w,  h,  d}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}}, // 8
-                {{ w,  h,  d}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}}, // 9
-                {{ w,  h, -d}, {0.0f, 1.0f, 0.0f}, {1.0f, 1.0f}}, // 10
-                {{-w,  h, -d}, {0.0f, 1.0f, 0.0f}, {0.0f, 1.0f}}, // 11
-            
-                // Bottom face
-                {{-w, -h, -d}, {0.0f, -1.0f, 0.0f}, {0.0f, 0.0f}}, // 12
-                {{ w, -h, -d}, {0.0f, -1.0f, 0.0f}, {1.0f, 0.0f}}, // 13
-                {{ w, -h,  d}, {0.0f, -1.0f, 0.0f}, {1.0f, 1.0f}}, // 14
-                {{-w, -h,  d}, {0.0f, -1.0f, 0.0f}, {0.0f, 1.0f}}, // 15
-            
-                // Right face
-                {{ w, -h,  d}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}}, // 16
-                {{ w, -h, -d}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}}, // 17
-                {{ w,  h, -d}, {1.0f, 0.0f, 0.0f}, {1.0f, 1.0f}}, // 18
-                {{ w,  h,  d}, {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f}}, // 19
-            
-                // Left face
-                {{-w, -h, -d}, {-1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}}, // 20
-                {{-w, -h,  d}, {-1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}}, // 21
-                {{-w,  h,  d}, {-1.0f, 0.0f, 0.0f}, {1.0f, 1.0f}}, // 22
-                {{-w,  h, -d}, {-1.0f, 0.0f, 0.0f}, {0.0f, 1.0f}}  // 23
-            };
-
-            std::vector<unsigned int> indices = {
-                // Front face
-                0, 1, 2, 2, 3, 0,
-            
-                // Back face
-                4, 5, 6, 6, 7, 4,
-            
-                // Top face
-                8, 9, 10, 10, 11, 8,
-            
-                // Bottom face
-                12, 13, 14, 14, 15, 12,
-            
-                // Right face
-                16, 17, 18, 18, 19, 16,
-            
-                // Left face
-                20, 21, 22, 22, 23, 20
-            };
-
-            auto vao = std::make_shared<VertexArray>();
+    std::vector<Vertex> vertices = {
+        // Front face
+        {{-w, -h,  d}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}}, // 0
+        {{ w, -h,  d}, {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f}}, // 1
+        {{ w,  h,  d}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}}, // 2
+        {{-w,  h,  d}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}}, // 3
     
-            auto vbo = std::make_shared<VertexBuffer>(vertices.data(), vertices.size() * sizeof(Vertex));
+        // Back face
+        {{ w, -h, -d}, {0.0f, 0.0f, -1.0f}, {0.0f, 0.0f}}, // 4
+        {{-w, -h, -d}, {0.0f, 0.0f, -1.0f}, {1.0f, 0.0f}}, // 5
+        {{-w,  h, -d}, {0.0f, 0.0f, -1.0f}, {1.0f, 1.0f}}, // 6
+        {{ w,  h, -d}, {0.0f, 0.0f, -1.0f}, {0.0f, 1.0f}}, // 7
+    
+        // Top face
+        {{-w,  h,  d}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}}, // 8
+        {{ w,  h,  d}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}}, // 9
+        {{ w,  h, -d}, {0.0f, 1.0f, 0.0f}, {1.0f, 1.0f}}, // 10
+        {{-w,  h, -d}, {0.0f, 1.0f, 0.0f}, {0.0f, 1.0f}}, // 11
+    
+        // Bottom face
+        {{-w, -h, -d}, {0.0f, -1.0f, 0.0f}, {0.0f, 0.0f}}, // 12
+        {{ w, -h, -d}, {0.0f, -1.0f, 0.0f}, {1.0f, 0.0f}}, // 13
+        {{ w, -h,  d}, {0.0f, -1.0f, 0.0f}, {1.0f, 1.0f}}, // 14
+        {{-w, -h,  d}, {0.0f, -1.0f, 0.0f}, {0.0f, 1.0f}}, // 15
+    
+        // Right face
+        {{ w, -h,  d}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}}, // 16
+        {{ w, -h, -d}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}}, // 17
+        {{ w,  h, -d}, {1.0f, 0.0f, 0.0f}, {1.0f, 1.0f}}, // 18
+        {{ w,  h,  d}, {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f}}, // 19
+    
+        // Left face
+        {{-w, -h, -d}, {-1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}}, // 20
+        {{-w, -h,  d}, {-1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}}, // 21
+        {{-w,  h,  d}, {-1.0f, 0.0f, 0.0f}, {1.0f, 1.0f}}, // 22
+        {{-w,  h, -d}, {-1.0f, 0.0f, 0.0f}, {0.0f, 1.0f}}  // 23
+    };
 
-            vao->LinkAttribute(0, 3, GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, pos));
-            vao->LinkAttribute(1, 3, GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, norms));
-            vao->LinkAttribute(2, 2, GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, tex));
-            vbo->Unbind();
+    std::vector<unsigned int> indices = {
+        // Front face
+        0, 1, 2, 2, 3, 0,
+    
+        // Back face
+        4, 5, 6, 6, 7, 4,
+    
+        // Top face
+        8, 9, 10, 10, 11, 8,
+    
+        // Bottom face
+        12, 13, 14, 14, 15, 12,
+    
+        // Right face
+        16, 17, 18, 18, 19, 16,
+    
+        // Left face
+        20, 21, 22, 22, 23, 20
+    };
 
-            auto ibo = std::make_shared<IndexBuffer>(indices.data(), indices.size() * sizeof(unsigned int));
+    auto vao = std::make_shared<VertexArray>();
+    vao->SetVertexCount(vertices.size());
 
-            return {vao, vbo, ibo};
+    auto vbo = std::make_shared<VertexBuffer>(vertices.data(), vertices.size() * sizeof(Vertex));
+
+    vao->LinkAttribute(0, 3, GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, pos));
+    vao->LinkAttribute(1, 3, GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, norms));
+    vao->LinkAttribute(2, 2, GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, tex));
+    vbo->Unbind();
+
+    auto ibo = std::make_shared<IndexBuffer>(indices.data(), indices.size() * sizeof(unsigned int));
+
+    return {vao, vbo, ibo};
 }
 
 /**
@@ -128,6 +129,7 @@ Ermine::Mesh GeometryFactory::CreateQuad(float width, float height)
     };
 
     auto vao = std::make_shared<VertexArray>();
+	vao->SetVertexCount(vertices.size());
     
     auto vbo = std::make_shared<VertexBuffer>(vertices.data(), vertices.size() * sizeof(Vertex));
 
@@ -207,6 +209,7 @@ Ermine::Mesh GeometryFactory::CreateSphere(float radius, unsigned int sectors, u
     }
 
     auto vao = std::make_shared<VertexArray>();
+    vao->SetVertexCount(vertices.size());
     
     auto vbo = std::make_shared<VertexBuffer>(vertices.data(), vertices.size() * sizeof(Vertex));
 

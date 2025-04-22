@@ -69,6 +69,46 @@ void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
     ImGui::EndMainMenuBar();
 }
 
+void EditorGUI::ProfilingWindow()
+{
+    ImGui::Begin("GPU Profiler");
+
+    const auto& metrics = graphics::GPUProfiler::GetMetrics();
+
+    ImGui::Text("FPS: %.1f", metrics.fps);
+    ImGui::Text("Frame Time: %.2f ms", metrics.frameTimeMs);
+    ImGui::Text("CPU Time: %.2f ms", metrics.cpuFrameTimeMs);
+    ImGui::Text("GPU Time: %.2f ms", metrics.gpuFrameTimeMs);
+
+    ImGui::Separator();
+
+    ImGui::Text("Min Frame Time: %.2f ms", metrics.minFrameTimeMs);
+    ImGui::Text("Max Frame Time: %.2f ms", metrics.maxFrameTimeMs);
+    ImGui::Text("Avg Frame Time: %.2f ms", metrics.averageFrameTimeMs);
+
+    ImGui::Separator();
+
+    ImGui::Text("Draw Calls: %u", metrics.drawCallCount);
+    ImGui::Text("Triangles: %u", metrics.triangleCount);
+    ImGui::Text("Vertices: %u", metrics.vertexCount);
+
+    ImGui::Separator();
+
+    ImGui::Text("Total VRAM: %llu MB", metrics.totalVRAMUsageMB);
+    ImGui::Text("Texture Memory: %llu MB", metrics.textureMemoryMB);
+    ImGui::Text("Buffer Memory: %llu MB", metrics.bufferMemoryMB);
+
+    // Display frame time history graph
+    const auto& history = graphics::GPUProfiler::GetFrameTimeHistory();
+    if (!history.empty())
+    {
+        std::vector values(history.begin(), history.end());
+        ImGui::PlotLines("Frame Times", values.data(), static_cast<int>(values.size()),
+            0, nullptr, 0.0f, metrics.maxFrameTimeMs * 1.2f, ImVec2(0, 80));
+    }
+    ImGui::End();
+}
+
 // This function is called before rendering the scene
 void EditorGUI::ViewPortWindow(bool &show)
 {
@@ -198,9 +238,9 @@ void EditorGUI::Update(GLFWwindow* windowContext)
 
     // Windows that imgui has to render
     TopMenuBar(windowContext);
-    static bool showSceneViewer = true;
-    if (showSceneViewer)
-		ViewPortWindow(showSceneViewer);
+    static bool show_scene_viewer = true;
+    if (show_scene_viewer)
+		ViewPortWindow(show_scene_viewer);
 
     static bool show_demo_window = true;
     if (show_demo_window)
@@ -219,6 +259,10 @@ void EditorGUI::Update(GLFWwindow* windowContext)
 
 void EditorGUI::Render()
 {
+    static bool show_profiler = true;
+    if (show_profiler)
+        ProfilingWindow();
+
     ImGui::Render();
     
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

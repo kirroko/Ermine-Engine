@@ -17,6 +17,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "IndexBuffer.h"
 #include "Shader.h"
 #include "Systems.h"
+#include "GPUProfiler.h"
 
 namespace Ermine::graphics
 {
@@ -63,6 +64,13 @@ namespace Ermine::graphics
          * @brief Clear the screen.
          */
         void Clear() const;
+
+        /**
+         * @brief Get the current performance metrics
+         * @return CurrentGPU performance metrics
+         */
+        const GPUProfiler::PerformanceMetrics& GetPerformanceMetrics() const;
+
     private:
 		std::shared_ptr<OffscreenBuffer> m_OffscreenBuffer;
     };

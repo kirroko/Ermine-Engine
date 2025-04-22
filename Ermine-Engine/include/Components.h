@@ -42,7 +42,7 @@ namespace Ermine
 
 	/*!***********************************************************************
 	\brief
-	 Rigidbody2D component structure.
+	 Rigidbody3D component structure.
 	*************************************************************************/
 	struct Rigidbody3D
 	{
@@ -66,6 +66,12 @@ namespace Ermine
 
 		bool use_gravity{false};  // If true, apply gravity
 		bool is_kinematic{false}; // If true, don't apply physics
+
+		explicit Rigidbody3D(const Vec3& pos = Vec3(), const Vec3& vel = Vec3(), const Vec3& acc = Vec3(), const Vec3& frc = Vec3(), float m = 1.f, float inv_m = 1.f, float lin_drag = 0.9f,
+			float ang_drag = 0.9f, bool use_grav = false, bool is_kinem = false) :
+			position(pos), velocity(vel), acceleration(acc), force(frc), mass(m), inverse_mass(inv_m), linear_drag(lin_drag), angular_drag(ang_drag), use_gravity(use_grav), is_kinematic(is_kinem)
+		{
+		}
 	};
 
 	struct CameraComponent

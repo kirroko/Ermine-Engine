@@ -23,6 +23,7 @@ namespace Ermine::graphics
     class VertexBuffer
     {
         GLuint m_RendererID;
+        unsigned int m_Size;
     public:
         /**
          * @brief Construct a new Vertex Buffer object

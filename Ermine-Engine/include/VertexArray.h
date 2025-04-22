@@ -25,6 +25,7 @@ namespace Ermine::graphics
     class VertexArray
     {
         GLuint m_RendererID;
+        size_t vertexCount;
     public:
         /*!
          * @brief Constructor that generates a Vertex Array Object (VAO) and assigns it an ID.
@@ -58,5 +59,9 @@ namespace Ermine::graphics
         void Unbind() const;
 
         GLuint GetRendererID() const { return m_RendererID; }
+
+		void SetVertexCount(size_t count) { vertexCount = count; }
+
+		size_t GetVertexCount() const { return vertexCount; }
     };
 }

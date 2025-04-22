@@ -34,6 +34,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <vector>
 #include <array>
 #include <queue>
+#include <deque>
 #include <unordered_map>
 #include <unordered_set>
 

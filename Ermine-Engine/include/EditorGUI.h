@@ -24,10 +24,17 @@ namespace Ermine::editor
 	 */
     class EE_API EditorGUI
     {
+        
+
 		/**
 		 * @brief Top menu bar for the editor
 		 */
         static void TopMenuBar(GLFWwindow* windowContext);
+
+		/**
+		 * @brief Profiling window for the editor
+		 */
+		static void ProfilingWindow();
 
 		/**
 		 * @brief Show the viewport for the editor
@@ -56,7 +63,7 @@ namespace Ermine::editor
         */
         static void Update(GLFWwindow* windowContext);
 
-        /**
+		/**
          * @brief Render the ImGUI context
          */
         static void Render();

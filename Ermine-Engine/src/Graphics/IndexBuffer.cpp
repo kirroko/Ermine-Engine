@@ -13,7 +13,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 /* End Header **************************************************************************/
 #include "PreCompile.h"
 #include "IndexBuffer.h"
-#include "Logger.h"
+
+#include "GPUProfiler.h"
 
 using namespace Ermine::graphics;
 
@@ -22,11 +23,13 @@ IndexBuffer::IndexBuffer(const unsigned int* data, unsigned int count)
 {
     glGenBuffers(1, &m_RendererID);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_RendererID);
+    GPUProfiler::TrackMemoryAllocation(count, "Buffer");
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, count, data, GL_STATIC_DRAW);
 }
 
 IndexBuffer::~IndexBuffer()
 {
+    GPUProfiler::TrackMemoryDeallocation(m_Count, "Buffer");
     glDeleteBuffers(1, &m_RendererID);
 }
 

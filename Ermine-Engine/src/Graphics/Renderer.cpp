@@ -171,6 +171,10 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 	glViewport(0, 0, m_OffscreenBuffer->width, m_OffscreenBuffer->height);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 #endif
+
+	// Use a single GPU timing event for the entire update
+	//GPUProfiler::BeginEvent("Renderer Update");
+
 	for (auto& entity : m_Entities)
 	{
 		auto& trans = ECS::GetInstance().GetComponent<Transform>(entity);
@@ -221,23 +225,28 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 
 		Draw(mesh.vertex_array, mesh.index_buffer, material.m_shader);
 	}
+	//GPUProfiler::EndEvent();
 #ifdef _DEBUG
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 #endif
 }
 
 /**
- * @brief Draw the mesh
- * @param vao The vertex array object
- * @param ibo The index buffer object
- * @param shader The shader object
- */
+* @brief Draw the mesh
+* @param vao The vertex array object
+* @param ibo The index buffer object
+* @param shader The shader object
+*/
 void Renderer::Draw(const std::shared_ptr<VertexArray>& vao, const std::shared_ptr<IndexBuffer>& ibo, const std::shared_ptr<Shader>& shader) const
 {
-	vao->Bind();
-	glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(ibo->GetCount()), GL_UNSIGNED_INT, 0);
-	vao->Unbind();
-	shader->Unbind();
+   vao->Bind();
+   glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(ibo->GetCount()), GL_UNSIGNED_INT, 0);
+   GPUProfiler::TrackDrawCall(
+       static_cast<uint32_t>(vao->GetVertexCount()),
+       ibo->GetCount()
+   );
+   vao->Unbind();
+   shader->Unbind();
 }
 
 /**
@@ -246,4 +255,9 @@ void Renderer::Draw(const std::shared_ptr<VertexArray>& vao, const std::shared_p
 void Renderer::Clear() const
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+
+const GPUProfiler::PerformanceMetrics& Renderer::GetPerformanceMetrics() const
+{
+	return GPUProfiler::GetMetrics();
 }

@@ -69,6 +69,9 @@
     <ClInclude Include="include\FrameController.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\GPUProfiler.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\GameObject.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -213,6 +216,9 @@
       <Filter>src\Utility</Filter>
     </ClCompile>
     <ClCompile Include="src\Utility\FrameController.cpp">
+      <Filter>src\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Utility\GPUProfiler.cpp">
       <Filter>src\Utility</Filter>
     </ClCompile>
     <ClCompile Include="src\Utility\Input.cpp">
