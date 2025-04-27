@@ -121,10 +121,10 @@ bool engine::Init(GLFWwindow* windowContext)
    ECS::GetInstance().AddComponent(entity2, graphics::GeometryFactory::CreateCube(1, 1, 1));
    ECS::GetInstance().AddComponent(entity2, Material(shader, texture));
 
-   auto entity3 = ECS::GetInstance().CreateEntity();
-   ECS::GetInstance().AddComponent(entity3, Transform(Vec3(1, 1, -3), Vec3(0, 0, 0), Vec3(1, 1, 1)));
-   ECS::GetInstance().AddComponent(entity3, graphics::GeometryFactory::CreateSphere());
-   ECS::GetInstance().AddComponent(entity3, Material(shader, texture));
+   //auto entity3 = ECS::GetInstance().CreateEntity();
+   //ECS::GetInstance().AddComponent(entity3, Transform(Vec3(1, 1, -3), Vec3(0, 0, 0), Vec3(1, 1, 1)));
+   //ECS::GetInstance().AddComponent(entity3, graphics::GeometryFactory::CreateSphere());
+   //ECS::GetInstance().AddComponent(entity3, Material(shader, texture));
 
    glClearColor(0.2f,0.3f,0.3f,1.0f); // Background color
    
@@ -151,6 +151,7 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
     if (!s_isInitialized)
         return;
 
+    // Profiler here
     graphics::GPUProfiler::BeginFrame();
     
     // 1. Update input states
@@ -181,6 +182,9 @@ void engine::Render(GLFWwindow* window)
     glfwGetFramebufferSize(window, &width, &height);
     glViewport(0,0,width,height);
 
+    // Start GPU timing for rendering
+    graphics::GPUProfiler::BeginEvent("Frame Rendering");
+
     ECS::GetInstance().GetSystem<graphics::Renderer>()->Clear();
     
     Mtx44 view = editor::EditorCamera::GetInstance().GetViewMatrix();
@@ -188,6 +192,8 @@ void engine::Render(GLFWwindow* window)
     
     // Draw
     ECS::GetInstance().GetSystem<graphics::Renderer>()->Update(view, proj);
+
+    graphics::GPUProfiler::EndEvent();
 
     if (editor::EditorGUI::IsInit())
 		editor::EditorGUI::Render(); // Render the ImGUI context on-top of the scene

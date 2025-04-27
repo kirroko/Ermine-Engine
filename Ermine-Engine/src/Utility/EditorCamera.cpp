@@ -129,8 +129,10 @@ void EditorCamera::ProcessKeyboardInput(float deltaTime)
 {
 	if (!Input::IsMouseButtonDown(GLFW_MOUSE_BUTTON_RIGHT))
 		return;
-
+	
 	float velocity = m_MovementSpeed * deltaTime;
+	if (Input::IsKeyDown(GLFW_KEY_LEFT_SHIFT))
+		velocity *= 2.0f;
 
 	if (Input::IsKeyDown(GLFW_KEY_W))
 		m_Position = m_Position + m_Front * velocity;

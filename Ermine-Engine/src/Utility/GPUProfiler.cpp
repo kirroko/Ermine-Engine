@@ -80,10 +80,13 @@ void GPUProfiler::BeginFrame()
     // Start frame timing
     s_FrameStartTime = std::chrono::high_resolution_clock::now();
 
-    // Start GPU timing for the entire frame
-    if (IsTimerQuerySupported())
-    {
-        BeginEvent("Frame");
+    // Make sure there are no active queries when starting a new frame
+    for (size_t i = 0; i < s_EventQueryActive.size(); i++) {
+        if (s_EventQueryActive[i]) {
+            EE_CORE_WARN("Found active query at BeginFrame. Forcibly ending it.");
+            glEndQuery(GL_TIME_ELAPSED);
+            s_EventQueryActive[i] = false;
+        }
     }
 }
 

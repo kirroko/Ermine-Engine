@@ -55,18 +55,18 @@ void FrameController::BeginFrame()
     s_fpsTimer += s_deltaTime;
     ++s_frameCount;
 
-    if (s_fpsTimer >= 1.0f)
-    {
-        s_FPS = static_cast<float>(s_frameCount) / s_fpsTimer;
-        std::ostringstream oss;
-        oss << std::fixed << std::setprecision(2) << s_FPS;
-        std::string fpsString = oss.str();
-        
-        EE_CORE_INFO("FPS: {0}", fpsString);
+    //if (s_fpsTimer >= 1.0f)
+    //{
+    //    s_FPS = static_cast<float>(s_frameCount) / s_fpsTimer;
+    //    std::ostringstream oss;
+    //    oss << std::fixed << std::setprecision(2) << s_FPS;
+    //    std::string fpsString = oss.str();
+    //    
+    //    EE_CORE_INFO("FPS: {0}", fpsString);
 
-        s_fpsTimer = .0f;
-        s_frameCount = 0; 
-    }
+    //    s_fpsTimer = .0f;
+    //    s_frameCount = 0; 
+    //}
 }
 
 bool FrameController::ShouldUpdateFixed()
