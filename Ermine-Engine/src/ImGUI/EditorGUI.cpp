@@ -170,7 +170,13 @@ void EditorGUI::Init(GLFWwindow* window)
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;    // Enable Gamepad Controls
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;       // Enable Docking
     io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;     // Enable Multi-Viewport / Platform Windows
-    
+
+    // --- DPI scaling for UI ---
+    float xScale, yScale;
+    glfwGetWindowContentScale(window, &xScale, &yScale);
+	io.FontGlobalScale = xScale; // Apply the xScale to the global font scale
+    //ImGui::GetStyle().ScaleAllSizes(xScale);
+
     // Setup Dear ImGui style
     ImGui::StyleColorsLight();
 
