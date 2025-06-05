@@ -87,7 +87,7 @@ namespace Ermine
 	 * @tparam T The system type to register
 	 */
 	template <typename T>
-	std::shared_ptr<T> ECS::RegisterSystem() const
+	void ECS::RegisterSystem() const
 	{
 		return m_SystemManager->RegisterSystem<T>();
 	}

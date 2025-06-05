@@ -43,7 +43,7 @@ namespace Ermine
 		 * @return shared pointer the registered system
 		 */
 		template <typename T>
-		std::shared_ptr<T> RegisterSystem();
+		void RegisterSystem();
 
 		/**
 		 * @brief Get a system

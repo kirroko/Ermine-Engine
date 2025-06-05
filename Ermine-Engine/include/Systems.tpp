@@ -21,7 +21,7 @@ namespace Ermine
 	 * @return shared pointer the registered system
 	 */
 	template <typename T>
-	std::shared_ptr<T> SystemManager::RegisterSystem()
+	void SystemManager::RegisterSystem()
 	{
 		const char* typeName = typeid(T).name();
 
@@ -29,8 +29,6 @@ namespace Ermine
 
 		auto system = std::make_shared<T>();
 		m_Systems.insert({ typeName, system });
-
-		return system;
 	}
 
 	/**
