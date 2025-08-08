@@ -4,7 +4,10 @@ workspace "Ermine"
     startproject "Ermine-Editor"
 
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
-fmod_dll = "ThirdParty/Fmod/lib/fmod.dll"
+fmod_dll = "../ThirdParty/Fmod/lib/fmod.dll"
+mono_dll = "../ThirdParty/Mono/lib/mono-2.0-sgen.dll"
+mono_assembly = "../ThirdParty/Mono/lib/"
+mono_config = "../ThirdParty/Mono/etc"
 
 -- Include directories relative to root folder (solution directory)
 IncludeDir = {}
@@ -14,10 +17,12 @@ IncludeDir["ImGui"] = "ThirdParty/imgui"
 IncludeDir["glm"] = "ThirdParty/glm"
 IncludeDir["spdlog"] = "ThirdParty/spdlog/include"
 IncludeDir["stb"] = "ThirdParty/stb"
+IncludeDir["Mono"] = "ThirdParty/Mono/include"
 
 -- Libraries
 LibraryDir = {}
 LibraryDir["Fmod"] = "ThirdParty/Fmod/lib"
+LibraryDir["Mono"] = "ThirdParty/Mono/lib"
 
 -- External libraries
 group "Dependencies"
@@ -25,6 +30,7 @@ group "Dependencies"
     include "ThirdParty/Glad"
     include "ThirdParty/imgui"
     include "ThirdParty/Fmod"
+    include "ThirdParty/Mono"
 group ""
 
 -- Engine Project
@@ -58,12 +64,14 @@ project "Ermine-Engine"
         "%{IncludeDir.glm}",
         "%{IncludeDir.spdlog}",
         "%{IncludeDir.stb}",
-        "%{IncludeDir.Fmod}"
+        "%{IncludeDir.Fmod}",
+        "%{IncludeDir.Mono}"
     }
 
     libdirs
     {
-        "%{LibraryDir.Fmod}"
+        "%{LibraryDir.Fmod}",
+        "%{LibraryDir.Mono}"
     }
 
     links
@@ -72,13 +80,17 @@ project "Ermine-Engine"
         "Glad",
         "ImGui",
         "fmod_vc",
-        "opengl32.lib"
+        "opengl32.lib",
+		"mono-2.0-sgen.lib"
     }
 
     postbuildcommands
     {
         ("{COPY} %{cfg.buildtarget.relpath} ../Build/bin/" .. outputdir .. "/Ermine-Editor"),
-        ("{COPY} " .. fmod_dll .. "../Build/bin/" .. outputdir .. "/Ermine-Editor"),
+        ("{COPY} " .. fmod_dll .. " ../Build/bin/" .. outputdir .. "/Ermine-Editor"),
+        ("{COPY} " .. mono_dll .. " ../Build/bin/" .. outputdir .. "/Ermine-Editor"),
+        ("{COPYDIR} " .. mono_assembly .. " ../Build/bin/" .. outputdir .. "/Ermine-Editor/mono/lib"),
+        ("{COPYDIR} " .. mono_config .. " ../Build/bin/" .. outputdir .. "/Ermine-Editor/mono/etc"),
         ("{COPYDIR} ../Resources ../Build/bin/" .. outputdir .. "/Resources")
     }
 
@@ -118,6 +130,7 @@ project "Ermine-Editor"
 
     targetdir ("Build/bin/" .. outputdir .. "/%{prj.name}")
     objdir ("Build/obj/" .. outputdir .. "/%{prj.name}")
+    debugdir ("Build/bin/" .. outputdir .. "/%{prj.name}")
 
     files
     {
@@ -135,7 +148,8 @@ project "Ermine-Editor"
         "%{IncludeDir.glm}",
         "%{IncludeDir.spdlog}",
         "%{IncludeDir.stb}",
-        "%{IncludeDir.Fmod}"
+        "%{IncludeDir.Fmod}",
+        "%{IncludeDir.Mono}"
     }
 
     links
@@ -164,3 +178,28 @@ project "Ermine-Editor"
         runtime "Release"
         optimize "on"
         linkoptions { "/NODEFAULTLIB:LIBCMT" }
+
+-- Script Assembly Project
+project "Ermine-ScriptAssembly"
+    location "Ermine-ScriptAssembly"
+    kind "SharedLib"
+    language "C#"
+    dotnetframework "4.7.2"
+
+    targetdir ("Build/bin/" .. outputdir .. "/%{prj.name}")
+    objdir ("Build/obj/" .. outputdir .. "/%{prj.name}")
+
+    files
+    {
+        "%{prj.name}/**.cs",
+        "%{prj.name}/**.csproj"
+    }
+
+    filter "system:windows"
+        systemversion "latest"
+    filter "configurations:Debug"
+        defines { "DEBUG" }
+        symbols "on"
+    filter "configurations:Release"
+        defines { "NDEBUG" }
+        optimize "on"

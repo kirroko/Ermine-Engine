@@ -34,6 +34,9 @@
     <Filter Include="src\Window">
       <UniqueIdentifier>{74C3D837-607B-1A85-C982-F3E0B559B575}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Scripting">
+      <UniqueIdentifier>{59cee895-7a0c-40af-a972-b1b5ac91070b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\AssetManager.h">
@@ -111,6 +114,12 @@
     <ClInclude Include="include\Renderer.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\ScriptClass.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ScriptInstance.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\Shader.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -136,6 +145,9 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\Window.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ScriptEngine.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
@@ -232,6 +244,9 @@
     </ClCompile>
     <ClCompile Include="src\dllmain.cpp">
       <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Scripting\ScriptEngine.cpp">
+      <Filter>src\Scripting</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
