@@ -28,14 +28,14 @@
     <Filter Include="src\Object">
       <UniqueIdentifier>{13A4AE24-FF5B-F071-6863-C9CD543A8B62}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Scripting">
+      <UniqueIdentifier>{6FBC2D98-DB7C-A9CE-A4B7-F24B1037EEAA}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Utility">
       <UniqueIdentifier>{70464FB2-DCFB-C7A7-65F0-C17ED1A4BEAB}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\Window">
       <UniqueIdentifier>{74C3D837-607B-1A85-C982-F3E0B559B575}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\Scripting">
-      <UniqueIdentifier>{59cee895-7a0c-40af-a972-b1b5ac91070b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -117,7 +117,13 @@
     <ClInclude Include="include\ScriptClass.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\ScriptEngine.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\ScriptInstance.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ScriptSystem.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\Shader.h">
@@ -145,9 +151,6 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\Window.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\ScriptEngine.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
@@ -224,6 +227,12 @@
     <ClCompile Include="src\PreCompile.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\Scripting\ScriptEngine.cpp">
+      <Filter>src\Scripting</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Scripting\ScriptSystem.cpp">
+      <Filter>src\Scripting</Filter>
+    </ClCompile>
     <ClCompile Include="src\Utility\EditorCamera.cpp">
       <Filter>src\Utility</Filter>
     </ClCompile>
@@ -244,9 +253,6 @@
     </ClCompile>
     <ClCompile Include="src\dllmain.cpp">
       <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Scripting\ScriptEngine.cpp">
-      <Filter>src\Scripting</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

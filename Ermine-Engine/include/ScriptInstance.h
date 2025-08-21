@@ -17,27 +17,93 @@ namespace Ermine::scripting
 {
 	struct ScriptInstance
 	{
-		Ermine::scripting::ScriptClass* klass;
-		MonoObject* instance = nullptr;
+		std::unique_ptr<ScriptClass> klass;
+		MonoObject* object = nullptr;
+		MonoGCHandle GCHandle = nullptr; // Mono GC handle for the script instance
+		EntityID	entityID; // Entity ID this script instance is attached to
 
-		ScriptInstance(Ermine::scripting::ScriptClass* k) : klass(k)
+		explicit ScriptInstance(std::unique_ptr<ScriptClass> k, const EntityID eid) : klass(std::move(k)), entityID(eid)
 		{
-			EE_CORE_TRACE("Script Instance Ctor");
-			instance = klass->Instantiate();
-			// store the native pointer back into the C# object for callbacks if desired:
-			// mono_field_set_value(instance, getInstancePtrField(), &instance);
+			EE_CORE_TRACE("ScriptInstance: Ctor");
+			object = klass ? klass->Instantiate() : nullptr;
+			if (!object)
+			{
+				EE_CORE_ERROR("ScriptInstance: failed to instantiate managed object");
+				return;
+			}
+			GCHandle = mono_gchandle_new_v2(object, false);
+			InjectEntityIfAvailable();
+			Awake(); // called when an enabled script instance is being loaded.
+			OnEnable(); // called when the object becomes enabled and active.
 		}
 
-		void Start() const
+		~ScriptInstance()
 		{
-			if (klass->MethodStart)
-				mono_runtime_invoke(klass->MethodStart, instance, nullptr, nullptr);
+			OnDisable();
+			Invoke(klass ? klass->MethodOnDestroy : nullptr);
+			if (GCHandle)
+			{
+				mono_gchandle_free_v2(GCHandle);
+				GCHandle = nullptr;
+			}
+			object = nullptr;
 		}
 
-		void Update() const
+		ScriptInstance(const ScriptInstance&) = delete;
+		ScriptInstance& operator= (const ScriptInstance&) = delete;
+
+		void Awake() { Invoke(klass ? klass->MethodAwake : nullptr); }
+		void Start() { Invoke(klass ? klass->MethodStart : nullptr); }
+		void Update() { Invoke(klass ? klass->MethodUpdate : nullptr); }
+		void FixedUpdate() { Invoke(klass ? klass->MethodFixedUpdate : nullptr); }
+		void OnEnable() { Invoke(klass ? klass->MethodOnEnable : nullptr); }
+		void OnDisable() { Invoke(klass ? klass->MethodOnDisable : nullptr); }
+
+	private:
+		void Invoke(MonoMethod* method)
 		{
-			if (klass->MethodUpdate)
-				mono_runtime_invoke(klass->MethodUpdate, instance, nullptr, nullptr);
+			if (!method || !object) return;
+			MonoObject* exc = nullptr;
+			mono_runtime_invoke(method, object, nullptr, &exc);
+			if (exc) ReportManagedException(exc);
 		}
+
+		void ReportManagedException(MonoObject* exc)
+		{
+			MonoString* s = mono_object_to_string(exc, nullptr);
+			char* utf8 = mono_string_to_utf8(s);
+			EE_CORE_ERROR("[C# Exception] {}", utf8 ? utf8 : "<null>");
+			if (utf8) mono_free(utf8);
+		}
+
+		void InjectEntityIfAvailable() const
+		{
+			if (!object || !klass) return;
+
+			if (MonoClassField* field = mono_class_get_field_from_name(klass->Class, "EntityID")) {
+				EntityID id = entityID;
+				mono_field_set_value(object, field, &id);
+			}
+		}
+
+		//ScriptInstance(Ermine::scripting::ScriptClass* k) : klass(k)
+		//{
+		//	EE_CORE_TRACE("Script Instance Ctor");
+		//	instance = klass->Instantiate();
+		//	// store the native pointer back into the C# object for callbacks if desired:
+		//	// mono_field_set_value(instance, getInstancePtrField(), &instance);
+		//}
+
+		//void Start() const
+		//{
+		//	if (klass->MethodStart)
+		//		mono_runtime_invoke(klass->MethodStart, instance, nullptr, nullptr);
+		//}
+
+		//void Update() const
+		//{
+		//	if (klass->MethodUpdate)
+		//		mono_runtime_invoke(klass->MethodUpdate, instance, nullptr, nullptr);
+		//}
 	};
 }

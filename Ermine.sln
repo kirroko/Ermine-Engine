@@ -19,6 +19,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Ermine-Engine", "Ermine-Eng
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ermine-ScriptAssembly", "Ermine-ScriptAssembly\Ermine-ScriptAssembly.csproj", "{E76B644C-53D8-1F47-1CCC-B7A488F741AF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ermine-ScriptSandbox", "Ermine-ScriptSandbox\Ermine-ScriptSandbox.csproj", "{F6EBEDB5-E27A-777F-8B99-8B7A77078825}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -57,6 +59,10 @@ Global
 		{E76B644C-53D8-1F47-1CCC-B7A488F741AF}.Debug|x64.Build.0 = Debug|x64
 		{E76B644C-53D8-1F47-1CCC-B7A488F741AF}.Release|x64.ActiveCfg = Release|x64
 		{E76B644C-53D8-1F47-1CCC-B7A488F741AF}.Release|x64.Build.0 = Release|x64
+		{F6EBEDB5-E27A-777F-8B99-8B7A77078825}.Debug|x64.ActiveCfg = Debug|x64
+		{F6EBEDB5-E27A-777F-8B99-8B7A77078825}.Debug|x64.Build.0 = Debug|x64
+		{F6EBEDB5-E27A-777F-8B99-8B7A77078825}.Release|x64.ActiveCfg = Release|x64
+		{F6EBEDB5-E27A-777F-8B99-8B7A77078825}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

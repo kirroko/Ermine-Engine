@@ -149,6 +149,7 @@ xcopy /Q /E /Y /I ..\Resources ..\Build\bin\Release-windows-x86_64\Resources</Co
     <ClInclude Include="include\ScriptClass.h" />
     <ClInclude Include="include\ScriptEngine.h" />
     <ClInclude Include="include\ScriptInstance.h" />
+    <ClInclude Include="include\ScriptSystem.h" />
     <ClInclude Include="include\Shader.h" />
     <ClInclude Include="include\Systems.h" />
     <ClInclude Include="include\Texture.h" />
@@ -187,6 +188,7 @@ xcopy /Q /E /Y /I ..\Resources ..\Build\bin\Release-windows-x86_64\Resources</Co
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="src\Scripting\ScriptEngine.cpp" />
+    <ClCompile Include="src\Scripting\ScriptSystem.cpp" />
     <ClCompile Include="src\Utility\EditorCamera.cpp" />
     <ClCompile Include="src\Utility\FrameController.cpp" />
     <ClCompile Include="src\Utility\GPUProfiler.cpp" />

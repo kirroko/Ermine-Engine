@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x64</Platform>
-    <ProjectGuid>{E76B644C-53D8-1F47-1CCC-B7A488F741AF}</ProjectGuid>
+    <ProjectGuid>{F6EBEDB5-E27A-777F-8B99-8B7A77078825}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Ermine-ScriptAssembly</RootNamespace>
-    <AssemblyName>Ermine-ScriptAssembly</AssemblyName>
+    <RootNamespace>Ermine-ScriptSandbox</RootNamespace>
+    <AssemblyName>Ermine-ScriptSandbox</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -18,8 +18,8 @@
     <DebugType>pdbonly</DebugType>
     <DebugSymbols>true</DebugSymbols>
     <Optimize>false</Optimize>
-    <OutputPath>..\Build\bin\Debug-windows-x86_64\Ermine-ScriptAssembly\</OutputPath>
-    <BaseIntermediateOutputPath>..\Build\obj\Debug-windows-x86_64\Ermine-ScriptAssembly\</BaseIntermediateOutputPath>
+    <OutputPath>..\Build\bin\Debug-windows-x86_64\Ermine-ScriptSandbox\</OutputPath>
+    <BaseIntermediateOutputPath>..\Build\obj\Debug-windows-x86_64\Ermine-ScriptSandbox\</BaseIntermediateOutputPath>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)</IntermediateOutputPath>
     <DefineConstants>DEBUG</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
@@ -30,8 +30,8 @@
     <DebugType>portable</DebugType>
     <DebugSymbols>true</DebugSymbols>
     <Optimize>true</Optimize>
-    <OutputPath>..\Build\bin\Release-windows-x86_64\Ermine-ScriptAssembly\</OutputPath>
-    <BaseIntermediateOutputPath>..\Build\obj\Release-windows-x86_64\Ermine-ScriptAssembly\</BaseIntermediateOutputPath>
+    <OutputPath>..\Build\bin\Release-windows-x86_64\Ermine-ScriptSandbox\</OutputPath>
+    <BaseIntermediateOutputPath>..\Build\obj\Release-windows-x86_64\Ermine-ScriptSandbox\</BaseIntermediateOutputPath>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)</IntermediateOutputPath>
     <DefineConstants>NDEBUG</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
@@ -42,13 +42,13 @@
   <ItemGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Object.cs" />
-    <Compile Include="Time.cs" />
-    <None Include="Ermine-ScriptAssembly.csproj" />
-    <Compile Include="Debug.cs" />
-    <Compile Include="MonoBehaviour.cs" />
+    <Compile Include="Sandbox.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Ermine-ScriptAssembly\Ermine-ScriptAssembly.csproj">
+      <Project>{E76B644C-53D8-1F47-1CCC-B7A488F741AF}</Project>
+      <Name>Ermine-ScriptAssembly</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.

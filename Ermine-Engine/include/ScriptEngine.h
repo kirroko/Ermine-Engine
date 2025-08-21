@@ -24,20 +24,12 @@ namespace Ermine::scripting
 		MonoDomain* m_coreDomain = nullptr;
 		MonoDomain* m_gameDomain = nullptr;
 		MonoAssembly* m_apiAsm = nullptr;
-		MonoImage* m_apiImage = nullptr;
 		MonoAssembly* m_gameAsm = nullptr;
-		MonoImage* m_gameImage = nullptr;
-	public:
-		/**
-		 * @brief Initialize the Mono runtime and create the core and game domains.
-		 * This function should be called before any other functions in this class.
-		 * @param assembly_path The path to the C# assembly to load.
-		 */
-		void InitMono(const std::string& assembly_path);
-		/**
-		 * @brief Shutdown the Mono runtime and clean up resources.
-		 */
-		void Shutdown();
+		//MonoImage* m_apiImage = nullptr;
+		//MonoImage* m_gameImage = nullptr;
+
+		std::string m_gameAssemblyPath;
+
 		/**
 		 * @brief Print all types in the given assembly.
 		 * @param assembly The MonoAssembly to print types from.
@@ -55,7 +47,37 @@ namespace Ermine::scripting
 		 * @param assemblyPath The path to the assembly to load.
 		 * @return A pointer to the loaded MonoAssembly, or nullptr if the assembly could not be loaded.
 		 */
-		[[nodiscard]]
 		MonoAssembly* LoadCSharpAssembly(const std::string& assemblyPath);
+		/**
+		 * @brief Register internal calls for Mono.
+		 * This function should be called after the Mono runtime is initialized.
+		 */
+		void RegisterInternalCalls();
+	public:
+		/**
+		 * @brief Initialize the Mono runtime and create the core and game domains.
+		 * This function should be called before any other functions in this class.
+		 * @param assembly_path The path to the C# assembly to load.
+		 */
+		void InitMono(const std::string& assembly_path);
+		/**
+		 * @brief Shutdown the Mono runtime and clean up resources.
+		 */
+		void Shutdown();
+		/**
+		 * @brief Load the game assembly from the given path. The dll is the one that contains the game logic.
+		 * @param assemblyPath The path to the game assembly to load.
+		 * @return A pointer to the loaded MonoAssembly, or nullptr if the assembly could not be loaded.
+		 */
+		MonoAssembly* LoadGameAssembly(const std::string& assemblyPath);
+		/**
+		 * @brief Reload the game assembly. This is useful for hot-reloading scripts during development.
+		 * It will close the current game assembly and load a new one from the same path.
+		 */
+		void ReloadGameAssembly();
+
+
+		MonoAssembly* GetGameAsm() const { return m_gameAsm; }
+		MonoDomain* GetGameDomain() const { return m_gameDomain; }
 	};
 }

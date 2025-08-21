@@ -30,6 +30,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #include <random> // Include for random number generation
 
+#include "ScriptSystem.h"
+
 using namespace Ermine;
 
 namespace
@@ -45,7 +47,6 @@ namespace
 		if (breakAlloc != -1)
 			_CrtSetBreakAlloc(breakAlloc);
 	}
-	std::shared_ptr<scripting::ScriptEngine> scriptEngine = std::make_shared<scripting::ScriptEngine>();
 }
 
 bool engine::Init(GLFWwindow* windowContext)
@@ -54,8 +55,6 @@ bool engine::Init(GLFWwindow* windowContext)
 		return true;
 
 	EnableMemoryLeakChecking();
-
-	scriptEngine->InitMono("../Ermine-ScriptAssembly/Ermine-ScriptAssembly.dll");
 
 	Input::Init(windowContext);
 
@@ -74,9 +73,11 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().RegisterComponent<Rigidbody3D>();
 	ECS::GetInstance().RegisterComponent<Mesh>();
 	ECS::GetInstance().RegisterComponent<Material>();
+	ECS::GetInstance().RegisterComponent<Script>();
 
 	// TODO: Register all systems here, no limits
 	ECS::GetInstance().RegisterSystem<graphics::Renderer>();
+	ECS::GetInstance().RegisterSystem<scripting::ScriptSystem>();
 
 	// TODO: Set the signature for the system as required
 	// For Graphics/Renderer system
@@ -85,6 +86,10 @@ bool engine::Init(GLFWwindow* windowContext)
 	sig.set(ECS::GetInstance().GetComponentType<Mesh>());
 	sig.set(ECS::GetInstance().GetComponentType<Material>());
 	ECS::GetInstance().SetSystemSignature<graphics::Renderer>(sig);
+
+	sig.reset();
+	sig.set(ECS::GetInstance().GetComponentType<Script>());
+	ECS::GetInstance().SetSystemSignature<scripting::ScriptSystem>(sig);
 
 	glfwSetFramebufferSizeCallback(windowContext, []([[maybe_unused]] GLFWwindow* window, int width, int height)
 		{
@@ -123,6 +128,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().AddComponent(entity2, Transform(Vec3(-1, 1, -2), Vec3(0, 0, 0), Vec3(1, 1, 1)));
 	ECS::GetInstance().AddComponent(entity2, graphics::GeometryFactory::CreateCube(1, 1, 1));
 	ECS::GetInstance().AddComponent(entity2, Material(shader, texture));
+	ECS::GetInstance().AddComponent(entity2, Script("Sandbox",entity2));
 
 	//auto entity3 = ECS::GetInstance().CreateEntity();
 	//ECS::GetInstance().AddComponent(entity3, Transform(Vec3(1, 1, -3), Vec3(0, 0, 0), Vec3(1, 1, 1)));
@@ -146,7 +152,7 @@ void engine::Shutdown()
 
 	job::Shutdown();
 
-	scriptEngine->Shutdown();
+	ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->m_ScriptEngine->Shutdown();
 
 	s_isInitialized = false;
 }
@@ -171,9 +177,11 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 	while (FrameController::ShouldUpdateFixed())
 	{
 		// Fixed update logic here
+		ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->FixedUpdate();
 	}
 
 	// Other non-fixed logic here
+	ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->Update();
 	// Update editor camera
 	editor::EditorCamera::GetInstance().Update();
 }

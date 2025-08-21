@@ -203,3 +203,35 @@ project "Ermine-ScriptAssembly"
     filter "configurations:Release"
         defines { "NDEBUG" }
         optimize "on"
+
+-- Script Sandbox project
+project "Ermine-ScriptSandbox"
+    location "Ermine-ScriptSandbox"
+    kind "SharedLib"
+    language "C#"
+    dotnetframework "4.7.2"
+
+    targetdir ("Build/bin/" .. outputdir .. "/%{prj.name}")
+    objdir ("Build/obj/" .. outputdir .. "/%{prj.name}")
+
+    files
+    {
+        "%{prj.name}/**.cs",
+        "%{prj.name}/**.csproj"
+    }
+    includedirs
+    {
+        "Ermine-ScriptAssembly"
+    }
+    links
+    {
+        "Ermine-ScriptAssembly"
+    }
+    filter "system:windows"
+        systemversion "latest"
+    filter "configurations:Debug"
+        defines { "DEBUG" }
+        symbols "on"
+    filter "configurations:Release"
+        defines { "NDEBUG" }
+        optimize "on"

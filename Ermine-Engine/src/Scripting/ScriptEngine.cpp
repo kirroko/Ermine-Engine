@@ -15,6 +15,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 /* End Header **************************************************************************/
 #include "PreCompile.h"
 #include "ScriptEngine.h"
+
+#include "FrameController.h"
 #include "Logger.h"
 
 void Ermine::scripting::ScriptEngine::InitMono(const std::string& assembly_path)
@@ -29,10 +31,20 @@ void Ermine::scripting::ScriptEngine::InitMono(const std::string& assembly_path)
 		EE_CORE_ERROR("Failed to initialize Mono Core Domain");
 		return;
 	}
+
 	m_gameDomain = mono_domain_create_appdomain("ErmineGame", nullptr);
 	mono_domain_set(m_gameDomain, true);
+
+	// Loading engine API assembly
 	m_apiAsm = LoadCSharpAssembly(assembly_path);
+	if (!m_apiAsm)
+	{
+		EE_CORE_ERROR("Failed to load API assembly: {0}", assembly_path);
+		return;
+	}
 	PrintAssemblyTypes(m_apiAsm);
+
+	RegisterInternalCalls();
 }
 
 void Ermine::scripting::ScriptEngine::Shutdown()
@@ -118,3 +130,88 @@ MonoAssembly* Ermine::scripting::ScriptEngine::LoadCSharpAssembly(const std::str
 
 	return assembly;
 }
+
+MonoAssembly* Ermine::scripting::ScriptEngine::LoadGameAssembly(const std::string& assemblyPath)
+{
+	m_gameAssemblyPath = assemblyPath;
+
+	if (m_gameAsm) // If we already have a game assembly loaded, close it first
+	{
+		mono_assembly_close(m_gameAsm);
+		m_gameAsm = nullptr;
+	}
+
+	m_gameAsm = LoadCSharpAssembly(assemblyPath);
+	if (!m_gameAsm)
+	{
+		EE_CORE_ERROR("Failed to load game assembly: {0}", assemblyPath);
+		return nullptr;
+	}
+
+	EE_CORE_TRACE("Game assembly loaded: {0}", assemblyPath);
+	PrintAssemblyTypes(m_gameAsm);
+	return m_gameAsm;
+}
+
+void Ermine::scripting::ScriptEngine::ReloadGameAssembly()
+{
+	if (m_gameAssemblyPath.empty())
+	{
+		EE_CORE_WARN("Cannot reload game assembly: No path specified");
+		return;
+	}
+
+	mono_domain_set(m_gameDomain, false);
+
+	LoadGameAssembly(m_gameAssemblyPath);
+}
+
+namespace
+{
+	float icall_time_get_deltatime() { EE_CORE_INFO("Delta Time asked!"); return Ermine::FrameController::GetDeltaTime(); }
+	float icall_time_get_fixeddeltatime() { return Ermine::FrameController::GetFixedDeltaTime(); }
+
+	const char* ToTempUTF8(MonoString* str, std::string& out)
+	{
+		if (!str)
+		{
+			out.clear();
+			return out.c_str();
+		}
+		char* raw = mono_string_to_utf8(str);
+		out = raw ? raw : "";
+		if (raw)
+			mono_free(raw);
+		return out.c_str();
+	}
+
+	void icall_debug_log_info(MonoString* message)
+	{
+		std::string temp;
+		EE_CORE_INFO("{}", ToTempUTF8(message,temp));
+	}
+
+	void icall_debug_log_warning(MonoString* message)
+	{
+		std::string temp;
+		EE_CORE_WARN("{}", ToTempUTF8(message,temp));
+	}
+
+	void icall_debug_log_error(MonoString* message)
+	{
+		std::string temp;
+		EE_CORE_ERROR("{}", ToTempUTF8(message,temp));
+	}
+}
+
+void Ermine::scripting::ScriptEngine::RegisterInternalCalls()
+{
+	mono_add_internal_call("ErmineEngine.Time::get_deltaTime",	(const void*)icall_time_get_deltatime);
+	mono_add_internal_call("ErmineEngine.Time::get_fixedDeltaTime", (const void*)icall_time_get_fixeddeltatime);
+
+	mono_add_internal_call("ErmineEngine.Debug::LogInternal",			(const void*)icall_debug_log_info);
+	mono_add_internal_call("ErmineEngine.Debug::LogWarningInternal",	(const void*)icall_debug_log_warning);
+	mono_add_internal_call("ErmineEngine.Debug::LogErrorInternal",		(const void*)icall_debug_log_error);
+}
+
+
