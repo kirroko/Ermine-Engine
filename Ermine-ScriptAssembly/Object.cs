@@ -11,10 +11,6 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 */
 /* End Header **************************************************************************/
 
-using System.Dynamic;
-using System.Runtime.CompilerServices;
-using System.Threading;
-
 namespace ErmineEngine
 {
     public class Object
@@ -22,14 +18,21 @@ namespace ErmineEngine
         #region Properties
         public string name { get; set; }
 
-        private long EntityID;
+        private long EntityID; // Gets updates from Native side (ScriptInstance::InjectEntityIfAvailable)
         #endregion
 
         #region Public Methods
-
         public long GetInstanceID() => EntityID;
+        public override string ToString() => name ?? base.ToString();
 
-        public string ToString() => name ?? base.ToString();
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj is null || obj.GetType() != GetType()) return false;
+            return ((Object)obj).EntityID == EntityID;
+        }
+
+        public override int GetHashCode() => EntityID.GetHashCode();
 
         public static bool operator ==(Object lhs, Object rhs)
         {

@@ -85,25 +85,5 @@ namespace Ermine::scripting
 				mono_field_set_value(object, field, &id);
 			}
 		}
-
-		//ScriptInstance(Ermine::scripting::ScriptClass* k) : klass(k)
-		//{
-		//	EE_CORE_TRACE("Script Instance Ctor");
-		//	instance = klass->Instantiate();
-		//	// store the native pointer back into the C# object for callbacks if desired:
-		//	// mono_field_set_value(instance, getInstancePtrField(), &instance);
-		//}
-
-		//void Start() const
-		//{
-		//	if (klass->MethodStart)
-		//		mono_runtime_invoke(klass->MethodStart, instance, nullptr, nullptr);
-		//}
-
-		//void Update() const
-		//{
-		//	if (klass->MethodUpdate)
-		//		mono_runtime_invoke(klass->MethodUpdate, instance, nullptr, nullptr);
-		//}
 	};
 }

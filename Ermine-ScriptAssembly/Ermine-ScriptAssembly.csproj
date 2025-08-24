@@ -42,14 +42,15 @@
   <ItemGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Behaviour.cs" />
+    <Compile Include="Component.cs" />
     <Compile Include="Object.cs" />
-    <Compile Include="Time.cs" />
+    <Compile Include="CoreModule\Time.cs" />
     <None Include="Ermine-ScriptAssembly.csproj" />
-    <Compile Include="Debug.cs" />
+    <Compile Include="CoreModule\Debug.cs" />
     <Compile Include="MonoBehaviour.cs" />
   </ItemGroup>
-  <ItemGroup>
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.

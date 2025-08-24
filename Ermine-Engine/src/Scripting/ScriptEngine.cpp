@@ -16,6 +16,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "PreCompile.h"
 #include "ScriptEngine.h"
 
+#include "Entity.h"
 #include "FrameController.h"
 #include "Logger.h"
 
@@ -168,9 +169,6 @@ void Ermine::scripting::ScriptEngine::ReloadGameAssembly()
 
 namespace
 {
-	float icall_time_get_deltatime() { EE_CORE_INFO("Delta Time asked!"); return Ermine::FrameController::GetDeltaTime(); }
-	float icall_time_get_fixeddeltatime() { return Ermine::FrameController::GetFixedDeltaTime(); }
-
 	const char* ToTempUTF8(MonoString* str, std::string& out)
 	{
 		if (!str)
@@ -185,6 +183,25 @@ namespace
 		return out.c_str();
 	}
 
+	Ermine::EntityID GetEntityIDFromManaged(MonoObject* obj)
+	{
+		if (!obj) return 0;
+		MonoClass* klass = mono_object_get_class(obj);
+		if (MonoClassField* field = mono_class_get_field_from_name(klass, "EntityID"))
+		{
+			Ermine::EntityID id = 0;
+			mono_field_get_value(obj, field, &id);
+			return id;
+		}
+		return 0;
+	}
+
+#pragma region Time ICalls
+	float icall_time_get_deltatime() { return Ermine::FrameController::GetDeltaTime(); }
+	float icall_time_get_fixeddeltatime() { return Ermine::FrameController::GetFixedDeltaTime(); }
+#pragma endregion
+
+#pragma region Debug ICalls
 	void icall_debug_log_info(MonoString* message)
 	{
 		std::string temp;
@@ -202,16 +219,33 @@ namespace
 		std::string temp;
 		EE_CORE_ERROR("{}", ToTempUTF8(message,temp));
 	}
+#pragma endregion
+
+#pragma region Component ICalls
+	 MonoString* icall_component_get_tag(MonoObject* thisObj)
+	{
+		 Ermine::EntityID id = GetEntityIDFromManaged(thisObj);
+		 if (id == 0) return nullptr;
+	}
+#pragma endregion Component ICalls
 }
 
 void Ermine::scripting::ScriptEngine::RegisterInternalCalls()
 {
+#pragma region Time ICalls
 	mono_add_internal_call("ErmineEngine.Time::get_deltaTime",	(const void*)icall_time_get_deltatime);
 	mono_add_internal_call("ErmineEngine.Time::get_fixedDeltaTime", (const void*)icall_time_get_fixeddeltatime);
+#pragma endregion
 
+#pragma region Debug ICalls
 	mono_add_internal_call("ErmineEngine.Debug::LogInternal",			(const void*)icall_debug_log_info);
 	mono_add_internal_call("ErmineEngine.Debug::LogWarningInternal",	(const void*)icall_debug_log_warning);
 	mono_add_internal_call("ErmineEngine.Debug::LogErrorInternal",		(const void*)icall_debug_log_error);
+#pragma endregion
+
+#pragma region Component ICalls
+
+#pragma endregion 
 }
 
 
