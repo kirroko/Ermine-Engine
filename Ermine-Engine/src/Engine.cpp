@@ -139,10 +139,14 @@ void engine::Shutdown()
     if (!s_isInitialized)
         return;
 
+    AssetManager::GetInstance().Clear();
+
     graphics::GPUProfiler::Shutdown();
 
     job::Shutdown();
-    
+
+    ECS::GetInstance().Shutdown();
+
     s_isInitialized = false;
 }
 

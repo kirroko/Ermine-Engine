@@ -14,6 +14,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "PreCompile.h"
 #include "ECS.h"
 
+#include "Logger.h"
+
 namespace Ermine
 {
 	/**
@@ -24,6 +26,17 @@ namespace Ermine
 		m_ComponentManager = std::make_unique<ComponentManager>();
 		m_EntityManager = std::make_unique<EntityManager>();
 		m_SystemManager = std::make_unique<SystemManager>();
+	}
+
+	/**
+	 * @brief Shutdown the ECS, and release all resources via their destructors
+	 */
+	void ECS::Shutdown()
+	{
+		EE_CORE_TRACE("Shutting down ECS...");
+		m_SystemManager.reset();
+		m_ComponentManager.reset();
+		m_EntityManager.reset();
 	}
 
 	/**

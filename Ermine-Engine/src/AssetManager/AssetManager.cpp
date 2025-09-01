@@ -123,3 +123,10 @@ const char* AssetManager::load_file_contents(const char* filepath)
     file.close();
     return buffer;
 }
+
+void AssetManager::Clear()
+{
+    EE_CORE_INFO("Clearing assets: {0} textures, {1} shaders", m_textures.size(), m_shaders.size());
+    m_textures.clear();
+    m_shaders.clear();
+}

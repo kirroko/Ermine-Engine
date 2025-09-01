@@ -19,8 +19,32 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <stb_image.h>
 
 #include "GPUProfiler.h"
+#include "Window.h"
 
 using namespace Ermine::graphics;
+
+void Texture::Release(bool contextExpected) noexcept
+{
+    if (!m_RendererID)
+        return;
+
+    GLFWwindow* current = glfwGetCurrentContext();
+    if (!current)
+    {
+        EE_CORE_ERROR("No current OpenGL context while deleting texture ID={0} path={1} (Leaking GPU resource)", m_RendererID, m_filePath);
+        m_RendererID = 0;
+        return;
+    }
+
+    if (contextExpected && !glIsTexture(m_RendererID))
+        EE_CORE_WARN("GL object {0} not recognized as texture (already deleted?) path={1}", m_RendererID, m_filePath);
+
+    GPUProfiler::TrackMemoryDeallocation(static_cast<size_t>(m_Width) * m_Height * 4, "Texture");
+    glDeleteTextures(1, &m_RendererID);
+    m_RendererID = 0;
+	m_Width = m_Height = m_BPP = 0;
+    m_LocalBuffer = nullptr;
+}
 
 /**
  * @brief Default Constructor
@@ -63,8 +87,34 @@ Texture::Texture(const std::string& filePath) : m_filePath(filePath)
  */
 Texture::~Texture()
 {
-	GPUProfiler::TrackMemoryDeallocation(m_Width * m_Height * 4, "Texture");
-	glDeleteTextures(1, &m_RendererID);
+    Release(true);
+	/*GPUProfiler::TrackMemoryDeallocation(m_Width * m_Height * 4, "Texture");
+	glDeleteTextures(1, &m_RendererID);*/
+}
+
+Texture::Texture(Texture&& other) noexcept
+{
+    *this = std::move(other);
+}
+
+Texture& Texture::operator=(Texture&& other) noexcept
+{
+    if (this != &other)
+    {
+        Release(true);
+        m_RendererID = other.m_RendererID;
+        m_filePath = std::move(other.m_filePath);
+        m_LocalBuffer = other.m_LocalBuffer;
+        m_Width = other.m_Width;
+        m_Height = other.m_Height;
+		m_BPP = other.m_BPP;
+
+        other.m_RendererID = 0;
+        other.m_LocalBuffer = nullptr;
+        other.m_Width = other.m_Height = other.m_BPP = 0;
+    }
+
+    return *this;
 }
 
 /**
