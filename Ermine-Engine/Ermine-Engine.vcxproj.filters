@@ -34,6 +34,9 @@
     <Filter Include="src\Window">
       <UniqueIdentifier>{74C3D837-607B-1A85-C982-F3E0B559B575}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\AssetBrowser">
+      <UniqueIdentifier>{e9715dfb-03d2-4627-982f-254eae5c0db0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\AssetManager.h">
@@ -138,6 +141,9 @@
     <ClInclude Include="include\Window.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\AssetBrowser.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\AssetManager\AssetManager.cpp">
@@ -232,6 +238,9 @@
     </ClCompile>
     <ClCompile Include="src\dllmain.cpp">
       <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\AssetBrowser\AssetBrowser.cpp">
+      <Filter>src\AssetBrowser</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

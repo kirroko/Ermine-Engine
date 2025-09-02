@@ -24,8 +24,11 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "FrameController.h"
 #include "Input.h"
 #include "Renderer.h"
+#include "AssetBrowser.h"
 
 using namespace Ermine::editor;
+
+static Ermine::ImguiUI::AssetBrowser assetBrowser;
 
 void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
 {
@@ -260,6 +263,12 @@ void EditorGUI::Update(GLFWwindow* windowContext)
         if (ImGui::Button("Close Me"))
             show_another_window = false;
         ImGui::End();
+    }
+
+    static bool show_asset_browser = true;
+    if (show_asset_browser)
+    {
+        assetBrowser.Render();
     }
 }
 
