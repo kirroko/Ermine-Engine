@@ -24,6 +24,8 @@ namespace Ermine::graphics
         std::string m_filePath;
         unsigned char* m_LocalBuffer;
         int m_Width, m_Height, m_BPP;
+
+        void Release(bool contextExpected) noexcept;
     public:
         /**
          * @brief Default Construct
@@ -33,11 +35,17 @@ namespace Ermine::graphics
         /**
          * @brief Construct a new Texture object
          */
-        Texture(const std::string& filePath);
+        explicit Texture(const std::string& filePath);
+
         /**
          * @brief Destroy the Texture object
          */
         ~Texture();
+
+        Texture(const Texture&) = delete;
+        Texture& operator=(const Texture&) = delete;
+        Texture(Texture && other) noexcept;
+        Texture& operator=(Texture&& other) noexcept;
 
         /**
          * @brief check if the texture is valid
