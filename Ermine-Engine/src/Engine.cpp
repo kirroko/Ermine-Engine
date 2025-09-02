@@ -148,13 +148,17 @@ void engine::Shutdown()
 	if (!s_isInitialized)
 		return;
 
-	graphics::GPUProfiler::Shutdown();
+    AssetManager::GetInstance().Clear();
 
-	job::Shutdown();
+    graphics::GPUProfiler::Shutdown();
+
+    job::Shutdown();
 
 	ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->m_ScriptEngine->Shutdown();
 
-	s_isInitialized = false;
+    ECS::GetInstance().Shutdown();
+
+    s_isInitialized = false;
 }
 
 void engine::Update([[maybe_unused]] GLFWwindow* windowContext)

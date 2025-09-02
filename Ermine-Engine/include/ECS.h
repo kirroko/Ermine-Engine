@@ -44,6 +44,11 @@ namespace Ermine
 		void Init();
 
 		/**
+		 * @brief Shutdown the ECS, and release all resources via their destructors
+		 */
+		void Shutdown();
+
+		/**
 		 * @brief Create an entity
 		 * @return The ID of the created entity
 		 */
