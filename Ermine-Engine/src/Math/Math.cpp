@@ -1,22 +1,13 @@
-/* Start Header ************************************************************************/
-/*!
-\file       Vector2D.cpp
-\author     Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu
-\date       Nov 06, 2024
-\brief      This file contains the definition of the Vector2D structure.
-
-Copyright (C) 2024 DigiPen Institute of Technology.
-Reproduction or disclosure of this file or its contents without the
-prior written consent of DigiPen Institute of Technology is prohibited.
-*/
-/* End Header **************************************************************************/
-
 #include "PreCompile.h"
-#include "Vector2D.h" // for forward declaration
-#include <cmath>      // for sqrt
+#include "Math.h"
+#include <cmath>
 
 namespace Ermine
 {
+    /**********************************Vector2D***************************************/
+#pragma region Vector2D
+
+#pragma region Operators
     /*!***********************************************************************
     \brief
      Addition assignment operator.
@@ -101,7 +92,9 @@ namespace Ermine
     {
         return Vector2D(y, -x);
     }
+#pragma endregion Operators
 
+#pragma region Binary operators
     /*!***********************************************************************
     \brief
      Binary addition operator for two vectors.
@@ -179,6 +172,39 @@ namespace Ermine
         return Vector2D(lhs.x / rhs, lhs.y / rhs);
     }
 
+    /*!***********************************************************************
+    \brief
+     Equality operator for two Vector2D instances.
+    \param[in] lhs
+     The first vector to compare.
+    \param[in] rhs
+     The second vector to compare.
+    \return
+     True if both x and y components of lhs and rhs are equal, false otherwise.
+    *************************************************************************/
+    bool operator==(const Vector2D& lhs, const Vector2D& rhs)
+    {
+        return lhs.x == rhs.x && lhs.y == rhs.y;
+    }
+
+    /*!***********************************************************************
+    \brief
+     Inequality operator for two Vector2D instances.
+    \param[in] lhs
+     The first vector to compare.
+    \param[in] rhs
+     The second vector to compare.
+    \return
+     True if any component of lhs and rhs differ, false if both are equal.
+    *************************************************************************/
+    bool operator!=(const Vector2D& lhs, const Vector2D& rhs)
+    {
+        return !(lhs == rhs);
+    }
+
+#pragma endregion Binary operators
+
+#pragma region Utility functions
     /*!***********************************************************************
     \brief
      Normalize a vector.
@@ -302,4 +328,66 @@ namespace Ermine
             vec.x * std::sin(angle) + vec.y * std::cos(angle)
         };
     }
+
+    /*!***********************************************************************
+    \brief
+     Linearly interpolates between two vectors.
+    \param[in] a
+     The starting vector.
+    \param[in] b
+     The ending vector.
+    \param[in] t
+     Interpolation factor (0.0 = a, 1.0 = b).
+    \return
+     The interpolated vector.
+    *************************************************************************/
+    inline Vector2D Vec2Lerp(const Vector2D& a, const Vector2D& b, float t)
+    {
+        return Vector2D(
+            a.x + (b.x - a.x) * t,
+            a.y + (b.y - a.y) * t
+        );
+    }
+
+    /*!***********************************************************************
+    \brief
+     Clamps each component of a vector to a given range.
+    \param[in] v
+     The input vector.
+    \param[in] minVal
+     Minimum value for each component.
+    \param[in] maxVal
+     Maximum value for each component.
+    \return
+     A vector with each component clamped between minVal and maxVal.
+    *************************************************************************/
+    inline Vector2D Vec2Clamp(const Vector2D& v, float minVal, float maxVal)
+    {
+        return Vector2D(
+            (v.x < minVal) ? minVal : (v.x > maxVal ? maxVal : v.x),
+            (v.y < minVal) ? minVal : (v.y > maxVal ? maxVal : v.y)
+        );
+    }
+
+    /*!***********************************************************************
+    \brief
+     Calculates the angle (in radians) between two vectors.
+    \param[in] a
+     The first vector.
+    \param[in] b
+     The second vector.
+    \return
+     The angle in radians between vectors a and b.
+    *************************************************************************/
+    inline float Vec2Angle(const Vector2D& a, const Vector2D& b)
+    {
+        float dot = Vec2DotProduct(a, b);
+        float len = Vec2Length(a) * Vec2Length(b);
+        return (len == 0.0f) ? 0.0f : acos(dot / len);
+    }
+#pragma endregion Utility functions
+
+#pragma endregion Vector2D
+
+    /**********************************Vector2D***************************************/
 }

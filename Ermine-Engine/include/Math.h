@@ -1,18 +1,16 @@
+#pragma once
 /* Start Header ************************************************************************/
 /*!
-\file       Vector2D.h
-\author     Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu
-\date       Nov 06, 2024
-\brief      This file contains the declaration of the Vector2D structure.
+\file       Math.h
+\author     Tan Si Han, t.sihan, 2301264, t.sihan\@digipen.edu
+\date       Sept 02, 2025
+\brief      This file contains the declaration of the Math structure.
 
-Copyright (C) 2024 DigiPen Institute of Technology.
+Copyright (C) 2025 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents without the
 prior written consent of DigiPen Institute of Technology is prohibited.
 */
 /* End Header **************************************************************************/
-
-#pragma once
-
 namespace Ermine
 {
 #ifdef _MSC_VER
@@ -20,10 +18,9 @@ namespace Ermine
 #pragma warning( disable : 4201 )
 #endif
 
-    /*!***********************************************************************
-    \brief
-     Represents a 2D vector with x and y components, or as an array.
-    *************************************************************************/
+    /**********************************Vector2D***************************************/
+#pragma region Vector2D
+
     typedef union Vector2D
     {
         struct
@@ -37,7 +34,7 @@ namespace Ermine
         \brief
          Default constructor.
         *************************************************************************/
-        Vector2D() : x(0.0f), y(0.0f), m{ 0.0f } {}
+        Vector2D() : m{ 0.0f, 0.0f } {}
 
         /*!***********************************************************************
         \brief
@@ -47,7 +44,7 @@ namespace Ermine
         \param[in] y
          The y coordinate.
         *************************************************************************/
-        Vector2D(float x, float y) : x(x), y(y), m{ x, y } {}
+        Vector2D(float x, float y) : m{ x, y } {}
 
         /*!***********************************************************************
         \brief
@@ -130,6 +127,7 @@ namespace Ermine
 #pragma warning( default : 4201 )
 #endif
 
+#pragma region Binary operators
     /*!***********************************************************************
     \brief
      Binary addition operator for two vectors.
@@ -190,6 +188,11 @@ namespace Ermine
     *************************************************************************/
     Vector2D operator/(const Vector2D& lhs, float rhs);
 
+    bool operator==(const Vector2D& lhs, const Vector2D& rhs);
+    bool operator!=(const Vector2D& lhs, const Vector2D& rhs);
+#pragma endregion Binary operators
+
+#pragma region Utility functions
     /*!***********************************************************************
     \brief
      Normalize a vector.
@@ -279,4 +282,15 @@ namespace Ermine
      The rotated vector.
     *************************************************************************/
     Vector2D Vec2Rotate(const Vector2D& vec, const float angle);
+    
+    Vector2D Vec2Lerp(const Vector2D& a, const Vector2D& b, float t);
+    
+    Vector2D Vec2Clamp(const Vector2D& v, float minVal, float maxVal);
+    
+    float Vec2Angle(const Vector2D& a, const Vector2D& b);
+#pragma endregion Utility functions
+
+#pragma endregion Vector2D
+    /**********************************Vector2D***************************************/
+
 }
