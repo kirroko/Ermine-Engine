@@ -239,7 +239,7 @@
     <ClCompile Include="src\dllmain.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="Physics.cpp">
+    <ClCompile Include="src\Physics\Physics.cpp">
       <Filter>src\Physics</Filter>
     </ClCompile>
   </ItemGroup>

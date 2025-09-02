@@ -173,9 +173,9 @@ xcopy /Q /E /Y /I ..\Resources ..\Build\bin\Release-windows-x86_64\Resources</Co
     <ClCompile Include="src\Math\Vector2D.cpp" />
     <ClCompile Include="src\Math\Vector3D.cpp" />
     <ClCompile Include="src\Math\Vector4D.cpp" />
-    <ClCompile Include="src\Physics\Physics.cpp" />
     <ClCompile Include="src\Object\GameObject.cpp" />
     <ClCompile Include="src\Object\GameObjectFactory.cpp" />
+    <ClCompile Include="src\Physics\Physics.cpp" />
     <ClCompile Include="src\PreCompile.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
