@@ -115,6 +115,7 @@ xcopy /Q /E /Y /I ..\Resources ..\Build\bin\Release-windows-x86_64\Resources</Co
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="HierarchySystem.h" />
     <ClInclude Include="include\AssetManager.h" />
     <ClInclude Include="include\Camera.h" />
     <ClInclude Include="include\Component.h" />

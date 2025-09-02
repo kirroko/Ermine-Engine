@@ -17,6 +17,14 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 namespace Ermine
 {
+	struct HierarchyComponent
+	{
+		EntityID parent{ 0 };
+		std::vector<EntityID> children{};
+		int depth{ 0 };
+		bool isDirty{ false };
+	};
+
 	// The component manager class that manages all the different component arrays that are attached to the component type
 	class ComponentManager
 	{
