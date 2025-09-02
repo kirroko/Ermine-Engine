@@ -75,7 +75,7 @@ void EditorCamera::SetViewportSize(float width, float height)
 
 #ifdef _DEBUG
 	// Update the frame buffer size for drawing on screen
-	if (width > 0.f || height > 0.f)
+	if (width > 0.f && height > 0.f)
 		ECS::GetInstance().GetSystem<graphics::Renderer>()->Create(static_cast<int>(width), static_cast<int>(height));
 #endif
 
