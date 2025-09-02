@@ -34,6 +34,9 @@
     <Filter Include="src\Window">
       <UniqueIdentifier>{74C3D837-607B-1A85-C982-F3E0B559B575}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Physics">
+      <UniqueIdentifier>{ab28c6ea-199c-4206-8816-dd6a0e421585}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\AssetManager.h">
@@ -100,6 +103,9 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\Matrix4x4.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Physics.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\PreCompile.h">
@@ -232,6 +238,9 @@
     </ClCompile>
     <ClCompile Include="src\dllmain.cpp">
       <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="Physics.cpp">
+      <Filter>src\Physics</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
