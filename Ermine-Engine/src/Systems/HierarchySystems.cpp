@@ -1,7 +1,7 @@
 /* Start Header ************************************************************************/
 /*!
 \file       HierarchySystem.cpp
-\author     WONG JUN YU, Kean, junyukean.wong, 2301234
+\author     Edwin Lee Zirui, edwinzirui.lee, 2301299
 \date       Sep 02, 2025
 \brief      Implementation of HierarchySystem.
 
