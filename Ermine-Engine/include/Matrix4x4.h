@@ -13,7 +13,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #pragma once
 
-#include "Vector3D.h" // for Vector3D
+#include "Math.h" // for Vector3D
 
 namespace Ermine
 {

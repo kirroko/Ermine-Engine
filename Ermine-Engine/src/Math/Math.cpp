@@ -341,7 +341,7 @@ namespace Ermine
     \return
      The interpolated vector.
     *************************************************************************/
-    inline Vector2D Vec2Lerp(const Vector2D& a, const Vector2D& b, float t)
+    Vector2D Vec2Lerp(const Vector2D& a, const Vector2D& b, float t)
     {
         return Vector2D(
             a.x + (b.x - a.x) * t,
@@ -361,7 +361,7 @@ namespace Ermine
     \return
      A vector with each component clamped between minVal and maxVal.
     *************************************************************************/
-    inline Vector2D Vec2Clamp(const Vector2D& v, float minVal, float maxVal)
+    Vector2D Vec2Clamp(const Vector2D& v, float minVal, float maxVal)
     {
         return Vector2D(
             (v.x < minVal) ? minVal : (v.x > maxVal ? maxVal : v.x),
@@ -379,7 +379,7 @@ namespace Ermine
     \return
      The angle in radians between vectors a and b.
     *************************************************************************/
-    inline float Vec2Angle(const Vector2D& a, const Vector2D& b)
+    float Vec2Angle(const Vector2D& a, const Vector2D& b)
     {
         float dot = Vec2DotProduct(a, b);
         float len = Vec2Length(a) * Vec2Length(b);
@@ -390,4 +390,430 @@ namespace Ermine
 #pragma endregion Vector2D
 
     /**********************************Vector2D***************************************/
+
+    /**********************************Vector3D***************************************/
+#pragma region Vector3D
+
+#pragma region Operators
+    /*!***********************************************************************
+    \brief
+     Addition assignment operator.
+    \param[in] rhs
+     The vector to add.
+    \return
+     A reference to the vector.
+    *************************************************************************/
+    Vector3D& Vector3D::operator+=(const Vector3D& rhs)
+    {
+        x += rhs.x;
+        y += rhs.y;
+        z += rhs.z;
+        return *this;
+    }
+
+    /*!***********************************************************************
+    \brief
+     Subtraction assignment operator.
+    \param[in] rhs
+     The vector to subtract.
+    \return
+     A reference to the vector.
+    *************************************************************************/
+    Vector3D& Vector3D::operator-=(const Vector3D& rhs)
+    {
+        x -= rhs.x;
+        y -= rhs.y;
+        z -= rhs.z;
+        return *this;
+    }
+
+    /*!***********************************************************************
+    \brief
+     Multiplication assignment operator.
+    \param[in] rhs
+     The scalar to multiply.
+    \return
+     A reference to the vector.
+    *************************************************************************/
+    Vector3D& Vector3D::operator*=(float rhs)
+    {
+        x *= rhs;
+        y *= rhs;
+        z *= rhs;
+        return *this;
+    }
+
+    /*!***********************************************************************
+    \brief
+     Division assignment operator.
+    \param[in] rhs
+     The scalar to divide.
+    \return
+     A reference to the vector.
+    *************************************************************************/
+    Vector3D& Vector3D::operator/=(float rhs)
+    {
+        if (rhs != 0.0f)
+        {
+            x /= rhs;
+            y /= rhs;
+            z /= rhs;
+        }
+        return *this;
+    }
+
+    /*!***********************************************************************
+    \brief
+     Unary negation operator.
+    \return
+     The negated vector.
+    *************************************************************************/
+    Vector3D Vector3D::operator-() const
+    {
+        return Vector3D(-x, -y, -z);
+    }
+#pragma endregion Operators
+
+#pragma region Binary operators
+    /*!***********************************************************************
+    \brief
+     Binary addition operator for two vectors.
+    \param[in] lhs
+     The first vector to add.
+    \param[in] rhs
+     The second vector to add.
+    \return
+     The vector of the sum of the two vectors.
+    *************************************************************************/
+    Vector3D operator+(const Vector3D& lhs, const Vector3D& rhs)
+    {
+        return Vector3D(lhs.x + rhs.x, lhs.y + rhs.y, lhs.z + rhs.z);
+    }
+
+    /*!***********************************************************************
+    \brief
+     Binary subtraction operator for two vectors.
+    \param[in] lhs
+     The first vector to subtract.
+    \param[in] rhs
+     The second vector to subtract.
+    \return
+     The vector of the difference of the two vectors.
+    *************************************************************************/
+    Vector3D operator-(const Vector3D& lhs, const Vector3D& rhs)
+    {
+        return Vector3D(lhs.x - rhs.x, lhs.y - rhs.y, lhs.z - rhs.z);
+    }
+
+    /*!***********************************************************************
+    \brief
+     Scalar multiplication operator for a vector and a scalar.
+    \param[in] lhs
+     The vector to multiply.
+    \param[in] rhs
+     The scalar to multiply.
+    \return
+     The vector of the product of the vector and scalar.
+    *************************************************************************/
+    Vector3D operator*(const Vector3D& lhs, float rhs)
+    {
+        return Vector3D(lhs.x * rhs, lhs.y * rhs, lhs.z * rhs);
+    }
+
+    /*!***********************************************************************
+    \brief
+     Scalar multiplication operator for a scalar and a vector.
+    \param[in] lhs
+     The scalar to multiply.
+    \param[in] rhs
+     The vector to multiply.
+    \return
+     The vector of the product of the scalar and vector.
+    *************************************************************************/
+    Vector3D operator*(float lhs, const Vector3D& rhs)
+    {
+        return Vector3D(lhs * rhs.x, lhs * rhs.y, lhs * rhs.z);
+    }
+
+    /*!***********************************************************************
+    \brief
+     Scalar division operator for a vector and a scalar.
+    \param[in] lhs
+     The vector to divide.
+    \param[in] rhs
+     The scalar to divide.
+    \return
+     The vector of the division of the vector and scalar.
+    *************************************************************************/
+    Vector3D operator/(const Vector3D& lhs, float rhs)
+    {
+        if (rhs == 0.0f)
+            return lhs;
+        return Vector3D(lhs.x / rhs, lhs.y / rhs, lhs.z / rhs);
+    }
+
+    /*!***********************************************************************
+    \brief
+     Equality operator for two vectors.
+    \param[in] lhs
+     The first vector to compare.
+    \param[in] rhs
+     The second vector to compare.
+    \return
+     True if the two vectors are equal, false otherwise.
+    *************************************************************************/
+    bool operator==(const Vector3D& lhs, const Vector3D& rhs)
+    {
+        return lhs.x == rhs.x && lhs.y == rhs.y && lhs.z == rhs.z;
+    }
+
+    /*!***********************************************************************
+    \brief
+     Inequality operator for two vectors.
+    \param[in] lhs
+     The first vector to compare.
+    \param[in] rhs
+     The second vector to compare.
+    \return
+     True if the two vectors are not equal, false otherwise.
+    *************************************************************************/
+    bool operator!=(const Vector3D& lhs, const Vector3D& rhs)
+    {
+        return !(lhs == rhs);
+    }
+#pragma endregion Binary operators
+
+#pragma region Utility functions
+    /*!***********************************************************************
+    \brief
+     Normalize a vector.
+    \param[out] pResult
+     The normalized vector.
+    \param[in] vec
+     The input vector.
+    *************************************************************************/
+    void Vec3Normalize(Vector3D& pResult, const Vector3D& vec)
+    {
+        float length = Vec3Length(vec);
+        if (length != 0.0f)
+        {
+            pResult.x = vec.x / length;
+            pResult.y = vec.y / length;
+            pResult.z = vec.z / length;
+        }
+    }
+
+    /*!***********************************************************************
+    \brief
+     Calculate the length of a vector.
+    \param[in] vec
+     The input vector.
+    \return
+     The length of the vector.
+    *************************************************************************/
+    float Vec3Length(const Vector3D& vec)
+    {
+        return sqrt(vec.x * vec.x + vec.y * vec.y + vec.z * vec.z);
+    }
+
+    /*!***********************************************************************
+    \brief
+     Calculate the squared length of a vector.
+    \param[in] vec
+     The input vector.
+    \return
+     The squared length of the vector.
+    *************************************************************************/
+    float Vec3SquareLength(const Vector3D& vec)
+    {
+        return vec.x * vec.x + vec.y * vec.y + vec.z * vec.z;
+    }
+
+    /*!***********************************************************************
+    \brief
+     Calculate the distance of two vectors.
+    \param[in] lhs
+     The first vector.
+    \param[in] rhs
+     The second vector.
+    \return
+     The distance of the two vectors.
+    *************************************************************************/
+    float Vec3Distance(const Vector3D& lhs, const Vector3D& rhs)
+    {
+        return Vec3Length(lhs - rhs);
+    }
+
+    /*!***********************************************************************
+    \brief
+     Calculate the squared distance of two vectors.
+    \param[in] lhs
+     The first vector.
+    \param[in] rhs
+     The second vector.
+    \return
+     The squared distance of the two vectors.
+    *************************************************************************/
+    float Vec3SquareDistance(const Vector3D& lhs, const Vector3D& rhs)
+    {
+        return Vec3SquareLength(lhs - rhs);
+    }
+
+    /*!***********************************************************************
+    \brief
+     Calculate the dot product of two vectors.
+    \param[in] lhs
+     The first vector.
+    \param[in] rhs
+     The second vector.
+    \return
+     The dot product of the two vectors.
+    *************************************************************************/
+    float Vec3DotProduct(const Vector3D& lhs, const Vector3D& rhs)
+    {
+        return lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z;
+    }
+
+    /*!***********************************************************************
+    \brief
+     Calculate the magnitude of the cross product of two vectors.
+    \param[in] lhs
+     The first vector.
+    \param[in] rhs
+     The second vector.
+    \return
+     The magnitude of the cross product of the two vectors.
+    *************************************************************************/
+    float Vec3CrossProductMagnitude(const Vector3D& lhs, const Vector3D& rhs)
+    {
+        Vector3D cross_product = Vector3D(
+            lhs.y * rhs.z - lhs.z * rhs.y,
+            lhs.z * rhs.x - lhs.x * rhs.z,
+            lhs.x * rhs.y - lhs.y * rhs.x);
+        return Vec3Length(cross_product);
+    }
+
+    /*!***********************************************************************
+    \brief
+     Calculate the cross product of two vectors.
+    \param[out] pResult
+     The cross product of the two vectors.
+    \param[in] lhs
+     The first vector.
+    \param[in] rhs
+     The second vector.
+    *************************************************************************/
+    void Vec3CrossProduct(Vector3D& pResult, const Vector3D& lhs, const Vector3D& rhs)
+    {
+        pResult.x = lhs.y * rhs.z - lhs.z * rhs.y;
+        pResult.y = lhs.z * rhs.x - lhs.x * rhs.z;
+        pResult.z = lhs.x * rhs.y - lhs.y * rhs.x;
+    }
+
+    /*!***********************************************************************
+    \brief
+     Linearly interpolates between two 3D vectors.
+    \param[in] a
+     The starting vector.
+    \param[in] b
+     The ending vector.
+    \param[in] t
+     The interpolation factor (0.0f = a, 1.0f = b).
+    \return
+     The interpolated vector.
+    *************************************************************************/
+    Vector3D Vec3Lerp(const Vector3D& a, const Vector3D& b, float t)
+    {
+        return a + (b - a) * t;
+    }
+
+    /*!***********************************************************************
+    \brief
+     Clamps the components of a 3D vector between a minimum and maximum value.
+    \param[in] v
+     The input vector.
+    \param[in] minVal
+     The minimum value to clamp to.
+    \param[in] maxVal
+     The maximum value to clamp to.
+    \return
+     The clamped vector.
+    *************************************************************************/
+    Vector3D Vec3Clamp(const Vector3D& v, float minVal, float maxVal)
+    {
+        auto clampf = [](float val, float minV, float maxV) {
+            return (val < minV) ? minV : (val > maxV) ? maxV : val;
+            };
+        return Vector3D(
+            clampf(v.x, minVal, maxVal),
+            clampf(v.y, minVal, maxVal),
+            clampf(v.z, minVal, maxVal));
+    }
+
+    /*!***********************************************************************
+    \brief
+     Calculates the angle in radians between two 3D vectors.
+    \param[in] a
+     The first vector.
+    \param[in] b
+     The second vector.
+    \return
+     The angle in radians between the two vectors.
+    *************************************************************************/
+    float Vec3Angle(const Vector3D& a, const Vector3D& b)
+    {
+        float dot = Vec3DotProduct(a, b);
+        float lenA = Vec3Length(a);
+        float lenB = Vec3Length(b);
+
+        if (lenA == 0.0f || lenB == 0.0f)
+            return 0.0f;
+
+        float cosTheta = dot / (lenA * lenB);
+
+        if (cosTheta < -1.0f) cosTheta = -1.0f;
+        if (cosTheta > 1.0f) cosTheta = 1.0f;
+
+        return acos(cosTheta);
+    }
+
+    /*!***********************************************************************
+    \brief
+     Reflects a vector about a given normal.
+    \param[in] v
+     The input vector to reflect.
+    \param[in] normal
+     The normal vector to reflect about (assumed to be normalized).
+    \return
+     The reflected vector.
+    *************************************************************************/
+    Vector3D Vec3Reflect(const Vector3D& v, const Vector3D& normal)
+    {
+        float dotVN = Vec3DotProduct(v, normal);
+        return v - 2.0f * dotVN * normal;
+    }
+
+    /*!***********************************************************************
+    \brief
+     Projects one vector onto another.
+    \param[in] v
+     The vector to project.
+    \param[in] onto
+     The vector to project onto.
+    \return
+     The projection of the vector onto the other vector.
+    *************************************************************************/
+    Vector3D Vec3Project(const Vector3D& v, const Vector3D& onto)
+    {
+        float dotVV = Vec3DotProduct(onto, onto);
+        if (dotVV == 0.0f)
+            return Vector3D(0.0f, 0.0f, 0.0f);
+
+        float scale = Vec3DotProduct(v, onto) / dotVV;
+        return onto * scale;
+    }
+#pragma endregion Utility functions
+
+#pragma endregion Vector3D
+    /**********************************Vector3D***************************************/
 }
