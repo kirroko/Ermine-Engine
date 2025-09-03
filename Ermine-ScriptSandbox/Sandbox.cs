@@ -4,12 +4,17 @@ public class Sandbox : MonoBehaviour
 {
     void Start()
     {
-        float dt = Time.deltaTime;
         Debug.Log("ID: " + GetInstanceID());
+        this.tag = "Box";
+        this.name = "Box2";
+        Debug.Log("Name: " + gameObject.name);
+        Debug.Log("Tag: " + this.tag);
+        Debug.Log("Transform position: " + gameObject.transform.position.ToString());
+        Debug.Log("Transform rotation: " + transform.rotation.ToString());
     }
 
     void Update()
     {
-
+        transform.Rotate(new Vector3(0,10f,0) * Time.deltaTime);
     }
 }

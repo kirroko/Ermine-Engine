@@ -1,4 +1,15 @@
-﻿using System;
+﻿/* Start Header ************************************************************************/
+/*!
+\file       Debug.cs
+\author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu
+\date       03/09/2025
+\brief      This file contains the Debug class which provides logging functionalities for the Ermine Engine.
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents without the
+prior written consent of DigiPen Institute of Technology is prohibited.
+*/
+/* End Header **************************************************************************/
 using System.Runtime.CompilerServices;
 
 namespace ErmineEngine

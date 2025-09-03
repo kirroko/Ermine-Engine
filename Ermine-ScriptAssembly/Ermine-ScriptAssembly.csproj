@@ -44,6 +44,8 @@
   <ItemGroup>
     <Compile Include="Behaviour.cs" />
     <Compile Include="Component.cs" />
+    <Compile Include="CoreModule\GameObject.cs" />
+    <Compile Include="CoreModule\Transform.cs" />
     <Compile Include="Object.cs" />
     <Compile Include="CoreModule\Time.cs" />
     <None Include="Ermine-ScriptAssembly.csproj" />

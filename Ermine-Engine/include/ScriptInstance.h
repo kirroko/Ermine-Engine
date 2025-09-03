@@ -15,6 +15,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 namespace Ermine::scripting
 {
+	void NativeBindComponentGameObject(MonoObject* componentObj, EntityID id);
+
 	struct ScriptInstance
 	{
 		std::unique_ptr<ScriptClass> klass;
@@ -33,6 +35,7 @@ namespace Ermine::scripting
 			}
 			GCHandle = mono_gchandle_new_v2(object, false);
 			InjectEntityIfAvailable();
+			NativeBindComponentGameObject(object, eid);
 			Awake(); // called when an enabled script instance is being loaded.
 			OnEnable(); // called when the object becomes enabled and active.
 		}

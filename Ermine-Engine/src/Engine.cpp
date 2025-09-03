@@ -74,6 +74,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().RegisterComponent<Mesh>();
 	ECS::GetInstance().RegisterComponent<Material>();
 	ECS::GetInstance().RegisterComponent<Script>();
+	ECS::GetInstance().RegisterComponent<ObjectMetaData>();
 
 	// TODO: Register all systems here, no limits
 	ECS::GetInstance().RegisterSystem<graphics::Renderer>();
@@ -121,11 +122,13 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	auto entity = ECS::GetInstance().CreateEntity();
 	ECS::GetInstance().AddComponent(entity, Transform(Vec3(0, 0, -1), Vec3(0, 45, 90), Vec3(1, 1, 1)));
+	ECS::GetInstance().AddComponent(entity, ObjectMetaData());
 	ECS::GetInstance().AddComponent(entity, graphics::GeometryFactory::CreateCube(1, 1, 1));
 	ECS::GetInstance().AddComponent(entity, Material(shader, texture));
 
 	auto entity2 = ECS::GetInstance().CreateEntity();
 	ECS::GetInstance().AddComponent(entity2, Transform(Vec3(-1, 1, -2), Vec3(0, 0, 0), Vec3(1, 1, 1)));
+	ECS::GetInstance().AddComponent(entity2, ObjectMetaData());
 	ECS::GetInstance().AddComponent(entity2, graphics::GeometryFactory::CreateCube(1, 1, 1));
 	ECS::GetInstance().AddComponent(entity2, Material(shader, texture));
 	ECS::GetInstance().AddComponent(entity2, Script("Sandbox",entity2));

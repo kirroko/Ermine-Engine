@@ -2,7 +2,7 @@
 /*!
 \file       Object.cs
 \author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu
-\date       19/08/2025
+\date       03/09/2025
 \brief      This file contains the base class for all objects in the Ermine Engine.
 
 Copyright (C) 2025 DigiPen Institute of Technology.
@@ -11,14 +11,23 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 */
 /* End Header **************************************************************************/
 
+using System.Runtime.CompilerServices;
+
 namespace ErmineEngine
 {
     public class Object
     {
         #region Properties
-        public string name { get; set; }
 
-        private long EntityID; // Gets updates from Native side (ScriptInstance::InjectEntityIfAvailable)
+        public string name
+        {
+            [MethodImpl(MethodImplOptions.InternalCall)]
+            get;
+            [MethodImpl(MethodImplOptions.InternalCall)]
+            set;
+        }
+
+        private long EntityID = 0; // Gets updates from Native side (ScriptInstance::InjectEntityIfAvailable)
         #endregion
 
         #region Public Methods

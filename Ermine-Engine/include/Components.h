@@ -75,6 +75,23 @@ namespace Ermine
 		}
 	};
 
+	struct ObjectMetaData
+	{
+		std::string name{};
+		std::string tag{};
+
+		bool selfActive{ };
+
+		ObjectMetaData() : name("GameObject"), tag("Untagged"), selfActive(true)
+		{
+		}
+
+		ObjectMetaData(std::string name_, std::string tag_, const bool& active) : name(std::move(name_)), tag(std::move(
+			tag_)), selfActive(active)
+		{
+		}
+	};
+
 	struct Script
 	{
 		std::string m_className;
