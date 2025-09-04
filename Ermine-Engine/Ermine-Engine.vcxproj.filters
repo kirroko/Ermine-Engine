@@ -28,6 +28,9 @@
     <Filter Include="src\Object">
       <UniqueIdentifier>{13A4AE24-FF5B-F071-6863-C9CD543A8B62}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Scripting">
+      <UniqueIdentifier>{6FBC2D98-DB7C-A9CE-A4B7-F24B1037EEAA}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Utility">
       <UniqueIdentifier>{70464FB2-DCFB-C7A7-65F0-C17ED1A4BEAB}</UniqueIdentifier>
     </Filter>
@@ -36,6 +39,9 @@
     </Filter>
     <Filter Include="src\Physics">
       <UniqueIdentifier>{ab28c6ea-199c-4206-8816-dd6a0e421585}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\AssetBrowser">
+      <UniqueIdentifier>{e9715dfb-03d2-4627-982f-254eae5c0db0}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -117,6 +123,18 @@
     <ClInclude Include="include\Renderer.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\ScriptClass.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ScriptEngine.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ScriptInstance.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ScriptSystem.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\Shader.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -136,6 +154,12 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\Math.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\AssetBrowser.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ImGuiUIWindow.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
@@ -203,6 +227,12 @@
     <ClCompile Include="src\PreCompile.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\Scripting\ScriptEngine.cpp">
+      <Filter>src\Scripting</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Scripting\ScriptSystem.cpp">
+      <Filter>src\Scripting</Filter>
+    </ClCompile>
     <ClCompile Include="src\Utility\EditorCamera.cpp">
       <Filter>src\Utility</Filter>
     </ClCompile>
@@ -229,6 +259,9 @@
     </ClCompile>
     <ClCompile Include="src\Math\Math.cpp">
       <Filter>src\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="src\AssetBrowser\AssetBrowser.cpp">
+      <Filter>src\AssetBrowser</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

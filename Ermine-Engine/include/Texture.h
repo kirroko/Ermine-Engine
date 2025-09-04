@@ -1,7 +1,8 @@
 /* Start Header ************************************************************************/
 /*!
 \file       Texture.h
-\author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu
+\author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu (99%)
+\co-authors LEE Wen Jie, Brian, wenjiebrian.lee, 2301261, wenjiebrian.lee\@digipen.edu (1%)
 \date       09/03/2025
 \brief      This file contains the declaration of the Texture class.
             This file is used to load and bind textures to the renderer.
@@ -62,5 +63,13 @@ namespace Ermine::graphics
          * @brief Unbind the texture
          */
         void Unbind() const;
+
+        /*!***********************************************************************
+        \brief
+         Getter for GLuint m_RendererID
+        \return
+         Returns GLuint m_RendererID
+        *************************************************************************/
+        unsigned int Texture::GetRendererID() const;
     };
 }
