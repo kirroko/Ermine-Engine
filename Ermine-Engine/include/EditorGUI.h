@@ -1,7 +1,8 @@
 /* Start Header ************************************************************************/
 /*!
 \file       EditorGUI.h
-\author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu
+\author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu (95%)
+\co-authors LEE Wen Jie, Brian, wenjiebrian.lee, 2301261, wenjiebrian.lee\@digipen.edu (5%)
 \date       27/03/2025
 \brief      This file contains the declaration of the EditorGUI class.
             Function just like a wrapper for the ImGUI library.
@@ -16,6 +17,9 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #pragma once
 #include "imgui.h"
 #include "GLFW/glfw3.h"
+#include "ImGuiUIWindow.h"
+#include <type_traits> // for std::is_base_of
+#include <utility> // for std::forward
 
 namespace Ermine::editor
 {
@@ -24,7 +28,8 @@ namespace Ermine::editor
 	 */
     class EE_API EditorGUI
     {
-        
+        // Keeps track of all registered ImGui windows
+        static std::vector<std::unique_ptr<ImGUIWindow>> m_Windows;
 
 		/**
 		 * @brief Top menu bar for the editor
@@ -72,5 +77,24 @@ namespace Ermine::editor
          * @brief Shut down the ImGUI context
          */
         static void ShutDown();
+
+        /*!***********************************************************************
+        \brief
+         Create and register an ImGUIWindow
+        \param[in/out] T Window type
+         Must derive from ImGUIWindow
+        \param[in/out] Args
+         Constructor arguments
+        \return
+         Pointer to the created window
+        *************************************************************************/
+        template<typename T, typename... Args>
+        static T* CreateImGUIWindow(Args&&... args) {
+            static_assert(std::is_base_of<ImGUIWindow, T>::value, "T must derive from ImGUIWindow");
+            auto window = std::make_unique<T>(std::forward<Args>(args)...);
+            T* ptr = window.get();
+            m_Windows.emplace_back(std::move(window));
+            return ptr;
+        }
     };
 }

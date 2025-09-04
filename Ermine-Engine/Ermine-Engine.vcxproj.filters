@@ -159,6 +159,9 @@
     <ClInclude Include="include\AssetBrowser.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\ImGuiUIWindow.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\AssetManager\AssetManager.cpp">

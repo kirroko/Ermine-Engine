@@ -1,7 +1,8 @@
 /* Start Header ************************************************************************/
 /*!
 \file       EditorGUI.h
-\author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu
+\author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu (98%)
+\co-authors LEE Wen Jie, Brian, wenjiebrian.lee, 2301261, wenjiebrian.lee\@digipen.edu (2%)
 \date       27/03/2025
 \brief      This file contains the declaration of the EditorGUI class.
             Function just like a wrapper for the ImGUI library.
@@ -24,11 +25,11 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "FrameController.h"
 #include "Input.h"
 #include "Renderer.h"
-#include "AssetBrowser.h"
 
 using namespace Ermine::editor;
 
-static Ermine::ImguiUI::AssetBrowser assetBrowser;
+// Definition for static member m_Windows, for ImGUI Windows
+std::vector<std::unique_ptr<Ermine::ImGUIWindow>>Ermine::editor::EditorGUI::m_Windows;
 
 void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
 {
@@ -266,10 +267,9 @@ void EditorGUI::Update(GLFWwindow* windowContext)
         ImGui::End();
     }
 
-    static bool show_asset_browser = true;
-    if (show_asset_browser)
-    {
-        assetBrowser.Render();
+    // Call Update() for all registered ImGui windows
+    for (auto& window : m_Windows) {
+        window->Update();
     }
 }
 
@@ -278,6 +278,11 @@ void EditorGUI::Render()
     static bool show_profiler = true;
     if (show_profiler)
         ProfilingWindow();
+
+    // Render additional ImGUI windows
+    for (auto& window : m_Windows) {
+        window->Render();
+    }
 
     ImGui::Render();
     
