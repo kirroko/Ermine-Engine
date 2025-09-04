@@ -802,6 +802,7 @@ namespace Ermine
         Vector4D operator-() const;
     } Vector4D, Vec4;
 
+#pragma region Binary operators
     /*!***********************************************************************
     \brief
      Binary addition operator for two vectors.
@@ -885,6 +886,9 @@ namespace Ermine
 *************************************************************************/
     bool operator!=(const Vector4D& lhs, const Vector4D& rhs);
 
+#pragma endregion Binary operators
+
+#pragma region Utility functions
     /*!***********************************************************************
     \brief
      Normalizes a vector.
@@ -1014,6 +1018,9 @@ namespace Ermine
      The reflected vector.
     *************************************************************************/
     Vector4D Vec4Reflect(const Vector4D& v, const Vector4D& normal);
+
+#pragma endregion Utility functions
+
 #pragma endregion Vector4D
     /**********************************Vector4D***************************************/
 }

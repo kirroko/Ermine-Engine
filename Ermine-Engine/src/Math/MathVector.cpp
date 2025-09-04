@@ -833,6 +833,9 @@ namespace Ermine
 
   /**********************************Vector4D***************************************/
 
+#pragma region Vector4D
+
+#pragma region Binary operators
   /*!***********************************************************************
   \brief
    Addition assignment operator.
@@ -1015,6 +1018,9 @@ namespace Ermine
   *************************************************************************/
   bool operator!=(const Vector4D &lhs, const Vector4D &rhs) { return !(lhs == rhs); }
 
+#pragma endregion Binary operators
+
+#pragma region Utility functions
   /*!***********************************************************************
   \brief
     Normalize a 4D vector.
@@ -1178,5 +1184,9 @@ namespace Ermine
   {
     return v - 2.0f * Vec4DotProduct(v, normal) * normal;
   }
+
+#pragma endregion Utility functions
+
+#pragma endregion Vector4D
   /**********************************Vector4D***************************************/
 }
