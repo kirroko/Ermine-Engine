@@ -106,7 +106,13 @@ namespace Ermine {
             current_sortSpecs = NULL;
         }
 
-        Browser::Browser() {}
+        Browser::Browser()
+        {
+            // Load placeholder.png to be used as default icon for certain assets in the asset browser
+            auto icon = AssetManager::GetInstance().LoadTexture("../Resources/Textures/placeholder.png");
+            if (icon && icon->IsValid())
+                placeholderIcon = (ImTextureID)(intptr_t)icon->GetRendererID();
+        }
 
         void Browser::AddItems(int count, int type, std::string name)
         {
@@ -122,13 +128,9 @@ namespace Ermine {
                     if (tex && tex->IsValid()) {
                         icon_id = (ImTextureID)(intptr_t)tex->GetRendererID();
                     }
-                    else {
-                        icon_id = 0;
-                    }
                 }
-                else { // default icon
-                    auto icon = AssetManager::GetInstance().LoadTexture("../Resources/Textures/placeholder.png");
-                    icon_id = (ImTextureID)(intptr_t)icon->GetRendererID();
+                else { // Default icon for other asset types
+                    icon_id = placeholderIcon;
                 }
 
                 std::string temp = name;

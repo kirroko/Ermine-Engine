@@ -114,6 +114,7 @@ namespace Ermine {
             int             LayoutLineCount = 0;
 
             ImVector<std::string> myStrings;
+            ImTextureID placeholderIcon = 0;
 
             // Functions
             Browser();
