@@ -12,7 +12,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 */
 /* End Header **************************************************************************/
 #include "PreCompile.h"
-#include "Math.h"
+#include "MathVector.h"
 #include <cmath>
 
 namespace Ermine

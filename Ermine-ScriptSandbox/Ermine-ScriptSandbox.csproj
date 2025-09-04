@@ -42,6 +42,7 @@
   <ItemGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
   </ItemGroup>
   <ItemGroup>
+    <None Include="Ermine-ScriptSandbox.csproj" />
     <Compile Include="Sandbox.cs" />
   </ItemGroup>
   <ItemGroup>

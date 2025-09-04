@@ -142,8 +142,8 @@ xcopy /Q /E /Y /I ..\Resources ..\Build\bin\Release-windows-x86_64\Resources</Co
     <ClInclude Include="include\Input.h" />
     <ClInclude Include="include\JobSystem.h" />
     <ClInclude Include="include\Logger.h" />
-    <ClInclude Include="include\Math.h" />
     <ClInclude Include="include\MathUtils.h" />
+    <ClInclude Include="include\MathVector.h" />
     <ClInclude Include="include\Matrix3x3.h" />
     <ClInclude Include="include\Matrix4x4.h" />
     <ClInclude Include="include\Physics.h" />
@@ -179,7 +179,7 @@ xcopy /Q /E /Y /I ..\Resources ..\Build\bin\Release-windows-x86_64\Resources</Co
     <ClCompile Include="src\Graphics\VertexBuffer.cpp" />
     <ClCompile Include="src\ImGUI\EditorGUI.cpp" />
     <ClCompile Include="src\Logger\Logger.cpp" />
-    <ClCompile Include="src\Math\Math.cpp" />
+    <ClCompile Include="src\Math\MathVector.cpp" />
     <ClCompile Include="src\Math\Matrix3x3.cpp" />
     <ClCompile Include="src\Math\Matrix4x4.cpp" />
     <ClCompile Include="src\Object\GameObject.cpp" />
