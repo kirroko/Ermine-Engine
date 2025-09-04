@@ -44,15 +44,16 @@
   <ItemGroup>
     <Compile Include="Behaviour.cs" />
     <Compile Include="Component.cs" />
-    <Compile Include="CoreModule\GameObject.cs" />
-    <Compile Include="CoreModule\Transform.cs" />
-    <Compile Include="Object.cs" />
-    <Compile Include="CoreModule\Time.cs" />
-    <None Include="Ermine-ScriptAssembly.csproj" />
     <Compile Include="CoreModule\Debug.cs" />
+    <Compile Include="CoreModule\GameObject.cs" />
+    <Compile Include="CoreModule\Time.cs" />
+    <Compile Include="CoreModule\Transform.cs" />
+    <None Include="Ermine-ScriptAssembly.csproj" />
     <Compile Include="MonoBehaviour.cs" />
+    <Compile Include="Object.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
