@@ -12,6 +12,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 /* End Header **************************************************************************/
 #pragma once
 #include <cassert>
+#include <utility>
 
 namespace Ermine
 {
@@ -29,7 +30,7 @@ namespace Ermine
 		size_t newIndex = m_Size;
 		m_EntityToIndexMap[entity] = newIndex;
 		m_IndexToEntityMap[newIndex] = entity;
-		m_ComponentArray[newIndex] = component;
+		m_ComponentArray[newIndex] = std::move(component);
 		++m_Size;
 	}
 

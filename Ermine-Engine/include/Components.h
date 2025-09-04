@@ -20,6 +20,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "VertexArray.h"
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
+#include "ScriptInstance.h"
 #include "Texture.h"
 
 namespace Ermine
@@ -71,6 +72,81 @@ namespace Ermine
 			float ang_drag = 0.9f, bool use_grav = false, bool is_kinem = false) :
 			position(pos), velocity(vel), acceleration(acc), force(frc), mass(m), inverse_mass(inv_m), linear_drag(lin_drag), angular_drag(ang_drag), use_gravity(use_grav), is_kinematic(is_kinem)
 		{
+		}
+	};
+
+	struct ObjectMetaData
+	{
+		std::string name{};
+		std::string tag{};
+
+		bool selfActive{ };
+
+		ObjectMetaData() : name("GameObject"), tag("Untagged"), selfActive(true)
+		{
+		}
+
+		ObjectMetaData(std::string name_, std::string tag_, const bool& active) : name(std::move(name_)), tag(std::move(
+			tag_)), selfActive(active)
+		{
+		}
+	};
+
+	struct Script
+	{
+		std::string m_className;
+		std::unique_ptr<scripting::ScriptInstance> m_instance;
+		bool m_enabled = true;
+		bool m_started = false;
+
+		Script() = default;
+		explicit Script(std::string className, EntityID id) : m_className(std::move(className))
+		{
+			auto sc = std::make_unique<scripting::ScriptClass>(scripting::ScriptClass("", m_className));
+			m_instance = std::make_unique<scripting::ScriptInstance>(std::move(sc), id);
+		}
+
+		Script(const Script& other) : m_className(other.m_className)
+		{
+			if (other.m_instance)
+			{
+				// Re-create the script instance with the same class
+				auto sc = std::make_unique<scripting::ScriptClass>(scripting::ScriptClass("", m_className));
+				m_instance = std::make_unique<scripting::ScriptInstance>(std::move(sc), other.m_instance->entityID);
+			}
+		}
+
+		Script& operator=(const Script& other)
+		{
+			if (this != &other)
+			{
+				m_className = other.m_className;
+				if (other.m_instance)
+				{
+					// Re-create the script instance with the same class
+					auto sc = std::make_unique<scripting::ScriptClass>(scripting::ScriptClass("", m_className));
+					m_instance = std::make_unique<scripting::ScriptInstance>(std::move(sc), other.m_instance->entityID);
+				}
+				else
+				{
+					m_instance.reset();
+				}
+			}
+			return *this;
+		}
+
+		Script(Script&& other) noexcept : m_className(std::move(other.m_className)),
+		m_instance(std::move(other.m_instance))
+		{}
+
+		Script& operator=(Script&& other) noexcept
+		{
+			if (this != &other)
+			{
+				m_className = std::move(other.m_className);
+				m_instance = std::move(other.m_instance);
+			}
+			return *this;
 		}
 	};
 

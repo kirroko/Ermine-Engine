@@ -56,7 +56,7 @@ namespace Ermine::object
 		 * @param component The component to add
 		 */
 		template<typename T>
-		void AddComponent(T component) { if (m_EntityID == 0) return; ECS::GetInstance().AddComponent<T>(m_EntityID, component); }
+		void AddComponent(T component) { if (m_EntityID == 0) return; ECS::GetInstance().AddComponent<T>(m_EntityID, std::move(component)); }
 
 		/**
 		 * @brief Get a component from the game object

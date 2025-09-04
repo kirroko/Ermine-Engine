@@ -1,3 +1,5 @@
+#include <utility>
+
 /* Start Header ************************************************************************/
 /*!
 \file       ECS.tpp
@@ -33,7 +35,7 @@ namespace Ermine
 	template <typename T>
 	void ECS::AddComponent(EntityID entity, T component)
 	{
-		m_ComponentManager->AddComponent<T>(entity, component);
+		m_ComponentManager->AddComponent<T>(entity, std::move(component));
 
 		auto signature = m_EntityManager->GetSignature(entity);
 		signature.set(m_ComponentManager->GetComponentType<T>(), true);
