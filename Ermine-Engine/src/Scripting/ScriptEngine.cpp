@@ -19,6 +19,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "ECS.h"
 #include "Components.h"
 #include "FrameController.h"
+#include "Input.h"
 #include "Logger.h"
 
 void Ermine::scripting::ScriptEngine::InitMono(const std::string& assembly_path)
@@ -258,7 +259,6 @@ namespace
 	{
 		if (!componentObj || !s_ComponentClass || !s_GameObjectClass)
 			return;
-		EE_CORE_WARN("Poi");
 		MonoMethod* setGO = mono_class_get_method_from_name(s_ComponentClass, "set_gameObject", 1);
 		if (!setGO)
 			return;
@@ -331,6 +331,23 @@ namespace
 #pragma region Time ICalls
 	float icall_time_get_deltatime() { return Ermine::FrameController::GetDeltaTime(); }
 	float icall_time_get_fixeddeltatime() { return Ermine::FrameController::GetFixedDeltaTime(); }
+#pragma endregion
+
+#pragma region Input ICalls
+	bool icall_input_getkey(int key)
+	{
+		return Ermine::Input::IsKeyPressed(key);
+	}
+
+	bool icall_input_getkeydown(int key)
+	{
+		return Ermine::Input::IsKeyDown(key);
+	}
+
+	bool icall_input_getkeyup(int key)
+	{
+		return Ermine::Input::IsKeyReleased(key);
+	}
 #pragma endregion
 
 #pragma region Debug ICalls
@@ -446,7 +463,6 @@ namespace
 	{
 		using namespace Ermine;
 		EntityID id = GetEntityIDFromManaged(self);
-		EE_CORE_WARN("Getting transform for {0}", id);
 		if (id == 0 || !ECS::GetInstance().IsEntityValid(id) || !ECS::GetInstance().HasComponent<Transform>(id))
 			return nullptr;
 		MonoObject* obj = CreateManagedGameObjectWrapper(id);
@@ -746,6 +762,12 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls()
 #pragma region Time ICalls
 	mono_add_internal_call("ErmineEngine.Time::get_deltaTime",	(const void*)icall_time_get_deltatime);
 	mono_add_internal_call("ErmineEngine.Time::get_fixedDeltaTime", (const void*)icall_time_get_fixeddeltatime);
+#pragma endregion
+
+#pragma region Input ICalls
+	mono_add_internal_call("ErmineEngine.Input::InternalGetKey", (const void*)icall_input_getkey);
+	mono_add_internal_call("ErmineEngine.Input::InternalGetKeyDown", (const void*)icall_input_getkeydown);
+	mono_add_internal_call("ErmineEngine.Input::InternalGetKeyUp", (const void*)icall_input_getkeyup);
 #pragma endregion
 
 #pragma region Debug ICalls
