@@ -28,6 +28,9 @@
     <Filter Include="src\Object">
       <UniqueIdentifier>{13A4AE24-FF5B-F071-6863-C9CD543A8B62}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Systems">
+      <UniqueIdentifier>{34DEBD24-A093-361A-2988-30F1953C2D1E}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Utility">
       <UniqueIdentifier>{70464FB2-DCFB-C7A7-65F0-C17ED1A4BEAB}</UniqueIdentifier>
     </Filter>
@@ -79,6 +82,9 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\GeometryFactory.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\HierarchySystem.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\IndexBuffer.h">
@@ -136,9 +142,6 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\Window.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="HierarchySystem.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
@@ -214,6 +217,9 @@
     </ClCompile>
     <ClCompile Include="src\PreCompile.cpp">
       <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Systems\HierarchySystem.cpp">
+      <Filter>src\Systems</Filter>
     </ClCompile>
     <ClCompile Include="src\Utility\EditorCamera.cpp">
       <Filter>src\Utility</Filter>
