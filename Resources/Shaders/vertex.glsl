@@ -136,7 +136,7 @@ void main() {
     getCamSpace(camNorm, camPosition);
     
     // Evaluate the reflection model
-    LightIntensity = computeLighting(camPos, camNorm);
+    LightIntensity = computeLighting(camPosition, camNorm);
     
     TexCoord = vertex_texCoord;
     
