@@ -21,6 +21,9 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Matrix3x3.h"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/glm.hpp"
+#include "Input.h"
+#include <GLFW/glfw3.h>
+
 
 using namespace Ermine::graphics;
 
@@ -73,6 +76,19 @@ Renderer::OffscreenBuffer Renderer::Create(const int& width, const int& height)
 		glDeleteFramebuffers(1, &m_OffscreenBuffer->FBO);
 		glDeleteTextures(1, &m_OffscreenBuffer->ColorTexture);
 		glDeleteRenderbuffers(1, &m_OffscreenBuffer->RBO);
+	}
+
+	// If Light UBO doesn't exist, create it
+	if (!m_LightsUBO)
+	{
+		glGenBuffers(1, &m_LightsUBO);
+		glBindBuffer(GL_UNIFORM_BUFFER, m_LightsUBO);
+		const GLsizeiptr headerSize = static_cast<GLsizeiptr>(sizeof(glm::vec4));
+		const GLsizeiptr bodySize = static_cast<GLsizeiptr>(MaxLights * sizeof(LightGPU));
+		glBufferData(GL_UNIFORM_BUFFER, headerSize + bodySize, nullptr, GL_DYNAMIC_DRAW);
+		glBindBufferBase(GL_UNIFORM_BUFFER, LightsBindingPoint, m_LightsUBO);
+		glBindBuffer(GL_UNIFORM_BUFFER, 0);
+		glCheckError();
 	}
 
 	// Create FBO
@@ -161,6 +177,101 @@ Renderer::OffscreenBuffer Renderer::Create(const int& width, const int& height)
 	return buffer;
 }
 
+void Renderer::UpdateLightsUBO(const Mtx44& view)
+{
+	std::vector<LightGPU> lights;
+	lights.reserve(MaxLights);
+
+	// Gather Light and Transform across all alive entities
+	const auto& ecs = Ermine::ECS::GetInstance();
+	const unsigned long int maxId = ecs.GetLivingEntityCount();
+	for (Ermine::EntityID e = 1; e <= maxId && lights.size() < MaxLights; e++)
+	{
+		if (!ecs.IsEntityValid(e)) continue;
+		if (!ecs.HasComponent<Light>(e)) continue;
+		if (!ecs.HasComponent<Transform>(e)) continue;
+
+		const auto& trans = ecs.GetComponent<Transform>(e);
+		const auto& light = ecs.GetComponent<Light>(e);
+
+		// View-space position (uses operator*(Mtx44, Vec3) which should apply translation)
+		Vec3 posView3 = view * trans.position;
+		Vec4 posView(posView3.x, posView3.y, posView3.z, 1.0f);
+
+		// Build rotation from Euler (Z * Y * X)
+		Mtx44 rx, ry, rz;
+		Mtx44RotXRad(rx, radian(trans.rotation.x));
+		Mtx44RotYRad(ry, radian(trans.rotation.y));
+		Mtx44RotZRad(rz, radian(trans.rotation.z));
+		Mtx44 rot = rz * ry * rx;
+
+		// World-space direction
+		Vec3 fwd(0.0f, 0.0f, 1.0f); // Light coming from +Z when unrotated
+		Vec3 dirWorld = rot * fwd;
+		Vec3 dirWorldN;
+		Vec3Normalize(dirWorldN, dirWorld);
+
+		// View-space direction
+		Vec3 dirViewRaw = Vec3(
+			view.m00 * dirWorldN.x + view.m01 * dirWorldN.y + view.m02 * dirWorldN.z,
+			view.m10 * dirWorldN.x + view.m11 * dirWorldN.y + view.m12 * dirWorldN.z,
+			view.m20 * dirWorldN.x + view.m21 * dirWorldN.y + view.m22 * dirWorldN.z
+		);
+		Vec3 dirView;
+		Vec3Normalize(dirView, dirViewRaw);
+
+		// Set spot angles
+		float innerCos = 1.0f, outerCos = 1.0f;
+		if (light.type == LightType::SPOT) {
+			float innerAngle = radian(10.f);
+			float outerAngle = radian(10.f);
+			innerCos = cos(innerAngle);
+			outerCos = cos(outerAngle);
+		}
+
+		LightGPU gpu{};
+		gpu.position_type = Vec4(posView.x, posView.y, posView.z, static_cast<float>(light.type));
+		gpu.color_intensity = Vec4(light.color.x, light.color.y, light.color.z, light.intensity);
+		gpu.direction_range = Vec4(dirView.x, dirView.y, dirView.z, 100.f); // TODO: light range
+		gpu.spot_angles = Vec4(innerCos, outerCos, 0.0f, 0.0f);
+
+		lights.emplace_back(gpu);
+	}
+
+	// Upload
+	glBindBuffer(GL_UNIFORM_BUFFER, m_LightsUBO);
+
+	Vec4 count(static_cast<float>(lights.size()), 0.0f, 0.0f, 0.0f);
+	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Vec4), count.m);
+
+	if (!lights.empty())
+	{
+		const GLsizeiptr bodyOffset = static_cast<GLsizeiptr>(sizeof(Vec4));
+		const GLsizeiptr bodySize = static_cast<GLsizeiptr>(lights.size() * sizeof(LightGPU));
+		glBufferSubData(GL_UNIFORM_BUFFER, bodyOffset, bodySize, lights.data());
+	}
+
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+	glCheckError();
+}
+
+void Renderer::BindLightsBlockIfPresent(const std::shared_ptr<Shader>& shader)
+{
+	if (!shader || !shader->IsValid())
+		return;
+
+	const GLuint program = shader->GetRendererID();
+	if (m_LightBlockBoundPrograms.find(program) != m_LightBlockBoundPrograms.end())
+		return;
+
+	GLuint blockIndex = glGetUniformBlockIndex(program, "Lights");
+	if (blockIndex != GL_INVALID_INDEX)
+	{
+		glUniformBlockBinding(program, blockIndex, LightsBindingPoint);
+		m_LightBlockBoundPrograms.insert(program);
+	}
+}
+
 /**
  * @brief Update all mesh entities and draw them
  */
@@ -174,6 +285,9 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 
 	// Use a single GPU timing event for the entire update
 	//GPUProfiler::BeginEvent("Renderer Update");
+
+	//Update lights UBO for this frame
+	UpdateLightsUBO(view);
 
 	for (auto& entity : m_Entities)
 	{
@@ -208,13 +322,13 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 
 		// TODO: Can be moved to a light component
 		// Light Properties
-		glm::vec4 lightPosWorld(10.f, 10.f, 10.f, 1.0f); // Example position in world space
-		glm::vec4 lightPosView = glmView * lightPosWorld;           // Transform to view space
-		material.m_shader->SetUniform4f("Light.Position", lightPosView);
-		glm::vec3 ld(1.0f, 1.0f, 1.0f); // Light color
-		material.m_shader->SetUniform3f("Light.La", glm::vec3(0.2f, 0.2f, 0.2f));
-		material.m_shader->SetUniform3f("Light.Ld", ld);
-		material.m_shader->SetUniform3f("Light.Ls", glm::vec3(1.0f, 1.0f, 1.0f));
+		//glm::vec4 lightPosWorld(10.f, 10.f, 10.f, 1.0f); // Example position in world space
+		//glm::vec4 lightPosView = glmView * lightPosWorld;           // Transform to view space
+		//material.m_shader->SetUniform4f("Light.Position", lightPosView);
+		//glm::vec3 ld(1.0f, 1.0f, 1.0f); // Light color
+		//material.m_shader->SetUniform3f("Light.La", glm::vec3(0.2f, 0.2f, 0.2f));
+		//material.m_shader->SetUniform3f("Light.Ld", ld);
+		//material.m_shader->SetUniform3f("Light.Ls", glm::vec3(1.0f, 1.0f, 1.0f));
 
 		// Material properties
 		glm::vec3 kd(0.9f, 0.9f, 0.9f); // Diffuse reflectivity

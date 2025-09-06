@@ -162,6 +162,9 @@
     <ClInclude Include="include\MathVector.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\Material.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\AssetBrowser\AssetBrowser.cpp">

@@ -76,6 +76,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().RegisterComponent<Material>();
 	ECS::GetInstance().RegisterComponent<Script>();
 	ECS::GetInstance().RegisterComponent<ObjectMetaData>();
+	ECS::GetInstance().RegisterComponent<Light>();
 
 	// TODO: Register all systems here, no limits
 	ECS::GetInstance().RegisterSystem<graphics::Renderer>();
@@ -133,13 +134,22 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().AddComponent(entity2, graphics::GeometryFactory::CreateCube(1, 1, 1));
 	ECS::GetInstance().AddComponent(entity2, Material(shader, texture));
 	ECS::GetInstance().AddComponent(entity2, Script("Sandbox",entity2));
+	EE_CORE_INFO("Total living entities after light creation: {0}", ECS::GetInstance().GetLivingEntityCount());
+
 
 	//auto entity3 = ECS::GetInstance().CreateEntity();
 	//ECS::GetInstance().AddComponent(entity3, Transform(Vec3(1, 1, -3), Vec3(0, 0, 0), Vec3(1, 1, 1)));
 	//ECS::GetInstance().AddComponent(entity3, graphics::GeometryFactory::CreateSphere());
 	//ECS::GetInstance().AddComponent(entity3, Material(shader, texture));
 
-   glClearColor(0.2f,0.3f,0.3f,1.0f); // Background color
+	// Add a light entity
+	auto lightEntity = ECS::GetInstance().CreateEntity();
+	ECS::GetInstance().AddComponent(lightEntity, Transform(Vec3(1, 1, 1), Vec3(1, 1, 1), Vec3(0, 0, 0)));
+	ECS::GetInstance().AddComponent(lightEntity, ObjectMetaData("Light1", "Light", true));
+	ECS::GetInstance().AddComponent(lightEntity, Light(Vec3(1, 1, 1), 1.0f, LightType::POINT));
+	
+	
+	glClearColor(0.2f,0.3f,0.3f,1.0f); // Background color
 
    // Create ImGUI window for Asset Browser
    editor::EditorGUI::CreateImGUIWindow<ImguiUI::AssetBrowser>();

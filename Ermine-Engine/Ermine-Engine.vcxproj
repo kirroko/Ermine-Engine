@@ -142,6 +142,7 @@ xcopy /Q /E /Y /I ..\Resources ..\Build\bin\Release-windows-x86_64\Resources</Co
     <ClInclude Include="include\Input.h" />
     <ClInclude Include="include\JobSystem.h" />
     <ClInclude Include="include\Logger.h" />
+    <ClInclude Include="include\Material.h" />
     <ClInclude Include="include\MathUtils.h" />
     <ClInclude Include="include\MathVector.h" />
     <ClInclude Include="include\Matrix3x3.h" />

@@ -73,5 +73,14 @@ namespace Ermine::graphics
 
     private:
 		std::shared_ptr<OffscreenBuffer> m_OffscreenBuffer;
+
+
+		// Lighting UBO
+        GLuint m_LightsUBO = 0;
+        GLuint LightsBindingPoint = 1;
+        size_t MaxLights = 16;
+        std::unordered_set<GLuint> m_LightBlockBoundPrograms;
+        void UpdateLightsUBO(const Mtx44& view);
+        void BindLightsBlockIfPresent(const std::shared_ptr<Shader>& shader);
     };
 }

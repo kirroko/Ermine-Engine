@@ -22,6 +22,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "IndexBuffer.h"
 #include "ScriptInstance.h"
 #include "Texture.h"
+#include "Material.h"
 
 namespace Ermine
 {
@@ -186,10 +187,28 @@ namespace Ermine
 	{
 		std::shared_ptr<graphics::Shader> m_shader;
 		std::shared_ptr<graphics::Texture> m_texture;
+		MaterialData m_materialData;
 
 		Material() = default;
 		
 		Material(const std::shared_ptr<graphics::Shader>& shader, const std::shared_ptr<graphics::Texture>& texture) : m_shader(shader), m_texture(texture)
 		{}
+	};
+
+	struct Light {
+		Vec3 color;
+		float intensity;
+		LightType type;
+
+		Light() : color(1.0f, 1.0f, 1.0f), 
+				intensity(1.0f), 
+				type(LightType::POINT)
+		{
+		}
+
+		Light(const Vec3& col, float intens, LightType t) :
+			color(col), intensity(intens), type(t)
+		{
+		}
 	};
 }
