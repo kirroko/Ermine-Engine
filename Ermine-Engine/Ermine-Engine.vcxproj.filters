@@ -111,6 +111,9 @@
     <ClInclude Include="include\MathUtils.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\MathVector.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\Matrix3x3.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -157,9 +160,6 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\Window.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\MathVector.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
@@ -215,6 +215,9 @@
     <ClCompile Include="src\Logger\Logger.cpp">
       <Filter>src\Logger</Filter>
     </ClCompile>
+    <ClCompile Include="src\Math\MathVector.cpp">
+      <Filter>src\Math</Filter>
+    </ClCompile>
     <ClCompile Include="src\Math\Matrix3x3.cpp">
       <Filter>src\Math</Filter>
     </ClCompile>
@@ -259,9 +262,6 @@
     </ClCompile>
     <ClCompile Include="src\dllmain.cpp">
       <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Math\MathVector.cpp">
-      <Filter>src\Math</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

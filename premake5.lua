@@ -66,7 +66,7 @@ project "Ermine-Engine"
         "%{IncludeDir.spdlog}",
         "%{IncludeDir.stb}",
         "%{IncludeDir.Fmod}",
-        "%{IncludeDir.Mono}"
+        "%{IncludeDir.Mono}",
         "%{IncludeDir.rapidjson}"
     }
 
@@ -151,7 +151,7 @@ project "Ermine-Editor"
         "%{IncludeDir.spdlog}",
         "%{IncludeDir.stb}",
         "%{IncludeDir.Fmod}",
-        "%{IncludeDir.Mono}"
+        "%{IncludeDir.Mono}",
         "%{IncludeDir.rapidjson}"
     }
 

@@ -59,7 +59,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>EE_PLATFORM_WINDOWS;EE_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>include;..\Ermine-Engine\include;..\ThirdParty\GLFW\include;..\ThirdParty\Glad\include;..\ThirdParty\imgui;..\ThirdParty\glm;..\ThirdParty\spdlog\include;..\ThirdParty\stb;..;..\ThirdParty\Mono\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;..\Ermine-Engine\include;..\ThirdParty\GLFW\include;..\ThirdParty\Glad\include;..\ThirdParty\imgui;..\ThirdParty\glm;..\ThirdParty\spdlog\include;..\ThirdParty\stb;..;..\ThirdParty\Mono\include;..\ThirdParty\rapidjson;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -78,7 +78,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>EE_PLATFORM_WINDOWS;EE_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>include;..\Ermine-Engine\include;..\ThirdParty\GLFW\include;..\ThirdParty\Glad\include;..\ThirdParty\imgui;..\ThirdParty\glm;..\ThirdParty\spdlog\include;..\ThirdParty\stb;..;..\ThirdParty\Mono\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;..\Ermine-Engine\include;..\ThirdParty\GLFW\include;..\ThirdParty\Glad\include;..\ThirdParty\imgui;..\ThirdParty\glm;..\ThirdParty\spdlog\include;..\ThirdParty\stb;..;..\ThirdParty\Mono\include;..\ThirdParty\rapidjson;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
