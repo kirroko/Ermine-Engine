@@ -43,6 +43,9 @@
     <Filter Include="src\Window">
       <UniqueIdentifier>{74C3D837-607B-1A85-C982-F3E0B559B575}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Serialisation">
+      <UniqueIdentifier>{103c2c8c-5abb-444d-8759-33dd9069c19a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\AssetBrowser.h">
@@ -162,6 +165,9 @@
     <ClInclude Include="include\Window.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\Serialisation.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\AssetBrowser\AssetBrowser.cpp">
@@ -262,6 +268,9 @@
     </ClCompile>
     <ClCompile Include="src\dllmain.cpp">
       <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Serialisation\Serialisation.cpp">
+      <Filter>src\Serialisation</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
