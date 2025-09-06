@@ -18,6 +18,7 @@ IncludeDir["glm"] = "ThirdParty/glm"
 IncludeDir["spdlog"] = "ThirdParty/spdlog/include"
 IncludeDir["stb"] = "ThirdParty/stb"
 IncludeDir["Mono"] = "ThirdParty/Mono/include"
+IncludeDir["rapidjson"] = "ThirdParty/rapidjson"
 
 -- Libraries
 LibraryDir = {}
@@ -66,6 +67,7 @@ project "Ermine-Engine"
         "%{IncludeDir.stb}",
         "%{IncludeDir.Fmod}",
         "%{IncludeDir.Mono}"
+        "%{IncludeDir.rapidjson}"
     }
 
     libdirs
@@ -150,6 +152,7 @@ project "Ermine-Editor"
         "%{IncludeDir.stb}",
         "%{IncludeDir.Fmod}",
         "%{IncludeDir.Mono}"
+        "%{IncludeDir.rapidjson}"
     }
 
     links
