@@ -324,20 +324,26 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 		// Set shading mode
 		material.m_shader->SetUniform1i("isBlinnPhong", m_IsBlinnPhong ? 1 : 0);
 
-		// Set material properties for Blinn-Phong
-		if (m_IsBlinnPhong) {
-			material.m_shader->SetUniform3f("material.Ka", glm::vec3(0.2f, 0.2f, 0.2f));
-			material.m_shader->SetUniform3f("material.Kd", glm::vec3(0.9f, 0.9f, 0.9f));
-			material.m_shader->SetUniform3f("material.Ks", glm::vec3(0.8f, 0.8f, 0.8f));
-			material.m_shader->SetUniform1f("material.Shininess", 100.0f);
-		}
-		else {
-			// Set PBR material properties
-			material.m_shader->SetUniform3f("pbrMaterial.albedo", glm::vec3(0.5f, 0.5f, 0.5f));
-			material.m_shader->SetUniform1f("pbrMaterial.metallic", 0.0f);
-			material.m_shader->SetUniform1f("pbrMaterial.roughness", 0.5f);
-			material.m_shader->SetUniform1f("pbrMaterial.ao", 1.0f);
-		}
+		// Set basic light properties (simplified single light)
+		material.m_shader->SetUniform3f("lightPos", glm::vec3(5.0f, 5.0f, 5.0f));
+		material.m_shader->SetUniform3f("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+
+		// Set view position (extract from view matrix)
+		glm::mat4 invView = glm::inverse(glmView);
+		glm::vec3 viewPos = glm::vec3(invView[3]);
+		material.m_shader->SetUniform3f("viewPos", viewPos);
+
+		// Set Blinn-Phong material properties
+		material.m_shader->SetUniform3f("materialKa", glm::vec3(0.2f, 0.2f, 0.2f));
+		material.m_shader->SetUniform3f("materialKd", glm::vec3(0.9f, 0.9f, 0.9f));
+		material.m_shader->SetUniform3f("materialKs", glm::vec3(0.8f, 0.8f, 0.8f));
+		material.m_shader->SetUniform1f("materialShininess", 100.0f);
+
+		// Set PBR material properties
+		material.m_shader->SetUniform3f("pbrAlbedo", glm::vec3(0.5f, 0.5f, 0.5f));
+		material.m_shader->SetUniform1f("pbrMetallic", 0.0f);
+		material.m_shader->SetUniform1f("pbrRoughness", 0.5f);
+		material.m_shader->SetUniform1f("pbrAO", 1.0f);
 
 		Draw(mesh.vertex_array, mesh.index_buffer, material.m_shader);
 	}
@@ -346,6 +352,7 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 #endif
 }
+
 
 /**
 * @brief Draw the mesh
