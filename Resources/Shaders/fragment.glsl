@@ -3,6 +3,7 @@
 in vec2 TexCoord;
 in vec3 Normal;
 in vec3 FragPos;
+in vec3 ViewPos; // Position in view space
 
 out vec4 FragColor;
 
@@ -23,12 +24,24 @@ uniform float pbrMetallic;
 uniform float pbrRoughness;
 uniform float pbrAO;
 
-// Basic lighting (simplified - no UBO for compatibility)
-uniform vec3 lightPos;
-uniform vec3 lightColor;
-uniform vec3 viewPos;
+uniform vec3 viewPos; // World space view position for PBR
+
+// UBO for multiple lights
+layout (std140) uniform Lights
+{
+    vec4 lightCount; // x = number of lights
+    struct {
+        vec4 position_type;    // xyz = position (view space), w = light type
+        vec4 color_intensity;  // xyz = color, w = intensity
+        vec4 direction_range;  // xyz = direction (view space), w = range
+        vec4 spot_angles;      // x = inner cos, y = outer cos
+    } lights[16]; // Match your MaxLights
+};
 
 const float PI = 3.14159265359;
+const int POINT_LIGHT = 0;
+const int DIRECTIONAL_LIGHT = 1;
+const int SPOT_LIGHT = 2;
 
 // PBR Functions
 float DistributionGGX(vec3 N, vec3 H, float roughness)
@@ -71,59 +84,130 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0)
     return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
 }
 
+// Calculate light attenuation and spot effect
+float calculateAttenuation(int lightIndex, vec3 fragPosView, out vec3 lightDir)
+{
+    int lightType = int(lights[lightIndex].position_type.w);
+    vec3 lightPosView = lights[lightIndex].position_type.xyz;
+    float range = lights[lightIndex].direction_range.w;
+    
+    float attenuation = 1.0;
+    
+    if (lightType == DIRECTIONAL_LIGHT) {
+        // Directional light - direction is stored directly
+        lightDir = normalize(-lights[lightIndex].direction_range.xyz);
+        attenuation = 1.0; // No attenuation for directional lights
+    } else {
+        // Point or spot light - calculate direction from position
+        lightDir = normalize(lightPosView - fragPosView);
+        float distance = length(lightPosView - fragPosView);
+        
+        // Distance attenuation
+        attenuation = 1.0 / (1.0 + 0.09 * distance + 0.032 * distance * distance);
+        
+        // Range cutoff
+        if (distance > range) {
+            attenuation = 0.0;
+        }
+        
+        // Spot light cone attenuation
+        if (lightType == SPOT_LIGHT) {
+            vec3 spotDir = normalize(lights[lightIndex].direction_range.xyz);
+            float cosAngle = dot(-lightDir, spotDir);
+            float innerCos = lights[lightIndex].spot_angles.x;
+            float outerCos = lights[lightIndex].spot_angles.y;
+            
+            float spotFactor = clamp((cosAngle - outerCos) / (innerCos - outerCos), 0.0, 1.0);
+            attenuation *= spotFactor;
+        }
+    }
+    
+    return attenuation;
+}
+
+// Blinn-Phong lighting calculation for one light
+vec3 calculateBlinnPhong(int lightIndex, vec3 normal, vec3 viewDir, vec3 fragPosView)
+{
+    vec3 lightDir;
+    float attenuation = calculateAttenuation(lightIndex, fragPosView, lightDir);
+    
+    if (attenuation <= 0.0) return vec3(0.0);
+    
+    vec3 lightColor = lights[lightIndex].color_intensity.xyz * lights[lightIndex].color_intensity.w;
+    
+    // Diffuse
+    float diff = max(dot(normal, lightDir), 0.0);
+    vec3 diffuse = diff * lightColor * materialKd;
+    
+    // Specular (Blinn-Phong)
+    vec3 halfwayDir = normalize(lightDir + viewDir);
+    float spec = pow(max(dot(normal, halfwayDir), 0.0), materialShininess);
+    vec3 specular = spec * lightColor * materialKs;
+    
+    return (diffuse + specular) * attenuation;
+}
+
+// PBR lighting calculation for one light
+vec3 calculatePBR(int lightIndex, vec3 normal, vec3 viewDir, vec3 fragPosView, vec3 albedo, vec3 F0)
+{
+    vec3 lightDir;
+    float attenuation = calculateAttenuation(lightIndex, fragPosView, lightDir);
+    
+    if (attenuation <= 0.0) return vec3(0.0);
+    
+    vec3 lightColor = lights[lightIndex].color_intensity.xyz * lights[lightIndex].color_intensity.w;
+    vec3 radiance = lightColor * attenuation;
+    
+    vec3 H = normalize(viewDir + lightDir);
+    
+    float NDF = DistributionGGX(normal, H, pbrRoughness);
+    float G = GeometrySmith(normal, viewDir, lightDir, pbrRoughness);
+    vec3 F = fresnelSchlick(max(dot(H, viewDir), 0.0), F0);
+    
+    vec3 kS = F;
+    vec3 kD = vec3(1.0) - kS;
+    kD *= 1.0 - pbrMetallic;
+    
+    vec3 numerator = NDF * G * F;
+    float denominator = 4.0 * max(dot(normal, viewDir), 0.0) * max(dot(normal, lightDir), 0.0) + 0.0001;
+    vec3 specular = numerator / denominator;
+    
+    float NdotL = max(dot(normal, lightDir), 0.0);
+    return (kD * albedo / PI + specular) * radiance * NdotL;
+}
+
 void main()
 {
-    // Basic texture sampling
     vec4 texColor = texture(texture0, TexCoord);
     vec3 norm = normalize(Normal);
-    vec3 viewDir = normalize(viewPos - FragPos);
-    vec3 lightDir = normalize(lightPos - FragPos);
+    vec3 viewDir = normalize(-ViewPos); // ViewPos is already in view space
     
-    vec3 result;
+    vec3 result = vec3(0.0);
+    int numLights = int(lightCount.x);
     
     if (isBlinnPhong) {
-        // Blinn-Phong Lighting
-        // Ambient
-        vec3 ambient = materialKa * lightColor * 0.1;
-
-        // Diffuse
-        float diff = max(dot(norm, lightDir), 0.0);
-        vec3 diffuse = diff * lightColor * materialKd;
-
-        // Specular (Blinn-Phong)
-        vec3 halfwayDir = normalize(lightDir + viewDir);
-        float spec = pow(max(dot(norm, halfwayDir), 0.0), materialShininess);
-        vec3 specular = spec * lightColor * materialKs;
-
-        result = (ambient + diffuse + specular) * texColor.rgb;
+        // Ambient component (applied once)
+        vec3 ambient = materialKa * 0.1;
+        result += ambient * texColor.rgb;
+        
+        // Add contribution from each light
+        for (int i = 0; i < numLights && i < 16; ++i) {
+            result += calculateBlinnPhong(i, norm, viewDir, ViewPos) * texColor.rgb;
+        }
     } else {
         // PBR Lighting
         vec3 albedo = texColor.rgb * pbrAlbedo;
         vec3 F0 = vec3(0.04);
         F0 = mix(F0, albedo, pbrMetallic);
         
-        vec3 H = normalize(viewDir + lightDir);
-        float distance = length(lightPos - FragPos);
-        float attenuation = 1.0 / (distance * distance);
-        vec3 radiance = lightColor * attenuation;
-        
-        float NDF = DistributionGGX(norm, H, pbrRoughness);
-        float G = GeometrySmith(norm, viewDir, lightDir, pbrRoughness);
-        vec3 F = fresnelSchlick(max(dot(H, viewDir), 0.0), F0);
-        
-        vec3 kS = F;
-        vec3 kD = vec3(1.0) - kS;
-        kD *= 1.0 - pbrMetallic;
-        
-        vec3 numerator = NDF * G * F;
-        float denominator = 4.0 * max(dot(norm, viewDir), 0.0) * max(dot(norm, lightDir), 0.0) + 0.0001;
-        vec3 specular = numerator / denominator;
-        
-        float NdotL = max(dot(norm, lightDir), 0.0);
-        vec3 Lo = (kD * albedo / PI + specular) * radiance * NdotL;
-        
+        // Ambient component (applied once)
         vec3 ambient = vec3(0.03) * albedo * pbrAO;
-        result = ambient + Lo;
+        result += ambient;
+        
+        // Add contribution from each light
+        for (int i = 0; i < numLights && i < 16; ++i) {
+            result += calculatePBR(i, norm, viewDir, ViewPos, albedo, F0);
+        }
     }
     
     // Gamma correction

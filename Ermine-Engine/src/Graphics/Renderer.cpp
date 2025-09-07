@@ -283,7 +283,7 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 #endif
 
-	//Update lights UBO for this frame
+	// Update lights UBO for this frame
 	UpdateLightsUBO(view);
 
 	for (auto& entity : m_Entities)
@@ -300,12 +300,12 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 		model = glm::scale(model, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
 
 		material.m_texture->Bind();
-
 		material.m_shader->Bind();
 
-		// Bind lights uniform block if present
+		// Bind lights uniform block if present - IMPORTANT: Move this AFTER shader bind
 		BindLightsBlockIfPresent(material.m_shader);
 
+		// Set matrices
 		material.m_shader->SetUniformMatrix4fv("model", &model[0][0]);
 		material.m_shader->SetUniformMatrix4fv("view", &view.m2[0][0]);
 		material.m_shader->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
@@ -324,14 +324,10 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 		// Set shading mode
 		material.m_shader->SetUniform1i("isBlinnPhong", m_IsBlinnPhong ? 1 : 0);
 
-		// Set basic light properties (simplified single light)
-		material.m_shader->SetUniform3f("lightPos", glm::vec3(5.0f, 5.0f, 5.0f));
-		material.m_shader->SetUniform3f("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
-
-		// Set view position (extract from view matrix)
+		// Set world space view position for PBR calculations
 		glm::mat4 invView = glm::inverse(glmView);
-		glm::vec3 viewPos = glm::vec3(invView[3]);
-		material.m_shader->SetUniform3f("viewPos", viewPos);
+		glm::vec3 worldViewPos = glm::vec3(invView[3]);
+		material.m_shader->SetUniform3f("viewPos", worldViewPos);
 
 		// Set Blinn-Phong material properties
 		material.m_shader->SetUniform3f("materialKa", glm::vec3(0.2f, 0.2f, 0.2f));
