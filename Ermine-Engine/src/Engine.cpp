@@ -142,13 +142,24 @@ bool engine::Init(GLFWwindow* windowContext)
 	//ECS::GetInstance().AddComponent(entity3, graphics::GeometryFactory::CreateSphere());
 	//ECS::GetInstance().AddComponent(entity3, Material(shader, texture));
 
-	// Add a light entity
-	auto lightEntity = ECS::GetInstance().CreateEntity();
-	ECS::GetInstance().AddComponent(lightEntity, Transform(Vec3(1, 1, 1), Vec3(1, 1, 1), Vec3(0, 0, 0)));
-	ECS::GetInstance().AddComponent(lightEntity, ObjectMetaData("Light1", "Light", true));
-	ECS::GetInstance().AddComponent(lightEntity, Light(Vec3(1, 1, 1), 1.0f, LightType::POINT));
+	// Add a light entities
+	auto redLightEntity = ECS::GetInstance().CreateEntity();
+	ECS::GetInstance().AddComponent(redLightEntity, Transform(Vec3(1, 2, 0), Vec3(1, 1, 1), Vec3(0, 0, 0)));
+	ECS::GetInstance().AddComponent(redLightEntity, ObjectMetaData("LightRed", "Light", true));
+	ECS::GetInstance().AddComponent(redLightEntity, Light(Vec3(1, 0, 0), 1.0f, LightType::POINT));
 	
+
+	auto blueLightEntity = ECS::GetInstance().CreateEntity();
+	ECS::GetInstance().AddComponent(blueLightEntity, Transform(Vec3(-1, 2, 0), Vec3(1, 1, 1), Vec3(0, 0, 0)));
+	ECS::GetInstance().AddComponent(blueLightEntity, ObjectMetaData("LightBlue", "Light", true));
+	ECS::GetInstance().AddComponent(blueLightEntity, Light(Vec3(0, 1, 0), 1.0f, LightType::POINT));
 	
+
+	auto greenLightEntity = ECS::GetInstance().CreateEntity();
+	ECS::GetInstance().AddComponent(greenLightEntity, Transform(Vec3(0, 2, -3), Vec3(1, 1, 1), Vec3(0, 0, 0)));
+	ECS::GetInstance().AddComponent(greenLightEntity, ObjectMetaData("LightGreen", "Light", true));
+	ECS::GetInstance().AddComponent(greenLightEntity, Light(Vec3(0, 0, 1), 1.0f, LightType::POINT));
+		
 	glClearColor(0.2f,0.3f,0.3f,1.0f); // Background color
 
    // Create ImGUI window for Asset Browser

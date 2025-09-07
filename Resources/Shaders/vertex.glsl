@@ -17,7 +17,7 @@ uniform bool useBF;
 uniform mat3 NormalMatrix;
 
 struct LightData {
-    vec4 position_type;    // xyz = pos (view), w = type
+    vec4 position_type;    // xyz = pos (view), w = type (0=POINT, 1=DIRECTIONAL, 2=SPOT)
     vec4 color_intensity;  // rgb = color, a = intensity
     vec4 direction_range;  // xyz = dir (view), w = range
     vec4 spot_angles;      // x = innerCos, y = outerCos
@@ -67,8 +67,7 @@ vec3 blinnPhongForLight(const in LightData ld, const in vec3 fragPos, const in v
     vec3 L;           // Light direction (toward fragment)
     float attenuation = 1.0;
 
-    if (type == 0) {
-        // Directional light: direction is stored in direction_range.xyz (from light)
+    if (type == 1) {
         L = normalize(ld.direction_range.xyz);
     } else {
         // Point or Spot: light position in view space
@@ -85,8 +84,8 @@ vec3 blinnPhongForLight(const in LightData ld, const in vec3 fragPos, const in v
 
         // Spotlight modulation
         if (type == 2) {
-            vec3 spotDir = normalize(ld.direction_range.xyz); // spotlight direction (where it points)
-            float spotCos = dot(-spotDir, L); // angle between light beam and direction to fragment
+            vec3 spotDir = normalize(ld.direction_range.xyz); 
+            float spotCos = dot(-spotDir, L);
 
             float innerCos = ld.spot_angles.x;
             float outerCos = ld.spot_angles.y;
@@ -102,7 +101,7 @@ vec3 blinnPhongForLight(const in LightData ld, const in vec3 fragPos, const in v
     vec3 diffuse = Material.Kd * lightColor * NdotL * attenuation;
 
     // Ambient (not view-dependent)
-    vec3 ambient = Material.Ka * lightColor * attenuation; // optional: ambient doesn't usually attenuate
+    vec3 ambient = Material.Ka * lightColor;
 
     // Specular (Blinn-Phong)
     vec3 specular = vec3(0.0);
