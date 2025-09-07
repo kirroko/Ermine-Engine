@@ -200,8 +200,6 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
 		Vec4 posView(posView3.x, posView3.y, posView3.z, 1.0f);
 		*/
 
-		// Using glm for matrix multiplication instead of our custom Matrix44
-		// because our Matrix44 for some reason gives incorrect results
 		glm::mat4 glmView = glm::mat4(
 			view.m00, view.m01, view.m02, view.m03,
 			view.m10, view.m11, view.m12, view.m13,
