@@ -71,6 +71,9 @@ namespace Ermine::graphics
          */
         const GPUProfiler::PerformanceMetrics& GetPerformanceMetrics() const;
 
+        void SetShadingMode(bool isBlinnPhong) { m_IsBlinnPhong = isBlinnPhong; }
+        bool GetShadingMode() const { return m_IsBlinnPhong; }
+
     private:
 		std::shared_ptr<OffscreenBuffer> m_OffscreenBuffer;
 
@@ -82,5 +85,7 @@ namespace Ermine::graphics
         std::unordered_set<GLuint> m_LightBlockBoundPrograms;
         void UpdateLightsUBO(const Mtx44& view);
         void BindLightsBlockIfPresent(const std::shared_ptr<Shader>& shader);
+        bool m_IsBlinnPhong = true; // Default to Blinn-Phong
+
     };
 }

@@ -183,6 +183,9 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 	if (!s_isInitialized)
 		return;
 
+	// Handle shading mode toggle
+	HandleShadingToggle(windowContext);
+
 	// Profiler here
 	graphics::GPUProfiler::BeginFrame();
 
@@ -303,4 +306,30 @@ void engine::Dummy([[maybe_unused]] GLFWwindow* wwindow)
 		//     glfwSetWindowShouldClose(wwindow, 1);
 		// }
 	// }
+}
+
+void HandleShadingToggle(GLFWwindow* windowContext)
+{
+	static bool key1WasPressed = false;
+	static bool key2WasPressed = false;
+
+	bool key1IsPressed = glfwGetKey(windowContext, GLFW_KEY_1) == GLFW_PRESS;
+	bool key2IsPressed = glfwGetKey(windowContext, GLFW_KEY_2) == GLFW_PRESS;
+
+	// Toggle to PBR (key 1)
+	if (key1IsPressed && !key1WasPressed) {
+		auto renderer = ECS::GetInstance().GetSystem<graphics::Renderer>();
+		renderer->SetShadingMode(false); // false = PBR
+		EE_CORE_INFO("Switched to PBR shading");
+	}
+
+	// Toggle to Blinn-Phong (key 2)  
+	if (key2IsPressed && !key2WasPressed) {
+		auto renderer = ECS::GetInstance().GetSystem<graphics::Renderer>();
+		renderer->SetShadingMode(true); // true = Blinn-Phong
+		EE_CORE_INFO("Switched to Blinn-Phong shading");
+	}
+
+	key1WasPressed = key1IsPressed;
+	key2WasPressed = key2IsPressed;
 }

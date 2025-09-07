@@ -283,9 +283,6 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 #endif
 
-	// Use a single GPU timing event for the entire update
-	//GPUProfiler::BeginEvent("Renderer Update");
-
 	//Update lights UBO for this frame
 	UpdateLightsUBO(view);
 
@@ -296,8 +293,8 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 		auto& material = ECS::GetInstance().GetComponent<Material>(entity);
 
 		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(trans.position.x, trans.position.y, trans.position.z)); // Translate using the position data
-		model = glm::rotate(model, radian(trans.rotation.x), glm::vec3(1, 0, 0)); // Rotate around the X axis
+		model = glm::translate(model, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
+		model = glm::rotate(model, radian(trans.rotation.x), glm::vec3(1, 0, 0));
 		model = glm::rotate(model, radian(trans.rotation.y), glm::vec3(0, 1, 0));
 		model = glm::rotate(model, radian(trans.rotation.z), glm::vec3(0, 0, 1));
 		model = glm::scale(model, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
@@ -305,11 +302,15 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 		material.m_texture->Bind();
 
 		material.m_shader->Bind();
+
+		// Bind lights uniform block if present
+		BindLightsBlockIfPresent(material.m_shader);
+
 		material.m_shader->SetUniformMatrix4fv("model", &model[0][0]);
 		material.m_shader->SetUniformMatrix4fv("view", &view.m2[0][0]);
 		material.m_shader->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
 
-		// Calculate normal matrix (inverse transpose of the upper 3x3 part of model-view matrix)
+		// Calculate normal matrix
 		glm::mat4 glmView = glm::mat4(
 			view.m00, view.m01, view.m02, view.m03,
 			view.m10, view.m11, view.m12, view.m13,
@@ -320,26 +321,27 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 		glm::mat3 normalMatrix = transpose(inverse(glm::mat3(modelView)));
 		material.m_shader->SetUniformMatrix3fv("NormalMatrix", &normalMatrix[0][0]);
 
-		// TODO: Can be moved to a light component
-		// Light Properties
-		//glm::vec4 lightPosWorld(10.f, 10.f, 10.f, 1.0f); // Example position in world space
-		//glm::vec4 lightPosView = glmView * lightPosWorld;           // Transform to view space
-		//material.m_shader->SetUniform4f("Light.Position", lightPosView);
-		//glm::vec3 ld(1.0f, 1.0f, 1.0f); // Light color
-		//material.m_shader->SetUniform3f("Light.La", glm::vec3(0.2f, 0.2f, 0.2f));
-		//material.m_shader->SetUniform3f("Light.Ld", ld);
-		//material.m_shader->SetUniform3f("Light.Ls", glm::vec3(1.0f, 1.0f, 1.0f));
+		// Set shading mode
+		material.m_shader->SetUniform1i("isBlinnPhong", m_IsBlinnPhong ? 1 : 0);
 
-		// Material properties
-		glm::vec3 kd(0.9f, 0.9f, 0.9f); // Diffuse reflectivity
-		material.m_shader->SetUniform3f("Material.Ka", glm::vec3(0.2f, 0.2f, 0.2f));
-		material.m_shader->SetUniform3f("Material.Kd", kd);
-		material.m_shader->SetUniform3f("Material.Ks", glm::vec3(0.8f, 0.8f, 0.8f));
-		material.m_shader->SetUniform1f("Material.Shininess", 100.0f);
+		// Set material properties for Blinn-Phong
+		if (m_IsBlinnPhong) {
+			material.m_shader->SetUniform3f("material.Ka", glm::vec3(0.2f, 0.2f, 0.2f));
+			material.m_shader->SetUniform3f("material.Kd", glm::vec3(0.9f, 0.9f, 0.9f));
+			material.m_shader->SetUniform3f("material.Ks", glm::vec3(0.8f, 0.8f, 0.8f));
+			material.m_shader->SetUniform1f("material.Shininess", 100.0f);
+		}
+		else {
+			// Set PBR material properties
+			material.m_shader->SetUniform3f("pbrMaterial.albedo", glm::vec3(0.5f, 0.5f, 0.5f));
+			material.m_shader->SetUniform1f("pbrMaterial.metallic", 0.0f);
+			material.m_shader->SetUniform1f("pbrMaterial.roughness", 0.5f);
+			material.m_shader->SetUniform1f("pbrMaterial.ao", 1.0f);
+		}
 
 		Draw(mesh.vertex_array, mesh.index_buffer, material.m_shader);
 	}
-	//GPUProfiler::EndEvent();
+
 #ifdef _DEBUG
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 #endif
