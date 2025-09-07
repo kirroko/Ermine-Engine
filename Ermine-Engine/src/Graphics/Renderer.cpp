@@ -349,7 +349,6 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 #endif
 }
 
-
 /**
 * @brief Draw the mesh
 * @param vao The vertex array object
