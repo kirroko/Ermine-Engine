@@ -194,9 +194,16 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
 		const auto& trans = ecs.GetComponent<Transform>(e);
 		const auto& light = ecs.GetComponent<Light>(e);
 
-		// View-space position (uses operator*(Mtx44, Vec3) which should apply translation)
-		Vec3 posView3 = view * trans.position;
-		Vec4 posView(posView3.x, posView3.y, posView3.z, 1.0f);
+		// Convert view matrix to glm format
+		glm::mat4 glmView = glm::mat4(
+			view.m00, view.m01, view.m02, view.m03,
+			view.m10, view.m11, view.m12, view.m13,
+			view.m20, view.m21, view.m22, view.m23,
+			view.m30, view.m31, view.m32, view.m33
+		);
+
+		// Transform position to view space
+		glm::vec4 posView = glmView * glm::vec4{ trans.position.x, trans.position.y, trans.position.z, 1.0f };
 
 		// Build rotation from Euler (Z * Y * X)
 		Mtx44 rx, ry, rz;
@@ -205,26 +212,21 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
 		Mtx44RotZRad(rz, radian(trans.rotation.z));
 		Mtx44 rot = rz * ry * rx;
 
-		// World-space direction
-		Vec3 fwd(0.0f, 0.0f, 1.0f); // Light coming from +Z when unrotated
+		// World-space direction (forward vector for light)
+		Vec3 fwd(0.0f, 0.0f, 1.0f); // Light pointing in +Z direction when unrotated
 		Vec3 dirWorld = rot * fwd;
 		Vec3 dirWorldN;
 		Vec3Normalize(dirWorldN, dirWorld);
 
-		// View-space direction
-		Vec3 dirViewRaw = Vec3(
-			view.m00 * dirWorldN.x + view.m01 * dirWorldN.y + view.m02 * dirWorldN.z,
-			view.m10 * dirWorldN.x + view.m11 * dirWorldN.y + view.m12 * dirWorldN.z,
-			view.m20 * dirWorldN.x + view.m21 * dirWorldN.y + view.m22 * dirWorldN.z
-		);
-		Vec3 dirView;
-		Vec3Normalize(dirView, dirViewRaw);
+		// Transform direction to view space (only rotation part of view matrix)
+		glm::vec3 dirView = glm::mat3(glmView) * glm::vec3(dirWorldN.x, dirWorldN.y, dirWorldN.z);
+		dirView = normalize(dirView);
 
 		// Set spot angles
 		float innerCos = 1.0f, outerCos = 1.0f;
 		if (light.type == LightType::SPOT) {
-			float innerAngle = radian(10.f);
-			float outerAngle = radian(10.f);
+			float innerAngle = radian(15.f); // Inner cone angle
+			float outerAngle = radian(25.f); // Outer cone angle  
 			innerCos = cos(innerAngle);
 			outerCos = cos(outerAngle);
 		}
@@ -232,13 +234,13 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
 		LightGPU gpu{};
 		gpu.position_type = Vec4(posView.x, posView.y, posView.z, static_cast<float>(light.type));
 		gpu.color_intensity = Vec4(light.color.x, light.color.y, light.color.z, light.intensity);
-		gpu.direction_range = Vec4(dirView.x, dirView.y, dirView.z, 100.f); // TODO: light range
+		gpu.direction_range = Vec4(dirView.x, dirView.y, dirView.z, 100.f); // TODO: make range configurable
 		gpu.spot_angles = Vec4(innerCos, outerCos, 0.0f, 0.0f);
 
 		lights.emplace_back(gpu);
 	}
 
-	// Upload
+	// Upload to UBO
 	glBindBuffer(GL_UNIFORM_BUFFER, m_LightsUBO);
 
 	Vec4 count(static_cast<float>(lights.size()), 0.0f, 0.0f, 0.0f);
@@ -254,7 +256,6 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 	glCheckError();
 }
-
 void Renderer::BindLightsBlockIfPresent(const std::shared_ptr<Shader>& shader)
 {
 	if (!shader || !shader->IsValid())
@@ -348,6 +349,7 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 #endif
 }
+
 
 
 /**
