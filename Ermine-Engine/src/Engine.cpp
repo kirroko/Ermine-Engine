@@ -308,7 +308,7 @@ void engine::Dummy([[maybe_unused]] GLFWwindow* wwindow)
 	// }
 }
 
-void HandleShadingToggle(GLFWwindow* windowContext)
+void engine::HandleShadingToggle(GLFWwindow* windowContext)
 {
 	static bool key1WasPressed = false;
 	static bool key2WasPressed = false;
