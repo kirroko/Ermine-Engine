@@ -1,4 +1,4 @@
-#version 410
+#version 460
 
 in vec2 TexCoord;
 in vec3 Normal;
@@ -104,12 +104,21 @@ float calculateAttenuation(int lightIndex, vec3 fragPosView, out vec3 lightDir)
         lightDir = normalize(lightPosView - fragPosView);
         float distance = length(lightPosView - fragPosView);
         
-        // Distance attenuation
-        attenuation = 1.0 / (1.0 + 0.09 * distance + 0.032 * distance * distance);
+        // Improved distance attenuation with configurable falloff
+        float linearTerm = 0.045; // Reduced for less aggressive falloff
+        float quadraticTerm = 0.0075; // Reduced for less aggressive falloff
+        attenuation = 1.0 / (1.0 + linearTerm * distance + quadraticTerm * distance * distance);
         
-        // Range cutoff
+        // Range cutoff with smooth transition
         if (distance > range) {
-            attenuation = 0.0;
+            float fadeDistance = range * 0.1; // 10% of range for smooth fade
+            float fadeStart = range - fadeDistance;
+            if (distance > fadeStart) {
+                float fadeFactor = 1.0 - (distance - fadeStart) / fadeDistance;
+                attenuation *= max(fadeFactor, 0.0);
+            } else {
+                attenuation = 0.0;
+            }
         }
         
         // Spot light cone attenuation
@@ -162,8 +171,11 @@ vec3 calculatePBR(int lightIndex, vec3 normal, vec3 viewDir, vec3 fragPosView, v
     
     vec3 H = normalize(viewDir + lightDir);
     
-    float NDF = DistributionGGX(normal, H, pbrRoughness);
-    float G = GeometrySmith(normal, viewDir, lightDir, pbrRoughness);
+    // Clamp roughness to prevent division by zero and artifacts
+    float roughness = clamp(pbrRoughness, 0.05, 1.0);
+    
+    float NDF = DistributionGGX(normal, H, roughness);
+    float G = GeometrySmith(normal, viewDir, lightDir, roughness);
     vec3 F = fresnelSchlick(max(dot(H, viewDir), 0.0), F0);
     
     vec3 kS = F;
@@ -199,18 +211,32 @@ void main()
     } else {
         // PBR Lighting
         vec3 albedo = texColor.rgb * pbrAlbedo;
+        
+        // Improved F0 calculation
         vec3 F0 = vec3(0.04);
         F0 = mix(F0, albedo, pbrMetallic);
         
-        // Ambient component (applied once)
-        vec3 ambient = vec3(0.03) * albedo * pbrAO;
+        // More balanced ambient lighting
+        vec3 ambient = vec3(0.08) * albedo * pbrAO; // Reduced from 0.15 to 0.08
         result += ambient;
         
         // Add contribution from each light
         for (int i = 0; i < numLights && i < 16; ++i) {
             result += calculatePBR(i, norm, viewDir, ViewPos, albedo, F0);
         }
+        
+        // Additional energy compensation for very rough surfaces
+        if (pbrRoughness > 0.7) {
+            result *= mix(1.0, 1.4, (pbrRoughness - 0.7) / 0.3);
+        }
     }
+    
+    // Improved tone mapping (ACES approximation)
+    vec3 a = 2.51 * result;
+    vec3 b = 0.03 + result;
+    vec3 c = 2.43 * result + 0.59;
+    vec3 d = 0.14 + result;
+    result = clamp((a * b) / (c * d), 0.0, 1.0);
     
     // Gamma correction
     result = pow(result, vec3(1.0/2.2));

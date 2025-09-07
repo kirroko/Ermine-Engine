@@ -302,6 +302,7 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 		auto& mesh = ECS::GetInstance().GetComponent<Mesh>(entity);
 		auto& material = ECS::GetInstance().GetComponent<Material>(entity);
 
+		// Build model matrix
 		glm::mat4 model = glm::mat4(1.0f);
 		model = glm::translate(model, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
 		model = glm::rotate(model, radian(trans.rotation.x), glm::vec3(1, 0, 0));
@@ -309,18 +310,19 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 		model = glm::rotate(model, radian(trans.rotation.z), glm::vec3(0, 0, 1));
 		model = glm::scale(model, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
 
+		// Bind texture and shader
 		material.m_texture->Bind();
 		material.m_shader->Bind();
 
 		// Bind lights uniform block if present - IMPORTANT: Move this AFTER shader bind
 		BindLightsBlockIfPresent(material.m_shader);
 
-		// Set matrices
+		// Set transformation matrices
 		material.m_shader->SetUniformMatrix4fv("model", &model[0][0]);
 		material.m_shader->SetUniformMatrix4fv("view", &view.m2[0][0]);
 		material.m_shader->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
 
-		// Calculate normal matrix
+		// Calculate and set normal matrix
 		glm::mat4 glmView = glm::mat4(
 			view.m00, view.m01, view.m02, view.m03,
 			view.m10, view.m11, view.m12, view.m13,
@@ -339,18 +341,23 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 		glm::vec3 worldViewPos = glm::vec3(invView[3]);
 		material.m_shader->SetUniform3f("viewPos", worldViewPos);
 
-		// Set Blinn-Phong material properties
-		material.m_shader->SetUniform3f("materialKa", glm::vec3(0.2f, 0.2f, 0.2f));
-		material.m_shader->SetUniform3f("materialKd", glm::vec3(0.9f, 0.9f, 0.9f));
-		material.m_shader->SetUniform3f("materialKs", glm::vec3(0.8f, 0.8f, 0.8f));
-		material.m_shader->SetUniform1f("materialShininess", 100.0f);
+		// Set material properties based on shading mode
+		if (m_IsBlinnPhong) {
+			// Blinn-Phong material properties
+			material.m_shader->SetUniform3f("materialKa", glm::vec3(0.2f, 0.2f, 0.2f));
+			material.m_shader->SetUniform3f("materialKd", glm::vec3(0.9f, 0.9f, 0.9f));
+			material.m_shader->SetUniform3f("materialKs", glm::vec3(0.8f, 0.8f, 0.8f));
+			material.m_shader->SetUniform1f("materialShininess", 100.0f);
+		}
+		else {
+			// PBR material properties
+			material.m_shader->SetUniform3f("pbrAlbedo", glm::vec3(0.8f, 0.8f, 0.8f));
+			material.m_shader->SetUniform1f("pbrMetallic", 0.1f);
+			material.m_shader->SetUniform1f("pbrRoughness", 0.4f);
+			material.m_shader->SetUniform1f("pbrAO", 1.0f);
+		}
 
-		// Set PBR material properties
-		material.m_shader->SetUniform3f("pbrAlbedo", glm::vec3(0.5f, 0.5f, 0.5f));
-		material.m_shader->SetUniform1f("pbrMetallic", 0.0f);
-		material.m_shader->SetUniform1f("pbrRoughness", 0.5f);
-		material.m_shader->SetUniform1f("pbrAO", 1.0f);
-
+		// Draw the mesh
 		Draw(mesh.vertex_array, mesh.index_buffer, material.m_shader);
 	}
 
