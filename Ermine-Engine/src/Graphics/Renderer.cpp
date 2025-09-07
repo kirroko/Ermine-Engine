@@ -195,8 +195,13 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
 		const auto& light = ecs.GetComponent<Light>(e);
 
 		// View-space position (uses operator*(Mtx44, Vec3) which should apply translation)
-		Vec3 posView3 = view * trans.position;
-		Vec4 posView(posView3.x, posView3.y, posView3.z, 1.0f);
+		glm::mat4 glmView = glm::mat4(
+			view.m00, view.m01, view.m02, view.m03,
+			view.m10, view.m11, view.m12, view.m13,
+			view.m20, view.m21, view.m22, view.m23,
+			view.m30, view.m31, view.m32, view.m33
+		);
+		glm::vec4 posView = glmView * glm::vec4{ trans.position.x, trans.position.y, trans.position.z, 1.0f };
 
 		// Build rotation from Euler (Z * Y * X)
 		Mtx44 rx, ry, rz;
