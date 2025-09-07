@@ -158,7 +158,6 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().AddComponent(greenLightEntity, ObjectMetaData("LightGreen", "Light", true));
 	ECS::GetInstance().AddComponent(greenLightEntity, Light(Vec3(0, 1, 0), 2.0f, LightType::POINT));
 
-	
 	glClearColor(0.2f,0.3f,0.3f,1.0f); // Background color
 
    // Create ImGUI window for Asset Browser
