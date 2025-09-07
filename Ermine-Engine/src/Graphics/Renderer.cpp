@@ -302,10 +302,6 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 		auto& mesh = ECS::GetInstance().GetComponent<Mesh>(entity);
 		auto& material = ECS::GetInstance().GetComponent<Material>(entity);
 
-
-		// TODO: Move to init portion
-		//BindLightsBlockIfPresent(material.m_shader);
-
 		glm::mat4 model = glm::mat4(1.0f);
 		model = glm::translate(model, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
 		model = glm::rotate(model, radian(trans.rotation.x), glm::vec3(1, 0, 0));
