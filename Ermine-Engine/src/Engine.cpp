@@ -146,17 +146,29 @@ bool engine::Init(GLFWwindow* windowContext)
 	auto redLightEntity = ECS::GetInstance().CreateEntity();
 	ECS::GetInstance().AddComponent(redLightEntity, Transform(Vec3(2, 2, 0), Vec3(0, 0, 0), Vec3(1, 1, 1)));
 	ECS::GetInstance().AddComponent(redLightEntity, ObjectMetaData("LightRed", "Light", true));
-	ECS::GetInstance().AddComponent(redLightEntity, Light(Vec3(1, 0, 0), 2.0f, LightType::POINT));
+	ECS::GetInstance().AddComponent(redLightEntity, Light(Vec3(1, 0, 0), 1.0f, LightType::POINT));
+	ECS::GetInstance().AddComponent(redLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
+	ECS::GetInstance().AddComponent(redLightEntity, Material(shader, texture));
+
+
 
 	auto blueLightEntity = ECS::GetInstance().CreateEntity();
 	ECS::GetInstance().AddComponent(blueLightEntity, Transform(Vec3(-2, 2, 0), Vec3(0, 0, 0), Vec3(1, 1, 1)));
 	ECS::GetInstance().AddComponent(blueLightEntity, ObjectMetaData("LightBlue", "Light", true));
-	ECS::GetInstance().AddComponent(blueLightEntity, Light(Vec3(0, 0, 1), 2.0f, LightType::POINT));
+	ECS::GetInstance().AddComponent(blueLightEntity, Light(Vec3(0, 0, 1), 1.0f, LightType::POINT));
+	ECS::GetInstance().AddComponent(blueLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
+	ECS::GetInstance().AddComponent(blueLightEntity, Material(shader, texture));
+
+
 
 	auto greenLightEntity = ECS::GetInstance().CreateEntity();
 	ECS::GetInstance().AddComponent(greenLightEntity, Transform(Vec3(0, 2, -3), Vec3(0, 0, 0), Vec3(1, 1, 1)));
 	ECS::GetInstance().AddComponent(greenLightEntity, ObjectMetaData("LightGreen", "Light", true));
-	ECS::GetInstance().AddComponent(greenLightEntity, Light(Vec3(0, 1, 0), 2.0f, LightType::POINT));
+	ECS::GetInstance().AddComponent(greenLightEntity, Light(Vec3(0, 1, 0), 1.0f, LightType::POINT));
+	ECS::GetInstance().AddComponent(greenLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
+	ECS::GetInstance().AddComponent(greenLightEntity, Material(shader, texture));
+
+
 
 	glClearColor(0.2f,0.3f,0.3f,1.0f); // Background color
 

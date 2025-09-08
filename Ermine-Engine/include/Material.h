@@ -7,7 +7,6 @@ namespace Ermine
     struct MaterialData {
         Vec3 Ka, Kd, Ks;
         float Shininess;
-        int useBF;
     };
 
     struct LightGPU

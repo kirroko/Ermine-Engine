@@ -302,6 +302,7 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 		auto& mesh = ECS::GetInstance().GetComponent<Mesh>(entity);
 		auto& material = ECS::GetInstance().GetComponent<Material>(entity);
 
+
 		// Build model matrix
 		glm::mat4 model = glm::mat4(1.0f);
 		model = glm::translate(model, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
@@ -341,20 +342,49 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 		glm::vec3 worldViewPos = glm::vec3(invView[3]);
 		material.m_shader->SetUniform3f("viewPos", worldViewPos);
 
-		// Set material properties based on shading mode
-		if (m_IsBlinnPhong) {
-			// Blinn-Phong material properties
-			material.m_shader->SetUniform3f("materialKa", glm::vec3(0.2f, 0.2f, 0.2f));
-			material.m_shader->SetUniform3f("materialKd", glm::vec3(0.9f, 0.9f, 0.9f));
-			material.m_shader->SetUniform3f("materialKs", glm::vec3(0.8f, 0.8f, 0.8f));
-			material.m_shader->SetUniform1f("materialShininess", 100.0f);
+
+		if (ECS::GetInstance().HasComponent<Light>(entity))
+		{
+			auto& light = ECS::GetInstance().GetComponent<Light>(entity);
+			glm::vec3 emissionColor = glm::vec3(light.color.x, light.color.y, light.color.z);
+			if (m_IsBlinnPhong) {
+				// Blinn-Phong material properties
+				material.m_shader->SetUniform3f("materialKa", glm::vec3(0.f));
+				material.m_shader->SetUniform3f("materialKd", glm::vec3(0.f));
+				material.m_shader->SetUniform3f("materialKs", glm::vec3(0.f));
+				material.m_shader->SetUniform1f("materialShininess", 0.1f);
+				material.m_shader->SetUniform3f("materialKe", emissionColor * light.intensity);
+			}
+			else {
+				// PBR material properties
+				material.m_shader->SetUniform3f("pbrAlbedo", glm::vec3(0.f));
+				material.m_shader->SetUniform1f("pbrMetallic", 0.0f);
+				material.m_shader->SetUniform1f("pbrRoughness", 0.0f);
+				material.m_shader->SetUniform1f("pbrAO", 0.0f);
+				material.m_shader->SetUniform3f("pbrEmissive", emissionColor);
+				material.m_shader->SetUniform1f("pbrEmissiveIntensity", light.intensity);
+			}
 		}
 		else {
-			// PBR material properties
-			material.m_shader->SetUniform3f("pbrAlbedo", glm::vec3(0.8f, 0.8f, 0.8f));
-			material.m_shader->SetUniform1f("pbrMetallic", 0.1f);
-			material.m_shader->SetUniform1f("pbrRoughness", 0.4f);
-			material.m_shader->SetUniform1f("pbrAO", 1.0f);
+			// Set material properties based on shading mode
+			if (m_IsBlinnPhong) {
+				// Blinn-Phong material properties
+				material.m_shader->SetUniform3f("materialKa", glm::vec3(0.2f, 0.2f, 0.2f));
+				material.m_shader->SetUniform3f("materialKd", glm::vec3(0.9f, 0.9f, 0.9f));
+				material.m_shader->SetUniform3f("materialKs", glm::vec3(0.8f, 0.8f, 0.8f));
+				material.m_shader->SetUniform1f("materialShininess", 100.0f);
+				material.m_shader->SetUniform3f("materialKe", glm::vec3(0.f));
+
+			}
+			else {
+				// PBR material properties
+				material.m_shader->SetUniform3f("pbrAlbedo", glm::vec3(0.8f, 0.8f, 0.8f));
+				material.m_shader->SetUniform1f("pbrMetallic", 0.1f);
+				material.m_shader->SetUniform1f("pbrRoughness", 0.4f);
+				material.m_shader->SetUniform1f("pbrAO", 1.0f);
+				material.m_shader->SetUniform3f("pbrEmissive", glm::vec3(0.f));
+				material.m_shader->SetUniform1f("pbrEmissiveIntensity", 0.f);
+			}
 		}
 
 		// Draw the mesh

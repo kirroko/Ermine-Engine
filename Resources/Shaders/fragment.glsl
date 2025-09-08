@@ -16,6 +16,7 @@ uniform bool isBlinnPhong;
 uniform vec3 materialKa;
 uniform vec3 materialKd;
 uniform vec3 materialKs;
+uniform vec3 materialKe;
 uniform float materialShininess;
 
 // PBR Material properties
@@ -23,6 +24,8 @@ uniform vec3 pbrAlbedo;
 uniform float pbrMetallic;
 uniform float pbrRoughness;
 uniform float pbrAO;
+uniform vec3 pbrEmissive;
+uniform float pbrEmissiveIntensity;
 
 uniform vec3 viewPos; // World space view position for PBR
 
@@ -203,11 +206,14 @@ void main()
         // Ambient component (applied once)
         vec3 ambient = materialKa * 0.1;
         result += ambient * texColor.rgb;
-        
+
         // Add contribution from each light
         for (int i = 0; i < numLights && i < 16; ++i) {
             result += calculateBlinnPhong(i, norm, viewDir, ViewPos) * texColor.rgb;
         }
+        
+        // Add Flat Emission
+        result += materialKe; 
     } else {
         // PBR Lighting
         vec3 albedo = texColor.rgb * pbrAlbedo;
@@ -219,7 +225,7 @@ void main()
         // More balanced ambient lighting
         vec3 ambient = vec3(0.08) * albedo * pbrAO; // Reduced from 0.15 to 0.08
         result += ambient;
-        
+
         // Add contribution from each light
         for (int i = 0; i < numLights && i < 16; ++i) {
             result += calculatePBR(i, norm, viewDir, ViewPos, albedo, F0);
@@ -229,6 +235,9 @@ void main()
         if (pbrRoughness > 0.7) {
             result *= mix(1.0, 1.4, (pbrRoughness - 0.7) / 0.3);
         }
+        
+        // Add Flat Emission
+        result += pbrEmissive * pbrEmissiveIntensity;
     }
     
     // Improved tone mapping (ACES approximation)
