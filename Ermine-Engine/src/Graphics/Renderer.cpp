@@ -340,7 +340,6 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 		// Set world space view position for PBR calculations
 		glm::mat4 invView = glm::inverse(glmView);
 		glm::vec3 worldViewPos = glm::vec3(invView[3]);
-		material.m_shader->SetUniform3f("viewPos", worldViewPos);
 
 
 		if (ECS::GetInstance().HasComponent<Light>(entity))

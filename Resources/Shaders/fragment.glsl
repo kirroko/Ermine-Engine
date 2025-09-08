@@ -27,8 +27,6 @@ uniform float pbrAO;
 uniform vec3 pbrEmissive;
 uniform float pbrEmissiveIntensity;
 
-uniform vec3 viewPos; // World space view position for PBR
-
 struct Light {
     vec4 position_type;    // xyz = position (view space), w = light type
     vec4 color_intensity;  // xyz = color, w = intensity
