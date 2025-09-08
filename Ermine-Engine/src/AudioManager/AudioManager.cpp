@@ -72,7 +72,8 @@ void CAudioEngine::UnLoadSound(const std::string& strSoundName)
 	sgpImplementation->mSounds.erase(tFoundIt);
 }
 
-int CAudioEngine::PlaySounds(const string& strSoundName, const Vector3& vPosition, float fVolumedB)
+// Updated to use Vector3D instead of Vector3
+int CAudioEngine::PlaySounds(const string& strSoundName, const Vector3D& vPosition, float fVolumedB)
 {
 	// Check if sound exists, load if needed
 	auto tFoundIt = sgpImplementation->mSounds.find(strSoundName);
@@ -117,7 +118,8 @@ int CAudioEngine::PlaySounds(const string& strSoundName, const Vector3& vPositio
 	return nChannelId; // Return valid channel ID
 }
 
-void CAudioEngine::SetChannel3dPosition(int nChannelId, const Vector3& vPosition)
+// Updated to use Vector3D instead of Vector3
+void CAudioEngine::SetChannel3dPosition(int nChannelId, const Vector3D& vPosition)
 {
 	auto tFoundIt = sgpImplementation->mChannels.find(nChannelId);
 	if (tFoundIt == sgpImplementation->mChannels.end())
@@ -215,7 +217,8 @@ void CAudioEngine::SetEventParameter(const string& strEventName, const string& s
 	CAudioEngine::ErrorCheck(tFoundIt->second->setParameterByName(strParameterName.c_str(), fValue));
 }
 
-FMOD_VECTOR CAudioEngine::VectorToFmod(const Vector3& vPosition) {
+// Updated to use Vector3D instead of Vector3
+FMOD_VECTOR CAudioEngine::VectorToFmod(const Vector3D& vPosition) {
 	FMOD_VECTOR fVec;
 	fVec.x = vPosition.x;
 	fVec.y = vPosition.y;
@@ -240,6 +243,32 @@ float  CAudioEngine::dbToVolume(float dB)
 float  CAudioEngine::VolumeTodB(float volume)
 {
 	return 20.0f * log10f(volume);
+}
+
+bool CAudioEngine::IsPlaying(int nChannelId) {
+	auto tFoundIt = sgpImplementation->mChannels.find(nChannelId);
+	if (tFoundIt == sgpImplementation->mChannels.end())
+		return false;
+
+	bool isPlaying = false;
+	tFoundIt->second->isPlaying(&isPlaying);
+	return isPlaying;
+}
+
+void CAudioEngine::StopChannel(int nChannelId) {
+	auto tFoundIt = sgpImplementation->mChannels.find(nChannelId);
+	if (tFoundIt == sgpImplementation->mChannels.end())
+		return;
+
+	CAudioEngine::ErrorCheck(tFoundIt->second->stop());
+	sgpImplementation->mChannels.erase(tFoundIt);
+}
+
+void CAudioEngine::StopAllChannels() {
+	for (auto& channel : sgpImplementation->mChannels) {
+		CAudioEngine::ErrorCheck(channel.second->stop());
+	}
+	sgpImplementation->mChannels.clear();
 }
 
 void CAudioEngine::Shutdown() {

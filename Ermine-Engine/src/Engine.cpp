@@ -28,6 +28,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "EditorGUI.h"
 #include "JobSystem.h"
 #include "ScriptEngine.h"
+#include "AudioSystem.h"
 
 #include <random> // Include for random number generation
 
@@ -69,6 +70,9 @@ bool engine::Init(GLFWwindow* windowContext)
 	EE_CORE_INFO("ECS Initialized");
 	EE_CORE_TRACE("Begin Registering of Components and Systems...");
 
+	AudioSystem::Init();
+	EE_CORE_INFO("AudioSystem Initialized");
+
 	// TODO: Register all components here, limit of 32 components
 	ECS::GetInstance().RegisterComponent<Transform>();
 	ECS::GetInstance().RegisterComponent<Rigidbody3D>();
@@ -77,9 +81,13 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().RegisterComponent<Script>();
 	ECS::GetInstance().RegisterComponent<ObjectMetaData>();
 
+	ECS::GetInstance().RegisterComponent<AudioComponent>(); // ADD THIS
+	ECS::GetInstance().RegisterComponent<GlobalAudioComponent>(); // ADD THIS IF YOU WANT GLOBAL AUDIO
+
 	// TODO: Register all systems here, no limits
 	ECS::GetInstance().RegisterSystem<graphics::Renderer>();
 	ECS::GetInstance().RegisterSystem<scripting::ScriptSystem>();
+	ECS::GetInstance().RegisterSystem<AudioSystem>();
 
 	// TODO: Set the signature for the system as required
 	// For Graphics/Renderer system
@@ -92,6 +100,11 @@ bool engine::Init(GLFWwindow* windowContext)
 	sig.reset();
 	sig.set(ECS::GetInstance().GetComponentType<Script>());
 	ECS::GetInstance().SetSystemSignature<scripting::ScriptSystem>(sig);
+
+	sig.reset();
+	sig.set(ECS::GetInstance().GetComponentType<AudioComponent>());
+	sig.set(ECS::GetInstance().GetComponentType<Transform>());
+	ECS::GetInstance().SetSystemSignature<AudioSystem>(sig);
 
 	glfwSetFramebufferSizeCallback(windowContext, []([[maybe_unused]] GLFWwindow* window, int width, int height)
 		{
@@ -134,6 +147,22 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().AddComponent(entity2, Material(shader, texture));
 	ECS::GetInstance().AddComponent(entity2, Script("Sandbox",entity2));
 
+	auto audioTestEntity = ECS::GetInstance().CreateEntity();
+	ECS::GetInstance().AddComponent(audioTestEntity, Transform(Vec3(2, 0, -1), Vec3(0, 0, 0), Vec3(1, 1, 1)));
+	ECS::GetInstance().AddComponent(audioTestEntity, ObjectMetaData());
+
+	AudioComponent testAudio;
+	testAudio.soundName = "../Resources/Audio/test.wav"; // Replace with your actual sound file path
+	testAudio.volume = 0.5f; // 50% volume
+	testAudio.is3D = false; // 2D sound for testing
+	testAudio.isLooping = false;
+	testAudio.isStreaming = false;
+	testAudio.shouldPlay = true; // We'll trigger this with keyboard input
+
+	ECS::GetInstance().AddComponent(audioTestEntity, testAudio);
+
+	EE_CORE_INFO("Audio test entity created with ID: {} - will auto-play", audioTestEntity);
+
 	//auto entity3 = ECS::GetInstance().CreateEntity();
 	//ECS::GetInstance().AddComponent(entity3, Transform(Vec3(1, 1, -3), Vec3(0, 0, 0), Vec3(1, 1, 1)));
 	//ECS::GetInstance().AddComponent(entity3, graphics::GeometryFactory::CreateSphere());
@@ -162,6 +191,7 @@ void engine::Shutdown()
     job::Shutdown();
 
 	ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->m_ScriptEngine->Shutdown();
+	AudioSystem::Shutdown();
 
     ECS::GetInstance().Shutdown();
 
@@ -193,6 +223,7 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 
 	// Other non-fixed logic here
 	ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->Update();
+	ECS::GetInstance().GetSystem<AudioSystem>()->Update();
 	// Update editor camera
 	editor::EditorCamera::GetInstance().Update();
 }

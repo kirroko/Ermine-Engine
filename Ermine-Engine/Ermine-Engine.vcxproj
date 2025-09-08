@@ -124,6 +124,7 @@ xcopy /Q /E /Y /I ..\Resources ..\Build\bin\Release-windows-x86_64\Resources</Co
     <ClInclude Include="include\AssetBrowser.h" />
     <ClInclude Include="include\AssetManager.h" />
     <ClInclude Include="include\AudioManager.h" />
+    <ClInclude Include="include\AudioSystem.h" />
     <ClInclude Include="include\Camera.h" />
     <ClInclude Include="include\Component.h" />
     <ClInclude Include="include\Components.h" />
@@ -166,6 +167,7 @@ xcopy /Q /E /Y /I ..\Resources ..\Build\bin\Release-windows-x86_64\Resources</Co
     <ClCompile Include="src\AssetBrowser\AssetBrowser.cpp" />
     <ClCompile Include="src\AssetManager\AssetManager.cpp" />
     <ClCompile Include="src\AudioManager\AudioManager.cpp" />
+    <ClCompile Include="src\AudioManager\AudioSystem.cpp" />
     <ClCompile Include="src\ECS\Component.cpp" />
     <ClCompile Include="src\ECS\ECS.cpp" />
     <ClCompile Include="src\ECS\Entity.cpp" />
