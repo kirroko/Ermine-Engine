@@ -13,6 +13,9 @@
     <Filter Include="src\AssetManager">
       <UniqueIdentifier>{D7F065A7-C3E9-84F9-EC1B-6A7ED8736405}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\AudioManager">
+      <UniqueIdentifier>{097629AA-F56E-48FC-1EA1-2D810AF92708}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\ECS">
       <UniqueIdentifier>{F76D2FA9-634D-AE44-6C65-391BD8C314A6}</UniqueIdentifier>
     </Filter>
@@ -49,6 +52,9 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\AssetManager.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\AudioManager.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\Camera.h">
@@ -111,6 +117,9 @@
     <ClInclude Include="include\MathUtils.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\MathVector.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\Matrix3x3.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -159,9 +168,6 @@
     <ClInclude Include="include\Window.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="include\MathVector.h">
-      <Filter>include</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\AssetBrowser\AssetBrowser.cpp">
@@ -169,6 +175,9 @@
     </ClCompile>
     <ClCompile Include="src\AssetManager\AssetManager.cpp">
       <Filter>src\AssetManager</Filter>
+    </ClCompile>
+    <ClCompile Include="src\AudioManager\AudioManager.cpp">
+      <Filter>src\AudioManager</Filter>
     </ClCompile>
     <ClCompile Include="src\ECS\Component.cpp">
       <Filter>src\ECS</Filter>
@@ -215,6 +224,9 @@
     <ClCompile Include="src\Logger\Logger.cpp">
       <Filter>src\Logger</Filter>
     </ClCompile>
+    <ClCompile Include="src\Math\MathVector.cpp">
+      <Filter>src\Math</Filter>
+    </ClCompile>
     <ClCompile Include="src\Math\Matrix3x3.cpp">
       <Filter>src\Math</Filter>
     </ClCompile>
@@ -259,9 +271,6 @@
     </ClCompile>
     <ClCompile Include="src\dllmain.cpp">
       <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Math\MathVector.cpp">
-      <Filter>src\Math</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

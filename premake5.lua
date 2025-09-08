@@ -18,6 +18,7 @@ IncludeDir["glm"] = "ThirdParty/glm"
 IncludeDir["spdlog"] = "ThirdParty/spdlog/include"
 IncludeDir["stb"] = "ThirdParty/stb"
 IncludeDir["Mono"] = "ThirdParty/Mono/include"
+IncludeDir["Fmod"] = "ThirdParty/Fmod/inc"
 
 -- Libraries
 LibraryDir = {}
@@ -80,6 +81,9 @@ project "Ermine-Engine"
         "Glad",
         "ImGui",
         "fmod_vc",
+        "fmodL_vc",
+        "fmodstudio_vc",
+        "fmodstudioL_vc",
         "opengl32.lib",
 		"mono-2.0-sgen.lib"
     }
