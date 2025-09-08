@@ -352,7 +352,7 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 				material.m_shader->SetUniform3f("materialKa", glm::vec3(0.f));
 				material.m_shader->SetUniform3f("materialKd", glm::vec3(0.f));
 				material.m_shader->SetUniform3f("materialKs", glm::vec3(0.f));
-				material.m_shader->SetUniform1f("materialShininess", 0.1f);
+				material.m_shader->SetUniform1f("materialShininess", 0.0f);
 				material.m_shader->SetUniform3f("materialKe", emissionColor * light.intensity);
 			}
 			else {

@@ -155,7 +155,12 @@ vec3 calculateBlinnPhong(int lightIndex, vec3 normal, vec3 viewDir, vec3 fragPos
     
     // Specular (Blinn-Phong)
     vec3 halfwayDir = normalize(lightDir + viewDir);
-    float spec = pow(max(dot(normal, halfwayDir), 0.0), materialShininess);
+    float spec;
+    if (materialShininess <= 0.0) {
+        spec = 0.0;
+    } else {
+        spec = pow(max(dot(normal, halfwayDir), 0.0), materialShininess);
+    }
     vec3 specular = spec * lightColor * materialKs;
     
     return (diffuse + specular) * attenuation;
