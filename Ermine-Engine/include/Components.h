@@ -192,4 +192,19 @@ namespace Ermine
 		Material(const std::shared_ptr<graphics::Shader>& shader, const std::shared_ptr<graphics::Texture>& texture) : m_shader(shader), m_texture(texture)
 		{}
 	};
+
+	/*!***********************************************************************
+	\brief
+	 Particle component structure.
+	*************************************************************************/
+	struct Particle
+	{
+		Vec3 velocity;
+		float lifetime;
+		float age;
+		Vec4 colour;
+		float size;
+
+		Particle() : velocity(0, 0, 0), lifetime(1.0f), age(0.0f), colour(1, 1, 1, 1), size(1.0f) {}
+	};
 }

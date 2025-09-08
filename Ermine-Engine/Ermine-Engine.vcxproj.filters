@@ -31,6 +31,9 @@
     <Filter Include="src\Object">
       <UniqueIdentifier>{13A4AE24-FF5B-F071-6863-C9CD543A8B62}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Particles">
+      <UniqueIdentifier>{438C557B-AF4C-D1B1-7887-1A2FE406168E}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Physics">
       <UniqueIdentifier>{9F8B9316-0B41-0C0C-9435-06E300EA0210}</UniqueIdentifier>
     </Filter>
@@ -111,10 +114,16 @@
     <ClInclude Include="include\MathUtils.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\MathVector.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\Matrix3x3.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\Matrix4x4.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Particles.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\Physics.h">
@@ -157,9 +166,6 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\Window.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\MathVector.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
@@ -215,6 +221,9 @@
     <ClCompile Include="src\Logger\Logger.cpp">
       <Filter>src\Logger</Filter>
     </ClCompile>
+    <ClCompile Include="src\Math\MathVector.cpp">
+      <Filter>src\Math</Filter>
+    </ClCompile>
     <ClCompile Include="src\Math\Matrix3x3.cpp">
       <Filter>src\Math</Filter>
     </ClCompile>
@@ -226,6 +235,9 @@
     </ClCompile>
     <ClCompile Include="src\Object\GameObjectFactory.cpp">
       <Filter>src\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Particles\Particles.cpp">
+      <Filter>src\Particles</Filter>
     </ClCompile>
     <ClCompile Include="src\Physics\Physics.cpp">
       <Filter>src\Physics</Filter>
@@ -259,9 +271,6 @@
     </ClCompile>
     <ClCompile Include="src\dllmain.cpp">
       <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Math\MathVector.cpp">
-      <Filter>src\Math</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
