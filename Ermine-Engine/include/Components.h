@@ -21,6 +21,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
 #include "Texture.h"
+#include "Animator.h"
 
 namespace Ermine
 {
@@ -30,12 +31,12 @@ namespace Ermine
 	*************************************************************************/
 	struct Transform
 	{
-		Mtx44 transform_matrix {1.0f}; // Identity matrix
+		Mtx44 transform_matrix{ 1.0f }; // Identity matrix
 		Vec3 position;
 		Vec3 rotation; // Euler angles in degrees
 		Vec3 scale;
 
-		explicit Transform(const Vec3& pos = Vec3(), const Vec3& rot = Vec3(), const Vec3& scl = Vec3(1.f,1.f,1.f)) : position(pos), rotation(rot), scale(scl)
+		explicit Transform(const Vec3& pos = Vec3(), const Vec3& rot = Vec3(), const Vec3& scl = Vec3(1.f, 1.f, 1.f)) : position(pos), rotation(rot), scale(scl)
 		{
 		}
 	};
@@ -51,21 +52,21 @@ namespace Ermine
 		Vec3 velocity{};
 		Vec3 acceleration{};
 		Vec3 force{};
-		float mass{1.f};				// Minimum mass of 1
-		float inverse_mass{1.f / mass}; // inverse mass = 1/mass
-		float linear_drag{0.9f};		// Adjust to control the friction from [0, 1]
+		float mass{ 1.f };				// Minimum mass of 1
+		float inverse_mass{ 1.f / mass }; // inverse mass = 1/mass
+		float linear_drag{ 0.9f };		// Adjust to control the friction from [0, 1]
 
 		// Rotational Properties
 		float angle{};
 		float angular_velocity{};
 		float angular_acceleration{};
 		float torque{};
-		float inertia_mass{1.f};					// Minimum inertia mass of 1
-		float inv_inertia_mass{1.f / inertia_mass}; // inverse inertia mass = 1/inertia mass
-		float angular_drag{0.9f};					// Adjust to control the friction from [0, 1]
+		float inertia_mass{ 1.f };					// Minimum inertia mass of 1
+		float inv_inertia_mass{ 1.f / inertia_mass }; // inverse inertia mass = 1/inertia mass
+		float angular_drag{ 0.9f };					// Adjust to control the friction from [0, 1]
 
-		bool use_gravity{false};  // If true, apply gravity
-		bool is_kinematic{false}; // If true, don't apply physics
+		bool use_gravity{ false };  // If true, apply gravity
+		bool is_kinematic{ false }; // If true, don't apply physics
 
 		explicit Rigidbody3D(const Vec3& pos = Vec3(), const Vec3& vel = Vec3(), const Vec3& acc = Vec3(), const Vec3& frc = Vec3(), float m = 1.f, float inv_m = 1.f, float lin_drag = 0.9f,
 			float ang_drag = 0.9f, bool use_grav = false, bool is_kinem = false) :
@@ -83,8 +84,8 @@ namespace Ermine
 		bool isPrimary; // Is this the main camera?
 
 		CameraComponent() = default;
-		CameraComponent(float fov = 60.0f, float aspect = 16.0f/9.0f, float nearP = 0.1f, float farP = 1000.0f, bool primary = false) :
-		fov(fov), aspectRatio(aspect), nearPlane(nearP), farPlane(farP), isPrimary(primary)
+		CameraComponent(float fov = 60.0f, float aspect = 16.0f / 9.0f, float nearP = 0.1f, float farP = 1000.0f, bool primary = false) :
+			fov(fov), aspectRatio(aspect), nearPlane(nearP), farPlane(farP), isPrimary(primary)
 		{
 		}
 	};
@@ -96,12 +97,12 @@ namespace Ermine
 		std::shared_ptr<graphics::IndexBuffer> index_buffer;
 
 		Mesh() = default;
-		
+
 		Mesh(const std::shared_ptr<graphics::VertexArray>& vao, const std::shared_ptr<graphics::VertexBuffer>& vbo, const std::shared_ptr<graphics::IndexBuffer>& ibo) :
 			vertex_array(vao), vertex_buffer(vbo), index_buffer(ibo)
 		{}
 	};
-	
+
 	/*!***********************************************************************
 	\brief
 	 Material component structure.
@@ -112,8 +113,17 @@ namespace Ermine
 		std::shared_ptr<graphics::Texture> m_texture;
 
 		Material() = default;
-		
+
 		Material(const std::shared_ptr<graphics::Shader>& shader, const std::shared_ptr<graphics::Texture>& texture) : m_shader(shader), m_texture(texture)
 		{}
+	};
+
+	/*!***********************************************************************
+	\brief
+	 Animator component structure.
+	*************************************************************************/
+	struct AnimatorComponent
+	{
+		std::shared_ptr<Animator> animator;
 	};
 }

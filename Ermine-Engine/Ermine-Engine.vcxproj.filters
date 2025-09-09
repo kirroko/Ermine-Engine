@@ -138,6 +138,15 @@
     <ClInclude Include="include\Window.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\AnimatorTypes.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Animator.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\AnimatorSystem.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\AssetManager\AssetManager.cpp">
@@ -232,6 +241,15 @@
     </ClCompile>
     <ClCompile Include="src\dllmain.cpp">
       <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Graphics\Animator.cpp">
+      <Filter>src\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Graphics\AnimatorSystem.cpp">
+      <Filter>src\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Graphics\AnimatorEditor.cpp">
+      <Filter>src\Graphics</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

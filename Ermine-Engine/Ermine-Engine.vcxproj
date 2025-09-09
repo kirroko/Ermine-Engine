@@ -115,6 +115,9 @@ xcopy /Q /E /Y /I ..\Resources ..\Build\bin\Release-windows-x86_64\Resources</Co
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="include\Animator.h" />
+    <ClInclude Include="include\AnimatorSystem.h" />
+    <ClInclude Include="include\AnimatorTypes.h" />
     <ClInclude Include="include\AssetManager.h" />
     <ClInclude Include="include\Camera.h" />
     <ClInclude Include="include\Component.h" />
@@ -157,6 +160,9 @@ xcopy /Q /E /Y /I ..\Resources ..\Build\bin\Release-windows-x86_64\Resources</Co
     <ClCompile Include="src\ECS\Entity.cpp" />
     <ClCompile Include="src\ECS\Systems.cpp" />
     <ClCompile Include="src\Engine.cpp" />
+    <ClCompile Include="src\Graphics\Animator.cpp" />
+    <ClCompile Include="src\Graphics\AnimatorEditor.cpp" />
+    <ClCompile Include="src\Graphics\AnimatorSystem.cpp" />
     <ClCompile Include="src\Graphics\Camera.cpp" />
     <ClCompile Include="src\Graphics\GeometryFactory.cpp" />
     <ClCompile Include="src\Graphics\IndexBuffer.cpp" />
