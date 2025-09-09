@@ -28,6 +28,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "EditorGUI.h"
 #include "JobSystem.h"
 #include "ScriptEngine.h"
+#include "Serialisation.h"
 
 #include <random> // Include for random number generation
 
@@ -54,6 +55,43 @@ bool engine::Init(GLFWwindow* windowContext)
 {
 	if (s_isInitialized) // Already initialized
 		return true;
+
+	//const std::filesystem::path cfgPath = std::filesystem::path("configs") / "ErmineEngine.config";
+	const std::filesystem::path cfgPath = "Ermine-Engine.config";
+
+	Config cfg{};
+	try {
+	    cfg = LoadConfigFromFile(cfgPath);
+	    EE_CORE_INFO("Loaded config: {}x{}, fullscreen={}, maximised={}, title={}",
+	        cfg.windowWidth, cfg.windowHeight, cfg.fullscreen, cfg.title);
+	}
+	catch (const std::exception& e) {
+	    EE_CORE_WARN("Config not found/invalid ({}). Using defaults.", e.what());
+	    cfg = { 1920, 1080, false, false, "Ermine Editor 0.1" };
+	    // Optional: write defaults so the file exists next run
+	    try { SaveConfigToFile(cfg, cfgPath, /*pretty=*/true); }
+	    catch (const std::exception& w) { EE_CORE_WARN("Could not write default config: {}", w.what()); }
+	}
+
+	// Apply config to the window
+	glfwSetWindowTitle(windowContext, cfg.title.c_str());
+	if (cfg.fullscreen) {
+		GLFWmonitor* mon = glfwGetPrimaryMonitor();
+		const GLFWvidmode* mode = glfwGetVideoMode(mon);
+		glfwSetWindowMonitor(windowContext, mon, 0, 0,
+			mode->width, mode->height,
+			mode->refreshRate);
+	}
+	else {
+		glfwSetWindowSize(windowContext, cfg.windowWidth, cfg.windowHeight);
+
+		if (cfg.maximized) {
+			glfwMaximizeWindow(windowContext);
+		}
+		else {
+			glfwRestoreWindow(windowContext);
+		}
+	}
 
 	EnableMemoryLeakChecking();
 
@@ -154,6 +192,20 @@ void engine::Shutdown()
 	// By right, ECS helps shut all systems down via each system's destructor, while the rest of the singleton classes will be destroyed by the OS
 	if (!s_isInitialized)
 		return;
+
+	//const std::filesystem::path scenePath = "Ermine-Engine.scene";
+	//SaveSceneToFile("Ermine-Engine", scenePath);
+
+	Config cfg{};
+	int width, height;
+	glfwGetWindowSize(glfwGetCurrentContext(), &width, &height);
+	cfg.windowWidth = width;
+	cfg.windowHeight = height;
+	cfg.fullscreen = (glfwGetWindowMonitor(glfwGetCurrentContext()) != nullptr);
+	cfg.maximized = (glfwGetWindowAttrib(glfwGetCurrentContext(), GLFW_MAXIMIZED) == GLFW_TRUE);
+	cfg.title = "Ermine Editor 0.1";
+
+	SaveConfigToFile(cfg, "Ermine-Engine.config", false);
 
     AssetManager::GetInstance().Clear();
 

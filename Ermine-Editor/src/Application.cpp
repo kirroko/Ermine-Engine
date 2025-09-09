@@ -24,6 +24,7 @@ int main()
 {
     Logger::Init();
     EE_CORE_INFO("Logger Initialized");
+
     GLFWwindow* window = Window::InitWindow(1920,1080, "Ermine Editor 0.1");
     if (window == nullptr)
         return -1;
