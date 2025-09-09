@@ -151,7 +151,7 @@ void Texture::Unbind() const
 \return
  Returns GLuint m_RendererID
 *************************************************************************/
-unsigned int Ermine::graphics::Texture::GetRendererID() const
+GLuint Texture::GetRendererID() const
 {
     return m_RendererID;
 }

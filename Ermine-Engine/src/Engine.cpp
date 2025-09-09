@@ -29,6 +29,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "JobSystem.h"
 #include "ScriptEngine.h"
 #include "Serialisation.h"
+#include "AudioSystem.h"
+#include "Particles.h"
 
 #include <random> // Include for random number generation
 
@@ -49,6 +51,10 @@ namespace
 		if (breakAlloc != -1)
 			_CrtSetBreakAlloc(breakAlloc);
 	}
+
+	// For Particles
+	static std::shared_ptr<Ermine::graphics::Shader> particleShader;
+	static std::unique_ptr<Ermine::ParticleEmitter> emitter;
 }
 
 bool engine::Init(GLFWwindow* windowContext)
@@ -107,6 +113,9 @@ bool engine::Init(GLFWwindow* windowContext)
 	EE_CORE_INFO("ECS Initialized");
 	EE_CORE_TRACE("Begin Registering of Components and Systems...");
 
+	AudioSystem::Init();
+	EE_CORE_INFO("AudioSystem Initialized");
+
 	// TODO: Register all components here, limit of 32 components
 	ECS::GetInstance().RegisterComponent<Transform>();
 	ECS::GetInstance().RegisterComponent<Rigidbody3D>();
@@ -114,10 +123,16 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().RegisterComponent<Material>();
 	ECS::GetInstance().RegisterComponent<Script>();
 	ECS::GetInstance().RegisterComponent<ObjectMetaData>();
+	ECS::GetInstance().RegisterComponent<Particle>();
+
+	ECS::GetInstance().RegisterComponent<AudioComponent>(); // ADD THIS
+	ECS::GetInstance().RegisterComponent<GlobalAudioComponent>(); // ADD THIS IF YOU WANT GLOBAL AUDIO
 
 	// TODO: Register all systems here, no limits
 	ECS::GetInstance().RegisterSystem<graphics::Renderer>();
 	ECS::GetInstance().RegisterSystem<scripting::ScriptSystem>();
+	ECS::GetInstance().RegisterSystem<AudioSystem>();
+	ECS::GetInstance().RegisterSystem<ParticleSystem>();
 
 	// TODO: Set the signature for the system as required
 	// For Graphics/Renderer system
@@ -130,6 +145,19 @@ bool engine::Init(GLFWwindow* windowContext)
 	sig.reset();
 	sig.set(ECS::GetInstance().GetComponentType<Script>());
 	ECS::GetInstance().SetSystemSignature<scripting::ScriptSystem>(sig);
+
+	sig.reset();
+	sig.set(ECS::GetInstance().GetComponentType<AudioComponent>());
+	sig.set(ECS::GetInstance().GetComponentType<Transform>());
+	ECS::GetInstance().SetSystemSignature<AudioSystem>(sig);
+	
+	// For Particles
+	sig.reset();
+	sig.set(ECS::GetInstance().GetComponentType<Transform>());
+	sig.set(ECS::GetInstance().GetComponentType<Mesh>());
+	sig.set(ECS::GetInstance().GetComponentType<Material>());
+	sig.set(ECS::GetInstance().GetComponentType<Particle>());
+	ECS::GetInstance().SetSystemSignature<ParticleSystem>(sig);
 
 	glfwSetFramebufferSizeCallback(windowContext, []([[maybe_unused]] GLFWwindow* window, int width, int height)
 		{
@@ -172,15 +200,40 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().AddComponent(entity2, Material(shader, texture));
 	ECS::GetInstance().AddComponent(entity2, Script("Sandbox",entity2));
 
+	auto audioTestEntity = ECS::GetInstance().CreateEntity();
+	ECS::GetInstance().AddComponent(audioTestEntity, Transform(Vec3(2, 0, -1), Vec3(0, 0, 0), Vec3(1, 1, 1)));
+	ECS::GetInstance().AddComponent(audioTestEntity, ObjectMetaData());
+
+	AudioComponent testAudio;
+	testAudio.soundName = "../Resources/Audio/test.wav"; // Replace with your actual sound file path
+	testAudio.volume = 0.5f; // 50% volume
+	testAudio.is3D = false; // 2D sound for testing
+	testAudio.isLooping = false;
+	testAudio.isStreaming = false;
+	testAudio.shouldPlay = true; // We'll trigger this with keyboard input
+
+	ECS::GetInstance().AddComponent(audioTestEntity, testAudio);
+
+	EE_CORE_INFO("Audio test entity created with ID: {} - will auto-play", audioTestEntity);
+
 	//auto entity3 = ECS::GetInstance().CreateEntity();
 	//ECS::GetInstance().AddComponent(entity3, Transform(Vec3(1, 1, -3), Vec3(0, 0, 0), Vec3(1, 1, 1)));
 	//ECS::GetInstance().AddComponent(entity3, graphics::GeometryFactory::CreateSphere());
 	//ECS::GetInstance().AddComponent(entity3, Material(shader, texture));
 
+	// Create a simple quad mesh for particles
+	auto quadMesh = graphics::GeometryFactory::CreateQuad(1.0f, 1.0f);
+	auto tex = AssetManager::GetInstance().LoadTexture("../Resources/Textures/greybox_red_solid.png");
+	particleShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/vertex.glsl", "../Resources/Shaders/fragment.glsl");
+
+	// Particles Emitter
+	emitter = std::make_unique<ParticleEmitter>(quadMesh, particleShader, tex);
+
    glClearColor(0.2f,0.3f,0.3f,1.0f); // Background color
 
    // Create ImGUI window for Asset Browser
    editor::EditorGUI::CreateImGUIWindow<ImguiUI::AssetBrowser>();
+   editor::EditorGUI::CreateImGUIWindow<ParticlesImGUI>(emitter.get());
    
    EE_CORE_INFO("Systems and components registered successfully, Engine Initialized");
    s_isInitialized = true;
@@ -209,11 +262,14 @@ void engine::Shutdown()
 
     AssetManager::GetInstance().Clear();
 
+	emitter.reset();
+
     graphics::GPUProfiler::Shutdown();
 
     job::Shutdown();
 
 	ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->m_ScriptEngine->Shutdown();
+	AudioSystem::Shutdown();
 
     ECS::GetInstance().Shutdown();
 
@@ -245,8 +301,22 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 
 	// Other non-fixed logic here
 	ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->Update();
+	ECS::GetInstance().GetSystem<AudioSystem>()->Update();
 	// Update editor camera
 	editor::EditorCamera::GetInstance().Update();
+
+	/*
+	if (s_isInitialized && emitter)
+	{
+		// Emit x number of particles each frame
+		for (int i = 0; i < 2; i++)
+		{
+			Vec3 vel = { ((rand() % 100) / 100.0f - 0.5f) * 2.0f, 2.0f, 0.0f };
+			emitter->Emit({ 0,0,-3 }, vel, 2.0f, 0.5f, { 1,0,0,1 });
+		}
+	}*/
+	// Update for Particles
+	ECS::GetInstance().GetSystem<ParticleSystem>()->Update(FrameController::GetDeltaTime());
 }
 
 void engine::Render(GLFWwindow* window)

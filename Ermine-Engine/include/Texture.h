@@ -70,6 +70,6 @@ namespace Ermine::graphics
         \return
          Returns GLuint m_RendererID
         *************************************************************************/
-        unsigned int Texture::GetRendererID() const;
+        GLuint GetRendererID() const;
     };
 }
