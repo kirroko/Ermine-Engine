@@ -22,6 +22,7 @@ IncludeDir["spdlog"] = "ThirdParty/spdlog/include"
 IncludeDir["stb"] = "ThirdParty/stb"
 IncludeDir["Mono"] = "ThirdParty/Mono/include"
 IncludeDir["Fmod"] = "ThirdParty/Fmod/inc"
+IncludeDir["Jolt"] = "ThirdParty"
 
 -- Libraries
 LibraryDir = {}
@@ -35,6 +36,7 @@ group "Dependencies"
     include "ThirdParty/imgui"
     include "ThirdParty/Fmod"
     include "ThirdParty/Mono"
+    include "ThirdParty/Jolt"
 group ""
 
 -- Engine Project
@@ -69,7 +71,8 @@ project "Ermine-Engine"
         "%{IncludeDir.spdlog}",
         "%{IncludeDir.stb}",
         "%{IncludeDir.Fmod}",
-        "%{IncludeDir.Mono}"
+        "%{IncludeDir.Mono}",
+        "%{IncludeDir.Jolt}"
     }
 
     libdirs
@@ -88,7 +91,8 @@ project "Ermine-Engine"
         "fmodstudio_vc",
         "fmodstudioL_vc",
         "opengl32.lib",
-		"mono-2.0-sgen.lib"
+		"mono-2.0-sgen.lib",
+        "Jolt"
     }
 
     postbuildcommands
@@ -101,7 +105,8 @@ project "Ermine-Engine"
         ("{COPY} " .. mono_dll .. " ../Build/bin/" .. outputdir .. "/Ermine-Editor"),
         ("{COPYDIR} " .. mono_assembly .. " ../Build/bin/" .. outputdir .. "/Ermine-Editor/mono/lib"),
         ("{COPYDIR} " .. mono_config .. " ../Build/bin/" .. outputdir .. "/Ermine-Editor/mono/etc"),
-        ("{COPYDIR} ../Resources ../Build/bin/" .. outputdir .. "/Resources")
+        ("{COPYDIR} ../Resources ../Build/bin/" .. outputdir .. "/Resources"),
+        ("{COPY} %{cfg.buildtarget.relpath} ../Build/bin/" .. outputdir .. "/Ermine-Editor/Jolt")
     }
 
     filter "system:windows"
