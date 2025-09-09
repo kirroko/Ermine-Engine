@@ -53,7 +53,6 @@ namespace
 	// For Particles
 	static std::shared_ptr<Ermine::graphics::Shader> particleShader;
 	static std::unique_ptr<Ermine::ParticleEmitter> emitter;
-	int count = 0; // Just for testing, to stop particles from infinitely spawning, will be removed
 }
 
 bool engine::Init(GLFWwindow* windowContext)
@@ -167,6 +166,7 @@ bool engine::Init(GLFWwindow* windowContext)
 
    // Create ImGUI window for Asset Browser
    editor::EditorGUI::CreateImGUIWindow<ImguiUI::AssetBrowser>();
+   editor::EditorGUI::CreateImGUIWindow<ParticlesImGUI>(emitter.get());
    
    EE_CORE_INFO("Systems and components registered successfully, Engine Initialized");
    s_isInitialized = true;
@@ -222,19 +222,17 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 	// Update editor camera
 	editor::EditorCamera::GetInstance().Update();
 
-	// Update for Particles
+	/*
 	if (s_isInitialized && emitter)
 	{
 		// Emit x number of particles each frame
 		for (int i = 0; i < 2; i++)
 		{
 			Vec3 vel = { ((rand() % 100) / 100.0f - 0.5f) * 2.0f, 2.0f, 0.0f };
-			if (count < 50)
-				emitter->Emit({ 0,0,-3 }, vel, 2.0f, 0.5f, { 1,0,0,1 });
-
-			count++;
+			emitter->Emit({ 0,0,-3 }, vel, 2.0f, 0.5f, { 1,0,0,1 });
 		}
-	}
+	}*/
+	// Update for Particles
 	ECS::GetInstance().GetSystem<ParticleSystem>()->Update(FrameController::GetDeltaTime());
 }
 

@@ -55,6 +55,11 @@ std::shared_ptr<graphics::Texture> AssetManager::GetTexture(const std::string& f
     return it != m_textures.end() ? it->second : nullptr;
 }
 
+const std::unordered_map<std::string, std::shared_ptr<graphics::Texture>>& AssetManager::GetLoadedTextures() const
+{
+    return m_textures;
+}
+
 /**
  * @brief Load a shader from the vertex and fragment file path and store it in the asset manager, if it is loaded before, return the shader
  * @param vertexPath The file path of the vertex shader
