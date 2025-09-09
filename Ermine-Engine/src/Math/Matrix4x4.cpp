@@ -160,10 +160,10 @@ namespace Ermine
     void Mtx44RotXRad(Matrix4x4& pResult, float angle)
     {
         // Mtx44Identity(pResult);
-        pResult.m11 = cosf(angle);
-        pResult.m12 = -sinf(angle);
-        pResult.m21 = sinf(angle);
-        pResult.m22 = cosf(angle);
+        pResult.m11 = cos(angle);
+        pResult.m12 = -sin(angle);
+        pResult.m21 = sin(angle);
+        pResult.m22 = cos(angle);
     }
 
     /*!***********************************************************************
@@ -177,10 +177,10 @@ namespace Ermine
     void Mtx44RotYRad(Matrix4x4& pResult, float angle)
     {
         // Mtx44Identity(pResult);
-        pResult.m00 = cosf(angle);
-        pResult.m02 = sinf(angle);
-        pResult.m20 = -sinf(angle);
-        pResult.m22 = cosf(angle);
+        pResult.m00 = cos(angle);
+        pResult.m02 = sin(angle);
+        pResult.m20 = -sin(angle);
+        pResult.m22 = cos(angle);
     }
 
     /*!***********************************************************************
@@ -194,10 +194,10 @@ namespace Ermine
     void Mtx44RotZRad(Matrix4x4& pResult, float angle)
     {
         // Mtx44Identity(pResult);
-        pResult.m00 = cosf(angle);
-        pResult.m01 = -sinf(angle);
-        pResult.m10 = sinf(angle);
-        pResult.m11 = cosf(angle);
+        pResult.m00 = cos(angle);
+        pResult.m01 = -sin(angle);
+        pResult.m10 = sin(angle);
+        pResult.m11 = cos(angle);
     }
 
     /*!***********************************************************************
@@ -238,7 +238,7 @@ namespace Ermine
     void Mtx44Perspective(Matrix4x4& pResult, float fovy, float aspect, float zn, float zf)
     {
        // Calculate the scale based on the field of view
-       float yScale = 1.0f / tanf(fovy / 2.0f);
+       float yScale = 1.0f / tan(fovy / 2.0f);
        float xScale = yScale / aspect;
 
        // Fill in the matrix elements

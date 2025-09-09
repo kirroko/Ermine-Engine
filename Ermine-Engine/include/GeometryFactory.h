@@ -13,8 +13,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #pragma once
 #include "Components.h"
-#include "Vector2D.h"
-#include "Vector3D.h"
+#include "Math.h"
 
 namespace Ermine::graphics
 {

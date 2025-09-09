@@ -7,6 +7,9 @@
     <Filter Include="src">
       <UniqueIdentifier>{2DAB880B-99B4-887C-2230-9F7C8E38947C}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\AssetBrowser">
+      <UniqueIdentifier>{20636B80-0C5C-8AD2-358E-6F5721E669DE}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\AssetManager">
       <UniqueIdentifier>{D7F065A7-C3E9-84F9-EC1B-6A7ED8736405}</UniqueIdentifier>
     </Filter>
@@ -28,6 +31,9 @@
     <Filter Include="src\Object">
       <UniqueIdentifier>{13A4AE24-FF5B-F071-6863-C9CD543A8B62}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Physics">
+      <UniqueIdentifier>{9F8B9316-0B41-0C0C-9435-06E300EA0210}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Scripting">
       <UniqueIdentifier>{6FBC2D98-DB7C-A9CE-A4B7-F24B1037EEAA}</UniqueIdentifier>
     </Filter>
@@ -39,6 +45,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\AssetBrowser.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\AssetManager.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -84,6 +93,9 @@
     <ClInclude Include="include\GeometryFactory.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\ImGuiUIWindow.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\IndexBuffer.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -99,10 +111,16 @@
     <ClInclude Include="include\MathUtils.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\MathVector.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\Matrix3x3.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\Matrix4x4.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Physics.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\PreCompile.h">
@@ -135,15 +153,6 @@
     <ClInclude Include="include\Texture.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="include\Vector2D.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Vector3D.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Vector4D.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="include\VertexArray.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -155,6 +164,9 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\AssetBrowser\AssetBrowser.cpp">
+      <Filter>src\AssetBrowser</Filter>
+    </ClCompile>
     <ClCompile Include="src\AssetManager\AssetManager.cpp">
       <Filter>src\AssetManager</Filter>
     </ClCompile>
@@ -203,19 +215,13 @@
     <ClCompile Include="src\Logger\Logger.cpp">
       <Filter>src\Logger</Filter>
     </ClCompile>
+    <ClCompile Include="src\Math\MathVector.cpp">
+      <Filter>src\Math</Filter>
+    </ClCompile>
     <ClCompile Include="src\Math\Matrix3x3.cpp">
       <Filter>src\Math</Filter>
     </ClCompile>
     <ClCompile Include="src\Math\Matrix4x4.cpp">
-      <Filter>src\Math</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Math\Vector2D.cpp">
-      <Filter>src\Math</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Math\Vector3D.cpp">
-      <Filter>src\Math</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Math\Vector4D.cpp">
       <Filter>src\Math</Filter>
     </ClCompile>
     <ClCompile Include="src\Object\GameObject.cpp">
@@ -223,6 +229,9 @@
     </ClCompile>
     <ClCompile Include="src\Object\GameObjectFactory.cpp">
       <Filter>src\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Physics\Physics.cpp">
+      <Filter>src\Physics</Filter>
     </ClCompile>
     <ClCompile Include="src\PreCompile.cpp">
       <Filter>src</Filter>

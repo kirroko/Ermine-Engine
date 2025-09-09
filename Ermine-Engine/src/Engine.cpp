@@ -16,6 +16,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Engine.h"
 
 #include "AssetManager.h"
+#include "AssetBrowser.h"
 #include "ECS.h"
 #include "Components.h"
 #include "EditorCamera.h"
@@ -138,11 +139,14 @@ bool engine::Init(GLFWwindow* windowContext)
 	//ECS::GetInstance().AddComponent(entity3, graphics::GeometryFactory::CreateSphere());
 	//ECS::GetInstance().AddComponent(entity3, Material(shader, texture));
 
-	glClearColor(0.2f, 0.3f, 0.3f, 1.0f); // Background color
+   glClearColor(0.2f,0.3f,0.3f,1.0f); // Background color
 
-	EE_CORE_INFO("Systems and components registered successfully, Engine Initialized");
-	s_isInitialized = true;
-	return true;
+   // Create ImGUI window for Asset Browser
+   editor::EditorGUI::CreateImGUIWindow<ImguiUI::AssetBrowser>();
+   
+   EE_CORE_INFO("Systems and components registered successfully, Engine Initialized");
+   s_isInitialized = true;
+   return true;
 }
 
 void engine::Shutdown()

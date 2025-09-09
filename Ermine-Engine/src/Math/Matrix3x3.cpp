@@ -155,8 +155,8 @@ namespace Ermine
     *************************************************************************/
     void Mtx33RotRad(Matrix3x3& pResult, float angle)
     {
-        float cos_angle = cosf(angle);
-        float sin_angle = sinf(angle);
+        float cos_angle = cos(angle);
+        float sin_angle = sin(angle);
         pResult.m00 = cos_angle; pResult.m01 = -sin_angle; pResult.m02 = 0.0f;
         pResult.m10 = sin_angle; pResult.m11 = cos_angle; pResult.m12 = 0.0f;
         pResult.m20 = 0.0f; pResult.m21 = 0.0f; pResult.m22 = 1.0f;
