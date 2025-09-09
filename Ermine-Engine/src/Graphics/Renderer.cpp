@@ -2,6 +2,8 @@
 /*!
 \file       Renderer.cpp
 \author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu
+\co-author  Jeremy Lim Ting Jie, jeremytingjie.lim, 2301370, jeremytingjie.lim\@digipen.edu
+\co-author  Ridhwan
 \date       09/03/2025
 \brief      This file contains the definition of the Renderer system.
 			This file is used to render the game objects.
@@ -13,6 +15,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 /* End Header **************************************************************************/
 #include "PreCompile.h"
 #include "Renderer.h"
+#include "Material.h"
 
 #include "ECS.h"
 #include "Logger.h"
@@ -23,7 +26,6 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "glm/glm.hpp"
 #include "Input.h"
 #include <GLFW/glfw3.h>
-
 
 using namespace Ermine::graphics;
 
@@ -177,6 +179,10 @@ Renderer::OffscreenBuffer Renderer::Create(const int& width, const int& height)
 	return buffer;
 }
 
+/**
+ * @brief Updates the lights' uniform buffer object (UBO) with the current light and transform data from all living entities.
+ * @param view The view matrix to transform the positions and directions of the lights into view space.
+ */
 void Renderer::UpdateLightsUBO(const Mtx44& view)
 {
 	std::vector<LightGPU> lights;
@@ -242,9 +248,8 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
 		LightGPU gpu{};
 		gpu.position_type = Vec4(posView.x, posView.y, posView.z, static_cast<float>(light.type));
 		gpu.color_intensity = Vec4(light.color.x, light.color.y, light.color.z, light.intensity);
-		gpu.direction_range = Vec4(dirView.x, dirView.y, dirView.z, 100.f); // TODO: light range
+		gpu.direction_range = Vec4(dirView.x, dirView.y, dirView.z, 100.0f);
 		gpu.spot_angles = Vec4(innerCos, outerCos, 0.0f, 0.0f);
-
 		lights.emplace_back(gpu);
 	}
 
@@ -265,6 +270,10 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
 	glCheckError();
 }
 
+/**
+ * @brief Binds the Lights uniform block to the specified shader program if it has not been bound before.
+ * @param shader The shader program to which the lights block should be bound.
+ */
 void Renderer::BindLightsBlockIfPresent(const std::shared_ptr<Shader>& shader)
 {
 	if (!shader || !shader->IsValid())
@@ -279,6 +288,55 @@ void Renderer::BindLightsBlockIfPresent(const std::shared_ptr<Shader>& shader)
 	{
 		glUniformBlockBinding(program, blockIndex, LightsBindingPoint);
 		m_LightBlockBoundPrograms.insert(program);
+	}
+}
+
+/**
+ * @brief Updates the material's uniform buffer object (UBO) with the specified material data.
+ *
+ * If the material UBO does not exist, this function creates one. It then uploads the given material data
+ * into the UBO, making it available to the shader for rendering.
+ *
+ * @param materialData The material data to be uploaded to the UBO, including properties like color, texture, etc.
+ */
+void Renderer::UpdateMaterialUBO(const graphics::MaterialUBO& materialData)
+{
+	// Create Material UBO if it doesn't exist
+	if (!m_MaterialUBO)
+	{
+		glGenBuffers(1, &m_MaterialUBO);
+		glBindBuffer(GL_UNIFORM_BUFFER, m_MaterialUBO);
+		glBufferData(GL_UNIFORM_BUFFER, sizeof(graphics::MaterialUBO), nullptr, GL_DYNAMIC_DRAW);
+		glBindBufferBase(GL_UNIFORM_BUFFER, MaterialBindingPoint, m_MaterialUBO);
+		glBindBuffer(GL_UNIFORM_BUFFER, 0);
+		glCheckError();
+	}
+
+	// Upload material data
+	glBindBuffer(GL_UNIFORM_BUFFER, m_MaterialUBO);
+	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(graphics::MaterialUBO), &materialData);
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+	glCheckError();
+}
+
+/**
+ * @brief Binds the MaterialBlock uniform block to the specified shader program if it has not been bound before.
+ * @param shader The shader program to which the material block should be bound.
+ */
+void Renderer::BindMaterialBlockIfPresent(const std::shared_ptr<Shader>& shader)
+{
+	if (!shader || !shader->IsValid())
+		return;
+
+	const GLuint program = shader->GetRendererID();
+	if (m_MaterialBlockBoundPrograms.find(program) != m_MaterialBlockBoundPrograms.end())
+		return;
+
+	GLuint blockIndex = glGetUniformBlockIndex(program, "MaterialBlock");
+	if (blockIndex != GL_INVALID_INDEX)
+	{
+		glUniformBlockBinding(program, blockIndex, MaterialBindingPoint);
+		m_MaterialBlockBoundPrograms.insert(program);
 	}
 }
 
@@ -300,8 +358,21 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 	{
 		auto& trans = ECS::GetInstance().GetComponent<Transform>(entity);
 		auto& mesh = ECS::GetInstance().GetComponent<Mesh>(entity);
-		auto& material = ECS::GetInstance().GetComponent<Material>(entity);
+		auto& materialComponent = ECS::GetInstance().GetComponent<Ermine::Material>(entity);
 
+		// Get the modular material
+		Ermine::graphics::Material* material = materialComponent.GetMaterial();
+
+		if (!material) {
+			EE_CORE_WARN("Entity {0} has null material", entity);
+			continue;
+		}
+
+		auto shader = material->GetShader();
+		if (!shader || !shader->IsValid()) {
+			EE_CORE_WARN("Entity {0} has invalid shader", entity);
+			continue;
+		}
 
 		// Build model matrix
 		glm::mat4 model = glm::mat4(1.0f);
@@ -311,17 +382,20 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 		model = glm::rotate(model, radian(trans.rotation.z), glm::vec3(0, 0, 1));
 		model = glm::scale(model, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
 
-		// Bind texture and shader
-		material.m_texture->Bind();
-		material.m_shader->Bind();
+		// Update Material UBO with current material data
+		UpdateMaterialUBO(material->GetUBOData());
 
-		// Bind lights uniform block if present - IMPORTANT: Move this AFTER shader bind
-		BindLightsBlockIfPresent(material.m_shader);
+		// Bind material (this handles shader binding and texture binding)
+		material->Bind();
+
+		// Bind uniform blocks
+		BindLightsBlockIfPresent(shader);
+		BindMaterialBlockIfPresent(shader);
 
 		// Set transformation matrices
-		material.m_shader->SetUniformMatrix4fv("model", &model[0][0]);
-		material.m_shader->SetUniformMatrix4fv("view", &view.m2[0][0]);
-		material.m_shader->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
+		shader->SetUniformMatrix4fv("model", model);
+		shader->SetUniformMatrix4fv("view", &view.m2[0][0]);
+		shader->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
 
 		// Calculate and set normal matrix
 		glm::mat4 glmView = glm::mat4(
@@ -332,68 +406,76 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 		);
 		glm::mat4 modelView = glmView * model;
 		glm::mat3 normalMatrix = transpose(inverse(glm::mat3(modelView)));
-		material.m_shader->SetUniformMatrix3fv("NormalMatrix", &normalMatrix[0][0]);
+		shader->SetUniformMatrix3fv("NormalMatrix", normalMatrix);
 
 		// Set shading mode
-		material.m_shader->SetUniform1i("isBlinnPhong", m_IsBlinnPhong ? 1 : 0);
+		shader->SetUniform1i("isBlinnPhong", m_IsBlinnPhong ? 1 : 0);
 
-		// Set world space view position for PBR calculations
-		glm::mat4 invView = glm::inverse(glmView);
-		glm::vec3 worldViewPos = glm::vec3(invView[3]);
-
-
-		if (ECS::GetInstance().HasComponent<Light>(entity))
+		// Handle material properties based on shading mode
+		if (m_IsBlinnPhong)
 		{
-			auto& light = ECS::GetInstance().GetComponent<Light>(entity);
-			glm::vec3 emissionColor = glm::vec3(light.color.x, light.color.y, light.color.z);
-			if (m_IsBlinnPhong) {
-				// Blinn-Phong material properties
-				material.m_shader->SetUniform3f("materialKa", glm::vec3(0.f));
-				material.m_shader->SetUniform3f("materialKd", glm::vec3(0.f));
-				material.m_shader->SetUniform3f("materialKs", glm::vec3(0.f));
-				material.m_shader->SetUniform1f("materialShininess", 0.0f);
-				material.m_shader->SetUniform3f("materialKe", emissionColor * light.intensity);
+			// Set Blinn-Phong material properties for ALL entities
+			auto uboData = material->GetUBOData();
+
+			// Convert PBR properties to Blinn-Phong equivalents
+			glm::vec3 albedo = glm::vec3(uboData.albedo.x, uboData.albedo.y, uboData.albedo.z);
+
+			// Set material properties
+			shader->SetUniform3f("materialKa", glm::vec3(0.2f) * albedo); // Ambient = 20% of albedo
+			shader->SetUniform3f("materialKd", albedo); // Diffuse = albedo
+			shader->SetUniform3f("materialKs", glm::vec3(1.0f)); // Specular = white
+			shader->SetUniform1f("materialShininess", (1.0f - uboData.roughness) * 128.0f); // Convert roughness to shininess
+
+			// Handle special case for light entities
+			if (ECS::GetInstance().HasComponent<Light>(entity))
+			{
+				auto& light = ECS::GetInstance().GetComponent<Light>(entity);
+				// Override for pure emission
+				shader->SetUniform3f("materialKe", glm::vec3(light.color.x * light.intensity,
+					light.color.y * light.intensity,
+					light.color.z * light.intensity));
+				shader->SetUniform3f("materialKa", glm::vec3(0.0f));
+				shader->SetUniform3f("materialKd", glm::vec3(0.0f));
+				shader->SetUniform3f("materialKs", glm::vec3(0.0f));
 			}
-			else {
-				// PBR material properties
-				material.m_shader->SetUniform3f("pbrAlbedo", glm::vec3(0.f));
-				material.m_shader->SetUniform1f("pbrMetallic", 0.0f);
-				material.m_shader->SetUniform1f("pbrRoughness", 0.0f);
-				material.m_shader->SetUniform1f("pbrAO", 0.0f);
-				material.m_shader->SetUniform3f("pbrEmissive", emissionColor);
-				material.m_shader->SetUniform1f("pbrEmissiveIntensity", light.intensity);
+			else
+			{
+				// Non-light entities should have no emission
+				shader->SetUniform3f("materialKe", glm::vec3(0.0f));
 			}
 		}
-		else {
-			// Set material properties based on shading mode
-			if (m_IsBlinnPhong) {
-				// Blinn-Phong material properties
-				material.m_shader->SetUniform3f("materialKa", glm::vec3(0.2f, 0.2f, 0.2f));
-				material.m_shader->SetUniform3f("materialKd", glm::vec3(0.9f, 0.9f, 0.9f));
-				material.m_shader->SetUniform3f("materialKs", glm::vec3(0.8f, 0.8f, 0.8f));
-				material.m_shader->SetUniform1f("materialShininess", 100.0f);
-				material.m_shader->SetUniform3f("materialKe", glm::vec3(0.f));
+		else
+		{
+			// PBR mode - handle light entities with emissive materials
+			if (ECS::GetInstance().HasComponent<Light>(entity))
+			{
+				auto& light = ECS::GetInstance().GetComponent<Light>(entity);
 
-			}
-			else {
-				// PBR material properties
-				material.m_shader->SetUniform3f("pbrAlbedo", glm::vec3(0.8f, 0.8f, 0.8f));
-				material.m_shader->SetUniform1f("pbrMetallic", 0.1f);
-				material.m_shader->SetUniform1f("pbrRoughness", 0.4f);
-				material.m_shader->SetUniform1f("pbrAO", 1.0f);
-				material.m_shader->SetUniform3f("pbrEmissive", glm::vec3(0.f));
-				material.m_shader->SetUniform1f("pbrEmissiveIntensity", 0.f);
+				// Create temporary material data for emissive lighting
+				MaterialUBO lightMaterialData = material->GetUBOData();
+				lightMaterialData.emissive = Vec3(light.color.x, light.color.y, light.color.z);
+				lightMaterialData.emissiveIntensity = light.intensity;
+				lightMaterialData.albedo = Vec3(0.0f, 0.0f, 0.0f);
+				lightMaterialData.metallic = 0.0f;
+				lightMaterialData.roughness = 1.0f;
+
+				// Update UBO with light-specific data
+				UpdateMaterialUBO(lightMaterialData);
 			}
 		}
 
 		// Draw the mesh
-		Draw(mesh.vertex_array, mesh.index_buffer, material.m_shader);
+		Draw(mesh.vertex_array, mesh.index_buffer, shader);
+
+		// Unbind material
+		material->Unbind();
 	}
 
 #ifdef _DEBUG
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 #endif
 }
+
 
 /**
 * @brief Draw the mesh
@@ -421,7 +503,28 @@ void Renderer::Clear() const
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
+/**
+ * @brief Get the current performance metrics
+ * @return CurrentGPU performance metrics
+ */
 const GPUProfiler::PerformanceMetrics& Renderer::GetPerformanceMetrics() const
 {
 	return GPUProfiler::GetMetrics();
 }
+
+/**
+ * @brief Destructor for Renderer
+ */
+Renderer::~Renderer()
+{
+	if (m_LightsUBO) {
+		glDeleteBuffers(1, &m_LightsUBO);
+		m_LightsUBO = 0;
+	}
+
+	if (m_MaterialUBO) {
+		glDeleteBuffers(1, &m_MaterialUBO);
+		m_MaterialUBO = 0;
+	}
+}
+

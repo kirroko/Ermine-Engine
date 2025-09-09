@@ -122,51 +122,89 @@ bool engine::Init(GLFWwindow* windowContext)
 	//    ECS::GetInstance().AddComponent(entity, Material(shader, texture));
 	//}
 
+	// Create first cube
 	auto entity = ECS::GetInstance().CreateEntity();
 	ECS::GetInstance().AddComponent(entity, Transform(Vec3(0, 0, -1), Vec3(0, 45, 90), Vec3(1, 1, 1)));
 	ECS::GetInstance().AddComponent(entity, ObjectMetaData());
 	ECS::GetInstance().AddComponent(entity, graphics::GeometryFactory::CreateCube(1, 1, 1));
-	ECS::GetInstance().AddComponent(entity, Material(shader, texture));
 
+	// Create material using UBO template
+	auto cubeMaterial = std::make_unique<graphics::Material>(shader);
+	cubeMaterial->LoadTemplate(graphics::MaterialTemplates::PBR_WHITE());
+
+	// Set texture if available
+	if (texture && texture->IsValid()) {
+		cubeMaterial->SetTexture("materialAlbedoMap", texture);
+		cubeMaterial->SetTexture("texture0", texture); // Fallback for compatibility
+	}
+
+	ECS::GetInstance().AddComponent(entity, Material(std::move(cubeMaterial)));
+
+	// Create second cube  
 	auto entity2 = ECS::GetInstance().CreateEntity();
 	ECS::GetInstance().AddComponent(entity2, Transform(Vec3(-1, 1, -2), Vec3(0, 0, 0), Vec3(1, 1, 1)));
 	ECS::GetInstance().AddComponent(entity2, ObjectMetaData());
 	ECS::GetInstance().AddComponent(entity2, graphics::GeometryFactory::CreateCube(1, 1, 1));
-	ECS::GetInstance().AddComponent(entity2, Material(shader, texture));
-	ECS::GetInstance().AddComponent(entity2, Script("Sandbox",entity2));
-	EE_CORE_INFO("Total living entities after light creation: {0}", ECS::GetInstance().GetLivingEntityCount());
 
+	// Create a different material for variety
+	auto cube2Material = std::make_unique<graphics::Material>(shader);
+	cube2Material->LoadTemplate(graphics::MaterialTemplates::PBR_METAL());
 
-	//auto entity3 = ECS::GetInstance().CreateEntity();
-	//ECS::GetInstance().AddComponent(entity3, Transform(Vec3(1, 1, -3), Vec3(0, 0, 0), Vec3(1, 1, 1)));
-	//ECS::GetInstance().AddComponent(entity3, graphics::GeometryFactory::CreateSphere());
-	//ECS::GetInstance().AddComponent(entity3, Material(shader, texture));
+	if (texture && texture->IsValid()) {
+		cube2Material->SetTexture("materialAlbedoMap", texture);
+		cube2Material->SetTexture("texture0", texture);
+	}
 
-	// Add a light entity
+	ECS::GetInstance().AddComponent(entity2, Material(std::move(cube2Material)));
+	ECS::GetInstance().AddComponent(entity2, Script("Sandbox", entity2));
+
+	// Create lights with balanced intensities
+	auto mainLightEntity = ECS::GetInstance().CreateEntity();
+	ECS::GetInstance().AddComponent(mainLightEntity, Transform(Vec3(0, 4, 2), Vec3(0, 0, 0), Vec3(1, 1, 1)));
+	ECS::GetInstance().AddComponent(mainLightEntity, ObjectMetaData("MainLight", "Light", true));
+	ECS::GetInstance().AddComponent(mainLightEntity, Light(Vec3(1, 1, 1), 0.8f, LightType::POINT));
+
+	// Light sphere material
+	auto lightMaterial = std::make_unique<graphics::Material>(shader);
+	lightMaterial->LoadTemplate(graphics::MaterialTemplates::EMISSIVE(Vec3(1.0f, 1.0f, 1.0f), 2.0f));
+	ECS::GetInstance().AddComponent(mainLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
+	ECS::GetInstance().AddComponent(mainLightEntity, Material(std::move(lightMaterial)));
+
+	// Red accent light
 	auto redLightEntity = ECS::GetInstance().CreateEntity();
-	ECS::GetInstance().AddComponent(redLightEntity, Transform(Vec3(2, 2, 0), Vec3(0, 0, 0), Vec3(1, 1, 1)));
+	ECS::GetInstance().AddComponent(redLightEntity, Transform(Vec3(3, 2, 0), Vec3(0, 0, 0), Vec3(1, 1, 1)));
 	ECS::GetInstance().AddComponent(redLightEntity, ObjectMetaData("LightRed", "Light", true));
-	ECS::GetInstance().AddComponent(redLightEntity, Light(Vec3(1, 0, 0), 1.0f, LightType::POINT));
+	ECS::GetInstance().AddComponent(redLightEntity, Light(Vec3(1, 0.0, 0.0), 1.0f, LightType::POINT));
+
+	auto redLightMaterial = std::make_unique<graphics::Material>(shader);
+	redLightMaterial->LoadTemplate(graphics::MaterialTemplates::EMISSIVE(Vec3(1.0f, 0.2f, 0.2f), 1.5f));
 	ECS::GetInstance().AddComponent(redLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
-	ECS::GetInstance().AddComponent(redLightEntity, Material(shader, texture));
+	ECS::GetInstance().AddComponent(redLightEntity, Material(std::move(redLightMaterial)));
 
-
-
+	// Blue accent light
 	auto blueLightEntity = ECS::GetInstance().CreateEntity();
-	ECS::GetInstance().AddComponent(blueLightEntity, Transform(Vec3(-2, 2, 0), Vec3(0, 0, 0), Vec3(1, 1, 1)));
+	ECS::GetInstance().AddComponent(blueLightEntity, Transform(Vec3(-3, 2, 0), Vec3(0, 0, 0), Vec3(1, 1, 1)));
 	ECS::GetInstance().AddComponent(blueLightEntity, ObjectMetaData("LightBlue", "Light", true));
-	ECS::GetInstance().AddComponent(blueLightEntity, Light(Vec3(0, 0, 1), 1.0f, LightType::POINT));
+	ECS::GetInstance().AddComponent(blueLightEntity, Light(Vec3(0.0, 0.0, 1), 1.0f, LightType::POINT));
+
+	auto blueLightMaterial = std::make_unique<graphics::Material>(shader);
+	blueLightMaterial->LoadTemplate(graphics::MaterialTemplates::EMISSIVE(Vec3(0.2f, 0.2f, 1.0f), 1.5f));
 	ECS::GetInstance().AddComponent(blueLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
-	ECS::GetInstance().AddComponent(blueLightEntity, Material(shader, texture));
+	ECS::GetInstance().AddComponent(blueLightEntity, Material(std::move(blueLightMaterial)));
 
-
-
+	// Green accent light
 	auto greenLightEntity = ECS::GetInstance().CreateEntity();
 	ECS::GetInstance().AddComponent(greenLightEntity, Transform(Vec3(0, 2, -3), Vec3(0, 0, 0), Vec3(1, 1, 1)));
 	ECS::GetInstance().AddComponent(greenLightEntity, ObjectMetaData("LightGreen", "Light", true));
-	ECS::GetInstance().AddComponent(greenLightEntity, Light(Vec3(0, 1, 0), 1.0f, LightType::POINT));
+	ECS::GetInstance().AddComponent(greenLightEntity, Light(Vec3(0.0, 1.0f, 0.0), 1.0f, LightType::POINT));
+
+	auto greenLightMaterial = std::make_unique<graphics::Material>(shader);
+	greenLightMaterial->LoadTemplate(graphics::MaterialTemplates::EMISSIVE(Vec3(0.2f, 0.2f, 1.0f), 1.5f));
 	ECS::GetInstance().AddComponent(greenLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
-	ECS::GetInstance().AddComponent(greenLightEntity, Material(shader, texture));
+	ECS::GetInstance().AddComponent(greenLightEntity, Material(std::move(greenLightMaterial)));
+
+
+	EE_CORE_INFO("Total living entities after creation: {0}", ECS::GetInstance().GetLivingEntityCount());
 
 
 

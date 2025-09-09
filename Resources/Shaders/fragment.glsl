@@ -4,28 +4,59 @@ in vec2 TexCoord;
 in vec3 Normal;
 in vec3 FragPos;
 in vec3 ViewPos; // Position in view space
+in vec3 Tangent;   // Add for normal mapping
+in vec3 Bitangent; // Add for normal mapping
 
 out vec4 FragColor;
 
-uniform sampler2D texture0;
+// Texture samplers - now more flexible
+uniform sampler2D texture0;           // Backwards compatibility
+
+// Material uniform block
+layout (std140) uniform MaterialBlock {
+    vec3 albedo;
+    float metallic;
+    float roughness;
+    float ao;
+    vec3 emissive;
+    float emissiveIntensity;
+    float normalStrength;
+    int shadingModel; // 0 = PBR, 1 = Blinn-Phong
+    
+    // Flags for texture presence
+    bool hasAlbedoMap;
+    bool hasNormalMap;
+    bool hasRoughnessMap;
+    bool hasMetallicMap;
+    bool hasAoMap;
+    bool hasEmissiveMap;
+} material;
+
+// Separate texture samplers (cannot be in uniform blocks)
+uniform sampler2D materialAlbedoMap;
+uniform sampler2D materialNormalMap;
+uniform sampler2D materialRoughnessMap;
+uniform sampler2D materialMetallicMap;
+uniform sampler2D materialAoMap;
+uniform sampler2D materialEmissiveMap;
 
 // Shading mode toggle
 uniform bool isBlinnPhong;
 
 // Material properties for Blinn-Phong
-uniform vec3 materialKa;
-uniform vec3 materialKd;
-uniform vec3 materialKs;
-uniform vec3 materialKe;
-uniform float materialShininess;
+uniform vec3 materialKa = vec3(0.2, 0.2, 0.2);
+uniform vec3 materialKd = vec3(0.8, 0.8, 0.8);
+uniform vec3 materialKs = vec3(1.0, 1.0, 1.0);
+uniform vec3 materialKe = vec3(0.0, 0.0, 0.0);
+uniform float materialShininess = 64.0;
 
-// PBR Material properties
-uniform vec3 pbrAlbedo;
-uniform float pbrMetallic;
-uniform float pbrRoughness;
-uniform float pbrAO;
-uniform vec3 pbrEmissive;
-uniform float pbrEmissiveIntensity;
+// Legacy uniforms for backwards compatibility
+uniform vec3 pbrAlbedo = vec3(0.8, 0.8, 0.8);
+uniform float pbrMetallic = 0.0;
+uniform float pbrRoughness = 0.5;
+uniform float pbrAO = 1.0;
+uniform vec3 pbrEmissive = vec3(0.0);
+uniform float pbrEmissiveIntensity = 0.0;
 
 struct Light {
     vec4 position_type;    // xyz = position (view space), w = light type
@@ -40,13 +71,88 @@ layout (std140) uniform Lights {
     Light lights[16];     // array of Light structs
 };
 
-
 const float PI = 3.14159265359;
 const int POINT_LIGHT = 0;
 const int DIRECTIONAL_LIGHT = 1;
 const int SPOT_LIGHT = 2;
 
-// PBR Functions
+// Normal mapping function
+vec3 calculateNormal()
+{
+    vec3 normal = normalize(Normal);
+    
+    if (material.hasNormalMap) {
+        // Sample normal map
+        vec3 normalMap = texture(materialNormalMap, TexCoord).rgb * 2.0 - 1.0;
+        normalMap.xy *= material.normalStrength;
+        
+        // Create TBN matrix
+        vec3 T = normalize(Tangent);
+        vec3 B = normalize(Bitangent);
+        vec3 N = normal;
+        mat3 TBN = mat3(T, B, N);
+        
+        normal = normalize(TBN * normalMap);
+    }
+    
+    return normal;
+}
+
+// Sample material properties with texture support
+vec3 getAlbedo()
+{
+    vec3 albedo = material.albedo;
+    
+    if (material.hasAlbedoMap) {
+        vec4 texColor = texture(materialAlbedoMap, TexCoord);
+        albedo *= texColor.rgb;
+    } else {
+        // Backwards compatibility
+        vec4 texColor = texture(texture0, TexCoord);
+        albedo *= texColor.rgb;
+    }
+    
+    return albedo;
+}
+
+float getRoughness()
+{
+    float roughness = material.roughness;
+    if (material.hasRoughnessMap) {
+        roughness *= texture(materialRoughnessMap, TexCoord).r;
+    }
+    return clamp(roughness, 0.05, 1.0);
+}
+
+float getMetallic()
+{
+    float metallic = material.metallic;
+    if (material.hasMetallicMap) {
+        metallic *= texture(materialMetallicMap, TexCoord).r;
+    }
+    return clamp(metallic, 0.0, 1.0);
+}
+
+float getAO()
+{
+    float ao = material.ao;
+    if (material.hasAoMap) {
+        ao *= texture(materialAoMap, TexCoord).r;
+    }
+    return ao;
+}
+
+vec3 getEmissive()
+{
+    vec3 emissive = material.emissive * material.emissiveIntensity;
+    if (material.hasEmissiveMap) {
+        vec4 emissiveTexel = texture(materialEmissiveMap, TexCoord);
+        emissive *= emissiveTexel.rgb;
+    }
+    return emissive;
+}
+
+// PBR Functions (same as before)
 float DistributionGGX(vec3 N, vec3 H, float roughness)
 {
     float a = roughness * roughness;
@@ -97,22 +203,18 @@ float calculateAttenuation(int lightIndex, vec3 fragPosView, out vec3 lightDir)
     float attenuation = 1.0;
     
     if (lightType == DIRECTIONAL_LIGHT) {
-        // Directional light - direction is stored directly
         lightDir = normalize(-lights[lightIndex].direction_range.xyz);
-        attenuation = 1.0; // No attenuation for directional lights
+        attenuation = 1.0;
     } else {
-        // Point or spot light - calculate direction from position
         lightDir = normalize(lightPosView - fragPosView);
         float distance = length(lightPosView - fragPosView);
         
-        // Improved distance attenuation with configurable falloff
-        float linearTerm = 0.045; // Reduced for less aggressive falloff
-        float quadraticTerm = 0.0075; // Reduced for less aggressive falloff
+        float linearTerm = 0.045;
+        float quadraticTerm = 0.0075;
         attenuation = 1.0 / (1.0 + linearTerm * distance + quadraticTerm * distance * distance);
         
-        // Range cutoff with smooth transition
         if (distance > range) {
-            float fadeDistance = range * 0.1; // 10% of range for smooth fade
+            float fadeDistance = range * 0.1;
             float fadeStart = range - fadeDistance;
             if (distance > fadeStart) {
                 float fadeFactor = 1.0 - (distance - fadeStart) / fadeDistance;
@@ -122,7 +224,6 @@ float calculateAttenuation(int lightIndex, vec3 fragPosView, out vec3 lightDir)
             }
         }
         
-        // Spot light cone attenuation
         if (lightType == SPOT_LIGHT) {
             vec3 spotDir = normalize(lights[lightIndex].direction_range.xyz);
             float cosAngle = dot(-lightDir, spotDir);
@@ -138,7 +239,7 @@ float calculateAttenuation(int lightIndex, vec3 fragPosView, out vec3 lightDir)
 }
 
 // Blinn-Phong lighting calculation for one light
-vec3 calculateBlinnPhong(int lightIndex, vec3 normal, vec3 viewDir, vec3 fragPosView)
+vec3 calculateBlinnPhong(int lightIndex, vec3 normal, vec3 viewDir, vec3 fragPosView, vec3 albedo)
 {
     vec3 lightDir;
     float attenuation = calculateAttenuation(lightIndex, fragPosView, lightDir);
@@ -149,7 +250,7 @@ vec3 calculateBlinnPhong(int lightIndex, vec3 normal, vec3 viewDir, vec3 fragPos
     
     // Diffuse
     float diff = max(dot(normal, lightDir), 0.0);
-    vec3 diffuse = diff * lightColor * materialKd;
+    vec3 diffuse = diff * lightColor * materialKd * albedo;
     
     // Specular (Blinn-Phong)
     vec3 halfwayDir = normalize(lightDir + viewDir);
@@ -165,7 +266,7 @@ vec3 calculateBlinnPhong(int lightIndex, vec3 normal, vec3 viewDir, vec3 fragPos
 }
 
 // PBR lighting calculation for one light
-vec3 calculatePBR(int lightIndex, vec3 normal, vec3 viewDir, vec3 fragPosView, vec3 albedo, vec3 F0)
+vec3 calculatePBR(int lightIndex, vec3 normal, vec3 viewDir, vec3 fragPosView, vec3 albedo, vec3 F0, float roughness, float metallic)
 {
     vec3 lightDir;
     float attenuation = calculateAttenuation(lightIndex, fragPosView, lightDir);
@@ -177,16 +278,13 @@ vec3 calculatePBR(int lightIndex, vec3 normal, vec3 viewDir, vec3 fragPosView, v
     
     vec3 H = normalize(viewDir + lightDir);
     
-    // Clamp roughness to prevent division by zero and artifacts
-    float roughness = clamp(pbrRoughness, 0.05, 1.0);
-    
     float NDF = DistributionGGX(normal, H, roughness);
     float G = GeometrySmith(normal, viewDir, lightDir, roughness);
     vec3 F = fresnelSchlick(max(dot(H, viewDir), 0.0), F0);
     
     vec3 kS = F;
     vec3 kD = vec3(1.0) - kS;
-    kD *= 1.0 - pbrMetallic;
+    kD *= 1.0 - metallic;
     
     vec3 numerator = NDF * G * F;
     float denominator = 4.0 * max(dot(normal, viewDir), 0.0) * max(dot(normal, lightDir), 0.0) + 0.0001;
@@ -198,52 +296,62 @@ vec3 calculatePBR(int lightIndex, vec3 normal, vec3 viewDir, vec3 fragPosView, v
 
 void main()
 {
-    vec4 texColor = texture(texture0, TexCoord);
-    vec3 norm = normalize(Normal);
-    vec3 viewDir = normalize(-ViewPos); // ViewPos is already in view space
+    // Calculate normal (with potential normal mapping)
+    vec3 norm = calculateNormal();
+    vec3 viewDir = normalize(-ViewPos);
+    
+    // Sample material properties
+    vec3 albedo = getAlbedo();
+    float roughness = getRoughness();
+    float metallic = getMetallic();
+    float ao = getAO();
+    vec3 emissive = getEmissive();
     
     vec3 result = vec3(0.0);
     int numLights = int(lightCount.x);
     
-    if (isBlinnPhong) {
-        // Ambient component (applied once)
-        vec3 ambient = materialKa * 0.1;
-        result += ambient * texColor.rgb;
-
-        // Add contribution from each light
-        for (int i = 0; i < numLights && i < 16; ++i) {
-            result += calculateBlinnPhong(i, norm, viewDir, ViewPos) * texColor.rgb;
-        }
-        
-        // Add Flat Emission
-        result += materialKe; 
-    } else {
-        // PBR Lighting
-        vec3 albedo = texColor.rgb * pbrAlbedo;
-        
-        // Improved F0 calculation
-        vec3 F0 = vec3(0.04);
-        F0 = mix(F0, albedo, pbrMetallic);
-        
-        // More balanced ambient lighting
-        vec3 ambient = vec3(0.08) * albedo * pbrAO; // Reduced from 0.15 to 0.08
+    // Choose shading model based on material settings or global toggle
+    bool useBlinnPhong = isBlinnPhong || (material.shadingModel == 1);
+    
+    if (useBlinnPhong) {
+        // Ambient component
+        vec3 ambient = materialKa * 0.1 * albedo * ao;
         result += ambient;
 
         // Add contribution from each light
         for (int i = 0; i < numLights && i < 16; ++i) {
-            result += calculatePBR(i, norm, viewDir, ViewPos, albedo, F0);
+            result += calculateBlinnPhong(i, norm, viewDir, ViewPos, albedo);
         }
         
-        // Additional energy compensation for very rough surfaces
-        if (pbrRoughness > 0.7) {
-            result *= mix(1.0, 1.4, (pbrRoughness - 0.7) / 0.3);
+        // Add emissive (material system handles this now)
+        result += emissive;
+        // Legacy support
+        result += materialKe;
+    } else {
+        // PBR Lighting
+        vec3 F0 = vec3(0.04);
+        F0 = mix(F0, albedo, metallic);
+        
+        vec3 ambient = vec3(0.08) * albedo * ao;
+        result += ambient;
+
+        // Add contribution from each light
+        for (int i = 0; i < numLights && i < 16; ++i) {
+            result += calculatePBR(i, norm, viewDir, ViewPos, albedo, F0, roughness, metallic);
         }
         
-        // Add Flat Emission
+        // Energy compensation for very rough surfaces
+        if (roughness > 0.7) {
+            result *= mix(1.0, 1.4, (roughness - 0.7) / 0.3);
+        }
+        
+        // Add emissive
+        result += emissive;
+        // Legacy support
         result += pbrEmissive * pbrEmissiveIntensity;
     }
     
-    // Improved tone mapping (ACES approximation)
+    // Tone mapping (ACES approximation)
     vec3 a = 2.51 * result;
     vec3 b = 0.03 + result;
     vec3 c = 2.43 * result + 0.59;
@@ -253,5 +361,5 @@ void main()
     // Gamma correction
     result = pow(result, vec3(1.0/2.2));
     
-    FragColor = vec4(result, texColor.a);
+    FragColor = vec4(result, 1.0);
 }
