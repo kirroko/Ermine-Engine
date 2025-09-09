@@ -48,6 +48,15 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\Animator.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\AnimatorSystem.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\AnimatorTypes.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\AssetBrowser.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -55,6 +64,9 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\AudioManager.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\AudioSystem.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\Camera.h">
@@ -168,18 +180,6 @@
     <ClInclude Include="include\Window.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="include\AnimatorTypes.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Animator.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\AnimatorSystem.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\AudioSystem.h">
-      <Filter>include</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\AssetBrowser\AssetBrowser.cpp">
@@ -189,6 +189,9 @@
       <Filter>src\AssetManager</Filter>
     </ClCompile>
     <ClCompile Include="src\AudioManager\AudioManager.cpp">
+      <Filter>src\AudioManager</Filter>
+    </ClCompile>
+    <ClCompile Include="src\AudioManager\AudioSystem.cpp">
       <Filter>src\AudioManager</Filter>
     </ClCompile>
     <ClCompile Include="src\ECS\Component.cpp">
@@ -205,6 +208,15 @@
     </ClCompile>
     <ClCompile Include="src\Engine.cpp">
       <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Graphics\Animator.cpp">
+      <Filter>src\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Graphics\AnimatorEditor.cpp">
+      <Filter>src\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Graphics\AnimatorSystem.cpp">
+      <Filter>src\Graphics</Filter>
     </ClCompile>
     <ClCompile Include="src\Graphics\Camera.cpp">
       <Filter>src\Graphics</Filter>
@@ -283,18 +295,6 @@
     </ClCompile>
     <ClCompile Include="src\dllmain.cpp">
       <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Graphics\Animator.cpp">
-      <Filter>src\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Graphics\AnimatorSystem.cpp">
-      <Filter>src\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Graphics\AnimatorEditor.cpp">
-      <Filter>src\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="src\AudioManager\AudioSystem.cpp">
-      <Filter>src\AudioManager</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
