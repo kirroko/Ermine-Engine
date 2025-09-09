@@ -16,5 +16,9 @@ public class Sandbox : MonoBehaviour
     void Update()
     {
         transform.Rotate(new Vector3(0,10f,0) * Time.deltaTime);
+        if (Input.GetKeyDown(KeyCode.S))
+        {
+            transform.Translate(new Vector3(0f,-10.0f,0f) * Time.deltaTime);
+        }
     }
 }

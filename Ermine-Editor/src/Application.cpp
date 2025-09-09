@@ -35,7 +35,7 @@ int main()
     editor::EditorGUI::Init(window);
 #endif
 
-    EE_CORE_TRACE("Programming running...");
+    EE_CORE_TRACE("Program running...");
     bool running = true;
     while (running && !Window::ShouldCloseWindow(window))
     {
