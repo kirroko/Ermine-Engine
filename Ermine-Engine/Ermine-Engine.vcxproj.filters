@@ -43,6 +43,9 @@
     <Filter Include="src\Scripting">
       <UniqueIdentifier>{6FBC2D98-DB7C-A9CE-A4B7-F24B1037EEAA}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Serialisation">
+      <UniqueIdentifier>{13729070-7F88-8E06-C8FF-192834555F8E}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Utility">
       <UniqueIdentifier>{70464FB2-DCFB-C7A7-65F0-C17ED1A4BEAB}</UniqueIdentifier>
     </Filter>
@@ -159,6 +162,9 @@
     <ClInclude Include="include\ScriptSystem.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\Serialisation.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\Shader.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -265,6 +271,9 @@
     </ClCompile>
     <ClCompile Include="src\Scripting\ScriptSystem.cpp">
       <Filter>src\Scripting</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Serialisation\Serialisation.cpp">
+      <Filter>src\Serialisation</Filter>
     </ClCompile>
     <ClCompile Include="src\Utility\EditorCamera.cpp">
       <Filter>src\Utility</Filter>

@@ -35,7 +35,7 @@ GameObject* GameObjectFactory::CreateGameObject(const std::string& name, const s
 	return rawPointer;
 }
 
-//GameObject* GameObjectFactory::CloneGameObbject(GameObject* game_object)
+//GameObject* GameObjectFactory::CloneGameObject(GameObject* game_object)
 //{
 //
 //}
