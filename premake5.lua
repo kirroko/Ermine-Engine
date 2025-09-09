@@ -5,6 +5,9 @@ workspace "Ermine"
 
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 fmod_dll = "../ThirdParty/Fmod/lib/fmod.dll"
+fmodL_dll = "../ThirdParty/Fmod/lib/fmodL.dll"
+fmodstudio_dll = "../ThirdParty/Fmod/lib/fmodstudio.dll"
+fmodstudioL_dll = "../ThirdParty/Fmod/lib/fmodstudioL.dll"
 mono_dll = "../ThirdParty/Mono/lib/mono-2.0-sgen.dll"
 mono_assembly = "../ThirdParty/Mono/lib/"
 mono_config = "../ThirdParty/Mono/etc"
@@ -92,6 +95,9 @@ project "Ermine-Engine"
     {
         ("{COPY} %{cfg.buildtarget.relpath} ../Build/bin/" .. outputdir .. "/Ermine-Editor"),
         ("{COPY} " .. fmod_dll .. " ../Build/bin/" .. outputdir .. "/Ermine-Editor"),
+        ("{COPY} " .. fmodL_dll .. " ../Build/bin/" .. outputdir .. "/Ermine-Editor"),
+        ("{COPY} " .. fmodstudio_dll .. " ../Build/bin/" .. outputdir .. "/Ermine-Editor"),
+        ("{COPY} " .. fmodstudioL_dll .. " ../Build/bin/" .. outputdir .. "/Ermine-Editor"),
         ("{COPY} " .. mono_dll .. " ../Build/bin/" .. outputdir .. "/Ermine-Editor"),
         ("{COPYDIR} " .. mono_assembly .. " ../Build/bin/" .. outputdir .. "/Ermine-Editor/mono/lib"),
         ("{COPYDIR} " .. mono_config .. " ../Build/bin/" .. outputdir .. "/Ermine-Editor/mono/etc"),
