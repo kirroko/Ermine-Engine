@@ -33,8 +33,8 @@ void Ermine::scripting::ScriptEngine::InitMono(const std::string& assembly_path)
 		EE_CORE_ERROR("Failed to initialize Mono Core Domain");
 		return;
 	}
-
-	m_gameDomain = mono_domain_create_appdomain("ErmineGame", nullptr);
+	char gdn[] = "ErmineGame";
+	m_gameDomain = mono_domain_create_appdomain(gdn, nullptr);
 	mono_domain_set(m_gameDomain, true);
 
 	// Loading engine API assembly
