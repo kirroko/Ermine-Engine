@@ -195,9 +195,9 @@ namespace Ermine
 	};
 
 	/*!***********************************************************************
-\brief
- AudioSource structure for individual audio files.
-*************************************************************************/
+	\brief
+	AudioSource structure for individual audio files.
+	*************************************************************************/
 	struct AudioSource
 	{
 		std::string audioPath{};
@@ -289,5 +289,20 @@ namespace Ermine
 		explicit AudioComponent(const std::string& event) :
 			eventName(event), is3D(false) {
 		} // Events typically handle their own 3D settings
+	};
+
+	/*!***********************************************************************
+	 \brief
+	 Particle component structure.
+	*************************************************************************/
+	struct Particle
+	{
+		Vec3 velocity;
+		float lifetime;
+		float age;
+		Vec4 colour;
+		float size;
+
+		Particle() : velocity(0, 0, 0), lifetime(1.0f), age(0.0f), colour(1, 1, 1, 1), size(1.0f) {}
 	};
 }
