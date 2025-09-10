@@ -134,7 +134,7 @@ namespace Ermine::graphics
                 {"materialEmissiveIntensity", 0.0f},
                 {"materialNormalStrength", 1.0f},
                 {"materialShadingModel", 0},
-                {"materialHasAlbedoMap", false},
+                {"materialHasAlbedoMap", true},
                 {"materialHasNormalMap", false},
                 {"materialHasRoughnessMap", false},
                 {"materialHasMetallicMap", false},
@@ -167,7 +167,7 @@ namespace Ermine::graphics
         static std::map<std::string, MaterialParam> EMISSIVE(const Vec3& color, float intensity)
         {
             return {
-                {"materialAlbedo", Vec3(1.0f, 1.0f, 1.0f)},
+                {"materialAlbedo", Vec3(0.0f, 0.0f, 0.0f)},
                 {"materialMetallic", 0.0f},
                 {"materialRoughness", 1.0f},
                 {"materialAo", 1.0f},

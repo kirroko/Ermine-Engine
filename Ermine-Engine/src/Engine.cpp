@@ -103,6 +103,7 @@ bool engine::Init(GLFWwindow* windowContext)
 		});
 
 	// Create graphics resources
+	ECS::GetInstance().GetSystem<graphics::Renderer>()->Init(1280, 720);
 	auto shader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/vertex.glsl", "../Resources/Shaders/fragment.glsl");
 	auto texture = AssetManager::GetInstance().LoadTexture("../Resources/Textures/greybox_grey_grid.png");
 
@@ -177,7 +178,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().AddComponent(redLightEntity, Light(Vec3(1, 0.0, 0.0), 1.0f, LightType::POINT));
 
 	auto redLightMaterial = std::make_unique<graphics::Material>(shader);
-	redLightMaterial->LoadTemplate(graphics::MaterialTemplates::EMISSIVE(Vec3(1.0f, 0.2f, 0.2f), 1.5f));
+	redLightMaterial->LoadTemplate(graphics::MaterialTemplates::EMISSIVE(Vec3(1.0f, 0.f, 0.f), 1.0f));
 	ECS::GetInstance().AddComponent(redLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
 	ECS::GetInstance().AddComponent(redLightEntity, Material(std::move(redLightMaterial)));
 
@@ -188,7 +189,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().AddComponent(blueLightEntity, Light(Vec3(0.0, 0.0, 1), 1.0f, LightType::POINT));
 
 	auto blueLightMaterial = std::make_unique<graphics::Material>(shader);
-	blueLightMaterial->LoadTemplate(graphics::MaterialTemplates::EMISSIVE(Vec3(0.2f, 0.2f, 1.0f), 1.5f));
+	blueLightMaterial->LoadTemplate(graphics::MaterialTemplates::EMISSIVE(Vec3(0.f, 0.f, 1.0f), 1.0f));
 	ECS::GetInstance().AddComponent(blueLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
 	ECS::GetInstance().AddComponent(blueLightEntity, Material(std::move(blueLightMaterial)));
 
@@ -199,7 +200,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().AddComponent(greenLightEntity, Light(Vec3(0.0, 1.0f, 0.0), 1.0f, LightType::POINT));
 
 	auto greenLightMaterial = std::make_unique<graphics::Material>(shader);
-	greenLightMaterial->LoadTemplate(graphics::MaterialTemplates::EMISSIVE(Vec3(0.2f, 0.2f, 1.0f), 1.5f));
+	greenLightMaterial->LoadTemplate(graphics::MaterialTemplates::EMISSIVE(Vec3(0.f, 1.f, 0.0f), 1.0f));
 	ECS::GetInstance().AddComponent(greenLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
 	ECS::GetInstance().AddComponent(greenLightEntity, Material(std::move(greenLightMaterial)));
 
@@ -371,9 +372,11 @@ void engine::HandleShadingToggle(GLFWwindow* windowContext)
 {
 	static bool key1WasPressed = false;
 	static bool key2WasPressed = false;
+	static bool key3WasPressed = false;
 
 	bool key1IsPressed = glfwGetKey(windowContext, GLFW_KEY_1) == GLFW_PRESS;
 	bool key2IsPressed = glfwGetKey(windowContext, GLFW_KEY_2) == GLFW_PRESS;
+	bool key3IsPressed = glfwGetKey(windowContext, GLFW_KEY_3) == GLFW_PRESS;
 
 	// Toggle to PBR (key 1)
 	if (key1IsPressed && !key1WasPressed) {
@@ -388,7 +391,13 @@ void engine::HandleShadingToggle(GLFWwindow* windowContext)
 		renderer->SetShadingMode(true); // true = Blinn-Phong
 		EE_CORE_INFO("Switched to Blinn-Phong shading");
 	}
+	// Toggle to Deferred (key 3)
+	if (key3IsPressed && !key3WasPressed) {
+		auto renderer = ECS::GetInstance().GetSystem<graphics::Renderer>();
+		renderer->ToggleDeferredRendering();
+	}
 
 	key1WasPressed = key1IsPressed;
 	key2WasPressed = key2IsPressed;
+	key3WasPressed = key3IsPressed;
 }
