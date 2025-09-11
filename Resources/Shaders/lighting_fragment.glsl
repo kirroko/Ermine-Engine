@@ -94,18 +94,6 @@ void unpackMaterialProperties(uint packedData, out float metallic, out float rou
     normalStrength = float((packedData >> 24) & 0xFFu) / 255.0;
 }
 
-vec2 unpackMotionVectors(uint packedData)
-{
-    // Extract 2×16 bits motion vectors
-    uint x = packedData & 0xFFFFu;        // bits 0-15
-    uint y = (packedData >> 16) & 0xFFFFu; // bits 16-31
-    
-    vec2 motion = vec2(float(x), float(y)) / 65535.0;
-    
-    // Convert from [0,1] back to [-1,1] range
-    return motion * 2.0 - 1.0;
-}
-
 // Reconstruct world position from depth
 vec3 reconstructWorldPosition(vec2 texCoord, float depth)
 {

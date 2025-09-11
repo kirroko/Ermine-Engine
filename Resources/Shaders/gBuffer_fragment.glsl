@@ -94,15 +94,6 @@ uint packMaterialProperties(float metallic, float roughness, float ao, float nor
     return (props.w << 24) | (props.z << 16) | (props.y << 8) | props.x;
 }
 
-uint packMotionVectors(vec2 motionVector)
-{
-    // Pack 2×16 bits motion vectors
-    // Convert from [-1,1] to [0,1] range and pack as 16-bit values
-    vec2 packedVec = clamp((motionVector + 1.0) * 0.5, 0.0, 1.0);
-    uvec2 motion = uvec2(packedVec * 65535.0);
-    return (motion.y << 16) | motion.x;
-}
-
 vec3 getNormalFromMap(sampler2D normalMap, vec2 texCoords, vec3 worldNormal, vec3 worldPos)
 {
     // Sample normal map
@@ -173,17 +164,12 @@ void main()
     //bool isBlinnPhong = shadingModel == 1;
     bool isBlinnPhong = false;
 
-
-    // Calculate motion vectors
-    vec2 motionVector = vec2(0.0); // Placeholder - implement proper motion vector calculation
-    
     // Pack data into G-Buffer
     // RT0: RGB32_UINT (96 bits)
     gBuffer0.r = packAlbedoShadingModel(finalAlbedo, isBlinnPhong);
     gBuffer0.g = packNormal(finalNormal);
     gBuffer0.b = packEmissive(finalEmissive, finalEmissiveIntensity);
     
-    // RT1: RG32_UINT (64 bits)
+    // RT1: R32_UINT (32 bits)
     gBuffer1.r = packMaterialProperties(finalMetallic, finalRoughness, finalAO, normalStrength);
-    gBuffer1.g = packMotionVectors(motionVector);
 }
