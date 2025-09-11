@@ -25,6 +25,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "ScriptInstance.h"
 #include "Texture.h"
 #include "Material.h" 
+#include "AudioManager.h"
 
 namespace Ermine
 {
@@ -312,7 +313,7 @@ namespace Ermine
 
 		/**
 		* @brief Sets the roughness value for the material.
-		* @details Roughness defines the material’s surface smoothness. A value of 0.0 is smooth, and 1.0 is rough.
+		* @details Roughness defines the materialï¿½s surface smoothness. A value of 0.0 is smooth, and 1.0 is rough.
 		* @param roughness A float representing the roughness of the material.
 		*/
 		void SetRoughness(float roughness)
@@ -402,5 +403,116 @@ namespace Ermine
 			color(col), intensity(intens), type(t)
 		{
 		}
+	};
+	
+	/*!***********************************************************************
+		AudioSource structure for individual audio files.
+	*************************************************************************/
+	struct AudioSource
+	{
+		std::string audioPath{};
+		std::string audioName{};
+		float volume{ 0.2f }; // Volume from 0.0f to 1.0f (matches your previous engine)
+
+		AudioSource() = default;
+		AudioSource(const std::string& name, const std::string& path, float vol = 0.2f) :
+			audioName(name), audioPath(path), volume(vol) {
+		}
+	};
+
+	/*!***********************************************************************
+	\brief
+	 Global AudioManager component for managing music, SFX collections, and global audio.
+	 Similar to your previous engine but adapted for FMOD.
+	*************************************************************************/
+	struct GlobalAudioComponent
+	{
+		std::vector<AudioSource> music; // Music category
+		std::vector<AudioSource> sfx;   // SFX category
+
+		// Global volume controls
+		float masterVolume{ 1.0f };
+		float musicVolume{ 1.0f };
+		float sfxVolume{ 1.0f };
+
+		// Currently playing tracks
+		int currentMusicIndex{ -1 };
+		int currentMusicChannelId{ -1 };
+
+		GlobalAudioComponent() = default;
+
+		// Music management
+		void PlayMusic(int index);
+		void StopMusic();
+		void SetMusicVolume(float volume);
+
+		// SFX management  
+		void PlaySFX(int index);
+		void PlaySFX(const std::string& name);
+		void SetSFXVolume(float volume);
+
+		// Utility functions
+		int GetSFXIndex(const std::string& name) const;
+		int GetMusicIndex(const std::string& name) const;
+		void AddMusicSource(const std::string& name, const std::string& path);
+		void AddSFXSource(const std::string& name, const std::string& path);
+	};
+
+	/*!***********************************************************************
+	\brief
+	 Individual AudioComponent for entity-specific audio (footsteps, weapon sounds, etc.)
+	 Works alongside the global AudioManager.
+	*************************************************************************/
+	struct AudioComponent
+	{
+		// Basic audio properties
+		std::string soundName{};
+		std::string eventName{}; // For FMOD Studio events
+
+		// Playback control
+		int channelId{ -1 }; // Managed by CAudioEngine
+		bool isPlaying{ false };
+		bool shouldPlay{ false }; // Trigger flag for AudioSystem
+		bool shouldStop{ false }; // Trigger flag for AudioSystem
+
+		// Audio settings
+		bool is3D{ true };
+		bool isLooping{ false };
+		bool isStreaming{ false };
+		float volume{ 0.0f }; // Volume in dB (-60 to 0) - matches your FMOD system
+
+		// 3D Audio properties
+		bool followTransform{ true }; // Should audio follow entity position?
+		float minDistance{ 1.0f }; // 3D audio rolloff settings
+		float maxDistance{ 100.0f };
+
+		// FMOD Studio event parameters (optional)
+		std::map<std::string, float> eventParameters{};
+
+		// Constructors
+		AudioComponent() = default;
+
+		explicit AudioComponent(const std::string& sound, bool is3d = true, bool loop = false, float vol = 0.0f) :
+			soundName(sound), is3D(is3d), isLooping(loop), volume(vol) {
+		}
+
+		explicit AudioComponent(const std::string& event) :
+			eventName(event), is3D(false) {
+		} // Events typically handle their own 3D settings
+	};
+
+	/*!***********************************************************************
+	 \brief
+	 Particle component structure.
+	*************************************************************************/
+	struct Particle
+	{
+		Vec3 velocity;
+		float lifetime;
+		float age;
+		Vec4 colour;
+		float size;
+
+		Particle() : velocity(0, 0, 0), lifetime(1.0f), age(0.0f), colour(1, 1, 1, 1), size(1.0f) {}
 	};
 }

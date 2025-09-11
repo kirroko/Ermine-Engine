@@ -306,4 +306,5 @@ void EditorGUI::ShutDown()
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
+    m_Windows.clear(); // Clean up additional ImGUI windows
 }
