@@ -18,6 +18,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Shader.h"
 #include "Systems.h"
 #include "GPUProfiler.h"
+#include "Texture.h"
+#include "Components.h"
 
 namespace Ermine::graphics
 {
@@ -38,6 +40,29 @@ namespace Ermine::graphics
             int height;
         };
 
+        struct InstanceData {
+            glm::mat4 model; // per-entity transform
+            glm::mat3 normalMat; // per-entity normal matrix
+            //glm::vec4 colour; // optional tint
+        };
+
+        // group by mesh pointer, shader, texture
+        struct BatchKey {
+            //Mesh* k_mesh;
+            const graphics::VertexArray* k_vao;
+            const graphics::IndexBuffer* k_ibo;
+
+            std::shared_ptr<Shader> k_shader;
+            std::shared_ptr<Texture> k_texture;
+
+            bool operator<(const BatchKey& other) const {
+                if (k_vao != other.k_vao) return k_vao < other.k_vao;
+                if (k_ibo != other.k_ibo) return k_ibo < other.k_ibo;
+                if (k_shader != other.k_shader) return k_shader < other.k_shader;
+                return k_texture < other.k_texture;
+            }
+        };
+
         //~Renderer();
 
         /**
@@ -54,6 +79,8 @@ namespace Ermine::graphics
          * @brief Update the game objects to the screen.
          */
         void Update(const Mtx44& view, const Mtx44& projection);
+
+        void UpdateWithBatchRender(const Mtx44& view, const Mtx44& projection);
         
         /**
          * @brief Draw the game objects to the screen.
@@ -73,5 +100,6 @@ namespace Ermine::graphics
 
     private:
 		std::shared_ptr<OffscreenBuffer> m_OffscreenBuffer;
+        unsigned int m_InstanceVBO = 0;
     };
 }

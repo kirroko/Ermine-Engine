@@ -168,7 +168,8 @@ bool engine::Init(GLFWwindow* windowContext)
 		});
 
 	// Create graphics resources
-	auto shader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/vertex.glsl", "../Resources/Shaders/fragment.glsl");
+	//auto shader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/vertex.glsl", "../Resources/Shaders/fragment.glsl");
+	auto shader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/batch_vertex.glsl", "../Resources/Shaders/batch_fragment.glsl"); // For Batch Rendering
 	auto texture = AssetManager::GetInstance().LoadTexture("../Resources/Textures/greybox_grey_grid.png");
 
 	// Random number generation setup
@@ -187,18 +188,35 @@ bool engine::Init(GLFWwindow* windowContext)
 	//    ECS::GetInstance().AddComponent(entity, Material(shader, texture));
 	//}
 
+	//auto entity = ECS::GetInstance().CreateEntity();
+	//ECS::GetInstance().AddComponent(entity, Transform(Vec3(0, 0, -1), Vec3(0, 45, 90), Vec3(1, 1, 1)));
+	//ECS::GetInstance().AddComponent(entity, ObjectMetaData());
+	//ECS::GetInstance().AddComponent(entity, graphics::GeometryFactory::CreateCube(1, 1, 1));
+	//ECS::GetInstance().AddComponent(entity, Material(shader, texture));
+
+	//auto entity2 = ECS::GetInstance().CreateEntity();
+	//ECS::GetInstance().AddComponent(entity2, Transform(Vec3(-1, 1, -2), Vec3(0, 0, 0), Vec3(1, 1, 1)));
+	//ECS::GetInstance().AddComponent(entity2, ObjectMetaData());
+	//ECS::GetInstance().AddComponent(entity2, graphics::GeometryFactory::CreateCube(1, 1, 1));
+	//ECS::GetInstance().AddComponent(entity2, Material(shader, texture));
+	//ECS::GetInstance().AddComponent(entity2, Script("Sandbox",entity2));
+
+	// Create a shared cube mesh ONCE
+	auto cubeMesh = std::make_shared<Mesh>(graphics::GeometryFactory::CreateCube(1, 1, 1));
+
+	// Create entities using the same mesh
 	auto entity = ECS::GetInstance().CreateEntity();
 	ECS::GetInstance().AddComponent(entity, Transform(Vec3(0, 0, -1), Vec3(0, 45, 90), Vec3(1, 1, 1)));
 	ECS::GetInstance().AddComponent(entity, ObjectMetaData());
-	ECS::GetInstance().AddComponent(entity, graphics::GeometryFactory::CreateCube(1, 1, 1));
+	ECS::GetInstance().AddComponent(entity, *cubeMesh); // use same mesh object
 	ECS::GetInstance().AddComponent(entity, Material(shader, texture));
 
 	auto entity2 = ECS::GetInstance().CreateEntity();
 	ECS::GetInstance().AddComponent(entity2, Transform(Vec3(-1, 1, -2), Vec3(0, 0, 0), Vec3(1, 1, 1)));
 	ECS::GetInstance().AddComponent(entity2, ObjectMetaData());
-	ECS::GetInstance().AddComponent(entity2, graphics::GeometryFactory::CreateCube(1, 1, 1));
+	ECS::GetInstance().AddComponent(entity2, *cubeMesh); // use same mesh again
 	ECS::GetInstance().AddComponent(entity2, Material(shader, texture));
-	ECS::GetInstance().AddComponent(entity2, Script("Sandbox",entity2));
+	ECS::GetInstance().AddComponent(entity2, Script("Sandbox", entity2));
 
 	auto audioTestEntity = ECS::GetInstance().CreateEntity();
 	ECS::GetInstance().AddComponent(audioTestEntity, Transform(Vec3(2, 0, -1), Vec3(0, 0, 0), Vec3(1, 1, 1)));
@@ -224,7 +242,8 @@ bool engine::Init(GLFWwindow* windowContext)
 	// Create a simple quad mesh for particles
 	auto quadMesh = graphics::GeometryFactory::CreateQuad(1.0f, 1.0f);
 	auto tex = AssetManager::GetInstance().LoadTexture("../Resources/Textures/greybox_red_solid.png");
-	particleShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/vertex.glsl", "../Resources/Shaders/fragment.glsl");
+	//particleShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/vertex.glsl", "../Resources/Shaders/fragment.glsl");
+	particleShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/batch_vertex.glsl", "../Resources/Shaders/batch_fragment.glsl"); // For Batch Rendering
 
 	// Particles Emitter
 	emitter = std::make_unique<ParticleEmitter>(quadMesh, particleShader, tex);
@@ -337,7 +356,9 @@ void engine::Render(GLFWwindow* window)
 	Mtx44 proj = editor::EditorCamera::GetInstance().GetProjectionMatrix();
 
 	// Draw
-	ECS::GetInstance().GetSystem<graphics::Renderer>()->Update(view, proj);
+	//ECS::GetInstance().GetSystem<graphics::Renderer>()->Update(view, proj);
+
+	ECS::GetInstance().GetSystem<graphics::Renderer>()->UpdateWithBatchRender(view, proj);
 
 	graphics::GPUProfiler::EndEvent();
 

@@ -16,7 +16,6 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #include "ECS.h"
 #include "Logger.h"
-#include "Components.h"
 #include "MathUtils.h"
 #include "Matrix3x3.h"
 #include "glm/gtc/matrix_transform.hpp"
@@ -107,6 +106,11 @@ Renderer::OffscreenBuffer Renderer::Create(const int& width, const int& height)
 	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
 	glBindRenderbuffer(GL_RENDERBUFFER, buffer.RBO);
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, buffer.RBO);
+
+	// For Batch Rendering
+	if (m_InstanceVBO == 0) {
+		glGenBuffers(1, &m_InstanceVBO);
+	}
 
 	// Check for errors
 	glCheckError();
@@ -226,6 +230,134 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 		Draw(mesh.vertex_array, mesh.index_buffer, material.m_shader);
 	}
 	//GPUProfiler::EndEvent();
+#ifdef _DEBUG
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+#endif
+}
+
+void Ermine::graphics::Renderer::UpdateWithBatchRender(const Mtx44& view, const Mtx44& projection)
+{
+#ifdef _DEBUG
+	glBindFramebuffer(GL_FRAMEBUFFER, m_OffscreenBuffer->FBO);
+	glViewport(0, 0, m_OffscreenBuffer->width, m_OffscreenBuffer->height);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+#endif
+
+
+	std::map<Renderer::BatchKey, std::vector<Renderer::InstanceData>> batches;
+
+	for (auto& entity : m_Entities) {
+		if (!ECS::GetInstance().HasComponent<Transform>(entity) ||
+			!ECS::GetInstance().HasComponent<Mesh>(entity) ||
+			!ECS::GetInstance().HasComponent<Material>(entity))
+			continue;
+
+		auto& trans = ECS::GetInstance().GetComponent<Transform>(entity);
+		auto& mesh = ECS::GetInstance().GetComponent<Mesh>(entity);
+		auto& material = ECS::GetInstance().GetComponent<Material>(entity);
+
+		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
+		model = glm::rotate(model, radian(trans.rotation.x), glm::vec3(1, 0, 0));
+		model = glm::rotate(model, radian(trans.rotation.y), glm::vec3(0, 1, 0));
+		model = glm::rotate(model, radian(trans.rotation.z), glm::vec3(0, 0, 1));
+		model = glm::scale(model, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
+
+		glm::mat4 glmView = glm::mat4(
+			view.m00, view.m01, view.m02, view.m03,
+			view.m10, view.m11, view.m12, view.m13,
+			view.m20, view.m21, view.m22, view.m23,
+			view.m30, view.m31, view.m32, view.m33
+		);
+		glm::mat4 modelView = glmView * model;
+		glm::mat3 normalMatrix = transpose(inverse(glm::mat3(modelView)));
+
+		batches[{ mesh.vertex_array.get(), mesh.index_buffer.get(), material.m_shader, material.m_texture }]
+			.push_back(Renderer::InstanceData{ model, normalMatrix/*, glm::vec4(1.0f)*/ });
+	}
+
+	// now render each batch
+	for (auto& [key, instances] : batches) {
+		// upload instance buffer
+		if (m_InstanceVBO == 0)
+			glGenBuffers(1, &m_InstanceVBO);
+
+		glBindBuffer(GL_ARRAY_BUFFER, m_InstanceVBO);
+		glBufferData(GL_ARRAY_BUFFER,
+			instances.size() * sizeof(InstanceData),
+			instances.data(),
+			GL_DYNAMIC_DRAW);
+
+		key.k_texture->Bind();
+		key.k_shader->Bind();
+		key.k_shader->SetUniformMatrix4fv("view", &view.m2[0][0]);
+		key.k_shader->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
+
+		key.k_vao->Bind();
+
+		glm::mat4 glmView = glm::mat4(
+			view.m00, view.m01, view.m02, view.m03,
+			view.m10, view.m11, view.m12, view.m13,
+			view.m20, view.m21, view.m22, view.m23,
+			view.m30, view.m31, view.m32, view.m33
+		);
+		glm::vec4 lightPosWorld(10.f, 10.f, 10.f, 1.0f);
+		glm::vec4 lightPosView = glmView * lightPosWorld;
+
+		key.k_shader->SetUniform4f("Light.Position", lightPosView);
+		key.k_shader->SetUniform3f("Light.La", glm::vec3(0.2f, 0.2f, 0.2f));
+		key.k_shader->SetUniform3f("Light.Ld", glm::vec3(1.0f, 1.0f, 1.0f));
+		key.k_shader->SetUniform3f("Light.Ls", glm::vec3(1.0f, 1.0f, 1.0f));
+
+		// Material
+		key.k_shader->SetUniform3f("Material.Ka", glm::vec3(0.2f, 0.2f, 0.2f));
+		key.k_shader->SetUniform3f("Material.Kd", glm::vec3(0.9f, 0.9f, 0.9f));
+		key.k_shader->SetUniform3f("Material.Ks", glm::vec3(0.8f, 0.8f, 0.8f));
+		key.k_shader->SetUniform1f("Material.Shininess", 100.0f);
+
+		// setup attributes
+		std::size_t vec4Size = sizeof(glm::vec4);
+
+		// mat4 model (locations 3–6)
+		for (int i = 0; i < 4; i++) {
+			glEnableVertexAttribArray(3 + i);
+			glVertexAttribPointer(3 + i, 4, GL_FLOAT, GL_FALSE,
+				sizeof(InstanceData), (void*)(i * vec4Size));
+			glVertexAttribDivisor(3 + i, 1);
+		}
+
+		// mat3 normal (locations 7–9)
+		std::size_t mat4Size = sizeof(glm::mat4);
+		for (int i = 0; i < 3; i++) {
+			glEnableVertexAttribArray(7 + i);
+			glVertexAttribPointer(7 + i, 3, GL_FLOAT, GL_FALSE,
+				sizeof(InstanceData), (void*)(mat4Size + i * sizeof(glm::vec3)));
+			glVertexAttribDivisor(7 + i, 1);
+		}
+
+		// colour (location 10)
+		//glEnableVertexAttribArray(10);
+		//glVertexAttribPointer(10, 4, GL_FLOAT, GL_FALSE,
+		//	sizeof(InstanceData), (void*)(mat4Size + sizeof(glm::mat3)));
+		//glVertexAttribDivisor(10, 1);
+
+		// Instanced Draw
+		glDrawElementsInstanced(GL_TRIANGLES,
+			//m_mesh->index_buffer->GetCount(),
+			key.k_ibo->GetCount(),
+			GL_UNSIGNED_INT, 0,
+			(GLsizei)instances.size());
+
+		// Track batched draw
+		GLsizei instanceCount = (GLsizei)instances.size();
+		GPUProfiler::TrackDrawCall(
+			key.k_vao->GetVertexCount()* instanceCount,
+			key.k_ibo->GetCount()* instanceCount
+		);
+
+		key.k_vao->Unbind();
+	}
+
 #ifdef _DEBUG
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 #endif
