@@ -175,7 +175,6 @@ namespace Ermine {
             }
 
             // Preset selection
-            ImGui::Text("Presets");
             const char* presetNames[] = { "Default", "SpreadOut", "Fireflies" };
             int currentPresetIdx = static_cast<int>(m_CurrentPreset);
             if (ImGui::Combo("Preset", &currentPresetIdx, presetNames, IM_ARRAYSIZE(presetNames)))
