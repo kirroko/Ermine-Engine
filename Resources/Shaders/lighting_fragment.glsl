@@ -9,11 +9,9 @@ uniform usampler2D u_GBuffer1;    // RT1: RG32_UINT (Material + Motion vectors)
 uniform sampler2D u_GBufferDepth; // Depth buffer
 
 // Matrices for position reconstruction
+uniform mat4 view;
 uniform mat4 invView;      
 uniform mat4 invProjection;   
-
-// Screen size for texture coordinate calculations
-uniform vec2 u_ScreenSize;
 
 // Shading mode
 uniform int u_ShadingMode; // 0 = PBR, 1 = Blinn-Phong
@@ -288,57 +286,74 @@ void main()
     // Unpack G-Buffer data
     vec3 albedo = unpackAlbedo(gBuffer0.r);
     vec3 normal = unpackNormal(gBuffer0.g);
-    
     vec3 emissive = unpackEmissive(gBuffer0.b);
 
     float metallic, roughness, ao, normalStrength;
     unpackMaterialProperties(gBuffer1.r, metallic, roughness, ao, normalStrength);
-    
+
     // Reconstruct world position
     vec3 worldPos = reconstructWorldPosition(TexCoord, depth);
-    
+
     // Convert to view space for lighting calculations
-    vec4 viewPos4 = inverse(invView) * vec4(worldPos, 1.0);
+    vec4 viewPos4 = view * vec4(worldPos, 1.0);
     vec3 fragPosView = viewPos4.xyz / viewPos4.w;
-    
+
     // Convert normal to view space
-    vec3 normalView = mat3(inverse(invView)) * normal;
+    vec3 normalView = mat3(view) * normal;
     normalView = normalize(normalView);
-    
+
     // View direction in view space (towards camera)
     vec3 viewDir = normalize(-fragPosView);
-    
-    // Initialize final color with emissive
-    vec3 finalColor = emissive;
-    
-    // Get light count
-    int numLights = int(lightCount.x);
-    
-    // Apply lighting
-    for (int i = 0; i < numLights && i < 16; ++i) {
-        if (u_ShadingMode == 1) {
-            // Blinn-Phong shading
-            float shininess = (1.0 - roughness) * 128.0;
-            finalColor += calculateBlinnPhong(i, normalView, viewDir, fragPosView, albedo, 1.0, shininess);
-        } else {
-            // PBR shading
-            vec3 F0 = mix(vec3(0.04), albedo, metallic);
-            finalColor += calculatePBR(i, normalView, viewDir, fragPosView, albedo, metallic, roughness, F0);
-        }
-    }
-    
-    // Apply ambient occlusion
-    finalColor *= ao;
-    
-    // Tone mapping (ACES approximation)
-    vec3 a = 2.51 * finalColor;
-    vec3 b = 0.03 + finalColor;
-    vec3 c = 2.43 * finalColor + 0.59;
-    vec3 d = 0.14 + finalColor;
-    finalColor = clamp((a * b) / (c * d), 0.0, 1.0);
-        
-    // Gamma correction
-    finalColor = pow(finalColor, vec3(1.0/2.2));
 
-    FragColor = vec4(finalColor, 1.0);
+    int numLights = int(lightCount.x);
+
+    // Shading model selection
+    bool useBlinnPhong = (u_ShadingMode == 1);
+
+    vec3 result = vec3(0.0);
+
+    if (useBlinnPhong) {
+        // Ambient
+        vec3 ambient = vec3(0.2) * 0.1 * albedo * ao;
+        result += ambient;
+
+        // Blinn-Phong lighting
+        for (int i = 0; i < numLights && i < 16; ++i) {
+            float shininess = (1.0 - roughness) * 128.0;
+            result += calculateBlinnPhong(i, normalView, viewDir, fragPosView, albedo, 1.0, shininess);
+        }
+
+        // Emissive
+        result += emissive;
+    } else {
+        // PBR ambient
+        vec3 ambient = vec3(0.08) * albedo * ao;
+        result += ambient;
+
+        // PBR lighting
+        vec3 F0 = mix(vec3(0.04), albedo, metallic);
+        for (int i = 0; i < numLights && i < 16; ++i) {
+            result += calculatePBR(i, normalView, viewDir, fragPosView, albedo, metallic, roughness, F0);
+        }
+
+        // Energy compensation for rough surfaces
+        if (roughness > 0.7) {
+            result *= mix(1.0, 1.4, (roughness - 0.7) / 0.3);
+        }
+
+        // Emissive
+        result += emissive;
+    }
+
+    // Tone mapping (ACES approximation)
+    vec3 a = 2.51 * result;
+    vec3 b = 0.03 + result;
+    vec3 c = 2.43 * result + 0.59;
+    vec3 d = 0.14 + result;
+    result = clamp((a * b) / (c * d), 0.0, 1.0);
+
+    // Gamma correction
+    result = pow(result, vec3(1.0/2.2));
+
+    FragColor = vec4(result, 1.0);
 }

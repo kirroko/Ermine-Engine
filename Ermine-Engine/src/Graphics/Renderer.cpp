@@ -487,14 +487,12 @@ void Renderer::RenderLightingPass(const Mtx44& view, const Mtx44& projection)
 
 	glm::mat4 invView = glm::inverse(glmView);
 	glm::mat4 invProjection = glm::inverse(glmProjection);
+	m_LightPassShader->SetUniformMatrix4fv("view", glmView);
 	m_LightPassShader->SetUniformMatrix4fv("invView", invView);
 	m_LightPassShader->SetUniformMatrix4fv("invProjection", invProjection);
 
 	// Set shading mode
 	m_LightPassShader->SetUniform1i("u_ShadingMode", m_IsBlinnPhong ? 1 : 0);
-
-	// Set screen resolution for texture coordinate calculations
-	m_LightPassShader->SetUniform2f("u_ScreenSize", static_cast<float>(m_GBuffer->width), static_cast<float>(m_GBuffer->height));
 
 	// Update and bind lights UBO
 	UpdateLightsUBO(view);
