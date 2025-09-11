@@ -1,11 +1,13 @@
 #version 460 core
+#extension GL_ARB_bindless_texture : require
+
 
 in vec2 TexCoord;
 out vec4 FragColor;
 
-// G-Buffer textures - Use usampler2D for integer textures
+// G-Buffer textures
 uniform usampler2D u_GBuffer0;    // RT0: RGB32_UINT (Albedo + Normal + Emissive)  
-uniform usampler2D u_GBuffer1;    // RT1: RG32_UINT (Material + Motion vectors)
+uniform usampler2D u_GBuffer1;    // RT1: R32_UINT (Material)
 uniform sampler2D u_GBufferDepth; // Depth buffer
 
 // Matrices for position reconstruction
@@ -16,7 +18,7 @@ uniform mat4 invProjection;
 // Shading mode
 uniform int u_ShadingMode; // 0 = PBR, 1 = Blinn-Phong
 
-// Light structure - must match C++ LightGPU
+// Light structure
 struct Light {
     vec4 position_type;    // xyz = position (view space), w = light type
     vec4 color_intensity;  // xyz = color, w = intensity
@@ -273,7 +275,7 @@ void main()
     
     // Unpack G-Buffer data
     vec3 albedo = unpackAlbedo(gBuffer0.r);
-    vec3 normal = unpackNormal(gBuffer0.g);
+    vec3 normalView = unpackNormal(gBuffer0.g);
     vec3 emissive = unpackEmissive(gBuffer0.b);
 
     float metallic, roughness, ao, normalStrength;
@@ -286,8 +288,7 @@ void main()
     vec4 viewPos4 = view * vec4(worldPos, 1.0);
     vec3 fragPosView = viewPos4.xyz / viewPos4.w;
 
-    // Convert normal to view space
-    vec3 normalView = mat3(view) * normal;
+    // Normalze
     normalView = normalize(normalView);
 
     // View direction in view space (towards camera)

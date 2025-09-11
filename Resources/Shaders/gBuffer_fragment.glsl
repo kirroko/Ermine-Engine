@@ -1,4 +1,5 @@
 #version 460 core
+#extension GL_ARB_bindless_texture : require
 
 // Input from vertex shader
 in vec2 TexCoord;
@@ -7,9 +8,9 @@ in vec3 WorldNormal;
 in vec3 ViewPos;
 in vec3 ViewNormal;
 
-// G-Buffer outputs - matches your optimized format
+// G-Buffer outputs
 layout(location = 0) out uvec3 gBuffer0; // RT0: RGB32_UINT (Albedo + Normal + Emissive)
-layout(location = 1) out uvec2 gBuffer1; // RT1: RG32_UINT (Material + Motion vectors)
+layout(location = 1) out uvec2 gBuffer1; // RT1: R32_UINT (Material)
 
 // Material UBO - matches your MaterialUBO structure
 layout(std140) uniform MaterialBlock
@@ -94,23 +95,25 @@ uint packMaterialProperties(float metallic, float roughness, float ao, float nor
     return (props.w << 24) | (props.z << 16) | (props.y << 8) | props.x;
 }
 
-vec3 getNormalFromMap(sampler2D normalMap, vec2 texCoords, vec3 worldNormal, vec3 worldPos)
+vec3 getNormalFromMap_viewspace(sampler2D normalMap, vec2 texCoords, vec3 viewNormal, vec3 viewPos)
 {
-    // Sample normal map
+    // Sample normal map (tangent space)
     vec3 tangentNormal = texture(normalMap, texCoords).rgb * 2.0 - 1.0;
-    
-    // Create TBN matrix
-    vec3 Q1 = dFdx(worldPos);
-    vec3 Q2 = dFdy(worldPos);
+
+    // Build TBN using derivatives of view-space position and UV
+    vec3 Q1 = dFdx(viewPos);
+    vec3 Q2 = dFdy(viewPos);
     vec2 st1 = dFdx(texCoords);
     vec2 st2 = dFdy(texCoords);
-    
-    vec3 N = normalize(worldNormal);
+
+    // Tangent in view space
     vec3 T = normalize(Q1 * st2.t - Q2 * st1.t);
-    vec3 B = -normalize(cross(N, T));
-    mat3 TBN = mat3(T, B, N);
-    
-    return normalize(TBN * tangentNormal);
+    // Ensure orthogonality
+    T = normalize(T - dot(T, viewNormal) * viewNormal);
+    vec3 B = normalize(cross(viewNormal, T));
+
+    mat3 TBN = mat3(T, B, viewNormal);
+    return normalize(TBN * tangentNormal); // returns view-space normal
 }
 
 void main()
@@ -123,12 +126,11 @@ void main()
         finalAlbedo *= albedoSample.rgb;
     }
     
-    vec3 finalNormal = WorldNormal;
+    vec3 finalNormal = ViewNormal;
     if (hasNormalMap != 0)
     {
-        finalNormal = getNormalFromMap(materialNormalMap, TexCoord, WorldNormal, WorldPos);
-        // Apply normal strength
-        finalNormal = normalize(mix(WorldNormal, finalNormal, normalStrength));
+        vec3 mapped = getNormalFromMap_viewspace(materialNormalMap, TexCoord, ViewNormal, ViewPos);
+        finalNormal = normalize(mix(ViewNormal, mapped, normalStrength));
     }
     
     float finalRoughness = roughness;
@@ -154,15 +156,13 @@ void main()
     if (hasEmissiveMap != 0)
     {
         vec4 emissiveSample = texture(materialEmissiveMap, TexCoord);
-        // Blend approach: use texture RGB, and combine intensities additively or use max
         finalEmissive = emissiveSample.rgb + (emissive * emissiveIntensity);
         finalEmissiveIntensity = max(emissiveSample.a, emissiveIntensity);
     }
    
     
-    // Determine shading model (use material setting, can be overridden by global uniform)
-    //bool isBlinnPhong = shadingModel == 1;
-    bool isBlinnPhong = false;
+    // Determine shading model
+    bool isBlinnPhong = shadingModel == 1;
 
     // Pack data into G-Buffer
     // RT0: RGB32_UINT (96 bits)

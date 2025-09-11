@@ -57,6 +57,12 @@ GLenum glCheckError_(const char* file, int line)
 
 void Renderer::Init(const int& screenWidth, const int& screenHeight)
 {
+	// Check for ARB_bindless_texture support
+	if (!glfwExtensionSupported("GL_ARB_bindless_texture") || !GL_ARB_bindless_texture)
+	{
+		EE_CORE_WARN("GL_ARB_bindless_texture not supported. Deferred rendering will be disabled.");
+		m_UseDeferredRendering = false;
+	}
 	// Create a fullscreen quad for rendering the offscreen buffer to the screen
 	m_QuadMesh = GeometryFactory::CreateQuad(2.0f, 2.0f);
 
@@ -221,7 +227,7 @@ Renderer::GBuffer Renderer::CreateGBuffer(const int& width, const int& height)
 	glGenFramebuffers(1, &gBuffer.FBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, gBuffer.FBO);
 
-	// Create RT0: RGB32_UINT (96 bits) - Albedo, Normal, Emissive
+	// Create RT0 Teexture: RGB32_UINT (96 bits) - Albedo, Normal, Emissive
 	glGenTextures(1, &gBuffer.PackedTexture0);
 	glBindTexture(GL_TEXTURE_2D, gBuffer.PackedTexture0);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32UI, width, height, 0, GL_RGB_INTEGER, GL_UNSIGNED_INT, nullptr);
@@ -231,7 +237,7 @@ Renderer::GBuffer Renderer::CreateGBuffer(const int& width, const int& height)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gBuffer.PackedTexture0, 0);
 
-	// Create RT1: RG32_UINT (32 bits) - Material properties
+	// Create RT1 Teexture: RG32_UINT (32 bits) - Material properties
 	glGenTextures(1, &gBuffer.PackedTexture1);
 	glBindTexture(GL_TEXTURE_2D, gBuffer.PackedTexture1);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_R32UI, width, height, 0, GL_RG_INTEGER, GL_UNSIGNED_INT, nullptr);
@@ -268,8 +274,19 @@ Renderer::GBuffer Renderer::CreateGBuffer(const int& width, const int& height)
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glCheckError();
 
+	// Get the texture handles for the deferred lighting textures created above
+	gBuffer.HandlePackedTexture0 = glGetTextureHandleARB(gBuffer.PackedTexture0);
+	glMakeTextureHandleResidentARB(gBuffer.HandlePackedTexture0);
+
+	gBuffer.HandlePackedTexture1 = glGetTextureHandleARB(gBuffer.PackedTexture1);
+	glMakeTextureHandleResidentARB(gBuffer.HandlePackedTexture1);
+
+	gBuffer.HandleDepthTexture = glGetTextureHandleARB(gBuffer.DepthTexture);
+	glMakeTextureHandleResidentARB(gBuffer.HandleDepthTexture);
+
+
 	m_GBuffer = std::make_shared<GBuffer>(gBuffer);
-	EE_CORE_INFO("Created optimized G-Buffer: {0}x{1}, 160 bits per pixel", width, height);
+	EE_CORE_INFO("Created G-Buffer: {0}x{1}, 128 bits per pixel", width, height);
 
 	return gBuffer;
 }
@@ -309,7 +326,6 @@ void Renderer::BeginGeometryPass()
 	// Set up depth testing for geometry pass
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
-	glDepthMask(GL_TRUE);
 
 	// Disable blending for geometry pass
 	glDisable(GL_BLEND);
@@ -344,9 +360,6 @@ void Renderer::BeginLightingPass()
 	glGetIntegerv(GL_VIEWPORT, viewport);
 	glViewport(0, 0, viewport[2], viewport[3]);
 #endif
-
-	// Bind g-buffer textures for reading
-	BindGBufferTextures(0);
 
 	// Set up for lighting calculations
 	glDisable(GL_DEPTH_TEST); // No depth testing needed for full-screen pass
@@ -424,15 +437,7 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 		m_GBufferShader->SetUniformMatrix4fv("view", &view.m2[0][0]);
 		m_GBufferShader->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
 
-		// Calculate and set normal matrix
-		glm::mat4 glmView = glm::mat4(
-			view.m00, view.m01, view.m02, view.m03,
-			view.m10, view.m11, view.m12, view.m13,
-			view.m20, view.m21, view.m22, view.m23,
-			view.m30, view.m31, view.m32, view.m33
-		);
-		glm::mat4 modelView = glmView * model;
-		glm::mat3 normalMatrix = transpose(inverse(glm::mat3(modelView)));
+		glm::mat3 normalMatrix = transpose(inverse(glm::mat3(model)));
 		m_GBufferShader->SetUniformMatrix3fv("NormalMatrix", normalMatrix);
 
 		UpdateMaterialUBO(material->GetUBOData());
@@ -463,13 +468,7 @@ void Renderer::RenderLightingPass(const Mtx44& view, const Mtx44& projection)
 	m_LightPassShader->Bind();
 
 	// Bind g-buffer textures for reading
-	BindGBufferTextures(0);
-
-	// Set texture uniform locations
-	m_LightPassShader->SetUniform1i("u_GBuffer0", 0); // RT0
-	m_LightPassShader->SetUniform1i("u_GBuffer1", 1); // RT1  
-	m_LightPassShader->SetUniform1i("u_GBufferDepth", 2); // Depth
-
+	BindGBufferTextures();
 
 	// Calculate and set inverse matrices for world position reconstruction
 	glm::mat4 glmView = glm::mat4(
@@ -524,7 +523,7 @@ void Renderer::RenderDeferredPipeline(const Mtx44& view, const Mtx44& projection
 /**
  * @brief Bind g-buffer textures to specified texture units
  */
-void Renderer::BindGBufferTextures(int startingTextureUnit)
+void Renderer::BindGBufferTextures()
 {
 	if (!m_GBuffer)
 	{
@@ -532,20 +531,19 @@ void Renderer::BindGBufferTextures(int startingTextureUnit)
 		return;
 	}
 
-	// Bind packed texture 0 (Albedo + Normal + Emissive)
-	glActiveTexture(GL_TEXTURE0 + startingTextureUnit + GBufferPacked0);
-	glBindTexture(GL_TEXTURE_2D, m_GBuffer->PackedTexture0);
-
-	// Bind packed texture 1 (Material properties + Motion vectors)
-	glActiveTexture(GL_TEXTURE0 + startingTextureUnit + GBufferPacked1);
-	glBindTexture(GL_TEXTURE_2D, m_GBuffer->PackedTexture1);
-
-	// Bind depth texture
-	glActiveTexture(GL_TEXTURE0 + startingTextureUnit + GBufferDepth);
-	glBindTexture(GL_TEXTURE_2D, m_GBuffer->DepthTexture);
-
-	// Reset to texture unit 0
-	glActiveTexture(GL_TEXTURE0);
+	// Pass handles to the currently bound shader
+	// (Assumes m_LightPassShader is bound; adjust as needed for your pipeline)
+	if (m_LightPassShader)
+	{
+		// Get uniform locations for g-buffer textures
+		GLint loc0 = glGetUniformLocation(m_LightPassShader->GetRendererID(), "u_GBuffer0");
+		GLint loc1 = glGetUniformLocation(m_LightPassShader->GetRendererID(), "u_GBuffer1");
+		GLint locD = glGetUniformLocation(m_LightPassShader->GetRendererID(), "u_GBufferDepth");
+		// Set the texture handles
+		glUniformHandleui64ARB(loc0, m_GBuffer->HandlePackedTexture0);
+		glUniformHandleui64ARB(loc1, m_GBuffer->HandlePackedTexture1);
+		glUniformHandleui64ARB(locD, m_GBuffer->HandleDepthTexture);
+	}
 }
 
 /**

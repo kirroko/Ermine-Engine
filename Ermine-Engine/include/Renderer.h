@@ -59,6 +59,9 @@ namespace Ermine::graphics
         {
             unsigned int FBO;
             unsigned int DepthTexture;
+            uint64_t HandlePackedTexture0 = 0;
+            uint64_t HandlePackedTexture1 = 0;
+            uint64_t HandleDepthTexture = 0;
 			// Multiple Render Targets (MRTs)
             
             // RT0: RGB32_UINT - 96 bits total
@@ -161,7 +164,7 @@ namespace Ermine::graphics
          * @brief Bind g-buffer textures to specified texture units
          * @param startingTextureUnit The first texture unit to bind to (default: 0)
          */
-        void BindGBufferTextures(int startingTextureUnit = 0);
+        void BindGBufferTextures();
 
         std::shared_ptr<OffscreenBuffer> GetOffscreenBuffer() const { return m_OffscreenBuffer; }
         std::shared_ptr<GBuffer> GetGBuffer() const { return m_GBuffer; }
