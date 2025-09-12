@@ -218,26 +218,11 @@ vec3 unpackNormal(vec3 packedNormal) {
 
 // Unpack emissive from RT2 (RGBA8 format)
 void unpackEmissive(vec4 packedEmissive, out vec3 emissive, out float emissiveIntensity) {
-    vec3 normalizedRGB = packedEmissive.rgb;
-    float exponent = packedEmissive.a * 255.0;
+    emissive = packedEmissive.rgb;
+    emissiveIntensity = packedEmissive.a * 255.0;
     
-    if (exponent < 1.0) {
-        emissive = vec3(0.0);
-        emissiveIntensity = 0.0;
-        return;
-    }
-    
-    // Reconstruct scale factor
-    float scale = exp2(exponent - 128.0);
-    
-    // Reconstruct emissive color and intensity
-    vec3 scaledEmissive = normalizedRGB * scale;
-    float totalIntensity = length(scaledEmissive);
-    
-    if (totalIntensity > 0.0) {
-        emissive = scaledEmissive / totalIntensity;
-        emissiveIntensity = totalIntensity;
-    } else {
+    // Check for no emissive contribution
+    if (emissiveIntensity < 0.001 || length(emissive) < 0.001) {
         emissive = vec3(0.0);
         emissiveIntensity = 0.0;
     }
@@ -356,16 +341,6 @@ void main()
         // Emissive
         result += emissive * emissiveIntensity;
     }
-
-    // Tone mapping (ACES approximation)
-    vec3 a = 2.51 * result;
-    vec3 b = 0.03 + result;
-    vec3 c = 2.43 * result + 0.59;
-    vec3 d = 0.14 + result;
-    result = clamp((a * b) / (c * d), 0.0, 1.0);
-
-    // Gamma correction
-    result = pow(result, vec3(1.0/2.2));
 
     FragColor = vec4(result, 1.0);
 }

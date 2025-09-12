@@ -262,7 +262,7 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	// Light sphere material
 	auto lightMaterial = std::make_unique<graphics::Material>(shader);
-	lightMaterial->LoadTemplate(graphics::MaterialTemplates::EMISSIVE(Vec3(1.0f, 1.0f, 1.0f), 2.0f));
+	lightMaterial->LoadTemplate(graphics::MaterialTemplates::EMISSIVE(Vec3(1.0f, 1.0f, 1.0f), 10.0f));
 	ECS::GetInstance().AddComponent(mainLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
 	ECS::GetInstance().AddComponent(mainLightEntity, Material(std::move(lightMaterial)));
 
@@ -270,10 +270,10 @@ bool engine::Init(GLFWwindow* windowContext)
 	auto redLightEntity = ECS::GetInstance().CreateEntity();
 	ECS::GetInstance().AddComponent(redLightEntity, Transform(Vec3(3, 2, 0), Vec3(0, 0, 0), Vec3(1, 1, 1)));
 	ECS::GetInstance().AddComponent(redLightEntity, ObjectMetaData("LightRed", "Light", true));
-	ECS::GetInstance().AddComponent(redLightEntity, Light(Vec3(1, 0.0, 0.0), 1.0f, LightType::POINT));
+	ECS::GetInstance().AddComponent(redLightEntity, Light(Vec3(1, 0.0, 0.0), 0.5f, LightType::POINT));
 
 	auto redLightMaterial = std::make_unique<graphics::Material>(shader);
-	redLightMaterial->LoadTemplate(graphics::MaterialTemplates::EMISSIVE(Vec3(1.0f, 0.f, 0.f), 1.0f));
+	redLightMaterial->LoadTemplate(graphics::MaterialTemplates::EMISSIVE(Vec3(1.0f, 0.f, 0.f), 10.0f));
 	ECS::GetInstance().AddComponent(redLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
 	ECS::GetInstance().AddComponent(redLightEntity, Material(std::move(redLightMaterial)));
 
@@ -281,10 +281,10 @@ bool engine::Init(GLFWwindow* windowContext)
 	auto blueLightEntity = ECS::GetInstance().CreateEntity();
 	ECS::GetInstance().AddComponent(blueLightEntity, Transform(Vec3(-3, 2, 0), Vec3(0, 0, 0), Vec3(1, 1, 1)));
 	ECS::GetInstance().AddComponent(blueLightEntity, ObjectMetaData("LightBlue", "Light", true));
-	ECS::GetInstance().AddComponent(blueLightEntity, Light(Vec3(0.0, 0.0, 1), 1.0f, LightType::POINT));
+	ECS::GetInstance().AddComponent(blueLightEntity, Light(Vec3(0.0, 0.0, 1), 0.5f, LightType::POINT));
 
 	auto blueLightMaterial = std::make_unique<graphics::Material>(shader);
-	blueLightMaterial->LoadTemplate(graphics::MaterialTemplates::EMISSIVE(Vec3(0.f, 0.f, 1.0f), 1.0f));
+	blueLightMaterial->LoadTemplate(graphics::MaterialTemplates::EMISSIVE(Vec3(0.f, 0.f, 1.0f), 10.0f));
 	ECS::GetInstance().AddComponent(blueLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
 	ECS::GetInstance().AddComponent(blueLightEntity, Material(std::move(blueLightMaterial)));
 
@@ -292,10 +292,10 @@ bool engine::Init(GLFWwindow* windowContext)
 	auto greenLightEntity = ECS::GetInstance().CreateEntity();
 	ECS::GetInstance().AddComponent(greenLightEntity, Transform(Vec3(0, 2, -3), Vec3(0, 0, 0), Vec3(1, 1, 1)));
 	ECS::GetInstance().AddComponent(greenLightEntity, ObjectMetaData("LightGreen", "Light", true));
-	ECS::GetInstance().AddComponent(greenLightEntity, Light(Vec3(0.0, 1.0f, 0.0), 1.0f, LightType::POINT));
+	ECS::GetInstance().AddComponent(greenLightEntity, Light(Vec3(0.0, 1.0f, 0.0), 0.5f, LightType::POINT));
 
 	auto greenLightMaterial = std::make_unique<graphics::Material>(shader);
-	greenLightMaterial->LoadTemplate(graphics::MaterialTemplates::EMISSIVE(Vec3(0.f, 1.f, 0.0f), 1.0f));
+	greenLightMaterial->LoadTemplate(graphics::MaterialTemplates::EMISSIVE(Vec3(0.f, 1.f, 0.0f), 10.0f));
 	ECS::GetInstance().AddComponent(greenLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
 	ECS::GetInstance().AddComponent(greenLightEntity, Material(std::move(greenLightMaterial)));
 

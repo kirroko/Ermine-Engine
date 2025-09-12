@@ -63,25 +63,13 @@ vec3 packNormal(vec3 normal) {
 
 // Pack emissive RGB + intensity into RT2 (RGBA8 format)
 vec4 packEmissive(vec3 emissive, float emissiveIntensity) {
-    // Use RGBE-like encoding for high dynamic range
-    vec3 scaledEmissive = emissive * emissiveIntensity;
-    
-    // Find the maximum component to determine scaling
-    float maxComponent = max(scaledEmissive.x, max(scaledEmissive.y, scaledEmissive.z));
-    
-    if (maxComponent < 1e-6) {
+    if (emissiveIntensity < 0.001) {
         return vec4(0.0, 0.0, 0.0, 0.0); // Black emissive
     }
     
-    // Calculate exponent (stored in alpha channel)
-    float exponent = ceil(log2(maxComponent));
-    exponent = clamp(exponent + 128.0, 0.0, 255.0); // Bias and clamp for 8-bit storage
+    float clampedIntensity = clamp(emissiveIntensity, 0.0, 255.0);
     
-    // Scale RGB components to fit in [0,1] range
-    float scale = exp2(exponent - 128.0);
-    vec3 normalizedRGB = scaledEmissive / scale;
-    
-    return vec4(normalizedRGB, exponent / 255.0);
+    return vec4(clamp(emissive, 0.0, 1.0), clampedIntensity / 255.0);
 }
 
 // Pack material properties into RT3 (RGBA8 format)
@@ -165,8 +153,21 @@ void main()
     if (hasEmissiveMap != 0)
     {
         vec4 emissiveSample = texture(materialEmissiveMap, TexCoord);
-        finalEmissive = emissiveSample.rgb + (emissive * emissiveIntensity);
-        finalEmissiveIntensity = max(emissiveSample.a, emissiveIntensity);
+        // Properly combine emissive map with material emissive
+        vec3 mapEmissive = emissiveSample.rgb * emissiveSample.a; // Use alpha as intensity
+        vec3 materialEmissive = emissive * emissiveIntensity;
+        
+        // Combine both contributions
+        vec3 combinedEmissive = mapEmissive + materialEmissive;
+        float combinedIntensity = length(combinedEmissive);
+        
+        if (combinedIntensity > 0.0) {
+            finalEmissive = combinedEmissive / combinedIntensity;
+            finalEmissiveIntensity = combinedIntensity;
+        } else {
+            finalEmissive = vec3(0.0);
+            finalEmissiveIntensity = 0.0;
+        }
     }
    
     

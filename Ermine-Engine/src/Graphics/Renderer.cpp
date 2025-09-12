@@ -70,8 +70,11 @@ void Renderer::Init(const int& screenWidth, const int& screenHeight)
 	// Load deferred shading shaders
 	m_GBufferShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/gBuffer_vertex.glsl", "../Resources/Shaders/gBuffer_fragment.glsl");
 	m_LightPassShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/lighting_vertex.glsl", "../Resources/Shaders/lighting_fragment.glsl");
+	m_BloomShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/bloom_vertex.glsl", "../Resources/Shaders/bloom_fragment.glsl");
+	m_PostProcessShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/postprocess_vertex.glsl", "../Resources/Shaders/postprocess_fragment.glsl");
 	// Create initial g-buffer
 	CreateGBuffer(screenWidth, screenHeight);
+	CreatePostProcessBuffer(screenWidth, screenHeight);
 
 	tempTexture = AssetManager::GetInstance().LoadTexture("../Resources/Textures/greybox_grey_grid.png");
 }
@@ -212,7 +215,7 @@ Renderer::OffscreenBuffer Renderer::Create(const int& width, const int& height)
  * RT3: RGBA8 (32 bits) - Material properties (R: Roughness, G: Metallic, B: AO, A: Unused)
  * Total: 160 bits per pixel
  */
-Renderer::GBuffer Renderer::CreateGBuffer(const int& width, const int& height)
+void Renderer::CreateGBuffer(const int& width, const int& height)
 {
 	// Clean up existing g-buffer if it exists
 	CleanupGBuffer();
@@ -225,7 +228,19 @@ Renderer::GBuffer Renderer::CreateGBuffer(const int& width, const int& height)
 	if (width <= 0 || height <= 0)
 	{
 		EE_CORE_ERROR("ERROR: Invalid G-Buffer dimensions: {0}x{1}", width, height);
-		return gBuffer;
+	}
+
+	// If Light UBO doesn't exist, create it
+	if (!m_LightsUBO)
+	{
+		glGenBuffers(1, &m_LightsUBO);
+		glBindBuffer(GL_UNIFORM_BUFFER, m_LightsUBO);
+		const GLsizeiptr headerSize = static_cast<GLsizeiptr>(sizeof(glm::vec4));
+		const GLsizeiptr bodySize = static_cast<GLsizeiptr>(MaxLights * sizeof(LightGPU));
+		glBufferData(GL_UNIFORM_BUFFER, headerSize + bodySize, nullptr, GL_DYNAMIC_DRAW);
+		glBindBufferBase(GL_UNIFORM_BUFFER, LightsBindingPoint, m_LightsUBO);
+		glBindBuffer(GL_UNIFORM_BUFFER, 0);
+		glCheckError();
 	}
 
 	// Create framebuffer
@@ -293,7 +308,6 @@ Renderer::GBuffer Renderer::CreateGBuffer(const int& width, const int& height)
 		EE_CORE_ERROR("ERROR: G-Buffer framebuffer not complete! Status: {0}", status);
 		CleanupGBuffer();
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		return gBuffer;
 	}
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -317,9 +331,145 @@ Renderer::GBuffer Renderer::CreateGBuffer(const int& width, const int& height)
 
 	m_GBuffer = std::make_shared<GBuffer>(gBuffer);
 	EE_CORE_INFO("Created G-Buffer: {0}x{1}, 160 bits per pixel", width, height);
-
-	return gBuffer;
 }
+
+
+
+/**
+ * @brief Create an offscreen buffer for viewport/scene rendering
+ * @param width The width of the offscreen buffer
+ * @param height The height of the offscreen buffer
+ * @return OffscreenBuffer The offscreen buffer
+ */
+void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
+{
+	PostProcessBuffer pPBuffer, bEBuffer, bBBuffer1, bBBuffer2;
+
+
+	// If an  buffer already exists, delete its OpenGL resources before creating a new one.
+	if (m_PostProcessBuffer)
+	{
+		glDeleteFramebuffers(1, &m_PostProcessBuffer->FBO);
+		glDeleteTextures(1, &m_PostProcessBuffer->ColorTexture);
+		glDeleteFramebuffers(1, &m_BloomExtractBuffer->FBO);
+		glDeleteTextures(1, &m_BloomExtractBuffer->ColorTexture);
+		glDeleteFramebuffers(1, &m_BloomBlurBuffer1->FBO);
+		glDeleteTextures(1, &m_BloomBlurBuffer1->ColorTexture);
+		glDeleteFramebuffers(1, &m_BloomBlurBuffer2->FBO);
+		glDeleteTextures(1, &m_BloomBlurBuffer2->ColorTexture);
+	}
+
+	// Create FBOs
+	glGenFramebuffers(1, &pPBuffer.FBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, pPBuffer.FBO);
+	glGenTextures(1, &pPBuffer.ColorTexture);
+	glBindTexture(GL_TEXTURE_2D, pPBuffer.ColorTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_HALF_FLOAT, nullptr);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pPBuffer.ColorTexture, 0);
+	glCheckError();
+
+	glGenFramebuffers(1, &bEBuffer.FBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, bEBuffer.FBO);
+	glGenTextures(1, &bEBuffer.ColorTexture);
+	glBindTexture(GL_TEXTURE_2D, bEBuffer.ColorTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_HALF_FLOAT, nullptr);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, bEBuffer.ColorTexture, 0);
+	glCheckError();
+
+	glGenFramebuffers(1, &bBBuffer1.FBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, bBBuffer1.FBO);
+	glGenTextures(1, &bBBuffer1.ColorTexture);
+	glBindTexture(GL_TEXTURE_2D, bBBuffer1.ColorTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_HALF_FLOAT, nullptr);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, bBBuffer1.ColorTexture, 0);
+	glCheckError();
+
+	glGenFramebuffers(1, &bBBuffer2.FBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, bBBuffer2.FBO);
+	glGenTextures(1, &bBBuffer2.ColorTexture);
+	glBindTexture(GL_TEXTURE_2D, bBBuffer2.ColorTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_HALF_FLOAT, nullptr);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, bBBuffer2.ColorTexture, 0);
+	glCheckError();
+
+	// Making sure dimensions are non-zero
+	if (width <= 0 || height <= 0)
+	{
+		EE_CORE_ERROR("ERROR: Invalid framebuffer dimensions: {0}x{1}", width, height);
+	}
+
+	// Explicitly specify draw buffer
+	GLenum drawBuffers[1] = { GL_COLOR_ATTACHMENT0 };
+	glDrawBuffers(1, drawBuffers);
+
+	// Check overall framebuffer completeness
+	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if (status != GL_FRAMEBUFFER_COMPLETE)
+	{
+		switch (status)
+		{
+		case GL_FRAMEBUFFER_UNDEFINED:
+			EE_CORE_ERROR("ERROR: Framebuffer is undefined!");
+			break;
+		case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+			EE_CORE_ERROR("ERROR: Framebuffer incomplete attachment!");
+			break;
+		case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+			EE_CORE_ERROR("ERROR: Framebuffer missing attachment!");
+			break;
+		case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
+			EE_CORE_ERROR("ERROR: Framebuffer incomplete draw buffer!");
+			break;
+		case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
+			EE_CORE_ERROR("ERROR: Framebuffer incomplete read buffer!");
+			break;
+		case GL_FRAMEBUFFER_UNSUPPORTED:
+			EE_CORE_ERROR("ERROR: Framebuffer unsupported!");
+			break;
+		case GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE:
+			EE_CORE_ERROR("ERROR: Framebuffer incomplete multisample!");
+			break;
+		case GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS:
+			EE_CORE_ERROR("ERROR: Framebuffer incomplete layer targets!");
+			break;
+		default:
+			EE_CORE_ERROR("ERROR: Framebuffer unknown error!");
+			break;
+		}
+		EE_CORE_FATAL("Framebuffer Failed!!!");
+		assert(false && "Check logs");
+	}
+
+	pPBuffer.width = width;
+	pPBuffer.height = height;
+	m_PostProcessBuffer = std::make_shared<PostProcessBuffer>(pPBuffer);
+	bEBuffer.width = width;
+	bEBuffer.height = height;
+	m_BloomExtractBuffer = std::make_shared<PostProcessBuffer>(bEBuffer);
+	bBBuffer1.width = width;
+	bBBuffer1.height = height;
+	m_BloomBlurBuffer1 = std::make_shared<PostProcessBuffer>(bBBuffer1);
+	bBBuffer2.width = width;
+	bBBuffer2.height = height;
+	m_BloomBlurBuffer2 = std::make_shared<PostProcessBuffer>(bBBuffer2);
+}
+
 
 /**
  * @brief Resize the g-buffer to new dimensions
@@ -371,42 +521,34 @@ void Renderer::EndGeometryPass()
 }
 
 /**
- * @brief Begin lighting pass for deferred rendering
+ * @brief Begin lighting pass for deferred rendering - render to texture for post-processing
  */
 void Renderer::BeginLightingPass()
 {
+	// Always render lighting pass to post-process buffer for sampling
+	if (!m_PostProcessBuffer)
+	{
+		EE_CORE_ERROR("Post-process buffer not initialized!");
+		return;
+	}
 
-#ifdef _DEBUG
-	glBindFramebuffer(GL_FRAMEBUFFER, m_OffscreenBuffer->FBO);
-	glViewport(0, 0, m_OffscreenBuffer->width, m_OffscreenBuffer->height);
-#else
-	// Bind default framebuffer for final output
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, m_PostProcessBuffer->FBO);
+	glViewport(0, 0, m_PostProcessBuffer->width, m_PostProcessBuffer->height);
 
-
-	// Get current viewport size
-	GLint viewport[4];
-	glGetIntegerv(GL_VIEWPORT, viewport);
-	glViewport(0, 0, viewport[2], viewport[3]);
-#endif
+	// Clear the lighting pass output
+	glClear(GL_COLOR_BUFFER_BIT);
 
 	// Set up for lighting calculations
 	glDisable(GL_DEPTH_TEST); // No depth testing needed for full-screen pass
-	glDisable(GL_BLEND);       // No blending needed for final output
+	glDisable(GL_BLEND);       // No blending needed for lighting output
 }
-
 /**
  * @brief End lighting pass and finalize frame
  */
 void Renderer::EndLightingPass()
 {
 	glDisable(GL_BLEND);
-	glEnable(GL_DEPTH_TEST);
 	glCheckError();
-
-#ifdef _DEBUG
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-#endif
 }
 
 
@@ -536,6 +678,107 @@ void Renderer::RenderLightingPass(const Mtx44& view, const Mtx44& projection)
 }
 
 /**
+ * @brief Render post-processing effects using the lighting pass output
+ */
+void Renderer::RenderPostProcessPass()
+{
+	if (!m_PostProcessBuffer || !m_BloomShader || !m_PostProcessShader)
+	{
+		EE_CORE_ERROR("Post-process buffers or shaders not initialized!");
+		return;
+	}
+
+	glDisable(GL_DEPTH_TEST);
+
+	// Pass 1: Extract bright areas
+	glBindFramebuffer(GL_FRAMEBUFFER, m_BloomExtractBuffer->FBO);
+	m_BloomShader->Bind();
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, m_PostProcessBuffer->ColorTexture);
+	m_BloomShader->SetUniform1i("u_LightingTexture", 0);
+	m_BloomShader->SetUniform1i("u_Pass", 1);
+
+	// Set bloom extraction parameters
+	m_BloomShader->SetUniform1f("u_BloomThreshold", m_BloomThreshold);
+	m_BloomShader->SetUniform1f("u_BloomIntensity", m_BloomIntensity);
+	m_BloomShader->SetUniform1f("u_BloomRadius", m_BloomRadius);
+
+	Draw(m_QuadMesh.vertex_array, m_QuadMesh.index_buffer, m_BloomShader);
+
+	// Pass 2: Horizontal blur
+	glBindFramebuffer(GL_FRAMEBUFFER, m_BloomBlurBuffer1->FBO);
+	m_BloomShader->Bind();
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, m_BloomExtractBuffer->ColorTexture);
+	m_BloomShader->SetUniform1i("u_Pass", 2);
+	Draw(m_QuadMesh.vertex_array, m_QuadMesh.index_buffer, m_BloomShader);
+
+	// Pass 3: Vertical blur
+	glBindFramebuffer(GL_FRAMEBUFFER, m_BloomBlurBuffer2->FBO);
+	m_BloomShader->Bind();
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, m_BloomBlurBuffer1->ColorTexture);
+	m_BloomShader->SetUniform1i("u_LightingTexture", 0);
+	m_BloomShader->SetUniform1i("u_Pass", 3);
+	Draw(m_QuadMesh.vertex_array, m_QuadMesh.index_buffer, m_BloomShader);
+
+	// Final pass: Combine with post-processing
+#ifdef _DEBUG
+	glBindFramebuffer(GL_FRAMEBUFFER, m_OffscreenBuffer->FBO);
+	glViewport(0, 0, m_OffscreenBuffer->width, m_OffscreenBuffer->height);
+#else
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	GLint viewport[4];
+	glGetIntegerv(GL_VIEWPORT, viewport);
+	glViewport(0, 0, viewport[2], viewport[3]);
+#endif
+
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	m_PostProcessShader->Bind();
+
+	// Bind main scene texture
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, m_PostProcessBuffer->ColorTexture);
+	m_PostProcessShader->SetUniform1i("u_LightingTexture", 0);
+
+	// Bind bloom texture
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, m_BloomBlurBuffer2->ColorTexture);
+	m_PostProcessShader->SetUniform1i("u_BloomTexture", 1);
+
+	// Set post-processing toggle parameters
+	m_PostProcessShader->SetUniform1i("u_Vignette", m_VignetteEnabled ? 1 : 0);
+	m_PostProcessShader->SetUniform1i("u_FXAA", m_FXAAEnabled ? 1 : 0);
+	m_PostProcessShader->SetUniform1i("u_ToneMapping", m_ToneMappingEnabled ? 1 : 0);
+	m_PostProcessShader->SetUniform1i("u_GammaCorrection", m_GammaCorrectionEnabled ? 1 : 0);
+	m_PostProcessShader->SetUniform1i("u_Bloom", m_BloomEnabled ? 1 : 0);
+
+	// Set post-processing value parameters
+	m_PostProcessShader->SetUniform1f("u_Exposure", m_Exposure);
+	m_PostProcessShader->SetUniform1f("u_Contrast", m_Contrast);
+	m_PostProcessShader->SetUniform1f("u_Saturation", m_Saturation);
+	m_PostProcessShader->SetUniform1f("u_Gamma", m_Gamma);
+	m_PostProcessShader->SetUniform1f("u_VignetteIntensity", m_VignetteIntensity);
+	m_PostProcessShader->SetUniform1f("u_VignetteRadius", m_VignetteRadius);
+	m_PostProcessShader->SetUniform1f("u_BloomStrength", m_BloomStrength);
+
+	// Set FXAA parameters
+	m_PostProcessShader->SetUniform1f("u_FXAASpanMax", m_FXAASpanMax);
+	m_PostProcessShader->SetUniform1f("u_FXAAReduceMin", m_FXAAReduceMin);
+	m_PostProcessShader->SetUniform1f("u_FXAAReduceMul", m_FXAAReduceMul);
+
+	Draw(m_QuadMesh.vertex_array, m_QuadMesh.index_buffer, m_PostProcessShader);
+
+	glEnable(GL_DEPTH_TEST);
+
+#ifdef _DEBUG
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+#endif
+}
+
+
+/**
  * @brief Complete deferred rendering pipeline
  * @param view The view matrix
  * @param projection The projection matrix
@@ -547,6 +790,9 @@ void Renderer::RenderDeferredPipeline(const Mtx44& view, const Mtx44& projection
 
 	// Lighting pass - read from g-buffer and perform lighting
 	RenderLightingPass(view, projection);
+
+	// Post-processing pass - read from lighting pass output
+	RenderPostProcessPass();
 }
 
 /**
@@ -634,6 +880,80 @@ void Renderer::CleanupGBuffer()
 		m_GBuffer.reset();
 	}
 }
+
+/**
+ * @brief Cleanup post-processing buffer resources
+ */
+void Renderer::CleanupPostProcessBuffer()
+{
+	// Clean up main post-process buffer
+	if (m_PostProcessBuffer)
+	{
+		if (m_PostProcessBuffer->FBO != 0)
+		{
+			glDeleteFramebuffers(1, &m_PostProcessBuffer->FBO);
+			m_PostProcessBuffer->FBO = 0;
+		}
+		if (m_PostProcessBuffer->ColorTexture != 0)
+		{
+			glDeleteTextures(1, &m_PostProcessBuffer->ColorTexture);
+			m_PostProcessBuffer->ColorTexture = 0;
+		}
+		m_PostProcessBuffer.reset();
+	}
+
+	// Clean up bloom extract buffer
+	if (m_BloomExtractBuffer)
+	{
+		if (m_BloomExtractBuffer->FBO != 0)
+		{
+			glDeleteFramebuffers(1, &m_BloomExtractBuffer->FBO);
+			m_BloomExtractBuffer->FBO = 0;
+		}
+		if (m_BloomExtractBuffer->ColorTexture != 0)
+		{
+			glDeleteTextures(1, &m_BloomExtractBuffer->ColorTexture);
+			m_BloomExtractBuffer->ColorTexture = 0;
+		}
+		m_BloomExtractBuffer.reset();
+	}
+
+	// Clean up bloom blur buffer 1
+	if (m_BloomBlurBuffer1)
+	{
+		if (m_BloomBlurBuffer1->FBO != 0)
+		{
+			glDeleteFramebuffers(1, &m_BloomBlurBuffer1->FBO);
+			m_BloomBlurBuffer1->FBO = 0;
+		}
+		if (m_BloomBlurBuffer1->ColorTexture != 0)
+		{
+			glDeleteTextures(1, &m_BloomBlurBuffer1->ColorTexture);
+			m_BloomBlurBuffer1->ColorTexture = 0;
+		}
+		m_BloomBlurBuffer1.reset();
+	}
+
+	// Clean up bloom blur buffer 2
+	if (m_BloomBlurBuffer2)
+	{
+		if (m_BloomBlurBuffer2->FBO != 0)
+		{
+			glDeleteFramebuffers(1, &m_BloomBlurBuffer2->FBO);
+			m_BloomBlurBuffer2->FBO = 0;
+		}
+		if (m_BloomBlurBuffer2->ColorTexture != 0)
+		{
+			glDeleteTextures(1, &m_BloomBlurBuffer2->ColorTexture);
+			m_BloomBlurBuffer2->ColorTexture = 0;
+		}
+		m_BloomBlurBuffer2.reset();
+	}
+
+	// Check for OpenGL errors after cleanup
+	glCheckError();
+}
+
 
 /**
  * @brief Updates the lights' uniform buffer object (UBO) with the current light and transform data from all living entities.
@@ -1027,6 +1347,9 @@ Renderer::~Renderer()
 		glDeleteBuffers(1, &m_MaterialUBO);
 		m_MaterialUBO = 0;
 	}
+
+	CleanupGBuffer();
+	CleanupPostProcessBuffer();
 }
 
 
