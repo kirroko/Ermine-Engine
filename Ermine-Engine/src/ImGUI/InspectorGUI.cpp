@@ -59,7 +59,7 @@ namespace Ermine
                 ImGui::DragFloat3("##pos", &tr.position.x);
 
                 // Rotation
-                ImGui::TextUnformatted("Rotation (deg)");
+                ImGui::TextUnformatted("Rotation");
                 ImGui::SameLine();
                 if (ImGui::SmallButton("Reset##rot")) tr.rotation = Vector3D(0.f, 0.f, 0.f);
                 ImGui::DragFloat3("##rot", &tr.rotation.x);

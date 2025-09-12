@@ -225,8 +225,8 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().AddComponent(entity, ObjectMetaData());
 	ECS::GetInstance().AddComponent(entity, graphics::GeometryFactory::CreateCube(1, 1, 1));
 
-	InspectorGUI inspector{ entity, "Inspector" };
-	inspector.SetEntity(entity);
+	//InspectorGUI inspector{ entity, "Inspector" };
+	//inspector.SetEntity(entity);
 
 	// Create material using UBO template
 	auto cubeMaterial = std::make_unique<graphics::Material>(shader);
@@ -310,17 +310,17 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	glClearColor(0.2f,0.3f,0.3f,1.0f); // Background color
 
-   // Create ImGUI window for Asset Browser
-   editor::EditorGUI::CreateImGUIWindow<ImguiUI::AssetBrowser>();
-   editor::EditorGUI::CreateImGUIWindow<ParticlesImGUI>(emitter.get());
+	// Create ImGUI window for Asset Browser
+	editor::EditorGUI::CreateImGUIWindow<ImguiUI::AssetBrowser>();
+	editor::EditorGUI::CreateImGUIWindow<ParticlesImGUI>(emitter.get());
 
-   // Create ImGUI window for Inspector
-   //editor::EditorGUI::CreateImGUIWindow<InspectorGUI>();
-   editor::EditorGUI::CreateImGUIWindow<InspectorGUI>(entity, "Inspector");
+	// Create ImGUI window for Inspector
+	//editor::EditorGUI::CreateImGUIWindow<InspectorGUI>();
+	editor::EditorGUI::CreateImGUIWindow<InspectorGUI>(entity2, "Inspector");
    
-   EE_CORE_INFO("Systems and components registered successfully, Engine Initialized");
-   s_isInitialized = true;
-   return true;
+	EE_CORE_INFO("Systems and components registered successfully, Engine Initialized");
+	s_isInitialized = true;
+	return true;
 }
 
 void engine::Shutdown()
