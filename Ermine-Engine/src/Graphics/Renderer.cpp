@@ -64,6 +64,7 @@ void Renderer::Init(const int& screenWidth, const int& screenHeight)
 		m_UseDeferredRendering = false;
 	}
 	// Create a fullscreen quad for rendering the offscreen buffer to the screen
+
 	m_QuadMesh = GeometryFactory::CreateQuad(2.0f, 2.0f);
 
 	// Load deferred shading shaders
@@ -204,8 +205,12 @@ Renderer::OffscreenBuffer Renderer::Create(const int& width, const int& height)
 
 
 /**
- * @brief Create optimized g-buffer for deferred rendering
- * Total: 160 bits per pixel using RGB32_UINT + RG32_UINT format
+ * @brief Create optimized g-buffer for deferred rendering using scalar materials and emissive
+ * RT0: RGB16F (48 bits) - Albedo RGB
+ * RT1: RGB16F (48 bits) - Normals XYZ
+ * RT2: RGBA8 (32 bits) - Emissive RGB + Intensity
+ * RT3: RGBA8 (32 bits) - Material properties (R: Roughness, G: Metallic, B: AO, A: Unused)
+ * Total: 160 bits per pixel
  */
 Renderer::GBuffer Renderer::CreateGBuffer(const int& width, const int& height)
 {
@@ -227,39 +232,59 @@ Renderer::GBuffer Renderer::CreateGBuffer(const int& width, const int& height)
 	glGenFramebuffers(1, &gBuffer.FBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, gBuffer.FBO);
 
-	// Create RT0 Teexture: RGB32_UINT (96 bits) - Albedo, Normal, Emissive
+	// Create RT0 Texture: RGB16F (48 bits) - Albedo RGB
 	glGenTextures(1, &gBuffer.PackedTexture0);
 	glBindTexture(GL_TEXTURE_2D, gBuffer.PackedTexture0);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32UI, width, height, 0, GL_RGB_INTEGER, GL_UNSIGNED_INT, nullptr);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_HALF_FLOAT, nullptr);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gBuffer.PackedTexture0, 0);
 
-	// Create RT1 Teexture: RG32_UINT (32 bits) - Material properties
+	// Create RT1 Texture: RGB16F (48 bits) - Normals XYZ
 	glGenTextures(1, &gBuffer.PackedTexture1);
 	glBindTexture(GL_TEXTURE_2D, gBuffer.PackedTexture1);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_R32UI, width, height, 0, GL_RG_INTEGER, GL_UNSIGNED_INT, nullptr);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_HALF_FLOAT, nullptr);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, gBuffer.PackedTexture1, 0);
 
-	// Create depth texture for depth testing and reconstruction. 16 bits for memory efficiency
+	// Create RT2 Texture: RGBA8 (32 bits) - Emissive RGB + Intensity
+	glGenTextures(1, &gBuffer.PackedTexture2);
+	glBindTexture(GL_TEXTURE_2D, gBuffer.PackedTexture2);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gBuffer.PackedTexture2, 0);
+
+	// Create RT3 Texture: RGBA8 (32 bits) - Material properties (R: Roughness, G: Metallic, B: AO, A: Unused)
+	glGenTextures(1, &gBuffer.PackedTexture3);
+	glBindTexture(GL_TEXTURE_2D, gBuffer.PackedTexture3);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, gBuffer.PackedTexture3, 0);
+
+	// Create depth texture for depth testing and reconstruction. 24 bits
 	glGenTextures(1, &gBuffer.DepthTexture);
 	glBindTexture(GL_TEXTURE_2D, gBuffer.DepthTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, width, height, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, nullptr);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, gBuffer.DepthTexture, 0);
 
-	// Set up MRTs
-	GLenum drawBuffers[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
-	glDrawBuffers(2, drawBuffers);
+	// Set up MRTs - all 4 color attachments
+	GLenum drawBuffers[4] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
+	glDrawBuffers(4, drawBuffers);
 
 	// Check framebuffer completeness
 	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
@@ -281,16 +306,20 @@ Renderer::GBuffer Renderer::CreateGBuffer(const int& width, const int& height)
 	gBuffer.HandlePackedTexture1 = glGetTextureHandleARB(gBuffer.PackedTexture1);
 	glMakeTextureHandleResidentARB(gBuffer.HandlePackedTexture1);
 
+	gBuffer.HandlePackedTexture2 = glGetTextureHandleARB(gBuffer.PackedTexture2);
+	glMakeTextureHandleResidentARB(gBuffer.HandlePackedTexture2);
+
+	gBuffer.HandlePackedTexture3 = glGetTextureHandleARB(gBuffer.PackedTexture3);
+	glMakeTextureHandleResidentARB(gBuffer.HandlePackedTexture3);
+
 	gBuffer.HandleDepthTexture = glGetTextureHandleARB(gBuffer.DepthTexture);
 	glMakeTextureHandleResidentARB(gBuffer.HandleDepthTexture);
 
-
 	m_GBuffer = std::make_shared<GBuffer>(gBuffer);
-	EE_CORE_INFO("Created G-Buffer: {0}x{1}, 128 bits per pixel", width, height);
+	EE_CORE_INFO("Created G-Buffer: {0}x{1}, 160 bits per pixel", width, height);
 
 	return gBuffer;
 }
-
 
 /**
  * @brief Resize the g-buffer to new dimensions
@@ -531,20 +560,45 @@ void Renderer::BindGBufferTextures()
 		return;
 	}
 
-	// Pass handles to the currently bound shader
-	// (Assumes m_LightPassShader is bound; adjust as needed for your pipeline)
 	if (m_LightPassShader)
 	{
-		// Get uniform locations for g-buffer textures
-		GLint loc0 = glGetUniformLocation(m_LightPassShader->GetRendererID(), "u_GBuffer0");
-		GLint loc1 = glGetUniformLocation(m_LightPassShader->GetRendererID(), "u_GBuffer1");
-		GLint locD = glGetUniformLocation(m_LightPassShader->GetRendererID(), "u_GBufferDepth");
-		// Set the texture handles
-		glUniformHandleui64ARB(loc0, m_GBuffer->HandlePackedTexture0);
-		glUniformHandleui64ARB(loc1, m_GBuffer->HandlePackedTexture1);
-		glUniformHandleui64ARB(locD, m_GBuffer->HandleDepthTexture);
+		GLint loc0 = glGetUniformLocation(m_LightPassShader->GetRendererID(), "u_GBuffer0Handle");
+		GLint loc1 = glGetUniformLocation(m_LightPassShader->GetRendererID(), "u_GBuffer1Handle");
+		GLint loc2 = glGetUniformLocation(m_LightPassShader->GetRendererID(), "u_GBuffer2Handle");
+		GLint loc3 = glGetUniformLocation(m_LightPassShader->GetRendererID(), "u_GBuffer3Handle");
+		GLint locD = glGetUniformLocation(m_LightPassShader->GetRendererID(), "u_GBufferDepthHandle");
+
+		// Bind bindless texture handles
+		if (loc0 != -1)
+		{
+			// Convert 64-bit handle to two 32-bit unsigned integers
+			glUniform2ui(loc0, static_cast<GLuint>(m_GBuffer->HandlePackedTexture0),
+				static_cast<GLuint>(m_GBuffer->HandlePackedTexture0 >> 32));
+		}
+		if (loc1 != -1)
+		{
+			glUniform2ui(loc1, static_cast<GLuint>(m_GBuffer->HandlePackedTexture1),
+				static_cast<GLuint>(m_GBuffer->HandlePackedTexture1 >> 32));
+		}
+		if (loc2 != -1)
+		{
+			glUniform2ui(loc2, static_cast<GLuint>(m_GBuffer->HandlePackedTexture2),
+				static_cast<GLuint>(m_GBuffer->HandlePackedTexture2 >> 32));
+		}
+		if (loc3 != -1)
+		{
+			glUniform2ui(loc3, static_cast<GLuint>(m_GBuffer->HandlePackedTexture3),
+				static_cast<GLuint>(m_GBuffer->HandlePackedTexture3 >> 32));
+		}
+		if (locD != -1)
+		{
+			glUniform2ui(locD, static_cast<GLuint>(m_GBuffer->HandleDepthTexture),
+				static_cast<GLuint>(m_GBuffer->HandleDepthTexture >> 32));
+		}
 	}
 }
+
+
 
 /**
  * @brief Cleanup g-buffer resources
@@ -564,6 +618,14 @@ void Renderer::CleanupGBuffer()
 		if (m_GBuffer->PackedTexture1 != 0)
 		{
 			glDeleteTextures(1, &m_GBuffer->PackedTexture1);
+		}
+		if (m_GBuffer->PackedTexture2 != 0)
+		{
+			glDeleteTextures(1, &m_GBuffer->PackedTexture2);
+		}
+		if (m_GBuffer->PackedTexture3 != 0)
+		{
+			glDeleteTextures(1, &m_GBuffer->PackedTexture3);
 		}
 		if (m_GBuffer->DepthTexture != 0)
 		{

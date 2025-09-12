@@ -59,21 +59,21 @@ namespace Ermine::graphics
         {
             unsigned int FBO;
             unsigned int DepthTexture;
+
+            // Multiple Render Targets (MRTs)
+
             uint64_t HandlePackedTexture0 = 0;
             uint64_t HandlePackedTexture1 = 0;
+            uint64_t HandlePackedTexture2 = 0;
+            uint64_t HandlePackedTexture3 = 0;
             uint64_t HandleDepthTexture = 0;
-			// Multiple Render Targets (MRTs)
             
-            // RT0: RGB32_UINT - 96 bits total
-            // R32: Albedo RGB 8:8:8 + 8 spare bits
-            // G32: Normal RGB 11:10:11 
-            // B32: Emissive RGBE 9:9:9:5
-            unsigned int PackedTexture0;
 
-            // RT1: RG32_UINT - 64 bits total  
-			// R32: Roughness 8 bits + Metallic 8 bits + AO 8 bits + 8 spare bits
-            // G32: Motion vectors 2x16 bits
+            unsigned int PackedTexture0;
             unsigned int PackedTexture1;
+			unsigned int PackedTexture2;
+			unsigned int PackedTexture3;
+            
 
 
             int width;

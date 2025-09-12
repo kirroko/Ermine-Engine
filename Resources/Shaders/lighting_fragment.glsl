@@ -5,10 +5,12 @@
 in vec2 TexCoord;
 out vec4 FragColor;
 
-// G-Buffer textures
-uniform usampler2D u_GBuffer0;    // RT0: RGB32_UINT (Albedo + Normal + Emissive)  
-uniform usampler2D u_GBuffer1;    // RT1: R32_UINT (Material)
-uniform sampler2D u_GBufferDepth; // Depth buffer
+// Bindless texture handles
+uniform uvec2 u_GBuffer0Handle;
+uniform uvec2 u_GBuffer1Handle;
+uniform uvec2 u_GBuffer2Handle;
+uniform uvec2 u_GBuffer3Handle;
+uniform uvec2 u_GBufferDepthHandle; 
 
 // Matrices for position reconstruction
 uniform mat4 view;
@@ -36,65 +38,6 @@ const float PI = 3.14159265359;
 const int POINT_LIGHT = 0;
 const int DIRECTIONAL_LIGHT = 1;
 const int SPOT_LIGHT = 2;
-
-// G-Buffer unpacking functions
-vec3 unpackAlbedo(uint packedData)
-{
-    // Extract RGB 9:9:9 bits - matches packing order: R(0-8), G(9-17), B(18-26)
-    uint r = packedData & 0x1FFu;         // bits 0-8 (R component)
-    uint g = (packedData >> 9) & 0x1FFu;  // bits 9-17 (G component)  
-    uint b = (packedData >> 18) & 0x1FFu; // bits 18-26 (B component)
-    
-    return vec3(float(r), float(g), float(b)) / 511.0;
-}
-
-bool unpackShadingModel(uint packedData)
-{
-    // Extract shading model bit (bit 27)
-    return ((packedData >> 27) & 0x1u) == 1u;
-}
-
-vec3 unpackNormal(uint packedData)
-{
-    // Extract RGB 11:10:11 format
-    uint x = packedData & 0x7FFu;          // 11 bits
-    uint y = (packedData >> 11) & 0x3FFu;  // 10 bits
-    uint z = (packedData >> 21) & 0x7FFu;  // 11 bits
-    
-    vec3 normal = vec3(
-        float(x) / 2047.0,
-        float(y) / 1023.0,
-        float(z) / 2047.0
-    );
-    
-    // Convert from [0,1] to [-1,1]
-    return normalize(normal * 2.0 - 1.0);
-}
-
-vec3 unpackEmissive(uint packedData)
-{
-    if (packedData == 0u) {
-        return vec3(0.0);
-    }
-    
-    uint r = packedData & 0x1FFu;
-    uint g = (packedData >> 9) & 0x1FFu;
-    uint b = (packedData >> 18) & 0x1FFu;
-    uint e = (packedData >> 27) & 0x1Fu;
-
-    vec3 rgb = vec3(r, g, b) / 511.0;
-    float scale = exp2(float(int(e) - 15)); 
-    return rgb * scale;
-}
-
-void unpackMaterialProperties(uint packedData, out float metallic, out float roughness, out float ao, out float normalStrength)
-{
-    // Extract packedData 8:8:8:8 format
-    metallic = float(packedData & 0xFFu) / 255.0;
-    roughness = float((packedData >> 8) & 0xFFu) / 255.0;
-    ao = float((packedData >> 16) & 0xFFu) / 255.0;
-    normalStrength = float((packedData >> 24) & 0xFFu) / 255.0;
-}
 
 // Reconstruct world position from depth
 vec3 reconstructWorldPosition(vec2 texCoord, float depth)
@@ -260,13 +203,93 @@ vec3 calculatePBR(int lightIndex, vec3 normal, vec3 viewDir, vec3 fragPosView,
     return (kD * albedo / PI + specular) * radiance * NdotL;
 }
 
+// Unpack albedo from RT0 (RGB16F format)
+vec3 unpackAlbedo(vec3 packedAlbedo) {
+    // Direct read - RGB16F stores albedo directly
+    return packedAlbedo;
+}
+
+// Unpack normal from RT1 (RGB16F format)
+vec3 unpackNormal(vec3 packedNormal) {
+    // Convert from [0,1] back to [-1,1] range and normalize
+    vec3 normal = packedNormal * 2.0 - 1.0;
+    return normalize(normal);
+}
+
+// Unpack emissive from RT2 (RGBA8 format)
+void unpackEmissive(vec4 packedEmissive, out vec3 emissive, out float emissiveIntensity) {
+    vec3 normalizedRGB = packedEmissive.rgb;
+    float exponent = packedEmissive.a * 255.0;
+    
+    if (exponent < 1.0) {
+        emissive = vec3(0.0);
+        emissiveIntensity = 0.0;
+        return;
+    }
+    
+    // Reconstruct scale factor
+    float scale = exp2(exponent - 128.0);
+    
+    // Reconstruct emissive color and intensity
+    vec3 scaledEmissive = normalizedRGB * scale;
+    float totalIntensity = length(scaledEmissive);
+    
+    if (totalIntensity > 0.0) {
+        emissive = scaledEmissive / totalIntensity;
+        emissiveIntensity = totalIntensity;
+    } else {
+        emissive = vec3(0.0);
+        emissiveIntensity = 0.0;
+    }
+}
+
+// Unpack material properties from RT3 (RGBA8 format)
+void unpackMaterialProperties(vec4 packedMaterial, out float roughness, 
+                             out float metallic, out float ao) {
+    roughness = packedMaterial.r;
+    metallic = packedMaterial.g;
+    ao = packedMaterial.b;
+    // packedMaterial.a is unused
+}
+
+// Main G-Buffer reading function (call this in lighting fragment shader)
+void readGBuffer(sampler2D gBuffer0, sampler2D gBuffer1, sampler2D gBuffer2, sampler2D gBuffer3,
+                 vec2 texCoords, out vec3 albedo, out vec3 normal, out vec3 emissive, 
+                 out float emissiveIntensity, out float roughness, out float metallic, out float ao) {
+    
+    // Sample all G-Buffer textures
+    vec3 packedAlbedo = texture(gBuffer0, texCoords).rgb;
+    vec3 packedNormal = texture(gBuffer1, texCoords).rgb;
+    vec4 packedEmissive = texture(gBuffer2, texCoords);
+    vec4 packedMaterial = texture(gBuffer3, texCoords);
+    
+    // Unpack all components
+    albedo = unpackAlbedo(packedAlbedo);
+    normal = unpackNormal(packedNormal);
+    unpackEmissive(packedEmissive, emissive, emissiveIntensity);
+    unpackMaterialProperties(packedMaterial, roughness, metallic, ao);
+}
+
+void readGBufferBindless(uvec2 gBuffer0Handle, uvec2 gBuffer1Handle, uvec2 gBuffer2Handle, uvec2 gBuffer3Handle,
+                        vec2 texCoords, out vec3 albedo, out vec3 normal, out vec3 emissive,
+                        out float emissiveIntensity, out float roughness, out float metallic, out float ao) {
+    
+    // Convert handles to samplers
+    sampler2D gBuffer0 = sampler2D(gBuffer0Handle);
+    sampler2D gBuffer1 = sampler2D(gBuffer1Handle);
+    sampler2D gBuffer2 = sampler2D(gBuffer2Handle);
+    sampler2D gBuffer3 = sampler2D(gBuffer3Handle);
+    
+    readGBuffer(gBuffer0, gBuffer1, gBuffer2, gBuffer3, texCoords, 
+                albedo, normal, emissive, emissiveIntensity, roughness, metallic, ao);
+}
+
 void main()
 {    
-    // Sample G-Buffer data
-    uvec3 gBuffer0 = texture(u_GBuffer0, TexCoord).rgb;
-    uvec2 gBuffer1 = texture(u_GBuffer1, TexCoord).rg;
-    float depth = texture(u_GBufferDepth, TexCoord).r;
-    
+    // Smaple depth
+    sampler2D gBufferDepthSampler = sampler2D(u_GBufferDepthHandle);
+    float depth = texture(gBufferDepthSampler, TexCoord).r;
+
     // Early exit for background pixels
     if (depth >= 1.0) {
         FragColor = vec4(0.2f,0.3f,0.3f,1.0f);
@@ -274,12 +297,12 @@ void main()
     }
     
     // Unpack G-Buffer data
-    vec3 albedo = unpackAlbedo(gBuffer0.r);
-    vec3 normalView = unpackNormal(gBuffer0.g);
-    vec3 emissive = unpackEmissive(gBuffer0.b);
+    vec3 albedo, normalView, emissive;
+    float emissiveIntensity, metallic, roughness, ao;
 
-    float metallic, roughness, ao, normalStrength;
-    unpackMaterialProperties(gBuffer1.r, metallic, roughness, ao, normalStrength);
+    readGBufferBindless(u_GBuffer0Handle, u_GBuffer1Handle, u_GBuffer2Handle, u_GBuffer3Handle,
+                       TexCoord, albedo, normalView, emissive, emissiveIntensity, 
+                       roughness, metallic, ao);
 
     // Reconstruct world position
     vec3 worldPos = reconstructWorldPosition(TexCoord, depth);
@@ -313,7 +336,7 @@ void main()
         }
 
         // Emissive
-        result += emissive;
+        result += emissive * emissiveIntensity;
     } else {
         // PBR ambient
         vec3 ambient = vec3(0.08) * albedo * ao;
@@ -331,7 +354,7 @@ void main()
         }
 
         // Emissive
-        result += emissive;
+        result += emissive * emissiveIntensity;
     }
 
     // Tone mapping (ACES approximation)

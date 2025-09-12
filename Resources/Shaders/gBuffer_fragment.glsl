@@ -9,10 +9,13 @@ in vec3 ViewPos;
 in vec3 ViewNormal;
 
 // G-Buffer outputs
-layout(location = 0) out uvec3 gBuffer0; // RT0: RGB32_UINT (Albedo + Normal + Emissive)
-layout(location = 1) out uvec2 gBuffer1; // RT1: R32_UINT (Material)
+layout(location = 0) out vec3 gBuffer0; // RT0: Albedo
+layout(location = 1) out vec3 gBuffer1; // RT1: Normal
+layout(location = 2) out vec4 gBuffer2; // RT2: Emissive
+layout(location = 3) out vec4 gBuffer3; // RT3: Material
 
-// Material UBO - matches your MaterialUBO structure
+
+// Material UBO
 layout(std140) uniform MaterialBlock
 {
     vec3 albedo;                    // 16-byte aligned
@@ -45,54 +48,60 @@ uniform sampler2D materialAoMap;
 uniform sampler2D materialEmissiveMap;
 
 
-// Packing functions based on your renderer specifications
-uint packAlbedoShadingModel(vec3 albedo, bool isBlinnPhong)
-{
-    // Pack RGB 9:9:9 + ShadingModel 1-bit + 4 spare bits
-    uvec3 rgb = uvec3(clamp(albedo * 511.0, 0.0, 511.0));
-    uint sm = isBlinnPhong ? 1u : 0u;
-    return (sm << 27) | (rgb.b << 18) | (rgb.g << 9) | rgb.r;
+// Pack albedo RGB into RT0 (RGB16F format)
+vec3 packAlbedo(vec3 albedo) {
+    // Direct storage - RGB16F provides sufficient precision for albedo
+    return clamp(albedo, 0.0, 65504.0); // Clamp to half-float range
 }
 
-uint packNormal(vec3 normal)
-{
-    // Pack RGB 11:10:11 format
-    vec3 n = (normal + 1.0) * 0.5; // Convert from [-1,1] to [0,1]
-    uvec3 xyz = uvec3(
-        clamp(n.x * 2047.0, 0.0, 2047.0), // 11 bits
-        clamp(n.y * 1023.0, 0.0, 1023.0), // 10 bits  
-        clamp(n.z * 2047.0, 0.0, 2047.0)  // 11 bits
-    );
-    return (xyz.z << 21) | (xyz.y << 11) | xyz.x;
+// Pack normal XYZ into RT1 (RGB16F format)
+vec3 packNormal(vec3 normal) {
+    // Normalize and convert from [-1,1] to [0,1] range for storage
+    vec3 packedNormal = normalize(normal) * 0.5 + 0.5;
+    return clamp(packedNormal, 0.0, 1.0);
 }
-uint packEmissive(vec3 emissive, float emissiveIntensity)
-{
-    // Pack RGBE 9:9:9:5 format
+
+// Pack emissive RGB + intensity into RT2 (RGBA8 format)
+vec4 packEmissive(vec3 emissive, float emissiveIntensity) {
+    // Use RGBE-like encoding for high dynamic range
     vec3 scaledEmissive = emissive * emissiveIntensity;
+    
+    // Find the maximum component to determine scaling
     float maxComponent = max(scaledEmissive.x, max(scaledEmissive.y, scaledEmissive.z));
     
-    if (maxComponent < 1e-32) return 0u; // Black emissive
+    if (maxComponent < 1e-6) {
+        return vec4(0.0, 0.0, 0.0, 0.0); // Black emissive
+    }
     
-    int exponent = int(floor(log2(maxComponent))) + 15; // Bias by 15
-    exponent = clamp(exponent, 0, 31); // 5-bit range
+    // Calculate exponent (stored in alpha channel)
+    float exponent = ceil(log2(maxComponent));
+    exponent = clamp(exponent + 128.0, 0.0, 255.0); // Bias and clamp for 8-bit storage
     
-    // Scale values to fit in 9-bit mantissa range [0, 511]
-    float scale = exp2(float(exponent - 15));
-    uvec3 rgb = uvec3(clamp(scaledEmissive / scale * 511.0, 0.0, 511.0));
+    // Scale RGB components to fit in [0,1] range
+    float scale = exp2(exponent - 128.0);
+    vec3 normalizedRGB = scaledEmissive / scale;
     
-    return (uint(exponent) << 27) | (rgb.b << 18) | (rgb.g << 9) | rgb.r;
+    return vec4(normalizedRGB, exponent / 255.0);
 }
 
-uint packMaterialProperties(float metallic, float roughness, float ao, float normalStrength)
-{
-    // Pack Metallic 8-bits + Roughness 8-bits + AO 8-bits + NormalStrength 8-bits
-    uvec4 props = uvec4(
-        clamp(metallic * 255.0, 0.0, 255.0),
-        clamp(roughness * 255.0, 0.0, 255.0),
-        clamp(ao * 255.0, 0.0, 255.0),
-        clamp(normalStrength * 255.0, 0.0, 255.0)
+// Pack material properties into RT3 (RGBA8 format)
+vec4 packMaterialProperties(float roughness, float metallic, float ao, float unused) {
+    return vec4(
+        clamp(roughness, 0.0, 1.0),
+        clamp(metallic, 0.0, 1.0),
+        clamp(ao, 0.0, 1.0),
+        0.0 // Unused channel
     );
-    return (props.w << 24) | (props.z << 16) | (props.y << 8) | props.x;
+}
+
+// Main G-Buffer output function (call this in geometry fragment shader)
+void writeGBuffer(vec3 albedo, vec3 normal, vec3 emissive, float emissiveIntensity,
+                  float roughness, float metallic, float ao) {
+    // Output to multiple render targets
+    gBuffer0 = packAlbedo(albedo);                                    // RT0: RGB16F
+    gBuffer1 = packNormal(normal);                                    // RT1: RGB16F
+    gBuffer2 = packEmissive(emissive, emissiveIntensity);            // RT2: RGBA8
+    gBuffer3 = packMaterialProperties(roughness, metallic, ao, 0.0); // RT3: RGBA8
 }
 
 vec3 getNormalFromMap_viewspace(sampler2D normalMap, vec2 texCoords, vec3 viewNormal, vec3 viewPos)
@@ -164,12 +173,9 @@ void main()
     // Determine shading model
     bool isBlinnPhong = shadingModel == 1;
 
-    // Pack data into G-Buffer
-    // RT0: RGB32_UINT (96 bits)
-    gBuffer0.r = packAlbedoShadingModel(finalAlbedo, isBlinnPhong);
-    gBuffer0.g = packNormal(finalNormal);
-    gBuffer0.b = packEmissive(finalEmissive, finalEmissiveIntensity);
-    
-    // RT1: R32_UINT (32 bits)
-    gBuffer1.r = packMaterialProperties(finalMetallic, finalRoughness, finalAO, normalStrength);
+    // Write to G-Buffer
+    writeGBuffer(finalAlbedo, finalNormal, finalEmissive, finalEmissiveIntensity, 
+                 finalRoughness, finalMetallic, finalAO);
+
+
 }
