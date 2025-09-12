@@ -189,6 +189,9 @@
     <ClInclude Include="include\Material.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\InspectorGUI.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\AssetBrowser\AssetBrowser.cpp">
@@ -301,6 +304,9 @@
     </ClCompile>
     <ClCompile Include="src\dllmain.cpp">
       <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ImGUI\InspectorGUI.cpp">
+      <Filter>src\ImGUI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

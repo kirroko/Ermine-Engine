@@ -31,6 +31,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Serialisation.h"
 #include "AudioSystem.h"
 #include "Particles.h"
+#include "InspectorGUI.h"
 
 #include <random> // Include for random number generation
 
@@ -224,6 +225,9 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().AddComponent(entity, ObjectMetaData());
 	ECS::GetInstance().AddComponent(entity, graphics::GeometryFactory::CreateCube(1, 1, 1));
 
+	InspectorGUI inspector{ entity, "Inspector" };
+	inspector.SetEntity(entity);
+
 	// Create material using UBO template
 	auto cubeMaterial = std::make_unique<graphics::Material>(shader);
 	cubeMaterial->LoadTemplate(graphics::MaterialTemplates::PBR_WHITE());
@@ -309,6 +313,10 @@ bool engine::Init(GLFWwindow* windowContext)
    // Create ImGUI window for Asset Browser
    editor::EditorGUI::CreateImGUIWindow<ImguiUI::AssetBrowser>();
    editor::EditorGUI::CreateImGUIWindow<ParticlesImGUI>(emitter.get());
+
+   // Create ImGUI window for Inspector
+   //editor::EditorGUI::CreateImGUIWindow<InspectorGUI>();
+   editor::EditorGUI::CreateImGUIWindow<InspectorGUI>(entity, "Inspector");
    
    EE_CORE_INFO("Systems and components registered successfully, Engine Initialized");
    s_isInitialized = true;
