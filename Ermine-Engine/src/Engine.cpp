@@ -100,35 +100,7 @@ bool engine::Init(GLFWwindow* windowContext)
 		}
 	}
 
-   job::Initialize();
    
-   ECS::GetInstance().Init();
-   EE_CORE_INFO("ECS Initialized");
-   EE_CORE_TRACE("Begin Registering of Components and Systems...");
-   EE_CORE_INFO("Testing Hierarchy System...");
-   
-   // TODO: Register all components here, limit of 32 components
-   ECS::GetInstance().RegisterComponent<Transform>();
-   ECS::GetInstance().RegisterComponent<Rigidbody3D>();
-   ECS::GetInstance().RegisterComponent<Mesh>();
-   ECS::GetInstance().RegisterComponent<Material>();
-   ECS::GetInstance().RegisterComponent<HierarchyComponent>();
-   
-   // TODO: Register all systems here, no limits
-   ECS::GetInstance().RegisterSystem<graphics::Renderer>();
-   ECS::GetInstance().RegisterSystem<HierarchySystem>();
-   
-   // TODO: Set the signature for the system as required
-   // For Graphics/Renderer system
-   SignatureID sig;
-   SignatureID hierarchySig;
-   sig.set(ECS::GetInstance().GetComponentType<Transform>());
-   sig.set(ECS::GetInstance().GetComponentType<Mesh>());
-   sig.set(ECS::GetInstance().GetComponentType<Material>());
-   ECS::GetInstance().SetSystemSignature<graphics::Renderer>(sig);
-   hierarchySig.set(ECS::GetInstance().GetComponentType<HierarchyComponent>());
-   hierarchySig.set(ECS::GetInstance().GetComponentType<Transform>());
-   ECS::GetInstance().SetSystemSignature<HierarchySystem>(hierarchySig);
 	EnableMemoryLeakChecking();
 
 	Input::Init(windowContext);
@@ -146,6 +118,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	AudioSystem::Init();
 	EE_CORE_INFO("AudioSystem Initialized");
 
+
 	// TODO: Register all components here, limit of 32 components
 	ECS::GetInstance().RegisterComponent<Transform>();
 	ECS::GetInstance().RegisterComponent<Rigidbody3D>();
@@ -156,6 +129,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().RegisterComponent<Light>();
 	ECS::GetInstance().RegisterComponent<Particle>();
 
+
 	ECS::GetInstance().RegisterComponent<AudioComponent>(); // ADD THIS
 	ECS::GetInstance().RegisterComponent<GlobalAudioComponent>(); // ADD THIS IF YOU WANT GLOBAL AUDIO
 
@@ -165,7 +139,9 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().RegisterSystem<AudioSystem>();
 	ECS::GetInstance().RegisterSystem<ParticleSystem>();
 
+
 	// TODO: Set the signature for the system as required
+
 	// For Graphics/Renderer system
 	SignatureID sig;
 	sig.set(ECS::GetInstance().GetComponentType<Transform>());
@@ -234,44 +210,6 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().AddComponent(audioTestEntity, testAudio);
 
 	EE_CORE_INFO("Audio test entity created with ID: {} - will auto-play", audioTestEntity);
-
-   // edwin - testing hierarchy system
-   // Create parent entity with hierarchy component
-   auto parentEntity = ECS::GetInstance().CreateEntity();
-   ECS::GetInstance().AddComponent(parentEntity, Transform(Vec3(0, 0, 0), Vec3(0, 0, 0), Vec3(1, 1, 1)));
-   ECS::GetInstance().AddComponent(parentEntity, HierarchyComponent());
-   ECS::GetInstance().AddComponent(parentEntity, graphics::GeometryFactory::CreateCube(1, 1, 1));
-   ECS::GetInstance().AddComponent(parentEntity, Material(shader, texture));
-
-   // Create child entities with hierarchy components
-   auto childEntity1 = ECS::GetInstance().CreateEntity();
-   ECS::GetInstance().AddComponent(childEntity1, Transform(Vec3(2, 0, 0), Vec3(0, 0, 0), Vec3(0.5f, 0.5f, 0.5f)));
-   ECS::GetInstance().AddComponent(childEntity1, HierarchyComponent());
-   ECS::GetInstance().AddComponent(childEntity1, graphics::GeometryFactory::CreateCube(1, 1, 1));
-   ECS::GetInstance().AddComponent(childEntity1, Material(shader, texture));
-
-   auto childEntity2 = ECS::GetInstance().CreateEntity();
-   ECS::GetInstance().AddComponent(childEntity2, Transform(Vec3(-2, 0, 0), Vec3(0, 0, 0), Vec3(0.5f, 0.5f, 0.5f)));
-   ECS::GetInstance().AddComponent(childEntity2, HierarchyComponent());
-   ECS::GetInstance().AddComponent(childEntity2, graphics::GeometryFactory::CreateCube(1, 1, 1));
-   ECS::GetInstance().AddComponent(childEntity2, Material(shader, texture));
-
-   // Get hierarchy system and test it
-   std::shared_ptr<HierarchySystem> hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>();
-
-   // Set up parent-child relationships
-   hierarchySystem->SetParent(childEntity1, parentEntity);
-   hierarchySystem->SetParent(childEntity2, parentEntity);
-
-   // Test cycle prevention
-   bool wouldCycle = hierarchySystem->WouldCreateCycle(parentEntity, childEntity1);
-   EE_CORE_INFO("Cycle test (should be true): {}", wouldCycle);
-
-   // Test getting parent/children
-   EntityID retrievedParent = hierarchySystem->GetParent(childEntity1);
-   const auto& children = hierarchySystem->GetChildren(parentEntity);
-   EE_CORE_INFO("Parent of child1: {} (should be {})", retrievedParent, parentEntity);
-   EE_CORE_INFO("Parent has {} children", children.size());
 
    glClearColor(0.2f,0.3f,0.3f,1.0f); // Background color
 	//auto entity3 = ECS::GetInstance().CreateEntity();
