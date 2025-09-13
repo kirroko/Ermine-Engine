@@ -207,6 +207,7 @@ IF EXIST ..\Build\bin\Release-windows-x86_64\Ermine-Engine\Ermine-Engine.dll\ (x
     <ClCompile Include="src\Scripting\ScriptEngine.cpp" />
     <ClCompile Include="src\Scripting\ScriptSystem.cpp" />
     <ClCompile Include="src\Serialisation\Serialisation.cpp" />
+    <ClCompile Include="src\Systems\HierarchySystem.cpp" />
     <ClCompile Include="src\Utility\EditorCamera.cpp" />
     <ClCompile Include="src\Utility\FrameController.cpp" />
     <ClCompile Include="src\Utility\GPUProfiler.cpp" />

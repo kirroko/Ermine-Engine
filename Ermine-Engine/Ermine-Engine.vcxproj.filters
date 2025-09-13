@@ -52,6 +52,9 @@
     <Filter Include="src\Window">
       <UniqueIdentifier>{74C3D837-607B-1A85-C982-F3E0B559B575}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Systems">
+      <UniqueIdentifier>{fddb1d5a-22fd-473c-93b8-b9098f590695}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\AssetBrowser.h">
@@ -301,6 +304,9 @@
     </ClCompile>
     <ClCompile Include="src\dllmain.cpp">
       <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Systems\HierarchySystem.cpp">
+      <Filter>src\Systems</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
