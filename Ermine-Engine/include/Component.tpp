@@ -13,6 +13,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #pragma once
 
 #include <cassert>
+#include <utility>
 
 #include "Component.h"
 
@@ -65,7 +66,7 @@ namespace Ermine
 	template <typename T>
 	void ComponentManager::AddComponent(EntityID entity, T component)
 	{
-		GetComponentArray<T>()->InsertData(entity, component);
+		GetComponentArray<T>()->InsertData(entity, std::move(component));
 	}
 
 	/**

@@ -14,7 +14,9 @@ project "Fmod"
 	links
 	{
 	    "lib/fmod_vc.lib",
-	    "lib/fmodL_vc.lib"
+	    "lib/fmodL_vc.lib",
+		"lib/fmodstudioL_vc.lib",
+		"lib/fmodstudio_vc.lib"
 	}
 
 

@@ -1,7 +1,8 @@
 /* Start Header ************************************************************************/
 /*!
 \file       Texture.cpp
-\author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu
+\author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu (99%)
+\co-authors LEE Wen Jie, Brian, wenjiebrian.lee, 2301261, wenjiebrian.lee\@digipen.edu (1%)
 \date       09/03/2025
 \brief      This file contains the definition of the Texture system.
             This file is used to load textures using stb_image.
@@ -142,4 +143,15 @@ void Texture::Bind(unsigned int slot) const
 void Texture::Unbind() const
 {
     glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+/*!***********************************************************************
+\brief
+ Getter for GLuint m_RendererID
+\return
+ Returns GLuint m_RendererID
+*************************************************************************/
+GLuint Texture::GetRendererID() const
+{
+    return m_RendererID;
 }
