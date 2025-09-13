@@ -91,9 +91,18 @@ namespace Ermine
         auto& hierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(entity);
         auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
 
+        //if (hierarchy.parent != 0) {
+        //    auto& parentTransform = ECS::GetInstance().GetComponent<Transform>(hierarchy.parent);
+        //    transform.transform_matrix = parentTransform.transform_matrix * transform.transform_matrix;
+        //}
+
+        // Store local transform if not already stored
+        // Then compute world transform based on parent's world transform
+
         if (hierarchy.parent != 0) {
             auto& parentTransform = ECS::GetInstance().GetComponent<Transform>(hierarchy.parent);
-            transform.transform_matrix = parentTransform.transform_matrix * transform.transform_matrix;
+            // Combine parent's world transform with this entity's local transform
+            // transform.worldMatrix = parentTransform.worldMatrix * transform.localMatrix;
         }
         for (auto child : hierarchy.children) {
             UpdateWorldTransform(child);
