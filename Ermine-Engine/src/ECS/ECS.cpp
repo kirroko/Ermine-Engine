@@ -59,6 +59,19 @@ namespace Ermine
 		m_SystemManager->EntityDestroyed(entity);
 	}
 
+	EntityID ECS::CloneEntity(EntityID entity)
+	{
+		EntityID newEntity = m_EntityManager->CreateEntity();
+
+		m_ComponentManager->CloneAllComponents(entity, newEntity);
+
+		SignatureID originalSignature = m_EntityManager->GetSignature(entity);
+		m_EntityManager->SetSignature(newEntity, originalSignature);
+		m_SystemManager->EntitySignatureChanged(newEntity, originalSignature);
+
+		return newEntity;
+	}
+
 	/**
 	 * @brief Reload the entity manager
 	 */

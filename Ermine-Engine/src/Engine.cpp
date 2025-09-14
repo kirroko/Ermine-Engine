@@ -35,6 +35,9 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 using namespace Ermine;
 
+#define EE_AUTO_REGISTER_COMPONENT(Type, Name) \
+	static bool _##Type##_autoreg = [](){ Ermine::ECS::GetInstance().RegisterComponent<Type>(Name); return true; }();
+
 namespace
 {
 	bool s_isInitialized = false;
@@ -70,12 +73,26 @@ bool engine::Init(GLFWwindow* windowContext)
 	EE_CORE_TRACE("Begin Registering of Components and Systems...");
 
 	// TODO: Register all components here, limit of 32 components
-	ECS::GetInstance().RegisterComponent<Transform>();
-	ECS::GetInstance().RegisterComponent<Rigidbody3D>();
-	ECS::GetInstance().RegisterComponent<Mesh>();
-	ECS::GetInstance().RegisterComponent<Material>();
-	ECS::GetInstance().RegisterComponent<Script>();
-	ECS::GetInstance().RegisterComponent<ObjectMetaData>();
+	EE_AUTO_REGISTER_COMPONENT(Transform, "Transform")
+	EE_AUTO_REGISTER_COMPONENT(Rigidbody3D, "Rigidbody3D")
+	EE_AUTO_REGISTER_COMPONENT(Mesh, "Mesh")
+	EE_AUTO_REGISTER_COMPONENT(Material, "Material")
+	//EE_AUTO_REGISTER_COMPONENT(Script,"Script")
+	EE_AUTO_REGISTER_COMPONENT(ObjectMetaData, "ObjectMetaData")
+	ECS::GetInstance().RegisterComponent<Script>("Script",
+		[](Ermine::ComponentManager& cm, EntityID src, EntityID dst)
+		{
+			if (!cm.HasComponent<Script>(src)) return;
+			auto& srcScript = cm.GetComponent<Script>(src);
+			cm.AddComponent<Script>(dst, Script(srcScript.m_className, dst));
+		});
+
+	//ECS::GetInstance().RegisterComponent<Transform>();
+	//ECS::GetInstance().RegisterComponent<Rigidbody3D>();
+	//ECS::GetInstance().RegisterComponent<Mesh>();
+	//ECS::GetInstance().RegisterComponent<Material>();
+	//ECS::GetInstance().RegisterComponent<Script>();
+	//ECS::GetInstance().RegisterComponent<ObjectMetaData>();
 
 	// TODO: Register all systems here, no limits
 	ECS::GetInstance().RegisterSystem<graphics::Renderer>();
@@ -149,15 +166,24 @@ bool engine::Init(GLFWwindow* windowContext)
    return true;
 }
 
+// TODO: Shutdown for subsystem should be in order, please be mindful of the order that is already in place.
 void engine::Shutdown()
 {
-	// By right, ECS helps shut all systems down via each system's destructor, while the rest of the singleton classes will be destroyed by the OS
 	if (!s_isInitialized)
 		return;
 
     AssetManager::GetInstance().Clear();
 
     graphics::GPUProfiler::Shutdown();
+
+#ifdef _DEBUG
+	auto scriptSys = ECS::GetInstance().GetSystem<scripting::ScriptSystem>();
+	if (scriptSys && scriptSys->m_ScriptEngine)
+	{
+		scriptSys->m_ScriptEngine->StopWatchingScriptSources();
+		scriptSys->m_ScriptEngine->StopWatchingGameAssembly();
+	}
+#endif
 
     job::Shutdown();
 

@@ -11,14 +11,20 @@ public class Sandbox : MonoBehaviour
         Debug.Log("Tag: " + this.tag);
         Debug.Log("Transform position: " + gameObject.transform.position.ToString());
         Debug.Log("Transform rotation: " + transform.rotation.ToString());
+
+        //Debug.Log("Changes");
     }
 
     void Update()
     {
         transform.Rotate(new Vector3(0,10f,0) * Time.deltaTime);
-        if (Input.GetKeyDown(KeyCode.S))
-        {
-            transform.Translate(new Vector3(0f,-10.0f,0f) * Time.deltaTime);
-        }
+        if(Input.GetKeyDown(KeyCode.A))
+            transform.Translate(new Vector3(-1f,0,0) * Time.deltaTime);
+        if(Input.GetKeyDown(KeyCode.D))
+            transform.Translate(new Vector3(1f,0f,0f) * Time.deltaTime);
+        if(Input.GetKeyDown(KeyCode.W))
+            transform.Translate(new Vector3(0f,1f,0) * Time.deltaTime);
+        if(Input.GetKeyDown(KeyCode.S))
+            transform.Translate(new Vector3(0f,-1f,0) * Time.deltaTime);
     }
 }

@@ -38,7 +38,7 @@ project "Ermine-Engine"
     location "Ermine-Engine"
     kind "SharedLib"
     language "C++"
-    cppdialect "C++17"
+    cppdialect "C++20"
     staticruntime "off" -- Use dynamic runtime
 
     targetdir ("Build/bin/" .. outputdir .. "/%{prj.name}")
@@ -114,18 +114,22 @@ project "Ermine-Engine"
         symbols "on"
         linkoptions { "/NODEFAULTLIB:LIBCMTD" }
 
+        defines { "VERBOSE_LOGGING=1" }
+
     filter "configurations:Release"
         defines "EE_RELEASE"
         runtime "Release"
         optimize "on"
         linkoptions { "/NODEFAULTLIB:LIBCMT" }
+        
+        defines { "VERBOSE_LOGGING=0" }
 
 -- Editor Project
 project "Ermine-Editor"
     location "Ermine-Editor"
     kind "ConsoleApp"
     language "C++"
-    cppdialect "C++17"
+    cppdialect "C++20"
     staticruntime "off" -- Use dynamic runtime
 
     targetdir ("Build/bin/" .. outputdir .. "/%{prj.name}")

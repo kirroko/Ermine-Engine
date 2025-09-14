@@ -21,15 +21,19 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <chrono>
 #include <fstream>
 #include <sstream>
+#include <cassert>
 
 #include <memory>
 #include <bitset>
+#include <set>
 
 #include <functional>
 #include <future>
 #include <mutex>
 #include <condition_variable>
 #include <atomic>
+#include <filesystem>
+#include <typeindex>
 
 #include <vector>
 #include <array>

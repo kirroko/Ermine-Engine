@@ -26,10 +26,30 @@ Ermine::scripting::ScriptSystem::ScriptSystem()
 	m_ScriptEngine = std::make_unique<ScriptEngine>();
 	m_ScriptEngine->InitMono("../Ermine-ScriptAssembly/Ermine-ScriptAssembly.dll"); // TODO: Move dll into editor's build directory
 	m_ScriptEngine->LoadGameAssembly("../Ermine-ScriptSandbox/Ermine-ScriptSandbox.dll"); // TODO: Move dll into editor's build directory
+
+	// Configure MSBuild + source watcher (adjust paths as necessary)
+#ifdef _DEBUG // We only want to do this in debug cause debug in editor mode
+	// Start DLL watcher
+	m_ScriptEngine->StartWatchingGameAssembly();
+	m_ScriptEngine->ConfigureBuild(
+		"../../../../Ermine-ScriptSandbox/Ermine-ScriptSandbox.csproj",
+		"../../../../Ermine-ScriptSandbox",
+		"../Ermine-ScriptSandbox/Ermine-ScriptSandbox.dll",
+		"Debug",
+		"x64", "MSBuild.exe");
+	m_ScriptEngine->StartWatchingScriptSources();
+#endif
 }
 
 void Ermine::scripting::ScriptSystem::Update() const
 {
+#ifdef _DEBUG
+	m_ScriptEngine->ProcessHotReload(
+		[this]() { this->PrepareForHotReload(); },
+		[this](bool ok) { this->FinishHotReload(ok); }
+	);
+#endif
+
 	for (auto& entity : m_Entities)
 	{
 		auto& sc = ECS::GetInstance().GetComponent<Script>(entity);
@@ -44,6 +64,13 @@ void Ermine::scripting::ScriptSystem::Update() const
 
 void Ermine::scripting::ScriptSystem::FixedUpdate() const
 {
+#ifdef _DEBUG
+	m_ScriptEngine->ProcessHotReload(
+		[this]() { this->PrepareForHotReload(); },
+		[this](bool ok) { this->FinishHotReload(ok); }
+	);
+#endif
+
 	for (auto& entity : m_Entities)
 	{
 		auto& sc = ECS::GetInstance().GetComponent<Script>(entity);
@@ -54,4 +81,52 @@ void Ermine::scripting::ScriptSystem::FixedUpdate() const
 
 		sc.m_instance->FixedUpdate();
 	}
+}
+
+void Ermine::scripting::ScriptSystem::PrepareForHotReload() const
+{
+	m_RestoreList.clear();
+	auto& ecs = ECS::GetInstance();
+
+	for (auto& entity : m_Entities)
+	{
+		if (!ecs.IsEntityValid(entity) || !ecs.HasComponent<Script>(entity))
+			continue;
+
+		auto& sc = ecs.GetComponent<Script>(entity);
+		m_RestoreList.emplace_back(entity, sc.m_className);
+
+		// Dispose existing managed instance
+		sc.m_instance.reset();
+		sc.m_started = false;
+	}
+}
+
+void Ermine::scripting::ScriptSystem::FinishHotReload(bool success) const
+{
+	if (!success)
+	{
+		EE_CORE_ERROR("ScriptSystem: HotReload failed; skipping recreation.");
+		m_RestoreList.clear();
+		return;
+	}
+
+	auto& ecs = ECS::GetInstance();
+
+	for (auto& [entity, className] : m_RestoreList)
+	{
+		if (!ecs.IsEntityValid(entity) || !ecs.HasComponent<Script>(entity))
+			continue;
+
+		auto& sc = ecs.GetComponent<Script>(entity);
+
+		// REcreate instance with same class + entity
+		sc.m_className = className;
+		auto scriptClass = std::make_unique<ScriptClass>(ScriptClass("", className));
+		sc.m_instance = std::make_unique<ScriptInstance>(std::move(scriptClass), entity);
+		sc.m_started = false;
+	}
+
+	m_RestoreList.clear();
+	EE_CORE_INFO("ScriptSystem: HotReload recreation complete.");
 }
