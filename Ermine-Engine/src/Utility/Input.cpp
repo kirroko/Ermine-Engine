@@ -17,7 +17,6 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #include "AssetManager.h"
 #include "imgui.h"
-#include "Logger.h"
 
 namespace Ermine
 {

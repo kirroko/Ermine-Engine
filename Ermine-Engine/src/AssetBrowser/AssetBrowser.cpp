@@ -13,6 +13,9 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #include "PreCompile.h"
 #include "AssetBrowser.h"
+#include "AssetManager.h"
+
+
 namespace fs = std::filesystem;
 
 // Helper Functions
@@ -44,8 +47,10 @@ static void HelpMarker(const char* desc)
 }
 
 namespace Ermine {
-    namespace ImguiUI {
 
+	namespace ImguiUI {
+        
+        
         int SelectionWithDeletion::ApplyDeletionPreLoop(ImGuiMultiSelectIO* ms_io, int items_count)
         {
             if (Size == 0)
@@ -330,7 +335,7 @@ namespace Ermine {
 
             // Asset Categories
             //const char* categories[] = { "Audio", "Images", "Fonts", "Prefabs", "Scenes" };
-            const char* categories[] = { "Textures", "Shaders" };
+            //const char* categories[] = { "Textures", "Shaders" };
             for (int type = 0; type < 2; ++type)
             {
                 if (ImGui::TreeNode(categories[type]))

@@ -15,7 +15,6 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 /* End Header **************************************************************************/
 #include "PreCompile.h"
 #include "EditorGUI.h"
-#include "Logger.h"
 
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
@@ -306,4 +305,5 @@ void EditorGUI::ShutDown()
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
+    m_Windows.clear(); // Clean up additional ImGUI windows
 }

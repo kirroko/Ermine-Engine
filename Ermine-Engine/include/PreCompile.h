@@ -16,30 +16,39 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #pragma once
 
+// Standard Libraries
 #include <iostream>
 #include <string>
 #include <chrono>
 #include <fstream>
 #include <sstream>
 #include <cassert>
+#include <algorithm>
 
 #include <memory>
 #include <bitset>
 #include <set>
 
+#include <filesystem>
+#include <typeindex>
+
+// Threading and synchronization
 #include <functional>
 #include <future>
 #include <mutex>
 #include <condition_variable>
 #include <atomic>
-#include <filesystem>
-#include <typeindex>
 
+
+// Data types and structures
 #include <vector>
 #include <array>
 #include <queue>
 #include <deque>
+#include <map>
 #include <unordered_map>
 #include <unordered_set>
 
+// Project-specific headers
 #include "EngineAPI.h"
+#include "Logger.h"

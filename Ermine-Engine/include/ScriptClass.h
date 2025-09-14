@@ -11,7 +11,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 */
 /* End Header **************************************************************************/
 #pragma once
-#include "Logger.h"
+#include "PreCompile.h"
 #include "ScriptSystem.h"
 #include "ECS.h"
 

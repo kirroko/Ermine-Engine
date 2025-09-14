@@ -37,7 +37,7 @@ namespace Ermine::object
 		 * @param game_object The game object to clone
 		 * @return A pointer to the cloned game object
 		 */
-		static GameObject* CloneGameObbject(GameObject* game_object);
+		static GameObject* CloneGameObject(GameObject* game_object);
 
 		/**
 		 * @brief Destroy a game object

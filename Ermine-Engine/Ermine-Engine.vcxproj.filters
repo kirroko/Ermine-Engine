@@ -13,6 +13,9 @@
     <Filter Include="src\AssetManager">
       <UniqueIdentifier>{D7F065A7-C3E9-84F9-EC1B-6A7ED8736405}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\AudioManager">
+      <UniqueIdentifier>{097629AA-F56E-48FC-1EA1-2D810AF92708}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\ECS">
       <UniqueIdentifier>{F76D2FA9-634D-AE44-6C65-391BD8C314A6}</UniqueIdentifier>
     </Filter>
@@ -31,11 +34,17 @@
     <Filter Include="src\Object">
       <UniqueIdentifier>{13A4AE24-FF5B-F071-6863-C9CD543A8B62}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Particles">
+      <UniqueIdentifier>{438C557B-AF4C-D1B1-7887-1A2FE406168E}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Physics">
       <UniqueIdentifier>{9F8B9316-0B41-0C0C-9435-06E300EA0210}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\Scripting">
       <UniqueIdentifier>{6FBC2D98-DB7C-A9CE-A4B7-F24B1037EEAA}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Serialisation">
+      <UniqueIdentifier>{13729070-7F88-8E06-C8FF-192834555F8E}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\Utility">
       <UniqueIdentifier>{70464FB2-DCFB-C7A7-65F0-C17ED1A4BEAB}</UniqueIdentifier>
@@ -49,6 +58,12 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\AssetManager.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\AudioManager.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\AudioSystem.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\Camera.h">
@@ -108,6 +123,9 @@
     <ClInclude Include="include\Logger.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\Material.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\MathUtils.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -118,6 +136,9 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\Matrix4x4.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Particles.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\Physics.h">
@@ -142,6 +163,9 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\ScriptSystem.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Serialisation.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\Shader.h">
@@ -169,6 +193,12 @@
     </ClCompile>
     <ClCompile Include="src\AssetManager\AssetManager.cpp">
       <Filter>src\AssetManager</Filter>
+    </ClCompile>
+    <ClCompile Include="src\AudioManager\AudioManager.cpp">
+      <Filter>src\AudioManager</Filter>
+    </ClCompile>
+    <ClCompile Include="src\AudioManager\AudioSystem.cpp">
+      <Filter>src\AudioManager</Filter>
     </ClCompile>
     <ClCompile Include="src\ECS\Component.cpp">
       <Filter>src\ECS</Filter>
@@ -230,6 +260,9 @@
     <ClCompile Include="src\Object\GameObjectFactory.cpp">
       <Filter>src\Object</Filter>
     </ClCompile>
+    <ClCompile Include="src\Particles\Particles.cpp">
+      <Filter>src\Particles</Filter>
+    </ClCompile>
     <ClCompile Include="src\Physics\Physics.cpp">
       <Filter>src\Physics</Filter>
     </ClCompile>
@@ -241,6 +274,9 @@
     </ClCompile>
     <ClCompile Include="src\Scripting\ScriptSystem.cpp">
       <Filter>src\Scripting</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Serialisation\Serialisation.cpp">
+      <Filter>src\Serialisation</Filter>
     </ClCompile>
     <ClCompile Include="src\Utility\EditorCamera.cpp">
       <Filter>src\Utility</Filter>
