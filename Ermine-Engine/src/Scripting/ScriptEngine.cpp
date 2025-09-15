@@ -435,6 +435,8 @@ void Ermine::scripting::ScriptEngine::ReloadGameAssembly()
 	LoadGameAssembly(m_gameAssemblyPath);
 }
 
+#pragma region File Watcher
+
 void Ermine::scripting::ScriptEngine::StartWatchingGameAssembly()
 {
 	if (m_watching.exchange(true))
@@ -869,6 +871,8 @@ bool Ermine::scripting::ScriptEngine::BuildGameAssembly()
 	//}
 }
 
+#pragma endregion
+
 namespace
 {
 	// Caching
@@ -1053,21 +1057,21 @@ namespace
 	{
 		std::string temp;
 		ToTempUTF8(message, temp);
-		EE_CORE_INFO("{}", temp);
+		EE_CORE_INFO("{}", temp); // TODO: Might have to swap to different channel
 	}
 
 	void icall_debug_log_warning(MonoString* message)
 	{
 		std::string temp;
 		ToTempUTF8(message, temp);
-		EE_CORE_WARN("{}", temp);
+		EE_CORE_WARN("{}", temp); // TODO: Might have to swap to different channel
 	}
 
 	void icall_debug_log_error(MonoString* message)
 	{
 		std::string temp;
 		ToTempUTF8(message, temp);
-		EE_CORE_ERROR("{}", temp);
+		EE_CORE_ERROR("{}", temp); // TODO: Might have to swap to different channel
 	}
 #pragma endregion
 

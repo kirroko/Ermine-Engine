@@ -3,6 +3,8 @@ project "Jolt"
     language "C++"
     cppdialect "C++17"
 
+    buildoptions { "/bigobj", "/MP" } -- Jolt requires this flag on MSVC
+
     targetdir ("../../Build/bin/" .. outputdir .. "/Ermine-Editor/Jolt")
     objdir ("../../Build/obj/" .. outputdir .. "/Ermine-Editor/Jolt")
 

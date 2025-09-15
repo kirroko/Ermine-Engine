@@ -48,6 +48,8 @@ project "Ermine-Engine"
     cppdialect "C++20"
     staticruntime "off" -- Use dynamic runtime
 
+    buildoptions { "/MP" } -- Enable multi-processor compilation
+
     targetdir ("Build/bin/" .. outputdir .. "/%{prj.name}")
     objdir ("Build/obj/" .. outputdir .. "/%{prj.name}")
 
