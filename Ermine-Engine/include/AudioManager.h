@@ -58,6 +58,14 @@ namespace Ermine {
         static void SetEventParameter(const string& strEventName, const string& strParameterName, float fValue);
         // 3D Audio listener - now using Vector3D
         static void Set3dListenerAndOrientation(const Vector3D& vPosition, const Vector3D& vLook, const Vector3D& vUp);
+
+        static void SetListenerPosition(const Vector3D& position);
+        static void SetListenerOrientation(const Vector3D& forward, const Vector3D& up);
+        static void SetListenerAttributes(const Vector3D& position,
+            const Vector3D& velocity,
+            const Vector3D& forward,
+            const Vector3D& up);
+
         // Utility functions
         static float dbToVolume(float dB);
         static float VolumeTodB(float volume);

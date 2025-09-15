@@ -31,6 +31,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Serialisation.h"
 #include "AudioSystem.h"
 #include "Particles.h"
+#include "AudioImGUI.h"
 
 #include <random> // Include for random number generation
 
@@ -194,12 +195,12 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().AddComponent(audioTestEntity, ObjectMetaData());
 
 	AudioComponent testAudio;
-	testAudio.soundName = "../Resources/Audio/test.wav"; // Replace with your actual sound file path
-	testAudio.volume = 0.5f; // 50% volume
-	testAudio.is3D = false; // 2D sound for testing
-	testAudio.isLooping = false;
-	testAudio.isStreaming = false;
-	testAudio.shouldPlay = true; // We'll trigger this with keyboard input
+	//testAudio.soundName = "../Resources/Audio/test.wav"; // Replace with your actual sound file path
+	//testAudio.volume = 0.5f; // 50% volume
+	//testAudio.is3D = false; // 2D sound for testing
+	//testAudio.isLooping = false;
+	//testAudio.isStreaming = false;
+	//testAudio.shouldPlay = true; // We'll trigger this with keyboard input
 
 	ECS::GetInstance().AddComponent(audioTestEntity, testAudio);
 
@@ -309,6 +310,7 @@ bool engine::Init(GLFWwindow* windowContext)
    // Create ImGUI window for Asset Browser
    editor::EditorGUI::CreateImGUIWindow<ImguiUI::AssetBrowser>();
    editor::EditorGUI::CreateImGUIWindow<ParticlesImGUI>(emitter.get());
+   editor::EditorGUI::CreateImGUIWindow<AudioImGUI>();
    
    EE_CORE_INFO("Systems and components registered successfully, Engine Initialized");
    s_isInitialized = true;
