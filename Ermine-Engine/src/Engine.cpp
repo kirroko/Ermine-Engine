@@ -133,6 +133,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	EE_AUTO_REGISTER_COMPONENT(Particle, "Particle")
 	EE_AUTO_REGISTER_COMPONENT(AudioComponent, "AudioComponent")
 	EE_AUTO_REGISTER_COMPONENT(GlobalAudioComponent, "GlobalAudioComponent")
+	EE_AUTO_REGISTER_COMPONENT(HierarchyComponent, "HierarchyComponent");
 
 	// ECS::GetInstance().RegisterComponent<AudioComponent>(); // ADD THIS
 	// ECS::GetInstance().RegisterComponent<GlobalAudioComponent>(); // ADD THIS IF YOU WANT GLOBAL AUDIO

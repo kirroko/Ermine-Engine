@@ -515,4 +515,23 @@ namespace Ermine
 
 		Particle() : velocity(0, 0, 0), lifetime(1.0f), age(0.0f), colour(1, 1, 1, 1), size(1.0f) {}
 	};
+
+	/*!***********************************************************************
+	\brief
+	 Hierarchy component structure for parent-child relationships.
+	*************************************************************************/
+	struct HierarchyComponent
+	{
+		EntityID parent = 0;                    // Parent entity ID (0 = no parent)
+		std::vector<EntityID> children;         // List of child entity IDs
+		int depth = 0;                          // Depth in hierarchy (root = 0)
+		bool isDirty = false;                   // Flag for transform updates
+
+		HierarchyComponent() = default;
+
+		explicit HierarchyComponent(EntityID parentId)
+			: parent(parentId), depth(0), isDirty(true)
+		{
+		}
+	};
 }
