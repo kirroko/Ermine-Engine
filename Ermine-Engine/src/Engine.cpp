@@ -430,7 +430,7 @@ void engine::Render(GLFWwindow* window)
 	glViewport(0, 0, width, height);
 
 	// Start GPU timing for rendering
-	graphics::GPUProfiler::BeginEvent("Frame Rendering");
+	graphics::GPUProfiler::BeginEvent("Frame");
 
 	ECS::GetInstance().GetSystem<graphics::Renderer>()->Clear();
 
