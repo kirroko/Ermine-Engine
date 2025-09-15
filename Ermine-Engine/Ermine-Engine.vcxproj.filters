@@ -126,6 +126,9 @@
     <ClInclude Include="include\Logger.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\Material.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\MathUtils.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -184,12 +187,6 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\Window.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\MathVector.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Material.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>

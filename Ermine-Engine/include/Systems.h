@@ -13,10 +13,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #pragma once
 
-#include <unordered_map> // std::unordered_map
-#include <set>           // std::set
-#include <memory>        // std::shared_ptr
-#include <cassert>       // assert
+#include <PreCompile.h>
 #include "Entity.h"      // Entity, Signature
 
 namespace Ermine

@@ -14,7 +14,6 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 /* End Header **************************************************************************/
 #include "PreCompile.h"
 #include "Texture.h"
-#include "Logger.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
