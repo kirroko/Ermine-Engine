@@ -126,6 +126,15 @@ bool engine::Init(GLFWwindow* windowContext)
 	EE_AUTO_REGISTER_COMPONENT(Material, "Material")
 	//EE_AUTO_REGISTER_COMPONENT(Script,"Script")
 	EE_AUTO_REGISTER_COMPONENT(ObjectMetaData, "ObjectMetaData")
+	EE_AUTO_REGISTER_COMPONENT(Light, "Light")
+	EE_AUTO_REGISTER_COMPONENT(Particle, "Particle")
+	EE_AUTO_REGISTER_COMPONENT(AudioComponent, "AudioComponent")
+	EE_AUTO_REGISTER_COMPONENT(GlobalAudioComponent, "GlobalAudioComponent")
+
+	// ECS::GetInstance().RegisterComponent<AudioComponent>(); // ADD THIS
+	// ECS::GetInstance().RegisterComponent<GlobalAudioComponent>(); // ADD THIS IF YOU WANT GLOBAL AUDIO
+
+	// Special Case for Script component, need to copy over the class name
 	ECS::GetInstance().RegisterComponent<Script>("Script",
 		[](Ermine::ComponentManager& cm, EntityID src, EntityID dst)
 		{
@@ -133,13 +142,6 @@ bool engine::Init(GLFWwindow* windowContext)
 			auto& srcScript = cm.GetComponent<Script>(src);
 			cm.AddComponent<Script>(dst, Script(srcScript.m_className, dst));
 		});
-	EE_AUTO_REGISTER_COMPONENT(Light, "Light")
-	EE_AUTO_REGISTER_COMPONENT(Particle, "Particle")
-	EE_AUTO_REGISTER_COMPONENT(AudioComponent, "AudioComponent")
-	EE_AUTO_REGISTER_COMPONENT(GlobalAudioComponent, "GlobalAudioComponent")
-
-	ECS::GetInstance().RegisterComponent<AudioComponent>(); // ADD THIS
-	ECS::GetInstance().RegisterComponent<GlobalAudioComponent>(); // ADD THIS IF YOU WANT GLOBAL AUDIO
 
 	// TODO: Register all systems here, no limits
 	ECS::GetInstance().RegisterSystem<graphics::Renderer>();

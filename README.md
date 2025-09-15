@@ -1,6 +1,6 @@
 # **ErmineEngine by ErmineWorks**
 
-The Ermine Engine made by thrid year students of Digipen Singapore.
+The Ermine Engine made by third year students of Digipen Singapore.
 
 > :exclamation: Warning: Project is still in development!
 

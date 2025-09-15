@@ -29,6 +29,7 @@ using namespace Ermine::editor;
 
 // Definition for static member m_Windows, for ImGUI Windows
 std::vector<std::unique_ptr<Ermine::ImGUIWindow>>Ermine::editor::EditorGUI::m_Windows;
+bool Ermine::editor::EditorGUI::isPlaying = false; // TODO: tied to Play/Stop toolbar state.
 
 void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
 {
@@ -140,14 +141,43 @@ void EditorGUI::ViewPortWindow(bool &show)
 
 	EditorCamera::GetInstance().SetViewportSize(viewport_size.x, viewport_size.y);
 
-	ImGui::Image(offscreen_buffer->ColorTexture, viewport_size, ImVec2(0, 1), ImVec2(1, 0));
+    // Child region that ignores all ImGui inputs
+    ImGuiWindowFlags vpChildFlags =
+        ImGuiWindowFlags_NoNav |
+        ImGuiWindowFlags_NoScrollbar |
+        ImGuiWindowFlags_NoScrollWithMouse;
 
-    if (ImGui::IsWindowHovered())
+    ImGui::BeginChild("SceneViewportRegion", ImVec2(0,0), false, vpChildFlags);
+
+    // Draw the rendered scene
+	ImGui::Image(offscreen_buffer->ColorTexture, ImGui::GetContentRegionAvail(), ImVec2(0, 1), ImVec2(1, 0));
+
+    const ImGuiHoveredFlags hovFlags =
+        ImGuiHoveredFlags_AllowWhenBlockedByActiveItem |
+        ImGuiHoveredFlags_AllowWhenOverlappedByWindow |
+        ImGuiHoveredFlags_AllowWhenOverlappedByItem;
+
+    const bool viewportHovered = ImGui::IsItemHovered(hovFlags);
+	const bool viewportFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_None);
+
+    ImGui::EndChild();
+
+    Input::SetEditorInputActive(viewportFocused && viewportHovered);
+    if (Input::IsKeyDownEditor(GLFW_KEY_LEFT_CONTROL) && Input::IsKeyPressedEditor(GLFW_KEY_P))
+    {
+		isPlaying = !isPlaying;
+        EE_CORE_INFO("Play {0}", isPlaying);
+    }
+    Input::SetGameInputActive(isPlaying && viewportFocused && viewportHovered);
+    //EE_CORE_TRACE("Foc {0} | Hov {1}", viewportFocused, viewportHovered);
+
+    if (viewportHovered && !isPlaying)
     {
 	    EditorCamera::GetInstance().ProcessMouseMovement();
 		EditorCamera::GetInstance().ProcessKeyboardInput(FrameController::GetDeltaTime());
 		EditorCamera::GetInstance().ProcessScrollWheel(Input::GetMouseScrollOffset());
     }
+
 	ImGui::End();
 }
 

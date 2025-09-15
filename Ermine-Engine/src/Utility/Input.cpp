@@ -26,8 +26,16 @@ namespace Ermine
 	float Input::s_MouseDeltaX = 0.0f;
 	float Input::s_MouseDeltaY = 0.0f;
 	float Input::s_MouseScrollOffset = 0.0f;
+	float Input::s_MouseScrollOffsetEditor = 0.0f;
 	std::unordered_map<int, bool> Input::s_PreviousKeyStates;
 	std::unordered_map<int, bool> Input::s_PreviousMouseButtonStates;
+	std::unordered_map<int, bool> Input::s_PreviousKeyStatesEditor;
+
+	bool Input::s_GameInputActive = true;
+	bool Input::s_BlockKeyboard = false;
+	bool Input::s_BlockMouse = false;
+
+	bool Input::s_EditorInputActive = false;
 
 	/**
 	 * @brief Initialize the input system
@@ -49,7 +57,10 @@ namespace Ermine
 				ImGuiIO& io = ImGui::GetIO();
 				io.AddMouseWheelEvent(static_cast<float>(offsetX), static_cast<float>(offsetY));
 
-				s_MouseScrollOffset += static_cast<float>(offsetY);
+				if (s_GameInputActive)
+					s_MouseScrollOffset += static_cast<float>(offsetY);
+				if (s_EditorInputActive)
+					s_MouseScrollOffsetEditor += static_cast<float>(offsetY);
 			});
 
 		// Mouse button callback
@@ -58,7 +69,7 @@ namespace Ermine
 				ImGuiIO& io = ImGui::GetIO();
 				io.AddMouseButtonEvent(button, action == GLFW_PRESS);
 
-				if (!io.WantCaptureMouse)
+				if (s_GameInputActive)
 				{
 					// Update mouse button states
 					s_PreviousMouseButtonStates[button] = (action == GLFW_PRESS);
@@ -71,7 +82,7 @@ namespace Ermine
 				ImGuiIO& io = ImGui::GetIO();
 				io.AddKeyEvent(GlfwKeyToImguiKey(key), action == GLFW_PRESS || action == GLFW_REPEAT);
 
-				if (!io.WantCaptureKeyboard)
+				if (s_GameInputActive)
 				{
 					// Update key states
 					s_PreviousKeyStates[key] = (action == GLFW_PRESS || action == GLFW_REPEAT);
@@ -85,11 +96,8 @@ namespace Ermine
 				ImGuiIO& io = ImGui::GetIO();
 				io.AddMousePosEvent(static_cast<float>(xpos), static_cast<float>(ypos));
 
-				if (!io.WantCaptureMouse)
-				{
-					s_LastMouseX = static_cast<float>(xpos);
-					s_LastMouseY = static_cast<float>(ypos);
-				}
+				s_LastMouseX = static_cast<float>(xpos);
+				s_LastMouseY = static_cast<float>(ypos);
 			});
 #endif
 
@@ -113,6 +121,10 @@ namespace Ermine
 	 */
 	void Input::Update()
 	{
+		// Read ImGUI capture intent and compute gameplay blocks
+		s_BlockKeyboard = !s_GameInputActive;
+		s_BlockMouse = !s_GameInputActive;
+		
 		// Update mouse delta
 		double mouseX, mouseY;
 		glfwGetCursorPos(s_Window, &mouseX, &mouseY);
@@ -123,17 +135,48 @@ namespace Ermine
 		s_LastMouseX = static_cast<float>(mouseX);
 		s_LastMouseY = static_cast<float>(mouseY);
 
-		// Update previous frame key states
-		for (auto& [key, state] : s_PreviousKeyStates)
+		if (s_BlockMouse)
 		{
-			state = IsKeyDown(key);
+			s_MouseDeltaX = 0.0f;
+			s_MouseDeltaY = 0.0f;
 		}
 
-		// Update previous frame mouse button states
-		for (auto& [button, state] : s_PreviousMouseButtonStates)
+		if (!s_BlockKeyboard)
 		{
-			state = IsMouseButtonDown(button);
+			for (auto& [key, state] : s_PreviousKeyStates)
+				state = IsKeyDown(key);
 		}
+		if (!s_BlockMouse)
+		{
+			for (auto& [button, state] : s_PreviousMouseButtonStates)
+				state = IsMouseButtonDown(button);
+		}
+
+		if (s_EditorInputActive)
+		{
+			for (auto& [key, state] : s_PreviousKeyStatesEditor)
+				state = IsKeyDownEditor(key);
+		}
+	}
+
+	void Input::SetGameInputActive(bool active)
+	{
+		s_GameInputActive = active;
+	}
+
+	bool Input::IsGameInputActive()
+	{
+		return s_GameInputActive;
+	}
+
+	void Input::SetEditorInputActive(bool active)
+	{
+		s_EditorInputActive = active;
+	}
+
+	bool Input::IsEditorInputActive()
+	{
+		return s_EditorInputActive;
 	}
 
 	ImGuiKey Input::GlfwKeyToImguiKey(int key)
@@ -348,7 +391,7 @@ namespace Ermine
 
 	bool Input::IsKeyPressed(int keyCode)
 	{
-		if (!s_Window)
+		if (!s_Window || s_BlockKeyboard)
 			return false;
 
 		// Check if key exists in previous states map
@@ -366,7 +409,7 @@ namespace Ermine
 
 	bool Input::IsKeyReleased(int keyCode)
 	{
-		if (!s_Window)
+		if (!s_Window || s_BlockKeyboard)
 			return false;
 
 		// Check if key exists in previous states map
@@ -384,7 +427,7 @@ namespace Ermine
 
 	bool Input::IsKeyDown(int keyCode)
 	{
-		if (!s_Window)
+		if (!s_Window || s_BlockKeyboard)
 			return false;
 
 		auto state = glfwGetKey(s_Window, keyCode);
@@ -393,7 +436,7 @@ namespace Ermine
 
 	bool Input::IsMouseButtonPressed(int button)
 	{
-		if (!s_Window)
+		if (!s_Window || s_BlockMouse)
 			return false;
 
 		// Check if button exists in previous states map
@@ -411,7 +454,7 @@ namespace Ermine
 
 	bool Input::IsMouseButtonReleased(int button)
 	{
-		if (!s_Window)
+		if (!s_Window || s_BlockMouse)
 			return false;
 
 		// Check if button exists in previous states map
@@ -429,9 +472,42 @@ namespace Ermine
 
 	bool Input::IsMouseButtonDown(int button)
 	{
-		if (!s_Window)
+		if (!s_Window || s_BlockMouse)
 			return false;
 
+		auto state = glfwGetMouseButton(s_Window, button);
+		return state == GLFW_PRESS;
+	}
+
+	bool Input::IsKeyDownEditor(int keyCode)
+	{
+		if (!s_Window || !s_EditorInputActive)
+			return false;
+		auto state = glfwGetKey(s_Window, keyCode);
+		return state == GLFW_PRESS || state == GLFW_REPEAT;
+	}
+
+	bool Input::IsKeyPressedEditor(int keyCode)
+	{
+		if (!s_Window || !s_EditorInputActive)
+			return false;
+		// Check if key exists in previous states map
+		auto it = s_PreviousKeyStatesEditor.find(keyCode);
+		if (it == s_PreviousKeyStatesEditor.end())
+			s_PreviousKeyStatesEditor[keyCode] = false;
+		
+		bool previous = s_PreviousKeyStatesEditor[keyCode];
+		bool current = IsKeyDownEditor(keyCode);
+
+		s_PreviousKeyStatesEditor[keyCode] = current;
+
+		return current && !previous;
+	}
+
+	bool Input::IsMouseButtonDownEditor(int button)
+	{
+		if (!s_Window || !s_EditorInputActive)
+			return false;
 		auto state = glfwGetMouseButton(s_Window, button);
 		return state == GLFW_PRESS;
 	}
@@ -466,6 +542,18 @@ namespace Ermine
 	{
 		s_MouseScrollOffset = 0.0f;
 	}
+
+	float Input::GetMouseScrollOffsetEditor()
+	{
+		return s_MouseScrollOffsetEditor;
+	}
+
+	void Input::ResetMouseScrollOffsetEditor()
+	{
+		s_MouseScrollOffsetEditor = 0.0f;
+	}
+
+
 
 	std::pair<float, float> Input::GetMouseDelta()
 	{
