@@ -227,11 +227,9 @@ bool engine::Init(GLFWwindow* windowContext)
 	// Create a simple quad mesh for particles
 	auto quadMesh = graphics::GeometryFactory::CreateQuad(1.0f, 1.0f);
 	auto tex = AssetManager::GetInstance().LoadTexture("../Resources/Textures/greybox_red_solid.png");
-	//particleShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/vertex.glsl", "../Resources/Shaders/fragment.glsl");
-	particleShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/batch_vertex.glsl", "../Resources/Shaders/batch_fragment.glsl"); // For Batch Rendering
 
 	// Particles Emitter
-	emitter = std::make_unique<ParticleEmitter>(quadMesh, particleShader, tex);
+	emitter = std::make_unique<ParticleEmitter>(quadMesh, shader, tex);
 
 	// Create first cube
 	auto entity = ECS::GetInstance().CreateEntity();
@@ -439,9 +437,7 @@ void engine::Render(GLFWwindow* window)
 	Mtx44 proj = editor::EditorCamera::GetInstance().GetProjectionMatrix();
 
 	// Draw
-	//ECS::GetInstance().GetSystem<graphics::Renderer>()->Update(view, proj);
-
-	ECS::GetInstance().GetSystem<graphics::Renderer>()->UpdateWithBatchRender(view, proj);
+	ECS::GetInstance().GetSystem<graphics::Renderer>()->Update(view, proj);
 
 	graphics::GPUProfiler::EndEvent();
 
