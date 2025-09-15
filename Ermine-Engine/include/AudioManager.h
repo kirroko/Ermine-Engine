@@ -1,13 +1,9 @@
-#ifndef AUDIOENGINE_H_
-#define AUDIOENGINE_H_
+#pragma once
+
+#include "PreCompile.h"
+#include "MathVector.h"
 #include "fmod_studio.hpp"
 #include "fmod.hpp"
-#include <string>
-#include <map>
-#include <vector>
-#include <Math.h>
-#include <iostream>
-#include <MathVector.h>
 
 using namespace std;
 
@@ -64,4 +60,3 @@ namespace Ermine {
         static FMOD_VECTOR VectorToFmod(const Vector3D& vPosition); // Updated parameter type
     };
 }
-#endif

@@ -13,8 +13,10 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #include "PreCompile.h"
 #include "AudioSystem.h"
-#include "ECS.h"
+
 #include "MathVector.h"
+
+class ECS;
 
 using namespace Ermine;
 
