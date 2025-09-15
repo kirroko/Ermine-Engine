@@ -188,20 +188,29 @@ bool engine::Init(GLFWwindow* windowContext)
 	auto texture = AssetManager::GetInstance().LoadTexture("../Resources/Textures/greybox_grey_grid.png");
 
 	// Random number generation setup
-	//std::random_device rd;
-	//std::mt19937 gen(rd());
-	//std::uniform_real_distribution<float> posDist(-10.0f, 10.0f); // Random positions between -10 and 10
-	//std::uniform_real_distribution<float> rotDist(0.0f, 360.0f);  // Random rotations between 0 and 360
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_real_distribution<float> posDist(-10.0f, 10.0f); // Random positions between -10 and 10
+	std::uniform_real_distribution<float> rotDist(0.0f, 360.0f);  // Random rotations between 0 and 360
 
-	//for (int i = 0; i < 1000; ++i)
-	//{
-	//    auto entity = ECS::GetInstance().CreateEntity();
-	//    Vec3 randomPosition(posDist(gen), posDist(gen), posDist(gen));
-	//    Vec3 randomRotation(rotDist(gen), rotDist(gen), rotDist(gen));
-	//    ECS::GetInstance().AddComponent(entity, Transform(randomPosition, randomRotation, Vec3(1.0f, 1.0f, 1.0f)));
-	//    ECS::GetInstance().AddComponent(entity, graphics::GeometryFactory::CreateCube(1.0f, 1.0f, 1.0f));
-	//    ECS::GetInstance().AddComponent(entity, Material(shader, texture));
-	//}
+	for (int i = 0; i < 500; ++i)
+	{
+	    auto entity = ECS::GetInstance().CreateEntity();
+	    Vec3 randomPosition(posDist(gen), posDist(gen), posDist(gen));
+	    Vec3 randomRotation(rotDist(gen), rotDist(gen), rotDist(gen));
+	    ECS::GetInstance().AddComponent(entity, Transform(randomPosition, randomRotation, Vec3(1.0f, 1.0f, 1.0f)));
+	    ECS::GetInstance().AddComponent(entity, graphics::GeometryFactory::CreateCube(1.0f, 1.0f, 1.0f));
+
+		auto cube2Material = std::make_unique<graphics::Material>(shader);
+		cube2Material->LoadTemplate(graphics::MaterialTemplates::PBR_METAL());
+
+		if (texture && texture->IsValid()) {
+			cube2Material->SetTexture("materialAlbedoMap", texture);
+			cube2Material->SetTexture("texture0", texture);
+		}
+
+		ECS::GetInstance().AddComponent(entity, Material(std::move(cube2Material)));
+	}
 	
 	auto audioTestEntity = ECS::GetInstance().CreateEntity();
 	ECS::GetInstance().AddComponent(audioTestEntity, Transform(Vec3(2, 0, -1), Vec3(0, 0, 0), Vec3(1, 1, 1)));
