@@ -23,6 +23,8 @@ namespace Ermine
 
     void InspectorGUI::Render()
     {
+        //m_Entities (list of entities)
+
         if (!ImGui::Begin(Name().c_str()))
         {
             ImGui::End();
@@ -41,9 +43,12 @@ namespace Ermine
         if (ecs.HasComponent<Transform>(m_entity))
         {
             auto& tr = ecs.GetComponent<Transform>(m_entity);
+            ImGui::BeginChild("TransformChild");
+            ImGui::BeginGroup();
 
             if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
             {
+
                 // Position
                 ImGui::TextUnformatted("Position");
                 ImGui::SameLine();
@@ -67,7 +72,51 @@ namespace Ermine
                     tr.scale.y = (tr.scale.y >= 0.f) ? fmaxf(tr.scale.y, kMinScale) : -fmaxf(-tr.scale.y, kMinScale);
                     tr.scale.z = (tr.scale.z >= 0.f) ? fmaxf(tr.scale.z, kMinScale) : -fmaxf(-tr.scale.z, kMinScale);
                 }
+
+
+                // Context menu for contents
+                if (ImGui::BeginPopupContextWindow("Transform_ContentContext", ImGuiPopupFlags_MouseButtonRight))
+                {
+                    if (ImGui::MenuItem("Delete", "Del", false))
+                    {
+                        ecs.RemoveComponent<Transform>(m_entity);
+                    }
+                    ImGui::EndPopup();
+                }
+
+                ImGui::EndGroup();
+                ImGui::EndChild();
             }
+
+            ImGui::Separator();
+        }
+
+        if (ecs.HasComponent<Material>(m_entity))
+        {
+            auto& mt = ecs.GetComponent<Material>(m_entity);
+
+            if (ImGui::CollapsingHeader("Material", ImGuiTreeNodeFlags_DefaultOpen))
+            {
+            }
+
+            ImGui::Separator();
+        }
+
+        if (ecs.HasComponent<AudioComponent>(m_entity))
+        {
+            auto& ac = ecs.GetComponent<AudioComponent>(m_entity);
+
+            if (ImGui::CollapsingHeader("AudioComponent", ImGuiTreeNodeFlags_DefaultOpen))
+            {
+            }
+
+            ImGui::Separator();
+        }
+
+        //ImGui::
+        if (ImGui::Button("Add Component"))
+        {
+			ImGui::OpenPopup("AddComponent");
         }
 
         ImGui::End();
