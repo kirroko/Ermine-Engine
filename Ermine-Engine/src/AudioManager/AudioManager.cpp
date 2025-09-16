@@ -271,6 +271,54 @@ void CAudioEngine::StopAllChannels() {
 	sgpImplementation->mChannels.clear();
 }
 
+void CAudioEngine::SetListenerPosition(const Vector3D& position) {
+	FMOD_VECTOR pos = VectorToFmod(position);
+	FMOD_VECTOR vel = { 0, 0, 0 }; // No velocity by default
+	FMOD_VECTOR forward = { 0, 0, 1 }; // Default forward
+	FMOD_VECTOR up = { 0, 1, 0 }; // Default up
+
+	CAudioEngine::ErrorCheck(sgpImplementation->mpSystem->set3DListenerAttributes(
+		0, // listener index (usually 0 for single listener)
+		&pos,
+		&vel,
+		&forward,
+		&up
+	));
+}
+
+void CAudioEngine::SetListenerOrientation(const Vector3D& forward, const Vector3D& up) {
+	FMOD_VECTOR pos = { 0, 0, 0 }; // Keep current position
+	FMOD_VECTOR vel = { 0, 0, 0 }; // No velocity
+	FMOD_VECTOR fwd = VectorToFmod(forward);
+	FMOD_VECTOR upVec = VectorToFmod(up);
+
+	CAudioEngine::ErrorCheck(sgpImplementation->mpSystem->set3DListenerAttributes(
+		0, // listener index
+		nullptr, // Don't change position (pass nullptr)
+		&vel,
+		&fwd,
+		&upVec
+	));
+}
+
+void CAudioEngine::SetListenerAttributes(const Vector3D& position,
+	const Vector3D& velocity,
+	const Vector3D& forward,
+	const Vector3D& up) {
+	FMOD_VECTOR pos = VectorToFmod(position);
+	FMOD_VECTOR vel = VectorToFmod(velocity);
+	FMOD_VECTOR fwd = VectorToFmod(forward);
+	FMOD_VECTOR upVec = VectorToFmod(up);
+
+	CAudioEngine::ErrorCheck(sgpImplementation->mpSystem->set3DListenerAttributes(
+		0, // listener index
+		&pos,
+		&vel,
+		&fwd,
+		&upVec
+	));
+}
+
 void CAudioEngine::Shutdown() {
 	delete sgpImplementation;
 }

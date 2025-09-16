@@ -186,6 +186,15 @@
     <ClInclude Include="include\Window.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\MathVector.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Material.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\AudioImGUI.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\AssetBrowser\AssetBrowser.cpp">
@@ -298,6 +307,9 @@
     </ClCompile>
     <ClCompile Include="src\dllmain.cpp">
       <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\AudioManager\AudioIMGUI.cpp">
+      <Filter>src\AudioManager</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

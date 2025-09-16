@@ -31,6 +31,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Serialisation.h"
 #include "AudioSystem.h"
 #include "Particles.h"
+#include "AudioImGUI.h"
 
 #include <random> // Include for random number generation
 
@@ -193,14 +194,23 @@ bool engine::Init(GLFWwindow* windowContext)
 	//std::uniform_real_distribution<float> posDist(-10.0f, 10.0f); // Random positions between -10 and 10
 	//std::uniform_real_distribution<float> rotDist(0.0f, 360.0f);  // Random rotations between 0 and 360
 
-	//for (int i = 0; i < 1000; ++i)
+	//for (int i = 0; i < 500; ++i)
 	//{
 	//    auto entity = ECS::GetInstance().CreateEntity();
 	//    Vec3 randomPosition(posDist(gen), posDist(gen), posDist(gen));
 	//    Vec3 randomRotation(rotDist(gen), rotDist(gen), rotDist(gen));
 	//    ECS::GetInstance().AddComponent(entity, Transform(randomPosition, randomRotation, Vec3(1.0f, 1.0f, 1.0f)));
 	//    ECS::GetInstance().AddComponent(entity, graphics::GeometryFactory::CreateCube(1.0f, 1.0f, 1.0f));
-	//    ECS::GetInstance().AddComponent(entity, Material(shader, texture));
+
+	//	auto cube2Material = std::make_unique<graphics::Material>(shader);
+	//	cube2Material->LoadTemplate(graphics::MaterialTemplates::PBR_METAL());
+
+	//	if (texture && texture->IsValid()) {
+	//		cube2Material->SetTexture("materialAlbedoMap", texture);
+	//		cube2Material->SetTexture("texture0", texture);
+	//	}
+
+	//	ECS::GetInstance().AddComponent(entity, Material(std::move(cube2Material)));
 	//}
 	
 	auto audioTestEntity = ECS::GetInstance().CreateEntity();
@@ -208,12 +218,12 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().AddComponent(audioTestEntity, ObjectMetaData());
 
 	AudioComponent testAudio;
-	testAudio.soundName = "../Resources/Audio/test.wav"; // Replace with your actual sound file path
-	testAudio.volume = 0.5f; // 50% volume
-	testAudio.is3D = false; // 2D sound for testing
-	testAudio.isLooping = false;
-	testAudio.isStreaming = false;
-	testAudio.shouldPlay = true; // We'll trigger this with keyboard input
+	//testAudio.soundName = "../Resources/Audio/test.wav"; // Replace with your actual sound file path
+	//testAudio.volume = 0.5f; // 50% volume
+	//testAudio.is3D = false; // 2D sound for testing
+	//testAudio.isLooping = false;
+	//testAudio.isStreaming = false;
+	//testAudio.shouldPlay = true; // We'll trigger this with keyboard input
 
 	ECS::GetInstance().AddComponent(audioTestEntity, testAudio);
 
@@ -322,6 +332,7 @@ bool engine::Init(GLFWwindow* windowContext)
    // Create ImGUI window for Asset Browser
    editor::EditorGUI::CreateImGUIWindow<ImguiUI::AssetBrowser>();
    editor::EditorGUI::CreateImGUIWindow<ParticlesImGUI>(emitter.get());
+   editor::EditorGUI::CreateImGUIWindow<AudioImGUI>();
    
    EE_CORE_INFO("Systems and components registered successfully, Engine Initialized");
    s_isInitialized = true;
