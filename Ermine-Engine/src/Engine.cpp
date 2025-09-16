@@ -156,7 +156,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	// For Graphics/Renderer system
 	SignatureID sig;
 	sig.set(ECS::GetInstance().GetComponentType<Transform>());
-	//sig.set(ECS::GetInstance().GetComponentType<Mesh>());
+	sig.set(ECS::GetInstance().GetComponentType<Mesh>());
 	sig.set(ECS::GetInstance().GetComponentType<Material>());
 	ECS::GetInstance().SetSystemSignature<graphics::Renderer>(sig);
 
@@ -237,12 +237,12 @@ bool engine::Init(GLFWwindow* windowContext)
 	//ECS::GetInstance().AddComponent(entity3, Material(shader, texture));
 
 	// TEST FBX
-	// auto fbxModel = AssetManager::GetInstance().LoadModel("../Resources/Models/Walking.fbx");
-	// auto fbxEntity = ECS::GetInstance().CreateEntity();
-	// ECS::GetInstance().AddComponent(fbxEntity, Transform(Vec3(0, 1, -1), Vec3(0, 0, 0), Vec3(0.01f, 0.01f, 0.01f)));
-	// ECS::GetInstance().AddComponent(fbxEntity, ObjectMetaData("Character", "Model", true));
-	// ECS::GetInstance().AddComponent(fbxEntity, ModelComponent(fbxModel));
-	// ECS::GetInstance().AddComponent(fbxEntity, Material(shader, texture));
+	 auto fbxEntity = ECS::GetInstance().CreateEntity();
+	 ECS::GetInstance().AddComponent(fbxEntity, Transform(Vec3(0, 1, -1), Vec3(0, 0, 0), Vec3(0.01f, 0.01f, 0.01f)));
+	 ECS::GetInstance().AddComponent(fbxEntity, ObjectMetaData("Character", "Model", true));
+	 ECS::GetInstance().AddComponent(fbxEntity, Mesh{});
+	 ECS::GetInstance().AddComponent(fbxEntity, ModelComponent(AssetManager::GetInstance().LoadModel("../Resources/Models/Walking.fbx")));
+	 ECS::GetInstance().AddComponent(fbxEntity, Material(shader, texture));
 
 	// Create a simple quad mesh for particles
 	auto quadMesh = graphics::GeometryFactory::CreateQuad(1.0f, 1.0f);

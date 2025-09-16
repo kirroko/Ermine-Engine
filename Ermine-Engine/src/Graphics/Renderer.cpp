@@ -962,55 +962,55 @@ void Renderer::DrawMesh(const Mesh& mesh,
 	const std::shared_ptr<graphics::Texture>& overrideTex,
 	const std::vector<glm::mat4>* bones)
 {
-	auto shader = material.m_shader;
-	shader->Bind();
-	shader->SetUniformMatrix4fv("model", &model[0][0]);
-	shader->SetUniformMatrix4fv("view", &view.m2[0][0]);
-	shader->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
+	//auto shader = material.m_shader;
+	//shader->Bind();
+	//shader->SetUniformMatrix4fv("model", &model[0][0]);
+	//shader->SetUniformMatrix4fv("view", &view.m2[0][0]);
+	//shader->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
 
-	// Bone
-	if (bones)
-	{
-		for (int i = 0; i < bones->size(); ++i)
-		{
-			std::string name = "u_Bones[" + std::to_string(i) + "]";
-			shader->SetUniformMatrix4fv(name.c_str(), &(*bones)[i][0][0]);
-		}
-		shader->SetUniform1i("u_BoneCount", (int)bones->size());
-	}
+	//// Bone
+	//if (bones)
+	//{
+	//	for (int i = 0; i < bones->size(); ++i)
+	//	{
+	//		std::string name = "u_Bones[" + std::to_string(i) + "]";
+	//		shader->SetUniformMatrix4fv(name.c_str(), &(*bones)[i][0][0]);
+	//	}
+	//	shader->SetUniform1i("u_BoneCount", (int)bones->size());
+	//}
 
-	// Normal matrix
-	glm::mat4 glmView = glm::mat4(
-		view.m00, view.m01, view.m02, view.m03,
-		view.m10, view.m11, view.m12, view.m13,
-		view.m20, view.m21, view.m22, view.m23,
-		view.m30, view.m31, view.m32, view.m33
-	);
-	glm::mat4 modelView = glmView * model;
-	glm::mat3 normalMatrix = transpose(inverse(glm::mat3(modelView)));
-	shader->SetUniformMatrix3fv("NormalMatrix", &normalMatrix[0][0]);
+	//// Normal matrix
+	//glm::mat4 glmView = glm::mat4(
+	//	view.m00, view.m01, view.m02, view.m03,
+	//	view.m10, view.m11, view.m12, view.m13,
+	//	view.m20, view.m21, view.m22, view.m23,
+	//	view.m30, view.m31, view.m32, view.m33
+	//);
+	//glm::mat4 modelView = glmView * model;
+	//glm::mat3 normalMatrix = transpose(inverse(glm::mat3(modelView)));
+	//shader->SetUniformMatrix3fv("NormalMatrix", &normalMatrix[0][0]);
 
-	// Simple hardcoded light
-	glm::vec4 lightPosWorld(10.f, 10.f, 10.f, 1.0f);
-	glm::vec4 lightPosView = glmView * lightPosWorld;
-	shader->SetUniform4f("Light.Position", lightPosView);
-	shader->SetUniform3f("Light.La", glm::vec3(0.2f));
-	shader->SetUniform3f("Light.Ld", glm::vec3(1.0f));
-	shader->SetUniform3f("Light.Ls", glm::vec3(1.0f));
+	//// Simple hardcoded light
+	//glm::vec4 lightPosWorld(10.f, 10.f, 10.f, 1.0f);
+	//glm::vec4 lightPosView = glmView * lightPosWorld;
+	//shader->SetUniform4f("Light.Position", lightPosView);
+	//shader->SetUniform3f("Light.La", glm::vec3(0.2f));
+	//shader->SetUniform3f("Light.Ld", glm::vec3(1.0f));
+	//shader->SetUniform3f("Light.Ls", glm::vec3(1.0f));
 
-	// Material values
-	shader->SetUniform3f("Material.Ka", glm::vec3(0.2f));
-	shader->SetUniform3f("Material.Kd", glm::vec3(0.9f));
-	shader->SetUniform3f("Material.Ks", glm::vec3(0.8f));
-	shader->SetUniform1f("Material.Shininess", 100.0f);
+	//// Material values
+	//shader->SetUniform3f("Material.Ka", glm::vec3(0.2f));
+	//shader->SetUniform3f("Material.Kd", glm::vec3(0.9f));
+	//shader->SetUniform3f("Material.Ks", glm::vec3(0.8f));
+	//shader->SetUniform1f("Material.Shininess", 100.0f);
 
-	// Texture binding
-	if (overrideTex)
-		overrideTex->Bind();
-	else if (material.m_texture)
-		material.m_texture->Bind();
+	//// Texture binding
+	//if (overrideTex)
+	//	overrideTex->Bind();
+	//else if (material.m_texture)
+	//	material.m_texture->Bind();
 
-	this->Draw(mesh.vertex_array, mesh.index_buffer, shader);
+	//this->Draw(mesh.vertex_array, mesh.index_buffer, shader);
 }
 
 /**
