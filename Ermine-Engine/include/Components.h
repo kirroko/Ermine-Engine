@@ -22,6 +22,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "IndexBuffer.h"
 #include "ScriptInstance.h"
 #include "Texture.h"
+#include "Model.h"
 
 namespace Ermine
 {
@@ -191,5 +192,17 @@ namespace Ermine
 		
 		Material(const std::shared_ptr<graphics::Shader>& shader, const std::shared_ptr<graphics::Texture>& texture) : m_shader(shader), m_texture(texture)
 		{}
+	};
+
+	/*!***********************************************************************
+	\brief
+	 Model component structure.
+	*************************************************************************/
+	struct ModelComponent
+	{
+		std::shared_ptr<graphics::Model> m_model;
+
+		ModelComponent() = default;
+		explicit ModelComponent(const std::shared_ptr<graphics::Model>& model) : m_model(model) {}
 	};
 }

@@ -18,6 +18,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Shader.h"
 #include "Systems.h"
 #include "GPUProfiler.h"
+#include "Components.h"
 
 namespace Ermine::graphics
 {
@@ -29,9 +30,9 @@ namespace Ermine::graphics
     public:
         struct OffscreenBuffer
         {
-			unsigned int FBO; // Frame Buffer Object
+            unsigned int FBO; // Frame Buffer Object
             unsigned int ColorTexture;
-			unsigned int RBO; // Render Buffer Object
+            unsigned int RBO; // Render Buffer Object
 
             // Viewport size
             int width;
@@ -41,20 +42,20 @@ namespace Ermine::graphics
         //~Renderer();
 
         /**
-		 * @brief Create an offscreen buffer for viewport/scene rendering
-		 * @param width The width of the offscreen buffer
-		 * @param height The height of the offscreen buffer
-		 * @return OffscreenBuffer The offscreen buffer
+         * @brief Create an offscreen buffer for viewport/scene rendering
+         * @param width The width of the offscreen buffer
+         * @param height The height of the offscreen buffer
+         * @return OffscreenBuffer The offscreen buffer
          */
         OffscreenBuffer Create(const int& width, const int& height);
 
-		std::shared_ptr<OffscreenBuffer> GetOffscreenBuffer() const { return m_OffscreenBuffer; }
+        std::shared_ptr<OffscreenBuffer> GetOffscreenBuffer() const { return m_OffscreenBuffer; }
 
         /**
          * @brief Update the game objects to the screen.
          */
         void Update(const Mtx44& view, const Mtx44& projection);
-        
+
         /**
          * @brief Draw the game objects to the screen.
          */
@@ -72,6 +73,14 @@ namespace Ermine::graphics
         const GPUProfiler::PerformanceMetrics& GetPerformanceMetrics() const;
 
     private:
-		std::shared_ptr<OffscreenBuffer> m_OffscreenBuffer;
+        std::shared_ptr<OffscreenBuffer> m_OffscreenBuffer;
+
+        void DrawMesh(const Mesh& mesh,
+            const Material& material,
+            const Mtx44& view,
+            const Mtx44& projection,
+            const glm::mat4& model,
+            const std::shared_ptr<graphics::Texture>& overrideTex = nullptr,
+            const std::vector<glm::mat4>* bones = nullptr);
     };
 }

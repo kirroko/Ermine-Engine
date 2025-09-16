@@ -8,6 +8,7 @@ fmod_dll = "../ThirdParty/Fmod/lib/fmod.dll"
 mono_dll = "../ThirdParty/Mono/lib/mono-2.0-sgen.dll"
 mono_assembly = "../ThirdParty/Mono/lib/"
 mono_config = "../ThirdParty/Mono/etc"
+assimp_dll = "../ThirdParty/assimp/bin/assimp-vc143-mt.dll"
 
 -- Include directories relative to root folder (solution directory)
 IncludeDir = {}
@@ -18,11 +19,13 @@ IncludeDir["glm"] = "ThirdParty/glm"
 IncludeDir["spdlog"] = "ThirdParty/spdlog/include"
 IncludeDir["stb"] = "ThirdParty/stb"
 IncludeDir["Mono"] = "ThirdParty/Mono/include"
+IncludeDir["assimp"] = "ThirdParty/assimp/include"
 
 -- Libraries
 LibraryDir = {}
 LibraryDir["Fmod"] = "ThirdParty/Fmod/lib"
 LibraryDir["Mono"] = "ThirdParty/Mono/lib"
+LibraryDir["assimp"] = "ThirdParty/assimp/lib"
 
 -- External libraries
 group "Dependencies"
@@ -65,13 +68,15 @@ project "Ermine-Engine"
         "%{IncludeDir.spdlog}",
         "%{IncludeDir.stb}",
         "%{IncludeDir.Fmod}",
-        "%{IncludeDir.Mono}"
+        "%{IncludeDir.Mono}",
+        "%{IncludeDir.assimp}"
     }
 
     libdirs
     {
         "%{LibraryDir.Fmod}",
-        "%{LibraryDir.Mono}"
+        "%{LibraryDir.Mono}",
+        "%{LibraryDir.assimp}"
     }
 
     links
@@ -81,7 +86,8 @@ project "Ermine-Engine"
         "ImGui",
         "fmod_vc",
         "opengl32.lib",
-		"mono-2.0-sgen.lib"
+		"mono-2.0-sgen.lib",
+        "assimp-vc143-mt.lib"
     }
 
     postbuildcommands
@@ -89,6 +95,7 @@ project "Ermine-Engine"
         ("{COPY} %{cfg.buildtarget.relpath} ../Build/bin/" .. outputdir .. "/Ermine-Editor"),
         ("{COPY} " .. fmod_dll .. " ../Build/bin/" .. outputdir .. "/Ermine-Editor"),
         ("{COPY} " .. mono_dll .. " ../Build/bin/" .. outputdir .. "/Ermine-Editor"),
+        ("{COPY} " .. assimp_dll .. " ../Build/bin/" .. outputdir .. "/Ermine-Editor"),
         ("{COPYDIR} " .. mono_assembly .. " ../Build/bin/" .. outputdir .. "/Ermine-Editor/mono/lib"),
         ("{COPYDIR} " .. mono_config .. " ../Build/bin/" .. outputdir .. "/Ermine-Editor/mono/etc"),
         ("{COPYDIR} ../Resources ../Build/bin/" .. outputdir .. "/Resources")

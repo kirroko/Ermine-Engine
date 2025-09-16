@@ -76,6 +76,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().RegisterComponent<Material>();
 	ECS::GetInstance().RegisterComponent<Script>();
 	ECS::GetInstance().RegisterComponent<ObjectMetaData>();
+	ECS::GetInstance().RegisterComponent<ModelComponent>();
 
 	// TODO: Register all systems here, no limits
 	ECS::GetInstance().RegisterSystem<graphics::Renderer>();
@@ -85,7 +86,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	// For Graphics/Renderer system
 	SignatureID sig;
 	sig.set(ECS::GetInstance().GetComponentType<Transform>());
-	sig.set(ECS::GetInstance().GetComponentType<Mesh>());
+	//sig.set(ECS::GetInstance().GetComponentType<Mesh>());
 	sig.set(ECS::GetInstance().GetComponentType<Material>());
 	ECS::GetInstance().SetSystemSignature<graphics::Renderer>(sig);
 
@@ -138,6 +139,15 @@ bool engine::Init(GLFWwindow* windowContext)
 	//ECS::GetInstance().AddComponent(entity3, Transform(Vec3(1, 1, -3), Vec3(0, 0, 0), Vec3(1, 1, 1)));
 	//ECS::GetInstance().AddComponent(entity3, graphics::GeometryFactory::CreateSphere());
 	//ECS::GetInstance().AddComponent(entity3, Material(shader, texture));
+
+	// TEST FBX
+	auto fbxModel = AssetManager::GetInstance().LoadModel("../Resources/Models/Walking.fbx");
+
+	auto fbxEntity = ECS::GetInstance().CreateEntity();
+	ECS::GetInstance().AddComponent(fbxEntity, Transform(Vec3(0, 1, -1), Vec3(0, 0, 0), Vec3(0.01f, 0.01f, 0.01f)));
+	ECS::GetInstance().AddComponent(fbxEntity, ObjectMetaData("Character", "Model", true));
+	ECS::GetInstance().AddComponent(fbxEntity, ModelComponent(fbxModel));
+	ECS::GetInstance().AddComponent(fbxEntity, Material(shader, texture));
 
    glClearColor(0.2f,0.3f,0.3f,1.0f); // Background color
 

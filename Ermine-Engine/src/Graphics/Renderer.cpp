@@ -16,7 +16,6 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #include "ECS.h"
 #include "Logger.h"
-#include "Components.h"
 #include "MathUtils.h"
 #include "Matrix3x3.h"
 #include "glm/gtc/matrix_transform.hpp"
@@ -178,7 +177,6 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 	for (auto& entity : m_Entities)
 	{
 		auto& trans = ECS::GetInstance().GetComponent<Transform>(entity);
-		auto& mesh = ECS::GetInstance().GetComponent<Mesh>(entity);
 		auto& material = ECS::GetInstance().GetComponent<Material>(entity);
 
 		glm::mat4 model = glm::mat4(1.0f);
@@ -188,43 +186,30 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 		model = glm::rotate(model, radian(trans.rotation.z), glm::vec3(0, 0, 1));
 		model = glm::scale(model, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
 
-		material.m_texture->Bind();
+		// For single primitive mesh
+		if (ECS::GetInstance().HasComponent<Mesh>(entity))
+		{
+			auto& mesh = ECS::GetInstance().GetComponent<Mesh>(entity);
+			DrawMesh(mesh, material, view, projection, model);
+		}
 
-		material.m_shader->Bind();
-		material.m_shader->SetUniformMatrix4fv("model", &model[0][0]);
-		material.m_shader->SetUniformMatrix4fv("view", &view.m2[0][0]);
-		material.m_shader->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
+		// For full imported model
+		if (ECS::GetInstance().HasComponent<ModelComponent>(entity))
+		{
+			auto& modelComp = ECS::GetInstance().GetComponent<ModelComponent>(entity);
+			auto modelPtr = modelComp.m_model;
 
-		// Calculate normal matrix (inverse transpose of the upper 3x3 part of model-view matrix)
-		glm::mat4 glmView = glm::mat4(
-			view.m00, view.m01, view.m02, view.m03,
-			view.m10, view.m11, view.m12, view.m13,
-			view.m20, view.m21, view.m22, view.m23,
-			view.m30, view.m31, view.m32, view.m33
-		);
-		glm::mat4 modelView = glmView * model;
-		glm::mat3 normalMatrix = transpose(inverse(glm::mat3(modelView)));
-		material.m_shader->SetUniformMatrix3fv("NormalMatrix", &normalMatrix[0][0]);
-
-		// TODO: Can be moved to a light component
-		// Light Properties
-		glm::vec4 lightPosWorld(10.f, 10.f, 10.f, 1.0f); // Example position in world space
-		glm::vec4 lightPosView = glmView * lightPosWorld;           // Transform to view space
-		material.m_shader->SetUniform4f("Light.Position", lightPosView);
-		glm::vec3 ld(1.0f, 1.0f, 1.0f); // Light color
-		material.m_shader->SetUniform3f("Light.La", glm::vec3(0.2f, 0.2f, 0.2f));
-		material.m_shader->SetUniform3f("Light.Ld", ld);
-		material.m_shader->SetUniform3f("Light.Ls", glm::vec3(1.0f, 1.0f, 1.0f));
-
-		// Material properties
-		glm::vec3 kd(0.9f, 0.9f, 0.9f); // Diffuse reflectivity
-		material.m_shader->SetUniform3f("Material.Ka", glm::vec3(0.2f, 0.2f, 0.2f));
-		material.m_shader->SetUniform3f("Material.Kd", kd);
-		material.m_shader->SetUniform3f("Material.Ks", glm::vec3(0.8f, 0.8f, 0.8f));
-		material.m_shader->SetUniform1f("Material.Shininess", 100.0f);
-
-		Draw(mesh.vertex_array, mesh.index_buffer, material.m_shader);
+			for (const auto& meshData : modelPtr->GetMeshes())
+			{
+				Mesh temp(meshData.vao, meshData.vbo, meshData.ibo);
+				glm::mat4 combined = model * meshData.localTransform;
+				DrawMesh(temp, material, view, projection, combined, meshData.texture, &modelPtr->GetBoneTransforms());
+			}
+		}
 	}
+
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
 	//GPUProfiler::EndEvent();
 #ifdef _DEBUG
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -260,4 +245,63 @@ void Renderer::Clear() const
 const GPUProfiler::PerformanceMetrics& Renderer::GetPerformanceMetrics() const
 {
 	return GPUProfiler::GetMetrics();
+}
+
+void Renderer::DrawMesh(const Mesh& mesh,
+	const Material& material,
+	const Mtx44& view,
+	const Mtx44& projection,
+	const glm::mat4& model,
+	const std::shared_ptr<graphics::Texture>& overrideTex,
+	const std::vector<glm::mat4>* bones)
+{
+	auto shader = material.m_shader;
+	shader->Bind();
+	shader->SetUniformMatrix4fv("model", &model[0][0]);
+	shader->SetUniformMatrix4fv("view", &view.m2[0][0]);
+	shader->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
+
+	// Bone
+	if (bones)
+	{
+		for (int i = 0; i < bones->size(); ++i)
+		{
+			std::string name = "u_Bones[" + std::to_string(i) + "]";
+			shader->SetUniformMatrix4fv(name.c_str(), &(*bones)[i][0][0]);
+		}
+		shader->SetUniform1i("u_BoneCount", (int)bones->size());
+	}
+
+	// Normal matrix
+	glm::mat4 glmView = glm::mat4(
+		view.m00, view.m01, view.m02, view.m03,
+		view.m10, view.m11, view.m12, view.m13,
+		view.m20, view.m21, view.m22, view.m23,
+		view.m30, view.m31, view.m32, view.m33
+	);
+	glm::mat4 modelView = glmView * model;
+	glm::mat3 normalMatrix = transpose(inverse(glm::mat3(modelView)));
+	shader->SetUniformMatrix3fv("NormalMatrix", &normalMatrix[0][0]);
+
+	// Simple hardcoded light
+	glm::vec4 lightPosWorld(10.f, 10.f, 10.f, 1.0f);
+	glm::vec4 lightPosView = glmView * lightPosWorld;
+	shader->SetUniform4f("Light.Position", lightPosView);
+	shader->SetUniform3f("Light.La", glm::vec3(0.2f));
+	shader->SetUniform3f("Light.Ld", glm::vec3(1.0f));
+	shader->SetUniform3f("Light.Ls", glm::vec3(1.0f));
+
+	// Material values
+	shader->SetUniform3f("Material.Ka", glm::vec3(0.2f));
+	shader->SetUniform3f("Material.Kd", glm::vec3(0.9f));
+	shader->SetUniform3f("Material.Ks", glm::vec3(0.8f));
+	shader->SetUniform1f("Material.Shininess", 100.0f);
+
+	// Texture binding
+	if (overrideTex)
+		overrideTex->Bind();
+	else if (material.m_texture)
+		material.m_texture->Bind();
+
+	this->Draw(mesh.vertex_array, mesh.index_buffer, shader);
 }
