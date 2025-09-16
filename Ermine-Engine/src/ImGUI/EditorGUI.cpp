@@ -24,12 +24,18 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "FrameController.h"
 #include "Input.h"
 #include "Renderer.h"
+#include "Scene.h"
+#include "HierarchyPanel.h"
+
 
 using namespace Ermine::editor;
 
 // Definition for static member m_Windows, for ImGUI Windows
 std::vector<std::unique_ptr<Ermine::ImGUIWindow>>Ermine::editor::EditorGUI::m_Windows;
 bool Ermine::editor::EditorGUI::isPlaying = false; // TODO: tied to Play/Stop toolbar state.
+
+std::unique_ptr<Ermine::Scene> Ermine::editor::EditorGUI::s_ActiveScene = nullptr;
+std::unique_ptr<Ermine::HierarchyPanel> Ermine::editor::EditorGUI::s_HierarchyPanel = nullptr;
 
 void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
 {
@@ -225,6 +231,13 @@ void EditorGUI::Init(GLFWwindow* window)
     // Setup Platform/Renderer backends
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 460");
+
+    // Create Scene first
+    s_ActiveScene = std::make_unique<Scene>("Default Scene"); // Give it a name
+
+    // Then create HierarchyPanel with the scene
+    s_HierarchyPanel = std::make_unique<HierarchyPanel>();
+    s_HierarchyPanel->SetScene(s_ActiveScene.get());
 }
 
 /**
@@ -278,9 +291,21 @@ void EditorGUI::Update(GLFWwindow* windowContext)
 
     // Windows that imgui has to render
     TopMenuBar(windowContext);
+
+    // Scene Viewport
     static bool show_scene_viewer = true;
     if (show_scene_viewer)
 		ViewPortWindow(show_scene_viewer);
+
+
+    // Hierarchy Panel
+    static bool show_hierarchy = true;
+    if (s_HierarchyPanel && show_hierarchy) {
+        s_HierarchyPanel->SetVisible(show_hierarchy);
+        if (s_HierarchyPanel->GetScene()) { // Check if scene is set
+            s_HierarchyPanel->OnImGuiRender();
+        }
+    }
 
     static bool show_demo_window = true;
     if (show_demo_window)

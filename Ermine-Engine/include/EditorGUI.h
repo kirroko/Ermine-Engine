@@ -21,6 +21,11 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <type_traits> // for std::is_base_of
 #include <utility> // for std::forward
 
+namespace Ermine {
+    class Scene;
+    class HierarchyPanel;
+}
+
 namespace Ermine::editor
 {
     /**
@@ -32,6 +37,10 @@ namespace Ermine::editor
         static std::vector<std::unique_ptr<ImGUIWindow>> m_Windows;
 
         static bool isPlaying;
+
+        static std::unique_ptr<Ermine::Scene> s_ActiveScene;
+
+        static std::unique_ptr<Ermine::HierarchyPanel> s_HierarchyPanel;
 
 		/**
 		 * @brief Top menu bar for the editor
@@ -98,5 +107,8 @@ namespace Ermine::editor
             m_Windows.emplace_back(std::move(window));
             return ptr;
         }
+
+        static void SetActiveScene(Ermine::Scene* scene);
+        static Ermine::Scene* GetActiveScene() { return s_ActiveScene.get(); }
     };
 }
