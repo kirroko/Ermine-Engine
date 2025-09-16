@@ -21,9 +21,26 @@ namespace Ermine
 	* @tparam T The component type to register
 	*/
 	template <typename T>
-	void ECS::RegisterComponent()
+	void ECS::RegisterComponent() const
 	{
 		m_ComponentManager->RegisterComponent<T>();
+	}
+
+	/**
+	* @brief Register a component type with a custom name
+	* @tparam T The component type to register
+	* @param customName The custom name to register the component with
+	*/
+	template <typename T>
+	void ECS::RegisterComponent(std::string_view customName) const
+	{
+		m_ComponentManager->RegisterComponent<T>(customName);
+	}
+
+	template <typename T, typename CloneFn>
+	void ECS::RegisterComponent(std::string_view customName, CloneFn customClone) const
+	{
+		m_ComponentManager->RegisterComponent<T>(customName, std::move(customClone));
 	}
 
 	/**

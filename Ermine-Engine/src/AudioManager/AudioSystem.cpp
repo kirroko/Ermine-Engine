@@ -13,9 +13,11 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #include "PreCompile.h"
 #include "AudioSystem.h"
-#include "ECS.h"
+
 #include "MathVector.h"
 #include "AudioManager.h" // Include the CAudioEngine
+
+class ECS;
 
 using namespace Ermine;
 

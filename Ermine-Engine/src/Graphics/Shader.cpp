@@ -15,7 +15,6 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "PreCompile.h"
 #include "Shader.h"
 
-#include "Logger.h"
 #include "Matrix3x3.h"
 #include "glad/glad.h"
 

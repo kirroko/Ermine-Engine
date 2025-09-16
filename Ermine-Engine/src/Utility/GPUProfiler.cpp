@@ -12,7 +12,6 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 /* End Header **************************************************************************/
 #include "PreCompile.h"
 #include "GPUProfiler.h"
-#include "Logger.h"
 
 using namespace Ermine::graphics;
 
@@ -291,9 +290,9 @@ void GPUProfiler::UpdateMetrics(float frameTimeMs)
     // Calculate FPS
     s_CurrentMetrics.fps = frameTimeMs > 0.0f ? 1000.0f / frameTimeMs : 0.0f;
 
-    // Update min/max frame time
-    s_CurrentMetrics.minFrameTimeMs = std::min(s_CurrentMetrics.minFrameTimeMs, frameTimeMs);
-    s_CurrentMetrics.maxFrameTimeMs = std::max(s_CurrentMetrics.maxFrameTimeMs, frameTimeMs);
+    // Update min/max frame time (avoid Windows min/max macros)
+    s_CurrentMetrics.minFrameTimeMs = (std::min)(s_CurrentMetrics.minFrameTimeMs, frameTimeMs);
+    s_CurrentMetrics.maxFrameTimeMs = (std::max)(s_CurrentMetrics.maxFrameTimeMs, frameTimeMs);
 
     // Calculate average frame time
     if (!s_FrameTimeHistory.empty())

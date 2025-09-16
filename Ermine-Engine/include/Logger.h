@@ -18,6 +18,10 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
+#ifndef VERBOSE_LOGGING
+#define VERBOSE_LOGGING 1
+#endif
+
 namespace Ermine
 {
     class EE_API Logger
