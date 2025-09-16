@@ -61,6 +61,7 @@ public:
         std::shared_ptr<graphics::Texture> GetTexture(const std::string& filePath);
 
         // ================== Shader Management ==================
+        const std::unordered_map<std::string, std::shared_ptr<graphics::Texture>>& GetLoadedTextures() const;
         /**
          * @brief Load a shader from a vertex and fragment file
          * @param vertexPath The path to the vertex shader file

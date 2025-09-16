@@ -83,7 +83,25 @@ namespace Ermine
 		 * @tparam T The component type to register
 		 */
 		template<typename T>
-		void RegisterComponent();
+		void RegisterComponent() const;
+
+		/**
+		 * @brief Register a component type with a custom name
+		 * @tparam T The component type to register
+		 * @param customName The custom name to register the component with
+		 */
+		template<typename T>
+		void RegisterComponent(std::string_view customName) const;
+
+		/**
+		 * @brief Register a component type with a custom name and a custom clone function
+		 * @tparam T The component type to register
+		 * @tparam CloneFn The type of the custom clone function
+		 * @param customName The custom name to register the component with
+		 * @param customClone The custom clone function to use when cloning the component
+		 */
+		template<typename T, typename CloneFn>
+		void RegisterComponent(std::string_view customName, CloneFn customClone) const;
 
 		/**
 		 * @brief Add a component to an entity.
@@ -153,6 +171,29 @@ namespace Ermine
 		bool HasComponent(EntityID entity) const
 		{
 			return m_ComponentManager->HasComponent<T>(entity);
+		}
+
+		/**
+		 * @brief Check if an entity has a component by name
+		 * Manage and verify the relationship between entity and their components within ECS
+		 * @tparam T The component type to check for
+		 * @param entity The entity to check
+		 * @param name The name of the component to check for
+		 * @return True if the entity has the component, false otherwise
+		 */
+		bool HasComponent(EntityID entity, std::string_view name) const
+		{
+			return m_ComponentManager->HasComponent(entity, name);
+		}
+
+		/**
+		 * @brief Get the names of all components attached to an entity
+		 * @param entity The entity to get the component names from
+		 * @return A vector of component names
+		 */
+		std::vector<std::string> GetComponentNames(EntityID entity) const
+		{
+			return m_ComponentManager->GetComponentNames(entity);
 		}
 
 		/**

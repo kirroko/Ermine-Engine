@@ -15,7 +15,6 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "PreCompile.h"
 #include "Window.h"
 
-#include "Logger.h"
 #include "glad/glad.h"
 
 /**

@@ -14,8 +14,6 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "PreCompile.h"
 #include "ECS.h"
 
-#include "Logger.h"
-
 namespace Ermine
 {
 	/**
@@ -57,6 +55,19 @@ namespace Ermine
 		m_EntityManager->DestroyEntity(entity);
 		m_ComponentManager->EntityDestroyed(entity);
 		m_SystemManager->EntityDestroyed(entity);
+	}
+
+	EntityID ECS::CloneEntity(EntityID entity)
+	{
+		EntityID newEntity = m_EntityManager->CreateEntity();
+
+		m_ComponentManager->CloneAllComponents(entity, newEntity);
+
+		SignatureID originalSignature = m_EntityManager->GetSignature(entity);
+		m_EntityManager->SetSignature(newEntity, originalSignature);
+		m_SystemManager->EntitySignatureChanged(newEntity, originalSignature);
+
+		return newEntity;
 	}
 
 	/**

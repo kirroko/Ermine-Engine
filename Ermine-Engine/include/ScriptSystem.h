@@ -21,10 +21,14 @@ namespace Ermine::scripting
 {
 	class ScriptSystem : public System
 	{
+		mutable std::vector<std::pair<EntityID, std::string>> m_RestoreList;
 	public:
 		std::unique_ptr<ScriptEngine> m_ScriptEngine;
 		ScriptSystem();
 		void Update() const;
 		void FixedUpdate() const;
+
+		void PrepareForHotReload() const;
+		void FinishHotReload(bool success) const;
 	};
 }
