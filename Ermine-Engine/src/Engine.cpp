@@ -315,8 +315,8 @@ bool engine::Init(GLFWwindow* windowContext)
 	editor::EditorGUI::CreateImGUIWindow<ParticlesImGUI>(emitter.get());
 
 	// Create ImGUI window for Inspector
-	//editor::EditorGUI::CreateImGUIWindow<InspectorGUI>();
-	editor::EditorGUI::CreateImGUIWindow<InspectorGUI>(entity2, "Inspector");
+	editor::EditorGUI::CreateImGUIWindow<InspectorGUI>();
+	//editor::EditorGUI::CreateImGUIWindow<InspectorGUI>(entity2, "Inspector");
    
 	EE_CORE_INFO("Systems and components registered successfully, Engine Initialized");
 	s_isInitialized = true;
@@ -390,6 +390,10 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 	ECS::GetInstance().GetSystem<AudioSystem>()->Update();
 	// Update editor camera
 	editor::EditorCamera::GetInstance().Update();
+
+	// Simple test to see if we can select an entity and view it in the inspector
+	//if (Input::IsKeyDown(GLFW_KEY_Q))
+		//InspectorGUI::SetEntity(entity);
 
 	/*
 	if (s_isInitialized && emitter)

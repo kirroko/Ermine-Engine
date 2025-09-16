@@ -16,14 +16,6 @@ namespace Ermine
     {
     }
 
-    //InspectorGUI::InspectorGUI()
-    //{
-    //}
-    //InspectorGUI::InspectorGUI(EntityID entity, std::string name)
-    //    : ImGUIWindow(name), m_entity(entity)
-    //{
-    //}
-
     void InspectorGUI::SetEntity(EntityID entity)
     {
         m_entity = entity;
