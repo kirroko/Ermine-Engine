@@ -43,12 +43,11 @@ namespace Ermine
         if (ecs.HasComponent<Transform>(m_entity))
         {
             auto& tr = ecs.GetComponent<Transform>(m_entity);
-            ImGui::BeginChild("TransformChild");
-            ImGui::BeginGroup();
 
             if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
             {
-
+                ImGui::BeginChild("TransformChild", ImVec2(0, 0), ImGuiChildFlags_AutoResizeY);
+                //ImGui::BeginGroup();
                 // Position
                 ImGui::TextUnformatted("Position");
                 ImGui::SameLine();
@@ -64,6 +63,8 @@ namespace Ermine
                 // Scale
                 ImGui::TextUnformatted("Scale");
                 ImGui::SameLine();
+
+
                 if (ImGui::SmallButton("Reset##scl")) tr.scale = Vector3D(1.f, 1.f, 1.f);
                 if (ImGui::DragFloat3("##scl", &tr.scale.x))
                 {
@@ -72,7 +73,6 @@ namespace Ermine
                     tr.scale.y = (tr.scale.y >= 0.f) ? fmaxf(tr.scale.y, kMinScale) : -fmaxf(-tr.scale.y, kMinScale);
                     tr.scale.z = (tr.scale.z >= 0.f) ? fmaxf(tr.scale.z, kMinScale) : -fmaxf(-tr.scale.z, kMinScale);
                 }
-
 
                 // Context menu for contents
                 if (ImGui::BeginPopupContextWindow("Transform_ContentContext", ImGuiPopupFlags_MouseButtonRight))
@@ -84,8 +84,9 @@ namespace Ermine
                     ImGui::EndPopup();
                 }
 
-                ImGui::EndGroup();
+                //ImGui::EndGroup();
                 ImGui::EndChild();
+
             }
 
             ImGui::Separator();
