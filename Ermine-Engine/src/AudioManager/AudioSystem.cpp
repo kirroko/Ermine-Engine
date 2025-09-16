@@ -1,8 +1,8 @@
 /* Start Header ************************************************************************/
 /*!
 \file       AudioSystem.cpp
-\author     [Your Name]
-\date       [Current Date]
+\author     Hurng Kai Rui, h.kairui, 2301278, h.kairui\@digipen.edu
+\date       15/9/2025
 \brief      Implementation of AudioSystem as a proper ECS System.
 
 Copyright (C) 2025 DigiPen Institute of Technology.

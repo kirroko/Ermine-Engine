@@ -1,8 +1,8 @@
 /* Start Header ************************************************************************/
 /*!
 \file       AudioImGUI.h
-\author     [Your Name]
-\date       [Current Date]
+\author     Hurng Kai Rui, h.kairui, 2301278, h.kairui\@digipen.edu
+\date       15/9/2025
 \brief      This file contains the declaration of AudioImGUI for managing audio through ImGUI.
 
 Copyright (C) 2025 DigiPen Institute of Technology.
