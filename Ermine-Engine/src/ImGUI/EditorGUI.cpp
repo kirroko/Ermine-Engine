@@ -26,6 +26,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Renderer.h"
 #include "Scene.h"
 #include "HierarchyPanel.h"
+#include "HierarchyInspector.h"
 
 
 using namespace Ermine::editor;
@@ -36,6 +37,7 @@ bool Ermine::editor::EditorGUI::isPlaying = false; // TODO: tied to Play/Stop to
 
 std::unique_ptr<Ermine::Scene> Ermine::editor::EditorGUI::s_ActiveScene = nullptr;
 std::unique_ptr<Ermine::HierarchyPanel> Ermine::editor::EditorGUI::s_HierarchyPanel = nullptr;
+std::unique_ptr<Ermine::editor::HierarchyInspector> Ermine::editor::EditorGUI::s_Inspector = nullptr;
 
 void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
 {
@@ -238,6 +240,10 @@ void EditorGUI::Init(GLFWwindow* window)
     // Then create HierarchyPanel with the scene
     s_HierarchyPanel = std::make_unique<HierarchyPanel>();
     s_HierarchyPanel->SetScene(s_ActiveScene.get());
+
+    // Create Inspector Panel
+    s_Inspector = std::make_unique<HierarchyInspector>();
+    s_Inspector->SetScene(s_ActiveScene.get());
 }
 
 /**
@@ -307,6 +313,13 @@ void EditorGUI::Update(GLFWwindow* windowContext)
         }
     }
 
+    // Inspector Panel
+    static bool show_inspector = true;
+    if (s_Inspector && show_inspector) {
+        s_Inspector->SetVisible(show_inspector);
+        s_Inspector->OnImGuiRender();
+    }
+
     static bool show_demo_window = true;
     if (show_demo_window)
         ImGui::ShowDemoWindow(&show_demo_window);
@@ -356,6 +369,11 @@ void EditorGUI::Render()
 
 void EditorGUI::ShutDown()
 {
+    // Clean up panels first
+    s_Inspector.reset();
+    s_HierarchyPanel.reset();
+    s_ActiveScene.reset();
+
     // Cleanup
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();

@@ -28,6 +28,7 @@ namespace Ermine {
 
 namespace Ermine::editor
 {
+    class HierarchyInspector;
     /**
 	 * @brief The EditorGUI class, function just like a wrapper for the ImGUI library
 	 */
@@ -41,6 +42,8 @@ namespace Ermine::editor
         static std::unique_ptr<Ermine::Scene> s_ActiveScene;
 
         static std::unique_ptr<Ermine::HierarchyPanel> s_HierarchyPanel;
+
+        static std::unique_ptr<Ermine::editor::HierarchyInspector> s_Inspector;
 
 		/**
 		 * @brief Top menu bar for the editor

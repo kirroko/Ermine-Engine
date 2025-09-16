@@ -201,6 +201,9 @@
     <ClInclude Include="HierarchyPanel.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\HierarchyInspector.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\AssetBrowser\AssetBrowser.cpp">
@@ -317,11 +320,14 @@
     <ClCompile Include="src\dllmain.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="Scene.cpp">
-      <Filter>src\Scene</Filter>
-    </ClCompile>
     <ClCompile Include="HierarchyPanel.cpp">
       <Filter>src\Systems</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Systems\HierarchyInspector.cpp">
+      <Filter>src\Systems</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Scene\Scene.cpp">
+      <Filter>src\Scene</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

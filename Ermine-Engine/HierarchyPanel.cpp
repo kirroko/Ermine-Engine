@@ -1,4 +1,16 @@
-﻿
+﻿/* Start Header ************************************************************************/
+/*!
+\file       HierarchyInspector.h
+\author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu
+\date       27/03/2025
+\brief      Inspector panel for viewing and editing entity properties
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents without the
+prior written consent of DigiPen Institute of Technology is prohibited.
+*/
+/* End Header **************************************************************************/
+
 #include "PreCompile.h"
 #include "HierarchyPanel.h"
 #include "Components.h"
