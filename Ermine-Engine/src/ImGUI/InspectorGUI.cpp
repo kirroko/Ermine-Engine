@@ -32,7 +32,7 @@ namespace Ermine
         auto& ecs = ECS::GetInstance();
         if (!ecs.IsEntityValid(m_entity))
         {
-            ImGui::TextDisabled("No entity selected");
+            ImGui::TextDisabled("No GameObject selected");
             ImGui::End();
             return;
         }

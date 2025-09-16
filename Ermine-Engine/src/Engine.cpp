@@ -339,8 +339,8 @@ bool engine::Init(GLFWwindow* windowContext)
 	editor::EditorGUI::CreateImGUIWindow<ParticlesImGUI>(emitter.get());
 	editor::EditorGUI::CreateImGUIWindow<AudioImGUI>();
 	// Create ImGUI window for Inspector
-	editor::EditorGUI::CreateImGUIWindow<InspectorGUI>();
-	//editor::EditorGUI::CreateImGUIWindow<InspectorGUI>(entity2, "Inspector");
+	//editor::EditorGUI::CreateImGUIWindow<InspectorGUI>();
+	editor::EditorGUI::CreateImGUIWindow<InspectorGUI>(entity2, "Inspector");
    
 	EE_CORE_INFO("Systems and components registered successfully, Engine Initialized");
 	s_isInitialized = true;
