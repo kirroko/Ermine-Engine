@@ -83,9 +83,34 @@ namespace Ermine::graphics
             int height;
         };
 
+
+        struct InstanceData {
+            glm::mat4 model; // per-entity transform
+            glm::mat3 normalMat; // per-entity normal matrix
+            //glm::vec4 colour; // optional tint
+        };
+
+        // group by mesh pointer, shader, texture
+        struct BatchKey {
+            //Mesh* k_mesh;
+            const graphics::VertexArray* k_vao;
+            const graphics::IndexBuffer* k_ibo;
+
+            std::shared_ptr<Shader> k_shader;
+            std::shared_ptr<Texture> k_texture;
+
+            bool operator<(const BatchKey& other) const {
+                if (k_vao != other.k_vao) return k_vao < other.k_vao;
+                if (k_ibo != other.k_ibo) return k_ibo < other.k_ibo;
+                if (k_shader != other.k_shader) return k_shader < other.k_shader;
+                return k_texture < other.k_texture;
+            }
+        };
+        
          /**
 		 * @brief G buffer structure for rendering to Lighting pass
 		 */
+        //~Renderer();
         struct GBuffer
         {
             unsigned int FBO;

@@ -13,6 +13,9 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #include "PreCompile.h"
 #include "AssetBrowser.h"
+#include "AssetManager.h"
+
+
 namespace fs = std::filesystem;
 
 // Helper Functions
@@ -44,8 +47,10 @@ static void HelpMarker(const char* desc)
 }
 
 namespace Ermine {
-    namespace ImguiUI {
 
+	namespace ImguiUI {
+        
+        
         int SelectionWithDeletion::ApplyDeletionPreLoop(ImGuiMultiSelectIO* ms_io, int items_count)
         {
             if (Size == 0)

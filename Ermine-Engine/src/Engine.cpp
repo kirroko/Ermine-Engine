@@ -31,12 +31,17 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Serialisation.h"
 #include "AudioSystem.h"
 #include "Particles.h"
+#include "InspectorGUI.h"
+#include "AudioImGUI.h"
 
 #include <random> // Include for random number generation
 
 #include "ScriptSystem.h"
 
 using namespace Ermine;
+
+#define EE_AUTO_REGISTER_COMPONENT(Type, Name) \
+	static bool _##Type##_autoreg = [](){ Ermine::ECS::GetInstance().RegisterComponent<Type>(Name); return true; }();
 
 namespace
 {
@@ -68,8 +73,8 @@ bool engine::Init(GLFWwindow* windowContext)
 	Config cfg{};
 	try {
 	    cfg = LoadConfigFromFile(cfgPath);
-	    EE_CORE_INFO("Loaded config: {}x{}, fullscreen={}, maximised={}, title={}",
-	        cfg.windowWidth, cfg.windowHeight, cfg.fullscreen, cfg.title);
+	    EE_CORE_INFO("Loaded config: {0}x{1}, fullscreen={2}, maximised={3}, title={4}",
+	        cfg.windowWidth, cfg.windowHeight, cfg.fullscreen, cfg.maximized, cfg.title);
 	}
 	catch (const std::exception& e) {
 	    EE_CORE_WARN("Config not found/invalid ({}). Using defaults.", e.what());
@@ -117,17 +122,28 @@ bool engine::Init(GLFWwindow* windowContext)
 	EE_CORE_INFO("AudioSystem Initialized");
 
 	// TODO: Register all components here, limit of 32 components
-	ECS::GetInstance().RegisterComponent<Transform>();
-	ECS::GetInstance().RegisterComponent<Rigidbody3D>();
-	ECS::GetInstance().RegisterComponent<Mesh>();
-	ECS::GetInstance().RegisterComponent<Material>();
-	ECS::GetInstance().RegisterComponent<Script>();
-	ECS::GetInstance().RegisterComponent<ObjectMetaData>();
-	ECS::GetInstance().RegisterComponent<Light>();
-	ECS::GetInstance().RegisterComponent<Particle>();
+	EE_AUTO_REGISTER_COMPONENT(Transform, "Transform")
+	EE_AUTO_REGISTER_COMPONENT(Rigidbody3D, "Rigidbody3D")
+	EE_AUTO_REGISTER_COMPONENT(Mesh, "Mesh")
+	EE_AUTO_REGISTER_COMPONENT(Material, "Material")
+	//EE_AUTO_REGISTER_COMPONENT(Script,"Script")
+	EE_AUTO_REGISTER_COMPONENT(ObjectMetaData, "ObjectMetaData")
+	EE_AUTO_REGISTER_COMPONENT(Light, "Light")
+	EE_AUTO_REGISTER_COMPONENT(Particle, "Particle")
+	EE_AUTO_REGISTER_COMPONENT(AudioComponent, "AudioComponent")
+	EE_AUTO_REGISTER_COMPONENT(GlobalAudioComponent, "GlobalAudioComponent")
 
-	ECS::GetInstance().RegisterComponent<AudioComponent>(); // ADD THIS
-	ECS::GetInstance().RegisterComponent<GlobalAudioComponent>(); // ADD THIS IF YOU WANT GLOBAL AUDIO
+	// ECS::GetInstance().RegisterComponent<AudioComponent>(); // ADD THIS
+	// ECS::GetInstance().RegisterComponent<GlobalAudioComponent>(); // ADD THIS IF YOU WANT GLOBAL AUDIO
+
+	// Special Case for Script component, need to copy over the class name
+	ECS::GetInstance().RegisterComponent<Script>("Script",
+		[](Ermine::ComponentManager& cm, EntityID src, EntityID dst)
+		{
+			if (!cm.HasComponent<Script>(src)) return;
+			auto& srcScript = cm.GetComponent<Script>(src);
+			cm.AddComponent<Script>(dst, Script(srcScript.m_className, dst));
+		});
 
 	// TODO: Register all systems here, no limits
 	ECS::GetInstance().RegisterSystem<graphics::Renderer>();
@@ -179,14 +195,23 @@ bool engine::Init(GLFWwindow* windowContext)
 	//std::uniform_real_distribution<float> posDist(-10.0f, 10.0f); // Random positions between -10 and 10
 	//std::uniform_real_distribution<float> rotDist(0.0f, 360.0f);  // Random rotations between 0 and 360
 
-	//for (int i = 0; i < 1000; ++i)
+	//for (int i = 0; i < 500; ++i)
 	//{
 	//    auto entity = ECS::GetInstance().CreateEntity();
 	//    Vec3 randomPosition(posDist(gen), posDist(gen), posDist(gen));
 	//    Vec3 randomRotation(rotDist(gen), rotDist(gen), rotDist(gen));
 	//    ECS::GetInstance().AddComponent(entity, Transform(randomPosition, randomRotation, Vec3(1.0f, 1.0f, 1.0f)));
 	//    ECS::GetInstance().AddComponent(entity, graphics::GeometryFactory::CreateCube(1.0f, 1.0f, 1.0f));
-	//    ECS::GetInstance().AddComponent(entity, Material(shader, texture));
+
+	//	auto cube2Material = std::make_unique<graphics::Material>(shader);
+	//	cube2Material->LoadTemplate(graphics::MaterialTemplates::PBR_METAL());
+
+	//	if (texture && texture->IsValid()) {
+	//		cube2Material->SetTexture("materialAlbedoMap", texture);
+	//		cube2Material->SetTexture("texture0", texture);
+	//	}
+
+	//	ECS::GetInstance().AddComponent(entity, Material(std::move(cube2Material)));
 	//}
 	
 	auto audioTestEntity = ECS::GetInstance().CreateEntity();
@@ -194,12 +219,12 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().AddComponent(audioTestEntity, ObjectMetaData());
 
 	AudioComponent testAudio;
-	testAudio.soundName = "../Resources/Audio/test.wav"; // Replace with your actual sound file path
-	testAudio.volume = 0.5f; // 50% volume
-	testAudio.is3D = false; // 2D sound for testing
-	testAudio.isLooping = false;
-	testAudio.isStreaming = false;
-	testAudio.shouldPlay = true; // We'll trigger this with keyboard input
+	//testAudio.soundName = "../Resources/Audio/test.wav"; // Replace with your actual sound file path
+	//testAudio.volume = 0.5f; // 50% volume
+	//testAudio.is3D = false; // 2D sound for testing
+	//testAudio.isLooping = false;
+	//testAudio.isStreaming = false;
+	//testAudio.shouldPlay = true; // We'll trigger this with keyboard input
 
 	ECS::GetInstance().AddComponent(audioTestEntity, testAudio);
 
@@ -213,16 +238,18 @@ bool engine::Init(GLFWwindow* windowContext)
 	// Create a simple quad mesh for particles
 	auto quadMesh = graphics::GeometryFactory::CreateQuad(1.0f, 1.0f);
 	auto tex = AssetManager::GetInstance().LoadTexture("../Resources/Textures/greybox_red_solid.png");
-	particleShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/vertex.glsl", "../Resources/Shaders/fragment.glsl");
 
 	// Particles Emitter
-	emitter = std::make_unique<ParticleEmitter>(quadMesh, particleShader, tex);
+	emitter = std::make_unique<ParticleEmitter>(quadMesh, shader, tex);
 
 	// Create first cube
 	auto entity = ECS::GetInstance().CreateEntity();
 	ECS::GetInstance().AddComponent(entity, Transform(Vec3(0, 0, -1), Vec3(0, 45, 90), Vec3(1, 1, 1)));
 	ECS::GetInstance().AddComponent(entity, ObjectMetaData());
 	ECS::GetInstance().AddComponent(entity, graphics::GeometryFactory::CreateCube(1, 1, 1));
+
+	//InspectorGUI inspector{ entity, "Inspector" };
+	//inspector.SetEntity(entity);
 
 	// Create material using UBO template
 	auto cubeMaterial = std::make_unique<graphics::Material>(shader);
@@ -306,18 +333,22 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	glClearColor(0.2f,0.3f,0.3f,1.0f); // Background color
 
-   // Create ImGUI window for Asset Browser
-   editor::EditorGUI::CreateImGUIWindow<ImguiUI::AssetBrowser>();
-   editor::EditorGUI::CreateImGUIWindow<ParticlesImGUI>(emitter.get());
+	// Create ImGUI window for Asset Browser
+	editor::EditorGUI::CreateImGUIWindow<ImguiUI::AssetBrowser>();
+	editor::EditorGUI::CreateImGUIWindow<ParticlesImGUI>(emitter.get());
+	editor::EditorGUI::CreateImGUIWindow<AudioImGUI>();
+	// Create ImGUI window for Inspector
+	//editor::EditorGUI::CreateImGUIWindow<InspectorGUI>();
+	editor::EditorGUI::CreateImGUIWindow<InspectorGUI>(entity2, "Inspector");
    
-   EE_CORE_INFO("Systems and components registered successfully, Engine Initialized");
-   s_isInitialized = true;
-   return true;
+	EE_CORE_INFO("Systems and components registered successfully, Engine Initialized");
+	s_isInitialized = true;
+	return true;
 }
 
+// TODO: Shutdown for subsystem should be in order, please be mindful of the order that is already in place.
 void engine::Shutdown()
 {
-	// By right, ECS helps shut all systems down via each system's destructor, while the rest of the singleton classes will be destroyed by the OS
 	if (!s_isInitialized)
 		return;
 
@@ -341,6 +372,15 @@ void engine::Shutdown()
 
     graphics::GPUProfiler::Shutdown();
 
+#ifdef _DEBUG
+	auto scriptSys = ECS::GetInstance().GetSystem<scripting::ScriptSystem>();
+	if (scriptSys && scriptSys->m_ScriptEngine)
+	{
+		scriptSys->m_ScriptEngine->StopWatchingScriptSources();
+		scriptSys->m_ScriptEngine->StopWatchingGameAssembly();
+	}
+#endif
+
     job::Shutdown();
 
 	ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->m_ScriptEngine->Shutdown();
@@ -362,13 +402,13 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 	// Profiler here
 	graphics::GPUProfiler::BeginFrame();
 
+	// Update FrameController
+	FrameController::BeginFrame();
+
 	// 1. Update input states
 	Input::Update();
 
 	glfwPollEvents(); // Do not move me above Input::Update - Friendly Adviser
-
-	// Update FrameController
-	FrameController::BeginFrame();
 
 	// 2. Game state update
 	while (FrameController::ShouldUpdateFixed())
@@ -382,6 +422,10 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 	ECS::GetInstance().GetSystem<AudioSystem>()->Update();
 	// Update editor camera
 	editor::EditorCamera::GetInstance().Update();
+
+	// Simple test to see if we can select an entity and view it in the inspector
+	//if (Input::IsKeyDown(GLFW_KEY_Q))
+		//InspectorGUI::SetEntity(entity);
 
 	/*
 	if (s_isInitialized && emitter)
@@ -407,7 +451,7 @@ void engine::Render(GLFWwindow* window)
 	glViewport(0, 0, width, height);
 
 	// Start GPU timing for rendering
-	graphics::GPUProfiler::BeginEvent("Frame Rendering");
+	graphics::GPUProfiler::BeginEvent("Frame");
 
 	ECS::GetInstance().GetSystem<graphics::Renderer>()->Clear();
 

@@ -16,10 +16,6 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Shader.h"
 #include "Texture.h"
 #include "MathVector.h"
-#include <map>
-#include <vector>
-#include <memory>
-#include <initializer_list>
 
 namespace Ermine::graphics
 {

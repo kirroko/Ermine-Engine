@@ -15,7 +15,6 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 /* End Header **************************************************************************/
 #include "PreCompile.h"
 #include "EditorGUI.h"
-#include "Logger.h"
 
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
@@ -30,6 +29,47 @@ using namespace Ermine::editor;
 
 // Definition for static member m_Windows, for ImGUI Windows
 std::vector<std::unique_ptr<Ermine::ImGUIWindow>>Ermine::editor::EditorGUI::m_Windows;
+bool Ermine::editor::EditorGUI::isPlaying = false; // TODO: tied to Play/Stop toolbar state.
+
+namespace
+{
+    std::string FormatNumber(uint64_t value)
+    {
+        struct Unit { uint64_t base; const char* suffix; };
+        static constexpr Unit units[] = {
+{1'000'000'000'000ULL, "T" },
+        {1'000'000'000ULL, "B"},
+            {1'000'000ULL, "M"},
+        {1'000ULL, "K"},
+        {1, ""}
+        };
+
+        for (const auto& u : units)
+        {
+            if (value >= u.base)
+            {
+                char buffer[32];
+                const double scaled = static_cast<double>(value) / static_cast<double>(u.base);
+                const int written = snprintf(buffer, sizeof(buffer), "%.1f%s", scaled, u.suffix);
+                if (written < 0)
+                {
+                    EE_CORE_WARN("FormatNumber error occurred");
+                    return std::to_string(value);
+                }
+                return std::string(buffer);
+            }
+        }
+
+        char buffer[32];
+		const int written = snprintf(buffer, sizeof(buffer), "%llu", value);
+        if (written < 0)
+        {
+            EE_CORE_WARN("FormatNumber error occurred");
+            return std::to_string(value);
+        }
+		return std::string(buffer);
+	}
+}
 
 void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
 {
@@ -79,7 +119,10 @@ void EditorGUI::ProfilingWindow()
 
     const auto& metrics = graphics::GPUProfiler::GetMetrics();
 
-    ImGui::Text("FPS: %.1f", metrics.fps);
+    float avgFps = metrics.averageFrameTimeMs > 0.0f ? 1000.0f / metrics.averageFrameTimeMs : 0.0f;
+
+    //ImGui::Text("FPS: %.1f (avg: %.1f)", metrics.fps, avgFps);
+    ImGui::Text("FPS: %.1f", avgFps);
     ImGui::Text("Frame Time: %.2f ms", metrics.frameTimeMs);
     ImGui::Text("CPU Time: %.2f ms", metrics.cpuFrameTimeMs);
     ImGui::Text("GPU Time: %.2f ms", metrics.gpuFrameTimeMs);
@@ -93,8 +136,8 @@ void EditorGUI::ProfilingWindow()
     ImGui::Separator();
 
     ImGui::Text("Draw Calls: %u", metrics.drawCallCount);
-    ImGui::Text("Triangles: %u", metrics.triangleCount);
-    ImGui::Text("Vertices: %u", metrics.vertexCount);
+    ImGui::Text("Tris: %s", FormatNumber(metrics.triangleCount).c_str());
+    ImGui::Text("Verts: %s", FormatNumber(metrics.vertexCount).c_str());
 
     ImGui::Separator();
 
@@ -141,14 +184,43 @@ void EditorGUI::ViewPortWindow(bool &show)
 
 	EditorCamera::GetInstance().SetViewportSize(viewport_size.x, viewport_size.y);
 
-	ImGui::Image(offscreen_buffer->ColorTexture, viewport_size, ImVec2(0, 1), ImVec2(1, 0));
+    // Child region that ignores all ImGui inputs
+    ImGuiWindowFlags vpChildFlags =
+        ImGuiWindowFlags_NoNav |
+        ImGuiWindowFlags_NoScrollbar |
+        ImGuiWindowFlags_NoScrollWithMouse;
 
-    if (ImGui::IsWindowHovered())
+    ImGui::BeginChild("SceneViewportRegion", ImVec2(0,0), false, vpChildFlags);
+
+    // Draw the rendered scene
+	ImGui::Image(offscreen_buffer->ColorTexture, ImGui::GetContentRegionAvail(), ImVec2(0, 1), ImVec2(1, 0));
+
+    const ImGuiHoveredFlags hovFlags =
+        ImGuiHoveredFlags_AllowWhenBlockedByActiveItem |
+        ImGuiHoveredFlags_AllowWhenOverlappedByWindow |
+        ImGuiHoveredFlags_AllowWhenOverlappedByItem;
+
+    const bool viewportHovered = ImGui::IsItemHovered(hovFlags);
+	const bool viewportFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_None);
+
+    ImGui::EndChild();
+
+    Input::SetEditorInputActive(viewportFocused && viewportHovered);
+    if (Input::IsKeyDownEditor(GLFW_KEY_LEFT_CONTROL) && Input::IsKeyPressedEditor(GLFW_KEY_P))
+    {
+		isPlaying = !isPlaying;
+        EE_CORE_INFO("Play {0}", isPlaying);
+    }
+    Input::SetGameInputActive(isPlaying && viewportFocused && viewportHovered);
+    //EE_CORE_TRACE("Foc {0} | Hov {1}", viewportFocused, viewportHovered);
+
+    if (viewportHovered && !isPlaying)
     {
 	    EditorCamera::GetInstance().ProcessMouseMovement();
 		EditorCamera::GetInstance().ProcessKeyboardInput(FrameController::GetDeltaTime());
-		EditorCamera::GetInstance().ProcessScrollWheel(Input::GetMouseScrollOffset());
+		EditorCamera::GetInstance().ProcessScrollWheel(Input::GetMouseScrollOffsetEditor());
     }
+
 	ImGui::End();
 }
 

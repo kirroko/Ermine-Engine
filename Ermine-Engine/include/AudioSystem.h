@@ -16,7 +16,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #pragma once
 
 #include "Components.h"
-#include "AudioManager.h"
+//#include "AudioManager.h"
 #include "Systems.h" // For the base System class
 
 namespace Ermine
@@ -60,5 +60,9 @@ namespace Ermine
         // Utility functions
         static float ConvertVolumeToFMOD(float volume01);
         static float ConvertVolumeFromFMOD(float volumeDB);
+
+        const std::set<EntityID>& GetEntities() const { return m_Entities; }
+        // Static method to check if audio system is initialized
+        static bool IsInitialized() { return s_initialized; }   
     };
 }

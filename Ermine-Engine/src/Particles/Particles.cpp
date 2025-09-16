@@ -174,6 +174,14 @@ namespace Ermine {
                 ImGui::Text("No textures loaded.");
             }
 
+            // Preset selection
+            const char* presetNames[] = { "Default", "SpreadOut", "Fireflies" };
+            int currentPresetIdx = static_cast<int>(m_CurrentPreset);
+            if (ImGui::Combo("Preset", &currentPresetIdx, presetNames, IM_ARRAYSIZE(presetNames)))
+            {
+                m_CurrentPreset = static_cast<PresetType>(currentPresetIdx);
+            }
+
             ImGui::Separator();
 
             // Emit Particles button
@@ -187,13 +195,34 @@ namespace Ermine {
 
                     for (int i = 0; i < m_Count; i++)
                     {
-                        m_Emitter->Emit(
-                            { m_Position.x, m_Position.y, m_Position.z },
-                            { ((rand() % 100) / 100.0f - 0.5f), m_Velocity.y, m_Velocity.z },
-                            m_Lifetime,
-                            m_Size,
-                            { m_Color.r, m_Color.g, m_Color.b, m_Color.a }
-                        );
+                        Vec3 pos = { m_Position.x, m_Position.y, m_Position.z };
+                        Vec3 vel = { m_Velocity.x, m_Velocity.y, m_Velocity.z };
+                        float lifetime = m_Lifetime;
+                        float size = m_Size;
+                        Vec4 colour = { m_Color.r, m_Color.g, m_Color.b, m_Color.a };
+
+                        // Add particle emission behaviours here
+                        switch (m_CurrentPreset)
+                        {
+                        case PresetType::Default:
+                            // Use UI values directly
+                            break;
+
+                        case PresetType::SpreadOut:
+                            vel.x = ((rand() % 100) / 100.0f - 0.5f);
+                            break;
+
+                        case PresetType::Fireflies:
+                            pos.x += ((rand() % 100) / 100.0f - 0.5f) * 2.0f; // spread in X
+                            pos.y += ((rand() % 100) / 100.0f) * 2.0f; // float upwards
+                            vel = { ((rand() % 100) / 100.0f - 0.5f) * 0.5f, ((rand() % 100) / 100.0f) * 1.0f, ((rand() % 100) / 100.0f - 0.5f) * 0.5f };
+                            lifetime = 3.0f + (rand() % 100) / 100.0f * 2.0f; // 3–5s
+                            size = 0.1f + (rand() % 100) / 100.0f * 0.2f; // vary size
+                            //colour = { 1.0f, 1.0f, 0.3f, 1.0f }; // yellow glow
+                            break;
+                        }
+
+                        m_Emitter->Emit(pos, vel, lifetime, size, colour);
                     }
                 }
             }

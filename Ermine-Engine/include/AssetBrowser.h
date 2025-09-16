@@ -16,12 +16,6 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "PreCompile.h"
 #include "imgui.h"
 #include "ImGuiUIWindow.h"
-#include "AssetManager.h"
-#include "Logger.h"
-#include <direct.h> // for _getcwd
-#include <windows.h> // for MultiByteToWideChar(...)
-#include <algorithm> // for std::min
-#include <filesystem>
 
 #ifndef IMGUI_CDECL
 #ifdef _MSC_VER

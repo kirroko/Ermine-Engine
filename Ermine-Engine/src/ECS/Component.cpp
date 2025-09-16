@@ -29,5 +29,41 @@ namespace Ermine
 			component->EntityDestroyed(entity);
 		}
 	}
+
+	bool ComponentManager::HasComponent(EntityID entity, std::string_view name) const
+	{
+		auto it = m_Descriptors.find(std::string(name));
+		if (it == m_Descriptors.end())
+			return false;
+		return it->second.has(entity);
+	}
+
+	std::vector<std::string> ComponentManager::GetComponentNames(EntityID entity) const
+	{
+		std::vector<std::string> out;
+		out.reserve(m_Descriptors.size());
+		for (auto const& [name,desc] : m_Descriptors)
+		{
+			if (desc.has(entity))
+				out.emplace_back(name);
+		}
+		return out;
+	}
+
+	void ComponentManager::CloneAllComponents(EntityID src, EntityID dst)
+	{
+		for (auto& desc : m_Descriptors | std::views::values)
+		{
+			if (desc.has(src))
+				desc.clone(src, dst);
+		}
+	}
+
+
+	const ComponentDescriptor* ComponentManager::GetDescriptor(std::string_view name) const
+	{
+		auto it = m_Descriptors.find(std::string(name));
+		return it == m_Descriptors.end() ? nullptr : &it->second;
+	}
 }
 // 0x4B45414E

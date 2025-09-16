@@ -15,8 +15,6 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "PreCompile.h"
 #include "VertexArray.h"
 
-#include "Logger.h"
-
 using namespace Ermine::graphics;
 
 /*!
