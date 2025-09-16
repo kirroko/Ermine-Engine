@@ -123,6 +123,9 @@
     <ClInclude Include="include\Logger.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\Material.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\MathUtils.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -190,6 +193,9 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\InspectorGUI.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\AudioImGUI.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
@@ -307,6 +313,9 @@
     </ClCompile>
     <ClCompile Include="src\ImGUI\InspectorGUI.cpp">
       <Filter>src\ImGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\AudioManager\AudioIMGUI.cpp">
+      <Filter>src\AudioManager</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

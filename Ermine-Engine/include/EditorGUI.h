@@ -31,6 +31,8 @@ namespace Ermine::editor
         // Keeps track of all registered ImGui windows
         static std::vector<std::unique_ptr<ImGUIWindow>> m_Windows;
 
+        static bool isPlaying;
+
 		/**
 		 * @brief Top menu bar for the editor
 		 */

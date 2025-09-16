@@ -8,7 +8,6 @@
 #include <istreamwrapper.h>
 
 #include "GameObjectFactory.h"
-#include "Logger.h"
 
 using namespace rapidjson;
 

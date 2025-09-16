@@ -128,7 +128,55 @@ namespace Ermine
          * @brief Update the input system
          */
         static void Update();
-        
+
+        /**
+         * @brief Set whether game input is active (for ImGui integration)
+         * @param active True to activate game input, false to deactivate
+		 */
+        static void SetGameInputActive(bool active);
+        /**
+         * @brief Check if game input is active (for ImGui integration)
+		 * @return True if game input is active, false otherwise
+		 */
+        static bool IsGameInputActive();
+        /**
+		 * @brief Set whether editor input is active (for ImGui integration)
+		 * @param active True to activate editor input, false to deactivate
+         */
+        static void SetEditorInputActive(bool active);
+        /**
+		 * @brief Check if editor input is active (for ImGui integration)
+		 * @return True if editor input is active, false otherwise
+		 */
+		static bool IsEditorInputActive();
+
+        /**
+         * @brief Check if the key is down in editor mode (ignores game input blocking)
+         * @param keyCode The key to check
+         * @return true if the key is down
+		 */
+        static bool IsKeyDownEditor(int keyCode);
+        /**
+         * @brief Check if the key is pressed in editor mode (ignores game input blocking)
+         * @param keyCode The key to check
+		 * @return true if the key is pressed
+		 */
+        static bool IsKeyPressedEditor(int keyCode);
+        /**
+         * @brief Check if the mouse button is down in editor mode (ignores game input blocking)
+         * @param button The button to check
+		 * @return true if the button is down
+		 */
+        static bool IsMouseButtonDownEditor(int button);
+        /**
+         * @brief Get the mouse position in editor mode (ignores game input blocking)
+		 * @return The mouse position
+		 */
+        static float GetMouseScrollOffsetEditor();
+        /**
+		 * @brief Reset the mouse scroll accumulation in editor mode (ignores game input blocking)
+		 */ 
+        static void ResetMouseScrollOffsetEditor();
     private:
         static GLFWwindow* s_Window;
         static float s_LastMouseX;
@@ -136,10 +184,22 @@ namespace Ermine
         static float s_MouseDeltaX;
         static float s_MouseDeltaY;
         static float s_MouseScrollOffset;
+
+        static float s_MouseScrollOffsetEditor;
         
         // Track previous frame's key/mouse button states
         static std::unordered_map<int, bool> s_PreviousKeyStates;
         static std::unordered_map<int, bool> s_PreviousMouseButtonStates;
+
+		// Track previous frame's key states for editor mode
+        static std::unordered_map<int, bool> s_PreviousKeyStatesEditor;
+
+        // Gate flags
+        static bool s_GameInputActive;
+        static bool s_BlockKeyboard;
+		static bool s_BlockMouse;
+
+        static bool s_EditorInputActive;
 
 		// Helper function to convert GLFW key to ImGui key
         static ImGuiKey GlfwKeyToImguiKey(int key);
