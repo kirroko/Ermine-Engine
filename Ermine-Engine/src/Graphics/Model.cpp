@@ -85,54 +85,47 @@ void Model::ProcessNode(aiNode* node, const aiScene* scene, const aiMatrix4x4& p
 
 MeshData Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
 {
-    std::vector<float> vertexData;
     std::vector<unsigned int> indices;
 
     size_t vertexCount = mesh->mNumVertices;
-    std::vector<VertexBoneData> bones(vertexCount);
+    std::vector<VertexData> vertices(vertexCount);
 
     // Base vertex attributes
     for (unsigned int i = 0; i < mesh->mNumVertices; ++i)
     {
+        VertexData& vertex = vertices[i];
+
         // pos
-        vertexData.push_back(mesh->mVertices[i].x);
-        vertexData.push_back(mesh->mVertices[i].y);
-        vertexData.push_back(mesh->mVertices[i].z);
+        vertex.position[0] = mesh->mVertices[i].x;
+        vertex.position[1] = mesh->mVertices[i].y;
+        vertex.position[2] = mesh->mVertices[i].z;
 
         // normal
         if (mesh->HasNormals())
         {
-            vertexData.push_back(mesh->mNormals[i].x);
-            vertexData.push_back(mesh->mNormals[i].y);
-            vertexData.push_back(mesh->mNormals[i].z);
+            vertex.normal[0] = mesh->mNormals[i].x;
+            vertex.normal[1] = mesh->mNormals[i].y;
+            vertex.normal[2] = mesh->mNormals[i].z;
         }
         else
         {
-            vertexData.push_back(0.f); vertexData.push_back(0.f); vertexData.push_back(0.f);
+			vertex.normal[0] = 0.f; 
+            vertex.normal[1] = 0.f; 
+            vertex.normal[2] = 0.f;
         }
 
         // uv
         if (mesh->mTextureCoords[0])
         {
-            vertexData.push_back(mesh->mTextureCoords[0][i].x);
-            vertexData.push_back(mesh->mTextureCoords[0][i].y);
+            vertex.texCoords[0] = mesh->mTextureCoords[0][i].x;
+            vertex.texCoords[1] = mesh->mTextureCoords[0][i].y;
         }
         else
         {
-            vertexData.push_back(0.f); vertexData.push_back(0.f);
+            vertex.texCoords[0] = 0.f;
+            vertex.texCoords[1] = 0.f;
         }
 
-        // reserve space for 4 bone IDs + 4 weights
-        for (int k = 0; k < MAX_BONE_INFLUENCE; ++k) vertexData.push_back(0.0f); // IDs as floats
-        for (int k = 0; k < MAX_BONE_INFLUENCE; ++k) vertexData.push_back(0.0f); // weights
-    }
-
-    // indices
-    for (unsigned int i = 0; i < mesh->mNumFaces; ++i)
-    {
-        aiFace face = mesh->mFaces[i];
-        for (unsigned int j = 0; j < face.mNumIndices; ++j)
-            indices.push_back(face.mIndices[j]);
     }
 
     // bones
@@ -156,44 +149,39 @@ MeshData Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
         for (unsigned int w = 0; w < ai_bone->mNumWeights; ++w)
         {
             auto vw = ai_bone->mWeights[w];
-            bones[vw.mVertexId].AddBoneData(boneIndex, vw.mWeight);
+            vertices[vw.mVertexId].AddBoneData(boneIndex, vw.mWeight);
         }
     }
 
-    // interleave bone data into vertexData
-    const int floatsPerVertex = 3 + 3 + 2 + MAX_BONE_INFLUENCE + MAX_BONE_INFLUENCE;
-    for (size_t v = 0; v < vertexCount; ++v)
+    // indices
+    for (unsigned int i = 0; i < mesh->mNumFaces; ++i)
     {
-        int base = (int)v * floatsPerVertex + 8; // skip pos(3)+norm(3)+uv(2)
-
-        for (int k = 0; k < MAX_BONE_INFLUENCE; ++k)
-            vertexData[base + k] = (float)bones[v].IDs[k];
-
-        int weightOffset = base + MAX_BONE_INFLUENCE;
-        for (int k = 0; k < MAX_BONE_INFLUENCE; ++k)
-            vertexData[weightOffset + k] = bones[v].Weights[k];
+        aiFace face = mesh->mFaces[i];
+        for (unsigned int j = 0; j < face.mNumIndices; ++j)
+            indices.push_back(face.mIndices[j]);
     }
+
 
     // GPU buffers
     auto vao = std::make_shared<VertexArray>();
-    auto vbo = std::make_shared<VertexBuffer>(vertexData.data(), vertexData.size() * sizeof(float));
-    auto ibo = std::make_shared<IndexBuffer>(indices.data(), indices.size());
+    auto vbo = std::make_shared<VertexBuffer>(vertices.data(), vertices.size() * sizeof(VertexData));
+	auto ibo = std::make_shared<IndexBuffer>(indices.data(), indices.size() * sizeof(unsigned int)); // Main Issue - was using indices.size() count instead of byte size
 
     vao->Bind();
     vbo->Bind();
 
     // Attributes
-    vao->LinkAttribute(0, 3, GL_FLOAT, floatsPerVertex * sizeof(float), (void*)(0));
-    vao->LinkAttribute(1, 3, GL_FLOAT, floatsPerVertex * sizeof(float), (void*)(3 * sizeof(float)));
-    vao->LinkAttribute(2, 2, GL_FLOAT, floatsPerVertex * sizeof(float), (void*)(6 * sizeof(float)));
+    vao->LinkAttribute(0, 3, GL_FLOAT, sizeof(VertexData), (void*)offsetof(VertexData, position));
+    vao->LinkAttribute(1, 3, GL_FLOAT, sizeof(VertexData), (void*)offsetof(VertexData, normal));
+    vao->LinkAttribute(2, 2, GL_FLOAT, sizeof(VertexData), (void*)offsetof(VertexData, texCoords));
 
     // Bone IDs (int)
     glEnableVertexAttribArray(3);
-    glVertexAttribIPointer(3, 4, GL_INT, floatsPerVertex * sizeof(float), (void*)(8 * sizeof(float)));
+    glVertexAttribIPointer(3, MAX_BONE_INFLUENCE, GL_INT, sizeof(VertexData), (void*)offsetof(VertexData, IDs));
 
     // Bone weights (float)
     glEnableVertexAttribArray(4);
-    glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, floatsPerVertex * sizeof(float), (void*)((8 + MAX_BONE_INFLUENCE) * sizeof(float)));
+    glVertexAttribPointer(4, MAX_BONE_INFLUENCE, GL_FLOAT, GL_FALSE, sizeof(VertexData), (void*)offsetof(VertexData, Weights));
 
     vao->Unbind();
     vbo->Unbind();

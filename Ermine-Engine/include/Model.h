@@ -30,8 +30,11 @@ namespace Ermine::graphics
     constexpr int MAX_BONE_INFLUENCE = 4;
 
     // Vertex Bone Data
-    struct VertexBoneData
+    struct VertexData
     {
+        float position[3];
+        float normal[3];
+        float texCoords[2];
         int IDs[MAX_BONE_INFLUENCE] = { 0,0,0,0 };
         float Weights[MAX_BONE_INFLUENCE] = { 0,0,0,0 };
 
