@@ -33,6 +33,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Particles.h"
 #include "InspectorGUI.h"
 #include "AudioImGUI.h"
+#include "FiniteStateMachine.h"
 
 #include <random> // Include for random number generation
 
@@ -60,6 +61,18 @@ namespace
 	// For Particles
 	static std::shared_ptr<Ermine::graphics::Shader> particleShader;
 	static std::unique_ptr<Ermine::ParticleEmitter> emitter;
+
+
+	std::unique_ptr<Ermine::StateManager> s_FSMManager;
+	EntityID s_FSMCube = 0;
+
+	IdleState g_IdleState;
+	RoamState g_RoamState;
+
+	float s_StateTimer = 0.0f;
+	float s_StateDuration = 3.0f; // switch every 3 seconds
+
+	State* g_CurrentState = nullptr;
 }
 
 bool engine::Init(GLFWwindow* windowContext)
@@ -329,7 +342,23 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	EE_CORE_INFO("Total living entities after creation: {0}", ECS::GetInstance().GetLivingEntityCount());
 
+	// Create FSM test cube
+	s_FSMCube = ECS::GetInstance().CreateEntity();
+	ECS::GetInstance().AddComponent(s_FSMCube, Transform(Vec3(0, 0, -5), Vec3(0, 0, 0), Vec3(1, 1, 1)));
+	ECS::GetInstance().AddComponent(s_FSMCube, ObjectMetaData("FSM Cube", "TestCube", true));
+	ECS::GetInstance().AddComponent(s_FSMCube, graphics::GeometryFactory::CreateCube(1, 1, 1));
 
+	// Give it a material
+	auto fsmMat = std::make_unique<graphics::Material>(shader);
+	fsmMat->LoadTemplate(graphics::MaterialTemplates::PBR_METAL());
+	ECS::GetInstance().AddComponent(s_FSMCube, Material(std::move(fsmMat)));
+
+	// Init FSM
+	s_FSMManager = std::make_unique<StateManager>();
+	s_FSMManager->Init(s_FSMCube, &g_IdleState);
+	g_CurrentState = &g_IdleState;
+
+	EE_CORE_INFO("FSM Test Cube created with ID: {}", s_FSMCube);
 
 	glClearColor(0.2f,0.3f,0.3f,1.0f); // Background color
 
@@ -439,6 +468,29 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 	}*/
 	// Update for Particles
 	ECS::GetInstance().GetSystem<ParticleSystem>()->Update(FrameController::GetDeltaTime());
+
+	// FSM Update
+	if (s_FSMManager)
+	{
+		s_FSMManager->Update(FrameController::GetDeltaTime());
+
+		s_StateTimer += FrameController::GetDeltaTime();
+		if (s_StateTimer > s_StateDuration)
+		{
+			s_StateTimer = 0.0f;
+
+			if (g_CurrentState == &g_IdleState)
+			{
+				s_FSMManager->Init(s_FSMCube, &g_RoamState);
+				g_CurrentState = &g_RoamState;
+			}
+			else
+			{
+				s_FSMManager->Init(s_FSMCube, &g_IdleState);
+				g_CurrentState = &g_IdleState;
+			}
+		}
+	}
 }
 
 void engine::Render(GLFWwindow* window)
