@@ -132,6 +132,7 @@ IF EXIST ..\Build\bin\Release-windows-x86_64\Ermine-Engine\Ermine-Engine.dll\ (x
     <ClInclude Include="HierarchyPanel.h" />
     <ClInclude Include="include\AssetBrowser.h" />
     <ClInclude Include="include\AssetManager.h" />
+    <ClInclude Include="include\AudioImGUI.h" />
     <ClInclude Include="include\AudioManager.h" />
     <ClInclude Include="include\AudioSystem.h" />
     <ClInclude Include="include\Camera.h" />
@@ -153,6 +154,7 @@ IF EXIST ..\Build\bin\Release-windows-x86_64\Ermine-Engine\Ermine-Engine.dll\ (x
     <ClInclude Include="include\ImGuiUIWindow.h" />
     <ClInclude Include="include\IndexBuffer.h" />
     <ClInclude Include="include\Input.h" />
+    <ClInclude Include="include\InspectorGUI.h" />
     <ClInclude Include="include\JobSystem.h" />
     <ClInclude Include="include\Logger.h" />
     <ClInclude Include="include\Material.h" />
@@ -182,6 +184,7 @@ IF EXIST ..\Build\bin\Release-windows-x86_64\Ermine-Engine\Ermine-Engine.dll\ (x
     <ClCompile Include="HierarchyPanel.cpp" />
     <ClCompile Include="src\AssetBrowser\AssetBrowser.cpp" />
     <ClCompile Include="src\AssetManager\AssetManager.cpp" />
+    <ClCompile Include="src\AudioManager\AudioIMGUI.cpp" />
     <ClCompile Include="src\AudioManager\AudioManager.cpp" />
     <ClCompile Include="src\AudioManager\AudioSystem.cpp" />
     <ClCompile Include="src\ECS\Component.cpp" />
@@ -198,6 +201,7 @@ IF EXIST ..\Build\bin\Release-windows-x86_64\Ermine-Engine\Ermine-Engine.dll\ (x
     <ClCompile Include="src\Graphics\VertexArray.cpp" />
     <ClCompile Include="src\Graphics\VertexBuffer.cpp" />
     <ClCompile Include="src\ImGUI\EditorGUI.cpp" />
+    <ClCompile Include="src\ImGUI\InspectorGUI.cpp" />
     <ClCompile Include="src\Logger\Logger.cpp" />
     <ClCompile Include="src\Math\MathVector.cpp" />
     <ClCompile Include="src\Math\Matrix3x3.cpp" />

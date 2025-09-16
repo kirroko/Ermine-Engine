@@ -38,6 +38,45 @@ bool Ermine::editor::EditorGUI::isPlaying = false; // TODO: tied to Play/Stop to
 std::unique_ptr<Ermine::Scene> Ermine::editor::EditorGUI::s_ActiveScene = nullptr;
 std::unique_ptr<Ermine::HierarchyPanel> Ermine::editor::EditorGUI::s_HierarchyPanel = nullptr;
 std::unique_ptr<Ermine::editor::HierarchyInspector> Ermine::editor::EditorGUI::s_Inspector = nullptr;
+namespace
+{
+    std::string FormatNumber(uint64_t value)
+    {
+        struct Unit { uint64_t base; const char* suffix; };
+        static constexpr Unit units[] = {
+{1'000'000'000'000ULL, "T" },
+        {1'000'000'000ULL, "B"},
+            {1'000'000ULL, "M"},
+        {1'000ULL, "K"},
+        {1, ""}
+        };
+
+        for (const auto& u : units)
+        {
+            if (value >= u.base)
+            {
+                char buffer[32];
+                const double scaled = static_cast<double>(value) / static_cast<double>(u.base);
+                const int written = snprintf(buffer, sizeof(buffer), "%.1f%s", scaled, u.suffix);
+                if (written < 0)
+                {
+                    EE_CORE_WARN("FormatNumber error occurred");
+                    return std::to_string(value);
+                }
+                return std::string(buffer);
+            }
+        }
+
+        char buffer[32];
+		const int written = snprintf(buffer, sizeof(buffer), "%llu", value);
+        if (written < 0)
+        {
+            EE_CORE_WARN("FormatNumber error occurred");
+            return std::to_string(value);
+        }
+		return std::string(buffer);
+	}
+}
 
 void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
 {
@@ -87,7 +126,10 @@ void EditorGUI::ProfilingWindow()
 
     const auto& metrics = graphics::GPUProfiler::GetMetrics();
 
-    ImGui::Text("FPS: %.1f", metrics.fps);
+    float avgFps = metrics.averageFrameTimeMs > 0.0f ? 1000.0f / metrics.averageFrameTimeMs : 0.0f;
+
+    //ImGui::Text("FPS: %.1f (avg: %.1f)", metrics.fps, avgFps);
+    ImGui::Text("FPS: %.1f", avgFps);
     ImGui::Text("Frame Time: %.2f ms", metrics.frameTimeMs);
     ImGui::Text("CPU Time: %.2f ms", metrics.cpuFrameTimeMs);
     ImGui::Text("GPU Time: %.2f ms", metrics.gpuFrameTimeMs);
@@ -101,8 +143,8 @@ void EditorGUI::ProfilingWindow()
     ImGui::Separator();
 
     ImGui::Text("Draw Calls: %u", metrics.drawCallCount);
-    ImGui::Text("Triangles: %u", metrics.triangleCount);
-    ImGui::Text("Vertices: %u", metrics.vertexCount);
+    ImGui::Text("Tris: %s", FormatNumber(metrics.triangleCount).c_str());
+    ImGui::Text("Verts: %s", FormatNumber(metrics.vertexCount).c_str());
 
     ImGui::Separator();
 
@@ -183,7 +225,7 @@ void EditorGUI::ViewPortWindow(bool &show)
     {
 	    EditorCamera::GetInstance().ProcessMouseMovement();
 		EditorCamera::GetInstance().ProcessKeyboardInput(FrameController::GetDeltaTime());
-		EditorCamera::GetInstance().ProcessScrollWheel(Input::GetMouseScrollOffset());
+		EditorCamera::GetInstance().ProcessScrollWheel(Input::GetMouseScrollOffsetEditor());
     }
 
 	ImGui::End();

@@ -52,12 +52,6 @@
     <Filter Include="src\Window">
       <UniqueIdentifier>{74C3D837-607B-1A85-C982-F3E0B559B575}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\Scene">
-      <UniqueIdentifier>{b4454b8b-5508-4ba7-a490-dea3cfa9dd8a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\Systems">
-      <UniqueIdentifier>{34DEBD24-A093-361A-2988-30F1953C2D1E}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\AssetBrowser.h">
@@ -112,9 +106,6 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\GeometryFactory.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\HierarchySystem.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\ImGuiUIWindow.h">
@@ -195,13 +186,16 @@
     <ClInclude Include="include\Window.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="Scene.h">
+    <ClInclude Include="include\MathVector.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="HierarchyPanel.h">
+    <ClInclude Include="include\Material.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="include\HierarchyInspector.h">
+    <ClInclude Include="include\InspectorGUI.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\AudioImGUI.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
@@ -296,9 +290,6 @@
     <ClCompile Include="src\Serialisation\Serialisation.cpp">
       <Filter>src\Serialisation</Filter>
     </ClCompile>
-    <ClCompile Include="src\Systems\HierarchySystem.cpp">
-      <Filter>src\Systems</Filter>
-    </ClCompile>
     <ClCompile Include="src\Utility\EditorCamera.cpp">
       <Filter>src\Utility</Filter>
     </ClCompile>
@@ -320,14 +311,11 @@
     <ClCompile Include="src\dllmain.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="HierarchyPanel.cpp">
-      <Filter>src\Systems</Filter>
+    <ClCompile Include="src\ImGUI\InspectorGUI.cpp">
+      <Filter>src\ImGUI</Filter>
     </ClCompile>
-    <ClCompile Include="src\Systems\HierarchyInspector.cpp">
-      <Filter>src\Systems</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Scene\Scene.cpp">
-      <Filter>src\Scene</Filter>
+    <ClCompile Include="src\AudioManager\AudioIMGUI.cpp">
+      <Filter>src\AudioManager</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

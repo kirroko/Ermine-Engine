@@ -1,0 +1,88 @@
+/* Start Header ************************************************************************/
+/*!
+\file       AudioImGUI.h
+\author     [Your Name]
+\date       [Current Date]
+\brief      This file contains the declaration of AudioImGUI for managing audio through ImGUI.
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents without the
+prior written consent of DigiPen Institute of Technology is prohibited.
+*/
+/* End Header **************************************************************************/
+
+#pragma once
+#include "PreCompile.h"
+#include "ImGuiUIWindow.h"
+#include "imgui.h"
+#include "AudioSystem.h"
+#include "ECS.h"
+#include "Components.h"
+
+namespace Ermine
+{
+
+    struct AudioFileInfo
+    {
+        std::string filename;
+        std::string fullPath;
+    };
+
+    class AudioImGUI : public ImGUIWindow
+    {
+    public:
+        AudioImGUI();
+        ~AudioImGUI();
+
+        void Update() override;
+        void Render() override;
+
+    private:
+        // GUI state variables
+        char m_SoundPath[256] = "../Resources/Audio/";
+        float m_Volume = 0.5f;
+        bool m_Is3D = false;
+        bool m_IsLooping = false;
+        bool m_IsStreaming = false;
+        float m_Position[3] = { 0.0f, 0.0f, 0.0f };
+
+        EntityID m_SelectedEntity = 0;
+        bool m_ShowEntityList = true;
+
+        // Status messages
+        std::string m_StatusMessage;
+        float m_StatusTimer = 0.0f;
+
+        // Audio management functions
+        void RenderEntityAudioControls();
+        void RenderGlobalAudioControls();
+        void RenderAudioTester();
+        void SetStatusMessage(const std::string& message, float duration = 3.0f);
+        void UpdateStatus();
+
+        // Helper functions
+        std::vector<EntityID> GetEntitiesWithAudioComponent();
+        int PlayTestAudio(); // Returns channel ID
+        void StopAllAudio();
+        void StopTestAudio();
+
+
+        int m_TestChannelId = -1;  // Track the test audio channel
+        float m_PreviousTestVolume = -1.0f;  // Track volume changes
+
+        std::vector<AudioFileInfo> m_AudioFiles;
+        int m_SelectedAudioIndex = -1;
+        std::string m_SelectedAudioFile;
+        int m_BrowserTestChannelId = -1;
+
+        // Popup control flags
+        bool m_ShowEntitySoundBrowser = false;
+        bool m_ShowTesterSoundBrowser = false;
+
+        // Add these private methods to your AudioImGUI class:
+        void RenderAudioBrowser();
+        bool RenderAudioFileSelector();
+        void RefreshAudioFiles();
+
+    };
+}

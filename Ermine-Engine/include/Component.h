@@ -14,6 +14,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #pragma once
 
 #include "Registry.h"
+#include <array>
 
 namespace Ermine
 {
@@ -49,6 +50,8 @@ namespace Ermine
 		template <typename T>
 		std::shared_ptr<ComponentArray<T>> GetComponentArray();
 
+		std::unordered_map<std::type_index, ComponentTypeID> m_TypeIndexToID{};
+		std::array<std::shared_ptr<IComponentArray>, MAX_COMPONENTS> m_ArraysByTypeID{};
 	public:
 		// Register a component
 		template <typename T>
@@ -88,7 +91,7 @@ namespace Ermine
 		// Notify all component arrays that an entity has been destroyed
 		void EntityDestroyed(EntityID entity) const;
 
-		// Verify whether an entity has a particular component 
+		// Verify whether an entity has a particular component
 		template<typename T>
 		bool HasComponent(EntityID entity) {
 			// Retrieve the component array for type T

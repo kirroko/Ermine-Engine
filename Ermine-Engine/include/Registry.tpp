@@ -65,9 +65,10 @@ namespace Ermine
 	template <typename T>
 	T& ComponentArray<T>::GetData(EntityID entity)
 	{
-		assert(m_EntityToIndexMap.find(entity) != m_EntityToIndexMap.end() && "Retrieving non-existent component.");
+		auto it = m_EntityToIndexMap.find(entity);
+		assert(it != m_EntityToIndexMap.end() && "Retrieving non-existent component.");
 
-		return m_ComponentArray[m_EntityToIndexMap[entity]]; // Return a reference to the entity's component
+		return m_ComponentArray[it->second]; // Return a reference to the entity's component
 	}
 
 	/**
