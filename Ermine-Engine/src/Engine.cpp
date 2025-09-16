@@ -31,6 +31,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Serialisation.h"
 #include "AudioSystem.h"
 #include "Particles.h"
+#include "InspectorGUI.h"
 #include "AudioImGUI.h"
 
 #include <random> // Include for random number generation
@@ -247,6 +248,9 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().AddComponent(entity, ObjectMetaData());
 	ECS::GetInstance().AddComponent(entity, graphics::GeometryFactory::CreateCube(1, 1, 1));
 
+	//InspectorGUI inspector{ entity, "Inspector" };
+	//inspector.SetEntity(entity);
+
 	// Create material using UBO template
 	auto cubeMaterial = std::make_unique<graphics::Material>(shader);
 	cubeMaterial->LoadTemplate(graphics::MaterialTemplates::PBR_WHITE());
@@ -329,14 +333,17 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	glClearColor(0.2f,0.3f,0.3f,1.0f); // Background color
 
-   // Create ImGUI window for Asset Browser
-   editor::EditorGUI::CreateImGUIWindow<ImguiUI::AssetBrowser>();
-   editor::EditorGUI::CreateImGUIWindow<ParticlesImGUI>(emitter.get());
-   editor::EditorGUI::CreateImGUIWindow<AudioImGUI>();
+	// Create ImGUI window for Asset Browser
+	editor::EditorGUI::CreateImGUIWindow<ImguiUI::AssetBrowser>();
+	editor::EditorGUI::CreateImGUIWindow<ParticlesImGUI>(emitter.get());
+	editor::EditorGUI::CreateImGUIWindow<AudioImGUI>();
+	// Create ImGUI window for Inspector
+	//editor::EditorGUI::CreateImGUIWindow<InspectorGUI>();
+	editor::EditorGUI::CreateImGUIWindow<InspectorGUI>(entity2, "Inspector");
    
-   EE_CORE_INFO("Systems and components registered successfully, Engine Initialized");
-   s_isInitialized = true;
-   return true;
+	EE_CORE_INFO("Systems and components registered successfully, Engine Initialized");
+	s_isInitialized = true;
+	return true;
 }
 
 // TODO: Shutdown for subsystem should be in order, please be mindful of the order that is already in place.
@@ -415,6 +422,10 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 	ECS::GetInstance().GetSystem<AudioSystem>()->Update();
 	// Update editor camera
 	editor::EditorCamera::GetInstance().Update();
+
+	// Simple test to see if we can select an entity and view it in the inspector
+	//if (Input::IsKeyDown(GLFW_KEY_Q))
+		//InspectorGUI::SetEntity(entity);
 
 	/*
 	if (s_isInitialized && emitter)
