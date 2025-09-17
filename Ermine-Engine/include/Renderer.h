@@ -118,7 +118,14 @@ namespace Ermine::graphics
          * @param height The height of the offscreen buffer
          * @return OffscreenBuffer The offscreen buffer
          */
-        OffscreenBuffer Create(const int& width, const int& height);
+        OffscreenBuffer CreateOffscreenBuffer(const int& width, const int& height);
+
+        /**
+         * @brief Resize the offscreen buffer to new dimensions without recreating the FBO
+         * @param width New width
+         * @param height New height
+		 */
+        void ResizeOffscreenBuffer(const int& width, const int& height);
 
         /**
          * @brief Create optimized g-buffer for deferred rendering

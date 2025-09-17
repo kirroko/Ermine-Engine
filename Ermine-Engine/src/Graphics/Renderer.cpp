@@ -87,7 +87,7 @@ void Renderer::Init(const int& screenWidth, const int& screenHeight)
  * @param height The height of the offscreen buffer
  * @return OffscreenBuffer The offscreen buffer
  */
-Renderer::OffscreenBuffer Renderer::Create(const int& width, const int& height)
+Renderer::OffscreenBuffer Renderer::CreateOffscreenBuffer(const int& width, const int& height)
 {
 	OffscreenBuffer buffer{};
 
@@ -196,6 +196,44 @@ Renderer::OffscreenBuffer Renderer::Create(const int& width, const int& height)
 	buffer.height = height;
 	m_OffscreenBuffer = std::make_shared<OffscreenBuffer>(buffer);
 	return buffer;
+}
+
+/**
+ * @brief Resize the offscreen buffer to new dimensions without recreating the FBO
+ * @param width New width
+ * @param height New height
+ */
+void Renderer::ResizeOffscreenBuffer(const int& width, const int& height)
+{
+	if (!m_OffscreenBuffer)
+	{
+		CreateOffscreenBuffer(width, height);
+		return;
+	}
+
+	if (m_OffscreenBuffer->width == width && m_OffscreenBuffer->height == height)
+		return;
+
+	// Resize color texture
+	glBindTexture(GL_TEXTURE_2D, m_OffscreenBuffer->ColorTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+
+	// Resize depth-stencil renderbuffer
+	glBindRenderbuffer(GL_RENDERBUFFER, m_OffscreenBuffer->RBO);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+
+	// Validate framebuffer completeness after resize
+	glBindFramebuffer(GL_FRAMEBUFFER, m_OffscreenBuffer->FBO);
+	const GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if (status != GL_FRAMEBUFFER_COMPLETE)
+		EE_CORE_ERROR("ERROR: Offscreen framebuffer not complete after resize! Status: {0}", status);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	m_OffscreenBuffer->width = width;
+	m_OffscreenBuffer->height = height;
+
+	glCheckError();
 }
 
 

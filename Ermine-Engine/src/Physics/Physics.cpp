@@ -179,10 +179,11 @@ namespace Ermine
             // Rotation too
             JPH::Quat rot = transform.GetRotation().GetQuaternion();
             t.rotation = t.rotation = QuaternionToEuler(Quaternion(rot.GetX(), rot.GetY(), rot.GetZ(), rot.GetW()), true);
-            std::cout << "Entity " << entity << " position: "
-                << t.position.x << ", "
-                << t.position.y << ", "
-                << t.position.z << std::endl;
+            //std::cout << "Entity " << entity << " position: "
+            //    << t.position.x << ", "
+            //    << t.position.y << ", "
+            //    << t.position.z << std::endl;
+            EE_CORE_TRACE("Entity {0} position: {1} {2} {3}", entity, t.position.x, t.position.y, t.position.z);
         }
     }
 
