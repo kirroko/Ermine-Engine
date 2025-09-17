@@ -1,7 +1,8 @@
 /* Start Header ************************************************************************/
 /*!
 \file       AssetManager.h
-\author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu
+\author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu (80%)   
+\co-author  Jeremy Lim Ting Jie, jeremytingjie.lim, 2301370, jeremytingjie.lim\@digipen.edu (20%)
 \date       09/03/2025
 \brief      This reflects the brief of the AssetManager system.
             This file is used to manage all the assets in the game.
@@ -18,6 +19,11 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Texture.h"
 #include "Cubemap.h"
 
+// Forward declaration to avoid circular includes
+namespace Ermine::graphics {
+    class Material;
+}
+
 namespace Ermine
 {
     /**
@@ -33,6 +39,7 @@ namespace Ermine
         std::unordered_map<std::string, std::shared_ptr<graphics::Texture>> m_textures;
         std::unordered_map<std::string, std::shared_ptr<graphics::Shader>> m_shaders;
         std::unordered_map<std::string, std::shared_ptr<graphics::Cubemap>> m_cubemaps;
+        std::unordered_map<std::string, std::shared_ptr<graphics::Material>> m_materials;
     
 public:
         static AssetManager& GetInstance()
@@ -102,6 +109,36 @@ public:
          * @return The cubemap if it exists, nullptr otherwise
          */
         std::shared_ptr<graphics::Cubemap> GetCubemap(const std::string& name);
+
+        // Material management
+        /**
+         * @brief Create and cache a material with the given name
+         * @param name The name/key for the material
+         * @param shader The shader to use for the material
+         * @param materialTemplate Optional material template to apply
+         * @return The created material
+         */
+        std::shared_ptr<graphics::Material> CreateMaterial(const std::string& name, 
+                                                         std::shared_ptr<graphics::Shader> shader,
+                                                         const std::string& materialTemplate = "");
+        
+        /**
+         * @brief Get a material from the cache
+         * @param name The name of the material
+         * @return The material if it exists, nullptr otherwise
+         */
+        std::shared_ptr<graphics::Material> GetMaterial(const std::string& name);
+        
+        /**
+         * @brief Create a shared material for common use cases
+         * @param materialType Type of material (e.g., "wood", "metal", "plastic")
+         * @param shader The shader to use
+         * @param baseTexture Optional base texture
+         * @return The created shared material
+         */
+        std::shared_ptr<graphics::Material> CreateSharedMaterial(const std::string& materialType,
+                                                               std::shared_ptr<graphics::Shader> shader,
+                                                               std::shared_ptr<graphics::Texture> baseTexture = nullptr);
 
         // Clear all loaded assets
         void Clear();

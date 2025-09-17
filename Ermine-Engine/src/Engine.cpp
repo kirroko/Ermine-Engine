@@ -221,12 +221,30 @@ bool engine::Init(GLFWwindow* windowContext)
 	// For now, let's create a placeholder cubemap that you can replace later
 	EE_CORE_INFO("Cubemap system initialized. You can load cubemaps using AssetManager::LoadCubemap() or LoadCubemapFromEquirectangular()");
 
+	// Create shared materials for common use cases - demonstrating the new shared_ptr system
+	// These materials can be reused by multiple objects for better memory efficiency
+	std::shared_ptr<graphics::Material> basicWhiteMaterial = AssetManager::GetInstance().CreateMaterial("basic_white", shader, "PBR_WHITE");
+	std::shared_ptr<graphics::Material> metalMaterial = AssetManager::GetInstance().CreateMaterial("shiny_metal", shader, "PBR_METAL");
+	std::shared_ptr<graphics::Material> emissiveWhiteMaterial = AssetManager::GetInstance().CreateMaterial("light_emissive", shader, "EMISSIVE_WHITE");
+	
+	// Apply textures to shared materials
+	if (texture && texture->IsValid()) {
+		basicWhiteMaterial->SetTexture("materialAlbedoMap", texture);
+		basicWhiteMaterial->SetTexture("texture0", texture);
+		
+		metalMaterial->SetTexture("materialAlbedoMap", texture);
+		metalMaterial->SetTexture("texture0", texture);
+	}
+	
+	EE_CORE_INFO("Created shared materials for efficient reuse across multiple objects");
+
 	// Random number generation setup
 	//std::random_device rd;
 	//std::mt19937 gen(rd());
 	//std::uniform_real_distribution<float> posDist(-10.0f, 10.0f); // Random positions between -10 and 10
 	//std::uniform_real_distribution<float> rotDist(0.0f, 360.0f);  // Random rotations between 0 and 360
 
+	// Example of how to create many entities with shared materials (commented out for now)
 	//for (int i = 0; i < 500; ++i)
 	//{
 	//    auto entity = ECS::GetInstance().CreateEntity();
@@ -234,16 +252,9 @@ bool engine::Init(GLFWwindow* windowContext)
 	//    Vec3 randomRotation(rotDist(gen), rotDist(gen), rotDist(gen));
 	//    ECS::GetInstance().AddComponent(entity, Transform(randomPosition, randomRotation, Vec3(1.0f, 1.0f, 1.0f)));
 	//    ECS::GetInstance().AddComponent(entity, graphics::GeometryFactory::CreateCube(1.0f, 1.0f, 1.0f));
-
-	//	auto cube2Material = std::make_unique<graphics::Material>(shader);
-	//	cube2Material->LoadTemplate(graphics::MaterialTemplates::PBR_METAL());
-
-	//	if (texture && texture->IsValid()) {
-	//		cube2Material->SetTexture("materialAlbedoMap", texture);
-	//		cube2Material->SetTexture("texture0", texture);
-	//	}
-
-	//	ECS::GetInstance().AddComponent(entity, Material(std::move(cube2Material)));
+	//
+	//    // Use shared material for all these entities - much more memory efficient!
+	//    ECS::GetInstance().AddComponent(entity, Material(metalMaterial));
 	//}
 	
 	auto audioTestEntity = ECS::GetInstance().CreateEntity();
@@ -274,26 +285,14 @@ bool engine::Init(GLFWwindow* windowContext)
 	// Particles Emitter
 	emitter = std::make_unique<ParticleEmitter>(quadMesh, shader, tex);
 
-	// Create first cube
+	// Create first cube using shared basic white material
 	auto entity = ECS::GetInstance().CreateEntity();
 	ECS::GetInstance().AddComponent(entity, Transform(Vec3(0, 0, -1), Vec3(0, 45, 90), Vec3(1, 1, 1)));
 	ECS::GetInstance().AddComponent(entity, ObjectMetaData());
 	ECS::GetInstance().AddComponent(entity, graphics::GeometryFactory::CreateCube(1, 1, 1));
 
-	//InspectorGUI inspector{ entity, "Inspector" };
-	//inspector.SetEntity(entity);
-
-	// Create material using UBO template
-	auto cubeMaterial = std::make_unique<graphics::Material>(shader);
-	cubeMaterial->LoadTemplate(graphics::MaterialTemplates::PBR_WHITE());
-
-	// Set texture if available
-	if (texture && texture->IsValid()) {
-		cubeMaterial->SetTexture("materialAlbedoMap", texture);
-		cubeMaterial->SetTexture("texture0", texture); // Fallback for compatibility
-	}
-
-	ECS::GetInstance().AddComponent(entity, Material(std::move(cubeMaterial)));
+	// Use the shared basic white material
+	ECS::GetInstance().AddComponent(entity, Material(basicWhiteMaterial));
 
 	// Create second cube  
 	auto entity2 = ECS::GetInstance().CreateEntity();
@@ -301,8 +300,8 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().AddComponent(entity2, ObjectMetaData());
 	ECS::GetInstance().AddComponent(entity2, graphics::GeometryFactory::CreateCube(1, 1, 1));
 
-	// Create a reflective material for demonstration
-	auto cube2Material = std::make_unique<graphics::Material>(shader);
+	// Create a reflective material for demonstration - this one is unique
+	auto cube2Material = std::make_shared<graphics::Material>(shader);
 	cube2Material->LoadTemplate(graphics::MaterialTemplates::PBR_REFLECTIVE(0.9f, 0.1f)); // Highly reflective metal
 
 	if (texture && texture->IsValid()) {
@@ -321,7 +320,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	    EE_CORE_INFO("Environment mapping applied to reflective cube");
 	}
 
-	ECS::GetInstance().AddComponent(entity2, Material(std::move(cube2Material)));
+	ECS::GetInstance().AddComponent(entity2, Material(cube2Material));
 	ECS::GetInstance().AddComponent(entity2, Script("Sandbox", entity2));
 
 	// Create lights with balanced intensities
@@ -330,22 +329,20 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().AddComponent(mainLightEntity, ObjectMetaData("MainLight", "Light", true));
 	ECS::GetInstance().AddComponent(mainLightEntity, Light(Vec3(1, 1, 1), 0.8f, LightType::POINT));
 
-	// Light sphere material
-	auto lightMaterial = std::make_unique<graphics::Material>(shader);
-	lightMaterial->LoadTemplate(graphics::MaterialTemplates::EMISSIVE(Vec3(1.0f, 1.0f, 1.0f), 10.0f));
+	// Light sphere material - use shared emissive material for all lights
 	ECS::GetInstance().AddComponent(mainLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
-	ECS::GetInstance().AddComponent(mainLightEntity, Material(std::move(lightMaterial)));
+	ECS::GetInstance().AddComponent(mainLightEntity, Material(emissiveWhiteMaterial));
 
-	// Red accent light
+	// Red accent light - create unique colored emissive materials
 	auto redLightEntity = ECS::GetInstance().CreateEntity();
 	ECS::GetInstance().AddComponent(redLightEntity, Transform(Vec3(3, 2, 0), Vec3(0, 0, 0), Vec3(1, 1, 1)));
 	ECS::GetInstance().AddComponent(redLightEntity, ObjectMetaData("LightRed", "Light", true));
 	ECS::GetInstance().AddComponent(redLightEntity, Light(Vec3(1, 0.0, 0.0), 0.5f, LightType::POINT));
 
-	auto redLightMaterial = std::make_unique<graphics::Material>(shader);
+	auto redLightMaterial = std::make_shared<graphics::Material>(shader);
 	redLightMaterial->LoadTemplate(graphics::MaterialTemplates::EMISSIVE(Vec3(1.0f, 0.f, 0.f), 10.0f));
 	ECS::GetInstance().AddComponent(redLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
-	ECS::GetInstance().AddComponent(redLightEntity, Material(std::move(redLightMaterial)));
+	ECS::GetInstance().AddComponent(redLightEntity, Material(redLightMaterial));
 
 	// Blue accent light
 	auto blueLightEntity = ECS::GetInstance().CreateEntity();
@@ -353,10 +350,10 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().AddComponent(blueLightEntity, ObjectMetaData("LightBlue", "Light", true));
 	ECS::GetInstance().AddComponent(blueLightEntity, Light(Vec3(0.0, 0.0, 1), 0.5f, LightType::POINT));
 
-	auto blueLightMaterial = std::make_unique<graphics::Material>(shader);
+	auto blueLightMaterial = std::make_shared<graphics::Material>(shader);
 	blueLightMaterial->LoadTemplate(graphics::MaterialTemplates::EMISSIVE(Vec3(0.f, 0.f, 1.0f), 10.0f));
 	ECS::GetInstance().AddComponent(blueLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
-	ECS::GetInstance().AddComponent(blueLightEntity, Material(std::move(blueLightMaterial)));
+	ECS::GetInstance().AddComponent(blueLightEntity, Material(blueLightMaterial));
 
 	// Green accent light
 	auto greenLightEntity = ECS::GetInstance().CreateEntity();
@@ -364,15 +361,12 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().AddComponent(greenLightEntity, ObjectMetaData("LightGreen", "Light", true));
 	ECS::GetInstance().AddComponent(greenLightEntity, Light(Vec3(0.0, 1.0f, 0.0), 0.5f, LightType::POINT));
 
-	auto greenLightMaterial = std::make_unique<graphics::Material>(shader);
+	auto greenLightMaterial = std::make_shared<graphics::Material>(shader);
 	greenLightMaterial->LoadTemplate(graphics::MaterialTemplates::EMISSIVE(Vec3(0.f, 1.f, 0.0f), 10.0f));
 	ECS::GetInstance().AddComponent(greenLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
-	ECS::GetInstance().AddComponent(greenLightEntity, Material(std::move(greenLightMaterial)));
-
+	ECS::GetInstance().AddComponent(greenLightEntity, Material(greenLightMaterial));
 
 	EE_CORE_INFO("Total living entities after creation: {0}", ECS::GetInstance().GetLivingEntityCount());
-
-
 
 	glClearColor(0.2f,0.3f,0.3f,1.0f); // Background color
 
@@ -384,6 +378,16 @@ bool engine::Init(GLFWwindow* windowContext)
 	//editor::EditorGUI::CreateImGUIWindow<InspectorGUI>();
 	editor::EditorGUI::CreateImGUIWindow<InspectorGUI>(entity2, "Inspector");
    
+	// Demonstrate different material sharing strategies:
+	// 1. Use completely shared material (multiple entities, same appearance)
+	//    Example: ECS::GetInstance().AddComponent(anotherEntity, Material(basicWhiteMaterial)); // Same material instance
+	// 2. Create unique materials when needed (entities with unique appearance)
+	//    Example: auto customMaterial = std::make_shared<graphics::Material>(shader); // Unique material
+	// 3. Clone and modify shared materials (similar but slightly different materials)
+	//    Example: auto customMaterial = std::make_shared<graphics::Material>(*basicWhiteMaterial);  // Copy
+	//             customMaterial->SetFloat("material.roughness", 0.8f);  // Modify the copy
+
+	EE_CORE_INFO("Material system now supports efficient sharing between entities using shared_ptr");
 	EE_CORE_INFO("Systems and components registered successfully, Engine Initialized");
 	s_isInitialized = true;
 	return true;
