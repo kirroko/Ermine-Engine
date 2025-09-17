@@ -17,11 +17,25 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 namespace Ermine
 {
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 #ifdef _MSC_VER
     // Supress warning: nonstandard extension used : nameless struct/union
 #pragma warning( disable : 4201 )
 #endif
+    struct Quaternion
+    {
+        float x, y, z, w;
 
+        Quaternion(float _x = 0.0f, float _y = 0.0f, float _z = 0.0f, float _w = 1.0f)
+            : x(_x), y(_y), z(_z), w(_w) {}
+    };
+
+#ifdef _MSC_VER
+    // Supress warning: nonstandard extension used : nameless struct/union
+#pragma warning( disable : 4201 )
+#endif
     /*!***********************************************************************
     \brief
      Represents a 4x4 matrix with individual components, or as an single or double array.
@@ -301,4 +315,10 @@ namespace Ermine
      * @param up is the world up direction
      */
     void Mtx44LookAt(Matrix4x4& pResult, const Vector3D& eye, const Vector3D& center, const Vector3D& up);
+
+    void Mtx44SetFromQuaternion(Matrix4x4& pResult, const Quaternion& q);
+
+    Quaternion Mtx44GetQuaternion(const Matrix4x4& m);
+
+    Vec3 QuaternionToEuler(const Quaternion& q, bool inDegrees = true);
 }

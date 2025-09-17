@@ -31,6 +31,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Serialisation.h"
 #include "AudioSystem.h"
 #include "Particles.h"
+#include "Physics.h"
 
 #include <random> // Include for random number generation
 
@@ -233,10 +234,19 @@ bool engine::Init(GLFWwindow* windowContext)
 	emitter = std::make_unique<ParticleEmitter>(quadMesh, particleShader, tex);
 
 	// Create first cube
-	auto entity = ECS::GetInstance().CreateEntity();
-	ECS::GetInstance().AddComponent(entity, Transform(Vec3(0, 0, -1), Vec3(0, 45, 90), Vec3(1, 1, 1)));
-	ECS::GetInstance().AddComponent(entity, ObjectMetaData());
-	ECS::GetInstance().AddComponent(entity, graphics::GeometryFactory::CreateCube(1, 1, 1));
+	//auto entity = ECS::GetInstance().CreateEntity();
+	//ECS::GetInstance().AddComponent(entity, Transform(Vec3(0, 0, -1), Vec3(0, 45, 90), Vec3(1, 1, 1)));
+	//ECS::GetInstance().AddComponent(entity, ObjectMetaData());
+	//ECS::GetInstance().AddComponent(entity, graphics::GeometryFactory::CreateCube(1, 1, 1));
+
+	RegisterDefaultAllocator();
+
+	gPhysics = new Physics();
+	gPhysics->Init();
+	gPhysics->CreatePhysicsBox(Vec3(0, 5, 0), Vec3(1, 1, 1), 1.0f);
+	gPhysics->CreatePhysicsBox(Vec3(0, 8, 0), Vec3(1, 1, 1), 1.0f);
+
+	gPhysics->CreatePhysicsBox(Vec3(0, 0, 0), Vec3(1, 1, 1), 0.0f);
 
 	// Create material using UBO template
 	auto cubeMaterial = std::make_unique<graphics::Material>(shader);
@@ -248,7 +258,7 @@ bool engine::Init(GLFWwindow* windowContext)
 		cubeMaterial->SetTexture("texture0", texture); // Fallback for compatibility
 	}
 
-	ECS::GetInstance().AddComponent(entity, Material(std::move(cubeMaterial)));
+	//ECS::GetInstance().AddComponent(entity, Material(std::move(cubeMaterial)));
 
 	// Create second cube  
 	auto entity2 = ECS::GetInstance().CreateEntity();
@@ -350,7 +360,9 @@ void engine::Shutdown()
 	SaveConfigToFile(cfg, "Ermine-Engine.config", false);
 
     AssetManager::GetInstance().Clear();
-
+	gPhysics->Shutdown();
+	delete gPhysics;
+	gPhysics = nullptr;
 	emitter.reset();
 
     graphics::GPUProfiler::Shutdown();
@@ -405,7 +417,7 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 	ECS::GetInstance().GetSystem<AudioSystem>()->Update();
 	// Update editor camera
 	editor::EditorCamera::GetInstance().Update();
-
+	gPhysics->Update(FrameController::GetDeltaTime());
 	/*
 	if (s_isInitialized && emitter)
 	{
