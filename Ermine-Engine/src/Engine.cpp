@@ -244,13 +244,13 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().AddComponent(fbxEntity, ObjectMetaData("Character", "Model", true));
 	ECS::GetInstance().AddComponent(fbxEntity, Mesh{}); // empty mesh component for renderer signature
 	ECS::GetInstance().AddComponent(fbxEntity, ModelComponent(AssetManager::GetInstance().LoadModel("../Resources/Models/Walking.fbx")));
-	auto cube2Material = std::make_unique<graphics::Material>(shader);
-	cube2Material->LoadTemplate(graphics::MaterialTemplates::PBR_METAL());
+	auto cubeFBXMaterial = std::make_unique<graphics::Material>(shader);
+	cubeFBXMaterial->LoadTemplate(graphics::MaterialTemplates::PBR_METAL());
 	if (texture && texture->IsValid()) {
-		cube2Material->SetTexture("materialAlbedoMap", texture);
-		cube2Material->SetTexture("texture0", texture);
+		cubeFBXMaterial->SetTexture("materialAlbedoMap", texture);
+		cubeFBXMaterial->SetTexture("texture0", texture);
 	}
-	ECS::GetInstance().AddComponent(fbxEntity, Material(std::move(cube2Material)));
+	ECS::GetInstance().AddComponent(fbxEntity, Material(std::move(cubeFBXMaterial)));
 
 	// Create a simple quad mesh for particles
 	auto quadMesh = graphics::GeometryFactory::CreateQuad(1.0f, 1.0f);
