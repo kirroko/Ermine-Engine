@@ -244,7 +244,7 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	// Create first cube
 	auto entity = ECS::GetInstance().CreateEntity();
-	ECS::GetInstance().AddComponent(entity, Transform(Vec3(0, 0, -1), Vec3(0, 45, 90), Vec3(1, 1, 1)));
+	ECS::GetInstance().AddComponent(entity, Transform(Vec3(0, 0, -1), Vec3(0, 45, 0), Vec3(1, 1, 1)));
 	ECS::GetInstance().AddComponent(entity, ObjectMetaData());
 	ECS::GetInstance().AddComponent(entity, graphics::GeometryFactory::CreateCube(1, 1, 1));
 
