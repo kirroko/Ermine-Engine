@@ -398,50 +398,74 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 
 	for (auto& entity:m_Entities)
 	{
-		auto& trans = ecs.GetComponent<Transform>(entity);
-		auto& mesh = ecs.GetComponent<Mesh>(entity);
-		auto& materialComponent = ecs.GetComponent<Ermine::Material>(entity);
+		// Model pipeline
+		if (ecs.HasComponent<ModelComponent>(entity))
+		{
+			auto& modelComp = ecs.GetComponent<ModelComponent>(entity);
+			auto& trans = ecs.GetComponent<Transform>(entity);
 
-		if (!mesh.vertex_array || !mesh.index_buffer) continue;
+			if (modelComp.m_model)
+			{
+				// Apply entity’s transform as root
+				glm::mat4 entityModel = glm::mat4(1.0f);
+				entityModel = glm::translate(entityModel, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
+				entityModel = glm::rotate(entityModel, glm::radians(trans.rotation.x), glm::vec3(1, 0, 0));
+				entityModel = glm::rotate(entityModel, glm::radians(trans.rotation.y), glm::vec3(0, 1, 0));
+				entityModel = glm::rotate(entityModel, glm::radians(trans.rotation.z), glm::vec3(0, 0, 1));
+				entityModel = glm::scale(entityModel, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
 
-		// Get the modular material
-		Ermine::graphics::Material* material = materialComponent.GetMaterial();
-
-		if (!material) {
-			EE_CORE_WARN("Entity {0} has null material", entity);
-			continue;
+				// Render model
+				RenderModel(*modelComp.m_model, view, projection, entityModel);
+			}
 		}
+		// Mesh + material pipeline
+		else if (ecs.HasComponent<Mesh>(entity) && ecs.HasComponent<Ermine::Material>(entity))
+		{
+			auto& trans = ecs.GetComponent<Transform>(entity);
+			auto& mesh = ecs.GetComponent<Mesh>(entity);
+			auto& materialComponent = ecs.GetComponent<Ermine::Material>(entity);
 
-		// Build model matrix
-		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
-		model = glm::rotate(model, glm::radians(trans.rotation.x), glm::vec3(1, 0, 0));
-		model = glm::rotate(model, glm::radians(trans.rotation.y), glm::vec3(0, 1, 0));
-		model = glm::rotate(model, glm::radians(trans.rotation.z), glm::vec3(0, 0, 1));
-		model = glm::scale(model, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
+			if (!mesh.vertex_array || !mesh.index_buffer) continue;
 
-		// Set transformation matrices for g-buffer shader
-		m_GBufferShader->SetUniformMatrix4fv("model", model);
-		m_GBufferShader->SetUniformMatrix4fv("view", &view.m2[0][0]);
-		m_GBufferShader->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
+			// Get the modular material
+			Ermine::graphics::Material* material = materialComponent.GetMaterial();
 
-		// Calculate and set normal matrix
-		glm::mat4 glmView = glm::mat4(
-			view.m00, view.m01, view.m02, view.m03,
-			view.m10, view.m11, view.m12, view.m13,
-			view.m20, view.m21, view.m22, view.m23,
-			view.m30, view.m31, view.m32, view.m33
-		);
-		glm::mat4 modelView = glmView * model;
-		glm::mat3 normalMatrix = transpose(inverse(glm::mat3(modelView)));
-		m_GBufferShader->SetUniformMatrix3fv("NormalMatrix", normalMatrix);
+			if (!material) {
+				EE_CORE_WARN("Entity {0} has null material", entity);
+				continue;
+			}
 
-		UpdateMaterialUBO(material->GetUBOData());
+			// Build model matrix
+			glm::mat4 model = glm::mat4(1.0f);
+			model = glm::translate(model, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
+			model = glm::rotate(model, glm::radians(trans.rotation.x), glm::vec3(1, 0, 0));
+			model = glm::rotate(model, glm::radians(trans.rotation.y), glm::vec3(0, 1, 0));
+			model = glm::rotate(model, glm::radians(trans.rotation.z), glm::vec3(0, 0, 1));
+			model = glm::scale(model, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
 
-		// TODO: Use new texture system to bind textures
-		tempTexture->Bind(0);
-		// Draw the mesh
-		Draw(mesh.vertex_array, mesh.index_buffer, m_GBufferShader);
+			// Set transformation matrices for g-buffer shader
+			m_GBufferShader->SetUniformMatrix4fv("model", model);
+			m_GBufferShader->SetUniformMatrix4fv("view", &view.m2[0][0]);
+			m_GBufferShader->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
+
+			// Calculate and set normal matrix
+			glm::mat4 glmView = glm::mat4(
+				view.m00, view.m01, view.m02, view.m03,
+				view.m10, view.m11, view.m12, view.m13,
+				view.m20, view.m21, view.m22, view.m23,
+				view.m30, view.m31, view.m32, view.m33
+			);
+			glm::mat4 modelView = glmView * model;
+			glm::mat3 normalMatrix = transpose(inverse(glm::mat3(modelView)));
+			m_GBufferShader->SetUniformMatrix3fv("NormalMatrix", normalMatrix);
+
+			UpdateMaterialUBO(material->GetUBOData());
+
+			// TODO: Use new texture system to bind textures
+			tempTexture->Bind(0);
+			// Draw the mesh
+			Draw(mesh.vertex_array, mesh.index_buffer, m_GBufferShader);
+		}
 	}
 
 	EndGeometryPass();
@@ -779,7 +803,6 @@ void Renderer::BindMaterialBlockIfPresent(const std::shared_ptr<Shader>& shader)
  */
 void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 {
-
 	if (m_UseDeferredRendering)
 	{
 		// Use deferred rendering pipeline
@@ -796,121 +819,147 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 		// Update lights UBO for this frame
 		UpdateLightsUBO(view);
 
+		auto& ecs = ECS::GetInstance();
+
 		for (auto& entity : m_Entities)
 		{
-			auto& trans = ECS::GetInstance().GetComponent<Transform>(entity);
-			auto& mesh = ECS::GetInstance().GetComponent<Mesh>(entity);
-			auto& materialComponent = ECS::GetInstance().GetComponent<Ermine::Material>(entity);
+			// Model pipeline
+			if (ecs.HasComponent<ModelComponent>(entity))
+			{	
+				auto& modelComp = ecs.GetComponent<ModelComponent>(entity);
+				auto& trans = ecs.GetComponent<Transform>(entity);
 
-			// Get the modular material
-			Ermine::graphics::Material* material = materialComponent.GetMaterial();
-
-			if (!material) {
-				EE_CORE_WARN("Entity {0} has null material", entity);
-				continue;
-			}
-
-			auto shader = material->GetShader();
-			if (!shader || !shader->IsValid()) {
-				EE_CORE_WARN("Entity {0} has invalid shader", entity);
-				continue;
-			}
-
-			// Build model matrix
-			glm::mat4 model = glm::mat4(1.0f);
-			model = glm::translate(model, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
-			model = glm::rotate(model, glm::radians(trans.rotation.x), glm::vec3(1, 0, 0));
-			model = glm::rotate(model, glm::radians(trans.rotation.y), glm::vec3(0, 1, 0));
-			model = glm::rotate(model, glm::radians(trans.rotation.z), glm::vec3(0, 0, 1));
-			model = glm::scale(model, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
-
-			// Update Material UBO with current material data
-			UpdateMaterialUBO(material->GetUBOData());
-
-			// Bind material (this handles shader binding and texture binding)
-			material->Bind();
-
-			// Bind uniform blocks
-			BindLightsBlockIfPresent(shader);
-			BindMaterialBlockIfPresent(shader);
-
-			// Set transformation matrices
-			shader->SetUniformMatrix4fv("model", model);
-			shader->SetUniformMatrix4fv("view", &view.m2[0][0]);
-			shader->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
-
-			// Calculate and set normal matrix
-			glm::mat4 glmView = glm::mat4(
-				view.m00, view.m01, view.m02, view.m03,
-				view.m10, view.m11, view.m12, view.m13,
-				view.m20, view.m21, view.m22, view.m23,
-				view.m30, view.m31, view.m32, view.m33
-			);
-			glm::mat4 modelView = glmView * model;
-			glm::mat3 normalMatrix = transpose(inverse(glm::mat3(modelView)));
-			shader->SetUniformMatrix3fv("NormalMatrix", normalMatrix);
-
-			// Set shading mode
-			shader->SetUniform1i("isBlinnPhong", m_IsBlinnPhong ? 1 : 0);
-
-			// Handle material properties based on shading mode
-			if (m_IsBlinnPhong)
-			{
-				// Set Blinn-Phong material properties for ALL entities
-				auto uboData = material->GetUBOData();
-
-				// Convert PBR properties to Blinn-Phong equivalents
-				glm::vec3 albedo = glm::vec3(uboData.albedo.x, uboData.albedo.y, uboData.albedo.z);
-
-				// Set material properties
-				shader->SetUniform3f("materialKa", glm::vec3(0.2f) * albedo); // Ambient = 20% of albedo
-				shader->SetUniform3f("materialKd", albedo); // Diffuse = albedo
-				shader->SetUniform3f("materialKs", glm::vec3(1.0f)); // Specular = white
-				shader->SetUniform1f("materialShininess", (1.0f - uboData.roughness) * 128.0f); // Convert roughness to shininess
-
-				// Handle special case for light entities
-				if (ECS::GetInstance().HasComponent<Light>(entity))
+				if (modelComp.m_model)
 				{
-					auto& light = ECS::GetInstance().GetComponent<Light>(entity);
-					// Override for pure emission
-					shader->SetUniform3f("materialKe", glm::vec3(light.color.x * light.intensity,
-						light.color.y * light.intensity,
-						light.color.z * light.intensity));
-					shader->SetUniform3f("materialKa", glm::vec3(0.0f));
-					shader->SetUniform3f("materialKd", glm::vec3(0.0f));
-					shader->SetUniform3f("materialKs", glm::vec3(0.0f));
+					// Apply entity’s transform as root
+					glm::mat4 entityModel = glm::mat4(1.0f);
+					entityModel = glm::translate(entityModel, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
+					entityModel = glm::rotate(entityModel, glm::radians(trans.rotation.x), glm::vec3(1, 0, 0));
+					entityModel = glm::rotate(entityModel, glm::radians(trans.rotation.y), glm::vec3(0, 1, 0));
+					entityModel = glm::rotate(entityModel, glm::radians(trans.rotation.z), glm::vec3(0, 0, 1));
+					entityModel = glm::scale(entityModel, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
+
+					// Render model
+					RenderModel(*modelComp.m_model, view, projection, entityModel);
+				}
+			}
+			// Mesh + material pipeline
+			else if (ecs.HasComponent<Mesh>(entity) && ecs.HasComponent<Ermine::Material>(entity))
+			{
+				auto& trans = ecs.GetComponent<Transform>(entity);
+				auto& mesh = ecs.GetComponent<Mesh>(entity);
+				auto& materialComponent = ecs.GetComponent<Ermine::Material>(entity);
+
+				// Get the modular material
+				Ermine::graphics::Material* material = materialComponent.GetMaterial();
+
+				if (!material) {
+					EE_CORE_WARN("Entity {0} has null material", entity);
+					continue;
+				}
+
+				auto shader = material->GetShader();
+				if (!shader || !shader->IsValid()) {
+					EE_CORE_WARN("Entity {0} has invalid shader", entity);
+					continue;
+				}
+
+				// Build model matrix
+				glm::mat4 model = glm::mat4(1.0f);
+				model = glm::translate(model, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
+				model = glm::rotate(model, glm::radians(trans.rotation.x), glm::vec3(1, 0, 0));
+				model = glm::rotate(model, glm::radians(trans.rotation.y), glm::vec3(0, 1, 0));
+				model = glm::rotate(model, glm::radians(trans.rotation.z), glm::vec3(0, 0, 1));
+				model = glm::scale(model, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
+
+				// Update Material UBO with current material data
+				UpdateMaterialUBO(material->GetUBOData());
+
+				// Bind material (this handles shader binding and texture binding)
+				material->Bind();
+
+				// Bind uniform blocks
+				BindLightsBlockIfPresent(shader);
+				BindMaterialBlockIfPresent(shader);
+
+				// Set transformation matrices
+				shader->SetUniformMatrix4fv("model", model);
+				shader->SetUniformMatrix4fv("view", &view.m2[0][0]);
+				shader->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
+
+				// Calculate and set normal matrix
+				glm::mat4 glmView = glm::mat4(
+					view.m00, view.m01, view.m02, view.m03,
+					view.m10, view.m11, view.m12, view.m13,
+					view.m20, view.m21, view.m22, view.m23,
+					view.m30, view.m31, view.m32, view.m33
+				);
+				glm::mat4 modelView = glmView * model;
+				glm::mat3 normalMatrix = transpose(inverse(glm::mat3(modelView)));
+				shader->SetUniformMatrix3fv("NormalMatrix", normalMatrix);
+
+				// Set shading mode
+				shader->SetUniform1i("isBlinnPhong", m_IsBlinnPhong ? 1 : 0);
+
+				// Handle material properties based on shading mode
+				if (m_IsBlinnPhong)
+				{
+					// Set Blinn-Phong material properties for ALL entities
+					auto uboData = material->GetUBOData();
+
+					// Convert PBR properties to Blinn-Phong equivalents
+					glm::vec3 albedo = glm::vec3(uboData.albedo.x, uboData.albedo.y, uboData.albedo.z);
+
+					// Set material properties
+					shader->SetUniform3f("materialKa", glm::vec3(0.2f) * albedo); // Ambient = 20% of albedo
+					shader->SetUniform3f("materialKd", albedo); // Diffuse = albedo
+					shader->SetUniform3f("materialKs", glm::vec3(1.0f)); // Specular = white
+					shader->SetUniform1f("materialShininess", (1.0f - uboData.roughness) * 128.0f); // Convert roughness to shininess
+
+					// Handle special case for light entities
+					if (ECS::GetInstance().HasComponent<Light>(entity))
+					{
+						auto& light = ECS::GetInstance().GetComponent<Light>(entity);
+						// Override for pure emission
+						shader->SetUniform3f("materialKe", glm::vec3(light.color.x * light.intensity,
+							light.color.y * light.intensity,
+							light.color.z * light.intensity));
+						shader->SetUniform3f("materialKa", glm::vec3(0.0f));
+						shader->SetUniform3f("materialKd", glm::vec3(0.0f));
+						shader->SetUniform3f("materialKs", glm::vec3(0.0f));
+					}
+					else
+					{
+						// Non-light entities should have no emission
+						shader->SetUniform3f("materialKe", glm::vec3(0.0f));
+					}
 				}
 				else
 				{
-					// Non-light entities should have no emission
-					shader->SetUniform3f("materialKe", glm::vec3(0.0f));
+					// PBR mode - handle light entities with emissive materials
+					if (ECS::GetInstance().HasComponent<Light>(entity))
+					{
+						auto& light = ECS::GetInstance().GetComponent<Light>(entity);
+
+						// Create temporary material data for emissive lighting
+						MaterialUBO lightMaterialData = material->GetUBOData();
+						lightMaterialData.emissive = Vec3(light.color.x, light.color.y, light.color.z);
+						lightMaterialData.emissiveIntensity = light.intensity;
+						lightMaterialData.albedo = Vec3(0.0f, 0.0f, 0.0f);
+						lightMaterialData.metallic = 0.0f;
+						lightMaterialData.roughness = 1.0f;
+
+						// Update UBO with light-specific data
+						UpdateMaterialUBO(lightMaterialData);
+					}
 				}
+
+				// Draw the mesh
+				Draw(mesh.vertex_array, mesh.index_buffer, shader);
+
+				// Unbind material
+				material->Unbind();
 			}
-			else
-			{
-				// PBR mode - handle light entities with emissive materials
-				if (ECS::GetInstance().HasComponent<Light>(entity))
-				{
-					auto& light = ECS::GetInstance().GetComponent<Light>(entity);
-
-					// Create temporary material data for emissive lighting
-					MaterialUBO lightMaterialData = material->GetUBOData();
-					lightMaterialData.emissive = Vec3(light.color.x, light.color.y, light.color.z);
-					lightMaterialData.emissiveIntensity = light.intensity;
-					lightMaterialData.albedo = Vec3(0.0f, 0.0f, 0.0f);
-					lightMaterialData.metallic = 0.0f;
-					lightMaterialData.roughness = 1.0f;
-
-					// Update UBO with light-specific data
-					UpdateMaterialUBO(lightMaterialData);
-				}
-			}
-
-			// Draw the mesh
-			Draw(mesh.vertex_array, mesh.index_buffer, shader);
-
-			// Unbind material
-			material->Unbind();
 		}
 
 #ifdef _DEBUG
@@ -954,65 +1003,6 @@ const GPUProfiler::PerformanceMetrics& Renderer::GetPerformanceMetrics() const
 	return GPUProfiler::GetMetrics();
 }
 
-void Renderer::DrawMesh(const Mesh& mesh,
-	const Material& material,
-	const Mtx44& view,
-	const Mtx44& projection,
-	const glm::mat4& model,
-	const std::shared_ptr<graphics::Texture>& overrideTex,
-	const std::vector<glm::mat4>* bones)
-{
-	//auto shader = material.m_shader;
-	//shader->Bind();
-	//shader->SetUniformMatrix4fv("model", &model[0][0]);
-	//shader->SetUniformMatrix4fv("view", &view.m2[0][0]);
-	//shader->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
-
-	//// Bone
-	//if (bones)
-	//{
-	//	for (int i = 0; i < bones->size(); ++i)
-	//	{
-	//		std::string name = "u_Bones[" + std::to_string(i) + "]";
-	//		shader->SetUniformMatrix4fv(name.c_str(), &(*bones)[i][0][0]);
-	//	}
-	//	shader->SetUniform1i("u_BoneCount", (int)bones->size());
-	//}
-
-	//// Normal matrix
-	//glm::mat4 glmView = glm::mat4(
-	//	view.m00, view.m01, view.m02, view.m03,
-	//	view.m10, view.m11, view.m12, view.m13,
-	//	view.m20, view.m21, view.m22, view.m23,
-	//	view.m30, view.m31, view.m32, view.m33
-	//);
-	//glm::mat4 modelView = glmView * model;
-	//glm::mat3 normalMatrix = transpose(inverse(glm::mat3(modelView)));
-	//shader->SetUniformMatrix3fv("NormalMatrix", &normalMatrix[0][0]);
-
-	//// Simple hardcoded light
-	//glm::vec4 lightPosWorld(10.f, 10.f, 10.f, 1.0f);
-	//glm::vec4 lightPosView = glmView * lightPosWorld;
-	//shader->SetUniform4f("Light.Position", lightPosView);
-	//shader->SetUniform3f("Light.La", glm::vec3(0.2f));
-	//shader->SetUniform3f("Light.Ld", glm::vec3(1.0f));
-	//shader->SetUniform3f("Light.Ls", glm::vec3(1.0f));
-
-	//// Material values
-	//shader->SetUniform3f("Material.Ka", glm::vec3(0.2f));
-	//shader->SetUniform3f("Material.Kd", glm::vec3(0.9f));
-	//shader->SetUniform3f("Material.Ks", glm::vec3(0.8f));
-	//shader->SetUniform1f("Material.Shininess", 100.0f);
-
-	//// Texture binding
-	//if (overrideTex)
-	//	overrideTex->Bind();
-	//else if (material.m_texture)
-	//	material.m_texture->Bind();
-
-	//this->Draw(mesh.vertex_array, mesh.index_buffer, shader);
-}
-
 /**
  * @brief Destructor for Renderer
  */
@@ -1037,4 +1027,46 @@ void Renderer::ToggleDeferredRendering()
 	else
 		EE_CORE_INFO("Switched to Forward Rendering");
 
+}
+
+void Renderer::RenderModel(const Model& model, const Mtx44& view, const Mtx44& projection, const glm::mat4& rootTransform)
+{
+	const auto& meshes = model.GetMeshes();
+	if (meshes.empty())
+		return;
+
+	for (const auto& mesh : meshes)
+	{
+		if (!mesh.vao || !mesh.ibo) continue;
+
+		auto shader = m_GBufferShader ? m_GBufferShader : AssetManager::GetInstance().GetShader("default");
+		if (!shader || !shader->IsValid()) continue;
+
+		shader->Bind();
+		BindLightsBlockIfPresent(shader);
+		BindMaterialBlockIfPresent(shader);
+
+		glm::mat4 modelMat = rootTransform * mesh.localTransform;
+
+		shader->SetUniformMatrix4fv("model", modelMat);
+		shader->SetUniformMatrix4fv("view", &view.m2[0][0]);
+		shader->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
+
+		glm::mat4 glmView = glm::mat4(
+			view.m00, view.m01, view.m02, view.m03,
+			view.m10, view.m11, view.m12, view.m13,
+			view.m20, view.m21, view.m22, view.m23,
+			view.m30, view.m31, view.m32, view.m33
+		);
+		glm::mat4 modelView = glmView * modelMat;
+		glm::mat3 normalMatrix = transpose(inverse(glm::mat3(modelView)));
+		shader->SetUniformMatrix3fv("NormalMatrix", normalMatrix);
+
+		if (mesh.texture && mesh.texture->IsValid())
+			mesh.texture->Bind(0);
+		else if (tempTexture)
+			tempTexture->Bind(0);
+
+		Draw(mesh.vao, mesh.ibo, shader);
+	}
 }

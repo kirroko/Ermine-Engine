@@ -72,16 +72,16 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	Config cfg{};
 	try {
-	    cfg = LoadConfigFromFile(cfgPath);
-	    EE_CORE_INFO("Loaded config: {0}x{1}, fullscreen={2}, maximised={3}, title={4}",
-	        cfg.windowWidth, cfg.windowHeight, cfg.fullscreen, cfg.maximized, cfg.title);
+		cfg = LoadConfigFromFile(cfgPath);
+		EE_CORE_INFO("Loaded config: {0}x{1}, fullscreen={2}, maximised={3}, title={4}",
+			cfg.windowWidth, cfg.windowHeight, cfg.fullscreen, cfg.maximized, cfg.title);
 	}
 	catch (const std::exception& e) {
-	    EE_CORE_WARN("Config not found/invalid ({}). Using defaults.", e.what());
-	    cfg = { 1920, 1080, false, false, "Ermine Editor 0.1" };
-	    // Optional: write defaults so the file exists next run
-	    try { SaveConfigToFile(cfg, cfgPath, /*pretty=*/true); }
-	    catch (const std::exception& w) { EE_CORE_WARN("Could not write default config: {}", w.what()); }
+		EE_CORE_WARN("Config not found/invalid ({}). Using defaults.", e.what());
+		cfg = { 1920, 1080, false, false, "Ermine Editor 0.1" };
+		// Optional: write defaults so the file exists next run
+		try { SaveConfigToFile(cfg, cfgPath, /*pretty=*/true); }
+		catch (const std::exception& w) { EE_CORE_WARN("Could not write default config: {}", w.what()); }
 	}
 
 	// Apply config to the window
@@ -157,6 +157,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	SignatureID sig;
 	sig.set(ECS::GetInstance().GetComponentType<Transform>());
 	sig.set(ECS::GetInstance().GetComponentType<Mesh>());
+	//sig.set(ECS::GetInstance().GetComponentType<ModelComponent>());
 	sig.set(ECS::GetInstance().GetComponentType<Material>());
 	ECS::GetInstance().SetSystemSignature<graphics::Renderer>(sig);
 
@@ -168,7 +169,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	sig.set(ECS::GetInstance().GetComponentType<AudioComponent>());
 	sig.set(ECS::GetInstance().GetComponentType<Transform>());
 	ECS::GetInstance().SetSystemSignature<AudioSystem>(sig);
-	
+
 	// For Particles
 	sig.reset();
 	sig.set(ECS::GetInstance().GetComponentType<Transform>());
@@ -214,7 +215,7 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	//	ECS::GetInstance().AddComponent(entity, Material(std::move(cube2Material)));
 	//}
-	
+
 	auto audioTestEntity = ECS::GetInstance().CreateEntity();
 	ECS::GetInstance().AddComponent(audioTestEntity, Transform(Vec3(2, 0, -1), Vec3(0, 0, 0), Vec3(1, 1, 1)));
 	ECS::GetInstance().AddComponent(audioTestEntity, ObjectMetaData());
@@ -236,13 +237,19 @@ bool engine::Init(GLFWwindow* windowContext)
 	//ECS::GetInstance().AddComponent(entity3, graphics::GeometryFactory::CreateSphere());
 	//ECS::GetInstance().AddComponent(entity3, Material(shader, texture));
 
-	// TEST FBX
-	 auto fbxEntity = ECS::GetInstance().CreateEntity();
-	 ECS::GetInstance().AddComponent(fbxEntity, Transform(Vec3(0, 1, -1), Vec3(0, 0, 0), Vec3(0.01f, 0.01f, 0.01f)));
-	 ECS::GetInstance().AddComponent(fbxEntity, ObjectMetaData("Character", "Model", true));
-	 ECS::GetInstance().AddComponent(fbxEntity, Mesh{});
-	 ECS::GetInstance().AddComponent(fbxEntity, ModelComponent(AssetManager::GetInstance().LoadModel("../Resources/Models/Walking.fbx")));
-	 ECS::GetInstance().AddComponent(fbxEntity, Material(shader, texture));
+	// Example FBX entity
+	auto fbxEntity = ECS::GetInstance().CreateEntity();
+	ECS::GetInstance().AddComponent(fbxEntity, Transform(Vec3(0, 0, -1), Vec3(0, 0, 0), Vec3(0.01f, 0.01f, 0.01f)));
+	ECS::GetInstance().AddComponent(fbxEntity, ObjectMetaData("Character", "Model", true));
+	ECS::GetInstance().AddComponent(fbxEntity, Mesh{}); // empty mesh component for renderer signature
+	ECS::GetInstance().AddComponent(fbxEntity, ModelComponent(AssetManager::GetInstance().LoadModel("../Resources/Models/Walking.fbx")));
+	auto cube2Material = std::make_unique<graphics::Material>(shader);
+	cube2Material->LoadTemplate(graphics::MaterialTemplates::PBR_METAL());
+	if (texture && texture->IsValid()) {
+		cube2Material->SetTexture("materialAlbedoMap", texture);
+		cube2Material->SetTexture("texture0", texture);
+	}
+	ECS::GetInstance().AddComponent(fbxEntity, Material(std::move(cube2Material)));
 
 	// Create a simple quad mesh for particles
 	auto quadMesh = graphics::GeometryFactory::CreateQuad(1.0f, 1.0f);
@@ -340,7 +347,7 @@ bool engine::Init(GLFWwindow* windowContext)
 
 
 
-	glClearColor(0.2f,0.3f,0.3f,1.0f); // Background color
+	glClearColor(0.2f, 0.3f, 0.3f, 1.0f); // Background color
 
 	// Create ImGUI window for Asset Browser
 	editor::EditorGUI::CreateImGUIWindow<ImguiUI::AssetBrowser>();
@@ -349,7 +356,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	// Create ImGUI window for Inspector
 	//editor::EditorGUI::CreateImGUIWindow<InspectorGUI>();
 	editor::EditorGUI::CreateImGUIWindow<InspectorGUI>(entity2, "Inspector");
-   
+
 	EE_CORE_INFO("Systems and components registered successfully, Engine Initialized");
 	s_isInitialized = true;
 	return true;
