@@ -19,6 +19,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #include "ECS.h"
 #include "Logger.h"
+#include "MathUtils.h"
+#include "Matrix3x3.h"
 #include "Components.h"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/glm.hpp"

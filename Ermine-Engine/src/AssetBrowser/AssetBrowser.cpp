@@ -335,7 +335,7 @@ namespace Ermine {
 
             // Asset Categories
             //const char* categories[] = { "Audio", "Images", "Fonts", "Prefabs", "Scenes" };
-            //const char* categories[] = { "Textures", "Shaders" };
+            const char* categories[] = { "Textures", "Shaders" };
             for (int type = 0; type < 2; ++type)
             {
                 if (ImGui::TreeNode(categories[type]))
