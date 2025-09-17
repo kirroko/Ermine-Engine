@@ -484,7 +484,7 @@ void Ermine::scripting::ScriptEngine::ProcessHotReload(const std::function<void(
 	bool ok = ReloadDomainsAndAssemblies();
 	if (post) post(ok);
 
-	EE_CORE_INFO("HotReload: Done (success={0}", ok ? "true" : "false");
+	EE_CORE_INFO("HotReload: Done (success={0})", ok ? "true" : "false");
 }
 
 bool Ermine::scripting::ScriptEngine::ReloadDomainsAndAssemblies()
@@ -524,8 +524,8 @@ bool Ermine::scripting::ScriptEngine::ReloadDomainsAndAssemblies()
 
 	RegisterInternalCalls();
 
-	const int maxAttempts = 20;
-	for (int attemp = 0; attemp < maxAttempts; ++attemp)
+	constexpr int maxAttempts = 20;
+	for (int attempt = 0; attempt < maxAttempts; ++attempt)
 	{
 		m_gameAsm = LoadCSharpAssembly(m_gameAssemblyPath);
 		if (m_gameAsm)
