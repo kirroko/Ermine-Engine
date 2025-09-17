@@ -479,13 +479,13 @@ void engine::Render(GLFWwindow* window)
 	glfwGetFramebufferSize(window, &width, &height);
 	glViewport(0, 0, width, height);
 
+	Mtx44 view = editor::EditorCamera::GetInstance().GetViewMatrix();
+	Mtx44 proj = editor::EditorCamera::GetInstance().GetProjectionMatrix();
+
 	// Start GPU timing for rendering
 	graphics::GPUProfiler::BeginEvent("Frame");
 
 	ECS::GetInstance().GetSystem<graphics::Renderer>()->Clear();
-
-	Mtx44 view = editor::EditorCamera::GetInstance().GetViewMatrix();
-	Mtx44 proj = editor::EditorCamera::GetInstance().GetProjectionMatrix();
 
 	// Draw
 	ECS::GetInstance().GetSystem<graphics::Renderer>()->Update(view, proj);
