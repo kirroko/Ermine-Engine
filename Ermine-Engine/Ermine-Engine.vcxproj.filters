@@ -198,6 +198,12 @@
     <ClInclude Include="include\AudioImGUI.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\Cubemap.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Skybox.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\AssetBrowser\AssetBrowser.cpp">
@@ -316,6 +322,12 @@
     </ClCompile>
     <ClCompile Include="src\AudioManager\AudioIMGUI.cpp">
       <Filter>src\AudioManager</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Graphics\Cubemap.cpp">
+      <Filter>src\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Graphics\Skybox.cpp">
+      <Filter>src\Graphics</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

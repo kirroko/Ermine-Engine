@@ -130,7 +130,82 @@ const char* AssetManager::load_file_contents(const char* filepath)
 
 void AssetManager::Clear()
 {
-    EE_CORE_INFO("Clearing assets: {0} textures, {1} shaders", m_textures.size(), m_shaders.size());
+    EE_CORE_INFO("Clearing assets: {0} textures, {1} shaders, {2} cubemaps", m_textures.size(), m_shaders.size(), m_cubemaps.size());
     m_textures.clear();
     m_shaders.clear();
+    m_cubemaps.clear();
+}
+
+/**
+ * @brief Load a cubemap from individual face textures and store it in the asset manager
+ * @param faces Array of 6 face texture paths in order: +X, -X, +Y, -Y, +Z, -Z  
+ * @param name Optional name for the cubemap (for caching)
+ * @return The loaded cubemap
+ */
+std::shared_ptr<graphics::Cubemap> AssetManager::LoadCubemap(const std::array<std::string, 6>& faces, const std::string& name)
+{
+    // Create a cache key
+    std::string key = name.empty() ? 
+        (faces[0] + "|" + faces[1] + "|" + faces[2] + "|" + faces[3] + "|" + faces[4] + "|" + faces[5]) : 
+        name;
+    
+    EE_CORE_TRACE("Loading cubemap: {0}", key);
+    
+    // Check if already loaded
+    auto it = m_cubemaps.find(key);
+    if (it != m_cubemaps.end())
+        return it->second;
+    
+    // Create new cubemap
+    std::shared_ptr<graphics::Cubemap> cubemap = std::make_shared<graphics::Cubemap>(faces);
+    if (!cubemap->IsValid())
+    {
+        EE_CORE_ERROR("Failed to load cubemap: {0}", key);
+        return nullptr;
+    }
+    
+    m_cubemaps[key] = cubemap;
+    EE_CORE_INFO("Cubemap loaded: {0}", key);
+    return cubemap;
+}
+
+/**
+ * @brief Load a cubemap from an equirectangular texture
+ * @param equirectangularPath Path to the equirectangular texture
+ * @param name Optional name for the cubemap (for caching)
+ * @return The loaded cubemap
+ */
+std::shared_ptr<graphics::Cubemap> AssetManager::LoadCubemapFromEquirectangular(const std::string& equirectangularPath, const std::string& name)
+{
+    std::string key = name.empty() ? equirectangularPath : name;
+    
+    EE_CORE_TRACE("Loading cubemap from equirectangular: {0}", key);
+    
+    // Check if already loaded
+    auto it = m_cubemaps.find(key);
+    if (it != m_cubemaps.end())
+        return it->second;
+    
+    // Create new cubemap from equirectangular
+    std::shared_ptr<graphics::Cubemap> cubemap = std::make_shared<graphics::Cubemap>(equirectangularPath);
+    if (!cubemap->IsValid())
+    {
+        EE_CORE_ERROR("Failed to load cubemap from equirectangular: {0}", key);
+        return nullptr;
+    }
+    
+    m_cubemaps[key] = cubemap;
+    EE_CORE_INFO("Cubemap loaded from equirectangular: {0}", key);
+    return cubemap;
+}
+
+/**
+ * @brief Get a cubemap from the cache
+ * @param name The name of the cubemap
+ * @return The cubemap if it exists, nullptr otherwise
+ */
+std::shared_ptr<graphics::Cubemap> AssetManager::GetCubemap(const std::string& name)
+{
+    auto it = m_cubemaps.find(name);
+    return it != m_cubemaps.end() ? it->second : nullptr;
 }

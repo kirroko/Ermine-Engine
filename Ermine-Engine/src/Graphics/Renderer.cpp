@@ -27,6 +27,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Input.h"
 #include "GeometryFactory.h"
 #include "AssetManager.h"
+#include "Skybox.h"
 #include <random>  
 
 #include <GLFW/glfw3.h>
@@ -353,6 +354,9 @@ void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 	{
 		glDeleteFramebuffers(1, &m_PostProcessBuffer->FBO);
 		glDeleteTextures(1, &m_PostProcessBuffer->ColorTexture);
+		if (m_PostProcessBuffer->DepthTexture != 0) {
+			glDeleteTextures(1, &m_PostProcessBuffer->DepthTexture);
+		}
 		glDeleteFramebuffers(1, &m_BloomExtractBuffer->FBO);
 		glDeleteTextures(1, &m_BloomExtractBuffer->ColorTexture);
 		glDeleteFramebuffers(1, &m_BloomBlurBuffer1->FBO);
@@ -361,9 +365,11 @@ void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 		glDeleteTextures(1, &m_BloomBlurBuffer2->ColorTexture);
 	}
 
-	// Create FBOs
+	// Create main post-process buffer with depth attachment for skybox rendering
 	glGenFramebuffers(1, &pPBuffer.FBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, pPBuffer.FBO);
+	
+	// Color texture
 	glGenTextures(1, &pPBuffer.ColorTexture);
 	glBindTexture(GL_TEXTURE_2D, pPBuffer.ColorTexture);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_HALF_FLOAT, nullptr);
@@ -372,8 +378,20 @@ void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pPBuffer.ColorTexture, 0);
+	
+	// Depth texture for skybox rendering
+	glGenTextures(1, &pPBuffer.DepthTexture);
+	glBindTexture(GL_TEXTURE_2D, pPBuffer.DepthTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, pPBuffer.DepthTexture, 0);
+	
 	glCheckError();
 
+	// Create other buffers without depth (they don't need it)
 	glGenFramebuffers(1, &bEBuffer.FBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, bEBuffer.FBO);
 	glGenTextures(1, &bEBuffer.ColorTexture);
@@ -384,6 +402,7 @@ void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, bEBuffer.ColorTexture, 0);
+	bEBuffer.DepthTexture = 0; // No depth for bloom buffers
 	glCheckError();
 
 	glGenFramebuffers(1, &bBBuffer1.FBO);
@@ -396,6 +415,7 @@ void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, bBBuffer1.ColorTexture, 0);
+	bBBuffer1.DepthTexture = 0;
 	glCheckError();
 
 	glGenFramebuffers(1, &bBBuffer2.FBO);
@@ -408,6 +428,7 @@ void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, bBBuffer2.ColorTexture, 0);
+	bBBuffer2.DepthTexture = 0;
 	glCheckError();
 
 	// Making sure dimensions are non-zero
@@ -793,6 +814,36 @@ void Renderer::RenderDeferredPipeline(const Mtx44& view, const Mtx44& projection
 	// Lighting pass - read from g-buffer and perform lighting
 	RenderLightingPass(view, projection);
 
+	// Render skybox after lighting but before post-processing
+	// This ensures the skybox appears behind all geometry using the depth buffer
+	if (m_skybox && m_skybox->IsValid() && m_PostProcessBuffer && m_GBuffer) {
+		// Bind the post-process buffer where the lighting pass output is stored
+		glBindFramebuffer(GL_FRAMEBUFFER, m_PostProcessBuffer->FBO);
+		glViewport(0, 0, m_PostProcessBuffer->width, m_PostProcessBuffer->height);
+		
+		// Copy depth buffer from g-buffer to post-process buffer for proper depth testing
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, m_GBuffer->FBO);
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_PostProcessBuffer->FBO);
+		glBlitFramebuffer(0, 0, m_GBuffer->width, m_GBuffer->height,
+						  0, 0, m_PostProcessBuffer->width, m_PostProcessBuffer->height,
+						  GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+		
+		// Bind back to post-process buffer
+		glBindFramebuffer(GL_FRAMEBUFFER, m_PostProcessBuffer->FBO);
+		
+		// Enable depth testing but set to render only where depth = 1.0 (background)
+		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_LEQUAL);
+		glDepthMask(GL_FALSE);
+		
+		// Render skybox
+		m_skybox->Render(view, projection);
+		
+		// Restore depth state
+		glDepthMask(GL_TRUE);
+		glDepthFunc(GL_LESS);
+	}
+
 	// Post-processing pass - read from lighting pass output
 	RenderPostProcessPass();
 }
@@ -900,6 +951,11 @@ void Renderer::CleanupPostProcessBuffer()
 		{
 			glDeleteTextures(1, &m_PostProcessBuffer->ColorTexture);
 			m_PostProcessBuffer->ColorTexture = 0;
+		}
+		if (m_PostProcessBuffer->DepthTexture != 0)
+		{
+			glDeleteTextures(1, &m_PostProcessBuffer->DepthTexture);
+			m_PostProcessBuffer->DepthTexture = 0;
 		}
 		m_PostProcessBuffer.reset();
 	}
@@ -1173,6 +1229,14 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 		glViewport(0, 0, m_OffscreenBuffer->width, m_OffscreenBuffer->height);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 #endif
+
+		// Render skybox FIRST as the background
+		if (m_skybox && m_skybox->IsValid()) {
+			// Disable depth writing for skybox so it appears behind everything
+			glDepthMask(GL_FALSE);
+			m_skybox->Render(view, projection);
+			glDepthMask(GL_TRUE);
+		}
 
 		// Update lights UBO for this frame
 		UpdateLightsUBO(view);

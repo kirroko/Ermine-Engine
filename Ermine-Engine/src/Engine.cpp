@@ -33,6 +33,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Particles.h"
 #include "InspectorGUI.h"
 #include "AudioImGUI.h"
+#include "Skybox.h"
+#include "Cubemap.h"
 
 #include <random> // Include for random number generation
 
@@ -47,6 +49,10 @@ namespace
 {
 	bool s_isInitialized = false;
 	//std::unique_ptr<editor::EditorCamera> s_EditorCamera = nullptr;
+
+	// For Skybox/Environment mapping
+	static std::unique_ptr<Ermine::graphics::Skybox> skybox;
+	static std::shared_ptr<Ermine::graphics::Cubemap> environmentCubemap;
 
 	void EnableMemoryLeakChecking(int breakAlloc = -1)
 	{
@@ -189,6 +195,32 @@ bool engine::Init(GLFWwindow* windowContext)
 	auto shader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/vertex.glsl", "../Resources/Shaders/fragment.glsl");
 	auto texture = AssetManager::GetInstance().LoadTexture("../Resources/Textures/greybox_grey_grid.png");
 
+	// Load skybox shader and create a simple test cubemap (optional)
+	auto skyboxShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/skybox_vertex.glsl", "../Resources/Shaders/skybox_fragment.glsl");
+	
+	// Example: Load a cubemap from individual face textures (you'll need to provide actual texture files)
+	// Try different face order - some cubemap sources use different conventions
+	 std::array<std::string, 6> cubemapFaces = {
+	     "../Resources/Textures/Skybox/right.jpg",   // +X (right)
+	     "../Resources/Textures/Skybox/left.jpg",    // -X (left)  
+	     "../Resources/Textures/Skybox/bottom.jpg",  // +Y (top) - swapped for correct orientation
+	     "../Resources/Textures/Skybox/top.jpg",     // -Y (bottom) - swapped for correct orientation
+	     "../Resources/Textures/Skybox/front.jpg",   // +Z (front)
+	     "../Resources/Textures/Skybox/back.jpg"     // -Z (back)
+	 };
+	 environmentCubemap = AssetManager::GetInstance().LoadCubemap(cubemapFaces, "default_skybox");
+	
+	// Create the skybox if cubemap loaded successfully
+	if (environmentCubemap && environmentCubemap->IsValid() && skyboxShader && skyboxShader->IsValid()) {
+		skybox = std::make_unique<graphics::Skybox>(environmentCubemap, skyboxShader);
+		EE_CORE_INFO("Skybox created successfully");
+	} else {
+		EE_CORE_WARN("Failed to create skybox - cubemap or shader invalid");
+	}
+	
+	// For now, let's create a placeholder cubemap that you can replace later
+	EE_CORE_INFO("Cubemap system initialized. You can load cubemaps using AssetManager::LoadCubemap() or LoadCubemapFromEquirectangular()");
+
 	// Random number generation setup
 	//std::random_device rd;
 	//std::mt19937 gen(rd());
@@ -269,13 +301,24 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().AddComponent(entity2, ObjectMetaData());
 	ECS::GetInstance().AddComponent(entity2, graphics::GeometryFactory::CreateCube(1, 1, 1));
 
-	// Create a different material for variety
+	// Create a reflective material for demonstration
 	auto cube2Material = std::make_unique<graphics::Material>(shader);
-	cube2Material->LoadTemplate(graphics::MaterialTemplates::PBR_METAL());
+	cube2Material->LoadTemplate(graphics::MaterialTemplates::PBR_REFLECTIVE(0.9f, 0.1f)); // Highly reflective metal
 
 	if (texture && texture->IsValid()) {
 		cube2Material->SetTexture("materialAlbedoMap", texture);
 		cube2Material->SetTexture("texture0", texture);
+	}
+
+	// Example: Add environment mapping to the material
+	// If you have a cubemap loaded, you can set it like this:
+	if (environmentCubemap && environmentCubemap->IsValid()) {
+	    cube2Material->SetCubemap("materialEnvironmentMap", environmentCubemap);
+	    cube2Material->SetCubemap("materialIrradianceMap", environmentCubemap); // You'd typically use a separate irradiance map
+	    cube2Material->SetBool("materialHasEnvironmentMap", true);
+	    cube2Material->SetBool("materialHasIrradianceMap", true);
+	    cube2Material->SetFloat("materialEnvironmentIntensity", 1.0f);
+	    EE_CORE_INFO("Environment mapping applied to reflective cube");
 	}
 
 	ECS::GetInstance().AddComponent(entity2, Material(std::move(cube2Material)));
@@ -369,6 +412,8 @@ void engine::Shutdown()
     AssetManager::GetInstance().Clear();
 
 	emitter.reset();
+	skybox.reset();
+	environmentCubemap.reset();
 
     graphics::GPUProfiler::Shutdown();
 
@@ -458,11 +503,18 @@ void engine::Render(GLFWwindow* window)
 	Mtx44 view = editor::EditorCamera::GetInstance().GetViewMatrix();
 	Mtx44 proj = editor::EditorCamera::GetInstance().GetProjectionMatrix();
 
-	// Draw
-	ECS::GetInstance().GetSystem<graphics::Renderer>()->Update(view, proj);
+	// Pass skybox to renderer so it can be rendered in the proper framebuffer
+	auto renderer = ECS::GetInstance().GetSystem<graphics::Renderer>();
+	if (skybox && skybox->IsValid()) {
+		renderer->SetSkybox(skybox.get());
+	}
+
+	// Draw scene objects (this now handles skybox, deferred/forward rendering internally)
+	renderer->Update(view, proj);
 
 	graphics::GPUProfiler::EndEvent();
 
+	// Render ImGui/Editor on top of everything
 	if (editor::EditorGUI::IsInit())
 		editor::EditorGUI::Render(); // Render the ImGUI context on-top of the scene
 

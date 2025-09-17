@@ -15,6 +15,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "PreCompile.h"
 #include "Shader.h"
 #include "Texture.h"
+#include "Cubemap.h"
 #include "MathVector.h"
 
 namespace Ermine::graphics
@@ -47,6 +48,7 @@ namespace Ermine::graphics
         int intValue = 0;
         bool boolValue = false;
         std::shared_ptr<Texture> texture = nullptr;
+        std::shared_ptr<Cubemap> cubemap = nullptr;
 
         // Default constructor
         MaterialParam() : type(MaterialParamType::FLOAT), intValue(0), boolValue(false) {}
@@ -60,6 +62,9 @@ namespace Ermine::graphics
         MaterialParam(bool value) : type(MaterialParamType::BOOL), boolValue(value) {}
         MaterialParam(std::shared_ptr<Texture> tex, MaterialParamType texType = MaterialParamType::TEXTURE_2D)
             : type(texType), texture(std::move(tex)) {
+        }
+        MaterialParam(std::shared_ptr<Cubemap> cube) 
+            : type(MaterialParamType::TEXTURE_CUBE), cubemap(std::move(cube)) {
         }
     };
 
@@ -85,7 +90,13 @@ namespace Ermine::graphics
         alignas(4) int hasMetallicMap{ 0 };
         alignas(4) int hasAoMap{ 0 };
         alignas(4) int hasEmissiveMap{ 0 };
+        alignas(4) int hasEnvironmentMap{ 0 };
+        alignas(4) int hasIrradianceMap{ 0 };
 
+        // Environment mapping parameters
+        alignas(4) float reflectance{ 0.04f };
+        alignas(4) float environmentIntensity{ 1.0f };
+        
         // Padding to ensure proper alignment
         alignas(4) int padding1{ 0 };
         alignas(4) int padding2{ 0 };
@@ -115,7 +126,9 @@ namespace Ermine::graphics
                 {"materialHasRoughnessMap", false},
                 {"materialHasMetallicMap", false},
                 {"materialHasAoMap", false},
-                {"materialHasEmissiveMap", false}
+                {"materialHasEmissiveMap", false},
+                {"materialHasEnvironmentMap", false},
+                {"materialHasIrradianceMap", false}
             };
         }
 
@@ -135,7 +148,9 @@ namespace Ermine::graphics
                 {"materialHasRoughnessMap", false},
                 {"materialHasMetallicMap", false},
                 {"materialHasAoMap", false},
-                {"materialHasEmissiveMap", false}
+                {"materialHasEmissiveMap", false},
+                {"materialHasEnvironmentMap", false},
+                {"materialHasIrradianceMap", false}
             };
         }
 
@@ -155,7 +170,9 @@ namespace Ermine::graphics
                 {"materialHasRoughnessMap", false},
                 {"materialHasMetallicMap", false},
                 {"materialHasAoMap", false},
-                {"materialHasEmissiveMap", false}
+                {"materialHasEmissiveMap", false},
+                {"materialHasEnvironmentMap", false},
+                {"materialHasIrradianceMap", false}
             };
         }
 
@@ -176,7 +193,34 @@ namespace Ermine::graphics
                 {"materialHasRoughnessMap", false},
                 {"materialHasMetallicMap", false},
                 {"materialHasAoMap", false},
-                {"materialHasEmissiveMap", false}
+                {"materialHasEmissiveMap", false},
+                {"materialHasEnvironmentMap", false},
+                {"materialHasIrradianceMap", false}
+            };
+        }
+
+        // Reflective material template with environment mapping
+        static std::map<std::string, MaterialParam> PBR_REFLECTIVE(float metallic = 1.0f, float roughness = 0.1f)
+        {
+            return {
+                {"materialAlbedo", Vec3(0.8f, 0.8f, 0.8f)},
+                {"materialMetallic", metallic},
+                {"materialRoughness", roughness},
+                {"materialAo", 1.0f},
+                {"materialEmissive", Vec3(0.0f, 0.0f, 0.0f)},
+                {"materialEmissiveIntensity", 0.0f},
+                {"materialNormalStrength", 1.0f},
+                {"materialShadingModel", 0},
+                {"materialHasAlbedoMap", false},
+                {"materialHasNormalMap", false},
+                {"materialHasRoughnessMap", false},
+                {"materialHasMetallicMap", false},
+                {"materialHasAoMap", false},
+                {"materialHasEmissiveMap", false},
+                {"materialHasEnvironmentMap", true},
+                {"materialHasIrradianceMap", true},
+                {"materialReflectance", 0.04f},
+                {"materialEnvironmentIntensity", 1.0f}
             };
         }
     };
@@ -242,6 +286,12 @@ namespace Ermine::graphics
             if (auto param = GetParameter("materialShadingModel"))
                 m_materialData.shadingModel = param->intValue;
 
+            if (auto param = GetParameter("materialReflectance"))
+                m_materialData.reflectance = param->floatValues[0];
+
+            if (auto param = GetParameter("materialEnvironmentIntensity"))
+                m_materialData.environmentIntensity = param->floatValues[0];
+
             // Update texture flags
             m_materialData.hasAlbedoMap = GetParameter("materialHasAlbedoMap") &&
                 GetParameter("materialHasAlbedoMap")->boolValue ? 1 : 0;
@@ -255,6 +305,10 @@ namespace Ermine::graphics
                 GetParameter("materialHasAoMap")->boolValue ? 1 : 0;
             m_materialData.hasEmissiveMap = GetParameter("materialHasEmissiveMap") &&
                 GetParameter("materialHasEmissiveMap")->boolValue ? 1 : 0;
+            m_materialData.hasEnvironmentMap = GetParameter("materialHasEnvironmentMap") &&
+                GetParameter("materialHasEnvironmentMap")->boolValue ? 1 : 0;
+            m_materialData.hasIrradianceMap = GetParameter("materialHasIrradianceMap") &&
+                GetParameter("materialHasIrradianceMap")->boolValue ? 1 : 0;
 
             m_uboDirty = false;
         }
@@ -348,6 +402,15 @@ namespace Ermine::graphics
         }
 
         /**
+         * @brief Sets a cubemap material parameter.
+         * @param name The name of the parameter.
+         * @param cubemap A shared pointer to the cubemap to set.
+         */
+        void SetCubemap(const std::string& name, std::shared_ptr<Cubemap> cubemap)
+        {
+            SetParameter(name, MaterialParam(std::move(cubemap)));
+        }
+        /**
          * @brief Checks if a material parameter exists.
          * @param name The name of the parameter.
          * @return True if the parameter exists, false otherwise.
@@ -387,14 +450,23 @@ namespace Ermine::graphics
 
             for (const auto& [name, param] : m_parameters)
             {
-                if ((param.type == MaterialParamType::TEXTURE_2D ||
-                    param.type == MaterialParamType::TEXTURE_CUBE) &&
+                if (param.type == MaterialParamType::TEXTURE_2D && 
                     param.texture && param.texture->IsValid())
                 {
                     auto slotIt = m_textureSlots.find(name);
                     if (slotIt != m_textureSlots.end())
                     {
                         param.texture->Bind(slotIt->second);
+                        m_shader->SetUniform1i(name, slotIt->second);
+                    }
+                }
+                else if (param.type == MaterialParamType::TEXTURE_CUBE &&
+                         param.cubemap && param.cubemap->IsValid())
+                {
+                    auto slotIt = m_textureSlots.find(name);
+                    if (slotIt != m_textureSlots.end())
+                    {
+                        param.cubemap->Bind(slotIt->second);
                         m_shader->SetUniform1i(name, slotIt->second);
                     }
                 }
@@ -419,11 +491,15 @@ namespace Ermine::graphics
             // Unbind textures
             for (const auto& [name, param] : m_parameters)
             {
-                if ((param.type == MaterialParamType::TEXTURE_2D ||
-                    param.type == MaterialParamType::TEXTURE_CUBE) &&
+                if (param.type == MaterialParamType::TEXTURE_2D &&
                     param.texture && param.texture->IsValid())
                 {
                     param.texture->Unbind();
+                }
+                else if (param.type == MaterialParamType::TEXTURE_CUBE &&
+                         param.cubemap && param.cubemap->IsValid())
+                {
+                    param.cubemap->Unbind();
                 }
             }
 

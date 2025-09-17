@@ -16,6 +16,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #include "Shader.h"
 #include "Texture.h"
+#include "Cubemap.h"
 
 namespace Ermine
 {
@@ -31,6 +32,7 @@ namespace Ermine
         // Internal caching for assets
         std::unordered_map<std::string, std::shared_ptr<graphics::Texture>> m_textures;
         std::unordered_map<std::string, std::shared_ptr<graphics::Shader>> m_shaders;
+        std::unordered_map<std::string, std::shared_ptr<graphics::Cubemap>> m_cubemaps;
     
 public:
         static AssetManager& GetInstance()
@@ -76,6 +78,30 @@ public:
          * @return The contents of the file as a buffer.
          */
         const char* load_file_contents(const char* filepath);
+
+        // Cubemap management
+        /**
+         * @brief Load a cubemap from individual face textures
+         * @param faces Array of 6 face texture paths in order: +X, -X, +Y, -Y, +Z, -Z
+         * @param name Optional name for the cubemap (for caching)
+         * @return The loaded cubemap
+         */
+        std::shared_ptr<graphics::Cubemap> LoadCubemap(const std::array<std::string, 6>& faces, const std::string& name = "");
+        
+        /**
+         * @brief Load a cubemap from an equirectangular texture
+         * @param equirectangularPath Path to the equirectangular texture
+         * @param name Optional name for the cubemap (for caching)
+         * @return The loaded cubemap
+         */
+        std::shared_ptr<graphics::Cubemap> LoadCubemapFromEquirectangular(const std::string& equirectangularPath, const std::string& name = "");
+        
+        /**
+         * @brief Get a cubemap from the cache
+         * @param name The name of the cubemap
+         * @return The cubemap if it exists, nullptr otherwise
+         */
+        std::shared_ptr<graphics::Cubemap> GetCubemap(const std::string& name);
 
         // Clear all loaded assets
         void Clear();

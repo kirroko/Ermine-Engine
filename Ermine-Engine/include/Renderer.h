@@ -27,6 +27,7 @@ namespace Ermine::graphics
 {
     // Forward declarations
     struct MaterialUBO;
+    class Skybox;
 
     /**
      * @brief The Renderer class is responsible for rendering the game objects to the screen.
@@ -144,6 +145,7 @@ namespace Ermine::graphics
         {
 			unsigned int FBO;
 			unsigned int ColorTexture;
+			unsigned int DepthTexture = 0; // Optional depth texture for skybox rendering
 
 			int width;
 			int height;
@@ -312,6 +314,12 @@ namespace Ermine::graphics
          */
         void ToggleDeferredRendering();
 
+        /**
+         * @brief Set the skybox to be rendered
+         * @param skybox Pointer to the skybox to render
+         */
+        void SetSkybox(graphics::Skybox* skybox) { m_skybox = skybox; }
+
 
     private:
         std::shared_ptr<OffscreenBuffer> m_OffscreenBuffer;
@@ -346,7 +354,7 @@ namespace Ermine::graphics
 		std::shared_ptr<Shader> m_BloomShader = 0; // Shader for bloom effect
 		std::shared_ptr<Shader> m_PostProcessShader = 0; // Shader for post-processing effects
 
-
-
+		// Skybox
+		graphics::Skybox* m_skybox = nullptr;
     };
 }
