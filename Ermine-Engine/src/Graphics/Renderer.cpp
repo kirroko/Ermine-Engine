@@ -406,7 +406,7 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 
 			if (modelComp.m_model)
 			{
-				// Apply entity’s transform as root
+				// Apply entity's transform as root
 				glm::mat4 entityModel = glm::mat4(1.0f);
 				entityModel = glm::translate(entityModel, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
 				entityModel = glm::rotate(entityModel, glm::radians(trans.rotation.x), glm::vec3(1, 0, 0));
@@ -831,7 +831,7 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 
 				if (modelComp.m_model)
 				{
-					// Apply entity’s transform as root
+					// Apply entity's transform as root
 					glm::mat4 entityModel = glm::mat4(1.0f);
 					entityModel = glm::translate(entityModel, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
 					entityModel = glm::rotate(entityModel, glm::radians(trans.rotation.x), glm::vec3(1, 0, 0));
