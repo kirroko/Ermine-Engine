@@ -184,6 +184,7 @@ void EditorGUI::ViewPortWindow(bool &show)
 	const auto offscreen_buffer = renderer->GetOffscreenBuffer(); // released at the end of the scope
     if (offscreen_buffer)
     {
+        // Resize the offscreen buffer when viewport size changes
 	    if (offscreen_buffer->width != static_cast<int>(viewport_size.x) ||
             offscreen_buffer->height != static_cast<int>(viewport_size.y))
 	    {
@@ -192,6 +193,7 @@ void EditorGUI::ViewPortWindow(bool &show)
 	    }
     }
 
+    // Set editor's camera viewport size
 	EditorCamera::GetInstance().SetViewportSize(viewport_size.x, viewport_size.y);
 
     // Child region that ignores all ImGui inputs
