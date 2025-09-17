@@ -5,6 +5,9 @@ workspace "Ermine"
 
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 fmod_dll = "../ThirdParty/Fmod/lib/fmod.dll"
+fmodL_dll = "../ThirdParty/Fmod/lib/fmodL.dll"
+fmodstudio_dll = "../ThirdParty/Fmod/lib/fmodstudio.dll"
+fmodstudioL_dll = "../ThirdParty/Fmod/lib/fmodstudioL.dll"
 mono_dll = "../ThirdParty/Mono/lib/mono-2.0-sgen.dll"
 mono_assembly = "../ThirdParty/Mono/lib/"
 mono_config = "../ThirdParty/Mono/etc"
@@ -18,6 +21,9 @@ IncludeDir["glm"] = "ThirdParty/glm"
 IncludeDir["spdlog"] = "ThirdParty/spdlog/include"
 IncludeDir["stb"] = "ThirdParty/stb"
 IncludeDir["Mono"] = "ThirdParty/Mono/include"
+IncludeDir["rapidjson"] = "ThirdParty/rapidjson"
+IncludeDir["Fmod"] = "ThirdParty/Fmod/inc"
+IncludeDir["Jolt"] = "ThirdParty"
 
 -- Libraries
 LibraryDir = {}
@@ -31,6 +37,7 @@ group "Dependencies"
     include "ThirdParty/imgui"
     include "ThirdParty/Fmod"
     include "ThirdParty/Mono"
+    include "ThirdParty/Jolt"
 group ""
 
 -- Engine Project
@@ -38,8 +45,10 @@ project "Ermine-Engine"
     location "Ermine-Engine"
     kind "SharedLib"
     language "C++"
-    cppdialect "C++17"
+    cppdialect "C++20"
     staticruntime "off" -- Use dynamic runtime
+
+    buildoptions { "/MP" } -- Enable multi-processor compilation
 
     targetdir ("Build/bin/" .. outputdir .. "/%{prj.name}")
     objdir ("Build/obj/" .. outputdir .. "/%{prj.name}")
@@ -65,7 +74,9 @@ project "Ermine-Engine"
         "%{IncludeDir.spdlog}",
         "%{IncludeDir.stb}",
         "%{IncludeDir.Fmod}",
-        "%{IncludeDir.Mono}"
+        "%{IncludeDir.Mono}",
+        "%{IncludeDir.Jolt}",
+        "%{IncludeDir.rapidjson}"
     }
 
     libdirs
@@ -80,18 +91,26 @@ project "Ermine-Engine"
         "Glad",
         "ImGui",
         "fmod_vc",
+        "fmodL_vc",
+        "fmodstudio_vc",
+        "fmodstudioL_vc",
         "opengl32.lib",
-		"mono-2.0-sgen.lib"
+		"mono-2.0-sgen.lib",
+        "Jolt"
     }
 
     postbuildcommands
     {
         ("{COPY} %{cfg.buildtarget.relpath} ../Build/bin/" .. outputdir .. "/Ermine-Editor"),
         ("{COPY} " .. fmod_dll .. " ../Build/bin/" .. outputdir .. "/Ermine-Editor"),
+        ("{COPY} " .. fmodL_dll .. " ../Build/bin/" .. outputdir .. "/Ermine-Editor"),
+        ("{COPY} " .. fmodstudio_dll .. " ../Build/bin/" .. outputdir .. "/Ermine-Editor"),
+        ("{COPY} " .. fmodstudioL_dll .. " ../Build/bin/" .. outputdir .. "/Ermine-Editor"),
         ("{COPY} " .. mono_dll .. " ../Build/bin/" .. outputdir .. "/Ermine-Editor"),
         ("{COPYDIR} " .. mono_assembly .. " ../Build/bin/" .. outputdir .. "/Ermine-Editor/mono/lib"),
         ("{COPYDIR} " .. mono_config .. " ../Build/bin/" .. outputdir .. "/Ermine-Editor/mono/etc"),
-        ("{COPYDIR} ../Resources ../Build/bin/" .. outputdir .. "/Resources")
+        ("{COPYDIR} ../Resources ../Build/bin/" .. outputdir .. "/Resources"),
+        ("{COPY} %{cfg.buildtarget.relpath} ../Build/bin/" .. outputdir .. "/Ermine-Editor/Jolt")
     }
 
     filter "system:windows"
@@ -99,7 +118,7 @@ project "Ermine-Engine"
 
         warnings "Extra"
 
-        buildoptions { "/wd4251", "/wd4005", "/wd4267" }
+        buildoptions { "/wd4251", "/wd4005", "/wd4267", "/wd4324" }
 
         defines
         {
@@ -114,18 +133,22 @@ project "Ermine-Engine"
         symbols "on"
         linkoptions { "/NODEFAULTLIB:LIBCMTD" }
 
+        defines { "VERBOSE_LOGGING=1" }
+
     filter "configurations:Release"
         defines "EE_RELEASE"
         runtime "Release"
         optimize "on"
         linkoptions { "/NODEFAULTLIB:LIBCMT" }
+        
+        defines { "VERBOSE_LOGGING=0" }
 
 -- Editor Project
 project "Ermine-Editor"
     location "Ermine-Editor"
     kind "ConsoleApp"
     language "C++"
-    cppdialect "C++17"
+    cppdialect "C++20"
     staticruntime "off" -- Use dynamic runtime
 
     targetdir ("Build/bin/" .. outputdir .. "/%{prj.name}")
@@ -149,7 +172,8 @@ project "Ermine-Editor"
         "%{IncludeDir.spdlog}",
         "%{IncludeDir.stb}",
         "%{IncludeDir.Fmod}",
-        "%{IncludeDir.Mono}"
+        "%{IncludeDir.Mono}",
+        "%{IncludeDir.rapidjson}"
     }
 
     links

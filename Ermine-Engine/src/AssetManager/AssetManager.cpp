@@ -14,7 +14,6 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "PreCompile.h"
 #include "AssetManager.h"
 
-#include "GPUProfiler.h"
 #include "Logger.h"
 
 using namespace Ermine;
@@ -53,6 +52,11 @@ std::shared_ptr<graphics::Texture> AssetManager::GetTexture(const std::string& f
 {
     auto it = m_textures.find(filePath);
     return it != m_textures.end() ? it->second : nullptr;
+}
+
+const std::unordered_map<std::string, std::shared_ptr<graphics::Texture>>& AssetManager::GetLoadedTextures() const
+{
+    return m_textures;
 }
 
 /**

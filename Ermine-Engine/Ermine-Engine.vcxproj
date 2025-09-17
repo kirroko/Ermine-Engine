@@ -59,19 +59,19 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>PreCompile.h</PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>EE_PLATFORM_WINDOWS;EE_BUILD_DLL;GLFW_INCLUDE_NONE;EE_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>include;..\ThirdParty\GLFW\include;..\ThirdParty\Glad\include;..\ThirdParty\imgui;..\ThirdParty\glm;..\ThirdParty\spdlog\include;..\ThirdParty\stb;..;..\ThirdParty\Mono\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>EE_PLATFORM_WINDOWS;EE_BUILD_DLL;GLFW_INCLUDE_NONE;EE_DEBUG;VERBOSE_LOGGING=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>include;..\ThirdParty\GLFW\include;..\ThirdParty\Glad\include;..\ThirdParty\imgui;..\ThirdParty\glm;..\ThirdParty\spdlog\include;..\ThirdParty\stb;..\ThirdParty\Fmod\inc;..\ThirdParty\Mono\include;..\ThirdParty;..\ThirdParty\rapidjson;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <AdditionalOptions>/wd4251 /wd4005 /wd4267 %(AdditionalOptions)</AdditionalOptions>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalOptions>/MP /wd4251 /wd4005 /wd4267 /wd4324 %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>fmod_vc.lib;opengl32.lib;mono-2.0-sgen.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>fmod_vc.lib;fmodL_vc.lib;fmodstudio_vc.lib;fmodstudioL_vc.lib;opengl32.lib;mono-2.0-sgen.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>..\ThirdParty\Fmod\lib;..\ThirdParty\Mono\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ImportLibrary>..\Build\bin\Debug-windows-x86_64\Ermine-Engine\Ermine-Engine.lib</ImportLibrary>
       <AdditionalOptions>/NODEFAULTLIB:LIBCMTD %(AdditionalOptions)</AdditionalOptions>
@@ -79,10 +79,14 @@
     <PostBuildEvent>
       <Command>IF EXIST ..\Build\bin\Debug-windows-x86_64\Ermine-Engine\Ermine-Engine.dll\ (xcopy /Q /E /Y /I ..\Build\bin\Debug-windows-x86_64\Ermine-Engine\Ermine-Engine.dll ..\Build\bin\Debug-windows-x86_64\Ermine-Editor &gt; nul) ELSE (xcopy /Q /Y /I ..\Build\bin\Debug-windows-x86_64\Ermine-Engine\Ermine-Engine.dll ..\Build\bin\Debug-windows-x86_64\Ermine-Editor &gt; nul)
 IF EXIST ..\ThirdParty\Fmod\lib\fmod.dll\ (xcopy /Q /E /Y /I ..\ThirdParty\Fmod\lib\fmod.dll ..\Build\bin\Debug-windows-x86_64\Ermine-Editor &gt; nul) ELSE (xcopy /Q /Y /I ..\ThirdParty\Fmod\lib\fmod.dll ..\Build\bin\Debug-windows-x86_64\Ermine-Editor &gt; nul)
+IF EXIST ..\ThirdParty\Fmod\lib\fmodL.dll\ (xcopy /Q /E /Y /I ..\ThirdParty\Fmod\lib\fmodL.dll ..\Build\bin\Debug-windows-x86_64\Ermine-Editor &gt; nul) ELSE (xcopy /Q /Y /I ..\ThirdParty\Fmod\lib\fmodL.dll ..\Build\bin\Debug-windows-x86_64\Ermine-Editor &gt; nul)
+IF EXIST ..\ThirdParty\Fmod\lib\fmodstudio.dll\ (xcopy /Q /E /Y /I ..\ThirdParty\Fmod\lib\fmodstudio.dll ..\Build\bin\Debug-windows-x86_64\Ermine-Editor &gt; nul) ELSE (xcopy /Q /Y /I ..\ThirdParty\Fmod\lib\fmodstudio.dll ..\Build\bin\Debug-windows-x86_64\Ermine-Editor &gt; nul)
+IF EXIST ..\ThirdParty\Fmod\lib\fmodstudioL.dll\ (xcopy /Q /E /Y /I ..\ThirdParty\Fmod\lib\fmodstudioL.dll ..\Build\bin\Debug-windows-x86_64\Ermine-Editor &gt; nul) ELSE (xcopy /Q /Y /I ..\ThirdParty\Fmod\lib\fmodstudioL.dll ..\Build\bin\Debug-windows-x86_64\Ermine-Editor &gt; nul)
 IF EXIST ..\ThirdParty\Mono\lib\mono-2.0-sgen.dll\ (xcopy /Q /E /Y /I ..\ThirdParty\Mono\lib\mono-2.0-sgen.dll ..\Build\bin\Debug-windows-x86_64\Ermine-Editor &gt; nul) ELSE (xcopy /Q /Y /I ..\ThirdParty\Mono\lib\mono-2.0-sgen.dll ..\Build\bin\Debug-windows-x86_64\Ermine-Editor &gt; nul)
 xcopy /Q /E /Y /I ..\ThirdParty\Mono\lib ..\Build\bin\Debug-windows-x86_64\Ermine-Editor\mono\lib
 xcopy /Q /E /Y /I ..\ThirdParty\Mono\etc ..\Build\bin\Debug-windows-x86_64\Ermine-Editor\mono\etc
-xcopy /Q /E /Y /I ..\Resources ..\Build\bin\Debug-windows-x86_64\Resources</Command>
+xcopy /Q /E /Y /I ..\Resources ..\Build\bin\Debug-windows-x86_64\Resources
+IF EXIST ..\Build\bin\Debug-windows-x86_64\Ermine-Engine\Ermine-Engine.dll\ (xcopy /Q /E /Y /I ..\Build\bin\Debug-windows-x86_64\Ermine-Engine\Ermine-Engine.dll ..\Build\bin\Debug-windows-x86_64\Ermine-Editor\Jolt &gt; nul) ELSE (xcopy /Q /Y /I ..\Build\bin\Debug-windows-x86_64\Ermine-Engine\Ermine-Engine.dll ..\Build\bin\Debug-windows-x86_64\Ermine-Editor\Jolt &gt; nul)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -90,23 +94,23 @@ xcopy /Q /E /Y /I ..\Resources ..\Build\bin\Debug-windows-x86_64\Resources</Comm
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>PreCompile.h</PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>EE_PLATFORM_WINDOWS;EE_BUILD_DLL;GLFW_INCLUDE_NONE;EE_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>include;..\ThirdParty\GLFW\include;..\ThirdParty\Glad\include;..\ThirdParty\imgui;..\ThirdParty\glm;..\ThirdParty\spdlog\include;..\ThirdParty\stb;..;..\ThirdParty\Mono\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>EE_PLATFORM_WINDOWS;EE_BUILD_DLL;GLFW_INCLUDE_NONE;EE_RELEASE;VERBOSE_LOGGING=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>include;..\ThirdParty\GLFW\include;..\ThirdParty\Glad\include;..\ThirdParty\imgui;..\ThirdParty\glm;..\ThirdParty\spdlog\include;..\ThirdParty\stb;..\ThirdParty\Fmod\inc;..\ThirdParty\Mono\include;..\ThirdParty;..\ThirdParty\rapidjson;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <MinimalRebuild>false</MinimalRebuild>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalOptions>/wd4251 /wd4005 /wd4267 %(AdditionalOptions)</AdditionalOptions>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalOptions>/MP /wd4251 /wd4005 /wd4267 /wd4324 %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>fmod_vc.lib;opengl32.lib;mono-2.0-sgen.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>fmod_vc.lib;fmodL_vc.lib;fmodstudio_vc.lib;fmodstudioL_vc.lib;opengl32.lib;mono-2.0-sgen.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>..\ThirdParty\Fmod\lib;..\ThirdParty\Mono\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ImportLibrary>..\Build\bin\Release-windows-x86_64\Ermine-Engine\Ermine-Engine.lib</ImportLibrary>
       <AdditionalOptions>/NODEFAULTLIB:LIBCMT %(AdditionalOptions)</AdditionalOptions>
@@ -114,15 +118,22 @@ xcopy /Q /E /Y /I ..\Resources ..\Build\bin\Debug-windows-x86_64\Resources</Comm
     <PostBuildEvent>
       <Command>IF EXIST ..\Build\bin\Release-windows-x86_64\Ermine-Engine\Ermine-Engine.dll\ (xcopy /Q /E /Y /I ..\Build\bin\Release-windows-x86_64\Ermine-Engine\Ermine-Engine.dll ..\Build\bin\Release-windows-x86_64\Ermine-Editor &gt; nul) ELSE (xcopy /Q /Y /I ..\Build\bin\Release-windows-x86_64\Ermine-Engine\Ermine-Engine.dll ..\Build\bin\Release-windows-x86_64\Ermine-Editor &gt; nul)
 IF EXIST ..\ThirdParty\Fmod\lib\fmod.dll\ (xcopy /Q /E /Y /I ..\ThirdParty\Fmod\lib\fmod.dll ..\Build\bin\Release-windows-x86_64\Ermine-Editor &gt; nul) ELSE (xcopy /Q /Y /I ..\ThirdParty\Fmod\lib\fmod.dll ..\Build\bin\Release-windows-x86_64\Ermine-Editor &gt; nul)
+IF EXIST ..\ThirdParty\Fmod\lib\fmodL.dll\ (xcopy /Q /E /Y /I ..\ThirdParty\Fmod\lib\fmodL.dll ..\Build\bin\Release-windows-x86_64\Ermine-Editor &gt; nul) ELSE (xcopy /Q /Y /I ..\ThirdParty\Fmod\lib\fmodL.dll ..\Build\bin\Release-windows-x86_64\Ermine-Editor &gt; nul)
+IF EXIST ..\ThirdParty\Fmod\lib\fmodstudio.dll\ (xcopy /Q /E /Y /I ..\ThirdParty\Fmod\lib\fmodstudio.dll ..\Build\bin\Release-windows-x86_64\Ermine-Editor &gt; nul) ELSE (xcopy /Q /Y /I ..\ThirdParty\Fmod\lib\fmodstudio.dll ..\Build\bin\Release-windows-x86_64\Ermine-Editor &gt; nul)
+IF EXIST ..\ThirdParty\Fmod\lib\fmodstudioL.dll\ (xcopy /Q /E /Y /I ..\ThirdParty\Fmod\lib\fmodstudioL.dll ..\Build\bin\Release-windows-x86_64\Ermine-Editor &gt; nul) ELSE (xcopy /Q /Y /I ..\ThirdParty\Fmod\lib\fmodstudioL.dll ..\Build\bin\Release-windows-x86_64\Ermine-Editor &gt; nul)
 IF EXIST ..\ThirdParty\Mono\lib\mono-2.0-sgen.dll\ (xcopy /Q /E /Y /I ..\ThirdParty\Mono\lib\mono-2.0-sgen.dll ..\Build\bin\Release-windows-x86_64\Ermine-Editor &gt; nul) ELSE (xcopy /Q /Y /I ..\ThirdParty\Mono\lib\mono-2.0-sgen.dll ..\Build\bin\Release-windows-x86_64\Ermine-Editor &gt; nul)
 xcopy /Q /E /Y /I ..\ThirdParty\Mono\lib ..\Build\bin\Release-windows-x86_64\Ermine-Editor\mono\lib
 xcopy /Q /E /Y /I ..\ThirdParty\Mono\etc ..\Build\bin\Release-windows-x86_64\Ermine-Editor\mono\etc
-xcopy /Q /E /Y /I ..\Resources ..\Build\bin\Release-windows-x86_64\Resources</Command>
+xcopy /Q /E /Y /I ..\Resources ..\Build\bin\Release-windows-x86_64\Resources
+IF EXIST ..\Build\bin\Release-windows-x86_64\Ermine-Engine\Ermine-Engine.dll\ (xcopy /Q /E /Y /I ..\Build\bin\Release-windows-x86_64\Ermine-Engine\Ermine-Engine.dll ..\Build\bin\Release-windows-x86_64\Ermine-Editor\Jolt &gt; nul) ELSE (xcopy /Q /Y /I ..\Build\bin\Release-windows-x86_64\Ermine-Engine\Ermine-Engine.dll ..\Build\bin\Release-windows-x86_64\Ermine-Editor\Jolt &gt; nul)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="include\AssetBrowser.h" />
     <ClInclude Include="include\AssetManager.h" />
+    <ClInclude Include="include\AudioImGUI.h" />
+    <ClInclude Include="include\AudioManager.h" />
+    <ClInclude Include="include\AudioSystem.h" />
     <ClInclude Include="include\Camera.h" />
     <ClInclude Include="include\Component.h" />
     <ClInclude Include="include\Components.h" />
@@ -140,6 +151,7 @@ xcopy /Q /E /Y /I ..\Resources ..\Build\bin\Release-windows-x86_64\Resources</Co
     <ClInclude Include="include\ImGuiUIWindow.h" />
     <ClInclude Include="include\IndexBuffer.h" />
     <ClInclude Include="include\Input.h" />
+    <ClInclude Include="include\InspectorGUI.h" />
     <ClInclude Include="include\JobSystem.h" />
     <ClInclude Include="include\Logger.h" />
     <ClInclude Include="include\Material.h" />
@@ -147,6 +159,7 @@ xcopy /Q /E /Y /I ..\Resources ..\Build\bin\Release-windows-x86_64\Resources</Co
     <ClInclude Include="include\MathVector.h" />
     <ClInclude Include="include\Matrix3x3.h" />
     <ClInclude Include="include\Matrix4x4.h" />
+    <ClInclude Include="include\Particles.h" />
     <ClInclude Include="include\Physics.h" />
     <ClInclude Include="include\PreCompile.h" />
     <ClInclude Include="include\Registry.h" />
@@ -155,6 +168,7 @@ xcopy /Q /E /Y /I ..\Resources ..\Build\bin\Release-windows-x86_64\Resources</Co
     <ClInclude Include="include\ScriptEngine.h" />
     <ClInclude Include="include\ScriptInstance.h" />
     <ClInclude Include="include\ScriptSystem.h" />
+    <ClInclude Include="include\Serialisation.h" />
     <ClInclude Include="include\Shader.h" />
     <ClInclude Include="include\Systems.h" />
     <ClInclude Include="include\Texture.h" />
@@ -165,6 +179,9 @@ xcopy /Q /E /Y /I ..\Resources ..\Build\bin\Release-windows-x86_64\Resources</Co
   <ItemGroup>
     <ClCompile Include="src\AssetBrowser\AssetBrowser.cpp" />
     <ClCompile Include="src\AssetManager\AssetManager.cpp" />
+    <ClCompile Include="src\AudioManager\AudioIMGUI.cpp" />
+    <ClCompile Include="src\AudioManager\AudioManager.cpp" />
+    <ClCompile Include="src\AudioManager\AudioSystem.cpp" />
     <ClCompile Include="src\ECS\Component.cpp" />
     <ClCompile Include="src\ECS\ECS.cpp" />
     <ClCompile Include="src\ECS\Entity.cpp" />
@@ -179,18 +196,21 @@ xcopy /Q /E /Y /I ..\Resources ..\Build\bin\Release-windows-x86_64\Resources</Co
     <ClCompile Include="src\Graphics\VertexArray.cpp" />
     <ClCompile Include="src\Graphics\VertexBuffer.cpp" />
     <ClCompile Include="src\ImGUI\EditorGUI.cpp" />
+    <ClCompile Include="src\ImGUI\InspectorGUI.cpp" />
     <ClCompile Include="src\Logger\Logger.cpp" />
     <ClCompile Include="src\Math\MathVector.cpp" />
     <ClCompile Include="src\Math\Matrix3x3.cpp" />
     <ClCompile Include="src\Math\Matrix4x4.cpp" />
     <ClCompile Include="src\Object\GameObject.cpp" />
     <ClCompile Include="src\Object\GameObjectFactory.cpp" />
+    <ClCompile Include="src\Particles\Particles.cpp" />
     <ClCompile Include="src\Physics\Physics.cpp" />
     <ClCompile Include="src\PreCompile.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="src\Scripting\ScriptEngine.cpp" />
     <ClCompile Include="src\Scripting\ScriptSystem.cpp" />
+    <ClCompile Include="src\Serialisation\Serialisation.cpp" />
     <ClCompile Include="src\Utility\EditorCamera.cpp" />
     <ClCompile Include="src\Utility\FrameController.cpp" />
     <ClCompile Include="src\Utility\GPUProfiler.cpp" />
@@ -215,6 +235,9 @@ xcopy /Q /E /Y /I ..\Resources ..\Build\bin\Release-windows-x86_64\Resources</Co
     </ProjectReference>
     <ProjectReference Include="..\ThirdParty\imgui\ImGui.vcxproj">
       <Project>{C0FF640D-2C14-8DBE-F595-301E616989EF}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\ThirdParty\Jolt\Jolt.vcxproj">
+      <Project>{1E8A877C-0AC1-880D-B3AD-6E109FC3040F}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
