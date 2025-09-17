@@ -447,9 +447,12 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 				// Apply entity's transform as root
 				glm::mat4 entityModel = glm::mat4(1.0f);
 				entityModel = glm::translate(entityModel, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
-				entityModel = glm::rotate(entityModel, glm::radians(trans.rotation.x), glm::vec3(1, 0, 0));
-				entityModel = glm::rotate(entityModel, glm::radians(trans.rotation.y), glm::vec3(0, 1, 0));
-				entityModel = glm::rotate(entityModel, glm::radians(trans.rotation.z), glm::vec3(0, 0, 1));
+				glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
+				rotQuat = glm::normalize(rotQuat);
+				entityModel *= glm::mat4_cast(rotQuat);
+				//entityModel = glm::rotate(entityModel, glm::radians(trans.rotation.x), glm::vec3(1, 0, 0));
+				//entityModel = glm::rotate(entityModel, glm::radians(trans.rotation.y), glm::vec3(0, 1, 0));
+				//entityModel = glm::rotate(entityModel, glm::radians(trans.rotation.z), glm::vec3(0, 0, 1));
 				entityModel = glm::scale(entityModel, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
 
 				// Render model
@@ -476,9 +479,12 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 			// Build model matrix
 			glm::mat4 model = glm::mat4(1.0f);
 			model = glm::translate(model, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
-			model = glm::rotate(model, glm::radians(trans.rotation.x), glm::vec3(1, 0, 0));
-			model = glm::rotate(model, glm::radians(trans.rotation.y), glm::vec3(0, 1, 0));
-			model = glm::rotate(model, glm::radians(trans.rotation.z), glm::vec3(0, 0, 1));
+			glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
+			rotQuat = glm::normalize(rotQuat);
+			model *= glm::mat4_cast(rotQuat);
+			//model = glm::rotate(model, glm::radians(trans.rotation.x), glm::vec3(1, 0, 0));
+			//model = glm::rotate(model, glm::radians(trans.rotation.y), glm::vec3(0, 1, 0));
+			//model = glm::rotate(model, glm::radians(trans.rotation.z), glm::vec3(0, 0, 1));
 			model = glm::scale(model, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
 
 			// Set transformation matrices for g-buffer shader
@@ -672,15 +678,15 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
 		glm::vec4 posView = glmView * posWorld;
 
 		// Build rotation from Euler angles using GLM
-		glm::mat4 rotationMatrix = glm::mat4(1.0f);
-		rotationMatrix = glm::rotate(rotationMatrix, glm::radians(trans.rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
-		rotationMatrix = glm::rotate(rotationMatrix, glm::radians(trans.rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-		rotationMatrix = glm::rotate(rotationMatrix, glm::radians(trans.rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+		glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
+		rotQuat = glm::normalize(rotQuat);
+		//rotationMatrix = glm::rotate(rotationMatrix, glm::radians(trans.rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+		//rotationMatrix = glm::rotate(rotationMatrix, glm::radians(trans.rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+		//rotationMatrix = glm::rotate(rotationMatrix, glm::radians(trans.rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
 
 		// World-space direction using GLM
 		glm::vec3 fwd(0.0f, 0.0f, 1.0f); // Light coming from +Z when unrotated
-		glm::vec3 dirWorld = glm::mat3(rotationMatrix) * fwd;
-		dirWorld = glm::normalize(dirWorld);
+		glm::vec3 dirWorld = glm::normalize(rotQuat * fwd);
 
 		// View-space direction using GLM
 		glm::vec4 dirWorldH(dirWorld, 0.0f); // Homogeneous coordinate with w=0 for directions
@@ -872,9 +878,12 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 					// Apply entity's transform as root
 					glm::mat4 entityModel = glm::mat4(1.0f);
 					entityModel = glm::translate(entityModel, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
-					entityModel = glm::rotate(entityModel, glm::radians(trans.rotation.x), glm::vec3(1, 0, 0));
-					entityModel = glm::rotate(entityModel, glm::radians(trans.rotation.y), glm::vec3(0, 1, 0));
-					entityModel = glm::rotate(entityModel, glm::radians(trans.rotation.z), glm::vec3(0, 0, 1));
+					glm::quat rotQuat = glm::quat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
+					rotQuat = glm::normalize(rotQuat);
+					entityModel *= glm::mat4_cast(rotQuat);
+					//entityModel = glm::rotate(entityModel, glm::radians(trans.rotation.x), glm::vec3(1, 0, 0));
+					//entityModel = glm::rotate(entityModel, glm::radians(trans.rotation.y), glm::vec3(0, 1, 0));
+					//entityModel = glm::rotate(entityModel, glm::radians(trans.rotation.z), glm::vec3(0, 0, 1));
 					entityModel = glm::scale(entityModel, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
 
 					// Render model
@@ -905,9 +914,12 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 				// Build model matrix
 				glm::mat4 model = glm::mat4(1.0f);
 				model = glm::translate(model, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
-				model = glm::rotate(model, glm::radians(trans.rotation.x), glm::vec3(1, 0, 0));
-				model = glm::rotate(model, glm::radians(trans.rotation.y), glm::vec3(0, 1, 0));
-				model = glm::rotate(model, glm::radians(trans.rotation.z), glm::vec3(0, 0, 1));
+				glm::quat rotQuat = glm::quat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
+				rotQuat = glm::normalize(rotQuat);
+				model *= glm::mat4_cast(rotQuat);
+				//model = glm::rotate(model, glm::radians(trans.rotation.x), glm::vec3(1, 0, 0));
+				//model = glm::rotate(model, glm::radians(trans.rotation.y), glm::vec3(0, 1, 0));
+				//model = glm::rotate(model, glm::radians(trans.rotation.z), glm::vec3(0, 0, 1));
 				model = glm::scale(model, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
 
 				// Update Material UBO with current material data

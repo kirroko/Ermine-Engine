@@ -218,7 +218,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	//}
 
 	auto audioTestEntity = ECS::GetInstance().CreateEntity();
-	ECS::GetInstance().AddComponent(audioTestEntity, Transform(Vec3(2, 0, -1), Vec3(0, 0, 0), Vec3(1, 1, 1)));
+	ECS::GetInstance().AddComponent(audioTestEntity, Transform(Vec3(2, 0, -1), Quaternion(), Vec3(1, 1, 1)));
 	ECS::GetInstance().AddComponent(audioTestEntity, ObjectMetaData());
 
 	AudioComponent testAudio;
@@ -240,7 +240,7 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	// Example FBX entity
 	auto fbxEntity = ECS::GetInstance().CreateEntity();
-	ECS::GetInstance().AddComponent(fbxEntity, Transform(Vec3(0, 0, -1), Vec3(0, 0, 0), Vec3(0.01f, 0.01f, 0.01f)));
+	ECS::GetInstance().AddComponent(fbxEntity, Transform(Vec3(0, 0, -1), Quaternion(), Vec3(0.01f, 0.01f, 0.01f)));
 	ECS::GetInstance().AddComponent(fbxEntity, ObjectMetaData("Character", "Model", true));
 	ECS::GetInstance().AddComponent(fbxEntity, Mesh{}); // empty mesh component for renderer signature
 	ECS::GetInstance().AddComponent(fbxEntity, ModelComponent(AssetManager::GetInstance().LoadModel("../Resources/Models/Walking.fbx")));
@@ -291,7 +291,7 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	// Create second cube  
 	auto entity2 = ECS::GetInstance().CreateEntity();
-	ECS::GetInstance().AddComponent(entity2, Transform(Vec3(-1, 1, -2), Vec3(0, 0, 0), Vec3(1, 1, 1)));
+	ECS::GetInstance().AddComponent(entity2, Transform(Vec3(-1, 1, -2), Quaternion(), Vec3(1, 1, 1)));
 	ECS::GetInstance().AddComponent(entity2, ObjectMetaData());
 	ECS::GetInstance().AddComponent(entity2, graphics::GeometryFactory::CreateCube(1, 1, 1));
 
@@ -309,7 +309,7 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	// Create lights with balanced intensities
 	auto mainLightEntity = ECS::GetInstance().CreateEntity();
-	ECS::GetInstance().AddComponent(mainLightEntity, Transform(Vec3(0, 4, 2), Vec3(0, 0, 0), Vec3(1, 1, 1)));
+	ECS::GetInstance().AddComponent(mainLightEntity, Transform(Vec3(0, 4, 2), Quaternion(), Vec3(1, 1, 1)));
 	ECS::GetInstance().AddComponent(mainLightEntity, ObjectMetaData("MainLight", "Light", true));
 	ECS::GetInstance().AddComponent(mainLightEntity, Light(Vec3(1, 1, 1), 0.8f, LightType::POINT));
 
@@ -321,7 +321,7 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	// Red accent light
 	auto redLightEntity = ECS::GetInstance().CreateEntity();
-	ECS::GetInstance().AddComponent(redLightEntity, Transform(Vec3(3, 2, 0), Vec3(0, 0, 0), Vec3(1, 1, 1)));
+	ECS::GetInstance().AddComponent(redLightEntity, Transform(Vec3(3, 2, 0), Quaternion(), Vec3(1, 1, 1)));
 	ECS::GetInstance().AddComponent(redLightEntity, ObjectMetaData("LightRed", "Light", true));
 	ECS::GetInstance().AddComponent(redLightEntity, Light(Vec3(1, 0.0, 0.0), 1.0f, LightType::POINT));
 
@@ -332,7 +332,7 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	// Blue accent light
 	auto blueLightEntity = ECS::GetInstance().CreateEntity();
-	ECS::GetInstance().AddComponent(blueLightEntity, Transform(Vec3(-3, 2, 0), Vec3(0, 0, 0), Vec3(1, 1, 1)));
+	ECS::GetInstance().AddComponent(blueLightEntity, Transform(Vec3(-3, 2, 0), Quaternion(), Vec3(1, 1, 1)));
 	ECS::GetInstance().AddComponent(blueLightEntity, ObjectMetaData("LightBlue", "Light", true));
 	ECS::GetInstance().AddComponent(blueLightEntity, Light(Vec3(0.0, 0.0, 1), 1.0f, LightType::POINT));
 
@@ -343,7 +343,7 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	// Green accent light
 	auto greenLightEntity = ECS::GetInstance().CreateEntity();
-	ECS::GetInstance().AddComponent(greenLightEntity, Transform(Vec3(0, 2, -3), Vec3(0, 0, 0), Vec3(1, 1, 1)));
+	ECS::GetInstance().AddComponent(greenLightEntity, Transform(Vec3(0, 2, -3), Quaternion(), Vec3(1, 1, 1)));
 	ECS::GetInstance().AddComponent(greenLightEntity, ObjectMetaData("LightGreen", "Light", true));
 	ECS::GetInstance().AddComponent(greenLightEntity, Light(Vec3(0.0, 1.0f, 0.0), 1.0f, LightType::POINT));
 

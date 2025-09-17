@@ -27,7 +27,7 @@ namespace ErmineEngine
             set;
         }
 
-        public Vector3 rotation // TODO: Convert to quaternion whenever ready
+        public Quaternion rotation
         {
             [MethodImpl(MethodImplOptions.InternalCall)]
             get;
@@ -49,7 +49,7 @@ namespace ErmineEngine
         {
             get
             {
-                Vector3 e = rotation;
+                Vector3 e = rotation.eulerAngles;
                 float cx = (float)System.Math.Cos(e.x * Deg2Rad);
                 float sx = (float)System.Math.Sin(e.x * Deg2Rad);
                 float cy = (float)System.Math.Cos(e.y * Deg2Rad);
@@ -72,7 +72,7 @@ namespace ErmineEngine
         {
             get
             {
-                Vector3 e = rotation;
+                Vector3 e = rotation.eulerAngles;
                 float cx = (float)System.Math.Cos(e.x * Deg2Rad);
                 float sx = (float)System.Math.Sin(e.x * Deg2Rad);
                 float cy = (float)System.Math.Cos(e.y * Deg2Rad);
@@ -85,7 +85,13 @@ namespace ErmineEngine
         }
 
         public void Translate(Vector3 delta) => position += delta;
-        public void Rotate(Vector3 deltaEuler) => rotation += deltaEuler;
+
+        public void Rotate(Vector3 deltaEuler)
+        {
+            Quaternion q = rotation;
+            q.eulerAngles = q.eulerAngles + (deltaEuler * Deg2Rad);
+            rotation = q.normalized;
+        }
 
         public void LookAt(Vector3 target)
         {
@@ -94,8 +100,12 @@ namespace ErmineEngine
 
             float yaw = (float)System.Math.Atan2(dir.x, dir.z) / Deg2Rad;
             float pitch = (float)System.Math.Asin(-dir.y) / Deg2Rad;
-            Vector3 e = rotation;
-            rotation = new Vector3(pitch, yaw, e.z);
+
+            // Persist the roll (z) component of the current rotation
+            Quaternion q = rotation;
+            Vector3 currentEuler = q.eulerAngles;
+            q.eulerAngles = new Vector3(pitch, yaw, currentEuler.z);
+            rotation = q.normalized;
         }
     }
 }

@@ -38,10 +38,10 @@ namespace Ermine
 	{
 		Mtx44 transform_matrix{ 1.0f }; // Identity matrix
 		Vec3 position;
-		Vec3 rotation; // Euler angles in degrees
+		Quaternion rotation; // Euler angles in degrees
 		Vec3 scale;
 
-		explicit Transform(const Vec3& pos = Vec3(), const Vec3& rot = Vec3(), const Vec3& scl = Vec3(1.f, 1.f, 1.f)) : position(pos), rotation(rot), scale(scl)
+		explicit Transform(const Vec3& pos = Vec3(), const Quaternion& rot = Quaternion(), const Vec3& scl = Vec3(1.f, 1.f, 1.f)) : position(pos), rotation(rot), scale(scl)
 		{
 		}
 	};

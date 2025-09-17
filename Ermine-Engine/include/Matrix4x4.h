@@ -20,17 +20,26 @@ namespace Ermine
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
-#ifdef _MSC_VER
-    // Supress warning: nonstandard extension used : nameless struct/union
-#pragma warning( disable : 4201 )
-#endif
-    struct Quaternion
-    {
-        float x, y, z, w;
 
-        Quaternion(float _x = 0.0f, float _y = 0.0f, float _z = 0.0f, float _w = 1.0f)
+    //struct Quaternion
+    //{
+    //    float x, y, z, w;
+
+    //    Quaternion(float _x = 0.0f, float _y = 0.0f, float _z = 0.0f, float _w = 1.0f)
+    //        : x(_x), y(_y), z(_z), w(_w) {}
+    //};
+
+    typedef union Quaternion
+    {
+        struct
+        {
+            float x, y, z, w;
+        };
+        float m[4];
+
+        Quaternion(float _x = 0.0, float _y = 0.0, float _z = 0.0, float _w = 1.0)
             : x(_x), y(_y), z(_z), w(_w) {}
-    };
+	} Quaternion;
 
 #ifdef _MSC_VER
     // Supress warning: nonstandard extension used : nameless struct/union

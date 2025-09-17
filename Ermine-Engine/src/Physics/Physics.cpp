@@ -178,12 +178,16 @@ namespace Ermine
 
             // Rotation too
             JPH::Quat rot = transform.GetRotation().GetQuaternion();
-            t.rotation = t.rotation = QuaternionToEuler(Quaternion(rot.GetX(), rot.GetY(), rot.GetZ(), rot.GetW()), true);
+			t.rotation.w = rot.GetW();
+			t.rotation.x = rot.GetX();
+            t.rotation.y = rot.GetY();
+            t.rotation.z = rot.GetZ();
+            //t.rotation = QuaternionToEuler(Quaternion(rot.GetX(), rot.GetY(), rot.GetZ(), rot.GetW()), true);
             //std::cout << "Entity " << entity << " position: "
             //    << t.position.x << ", "
             //    << t.position.y << ", "
             //    << t.position.z << std::endl;
-            EE_CORE_TRACE("Entity {0} position: {1} {2} {3}", entity, t.position.x, t.position.y, t.position.z);
+            //EE_CORE_TRACE("Entity {0} position: {1} {2} {3}", entity, t.position.x, t.position.y, t.position.z);
         }
     }
 
@@ -212,7 +216,7 @@ namespace Ermine
         auto entity = ECS::GetInstance().CreateEntity();
 
         // 2. Add Transform
-        ECS::GetInstance().AddComponent(entity, Transform(position, Vec3(0, 0, 0), size));
+        ECS::GetInstance().AddComponent(entity, Transform(position, Quaternion(), size));
 
         // 3. Add Mesh
         ECS::GetInstance().AddComponent(entity, graphics::GeometryFactory::CreateCube(size.x, size.y, size.z));
