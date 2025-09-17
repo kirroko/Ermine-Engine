@@ -1022,3 +1022,6 @@ namespace Ermine
 #pragma endregion Vector4D
     /**********************************Vector4D***************************************/
 }
+
+#include "Matrix3x3.h"
+#include "Matrix4x4.h"
