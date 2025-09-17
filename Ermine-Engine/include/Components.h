@@ -24,8 +24,9 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "IndexBuffer.h"
 #include "ScriptInstance.h"
 #include "Texture.h"
-#include "Material.h" 
+#include "Material.h"
 #include "AudioManager.h"
+#include "Model.h"
 
 namespace Ermine
 {
@@ -512,5 +513,17 @@ namespace Ermine
 		float size;
 
 		Particle() : velocity(0, 0, 0), lifetime(1.0f), age(0.0f), colour(1, 1, 1, 1), size(1.0f) {}
+	};
+
+	/*!***********************************************************************
+	\brief
+	 Model component structure.
+	*************************************************************************/
+	struct ModelComponent
+	{
+		std::shared_ptr<graphics::Model> m_model;
+
+		ModelComponent() = default;
+		explicit ModelComponent(const std::shared_ptr<graphics::Model>& model) : m_model(model) {}
 	};
 }
