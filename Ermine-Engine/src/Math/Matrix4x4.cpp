@@ -285,4 +285,109 @@ namespace Ermine
      // Combine rotation and translation
      pResult = pResult * translation;
     }
+
+    void Mtx44SetFromQuaternion(Matrix4x4& pResult, const Quaternion& q)
+    {
+        float xx = q.x * q.x;
+        float yy = q.y * q.y;
+        float zz = q.z * q.z;
+        float xy = q.x * q.y;
+        float xz = q.x * q.z;
+        float yz = q.y * q.z;
+        float wx = q.w * q.x;
+        float wy = q.w * q.y;
+        float wz = q.w * q.z;
+
+        pResult.m00 = 1.0f - 2.0f * (yy + zz);
+        pResult.m01 = 2.0f * (xy - wz);
+        pResult.m02 = 2.0f * (xz + wy);
+        pResult.m03 = 0.0f;
+
+        pResult.m10 = 2.0f * (xy + wz);
+        pResult.m11 = 1.0f - 2.0f * (xx + zz);
+        pResult.m12 = 2.0f * (yz - wx);
+        pResult.m13 = 0.0f;
+
+        pResult.m20 = 2.0f * (xz - wy);
+        pResult.m21 = 2.0f * (yz + wx);
+        pResult.m22 = 1.0f - 2.0f * (xx + yy);
+        pResult.m23 = 0.0f;
+
+        pResult.m30 = 0.0f;
+        pResult.m31 = 0.0f;
+        pResult.m32 = 0.0f;
+        pResult.m33 = 1.0f;
+    }
+
+    Quaternion Mtx44GetQuaternion(const Matrix4x4& m)
+    {
+        Quaternion q;
+        float trace = m.m00 + m.m11 + m.m22;
+
+        if (trace > 0.0f)
+        {
+            float s = 0.5f / sqrtf(trace + 1.0f);
+            q.w = 0.25f / s;
+            q.x = (m.m21 - m.m12) * s;
+            q.y = (m.m02 - m.m20) * s;
+            q.z = (m.m10 - m.m01) * s;
+        }
+        else
+        {
+            if (m.m00 > m.m11 && m.m00 > m.m22)
+            {
+                float s = 2.0f * sqrtf(1.0f + m.m00 - m.m11 - m.m22);
+                q.w = (m.m21 - m.m12) / s;
+                q.x = 0.25f * s;
+                q.y = (m.m01 + m.m10) / s;
+                q.z = (m.m02 + m.m20) / s;
+            }
+            else if (m.m11 > m.m22)
+            {
+                float s = 2.0f * sqrtf(1.0f + m.m11 - m.m00 - m.m22);
+                q.w = (m.m02 - m.m20) / s;
+                q.x = (m.m01 + m.m10) / s;
+                q.y = 0.25f * s;
+                q.z = (m.m12 + m.m21) / s;
+            }
+            else
+            {
+                float s = 2.0f * sqrtf(1.0f + m.m22 - m.m00 - m.m11);
+                q.w = (m.m10 - m.m01) / s;
+                q.x = (m.m02 + m.m20) / s;
+                q.y = (m.m12 + m.m21) / s;
+                q.z = 0.25f * s;
+            }
+        }
+
+        return q;
+    }
+
+    Vec3 QuaternionToEuler(const Quaternion& q, bool inDegrees)
+    {
+        float ysqr = q.y * q.y;
+
+        // Roll (x-axis rotation)
+        float t0 = +2.0f * (q.w * q.x + q.y * q.z);
+        float t1 = +1.0f - 2.0f * (q.x * q.x + ysqr);
+        float roll = std::atan2(t0, t1);
+
+        // Pitch (y-axis rotation)
+        float t2 = +2.0f * (q.w * q.y - q.z * q.x);
+        t2 = std::clamp(t2, -1.0f, 1.0f);
+        float pitch = std::asin(t2);
+
+        // Yaw (z-axis rotation)
+        float t3 = +2.0f * (q.w * q.z + q.x * q.y);
+        float t4 = +1.0f - 2.0f * (ysqr + q.z * q.z);
+        float yaw = std::atan2(t3, t4);
+
+        if (inDegrees)
+        {
+            constexpr float Rad2Deg = 180.0f / M_PI;
+            return Vec3(roll * Rad2Deg, pitch * Rad2Deg, yaw * Rad2Deg);
+        }
+
+        return Vec3(roll, pitch, yaw); // radians
+    }
 }

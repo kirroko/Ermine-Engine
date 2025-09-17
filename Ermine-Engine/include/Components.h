@@ -16,7 +16,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #pragma once
 
 #include "PreCompile.h"
-#include "Matrix4x4.h" // Vector3D included
+#include "MathVector.h" // Vector3D included
 
 //#include "Shader.h"
 #include "VertexArray.h"
@@ -24,8 +24,9 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "IndexBuffer.h"
 #include "ScriptInstance.h"
 #include "Texture.h"
-#include "Material.h" 
+#include "Material.h"
 #include "AudioManager.h"
+#include "Model.h"
 
 namespace Ermine
 {
@@ -479,7 +480,7 @@ namespace Ermine
 		bool is3D{ true };
 		bool isLooping{ false };
 		bool isStreaming{ false };
-		float volume{ 0.0f }; // Volume in dB (-60 to 0) - matches your FMOD system
+		float volume{ 0.5f }; // Volume from 0.0f to 1.0f (NOT dB!) - will be converted to dB when needed
 
 		// 3D Audio properties
 		bool followTransform{ true }; // Should audio follow entity position?
@@ -491,13 +492,11 @@ namespace Ermine
 
 		// Constructors
 		AudioComponent() = default;
-
-		explicit AudioComponent(const std::string& sound, bool is3d = true, bool loop = false, float vol = 0.0f) :
+		explicit AudioComponent(const std::string& sound, bool is3d = true, bool loop = false, float vol = 0.5f) :
 			soundName(sound), is3D(is3d), isLooping(loop), volume(vol) {
 		}
-
 		explicit AudioComponent(const std::string& event) :
-			eventName(event), is3D(false) {
+			eventName(event), is3D(false), volume(0.5f) {
 		} // Events typically handle their own 3D settings
 	};
 
@@ -514,5 +513,17 @@ namespace Ermine
 		float size;
 
 		Particle() : velocity(0, 0, 0), lifetime(1.0f), age(0.0f), colour(1, 1, 1, 1), size(1.0f) {}
+	};
+
+	/*!***********************************************************************
+	\brief
+	 Model component structure.
+	*************************************************************************/
+	struct ModelComponent
+	{
+		std::shared_ptr<graphics::Model> m_model;
+
+		ModelComponent() = default;
+		explicit ModelComponent(const std::shared_ptr<graphics::Model>& model) : m_model(model) {}
 	};
 }

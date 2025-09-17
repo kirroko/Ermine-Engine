@@ -69,5 +69,9 @@ namespace Ermine {
         char m_TexturePath[256] = "";
         std::shared_ptr<graphics::Texture> m_SelectedTexture = nullptr;
         std::vector<std::string> textureNames;
+
+        // Presets
+        enum class PresetType { Default, SpreadOut, Fireflies };
+        PresetType m_CurrentPreset = PresetType::Default;
     };
 }
