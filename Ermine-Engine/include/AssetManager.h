@@ -2,7 +2,8 @@
 /*!
 \file       AssetManager.h
 \author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu
-\date       09/03/2025
+\co-authors Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu
+\date       10/09/2025
 \brief      This reflects the brief of the AssetManager system.
             This file is used to manage all the assets in the game.
 
@@ -16,6 +17,11 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #include "Shader.h"
 #include "Texture.h"
+#include "Model.h"
+
+#include <assimp/Importer.hpp>  // for the importer class
+#include <assimp/scene.h>       // for the output data structure
+#include <assimp/postprocess.h> // for post processing flags
 
 namespace Ermine
 {
@@ -31,6 +37,7 @@ namespace Ermine
         // Internal caching for assets
         std::unordered_map<std::string, std::shared_ptr<graphics::Texture>> m_textures;
         std::unordered_map<std::string, std::shared_ptr<graphics::Shader>> m_shaders;
+        std::unordered_map<std::string, std::shared_ptr<graphics::Model>> m_models;
     
 public:
         static AssetManager& GetInstance()
@@ -39,7 +46,7 @@ public:
             return instance;
         }
 
-        // Texture management
+        // ================== Texture Management ==================
         /**
          * @brief Load a texture from a file
          * @param filePath The path to the texture file
@@ -53,9 +60,8 @@ public:
          */
         std::shared_ptr<graphics::Texture> GetTexture(const std::string& filePath);
 
+        // ================== Shader Management ==================
         const std::unordered_map<std::string, std::shared_ptr<graphics::Texture>>& GetLoadedTextures() const;
-
-        // Shader management
         /**
          * @brief Load a shader from a vertex and fragment file
          * @param vertexPath The path to the vertex shader file
@@ -70,6 +76,21 @@ public:
          */
         std::shared_ptr<graphics::Shader> GetShader(const std::string& shaderName);
 
+        // ================== Model Management ==================
+        /**
+         * @brief Load a 3D model from file using Assimp.
+         * @param filePath The path to the model file (e.g. .fbx, .obj, .gltf).
+         * @return The loaded model.
+         */
+        std::shared_ptr<graphics::Model> LoadModel(const std::string& filePath);
+        /**
+         * @brief Get a model from the cache.
+         * @param filePath The path to the model file.
+         * @return The model if it exists, nullptr otherwise.
+         */
+        std::shared_ptr<graphics::Model> GetModel(const std::string& filePath);
+
+        // ================== Utilities ==================
         /**
          * @brief Load the contents of a file into a buffer.
          * @param filepath The path to the file to load.

@@ -16,7 +16,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #pragma once
 
 #include "PreCompile.h"
-#include "Matrix4x4.h" // Vector3D included
+#include "MathVector.h" // Vector3D included
 
 //#include "Shader.h"
 #include "VertexArray.h"
@@ -24,8 +24,9 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "IndexBuffer.h"
 #include "ScriptInstance.h"
 #include "Texture.h"
-#include "Material.h" 
+#include "Material.h"
 #include "AudioManager.h"
+#include "Model.h"
 
 namespace Ermine
 {
@@ -37,10 +38,10 @@ namespace Ermine
 	{
 		Mtx44 transform_matrix{ 1.0f }; // Identity matrix
 		Vec3 position;
-		Vec3 rotation; // Euler angles in degrees
+		Quaternion rotation; // Euler angles in degrees
 		Vec3 scale;
 
-		explicit Transform(const Vec3& pos = Vec3(), const Vec3& rot = Vec3(), const Vec3& scl = Vec3(1.f, 1.f, 1.f)) : position(pos), rotation(rot), scale(scl)
+		explicit Transform(const Vec3& pos = Vec3(), const Quaternion& rot = Quaternion(), const Vec3& scl = Vec3(1.f, 1.f, 1.f)) : position(pos), rotation(rot), scale(scl)
 		{
 		}
 	};
@@ -516,20 +517,13 @@ namespace Ermine
 
 	/*!***********************************************************************
 	\brief
-	 Hierarchy component structure for parent-child relationships.
+	 Model component structure.
 	*************************************************************************/
-	struct HierarchyComponent
+	struct ModelComponent
 	{
-		EntityID parent = 0;                    // Parent entity ID (0 = no parent)
-		std::vector<EntityID> children;         // List of child entity IDs
-		int depth = 0;                          // Depth in hierarchy (root = 0)
-		bool isDirty = false;                   // Flag for transform updates
+		std::shared_ptr<graphics::Model> m_model;
 
-		HierarchyComponent() = default;
-
-		explicit HierarchyComponent(EntityID parentId)
-			: parent(parentId), depth(0), isDirty(true)
-		{
-		}
+		ModelComponent() = default;
+		explicit ModelComponent(const std::shared_ptr<graphics::Model>& model) : m_model(model) {}
 	};
 }

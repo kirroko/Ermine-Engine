@@ -44,11 +44,11 @@ namespace
     {
         struct Unit { uint64_t base; const char* suffix; };
         static constexpr Unit units[] = {
-{1'000'000'000'000ULL, "T" },
-        {1'000'000'000ULL, "B"},
-            {1'000'000ULL, "M"},
-        {1'000ULL, "K"},
-        {1, ""}
+			{.base= 1'000'000'000'000ULL, .suffix= "T"},
+	        {.base= 1'000'000'000ULL, .suffix= "B"},
+	        {.base= 1'000'000ULL, .suffix= "M"},
+	        {.base= 1'000ULL, .suffix= "K"},
+	        {.base= 1, .suffix= ""}
         };
 
         for (const auto& u : units)
@@ -180,15 +180,27 @@ void EditorGUI::ViewPortWindow(bool &show)
     viewport_size.y = std::clamp(viewport_size.y, static_cast<float>(minSize), static_cast<float>(max_size));
 
     static bool first_time = true;
+	auto renderer = ECS::GetInstance().GetSystem<graphics::Renderer>();
     if (first_time)
     {
-		ECS::GetInstance().GetSystem<graphics::Renderer>()->Create(static_cast<int>(viewport_size.x), static_cast<int>(viewport_size.y));
+        renderer->CreateOffscreenBuffer(static_cast<int>(viewport_size.x), static_cast<int>(viewport_size.y));
+        renderer->ResizeGBuffer(static_cast<int>(viewport_size.x), static_cast<int>(viewport_size.y));
         first_time = false;
     }
-	const auto offscreen_buffer = ECS::GetInstance().GetSystem<graphics::Renderer>()->GetOffscreenBuffer(); // released at the end of the scope
-	offscreen_buffer->width = static_cast<int>(viewport_size.x);
-	offscreen_buffer->height = static_cast<int>(viewport_size.y);
 
+	const auto offscreen_buffer = renderer->GetOffscreenBuffer(); // released at the end of the scope
+    if (offscreen_buffer)
+    {
+        // Resize the offscreen buffer when viewport size changes
+	    if (offscreen_buffer->width != static_cast<int>(viewport_size.x) ||
+            offscreen_buffer->height != static_cast<int>(viewport_size.y))
+	    {
+		    renderer->ResizeOffscreenBuffer(static_cast<int>(viewport_size.x), static_cast<int>(viewport_size.y));
+			renderer->ResizeGBuffer(static_cast<int>(viewport_size.x), static_cast<int>(viewport_size.y));
+	    }
+    }
+
+    // Set editor's camera viewport size
 	EditorCamera::GetInstance().SetViewportSize(viewport_size.x, viewport_size.y);
 
     // Child region that ignores all ImGui inputs
@@ -200,7 +212,18 @@ void EditorGUI::ViewPortWindow(bool &show)
     ImGui::BeginChild("SceneViewportRegion", ImVec2(0,0), false, vpChildFlags);
 
     // Draw the rendered scene
-	ImGui::Image(offscreen_buffer->ColorTexture, ImGui::GetContentRegionAvail(), ImVec2(0, 1), ImVec2(1, 0));
+    if (offscreen_buffer)
+    {
+        ImGui::Image(
+#if defined(IMGUI_IMPL_OPENGL_LOADER_GL3W) || defined(IMGUI_IMPL_OPENGL_ES2) || defined(IMGUI_IMPL_OPENGL_ES3) || defined(IMGUI_IMPL_OPENGL_LOADER_GLEW) || defined(IMGUI_IMPL_OPENGL_LOADER_GLAD)
+            (ImTextureID)(intptr_t)offscreen_buffer->ColorTexture,
+#else
+            offscreen_buffer->ColorTexture,
+#endif
+            ImGui::GetContentRegionAvail(),
+            ImVec2(0, 1), ImVec2(1, 0)
+        );
+    }
 
     const ImGuiHoveredFlags hovFlags =
         ImGuiHoveredFlags_AllowWhenBlockedByActiveItem |
@@ -219,7 +242,6 @@ void EditorGUI::ViewPortWindow(bool &show)
         EE_CORE_INFO("Play {0}", isPlaying);
     }
     Input::SetGameInputActive(isPlaying && viewportFocused && viewportHovered);
-    //EE_CORE_TRACE("Foc {0} | Hov {1}", viewportFocused, viewportHovered);
 
     if (viewportHovered && !isPlaying)
     {

@@ -11,6 +11,7 @@ fmodstudioL_dll = "../ThirdParty/Fmod/lib/fmodstudioL.dll"
 mono_dll = "../ThirdParty/Mono/lib/mono-2.0-sgen.dll"
 mono_assembly = "../ThirdParty/Mono/lib/"
 mono_config = "../ThirdParty/Mono/etc"
+assimp_dll = "../ThirdParty/assimp/bin/assimp-vc143-mt.dll"
 
 -- Include directories relative to root folder (solution directory)
 IncludeDir = {}
@@ -24,11 +25,13 @@ IncludeDir["Mono"] = "ThirdParty/Mono/include"
 IncludeDir["rapidjson"] = "ThirdParty/rapidjson"
 IncludeDir["Fmod"] = "ThirdParty/Fmod/inc"
 IncludeDir["Jolt"] = "ThirdParty"
+IncludeDir["assimp"] = "ThirdParty/assimp/include"
 
 -- Libraries
 LibraryDir = {}
 LibraryDir["Fmod"] = "ThirdParty/Fmod/lib"
 LibraryDir["Mono"] = "ThirdParty/Mono/lib"
+LibraryDir["assimp"] = "ThirdParty/assimp/lib"
 
 -- External libraries
 group "Dependencies"
@@ -76,13 +79,15 @@ project "Ermine-Engine"
         "%{IncludeDir.Fmod}",
         "%{IncludeDir.Mono}",
         "%{IncludeDir.Jolt}",
-        "%{IncludeDir.rapidjson}"
+        "%{IncludeDir.rapidjson}",
+        "%{IncludeDir.assimp}"
     }
 
     libdirs
     {
         "%{LibraryDir.Fmod}",
-        "%{LibraryDir.Mono}"
+        "%{LibraryDir.Mono}",
+        "%{LibraryDir.assimp}"
     }
 
     links
@@ -96,7 +101,8 @@ project "Ermine-Engine"
         "fmodstudioL_vc",
         "opengl32.lib",
 		"mono-2.0-sgen.lib",
-        "Jolt"
+        "Jolt",
+        "assimp-vc143-mt.lib"
     }
 
     postbuildcommands
@@ -107,6 +113,7 @@ project "Ermine-Engine"
         ("{COPY} " .. fmodstudio_dll .. " ../Build/bin/" .. outputdir .. "/Ermine-Editor"),
         ("{COPY} " .. fmodstudioL_dll .. " ../Build/bin/" .. outputdir .. "/Ermine-Editor"),
         ("{COPY} " .. mono_dll .. " ../Build/bin/" .. outputdir .. "/Ermine-Editor"),
+        ("{COPY} " .. assimp_dll .. " ../Build/bin/" .. outputdir .. "/Ermine-Editor"),
         ("{COPYDIR} " .. mono_assembly .. " ../Build/bin/" .. outputdir .. "/Ermine-Editor/mono/lib"),
         ("{COPYDIR} " .. mono_config .. " ../Build/bin/" .. outputdir .. "/Ermine-Editor/mono/etc"),
         ("{COPYDIR} ../Resources ../Build/bin/" .. outputdir .. "/Resources"),
