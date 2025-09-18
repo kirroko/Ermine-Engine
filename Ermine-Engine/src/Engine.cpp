@@ -378,38 +378,38 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().AddComponent(mainLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
 	ECS::GetInstance().AddComponent(mainLightEntity, Material(emissiveWhiteMaterial));
 
-	// Red accent light - create unique colored emissive materials
-	auto redLightEntity = ECS::GetInstance().CreateEntity();
-	ECS::GetInstance().AddComponent(redLightEntity, Transform(Vec3(3, 2, 0), Quaternion(), Vec3(1, 1, 1)));
-	ECS::GetInstance().AddComponent(redLightEntity, ObjectMetaData("LightRed", "Light", true));
-	ECS::GetInstance().AddComponent(redLightEntity, Light(Vec3(1, 0.0, 0.0), 0.5f, LightType::POINT));
+	//// Red accent light - create unique colored emissive materials
+	//auto redLightEntity = ECS::GetInstance().CreateEntity();
+	//ECS::GetInstance().AddComponent(redLightEntity, Transform(Vec3(3, 2, 0), Quaternion(), Vec3(1, 1, 1)));
+	//ECS::GetInstance().AddComponent(redLightEntity, ObjectMetaData("LightRed", "Light", true));
+	//ECS::GetInstance().AddComponent(redLightEntity, Light(Vec3(1, 0.0, 0.0), 0.5f, LightType::POINT));
 
-	auto redLightMaterial = std::make_shared<graphics::Material>(shader);
-	redLightMaterial->LoadTemplate(graphics::MaterialTemplates::EMISSIVE(Vec3(1.0f, 0.f, 0.f), 10.0f));
-	ECS::GetInstance().AddComponent(redLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
-	ECS::GetInstance().AddComponent(redLightEntity, Material(redLightMaterial));
+	//auto redLightMaterial = std::make_shared<graphics::Material>(shader);
+	//redLightMaterial->LoadTemplate(graphics::MaterialTemplates::EMISSIVE(Vec3(1.0f, 0.f, 0.f), 10.0f));
+	//ECS::GetInstance().AddComponent(redLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
+	//ECS::GetInstance().AddComponent(redLightEntity, Material(redLightMaterial));
 
-	// Blue accent light
-	auto blueLightEntity = ECS::GetInstance().CreateEntity();
-	ECS::GetInstance().AddComponent(blueLightEntity, Transform(Vec3(-3, 2, 0), Quaternion(), Vec3(1, 1, 1)));
-	ECS::GetInstance().AddComponent(blueLightEntity, ObjectMetaData("LightBlue", "Light", true));
-	ECS::GetInstance().AddComponent(blueLightEntity, Light(Vec3(0.0, 0.0, 1), 0.5f, LightType::POINT));
+	//// Blue accent light
+	//auto blueLightEntity = ECS::GetInstance().CreateEntity();
+	//ECS::GetInstance().AddComponent(blueLightEntity, Transform(Vec3(-3, 2, 0), Quaternion(), Vec3(1, 1, 1)));
+	//ECS::GetInstance().AddComponent(blueLightEntity, ObjectMetaData("LightBlue", "Light", true));
+	//ECS::GetInstance().AddComponent(blueLightEntity, Light(Vec3(0.0, 0.0, 1), 0.5f, LightType::POINT));
 
-	auto blueLightMaterial = std::make_shared<graphics::Material>(shader);
-	blueLightMaterial->LoadTemplate(graphics::MaterialTemplates::EMISSIVE(Vec3(0.f, 0.f, 1.0f), 10.0f));
-	ECS::GetInstance().AddComponent(blueLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
-	ECS::GetInstance().AddComponent(blueLightEntity, Material(blueLightMaterial));
+	//auto blueLightMaterial = std::make_shared<graphics::Material>(shader);
+	//blueLightMaterial->LoadTemplate(graphics::MaterialTemplates::EMISSIVE(Vec3(0.f, 0.f, 1.0f), 10.0f));
+	//ECS::GetInstance().AddComponent(blueLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
+	//ECS::GetInstance().AddComponent(blueLightEntity, Material(blueLightMaterial));
 
-	// Green accent light
-	auto greenLightEntity = ECS::GetInstance().CreateEntity();
-	ECS::GetInstance().AddComponent(greenLightEntity, Transform(Vec3(0, 2, -3), Quaternion(), Vec3(1, 1, 1)));
-	ECS::GetInstance().AddComponent(greenLightEntity, ObjectMetaData("LightGreen", "Light", true));
-	ECS::GetInstance().AddComponent(greenLightEntity, Light(Vec3(0.0, 1.0f, 0.0), 0.5f, LightType::POINT));
+	//// Green accent light
+	//auto greenLightEntity = ECS::GetInstance().CreateEntity();
+	//ECS::GetInstance().AddComponent(greenLightEntity, Transform(Vec3(0, 2, -3), Quaternion(), Vec3(1, 1, 1)));
+	//ECS::GetInstance().AddComponent(greenLightEntity, ObjectMetaData("LightGreen", "Light", true));
+	//ECS::GetInstance().AddComponent(greenLightEntity, Light(Vec3(0.0, 1.0f, 0.0), 0.5f, LightType::POINT));
 
-	auto greenLightMaterial = std::make_shared<graphics::Material>(shader);
-	greenLightMaterial->LoadTemplate(graphics::MaterialTemplates::EMISSIVE(Vec3(0.f, 1.f, 0.0f), 10.0f));
-	ECS::GetInstance().AddComponent(greenLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
-	ECS::GetInstance().AddComponent(greenLightEntity, Material(greenLightMaterial));
+	//auto greenLightMaterial = std::make_shared<graphics::Material>(shader);
+	//greenLightMaterial->LoadTemplate(graphics::MaterialTemplates::EMISSIVE(Vec3(0.f, 1.f, 0.0f), 10.0f));
+	//ECS::GetInstance().AddComponent(greenLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
+	//ECS::GetInstance().AddComponent(greenLightEntity, Material(greenLightMaterial));
 
 	EE_CORE_INFO("Total living entities after creation: {0}", ECS::GetInstance().GetLivingEntityCount());
 
@@ -650,10 +650,12 @@ void engine::HandleShadingToggle(GLFWwindow* windowContext)
 	static bool key1WasPressed = false;
 	static bool key2WasPressed = false;
 	static bool key3WasPressed = false;
+	static bool key4WasPressed = false;
 
 	bool key1IsPressed = glfwGetKey(windowContext, GLFW_KEY_1) == GLFW_PRESS;
 	bool key2IsPressed = glfwGetKey(windowContext, GLFW_KEY_2) == GLFW_PRESS;
 	bool key3IsPressed = glfwGetKey(windowContext, GLFW_KEY_3) == GLFW_PRESS;
+	bool key4IsPressed = glfwGetKey(windowContext, GLFW_KEY_4) == GLFW_PRESS;
 
 	// Toggle to PBR (key 1)
 	if (key1IsPressed && !key1WasPressed) {
@@ -673,8 +675,14 @@ void engine::HandleShadingToggle(GLFWwindow* windowContext)
 		auto renderer = ECS::GetInstance().GetSystem<graphics::Renderer>();
 		renderer->ToggleDeferredRendering();
 	}
+	// Toggle to Deferred (key 4)
+	if (key4IsPressed && !key4WasPressed) {
+		auto renderer = ECS::GetInstance().GetSystem<graphics::Renderer>();
+		renderer->m_SSAOEnabled = !renderer->m_SSAOEnabled;
+	}
 
 	key1WasPressed = key1IsPressed;
 	key2WasPressed = key2IsPressed;
 	key3WasPressed = key3IsPressed;
+	key4WasPressed = key4IsPressed;
 }

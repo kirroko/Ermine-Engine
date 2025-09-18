@@ -251,7 +251,6 @@ void Renderer::ResizeOffscreenBuffer(const int& width, const int& height)
 	glCheckError();
 }
 
-
 /**
  * @brief Create optimized g-buffer for deferred rendering using scalar materials and emissive
  * RT0: RGB16F (48 bits) - Albedo RGB
@@ -377,8 +376,6 @@ void Renderer::CreateGBuffer(const int& width, const int& height)
 	m_GBuffer = std::make_shared<GBuffer>(gBuffer);
 	EE_CORE_INFO("Created G-Buffer: {0}x{1}, 160 bits per pixel", width, height);
 }
-
-
 
 /**
  * @brief Create an offscreen buffer for viewport/scene rendering
@@ -535,7 +532,6 @@ void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 	m_BloomBlurBuffer2 = std::make_shared<PostProcessBuffer>(bBBuffer2);
 }
 
-
 /**
  * @brief Resize the g-buffer to new dimensions
  */
@@ -575,7 +571,6 @@ void Renderer::BeginGeometryPass()
 	glDisable(GL_BLEND);
 }
 
-
 /**
  * @brief End geometry pass and prepare for lighting pass
  */
@@ -607,6 +602,7 @@ void Renderer::BeginLightingPass()
 	glDisable(GL_DEPTH_TEST); // No depth testing needed for full-screen pass
 	glDisable(GL_BLEND);       // No blending needed for lighting output
 }
+
 /**
  * @brief End lighting pass and finalize frame
  */
@@ -615,7 +611,6 @@ void Renderer::EndLightingPass()
 	glDisable(GL_BLEND);
 	glCheckError();
 }
-
 
 /**
  * @brief Render geometry pass for deferred rendering
@@ -756,6 +751,7 @@ void Renderer::RenderLightingPass(const Mtx44& view, const Mtx44& projection)
 	m_LightPassShader->SetUniformMatrix4fv("view", glmView);
 	m_LightPassShader->SetUniformMatrix4fv("invView", invView);
 	m_LightPassShader->SetUniformMatrix4fv("invProjection", invProjection);
+	m_LightPassShader->SetUniform1i("u_VBAO", m_SSAOEnabled ? 1 : 0);
 
 	// Set shading mode
 	m_LightPassShader->SetUniform1i("u_ShadingMode", m_IsBlinnPhong ? 1 : 0);
@@ -970,8 +966,6 @@ void Renderer::BindGBufferTextures()
 	}
 }
 
-
-
 /**
  * @brief Cleanup g-buffer resources
  */
@@ -1084,7 +1078,6 @@ void Renderer::CleanupPostProcessBuffer()
 	// Check for OpenGL errors after cleanup
 	glCheckError();
 }
-
 
 /**
  * @brief Updates the lights' uniform buffer object (UBO) with the current light and transform data from all living entities.
@@ -1463,7 +1456,6 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 #endif
 	}
 }
-
 
 /**
 * @brief Draw the mesh

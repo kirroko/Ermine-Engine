@@ -45,6 +45,7 @@ namespace Ermine::graphics
         bool m_ToneMappingEnabled = true;
         bool m_GammaCorrectionEnabled = true;
         bool m_BloomEnabled = true;
+		bool m_SSAOEnabled = true;
 
         // Post-processing uniforms - parameters
         float m_Exposure = 1.0f;
