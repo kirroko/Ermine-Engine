@@ -516,6 +516,32 @@ namespace Ermine
 	};
 
 	/*!***********************************************************************
+	 \brief
+	  Hierarchy component structure for parent-child relationships.
+	*************************************************************************/
+	struct HierarchyComponent
+	{
+		static constexpr EntityID INVALID_PARENT = 0;
+
+		EntityID parent = INVALID_PARENT;        // Parent entity ID
+		std::vector<EntityID> children;         // List of child entity IDs
+		int depth = 0;                          // Depth in hierarchy (root = 0)
+		bool isDirty = false;                   // Flag for transform updates
+
+		// Optional: Cache world transform for performance
+		Mtx44 worldTransform{ 1.0f };             // Cached world transform
+		bool worldTransformDirty = true;        // Separate flag for world transform cache
+
+		// Constructors
+		HierarchyComponent() = default;
+
+		explicit HierarchyComponent(EntityID parentId)
+			: parent(parentId), depth(0), isDirty(true), worldTransformDirty(true)
+		{
+		}
+	};
+
+	/*!***********************************************************************
 	\brief
 	 Model component structure.
 	*************************************************************************/

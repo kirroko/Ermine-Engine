@@ -27,6 +27,7 @@ public:
     bool IsVisible() const { return m_IsVisible; }
 
 private:
+    void DrawEntityHeader(EntityID entity);
     void DrawTransformComponent(EntityID entity);
     void DrawMeshComponent(EntityID entity);
     void DrawMaterialComponent(EntityID entity);

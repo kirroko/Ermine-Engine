@@ -37,7 +37,7 @@ namespace Ermine
         };
         float m[4];
 
-        Quaternion(float _x = 0.0, float _y = 0.0, float _z = 0.0, float _w = 1.0)
+        Quaternion(float _x = 0.0f, float _y = 0.0f, float _z = 0.0f, float _w = 1.0f)
             : x(_x), y(_y), z(_z), w(_w) {}
 	} Quaternion;
 

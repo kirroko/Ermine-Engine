@@ -4,11 +4,12 @@
 #include "Components.h"
 #include "HierarchySystem.h"
 #include "ECS.h"
+#include "GeometryFactory.h"
+
 
 namespace Ermine {
     void HierarchyPanel::OnImGuiRender() {
         if (!m_IsVisible) return;
-
         ImGui::Begin("Scene Hierarchy", &m_IsVisible);
 
         if (!m_ActiveScene) {
@@ -24,7 +25,9 @@ namespace Ermine {
 
         // Toolbar
         if (ImGui::Button("Create Entity")) {
-            m_ActiveScene->CreateEntity("New Entity");
+            EntityID newEntity = m_ActiveScene->CreateEntity("New Entity");
+            m_ActiveScene->SetSelectedEntity(newEntity);
+            ImGui::SetWindowFocus("Inspector");
         }
         ImGui::SameLine();
 
@@ -40,56 +43,96 @@ namespace Ermine {
         // Entity hierarchy
         auto rootEntities = m_ActiveScene->GetRootEntities();
         for (auto entity : rootEntities) {
-            DrawEntityNode(entity);
+            DrawEntityNode(entity, 0);
         }
 
         // Right-click context menu
         DrawContextMenu();
 
+        // Handle delayed inspector focus - wait for mouse release
+            if (m_PendingFocusEntity != 0) {
+                if (!ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
+                    // Mouse released - check if it was a drag or just a click
+                    if (!ImGui::GetDragDropPayload()) {
+                        ImGui::SetWindowFocus("Inspector");
+                    }
+                    m_PendingFocusEntity = 0; // Reset
+                }
+            }
+
         ImGui::End();
     }
 
-    void HierarchyPanel::DrawEntityNode(EntityID entity) {
+    void HierarchyPanel::DrawEntityNode(EntityID entity, int depth) {
         if (!ECS::GetInstance().IsEntityValid(entity)) return;
-        if (!ECS::GetInstance().HasComponent<HierarchyComponent>(entity)) return;
 
         auto& metadata = ECS::GetInstance().GetComponent<ObjectMetaData>(entity);
-        auto& hierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(entity);
+        bool isSelected = m_ActiveScene->IsEntitySelected(entity);
 
-        // Determine tree node flags
-        ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow |
-            ImGuiTreeNodeFlags_SpanAvailWidth;
+        ImGui::PushID(static_cast<int>(entity));
 
-        if (hierarchy.children.empty()) {
-            flags |= ImGuiTreeNodeFlags_Leaf;
+        // Get children
+        std::vector<EntityID> children;
+        bool hasChildren = false;
+        if (ECS::GetInstance().HasComponent<HierarchyComponent>(entity)) {
+            const auto& hierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(entity);
+            children = hierarchy.children;
+            hasChildren = !children.empty();
         }
 
-        if (m_ActiveScene->GetSelectedEntity() == entity) {
-            flags |= ImGuiTreeNodeFlags_Selected;
+        // Add indentation for depth (16 pixels per level)
+        float indent = depth * 16.0f;
+        if (indent > 0) ImGui::Indent(indent);
+
+        // Simple display name without symbols
+        std::string displayName = metadata.name;
+        if (hasChildren) {
+            displayName += " (" + std::to_string(children.size()) + " children)";
         }
 
-        // Create label with icon
-        const char* icon = GetEntityIcon(entity);
-        std::string label = std::string(icon) + " " + metadata.name;
+        // Tree node flags
+        ImGuiTreeNodeFlags nodeFlags = ImGuiTreeNodeFlags_OpenOnArrow |
+            ImGuiTreeNodeFlags_SpanAvailWidth |
+            ImGuiTreeNodeFlags_FramePadding;
 
-        // Draw tree node
-        bool nodeOpen = ImGui::TreeNodeEx((void*)(uint64_t)entity, flags, "%s", label.c_str());
+        if (isSelected) {
+            nodeFlags |= ImGuiTreeNodeFlags_Selected;
+        }
+        if (!hasChildren) {
+            nodeFlags |= ImGuiTreeNodeFlags_Leaf;
+        }
 
-        // Handle selection
+        bool nodeOpen = ImGui::TreeNodeEx(displayName.c_str(), nodeFlags);
+
+        // Handle interaction
+        HandleDragDrop(entity);
         if (ImGui::IsItemClicked()) {
             m_ActiveScene->SetSelectedEntity(entity);
+            m_PendingFocusEntity = entity;
         }
 
-        // Handle drag and drop
-        HandleDragDrop(entity);
+        // Context menu
+        if (ImGui::BeginPopupContextItem()) {
+            if (ImGui::MenuItem("Delete")) {
+                m_ActiveScene->DestroyEntity(entity);
+                ImGui::CloseCurrentPopup();
+            }
+            if (ImGui::MenuItem("Duplicate")) {
+                // TODO: Implement duplication
+            }
+            ImGui::EndPopup();
+        }
 
-        // Draw children if node is open
+        // Draw children
         if (nodeOpen) {
-            for (auto child : hierarchy.children) {
-                DrawEntityNode(child);
+            for (auto child : children) {
+                DrawEntityNode(child, depth + 1);
             }
             ImGui::TreePop();
         }
+
+        if (indent > 0) ImGui::Unindent(indent);
+        ImGui::PopID();
     }
 
     void HierarchyPanel::HandleDragDrop(EntityID entity) {
@@ -128,17 +171,25 @@ namespace Ermine {
     void HierarchyPanel::DrawContextMenu() {
         if (ImGui::BeginPopupContextWindow("HierarchyContext", ImGuiPopupFlags_NoOpenOverItems | ImGuiPopupFlags_MouseButtonRight)) {
             if (ImGui::MenuItem("Create Empty Entity")) {
-                m_ActiveScene->CreateEntity("Empty Entity");
+                EntityID newEntity = m_ActiveScene->CreateEntity("Empty Entity");
+                m_ActiveScene->SetSelectedEntity(newEntity); // Auto-select the new entity
+                ImGui::SetWindowFocus("Inspector"); // ADD THIS LINE
             }
 
             if (ImGui::BeginMenu("Create Primitive")) {
                 if (ImGui::MenuItem("Cube")) {
                     EntityID entity = m_ActiveScene->CreateEntity("Cube");
-                    // Add cube mesh components here if needed
+                    // Add cube mesh and material components here
+                    ECS::GetInstance().AddComponent(entity, graphics::GeometryFactory::CreateCube(1, 1, 1));
+                    m_ActiveScene->SetSelectedEntity(entity); // ADD THIS LINE
+                    ImGui::SetWindowFocus("Inspector"); // ADD THIS LINE
                 }
                 if (ImGui::MenuItem("Sphere")) {
                     EntityID entity = m_ActiveScene->CreateEntity("Sphere");
-                    // Add sphere mesh components here if needed
+                    // Add sphere mesh and material components here  
+                    ECS::GetInstance().AddComponent(entity, graphics::GeometryFactory::CreateSphere(1.0f));
+                    m_ActiveScene->SetSelectedEntity(entity); // ADD THIS LINE
+                    ImGui::SetWindowFocus("Inspector"); // ADD THIS LINE
                 }
                 ImGui::EndMenu();
             }
@@ -146,7 +197,10 @@ namespace Ermine {
             if (ImGui::MenuItem("Create Light")) {
                 EntityID entity = m_ActiveScene->CreateEntity("Light");
                 ECS::GetInstance().AddComponent(entity, Light());
+                m_ActiveScene->SetSelectedEntity(entity); // ADD THIS LINE
+                ImGui::SetWindowFocus("Inspector"); // ADD THIS LINE
             }
+
 
             ImGui::Separator();
 
@@ -167,16 +221,16 @@ namespace Ermine {
     }
 
     const char* HierarchyPanel::GetEntityIcon(EntityID entity) const {
-        // Return appropriate icon based on components
+        // Return simple text prefixes instead of symbols
         if (ECS::GetInstance().HasComponent<Light>(entity)) {
-            return "💡";
+            return "[Light] ";
         }
         if (ECS::GetInstance().HasComponent<AudioComponent>(entity)) {
-            return "🔊";
+            return "[Audio] ";
         }
         if (ECS::GetInstance().HasComponent<Mesh>(entity)) {
-            return "📦";
+            return "[Mesh] ";
         }
-        return "⚪"; // Default entity icon
+        return ""; // No prefix for basic entities
     }
 }

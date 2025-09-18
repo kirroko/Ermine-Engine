@@ -38,8 +38,12 @@ namespace Ermine {
         std::vector<EntityID> GetAllEntities() const;
 
         // Selection
-        void SetSelectedEntity(EntityID entity) { m_SelectedEntity = entity; }
+        void SetSelectedEntity(EntityID entity);
         EntityID GetSelectedEntity() const { return m_SelectedEntity; }
+
+        // Selection management
+        void ClearSelection() { m_SelectedEntity = 0; }
+        bool IsEntitySelected(EntityID entity) const { return m_SelectedEntity == entity; }
 
         // Scene properties
         const std::string& GetName() const { return m_Name; }

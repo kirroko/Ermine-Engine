@@ -91,6 +91,21 @@ namespace Ermine {
         return roots;
     }
 
+    void Scene::SetSelectedEntity(EntityID entity) {
+        // Validate entity exists in this scene
+        if (entity != 0 && !HasEntity(entity)) {
+            EE_CORE_WARN("Trying to select entity {} that doesn't exist in scene {}", entity, m_Name);
+            return;
+        }
+
+        EntityID previousSelection = m_SelectedEntity;
+        m_SelectedEntity = entity;
+
+        if (previousSelection != entity) {
+            EE_CORE_TRACE("Selected entity {} in scene {}", entity, m_Name);
+        }
+    }
+
     std::vector<EntityID> Scene::GetAllEntities() const {
         return std::vector<EntityID>(m_Entities.begin(), m_Entities.end());
     }

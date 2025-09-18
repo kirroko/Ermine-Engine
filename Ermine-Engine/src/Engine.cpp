@@ -365,75 +365,6 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().AddComponent(greenLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
 	ECS::GetInstance().AddComponent(greenLightEntity, Material(std::move(greenLightMaterial)));
 
-	// edwin - testing hierarchy system
-	EE_CORE_INFO("Testing Hierarchy System...");
-
-	// Create parent entity with hierarchy component
-	auto parentEntity = ECS::GetInstance().CreateEntity();
-	ECS::GetInstance().AddComponent(parentEntity, Transform(Vec3(5, 0, 0), Vec3(0, 0, 0), Vec3(1, 1, 1)));
-	ECS::GetInstance().AddComponent(parentEntity, HierarchyComponent());
-	ECS::GetInstance().AddComponent(parentEntity, ObjectMetaData("HierarchyParent", "Test", true));
-	ECS::GetInstance().AddComponent(parentEntity, graphics::GeometryFactory::CreateCube(1, 1, 1));
-
-	// Create parent material
-	auto parentMaterial = std::make_unique<graphics::Material>(shader);
-	parentMaterial->LoadTemplate(graphics::MaterialTemplates::PBR_WHITE());
-	if (texture && texture->IsValid()) {
-		parentMaterial->SetTexture("materialAlbedoMap", texture);
-		parentMaterial->SetTexture("texture0", texture);
-	}
-	ECS::GetInstance().AddComponent(parentEntity, Material(std::move(parentMaterial)));
-
-	// Create child entities with hierarchy components
-	auto childEntity1 = ECS::GetInstance().CreateEntity();
-	ECS::GetInstance().AddComponent(childEntity1, Transform(Vec3(2, 0, 0), Vec3(0, 0, 0), Vec3(0.5f, 0.5f, 0.5f)));
-	ECS::GetInstance().AddComponent(childEntity1, HierarchyComponent());
-	ECS::GetInstance().AddComponent(childEntity1, ObjectMetaData("HierarchyChild1", "Test", true));
-	ECS::GetInstance().AddComponent(childEntity1, graphics::GeometryFactory::CreateCube(1, 1, 1));
-
-	auto child1Material = std::make_unique<graphics::Material>(shader);
-	child1Material->LoadTemplate(graphics::MaterialTemplates::PBR_METAL());
-	if (texture && texture->IsValid()) {
-		child1Material->SetTexture("materialAlbedoMap", texture);
-		child1Material->SetTexture("texture0", texture);
-	}
-	ECS::GetInstance().AddComponent(childEntity1, Material(std::move(child1Material)));
-
-	auto childEntity2 = ECS::GetInstance().CreateEntity();
-	ECS::GetInstance().AddComponent(childEntity2, Transform(Vec3(-2, 0, 0), Vec3(0, 0, 0), Vec3(0.5f, 0.5f, 0.5f)));
-	ECS::GetInstance().AddComponent(childEntity2, HierarchyComponent());
-	ECS::GetInstance().AddComponent(childEntity2, ObjectMetaData("HierarchyChild2", "Test", true));
-	ECS::GetInstance().AddComponent(childEntity2, graphics::GeometryFactory::CreateCube(1, 1, 1));
-
-	auto child2Material = std::make_unique<graphics::Material>(shader);
-	child2Material->LoadTemplate(graphics::MaterialTemplates::PBR_METAL());
-	if (texture && texture->IsValid()) {
-		child2Material->SetTexture("materialAlbedoMap", texture);
-		child2Material->SetTexture("texture0", texture);
-	}
-	ECS::GetInstance().AddComponent(childEntity2, Material(std::move(child2Material)));
-
-	// Get hierarchy system and test it
-	std::shared_ptr<HierarchySystem> hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>();
-
-	// Set up parent-child relationships
-	hierarchySystem->SetParent(childEntity1, parentEntity);
-	hierarchySystem->SetParent(childEntity2, parentEntity);
-
-	// Test cycle prevention
-	bool wouldCycle = hierarchySystem->WouldCreateCycle(parentEntity, childEntity1);
-	EE_CORE_INFO("Cycle test (should be true): {}", wouldCycle);
-
-	// Test getting parent/children
-	EntityID retrievedParent = hierarchySystem->GetParent(childEntity1);
-	const auto& children = hierarchySystem->GetChildren(parentEntity);
-	EE_CORE_INFO("Parent of child1: {} (should be {})", retrievedParent, parentEntity);
-	EE_CORE_INFO("Parent has {} children", children.size());
-	EE_CORE_INFO("Hierarchy testing complete");
-
-	EE_CORE_INFO("Total living entities after creation: {0}", ECS::GetInstance().GetLivingEntityCount());
-
-
 
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f); // Background color
 
@@ -443,7 +374,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	editor::EditorGUI::CreateImGUIWindow<AudioImGUI>();
 	// Create ImGUI window for Inspector
 	//editor::EditorGUI::CreateImGUIWindow<InspectorGUI>();
-	editor::EditorGUI::CreateImGUIWindow<InspectorGUI>(entity2, "Inspector");
+	//editor::EditorGUI::CreateImGUIWindow<InspectorGUI>(entity2, "Inspector");
 
 	EE_CORE_INFO("Systems and components registered successfully, Engine Initialized");
 	s_isInitialized = true;

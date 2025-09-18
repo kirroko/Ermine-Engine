@@ -90,19 +90,42 @@ namespace Ermine
         auto& hierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(entity);
         auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
 
-        //if (hierarchy.parent != 0) {
-        //    auto& parentTransform = ECS::GetInstance().GetComponent<Transform>(hierarchy.parent);
-        //    transform.transform_matrix = parentTransform.transform_matrix * transform.transform_matrix;
-        //}
+        // Create transformation matrices from position, rotation, scale
+        Matrix4x4 translation, rotation, scale, localMatrix;
+        Mtx44Identity(translation);
+        Mtx44Identity(rotation);
+        Mtx44Identity(scale);
 
-        // Store local transform if not already stored
-        // Then compute world transform based on parent's world transform
+        // Build local transform matrix
+        Mtx44Translate(translation, transform.position.x, transform.position.y, transform.position.z);
+        Mtx44SetFromQuaternion(rotation, transform.rotation);
+        Mtx44Scale(scale, transform.scale.x, transform.scale.y, transform.scale.z);
 
+        // Combine: Translation * Rotation * Scale
+        localMatrix = translation * rotation * scale;
+
+        // Calculate world transform
         if (hierarchy.parent != 0) {
+            // Get parent's world transform
+            auto& parentHierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(hierarchy.parent);
             auto& parentTransform = ECS::GetInstance().GetComponent<Transform>(hierarchy.parent);
-            // Combine parent's world transform with this entity's local transform
-            // transform.worldMatrix = parentTransform.worldMatrix * transform.localMatrix;
+
+            // World = Parent's World * Local
+            transform.transform_matrix = parentTransform.transform_matrix * localMatrix;
+
+            // Cache in hierarchy component if using the optimization
+            hierarchy.worldTransform = transform.transform_matrix;
         }
+        else {
+            // Root entity - world transform = local transform
+            transform.transform_matrix = localMatrix;
+            hierarchy.worldTransform = localMatrix;
+        }
+
+        // Mark as clean
+        hierarchy.worldTransformDirty = false;
+
+        // Recursively update children
         for (auto child : hierarchy.children) {
             UpdateWorldTransform(child);
         }

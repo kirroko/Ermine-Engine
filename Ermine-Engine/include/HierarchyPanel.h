@@ -7,9 +7,11 @@ namespace Ermine {
     private:
         Scene* m_ActiveScene = nullptr;
         bool m_IsVisible = true;
+        EntityID m_PendingFocusEntity = 0;
+        //float m_FocusTimer = 0.0f;
 
         // UI helper functions
-        void DrawEntityNode(EntityID entity);
+        void DrawEntityNode(EntityID entity, int depth);
         void DrawContextMenu();
         void HandleDragDrop(EntityID entity);
         const char* GetEntityIcon(EntityID entity) const;
