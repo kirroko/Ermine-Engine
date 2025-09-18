@@ -377,10 +377,10 @@ namespace Ermine
 	*************************************************************************/
 	struct LightGPU
 	{
-		Vec4 position_type;    // xyz = position (view space), w = light type
-		Vec4 color_intensity;  // xyz = color, w = intensity
-		Vec4 direction_range;  // xyz = direction (view space), w = range
-		Vec4 spot_angles;      // x = inner cos, y = outer cos
+		glm::vec4 position_type;    // xyz = position (view space), w = light type
+		glm::vec4 color_intensity;  // xyz = color, w = intensity
+		glm::vec4 direction_range;  // xyz = direction (view space), w = range
+		glm::vec4 spot_angles;      // x = inner cos, y = outer cos
 	};
 
 	/*!***********************************************************************

@@ -68,6 +68,10 @@ void Renderer::Init(const int& screenWidth, const int& screenHeight)
 	}
 	// Create a fullscreen quad for rendering the offscreen buffer to the screen
 
+
+	// Add light system reference
+	m_LightSystem = Ermine::ECS::GetInstance().GetSystem<LightSystem>();
+
 	m_QuadMesh = GeometryFactory::CreateQuad(2.0f, 2.0f);
 
 	// Load deferred shading shaders
@@ -655,9 +659,6 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 				glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
 				rotQuat = glm::normalize(rotQuat);
 				entityModel *= glm::mat4_cast(rotQuat);
-				//entityModel = glm::rotate(entityModel, glm::radians(trans.rotation.x), glm::vec3(1, 0, 0));
-				//entityModel = glm::rotate(entityModel, glm::radians(trans.rotation.y), glm::vec3(0, 1, 0));
-				//entityModel = glm::rotate(entityModel, glm::radians(trans.rotation.z), glm::vec3(0, 0, 1));
 				entityModel = glm::scale(entityModel, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
 
 				// Render model
@@ -687,9 +688,6 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 			glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
 			rotQuat = glm::normalize(rotQuat);
 			model *= glm::mat4_cast(rotQuat);
-			//model = glm::rotate(model, glm::radians(trans.rotation.x), glm::vec3(1, 0, 0));
-			//model = glm::rotate(model, glm::radians(trans.rotation.y), glm::vec3(0, 1, 0));
-			//model = glm::rotate(model, glm::radians(trans.rotation.z), glm::vec3(0, 0, 1));
 			model = glm::scale(model, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
 
 			// Set transformation matrices for g-buffer shader
@@ -705,7 +703,7 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 				view.m30, view.m31, view.m32, view.m33
 			);
 			glm::mat4 modelView = glmView * model;
-			glm::mat3 normalMatrix = transpose(inverse(glm::mat3(modelView)));
+			glm::mat3 normalMatrix = transpose(inverse(glm::mat3(model)));
 			m_GBufferShader->SetUniformMatrix3fv("NormalMatrix", normalMatrix);
 
 			UpdateMaterialUBO(material->GetUBOData());
@@ -1107,12 +1105,8 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
 
 	// Gather Light and Transform across all alive entities
 	const auto& ecs = Ermine::ECS::GetInstance();
-	const unsigned long int maxId = ecs.GetLivingEntityCount();
-	for (Ermine::EntityID e = 1; e <= maxId && lights.size() < MaxLights; e++)
+	for(EntityID e : m_LightSystem->m_Entities)
 	{
-		if (!ecs.IsEntityValid(e)) continue;
-		if (!ecs.HasComponent<Light>(e)) continue;
-		if (!ecs.HasComponent<Transform>(e)) continue;
 
 		const auto& trans = ecs.GetComponent<Transform>(e);
 		const auto& light = ecs.GetComponent<Light>(e);
@@ -1146,24 +1140,24 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
 			outerCos = glm::cos(outerAngle);
 		}
 
-		// Convert back to Vec4 for LightGPU structure (maintaining compatibility)
+		// Convert back to glm::vec4 for LightGPU structure (maintaining compatibility)
 		LightGPU gpu{};
-		gpu.position_type = Vec4(posView.x, posView.y, posView.z, static_cast<float>(light.type));
-		gpu.color_intensity = Vec4(light.color.x, light.color.y, light.color.z, light.intensity);
-		gpu.direction_range = Vec4(dirView.x, dirView.y, dirView.z, 100.0f);
-		gpu.spot_angles = Vec4(innerCos, outerCos, 0.0f, 0.0f);
+		gpu.position_type = glm::vec4(posView.x, posView.y, posView.z, static_cast<float>(light.type));
+		gpu.color_intensity = glm::vec4(light.color.x, light.color.y, light.color.z, light.intensity);
+		gpu.direction_range = glm::vec4(dirView.x, dirView.y, dirView.z, 100.0f);
+		gpu.spot_angles = glm::vec4(innerCos, outerCos, 0.0f, 0.0f);
 		lights.emplace_back(gpu);
 	}
 
 	// Upload
 	glBindBuffer(GL_UNIFORM_BUFFER, m_LightsUBO);
 
-	Vec4 count(static_cast<float>(lights.size()), 0.0f, 0.0f, 0.0f);
-	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Vec4), count.m);
+	glm::vec4 count(static_cast<float>(lights.size()), 0.0f, 0.0f, 0.0f);
+	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::vec4), &count);
 
 	if (!lights.empty())
 	{
-		const GLsizeiptr bodyOffset = static_cast<GLsizeiptr>(sizeof(Vec4));
+		const GLsizeiptr bodyOffset = static_cast<GLsizeiptr>(sizeof(glm::vec4));
 		const GLsizeiptr bodySize = static_cast<GLsizeiptr>(lights.size() * sizeof(LightGPU));
 		glBufferSubData(GL_UNIFORM_BUFFER, bodyOffset, bodySize, lights.data());
 	}

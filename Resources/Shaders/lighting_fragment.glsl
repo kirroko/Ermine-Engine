@@ -14,11 +14,24 @@ uniform uvec2 u_GBufferDepthHandle;
 
 // Matrices for position reconstruction
 uniform mat4 view;
-uniform mat4 invView;      
-uniform mat4 invProjection;   
+uniform mat4 invView;
+uniform mat4 invProjection;
+uniform mat4 projection;
 
 // Shading mode
 uniform int u_ShadingMode; // 0 = PBR, 1 = Blinn-Phong
+
+// VBAO Parameters 
+uniform int u_VBAO = 1;
+uniform int u_VBAOSlices = 8;
+uniform int u_VBAOSteps = 32;
+uniform float u_VBAORadius = 2;
+uniform float u_VBAOThickness; 
+uniform float u_VBAOThicknessMultiplier;
+uniform float u_VBAOIntensity;
+uniform float u_VBAOFadeout;
+uniform float u_VBAOBias;
+
 
 // Light structure
 struct Light {
@@ -35,6 +48,8 @@ layout (std140) uniform Lights {
 
 // Constants
 const float PI = 3.14159265359;
+const float HALF_PI = PI * 0.5;
+const uint SECTOR_COUNT = 32u;
 const int POINT_LIGHT = 0;
 const int DIRECTIONAL_LIGHT = 1;
 const int SPOT_LIGHT = 2;
@@ -54,6 +69,13 @@ vec3 reconstructWorldPosition(vec2 texCoord, float depth)
     
     return worldPos.xyz;
 }
+
+vec3 reconstructViewPosition(vec2 texCoord, float depth) {
+    vec4 ndc = vec4(texCoord * 2.0 - 1.0, depth * 2.0 - 1.0, 1.0);
+    vec4 viewPos = invProjection * ndc;
+    return viewPos.xyz / viewPos.w;
+}
+
 
 // PBR Functions
 float DistributionGGX(vec3 N, vec3 H, float roughness)
@@ -146,6 +168,156 @@ float calculateAttenuation(int lightIndex, vec3 fragPosView, out vec3 lightDir)
     return attenuation;
 }
 
+uint fastBitCount(uint value) {
+    // Brian Kernighan's algorithm
+    value = value - ((value >> 1u) & 0x55555555u);
+    value = (value & 0x33333333u) + ((value >> 2u) & 0x33333333u);
+    return ((value + (value >> 4u) & 0xF0F0F0Fu) * 0x1010101u) >> 24u;
+}
+
+uint updateSectorBitmask(float minHorizon, float maxHorizon, uint existingMask) {
+    // Convert normalized horizon angles to bit positions
+    uint startBit = uint(clamp(minHorizon * float(SECTOR_COUNT), 0.0, 31.0));
+    uint endBit = uint(clamp(maxHorizon * float(SECTOR_COUNT), 0.0, 31.0));
+    
+    if (endBit <= startBit) return existingMask;
+    
+    uint bitCount = endBit - startBit;
+    uint mask = (bitCount >= 32u) ? 0xFFFFFFFFu : ((1u << bitCount) - 1u) << startBit;
+    
+    return existingMask | mask;
+}
+
+// Noise reduction function for temporal stability
+float bayer4x4(ivec2 coord) {
+    const uint bayer[16] = uint[](
+        0u, 8u, 2u, 10u,
+        12u, 4u, 14u, 6u,
+        3u, 11u, 1u, 9u,
+        15u, 7u, 13u, 5u
+    );
+    return float(bayer[(coord.x & 3) + (coord.y & 3) * 4]) * (1.0 / 16.0);
+}
+
+
+float randf(vec2 coord) {
+    return fract(52.9829189 * fract(0.06711056 * coord.x + 0.00583715 * coord.y));
+}
+
+vec2 fastAcos2(vec2 x) {
+    return (-0.69813170 * x * x - 0.87266463) * x + 1.57079633;
+}
+
+float fastDotNormalized(vec3 a, vec3 b) {
+    return dot(a, b) * inversesqrt(dot(a, a));
+}
+
+// VBAO slice tracing with fast bit operations
+vec2 traceSliceBitmask(vec2 texCoord, vec3 viewPos, vec3 viewDir, vec3 normal,
+                               vec2 sliceDir, float jitter, inout uint bitfield,
+                               float dirSign, float N, vec3 projectedNormal) {
+    
+    vec2 texelSize = 1.0 / textureSize(sampler2D(u_GBufferDepthHandle), 0);
+    vec2 rayOffset = 1.4 * dirSign * sliceDir * texelSize;
+    vec2 scaledDir = sliceDir * vec2(1.0, texelSize.x / texelSize.y);
+    
+    float h = dirSign * sin(N);
+    
+    // Pre-calculate constants outside loop
+    const float radiusScale = 0.1 * u_VBAORadius;
+    const float invSteps = 1.0 / float(u_VBAOSteps);
+    
+    for(int i = 0; i < u_VBAOSteps; i++) {
+        float stepRatio = (float(i) + jitter) * invSteps;
+        stepRatio = stepRatio * stepRatio * stepRatio; // Cubic distribution for better near sampling
+        
+        vec2 sampleCoord = texCoord + rayOffset + dirSign * radiusScale * scaledDir * stepRatio;
+        
+        // Depth sampling - use texelFetch for near samples (faster)
+        float sampleDepth;
+        if(stepRatio < 0.7) {
+            ivec2 iCoord = ivec2(sampleCoord * textureSize(sampler2D(u_GBufferDepthHandle), 0));
+            sampleDepth = texelFetch(sampler2D(u_GBufferDepthHandle), iCoord, 0).r;
+        } else {
+            sampleDepth = texture(sampler2D(u_GBufferDepthHandle), sampleCoord).r;
+        }
+        
+        vec3 samplePos = reconstructViewPosition(sampleCoord, sampleDepth);
+        vec3 toSample = samplePos - viewPos;
+        
+        float sampleDotView = fastDotNormalized(toSample, viewDir);
+        
+        // Apply user-adjustable thickness
+        vec3 thicknessSample = normalize(samplePos) * u_VBAOThickness + 
+                              (1.0 + u_VBAOThicknessMultiplier) * samplePos - viewPos;
+        float thicknessDotView = fastDotNormalized(thicknessSample, viewDir);
+        
+        vec2 angles = fastAcos2(vec2(sampleDotView, thicknessDotView));
+        
+        // Distance-based attenuation
+        float distSq = dot(toSample, toSample);
+        float attenuation = 1.0 / (0.01 * distSq / dot(samplePos, samplePos) + 1.0);
+        h = mix(h, max(h, sampleDotView), mix(1.0, stepRatio, 0.75) * attenuation);
+        
+        // Convert angles to normalized bitmask coordinates
+        vec2 normalizedAngles = clamp((dirSign * -angles - N + HALF_PI) / PI, 0.0, 1.0);
+        normalizedAngles = normalizedAngles.x > normalizedAngles.y ? normalizedAngles.yx : normalizedAngles;
+        
+        // Fast bit operations - update bitmask
+        bitfield = updateSectorBitmask(normalizedAngles.x, normalizedAngles.y, bitfield);
+    }
+    
+    return vec2(h, 0.0);
+}
+
+// Main VBAO calculation
+float calculateVBAO(vec2 texCoord, vec3 viewPos, vec3 viewDir, vec3 normal, vec2 noise) {
+    float totalAO = 0.0;
+    float totalWeight = 0.0;
+    
+    // Pre-calculate slice rotation increment
+    const float sliceRotation = PI / float(u_VBAOSlices);
+    
+    for(int slice = 0; slice < u_VBAOSlices; slice++) {
+        float angle = (float(slice) + noise.x) * sliceRotation;
+        vec2 sliceDir = vec2(sin(angle), cos(angle));
+        
+        vec3 sliceNormal = normalize(cross(vec3(sliceDir, 0.0), viewDir));
+        vec3 tangent = cross(viewDir, sliceNormal);
+        
+        vec3 projectedNormal = normal - sliceNormal * dot(normal, sliceNormal);
+        float projectedLength = length(projectedNormal);
+        
+        if(projectedLength < 0.01) continue; // Skip perpendicular slices
+        
+        float N = -sign(dot(projectedNormal, tangent)) * 
+                  acos(clamp(dot(normalize(projectedNormal), viewDir), -1.0, 1.0));
+        
+        vec3 normalizedProjected = normalize(projectedNormal);
+        
+        // Initialize bitmask for this slice
+        uint bitfield = 0u;
+        vec4 horizons;
+        
+        // Trace both directions of the slice
+        horizons.xz = traceSliceBitmask(texCoord, viewPos, viewDir, normal, sliceDir, 
+                                                noise.y, bitfield, 1.0, N, normalizedProjected);
+        horizons.yw = traceSliceBitmask(texCoord, viewPos, viewDir, normal, sliceDir, 
+                                                noise.y, bitfield, -1.0, N, normalizedProjected);
+        
+        // Calculate visibility from bitmask
+        float visibility = 1.0 - float(fastBitCount(bitfield)) / float(SECTOR_COUNT);
+        
+        // Weight by projected normal length (slice importance)
+        float sliceWeight = projectedLength;
+        totalAO += visibility * sliceWeight;
+        totalWeight += sliceWeight;
+    }
+    
+    return totalWeight > 0.0 ? totalAO / totalWeight : 1.0;
+}
+
+
 // Blinn-Phong shading
 vec3 calculateBlinnPhong(int lightIndex, vec3 normal, vec3 viewDir, vec3 fragPosView, 
                         vec3 albedo, float ksIntensity, float shininess)
@@ -172,9 +344,10 @@ vec3 calculateBlinnPhong(int lightIndex, vec3 normal, vec3 viewDir, vec3 fragPos
     return (diffuse + specular) * attenuation;
 }
 
+
 // PBR shading
 vec3 calculatePBR(int lightIndex, vec3 normal, vec3 viewDir, vec3 fragPosView, 
-                 vec3 albedo, float metallic, float roughness, vec3 F0)
+                 vec3 albedo, float metallic, float roughness, vec3 F0, vec3 fragPosWorld)
 {
     vec3 lightDir;
     float attenuation = calculateAttenuation(lightIndex, fragPosView, lightDir);
@@ -269,6 +442,7 @@ void readGBufferBindless(uvec2 gBuffer0Handle, uvec2 gBuffer1Handle, uvec2 gBuff
                 albedo, normal, emissive, emissiveIntensity, roughness, metallic, ao);
 }
 
+
 void main()
 {    
     // Smaple depth
@@ -302,6 +476,14 @@ void main()
     // View direction in view space (towards camera)
     vec3 viewDir = normalize(-fragPosView);
 
+    // Calculate VBAO if enabled
+    float vbao = 1.0;
+    if (u_VBAO == 1) {
+        vec2 noise = vec2(randf(gl_FragCoord.xy), bayer4x4(ivec2(gl_FragCoord.xy)));
+        vbao = calculateVBAO(TexCoord, fragPosView, viewDir, normalView, noise);
+        ao *= vbao;
+    }
+
     int numLights = int(lightCount.x);
 
     // Shading model selection
@@ -330,7 +512,7 @@ void main()
         // PBR lighting
         vec3 F0 = mix(vec3(0.04), albedo, metallic);
         for (int i = 0; i < numLights && i < 16; ++i) {
-            result += calculatePBR(i, normalView, viewDir, fragPosView, albedo, metallic, roughness, F0);
+            result += calculatePBR(i, normalView, viewDir, fragPosView, albedo, metallic, roughness, F0, worldPos);
         }
 
         // Energy compensation for rough surfaces

@@ -25,6 +25,9 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 namespace Ermine::graphics
 {
+    // Lights
+    class LightSystem : public System {};
+
     // Forward declarations
     struct MaterialUBO;
     class Skybox;
@@ -330,6 +333,8 @@ namespace Ermine::graphics
         void RenderModel(const Model& model, const Mtx44& view, const Mtx44& projection, const glm::mat4& rootTransform);
 
     private:
+		// Light System
+		std::shared_ptr<LightSystem> m_LightSystem = nullptr;
         std::shared_ptr<OffscreenBuffer> m_OffscreenBuffer;
 
         // Lighting UBO

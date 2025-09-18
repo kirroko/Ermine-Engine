@@ -158,6 +158,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().RegisterSystem<scripting::ScriptSystem>();
 	ECS::GetInstance().RegisterSystem<AudioSystem>();
 	ECS::GetInstance().RegisterSystem<ParticleSystem>();
+	ECS::GetInstance().RegisterSystem <graphics::LightSystem>();
 
 	// TODO: Set the signature for the system as required
 	// For Graphics/Renderer system
@@ -184,6 +185,12 @@ bool engine::Init(GLFWwindow* windowContext)
 	sig.set(ECS::GetInstance().GetComponentType<Material>());
 	sig.set(ECS::GetInstance().GetComponentType<Particle>());
 	ECS::GetInstance().SetSystemSignature<ParticleSystem>(sig);
+
+	// Lights
+	sig.reset();
+	sig.set(ECS::GetInstance().GetComponentType<Light>());
+	sig.set(ECS::GetInstance().GetComponentType<Transform>());
+	ECS::GetInstance().SetSystemSignature<graphics::LightSystem>(sig);
 
 	glfwSetFramebufferSizeCallback(windowContext, []([[maybe_unused]] GLFWwindow* window, int width, int height)
 		{
