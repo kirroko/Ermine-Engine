@@ -31,6 +31,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Serialisation.h"
 #include "AudioSystem.h"
 #include "Particles.h"
+#include "Physics.h"
 #include "InspectorGUI.h"
 #include "AudioImGUI.h"
 #include "Skybox.h"
@@ -78,16 +79,16 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	Config cfg{};
 	try {
-	    cfg = LoadConfigFromFile(cfgPath);
-	    EE_CORE_INFO("Loaded config: {0}x{1}, fullscreen={2}, maximised={3}, title={4}",
-	        cfg.windowWidth, cfg.windowHeight, cfg.fullscreen, cfg.maximized, cfg.title);
+		cfg = LoadConfigFromFile(cfgPath);
+		EE_CORE_INFO("Loaded config: {0}x{1}, fullscreen={2}, maximised={3}, title={4}",
+			cfg.windowWidth, cfg.windowHeight, cfg.fullscreen, cfg.maximized, cfg.title);
 	}
 	catch (const std::exception& e) {
-	    EE_CORE_WARN("Config not found/invalid ({}). Using defaults.", e.what());
-	    cfg = { 1920, 1080, false, false, "Ermine Editor 0.1" };
-	    // Optional: write defaults so the file exists next run
-	    try { SaveConfigToFile(cfg, cfgPath, /*pretty=*/true); }
-	    catch (const std::exception& w) { EE_CORE_WARN("Could not write default config: {}", w.what()); }
+		EE_CORE_WARN("Config not found/invalid ({}). Using defaults.", e.what());
+		cfg = { 1920, 1080, false, false, "Ermine Editor 0.1" };
+		// Optional: write defaults so the file exists next run
+		try { SaveConfigToFile(cfg, cfgPath, /*pretty=*/true); }
+		catch (const std::exception& w) { EE_CORE_WARN("Could not write default config: {}", w.what()); }
 	}
 
 	// Apply config to the window
@@ -138,6 +139,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	EE_AUTO_REGISTER_COMPONENT(Particle, "Particle")
 	EE_AUTO_REGISTER_COMPONENT(AudioComponent, "AudioComponent")
 	EE_AUTO_REGISTER_COMPONENT(GlobalAudioComponent, "GlobalAudioComponent")
+	EE_AUTO_REGISTER_COMPONENT(ModelComponent, "ModelComponent")
 
 	// ECS::GetInstance().RegisterComponent<AudioComponent>(); // ADD THIS
 	// ECS::GetInstance().RegisterComponent<GlobalAudioComponent>(); // ADD THIS IF YOU WANT GLOBAL AUDIO
@@ -162,6 +164,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	SignatureID sig;
 	sig.set(ECS::GetInstance().GetComponentType<Transform>());
 	sig.set(ECS::GetInstance().GetComponentType<Mesh>());
+	//sig.set(ECS::GetInstance().GetComponentType<ModelComponent>());
 	sig.set(ECS::GetInstance().GetComponentType<Material>());
 	ECS::GetInstance().SetSystemSignature<graphics::Renderer>(sig);
 
@@ -173,7 +176,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	sig.set(ECS::GetInstance().GetComponentType<AudioComponent>());
 	sig.set(ECS::GetInstance().GetComponentType<Transform>());
 	ECS::GetInstance().SetSystemSignature<AudioSystem>(sig);
-	
+
 	// For Particles
 	sig.reset();
 	sig.set(ECS::GetInstance().GetComponentType<Transform>());
@@ -256,9 +259,9 @@ bool engine::Init(GLFWwindow* windowContext)
 	//    // Use shared material for all these entities - much more memory efficient!
 	//    ECS::GetInstance().AddComponent(entity, Material(metalMaterial));
 	//}
-	
+
 	auto audioTestEntity = ECS::GetInstance().CreateEntity();
-	ECS::GetInstance().AddComponent(audioTestEntity, Transform(Vec3(2, 0, -1), Vec3(0, 0, 0), Vec3(1, 1, 1)));
+	ECS::GetInstance().AddComponent(audioTestEntity, Transform(Vec3(2, 0, -1), Quaternion(), Vec3(1, 1, 1)));
 	ECS::GetInstance().AddComponent(audioTestEntity, ObjectMetaData());
 
 	AudioComponent testAudio;
@@ -278,6 +281,20 @@ bool engine::Init(GLFWwindow* windowContext)
 	//ECS::GetInstance().AddComponent(entity3, graphics::GeometryFactory::CreateSphere());
 	//ECS::GetInstance().AddComponent(entity3, Material(shader, texture));
 
+	// Example FBX entity
+	auto fbxEntity = ECS::GetInstance().CreateEntity();
+	ECS::GetInstance().AddComponent(fbxEntity, Transform(Vec3(0, 0, -1), Quaternion(), Vec3(0.01f, 0.01f, 0.01f)));
+	ECS::GetInstance().AddComponent(fbxEntity, ObjectMetaData("Character", "Model", true));
+	ECS::GetInstance().AddComponent(fbxEntity, Mesh{}); // empty mesh component for renderer signature
+	ECS::GetInstance().AddComponent(fbxEntity, ModelComponent(AssetManager::GetInstance().LoadModel("../Resources/Models/Walking.fbx")));
+	auto cubeFBXMaterial = std::make_unique<graphics::Material>(shader);
+	cubeFBXMaterial->LoadTemplate(graphics::MaterialTemplates::PBR_METAL());
+	if (texture && texture->IsValid()) {
+		cubeFBXMaterial->SetTexture("materialAlbedoMap", texture);
+		cubeFBXMaterial->SetTexture("texture0", texture);
+	}
+	ECS::GetInstance().AddComponent(fbxEntity, Material(std::move(cubeFBXMaterial)));
+
 	// Create a simple quad mesh for particles
 	auto quadMesh = graphics::GeometryFactory::CreateQuad(1.0f, 1.0f);
 	auto tex = AssetManager::GetInstance().LoadTexture("../Resources/Textures/greybox_red_solid.png");
@@ -285,18 +302,39 @@ bool engine::Init(GLFWwindow* windowContext)
 	// Particles Emitter
 	emitter = std::make_unique<ParticleEmitter>(quadMesh, shader, tex);
 
-	// Create first cube using shared basic white material
-	auto entity = ECS::GetInstance().CreateEntity();
-	ECS::GetInstance().AddComponent(entity, Transform(Vec3(0, 0, -1), Vec3(0, 45, 90), Vec3(1, 1, 1)));
-	ECS::GetInstance().AddComponent(entity, ObjectMetaData());
-	ECS::GetInstance().AddComponent(entity, graphics::GeometryFactory::CreateCube(1, 1, 1));
+	// Create first cube
+	//auto entity = ECS::GetInstance().CreateEntity();
+	//ECS::GetInstance().AddComponent(entity, Transform(Vec3(0, 0, -1), Vec3(0, 45, 90), Vec3(1, 1, 1)));
+	//ECS::GetInstance().AddComponent(entity, ObjectMetaData());
+	//ECS::GetInstance().AddComponent(entity, graphics::GeometryFactory::CreateCube(1, 1, 1));
 
-	// Use the shared basic white material
-	ECS::GetInstance().AddComponent(entity, Material(basicWhiteMaterial));
+	RegisterDefaultAllocator();
+
+	gPhysics = new Physics();
+	gPhysics->Init();
+	gPhysics->CreatePhysicsBox(Vec3(0, 5, 0), Vec3(1, 1, 1), 1.0f);
+	gPhysics->CreatePhysicsBox(Vec3(0, 8, 0), Vec3(1, 1, 1), 1.0f);
+
+	gPhysics->CreatePhysicsBox(Vec3(0, 0, 0), Vec3(1, 1, 1), 0.0f);
+
+	//InspectorGUI inspector{ entity, "Inspector" };
+	//inspector.SetEntity(entity);
+
+	// Create material using UBO template
+	auto cubeMaterial = std::make_unique<graphics::Material>(shader);
+	cubeMaterial->LoadTemplate(graphics::MaterialTemplates::PBR_WHITE());
+
+	// Set texture if available
+	if (texture && texture->IsValid()) {
+		cubeMaterial->SetTexture("materialAlbedoMap", texture);
+		cubeMaterial->SetTexture("texture0", texture); // Fallback for compatibility
+	}
+
+	//ECS::GetInstance().AddComponent(entity, Material(std::move(cubeMaterial)));
 
 	// Create second cube  
 	auto entity2 = ECS::GetInstance().CreateEntity();
-	ECS::GetInstance().AddComponent(entity2, Transform(Vec3(-1, 1, -2), Vec3(0, 0, 0), Vec3(1, 1, 1)));
+	ECS::GetInstance().AddComponent(entity2, Transform(Vec3(-1, 1, -2), Quaternion(), Vec3(1, 1, 1)));
 	ECS::GetInstance().AddComponent(entity2, ObjectMetaData());
 	ECS::GetInstance().AddComponent(entity2, graphics::GeometryFactory::CreateCube(1, 1, 1));
 
@@ -325,7 +363,7 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	// Create lights with balanced intensities
 	auto mainLightEntity = ECS::GetInstance().CreateEntity();
-	ECS::GetInstance().AddComponent(mainLightEntity, Transform(Vec3(0, 4, 2), Vec3(0, 0, 0), Vec3(1, 1, 1)));
+	ECS::GetInstance().AddComponent(mainLightEntity, Transform(Vec3(0, 4, 2), Quaternion(), Vec3(1, 1, 1)));
 	ECS::GetInstance().AddComponent(mainLightEntity, ObjectMetaData("MainLight", "Light", true));
 	ECS::GetInstance().AddComponent(mainLightEntity, Light(Vec3(1, 1, 1), 0.8f, LightType::POINT));
 
@@ -335,7 +373,7 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	// Red accent light - create unique colored emissive materials
 	auto redLightEntity = ECS::GetInstance().CreateEntity();
-	ECS::GetInstance().AddComponent(redLightEntity, Transform(Vec3(3, 2, 0), Vec3(0, 0, 0), Vec3(1, 1, 1)));
+	ECS::GetInstance().AddComponent(redLightEntity, Transform(Vec3(3, 2, 0), Quaternion(), Vec3(1, 1, 1)));
 	ECS::GetInstance().AddComponent(redLightEntity, ObjectMetaData("LightRed", "Light", true));
 	ECS::GetInstance().AddComponent(redLightEntity, Light(Vec3(1, 0.0, 0.0), 0.5f, LightType::POINT));
 
@@ -346,7 +384,7 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	// Blue accent light
 	auto blueLightEntity = ECS::GetInstance().CreateEntity();
-	ECS::GetInstance().AddComponent(blueLightEntity, Transform(Vec3(-3, 2, 0), Vec3(0, 0, 0), Vec3(1, 1, 1)));
+	ECS::GetInstance().AddComponent(blueLightEntity, Transform(Vec3(-3, 2, 0), Quaternion(), Vec3(1, 1, 1)));
 	ECS::GetInstance().AddComponent(blueLightEntity, ObjectMetaData("LightBlue", "Light", true));
 	ECS::GetInstance().AddComponent(blueLightEntity, Light(Vec3(0.0, 0.0, 1), 0.5f, LightType::POINT));
 
@@ -357,7 +395,7 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	// Green accent light
 	auto greenLightEntity = ECS::GetInstance().CreateEntity();
-	ECS::GetInstance().AddComponent(greenLightEntity, Transform(Vec3(0, 2, -3), Vec3(0, 0, 0), Vec3(1, 1, 1)));
+	ECS::GetInstance().AddComponent(greenLightEntity, Transform(Vec3(0, 2, -3), Quaternion(), Vec3(1, 1, 1)));
 	ECS::GetInstance().AddComponent(greenLightEntity, ObjectMetaData("LightGreen", "Light", true));
 	ECS::GetInstance().AddComponent(greenLightEntity, Light(Vec3(0.0, 1.0f, 0.0), 0.5f, LightType::POINT));
 
@@ -368,7 +406,9 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	EE_CORE_INFO("Total living entities after creation: {0}", ECS::GetInstance().GetLivingEntityCount());
 
-	glClearColor(0.2f,0.3f,0.3f,1.0f); // Background color
+
+
+	glClearColor(0.2f, 0.3f, 0.3f, 1.0f); // Background color
 
 	// Create ImGUI window for Asset Browser
 	editor::EditorGUI::CreateImGUIWindow<ImguiUI::AssetBrowser>();
@@ -414,7 +454,9 @@ void engine::Shutdown()
 	SaveConfigToFile(cfg, "Ermine-Engine.config", false);
 
     AssetManager::GetInstance().Clear();
-
+	gPhysics->Shutdown();
+	delete gPhysics;
+	gPhysics = nullptr;
 	emitter.reset();
 	skybox.reset();
 	environmentCubemap.reset();
@@ -471,6 +513,7 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 	ECS::GetInstance().GetSystem<AudioSystem>()->Update();
 	// Update editor camera
 	editor::EditorCamera::GetInstance().Update();
+	gPhysics->Update(FrameController::GetDeltaTime());
 
 	// Simple test to see if we can select an entity and view it in the inspector
 	//if (Input::IsKeyDown(GLFW_KEY_Q))
@@ -499,13 +542,13 @@ void engine::Render(GLFWwindow* window)
 	glfwGetFramebufferSize(window, &width, &height);
 	glViewport(0, 0, width, height);
 
+	Mtx44 view = editor::EditorCamera::GetInstance().GetViewMatrix();
+	Mtx44 proj = editor::EditorCamera::GetInstance().GetProjectionMatrix();
+
 	// Start GPU timing for rendering
 	graphics::GPUProfiler::BeginEvent("Frame");
 
 	ECS::GetInstance().GetSystem<graphics::Renderer>()->Clear();
-
-	Mtx44 view = editor::EditorCamera::GetInstance().GetViewMatrix();
-	Mtx44 proj = editor::EditorCamera::GetInstance().GetProjectionMatrix();
 
 	// Pass skybox to renderer so it can be rendered in the proper framebuffer
 	auto renderer = ECS::GetInstance().GetSystem<graphics::Renderer>();

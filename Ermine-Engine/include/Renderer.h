@@ -21,7 +21,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Systems.h"
 #include "GPUProfiler.h"
 #include "Material.h"
-#include "Components.h" 
+#include "Components.h"
 
 namespace Ermine::graphics
 {
@@ -67,12 +67,12 @@ namespace Ermine::graphics
          * @brief Initialize the renderer with the screen width and height.
          * @param screenWidth The width of the screen
          * @param screenHeight The height of the screen
-		 */
-		void Init(const int& screenWidth, const int& screenHeight);
+         */
+        void Init(const int& screenWidth, const int& screenHeight);
 
         /**
          * @brief Offscreen buffer structure for rendering to texture
-		 */
+         */
         struct OffscreenBuffer
         {
             unsigned int FBO; // Frame Buffer Object
@@ -164,7 +164,14 @@ namespace Ermine::graphics
          * @param height The height of the offscreen buffer
          * @return OffscreenBuffer The offscreen buffer
          */
-        OffscreenBuffer Create(const int& width, const int& height);
+        OffscreenBuffer CreateOffscreenBuffer(const int& width, const int& height);
+
+        /**
+         * @brief Resize the offscreen buffer to new dimensions without recreating the FBO
+         * @param width New width
+         * @param height New height
+		 */
+        void ResizeOffscreenBuffer(const int& width, const int& height);
 
         /**
          * @brief Create  g-buffer for deferred rendering
@@ -320,6 +327,7 @@ namespace Ermine::graphics
          */
         void SetSkybox(graphics::Skybox* skybox) { m_skybox = skybox; }
 
+        void RenderModel(const Model& model, const Mtx44& view, const Mtx44& projection, const glm::mat4& rootTransform);
 
     private:
         std::shared_ptr<OffscreenBuffer> m_OffscreenBuffer;
@@ -329,19 +337,18 @@ namespace Ermine::graphics
         static constexpr GLuint LightsBindingPoint = 1;
         static constexpr size_t MaxLights = 16;
         std::unordered_set<GLuint> m_LightBlockBoundPrograms;
-		bool m_IsBlinnPhong = false; // Default to PBR shading
+        bool m_IsBlinnPhong = false; // Default to PBR shading
 
         // Material UBO
         GLuint m_MaterialUBO = 0;
         static constexpr GLuint MaterialBindingPoint = 2;
         std::unordered_set<GLuint> m_MaterialBlockBoundPrograms;
 
-
-		// Deferred rendering buffers
-		bool m_UseDeferredRendering = true;
-		Ermine::Mesh m_QuadMesh;
+        // Deferred rendering buffers
+        bool m_UseDeferredRendering = true;
+        Ermine::Mesh m_QuadMesh;
         std::shared_ptr<GBuffer> m_GBuffer;
-		std::shared_ptr<Shader> m_GBufferShader = 0; // Shader for executing g-buffer pass
+        std::shared_ptr<Shader> m_GBufferShader = 0; // Shader for executing g-buffer pass
         std::shared_ptr<Shader> m_LightPassShader = 0; // Shader for lighting pass
         std::shared_ptr<Texture> tempTexture;
 
