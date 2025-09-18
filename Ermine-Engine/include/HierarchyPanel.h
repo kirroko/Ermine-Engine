@@ -14,6 +14,7 @@ namespace Ermine {
         void DrawEntityNode(EntityID entity, int depth);
         void DrawContextMenu();
         void HandleDragDrop(EntityID entity);
+        void HandleUnparentDrop();
         const char* GetEntityIcon(EntityID entity) const;
 
     public:

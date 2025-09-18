@@ -46,6 +46,10 @@ namespace Ermine {
             DrawEntityNode(entity, 0);
         }
 
+        // Add invisible button to catch drops on empty space
+        ImGui::InvisibleButton("UnparentDropZone", ImGui::GetContentRegionAvail());
+        HandleUnparentDrop();
+
         // Right-click context menu
         DrawContextMenu();
 
@@ -136,17 +140,15 @@ namespace Ermine {
     }
 
     void HierarchyPanel::HandleDragDrop(EntityID entity) {
-        // Drag source
+        // Existing drag source code
         if (ImGui::BeginDragDropSource()) {
             ImGui::SetDragDropPayload("HIERARCHY_ENTITY", &entity, sizeof(EntityID));
-
             auto& metadata = ECS::GetInstance().GetComponent<ObjectMetaData>(entity);
             ImGui::Text("Moving: %s", metadata.name.c_str());
-
             ImGui::EndDragDropSource();
         }
 
-        // Drop target
+        // Existing drop target code for parenting
         if (ImGui::BeginDragDropTarget()) {
             if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("HIERARCHY_ENTITY")) {
                 EntityID droppedEntity = *(EntityID*)payload->Data;
@@ -154,7 +156,6 @@ namespace Ermine {
                 if (droppedEntity != entity) {
                     auto hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>();
 
-                    // Check for cycles before setting parent
                     if (!hierarchySystem->WouldCreateCycle(droppedEntity, entity)) {
                         hierarchySystem->SetParent(droppedEntity, entity);
                         EE_CORE_INFO("Reparented entity {} to {}", droppedEntity, entity);
@@ -162,6 +163,24 @@ namespace Ermine {
                     else {
                         EE_CORE_WARN("Cannot parent entity {} to {} - would create cycle", droppedEntity, entity);
                     }
+                }
+            }
+            ImGui::EndDragDropTarget();
+        }
+    }
+
+    void HierarchyPanel::HandleUnparentDrop() {
+        if (ImGui::BeginDragDropTarget()) {
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("HIERARCHY_ENTITY")) {
+                EntityID droppedEntity = *(EntityID*)payload->Data;
+
+                auto hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>();
+
+                // Check if entity currently has a parent
+                EntityID currentParent = hierarchySystem->GetParent(droppedEntity);
+                if (currentParent != 0) {
+                    hierarchySystem->UnsetParent(droppedEntity);
+                    EE_CORE_INFO("Unparented entity {} - now a root entity", droppedEntity);
                 }
             }
             ImGui::EndDragDropTarget();
@@ -206,6 +225,15 @@ namespace Ermine {
 
             EntityID selected = m_ActiveScene->GetSelectedEntity();
             if (selected != 0) {
+                // Check if selected entity has a parent
+                auto hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>();
+                if (hierarchySystem->GetParent(selected) != 0) {
+                    if (ImGui::MenuItem("Unparent Selected")) {
+                        hierarchySystem->UnsetParent(selected);
+                        EE_CORE_INFO("Unparented entity {}", selected);
+                    }
+                }
+
                 if (ImGui::MenuItem("Delete Selected")) {
                     m_ActiveScene->DestroyEntity(selected);
                 }
