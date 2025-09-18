@@ -27,6 +27,7 @@ namespace Ermine::graphics
 {
     // Forward declarations
     struct MaterialUBO;
+    class Skybox;
 
     /**
      * @brief The Renderer class is responsible for rendering the game objects to the screen.
@@ -34,6 +35,34 @@ namespace Ermine::graphics
     class Renderer : public System
     {
     public:
+
+        // Post-processing uniforms - toggles
+        bool m_VignetteEnabled = true;
+        bool m_FXAAEnabled = true;
+        bool m_ToneMappingEnabled = true;
+        bool m_GammaCorrectionEnabled = true;
+        bool m_BloomEnabled = true;
+
+        // Post-processing uniforms - parameters
+        float m_Exposure = 1.0f;
+        float m_Contrast = 1.0f;
+        float m_Saturation = 1.0f;
+        float m_Gamma = 2.2f;
+        float m_VignetteIntensity = 0.3f;
+        float m_VignetteRadius = 0.8f;
+        float m_BloomStrength = 0.04f;
+
+        // FXAA parameters
+        float m_FXAASpanMax = 8.0f;
+        float m_FXAAReduceMin = 1.0f / 128.0f;
+        float m_FXAAReduceMul = 1.0f / 8.0f;
+
+        // Bloom pass parameters
+        float m_BloomThreshold = 1.0f;
+        float m_BloomIntensity = 2.0f;
+        float m_BloomRadius = 5.0f;
+
+
         /**
          * @brief Initialize the renderer with the screen width and height.
          * @param screenWidth The width of the screen
@@ -54,6 +83,7 @@ namespace Ermine::graphics
             int width;
             int height;
         };
+
 
         struct InstanceData {
             glm::mat4 model; // per-entity transform
@@ -77,38 +107,54 @@ namespace Ermine::graphics
                 return k_texture < other.k_texture;
             }
         };
-
+        
+         /**
+		 * @brief G buffer structure for rendering to Lighting pass
+		 */
         //~Renderer();
         struct GBuffer
         {
             unsigned int FBO;
             unsigned int DepthTexture;
-			// Multiple Render Targets (MRTs)
-            
-            // RT0: RGB32_UINT - 96 bits total
-            // R32: Albedo RGB 8:8:8 + 8 spare bits
-            // G32: Normal RGB 11:10:11 
-            // B32: Emissive RGBE 9:9:9:5
-            unsigned int PackedTexture0;
 
-            // RT1: RG32_UINT - 64 bits total  
-			// R32: Roughness 8 bits + Metallic 8 bits + AO 8 bits + 8 spare bits
-            // G32: Motion vectors 2x16 bits
+            // Multiple Render Targets (MRTs)
+
+            uint64_t HandlePackedTexture0 = 0;
+            uint64_t HandlePackedTexture1 = 0;
+            uint64_t HandlePackedTexture2 = 0;
+            uint64_t HandlePackedTexture3 = 0;
+            uint64_t HandleDepthTexture = 0;
+            
+
+            unsigned int PackedTexture0;
             unsigned int PackedTexture1;
+			unsigned int PackedTexture2;
+			unsigned int PackedTexture3;
+            
 
 
             int width;
             int height;
         };
 
-        enum GBufferTextureType
+
+         /**
+		 * @brief PostProcessing buffer structure for each post-processing effect
+		 */
+		struct PostProcessBuffer
         {
-            GBufferPacked0 = 0,    // RT0: Albedo + Normal + Emissive
-            GBufferPacked1 = 1,    // RT1: Material properties + Motion vectors
-            GBufferDepth = 2,      // Depth buffer
-            GBufferCOUNT = 3
+			unsigned int FBO;
+			unsigned int ColorTexture;
+			unsigned int DepthTexture = 0; // Optional depth texture for skybox rendering
+
+			int width;
+			int height;
         };
 
+
+        /**
+		 * @brief Destructor - cleans up allocated resources
+         */
         ~Renderer();
 
 
@@ -121,12 +167,19 @@ namespace Ermine::graphics
         OffscreenBuffer Create(const int& width, const int& height);
 
         /**
-         * @brief Create optimized g-buffer for deferred rendering
+         * @brief Create  g-buffer for deferred rendering
          * @param width The width of the g-buffer
          * @param height The height of the g-buffer
-         * @return GBuffer The g-buffer structure
          */
-        GBuffer CreateGBuffer(const int& width, const int& height);
+        void CreateGBuffer(const int& width, const int& height);
+
+
+        /**
+		 * @brief Create post-processing buffer
+		 * @param width The width of the post-processing buffer
+		 * @param height The height of the post-processing buffer
+         */
+        void CreatePostProcessBuffer(const int& width, const int& height);
 
         /**
          * @brief Resize the g-buffer to new dimensions
@@ -175,6 +228,11 @@ namespace Ermine::graphics
         void RenderLightingPass(const Mtx44& view, const Mtx44& projection);
 
         /**
+		 * @brief Render Post-processing effects using the lighting pass output
+         */
+        void RenderPostProcessPass();
+
+        /**
          * @brief Complete deferred rendering pipeline
          * @param view The view matrix
          * @param projection The projection matrix
@@ -185,10 +243,20 @@ namespace Ermine::graphics
          * @brief Bind g-buffer textures to specified texture units
          * @param startingTextureUnit The first texture unit to bind to (default: 0)
          */
-        void BindGBufferTextures(int startingTextureUnit = 0);
+        void BindGBufferTextures();
 
         std::shared_ptr<OffscreenBuffer> GetOffscreenBuffer() const { return m_OffscreenBuffer; }
         std::shared_ptr<GBuffer> GetGBuffer() const { return m_GBuffer; }
+
+         /**
+         * @brief Cleanup g-buffer resources
+         */
+        void CleanupGBuffer();
+
+        /**
+        * @brief Cleanup postprocess buffer resources
+        */
+        void CleanupPostProcessBuffer();
 
         /**
          * @brief Update the game objects to the screen.
@@ -241,7 +309,16 @@ namespace Ermine::graphics
          */
         void BindMaterialBlockIfPresent(const std::shared_ptr<Shader>& shader);
 
+        /**
+		 * @brief Toggles the flag for using deferred rendering.
+         */
         void ToggleDeferredRendering();
+
+        /**
+         * @brief Set the skybox to be rendered
+         * @param skybox Pointer to the skybox to render
+         */
+        void SetSkybox(graphics::Skybox* skybox) { m_skybox = skybox; }
 
 
     private:
@@ -266,7 +343,18 @@ namespace Ermine::graphics
         std::shared_ptr<GBuffer> m_GBuffer;
 		std::shared_ptr<Shader> m_GBufferShader = 0; // Shader for executing g-buffer pass
         std::shared_ptr<Shader> m_LightPassShader = 0; // Shader for lighting pass
-        void CleanupGBuffer();
         std::shared_ptr<Texture> tempTexture;
+
+
+		// Post-processing buffer
+		std::shared_ptr<PostProcessBuffer> m_PostProcessBuffer;
+		std::shared_ptr<PostProcessBuffer> m_BloomExtractBuffer;
+        std::shared_ptr<PostProcessBuffer> m_BloomBlurBuffer1;
+        std::shared_ptr<PostProcessBuffer> m_BloomBlurBuffer2;
+		std::shared_ptr<Shader> m_BloomShader = 0; // Shader for bloom effect
+		std::shared_ptr<Shader> m_PostProcessShader = 0; // Shader for post-processing effects
+
+		// Skybox
+		graphics::Skybox* m_skybox = nullptr;
     };
 }

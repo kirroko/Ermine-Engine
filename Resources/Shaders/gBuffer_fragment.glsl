@@ -1,4 +1,5 @@
 #version 460 core
+#extension GL_ARB_bindless_texture : require
 
 // Input from vertex shader
 in vec2 TexCoord;
@@ -7,11 +8,14 @@ in vec3 WorldNormal;
 in vec3 ViewPos;
 in vec3 ViewNormal;
 
-// G-Buffer outputs - matches your optimized format
-layout(location = 0) out uvec3 gBuffer0; // RT0: RGB32_UINT (Albedo + Normal + Emissive)
-layout(location = 1) out uvec2 gBuffer1; // RT1: RG32_UINT (Material + Motion vectors)
+// G-Buffer outputs
+layout(location = 0) out vec3 gBuffer0; // RT0: Albedo
+layout(location = 1) out vec3 gBuffer1; // RT1: Normal
+layout(location = 2) out vec4 gBuffer2; // RT2: Emissive
+layout(location = 3) out vec4 gBuffer3; // RT3: Material
 
-// Material UBO - matches your MaterialUBO structure
+
+// Material UBO
 layout(std140) uniform MaterialBlock
 {
     vec3 albedo;                    // 16-byte aligned
@@ -44,73 +48,69 @@ uniform sampler2D materialAoMap;
 uniform sampler2D materialEmissiveMap;
 
 
-// Packing functions based on your renderer specifications
-uint packAlbedoShadingModel(vec3 albedo, bool isBlinnPhong)
-{
-    // Pack RGB 9:9:9 + ShadingModel 1-bit + 4 spare bits
-    uvec3 rgb = uvec3(clamp(albedo * 511.0, 0.0, 511.0));
-    uint sm = isBlinnPhong ? 1u : 0u;
-    return (sm << 27) | (rgb.b << 18) | (rgb.g << 9) | rgb.r;
+// Pack albedo RGB into RT0 (RGB16F format)
+vec3 packAlbedo(vec3 albedo) {
+    // Direct storage - RGB16F provides sufficient precision for albedo
+    return clamp(albedo, 0.0, 65504.0); // Clamp to half-float range
 }
 
-uint packNormal(vec3 normal)
-{
-    // Pack RGB 11:10:11 format
-    vec3 n = (normal + 1.0) * 0.5; // Convert from [-1,1] to [0,1]
-    uvec3 xyz = uvec3(
-        clamp(n.x * 2047.0, 0.0, 2047.0), // 11 bits
-        clamp(n.y * 1023.0, 0.0, 1023.0), // 10 bits  
-        clamp(n.z * 2047.0, 0.0, 2047.0)  // 11 bits
+// Pack normal XYZ into RT1 (RGB16F format)
+vec3 packNormal(vec3 normal) {
+    // Normalize and convert from [-1,1] to [0,1] range for storage
+    vec3 packedNormal = normalize(normal) * 0.5 + 0.5;
+    return clamp(packedNormal, 0.0, 1.0);
+}
+
+// Pack emissive RGB + intensity into RT2 (RGBA8 format)
+vec4 packEmissive(vec3 emissive, float emissiveIntensity) {
+    if (emissiveIntensity < 0.001) {
+        return vec4(0.0, 0.0, 0.0, 0.0); // Black emissive
+    }
+    
+    float clampedIntensity = clamp(emissiveIntensity, 0.0, 255.0);
+    
+    return vec4(clamp(emissive, 0.0, 1.0), clampedIntensity / 255.0);
+}
+
+// Pack material properties into RT3 (RGBA8 format)
+vec4 packMaterialProperties(float roughness, float metallic, float ao, float unused) {
+    return vec4(
+        clamp(roughness, 0.0, 1.0),
+        clamp(metallic, 0.0, 1.0),
+        clamp(ao, 0.0, 1.0),
+        0.0 // Unused channel
     );
-    return (xyz.z << 21) | (xyz.y << 11) | xyz.x;
-}
-uint packEmissive(vec3 emissive, float emissiveIntensity)
-{
-    // Pack RGBE 9:9:9:5 format
-    vec3 scaledEmissive = emissive * emissiveIntensity;
-    float maxComponent = max(scaledEmissive.x, max(scaledEmissive.y, scaledEmissive.z));
-    
-    if (maxComponent < 1e-32) return 0u; // Black emissive
-    
-    int exponent = int(floor(log2(maxComponent))) + 15; // Bias by 15
-    exponent = clamp(exponent, 0, 31); // 5-bit range
-    
-    // Scale values to fit in 9-bit mantissa range [0, 511]
-    float scale = exp2(float(exponent - 15));
-    uvec3 rgb = uvec3(clamp(scaledEmissive / scale * 511.0, 0.0, 511.0));
-    
-    return (uint(exponent) << 27) | (rgb.b << 18) | (rgb.g << 9) | rgb.r;
 }
 
-uint packMaterialProperties(float metallic, float roughness, float ao, float normalStrength)
-{
-    // Pack Metallic 8-bits + Roughness 8-bits + AO 8-bits + NormalStrength 8-bits
-    uvec4 props = uvec4(
-        clamp(metallic * 255.0, 0.0, 255.0),
-        clamp(roughness * 255.0, 0.0, 255.0),
-        clamp(ao * 255.0, 0.0, 255.0),
-        clamp(normalStrength * 255.0, 0.0, 255.0)
-    );
-    return (props.w << 24) | (props.z << 16) | (props.y << 8) | props.x;
+// Main G-Buffer output function (call this in geometry fragment shader)
+void writeGBuffer(vec3 albedo, vec3 normal, vec3 emissive, float emissiveIntensity,
+                  float roughness, float metallic, float ao) {
+    // Output to multiple render targets
+    gBuffer0 = packAlbedo(albedo);                                    // RT0: RGB16F
+    gBuffer1 = packNormal(normal);                                    // RT1: RGB16F
+    gBuffer2 = packEmissive(emissive, emissiveIntensity);            // RT2: RGBA8
+    gBuffer3 = packMaterialProperties(roughness, metallic, ao, 0.0); // RT3: RGBA8
 }
 
-vec3 getNormalFromMap(sampler2D normalMap, vec2 texCoords, vec3 worldNormal, vec3 worldPos)
+vec3 getNormalFromMap_viewspace(sampler2D normalMap, vec2 texCoords, vec3 viewNormal, vec3 viewPos)
 {
-    // Sample normal map
+    // Sample normal map (tangent space)
     vec3 tangentNormal = texture(normalMap, texCoords).rgb * 2.0 - 1.0;
-    
-    // Create TBN matrix
-    vec3 Q1 = dFdx(worldPos);
-    vec3 Q2 = dFdy(worldPos);
+
+    // Build TBN using derivatives of view-space position and UV
+    vec3 Q1 = dFdx(viewPos);
+    vec3 Q2 = dFdy(viewPos);
     vec2 st1 = dFdx(texCoords);
     vec2 st2 = dFdy(texCoords);
-    
-    vec3 N = normalize(worldNormal);
+
+    // Tangent in view space
     vec3 T = normalize(Q1 * st2.t - Q2 * st1.t);
-    vec3 B = -normalize(cross(N, T));
-    mat3 TBN = mat3(T, B, N);
-    
-    return normalize(TBN * tangentNormal);
+    // Ensure orthogonality
+    T = normalize(T - dot(T, viewNormal) * viewNormal);
+    vec3 B = normalize(cross(viewNormal, T));
+
+    mat3 TBN = mat3(T, B, viewNormal);
+    return normalize(TBN * tangentNormal); // returns view-space normal
 }
 
 void main()
@@ -123,12 +123,11 @@ void main()
         finalAlbedo *= albedoSample.rgb;
     }
     
-    vec3 finalNormal = WorldNormal;
+    vec3 finalNormal = ViewNormal;
     if (hasNormalMap != 0)
     {
-        finalNormal = getNormalFromMap(materialNormalMap, TexCoord, WorldNormal, WorldPos);
-        // Apply normal strength
-        finalNormal = normalize(mix(WorldNormal, finalNormal, normalStrength));
+        vec3 mapped = getNormalFromMap_viewspace(materialNormalMap, TexCoord, ViewNormal, ViewPos);
+        finalNormal = normalize(mix(ViewNormal, mapped, normalStrength));
     }
     
     float finalRoughness = roughness;
@@ -154,22 +153,30 @@ void main()
     if (hasEmissiveMap != 0)
     {
         vec4 emissiveSample = texture(materialEmissiveMap, TexCoord);
-        // Blend approach: use texture RGB, and combine intensities additively or use max
-        finalEmissive = emissiveSample.rgb + (emissive * emissiveIntensity);
-        finalEmissiveIntensity = max(emissiveSample.a, emissiveIntensity);
+        // Properly combine emissive map with material emissive
+        vec3 mapEmissive = emissiveSample.rgb * emissiveSample.a; // Use alpha as intensity
+        vec3 materialEmissive = emissive * emissiveIntensity;
+        
+        // Combine both contributions
+        vec3 combinedEmissive = mapEmissive + materialEmissive;
+        float combinedIntensity = length(combinedEmissive);
+        
+        if (combinedIntensity > 0.0) {
+            finalEmissive = combinedEmissive / combinedIntensity;
+            finalEmissiveIntensity = combinedIntensity;
+        } else {
+            finalEmissive = vec3(0.0);
+            finalEmissiveIntensity = 0.0;
+        }
     }
    
     
-    // Determine shading model (use material setting, can be overridden by global uniform)
-    //bool isBlinnPhong = shadingModel == 1;
-    bool isBlinnPhong = false;
+    // Determine shading model
+    bool isBlinnPhong = shadingModel == 1;
 
-    // Pack data into G-Buffer
-    // RT0: RGB32_UINT (96 bits)
-    gBuffer0.r = packAlbedoShadingModel(finalAlbedo, isBlinnPhong);
-    gBuffer0.g = packNormal(finalNormal);
-    gBuffer0.b = packEmissive(finalEmissive, finalEmissiveIntensity);
-    
-    // RT1: R32_UINT (32 bits)
-    gBuffer1.r = packMaterialProperties(finalMetallic, finalRoughness, finalAO, normalStrength);
+    // Write to G-Buffer
+    writeGBuffer(finalAlbedo, finalNormal, finalEmissive, finalEmissiveIntensity, 
+                 finalRoughness, finalMetallic, finalAO);
+
+
 }
