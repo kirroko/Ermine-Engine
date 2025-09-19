@@ -90,6 +90,30 @@ std::shared_ptr<graphics::Shader> AssetManager::LoadShader(const std::string& ve
 }
 
 /**
+ * @brief Load a shader from a vertex, geometry and fragment file
+ * @param vertexPath The path to the vertex shader file
+ * @param geometryPath The path to the geometry shader file
+ * @param fragmentPath The path to the fragment shader file
+ * @return The loaded shader
+ */
+std::shared_ptr<graphics::Shader> AssetManager::LoadShader(const std::string& vertexPath, const std::string& geometryPath, const std::string& fragmentPath)
+{
+    EE_CORE_TRACE("Loading shader: {0} | {1} | {2}", vertexPath, geometryPath, fragmentPath);
+    std::string key = vertexPath + "|" + geometryPath + "|" + fragmentPath;
+
+    std::shared_ptr<graphics::Shader> shader = std::make_shared<graphics::Shader>(vertexPath, geometryPath, fragmentPath);
+    if (!shader->IsValid())
+    {
+        EE_CORE_ERROR("Failed to load shader: {0} | {1} | {2}", vertexPath, geometryPath, fragmentPath);
+        return nullptr;
+    }
+
+    m_shaders[key] = shader;
+    EE_CORE_INFO("Shader loaded: {0} | {1} | {2}", vertexPath, geometryPath, fragmentPath);
+    return shader;
+}
+
+/**
  * @brief Get the shader from the asset manager
  * @param shaderName The name of the shader
  * @return The shader that is loaded

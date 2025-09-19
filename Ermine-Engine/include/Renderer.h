@@ -22,6 +22,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "GPUProfiler.h"
 #include "Material.h"
 #include "Components.h"
+#include "EditorCamera.h"
 
 namespace Ermine::graphics
 {
@@ -333,6 +334,17 @@ namespace Ermine::graphics
 
         void RenderModel(const Model& model, const Mtx44& view, const Mtx44& projection, const glm::mat4& rootTransform);
 
+
+        // Shadow mapping
+        bool InitializeShadowMap();
+        bool CreateShadowMap(const unsigned int resolution = 1024);
+        bool CreateShadowMapCube(const unsigned int resolution);
+        void CalculateDirectionalMatrix(const editor::EditorCamera& editorCamera);
+		void RenderShadowMap(const glm::mat4& lightSpaceMatrix);
+        void RenderShadowPass();
+
+
+
     private:
 		// Light System
 		std::shared_ptr<LightSystem> m_LightSystem = nullptr;
@@ -369,5 +381,16 @@ namespace Ermine::graphics
 
 		// Skybox
 		graphics::Skybox* m_skybox = nullptr;
+
+        // Shadow mapping
+        std::shared_ptr<Shader> m_ShadowMapShader = nullptr;
+        // Just one FBO and one 2D shadow map for one directional light for now
+        GLuint m_ShadowMapFBO = 0;
+        GLuint m_ShadowMap = 0;
+        GLuint m_ShadowMapCube = 0;
+        uint64_t m_ShadowMapHandle = 0;
+        glm::mat4 m_LightSpaceMatrix;
+
+
     };
 }

@@ -10,12 +10,14 @@ uniform uvec2 u_GBuffer1Handle;
 uniform uvec2 u_GBuffer2Handle;
 uniform uvec2 u_GBuffer3Handle;
 uniform uvec2 u_GBufferDepthHandle; 
+uniform uvec2 u_ShadowMapHandle; 
 
 // Matrices for position reconstruction
 uniform mat4 view;
 uniform mat4 invView;
 uniform mat4 invProjection;
 uniform mat4 projection;
+uniform mat4 lightSpaceMatrix;
 
 // Shading mode
 uniform int u_ShadingMode; // 0 = PBR, 1 = Blinn-Phong
@@ -38,7 +40,7 @@ struct Light {
     vec4 position_type;    // xyz = position (view space), w = light type
     vec4 color_intensity;  // xyz = color, w = intensity
     vec4 direction_range;  // xyz = direction (view space), w = range
-    vec4 spot_angles;      // x = inner cos, y = outer cos
+    vec4 spot_angles_castshadows_resolution;      // x = inner cos, y = outer cos z = casts shadows (1.0 or 0.0), w = shadow map resolution
 };
 
 layout (std140) uniform Lights {
@@ -282,7 +284,7 @@ float calculateAttenuation(int lightIndex, vec3 fragPosView, out vec3 lightDir)
     
     if (lightType == DIRECTIONAL_LIGHT) {
         // Direction is stored directly in view space
-        lightDir = normalize(-lights[lightIndex].direction_range.xyz);
+        lightDir = normalize(lights[lightIndex].direction_range.xyz);
         attenuation = 1.0;
     } else {
         // Point or spot: direction from light to fragment
@@ -310,8 +312,8 @@ float calculateAttenuation(int lightIndex, vec3 fragPosView, out vec3 lightDir)
         if (lightType == SPOT_LIGHT) {
             vec3 spotDir = normalize(lights[lightIndex].direction_range.xyz);
             float cosAngle = dot(-lightDir, spotDir);
-            float innerCos = lights[lightIndex].spot_angles.x;
-            float outerCos = lights[lightIndex].spot_angles.y;
+            float innerCos = lights[lightIndex].spot_angles_castshadows_resolution.x;
+            float outerCos = lights[lightIndex].spot_angles_castshadows_resolution.y;
             
             float spotFactor = clamp((cosAngle - outerCos) / (innerCos - outerCos), 0.0, 1.0);
             attenuation *= spotFactor;
@@ -446,6 +448,63 @@ void readGBufferBindless(uvec2 gBuffer0Handle, uvec2 gBuffer1Handle, uvec2 gBuff
 }
 
 
+// Calculate shadow factor from shadow map in light space (PCF 3x3).
+// Returns 1.0 = fully lit, 0.0 = fully in shadow.
+float calculateShadowFactor(int lightIndex, vec3 fragPosWorld, vec3 normalWorld)
+{
+    sampler2D shadowSampler = sampler2D(u_ShadowMapHandle);
+
+    // Transform world position into light clip space
+    vec4 proj = lightSpaceMatrix * vec4(fragPosWorld, 1.0);
+    if (proj.w == 0.0) return 1.0;
+    vec3 projN = proj.xyz / proj.w;
+
+    // NDC -> UV
+    vec2 uv = projN.xy * 0.5 + 0.5;
+
+    // If outside the shadow map, consider it lit
+    if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0)
+        return 1.0;
+
+    // Convert to [0,1] depth
+    float currentDepth = projN.z * 0.5 + 0.5;
+
+
+    // Compute light direction in world space for bias calculation
+    int lightType = int(lights[lightIndex].position_type.w);
+    vec3 lightDirWorld;
+    if (lightType == DIRECTIONAL_LIGHT) {
+        // lights[].direction_range.xyz is in view space; convert to world (w=0)
+        vec3 dirView = -lights[lightIndex].direction_range.xyz;
+        lightDirWorld = normalize((invView * vec4(dirView, 0.0)).xyz);
+    } else {
+        // point/spot: position is in view space, convert to world
+        vec3 lightPosView = lights[lightIndex].position_type.xyz;
+        vec3 lightPosWorld = (invView * vec4(lightPosView, 1.0)).xyz;
+        lightDirWorld = normalize(lightPosWorld - fragPosWorld);
+    }
+
+    // Bias helps avoid self-shadowing; scale with normal-light angle
+    float bias = max(0.0025 * (1.0 - dot(normalWorld, lightDirWorld)), 0.0005);
+
+    // PCF 3x3
+    vec2 texelSize = 1.0 / vec2(textureSize(shadowSampler, 0));
+    float shadow = 0.0;
+    for(int x = -1; x <= 1; ++x) {
+        for(int y = -1; y <= 1; ++y) {
+            vec2 offset = vec2(float(x), float(y)) * texelSize;
+            float sampledDepth = texture(shadowSampler, uv + offset).r;
+            if (currentDepth - bias > sampledDepth) {
+                shadow += 1.0;
+            }
+        }
+    }
+    shadow /= 9.0;
+
+    // Return lighting factor
+    return 1.0 - shadow;
+}
+
 void main()
 {    
     // Smaple depth
@@ -476,6 +535,9 @@ void main()
     // Normalze
     normalView = normalize(normalView);
 
+    // Derive world-space normal for shadow bias calculations
+    vec3 normalWorld = normalize(mat3(invView) * normalView);
+
     // View direction in view space (towards camera)
     vec3 viewDir = normalize(-fragPosView);
 
@@ -502,7 +564,18 @@ void main()
         // Blinn-Phong lighting
         for (int i = 0; i < numLights && i < 16; ++i) {
             float shininess = (1.0 - roughness) * 128.0;
-            result += calculateBlinnPhong(i, normalView, viewDir, fragPosView, albedo, 1.0, shininess);
+            // Compute light contribution
+            vec3 lightContrib = calculateBlinnPhong(i, normalView, viewDir, fragPosView, albedo, 1.0, shininess);
+
+            // Shadow factor (1.0 = lit, 0.0 = shadowed)
+            float shadowFactor = 1.0;
+            int lightType = int(lights[i].position_type.w);
+            bool castsShadows = (lights[i].spot_angles_castshadows_resolution.z > 0.5);
+            if (castsShadows && lightType == DIRECTIONAL_LIGHT) {
+                shadowFactor = calculateShadowFactor(i, worldPos, normalWorld);
+            }
+
+            result += lightContrib * shadowFactor;
         }
         
         // Calculate and apply VBAO
@@ -533,7 +606,14 @@ void main()
         // PBR lighting
         vec3 F0 = mix(vec3(0.04), albedo, metallic);
         for (int i = 0; i < numLights && i < 16; ++i) {
-            result += calculatePBR(i, normalView, viewDir, fragPosView, albedo, metallic, roughness, F0, worldPos);
+            vec3 lightContrib = calculatePBR(i, normalView, viewDir, fragPosView, albedo, metallic, roughness, F0, worldPos);
+            float shadowFactor = 1.0;
+            int lightType = int(lights[i].position_type.w);
+            bool castsShadows = (lights[i].spot_angles_castshadows_resolution.z > 0.5);
+            if (castsShadows && lightType == DIRECTIONAL_LIGHT) {
+                shadowFactor = calculateShadowFactor(i, worldPos, normalWorld);
+            }
+            result += lightContrib * shadowFactor;
         }
 
         // Energy compensation for rough surfaces

@@ -201,7 +201,6 @@ bool engine::Init(GLFWwindow* windowContext)
 		});
 
 	// Create graphics resources
-	ECS::GetInstance().GetSystem<graphics::Renderer>()->Init(1280, 720);
 	auto shader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/vertex.glsl", "../Resources/Shaders/fragment.glsl");
 	auto texture = AssetManager::GetInstance().LoadTexture("../Resources/Textures/greybox_grey_grid.png");
 
@@ -341,7 +340,7 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	// Create second cube  
 	auto entity2 = ECS::GetInstance().CreateEntity();
-	ECS::GetInstance().AddComponent(entity2, Transform(Vec3(-1, 1, -2), Quaternion(), Vec3(1, 1, 1)));
+	ECS::GetInstance().AddComponent(entity2, Transform(Vec3(0, -1, 0), Quaternion(), Vec3(100, 0.1f, 100)));
 	ECS::GetInstance().AddComponent(entity2, ObjectMetaData());
 	ECS::GetInstance().AddComponent(entity2, graphics::GeometryFactory::CreateCube(1, 1, 1));
 
@@ -370,9 +369,9 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	// Create lights with balanced intensities
 	auto mainLightEntity = ECS::GetInstance().CreateEntity();
-	ECS::GetInstance().AddComponent(mainLightEntity, Transform(Vec3(0, 4, 2), Quaternion(), Vec3(1, 1, 1)));
+	ECS::GetInstance().AddComponent(mainLightEntity, Transform(Vec3(0, 4, 2), Quaternion(0.9f,0.2f,0.1f,-0.3f), Vec3(1, 1, 1)));
 	ECS::GetInstance().AddComponent(mainLightEntity, ObjectMetaData("MainLight", "Light", true));
-	ECS::GetInstance().AddComponent(mainLightEntity, Light(Vec3(1, 1, 1), 0.8f, LightType::POINT));
+	ECS::GetInstance().AddComponent(mainLightEntity, Light(Vec3(1, 1, 1), 0.8f, LightType::DIRECTIONAL, true, 4096u));
 
 	// Light sphere material - use shared emissive material for all lights
 	ECS::GetInstance().AddComponent(mainLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
@@ -413,7 +412,8 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	EE_CORE_INFO("Total living entities after creation: {0}", ECS::GetInstance().GetLivingEntityCount());
 
-
+	// Init Renderer after objects haVe been initialised
+	ECS::GetInstance().GetSystem<graphics::Renderer>()->Init(1280, 720);
 
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f); // Background color
 

@@ -80,6 +80,16 @@ public:
          * @return The loaded shader
          */
         std::shared_ptr<graphics::Shader> LoadShader(const std::string& vertexPath, const std::string& fragmentPath);
+
+        /*@brief Load a shader from a vertex, geometry and fragment file
+        * @param vertexPath The path to the vertex shader file
+        * @param geometryPath The path to the geometry shader file
+        * @param fragmentPath The path to the fragment shader file
+        * @return The loaded shader
+        */
+        std::shared_ptr<graphics::Shader> LoadShader(const std::string & vertexPath, const std::string & geometryPath, const std::string & fragmentPath);
+
+
         /**
          * @brief Get a shader from the cache
          * @param shaderName The name of the shader

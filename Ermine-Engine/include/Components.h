@@ -380,7 +380,7 @@ namespace Ermine
 		glm::vec4 position_type;    // xyz = position (view space), w = light type
 		glm::vec4 color_intensity;  // xyz = color, w = intensity
 		glm::vec4 direction_range;  // xyz = direction (view space), w = range
-		glm::vec4 spot_angles;      // x = inner cos, y = outer cos
+		glm::vec4 spot_angles_castshadows_resolution;      // x = inner cos, y = outer cos z = casts shadows (1.0 or 0.0), w = shadow map resolution
 	};
 
 	/*!***********************************************************************
@@ -391,6 +391,8 @@ namespace Ermine
 		Vec3 color;
 		float intensity;
 		LightType type;
+		bool castsShadows{ false };
+		unsigned int resolution{ 1024 }; // Shadow map resolution
 
 		Light() : color(1.0f, 1.0f, 1.0f),
 			intensity(1.0f),
@@ -400,6 +402,11 @@ namespace Ermine
 
 		Light(const Vec3& col, float intens, LightType t) :
 			color(col), intensity(intens), type(t)
+		{
+		}
+
+		Light(const Vec3& col, float intens, LightType t, bool shadows, unsigned int res) :
+			color(col), intensity(intens), type(t), castsShadows(shadows), resolution(res)
 		{
 		}
 	};
