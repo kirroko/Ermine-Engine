@@ -424,14 +424,15 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 	if (!s_isInitialized)
 		return;
 
+	// Update FrameController
+	FrameController::BeginFrame();
+
 	// Handle shading mode toggle
 	HandleShadingToggle(windowContext);
 
 	// Profiler here
 	graphics::GPUProfiler::BeginFrame();
 
-	// Update FrameController
-	FrameController::BeginFrame();
 
 	// 1. Update input states
 	Input::Update();
