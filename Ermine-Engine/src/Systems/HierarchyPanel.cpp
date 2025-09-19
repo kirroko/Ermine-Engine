@@ -8,6 +8,15 @@
 
 
 namespace Ermine {
+    void HierarchyPanel::SetScene(Scene* scene) {
+        m_ActiveScene = scene;
+        EE_CORE_INFO("HierarchyPanel::SetScene called with scene: {}", scene ? scene->GetName() : "null");
+    }
+
+    Scene* HierarchyPanel::GetScene() const {
+        return m_ActiveScene;
+    }
+
     void HierarchyPanel::OnImGuiRender() {
         if (!m_IsVisible) return;
         ImGui::Begin("Scene Hierarchy", &m_IsVisible);

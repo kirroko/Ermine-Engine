@@ -21,8 +21,8 @@ namespace Ermine {
         HierarchyPanel() = default;
         ~HierarchyPanel() = default;
 
-        void SetScene(Scene* scene) { m_ActiveScene = scene; }
-        Scene* GetScene() const { return m_ActiveScene; }
+        void SetScene(Scene* scene);
+        Scene* GetScene() const;
 
         void OnImGuiRender();
         void SetVisible(bool visible) { m_IsVisible = visible; }

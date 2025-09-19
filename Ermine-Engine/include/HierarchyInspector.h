@@ -14,15 +14,18 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #pragma once
 #include "PreCompile.h"
 #include "Scene.h"
+#include "HierarchyPanel.h"
 
 namespace Ermine::editor {
 
 class HierarchyInspector {
 public:
     HierarchyInspector() = default;
-
     void OnImGuiRender();
+
     void SetScene(Scene* scene) { m_ActiveScene = scene; }
+    Scene* GetScene() const { return m_ActiveScene; }
+
     void SetVisible(bool visible) { m_IsVisible = visible; }
     bool IsVisible() const { return m_IsVisible; }
 

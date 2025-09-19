@@ -35,6 +35,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Physics.h"
 #include "InspectorGUI.h"
 #include "AudioImGUI.h"
+#include "Scene.h"
+#include "HierarchyPanel.h"
 
 #include <random> // Include for random number generation
 
@@ -229,9 +231,22 @@ bool engine::Init(GLFWwindow* windowContext)
 	//	ECS::GetInstance().AddComponent(entity, Material(std::move(cube2Material)));
 	//}
 
-	auto audioTestEntity = ECS::GetInstance().CreateEntity();
-	ECS::GetInstance().AddComponent(audioTestEntity, Transform(Vec3(2, 0, -1), Quaternion(), Vec3(1, 1, 1)));
-	ECS::GetInstance().AddComponent(audioTestEntity, ObjectMetaData());
+	//auto audioTestEntity = ECS::GetInstance().CreateEntity();
+	//ECS::GetInstance().AddComponent(audioTestEntity, Transform(Vec3(2, 0, -1), Quaternion(), Vec3(1, 1, 1)));
+	//ECS::GetInstance().AddComponent(audioTestEntity, ObjectMetaData());
+
+	// Create and set the default scene
+	auto defaultScene = std::make_shared<Scene>("Main Scene");
+	editor::EditorGUI::SetActiveScene(defaultScene);
+	EE_CORE_INFO("Created and set active scene: Main Scene");
+
+	auto audioTestEntity = defaultScene->CreateEntity("AudioTest");
+	auto& audioTransform = ECS::GetInstance().GetComponent<Transform>(audioTestEntity);
+	audioTransform.position = Vec3(2, 0, -1);
+
+	//auto entity = defaultScene->CreateEntity("Name");
+	//auto& metadata = ECS::GetInstance().GetComponent<ObjectMetaData>(entity);
+	//metadata.tag = "Type";
 
 	AudioComponent testAudio;
 	//testAudio.soundName = "../Resources/Audio/test.wav"; // Replace with your actual sound file path

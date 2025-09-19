@@ -25,13 +25,18 @@ namespace Ermine {
         Clear();
     }
 
-    EntityID Scene::CreateEntity(const std::string& name) {
+    EntityID Scene::CreateEntity(const std::string& name, bool needsTransform, bool needsHierarchy) {
         EntityID entity = ECS::GetInstance().CreateEntity();
 
         // Add essential components
         ECS::GetInstance().AddComponent(entity, ObjectMetaData(name, "Untagged", true));
-        ECS::GetInstance().AddComponent(entity, Transform());
-        ECS::GetInstance().AddComponent(entity, HierarchyComponent());
+        if (needsTransform) {
+            ECS::GetInstance().AddComponent(entity, Transform());
+        }
+
+        if (needsHierarchy) {
+            ECS::GetInstance().AddComponent(entity, HierarchyComponent());
+        }
 
         m_Entities.insert(entity);
         EE_CORE_TRACE("Created entity {} in scene {}", entity, m_Name);

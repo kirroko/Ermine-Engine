@@ -29,7 +29,7 @@ namespace Ermine {
         ~Scene();
 
         // Entity management
-        EntityID CreateEntity(const std::string& name = "Entity");
+        EntityID CreateEntity(const std::string& name, bool needsTransform = true, bool needsHierarchy = true);
         void DestroyEntity(EntityID entity);
         bool HasEntity(EntityID entity) const;
 

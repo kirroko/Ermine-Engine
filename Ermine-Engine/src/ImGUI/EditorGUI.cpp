@@ -35,7 +35,7 @@ using namespace Ermine::editor;
 std::vector<std::unique_ptr<Ermine::ImGUIWindow>>Ermine::editor::EditorGUI::m_Windows;
 bool Ermine::editor::EditorGUI::isPlaying = false; // TODO: tied to Play/Stop toolbar state.
 
-std::unique_ptr<Ermine::Scene> Ermine::editor::EditorGUI::s_ActiveScene = nullptr;
+std::shared_ptr<Ermine::Scene> EditorGUI::s_ActiveScene = nullptr; 
 std::unique_ptr<Ermine::HierarchyPanel> Ermine::editor::EditorGUI::s_HierarchyPanel = nullptr;
 std::unique_ptr<Ermine::editor::HierarchyInspector> Ermine::editor::EditorGUI::s_Inspector = nullptr;
 namespace
@@ -253,6 +253,31 @@ void EditorGUI::ViewPortWindow(bool &show)
 	ImGui::End();
 }
 
+void EditorGUI::SetActiveScene(std::shared_ptr<Ermine::Scene> scene) {
+    s_ActiveScene = scene;
+
+    // Debug logging to see what's happening
+    EE_CORE_INFO("Setting active scene: {}", scene ? scene->GetName() : "null");
+
+    // Update the hierarchy panel with the new scene
+    if (s_HierarchyPanel) {
+        s_HierarchyPanel->SetScene(scene.get());
+        EE_CORE_INFO("Scene set to hierarchy panel");
+
+        // Verify it was set correctly
+        auto retrievedScene = s_HierarchyPanel->GetScene();
+        EE_CORE_INFO("Retrieved scene from hierarchy panel: {}", retrievedScene ? "exists" : "null");
+    }
+    else {
+        EE_CORE_WARN("s_HierarchyPanel is null!");
+    }
+
+    // Update the inspector panel with the new scene  
+    if (s_Inspector) {
+        s_Inspector->SetScene(scene.get());
+    }
+}
+
 /**
  * @brief Initialize the ImGUI context
  * @param window The window to initialize the ImGUI context
@@ -299,15 +324,15 @@ void EditorGUI::Init(GLFWwindow* window)
     ImGui_ImplOpenGL3_Init("#version 460");
 
     // Create Scene first
-    s_ActiveScene = std::make_unique<Scene>("Default Scene"); // Give it a name
+    //s_ActiveScene = std::make_unique<Scene>("Default Scene"); // Give it a name
 
     // Then create HierarchyPanel with the scene
     s_HierarchyPanel = std::make_unique<HierarchyPanel>();
-    s_HierarchyPanel->SetScene(s_ActiveScene.get());
+    //s_HierarchyPanel->SetScene(s_ActiveScene.get());
 
     // Create Inspector Panel
     s_Inspector = std::make_unique<HierarchyInspector>();
-    s_Inspector->SetScene(s_ActiveScene.get());
+    //s_Inspector->SetScene(s_ActiveScene.get());
 }
 
 /**
@@ -372,9 +397,7 @@ void EditorGUI::Update(GLFWwindow* windowContext)
     static bool show_hierarchy = true;
     if (s_HierarchyPanel && show_hierarchy) {
         s_HierarchyPanel->SetVisible(show_hierarchy);
-        if (s_HierarchyPanel->GetScene()) { // Check if scene is set
-            s_HierarchyPanel->OnImGuiRender();
-        }
+        s_HierarchyPanel->OnImGuiRender();
     }
 
     // Inspector Panel

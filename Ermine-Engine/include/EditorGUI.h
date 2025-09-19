@@ -20,6 +20,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "ImGuiUIWindow.h"
 #include <type_traits> // for std::is_base_of
 #include <utility> // for std::forward
+#include <memory> // Add this include for shared_ptr
 
 namespace Ermine {
     class Scene;
@@ -39,7 +40,7 @@ namespace Ermine::editor
 
         static bool isPlaying;
 
-        static std::unique_ptr<Ermine::Scene> s_ActiveScene;
+        static std::shared_ptr<Ermine::Scene> s_ActiveScene;
 
         static std::unique_ptr<Ermine::HierarchyPanel> s_HierarchyPanel;
 
@@ -111,7 +112,7 @@ namespace Ermine::editor
             return ptr;
         }
 
-        static void SetActiveScene(Ermine::Scene* scene);
-        static Ermine::Scene* GetActiveScene() { return s_ActiveScene.get(); }
+        static void SetActiveScene(std::shared_ptr<Ermine::Scene> scene);        
+        static std::shared_ptr<Ermine::Scene> GetActiveScene() { return s_ActiveScene; }
     };
 }
