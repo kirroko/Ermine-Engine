@@ -33,6 +33,28 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 namespace Ermine
 {
+	inline Quaternion QuaternionFromEulerDegrees(const Vec3& eulerDeg) {
+		// Convert degrees to radians
+		float pitch = glm::radians(eulerDeg.x); // or your own math::ToRadians
+		float yaw = glm::radians(eulerDeg.y);
+		float roll = glm::radians(eulerDeg.z);
+
+		float cy = cosf(yaw * 0.5f);
+
+		float sy = sinf(yaw * 0.5f);
+		float cp = cosf(pitch * 0.5f);
+		float sp = sinf(pitch * 0.5f);
+		float cr = cosf(roll * 0.5f);
+		float sr = sinf(roll * 0.5f);
+
+		Quaternion q{};
+		q.w = cr * cp * cy + sr * sp * sy;
+		q.x = sr * cp * cy - cr * sp * sy;
+		q.y = cr * sp * cy + sr * cp * sy;
+		q.z = cr * cp * sy - sr * sp * cy;
+		return q;
+	}
+
 	/*!***********************************************************************
 	\brief
 	 Transform component structure.
@@ -53,30 +75,53 @@ namespace Ermine
 			out.SetObject();
 
 			auto vec3_to_json = [&](const Vec3& v) {
-				rapidjson::Value arr(rapidjson::kArrayType);
-				arr.PushBack(v.x, alloc).PushBack(v.y, alloc).PushBack(v.z, alloc);
-				return arr;
+				rapidjson::Value a(rapidjson::kArrayType);
+				a.PushBack(v.x, alloc).PushBack(v.y, alloc).PushBack(v.z, alloc);
+				return a;
 				};
 
-			// Matrix as flat 16 floats
-			//rapidjson::Value matArr(rapidjson::kArrayType);
-			//for (int i = 0; i < 16; i++)
-			//	matArr.PushBack(transform_matrix[i], alloc);
+			auto quat_to_json = [&](const Quaternion& q) {
+				rapidjson::Value a(rapidjson::kArrayType);
+				// Store as [w, x, y, z]  (pick one convention and stick to it)
+				a.PushBack(q.w, alloc).PushBack(q.x, alloc).PushBack(q.y, alloc).PushBack(q.z, alloc);
+				return a;
+				};
 
-			//out.AddMember("matrix", matArr, alloc);
 			out.AddMember("position", vec3_to_json(position), alloc);
-			out.AddMember("rotation", vec3_to_json(rotation), alloc);
+			out.AddMember("rotation", quat_to_json(rotation), alloc);
 			out.AddMember("scale", vec3_to_json(scale), alloc);
+			// (matrix omitted; recompute from TRS after load)
 		}
 
 		void Deserialize(const rapidjson::Value& in) {
 			auto json_to_vec3 = [&](const rapidjson::Value& arr) {
-				return Vec3(arr[0].GetFloat(), arr[1].GetFloat(), arr[2].GetFloat());
+				return Vector3D(arr[0].GetFloat(), arr[1].GetFloat(), arr[2].GetFloat());
 				};
 
-			if (in.HasMember("position")) position = json_to_vec3(in["position"]);
-			if (in.HasMember("rotation")) rotation = json_to_vec3(in["rotation"]);
-			if (in.HasMember("scale"))    scale = json_to_vec3(in["scale"]);
+			if (in.HasMember("position") && in["position"].IsArray() && in["position"].Size() == 3)
+				position = json_to_vec3(in["position"]);
+
+			if (in.HasMember("scale") && in["scale"].IsArray() && in["scale"].Size() == 3)
+				scale = json_to_vec3(in["scale"]);
+
+			if (in.HasMember("rotation") && in["rotation"].IsArray()) {
+				const auto& r = in["rotation"];
+				if (r.Size() == 4) {
+					// Expecting [w, x, y, z]
+					rotation.w = r[0].GetFloat();
+					rotation.x = r[1].GetFloat();
+					rotation.y = r[2].GetFloat();
+					rotation.z = r[3].GetFloat();
+				}
+				else if (r.Size() == 3) {
+					// Back-compat: old files stored Euler degrees [x,y,z]
+					Vec3 eulerDeg = json_to_vec3(r);
+					rotation = QuaternionFromEulerDegrees(eulerDeg); // implement or call your math util
+				}
+			}
+
+			// Rebuild matrix from TRS if you keep it:
+			// transform_matrix = Mtx44::FromTRS(position, rotation, scale);
 		}
 	};
 
