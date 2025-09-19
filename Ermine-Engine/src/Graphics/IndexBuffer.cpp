@@ -23,13 +23,15 @@ IndexBuffer::IndexBuffer(const unsigned int* data, unsigned int count)
 {
     glGenBuffers(1, &m_RendererID);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_RendererID);
-    GPUProfiler::TrackMemoryAllocation(count, "Buffer");
+
+	const unsigned int sizeBytes = count * sizeof(unsigned int);
+    GPUProfiler::TrackMemoryAllocation(sizeBytes, "Buffer");
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, count, data, GL_STATIC_DRAW);
 }
 
 IndexBuffer::~IndexBuffer()
 {
-    GPUProfiler::TrackMemoryDeallocation(m_Count, "Buffer");
+    GPUProfiler::TrackMemoryDeallocation(m_Count * sizeof(unsigned int), "Buffer");
     glDeleteBuffers(1, &m_RendererID);
 }
 

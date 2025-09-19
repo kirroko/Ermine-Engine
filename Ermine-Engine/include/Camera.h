@@ -30,7 +30,7 @@ namespace Ermine::graphics
         Mtx44 GetProjectionMatrix() const { return projectionMatrix; }
         EntityID GetActiveCameraEntity() const { return activeCameraEntity; }
 
-        Vector3D CalculateForwardVector(const Vector3D& rotation) const;
-        Vector3D CalculateUpVector(const Vector3D& rotation) const;
+        Vector3D CalculateForwardVector(const Quaternion& rotation) const;
+        Vector3D CalculateUpVector(const Quaternion& rotation) const;
     };
 }
