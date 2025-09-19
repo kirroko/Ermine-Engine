@@ -370,7 +370,7 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	// Create FSM test cube
 	s_FSMCube = ECS::GetInstance().CreateEntity();
-	ECS::GetInstance().AddComponent(s_FSMCube, Transform(Vec3(0, 0, -5), Vec3(0, 0, 0), Vec3(1, 1, 1)));
+	ECS::GetInstance().AddComponent(s_FSMCube, Transform(Vec3(0, 0, -5), Quaternion(), Vec3(1, 1, 1)));
 	ECS::GetInstance().AddComponent(s_FSMCube, ObjectMetaData("FSM Cube", "TestCube", true));
 	ECS::GetInstance().AddComponent(s_FSMCube, graphics::GeometryFactory::CreateCube(1, 1, 1));
 
