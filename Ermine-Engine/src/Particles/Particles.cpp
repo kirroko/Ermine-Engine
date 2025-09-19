@@ -65,7 +65,7 @@ namespace Ermine {
         auto& ecs = ECS::GetInstance();
         auto entity = ecs.CreateEntity();
 
-        ecs.AddComponent(entity, Transform(pos, Vec3(0, 0, 0), Vec3(size, size, size)));
+        ecs.AddComponent(entity, Transform(pos, Quaternion(), Vec3(size, size, size)));
         ecs.AddComponent(entity, m_QuadMesh);
         ecs.AddComponent(entity, Material(m_Shader, m_Texture));
 

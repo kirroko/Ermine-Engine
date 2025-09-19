@@ -63,6 +63,9 @@
     <ClInclude Include="include\AssetManager.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\AudioImGUI.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\AudioManager.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -120,6 +123,9 @@
     <ClInclude Include="include\Input.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\InspectorGUI.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\JobSystem.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -139,6 +145,9 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\Matrix4x4.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Model.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\Particles.h">
@@ -189,18 +198,6 @@
     <ClInclude Include="include\Window.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="include\MathVector.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Material.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\InspectorGUI.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\AudioImGUI.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="include\FiniteStateMachine.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -211,6 +208,9 @@
     </ClCompile>
     <ClCompile Include="src\AssetManager\AssetManager.cpp">
       <Filter>src\AssetManager</Filter>
+    </ClCompile>
+    <ClCompile Include="src\AudioManager\AudioIMGUI.cpp">
+      <Filter>src\AudioManager</Filter>
     </ClCompile>
     <ClCompile Include="src\AudioManager\AudioManager.cpp">
       <Filter>src\AudioManager</Filter>
@@ -242,6 +242,9 @@
     <ClCompile Include="src\Graphics\IndexBuffer.cpp">
       <Filter>src\Graphics</Filter>
     </ClCompile>
+    <ClCompile Include="src\Graphics\Model.cpp">
+      <Filter>src\Graphics</Filter>
+    </ClCompile>
     <ClCompile Include="src\Graphics\Renderer.cpp">
       <Filter>src\Graphics</Filter>
     </ClCompile>
@@ -258,6 +261,9 @@
       <Filter>src\Graphics</Filter>
     </ClCompile>
     <ClCompile Include="src\ImGUI\EditorGUI.cpp">
+      <Filter>src\ImGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ImGUI\InspectorGUI.cpp">
       <Filter>src\ImGUI</Filter>
     </ClCompile>
     <ClCompile Include="src\Logger\Logger.cpp">
@@ -316,12 +322,6 @@
     </ClCompile>
     <ClCompile Include="src\dllmain.cpp">
       <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ImGUI\InspectorGUI.cpp">
-      <Filter>src\ImGUI</Filter>
-    </ClCompile>
-    <ClCompile Include="src\AudioManager\AudioIMGUI.cpp">
-      <Filter>src\AudioManager</Filter>
     </ClCompile>
     <ClCompile Include="src\FSM\FiniteStateMachine.cpp">
       <Filter>src\FSM</Filter>
