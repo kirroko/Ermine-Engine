@@ -40,13 +40,16 @@ namespace Ermine::graphics
     {
     public:
 
+        // Lighting Pass Parameters
+        bool m_SSAOEnabled = true;
+
         // Post-processing uniforms - toggles
         bool m_VignetteEnabled = true;
         bool m_FXAAEnabled = true;
         bool m_ToneMappingEnabled = true;
         bool m_GammaCorrectionEnabled = true;
         bool m_BloomEnabled = true;
-		bool m_SSAOEnabled = true;
+        bool m_SkyBoxisHDR = false;
 
         // Post-processing uniforms - parameters
         float m_Exposure = 1.0f;

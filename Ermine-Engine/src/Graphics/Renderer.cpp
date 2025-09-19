@@ -436,8 +436,9 @@ void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_NONE);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, pPBuffer.DepthTexture, 0);
-	
+
 	glCheckError();
 
 	// Create other buffers without depth (they don't need it)
@@ -850,12 +851,17 @@ void Renderer::RenderPostProcessPass()
 	glBindTexture(GL_TEXTURE_2D, m_BloomBlurBuffer2->ColorTexture);
 	m_PostProcessShader->SetUniform1i("u_BloomTexture", 1);
 
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, m_PostProcessBuffer->DepthTexture);
+	m_PostProcessShader->SetUniform1i("u_SceneDepth", 2);
+
 	// Set post-processing toggle parameters
 	m_PostProcessShader->SetUniform1i("u_Vignette", m_VignetteEnabled ? 1 : 0);
 	m_PostProcessShader->SetUniform1i("u_FXAA", m_FXAAEnabled ? 1 : 0);
 	m_PostProcessShader->SetUniform1i("u_ToneMapping", m_ToneMappingEnabled ? 1 : 0);
 	m_PostProcessShader->SetUniform1i("u_GammaCorrection", m_GammaCorrectionEnabled ? 1 : 0);
 	m_PostProcessShader->SetUniform1i("u_Bloom", m_BloomEnabled ? 1 : 0);
+	m_PostProcessShader->SetUniform1i("u_SkyboxIsHDR", m_SkyBoxisHDR ? 1 : 0);
 
 	// Set post-processing value parameters
 	m_PostProcessShader->SetUniform1f("u_Exposure", m_Exposure);
@@ -912,6 +918,11 @@ void Renderer::RenderDeferredPipeline(const Mtx44& view, const Mtx44& projection
 		
 		// Bind back to post-process buffer
 		glBindFramebuffer(GL_FRAMEBUFFER, m_PostProcessBuffer->FBO);
+
+		// Bind depth texture for depth testing
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, m_PostProcessBuffer->DepthTexture);
+
 		
 		// Enable depth testing but set to render only where depth = 1.0 (background)
 		glEnable(GL_DEPTH_TEST);
@@ -1682,6 +1693,7 @@ bool Renderer::CreateShadowMap(const unsigned int resolution)
 	EE_CORE_INFO("Created shadow map with resolution {0}x{1}", width, height);
 	return m_ShadowMap != 0;
 }
+ 
 bool Renderer::CreateShadowMapCube(const unsigned int resolution)
 {
 	glGenTextures(1, &m_ShadowMapCube);
@@ -1700,6 +1712,7 @@ bool Renderer::CreateShadowMapCube(const unsigned int resolution)
 	EE_CORE_INFO("Created cube shadow map with resolution {0}x{1}", resolution, resolution);
 	return m_ShadowMapCube != 0;
 }
+
 void Renderer::CalculateDirectionalMatrix(const editor::EditorCamera & editorCamera)
 {
 	// Convert camera projection/view to glm
@@ -1964,8 +1977,6 @@ void Renderer::CalculateDirectionalMatrix(const editor::EditorCamera & editorCam
 
 	// For testing: assign the nearest split (split 0 = closest to camera) to the active light view-proj matrix.
 	m_LightSpaceMatrix = splitLightMatrices[0];
-
-	EE_CORE_INFO("calculatedirectionalmatrix: computed {0} splits using optimized log-split + PCA rotation; assigned nearest split (0) to LightSpaceMatrix", numSplits);
 }
 
 void Renderer::RenderShadowMap(const glm::mat4& lightSpaceMatrix)
