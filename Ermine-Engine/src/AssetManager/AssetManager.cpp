@@ -257,6 +257,10 @@ std::shared_ptr<graphics::Material> AssetManager::CreateMaterial(const std::stri
             material->LoadTemplate(graphics::MaterialTemplates::PBR_REFLECTIVE(0.9f, 0.1f));
         else if (materialTemplate == "EMISSIVE_WHITE")
             material->LoadTemplate(graphics::MaterialTemplates::EMISSIVE(Vec3(1.0f, 1.0f, 1.0f), 10.0f));
+        else if (materialTemplate == "PBR_GLASS")
+            material->LoadTemplate(graphics::MaterialTemplates::PBR_GLASS(0.9f, 1.5f));
+        else if (materialTemplate == "PBR_WATER")
+            material->LoadTemplate(graphics::MaterialTemplates::PBR_WATER(0.7f));
         else
             EE_CORE_WARN("Unknown material template: {0}", materialTemplate);
     }

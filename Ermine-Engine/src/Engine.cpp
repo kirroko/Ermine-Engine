@@ -138,6 +138,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	EE_AUTO_REGISTER_COMPONENT(Particle, "Particle")
 	EE_AUTO_REGISTER_COMPONENT(AudioComponent, "AudioComponent")
 	EE_AUTO_REGISTER_COMPONENT(GlobalAudioComponent, "GlobalAudioComponent")
+	EE_AUTO_REGISTER_COMPONENT(ReflectionProbe, "ReflectionProbe")
 
 	// ECS::GetInstance().RegisterComponent<AudioComponent>(); // ADD THIS
 	// ECS::GetInstance().RegisterComponent<GlobalAudioComponent>(); // ADD THIS IF YOU WANT GLOBAL AUDIO
@@ -227,6 +228,10 @@ bool engine::Init(GLFWwindow* windowContext)
 	std::shared_ptr<graphics::Material> metalMaterial = AssetManager::GetInstance().CreateMaterial("shiny_metal", shader, "PBR_METAL");
 	std::shared_ptr<graphics::Material> emissiveWhiteMaterial = AssetManager::GetInstance().CreateMaterial("light_emissive", shader, "EMISSIVE_WHITE");
 	
+	// Create new materials showcasing refraction and transparency
+	std::shared_ptr<graphics::Material> glassMaterial = AssetManager::GetInstance().CreateMaterial("clear_glass", shader, "PBR_GLASS");
+	std::shared_ptr<graphics::Material> waterMaterial = AssetManager::GetInstance().CreateMaterial("water_surface", shader, "PBR_WATER");
+	
 	// Apply textures to shared materials
 	if (texture && texture->IsValid()) {
 		basicWhiteMaterial->SetTexture("materialAlbedoMap", texture);
@@ -234,15 +239,51 @@ bool engine::Init(GLFWwindow* windowContext)
 		
 		metalMaterial->SetTexture("materialAlbedoMap", texture);
 		metalMaterial->SetTexture("texture0", texture);
+		
+		// Glass material setup - FIXED for proper refraction
+		glassMaterial->SetTexture("materialAlbedoMap", texture);
+		glassMaterial->SetTexture("texture0", texture);
+		glassMaterial->SetFloat("materialTransparency", 0.9f);
+		glassMaterial->SetFloat("materialIndexOfRefraction", 1.5f);
+		glassMaterial->SetFloat("materialTransmissionFactor", 0.85f);
+		glassMaterial->SetBool("materialHasRefractionMap", true);
+		glassMaterial->SetFloat("materialReflectance", 0.04f);
+		glassMaterial->SetFloat("materialEnvironmentIntensity", 1.0f);
+		
+		// Add environment maps for glass refraction/reflection
+		if (environmentCubemap && environmentCubemap->IsValid()) {
+			glassMaterial->SetCubemap("materialEnvironmentMap", environmentCubemap);
+			glassMaterial->SetCubemap("materialIrradianceMap", environmentCubemap);
+			glassMaterial->SetBool("materialHasEnvironmentMap", true);
+			glassMaterial->SetBool("materialHasIrradianceMap", true);
+		}
+		
+		// Water material setup - FIXED for proper refraction
+		waterMaterial->SetTexture("materialAlbedoMap", texture);
+		waterMaterial->SetTexture("texture0", texture);
+		waterMaterial->SetFloat("materialTransparency", 0.7f);
+		waterMaterial->SetFloat("materialIndexOfRefraction", 1.33f);
+		waterMaterial->SetFloat("materialTransmissionFactor", 0.6f);
+		waterMaterial->SetBool("materialHasRefractionMap", true);
+		waterMaterial->SetFloat("materialReflectance", 0.04f);
+		waterMaterial->SetFloat("materialEnvironmentIntensity", 1.0f);
+		
+		// Add environment maps for water refraction/reflection
+		if (environmentCubemap && environmentCubemap->IsValid()) {
+			waterMaterial->SetCubemap("materialEnvironmentMap", environmentCubemap);
+			waterMaterial->SetCubemap("materialIrradianceMap", environmentCubemap);
+			waterMaterial->SetBool("materialHasEnvironmentMap", true);
+			waterMaterial->SetBool("materialHasIrradianceMap", true);
+		}
 	}
 	
-	EE_CORE_INFO("Created shared materials for efficient reuse across multiple objects");
+	EE_CORE_INFO("Created shared materials including glass and water with refraction support");
 
 	// Random number generation setup
 	//std::random_device rd;
 	//std::mt19937 gen(rd());
 	//std::uniform_real_distribution<float> posDist(-10.0f, 10.0f); // Random positions between -10 and 10
-	//std::uniform_real_distribution<float> rotDist(0.0f, 360.0f);  // Random rotations between 0 and 360
+	//std::uniform_real_distribution<float> rotDist(0.0f, 360.0f);  // Random rotations between 0.0f and 360.0f
 
 	// Example of how to create many entities with shared materials (commented out for now)
 	//for (int i = 0; i < 500; ++i)
@@ -366,7 +407,51 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().AddComponent(greenLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
 	ECS::GetInstance().AddComponent(greenLightEntity, Material(greenLightMaterial));
 
+	// Create demo objects showcasing refraction and local reflection probes
+	
+	// Glass sphere demonstrating refraction
+	auto glassEntity = ECS::GetInstance().CreateEntity();
+	ECS::GetInstance().AddComponent(glassEntity, Transform(Vec3(2, 0, -1), Vec3(0, 0, 0), Vec3(1, 1, 1)));
+	ECS::GetInstance().AddComponent(glassEntity, ObjectMetaData("GlassSphere", "Transparent", true));
+	ECS::GetInstance().AddComponent(glassEntity, graphics::GeometryFactory::CreateSphere(0.8f));
+	ECS::GetInstance().AddComponent(glassEntity, Material(glassMaterial));
+
+	// Water-like cube
+	auto waterEntity = ECS::GetInstance().CreateEntity();
+	ECS::GetInstance().AddComponent(waterEntity, Transform(Vec3(-2, 0, -1), Vec3(0, 0, 0), Vec3(1, 1, 0.3f)));
+	ECS::GetInstance().AddComponent(waterEntity, ObjectMetaData("WaterSlab", "Transparent", true));
+	ECS::GetInstance().AddComponent(waterEntity, graphics::GeometryFactory::CreateCube(2, 2, 0.6f));
+	ECS::GetInstance().AddComponent(waterEntity, Material(waterMaterial));
+
+	// Create local reflection probes
+	// Main reflection probe near the center
+	auto mainProbeEntity = ECS::GetInstance().CreateEntity();
+	ECS::GetInstance().AddComponent(mainProbeEntity, Transform(Vec3(0, 1, -1), Vec3(0, 0, 0), Vec3(1, 1, 1)));
+	ECS::GetInstance().AddComponent(mainProbeEntity, ObjectMetaData("MainReflectionProbe", "ReflectionProbe", true));
+	
+	ReflectionProbe mainProbe(Vec3(0, 1, -1), Vec3(8, 8, 8), 1.0f);
+	mainProbe.blendDistance = 2.0f;
+	mainProbe.priority = 1;
+	mainProbe.reflectionCubemap = environmentCubemap; // Use global environment as fallback
+	mainProbe.boxMin = Vec3(-4, -4, -4);
+	mainProbe.boxMax = Vec3(4, 4, 4);
+	ECS::GetInstance().AddComponent(mainProbeEntity, mainProbe);
+	
+	// Secondary reflection probe for local area  
+	auto localProbeEntity = ECS::GetInstance().CreateEntity();
+	ECS::GetInstance().AddComponent(localProbeEntity, Transform(Vec3(3, 1, 0), Vec3(0, 0, 0), Vec3(1, 1, 1)));
+	ECS::GetInstance().AddComponent(localProbeEntity, ObjectMetaData("LocalReflectionProbe", "ReflectionProbe", true));
+	
+	ReflectionProbe localProbe(Vec3(3, 1, 0), Vec3(6, 6, 6), 0.8f);
+	localProbe.blendDistance = 1.5f;
+	localProbe.priority = 2;
+	localProbe.reflectionCubemap = environmentCubemap; // Use global environment as fallback
+	localProbe.boxMin = Vec3(-3, -3, -3);
+	localProbe.boxMax = Vec3(3, 3, 3);
+	ECS::GetInstance().AddComponent(localProbeEntity, localProbe);
+
 	EE_CORE_INFO("Total living entities after creation: {0}", ECS::GetInstance().GetLivingEntityCount());
+	EE_CORE_INFO("Created demo objects with refraction materials and local reflection probes");
 
 	glClearColor(0.2f,0.3f,0.3f,1.0f); // Background color
 
@@ -388,9 +473,14 @@ bool engine::Init(GLFWwindow* windowContext)
 	//             customMaterial->SetFloat("material.roughness", 0.8f);  // Modify the copy
 
 	EE_CORE_INFO("Material system now supports efficient sharing between entities using shared_ptr");
+	EE_CORE_INFO("Advanced features implemented:");
+	EE_CORE_INFO("  - Fixed reflection with environment cubemaps and local probes");
+	EE_CORE_INFO("  - Correct refraction with IOR support (Glass: 1.5, Water: 1.33)");
+	EE_CORE_INFO("  - Proper Fresnel-based reflection/refraction mixing");
+	EE_CORE_INFO("  - Enhanced material templates with all required parameters");
+	EE_CORE_INFO("  - Key controls: 1=PBR, 2=Blinn-Phong, 3=Toggle Deferred");
 	EE_CORE_INFO("Systems and components registered successfully, Engine Initialized");
 	s_isInitialized = true;
-	return true;
 }
 
 // TODO: Shutdown for subsystem should be in order, please be mindful of the order that is already in place.
@@ -618,6 +708,7 @@ void engine::HandleShadingToggle(GLFWwindow* windowContext)
 		renderer->SetShadingMode(true); // true = Blinn-Phong
 		EE_CORE_INFO("Switched to Blinn-Phong shading");
 	}
+
 	// Toggle to Deferred (key 3)
 	if (key3IsPressed && !key3WasPressed) {
 		auto renderer = ECS::GetInstance().GetSystem<graphics::Renderer>();

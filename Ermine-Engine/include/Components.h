@@ -511,4 +511,81 @@ namespace Ermine
 
 		Particle() : velocity(0, 0, 0), lifetime(1.0f), age(0.0f), colour(1, 1, 1, 1), size(1.0f) {}
 	};
+
+	/*!***********************************************************************
+	 \brief
+	 Reflection Probe component for local environment mapping
+	*************************************************************************/
+	struct ReflectionProbe
+	{
+		// Probe properties
+		Vec3 position{0.0f, 0.0f, 0.0f};
+		Vec3 size{10.0f, 10.0f, 10.0f};       // Bounding box size
+		float intensity{1.0f};
+		float blendDistance{1.0f};             // Distance over which to blend with other probes
+		bool boxProjection{true};              // Use box projection for more accurate reflections
+		
+		// Runtime cubemap data
+		std::shared_ptr<graphics::Cubemap> reflectionCubemap{nullptr};
+		std::shared_ptr<graphics::Cubemap> irradianceCubemap{nullptr};
+		
+		// Probe influence settings
+		bool isActive{true};
+		int priority{0};                       // Higher priority probes override lower ones
+		
+		// Box projection parameters (for accurate local reflections)
+		Vec3 boxMin{-5.0f, -5.0f, -5.0f};    // Local space bounding box
+		Vec3 boxMax{5.0f, 5.0f, 5.0f};
+		
+		ReflectionProbe() = default;
+		
+		/**
+		 * @brief Constructor with basic setup
+		 * @param pos Position of the probe in world space
+		 * @param probeSize Size of the influence area
+		 * @param probeIntensity Intensity multiplier for reflections
+		 */
+		ReflectionProbe(const Vec3& pos, const Vec3& probeSize, float probeIntensity = 1.0f)
+			: position(pos), size(probeSize), intensity(probeIntensity)
+		{
+			// Set bounding box to match size
+			boxMin = -probeSize * 0.5f;
+			boxMax = probeSize * 0.5f;
+		}
+		
+		/**
+		 * @brief Check if a world position is within this probe's influence
+		 * @param worldPos Position to test
+		 * @return True if position is influenced by this probe
+		 */
+		bool IsWithinInfluence(const Vec3& worldPos) const
+		{
+			Vec3 localPos = worldPos - position;
+			return (localPos.x >= boxMin.x && localPos.x <= boxMax.x &&
+					localPos.y >= boxMin.y && localPos.y <= boxMax.y &&
+					localPos.z >= boxMin.z && localPos.z <= boxMax.z);
+		}
+		
+		/**
+		 * @brief Calculate blend weight for a world position
+		 * @param worldPos Position to calculate weight for
+		 * @return Weight between 0 and 1
+		 */
+		float CalculateWeight(const Vec3& worldPos) const
+		{
+			if (!IsWithinInfluence(worldPos)) return 0.0f;
+			
+			Vec3 localPos = worldPos - position;
+			Vec3 distToEdge = Vec3(
+				std::min(localPos.x - boxMin.x, boxMax.x - localPos.x),
+				std::min(localPos.y - boxMin.y, boxMax.y - localPos.y),
+				std::min(localPos.z - boxMin.z, boxMax.z - localPos.z)
+			);
+			
+			float minDist = std::min({distToEdge.x, distToEdge.y, distToEdge.z});
+			
+			if (minDist >= blendDistance) return 1.0f;
+			return minDist / blendDistance;
+		}
+	};
 }
