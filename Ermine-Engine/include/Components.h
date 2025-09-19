@@ -26,6 +26,9 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Texture.h"
 #include "Material.h" 
 #include "AudioManager.h"
+#include <rapidjson/document.h>
+#include <rapidjson/writer.h>
+#include <rapidjson/stringbuffer.h>
 
 namespace Ermine
 {
@@ -42,6 +45,37 @@ namespace Ermine
 
 		explicit Transform(const Vec3& pos = Vec3(), const Vec3& rot = Vec3(), const Vec3& scl = Vec3(1.f, 1.f, 1.f)) : position(pos), rotation(rot), scale(scl)
 		{
+		}
+
+		template<typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
+			out.SetObject();
+
+			auto vec3_to_json = [&](const Vec3& v) {
+				rapidjson::Value arr(rapidjson::kArrayType);
+				arr.PushBack(v.x, alloc).PushBack(v.y, alloc).PushBack(v.z, alloc);
+				return arr;
+				};
+
+			// Matrix as flat 16 floats
+			//rapidjson::Value matArr(rapidjson::kArrayType);
+			//for (int i = 0; i < 16; i++)
+			//	matArr.PushBack(transform_matrix[i], alloc);
+
+			//out.AddMember("matrix", matArr, alloc);
+			out.AddMember("position", vec3_to_json(position), alloc);
+			out.AddMember("rotation", vec3_to_json(rotation), alloc);
+			out.AddMember("scale", vec3_to_json(scale), alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in) {
+			auto json_to_vec3 = [&](const rapidjson::Value& arr) {
+				return Vec3(arr[0].GetFloat(), arr[1].GetFloat(), arr[2].GetFloat());
+				};
+
+			if (in.HasMember("position")) position = json_to_vec3(in["position"]);
+			if (in.HasMember("rotation")) rotation = json_to_vec3(in["rotation"]);
+			if (in.HasMember("scale"))    scale = json_to_vec3(in["scale"]);
 		}
 	};
 

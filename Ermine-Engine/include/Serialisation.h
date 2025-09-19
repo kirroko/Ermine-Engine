@@ -4,6 +4,7 @@
 #include "PreCompile.h"
 #include <filesystem>
 #include <string>
+#include "ECS.h"
 
 struct Config {
     int windowWidth{};
@@ -19,7 +20,10 @@ Config DeserializeConfig(const std::string& jsonStr);
 void SaveConfigToFile(const Config& config, const std::filesystem::path& path, bool pretty = true);
 Config LoadConfigFromFile(const std::filesystem::path& path);
 
-//void SaveSceneToFile(std::string name, const std::filesystem::path& path, bool pretty = true);
-//void LoadSceneFromFile(std::string name, const std::filesystem::path& path);
+void SaveSceneToFile(const Ermine::ECS& ecs, const std::filesystem::path& path, bool pretty);
+void LoadSceneFromFile(Ermine::ECS& ecs, const std::filesystem::path& path);
+
+void SaveCurrentScene(const std::string& sceneName);
+void LoadScene(const std::string& sceneName);
 
 #endif // SERIALISATION_H
