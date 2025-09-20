@@ -253,18 +253,19 @@ bool engine::Init(GLFWwindow* windowContext)
 	//ECS::GetInstance().AddComponent(entity3, Material(shader, texture));
 
 	// Example FBX entity
-	fbxEntity = ECS::GetInstance().CreateEntity();
-	ECS::GetInstance().AddComponent(fbxEntity, Transform(Vec3(0, 0, -1), Quaternion(), Vec3(0.01f, 0.01f, 0.01f)));
+	auto fbxEntity = ECS::GetInstance().CreateEntity();
+	ECS::GetInstance().AddComponent(fbxEntity, Transform(Vec3(2, -0.5f, 0), Quaternion(), Vec3(0.01f, 0.01f, 0.01f)));
 	ECS::GetInstance().AddComponent(fbxEntity, ObjectMetaData("Character", "Model", true));
 	ECS::GetInstance().AddComponent(fbxEntity, Mesh{}); // empty mesh component for renderer signature
-	ECS::GetInstance().AddComponent(fbxEntity, ModelComponent(AssetManager::GetInstance().LoadModel("../Resources/Models/Walking.fbx")));
-	auto cubeFBXMaterial = std::make_unique<graphics::Material>(shader);
-	cubeFBXMaterial->LoadTemplate(graphics::MaterialTemplates::PBR_METAL());
-	if (texture && texture->IsValid()) {
-		cubeFBXMaterial->SetTexture("materialAlbedoMap", texture);
-		cubeFBXMaterial->SetTexture("texture0", texture);
+	ECS::GetInstance().AddComponent(fbxEntity, ModelComponent(AssetManager::GetInstance().LoadModel("../Resources/Models/Shadowkin_Rigged.fbx")));
+	auto fbxMaterial = std::make_unique<graphics::Material>(shader);
+	auto fbxTexture = AssetManager::GetInstance().LoadTexture("../Resources/Textures/Pants_Base_color.png");
+	fbxMaterial->LoadTemplate(graphics::MaterialTemplates::PBR_WHITE());
+	if (fbxTexture && fbxTexture->IsValid()) {
+		fbxMaterial->SetTexture("materialAlbedoMap", fbxTexture);
+		fbxMaterial->SetTexture("texture0", fbxTexture);
 	}
-	ECS::GetInstance().AddComponent(fbxEntity, Material(std::move(cubeFBXMaterial)));
+	ECS::GetInstance().AddComponent(fbxEntity, Material(std::move(fbxMaterial)));
 
 	// Create a simple quad mesh for particles
 	auto quadMesh = graphics::GeometryFactory::CreateQuad(1.0f, 1.0f);
