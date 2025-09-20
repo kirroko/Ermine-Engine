@@ -30,6 +30,12 @@ layout (std140) uniform MaterialBlock {
     bool hasMetallicMap;
     bool hasAoMap;
     bool hasEmissiveMap;
+    bool hasEnvironmentMap;
+    bool hasIrradianceMap;
+    
+    // Environment mapping parameters
+    float reflectance;
+    float environmentIntensity;
 } material;
 
 // Separate texture samplers (cannot be in uniform blocks)
@@ -40,8 +46,15 @@ uniform sampler2D materialMetallicMap;
 uniform sampler2D materialAoMap;
 uniform sampler2D materialEmissiveMap;
 
+// Environment mapping samplers
+uniform samplerCube materialEnvironmentMap;  // Main environment/reflection map
+uniform samplerCube materialIrradianceMap;   // Irradiance map for diffuse IBL
+
 // Shading mode toggle
 uniform bool isBlinnPhong;
+
+// View matrix for world space calculations
+uniform mat4 view;
 
 // Material properties for Blinn-Phong
 uniform vec3 materialKa = vec3(0.2, 0.2, 0.2);
@@ -191,7 +204,12 @@ float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
 vec3 fresnelSchlick(float cosTheta, vec3 F0)
 {
     return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
-}
+}   
+
+vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
+{
+    return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+}   
 
 // Calculate light attenuation and spot effect
 float calculateAttenuation(int lightIndex, vec3 fragPosView, out vec3 lightDir)
@@ -236,6 +254,40 @@ float calculateAttenuation(int lightIndex, vec3 fragPosView, out vec3 lightDir)
     }
     
     return attenuation;
+}
+
+// Environment mapping functions
+vec3 calculateEnvironmentReflection(vec3 normal, vec3 viewDir, float roughness, vec3 F0)
+{
+    if (!material.hasEnvironmentMap) return vec3(0.0);
+    
+    // Convert from view space to world space for environment mapping
+    mat3 viewToWorld = transpose(mat3(view));
+    vec3 worldNormal = viewToWorld * normal;
+    vec3 worldViewDir = viewToWorld * viewDir;
+    
+    // Calculate reflection vector in world space
+    vec3 R = reflect(-worldViewDir, worldNormal);
+    
+    // Sample environment map with mipmap level based on roughness
+    float mipLevel = roughness * 8.0; // Assuming 8 mip levels
+    vec3 envReflection = textureLod(materialEnvironmentMap, R, mipLevel).rgb;
+    
+    return envReflection * material.environmentIntensity;
+}
+
+vec3 calculateEnvironmentIrradiance(vec3 normal)
+{
+    if (!material.hasIrradianceMap) return vec3(0.0);
+    
+    // Convert normal from view space to world space
+    mat3 viewToWorld = transpose(mat3(view));
+    vec3 worldNormal = viewToWorld * normal;
+    
+    // Sample irradiance map for diffuse environment lighting
+    vec3 irradiance = texture(materialIrradianceMap, worldNormal).rgb;
+    
+    return irradiance * material.environmentIntensity;
 }
 
 // Blinn-Phong lighting calculation for one light
@@ -316,6 +368,12 @@ void main()
     if (useBlinnPhong) {
         // Ambient component
         vec3 ambient = materialKa * 0.1 * albedo * ao;
+        
+        // Add environment irradiance as ambient if available
+        if (material.hasIrradianceMap) {
+            ambient += calculateEnvironmentIrradiance(norm) * albedo * 0.3;
+        }
+        
         result += ambient;
 
         // Add contribution from each light
@@ -323,21 +381,46 @@ void main()
             result += calculateBlinnPhong(i, norm, viewDir, ViewPos, albedo);
         }
         
+        // Add simple environment reflection for Blinn-Phong
+        if (material.hasEnvironmentMap) {
+            vec3 envReflection = calculateEnvironmentReflection(norm, viewDir, 0.2, vec3(0.04));
+            result += envReflection * materialKs * 0.5; // Simple reflection contribution
+        }
+        
         // Add emissive (material system handles this now)
         result += emissive;
         // Legacy support
         result += materialKe;
     } else {
-        // PBR Lighting
-        vec3 F0 = vec3(0.04);
+        // PBR Lighting with Image-Based Lighting (IBL)
+        vec3 F0 = vec3(material.reflectance);
         F0 = mix(F0, albedo, metallic);
         
+        // Ambient lighting from environment or fallback
         vec3 ambient = vec3(0.08) * albedo * ao;
+        if (material.hasIrradianceMap) {
+            vec3 kS = fresnelSchlickRoughness(max(dot(norm, viewDir), 0.0), F0, roughness);
+            vec3 kD = 1.0 - kS;
+            kD *= 1.0 - metallic;
+            
+            vec3 irradiance = calculateEnvironmentIrradiance(norm);
+            vec3 diffuse = irradiance * albedo;
+            ambient = (kD * diffuse) * ao;
+        }
+        
         result += ambient;
 
         // Add contribution from each light
         for (int i = 0; i < numLights && i < 16; ++i) {
             result += calculatePBR(i, norm, viewDir, ViewPos, albedo, F0, roughness, metallic);
+        }
+        
+        // Environment reflections for PBR
+        if (material.hasEnvironmentMap) {
+            vec3 kS = fresnelSchlickRoughness(max(dot(norm, viewDir), 0.0), F0, roughness);
+            vec3 envReflection = calculateEnvironmentReflection(norm, viewDir, roughness, F0);
+            vec3 specular = envReflection * kS;
+            result += specular * ao;
         }
         
         // Energy compensation for very rough surfaces
