@@ -7,7 +7,6 @@ uniform sampler2D u_LightingTexture;
 uniform int u_Pass; // 1 = extract bright, 2 = blur horizontal, 3 = blur vertical, 4 = combine
 
 uniform float u_BloomThreshold = 1.0;
-uniform float u_BloomIntensity = 0.8;
 uniform float u_BloomRadius = 1.0;
 
 // Gaussian blur weights for 5-tap kernel
