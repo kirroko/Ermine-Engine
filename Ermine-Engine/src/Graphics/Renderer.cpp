@@ -943,7 +943,6 @@ void Renderer::RenderPostProcessPass()
 
 	// Set bloom extraction parameters
 	m_BloomShader->SetUniform1f("u_BloomThreshold", m_BloomThreshold);
-	m_BloomShader->SetUniform1f("u_BloomIntensity", m_BloomIntensity);
 	m_BloomShader->SetUniform1f("u_BloomRadius", m_BloomRadius);
 
 	Draw(m_QuadMesh.vertex_array, m_QuadMesh.index_buffer, m_BloomShader);

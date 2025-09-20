@@ -374,8 +374,8 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().AddComponent(mainLightEntity, Light(Vec3(1, 1, 1), 0.8f, LightType::DIRECTIONAL, true, 4096u));
 
 	// Light sphere material - use shared emissive material for all lights
-	ECS::GetInstance().AddComponent(mainLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
-	ECS::GetInstance().AddComponent(mainLightEntity, Material(emissiveWhiteMaterial));
+	//ECS::GetInstance().AddComponent(mainLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
+	//ECS::GetInstance().AddComponent(mainLightEntity, Material(emissiveWhiteMaterial));
 
 	// Red accent light - create unique colored emissive materials
 	auto redLightEntity = ECS::GetInstance().CreateEntity();
