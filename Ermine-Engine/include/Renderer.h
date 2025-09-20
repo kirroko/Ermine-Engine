@@ -41,7 +41,7 @@ namespace Ermine::graphics
     public:
 
         // Lighting Pass Parameters
-        bool m_SSAOEnabled = true;
+        bool m_SSAOEnabled = false;
 
         // Post-processing uniforms - toggles
         bool m_VignetteEnabled = true;

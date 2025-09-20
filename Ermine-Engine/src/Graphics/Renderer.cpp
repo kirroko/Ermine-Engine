@@ -656,9 +656,18 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 		{
 			auto& modelComp = ecs.GetComponent<ModelComponent>(entity);
 			auto& trans = ecs.GetComponent<Transform>(entity);
+			auto& materialComponent = ecs.GetComponent<Ermine::Material>(entity);
 
 			if (modelComp.m_model)
 			{
+				Ermine::graphics::Material* material = materialComponent.GetMaterial();
+
+				if (!material) {
+					EE_CORE_WARN("Entity {0} has null material", entity);
+					continue;
+				}
+				UpdateMaterialUBO(material->GetUBOData());
+
 				// Apply entity's transform as root
 				glm::mat4 entityModel = glm::mat4(1.0f);
 				entityModel = glm::translate(entityModel, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
@@ -666,6 +675,73 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 				rotQuat = glm::normalize(rotQuat);
 				entityModel *= glm::mat4_cast(rotQuat);
 				entityModel = glm::scale(entityModel, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
+
+				int texUnit = 0;
+				if (material->HasParameter("materialAlbedoMap")) {
+					std::shared_ptr<Texture> albedo = material->GetParameter("materialAlbedoMap")->texture;
+					if (albedo && albedo->IsValid()) {
+						albedo->Bind(texUnit);
+						m_GBufferShader->SetUniform1i("materialAlbedoMap", texUnit);
+					}
+				}
+				texUnit = 1;
+				if (material->HasParameter("materialNormalMap")) {
+					std::shared_ptr<Texture> normal = material->GetParameter("materialNormalMap")->texture;
+					if (normal && normal->IsValid()) {
+						normal->Bind(texUnit);
+						m_GBufferShader->SetUniform1i("materialNormalMap", texUnit);
+					}
+				}
+				texUnit = 2;
+				if (material->HasParameter("materialRoughnessMap")) {
+					std::shared_ptr<Texture> roughness = material->GetParameter("materialRoughnessMap")->texture;
+					if (roughness && roughness->IsValid()) {
+						roughness->Bind(texUnit);
+						m_GBufferShader->SetUniform1i("materialRoughnessMap", texUnit);
+					}
+				}
+				texUnit = 3;
+				if (material->HasParameter("materialMetallicMap")) {
+					std::shared_ptr<Texture> metallic = material->GetParameter("materialMetallicMap")->texture;
+					if (metallic && metallic->IsValid()) {
+						metallic->Bind(texUnit);
+						m_GBufferShader->SetUniform1i("materialMetallicMap", texUnit);
+					}
+				}
+				texUnit = 4;
+				if (material->HasParameter("materialAoMap")) {
+					std::shared_ptr<Texture> ao = material->GetParameter("materialAoMap")->texture;
+					if (ao && ao->IsValid()) {
+						ao->Bind(texUnit);
+						m_GBufferShader->SetUniform1i("materialAoMap", texUnit);
+					}
+				}
+				texUnit = 5;
+				if (material->HasParameter("materialEmissiveMap")) {
+					std::shared_ptr<Texture> emissive = material->GetParameter("materialEmissiveMap")->texture;
+					if (emissive && emissive->IsValid()) {
+						emissive->Bind(texUnit);
+						m_GBufferShader->SetUniform1i("materialEmissiveMap", texUnit);
+					}
+				}
+				texUnit = 6;
+				if (material->HasParameter("materialEnvironmentMap")) {
+					std::shared_ptr<Texture> env = material->GetParameter("materialEnvironmentMap")->texture;
+					if (env && env->IsValid()) {
+						env->Bind(texUnit);
+						m_GBufferShader->SetUniform1i("materialEnvironmentMap", texUnit);
+					}
+				}
+				texUnit = 7;
+				if (material->HasParameter("materialIrradianceMap")) {
+					std::shared_ptr<Texture> irradiance = material->GetParameter("materialIrradianceMap")->texture;
+					if (irradiance && irradiance->IsValid()) {
+						irradiance->Bind(texUnit);
+						m_GBufferShader->SetUniform1i("materialIrradianceMap", texUnit);
+					}
+				}
+
+
 
 				// Render model
 				RenderModel(*modelComp.m_model, view, projection, entityModel);
@@ -714,8 +790,71 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 
 			UpdateMaterialUBO(material->GetUBOData());
 
-			// TODO: Use new texture system to bind textures
-			tempTexture->Bind(0);
+			int texUnit = 0;
+			if (material->HasParameter("materialAlbedoMap")) {
+				std::shared_ptr<Texture> albedo = material->GetParameter("materialAlbedoMap")->texture;
+				if (albedo && albedo->IsValid()) {
+					albedo->Bind(texUnit);
+					m_GBufferShader->SetUniform1i("materialAlbedoMap", texUnit);
+				}
+			}
+			texUnit = 1;
+			if (material->HasParameter("materialNormalMap")) {
+				std::shared_ptr<Texture> normal = material->GetParameter("materialNormalMap")->texture;
+				if (normal && normal->IsValid()) {
+					normal->Bind(texUnit);
+					m_GBufferShader->SetUniform1i("materialNormalMap", texUnit);
+				}
+			}
+			texUnit = 2;
+			if (material->HasParameter("materialRoughnessMap")) {
+				std::shared_ptr<Texture> roughness = material->GetParameter("materialRoughnessMap")->texture;
+				if (roughness && roughness->IsValid()) {
+					roughness->Bind(texUnit);
+					m_GBufferShader->SetUniform1i("materialRoughnessMap", texUnit);
+				}
+			}
+			texUnit = 3;
+			if (material->HasParameter("materialMetallicMap")) {
+				std::shared_ptr<Texture> metallic = material->GetParameter("materialMetallicMap")->texture;
+				if (metallic && metallic->IsValid()) {
+					metallic->Bind(texUnit);
+					m_GBufferShader->SetUniform1i("materialMetallicMap", texUnit);
+				}
+			}
+			texUnit = 4;
+			if (material->HasParameter("materialAoMap")) {
+				std::shared_ptr<Texture> ao = material->GetParameter("materialAoMap")->texture;
+				if (ao && ao->IsValid()) {
+					ao->Bind(texUnit);
+					m_GBufferShader->SetUniform1i("materialAoMap", texUnit);
+				}
+			}
+			texUnit = 5;
+			if (material->HasParameter("materialEmissiveMap")) {
+				std::shared_ptr<Texture> emissive = material->GetParameter("materialEmissiveMap")->texture;
+				if (emissive && emissive->IsValid()) {
+					emissive->Bind(texUnit);
+					m_GBufferShader->SetUniform1i("materialEmissiveMap", texUnit);
+				}
+			}
+			texUnit = 6;
+			if (material->HasParameter("materialEnvironmentMap")) {
+				std::shared_ptr<Texture> env = material->GetParameter("materialEnvironmentMap")->texture;
+				if (env && env->IsValid()) {
+					env->Bind(texUnit);
+					m_GBufferShader->SetUniform1i("materialEnvironmentMap", texUnit);
+				}
+			}
+			texUnit = 7;
+			if (material->HasParameter("materialIrradianceMap")) {
+				std::shared_ptr<Texture> irradiance = material->GetParameter("materialIrradianceMap")->texture;
+				if (irradiance && irradiance->IsValid()) {
+					irradiance->Bind(texUnit);
+					m_GBufferShader->SetUniform1i("materialIrradianceMap", texUnit);
+				}
+			}
+
 			// Draw the mesh
 			Draw(mesh.vertex_array, mesh.index_buffer, m_GBufferShader);
 		}
@@ -1584,9 +1723,14 @@ void Renderer::RenderModel(const Model& model, const Mtx44& view, const Mtx44& p
 		shader->SetUniformMatrix3fv("NormalMatrix", normalMatrix);
 
 		if (mesh.texture && mesh.texture->IsValid())
+		{
+			// Bind texture to texture unit 0
 			mesh.texture->Bind(0);
-		else if (tempTexture)
-			tempTexture->Bind(0);
+
+			// Tell the shader which texture unit the sampler uses
+			if (shader->HasUniform("materialAlbedoMap"))
+				shader->SetUniform1i("materialAlbedoMap", 0);
+		}
 
 		Draw(mesh.vao, mesh.ibo, shader);
 	}

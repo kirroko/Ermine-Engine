@@ -211,7 +211,7 @@ namespace Ermine::graphics
                 {"materialEmissiveIntensity", 0.0f},
                 {"materialNormalStrength", 1.0f},
                 {"materialShadingModel", 0},
-                {"materialHasAlbedoMap", false},
+                {"materialHasAlbedoMap", true},
                 {"materialHasNormalMap", false},
                 {"materialHasRoughnessMap", false},
                 {"materialHasMetallicMap", false},
@@ -399,6 +399,22 @@ namespace Ermine::graphics
         void SetTexture(const std::string& name, std::shared_ptr<Texture> texture)
         {
             SetParameter(name, MaterialParam(std::move(texture)));
+        }
+        /**
+         * @brief Gets a texture
+         * @param name The name of the parameter.
+         * @return texture A shared pointer to the texture to set.
+         */
+        std::shared_ptr<Texture> GetTexture(const std::string& name)
+        {
+            if (auto param = GetParameter(name))
+            {
+                if (param->type == MaterialParamType::TEXTURE_2D)
+                {
+                    return param->texture;
+                }
+            }
+			return nullptr;
         }
 
         /**
