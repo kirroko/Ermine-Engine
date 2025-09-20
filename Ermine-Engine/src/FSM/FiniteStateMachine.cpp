@@ -16,6 +16,14 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 namespace Ermine
 {
+    inline Vec3 Normalize(const Vec3& v)
+    {
+        float len = std::sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
+        if (len > 0.0001f)
+            return Vec3(v.x / len, v.y / len, v.z / len);
+        return Vec3(0.0f, 0.0f, 0.0f);
+    }
+
     // StateMachine
     void StateMachine::ChangeState(EntityID entity, State* newState)
     {
@@ -81,11 +89,29 @@ namespace Ermine
 
         auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
 
-        // Move cube forward
-        transform.position.x += 1.0f * deltaTime;
+        // Move cube
+        //transform.position.x += 1.0f * deltaTime;
 
-        EE_CORE_INFO("Entity {0} is roaming at position ({1}, {2}, {3})",
-            entity, transform.position.x, transform.position.y, transform.position.z);
+        // Update orbit angle
+        angle += speed * deltaTime;
+        if (angle > 2.0f * M_PI) angle -= 2.0f * M_PI;
+
+        // Compute new position along circle (XZ plane)
+        float x = radius * cos(angle);
+        float z = radius * sin(angle);
+        transform.position = Vec3(x, 0.0f, z);
+
+        // Compute forward direction (tangent to circle)
+        Vec3 forward(-sin(angle), 0.0f, cos(angle));
+        forward = Normalize(forward);
+
+        // Convert forward vector into quaternion facing that way
+        float yaw = atan2(forward.x, forward.z);  // yaw in radians
+        float halfYaw = yaw * 0.5f;
+        transform.rotation = Quaternion(0.0f, sin(halfYaw), 0.0f, cos(halfYaw));
+
+        //EE_CORE_INFO("Entity {0} is roaming at position ({1}, {2}, {3})",
+        //    entity, transform.position.x, transform.position.y, transform.position.z);
     }
 
     void RoamState::Exit(EntityID entity)

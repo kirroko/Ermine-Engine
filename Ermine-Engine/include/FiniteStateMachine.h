@@ -61,6 +61,9 @@ namespace Ermine
 
     class RoamState : public State
     {
+        float angle = 0.0f;
+        float speed = 1.0f;
+        float radius = 3.0f;
     public:
         void Enter(EntityID entity) override;
         void Update(EntityID entity, float deltaTime) override;
