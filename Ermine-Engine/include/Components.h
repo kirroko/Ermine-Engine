@@ -373,18 +373,6 @@ namespace Ermine
 
 	/*!***********************************************************************
 	\brief
-	 Light GPU structure
-	*************************************************************************/
-	struct LightGPU
-	{
-		glm::vec4 position_type;    // xyz = position (view space), w = light type
-		glm::vec4 color_intensity;  // xyz = color, w = intensity
-		glm::vec4 direction_range;  // xyz = direction (view space), w = range
-		glm::vec4 spot_angles_castshadows_resolution;      // x = inner cos, y = outer cos z = casts shadows (1.0 or 0.0), w = shadow map resolution
-	};
-
-	/*!***********************************************************************
-	\brief
 	 Light structure
 	*************************************************************************/
 	struct Light {
@@ -392,7 +380,12 @@ namespace Ermine
 		float intensity;
 		LightType type;
 		bool castsShadows{ false };
-		unsigned int resolution{ 1024 }; // Shadow map resolution
+		vector<glm::mat4> lightSpaceMatrices{ glm::mat4{0}, glm::mat4{0}, glm::mat4{0}, glm::mat4{0} }; // For shadow mapping
+		int startOffset{ 0 }; // For UBO indexing
+		float innercos{ -1.0f }; // For spotlights
+		float outercos{ -1.0f }; // For spotlights
+		float radius{ 1.0f }; // For point lights
+		glm::vec4 splitDepths{ 0.1f, 10.0f, 50.0f , 100.f}; // For Cascaded Shadow Maps (CSM)
 
 		Light() : color(1.0f, 1.0f, 1.0f),
 			intensity(1.0f),
@@ -405,9 +398,15 @@ namespace Ermine
 		{
 		}
 
-		Light(const Vec3& col, float intens, LightType t, bool shadows, unsigned int res) :
-			color(col), intensity(intens), type(t), castsShadows(shadows), resolution(res)
+		Light(const Vec3& col, float intens, LightType t, bool shadows) :
+			color(col), intensity(intens), type(t), castsShadows(shadows)
 		{
+		}
+
+		Light(const Vec3& col, float intens, LightType t, bool shadows, float inner, float outer, float rad = 1.0f) :
+			color(col), intensity(intens), type(t), castsShadows(shadows), innercos(inner), outercos(outer), radius(rad)
+		{
+		
 		}
 	};
 	

@@ -27,7 +27,29 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 namespace Ermine::graphics
 {
     // Lights
+
+    constexpr int MaxLights = 16;
+    constexpr int NUM_CASCADES = 4;
+	constexpr int SHADOW_MAX_LAYERS = 32;
+	constexpr int SHADOW_MAP_RESOLUTION = 4096;
+    constexpr float SHADOW_MAP_ARRAY_LAMBDA = 0.95f;
+
     class LightSystem : public System {};
+
+    /*!***********************************************************************
+    \brief
+     Light GPU structure
+    *************************************************************************/
+    struct LightGPU
+    {
+        glm::vec4 position_type;    // xyz = position (view space), w = light type
+        glm::vec4 color_intensity;  // xyz = color, w = intensity
+        glm::vec4 direction_range;  // xyz = direction (view space), w = range
+		glm::vec4 spot_angles_castshadows_startOffset; // x = inner angle (cos), y = outer angle (cos), z = cast shadows (bool), w = shadow map index or 0 if no shadows
+        glm::mat4 lightSpaceMatrix[NUM_CASCADES];
+		glm::vec4 splitDepths; // split depths for cascaded shadow maps xyzw
+    };
+
 
     // Forward declarations
     struct MaterialUBO;
@@ -39,6 +61,8 @@ namespace Ermine::graphics
     class Renderer : public System
     {
     public:
+        GLuint m_ShadowMapFBO = 0;
+        GLuint m_ShadowMapArray = 0;
 
         // Lighting Pass Parameters
         bool m_SSAOEnabled = false;
@@ -340,10 +364,10 @@ namespace Ermine::graphics
 
         // Shadow mapping
         bool InitializeShadowMap();
-        bool CreateShadowMap(const unsigned int resolution = 1024);
+        bool CreateShadowMapArray();
         bool CreateShadowMapCube(const unsigned int resolution);
         void CalculateDirectionalMatrix(const editor::EditorCamera& editorCamera);
-		void RenderShadowMap(const glm::mat4& lightSpaceMatrix);
+		void RenderShadowMap();
         void RenderShadowPass();
 
 
@@ -356,7 +380,6 @@ namespace Ermine::graphics
         // Lighting UBO
         GLuint m_LightsUBO = 0;
         static constexpr GLuint LightsBindingPoint = 1;
-        static constexpr size_t MaxLights = 16;
         std::unordered_set<GLuint> m_LightBlockBoundPrograms;
         bool m_IsBlinnPhong = false; // Default to PBR shading
 
@@ -371,7 +394,6 @@ namespace Ermine::graphics
         std::shared_ptr<GBuffer> m_GBuffer;
         std::shared_ptr<Shader> m_GBufferShader = 0; // Shader for executing g-buffer pass
         std::shared_ptr<Shader> m_LightPassShader = 0; // Shader for lighting pass
-        std::shared_ptr<Texture> tempTexture;
 
 
 		// Post-processing buffer
@@ -386,13 +408,10 @@ namespace Ermine::graphics
 		graphics::Skybox* m_skybox = nullptr;
 
         // Shadow mapping
-        std::shared_ptr<Shader> m_ShadowMapShader = nullptr;
+        std::shared_ptr<Shader> m_ShadowMapGeometryShader = nullptr;
         // Just one FBO and one 2D shadow map for one directional light for now
-        GLuint m_ShadowMapFBO = 0;
-        GLuint m_ShadowMap = 0;
         GLuint m_ShadowMapCube = 0;
-        uint64_t m_ShadowMapHandle = 0;
-        glm::mat4 m_LightSpaceMatrix;
+        uint64_t m_ShadowMapArrayHandle = 0;
 
 
     };

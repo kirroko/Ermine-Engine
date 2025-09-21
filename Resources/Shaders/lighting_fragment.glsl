@@ -1,6 +1,10 @@
 #version 460 core
 #extension GL_ARB_bindless_texture : require
 
+    const int NUM_CASCADES = 4;
+	const int MAX_LAYERS = 32;
+	const int SHADOW_MAP_RESOLUTION = 4098;
+
 in vec2 TexCoord;
 out vec4 FragColor;
 
@@ -10,14 +14,13 @@ uniform uvec2 u_GBuffer1Handle;
 uniform uvec2 u_GBuffer2Handle;
 uniform uvec2 u_GBuffer3Handle;
 uniform uvec2 u_GBufferDepthHandle; 
-uniform uvec2 u_ShadowMapHandle; 
+uniform uvec2 u_ShadowMapArrayHandle; 
 
 // Matrices for position reconstruction
 uniform mat4 view;
 uniform mat4 invView;
 uniform mat4 invProjection;
 uniform mat4 projection;
-uniform mat4 lightSpaceMatrix;
 
 // Shading mode
 uniform int u_ShadingMode; // 0 = PBR, 1 = Blinn-Phong
@@ -40,7 +43,9 @@ struct Light {
     vec4 position_type;    // xyz = position (view space), w = light type
     vec4 color_intensity;  // xyz = color, w = intensity
     vec4 direction_range;  // xyz = direction (view space), w = range
-    vec4 spot_angles_castshadows_resolution;      // x = inner cos, y = outer cos z = casts shadows (1.0 or 0.0), w = shadow map resolution
+    vec4 spot_angles_castshadows_startOffset; // x = inner angle (cos), y = outer angle (cos), z = cast shadows (bool), w = shadow map index or 0 if no shadows
+    mat4 lightSpaceMatrix[NUM_CASCADES]; // Light view-projection matrices for cascaded shadow maps
+    vec4 splitDepths; // x = split depth 0, y = split depth 1, z = split depth 2, w = unused
 };
 
 layout (std140) uniform Lights {
@@ -312,8 +317,8 @@ float calculateAttenuation(int lightIndex, vec3 fragPosView, out vec3 lightDir)
         if (lightType == SPOT_LIGHT) {
             vec3 spotDir = normalize(lights[lightIndex].direction_range.xyz);
             float cosAngle = dot(-lightDir, spotDir);
-            float innerCos = lights[lightIndex].spot_angles_castshadows_resolution.x;
-            float outerCos = lights[lightIndex].spot_angles_castshadows_resolution.y;
+            float innerCos = lights[lightIndex].spot_angles_castshadows_startOffset.x;
+            float outerCos = lights[lightIndex].spot_angles_castshadows_startOffset.y;
             
             float spotFactor = clamp((cosAngle - outerCos) / (innerCos - outerCos), 0.0, 1.0);
             attenuation *= spotFactor;
@@ -447,12 +452,9 @@ void readGBufferBindless(uvec2 gBuffer0Handle, uvec2 gBuffer1Handle, uvec2 gBuff
                 albedo, normal, emissive, emissiveIntensity, roughness, metallic, ao);
 }
 
-
-// Calculate shadow factor from shadow map in light space (PCF 3x3).
-// Returns 1.0 = fully lit, 0.0 = fully in shadow.
-float calculateShadowFactor(int lightIndex, vec3 fragPosWorld, vec3 normalWorld)
+float calculateShadowFactor(mat4 lightSpaceMatrix, int lightIndex, vec3 fragPosWorld, vec3 normalWorld, int layerIndex)
 {
-    sampler2D shadowSampler = sampler2D(u_ShadowMapHandle);
+    sampler2DArray shadowArraySampler = sampler2DArray(u_ShadowMapArrayHandle);
 
     // Transform world position into light clip space
     vec4 proj = lightSpaceMatrix * vec4(fragPosWorld, 1.0);
@@ -468,30 +470,37 @@ float calculateShadowFactor(int lightIndex, vec3 fragPosWorld, vec3 normalWorld)
 
     // Convert to [0,1] depth
     float currentDepth = projN.z * 0.5 + 0.5;
-
+    
+    // Clamp depth to valid range
+    currentDepth = clamp(currentDepth, 0.0, 1.0);
 
     // Compute light direction in world space for bias calculation
     int lightType = int(lights[lightIndex].position_type.w);
     vec3 lightDirWorld;
     if (lightType == DIRECTIONAL_LIGHT) {
-        // lights[].direction_range.xyz is in view space; convert to world (w=0)
         vec3 dirView = -lights[lightIndex].direction_range.xyz;
         lightDirWorld = normalize((invView * vec4(dirView, 0.0)).xyz);
     } else {
-        // point/spot: position is in view space, convert to world
         vec3 lightPosView = lights[lightIndex].position_type.xyz;
         vec3 lightPosWorld = (invView * vec4(lightPosView, 1.0)).xyz;
         lightDirWorld = normalize(lightPosWorld - fragPosWorld);
     }
-
-    // PCF 3x3
-    vec2 texelSize = 1.0 / vec2(textureSize(shadowSampler, 0));
+    
+    // Dynamic bias based on surface angle to light
+    float cosAngle = max(0.0, dot(normalWorld, lightDirWorld));
+    float bias = max(0.005 * (1.0 - cosAngle), 0.0005);
+    vec2 texelSize = 1.0 / vec2(textureSize(shadowArraySampler, 0).xy);
     float shadow = 0.0;
+    
+    // PCF 3x3
     for(int x = -1; x <= 1; ++x) {
         for(int y = -1; y <= 1; ++y) {
             vec2 offset = vec2(float(x), float(y)) * texelSize;
-            float sampledDepth = texture(shadowSampler, uv + offset).r;
-            if (currentDepth > sampledDepth) {
+            vec3 sampleCoord = vec3(uv + offset, float(layerIndex));
+            float sampledDepth = texture(shadowArraySampler, sampleCoord).r;
+            
+            // Apply bias and compare
+            if (currentDepth - bias > sampledDepth) {
                 shadow += 1.0;
             }
         }
@@ -502,15 +511,16 @@ float calculateShadowFactor(int lightIndex, vec3 fragPosWorld, vec3 normalWorld)
     return 1.0 - shadow;
 }
 
+
 void main()
 {    
-    // Smaple depth
+    // Sample depth
     sampler2D gBufferDepthSampler = sampler2D(u_GBufferDepthHandle);
     float depth = texture(gBufferDepthSampler, TexCoord).r;
 
     // Early exit for background pixels
     if (depth >= 1.0) {
-        FragColor = vec4(0.2f,0.3f,0.3f,1.0f);
+        FragColor = vec4(0.2, 0.3, 0.3, 1.0);
         return;
     }
     
@@ -529,7 +539,7 @@ void main()
     vec4 viewPos4 = view * vec4(worldPos, 1.0);
     vec3 fragPosView = viewPos4.xyz / viewPos4.w;
 
-    // Normalze
+    // Normalize
     normalView = normalize(normalView);
 
     // Derive world-space normal for shadow bias calculations
@@ -543,15 +553,11 @@ void main()
     // Shading model selection
     bool useBlinnPhong = (u_ShadingMode == 1);
 
-    
     // Apply bias to prevent self-occlusion
     vec3 biasedViewPos = fragPosView + u_VBAOBias * normalView * length(fragPosView);
-    
+
     // Calculate lighting using your existing system
     vec3 result = vec3(0.0);
-    
-
-    
 
     if (useBlinnPhong) {
         // Ambient
@@ -567,10 +573,35 @@ void main()
             // Shadow factor (1.0 = lit, 0.0 = shadowed)
             float shadowFactor = 1.0;
             int lightType = int(lights[i].position_type.w);
-            bool castsShadows = (lights[i].spot_angles_castshadows_resolution.z > 0.5);
+            bool castsShadows = (lights[i].spot_angles_castshadows_startOffset.z > 0.5);
             if (castsShadows && lightType == DIRECTIONAL_LIGHT) {
-                shadowFactor = calculateShadowFactor(i, worldPos, normalWorld);
-            }
+                int cascadeIndex = NUM_CASCADES - 1; // Default to last cascade
+                
+                // Select cascade based on depth buffer value (not view distance)
+                if (depth <= lights[i].splitDepths.x) {
+                    cascadeIndex = 0;
+                } else if (depth <= lights[i].splitDepths.y) {
+                    cascadeIndex = 1;
+                } else if (depth <= lights[i].splitDepths.z) {
+                    cascadeIndex = 2;
+                } else if (depth <= lights[i].splitDepths.w) {
+                    cascadeIndex = 3;
+                }
+                
+                // Calculate shadow with selected cascade
+                int startOffset = int(lights[i].spot_angles_castshadows_startOffset.w);
+                int layerIndex = startOffset + cascadeIndex;
+                
+                shadowFactor = calculateShadowFactor(
+                    lights[i].lightSpaceMatrix[cascadeIndex], 
+                    i, 
+                    worldPos, 
+                    normalWorld, 
+                    layerIndex
+                );
+                
+                
+                }
 
             result += lightContrib * shadowFactor;
         }
@@ -604,13 +635,40 @@ void main()
         vec3 F0 = mix(vec3(0.04), albedo, metallic);
         for (int i = 0; i < numLights && i < 16; ++i) {
             vec3 lightContrib = calculatePBR(i, normalView, viewDir, fragPosView, albedo, metallic, roughness, F0, worldPos);
+
             float shadowFactor = 1.0;
             int lightType = int(lights[i].position_type.w);
-            bool castsShadows = (lights[i].spot_angles_castshadows_resolution.z > 0.5);
+            bool castsShadows = (lights[i].spot_angles_castshadows_startOffset.z > 0.5);
+            
             if (castsShadows && lightType == DIRECTIONAL_LIGHT) {
-                shadowFactor = calculateShadowFactor(i, worldPos, normalWorld);
-            }
-            result += lightContrib * shadowFactor;
+                int cascadeIndex = NUM_CASCADES - 1;
+                
+                if (depth <= lights[i].splitDepths.x) {
+                    cascadeIndex = 0;
+                } else if (depth <= lights[i].splitDepths.y) {
+                    cascadeIndex = 1;
+                } else if (depth <= lights[i].splitDepths.z) {
+                    cascadeIndex = 2;
+                }else if (depth <= lights[i].splitDepths.w) {
+                    cascadeIndex = 3;
+                }
+                
+                int startOffset = int(lights[i].spot_angles_castshadows_startOffset.w);
+                int layerIndex = startOffset + cascadeIndex;
+                
+                shadowFactor = calculateShadowFactor(
+                    lights[i].lightSpaceMatrix[cascadeIndex], 
+                    i, 
+                    worldPos, 
+                    normalWorld, 
+                    layerIndex
+                );
+                
+                } 
+                else if (castsShadows && (lightType == SPOT_LIGHT)) {
+                    // Spot light shadow calculation can be implemented here if needed
+                }
+            result += lightContrib * shadowFactor; 
         }
 
         // Energy compensation for rough surfaces
