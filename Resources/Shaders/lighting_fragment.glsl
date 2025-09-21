@@ -484,9 +484,6 @@ float calculateShadowFactor(int lightIndex, vec3 fragPosWorld, vec3 normalWorld)
         lightDirWorld = normalize(lightPosWorld - fragPosWorld);
     }
 
-    // Bias helps avoid self-shadowing; scale with normal-light angle
-    float bias = max(0.0025 * (1.0 - dot(normalWorld, lightDirWorld)), 0.0005);
-
     // PCF 3x3
     vec2 texelSize = 1.0 / vec2(textureSize(shadowSampler, 0));
     float shadow = 0.0;
@@ -494,7 +491,7 @@ float calculateShadowFactor(int lightIndex, vec3 fragPosWorld, vec3 normalWorld)
         for(int y = -1; y <= 1; ++y) {
             vec2 offset = vec2(float(x), float(y)) * texelSize;
             float sampledDepth = texture(shadowSampler, uv + offset).r;
-            if (currentDepth - bias > sampledDepth) {
+            if (currentDepth > sampledDepth) {
                 shadow += 1.0;
             }
         }

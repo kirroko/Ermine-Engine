@@ -2065,7 +2065,7 @@ void Renderer::CalculateDirectionalMatrix(const editor::EditorCamera & editorCam
 		}
 
 		// Small margin to avoid precision clipping
-		const float margin = 0.5f;
+		const float margin = 10.0f;
 		lsMin -= glm::vec3(margin);
 		lsMax += glm::vec3(margin);
 
