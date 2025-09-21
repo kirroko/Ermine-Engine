@@ -91,6 +91,13 @@ namespace Ermine::graphics
         void Unbind() const;
 
         /**
+		 * @brief Set unsigned integer uniform
+         * @param name The name of the uniform
+         * @param value The value to set
+         */
+        void SetUniform1ui(const std::string& name, unsigned int value);
+
+        /**
          * @brief Set integer uniform
          * @param name The name of the uniform
          * @param value The value to set

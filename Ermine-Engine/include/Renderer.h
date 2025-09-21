@@ -24,8 +24,6 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Components.h"
 #include "EditorCamera.h"
 
-#include <array>
-
 namespace Ermine::graphics
 {
     // Lights
@@ -394,7 +392,7 @@ namespace Ermine::graphics
 		std::shared_ptr<Shader> m_PostProcessShader = 0; // Shader for post-processing effects
 
 		// Skybox
-		graphics::Skybox* m_skybox = nullptr;
+		Skybox* m_skybox = nullptr;
 
         // Shadow mapping
         std::shared_ptr<Shader> m_ShadowMapShader = nullptr;
@@ -406,15 +404,35 @@ namespace Ermine::graphics
         glm::mat4 m_LightSpaceMatrix;
 
         // Picking (stencil) helpers
+        struct PickingBuffer
+        {
+			GLuint FBO = 0;
+            GLuint ColorID = 0; // GL_R32UI
+            GLuint Depth = 0; // GL_DEPTH24
+            int width = 0;
+            int height = 0;
+        };
+
+        std::shared_ptr<PickingBuffer> m_PickingBuffer;
+		std::shared_ptr<Shader> m_PickingShader = nullptr;
+
+        /**
+         * @brief Create an offscreen buffer for entity picking using stencil buffer
+         * @param width The width of the picking buffer
+         * @param height The height of the picking buffer
+		 */
+        void CreatePickingBuffer(const int& width, const int& height);
+        /**
+         * @brief Resize the picking buffer to new dimensions without recreating the FBO
+         * @param width New width
+		 * @param height New height
+		 */
+		void ResizePickingBuffer(const int& width, const int& height);
         /**
          * @brief Render entities into the offscreen FBO's stencil buffer using camera VP and G-Buffer depth.
          * @param view the camera view matrix
          * @param projection the camera projection matrix
          */
-        void RenderPickingStencilPass(const Mtx44& view, const Mtx44& projection);
-
-        std::array<EntityID, 256> m_PickingLUT{};
-
-        uint8_t m_PickingCount = 0;
+        void RenderPickingPass(const Mtx44& view, const Mtx44& projection);
     };
 }
