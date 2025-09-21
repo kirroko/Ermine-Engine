@@ -22,7 +22,9 @@ project "ImGui"
 		"imstb_textedit.h",
 		"imstb_truetype.h",
 		"imgui_demo.cpp",
-		"imgui_tables.cpp"
+		"imgui_tables.cpp",
+		"ImGuizmo.cpp",
+		"ImGuizmo.h"
 	}
 
 	includedirs

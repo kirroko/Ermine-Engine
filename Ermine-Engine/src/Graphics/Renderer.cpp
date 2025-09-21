@@ -2260,3 +2260,181 @@ void Renderer::RenderShadowPass()
 
 	RenderShadowMap(m_LightSpaceMatrix);
 }
+
+void Renderer::RenderPickingStencilPass(const Mtx44& view, const Mtx44& projection)
+{
+#ifdef _DEBUG
+	if (!m_OffscreenBuffer || !m_GBuffer)
+		return;
+
+	// Setup
+	m_PickingLUT.fill(EntityID{});
+	m_PickingCount = 0;
+
+	// Blit Gb depth into the offscreen FBO so depth test matches the scene
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_GBuffer->FBO);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_OffscreenBuffer->FBO);
+	glBlitFramebuffer(0, 0, m_GBuffer->width, m_GBuffer->height,
+		0, 0, m_OffscreenBuffer->width, m_OffscreenBuffer->height,
+		GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+
+	// Bind offscreen FBO for drawing stencil
+	glBindFramebuffer(GL_FRAMEBUFFER, m_OffscreenBuffer->FBO);
+	glViewport(0, 0, m_OffscreenBuffer->width, m_OffscreenBuffer->height);
+
+	// Update stencil, keep depth for occlusion and don't write to color
+	glEnable(GL_DEPTH_TEST);
+	glDepthMask(GL_FALSE); // Not modifying depth
+	glDisable(GL_BLEND);
+	glEnable(GL_STENCIL_TEST);
+	glStencilMask(0xFF);
+	glClearStencil(0);
+	glClear(GL_STENCIL_BUFFER_BIT);
+
+	// Replace stencil value on depth pass
+	glStencilOp(GL_KEEP, GL_REPLACE, GL_REPLACE);
+	glStencilFunc(GL_ALWAYS, 0, 0xFF);
+
+	// Disable color writes
+	GLboolean prevColorMask[4];
+	glGetBooleanv(GL_COLOR_WRITEMASK, prevColorMask);
+	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+
+	// Reuse shadow map shader
+	if (!m_ShadowMapShader || !m_ShadowMapShader->IsValid())
+	{
+		glColorMask(prevColorMask[0], prevColorMask[1], prevColorMask[2], prevColorMask[3]);
+		glDisable(GL_STENCIL_TEST);
+		glDepthMask(GL_TRUE);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		return;
+	}
+
+	// VP from camera
+	glm::mat4 glmView = glm::mat4(
+		view.m00, view.m01, view.m02, view.m03,
+		view.m10, view.m11, view.m12, view.m13,
+		view.m20, view.m21, view.m22, view.m23,
+		view.m30, view.m31, view.m32, view.m33
+	);
+	glm::mat4 glmProjection = glm::mat4(
+		projection.m00, projection.m01, projection.m02, projection.m03,
+		projection.m10, projection.m11, projection.m12, projection.m13,
+		projection.m20, projection.m21, projection.m22, projection.m23,
+		projection.m30, projection.m31, projection.m32, projection.m33
+	);
+
+	glm::mat4 vp = glmProjection * glmView;
+
+	m_ShadowMapShader->Bind();
+	m_ShadowMapShader->SetUniformMatrix4fv("u_LightViewProj", vp);
+
+	auto& ecs = ECS::GetInstance();
+
+	uint8_t nextId = 1;
+
+	// Model pipeline first
+	for (EntityID entity : m_Entities)
+	{
+		if (!ecs.HasComponent<ModelComponent>(entity))
+			continue;
+
+		if (nextId == 0) break; // ran out of stencil IDs
+
+		auto& modelComp = ecs.GetComponent<ModelComponent>(entity);
+		if (!modelComp.m_model) continue;
+
+		auto& trans = ecs.GetComponent<Transform>(entity);
+
+		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
+		glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
+		rotQuat = glm::normalize(rotQuat);
+		model *= glm::mat4_cast(rotQuat);
+		model = glm::scale(model, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
+
+		glStencilFunc(GL_ALWAYS, nextId, 0xFF);
+
+		const auto& meshes = modelComp.m_model->GetMeshes();
+		for (const auto& mesh : meshes)
+		{
+			if (!mesh.vao || !mesh.ibo) continue;
+
+			glm::mat4 modelMat = model * mesh.localTransform;
+			m_ShadowMapShader->SetUniformMatrix4fv("model", modelMat);
+			Draw(mesh.vao, mesh.ibo, m_ShadowMapShader);
+		}
+
+		m_PickingLUT[nextId] = entity;
+		++nextId;
+	}
+
+	// Mesh + material pipeline
+	for (EntityID entity : m_Entities)
+	{
+		if (!(ecs.HasComponent<Mesh>(entity) && ecs.HasComponent<Ermine::Material>(entity)))
+			continue;
+
+		if (nextId == 0) break;
+
+		auto& trans = ecs.GetComponent<Transform>(entity);
+		auto& mesh = ecs.GetComponent<Mesh>(entity);
+		if (!mesh.vertex_array || !mesh.index_buffer) continue;
+
+		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
+		glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
+		rotQuat = glm::normalize(rotQuat);
+		model *= glm::mat4_cast(rotQuat);
+		model = glm::scale(model, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
+
+		glStencilFunc(GL_ALWAYS, nextId, 0xFF);
+		m_ShadowMapShader->SetUniformMatrix4fv("model", model);
+		Draw(mesh.vertex_array, mesh.index_buffer, m_ShadowMapShader);
+
+		m_PickingLUT[nextId] = entity;
+		++nextId;
+	}
+
+	m_PickingCount = static_cast<uint8_t>(nextId - 1);
+
+	// Restore state
+	glColorMask(prevColorMask[0],prevColorMask[1],prevColorMask[2], prevColorMask[3]);
+	glDisable(GL_STENCIL_TEST);
+	glDepthMask(GL_TRUE);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	glCheckError();
+#endif
+}
+
+std::pair<bool, Ermine::EntityID> Renderer::PickEntityAt(const int& x, const int& y, const Mtx44& view, const Mtx44& projection)
+{
+#ifndef _DEBUG
+	return { false, EntityID{} };
+#else
+	if (!m_OffscreenBuffer)
+		return { false, EntityID{} };
+
+	RenderPickingStencilPass(view, projection);
+
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_OffscreenBuffer->FBO);
+	glReadBuffer(GL_COLOR_ATTACHMENT0); // color read buffer doesn't matter since we only read stencil
+	glPixelStorei(GL_PACK_ALIGNMENT, 1);
+
+	uint8_t stencil = 0;
+	glReadPixels(x, y, 1, 1, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, &stencil);
+
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+
+	if (stencil == 0 || stencil > m_PickingCount)
+		return { false, EntityID{} };
+
+	EntityID picked = m_PickingLUT[stencil];
+	if (!ECS::GetInstance().IsEntityValid(picked))
+		return { false , EntityID{} };
+
+	return { true, picked };
+#endif
+}

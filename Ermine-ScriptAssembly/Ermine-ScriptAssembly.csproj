@@ -51,8 +51,8 @@
     <Compile Include="CoreModule\Rigidbody.cs" />
     <Compile Include="CoreModule\Time.cs" />
     <Compile Include="CoreModule\Transform.cs" />
-    <None Include="Ermine-ScriptAssembly.csproj" />
     <Compile Include="CoreModule\Vector3.cs" />
+    <None Include="Ermine-ScriptAssembly.csproj" />
     <Compile Include="MonoBehaviour.cs" />
     <Compile Include="Object.cs" />
   </ItemGroup>

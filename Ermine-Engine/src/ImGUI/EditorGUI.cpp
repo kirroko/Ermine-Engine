@@ -23,7 +23,15 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "EditorCamera.h"
 #include "FrameController.h"
 #include "Input.h"
+#include "InspectorGUI.h"
 #include "Renderer.h"
+
+namespace Ermine
+{
+	class InspectorGUI;
+}
+
+class Ermine::InspectorGUI;
 
 using namespace Ermine::editor;
 
@@ -216,6 +224,43 @@ void EditorGUI::ViewPortWindow(bool &show)
             ImGui::GetContentRegionAvail(),
             ImVec2(0, 1), ImVec2(1, 0)
         );
+    }
+
+	// Capture the image rect for mouse->pixel conversion
+    const ImVec2 imgMin = ImGui::GetItemRectMin();
+    const ImVec2 imgMax = ImGui::GetItemRectMax();
+    const ImVec2 imgSize = ImGui::GetItemRectSize();
+
+    // Left-click within the image, perform picking
+    if (!isPlaying && ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+    {
+        ImGuiIO io = ImGui::GetIO();
+        const float localX = io.MousePos.x - imgMin.x;
+		const float localY = io.MousePos.y - imgMin.y;
+
+        if (localX >= 0.0f && localY >= 0.0f && localX <= imgSize.x && localY <= imgSize.y)
+        {
+            // Convert to framebuffer coordinates (y is flipped)
+			const float u = imgSize.x > 0.0f ? localX / imgSize.x : 0.0f;
+			const float v = imgSize.y > 0.0f ? localY / imgSize.y : 0.0f;
+
+			const int px = static_cast<int>(u * offscreen_buffer->width);
+            const int py = static_cast<int>((1.0f - v) * offscreen_buffer->height);
+            auto [hit, entity] = renderer->PickEntityAt(std::clamp(px,0,offscreen_buffer->width - 1),
+                std::clamp(py,0,offscreen_buffer->height - 1),
+                EditorCamera::GetInstance().GetViewMatrix(),
+                EditorCamera::GetInstance().GetProjectionMatrix());
+
+            if (hit)
+            {
+				// Set selection in Inspector?
+                for (auto& w : m_Windows)
+                {
+                    if (auto* inspector = dynamic_cast<InspectorGUI*>(w.get()))
+                        inspector->SetEntity(entity);
+                }
+			}
+        }
     }
 
     const ImGuiHoveredFlags hovFlags =

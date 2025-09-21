@@ -24,6 +24,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Components.h"
 #include "EditorCamera.h"
 
+#include <array>
+
 namespace Ermine::graphics
 {
     // Lights
@@ -70,6 +72,15 @@ namespace Ermine::graphics
         float m_BloomIntensity = 2.0f;
         float m_BloomRadius = 5.0f;
 
+        /**
+         * @brief To run the pass and read GL_STENCIL_INDEX at a pixel
+         * @param x The x coordinate from the framebuffer
+         * @param y The y coordinate from the framebuffer
+		 * @param view camera view matrix
+		 * @param projection camera projection matrix
+         * @return 
+         */
+        std::pair<bool, EntityID> PickEntityAt(const int& x, const int& y, const Mtx44& view, const Mtx44& projection);
 
         /**
          * @brief Initialize the renderer with the screen width and height.
@@ -394,6 +405,16 @@ namespace Ermine::graphics
         uint64_t m_ShadowMapHandle = 0;
         glm::mat4 m_LightSpaceMatrix;
 
+        // Picking (stencil) helpers
+        /**
+         * @brief Render entities into the offscreen FBO's stencil buffer using camera VP and G-Buffer depth.
+         * @param view the camera view matrix
+         * @param projection the camera projection matrix
+         */
+        void RenderPickingStencilPass(const Mtx44& view, const Mtx44& projection);
 
+        std::array<EntityID, 256> m_PickingLUT{};
+
+        uint8_t m_PickingCount = 0;
     };
 }
