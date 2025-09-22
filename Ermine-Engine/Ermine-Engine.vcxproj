@@ -146,6 +146,7 @@ IF EXIST ..\Build\bin\Release-windows-x86_64\Ermine-Engine\Ermine-Engine.dll\ (x
     <ClInclude Include="include\Engine.h" />
     <ClInclude Include="include\EngineAPI.h" />
     <ClInclude Include="include\Entity.h" />
+    <ClInclude Include="include\FiniteStateMachine.h" />
     <ClInclude Include="include\FrameController.h" />
     <ClInclude Include="include\GPUProfiler.h" />
     <ClInclude Include="include\GameObject.h" />
@@ -192,6 +193,7 @@ IF EXIST ..\Build\bin\Release-windows-x86_64\Ermine-Engine\Ermine-Engine.dll\ (x
     <ClCompile Include="src\ECS\Entity.cpp" />
     <ClCompile Include="src\ECS\Systems.cpp" />
     <ClCompile Include="src\Engine.cpp" />
+    <ClCompile Include="src\FSM\FiniteStateMachine.cpp" />
     <ClCompile Include="src\Graphics\Camera.cpp" />
     <ClCompile Include="src\Graphics\Cubemap.cpp" />
     <ClCompile Include="src\Graphics\GeometryFactory.cpp" />

@@ -35,11 +35,10 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "InspectorGUI.h"
 #include "ViewPortGUI.h"
 #include "AudioImGUI.h"
+#include "FiniteStateMachine.h"
 #include "Skybox.h"
 #include "Cubemap.h"
-
 #include <random> // Include for random number generation
-
 #include "ScriptSystem.h"
 
 using namespace Ermine;
@@ -68,6 +67,19 @@ namespace
 	// For Particles
 	static std::shared_ptr<Ermine::graphics::Shader> particleShader;
 	static std::unique_ptr<Ermine::ParticleEmitter> emitter;
+
+
+	std::unique_ptr<Ermine::StateManager> s_FSMManager;
+	//EntityID s_FSMCube = 0;
+	EntityID fbxEntity = 0;
+
+	IdleState g_IdleState;
+	RoamState g_RoamState;
+
+	float s_StateTimer = 0.0f;
+	float s_StateDuration = 3.0f; // switch every 3 seconds
+
+	State* g_CurrentState = nullptr;
 }
 
 bool engine::Init(GLFWwindow* windowContext)
@@ -289,18 +301,19 @@ bool engine::Init(GLFWwindow* windowContext)
 	//ECS::GetInstance().AddComponent(entity3, Material(shader, texture));
 
 	// Example FBX entity
-	auto fbxEntity = ECS::GetInstance().CreateEntity();
-	ECS::GetInstance().AddComponent(fbxEntity, Transform(Vec3(0, 0, -1), Quaternion(), Vec3(0.01f, 0.01f, 0.01f)));
+	fbxEntity = ECS::GetInstance().CreateEntity();
+	ECS::GetInstance().AddComponent(fbxEntity, Transform(Vec3(2, -0.5f, 0), Quaternion(), Vec3(0.01f, 0.01f, 0.01f)));
 	ECS::GetInstance().AddComponent(fbxEntity, ObjectMetaData("Character", "Model", true));
 	ECS::GetInstance().AddComponent(fbxEntity, Mesh{}); // empty mesh component for renderer signature
-	ECS::GetInstance().AddComponent(fbxEntity, ModelComponent(AssetManager::GetInstance().LoadModel("../Resources/Models/Walking.fbx")));
-	auto cubeFBXMaterial = std::make_unique<graphics::Material>(shader);
-	cubeFBXMaterial->LoadTemplate(graphics::MaterialTemplates::PBR_METAL());
-	if (texture && texture->IsValid()) {
-		cubeFBXMaterial->SetTexture("materialAlbedoMap", texture);
-		cubeFBXMaterial->SetTexture("texture0", texture);
+	ECS::GetInstance().AddComponent(fbxEntity, ModelComponent(AssetManager::GetInstance().LoadModel("../Resources/Models/Shadowkin_Rigged.fbx")));
+	auto fbxMaterial = std::make_unique<graphics::Material>(shader);
+	auto fbxTexture = AssetManager::GetInstance().LoadTexture("../Resources/Textures/Pants_Base_color.png");
+	fbxMaterial->LoadTemplate(graphics::MaterialTemplates::PBR_WHITE());
+	if (fbxTexture && fbxTexture->IsValid()) {
+		fbxMaterial->SetTexture("materialAlbedoMap", fbxTexture);
+		fbxMaterial->SetTexture("texture0", fbxTexture);
 	}
-	ECS::GetInstance().AddComponent(fbxEntity, Material(std::move(cubeFBXMaterial)));
+	ECS::GetInstance().AddComponent(fbxEntity, Material(std::move(fbxMaterial)));
 
 	// Create a simple quad mesh for particles
 	auto quadMesh = graphics::GeometryFactory::CreateQuad(1.0f, 1.0f);
@@ -413,6 +426,23 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	EE_CORE_INFO("Total living entities after creation: {0}", ECS::GetInstance().GetLivingEntityCount());
 
+	// Create FSM test cube
+	//s_FSMCube = ECS::GetInstance().CreateEntity();
+	//ECS::GetInstance().AddComponent(s_FSMCube, Transform(Vec3(0, 0, -5), Quaternion(), Vec3(1, 1, 1)));
+	//ECS::GetInstance().AddComponent(s_FSMCube, ObjectMetaData("FSM Cube", "TestCube", true));
+	//ECS::GetInstance().AddComponent(s_FSMCube, graphics::GeometryFactory::CreateCube(1, 1, 1));
+
+	//// Give it a material
+	//auto fsmMat = std::make_unique<graphics::Material>(shader);
+	//fsmMat->LoadTemplate(graphics::MaterialTemplates::PBR_METAL());
+	//ECS::GetInstance().AddComponent(s_FSMCube, Material(std::move(fsmMat)));
+
+	// Init FSM
+	s_FSMManager = std::make_unique<StateManager>();
+	s_FSMManager->Init(fbxEntity, &g_IdleState);
+	g_CurrentState = &g_IdleState;
+
+	//EE_CORE_INFO("FSM Test Cube created with ID: {}", s_FSMCube);
 	// Init Renderer after objects haVe been initialised
 	ECS::GetInstance().GetSystem<graphics::Renderer>()->Init(1280, 720);
 
@@ -540,6 +570,31 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 	}*/
 	// Update for Particles
 	ECS::GetInstance().GetSystem<ParticleSystem>()->Update(FrameController::GetDeltaTime());
+
+	// FSM Update
+	if (s_FSMManager)
+	{
+		s_FSMManager->Update(FrameController::GetDeltaTime());
+
+		s_StateTimer += FrameController::GetDeltaTime();
+		if (s_StateTimer > s_StateDuration)
+		{
+			s_StateTimer = 0.0f;
+
+			if (g_CurrentState == &g_IdleState)
+			{
+				//s_FSMManager->Init(s_FSMCube, &g_RoamState);
+				s_FSMManager->Init(fbxEntity, &g_RoamState);
+				g_CurrentState = &g_RoamState;
+			}
+			else
+			{
+				//s_FSMManager->Init(s_FSMCube, &g_IdleState);
+				s_FSMManager->Init(fbxEntity, &g_IdleState);
+				g_CurrentState = &g_IdleState;
+			}
+		}
+	}
 }
 
 void engine::Render(GLFWwindow* window)

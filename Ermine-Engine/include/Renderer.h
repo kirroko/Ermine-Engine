@@ -4,7 +4,8 @@
 \author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu
 \co-author  Jeremy Lim Ting Jie, jeremytingjie.lim, 2301370, jeremytingjie.lim\@digipen.edu
 \co-author  Ridhwan
-\date       09/03/2025
+\co-author  Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu
+\date       19/09/2025
 \brief      This file contains the declaration of the Renderer system.
             This file is used to render the game objects to the screen.
 
@@ -187,7 +188,7 @@ namespace Ermine::graphics
          * @brief Resize the offscreen buffer to new dimensions without recreating the FBO
          * @param width New width
          * @param height New height
-		 */
+         */
         void ResizeOffscreenBuffer(const int& width, const int& height);
 
         /**
@@ -332,19 +333,52 @@ namespace Ermine::graphics
          * @param shader The shader program to which the material block should be bound.
          */
         void BindMaterialBlockIfPresent(const std::shared_ptr<Shader>& shader);
-
         /**
-		 * @brief Toggles the flag for using deferred rendering.
+         * @brief Toggles between forward and deferred rendering pipelines.
+         *
+         * This function flips the internal flag @c m_UseDeferredRendering. When enabled,
+         * all rendering will go through the deferred pipeline using a G-buffer and lighting pass.
+         * When disabled, rendering falls back to forward shading, where each object is drawn directly
+         * with its material and lighting applied in a single pass.
+         *
+         * It also logs a message indicating the current rendering mode.
          */
         void ToggleDeferredRendering();
+        /**
+         * @brief Renders a model using the deferred rendering pipeline.
+         *
+         * In this mode, the function uses the shared G-buffer shader (@c m_GBufferShader) to
+         * write geometry data (position, normals, material properties) into the G-buffer.
+         * Per-entity materials are not bound as shaders, but their UBO data (albedo, metallic,
+         * roughness, emissive, etc.) is uploaded to the GPU so the G-buffer can store them.
+         *
+         * @param model The model to render, containing mesh geometry and local transforms.
+         * @param material Pointer to the material providing UBO data (albedo, metallic, etc.).
+         * @param view The view matrix representing the camera transform.
+         * @param projection The projection matrix (perspective or orthographic).
+         * @param rootTransform Root transform matrix for the entity (translation, rotation, scale).
+         */
+        void RenderModelDeferred(const Model& model, graphics::Material* material, const Mtx44& view, const Mtx44& projection, const glm::mat4& rootTransform);
+        /**
+         * @brief Renders a model using the forward rendering pipeline.
+         *
+         * In this mode, the function binds the entity's own material and its shader, then
+         * issues draw calls for each mesh in the model. Lighting and material shading are
+         * evaluated directly during rasterization (per-fragment).
+         *
+         * @param model The model to render, containing mesh geometry and local transforms.
+         * @param material Pointer to the material to bind, providing textures and shader.
+         * @param view The view matrix representing the camera transform.
+         * @param projection The projection matrix (perspective or orthographic).
+         * @param rootTransform Root transform matrix for the entity (translation, rotation, scale).
+         */
+        void RenderModelForward(const Model& model, graphics::Material* material, const Mtx44& view, const Mtx44& projection, const glm::mat4& rootTransform);
 
         /**
          * @brief Set the skybox to be rendered
          * @param skybox Pointer to the skybox to render
          */
         void SetSkybox(graphics::Skybox* skybox) { m_skybox = skybox; }
-
-        void RenderModel(const Model& model, const Mtx44& view, const Mtx44& projection, const glm::mat4& rootTransform);
 
 
         // Shadow mapping

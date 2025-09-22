@@ -4,7 +4,8 @@
 \author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu
 \co-author  Jeremy Lim Ting Jie, jeremytingjie.lim, 2301370, jeremytingjie.lim\@digipen.edu
 \co-author  Ridhwan
-\date       09/03/2025
+\co-author  Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu
+\date       19/09/2025
 \brief      This file contains the definition of the Renderer system.
 			This file is used to render the game objects.
 
@@ -660,18 +661,18 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 	const auto& ecs = Ermine::ECS::GetInstance();
 	const unsigned long int maxId = ecs.GetLivingEntityCount();
 
-	for (auto& entity:m_Entities)
+	for (auto& entity : m_Entities)
 	{
 		// Model pipeline
-		if (ecs.HasComponent<ModelComponent>(entity))
+		if (ecs.HasComponent<ModelComponent>(entity) && ecs.HasComponent<Ermine::Material>(entity))
 		{
-			auto& modelComp = ecs.GetComponent<ModelComponent>(entity);
 			auto& trans = ecs.GetComponent<Transform>(entity);
-			auto& materialComponent = ecs.GetComponent<Ermine::Material>(entity);
+			auto& modelComp = ecs.GetComponent<ModelComponent>(entity);
+			auto& materialComp = ecs.GetComponent<Ermine::Material>(entity);
 
-			if (modelComp.m_model)
+			if (modelComp.m_model && materialComp.GetMaterial())
 			{
-				Ermine::graphics::Material* material = materialComponent.GetMaterial();
+				Ermine::graphics::Material* material = materialComp.GetMaterial();
 
 				if (!material) {
 					EE_CORE_WARN("Entity {0} has null material", entity);
@@ -682,7 +683,7 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 				// Apply entity's transform as root
 				glm::mat4 entityModel = glm::mat4(1.0f);
 				entityModel = glm::translate(entityModel, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
-				glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
+				glm::quat rotQuat = glm::quat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
 				rotQuat = glm::normalize(rotQuat);
 				entityModel *= glm::mat4_cast(rotQuat);
 				entityModel = glm::scale(entityModel, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
@@ -752,10 +753,7 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 					}
 				}
 
-
-
-				// Render model
-				RenderModel(*modelComp.m_model, view, projection, entityModel);
+				RenderModelDeferred(*modelComp.m_model, materialComp.GetMaterial(), view, projection, entityModel);
 			}
 		}
 		// Mesh + material pipeline
@@ -1486,26 +1484,22 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 		for (auto& entity : m_Entities)
 		{
 			// Model pipeline
-			if (ecs.HasComponent<ModelComponent>(entity))
+			if (ecs.HasComponent<ModelComponent>(entity) && ecs.HasComponent<Ermine::Material>(entity))
 			{	
-				auto& modelComp = ecs.GetComponent<ModelComponent>(entity);
 				auto& trans = ecs.GetComponent<Transform>(entity);
+				auto& modelComp = ecs.GetComponent<ModelComponent>(entity);
+				auto& materialComp = ecs.GetComponent<Ermine::Material>(entity);
 
-				if (modelComp.m_model)
+				if (modelComp.m_model && materialComp.GetMaterial())
 				{
-					// Apply entity's transform as root
 					glm::mat4 entityModel = glm::mat4(1.0f);
 					entityModel = glm::translate(entityModel, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
 					glm::quat rotQuat = glm::quat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
 					rotQuat = glm::normalize(rotQuat);
 					entityModel *= glm::mat4_cast(rotQuat);
-					//entityModel = glm::rotate(entityModel, glm::radians(trans.rotation.x), glm::vec3(1, 0, 0));
-					//entityModel = glm::rotate(entityModel, glm::radians(trans.rotation.y), glm::vec3(0, 1, 0));
-					//entityModel = glm::rotate(entityModel, glm::radians(trans.rotation.z), glm::vec3(0, 0, 1));
 					entityModel = glm::scale(entityModel, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
 
-					// Render model
-					RenderModel(*modelComp.m_model, view, projection, entityModel);
+					RenderModelForward(*modelComp.m_model, materialComp.GetMaterial(), view, projection, entityModel);
 				}
 			}
 			// Mesh + material pipeline
@@ -1637,11 +1631,11 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 }
 
 /**
-* @brief Draw the mesh
-* @param vao The vertex array object
-* @param ibo The index buffer object
-* @param shader The shader object
-*/
+ * @brief Draw the mesh
+ * @param vao The vertex array object
+ * @param ibo The index buffer object
+ * @param shader The shader object
+ */
 void Renderer::Draw(const std::shared_ptr<VertexArray>& vao, const std::shared_ptr<IndexBuffer>& ibo, const std::shared_ptr<Shader>& shader) const
 {
    vao->Bind();
@@ -1689,6 +1683,16 @@ Renderer::~Renderer()
 	CleanupPostProcessBuffer();
 }
 
+/**
+ * @brief Toggles between forward and deferred rendering pipelines.
+ *
+ * This function flips the internal flag @c m_UseDeferredRendering. When enabled,
+ * all rendering will go through the deferred pipeline using a G-buffer and lighting pass.
+ * When disabled, rendering falls back to forward shading, where each object is drawn directly
+ * with its material and lighting applied in a single pass.
+ *
+ * It also logs a message indicating the current rendering mode.
+ */
 void Renderer::ToggleDeferredRendering()
 {
 	m_UseDeferredRendering = !m_UseDeferredRendering;
@@ -1699,25 +1703,82 @@ void Renderer::ToggleDeferredRendering()
 
 }
 
-void Renderer::RenderModel(const Model& model, const Mtx44& view, const Mtx44& projection, const glm::mat4& rootTransform)
+/**
+ * @brief Renders a model using the deferred rendering pipeline.
+ *
+ * In this mode, the function uses the shared G-buffer shader (@c m_GBufferShader) to
+ * write geometry data (position, normals, material properties) into the G-buffer.
+ * Per-entity materials are not bound as shaders, but their UBO data (albedo, metallic,
+ * roughness, emissive, etc.) is uploaded to the GPU so the G-buffer can store them.
+ *
+ * @param model The model to render, containing mesh geometry and local transforms.
+ * @param material Pointer to the material providing UBO data (albedo, metallic, etc.).
+ * @param view The view matrix representing the camera transform.
+ * @param projection The projection matrix (perspective or orthographic).
+ * @param rootTransform Root transform matrix for the entity (translation, rotation, scale).
+ */
+void Renderer::RenderModelDeferred(const Model& model, graphics::Material* material, const Mtx44& view, const Mtx44& projection, const glm::mat4& rootTransform)
 {
 	const auto& meshes = model.GetMeshes();
-	if (meshes.empty())
-		return;
+	if (meshes.empty() || !material) return;
+	if (!m_GBufferShader || !m_GBufferShader->IsValid()) return;
+
+	m_GBufferShader->Bind();
+
+	for (const auto& mesh : meshes)
+	{
+		if (!mesh.vao || !mesh.ibo) continue;
+		glm::mat4 modelMat = rootTransform * mesh.localTransform;
+		m_GBufferShader->SetUniformMatrix4fv("model", modelMat);
+		m_GBufferShader->SetUniformMatrix4fv("view", &view.m2[0][0]);
+		m_GBufferShader->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
+
+		glm::mat4 glmView = glm::mat4(
+			view.m00, view.m01, view.m02, view.m03,
+			view.m10, view.m11, view.m12, view.m13,
+			view.m20, view.m21, view.m22, view.m23,
+			view.m30, view.m31, view.m32, view.m33
+		);
+		glm::mat4 modelView = glmView * modelMat;
+		glm::mat3 normalMatrix = transpose(inverse(glm::mat3(modelView)));
+		m_GBufferShader->SetUniformMatrix3fv("NormalMatrix", normalMatrix);
+
+		Draw(mesh.vao, mesh.ibo, m_GBufferShader);
+	}
+}
+
+/**
+ * @brief Renders a model using the forward rendering pipeline.
+ *
+ * In this mode, the function binds the entity's own material and its shader, then
+ * issues draw calls for each mesh in the model. Lighting and material shading are
+ * evaluated directly during rasterization (per-fragment).
+ *
+ * @param model The model to render, containing mesh geometry and local transforms.
+ * @param material Pointer to the material to bind, providing textures and shader.
+ * @param view The view matrix representing the camera transform.
+ * @param projection The projection matrix (perspective or orthographic).
+ * @param rootTransform Root transform matrix for the entity (translation, rotation, scale).
+ */
+void Renderer::RenderModelForward(const Model& model, graphics::Material* material, const Mtx44& view, const Mtx44& projection, const glm::mat4& rootTransform)
+{
+	const auto& meshes = model.GetMeshes();
+	if (meshes.empty() || !material) return;
+
+	auto shader = material->GetShader();
+	if (!shader || !shader->IsValid()) return;
+
+	UpdateMaterialUBO(material->GetUBOData());
 
 	for (const auto& mesh : meshes)
 	{
 		if (!mesh.vao || !mesh.ibo) continue;
 
-		auto shader = m_GBufferShader ? m_GBufferShader : AssetManager::GetInstance().GetShader("default");
-		if (!shader || !shader->IsValid()) continue;
-
-		shader->Bind();
+		material->Bind();
 		BindLightsBlockIfPresent(shader);
 		BindMaterialBlockIfPresent(shader);
 
 		glm::mat4 modelMat = rootTransform * mesh.localTransform;
-
 		shader->SetUniformMatrix4fv("model", modelMat);
 		shader->SetUniformMatrix4fv("view", &view.m2[0][0]);
 		shader->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
@@ -1732,17 +1793,9 @@ void Renderer::RenderModel(const Model& model, const Mtx44& view, const Mtx44& p
 		glm::mat3 normalMatrix = transpose(inverse(glm::mat3(modelView)));
 		shader->SetUniformMatrix3fv("NormalMatrix", normalMatrix);
 
-		if (mesh.texture && mesh.texture->IsValid())
-		{
-			// Bind texture to texture unit 0
-			mesh.texture->Bind(0);
-
-			// Tell the shader which texture unit the sampler uses
-			if (shader->HasUniform("materialAlbedoMap"))
-				shader->SetUniform1i("materialAlbedoMap", 0);
-		}
-
 		Draw(mesh.vao, mesh.ibo, shader);
+
+		material->Unbind();
 	}
 }
 

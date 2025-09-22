@@ -32,6 +32,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 namespace Ermine::ImguiUI {
 	//inline constexpr const char* categories[] = { "Audio", "Images", "Fonts", "Prefabs", "Scenes" };
 	inline constexpr const char* categories[] = { "Textures", "Shaders" };
+	constexpr size_t num_of_categories = sizeof(categories) / sizeof(categories[0]);
+
 	struct SelectionWithDeletion : ImGuiSelectionBasicStorage
 	{
 		int ApplyDeletionPreLoop(ImGuiMultiSelectIO* ms_io, int items_count);

@@ -52,6 +52,9 @@
     <Filter Include="src\Window">
       <UniqueIdentifier>{74C3D837-607B-1A85-C982-F3E0B559B575}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\FSM">
+      <UniqueIdentifier>{c0551004-38f9-473b-9a46-1c860ed6ee76}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\AssetBrowser.h">
@@ -198,7 +201,16 @@
     <ClInclude Include="include\VertexBuffer.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\Window.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\FiniteStateMachine.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\ViewPortGUI.h">
+        <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\MathVector.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\Window.h">
@@ -334,6 +346,21 @@
     </ClCompile>
     <ClCompile Include="src\dllmain.cpp">
       <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\FSM\FiniteStateMachine.cpp">
+      <Filter>src\FSM</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ImGUI\InspectorGUI.cpp">
+      <Filter>src\ImGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\AudioManager\AudioIMGUI.cpp">
+      <Filter>src\AudioManager</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Graphics\Cubemap.cpp">
+      <Filter>src\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Graphics\Skybox.cpp">
+      <Filter>src\Graphics</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
