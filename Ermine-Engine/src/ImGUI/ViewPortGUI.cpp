@@ -107,6 +107,14 @@ void Ermine::ViewPortGUI::Update()
 	const ImVec2 imgMax = ImGui::GetItemRectMax();
 	const ImVec2 imgSize = ImGui::GetItemRectSize();
 
+	// View cube (top-right corner)
+	const float pad = 10.f;
+	const ImVec2 vmSize = ImVec2(100.f, 100.f);
+	const ImVec2 vmPos = ImVec2(imgMax.x - vmSize.x - pad, imgMin.y + pad);
+	const ImVec2 vmPosBR = ImVec2(vmPos.x + vmSize.x, vmPos.y + vmSize.y);
+
+	const bool overViewCube = ImGui::IsMouseHoveringRect(vmPos, vmPosBR, false);
+
 	EntityID selectedEntity{};
 	selectedEntity = ref_Inspector->GetEntity();
 
@@ -122,6 +130,7 @@ void Ermine::ViewPortGUI::Update()
 	const bool viewportHovered = ImGui::IsItemHovered(hovFlags);
 	const bool viewportFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_None);
 
+	// Set manipulation mode based on keyboard shortcuts
 	if (viewportFocused && viewportHovered && !isPlaying && !Input::IsMouseButtonDownEditor(GLFW_MOUSE_BUTTON_RIGHT))
 	{
 		if (Input::IsKeyPressedEditor(GLFW_KEY_W)) gOperation = ImGuizmo::TRANSLATE;
@@ -130,7 +139,67 @@ void Ermine::ViewPortGUI::Update()
 		if (Input::IsKeyPressedEditor(GLFW_KEY_Q)) gMode = gMode == ImGuizmo::LOCAL ? ImGuizmo::WORLD : ImGuizmo::LOCAL;
 	}
 
-	if (viewportHovered && !isPlaying)
+	// Focus camera on selected entity
+	if(viewportFocused && viewportHovered && !isPlaying && Input::IsKeyPressedEditor(GLFW_KEY_F))
+	{
+		if (ECS::GetInstance().IsEntityValid(selectedEntity) && ECS::GetInstance().HasComponent<Transform>(selectedEntity))
+		{
+			auto& ecs = ECS::GetInstance();
+			auto& tr = ecs.GetComponent<Transform>(selectedEntity);
+			EditorCamera::GetInstance().Focus(tr.position);
+		}
+	}
+
+	// Orbit around pivot
+	static bool s_orbiting = false;
+	static ImVec2 s_lastMouse = ImVec2(0, 0);
+	static Vector3D s_pivot = Vector3D(0.0f, 0.0f, 0.0f);
+	static float s_distance = 5.0f;
+
+	const bool altDown = Input::IsKeyDownEditor(GLFW_KEY_LEFT_ALT);
+	const bool rightMouseDown = Input::IsMouseButtonDownEditor(GLFW_MOUSE_BUTTON_RIGHT);
+
+	if (viewportHovered && !isPlaying && altDown && rightMouseDown && !overViewCube)
+	{
+		ImGuiIO& io = ImGui::GetIO();
+		if (!s_orbiting)
+		{
+			// Initialize orbit
+			if(ECS::GetInstance().IsEntityValid(selectedEntity) && ECS::GetInstance().HasComponent<Transform>(selectedEntity))
+			{
+				auto& ecs = ECS::GetInstance();
+				auto& tr = ecs.GetComponent<Transform>(selectedEntity);
+				s_pivot = tr.position;
+			}
+			else
+			{
+				//s_pivot = EditorCamera::GetInstance().GetPosition() + EditorCamera::GetInstance().() * s_distance;
+			}
+
+			const Vector3D camPos = EditorCamera::GetInstance().GetPosition();
+			Vector3D diff = camPos - s_pivot;
+			s_distance = Vec3Length(diff);
+			if (s_distance < 0.001f) s_distance = 5.0f;
+
+			s_lastMouse = io.MousePos;
+			s_orbiting = true;
+		}
+		else
+		{
+			const float dx = io.MousePos.x - s_lastMouse.x;
+			const float dy = io.MousePos.y - s_lastMouse.y;
+			s_lastMouse = io.MousePos;
+
+			EditorCamera::GetInstance().OrbitAround(s_pivot, dx, dy, s_distance);
+		}
+	}
+	else
+	{
+		s_orbiting = false;
+	}
+
+	// Camera controls
+	if (viewportHovered && !isPlaying && !s_orbiting)
 	{
 		if (!ImGuizmo::IsUsing())
 		{
@@ -143,7 +212,7 @@ void Ermine::ViewPortGUI::Update()
 	// Left-click within the image, perform picking
 	if (!isPlaying && ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
 	{
-		if (!ImGuizmo::IsOver() && !ImGuizmo::IsUsing())
+		if (!s_orbiting && !overViewCube && !ImGuizmo::IsOver() && !ImGuizmo::IsUsing())
 		{
 			ImGuiIO io = ImGui::GetIO();
 			const float localX = io.MousePos.x - imgMin.x;
@@ -162,13 +231,34 @@ void Ermine::ViewPortGUI::Update()
 					EditorCamera::GetInstance().GetViewMatrix(),
 					EditorCamera::GetInstance().GetProjectionMatrix());
 
-				if (hit)
+				if (hit && ref_Inspector)
 					ref_Inspector->SetEntity(entity);
 			}
 		}
 	}
 
-	// Gizmo overlay
+	const Mtx44& v = EditorCamera::GetInstance().GetViewMatrix();
+	const Mtx44& p = EditorCamera::GetInstance().GetProjectionMatrix();
+
+	glm::mat4 view = glm::mat4(
+		v.m00, v.m01, v.m02, v.m03,
+		v.m10, v.m11, v.m12, v.m13,
+		v.m20, v.m21, v.m22, v.m23,
+		v.m30, v.m31, v.m32, v.m33
+	);
+	glm::mat4 proj = glm::mat4(
+		p.m00, p.m01, p.m02, p.m03,
+		p.m10, p.m11, p.m12, p.m13,
+		p.m20, p.m21, p.m22, p.m23,
+		p.m30, p.m31, p.m32, p.m33
+	);
+
+	// ImGuizmo setup for this image rect
+	ImGuizmo::SetOrthographic(false);
+	ImGuizmo::SetDrawlist(ImGui::GetWindowDrawList());
+	ImGuizmo::SetRect(imgMin.x, imgMin.y, imgSize.x, imgSize.y);
+
+	// OBJECT Gizmo overlay
 	if (!isPlaying && ECS::GetInstance().IsEntityValid(selectedEntity) && ECS::GetInstance().HasComponent<Transform>(selectedEntity))
 	{
 		auto& ecs = ECS::GetInstance();
@@ -180,27 +270,6 @@ void Ermine::ViewPortGUI::Update()
 		rotQuat = glm::normalize(rotQuat);
 		model *= glm::mat4_cast(rotQuat);
 		model = glm::scale(model, glm::vec3(tr.scale.x, tr.scale.y, tr.scale.z));
-
-		const Mtx44& v = EditorCamera::GetInstance().GetViewMatrix();
-		const Mtx44& p = EditorCamera::GetInstance().GetProjectionMatrix();
-
-		glm::mat4 view = glm::mat4(
-			v.m00, v.m01, v.m02, v.m03,
-			v.m10, v.m11, v.m12, v.m13,
-			v.m20, v.m21, v.m22, v.m23,
-			v.m30, v.m31, v.m32, v.m33
-		);
-		glm::mat4 proj = glm::mat4(
-			p.m00, p.m01, p.m02, p.m03,
-			p.m10, p.m11, p.m12, p.m13,
-			p.m20, p.m21, p.m22, p.m23,
-			p.m30, p.m31, p.m32, p.m33
-		);
-
-		// ImGuizmo setup for this image rect
-		ImGuizmo::SetOrthographic(false);
-		ImGuizmo::SetDrawlist(ImGui::GetWindowDrawList());
-		ImGuizmo::SetRect(imgMin.x, imgMin.y, imgSize.x, imgSize.y);
 
 		// Snapping
 		const bool useSnap = Input::IsKeyDownEditor(GLFW_KEY_LEFT_CONTROL) || Input::IsKeyDownEditor(GLFW_KEY_RIGHT_CONTROL);
@@ -222,18 +291,59 @@ void Ermine::ViewPortGUI::Update()
 		// Apply result back into Transform
 		if (ImGuizmo::IsUsing())
 		{
-			EE_CORE_TRACE("Applying result...");
 			glm::vec3 skew, translation, scale;
 			glm::vec4 perspective;
 			glm::quat rotation;
 			if (glm::decompose(model, scale, rotation, translation, skew, perspective))
 			{
-				EE_CORE_INFO("Working...");
 				rotation = glm::normalize(rotation);
 				tr.position = Vector3D(translation.x, translation.y, translation.z);
 				tr.scale = Vector3D(scale.x, scale.y, scale.z);
 				tr.rotation = Quaternion(rotation.x, rotation.y, rotation.z, rotation.w);
 			}
+		}
+	}
+
+	// VIEW gizmo (camera nav cube)
+	{
+		glm::mat4 viewBefore = view;
+		glm::mat4 viewEdit = view;
+
+		const Vector3D camPos = EditorCamera::GetInstance().GetPosition();
+		float viewLength = Vec3Length(camPos);
+		if (viewLength < 0.001f) viewLength = 5.0f;
+
+		ImGuizmo::SetDrawlist(ImGui::GetForegroundDrawList());
+
+		ImGuizmo::ViewManipulate(
+			glm::value_ptr(viewEdit),
+			viewLength,
+			vmPos,
+			vmSize,
+			0x10101010
+		);
+
+		auto matChanged = [](const glm::mat4& a, const glm::mat4& b) {
+			const float eps = 1e-5f;
+			for (int c = 0; c < 4; ++c)
+				for (int r = 0; r < 4; ++r)
+					if (!glm::epsilonEqual(a[c][r], b[c][r], eps))
+						return true;
+			return false;
+		};
+
+		if (matChanged(viewBefore,viewEdit))
+		{
+			glm::mat4 inv = glm::inverse(viewEdit);
+			glm::vec3 pos = glm::vec3(inv[3]);
+			glm::vec3 fwd = glm::normalize(-glm::vec3(inv[2])); // -Z axis
+
+			auto rad2deg = [](float r) { return r * 57.29577951308232f; };
+			float yaw = rad2deg(std::atan2(fwd.z, fwd.x));
+			float pitch = rad2deg(std::asin(std::clamp(fwd.y, -1.0f, 1.0f)));
+
+			EditorCamera::GetInstance().SetPosition(Vector3D(pos.x, pos.y, pos.z));
+			EditorCamera::GetInstance().SetYawPitch(yaw, pitch);
 		}
 	}
 
