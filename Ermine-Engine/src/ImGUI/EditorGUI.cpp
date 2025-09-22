@@ -26,6 +26,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "InspectorGUI.h"
 #include "Renderer.h"
 
+#include <ImGuizmo.h>
+
 namespace Ermine
 {
 	class InspectorGUI;
@@ -36,7 +38,7 @@ class Ermine::InspectorGUI;
 using namespace Ermine::editor;
 
 // Definition for static member m_Windows, for ImGUI Windows
-std::vector<std::unique_ptr<Ermine::ImGUIWindow>>Ermine::editor::EditorGUI::m_Windows;
+std::vector<std::unique_ptr<Ermine::ImGUIWindow>>EditorGUI::m_Windows;
 bool Ermine::editor::EditorGUI::isPlaying = false; // TODO: tied to Play/Stop toolbar state.
 
 namespace
@@ -388,23 +390,23 @@ void EditorGUI::Update(GLFWwindow* windowContext)
 
     // Windows that imgui has to render
     TopMenuBar(windowContext);
-    static bool show_scene_viewer = true;
-    if (show_scene_viewer)
-		ViewPortWindow(show_scene_viewer);
+  //  static bool show_scene_viewer = true;
+  //  if (show_scene_viewer)
+		//ViewPortWindow(show_scene_viewer);
 
     static bool show_demo_window = true;
     if (show_demo_window)
         ImGui::ShowDemoWindow(&show_demo_window);
 
-    static bool show_another_window = true;
-    if (show_another_window)
-    {
-        ImGui::Begin("Another Window", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-        ImGui::Text("Hello from another window!");
-        if (ImGui::Button("Close Me"))
-            show_another_window = false;
-        ImGui::End();
-    }
+    //static bool show_another_window = true;
+    //if (show_another_window)
+    //{
+    //    ImGui::Begin("Another Window", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
+    //    ImGui::Text("Hello from another window!");
+    //    if (ImGui::Button("Close Me"))
+    //        show_another_window = false;
+    //    ImGui::End();
+    //}
 
     // Call Update() for all registered ImGui windows
     for (auto& window : m_Windows) {

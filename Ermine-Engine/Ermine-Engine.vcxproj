@@ -59,7 +59,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>PreCompile.h</PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>EE_PLATFORM_WINDOWS;EE_BUILD_DLL;GLFW_INCLUDE_NONE;EE_DEBUG;VERBOSE_LOGGING=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>EE_PLATFORM_WINDOWS;EE_BUILD_DLL;GLFW_INCLUDE_NONE;IMGUI_DEFINE_MATH_OPERATORS;GLM_ENABLE_EXPERIMENTAL;EE_DEBUG;VERBOSE_LOGGING=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>include;..\ThirdParty\GLFW\include;..\ThirdParty\Glad\include;..\ThirdParty\imgui;..\ThirdParty\glm;..\ThirdParty\spdlog\include;..\ThirdParty\stb;..\ThirdParty\Fmod\inc;..\ThirdParty\Mono\include;..\ThirdParty;..\ThirdParty\rapidjson;..\ThirdParty\assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
@@ -95,7 +95,7 @@ IF EXIST ..\Build\bin\Debug-windows-x86_64\Ermine-Engine\Ermine-Engine.dll\ (xco
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>PreCompile.h</PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>EE_PLATFORM_WINDOWS;EE_BUILD_DLL;GLFW_INCLUDE_NONE;EE_RELEASE;VERBOSE_LOGGING=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>EE_PLATFORM_WINDOWS;EE_BUILD_DLL;GLFW_INCLUDE_NONE;IMGUI_DEFINE_MATH_OPERATORS;GLM_ENABLE_EXPERIMENTAL;EE_RELEASE;VERBOSE_LOGGING=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>include;..\ThirdParty\GLFW\include;..\ThirdParty\Glad\include;..\ThirdParty\imgui;..\ThirdParty\glm;..\ThirdParty\spdlog\include;..\ThirdParty\stb;..\ThirdParty\Fmod\inc;..\ThirdParty\Mono\include;..\ThirdParty;..\ThirdParty\rapidjson;..\ThirdParty\assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -179,12 +179,12 @@ IF EXIST ..\Build\bin\Release-windows-x86_64\Ermine-Engine\Ermine-Engine.dll\ (x
     <ClInclude Include="include\Texture.h" />
     <ClInclude Include="include\VertexArray.h" />
     <ClInclude Include="include\VertexBuffer.h" />
+    <ClInclude Include="include\ViewPortGUI.h" />
     <ClInclude Include="include\Window.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\AssetBrowser\AssetBrowser.cpp" />
     <ClCompile Include="src\AssetManager\AssetManager.cpp" />
-    <ClCompile Include="src\AudioManager\AudioIMGUI.cpp" />
     <ClCompile Include="src\AudioManager\AudioManager.cpp" />
     <ClCompile Include="src\AudioManager\AudioSystem.cpp" />
     <ClCompile Include="src\ECS\Component.cpp" />
@@ -203,8 +203,10 @@ IF EXIST ..\Build\bin\Release-windows-x86_64\Ermine-Engine\Ermine-Engine.dll\ (x
     <ClCompile Include="src\Graphics\Texture.cpp" />
     <ClCompile Include="src\Graphics\VertexArray.cpp" />
     <ClCompile Include="src\Graphics\VertexBuffer.cpp" />
+    <ClCompile Include="src\ImGUI\AudioIMGUI.cpp" />
     <ClCompile Include="src\ImGUI\EditorGUI.cpp" />
     <ClCompile Include="src\ImGUI\InspectorGUI.cpp" />
+    <ClCompile Include="src\ImGUI\ViewPortGUI.cpp" />
     <ClCompile Include="src\Logger\Logger.cpp" />
     <ClCompile Include="src\Math\MathVector.cpp" />
     <ClCompile Include="src\Math\Matrix3x3.cpp" />

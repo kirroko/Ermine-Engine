@@ -33,6 +33,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Particles.h"
 #include "Physics.h"
 #include "InspectorGUI.h"
+#include "ViewPortGUI.h"
 #include "AudioImGUI.h"
 #include "Skybox.h"
 #include "Cubemap.h"
@@ -418,12 +419,13 @@ bool engine::Init(GLFWwindow* windowContext)
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f); // Background color
 
 	// Create ImGUI window for Asset Browser
-	editor::EditorGUI::CreateImGUIWindow<ImguiUI::AssetBrowser>();
+	editor::EditorGUI::CreateImGUIWindow<ImguiUI::AssetBrowser>(); //TODO: Standardize please, do we want namespace ImGui for all window or not
 	editor::EditorGUI::CreateImGUIWindow<ParticlesImGUI>(emitter.get());
 	editor::EditorGUI::CreateImGUIWindow<AudioImGUI>();
 	// Create ImGUI window for Inspector
 	//editor::EditorGUI::CreateImGUIWindow<InspectorGUI>();
-	editor::EditorGUI::CreateImGUIWindow<InspectorGUI>(entity2, "Inspector");
+	InspectorGUI* ref = editor::EditorGUI::CreateImGUIWindow<InspectorGUI>(entity2, "Inspector");
+	editor::EditorGUI::CreateImGUIWindow<ViewPortGUI>(ref);
    
 	// Demonstrate different material sharing strategies:
 	// 1. Use completely shared material (multiple entities, same appearance)

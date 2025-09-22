@@ -198,6 +198,9 @@
     <ClInclude Include="include\VertexBuffer.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\ViewPortGUI.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\Window.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -208,9 +211,6 @@
     </ClCompile>
     <ClCompile Include="src\AssetManager\AssetManager.cpp">
       <Filter>src\AssetManager</Filter>
-    </ClCompile>
-    <ClCompile Include="src\AudioManager\AudioIMGUI.cpp">
-      <Filter>src\AudioManager</Filter>
     </ClCompile>
     <ClCompile Include="src\AudioManager\AudioManager.cpp">
       <Filter>src\AudioManager</Filter>
@@ -266,10 +266,16 @@
     <ClCompile Include="src\Graphics\VertexBuffer.cpp">
       <Filter>src\Graphics</Filter>
     </ClCompile>
+    <ClCompile Include="src\ImGUI\AudioIMGUI.cpp">
+      <Filter>src\ImGUI</Filter>
+    </ClCompile>
     <ClCompile Include="src\ImGUI\EditorGUI.cpp">
       <Filter>src\ImGUI</Filter>
     </ClCompile>
     <ClCompile Include="src\ImGUI\InspectorGUI.cpp">
+      <Filter>src\ImGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ImGUI\ViewPortGUI.cpp">
       <Filter>src\ImGUI</Filter>
     </ClCompile>
     <ClCompile Include="src\Logger\Logger.cpp">
