@@ -22,9 +22,9 @@ namespace Ermine
         Quaternion Normalize(const Quaternion& q)
         {
             float len = std::sqrt(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w);
-            if (len <= 1e-12f) return Quaternion(0.f, 0.f, 0.f, 1.f);
+            if (len <= 1e-12f) return {0.f, 0.f, 0.f, 1.f};
             float inv = 1.0f / len;
-            return Quaternion(q.x * inv, q.y * inv, q.z * inv, q.w * inv);
+            return {q.x * inv, q.y * inv, q.z * inv, q.w * inv};
         }
 
         Quaternion EulerDegToQuaternion(const Vector3D& eulerDeg)

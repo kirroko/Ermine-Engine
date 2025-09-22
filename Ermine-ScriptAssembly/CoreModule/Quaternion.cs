@@ -89,17 +89,13 @@ namespace ErmineEngine
 
             set
             {
-                double cr = Math.Cos(value.x * 0.5f);
-                double sr = Math.Sin(value.x * 0.5f);
-                double cp = Math.Cos(value.y * 0.5f);
-                double sp = Math.Sin(value.y * 0.5f);
-                double cy = Math.Cos(value.z * 0.5f);
-                double sy = Math.Sin(value.z * 0.5f);
+                // Create a new quaternion qRotate from Euler angles (in radians)
+                Quaternion qRotate = Euler(value.x, value.y, value.z);
 
-                w = (float)(cr * cp * cy + sr * sp * sy);
-                x = (float)(sr * cp * cy - cr * sp * sy);
-                y = (float)(cr * sp * cy + sr * cp * sy);
-                z = (float)(cr * cp * sy - sr * sp * cy);
+                w *= qRotate.w;
+                x *= qRotate.x;
+                y *= qRotate.y;
+                z *= qRotate.z;
             }
         }
         #endregion
@@ -308,6 +304,23 @@ namespace ErmineEngine
 
         #region Static Methods
 
+        public static Quaternion Euler(float x, float y, float z)
+        {
+            double cr = Math.Cos(x * 0.5f);
+            double sr = Math.Sin(x * 0.5f);
+            double cp = Math.Cos(y * 0.5f);
+            double sp = Math.Sin(y * 0.5f);
+            double cy = Math.Cos(z * 0.5f);
+            double sy = Math.Sin(z * 0.5f);
+
+            float qw = (float)(cr * cp * cy + sr * sp * sy);
+            float qx = (float)(sr * cp * cy - cr * sp * sy);
+            float qy = (float)(cr * sp * cy + sr * cp * sy);
+            float qz = (float)(cr * cp * sy - sr * sp * cy);
+
+            return new Quaternion(qx, qy, qz, qw);
+        }
+
         public static float Dot(Quaternion a, Quaternion b)
         {
             return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
@@ -438,5 +451,15 @@ namespace ErmineEngine
             return Slerp(a, b, t);
         }
         #endregion
+
+        public static Quaternion operator *(Quaternion lhs, Quaternion rhs)
+        {
+            return new Quaternion(
+                lhs.w * rhs.x + lhs.x * rhs.w + lhs.y * rhs.z - lhs.z * rhs.y,
+                lhs.w * rhs.y - lhs.x * rhs.z + lhs.y * rhs.w + lhs.z * rhs.x,
+                lhs.w * rhs.z + lhs.x * rhs.y - lhs.y * rhs.x + lhs.z * rhs.w,
+                lhs.w * rhs.w - lhs.x * rhs.x - lhs.y * rhs.y - lhs.z * rhs.z
+            );
+        }
     }
 }

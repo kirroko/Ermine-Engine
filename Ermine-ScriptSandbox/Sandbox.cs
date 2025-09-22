@@ -17,8 +17,9 @@ public class Sandbox : MonoBehaviour
 
     void Update()
     {
-        transform.Rotate(new Vector3(0,10f,0) * Time.deltaTime);
-        if(Input.GetKeyDown(KeyCode.A))
+        transform.Rotate(new Vector3(0, 1f, 0) * Time.deltaTime);
+        //Debug.Log("Internal Quaternion: " + transform.rotation.ToString());
+        if (Input.GetKeyDown(KeyCode.A))
             transform.Translate(new Vector3(-1f,0,0) * Time.deltaTime);
         if(Input.GetKeyDown(KeyCode.D))
             transform.Translate(new Vector3(1f,0f,0f) * Time.deltaTime);

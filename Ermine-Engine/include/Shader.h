@@ -62,6 +62,14 @@ namespace Ermine::graphics
         Shader(const std::string& vertexPath, const std::string& fragmentPath);
 
         /**
+         * @brief Create a shader
+         * @param vertexPath The path of the vertex shader
+         * @param geometryPath The path of the geometry shader
+         * @param fragmentPath The path of the fragment shader
+         */
+        Shader(const std::string& vertexPath, const std::string& geometryPath, const std::string& fragmentPath);
+
+        /**
          * @brief Destroy the shader
          */
         ~Shader();
@@ -81,6 +89,13 @@ namespace Ermine::graphics
          * @brief Unbind the shader
          */
         void Unbind() const;
+
+        /**
+		 * @brief Set unsigned integer uniform
+         * @param name The name of the uniform
+         * @param value The value to set
+         */
+        void SetUniform1ui(const std::string& name, unsigned int value);
 
         /**
          * @brief Set integer uniform

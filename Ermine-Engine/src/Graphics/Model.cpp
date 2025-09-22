@@ -2,7 +2,7 @@
 /*!
 \file       Model.cpp
 \author     Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu
-\date       10/09/2025
+\date       19/09/2025
 \brief      This file contains the definition of the Model class.
             The Model class is used to load and render 3D models using Assimp.
 
@@ -68,22 +68,20 @@ void Model::ProcessNode(aiNode* node, const aiScene* scene, const aiMatrix4x4& p
     for (unsigned int i = 0; i < node->mNumMeshes; i++)
     {
         aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-        MeshData meshData = ProcessMesh(mesh, scene);
+        MeshData meshData = ProcessMesh(mesh);
         meshData.localTransform = ToGlm(nodeTransform);
         m_meshes.push_back(meshData);
     }
 
     for (unsigned int i = 0; i < node->mNumChildren; i++)
-    {
         ProcessNode(node->mChildren[i], scene, nodeTransform);
-    }
 
     //std::cout << "Node: " << node->mName.C_Str()
     //    << " meshes: " << node->mNumMeshes
     //    << " children: " << node->mNumChildren << "\n";
 }
 
-MeshData Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
+MeshData Model::ProcessMesh(aiMesh* mesh)
 {
     std::vector<unsigned int> indices;
 
@@ -109,8 +107,8 @@ MeshData Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
         }
         else
         {
-			vertex.normal[0] = 0.f; 
-            vertex.normal[1] = 0.f; 
+            vertex.normal[0] = 0.f;
+            vertex.normal[1] = 0.f;
             vertex.normal[2] = 0.f;
         }
 
@@ -125,7 +123,6 @@ MeshData Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
             vertex.texCoords[0] = 0.f;
             vertex.texCoords[1] = 0.f;
         }
-
     }
 
     // bones
@@ -142,9 +139,7 @@ MeshData Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
             m_BoneOffsets.push_back(ToGlm(ai_bone->mOffsetMatrix));
         }
         else
-        {
             boneIndex = m_BoneMapping[boneName];
-        }
 
         for (unsigned int w = 0; w < ai_bone->mNumWeights; ++w)
         {
@@ -161,11 +156,10 @@ MeshData Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
             indices.push_back(face.mIndices[j]);
     }
 
-
     // GPU buffers
     auto vao = std::make_shared<VertexArray>();
     auto vbo = std::make_shared<VertexBuffer>(vertices.data(), vertices.size() * sizeof(VertexData));
-	auto ibo = std::make_shared<IndexBuffer>(indices.data(), indices.size() * sizeof(unsigned int)); // Main Issue - was using indices.size() count instead of byte size
+    auto ibo = std::make_shared<IndexBuffer>(indices.data(), indices.size() * sizeof(unsigned int)); // Main Issue - was using indices.size() count instead of byte size
 
     vao->Bind();
     vbo->Bind();
@@ -187,30 +181,9 @@ MeshData Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
     vbo->Unbind();
     ibo->Unbind();
 
-    MeshData meshData{ vao, vbo, ibo, nullptr, glm::mat4(1.0f) };
-
-    // load diffuse texture if available
-    if (mesh->mMaterialIndex >= 0)
-    {
-        aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-        meshData.texture = LoadMaterialTexture(material, aiTextureType_DIFFUSE);
-    }
-
     //if (mesh->HasBones())
     //    std::cout << "Mesh " << mesh->mName.C_Str()
     //    << " has " << mesh->mNumBones << " bones\n";
 
-    return meshData;
-}
-
-std::shared_ptr<Texture> Model::LoadMaterialTexture(aiMaterial* mat, aiTextureType type)
-{
-    if (mat->GetTextureCount(type) > 0)
-    {
-        aiString str;
-        mat->GetTexture(type, 0, &str);
-        std::string texPath = m_directory + "/" + std::string(str.C_Str());
-        return AssetManager::GetInstance().LoadTexture(texPath);
-    }
-    return nullptr;
+    return MeshData{ vao, vbo, ibo, glm::mat4(1.0f) };
 }

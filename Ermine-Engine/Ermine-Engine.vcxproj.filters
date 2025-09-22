@@ -52,6 +52,9 @@
     <Filter Include="src\Window">
       <UniqueIdentifier>{74C3D837-607B-1A85-C982-F3E0B559B575}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\FSM">
+      <UniqueIdentifier>{c0551004-38f9-473b-9a46-1c860ed6ee76}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\AssetBrowser.h">
@@ -76,6 +79,9 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\Components.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Cubemap.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\ECS.h">
@@ -180,6 +186,9 @@
     <ClInclude Include="include\Shader.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\Skybox.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\Systems.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -195,6 +204,18 @@
     <ClInclude Include="include\Window.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\FiniteStateMachine.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ViewPortGUI.h">
+        <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\MathVector.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Window.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\AssetBrowser\AssetBrowser.cpp">
@@ -202,9 +223,6 @@
     </ClCompile>
     <ClCompile Include="src\AssetManager\AssetManager.cpp">
       <Filter>src\AssetManager</Filter>
-    </ClCompile>
-    <ClCompile Include="src\AudioManager\AudioIMGUI.cpp">
-      <Filter>src\AudioManager</Filter>
     </ClCompile>
     <ClCompile Include="src\AudioManager\AudioManager.cpp">
       <Filter>src\AudioManager</Filter>
@@ -230,6 +248,9 @@
     <ClCompile Include="src\Graphics\Camera.cpp">
       <Filter>src\Graphics</Filter>
     </ClCompile>
+    <ClCompile Include="src\Graphics\Cubemap.cpp">
+      <Filter>src\Graphics</Filter>
+    </ClCompile>
     <ClCompile Include="src\Graphics\GeometryFactory.cpp">
       <Filter>src\Graphics</Filter>
     </ClCompile>
@@ -245,6 +266,9 @@
     <ClCompile Include="src\Graphics\Shader.cpp">
       <Filter>src\Graphics</Filter>
     </ClCompile>
+    <ClCompile Include="src\Graphics\Skybox.cpp">
+      <Filter>src\Graphics</Filter>
+    </ClCompile>
     <ClCompile Include="src\Graphics\Texture.cpp">
       <Filter>src\Graphics</Filter>
     </ClCompile>
@@ -254,10 +278,16 @@
     <ClCompile Include="src\Graphics\VertexBuffer.cpp">
       <Filter>src\Graphics</Filter>
     </ClCompile>
+    <ClCompile Include="src\ImGUI\AudioIMGUI.cpp">
+      <Filter>src\ImGUI</Filter>
+    </ClCompile>
     <ClCompile Include="src\ImGUI\EditorGUI.cpp">
       <Filter>src\ImGUI</Filter>
     </ClCompile>
     <ClCompile Include="src\ImGUI\InspectorGUI.cpp">
+      <Filter>src\ImGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ImGUI\ViewPortGUI.cpp">
       <Filter>src\ImGUI</Filter>
     </ClCompile>
     <ClCompile Include="src\Logger\Logger.cpp">
@@ -316,6 +346,21 @@
     </ClCompile>
     <ClCompile Include="src\dllmain.cpp">
       <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\FSM\FiniteStateMachine.cpp">
+      <Filter>src\FSM</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ImGUI\InspectorGUI.cpp">
+      <Filter>src\ImGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\AudioManager\AudioIMGUI.cpp">
+      <Filter>src\AudioManager</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Graphics\Cubemap.cpp">
+      <Filter>src\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Graphics\Skybox.cpp">
+      <Filter>src\Graphics</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

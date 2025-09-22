@@ -148,6 +148,56 @@ Shader::Shader(const std::string& vertexPath, const std::string& fragmentPath)
     glDeleteShader(fragmentShader);
 }
 
+
+/**
+ * @brief Create a shader
+ * @param vertexPath The path of the vertex shader
+ * @param geometryPath The path of the geometry shader
+ * @param fragmentPath The path of the fragment shader
+ */
+Shader::Shader(const std::string& vertexPath, const std::string& geometryPath, const std::string& fragmentPath)
+{
+    std::string vertexSource = LoadShaderSource(vertexPath);
+    std::string geometrySource = LoadShaderSource(geometryPath);
+    std::string fragmentSource = LoadShaderSource(fragmentPath);
+
+    GLuint vertexShader = CompileShader(GL_VERTEX_SHADER, vertexSource);
+    GLuint geometryShader = CompileShader(GL_GEOMETRY_SHADER, geometrySource);
+    GLuint fragmentShader = CompileShader(GL_FRAGMENT_SHADER, fragmentSource);
+
+    // Link the shaders to the program
+    m_RendererID = glCreateProgram();
+    glAttachShader(m_RendererID, vertexShader);
+    glAttachShader(m_RendererID, geometryShader);
+    glAttachShader(m_RendererID, fragmentShader);
+    glLinkProgram(m_RendererID);
+
+    GLint isLinked = 0;
+    glGetProgramiv(m_RendererID, GL_LINK_STATUS, &isLinked);
+    if (isLinked == GL_FALSE)
+    {
+        GLint maxLength = 0;
+        glGetProgramiv(m_RendererID, GL_INFO_LOG_LENGTH, &maxLength);
+
+        std::vector<GLchar> infoLog(maxLength);
+        glGetProgramInfoLog(m_RendererID, maxLength, &maxLength, &infoLog[0]);
+
+        glDeleteProgram(m_RendererID);
+        glDeleteShader(vertexShader);
+        glDeleteShader(geometryShader);
+        glDeleteShader(fragmentShader);
+
+        EE_CORE_ERROR("Shader linking failed: {0}", infoLog.data());
+        m_RendererID = 0;
+        return;
+    }
+
+    // Delete the shaders as they are linked to the program and no longer needed
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
+}
+
+
 /**
  * @brief Destroy the shader
  */
@@ -179,6 +229,11 @@ void Shader::Bind() const
 void Shader::Unbind() const
 {
     glUseProgram(0);
+}
+
+void Shader::SetUniform1ui(const std::string& name, unsigned int value)
+{
+	glUniform1ui(GetUniformLocation(name), value);
 }
 
 /**
