@@ -27,6 +27,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Material.h"
 #include "AudioManager.h"
 #include "Model.h"
+#include "Animator.h"
 
 namespace Ermine
 {
@@ -530,5 +531,16 @@ namespace Ermine
 
 		ModelComponent() = default;
 		explicit ModelComponent(const std::shared_ptr<graphics::Model>& model) : m_model(model) {}
+	};
+
+	/*!***********************************************************************
+	\brief
+	 Animation component structure.
+	*************************************************************************/
+	struct AnimationComponent
+	{
+		std::shared_ptr<graphics::Animator> m_animator;
+		const graphics::AnimationClip* currentClip;
+		bool looping = true;
 	};
 }

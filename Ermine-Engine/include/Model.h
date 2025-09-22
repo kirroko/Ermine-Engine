@@ -87,11 +87,14 @@ namespace Ermine::graphics
 
         const std::vector<MeshData>& GetMeshes() const { return m_meshes; }
 
+        const std::unordered_map<std::string, int>& GetBoneMapping() const { return m_BoneMapping; }
         int GetBoneCount() const { return static_cast<int>(m_BoneOffsets.size()); }
         const std::vector<glm::mat4>& GetBoneOffsets() const { return m_BoneOffsets; }
         const std::vector<glm::mat4>& GetBoneTransforms() const { return m_BoneTransforms; }
 
         void SetBoneTransforms(const std::vector<glm::mat4>& transforms) { m_BoneTransforms = transforms; }
+
+        glm::mat4 ToGlm(const aiMatrix4x4& from);
 
     private:
         std::string m_directory; // directory for resolving textures
@@ -101,8 +104,6 @@ namespace Ermine::graphics
         std::unordered_map<std::string, int> m_BoneMapping;
         std::vector<glm::mat4> m_BoneOffsets;
         std::vector<glm::mat4> m_BoneTransforms;
-
-        glm::mat4 ToGlm(const aiMatrix4x4& from);
 
         void LoadModel(const std::string& path);
         void ProcessNode(aiNode* node, const aiScene* scene, const aiMatrix4x4& parentTransform);
