@@ -27,6 +27,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Renderer.h"
 
 #include <ImGuizmo.h>
+#include "Serialisation.h"
 
 namespace Ermine
 {
@@ -90,11 +91,13 @@ void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
         {
 			EE_CORE_INFO("Open file clicked");
             // Code to open a file, the scene?
+			LoadScene("Scene01");
         }
         if (ImGui::MenuItem("Save", "Ctrl+S"))
         {
             EE_CORE_INFO("Save file clicked");
             // Code to save a file, maybe the scene
+			SaveCurrentScene("Scene01");
         }
         if (ImGui::MenuItem("Exit", "Alt+F4"))
         {

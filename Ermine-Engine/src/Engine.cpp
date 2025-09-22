@@ -480,6 +480,7 @@ void engine::Shutdown()
 
 	//const std::filesystem::path scenePath = "Ermine-Engine.scene";
 	//SaveSceneToFile("Ermine-Engine", scenePath);
+	//SaveCurrentScene("Level01");
 
 	Config cfg{};
 	int width, height;
@@ -557,7 +558,7 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 
 	// Simple test to see if we can select an entity and view it in the inspector
 	//if (Input::IsKeyDown(GLFW_KEY_Q))
-		//InspectorGUI::SetEntity(entity);
+	//	InspectorGUI::SetEntity(System::m_Entities);
 
 	/*
 	if (s_isInitialized && emitter)
