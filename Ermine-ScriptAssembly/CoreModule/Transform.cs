@@ -88,9 +88,8 @@ namespace ErmineEngine
 
         public void Rotate(Vector3 deltaEuler)
         {
-            Quaternion q = rotation;
-            q.eulerAngles = q.eulerAngles + (deltaEuler * Deg2Rad);
-            rotation = q.normalized;
+            Quaternion deltaRotation = Quaternion.Euler(deltaEuler.x, deltaEuler.y, deltaEuler.z);
+            rotation *= deltaRotation;
         }
 
         public void LookAt(Vector3 target)
