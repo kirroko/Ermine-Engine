@@ -71,6 +71,15 @@ namespace Ermine::graphics
         float m_BloomIntensity = 2.0f;
         float m_BloomRadius = 5.0f;
 
+        /**
+         * @brief To run the pass and read GL_STENCIL_INDEX at a pixel
+         * @param x The x coordinate from the framebuffer
+         * @param y The y coordinate from the framebuffer
+		 * @param view camera view matrix
+		 * @param projection camera projection matrix
+         * @return 
+         */
+        std::pair<bool, EntityID> PickEntityAt(const int& x, const int& y, const Mtx44& view, const Mtx44& projection);
 
         /**
          * @brief Initialize the renderer with the screen width and height.
@@ -417,7 +426,7 @@ namespace Ermine::graphics
 		std::shared_ptr<Shader> m_PostProcessShader = 0; // Shader for post-processing effects
 
 		// Skybox
-		graphics::Skybox* m_skybox = nullptr;
+		Skybox* m_skybox = nullptr;
 
         // Shadow mapping
         std::shared_ptr<Shader> m_ShadowMapShader = nullptr;
@@ -428,6 +437,36 @@ namespace Ermine::graphics
         uint64_t m_ShadowMapHandle = 0;
         glm::mat4 m_LightSpaceMatrix;
 
+        // Picking (stencil) helpers
+        struct PickingBuffer
+        {
+			GLuint FBO = 0;
+            GLuint ColorID = 0; // GL_R32UI
+            GLuint Depth = 0; // GL_DEPTH24
+            int width = 0;
+            int height = 0;
+        };
 
+        std::shared_ptr<PickingBuffer> m_PickingBuffer;
+		std::shared_ptr<Shader> m_PickingShader = nullptr;
+
+        /**
+         * @brief Create an offscreen buffer for entity picking using stencil buffer
+         * @param width The width of the picking buffer
+         * @param height The height of the picking buffer
+		 */
+        void CreatePickingBuffer(const int& width, const int& height);
+        /**
+         * @brief Resize the picking buffer to new dimensions without recreating the FBO
+         * @param width New width
+		 * @param height New height
+		 */
+		void ResizePickingBuffer(const int& width, const int& height);
+        /**
+         * @brief Render entities into the offscreen FBO's stencil buffer using camera VP and G-Buffer depth.
+         * @param view the camera view matrix
+         * @param projection the camera projection matrix
+         */
+        void RenderPickingPass(const Mtx44& view, const Mtx44& projection);
     };
 }
