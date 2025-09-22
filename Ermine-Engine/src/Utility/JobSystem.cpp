@@ -14,8 +14,6 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "PreCompile.h"
 #include "JobSystem.h"
 
-#include "Logger.h"
-
 using namespace Ermine::job;
 
 /**

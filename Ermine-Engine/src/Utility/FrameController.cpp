@@ -14,12 +14,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "PreCompile.h"
 #include "FrameController.h"
 
-#include <iomanip>
-#include <sstream>
-#include <spdlog/spdlog.h>
 #include <GLFW/glfw3.h>
-
-#include "Logger.h"
 
 using namespace Ermine;
 
@@ -52,8 +47,8 @@ void FrameController::BeginFrame()
     }
 
     // Calculate FPS
-    s_fpsTimer += s_deltaTime;
-    ++s_frameCount;
+    //s_fpsTimer += s_deltaTime;
+    //++s_frameCount;
 
     //if (s_fpsTimer >= 1.0f)
     //{

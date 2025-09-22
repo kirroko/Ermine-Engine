@@ -21,6 +21,269 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "FrameController.h"
 #include "Input.h"
 #include "Logger.h"
+#include "JobSystem.h"
+
+namespace fs = std::filesystem;
+
+namespace
+{
+	// Helper: convert file_time_type to local time string
+	//std::string FormatFileTime(std::filesystem::file_time_type tp)
+	//{
+	//	using namespace std::chrono;
+	//	if (tp == std::filesystem::file_time_type{}) return "<unset>";
+
+	//	// Convert filesystem clock -> system_clock
+	//	const auto sctp = time_point_cast<system_clock::duration>(
+	//		tp - std::filesystem::file_time_type::clock::now() + system_clock::now());
+
+	//	const std::time_t tt = system_clock::to_time_t(sctp);
+	//	std::tm tm{};
+	//#if defined(_WIN32)
+	//	localtime_s(&tm, &tt);
+	//#else
+	//	localtime_r(&tt, &tm);
+	//#endif
+	//	char buf[32]{};
+	//	std::strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &tm);
+	//	return std::string(buf);
+	//}
+
+	std::string Trim(const std::string& s)
+	{
+		const char* ws = " \t\r\n";
+		const size_t b = s.find_first_not_of(ws);
+		if (b == std::string::npos) return {};
+		const size_t e = s.find_last_not_of(ws);
+		return s.substr(b, e - b + 1);
+	}
+
+    std::string GetEnv(const char* name)
+    {
+    #if defined(_WIN32)
+        if (!name || !*name) return {};
+        char* buf = nullptr;
+        size_t len = 0;
+        errno_t err = _dupenv_s(&buf, &len, name);
+        if (err != 0 || !buf) return {};
+        std::string value;
+        if (len > 0)
+            value.assign(buf, buf + (buf[len - 1] == '\0' ? len - 1 : len));
+        free(buf);
+        return value;
+    #else
+        const char* v = std::getenv(name);
+        return v ? std::string(v) : std::string();
+    #endif
+    }
+
+#if defined(_WIN32)
+	std::wstring ToWide(const std::string& s)
+	{
+		if (s.empty()) return L"";
+		int len = MultiByteToWideChar(CP_UTF8, 0, s.c_str(), -1, nullptr, 0);
+		std::wstring w(static_cast<size_t>(len), L'\0');
+		MultiByteToWideChar(CP_UTF8, 0, s.c_str(), -1, &w[0], len);
+		if (!w.empty() && w.back() == L'\0') w.pop_back();
+		return w;
+	}
+
+	std::string FromBytes(const std::vector<char>& bytes)
+	{
+		return std::string(bytes.begin(), bytes.end());
+	}
+
+	std::wstring QuoteIfNeeded(std::wstring arg)
+	{
+		bool needs = arg.find_first_of(L" \t\"") != std::wstring::npos;
+		if (!needs) return arg;
+		size_t pos = 0;
+		while ((pos = arg.find(L'"', pos)) != std::wstring::npos)
+		{
+			arg.insert(pos, L"\\");
+			pos += 2;
+		}
+		return L"\"" + arg + L"\"";
+	}
+
+	// Run a process and capture its stdout/stderr output (With best friend's help)
+	bool RunProcessCapture(const std::wstring& exePath,
+		const std::vector<std::wstring>& args,
+		DWORD& exitCode,
+		std::string& output)
+	{
+		output.clear();
+		exitCode = DWORD(-1);
+
+		SECURITY_ATTRIBUTES sa{};
+		sa.nLength = sizeof(sa);
+		sa.bInheritHandle = TRUE;
+		sa.lpSecurityDescriptor = nullptr;
+
+		HANDLE hStdOutRd = nullptr, hStdOutWr = nullptr;
+		if (!CreatePipe(&hStdOutRd, &hStdOutWr, &sa, 0))
+			return false;
+		// make read end non-inheritable
+		SetHandleInformation(hStdOutRd, HANDLE_FLAG_INHERIT, 0);
+
+		STARTUPINFOW si{};
+		si.cb = sizeof(si);
+		si.hStdError = hStdOutWr;
+		si.hStdOutput = hStdOutWr;
+		si.dwFlags |= STARTF_USESTDHANDLES;
+
+		PROCESS_INFORMATION pi{};
+		// build command line (program name + args)
+		std::wstring cmdLine;
+		cmdLine.reserve(512);
+		{
+			cmdLine.append(QuoteIfNeeded(exePath));
+			for (const auto& a : args)
+			{
+				cmdLine.push_back(L' ');
+				cmdLine.append(QuoteIfNeeded(a));
+			}
+		}
+		// CreateProcess requires mutable buffer
+		std::vector cmdBuf(cmdLine.begin(), cmdLine.end());
+		cmdBuf.push_back(L'\0');
+
+		BOOL ok = CreateProcessW(
+			exePath.c_str(),         // lpApplicationName
+			cmdBuf.data(),           // lpCommandLine (mutable)
+			nullptr, nullptr, TRUE,  // inherit handles to get pipes
+			CREATE_NO_WINDOW,
+			nullptr, nullptr,
+			&si, &pi
+		);
+
+		// Parent does not need write end
+		CloseHandle(hStdOutWr);
+
+		if (!ok)
+		{
+			CloseHandle(hStdOutRd);
+			return false;
+		}
+
+		// Read until process exits and pipe is closed
+		std::vector<char> buffer;
+		buffer.reserve(8192);
+		const DWORD chunk = 4096;
+		for (;;)
+		{
+			char temp[chunk];
+			DWORD read = 0;
+			BOOL r = ReadFile(hStdOutRd, temp, chunk, &read, nullptr);
+			if (!r || read == 0)
+			{
+				// may break early if no data; still wait for process
+				if (WaitForSingleObject(pi.hProcess, 50) == WAIT_OBJECT_0)
+					break;
+				continue;
+			}
+			buffer.insert(buffer.end(), temp, temp + read);
+		}
+
+		WaitForSingleObject(pi.hProcess, INFINITE);
+		GetExitCodeProcess(pi.hProcess, &exitCode);
+
+		CloseHandle(hStdOutRd);
+		CloseHandle(pi.hThread);
+		CloseHandle(pi.hProcess);
+
+		output = FromBytes(buffer);
+		return true;
+	}
+#endif
+
+	std::string ExecAndCapture(const std::string& cmd)
+	{
+		std::array<char, 1024> buf{  };
+		std::string out;
+
+#if defined(_WIN32)
+		FILE* pipe = _popen(cmd.c_str(), "r");
+#else
+		FILE* pipe = popen(cmd.c_str(), "r");
+#endif
+		if (!pipe) return "ERROR";
+		while (fgets(buf.data(), buf.size(), pipe))
+			out.append(buf.data());
+
+#if defined(_WIN32)
+		_pclose(pipe);
+#else
+		pclose(pipe);
+#endif
+		return out;
+	}
+
+	fs::path FindVsWhere()
+	{
+		auto pf86 = GetEnv("ProgramFiles(x86)");
+		if (pf86.empty()) return {};
+		fs::path p = fs::path(pf86) / "Microsoft Visual Studio" / "Installer" / "vswhere.exe";
+		return fs::exists(p) ? p : fs::path();
+	}
+
+	std::string TryFindMSBuildWithVsWhere()
+	{
+#if !defined(_WIN32)
+		return {};
+#else
+		auto vsw = FindVsWhere();
+		if (vsw.empty()) return {};
+
+		DWORD code = DWORD(-1);
+		std::string out;
+
+		const std::wstring exe = vsw.wstring();
+		std::vector<std::wstring> args = {
+			L"-latest",
+			L"-requires", L"Microsoft.Component.MSBuild",
+			L"-find", L"MSBuild\\**\\Bin\\MSBuild.exe"
+		};
+
+		if (!RunProcessCapture(exe, args, code, out) || code != 0 || out.empty())
+			return {};
+
+		std::istringstream iss(out);
+		std::string line;
+		while (std::getline(iss,line))
+		{
+			line = Trim(line);
+			if (!line.empty() && fs::exists(line))
+				return line;
+		}
+		return {};
+#endif
+	}
+
+	std::string TryFindMSBuildInKnownPaths()
+	{
+		// VS 2022 common installations
+		const std::vector<std::string> bases = {
+			GetEnv("ProgramFiles") + "\\Microsoft Visual Studio\\2022\\Community",
+			GetEnv("ProgramFiles") + "\\Microsoft Visual Studio\\2022\\Professional",
+			GetEnv("ProgramFiles") + "\\Microsoft Visual Studio\\2022\\Enterprise",
+			GetEnv("ProgramFiles") + "\\Microsoft Visual Studio\\2022\\BuildTools"
+		};
+
+		for (const auto& base : bases)
+		{
+			if (base.empty()) continue;
+
+			// Prefer Current\Bin\MSBuild.exe, fallback to Bin\amd64
+			fs::path p1 = fs::path(base) / "MSBuild" / "Current" / "Bin" / "MSBuild.exe";
+			if (fs::exists(p1)) return p1.string();
+
+			fs::path p2 = fs::path(base) / "MSBuild" / "Current" / "Bin" / "amd64" / "MSBuild.exe";
+			if (fs::exists(p2)) return p2.string();
+		}
+		return {};
+	}
+}
 
 void Ermine::scripting::ScriptEngine::InitMono(const std::string& assembly_path)
 {
@@ -39,6 +302,7 @@ void Ermine::scripting::ScriptEngine::InitMono(const std::string& assembly_path)
 	mono_domain_set(m_gameDomain, true);
 
 	// Loading engine API assembly
+	m_apiAssemblyPath = assembly_path;
 	m_apiAsm = LoadCSharpAssembly(assembly_path);
 	if (!m_apiAsm)
 	{
@@ -48,6 +312,8 @@ void Ermine::scripting::ScriptEngine::InitMono(const std::string& assembly_path)
 	PrintAssemblyTypes(m_apiAsm);
 
 	RegisterInternalCalls();
+
+	ResolveMSBuildPath();
 }
 
 void Ermine::scripting::ScriptEngine::Shutdown()
@@ -169,28 +435,464 @@ void Ermine::scripting::ScriptEngine::ReloadGameAssembly()
 	LoadGameAssembly(m_gameAssemblyPath);
 }
 
+#pragma region File Watcher
+
+void Ermine::scripting::ScriptEngine::StartWatchingGameAssembly()
+{
+	if (m_watching.exchange(true))
+		return; // Already watching
+
+	if (m_gameAssemblyPath.empty())
+	{
+		EE_CORE_WARN("StartWatchingGameAssembly called with empty game assembly path.");
+		m_watching.store(false);
+		return;
+	}
+
+	EE_CORE_INFO("ScriptEngine: Watching for changes: {0}", m_gameAssemblyPath);
+	InitializeDllTimestamp();
+	ScheduleWatcherTick();
+}
+
+void Ermine::scripting::ScriptEngine::StopWatchingGameAssembly()
+{
+	m_watching.store(false);
+}
+
+void Ermine::scripting::ScriptEngine::ScheduleSourceWatcherTick()
+{
+	if (!m_watching.load())
+		return; // Not watching
+
+	job::Declaration d{
+	&ScriptEngine::SourceWatcherJobEntry,
+	reinterpret_cast<uintptr_t>(this),
+	job::Priority::LOW
+	};
+	job::KickJob(d);
+}
+
+void Ermine::scripting::ScriptEngine::ProcessHotReload(const std::function<void()>& pre,
+	const std::function<void(bool success)>& post)
+{
+	if (!m_reloadRequested.exchange(false))
+		return; // No reload requested
+
+	EE_CORE_INFO("HotReload: Processing pending reload...");
+
+	if (pre) pre();
+	bool ok = ReloadDomainsAndAssemblies();
+	if (post) post(ok);
+
+	EE_CORE_INFO("HotReload: Done (success={0})", ok ? "true" : "false");
+}
+
+bool Ermine::scripting::ScriptEngine::ReloadDomainsAndAssemblies()
+{
+	if (m_apiAssemblyPath.empty() || m_gameAssemblyPath.empty())
+	{
+		EE_CORE_WARN("Reload requested but paths are not set. API='{0}' Game='{1}'",
+			m_apiAssemblyPath, m_gameAssemblyPath);
+		return false;
+	}
+
+	EE_CORE_TRACE("HotReload: Swapping AppDomain...");
+
+	mono_domain_set(m_coreDomain, false);
+
+	if (m_gameDomain)
+	{
+		mono_domain_unload(m_gameDomain);
+		m_gameDomain = nullptr;
+		m_gameAsm = nullptr;
+	}
+	char gdn[] = "ErmineGame";
+	m_gameDomain = mono_domain_create_appdomain(gdn, nullptr);
+	if (!m_gameDomain)
+	{
+		EE_CORE_ERROR("HotReload: Failed to create new game AppDomain");
+		return false;
+	}
+	mono_domain_set(m_gameDomain, true);
+
+	m_apiAsm = LoadCSharpAssembly(m_apiAssemblyPath);
+	if (!m_apiAsm)
+	{
+		EE_CORE_ERROR("HotReload: Failed to reload API assembly: {0}", m_apiAssemblyPath);
+		return false;
+	}
+
+	RegisterInternalCalls();
+
+	constexpr int maxAttempts = 20;
+	for (int attempt = 0; attempt < maxAttempts; ++attempt)
+	{
+		m_gameAsm = LoadCSharpAssembly(m_gameAssemblyPath);
+		if (m_gameAsm)
+			break;
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
+
+	if (!m_gameAsm)
+	{
+		EE_CORE_ERROR("HotReload: Failed to reload Game assembly after retries: {0}", m_gameAssemblyPath);
+		return false;
+	}
+
+	EE_CORE_INFO("HotReload: Reloaded assemblies successfully");
+	InitializeDllTimestamp();
+	return true;
+}
+
+void Ermine::scripting::ScriptEngine::InitializeDllTimestamp()
+{
+	try
+	{
+		if (!m_gameAssemblyPath.empty() && fs::exists(m_gameAssemblyPath))
+			m_lastWriteTime = fs::last_write_time(m_gameAssemblyPath);
+	}
+	catch (...) {}
+}
+
+void Ermine::scripting::ScriptEngine::WatcherJobEntry(uintptr_t param)
+{
+	auto* self = reinterpret_cast<ScriptEngine*>(param);
+	if (!self) return;
+	if (!self->m_watching.load()) return;
+	self->WatcherTick();
+	self->ScheduleWatcherTick(); // Re-schedule if still active
+}
+
+void Ermine::scripting::ScriptEngine::WatcherTick()
+{
+	try
+	{
+		if (m_gameAssemblyPath.empty() || !fs::exists(m_gameAssemblyPath))
+			return;
+
+		auto t = fs::last_write_time(m_gameAssemblyPath);
+		if (t != m_lastWriteTime)
+		{
+			// Debounce: wait a bit to ensure file write is complete
+			std::this_thread::sleep_for(std::chrono::milliseconds(200));
+			auto t2 = fs::last_write_time(m_gameAssemblyPath);
+			if (t2 != m_lastWriteTime)
+			{
+				m_lastWriteTime = t2;
+				EE_CORE_INFO("ScriptEngine: Detected change in {0}", m_gameAssemblyPath);
+				m_reloadRequested.store(true);
+			}
+		}
+	}
+	catch (...) {}
+	std::this_thread::sleep_for(std::chrono::milliseconds(50));
+}
+
+bool Ermine::scripting::ScriptEngine::ResolveMSBuildPath()
+{
+	if (!m_msbuildExe.empty())
+	{
+		fs::path p(m_msbuildExe);
+		if (p.is_absolute() && fs::exists(p))
+			return true; // Already set and exists
+	}
+
+	// Try vswhere first
+	if (auto msb = TryFindMSBuildWithVsWhere(); !msb.empty())
+	{
+		m_msbuildExe = msb;
+		EE_CORE_INFO("MSBuild resolved via vswhere: {0}", m_msbuildExe);
+		return true;
+	}
+	// Try known paths
+	if (auto msb = TryFindMSBuildInKnownPaths(); !msb.empty())
+	{
+		m_msbuildExe = msb;
+		EE_CORE_INFO("MSBuild resolved via KnownPaths: {0}", m_msbuildExe);
+		return true;
+	}
+
+	EE_CORE_WARN("Failed to resolve MSBuild.exe path. Please ensure it's in PATH or specify it manually OR run powershell script in main directory");
+	return false;
+}
+
+void Ermine::scripting::ScriptEngine::ConfigureBuild(const std::string& csprojPath, const std::string& sourceRoot, const std::string& buildDLLPath, const std::string& configuration, const std::string& platform, const std::string& msbuildExe)
+{
+	m_csprojPath = csprojPath;
+	m_sourceRoot = sourceRoot;
+	m_buildDLLPath = buildDLLPath;
+	m_buildConfiguration = configuration;
+	m_buildPlatform = platform;
+
+	if (!msbuildExe.empty() && fs::exists(msbuildExe)) m_msbuildExe = msbuildExe;
+	else ResolveMSBuildPath();
+
+	// initial timestamp
+	try
+	{
+		std::filesystem::file_time_type latest{};
+		if (!m_sourceRoot.empty() && fs::exists(m_sourceRoot))
+		{
+			for (auto& e : fs::recursive_directory_iterator(m_sourceRoot))
+			{
+				if (!e.is_regular_file()) continue;
+				auto path = e.path();
+				auto ext = path.extension().string();
+				if (ext == ".cs" || ext == ".csproj")
+					latest = std::max(latest, fs::last_write_time(path));
+			}
+		}
+		if (!m_csprojPath.empty() && fs::exists(m_csprojPath))
+			latest = std::max(latest, fs::last_write_time(m_csprojPath));
+
+		m_lastSourcesStamp = latest;
+	}
+	catch (...) {}
+}
+
+void Ermine::scripting::ScriptEngine::StartWatchingScriptSources()
+{
+	if (m_sourceWatching.exchange(true))
+		return; // Already watching
+
+	if (m_csprojPath.empty() || m_sourceRoot.empty())
+	{
+		EE_CORE_WARN("StartWatchingScriptSources called with empty csproj path or source root.");
+		m_sourceWatching.store(false);
+		return;
+	}
+
+	EE_CORE_INFO("ScriptEngine: Watching sources: {0}", m_sourceRoot);
+	ScheduleSourceWatcherTick();
+}
+
+void Ermine::scripting::ScriptEngine::StopWatchingScriptSources()
+{
+	m_sourceWatching.store(false);
+}
+
+void Ermine::scripting::ScriptEngine::ScheduleWatcherTick()
+{
+	if (!m_watching.load())
+		return; // Not watching
+
+	job::Declaration d
+	{
+		&ScriptEngine::WatcherJobEntry,
+		reinterpret_cast<uintptr_t>(this),
+		job::Priority::LOW
+	};
+	KickJob(d);
+}
+
+void Ermine::scripting::ScriptEngine::SourceWatcherJobEntry(uintptr_t param)
+{
+	auto* self = reinterpret_cast<ScriptEngine*>(param);
+	if (!self || !self->m_sourceWatching.load()) return;
+	self->SourceWatcherTick();
+	self->ScheduleSourceWatcherTick();
+}
+
+void Ermine::scripting::ScriptEngine::SourceWatcherTick()
+{
+	std::filesystem::file_time_type latest{};
+	try
+	{
+		if (!m_sourceRoot.empty() && fs::exists(m_sourceRoot))
+		{
+			for (auto& e : fs::recursive_directory_iterator(m_sourceRoot))
+			{
+				if (!e.is_regular_file()) continue;
+				const auto& path = e.path();
+				auto ext = path.extension().string();
+				if (ext == ".cs" /*|| ext == ".csproj"*/)
+				{
+					//EE_CORE_TRACE("Before : {0}", FormatFileTime(latest));
+					latest = std::max(latest, fs::last_write_time(path));
+					//EE_CORE_TRACE("After : {0}", FormatFileTime(latest));
+				}
+			}
+		}
+		if (!m_csprojPath.empty() && fs::exists(m_csprojPath))
+			latest = std::max(latest, fs::last_write_time(m_csprojPath));
+	} catch (...) {}
+	
+	// Debounce and trigger build once
+	if (latest != std::filesystem::file_time_type{} && latest != m_lastSourcesStamp)
+	{
+		std::this_thread::sleep_for(std::chrono::milliseconds(200));
+		m_lastSourcesStamp = latest;
+
+		// Request a build if not already running
+		if (!m_buildInProgress.load())
+		{
+			EE_CORE_TRACE("Request build on the way!");
+			m_buildRequested.store(true);
+
+			job::Declaration b{
+			&ScriptEngine::BuildJobEntry,
+			reinterpret_cast<uintptr_t>(this),
+			job::Priority::NORMAL };
+			job::KickJob(b);
+		}
+	}
+
+	std::this_thread::sleep_for(std::chrono::milliseconds(100));
+}
+
+void Ermine::scripting::ScriptEngine::BuildJobEntry(uintptr_t param)
+{
+	auto* self = reinterpret_cast<ScriptEngine*>(param);
+	if (!self)
+	{
+		EE_CORE_WARN("Param cast failed! No build done");
+		return;
+	}
+
+	if (!self->m_buildRequested.exchange(false))
+	{
+		EE_CORE_WARN("No build requested!");
+		return; // No build requested
+	}
+
+	if (self->m_buildInProgress.exchange(true))
+	{
+		EE_CORE_WARN("Return out of build entry, build in progress");
+		return;
+	}
+
+	const bool ok = self->BuildGameAssembly();
+	self->m_buildInProgress.store(false);
+
+	if (ok)
+		EE_CORE_INFO("ScriptEngine: Build completed successfully.");
+	else
+		EE_CORE_ERROR("ScriptEngine: Build failed!");
+}
+
+bool Ermine::scripting::ScriptEngine::BuildGameAssembly()
+{
+	if (m_csprojPath.empty())
+	{
+		EE_CORE_ERROR("BuildGameAssembly: csproj path is empty.");
+		return false;
+	}
+
+	ResolveMSBuildPath(); // Ensure we have MSBuild path
+
+#if defined(_WIN32)
+	std::vector<std::wstring> args;
+	args.emplace_back(ToWide(m_csprojPath));
+	args.emplace_back(L"/t:Build");
+	args.emplace_back(ToWide("/p:Configuration=" + m_buildConfiguration));
+	args.emplace_back(ToWide("/p:Platform=" + m_buildPlatform));
+	args.emplace_back(L"/nologo");
+	args.emplace_back(L"/verbosity:minimal");
+
+	const std::wstring msbuildExeW = ToWide(m_msbuildExe);
+	DWORD exitCode = DWORD(-1);
+	std::string out;
+
+	EE_CORE_INFO("ScriptEngine: Building with: {0}", m_msbuildExe);
+	if (!RunProcessCapture(msbuildExeW, args, exitCode, out))
+	{
+		EE_CORE_ERROR("Failed to start MSBuild process.");
+		return false;
+	}
+
+	if (exitCode != 0)
+	{
+		EE_CORE_ERROR("MSBuild failed with code {0}", exitCode);
+		if (!out.empty())
+			EE_CORE_WARN("MSBuild output:\n{0}", out);
+		return false;
+	}
+#else
+	EE_CORE_ERROR("BuildGameAssembly only implemented for Windows.");
+	return false
+#endif
+	if (m_gameAssemblyPath.empty())
+	{
+		EE_CORE_WARN("Build succeeded, but game assembly path is empty; skip copy.");
+		return true;
+	}
+
+	return true;
+	// NOTE: We don't need this portion because when msbuild builds, it will directly overwrite the game assembly
+	//try
+	//{
+	//	fs::path csproj(m_buildDLLPath);
+	//	const fs::path projDir = csproj.parent_path();
+
+	//	// Use filename from m_gameAssemblyPath
+	//	const fs::path targetDllName = fs::path(m_gameAssemblyPath).filename();
+
+	//	// Assume output is in bin/<Configuration>/
+	//	const fs::path builtDll = projDir / targetDllName;
+
+	//	if (!exists(builtDll))
+	//	{
+	//		EE_CORE_ERROR("Built DLL not found at: {0}", builtDll.string());
+	//		return false;
+	//	}
+
+	//	// Ensure destination directory exists
+	//	const fs::path destPath = fs::path(m_gameAssemblyPath);
+	//	if (destPath.has_parent_path())
+	//	{
+	//		std::error_code ec;
+	//		fs::create_directories(destPath.parent_path(), ec);
+	//	}
+
+	//	// Retry copy in case of antivirus/lock hiccups
+	//	const int maxAttemps = 10;
+	//	for (int i = 0; i < maxAttemps; ++i)
+	//	{
+	//		std::error_code ec;
+	//		fs::copy_file(builtDll,destPath , fs::copy_options::overwrite_existing, ec);
+	//		if (!ec)
+	//			return true;
+
+	//		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	//	}
+
+	//	EE_CORE_ERROR("Failed to copy built DLL to {0}", destPath.string());
+	//	return false;
+	//}
+	//catch (const std::exception& e)
+	//{
+	//	EE_CORE_ERROR("Exception during DLL copy: {0}", e.what());
+	//	return false;
+	//}
+	//catch (...)
+	//{
+	//	EE_CORE_ERROR("unknown exception");
+	//	return false;
+	//}
+}
+
+#pragma endregion
+
 namespace
 {
 	// Caching
-	static MonoImage* s_APIImage = nullptr;
-	static MonoClass* s_GameObjectClass = nullptr;
-	static MonoClass* s_TransformClass = nullptr;
-	static MonoClass* s_MonoBehaviourClass = nullptr;
-	static MonoClass* s_ComponentClass = nullptr;
+	MonoImage* s_APIImage = nullptr;
+	MonoClass* s_GameObjectClass = nullptr;
+	MonoClass* s_TransformClass = nullptr;
+	MonoClass* s_MonoBehaviourClass = nullptr;
+	MonoClass* s_ComponentClass = nullptr;
 
 	void ToTempUTF8(MonoString* str, std::string& out)
 	{
 		if (!str)
 		{
 			out.clear();
-			//return out.c_str();
 			return;
 		}
 		char* raw = mono_string_to_utf8(str);
 		out = raw ? raw : "";
 		if (raw)
 			mono_free(raw);
-		/*return out.c_str();*/
 	}
 
 	Ermine::EntityID GetEntityIDFromManaged(MonoObject* obj)
@@ -269,8 +971,11 @@ namespace
 	}
 
 	struct ManagedVector3 { float x, y, z; };
-	ManagedVector3 ToManaged(const Ermine::Vec3& v) { return { v.x, v.y, v.z }; }
-	Ermine::Vec3 ToNative(const ManagedVector3& v) { return { v.x, v.y, v.z }; }
+	struct ManagedQuaternion { float x, y, z, w; };
+	ManagedVector3 ToManagedVec(const Ermine::Vec3& v) { return { v.x, v.y, v.z }; }
+	ManagedQuaternion ToManagedQuat(const Ermine::Quaternion& q) { return { q.x, q.y, q.z, q.w }; }
+	Ermine::Vec3 ToNativeVec(const ManagedVector3& v) { return { v.x, v.y, v.z }; }
+	Ermine::Quaternion ToNativeQuat(const ManagedQuaternion& q) { return { q.x, q.y, q.z, q.w }; }
 
 	Ermine::Transform* GetTransformFromManaged(MonoObject* thisObj)
 	{
@@ -288,23 +993,23 @@ namespace
 	ManagedVector3 icall_transform_get_position(MonoObject* thisObj)
 	{
 		if (auto* t = GetTransformFromManaged(thisObj))
-			return ToManaged(t->position);
+			return ToManagedVec(t->position);
 		EE_CORE_WARN("Transform for {0} failed to get unmanaged position", GetEntityIDFromManaged(thisObj));
 		return { 0,0,0 };
 	}
 
-	ManagedVector3 icall_transform_get_rotation(MonoObject* thisObj)
+	ManagedQuaternion icall_transform_get_rotation(MonoObject* thisObj)
 	{
 		if (auto* t = GetTransformFromManaged(thisObj))
-			return ToManaged(t->rotation);
+			return ToManagedQuat(t->rotation);
 		EE_CORE_WARN("Transform for {0} failed to get unmanaged rotation", GetEntityIDFromManaged(thisObj));
-		return { 0,0,0 };
+		return { .x= 0, .y= 0, .z= 0, .w = 1.0f };
 	}
 
 	ManagedVector3 icall_transform_get_scale(MonoObject* thisObj)
 	{
 		if (auto* t = GetTransformFromManaged(thisObj))
-			return ToManaged(t->scale);
+			return ToManagedVec(t->scale);
 		EE_CORE_WARN("Transform for {0} failed to get unmanaged scale", GetEntityIDFromManaged(thisObj));
 		return { 1,1,1 };
 	}
@@ -312,19 +1017,19 @@ namespace
 	void icall_transform_set_position(MonoObject* thisObj, ManagedVector3 value)
 	{
 		if (auto* t = GetTransformFromManaged(thisObj))
-			t->position = ToNative(value);
+			t->position = ToNativeVec(value);
 	}
 
-	void icall_transform_set_rotation(MonoObject* thisObj, ManagedVector3 value)
+	void icall_transform_set_rotation(MonoObject* thisObj, ManagedQuaternion value)
 	{
 		if (auto* t = GetTransformFromManaged(thisObj))
-			t->rotation = ToNative(value);
+			t->rotation = ToNativeQuat(value);
 	}
 
 	void icall_transform_set_scale(MonoObject* thisObj, ManagedVector3 value)
 	{
 		if (auto* t = GetTransformFromManaged(thisObj))
-			t->scale = ToNative(value);
+			t->scale = ToNativeVec(value);
 	}
 #pragma endregion
 
@@ -355,21 +1060,21 @@ namespace
 	{
 		std::string temp;
 		ToTempUTF8(message, temp);
-		EE_CORE_INFO("{}", temp);
+		EE_CORE_INFO("{}", temp); // TODO: Might have to swap to different channel
 	}
 
 	void icall_debug_log_warning(MonoString* message)
 	{
 		std::string temp;
 		ToTempUTF8(message, temp);
-		EE_CORE_WARN("{}", temp);
+		EE_CORE_WARN("{}", temp); // TODO: Might have to swap to different channel
 	}
 
 	void icall_debug_log_error(MonoString* message)
 	{
 		std::string temp;
 		ToTempUTF8(message, temp);
-		EE_CORE_ERROR("{}", temp);
+		EE_CORE_ERROR("{}", temp); // TODO: Might have to swap to different channel
 	}
 #pragma endregion
 
@@ -465,7 +1170,7 @@ namespace
 		EntityID id = GetEntityIDFromManaged(self);
 		if (id == 0 || !ECS::GetInstance().IsEntityValid(id) || !ECS::GetInstance().HasComponent<Transform>(id))
 			return nullptr;
-		MonoObject* obj = CreateManagedGameObjectWrapper(id);
+		MonoObject* obj = CreateManagedTransformWrapper(id);
 		SetComponentGameObject(obj, id);
 		return obj;
 	}
@@ -667,34 +1372,7 @@ namespace
 		if (srcID == 0 || !ECS::GetInstance().IsEntityValid(srcID))
 			return nullptr;
 
-		EntityID dstID = ECS::GetInstance().CreateEntity();
-
-		// TODO: Copy all components from srcID to dstID, It will grow over time with more components
-		// Copy Transform
-		if (ECS::GetInstance().HasComponent<Transform>(srcID))
-		{
-			auto t = ECS::GetInstance().GetComponent<Transform>(srcID);
-			ECS::GetInstance().AddComponent(dstID, t);
-		}
-		else
-			ECS::GetInstance().AddComponent(dstID, Transform());
-
-		// Copy Meta
-		if (ECS::GetInstance().HasComponent<ObjectMetaData>(srcID))
-		{
-			auto meta = ECS::GetInstance().GetComponent<ObjectMetaData>(srcID);
-			meta.name += "(Clone)";
-			ECS::GetInstance().AddComponent(dstID, meta);
-		}
-		else
-			ECS::GetInstance().AddComponent(dstID, ObjectMetaData());
-
-		// Copy Script?
-		if (ECS::GetInstance().HasComponent<Script>(srcID))
-		{
-			auto& scriptSrc = ECS::GetInstance().GetComponent<Script>(srcID);
-			ECS::GetInstance().AddComponent(dstID, Script(scriptSrc.m_className, dstID));
-		}
+		EntityID dstID = ECS::GetInstance().CloneEntity(srcID);
 
 		MonoObject* obj = CreateManagedGameObjectWrapper(dstID);
 		SetComponentGameObject(obj, dstID);
@@ -742,7 +1420,7 @@ namespace Ermine::scripting
 	}
 }
 
-void Ermine::scripting::ScriptEngine::RegisterInternalCalls()
+void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 {
 	s_APIImage = mono_assembly_get_image(m_apiAsm);
 	s_GameObjectClass = GetAPIClass("ErmineEngine", "GameObject");

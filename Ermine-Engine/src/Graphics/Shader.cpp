@@ -1,7 +1,8 @@
 /* Start Header ************************************************************************/
 /*!
 \file       Shader.cpp
-\author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu
+\author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu (70%)
+\co-author  Jeremy Lim Ting Jie, jeremytingjie.lim, 2301370, jeremytingjie.lim\@digipen.edu (30%)
 \date       09/03/2025
 \brief      This file contains the definition of the Shader system.
             This file is used to load the shader files.
@@ -14,7 +15,6 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "PreCompile.h"
 #include "Shader.h"
 
-#include "Logger.h"
 #include "Matrix3x3.h"
 #include "glad/glad.h"
 
@@ -148,6 +148,56 @@ Shader::Shader(const std::string& vertexPath, const std::string& fragmentPath)
     glDeleteShader(fragmentShader);
 }
 
+
+/**
+ * @brief Create a shader
+ * @param vertexPath The path of the vertex shader
+ * @param geometryPath The path of the geometry shader
+ * @param fragmentPath The path of the fragment shader
+ */
+Shader::Shader(const std::string& vertexPath, const std::string& geometryPath, const std::string& fragmentPath)
+{
+    std::string vertexSource = LoadShaderSource(vertexPath);
+    std::string geometrySource = LoadShaderSource(geometryPath);
+    std::string fragmentSource = LoadShaderSource(fragmentPath);
+
+    GLuint vertexShader = CompileShader(GL_VERTEX_SHADER, vertexSource);
+    GLuint geometryShader = CompileShader(GL_GEOMETRY_SHADER, geometrySource);
+    GLuint fragmentShader = CompileShader(GL_FRAGMENT_SHADER, fragmentSource);
+
+    // Link the shaders to the program
+    m_RendererID = glCreateProgram();
+    glAttachShader(m_RendererID, vertexShader);
+    glAttachShader(m_RendererID, geometryShader);
+    glAttachShader(m_RendererID, fragmentShader);
+    glLinkProgram(m_RendererID);
+
+    GLint isLinked = 0;
+    glGetProgramiv(m_RendererID, GL_LINK_STATUS, &isLinked);
+    if (isLinked == GL_FALSE)
+    {
+        GLint maxLength = 0;
+        glGetProgramiv(m_RendererID, GL_INFO_LOG_LENGTH, &maxLength);
+
+        std::vector<GLchar> infoLog(maxLength);
+        glGetProgramInfoLog(m_RendererID, maxLength, &maxLength, &infoLog[0]);
+
+        glDeleteProgram(m_RendererID);
+        glDeleteShader(vertexShader);
+        glDeleteShader(geometryShader);
+        glDeleteShader(fragmentShader);
+
+        EE_CORE_ERROR("Shader linking failed: {0}", infoLog.data());
+        m_RendererID = 0;
+        return;
+    }
+
+    // Delete the shaders as they are linked to the program and no longer needed
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
+}
+
+
 /**
  * @brief Destroy the shader
  */
@@ -181,6 +231,11 @@ void Shader::Unbind() const
     glUseProgram(0);
 }
 
+void Shader::SetUniform1ui(const std::string& name, unsigned int value)
+{
+	glUniform1ui(GetUniformLocation(name), value);
+}
+
 /**
  * @brief Set the uniform value of the shader
  * @param name The name of the uniform
@@ -192,6 +247,42 @@ void Shader::SetUniform1i(const std::string& name, int value)
 }
 
 /**
+ * @brief Sets a 2-component integer uniform in the shader.
+ * @param name The uniform name.
+ * @param x The first integer component.
+ * @param y The second integer component.
+ */
+void Shader::SetUniform2i(const std::string& name, int x, int y)
+{
+    glUniform2i(GetUniformLocation(name), x, y);
+}
+
+/**
+ * @brief Sets a 3-component integer uniform in the shader.
+ * @param name The uniform name.
+ * @param x The first integer component.
+ * @param y The second integer component.
+ * @param z The third integer component.
+ */
+void Shader::SetUniform3i(const std::string& name, int x, int y, int z)
+{
+    glUniform3i(GetUniformLocation(name), x, y, z);
+}
+
+/**
+ * @brief Sets a 4-component integer uniform in the shader.
+ * @param name The uniform name.
+ * @param x The first integer component.
+ * @param y The second integer component.
+ * @param z The third integer component.
+ * @param w The fourth integer component.
+ */
+void Shader::SetUniform4i(const std::string& name, int x, int y, int z, int w)
+{
+    glUniform4i(GetUniformLocation(name), x, y, z, w);
+}
+
+/**
  * @brief Set the uniform value of the shader
  * @param name The name of the uniform
  * @param value The value to set
@@ -199,6 +290,27 @@ void Shader::SetUniform1i(const std::string& name, int value)
 void Shader::SetUniform1f(const std::string& name, float value)
 {
     glUniform1f(GetUniformLocation(name), value);
+}
+
+/**
+ * @brief Sets a 2-component float uniform in the shader.
+ * @param name The uniform name.
+ * @param x The first float component.
+ * @param y The second float component.
+ */
+void Shader::SetUniform2f(const std::string& name, float x, float y)
+{
+    glUniform2f(GetUniformLocation(name), x, y);
+}
+
+/**
+ * @brief Sets a 2-component float uniform in the shader.
+ * @param name The uniform name.
+ * @param value The `glm::vec2` containing the float components.
+ */
+void Shader::SetUniform2f(const std::string& name, const glm::vec2& value)
+{
+    glUniform2f(GetUniformLocation(name), value.x, value.y);
 }
 
 /**
@@ -219,6 +331,17 @@ void Shader::SetUniform3f(const std::string& name, const glm::vec3& value)
 void Shader::SetUniform4f(const std::string& name, const glm::vec4& value)
 {
     glUniform4f(GetUniformLocation(name), value.x, value.y, value.z, value.w);
+}
+
+/**
+ * @brief Sets a 2-component float uniform in the shader.
+ * @param name The uniform name.
+ * @param count The number of elements.
+ * @param value Pointer to the float values.
+ */
+void Shader::SetUniformMatrix2fv(const std::string& name, const glm::mat2& value)
+{
+    glUniformMatrix2fv(GetUniformLocation(name), 1, GL_FALSE, glm::value_ptr(value));
 }
 
 /**
@@ -248,4 +371,163 @@ void Shader::SetUniformMatrix4fv(const std::string& name, const Mtx44& matrix)
 GLuint Shader::GetRendererID() const
 {
     return m_RendererID;
+}
+
+/**
+ * @brief Sets a 1-component float uniform in the shader.
+ * @param name The uniform name.
+ * @param count The number of elements.
+ * @param value Pointer to the float values.
+ */
+void Shader::SetUniform1fv(const std::string& name, GLsizei count, const float* value)
+{
+    glUniform1fv(GetUniformLocation(name), count, value);
+}
+
+/**
+ * @brief Sets a 2-component float uniform in the shader.
+ * @param name The uniform name.
+ * @param count The number of elements.
+ * @param value Pointer to the float values.
+ */
+void Shader::SetUniform2fv(const std::string& name, GLsizei count, const float* value)
+{
+    glUniform2fv(GetUniformLocation(name), count, value);
+}
+
+/**
+ * @brief Sets a 3-component float uniform in the shader.
+ * @param name The uniform name.
+ * @param count The number of elements.
+ * @param value Pointer to the float values.
+ */
+void Shader::SetUniform3fv(const std::string& name, GLsizei count, const float* value)
+{
+    glUniform3fv(GetUniformLocation(name), count, value);
+}
+
+/**
+ * @brief Sets a 4-component float uniform in the shader.
+ * @param name The uniform name.
+ * @param count The number of elements.
+ * @param value Pointer to the float values.
+ */
+void Shader::SetUniform4fv(const std::string& name, GLsizei count, const float* value)
+{
+    glUniform4fv(GetUniformLocation(name), count, value);
+}
+
+/**
+ * @brief Sets a 1-component int uniform in the shader.
+ * @param name The uniform name.
+ * @param count The number of elements.
+ * @param value Pointer to the int values.
+ */
+void Shader::SetUniform1iv(const std::string& name, GLsizei count, const int* value)
+{
+    glUniform1iv(GetUniformLocation(name), count, value);
+}
+
+/**
+ * @brief Sets a boolean uniform in the shader.
+ * @param name The uniform name.
+ * @param value The boolean value (true/false).
+ */
+void Shader::SetUniformBool(const std::string& name, bool value)
+{
+    glUniform1i(GetUniformLocation(name), value ? 1 : 0);
+}
+
+/**
+ * @brief Checks if a uniform exists in the shader.
+ * @param name The uniform name.
+ * @return `true` if uniform exists, `false` otherwise.
+ */
+bool Shader::HasUniform(const std::string& name)
+{
+    return GetUniformLocation(name) != -1;
+}
+
+/**
+ * @brief Retrieves all active uniform names in the shader.
+ * @return A vector of uniform names.
+ */
+std::vector<std::string> Shader::GetActiveUniforms() const
+{
+    std::vector<std::string> uniforms;
+
+    if (m_RendererID == 0) return uniforms;
+
+    GLint numUniforms;
+    glGetProgramiv(m_RendererID, GL_ACTIVE_UNIFORMS, &numUniforms);
+
+    GLint maxLength;
+    glGetProgramiv(m_RendererID, GL_ACTIVE_UNIFORM_MAX_LENGTH, &maxLength);
+
+    std::vector<GLchar> nameBuffer(maxLength);
+
+    for (GLint i = 0; i < numUniforms; ++i)
+    {
+        GLsizei length;
+        GLint size;
+        GLenum type;
+
+        glGetActiveUniform(m_RendererID, i, maxLength, &length, &size, &type, nameBuffer.data());
+
+        uniforms.emplace_back(nameBuffer.data(), length);
+    }
+
+    return uniforms;
+}
+
+/**
+ * @brief Prints active uniform names and their locations.
+ * @note Logs a warning if the shader is invalid.
+ */
+void Shader::PrintActiveUniforms() const
+{
+    if (m_RendererID == 0)
+    {
+        EE_CORE_WARN("Cannot print uniforms: Invalid shader program");
+        return;
+    }
+
+    auto uniforms = GetActiveUniforms();
+    EE_CORE_INFO("Active uniforms for shader program {0}:", m_RendererID);
+
+    for (const auto& uniform : uniforms)
+    {
+        GLint location = glGetUniformLocation(m_RendererID, uniform.c_str());
+        EE_CORE_INFO("  {0} (location: {1})", uniform, location);
+    }
+}
+
+/**
+ * @brief Set mat3 uniform (GLM)
+ * @param name The name of the uniform
+ * @param value The mat3 value to set
+ */
+void Shader::SetUniformMatrix3fv(const std::string& name, const glm::mat3& value)
+{
+    glUniformMatrix3fv(GetUniformLocation(name), 1, GL_FALSE, glm::value_ptr(value));
+}
+
+/**
+ * @brief Set mat4 uniform (GLM)
+ * @param name The name of the uniform
+ * @param matrix The mat4 value to set
+ */
+void Shader::SetUniformMatrix4fv(const std::string& name, const glm::mat4& matrix)
+{
+    glUniformMatrix4fv(GetUniformLocation(name), 1, GL_FALSE, glm::value_ptr(matrix));
+}
+
+/**
+ * @brief Set mat4 uniform from raw float pointer
+ * @param name The name of the uniform
+ * @param matrix Pointer to 16 floats representing the matrix
+ */
+void Shader::SetUniformMatrix4fv(const std::string& name, const float* matrix)
+{
+    glUniformMatrix4fv(GetUniformLocation(name), 1, GL_FALSE, matrix);
 }

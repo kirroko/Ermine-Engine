@@ -1,64 +1,45 @@
 #version 460
-layout(location = 0) in vec3 vertex_position;
-layout(location = 1) in vec3 vertex_normal;
-layout(location = 2) in vec2 vertex_texCoord;
+
+layout (location = 0) in vec3 aPos;
+layout (location = 1) in vec3 aNormal;
+layout (location = 2) in vec2 aTexCoord;
+layout (location = 3) in vec3 aTangent;   // Add tangent attribute
 
 out vec2 TexCoord;
-out vec3 LightIntensity;
+out vec3 Normal;
+out vec3 FragPos;
+out vec3 ViewPos; // Position in view space for lighting calculations
+out vec3 Tangent;
+out vec3 Bitangent;
 
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
+uniform mat3 NormalMatrix; // Already calculated in Renderer.cpp
 
-uniform mat3 NormalMatrix;
-
-uniform struct LightInfo {
-    vec4 Position; // Light position in eye coords
-    vec3 La;      // Ambient light intensity
-    vec3 Ld;      // Diffuse light intensity
-    vec3 Ls;      // Specular light intensity
-} Light;
-
-uniform struct MaterialInfo {
-    vec3 Ka;      // Ambient reflectivity
-    vec3 Kd;      // Diffuse reflectivity
-    vec3 Ks;      // Specular reflectivity
-    float Shininess; // Specular shininess factor
-} Material;
-
-void getCamSpace(out vec3 norm, out vec3 position)
+void main()
 {
-    norm = normalize(NormalMatrix * vertex_normal);
-    vec4 camCoords = view * model * vec4(vertex_position, 1.0);
-    position = camCoords.xyz;
-}
+    // Calculate positions
+    vec4 viewPos = view * model * vec4(aPos, 1.0);
+    ViewPos = viewPos.xyz;
+    
+    gl_Position = projection * viewPos;
+    TexCoord = aTexCoord;
 
-vec3 phongModel(vec3 position, vec3 n)
-{
-    vec3 ambient = Light.La * Material.Ka;
-    vec3 s = normalize(vec3(Light.Position - vec4(position, 1.0)));
-    float sDotN = max(dot(s, n), 0.0);
-    vec3 diffuse = Light.Ld * Material.Kd * sDotN;
-    vec3 spec = vec3(0.0);
-    if(sDotN > 0.0)
-    {
-        vec3 v = normalize(-position);
-        vec3 r = reflect(-s, n);
-        float rDotV = max(dot(r, v), 0.0);
-        spec = Light.Ls * Material.Ks * pow(rDotV, Material.Shininess);
-    }
-    return ambient + diffuse + spec;
-}
+    // Transform normal to view space
+    Normal = normalize(NormalMatrix * aNormal);
 
-void main() {
-    // Get the position and normal in camera space
-    vec3 camNorm, camPosition;
-    getCamSpace(camNorm, camPosition);
+    // Calculate fragment position in world space for potential future use
+    FragPos = vec3(model * vec4(aPos, 1.0));
+
+    // Calculate tangent and bitangent for normal mapping
+    Tangent = normalize(NormalMatrix * aTangent);
     
-    // Evaluate the reflection model
-    LightIntensity = phongModel(camPosition, camNorm);
+    // Calculate bitangent using cross product (assuming right-handed coordinate system)
+    // Note: Some models may have pre-calculated bitangents or handedness info
+    Bitangent = normalize(cross(Normal, Tangent));
     
-    TexCoord = vertex_texCoord;
-    
-    gl_Position = projection * view * model * vec4(vertex_position, 1.0);
+    // Gram-Schmidt process to re-orthogonalize TBN vectors
+    Tangent = normalize(Tangent - dot(Tangent, Normal) * Normal);
+    Bitangent = cross(Normal, Tangent);
 }

@@ -15,7 +15,6 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 /* End Header **************************************************************************/
 #include "PreCompile.h"
 #include "EditorGUI.h"
-#include "Logger.h"
 
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
@@ -24,12 +23,63 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "EditorCamera.h"
 #include "FrameController.h"
 #include "Input.h"
+#include "InspectorGUI.h"
 #include "Renderer.h"
+
+#include <ImGuizmo.h>
+
+namespace Ermine
+{
+	class InspectorGUI;
+}
+
+class Ermine::InspectorGUI;
 
 using namespace Ermine::editor;
 
 // Definition for static member m_Windows, for ImGUI Windows
-std::vector<std::unique_ptr<Ermine::ImGUIWindow>>Ermine::editor::EditorGUI::m_Windows;
+std::vector<std::unique_ptr<Ermine::ImGUIWindow>>EditorGUI::m_Windows;
+bool Ermine::editor::EditorGUI::isPlaying = false; // TODO: tied to Play/Stop toolbar state.
+
+namespace
+{
+    std::string FormatNumber(uint64_t value)
+    {
+        struct Unit { uint64_t base; const char* suffix; };
+        static constexpr Unit units[] = {
+			{.base= 1'000'000'000'000ULL, .suffix= "T"},
+	        {.base= 1'000'000'000ULL, .suffix= "B"},
+	        {.base= 1'000'000ULL, .suffix= "M"},
+	        {.base= 1'000ULL, .suffix= "K"},
+	        {.base= 1, .suffix= ""}
+        };
+
+        for (const auto& u : units)
+        {
+            if (value >= u.base)
+            {
+                char buffer[32];
+                const double scaled = static_cast<double>(value) / static_cast<double>(u.base);
+                const int written = snprintf(buffer, sizeof(buffer), "%.1f%s", scaled, u.suffix);
+                if (written < 0)
+                {
+                    EE_CORE_WARN("FormatNumber error occurred");
+                    return std::to_string(value);
+                }
+                return std::string(buffer);
+            }
+        }
+
+        char buffer[32];
+		const int written = snprintf(buffer, sizeof(buffer), "%llu", value);
+        if (written < 0)
+        {
+            EE_CORE_WARN("FormatNumber error occurred");
+            return std::to_string(value);
+        }
+		return std::string(buffer);
+	}
+}
 
 void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
 {
@@ -79,7 +129,10 @@ void EditorGUI::ProfilingWindow()
 
     const auto& metrics = graphics::GPUProfiler::GetMetrics();
 
-    ImGui::Text("FPS: %.1f", metrics.fps);
+    float avgFps = metrics.averageFrameTimeMs > 0.0f ? 1000.0f / metrics.averageFrameTimeMs : 0.0f;
+
+    //ImGui::Text("FPS: %.1f (avg: %.1f)", metrics.fps, avgFps);
+    ImGui::Text("FPS: %.1f", avgFps);
     ImGui::Text("Frame Time: %.2f ms", metrics.frameTimeMs);
     ImGui::Text("CPU Time: %.2f ms", metrics.cpuFrameTimeMs);
     ImGui::Text("GPU Time: %.2f ms", metrics.gpuFrameTimeMs);
@@ -93,8 +146,8 @@ void EditorGUI::ProfilingWindow()
     ImGui::Separator();
 
     ImGui::Text("Draw Calls: %u", metrics.drawCallCount);
-    ImGui::Text("Triangles: %u", metrics.triangleCount);
-    ImGui::Text("Vertices: %u", metrics.vertexCount);
+    ImGui::Text("Tris: %s", FormatNumber(metrics.triangleCount).c_str());
+    ImGui::Text("Verts: %s", FormatNumber(metrics.vertexCount).c_str());
 
     ImGui::Separator();
 
@@ -130,25 +183,113 @@ void EditorGUI::ViewPortWindow(bool &show)
     viewport_size.y = std::clamp(viewport_size.y, static_cast<float>(minSize), static_cast<float>(max_size));
 
     static bool first_time = true;
+	auto renderer = ECS::GetInstance().GetSystem<graphics::Renderer>();
     if (first_time)
     {
-		ECS::GetInstance().GetSystem<graphics::Renderer>()->Create(static_cast<int>(viewport_size.x), static_cast<int>(viewport_size.y));
+        renderer->CreateOffscreenBuffer(static_cast<int>(viewport_size.x), static_cast<int>(viewport_size.y));
+        renderer->ResizeGBuffer(static_cast<int>(viewport_size.x), static_cast<int>(viewport_size.y));
         first_time = false;
     }
-	const auto offscreen_buffer = ECS::GetInstance().GetSystem<graphics::Renderer>()->GetOffscreenBuffer(); // released at the end of the scope
-	offscreen_buffer->width = static_cast<int>(viewport_size.x);
-	offscreen_buffer->height = static_cast<int>(viewport_size.y);
 
+	const auto offscreen_buffer = renderer->GetOffscreenBuffer(); // released at the end of the scope
+    if (offscreen_buffer)
+    {
+        // Resize the offscreen buffer when viewport size changes
+	    if (offscreen_buffer->width != static_cast<int>(viewport_size.x) ||
+            offscreen_buffer->height != static_cast<int>(viewport_size.y))
+	    {
+		    renderer->ResizeOffscreenBuffer(static_cast<int>(viewport_size.x), static_cast<int>(viewport_size.y));
+			renderer->ResizeGBuffer(static_cast<int>(viewport_size.x), static_cast<int>(viewport_size.y));
+	    }
+    }
+
+    // Set editor's camera viewport size
 	EditorCamera::GetInstance().SetViewportSize(viewport_size.x, viewport_size.y);
 
-	ImGui::Image(offscreen_buffer->ColorTexture, viewport_size, ImVec2(0, 1), ImVec2(1, 0));
+    // Child region that ignores all ImGui inputs
+    ImGuiWindowFlags vpChildFlags =
+        ImGuiWindowFlags_NoNav |
+        ImGuiWindowFlags_NoScrollbar |
+        ImGuiWindowFlags_NoScrollWithMouse;
 
-    if (ImGui::IsWindowHovered())
+    ImGui::BeginChild("SceneViewportRegion", ImVec2(0,0), false, vpChildFlags);
+
+    // Draw the rendered scene
+    if (offscreen_buffer)
+    {
+        ImGui::Image(
+#if defined(IMGUI_IMPL_OPENGL_LOADER_GL3W) || defined(IMGUI_IMPL_OPENGL_ES2) || defined(IMGUI_IMPL_OPENGL_ES3) || defined(IMGUI_IMPL_OPENGL_LOADER_GLEW) || defined(IMGUI_IMPL_OPENGL_LOADER_GLAD)
+            (ImTextureID)(intptr_t)offscreen_buffer->ColorTexture,
+#else
+            offscreen_buffer->ColorTexture,
+#endif
+            ImGui::GetContentRegionAvail(),
+            ImVec2(0, 1), ImVec2(1, 0)
+        );
+    }
+
+	// Capture the image rect for mouse->pixel conversion
+    const ImVec2 imgMin = ImGui::GetItemRectMin();
+    const ImVec2 imgMax = ImGui::GetItemRectMax();
+    const ImVec2 imgSize = ImGui::GetItemRectSize();
+
+    // Left-click within the image, perform picking
+    if (!isPlaying && ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+    {
+        ImGuiIO io = ImGui::GetIO();
+        const float localX = io.MousePos.x - imgMin.x;
+		const float localY = io.MousePos.y - imgMin.y;
+
+        if (localX >= 0.0f && localY >= 0.0f && localX <= imgSize.x && localY <= imgSize.y)
+        {
+            // Convert to framebuffer coordinates (y is flipped)
+			const float u = imgSize.x > 0.0f ? localX / imgSize.x : 0.0f;
+			const float v = imgSize.y > 0.0f ? localY / imgSize.y : 0.0f;
+
+			const int px = static_cast<int>(u * offscreen_buffer->width);
+            const int py = static_cast<int>((1.0f - v) * offscreen_buffer->height);
+            auto [hit, entity] = renderer->PickEntityAt(std::clamp(px,0,offscreen_buffer->width - 1),
+                std::clamp(py,0,offscreen_buffer->height - 1),
+                EditorCamera::GetInstance().GetViewMatrix(),
+                EditorCamera::GetInstance().GetProjectionMatrix());
+
+            if (hit)
+            {
+				// Set selection in Inspector?
+                for (auto& w : m_Windows)
+                {
+                    if (auto* inspector = dynamic_cast<InspectorGUI*>(w.get()))
+                        inspector->SetEntity(entity);
+                }
+			}
+        }
+    }
+
+    const ImGuiHoveredFlags hovFlags =
+        ImGuiHoveredFlags_AllowWhenBlockedByActiveItem |
+        ImGuiHoveredFlags_AllowWhenOverlappedByWindow |
+        ImGuiHoveredFlags_AllowWhenOverlappedByItem;
+
+    const bool viewportHovered = ImGui::IsItemHovered(hovFlags);
+	const bool viewportFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_None);
+
+    ImGui::EndChild();
+
+    Input::SetEditorInputActive(viewportFocused && viewportHovered);
+    if (Input::IsKeyDownEditor(GLFW_KEY_LEFT_CONTROL) && Input::IsKeyPressedEditor(GLFW_KEY_P))
+    {
+		isPlaying = !isPlaying;
+        EE_CORE_INFO("Play {0}", isPlaying);
+    }
+    Input::SetGameInputActive(isPlaying && viewportFocused && viewportHovered);
+
+    if (viewportHovered && !isPlaying)
     {
 	    EditorCamera::GetInstance().ProcessMouseMovement();
 		EditorCamera::GetInstance().ProcessKeyboardInput(FrameController::GetDeltaTime());
-		EditorCamera::GetInstance().ProcessScrollWheel(Input::GetMouseScrollOffset());
+		EditorCamera::GetInstance().ProcessScrollWheel(Input::GetMouseScrollOffsetEditor());
     }
+
 	ImGui::End();
 }
 
@@ -249,23 +390,23 @@ void EditorGUI::Update(GLFWwindow* windowContext)
 
     // Windows that imgui has to render
     TopMenuBar(windowContext);
-    static bool show_scene_viewer = true;
-    if (show_scene_viewer)
-		ViewPortWindow(show_scene_viewer);
+  //  static bool show_scene_viewer = true;
+  //  if (show_scene_viewer)
+		//ViewPortWindow(show_scene_viewer);
 
     static bool show_demo_window = true;
     if (show_demo_window)
         ImGui::ShowDemoWindow(&show_demo_window);
 
-    static bool show_another_window = true;
-    if (show_another_window)
-    {
-        ImGui::Begin("Another Window", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-        ImGui::Text("Hello from another window!");
-        if (ImGui::Button("Close Me"))
-            show_another_window = false;
-        ImGui::End();
-    }
+    //static bool show_another_window = true;
+    //if (show_another_window)
+    //{
+    //    ImGui::Begin("Another Window", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
+    //    ImGui::Text("Hello from another window!");
+    //    if (ImGui::Button("Close Me"))
+    //        show_another_window = false;
+    //    ImGui::End();
+    //}
 
     // Call Update() for all registered ImGui windows
     for (auto& window : m_Windows) {
@@ -306,4 +447,5 @@ void EditorGUI::ShutDown()
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
+    m_Windows.clear(); // Clean up additional ImGUI windows
 }

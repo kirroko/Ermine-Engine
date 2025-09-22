@@ -13,6 +13,9 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #include "PreCompile.h"
 #include "AssetBrowser.h"
+#include "AssetManager.h"
+
+
 namespace fs = std::filesystem;
 
 // Helper Functions
@@ -44,8 +47,10 @@ static void HelpMarker(const char* desc)
 }
 
 namespace Ermine {
-    namespace ImguiUI {
 
+	namespace ImguiUI {
+        
+        
         int SelectionWithDeletion::ApplyDeletionPreLoop(ImGuiMultiSelectIO* ms_io, int items_count)
         {
             if (Size == 0)
@@ -325,13 +330,11 @@ namespace Ermine {
             }
 
             ImGui::SameLine();
-            if (ImGui::Button("Refresh Asset"))
-                //AssetManager::Refresh();
+            //if (ImGui::Button("Refresh Asset"))
+            //    AssetManager::Refresh();
 
             // Asset Categories
-            //const char* categories[] = { "Audio", "Images", "Fonts", "Prefabs", "Scenes" };
-            const char* categories[] = { "Textures", "Shaders" };
-            for (int type = 0; type < 2; ++type)
+            for (int type = 0; type < num_of_categories; ++type)
             {
                 if (ImGui::TreeNode(categories[type]))
                 {
@@ -666,6 +669,7 @@ namespace Ermine {
 
             std::vector<std::string> textureFiles;
             std::vector<std::string> shaderFiles;
+            std::vector<std::string> modelFiles;
 
             // Scan Textures folder
             for (const auto& entry : fs::directory_iterator("../Resources/Textures")) {
@@ -685,6 +689,15 @@ namespace Ermine {
                 }
             }
 
+            // Scan Models folder
+            for (const auto& entry : fs::directory_iterator("../Resources/Models")) {
+                if (entry.is_regular_file()) {
+                    const auto& path = entry.path();
+                    if (path.extension() == ".fbx" || path.extension() == ".obj" || path.extension() == ".gltf")
+                        modelFiles.push_back(path.string());
+                }
+            }
+
             size_t currentCount = textureFiles.size() + shaderFiles.size();
             if (currentCount != count)
             {
@@ -698,6 +711,10 @@ namespace Ermine {
                 // Populate shaders assets
                 for (const auto& shaderKey : shaderFiles)
                     assets_browser.AddItems(1, 1, getFileName(shaderKey));
+
+                // Populate models assets
+                for (const auto& modelPath : modelFiles)
+                    assets_browser.AddItems(1, 2, getFileName(modelPath));
 
                 count = currentCount;
                 //AssetManager::SetRefreshStatus(false);

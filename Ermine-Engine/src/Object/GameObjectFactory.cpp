@@ -15,8 +15,6 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "PreCompile.h"
 #include "GameObjectFactory.h"
 
-#include "Logger.h"
-
 using namespace Ermine::object;
 
 std::list<std::unique_ptr<GameObject>> GameObjectFactory::m_GameObjects; // List of all game objects
@@ -35,7 +33,7 @@ GameObject* GameObjectFactory::CreateGameObject(const std::string& name, const s
 	return rawPointer;
 }
 
-//GameObject* GameObjectFactory::CloneGameObbject(GameObject* game_object)
+//GameObject* GameObjectFactory::CloneGameObject(GameObject* game_object)
 //{
 //
 //}

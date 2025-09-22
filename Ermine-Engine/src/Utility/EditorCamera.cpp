@@ -73,12 +73,6 @@ void EditorCamera::SetViewportSize(float width, float height)
 {
 	m_AspectRatio = width / height;
 
-#ifdef _DEBUG
-	// Update the frame buffer size for drawing on screen
-	if (width > 0.f && height > 0.f)
-		ECS::GetInstance().GetSystem<graphics::Renderer>()->Create(static_cast<int>(width), static_cast<int>(height));
-#endif
-
 	UpdateProjectionMatrix();
 }
 
@@ -128,24 +122,24 @@ void EditorCamera::UpdateProjectionMatrix()
 */
 void EditorCamera::ProcessKeyboardInput(float deltaTime)
 {
-	if (!Input::IsMouseButtonDown(GLFW_MOUSE_BUTTON_RIGHT))
+	if (!Input::IsMouseButtonDownEditor(GLFW_MOUSE_BUTTON_RIGHT))
 		return;
 	
 	float velocity = m_MovementSpeed * deltaTime;
-	if (Input::IsKeyDown(GLFW_KEY_LEFT_SHIFT))
+	if (Input::IsKeyDownEditor(GLFW_KEY_LEFT_SHIFT))
 		velocity *= 2.0f;
 
-	if (Input::IsKeyDown(GLFW_KEY_W))
+	if (Input::IsKeyDownEditor(GLFW_KEY_W))
 		m_Position = m_Position + m_Front * velocity;
-	if (Input::IsKeyDown(GLFW_KEY_S))
+	if (Input::IsKeyDownEditor(GLFW_KEY_S))
 		m_Position = m_Position - m_Front * velocity;
-	if (Input::IsKeyDown(GLFW_KEY_A))
+	if (Input::IsKeyDownEditor(GLFW_KEY_A))
 		m_Position = m_Position - m_Right * velocity;
-	if (Input::IsKeyDown(GLFW_KEY_D))
+	if (Input::IsKeyDownEditor(GLFW_KEY_D))
 		m_Position = m_Position + m_Right * velocity;
-	if (Input::IsKeyDown(GLFW_KEY_Q))
+	if (Input::IsKeyDownEditor(GLFW_KEY_Q))
 		m_Position = m_Position - m_WorldUp * velocity;
-	if (Input::IsKeyDown(GLFW_KEY_E))
+	if (Input::IsKeyDownEditor(GLFW_KEY_E))
 		m_Position = m_Position + m_WorldUp * velocity;
 }
 
@@ -155,7 +149,7 @@ void EditorCamera::ProcessKeyboardInput(float deltaTime)
 void EditorCamera::ProcessMouseMovement()
 {
 	// Only rotate camera if right mouse button is pressed
-	if (Input::IsMouseButtonDown(GLFW_MOUSE_BUTTON_RIGHT))
+	if (Input::IsMouseButtonDownEditor(GLFW_MOUSE_BUTTON_RIGHT))
 	{
 		double xpos = Input::GetMouseX(), ypos = Input::GetMouseY();
 
@@ -197,5 +191,5 @@ void EditorCamera::ProcessScrollWheel(float yOffset)
 	m_FOV -= yOffset * FrameController::GetFixedDeltaTime();
 	m_FOV = std::max(m_FOV, 1.0f);
 	m_FOV = std::min(m_FOV, 45.0f);
-	Input::ResetMouseScrollOffset();
+	Input::ResetMouseScrollOffsetEditor();
 }

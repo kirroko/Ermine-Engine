@@ -16,7 +16,12 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <EditorGUI.h> // ImGUI wrapper for editor
 #include <FrameController.h> // Frame rate controller
 #include <Logger.h> // Logging system
-#include <Input.h> // Input system
+
+extern "C"
+{
+	__declspec(dllexport) unsigned long NvOptimusEnablement = 0x00000001; // Enable NVIDIA Optimus on laptops, requests high-performance GPU
+	__declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1; // Enable AMD Switchable Graphics on laptops, requests high-performance GPU
+}
 
 using namespace Ermine;
 
@@ -24,6 +29,7 @@ int main()
 {
     Logger::Init();
     EE_CORE_INFO("Logger Initialized");
+
     GLFWwindow* window = Window::InitWindow(1920,1080, "Ermine Editor 0.1");
     if (window == nullptr)
         return -1;
