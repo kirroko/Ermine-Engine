@@ -146,7 +146,7 @@ void Ermine::ViewPortGUI::Update()
 		{
 			auto& ecs = ECS::GetInstance();
 			auto& tr = ecs.GetComponent<Transform>(selectedEntity);
-			EditorCamera::GetInstance().Focus(tr.position);
+			EditorCamera::GetInstance().Focus(tr.position,2.5f);
 		}
 	}
 
