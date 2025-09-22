@@ -51,28 +51,80 @@ void Camera::Update(GLFWwindow* windowContext)
     }
 }
 
-Ermine::Vector3D Camera::CalculateUpVector(const Vector3D& rotation) const
+Ermine::Vector3D Camera::CalculateUpVector(const Quaternion& rotation) const
 {
-    // Convert degrees to radians
-    float yawRad = radian(rotation.y);
-    float pitchRad = radian(rotation.x);
-    float rollRad = radian(rotation.z);
+    double qx = rotation.x;
+    double qy = rotation.y;
+    double qz = rotation.z;
+    double qw = rotation.w;
 
-    // Calculate the up vector using the rotation matrix elements for the up direction
-    return Vector3D(
-        -sinf(rollRad) * cosf(yawRad) - cosf(rollRad) * sinf(pitchRad) * sinf(yawRad),
-        cosf(rollRad) * cosf(pitchRad),
-        -sinf(rollRad) * sinf(yawRad) + cosf(rollRad) * sinf(pitchRad) * cosf(yawRad));
+    double len = std::sqrt(qx * qx + qy * qy + qz * qz + qw * qw);
+    if (len < 1e-12)
+        return Vector3D(0.0f, 1.0f, 0.0f);
+
+    qx /= len;
+    qy /= len;
+    qz /= len;
+    qw /= len;
+
+    // Basis up vector (engine uses +Y as up for zero rotation)
+    const double vx = 0.0;
+    const double vy = 1.0;
+    const double vz = 0.0;
+
+    // t = 2 * cross(q_xyz, v)
+    double tx = 2.0 * (qy * vz - qz * vy);
+    double ty = 2.0 * (qz * vx - qx * vz);
+    double tz = 2.0 * (qx * vy - qy * vx);
+
+    // cross(q_xyz, t)
+    double cx = qy * tz - qz * ty;
+    double cy = qz * tx - qx * tz;
+    double cz = qx * ty - qy * tx;
+
+    // v' = v + q_w * t + cross(q_xyz, t)
+    double rx = vx + qw * tx + cx;
+    double ry = vy + qw * ty + cy;
+    double rz = vz + qw * tz + cz;
+
+    return { static_cast<float>(rx), static_cast<float>(ry), static_cast<float>(rz) };
 }
 
-Ermine::Vector3D Camera::CalculateForwardVector(const Vector3D& rotation) const
+Ermine::Vector3D Camera::CalculateForwardVector(const Quaternion& rotation) const
 {
-    // Convert degree to radian and calculate the forward vector
-    float yawRad = radian(rotation.y);
-    float pitchRad = radian(rotation.x);
+    double qx = rotation.x;
+    double qy = rotation.y;
+    double qz = rotation.z;
+    double qw = rotation.w;
 
-    return Vector3D(
-        cosf(pitchRad) * sinf(yawRad),
-        -sinf(pitchRad),
-        cosf(pitchRad) * cosf(yawRad));
+    // Normalize quaternion to avoid scaling the vector by non-unit quaternions
+    double len = std::sqrt(qx * qx + qy * qy + qz * qz + qw * qw);
+    if (len < 1e-12)
+        return Vector3D(0.0f, 0.0f, 1.0f);
+    
+    qx /= len;
+    qy /= len;
+    qz /= len;
+    qw /= len;
+
+    // Basis forward vector (engine uses +Z as forward for zero rotation)
+    const double vx = 0.0;
+    const double vy = 0.0;
+    const double vz = 1.0;
+
+    // t = 2 * cross(q_xyz, v)
+    double tx = 2.0 * (qy * vz - qz * vy);
+    double ty = 2.0 * (qz * vx - qx * vz);
+    double tz = 2.0 * (qx * vy - qy * vx);
+
+    // v' = v + q_w * t + cross(q_xyz, t)
+    double cx = qy * tz - qz * ty;
+    double cy = qz * tx - qx * tz;
+    double cz = qx * ty - qy * tx;
+
+    double rx = vx + qw * tx + cx;
+    double ry = vy + qw * ty + cy;
+    double rz = vz + qw * tz + cz;
+
+    return {static_cast<float>(rx), static_cast<float>(ry), static_cast<float>(rz)};
 }

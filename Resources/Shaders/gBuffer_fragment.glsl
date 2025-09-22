@@ -7,6 +7,8 @@ in vec3 WorldPos;
 in vec3 WorldNormal;
 in vec3 ViewPos;
 in vec3 ViewNormal;
+in vec3 ViewTangent;
+in vec3 ViewBitangent;
 
 // G-Buffer outputs
 layout(location = 0) out vec3 gBuffer0; // RT0: Albedo
@@ -92,25 +94,28 @@ void writeGBuffer(vec3 albedo, vec3 normal, vec3 emissive, float emissiveIntensi
     gBuffer3 = packMaterialProperties(roughness, metallic, ao, 0.0); // RT3: RGBA8
 }
 
-vec3 getNormalFromMap_viewspace(sampler2D normalMap, vec2 texCoords, vec3 viewNormal, vec3 viewPos)
+vec3 getNormalFromMap_TBN(sampler2D normalMap, vec2 texCoords, vec3 viewNormal, vec3 viewTangent, vec3 viewBitangent)
 {
-    // Sample normal map (tangent space)
-    vec3 tangentNormal = texture(normalMap, texCoords).rgb * 2.0 - 1.0;
-
-    // Build TBN using derivatives of view-space position and UV
-    vec3 Q1 = dFdx(viewPos);
-    vec3 Q2 = dFdy(viewPos);
-    vec2 st1 = dFdx(texCoords);
-    vec2 st2 = dFdy(texCoords);
-
-    // Tangent in view space
-    vec3 T = normalize(Q1 * st2.t - Q2 * st1.t);
-    // Ensure orthogonality
-    T = normalize(T - dot(T, viewNormal) * viewNormal);
-    vec3 B = normalize(cross(viewNormal, T));
-
-    mat3 TBN = mat3(T, B, viewNormal);
-    return normalize(TBN * tangentNormal); // returns view-space normal
+    // Sample normal map (tangent space normal)
+    vec3 tangentNormal = texture(normalMap, texCoords).xyz * 2.0 - 1.0;
+    
+    // Construct TBN matrix using pre-calculated tangent and bitangent
+    // Ensure all vectors are normalized and orthogonal
+    vec3 T = normalize(viewTangent);
+    vec3 B = normalize(viewBitangent);
+    vec3 N = normalize(viewNormal);
+    
+    // Re-orthogonalize T with respect to N (Gram-Schmidt process)
+    T = normalize(T - dot(T, N) * N);
+    
+    // Re-calculate B to ensure proper handedness
+    B = cross(N, T);
+    
+    // Construct the TBN matrix
+    mat3 TBN = mat3(T, B, N);
+    
+    // Transform tangent space normal to view space
+    return normalize(TBN * tangentNormal);
 }
 
 void main()
@@ -126,7 +131,8 @@ void main()
     vec3 finalNormal = ViewNormal;
     if (hasNormalMap != 0)
     {
-        vec3 mapped = getNormalFromMap_viewspace(materialNormalMap, TexCoord, ViewNormal, ViewPos);
+        // Use the new TBN-based normal mapping function - FIXED: Use ViewTangent and ViewBitangent
+        vec3 mapped = getNormalFromMap_TBN(materialNormalMap, TexCoord, ViewNormal, ViewTangent, ViewBitangent);
         finalNormal = normalize(mix(ViewNormal, mapped, normalStrength));
     }
     

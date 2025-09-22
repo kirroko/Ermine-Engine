@@ -3,7 +3,8 @@
 \file       AssetManager.cpp
 \author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu (80%)
 \co-author  Jeremy Lim Ting Jie, jeremytingjie.lim, 2301370, jeremytingjie.lim\@digipen.edu (20%)
-\date       09/03/2025
+\co-authors Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu
+\date       10/09/2025
 \brief      This file contains the definition of the AssetManager system.
             This file is used to manage all the assets in the game.
 
@@ -89,6 +90,30 @@ std::shared_ptr<graphics::Shader> AssetManager::LoadShader(const std::string& ve
 }
 
 /**
+ * @brief Load a shader from a vertex, geometry and fragment file
+ * @param vertexPath The path to the vertex shader file
+ * @param geometryPath The path to the geometry shader file
+ * @param fragmentPath The path to the fragment shader file
+ * @return The loaded shader
+ */
+std::shared_ptr<graphics::Shader> AssetManager::LoadShader(const std::string& vertexPath, const std::string& geometryPath, const std::string& fragmentPath)
+{
+    EE_CORE_TRACE("Loading shader: {0} | {1} | {2}", vertexPath, geometryPath, fragmentPath);
+    std::string key = vertexPath + "|" + geometryPath + "|" + fragmentPath;
+
+    std::shared_ptr<graphics::Shader> shader = std::make_shared<graphics::Shader>(vertexPath, geometryPath, fragmentPath);
+    if (!shader->IsValid())
+    {
+        EE_CORE_ERROR("Failed to load shader: {0} | {1} | {2}", vertexPath, geometryPath, fragmentPath);
+        return nullptr;
+    }
+
+    m_shaders[key] = shader;
+    EE_CORE_INFO("Shader loaded: {0} | {1} | {2}", vertexPath, geometryPath, fragmentPath);
+    return shader;
+}
+
+/**
  * @brief Get the shader from the asset manager
  * @param shaderName The name of the shader
  * @return The shader that is loaded
@@ -97,6 +122,43 @@ std::shared_ptr<graphics::Shader> AssetManager::GetShader(const std::string& sha
 {
     auto it = m_shaders.find(shaderName);
     return it != m_shaders.end() ? it->second : nullptr;
+}
+
+/**
+* @brief Load a 3D model from file using Assimp.
+* @param filePath The path to the model file (e.g. .fbx, .obj, .gltf).
+* @return The loaded model.
+*/
+std::shared_ptr<graphics::Model> AssetManager::LoadModel(const std::string& filePath)
+{
+    EE_CORE_TRACE("Loading model: {0}", filePath);
+    auto it = m_models.find(filePath);
+    if (it != m_models.end()) // Already loaded
+        return it->second;
+
+    try
+    {
+        std::shared_ptr<graphics::Model> model = std::make_shared<graphics::Model>(filePath);
+        m_models[filePath] = model;
+        EE_CORE_INFO("Model loaded: {0}", filePath);
+        return model;
+    }
+    catch (const std::exception& e)
+    {
+        EE_CORE_ERROR("Failed to load model: {0}, reason: {1}", filePath, e.what());
+        return nullptr;
+    }
+}
+
+/**
+* @brief Get a model from the cache.
+* @param filePath The path to the model file.
+* @return The model if it exists, nullptr otherwise.
+*/
+std::shared_ptr<graphics::Model> AssetManager::GetModel(const std::string& filePath)
+{
+    auto it = m_models.find(filePath);
+    return it != m_models.end() ? it->second : nullptr;
 }
 
 /**
@@ -132,12 +194,13 @@ const char* AssetManager::load_file_contents(const char* filepath)
 
 void AssetManager::Clear()
 {
-    EE_CORE_INFO("Clearing assets: {0} textures, {1} shaders, {2} cubemaps, {3} materials", 
-                 m_textures.size(), m_shaders.size(), m_cubemaps.size(), m_materials.size());
+    EE_CORE_INFO("Clearing assets: {0} textures, {1} shaders, {2} cubemaps, {3} materials, {4} models", 
+                 m_textures.size(), m_shaders.size(), m_cubemaps.size(), m_materials.size(), m_models.size());
     m_textures.clear();
     m_shaders.clear();
     m_cubemaps.clear();
     m_materials.clear();
+    m_models.clear();
 }
 
 /**

@@ -16,7 +16,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #pragma once
 
 #include "PreCompile.h"
-#include "Matrix4x4.h" // Vector3D included
+#include "MathVector.h" // Vector3D included
 
 //#include "Shader.h"
 #include "VertexArray.h"
@@ -24,8 +24,9 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "IndexBuffer.h"
 #include "ScriptInstance.h"
 #include "Texture.h"
-#include "Material.h" 
+#include "Material.h"
 #include "AudioManager.h"
+#include "Model.h"
 
 namespace Ermine
 {
@@ -37,10 +38,10 @@ namespace Ermine
 	{
 		Mtx44 transform_matrix{ 1.0f }; // Identity matrix
 		Vec3 position;
-		Vec3 rotation; // Euler angles in degrees
+		Quaternion rotation; // Euler angles in degrees
 		Vec3 scale;
 
-		explicit Transform(const Vec3& pos = Vec3(), const Vec3& rot = Vec3(), const Vec3& scl = Vec3(1.f, 1.f, 1.f)) : position(pos), rotation(rot), scale(scl)
+		explicit Transform(const Vec3& pos = Vec3(), const Quaternion& rot = Quaternion(), const Vec3& scl = Vec3(1.f, 1.f, 1.f)) : position(pos), rotation(rot), scale(scl)
 		{
 		}
 	};
@@ -372,24 +373,19 @@ namespace Ermine
 
 	/*!***********************************************************************
 	\brief
-	 Light GPU structure
-	*************************************************************************/
-	struct LightGPU
-	{
-		Vec4 position_type;    // xyz = position (view space), w = light type
-		Vec4 color_intensity;  // xyz = color, w = intensity
-		Vec4 direction_range;  // xyz = direction (view space), w = range
-		Vec4 spot_angles;      // x = inner cos, y = outer cos
-	};
-
-	/*!***********************************************************************
-	\brief
 	 Light structure
 	*************************************************************************/
 	struct Light {
 		Vec3 color;
 		float intensity;
 		LightType type;
+		bool castsShadows{ false };
+		vector<glm::mat4> lightSpaceMatrices{ glm::mat4{0}, glm::mat4{0}, glm::mat4{0}, glm::mat4{0} }; // For shadow mapping
+		int startOffset{ 0 }; // For UBO indexing
+		float innercos{ -1.0f }; // For spotlights
+		float outercos{ -1.0f }; // For spotlights
+		float radius{ 1.0f }; // For point lights
+		glm::vec4 splitDepths{ 0.1f, 10.0f, 50.0f , 100.f}; // For Cascaded Shadow Maps (CSM)
 
 		Light() : color(1.0f, 1.0f, 1.0f),
 			intensity(1.0f),
@@ -400,6 +396,17 @@ namespace Ermine
 		Light(const Vec3& col, float intens, LightType t) :
 			color(col), intensity(intens), type(t)
 		{
+		}
+
+		Light(const Vec3& col, float intens, LightType t, bool shadows) :
+			color(col), intensity(intens), type(t), castsShadows(shadows)
+		{
+		}
+
+		Light(const Vec3& col, float intens, LightType t, bool shadows, float inner, float outer, float rad = 1.0f) :
+			color(col), intensity(intens), type(t), castsShadows(shadows), innercos(inner), outercos(outer), radius(rad)
+		{
+		
 		}
 	};
 	
@@ -587,5 +594,17 @@ namespace Ermine
 			if (minDist >= blendDistance) return 1.0f;
 			return minDist / blendDistance;
 		}
+	};
+	
+	/*!***********************************************************************
+	\brief
+	 Model component structure.
+	*************************************************************************/
+	struct ModelComponent
+	{
+		std::shared_ptr<graphics::Model> m_model;
+
+		ModelComponent() = default;
+		explicit ModelComponent(const std::shared_ptr<graphics::Model>& model) : m_model(model) {}
 	};
 }

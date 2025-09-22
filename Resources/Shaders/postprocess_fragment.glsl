@@ -6,6 +6,7 @@ out vec4 FragColor;
 // Input textures
 uniform sampler2D u_LightingTexture;
 uniform sampler2D u_BloomTexture;
+uniform sampler2D u_SceneDepth;  
 
 // Post-processing toggles
 uniform int u_Vignette = 1;
@@ -13,6 +14,7 @@ uniform int u_FXAA = 1;
 uniform int u_ToneMapping = 1;
 uniform int u_GammaCorrection = 1;
 uniform int u_Bloom = 1;
+uniform int u_SkyboxIsHDR = 0;
 
 // Post-processing parameters
 uniform float u_Exposure = 1.0;
@@ -125,6 +127,9 @@ vec3 adjustSaturation(vec3 color, float saturation)
 void main()
 {
     vec3 color;
+    float sceneDepth = texture(u_SceneDepth, TexCoord).r;
+    bool isSky = sceneDepth >= 1.0;
+
     
     if(u_FXAA == 1)
     {
@@ -141,15 +146,18 @@ void main()
         color += bloomColor * u_BloomStrength;
     }
     
-    if(u_ToneMapping == 0)
+    if(!isSky || u_SkyboxIsHDR == 1)
     {
-        // Using ACES tone mapping for better results
-        color = acesToneMapping(color * u_Exposure);
-    }
-    
-    if(u_GammaCorrection == 1)
-    {
-        color = gammaCorrection(color, u_Gamma);
+        if(u_ToneMapping == 1)
+        {
+            // Using ACES tone mapping for better results
+            color = acesToneMapping(color * u_Exposure);
+        }
+        
+        if(u_GammaCorrection == 1)
+        {
+            color = gammaCorrection(color, u_Gamma);
+        }
     }
     
     if(u_Vignette == 1)
