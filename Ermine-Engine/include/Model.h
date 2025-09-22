@@ -2,7 +2,7 @@
 /*!
 \file       Model.h
 \author     Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu
-\date       10/09/2025
+\date       19/09/2025
 \brief      This file contains the declaration of the Model class.
             The Model class is used to load and render 3D models using Assimp.
 
@@ -18,8 +18,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "VertexArray.h"
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
-#include "Shader.h"
-#include "Texture.h"
+
+#include <glm/glm.hpp>
 #include <string>
 #include <vector>
 #include <memory>
@@ -29,14 +29,32 @@ namespace Ermine::graphics
 {
     constexpr int MAX_BONE_INFLUENCE = 4;
 
-    // Vertex Bone Data
+    // Vertex Data
     struct VertexData
     {
         float position[3];
         float normal[3];
         float texCoords[2];
-        int IDs[MAX_BONE_INFLUENCE] = { 0,0,0,0 };
-        float Weights[MAX_BONE_INFLUENCE] = { 0,0,0,0 };
+        int IDs[MAX_BONE_INFLUENCE];
+        float Weights[MAX_BONE_INFLUENCE];
+
+        VertexData()
+        {
+            for (int i = 0; i < 3; ++i)
+            {
+                position[i] = 0.0f;
+                normal[i] = 0.0f;
+            }
+
+            for (int i = 0; i < 2; ++i)
+                texCoords[i] = 0.0f;
+
+            for (int i = 0; i < MAX_BONE_INFLUENCE; ++i)
+            {
+                IDs[i] = 0;
+                Weights[i] = 0.0f;
+            }
+        }
 
         void AddBoneData(int boneID, float weight)
         {
@@ -58,7 +76,6 @@ namespace Ermine::graphics
         std::shared_ptr<VertexArray> vao;
         std::shared_ptr<VertexBuffer> vbo;
         std::shared_ptr<IndexBuffer> ibo;
-        std::shared_ptr<Texture> texture;
         glm::mat4 localTransform{ 1.0f };
     };
 
@@ -89,7 +106,6 @@ namespace Ermine::graphics
 
         void LoadModel(const std::string& path);
         void ProcessNode(aiNode* node, const aiScene* scene, const aiMatrix4x4& parentTransform);
-        MeshData ProcessMesh(aiMesh* mesh, const aiScene* scene);
-        std::shared_ptr<Texture> LoadMaterialTexture(aiMaterial* mat, aiTextureType type);
+        MeshData ProcessMesh(aiMesh* mesh);
     };
 }

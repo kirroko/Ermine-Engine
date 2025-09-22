@@ -98,6 +98,26 @@ namespace Ermine::editor
 		 * @param yOffset The offset of the scroll wheel
 		 */
 		void ProcessScrollWheel(float yOffset);
+		/**
+		 * @brief Directly set the yaw and pitch of the camera
+		 * @param yawDeg The yaw angle in degrees
+		 * @param pitchDeg The pitch angle in degrees
+		 */
+		void SetYawPitch(float yawDeg, float pitchDeg);
+		/**
+		 * @brief Focus the camera on a target point
+		 * @param target The target point to focus on
+		 * @param distance Optional distance from the target (default -1.0f to maintain current distance)
+		 */
+		void Focus(const Vector3D& target, float distance = -1.0f);
+		/**
+		 * @brief Orbit the camera around a target point
+		 * @param pivot The target point to orbit around
+		 * @param deltaX The change in x (yaw)
+		 * @param deltaY The change in y (pitch)
+		 * @param distance The distance from the target
+		 */
+		void OrbitAround(const Vector3D& pivot, float deltaX, float deltaY, float distance);
 
     private:
 		/**

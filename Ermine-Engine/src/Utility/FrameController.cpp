@@ -47,8 +47,8 @@ void FrameController::BeginFrame()
     }
 
     // Calculate FPS
-    s_fpsTimer += s_deltaTime;
-    ++s_frameCount;
+    //s_fpsTimer += s_deltaTime;
+    //++s_frameCount;
 
     //if (s_fpsTimer >= 1.0f)
     //{
