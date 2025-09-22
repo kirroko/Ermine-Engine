@@ -167,14 +167,30 @@ void SaveSceneToFile(const Ermine::ECS& ecs, const std::filesystem::path& path, 
         e.AddMember("id", static_cast<uint64_t>(id), a);
 
         Value comps(kObjectType);
+
         for (auto& name : ecs.GetComponentNames(id)) {
+            // Transform
             if (name == "Transform" && ecs.HasComponent<Ermine::Transform>(id)) {
                 Value t(kObjectType);
                 ecs.GetComponent<Ermine::Transform>(id).Serialize(t, a);
                 comps.AddMember(Value("Transform", a), t, a);
             }
-            // TODO: extend with Rigidbody3D, CameraComponent, etc.
+
+            // ObjectMetaData
+            if (name == "ObjectMetaData" && ecs.HasComponent<Ermine::ObjectMetaData>(id)) {
+                Value m(kObjectType);
+                ecs.GetComponent<Ermine::ObjectMetaData>(id).Serialize(m, a);
+                comps.AddMember(Value("ObjectMetaData", a), m, a);
+            }
+
+            // Light
+            if (name == "Light" && ecs.HasComponent<Ermine::Light>(id)) {
+                Value l(kObjectType);
+                ecs.GetComponent<Ermine::Light>(id).Serialize(l, a);
+                comps.AddMember(Value("Light", a), l, a);
+            }
         }
+
         e.AddMember("components", comps, a);
         entities.PushBack(e, a);
     }
@@ -185,6 +201,7 @@ void SaveSceneToFile(const Ermine::ECS& ecs, const std::filesystem::path& path, 
     else { Writer<OStreamWrapper> w(osw); d.Accept(w); }
 }
 
+
 void LoadSceneFromFile(Ermine::ECS& ecs, const std::filesystem::path& path) {
     std::ifstream ifs(path, std::ios::binary);
     if (!ifs) throw std::runtime_error("Could not open file for reading: " + path.string());
@@ -194,38 +211,63 @@ void LoadSceneFromFile(Ermine::ECS& ecs, const std::filesystem::path& path) {
     if (d.HasParseError() || !d.IsObject())
         throw std::runtime_error("Invalid JSON file: " + path.string());
 
+    // Defensive: ensure we have an "entities" array
+    if (!d.HasMember("entities") || !d["entities"].IsArray())
+        throw std::runtime_error("Invalid scene JSON (missing 'entities'): " + path.string());
+
     for (auto& e : d["entities"].GetArray()) {
+        if (!e.IsObject()) continue;
+
         Ermine::EntityID id = ecs.CreateEntity();
 
-        if (e.HasMember("components")) {
-            const auto& comps = e["components"];
+        if (!e.HasMember("components") || !e["components"].IsObject())
+            continue;
 
-            if (comps.HasMember("Transform")) {
-                if (!ecs.HasComponent<Ermine::Transform>(id))
-                    ecs.AddComponent<Ermine::Transform>(id, Ermine::Transform{});
+        const auto& comps = e["components"];
 
-                auto& c = ecs.GetComponent<Ermine::Transform>(id);
-                c.Deserialize(comps["Transform"]);
-            }
+        // Transform
+        if (comps.HasMember("Transform") && comps["Transform"].IsObject()) {
+            if (!ecs.HasComponent<Ermine::Transform>(id))
+                ecs.AddComponent<Ermine::Transform>(id, Ermine::Transform{});
 
-            // TODO: repeat the same pattern for other components
-            // if (comps.HasMember("Rigidbody3D")) { }
+            auto& c = ecs.GetComponent<Ermine::Transform>(id);
+            c.Deserialize(comps["Transform"]);
         }
+
+        // ObjectMetaData
+        if (comps.HasMember("ObjectMetaData") && comps["ObjectMetaData"].IsObject()) {
+            if (!ecs.HasComponent<Ermine::ObjectMetaData>(id))
+                ecs.AddComponent<Ermine::ObjectMetaData>(id, Ermine::ObjectMetaData{});
+
+            auto& m = ecs.GetComponent<Ermine::ObjectMetaData>(id);
+            m.Deserialize(comps["ObjectMetaData"]);
+        }
+
+        // Light
+        if (comps.HasMember("Light") && comps["Light"].IsObject()) {
+            if (!ecs.HasComponent<Ermine::Light>(id))
+                ecs.AddComponent<Ermine::Light>(id, Ermine::Light{});
+
+            auto& l = ecs.GetComponent<Ermine::Light>(id);
+            l.Deserialize(comps["Light"]);
+        }
+
+        // (If you later add more components, repeat this pattern.)
     }
 }
 
+
 void SaveCurrentScene(const std::string& sceneName)
 {
-    // e.g. "Level01" -> Resources/Scenes/Level01.json
-    filesystem::path scenePath = filesystem::path("Resources") / "Scenes" / (sceneName + ".json");
+    // "Level01" = Resources/Scenes/Level01.scene
+    filesystem::path scenePath = filesystem::path("Resources") / "Scenes" / (sceneName + ".scene");
 
-    // Pretty = human friendly (good for diffs). false = compact.
     SaveSceneToFile(Ermine::ECS::GetInstance(), scenePath, true);
 }
 
 void LoadScene(const std::string& sceneName)
 {
-    filesystem::path scenePath = filesystem::path("Resources") / "Scenes" / (sceneName + ".json");
+    filesystem::path scenePath = filesystem::path("Resources") / "Scenes" / (sceneName + ".scene");
 
     LoadSceneFromFile(Ermine::ECS::GetInstance(), scenePath);
 }

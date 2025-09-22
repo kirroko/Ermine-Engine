@@ -82,7 +82,6 @@ namespace Ermine
 
 			auto quat_to_json = [&](const Quaternion& q) {
 				rapidjson::Value a(rapidjson::kArrayType);
-				// Store as [w, x, y, z]  (pick one convention and stick to it)
 				a.PushBack(q.w, alloc).PushBack(q.x, alloc).PushBack(q.y, alloc).PushBack(q.z, alloc);
 				return a;
 				};
@@ -90,7 +89,6 @@ namespace Ermine
 			out.AddMember("position", vec3_to_json(position), alloc);
 			out.AddMember("rotation", quat_to_json(rotation), alloc);
 			out.AddMember("scale", vec3_to_json(scale), alloc);
-			// (matrix omitted; recompute from TRS after load)
 		}
 
 		void Deserialize(const rapidjson::Value& in) {
@@ -114,14 +112,10 @@ namespace Ermine
 					rotation.z = r[3].GetFloat();
 				}
 				else if (r.Size() == 3) {
-					// Back-compat: old files stored Euler degrees [x,y,z]
 					Vec3 eulerDeg = json_to_vec3(r);
-					rotation = QuaternionFromEulerDegrees(eulerDeg); // implement or call your math util
+					rotation = QuaternionFromEulerDegrees(eulerDeg);
 				}
 			}
-
-			// Rebuild matrix from TRS if you keep it:
-			// transform_matrix = Mtx44::FromTRS(position, rotation, scale);
 		}
 	};
 
@@ -177,6 +171,20 @@ namespace Ermine
 		ObjectMetaData(std::string name_, std::string tag_, const bool& active) : name(std::move(name_)), tag(std::move(
 			tag_)), selfActive(active)
 		{
+		}
+
+		template<typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
+			out.SetObject();
+			out.AddMember("name", rapidjson::Value(name.c_str(), alloc), alloc);
+			out.AddMember("tag", rapidjson::Value(tag.c_str(), alloc), alloc);
+			out.AddMember("active", selfActive, alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in) {
+			if (in.HasMember("name") && in["name"].IsString())   name = in["name"].GetString();
+			if (in.HasMember("tag") && in["tag"].IsString())    tag = in["tag"].GetString();
+			if (in.HasMember("active") && in["active"].IsBool()) selfActive = in["active"].GetBool();
 		}
 	};
 
@@ -487,6 +495,44 @@ namespace Ermine
 		Light(const Vec3& col, float intens, LightType t, bool shadows, unsigned int res) :
 			color(col), intensity(intens), type(t), castsShadows(shadows), resolution(res)
 		{
+		}
+
+		template<typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
+			out.SetObject();
+
+			auto vec3_to_json = [&](const Vec3& v) {
+				rapidjson::Value a(rapidjson::kArrayType);
+				a.PushBack(v.x, alloc).PushBack(v.y, alloc).PushBack(v.z, alloc);
+				return a;
+				};
+
+			out.AddMember("color", vec3_to_json(color), alloc);
+			out.AddMember("intensity", intensity, alloc);
+			out.AddMember("type", static_cast<int>(type), alloc);          // 0=POINT,1=DIR,2=SPOT
+			out.AddMember("castsShadows", castsShadows, alloc);
+			out.AddMember("resolution", resolution, alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in) {
+			auto json_to_vec3 = [&](const rapidjson::Value& arr) {
+				return Vec3(arr[0].GetFloat(), arr[1].GetFloat(), arr[2].GetFloat());
+				};
+
+			if (in.HasMember("color") && in["color"].IsArray() && in["color"].Size() == 3)
+				color = json_to_vec3(in["color"]);
+			if (in.HasMember("intensity") && in["intensity"].IsNumber())
+				intensity = in["intensity"].GetFloat();
+			if (in.HasMember("type") && in["type"].IsInt()) {
+				int t = in["type"].GetInt();
+				if (t == 1) type = LightType::DIRECTIONAL;
+				else if (t == 2) type = LightType::SPOT;
+				else             type = LightType::POINT;
+			}
+			if (in.HasMember("castsShadows") && in["castsShadows"].IsBool())
+				castsShadows = in["castsShadows"].GetBool();
+			if (in.HasMember("resolution") && in["resolution"].IsUint())
+				resolution = in["resolution"].GetUint();
 		}
 	};
 	

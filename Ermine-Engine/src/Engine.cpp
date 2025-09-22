@@ -480,7 +480,7 @@ void engine::Shutdown()
 
 	//const std::filesystem::path scenePath = "Ermine-Engine.scene";
 	//SaveSceneToFile("Ermine-Engine", scenePath);
-	SaveCurrentScene("Level01");
+	//SaveCurrentScene("Level01");
 
 	Config cfg{};
 	int width, height;
