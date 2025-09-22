@@ -413,6 +413,11 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().AddComponent<Transform>(mainLightEntity, Transform(Vec3(0, 4, 2), Quaternion(0.9f, 0.2f, 0.1f, -0.3f), Vec3(1, 1, 1)));
 	ECS::GetInstance().AddComponent<ObjectMetaData>(mainLightEntity, ObjectMetaData("MainLight", "Light", true));
 	ECS::GetInstance().AddComponent<Light>(mainLightEntity, Light(Vec3(1, 1, 1), 0.8f, LightType::DIRECTIONAL, true));
+	auto redLightDirectional = ECS::GetInstance().CreateEntity();
+	ECS::GetInstance().AddComponent<Transform>(redLightDirectional, Transform(Vec3(0, 4, 2), Quaternion(-0.149f, 0.601f, 0.495f, -0.610f), Vec3(1, 1, 1)));
+	ECS::GetInstance().AddComponent<ObjectMetaData>(redLightDirectional, ObjectMetaData("Red", "Light", true));
+	ECS::GetInstance().AddComponent<Light>(redLightDirectional, Light(Vec3(1, 0, 0), 1.f, LightType::DIRECTIONAL, true));
+
 	// Light sphere material - use shared emissive material for all lights
 	//ECS::GetInstance().AddComponent(mainLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
 	//ECS::GetInstance().AddComponent(mainLightEntity, Material(emissiveWhiteMaterial));
