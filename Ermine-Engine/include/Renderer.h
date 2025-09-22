@@ -4,7 +4,8 @@
 \author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu
 \co-author  Jeremy Lim Ting Jie, jeremytingjie.lim, 2301370, jeremytingjie.lim\@digipen.edu
 \co-author  Ridhwan
-\date       09/03/2025
+\co-author  Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu
+\date       19/09/2025
 \brief      This file contains the declaration of the Renderer system.
             This file is used to render the game objects to the screen.
 
@@ -21,12 +22,17 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Systems.h"
 #include "GPUProfiler.h"
 #include "Material.h"
-#include "Components.h" 
+#include "Components.h"
+#include "EditorCamera.h"
 
 namespace Ermine::graphics
 {
+    // Lights
+    class LightSystem : public System {};
+
     // Forward declarations
     struct MaterialUBO;
+    class Skybox;
 
     /**
      * @brief The Renderer class is responsible for rendering the game objects to the screen.
@@ -34,16 +40,48 @@ namespace Ermine::graphics
     class Renderer : public System
     {
     public:
+
+        // Lighting Pass Parameters
+        bool m_SSAOEnabled = false;
+
+        // Post-processing uniforms - toggles
+        bool m_VignetteEnabled = true;
+        bool m_FXAAEnabled = true;
+        bool m_ToneMappingEnabled = true;
+        bool m_GammaCorrectionEnabled = true;
+        bool m_BloomEnabled = true;
+        bool m_SkyBoxisHDR = false;
+
+        // Post-processing uniforms - parameters
+        float m_Exposure = 1.0f;
+        float m_Contrast = 1.0f;
+        float m_Saturation = 1.0f;
+        float m_Gamma = 2.2f;
+        float m_VignetteIntensity = 0.3f;
+        float m_VignetteRadius = 0.8f;
+        float m_BloomStrength = 0.04f;
+
+        // FXAA parameters
+        float m_FXAASpanMax = 8.0f;
+        float m_FXAAReduceMin = 1.0f / 128.0f;
+        float m_FXAAReduceMul = 1.0f / 8.0f;
+
+        // Bloom pass parameters
+        float m_BloomThreshold = 1.0f;
+        float m_BloomIntensity = 2.0f;
+        float m_BloomRadius = 5.0f;
+
+
         /**
          * @brief Initialize the renderer with the screen width and height.
          * @param screenWidth The width of the screen
          * @param screenHeight The height of the screen
-		 */
-		void Init(const int& screenWidth, const int& screenHeight);
+         */
+        void Init(const int& screenWidth, const int& screenHeight);
 
         /**
          * @brief Offscreen buffer structure for rendering to texture
-		 */
+         */
         struct OffscreenBuffer
         {
             unsigned int FBO; // Frame Buffer Object
@@ -55,36 +93,77 @@ namespace Ermine::graphics
             int height;
         };
 
+
+        struct InstanceData {
+            glm::mat4 model; // per-entity transform
+            glm::mat3 normalMat; // per-entity normal matrix
+            //glm::vec4 colour; // optional tint
+        };
+
+        // group by mesh pointer, shader, texture
+        struct BatchKey {
+            //Mesh* k_mesh;
+            const graphics::VertexArray* k_vao;
+            const graphics::IndexBuffer* k_ibo;
+
+            std::shared_ptr<Shader> k_shader;
+            std::shared_ptr<Texture> k_texture;
+
+            bool operator<(const BatchKey& other) const {
+                if (k_vao != other.k_vao) return k_vao < other.k_vao;
+                if (k_ibo != other.k_ibo) return k_ibo < other.k_ibo;
+                if (k_shader != other.k_shader) return k_shader < other.k_shader;
+                return k_texture < other.k_texture;
+            }
+        };
+        
+         /**
+		 * @brief G buffer structure for rendering to Lighting pass
+		 */
+        //~Renderer();
         struct GBuffer
         {
             unsigned int FBO;
             unsigned int DepthTexture;
-			// Multiple Render Targets (MRTs)
-            
-            // RT0: RGB32_UINT - 96 bits total
-            // R32: Albedo RGB 8:8:8 + 8 spare bits
-            // G32: Normal RGB 11:10:11 
-            // B32: Emissive RGBE 9:9:9:5
-            unsigned int PackedTexture0;
 
-            // RT1: RG32_UINT - 64 bits total  
-			// R32: Roughness 8 bits + Metallic 8 bits + AO 8 bits + 8 spare bits
-            // G32: Motion vectors 2x16 bits
+            // Multiple Render Targets (MRTs)
+
+            uint64_t HandlePackedTexture0 = 0;
+            uint64_t HandlePackedTexture1 = 0;
+            uint64_t HandlePackedTexture2 = 0;
+            uint64_t HandlePackedTexture3 = 0;
+            uint64_t HandleDepthTexture = 0;
+            
+
+            unsigned int PackedTexture0;
             unsigned int PackedTexture1;
+			unsigned int PackedTexture2;
+			unsigned int PackedTexture3;
+            
 
 
             int width;
             int height;
         };
 
-        enum GBufferTextureType
+
+         /**
+		 * @brief PostProcessing buffer structure for each post-processing effect
+		 */
+		struct PostProcessBuffer
         {
-            GBufferPacked0 = 0,    // RT0: Albedo + Normal + Emissive
-            GBufferPacked1 = 1,    // RT1: Material properties + Motion vectors
-            GBufferDepth = 2,      // Depth buffer
-            GBufferCOUNT = 3
+			unsigned int FBO;
+			unsigned int ColorTexture;
+			unsigned int DepthTexture = 0; // Optional depth texture for skybox rendering
+
+			int width;
+			int height;
         };
 
+
+        /**
+		 * @brief Destructor - cleans up allocated resources
+         */
         ~Renderer();
 
 
@@ -94,15 +173,29 @@ namespace Ermine::graphics
          * @param height The height of the offscreen buffer
          * @return OffscreenBuffer The offscreen buffer
          */
-        OffscreenBuffer Create(const int& width, const int& height);
+        OffscreenBuffer CreateOffscreenBuffer(const int& width, const int& height);
 
         /**
-         * @brief Create optimized g-buffer for deferred rendering
+         * @brief Resize the offscreen buffer to new dimensions without recreating the FBO
+         * @param width New width
+         * @param height New height
+         */
+        void ResizeOffscreenBuffer(const int& width, const int& height);
+
+        /**
+         * @brief Create  g-buffer for deferred rendering
          * @param width The width of the g-buffer
          * @param height The height of the g-buffer
-         * @return GBuffer The g-buffer structure
          */
-        GBuffer CreateGBuffer(const int& width, const int& height);
+        void CreateGBuffer(const int& width, const int& height);
+
+
+        /**
+		 * @brief Create post-processing buffer
+		 * @param width The width of the post-processing buffer
+		 * @param height The height of the post-processing buffer
+         */
+        void CreatePostProcessBuffer(const int& width, const int& height);
 
         /**
          * @brief Resize the g-buffer to new dimensions
@@ -151,6 +244,11 @@ namespace Ermine::graphics
         void RenderLightingPass(const Mtx44& view, const Mtx44& projection);
 
         /**
+		 * @brief Render Post-processing effects using the lighting pass output
+         */
+        void RenderPostProcessPass();
+
+        /**
          * @brief Complete deferred rendering pipeline
          * @param view The view matrix
          * @param projection The projection matrix
@@ -161,10 +259,20 @@ namespace Ermine::graphics
          * @brief Bind g-buffer textures to specified texture units
          * @param startingTextureUnit The first texture unit to bind to (default: 0)
          */
-        void BindGBufferTextures(int startingTextureUnit = 0);
+        void BindGBufferTextures();
 
         std::shared_ptr<OffscreenBuffer> GetOffscreenBuffer() const { return m_OffscreenBuffer; }
         std::shared_ptr<GBuffer> GetGBuffer() const { return m_GBuffer; }
+
+         /**
+         * @brief Cleanup g-buffer resources
+         */
+        void CleanupGBuffer();
+
+        /**
+        * @brief Cleanup postprocess buffer resources
+        */
+        void CleanupPostProcessBuffer();
 
         /**
          * @brief Update the game objects to the screen.
@@ -216,11 +324,67 @@ namespace Ermine::graphics
          * @param shader The shader program to which the material block should be bound.
          */
         void BindMaterialBlockIfPresent(const std::shared_ptr<Shader>& shader);
-
+        /**
+         * @brief Toggles between forward and deferred rendering pipelines.
+         *
+         * This function flips the internal flag @c m_UseDeferredRendering. When enabled,
+         * all rendering will go through the deferred pipeline using a G-buffer and lighting pass.
+         * When disabled, rendering falls back to forward shading, where each object is drawn directly
+         * with its material and lighting applied in a single pass.
+         *
+         * It also logs a message indicating the current rendering mode.
+         */
         void ToggleDeferredRendering();
+        /**
+         * @brief Renders a model using the deferred rendering pipeline.
+         *
+         * In this mode, the function uses the shared G-buffer shader (@c m_GBufferShader) to
+         * write geometry data (position, normals, material properties) into the G-buffer.
+         * Per-entity materials are not bound as shaders, but their UBO data (albedo, metallic,
+         * roughness, emissive, etc.) is uploaded to the GPU so the G-buffer can store them.
+         *
+         * @param model The model to render, containing mesh geometry and local transforms.
+         * @param material Pointer to the material providing UBO data (albedo, metallic, etc.).
+         * @param view The view matrix representing the camera transform.
+         * @param projection The projection matrix (perspective or orthographic).
+         * @param rootTransform Root transform matrix for the entity (translation, rotation, scale).
+         */
+        void RenderModelDeferred(const Model& model, graphics::Material* material, const Mtx44& view, const Mtx44& projection, const glm::mat4& rootTransform);
+        /**
+         * @brief Renders a model using the forward rendering pipeline.
+         *
+         * In this mode, the function binds the entity's own material and its shader, then
+         * issues draw calls for each mesh in the model. Lighting and material shading are
+         * evaluated directly during rasterization (per-fragment).
+         *
+         * @param model The model to render, containing mesh geometry and local transforms.
+         * @param material Pointer to the material to bind, providing textures and shader.
+         * @param view The view matrix representing the camera transform.
+         * @param projection The projection matrix (perspective or orthographic).
+         * @param rootTransform Root transform matrix for the entity (translation, rotation, scale).
+         */
+        void RenderModelForward(const Model& model, graphics::Material* material, const Mtx44& view, const Mtx44& projection, const glm::mat4& rootTransform);
+
+        /**
+         * @brief Set the skybox to be rendered
+         * @param skybox Pointer to the skybox to render
+         */
+        void SetSkybox(graphics::Skybox* skybox) { m_skybox = skybox; }
+
+
+        // Shadow mapping
+        bool InitializeShadowMap();
+        bool CreateShadowMap(const unsigned int resolution = 1024);
+        bool CreateShadowMapCube(const unsigned int resolution);
+        void CalculateDirectionalMatrix(const editor::EditorCamera& editorCamera);
+		void RenderShadowMap(const glm::mat4& lightSpaceMatrix);
+        void RenderShadowPass();
+
 
 
     private:
+		// Light System
+		std::shared_ptr<LightSystem> m_LightSystem = nullptr;
         std::shared_ptr<OffscreenBuffer> m_OffscreenBuffer;
 
         // Lighting UBO
@@ -228,21 +392,42 @@ namespace Ermine::graphics
         static constexpr GLuint LightsBindingPoint = 1;
         static constexpr size_t MaxLights = 16;
         std::unordered_set<GLuint> m_LightBlockBoundPrograms;
-		bool m_IsBlinnPhong = false; // Default to PBR shading
+        bool m_IsBlinnPhong = false; // Default to PBR shading
 
         // Material UBO
         GLuint m_MaterialUBO = 0;
         static constexpr GLuint MaterialBindingPoint = 2;
         std::unordered_set<GLuint> m_MaterialBlockBoundPrograms;
 
-
-		// Deferred rendering buffers
-		bool m_UseDeferredRendering = true;
-		Ermine::Mesh m_QuadMesh;
+        // Deferred rendering buffers
+        bool m_UseDeferredRendering = true;
+        Ermine::Mesh m_QuadMesh;
         std::shared_ptr<GBuffer> m_GBuffer;
-		std::shared_ptr<Shader> m_GBufferShader = 0; // Shader for executing g-buffer pass
+        std::shared_ptr<Shader> m_GBufferShader = 0; // Shader for executing g-buffer pass
         std::shared_ptr<Shader> m_LightPassShader = 0; // Shader for lighting pass
-        void CleanupGBuffer();
         std::shared_ptr<Texture> tempTexture;
+
+
+		// Post-processing buffer
+		std::shared_ptr<PostProcessBuffer> m_PostProcessBuffer;
+		std::shared_ptr<PostProcessBuffer> m_BloomExtractBuffer;
+        std::shared_ptr<PostProcessBuffer> m_BloomBlurBuffer1;
+        std::shared_ptr<PostProcessBuffer> m_BloomBlurBuffer2;
+		std::shared_ptr<Shader> m_BloomShader = 0; // Shader for bloom effect
+		std::shared_ptr<Shader> m_PostProcessShader = 0; // Shader for post-processing effects
+
+		// Skybox
+		graphics::Skybox* m_skybox = nullptr;
+
+        // Shadow mapping
+        std::shared_ptr<Shader> m_ShadowMapShader = nullptr;
+        // Just one FBO and one 2D shadow map for one directional light for now
+        GLuint m_ShadowMapFBO = 0;
+        GLuint m_ShadowMap = 0;
+        GLuint m_ShadowMapCube = 0;
+        uint64_t m_ShadowMapHandle = 0;
+        glm::mat4 m_LightSpaceMatrix;
+
+
     };
 }

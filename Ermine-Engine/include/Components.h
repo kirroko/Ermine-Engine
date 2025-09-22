@@ -16,7 +16,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #pragma once
 
 #include "PreCompile.h"
-#include "Matrix4x4.h" // Vector3D included
+#include "MathVector.h" // Vector3D included
 
 //#include "Shader.h"
 #include "VertexArray.h"
@@ -24,8 +24,9 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "IndexBuffer.h"
 #include "ScriptInstance.h"
 #include "Texture.h"
-#include "Material.h" 
+#include "Material.h"
 #include "AudioManager.h"
+#include "Model.h"
 
 namespace Ermine
 {
@@ -37,10 +38,10 @@ namespace Ermine
 	{
 		Mtx44 transform_matrix{ 1.0f }; // Identity matrix
 		Vec3 position;
-		Vec3 rotation; // Euler angles in degrees
+		Quaternion rotation; // Euler angles in degrees
 		Vec3 scale;
 
-		explicit Transform(const Vec3& pos = Vec3(), const Vec3& rot = Vec3(), const Vec3& scl = Vec3(1.f, 1.f, 1.f)) : position(pos), rotation(rot), scale(scl)
+		explicit Transform(const Vec3& pos = Vec3(), const Quaternion& rot = Quaternion(), const Vec3& scl = Vec3(1.f, 1.f, 1.f)) : position(pos), rotation(rot), scale(scl)
 		{
 		}
 	};
@@ -207,15 +208,15 @@ namespace Ermine
 	struct Material
 	{
 		//material class
-		std::unique_ptr<graphics::Material> m_material;
+		std::shared_ptr<graphics::Material> m_material;
 
 		Material() = default;
 
 		/**
 		 * @brief Constructor taking a modular material.
-		 * @param material A unique pointer to a `graphics::Material` object that will be used to initialize the Material.
+		 * @param material A shared pointer to a `graphics::Material` object that will be used to initialize the Material.
 		 */
-		Material(std::unique_ptr<graphics::Material> material) : m_material(std::move(material))
+		Material(std::shared_ptr<graphics::Material> material) : m_material(std::move(material))
 		{
 		}
 
@@ -226,7 +227,7 @@ namespace Ermine
 		 */
 		Material(const std::shared_ptr<graphics::Shader>& shader, const std::shared_ptr<graphics::Texture>& texture)
 		{
-			m_material = std::make_unique<graphics::Material>(shader);
+			m_material = std::make_shared<graphics::Material>(shader);
 			if (texture && texture->IsValid())
 			{
 				m_material->SetTexture("material.albedoMap", texture);
@@ -242,12 +243,9 @@ namespace Ermine
 		 * @brief Copy constructor for the Material class.
 		 * @param other The other Material object to copy from.
 		 */
-		Material(const Material& other)
+		Material(const Material& other) : m_material(other.m_material)
 		{
-			if (other.m_material)
-			{
-				m_material = std::make_unique<graphics::Material>(*other.m_material);
-			}
+			// Shared ownership - multiple entities can share the same material
 		}
 
 		/**
@@ -259,14 +257,7 @@ namespace Ermine
 		{
 			if (this != &other)
 			{
-				if (other.m_material)
-				{
-					m_material = std::make_unique<graphics::Material>(*other.m_material);
-				}
-				else
-				{
-					m_material.reset();
-				}
+				m_material = other.m_material; // Shared ownership
 			}
 			return *this;
 		}
@@ -302,6 +293,14 @@ namespace Ermine
 		}
 
 		/**
+		 * @brief Get the shared material pointer for sharing between entities.
+		 * @return A shared pointer to the internal `graphics::Material` object.
+		 */
+		std::shared_ptr<graphics::Material> GetSharedMaterial() const {
+			return m_material;
+		}
+
+		/**
 		* @brief Sets the albedo color for the material.
 		* @details Albedo represents the diffuse color of the material.
 		* @param albedo A Vec3 representing the RGB color value for the albedo.
@@ -313,7 +312,7 @@ namespace Ermine
 
 		/**
 		* @brief Sets the roughness value for the material.
-		* @details Roughness defines the material�s surface smoothness. A value of 0.0 is smooth, and 1.0 is rough.
+		* @details Roughness defines the material's surface smoothness. A value of 0.0 is smooth, and 1.0 is rough.
 		* @param roughness A float representing the roughness of the material.
 		*/
 		void SetRoughness(float roughness)
@@ -378,10 +377,10 @@ namespace Ermine
 	*************************************************************************/
 	struct LightGPU
 	{
-		Vec4 position_type;    // xyz = position (view space), w = light type
-		Vec4 color_intensity;  // xyz = color, w = intensity
-		Vec4 direction_range;  // xyz = direction (view space), w = range
-		Vec4 spot_angles;      // x = inner cos, y = outer cos
+		glm::vec4 position_type;    // xyz = position (view space), w = light type
+		glm::vec4 color_intensity;  // xyz = color, w = intensity
+		glm::vec4 direction_range;  // xyz = direction (view space), w = range
+		glm::vec4 spot_angles_castshadows_resolution;      // x = inner cos, y = outer cos z = casts shadows (1.0 or 0.0), w = shadow map resolution
 	};
 
 	/*!***********************************************************************
@@ -392,6 +391,8 @@ namespace Ermine
 		Vec3 color;
 		float intensity;
 		LightType type;
+		bool castsShadows{ false };
+		unsigned int resolution{ 1024 }; // Shadow map resolution
 
 		Light() : color(1.0f, 1.0f, 1.0f),
 			intensity(1.0f),
@@ -401,6 +402,11 @@ namespace Ermine
 
 		Light(const Vec3& col, float intens, LightType t) :
 			color(col), intensity(intens), type(t)
+		{
+		}
+
+		Light(const Vec3& col, float intens, LightType t, bool shadows, unsigned int res) :
+			color(col), intensity(intens), type(t), castsShadows(shadows), resolution(res)
 		{
 		}
 	};
@@ -512,5 +518,17 @@ namespace Ermine
 		float size;
 
 		Particle() : velocity(0, 0, 0), lifetime(1.0f), age(0.0f), colour(1, 1, 1, 1), size(1.0f) {}
+	};
+
+	/*!***********************************************************************
+	\brief
+	 Model component structure.
+	*************************************************************************/
+	struct ModelComponent
+	{
+		std::shared_ptr<graphics::Model> m_model;
+
+		ModelComponent() = default;
+		explicit ModelComponent(const std::shared_ptr<graphics::Model>& model) : m_model(model) {}
 	};
 }

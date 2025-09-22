@@ -187,11 +187,20 @@ void GPUProfiler::TrackDrawCall(uint32_t vertexCount, uint32_t indexCount)
         return;
 
     s_CurrentMetrics.drawCallCount++;
-    s_CurrentMetrics.vertexCount += vertexCount;
+    //s_CurrentMetrics.vertexCount += vertexCount;
 
     // If indexCount is provided, calculate triangles
     if (indexCount > 0)
-        s_CurrentMetrics.triangleCount += indexCount / 3;
+    {
+        s_CurrentMetrics.vertexCount += indexCount / 4; // vertices processed ~= indices submitted
+		s_CurrentMetrics.triangleCount += indexCount/4/3; // triangle list
+    }
+    else
+    {
+		s_CurrentMetrics.vertexCount += vertexCount; // vertices processed
+		s_CurrentMetrics.triangleCount += vertexCount / 3; // triangle list
+    }
+	//s_CurrentMetrics.triangleCount += indexCount / 3;
 }
 
 void GPUProfiler::TrackMemoryAllocation(uint64_t sizeBytes, const std::string& type)

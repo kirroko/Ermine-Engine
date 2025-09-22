@@ -484,7 +484,7 @@ void Ermine::scripting::ScriptEngine::ProcessHotReload(const std::function<void(
 	bool ok = ReloadDomainsAndAssemblies();
 	if (post) post(ok);
 
-	EE_CORE_INFO("HotReload: Done (success={0}", ok ? "true" : "false");
+	EE_CORE_INFO("HotReload: Done (success={0})", ok ? "true" : "false");
 }
 
 bool Ermine::scripting::ScriptEngine::ReloadDomainsAndAssemblies()
@@ -524,8 +524,8 @@ bool Ermine::scripting::ScriptEngine::ReloadDomainsAndAssemblies()
 
 	RegisterInternalCalls();
 
-	const int maxAttempts = 20;
-	for (int attemp = 0; attemp < maxAttempts; ++attemp)
+	constexpr int maxAttempts = 20;
+	for (int attempt = 0; attempt < maxAttempts; ++attempt)
 	{
 		m_gameAsm = LoadCSharpAssembly(m_gameAssemblyPath);
 		if (m_gameAsm)
@@ -971,8 +971,11 @@ namespace
 	}
 
 	struct ManagedVector3 { float x, y, z; };
-	ManagedVector3 ToManaged(const Ermine::Vec3& v) { return { v.x, v.y, v.z }; }
-	Ermine::Vec3 ToNative(const ManagedVector3& v) { return { v.x, v.y, v.z }; }
+	struct ManagedQuaternion { float x, y, z, w; };
+	ManagedVector3 ToManagedVec(const Ermine::Vec3& v) { return { v.x, v.y, v.z }; }
+	ManagedQuaternion ToManagedQuat(const Ermine::Quaternion& q) { return { q.x, q.y, q.z, q.w }; }
+	Ermine::Vec3 ToNativeVec(const ManagedVector3& v) { return { v.x, v.y, v.z }; }
+	Ermine::Quaternion ToNativeQuat(const ManagedQuaternion& q) { return { q.x, q.y, q.z, q.w }; }
 
 	Ermine::Transform* GetTransformFromManaged(MonoObject* thisObj)
 	{
@@ -990,23 +993,23 @@ namespace
 	ManagedVector3 icall_transform_get_position(MonoObject* thisObj)
 	{
 		if (auto* t = GetTransformFromManaged(thisObj))
-			return ToManaged(t->position);
+			return ToManagedVec(t->position);
 		EE_CORE_WARN("Transform for {0} failed to get unmanaged position", GetEntityIDFromManaged(thisObj));
 		return { 0,0,0 };
 	}
 
-	ManagedVector3 icall_transform_get_rotation(MonoObject* thisObj)
+	ManagedQuaternion icall_transform_get_rotation(MonoObject* thisObj)
 	{
 		if (auto* t = GetTransformFromManaged(thisObj))
-			return ToManaged(t->rotation);
+			return ToManagedQuat(t->rotation);
 		EE_CORE_WARN("Transform for {0} failed to get unmanaged rotation", GetEntityIDFromManaged(thisObj));
-		return { 0,0,0 };
+		return { .x= 0, .y= 0, .z= 0, .w = 1.0f };
 	}
 
 	ManagedVector3 icall_transform_get_scale(MonoObject* thisObj)
 	{
 		if (auto* t = GetTransformFromManaged(thisObj))
-			return ToManaged(t->scale);
+			return ToManagedVec(t->scale);
 		EE_CORE_WARN("Transform for {0} failed to get unmanaged scale", GetEntityIDFromManaged(thisObj));
 		return { 1,1,1 };
 	}
@@ -1014,19 +1017,19 @@ namespace
 	void icall_transform_set_position(MonoObject* thisObj, ManagedVector3 value)
 	{
 		if (auto* t = GetTransformFromManaged(thisObj))
-			t->position = ToNative(value);
+			t->position = ToNativeVec(value);
 	}
 
-	void icall_transform_set_rotation(MonoObject* thisObj, ManagedVector3 value)
+	void icall_transform_set_rotation(MonoObject* thisObj, ManagedQuaternion value)
 	{
 		if (auto* t = GetTransformFromManaged(thisObj))
-			t->rotation = ToNative(value);
+			t->rotation = ToNativeQuat(value);
 	}
 
 	void icall_transform_set_scale(MonoObject* thisObj, ManagedVector3 value)
 	{
 		if (auto* t = GetTransformFromManaged(thisObj))
-			t->scale = ToNative(value);
+			t->scale = ToNativeVec(value);
 	}
 #pragma endregion
 
@@ -1167,7 +1170,7 @@ namespace
 		EntityID id = GetEntityIDFromManaged(self);
 		if (id == 0 || !ECS::GetInstance().IsEntityValid(id) || !ECS::GetInstance().HasComponent<Transform>(id))
 			return nullptr;
-		MonoObject* obj = CreateManagedGameObjectWrapper(id);
+		MonoObject* obj = CreateManagedTransformWrapper(id);
 		SetComponentGameObject(obj, id);
 		return obj;
 	}
