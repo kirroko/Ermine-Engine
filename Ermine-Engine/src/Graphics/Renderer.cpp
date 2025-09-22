@@ -80,6 +80,13 @@ void Renderer::Init(const int& screenWidth, const int& screenHeight)
 	m_BloomShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/bloom_vertex.glsl", "../Resources/Shaders/bloom_fragment.glsl");
 	m_PostProcessShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/postprocess_vertex.glsl", "../Resources/Shaders/postprocess_fragment.glsl");
 	m_ShadowMapGeometryShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/shadowmap_vertex.glsl", "../Resources/Shaders/shadowmap_geometry.glsl", "../Resources/Shaders/shadowmap_fragment.glsl");
+	// Load forward rendering shader for transparent objects
+	m_ForwardShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/vertex.glsl", "../Resources/Shaders/fragment_enhanced.glsl");
+	if (!m_ForwardShader || !m_ForwardShader->IsValid()) {
+		EE_CORE_WARN("Forward shader for transparency not loaded, using enhanced fragment shader from assets");
+		// Fallback to the existing enhanced fragment shader
+		m_ForwardShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/vertex.glsl", "../Resources/Shaders/fragment_enhanced.glsl");
+	}
 	// Create initial g-buffer
 	CreateGBuffer(screenWidth, screenHeight);
 	CreatePostProcessBuffer(screenWidth, screenHeight);
@@ -620,143 +627,139 @@ void Renderer::EndLightingPass()
 	glDisable(GL_BLEND);
 	glCheckError();
 }
+void Renderer::BindMaterialTextures(Ermine::graphics::Material* material)
+{
+	if (!material) return;
 
-/**
- * @brief Render geometry pass for deferred rendering
- * CPU sets up the rendering state, GPU does the actual g-buffer writing
- */
+	int texUnit = 0;
+	if (material->HasParameter("materialAlbedoMap")) {
+		std::shared_ptr<Texture> albedo = material->GetParameter("materialAlbedoMap")->texture;
+		if (albedo && albedo->IsValid()) {
+			albedo->Bind(texUnit);
+			m_GBufferShader->SetUniform1i("materialAlbedoMap", texUnit);
+		}
+	}
+	texUnit = 1;
+	if (material->HasParameter("materialNormalMap")) {
+		std::shared_ptr<Texture> normal = material->GetParameter("materialNormalMap")->texture;
+		if (normal && normal->IsValid()) {
+			normal->Bind(texUnit);
+			m_GBufferShader->SetUniform1i("materialNormalMap", texUnit);
+		}
+	}
+	texUnit = 2;
+	if (material->HasParameter("materialRoughnessMap")) {
+		std::shared_ptr<Texture> roughness = material->GetParameter("materialRoughnessMap")->texture;
+		if (roughness && roughness->IsValid()) {
+			roughness->Bind(texUnit);
+			m_GBufferShader->SetUniform1i("materialRoughnessMap", texUnit);
+		}
+	}
+	texUnit = 3;
+	if (material->HasParameter("materialMetallicMap")) {
+		std::shared_ptr<Texture> metallic = material->GetParameter("materialMetallicMap")->texture;
+		if (metallic && metallic->IsValid()) {
+			metallic->Bind(texUnit);
+			m_GBufferShader->SetUniform1i("materialMetallicMap", texUnit);
+		}
+	}
+	texUnit = 4;
+	if (material->HasParameter("materialAoMap")) {
+		std::shared_ptr<Texture> ao = material->GetParameter("materialAoMap")->texture;
+		if (ao && ao->IsValid()) {
+			ao->Bind(texUnit);
+			m_GBufferShader->SetUniform1i("materialAoMap", texUnit);
+		}
+	}
+	texUnit = 5;
+	if (material->HasParameter("materialEmissiveMap")) {
+		std::shared_ptr<Texture> emissive = material->GetParameter("materialEmissiveMap")->texture;
+		if (emissive && emissive->IsValid()) {
+			emissive->Bind(texUnit);
+			m_GBufferShader->SetUniform1i("materialEmissiveMap", texUnit);
+		}
+	}
+}
+
+
 void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 {
-	if (!m_GBuffer || !m_GBufferShader)
-	{
+	if (!m_GBuffer || !m_GBufferShader) {
 		EE_CORE_ERROR("G-Buffer or geometry shader not initialized!");
 		return;
 	}
 
-	// Begin geometry pass
 	BeginGeometryPass();
-
 
 	// Bind geometry shader that writes to g-buffer
 	m_GBufferShader->Bind();
-
-	// Bind material blocks
 	BindMaterialBlockIfPresent(m_GBufferShader);
 
-	// Gather all renderable entities and draw them
-	const auto& ecs = Ermine::ECS::GetInstance();
-	const unsigned long int maxId = ecs.GetLivingEntityCount();
+	// Clear transparent objects from previous frame
+	m_transparentObjects.clear();
 
-	for (auto& entity:m_Entities)
-	{
+	// Calculate camera position for transparent sorting
+	glm::mat4 glmView = glm::mat4(
+		view.m00, view.m01, view.m02, view.m03,
+		view.m10, view.m11, view.m12, view.m13,
+		view.m20, view.m21, view.m22, view.m23,
+		view.m30, view.m31, view.m32, view.m33
+	);
+	glm::mat4 invView = glm::inverse(glmView);
+	Vec3 cameraPos = Vec3(invView[3][0], invView[3][1], invView[3][2]);
+
+	const auto& ecs = Ermine::ECS::GetInstance();
+
+	for (auto& entity : m_Entities) {
 		// Model pipeline
-		if (ecs.HasComponent<ModelComponent>(entity))
-		{
+		if (ecs.HasComponent<ModelComponent>(entity)) {
 			auto& modelComp = ecs.GetComponent<ModelComponent>(entity);
 			auto& trans = ecs.GetComponent<Transform>(entity);
-			auto& materialComponent = ecs.GetComponent<Ermine::Material>(entity);
 
-			if (modelComp.m_model)
-			{
-				Ermine::graphics::Material* material = materialComponent.GetMaterial();
+			if (!modelComp.m_model) continue;
 
-				if (!material) {
-					EE_CORE_WARN("Entity {0} has null material", entity);
-					continue;
-				}
-				UpdateMaterialUBO(material->GetUBOData());
-
-				// Apply entity's transform as root
-				glm::mat4 entityModel = glm::mat4(1.0f);
-				entityModel = glm::translate(entityModel, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
-				glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
-				rotQuat = glm::normalize(rotQuat);
-				entityModel *= glm::mat4_cast(rotQuat);
-				entityModel = glm::scale(entityModel, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
-
-				int texUnit = 0;
-				if (material->HasParameter("materialAlbedoMap")) {
-					std::shared_ptr<Texture> albedo = material->GetParameter("materialAlbedoMap")->texture;
-					if (albedo && albedo->IsValid()) {
-						albedo->Bind(texUnit);
-						m_GBufferShader->SetUniform1i("materialAlbedoMap", texUnit);
-					}
-				}
-				texUnit = 1;
-				if (material->HasParameter("materialNormalMap")) {
-					std::shared_ptr<Texture> normal = material->GetParameter("materialNormalMap")->texture;
-					if (normal && normal->IsValid()) {
-						normal->Bind(texUnit);
-						m_GBufferShader->SetUniform1i("materialNormalMap", texUnit);
-					}
-				}
-				texUnit = 2;
-				if (material->HasParameter("materialRoughnessMap")) {
-					std::shared_ptr<Texture> roughness = material->GetParameter("materialRoughnessMap")->texture;
-					if (roughness && roughness->IsValid()) {
-						roughness->Bind(texUnit);
-						m_GBufferShader->SetUniform1i("materialRoughnessMap", texUnit);
-					}
-				}
-				texUnit = 3;
-				if (material->HasParameter("materialMetallicMap")) {
-					std::shared_ptr<Texture> metallic = material->GetParameter("materialMetallicMap")->texture;
-					if (metallic && metallic->IsValid()) {
-						metallic->Bind(texUnit);
-						m_GBufferShader->SetUniform1i("materialMetallicMap", texUnit);
-					}
-				}
-				texUnit = 4;
-				if (material->HasParameter("materialAoMap")) {
-					std::shared_ptr<Texture> ao = material->GetParameter("materialAoMap")->texture;
-					if (ao && ao->IsValid()) {
-						ao->Bind(texUnit);
-						m_GBufferShader->SetUniform1i("materialAoMap", texUnit);
-					}
-				}
-				texUnit = 5;
-				if (material->HasParameter("materialEmissiveMap")) {
-					std::shared_ptr<Texture> emissive = material->GetParameter("materialEmissiveMap")->texture;
-					if (emissive && emissive->IsValid()) {
-						emissive->Bind(texUnit);
-						m_GBufferShader->SetUniform1i("materialEmissiveMap", texUnit);
-					}
-				}
-				texUnit = 6;
-				if (material->HasParameter("materialEnvironmentMap")) {
-					std::shared_ptr<Texture> env = material->GetParameter("materialEnvironmentMap")->texture;
-					if (env && env->IsValid()) {
-						env->Bind(texUnit);
-						m_GBufferShader->SetUniform1i("materialEnvironmentMap", texUnit);
-					}
-				}
-				texUnit = 7;
-				if (material->HasParameter("materialIrradianceMap")) {
-					std::shared_ptr<Texture> irradiance = material->GetParameter("materialIrradianceMap")->texture;
-					if (irradiance && irradiance->IsValid()) {
-						irradiance->Bind(texUnit);
-						m_GBufferShader->SetUniform1i("materialIrradianceMap", texUnit);
-					}
-				}
-
-
-
-				// Render model
-				RenderModel(*modelComp.m_model, view, projection, entityModel);
+			// Check if entity has material component for transparency check
+			Ermine::graphics::Material* material = nullptr;
+			if (ecs.HasComponent<Ermine::Material>(entity)) {
+				auto& materialComponent = ecs.GetComponent<Ermine::Material>(entity);
+				material = materialComponent.GetMaterial();
 			}
+
+			// Build entity transform
+			glm::mat4 entityModel = glm::mat4(1.0f);
+			entityModel = glm::translate(entityModel, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
+			glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
+			rotQuat = glm::normalize(rotQuat);
+			entityModel *= glm::mat4_cast(rotQuat);
+			entityModel = glm::scale(entityModel, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
+
+			// Check if material is transparent
+			if (material && IsTransparentMaterial(material)) {
+				// Add to transparent objects list
+				TransparentObject transparentObj;
+				transparentObj.entity = entity;
+				transparentObj.modelMatrix = entityModel;
+				transparentObj.distanceToCamera = 0.0f; // Will be calculated in SortTransparentObjects
+				m_transparentObjects.push_back(transparentObj);
+				continue; // Skip rendering in geometry pass
+			}
+
+			// Render opaque model in geometry pass
+			if (material) {
+				UpdateMaterialUBO(material->GetUBOData());
+				BindMaterialTextures(material);
+			}
+			RenderModel(*modelComp.m_model, view, projection, entityModel);
 		}
 		// Mesh + material pipeline
-		else if (ecs.HasComponent<Mesh>(entity) && ecs.HasComponent<Ermine::Material>(entity))
-		{
+		else if (ecs.HasComponent<Mesh>(entity) && ecs.HasComponent<Ermine::Material>(entity)) {
 			auto& trans = ecs.GetComponent<Transform>(entity);
 			auto& mesh = ecs.GetComponent<Mesh>(entity);
 			auto& materialComponent = ecs.GetComponent<Ermine::Material>(entity);
 
 			if (!mesh.vertex_array || !mesh.index_buffer) continue;
 
-			// Get the modular material
 			Ermine::graphics::Material* material = materialComponent.GetMaterial();
-
 			if (!material) {
 				EE_CORE_WARN("Entity {0} has null material", entity);
 				continue;
@@ -770,96 +773,41 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 			model *= glm::mat4_cast(rotQuat);
 			model = glm::scale(model, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
 
-			// Set transformation matrices for g-buffer shader
+			// Check if material is transparent
+			if (IsTransparentMaterial(material)) {
+				// Add to transparent objects list
+				TransparentObject transparentObj;
+				transparentObj.entity = entity;
+				transparentObj.modelMatrix = model;
+				transparentObj.distanceToCamera = 0.0f; // Will be calculated in SortTransparentObjects
+				m_transparentObjects.push_back(transparentObj);
+				continue; // Skip rendering in geometry pass
+			}
+
+			// Render opaque object in geometry pass
 			m_GBufferShader->SetUniformMatrix4fv("model", model);
 			m_GBufferShader->SetUniformMatrix4fv("view", &view.m2[0][0]);
 			m_GBufferShader->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
 
 			// Calculate and set normal matrix
-			glm::mat4 glmView = glm::mat4(
-				view.m00, view.m01, view.m02, view.m03,
-				view.m10, view.m11, view.m12, view.m13,
-				view.m20, view.m21, view.m22, view.m23,
-				view.m30, view.m31, view.m32, view.m33
-			);
 			glm::mat4 modelView = glmView * model;
 			glm::mat3 normalMatrix = transpose(inverse(glm::mat3(model)));
 			m_GBufferShader->SetUniformMatrix3fv("NormalMatrix", normalMatrix);
 
 			UpdateMaterialUBO(material->GetUBOData());
-
-			int texUnit = 0;
-			if (material->HasParameter("materialAlbedoMap")) {
-				std::shared_ptr<Texture> albedo = material->GetParameter("materialAlbedoMap")->texture;
-				if (albedo && albedo->IsValid()) {
-					albedo->Bind(texUnit);
-					m_GBufferShader->SetUniform1i("materialAlbedoMap", texUnit);
-				}
-			}
-			texUnit = 1;
-			if (material->HasParameter("materialNormalMap")) {
-				std::shared_ptr<Texture> normal = material->GetParameter("materialNormalMap")->texture;
-				if (normal && normal->IsValid()) {
-					normal->Bind(texUnit);
-					m_GBufferShader->SetUniform1i("materialNormalMap", texUnit);
-				}
-			}
-			texUnit = 2;
-			if (material->HasParameter("materialRoughnessMap")) {
-				std::shared_ptr<Texture> roughness = material->GetParameter("materialRoughnessMap")->texture;
-				if (roughness && roughness->IsValid()) {
-					roughness->Bind(texUnit);
-					m_GBufferShader->SetUniform1i("materialRoughnessMap", texUnit);
-				}
-			}
-			texUnit = 3;
-			if (material->HasParameter("materialMetallicMap")) {
-				std::shared_ptr<Texture> metallic = material->GetParameter("materialMetallicMap")->texture;
-				if (metallic && metallic->IsValid()) {
-					metallic->Bind(texUnit);
-					m_GBufferShader->SetUniform1i("materialMetallicMap", texUnit);
-				}
-			}
-			texUnit = 4;
-			if (material->HasParameter("materialAoMap")) {
-				std::shared_ptr<Texture> ao = material->GetParameter("materialAoMap")->texture;
-				if (ao && ao->IsValid()) {
-					ao->Bind(texUnit);
-					m_GBufferShader->SetUniform1i("materialAoMap", texUnit);
-				}
-			}
-			texUnit = 5;
-			if (material->HasParameter("materialEmissiveMap")) {
-				std::shared_ptr<Texture> emissive = material->GetParameter("materialEmissiveMap")->texture;
-				if (emissive && emissive->IsValid()) {
-					emissive->Bind(texUnit);
-					m_GBufferShader->SetUniform1i("materialEmissiveMap", texUnit);
-				}
-			}
-			texUnit = 6;
-			if (material->HasParameter("materialEnvironmentMap")) {
-				std::shared_ptr<Texture> env = material->GetParameter("materialEnvironmentMap")->texture;
-				if (env && env->IsValid()) {
-					env->Bind(texUnit);
-					m_GBufferShader->SetUniform1i("materialEnvironmentMap", texUnit);
-				}
-			}
-			texUnit = 7;
-			if (material->HasParameter("materialIrradianceMap")) {
-				std::shared_ptr<Texture> irradiance = material->GetParameter("materialIrradianceMap")->texture;
-				if (irradiance && irradiance->IsValid()) {
-					irradiance->Bind(texUnit);
-					m_GBufferShader->SetUniform1i("materialIrradianceMap", texUnit);
-				}
-			}
+			BindMaterialTextures(material);
 
 			// Draw the mesh
 			Draw(mesh.vertex_array, mesh.index_buffer, m_GBufferShader);
 		}
 	}
 
+	// Sort transparent objects by distance from camera
+	SortTransparentObjects(cameraPos);
+
 	EndGeometryPass();
 }
+
 
 /**
  * @brief Render lighting pass for deferred rendering
@@ -1028,51 +976,46 @@ void Renderer::RenderPostProcessPass()
  */
 void Renderer::RenderDeferredPipeline(const Mtx44& view, const Mtx44& projection)
 {
-	// Shadow pass - render scene from light's perspective to create shadow map
+	// Shadow pass - render scene from light's perspective
 	RenderShadowPass();
 
-	// Geometry pass - write to g-buffer
+	// Geometry pass - write opaque objects to g-buffer, collect transparent objects
 	RenderGeometryPass(view, projection);
 
-	// Lighting pass - read from g-buffer and perform lighting
+	// Lighting pass - read from g-buffer and perform lighting on opaque objects
 	RenderLightingPass(view, projection);
 
-	// Render skybox after lighting but before post-processing
-	// This ensures the skybox appears behind all geometry using the depth buffer
+	// Render skybox after lighting but before transparent objects
 	if (m_skybox && m_skybox->IsValid() && m_PostProcessBuffer && m_GBuffer) {
-		// Bind the post-process buffer where the lighting pass output is stored
 		glBindFramebuffer(GL_FRAMEBUFFER, m_PostProcessBuffer->FBO);
 		glViewport(0, 0, m_PostProcessBuffer->width, m_PostProcessBuffer->height);
-		
-		// Copy depth buffer from g-buffer to post-process buffer for proper depth testing
+
+		// Copy depth buffer from g-buffer to post-process buffer
 		glBindFramebuffer(GL_READ_FRAMEBUFFER, m_GBuffer->FBO);
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_PostProcessBuffer->FBO);
 		glBlitFramebuffer(0, 0, m_GBuffer->width, m_GBuffer->height,
-						  0, 0, m_PostProcessBuffer->width, m_PostProcessBuffer->height,
-						  GL_DEPTH_BUFFER_BIT, GL_NEAREST);
-		
-		// Bind back to post-process buffer
+			0, 0, m_PostProcessBuffer->width, m_PostProcessBuffer->height,
+			GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+
 		glBindFramebuffer(GL_FRAMEBUFFER, m_PostProcessBuffer->FBO);
 
-		// Bind depth texture for depth testing
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, m_PostProcessBuffer->DepthTexture);
-
-		
-		// Enable depth testing but set to render only where depth = 1.0 (background)
+		// Enable depth testing but render only where depth = 1.0 (background)
 		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_LEQUAL);
 		glDepthMask(GL_FALSE);
-		
+
 		// Render skybox
 		m_skybox->Render(view, projection);
-		
+
 		// Restore depth state
 		glDepthMask(GL_TRUE);
 		glDepthFunc(GL_LESS);
 	}
 
-	// Post-processing pass - read from lighting pass output
+	// TRANSPARENCY PASS - render transparent objects using forward rendering
+	RenderTransparentPass(view, projection);
+
+	// Post-processing pass - read from lighting + transparency pass output
 	RenderPostProcessPass();
 }
 
@@ -1449,11 +1392,12 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 {
 	if (m_UseDeferredRendering)
 	{
-		// Use deferred rendering pipeline
+		// Use deferred rendering pipeline (now includes transparency)
 		RenderDeferredPipeline(view, projection);
 	}
 	else
 	{
+		// Forward rendering with transparency support
 #ifdef _DEBUG
 		glBindFramebuffer(GL_FRAMEBUFFER, m_OffscreenBuffer->FBO);
 		glViewport(0, 0, m_OffscreenBuffer->width, m_OffscreenBuffer->height);
@@ -1462,41 +1406,70 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 
 		// Render skybox FIRST as the background
 		if (m_skybox && m_skybox->IsValid()) {
-			// Disable depth writing for skybox so it appears behind everything
 			glDepthMask(GL_FALSE);
 			m_skybox->Render(view, projection);
 			glDepthMask(GL_TRUE);
 		}
 
-		// Update lights UBO for this frame
-		// UpdateLightsUBO(view); // updated in shadow pass
+		// Clear transparent objects from previous frame
+		m_transparentObjects.clear();
+
+		// Calculate camera position for transparent sorting
+		glm::mat4 glmView = glm::mat4(
+			view.m00, view.m01, view.m02, view.m03,
+			view.m10, view.m11, view.m12, view.m13,
+			view.m20, view.m21, view.m22, view.m23,
+			view.m30, view.m31, view.m32, view.m33
+		);
+		glm::mat4 invView = glm::inverse(glmView);
+		Vec3 cameraPos = Vec3(invView[3][0], invView[3][1], invView[3][2]);
+
+		// Update lights UBO for forward rendering
+		UpdateLightsUBO(view);
 
 		auto& ecs = ECS::GetInstance();
 
+		// First pass: Render opaque objects and collect transparent objects
 		for (auto& entity : m_Entities)
 		{
 			// Model pipeline
 			if (ecs.HasComponent<ModelComponent>(entity))
-			{	
+			{
 				auto& modelComp = ecs.GetComponent<ModelComponent>(entity);
 				auto& trans = ecs.GetComponent<Transform>(entity);
 
-				if (modelComp.m_model)
-				{
-					// Apply entity's transform as root
-					glm::mat4 entityModel = glm::mat4(1.0f);
-					entityModel = glm::translate(entityModel, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
-					glm::quat rotQuat = glm::quat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
-					rotQuat = glm::normalize(rotQuat);
-					entityModel *= glm::mat4_cast(rotQuat);
-					//entityModel = glm::rotate(entityModel, glm::radians(trans.rotation.x), glm::vec3(1, 0, 0));
-					//entityModel = glm::rotate(entityModel, glm::radians(trans.rotation.y), glm::vec3(0, 1, 0));
-					//entityModel = glm::rotate(entityModel, glm::radians(trans.rotation.z), glm::vec3(0, 0, 1));
-					entityModel = glm::scale(entityModel, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
+				if (!modelComp.m_model) continue;
 
-					// Render model
-					RenderModel(*modelComp.m_model, view, projection, entityModel);
+				// Build entity transform
+				glm::mat4 entityModel = glm::mat4(1.0f);
+				entityModel = glm::translate(entityModel, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
+				glm::quat rotQuat = glm::quat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
+				rotQuat = glm::normalize(rotQuat);
+				entityModel *= glm::mat4_cast(rotQuat);
+				entityModel = glm::scale(entityModel, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
+
+				// Check if entity has material for transparency check
+				Ermine::graphics::Material* material = nullptr;
+				if (ecs.HasComponent<Ermine::Material>(entity)) {
+					auto& materialComponent = ecs.GetComponent<Ermine::Material>(entity);
+					material = materialComponent.GetMaterial();
 				}
+
+				// Check if transparent
+				if (material && IsTransparentMaterial(material)) {
+					TransparentObject transparentObj;
+					transparentObj.entity = entity;
+					transparentObj.modelMatrix = entityModel;
+					transparentObj.distanceToCamera = 0.0f; // Will be calculated in SortTransparentObjects
+					m_transparentObjects.push_back(transparentObj);
+					continue; // Skip opaque rendering
+				}
+
+				// Render opaque model
+				if (material) {
+					UpdateMaterialUBO(material->GetUBOData());
+				}
+				RenderModel(*modelComp.m_model, view, projection, entityModel);
 			}
 			// Mesh + material pipeline
 			else if (ecs.HasComponent<Mesh>(entity) && ecs.HasComponent<Ermine::Material>(entity))
@@ -1505,17 +1478,11 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 				auto& mesh = ecs.GetComponent<Mesh>(entity);
 				auto& materialComponent = ecs.GetComponent<Ermine::Material>(entity);
 
-				// Get the modular material
-				Ermine::graphics::Material* material = materialComponent.GetMaterial();
+				if (!mesh.vertex_array || !mesh.index_buffer) continue;
 
+				Ermine::graphics::Material* material = materialComponent.GetMaterial();
 				if (!material) {
 					EE_CORE_WARN("Entity {0} has null material", entity);
-					continue;
-				}
-
-				auto shader = material->GetShader();
-				if (!shader || !shader->IsValid()) {
-					EE_CORE_WARN("Entity {0} has invalid shader", entity);
 					continue;
 				}
 
@@ -1525,10 +1492,24 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 				glm::quat rotQuat = glm::quat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
 				rotQuat = glm::normalize(rotQuat);
 				model *= glm::mat4_cast(rotQuat);
-				//model = glm::rotate(model, glm::radians(trans.rotation.x), glm::vec3(1, 0, 0));
-				//model = glm::rotate(model, glm::radians(trans.rotation.y), glm::vec3(0, 1, 0));
-				//model = glm::rotate(model, glm::radians(trans.rotation.z), glm::vec3(0, 0, 1));
 				model = glm::scale(model, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
+
+				// Check if transparent
+				if (IsTransparentMaterial(material)) {
+					TransparentObject transparentObj;
+					transparentObj.entity = entity;
+					transparentObj.modelMatrix = model;
+					transparentObj.distanceToCamera = 0.0f; // Will be calculated in SortTransparentObjects
+					m_transparentObjects.push_back(transparentObj);
+					continue; // Skip opaque rendering
+				}
+
+				// Render opaque object
+				auto shader = material->GetShader();
+				if (!shader || !shader->IsValid()) {
+					EE_CORE_WARN("Entity {0} has invalid shader", entity);
+					continue;
+				}
 
 				// Update Material UBO with current material data
 				UpdateMaterialUBO(material->GetUBOData());
@@ -1540,18 +1521,13 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 				BindLightsBlockIfPresent(shader);
 				BindMaterialBlockIfPresent(shader);
 
+
 				// Set transformation matrices
 				shader->SetUniformMatrix4fv("model", model);
 				shader->SetUniformMatrix4fv("view", &view.m2[0][0]);
 				shader->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
 
 				// Calculate and set normal matrix
-				glm::mat4 glmView = glm::mat4(
-					view.m00, view.m01, view.m02, view.m03,
-					view.m10, view.m11, view.m12, view.m13,
-					view.m20, view.m21, view.m22, view.m23,
-					view.m30, view.m31, view.m32, view.m33
-				);
 				glm::mat4 modelView = glmView * model;
 				glm::mat3 normalMatrix = transpose(inverse(glm::mat3(modelView)));
 				shader->SetUniformMatrix3fv("NormalMatrix", normalMatrix);
@@ -1559,65 +1535,103 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 				// Set shading mode
 				shader->SetUniform1i("isBlinnPhong", m_IsBlinnPhong ? 1 : 0);
 
-				// Handle material properties based on shading mode
-				if (m_IsBlinnPhong)
-				{
-					// Set Blinn-Phong material properties for ALL entities
-					auto uboData = material->GetUBOData();
-
-					// Convert PBR properties to Blinn-Phong equivalents
-					glm::vec3 albedo = glm::vec3(uboData.albedo.x, uboData.albedo.y, uboData.albedo.z);
-
-					// Set material properties
-					shader->SetUniform3f("materialKa", glm::vec3(0.2f) * albedo); // Ambient = 20% of albedo
-					shader->SetUniform3f("materialKd", albedo); // Diffuse = albedo
-					shader->SetUniform3f("materialKs", glm::vec3(1.0f)); // Specular = white
-					shader->SetUniform1f("materialShininess", (1.0f - uboData.roughness) * 128.0f); // Convert roughness to shininess
-
-					// Handle special case for light entities
-					if (ECS::GetInstance().HasComponent<Light>(entity))
-					{
-						auto& light = ECS::GetInstance().GetComponent<Light>(entity);
-						// Override for pure emission
-						shader->SetUniform3f("materialKe", glm::vec3(light.color.x * light.intensity,
-							light.color.y * light.intensity,
-							light.color.z * light.intensity));
-						shader->SetUniform3f("materialKa", glm::vec3(0.0f));
-						shader->SetUniform3f("materialKd", glm::vec3(0.0f));
-						shader->SetUniform3f("materialKs", glm::vec3(0.0f));
-					}
-					else
-					{
-						// Non-light entities should have no emission
-						shader->SetUniform3f("materialKe", glm::vec3(0.0f));
-					}
-				}
-				else
-				{
-					// PBR mode - handle light entities with emissive materials
-					if (ECS::GetInstance().HasComponent<Light>(entity))
-					{
-						auto& light = ECS::GetInstance().GetComponent<Light>(entity);
-
-						// Create temporary material data for emissive lighting
-						MaterialUBO lightMaterialData = material->GetUBOData();
-						lightMaterialData.emissive = Vec3(light.color.x, light.color.y, light.color.z);
-						lightMaterialData.emissiveIntensity = light.intensity;
-						lightMaterialData.albedo = Vec3(0.0f, 0.0f, 0.0f);
-						lightMaterialData.metallic = 0.0f;
-						lightMaterialData.roughness = 1.0f;
-
-						// Update UBO with light-specific data
-						UpdateMaterialUBO(lightMaterialData);
-					}
-				}
-
 				// Draw the mesh
 				Draw(mesh.vertex_array, mesh.index_buffer, shader);
 
 				// Unbind material
 				material->Unbind();
 			}
+		}
+
+		// Sort transparent objects by distance from camera
+		SortTransparentObjects(cameraPos);
+
+		// Second pass: Render transparent objects in sorted order
+		if (!m_transparentObjects.empty()) {
+			// Enable alpha blending for transparency
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			glBlendEquation(GL_FUNC_ADD);
+
+			// Enable depth testing but disable depth writing
+			glEnable(GL_DEPTH_TEST);
+			glDepthFunc(GL_LEQUAL);
+			glDepthMask(GL_FALSE);
+
+			// Disable face culling for transparent objects
+			glDisable(GL_CULL_FACE);
+
+			// Render transparent objects back-to-front
+			for (const auto& transparentObj : m_transparentObjects) {
+				EntityID entity = transparentObj.entity;
+
+				// Handle ModelComponent entities
+				if (ecs.HasComponent<ModelComponent>(entity)) {
+					auto& modelComp = ecs.GetComponent<ModelComponent>(entity);
+					if (modelComp.m_model) {
+						// Get material for proper transparency shader
+						Ermine::graphics::Material* material = nullptr;
+						if (ecs.HasComponent<Ermine::Material>(entity)) {
+							auto& materialComponent = ecs.GetComponent<Ermine::Material>(entity);
+							material = materialComponent.GetMaterial();
+						}
+
+						if (material) {
+							UpdateMaterialUBO(material->GetUBOData());
+						}
+
+						RenderModel(*modelComp.m_model, view, projection, transparentObj.modelMatrix);
+					}
+				}
+				// Handle Mesh entities
+				else if (ecs.HasComponent<Mesh>(entity) && ecs.HasComponent<Ermine::Material>(entity)) {
+					auto& mesh = ecs.GetComponent<Mesh>(entity);
+					auto& materialComponent = ecs.GetComponent<Ermine::Material>(entity);
+
+					if (!mesh.vertex_array || !mesh.index_buffer) continue;
+
+					Ermine::graphics::Material* material = materialComponent.GetMaterial();
+					if (!material) continue;
+
+					auto shader = material->GetShader();
+					if (!shader || !shader->IsValid()) continue;
+
+					// Update Material UBO
+					UpdateMaterialUBO(material->GetUBOData());
+
+					// Bind material
+					material->Bind();
+
+					// Bind uniform blocks
+					BindLightsBlockIfPresent(shader);
+					BindMaterialBlockIfPresent(shader);
+
+					// Set transformation matrices
+					shader->SetUniformMatrix4fv("model", transparentObj.modelMatrix);
+					shader->SetUniformMatrix4fv("view", &view.m2[0][0]);
+					shader->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
+
+					// Calculate normal matrix
+					glm::mat4 modelView = glmView * transparentObj.modelMatrix;
+					glm::mat3 normalMatrix = transpose(inverse(glm::mat3(modelView)));
+					shader->SetUniformMatrix3fv("NormalMatrix", normalMatrix);
+
+					// Set shading mode
+					shader->SetUniform1i("isBlinnPhong", m_IsBlinnPhong ? 1 : 0);
+
+					// Draw the mesh
+					Draw(mesh.vertex_array, mesh.index_buffer, shader);
+
+					// Unbind material
+					material->Unbind();
+				}
+			}
+
+			// Restore render state after transparent rendering
+			glDepthMask(GL_TRUE);
+			glEnable(GL_CULL_FACE);
+			glCullFace(GL_BACK);
+			glDisable(GL_BLEND);
 		}
 
 #ifdef _DEBUG
@@ -2265,4 +2279,204 @@ void Renderer::RenderShadowPass()
 	CalculateDirectionalMatrix(editor::EditorCamera::GetInstance());
 
 	RenderShadowMap();
+}
+
+bool Renderer::IsTransparentMaterial(const Ermine::graphics::Material* material) const
+{
+	if (!material) return false;
+
+	// Check if material has transparency parameter set
+	if (auto transparencyParam = material->GetParameter("materialTransparency")) {
+		if (transparencyParam->type == MaterialParamType::FLOAT &&
+			transparencyParam->floatValues.size() > 0) {
+			return transparencyParam->floatValues[0] > 0.01f; // Consider transparent if > 1%
+		}
+	}
+
+	// Check material UBO data
+	const auto& uboData = material->GetUBOData();
+	return uboData.transparency > 0.01f;
+}
+
+
+void Renderer::SortTransparentObjects(const Vec3& cameraPos)
+{
+	// Calculate distances and sort transparent objects back-to-front
+	for (auto& obj : m_transparentObjects) {
+		// Extract position from model matrix
+		glm::vec3 objPos = glm::vec3(obj.modelMatrix[3]);
+		glm::vec3 camPos = glm::vec3(cameraPos.x, cameraPos.y, cameraPos.z);
+
+		obj.distanceToCamera = glm::distance(objPos, camPos);
+	}
+
+	// Sort back-to-front for proper alpha blending
+	std::sort(m_transparentObjects.begin(), m_transparentObjects.end());
+}
+
+void Renderer::RenderTransparentPass(const Mtx44& view, const Mtx44& projection)
+{
+	if (m_transparentObjects.empty()) return;
+
+	// Bind the post-process buffer where the opaque scene was rendered
+	if (!m_PostProcessBuffer) {
+		EE_CORE_ERROR("Post-process buffer not initialized for transparent pass!");
+		return;
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, m_PostProcessBuffer->FBO);
+	glViewport(0, 0, m_PostProcessBuffer->width, m_PostProcessBuffer->height);
+
+	// Enable alpha blending for transparency
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glBlendEquation(GL_FUNC_ADD);
+
+	// Enable depth testing but disable depth writing
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LEQUAL);
+	glDepthMask(GL_FALSE); // Don't write to depth buffer
+
+	// Disable face culling for transparent objects (they might be viewed from inside)
+	glDisable(GL_CULL_FACE);
+
+	const auto& ecs = Ermine::ECS::GetInstance();
+
+	// Render all transparent objects in sorted order
+	for (const auto& transparentObj : m_transparentObjects) {
+		EntityID entity = transparentObj.entity;
+
+		if (!ecs.HasComponent<Ermine::Material>(entity)) continue;
+
+		auto& materialComponent = ecs.GetComponent<Ermine::Material>(entity);
+		Ermine::graphics::Material* material = materialComponent.GetMaterial();
+
+		if (!material || !IsTransparentMaterial(material)) continue;
+
+		// Use forward shader for transparent objects (enhanced fragment shader)
+		auto shader = m_ForwardShader ? m_ForwardShader : material->GetShader();
+		if (!shader || !shader->IsValid()) continue;
+
+		shader->Bind();
+
+		// Bind uniform blocks
+		BindLightsBlockIfPresent(shader);
+		BindMaterialBlockIfPresent(shader);
+
+		// Update material UBO
+		UpdateMaterialUBO(material->GetUBOData());
+
+		// Set transformation matrices
+		shader->SetUniformMatrix4fv("model", transparentObj.modelMatrix);
+		shader->SetUniformMatrix4fv("view", &view.m2[0][0]);
+		shader->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
+
+		// Calculate normal matrix
+		glm::mat4 glmView = glm::mat4(
+			view.m00, view.m01, view.m02, view.m03,
+			view.m10, view.m11, view.m12, view.m13,
+			view.m20, view.m21, view.m22, view.m23,
+			view.m30, view.m31, view.m32, view.m33
+		);
+		glm::mat4 modelView = glmView * transparentObj.modelMatrix;
+		glm::mat3 normalMatrix = transpose(inverse(glm::mat3(modelView)));
+		shader->SetUniformMatrix3fv("NormalMatrix", normalMatrix);
+
+		// Set shading mode
+		shader->SetUniform1i("isBlinnPhong", m_IsBlinnPhong ? 1 : 0);
+
+		// Bind textures
+		int texUnit = 0;
+		if (material->HasParameter("materialAlbedoMap")) {
+			std::shared_ptr<Texture> albedo = material->GetParameter("materialAlbedoMap")->texture;
+			if (albedo && albedo->IsValid()) {
+				albedo->Bind(texUnit);
+				shader->SetUniform1i("materialAlbedoMap", texUnit);
+				shader->SetUniform1i("texture0", texUnit); // Fallback compatibility
+			}
+		}
+		texUnit++;
+
+		if (material->HasParameter("materialNormalMap")) {
+			std::shared_ptr<Texture> normal = material->GetParameter("materialNormalMap")->texture;
+			if (normal && normal->IsValid()) {
+				normal->Bind(texUnit);
+				shader->SetUniform1i("materialNormalMap", texUnit);
+			}
+		}
+		texUnit++;
+
+		if (material->HasParameter("materialRoughnessMap")) {
+			std::shared_ptr<Texture> roughness = material->GetParameter("materialRoughnessMap")->texture;
+			if (roughness && roughness->IsValid()) {
+				roughness->Bind(texUnit);
+				shader->SetUniform1i("materialRoughnessMap", texUnit);
+			}
+		}
+		texUnit++;
+
+		if (material->HasParameter("materialMetallicMap")) {
+			std::shared_ptr<Texture> metallic = material->GetParameter("materialMetallicMap")->texture;
+			if (metallic && metallic->IsValid()) {
+				metallic->Bind(texUnit);
+				shader->SetUniform1i("materialMetallicMap", texUnit);
+			}
+		}
+		texUnit++;
+
+		if (material->HasParameter("materialEmissiveMap")) {
+			std::shared_ptr<Texture> emissive = material->GetParameter("materialEmissiveMap")->texture;
+			if (emissive && emissive->IsValid()) {
+				emissive->Bind(texUnit);
+				shader->SetUniform1i("materialEmissiveMap", texUnit);
+			}
+		}
+		texUnit++;
+
+		// Bind environment maps for refraction/reflection
+		if (material->HasParameter("materialEnvironmentMap")) {
+			std::shared_ptr<Cubemap> env = material->GetParameter("materialEnvironmentMap")->cubemap;
+			if (env && env->IsValid()) {
+				env->Bind(texUnit);
+				shader->SetUniform1i("materialEnvironmentMap", texUnit);
+			}
+		}
+		texUnit++;
+
+		if (material->HasParameter("materialIrradianceMap")) {
+			std::shared_ptr<Cubemap> irradiance = material->GetParameter("materialIrradianceMap")->cubemap;
+			if (irradiance && irradiance->IsValid()) {
+				irradiance->Bind(texUnit);
+				shader->SetUniform1i("materialIrradianceMap", texUnit);
+			}
+		}
+
+		// Render the mesh
+		if (ecs.HasComponent<ModelComponent>(entity)) {
+			// Handle model component
+			auto& modelComp = ecs.GetComponent<ModelComponent>(entity);
+			if (modelComp.m_model) {
+				RenderModel(*modelComp.m_model, view, projection, transparentObj.modelMatrix);
+			}
+		}
+		else if (ecs.HasComponent<Mesh>(entity)) {
+			// Handle regular mesh component
+			auto& mesh = ecs.GetComponent<Mesh>(entity);
+			if (mesh.vertex_array && mesh.index_buffer) {
+				Draw(mesh.vertex_array, mesh.index_buffer, shader);
+			}
+		}
+
+		// Unbind textures
+		material->Unbind();
+	}
+
+	// Restore render state
+	glDepthMask(GL_TRUE);
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
+	glDisable(GL_BLEND);
+
+	// Clear transparent objects list for next frame
+	m_transparentObjects.clear();
 }

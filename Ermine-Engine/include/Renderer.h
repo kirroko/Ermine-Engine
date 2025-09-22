@@ -26,6 +26,18 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 namespace Ermine::graphics
 {
+
+    // Transparency rendering support
+    struct TransparentObject {
+        EntityID entity;
+        float distanceToCamera;
+        glm::mat4 modelMatrix;
+
+        bool operator<(const TransparentObject& other) const {
+            return distanceToCamera > other.distanceToCamera; // Sort back-to-front
+        }
+    };
+
     // Lights
 
     constexpr int MaxLights = 16;
@@ -370,6 +382,25 @@ namespace Ermine::graphics
 		void RenderShadowMap();
         void RenderShadowPass();
 
+        /**
+         * @brief Render transparent objects using forward rendering with depth peeling
+         * @param view The view matrix
+         * @param projection The projection matrix
+         */
+        void RenderTransparentPass(const Mtx44& view, const Mtx44& projection);
+
+        /**
+         * @brief Sort transparent objects by distance from camera
+         * @param cameraPos Camera position in world space
+         */
+        void SortTransparentObjects(const Vec3& cameraPos);
+
+        /**
+         * @brief Check if material is transparent based on transparency value
+         * @param material The material to check
+         * @return true if material should be rendered in transparent pass
+         */
+        bool IsTransparentMaterial(const Ermine::graphics::Material* material) const;
 
 
     private:
@@ -412,6 +443,12 @@ namespace Ermine::graphics
         // Just one FBO and one 2D shadow map for one directional light for now
         GLuint m_ShadowMapCube = 0;
         uint64_t m_ShadowMapArrayHandle = 0;
+        std::vector<TransparentObject> m_transparentObjects;
+
+        // Forward rendering shader for transparent objects
+        std::shared_ptr<Shader> m_ForwardShader = nullptr;
+
+        void BindMaterialTextures(Ermine::graphics::Material* material);
 
 
     };
