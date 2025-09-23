@@ -85,6 +85,8 @@ namespace Ermine::graphics
     public:
         Model(const std::string& path);
 
+		const std::string& GetDirectory() const { return m_directory; }
+		const std::string& GetName() const { return m_name; }
         const std::vector<MeshData>& GetMeshes() const { return m_meshes; }
 
         int GetBoneCount() const { return static_cast<int>(m_BoneOffsets.size()); }
@@ -92,9 +94,11 @@ namespace Ermine::graphics
         const std::vector<glm::mat4>& GetBoneTransforms() const { return m_BoneTransforms; }
 
         void SetBoneTransforms(const std::vector<glm::mat4>& transforms) { m_BoneTransforms = transforms; }
+        void LoadModel(const std::string& path);
 
     private:
-        std::string m_directory; // directory for resolving textures
+        std::string m_directory;        // directory for resolving textures
+		std::string m_name;             // name of the model
         std::vector<MeshData> m_meshes; // all meshes in this model
 
         // Bone data
@@ -104,7 +108,6 @@ namespace Ermine::graphics
 
         glm::mat4 ToGlm(const aiMatrix4x4& from);
 
-        void LoadModel(const std::string& path);
         void ProcessNode(aiNode* node, const aiScene* scene, const aiMatrix4x4& parentTransform);
         MeshData ProcessMesh(aiMesh* mesh);
     };

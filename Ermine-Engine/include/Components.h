@@ -30,6 +30,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <rapidjson/writer.h>
 #include <rapidjson/stringbuffer.h>
 #include "Model.h"
+#include "AssetManager.h"
 
 namespace Ermine
 {
@@ -186,6 +187,7 @@ namespace Ermine
 			if (in.HasMember("tag") && in["tag"].IsString())    tag = in["tag"].GetString();
 			if (in.HasMember("active") && in["active"].IsBool()) selfActive = in["active"].GetBool();
 		}
+
 	};
 
 	/*!***********************************************************************
@@ -285,6 +287,34 @@ namespace Ermine
 		Mesh(const std::shared_ptr<graphics::VertexArray>& vao, const std::shared_ptr<graphics::VertexBuffer>& vbo, const std::shared_ptr<graphics::IndexBuffer>& ibo) :
 			vertex_array(vao), vertex_buffer(vbo), index_buffer(ibo)
 		{
+		}
+
+		//template <typename Alloc>
+		//void Serialize(rapidjson::Value& out, Alloc& alloc) const {
+		//	out.SetObject();
+		//	MeshRef ref{ m_meshAssetId };
+		//	rapidjson::Value meshJson;
+		//	Serialize(ref, meshJson, alloc);
+		//	out.AddMember("mesh", meshJson, alloc);
+		//}
+
+		//void Deserialize(const rapidjson::Value& in) {
+		//	if (in.HasMember("mesh") && in["mesh"].IsObject())
+		//		mesh = DeserializeMeshRef(in["mesh"], AssetManager::Get());
+		//}
+
+		template <typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
+			out.SetObject();
+			//MeshRef ref{ m_meshAssetId };
+			//rapidjson::Value meshJson;
+			//Serialize(ref, meshJson, alloc);
+			//out.AddMember("mesh", meshJson, alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in) {
+			//if (in.HasMember("mesh") && in["mesh"].IsObject())
+			//	mesh = DeserializeMeshRef(in["mesh"], AssetManager::Get());
 		}
 	};
 
@@ -444,6 +474,20 @@ namespace Ermine
 				m_material->SetTexture("material.normalMap", normalMap);
 				m_material->SetBool("material.hasNormalMap", true);
 			}
+		}
+
+		template <typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
+			out.SetObject();
+			//MeshRef ref{ m_meshAssetId };
+			//rapidjson::Value meshJson;
+			//Serialize(ref, meshJson, alloc);
+			//out.AddMember("mesh", meshJson, alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in) {
+			//if (in.HasMember("mesh") && in["mesh"].IsObject())
+			//	mesh = DeserializeMeshRef(in["mesh"], AssetManager::Get());
 		}
 	};
 
@@ -643,6 +687,7 @@ namespace Ermine
 		float size;
 
 		Particle() : velocity(0, 0, 0), lifetime(1.0f), age(0.0f), colour(1, 1, 1, 1), size(1.0f) {}
+
 	};
 
 	/*!***********************************************************************
@@ -655,5 +700,31 @@ namespace Ermine
 
 		ModelComponent() = default;
 		explicit ModelComponent(const std::shared_ptr<graphics::Model>& model) : m_model(model) {}
+
+		template <typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
+			const std::string& model_name = m_model->GetName();
+			out.SetObject();
+
+			rapidjson::Value modelVal;
+			modelVal.SetString(model_name.c_str(),
+				static_cast<rapidjson::SizeType>(model_name.size()),
+				alloc);  // required for strings
+
+			out.AddMember("model", modelVal, alloc);
+		}
+
+
+		void Deserialize(const rapidjson::Value& in) {
+			if (in.HasMember("model") && in["model"].IsString()) {
+				const char* name = in["model"].GetString();
+
+				if (!m_model) {
+					m_model = AssetManager::GetInstance().LoadModel("../Resources/Models/" + std::string(name));
+				}
+
+				m_model->LoadModel(std::string("../Resources/Models/") + name);
+			}
+		}
 	};
 }

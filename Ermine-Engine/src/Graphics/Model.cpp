@@ -55,6 +55,7 @@ void Model::LoadModel(const std::string& path)
     }
 
     m_directory = path.substr(0, path.find_last_of('/'));
+	m_name = path.substr(path.find_last_of('/') + 1);
     ProcessNode(scene->mRootNode, scene, aiMatrix4x4());
 
     // Init bone transforms to identity

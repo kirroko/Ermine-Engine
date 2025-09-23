@@ -189,6 +189,27 @@ void SaveSceneToFile(const Ermine::ECS& ecs, const std::filesystem::path& path, 
                 ecs.GetComponent<Ermine::Light>(id).Serialize(l, a);
                 comps.AddMember(Value("Light", a), l, a);
             }
+
+            // Mesh
+            if (name == "Mesh" && ecs.HasComponent<Ermine::Mesh>(id)) {
+                Value m(kObjectType);
+                ecs.GetComponent<Ermine::Mesh>(id).Serialize(m, a);
+                comps.AddMember(Value("Mesh", a), m, a);
+            }
+
+            // Material
+            if (name == "Material" && ecs.HasComponent<Ermine::Material>(id)) {
+                Value m(kObjectType);
+                ecs.GetComponent<Ermine::Material>(id).Serialize(m, a);
+                comps.AddMember(Value("Material", a), m, a);
+            }
+
+			// ModelComponent
+            if (name == "ModelComponent" && ecs.HasComponent<Ermine::ModelComponent>(id)) {
+                Value l(kObjectType);
+                ecs.GetComponent<Ermine::ModelComponent>(id).Serialize(l, a);
+                comps.AddMember(Value("ModelComponent", a), l, a);
+            }
         }
 
         e.AddMember("components", comps, a);
@@ -250,6 +271,33 @@ void LoadSceneFromFile(Ermine::ECS& ecs, const std::filesystem::path& path) {
 
             auto& l = ecs.GetComponent<Ermine::Light>(id);
             l.Deserialize(comps["Light"]);
+        }
+
+        // Mesh
+        if (comps.HasMember("Mesh") && comps["Mesh"].IsObject()) {
+            if (!ecs.HasComponent<Ermine::Mesh>(id))
+                ecs.AddComponent<Ermine::Mesh>(id, Ermine::Mesh{});
+
+            auto& m = ecs.GetComponent<Ermine::Mesh>(id);
+            m.Deserialize(comps["Mesh"]);
+        }
+
+        // ModelComponent
+        if (comps.HasMember("Material") && comps["Material"].IsObject()) {
+            if (!ecs.HasComponent<Ermine::Material>(id))
+                ecs.AddComponent<Ermine::Material>(id, Ermine::Material{});
+
+            auto& m = ecs.GetComponent<Ermine::Material>(id);
+            m.Deserialize(comps["Material"]);
+        }
+
+        // ModelComponent
+        if (comps.HasMember("ModelComponent") && comps["ModelComponent"].IsObject()) {
+            if (!ecs.HasComponent<Ermine::ModelComponent>(id))
+                ecs.AddComponent<Ermine::ModelComponent>(id, Ermine::ModelComponent{});
+
+            auto& m = ecs.GetComponent<Ermine::ModelComponent>(id);
+            m.Deserialize(comps["ModelComponent"]);
         }
 
         // (If you later add more components, repeat this pattern.)

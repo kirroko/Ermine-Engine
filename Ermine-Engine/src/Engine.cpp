@@ -306,6 +306,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().AddComponent(fbxEntity, ObjectMetaData("Character", "Model", true));
 	ECS::GetInstance().AddComponent(fbxEntity, Mesh{}); // empty mesh component for renderer signature
 	ECS::GetInstance().AddComponent(fbxEntity, ModelComponent(AssetManager::GetInstance().LoadModel("../Resources/Models/Shadowkin_Rigged.fbx")));
+	//ECS::GetInstance().AddComponent(fbxEntity, ModelComponent(AssetManager::GetInstance().LoadModel("../")));
 	auto fbxMaterial = std::make_unique<graphics::Material>(shader);
 	auto fbxTexture = AssetManager::GetInstance().LoadTexture("../Resources/Textures/Pants_Base_color.png");
 	fbxMaterial->LoadTemplate(graphics::MaterialTemplates::PBR_WHITE());
