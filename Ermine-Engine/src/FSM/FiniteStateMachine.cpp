@@ -64,28 +64,28 @@ namespace Ermine
     // IdleState
     void IdleState::Enter(EntityID entity)
     {
-        EE_CORE_INFO("Entity {0} entered Idle state.", entity);
+        //EE_CORE_INFO("Entity {0} entered Idle state.", entity);
     }
 
     void IdleState::Update(EntityID entity, float deltaTime)
     {
-        EE_CORE_INFO("Entity {0} is idling...", entity);
+        //EE_CORE_INFO("Entity {0} is idling...", entity);
     }
 
     void IdleState::Exit(EntityID entity)
     {
-        EE_CORE_INFO("Entity {0} exiting Idle state.", entity);
+        //EE_CORE_INFO("Entity {0} exiting Idle state.", entity);
     }
 
     // RoamState
     void RoamState::Enter(EntityID entity)
     {
-        EE_CORE_INFO("Entity {0} entered Roam state.", entity);
+        //EE_CORE_INFO("Entity {0} entered Roam state.", entity);
     }
 
     void RoamState::Update(EntityID entity, float deltaTime)
     {
-        EE_CORE_INFO("Entity {0} is roaming...", entity);
+        //EE_CORE_INFO("Entity {0} is roaming...", entity);
 
         auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
 
@@ -116,38 +116,38 @@ namespace Ermine
 
     void RoamState::Exit(EntityID entity)
     {
-        EE_CORE_INFO("Entity {0} exiting Roam state.", entity);
+        //EE_CORE_INFO("Entity {0} exiting Roam state.", entity);
     }
 
     // AttackState
     void AttackState::Enter(EntityID entity)
     {
-        EE_CORE_INFO("Entity {0} entered Attack state.", entity);
+        //EE_CORE_INFO("Entity {0} entered Attack state.", entity);
     }
 
     void AttackState::Update(EntityID entity, float deltaTime)
     {
-        EE_CORE_INFO("Entity {0} is attacking!", entity);
+        //EE_CORE_INFO("Entity {0} is attacking!", entity);
     }
 
     void AttackState::Exit(EntityID entity)
     {
-        EE_CORE_INFO("Entity {0} exiting Attack state.", entity);
+        //EE_CORE_INFO("Entity {0} exiting Attack state.", entity);
     }
 
     // DeadState
     void DeadState::Enter(EntityID entity)
     {
-        EE_CORE_INFO("Entity {0} entered Dead state.", entity);
+        //EE_CORE_INFO("Entity {0} entered Dead state.", entity);
     }
 
     void DeadState::Update(EntityID entity, float deltaTime)
     {
-        EE_CORE_INFO("Entity {0} is dead...", entity);
+        //EE_CORE_INFO("Entity {0} is dead...", entity);
     }
 
     void DeadState::Exit(EntityID entity)
     {
-        EE_CORE_INFO("Entity {0} exiting Dead state.", entity);
+        //EE_CORE_INFO("Entity {0} exiting Dead state.", entity);
     }
 }
