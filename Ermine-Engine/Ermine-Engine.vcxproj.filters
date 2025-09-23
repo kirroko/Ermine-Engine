@@ -19,6 +19,9 @@
     <Filter Include="src\ECS">
       <UniqueIdentifier>{F76D2FA9-634D-AE44-6C65-391BD8C314A6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\FSM">
+      <UniqueIdentifier>{42742FA9-AE53-AE44-B76B-391B23CA14A6}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Graphics">
       <UniqueIdentifier>{0D564864-F9B8-D708-A23E-10BF8E80A38B}</UniqueIdentifier>
     </Filter>
@@ -57,9 +60,6 @@
     </Filter>
     <Filter Include="src\Window">
       <UniqueIdentifier>{74C3D837-607B-1A85-C982-F3E0B559B575}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\FSM">
-      <UniqueIdentifier>{c0551004-38f9-473b-9a46-1c860ed6ee76}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -106,6 +106,9 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\Entity.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\FiniteStateMachine.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\FrameController.h">
@@ -219,16 +222,7 @@
     <ClInclude Include="include\VertexBuffer.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="include\Window.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\FiniteStateMachine.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="include\ViewPortGUI.h">
-        <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\MathVector.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\Window.h">
@@ -262,6 +256,9 @@
     </ClCompile>
     <ClCompile Include="src\Engine.cpp">
       <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\FSM\FiniteStateMachine.cpp">
+      <Filter>src\FSM</Filter>
     </ClCompile>
     <ClCompile Include="src\Graphics\Camera.cpp">
       <Filter>src\Graphics</Filter>
@@ -376,21 +373,6 @@
     </ClCompile>
     <ClCompile Include="src\dllmain.cpp">
       <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\FSM\FiniteStateMachine.cpp">
-      <Filter>src\FSM</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ImGUI\InspectorGUI.cpp">
-      <Filter>src\ImGUI</Filter>
-    </ClCompile>
-    <ClCompile Include="src\AudioManager\AudioIMGUI.cpp">
-      <Filter>src\AudioManager</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Graphics\Cubemap.cpp">
-      <Filter>src\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Graphics\Skybox.cpp">
-      <Filter>src\Graphics</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

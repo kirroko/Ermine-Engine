@@ -1,10 +1,10 @@
-
 #include "PreCompile.h"
 #include "HierarchyPanel.h"
 #include "Components.h"
 #include "HierarchySystem.h"
 #include "ECS.h"
 #include "GeometryFactory.h"
+#include "AssetManager.h"
 
 
 namespace Ermine {
@@ -207,17 +207,34 @@ namespace Ermine {
             if (ImGui::BeginMenu("Create Primitive")) {
                 if (ImGui::MenuItem("Cube")) {
                     EntityID entity = m_ActiveScene->CreateEntity("Cube");
-                    // Add cube mesh and material components here
                     ECS::GetInstance().AddComponent(entity, graphics::GeometryFactory::CreateCube(1, 1, 1));
-                    m_ActiveScene->SetSelectedEntity(entity); // ADD THIS LINE
-                    ImGui::SetWindowFocus("Inspector"); // ADD THIS LINE
+
+                    // Create a basic material (replace with your shader/texture as needed)
+                    auto shader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/vertex.glsl", "../Resources/Shaders/fragment.glsl");
+                    auto texture = AssetManager::GetInstance().LoadTexture("../Resources/Textures/greybox_grey_grid.png");
+                    auto materialPtr = std::make_shared<graphics::Material>(shader);
+                    if (texture && texture->IsValid()) {
+                        materialPtr->SetTexture("materialAlbedoMap", texture);
+                        materialPtr->SetTexture("texture0", texture);
+                    }
+                    materialPtr->SetVec3("material.albedo", Vec3(1.0f, 1.0f, 1.0f)); // White color
+
+                    ECS::GetInstance().AddComponent(entity, Material(materialPtr));
+                    m_ActiveScene->SetSelectedEntity(entity);
+                    ImGui::SetWindowFocus("Inspector");
                 }
                 if (ImGui::MenuItem("Sphere")) {
                     EntityID entity = m_ActiveScene->CreateEntity("Sphere");
-                    // Add sphere mesh and material components here  
                     ECS::GetInstance().AddComponent(entity, graphics::GeometryFactory::CreateSphere(1.0f));
-                    m_ActiveScene->SetSelectedEntity(entity); // ADD THIS LINE
-                    ImGui::SetWindowFocus("Inspector"); // ADD THIS LINE
+
+                    auto shader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/vertex.glsl", "../Resources/Shaders/fragment.glsl");
+                    auto materialPtr = std::make_shared<graphics::Material>(shader);
+                    //materialPtr->SetAlbedo(Vec3(0.8f, 0.8f, 0.8f)); // Light gray
+                    materialPtr->SetVec3("material.albedo", Vec3(0.8f, 0.8f, 0.8f)); // light grey color
+
+                    ECS::GetInstance().AddComponent(entity, Material(materialPtr));
+                    m_ActiveScene->SetSelectedEntity(entity);
+                    ImGui::SetWindowFocus("Inspector");
                 }
                 ImGui::EndMenu();
             }
