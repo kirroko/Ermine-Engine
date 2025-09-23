@@ -205,11 +205,9 @@ bool engine::Init(GLFWwindow* windowContext)
 	auto shader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/vertex.glsl", "../Resources/Shaders/fragment.glsl");
 	auto texture = AssetManager::GetInstance().LoadTexture("../Resources/Textures/greybox_grey_grid.png");
 
-	// Load skybox shader and create a simple test cubemap (optional)
+	// Load skybox shader and create a simple test cubemap
 	auto skyboxShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/skybox_vertex.glsl", "../Resources/Shaders/skybox_fragment.glsl");
 	
-	// Example: Load a cubemap from individual face textures (you'll need to provide actual texture files)
-	// Try different face order - some cubemap sources use different conventions
 	 std::array<std::string, 6> cubemapFaces = {
 	     "../Resources/Textures/Skybox/right.jpg",   // +X (right)
 	     "../Resources/Textures/Skybox/left.jpg",    // -X (left)  
@@ -228,10 +226,10 @@ bool engine::Init(GLFWwindow* windowContext)
 		EE_CORE_WARN("Failed to create skybox - cubemap or shader invalid");
 	}
 	
-	// For now, let's create a placeholder cubemap that you can replace later
+	// For now, create a placeholder cubemap
 	EE_CORE_INFO("Cubemap system initialized. You can load cubemaps using AssetManager::LoadCubemap() or LoadCubemapFromEquirectangular()");
 
-	// Create shared materials for common use cases - demonstrating the new shared_ptr system
+	// Create shared materials for common use cases
 	// These materials can be reused by multiple objects for better memory efficiency
 	std::shared_ptr<graphics::Material> basicWhiteMaterial = AssetManager::GetInstance().CreateMaterial("basic_white", shader, "PBR_WHITE");
 	std::shared_ptr<graphics::Material> metalMaterial = AssetManager::GetInstance().CreateMaterial("shiny_metal", shader, "PBR_METAL");
@@ -249,7 +247,7 @@ bool engine::Init(GLFWwindow* windowContext)
 		metalMaterial->SetTexture("materialAlbedoMap", texture);
 		metalMaterial->SetTexture("texture0", texture);
 		
-		// Glass material setup - FIXED for proper refraction
+		// Glass material setup
 		glassMaterial->SetTexture("materialAlbedoMap", texture);
 		glassMaterial->SetTexture("texture0", texture);
 		glassMaterial->SetFloat("materialTransparency", 0.9f);
@@ -267,7 +265,7 @@ bool engine::Init(GLFWwindow* windowContext)
 			glassMaterial->SetBool("materialHasIrradianceMap", true);
 		}
 		
-		// Water material setup - FIXED for proper refraction
+		// Water material setup
 		waterMaterial->SetTexture("materialAlbedoMap", texture);
 		waterMaterial->SetTexture("texture0", texture);
 		waterMaterial->SetFloat("materialTransparency", 0.7f);
@@ -413,10 +411,10 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().AddComponent<Transform>(mainLightEntity, Transform(Vec3(0, 4, 2), Quaternion(0.9f, 0.2f, 0.1f, -0.3f), Vec3(1, 1, 1)));
 	ECS::GetInstance().AddComponent<ObjectMetaData>(mainLightEntity, ObjectMetaData("MainLight", "Light", true));
 	ECS::GetInstance().AddComponent<Light>(mainLightEntity, Light(Vec3(1, 1, 1), 0.8f, LightType::DIRECTIONAL, true));
-	auto redLightDirectional = ECS::GetInstance().CreateEntity();
-	ECS::GetInstance().AddComponent<Transform>(redLightDirectional, Transform(Vec3(0, 4, 2), Quaternion(-0.149f, 0.601f, 0.495f, -0.610f), Vec3(1, 1, 1)));
-	ECS::GetInstance().AddComponent<ObjectMetaData>(redLightDirectional, ObjectMetaData("Red", "Light", true));
-	ECS::GetInstance().AddComponent<Light>(redLightDirectional, Light(Vec3(1, 0, 0), 1.f, LightType::DIRECTIONAL, true));
+	auto whiteLightDirectional = ECS::GetInstance().CreateEntity();
+	ECS::GetInstance().AddComponent<Transform>(whiteLightDirectional, Transform(Vec3(0, 4, 2), Quaternion(-0.149f, 0.601f, 0.495f, -0.610f), Vec3(1, 1, 1)));
+	ECS::GetInstance().AddComponent<ObjectMetaData>(whiteLightDirectional, ObjectMetaData("Red", "Light", true));
+	ECS::GetInstance().AddComponent<Light>(whiteLightDirectional, Light(Vec3(1, 1, 1), 1.f, LightType::DIRECTIONAL, true));
 
 	// Light sphere material - use shared emissive material for all lights
 	//ECS::GetInstance().AddComponent(mainLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
@@ -456,7 +454,6 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().AddComponent(greenLightEntity, Material(greenLightMaterial));
 
 	// Create demo objects showcasing refraction and local reflection probes
-	
 	// Glass sphere demonstrating refraction
 	auto glassEntity = ECS::GetInstance().CreateEntity();
 	ECS::GetInstance().AddComponent<Transform>(glassEntity, Transform(Vec3(2, 0, -1), Quaternion(), Vec3(1, 1, 1)));
