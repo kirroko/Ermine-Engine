@@ -462,6 +462,133 @@ namespace Ermine
 		int GetMusicIndex(const std::string& name) const;
 		void AddMusicSource(const std::string& name, const std::string& path);
 		void AddSFXSource(const std::string& name, const std::string& path);
+
+		void UpdateMusicSource(int index, const std::string& name, const std::string& path)
+		{
+			if (index >= 0 && index < static_cast<int>(music.size()))
+			{
+				// Stop current music if we're updating the currently playing track
+				if (currentMusicIndex == index && currentMusicChannelId != -1)
+				{
+					CAudioEngine::StopChannel(currentMusicChannelId);
+					currentMusicChannelId = -1;
+				}
+
+				// Update the music source
+				music[index].audioName = name;
+				music[index].audioPath = path;
+
+				// Reload the sound with new path
+				try
+				{
+					CAudioEngine::LoadSound(path, false, true, true); // Background music is typically looped and streamed
+				}
+				catch (const std::exception& e)
+				{
+					// Handle loading error if needed
+				}
+			}
+		}
+
+		// Update an existing SFX source
+		void UpdateSFXSource(int index, const std::string& name, const std::string& path)
+		{
+			if (index >= 0 && index < static_cast<int>(sfx.size()))
+			{
+				// Update the SFX source
+				sfx[index].audioName = name;
+				sfx[index].audioPath = path;
+
+				// Reload the sound with new path
+				try
+				{
+					CAudioEngine::LoadSound(path, false, false, false); // SFX typically not looped/streamed
+				}
+				catch (const std::exception& e)
+				{
+					// Handle loading error if needed
+				}
+			}
+		}
+
+		// Remove a music source
+		void RemoveMusicSource(int index)
+		{
+			if (index >= 0 && index < static_cast<int>(music.size()))
+			{
+				// Stop current music if we're removing the currently playing track
+				if (currentMusicIndex == index && currentMusicChannelId != -1)
+				{
+					CAudioEngine::StopChannel(currentMusicChannelId);
+					currentMusicChannelId = -1;
+					currentMusicIndex = -1;
+				}
+				else if (currentMusicIndex > index)
+				{
+					// Adjust current music index if a track before it was removed
+					currentMusicIndex--;
+				}
+
+				// Remove the music source
+				music.erase(music.begin() + index);
+			}
+		}
+
+		// Remove an SFX source
+		void RemoveSFXSource(int index)
+		{
+			if (index >= 0 && index < static_cast<int>(sfx.size()))
+			{
+				// Remove the SFX source
+				sfx.erase(sfx.begin() + index);
+			}
+		}
+
+		// Get music source by index (for safe access)
+		const AudioSource* GetMusicSource(int index) const
+		{
+			if (index >= 0 && index < static_cast<int>(music.size()))
+			{
+				return &music[index];
+			}
+			return nullptr;
+		}
+
+		// Get SFX source by index (for safe access)
+		const AudioSource* GetSFXSource(int index) const
+		{
+			if (index >= 0 && index < static_cast<int>(sfx.size()))
+			{
+				return &sfx[index];
+			}
+			return nullptr;
+		}
+
+		// Find music index by name
+		int FindMusicIndex(const std::string& name) const
+		{
+			for (size_t i = 0; i < music.size(); ++i)
+			{
+				if (music[i].audioName == name)
+				{
+					return static_cast<int>(i);
+				}
+			}
+			return -1;
+		}
+
+		// Find SFX index by name
+		int FindSFXIndex(const std::string& name) const
+		{
+			for (size_t i = 0; i < sfx.size(); ++i)
+			{
+				if (sfx[i].audioName == name)
+				{
+					return static_cast<int>(i);
+				}
+			}
+			return -1;
+		}
 	};
 
 	/*!***********************************************************************

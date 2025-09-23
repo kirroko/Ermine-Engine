@@ -78,11 +78,45 @@ namespace Ermine
         // Popup control flags
         bool m_ShowEntitySoundBrowser = false;
         bool m_ShowTesterSoundBrowser = false;
+        bool m_ShowGlobalSFXBrowser = false;
+        bool m_ShowGlobalMusicBrowser = false;
+
+        int m_EditingMusicIndex = -1;
+        int m_EditingSFXIndex = -1;
+        char m_EditMusicName[256] = "";
+        char m_EditMusicPath[256] = "";
+        char m_EditSFXName[256] = "";
+        char m_EditSFXPath[256] = "";
+        bool m_ShowEditMusicBrowser = false;
+        bool m_ShowEditSFXBrowser = false;
+        bool m_ShowDeleteConfirmation = false;
+        int m_DeleteTargetIndex = -1;
+        bool m_DeletingMusic = true;
 
         // Add these private methods to your AudioImGUI class:
         void RenderAudioBrowser();
         bool RenderAudioFileSelector();
         void RefreshAudioFiles();
+
+
+        EntityID m_GlobalAudioEntity = 0;
+        bool m_HasGlobalAudio = false;
+        char m_GlobalMusicPath[256] = "../Resources/Audio/";
+        char m_GlobalSFXPath[256] = "../Resources/Audio/";
+        char m_GlobalMusicName[128] = "test_music";
+        char m_GlobalSFXName[128] = "test_sfx";
+        void CreateTestGlobalAudioEntity();
+        void RenderGlobalAudioTester();
+
+        // Entity audio management
+        bool m_ShowDeleteAudioConfirmation = false;
+        EntityID m_DeleteAudioEntity = 0;
+
+        // You may also want to add these function declarations to the public/private sections:
+        std::vector<EntityID> GetAllEntities();
+        void AddAudioComponentToEntity(EntityID entity);
+        void RemoveAudioComponentFromEntity(EntityID entity);
+        void RenderDeleteAudioConfirmationPopup();
 
     };
 }
