@@ -26,12 +26,37 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Texture.h"
 #include "Material.h"
 #include "AudioManager.h"
+#include <rapidjson/document.h>
+#include <rapidjson/writer.h>
+#include <rapidjson/stringbuffer.h>
 #include "Model.h"
 #include <Jolt/Jolt.h>
 #include <Jolt/Physics/Body/Body.h>
 
 namespace Ermine
 {
+	inline Quaternion QuaternionFromEulerDegrees(const Vec3& eulerDeg) {
+		// Convert degrees to radians
+		float pitch = glm::radians(eulerDeg.x); // or your own math::ToRadians
+		float yaw = glm::radians(eulerDeg.y);
+		float roll = glm::radians(eulerDeg.z);
+
+		float cy = cosf(yaw * 0.5f);
+
+		float sy = sinf(yaw * 0.5f);
+		float cp = cosf(pitch * 0.5f);
+		float sp = sinf(pitch * 0.5f);
+		float cr = cosf(roll * 0.5f);
+		float sr = sinf(roll * 0.5f);
+
+		Quaternion q{};
+		q.w = cr * cp * cy + sr * sp * sy;
+		q.x = sr * cp * cy - cr * sp * sy;
+		q.y = cr * sp * cy + sr * cp * sy;
+		q.z = cr * cp * sy - sr * sp * cy;
+		return q;
+	}
+
 	/*!***********************************************************************
 	\brief
 	 Transform component structure.
@@ -45,6 +70,54 @@ namespace Ermine
 
 		explicit Transform(const Vec3& pos = Vec3(), const Quaternion& rot = Quaternion(), const Vec3& scl = Vec3(1.f, 1.f, 1.f)) : position(pos), rotation(rot), scale(scl)
 		{
+		}
+
+		template<typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
+			out.SetObject();
+
+			auto vec3_to_json = [&](const Vec3& v) {
+				rapidjson::Value a(rapidjson::kArrayType);
+				a.PushBack(v.x, alloc).PushBack(v.y, alloc).PushBack(v.z, alloc);
+				return a;
+				};
+
+			auto quat_to_json = [&](const Quaternion& q) {
+				rapidjson::Value a(rapidjson::kArrayType);
+				a.PushBack(q.w, alloc).PushBack(q.x, alloc).PushBack(q.y, alloc).PushBack(q.z, alloc);
+				return a;
+				};
+
+			out.AddMember("position", vec3_to_json(position), alloc);
+			out.AddMember("rotation", quat_to_json(rotation), alloc);
+			out.AddMember("scale", vec3_to_json(scale), alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in) {
+			auto json_to_vec3 = [&](const rapidjson::Value& arr) {
+				return Vector3D(arr[0].GetFloat(), arr[1].GetFloat(), arr[2].GetFloat());
+				};
+
+			if (in.HasMember("position") && in["position"].IsArray() && in["position"].Size() == 3)
+				position = json_to_vec3(in["position"]);
+
+			if (in.HasMember("scale") && in["scale"].IsArray() && in["scale"].Size() == 3)
+				scale = json_to_vec3(in["scale"]);
+
+			if (in.HasMember("rotation") && in["rotation"].IsArray()) {
+				const auto& r = in["rotation"];
+				if (r.Size() == 4) {
+					// Expecting [w, x, y, z]
+					rotation.w = r[0].GetFloat();
+					rotation.x = r[1].GetFloat();
+					rotation.y = r[2].GetFloat();
+					rotation.z = r[3].GetFloat();
+				}
+				else if (r.Size() == 3) {
+					Vec3 eulerDeg = json_to_vec3(r);
+					rotation = QuaternionFromEulerDegrees(eulerDeg);
+				}
+			}
 		}
 	};
 
@@ -100,6 +173,20 @@ namespace Ermine
 		ObjectMetaData(std::string name_, std::string tag_, const bool& active) : name(std::move(name_)), tag(std::move(
 			tag_)), selfActive(active)
 		{
+		}
+
+		template<typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
+			out.SetObject();
+			out.AddMember("name", rapidjson::Value(name.c_str(), alloc), alloc);
+			out.AddMember("tag", rapidjson::Value(tag.c_str(), alloc), alloc);
+			out.AddMember("active", selfActive, alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in) {
+			if (in.HasMember("name") && in["name"].IsString())   name = in["name"].GetString();
+			if (in.HasMember("tag") && in["tag"].IsString())    tag = in["tag"].GetString();
+			if (in.HasMember("active") && in["active"].IsBool()) selfActive = in["active"].GetBool();
 		}
 	};
 
@@ -210,15 +297,15 @@ namespace Ermine
 	struct Material
 	{
 		//material class
-		std::unique_ptr<graphics::Material> m_material;
+		std::shared_ptr<graphics::Material> m_material;
 
 		Material() = default;
 
 		/**
 		 * @brief Constructor taking a modular material.
-		 * @param material A unique pointer to a `graphics::Material` object that will be used to initialize the Material.
+		 * @param material A shared pointer to a `graphics::Material` object that will be used to initialize the Material.
 		 */
-		Material(std::unique_ptr<graphics::Material> material) : m_material(std::move(material))
+		Material(std::shared_ptr<graphics::Material> material) : m_material(std::move(material))
 		{
 		}
 
@@ -229,7 +316,7 @@ namespace Ermine
 		 */
 		Material(const std::shared_ptr<graphics::Shader>& shader, const std::shared_ptr<graphics::Texture>& texture)
 		{
-			m_material = std::make_unique<graphics::Material>(shader);
+			m_material = std::make_shared<graphics::Material>(shader);
 			if (texture && texture->IsValid())
 			{
 				m_material->SetTexture("material.albedoMap", texture);
@@ -245,12 +332,9 @@ namespace Ermine
 		 * @brief Copy constructor for the Material class.
 		 * @param other The other Material object to copy from.
 		 */
-		Material(const Material& other)
+		Material(const Material& other) : m_material(other.m_material)
 		{
-			if (other.m_material)
-			{
-				m_material = std::make_unique<graphics::Material>(*other.m_material);
-			}
+			// Shared ownership - multiple entities can share the same material
 		}
 
 		/**
@@ -262,14 +346,7 @@ namespace Ermine
 		{
 			if (this != &other)
 			{
-				if (other.m_material)
-				{
-					m_material = std::make_unique<graphics::Material>(*other.m_material);
-				}
-				else
-				{
-					m_material.reset();
-				}
+				m_material = other.m_material; // Shared ownership
 			}
 			return *this;
 		}
@@ -305,6 +382,14 @@ namespace Ermine
 		}
 
 		/**
+		 * @brief Get the shared material pointer for sharing between entities.
+		 * @return A shared pointer to the internal `graphics::Material` object.
+		 */
+		std::shared_ptr<graphics::Material> GetSharedMaterial() const {
+			return m_material;
+		}
+
+		/**
 		* @brief Sets the albedo color for the material.
 		* @details Albedo represents the diffuse color of the material.
 		* @param albedo A Vec3 representing the RGB color value for the albedo.
@@ -316,7 +401,7 @@ namespace Ermine
 
 		/**
 		* @brief Sets the roughness value for the material.
-		* @details Roughness defines the material�s surface smoothness. A value of 0.0 is smooth, and 1.0 is rough.
+		* @details Roughness defines the material's surface smoothness. A value of 0.0 is smooth, and 1.0 is rough.
 		* @param roughness A float representing the roughness of the material.
 		*/
 		void SetRoughness(float roughness)
@@ -381,10 +466,10 @@ namespace Ermine
 	*************************************************************************/
 	struct LightGPU
 	{
-		Vec4 position_type;    // xyz = position (view space), w = light type
-		Vec4 color_intensity;  // xyz = color, w = intensity
-		Vec4 direction_range;  // xyz = direction (view space), w = range
-		Vec4 spot_angles;      // x = inner cos, y = outer cos
+		glm::vec4 position_type;    // xyz = position (view space), w = light type
+		glm::vec4 color_intensity;  // xyz = color, w = intensity
+		glm::vec4 direction_range;  // xyz = direction (view space), w = range
+		glm::vec4 spot_angles_castshadows_resolution;      // x = inner cos, y = outer cos z = casts shadows (1.0 or 0.0), w = shadow map resolution
 	};
 
 	/*!***********************************************************************
@@ -395,6 +480,8 @@ namespace Ermine
 		Vec3 color;
 		float intensity;
 		LightType type;
+		bool castsShadows{ false };
+		unsigned int resolution{ 1024 }; // Shadow map resolution
 
 		Light() : color(1.0f, 1.0f, 1.0f),
 			intensity(1.0f),
@@ -405,6 +492,49 @@ namespace Ermine
 		Light(const Vec3& col, float intens, LightType t) :
 			color(col), intensity(intens), type(t)
 		{
+		}
+
+		Light(const Vec3& col, float intens, LightType t, bool shadows, unsigned int res) :
+			color(col), intensity(intens), type(t), castsShadows(shadows), resolution(res)
+		{
+		}
+
+		template<typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
+			out.SetObject();
+
+			auto vec3_to_json = [&](const Vec3& v) {
+				rapidjson::Value a(rapidjson::kArrayType);
+				a.PushBack(v.x, alloc).PushBack(v.y, alloc).PushBack(v.z, alloc);
+				return a;
+				};
+
+			out.AddMember("color", vec3_to_json(color), alloc);
+			out.AddMember("intensity", intensity, alloc);
+			out.AddMember("type", static_cast<int>(type), alloc);          // 0=POINT,1=DIR,2=SPOT
+			out.AddMember("castsShadows", castsShadows, alloc);
+			out.AddMember("resolution", resolution, alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in) {
+			auto json_to_vec3 = [&](const rapidjson::Value& arr) {
+				return Vec3(arr[0].GetFloat(), arr[1].GetFloat(), arr[2].GetFloat());
+				};
+
+			if (in.HasMember("color") && in["color"].IsArray() && in["color"].Size() == 3)
+				color = json_to_vec3(in["color"]);
+			if (in.HasMember("intensity") && in["intensity"].IsNumber())
+				intensity = in["intensity"].GetFloat();
+			if (in.HasMember("type") && in["type"].IsInt()) {
+				int t = in["type"].GetInt();
+				if (t == 1) type = LightType::DIRECTIONAL;
+				else if (t == 2) type = LightType::SPOT;
+				else             type = LightType::POINT;
+			}
+			if (in.HasMember("castsShadows") && in["castsShadows"].IsBool())
+				castsShadows = in["castsShadows"].GetBool();
+			if (in.HasMember("resolution") && in["resolution"].IsUint())
+				resolution = in["resolution"].GetUint();
 		}
 	};
 	

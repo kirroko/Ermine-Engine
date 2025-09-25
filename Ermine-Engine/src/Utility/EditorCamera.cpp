@@ -15,7 +15,6 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #include <glm/ext/matrix_transform.hpp>
 
-#include "ECS.h"
 #include "FrameController.h"
 #include "Input.h"
 #include "MathUtils.h"
@@ -192,4 +191,58 @@ void EditorCamera::ProcessScrollWheel(float yOffset)
 	m_FOV = std::max(m_FOV, 1.0f);
 	m_FOV = std::min(m_FOV, 45.0f);
 	Input::ResetMouseScrollOffsetEditor();
+}
+
+/**
+ * @brief Directly set the yaw and pitch of the camera
+ * @param yawDeg The yaw angle in degrees
+ * @param pitchDeg The pitch angle in degrees
+ */
+void EditorCamera::SetYawPitch(float yawDeg, float pitchDeg)
+{
+	m_Yaw = yawDeg;
+	m_Pitch = std::min(std::max(pitchDeg, -89.0f), 89.0f);
+	UpdateViewMatrix();
+}
+
+void EditorCamera::Focus(const Vector3D& target, float distance)
+{
+	const Vector3D diff = m_Position - target;
+	float currentDist = Vec3Length(diff);
+	if (distance <= 0.0f)
+		distance = currentDist > 0.001f ? currentDist : 5.0f;
+
+	Vector3D forward;
+	forward.x = target.x - m_Position.x;
+	forward.y = target.y - m_Position.y;
+	forward.z = target.z - m_Position.z;
+
+	float len = Vec3Length(forward);
+	if (len > 1e-6f)
+	{
+		forward = forward / len;
+
+		auto rad2deg = [](float r) { return r * 57.29577951308232f; }; // TODO: Need add to math library
+		float yaw = rad2deg(std::atan2(forward.z, forward.x));
+		float pitch = rad2deg(std::asin(std::clamp(forward.y, -1.0f, 1.0f)));
+
+		SetYawPitch(yaw, pitch);
+	}
+
+	m_Position = target - m_Front * distance;
+	UpdateViewMatrix();
+}
+
+void EditorCamera::OrbitAround(const Vector3D& pivot, float deltaX, float deltaY, float distance)
+{
+	const float rotSpeed = m_MouseSensitivity;
+	m_Yaw += deltaX * rotSpeed;
+	m_Pitch += -deltaY * rotSpeed;
+	m_Pitch = std::min(std::max(m_Pitch, -89.0f), 89.0f);
+
+	UpdateViewMatrix();
+
+	m_Position = pivot - m_Front * distance;
+
+	UpdateViewMatrix();
 }

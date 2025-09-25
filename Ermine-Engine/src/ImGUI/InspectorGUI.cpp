@@ -22,9 +22,9 @@ namespace Ermine
         Quaternion Normalize(const Quaternion& q)
         {
             float len = std::sqrt(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w);
-            if (len <= 1e-12f) return Quaternion(0.f, 0.f, 0.f, 1.f);
+            if (len <= 1e-12f) return {0.f, 0.f, 0.f, 1.f};
             float inv = 1.0f / len;
-            return Quaternion(q.x * inv, q.y * inv, q.z * inv, q.w * inv);
+            return {q.x * inv, q.y * inv, q.z * inv, q.w * inv};
         }
 
         Quaternion EulerDegToQuaternion(const Vector3D& eulerDeg)
@@ -65,6 +65,8 @@ namespace Ermine
 
     void InspectorGUI::Render()
     {
+        //m_Entities (list of entities)
+
         if (!ImGui::Begin(Name().c_str()))
         {
             ImGui::End();
@@ -86,6 +88,8 @@ namespace Ermine
 
             if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
             {
+                ImGui::BeginChild("TransformChild", ImVec2(0, 0), ImGuiChildFlags_AutoResizeY);
+                //ImGui::BeginGroup();
                 // Position
                 ImGui::TextUnformatted("Position");
                 ImGui::SameLine();
@@ -105,6 +109,8 @@ namespace Ermine
                 // Scale
                 ImGui::TextUnformatted("Scale");
                 ImGui::SameLine();
+
+
                 if (ImGui::SmallButton("Reset##scl")) tr.scale = Vector3D(1.f, 1.f, 1.f);
                 if (ImGui::DragFloat3("##scl", &tr.scale.x))
                 {
@@ -113,7 +119,51 @@ namespace Ermine
                     tr.scale.y = (tr.scale.y >= 0.f) ? fmaxf(tr.scale.y, kMinScale) : -fmaxf(-tr.scale.y, kMinScale);
                     tr.scale.z = (tr.scale.z >= 0.f) ? fmaxf(tr.scale.z, kMinScale) : -fmaxf(-tr.scale.z, kMinScale);
                 }
+
+                // Context menu for contents
+                if (ImGui::BeginPopupContextWindow("Transform_ContentContext", ImGuiPopupFlags_MouseButtonRight))
+                {
+                    if (ImGui::MenuItem("Delete", "Del", false))
+                    {
+                        ecs.RemoveComponent<Transform>(m_entity);
+                    }
+                    ImGui::EndPopup();
+                }
+
+                //ImGui::EndGroup();
+                ImGui::EndChild();
+
             }
+
+            ImGui::Separator();
+        }
+
+        if (ecs.HasComponent<Material>(m_entity))
+        {
+            auto& mt = ecs.GetComponent<Material>(m_entity);
+
+            if (ImGui::CollapsingHeader("Material", ImGuiTreeNodeFlags_DefaultOpen))
+            {
+            }
+
+            ImGui::Separator();
+        }
+
+        if (ecs.HasComponent<AudioComponent>(m_entity))
+        {
+            auto& ac = ecs.GetComponent<AudioComponent>(m_entity);
+
+            if (ImGui::CollapsingHeader("AudioComponent", ImGuiTreeNodeFlags_DefaultOpen))
+            {
+            }
+
+            ImGui::Separator();
+        }
+
+        //ImGui::
+        if (ImGui::Button("Add Component"))
+        {
+			ImGui::OpenPopup("AddComponent");
         }
 
         ImGui::End();
