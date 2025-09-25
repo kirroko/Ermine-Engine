@@ -1,0 +1,1 @@
+Start-Process ".\x64\Debug\Ermine-ResourcePipeline.exe"
