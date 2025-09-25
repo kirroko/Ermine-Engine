@@ -52,6 +52,8 @@ namespace Ermine
 
         void UpdatePhysicList();
 
+        JPH::BodyID GetBodyID(EntityID objectID);
+
         BodyInterface& GetBodyInterface() { return mPhysicsSystem.GetBodyInterface(); }
 
     private:

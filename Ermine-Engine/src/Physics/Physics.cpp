@@ -162,7 +162,6 @@ namespace Ermine
     void Physics::Update(float deltaTime)
     {
         mPhysicsSystem.Update(deltaTime, 1, &mTempAllocator, &mJobSystem);
-
         auto& bodyInterface = mPhysicsSystem.GetBodyInterface();
         for (auto& [entity, rigidBody] : mEntityToBody)
         {
@@ -315,6 +314,14 @@ namespace Ermine
             mEntityToBody[entity] = body->GetID();
         }
 
+    }
+
+    JPH::BodyID Physics::GetBodyID(EntityID objectID)
+    {
+        auto it = mEntityToBody.find(objectID);
+        return (it != mEntityToBody.end())
+            ? it->second
+            : JPH::BodyID(JPH::BodyID::cInvalidBodyID);
     }
 
 }
