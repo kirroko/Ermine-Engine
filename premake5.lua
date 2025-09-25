@@ -26,12 +26,14 @@ IncludeDir["rapidjson"] = "ThirdParty/rapidjson"
 IncludeDir["Fmod"] = "ThirdParty/Fmod/inc"
 IncludeDir["Jolt"] = "ThirdParty"
 IncludeDir["assimp"] = "ThirdParty/assimp/include"
+IncludeDir["DirectXTex"] = "ThirdParty/DirectXTex/inc"
 
 -- Libraries
 LibraryDir = {}
 LibraryDir["Fmod"] = "ThirdParty/Fmod/lib"
 LibraryDir["Mono"] = "ThirdParty/Mono/lib"
 LibraryDir["assimp"] = "ThirdParty/assimp/lib"
+LibraryDir["DirectXTex"] = "ThirdParty/DirectXTex/lib"
 
 -- External libraries
 group "Dependencies"
@@ -80,14 +82,16 @@ project "Ermine-Engine"
         "%{IncludeDir.Mono}",
         "%{IncludeDir.Jolt}",
         "%{IncludeDir.rapidjson}",
-        "%{IncludeDir.assimp}"
+        "%{IncludeDir.assimp}",
+        "%{IncludeDir.DirectXTex}"
     }
 
     libdirs
     {
         "%{LibraryDir.Fmod}",
         "%{LibraryDir.Mono}",
-        "%{LibraryDir.assimp}"
+        "%{LibraryDir.assimp}",
+        "%{LibraryDir.DirectXTex}"
     }
 
     links
@@ -102,7 +106,8 @@ project "Ermine-Engine"
         "opengl32.lib",
 		"mono-2.0-sgen.lib",
         "Jolt",
-        "assimp-vc143-mt.lib"
+        "assimp-vc143-mt.lib",
+        "DirectXTex.lib"
     }
 
     postbuildcommands

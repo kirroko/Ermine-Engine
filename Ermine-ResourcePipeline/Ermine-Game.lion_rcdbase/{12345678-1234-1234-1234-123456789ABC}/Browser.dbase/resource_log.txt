@@ -1,0 +1,205 @@
+Resource: 0x12fcd058309a8001 (Type: 0x2fa72d942ff20ff4)
+  Source: ../../Ermine-Engine/Resources/Textures\greybox_blue_grid.png
+  Output: ./Ermine-Game.lion_rcdbase/{12345678-1234-1234-1234-123456789ABC}/Windows.platform/Data/1368197464004919297.dds
+  Format: DDS
+  ---
+Resource: 0xcafcd058309a8003 (Type: 0x2fa72d942ff20ff4)
+  Source: ../../Ermine-Engine/Resources/Textures\greybox_blue_solid.png
+  Output: ./Ermine-Game.lion_rcdbase/{12345678-1234-1234-1234-123456789ABC}/Windows.platform/Data/14626794766983659523.dds
+  Format: DDS
+  ---
+Resource: 0xb2fcd058309ac005 (Type: 0x2fa72d942ff20ff4)
+  Source: ../../Ermine-Engine/Resources/Textures\greybox_dark_grid.png
+  Output: ./Ermine-Game.lion_rcdbase/{12345678-1234-1234-1234-123456789ABC}/Windows.platform/Data/12897412510073405445.dds
+  Format: DDS
+  ---
+Resource: 0x8afcd058309ac007 (Type: 0x2fa72d942ff20ff4)
+  Source: ../../Ermine-Engine/Resources/Textures\greybox_dark_solid.png
+  Output: ./Ermine-Game.lion_rcdbase/{12345678-1234-1234-1234-123456789ABC}/Windows.platform/Data/10015108748556288007.dds
+  Format: DDS
+  ---
+Resource: 0xaafcd058309ac009 (Type: 0x2fa72d942ff20ff4)
+  Source: ../../Ermine-Engine/Resources/Textures\greybox_green_grid.png
+  Output: ./Ermine-Game.lion_rcdbase/{12345678-1234-1234-1234-123456789ABC}/Windows.platform/Data/12320951757769981961.dds
+  Format: DDS
+  ---
+Resource: 0xaafcd058309b000b (Type: 0x2fa72d942ff20ff4)
+  Source: ../../Ermine-Engine/Resources/Textures\greybox_green_solid.png
+  Output: ./Ermine-Game.lion_rcdbase/{12345678-1234-1234-1234-123456789ABC}/Windows.platform/Data/12320951757769998347.dds
+  Format: DDS
+  ---
+Resource: 0x9afcd058309b000d (Type: 0x2fa72d942ff20ff4)
+  Source: ../../Ermine-Engine/Resources/Textures\greybox_grey_grid.png
+  Output: ./Ermine-Game.lion_rcdbase/{12345678-1234-1234-1234-123456789ABC}/Windows.platform/Data/11168030253163151373.dds
+  Format: DDS
+  ---
+Resource: 0xdafcd058309b000f (Type: 0x2fa72d942ff20ff4)
+  Source: ../../Ermine-Engine/Resources/Textures\greybox_grey_solid.png
+  Output: ./Ermine-Game.lion_rcdbase/{12345678-1234-1234-1234-123456789ABC}/Windows.platform/Data/15779716271590539279.dds
+  Format: DDS
+  ---
+Resource: 0xf2fcd058309b4011 (Type: 0x2fa72d942ff20ff4)
+  Source: ../../Ermine-Engine/Resources/Textures\greybox_grey_solid_2.png
+  Output: ./Ermine-Game.lion_rcdbase/{12345678-1234-1234-1234-123456789ABC}/Windows.platform/Data/17509098528500826129.dds
+  Format: DDS
+  ---
+Resource: 0xd2fcd058309b4013 (Type: 0x2fa72d942ff20ff4)
+  Source: ../../Ermine-Engine/Resources/Textures\greybox_light_grid.png
+  Output: ./Ermine-Game.lion_rcdbase/{12345678-1234-1234-1234-123456789ABC}/Windows.platform/Data/15203255519287132179.dds
+  Format: DDS
+  ---
+Resource: 0xc2fcd058309b4015 (Type: 0x2fa72d942ff20ff4)
+  Source: ../../Ermine-Engine/Resources/Textures\greybox_light_solid.png
+  Output: ./Ermine-Game.lion_rcdbase/{12345678-1234-1234-1234-123456789ABC}/Windows.platform/Data/14050334014680285205.dds
+  Format: DDS
+  ---
+Resource: 0xcafcd058309b8017 (Type: 0x2fa72d942ff20ff4)
+  Source: ../../Ermine-Engine/Resources/Textures\greybox_lime_grid.png
+  Output: ./Ermine-Game.lion_rcdbase/{12345678-1234-1234-1234-123456789ABC}/Windows.platform/Data/14626794766983725079.dds
+  Format: DDS
+  ---
+Resource: 0x92fcd058309b8019 (Type: 0x2fa72d942ff20ff4)
+  Source: ../../Ermine-Engine/Resources/Textures\greybox_lime_solid.png
+  Output: ./Ermine-Game.lion_rcdbase/{12345678-1234-1234-1234-123456789ABC}/Windows.platform/Data/10591569500859760665.dds
+  Format: DDS
+  ---
+Resource: 0xafcd058309bc01b (Type: 0x2fa72d942ff20ff4)
+  Source: ../../Ermine-Engine/Resources/Textures\greybox_orange_grid.png
+  Output: ./Ermine-Game.lion_rcdbase/{12345678-1234-1234-1234-123456789ABC}/Windows.platform/Data/791736711701577755.dds
+  Format: DDS
+  ---
+Resource: 0x32fcd058309bc01d (Type: 0x2fa72d942ff20ff4)
+  Source: ../../Ermine-Engine/Resources/Textures\greybox_orange_solid.png
+  Output: ./Ermine-Game.lion_rcdbase/{12345678-1234-1234-1234-123456789ABC}/Windows.platform/Data/3674040473218695197.dds
+  Format: DDS
+  ---
+Resource: 0xe2fcd058309bc01f (Type: 0x2fa72d942ff20ff4)
+  Source: ../../Ermine-Engine/Resources/Textures\greybox_purple_grid.png
+  Output: ./Ermine-Game.lion_rcdbase/{12345678-1234-1234-1234-123456789ABC}/Windows.platform/Data/16356177023894011935.dds
+  Format: DDS
+  ---
+Resource: 0x72fcd058309c0021 (Type: 0x2fa72d942ff20ff4)
+  Source: ../../Ermine-Engine/Resources/Textures\greybox_purple_solid.png
+  Output: ./Ermine-Game.lion_rcdbase/{12345678-1234-1234-1234-123456789ABC}/Windows.platform/Data/8285726491646099489.dds
+  Format: DDS
+  ---
+Resource: 0x6afcd058309c0023 (Type: 0x2fa72d942ff20ff4)
+  Source: ../../Ermine-Engine/Resources/Textures\greybox_red_grid.png
+  Output: ./Ermine-Game.lion_rcdbase/{12345678-1234-1234-1234-123456789ABC}/Windows.platform/Data/7709265739342676003.dds
+  Format: DDS
+  ---
+Resource: 0xd2fcd058309c0025 (Type: 0x2fa72d942ff20ff4)
+  Source: ../../Ermine-Engine/Resources/Textures\greybox_red_solid.png
+  Output: ./Ermine-Game.lion_rcdbase/{12345678-1234-1234-1234-123456789ABC}/Windows.platform/Data/15203255519287181349.dds
+  Format: DDS
+  ---
+Resource: 0x12fcd058309c4027 (Type: 0x2fa72d942ff20ff4)
+  Source: ../../Ermine-Engine/Resources/Textures\greybox_teal_grid.png
+  Output: ./Ermine-Game.lion_rcdbase/{12345678-1234-1234-1234-123456789ABC}/Windows.platform/Data/1368197464005034023.dds
+  Format: DDS
+  ---
+Resource: 0x72fcd058309c4029 (Type: 0x2fa72d942ff20ff4)
+  Source: ../../Ermine-Engine/Resources/Textures\greybox_teal_solid.png
+  Output: ./Ermine-Game.lion_rcdbase/{12345678-1234-1234-1234-123456789ABC}/Windows.platform/Data/8285726491646115881.dds
+  Format: DDS
+  ---
+Resource: 0xc2fcd058309c402b (Type: 0x2fa72d942ff20ff4)
+  Source: ../../Ermine-Engine/Resources/Textures\greybox_yellow_grid.png
+  Output: ./Ermine-Game.lion_rcdbase/{12345678-1234-1234-1234-123456789ABC}/Windows.platform/Data/14050334014680350763.dds
+  Format: DDS
+  ---
+Resource: 0xafcd058309c802d (Type: 0x2fa72d942ff20ff4)
+  Source: ../../Ermine-Engine/Resources/Textures\greybox_yellow_solid.png
+  Output: ./Ermine-Game.lion_rcdbase/{12345678-1234-1234-1234-123456789ABC}/Windows.platform/Data/791736711701626925.dds
+  Format: DDS
+  ---
+Resource: 0x52fcd058309c802f (Type: 0x2fa72d942ff20ff4)
+  Source: ../../Ermine-Engine/Resources/Textures\Pants_Base_color.png
+  Output: ./Ermine-Game.lion_rcdbase/{12345678-1234-1234-1234-123456789ABC}/Windows.platform/Data/5979883482432438319.dds
+  Format: DDS
+  ---
+Resource: 0xe2fcd058309d0031 (Type: 0x2fa72d942ff20ff4)
+  Source: ../../Ermine-Engine/Resources/Textures\placeholder.png
+  Output: ./Ermine-Game.lion_rcdbase/{12345678-1234-1234-1234-123456789ABC}/Windows.platform/Data/16356177023894093873.dds
+  Format: DDS
+  ---
+Resource: 0x52fcd058309c802f (Type: 0x2fa72d942ff20ff4)
+  Source: ../../Ermine-Engine/Resources/Textures\Pants_Base_color.png
+  Output: ./Ermine-Game.lion_rcdbase/{12345678-1234-1234-1234-123456789ABC}/Windows.platform/Data/5979883482432438319.dds
+  Format: DDS
+  ---
+Resource: 0x9afcd058309b000d (Type: 0x2fa72d942ff20ff4)
+  Source: ../../Ermine-Engine/Resources/Textures\greybox_grey_grid.png
+  Output: ./Ermine-Game.lion_rcdbase/{12345678-1234-1234-1234-123456789ABC}/Windows.platform/Data/11168030253163151373.dds
+  Format: DDS
+  ---
+Resource: 0xdafcd058309b000f (Type: 0x2fa72d942ff20ff4)
+  Source: ../../Ermine-Engine/Resources/Textures\greybox_grey_solid.png
+  Output: ./Ermine-Game.lion_rcdbase/{12345678-1234-1234-1234-123456789ABC}/Windows.platform/Data/15779716271590539279.dds
+  Format: DDS
+  ---
+Resource: 0xf2fcd058309b4011 (Type: 0x2fa72d942ff20ff4)
+  Source: ../../Ermine-Engine/Resources/Textures\greybox_grey_solid_2.png
+  Output: ./Ermine-Game.lion_rcdbase/{12345678-1234-1234-1234-123456789ABC}/Windows.platform/Data/17509098528500826129.dds
+  Format: DDS
+  ---
+Resource: 0xd2fcd058309b4013 (Type: 0x2fa72d942ff20ff4)
+  Source: ../../Ermine-Engine/Resources/Textures\greybox_light_grid.png
+  Output: ./Ermine-Game.lion_rcdbase/{12345678-1234-1234-1234-123456789ABC}/Windows.platform/Data/15203255519287132179.dds
+  Format: DDS
+  ---
+Resource: 0xc2fcd058309b4015 (Type: 0x2fa72d942ff20ff4)
+  Source: ../../Ermine-Engine/Resources/Textures\greybox_light_solid.png
+  Output: ./Ermine-Game.lion_rcdbase/{12345678-1234-1234-1234-123456789ABC}/Windows.platform/Data/14050334014680285205.dds
+  Format: DDS
+  ---
+Resource: 0xcafcd058309b8017 (Type: 0x2fa72d942ff20ff4)
+  Source: ../../Ermine-Engine/Resources/Textures\greybox_lime_grid.png
+  Output: ./Ermine-Game.lion_rcdbase/{12345678-1234-1234-1234-123456789ABC}/Windows.platform/Data/14626794766983725079.dds
+  Format: DDS
+  ---
+Resource: 0x92fcd058309b8019 (Type: 0x2fa72d942ff20ff4)
+  Source: ../../Ermine-Engine/Resources/Textures\greybox_lime_solid.png
+  Output: ./Ermine-Game.lion_rcdbase/{12345678-1234-1234-1234-123456789ABC}/Windows.platform/Data/10591569500859760665.dds
+  Format: DDS
+  ---
+Resource: 0xafcd058309bc01b (Type: 0x2fa72d942ff20ff4)
+  Source: ../../Ermine-Engine/Resources/Textures\greybox_orange_grid.png
+  Output: ./Ermine-Game.lion_rcdbase/{12345678-1234-1234-1234-123456789ABC}/Windows.platform/Data/791736711701577755.dds
+  Format: DDS
+  ---
+Resource: 0x32fcd058309bc01d (Type: 0x2fa72d942ff20ff4)
+  Source: ../../Ermine-Engine/Resources/Textures\greybox_orange_solid.png
+  Output: ./Ermine-Game.lion_rcdbase/{12345678-1234-1234-1234-123456789ABC}/Windows.platform/Data/3674040473218695197.dds
+  Format: DDS
+  ---
+Resource: 0xe2fcd058309bc01f (Type: 0x2fa72d942ff20ff4)
+  Source: ../../Ermine-Engine/Resources/Textures\greybox_purple_grid.png
+  Output: ./Ermine-Game.lion_rcdbase/{12345678-1234-1234-1234-123456789ABC}/Windows.platform/Data/16356177023894011935.dds
+  Format: DDS
+  ---
+Resource: 0x72fcd058309c0021 (Type: 0x2fa72d942ff20ff4)
+  Source: ../../Ermine-Engine/Resources/Textures\greybox_purple_solid.png
+  Output: ./Ermine-Game.lion_rcdbase/{12345678-1234-1234-1234-123456789ABC}/Windows.platform/Data/8285726491646099489.dds
+  Format: DDS
+  ---
+Resource: 0x6afcd058309c0023 (Type: 0x2fa72d942ff20ff4)
+  Source: ../../Ermine-Engine/Resources/Textures\greybox_red_grid.png
+  Output: ./Ermine-Game.lion_rcdbase/{12345678-1234-1234-1234-123456789ABC}/Windows.platform/Data/7709265739342676003.dds
+  Format: DDS
+  ---
+Resource: 0xd2fcd058309c0025 (Type: 0x2fa72d942ff20ff4)
+  Source: ../../Ermine-Engine/Resources/Textures\greybox_red_solid.png
+  Output: ./Ermine-Game.lion_rcdbase/{12345678-1234-1234-1234-123456789ABC}/Windows.platform/Data/15203255519287181349.dds
+  Format: DDS
+  ---
+Resource: 0x12fcd058309c4027 (Type: 0x2fa72d942ff20ff4)
+  Source: ../../Ermine-Engine/Resources/Textures\greybox_teal_grid.png
+  Output: ./Ermine-Game.lion_rcdbase/{12345678-1234-1234-1234-123456789ABC}/Windows.platform/Data/1368197464005034023.dds
+  Format: DDS
+  ---
+Resource: 0x52fcd058309c802f (Type: 0x2fa72d942ff20ff4)
+  Source: ../../Ermine-Engine/Resources/Textures\Pants_Base_color.png
+  Output: ./Ermine-Game.lion_rcdbase/{12345678-1234-1234-1234-123456789ABC}/Windows.platform/Data/5979883482432438319.dds
+  Format: DDS
+  ---

@@ -1,8 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36310.24 d17.14
-MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Ermine-Editor", "Ermine-Editor\Ermine-Editor.vcxproj", "{397C7682-A53C-F2B8-6E77-3B36DAF63695}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Dependencies", "Dependencies", "{53E47842-3FC8-3998-A828-34EB942B241A}"
@@ -24,8 +22,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ermine-ScriptAssembly", "Ermine-ScriptAssembly\Ermine-ScriptAssembly.csproj", "{E76B644C-53D8-1F47-1CCC-B7A488F741AF}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ermine-ScriptSandbox", "Ermine-ScriptSandbox\Ermine-ScriptSandbox.csproj", "{F6EBEDB5-E27A-777F-8B99-8B7A77078825}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Ermine-ResourcePipeline", "Ermine-ResourcePipeline\Ermine-ResourcePipeline.vcxproj", "{BF138E9B-9EE4-4961-90A7-61E710E4DA65}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -73,10 +69,6 @@ Global
 		{F6EBEDB5-E27A-777F-8B99-8B7A77078825}.Debug|x64.Build.0 = Debug|x64
 		{F6EBEDB5-E27A-777F-8B99-8B7A77078825}.Release|x64.ActiveCfg = Release|x64
 		{F6EBEDB5-E27A-777F-8B99-8B7A77078825}.Release|x64.Build.0 = Release|x64
-		{BF138E9B-9EE4-4961-90A7-61E710E4DA65}.Debug|x64.ActiveCfg = Debug|x64
-		{BF138E9B-9EE4-4961-90A7-61E710E4DA65}.Debug|x64.Build.0 = Debug|x64
-		{BF138E9B-9EE4-4961-90A7-61E710E4DA65}.Release|x64.ActiveCfg = Release|x64
-		{BF138E9B-9EE4-4961-90A7-61E710E4DA65}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -88,8 +80,5 @@ Global
 		{C0FF640D-2C14-8DBE-F595-301E616989EF} = {53E47842-3FC8-3998-A828-34EB942B241A}
 		{1E8A877C-0AC1-880D-B3AD-6E109FC3040F} = {53E47842-3FC8-3998-A828-34EB942B241A}
 		{7E2F897C-6A66-8A0D-1353-7010FF68060F} = {53E47842-3FC8-3998-A828-34EB942B241A}
-	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {319939E1-E930-4362-B653-0358FF41079D}
 	EndGlobalSection
 EndGlobal

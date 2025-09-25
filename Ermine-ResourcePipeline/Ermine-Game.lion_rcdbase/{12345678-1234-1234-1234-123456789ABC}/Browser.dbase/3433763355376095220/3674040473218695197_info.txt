@@ -1,0 +1,10 @@
+Resource Information
+===================
+Instance GUID: 0x32fcd058309bc01d
+Type GUID: 0x2fa72d942ff20ff4
+Source: ../../Ermine-Engine/Resources/Textures\greybox_orange_solid.png
+Output: ./Ermine-Game.lion_rcdbase/{12345678-1234-1234-1234-123456789ABC}/Windows.platform/Data/3674040473218695197.dds
+Platform: WINDOWS
+Resource Type: TEXTURE
+Format: DDS (DirectX Texture)
+Generated: 17588106056076184

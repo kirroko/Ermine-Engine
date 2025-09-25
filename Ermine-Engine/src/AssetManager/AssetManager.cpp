@@ -22,6 +22,211 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 using namespace Ermine;
 
 /**
+ * @brief Initialize the asset manager with database path
+ * @param databasePath Path to the resource database
+ * @param projectGuid Project GUID (optional, will try to auto-detect)
+ * @return true if initialization successful
+ */
+bool AssetManager::Initialize(const std::string& databasePath, const std::string& projectGuid)
+{
+    m_databasePath = databasePath;
+    m_projectGuid = projectGuid;
+
+    EE_CORE_INFO("Initializing AssetManager with database: {0}", databasePath);
+
+    // Try to load the resource database
+    if (LoadResourceDatabase())
+    {
+        EE_CORE_INFO("Resource database loaded successfully with {0} entries", m_resourceDatabase.size());
+        return true;
+    }
+    else
+    {
+        EE_CORE_WARN("Could not load resource database - falling back to direct file loading");
+        return true; // Don't fail initialization, just fall back to direct loading
+    }
+}
+
+/**
+ * @brief Load the resource database from the pipeline output
+ * @return true if database loaded successfully
+ */
+bool AssetManager::LoadResourceDatabase()
+{
+    // If project GUID is not set, try to find it by scanning the database directory
+    if (m_projectGuid.empty())
+    {
+        if (!std::filesystem::exists(m_databasePath))
+        {
+            EE_CORE_WARN("Database path does not exist: {0}", m_databasePath);
+            return false;
+        }
+
+        // Look for project folders (should be GUIDs)
+        for (const auto& entry : std::filesystem::directory_iterator(m_databasePath))
+        {
+            if (entry.is_directory())
+            {
+                std::string folderName = entry.path().filename().string();
+                // Check if this looks like a GUID folder by looking for Browser.dbase
+                std::string browserPath = entry.path().string() + "/Browser.dbase";
+                if (std::filesystem::exists(browserPath))
+                {
+                    m_projectGuid = folderName;
+                    EE_CORE_INFO("Auto-detected project GUID: {0}", m_projectGuid);
+                    break;
+                }
+            }
+        }
+
+        if (m_projectGuid.empty())
+        {
+            EE_CORE_WARN("Could not auto-detect project GUID in database");
+            return false;
+        }
+    }
+
+    // Build path to resource database file
+    std::string resourceDbPath = m_databasePath + "/" + m_projectGuid + "/Browser.dbase/resource_database.txt";
+
+    if (!std::filesystem::exists(resourceDbPath))
+    {
+        EE_CORE_WARN("Resource database file not found: {0}", resourceDbPath);
+        return false;
+    }
+
+    // Parse the resource database
+    std::ifstream dbFile(resourceDbPath);
+    if (!dbFile.is_open())
+    {
+        EE_CORE_ERROR("Failed to open resource database file: {0}", resourceDbPath);
+        return false;
+    }
+
+    m_resourceDatabase.clear();
+
+    std::string line;
+    ResourceEntry currentEntry = {};
+    bool readingEntry = false;
+
+    while (std::getline(dbFile, line))
+    {
+        if (line.find("RESOURCE_START") == 0)
+        {
+            readingEntry = true;
+            currentEntry = ResourceEntry{};
+        }
+        else if (line.find("RESOURCE_END") == 0)
+        {
+            if (readingEntry && !currentEntry.sourcePath.empty())
+            {
+                // Store using normalized source path as key
+                std::string normalizedPath = ConvertToRelativePath(currentEntry.sourcePath);
+                m_resourceDatabase[normalizedPath] = currentEntry;
+
+                EE_CORE_TRACE("Loaded resource: {0} -> GUID 0x{1:x}",
+                    normalizedPath, currentEntry.instanceGUID);
+            }
+            readingEntry = false;
+        }
+        else if (readingEntry)
+        {
+            if (line.find("InstanceGUID=") == 0)
+            {
+                currentEntry.instanceGUID = std::stoull(line.substr(13), nullptr, 16);
+            }
+            else if (line.find("TypeGUID=") == 0)
+            {
+                currentEntry.typeGUID = std::stoull(line.substr(9), nullptr, 16);
+            }
+            else if (line.find("SourcePath=") == 0)
+            {
+                currentEntry.sourcePath = line.substr(11);
+            }
+            else if (line.find("OutputPath=") == 0)
+            {
+                currentEntry.outputPath = line.substr(11);
+            }
+            else if (line.find("LastModified=") == 0)
+            {
+                auto timeVal = std::stoull(line.substr(13));
+                currentEntry.lastModified = std::filesystem::file_time_type(
+                    std::chrono::duration<uint64_t>(timeVal));
+            }
+        }
+    }
+
+    m_databaseLoaded = true;
+    return true;
+}
+
+/**
+ * @brief Reload the resource database
+ * @return true if reload successful
+ */
+bool AssetManager::ReloadResourceDatabase()
+{
+    EE_CORE_INFO("Reloading resource database...");
+    m_databaseLoaded = false;
+    return LoadResourceDatabase();
+}
+
+/**
+ * @brief Find a resource entry by source path
+ * @param sourcePath The original source path (PNG file path)
+ * @return Resource entry if found, nullptr otherwise
+ */
+ResourceEntry* AssetManager::FindResourceBySourcePath(const std::string& sourcePath)
+{
+    // Normalize the path for lookup
+    std::string normalizedPath = ConvertToRelativePath(sourcePath);
+
+    auto it = m_resourceDatabase.find(normalizedPath);
+    if (it != m_resourceDatabase.end())
+    {
+        return &it->second;
+    }
+
+    // Try with different path separators
+    std::string altPath = normalizedPath;
+    std::replace(altPath.begin(), altPath.end(), '/', '\\');
+    it = m_resourceDatabase.find(altPath);
+    if (it != m_resourceDatabase.end())
+    {
+        return &it->second;
+    }
+
+    std::replace(altPath.begin(), altPath.end(), '\\', '/');
+    it = m_resourceDatabase.find(altPath);
+    if (it != m_resourceDatabase.end())
+    {
+        return &it->second;
+    }
+
+    return nullptr;
+}
+
+/**
+ * @brief Convert absolute path to relative path for database lookup
+ * @param absolutePath The absolute file path
+ * @return Relative path for database lookup
+ */
+std::string AssetManager::ConvertToRelativePath(const std::string& absolutePath)
+{
+    // Convert backslashes to forward slashes for consistency
+    std::string normalized = absolutePath;
+    std::replace(normalized.begin(), normalized.end(), '\\', '/');
+
+    // Remove leading "./" if present
+    if (normalized.starts_with("./"))
+    {
+        normalized = normalized.substr(2);
+    }
+
+    return normalized;
+}
+
+/**
  * @brief Load a texture from the file path and store it in the asset manager, if it is loaded before, return the texture
  * @param filePath The file path of the texture
  * @return The texture that is loaded
@@ -30,20 +235,101 @@ std::shared_ptr<graphics::Texture> AssetManager::LoadTexture(const std::string& 
 {
     
     EE_CORE_TRACE("Loading texture: {0}", filePath);
-    auto it = m_textures.find(filePath);
-    if (it != m_textures.end()) // If the texture is already loaded
-        return it->second;
 
-    std::shared_ptr<graphics::Texture> texture = std::make_shared<graphics::Texture>(filePath);
+    // Check cache first using original file path as key
+    auto it = m_textures.find(filePath);
+    if (it != m_textures.end())
+    {
+        EE_CORE_TRACE("Texture found in cache: {0}", filePath);
+        return it->second;
+    }
+
+    std::shared_ptr<graphics::Texture> texture;
+
+    // Try to load from resource database first
+    if (m_databaseLoaded)
+    {
+        ResourceEntry* resourceEntry = FindResourceBySourcePath(filePath);
+        if (resourceEntry != nullptr)
+        {
+            EE_CORE_TRACE("Found resource in database: {0} -> DDS path: {1}",
+                filePath, resourceEntry->outputPath);
+
+            // Create texture from DDS file
+            texture = std::make_shared<graphics::Texture>();
+            if (texture->LoadFromDDS(resourceEntry->outputPath))
+            {
+                EE_CORE_INFO("Texture loaded from pipeline DDS: {0}", filePath);
+                m_textures[filePath] = texture;
+                return texture;
+            }
+            else
+            {
+                EE_CORE_WARN("Failed to load DDS file: {0}, falling back to direct load",
+                    resourceEntry->outputPath);
+            }
+        }
+        else
+        {
+            EE_CORE_TRACE("Resource not found in database: {0}, trying direct load", filePath);
+        }
+    }
+
+    // Fallback: Load directly from source file (PNG)
+    texture = std::make_shared<graphics::Texture>(filePath);
     if (!texture->IsValid())
     {
         EE_CORE_ERROR("Failed to load texture: {0}", filePath);
         return nullptr;
     }
-    
+
     m_textures[filePath] = texture;
-    EE_CORE_INFO("Texture loaded: {0}", filePath);
+    EE_CORE_INFO("Texture loaded directly: {0}", filePath);
     return texture;
+}
+
+/**
+ * @brief Load a texture directly by GUID
+ * @param instanceGUID The instance GUID of the texture resource
+ * @return The loaded texture
+ */
+std::shared_ptr<graphics::Texture> AssetManager::LoadTextureByGUID(uint64_t instanceGUID)
+{
+    EE_CORE_TRACE("Loading texture by GUID: 0x{0:x}", instanceGUID);
+
+    // Create cache key from GUID
+    std::string cacheKey = "GUID_" + std::to_string(instanceGUID);
+
+    auto it = m_textures.find(cacheKey);
+    if (it != m_textures.end())
+    {
+        return it->second;
+    }
+
+    if (!m_databaseLoaded)
+    {
+        EE_CORE_ERROR("Cannot load by GUID: resource database not loaded");
+        return nullptr;
+    }
+
+    // Find the resource by GUID
+    for (const auto& [sourcePath, entry] : m_resourceDatabase)
+    {
+        if (entry.instanceGUID == instanceGUID)
+        {
+            auto texture = std::make_shared<graphics::Texture>();
+            if (texture->LoadFromDDS(entry.outputPath))
+            {
+                m_textures[cacheKey] = texture;
+                EE_CORE_INFO("Texture loaded by GUID 0x{0:x} from: {1}", instanceGUID, entry.outputPath);
+                return texture;
+            }
+            break;
+        }
+    }
+
+    EE_CORE_ERROR("Failed to load texture by GUID: 0x{0:x}", instanceGUID);
+    return nullptr;
 }
 
 /**

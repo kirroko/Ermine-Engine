@@ -1,0 +1,10 @@
+Resource Information
+===================
+Instance GUID: 0xe2fcd058309d0031
+Type GUID: 0x2fa72d942ff20ff4
+Source: ../../Ermine-Engine/Resources/Textures\placeholder.png
+Output: ./Ermine-Game.lion_rcdbase/{12345678-1234-1234-1234-123456789ABC}/Windows.platform/Data/16356177023894093873.dds
+Platform: WINDOWS
+Resource Type: TEXTURE
+Format: DDS (DirectX Texture)
+Generated: 17588080525172322
