@@ -345,39 +345,47 @@ bool engine::Init(GLFWwindow* windowContext)
 	emitter = std::make_unique<ParticleEmitter>(quadMesh, shader, tex);
 
 	// Create first cube
-	auto entity = ECS::GetInstance().CreateEntity();
-	ECS::GetInstance().AddComponent(entity, Transform(Vec3(0, -1, -1), FromEulerDegrees(0.0f, 0.0f, 0.0f), Vec3(5, 0.1f, 5)));
-	ECS::GetInstance().AddComponent(entity, ObjectMetaData());
-	ECS::GetInstance().AddComponent(entity, graphics::GeometryFactory::CreateCube(1, 1, 1));
-	ECS::GetInstance().AddComponent(
-		entity,
-		PhysicComponent(
-			PhysicsBodyType::Rigid,        // "rigid body", "trigger"
-			JPH::EMotionType::Static,      // static, dynamic, or kinematic
-			0.0f,                          // mass ( 0 for static , else is dynamic)
-			ShapeType::Box				   // Box, Sphere, Capsule, CustomMesh(need pass vertex)
-		));
+	//auto entity = ECS::GetInstance().CreateEntity();
+	//ECS::GetInstance().AddComponent(entity, Transform(Vec3(0, -1, -1), FromEulerDegrees(0.0f, 0.0f, 0.0f), Vec3(5, 0.1f, 5)));
+	//ECS::GetInstance().AddComponent(entity, ObjectMetaData());
+	//ECS::GetInstance().AddComponent(entity, graphics::GeometryFactory::CreateCube(1, 1, 1));
+	//ECS::GetInstance().AddComponent(
+	//	entity,
+	//	PhysicComponent(
+	//		PhysicsBodyType::Rigid,        // "rigid body", "trigger"
+	//		JPH::EMotionType::Static,      // static, dynamic, or kinematic
+	//		0.0f,                          // mass ( 0 for static , else is dynamic)
+	//		ShapeType::Box				   // Box, Sphere, Capsule, CustomMesh(need pass vertex)
+	//	));
 
-	//InspectorGUI inspector{ entity, "Inspector" };
-	//inspector.SetEntity(entity);
+	////InspectorGUI inspector{ entity, "Inspector" };
+	////inspector.SetEntity(entity);
 
-	// Create material using UBO template
-	auto cubeMaterial = std::make_unique<graphics::Material>(shader);
-	cubeMaterial->LoadTemplate(graphics::MaterialTemplates::PBR_WHITE());
+	//// Create material using UBO template
+	//auto cubeMaterial = std::make_unique<graphics::Material>(shader);
+	//cubeMaterial->LoadTemplate(graphics::MaterialTemplates::PBR_WHITE());
 
-	// Set texture if available
-	if (texture && texture->IsValid()) {
-		cubeMaterial->SetTexture("materialAlbedoMap", texture);
-		cubeMaterial->SetTexture("texture0", texture); // Fallback for compatibility
-	}
+	//// Set texture if available
+	//if (texture && texture->IsValid()) {
+	//	cubeMaterial->SetTexture("materialAlbedoMap", texture);
+	//	cubeMaterial->SetTexture("texture0", texture); // Fallback for compatibility
+	//}
 
-	ECS::GetInstance().AddComponent(entity, Material(std::move(cubeMaterial)));
+	//ECS::GetInstance().AddComponent(entity, Material(std::move(cubeMaterial)));
 
 	// Create second cube  
 	auto entity2 = ECS::GetInstance().CreateEntity();
 	ECS::GetInstance().AddComponent(entity2, Transform(Vec3(0, -1, 0), Quaternion(), Vec3(100, 0.1f, 100)));
 	ECS::GetInstance().AddComponent(entity2, ObjectMetaData());
 	ECS::GetInstance().AddComponent(entity2, graphics::GeometryFactory::CreateCube(1, 1, 1));
+	ECS::GetInstance().AddComponent(
+	entity2,
+	PhysicComponent(
+		PhysicsBodyType::Rigid,        // "rigid body", "trigger"
+		JPH::EMotionType::Static,      // static, dynamic, or kinematic
+		0.0f,                          // mass ( 0 for static , else is dynamic)
+		ShapeType::Box				   // Box, Sphere, Capsule, CustomMesh(need pass vertex)
+	));
 
 	// Create a reflective material for demonstration - this one is unique
 	auto cube2Material = std::make_shared<graphics::Material>(shader);
