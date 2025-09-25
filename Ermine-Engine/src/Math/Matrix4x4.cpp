@@ -384,10 +384,32 @@ namespace Ermine
 
         if (inDegrees)
         {
-            constexpr float Rad2Deg = 180.0f / M_PI;
+            constexpr float Rad2Deg = 180.0f / static_cast<float>(M_PI);
             return Vec3(roll * Rad2Deg, pitch * Rad2Deg, yaw * Rad2Deg);
         }
 
         return Vec3(roll, pitch, yaw); // radians
+    }
+
+    Quaternion FromEulerDegrees(float pitch, float yaw, float roll)
+    {
+        // Convert to radians
+        float x = DegToRad(pitch);
+        float y = DegToRad(yaw);
+        float z = DegToRad(roll);
+
+        float cx = cosf(x * 0.5f);
+        float sx = sinf(x * 0.5f);
+        float cy = cosf(y * 0.5f);
+        float sy = sinf(y * 0.5f);
+        float cz = cosf(z * 0.5f);
+        float sz = sinf(z * 0.5f);
+
+        Quaternion q;
+        q.w = cx * cy * cz + sx * sy * sz;
+        q.x = sx * cy * cz - cx * sy * sz;
+        q.y = cx * sy * cz + sx * cy * sz;
+        q.z = cx * cy * sz - sx * sy * cz;
+        return q;
     }
 }
