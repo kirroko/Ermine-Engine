@@ -387,7 +387,7 @@ bool engine::Init(GLFWwindow* windowContext)
 		PhysicComponent(
 			PhysicsBodyType::Rigid,        // "rigid body", "trigger"
 			JPH::EMotionType::Static,      // static, dynamic, or kinematic
-			0.0f,                          // mass ( 0 for static , else is dynamic)
+			1.0f,                          // mass ( 0 for static , else is dynamic)
 			ShapeType::Box				   // Box, Sphere, Capsule, CustomMesh(need pass vertex)
 		));
 
@@ -490,7 +490,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	editor::EditorGUI::CreateImGUIWindow<AudioImGUI>();
 	// Create ImGUI window for Inspector
 	//editor::EditorGUI::CreateImGUIWindow<InspectorGUI>();
-	InspectorGUI* ref = editor::EditorGUI::CreateImGUIWindow<InspectorGUI>();
+	InspectorGUI* ref = editor::EditorGUI::CreateImGUIWindow<InspectorGUI>(entity2, "Inspector");
 	editor::EditorGUI::CreateImGUIWindow<ViewPortGUI>(ref);
 
 	// Demonstrate different material sharing strategies:

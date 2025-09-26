@@ -189,6 +189,9 @@
     <ClInclude Include="include\Scene.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\SceneManager.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\ScriptClass.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -226,9 +229,6 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\Window.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\SceneManager.h" />
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
@@ -344,6 +344,9 @@
     <ClCompile Include="src\Scripting\ScriptSystem.cpp">
       <Filter>src\Scripting</Filter>
     </ClCompile>
+    <ClCompile Include="src\Serialisation\SceneManager.cpp">
+      <Filter>src\Serialisation</Filter>
+    </ClCompile>
     <ClCompile Include="src\Serialisation\Serialisation.cpp">
       <Filter>src\Serialisation</Filter>
     </ClCompile>
@@ -376,9 +379,6 @@
     </ClCompile>
     <ClCompile Include="src\dllmain.cpp">
       <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Serialisation\SceneManager.cpp">
-      <Filter>src\Serialisation</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

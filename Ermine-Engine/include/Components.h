@@ -838,7 +838,7 @@ namespace Ermine
 		Rigid,
 		Trigger
 	};
-	enum class ShapeType { Box, Sphere, Capsule, CustomMesh/*, Compound*/ };
+	enum class ShapeType { Box, Sphere, Capsule, CustomMesh/*, Compound*/,Total };
 
 	/*!***********************************************************************
 	 \brief
