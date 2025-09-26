@@ -125,7 +125,7 @@ project "Ermine-Engine"
 
         warnings "Extra"
 
-        buildoptions { "/wd4251", "/wd4005", "/wd4267", "/wd4324" }
+        buildoptions { "/wd4251", "/wd4005", "/wd4267", "/wd4324", "/wd4201", "/wd5054" }
 
         defines
         {

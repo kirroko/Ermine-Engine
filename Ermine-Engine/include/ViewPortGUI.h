@@ -21,7 +21,6 @@ namespace Ermine
 	class ViewPortGUI : public ImGUIWindow
 	{
 		bool show;
-		bool isPlaying;
 		InspectorGUI* ref_Inspector;
 	public:
 		ViewPortGUI();
