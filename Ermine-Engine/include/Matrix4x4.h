@@ -29,6 +29,10 @@ namespace Ermine
     //        : x(_x), y(_y), z(_z), w(_w) {}
     //};
 
+#ifdef _MSC_VER
+// Supress warning: nonstandard extension used : nameless struct/union
+#pragma warning( disable : 4201 )
+#endif
     typedef union Quaternion
     {
         struct
@@ -330,4 +334,10 @@ namespace Ermine
     Quaternion Mtx44GetQuaternion(const Matrix4x4& m);
 
     Vec3 QuaternionToEuler(const Quaternion& q, bool inDegrees = true);
+
+    inline float DegToRad(float deg)
+    {
+        return deg * (static_cast<float>(M_PI) / 180.0f);
+    }
+    Quaternion FromEulerDegrees(float pitch, float yaw, float roll);
 }

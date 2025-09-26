@@ -19,6 +19,9 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <Jolt/Physics/Collision/Shape/Shape.h>
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
+#include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
+#include <Jolt/Physics/Collision/Shape/ConvexHullShape.h>  // ConvexHullShape
+#include <Jolt/Physics/Collision/Shape/CompoundShape.h>    // CompoundShape
 #include <Jolt/Core/JobSystemThreadPool.h>
 #include <Jolt/Core/TempAllocator.h>
 #include <Jolt/RegisterTypes.h>
@@ -32,7 +35,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 using namespace JPH;
 namespace Ermine
 {
-    class Physics
+    class Physics : public System
     {
     public:
         Physics();
@@ -43,31 +46,31 @@ namespace Ermine
         void Update(float deltaTime);
 
         // Body creation
-        BodyID CreateStaticBox(const JPH::Vec3& halfExtents, const RVec3& position);
-        BodyID CreateDynamicSphere(float radius, const RVec3& position, const JPH::Vec3& initialVelocity);
-        void CreatePhysicsBox(const Ermine::Vec3& position, const Ermine::Vec3& size, float mass);
+        //BodyID CreateStaticBox(const JPH::Vec3& halfExtents, const RVec3& position);
+        //BodyID CreateDynamicSphere(float radius, const RVec3& position, const JPH::Vec3& initialVelocity);
+        //void CreatePhysicsBox(const Ermine::Vec3& position, const Ermine::Vec3& size, float mass);
+
+        void UpdatePhysicList();
+
+        JPH::BodyID GetBodyID(EntityID objectID);
 
         BodyInterface& GetBodyInterface() { return mPhysicsSystem.GetBodyInterface(); }
 
     private:
         // --- Important: allocator first, job system second, physics system third ---
-        TempAllocatorImpl       mTempAllocator;
-        JobSystemThreadPool     mJobSystem;
-        PhysicsSystem           mPhysicsSystem;
+        JPH::TempAllocatorImpl       mTempAllocator;
+        JPH::JobSystemThreadPool     mJobSystem;
+        JPH::PhysicsSystem           mPhysicsSystem;
 
-        // Layer and filter interfaces
-        class BPLayerInterfaceImpl* mBroadPhaseLayerInterface;
-        class ObjectVsBroadPhaseLayerFilterImpl* mObjectVsBroadPhaseLayerFilter;
-        class ObjectLayerPairFilterImpl* mObjectLayerPairFilter;
+        class BPLayerInterfaceImpl* mBroadPhaseLayerInterface = nullptr;
+        class ObjectVsBroadPhaseLayerFilterImpl* mObjectVsBroadPhaseLayerFilter = nullptr;
+        class ObjectLayerPairFilterImpl* mObjectLayerPairFilter = nullptr;
 
-        // Listeners
-        class MyBodyActivationListener* mBodyActivationListener;
-        class MyContactListener* mContactListener;
+        class MyBodyActivationListener* mBodyActivationListener = nullptr;
+        class MyContactListener* mContactListener = nullptr;
 
         std::unordered_map<EntityID, JPH::BodyID> mEntityToBody;
 
         void SetupLayers();
     };
-    extern Physics* gPhysics;
-    //extern Physics gPhysics;
 }
