@@ -156,6 +156,8 @@ void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
 		if (ImGui::MenuItem("Undo", "Ctrl+Z"))
 		{
 			EE_CORE_INFO("Undo clicked");
+            ECS::GetInstance().ClearAllEntities();
+            ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
 			// Code to undo
 		}
 		if (ImGui::MenuItem("Redo", "Ctrl+Y"))
