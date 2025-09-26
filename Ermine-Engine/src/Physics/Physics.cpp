@@ -247,6 +247,7 @@ namespace Ermine
         mEntityToBody.clear();
 
         auto& ecs = ECS::GetInstance();
+        auto& bodyInterface = mPhysicsSystem.GetBodyInterface();
 
         for (auto entity : m_Entities)
         {
@@ -257,44 +258,68 @@ namespace Ermine
             auto& t = ecs.GetComponent<Transform>(entity);
             auto& p = ecs.GetComponent<PhysicComponent>(entity);
 
+            // Remove old body if it exists (to update settings properly)
             if (p.bodyID != JPH::BodyID(JPH::BodyID::cInvalidBodyID))
-                continue;
+            {
+                bodyInterface.RemoveBody(p.bodyID);
+                bodyInterface.DestroyBody(p.bodyID);
+                p.bodyID = JPH::BodyID(JPH::BodyID::cInvalidBodyID);
+            }
 
-            // Determine the layer
-            ObjectLayer layer = (p.motionType == JPH::EMotionType::Dynamic) ? Layers::MOVING : Layers::NON_MOVING;
+            // Determine object layer
+            ObjectLayer layer = (p.motionType == JPH::EMotionType::Dynamic)
+                ? Layers::MOVING
+                : Layers::NON_MOVING;
 
             // Create the correct shape
             JPH::Shape* shape = nullptr;
             switch (p.shapeType)
             {
             case ShapeType::Box:
-                shape = new JPH::BoxShape(JPH::Vec3(t.scale.x * 0.5f, t.scale.y * 0.5f, t.scale.z * 0.5f));
+                shape = new JPH::BoxShape(JPH::Vec3(
+                    t.scale.x * 0.5f,
+                    t.scale.y * 0.5f,
+                    t.scale.z * 0.5f));
                 break;
+
             case ShapeType::Sphere:
-                shape = new JPH::SphereShape(t.scale.x * 0.5f); // radius
+                shape = new JPH::SphereShape(t.scale.x * 0.5f);
                 break;
+
             case ShapeType::Capsule:
-                shape = new JPH::CapsuleShape(t.scale.y * 0.5f, t.scale.x * 0.5f); // half height, radius
+                shape = new JPH::CapsuleShape(
+                    t.scale.y * 0.5f, // half height
+                    t.scale.x * 0.5f  // radius
+                );
                 break;
+
             case ShapeType::CustomMesh:
+            {
                 std::vector<JPH::Vec3> jphVerts;
                 jphVerts.reserve(p.customMeshVertices.size());
                 for (const auto& v : p.customMeshVertices)
                     jphVerts.emplace_back(v.x, v.y, v.z);
 
-                // Create settings
-                JPH::ConvexHullShapeSettings settings(jphVerts.data(), jphVerts.size());
+                JPH::ConvexHullShapeSettings hullSettings(
+                    jphVerts.data(),
+                    jphVerts.size()
+                );
 
-                // Create shape from settings
-                shape = settings.Create().Get();
+                JPH::ShapeSettings::ShapeResult hullResult = hullSettings.Create();
+                if (hullResult.IsValid())
+                    shape = hullResult.Get();
                 break;
-            //case ShapeType::Compound:
-            //    shape = BuildCompoundShape(p); // not implemented
-            //    break;
+            }
+            // case ShapeType::Compound:
+            //     shape = BuildCompoundShapeDirectly(...);
+            //     break;
             }
 
-            // Create body settings
-            JPH::BodyCreationSettings settings(
+            if (!shape) // Skip if shape creation failed
+                continue;
+
+            // Create body settings with updated transform and properties
+            JPH::BodyCreationSettings bodySettings(
                 shape,
                 JPH::Vec3(t.position.x, t.position.y, t.position.z),
                 JPH::Quat(t.rotation.x, t.rotation.y, t.rotation.z, t.rotation.w),
@@ -302,18 +327,20 @@ namespace Ermine
                 layer
             );
 
+            // Apply mass and inertia if dynamic
             if (p.motionType == JPH::EMotionType::Dynamic)
             {
-                settings.mOverrideMassProperties = JPH::EOverrideMassProperties::CalculateInertia;
-                settings.mMassPropertiesOverride.mMass = p.mass;
+                bodySettings.mOverrideMassProperties = JPH::EOverrideMassProperties::CalculateInertia;
+                bodySettings.mMassPropertiesOverride.mMass = p.mass;
             }
 
-            auto& bodyInterface = mPhysicsSystem.GetBodyInterface();
-            JPH::Body* body = bodyInterface.CreateBody(settings);
+            // Create and add body to the world
+            JPH::Body* body = bodyInterface.CreateBody(bodySettings);
             bodyInterface.AddBody(body->GetID(), JPH::EActivation::Activate);
 
+            // Store mapping
             p.bodyID = body->GetID();
-            mEntityToBody[entity] = body->GetID();
+            mEntityToBody[entity] = p.bodyID;
         }
 
     }
