@@ -48,7 +48,7 @@ namespace Ermine
          * @brief Recursively updates world transforms for an entity and its children.
          * @param[in] entity The root entity to start updating from.
         */
-        void UpdateWorldTransform(EntityID entity);
+        void UpdateWorldTransform(EntityID entity, const Matrix4x4* parentWorld);
 
         void UpdateWorldTransform(EntityID entity, const Matrix4x4* parentWorld);
 
