@@ -1358,7 +1358,7 @@ namespace
 		return nullptr;
 	}
 
-	MonoArray* icall_gameobject_find_gameobjects_with_tag(MonoString* mtag)
+	MonoArray* icall_gameobject_find_gameobjects_with_tag([[maybe_unused]] MonoString* mtag)
 	{
 		EE_CORE_WARN("Not ready yet.");
 		return nullptr;

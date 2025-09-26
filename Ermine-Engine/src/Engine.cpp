@@ -135,27 +135,20 @@ bool engine::Init(GLFWwindow* windowContext)
 	job::Initialize();
 
 	ECS::GetInstance().Init();
-	EE_CORE_INFO("ECS Initialized");
-	EE_CORE_TRACE("Begin Registering of Components and Systems...");
 
 	AudioSystem::Init();
-	EE_CORE_INFO("AudioSystem Initialized");
 
-	// TODO: Register all components here, limit of 32 components
+	// TODO: Register all components here, limit of 255 components
 	EE_AUTO_REGISTER_COMPONENT(Transform, "Transform")
 	EE_AUTO_REGISTER_COMPONENT(Rigidbody3D, "Rigidbody3D")
 	EE_AUTO_REGISTER_COMPONENT(Mesh, "Mesh")
 	EE_AUTO_REGISTER_COMPONENT(Material, "Material")
-	//EE_AUTO_REGISTER_COMPONENT(Script,"Script")
 	EE_AUTO_REGISTER_COMPONENT(ObjectMetaData, "ObjectMetaData")
 	EE_AUTO_REGISTER_COMPONENT(Light, "Light")
 	EE_AUTO_REGISTER_COMPONENT(Particle, "Particle")
 	EE_AUTO_REGISTER_COMPONENT(AudioComponent, "AudioComponent")
 	EE_AUTO_REGISTER_COMPONENT(GlobalAudioComponent, "GlobalAudioComponent")
 	EE_AUTO_REGISTER_COMPONENT(ModelComponent, "ModelComponent")
-
-	// ECS::GetInstance().RegisterComponent<AudioComponent>(); // ADD THIS
-	// ECS::GetInstance().RegisterComponent<GlobalAudioComponent>(); // ADD THIS IF YOU WANT GLOBAL AUDIO
 
 	// Special Case for Script component, need to copy over the class name
 	ECS::GetInstance().RegisterComponent<Script>("Script",
@@ -294,11 +287,6 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().AddComponent(audioTestEntity, testAudio);
 
 	EE_CORE_INFO("Audio test entity created with ID: {} - will auto-play", audioTestEntity);
-
-	//auto entity3 = ECS::GetInstance().CreateEntity();
-	//ECS::GetInstance().AddComponent(entity3, Transform(Vec3(1, 1, -3), Vec3(0, 0, 0), Vec3(1, 1, 1)));
-	//ECS::GetInstance().AddComponent(entity3, graphics::GeometryFactory::CreateSphere());
-	//ECS::GetInstance().AddComponent(entity3, Material(shader, texture));
 
 	// Example FBX entity
 	fbxEntity = ECS::GetInstance().CreateEntity();
@@ -453,7 +441,6 @@ bool engine::Init(GLFWwindow* windowContext)
 	editor::EditorGUI::CreateImGUIWindow<ParticlesImGUI>(emitter.get());
 	editor::EditorGUI::CreateImGUIWindow<AudioImGUI>();
 	// Create ImGUI window for Inspector
-	//editor::EditorGUI::CreateImGUIWindow<InspectorGUI>();
 	InspectorGUI* ref = editor::EditorGUI::CreateImGUIWindow<InspectorGUI>(entity2, "Inspector");
 	editor::EditorGUI::CreateImGUIWindow<ViewPortGUI>(ref);
    
