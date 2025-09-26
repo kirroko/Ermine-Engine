@@ -30,6 +30,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <rapidjson/writer.h>
 #include <rapidjson/stringbuffer.h>
 #include "Model.h"
+#include <Jolt/Jolt.h>
+#include <Jolt/Physics/Body/Body.h>
 
 namespace Ermine
 {
@@ -644,6 +646,42 @@ namespace Ermine
 
 		Particle() : velocity(0, 0, 0), lifetime(1.0f), age(0.0f), colour(1, 1, 1, 1), size(1.0f) {}
 	};
+
+	/*!***********************************************************************
+	 \brief
+	 Enum for Physic component.
+	*************************************************************************/
+	enum class PhysicsBodyType
+	{
+		Rigid,
+		Trigger
+	};
+	enum class ShapeType { Box, Sphere, Capsule, CustomMesh/*, Compound*/ };
+
+	/*!***********************************************************************
+	 \brief
+	 Physic component structure.
+	*************************************************************************/
+	struct PhysicComponent
+	{
+		JPH::BodyID bodyID{ JPH::BodyID::cInvalidBodyID };
+		PhysicsBodyType bodyType{ PhysicsBodyType::Rigid };
+		JPH::EMotionType motionType{ JPH::EMotionType::Static };
+		float mass{ 0.0f };
+		ShapeType shapeType{ ShapeType::Box };
+		std::vector<Ermine::Vec3> customMeshVertices;   // For custom mesh
+
+		PhysicComponent() = default;
+
+		PhysicComponent(
+			PhysicsBodyType type,
+			JPH::EMotionType motion,
+			float m = 0.0f,
+			ShapeType shape = ShapeType::Box)
+			: bodyType(type), motionType(motion), mass(m), shapeType(shape)
+		{}
+	};
+
 
 	/*!***********************************************************************
 	\brief

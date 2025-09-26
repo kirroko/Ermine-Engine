@@ -390,4 +390,26 @@ namespace Ermine
 
         return {roll, pitch, yaw}; // radians
     }
+
+    Quaternion FromEulerDegrees(float pitch, float yaw, float roll)
+    {
+        // Convert to radians
+        float x = DegToRad(pitch);
+        float y = DegToRad(yaw);
+        float z = DegToRad(roll);
+
+        float cx = cosf(x * 0.5f);
+        float sx = sinf(x * 0.5f);
+        float cy = cosf(y * 0.5f);
+        float sy = sinf(y * 0.5f);
+        float cz = cosf(z * 0.5f);
+        float sz = sinf(z * 0.5f);
+
+        Quaternion q;
+        q.w = cx * cy * cz + sx * sy * sz;
+        q.x = sx * cy * cz - cx * sy * sz;
+        q.y = cx * sy * cz + sx * cy * sz;
+        q.z = cx * cy * sz - sx * sy * cz;
+        return q;
+    }
 }

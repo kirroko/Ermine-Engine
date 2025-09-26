@@ -35,6 +35,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "InspectorGUI.h"
 #include "ViewPortGUI.h"
 #include "AudioImGUI.h"
+#include "MathVector.h"
 #include "FiniteStateMachine.h"
 #include "Skybox.h"
 #include "Cubemap.h"
@@ -148,6 +149,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	EE_AUTO_REGISTER_COMPONENT(Particle, "Particle")
 	EE_AUTO_REGISTER_COMPONENT(AudioComponent, "AudioComponent")
 	EE_AUTO_REGISTER_COMPONENT(GlobalAudioComponent, "GlobalAudioComponent")
+	EE_AUTO_REGISTER_COMPONENT(PhysicComponent, "PhysicComponent")
 	EE_AUTO_REGISTER_COMPONENT(ModelComponent, "ModelComponent")
 
 	// Special Case for Script component, need to copy over the class name
@@ -165,6 +167,11 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().RegisterSystem<AudioSystem>();
 	ECS::GetInstance().RegisterSystem<ParticleSystem>();
 	ECS::GetInstance().RegisterSystem <graphics::LightSystem>();
+
+	//Register JPH::TempAllocatorImpl for Physcis
+	RegisterDefaultAllocator();
+	ECS::GetInstance().RegisterSystem<Physics>();
+	ECS::GetInstance().GetSystem<Physics>()->Init();
 
 	// TODO: Set the signature for the system as required
 	// For Graphics/Renderer system
@@ -191,6 +198,12 @@ bool engine::Init(GLFWwindow* windowContext)
 	sig.set(ECS::GetInstance().GetComponentType<Material>());
 	sig.set(ECS::GetInstance().GetComponentType<Particle>());
 	ECS::GetInstance().SetSystemSignature<ParticleSystem>(sig);
+
+	// For Physics
+	sig.reset();
+	sig.set(ECS::GetInstance().GetComponentType<PhysicComponent>());
+	sig.set(ECS::GetInstance().GetComponentType<Transform>());
+	ECS::GetInstance().SetSystemSignature<Physics>(sig);
 
 	// Lights
 	sig.reset();
@@ -291,6 +304,14 @@ bool engine::Init(GLFWwindow* windowContext)
 	// Example FBX entity
 	fbxEntity = ECS::GetInstance().CreateEntity();
 	ECS::GetInstance().AddComponent(fbxEntity, Transform(Vec3(2, -0.5f, 0), Quaternion(), Vec3(0.01f, 0.01f, 0.01f)));
+	ECS::GetInstance().AddComponent(
+		fbxEntity,
+		PhysicComponent(
+			PhysicsBodyType::Rigid,         // "rigid body", "trigger"
+			JPH::EMotionType::Dynamic,      // static, dynamic, or kinematic
+			1.0f,                            // mass ( 0 for static , else is dynamic)
+			ShapeType::Capsule				// Box, Sphere, Capsule, CustomMesh(need pass vertex)
+		));
 	ECS::GetInstance().AddComponent(fbxEntity, ObjectMetaData("Character", "Model", true));
 	ECS::GetInstance().AddComponent(fbxEntity, Mesh{}); // empty mesh component for renderer signature
 	ECS::GetInstance().AddComponent(fbxEntity, ModelComponent(AssetManager::GetInstance().LoadModel("../Resources/Models/Shadowkin_Rigged.fbx")));
@@ -303,6 +324,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	}
 	ECS::GetInstance().AddComponent(fbxEntity, Material(std::move(fbxMaterial)));
 
+
 	// Create a simple quad mesh for particles
 	auto quadMesh = graphics::GeometryFactory::CreateQuad(1.0f, 1.0f);
 	auto tex = AssetManager::GetInstance().LoadTexture("../Resources/Textures/greybox_red_solid.png");
@@ -312,31 +334,30 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	// Create first cube
 	//auto entity = ECS::GetInstance().CreateEntity();
-	//ECS::GetInstance().AddComponent(entity, Transform(Vec3(0, 0, -1), Vec3(0, 45, 90), Vec3(1, 1, 1)));
+	//ECS::GetInstance().AddComponent(entity, Transform(Vec3(0, -1, -1), FromEulerDegrees(0.0f, 0.0f, 0.0f), Vec3(5, 0.1f, 5)));
 	//ECS::GetInstance().AddComponent(entity, ObjectMetaData());
 	//ECS::GetInstance().AddComponent(entity, graphics::GeometryFactory::CreateCube(1, 1, 1));
+	//ECS::GetInstance().AddComponent(
+	//	entity,
+	//	PhysicComponent(
+	//		PhysicsBodyType::Rigid,        // "rigid body", "trigger"
+	//		JPH::EMotionType::Static,      // static, dynamic, or kinematic
+	//		0.0f,                          // mass ( 0 for static , else is dynamic)
+	//		ShapeType::Box				   // Box, Sphere, Capsule, CustomMesh(need pass vertex)
+	//	));
 
-	RegisterDefaultAllocator();
+	////InspectorGUI inspector{ entity, "Inspector" };
+	////inspector.SetEntity(entity);
 
-	gPhysics = new Physics();
-	gPhysics->Init();
-	gPhysics->CreatePhysicsBox(Vec3(0, 5, 0), Vec3(1, 1, 1), 1.0f);
-	gPhysics->CreatePhysicsBox(Vec3(0, 8, 0), Vec3(1, 1, 1), 1.0f);
+	//// Create material using UBO template
+	//auto cubeMaterial = std::make_unique<graphics::Material>(shader);
+	//cubeMaterial->LoadTemplate(graphics::MaterialTemplates::PBR_WHITE());
 
-	gPhysics->CreatePhysicsBox(Vec3(0, 0, 0), Vec3(1, 1, 1), 0.0f);
-
-	//InspectorGUI inspector{ entity, "Inspector" };
-	//inspector.SetEntity(entity);
-
-	// Create material using UBO template
-	auto cubeMaterial = std::make_unique<graphics::Material>(shader);
-	cubeMaterial->LoadTemplate(graphics::MaterialTemplates::PBR_WHITE());
-
-	// Set texture if available
-	if (texture && texture->IsValid()) {
-		cubeMaterial->SetTexture("materialAlbedoMap", texture);
-		cubeMaterial->SetTexture("texture0", texture); // Fallback for compatibility
-	}
+	//// Set texture if available
+	//if (texture && texture->IsValid()) {
+	//	cubeMaterial->SetTexture("materialAlbedoMap", texture);
+	//	cubeMaterial->SetTexture("texture0", texture); // Fallback for compatibility
+	//}
 
 	//ECS::GetInstance().AddComponent(entity, Material(std::move(cubeMaterial)));
 
@@ -345,6 +366,14 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().AddComponent(entity2, Transform(Vec3(0, -1, 0), Quaternion(), Vec3(100, 0.1f, 100)));
 	ECS::GetInstance().AddComponent(entity2, ObjectMetaData());
 	ECS::GetInstance().AddComponent(entity2, graphics::GeometryFactory::CreateCube(1, 1, 1));
+	ECS::GetInstance().AddComponent(
+	entity2,
+	PhysicComponent(
+		PhysicsBodyType::Rigid,        // "rigid body", "trigger"
+		JPH::EMotionType::Static,      // static, dynamic, or kinematic
+		0.0f,                          // mass ( 0 for static , else is dynamic)
+		ShapeType::Box				   // Box, Sphere, Capsule, CustomMesh(need pass vertex)
+	));
 
 	// Create a reflective material for demonstration - this one is unique
 	auto cube2Material = std::make_shared<graphics::Material>(shader);
@@ -411,6 +440,9 @@ bool engine::Init(GLFWwindow* windowContext)
 	greenLightMaterial->LoadTemplate(graphics::MaterialTemplates::EMISSIVE(Vec3(0.f, 1.f, 0.0f), 10.0f));
 	ECS::GetInstance().AddComponent(greenLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
 	ECS::GetInstance().AddComponent(greenLightEntity, Material(greenLightMaterial));
+
+	//after creating all the physic object, update to physic system
+	ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
 
 	EE_CORE_INFO("Total living entities after creation: {0}", ECS::GetInstance().GetLivingEntityCount());
 
@@ -481,9 +513,7 @@ void engine::Shutdown()
 	SaveConfigToFile(cfg, "Ermine-Engine.config", false);
 
     AssetManager::GetInstance().Clear();
-	gPhysics->Shutdown();
-	delete gPhysics;
-	gPhysics = nullptr;
+	ECS::GetInstance().GetSystem<Physics>()->Shutdown();
 	emitter.reset();
 	skybox.reset();
 	environmentCubemap.reset();
@@ -534,6 +564,7 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 	{
 		// Fixed update logic here
 		ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->FixedUpdate();
+		ECS::GetInstance().GetSystem<Physics>()->Update(FrameController::GetFixedDeltaTime());
 	}
 
 	// Other non-fixed logic here
@@ -541,7 +572,7 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 	ECS::GetInstance().GetSystem<AudioSystem>()->Update();
 	// Update editor camera
 	editor::EditorCamera::GetInstance().Update();
-	gPhysics->Update(FrameController::GetDeltaTime());
+
 
 	// Simple test to see if we can select an entity and view it in the inspector
 	//if (Input::IsKeyDown(GLFW_KEY_Q))
