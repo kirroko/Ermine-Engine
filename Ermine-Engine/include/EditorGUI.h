@@ -38,8 +38,6 @@ namespace Ermine::editor
         // Keeps track of all registered ImGui windows
         static std::vector<std::unique_ptr<ImGUIWindow>> m_Windows;
 
-        static bool isPlaying;
-
         static std::shared_ptr<Ermine::Scene> s_ActiveScene;
 
         static std::unique_ptr<Ermine::HierarchyPanel> s_HierarchyPanel;
