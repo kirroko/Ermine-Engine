@@ -2,6 +2,7 @@
 #include "SceneManager.h"
 #include "Serialisation.h"
 #include "ECS.h"
+#include "Physics.h"
 
 namespace
 {
@@ -113,7 +114,8 @@ SceneManager& SceneManager::GetInstance()
 void SceneManager::NewScene()
 {
     // Clear ECS
-    //Ermine::ECS::GetInstance().ClearEntities();
+    Ermine::ECS::GetInstance().ClearAllEntities();
+    Ermine::ECS::GetInstance().GetSystem<Ermine::Physics>()->UpdatePhysicList();
     m_CurrentScenePath.reset();
     m_Dirty = false;
 }
