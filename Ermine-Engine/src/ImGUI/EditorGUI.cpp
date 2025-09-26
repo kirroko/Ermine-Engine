@@ -32,14 +32,17 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #include "AssetManager.h"
 #include "imgui_internal.h"
+#include "Physics.h"
 #include "Serialisation.h"
 
 namespace Ermine
 {
 	class InspectorGUI;
+    class Physics;
 }
 
 class Ermine::InspectorGUI;
+class Ermine::Physics;
 
 using namespace Ermine::editor;
 

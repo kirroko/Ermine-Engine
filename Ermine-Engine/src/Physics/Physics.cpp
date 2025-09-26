@@ -244,6 +244,8 @@ namespace Ermine
 
     void Physics::UpdatePhysicList()
     {
+        mEntityToBody.clear();
+
         auto& ecs = ECS::GetInstance();
 
         for (auto entity : m_Entities)
