@@ -30,7 +30,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "HierarchyInspector.h"
 
 
-#include <ImGuizmo.h>
+#include "AssetManager.h"
+#include "imgui_internal.h"
 #include "Serialisation.h"
 
 namespace Ermine
@@ -87,6 +88,38 @@ namespace
         }
 		return std::string(buffer);
 	}
+
+    ImTextureID gIconPlay = 0;
+    ImTextureID gIconStop = 0;
+    bool gIconsLoaded = false;
+
+    void LoadToolbarIcons()
+    {
+        if (gIconsLoaded) return;
+
+        auto loadTex = [](const char* path) -> ImTextureID
+            {
+                auto tex = Ermine::AssetManager::GetInstance().LoadTexture(path);
+                if (tex && tex->IsValid())
+                    return static_cast<ImTextureID>(static_cast<intptr_t>(tex->GetRendererID()));
+                return 0;
+            };
+
+        gIconPlay = loadTex("../Resources/Textures/Icons/play.png");
+        if (!gIconPlay) EE_CORE_WARN("Cannot find play button!");
+
+        gIconStop = loadTex("../Resources/Textures/Icons/stop.png");
+        if (!gIconStop) EE_CORE_WARN("Cannot find stop button!");
+
+        gIconsLoaded = true;
+    }
+
+    bool DrawIconOrTextButton(ImTextureID icon, const char* text, const ImVec2& size)
+    {
+        if (icon)
+            return ImGui::ImageButton(text, icon, size, ImVec2(0, 1), ImVec2(1, 0));
+        return ImGui::Button(text, size);
+    }
 }
 
 void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
@@ -131,6 +164,70 @@ void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
     }
 
     ImGui::EndMainMenuBar();
+}
+
+void EditorGUI::Toolbar()
+{
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 2));
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemInnerSpacing, ImVec2(0, 0));
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+
+    auto& colors = ImGui::GetStyle().Colors;
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, colors[ImGuiCol_ButtonHovered]);
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, colors[ImGuiCol_ButtonActive]);
+
+    ImGui::Begin("Toolbar", nullptr,
+        ImGuiWindowFlags_NoDecoration |
+        ImGuiWindowFlags_NoMove |
+        ImGuiWindowFlags_NoSavedSettings |
+        ImGuiWindowFlags_NoScrollbar |
+        ImGuiWindowFlags_NoScrollWithMouse);
+
+    const float size = ImGui::GetWindowHeight() - 4.0f;
+    const float spacing = ImGui::GetStyle().ItemSpacing.x;
+    const float total = size * 2.0f + spacing;
+    const float content_w = ImGui::GetWindowContentRegionMax().x - ImGui::GetWindowContentRegionMin().x;
+    const float start_x = (content_w - total) * 0.5f;
+    ImGui::SetCursorPosX(ImGui::GetWindowContentRegionMax().x + ImMax(0.0f, start_x));
+
+    auto RenderToggledButton = [&](bool toggled, ImTextureID icon, const char* label)
+        {
+            if (toggled)
+            {
+                ImGui::PushStyleColor(ImGuiCol_Button, colors[ImGuiCol_ButtonActive]);
+                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, colors[ImGuiCol_ButtonActive]);
+                ImGui::PushStyleColor(ImGuiCol_ButtonActive, colors[ImGuiCol_ButtonActive]);
+                ImGui::BeginDisabled(true);
+            }
+
+            bool clicked = DrawIconOrTextButton(icon, label, ImVec2(size, size));
+
+            if (toggled)
+            {
+                ImGui::EndDisabled();
+                ImGui::PopStyleColor(3);
+            }
+            return clicked;
+        };
+
+	if (RenderToggledButton(isPlaying,gIconPlay,"Play"))
+	{
+		if (!isPlaying)
+            isPlaying = true;
+	}
+
+    ImGui::SameLine();
+
+    if (RenderToggledButton(!isPlaying,gIconStop,"Stop"))
+    {
+	    if (isPlaying)
+			isPlaying = false;
+    }
+
+    ImGui::End();
+
+    ImGui::PopStyleVar(2);
+    ImGui::PopStyleColor(3);
 }
 
 void EditorGUI::ProfilingWindow()
@@ -458,16 +555,6 @@ void EditorGUI::Update(GLFWwindow* windowContext)
     static bool show_demo_window = true;
     if (show_demo_window)
         ImGui::ShowDemoWindow(&show_demo_window);
-
-    //static bool show_another_window = true;
-    //if (show_another_window)
-    //{
-    //    ImGui::Begin("Another Window", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-    //    ImGui::Text("Hello from another window!");
-    //    if (ImGui::Button("Close Me"))
-    //        show_another_window = false;
-    //    ImGui::End();
-    //}
 
     // Call Update() for all registered ImGui windows
     for (auto& window : m_Windows) {

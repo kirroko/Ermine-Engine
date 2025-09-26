@@ -384,11 +384,11 @@ namespace Ermine
 
         if (inDegrees)
         {
-            constexpr float Rad2Deg = 180.0f / static_cast<float>(M_PI);
-            return Vec3(roll * Rad2Deg, pitch * Rad2Deg, yaw * Rad2Deg);
+            constexpr float Rad2Deg = 180.0f / static_cast<float>(std::numbers::pi);
+            return {roll * Rad2Deg, pitch * Rad2Deg, yaw * Rad2Deg};
         }
 
-        return Vec3(roll, pitch, yaw); // radians
+        return {roll, pitch, yaw}; // radians
     }
 
     Quaternion FromEulerDegrees(float pitch, float yaw, float roll)

@@ -24,6 +24,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <sstream>
 #include <cassert>
 #include <algorithm>
+#include <numbers>
 
 #include <memory>
 #include <bitset>
