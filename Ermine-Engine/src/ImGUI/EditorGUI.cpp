@@ -32,14 +32,17 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #include "AssetManager.h"
 #include "imgui_internal.h"
+#include "Physics.h"
 #include "Serialisation.h"
 
 namespace Ermine
 {
 	class InspectorGUI;
+    class Physics;
 }
 
 class Ermine::InspectorGUI;
+class Ermine::Physics;
 
 using namespace Ermine::editor;
 
@@ -153,6 +156,8 @@ void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
 		if (ImGui::MenuItem("Undo", "Ctrl+Z"))
 		{
 			EE_CORE_INFO("Undo clicked");
+            ECS::GetInstance().ClearAllEntities();
+            ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
 			// Code to undo
 		}
 		if (ImGui::MenuItem("Redo", "Ctrl+Y"))

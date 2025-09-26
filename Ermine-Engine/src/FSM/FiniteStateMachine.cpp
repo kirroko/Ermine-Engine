@@ -86,6 +86,8 @@ namespace Ermine
     void RoamState::Update(EntityID entity, float deltaTime)
     {
         //EE_CORE_INFO("Entity {0} is roaming...", entity);
+        if (!ECS::GetInstance().IsEntityValid(entity))
+            return;
 
         auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
 

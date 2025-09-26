@@ -98,7 +98,7 @@ void Ermine::ViewPortGUI::Update()
 	ImGui::BeginGroup();
 	{
 		const bool playing = (EditorGUI::s_state == EditorGUI::SimState::playing);
-		const bool paused = (EditorGUI::s_state == EditorGUI::SimState::paused);
+		//const bool paused = (EditorGUI::s_state == EditorGUI::SimState::paused);
 		const bool stopped = (EditorGUI::s_state == EditorGUI::SimState::stopped);
 
 		// Play

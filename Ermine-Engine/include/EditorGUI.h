@@ -65,7 +65,7 @@ namespace Ermine::editor
 		 */
 		static void ViewPortWindow(bool& show);
     public:
-        enum class SimState { stopped, playing, paused };
+        enum class SimState : uint8_t { stopped, playing, paused };
         static SimState s_state;
         static bool isPlaying;
 

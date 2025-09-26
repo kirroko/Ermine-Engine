@@ -506,6 +506,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	EE_CORE_INFO("Created and set active scene: Main Scene");
 
 	s_isInitialized = true;
+	return true;
 }
 
 // TODO: Shutdown for subsystem should be in order, please be mindful of the order that is already in place.
