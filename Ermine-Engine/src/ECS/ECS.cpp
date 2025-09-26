@@ -111,22 +111,5 @@ namespace Ermine
 	{
 		return m_EntityManager->GetLivingEntityCount();
 	}
-
-	void ECS::ClearEntities()
-	{
-		std::vector<EntityID> toDestroy;
-		toDestroy.reserve(static_cast<size_t>(GetLivingEntityCount()));
-		for (EntityID id = 0; id < MAX_ENTITIES; ++id) {
-			if (IsEntityValid(id))
-				toDestroy.push_back(id);
-		}
-
-		for (EntityID id : toDestroy) {
-			DestroyEntity(id);
-		}
-
-		m_EntityManager = std::make_unique<EntityManager>();
-	}
-
 }
 // 0x4B45414E

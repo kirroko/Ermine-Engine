@@ -210,6 +210,13 @@ void SaveSceneToFile(const Ermine::ECS& ecs, const std::filesystem::path& path, 
                 ecs.GetComponent<Ermine::ModelComponent>(id).Serialize(l, a);
                 comps.AddMember(Value("ModelComponent", a), l, a);
             }
+
+            //// PhysicsComponent
+            //if (name == "PhysicsComponent" && ecs.HasComponent<Ermine::PhysicsComponent>(id)) {
+            //    Value l(kObjectType);
+            //    ecs.GetComponent<Ermine::ModelComponent>(id).Serialize(l, a);
+            //    comps.AddMember(Value("ModelComponent", a), l, a);
+            //}
         }
 
         e.AddMember("components", comps, a);
