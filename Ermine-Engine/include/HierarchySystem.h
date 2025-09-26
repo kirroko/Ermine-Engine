@@ -50,8 +50,6 @@ namespace Ermine
         */
         void UpdateWorldTransform(EntityID entity, const Matrix4x4* parentWorld);
 
-        void UpdateWorldTransform(EntityID entity, const Matrix4x4* parentWorld);
-
         void UpdateDirtyTransforms();
 
         /**

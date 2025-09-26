@@ -620,6 +620,12 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 	// Update for Particles
 	ECS::GetInstance().GetSystem<ParticleSystem>()->Update(FrameController::GetDeltaTime());
 
+	// Update transform hierarchy
+	auto hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>();
+	if (hierarchySystem) {
+		hierarchySystem->UpdateHierarchy();
+	}
+
 	// FSM Update
 	if (s_FSMManager)
 	{

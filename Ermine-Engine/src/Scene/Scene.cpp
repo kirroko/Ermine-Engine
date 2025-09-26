@@ -36,6 +36,12 @@ namespace Ermine {
 
         if (needsHierarchy) {
             ECS::GetInstance().AddComponent(entity, HierarchyComponent());
+
+            // Mark as dirty for first transform update
+            auto hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>();
+            if (hierarchySystem) {
+                hierarchySystem->OnTransformChanged(entity);
+            }
         }
 
         m_Entities.insert(entity);
