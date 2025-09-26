@@ -155,6 +155,7 @@ namespace Ermine
     void Physics::Shutdown()
     {
         UnregisterTypes();
+        mEntityToBody.clear();
         delete Factory::sInstance;
         Factory::sInstance = nullptr;
     }
@@ -162,6 +163,7 @@ namespace Ermine
     void Physics::Update(float deltaTime)
     {
         mPhysicsSystem.Update(deltaTime, 1, &mTempAllocator, &mJobSystem);
+
         auto& bodyInterface = mPhysicsSystem.GetBodyInterface();
         for (auto& [entity, rigidBody] : mEntityToBody)
         {
