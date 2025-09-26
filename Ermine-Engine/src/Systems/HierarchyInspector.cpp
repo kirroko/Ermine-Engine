@@ -1,7 +1,7 @@
 /* Start Header ************************************************************************/
 /*!
 \file       HierarchyInspector.cpp
-\author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu
+\author     Edwin Lee Zirui, edwinzirui.lee, 2301299, edwinzirui.lee\@digipen.edu
 \date       27/03/2025
 \brief      Inspector panel for viewing and editing entity properties
 
@@ -15,6 +15,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "HierarchyInspector.h"
 #include "Components.h"
 #include "ECS.h"
+#include "HierarchySystem.h"
 #include "GeometryFactory.h"
 #include "imgui.h"
 
@@ -117,10 +118,13 @@ namespace Ermine::editor {
     void HierarchyInspector::DrawTransformComponent(EntityID entity) {
         if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen)) {
             auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
-        
+            bool transformChanged = false;
+
+            // Position
             float position[3] = { transform.position.x, transform.position.y, transform.position.z };
             if (ImGui::DragFloat3("Position", position, 0.1f)) {
                 transform.position = Vec3(position[0], position[1], position[2]);
+                transformChanged = true;
             }
 
             // Convert quaternion to Euler angles for display (in degrees)
@@ -147,11 +151,22 @@ namespace Ermine::editor {
 
                 // Convert back to quaternion
                 transform.rotation = Mtx44GetQuaternion(combined);
+                transformChanged = true;
             }
 
+            // Scale
             float scale[3] = { transform.scale.x, transform.scale.y, transform.scale.z };
             if (ImGui::DragFloat3("Scale", scale, 0.1f, 0.1f, 10.0f)) {
                 transform.scale = Vec3(scale[0], scale[1], scale[2]);
+                transformChanged = true;
+            }
+
+            // Mark transform as dirty if any changes occurred
+            if (transformChanged) {
+                auto hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>();
+                if (hierarchySystem) {
+                    hierarchySystem->OnTransformChanged(entity);
+                }
             }
         }
     }
@@ -173,7 +188,7 @@ namespace Ermine::editor {
                 if (ImGui::ColorEdit3("Albedo", albedo)) {
                     material.SetAlbedo(Vec3(albedo[0], albedo[1], albedo[2]));
                 }
-            
+
                 float metallic = materialData.metallic;
                 if (ImGui::SliderFloat("Metallic", &metallic, 0.0f, 1.0f)) {
                     material.GetMaterial()->SetFloat("material.metallic", metallic);
@@ -190,14 +205,14 @@ namespace Ermine::editor {
     void HierarchyInspector::DrawLightComponent(EntityID entity) {
         if (ImGui::CollapsingHeader("Light")) {
             auto& light = ECS::GetInstance().GetComponent<Light>(entity);
-        
+
             float color[3] = { light.color.x, light.color.y, light.color.z };
             if (ImGui::ColorEdit3("Color", color)) {
                 light.color = Vec3(color[0], color[1], color[2]);
             }
 
             ImGui::SliderFloat("Intensity", &light.intensity, 0.0f, 10.0f);
-        
+
             const char* lightTypes[] = { "Point", "Directional", "Spot" };
             int currentType = static_cast<int>(light.type);
             if (ImGui::Combo("Type", &currentType, lightTypes, IM_ARRAYSIZE(lightTypes))) {
@@ -209,7 +224,7 @@ namespace Ermine::editor {
     void HierarchyInspector::DrawHierarchyComponent(EntityID entity) {
         if (ImGui::CollapsingHeader("Hierarchy")) {
             auto& hierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(entity);
-        
+
             if (hierarchy.parent != 0) {
                 if (ECS::GetInstance().HasComponent<ObjectMetaData>(hierarchy.parent)) {
                     auto& metadata = ECS::GetInstance().GetComponent<ObjectMetaData>(hierarchy.parent);

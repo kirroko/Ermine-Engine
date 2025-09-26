@@ -32,7 +32,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "AudioSystem.h"
 #include "Particles.h"
 #include "Physics.h"
-#include "InspectorGUI.h"
+//#include "InspectorGUI.h"
 #include "ViewPortGUI.h"
 #include "AudioImGUI.h"
 #include "MathVector.h"
@@ -498,8 +498,8 @@ bool engine::Init(GLFWwindow* windowContext)
 	editor::EditorGUI::CreateImGUIWindow<AudioImGUI>();
 	// Create ImGUI window for Inspector
 	//editor::EditorGUI::CreateImGUIWindow<InspectorGUI>();
-	InspectorGUI* ref = editor::EditorGUI::CreateImGUIWindow<InspectorGUI>(entity2, "Inspector");
-	editor::EditorGUI::CreateImGUIWindow<ViewPortGUI>(ref);
+	//InspectorGUI* ref = editor::EditorGUI::CreateImGUIWindow<InspectorGUI>(entity2, "Inspector");
+	//editor::EditorGUI::CreateImGUIWindow<ViewPortGUI>(ref);
 
 	// Demonstrate different material sharing strategies:
 	// 1. Use completely shared material (multiple entities, same appearance)

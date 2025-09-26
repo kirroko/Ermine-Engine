@@ -20,6 +20,7 @@ namespace Ermine
     class HierarchySystem : public System
     {
     public:
+        void MarkTransformDirty(EntityID entity);
         /**
          * @brief Checks if setting parent would create a cycle in the hierarchy.
          * @param[in] child The entity to be reparented.
@@ -41,16 +42,26 @@ namespace Ermine
         */
         void UnsetParent(EntityID child);
 
+        Matrix4x4 ComputeLocalMatrix(const Transform& transform);
+
         /**
          * @brief Recursively updates world transforms for an entity and its children.
          * @param[in] entity The root entity to start updating from.
         */
         void UpdateWorldTransform(EntityID entity);
 
+        void UpdateWorldTransform(EntityID entity, const Matrix4x4* parentWorld);
+
+        void UpdateDirtyTransforms();
+
         /**
          * @brief Updates the hierarchy for all root entities in the system.
         */
         void UpdateHierarchy();
+
+        void OnTransformChanged(EntityID entity);
+
+        void ForceUpdateTransform(EntityID entity);
 
         /**
          * @brief Gets the parent of an entity.
