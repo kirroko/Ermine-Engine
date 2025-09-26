@@ -72,6 +72,7 @@ namespace Ermine
         bool LoadResourceDatabase();
         ResourceEntry* FindResourceBySourcePath(const std::string& sourcePath);
         std::string ConvertToRelativePath(const std::string& absolutePath);
+        std::string GetFullDDSPath(const ResourceEntry& entry) const;
     
 public:
         static AssetManager& GetInstance()

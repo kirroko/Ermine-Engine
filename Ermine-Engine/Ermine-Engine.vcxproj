@@ -87,6 +87,8 @@ IF EXIST ..\ThirdParty\assimp\bin\assimp-vc143-mt.dll\ (xcopy /Q /E /Y /I ..\Thi
 xcopy /Q /E /Y /I ..\ThirdParty\Mono\lib ..\Build\bin\Debug-windows-x86_64\Ermine-Editor\mono\lib
 xcopy /Q /E /Y /I ..\ThirdParty\Mono\etc ..\Build\bin\Debug-windows-x86_64\Ermine-Editor\mono\etc
 xcopy /Q /E /Y /I ..\Resources ..\Build\bin\Debug-windows-x86_64\Resources
+xcopy /Q /E /Y /I ..\Ermine-ResourcePipeline\Ermine-Game.lion_rcdbase ..\Build\bin\Debug-windows-x86_64\Ermine-Game.lion_rcdbase
+xcopy /Q /E /Y /I ..\Ermine-ResourcePipeline\Ermine-Game.lion_project ..\Build\bin\Debug-windows-x86_64\Ermine-Game.lion_project
 IF EXIST ..\Build\bin\Debug-windows-x86_64\Ermine-Engine\Ermine-Engine.dll\ (xcopy /Q /E /Y /I ..\Build\bin\Debug-windows-x86_64\Ermine-Engine\Ermine-Engine.dll ..\Build\bin\Debug-windows-x86_64\Ermine-Editor\Jolt &gt; nul) ELSE (xcopy /Q /Y /I ..\Build\bin\Debug-windows-x86_64\Ermine-Engine\Ermine-Engine.dll ..\Build\bin\Debug-windows-x86_64\Ermine-Editor\Jolt &gt; nul)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -127,6 +129,8 @@ IF EXIST ..\ThirdParty\assimp\bin\assimp-vc143-mt.dll\ (xcopy /Q /E /Y /I ..\Thi
 xcopy /Q /E /Y /I ..\ThirdParty\Mono\lib ..\Build\bin\Release-windows-x86_64\Ermine-Editor\mono\lib
 xcopy /Q /E /Y /I ..\ThirdParty\Mono\etc ..\Build\bin\Release-windows-x86_64\Ermine-Editor\mono\etc
 xcopy /Q /E /Y /I ..\Resources ..\Build\bin\Release-windows-x86_64\Resources
+xcopy /Q /E /Y /I ..\Ermine-ResourcePipeline\Ermine-Game.lion_rcdbase ..\Build\bin\Release-windows-x86_64\Ermine-Game.lion_rcdbase
+xcopy /Q /E /Y /I ..\Ermine-ResourcePipeline\Ermine-Game.lion_project ..\Build\bin\Release-windows-x86_64\Ermine-Game.lion_project
 IF EXIST ..\Build\bin\Release-windows-x86_64\Ermine-Engine\Ermine-Engine.dll\ (xcopy /Q /E /Y /I ..\Build\bin\Release-windows-x86_64\Ermine-Engine\Ermine-Engine.dll ..\Build\bin\Release-windows-x86_64\Ermine-Editor\Jolt &gt; nul) ELSE (xcopy /Q /Y /I ..\Build\bin\Release-windows-x86_64\Ermine-Engine\Ermine-Engine.dll ..\Build\bin\Release-windows-x86_64\Ermine-Editor\Jolt &gt; nul)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>

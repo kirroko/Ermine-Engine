@@ -213,16 +213,32 @@ ResourceEntry* AssetManager::FindResourceBySourcePath(const std::string& sourceP
  */
 std::string AssetManager::ConvertToRelativePath(const std::string& absolutePath)
 {
-    // Convert backslashes to forward slashes for consistency
     std::string normalized = absolutePath;
+
+    // Convert backslashes to forward slashes
     std::replace(normalized.begin(), normalized.end(), '\\', '/');
 
-    // Remove leading "./" if present
+    // Remove leading "./"
     if (normalized.starts_with("./"))
-    {
         normalized = normalized.substr(2);
-    }
 
+    // Strip any leading "../"
+    while (normalized.rfind("../", 0) == 0)
+        normalized = normalized.substr(3);
+
+    return normalized;
+}
+
+std::string AssetManager::GetFullDDSPath(const ResourceEntry& entry) const
+{
+    // Combine the database path, project GUID, and stored relative DDS path
+    std::filesystem::path fullPath = m_databasePath;
+    fullPath /= m_projectGuid;
+    fullPath /= entry.outputPath;
+
+    // Normalize to string with forward slashes (optional)
+    std::string normalized = fullPath.string();
+    std::replace(normalized.begin(), normalized.end(), '\\', '/');
     return normalized;
 }
 
@@ -252,12 +268,13 @@ std::shared_ptr<graphics::Texture> AssetManager::LoadTexture(const std::string& 
         ResourceEntry* resourceEntry = FindResourceBySourcePath(filePath);
         if (resourceEntry != nullptr)
         {
+            std::string ddsFullPath = m_databasePath + "/" + m_projectGuid + "/" + resourceEntry->outputPath;
             EE_CORE_TRACE("Found resource in database: {0} -> DDS path: {1}",
-                filePath, resourceEntry->outputPath);
+                filePath, ddsFullPath);
 
             // Create texture from DDS file
             texture = std::make_shared<graphics::Texture>();
-            if (texture->LoadFromDDS(resourceEntry->outputPath))
+            if (texture->LoadFromDDS(ddsFullPath))
             {
                 EE_CORE_INFO("Texture loaded from pipeline DDS: {0}", filePath);
                 m_textures[filePath] = texture;
@@ -265,8 +282,7 @@ std::shared_ptr<graphics::Texture> AssetManager::LoadTexture(const std::string& 
             }
             else
             {
-                EE_CORE_WARN("Failed to load DDS file: {0}, falling back to direct load",
-                    resourceEntry->outputPath);
+                EE_CORE_WARN("Failed to load DDS file: {0}, falling back to direct load", ddsFullPath);
             }
         }
         else

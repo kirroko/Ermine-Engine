@@ -47,77 +47,61 @@ private:
     }
 
     bool ConvertPNGtoDDS(const std::string& inputPath, const std::string& outputPath) {
-        std::cout << "    Converting PNG to DDS..." << std::endl;
+        using namespace DirectX;
 
-        // Convert string to wide string for DirectXTex
-        std::wstring wInputPath(inputPath.begin(), inputPath.end());
-        std::wstring wOutputPath(outputPath.begin(), outputPath.end());
+        // Convert paths to wide strings for DirectXTex
+        std::wstring wInput(inputPath.begin(), inputPath.end());
+        std::wstring wOutput(outputPath.begin(), outputPath.end());
 
+        // Load the PNG
         ScratchImage image;
-        HRESULT hr;
-
-        // Load the PNG file
-        hr = LoadFromWICFile(wInputPath.c_str(), WIC_FLAGS_NONE, nullptr, image);
-        if (FAILED(hr)) {
-            std::cout << "    ❌ Failed to load PNG file: 0x" << std::hex << hr << std::dec << std::endl;
+        HRESULT hr = LoadFromWICFile(wInput.c_str(), WIC_FLAGS_NONE, nullptr, image);
+        if (FAILED(hr))
             return false;
+
+        TexMetadata metadata = image.GetMetadata();
+
+        // Convert to engine-supported DXGI format
+        // B8G8R8A8_UNORM is safe for your engine
+        ScratchImage standardized;
+        if (metadata.format != DXGI_FORMAT_B8G8R8A8_UNORM)
+        {
+            hr = Convert(image.GetImages(), image.GetImageCount(), metadata,
+                DXGI_FORMAT_B8G8R8A8_UNORM, TEX_FILTER_DEFAULT, TEX_THRESHOLD_DEFAULT, standardized);
+            if (FAILED(hr))
+                return false;
+            metadata = standardized.GetMetadata();
+        }
+        else
+        {
+            standardized = std::move(image);
         }
 
-        std::cout << "    ✓ Loaded PNG: " << image.GetImageCount() << " images, "
-            << image.GetMetadata().width << "x" << image.GetMetadata().height << std::endl;
-
-        // Generate mipmaps if the texture is large enough
+        // Generate mipmaps
         ScratchImage mipChain;
-        if (image.GetMetadata().width > 1 && image.GetMetadata().height > 1) {
-            hr = GenerateMipMaps(image.GetImages(), image.GetImageCount(), image.GetMetadata(),
-                TEX_FILTER_DEFAULT, 0, mipChain);
-            if (SUCCEEDED(hr)) {
-                std::cout << "    ✓ Generated " << mipChain.GetImageCount() << " mip levels" << std::endl;
+        hr = GenerateMipMaps(standardized.GetImages(), standardized.GetImageCount(),
+            metadata, TEX_FILTER_DEFAULT, 0, mipChain);
+        if (FAILED(hr))
+            mipChain = std::move(standardized);
+
+        // Optional: Force fully opaque alpha for debug/placeholder textures
+        auto imgs = mipChain.GetImages();
+        for (size_t i = 0; i < mipChain.GetImageCount(); ++i)
+        {
+            uint32_t* pixels = reinterpret_cast<uint32_t*>(imgs[i].pixels);
+            for (size_t p = 0; p < imgs[i].width * imgs[i].height; ++p)
+            {
+                uint8_t alpha = pixels[p] >> 24;
+                if (alpha == 0)
+                    pixels[p] |= 0xFF000000;
             }
-            else {
-                std::cout << "    ⚠ Failed to generate mipmaps, using original image" << std::endl;
-                mipChain = std::move(image);
-            }
-        }
-        else {
-            mipChain = std::move(image);
         }
 
-        // Compress the texture (using BC1 for RGB, BC3 for RGBA)
-        ScratchImage compressed;
-        const TexMetadata& metadata = mipChain.GetMetadata();
+        // Save DDS uncompressed
+        hr = SaveToDDSFile(mipChain.GetImages(), mipChain.GetImageCount(),
+            mipChain.GetMetadata(), DDS_FLAGS_NONE, wOutput.c_str());
 
-        DXGI_FORMAT compressFormat = DXGI_FORMAT_BC1_UNORM; // Default to BC1
-        if (HasAlpha(metadata.format)) {
-            compressFormat = DXGI_FORMAT_BC3_UNORM; // Use BC3 for alpha
-            std::cout << "    Using BC3 compression (with alpha)" << std::endl;
-        }
-        else {
-            std::cout << "    Using BC1 compression (no alpha)" << std::endl;
-        }
-
-        hr = Compress(mipChain.GetImages(), mipChain.GetImageCount(), metadata,
-            compressFormat, TEX_COMPRESS_DEFAULT, TEX_THRESHOLD_DEFAULT, compressed);
-
-        if (FAILED(hr)) {
-            std::cout << "    ⚠ Compression failed, saving uncompressed" << std::endl;
-            compressed = std::move(mipChain);
-        }
-        else {
-            std::cout << "    ✓ Compressed texture successfully" << std::endl;
-        }
-
-        // Save as DDS
-        hr = SaveToDDSFile(compressed.GetImages(), compressed.GetImageCount(),
-            compressed.GetMetadata(), DDS_FLAGS_NONE, wOutputPath.c_str());
-
-        if (FAILED(hr)) {
-            std::cout << "    ❌ Failed to save DDS file: 0x" << std::hex << hr << std::dec << std::endl;
-            return false;
-        }
-
-        std::cout << "    ✓ Successfully saved DDS file" << std::endl;
-        return true;
+        return SUCCEEDED(hr);
     }
 
 public:
@@ -426,9 +410,14 @@ public:
                 else {
                     ResourceEntry newEntry;
                     newEntry.guid = resourceGuid;
-                    newEntry.sourcePath = assetPath;
+                    //newEntry.sourcePath = assetPath;
+                    std::filesystem::path assetRelPath = std::filesystem::relative(assetPath, "../../Ermine-Engine"); // or wherever your engine expects
+                    newEntry.sourcePath = assetRelPath.string(); // e.g., "Resources/Textures/greybox_blue_grid.png"
+
                     newEntry.lastModified = std::filesystem::last_write_time(assetPath);
-                    newEntry.outputPath = finalOutput;
+                    std::filesystem::path outputRelPath = std::filesystem::relative(finalOutput, projectFolder); // relative inside .lion_rcdbase
+                    newEntry.outputPath = outputRelPath.string(); // e.g., "Windows.platform/Data/<GUID>.dds"
+                    //newEntry.outputPath = finalOutput;
                     existingResources.push_back(newEntry);
                 }
 

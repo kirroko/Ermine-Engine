@@ -83,17 +83,22 @@ bool Texture::LoadFromDDS(const std::string& ddsFilePath)
     switch (metadata.format) {
     case DXGI_FORMAT_BC1_UNORM:
         internalFormat = GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
+        isCompressed = true;
         break;
     case DXGI_FORMAT_BC2_UNORM:
         internalFormat = GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
+        isCompressed = true;
         break;
     case DXGI_FORMAT_BC3_UNORM:
         internalFormat = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
+        isCompressed = true;
         break;
     case DXGI_FORMAT_BC7_UNORM:
         internalFormat = GL_COMPRESSED_RGBA_BPTC_UNORM;
+        isCompressed = true;
         break;
     case DXGI_FORMAT_R8G8B8A8_UNORM:
+    case DXGI_FORMAT_R8G8B8A8_TYPELESS:      // added typeless support
         internalFormat = GL_RGBA8;
         format = GL_RGBA;
         type = GL_UNSIGNED_BYTE;
