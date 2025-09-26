@@ -205,6 +205,8 @@ namespace Ermine
 		{
 			return m_EntityManager->IsEntityAlive(entity);
 		}
+
+		void ClearEntities();
 	};
 }
 #include "ECS.tpp"

@@ -208,7 +208,7 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\ViewPortGUI.h">
-        <Filter>include</Filter>
+      <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\MathVector.h">
       <Filter>include</Filter>
@@ -216,6 +216,7 @@
     <ClInclude Include="include\Window.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\SceneManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\AssetBrowser\AssetBrowser.cpp">
@@ -353,15 +354,13 @@
     <ClCompile Include="src\ImGUI\InspectorGUI.cpp">
       <Filter>src\ImGUI</Filter>
     </ClCompile>
-    <ClCompile Include="src\AudioManager\AudioIMGUI.cpp">
-      <Filter>src\AudioManager</Filter>
-    </ClCompile>
     <ClCompile Include="src\Graphics\Cubemap.cpp">
       <Filter>src\Graphics</Filter>
     </ClCompile>
     <ClCompile Include="src\Graphics\Skybox.cpp">
       <Filter>src\Graphics</Filter>
     </ClCompile>
+    <ClCompile Include="src\Serialisation\SceneManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="include\Component.tpp">

@@ -32,6 +32,11 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <filesystem>
 #include <typeindex>
 
+#include <shobjidl.h>
+#include <windows.h>
+#undef max
+#undef min
+
 // Threading and synchronization
 #include <functional>
 #include <future>

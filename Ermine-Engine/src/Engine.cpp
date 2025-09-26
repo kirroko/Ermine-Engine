@@ -124,6 +124,8 @@ bool engine::Init(GLFWwindow* windowContext)
 		}
 	}
 
+	CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+
 	EnableMemoryLeakChecking();
 
 	Input::Init(windowContext);
@@ -493,6 +495,8 @@ void engine::Shutdown()
 	cfg.title = "Ermine Editor 0.1";
 
 	SaveConfigToFile(cfg, "Ermine-Engine.config", false);
+
+	CoUninitialize();
 
     AssetManager::GetInstance().Clear();
 	gPhysics->Shutdown();

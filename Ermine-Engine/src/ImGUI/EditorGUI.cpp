@@ -28,6 +28,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #include <ImGuizmo.h>
 #include "Serialisation.h"
+#include <optional>
+#include "SceneManager.h"
 
 namespace Ermine
 {
@@ -87,26 +89,26 @@ void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
     ImGui::BeginMainMenuBar();
     if (ImGui::BeginMenu("File"))
     {
-        if (ImGui::MenuItem("Open", "Ctrl+O"))
-        {
-			EE_CORE_INFO("Open file clicked");
-            // Code to open a file, the scene?
-			LoadScene("Scene01");
-        }
+        if (ImGui::MenuItem("New"))
+            SceneManager::GetInstance().NewScene();
+
+        if (ImGui::MenuItem("Open...", "Ctrl+O"))
+            if (auto path = SceneManager::ShowOpenDialog(GetActiveWindow()))
+                SceneManager::GetInstance().OpenScene(*path);
+
         if (ImGui::MenuItem("Save", "Ctrl+S"))
-        {
-            EE_CORE_INFO("Save file clicked");
-            // Code to save a file, maybe the scene
-			SaveCurrentScene("Scene01");
-        }
+            SceneManager::GetInstance().SaveScene();
+
+        if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S"))
+            if (auto path = SceneManager::ShowSaveDialog(L"untitled.scene", GetActiveWindow()))
+                SceneManager::GetInstance().SaveSceneTo(*path);
+
         if (ImGui::MenuItem("Exit", "Alt+F4"))
-        {
-			EE_CORE_INFO("Exit clicked");
-			// Code to exit the application
-			glfwSetWindowShouldClose(windowContext, GLFW_TRUE);
-        }
-		ImGui::EndMenu();
+            glfwSetWindowShouldClose(windowContext, GLFW_TRUE);
+
+        ImGui::EndMenu();
     }
+
 
     if (ImGui::BeginMenu("Edit"))
     {
