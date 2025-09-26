@@ -27,7 +27,6 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Renderer.h"
 #include "EditorGUI.h"
 #include "JobSystem.h"
-#include "HierarchySystem.h"
 #include "ScriptEngine.h"
 #include "Serialisation.h"
 #include "AudioSystem.h"
@@ -36,15 +35,16 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "InspectorGUI.h"
 #include "ViewPortGUI.h"
 #include "AudioImGUI.h"
-#include "Scene.h"
-#include "HierarchyPanel.h"
-
 #include "MathVector.h"
 #include "FiniteStateMachine.h"
 #include "Skybox.h"
 #include "Cubemap.h"
 #include <random> // Include for random number generation
 #include "ScriptSystem.h"
+#include "Scene.h"
+#include "HierarchyPanel.h"
+#include "HierarchySystem.h"
+
 
 using namespace Ermine;
 
@@ -129,7 +129,6 @@ bool engine::Init(GLFWwindow* windowContext)
 		}
 	}
 
-   
 	EnableMemoryLeakChecking();
 
 	Input::Init(windowContext);
@@ -147,41 +146,40 @@ bool engine::Init(GLFWwindow* windowContext)
 	AudioSystem::Init();
 	EE_CORE_INFO("AudioSystem Initialized");
 
-
 	// TODO: Register all components here, limit of 32 components
 	EE_AUTO_REGISTER_COMPONENT(Transform, "Transform")
-	EE_AUTO_REGISTER_COMPONENT(Rigidbody3D, "Rigidbody3D")
-	EE_AUTO_REGISTER_COMPONENT(Mesh, "Mesh")
-	EE_AUTO_REGISTER_COMPONENT(Material, "Material")
-	//EE_AUTO_REGISTER_COMPONENT(Script,"Script")
-	EE_AUTO_REGISTER_COMPONENT(ObjectMetaData, "ObjectMetaData")
-	EE_AUTO_REGISTER_COMPONENT(Light, "Light")
-	EE_AUTO_REGISTER_COMPONENT(Particle, "Particle")
-	EE_AUTO_REGISTER_COMPONENT(AudioComponent, "AudioComponent")
-	EE_AUTO_REGISTER_COMPONENT(GlobalAudioComponent, "GlobalAudioComponent")
-	EE_AUTO_REGISTER_COMPONENT(HierarchyComponent, "HierarchyComponent");
-	EE_AUTO_REGISTER_COMPONENT(PhysicComponent, "PhysicComponent")
-	EE_AUTO_REGISTER_COMPONENT(ModelComponent, "ModelComponent")
+		EE_AUTO_REGISTER_COMPONENT(Rigidbody3D, "Rigidbody3D")
+		EE_AUTO_REGISTER_COMPONENT(Mesh, "Mesh")
+		EE_AUTO_REGISTER_COMPONENT(Material, "Material")
+		//EE_AUTO_REGISTER_COMPONENT(Script,"Script")
+		EE_AUTO_REGISTER_COMPONENT(ObjectMetaData, "ObjectMetaData")
+		EE_AUTO_REGISTER_COMPONENT(Light, "Light")
+		EE_AUTO_REGISTER_COMPONENT(Particle, "Particle")
+		EE_AUTO_REGISTER_COMPONENT(AudioComponent, "AudioComponent")
+		EE_AUTO_REGISTER_COMPONENT(GlobalAudioComponent, "GlobalAudioComponent")
+		EE_AUTO_REGISTER_COMPONENT(PhysicComponent, "PhysicComponent")
+		EE_AUTO_REGISTER_COMPONENT(ModelComponent, "ModelComponent")
+		EE_AUTO_REGISTER_COMPONENT(HierarchyComponent, "HierarchyComponent");
 
-	// ECS::GetInstance().RegisterComponent<AudioComponent>(); // ADD THIS
-	// ECS::GetInstance().RegisterComponent<GlobalAudioComponent>(); // ADD THIS IF YOU WANT GLOBAL AUDIO
+		// ECS::GetInstance().RegisterComponent<AudioComponent>(); // ADD THIS
+		// ECS::GetInstance().RegisterComponent<GlobalAudioComponent>(); // ADD THIS IF YOU WANT GLOBAL AUDIO
 
-	// Special Case for Script component, need to copy over the class name
-	ECS::GetInstance().RegisterComponent<Script>("Script",
-		[](Ermine::ComponentManager& cm, EntityID src, EntityID dst)
-		{
-			if (!cm.HasComponent<Script>(src)) return;
-			auto& srcScript = cm.GetComponent<Script>(src);
-			cm.AddComponent<Script>(dst, Script(srcScript.m_className, dst));
-		});
+		// Special Case for Script component, need to copy over the class name
+		ECS::GetInstance().RegisterComponent<Script>("Script",
+			[](Ermine::ComponentManager& cm, EntityID src, EntityID dst)
+			{
+				if (!cm.HasComponent<Script>(src)) return;
+				auto& srcScript = cm.GetComponent<Script>(src);
+				cm.AddComponent<Script>(dst, Script(srcScript.m_className, dst));
+			});
 
 	// TODO: Register all systems here, no limits
 	ECS::GetInstance().RegisterSystem<graphics::Renderer>();
 	ECS::GetInstance().RegisterSystem<scripting::ScriptSystem>();
 	ECS::GetInstance().RegisterSystem<AudioSystem>();
 	ECS::GetInstance().RegisterSystem<ParticleSystem>();
-	ECS::GetInstance().RegisterSystem<HierarchySystem>();
 	ECS::GetInstance().RegisterSystem <graphics::LightSystem>();
+	ECS::GetInstance().RegisterSystem<HierarchySystem>();
 
 	//Register JPH::TempAllocatorImpl for Physcis
 	RegisterDefaultAllocator();
@@ -189,13 +187,6 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().GetSystem<Physics>()->Init();
 
 	// TODO: Set the signature for the system as required
-
-	// For Hierarchy system
-	SignatureID hierarchySig;
-	hierarchySig.set(ECS::GetInstance().GetComponentType<HierarchyComponent>());
-	hierarchySig.set(ECS::GetInstance().GetComponentType<Transform>());
-	ECS::GetInstance().SetSystemSignature<HierarchySystem>(hierarchySig);
-
 	// For Graphics/Renderer system
 	SignatureID sig;
 	sig.set(ECS::GetInstance().GetComponentType<Transform>());
@@ -233,6 +224,11 @@ bool engine::Init(GLFWwindow* windowContext)
 	sig.set(ECS::GetInstance().GetComponentType<Transform>());
 	ECS::GetInstance().SetSystemSignature<graphics::LightSystem>(sig);
 
+	SignatureID hierarchySig;
+	hierarchySig.set(ECS::GetInstance().GetComponentType<HierarchyComponent>());
+	hierarchySig.set(ECS::GetInstance().GetComponentType<Transform>());
+	ECS::GetInstance().SetSystemSignature<HierarchySystem>(hierarchySig);
+
 	glfwSetFramebufferSizeCallback(windowContext, []([[maybe_unused]] GLFWwindow* window, int width, int height)
 		{
 #ifdef _DEBUG
@@ -247,27 +243,28 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	// Load skybox shader and create a simple test cubemap (optional)
 	auto skyboxShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/skybox_vertex.glsl", "../Resources/Shaders/skybox_fragment.glsl");
-	
+
 	// Example: Load a cubemap from individual face textures (you'll need to provide actual texture files)
 	// Try different face order - some cubemap sources use different conventions
-	 std::array<std::string, 6> cubemapFaces = {
-	     "../Resources/Textures/Skybox/right.jpg",   // +X (right)
-	     "../Resources/Textures/Skybox/left.jpg",    // -X (left)  
-	     "../Resources/Textures/Skybox/bottom.jpg",  // +Y (top) - swapped for correct orientation
-	     "../Resources/Textures/Skybox/top.jpg",     // -Y (bottom) - swapped for correct orientation
-	     "../Resources/Textures/Skybox/front.jpg",   // +Z (front)
-	     "../Resources/Textures/Skybox/back.jpg"     // -Z (back)
-	 };
-	 environmentCubemap = AssetManager::GetInstance().LoadCubemap(cubemapFaces, "default_skybox");
-	
+	std::array<std::string, 6> cubemapFaces = {
+		"../Resources/Textures/Skybox/right.jpg",   // +X (right)
+		"../Resources/Textures/Skybox/left.jpg",    // -X (left)  
+		"../Resources/Textures/Skybox/bottom.jpg",  // +Y (top) - swapped for correct orientation
+		"../Resources/Textures/Skybox/top.jpg",     // -Y (bottom) - swapped for correct orientation
+		"../Resources/Textures/Skybox/front.jpg",   // +Z (front)
+		"../Resources/Textures/Skybox/back.jpg"     // -Z (back)
+	};
+	environmentCubemap = AssetManager::GetInstance().LoadCubemap(cubemapFaces, "default_skybox");
+
 	// Create the skybox if cubemap loaded successfully
 	if (environmentCubemap && environmentCubemap->IsValid() && skyboxShader && skyboxShader->IsValid()) {
 		skybox = std::make_unique<graphics::Skybox>(environmentCubemap, skyboxShader);
 		EE_CORE_INFO("Skybox created successfully");
-	} else {
+	}
+	else {
 		EE_CORE_WARN("Failed to create skybox - cubemap or shader invalid");
 	}
-	
+
 	// For now, let's create a placeholder cubemap that you can replace later
 	EE_CORE_INFO("Cubemap system initialized. You can load cubemaps using AssetManager::LoadCubemap() or LoadCubemapFromEquirectangular()");
 
@@ -276,16 +273,16 @@ bool engine::Init(GLFWwindow* windowContext)
 	std::shared_ptr<graphics::Material> basicWhiteMaterial = AssetManager::GetInstance().CreateMaterial("basic_white", shader, "PBR_WHITE");
 	std::shared_ptr<graphics::Material> metalMaterial = AssetManager::GetInstance().CreateMaterial("shiny_metal", shader, "PBR_METAL");
 	std::shared_ptr<graphics::Material> emissiveWhiteMaterial = AssetManager::GetInstance().CreateMaterial("light_emissive", shader, "EMISSIVE_WHITE");
-	
+
 	// Apply textures to shared materials
 	if (texture && texture->IsValid()) {
 		basicWhiteMaterial->SetTexture("materialAlbedoMap", texture);
 		basicWhiteMaterial->SetTexture("texture0", texture);
-		
+
 		metalMaterial->SetTexture("materialAlbedoMap", texture);
 		metalMaterial->SetTexture("texture0", texture);
 	}
-	
+
 	EE_CORE_INFO("Created shared materials for efficient reuse across multiple objects");
 
 	// Random number generation setup
@@ -307,22 +304,9 @@ bool engine::Init(GLFWwindow* windowContext)
 	//    ECS::GetInstance().AddComponent(entity, Material(metalMaterial));
 	//}
 
-	//auto audioTestEntity = ECS::GetInstance().CreateEntity();
-	//ECS::GetInstance().AddComponent(audioTestEntity, Transform(Vec3(2, 0, -1), Quaternion(), Vec3(1, 1, 1)));
-	//ECS::GetInstance().AddComponent(audioTestEntity, ObjectMetaData());
-
-	// Create and set the default scene
-	auto defaultScene = std::make_shared<Scene>("Main Scene");
-	editor::EditorGUI::SetActiveScene(defaultScene);
-	EE_CORE_INFO("Created and set active scene: Main Scene");
-
-	auto audioTestEntity = defaultScene->CreateEntity("AudioTest");
-	auto& audioTransform = ECS::GetInstance().GetComponent<Transform>(audioTestEntity);
-	audioTransform.position = Vec3(2, 0, -1);
-
-	//auto entity = defaultScene->CreateEntity("Name");
-	//auto& metadata = ECS::GetInstance().GetComponent<ObjectMetaData>(entity);
-	//metadata.tag = "Type";
+	auto audioTestEntity = ECS::GetInstance().CreateEntity();
+	ECS::GetInstance().AddComponent(audioTestEntity, Transform(Vec3(2, 0, -1), Quaternion(), Vec3(1, 1, 1)));
+	ECS::GetInstance().AddComponent(audioTestEntity, ObjectMetaData());
 
 	AudioComponent testAudio;
 	//testAudio.soundName = "../Resources/Audio/test.wav"; // Replace with your actual sound file path
@@ -336,7 +320,6 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	EE_CORE_INFO("Audio test entity created with ID: {} - will auto-play", audioTestEntity);
 
-   glClearColor(0.2f,0.3f,0.3f,1.0f); // Background color
 	//auto entity3 = ECS::GetInstance().CreateEntity();
 	//ECS::GetInstance().AddComponent(entity3, Transform(Vec3(1, 1, -3), Vec3(0, 0, 0), Vec3(1, 1, 1)));
 	//ECS::GetInstance().AddComponent(entity3, graphics::GeometryFactory::CreateSphere());
@@ -390,25 +373,6 @@ bool engine::Init(GLFWwindow* windowContext)
 	////InspectorGUI inspector{ entity, "Inspector" };
 	////inspector.SetEntity(entity);
 
-	gPhysics = new Physics();
-	gPhysics->Init();
-	//gPhysics->CreatePhysicsBox(Vec3(0, 5, 0), Vec3(1, 1, 1), 1.0f);
-	//gPhysics->CreatePhysicsBox(Vec3(0, 8, 0), Vec3(1, 1, 1), 1.0f);
-
-	//gPhysics->CreatePhysicsBox(Vec3(0, 0, 0), Vec3(1, 1, 1), 0.0f);
-
-	//InspectorGUI inspector{ entity, "Inspector" };
-	//inspector.SetEntity(entity);
-
-	// Create material using UBO template
-	auto cubeMaterial = std::make_unique<graphics::Material>(shader);
-	cubeMaterial->LoadTemplate(graphics::MaterialTemplates::PBR_WHITE());
-
-	// Set texture if available
-	if (texture && texture->IsValid()) {
-		cubeMaterial->SetTexture("materialAlbedoMap", texture);
-		cubeMaterial->SetTexture("texture0", texture); // Fallback for compatibility
-	}
 	//// Create material using UBO template
 	//auto cubeMaterial = std::make_unique<graphics::Material>(shader);
 	//cubeMaterial->LoadTemplate(graphics::MaterialTemplates::PBR_WHITE());
@@ -427,79 +391,79 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().AddComponent(entity2, ObjectMetaData());
 	ECS::GetInstance().AddComponent(entity2, graphics::GeometryFactory::CreateCube(1, 1, 1));
 	ECS::GetInstance().AddComponent(
-	entity2,
-	PhysicComponent(
-		PhysicsBodyType::Rigid,        // "rigid body", "trigger"
-		JPH::EMotionType::Static,      // static, dynamic, or kinematic
-		0.0f,                          // mass ( 0 for static , else is dynamic)
-		ShapeType::Box				   // Box, Sphere, Capsule, CustomMesh(need pass vertex)
-	));
+		entity2,
+		PhysicComponent(
+			PhysicsBodyType::Rigid,        // "rigid body", "trigger"
+			JPH::EMotionType::Static,      // static, dynamic, or kinematic
+			0.0f,                          // mass ( 0 for static , else is dynamic)
+			ShapeType::Box				   // Box, Sphere, Capsule, CustomMesh(need pass vertex)
+		));
 
-	//// Create a reflective material for demonstration - this one is unique
-	//auto cube2Material = std::make_shared<graphics::Material>(shader);
-	//cube2Material->LoadTemplate(graphics::MaterialTemplates::PBR_REFLECTIVE(0.9f, 0.1f)); // Highly reflective metal
+	// Create a reflective material for demonstration - this one is unique
+	auto cube2Material = std::make_shared<graphics::Material>(shader);
+	cube2Material->LoadTemplate(graphics::MaterialTemplates::PBR_REFLECTIVE(0.9f, 0.1f)); // Highly reflective metal
 
-	//if (texture && texture->IsValid()) {
-	//	cube2Material->SetTexture("materialAlbedoMap", texture);
-	//	cube2Material->SetTexture("texture0", texture);
-	//}
+	if (texture && texture->IsValid()) {
+		cube2Material->SetTexture("materialAlbedoMap", texture);
+		cube2Material->SetTexture("texture0", texture);
+	}
 
 	// Example: Add environment mapping to the material
 	// If you have a cubemap loaded, you can set it like this:
-	//if (environmentCubemap && environmentCubemap->IsValid()) {
-	//    cube2Material->SetCubemap("materialEnvironmentMap", environmentCubemap);
-	//    cube2Material->SetCubemap("materialIrradianceMap", environmentCubemap); // You'd typically use a separate irradiance map
-	//    cube2Material->SetBool("materialHasEnvironmentMap", true);
-	//    cube2Material->SetBool("materialHasIrradianceMap", true);
-	//    cube2Material->SetFloat("materialEnvironmentIntensity", 1.0f);
-	//    EE_CORE_INFO("Environment mapping applied to reflective cube");
-	//}
+	if (environmentCubemap && environmentCubemap->IsValid()) {
+		cube2Material->SetCubemap("materialEnvironmentMap", environmentCubemap);
+		cube2Material->SetCubemap("materialIrradianceMap", environmentCubemap); // You'd typically use a separate irradiance map
+		cube2Material->SetBool("materialHasEnvironmentMap", true);
+		cube2Material->SetBool("materialHasIrradianceMap", true);
+		cube2Material->SetFloat("materialEnvironmentIntensity", 1.0f);
+		EE_CORE_INFO("Environment mapping applied to reflective cube");
+	}
 
-	//ECS::GetInstance().AddComponent(entity2, Material(cube2Material));
-	//ECS::GetInstance().AddComponent(entity2, Script("Sandbox", entity2));
+	ECS::GetInstance().AddComponent(entity2, Material(cube2Material));
+	ECS::GetInstance().AddComponent(entity2, Script("Sandbox", entity2));
 
 	// Create lights with balanced intensities
-	//auto mainLightEntity = ECS::GetInstance().CreateEntity();
-	//ECS::GetInstance().AddComponent(mainLightEntity, Transform(Vec3(0, 4, 2), Quaternion(0.9f,0.2f,0.1f,-0.3f), Vec3(1, 1, 1)));
-	//ECS::GetInstance().AddComponent(mainLightEntity, ObjectMetaData("MainLight", "Light", true));
-	//ECS::GetInstance().AddComponent(mainLightEntity, Light(Vec3(1, 1, 1), 0.8f, LightType::DIRECTIONAL, true, 4096u));
+	auto mainLightEntity = ECS::GetInstance().CreateEntity();
+	ECS::GetInstance().AddComponent(mainLightEntity, Transform(Vec3(0, 4, 2), Quaternion(0.9f, 0.2f, 0.1f, -0.3f), Vec3(1, 1, 1)));
+	ECS::GetInstance().AddComponent(mainLightEntity, ObjectMetaData("MainLight", "Light", true));
+	ECS::GetInstance().AddComponent(mainLightEntity, Light(Vec3(1, 1, 1), 0.8f, LightType::DIRECTIONAL, true, 4096u));
 
-	//// Light sphere material - use shared emissive material for all lights
-	////ECS::GetInstance().AddComponent(mainLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
-	////ECS::GetInstance().AddComponent(mainLightEntity, Material(emissiveWhiteMaterial));
+	// Light sphere material - use shared emissive material for all lights
+	//ECS::GetInstance().AddComponent(mainLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
+	//ECS::GetInstance().AddComponent(mainLightEntity, Material(emissiveWhiteMaterial));
 
-	//// Red accent light - create unique colored emissive materials
-	//auto redLightEntity = ECS::GetInstance().CreateEntity();
-	//ECS::GetInstance().AddComponent(redLightEntity, Transform(Vec3(3, 2, 0), Quaternion(), Vec3(1, 1, 1)));
-	//ECS::GetInstance().AddComponent(redLightEntity, ObjectMetaData("LightRed", "Light", true));
-	//ECS::GetInstance().AddComponent(redLightEntity, Light(Vec3(1, 0.0, 0.0), 0.5f, LightType::POINT));
+	// Red accent light - create unique colored emissive materials
+	auto redLightEntity = ECS::GetInstance().CreateEntity();
+	ECS::GetInstance().AddComponent(redLightEntity, Transform(Vec3(3, 2, 0), Quaternion(), Vec3(1, 1, 1)));
+	ECS::GetInstance().AddComponent(redLightEntity, ObjectMetaData("LightRed", "Light", true));
+	ECS::GetInstance().AddComponent(redLightEntity, Light(Vec3(1, 0.0, 0.0), 0.5f, LightType::POINT));
 
-	//auto redLightMaterial = std::make_shared<graphics::Material>(shader);
-	//redLightMaterial->LoadTemplate(graphics::MaterialTemplates::EMISSIVE(Vec3(1.0f, 0.f, 0.f), 10.0f));
-	//ECS::GetInstance().AddComponent(redLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
-	//ECS::GetInstance().AddComponent(redLightEntity, Material(redLightMaterial));
+	auto redLightMaterial = std::make_shared<graphics::Material>(shader);
+	redLightMaterial->LoadTemplate(graphics::MaterialTemplates::EMISSIVE(Vec3(1.0f, 0.f, 0.f), 10.0f));
+	ECS::GetInstance().AddComponent(redLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
+	ECS::GetInstance().AddComponent(redLightEntity, Material(redLightMaterial));
 
-	//// Blue accent light
-	//auto blueLightEntity = ECS::GetInstance().CreateEntity();
-	//ECS::GetInstance().AddComponent(blueLightEntity, Transform(Vec3(-3, 2, 0), Quaternion(), Vec3(1, 1, 1)));
-	//ECS::GetInstance().AddComponent(blueLightEntity, ObjectMetaData("LightBlue", "Light", true));
-	//ECS::GetInstance().AddComponent(blueLightEntity, Light(Vec3(0.0, 0.0, 1), 0.5f, LightType::POINT));
+	// Blue accent light
+	auto blueLightEntity = ECS::GetInstance().CreateEntity();
+	ECS::GetInstance().AddComponent(blueLightEntity, Transform(Vec3(-3, 2, 0), Quaternion(), Vec3(1, 1, 1)));
+	ECS::GetInstance().AddComponent(blueLightEntity, ObjectMetaData("LightBlue", "Light", true));
+	ECS::GetInstance().AddComponent(blueLightEntity, Light(Vec3(0.0, 0.0, 1), 0.5f, LightType::POINT));
 
-	//auto blueLightMaterial = std::make_shared<graphics::Material>(shader);
-	//blueLightMaterial->LoadTemplate(graphics::MaterialTemplates::EMISSIVE(Vec3(0.f, 0.f, 1.0f), 10.0f));
-	//ECS::GetInstance().AddComponent(blueLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
-	//ECS::GetInstance().AddComponent(blueLightEntity, Material(blueLightMaterial));
+	auto blueLightMaterial = std::make_shared<graphics::Material>(shader);
+	blueLightMaterial->LoadTemplate(graphics::MaterialTemplates::EMISSIVE(Vec3(0.f, 0.f, 1.0f), 10.0f));
+	ECS::GetInstance().AddComponent(blueLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
+	ECS::GetInstance().AddComponent(blueLightEntity, Material(blueLightMaterial));
 
-	//// Green accent light
-	//auto greenLightEntity = ECS::GetInstance().CreateEntity();
-	//ECS::GetInstance().AddComponent(greenLightEntity, Transform(Vec3(0, 2, -3), Quaternion(), Vec3(1, 1, 1)));
-	//ECS::GetInstance().AddComponent(greenLightEntity, ObjectMetaData("LightGreen", "Light", true));
-	//ECS::GetInstance().AddComponent(greenLightEntity, Light(Vec3(0.0, 1.0f, 0.0), 0.5f, LightType::POINT));
+	// Green accent light
+	auto greenLightEntity = ECS::GetInstance().CreateEntity();
+	ECS::GetInstance().AddComponent(greenLightEntity, Transform(Vec3(0, 2, -3), Quaternion(), Vec3(1, 1, 1)));
+	ECS::GetInstance().AddComponent(greenLightEntity, ObjectMetaData("LightGreen", "Light", true));
+	ECS::GetInstance().AddComponent(greenLightEntity, Light(Vec3(0.0, 1.0f, 0.0), 0.5f, LightType::POINT));
 
-	//auto greenLightMaterial = std::make_shared<graphics::Material>(shader);
-	//greenLightMaterial->LoadTemplate(graphics::MaterialTemplates::EMISSIVE(Vec3(0.f, 1.f, 0.0f), 10.0f));
-	//ECS::GetInstance().AddComponent(greenLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
-	//ECS::GetInstance().AddComponent(greenLightEntity, Material(greenLightMaterial));
+	auto greenLightMaterial = std::make_shared<graphics::Material>(shader);
+	greenLightMaterial->LoadTemplate(graphics::MaterialTemplates::EMISSIVE(Vec3(0.f, 1.f, 0.0f), 10.0f));
+	ECS::GetInstance().AddComponent(greenLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
+	ECS::GetInstance().AddComponent(greenLightEntity, Material(greenLightMaterial));
 
 	//after creating all the physic object, update to physic system
 	ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
@@ -518,9 +482,9 @@ bool engine::Init(GLFWwindow* windowContext)
 	//ECS::GetInstance().AddComponent(s_FSMCube, Material(std::move(fsmMat)));
 
 	// Init FSM
-	//s_FSMManager = std::make_unique<StateManager>();
-	//s_FSMManager->Init(fbxEntity, &g_IdleState);
-	//g_CurrentState = &g_IdleState;
+	s_FSMManager = std::make_unique<StateManager>();
+	s_FSMManager->Init(fbxEntity, &g_IdleState);
+	g_CurrentState = &g_IdleState;
 
 	//EE_CORE_INFO("FSM Test Cube created with ID: {}", s_FSMCube);
 	// Init Renderer after objects haVe been initialised
@@ -534,23 +498,26 @@ bool engine::Init(GLFWwindow* windowContext)
 	editor::EditorGUI::CreateImGUIWindow<AudioImGUI>();
 	// Create ImGUI window for Inspector
 	//editor::EditorGUI::CreateImGUIWindow<InspectorGUI>();
-	//editor::EditorGUI::CreateImGUIWindow<InspectorGUI>(entity2, "Inspector");
-	InspectorGUI* ref = editor::EditorGUI::CreateImGUIWindow<InspectorGUI>();
+	InspectorGUI* ref = editor::EditorGUI::CreateImGUIWindow<InspectorGUI>(entity2, "Inspector");
 	editor::EditorGUI::CreateImGUIWindow<ViewPortGUI>(ref);
-   
+
 	// Demonstrate different material sharing strategies:
 	// 1. Use completely shared material (multiple entities, same appearance)
 	//    Example: ECS::GetInstance().AddComponent(anotherEntity, Material(basicWhiteMaterial)); // Same material instance
 	// 2. Create unique materials when needed (entities with unique appearance)
-	//    Example: auto customMaterial = std::make_shared<graphics::Material>(shader); // Unique material
+	//    Example: auto customMaterial = std::shared_ptr<graphics::Material>(shader); // Unique material
 	// 3. Clone and modify shared materials (similar but slightly different materials)
-	//    Example: auto customMaterial = std::make_shared<graphics::Material>(*basicWhiteMaterial);  // Copy
+	//    Example: auto customMaterial = std::shared_ptr<graphics::Material>(*basicWhiteMaterial);  // Copy
 	//             customMaterial->SetFloat("material.roughness", 0.8f);  // Modify the copy
 
 	EE_CORE_INFO("Material system now supports efficient sharing between entities using shared_ptr");
 	EE_CORE_INFO("Systems and components registered successfully, Engine Initialized");
+
+	auto defaultScene = std::make_shared<Scene>("Main Scene");
+	editor::EditorGUI::SetActiveScene(defaultScene);
+	EE_CORE_INFO("Created and set active scene: Main Scene");
+
 	s_isInitialized = true;
-	return true;
 }
 
 // TODO: Shutdown for subsystem should be in order, please be mindful of the order that is already in place.
@@ -574,13 +541,13 @@ void engine::Shutdown()
 
 	SaveConfigToFile(cfg, "Ermine-Engine.config", false);
 
-    AssetManager::GetInstance().Clear();
+	AssetManager::GetInstance().Clear();
 	ECS::GetInstance().GetSystem<Physics>()->Shutdown();
 	emitter.reset();
 	skybox.reset();
 	environmentCubemap.reset();
 
-    graphics::GPUProfiler::Shutdown();
+	graphics::GPUProfiler::Shutdown();
 
 #ifdef _DEBUG
 	auto scriptSys = ECS::GetInstance().GetSystem<scripting::ScriptSystem>();
@@ -591,14 +558,14 @@ void engine::Shutdown()
 	}
 #endif
 
-    job::Shutdown();
+	job::Shutdown();
 
 	ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->m_ScriptEngine->Shutdown();
 	AudioSystem::Shutdown();
 
-    ECS::GetInstance().Shutdown();
+	ECS::GetInstance().Shutdown();
 
-    s_isInitialized = false;
+	s_isInitialized = false;
 }
 
 void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
@@ -632,8 +599,6 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 	// Other non-fixed logic here
 	ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->Update();
 	ECS::GetInstance().GetSystem<AudioSystem>()->Update();
-	ECS::GetInstance().GetSystem<HierarchySystem>()->UpdateHierarchy();
-
 	// Update editor camera
 	editor::EditorCamera::GetInstance().Update();
 

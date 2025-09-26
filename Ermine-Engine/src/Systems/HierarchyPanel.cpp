@@ -130,8 +130,20 @@ namespace Ermine {
                 m_ActiveScene->DestroyEntity(entity);
                 ImGui::CloseCurrentPopup();
             }
-            if (ImGui::MenuItem("Duplicate")) {
-                // TODO: Implement duplication
+            if (ImGui::MenuItem("Duplicate Selected")) {
+                EntityID selectedEntity = m_ActiveScene->GetSelectedEntity();
+                if (selectedEntity != 0) {
+                    // Clone the entity and add it to the scene
+                    EntityID newEntity = ECS::GetInstance().CloneEntity(selectedEntity);
+
+                    // Optionally, set a new name for the duplicated entity
+                    auto& meta = ECS::GetInstance().GetComponent<ObjectMetaData>(newEntity);
+                    meta.name += " (Copy)";
+
+                    // Add the new entity to the scene and select it
+                    m_ActiveScene->SetSelectedEntity(newEntity);
+                    ImGui::SetWindowFocus("Inspector");
+                }
             }
             ImGui::EndPopup();
         }
@@ -209,15 +221,9 @@ namespace Ermine {
                     EntityID entity = m_ActiveScene->CreateEntity("Cube");
                     ECS::GetInstance().AddComponent(entity, graphics::GeometryFactory::CreateCube(1, 1, 1));
 
-                    // Create a basic material (replace with your shader/texture as needed)
                     auto shader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/vertex.glsl", "../Resources/Shaders/fragment.glsl");
-                    auto texture = AssetManager::GetInstance().LoadTexture("../Resources/Textures/greybox_grey_grid.png");
                     auto materialPtr = std::make_shared<graphics::Material>(shader);
-                    if (texture && texture->IsValid()) {
-                        materialPtr->SetTexture("materialAlbedoMap", texture);
-                        materialPtr->SetTexture("texture0", texture);
-                    }
-                    materialPtr->SetVec3("material.albedo", Vec3(1.0f, 1.0f, 1.0f)); // White color
+                    materialPtr->SetVec3("material.albedo", Vec3(1.0f, 1.0f, 1.0f)); // white color
 
                     ECS::GetInstance().AddComponent(entity, Material(materialPtr));
                     m_ActiveScene->SetSelectedEntity(entity);
@@ -229,7 +235,6 @@ namespace Ermine {
 
                     auto shader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/vertex.glsl", "../Resources/Shaders/fragment.glsl");
                     auto materialPtr = std::make_shared<graphics::Material>(shader);
-                    //materialPtr->SetAlbedo(Vec3(0.8f, 0.8f, 0.8f)); // Light gray
                     materialPtr->SetVec3("material.albedo", Vec3(0.8f, 0.8f, 0.8f)); // light grey color
 
                     ECS::GetInstance().AddComponent(entity, Material(materialPtr));
