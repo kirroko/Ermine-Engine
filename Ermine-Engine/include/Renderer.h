@@ -23,6 +23,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Material.h"
 #include "Components.h"
 #include "EditorCamera.h"
+#include "shadow_config.h"
 
 namespace Ermine::graphics
 {
@@ -40,17 +41,13 @@ namespace Ermine::graphics
 
     // Lights
 
-    constexpr int MaxLights = 16;
-    constexpr int NUM_CASCADES = 4;
-	constexpr int SHADOW_MAX_LAYERS = 32;
-	constexpr int SHADOW_MAP_RESOLUTION = 4096;
-    constexpr float SHADOW_MAP_ARRAY_LAMBDA = 0.95f;
-
+    /*!***********************************************************************
+    \brief Light System. Contains all light entities in the scene.
+    *************************************************************************/
     class LightSystem : public System {};
 
     /*!***********************************************************************
-    \brief
-     Light GPU structure
+    \brief Light GPU structure
     *************************************************************************/
     struct LightGPU
     {
@@ -59,7 +56,7 @@ namespace Ermine::graphics
         glm::vec4 direction_range;  // xyz = direction (view space), w = range
 		glm::vec4 spot_angles_castshadows_startOffset; // x = inner angle (cos), y = outer angle (cos), z = cast shadows (bool), w = shadow map index or 0 if no shadows
         glm::mat4 lightSpaceMatrix[NUM_CASCADES];
-		glm::vec4 splitDepths; // split depths for cascaded shadow maps xyzw
+		glm::vec4 splitDepths[(NUM_CASCADES+3)/4]; // split depths for cascaded shadow maps xyzw
     };
 
 
@@ -80,7 +77,7 @@ namespace Ermine::graphics
         bool m_SSAOEnabled = false;
 
         // Post-processing uniforms - toggles
-        bool m_VignetteEnabled = true;
+        bool m_VignetteEnabled = false;
         bool m_FXAAEnabled = true;
         bool m_ToneMappingEnabled = true;
         bool m_GammaCorrectionEnabled = true;
@@ -320,6 +317,11 @@ namespace Ermine::graphics
         void Draw(const std::shared_ptr<VertexArray>& vao, const std::shared_ptr<IndexBuffer>& ibo, const std::shared_ptr<Shader>& shader) const;
 
         /**
+         * @brief Draw the game objects to the screen using instanced rendering.
+         */
+        void DrawInstanced(const std::shared_ptr<VertexArray>& vao, const std::shared_ptr<IndexBuffer>& ibo, const std::shared_ptr<Shader>& shader, int instanceCount) const;
+
+        /**
          * @brief Clear the screen.
          */
         void Clear() const;
@@ -340,13 +342,13 @@ namespace Ermine::graphics
          */
         bool GetShadingMode() const { return m_IsBlinnPhong; }
         /**
-         * @brief Updates the lights' uniform buffer object (UBO) with the current light and transform data from all living entities.
+         * @brief Updates the lights' shader storage buffer object (SSBO) with the current light and transform data from all living entities.
          * @param view The view matrix to transform the positions and directions of the lights into view space.
          */
         void UpdateLightsUBO(const Mtx44& view);
         /**
-         * @brief Binds the Lights uniform block to the specified shader program if it has not been bound before.
-         * @param shader The shader program to which the lights block should be bound.
+         * @brief Binds the Lights SSBO to the specified shader program if it has not been bound before.
+         * @param shader The shader program to which the lights SSBO should be bound.
          */
         void BindLightsBlockIfPresent(const std::shared_ptr<Shader>& shader);
         /**
@@ -374,13 +376,78 @@ namespace Ermine::graphics
         void RenderModel(const Model& model, const Mtx44& view, const Mtx44& projection, const glm::mat4& rootTransform);
 
 
-        // Shadow mapping
+#pragma region ShadowMapMemberFunctions
+        /**
+         * @brief Initializes the shadow map framebuffer object (FBO).
+         * Creates and binds the FBO for shadow mapping. If a depth texture array exists, attaches it.
+         * Does not validate completeness unless a depth attachment is present.
+         * @return True if the FBO was successfully created, false otherwise.
+         */
         bool InitializeShadowMap();
+        /**
+         * @brief Creates a shadow map texture array for cascaded shadow mapping.
+         * Attempts to allocate a depth texture array with as many layers as possible, falling back if allocation fails.
+         * Attaches the texture array to the shadow map FBO and sets up bindless texture handle.
+         * @return True if the texture array was successfully created and attached, false otherwise.
+         */
         bool CreateShadowMapArray();
-        bool CreateShadowMapCube(const unsigned int resolution);
-        void CalculateDirectionalMatrix(const editor::EditorCamera& editorCamera);
-		void RenderShadowMap();
+        /**
+         * @brief Calculates light-space matrices for all shadow-casting lights.
+         * Computes cascade splits and shadow matrices for directional and spot lights based on the camera's view and projection.
+         * Updates each light's shadow matrix and split depth for use in shadow mapping.
+         * @param editorCamera Reference to the editor camera providing view and projection matrices.
+         */
+        void CalculateLightMatrix(const editor::EditorCamera& editorCamera);
+        /**
+         * @brief Renders the shadow map using instanced rendering for all shadow-casting lights and cascades.
+         * Sets up the shadow map FBO, viewport, and render state, then draws all geometry using instanced draw calls.
+         * Restores previous OpenGL state after rendering.
+         */
+		void RenderShadowMapInstanced();
+        /**
+         * @brief Executes the full shadow pass for all shadow-casting lights.
+         * Calculates light-space matrices and renders the shadow map using instanced rendering.
+         */
         void RenderShadowPass();
+        /**
+         * @brief Computes the eight frustum corners in world space for a given cascade split.
+         * Unprojects normalized device coordinates (NDC) to world space using the inverse projection-view matrix.
+         * @param invPV Inverse projection-view matrix.
+         * @param nearSplit NDC Z value for the near plane of the cascade.
+         * @param farSplit NDC Z value for the far plane of the cascade.
+         * @return Array of eight world-space frustum corners.
+         */
+        std::array<glm::vec3, 8> createCascadeFrustum(const glm::mat4& invPV, float nearSplit, float farSplit);
+        /**
+         * @brief Tests whether a spotlight's cone intersects a given frustum.
+         * Checks if any frustum corner is inside the spotlight cone or if the cone intersects the frustum's AABB.
+         * @param lightPos Position of the spotlight.
+         * @param spotDir Direction vector of the spotlight.
+         * @param outerAngleRad Outer angle of the spotlight cone in radians.
+         * @param lightRadius Maximum range of the spotlight.
+         * @param frustumCorners Array of eight frustum corners in world space.
+         * @return True if the spotlight cone intersects the frustum, false otherwise.
+        */
+        bool testSpotlightFrustumIntersection(const glm::vec3& lightPos, const glm::vec3& spotDir,
+            float outerAngleRad, float lightRadius,
+            const std::array<glm::vec3, 8>& frustumCorners);
+        /**
+         * @brief Calculates the shadow matrix for a spotlight cascade.
+         * Computes a view and orthographic projection matrix that tightly fits the cascade frustum in light space.
+         * Applies texel snapping and margin adjustments for stable shadows.
+         * @param lightPos Position of the spotlight.
+         * @param spotDir Direction vector of the spotlight.
+         * @param outerAngleRad Outer angle of the spotlight cone in radians.
+         * @param lightRadius Maximum range of the spotlight.
+         * @param cascadeFrustum Array of eight frustum corners for the cascade.
+         * @param shadowRes Shadow map resolution.
+         * @return The spotlight's light-space matrix for the cascade.
+         */
+        glm::mat4 calculateSpotlightCascadeMatrix(const glm::vec3& lightPos, const glm::vec3& spotDir,
+            float outerAngleRad, float lightRadius,
+            const std::array<glm::vec3, 8>& cascadeFrustum,
+            int shadowRes);
+#pragma endregion
 
         /**
          * @brief Render transparent objects using forward rendering with depth peeling
@@ -408,8 +475,8 @@ namespace Ermine::graphics
 		std::shared_ptr<LightSystem> m_LightSystem = nullptr;
         std::shared_ptr<OffscreenBuffer> m_OffscreenBuffer;
 
-        // Lighting UBO
-        GLuint m_LightsUBO = 0;
+        // Lighting SSBO
+        GLuint m_LightsSSBO = 0;
         static constexpr GLuint LightsBindingPoint = 1;
         std::unordered_set<GLuint> m_LightBlockBoundPrograms;
         bool m_IsBlinnPhong = false; // Default to PBR shading
@@ -440,7 +507,7 @@ namespace Ermine::graphics
 
         // Shadow mapping
         std::shared_ptr<Shader> m_ShadowMapGeometryShader = nullptr;
-        // Just one FBO and one 2D shadow map for one directional light for now
+        std::shared_ptr<Shader> m_ShadowMapInstancedShader = nullptr;
         GLuint m_ShadowMapCube = 0;
         uint64_t m_ShadowMapArrayHandle = 0;
         std::vector<TransparentObject> m_transparentObjects;

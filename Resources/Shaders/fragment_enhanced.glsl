@@ -107,10 +107,10 @@ struct Light {
     vec4 spot_angles;      // x = inner cos, y = outer cos
 };
 
-// UBO for multiple lights
-layout (std140) uniform Lights {
+// SSBO for multiple lights
+layout (std430, binding = 1) restrict readonly buffer LightsSSBO {
     vec4 lightCount;      // x = number of lights
-    Light lights[16];     // array of Light structs
+    Light lights[];       // array of Light structs
 };
 
 const float PI = 3.14159265359;

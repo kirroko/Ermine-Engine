@@ -27,6 +27,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Material.h"
 #include "AudioManager.h"
 #include "Model.h"
+#include "shadow_config.h"
 
 namespace Ermine
 {
@@ -380,12 +381,12 @@ namespace Ermine
 		float intensity;
 		LightType type;
 		bool castsShadows{ false };
-		vector<glm::mat4> lightSpaceMatrices{ glm::mat4{0}, glm::mat4{0}, glm::mat4{0}, glm::mat4{0} }; // For shadow mapping
+		glm::mat4 lightSpaceMatrices[NUM_CASCADES]; // For shadow mapping
 		int startOffset{ 0 }; // For UBO indexing
-		float innercos{ -1.0f }; // For spotlights
-		float outercos{ -1.0f }; // For spotlights
-		float radius{ 1.0f }; // For point lights
-		glm::vec4 splitDepths{ 0.1f, 10.0f, 50.0f , 100.f}; // For Cascaded Shadow Maps (CSM)
+		float innerAngle{ -1.0f }; // For spotlights
+		float outerAngle{ -1.0f }; // For spotlights
+		float radius{ 1.0f }; // For point lights/spotlights
+		float splitDepths[NUM_CASCADES];
 
 		Light() : color(1.0f, 1.0f, 1.0f),
 			intensity(1.0f),
@@ -404,7 +405,7 @@ namespace Ermine
 		}
 
 		Light(const Vec3& col, float intens, LightType t, bool shadows, float inner, float outer, float rad = 1.0f) :
-			color(col), intensity(intens), type(t), castsShadows(shadows), innercos(inner), outercos(outer), radius(rad)
+			color(col), intensity(intens), type(t), castsShadows(shadows), innerAngle(inner), outerAngle(outer), radius(rad)
 		{
 		
 		}

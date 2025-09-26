@@ -2,8 +2,6 @@
 #extension GL_ARB_bindless_texture : require
 
     const int NUM_CASCADES = 4;
-	const int MAX_LAYERS = 32;
-	const int SHADOW_MAP_RESOLUTION = 4098;
 
 in vec2 TexCoord;
 out vec4 FragColor;
@@ -45,12 +43,12 @@ struct Light {
     vec4 direction_range;  // xyz = direction (view space), w = range
     vec4 spot_angles_castshadows_startOffset; // x = inner angle (cos), y = outer angle (cos), z = cast shadows (bool), w = shadow map index or 0 if no shadows
     mat4 lightSpaceMatrix[NUM_CASCADES]; // Light view-projection matrices for cascaded shadow maps
-    vec4 splitDepths; // x = split depth 0, y = split depth 1, z = split depth 2, w = unused
+    vec4 splitDepths[(NUM_CASCADES + 3) / 4]; // Split depths for cascaded shadow maps
 };
 
-layout (std140) uniform Lights {
+layout (std430, binding = 1) restrict readonly buffer LightsSSBO {
     vec4 lightCount;       // x = count, yzw unused
-    Light lights[16];
+    Light lights[];
 };
 
 // Constants
@@ -478,7 +476,7 @@ float calculateShadowFactor(mat4 lightSpaceMatrix, int lightIndex, vec3 fragPosW
     int lightType = int(lights[lightIndex].position_type.w);
     vec3 lightDirWorld;
     if (lightType == DIRECTIONAL_LIGHT) {
-        vec3 dirView = -lights[lightIndex].direction_range.xyz;
+        vec3 dirView = lights[lightIndex].direction_range.xyz;
         lightDirWorld = normalize((invView * vec4(dirView, 0.0)).xyz);
     } else {
         vec3 lightPosView = lights[lightIndex].position_type.xyz;
@@ -578,16 +576,14 @@ void main()
                 int cascadeIndex = NUM_CASCADES - 1; // Default to last cascade
                 
                 // Select cascade based on depth buffer value (not view distance)
-                if (depth <= lights[i].splitDepths.x) {
-                    cascadeIndex = 0;
-                } else if (depth <= lights[i].splitDepths.y) {
-                    cascadeIndex = 1;
-                } else if (depth <= lights[i].splitDepths.z) {
-                    cascadeIndex = 2;
-                } else if (depth <= lights[i].splitDepths.w) {
-                    cascadeIndex = 3;
+                for (int c = 0; c < NUM_CASCADES; ++c) {
+                    if (depth <= lights[i].splitDepths[c/4][c%4]) {
+                        cascadeIndex = c;
+                        break;
+                    }
                 }
                 
+               
                 // Calculate shadow with selected cascade
                 int startOffset = int(lights[i].spot_angles_castshadows_startOffset.w);
                 int layerIndex = startOffset + cascadeIndex;
@@ -602,6 +598,44 @@ void main()
                 
                 
                 }
+                else if (castsShadows && (lightType == SPOT_LIGHT)) {
+
+                // Spotlight shadow calculation
+                int cascadeIndex = NUM_CASCADES - 1;
+        
+                // Select cascade based on depth buffer value
+                for (int c = 0; c < NUM_CASCADES; ++c) {
+                    if (depth <= lights[i].splitDepths[c/4][c%4]) {
+                        cascadeIndex = c;
+                        break;
+                    }
+                }
+        
+                // Check if this cascade has a valid matrix (non-zero)
+                mat4 cascadeMatrix = lights[i].lightSpaceMatrix[cascadeIndex];
+                bool hasValidMatrix = (cascadeMatrix[0][0] != 0.0 || cascadeMatrix[0][1] != 0.0 || 
+                                      cascadeMatrix[0][2] != 0.0 || cascadeMatrix[0][3] != 0.0 ||
+                                      cascadeMatrix[1][0] != 0.0 || cascadeMatrix[1][1] != 0.0 || 
+                                      cascadeMatrix[1][2] != 0.0 || cascadeMatrix[1][3] != 0.0);
+        
+                if (hasValidMatrix) {
+                    int startOffset = int(lights[i].spot_angles_castshadows_startOffset.w);
+                    int layerIndex = startOffset + cascadeIndex;
+            
+                    shadowFactor = calculateShadowFactor(
+                        cascadeMatrix, 
+                        i, 
+                        worldPos, 
+                        normalWorld, 
+                        layerIndex
+                    );
+                } else {
+                    // No valid shadow matrix for this cascade, assume fully lit
+                    shadowFactor = 1.0;
+                }
+        }
+
+
 
             result += lightContrib * shadowFactor;
         }
@@ -643,14 +677,11 @@ void main()
             if (castsShadows && lightType == DIRECTIONAL_LIGHT) {
                 int cascadeIndex = NUM_CASCADES - 1;
                 
-                if (depth <= lights[i].splitDepths.x) {
-                    cascadeIndex = 0;
-                } else if (depth <= lights[i].splitDepths.y) {
-                    cascadeIndex = 1;
-                } else if (depth <= lights[i].splitDepths.z) {
-                    cascadeIndex = 2;
-                }else if (depth <= lights[i].splitDepths.w) {
-                    cascadeIndex = 3;
+                for (int c = 0; c < NUM_CASCADES; ++c) {
+                    if (depth <= lights[i].splitDepths[c/4][c%4]) {
+                        cascadeIndex = c;
+                        break;
+                    }
                 }
                 
                 int startOffset = int(lights[i].spot_angles_castshadows_startOffset.w);
@@ -666,8 +697,41 @@ void main()
                 
                 } 
                 else if (castsShadows && (lightType == SPOT_LIGHT)) {
-                    // Spot light shadow calculation can be implemented here if needed
+
+                // Spotlight shadow calculation
+                int cascadeIndex = NUM_CASCADES - 1;
+        
+                // Select cascade based on depth buffer value
+                for (int c = 0; c < NUM_CASCADES; ++c) {
+                    if (depth <= lights[i].splitDepths[c/4][c%4]) {
+                        cascadeIndex = c;
+                        break;
+                    }
                 }
+        
+                // Check if this cascade has a valid matrix (non-zero)
+                mat4 cascadeMatrix = lights[i].lightSpaceMatrix[cascadeIndex];
+                bool hasValidMatrix = (cascadeMatrix[0][0] != 0.0 || cascadeMatrix[0][1] != 0.0 || 
+                                      cascadeMatrix[0][2] != 0.0 || cascadeMatrix[0][3] != 0.0 ||
+                                      cascadeMatrix[1][0] != 0.0 || cascadeMatrix[1][1] != 0.0 || 
+                                      cascadeMatrix[1][2] != 0.0 || cascadeMatrix[1][3] != 0.0);
+        
+                if (hasValidMatrix) {
+                    int startOffset = int(lights[i].spot_angles_castshadows_startOffset.w);
+                    int layerIndex = startOffset + cascadeIndex;
+            
+                    shadowFactor = calculateShadowFactor(
+                        cascadeMatrix, 
+                        i, 
+                        worldPos, 
+                        normalWorld, 
+                        layerIndex
+                    );
+                } else {
+                    // No valid shadow matrix for this cascade, assume fully lit
+                    shadowFactor = 1.0;
+                }
+        }
             result += lightContrib * shadowFactor; 
         }
 

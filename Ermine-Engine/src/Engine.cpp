@@ -406,15 +406,15 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().AddComponent(entity2, Material(cube2Material));
 	ECS::GetInstance().AddComponent(entity2, Script("Sandbox", entity2));
 
-	// Create lights with balanced intensities
+	//// Create lights with balanced intensities
 	auto mainLightEntity = ECS::GetInstance().CreateEntity();
 	ECS::GetInstance().AddComponent<Transform>(mainLightEntity, Transform(Vec3(0, 4, 2), Quaternion(0.9f, 0.2f, 0.1f, -0.3f), Vec3(1, 1, 1)));
 	ECS::GetInstance().AddComponent<ObjectMetaData>(mainLightEntity, ObjectMetaData("MainLight", "Light", true));
 	ECS::GetInstance().AddComponent<Light>(mainLightEntity, Light(Vec3(1, 1, 1), 0.8f, LightType::DIRECTIONAL, true));
-	auto whiteLightDirectional = ECS::GetInstance().CreateEntity();
-	ECS::GetInstance().AddComponent<Transform>(whiteLightDirectional, Transform(Vec3(0, 4, 2), Quaternion(-0.149f, 0.601f, 0.495f, -0.610f), Vec3(1, 1, 1)));
-	ECS::GetInstance().AddComponent<ObjectMetaData>(whiteLightDirectional, ObjectMetaData("Red", "Light", true));
-	ECS::GetInstance().AddComponent<Light>(whiteLightDirectional, Light(Vec3(1, 1, 1), 1.f, LightType::DIRECTIONAL, true));
+	auto yellowLightSpot = ECS::GetInstance().CreateEntity();
+	ECS::GetInstance().AddComponent<Transform>(yellowLightSpot, Transform(Vec3(0, 10, 0), Quaternion(0.707f, 0.f, 0.f, 0.707f), Vec3(1, 1, 1)));
+	ECS::GetInstance().AddComponent<ObjectMetaData>(yellowLightSpot, ObjectMetaData("Red", "Light", true));
+	ECS::GetInstance().AddComponent<Light>(yellowLightSpot, Light(Vec3(1, 0.8f, 0.6f), 1.f, LightType::SPOT, true, 50,60,100.f));
 
 	// Light sphere material - use shared emissive material for all lights
 	//ECS::GetInstance().AddComponent(mainLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));

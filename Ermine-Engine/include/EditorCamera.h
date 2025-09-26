@@ -99,6 +99,12 @@ namespace Ermine::editor
 		 */
 		void ProcessScrollWheel(float yOffset);
 
+		/**
+		 * @brief Get the near and far clip planes
+		 */
+		float GetNearClip() const { return m_NearClip; }
+		float GetFarClip() const { return m_FarClip; }
+
     private:
 		/**
 		 * @brief Update the view matrix

@@ -28,16 +28,16 @@ struct Material {
     float Shininess;
 };
 
-// Light structure (existing Lights UBO)
-layout(std140, binding = 1) uniform Lights
+// Light structure (existing Lights SSBO)
+layout(std430, binding = 1) restrict readonly buffer LightsSSBO
 {
     vec4 lightCount;
     struct LightData {
         vec4 position_type;     // xyz = position (view space), w = type
-        vec4 color_intensity;   // rgb = color, a = intensity  
+        vec4 color_intensity;   // rgb = color, a = intensity
         vec4 direction_range;   // xyz = direction (view space), w = range
         vec4 spot_angles;       // x = innerCos, y = outerCos, z,w = padding
-    } lights[16];
+    } lights[];
 };
 
 uniform PBRMaterial pbrMaterial = PBRMaterial(vec3(0.5, 0.5, 0.5), 0.0, 0.5, 1.0);

@@ -3,8 +3,8 @@
 \file       Renderer.cpp
 \author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu
 \co-author  Jeremy Lim Ting Jie, jeremytingjie.lim, 2301370, jeremytingjie.lim\@digipen.edu
-\co-author  Ridhwan
-\date       09/03/2025
+\co-author  Ridhwan Afandi, moahamedridhwan.b, 2301367, moahamedridhwan.b\@digipen.edu
+\date       09/27/2025
 \brief      This file contains the definition of the Renderer system.
 			This file is used to render the game objects.
 
@@ -34,6 +34,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 using namespace Ermine::graphics;
 
+unsigned int SHADOW_MAX_LAYERS = SHADOW_MAX_LAYERS_DESIRED;
 
 GLenum glCheckError_(const char* file, int line)
 {
@@ -80,6 +81,7 @@ void Renderer::Init(const int& screenWidth, const int& screenHeight)
 	m_BloomShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/bloom_vertex.glsl", "../Resources/Shaders/bloom_fragment.glsl");
 	m_PostProcessShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/postprocess_vertex.glsl", "../Resources/Shaders/postprocess_fragment.glsl");
 	m_ShadowMapGeometryShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/shadowmap_vertex.glsl", "../Resources/Shaders/shadowmap_geometry.glsl", "../Resources/Shaders/shadowmap_fragment.glsl");
+	m_ShadowMapInstancedShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/shadowmap_instanced_vertex.glsl", "../Resources/Shaders/shadowmap_instanced_geometry.glsl", "../Resources/Shaders/shadowmap_fragment.glsl");
 	// Load forward rendering shader for transparent objects
 	m_ForwardShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/vertex.glsl", "../Resources/Shaders/fragment_enhanced.glsl");
 	if (!m_ForwardShader || !m_ForwardShader->IsValid()) {
@@ -129,16 +131,16 @@ Renderer::OffscreenBuffer Renderer::CreateOffscreenBuffer(const int& width, cons
 		glDeleteRenderbuffers(1, &m_OffscreenBuffer->RBO);
 	}
 
-	// If Light UBO doesn't exist, create it
-	if (!m_LightsUBO)
+	// If Light SSBO doesn't exist, create it
+	if (!m_LightsSSBO)
 	{
-		glGenBuffers(1, &m_LightsUBO);
-		glBindBuffer(GL_UNIFORM_BUFFER, m_LightsUBO);
+		glGenBuffers(1, &m_LightsSSBO);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_LightsSSBO);
 		const GLsizeiptr headerSize = static_cast<GLsizeiptr>(sizeof(glm::vec4));
-		const GLsizeiptr bodySize = static_cast<GLsizeiptr>(MaxLights * sizeof(LightGPU));
-		glBufferData(GL_UNIFORM_BUFFER, headerSize + bodySize, nullptr, GL_DYNAMIC_DRAW);
-		glBindBufferBase(GL_UNIFORM_BUFFER, LightsBindingPoint, m_LightsUBO);
-		glBindBuffer(GL_UNIFORM_BUFFER, 0);
+		const GLsizeiptr bodySize = static_cast<GLsizeiptr>(MAX_LIGHTS * sizeof(LightGPU));
+		glBufferData(GL_SHADER_STORAGE_BUFFER, headerSize + bodySize, nullptr, GL_DYNAMIC_DRAW);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, LightsBindingPoint, m_LightsSSBO);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 		glCheckError();
 	}
 
@@ -289,16 +291,16 @@ void Renderer::CreateGBuffer(const int& width, const int& height)
 		EE_CORE_ERROR("ERROR: Invalid G-Buffer dimensions: {0}x{1}", width, height);
 	}
 
-	// If Light UBO doesn't exist, create it
-	if (!m_LightsUBO)
+	// If Light SSBO doesn't exist, create it
+	if (!m_LightsSSBO)
 	{
-		glGenBuffers(1, &m_LightsUBO);
-		glBindBuffer(GL_UNIFORM_BUFFER, m_LightsUBO);
+		glGenBuffers(1, &m_LightsSSBO);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_LightsSSBO);
 		const GLsizeiptr headerSize = static_cast<GLsizeiptr>(sizeof(glm::vec4));
-		const GLsizeiptr bodySize = static_cast<GLsizeiptr>(MaxLights * sizeof(LightGPU));
-		glBufferData(GL_UNIFORM_BUFFER, headerSize + bodySize, nullptr, GL_DYNAMIC_DRAW);
-		glBindBufferBase(GL_UNIFORM_BUFFER, LightsBindingPoint, m_LightsUBO);
-		glBindBuffer(GL_UNIFORM_BUFFER, 0);
+		const GLsizeiptr bodySize = static_cast<GLsizeiptr>(MAX_LIGHTS * sizeof(LightGPU));
+		glBufferData(GL_SHADER_STORAGE_BUFFER, headerSize + bodySize, nullptr, GL_DYNAMIC_DRAW);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, LightsBindingPoint, m_LightsSSBO);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 		glCheckError();
 	}
 
@@ -627,6 +629,8 @@ void Renderer::EndLightingPass()
 	glDisable(GL_BLEND);
 	glCheckError();
 }
+
+
 void Renderer::BindMaterialTextures(Ermine::graphics::Material* material)
 {
 	if (!material) return;
@@ -680,7 +684,6 @@ void Renderer::BindMaterialTextures(Ermine::graphics::Material* material)
 		}
 	}
 }
-
 
 void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 {
@@ -807,7 +810,6 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 
 	EndGeometryPass();
 }
-
 
 /**
  * @brief Render lighting pass for deferred rendering
@@ -1194,7 +1196,7 @@ void Renderer::CleanupPostProcessBuffer()
 void Renderer::UpdateLightsUBO(const Mtx44& view)
 {
 	std::vector<LightGPU> lights;
-	lights.reserve(MaxLights);
+	lights.reserve(MAX_LIGHTS);
 
 	// Convert view matrix to glm once for better performance
 	glm::mat4 glmView = glm::mat4(
@@ -1235,8 +1237,8 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
 		// Set spot angles
 		float innerCos = 1.0f, outerCos = 1.0f;
 		if (light.type == LightType::SPOT) {
-			float innerAngle = glm::radians(10.0f);
-			float outerAngle = glm::radians(10.0f);
+			float innerAngle = glm::radians(light.innerAngle);
+			float outerAngle = glm::radians(light.outerAngle);
 			innerCos = glm::cos(innerAngle);
 			outerCos = glm::cos(outerAngle);
 		}
@@ -1245,51 +1247,42 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
 		LightGPU gpu{};
 		gpu.position_type = glm::vec4(posView.x, posView.y, posView.z, static_cast<float>(light.type));
 		gpu.color_intensity = glm::vec4(light.color.x, light.color.y, light.color.z, light.intensity);
-		gpu.direction_range = glm::vec4(dirView.x, dirView.y, dirView.z, 100.0f);
+		gpu.direction_range = glm::vec4(dirView.x, dirView.y, dirView.z, light.radius);
 		gpu.spot_angles_castshadows_startOffset = glm::vec4(innerCos, outerCos, light.castsShadows, light.startOffset);
-		gpu.lightSpaceMatrix[0] = light.lightSpaceMatrices[0];
-		gpu.lightSpaceMatrix[1] = light.lightSpaceMatrices[1];
-		gpu.lightSpaceMatrix[2] = light.lightSpaceMatrices[2]; 
-		gpu.splitDepths = glm::vec4(light.splitDepths[0], light.splitDepths[1], light.splitDepths[2], light.splitDepths[3]);
+		for (int i = 0; i < NUM_CASCADES; ++i) {
+			gpu.lightSpaceMatrix[i] = light.lightSpaceMatrices[i];
+			gpu.splitDepths[i / 4][i % 4] = light.splitDepths[i];
+		}
 		lights.emplace_back(gpu);
 	}
 
-	// Upload
-	glBindBuffer(GL_UNIFORM_BUFFER, m_LightsUBO);
+	// Upload to SSBO
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_LightsSSBO);
 
 	glm::vec4 count(static_cast<float>(lights.size()), 0.0f, 0.0f, 0.0f);
-	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::vec4), &count);
+	glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(glm::vec4), &count);
 
 	if (!lights.empty())
 	{
 		const GLsizeiptr bodyOffset = static_cast<GLsizeiptr>(sizeof(glm::vec4));
 		const GLsizeiptr bodySize = static_cast<GLsizeiptr>(lights.size() * sizeof(LightGPU));
-		glBufferSubData(GL_UNIFORM_BUFFER, bodyOffset, bodySize, lights.data());
+		glBufferSubData(GL_SHADER_STORAGE_BUFFER, bodyOffset, bodySize, lights.data());
 	}
 
-	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 	glCheckError();
 }
 
 /**
- * @brief Binds the Lights uniform block to the specified shader program if it has not been bound before.
- * @param shader The shader program to which the lights block should be bound.
+ * @brief Binds the Lights SSBO to the specified shader program if it has not been bound before.
+ * @param shader The shader program to which the lights SSBO should be bound.
  */
 void Renderer::BindLightsBlockIfPresent(const std::shared_ptr<Shader>& shader)
 {
-	if (!shader || !shader->IsValid())
-		return;
-
-	const GLuint program = shader->GetRendererID();
-	if (m_LightBlockBoundPrograms.find(program) != m_LightBlockBoundPrograms.end())
-		return;
-
-	GLuint blockIndex = glGetUniformBlockIndex(program, "Lights");
-	if (blockIndex != GL_INVALID_INDEX)
-	{
-		glUniformBlockBinding(program, blockIndex, LightsBindingPoint);
-		m_LightBlockBoundPrograms.insert(program);
-	}
+	// Since we use explicit binding in shaders (binding = 1),
+	// we don't need to manually bind SSBO blocks like we did with UBOs
+	// The shader binding layout handles this automatically
+	return;
 }
 
 /**
@@ -1657,6 +1650,17 @@ void Renderer::Draw(const std::shared_ptr<VertexArray>& vao, const std::shared_p
    vao->Unbind();
 }
 
+void Renderer::DrawInstanced(const std::shared_ptr<VertexArray>& vao, const std::shared_ptr<IndexBuffer>& ibo, const std::shared_ptr<Shader>& shader, int instanceCount) const
+{
+   vao->Bind();
+   glDrawElementsInstanced(GL_TRIANGLES, static_cast<GLsizei>(ibo->GetCount()), GL_UNSIGNED_INT, 0, instanceCount);
+   GPUProfiler::TrackDrawCall(
+       static_cast<uint32_t>(vao->GetVertexCount()) ,
+       ibo->GetCount()
+   );
+   vao->Unbind();
+}
+
 /**
  * @brief Clear the screen
  */
@@ -1679,9 +1683,9 @@ const GPUProfiler::PerformanceMetrics& Renderer::GetPerformanceMetrics() const
  */
 Renderer::~Renderer()
 {
-	if (m_LightsUBO) {
-		glDeleteBuffers(1, &m_LightsUBO);
-		m_LightsUBO = 0;
+	if (m_LightsSSBO) {
+		glDeleteBuffers(1, &m_LightsSSBO);
+		m_LightsSSBO = 0;
 	}
 
 	if (m_MaterialUBO) {
@@ -1758,529 +1762,6 @@ void Renderer::RenderModel(const Model& model, const Mtx44& view, const Mtx44& p
 	}
 }
 
-bool Renderer::InitializeShadowMap()
-{
-	glGenFramebuffers(1, &m_ShadowMapFBO);
-	glBindFramebuffer(GL_FRAMEBUFFER, m_ShadowMapFBO);
-
-	// If a depth texture already exists attach it. Otherwise we create the FBO now
-	// and defer attachment until CreateShadowMap is called.
-	if (m_ShadowMapArray != 0)
-	{
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_ShadowMapArray, 0);
-	}
-
-	// No color buffer is drawn
-	glDrawBuffer(GL_NONE);
-	glReadBuffer(GL_NONE);
-
-	// Only check completeness if we already have a depth attachment.
-	if (m_ShadowMapArray != 0)
-	{
-		GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-		if (status != GL_FRAMEBUFFER_COMPLETE)
-		{
-			EE_CORE_ERROR("Shadow map FBO incomplete: {0}", status);
-			glBindFramebuffer(GL_FRAMEBUFFER, 0);
-			return false;
-		}
-	}
-	else
-	{
-		// We intentionally do not validate completeness here because texture creation
-		// happens after InitializeShadowMap in the Init sequence. The FBO exists and
-		// will be validated after the texture is attached in CreateShadowMap.
-		EE_CORE_INFO("Initialized shadow FBO (no depth texture attached yet).");
-	}
-
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	return m_ShadowMapFBO != 0;
-}
-
-bool Renderer::CreateShadowMapArray()
-{
-	// Clean up previous array if it exists
-	if (m_ShadowMapArray)
-	{
-		glDeleteTextures(1, &m_ShadowMapArray);
-		m_ShadowMapArray = 0;
-	}
-
-	// Create depth texture array
-	glGenTextures(1, &m_ShadowMapArray);
-	glBindTexture(GL_TEXTURE_2D_ARRAY, m_ShadowMapArray);
-	glTexImage3D(
-		GL_TEXTURE_2D_ARRAY,
-		0,
-		GL_DEPTH_COMPONENT16,
-		SHADOW_MAP_RESOLUTION,
-		SHADOW_MAP_RESOLUTION,
-		SHADOW_MAX_LAYERS,
-		0,
-		GL_DEPTH_COMPONENT,
-		GL_FLOAT,
-		nullptr
-	);
-
-	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-
-	float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-	glTexParameterfv(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_BORDER_COLOR, borderColor);
-
-	// Create FBO if needed
-	if (m_ShadowMapFBO == 0)
-		glGenFramebuffers(1, &m_ShadowMapFBO);
-
-	// FIXED: Attach entire texture array for layered rendering
-	glBindFramebuffer(GL_FRAMEBUFFER, m_ShadowMapFBO);
-	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_ShadowMapArray, 0);
-
-	glDrawBuffer(GL_NONE);
-	glReadBuffer(GL_NONE);
-
-	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-	if (status != GL_FRAMEBUFFER_COMPLETE)
-	{
-		EE_CORE_ERROR("CreateShadowMapArray: FBO incomplete after attaching depth array: {0}", status);
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glDeleteTextures(1, &m_ShadowMapArray);
-		m_ShadowMapArray = 0;
-		return false;
-	}
-
-	// Bindless handle for array
-	m_ShadowMapArrayHandle = glGetTextureHandleARB(m_ShadowMapArray);
-	glMakeTextureHandleResidentARB(m_ShadowMapArrayHandle);
-
-	glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glCheckError();
-
-	return m_ShadowMapArray != 0;
-}
-
-bool Renderer::CreateShadowMapCube(const unsigned int resolution)
-{
-	glGenTextures(1, &m_ShadowMapCube);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, m_ShadowMapCube);
-	for (unsigned int i = 0; i < 6; ++i) {
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT24,
-			resolution, resolution, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
-	}
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
-	glCheckError();
-	EE_CORE_INFO("Created cube shadow map with resolution {0}x{1}", resolution, resolution);
-	return m_ShadowMapCube != 0;
-}
-
-void Renderer::CalculateDirectionalMatrix(const editor::EditorCamera& editorCamera)
-{
-	// Convert camera projection/view to glm
-	const Mtx44 proj = editorCamera.GetProjectionMatrix();
-	const Mtx44 view = editorCamera.GetViewMatrix();
-
-	glm::mat4 glmProj = glm::mat4(
-		proj.m00, proj.m01, proj.m02, proj.m03,
-		proj.m10, proj.m11, proj.m12, proj.m13,
-		proj.m20, proj.m21, proj.m22, proj.m23,
-		proj.m30, proj.m31, proj.m32, proj.m33
-	);
-	glm::mat4 glmView = glm::mat4(
-		view.m00, view.m01, view.m02, view.m03,
-		view.m10, view.m11, view.m12, view.m13,
-		view.m20, view.m21, view.m22, view.m23,
-		view.m30, view.m31, view.m32, view.m33
-	);
-
-	// Inverse PV used for unprojecting NDC to world
-	glm::mat4 invPV = glm::inverse(glmProj * glmView);
-
-	auto UnprojectNDC = [&](float ndcX, float ndcY, float ndcZ) -> glm::vec3 {
-		glm::vec4 ndc(ndcX, ndcY, ndcZ, 1.0f);
-		glm::vec4 world = invPV * ndc;
-		if (world.w != 0.0f) world /= world.w;
-		return glm::vec3(world);
-		};
-
-	// Derive near and far world positions along the view center ray (NDC z = -1 and +1)
-	glm::vec3 nearPos = UnprojectNDC(0.0f, 0.0f, -1.0f);
-	glm::vec3 farPos = UnprojectNDC(0.0f, 0.0f, 1.0f);
-
-	// Compute view-space distances for robust split calculation
-	glm::vec4 nearPosView4 = glmView * glm::vec4(nearPos, 1.0f);
-	glm::vec4 farPosView4 = glmView * glm::vec4(farPos, 1.0f);
-	float nearDist = -nearPosView4.z; // positive distance from camera along view dir
-	float farDist = -farPosView4.z;
-
-	if (nearDist <= 1e-6f || farDist <= nearDist)
-	{
-		EE_CORE_WARN("calculatedirectionalmatrix: invalid camera near/far ({0},{1})", nearDist, farDist);
-		return;
-	}
-
-	// Direction along camera center ray (world space)
-	glm::vec3 viewDir = glm::normalize(farPos - nearPos);
-
-	// Determine directional light vector (use first shadow-casting directional light found)
-	glm::vec3 lightDir(0.0f, -1.0f, 0.0f);
-	if (m_LightSystem && !m_LightSystem->m_Entities.empty())
-	{
-		const auto& ecs = Ermine::ECS::GetInstance();
-		// Track the current layer in the shadow map array
-		int currentLayer = 0;
-		constexpr int numCascades = NUM_CASCADES;
-		constexpr int maxLayers = SHADOW_MAX_LAYERS; // Make sure this matches your shadow map array definition
-
-		for (auto e : m_LightSystem->m_Entities)
-		{
-			if (!ecs.HasComponent<Light>(e) || !ecs.HasComponent<Transform>(e)) continue;
-			auto& light = ecs.GetComponent<Light>(e);
-			if (light.type != LightType::DIRECTIONAL) continue;
-			if (light.castsShadows == 0) continue;
-
-
-			// Check if there is enough space in the shadow map array for this light's cascades
-			if (currentLayer + numCascades > maxLayers)
-			{
-				EE_CORE_WARN("Not enough layers in shadow map array for light entity {0}. Skipping.", e);
-				continue;
-			}
-
-			// Assign the start offset for this light in the shadow map array
-			light.startOffset = currentLayer;
-
-			const auto& trans = ecs.GetComponent<Transform>(e);
-			glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
-			rotQuat = glm::normalize(rotQuat);
-			glm::vec3 fwd = glm::normalize(rotQuat * glm::vec3(0.0f, 0.0f, 1.0f));
-			lightDir = glm::normalize(-fwd); // light direction points from scene to light
-
-			// Avoid degenerate up vector
-			glm::vec3 up(0.0f, 1.0f, 0.0f);
-			if (glm::abs(glm::dot(up, lightDir)) > 0.999f)
-				up = glm::vec3(1.0f, 0.0f, 0.0f);
-
-			// Compute split distances in view-space
-			std::vector<float> splits;
-			splits.resize(NUM_CASCADES + 1);
-			for (int i = 0; i <= NUM_CASCADES; ++i)
-			{
-				float si = static_cast<float>(i) / static_cast<float>(NUM_CASCADES);
-				float logSplit = nearDist * std::pow(farDist / nearDist, si);
-				float linSplit = nearDist + (farDist - nearDist) * si;
-				splits[i] = SHADOW_MAP_ARRAY_LAMBDA * logSplit + (1.0f - SHADOW_MAP_ARRAY_LAMBDA) * linSplit;
-			}
-
-			// Compute light matrices per split
-			const int numSplits = NUM_CASCADES;
-            std::vector<glm::mat4> splitLightMatrices(numSplits);
-
-			for (int split = 0; split < NUM_CASCADES; ++split)
-			{
-				// Compute world-space near and far for this split from distances along center ray.
-				float splitNearDist = splits[split];
-				float splitFarDist = splits[split + 1];
-
-				glm::vec3 splitNearWorld = nearPos + viewDir * (splitNearDist - nearDist);
-				glm::vec3 splitFarWorld = nearPos + viewDir * (splitFarDist - nearDist);
-
-				// Compute clip-space (post projection) z for split near/far to allow unprojection via NDC
-				glm::vec4 clipNear = glmProj * glmView * glm::vec4(splitNearWorld, 1.0f);
-				glm::vec4 clipFar = glmProj * glmView * glm::vec4(splitFarWorld, 1.0f);
-				float ndcZ_splitNear = (clipNear.w == 0.0f) ? -1.0f : (clipNear.z / clipNear.w);
-				float ndcZ_splitFar = (clipFar.w == 0.0f) ? 1.0f : (clipFar.z / clipFar.w);
-
-				float depthBufferFar = ndcZ_splitFar * 0.5f + 0.5f;
-
-				// Build the 8 world-space corners of the frustum slice [splitNear, splitFar]
-				std::array<glm::vec3, 8> frustumCornersWorld;
-				const float xs[2] = { -1.0f, 1.0f };
-				const float ys[2] = { -1.0f, 1.0f };
-				int idx = 0;
-				for (int iz = 0; iz < 2; ++iz)
-				{
-					float zndc = (iz == 0) ? ndcZ_splitNear : ndcZ_splitFar;
-					for (int iy = 0; iy < 2; ++iy)
-						for (int ix = 0; ix < 2; ++ix)
-							frustumCornersWorld[idx++] = UnprojectNDC(xs[ix], ys[iy], zndc);
-				}
-
-				// Compute world-space AABB center (used to position the light)
-				glm::vec3 minCorner = frustumCornersWorld[0];
-				glm::vec3 maxCorner = frustumCornersWorld[0];
-				for (const auto& c : frustumCornersWorld)
-				{
-					minCorner = glm::min(minCorner, c);
-					maxCorner = glm::max(maxCorner, c);
-				}
-				glm::vec3 worldCenter = (minCorner + maxCorner) * 0.5f;
-
-				// Place light at a distance so the frustum slice sits between near/far planes of the ortho projection
-				float diagonal = glm::length(maxCorner - minCorner);
-				float lightDistance = glm::max(diagonal * 2.0f, (splitFarDist - splitNearDist) + 1.0f);
-				glm::vec3 lightPos = worldCenter - lightDir * lightDistance;
-
-				// Initial light view (unrotated)
-				glm::mat4 lightView = glm::lookAt(lightPos, worldCenter, up);
-
-				// Transform frustum corners into light space (for PCA / rotating to tight OBB)
-				std::vector<glm::vec3> cornersLS;
-				cornersLS.reserve(8);
-				for (const auto& c : frustumCornersWorld)
-				{
-					glm::vec4 p = lightView * glm::vec4(c, 1.0f);
-					cornersLS.emplace_back(glm::vec3(p));
-				}
-
-				// PCA on 2D (x,y) 
-				// Compute centroid
-				glm::vec2 centroid(0.0f);
-				for (const auto& p : cornersLS) centroid += glm::vec2(p.x, p.y);
-				centroid /= static_cast<float>(cornersLS.size());
-
-				// Covariance 2x2
-				float cov_xx = 0.0f, cov_xy = 0.0f, cov_yy = 0.0f;
-				for (const auto& p : cornersLS)
-				{
-					glm::vec2 d = glm::vec2(p.x, p.y) - centroid;
-					cov_xx += d.x * d.x;
-					cov_xy += d.x * d.y;
-					cov_yy += d.y * d.y;
-				}
-				cov_xx /= static_cast<float>(cornersLS.size());
-				cov_xy /= static_cast<float>(cornersLS.size());
-				cov_yy /= static_cast<float>(cornersLS.size());
-
-				// Solve eigenvector for largest eigenvalue of symmetric matrix [cov_xx cov_xy; cov_xy cov_yy]
-				float trace = cov_xx + cov_yy;
-				float det = cov_xx * cov_yy - cov_xy * cov_xy;
-				float disc = std::sqrt(glm::max(0.0f, trace * trace * 0.25f - det));
-				float lambda1 = trace * 0.5f + disc;
-
-				glm::vec2 principalAxis;
-				if (std::abs(cov_xy) > 1e-6f || std::abs(cov_xx - lambda1) > 1e-6f)
-				{
-					// (cov_xx - lambda) * vx + cov_xy * vy = 0  => choose vx = cov_xy, vy = lambda - cov_xx (or the symmetric)
-					principalAxis = glm::vec2(cov_xy, lambda1 - cov_xx);
-					float len = glm::length(principalAxis);
-					if (len * len < 1e-12f)
-						principalAxis = glm::vec2(1.0f, 0.0f);
-					else
-						principalAxis = glm::normalize(principalAxis);
-				}
-				else
-				{
-					// Degenerate: pick world X
-					principalAxis = glm::vec2(1.0f, 0.0f);
-				}
-
-				// Rotation angle to align principalAxis to +X
-				float angle = std::atan2(principalAxis.y, principalAxis.x);
-
-				// Build rotation around light-space Z to align principal axis to X
-				glm::mat4 rot = glm::rotate(glm::mat4(1.0f), -angle, glm::vec3(0.0f, 0.0f, 1.0f));
-				glm::mat4 rotatedLightView = rot * lightView;
-
-				// Transform corners again with rotated view to compute tight AABB in rotated frame
-				glm::vec3 lsMin(FLT_MAX), lsMax(-FLT_MAX);
-				for (const auto& c : frustumCornersWorld)
-				{
-					glm::vec4 p = rotatedLightView * glm::vec4(c, 1.0f);
-					glm::vec3 pp = glm::vec3(p);
-					lsMin = glm::min(lsMin, pp);
-					lsMax = glm::max(lsMax, pp);
-				}
-
-				// Small margin to avoid precision clipping
-				const float margin = 0.1f;
-				lsMin -= glm::vec3(margin);
-				lsMax += glm::vec3(margin);
-
-				// Compute ortho extents
-				float orthoWidth = lsMax.x - lsMin.x;
-				float orthoHeight = lsMax.y - lsMin.y;
-				float orthoDepth = lsMax.z - lsMin.z;
-
-				// Clamp extents to avoid degenerate projection
-				const float minExtent = 0.1f;
-				orthoWidth = glm::max(orthoWidth, minExtent);
-				orthoHeight = glm::max(orthoHeight, minExtent);
-				orthoDepth = glm::max(orthoDepth, minExtent);
-
-				// Texel-snapping to stabilize shadows and make full use of shadow map resolution
-				int shadowRes = 1024;
-				if (m_ShadowMapArray != 0)
-				{
-					glBindTexture(GL_TEXTURE_2D_ARRAY, m_ShadowMapArray);
-					GLint w = 0;
-					glGetTexLevelParameteriv(GL_TEXTURE_2D_ARRAY, 0, GL_TEXTURE_WIDTH, &w);
-					if (w > 0) shadowRes = w;
-					glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
-				}
-				glCheckError();
-
-				// Use a single texel size (square texels) based on the larger ortho extent
-				float texelSize = glm::max(orthoWidth, orthoHeight) / static_cast<float>(shadowRes);
-
-				// Compute center in rotated light space and snap to texel grid
-				glm::vec4 centerLS4 = rotatedLightView * glm::vec4(worldCenter, 1.0f);
-				glm::vec3 centerLS = glm::vec3(centerLS4);
-				centerLS.x = floor(centerLS.x / texelSize) * texelSize;
-				centerLS.y = floor(centerLS.y / texelSize) * texelSize;
-
-				// Recompute lsMin/lsMax around the snapped center to form tight axes-aligned extents
-				float halfW = orthoWidth * 0.5f;
-				float halfH = orthoHeight * 0.5f;
-				lsMin.x = centerLS.x - halfW;
-				lsMax.x = centerLS.x + halfW;
-				lsMin.y = centerLS.y - halfH;
-				lsMax.y = centerLS.y + halfH;
-
-				// Build orthographic projection with tight near/far based on rotated light-space z extents
-				float nearPlane = -lsMax.z;
-				float farPlane = -lsMin.z;
-
-				glm::mat4 lightProj = glm::ortho(lsMin.x, lsMax.x, lsMin.y, lsMax.y, nearPlane, farPlane);
-
-				// Store computed light-space matrix for this split (rotated for minimal-area rectangle)
-				light.lightSpaceMatrices[split] = lightProj * rotatedLightView;
-				light.splitDepths[split] = depthBufferFar;
-			}
-
-			currentLayer += numCascades;
-
-		}
-	}
-}
-
-void Renderer::RenderShadowMap()
-{
-	UpdateLightsUBO(editor::EditorCamera::GetInstance().GetViewMatrix());
-	BindLightsBlockIfPresent(m_ShadowMapGeometryShader);
-
-	// Validate resources
-	if (!m_ShadowMapFBO || !m_ShadowMapArray || !m_ShadowMapGeometryShader)
-	{
-		EE_CORE_WARN("RenderShadowMap: missing shadow FBO/texture/shader");
-		return;
-	}
-
-	// Query current viewport so we can restore it later
-	GLint prevViewport[4];
-	glGetIntegerv(GL_VIEWPORT, prevViewport);
-	// Query shadow map resolution from the texture
-	glBindTexture(GL_TEXTURE_2D_ARRAY, m_ShadowMapArray);
-	GLint shadowWidth = 1024, shadowHeight = 1024; // fallback
-	glGetTexLevelParameteriv(GL_TEXTURE_2D_ARRAY, 0, GL_TEXTURE_WIDTH, &shadowWidth);
-	glGetTexLevelParameteriv(GL_TEXTURE_2D_ARRAY, 0, GL_TEXTURE_HEIGHT, &shadowHeight);
-	glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
-
-	// Bind shadow FBO and set viewport to shadow resolution
-	glBindFramebuffer(GL_FRAMEBUFFER, m_ShadowMapFBO);
-	glViewport(0, 0, shadowWidth, shadowHeight);
-
-	// Clear depth
-	glClearDepth(1.0f);
-	glClear(GL_DEPTH_BUFFER_BIT);
-
-	// Setup render state for depth-only pass
-	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LEQUAL);
-
-	// Cull front faces to reduce shadow acne (common technique)
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_FRONT);
-
-	// Bind shadow shader and set light-space matrix/uniforms
-	m_ShadowMapGeometryShader->Bind();
-
-	// Render all geometry into the depth map
-	const auto& ecs = Ermine::ECS::GetInstance();
-
-	// First draw ModelComponent pipeline (models with multiple meshes)
-	for (EntityID entity : m_Entities)
-	{
-		if (!ecs.HasComponent<ModelComponent>(entity)) continue;
-		auto& modelComp = ecs.GetComponent<ModelComponent>(entity);
-		if (!modelComp.m_model) continue;
-
-		const auto& trans = ecs.GetComponent<Transform>(entity);
-
-		// Build root transform
-		glm::mat4 root = glm::mat4(1.0f);
-		root = glm::translate(root, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
-		glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
-		rotQuat = glm::normalize(rotQuat);
-		root *= glm::mat4_cast(rotQuat);
-		root = glm::scale(root, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
-
-		const auto& meshes = modelComp.m_model->GetMeshes();
-		for (const auto& mesh : meshes)
-		{
-			if (!mesh.vao || !mesh.ibo) continue;
-
-			glm::mat4 modelMat = root * mesh.localTransform;
-			m_ShadowMapGeometryShader->SetUniformMatrix4fv("model", modelMat);
-
-			// Draw
-			Draw(mesh.vao, mesh.ibo, m_ShadowMapGeometryShader);
-		}
-	}
-
-	// Then draw simple mesh+material entities (we only need transform + mesh)
-	for (EntityID entity : m_Entities)
-	{
-		if (!(ecs.HasComponent<Mesh>(entity) && ecs.HasComponent<Ermine::Material>(entity)))
-			continue;
-
-		auto& mesh = ecs.GetComponent<Mesh>(entity);
-		auto& trans = ecs.GetComponent<Transform>(entity);
-
-		if (!mesh.vertex_array || !mesh.index_buffer) continue;
-
-		// Build model matrix
-		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
-		glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
-		rotQuat = glm::normalize(rotQuat);
-		model *= glm::mat4_cast(rotQuat);
-		model = glm::scale(model, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
-
-		m_ShadowMapGeometryShader->SetUniformMatrix4fv("model", model);
-
-		// Draw
-		Draw(mesh.vertex_array, mesh.index_buffer, m_ShadowMapGeometryShader);
-	}
-
-	// Cleanup / restore GL state
-	m_ShadowMapGeometryShader->Unbind();
-	glCullFace(GL_BACK);
-	glDisable(GL_CULL_FACE);
-	glDepthFunc(GL_LESS);
-
-	// Unbind framebuffer and restore viewport
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glViewport(prevViewport[0], prevViewport[1], prevViewport[2], prevViewport[3]);
-
-	glCheckError();
-}
-
-void Renderer::RenderShadowPass()
-{
-	// Get nearest chunk for directional light
-	CalculateDirectionalMatrix(editor::EditorCamera::GetInstance());
-
-	RenderShadowMap();
-}
-
 bool Renderer::IsTransparentMaterial(const Ermine::graphics::Material* material) const
 {
 	if (!material) return false;
@@ -2297,7 +1778,6 @@ bool Renderer::IsTransparentMaterial(const Ermine::graphics::Material* material)
 	const auto& uboData = material->GetUBOData();
 	return uboData.transparency > 0.01f;
 }
-
 
 void Renderer::SortTransparentObjects(const Vec3& cameraPos)
 {
@@ -2480,3 +1960,841 @@ void Renderer::RenderTransparentPass(const Mtx44& view, const Mtx44& projection)
 	// Clear transparent objects list for next frame
 	m_transparentObjects.clear();
 }
+
+#pragma region Shadow Mapping
+/**
+ * @brief Initializes the shadow map framebuffer object (FBO).
+ * Creates and binds the FBO for shadow mapping. If a depth texture array exists, attaches it.
+ * Does not validate completeness unless a depth attachment is present.
+ * @return True if the FBO was successfully created, false otherwise.
+ */
+bool Renderer::InitializeShadowMap()
+{
+	glGenFramebuffers(1, &m_ShadowMapFBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, m_ShadowMapFBO);
+
+	// If a depth texture already exists attach it. Otherwise we create the FBO now
+	// and defer attachment until CreateShadowMap is called.
+	if (m_ShadowMapArray != 0)
+	{
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_ShadowMapArray, 0);
+	}
+
+	// No color buffer is drawn
+	glDrawBuffer(GL_NONE);
+	glReadBuffer(GL_NONE);
+
+	// Only check completeness if we already have a depth attachment.
+	if (m_ShadowMapArray != 0)
+	{
+		GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+		if (status != GL_FRAMEBUFFER_COMPLETE)
+		{
+			EE_CORE_ERROR("Shadow map FBO incomplete: {0}", status);
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			return false;
+		}
+	}
+	else
+	{
+		EE_CORE_INFO("Initialized shadow FBO (no depth texture attached yet).");
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	return m_ShadowMapFBO != 0;
+}
+
+/**
+ * @brief Creates a shadow map texture array for cascaded shadow mapping.
+ * Attempts to allocate a depth texture array with as many layers as possible, falling back if allocation fails.
+ * Attaches the texture array to the shadow map FBO and sets up bindless texture handle.
+ * @return True if the texture array was successfully created and attached, false otherwise.
+ */
+bool Renderer::CreateShadowMapArray()
+{
+	// Query hardware limit for texture array layers
+	GLint maxLayers;
+	glGetIntegerv(GL_MAX_ARRAY_TEXTURE_LAYERS, &maxLayers);
+
+	// Clean up previous array if it exists
+	if (m_ShadowMapArray)
+	{
+		glDeleteTextures(1, &m_ShadowMapArray);
+		m_ShadowMapArray = 0;
+	}
+
+	// Create depth texture array with fallback logic
+	glGenTextures(1, &m_ShadowMapArray);
+	glBindTexture(GL_TEXTURE_2D_ARRAY, m_ShadowMapArray);
+
+	bool allocationSuccessful = false;
+	unsigned int attemptedLayers = SHADOW_MAX_LAYERS;
+
+	// Try allocating with progressively fewer layers until successful
+	while (!allocationSuccessful && attemptedLayers >= 4) {
+		glTexImage3D(
+			GL_TEXTURE_2D_ARRAY,
+			0,
+			GL_DEPTH_COMPONENT16,
+			SHADOW_MAP_RESOLUTION,
+			SHADOW_MAP_RESOLUTION,
+			attemptedLayers,
+			0,
+			GL_DEPTH_COMPONENT,
+			GL_FLOAT,
+			nullptr
+		);
+
+		GLenum error = glGetError();
+		if (error == GL_NO_ERROR) {
+			allocationSuccessful = true;
+			SHADOW_MAX_LAYERS = attemptedLayers;
+			EE_CORE_WARN("Successfully allocated {0} shadow map layers", SHADOW_MAX_LAYERS);
+		}
+		else {
+			EE_CORE_WARN("Failed to allocate {0} layers (error: {1}), trying {2}",
+				attemptedLayers, error, attemptedLayers / 2);
+			attemptedLayers /= 2;
+		}
+	}
+
+	if (!allocationSuccessful) {
+		EE_CORE_ERROR("Failed to allocate shadow map array even with minimum layers");
+		glDeleteTextures(1, &m_ShadowMapArray);
+		m_ShadowMapArray = 0;
+		return false;
+	}
+
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+
+	float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	glTexParameterfv(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_BORDER_COLOR, borderColor);
+
+	// Create FBO if needed
+	if (m_ShadowMapFBO == 0)
+		glGenFramebuffers(1, &m_ShadowMapFBO);
+
+	// FIXED: Attach entire texture array for layered rendering
+	glBindFramebuffer(GL_FRAMEBUFFER, m_ShadowMapFBO);
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_ShadowMapArray, 0);
+
+	glDrawBuffer(GL_NONE);
+	glReadBuffer(GL_NONE);
+
+	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if (status != GL_FRAMEBUFFER_COMPLETE)
+	{
+		EE_CORE_ERROR("CreateShadowMapArray: FBO incomplete after attaching depth array: {0}", status);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glDeleteTextures(1, &m_ShadowMapArray);
+		m_ShadowMapArray = 0;
+		return false;
+	}
+
+	// Bindless handle for array
+	m_ShadowMapArrayHandle = glGetTextureHandleARB(m_ShadowMapArray);
+	glMakeTextureHandleResidentARB(m_ShadowMapArrayHandle);
+
+	glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glCheckError();
+
+	return m_ShadowMapArray != 0;
+}
+
+/**
+ * @brief Computes the eight frustum corners in world space for a given cascade split.
+ * Unprojects normalized device coordinates (NDC) to world space using the inverse projection-view matrix.
+ * @param invPV Inverse projection-view matrix.
+ * @param nearSplit NDC Z value for the near plane of the cascade.
+ * @param farSplit NDC Z value for the far plane of the cascade.
+ * @return Array of eight world-space frustum corners.
+ */
+std::array<glm::vec3, 8> Renderer::createCascadeFrustum(const glm::mat4& invPV, float nearSplit, float farSplit) {
+	std::array<glm::vec3, 8> frustumCorners;
+
+	// Lambda function to unproject NDC to world space
+	auto UnprojectNDC = [&](float ndcX, float ndcY, float ndcZ) -> glm::vec3 {
+		glm::vec4 ndc(ndcX, ndcY, ndcZ, 1.0f);
+		glm::vec4 world = invPV * ndc;
+		if (world.w != 0.0f) world /= world.w;
+		return glm::vec3(world);
+		};
+
+	const float xs[2] = { -1.0f, 1.0f };
+	const float ys[2] = { -1.0f, 1.0f };
+
+	int idx = 0;
+	for (int iz = 0; iz < 2; ++iz) {
+		float zndc = (iz == 0) ? nearSplit : farSplit;
+		for (int iy = 0; iy < 2; ++iy) {
+			for (int ix = 0; ix < 2; ++ix) {
+				frustumCorners[idx++] = UnprojectNDC(xs[ix], ys[iy], zndc);
+			}
+		}
+	}
+
+	return frustumCorners;
+}
+
+/**
+ * @brief Tests whether a spotlight's cone intersects a given frustum.
+ * Checks if any frustum corner is inside the spotlight cone or if the cone intersects the frustum's AABB.
+ * @param lightPos Position of the spotlight.
+ * @param spotDir Direction vector of the spotlight.
+ * @param outerAngleRad Outer angle of the spotlight cone in radians.
+ * @param lightRadius Maximum range of the spotlight.
+ * @param frustumCorners Array of eight frustum corners in world space.
+ * @return True if the spotlight cone intersects the frustum, false otherwise.
+ */
+bool Renderer::testSpotlightFrustumIntersection(const glm::vec3& lightPos, const glm::vec3& spotDir,
+	float outerAngleRad, float lightRadius,
+	const std::array<glm::vec3, 8>& frustumCorners) {
+
+	// Test if any frustum corner is inside spotlight cone. If so, they intersect.
+	for (const auto& corner : frustumCorners) {
+		glm::vec3 toCorner = corner - lightPos;
+		float distanceToCorner = glm::length(toCorner);
+
+		// Check if corner is within spotlight range
+		if (distanceToCorner <= lightRadius && distanceToCorner > 0.01f) {
+			glm::vec3 dirToCorner = toCorner / distanceToCorner;
+			float angleToCorner = std::acos(glm::clamp(glm::dot(spotDir, dirToCorner), -1.0f, 1.0f));
+
+			// Check if corner is within spotlight cone
+			if (angleToCorner <= outerAngleRad) {
+				return true;
+			}
+		}
+	}
+
+	// Test if spotlight cone intersects frustum planes
+	// Create cone vertices at far plane
+	const int numSamples = 8;
+	float coneRadius = lightRadius * std::tan(outerAngleRad);
+
+	// Create cone basis vectors
+	glm::vec3 right = glm::normalize(glm::cross(spotDir, glm::vec3(0.0f, 1.0f, 0.0f)));
+	if (glm::length(right) < 0.1f) {
+		right = glm::normalize(glm::cross(spotDir, glm::vec3(1.0f, 0.0f, 0.0f)));
+	}
+	glm::vec3 up = glm::normalize(glm::cross(right, spotDir));
+
+	// Test cone apex and circumference points
+	glm::vec3 coneCenter = lightPos + spotDir * lightRadius;
+
+	// Create AABB from frustum corners for quick rejection test
+	glm::vec3 frustumMin = frustumCorners[0];
+	glm::vec3 frustumMax = frustumCorners[0];
+	for (const auto& corner : frustumCorners) {
+		frustumMin = glm::min(frustumMin, corner);
+		frustumMax = glm::max(frustumMax, corner);
+	}
+
+	// Expand frustum AABB slightly for numerical stability
+	frustumMin -= glm::vec3(0.1f);
+	frustumMax += glm::vec3(0.1f);
+
+	// Test cone apex
+	if (lightPos.x >= frustumMin.x && lightPos.x <= frustumMax.x &&
+		lightPos.y >= frustumMin.y && lightPos.y <= frustumMax.y &&
+		lightPos.z >= frustumMin.z && lightPos.z <= frustumMax.z) {
+		return true;
+	}
+
+	// Test points around cone circumference
+	for (int i = 0; i < numSamples; ++i) {
+		float angle = (2.0f * M_PI * i) / numSamples;
+		glm::vec3 offset = right * (coneRadius * std::cos(angle)) + up * (coneRadius * std::sin(angle));
+		glm::vec3 conePoint = coneCenter + offset;
+
+		if (conePoint.x >= frustumMin.x && conePoint.x <= frustumMax.x &&
+			conePoint.y >= frustumMin.y && conePoint.y <= frustumMax.y &&
+			conePoint.z >= frustumMin.z && conePoint.z <= frustumMax.z) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+/**
+ * @brief Calculates the shadow matrix for a spotlight cascade.
+ * Computes a view and orthographic projection matrix that tightly fits the cascade frustum in light space.
+ * Applies texel snapping and margin adjustments for stable shadows.
+ * @param lightPos Position of the spotlight.
+ * @param spotDir Direction vector of the spotlight.
+ * @param outerAngleRad Outer angle of the spotlight cone in radians.
+ * @param lightRadius Maximum range of the spotlight.
+ * @param cascadeFrustum Array of eight frustum corners for the cascade.
+ * @param shadowRes Shadow map resolution.
+ * @return The spotlight's light-space matrix for the cascade.
+ */
+glm::mat4 Renderer::calculateSpotlightCascadeMatrix(const glm::vec3& lightPos, const glm::vec3& spotDir,
+	float outerAngleRad, float lightRadius,
+	const std::array<glm::vec3, 8>& cascadeFrustum,
+	int shadowRes) {
+
+	// Create spotlight's base view matrix
+	glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
+	if (glm::abs(glm::dot(spotDir, up)) > 0.999f) {
+		up = glm::vec3(1.0f, 0.0f, 0.0f);
+	}
+	glm::mat4 baseView = glm::lookAt(lightPos, lightPos + spotDir, up);
+
+	// Transform cascade frustum to light space
+	std::vector<glm::vec3> frustumLS;
+	frustumLS.reserve(8);
+	for (const auto& corner : cascadeFrustum) {
+		glm::vec4 p = baseView * glm::vec4(corner, 1.0f);
+		frustumLS.emplace_back(glm::vec3(p));
+	}
+
+	// Find AABB in light space
+	glm::vec3 lsMin = frustumLS[0];
+	glm::vec3 lsMax = frustumLS[0];
+	for (const auto& p : frustumLS) {
+		lsMin = glm::min(lsMin, p);
+		lsMax = glm::max(lsMax, p);
+	}
+
+	// Apply margins to prevent edge artifacts
+	const float xyMargin = 0.2f;
+	const float zMargin = 5.0f;
+	lsMin -= glm::vec3(xyMargin, xyMargin, zMargin);
+	lsMax += glm::vec3(xyMargin, xyMargin, zMargin);
+
+	// Ensure we don't go beyond the spotlight's natural cone
+	float maxConeRadius = lightRadius * std::tan(outerAngleRad);
+	float maxExtent = glm::max(glm::abs(lsMin.x), glm::abs(lsMax.x));
+	maxExtent = glm::max(maxExtent, glm::max(glm::abs(lsMin.y), glm::abs(lsMax.y)));
+
+	if (maxExtent > maxConeRadius) {
+		float scale = maxConeRadius / maxExtent;
+		lsMin.x *= scale;
+		lsMin.y *= scale;
+		lsMax.x *= scale;
+		lsMax.y *= scale;
+	}
+
+	// Texel snapping for stable shadows
+	float orthoWidth = lsMax.x - lsMin.x;
+	float orthoHeight = lsMax.y - lsMin.y;
+	float texelSize = glm::max(orthoWidth, orthoHeight) / static_cast<float>(shadowRes);
+
+	// Snap bounds to texel grid
+	lsMin.x = std::floor(lsMin.x / texelSize) * texelSize;
+	lsMin.y = std::floor(lsMin.y / texelSize) * texelSize;
+	lsMax.x = std::ceil(lsMax.x / texelSize) * texelSize;
+	lsMax.y = std::ceil(lsMax.y / texelSize) * texelSize;
+
+	// Create orthographic projection (tighter fit than perspective for cascaded shadows)
+	float nearPlane = -lsMax.z;
+	float farPlane = -lsMin.z;
+
+	// Ensure valid near/far planes
+	if (nearPlane <= 0.0f) nearPlane = 0.1f;
+	if (farPlane <= nearPlane) farPlane = nearPlane + lightRadius;
+
+	glm::mat4 lightProj = glm::ortho(lsMin.x, lsMax.x, lsMin.y, lsMax.y, nearPlane, farPlane);
+
+	return lightProj * baseView;
+}
+
+/**
+ * @brief Calculates light-space matrices for all shadow-casting lights.
+ * Computes cascade splits and shadow matrices for directional and spot lights based on the camera's view and projection.
+ * Updates each light's shadow matrix and split depth for use in shadow mapping.
+ * @param editorCamera Reference to the editor camera providing view and projection matrices.
+ */
+void Renderer::CalculateLightMatrix(const editor::EditorCamera& editorCamera)
+{
+	// Convert camera projection/view to glm
+	const Mtx44 proj = editorCamera.GetProjectionMatrix();
+	const Mtx44 view = editorCamera.GetViewMatrix();
+
+	glm::mat4 glmProj = glm::mat4(
+		proj.m00, proj.m01, proj.m02, proj.m03,
+		proj.m10, proj.m11, proj.m12, proj.m13,
+		proj.m20, proj.m21, proj.m22, proj.m23,
+		proj.m30, proj.m31, proj.m32, proj.m33
+	);
+	glm::mat4 glmView = glm::mat4(
+		view.m00, view.m01, view.m02, view.m03,
+		view.m10, view.m11, view.m12, view.m13,
+		view.m20, view.m21, view.m22, view.m23,
+		view.m30, view.m31, view.m32, view.m33
+	);
+
+	// Inverse PV used for unprojecting NDC to world
+	glm::mat4 invPV = glm::inverse(glmProj * glmView);
+
+	auto UnprojectNDC = [&](float ndcX, float ndcY, float ndcZ) -> glm::vec3 {
+		glm::vec4 ndc(ndcX, ndcY, ndcZ, 1.0f);
+		glm::vec4 world = invPV * ndc;
+		if (world.w != 0.0f) world /= world.w;
+		return glm::vec3(world);
+		};
+
+	// Derive near and far world positions along the view center ray
+	glm::vec3 nearPos = UnprojectNDC(0.0f, 0.0f, -1.0f);
+	glm::vec3 farPos = UnprojectNDC(0.0f, 0.0f, 1.0f);
+
+	// Compute view-space distances for robust split calculation
+	glm::vec4 nearPosView4 = glmView * glm::vec4(nearPos, 1.0f);
+	glm::vec4 farPosView4 = glmView * glm::vec4(farPos, 1.0f);
+	float nearDist = -nearPosView4.z; // positive distance from camera along view dir
+	float farDist = -farPosView4.z;
+
+	if (nearDist <= 1e-6f || farDist <= nearDist) {
+		EE_CORE_WARN("calculatedirectionalmatrix: invalid camera near/far ({0},{1})", nearDist, farDist);
+		return;
+	}
+
+	// Direction along camera center ray (world space)
+	glm::vec3 viewDir = glm::normalize(farPos - nearPos);
+
+	const auto& ecs = Ermine::ECS::GetInstance();
+	int currentLayer = 0;
+
+	for (auto e : m_LightSystem->m_Entities) {
+		if (!ecs.HasComponent<Light>(e) || !ecs.HasComponent<Transform>(e)) continue;
+		auto& light = ecs.GetComponent<Light>(e);
+		if (light.castsShadows == 0) continue;
+
+		// Get transform data
+		const auto& trans = ecs.GetComponent<Transform>(e);
+		glm::quat rotQuat = glm::normalize(glm::quat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z));
+		glm::vec3 lightPos = glm::vec3(trans.position.x, trans.position.y, trans.position.z);
+
+		if (light.type == LightType::DIRECTIONAL) {
+			// DIRECTIONAL LIGHT PROCESSING (existing code)
+			if (currentLayer + NUM_CASCADES > SHADOW_MAX_LAYERS) {
+				EE_CORE_WARN("Not enough layers in shadow map array for directional light entity {0}. Skipping.", e);
+				continue;
+			}
+
+			light.startOffset = currentLayer;
+
+			// Get light direction
+			glm::vec3 fwd = glm::normalize(rotQuat * glm::vec3(0.0f, 0.0f, 1.0f));
+			glm::vec3 lightDir = glm::normalize(-fwd); // from scene to light
+
+			// Setup up vector
+			glm::vec3 up(0.0f, 1.0f, 0.0f);
+			if (glm::abs(glm::dot(up, lightDir)) > 0.999f)
+				up = glm::vec3(1.0f, 0.0f, 0.0f);
+
+			// Compute cascade splits
+			std::vector<float> splits(NUM_CASCADES + 1);
+			for (int i = 0; i <= NUM_CASCADES; ++i) {
+				float si = static_cast<float>(i) / static_cast<float>(NUM_CASCADES);
+				float logSplit = nearDist * std::pow(farDist / nearDist, si);
+				float linSplit = nearDist + (farDist - nearDist) * si;
+				splits[i] = SHADOW_MAP_ARRAY_LAMBDA * logSplit + (1.0f - SHADOW_MAP_ARRAY_LAMBDA) * linSplit;
+			}
+
+			// Get shadow map resolution
+			int shadowRes = 1024;
+			if (m_ShadowMapArray != 0) {
+				glBindTexture(GL_TEXTURE_2D_ARRAY, m_ShadowMapArray);
+				GLint w = 0;
+				glGetTexLevelParameteriv(GL_TEXTURE_2D_ARRAY, 0, GL_TEXTURE_WIDTH, &w);
+				if (w > 0) shadowRes = w;
+				glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+				glCheckError();
+			}
+
+			// Process each cascade
+			for (int split = 0; split < NUM_CASCADES; ++split) {
+				float splitNearDist = splits[split];
+				float splitFarDist = splits[split + 1];
+
+				// Compute world positions for cascade near/far
+				glm::vec3 splitNearWorld = nearPos + viewDir * (splitNearDist - nearDist);
+				glm::vec3 splitFarWorld = nearPos + viewDir * (splitFarDist - nearDist);
+
+				// Compute depth for depth buffer
+				glm::vec4 clipFar = glmProj * glmView * glm::vec4(splitFarWorld, 1.0f);
+				float ndcZ_splitFar = (clipFar.w == 0.0f) ? 1.0f : (clipFar.z / clipFar.w);
+				float depthBufferFar = ndcZ_splitFar * 0.5f + 0.5f;
+
+				// Build frustum corners
+				std::array<glm::vec3, 8> frustumCornersWorld;
+				const float xs[2] = { -1.0f, 1.0f };
+				const float ys[2] = { -1.0f, 1.0f };
+				float ndcZ_splitNear = (split == 0) ? -1.0f : (glmProj * glmView * glm::vec4(splitNearWorld, 1.0f)).z / (glmProj * glmView * glm::vec4(splitNearWorld, 1.0f)).w;
+
+				int idx = 0;
+				for (int iz = 0; iz < 2; ++iz) {
+					float zndc = (iz == 0) ? ndcZ_splitNear : ndcZ_splitFar;
+					for (int iy = 0; iy < 2; ++iy)
+						for (int ix = 0; ix < 2; ++ix)
+							frustumCornersWorld[idx++] = UnprojectNDC(xs[ix], ys[iy], zndc);
+				}
+
+				// Get AABB and center
+				glm::vec3 minCorner = frustumCornersWorld[0];
+				glm::vec3 maxCorner = frustumCornersWorld[0];
+				for (const auto& c : frustumCornersWorld) {
+					minCorner = glm::min(minCorner, c);
+					maxCorner = glm::max(maxCorner, c);
+				}
+				glm::vec3 worldCenter = (minCorner + maxCorner) * 0.5f;
+
+				// Place light far enough away with safety margin
+				float diagonal = glm::length(maxCorner - minCorner);
+				float lightDistance = glm::max(diagonal * 3.0f, (splitFarDist - splitNearDist) * 2.0f);
+				glm::vec3 lightPosCalc = worldCenter - lightDir * lightDistance;
+
+				// Create light view matrix
+				glm::mat4 lightView = glm::lookAt(lightPosCalc, worldCenter, up);
+
+				// Transform frustum to light space
+				std::vector<glm::vec3> cornersLS;
+				cornersLS.reserve(8);
+				for (const auto& c : frustumCornersWorld) {
+					glm::vec4 p = lightView * glm::vec4(c, 1.0f);
+					cornersLS.emplace_back(glm::vec3(p));
+				}
+
+				// 2D PCA for optimal shadow map orientation
+				glm::vec2 centroid2D(0.0f);
+				for (const auto& p : cornersLS)
+					centroid2D += glm::vec2(p.x, p.y);
+				centroid2D /= static_cast<float>(cornersLS.size());
+
+				// Compute 2x2 covariance matrix
+				float cov_xx = 0.0f, cov_xy = 0.0f, cov_yy = 0.0f;
+				for (const auto& p : cornersLS) {
+					glm::vec2 d = glm::vec2(p.x, p.y) - centroid2D;
+					cov_xx += d.x * d.x;
+					cov_xy += d.x * d.y;
+					cov_yy += d.y * d.y;
+				}
+				cov_xx /= static_cast<float>(cornersLS.size());
+				cov_xy /= static_cast<float>(cornersLS.size());
+				cov_yy /= static_cast<float>(cornersLS.size());
+
+				// Find principal axis
+				float trace = cov_xx + cov_yy;
+				float det = cov_xx * cov_yy - cov_xy * cov_xy;
+				float lambda1 = 0.5f * (trace + std::sqrt(trace * trace - 4.0f * det));
+
+				glm::vec2 eigenVec;
+				if (std::abs(cov_xy) > 1e-6f) {
+					eigenVec = glm::normalize(glm::vec2(lambda1 - cov_yy, cov_xy));
+				}
+				else {
+					eigenVec = (cov_xx > cov_yy) ? glm::vec2(1.0f, 0.0f) : glm::vec2(0.0f, 1.0f);
+				}
+
+				// Rotate around Z-axis only
+				float angle = std::atan2(eigenVec.y, eigenVec.x);
+				glm::mat4 zRotation = glm::rotate(glm::mat4(1.0f), -angle, glm::vec3(0.0f, 0.0f, 1.0f));
+				glm::mat4 rotatedLightView = zRotation * lightView;
+
+				// Find bounds in rotated space
+				glm::vec3 lsMin(FLT_MAX), lsMax(-FLT_MAX);
+				for (const auto& c : frustumCornersWorld) {
+					glm::vec4 p = rotatedLightView * glm::vec4(c, 1.0f);
+					glm::vec3 pp = glm::vec3(p);
+					lsMin = glm::min(lsMin, pp);
+					lsMax = glm::max(lsMax, pp);
+				}
+
+				// Add margins to prevent clipping
+				const float xyMargin = 0.5f;
+				const float zMargin = 10.0f;
+				lsMin -= glm::vec3(xyMargin, xyMargin, zMargin);
+				lsMax += glm::vec3(xyMargin, xyMargin, zMargin);
+
+				// Compute ortho extents
+				float orthoWidth = lsMax.x - lsMin.x;
+				float orthoHeight = lsMax.y - lsMin.y;
+
+				// Avoid degenerate cases
+				const float minExtent = 0.1f;
+				orthoWidth = glm::max(orthoWidth, minExtent);
+				orthoHeight = glm::max(orthoHeight, minExtent);
+
+				// Texel snapping for stable shadows
+				float texelSize = glm::max(orthoWidth, orthoHeight) / static_cast<float>(shadowRes);
+
+				// Snap bounds to texel grid
+				lsMin.x = std::floor(lsMin.x / texelSize) * texelSize;
+				lsMin.y = std::floor(lsMin.y / texelSize) * texelSize;
+				lsMax.x = std::ceil(lsMax.x / texelSize) * texelSize;
+				lsMax.y = std::ceil(lsMax.y / texelSize) * texelSize;
+
+				// Ortho projection
+				float nearPlane = -lsMax.z;
+				float farPlane = -lsMin.z;
+				glm::mat4 lightProj = glm::ortho(lsMin.x, lsMax.x, lsMin.y, lsMax.y, nearPlane, farPlane);
+
+				// Store final matrix and split depth
+				light.lightSpaceMatrices[split] = lightProj * rotatedLightView;
+				light.splitDepths[split] = depthBufferFar;
+			}
+
+			currentLayer += NUM_CASCADES;
+		}
+		else if (light.type == LightType::SPOT) {
+			// CASCADED SPOTLIGHT PROCESSING
+
+			// Get spotlight direction and parameters
+			glm::vec3 spotDir = glm::normalize(rotQuat * glm::vec3(0.0f, 0.0f, 1.0f));
+			float outerAngleRad = glm::radians(light.outerAngle);
+
+			// Compute cascade splits (same as directional lights)
+			std::vector<float> splits(NUM_CASCADES + 1);
+			for (int i = 0; i <= NUM_CASCADES; ++i) {
+				float si = static_cast<float>(i) / static_cast<float>(NUM_CASCADES);
+				float logSplit = nearDist * std::pow(farDist / nearDist, si);
+				float linSplit = nearDist + (farDist - nearDist) * si;
+				splits[i] = SHADOW_MAP_ARRAY_LAMBDA * logSplit + (1.0f - SHADOW_MAP_ARRAY_LAMBDA) * linSplit;
+			}
+
+			// Get shadow map resolution
+			int shadowRes = 1024;
+			if (m_ShadowMapArray != 0) {
+				glBindTexture(GL_TEXTURE_2D_ARRAY, m_ShadowMapArray);
+				GLint w = 0;
+				glGetTexLevelParameteriv(GL_TEXTURE_2D_ARRAY, 0, GL_TEXTURE_WIDTH, &w);
+				if (w > 0) shadowRes = w;
+				glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+				glCheckError();
+			}
+
+			// Test intersection with each cascade and build matrices
+			std::vector<bool> intersectingCascades(NUM_CASCADES, false);
+			std::vector<std::array<glm::vec3, 8>> cascadeFrustums(NUM_CASCADES);
+			int validCascades = 0;
+
+			for (int cascade = 0; cascade < NUM_CASCADES; ++cascade) {
+				float splitNearDist = splits[cascade];
+				float splitFarDist = splits[cascade + 1];
+
+				// Convert split distances to NDC Z values
+				glm::vec3 splitNearWorld = nearPos + viewDir * (splitNearDist - nearDist);
+				glm::vec3 splitFarWorld = nearPos + viewDir * (splitFarDist - nearDist);
+
+				glm::vec4 clipNear = glmProj * glmView * glm::vec4(splitNearWorld, 1.0f);
+				glm::vec4 clipFar = glmProj * glmView * glm::vec4(splitFarWorld, 1.0f);
+
+				float ndcZ_splitNear = (cascade == 0) ? -1.0f :
+					(clipNear.w == 0.0f) ? -1.0f : (clipNear.z / clipNear.w);
+				float ndcZ_splitFar = (clipFar.w == 0.0f) ? 1.0f : (clipFar.z / clipFar.w);
+
+				// Create frustum for this cascade
+				cascadeFrustums[cascade] = createCascadeFrustum(invPV, ndcZ_splitNear, ndcZ_splitFar);
+
+				// Test intersection with this cascade
+				bool intersectsThisCascade = testSpotlightFrustumIntersection(
+					lightPos, spotDir, outerAngleRad, light.radius, cascadeFrustums[cascade]);
+
+				if (intersectsThisCascade) {
+					intersectingCascades[cascade] = true;
+					validCascades++;
+				}
+			}
+
+			if (validCascades == 0) {
+				continue;
+			}
+
+			// Check if we have enough shadow map layers
+			if (currentLayer + validCascades > SHADOW_MAX_LAYERS) {
+				continue;
+			}
+
+			light.startOffset = currentLayer;
+
+			// Generate shadow matrices for intersecting cascades
+			int cascadeLayerOffset = 0;
+			for (int cascade = 0; cascade < NUM_CASCADES; ++cascade) {
+				if (intersectingCascades[cascade]) {
+					// Calculate specialized matrix for this cascade
+					light.lightSpaceMatrices[cascade] = calculateSpotlightCascadeMatrix(
+						lightPos, spotDir, outerAngleRad, light.radius,
+						cascadeFrustums[cascade], shadowRes);
+
+					// Compute depth for depth buffer (same as directional lights)
+					float splitFarDist = splits[cascade + 1];
+					glm::vec3 splitFarWorld = nearPos + viewDir * (splitFarDist - nearDist);
+					glm::vec4 clipFar = glmProj * glmView * glm::vec4(splitFarWorld, 1.0f);
+					float ndcZ_splitFar = (clipFar.w == 0.0f) ? 1.0f : (clipFar.z / clipFar.w);
+					float depthBufferFar = ndcZ_splitFar * 0.5f + 0.5f;
+					light.splitDepths[cascade] = depthBufferFar;
+
+					cascadeLayerOffset++;
+				}
+				else {
+					// Mark unused cascades with zero matrix
+					light.lightSpaceMatrices[cascade] = glm::mat4(0.0f);
+					light.splitDepths[cascade] = 0.0f;
+				}
+			}
+
+			currentLayer += validCascades;
+		}
+	}
+}
+
+/**
+ * @brief Renders the shadow map using instanced rendering for all shadow-casting lights and cascades.
+ * Sets up the shadow map FBO, viewport, and render state, then draws all geometry using instanced draw calls.
+ * Restores previous OpenGL state after rendering.
+ */
+void Renderer::RenderShadowMapInstanced()
+{
+	UpdateLightsUBO(editor::EditorCamera::GetInstance().GetViewMatrix());
+	BindLightsBlockIfPresent(m_ShadowMapInstancedShader);
+
+	// Validate resources
+	if (!m_ShadowMapFBO || !m_ShadowMapArray || !m_ShadowMapInstancedShader)
+	{
+		EE_CORE_WARN("RenderShadowMapInstancedOptimized: missing shadow FBO/texture/shader");
+		return;
+	}
+
+	// Query current viewport so we can restore it later
+	GLint prevViewport[4];
+	glGetIntegerv(GL_VIEWPORT, prevViewport);
+
+	// Query shadow map resolution from the texture
+	glBindTexture(GL_TEXTURE_2D_ARRAY, m_ShadowMapArray);
+	GLint shadowWidth = 1024, shadowHeight = 1024; // fallback
+	glGetTexLevelParameteriv(GL_TEXTURE_2D_ARRAY, 0, GL_TEXTURE_WIDTH, &shadowWidth);
+	glGetTexLevelParameteriv(GL_TEXTURE_2D_ARRAY, 0, GL_TEXTURE_HEIGHT, &shadowHeight);
+	glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+
+	// Bind shadow FBO and set viewport to shadow resolution
+	glBindFramebuffer(GL_FRAMEBUFFER, m_ShadowMapFBO);
+	glViewport(0, 0, shadowWidth, shadowHeight);
+
+	// Clear depth
+	glClearDepth(1.0f);
+	glClear(GL_DEPTH_BUFFER_BIT);
+
+	// Setup render state for depth-only pass
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LEQUAL);
+
+	// Cull front faces to reduce shadow acne (common technique)
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_FRONT);
+
+	// Bind shadow shader
+	m_ShadowMapInstancedShader->Bind();
+
+	// Gather shadow casting lights (both directional and spotlight)
+	const auto& ecs = Ermine::ECS::GetInstance();
+	std::vector<int> activeShadowLights;
+	int lightIndex = 0;
+
+	for (EntityID entity : m_LightSystem->m_Entities)
+	{
+		if (!ecs.HasComponent<Light>(entity)) continue;
+		auto& light = ecs.GetComponent<Light>(entity);
+		// Include both directional and spotlight shadow casters
+		if ((light.type == LightType::DIRECTIONAL || light.type == LightType::SPOT) && light.castsShadows) {
+			activeShadowLights.push_back(lightIndex);
+		}
+		lightIndex++;
+	}
+
+	// Use only shadowcaster lights for instancing
+	int maxLights = std::min(static_cast<int>(activeShadowLights.size()), 16);
+	int totalInstances = maxLights * NUM_CASCADES;
+
+	// Set up per-frame uniforms
+	m_ShadowMapInstancedShader->SetUniform1i("u_NumShadowLights", maxLights);
+	for (int i = 0; i < maxLights; ++i) {
+		std::string uniformName = "u_ActiveShadowLights[" + std::to_string(i) + "]";
+		m_ShadowMapInstancedShader->SetUniform1i(uniformName, activeShadowLights[i]);
+	}
+
+	// Render all geometry using true instanced rendering
+	// First draw ModelComponent pipeline (models with multiple meshes)
+	for (EntityID renderEntity : m_Entities)
+	{
+		if (!ecs.HasComponent<ModelComponent>(renderEntity)) continue;
+		auto& modelComp = ecs.GetComponent<ModelComponent>(renderEntity);
+		if (!modelComp.m_model) continue;
+
+		const auto& trans = ecs.GetComponent<Transform>(renderEntity);
+
+		// Build root transform
+		glm::mat4 root = glm::mat4(1.0f);
+		root = glm::translate(root, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
+		glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
+		rotQuat = glm::normalize(rotQuat);
+		root *= glm::mat4_cast(rotQuat);
+		root = glm::scale(root, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
+
+		const auto& meshes = modelComp.m_model->GetMeshes();
+		for (const auto& mesh : meshes)
+		{
+			if (!mesh.vao || !mesh.ibo) continue;
+
+			glm::mat4 modelMat = root * mesh.localTransform;
+			m_ShadowMapInstancedShader->SetUniformMatrix4fv("model", modelMat);
+
+			// Use instanced draw call
+			DrawInstanced(mesh.vao, mesh.ibo, m_ShadowMapInstancedShader, totalInstances);
+		}
+	}
+
+	// Then draw simple mesh+material entities
+	for (EntityID renderEntity : m_Entities)
+	{
+		if (!(ecs.HasComponent<Mesh>(renderEntity) && ecs.HasComponent<Ermine::Material>(renderEntity)))
+			continue;
+
+		auto& mesh = ecs.GetComponent<Mesh>(renderEntity);
+		auto& trans = ecs.GetComponent<Transform>(renderEntity);
+
+		if (!mesh.vertex_array || !mesh.index_buffer) continue;
+
+		// Build model matrix
+		glm::mat4 modelMat = glm::mat4(1.0f);
+		modelMat = glm::translate(modelMat, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
+		glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
+		rotQuat = glm::normalize(rotQuat);
+		modelMat *= glm::mat4_cast(rotQuat);
+		modelMat = glm::scale(modelMat, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
+
+		m_ShadowMapInstancedShader->SetUniformMatrix4fv("model", modelMat);
+
+		// Use instanced draw call
+		DrawInstanced(mesh.vertex_array, mesh.index_buffer, m_ShadowMapInstancedShader, totalInstances);
+	}
+
+	// Restore culling state (back to normal)
+	glCullFace(GL_BACK);
+
+	// Unbind framebuffer and restore viewport
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glViewport(prevViewport[0], prevViewport[1], prevViewport[2], prevViewport[3]);
+
+	glCheckError();
+}
+
+/**
+ * @brief Executes the full shadow pass for all shadow-casting lights.
+ * Calculates light-space matrices and renders the shadow map using instanced rendering.
+ */
+void Renderer::RenderShadowPass()
+{
+	// Calculate directional light matrices
+	CalculateLightMatrix(editor::EditorCamera::GetInstance());
+
+	// Render shadows with optimized instanced approach
+	RenderShadowMapInstanced();
+}
+
+#pragma endregion

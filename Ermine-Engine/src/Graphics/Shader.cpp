@@ -110,6 +110,38 @@ std::string Shader::LoadShaderSource(const std::string& filepath)
  * @param vertexPath The path of the vertex shader
  * @param fragmentPath The path of the fragment shader
  */
+Shader::Shader(const std::string& computePath)
+{
+    std::string computeSource = LoadShaderSource(computePath);
+
+	GLuint computeShader = CompileShader(GL_COMPUTE_SHADER, computeSource);
+
+	// Link the shaders to the program
+	m_RendererID = glCreateProgram();
+	glAttachShader(m_RendererID, computeShader);
+	glLinkProgram(m_RendererID);
+	GLint isLinked = 0;
+	glGetProgramiv(m_RendererID, GL_LINK_STATUS, &isLinked);
+    if (isLinked == GL_FALSE)
+    {
+        GLint maxLength = 0;
+        glGetProgramiv(m_RendererID, GL_INFO_LOG_LENGTH, &maxLength);
+        std::vector<GLchar> infoLog(maxLength);
+        glGetProgramInfoLog(m_RendererID, maxLength, &maxLength, &infoLog[0]);
+        glDeleteProgram(m_RendererID);
+        glDeleteShader(computeShader);
+        EE_CORE_ERROR("Shader linking failed: {0}", infoLog.data());
+        m_RendererID = 0;
+        return;
+	}
+	glDeleteShader(computeShader);
+}
+
+/**
+ * @brief Create a shader
+ * @param vertexPath The path of the vertex shader
+ * @param fragmentPath The path of the fragment shader
+ */
 Shader::Shader(const std::string& vertexPath, const std::string& fragmentPath)
 {
     std::string vertexSource = LoadShaderSource(vertexPath);

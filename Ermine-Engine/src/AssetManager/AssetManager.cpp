@@ -68,6 +68,29 @@ const std::unordered_map<std::string, std::shared_ptr<graphics::Texture>>& Asset
  * @param fragmentPath The file path of the fragment shader
  * @return The shader that is loaded
  */
+std::shared_ptr<graphics::Shader> AssetManager::LoadShader(const std::string& computePath)
+{
+    EE_CORE_TRACE("Loading compute shader: {0}", computePath);
+    auto it = m_shaders.find(computePath);
+    if (it != m_shaders.end())
+        return it->second;
+    std::shared_ptr<graphics::Shader> shader = std::make_shared<graphics::Shader>(computePath);
+    if (!shader->IsValid())
+    {
+        EE_CORE_ERROR("Failed to load compute shader: {0}", computePath);
+        return nullptr;
+    }
+    m_shaders[computePath] = shader;
+    EE_CORE_INFO("Compute shader loaded: {0}", computePath);
+	return shader;
+}
+
+/**
+ * @brief Load a shader from the vertex and fragment file path and store it in the asset manager, if it is loaded before, return the shader
+ * @param vertexPath The file path of the vertex shader
+ * @param fragmentPath The file path of the fragment shader
+ * @return The shader that is loaded
+ */
 std::shared_ptr<graphics::Shader> AssetManager::LoadShader(const std::string& vertexPath,
     const std::string& fragmentPath)
 {
@@ -112,6 +135,7 @@ std::shared_ptr<graphics::Shader> AssetManager::LoadShader(const std::string& ve
     EE_CORE_INFO("Shader loaded: {0} | {1} | {2}", vertexPath, geometryPath, fragmentPath);
     return shader;
 }
+
 
 /**
  * @brief Get the shader from the asset manager

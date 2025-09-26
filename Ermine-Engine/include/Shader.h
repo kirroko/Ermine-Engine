@@ -59,6 +59,13 @@ namespace Ermine::graphics
          * @param vertexPath The path of the vertex shader
          * @param fragmentPath The path of the fragment shader
          */
+        Shader(const std::string& computePath);
+
+        /**
+         * @brief Create a shader
+         * @param vertexPath The path of the vertex shader
+         * @param fragmentPath The path of the fragment shader
+         */
         Shader(const std::string& vertexPath, const std::string& fragmentPath);
 
         /**
