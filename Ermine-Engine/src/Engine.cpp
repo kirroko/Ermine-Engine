@@ -239,50 +239,52 @@ bool engine::Init(GLFWwindow* windowContext)
 	std::shared_ptr<graphics::Material> glassMaterial = AssetManager::GetInstance().CreateMaterial("clear_glass", shader, "PBR_GLASS");
 	std::shared_ptr<graphics::Material> waterMaterial = AssetManager::GetInstance().CreateMaterial("water_surface", shader, "PBR_WATER");
 	
-	// Apply textures to shared materials
-	if (texture && texture->IsValid()) {
-		basicWhiteMaterial->SetTexture("materialAlbedoMap", texture);
-		basicWhiteMaterial->SetTexture("texture0", texture);
-		
-		metalMaterial->SetTexture("materialAlbedoMap", texture);
-		metalMaterial->SetTexture("texture0", texture);
-		
-		// Glass material setup
-		glassMaterial->SetTexture("materialAlbedoMap", texture);
-		glassMaterial->SetTexture("texture0", texture);
-		glassMaterial->SetFloat("materialTransparency", 0.9f);
-		glassMaterial->SetFloat("materialIndexOfRefraction", 1.5f);
-		glassMaterial->SetFloat("materialTransmissionFactor", 0.85f);
-		glassMaterial->SetBool("materialHasRefractionMap", true);
-		glassMaterial->SetFloat("materialReflectance", 0.04f);
-		glassMaterial->SetFloat("materialEnvironmentIntensity", 1.0f);
-		
-		// Add environment maps for glass refraction/reflection
-		if (environmentCubemap && environmentCubemap->IsValid()) {
-			glassMaterial->SetCubemap("materialEnvironmentMap", environmentCubemap);
-			glassMaterial->SetCubemap("materialIrradianceMap", environmentCubemap);
-			glassMaterial->SetBool("materialHasEnvironmentMap", true);
-			glassMaterial->SetBool("materialHasIrradianceMap", true);
+		// Apply textures to shared materials
+		if (texture && texture->IsValid()) {
+			basicWhiteMaterial->SetTexture("materialAlbedoMap", texture);
+			basicWhiteMaterial->SetTexture("texture0", texture);
+			
+			metalMaterial->SetTexture("materialAlbedoMap", texture);
+			metalMaterial->SetTexture("texture0", texture);
+			
+			// Glass material setup with albedo alpha transparency
+			glassMaterial->SetTexture("materialAlbedoMap", texture);
+			glassMaterial->SetTexture("texture0", texture);
+			// Use albedo alpha for transparency instead of hardcoded materialTransparency
+			glassMaterial->SetVec4("materialAlbedo", Vec4(0.95f, 0.95f, 0.95f, 0.1f)); // Alpha = 0.1 means 90% transparent
+			glassMaterial->SetFloat("materialIndexOfRefraction", 1.5f);
+			glassMaterial->SetFloat("materialTransmissionFactor", 0.85f);
+			glassMaterial->SetBool("materialHasRefractionMap", true);
+			glassMaterial->SetFloat("materialReflectance", 0.04f);
+			glassMaterial->SetFloat("materialEnvironmentIntensity", 1.0f);
+			
+			// Add environment maps for glass refraction/reflection
+			if (environmentCubemap && environmentCubemap->IsValid()) {
+				glassMaterial->SetCubemap("materialEnvironmentMap", environmentCubemap);
+				glassMaterial->SetCubemap("materialIrradianceMap", environmentCubemap);
+				glassMaterial->SetBool("materialHasEnvironmentMap", true);
+				glassMaterial->SetBool("materialHasIrradianceMap", true);
+			}
+			
+			// Water material setup with albedo alpha transparency
+			waterMaterial->SetTexture("materialAlbedoMap", texture);
+			waterMaterial->SetTexture("texture0", texture);
+			// Use albedo alpha for transparency instead of hardcoded materialTransparency
+			waterMaterial->SetVec4("materialAlbedo", Vec4(0.1f, 0.3f, 0.6f, 0.3f)); // Alpha = 0.3 means 70% transparent
+			waterMaterial->SetFloat("materialIndexOfRefraction", 1.33f);
+			waterMaterial->SetFloat("materialTransmissionFactor", 0.6f);
+			waterMaterial->SetBool("materialHasRefractionMap", true);
+			waterMaterial->SetFloat("materialReflectance", 0.04f);
+			waterMaterial->SetFloat("materialEnvironmentIntensity", 1.0f);
+			
+			// Add environment maps for water refraction/reflection
+			if (environmentCubemap && environmentCubemap->IsValid()) {
+				waterMaterial->SetCubemap("materialEnvironmentMap", environmentCubemap);
+				waterMaterial->SetCubemap("materialIrradianceMap", environmentCubemap);
+				waterMaterial->SetBool("materialHasEnvironmentMap", true);
+				waterMaterial->SetBool("materialHasIrradianceMap", true);
+			}
 		}
-		
-		// Water material setup
-		waterMaterial->SetTexture("materialAlbedoMap", texture);
-		waterMaterial->SetTexture("texture0", texture);
-		waterMaterial->SetFloat("materialTransparency", 0.7f);
-		waterMaterial->SetFloat("materialIndexOfRefraction", 1.33f);
-		waterMaterial->SetFloat("materialTransmissionFactor", 0.6f);
-		waterMaterial->SetBool("materialHasRefractionMap", true);
-		waterMaterial->SetFloat("materialReflectance", 0.04f);
-		waterMaterial->SetFloat("materialEnvironmentIntensity", 1.0f);
-		
-		// Add environment maps for water refraction/reflection
-		if (environmentCubemap && environmentCubemap->IsValid()) {
-			waterMaterial->SetCubemap("materialEnvironmentMap", environmentCubemap);
-			waterMaterial->SetCubemap("materialIrradianceMap", environmentCubemap);
-			waterMaterial->SetBool("materialHasEnvironmentMap", true);
-			waterMaterial->SetBool("materialHasIrradianceMap", true);
-		}
-	}
 	
 	EE_CORE_INFO("Created shared materials including glass and water with refraction support");
 

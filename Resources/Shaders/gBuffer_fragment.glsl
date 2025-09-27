@@ -20,7 +20,7 @@ layout(location = 3) out vec4 gBuffer3; // RT3: Material
 // Material UBO
 layout(std140) uniform MaterialBlock
 {
-    vec3 albedo;                    // 16-byte aligned
+    vec4 albedo;                    // 16-byte aligned - changed to vec4 to include alpha
     float metallic;                 // 4 bytes
     float roughness;                // 4 bytes  
     float ao;                       // 4 bytes
@@ -121,21 +121,25 @@ vec3 getNormalFromMap_TBN(sampler2D normalMap, vec2 texCoords, vec3 viewNormal, 
 void main()
 {
     // Sample material properties from textures if available
-    vec3 finalAlbedo = albedo;
+    vec3 finalAlbedo = albedo.rgb; // Use RGB components from vec4 albedo
     if (hasAlbedoMap != 0)
     {
         vec4 albedoSample = texture(materialAlbedoMap, TexCoord);
         finalAlbedo *= albedoSample.rgb;
     }
     
+    // Normal mapping
     vec3 finalNormal = ViewNormal;
     if (hasNormalMap != 0)
     {
-        // Use the new TBN-based normal mapping function - FIXED: Use ViewTangent and ViewBitangent
-        vec3 mapped = getNormalFromMap_TBN(materialNormalMap, TexCoord, ViewNormal, ViewTangent, ViewBitangent);
-        finalNormal = normalize(mix(ViewNormal, mapped, normalStrength));
+        vec3 normalSample = texture(materialNormalMap, TexCoord).rgb * 2.0 - 1.0;
+        normalSample.xy *= normalStrength;
+        
+        mat3 TBN = mat3(normalize(ViewTangent), normalize(ViewBitangent), normalize(ViewNormal));
+        finalNormal = normalize(TBN * normalSample);
     }
     
+    // Material properties
     float finalRoughness = roughness;
     if (hasRoughnessMap != 0)
     {
@@ -158,27 +162,9 @@ void main()
     float finalEmissiveIntensity = emissiveIntensity;
     if (hasEmissiveMap != 0)
     {
-        vec4 emissiveSample = texture(materialEmissiveMap, TexCoord);
-        // Properly combine emissive map with material emissive
-        vec3 mapEmissive = emissiveSample.rgb * emissiveSample.a; // Use alpha as intensity
-        vec3 materialEmissive = emissive * emissiveIntensity;
-        
-        // Combine both contributions
-        vec3 combinedEmissive = mapEmissive + materialEmissive;
-        float combinedIntensity = length(combinedEmissive);
-        
-        if (combinedIntensity > 0.0) {
-            finalEmissive = combinedEmissive / combinedIntensity;
-            finalEmissiveIntensity = combinedIntensity;
-        } else {
-            finalEmissive = vec3(0.0);
-            finalEmissiveIntensity = 0.0;
-        }
+        vec3 emissiveSample = texture(materialEmissiveMap, TexCoord).rgb;
+        finalEmissive *= emissiveSample;
     }
-   
-    
-    // Determine shading model
-    bool isBlinnPhong = shadingModel == 1;
 
     // Write to G-Buffer
     writeGBuffer(finalAlbedo, finalNormal, finalEmissive, finalEmissiveIntensity, 

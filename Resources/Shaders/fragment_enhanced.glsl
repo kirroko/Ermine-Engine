@@ -12,36 +12,43 @@ out vec4 FragColor;
 // Texture samplers - backwards compatibility
 uniform sampler2D texture0;
 
-// Material uniform block
+// Material uniform block - must match MaterialUBO structure exactly
 layout (std140) uniform MaterialBlock {
-    vec3 albedo;
-    float metallic;
-    float roughness;
-    float ao;
-    vec3 emissive;
-    float emissiveIntensity;
-    float normalStrength;
-    int shadingModel; // 0 = PBR, 1 = Blinn-Phong
+    vec4 albedo;                  // 16 bytes (0-15)
+    float metallic;               // 4 bytes (16-19)
+    float roughness;              // 4 bytes (20-23)
+    float ao;                     // 4 bytes (24-27)
+    float normalStrength;         // 4 bytes (28-31)
     
-    // Flags for texture presence
-    bool hasAlbedoMap;
-    bool hasNormalMap;
-    bool hasRoughnessMap;
-    bool hasMetallicMap;
-    bool hasAoMap;
-    bool hasEmissiveMap;
-    bool hasEnvironmentMap;
-    bool hasIrradianceMap;
+    vec3 emissive;                // 16 bytes (32-47) - vec3 uses 16 bytes in std140
+    float emissiveIntensity;      // 4 bytes (48-51)
+    int shadingModel;             // 4 bytes (52-55) // 0 = PBR, 1 = Blinn-Phong
+    float reflectance;            // 4 bytes (56-59)
+    float environmentIntensity;   // 4 bytes (60-63)
     
-    // Environment mapping parameters
-    float reflectance;
-    float environmentIntensity;
+    // Texture presence flags
+    int hasAlbedoMap;             // 4 bytes (64-67)
+    int hasNormalMap;             // 4 bytes (68-71)
+    int hasRoughnessMap;          // 4 bytes (72-75)
+    int hasMetallicMap;           // 4 bytes (76-79)
+    
+    int hasAoMap;                 // 4 bytes (80-83)
+    int hasEmissiveMap;           // 4 bytes (84-87)
+    int hasEnvironmentMap;        // 4 bytes (88-91)
+    int hasIrradianceMap;         // 4 bytes (92-95)
     
     // Refraction and transparency parameters
-    float transparency;
-    float indexOfRefraction;
-    float transmissionFactor;
-    bool hasRefractionMap;
+    float indexOfRefraction;      // 4 bytes (96-99)
+    float transmissionFactor;     // 4 bytes (100-103)
+    int hasRefractionMap;         // 4 bytes (104-107)
+    
+    // Padding (not used in shader but needed for alignment)
+    int _padding1;                // 4 bytes (108-111)
+    int _padding2;                // 4 bytes (112-115)
+    int _padding3;                // 4 bytes (116-119)
+    int _padding4;                // 4 bytes (120-123)
+    int _padding5;                // 4 bytes (124-127)
+    // Total: 128 bytes
 } material;
 
 // Separate texture samplers (cannot be in uniform blocks)
@@ -123,7 +130,7 @@ vec3 calculateNormal()
 {
     vec3 normal = normalize(Normal);
     
-    if (material.hasNormalMap) {
+    if (material.hasNormalMap != 0) {
         // Sample normal map
         vec3 normalMap = texture(materialNormalMap, TexCoord).rgb * 2.0 - 1.0;
         normalMap.xy *= material.normalStrength;
@@ -143,9 +150,9 @@ vec3 calculateNormal()
 // Sample material properties with texture support
 vec3 getAlbedo()
 {
-    vec3 albedo = material.albedo;
+    vec3 albedo = material.albedo.xyz; // Extract xyz from vec4
     
-    if (material.hasAlbedoMap) {
+    if (material.hasAlbedoMap != 0) {
         vec4 texColor = texture(materialAlbedoMap, TexCoord);
         albedo *= texColor.rgb;
     } else {
@@ -160,7 +167,7 @@ vec3 getAlbedo()
 float getRoughness()
 {
     float roughness = material.roughness;
-    if (material.hasRoughnessMap) {
+    if (material.hasRoughnessMap != 0) {
         roughness *= texture(materialRoughnessMap, TexCoord).r;
     }
     return clamp(roughness, 0.05, 1.0);
@@ -169,7 +176,7 @@ float getRoughness()
 float getMetallic()
 {
     float metallic = material.metallic;
-    if (material.hasMetallicMap) {
+    if (material.hasMetallicMap != 0) {
         metallic *= texture(materialMetallicMap, TexCoord).r;
     }
     return clamp(metallic, 0.0, 1.0);
@@ -178,7 +185,7 @@ float getMetallic()
 float getAO()
 {
     float ao = material.ao;
-    if (material.hasAoMap) {
+    if (material.hasAoMap != 0) {
         ao *= texture(materialAoMap, TexCoord).r;
     }
     return ao;
@@ -187,7 +194,7 @@ float getAO()
 vec3 getEmissive()
 {
     vec3 emissive = material.emissive * material.emissiveIntensity;
-    if (material.hasEmissiveMap) {
+    if (material.hasEmissiveMap != 0) {
         vec4 emissiveTexel = texture(materialEmissiveMap, TexCoord);
         emissive *= emissiveTexel.rgb;
     }
@@ -297,7 +304,7 @@ vec3 calculateLocalReflection(vec3 worldPos, vec3 normal, vec3 viewDir, float ro
     }
     
     // Fallback to global environment map if no local probes
-    if (totalWeight < 0.001 && material.hasEnvironmentMap) {
+    if (totalWeight < 0.001 && material.hasEnvironmentMap != 0) {
         mat3 viewToWorld = transpose(mat3(view));
         vec3 worldNormal = viewToWorld * normal;
         vec3 worldViewDir = viewToWorld * viewDir;
@@ -314,7 +321,7 @@ vec3 calculateLocalReflection(vec3 worldPos, vec3 normal, vec3 viewDir, float ro
 // Calculate environment refraction
 vec3 calculateEnvironmentRefraction(vec3 normal, vec3 viewDir, float ior)
 {
-    if (!material.hasRefractionMap) return vec3(0.0);
+    if (material.hasRefractionMap == 0) return vec3(0.0);
     
     // Convert to world space for consistent environment mapping
     mat3 viewToWorld = transpose(mat3(view));
@@ -331,7 +338,7 @@ vec3 calculateEnvironmentRefraction(vec3 normal, vec3 viewDir, float ior)
     
     // Sample environment map for refraction with slight blur for realism
     vec3 envRefraction = vec3(0.0);
-    if (material.hasEnvironmentMap) {
+    if (material.hasEnvironmentMap != 0) {
         // Use slight mip bias for refracted rays to simulate scattering
         float mipLevel = 1.0; // Slightly blurred refraction
         envRefraction = textureLod(materialEnvironmentMap, refractionDir, mipLevel).rgb;
@@ -346,7 +353,7 @@ vec3 calculateEnvironmentRefraction(vec3 normal, vec3 viewDir, float ior)
 // Enhanced environment reflection calculation
 vec3 calculateEnvironmentReflection(vec3 normal, vec3 viewDir, float roughness)
 {
-    if (!material.hasEnvironmentMap) return vec3(0.0);
+    if (material.hasEnvironmentMap == 0) return vec3(0.0);
     
     // Convert to world space for consistent environment mapping
     mat3 viewToWorld = transpose(mat3(view));
@@ -510,7 +517,7 @@ void main()
         
         // Ambient lighting from environment or fallback
         vec3 ambient = vec3(0.08) * albedo * ao;
-        if (material.hasIrradianceMap) {
+        if (material.hasIrradianceMap != 0) {
             mat3 viewToWorld = transpose(mat3(view));
             vec3 worldNormal = viewToWorld * norm;
             
@@ -540,7 +547,8 @@ void main()
         
         // Environment refraction for transparent materials
         vec3 envRefraction = vec3(0.0);
-        if (material.transparency > 0.0 && material.hasRefractionMap) {
+        float transparency = 1.0 - material.albedo.a; // Calculate transparency from albedo alpha (1.0 - alpha)
+        if (transparency > 0.0 && material.hasRefractionMap != 0) {
             envRefraction = calculateEnvironmentRefraction(norm, viewDir, material.indexOfRefraction);
         }
         
@@ -549,10 +557,10 @@ void main()
         
         // Mix reflection and refraction based on fresnel and material properties
         vec3 environmentContribution = vec3(0.0);
-        if (material.transparency > 0.0) {
+        if (transparency > 0.0) {
             // For transparent materials: blend reflection and refraction
             float reflectionStrength = fresnelFactor;
-            float refractionStrength = (1.0 - fresnelFactor) * material.transmissionFactor * material.transparency;
+            float refractionStrength = (1.0 - fresnelFactor) * material.transmissionFactor * transparency;
             
             // Normalize to ensure energy conservation
             float totalStrength = reflectionStrength + refractionStrength;
@@ -589,7 +597,7 @@ void main()
     // Gamma correction
     result = pow(result, vec3(1.0/2.2));
     
-    // Apply transparency
-    float alpha = 1.0 - material.transparency;
+    // Use alpha directly from albedo
+    float alpha = material.albedo.a;
     FragColor = vec4(result, alpha);
 }

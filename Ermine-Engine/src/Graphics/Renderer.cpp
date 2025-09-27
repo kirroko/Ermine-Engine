@@ -270,11 +270,11 @@ void Renderer::ResizeOffscreenBuffer(const int& width, const int& height)
 
 /**
  * @brief Create optimized g-buffer for deferred rendering using scalar materials and emissive
- * RT0: RGB16F (48 bits) - Albedo RGB
+ * RT0: RGBA16F (64 bits) - Albedo RGB + Alpha (transparency)
  * RT1: RGB16F (48 bits) - Normals XYZ
  * RT2: RGBA8 (32 bits) - Emissive RGB + Intensity
  * RT3: RGBA8 (32 bits) - Material properties (R: Roughness, G: Metallic, B: AO, A: Unused)
- * Total: 160 bits per pixel
+ * Total: 176 bits per pixel
  */
 void Renderer::CreateGBuffer(const int& width, const int& height)
 {
@@ -308,10 +308,10 @@ void Renderer::CreateGBuffer(const int& width, const int& height)
 	glGenFramebuffers(1, &gBuffer.FBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, gBuffer.FBO);
 
-	// Create RT0 Texture: RGB16F (48 bits) - Albedo RGB
+	// Create RT0 Texture: RGBA16F (64 bits) - Albedo RGB + Alpha (transparency)
 	glGenTextures(1, &gBuffer.PackedTexture0);
 	glBindTexture(GL_TEXTURE_2D, gBuffer.PackedTexture0);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_HALF_FLOAT, nullptr);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_HALF_FLOAT, nullptr);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -391,7 +391,7 @@ void Renderer::CreateGBuffer(const int& width, const int& height)
 	glMakeTextureHandleResidentARB(gBuffer.HandleDepthTexture);
 
 	m_GBuffer = std::make_shared<GBuffer>(gBuffer);
-	EE_CORE_INFO("Created G-Buffer: {0}x{1}, 160 bits per pixel", width, height);
+	EE_CORE_INFO("Created G-Buffer: {0}x{1}, 176 bits per pixel", width, height);
 }
 
 /**
@@ -1295,27 +1295,40 @@ void Renderer::BindLightsBlockIfPresent(const std::shared_ptr<Shader>& shader)
  */
 void Renderer::UpdateMaterialUBO(const graphics::MaterialUBO& materialData)
 {
+	// Validate material data size first
+	constexpr size_t expectedSize = sizeof(graphics::MaterialUBO);
+	if (expectedSize == 0)
+	{
+		EE_CORE_ERROR("Invalid MaterialUBO size: {0}", expectedSize);
+		return;
+	}
+	
+	// Ensure size is reasonable (MaterialUBO should be 128 bytes with proper alignment)
+	if (expectedSize < 64 || expectedSize > 512)
+	{
+		EE_CORE_ERROR("MaterialUBO size out of expected range: {0} bytes (expected ~128 bytes)", expectedSize);
+		return;
+	}
+
 	// Create Material UBO if it doesn't exist
 	if (!m_MaterialUBO)
 	{
 		glGenBuffers(1, &m_MaterialUBO);
 		glBindBuffer(GL_UNIFORM_BUFFER, m_MaterialUBO);
-		glBufferData(GL_UNIFORM_BUFFER, sizeof(graphics::MaterialUBO), nullptr, GL_DYNAMIC_DRAW);
-		glBindBufferBase(GL_UNIFORM_BUFFER, MaterialBindingPoint, m_MaterialUBO);
-		glBindBuffer(GL_UNIFORM_BUFFER, 0);
+		glBufferData(GL_UNIFORM_BUFFER, expectedSize, nullptr, GL_DYNAMIC_DRAW);
+		
+		// Check for errors during buffer creation
 		GLenum error = glGetError();
 		if (error != GL_NO_ERROR)
 		{
 			EE_CORE_ERROR("OpenGL error during MaterialUBO creation: {0}", error);
 			return;
 		}
-	}
-
-	// Validate material data size
-	if (sizeof(graphics::MaterialUBO) == 0)
-	{
-		EE_CORE_ERROR("Invalid MaterialUBO size");
-		return;
+		
+		glBindBufferBase(GL_UNIFORM_BUFFER, MaterialBindingPoint, m_MaterialUBO);
+		glBindBuffer(GL_UNIFORM_BUFFER, 0);
+		
+		EE_CORE_INFO("Created MaterialUBO with size: {0} bytes", expectedSize);
 	}
 
 	// Upload material data with comprehensive error checking
@@ -1327,11 +1340,22 @@ void Renderer::UpdateMaterialUBO(const graphics::MaterialUBO& materialData)
 	if (static_cast<GLuint>(boundBuffer) != m_MaterialUBO)
 	{
 		EE_CORE_ERROR("Failed to bind MaterialUBO for update");
+		glBindBuffer(GL_UNIFORM_BUFFER, 0);
+		return;
+	}
+
+	// Check buffer size matches expectation
+	GLint bufferSize;
+	glGetBufferParameteriv(GL_UNIFORM_BUFFER, GL_BUFFER_SIZE, &bufferSize);
+	if (static_cast<size_t>(bufferSize) != expectedSize)
+	{
+		EE_CORE_ERROR("MaterialUBO buffer size mismatch. Expected: {0}, Got: {1}", expectedSize, bufferSize);
+		glBindBuffer(GL_UNIFORM_BUFFER, 0);
 		return;
 	}
 
 	// Perform the buffer update
-	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(graphics::MaterialUBO), &materialData);
+	glBufferSubData(GL_UNIFORM_BUFFER, 0, expectedSize, &materialData);
 	
 	// Check for errors immediately after the critical operation
 	GLenum error = glGetError();
@@ -1347,14 +1371,17 @@ void Renderer::UpdateMaterialUBO(const graphics::MaterialUBO& materialData)
 		default: errorString = "UNKNOWN_ERROR"; break;
 		}
 		EE_CORE_ERROR("OpenGL error in UpdateMaterialUBO during glBufferSubData: {0} ({1})", error, errorString);
+		EE_CORE_ERROR("Buffer size: {0}, MaterialUBO size: {1}", bufferSize, expectedSize);
 		
-		// Try to get more diagnostic information
-		GLint bufferSize;
-		glGetBufferParameteriv(GL_UNIFORM_BUFFER, GL_BUFFER_SIZE, &bufferSize);
-		EE_CORE_ERROR("Buffer size: {0}, MaterialUBO size: {1}", bufferSize, sizeof(graphics::MaterialUBO));
+		// Additional debug information
+		EE_CORE_ERROR("MaterialUBO contents preview:");
+		EE_CORE_ERROR("  albedo: [{0}, {1}, {2}, {3}]", materialData.albedo.x, materialData.albedo.y, materialData.albedo.z, materialData.albedo.w);
+		EE_CORE_ERROR("  metallic: {0}, roughness: {1}, ao: {2}", materialData.metallic, materialData.roughness, materialData.ao);
+		EE_CORE_ERROR("  normalStrength: {0}, shadingModel: {1}", materialData.normalStrength, materialData.shadingModel);
 	}
 	
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+	glCheckError();
 }
 
 /**
@@ -1423,7 +1450,8 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 		auto& ecs = ECS::GetInstance();
 
 		// First pass: Render opaque objects and collect transparent objects
-		for (auto& entity : m_Entities)
+		for (auto& entity : m_Entities
+		)
 		{
 			// Model pipeline
 			if (ecs.HasComponent<ModelComponent>(entity))
@@ -1487,7 +1515,7 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 				model *= glm::mat4_cast(rotQuat);
 				model = glm::scale(model, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
 
-				// Check if transparent
+				// Check if material is transparent
 				if (IsTransparentMaterial(material)) {
 					TransparentObject transparentObj;
 					transparentObj.entity = entity;
@@ -1520,7 +1548,13 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 				shader->SetUniformMatrix4fv("view", &view.m2[0][0]);
 				shader->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
 
-				// Calculate and set normal matrix
+				// Calculate normal matrix
+				glm::mat4 glmView = glm::mat4(
+					view.m00, view.m01, view.m02, view.m03,
+					view.m10, view.m11, view.m12, view.m13,
+					view.m20, view.m21, view.m22, view.m23,
+					view.m30, view.m31, view.m32, view.m33
+				);
 				glm::mat4 modelView = glmView * model;
 				glm::mat3 normalMatrix = transpose(inverse(glm::mat3(modelView)));
 				shader->SetUniformMatrix3fv("NormalMatrix", normalMatrix);
@@ -1605,6 +1639,12 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 					shader->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
 
 					// Calculate normal matrix
+					glm::mat4 glmView = glm::mat4(
+						view.m00, view.m01, view.m02, view.m03,
+						view.m10, view.m11, view.m12, view.m13,
+						view.m20, view.m21, view.m22, view.m23,
+						view.m30, view.m31, view.m32, view.m33
+					);
 					glm::mat4 modelView = glmView * transparentObj.modelMatrix;
 					glm::mat3 normalMatrix = transpose(inverse(glm::mat3(modelView)));
 					shader->SetUniformMatrix3fv("NormalMatrix", normalMatrix);
@@ -1758,7 +1798,7 @@ void Renderer::RenderModel(const Model& model, const Mtx44& view, const Mtx44& p
 
 			// Tell the shader which texture unit the sampler uses
 			if (shader->HasUniform("materialAlbedoMap"))
-				shader->SetUniform1i("materialAlbedoMap", 0);
+			shader->SetUniform1i("materialAlbedoMap", 0);
 		}
 
 		Draw(mesh.vao, mesh.ibo, shader);
@@ -1769,17 +1809,29 @@ bool Renderer::IsTransparentMaterial(const Ermine::graphics::Material* material)
 {
 	if (!material) return false;
 
-	// Check if material has transparency parameter set
-	if (auto transparencyParam = material->GetParameter("materialTransparency")) {
-		if (transparencyParam->type == MaterialParamType::FLOAT &&
-			transparencyParam->floatValues.size() > 0) {
-			return transparencyParam->floatValues[0] > 0.01f; // Consider transparent if > 1%
+	// Check if material has albedo with alpha for transparency
+	if (auto albedoParam = material->GetParameter("materialAlbedo")) {
+		if (albedoParam->type == MaterialParamType::VEC4 &&
+			albedoParam->floatValues.size() >= 4) {
+			float alpha = albedoParam->floatValues[3];
+			return alpha < 0.99f; // Consider transparent if alpha < 99%
+		}
+		// If albedo is Vec3, check if material has an albedo texture with alpha
+		else if (albedoParam->type == MaterialParamType::VEC3) {
+			// Check if there's an albedo texture that might have alpha
+			if (auto albedoTexParam = material->GetParameter("materialAlbedoMap")) {
+				if (albedoTexParam->type == MaterialParamType::TEXTURE_2D && 
+					albedoTexParam->texture && albedoTexParam->texture->IsValid()) {
+					// For texture-based materials, we can't easily check alpha without loading the texture
+					// For now, assume opaque unless explicitly marked as transparent
+					return false;
+				}
+			}
 		}
 	}
 
-	// Check material UBO data
-	const auto& uboData = material->GetUBOData();
-	return uboData.transparency > 0.01f;
+	// Default to opaque if no transparency information is found
+	return false;
 }
 
 void Renderer::SortTransparentObjects(const Vec3& cameraPos)
@@ -1950,7 +2002,7 @@ void Renderer::RenderTransparentPass(const Mtx44& view, const Mtx44& projection)
 			}
 		}
 
-		// Unbind textures
+		// Unbind material
 		material->Unbind();
 	}
 
@@ -2196,8 +2248,6 @@ bool Renderer::testSpotlightFrustumIntersection(const glm::vec3& lightPos, const
 		frustumMin = glm::min(frustumMin, corner);
 		frustumMax = glm::max(frustumMax, corner);
 	}
-
-	// Expand frustum AABB slightly for numerical stability
 	frustumMin -= glm::vec3(0.1f);
 	frustumMax += glm::vec3(0.1f);
 
@@ -2243,9 +2293,8 @@ glm::mat4 Renderer::calculateSpotlightCascadeMatrix(const glm::vec3& lightPos, c
 
 	// Create spotlight's base view matrix
 	glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
-	if (glm::abs(glm::dot(spotDir, up)) > 0.999f) {
+	if (glm::abs(glm::dot(spotDir, up)) > 0.999f)
 		up = glm::vec3(1.0f, 0.0f, 0.0f);
-	}
 	glm::mat4 baseView = glm::lookAt(lightPos, lightPos + spotDir, up);
 
 	// Transform cascade frustum to light space
@@ -2264,7 +2313,7 @@ glm::mat4 Renderer::calculateSpotlightCascadeMatrix(const glm::vec3& lightPos, c
 		lsMax = glm::max(lsMax, p);
 	}
 
-	// Apply margins to prevent edge artifacts
+	// Apply margins to prevent clipping
 	const float xyMargin = 0.2f;
 	const float zMargin = 5.0f;
 	lsMin -= glm::vec3(xyMargin, xyMargin, zMargin);
@@ -2282,17 +2331,6 @@ glm::mat4 Renderer::calculateSpotlightCascadeMatrix(const glm::vec3& lightPos, c
 		lsMax.x *= scale;
 		lsMax.y *= scale;
 	}
-
-	// Texel snapping for stable shadows
-	float orthoWidth = lsMax.x - lsMin.x;
-	float orthoHeight = lsMax.y - lsMin.y;
-	float texelSize = glm::max(orthoWidth, orthoHeight) / static_cast<float>(shadowRes);
-
-	// Snap bounds to texel grid
-	lsMin.x = std::floor(lsMin.x / texelSize) * texelSize;
-	lsMin.y = std::floor(lsMin.y / texelSize) * texelSize;
-	lsMax.x = std::ceil(lsMax.x / texelSize) * texelSize;
-	lsMax.y = std::ceil(lsMax.y / texelSize) * texelSize;
 
 	// Create orthographic projection (tighter fit than perspective for cascaded shadows)
 	float nearPlane = -lsMax.z;
@@ -2516,24 +2554,6 @@ void Renderer::CalculateLightMatrix(const editor::EditorCamera& editorCamera)
 				lsMax += glm::vec3(xyMargin, xyMargin, zMargin);
 
 				// Compute ortho extents
-				float orthoWidth = lsMax.x - lsMin.x;
-				float orthoHeight = lsMax.y - lsMin.y;
-
-				// Avoid degenerate cases
-				const float minExtent = 0.1f;
-				orthoWidth = glm::max(orthoWidth, minExtent);
-				orthoHeight = glm::max(orthoHeight, minExtent);
-
-				// Texel snapping for stable shadows
-				float texelSize = glm::max(orthoWidth, orthoHeight) / static_cast<float>(shadowRes);
-
-				// Snap bounds to texel grid
-				lsMin.x = std::floor(lsMin.x / texelSize) * texelSize;
-				lsMin.y = std::floor(lsMin.y / texelSize) * texelSize;
-				lsMax.x = std::ceil(lsMax.x / texelSize) * texelSize;
-				lsMax.y = std::ceil(lsMax.y / texelSize) * texelSize;
-
-				// Ortho projection
 				float nearPlane = -lsMax.z;
 				float farPlane = -lsMin.z;
 				glm::mat4 lightProj = glm::ortho(lsMin.x, lsMax.x, lsMin.y, lsMax.y, nearPlane, farPlane);
@@ -2660,7 +2680,7 @@ void Renderer::RenderShadowMapInstanced()
 	// Validate resources
 	if (!m_ShadowMapFBO || !m_ShadowMapArray || !m_ShadowMapInstancedShader)
 	{
-		EE_CORE_WARN("RenderShadowMapInstancedOptimized: missing shadow FBO/texture/shader");
+		EE_CORE_WARN("RenderShadowMapInstanced: missing shadow FBO/texture/shader");
 		return;
 	}
 
@@ -2734,7 +2754,7 @@ void Renderer::RenderShadowMapInstanced()
 		// Build root transform
 		glm::mat4 root = glm::mat4(1.0f);
 		root = glm::translate(root, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
-		glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
+		glm::quat rotQuat = glm::quat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
 		rotQuat = glm::normalize(rotQuat);
 		root *= glm::mat4_cast(rotQuat);
 		root = glm::scale(root, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
@@ -2766,7 +2786,7 @@ void Renderer::RenderShadowMapInstanced()
 		// Build model matrix
 		glm::mat4 modelMat = glm::mat4(1.0f);
 		modelMat = glm::translate(modelMat, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
-		glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
+		glm::quat rotQuat = glm::quat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
 		rotQuat = glm::normalize(rotQuat);
 		modelMat *= glm::mat4_cast(rotQuat);
 		modelMat = glm::scale(modelMat, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
@@ -2789,7 +2809,8 @@ void Renderer::RenderShadowMapInstanced()
 
 /**
  * @brief Executes the full shadow pass for all shadow-casting lights.
- * Calculates light-space matrices and renders the shadow map using instanced rendering.
+ * Calculates cascade splits and shadow matrices for directional and spot lights based on the camera's view and projection.
+ * Updates each light's shadow matrix and split depth for use in shadow mapping.
  */
 void Renderer::RenderShadowPass()
 {

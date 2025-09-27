@@ -74,38 +74,41 @@ namespace Ermine::graphics
     *************************************************************************/
     struct MaterialUBO
     {
-        alignas(16) Vec3 albedo { 0.8f, 0.8f, 0.8f };
-        alignas(4) float metallic{ 0.0f };
-        alignas(4) float roughness{ 0.5f };
-        alignas(4) float ao{ 1.0f };
-        alignas(16) Vec3 emissive { 0.0f, 0.0f, 0.0f };
-        alignas(4) float emissiveIntensity{ 0.0f };
-        alignas(4) float normalStrength{ 1.0f };
-        alignas(4) int shadingModel{ 0 }; // 0 = PBR, 1 = Blinn-Phong
-
+        alignas(16) Vec4 albedo { 0.8f, 0.8f, 0.8f, 1.0f }; // 16 bytes (0-15)
+        alignas(4) float metallic{ 0.0f };                   // 4 bytes (16-19)
+        alignas(4) float roughness{ 0.5f };                  // 4 bytes (20-23)
+        alignas(4) float ao{ 1.0f };                         // 4 bytes (24-27)
+        alignas(4) float normalStrength{ 1.0f };             // 4 bytes (28-31)
+        
+        alignas(16) Vec3 emissive { 0.0f, 0.0f, 0.0f };      // 16 bytes (32-47)
+        alignas(4) float emissiveIntensity{ 0.0f };          // 4 bytes (48-51)
+        alignas(4) int shadingModel{ 0 };                    // 4 bytes (52-55) // 0 = PBR, 1 = Blinn-Phong
+        alignas(4) float reflectance{ 0.04f };               // 4 bytes (56-59)
+        alignas(4) float environmentIntensity{ 1.0f };       // 4 bytes (60-63)
+        
         // Texture presence flags (packed as ints for std140 compatibility)
-        alignas(4) int hasAlbedoMap{ 0 };
-        alignas(4) int hasNormalMap{ 0 };
-        alignas(4) int hasRoughnessMap{ 0 };
-        alignas(4) int hasMetallicMap{ 0 };
-        alignas(4) int hasAoMap{ 0 };
-        alignas(4) int hasEmissiveMap{ 0 };
-        alignas(4) int hasEnvironmentMap{ 0 };
-        alignas(4) int hasIrradianceMap{ 0 };
-
-        // Environment mapping parameters
-        alignas(4) float reflectance{ 0.04f };
-        alignas(4) float environmentIntensity{ 1.0f };
+        alignas(4) int hasAlbedoMap{ 0 };        // 4 bytes (64-67)
+        alignas(4) int hasNormalMap{ 0 };        // 4 bytes (68-71)
+        alignas(4) int hasRoughnessMap{ 0 };     // 4 bytes (72-75)
+        alignas(4) int hasMetallicMap{ 0 };      // 4 bytes (76-79)
         
-        // Refraction and transparency parameters
-        alignas(4) float transparency{ 0.0f };        // 0 = opaque, 1 = fully transparent
-        alignas(4) float indexOfRefraction{ 1.0f };   // IOR for refraction (glass ~1.5, water ~1.33)
-        alignas(4) float transmissionFactor{ 0.0f };  // How much light passes through vs reflects
-        alignas(4) int hasRefractionMap{ 0 };         // Whether material uses refraction
+        alignas(4) int hasAoMap{ 0 };            // 4 bytes (80-83)
+        alignas(4) int hasEmissiveMap{ 0 };      // 4 bytes (84-87)
+        alignas(4) int hasEnvironmentMap{ 0 };   // 4 bytes (88-91)
+        alignas(4) int hasIrradianceMap{ 0 };    // 4 bytes (92-95)
         
-        // Padding to ensure proper alignment
-        alignas(4) int padding1{ 0 };
-        alignas(4) int padding2{ 0 };
+        // Refraction parameters (transparency now handled via albedo alpha)
+        alignas(4) float indexOfRefraction{ 1.0f };   // 4 bytes (96-99)   // IOR for refraction (glass ~1.5, water ~1.33)
+        alignas(4) float transmissionFactor{ 0.0f };  // 4 bytes (100-103) // How much light passes through vs reflects
+        alignas(4) int hasRefractionMap{ 0 };         // 4 bytes (104-107) // Whether material uses refraction
+        
+        // Padding to ensure proper alignment (total size should be multiple of 16)
+        alignas(4) int padding1{ 0 };            // 4 bytes (108-111)
+        alignas(4) int padding2{ 0 };            // 4 bytes (112-115)
+        alignas(4) int padding3{ 0 };            // 4 bytes (116-119)
+        alignas(4) int padding4{ 0 };            // 4 bytes (120-123)
+        alignas(4) int padding5{ 0 };            // 4 bytes (124-127)
+        // Total: 128 bytes (multiple of 16)
     };
 
     // Forward declaration
@@ -227,7 +230,6 @@ namespace Ermine::graphics
                 {"materialHasIrradianceMap", true},
                 {"materialReflectance", 0.04f},
                 {"materialEnvironmentIntensity", 1.0f},
-                {"materialTransparency", 0.0f},
                 {"materialIndexOfRefraction", 1.0f},
                 {"materialTransmissionFactor", 0.0f},
                 {"materialHasRefractionMap", false}
@@ -238,7 +240,7 @@ namespace Ermine::graphics
         static std::map<std::string, MaterialParam> PBR_GLASS(float transparency = 0.9f, float ior = 1.5f)
         {
             return {
-                {"materialAlbedo", Vec3(0.95f, 0.95f, 0.95f)},
+                {"materialAlbedo", Vec4(0.95f, 0.95f, 0.95f, 1.0f - transparency)}, // Use alpha for transparency
                 {"materialMetallic", 0.0f},
                 {"materialRoughness", 0.05f},
                 {"materialAo", 1.0f},
@@ -256,7 +258,6 @@ namespace Ermine::graphics
                 {"materialHasIrradianceMap", false},
                 {"materialReflectance", 0.04f},
                 {"materialEnvironmentIntensity", 1.0f},
-                {"materialTransparency", transparency},
                 {"materialIndexOfRefraction", ior},
                 {"materialTransmissionFactor", transparency * 0.9f},
                 {"materialHasRefractionMap", true}
@@ -267,7 +268,7 @@ namespace Ermine::graphics
         static std::map<std::string, MaterialParam> PBR_WATER(float transparency = 0.7f)
         {
             return {
-                {"materialAlbedo", Vec3(0.1f, 0.3f, 0.6f)},
+                {"materialAlbedo", Vec4(0.1f, 0.3f, 0.6f, 1.0f - transparency)}, // Use alpha for transparency
                 {"materialMetallic", 0.0f},
                 {"materialRoughness", 0.1f},
                 {"materialAo", 1.0f},
@@ -285,7 +286,6 @@ namespace Ermine::graphics
                 {"materialHasIrradianceMap", false},
                 {"materialReflectance", 0.04f},
                 {"materialEnvironmentIntensity", 1.0f},
-                {"materialTransparency", transparency},
                 {"materialIndexOfRefraction", 1.33f}, // Water IOR
                 {"materialTransmissionFactor", transparency * 0.8f},
                 {"materialHasRefractionMap", true}
@@ -315,14 +315,24 @@ namespace Ermine::graphics
         {
             if (!m_uboDirty) return;
 
-            // Update material data from parameters
+            // Update material data from parameters - support both Vec3 and Vec4 albedo
             if (auto param = GetParameter("materialAlbedo"))
             {
-                if (param->floatValues.size() >= 3)
+                if (param->type == MaterialParamType::VEC4 && param->floatValues.size() >= 4)
                 {
-                    m_materialData.albedo = Vec3(param->floatValues[0],
+                    // Vec4 albedo with alpha channel for transparency
+                    m_materialData.albedo = Vec4(param->floatValues[0],
                         param->floatValues[1],
-                        param->floatValues[2]);
+                        param->floatValues[2],
+                        param->floatValues[3]);
+                }
+                else if (param->type == MaterialParamType::VEC3 && param->floatValues.size() >= 3)
+                {
+                    // Vec3 albedo - set alpha to 1.0 (fully opaque)
+                    m_materialData.albedo = Vec4(param->floatValues[0],
+                        param->floatValues[1],
+                        param->floatValues[2],
+                        1.0f);
                 }
             }
 
@@ -334,6 +344,9 @@ namespace Ermine::graphics
 
             if (auto param = GetParameter("materialAo"))
                 m_materialData.ao = param->floatValues[0];
+
+            if (auto param = GetParameter("materialNormalStrength"))
+                m_materialData.normalStrength = param->floatValues[0];
 
             if (auto param = GetParameter("materialEmissive"))
             {
@@ -348,9 +361,6 @@ namespace Ermine::graphics
             if (auto param = GetParameter("materialEmissiveIntensity"))
                 m_materialData.emissiveIntensity = param->floatValues[0];
 
-            if (auto param = GetParameter("materialNormalStrength"))
-                m_materialData.normalStrength = param->floatValues[0];
-
             if (auto param = GetParameter("materialShadingModel"))
                 m_materialData.shadingModel = param->intValue;
 
@@ -360,10 +370,7 @@ namespace Ermine::graphics
             if (auto param = GetParameter("materialEnvironmentIntensity"))
                 m_materialData.environmentIntensity = param->floatValues[0];
 
-            // Update refraction and transparency parameters
-            if (auto param = GetParameter("materialTransparency"))
-                m_materialData.transparency = param->floatValues[0];
-
+            // Update refraction parameters (transparency now handled via albedo alpha)
             if (auto param = GetParameter("materialIndexOfRefraction"))
                 m_materialData.indexOfRefraction = param->floatValues[0];
 

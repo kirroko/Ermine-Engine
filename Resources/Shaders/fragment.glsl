@@ -14,7 +14,7 @@ uniform sampler2D texture0;           // Backwards compatibility
 
 // Material uniform block
 layout (std140) uniform MaterialBlock {
-    vec3 albedo;
+    vec4 albedo; // Changed from vec3 to vec4 to include alpha channel
     float metallic;
     float roughness;
     float ao;
@@ -114,7 +114,7 @@ vec3 calculateNormal()
 // Sample material properties with texture support
 vec3 getAlbedo()
 {
-    vec3 albedo = material.albedo;
+    vec3 albedo = material.albedo.rgb; // Use only RGB components
     
     if (material.hasAlbedoMap) {
         vec4 texColor = texture(materialAlbedoMap, TexCoord);
@@ -444,5 +444,7 @@ void main()
     // Gamma correction
     result = pow(result, vec3(1.0/2.2));
     
-    FragColor = vec4(result, 1.0);
+    // Use alpha from albedo for transparency
+    float alpha = material.albedo.a;
+    FragColor = vec4(result, alpha);
 }
