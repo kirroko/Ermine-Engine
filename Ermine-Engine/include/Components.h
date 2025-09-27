@@ -1,9 +1,10 @@
 /* Start Header ************************************************************************/
 /*!
 \file       Components.h
-\author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu (85%)
+\author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu (65%)
 \co-author  Jeremy Lim Ting Jie, jeremytingjie.lim, 2301370, jeremytingjie.lim\@digipen.edu (10%)
 \co-author  Ridhwan (5%)
+\co-author  Curtis (20%)
 \date       Jan 24, 2025
 \brief      Updated components with modular material system
 
@@ -26,11 +27,39 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Texture.h"
 #include "Material.h"
 #include "AudioManager.h"
+#include <rapidjson/document.h>
+#include <rapidjson/writer.h>
+#include <rapidjson/stringbuffer.h>
 #include "Model.h"
 #include "Animator.h"
+#include "AssetManager.h"
+#include <Jolt/Jolt.h>
+#include <Jolt/Physics/Body/Body.h>
 
 namespace Ermine
 {
+	inline Quaternion QuaternionFromEulerDegrees(const Vec3& eulerDeg) {
+		// Convert degrees to radians
+		float pitch = glm::radians(eulerDeg.x); // or your own math::ToRadians
+		float yaw = glm::radians(eulerDeg.y);
+		float roll = glm::radians(eulerDeg.z);
+
+		float cy = cosf(yaw * 0.5f);
+
+		float sy = sinf(yaw * 0.5f);
+		float cp = cosf(pitch * 0.5f);
+		float sp = sinf(pitch * 0.5f);
+		float cr = cosf(roll * 0.5f);
+		float sr = sinf(roll * 0.5f);
+
+		Quaternion q{};
+		q.w = cr * cp * cy + sr * sp * sy;
+		q.x = sr * cp * cy - cr * sp * sy;
+		q.y = cr * sp * cy + sr * cp * sy;
+		q.z = cr * cp * sy - sr * sp * cy;
+		return q;
+	}
+
 	/*!***********************************************************************
 	\brief
 	 Transform component structure.
@@ -44,6 +73,54 @@ namespace Ermine
 
 		explicit Transform(const Vec3& pos = Vec3(), const Quaternion& rot = Quaternion(), const Vec3& scl = Vec3(1.f, 1.f, 1.f)) : position(pos), rotation(rot), scale(scl)
 		{
+		}
+
+		template<typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
+			out.SetObject();
+
+			auto vec3_to_json = [&](const Vec3& v) {
+				rapidjson::Value a(rapidjson::kArrayType);
+				a.PushBack(v.x, alloc).PushBack(v.y, alloc).PushBack(v.z, alloc);
+				return a;
+				};
+
+			auto quat_to_json = [&](const Quaternion& q) {
+				rapidjson::Value a(rapidjson::kArrayType);
+				a.PushBack(q.w, alloc).PushBack(q.x, alloc).PushBack(q.y, alloc).PushBack(q.z, alloc);
+				return a;
+				};
+
+			out.AddMember("position", vec3_to_json(position), alloc);
+			out.AddMember("rotation", quat_to_json(rotation), alloc);
+			out.AddMember("scale", vec3_to_json(scale), alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in) {
+			auto json_to_vec3 = [&](const rapidjson::Value& arr) {
+				return Vector3D(arr[0].GetFloat(), arr[1].GetFloat(), arr[2].GetFloat());
+				};
+
+			if (in.HasMember("position") && in["position"].IsArray() && in["position"].Size() == 3)
+				position = json_to_vec3(in["position"]);
+
+			if (in.HasMember("scale") && in["scale"].IsArray() && in["scale"].Size() == 3)
+				scale = json_to_vec3(in["scale"]);
+
+			if (in.HasMember("rotation") && in["rotation"].IsArray()) {
+				const auto& r = in["rotation"];
+				if (r.Size() == 4) {
+					// Expecting [w, x, y, z]
+					rotation.w = r[0].GetFloat();
+					rotation.x = r[1].GetFloat();
+					rotation.y = r[2].GetFloat();
+					rotation.z = r[3].GetFloat();
+				}
+				else if (r.Size() == 3) {
+					Vec3 eulerDeg = json_to_vec3(r);
+					rotation = QuaternionFromEulerDegrees(eulerDeg);
+				}
+			}
 		}
 	};
 
@@ -79,6 +156,8 @@ namespace Ermine
 			position(pos), velocity(vel), acceleration(acc), force(frc), mass(m), inverse_mass(inv_m), linear_drag(lin_drag), angular_drag(ang_drag), use_gravity(use_grav), is_kinematic(is_kinem)
 		{
 		}
+
+		// 
 	};
 
 	/*!***********************************************************************
@@ -100,6 +179,21 @@ namespace Ermine
 			tag_)), selfActive(active)
 		{
 		}
+
+		template<typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
+			out.SetObject();
+			out.AddMember("name", rapidjson::Value(name.c_str(), alloc), alloc);
+			out.AddMember("tag", rapidjson::Value(tag.c_str(), alloc), alloc);
+			out.AddMember("active", selfActive, alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in) {
+			if (in.HasMember("name") && in["name"].IsString())   name = in["name"].GetString();
+			if (in.HasMember("tag") && in["tag"].IsString())    tag = in["tag"].GetString();
+			if (in.HasMember("active") && in["active"].IsBool()) selfActive = in["active"].GetBool();
+		}
+
 	};
 
 	/*!***********************************************************************
@@ -163,6 +257,24 @@ namespace Ermine
 			}
 			return *this;
 		}
+
+		template <typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
+			out.SetObject();
+			//MeshRef ref{ m_meshAssetId };
+			//rapidjson::Value meshJson;
+			//Serialize(ref, meshJson, alloc);
+			//out.AddMember("mesh", meshJson, alloc);
+
+			// only script name needs to be serialised
+		}
+
+		void Deserialize(const rapidjson::Value& in) {
+			//if (in.HasMember("mesh") && in["mesh"].IsObject())
+			//	mesh = DeserializeMeshRef(in["mesh"], AssetManager::Get());
+
+			// only script name needs to be deserialised
+		}
 	};
 
 	/*!***********************************************************************
@@ -182,6 +294,20 @@ namespace Ermine
 			fov(fov), aspectRatio(aspect), nearPlane(nearP), farPlane(farP), isPrimary(primary)
 		{
 		}
+
+		template <typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
+			out.SetObject();
+			//MeshRef ref{ m_meshAssetId };
+			//rapidjson::Value meshJson;
+			//Serialize(ref, meshJson, alloc);
+			//out.AddMember("mesh", meshJson, alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in) {
+			//if (in.HasMember("mesh") && in["mesh"].IsObject())
+			//	mesh = DeserializeMeshRef(in["mesh"], AssetManager::Get());
+		}
 	};
 
 	/*!***********************************************************************
@@ -199,6 +325,34 @@ namespace Ermine
 		Mesh(const std::shared_ptr<graphics::VertexArray>& vao, const std::shared_ptr<graphics::VertexBuffer>& vbo, const std::shared_ptr<graphics::IndexBuffer>& ibo) :
 			vertex_array(vao), vertex_buffer(vbo), index_buffer(ibo)
 		{
+		}
+
+		//template <typename Alloc>
+		//void Serialize(rapidjson::Value& out, Alloc& alloc) const {
+		//	out.SetObject();
+		//	MeshRef ref{ m_meshAssetId };
+		//	rapidjson::Value meshJson;
+		//	Serialize(ref, meshJson, alloc);
+		//	out.AddMember("mesh", meshJson, alloc);
+		//}
+
+		//void Deserialize(const rapidjson::Value& in) {
+		//	if (in.HasMember("mesh") && in["mesh"].IsObject())
+		//		mesh = DeserializeMeshRef(in["mesh"], AssetManager::Get());
+		//}
+
+		template <typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
+			out.SetObject();
+			//MeshRef ref{ m_meshAssetId };
+			//rapidjson::Value meshJson;
+			//Serialize(ref, meshJson, alloc);
+			//out.AddMember("mesh", meshJson, alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in) {
+			//if (in.HasMember("mesh") && in["mesh"].IsObject())
+			//	mesh = DeserializeMeshRef(in["mesh"], AssetManager::Get());
 		}
 	};
 
@@ -359,6 +513,20 @@ namespace Ermine
 				m_material->SetBool("material.hasNormalMap", true);
 			}
 		}
+
+		template <typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
+			out.SetObject();
+			//MeshRef ref{ m_meshAssetId };
+			//rapidjson::Value meshJson;
+			//Serialize(ref, meshJson, alloc);
+			//out.AddMember("mesh", meshJson, alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in) {
+			//if (in.HasMember("mesh") && in["mesh"].IsObject())
+			//	mesh = DeserializeMeshRef(in["mesh"], AssetManager::Get());
+		}
 	};
 
 	/*!***********************************************************************
@@ -409,6 +577,44 @@ namespace Ermine
 		Light(const Vec3& col, float intens, LightType t, bool shadows, unsigned int res) :
 			color(col), intensity(intens), type(t), castsShadows(shadows), resolution(res)
 		{
+		}
+
+		template<typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
+			out.SetObject();
+
+			auto vec3_to_json = [&](const Vec3& v) {
+				rapidjson::Value a(rapidjson::kArrayType);
+				a.PushBack(v.x, alloc).PushBack(v.y, alloc).PushBack(v.z, alloc);
+				return a;
+				};
+
+			out.AddMember("color", vec3_to_json(color), alloc);
+			out.AddMember("intensity", intensity, alloc);
+			out.AddMember("type", static_cast<int>(type), alloc);          // 0=POINT,1=DIR,2=SPOT
+			out.AddMember("castsShadows", castsShadows, alloc);
+			out.AddMember("resolution", resolution, alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in) {
+			auto json_to_vec3 = [&](const rapidjson::Value& arr) {
+				return Vec3(arr[0].GetFloat(), arr[1].GetFloat(), arr[2].GetFloat());
+				};
+
+			if (in.HasMember("color") && in["color"].IsArray() && in["color"].Size() == 3)
+				color = json_to_vec3(in["color"]);
+			if (in.HasMember("intensity") && in["intensity"].IsNumber())
+				intensity = in["intensity"].GetFloat();
+			if (in.HasMember("type") && in["type"].IsInt()) {
+				int t = in["type"].GetInt();
+				if (t == 1) type = LightType::DIRECTIONAL;
+				else if (t == 2) type = LightType::SPOT;
+				else             type = LightType::POINT;
+			}
+			if (in.HasMember("castsShadows") && in["castsShadows"].IsBool())
+				castsShadows = in["castsShadows"].GetBool();
+			if (in.HasMember("resolution") && in["resolution"].IsUint())
+				resolution = in["resolution"].GetUint();
 		}
 	};
 
@@ -463,6 +669,32 @@ namespace Ermine
 		int GetMusicIndex(const std::string& name) const;
 		void AddMusicSource(const std::string& name, const std::string& path);
 		void AddSFXSource(const std::string& name, const std::string& path);
+
+		template <typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
+			//const std::string& model_name = m_model->GetName();
+			//out.SetObject();
+
+			//rapidjson::Value modelVal;
+			//modelVal.SetString(model_name.c_str(),
+			//	static_cast<rapidjson::SizeType>(model_name.size()),
+			//	alloc);  // required for strings
+
+			//out.AddMember("model", modelVal, alloc);
+		}
+
+
+		void Deserialize(const rapidjson::Value& in) {
+			//if (in.HasMember("model") && in["model"].IsString()) {
+			//	const char* name = in["model"].GetString();
+
+			//	if (!m_model) {
+			//		m_model = AssetManager::GetInstance().LoadModel("../Resources/Models/" + std::string(name));
+			//	}
+
+			//	m_model->LoadModel(std::string("../Resources/Models/") + name);
+			//}
+		}
 	};
 
 	/*!***********************************************************************
@@ -504,6 +736,32 @@ namespace Ermine
 		explicit AudioComponent(const std::string& event) :
 			eventName(event), is3D(false), volume(0.5f) {
 		} // Events typically handle their own 3D settings
+
+		template <typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
+			//const std::string& model_name = m_model->GetName();
+			//out.SetObject();
+
+			//rapidjson::Value modelVal;
+			//modelVal.SetString(model_name.c_str(),
+			//	static_cast<rapidjson::SizeType>(model_name.size()),
+			//	alloc);  // required for strings
+
+			//out.AddMember("model", modelVal, alloc);
+		}
+
+
+		void Deserialize(const rapidjson::Value& in) {
+			//if (in.HasMember("model") && in["model"].IsString()) {
+			//	const char* name = in["model"].GetString();
+
+			//	if (!m_model) {
+			//		m_model = AssetManager::GetInstance().LoadModel("../Resources/Models/" + std::string(name));
+			//	}
+
+			//	m_model->LoadModel(std::string("../Resources/Models/") + name);
+			//}
+		}
 	};
 
 	/*!***********************************************************************
@@ -519,7 +777,94 @@ namespace Ermine
 		float size;
 
 		Particle() : velocity(0, 0, 0), lifetime(1.0f), age(0.0f), colour(1, 1, 1, 1), size(1.0f) {}
+
+		template <typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
+			//const std::string& model_name = m_model->GetName();
+			//out.SetObject();
+
+			//rapidjson::Value modelVal;
+			//modelVal.SetString(model_name.c_str(),
+			//	static_cast<rapidjson::SizeType>(model_name.size()),
+			//	alloc);  // required for strings
+
+			//out.AddMember("model", modelVal, alloc);
+		}
+
+
+		void Deserialize(const rapidjson::Value& in) {
+			//if (in.HasMember("model") && in["model"].IsString()) {
+			//	const char* name = in["model"].GetString();
+
+			//	if (!m_model) {
+			//		m_model = AssetManager::GetInstance().LoadModel("../Resources/Models/" + std::string(name));
+			//	}
+
+			//	m_model->LoadModel(std::string("../Resources/Models/") + name);
+			//}
+		}
 	};
+
+	/*!***********************************************************************
+	 \brief
+	  Hierarchy component structure for parent-child relationships.
+	*************************************************************************/
+	struct HierarchyComponent
+	{
+		static constexpr EntityID INVALID_PARENT = 0;
+
+		EntityID parent = INVALID_PARENT;        // Parent entity ID
+		std::vector<EntityID> children;         // List of child entity IDs
+		int depth = 0;                          // Depth in hierarchy (root = 0)
+		bool isDirty = false;                   // Flag for transform updates
+
+		// Optional: Cache world transform for performance
+		Mtx44 worldTransform{ 1.0f };             // Cached world transform
+		bool worldTransformDirty = true;        // Separate flag for world transform cache
+
+		// Constructors
+		HierarchyComponent() = default;
+
+		explicit HierarchyComponent(EntityID parentId)
+			: parent(parentId), depth(0), isDirty(true), worldTransformDirty(true)
+		{
+		}
+	};
+	/*!***********************************************************************
+	 \brief
+	 Enum for Physic component.
+	*************************************************************************/
+	enum class PhysicsBodyType
+	{
+		Rigid,
+		Trigger
+	};
+	enum class ShapeType { Box, Sphere, Capsule, CustomMesh/*, Compound*/,Total };
+
+	/*!***********************************************************************
+	 \brief
+	 Physic component structure.
+	*************************************************************************/
+	struct PhysicComponent
+	{
+		JPH::BodyID bodyID{ JPH::BodyID::cInvalidBodyID };
+		PhysicsBodyType bodyType{ PhysicsBodyType::Rigid };
+		JPH::EMotionType motionType{ JPH::EMotionType::Static };
+		float mass{ 0.0f };
+		ShapeType shapeType{ ShapeType::Box };
+		std::vector<Ermine::Vec3> customMeshVertices;   // For custom mesh
+
+		PhysicComponent() = default;
+
+		PhysicComponent(
+			PhysicsBodyType type,
+			JPH::EMotionType motion,
+			float m = 0.0f,
+			ShapeType shape = ShapeType::Box)
+			: bodyType(type), motionType(motion), mass(m), shapeType(shape)
+		{}
+	};
+
 
 	/*!***********************************************************************
 	\brief
@@ -531,6 +876,32 @@ namespace Ermine
 
 		ModelComponent() = default;
 		explicit ModelComponent(const std::shared_ptr<graphics::Model>& model) : m_model(model) {}
+
+		template <typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
+			const std::string& model_name = m_model->GetName();
+			out.SetObject();
+
+			rapidjson::Value modelVal;
+			modelVal.SetString(model_name.c_str(),
+				static_cast<rapidjson::SizeType>(model_name.size()),
+				alloc);  // required for strings
+
+			out.AddMember("model", modelVal, alloc);
+		}
+
+
+		void Deserialize(const rapidjson::Value& in) {
+			if (in.HasMember("model") && in["model"].IsString()) {
+				const char* name = in["model"].GetString();
+
+				if (!m_model) {
+					m_model = AssetManager::GetInstance().LoadModel("../Resources/Models/" + std::string(name));
+				}
+
+				m_model->LoadModel(std::string("../Resources/Models/") + name);
+			}
+		}
 	};
 
 	/*!***********************************************************************

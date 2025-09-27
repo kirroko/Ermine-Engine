@@ -106,6 +106,12 @@ namespace Ermine::graphics
          */
         Model(const std::string& path);
 
+        // @return Directory of the model file
+		const std::string& GetDirectory() const { return m_directory; }
+		
+        // @return Name of the model file
+        const std::string& GetName() const { return m_name; }
+
         // @return List of meshes in the model
         const std::vector<MeshData>& GetMeshes() const { return m_meshes; }
 
@@ -126,6 +132,7 @@ namespace Ermine::graphics
 
         // @brief Set the animated bone transforms
         void SetBoneTransforms(const std::vector<glm::mat4>& transforms) { m_BoneTransforms = transforms; }
+        void LoadModel(const std::string& path);
 
         /**
          * @brief Convert an Assimp matrix to a glm::mat4.
@@ -143,6 +150,7 @@ namespace Ermine::graphics
 
     private:
         std::string m_directory;                            // Directory of the model
+        std::string m_name;                                 // Name of the model
         std::vector<MeshData> m_meshes;                     // All meshes of the model
 
         std::unique_ptr<Assimp::Importer> m_Importer;       // Assimp importer
