@@ -360,7 +360,7 @@ namespace Ermine
 			}
 		}
 	};
-	
+
 	/*!***********************************************************************
 	\brief
 	 Light type structure
@@ -411,7 +411,7 @@ namespace Ermine
 		{
 		}
 	};
-	
+
 	/*!***********************************************************************
 		AudioSource structure for individual audio files.
 	*************************************************************************/
@@ -540,7 +540,5 @@ namespace Ermine
 	struct AnimationComponent
 	{
 		std::shared_ptr<graphics::Animator> m_animator;
-		const graphics::AnimationClip* currentClip;
-		bool looping = true;
 	};
 }

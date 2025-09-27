@@ -40,6 +40,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Cubemap.h"
 #include <random> // Include for random number generation
 #include "ScriptSystem.h"
+#include "AnimationManager.h"
 
 using namespace Ermine;
 
@@ -153,6 +154,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	EE_AUTO_REGISTER_COMPONENT(AudioComponent, "AudioComponent")
 	EE_AUTO_REGISTER_COMPONENT(GlobalAudioComponent, "GlobalAudioComponent")
 	EE_AUTO_REGISTER_COMPONENT(ModelComponent, "ModelComponent")
+	EE_AUTO_REGISTER_COMPONENT(AnimationComponent, "AnimationComponent")
 
 	// ECS::GetInstance().RegisterComponent<AudioComponent>(); // ADD THIS
 	// ECS::GetInstance().RegisterComponent<GlobalAudioComponent>(); // ADD THIS IF YOU WANT GLOBAL AUDIO
@@ -171,14 +173,14 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().RegisterSystem<scripting::ScriptSystem>();
 	ECS::GetInstance().RegisterSystem<AudioSystem>();
 	ECS::GetInstance().RegisterSystem<ParticleSystem>();
-	ECS::GetInstance().RegisterSystem <graphics::LightSystem>();
+	ECS::GetInstance().RegisterSystem<graphics::LightSystem>();
+	ECS::GetInstance().RegisterSystem<graphics::AnimationManager>();
 
 	// TODO: Set the signature for the system as required
 	// For Graphics/Renderer system
 	SignatureID sig;
 	sig.set(ECS::GetInstance().GetComponentType<Transform>());
 	sig.set(ECS::GetInstance().GetComponentType<Mesh>());
-	//sig.set(ECS::GetInstance().GetComponentType<ModelComponent>());
 	sig.set(ECS::GetInstance().GetComponentType<Material>());
 	ECS::GetInstance().SetSystemSignature<graphics::Renderer>(sig);
 
@@ -204,6 +206,12 @@ bool engine::Init(GLFWwindow* windowContext)
 	sig.set(ECS::GetInstance().GetComponentType<Light>());
 	sig.set(ECS::GetInstance().GetComponentType<Transform>());
 	ECS::GetInstance().SetSystemSignature<graphics::LightSystem>(sig);
+
+	// Animation Manager
+	sig.reset();
+	sig.set(ECS::GetInstance().GetComponentType<AnimationComponent>());
+	sig.set(ECS::GetInstance().GetComponentType<ModelComponent>());
+	ECS::GetInstance().SetSystemSignature<graphics::AnimationManager>(sig);
 
 	glfwSetFramebufferSizeCallback(windowContext, []([[maybe_unused]] GLFWwindow* window, int width, int height)
 		{
@@ -302,10 +310,22 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	// Example FBX entity
 	fbxEntity = ECS::GetInstance().CreateEntity();
+	auto model = AssetManager::GetInstance().LoadModel("../Resources/Models/Walking.fbx");
 	ECS::GetInstance().AddComponent(fbxEntity, Transform(Vec3(2, -0.5f, 0), Quaternion(), Vec3(0.01f, 0.01f, 0.01f)));
 	ECS::GetInstance().AddComponent(fbxEntity, ObjectMetaData("Character", "Model", true));
 	ECS::GetInstance().AddComponent(fbxEntity, Mesh{}); // empty mesh component for renderer signature
-	ECS::GetInstance().AddComponent(fbxEntity, ModelComponent(AssetManager::GetInstance().LoadModel("../Resources/Models/Shadowkin_Rigged.fbx")));
+	ECS::GetInstance().AddComponent(fbxEntity, ModelComponent(model));
+
+	// Adding animation component
+	const aiScene* scene = model->GetAssimpScene(); // Read animations from aiScene
+	if (scene && scene->mNumAnimations > 0) {
+		AnimationComponent animComp;
+		animComp.m_animator = std::make_shared<graphics::Animator>(model);
+		animComp.m_animator->LoadAnimations(scene);
+		animComp.m_animator->PlayAnimation(0, true);
+		ECS::GetInstance().AddComponent(fbxEntity, std::move(animComp));
+	}
+
 	auto fbxMaterial = std::make_unique<graphics::Material>(shader);
 	auto fbxTexture = AssetManager::GetInstance().LoadTexture("../Resources/Textures/Pants_Base_color.png");
 	fbxMaterial->LoadTemplate(graphics::MaterialTemplates::PBR_WHITE());
@@ -596,6 +616,9 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 			}
 		}
 	}
+
+	// Animation Update
+	ECS::GetInstance().GetSystem<graphics::AnimationManager>()->Update(FrameController::GetDeltaTime());
 }
 
 void engine::Render(GLFWwindow* window)

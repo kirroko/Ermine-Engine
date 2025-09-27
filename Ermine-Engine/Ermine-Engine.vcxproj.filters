@@ -216,6 +216,7 @@
     <ClInclude Include="include\Window.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\AnimationManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\AssetBrowser\AssetBrowser.cpp">
@@ -353,6 +354,7 @@
     <ClCompile Include="src\dllmain.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\Graphics\AnimationManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="include\Component.tpp">

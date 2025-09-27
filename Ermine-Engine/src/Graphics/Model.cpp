@@ -2,9 +2,10 @@
 /*!
 \file       Model.cpp
 \author     Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu
-\date       19/09/2025
-\brief      This file contains the definition of the Model class.
-            The Model class is used to load and render 3D models using Assimp.
+\date       26/09/2025
+\brief      This file contains the definition of the Model class for loading and processing
+            3D models using Assimp. Provides mesh data, bone data, and animation integration
+            for rendering and animation systems.
 
 Copyright (C) 2025 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents without the
@@ -14,45 +15,41 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #include "PreCompile.h"
 #include "Model.h"
-#include "AssetManager.h" // for loading textures
-#include <assimp/Importer.hpp>
-#include <assimp/postprocess.h>
-#include <iostream>
 
 using namespace Ermine::graphics;
 
-glm::mat4 Model::ToGlm(const aiMatrix4x4& from)
-{
-    glm::mat4 to;
-    to[0][0] = from.a1; to[1][0] = from.a2; to[2][0] = from.a3; to[3][0] = from.a4;
-    to[0][1] = from.b1; to[1][1] = from.b2; to[2][1] = from.b3; to[3][1] = from.b4;
-    to[0][2] = from.c1; to[1][2] = from.c2; to[2][2] = from.c3; to[3][2] = from.c4;
-    to[0][3] = from.d1; to[1][3] = from.d2; to[2][3] = from.d3; to[3][3] = from.d4;
-    return to;
-}
-
+/**
+ * @brief Construct a new Model by loading a file.
+ * @param path Path to the 3D model file
+ */
 Model::Model(const std::string& path)
 {
     LoadModel(path);
 }
 
+// Load the model and process nodes
 void Model::LoadModel(const std::string& path)
 {
-    Assimp::Importer importer;
-    const aiScene* scene = importer.ReadFile(
-        path,
-        aiProcess_Triangulate |
-        aiProcess_FlipUVs |
-        aiProcess_GenSmoothNormals |
-        aiProcess_JoinIdenticalVertices |
-        aiProcess_SortByPType
-    );
+    // Create importer owned by the Model instance
+    m_Importer = std::make_unique<Assimp::Importer>();
 
+    // Choose the flags required
+    unsigned int flags = aiProcess_Triangulate
+        | aiProcess_GenSmoothNormals
+        | aiProcess_FlipUVs
+        | aiProcess_LimitBoneWeights
+        | aiProcess_JoinIdenticalVertices
+        | aiProcess_CalcTangentSpace;
+
+    const aiScene* scene = m_Importer->ReadFile(path, flags);
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
     {
-        std::cerr << "ERROR::ASSIMP::" << importer.GetErrorString() << std::endl;
+        std::string err = m_Importer->GetErrorString();
+        EE_CORE_ERROR("ERROR::ASSIMP:: " + err);
+        m_Scene = nullptr;
         return;
     }
+    m_Scene = scene;
 
     m_directory = path.substr(0, path.find_last_of('/'));
     ProcessNode(scene->mRootNode, scene, aiMatrix4x4());
@@ -61,6 +58,7 @@ void Model::LoadModel(const std::string& path)
     m_BoneTransforms.resize(m_BoneOffsets.size(), glm::mat4(1.0f));
 }
 
+// Recursively process Assimp nodes
 void Model::ProcessNode(aiNode* node, const aiScene* scene, const aiMatrix4x4& parentTransform)
 {
     aiMatrix4x4 nodeTransform = parentTransform * node->mTransformation;
@@ -75,57 +73,42 @@ void Model::ProcessNode(aiNode* node, const aiScene* scene, const aiMatrix4x4& p
 
     for (unsigned int i = 0; i < node->mNumChildren; i++)
         ProcessNode(node->mChildren[i], scene, nodeTransform);
-
-    //std::cout << "Node: " << node->mName.C_Str()
-    //    << " meshes: " << node->mNumMeshes
-    //    << " children: " << node->mNumChildren << "\n";
 }
 
+// Process an Assimp mesh into engine MeshData
 MeshData Model::ProcessMesh(aiMesh* mesh)
 {
     std::vector<unsigned int> indices;
-
     size_t vertexCount = mesh->mNumVertices;
     std::vector<VertexData> vertices(vertexCount);
 
     // Base vertex attributes
-    for (unsigned int i = 0; i < mesh->mNumVertices; ++i)
+    for (unsigned int i = 0; i < vertexCount; ++i)
     {
         VertexData& vertex = vertices[i];
 
-        // pos
+        // Position
         vertex.position[0] = mesh->mVertices[i].x;
         vertex.position[1] = mesh->mVertices[i].y;
         vertex.position[2] = mesh->mVertices[i].z;
 
-        // normal
+        // Normal
         if (mesh->HasNormals())
         {
             vertex.normal[0] = mesh->mNormals[i].x;
             vertex.normal[1] = mesh->mNormals[i].y;
             vertex.normal[2] = mesh->mNormals[i].z;
         }
-        else
-        {
-            vertex.normal[0] = 0.f;
-            vertex.normal[1] = 0.f;
-            vertex.normal[2] = 0.f;
-        }
 
-        // uv
+        // Texture coordinates
         if (mesh->mTextureCoords[0])
         {
             vertex.texCoords[0] = mesh->mTextureCoords[0][i].x;
             vertex.texCoords[1] = mesh->mTextureCoords[0][i].y;
         }
-        else
-        {
-            vertex.texCoords[0] = 0.f;
-            vertex.texCoords[1] = 0.f;
-        }
     }
 
-    // bones
+    // Process bones
     for (unsigned int i = 0; i < mesh->mNumBones; ++i)
     {
         aiBone* ai_bone = mesh->mBones[i];
@@ -134,13 +117,14 @@ MeshData Model::ProcessMesh(aiMesh* mesh)
         int boneIndex = 0;
         if (m_BoneMapping.find(boneName) == m_BoneMapping.end())
         {
-            boneIndex = (int)m_BoneOffsets.size();
+            boneIndex = static_cast<int>(m_BoneOffsets.size());
             m_BoneMapping[boneName] = boneIndex;
             m_BoneOffsets.push_back(ToGlm(ai_bone->mOffsetMatrix));
         }
         else
             boneIndex = m_BoneMapping[boneName];
 
+        // Add bone weights to vertices
         for (unsigned int w = 0; w < ai_bone->mNumWeights; ++w)
         {
             auto vw = ai_bone->mWeights[w];
@@ -148,7 +132,18 @@ MeshData Model::ProcessMesh(aiMesh* mesh)
         }
     }
 
-    // indices
+    // Normalize weights per vertex
+    for (unsigned int i = 0; i < vertexCount; ++i)
+    {
+        float total = 0.0f;
+        for (int j = 0; j < MAX_BONE_INFLUENCE; ++j)
+            total += vertices[i].Weights[j];
+        if (total > 0.0f)
+            for (int j = 0; j < MAX_BONE_INFLUENCE; ++j)
+                vertices[i].Weights[j] /= total;
+    }
+
+    // Build indices
     for (unsigned int i = 0; i < mesh->mNumFaces; ++i)
     {
         aiFace face = mesh->mFaces[i];
@@ -156,34 +151,31 @@ MeshData Model::ProcessMesh(aiMesh* mesh)
             indices.push_back(face.mIndices[j]);
     }
 
-    // GPU buffers
+    // Create GPU buffers
     auto vao = std::make_shared<VertexArray>();
     auto vbo = std::make_shared<VertexBuffer>(vertices.data(), vertices.size() * sizeof(VertexData));
-    auto ibo = std::make_shared<IndexBuffer>(indices.data(), indices.size() * sizeof(unsigned int)); // Main Issue - was using indices.size() count instead of byte size
+    auto ibo = std::make_shared<IndexBuffer>(indices.data(), indices.size() * sizeof(unsigned int));
 
     vao->Bind();
     vbo->Bind();
+    ibo->Bind();
 
-    // Attributes
+    // Vertex attributes
     vao->LinkAttribute(0, 3, GL_FLOAT, sizeof(VertexData), (void*)offsetof(VertexData, position));
     vao->LinkAttribute(1, 3, GL_FLOAT, sizeof(VertexData), (void*)offsetof(VertexData, normal));
     vao->LinkAttribute(2, 2, GL_FLOAT, sizeof(VertexData), (void*)offsetof(VertexData, texCoords));
 
-    // Bone IDs (int)
-    glEnableVertexAttribArray(3);
-    glVertexAttribIPointer(3, MAX_BONE_INFLUENCE, GL_INT, sizeof(VertexData), (void*)offsetof(VertexData, IDs));
+    // Bone IDs (integer)
+    glEnableVertexAttribArray(4);
+    glVertexAttribIPointer(4, MAX_BONE_INFLUENCE, GL_INT, sizeof(VertexData), (void*)offsetof(VertexData, IDs));
 
     // Bone weights (float)
-    glEnableVertexAttribArray(4);
-    glVertexAttribPointer(4, MAX_BONE_INFLUENCE, GL_FLOAT, GL_FALSE, sizeof(VertexData), (void*)offsetof(VertexData, Weights));
+    glEnableVertexAttribArray(5);
+    glVertexAttribPointer(5, MAX_BONE_INFLUENCE, GL_FLOAT, GL_FALSE, sizeof(VertexData), (void*)offsetof(VertexData, Weights));
 
     vao->Unbind();
     vbo->Unbind();
     ibo->Unbind();
-
-    //if (mesh->HasBones())
-    //    std::cout << "Mesh " << mesh->mName.C_Str()
-    //    << " has " << mesh->mNumBones << " bones\n";
 
     return MeshData{ vao, vbo, ibo, glm::mat4(1.0f) };
 }
