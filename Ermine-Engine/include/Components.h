@@ -31,6 +31,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <rapidjson/writer.h>
 #include <rapidjson/stringbuffer.h>
 #include "Model.h"
+#include "Animator.h"
 #include "AssetManager.h"
 #include <Jolt/Jolt.h>
 #include <Jolt/Physics/Body/Body.h>
@@ -616,7 +617,7 @@ namespace Ermine
 				resolution = in["resolution"].GetUint();
 		}
 	};
-	
+
 	/*!***********************************************************************
 		AudioSource structure for individual audio files.
 	*************************************************************************/
@@ -901,5 +902,14 @@ namespace Ermine
 				m_model->LoadModel(std::string("../Resources/Models/") + name);
 			}
 		}
+	};
+
+	/*!***********************************************************************
+	\brief
+	 Animation component structure.
+	*************************************************************************/
+	struct AnimationComponent
+	{
+		std::shared_ptr<graphics::Animator> m_animator;
 	};
 }

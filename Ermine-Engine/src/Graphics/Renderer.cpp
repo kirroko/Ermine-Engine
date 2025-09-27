@@ -5,7 +5,7 @@
 \co-author  Jeremy Lim Ting Jie, jeremytingjie.lim, 2301370, jeremytingjie.lim\@digipen.edu
 \co-author  Ridhwan
 \co-author  Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu
-\date       19/09/2025
+\date       27/09/2025
 \brief      This file contains the definition of the Renderer system.
 			This file is used to render the game objects.
 
@@ -34,7 +34,6 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <GLFW/glfw3.h>
 
 using namespace Ermine::graphics;
-
 
 GLenum glCheckError_(const char* file, int line)
 {
@@ -780,6 +779,9 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 			rotQuat = glm::normalize(rotQuat);
 			model *= glm::mat4_cast(rotQuat);
 			model = glm::scale(model, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
+
+			// Disable skinning for primitive meshes
+			m_GBufferShader->SetUniform1i("u_UseSkinning", 0);
 
 			// Set transformation matrices for g-buffer shader
 			m_GBufferShader->SetUniformMatrix4fv("model", model);
@@ -1544,6 +1546,9 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 				BindLightsBlockIfPresent(shader);
 				BindMaterialBlockIfPresent(shader);
 
+				// Disable skinning for primitive meshes
+				shader->SetUniform1i("u_UseSkinning", 0);
+
 				// Set transformation matrices
 				shader->SetUniformMatrix4fv("model", model);
 				shader->SetUniformMatrix4fv("view", &view.m2[0][0]);
@@ -1723,24 +1728,37 @@ void Renderer::RenderModelDeferred(const Model& model, graphics::Material* mater
 	if (meshes.empty() || !material) return;
 	if (!m_GBufferShader || !m_GBufferShader->IsValid()) return;
 
+	// Bind shared g-buffer shader used to write geometry information
 	m_GBufferShader->Bind();
+
+	// convert the Mtx44 view/projection into glm mats for convenience
+	glm::mat4 glmView = ToGlm(view);
+	glm::mat4 glmProj = ToGlm(projection);
+
+	// Get bone transforms (may be empty for static meshes)
+	const auto& boneTransforms = model.GetBoneTransforms();
+	const bool hasBones = !boneTransforms.empty();
+	m_GBufferShader->SetUniform1i("u_UseSkinning", hasBones ? 1 : 0); // Enable skinning for model
+
+	// Upload bone matrices if present
+	if (hasBones)
+	{
+		GLsizei count = std::min((int)boneTransforms.size(), MAX_BONE_UNIFORMS);
+		GLint loc = glGetUniformLocation(m_GBufferShader->GetRendererID(), "u_BoneMatrices");
+		glUniformMatrix4fv(loc, count, GL_FALSE, glm::value_ptr(boneTransforms[0]));
+	}
 
 	for (const auto& mesh : meshes)
 	{
 		if (!mesh.vao || !mesh.ibo) continue;
+
 		glm::mat4 modelMat = rootTransform * mesh.localTransform;
 		m_GBufferShader->SetUniformMatrix4fv("model", modelMat);
-		m_GBufferShader->SetUniformMatrix4fv("view", &view.m2[0][0]);
-		m_GBufferShader->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
+		m_GBufferShader->SetUniformMatrix4fv("view", glmView);
+		m_GBufferShader->SetUniformMatrix4fv("projection", glmProj);
 
-		glm::mat4 glmView = glm::mat4(
-			view.m00, view.m01, view.m02, view.m03,
-			view.m10, view.m11, view.m12, view.m13,
-			view.m20, view.m21, view.m22, view.m23,
-			view.m30, view.m31, view.m32, view.m33
-		);
 		glm::mat4 modelView = glmView * modelMat;
-		glm::mat3 normalMatrix = transpose(inverse(glm::mat3(modelView)));
+		glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(modelView)));
 		m_GBufferShader->SetUniformMatrix3fv("NormalMatrix", normalMatrix);
 
 		Draw(mesh.vao, mesh.ibo, m_GBufferShader);
@@ -1770,33 +1788,43 @@ void Renderer::RenderModelForward(const Model& model, graphics::Material* materi
 
 	UpdateMaterialUBO(material->GetUBOData());
 
+	glm::mat4 glmView = ToGlm(view);
+	glm::mat4 glmProj = ToGlm(projection);
+
+	const auto& boneTransforms = model.GetBoneTransforms();
+	const bool hasBones = !boneTransforms.empty();
+	shader->SetUniform1i("u_UseSkinning", hasBones ? 1 : 0); // Enable skinning for model
+
+	// bind material (textures, shader)
+	material->Bind();
+	BindLightsBlockIfPresent(shader);
+	BindMaterialBlockIfPresent(shader);
+
+	// Upload bone matrices if present
+	if (hasBones)
+	{
+		GLsizei count = std::min((int)boneTransforms.size(), MAX_BONE_UNIFORMS);
+		GLint loc = glGetUniformLocation(shader->GetRendererID(), "u_BoneMatrices");
+		glUniformMatrix4fv(loc, count, GL_FALSE, glm::value_ptr(boneTransforms[0]));
+	}
+
 	for (const auto& mesh : meshes)
 	{
 		if (!mesh.vao || !mesh.ibo) continue;
 
-		material->Bind();
-		BindLightsBlockIfPresent(shader);
-		BindMaterialBlockIfPresent(shader);
-
 		glm::mat4 modelMat = rootTransform * mesh.localTransform;
 		shader->SetUniformMatrix4fv("model", modelMat);
-		shader->SetUniformMatrix4fv("view", &view.m2[0][0]);
-		shader->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
+		shader->SetUniformMatrix4fv("view", glmView);
+		shader->SetUniformMatrix4fv("projection", glmProj);
 
-		glm::mat4 glmView = glm::mat4(
-			view.m00, view.m01, view.m02, view.m03,
-			view.m10, view.m11, view.m12, view.m13,
-			view.m20, view.m21, view.m22, view.m23,
-			view.m30, view.m31, view.m32, view.m33
-		);
 		glm::mat4 modelView = glmView * modelMat;
-		glm::mat3 normalMatrix = transpose(inverse(glm::mat3(modelView)));
+		glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(modelView)));
 		shader->SetUniformMatrix3fv("NormalMatrix", normalMatrix);
 
 		Draw(mesh.vao, mesh.ibo, shader);
-
-		material->Unbind();
 	}
+
+	material->Unbind();
 }
 
 bool Renderer::InitializeShadowMap()

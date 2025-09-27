@@ -63,6 +63,15 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\AnimationClip.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\AnimationManager.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Animator.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\AssetBrowser.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -262,6 +271,12 @@
     </ClCompile>
     <ClCompile Include="src\FSM\FiniteStateMachine.cpp">
       <Filter>src\FSM</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Graphics\AnimationManager.cpp">
+      <Filter>src\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Graphics\Animator.cpp">
+      <Filter>src\Graphics</Filter>
     </ClCompile>
     <ClCompile Include="src\Graphics\Camera.cpp">
       <Filter>src\Graphics</Filter>

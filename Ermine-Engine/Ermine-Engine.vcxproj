@@ -131,6 +131,9 @@ IF EXIST ..\Build\bin\Release-windows-x86_64\Ermine-Engine\Ermine-Engine.dll\ (x
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="include\AnimationClip.h" />
+    <ClInclude Include="include\AnimationManager.h" />
+    <ClInclude Include="include\Animator.h" />
     <ClInclude Include="include\AssetBrowser.h" />
     <ClInclude Include="include\AssetManager.h" />
     <ClInclude Include="include\AudioImGUI.h" />
@@ -199,6 +202,8 @@ IF EXIST ..\Build\bin\Release-windows-x86_64\Ermine-Engine\Ermine-Engine.dll\ (x
     <ClCompile Include="src\ECS\Systems.cpp" />
     <ClCompile Include="src\Engine.cpp" />
     <ClCompile Include="src\FSM\FiniteStateMachine.cpp" />
+    <ClCompile Include="src\Graphics\AnimationManager.cpp" />
+    <ClCompile Include="src\Graphics\Animator.cpp" />
     <ClCompile Include="src\Graphics\Camera.cpp" />
     <ClCompile Include="src\Graphics\Cubemap.cpp" />
     <ClCompile Include="src\Graphics\GeometryFactory.cpp" />
