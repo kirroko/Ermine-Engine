@@ -132,6 +132,8 @@ namespace Ermine::graphics
 
         // @brief Set the animated bone transforms
         void SetBoneTransforms(const std::vector<glm::mat4>& transforms) { m_BoneTransforms = transforms; }
+
+        // Load the model and process nodes
         void LoadModel(const std::string& path);
 
         /**
@@ -160,9 +162,6 @@ namespace Ermine::graphics
         std::unordered_map<std::string, int> m_BoneMapping; // Name-to-index bone map
         std::vector<glm::mat4> m_BoneOffsets;               // Bone offset matrices
         std::vector<glm::mat4> m_BoneTransforms;            // Final bone transforms (for rendering)
-
-        // Load the model and process nodes
-        void LoadModel(const std::string& path);
 
         // Recursively process Assimp nodes
         void ProcessNode(aiNode* node, const aiScene* scene, const aiMatrix4x4& parentTransform);

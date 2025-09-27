@@ -2,7 +2,7 @@
 /*!
 \file       AnimationManager.cpp
 \author     Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu
-\date       26/09/2025
+\date       27/09/2025
 \brief      This file contains the definition of the animation manager.
 
 Copyright (C) 2025 DigiPen Institute of Technology.
