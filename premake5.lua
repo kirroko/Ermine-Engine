@@ -133,7 +133,8 @@ project "Ermine-Engine"
             "EE_BUILD_DLL",
             "GLFW_INCLUDE_NONE",
             "IMGUI_DEFINE_MATH_OPERATORS",
-            "GLM_ENABLE_EXPERIMENTAL"
+            "GLM_ENABLE_EXPERIMENTAL",
+            "_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING" -- To slience the warnings from Rapidjson
         }
 
     filter "configurations:Debug"
@@ -218,14 +219,14 @@ project "Ermine-ScriptAssembly"
     kind "SharedLib"
     language "C#"
     dotnetframework "4.7.2"
+    namespace "Ermine.ScriptAssembly"
 
     targetdir ("Build/bin/" .. outputdir .. "/%{prj.name}")
     objdir ("Build/obj/" .. outputdir .. "/%{prj.name}")
 
     files
     {
-        "%{prj.name}/**.cs",
-        "%{prj.name}/**.csproj"
+        "%{prj.name}/**.cs"
     }
 
     filter "system:windows"
@@ -243,14 +244,14 @@ project "Ermine-ScriptSandbox"
     kind "SharedLib"
     language "C#"
     dotnetframework "4.7.2"
+    namespace "Ermine.ScriptSandbox"
 
     targetdir ("Build/bin/" .. outputdir .. "/%{prj.name}")
     objdir ("Build/obj/" .. outputdir .. "/%{prj.name}")
 
     files
     {
-        "%{prj.name}/**.cs",
-        "%{prj.name}/**.csproj"
+        "%{prj.name}/**.cs"
     }
     includedirs
     {

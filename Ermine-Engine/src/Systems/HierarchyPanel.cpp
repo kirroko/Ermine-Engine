@@ -56,7 +56,9 @@ namespace Ermine {
         }
 
         // Add invisible button to catch drops on empty space
-        ImGui::InvisibleButton("UnparentDropZone", ImGui::GetContentRegionAvail());
+        ImVec2 space = ImGui::GetContentRegionAvail();
+		if (space.x != 0.0f && space.y != 0.0f)
+			ImGui::InvisibleButton("UnparentDropZone", ImGui::GetContentRegionAvail());
         HandleUnparentDrop();
 
         // Right-click context menu
