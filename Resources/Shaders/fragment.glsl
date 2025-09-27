@@ -9,9 +9,6 @@ in vec3 Bitangent; // Add for normal mapping
 
 out vec4 FragColor;
 
-// Texture samplers - now more flexible
-uniform sampler2D texture0;           // Backwards compatibility
-
 // Material uniform block
 layout (std140) uniform MaterialBlock {
     vec4 albedo; // Changed from vec3 to vec4 to include alpha channel
@@ -118,10 +115,6 @@ vec3 getAlbedo()
     
     if (material.hasAlbedoMap) {
         vec4 texColor = texture(materialAlbedoMap, TexCoord);
-        albedo *= texColor.rgb;
-    } else {
-        // Backwards compatibility
-        vec4 texColor = texture(texture0, TexCoord);
         albedo *= texColor.rgb;
     }
     

@@ -9,9 +9,6 @@ in vec3 Bitangent; // For normal mapping
 
 out vec4 FragColor;
 
-// Texture samplers - backwards compatibility
-uniform sampler2D texture0;
-
 // Material uniform block - must match MaterialUBO structure exactly
 layout (std140) uniform MaterialBlock {
     vec4 albedo;                  // 16 bytes (0-15)
@@ -154,10 +151,6 @@ vec3 getAlbedo()
     
     if (material.hasAlbedoMap != 0) {
         vec4 texColor = texture(materialAlbedoMap, TexCoord);
-        albedo *= texColor.rgb;
-    } else {
-        // Backwards compatibility
-        vec4 texColor = texture(texture0, TexCoord);
         albedo *= texColor.rgb;
     }
     

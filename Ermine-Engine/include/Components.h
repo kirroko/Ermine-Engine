@@ -224,19 +224,21 @@ namespace Ermine
 		/**
 		 * @brief Legacy constructor for backwards compatibility.
 		 * @param shader The shader to associate with the material.
-		 * @param texture The texture to associate with the material (optional). If valid, it is set as the albedo map and a fallback texture.
+		 * @param texture The texture to associate with the material (optional). If valid, it is set as the albedo map only.
 		 */
 		Material(const std::shared_ptr<graphics::Shader>& shader, const std::shared_ptr<graphics::Texture>& texture)
 		{
 			m_material = std::make_shared<graphics::Material>(shader);
+			
+			// Only set texture and flags if texture is explicitly provided and valid
 			if (texture && texture->IsValid())
 			{
-				m_material->SetTexture("material.albedoMap", texture);
-				m_material->SetTexture("texture0", texture); // Fallback for old shaders
+				m_material->SetTexture("materialAlbedoMap", texture);
+				m_material->SetBool("materialHasAlbedoMap", true);
 			}
 
-			// Set default PBR values
-			m_material->LoadTemplate(graphics::MaterialTemplates::PBR_RED());
+			// Set default PBR values without any texture assumptions
+			m_material->LoadTemplate(graphics::MaterialTemplates::PBR_WHITE());
 		}
 
 

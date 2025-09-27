@@ -432,7 +432,8 @@ std::shared_ptr<graphics::Material> AssetManager::CreateSharedMaterial(const std
     if (baseTexture && baseTexture->IsValid())
     {
         material->SetTexture("materialAlbedoMap", baseTexture);
-        material->SetTexture("texture0", baseTexture); // Fallback for compatibility
+        material->SetBool("materialHasAlbedoMap", true);
+        // REMOVED: All legacy texture fallback assignments to prevent unwanted texture loading
     }
     
     m_materials[materialName] = material;

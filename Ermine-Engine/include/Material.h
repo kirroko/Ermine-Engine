@@ -152,7 +152,7 @@ namespace Ermine::graphics
                 {"materialEmissiveIntensity", 0.0f},
                 {"materialNormalStrength", 1.0f},
                 {"materialShadingModel", 0},
-                {"materialHasAlbedoMap", true},
+                {"materialHasAlbedoMap", false}, // FIXED: Don't assume texture usage
                 {"materialHasNormalMap", false},
                 {"materialHasRoughnessMap", false},
                 {"materialHasMetallicMap", false},
@@ -168,13 +168,13 @@ namespace Ermine::graphics
             return {
                 {"materialAlbedo", Vec3(0.8f, 0.8f, 0.8f)},
                 {"materialMetallic", 0.0f},
-                {"materialRoughness", 0.5f},
+                {"materialRoughness", 0.3f},
                 {"materialAo", 1.0f},
                 {"materialEmissive", Vec3(0.0f, 0.0f, 0.0f)},
                 {"materialEmissiveIntensity", 0.0f},
                 {"materialNormalStrength", 1.0f},
-                {"materialShadingModel", 0},
-                {"materialHasAlbedoMap", true}, // Will use texture
+                {"materialShadingModel", 0}, // 0 = PBR
+                {"materialHasAlbedoMap", false}, // FIXED: Don't assume texture usage
                 {"materialHasNormalMap", false},
                 {"materialHasRoughnessMap", false},
                 {"materialHasMetallicMap", false},
@@ -220,13 +220,13 @@ namespace Ermine::graphics
                 {"materialEmissiveIntensity", 0.0f},
                 {"materialNormalStrength", 1.0f},
                 {"materialShadingModel", 0},
-                {"materialHasAlbedoMap", true},
+                {"materialHasAlbedoMap", false}, // FIXED: Don't assume texture usage
                 {"materialHasNormalMap", false},
                 {"materialHasRoughnessMap", false},
                 {"materialHasMetallicMap", false},
                 {"materialHasAoMap", false},
                 {"materialHasEmissiveMap", false},
-                {"materialHasEnvironmentMap", true},
+                {"materialHasEnvironmentMap", true}, // Only set environment maps for reflective materials
                 {"materialHasIrradianceMap", true},
                 {"materialReflectance", 0.04f},
                 {"materialEnvironmentIntensity", 1.0f},

@@ -239,54 +239,29 @@ bool engine::Init(GLFWwindow* windowContext)
 	std::shared_ptr<graphics::Material> glassMaterial = AssetManager::GetInstance().CreateMaterial("clear_glass", shader, "PBR_GLASS");
 	std::shared_ptr<graphics::Material> waterMaterial = AssetManager::GetInstance().CreateMaterial("water_surface", shader, "PBR_WATER");
 	
-		// Apply textures to shared materials
-		if (texture && texture->IsValid()) {
-			basicWhiteMaterial->SetTexture("materialAlbedoMap", texture);
-			basicWhiteMaterial->SetTexture("texture0", texture);
+	// Only apply textures to materials that explicitly need them
+	// Leave most materials as pure color-based to avoid unwanted texture loading
+	if (texture && texture->IsValid()) {
+		// Create one textured material variant for demonstration purposes only
+		std::shared_ptr<graphics::Material> texturedMaterial = AssetManager::GetInstance().CreateMaterial("textured_demo", shader, "PBR_WHITE");
+		texturedMaterial->SetTexture("materialAlbedoMap", texture);
+		texturedMaterial->SetBool("materialHasAlbedoMap", true);
+		
+		// Glass and water materials can optionally use environment textures but don't need albedo textures
+		if (environmentCubemap && environmentCubemap->IsValid()) {
+			glassMaterial->SetCubemap("materialEnvironmentMap", environmentCubemap);
+			glassMaterial->SetCubemap("materialIrradianceMap", environmentCubemap);
+			glassMaterial->SetBool("materialHasEnvironmentMap", true);
+			glassMaterial->SetBool("materialHasIrradianceMap", true);
 			
-			metalMaterial->SetTexture("materialAlbedoMap", texture);
-			metalMaterial->SetTexture("texture0", texture);
-			
-			// Glass material setup with albedo alpha transparency
-			glassMaterial->SetTexture("materialAlbedoMap", texture);
-			glassMaterial->SetTexture("texture0", texture);
-			// Use albedo alpha for transparency instead of hardcoded materialTransparency
-			glassMaterial->SetVec4("materialAlbedo", Vec4(0.95f, 0.95f, 0.95f, 0.1f)); // Alpha = 0.1 means 90% transparent
-			glassMaterial->SetFloat("materialIndexOfRefraction", 1.5f);
-			glassMaterial->SetFloat("materialTransmissionFactor", 0.85f);
-			glassMaterial->SetBool("materialHasRefractionMap", true);
-			glassMaterial->SetFloat("materialReflectance", 0.04f);
-			glassMaterial->SetFloat("materialEnvironmentIntensity", 1.0f);
-			
-			// Add environment maps for glass refraction/reflection
-			if (environmentCubemap && environmentCubemap->IsValid()) {
-				glassMaterial->SetCubemap("materialEnvironmentMap", environmentCubemap);
-				glassMaterial->SetCubemap("materialIrradianceMap", environmentCubemap);
-				glassMaterial->SetBool("materialHasEnvironmentMap", true);
-				glassMaterial->SetBool("materialHasIrradianceMap", true);
-			}
-			
-			// Water material setup with albedo alpha transparency
-			waterMaterial->SetTexture("materialAlbedoMap", texture);
-			waterMaterial->SetTexture("texture0", texture);
-			// Use albedo alpha for transparency instead of hardcoded materialTransparency
-			waterMaterial->SetVec4("materialAlbedo", Vec4(0.1f, 0.3f, 0.6f, 0.3f)); // Alpha = 0.3 means 70% transparent
-			waterMaterial->SetFloat("materialIndexOfRefraction", 1.33f);
-			waterMaterial->SetFloat("materialTransmissionFactor", 0.6f);
-			waterMaterial->SetBool("materialHasRefractionMap", true);
-			waterMaterial->SetFloat("materialReflectance", 0.04f);
-			waterMaterial->SetFloat("materialEnvironmentIntensity", 1.0f);
-			
-			// Add environment maps for water refraction/reflection
-			if (environmentCubemap && environmentCubemap->IsValid()) {
-				waterMaterial->SetCubemap("materialEnvironmentMap", environmentCubemap);
-				waterMaterial->SetCubemap("materialIrradianceMap", environmentCubemap);
-				waterMaterial->SetBool("materialHasEnvironmentMap", true);
-				waterMaterial->SetBool("materialHasIrradianceMap", true);
-			}
+			waterMaterial->SetCubemap("materialEnvironmentMap", environmentCubemap);
+			waterMaterial->SetCubemap("materialIrradianceMap", environmentCubemap);
+			waterMaterial->SetBool("materialHasEnvironmentMap", true);
+			waterMaterial->SetBool("materialHasIrradianceMap", true);
 		}
+	}
 	
-	EE_CORE_INFO("Created shared materials including glass and water with refraction support");
+	EE_CORE_INFO("Created shared materials with proper texture assignment control");
 
 	// Random number generation setup
 	//std::random_device rd;
@@ -334,12 +309,18 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().AddComponent<ObjectMetaData>(fbxEntity, ObjectMetaData("Character", "Model", true));
 	ECS::GetInstance().AddComponent<Mesh>(fbxEntity, Mesh{}); // empty mesh component for renderer signature
 	ECS::GetInstance().AddComponent<ModelComponent>(fbxEntity, ModelComponent(AssetManager::GetInstance().LoadModel("../Resources/Models/Walking.fbx")));
+	
+	// Create a pure metallic material without texture fallback
 	auto cubeFBXMaterial = std::make_unique<graphics::Material>(shader);
 	cubeFBXMaterial->LoadTemplate(graphics::MaterialTemplates::PBR_METAL());
-	if (texture && texture->IsValid()) {
-		cubeFBXMaterial->SetTexture("materialAlbedoMap", texture);
-		cubeFBXMaterial->SetTexture("texture0", texture);
-	}
+	
+	// Only set texture if we specifically want this model to be textured
+	// Remove automatic texture assignment to prevent unwanted texture loading
+	// if (texture && texture->IsValid()) {
+	//     cubeFBXMaterial->SetTexture("materialAlbedoMap", texture);
+	//     cubeFBXMaterial->SetBool("materialHasAlbedoMap", true);
+	// }
+	
 	ECS::GetInstance().AddComponent(fbxEntity, Material(std::move(cubeFBXMaterial)));
 
 	// Create a simple quad mesh for particles
@@ -367,15 +348,16 @@ bool engine::Init(GLFWwindow* windowContext)
 	//InspectorGUI inspector{ entity, "Inspector" };
 	//inspector.SetEntity(entity);
 
-	// Create material using UBO template
+	// Create material using UBO template - pure color-based without texture fallback
 	auto cubeMaterial = std::make_unique<graphics::Material>(shader);
 	cubeMaterial->LoadTemplate(graphics::MaterialTemplates::PBR_WHITE());
 
-	// Set texture if available
-	if (texture && texture->IsValid()) {
-		cubeMaterial->SetTexture("materialAlbedoMap", texture);
-		cubeMaterial->SetTexture("texture0", texture); // Fallback for compatibility
-	}
+	// Removed: Automatic texture assignment to prevent unwanted texture loading
+	// Only set textures when explicitly needed for specific visual effects
+	// if (texture && texture->IsValid()) {
+	//     cubeMaterial->SetTexture("materialAlbedoMap", texture);
+	//     cubeMaterial->SetBool("materialHasAlbedoMap", true);
+	// }
 
 	//ECS::GetInstance().AddComponent(entity, Material(std::move(cubeMaterial)));
 
@@ -389,10 +371,12 @@ bool engine::Init(GLFWwindow* windowContext)
 	auto cube2Material = std::make_shared<graphics::Material>(shader);
 	cube2Material->LoadTemplate(graphics::MaterialTemplates::PBR_REFLECTIVE(0.9f, 0.1f)); // Highly reflective metal
 
-	if (texture && texture->IsValid()) {
-		cube2Material->SetTexture("materialAlbedoMap", texture);
-		cube2Material->SetTexture("texture0", texture);
-	}
+	// Removed: Automatic texture assignment to prevent unwanted texture loading
+	// Only set textures when explicitly needed for visual effects
+	// if (texture && texture->IsValid()) {
+	//     cube2Material->SetTexture("materialAlbedoMap", texture);
+	//     cube2Material->SetBool("materialHasAlbedoMap", true);
+	// }
 
 	// Example: Add environment mapping to the material
 	// If you have a cubemap loaded, you can set it like this:

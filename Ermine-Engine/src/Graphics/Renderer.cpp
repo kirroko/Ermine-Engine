@@ -784,7 +784,7 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 				transparentObj.modelMatrix = model;
 				transparentObj.distanceToCamera = 0.0f; // Will be calculated in SortTransparentObjects
 				m_transparentObjects.push_back(transparentObj);
-				continue; // Skip rendering in geometry pass
+				continue; // Skip opaque rendering in geometry pass
 			}
 
 			// Render opaque object in geometry pass
@@ -1522,7 +1522,7 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 					transparentObj.modelMatrix = model;
 					transparentObj.distanceToCamera = 0.0f; // Will be calculated in SortTransparentObjects
 					m_transparentObjects.push_back(transparentObj);
-					continue; // Skip opaque rendering
+					continue; // Skip opaque rendering in geometry pass
 				}
 
 				// Render opaque object
@@ -1875,6 +1875,7 @@ void Renderer::RenderTransparentPass(const Mtx44& view, const Mtx44& projection)
 	// Disable face culling for transparent objects (they might be viewed from inside)
 	glDisable(GL_CULL_FACE);
 
+	// Get ECS reference
 	const auto& ecs = Ermine::ECS::GetInstance();
 
 	// Render all transparent objects in sorted order
@@ -1927,7 +1928,6 @@ void Renderer::RenderTransparentPass(const Mtx44& view, const Mtx44& projection)
 			if (albedo && albedo->IsValid()) {
 				albedo->Bind(texUnit);
 				shader->SetUniform1i("materialAlbedoMap", texUnit);
-				shader->SetUniform1i("texture0", texUnit); // Fallback compatibility
 			}
 		}
 		texUnit++;
@@ -2488,7 +2488,7 @@ void Renderer::CalculateLightMatrix(const editor::EditorCamera& editorCamera)
 
 				// Place light far enough away with safety margin
 				float diagonal = glm::length(maxCorner - minCorner);
-				float lightDistance = glm::max(diagonal * 3.0f, (splitFarDist - splitNearDist) * 2.0f);
+			 float lightDistance = glm::max(diagonal * 3.0f, (splitFarDist - splitNearDist) * 2.0f);
 				glm::vec3 lightPosCalc = worldCenter - lightDir * lightDistance;
 
 				// Create light view matrix

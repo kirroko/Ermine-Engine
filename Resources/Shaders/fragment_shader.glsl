@@ -7,8 +7,6 @@ in vec3 ViewPos;
 
 out vec4 FragColor;
 
-uniform sampler2D texture0;
-
 // Lighting mode toggle
 uniform bool isBlinnPhong = true;
 
@@ -88,7 +86,8 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0)
 
 vec3 calculatePBR(vec3 N, vec3 V)
 {
-    vec3 albedo = texture(texture0, TexCoord).rgb * pbrMaterial.albedo;
+    // FIXED: Use pure color from material properties instead of automatic texture sampling
+    vec3 albedo = pbrMaterial.albedo;
     float metallic = pbrMaterial.metallic;
     float roughness = pbrMaterial.roughness;
     float ao = pbrMaterial.ao;
@@ -137,7 +136,7 @@ vec3 calculatePBR(vec3 N, vec3 V)
 
 vec3 calculateBlinnPhong(vec3 N, vec3 V)
 {
-    vec4 texColor = texture(texture0, TexCoord);
+    // FIXED: Use pure color from material properties instead of automatic texture sampling
     vec3 result = vec3(0.0);
     
     // Calculate lighting for each light
@@ -163,7 +162,7 @@ vec3 calculateBlinnPhong(vec3 N, vec3 V)
         result += ambient + diffuse + specular;
     }
     
-    result *= texColor.rgb;
+    // REMOVED: Automatic texture multiplication - now uses pure material colors
     
     // Gamma correction
     result = pow(result, vec3(1.0/2.2));
@@ -183,4 +182,4 @@ void main()
     }
     
     FragColor = vec4(color, 1.0);
-}
+}}
