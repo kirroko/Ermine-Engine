@@ -979,8 +979,8 @@ void Renderer::RenderPostProcessPass()
 void Renderer::RenderDeferredPipeline(const Mtx44& view, const Mtx44& projection)
 {
 	// Shadow pass - render scene from light's perspective
+	if (frameCounter % SHADOW_MAp_REFRESH_INTERVAL == 0) // Update shadows every 4 frames for performance
 	RenderShadowPass();
-
 	// Geometry pass - write opaque objects to g-buffer, collect transparent objects
 	RenderGeometryPass(view, projection);
 
@@ -1631,6 +1631,9 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 #endif
 	}
+
+	// Increment  frame counter at the end of the frame
+	frameCounter++;
 }
 
 /**

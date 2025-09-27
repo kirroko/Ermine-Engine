@@ -471,6 +471,9 @@ namespace Ermine::graphics
 
 
     private:
+		// Renderer state
+		uint8_t frameCounter = 0;
+
 		// Light System
 		std::shared_ptr<LightSystem> m_LightSystem = nullptr;
         std::shared_ptr<OffscreenBuffer> m_OffscreenBuffer;
