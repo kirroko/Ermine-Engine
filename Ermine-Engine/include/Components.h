@@ -60,6 +60,38 @@ namespace Ermine
 		return q;
 	}
 
+	inline Vec3 JsonToVec3(const rapidjson::Value& a) {
+		return a.IsArray() && a.Size() == 3
+			? Vec3(a[0].GetFloat(), a[1].GetFloat(), a[2].GetFloat())
+			: Vec3();
+	}
+
+	inline rapidjson::Value Vec4ToJson(const Vec4& v, rapidjson::Document::AllocatorType& alloc) {
+		rapidjson::Value a(rapidjson::kArrayType);
+		a.PushBack(v.x, alloc).PushBack(v.y, alloc).PushBack(v.z, alloc).PushBack(v.w, alloc);
+		return a;
+	}
+
+	inline Vec4 JsonToVec4(const rapidjson::Value& arr) {
+		if (arr.IsArray() && arr.Size() == 4) {
+			return Vec4(arr[0].GetFloat(), arr[1].GetFloat(), arr[2].GetFloat(), arr[3].GetFloat());
+		}
+		return Vec4(0.f, 0.f, 0.f, 0.f); // default fallback
+	}
+
+	inline rapidjson::Value Vec3ToJson(const Vec3& v, rapidjson::Document::AllocatorType& alloc) {
+		rapidjson::Value a(rapidjson::kArrayType);
+		a.PushBack(v.x, alloc).PushBack(v.y, alloc).PushBack(v.z, alloc);
+		return a;
+	}
+
+	inline rapidjson::Value QuatToJson(const Quaternion& q, rapidjson::Document::AllocatorType& alloc) {
+		rapidjson::Value a(rapidjson::kArrayType);
+		a.PushBack(q.w, alloc).PushBack(q.x, alloc).PushBack(q.y, alloc).PushBack(q.z, alloc);
+		return a;
+	}
+
+
 	/*!***********************************************************************
 	\brief
 	 Transform component structure.
@@ -79,33 +111,21 @@ namespace Ermine
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
 			out.SetObject();
 
-			auto vec3_to_json = [&](const Vec3& v) {
-				rapidjson::Value a(rapidjson::kArrayType);
-				a.PushBack(v.x, alloc).PushBack(v.y, alloc).PushBack(v.z, alloc);
-				return a;
-				};
-
-			auto quat_to_json = [&](const Quaternion& q) {
-				rapidjson::Value a(rapidjson::kArrayType);
-				a.PushBack(q.w, alloc).PushBack(q.x, alloc).PushBack(q.y, alloc).PushBack(q.z, alloc);
-				return a;
-				};
-
-			out.AddMember("position", vec3_to_json(position), alloc);
-			out.AddMember("rotation", quat_to_json(rotation), alloc);
-			out.AddMember("scale", vec3_to_json(scale), alloc);
+			out.AddMember("position", Vec3ToJson(position, alloc), alloc);
+			out.AddMember("rotation", QuatToJson(rotation, alloc), alloc);
+			out.AddMember("scale", Vec3ToJson(scale, alloc), alloc);
 		}
 
 		void Deserialize(const rapidjson::Value& in) {
-			auto json_to_vec3 = [&](const rapidjson::Value& arr) {
-				return Vector3D(arr[0].GetFloat(), arr[1].GetFloat(), arr[2].GetFloat());
-				};
+			//auto json_to_vec3 = [&](const rapidjson::Value& arr) {
+			//	return Vector3D(arr[0].GetFloat(), arr[1].GetFloat(), arr[2].GetFloat());
+			//	};
 
 			if (in.HasMember("position") && in["position"].IsArray() && in["position"].Size() == 3)
-				position = json_to_vec3(in["position"]);
+				position = JsonToVec3(in["position"]);
 
 			if (in.HasMember("scale") && in["scale"].IsArray() && in["scale"].Size() == 3)
-				scale = json_to_vec3(in["scale"]);
+				scale = JsonToVec3(in["scale"]);
 
 			if (in.HasMember("rotation") && in["rotation"].IsArray()) {
 				const auto& r = in["rotation"];
@@ -117,7 +137,7 @@ namespace Ermine
 					rotation.z = r[3].GetFloat();
 				}
 				else if (r.Size() == 3) {
-					Vec3 eulerDeg = json_to_vec3(r);
+					Vec3 eulerDeg = JsonToVec3(r);
 					rotation = QuaternionFromEulerDegrees(eulerDeg);
 				}
 			}
@@ -261,19 +281,14 @@ namespace Ermine
 		template <typename Alloc>
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
 			out.SetObject();
-			//MeshRef ref{ m_meshAssetId };
-			//rapidjson::Value meshJson;
-			//Serialize(ref, meshJson, alloc);
-			//out.AddMember("mesh", meshJson, alloc);
-
-			// only script name needs to be serialised
+			out.AddMember("class", rapidjson::Value(m_className.c_str(), alloc), alloc);
+			out.AddMember("enabled", m_enabled, alloc);
 		}
 
 		void Deserialize(const rapidjson::Value& in) {
-			//if (in.HasMember("mesh") && in["mesh"].IsObject())
-			//	mesh = DeserializeMeshRef(in["mesh"], AssetManager::Get());
-
-			// only script name needs to be deserialised
+			if (in.HasMember("class") && in["class"].IsString()) m_className = in["class"].GetString();
+			if (in.HasMember("enabled") && in["enabled"].IsBool()) m_enabled = in["enabled"].GetBool();
+			// Note: re-create ScriptInstance when attaching to entity (needs EntityID)
 		}
 	};
 
@@ -298,15 +313,19 @@ namespace Ermine
 		template <typename Alloc>
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
 			out.SetObject();
-			//MeshRef ref{ m_meshAssetId };
-			//rapidjson::Value meshJson;
-			//Serialize(ref, meshJson, alloc);
-			//out.AddMember("mesh", meshJson, alloc);
+			out.AddMember("fov", fov, alloc);
+			out.AddMember("aspect", aspectRatio, alloc);
+			out.AddMember("near", nearPlane, alloc);
+			out.AddMember("far", farPlane, alloc);
+			out.AddMember("primary", isPrimary, alloc);
 		}
 
 		void Deserialize(const rapidjson::Value& in) {
-			//if (in.HasMember("mesh") && in["mesh"].IsObject())
-			//	mesh = DeserializeMeshRef(in["mesh"], AssetManager::Get());
+			if (in.HasMember("fov"))       fov = in["fov"].GetFloat();
+			if (in.HasMember("aspect"))    aspectRatio = in["aspect"].GetFloat();
+			if (in.HasMember("near"))      nearPlane = in["near"].GetFloat();
+			if (in.HasMember("far"))       farPlane = in["far"].GetFloat();
+			if (in.HasMember("primary"))   isPrimary = in["primary"].GetBool();
 		}
 	};
 
@@ -320,6 +339,15 @@ namespace Ermine
 		std::shared_ptr<graphics::VertexBuffer> vertex_buffer;
 		std::shared_ptr<graphics::IndexBuffer> index_buffer;
 
+		enum class Kind { None, Primitive, Asset };
+		Kind kind = Kind::None;
+
+		// Primitive description (enough for your CreateCube)
+		struct PrimitiveDesc { std::string type; Vec3 size{ 1,1,1 }; } primitive;
+
+		// Asset description
+		struct AssetDesc { std::string meshName; } asset;
+
 		Mesh() = default;
 
 		Mesh(const std::shared_ptr<graphics::VertexArray>& vao, const std::shared_ptr<graphics::VertexBuffer>& vbo, const std::shared_ptr<graphics::IndexBuffer>& ibo) :
@@ -327,33 +355,64 @@ namespace Ermine
 		{
 		}
 
-		//template <typename Alloc>
-		//void Serialize(rapidjson::Value& out, Alloc& alloc) const {
-		//	out.SetObject();
-		//	MeshRef ref{ m_meshAssetId };
-		//	rapidjson::Value meshJson;
-		//	Serialize(ref, meshJson, alloc);
-		//	out.AddMember("mesh", meshJson, alloc);
-		//}
-
+		void RebuildPrimitive(); // implemented in .cpp
 		//void Deserialize(const rapidjson::Value& in) {
-		//	if (in.HasMember("mesh") && in["mesh"].IsObject())
-		//		mesh = DeserializeMeshRef(in["mesh"], AssetManager::Get());
+		//	// ... set kind/primitive.type/primitive.size as you already do ...
+		//	if (kind == Kind::Primitive) RebuildPrimitive();
+		//	// Asset case: your loader, etc.
 		//}
 
 		template <typename Alloc>
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
 			out.SetObject();
-			//MeshRef ref{ m_meshAssetId };
-			//rapidjson::Value meshJson;
-			//Serialize(ref, meshJson, alloc);
-			//out.AddMember("mesh", meshJson, alloc);
+			switch (kind) {
+			case Kind::Primitive: {
+				out.AddMember("kind", "Primitive", alloc);
+				rapidjson::Value p(rapidjson::kObjectType);
+				p.AddMember("type", rapidjson::Value(primitive.type.c_str(), alloc), alloc);
+				p.AddMember("size", Vec3ToJson(primitive.size, alloc), alloc);
+				out.AddMember("primitive", p, alloc);
+				break;
+			}
+			case Kind::Asset: {
+				out.AddMember("kind", "Asset", alloc);
+				rapidjson::Value a(rapidjson::kObjectType);
+				a.AddMember("meshName", rapidjson::Value(asset.meshName.c_str(), alloc), alloc);
+				out.AddMember("asset", a, alloc);
+				break;
+			}
+			default:
+				out.AddMember("kind", "None", alloc);
+				break;
+			}
 		}
 
 		void Deserialize(const rapidjson::Value& in) {
-			//if (in.HasMember("mesh") && in["mesh"].IsObject())
-			//	mesh = DeserializeMeshRef(in["mesh"], AssetManager::Get());
+			if (!in.HasMember("kind")) { kind = Kind::None; return; }
+			const auto& k = in["kind"];
+			if (k.IsString()) {
+				if (strcmp(k.GetString(), "Primitive") == 0) {
+					kind = Kind::Primitive;
+					const auto& p = in["primitive"];
+					if (p.HasMember("type") && p["type"].IsString()) primitive.type = p["type"].GetString();
+					if (p.HasMember("size")) primitive.size = JsonToVec3(p["size"]);
+
+					RebuildPrimitive();
+					// extend for other primitives
+				}
+
+				else if (strcmp(k.GetString(), "Asset") == 0) {
+					kind = Kind::Asset;
+					const auto& a = in["asset"];
+					if (a.HasMember("meshName") && a["meshName"].IsString()) asset.meshName = a["meshName"].GetString();
+					// Rebuild from asset if you have a mesh loader separate from Model
+				}
+				else {
+					kind = Kind::None;
+				}
+			}
 		}
+
 	};
 
 	/*!***********************************************************************
@@ -364,6 +423,20 @@ namespace Ermine
 	{
 		//material class
 		std::shared_ptr<graphics::Material> m_material;
+		std::string materialName;  // NEW: name of material in AssetManager
+		std::string materialTemplate; // e.g. "PBR_REFLECTIVE", "PBR_RED"
+		std::unordered_map<std::string, float> floats;
+		std::unordered_map<std::string, bool>  bools;
+		std::unordered_map<std::string, Vec3>  vec3s;
+		std::unordered_map<std::string, std::string> textures; // uniform -> path
+		std::unordered_map<std::string, std::array<std::string, 6>> cubemapFaces;
+		std::unordered_map<std::string, std::string>cubemapEq;
+
+		inline void EnsureGraphicsMaterial() {
+			if (!m_material) {
+				m_material = std::make_shared<graphics::Material>(/* default shader */);
+			}
+		}
 
 		Material() = default;
 
@@ -460,9 +533,10 @@ namespace Ermine
 		* @details Albedo represents the diffuse color of the material.
 		* @param albedo A Vec3 representing the RGB color value for the albedo.
 		*/
-		void SetAlbedo(const Vec3& albedo)
-		{
-			if (m_material) m_material->SetVec3("material.albedo", albedo);
+		void SetAlbedo(const Vec3& albedo) {
+			EnsureGraphicsMaterial();
+			vec3s["material.albedo"] = albedo;
+			m_material->SetVec3("material.albedo", albedo);
 		}
 
 		/**
@@ -472,7 +546,9 @@ namespace Ermine
 		*/
 		void SetRoughness(float roughness)
 		{
-			if (m_material) m_material->SetFloat("material.roughness", roughness);
+			EnsureGraphicsMaterial();
+			floats["material.roughness"] = roughness;
+			m_material->SetFloat("material.roughness", roughness);
 		}
 
 		/**
@@ -482,7 +558,9 @@ namespace Ermine
 		*/
 		void SetMetallic(float metallic)
 		{
-			if (m_material) m_material->SetFloat("material.metallic", metallic);
+			EnsureGraphicsMaterial();
+			floats["material.metallic"] = metallic;
+			m_material->SetFloat("material.metallic", metallic);
 		}
 
 		/**
@@ -493,11 +571,11 @@ namespace Ermine
 		*/
 		void SetEmissive(const Vec3& emissive, float intensity = 1.0f)
 		{
-			if (m_material)
-			{
-				m_material->SetVec3("material.emissive", emissive);
-				m_material->SetFloat("material.emissiveIntensity", intensity);
-			}
+			EnsureGraphicsMaterial();
+			vec3s["material.emissive"] = emissive;
+			floats["material.emissiveIntensity"] = intensity;
+			m_material->SetVec3("material.emissive", emissive);
+			m_material->SetFloat("material.emissiveIntensity", intensity);
 		}
 
 		/**
@@ -507,25 +585,175 @@ namespace Ermine
 		*/
 		void SetNormalMap(std::shared_ptr<graphics::Texture> normalMap)
 		{
-			if (m_material && normalMap && normalMap->IsValid())
-			{
+			EnsureGraphicsMaterial();
+			if (normalMap && normalMap->IsValid()) {
+				bools["material.hasNormalMap"] = true;
 				m_material->SetTexture("material.normalMap", normalMap);
 				m_material->SetBool("material.hasNormalMap", true);
 			}
 		}
 
+		// add a path-based texture setter so it can be serialized
+		void SetTexture(const std::string& uniform, const std::string& path) {
+			EnsureGraphicsMaterial();
+			textures[uniform] = path;
+			if (auto t = AssetManager::GetInstance().LoadTexture(path); t && t->IsValid())
+				m_material->SetTexture(uniform, t);
+		}
+
+		void SetTemplate(const std::string& tpl) {
+			EnsureGraphicsMaterial();
+			materialTemplate = tpl;
+			if (tpl == "PBR_REFLECTIVE") m_material->LoadTemplate(graphics::MaterialTemplates::PBR_REFLECTIVE(0.9f, 0.1f));
+			else if (tpl == "PBR_RED")   m_material->LoadTemplate(graphics::MaterialTemplates::PBR_RED());
+		}
+
+		// cubemaps (two formats)
+		void SetCubemapFaces(const std::string& uniform, const std::array<std::string, 6>& faces) {
+			EnsureGraphicsMaterial();
+			cubemapFaces[uniform] = faces;
+			if (auto c = AssetManager::GetInstance().LoadCubemap(faces); c && c->IsValid())
+				m_material->SetCubemap(uniform, c);
+		}
+		void SetCubemapEquirect(const std::string& uniform, const std::string& path) {
+			EnsureGraphicsMaterial();
+			cubemapEq[uniform] = path;
+			if (auto c = AssetManager::GetInstance().LoadCubemapFromEquirectangular(path); c && c->IsValid())
+				m_material->SetCubemap(uniform, c);
+		}
+
 		template <typename Alloc>
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
 			out.SetObject();
-			//MeshRef ref{ m_meshAssetId };
-			//rapidjson::Value meshJson;
-			//Serialize(ref, meshJson, alloc);
-			//out.AddMember("mesh", meshJson, alloc);
+
+			// Case 1: linked to AssetManager
+			if (!materialName.empty()) {
+				out.AddMember("materialName",
+					rapidjson::Value(materialName.c_str(), alloc),
+					alloc);
+				return; // don’t need to dump all parameters
+			}
+
+			// Case 2: unique material — dump settings
+			if (!materialTemplate.empty())
+				out.AddMember("template",
+					rapidjson::Value(materialTemplate.c_str(), alloc),
+					alloc);
+
+			// floats
+			rapidjson::Value floatsObj(rapidjson::kObjectType);
+			for (auto& kv : floats) {
+				rapidjson::Value key(kv.first.c_str(), alloc);
+				rapidjson::Value val; val.SetFloat(kv.second);
+				floatsObj.AddMember(key, val, alloc);
+			}
+			out.AddMember("floats", floatsObj, alloc);
+
+			// bools
+			rapidjson::Value boolsObj(rapidjson::kObjectType);
+			for (auto& kv : bools) {
+				rapidjson::Value key(kv.first.c_str(), alloc);
+				rapidjson::Value val; val.SetBool(kv.second);
+				boolsObj.AddMember(key, val, alloc);
+			}
+			out.AddMember("bools", boolsObj, alloc);
+
+			// vec3s
+			rapidjson::Value vec3Obj(rapidjson::kObjectType);
+			for (auto& kv : vec3s) {
+				rapidjson::Value key(kv.first.c_str(), alloc);
+				vec3Obj.AddMember(key, Vec3ToJson(kv.second, alloc), alloc);
+			}
+			out.AddMember("vec3s", vec3Obj, alloc);
+
+			// textures
+			rapidjson::Value texObj(rapidjson::kObjectType);
+			for (auto& kv : textures) {
+				rapidjson::Value key(kv.first.c_str(), alloc);
+				texObj.AddMember(key,
+					rapidjson::Value(kv.second.c_str(), alloc),
+					alloc);
+			}
+			out.AddMember("textures", texObj, alloc);
+
+			// cubemaps
+			rapidjson::Value cubeObj(rapidjson::kObjectType);
+			for (auto& kv : cubemapFaces) {
+				rapidjson::Value arr(rapidjson::kArrayType);
+				for (auto& face : kv.second)
+					arr.PushBack(rapidjson::Value(face.c_str(), alloc), alloc);
+				cubeObj.AddMember(rapidjson::Value(kv.first.c_str(), alloc), arr, alloc);
+			}
+			for (auto& kv : cubemapEq) {
+				rapidjson::Value key(kv.first.c_str(), alloc);
+				cubeObj.AddMember(key,
+					rapidjson::Value(kv.second.c_str(), alloc),
+					alloc);
+			}
+			out.AddMember("cubemaps", cubeObj, alloc);
 		}
 
+
 		void Deserialize(const rapidjson::Value& in) {
-			//if (in.HasMember("mesh") && in["mesh"].IsObject())
-			//	mesh = DeserializeMeshRef(in["mesh"], AssetManager::Get());
+			EnsureGraphicsMaterial();
+
+			// Case 1: relink to shared material
+			if (in.HasMember("materialName") && in["materialName"].IsString()) {
+				materialName = in["materialName"].GetString();
+				auto shared = AssetManager::GetInstance().GetMaterial(materialName);
+				if (shared) {
+					m_material = shared;
+					return; // done
+				}
+				// fallback: if not found, continue to rebuild below
+			}
+
+			// Case 2: rebuild unique material
+			if (in.HasMember("template") && in["template"].IsString()) {
+				SetTemplate(in["template"].GetString());
+			}
+
+			if (in.HasMember("floats") && in["floats"].IsObject()) {
+				for (auto it = in["floats"].MemberBegin(); it != in["floats"].MemberEnd(); ++it) {
+					if (it->value.IsNumber())
+						m_material->SetFloat(it->name.GetString(), it->value.GetFloat());
+				}
+			}
+
+			if (in.HasMember("bools") && in["bools"].IsObject()) {
+				for (auto it = in["bools"].MemberBegin(); it != in["bools"].MemberEnd(); ++it) {
+					if (it->value.IsBool())
+						m_material->SetBool(it->name.GetString(), it->value.GetBool());
+				}
+			}
+
+			if (in.HasMember("vec3s") && in["vec3s"].IsObject()) {
+				for (auto it = in["vec3s"].MemberBegin(); it != in["vec3s"].MemberEnd(); ++it) {
+					if (it->value.IsArray() && it->value.Size() == 3)
+						m_material->SetVec3(it->name.GetString(), JsonToVec3(it->value));
+				}
+			}
+
+			if (in.HasMember("textures") && in["textures"].IsObject()) {
+				for (auto it = in["textures"].MemberBegin(); it != in["textures"].MemberEnd(); ++it) {
+					if (it->value.IsString())
+						SetTexture(it->name.GetString(), it->value.GetString());
+				}
+			}
+
+			if (in.HasMember("cubemaps") && in["cubemaps"].IsObject()) {
+				for (auto it = in["cubemaps"].MemberBegin(); it != in["cubemaps"].MemberEnd(); ++it) {
+					const auto& v = it->value;
+					if (v.IsArray() && v.Size() == 6) {
+						std::array<std::string, 6> faces;
+						for (rapidjson::SizeType i = 0; i < 6; ++i) faces[i] = v[i].GetString();
+						SetCubemapFaces(it->name.GetString(), faces);
+					}
+					else if (v.IsString()) {
+						SetCubemapEquirect(it->name.GetString(), v.GetString());
+					}
+				}
+			}
 		}
 	};
 
@@ -670,31 +898,51 @@ namespace Ermine
 		void AddMusicSource(const std::string& name, const std::string& path);
 		void AddSFXSource(const std::string& name, const std::string& path);
 
+		// GlobalAudioComponent
 		template <typename Alloc>
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
-			//const std::string& model_name = m_model->GetName();
-			//out.SetObject();
+			out.SetObject();
+			out.AddMember("masterVolume", masterVolume, alloc);
+			out.AddMember("musicVolume", musicVolume, alloc);
+			out.AddMember("sfxVolume", sfxVolume, alloc);
 
-			//rapidjson::Value modelVal;
-			//modelVal.SetString(model_name.c_str(),
-			//	static_cast<rapidjson::SizeType>(model_name.size()),
-			//	alloc);  // required for strings
-
-			//out.AddMember("model", modelVal, alloc);
+			auto writeList = [&](const std::vector<AudioSource>& list, const char* key) {
+				rapidjson::Value arr(rapidjson::kArrayType);
+				for (auto& s : list) {
+					rapidjson::Value o(rapidjson::kObjectType);
+					o.AddMember("name", rapidjson::Value(s.audioName.c_str(), alloc), alloc);
+					o.AddMember("path", rapidjson::Value(s.audioPath.c_str(), alloc), alloc);
+					o.AddMember("volume", s.volume, alloc);
+					arr.PushBack(o, alloc);
+				}
+				out.AddMember(rapidjson::StringRef(key), arr, alloc);
+				};
+			writeList(music, "music");
+			writeList(sfx, "sfx");
 		}
-
-
 		void Deserialize(const rapidjson::Value& in) {
-			//if (in.HasMember("model") && in["model"].IsString()) {
-			//	const char* name = in["model"].GetString();
+			if (in.HasMember("masterVolume")) masterVolume = in["masterVolume"].GetFloat();
+			if (in.HasMember("musicVolume")) musicVolume = in["musicVolume"].GetFloat();
+			if (in.HasMember("sfxVolume"))   sfxVolume = in["sfxVolume"].GetFloat();
 
-			//	if (!m_model) {
-			//		m_model = AssetManager::GetInstance().LoadModel("../Resources/Models/" + std::string(name));
-			//	}
+			auto readList = [&](const char* key, std::vector<AudioSource>& list) {
+				list.clear();
+				if (in.HasMember(key) && in[key].IsArray()) {
+					for (auto& v : in[key].GetArray()) {
+						AudioSource s;
+						if (v.HasMember("name") && v["name"].IsString())   s.audioName = v["name"].GetString();
+						if (v.HasMember("path") && v["path"].IsString())   s.audioPath = v["path"].GetString();
+						if (v.HasMember("volume") && v["volume"].IsNumber()) s.volume = v["volume"].GetFloat();
+						list.push_back(std::move(s));
+					}
+				}
+				};
+			readList("music", music);
+			readList("sfx", sfx);
 
-			//	m_model->LoadModel(std::string("../Resources/Models/") + name);
-			//}
+			currentMusicIndex = -1; currentMusicChannelId = -1;
 		}
+
 	};
 
 	/*!***********************************************************************
@@ -739,29 +987,55 @@ namespace Ermine
 
 		template <typename Alloc>
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
-			//const std::string& model_name = m_model->GetName();
-			//out.SetObject();
+			out.SetObject();
+			out.AddMember("soundName", rapidjson::Value(soundName.c_str(), alloc), alloc);
+			out.AddMember("eventName", rapidjson::Value(eventName.c_str(), alloc), alloc);
+			out.AddMember("is3D", is3D, alloc);
+			out.AddMember("isLooping", isLooping, alloc);
+			out.AddMember("isStreaming", isStreaming, alloc);
+			out.AddMember("volume", volume, alloc);
+			out.AddMember("followTransform", followTransform, alloc);
+			out.AddMember("minDistance", minDistance, alloc);
+			out.AddMember("maxDistance", maxDistance, alloc);
 
-			//rapidjson::Value modelVal;
-			//modelVal.SetString(model_name.c_str(),
-			//	static_cast<rapidjson::SizeType>(model_name.size()),
-			//	alloc);  // required for strings
+			rapidjson::Value params(rapidjson::kObjectType);
 
-			//out.AddMember("model", modelVal, alloc);
+			for (const auto& kv : eventParameters) {
+				// key
+				rapidjson::Value key;
+				key.SetString(kv.first.c_str(),
+					static_cast<rapidjson::SizeType>(kv.first.size()),
+					alloc);
+
+				// value (float/double)
+				rapidjson::Value val;
+				val.SetFloat(kv.second);              // or: val.SetDouble(static_cast<double>(kv.second));
+
+				// Add (moves key and val into the object)
+				params.AddMember(key, val, alloc);
+			}
+
+			out.AddMember(rapidjson::StringRef("eventParameters"), params, alloc);
+
 		}
-
-
 		void Deserialize(const rapidjson::Value& in) {
-			//if (in.HasMember("model") && in["model"].IsString()) {
-			//	const char* name = in["model"].GetString();
-
-			//	if (!m_model) {
-			//		m_model = AssetManager::GetInstance().LoadModel("../Resources/Models/" + std::string(name));
-			//	}
-
-			//	m_model->LoadModel(std::string("../Resources/Models/") + name);
-			//}
+			if (in.HasMember("soundName") && in["soundName"].IsString()) soundName = in["soundName"].GetString();
+			if (in.HasMember("eventName") && in["eventName"].IsString()) eventName = in["eventName"].GetString();
+			if (in.HasMember("is3D")) is3D = in["is3D"].GetBool();
+			if (in.HasMember("isLooping")) isLooping = in["isLooping"].GetBool();
+			if (in.HasMember("isStreaming")) isStreaming = in["isStreaming"].GetBool();
+			if (in.HasMember("volume")) volume = in["volume"].GetFloat();
+			if (in.HasMember("followTransform")) followTransform = in["followTransform"].GetBool();
+			if (in.HasMember("minDistance")) minDistance = in["minDistance"].GetFloat();
+			if (in.HasMember("maxDistance")) maxDistance = in["maxDistance"].GetFloat();
+			eventParameters.clear();
+			if (in.HasMember("eventParameters") && in["eventParameters"].IsObject()) {
+				for (auto it = in["eventParameters"].MemberBegin(); it != in["eventParameters"].MemberEnd(); ++it)
+					if (it->value.IsNumber()) eventParameters[it->name.GetString()] = it->value.GetFloat();
+			}
+			channelId = -1; isPlaying = false; shouldPlay = shouldStop = false;
 		}
+
 	};
 
 	/*!***********************************************************************
@@ -780,29 +1054,22 @@ namespace Ermine
 
 		template <typename Alloc>
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
-			//const std::string& model_name = m_model->GetName();
-			//out.SetObject();
-
-			//rapidjson::Value modelVal;
-			//modelVal.SetString(model_name.c_str(),
-			//	static_cast<rapidjson::SizeType>(model_name.size()),
-			//	alloc);  // required for strings
-
-			//out.AddMember("model", modelVal, alloc);
+			out.SetObject();
+			out.AddMember("velocity", Vec3ToJson(velocity, alloc), alloc);
+			out.AddMember("lifetime", lifetime, alloc);
+			out.AddMember("age", age, alloc);
+			out.AddMember("colour", Vec4ToJson(colour, alloc), alloc);
+			out.AddMember("size", size, alloc);
 		}
-
-
 		void Deserialize(const rapidjson::Value& in) {
-			//if (in.HasMember("model") && in["model"].IsString()) {
-			//	const char* name = in["model"].GetString();
-
-			//	if (!m_model) {
-			//		m_model = AssetManager::GetInstance().LoadModel("../Resources/Models/" + std::string(name));
-			//	}
-
-			//	m_model->LoadModel(std::string("../Resources/Models/") + name);
-			//}
+			if (in.HasMember("velocity")) velocity = JsonToVec3(in["velocity"]);
+			if (in.HasMember("lifetime")) lifetime = in["lifetime"].GetFloat();
+			if (in.HasMember("age"))      age = in["age"].GetFloat();
+			if (in.HasMember("colour") && in["colour"].IsArray() && in["colour"].Size() == 4)
+				colour = Vec4(in["colour"][0].GetFloat(), in["colour"][1].GetFloat(), in["colour"][2].GetFloat(), in["colour"][3].GetFloat());
+			if (in.HasMember("size"))     size = in["size"].GetFloat();
 		}
+
 	};
 
 	/*!***********************************************************************
@@ -863,6 +1130,67 @@ namespace Ermine
 			ShapeType shape = ShapeType::Box)
 			: bodyType(type), motionType(motion), mass(m), shapeType(shape)
 		{}
+
+		template <typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
+			out.SetObject();
+			const char* body = (bodyType == PhysicsBodyType::Trigger ? "Trigger" : "Rigid");
+			out.AddMember("bodyType", rapidjson::Value(body, alloc), alloc);
+
+			const char* motion = "Static";
+			if (motionType == JPH::EMotionType::Kinematic) motion = "Kinematic";
+			else if (motionType == JPH::EMotionType::Dynamic) motion = "Dynamic";
+			out.AddMember("motionType", rapidjson::Value(motion, alloc), alloc);
+
+			out.AddMember("mass", mass, alloc);
+
+			static const char* shapeNames[] = { "Box", "Sphere", "Capsule", "CustomMesh" };
+			out.AddMember("shapeType", rapidjson::Value(shapeNames[(int)shapeType], alloc), alloc);
+
+			if (shapeType == ShapeType::CustomMesh) {
+				rapidjson::Value verts(rapidjson::kArrayType);
+				verts.Reserve(static_cast<rapidjson::SizeType>(customMeshVertices.size()), alloc);
+				for (const auto& v : customMeshVertices) {
+					rapidjson::Value arr(rapidjson::kArrayType);
+					arr.PushBack(v.x, alloc).PushBack(v.y, alloc).PushBack(v.z, alloc);
+					verts.PushBack(arr, alloc);
+				}
+				out.AddMember("customVertices", verts, alloc);
+			}
+		}
+
+		void Deserialize(const rapidjson::Value& in) {
+			if (in.HasMember("bodyType") && in["bodyType"].IsString())
+				bodyType = (std::strcmp(in["bodyType"].GetString(), "Trigger") == 0) ? PhysicsBodyType::Trigger : PhysicsBodyType::Rigid;
+
+			if (in.HasMember("motionType") && in["motionType"].IsString()) {
+				auto s = in["motionType"].GetString();
+				if (std::strcmp(s, "Kinematic") == 0) motionType = JPH::EMotionType::Kinematic;
+				else if (std::strcmp(s, "Dynamic") == 0) motionType = JPH::EMotionType::Dynamic;
+				else motionType = JPH::EMotionType::Static;
+			}
+
+			if (in.HasMember("mass") && in["mass"].IsNumber())
+				mass = in["mass"].GetFloat();
+
+			if (in.HasMember("shapeType") && in["shapeType"].IsString()) {
+				auto s = in["shapeType"].GetString();
+				if (std::strcmp(s, "Box") == 0) shapeType = ShapeType::Box;
+				else if (std::strcmp(s, "Sphere") == 0) shapeType = ShapeType::Sphere;
+				else if (std::strcmp(s, "Capsule") == 0) shapeType = ShapeType::Capsule;
+				else shapeType = ShapeType::CustomMesh;
+			}
+
+			customMeshVertices.clear();
+			if (shapeType == ShapeType::CustomMesh && in.HasMember("customVertices") && in["customVertices"].IsArray()) {
+				for (auto& v : in["customVertices"].GetArray()) {
+					if (v.IsArray() && v.Size() == 3)
+						customMeshVertices.emplace_back(v[0].GetFloat(), v[1].GetFloat(), v[2].GetFloat());
+				}
+			}
+
+			//bodyID = JPH::BodyID::cInvalidBodyID; // rebuilt by your physics system on scene init
+		}
 	};
 
 

@@ -412,6 +412,13 @@ bool engine::Init(GLFWwindow* windowContext)
 			ShapeType::Box				   // Box, Sphere, Capsule, CustomMesh(need pass vertex)
 		));
 
+	auto& mesh = ECS::GetInstance().GetComponent<Mesh>(entity2);
+	mesh.kind = Mesh::Kind::Primitive;
+	mesh.primitive.type = "Cube";
+	mesh.primitive.size = { 1,1,1 };
+
+	//ECS::GetInstance().AddComponent(entity2, HierarchyComponent());
+
 	// Create a reflective material for demonstration - this one is unique
 	auto cube2Material = std::make_shared<graphics::Material>(shader);
 	cube2Material->LoadTemplate(graphics::MaterialTemplates::PBR_REFLECTIVE(0.9f, 0.1f)); // Highly reflective metal
@@ -456,6 +463,11 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().AddComponent(redLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
 	ECS::GetInstance().AddComponent(redLightEntity, Material(redLightMaterial));
 
+	auto& redlight = ECS::GetInstance().GetComponent<Mesh>(redLightEntity);
+	redlight.kind = Mesh::Kind::Primitive;
+	redlight.primitive.type = "Sphere";
+	redlight.primitive.size = { 0.1f,1,1 };
+
 	// Blue accent light
 	auto blueLightEntity = ECS::GetInstance().CreateEntity();
 	ECS::GetInstance().AddComponent(blueLightEntity, Transform(Vec3(-3, 2, 0), Quaternion(), Vec3(1, 1, 1)));
@@ -467,6 +479,11 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().AddComponent(blueLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
 	ECS::GetInstance().AddComponent(blueLightEntity, Material(blueLightMaterial));
 
+	auto& bluelight = ECS::GetInstance().GetComponent<Mesh>(blueLightEntity);
+	bluelight.kind = Mesh::Kind::Primitive;
+	bluelight.primitive.type = "Sphere";
+	bluelight.primitive.size = { 0.1f,1,1 };
+
 	// Green accent light
 	auto greenLightEntity = ECS::GetInstance().CreateEntity();
 	ECS::GetInstance().AddComponent(greenLightEntity, Transform(Vec3(0, 2, -3), Quaternion(), Vec3(1, 1, 1)));
@@ -477,6 +494,11 @@ bool engine::Init(GLFWwindow* windowContext)
 	greenLightMaterial->LoadTemplate(graphics::MaterialTemplates::EMISSIVE(Vec3(0.f, 1.f, 0.0f), 10.0f));
 	ECS::GetInstance().AddComponent(greenLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
 	ECS::GetInstance().AddComponent(greenLightEntity, Material(greenLightMaterial));
+
+	auto& greenlight = ECS::GetInstance().GetComponent<Mesh>(greenLightEntity);
+	greenlight.kind = Mesh::Kind::Primitive;
+	greenlight.primitive.type = "Sphere";
+	greenlight.primitive.size = { 0.1f,1,1 };
 
 	//after creating all the physic object, update to physic system
 	ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
