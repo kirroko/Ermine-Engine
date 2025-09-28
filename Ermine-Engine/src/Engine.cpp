@@ -348,16 +348,8 @@ bool engine::Init(GLFWwindow* windowContext)
 	//InspectorGUI inspector{ entity, "Inspector" };
 	//inspector.SetEntity(entity);
 
-	// Create material using UBO template - pure color-based without texture fallback
 	auto cubeMaterial = std::make_unique<graphics::Material>(shader);
 	cubeMaterial->LoadTemplate(graphics::MaterialTemplates::PBR_WHITE());
-
-	// Removed: Automatic texture assignment to prevent unwanted texture loading
-	// Only set textures when explicitly needed for specific visual effects
-	// if (texture && texture->IsValid()) {
-	//     cubeMaterial->SetTexture("materialAlbedoMap", texture);
-	//     cubeMaterial->SetBool("materialHasAlbedoMap", true);
-	// }
 
 	//ECS::GetInstance().AddComponent(entity, Material(std::move(cubeMaterial)));
 
@@ -367,27 +359,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().AddComponent<ObjectMetaData>(entity2, ObjectMetaData());
 	ECS::GetInstance().AddComponent<Mesh>(entity2, graphics::GeometryFactory::CreateCube(1, 1, 1));
 
-	// Create a reflective material for demonstration - this one is unique
 	auto cube2Material = std::make_shared<graphics::Material>(shader);
-	cube2Material->LoadTemplate(graphics::MaterialTemplates::PBR_REFLECTIVE(0.9f, 0.1f)); // Highly reflective metal
-
-	// Removed: Automatic texture assignment to prevent unwanted texture loading
-	// Only set textures when explicitly needed for visual effects
-	// if (texture && texture->IsValid()) {
-	//     cube2Material->SetTexture("materialAlbedoMap", texture);
-	//     cube2Material->SetBool("materialHasAlbedoMap", true);
-	// }
-
-	// Example: Add environment mapping to the material
-	// If you have a cubemap loaded, you can set it like this:
-	if (environmentCubemap && environmentCubemap->IsValid()) {
-	    cube2Material->SetCubemap("materialEnvironmentMap", environmentCubemap);
-	    cube2Material->SetCubemap("materialIrradianceMap", environmentCubemap); // You'd typically use a separate irradiance map
-	    cube2Material->SetBool("materialHasEnvironmentMap", true);
-	    cube2Material->SetBool("materialHasIrradianceMap", true);
-	    cube2Material->SetFloat("materialEnvironmentIntensity", 1.0f);
-	    EE_CORE_INFO("Environment mapping applied to reflective cube");
-	}
 
 	ECS::GetInstance().AddComponent(entity2, Material(cube2Material));
 	ECS::GetInstance().AddComponent(entity2, Script("Sandbox", entity2));
@@ -496,25 +468,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	// Create ImGUI window for Inspector
 	//editor::EditorGUI::CreateImGUIWindow<InspectorGUI>();
 	editor::EditorGUI::CreateImGUIWindow<InspectorGUI>(entity2, "Inspector");
-   
-	// Demonstrate different material sharing strategies:
-	// 1. Use completely shared material (multiple entities, same appearance)
-	//    Example: ECS::GetInstance().AddComponent(anotherEntity, Material(basicWhiteMaterial)); // Same material instance
-	// 2. Create unique materials when needed (entities with unique appearance)
-	//    Example: auto customMaterial = std::make_shared<graphics::Material>(shader); // Unique material
-	// 3. Clone and modify shared materials (similar but slightly different materials)
-	//    Example: auto customMaterial = std::make_shared<graphics::Material>(*basicWhiteMaterial);  // Copy
-	//             customMaterial->SetFloat("material.roughness", 0.8f);  // Modify the copy
-
-	EE_CORE_INFO("Material system now supports efficient sharing between entities using shared_ptr");
-	EE_CORE_INFO("Advanced features implemented:");
-	EE_CORE_INFO("  - Fixed reflection with environment cubemaps and local probes");
-	EE_CORE_INFO("  - Correct refraction with IOR support (Glass: 1.5, Water: 1.33)");
-	EE_CORE_INFO("  - Proper Fresnel-based reflection/refraction mixing");
-	EE_CORE_INFO("  - Enhanced material templates with all required parameters");
-	EE_CORE_INFO("  - Key controls: 1=PBR, 2=Blinn-Phong, 3=Toggle Deferred");
-	EE_CORE_INFO("Systems and components registered successfully, Engine Initialized");
-	s_isInitialized = true;
+   	s_isInitialized = true;
 }
 
 // TODO: Shutdown for subsystem should be in order, please be mindful of the order that is already in place.
