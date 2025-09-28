@@ -310,17 +310,17 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().AddComponent<Mesh>(fbxEntity, Mesh{}); // empty mesh component for renderer signature
 	ECS::GetInstance().AddComponent<ModelComponent>(fbxEntity, ModelComponent(AssetManager::GetInstance().LoadModel("../Resources/Models/Walking.fbx")));
 	
-	// Create a pure metallic material without texture fallback
+	// Create a material that uses the specific FBX texture
 	auto cubeFBXMaterial = std::make_unique<graphics::Material>(shader);
-	cubeFBXMaterial->LoadTemplate(graphics::MaterialTemplates::PBR_METAL());
+	auto fbxTexture = AssetManager::GetInstance().LoadTexture("../Resources/Textures/Pants_Base_color.png");
+	cubeFBXMaterial->LoadTemplate(graphics::MaterialTemplates::PBR_WHITE()); 
 	
-	// Only set texture if we specifically want this model to be textured
-	// Remove automatic texture assignment to prevent unwanted texture loading
-	// if (texture && texture->IsValid()) {
-	//     cubeFBXMaterial->SetTexture("materialAlbedoMap", texture);
-	//     cubeFBXMaterial->SetBool("materialHasAlbedoMap", true);
-	// }
-	
+	// Apply the FBX-specific texture 
+	if (fbxTexture && fbxTexture->IsValid()) {
+		cubeFBXMaterial->SetTexture("materialAlbedoMap", fbxTexture);
+		cubeFBXMaterial->SetBool("materialHasAlbedoMap", true);
+	}
+
 	ECS::GetInstance().AddComponent(fbxEntity, Material(std::move(cubeFBXMaterial)));
 
 	// Create a simple quad mesh for particles
