@@ -154,3 +154,8 @@ GLuint Texture::GetRendererID() const
 {
     return m_RendererID;
 }
+
+std::string Ermine::graphics::Texture::GetFilePath()
+{
+    return m_filePath;
+}

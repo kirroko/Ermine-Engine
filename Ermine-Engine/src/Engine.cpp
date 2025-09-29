@@ -41,10 +41,10 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Cubemap.h"
 #include <random> // Include for random number generation
 #include "ScriptSystem.h"
+#include "AnimationManager.h"
 #include "Scene.h"
 #include "HierarchyPanel.h"
 #include "HierarchySystem.h"
-
 
 using namespace Ermine;
 
@@ -157,6 +157,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	EE_AUTO_REGISTER_COMPONENT(GlobalAudioComponent, "GlobalAudioComponent")
 	EE_AUTO_REGISTER_COMPONENT(PhysicComponent, "PhysicComponent")
 	EE_AUTO_REGISTER_COMPONENT(ModelComponent, "ModelComponent")
+	EE_AUTO_REGISTER_COMPONENT(AnimationComponent, "AnimationComponent")
 	EE_AUTO_REGISTER_COMPONENT(HierarchyComponent, "HierarchyComponent");
 
 
@@ -174,7 +175,8 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().RegisterSystem<scripting::ScriptSystem>();
 	ECS::GetInstance().RegisterSystem<AudioSystem>();
 	ECS::GetInstance().RegisterSystem<ParticleSystem>();
-	ECS::GetInstance().RegisterSystem <graphics::LightSystem>();
+	ECS::GetInstance().RegisterSystem<graphics::LightSystem>();
+	ECS::GetInstance().RegisterSystem<graphics::AnimationManager>();
 	ECS::GetInstance().RegisterSystem<HierarchySystem>();
 
 	//Register JPH::TempAllocatorImpl for Physcis
@@ -187,14 +189,15 @@ bool engine::Init(GLFWwindow* windowContext)
 	SignatureID sig;
 	sig.set(ECS::GetInstance().GetComponentType<Transform>());
 	sig.set(ECS::GetInstance().GetComponentType<Mesh>());
-	//sig.set(ECS::GetInstance().GetComponentType<ModelComponent>());
 	sig.set(ECS::GetInstance().GetComponentType<Material>());
 	ECS::GetInstance().SetSystemSignature<graphics::Renderer>(sig);
 
+	// For Script system
 	sig.reset();
 	sig.set(ECS::GetInstance().GetComponentType<Script>());
 	ECS::GetInstance().SetSystemSignature<scripting::ScriptSystem>(sig);
 
+	// For Audio system
 	sig.reset();
 	sig.set(ECS::GetInstance().GetComponentType<AudioComponent>());
 	sig.set(ECS::GetInstance().GetComponentType<Transform>());
@@ -220,6 +223,13 @@ bool engine::Init(GLFWwindow* windowContext)
 	sig.set(ECS::GetInstance().GetComponentType<Transform>());
 	ECS::GetInstance().SetSystemSignature<graphics::LightSystem>(sig);
 
+	// For Animation system
+	sig.reset();
+	sig.set(ECS::GetInstance().GetComponentType<AnimationComponent>());
+	sig.set(ECS::GetInstance().GetComponentType<ModelComponent>());
+	ECS::GetInstance().SetSystemSignature<graphics::AnimationManager>(sig);
+	
+	// For Hierarchy System
 	SignatureID hierarchySig;
 	hierarchySig.set(ECS::GetInstance().GetComponentType<HierarchyComponent>());
 	hierarchySig.set(ECS::GetInstance().GetComponentType<Transform>());
@@ -318,6 +328,7 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	// Example FBX entity
 	fbxEntity = ECS::GetInstance().CreateEntity();
+	auto model = AssetManager::GetInstance().LoadModel("../Resources/Models/Walking.fbx");
 	ECS::GetInstance().AddComponent(fbxEntity, Transform(Vec3(2, -0.5f, 0), Quaternion(), Vec3(0.01f, 0.01f, 0.01f)));
 	ECS::GetInstance().AddComponent(
 		fbxEntity,
@@ -329,8 +340,15 @@ bool engine::Init(GLFWwindow* windowContext)
 		));
 	ECS::GetInstance().AddComponent(fbxEntity, ObjectMetaData("Character", "Model", true));
 	ECS::GetInstance().AddComponent(fbxEntity, Mesh{}); // empty mesh component for renderer signature
-	ECS::GetInstance().AddComponent(fbxEntity, ModelComponent(AssetManager::GetInstance().LoadModel("../Resources/Models/Shadowkin_Rigged.fbx")));
-	//ECS::GetInstance().AddComponent(fbxEntity, ModelComponent(AssetManager::GetInstance().LoadModel("../")));
+	ECS::GetInstance().AddComponent(fbxEntity, ModelComponent(model));
+
+	// Adding animation component
+	const aiScene* scene = model->GetAssimpScene(); // Read animations from aiScene
+	if (scene && scene->mNumAnimations > 0) {
+		ECS::GetInstance().AddComponent(fbxEntity, AnimationComponent(model));
+	}
+
+	// Adding material component
 	auto fbxMaterial = std::make_unique<graphics::Material>(shader);
 	auto fbxTexture = AssetManager::GetInstance().LoadTexture("../Resources/Textures/Pants_Base_color.png");
 	fbxMaterial->LoadTemplate(graphics::MaterialTemplates::PBR_WHITE());
@@ -339,7 +357,6 @@ bool engine::Init(GLFWwindow* windowContext)
 		fbxMaterial->SetTexture("texture0", fbxTexture);
 	}
 	ECS::GetInstance().AddComponent(fbxEntity, Material(std::move(fbxMaterial)));
-
 
 	// Create a simple quad mesh for particles
 	auto quadMesh = graphics::GeometryFactory::CreateQuad(1.0f, 1.0f);
@@ -391,6 +408,13 @@ bool engine::Init(GLFWwindow* windowContext)
 			ShapeType::Box				   // Box, Sphere, Capsule, CustomMesh(need pass vertex)
 		));
 
+	//auto& mesh = ECS::GetInstance().GetComponent<Mesh>(entity2);
+	//mesh.kind = Mesh::Kind::Primitive;
+	//mesh.primitive.type = "Cube";
+	//mesh.primitive.size = { 1,1,1 };
+
+	//ECS::GetInstance().AddComponent(entity2, HierarchyComponent());
+
 	// Create a reflective material for demonstration - this one is unique
 	auto cube2Material = std::make_shared<graphics::Material>(shader);
 	cube2Material->LoadTemplate(graphics::MaterialTemplates::PBR_REFLECTIVE(0.9f, 0.1f)); // Highly reflective metal
@@ -435,6 +459,11 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().AddComponent(redLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
 	ECS::GetInstance().AddComponent(redLightEntity, Material(redLightMaterial));
 
+	//auto& redlight = ECS::GetInstance().GetComponent<Mesh>(redLightEntity);
+	//redlight.kind = Mesh::Kind::Primitive;
+	//redlight.primitive.type = "Sphere";
+	//redlight.primitive.size = { 0.1f,1,1 };
+
 	// Blue accent light
 	auto blueLightEntity = ECS::GetInstance().CreateEntity();
 	ECS::GetInstance().AddComponent(blueLightEntity, Transform(Vec3(-3, 2, 0), Quaternion(), Vec3(1, 1, 1)));
@@ -446,6 +475,11 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().AddComponent(blueLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
 	ECS::GetInstance().AddComponent(blueLightEntity, Material(blueLightMaterial));
 
+	//auto& bluelight = ECS::GetInstance().GetComponent<Mesh>(blueLightEntity);
+	//bluelight.kind = Mesh::Kind::Primitive;
+	//bluelight.primitive.type = "Sphere";
+	//bluelight.primitive.size = { 0.1f,1,1 };
+
 	// Green accent light
 	auto greenLightEntity = ECS::GetInstance().CreateEntity();
 	ECS::GetInstance().AddComponent(greenLightEntity, Transform(Vec3(0, 2, -3), Quaternion(), Vec3(1, 1, 1)));
@@ -456,6 +490,11 @@ bool engine::Init(GLFWwindow* windowContext)
 	greenLightMaterial->LoadTemplate(graphics::MaterialTemplates::EMISSIVE(Vec3(0.f, 1.f, 0.0f), 10.0f));
 	ECS::GetInstance().AddComponent(greenLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
 	ECS::GetInstance().AddComponent(greenLightEntity, Material(greenLightMaterial));
+
+	//auto& greenlight = ECS::GetInstance().GetComponent<Mesh>(greenLightEntity);
+	//greenlight.kind = Mesh::Kind::Primitive;
+	//greenlight.primitive.type = "Sphere";
+	//greenlight.primitive.size = { 0.1f,1,1 };
 
 	//after creating all the physic object, update to physic system
 	ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
@@ -640,6 +679,9 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 			}
 		}
 	}
+
+	// Animation Update
+	ECS::GetInstance().GetSystem<graphics::AnimationManager>()->Update(FrameController::GetDeltaTime());
 }
 
 void engine::Render(GLFWwindow* window)
