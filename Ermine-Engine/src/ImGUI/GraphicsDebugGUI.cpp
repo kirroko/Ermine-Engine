@@ -1,0 +1,381 @@
+/* Start Header ************************************************************************/
+/*!
+\file       GraphicsDebugGUI.cpp
+\author     Jeremy Lim Ting Jie, jeremytingjie.lim, 2301370, jeremytingjie.lim\@digipen.edu
+\date       29/9/2025
+\brief      This file contains the implementation of the GraphicsDebugGUI class.
+            A debug GUI for graphics-related parameters and controls using ImGui.
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents without the
+prior written consent of DigiPen Institute of Technology is prohibited.
+*/
+/* End Header **************************************************************************/
+
+#include "PreCompile.h"
+#include "GraphicsDebugGUI.h"
+#include "imgui.h"
+#include "ECS.h"
+#include "Renderer.h"
+#include "GPUProfiler.h"
+#include "Logger.h"
+#include "shadow_config.h"
+
+using namespace Ermine::editor;
+using namespace Ermine::graphics;
+
+// Helper function for formatting numbers
+namespace
+{
+    std::string FormatNumber(uint64_t value)
+    {
+        struct Unit { uint64_t base; const char* suffix; };
+        static constexpr Unit units[] = {
+            {.base= 1'000'000'000'000ULL, .suffix= "T"},
+            {.base= 1'000'000'000ULL, .suffix= "B"},
+            {.base= 1'000'000ULL, .suffix= "M"},
+            {.base= 1'000ULL, .suffix= "K"},
+            {.base= 1, .suffix= ""}
+        };
+
+        for (const auto& u : units)
+        {
+            if (value >= u.base)
+            {
+                char buffer[32];
+                const double scaled = static_cast<double>(value) / static_cast<double>(u.base);
+                const int written = snprintf(buffer, sizeof(buffer), "%.1f%s", scaled, u.suffix);
+                if (written < 0)
+                {
+                    EE_CORE_WARN("FormatNumber error occurred");
+                    return std::to_string(value);
+                }
+                return std::string(buffer);
+            }
+        }
+
+        char buffer[32];
+        const int written = snprintf(buffer, sizeof(buffer), "%llu", value);
+        if (written < 0)
+        {
+            EE_CORE_WARN("FormatNumber error occurred");
+            return std::to_string(value);
+        }
+        return std::string(buffer);
+    }
+}
+
+GraphicsDebugGUI::GraphicsDebugGUI(const std::string& title)
+    : ImGUIWindow(title), m_title(title)
+{
+}
+
+void GraphicsDebugGUI::Update()
+{
+    auto renderer = ECS::GetInstance().GetSystem<Renderer>();
+    if (!renderer) {
+        ImGui::Begin(m_title.c_str());
+        ImGui::Text("Renderer system not available");
+        ImGui::End();
+        return;
+    }
+
+    ImGui::Begin(m_title.c_str());
+
+    // Create collapsible sections for organized UI
+    DrawRenderingModeControls();
+    DrawPostProcessingControls();
+    DrawShadowMappingControls();
+    DrawLightingControls();
+    DrawPerformanceMetrics();
+    DrawDebugVisualization();
+
+    ImGui::End();
+}
+
+void GraphicsDebugGUI::Render()
+{
+    // The ImGUIWindow base class requires this method
+    // For this GUI, all rendering is done in Update()
+    // This method is called by the editor framework but can be empty
+}
+
+void GraphicsDebugGUI::DrawRenderingModeControls()
+{
+    auto renderer = ECS::GetInstance().GetSystem<Renderer>();
+    
+    if (ImGui::CollapsingHeader("Rendering Pipeline", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        ImGui::Indent(10.0f);
+        
+        // Shading Model Toggle
+        bool isBlinnPhong = renderer->GetShadingMode();
+        if (ImGui::RadioButton("PBR Shading", !isBlinnPhong)) {
+            renderer->SetShadingMode(false);
+            EE_CORE_INFO("Switched to PBR shading");
+        }
+        ImGui::SameLine();
+        if (ImGui::RadioButton("Blinn-Phong", isBlinnPhong)) {
+            renderer->SetShadingMode(true);
+            EE_CORE_INFO("Switched to Blinn-Phong shading");
+        }
+        DrawTooltip("Choose between Physically Based Rendering (PBR) and classic Blinn-Phong shading");
+        
+        ImGui::Separator();
+        
+        // Deferred vs Forward Rendering Toggle
+        if (ImGui::Button("Toggle Deferred/Forward Rendering")) {
+            renderer->ToggleDeferredRendering();
+        }
+        DrawTooltip("Switch between Deferred Rendering (better for many lights) and Forward Rendering (simpler pipeline)");
+        
+        // SSAO Toggle
+        if (DrawToggleButton("Screen Space Ambient Occlusion", &renderer->m_SSAOEnabled, 
+                            "Enable/disable Screen Space Ambient Occlusion for enhanced depth perception")) {
+            EE_CORE_INFO("SSAO {}", renderer->m_SSAOEnabled ? "enabled" : "disabled");
+        }
+        
+        ImGui::Unindent(10.0f);
+    }
+}
+
+void GraphicsDebugGUI::DrawPostProcessingControls()
+{
+    auto renderer = ECS::GetInstance().GetSystem<Renderer>();
+    
+    if (ImGui::CollapsingHeader("Post-Processing Effects"))
+    {
+        ImGui::Indent(10.0f);
+        
+        // Post-processing toggles
+        DrawToggleButton("HDR Tone Mapping", &renderer->m_ToneMappingEnabled, 
+                        "Enable High Dynamic Range tone mapping for better exposure control");
+        DrawToggleButton("Gamma Correction", &renderer->m_GammaCorrectionEnabled, 
+                        "Apply gamma correction for proper color space conversion");
+        DrawToggleButton("FXAA Anti-Aliasing", &renderer->m_FXAAEnabled, 
+                        "Fast Approximate Anti-Aliasing to reduce jagged edges");
+        DrawToggleButton("Bloom Effect", &renderer->m_BloomEnabled, 
+                        "Bloom effect for bright light sources");
+        DrawToggleButton("Vignette Effect", &renderer->m_VignetteEnabled, 
+                        "Vignette darkening at screen borders");
+        
+        ImGui::Separator();
+        
+        // Exposure and Color Controls
+        if (ImGui::TreeNode("Color & Exposure"))
+        {
+            DrawFloatSlider("Exposure", &renderer->m_Exposure, 0.1f, 5.0f, 
+                           "Controls overall scene brightness");
+            DrawFloatSlider("Contrast", &renderer->m_Contrast, 0.5f, 2.0f, 
+                           "Adjust contrast between light and dark areas");
+            DrawFloatSlider("Saturation", &renderer->m_Saturation, 0.0f, 2.0f, 
+                           "Color saturation intensity");
+            DrawFloatSlider("Gamma", &renderer->m_Gamma, 1.0f, 3.0f, 
+                           "Gamma curve for color correction");
+            ImGui::TreePop();
+        }
+        
+        // Bloom Controls
+        if (ImGui::TreeNode("Bloom Settings"))
+        {
+            DrawFloatSlider("Bloom Threshold", &renderer->m_BloomThreshold, 0.1f, 3.0f, 
+                           "Brightness threshold for bloom effect");
+            DrawFloatSlider("Bloom Strength", &renderer->m_BloomStrength, 0.0f, 1.0f, 
+                           "Intensity of bloom effect");
+            DrawFloatSlider("Bloom Radius", &renderer->m_BloomRadius, 1.0f, 10.0f, 
+                           "Blur radius for bloom effect");
+            ImGui::TreePop();
+        }
+        
+        // Vignette Controls
+        if (ImGui::TreeNode("Vignette Settings"))
+        {
+            DrawFloatSlider("Vignette Intensity", &renderer->m_VignetteIntensity, 0.0f, 1.0f, 
+                           "Strength of vignette darkening");
+            DrawFloatSlider("Vignette Radius", &renderer->m_VignetteRadius, 0.1f, 1.0f, 
+                           "Size of vignette effect");
+            ImGui::TreePop();
+        }
+        
+        // FXAA Controls
+        if (ImGui::TreeNode("FXAA Settings"))
+        {
+            DrawFloatSlider("FXAA Span Max", &renderer->m_FXAASpanMax, 2.0f, 16.0f, 
+                           "Maximum search span for edge detection");
+            DrawFloatSlider("FXAA Reduce Min", &renderer->m_FXAAReduceMin, 1.0f/256.0f, 1.0f/32.0f, 
+                           "Minimum luminance reduction threshold");
+            DrawFloatSlider("FXAA Reduce Mul", &renderer->m_FXAAReduceMul, 1.0f/16.0f, 1.0f/4.0f, 
+                           "Luminance reduction multiplier");
+            ImGui::TreePop();
+        }
+        
+        ImGui::Unindent(10.0f);
+    }
+}
+
+void GraphicsDebugGUI::DrawShadowMappingControls()
+{
+    if (ImGui::CollapsingHeader("Shadow Mapping"))
+    {
+        ImGui::Indent(10.0f);
+        
+        ImGui::Text("Shadow Map Resolution: %d x %d", SHADOW_MAP_RESOLUTION, SHADOW_MAP_RESOLUTION);
+        DrawTooltip("Current shadow map resolution - defined in shadow_config.h");
+        
+        ImGui::Text("Max Shadow Layers: %u", SHADOW_MAX_LAYERS);
+        DrawTooltip("Maximum number of shadow map layers available");
+        
+        ImGui::Text("Cascade Count: %d", NUM_CASCADES);
+        DrawTooltip("Number of cascades for Cascaded Shadow Maps (CSM)");
+        
+        ImGui::Text("CSM Lambda: %.2f", SHADOW_MAP_ARRAY_LAMBDA);
+        DrawTooltip("Blend factor between logarithmic and linear cascade distribution");
+        
+        ImGui::Text("Refresh Interval: %d frames", SHADOW_MAP_REFRESH_INTERVAL_IN_FRAMES);
+        DrawTooltip("Shadow maps are refreshed every N frames for performance");
+        
+        if (ImGui::Button("Force Shadow Refresh")) {
+            EE_CORE_INFO("Manual shadow map refresh triggered");
+        }
+        DrawTooltip("Force refresh all shadow maps (normally updated every few frames)");
+        
+        ImGui::Unindent(10.0f);
+    }
+}
+
+void GraphicsDebugGUI::DrawLightingControls()
+{
+    if (ImGui::CollapsingHeader("Lighting System"))
+    {
+        ImGui::Indent(10.0f);
+        
+        ImGui::Text("Maximum Lights: %d", MAX_LIGHTS);
+        DrawTooltip("Maximum number of lights that can be processed simultaneously");
+        
+        // Count active lights
+        auto lightSystem = ECS::GetInstance().GetSystem<LightSystem>();
+        int activeLights = lightSystem ? static_cast<int>(lightSystem->m_Entities.size()) : 0;
+        ImGui::Text("Active Lights: %d", activeLights);
+        
+        // Show light distribution
+        if (lightSystem && activeLights > 0) {
+            const auto& ecs = ECS::GetInstance();
+            int directionalLights = 0;
+            int pointLights = 0;
+            int spotLights = 0;
+            int shadowCasters = 0;
+            
+            for (EntityID entity : lightSystem->m_Entities) {
+                if (ecs.HasComponent<Light>(entity)) {
+                    auto& light = ecs.GetComponent<Light>(entity);
+                    switch (light.type) {
+                        case LightType::DIRECTIONAL: directionalLights++; break;
+                        case LightType::POINT: pointLights++; break;
+                        case LightType::SPOT: spotLights++; break;
+                    }
+                    if (light.castsShadows) shadowCasters++;
+                }
+            }
+            
+            ImGui::Text("  Directional: %d", directionalLights);
+            ImGui::Text("  Point: %d", pointLights);
+            ImGui::Text("  Spot: %d", spotLights);
+            ImGui::Text("  Shadow Casters: %d", shadowCasters);
+        }
+        
+        ImGui::Unindent(10.0f);
+    }
+}
+
+void GraphicsDebugGUI::DrawPerformanceMetrics()
+{
+    if (ImGui::CollapsingHeader("Performance Metrics", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        ImGui::Indent(10.0f);
+        
+        const auto& metrics = GPUProfiler::GetMetrics();
+        
+        // Frame timing
+        float avgFps = metrics.averageFrameTimeMs > 0.0f ? 1000.0f / metrics.averageFrameTimeMs : 0.0f;
+        ImGui::Text("FPS: %.1f (%.2f ms)", avgFps, metrics.frameTimeMs);
+        ImGui::Text("CPU Time: %.2f ms", metrics.cpuFrameTimeMs);
+        ImGui::Text("GPU Time: %.2f ms", metrics.gpuFrameTimeMs);
+        
+        ImGui::Separator();
+        
+        // Render statistics
+        ImGui::Text("Draw Calls: %u", metrics.drawCallCount);
+        ImGui::Text("Triangles: %s", FormatNumber(metrics.triangleCount).c_str());
+        ImGui::Text("Vertices: %s", FormatNumber(metrics.vertexCount).c_str());
+        
+        ImGui::Separator();
+        
+        // Memory usage
+        ImGui::Text("VRAM Usage: %llu MB", metrics.totalVRAMUsageMB);
+        ImGui::Text("Texture Memory: %llu MB", metrics.textureMemoryMB);
+        ImGui::Text("Buffer Memory: %llu MB", metrics.bufferMemoryMB);
+        
+        // Frame time history graph
+        const auto& history = GPUProfiler::GetFrameTimeHistory();
+        if (!history.empty()) {
+            std::vector<float> values(history.begin(), history.end());
+            ImGui::PlotLines("Frame Times (ms)", values.data(), static_cast<int>(values.size()),
+                0, nullptr, 0.0f, metrics.maxFrameTimeMs * 1.2f, ImVec2(0, 80));
+        }
+        
+        ImGui::Unindent(10.0f);
+    }
+}
+
+void GraphicsDebugGUI::DrawDebugVisualization()
+{
+    if (ImGui::CollapsingHeader("Debug Visualization"))
+    {
+        ImGui::Indent(10.0f);
+        
+        if (ImGui::Button("Reload Shaders")) {
+            EE_CORE_INFO("Shader reload triggered");
+        }
+        DrawTooltip("Reload all shaders from disk (useful for shader development)");
+        
+        if (ImGui::Button("Capture Screenshot")) {
+            EE_CORE_INFO("Screenshot capture requested");
+        }
+        DrawTooltip("Capture a screenshot of the current frame");
+        
+        // Debug render modes
+        static int debugMode = 0;
+        const char* debugModes[] = { "Final Render", "Albedo Only", "Normals", "Depth", "Shadow Maps" };
+        if (ImGui::Combo("Debug View", &debugMode, debugModes, IM_ARRAYSIZE(debugModes))) {
+            EE_CORE_INFO("Debug view mode changed to: {}", debugModes[debugMode]);
+        }
+        DrawTooltip("Switch between different debug visualization modes");
+        
+        ImGui::Unindent(10.0f);
+    }
+}
+
+void GraphicsDebugGUI::DrawTooltip(const char* description)
+{
+    if (ImGui::IsItemHovered() && description) {
+        ImGui::BeginTooltip();
+        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+        ImGui::TextUnformatted(description);
+        ImGui::PopTextWrapPos();
+        ImGui::EndTooltip();
+    }
+}
+
+bool GraphicsDebugGUI::DrawFloatSlider(const char* label, float* value, float min, float max, const char* tooltip)
+{
+    bool changed = ImGui::SliderFloat(label, value, min, max, "%.3f");
+    if (tooltip) DrawTooltip(tooltip);
+    return changed;
+}
+
+bool GraphicsDebugGUI::DrawToggleButton(const char* label, bool* value, const char* tooltip)
+{
+    bool changed = ImGui::Checkbox(label, value);
+    if (tooltip) DrawTooltip(tooltip);
+    return changed;
+}

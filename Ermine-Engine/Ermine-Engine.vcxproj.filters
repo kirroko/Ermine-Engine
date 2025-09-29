@@ -216,6 +216,7 @@
     <ClInclude Include="include\shadow_config.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\GraphicsDebugGUI.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\AssetBrowser\AssetBrowser.cpp">
@@ -350,6 +351,7 @@
     <ClCompile Include="src\Graphics\Skybox.cpp">
       <Filter>src\Graphics</Filter>
     </ClCompile>
+    <ClCompile Include="src\ImGUI\GraphicsDebugGUI.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="include\Component.tpp">

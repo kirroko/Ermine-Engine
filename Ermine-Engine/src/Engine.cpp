@@ -14,7 +14,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 /* End Header **************************************************************************/
 #include "PreCompile.h"
 #include "Engine.h"
-
+#include "GraphicsDebugGUI.h"
 #include "AssetManager.h"
 #include "AssetBrowser.h"
 #include "ECS.h"
@@ -392,8 +392,8 @@ bool engine::Init(GLFWwindow* windowContext)
 	// Blue accent light
 	auto blueLightEntity = ECS::GetInstance().CreateEntity();
 	ECS::GetInstance().AddComponent<Transform>(blueLightEntity, Transform(Vec3(-3, 2, 0), Quaternion(), Vec3(1, 1, 1)));
-	ECS::GetInstance().AddComponent(blueLightEntity, ObjectMetaData("LightBlue", "Light", true));
-	ECS::GetInstance().AddComponent(blueLightEntity, Light(Vec3(0.0, 0.0, 1), 0.5f, LightType::POINT));
+	ECS::GetInstance().AddComponent<ObjectMetaData>(blueLightEntity, ObjectMetaData("LightBlue", "Light", true));
+	ECS::GetInstance().AddComponent<Light>(blueLightEntity, Light(Vec3(0.0, 0.0, 1), 0.5f, LightType::POINT));
 
 	auto blueLightMaterial = std::make_shared<graphics::Material>(shader);
 	blueLightMaterial->LoadTemplate(graphics::MaterialTemplates::EMISSIVE(Vec3(0.f, 0.f, 1.0f), 10.0f));
@@ -403,8 +403,8 @@ bool engine::Init(GLFWwindow* windowContext)
 	// Green accent light
 	auto greenLightEntity = ECS::GetInstance().CreateEntity();
 	ECS::GetInstance().AddComponent<Transform>(greenLightEntity, Transform(Vec3(0, 2, -3), Quaternion(), Vec3(1, 1, 1)));
-	ECS::GetInstance().AddComponent(greenLightEntity, ObjectMetaData("LightGreen", "Light", true));
-	ECS::GetInstance().AddComponent(greenLightEntity, Light(Vec3(0.0, 1.0f, 0.0), 0.5f, LightType::POINT));
+	ECS::GetInstance().AddComponent<ObjectMetaData>(greenLightEntity, ObjectMetaData("LightGreen", "Light", true));
+	ECS::GetInstance().AddComponent<Light>(greenLightEntity, Light(Vec3(0.0, 1.0f, 0.0), 0.5f, LightType::POINT));
 
 	auto greenLightMaterial = std::make_shared<graphics::Material>(shader);
 	greenLightMaterial->LoadTemplate(graphics::MaterialTemplates::EMISSIVE(Vec3(0.f, 1.f, 0.0f), 10.0f));
@@ -468,6 +468,8 @@ bool engine::Init(GLFWwindow* windowContext)
 	// Create ImGUI window for Inspector
 	//editor::EditorGUI::CreateImGUIWindow<InspectorGUI>();
 	editor::EditorGUI::CreateImGUIWindow<InspectorGUI>(entity2, "Inspector");
+	// Create ImGUI window for Graphics Debug 
+	editor::EditorGUI::CreateImGUIWindow<editor::GraphicsDebugGUI>("Graphics Debug");
    	s_isInitialized = true;
 }
 

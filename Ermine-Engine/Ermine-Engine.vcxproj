@@ -151,6 +151,7 @@ IF EXIST ..\Build\bin\Release-windows-x86_64\Ermine-Engine\Ermine-Engine.dll\ (x
     <ClInclude Include="include\GameObject.h" />
     <ClInclude Include="include\GameObjectFactory.h" />
     <ClInclude Include="include\GeometryFactory.h" />
+    <ClInclude Include="include\GraphicsDebugGUI.h" />
     <ClInclude Include="include\ImGuiUIWindow.h" />
     <ClInclude Include="include\IndexBuffer.h" />
     <ClInclude Include="include\Input.h" />
@@ -205,6 +206,7 @@ IF EXIST ..\Build\bin\Release-windows-x86_64\Ermine-Engine\Ermine-Engine.dll\ (x
     <ClCompile Include="src\Graphics\VertexArray.cpp" />
     <ClCompile Include="src\Graphics\VertexBuffer.cpp" />
     <ClCompile Include="src\ImGUI\EditorGUI.cpp" />
+    <ClCompile Include="src\ImGUI\GraphicsDebugGUI.cpp" />
     <ClCompile Include="src\ImGUI\InspectorGUI.cpp" />
     <ClCompile Include="src\Logger\Logger.cpp" />
     <ClCompile Include="src\Math\MathVector.cpp" />
