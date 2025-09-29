@@ -432,9 +432,9 @@ namespace Ermine
 		bool hasEmiss = false;   Vec3  cacheEmissive{ 0,0,0 };
 		float cacheEmissiveIntensity = 1.0f;
 
-		// Cached texture paths (only what we set by path)
-		bool hasAlbedoMapPath = false;   std::string albedoMapPath;
-		bool hasNormalMapPath = false;   std::string normalMapPath;
+		//// Cached texture paths (only what we set by path)
+		//bool hasAlbedoMapPath = false;   std::string albedoMapPath;
+		//bool hasNormalMapPath = false;   std::string normalMapPath;
 
 		Material() = default;
 
@@ -593,70 +593,223 @@ namespace Ermine
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
 			out.SetObject();
 
-			if (!materialTemplate.empty())
-				out.AddMember("template", rapidjson::Value(materialTemplate.c_str(), alloc), alloc);
-
-			if (hasAlbedo)
-				out.AddMember("albedo", Vec3ToJson(cacheAlbedo, alloc), alloc);
-
-			if (hasRough)
-				out.AddMember("roughness", cacheRoughness, alloc);
-
-			if (hasMetal)
-				out.AddMember("metallic", cacheMetallic, alloc);
-
-			if (hasEmiss) {
-				out.AddMember("emissive", Vec3ToJson(cacheEmissive, alloc), alloc);
-				out.AddMember("emissiveIntensity", cacheEmissiveIntensity, alloc);
+			// No material => nothing to serialize
+			if (!m_material) {
+				out.AddMember("hasMaterial", false, alloc);
+				return;
 			}
-			// (textures/normal map are skipped – no paths)
+			out.AddMember("hasMaterial", true, alloc);
+
+			// Serialize selected scalar/vector params so UBO can be restored
+			rapidjson::Value params(rapidjson::kObjectType);
+
+			auto writeFloat = [&](const char* name) {
+				if (auto p = m_material->GetParameter(name)) {
+					if (!p->floatValues.empty()) {
+						rapidjson::Value v;
+						v.SetFloat(p->floatValues[0]);
+						params.AddMember(rapidjson::StringRef(name), v, alloc);
+					}
+				}
+				};
+
+			auto writeInt = [&](const char* name) {
+				if (auto p = m_material->GetParameter(name)) {
+					rapidjson::Value v;
+					v.SetInt(p->intValue);
+					params.AddMember(rapidjson::StringRef(name), v, alloc);
+				}
+				};
+
+			auto writeBool = [&](const char* name) {
+				if (auto p = m_material->GetParameter(name)) {
+					rapidjson::Value v;
+					v.SetBool(p->boolValue);
+					params.AddMember(rapidjson::StringRef(name), v, alloc);
+				}
+				};
+
+			auto writeVec3 = [&](const char* name) {
+				if (auto p = m_material->GetParameter(name); p && p->floatValues.size() >= 3) {
+					rapidjson::Value a(rapidjson::kArrayType);
+					a.PushBack(p->floatValues[0], alloc)
+						.PushBack(p->floatValues[1], alloc)
+						.PushBack(p->floatValues[2], alloc);
+					params.AddMember(rapidjson::StringRef(name), a, alloc);
+				}
+				};
+
+			// Core PBR parameters (names follow graphics::Material templates)
+			writeVec3("materialAlbedo");
+			writeFloat("materialMetallic");
+			writeFloat("materialRoughness");
+			writeFloat("materialAo");
+			writeVec3("materialEmissive");
+			writeFloat("materialEmissiveIntensity");
+			writeFloat("materialNormalStrength");
+			writeInt("materialShadingModel");
+			writeFloat("materialReflectance");
+			writeFloat("materialEnvironmentIntensity");
+
+			// Map presence flags
+			writeBool("materialHasAlbedoMap");
+			writeBool("materialHasNormalMap");
+			writeBool("materialHasRoughnessMap");
+			writeBool("materialHasMetallicMap");
+			writeBool("materialHasAoMap");
+			writeBool("materialHasEmissiveMap");
+			writeBool("materialHasEnvironmentMap");
+			writeBool("materialHasIrradianceMap");
+
+			out.AddMember("params", params, alloc);
+
+			// Serialize textures: store slot name and source file path
+			rapidjson::Value textures(rapidjson::kArrayType);
+
+			// Known slots across the codebase (support both dot and non-dot styles + fallback)
+			const char* slots[] = {
+				"materialAlbedoMap", "material.albedoMap",
+				"material.normalMap",
+				"materialRoughnessMap", "material.metallicMap", "materialAoMap", "materialEmissiveMap",
+				"texture0" // fallback for legacy
+			};
+
+			// Helper: find file path for a given texture via AssetManager cache
+			auto findPathForTexture = [](const std::shared_ptr<graphics::Texture>& tex) -> std::string {
+				if (!tex) return {};
+				for (const auto& kv : AssetManager::GetInstance().GetLoadedTextures()) {
+					if (kv.second.get() == tex.get())
+						return kv.first;
+				}
+				return {};
+				};
+
+			for (const char* slot : slots) {
+				if (auto tex = m_material->GetTexture(slot)) {
+					if (tex && tex->IsValid()) {
+						std::string path = findPathForTexture(tex);
+						if (!path.empty()) {
+							rapidjson::Value texObj(rapidjson::kObjectType);
+							texObj.AddMember("slot", rapidjson::Value(slot, alloc), alloc);
+							texObj.AddMember("path", rapidjson::Value(path.c_str(), alloc), alloc);
+							textures.PushBack(texObj, alloc);
+						}
+					}
+				}
+			}
+
+			out.AddMember("textures", textures, alloc);
 		}
 
 		void Deserialize(const rapidjson::Value& in) {
+			// Ensure material exists
 			if (!m_material) {
-				// Create a material with whatever shader your engine expects by default
 				m_material = std::make_shared<graphics::Material>();
 			}
+			if (!in.IsObject()) return;
+			if (in.HasMember("hasMaterial") && in["hasMaterial"].IsBool() && !in["hasMaterial"].GetBool())
+				return;
 
-			// Apply template first (optional)
-			if (in.HasMember("template") && in["template"].IsString()) {
-				materialTemplate = in["template"].GetString();
-				if (materialTemplate == "PBR_REFLECTIVE")
-					m_material->LoadTemplate(graphics::MaterialTemplates::PBR_REFLECTIVE(0.9f, 0.1f));
-				else if (materialTemplate == "PBR_RED")
-					m_material->LoadTemplate(graphics::MaterialTemplates::PBR_RED());
-				else if (materialTemplate == "EMISSIVE")
-					m_material->LoadTemplate(graphics::MaterialTemplates::EMISSIVE(Vec3(1, 1, 1), 1.0f));
-			}
+			// Restore params
+			if (in.HasMember("params") && in["params"].IsObject()) {
+				const auto& p = in["params"];
 
-			// Albedo
-			if (in.HasMember("albedo") && in["albedo"].IsArray() && in["albedo"].Size() == 3) {
-				cacheAlbedo = JsonToVec3(in["albedo"]); hasAlbedo = true;
-				m_material->SetVec3("material.albedo", cacheAlbedo);
-			}
+				auto readVec3 = [&](const char* name, const char* compatName = nullptr) {
+					if (p.HasMember(name) && p[name].IsArray() && p[name].Size() == 3) {
+						Vec3 v{ p[name][0].GetFloat(), p[name][1].GetFloat(), p[name][2].GetFloat() };
+						m_material->SetVec3(name, v);
+						// Also write compatibility alias if provided
+						if (compatName) m_material->SetVec3(compatName, v);
+					}
+					};
+				auto readFloat = [&](const char* name, const char* compatName = nullptr) {
+					if (p.HasMember(name) && p[name].IsNumber()) {
+						m_material->SetFloat(name, p[name].GetFloat());
+						if (compatName) m_material->SetFloat(compatName, p[name].GetFloat());
+					}
+					};
+				auto readInt = [&](const char* name) {
+					if (p.HasMember(name) && p[name].IsInt())
+						m_material->SetInt(name, p[name].GetInt());
+					};
+				auto readBool = [&](const char* name, const char* compatName = nullptr) {
+					if (p.HasMember(name) && p[name].IsBool()) {
+						m_material->SetBool(name, p[name].GetBool());
+						if (compatName) m_material->SetBool(compatName, p[name].GetBool());
+					}
+					};
+				// Core PBR parameters
+				readVec3("materialAlbedo", "material.albedo");
+				readFloat("materialMetallic", "material.metallic");
+				readFloat("materialRoughness", "material.roughness");
+				readFloat("materialAo", "material.ao");
+				readVec3("materialEmissive", "material.emissive");
+				readFloat("materialEmissiveIntensity", "material.emissiveIntensity");
+				readFloat("materialNormalStrength", "material.normalStrength");
+				readInt("materialShadingModel");
+				readFloat("materialReflectance");
+				readFloat("materialEnvironmentIntensity");
 
-			// Roughness
-			if (in.HasMember("roughness") && in["roughness"].IsNumber()) {
-				cacheRoughness = in["roughness"].GetFloat(); hasRough = true;
-				m_material->SetFloat("material.roughness", cacheRoughness);
+				// Map presence flags
+				readBool("materialHasAlbedoMap");
+				readBool("materialHasNormalMap", "material.hasNormalMap");
+				readBool("materialHasRoughnessMap");
+				readBool("materialHasMetallicMap");
+				readBool("materialHasAoMap");
+				readBool("materialHasEmissiveMap");
+				readBool("materialHasEnvironmentMap");
+				readBool("materialHasIrradianceMap");
 			}
+			// Restore textures
+			if (in.HasMember("textures") && in["textures"].IsArray()) {
+				const auto& arr = in["textures"];
+				for (auto& t : arr.GetArray()) {
+					if (!t.IsObject()) continue;
+					if (!t.HasMember("slot") || !t.HasMember("path")) continue;
+					if (!t["slot"].IsString() || !t["path"].IsString()) continue;
 
-			// Metallic
-			if (in.HasMember("metallic") && in["metallic"].IsNumber()) {
-				cacheMetallic = in["metallic"].GetFloat(); hasMetal = true;
-				m_material->SetFloat("material.metallic", cacheMetallic);
-			}
+					std::string slot = t["slot"].GetString();
+					std::string path = t["path"].GetString();
 
-			// Emissive
-			if (in.HasMember("emissive") && in["emissive"].IsArray() && in["emissive"].Size() == 3) {
-				cacheEmissive = JsonToVec3(in["emissive"]); hasEmiss = true;
-				m_material->SetVec3("material.emissive", cacheEmissive);
-			}
-			if (in.HasMember("emissiveIntensity") && in["emissiveIntensity"].IsNumber()) {
-				cacheEmissiveIntensity = in["emissiveIntensity"].GetFloat(); hasEmiss = true;
-				m_material->SetFloat("material.emissiveIntensity", cacheEmissiveIntensity);
+					auto tex = AssetManager::GetInstance().LoadTexture(path);
+					if (tex && tex->IsValid()) {
+						m_material->SetTexture(slot, tex);
+
+						// For compatibility, mirror well-known slots to alternate names
+						if (slot == "materialAlbedoMap")
+							m_material->SetTexture("material.albedoMap", tex);
+						else if (slot == "material.albedoMap")
+							m_material->SetTexture("materialAlbedoMap", tex);
+
+
+						// Update presence flags for known types
+						auto setPresence = [&](const char* nonDot, const char* dot) {
+							m_material->SetBool(nonDot, true);
+							m_material->SetBool(dot, true);
+							};
+						if (slot.find("normal") != std::string::npos) {
+							setPresence("materialHasNormalMap", "material.hasNormalMap");
+						}
+						if (slot.find("Albedo") != std::string::npos || slot.find("albedo") != std::string::npos) {
+							m_material->SetBool("materialHasAlbedoMap", true);
+						}
+						if (slot.find("Roughness") != std::string::npos || slot.find("roughness") != std::string::npos) {
+							m_material->SetBool("materialHasRoughnessMap", true);
+						}
+						if (slot.find("Metallic") != std::string::npos || slot.find("metallic") != std::string::npos) {
+							m_material->SetBool("materialHasMetallicMap", true);
+						}
+						if (slot.find("Ao") != std::string::npos || slot.find("ao") != std::string::npos || slot.find("AmbientOcclusion") != std::string::npos) {
+							m_material->SetBool("materialHasAoMap", true);
+						}
+						if (slot.find("Emissive") != std::string::npos || slot.find("emissive") != std::string::npos) {
+							m_material->SetBool("materialHasEmissiveMap", true);
+						}
+					}
+				}
 			}
 		}
+
 	};
 
 	/*!***********************************************************************
@@ -1126,7 +1279,7 @@ namespace Ermine
 				const char* name = in["model"].GetString();
 
 				if (!m_model) {
-					m_model = AssetManager::GetInstance().LoadModel("../Resources/Models/" + std::string(name));
+					m_model = AssetManager::GetInstance().GetModel("../Resources/Models/" + std::string(name));
 				}
 
 				m_model->LoadModel(std::string("../Resources/Models/") + name);
@@ -1141,5 +1294,39 @@ namespace Ermine
 	struct AnimationComponent
 	{
 		std::shared_ptr<graphics::Animator> m_animator;
+
+		template <typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
+			const std::string& model_name = m_animator->GetModel()->GetName();
+			out.SetObject();
+
+			rapidjson::Value modelVal;
+			modelVal.SetString(model_name.c_str(),
+				static_cast<rapidjson::SizeType>(model_name.size()),
+				alloc);  // required for strings
+
+			out.AddMember("model", modelVal, alloc);
+		}
+
+
+		void Deserialize(const rapidjson::Value& in) {
+			if (!in.IsObject()) return;
+
+			if (in.HasMember("model") && in["model"].IsString()) {
+				std::string modelName = in["model"].GetString();
+
+				// Reload the model from assets
+				auto model = AssetManager::GetInstance().GetModel("../Resources/Models/" + modelName);
+				if (model) {
+					const aiScene* scene = model->GetAssimpScene();
+					if (scene && scene->mNumAnimations > 0) {
+						m_animator = std::make_shared<graphics::Animator>(model);
+						m_animator->LoadAnimations(scene);
+
+						m_animator->PlayAnimation(0, true);
+					}
+				}
+			}
+		}
 	};
 }

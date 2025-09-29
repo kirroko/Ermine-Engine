@@ -75,6 +75,8 @@ namespace Ermine::graphics
         // @return Final bone matrices to upload to GPU
         const std::vector<glm::mat4>& GetFinalBoneMatrices() const { return m_FinalBoneMatrices; }
 
+        const std::shared_ptr<Model>& GetModel() const { return m_Model; }
+
     private:
         std::shared_ptr<Model> m_Model;               // The model to animate
         const aiScene* m_Scene = nullptr;             // Cached Assimp scene

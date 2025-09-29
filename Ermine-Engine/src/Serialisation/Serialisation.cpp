@@ -254,6 +254,20 @@ void SaveSceneToFile(const Ermine::ECS& ecs, const std::filesystem::path& path, 
                 ecs.GetComponent<Ermine::GlobalAudioComponent>(id).Serialize(l, a);
                 comps.AddMember(Value("GlobalAudioComponent", a), l, a);
             }
+
+            // AnimationComponent
+            if (name == "AnimationComponent" && ecs.HasComponent<Ermine::AnimationComponent>(id)) {
+                Value l(kObjectType);
+                ecs.GetComponent<Ermine::AnimationComponent>(id).Serialize(l, a);
+                comps.AddMember(Value("AnimationComponent", a), l, a);
+            }
+
+            // Particle
+            if (name == "Particle" && ecs.HasComponent<Ermine::Particle>(id)) {
+                Value l(kObjectType);
+                ecs.GetComponent<Ermine::Particle>(id).Serialize(l, a);
+                comps.AddMember(Value("Particle", a), l, a);
+            }
         }
 
         e.AddMember("components", comps, a);
@@ -369,6 +383,24 @@ void LoadSceneFromFile(Ermine::ECS& ecs, const std::filesystem::path& path) {
 
             auto& m = ecs.GetComponent<Ermine::GlobalAudioComponent>(id);
             m.Deserialize(comps["GlobalAudioComponent"]);
+        }
+
+        // AnimationComponent
+        if (comps.HasMember("AnimationComponent") && comps["AnimationComponent"].IsObject()) {
+            if (!ecs.HasComponent<Ermine::AnimationComponent>(id))
+                ecs.AddComponent<Ermine::AnimationComponent>(id, Ermine::AnimationComponent{});
+
+            auto& m = ecs.GetComponent<Ermine::AnimationComponent>(id);
+            m.Deserialize(comps["AnimationComponent"]);
+        }
+
+        // Particle
+        if (comps.HasMember("Particle") && comps["Particle"].IsObject()) {
+            if (!ecs.HasComponent<Ermine::Particle>(id))
+                ecs.AddComponent<Ermine::Particle>(id, Ermine::Particle{});
+
+            auto& m = ecs.GetComponent<Ermine::Particle>(id);
+            m.Deserialize(comps["Particle"]);
         }
 
         // (If you later add more components, repeat this pattern.)
