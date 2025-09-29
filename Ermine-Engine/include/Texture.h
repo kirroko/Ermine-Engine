@@ -71,5 +71,7 @@ namespace Ermine::graphics
          Returns GLuint m_RendererID
         *************************************************************************/
         GLuint GetRendererID() const;
+
+        std::string GetFilePath();
     };
 }

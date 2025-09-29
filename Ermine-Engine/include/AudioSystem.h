@@ -1,8 +1,8 @@
 /* Start Header ************************************************************************/
 /*!
 \file       AudioSystem.h
-\author     [Your Name]
-\date       [Current Date]
+\author     Hurng Kai Rui, h.kairui, 2301278, h.kairui\@digipen.edu
+\date       15/9/2025
 \brief      AudioSystem as a proper ECS System that manages audio components.
             Integrates with the Ermine ECS architecture and handles both
             GlobalAudioComponent and individual AudioComponent updates.
