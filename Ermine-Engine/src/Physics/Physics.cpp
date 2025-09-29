@@ -273,6 +273,11 @@ namespace Ermine
                 ? Layers::MOVING
                 : Layers::NON_MOVING;
 
+            if (p.motionType == JPH::EMotionType::Dynamic && p.mass <= 0.0f)
+            {
+                p.mass = 1.0f;
+            }
+
             // Create the correct shape
             JPH::Shape* shape = nullptr;
             switch (p.shapeType)

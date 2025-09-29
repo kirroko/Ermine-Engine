@@ -30,21 +30,24 @@ namespace Ermine::graphics
     {
         m_Scene = m_Model->GetAssimpScene(); // cache scene for hierarchy traversal
         m_FinalBoneMatrices.resize(m_Model->GetBoneCount(), glm::mat4(1.0f));
+        
+        LoadAnimations(); // Load all animation clips
+        PlayAnimation(0, true); // play first clip, temp
     }
 
     /**
      * @brief Load all animations from an Assimp scene.
      * @param scene The Assimp scene containing animations
      */
-    void Animator::LoadAnimations(const aiScene* scene)
+    void Animator::LoadAnimations()
     {
         m_Clips.clear();
-        if (!scene) return;
+        if (!m_Scene) return;
 
-        for (unsigned int i = 0; i < scene->mNumAnimations; ++i)
+        for (unsigned int i = 0; i < m_Scene->mNumAnimations; ++i)
         {
-            m_Clips.push_back(LoadAnimation(scene->mAnimations[i]));
-            EE_CORE_INFO("Animation clip loaded: {0}", scene->mAnimations[i]->mName.C_Str());
+            m_Clips.push_back(LoadAnimation(m_Scene->mAnimations[i]));
+            EE_CORE_INFO("Animation clip loaded: {0}", m_Scene->mAnimations[i]->mName.C_Str());
         }
     }
 
@@ -152,6 +155,17 @@ namespace Ermine::graphics
     }
 
     /**
+     * @brief Clear all loaded animations.
+     */
+    void Animator::ClearAnimations()
+    {
+        m_Clips.clear();
+        m_CurrentClip = nullptr;
+        m_CurrentTime = 0.0;
+        m_Paused = false;
+    }
+
+    /**
      * @brief Play an animation by index.
      * @param index Index into loaded clips
      * @param loop Whether to loop playback
@@ -184,12 +198,51 @@ namespace Ermine::graphics
     }
 
     /**
+     * @brief Stop the current animation.
+     * Resets to the beginning and clears the current clip.
+     */
+    void Animator::StopAnimation()
+    {
+        m_CurrentClip = nullptr;
+        m_CurrentTime = 0.0;
+        m_Paused = false;
+        EE_CORE_INFO("Animation clip stopped");
+    }
+
+    /**
+     * @brief Pause the current animation.
+     * Does nothing if no animation is playing.
+     */
+    void Animator::PauseAnimation()
+    {
+        if (m_CurrentClip)
+        {
+            m_Paused = true;
+            EE_CORE_INFO("Animation clip paused");
+        }
+    }
+
+    /**
+     * @brief Resume the current animation if paused.
+     * Does nothing if not paused or no animation is playing.
+     */
+    void Animator::ResumeAnimation()
+    {
+        if (m_CurrentClip && m_Paused)
+        {
+            m_Paused = false;
+            EE_CORE_INFO("Animation clip resumed");
+        }
+    }
+
+    /**
      * @brief Advance animation and update bone transforms.
      * @param deltaTime Time step in seconds
      */
     void Animator::Update(double deltaTime)
     {
         if (!m_CurrentClip || !m_Scene || !m_Scene->mRootNode) return;
+        if (m_Paused) return;
 
         // Advance animation time in ticks
         double ticksPerSecond = m_CurrentClip->ticksPerSecond != 0.0

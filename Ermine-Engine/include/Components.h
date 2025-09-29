@@ -1295,7 +1295,7 @@ namespace Ermine
 		Rigid,
 		Trigger
 	};
-	enum class ShapeType { Box, Sphere, Capsule, CustomMesh/*, Compound*/,Total };
+	enum class ShapeType { Box, Sphere, Capsule, CustomMesh/*, Compound*/, Total };
 
 	/*!***********************************************************************
 	 \brief
@@ -1429,6 +1429,9 @@ namespace Ermine
 	{
 		std::shared_ptr<graphics::Animator> m_animator;
 
+		AnimationComponent() = default;
+		explicit AnimationComponent(const std::shared_ptr<graphics::Model>& model) : m_animator(std::make_shared<graphics::Animator>(model)) {}
+		
 		template <typename Alloc>
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
 			const std::string& model_name = m_animator->GetModel()->GetName();
@@ -1455,9 +1458,6 @@ namespace Ermine
 					const aiScene* scene = model->GetAssimpScene();
 					if (scene && scene->mNumAnimations > 0) {
 						m_animator = std::make_shared<graphics::Animator>(model);
-						m_animator->LoadAnimations(scene);
-
-						m_animator->PlayAnimation(0, true);
 					}
 				}
 			}
