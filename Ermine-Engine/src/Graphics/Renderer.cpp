@@ -269,11 +269,11 @@ void Renderer::ResizeOffscreenBuffer(const int& width, const int& height)
 
 /**
  * @brief Create optimized g-buffer for deferred rendering using scalar materials and emissive
- * RT0: RGBA16F (64 bits) - Albedo RGB + Alpha (transparency)
+ * RT0: RGBA16F (48 bits) - Albedo RGB
  * RT1: RGB16F (48 bits) - Normals XYZ
  * RT2: RGBA8 (32 bits) - Emissive RGB + Intensity
  * RT3: RGBA8 (32 bits) - Material properties (R: Roughness, G: Metallic, B: AO, A: Unused)
- * Total: 176 bits per pixel
+ * Total: 160 bits per pixel
  */
 void Renderer::CreateGBuffer(const int& width, const int& height)
 {
@@ -307,10 +307,10 @@ void Renderer::CreateGBuffer(const int& width, const int& height)
 	glGenFramebuffers(1, &gBuffer.FBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, gBuffer.FBO);
 
-	// Create RT0 Texture: RGBA16F (64 bits) - Albedo RGB + Alpha (transparency)
+	// Create RT0 Texture: RGBA16F (48 bits) - Albedo RGB
 	glGenTextures(1, &gBuffer.PackedTexture0);
 	glBindTexture(GL_TEXTURE_2D, gBuffer.PackedTexture0);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_HALF_FLOAT, nullptr);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_HALF_FLOAT, nullptr);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
