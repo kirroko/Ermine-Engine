@@ -839,7 +839,7 @@ namespace Ermine
 		Rigid,
 		Trigger
 	};
-	enum class ShapeType { Box, Sphere, Capsule, CustomMesh/*, Compound*/,Total };
+	enum class ShapeType { Box, Sphere, Capsule, CustomMesh/*, Compound*/, Total };
 
 	/*!***********************************************************************
 	 \brief
@@ -911,5 +911,8 @@ namespace Ermine
 	struct AnimationComponent
 	{
 		std::shared_ptr<graphics::Animator> m_animator;
+
+		AnimationComponent() = default;
+		explicit AnimationComponent(const std::shared_ptr<graphics::Model>& model) : m_animator(std::make_shared<graphics::Animator>(model)) {}
 	};
 }

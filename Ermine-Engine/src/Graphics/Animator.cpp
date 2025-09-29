@@ -30,21 +30,24 @@ namespace Ermine::graphics
     {
         m_Scene = m_Model->GetAssimpScene(); // cache scene for hierarchy traversal
         m_FinalBoneMatrices.resize(m_Model->GetBoneCount(), glm::mat4(1.0f));
+        
+        LoadAnimations(); // Load all animation clips
+        PlayAnimation(0, true); // play first clip, temp
     }
 
     /**
      * @brief Load all animations from an Assimp scene.
      * @param scene The Assimp scene containing animations
      */
-    void Animator::LoadAnimations(const aiScene* scene)
+    void Animator::LoadAnimations()
     {
         m_Clips.clear();
-        if (!scene) return;
+        if (!m_Scene) return;
 
-        for (unsigned int i = 0; i < scene->mNumAnimations; ++i)
+        for (unsigned int i = 0; i < m_Scene->mNumAnimations; ++i)
         {
-            m_Clips.push_back(LoadAnimation(scene->mAnimations[i]));
-            EE_CORE_INFO("Animation clip loaded: {0}", scene->mAnimations[i]->mName.C_Str());
+            m_Clips.push_back(LoadAnimation(m_Scene->mAnimations[i]));
+            EE_CORE_INFO("Animation clip loaded: {0}", m_Scene->mAnimations[i]->mName.C_Str());
         }
     }
 

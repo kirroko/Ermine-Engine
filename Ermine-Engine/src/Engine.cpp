@@ -345,11 +345,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	// Adding animation component
 	const aiScene* scene = model->GetAssimpScene(); // Read animations from aiScene
 	if (scene && scene->mNumAnimations > 0) {
-		AnimationComponent animComp;
-		animComp.m_animator = std::make_shared<graphics::Animator>(model);
-		animComp.m_animator->LoadAnimations(scene);
-		animComp.m_animator->PlayAnimation(0, true);
-		ECS::GetInstance().AddComponent(fbxEntity, std::move(animComp));
+		ECS::GetInstance().AddComponent(fbxEntity, AnimationComponent(model));
 	}
 
 	// Adding material component

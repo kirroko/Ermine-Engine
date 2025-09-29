@@ -37,7 +37,7 @@ namespace Ermine::graphics
          * @brief Load all animations from an Assimp scene.
          * @param scene The Assimp scene containing animations
          */
-        void LoadAnimations(const aiScene* scene);
+        void LoadAnimations();
 
         /**
          * @brief Build a single AnimationClip from Assimp data.
