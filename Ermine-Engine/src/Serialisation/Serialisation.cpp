@@ -9,7 +9,7 @@
 #include <stringbuffer.h>
 #include <ostreamwrapper.h>
 #include <istreamwrapper.h>
-#include "GeometryFactory.h"  // <- the header that declares CreateCube / CreateSphere
+#include "GeometryFactory.h"
 
 
 using namespace rapidjson;
@@ -25,6 +25,14 @@ void Ermine::Mesh::RebuildPrimitive() {
         *this = GeometryFactory::CreateSphere(primitive.size.x); // adapt to your API
         kind = Kind::Primitive;
     }
+    else if (primitive.type == "Quad") {
+        *this = GeometryFactory::CreateQuad(primitive.size.x, primitive.size.y); // adapt to your API
+        kind = Kind::Primitive;
+    }
+    else {
+        EE_CORE_WARN("Unknown primitive type: {}", primitive.type);
+        kind = Kind::None;
+	}
     // TODO: other primitives...
 }
 

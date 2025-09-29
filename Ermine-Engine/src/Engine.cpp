@@ -412,10 +412,10 @@ bool engine::Init(GLFWwindow* windowContext)
 			ShapeType::Box				   // Box, Sphere, Capsule, CustomMesh(need pass vertex)
 		));
 
-	auto& mesh = ECS::GetInstance().GetComponent<Mesh>(entity2);
-	mesh.kind = Mesh::Kind::Primitive;
-	mesh.primitive.type = "Cube";
-	mesh.primitive.size = { 1,1,1 };
+	//auto& mesh = ECS::GetInstance().GetComponent<Mesh>(entity2);
+	//mesh.kind = Mesh::Kind::Primitive;
+	//mesh.primitive.type = "Cube";
+	//mesh.primitive.size = { 1,1,1 };
 
 	//ECS::GetInstance().AddComponent(entity2, HierarchyComponent());
 
@@ -463,10 +463,10 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().AddComponent(redLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
 	ECS::GetInstance().AddComponent(redLightEntity, Material(redLightMaterial));
 
-	auto& redlight = ECS::GetInstance().GetComponent<Mesh>(redLightEntity);
-	redlight.kind = Mesh::Kind::Primitive;
-	redlight.primitive.type = "Sphere";
-	redlight.primitive.size = { 0.1f,1,1 };
+	//auto& redlight = ECS::GetInstance().GetComponent<Mesh>(redLightEntity);
+	//redlight.kind = Mesh::Kind::Primitive;
+	//redlight.primitive.type = "Sphere";
+	//redlight.primitive.size = { 0.1f,1,1 };
 
 	// Blue accent light
 	auto blueLightEntity = ECS::GetInstance().CreateEntity();
@@ -479,10 +479,10 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().AddComponent(blueLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
 	ECS::GetInstance().AddComponent(blueLightEntity, Material(blueLightMaterial));
 
-	auto& bluelight = ECS::GetInstance().GetComponent<Mesh>(blueLightEntity);
-	bluelight.kind = Mesh::Kind::Primitive;
-	bluelight.primitive.type = "Sphere";
-	bluelight.primitive.size = { 0.1f,1,1 };
+	//auto& bluelight = ECS::GetInstance().GetComponent<Mesh>(blueLightEntity);
+	//bluelight.kind = Mesh::Kind::Primitive;
+	//bluelight.primitive.type = "Sphere";
+	//bluelight.primitive.size = { 0.1f,1,1 };
 
 	// Green accent light
 	auto greenLightEntity = ECS::GetInstance().CreateEntity();
@@ -495,10 +495,10 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().AddComponent(greenLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
 	ECS::GetInstance().AddComponent(greenLightEntity, Material(greenLightMaterial));
 
-	auto& greenlight = ECS::GetInstance().GetComponent<Mesh>(greenLightEntity);
-	greenlight.kind = Mesh::Kind::Primitive;
-	greenlight.primitive.type = "Sphere";
-	greenlight.primitive.size = { 0.1f,1,1 };
+	//auto& greenlight = ECS::GetInstance().GetComponent<Mesh>(greenLightEntity);
+	//greenlight.kind = Mesh::Kind::Primitive;
+	//greenlight.primitive.type = "Sphere";
+	//greenlight.primitive.size = { 0.1f,1,1 };
 
 	//after creating all the physic object, update to physic system
 	ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();

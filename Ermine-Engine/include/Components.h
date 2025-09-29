@@ -423,20 +423,18 @@ namespace Ermine
 	{
 		//material class
 		std::shared_ptr<graphics::Material> m_material;
-		std::string materialName;  // NEW: name of material in AssetManager
-		std::string materialTemplate; // e.g. "PBR_REFLECTIVE", "PBR_RED"
-		std::unordered_map<std::string, float> floats;
-		std::unordered_map<std::string, bool>  bools;
-		std::unordered_map<std::string, Vec3>  vec3s;
-		std::unordered_map<std::string, std::string> textures; // uniform -> path
-		std::unordered_map<std::string, std::array<std::string, 6>> cubemapFaces;
-		std::unordered_map<std::string, std::string>cubemapEq;
 
-		inline void EnsureGraphicsMaterial() {
-			if (!m_material) {
-				m_material = std::make_shared<graphics::Material>(/* default shader */);
-			}
-		}
+		// ---- Minimal cached authoring values for serialization ----
+		std::string materialTemplate;       // optional
+		bool hasAlbedo = false;   Vec3  cacheAlbedo{ 1,1,1 };
+		bool hasRough = false;   float cacheRoughness = 0.5f;
+		bool hasMetal = false;   float cacheMetallic = 0.0f;
+		bool hasEmiss = false;   Vec3  cacheEmissive{ 0,0,0 };
+		float cacheEmissiveIntensity = 1.0f;
+
+		// Cached texture paths (only what we set by path)
+		bool hasAlbedoMapPath = false;   std::string albedoMapPath;
+		bool hasNormalMapPath = false;   std::string normalMapPath;
 
 		Material() = default;
 
@@ -533,10 +531,10 @@ namespace Ermine
 		* @details Albedo represents the diffuse color of the material.
 		* @param albedo A Vec3 representing the RGB color value for the albedo.
 		*/
-		void SetAlbedo(const Vec3& albedo) {
-			EnsureGraphicsMaterial();
-			vec3s["material.albedo"] = albedo;
-			m_material->SetVec3("material.albedo", albedo);
+		void SetAlbedo(const Vec3& albedo)
+		{
+			hasAlbedo = true; cacheAlbedo = albedo;
+			if (m_material) m_material->SetVec3("material.albedo", albedo);
 		}
 
 		/**
@@ -546,9 +544,8 @@ namespace Ermine
 		*/
 		void SetRoughness(float roughness)
 		{
-			EnsureGraphicsMaterial();
-			floats["material.roughness"] = roughness;
-			m_material->SetFloat("material.roughness", roughness);
+			hasRough = true; cacheRoughness = roughness;
+			if (m_material) m_material->SetFloat("material.roughness", roughness);
 		}
 
 		/**
@@ -558,9 +555,8 @@ namespace Ermine
 		*/
 		void SetMetallic(float metallic)
 		{
-			EnsureGraphicsMaterial();
-			floats["material.metallic"] = metallic;
-			m_material->SetFloat("material.metallic", metallic);
+			hasMetal = true; cacheMetallic = metallic;
+			if (m_material) m_material->SetFloat("material.metallic", metallic);
 		}
 
 		/**
@@ -571,11 +567,12 @@ namespace Ermine
 		*/
 		void SetEmissive(const Vec3& emissive, float intensity = 1.0f)
 		{
-			EnsureGraphicsMaterial();
-			vec3s["material.emissive"] = emissive;
-			floats["material.emissiveIntensity"] = intensity;
-			m_material->SetVec3("material.emissive", emissive);
-			m_material->SetFloat("material.emissiveIntensity", intensity);
+			hasEmiss = true; cacheEmissive = emissive; cacheEmissiveIntensity = intensity;
+			if (m_material)
+			{
+				m_material->SetVec3("material.emissive", emissive);
+				m_material->SetFloat("material.emissiveIntensity", intensity);
+			}
 		}
 
 		/**
@@ -585,174 +582,79 @@ namespace Ermine
 		*/
 		void SetNormalMap(std::shared_ptr<graphics::Texture> normalMap)
 		{
-			EnsureGraphicsMaterial();
-			if (normalMap && normalMap->IsValid()) {
-				bools["material.hasNormalMap"] = true;
+			if (m_material && normalMap && normalMap->IsValid())
+			{
 				m_material->SetTexture("material.normalMap", normalMap);
 				m_material->SetBool("material.hasNormalMap", true);
 			}
-		}
-
-		// add a path-based texture setter so it can be serialized
-		void SetTexture(const std::string& uniform, const std::string& path) {
-			EnsureGraphicsMaterial();
-			textures[uniform] = path;
-			if (auto t = AssetManager::GetInstance().LoadTexture(path); t && t->IsValid())
-				m_material->SetTexture(uniform, t);
-		}
-
-		void SetTemplate(const std::string& tpl) {
-			EnsureGraphicsMaterial();
-			materialTemplate = tpl;
-			if (tpl == "PBR_REFLECTIVE") m_material->LoadTemplate(graphics::MaterialTemplates::PBR_REFLECTIVE(0.9f, 0.1f));
-			else if (tpl == "PBR_RED")   m_material->LoadTemplate(graphics::MaterialTemplates::PBR_RED());
-		}
-
-		// cubemaps (two formats)
-		void SetCubemapFaces(const std::string& uniform, const std::array<std::string, 6>& faces) {
-			EnsureGraphicsMaterial();
-			cubemapFaces[uniform] = faces;
-			if (auto c = AssetManager::GetInstance().LoadCubemap(faces); c && c->IsValid())
-				m_material->SetCubemap(uniform, c);
-		}
-		void SetCubemapEquirect(const std::string& uniform, const std::string& path) {
-			EnsureGraphicsMaterial();
-			cubemapEq[uniform] = path;
-			if (auto c = AssetManager::GetInstance().LoadCubemapFromEquirectangular(path); c && c->IsValid())
-				m_material->SetCubemap(uniform, c);
 		}
 
 		template <typename Alloc>
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
 			out.SetObject();
 
-			// Case 1: linked to AssetManager
-			if (!materialName.empty()) {
-				out.AddMember("materialName",
-					rapidjson::Value(materialName.c_str(), alloc),
-					alloc);
-				return; // don’t need to dump all parameters
-			}
-
-			// Case 2: unique material — dump settings
 			if (!materialTemplate.empty())
-				out.AddMember("template",
-					rapidjson::Value(materialTemplate.c_str(), alloc),
-					alloc);
+				out.AddMember("template", rapidjson::Value(materialTemplate.c_str(), alloc), alloc);
 
-			// floats
-			rapidjson::Value floatsObj(rapidjson::kObjectType);
-			for (auto& kv : floats) {
-				rapidjson::Value key(kv.first.c_str(), alloc);
-				rapidjson::Value val; val.SetFloat(kv.second);
-				floatsObj.AddMember(key, val, alloc);
-			}
-			out.AddMember("floats", floatsObj, alloc);
+			if (hasAlbedo)
+				out.AddMember("albedo", Vec3ToJson(cacheAlbedo, alloc), alloc);
 
-			// bools
-			rapidjson::Value boolsObj(rapidjson::kObjectType);
-			for (auto& kv : bools) {
-				rapidjson::Value key(kv.first.c_str(), alloc);
-				rapidjson::Value val; val.SetBool(kv.second);
-				boolsObj.AddMember(key, val, alloc);
-			}
-			out.AddMember("bools", boolsObj, alloc);
+			if (hasRough)
+				out.AddMember("roughness", cacheRoughness, alloc);
 
-			// vec3s
-			rapidjson::Value vec3Obj(rapidjson::kObjectType);
-			for (auto& kv : vec3s) {
-				rapidjson::Value key(kv.first.c_str(), alloc);
-				vec3Obj.AddMember(key, Vec3ToJson(kv.second, alloc), alloc);
-			}
-			out.AddMember("vec3s", vec3Obj, alloc);
+			if (hasMetal)
+				out.AddMember("metallic", cacheMetallic, alloc);
 
-			// textures
-			rapidjson::Value texObj(rapidjson::kObjectType);
-			for (auto& kv : textures) {
-				rapidjson::Value key(kv.first.c_str(), alloc);
-				texObj.AddMember(key,
-					rapidjson::Value(kv.second.c_str(), alloc),
-					alloc);
+			if (hasEmiss) {
+				out.AddMember("emissive", Vec3ToJson(cacheEmissive, alloc), alloc);
+				out.AddMember("emissiveIntensity", cacheEmissiveIntensity, alloc);
 			}
-			out.AddMember("textures", texObj, alloc);
-
-			// cubemaps
-			rapidjson::Value cubeObj(rapidjson::kObjectType);
-			for (auto& kv : cubemapFaces) {
-				rapidjson::Value arr(rapidjson::kArrayType);
-				for (auto& face : kv.second)
-					arr.PushBack(rapidjson::Value(face.c_str(), alloc), alloc);
-				cubeObj.AddMember(rapidjson::Value(kv.first.c_str(), alloc), arr, alloc);
-			}
-			for (auto& kv : cubemapEq) {
-				rapidjson::Value key(kv.first.c_str(), alloc);
-				cubeObj.AddMember(key,
-					rapidjson::Value(kv.second.c_str(), alloc),
-					alloc);
-			}
-			out.AddMember("cubemaps", cubeObj, alloc);
+			// (textures/normal map are skipped – no paths)
 		}
 
-
 		void Deserialize(const rapidjson::Value& in) {
-			EnsureGraphicsMaterial();
-
-			// Case 1: relink to shared material
-			if (in.HasMember("materialName") && in["materialName"].IsString()) {
-				materialName = in["materialName"].GetString();
-				auto shared = AssetManager::GetInstance().GetMaterial(materialName);
-				if (shared) {
-					m_material = shared;
-					return; // done
-				}
-				// fallback: if not found, continue to rebuild below
+			if (!m_material) {
+				// Create a material with whatever shader your engine expects by default
+				m_material = std::make_shared<graphics::Material>();
 			}
 
-			// Case 2: rebuild unique material
+			// Apply template first (optional)
 			if (in.HasMember("template") && in["template"].IsString()) {
-				SetTemplate(in["template"].GetString());
+				materialTemplate = in["template"].GetString();
+				if (materialTemplate == "PBR_REFLECTIVE")
+					m_material->LoadTemplate(graphics::MaterialTemplates::PBR_REFLECTIVE(0.9f, 0.1f));
+				else if (materialTemplate == "PBR_RED")
+					m_material->LoadTemplate(graphics::MaterialTemplates::PBR_RED());
+				else if (materialTemplate == "EMISSIVE")
+					m_material->LoadTemplate(graphics::MaterialTemplates::EMISSIVE(Vec3(1, 1, 1), 1.0f));
 			}
 
-			if (in.HasMember("floats") && in["floats"].IsObject()) {
-				for (auto it = in["floats"].MemberBegin(); it != in["floats"].MemberEnd(); ++it) {
-					if (it->value.IsNumber())
-						m_material->SetFloat(it->name.GetString(), it->value.GetFloat());
-				}
+			// Albedo
+			if (in.HasMember("albedo") && in["albedo"].IsArray() && in["albedo"].Size() == 3) {
+				cacheAlbedo = JsonToVec3(in["albedo"]); hasAlbedo = true;
+				m_material->SetVec3("material.albedo", cacheAlbedo);
 			}
 
-			if (in.HasMember("bools") && in["bools"].IsObject()) {
-				for (auto it = in["bools"].MemberBegin(); it != in["bools"].MemberEnd(); ++it) {
-					if (it->value.IsBool())
-						m_material->SetBool(it->name.GetString(), it->value.GetBool());
-				}
+			// Roughness
+			if (in.HasMember("roughness") && in["roughness"].IsNumber()) {
+				cacheRoughness = in["roughness"].GetFloat(); hasRough = true;
+				m_material->SetFloat("material.roughness", cacheRoughness);
 			}
 
-			if (in.HasMember("vec3s") && in["vec3s"].IsObject()) {
-				for (auto it = in["vec3s"].MemberBegin(); it != in["vec3s"].MemberEnd(); ++it) {
-					if (it->value.IsArray() && it->value.Size() == 3)
-						m_material->SetVec3(it->name.GetString(), JsonToVec3(it->value));
-				}
+			// Metallic
+			if (in.HasMember("metallic") && in["metallic"].IsNumber()) {
+				cacheMetallic = in["metallic"].GetFloat(); hasMetal = true;
+				m_material->SetFloat("material.metallic", cacheMetallic);
 			}
 
-			if (in.HasMember("textures") && in["textures"].IsObject()) {
-				for (auto it = in["textures"].MemberBegin(); it != in["textures"].MemberEnd(); ++it) {
-					if (it->value.IsString())
-						SetTexture(it->name.GetString(), it->value.GetString());
-				}
+			// Emissive
+			if (in.HasMember("emissive") && in["emissive"].IsArray() && in["emissive"].Size() == 3) {
+				cacheEmissive = JsonToVec3(in["emissive"]); hasEmiss = true;
+				m_material->SetVec3("material.emissive", cacheEmissive);
 			}
-
-			if (in.HasMember("cubemaps") && in["cubemaps"].IsObject()) {
-				for (auto it = in["cubemaps"].MemberBegin(); it != in["cubemaps"].MemberEnd(); ++it) {
-					const auto& v = it->value;
-					if (v.IsArray() && v.Size() == 6) {
-						std::array<std::string, 6> faces;
-						for (rapidjson::SizeType i = 0; i < 6; ++i) faces[i] = v[i].GetString();
-						SetCubemapFaces(it->name.GetString(), faces);
-					}
-					else if (v.IsString()) {
-						SetCubemapEquirect(it->name.GetString(), v.GetString());
-					}
-				}
+			if (in.HasMember("emissiveIntensity") && in["emissiveIntensity"].IsNumber()) {
+				cacheEmissiveIntensity = in["emissiveIntensity"].GetFloat(); hasEmiss = true;
+				m_material->SetFloat("material.emissiveIntensity", cacheEmissiveIntensity);
 			}
 		}
 	};
