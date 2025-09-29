@@ -3,6 +3,7 @@
 #include <imgui.h>
 #include "MathVector.h"
 #include "Components.h"
+#include "Physics.h"
 
 namespace Ermine
 {
@@ -22,9 +23,9 @@ namespace Ermine
         Quaternion Normalize(const Quaternion& q)
         {
             float len = std::sqrt(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w);
-            if (len <= 1e-12f) return Quaternion(0.f, 0.f, 0.f, 1.f);
+            if (len <= 1e-12f) return {0.f, 0.f, 0.f, 1.f};
             float inv = 1.0f / len;
-            return Quaternion(q.x * inv, q.y * inv, q.z * inv, q.w * inv);
+            return {q.x * inv, q.y * inv, q.z * inv, q.w * inv};
         }
 
         Quaternion EulerDegToQuaternion(const Vector3D& eulerDeg)
@@ -65,6 +66,8 @@ namespace Ermine
 
     void InspectorGUI::Render()
     {
+        //m_Entities (list of entities)
+
         if (!ImGui::Begin(Name().c_str()))
         {
             ImGui::End();
@@ -86,6 +89,8 @@ namespace Ermine
 
             if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
             {
+                ImGui::BeginChild("TransformChild", ImVec2(0, 0), ImGuiChildFlags_AutoResizeY);
+                //ImGui::BeginGroup();
                 // Position
                 ImGui::TextUnformatted("Position");
                 ImGui::SameLine();
@@ -105,6 +110,8 @@ namespace Ermine
                 // Scale
                 ImGui::TextUnformatted("Scale");
                 ImGui::SameLine();
+
+
                 if (ImGui::SmallButton("Reset##scl")) tr.scale = Vector3D(1.f, 1.f, 1.f);
                 if (ImGui::DragFloat3("##scl", &tr.scale.x))
                 {
@@ -113,7 +120,125 @@ namespace Ermine
                     tr.scale.y = (tr.scale.y >= 0.f) ? fmaxf(tr.scale.y, kMinScale) : -fmaxf(-tr.scale.y, kMinScale);
                     tr.scale.z = (tr.scale.z >= 0.f) ? fmaxf(tr.scale.z, kMinScale) : -fmaxf(-tr.scale.z, kMinScale);
                 }
+
+                // Context menu for contents
+                if (ImGui::BeginPopupContextWindow("Transform_ContentContext", ImGuiPopupFlags_MouseButtonRight))
+                {
+                    if (ImGui::MenuItem("Delete", "Del", false))
+                    {
+                        ecs.RemoveComponent<Transform>(m_entity);
+                    }
+                    ImGui::EndPopup();
+                }
+
+                //ImGui::EndGroup();
+                ImGui::EndChild();
+
             }
+
+            ImGui::Separator();
+        }
+
+        if (ecs.HasComponent<Material>(m_entity))
+        {
+            auto& mt = ecs.GetComponent<Material>(m_entity);
+
+            if (ImGui::CollapsingHeader("Material", ImGuiTreeNodeFlags_DefaultOpen))
+            {
+            }
+
+            ImGui::Separator();
+        }
+
+        if (ecs.HasComponent<AudioComponent>(m_entity))
+        {
+            auto& ac = ecs.GetComponent<AudioComponent>(m_entity);
+
+            if (ImGui::CollapsingHeader("AudioComponent", ImGuiTreeNodeFlags_DefaultOpen))
+            {
+            }
+
+            ImGui::Separator();
+        }
+
+        if (ecs.HasComponent<PhysicComponent>(m_entity))
+        {
+            auto& pc = ecs.GetComponent<PhysicComponent>(m_entity);
+
+            if (ImGui::CollapsingHeader("PhysicComponent", ImGuiTreeNodeFlags_DefaultOpen))
+            {
+                const char* PhysicsBody[] = {"Rigidbody", "Trigger"};
+
+                if (ImGui::BeginCombo("Physics Body Type", PhysicsBody[(int)pc.bodyType]))
+                {
+                    for (int n = 0; n < 2; n++)
+                    {
+                        const bool is_selected = (pc.bodyType == (PhysicsBodyType)n);
+                        if (ImGui::Selectable(PhysicsBody[n], is_selected))
+                        {
+                            pc.bodyType = (PhysicsBodyType)n;
+                            ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
+                        }
+
+                        // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+                        if (is_selected)
+                            ImGui::SetItemDefaultFocus();
+                    }
+                    ImGui::EndCombo();
+                }
+
+                const char* EmotionType[] = {"Static", "Kinematic", "Dynamic"};
+
+                if (ImGui::BeginCombo("Emotion Type", EmotionType[(int)pc.motionType]))
+                {
+                    for (int n = 0; n < 3; n++)
+                    {
+                        const bool is_selected = (pc.motionType == (JPH::EMotionType)n);
+                        if (ImGui::Selectable(EmotionType[n], is_selected))
+                        {
+                            pc.motionType = (JPH::EMotionType)n;
+                            ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
+                        }
+
+                        if (is_selected)
+                            ImGui::SetItemDefaultFocus();
+                    }
+                    ImGui::EndCombo();
+                }
+
+                if (ImGui::DragFloat("##mas", &pc.mass))
+                {
+                    constexpr float kMinScale = 0.f;
+                    pc.mass = fmaxf(pc.mass, kMinScale);
+                    ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
+                }
+
+                const char* ShapeTypeList[] = { "Box", "Sphere", "Capsule", "CustomMesh" };
+
+                if (ImGui::BeginCombo("Shape Type", ShapeTypeList[(int)pc.shapeType]))
+                {
+                    for (int n = 0; n < (int)ShapeType::Total; n++)
+                    {
+                        const bool is_selected = (pc.shapeType == (ShapeType)n);
+                        if (ImGui::Selectable(ShapeTypeList[n], is_selected))
+                        {
+                            pc.shapeType = (ShapeType)n;
+                            ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
+                        }
+
+                        if (is_selected)
+                            ImGui::SetItemDefaultFocus();
+                    }
+                    ImGui::EndCombo();
+                }
+            }
+
+            ImGui::Separator();
+        }
+
+        if (ImGui::Button("Add Component"))
+        {
+			ImGui::OpenPopup("AddComponent");
         }
 
         ImGui::End();

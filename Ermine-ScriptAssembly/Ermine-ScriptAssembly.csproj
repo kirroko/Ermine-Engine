@@ -7,7 +7,7 @@
     <ProjectGuid>{E76B644C-53D8-1F47-1CCC-B7A488F741AF}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Ermine-ScriptAssembly</RootNamespace>
+    <RootNamespace>Ermine.ScriptAssembly</RootNamespace>
     <AssemblyName>Ermine-ScriptAssembly</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -51,7 +51,6 @@
     <Compile Include="CoreModule\Rigidbody.cs" />
     <Compile Include="CoreModule\Time.cs" />
     <Compile Include="CoreModule\Transform.cs" />
-    <None Include="Ermine-ScriptAssembly.csproj" />
     <Compile Include="CoreModule\Vector3.cs" />
     <Compile Include="MonoBehaviour.cs" />
     <Compile Include="Object.cs" />

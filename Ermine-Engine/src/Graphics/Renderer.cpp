@@ -5,7 +5,7 @@
 \co-author  Jeremy Lim Ting Jie, jeremytingjie.lim, 2301370, jeremytingjie.lim\@digipen.edu
 \co-author  Ridhwan
 \co-author  Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu
-\date       19/09/2025
+\date       27/09/2025
 \brief      This file contains the definition of the Renderer system.
 			This file is used to render the game objects.
 
@@ -34,7 +34,6 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <GLFW/glfw3.h>
 
 using namespace Ermine::graphics;
-
 
 GLenum glCheckError_(const char* file, int line)
 {
@@ -93,6 +92,13 @@ void Renderer::Init(const int& screenWidth, const int& screenHeight)
 		if (light.castsShadows)
 			CreateShadowMap(light.resolution);
 	}
+
+	m_PickingShader = AssetManager::GetInstance().LoadShader(
+		"../Resources/Shaders/picking_vertex.glsl",
+		"../Resources/Shaders/picking_fragment_uint.glsl"
+	);
+
+	CreatePickingBuffer(screenWidth, screenHeight);
 
 	tempTexture = AssetManager::GetInstance().LoadTexture("../Resources/Textures/greybox_grey_grid.png");
 }
@@ -260,6 +266,8 @@ void Renderer::ResizeOffscreenBuffer(const int& width, const int& height)
 	m_OffscreenBuffer->height = height;
 
 	glCheckError();
+
+	ResizePickingBuffer(width, height);
 }
 
 /**
@@ -553,6 +561,8 @@ void Renderer::ResizeGBuffer(const int& width, const int& height)
 		return; 
 
 	CreateGBuffer(width, height);
+
+	ResizePickingBuffer(width, height);
 }
 
 /**
@@ -769,6 +779,9 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 			rotQuat = glm::normalize(rotQuat);
 			model *= glm::mat4_cast(rotQuat);
 			model = glm::scale(model, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
+
+			// Disable skinning for primitive meshes
+			m_GBufferShader->SetUniform1i("u_UseSkinning", 0);
 
 			// Set transformation matrices for g-buffer shader
 			m_GBufferShader->SetUniformMatrix4fv("model", model);
@@ -1533,6 +1546,9 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 				BindLightsBlockIfPresent(shader);
 				BindMaterialBlockIfPresent(shader);
 
+				// Disable skinning for primitive meshes
+				shader->SetUniform1i("u_UseSkinning", 0);
+
 				// Set transformation matrices
 				shader->SetUniformMatrix4fv("model", model);
 				shader->SetUniformMatrix4fv("view", &view.m2[0][0]);
@@ -1712,24 +1728,37 @@ void Renderer::RenderModelDeferred(const Model& model, graphics::Material* mater
 	if (meshes.empty() || !material) return;
 	if (!m_GBufferShader || !m_GBufferShader->IsValid()) return;
 
+	// Bind shared g-buffer shader used to write geometry information
 	m_GBufferShader->Bind();
+
+	// convert the Mtx44 view/projection into glm mats for convenience
+	glm::mat4 glmView = ToGlm(view);
+	glm::mat4 glmProj = ToGlm(projection);
+
+	// Get bone transforms (may be empty for static meshes)
+	const auto& boneTransforms = model.GetBoneTransforms();
+	const bool hasBones = !boneTransforms.empty();
+	m_GBufferShader->SetUniform1i("u_UseSkinning", hasBones ? 1 : 0); // Enable skinning for model
+
+	// Upload bone matrices if present
+	if (hasBones)
+	{
+		GLsizei count = std::min((int)boneTransforms.size(), MAX_BONE_UNIFORMS);
+		GLint loc = glGetUniformLocation(m_GBufferShader->GetRendererID(), "u_BoneMatrices");
+		glUniformMatrix4fv(loc, count, GL_FALSE, glm::value_ptr(boneTransforms[0]));
+	}
 
 	for (const auto& mesh : meshes)
 	{
 		if (!mesh.vao || !mesh.ibo) continue;
+
 		glm::mat4 modelMat = rootTransform * mesh.localTransform;
 		m_GBufferShader->SetUniformMatrix4fv("model", modelMat);
-		m_GBufferShader->SetUniformMatrix4fv("view", &view.m2[0][0]);
-		m_GBufferShader->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
+		m_GBufferShader->SetUniformMatrix4fv("view", glmView);
+		m_GBufferShader->SetUniformMatrix4fv("projection", glmProj);
 
-		glm::mat4 glmView = glm::mat4(
-			view.m00, view.m01, view.m02, view.m03,
-			view.m10, view.m11, view.m12, view.m13,
-			view.m20, view.m21, view.m22, view.m23,
-			view.m30, view.m31, view.m32, view.m33
-		);
 		glm::mat4 modelView = glmView * modelMat;
-		glm::mat3 normalMatrix = transpose(inverse(glm::mat3(modelView)));
+		glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(modelView)));
 		m_GBufferShader->SetUniformMatrix3fv("NormalMatrix", normalMatrix);
 
 		Draw(mesh.vao, mesh.ibo, m_GBufferShader);
@@ -1759,33 +1788,43 @@ void Renderer::RenderModelForward(const Model& model, graphics::Material* materi
 
 	UpdateMaterialUBO(material->GetUBOData());
 
+	glm::mat4 glmView = ToGlm(view);
+	glm::mat4 glmProj = ToGlm(projection);
+
+	const auto& boneTransforms = model.GetBoneTransforms();
+	const bool hasBones = !boneTransforms.empty();
+	shader->SetUniform1i("u_UseSkinning", hasBones ? 1 : 0); // Enable skinning for model
+
+	// bind material (textures, shader)
+	material->Bind();
+	BindLightsBlockIfPresent(shader);
+	BindMaterialBlockIfPresent(shader);
+
+	// Upload bone matrices if present
+	if (hasBones)
+	{
+		GLsizei count = std::min((int)boneTransforms.size(), MAX_BONE_UNIFORMS);
+		GLint loc = glGetUniformLocation(shader->GetRendererID(), "u_BoneMatrices");
+		glUniformMatrix4fv(loc, count, GL_FALSE, glm::value_ptr(boneTransforms[0]));
+	}
+
 	for (const auto& mesh : meshes)
 	{
 		if (!mesh.vao || !mesh.ibo) continue;
 
-		material->Bind();
-		BindLightsBlockIfPresent(shader);
-		BindMaterialBlockIfPresent(shader);
-
 		glm::mat4 modelMat = rootTransform * mesh.localTransform;
 		shader->SetUniformMatrix4fv("model", modelMat);
-		shader->SetUniformMatrix4fv("view", &view.m2[0][0]);
-		shader->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
+		shader->SetUniformMatrix4fv("view", glmView);
+		shader->SetUniformMatrix4fv("projection", glmProj);
 
-		glm::mat4 glmView = glm::mat4(
-			view.m00, view.m01, view.m02, view.m03,
-			view.m10, view.m11, view.m12, view.m13,
-			view.m20, view.m21, view.m22, view.m23,
-			view.m30, view.m31, view.m32, view.m33
-		);
 		glm::mat4 modelView = glmView * modelMat;
-		glm::mat3 normalMatrix = transpose(inverse(glm::mat3(modelView)));
+		glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(modelView)));
 		shader->SetUniformMatrix3fv("NormalMatrix", normalMatrix);
 
 		Draw(mesh.vao, mesh.ibo, shader);
-
-		material->Unbind();
 	}
+
+	material->Unbind();
 }
 
 bool Renderer::InitializeShadowMap()
@@ -2312,4 +2351,230 @@ void Renderer::RenderShadowPass()
 	CalculateDirectionalMatrix(editor::EditorCamera::GetInstance());
 
 	RenderShadowMap(m_LightSpaceMatrix);
+}
+
+void Renderer::CreatePickingBuffer(const int& width, const int& height)
+{
+	if (m_PickingBuffer)
+	{
+		glDeleteFramebuffers(1, &m_PickingBuffer->FBO);
+		glDeleteTextures(1, &m_PickingBuffer->ColorID);
+		glDeleteRenderbuffers(1, &m_PickingBuffer->Depth);
+		m_PickingBuffer.reset();
+	}
+
+	auto pb = std::make_shared<PickingBuffer>();
+	pb->width = width;
+	pb->height = height;
+
+	glGenFramebuffers(1, &pb->FBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, pb->FBO);
+
+	// Color: 32-bit unsigned int
+	glGenTextures(1, &pb->ColorID);
+	glBindTexture(GL_TEXTURE_2D, pb->ColorID);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_R32UI, width, height, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, nullptr);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pb->ColorID, 0);
+
+	// Depth
+	glGenRenderbuffers(1, &pb->Depth);
+	glBindRenderbuffer(GL_RENDERBUFFER, pb->Depth);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width, height);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, pb->Depth);
+
+	GLenum db[1] = { GL_COLOR_ATTACHMENT0 };
+	glDrawBuffers(1, db);
+
+	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if (status != GL_FRAMEBUFFER_COMPLETE)
+	{
+		EE_CORE_ERROR("Picking FBO incomplete: {0}", status);
+		assert(false && "Picking FBO failed");
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	m_PickingBuffer = pb;
+	glCheckError();
+}
+
+void Renderer::ResizePickingBuffer(const int& width, const int& height)
+{
+	if (!m_PickingBuffer)
+	{
+		CreatePickingBuffer(width, height);
+		return;
+	}
+	if (m_PickingBuffer->width == width && m_PickingBuffer->height == height)
+		return;
+
+	glBindTexture(GL_TEXTURE_2D, m_PickingBuffer->ColorID);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_R32UI, width, height, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, nullptr);
+
+	glBindRenderbuffer(GL_RENDERBUFFER, m_PickingBuffer->Depth);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width, height);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, m_PickingBuffer->FBO);
+	const GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if (status != GL_FRAMEBUFFER_COMPLETE)
+		EE_CORE_ERROR("Picking FBO not complete after resize! Status: {0}", status);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	m_PickingBuffer->width = width;
+	m_PickingBuffer->height = height;
+	glCheckError();
+}
+
+void Renderer::RenderPickingPass(const Mtx44& view, const Mtx44& projection)
+{
+#ifdef _DEBUG
+	if (!m_PickingBuffer || !m_PickingShader)
+		return;
+
+	// 1) Prime depth: copy scene depth into picking FBO (source depends on path)
+	if (m_UseDeferredRendering && m_GBuffer)
+	{
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, m_GBuffer->FBO);
+	}
+	else if (m_OffscreenBuffer)
+	{
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, m_OffscreenBuffer->FBO);
+	}
+	else
+	{
+		return;
+	}
+
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_PickingBuffer->FBO);
+	glBlitFramebuffer(0, 0, m_PickingBuffer->width, m_PickingBuffer->height,
+		0, 0, m_PickingBuffer->width, m_PickingBuffer->height,
+		GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+
+	// 2) Render IDs
+	glBindFramebuffer(GL_FRAMEBUFFER, m_PickingBuffer->FBO);
+	glViewport(0, 0, m_PickingBuffer->width, m_PickingBuffer->height);
+
+	// Clear IDs to 0
+	GLuint clearVal[1] = { 0u };
+	glClearBufferuiv(GL_COLOR, 0, clearVal);
+
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LEQUAL);
+	glDepthMask(GL_FALSE);
+	glDisable(GL_BLEND);
+
+	m_PickingShader->Bind();
+
+	// Use same transforms as other passes
+	glm::mat4 glmView = glm::mat4(
+		view.m00, view.m01, view.m02, view.m03,
+		view.m10, view.m11, view.m12, view.m13,
+		view.m20, view.m21, view.m22, view.m23,
+		view.m30, view.m31, view.m32, view.m33
+	);
+	glm::mat4 glmProjection = glm::mat4(
+		projection.m00, projection.m01, projection.m02, projection.m03,
+		projection.m10, projection.m11, projection.m12, projection.m13,
+		projection.m20, projection.m21, projection.m22, projection.m23,
+		projection.m30, projection.m31, projection.m32, projection.m33
+	);
+
+	glm::mat4 vp = glmProjection * glmView;
+	// Shader uses u_LightViewProj + model, same as shadow/depth style
+	m_PickingShader->SetUniformMatrix4fv("u_LightViewProj", vp);
+
+	auto& ecs = ECS::GetInstance();
+
+	// Model pipeline
+	for (EntityID entity : m_Entities)
+	{
+		if (!ecs.HasComponent<ModelComponent>(entity))
+			continue;
+
+		auto& modelComp = ecs.GetComponent<ModelComponent>(entity);
+		if (!modelComp.m_model) continue;
+
+		auto& trans = ecs.GetComponent<Transform>(entity);
+		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
+		glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
+		rotQuat = glm::normalize(rotQuat);
+		model *= glm::mat4_cast(rotQuat);
+		model = glm::scale(model, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
+
+		// Encode as (EntityID + 1) so 0 stays as "no hit"
+		uint32_t encoded = static_cast<uint32_t>(entity) + 1u;
+		m_PickingShader->SetUniform1ui("u_EntityId", encoded);
+
+		const auto& meshes = modelComp.m_model->GetMeshes();
+		for (const auto& mesh : meshes)
+		{
+			if (!mesh.vao || !mesh.ibo) continue;
+			glm::mat4 modelMat = model * mesh.localTransform;
+			m_PickingShader->SetUniformMatrix4fv("model", modelMat);
+			Draw(mesh.vao, mesh.ibo, m_PickingShader);
+		}
+	}
+
+	// Mesh + material pipeline
+	for (EntityID entity : m_Entities)
+	{
+		if (!(ecs.HasComponent<Mesh>(entity) && ecs.HasComponent<Ermine::Material>(entity)))
+			continue;
+
+		auto& mesh = ecs.GetComponent<Mesh>(entity);
+		if (!mesh.vertex_array || !mesh.index_buffer) continue;
+
+		auto& trans = ecs.GetComponent<Transform>(entity);
+		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
+		glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
+		rotQuat = glm::normalize(rotQuat);
+		model *= glm::mat4_cast(rotQuat);
+		model = glm::scale(model, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
+
+		uint32_t encoded = static_cast<uint32_t>(entity) + 1u;
+		m_PickingShader->SetUniform1ui("u_EntityId", encoded);
+		m_PickingShader->SetUniformMatrix4fv("model", model);
+
+		Draw(mesh.vertex_array, mesh.index_buffer, m_PickingShader);
+	}
+
+	// Restore
+	m_PickingShader->Unbind();
+	glDepthMask(GL_TRUE);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	glCheckError();
+#endif
+}
+
+std::pair<bool, Ermine::EntityID> Renderer::PickEntityAt(const int& x, const int& y, const Mtx44& view, const Mtx44& projection)
+{
+#ifndef _DEBUG
+	return { false, EntityID{} };
+#else
+	if (!m_PickingBuffer)
+		return { false, EntityID{} };
+
+	RenderPickingPass(view, projection);
+
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_PickingBuffer->FBO);
+	glReadBuffer(GL_COLOR_ATTACHMENT0); // color read buffer doesn't matter since we only read stencil
+	glPixelStorei(GL_PACK_ALIGNMENT, 1);
+
+	uint32_t id = 0u;
+	glReadPixels(x, y, 1, 1, GL_RED_INTEGER, GL_UNSIGNED_BYTE, &id);
+
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+
+	if (id == 0u) return { false, EntityID{} };
+
+	EntityID picked = id - 1u;
+	if (!ECS::GetInstance().IsEntityValid(picked))
+		return { false , EntityID{} };
+
+	return { true, picked };
+#endif
 }

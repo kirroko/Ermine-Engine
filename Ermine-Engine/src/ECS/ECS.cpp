@@ -57,6 +57,23 @@ namespace Ermine
 		m_SystemManager->EntityDestroyed(entity);
 	}
 
+	/**
+	 * @brief Destroy all entities and reclaim IDs
+	 * Destroys all entities that have components (notifying components/systems),
+	 * then resets the EntityManager to reclaim IDs for entities without components.
+	 */
+	void ECS::ClearAllEntities()
+	{
+		for (EntityID e = 0; e < MAX_ENTITIES; ++e)
+		{
+			if (m_EntityManager->IsEntityAlive(e))
+				DestroyEntity(e);
+		}
+
+		// Reclaim IDs for entities without components
+		ReloadEntityManager();
+	}
+
 	EntityID ECS::CloneEntity(EntityID entity)
 	{
 		EntityID newEntity = m_EntityManager->CreateEntity();

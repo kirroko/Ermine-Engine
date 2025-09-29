@@ -66,6 +66,13 @@ namespace Ermine
 		void DestroyEntity(EntityID entity) const;
 
 		/**
+		 * @brief Destroy all entities and reclaim IDs
+		 * Destroys all entities that have components (notifying components/systems),
+		 * then resets the EntityManager to reclaim IDs for entities without components.
+		 */
+		void ClearAllEntities();
+
+		/**
 		 * @brief Clone an entity
 		 * @param entity The entity to clone
 		 * @return The ID of the cloned entity

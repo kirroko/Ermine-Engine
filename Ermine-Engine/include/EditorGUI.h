@@ -20,9 +20,16 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "ImGuiUIWindow.h"
 #include <type_traits> // for std::is_base_of
 #include <utility> // for std::forward
+#include <memory> // Add this include for shared_ptr
+
+namespace Ermine {
+    class Scene;
+    class HierarchyPanel;
+}
 
 namespace Ermine::editor
 {
+    class HierarchyInspector;
     /**
 	 * @brief The EditorGUI class, function just like a wrapper for the ImGUI library
 	 */
@@ -31,12 +38,21 @@ namespace Ermine::editor
         // Keeps track of all registered ImGui windows
         static std::vector<std::unique_ptr<ImGUIWindow>> m_Windows;
 
-        static bool isPlaying;
+        static std::shared_ptr<Ermine::Scene> s_ActiveScene;
+
+        static std::unique_ptr<Ermine::HierarchyPanel> s_HierarchyPanel;
+
+        static std::unique_ptr<Ermine::editor::HierarchyInspector> s_Inspector;
 
 		/**
 		 * @brief Top menu bar for the editor
 		 */
         static void TopMenuBar(GLFWwindow* windowContext);
+
+        /**
+         * @brief Toolbar for the editor
+         */
+        static void Toolbar();
 
 		/**
 		 * @brief Profiling window for the editor
@@ -49,6 +65,10 @@ namespace Ermine::editor
 		 */
 		static void ViewPortWindow(bool& show);
     public:
+        enum class SimState : uint8_t { stopped, playing, paused };
+        static SimState s_state;
+        static bool isPlaying;
+
         /**
          * @brief Initialize the ImGUI context
          * @param window The window to initialize the ImGUI context
@@ -98,5 +118,8 @@ namespace Ermine::editor
             m_Windows.emplace_back(std::move(window));
             return ptr;
         }
+
+        static void SetActiveScene(std::shared_ptr<Ermine::Scene> scene);        
+        static std::shared_ptr<Ermine::Scene> GetActiveScene() { return s_ActiveScene; }
     };
 }
