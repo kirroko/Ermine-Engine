@@ -318,11 +318,14 @@ namespace Ermine
         auto& ecs = ECS::GetInstance();
         std::vector<EntityID> allEntities;
 
-        // Loop through all possible entity IDs and check if they're valid
         for (EntityID entity = 1; entity <= MAX_ENTITIES; ++entity)
         {
-            if (ecs.IsEntityValid(entity))  // This uses your existing ECS method
+            if (ecs.IsEntityValid(entity))
             {
+                // Skip entities with GlobalAudioComponent - they belong in the Global Audio tab
+                if (ecs.HasComponent<GlobalAudioComponent>(entity))
+                    continue;
+
                 allEntities.push_back(entity);
             }
         }
