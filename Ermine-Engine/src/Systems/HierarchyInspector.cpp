@@ -382,6 +382,88 @@ namespace Ermine::editor {
             matComp.cacheEmissive = emi;
             matComp.cacheEmissiveIntensity = 1.0f;
         }
+
+        ImGui::SeparatorText("Textures");
+
+        struct SlotRow {
+            const char* label;          // UI label
+            const char* slot;           // primary slot name used by your material
+            const char* altSlot;        // optional alias slot (only albedo needs this)
+            const char* hasFlag;        // presence flag (primary)
+            const char* hasFlagAlias;   // presence flag alias (only normal uses this)
+        };
+        SlotRow rows[] = {
+            { "Albedo",    "materialAlbedoMap", "material.albedoMap", "materialHasAlbedoMap", nullptr },
+            { "Normal",    "material.normalMap", nullptr,              "materialHasNormalMap", "material.hasNormalMap" },
+            { "Roughness", "materialRoughnessMap", nullptr,            "materialHasRoughnessMap", nullptr },
+            { "Metallic",  "material.metallicMap", nullptr,            "materialHasMetallicMap", nullptr },
+            { "AO",        "materialAoMap", nullptr,                   "materialHasAoMap", nullptr },
+            { "Emissive",  "materialEmissiveMap", nullptr,             "materialHasEmissiveMap", nullptr },
+        };
+
+        // Build a stable list of choices: <None> + all loaded texture paths
+        std::vector<std::string> choices;
+        choices.emplace_back("<None>");
+        std::vector<std::shared_ptr<graphics::Texture>> choicePtrs;
+        choicePtrs.emplace_back(nullptr);
+
+        const auto& loaded = AssetManager::GetInstance().GetLoadedTextures(); // map<path, texture>
+        choices.reserve(choices.size() + loaded.size());
+        choicePtrs.reserve(choicePtrs.size() + loaded.size());
+        for (const auto& kv : loaded) {
+            choices.emplace_back(kv.first);
+            choicePtrs.emplace_back(kv.second);
+        }
+
+        // Utility to show a combo for one slot
+        auto showTextureCombo = [&](const SlotRow& r) {
+            // Resolve current texture for this slot
+            std::shared_ptr<graphics::Texture> curTex = gm->GetTexture(r.slot);
+            // Find current index
+            int currentIdx = 0; // <None>
+            if (curTex) {
+                for (int i = 1; i < (int)choicePtrs.size(); ++i) {
+                    if (choicePtrs[i].get() == curTex.get()) { currentIdx = i; break; }
+                }
+            }
+
+            // Combo UI
+            ImGui::PushID(r.slot);
+            if (ImGui::BeginCombo(r.label, choices[currentIdx].c_str())) {
+                for (int i = 0; i < (int)choices.size(); ++i) {
+                    bool selected = (i == currentIdx);
+                    if (ImGui::Selectable(choices[i].c_str(), selected)) {
+                        currentIdx = i;
+
+                        // Apply selection
+                        if (currentIdx == 0) {
+                            // None -> clear slot
+                            gm->SetTexture(r.slot, nullptr);
+                            if (r.altSlot) gm->SetTexture(r.altSlot, nullptr);
+                            if (r.hasFlag) gm->SetBool(r.hasFlag, false);
+                            if (r.hasFlagAlias) gm->SetBool(r.hasFlagAlias, false);
+                        }
+                        else {
+                            auto newTex = choicePtrs[currentIdx];
+                            if (newTex && newTex->IsValid()) {
+                                gm->SetTexture(r.slot, newTex);
+                                if (r.altSlot) gm->SetTexture(r.altSlot, newTex); // albedo alias
+                                if (r.hasFlag) gm->SetBool(r.hasFlag, true);
+                                if (r.hasFlagAlias) gm->SetBool(r.hasFlagAlias, true); // normal alias
+                            }
+                        }
+                    }
+                    if (selected) ImGui::SetItemDefaultFocus();
+                }
+                ImGui::EndCombo();
+            }
+            ImGui::PopID();
+            };
+
+        // Rows
+        for (const auto& row : rows) {
+            showTextureCombo(row);
+        }
     }
 
     void HierarchyInspector::DrawLightComponent(EntityID entity) {
