@@ -270,6 +270,7 @@ namespace Ermine {
 
                 if (ImGui::MenuItem("Delete Selected")) {
                     m_ActiveScene->DestroyEntity(selected);
+                    ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
                 }
 
                 if (ImGui::MenuItem("Duplicate Selected")) {
