@@ -1450,9 +1450,6 @@ namespace Ermine
 					const aiScene* scene = model->GetAssimpScene();
 					if (scene && scene->mNumAnimations > 0) {
 						m_animator = std::make_shared<graphics::Animator>(model);
-						m_animator->LoadAnimations(scene);
-
-						m_animator->PlayAnimation(0, true);
 					}
 				}
 			}

@@ -89,6 +89,12 @@ namespace Ermine::graphics
          */
         void Update(double deltaTime);
 
+        /**
+         * @brief Get the Model object
+         * @return const std::shared_ptr<Model>&
+         */
+        const std::shared_ptr<Model>& GetModel() const { return m_Model; }
+        
         // @return All loaded animation clips
         const std::vector<AnimationClip>& GetClips() const { return m_Clips; }
 
@@ -100,8 +106,6 @@ namespace Ermine::graphics
         
         // @return Final bone matrices to upload to GPU
         const std::vector<glm::mat4>& GetFinalBoneMatrices() const { return m_FinalBoneMatrices; }
-
-        const std::shared_ptr<Model>& GetModel() const { return m_Model; }
 
     private:
         std::shared_ptr<Model> m_Model;               // The model to animate
