@@ -1277,6 +1277,15 @@ namespace Ermine
 			: parent(parentId), depth(0), isDirty(true), worldTransformDirty(true)
 		{
 		}
+
+		template <typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
+			out.SetObject();
+
+		}
+		void Deserialize(const rapidjson::Value& in) {
+
+		}
 	};
 	/*!***********************************************************************
 	 \brief

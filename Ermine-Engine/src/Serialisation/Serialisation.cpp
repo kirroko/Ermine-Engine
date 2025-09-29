@@ -268,6 +268,13 @@ void SaveSceneToFile(const Ermine::ECS& ecs, const std::filesystem::path& path, 
                 ecs.GetComponent<Ermine::Particle>(id).Serialize(l, a);
                 comps.AddMember(Value("Particle", a), l, a);
             }
+
+            // HierarchyComponent
+            if (name == "HierarchyComponent" && ecs.HasComponent<Ermine::HierarchyComponent>(id)) {
+                Value l(kObjectType);
+                ecs.GetComponent<Ermine::HierarchyComponent>(id).Serialize(l, a);
+                comps.AddMember(Value("HierarchyComponent", a), l, a);
+            }
         }
 
         e.AddMember("components", comps, a);
@@ -401,6 +408,15 @@ void LoadSceneFromFile(Ermine::ECS& ecs, const std::filesystem::path& path) {
 
             auto& m = ecs.GetComponent<Ermine::Particle>(id);
             m.Deserialize(comps["Particle"]);
+        }
+
+        // HierarchyComponent 
+        if (comps.HasMember("HierarchyComponent") && comps["HierarchyComponent"].IsObject()) {
+            if (!ecs.HasComponent<Ermine::HierarchyComponent>(id))
+                ecs.AddComponent<Ermine::HierarchyComponent>(id, Ermine::HierarchyComponent{});
+
+            auto& m = ecs.GetComponent<Ermine::HierarchyComponent>(id);
+            m.Deserialize(comps["HierarchyComponent"]);
         }
 
         // (If you later add more components, repeat this pattern.)

@@ -43,6 +43,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "ScriptSystem.h"
 #include "AnimationManager.h"
 #include "Scene.h"
+#include "HierarchyInspector.h"
 #include "HierarchyPanel.h"
 #include "HierarchySystem.h"
 
@@ -313,6 +314,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	auto audioTestEntity = ECS::GetInstance().CreateEntity();
 	ECS::GetInstance().AddComponent(audioTestEntity, Transform(Vec3(2, 0, -1), Quaternion(), Vec3(1, 1, 1)));
 	ECS::GetInstance().AddComponent(audioTestEntity, ObjectMetaData());
+	ECS::GetInstance().AddComponent<Ermine::HierarchyComponent>(audioTestEntity, Ermine::HierarchyComponent{});
 
 	AudioComponent testAudio;
 	//testAudio.soundName = "../Resources/Audio/test.wav"; // Replace with your actual sound file path
@@ -330,17 +332,18 @@ bool engine::Init(GLFWwindow* windowContext)
 	fbxEntity = ECS::GetInstance().CreateEntity();
 	auto model = AssetManager::GetInstance().LoadModel("../Resources/Models/Walking.fbx");
 	ECS::GetInstance().AddComponent(fbxEntity, Transform(Vec3(2, -0.5f, 0), Quaternion(), Vec3(0.01f, 0.01f, 0.01f)));
-	ECS::GetInstance().AddComponent(
-		fbxEntity,
-		PhysicComponent(
-			PhysicsBodyType::Rigid,         // "rigid body", "trigger"
-			JPH::EMotionType::Dynamic,      // static, dynamic, or kinematic
-			1.0f,                            // mass ( 0 for static , else is dynamic)
-			ShapeType::Capsule				// Box, Sphere, Capsule, CustomMesh(need pass vertex)
-		));
+	//ECS::GetInstance().AddComponent(
+	//	fbxEntity,
+	//	PhysicComponent(
+	//		PhysicsBodyType::Rigid,         // "rigid body", "trigger"
+	//		JPH::EMotionType::Dynamic,      // static, dynamic, or kinematic
+	//		1.0f,                            // mass ( 0 for static , else is dynamic)
+	//		ShapeType::Capsule				// Box, Sphere, Capsule, CustomMesh(need pass vertex)
+	//	));
 	ECS::GetInstance().AddComponent(fbxEntity, ObjectMetaData("Character", "Model", true));
 	ECS::GetInstance().AddComponent(fbxEntity, Mesh{}); // empty mesh component for renderer signature
 	ECS::GetInstance().AddComponent(fbxEntity, ModelComponent(model));
+	ECS::GetInstance().AddComponent<Ermine::HierarchyComponent>(fbxEntity, Ermine::HierarchyComponent{});
 
 	// Adding animation component
 	const aiScene* scene = model->GetAssimpScene(); // Read animations from aiScene
@@ -403,14 +406,16 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().AddComponent(entity2, Transform(Vec3(0, -1, 0), Quaternion(), Vec3(100, 0.1f, 100)));
 	ECS::GetInstance().AddComponent(entity2, ObjectMetaData());
 	ECS::GetInstance().AddComponent(entity2, graphics::GeometryFactory::CreateCube(1, 1, 1));
-	ECS::GetInstance().AddComponent(
-		entity2,
-		PhysicComponent(
-			PhysicsBodyType::Rigid,        // "rigid body", "trigger"
-			JPH::EMotionType::Static,      // static, dynamic, or kinematic
-			1.0f,                          // mass ( 0 for static , else is dynamic)
-			ShapeType::Box				   // Box, Sphere, Capsule, CustomMesh(need pass vertex)
-		));
+	//ECS::GetInstance().AddComponent(
+	//	entity2,
+	//	PhysicComponent(
+	//		PhysicsBodyType::Rigid,        // "rigid body", "trigger"
+	//		JPH::EMotionType::Static,      // static, dynamic, or kinematic
+	//		1.0f,                          // mass ( 0 for static , else is dynamic)
+	//		ShapeType::Box				   // Box, Sphere, Capsule, CustomMesh(need pass vertex)
+	//	));
+
+	ECS::GetInstance().AddComponent<Ermine::HierarchyComponent>(entity2, Ermine::HierarchyComponent{});
 
 	//auto& mesh = ECS::GetInstance().GetComponent<Mesh>(entity2);
 	//mesh.kind = Mesh::Kind::Primitive;
@@ -447,6 +452,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().AddComponent(mainLightEntity, Transform(Vec3(0, 4, 2), Quaternion(0.9f, 0.2f, 0.1f, -0.3f), Vec3(1, 1, 1)));
 	ECS::GetInstance().AddComponent(mainLightEntity, ObjectMetaData("MainLight", "Light", true));
 	ECS::GetInstance().AddComponent(mainLightEntity, Light(Vec3(1, 1, 1), 0.8f, LightType::DIRECTIONAL, true, 4096u));
+	ECS::GetInstance().AddComponent<Ermine::HierarchyComponent>(mainLightEntity, Ermine::HierarchyComponent{});
 
 	// Light sphere material - use shared emissive material for all lights
 	//ECS::GetInstance().AddComponent(mainLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
@@ -462,6 +468,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	redLightMaterial->LoadTemplate(graphics::MaterialTemplates::EMISSIVE(Vec3(1.0f, 0.f, 0.f), 10.0f));
 	ECS::GetInstance().AddComponent(redLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
 	ECS::GetInstance().AddComponent(redLightEntity, Material(redLightMaterial));
+	ECS::GetInstance().AddComponent<Ermine::HierarchyComponent>(redLightEntity, Ermine::HierarchyComponent{});
 
 	//auto& redlight = ECS::GetInstance().GetComponent<Mesh>(redLightEntity);
 	//redlight.kind = Mesh::Kind::Primitive;
@@ -478,6 +485,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	blueLightMaterial->LoadTemplate(graphics::MaterialTemplates::EMISSIVE(Vec3(0.f, 0.f, 1.0f), 10.0f));
 	ECS::GetInstance().AddComponent(blueLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
 	ECS::GetInstance().AddComponent(blueLightEntity, Material(blueLightMaterial));
+	ECS::GetInstance().AddComponent<Ermine::HierarchyComponent>(blueLightEntity, Ermine::HierarchyComponent{});
 
 	//auto& bluelight = ECS::GetInstance().GetComponent<Mesh>(blueLightEntity);
 	//bluelight.kind = Mesh::Kind::Primitive;
@@ -494,6 +502,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	greenLightMaterial->LoadTemplate(graphics::MaterialTemplates::EMISSIVE(Vec3(0.f, 1.f, 0.0f), 10.0f));
 	ECS::GetInstance().AddComponent(greenLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
 	ECS::GetInstance().AddComponent(greenLightEntity, Material(greenLightMaterial));
+	ECS::GetInstance().AddComponent<Ermine::HierarchyComponent>(greenLightEntity, Ermine::HierarchyComponent{});
 
 	//auto& greenlight = ECS::GetInstance().GetComponent<Mesh>(greenLightEntity);
 	//greenlight.kind = Mesh::Kind::Primitive;
@@ -533,8 +542,11 @@ bool engine::Init(GLFWwindow* windowContext)
 	editor::EditorGUI::CreateImGUIWindow<AudioImGUI>();
 	// Create ImGUI window for Inspector
 	//editor::EditorGUI::CreateImGUIWindow<InspectorGUI>();
-	InspectorGUI* ref = editor::EditorGUI::CreateImGUIWindow<InspectorGUI>();
-	//InspectorGUI* ref = editor::EditorGUI::CreateImGUIWindow<InspectorGUI>(entity2, "Inspector");
+	//auto* inspector = editor::EditorGUI::CreateImGUIWindow<editor::HierarchyInspector>(editor::EditorGUI::GetActiveScene().get(), "Inspector");
+
+	// hook viewport to same scene
+	//editor::EditorGUI::CreateImGUIWindow<ViewPortGUI>(inspector);
+	InspectorGUI* ref = editor::EditorGUI::CreateImGUIWindow<InspectorGUI>(entity2, "Inspector");
 	editor::EditorGUI::CreateImGUIWindow<ViewPortGUI>(ref);
 
 	// Demonstrate different material sharing strategies:
