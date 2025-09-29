@@ -1250,7 +1250,6 @@ namespace Ermine
 				colour = Vec4(in["colour"][0].GetFloat(), in["colour"][1].GetFloat(), in["colour"][2].GetFloat(), in["colour"][3].GetFloat());
 			if (in.HasMember("size"))     size = in["size"].GetFloat();
 		}
-
 	};
 
 	/*!***********************************************************************

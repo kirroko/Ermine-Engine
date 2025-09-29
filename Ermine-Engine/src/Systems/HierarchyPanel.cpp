@@ -5,7 +5,7 @@
 #include "ECS.h"
 #include "GeometryFactory.h"
 #include "AssetManager.h"
-
+#include "Physics.h"
 
 namespace Ermine {
     void HierarchyPanel::SetScene(Scene* scene) {
@@ -130,6 +130,7 @@ namespace Ermine {
         if (ImGui::BeginPopupContextItem()) {
             if (ImGui::MenuItem("Delete")) {
                 m_ActiveScene->DestroyEntity(entity);
+                ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
                 ImGui::CloseCurrentPopup();
             }
             if (ImGui::MenuItem("Duplicate Selected")) {

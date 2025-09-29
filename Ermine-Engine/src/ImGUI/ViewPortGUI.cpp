@@ -26,6 +26,10 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #include "AssetManager.h"
 
+#include "EditorGUI.h"
+#include "HierarchyPanel.h"
+#include "Scene.h"
+
 using namespace Ermine::editor;
 
 EditorGUI::SimState EditorGUI::s_state = SimState::stopped;
@@ -374,7 +378,11 @@ void Ermine::ViewPortGUI::Update()
 					EditorCamera::GetInstance().GetProjectionMatrix());
 
 				if (hit && ref_Inspector)
+				{
 					ref_Inspector->SetEntity(entity);
+					editor:EditorGUI::GetActiveScene().get()->SetSelectedEntity(entity);
+					//HierarchyPanel::GetScene().SetSelectedEntity(entity)
+				}
 			}
 		}
 	}

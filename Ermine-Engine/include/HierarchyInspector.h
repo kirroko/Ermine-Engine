@@ -36,6 +36,10 @@ private:
     void DrawMaterialComponent(EntityID entity);
     void DrawLightComponent(EntityID entity);
     void DrawHierarchyComponent(EntityID entity);
+    void DrawPhysicsComponent(EntityID entity);
+    void DrawAudioComponent(EntityID entity);
+    //void DrawParticleComponent(EntityID entity);
+    void DrawScriptComponent(EntityID entity);
     void DrawAddComponentMenu(EntityID entity);
 
     Scene* m_ActiveScene = nullptr;
