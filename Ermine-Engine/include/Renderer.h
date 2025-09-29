@@ -3,8 +3,8 @@
 \file       Renderer.h
 \author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu
 \co-author  Jeremy Lim Ting Jie, jeremytingjie.lim, 2301370, jeremytingjie.lim\@digipen.edu
-\co-author  Ridhwan
-\date       09/03/2025
+\co-author  Ridhwan Afandi, mohamedridhwan.b, 2301367, mohamedridhwan.b\@digipen.edu
+\date       09/29/2025
 \brief      This file contains the declaration of the Renderer system.
             This file is used to render the game objects to the screen.
 
@@ -70,9 +70,6 @@ namespace Ermine::graphics
     class Renderer : public System
     {
     public:
-        GLuint m_ShadowMapFBO = 0;
-        GLuint m_ShadowMapArray = 0;
-
         // Lighting Pass Parameters
         bool m_SSAOEnabled = false;
 
@@ -509,14 +506,15 @@ namespace Ermine::graphics
 		graphics::Skybox* m_skybox = nullptr;
 
         // Shadow mapping
-        std::shared_ptr<Shader> m_ShadowMapGeometryShader = nullptr;
         std::shared_ptr<Shader> m_ShadowMapInstancedShader = nullptr;
         GLuint m_ShadowMapCube = 0;
         uint64_t m_ShadowMapArrayHandle = 0;
-        std::vector<TransparentObject> m_transparentObjects;
+        GLuint m_ShadowMapFBO = 0;
+        GLuint m_ShadowMapArray = 0;
 
         // Forward rendering shader for transparent objects
         std::shared_ptr<Shader> m_ForwardShader = nullptr;
+        std::vector<TransparentObject> m_transparentObjects;
 
         void BindMaterialTextures(Ermine::graphics::Material* material);
 
