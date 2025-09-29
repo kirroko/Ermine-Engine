@@ -45,6 +45,11 @@ namespace Ermine::graphics
          * @return Converted AnimationClip
          */
         static AnimationClip LoadAnimation(const aiAnimation* anim);
+        
+        /**
+         * @brief Clear all loaded animations.
+         */
+        void ClearAnimations();
 
         /**
          * @brief Play an animation by index.
@@ -59,6 +64,24 @@ namespace Ermine::graphics
          * @param loop Whether to loop playback
          */
         void PlayAnimation(const std::string& name, bool loop = true);
+        
+        /**
+         * @brief Stop the current animation.
+         * Resets to the beginning and clears the current clip.
+         */
+        void StopAnimation();
+        
+        /**
+         * @brief Pause the current animation.
+         * Does nothing if no animation is playing.
+         */
+        void PauseAnimation();
+
+        /**
+         * @brief Resume the current animation if paused.
+         * Does nothing if not paused or no animation is playing.
+         */
+        void ResumeAnimation();
 
         /**
          * @brief Advance animation and update bone transforms.
@@ -71,6 +94,9 @@ namespace Ermine::graphics
 
         // @return Current animation clip, or nullptr if none
         const AnimationClip* GetCurrentClip() const { return m_CurrentClip; }
+
+        // @return Returns true if currently paused
+        bool IsPaused() const { return m_Paused; }
         
         // @return Final bone matrices to upload to GPU
         const std::vector<glm::mat4>& GetFinalBoneMatrices() const { return m_FinalBoneMatrices; }
@@ -84,6 +110,7 @@ namespace Ermine::graphics
 
         double m_CurrentTime = 0.0;                   // Current time in ticks
         bool m_Loop = true;                           // Looping flag
+        bool m_Paused = false;                        // Pausing flag
 
         std::vector<glm::mat4> m_FinalBoneMatrices;   // Final transforms per bone
 
