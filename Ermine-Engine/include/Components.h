@@ -387,7 +387,7 @@ namespace Ermine
 		int startOffset{ 0 }; // For UBO indexing
 		float innerAngle{ -1.0f }; // For spotlights
 		float outerAngle{ -1.0f }; // For spotlights
-		float radius{ 1.0f }; // For point lights/spotlights
+		float radius{ 3.0f }; // For point lights/spotlights
 		float splitDepths[NUM_CASCADES];
 
 		Light() : color(1.0f, 1.0f, 1.0f),

@@ -342,7 +342,7 @@ namespace Ermine::graphics
          * @brief Updates the lights' shader storage buffer object (SSBO) with the current light and transform data from all living entities.
          * @param view The view matrix to transform the positions and directions of the lights into view space.
          */
-        void UpdateLightsUBO(const Mtx44& view);
+        void UpdateLightsSSBO(const Mtx44& view);
         /**
          * @brief Binds the Lights SSBO to the specified shader program if it has not been bound before.
          * @param shader The shader program to which the lights SSBO should be bound.

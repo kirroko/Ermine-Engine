@@ -1082,8 +1082,29 @@ void Renderer::CleanupGBuffer()
 {
 	if (m_GBuffer)
 	{
-		if (m_GBuffer->FBO != 0)
-		{
+		// Make bindless handles non-resident BEFORE deleting textures
+		if (m_GBuffer->HandlePackedTexture0 != 0) {
+			glMakeTextureHandleNonResidentARB(m_GBuffer->HandlePackedTexture0);
+			m_GBuffer->HandlePackedTexture0 = 0;
+		}
+		if (m_GBuffer->HandlePackedTexture1 != 0) {
+			glMakeTextureHandleNonResidentARB(m_GBuffer->HandlePackedTexture1);
+			m_GBuffer->HandlePackedTexture1 = 0;
+		}
+		if (m_GBuffer->HandlePackedTexture2 != 0) {
+			glMakeTextureHandleNonResidentARB(m_GBuffer->HandlePackedTexture2);
+			m_GBuffer->HandlePackedTexture2 = 0;
+		}
+		if (m_GBuffer->HandlePackedTexture3 != 0) {
+			glMakeTextureHandleNonResidentARB(m_GBuffer->HandlePackedTexture3);
+			m_GBuffer->HandlePackedTexture3 = 0;
+		}
+		if (m_GBuffer->HandleDepthTexture != 0) {
+			glMakeTextureHandleNonResidentARB(m_GBuffer->HandleDepthTexture);
+			m_GBuffer->HandleDepthTexture = 0;
+		}
+
+		if (m_GBuffer->FBO != 0) {
 			glDeleteFramebuffers(1, &m_GBuffer->FBO);
 		}
 		if (m_GBuffer->PackedTexture0 != 0)
@@ -1192,7 +1213,7 @@ void Renderer::CleanupPostProcessBuffer()
  * @brief Updates the lights' uniform buffer object (UBO) with the current light and transform data from all living entities.
  * @param view The view matrix to transform the positions and directions of the lights into view space.
  */
-void Renderer::UpdateLightsUBO(const Mtx44& view)
+void Renderer::UpdateLightsSSBO(const Mtx44& view)
 {
 	std::vector<LightGPU> lights;
 	lights.reserve(MAX_LIGHTS);
@@ -1444,7 +1465,7 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 		Vec3 cameraPos = Vec3(invView[3][0], invView[3][1], invView[3][2]);
 
 		// Update lights UBO for forward rendering
-		UpdateLightsUBO(view);
+		UpdateLightsSSBO(view);
 
 		auto& ecs = ECS::GetInstance();
 
@@ -1734,6 +1755,12 @@ Renderer::~Renderer()
 		glDeleteBuffers(1, &m_MaterialUBO);
 		m_MaterialUBO = 0;
 	}
+
+	if (m_ShadowMapArrayHandle != 0) {
+		glMakeTextureHandleNonResidentARB(m_ShadowMapArrayHandle);
+		m_ShadowMapArrayHandle = 0;
+	}
+
 	if (m_ShadowMapArray) {
 		glDeleteTextures(1, &m_ShadowMapArray);
 		m_ShadowMapArray = 0;
@@ -1745,6 +1772,20 @@ Renderer::~Renderer()
 
 	CleanupGBuffer();
 	CleanupPostProcessBuffer();
+
+	// Clean up offscreen buffer
+	if (m_OffscreenBuffer) {
+		if (m_OffscreenBuffer->FBO != 0) {
+			glDeleteFramebuffers(1, &m_OffscreenBuffer->FBO);
+		}
+		if (m_OffscreenBuffer->ColorTexture != 0) {
+			glDeleteTextures(1, &m_OffscreenBuffer->ColorTexture);
+		}
+		if (m_OffscreenBuffer->RBO != 0) {
+			glDeleteRenderbuffers(1, &m_OffscreenBuffer->RBO);
+		}
+		m_OffscreenBuffer.reset();
+	}
 }
 
 void Renderer::ToggleDeferredRendering()
@@ -2646,7 +2687,7 @@ void Renderer::CalculateLightMatrix(const editor::EditorCamera& editorCamera)
  */
 void Renderer::RenderShadowMapInstanced()
 {
-	UpdateLightsUBO(editor::EditorCamera::GetInstance().GetViewMatrix());
+	UpdateLightsSSBO(editor::EditorCamera::GetInstance().GetViewMatrix());
 	BindLightsBlockIfPresent(m_ShadowMapInstancedShader);
 
 	// Validate resources

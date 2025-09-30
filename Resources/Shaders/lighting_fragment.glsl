@@ -293,7 +293,8 @@ float calculateAttenuation(int lightIndex, vec3 fragPosView, out vec3 lightDir)
         // Point or spot: direction from light to fragment
         lightDir = normalize(lightPosView - fragPosView);
         float distance = length(lightPosView - fragPosView);
-        
+        distance = max(distance, 0.01); // Prevent division issues
+
         // Attenuation
         float linearTerm = 0.045;
         float quadraticTerm = 0.0075;
@@ -301,14 +302,12 @@ float calculateAttenuation(int lightIndex, vec3 fragPosView, out vec3 lightDir)
         
         // Range fade
         if (distance > range) {
+            attenuation = 0.0;
+        } else {
             float fadeDistance = range * 0.1;
             float fadeStart = range - fadeDistance;
-            if (distance > fadeStart) {
-                float fadeFactor = 1.0 - (distance - fadeStart) / fadeDistance;
-                attenuation *= max(fadeFactor, 0.0);
-            } else {
-                attenuation = 0.0;
-            }
+            float fadeFactor = smoothstep(range, fadeStart, distance);
+            attenuation *= fadeFactor;
         }
         
         // Spot cone
@@ -572,6 +571,7 @@ void main()
             float shadowFactor = 1.0;
             int lightType = int(lights[i].position_type.w);
             bool castsShadows = (lights[i].spot_angles_castshadows_startOffset.z > 0.5);
+
             if (castsShadows && lightType == DIRECTIONAL_LIGHT) {
                 int cascadeIndex = NUM_CASCADES - 1; // Default to last cascade
                 
@@ -597,8 +597,8 @@ void main()
                 );
                 
                 
-                }
-                else if (castsShadows && (lightType == SPOT_LIGHT)) {
+            }
+            else if (castsShadows && (lightType == SPOT_LIGHT)) {
 
                 // Spotlight shadow calculation
                 int cascadeIndex = NUM_CASCADES - 1;
@@ -629,13 +629,12 @@ void main()
                         normalWorld, 
                         layerIndex
                     );
-                } else {
+                }
+            }
+            else {
                     // No valid shadow matrix for this cascade, assume fully lit
                     shadowFactor = 1.0;
-                }
-        }
-
-
+            }
 
             result += lightContrib * shadowFactor;
         }
@@ -694,9 +693,9 @@ void main()
                     normalWorld, 
                     layerIndex
                 );
-                
-                } 
-                else if (castsShadows && (lightType == SPOT_LIGHT)) {
+
+            } 
+            else if (castsShadows && (lightType == SPOT_LIGHT)) {
 
                 // Spotlight shadow calculation
                 int cascadeIndex = NUM_CASCADES - 1;
@@ -727,11 +726,13 @@ void main()
                         normalWorld, 
                         layerIndex
                     );
-                } else {
+                } 
+            }
+            else {
                     // No valid shadow matrix for this cascade, assume fully lit
                     shadowFactor = 1.0;
-                }
-        }
+            }
+
             result += lightContrib * shadowFactor; 
         }
 
