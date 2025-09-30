@@ -124,8 +124,8 @@ namespace Ermine::graphics
         {
             return {
                 {"materialAlbedo", Vec4(0.7f, 0.7f, 0.8f, 1.0f)},
-                {"materialMetallic", 1.0f},
-                {"materialRoughness", 0.1f},
+                {"materialMetallic", 1.0f},  // Full metallic
+                {"materialRoughness", 0.15f}, // Slightly rough for visible reflections
                 {"materialAo", 1.0f},
                 {"materialEmissive", Vec3(0.0f, 0.0f, 0.0f)},
                 {"materialEmissiveIntensity", 0.0f},

@@ -88,7 +88,6 @@ void GraphicsDebugGUI::Update()
     DrawShadowMappingControls();
     DrawLightingControls();
     DrawPerformanceMetrics();
-    DrawDebugVisualization();
 
     ImGui::End();
 }
@@ -316,34 +315,6 @@ void GraphicsDebugGUI::DrawPerformanceMetrics()
             ImGui::PlotLines("Frame Times (ms)", values.data(), static_cast<int>(values.size()),
                 0, nullptr, 0.0f, metrics.maxFrameTimeMs * 1.2f, ImVec2(0, 80));
         }
-        
-        ImGui::Unindent(10.0f);
-    }
-}
-
-void GraphicsDebugGUI::DrawDebugVisualization()
-{
-    if (ImGui::CollapsingHeader("Debug Visualization"))
-    {
-        ImGui::Indent(10.0f);
-        
-        if (ImGui::Button("Reload Shaders")) {
-            EE_CORE_INFO("Shader reload triggered");
-        }
-        DrawTooltip("Reload all shaders from disk (useful for shader development)");
-        
-        if (ImGui::Button("Capture Screenshot")) {
-            EE_CORE_INFO("Screenshot capture requested");
-        }
-        DrawTooltip("Capture a screenshot of the current frame");
-        
-        // Debug render modes
-        static int debugMode = 0;
-        const char* debugModes[] = { "Final Render", "Albedo Only", "Normals", "Depth", "Shadow Maps" };
-        if (ImGui::Combo("Debug View", &debugMode, debugModes, IM_ARRAYSIZE(debugModes))) {
-            EE_CORE_INFO("Debug view mode changed to: {}", debugModes[debugMode]);
-        }
-        DrawTooltip("Switch between different debug visualization modes");
         
         ImGui::Unindent(10.0f);
     }
