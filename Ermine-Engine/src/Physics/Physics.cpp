@@ -227,7 +227,10 @@ namespace Ermine
         auto material = std::make_unique<graphics::Material>(shader);
         material->LoadTemplate(graphics::MaterialTemplates::PBR_WHITE());
         if (texture && texture->IsValid())
+        {
             material->SetTexture("materialAlbedoMap", texture);
+            material->SetBool("materialHasAlbedoMap", true);
+        }
         ECS::GetInstance().AddComponent(entity, Material(std::move(material)));
 
         // 5. Create Jolt Physics box shape
