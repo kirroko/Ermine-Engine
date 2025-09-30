@@ -28,11 +28,13 @@ using namespace Ermine;
  */
 std::shared_ptr<graphics::Texture> AssetManager::LoadTexture(const std::string& filePath)
 {
-    
     EE_CORE_TRACE("Loading texture: {0}", filePath);
     auto it = m_textures.find(filePath);
     if (it != m_textures.end()) // If the texture is already loaded
+    {
+        EE_CORE_INFO("Texture {0} already loaded, returning cached version", filePath);
         return it->second;
+    }
 
     std::shared_ptr<graphics::Texture> texture = std::make_shared<graphics::Texture>(filePath);
     if (!texture->IsValid())
@@ -75,7 +77,10 @@ std::shared_ptr<graphics::Shader> AssetManager::LoadShader(const std::string& ve
     std::string key = vertexPath + "|" + fragmentPath;
     auto it = m_shaders.find(key);
     if (it != m_shaders.end())
+    {
+        EE_CORE_INFO("Shader {0} already loaded, returning cached version", key);
         return it->second;
+    }
 
     std::shared_ptr<graphics::Shader> shader = std::make_shared<graphics::Shader>(vertexPath, fragmentPath);
     if (!shader->IsValid())
@@ -100,6 +105,11 @@ std::shared_ptr<graphics::Shader> AssetManager::LoadShader(const std::string& ve
 {
     EE_CORE_TRACE("Loading shader: {0} | {1} | {2}", vertexPath, geometryPath, fragmentPath);
     std::string key = vertexPath + "|" + geometryPath + "|" + fragmentPath;
+    auto it = m_shaders.find(key);
+    if (it != m_shaders.end()) {
+        EE_CORE_INFO("Shader {0} already loaded, returning cached version", key);
+        return it->second;
+    }
 
     std::shared_ptr<graphics::Shader> shader = std::make_shared<graphics::Shader>(vertexPath, geometryPath, fragmentPath);
     if (!shader->IsValid())
@@ -134,7 +144,10 @@ std::shared_ptr<graphics::Model> AssetManager::LoadModel(const std::string& file
     EE_CORE_TRACE("Loading model: {0}", filePath);
     auto it = m_models.find(filePath);
     if (it != m_models.end()) // Already loaded
+    {
+        EE_CORE_INFO("Model {0} already loaded, returning cached version", filePath);
         return it->second;
+    }
 
     try
     {
@@ -215,13 +228,15 @@ std::shared_ptr<graphics::Cubemap> AssetManager::LoadCubemap(const std::array<st
     std::string key = name.empty() ? 
         (faces[0] + "|" + faces[1] + "|" + faces[2] + "|" + faces[3] + "|" + faces[4] + "|" + faces[5]) : 
         name;
-    
     EE_CORE_TRACE("Loading cubemap: {0}", key);
-    
+
     // Check if already loaded
     auto it = m_cubemaps.find(key);
     if (it != m_cubemaps.end())
+    {
+        EE_CORE_INFO("Cubemap {0} already loaded, returning cached version", key);
         return it->second;
+    }
     
     // Create new cubemap
     std::shared_ptr<graphics::Cubemap> cubemap = std::make_shared<graphics::Cubemap>(faces);
@@ -251,7 +266,10 @@ std::shared_ptr<graphics::Cubemap> AssetManager::LoadCubemapFromEquirectangular(
     // Check if already loaded
     auto it = m_cubemaps.find(key);
     if (it != m_cubemaps.end())
+    {
+        EE_CORE_INFO("Cubemap {0} already loaded, returning cached version", key);
         return it->second;
+    }
     
     // Create new cubemap from equirectangular
     std::shared_ptr<graphics::Cubemap> cubemap = std::make_shared<graphics::Cubemap>(equirectangularPath);
