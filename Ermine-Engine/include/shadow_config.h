@@ -6,4 +6,4 @@
 extern unsigned int SHADOW_MAX_LAYERS; // defined in Renderer.cpp
 #define SHADOW_MAP_RESOLUTION 4096u
 #define SHADOW_MAP_ARRAY_LAMBDA 0.95f
-#define SHADOW_MAP_REFRESH_INTERVAL_IN_FRAMES 4 // 1 in 4 frames
+#define SHADOW_MAP_REFRESH_INTERVAL_IN_FRAMES 1 // 1 in x frames

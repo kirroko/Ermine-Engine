@@ -99,7 +99,7 @@ namespace Ermine::graphics
         // Bloom pass parameters
         float m_BloomThreshold = 1.0f;
         float m_BloomIntensity = 2.0f;
-        float m_BloomRadius = 5.0f;
+        float m_BloomRadius = 1.0f;
 
         // Maximum bone array size expected in shader
         static constexpr int MAX_BONE_UNIFORMS = 128;
