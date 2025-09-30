@@ -1374,7 +1374,6 @@ void Renderer::UpdateMaterialUBO(const graphics::MaterialUBO& materialData)
 		
 		// Additional debug information
 		EE_CORE_ERROR("MaterialUBO contents preview:");
-		EE_CORE_ERROR("  albedo: [{0}, {1}, {2}, {3}]", materialData.albedo.x, materialData.albedo.y, materialData.albedo.z, materialData.albedo.w);
 		EE_CORE_ERROR("  metallic: {0}, roughness: {1}, ao: {2}", materialData.metallic, materialData.roughness, materialData.ao);
 		EE_CORE_ERROR("  normalStrength: {0}, shadingModel: {1}", materialData.normalStrength, materialData.shadingModel);
 	}
@@ -1808,24 +1807,22 @@ bool Renderer::IsTransparentMaterial(const Ermine::graphics::Material* material)
 {
 	if (!material) return false;
 
-	// Check if material has albedo with alpha for transparency
-	if (auto albedoParam = material->GetParameter("materialAlbedo")) {
-		if (albedoParam->type == MaterialParamType::VEC4 &&
-			albedoParam->floatValues.size() >= 4) {
-			float alpha = albedoParam->floatValues[3];
-			return alpha < 0.99f; // Consider transparent if alpha < 99%
+	// Check if material has dedicated transparency parameter
+	if (auto transparencyParam = material->GetParameter("materialTransparency")) {
+		if (transparencyParam->type == MaterialParamType::FLOAT &&
+			transparencyParam->floatValues.size() >= 1) {
+			float transparency = transparencyParam->floatValues[0];
+			return transparency > 0.01f; // Consider transparent if transparency > 1%
 		}
-		// If albedo is Vec3, check if material has an albedo texture with alpha
-		else if (albedoParam->type == MaterialParamType::VEC3) {
-			// Check if there's an albedo texture that might have alpha
-			if (auto albedoTexParam = material->GetParameter("materialAlbedoMap")) {
-				if (albedoTexParam->type == MaterialParamType::TEXTURE_2D && 
-					albedoTexParam->texture && albedoTexParam->texture->IsValid()) {
-					// For texture-based materials, we can't easily check alpha without loading the texture
-					// For now, assume opaque unless explicitly marked as transparent
-					return false;
-				}
-			}
+	}
+
+	// Fallback: Check if there's an albedo texture that might have alpha
+	if (auto albedoTexParam = material->GetParameter("materialAlbedoMap")) {
+		if (albedoTexParam->type == MaterialParamType::TEXTURE_2D && 
+			albedoTexParam->texture && albedoTexParam->texture->IsValid()) {
+			// For texture-based materials, we can't easily check alpha without loading the texture
+			// For now, assume opaque unless explicitly marked as transparent
+			return false;
 		}
 	}
 

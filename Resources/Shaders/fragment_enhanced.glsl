@@ -11,7 +11,7 @@ out vec4 FragColor;
 
 // Material uniform block - must match MaterialUBO structure exactly
 layout (std140) uniform MaterialBlock {
-    vec4 albedo;                  // 16 bytes (0-15)
+    vec3 albedo;                  // 12 bytes + 4 padding = 16 bytes - changed back to vec3
     float metallic;               // 4 bytes (16-19)
     float roughness;              // 4 bytes (20-23)
     float ao;                     // 4 bytes (24-27)
@@ -34,18 +34,12 @@ layout (std140) uniform MaterialBlock {
     int hasEnvironmentMap;        // 4 bytes (88-91)
     int hasIrradianceMap;         // 4 bytes (92-95)
     
-    // Refraction and transparency parameters
-    float indexOfRefraction;      // 4 bytes (96-99)
-    float transmissionFactor;     // 4 bytes (100-103)
-    int hasRefractionMap;         // 4 bytes (104-107)
+    // Transparency parameters (moved from albedo.alpha to dedicated fields)
+    float transparency;           // 4 bytes (96-99) - 0.0 = opaque, 1.0 = fully transparent
+    float indexOfRefraction;      // 4 bytes (100-103)
+    float transmissionFactor;     // 4 bytes (104-107)
+    int hasRefractionMap;         // 4 bytes (108-111)
     
-    // Padding (not used in shader but needed for alignment)
-    int _padding1;                // 4 bytes (108-111)
-    int _padding2;                // 4 bytes (112-115)
-    int _padding3;                // 4 bytes (116-119)
-    int _padding4;                // 4 bytes (120-123)
-    int _padding5;                // 4 bytes (124-127)
-    // Total: 128 bytes
 } material;
 
 // Separate texture samplers (cannot be in uniform blocks)
@@ -147,7 +141,7 @@ vec3 calculateNormal()
 // Sample material properties with texture support
 vec3 getAlbedo()
 {
-    vec3 albedo = material.albedo.xyz; // Extract xyz from vec4
+    vec3 albedo = material.albedo; // Use vec3 directly
     
     if (material.hasAlbedoMap != 0) {
         vec4 texColor = texture(materialAlbedoMap, TexCoord);
@@ -540,7 +534,7 @@ void main()
         
         // Environment refraction for transparent materials
         vec3 envRefraction = vec3(0.0);
-        float transparency = 1.0 - material.albedo.a; // Calculate transparency from albedo alpha (1.0 - alpha)
+        float transparency = material.transparency; // Use dedicated transparency field
         if (transparency > 0.0 && material.hasRefractionMap != 0) {
             envRefraction = calculateEnvironmentRefraction(norm, viewDir, material.indexOfRefraction);
         }
@@ -590,7 +584,7 @@ void main()
     // Gamma correction
     result = pow(result, vec3(1.0/2.2));
     
-    // Use alpha directly from albedo
-    float alpha = material.albedo.a;
+    // Use alpha from transparency field
+    float alpha = 1.0 - material.transparency; // Convert transparency to alpha (1.0 = opaque, 0.0 = transparent)
     FragColor = vec4(result, alpha);
 }

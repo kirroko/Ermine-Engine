@@ -20,7 +20,7 @@ layout(location = 3) out vec4 gBuffer3; // RT3: Material
 // Material UBO
 layout(std140) uniform MaterialBlock
 {
-    vec4 albedo;                    // 16-byte aligned - changed to vec4 to include alpha
+    vec3 albedo;                    // 12 bytes + 4 padding = 16 bytes - changed back to vec3
     float metallic;                 // 4 bytes
     float roughness;                // 4 bytes  
     float ao;                       // 4 bytes
@@ -28,6 +28,8 @@ layout(std140) uniform MaterialBlock
     float emissiveIntensity;        // 4 bytes
     float normalStrength;           // 4 bytes
     int shadingModel;               // 4 bytes (0 = PBR, 1 = Blinn-Phong)
+    float reflectance;              // 4 bytes
+    float environmentIntensity;     // 4 bytes
     
     // Texture presence flags - MUST be int to match C++ MaterialUBO
     int hasAlbedoMap;               // 4 bytes
@@ -36,9 +38,19 @@ layout(std140) uniform MaterialBlock
     int hasMetallicMap;             // 4 bytes
     int hasAoMap;                   // 4 bytes
     int hasEmissiveMap;             // 4 bytes
+    int hasEnvironmentMap;          // 4 bytes
+    int hasIrradianceMap;           // 4 bytes
+    
+    // Transparency parameters (moved from albedo.alpha to dedicated fields)
+    float transparency;             // 4 bytes - 0.0 = opaque, 1.0 = fully transparent
+    float indexOfRefraction;        // 4 bytes
+    float transmissionFactor;       // 4 bytes
+    int hasRefractionMap;           // 4 bytes
     
     int padding1;                   // 4 bytes
     int padding2;                   // 4 bytes
+    int padding3;                   // 4 bytes
+    int padding4;                   // 4 bytes
 };
 
 // Texture Samplers
@@ -121,7 +133,7 @@ vec3 getNormalFromMap_TBN(sampler2D normalMap, vec2 texCoords, vec3 viewNormal, 
 void main()
 {
     // Sample material properties from textures if available
-    vec3 finalAlbedo = albedo.rgb; // Use RGB components from vec4 albedo
+    vec3 finalAlbedo = albedo; // Use vec3 albedo directly
     if (hasAlbedoMap != 0)
     {
         vec4 albedoSample = texture(materialAlbedoMap, TexCoord);

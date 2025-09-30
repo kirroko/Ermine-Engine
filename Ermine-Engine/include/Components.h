@@ -310,7 +310,17 @@ namespace Ermine
 		*/
 		void SetAlbedo(const Vec3& albedo)
 		{
-			if (m_material) m_material->SetVec3("material.albedo", albedo);
+			if (m_material) m_material->SetVec3("materialAlbedo", albedo);
+		}
+
+		/**
+		* @brief Sets the transparency for the material.
+		* @details Transparency defines how transparent the material is. 0.0 = opaque, 1.0 = fully transparent.
+		* @param transparency A float representing the transparency of the material.
+		*/
+		void SetTransparency(float transparency)
+		{
+			if (m_material) m_material->SetFloat("materialTransparency", transparency);
 		}
 
 		/**
