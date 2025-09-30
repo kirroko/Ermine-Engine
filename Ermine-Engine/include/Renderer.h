@@ -4,7 +4,8 @@
 \author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu
 \co-author  Jeremy Lim Ting Jie, jeremytingjie.lim, 2301370, jeremytingjie.lim\@digipen.edu
 \co-author  Ridhwan Afandi, mohamedridhwan.b, 2301367, mohamedridhwan.b\@digipen.edu
-\date       09/29/2025
+\co-author  Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu
+\date       27/09/2025
 \brief      This file contains the declaration of the Renderer system.
             This file is used to render the game objects to the screen.
 
@@ -100,6 +101,18 @@ namespace Ermine::graphics
         float m_BloomIntensity = 2.0f;
         float m_BloomRadius = 5.0f;
 
+        // Maximum bone array size expected in shader
+        static constexpr int MAX_BONE_UNIFORMS = 128;
+
+        /**
+         * @brief To run the pass and read GL_STENCIL_INDEX at a pixel
+         * @param x The x coordinate from the framebuffer
+         * @param y The y coordinate from the framebuffer
+         * @param view camera view matrix
+         * @param projection camera projection matrix
+         * @return
+         */
+        std::pair<bool, EntityID> PickEntityAt(const int& x, const int& y, const Mtx44& view, const Mtx44& projection);
 
         /**
          * @brief Initialize the renderer with the screen width and height.
@@ -145,10 +158,10 @@ namespace Ermine::graphics
                 return k_texture < other.k_texture;
             }
         };
-        
-         /**
-		 * @brief G buffer structure for rendering to Lighting pass
-		 */
+
+        /**
+        * @brief G buffer structure for rendering to Lighting pass
+        */
         //~Renderer();
         struct GBuffer
         {
@@ -162,13 +175,13 @@ namespace Ermine::graphics
             uint64_t HandlePackedTexture2 = 0;
             uint64_t HandlePackedTexture3 = 0;
             uint64_t HandleDepthTexture = 0;
-            
+
 
             unsigned int PackedTexture0;
             unsigned int PackedTexture1;
-			unsigned int PackedTexture2;
-			unsigned int PackedTexture3;
-            
+            unsigned int PackedTexture2;
+            unsigned int PackedTexture3;
+
 
 
             int width;
@@ -176,22 +189,22 @@ namespace Ermine::graphics
         };
 
 
-         /**
-		 * @brief PostProcessing buffer structure for each post-processing effect
-		 */
-		struct PostProcessBuffer
+        /**
+        * @brief PostProcessing buffer structure for each post-processing effect
+        */
+        struct PostProcessBuffer
         {
-			unsigned int FBO;
-			unsigned int ColorTexture;
-			unsigned int DepthTexture = 0; // Optional depth texture for skybox rendering
+            unsigned int FBO;
+            unsigned int ColorTexture;
+            unsigned int DepthTexture = 0; // Optional depth texture for skybox rendering
 
-			int width;
-			int height;
+            int width;
+            int height;
         };
 
 
         /**
-		 * @brief Destructor - cleans up allocated resources
+         * @brief Destructor - cleans up allocated resources
          */
         ~Renderer();
 
@@ -208,7 +221,7 @@ namespace Ermine::graphics
          * @brief Resize the offscreen buffer to new dimensions without recreating the FBO
          * @param width New width
          * @param height New height
-		 */
+         */
         void ResizeOffscreenBuffer(const int& width, const int& height);
 
         /**
@@ -220,9 +233,9 @@ namespace Ermine::graphics
 
 
         /**
-		 * @brief Create post-processing buffer
-		 * @param width The width of the post-processing buffer
-		 * @param height The height of the post-processing buffer
+         * @brief Create post-processing buffer
+         * @param width The width of the post-processing buffer
+         * @param height The height of the post-processing buffer
          */
         void CreatePostProcessBuffer(const int& width, const int& height);
 
@@ -273,7 +286,7 @@ namespace Ermine::graphics
         void RenderLightingPass(const Mtx44& view, const Mtx44& projection);
 
         /**
-		 * @brief Render Post-processing effects using the lighting pass output
+         * @brief Render Post-processing effects using the lighting pass output
          */
         void RenderPostProcessPass();
 
@@ -293,9 +306,9 @@ namespace Ermine::graphics
         std::shared_ptr<OffscreenBuffer> GetOffscreenBuffer() const { return m_OffscreenBuffer; }
         std::shared_ptr<GBuffer> GetGBuffer() const { return m_GBuffer; }
 
-         /**
-         * @brief Cleanup g-buffer resources
-         */
+        /**
+        * @brief Cleanup g-buffer resources
+        */
         void CleanupGBuffer();
 
         /**
@@ -358,19 +371,52 @@ namespace Ermine::graphics
          * @param shader The shader program to which the material block should be bound.
          */
         void BindMaterialBlockIfPresent(const std::shared_ptr<Shader>& shader);
-
         /**
-		 * @brief Toggles the flag for using deferred rendering.
+         * @brief Toggles between forward and deferred rendering pipelines.
+         *
+         * This function flips the internal flag @c m_UseDeferredRendering. When enabled,
+         * all rendering will go through the deferred pipeline using a G-buffer and lighting pass.
+         * When disabled, rendering falls back to forward shading, where each object is drawn directly
+         * with its material and lighting applied in a single pass.
+         *
+         * It also logs a message indicating the current rendering mode.
          */
         void ToggleDeferredRendering();
+        /**
+         * @brief Renders a model using the deferred rendering pipeline.
+         *
+         * In this mode, the function uses the shared G-buffer shader (@c m_GBufferShader) to
+         * write geometry data (position, normals, material properties) into the G-buffer.
+         * Per-entity materials are not bound as shaders, but their UBO data (albedo, metallic,
+         * roughness, emissive, etc.) is uploaded to the GPU so the G-buffer can store them.
+         *
+         * @param model The model to render, containing mesh geometry and local transforms.
+         * @param material Pointer to the material providing UBO data (albedo, metallic, etc.).
+         * @param view The view matrix representing the camera transform.
+         * @param projection The projection matrix (perspective or orthographic).
+         * @param rootTransform Root transform matrix for the entity (translation, rotation, scale).
+         */
+        void RenderModelDeferred(const Model& model, graphics::Material* material, const Mtx44& view, const Mtx44& projection, const glm::mat4& rootTransform);
+        /**
+         * @brief Renders a model using the forward rendering pipeline.
+         *
+         * In this mode, the function binds the entity's own material and its shader, then
+         * issues draw calls for each mesh in the model. Lighting and material shading are
+         * evaluated directly during rasterization (per-fragment).
+         *
+         * @param model The model to render, containing mesh geometry and local transforms.
+         * @param material Pointer to the material to bind, providing textures and shader.
+         * @param view The view matrix representing the camera transform.
+         * @param projection The projection matrix (perspective or orthographic).
+         * @param rootTransform Root transform matrix for the entity (translation, rotation, scale).
+         */
+        void RenderModelForward(const Model& model, graphics::Material* material, const Mtx44& view, const Mtx44& projection, const glm::mat4& rootTransform);
 
         /**
          * @brief Set the skybox to be rendered
          * @param skybox Pointer to the skybox to render
          */
         void SetSkybox(graphics::Skybox* skybox) { m_skybox = skybox; }
-
-        void RenderModel(const Model& model, const Mtx44& view, const Mtx44& projection, const glm::mat4& rootTransform);
 
 
 #pragma region ShadowMapMemberFunctions
@@ -494,16 +540,16 @@ namespace Ermine::graphics
         std::shared_ptr<Shader> m_LightPassShader = 0; // Shader for lighting pass
 
 
-		// Post-processing buffer
-		std::shared_ptr<PostProcessBuffer> m_PostProcessBuffer;
-		std::shared_ptr<PostProcessBuffer> m_BloomExtractBuffer;
+        // Post-processing buffer
+        std::shared_ptr<PostProcessBuffer> m_PostProcessBuffer;
+        std::shared_ptr<PostProcessBuffer> m_BloomExtractBuffer;
         std::shared_ptr<PostProcessBuffer> m_BloomBlurBuffer1;
         std::shared_ptr<PostProcessBuffer> m_BloomBlurBuffer2;
-		std::shared_ptr<Shader> m_BloomShader = 0; // Shader for bloom effect
-		std::shared_ptr<Shader> m_PostProcessShader = 0; // Shader for post-processing effects
+        std::shared_ptr<Shader> m_BloomShader = 0; // Shader for bloom effect
+        std::shared_ptr<Shader> m_PostProcessShader = 0; // Shader for post-processing effects
 
-		// Skybox
-		graphics::Skybox* m_skybox = nullptr;
+        // Skybox
+        Skybox* m_skybox = nullptr;
 
         // Shadow mapping
         std::shared_ptr<Shader> m_ShadowMapInstancedShader = nullptr;
@@ -518,6 +564,54 @@ namespace Ermine::graphics
 
         void BindMaterialTextures(Ermine::graphics::Material* material);
 
+        // Picking (stencil) helpers
+        struct PickingBuffer
+        {
+            GLuint FBO = 0;
+            GLuint ColorID = 0; // GL_R32UI
+            GLuint Depth = 0; // GL_DEPTH24
+            int width = 0;
+            int height = 0;
+        };
 
+        std::shared_ptr<PickingBuffer> m_PickingBuffer;
+        std::shared_ptr<Shader> m_PickingShader = nullptr;
+
+        /**
+         * @brief Create an offscreen buffer for entity picking using stencil buffer
+         * @param width The width of the picking buffer
+         * @param height The height of the picking buffer
+         */
+        void CreatePickingBuffer(const int& width, const int& height);
+        /**
+         * @brief Resize the picking buffer to new dimensions without recreating the FBO
+         * @param width New width
+         * @param height New height
+         */
+        void ResizePickingBuffer(const int& width, const int& height);
+        /**
+         * @brief Render entities into the offscreen FBO's stencil buffer using camera VP and G-Buffer depth.
+         * @param view the camera view matrix
+         * @param projection the camera projection matrix
+         */
+        void RenderPickingPass(const Mtx44& view, const Mtx44& projection);
+
+        /**
+         * @brief Converts an Ermine::Mtx44 matrix to a glm::mat4 matrix.
+         *
+         * This function takes a 4x4 matrix of type Ermine::Mtx44 and converts it into
+         * a glm::mat4 by directly mapping each element from row-major to the glm matrix.
+         *
+         * @param m The source 4x4 matrix in Ermine::Mtx44 format.
+         * @return glm::mat4 A glm 4x4 matrix containing the same values as @p m.
+         */
+        inline glm::mat4 ToGlm(const Ermine::Mtx44& m) {
+            return glm::mat4(
+                m.m00, m.m01, m.m02, m.m03,
+                m.m10, m.m11, m.m12, m.m13,
+                m.m20, m.m21, m.m22, m.m23,
+                m.m30, m.m31, m.m32, m.m33
+            );
+        }
     };
 }

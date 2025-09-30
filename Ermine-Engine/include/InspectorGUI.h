@@ -12,6 +12,7 @@ namespace Ermine
         InspectorGUI(EntityID entity, std::string name = "Inspector");
 
         void SetEntity(EntityID entity);
+		EntityID GetEntity() const { return m_entity; }
 
         void Render() override;  // defined in .cpp
 

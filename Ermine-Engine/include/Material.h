@@ -237,6 +237,7 @@ namespace Ermine::graphics
         // Texture slots management
         std::map<std::string, int> m_textureSlots;
         int m_nextTextureSlot = 0;
+        std::unordered_map<std::string, std::shared_ptr<Cubemap>> cubemaps;
 
         // UBO management
         mutable MaterialUBO m_materialData;
@@ -452,6 +453,10 @@ namespace Ermine::graphics
                 m_uboDirty = true;
             }
             return *this;
+        }
+
+        const std::unordered_map<std::string, std::shared_ptr<Cubemap>>& GetCubemaps() const {
+            return cubemaps;
         }
     };
 

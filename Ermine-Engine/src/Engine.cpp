@@ -33,12 +33,20 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Particles.h"
 #include "Physics.h"
 #include "InspectorGUI.h"
+#include "ViewPortGUI.h"
 #include "AudioImGUI.h"
+#include "MathVector.h"
+#include "FiniteStateMachine.h"
 #include "Skybox.h"
 #include "Cubemap.h"
 #include <random>
 
 #include "ScriptSystem.h"
+#include "AnimationManager.h"
+#include "Scene.h"
+#include "HierarchyInspector.h"
+#include "HierarchyPanel.h"
+#include "HierarchySystem.h"
 
 using namespace Ermine;
 
@@ -65,6 +73,18 @@ namespace
 		if (breakAlloc != -1)
 			_CrtSetBreakAlloc(breakAlloc);
 	}
+
+	std::unique_ptr<Ermine::StateManager> s_FSMManager;
+	//EntityID s_FSMCube = 0;
+	EntityID fbxEntity = 0;
+
+	IdleState g_IdleState;
+	RoamState g_RoamState;
+
+	float s_StateTimer = 0.0f;
+	float s_StateDuration = 3.0f; // switch every 3 seconds
+
+	State* g_CurrentState = nullptr;
 }
 
 bool engine::Init(GLFWwindow* windowContext)
@@ -107,6 +127,8 @@ bool engine::Init(GLFWwindow* windowContext)
 		}
 	}
 
+	CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+
 	EnableMemoryLeakChecking();
 
 	Input::Init(windowContext);
@@ -118,32 +140,33 @@ bool engine::Init(GLFWwindow* windowContext)
 	job::Initialize();
 
 	ECS::GetInstance().Init();
-	EE_CORE_INFO("ECS Initialized");
-	EE_CORE_TRACE("Begin Registering of Components and Systems...");
 
 	AudioSystem::Init();
-	EE_CORE_INFO("AudioSystem Initialized");
 
-	// TODO: Register all components here, limit of 32 components
+	// TODO: Register all components here, limit of 255 components
 	EE_AUTO_REGISTER_COMPONENT(Transform, "Transform")
-		EE_AUTO_REGISTER_COMPONENT(Rigidbody3D, "Rigidbody3D")
-		EE_AUTO_REGISTER_COMPONENT(Mesh, "Mesh")
-		EE_AUTO_REGISTER_COMPONENT(Material, "Material")
-		EE_AUTO_REGISTER_COMPONENT(ObjectMetaData, "ObjectMetaData")
-		EE_AUTO_REGISTER_COMPONENT(Light, "Light")
-		EE_AUTO_REGISTER_COMPONENT(Particle, "Particle")
-		EE_AUTO_REGISTER_COMPONENT(AudioComponent, "AudioComponent")
-		EE_AUTO_REGISTER_COMPONENT(GlobalAudioComponent, "GlobalAudioComponent")
-		EE_AUTO_REGISTER_COMPONENT(ModelComponent, "ModelComponent")
+	EE_AUTO_REGISTER_COMPONENT(Rigidbody3D, "Rigidbody3D")
+	EE_AUTO_REGISTER_COMPONENT(Mesh, "Mesh")
+	EE_AUTO_REGISTER_COMPONENT(Material, "Material")
+	EE_AUTO_REGISTER_COMPONENT(ObjectMetaData, "ObjectMetaData")
+	EE_AUTO_REGISTER_COMPONENT(Light, "Light")
+	EE_AUTO_REGISTER_COMPONENT(Particle, "Particle")
+	EE_AUTO_REGISTER_COMPONENT(AudioComponent, "AudioComponent")
+	EE_AUTO_REGISTER_COMPONENT(GlobalAudioComponent, "GlobalAudioComponent")
+	EE_AUTO_REGISTER_COMPONENT(PhysicComponent, "PhysicComponent")
+	EE_AUTO_REGISTER_COMPONENT(ModelComponent, "ModelComponent")
+	EE_AUTO_REGISTER_COMPONENT(AnimationComponent, "AnimationComponent")
+	EE_AUTO_REGISTER_COMPONENT(HierarchyComponent, "HierarchyComponent");
 
-		// Special Case for Script component
-		ECS::GetInstance().RegisterComponent<Script>("Script",
-			[](Ermine::ComponentManager& cm, EntityID src, EntityID dst)
-			{
-				if (!cm.HasComponent<Script>(src)) return;
-				auto& srcScript = cm.GetComponent<Script>(src);
-				cm.AddComponent<Script>(dst, Script(srcScript.m_className, dst));
-			});
+	// Special Case for Script component, need to copy over the class name
+	ECS::GetInstance().RegisterComponent<Script>("Script",
+		[](Ermine::ComponentManager& cm, EntityID src, EntityID dst)
+		{
+			if (!cm.HasComponent<Script>(src)) return;
+			auto& srcScript = cm.GetComponent<Script>(src);
+			cm.AddComponent<Script>(dst, Script(srcScript.m_className, dst));
+		});
+
 
 	// Register all systems
 	ECS::GetInstance().RegisterSystem<graphics::Renderer>();
@@ -151,6 +174,13 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().RegisterSystem<AudioSystem>();
 	ECS::GetInstance().RegisterSystem<ParticleSystem>();
 	ECS::GetInstance().RegisterSystem<graphics::LightSystem>();
+	ECS::GetInstance().RegisterSystem<graphics::AnimationManager>();
+	ECS::GetInstance().RegisterSystem<HierarchySystem>();
+
+	//Register JPH::TempAllocatorImpl for Physcis
+	RegisterDefaultAllocator();
+	ECS::GetInstance().RegisterSystem<Physics>();
+	ECS::GetInstance().GetSystem<Physics>()->Init();
 
 	// Set system signatures
 	SignatureID sig;
@@ -159,10 +189,12 @@ bool engine::Init(GLFWwindow* windowContext)
 	sig.set(ECS::GetInstance().GetComponentType<Material>());
 	ECS::GetInstance().SetSystemSignature<graphics::Renderer>(sig);
 
+	// For Script system
 	sig.reset();
 	sig.set(ECS::GetInstance().GetComponentType<Script>());
 	ECS::GetInstance().SetSystemSignature<scripting::ScriptSystem>(sig);
 
+	// For Audio system
 	sig.reset();
 	sig.set(ECS::GetInstance().GetComponentType<AudioComponent>());
 	sig.set(ECS::GetInstance().GetComponentType<Transform>());
@@ -176,11 +208,29 @@ bool engine::Init(GLFWwindow* windowContext)
 	sig.set(ECS::GetInstance().GetComponentType<Particle>());
 	ECS::GetInstance().SetSystemSignature<ParticleSystem>(sig);
 
+	// For Physics
+	sig.reset();
+	sig.set(ECS::GetInstance().GetComponentType<PhysicComponent>());
+	sig.set(ECS::GetInstance().GetComponentType<Transform>());
+	ECS::GetInstance().SetSystemSignature<Physics>(sig);
+
 	// Lights
 	sig.reset();
 	sig.set(ECS::GetInstance().GetComponentType<Light>());
 	sig.set(ECS::GetInstance().GetComponentType<Transform>());
 	ECS::GetInstance().SetSystemSignature<graphics::LightSystem>(sig);
+
+	// For Animation system
+	sig.reset();
+	sig.set(ECS::GetInstance().GetComponentType<AnimationComponent>());
+	sig.set(ECS::GetInstance().GetComponentType<ModelComponent>());
+	ECS::GetInstance().SetSystemSignature<graphics::AnimationManager>(sig);
+	
+	// For Hierarchy System
+	SignatureID hierarchySig;
+	hierarchySig.set(ECS::GetInstance().GetComponentType<HierarchyComponent>());
+	hierarchySig.set(ECS::GetInstance().GetComponentType<Transform>());
+	ECS::GetInstance().SetSystemSignature<HierarchySystem>(hierarchySig);
 
 	glfwSetFramebufferSizeCallback(windowContext, []([[maybe_unused]] GLFWwindow* window, int width, int height)
 		{
@@ -232,30 +282,47 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	// Audio test entity
 	auto audioTestEntity = ECS::GetInstance().CreateEntity();
-	ECS::GetInstance().AddComponent<Transform>(audioTestEntity, Transform(Vec3(2, 0, -1), Quaternion(), Vec3(1, 1, 1)));
-	ECS::GetInstance().AddComponent<ObjectMetaData>(audioTestEntity, ObjectMetaData());
+	ECS::GetInstance().AddComponent(audioTestEntity, Transform(Vec3(2, 0, -1), Quaternion(), Vec3(1, 1, 1)));
+	ECS::GetInstance().AddComponent(audioTestEntity, ObjectMetaData());
+	ECS::GetInstance().AddComponent<Ermine::HierarchyComponent>(audioTestEntity, Ermine::HierarchyComponent{});
 
 	AudioComponent testAudio;
 	ECS::GetInstance().AddComponent(audioTestEntity, testAudio);
-	EE_CORE_INFO("Audio test entity created with ID: {}", audioTestEntity);
+	EE_CORE_INFO("Audio test entity created with ID: {} - will auto-play", audioTestEntity);
 
 	// Example FBX entity
-	auto fbxEntity = ECS::GetInstance().CreateEntity();
-	ECS::GetInstance().AddComponent<Transform>(fbxEntity, Transform(Vec3(0, 0, -1), Quaternion(), Vec3(0.01f, 0.01f, 0.01f)));
-	ECS::GetInstance().AddComponent<ObjectMetaData>(fbxEntity, ObjectMetaData("Character", "Model", true));
-	ECS::GetInstance().AddComponent<Mesh>(fbxEntity, Mesh{});
-	ECS::GetInstance().AddComponent<ModelComponent>(fbxEntity, ModelComponent(AssetManager::GetInstance().LoadModel("../Resources/Models/Walking.fbx")));
+	fbxEntity = ECS::GetInstance().CreateEntity();
+	auto model = AssetManager::GetInstance().LoadModel("../Resources/Models/Walking.fbx");
+	ECS::GetInstance().AddComponent(fbxEntity, Transform(Vec3(2, -0.5f, 0), Quaternion(), Vec3(0.01f, 0.01f, 0.01f)));
+	//ECS::GetInstance().AddComponent(
+	//	fbxEntity,
+	//	PhysicComponent(
+	//		PhysicsBodyType::Rigid,         // "rigid body", "trigger"
+	//		JPH::EMotionType::Dynamic,      // static, dynamic, or kinematic
+	//		1.0f,                            // mass ( 0 for static , else is dynamic)
+	//		ShapeType::Capsule				// Box, Sphere, Capsule, CustomMesh(need pass vertex)
+	//	));
+	ECS::GetInstance().AddComponent(fbxEntity, ObjectMetaData("Character", "Model", true));
+	ECS::GetInstance().AddComponent(fbxEntity, Mesh{}); // empty mesh component for renderer signature
+	ECS::GetInstance().AddComponent(fbxEntity, ModelComponent(model));
+	ECS::GetInstance().AddComponent<Ermine::HierarchyComponent>(fbxEntity, Ermine::HierarchyComponent{});
 
-	auto cubeFBXMaterial = std::make_unique<graphics::Material>(shader);
-	auto fbxTexture = AssetManager::GetInstance().LoadTexture("../Resources/Textures/Pants_Base_color.png");
-	cubeFBXMaterial->LoadTemplate(graphics::MaterialTemplates::PBR_METAL());
-
-	if (fbxTexture && fbxTexture->IsValid()) {
-		cubeFBXMaterial->SetTexture("materialAlbedoMap", fbxTexture);
-		cubeFBXMaterial->SetBool("materialHasAlbedoMap", true);
+	// Adding animation component
+	const aiScene* scene = model->GetAssimpScene(); // Read animations from aiScene
+	if (scene && scene->mNumAnimations > 0) {
+		ECS::GetInstance().AddComponent(fbxEntity, AnimationComponent(model));
 	}
 
-	ECS::GetInstance().AddComponent(fbxEntity, Material(std::move(cubeFBXMaterial)));
+	// Adding material component
+	auto FBXMaterial = std::make_unique<graphics::Material>(shader);
+	auto fbxTexture = AssetManager::GetInstance().LoadTexture("../Resources/Textures/Pants_Base_color.png");
+	FBXMaterial->LoadTemplate(graphics::MaterialTemplates::PBR_WHITE());
+
+	if (fbxTexture && fbxTexture->IsValid()) {
+		FBXMaterial->SetTexture("materialAlbedoMap", fbxTexture);
+		FBXMaterial->SetBool("materialHasAlbedoMap", true);
+	}
+	ECS::GetInstance().AddComponent(fbxEntity, Material(std::move(FBXMaterial)));
 
 	// Create a simple quad mesh for particles
 	auto quadMesh = graphics::GeometryFactory::CreateQuad(1.0f, 1.0f);
@@ -264,19 +331,57 @@ bool engine::Init(GLFWwindow* windowContext)
 	// Particles Emitter
 	emitter = std::make_unique<ParticleEmitter>(quadMesh, shader, tex);
 
-	RegisterDefaultAllocator();
+	// Create first cube
+	//auto entity = ECS::GetInstance().CreateEntity();
+	//ECS::GetInstance().AddComponent(entity, Transform(Vec3(0, -1, -1), FromEulerDegrees(0.0f, 0.0f, 0.0f), Vec3(5, 0.1f, 5)));
+	//ECS::GetInstance().AddComponent(entity, ObjectMetaData());
+	//ECS::GetInstance().AddComponent(entity, graphics::GeometryFactory::CreateCube(1, 1, 1));
+	//ECS::GetInstance().AddComponent(
+	//	entity,
+	//	PhysicComponent(
+	//		PhysicsBodyType::Rigid,        // "rigid body", "trigger"
+	//		JPH::EMotionType::Static,      // static, dynamic, or kinematic
+	//		0.0f,                          // mass ( 0 for static , else is dynamic)
+	//		ShapeType::Box				   // Box, Sphere, Capsule, CustomMesh(need pass vertex)
+	//	));
 
-	gPhysics = new Physics();
-	gPhysics->Init();
-	gPhysics->CreatePhysicsBox(Vec3(0, 5, 0), Vec3(1, 1, 1), 1.0f);
-	gPhysics->CreatePhysicsBox(Vec3(0, 8, 0), Vec3(1, 1, 1), 1.0f);
-	gPhysics->CreatePhysicsBox(Vec3(0, 0, 0), Vec3(1, 1, 1), 0.0f);
+	////InspectorGUI inspector{ entity, "Inspector" };
+	////inspector.SetEntity(entity);
 
-	// This is the floor  
+	//// Create material using UBO template
+	//auto cubeMaterial = std::make_unique<graphics::Material>(shader);
+	//cubeMaterial->LoadTemplate(graphics::MaterialTemplates::PBR_WHITE());
+
+	//// Set texture if available
+	//if (texture && texture->IsValid()) {
+	//	cubeMaterial->SetTexture("materialAlbedoMap", texture);
+	//	cubeMaterial->SetTexture("texture0", texture); // Fallback for compatibility
+	//}
+
+	//ECS::GetInstance().AddComponent(entity, Material(std::move(cubeMaterial)));
+
+	// Create second cube  
 	auto entity2 = ECS::GetInstance().CreateEntity();
-	ECS::GetInstance().AddComponent<Transform>(entity2, Transform(Vec3(0, -1, 0), Quaternion(), Vec3(100, 0.1f, 100)));
-	ECS::GetInstance().AddComponent<ObjectMetaData>(entity2, ObjectMetaData());
-	ECS::GetInstance().AddComponent<Mesh>(entity2, graphics::GeometryFactory::CreateCube(1, 1, 1));
+	ECS::GetInstance().AddComponent(entity2, Transform(Vec3(0, -1, 0), Quaternion(), Vec3(100, 0.1f, 100)));
+	ECS::GetInstance().AddComponent(entity2, ObjectMetaData());
+	ECS::GetInstance().AddComponent(entity2, graphics::GeometryFactory::CreateCube(1, 1, 1));
+	//ECS::GetInstance().AddComponent(
+	//	entity2,
+	//	PhysicComponent(
+	//		PhysicsBodyType::Rigid,        // "rigid body", "trigger"
+	//		JPH::EMotionType::Static,      // static, dynamic, or kinematic
+	//		1.0f,                          // mass ( 0 for static , else is dynamic)
+	//		ShapeType::Box				   // Box, Sphere, Capsule, CustomMesh(need pass vertex)
+	//	));
+
+	ECS::GetInstance().AddComponent<Ermine::HierarchyComponent>(entity2, Ermine::HierarchyComponent{});
+
+	//auto& mesh = ECS::GetInstance().GetComponent<Mesh>(entity2);
+	//mesh.kind = Mesh::Kind::Primitive;
+	//mesh.primitive.type = "Cube";
+	//mesh.primitive.size = { 1,1,1 };
+
+	//ECS::GetInstance().AddComponent(entity2, HierarchyComponent());
 
 	// Apply texture to floor
 	auto cube2Material = std::make_shared<graphics::Material>(shader);
@@ -289,9 +394,10 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	// Create lights with balanced intensities
 	auto mainLightEntity = ECS::GetInstance().CreateEntity();
-	ECS::GetInstance().AddComponent<Transform>(mainLightEntity, Transform(Vec3(0, 4, 2), Quaternion(0.9f, 0.2f, 0.1f, -0.3f), Vec3(1, 1, 1)));
-	ECS::GetInstance().AddComponent<ObjectMetaData>(mainLightEntity, ObjectMetaData("MainLight", "Light", true));
-	ECS::GetInstance().AddComponent<Light>(mainLightEntity, Light(Vec3(1, 1, 1), 0.8f, LightType::DIRECTIONAL, true));
+	ECS::GetInstance().AddComponent(mainLightEntity, Transform(Vec3(0, 4, 2), Quaternion(0.9f, 0.2f, 0.1f, -0.3f), Vec3(1, 1, 1)));
+	ECS::GetInstance().AddComponent(mainLightEntity, ObjectMetaData("MainLight", "Light", true));
+	ECS::GetInstance().AddComponent(mainLightEntity, Light(Vec3(1, 1, 1), 0.8f, LightType::DIRECTIONAL, true));
+	ECS::GetInstance().AddComponent<Ermine::HierarchyComponent>(mainLightEntity, Ermine::HierarchyComponent{});
 
 	auto yellowLightSpot = ECS::GetInstance().CreateEntity();
 	ECS::GetInstance().AddComponent<Transform>(yellowLightSpot, Transform(Vec3(0, 10, 0), Quaternion(0.707f, 0.f, 0.f, 0.707f), Vec3(1, 1, 1)));
@@ -308,6 +414,12 @@ bool engine::Init(GLFWwindow* windowContext)
 	redLightMaterial->LoadTemplate(graphics::MaterialTemplates::EMISSIVE(Vec3(1.0f, 0.f, 0.f), 10.0f));
 	ECS::GetInstance().AddComponent(redLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
 	ECS::GetInstance().AddComponent(redLightEntity, Material(redLightMaterial));
+	ECS::GetInstance().AddComponent<Ermine::HierarchyComponent>(redLightEntity, Ermine::HierarchyComponent{});
+
+	//auto& redlight = ECS::GetInstance().GetComponent<Mesh>(redLightEntity);
+	//redlight.kind = Mesh::Kind::Primitive;
+	//redlight.primitive.type = "Sphere";
+	//redlight.primitive.size = { 0.1f,1,1 };
 
 	// Blue accent light
 	auto blueLightEntity = ECS::GetInstance().CreateEntity();
@@ -319,6 +431,12 @@ bool engine::Init(GLFWwindow* windowContext)
 	blueLightMaterial->LoadTemplate(graphics::MaterialTemplates::EMISSIVE(Vec3(0.f, 0.f, 1.0f), 10.0f));
 	ECS::GetInstance().AddComponent(blueLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
 	ECS::GetInstance().AddComponent(blueLightEntity, Material(blueLightMaterial));
+	ECS::GetInstance().AddComponent<Ermine::HierarchyComponent>(blueLightEntity, Ermine::HierarchyComponent{});
+
+	//auto& bluelight = ECS::GetInstance().GetComponent<Mesh>(blueLightEntity);
+	//bluelight.kind = Mesh::Kind::Primitive;
+	//bluelight.primitive.type = "Sphere";
+	//bluelight.primitive.size = { 0.1f,1,1 };
 
 	// Green accent light
 	auto greenLightEntity = ECS::GetInstance().CreateEntity();
@@ -330,6 +448,15 @@ bool engine::Init(GLFWwindow* windowContext)
 	greenLightMaterial->LoadTemplate(graphics::MaterialTemplates::EMISSIVE(Vec3(0.f, 1.f, 0.0f), 10.0f));
 	ECS::GetInstance().AddComponent(greenLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
 	ECS::GetInstance().AddComponent(greenLightEntity, Material(greenLightMaterial));
+	ECS::GetInstance().AddComponent<Ermine::HierarchyComponent>(greenLightEntity, Ermine::HierarchyComponent{});
+
+	//auto& greenlight = ECS::GetInstance().GetComponent<Mesh>(greenLightEntity);
+	//greenlight.kind = Mesh::Kind::Primitive;
+	//greenlight.primitive.type = "Sphere";
+	//greenlight.primitive.size = { 0.1f,1,1 };
+
+	//after creating all the physic object, update to physic system
+	ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
 
 	// Glass sphere demonstrating refraction
 	auto glassEntity = ECS::GetInstance().CreateEntity();
@@ -377,17 +504,56 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	EE_CORE_INFO("Total living entities after creation: {0}", ECS::GetInstance().GetLivingEntityCount());
 
-	// Init Renderer after objects have been initialised
+	// Create FSM test cube
+	//s_FSMCube = ECS::GetInstance().CreateEntity();
+	//ECS::GetInstance().AddComponent(s_FSMCube, Transform(Vec3(0, 0, -5), Quaternion(), Vec3(1, 1, 1)));
+	//ECS::GetInstance().AddComponent(s_FSMCube, ObjectMetaData("FSM Cube", "TestCube", true));
+	//ECS::GetInstance().AddComponent(s_FSMCube, graphics::GeometryFactory::CreateCube(1, 1, 1));
+
+	//// Give it a material
+	//auto fsmMat = std::make_unique<graphics::Material>(shader);
+	//fsmMat->LoadTemplate(graphics::MaterialTemplates::PBR_METAL());
+	//ECS::GetInstance().AddComponent(s_FSMCube, Material(std::move(fsmMat)));
+
+	// Init FSM
+	s_FSMManager = std::make_unique<StateManager>();
+	s_FSMManager->Init(fbxEntity, &g_IdleState);
+	g_CurrentState = &g_IdleState;
+
+	//EE_CORE_INFO("FSM Test Cube created with ID: {}", s_FSMCube);
+	// Init Renderer after objects haVe been initialised
 	ECS::GetInstance().GetSystem<graphics::Renderer>()->Init(1280, 720);
 
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
-	// Create ImGUI windows
-	editor::EditorGUI::CreateImGUIWindow<ImguiUI::AssetBrowser>();
+	// Create ImGUI window for Asset Browser
+	editor::EditorGUI::CreateImGUIWindow<ImguiUI::AssetBrowser>(); //TODO: Standardize please, do we want namespace ImGui for all window or not
 	editor::EditorGUI::CreateImGUIWindow<ParticlesImGUI>(emitter.get());
 	editor::EditorGUI::CreateImGUIWindow<AudioImGUI>();
-	editor::EditorGUI::CreateImGUIWindow<InspectorGUI>(entity2, "Inspector");
-	editor::EditorGUI::CreateImGUIWindow<editor::GraphicsDebugGUI>("Graphics Debug");
+	// Create ImGUI window for Inspector
+	//editor::EditorGUI::CreateImGUIWindow<InspectorGUI>();
+	//auto* inspector = editor::EditorGUI::CreateImGUIWindow<editor::HierarchyInspector>(editor::EditorGUI::GetActiveScene().get(), "Inspector");
+
+	// hook viewport to same scene
+	//editor::EditorGUI::CreateImGUIWindow<ViewPortGUI>(inspector);
+	InspectorGUI* ref = editor::EditorGUI::CreateImGUIWindow<InspectorGUI>(entity2, "Inspector");
+	editor::EditorGUI::CreateImGUIWindow<ViewPortGUI>(ref);
+
+	// Demonstrate different material sharing strategies:
+	// 1. Use completely shared material (multiple entities, same appearance)
+	//    Example: ECS::GetInstance().AddComponent(anotherEntity, Material(basicWhiteMaterial)); // Same material instance
+	// 2. Create unique materials when needed (entities with unique appearance)
+	//    Example: auto customMaterial = std::shared_ptr<graphics::Material>(shader); // Unique material
+	// 3. Clone and modify shared materials (similar but slightly different materials)
+	//    Example: auto customMaterial = std::shared_ptr<graphics::Material>(*basicWhiteMaterial);  // Copy
+	//             customMaterial->SetFloat("material.roughness", 0.8f);  // Modify the copy
+
+	EE_CORE_INFO("Material system now supports efficient sharing between entities using shared_ptr");
+	EE_CORE_INFO("Systems and components registered successfully, Engine Initialized");
+
+	auto defaultScene = std::make_shared<Scene>("Main Scene");
+	editor::EditorGUI::SetActiveScene(defaultScene);
+	EE_CORE_INFO("Created and set active scene: Main Scene");
 
 	s_isInitialized = true;
 	return true;
@@ -397,6 +563,10 @@ void engine::Shutdown()
 {
 	if (!s_isInitialized)
 		return;
+
+	//const std::filesystem::path scenePath = "Ermine-Engine.scene";
+	//SaveSceneToFile("Ermine-Engine", scenePath);
+	//SaveCurrentScene("Level01");
 
 	Config cfg{};
 	int width, height;
@@ -409,10 +579,10 @@ void engine::Shutdown()
 
 	SaveConfigToFile(cfg, "Ermine-Engine.config", false);
 
+	CoUninitialize();
+
 	AssetManager::GetInstance().Clear();
-	gPhysics->Shutdown();
-	delete gPhysics;
-	gPhysics = nullptr;
+	ECS::GetInstance().GetSystem<Physics>()->Shutdown();
 	emitter.reset();
 
 	graphics::GPUProfiler::Shutdown();
@@ -441,14 +611,15 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 	if (!s_isInitialized)
 		return;
 
+	// Update FrameController
+	FrameController::BeginFrame();
+
 	// Handle shading mode toggle
 	HandleShadingToggle(windowContext);
 
 	// Profiler
 	graphics::GPUProfiler::BeginFrame();
 
-	// Update FrameController
-	FrameController::BeginFrame();
 
 	// Update input states
 	Input::Update();
@@ -459,6 +630,7 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 	while (FrameController::ShouldUpdateFixed())
 	{
 		ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->FixedUpdate();
+		ECS::GetInstance().GetSystem<Physics>()->Update(FrameController::GetFixedDeltaTime());
 	}
 
 	// Other non-fixed logic
@@ -467,10 +639,52 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 
 	// Update editor camera
 	editor::EditorCamera::GetInstance().Update();
-	gPhysics->Update(FrameController::GetDeltaTime());
 
-	// Update particles
+
+	// Simple test to see if we can select an entity and view it in the inspector
+	//if (Input::IsKeyDown(GLFW_KEY_Q))
+	//	InspectorGUI::SetEntity(System::m_Entities);
+
+	/*
+	if (s_isInitialized && emitter)
+	{
+		// Emit x number of particles each frame
+		for (int i = 0; i < 2; i++)
+		{
+			Vec3 vel = { ((rand() % 100) / 100.0f - 0.5f) * 2.0f, 2.0f, 0.0f };
+			emitter->Emit({ 0,0,-3 }, vel, 2.0f, 0.5f, { 1,0,0,1 });
+		}
+	}*/
+	// Update for Particles
 	ECS::GetInstance().GetSystem<ParticleSystem>()->Update(FrameController::GetDeltaTime());
+
+	// FSM Update
+	if (s_FSMManager)
+	{
+		s_FSMManager->Update(FrameController::GetDeltaTime());
+
+		s_StateTimer += FrameController::GetDeltaTime();
+		if (s_StateTimer > s_StateDuration)
+		{
+			s_StateTimer = 0.0f;
+
+			if (g_CurrentState == &g_IdleState)
+			{
+				//s_FSMManager->Init(s_FSMCube, &g_RoamState);
+				s_FSMManager->Init(fbxEntity, &g_RoamState);
+				g_CurrentState = &g_RoamState;
+			}
+			else
+			{
+				//s_FSMManager->Init(s_FSMCube, &g_IdleState);
+				s_FSMManager->Init(fbxEntity, &g_IdleState);
+				g_CurrentState = &g_IdleState;
+			}
+		}
+	}
+
+	// Animation Update
+	ECS::GetInstance().GetSystem<graphics::AnimationManager>()->Update(FrameController::GetDeltaTime());
 }
 
 void engine::Render(GLFWwindow* window)
