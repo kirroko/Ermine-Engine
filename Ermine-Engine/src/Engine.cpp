@@ -348,18 +348,6 @@ bool engine::Init(GLFWwindow* windowContext)
 	////InspectorGUI inspector{ entity, "Inspector" };
 	////inspector.SetEntity(entity);
 
-	//// Create material using UBO template
-	//auto cubeMaterial = std::make_unique<graphics::Material>(shader);
-	//cubeMaterial->LoadTemplate(graphics::MaterialTemplates::PBR_WHITE());
-
-	//// Set texture if available
-	//if (texture && texture->IsValid()) {
-	//	cubeMaterial->SetTexture("materialAlbedoMap", texture);
-	//	cubeMaterial->SetTexture("texture0", texture); // Fallback for compatibility
-	//}
-
-	//ECS::GetInstance().AddComponent(entity, Material(std::move(cubeMaterial)));
-
 	// Create second cube  
 	auto entity2 = ECS::GetInstance().CreateEntity();
 	ECS::GetInstance().AddComponent(entity2, Transform(Vec3(0, -1, 0), Quaternion(), Vec3(100, 0.1f, 100)));
@@ -533,20 +521,13 @@ bool engine::Init(GLFWwindow* windowContext)
 	// Create ImGUI window for Inspector
 	//editor::EditorGUI::CreateImGUIWindow<InspectorGUI>();
 	//auto* inspector = editor::EditorGUI::CreateImGUIWindow<editor::HierarchyInspector>(editor::EditorGUI::GetActiveScene().get(), "Inspector");
+		//Create ImGUI window for Graphics
+	editor::EditorGUI::CreateImGUIWindow<editor::GraphicsDebugGUI>("Graphics Debug");
 
 	// hook viewport to same scene
 	//editor::EditorGUI::CreateImGUIWindow<ViewPortGUI>(inspector);
 	InspectorGUI* ref = editor::EditorGUI::CreateImGUIWindow<InspectorGUI>(entity2, "Inspector");
 	editor::EditorGUI::CreateImGUIWindow<ViewPortGUI>(ref);
-
-	// Demonstrate different material sharing strategies:
-	// 1. Use completely shared material (multiple entities, same appearance)
-	//    Example: ECS::GetInstance().AddComponent(anotherEntity, Material(basicWhiteMaterial)); // Same material instance
-	// 2. Create unique materials when needed (entities with unique appearance)
-	//    Example: auto customMaterial = std::shared_ptr<graphics::Material>(shader); // Unique material
-	// 3. Clone and modify shared materials (similar but slightly different materials)
-	//    Example: auto customMaterial = std::shared_ptr<graphics::Material>(*basicWhiteMaterial);  // Copy
-	//             customMaterial->SetFloat("material.roughness", 0.8f);  // Modify the copy
 
 	EE_CORE_INFO("Material system now supports efficient sharing between entities using shared_ptr");
 	EE_CORE_INFO("Systems and components registered successfully, Engine Initialized");
