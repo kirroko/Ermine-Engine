@@ -74,42 +74,37 @@ namespace Ermine::graphics
     *************************************************************************/
     struct MaterialUBO
     {
-        alignas(16) Vec4 albedo { 0.8f, 0.8f, 0.8f, 1.0f }; // 16 bytes (0-15)
-        alignas(4) float metallic{ 0.0f };                   // 4 bytes (16-19)
-        alignas(4) float roughness{ 0.5f };                  // 4 bytes (20-23)
-        alignas(4) float ao{ 1.0f };                         // 4 bytes (24-27)
-        alignas(4) float normalStrength{ 1.0f };             // 4 bytes (28-31)
-        
-        alignas(16) Vec3 emissive { 0.0f, 0.0f, 0.0f };      // 16 bytes (32-47)
-        alignas(4) float emissiveIntensity{ 0.0f };          // 4 bytes (48-51)
-        alignas(4) int shadingModel{ 0 };                    // 4 bytes (52-55) // 0 = PBR, 1 = Blinn-Phong
-        alignas(4) float reflectance{ 0.04f };               // 4 bytes (56-59)
-        alignas(4) float environmentIntensity{ 1.0f };       // 4 bytes (60-63)
-        
-        // Texture presence flags (packed as ints for std140 compatibility)
-        alignas(4) int hasAlbedoMap{ 0 };        // 4 bytes (64-67)
-        alignas(4) int hasNormalMap{ 0 };        // 4 bytes (68-71)
-        alignas(4) int hasRoughnessMap{ 0 };     // 4 bytes (72-75)
-        alignas(4) int hasMetallicMap{ 0 };      // 4 bytes (76-79)
-        
-        alignas(4) int hasAoMap{ 0 };            // 4 bytes (80-83)
-        alignas(4) int hasEmissiveMap{ 0 };      // 4 bytes (84-87)
-        alignas(4) int hasEnvironmentMap{ 0 };   // 4 bytes (88-91)
-        alignas(4) int hasIrradianceMap{ 0 };    // 4 bytes (92-95)
-        
-        // Refraction parameters (transparency now handled via albedo alpha)
-        alignas(4) float indexOfRefraction{ 1.0f };   // 4 bytes (96-99)   // IOR for refraction (glass ~1.5, water ~1.33)
-        alignas(4) float transmissionFactor{ 0.0f };  // 4 bytes (100-103) // How much light passes through vs reflects
-        alignas(4) int hasRefractionMap{ 0 };         // 4 bytes (104-107) // Whether material uses refraction
-        
-        // Padding to ensure proper alignment (total size should be multiple of 16)
-        alignas(4) int padding1{ 0 };            // 4 bytes (108-111)
-        alignas(4) int padding2{ 0 };            // 4 bytes (112-115)
-        alignas(4) int padding3{ 0 };            // 4 bytes (116-119)
-        alignas(4) int padding4{ 0 };            // 4 bytes (120-123)
-        alignas(4) int padding5{ 0 };            // 4 bytes (124-127)
-        // Total: 128 bytes (multiple of 16)
+        Vec4 albedo{ 0.8f, 0.8f, 0.8f, 1.0f }; // 16 bytes (0-15)
+
+        float metallic{ 0.0f };                  // 4 bytes (16-19)
+        float roughness{ 0.5f };                 // 4 bytes (20-23)
+        float ao{ 1.0f };                        // 4 bytes (24-27)
+        float normalStrength{ 1.0f };            // 4 bytes (28-31)
+
+        Vec3 emissive{ 0.0f, 0.0f, 0.0f };      // 12 bytes (32-43)
+        float emissiveIntensity{ 0.0f };         // 4 bytes (44-47)
+
+        int shadingModel{ 0 };                   // 4 bytes (48-51)
+        float reflectance{ 0.04f };              // 4 bytes (52-55)
+        float environmentIntensity{ 1.0f };      // 4 bytes (56-59)
+        float _pad0{};                           // 4 bytes (60-63)
+
+        int hasAlbedoMap{ 0 };                   // 4 bytes (64-67)
+        int hasNormalMap{ 0 };                   // 4 bytes (68-71)
+        int hasRoughnessMap{ 0 };                // 4 bytes (72-75)
+        int hasMetallicMap{ 0 };                 // 4 bytes (76-79)
+
+        int hasAoMap{ 0 };                       // 4 bytes (80-83)
+        int hasEmissiveMap{ 0 };                 // 4 bytes (84-87)
+        int hasEnvironmentMap{ 0 };              // 4 bytes (88-91)
+        int hasIrradianceMap{ 0 };               // 4 bytes (92-95)
+
+        float indexOfRefraction{ 1.0f };         // 4 bytes (96-99)
+        float transmissionFactor{ 0.0f };        // 4 bytes (100-103)
+        int hasRefractionMap{ 0 };               // 4 bytes (104-107)
+        float _pad1{};                           // 4 bytes (108-111) 
     };
+
 
     // Forward declaration
     class Material;
@@ -122,7 +117,7 @@ namespace Ermine::graphics
         static std::map<std::string, MaterialParam> PBR_RED()
         {
             return {
-                {"materialAlbedo", Vec3(1.0f, 0.0f, 0.0f)},
+                {"materialAlbedo", Vec4(1.0f, 0.0f, 0.0f, 1.0f)},  // Changed from Vec3 to Vec4
                 {"materialMetallic", 0.0f},
                 {"materialRoughness", 0.3f},
                 {"materialAo", 1.0f},
@@ -144,7 +139,7 @@ namespace Ermine::graphics
         static std::map<std::string, MaterialParam> PBR_METAL()
         {
             return {
-                {"materialAlbedo", Vec3(0.7f, 0.7f, 0.8f)},
+                {"materialAlbedo", Vec4(0.7f, 0.7f, 0.8f, 1.0f)},  // Changed from Vec3 to Vec4
                 {"materialMetallic", 1.0f},
                 {"materialRoughness", 0.1f},
                 {"materialAo", 1.0f},
@@ -166,7 +161,7 @@ namespace Ermine::graphics
         static std::map<std::string, MaterialParam> PBR_WHITE()
         {
             return {
-                {"materialAlbedo", Vec3(0.8f, 0.8f, 0.8f)},
+                {"materialAlbedo", Vec4(0.8f, 0.8f, 0.8f, 1.0f)},  // Changed from Vec3 to Vec4
                 {"materialMetallic", 0.0f},
                 {"materialRoughness", 0.3f},
                 {"materialAo", 1.0f},
@@ -189,7 +184,7 @@ namespace Ermine::graphics
         static std::map<std::string, MaterialParam> EMISSIVE(const Vec3& color, float intensity)
         {
             return {
-                {"materialAlbedo", Vec3(0.0f, 0.0f, 0.0f)},
+                {"materialAlbedo", Vec4(0.0f, 0.0f, 0.0f, 1.0f)},  // Changed from Vec3 to Vec4
                 {"materialMetallic", 0.0f},
                 {"materialRoughness", 1.0f},
                 {"materialAo", 1.0f},
@@ -212,7 +207,7 @@ namespace Ermine::graphics
         static std::map<std::string, MaterialParam> PBR_REFLECTIVE(float metallic = 1.0f, float roughness = 0.1f)
         {
             return {
-                {"materialAlbedo", Vec3(0.8f, 0.8f, 0.8f)},
+                {"materialAlbedo", Vec4(0.8f, 0.8f, 0.8f, 1.0f)},
                 {"materialMetallic", metallic},
                 {"materialRoughness", roughness},
                 {"materialAo", 1.0f},

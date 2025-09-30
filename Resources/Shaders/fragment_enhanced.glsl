@@ -10,43 +10,39 @@ in vec3 Bitangent; // For normal mapping
 out vec4 FragColor;
 
 // Material uniform block - must match MaterialUBO structure exactly
-layout (std140) uniform MaterialBlock {
-    vec4 albedo;                  // 16 bytes (0-15)
-    float metallic;               // 4 bytes (16-19)
-    float roughness;              // 4 bytes (20-23)
-    float ao;                     // 4 bytes (24-27)
-    float normalStrength;         // 4 bytes (28-31)
+layout(std140) uniform MaterialBlock
+{
+    vec4 albedo;                    // 16-byte 
+    float metallic;                 // 4 bytes
+    float roughness;                // 4 bytes  
+    float ao;                       // 4 bytes
+    float normalStrength;           // 4 bytes
+
+    vec3 emissive;                  // 12-byte 
+    float emissiveIntensity;        // 4 bytes
+
+    int shadingModel;               // 4 bytes (0 = PBR, 1 = Blinn-Phong)
+    float reflectance;
+    float environmentIntensity;
+    float _pad0;
     
-    vec3 emissive;                // 16 bytes (32-47) - vec3 uses 16 bytes in std140
-    float emissiveIntensity;      // 4 bytes (48-51)
-    int shadingModel;             // 4 bytes (52-55) // 0 = PBR, 1 = Blinn-Phong
-    float reflectance;            // 4 bytes (56-59)
-    float environmentIntensity;   // 4 bytes (60-63)
+    int hasAlbedoMap;               // 4 bytes
+    int hasNormalMap;               // 4 bytes
+    int hasRoughnessMap;            // 4 bytes
+    int hasMetallicMap;             // 4 bytes
+
+    int hasAoMap;                   // 4 bytes
+    int hasEmissiveMap;             // 4 bytes
+    int hasEnvironmentMap;
+    int hasIrradianceMap;
     
-    // Texture presence flags
-    int hasAlbedoMap;             // 4 bytes (64-67)
-    int hasNormalMap;             // 4 bytes (68-71)
-    int hasRoughnessMap;          // 4 bytes (72-75)
-    int hasMetallicMap;           // 4 bytes (76-79)
-    
-    int hasAoMap;                 // 4 bytes (80-83)
-    int hasEmissiveMap;           // 4 bytes (84-87)
-    int hasEnvironmentMap;        // 4 bytes (88-91)
-    int hasIrradianceMap;         // 4 bytes (92-95)
-    
-    // Refraction and transparency parameters
-    float indexOfRefraction;      // 4 bytes (96-99)
-    float transmissionFactor;     // 4 bytes (100-103)
-    int hasRefractionMap;         // 4 bytes (104-107)
-    
-    // Padding (not used in shader but needed for alignment)
-    int _padding1;                // 4 bytes (108-111)
-    int _padding2;                // 4 bytes (112-115)
-    int _padding3;                // 4 bytes (116-119)
-    int _padding4;                // 4 bytes (120-123)
-    int _padding5;                // 4 bytes (124-127)
-    // Total: 128 bytes
-} material;
+    float indexOfRefraction;
+    float transmissionFactor;
+    int hasRefractionMap;
+    float _pad1;                   // 4 bytes
+
+
+}material;
 
 // Separate texture samplers (cannot be in uniform blocks)
 uniform sampler2D materialAlbedoMap;

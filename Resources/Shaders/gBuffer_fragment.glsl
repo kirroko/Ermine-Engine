@@ -20,25 +20,36 @@ layout(location = 3) out vec4 gBuffer3; // RT3: Material
 // Material UBO
 layout(std140) uniform MaterialBlock
 {
-    vec4 albedo;                    // 16-byte aligned - changed to vec4 to include alpha
+    vec4 albedo;                    // 16-byte 
     float metallic;                 // 4 bytes
     float roughness;                // 4 bytes  
     float ao;                       // 4 bytes
-    vec3 emissive;                  // 16-byte aligned
-    float emissiveIntensity;        // 4 bytes
     float normalStrength;           // 4 bytes
+
+    vec3 emissive;                  // 12-byte 
+    float emissiveIntensity;        // 4 bytes 
+
     int shadingModel;               // 4 bytes (0 = PBR, 1 = Blinn-Phong)
+    float reflectance;
+    float environmentIntensity;
+    float _pad0;
     
-    // Texture presence flags - MUST be int to match C++ MaterialUBO
     int hasAlbedoMap;               // 4 bytes
     int hasNormalMap;               // 4 bytes
     int hasRoughnessMap;            // 4 bytes
     int hasMetallicMap;             // 4 bytes
+
     int hasAoMap;                   // 4 bytes
     int hasEmissiveMap;             // 4 bytes
+    int hasEnvironmentMap;
+    int hasIrradianceMap;
     
-    int padding1;                   // 4 bytes
-    int padding2;                   // 4 bytes
+    float indexOfRefraction;
+    float transmissionFactor;
+    int hasRefractionMap;
+    float _pad1;                   // 4 bytes
+
+
 };
 
 // Texture Samplers
