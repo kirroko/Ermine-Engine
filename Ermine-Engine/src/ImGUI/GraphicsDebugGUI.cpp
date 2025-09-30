@@ -123,12 +123,6 @@ void GraphicsDebugGUI::DrawRenderingModeControls()
         
         ImGui::Separator();
         
-        // Deferred vs Forward Rendering Toggle
-        if (ImGui::Button("Toggle Deferred/Forward Rendering")) {
-            renderer->ToggleDeferredRendering();
-        }
-        DrawTooltip("Switch between Deferred Rendering (better for many lights) and Forward Rendering (simpler pipeline)");
-        
         // SSAO Toggle
         if (DrawToggleButton("Screen Space Ambient Occlusion", &renderer->m_SSAOEnabled, 
                             "Enable/disable Screen Space Ambient Occlusion for enhanced depth perception")) {

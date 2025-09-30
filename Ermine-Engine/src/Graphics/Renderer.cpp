@@ -1958,33 +1958,6 @@ void Renderer::RenderTransparentPass(const Mtx44& view, const Mtx44& projection)
 		}
 		texUnit++;
 
-		if (material->HasParameter("materialEmissiveMap")) {
-			std::shared_ptr<Texture> emissive = material->GetParameter("materialEmissiveMap")->texture;
-			if (emissive && emissive->IsValid()) {
-				emissive->Bind(texUnit);
-				shader->SetUniform1i("materialEmissiveMap", texUnit);
-			}
-		}
-		texUnit++;
-
-		// Bind environment maps for refraction/reflection
-		if (material->HasParameter("materialEnvironmentMap")) {
-			std::shared_ptr<Cubemap> env = material->GetParameter("materialEnvironmentMap")->cubemap;
-			if (env && env->IsValid()) {
-				env->Bind(texUnit);
-				shader->SetUniform1i("materialEnvironmentMap", texUnit);
-			}
-		}
-		texUnit++;
-
-		if (material->HasParameter("materialIrradianceMap")) {
-			std::shared_ptr<Cubemap> irradiance = material->GetParameter("materialIrradianceMap")->cubemap;
-			if (irradiance && irradiance->IsValid()) {
-				irradiance->Bind(texUnit);
-				shader->SetUniform1i("materialIrradianceMap", texUnit);
-			}
-		}
-
 		// Render the mesh
 		if (ecs.HasComponent<ModelComponent>(entity)) {
 			// Handle model component
