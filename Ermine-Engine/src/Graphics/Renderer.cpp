@@ -2751,7 +2751,6 @@ void Renderer::RenderShadowMapInstanced()
 	int totalInstances = maxLights * NUM_CASCADES;
 
 	// Set up per-frame uniforms
-	m_ShadowMapInstancedShader->SetUniform1i("u_NumShadowLights", maxLights);
 	for (int i = 0; i < maxLights; ++i) {
 		std::string uniformName = "u_ActiveShadowLights[" + std::to_string(i) + "]";
 		m_ShadowMapInstancedShader->SetUniform1i(uniformName, activeShadowLights[i]);

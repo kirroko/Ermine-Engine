@@ -24,7 +24,6 @@ layout (std430, binding = 1) restrict readonly buffer LightsSSBO {
 
 // Per-frame uniforms - avoid additional SSBOs
 uniform int u_ActiveShadowLights[16];    // Indices of shadow-casting directional lights
-uniform int u_NumShadowLights;           // Number of active shadow-casting lights
 
 // Output for fragment shader
 flat out int v_Layer;
