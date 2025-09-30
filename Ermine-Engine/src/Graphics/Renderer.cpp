@@ -1838,7 +1838,10 @@ void Renderer::RenderModel(const Model& model, const Mtx44& view, const Mtx44& p
 
 			// Tell the shader which texture unit the sampler uses
 			if (shader->HasUniform("materialAlbedoMap"))
-			shader->SetUniform1i("materialAlbedoMap", 0);
+			{
+				shader->SetUniform1i("hasAlbedoMap", 1);
+				shader->SetUniform1i("materialAlbedoMap", 0);
+			}
 		}
 
 		Draw(mesh.vao, mesh.ibo, shader);
