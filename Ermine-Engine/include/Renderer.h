@@ -451,7 +451,7 @@ namespace Ermine::graphics
          * @param view The view matrix
          * @param projection The projection matrix
          */
-        void RenderTransparentPass(const Mtx44& view, const Mtx44& projection);
+        void RenderForwardPass(const Mtx44& view, const Mtx44& projection);
 
         /**
          * @brief Sort transparent objects by distance from camera

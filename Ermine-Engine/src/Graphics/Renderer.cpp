@@ -1014,7 +1014,7 @@ void Renderer::RenderDeferredPipeline(const Mtx44& view, const Mtx44& projection
 	}
 
 	// TRANSPARENCY PASS - render transparent objects using forward rendering
-	RenderTransparentPass(view, projection);
+	RenderForwardPass(view, projection);
 
 	// Post-processing pass - read from lighting + transparency pass output
 	RenderPostProcessPass();
@@ -1892,7 +1892,7 @@ void Renderer::SortTransparentObjects(const Vec3& cameraPos)
 	std::sort(m_transparentObjects.begin(), m_transparentObjects.end());
 }
 
-void Renderer::RenderTransparentPass(const Mtx44& view, const Mtx44& projection)
+void Renderer::RenderForwardPass(const Mtx44& view, const Mtx44& projection)
 {
 	if (m_transparentObjects.empty()) return;
 
