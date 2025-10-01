@@ -2396,74 +2396,32 @@ bool Renderer::testSpotlightFrustumIntersection(const glm::vec3& lightPos, const
 }
 
 /**
- * @brief Calculates the shadow matrix for a spotlight cascade.
+ * @brief Calculates the shadow matrix for a spotlight.
  * Computes a view and orthographic projection matrix that tightly fits the cascade frustum in light space.
  * Applies texel snapping and margin adjustments for stable shadows.
  * @param lightPos Position of the spotlight.
  * @param spotDir Direction vector of the spotlight.
  * @param outerAngleRad Outer angle of the spotlight cone in radians.
  * @param lightRadius Maximum range of the spotlight.
- * @param cascadeFrustum Array of eight frustum corners for the cascade.
- * @param shadowRes Shadow map resolution.
- * @return The spotlight's light-space matrix for the cascade.
- */
-glm::mat4 Renderer::calculateSpotlightCascadeMatrix(const glm::vec3& lightPos, const glm::vec3& spotDir,
-	float outerAngleRad, float lightRadius,
-	const std::array<glm::vec3, 8>& cascadeFrustum,
-	int shadowRes) {
+*/
+glm::mat4 Renderer::calculateSpotlightShadowMatrix(const glm::vec3& lightPos,
+	const glm::vec3& spotDir,
+	float outerAngleRad,
+	float lightRadius) {
 
-	// Create spotlight's base view matrix
+	// View matrix
 	glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
 	if (glm::abs(glm::dot(spotDir, up)) > 0.999f)
 		up = glm::vec3(1.0f, 0.0f, 0.0f);
-	glm::mat4 baseView = glm::lookAt(lightPos, lightPos + spotDir, up);
+	glm::mat4 view = glm::lookAt(lightPos, lightPos + spotDir, up);
 
-	// Transform cascade frustum to light space
-	std::vector<glm::vec3> frustumLS;
-	frustumLS.reserve(8);
-	for (const auto& corner : cascadeFrustum) {
-		glm::vec4 p = baseView * glm::vec4(corner, 1.0f);
-		frustumLS.emplace_back(glm::vec3(p));
-	}
+	// Perspective projection matching cone
+	float fov = 2.0f * outerAngleRad;
+	float nearPlane = 0.1f;
+	float farPlane = lightRadius;
+	glm::mat4 proj = glm::perspective(fov, 1.0f, nearPlane, farPlane);
 
-	// Find AABB in light space
-	glm::vec3 lsMin = frustumLS[0];
-	glm::vec3 lsMax = frustumLS[0];
-	for (const auto& p : frustumLS) {
-		lsMin = glm::min(lsMin, p);
-		lsMax = glm::max(lsMax, p);
-	}
-
-	// Apply margins to prevent clipping
-	const float xyMargin = 0.2f;
-	const float zMargin = 5.0f;
-	lsMin -= glm::vec3(xyMargin, xyMargin, zMargin);
-	lsMax += glm::vec3(xyMargin, xyMargin, zMargin);
-
-	// Ensure we don't go beyond the spotlight's natural cone
-	float maxConeRadius = lightRadius * std::tan(outerAngleRad);
-	float maxExtent = glm::max(glm::abs(lsMin.x), glm::abs(lsMax.x));
-	maxExtent = glm::max(maxExtent, glm::max(glm::abs(lsMin.y), glm::abs(lsMax.y)));
-
-	if (maxExtent > maxConeRadius) {
-		float scale = maxConeRadius / maxExtent;
-		lsMin.x *= scale;
-		lsMin.y *= scale;
-		lsMax.x *= scale;
-		lsMax.y *= scale;
-	}
-
-	// Create orthographic projection (tighter fit than perspective for cascaded shadows)
-	float nearPlane = -lsMax.z;
-	float farPlane = -lsMin.z;
-
-	// Ensure valid near/far planes
-	if (nearPlane <= 0.0f) nearPlane = 0.1f;
-	if (farPlane <= nearPlane) farPlane = nearPlane + lightRadius;
-
-	glm::mat4 lightProj = glm::ortho(lsMin.x, lsMax.x, lsMin.y, lsMax.y, nearPlane, farPlane);
-
-	return lightProj * baseView;
+	return proj * view;
 }
 
 /**
@@ -2609,7 +2567,7 @@ void Renderer::CalculateLightMatrix(const editor::EditorCamera& editorCamera)
 
 				// Place light far enough away with safety margin
 				float diagonal = glm::length(maxCorner - minCorner);
-			 float lightDistance = glm::max(diagonal * 3.0f, (splitFarDist - splitNearDist) * 2.0f);
+				float lightDistance = glm::max(diagonal * 3.0f, (splitFarDist - splitNearDist) * 2.0f);
 				glm::vec3 lightPosCalc = worldCenter - lightDir * lightDistance;
 
 				// Create light view matrix
@@ -2687,103 +2645,22 @@ void Renderer::CalculateLightMatrix(const editor::EditorCamera& editorCamera)
 			currentLayer += NUM_CASCADES;
 		}
 		else if (light.type == LightType::SPOT) {
-			// CASCADED SPOTLIGHT PROCESSING
+			// Check if we have a shadow map layer available
+			if (currentLayer >= SHADOW_MAX_LAYERS) {
+				continue;
+			}
 
 			// Get spotlight direction and parameters
 			glm::vec3 spotDir = glm::normalize(rotQuat * glm::vec3(0.0f, 0.0f, 1.0f));
 			float outerAngleRad = glm::radians(light.outerAngle);
 
-			// Compute cascade splits (same as directional lights)
-			std::vector<float> splits(NUM_CASCADES + 1);
-			for (int i = 0; i <= NUM_CASCADES; ++i) {
-				float si = static_cast<float>(i) / static_cast<float>(NUM_CASCADES);
-				float logSplit = nearDist * std::pow(farDist / nearDist, si);
-				float linSplit = nearDist + (farDist - nearDist) * si;
-				splits[i] = SHADOW_MAP_ARRAY_LAMBDA * logSplit + (1.0f - SHADOW_MAP_ARRAY_LAMBDA) * linSplit;
-			}
+			// Calculate single shadow matrix for the spotlight
+			light.lightSpaceMatrices[0] = calculateSpotlightShadowMatrix(
+				lightPos, spotDir, outerAngleRad, light.radius);
 
-			// Get shadow map resolution
-			int shadowRes = 1024;
-			if (m_ShadowMapArray != 0) {
-				glBindTexture(GL_TEXTURE_2D_ARRAY, m_ShadowMapArray);
-				GLint w = 0;
-				glGetTexLevelParameteriv(GL_TEXTURE_2D_ARRAY, 0, GL_TEXTURE_WIDTH, &w);
-				if (w > 0) shadowRes = w;
-				glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
-				glCheckError();
-			}
-
-			// Test intersection with each cascade and build matrices
-			std::vector<bool> intersectingCascades(NUM_CASCADES, false);
-			std::vector<std::array<glm::vec3, 8>> cascadeFrustums(NUM_CASCADES);
-			int validCascades = 0;
-
-			for (int cascade = 0; cascade < NUM_CASCADES; ++cascade) {
-				float splitNearDist = splits[cascade];
-				float splitFarDist = splits[cascade + 1];
-
-				// Convert split distances to NDC Z values
-				glm::vec3 splitNearWorld = nearPos + viewDir * (splitNearDist - nearDist);
-				glm::vec3 splitFarWorld = nearPos + viewDir * (splitFarDist - nearDist);
-
-				glm::vec4 clipNear = glmProj * glmView * glm::vec4(splitNearWorld, 1.0f);
-				glm::vec4 clipFar = glmProj * glmView * glm::vec4(splitFarWorld, 1.0f);
-
-				float ndcZ_splitNear = (cascade == 0) ? -1.0f :
-					(clipNear.w == 0.0f) ? -1.0f : (clipNear.z / clipNear.w);
-				float ndcZ_splitFar = (clipFar.w == 0.0f) ? 1.0f : (clipFar.z / clipFar.w);
-
-				// Create frustum for this cascade
-				cascadeFrustums[cascade] = createCascadeFrustum(invPV, ndcZ_splitNear, ndcZ_splitFar);
-
-				// Test intersection with this cascade
-				bool intersectsThisCascade = testSpotlightFrustumIntersection(
-					lightPos, spotDir, outerAngleRad, light.radius, cascadeFrustums[cascade]);
-
-				if (intersectsThisCascade) {
-					intersectingCascades[cascade] = true;
-					validCascades++;
-				}
-			}
-
-			if (validCascades == 0) {
-				continue;
-			}
-
-			// Check if we have enough shadow map layers
-			if (currentLayer + validCascades > SHADOW_MAX_LAYERS) {
-				continue;
-			}
-
+			// Assign shadow map layer
 			light.startOffset = currentLayer;
-
-			// Generate shadow matrices for intersecting cascades
-			int cascadeLayerOffset = 0;
-			for (int cascade = 0; cascade < NUM_CASCADES; ++cascade) {
-				if (intersectingCascades[cascade]) {
-					// Calculate specialized matrix for this cascade
-					light.lightSpaceMatrices[cascade] = calculateSpotlightCascadeMatrix(
-						lightPos, spotDir, outerAngleRad, light.radius,
-						cascadeFrustums[cascade], shadowRes);
-
-					// Compute depth for depth buffer (same as directional lights)
-					float splitFarDist = splits[cascade + 1];
-					glm::vec3 splitFarWorld = nearPos + viewDir * (splitFarDist - nearDist);
-					glm::vec4 clipFar = glmProj * glmView * glm::vec4(splitFarWorld, 1.0f);
-					float ndcZ_splitFar = (clipFar.w == 0.0f) ? 1.0f : (clipFar.z / clipFar.w);
-					float depthBufferFar = ndcZ_splitFar * 0.5f + 0.5f;
-					light.splitDepths[cascade] = depthBufferFar;
-
-					cascadeLayerOffset++;
-				}
-				else {
-					// Mark unused cascades with zero matrix
-					light.lightSpaceMatrices[cascade] = glm::mat4(0.0f);
-					light.splitDepths[cascade] = 0.0f;
-				}
-			}
-
-			currentLayer += validCascades;
+			currentLayer += 1;
 		}
 	}
 }
@@ -2829,8 +2706,8 @@ void Renderer::RenderShadowMapInstanced()
 	glDepthFunc(GL_LEQUAL);
 
 	// Cull front faces to reduce shadow acne (common technique)
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_FRONT);
+	//glEnable(GL_CULL_FACE);
+	//glCullFace(GL_FRONT);
 
 	// Bind shadow shader
 	m_ShadowMapInstancedShader->Bind();
@@ -2852,7 +2729,7 @@ void Renderer::RenderShadowMapInstanced()
 	}
 
 	// Use only shadowcaster lights for instancing
-	int maxLights = std::min(static_cast<int>(activeShadowLights.size()), 16);
+	unsigned int maxLights = std::min(static_cast<unsigned int>(activeShadowLights.size()), MAX_LIGHTS);
 	int totalInstances = maxLights * NUM_CASCADES;
 
 	// Set up per-frame uniforms
@@ -2933,7 +2810,7 @@ void Renderer::RenderShadowMapInstanced()
 	}
 
 	// Restore culling state (back to normal)
-	glCullFace(GL_BACK);
+	//glCullFace(GL_BACK);
 
 	// Unbind framebuffer and restore viewport
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);

@@ -475,21 +475,18 @@ namespace Ermine::graphics
             float outerAngleRad, float lightRadius,
             const std::array<glm::vec3, 8>& frustumCorners);
         /**
-         * @brief Calculates the shadow matrix for a spotlight cascade.
+         * @brief Calculates the shadow matrix for a spotlight.
          * Computes a view and orthographic projection matrix that tightly fits the cascade frustum in light space.
          * Applies texel snapping and margin adjustments for stable shadows.
          * @param lightPos Position of the spotlight.
          * @param spotDir Direction vector of the spotlight.
          * @param outerAngleRad Outer angle of the spotlight cone in radians.
          * @param lightRadius Maximum range of the spotlight.
-         * @param cascadeFrustum Array of eight frustum corners for the cascade.
-         * @param shadowRes Shadow map resolution.
-         * @return The spotlight's light-space matrix for the cascade.
-         */
-        glm::mat4 calculateSpotlightCascadeMatrix(const glm::vec3& lightPos, const glm::vec3& spotDir,
-            float outerAngleRad, float lightRadius,
-            const std::array<glm::vec3, 8>& cascadeFrustum,
-            int shadowRes);
+        */
+        glm::mat4 calculateSpotlightShadowMatrix(const glm::vec3& lightPos,
+            const glm::vec3& spotDir,
+            float outerAngleRad,
+            float lightRadius);
 #pragma endregion
 
         /**

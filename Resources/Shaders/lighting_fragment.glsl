@@ -562,7 +562,7 @@ void main()
         result += ambient;
 
         // Blinn-Phong lighting
-        for (int i = 0; i < numLights && i < 16; ++i) {
+        for (int i = 0; i < numLights; ++i) {
             float shininess = (1.0 - roughness) * 128.0;
             // Compute light contribution
             vec3 lightContrib = calculateBlinnPhong(i, normalView, viewDir, fragPosView, albedo, 1.0, shininess);
@@ -599,29 +599,15 @@ void main()
                 
             }
             else if (castsShadows && (lightType == SPOT_LIGHT)) {
-
-                // Spotlight shadow calculation
-                int cascadeIndex = NUM_CASCADES - 1;
-        
-                // Select cascade based on depth buffer value
-                for (int c = 0; c < NUM_CASCADES; ++c) {
-                    if (depth <= lights[i].splitDepths[c/4][c%4]) {
-                        cascadeIndex = c;
-                        break;
-                    }
-                }
-        
                 // Check if this cascade has a valid matrix (non-zero)
-                mat4 cascadeMatrix = lights[i].lightSpaceMatrix[cascadeIndex];
+                mat4 cascadeMatrix = lights[i].lightSpaceMatrix[0];
                 bool hasValidMatrix = (cascadeMatrix[0][0] != 0.0 || cascadeMatrix[0][1] != 0.0 || 
                                       cascadeMatrix[0][2] != 0.0 || cascadeMatrix[0][3] != 0.0 ||
                                       cascadeMatrix[1][0] != 0.0 || cascadeMatrix[1][1] != 0.0 || 
                                       cascadeMatrix[1][2] != 0.0 || cascadeMatrix[1][3] != 0.0);
         
                 if (hasValidMatrix) {
-                    int startOffset = int(lights[i].spot_angles_castshadows_startOffset.w);
-                    int layerIndex = startOffset + cascadeIndex;
-            
+                    int layerIndex = int(lights[i].spot_angles_castshadows_startOffset.w);            
                     shadowFactor = calculateShadowFactor(
                         cascadeMatrix, 
                         i, 
@@ -666,7 +652,7 @@ void main()
 
         // PBR lighting
         vec3 F0 = mix(vec3(0.04), albedo, metallic);
-        for (int i = 0; i < numLights && i < 16; ++i) {
+        for (int i = 0; i < numLights; ++i) {
             vec3 lightContrib = calculatePBR(i, normalView, viewDir, fragPosView, albedo, metallic, roughness, F0, worldPos);
 
             float shadowFactor = 1.0;
@@ -696,28 +682,15 @@ void main()
 
             } 
             else if (castsShadows && (lightType == SPOT_LIGHT)) {
-
-                // Spotlight shadow calculation
-                int cascadeIndex = NUM_CASCADES - 1;
-        
-                // Select cascade based on depth buffer value
-                for (int c = 0; c < NUM_CASCADES; ++c) {
-                    if (depth <= lights[i].splitDepths[c/4][c%4]) {
-                        cascadeIndex = c;
-                        break;
-                    }
-                }
-        
                 // Check if this cascade has a valid matrix (non-zero)
-                mat4 cascadeMatrix = lights[i].lightSpaceMatrix[cascadeIndex];
+                mat4 cascadeMatrix = lights[i].lightSpaceMatrix[0];
                 bool hasValidMatrix = (cascadeMatrix[0][0] != 0.0 || cascadeMatrix[0][1] != 0.0 || 
                                       cascadeMatrix[0][2] != 0.0 || cascadeMatrix[0][3] != 0.0 ||
                                       cascadeMatrix[1][0] != 0.0 || cascadeMatrix[1][1] != 0.0 || 
                                       cascadeMatrix[1][2] != 0.0 || cascadeMatrix[1][3] != 0.0);
         
                 if (hasValidMatrix) {
-                    int startOffset = int(lights[i].spot_angles_castshadows_startOffset.w);
-                    int layerIndex = startOffset + cascadeIndex;
+                    int layerIndex = int(lights[i].spot_angles_castshadows_startOffset.w);
             
                     shadowFactor = calculateShadowFactor(
                         cascadeMatrix, 
