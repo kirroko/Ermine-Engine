@@ -94,26 +94,40 @@ namespace Ermine
                 // Position
                 ImGui::TextUnformatted("Position");
                 ImGui::SameLine();
-                if (ImGui::SmallButton("Reset##pos")) tr.position = Vector3D(0.f, 0.f, 0.f);
-                ImGui::DragFloat3("##pos", &tr.position.x);
+                if (ImGui::SmallButton("Reset##pos")) {
+                    tr.position = Vector3D(0.f, 0.f, 0.f);
+                    ECS::GetInstance().GetSystem<HierarchySystem>()->MarkDirty(m_entity);
+                }
+                if (ImGui::DragFloat3("##pos", &tr.position.x)) {
+                    ECS::GetInstance().GetSystem<HierarchySystem>()->MarkDirty(m_entity);
+                }
 
                 // Rotation
                 ImGui::TextUnformatted("Rotation");
                 ImGui::SameLine();
-                if (ImGui::SmallButton("Reset##rot")) tr.rotation = Quaternion(0.f, 0.f, 0.f, 1.f);
+                if (ImGui::SmallButton("Reset##rot")) {
+                    tr.rotation = Quaternion(0.f, 0.f, 0.f, 1.f);
+                    ECS::GetInstance().GetSystem<HierarchySystem>()->MarkDirty(m_entity);
+                }
 
                 Vector3D eulerDeg = QuaternionToEuler(tr.rotation);
                 
-                if (ImGui::DragFloat3("##rot", &eulerDeg.x, 1.0f))
+                if (ImGui::DragFloat3("##rot", &eulerDeg.x, 1.0f)) {
                     tr.rotation = EulerDegToQuaternion(eulerDeg);
+                    ECS::GetInstance().GetSystem<HierarchySystem>()->MarkDirty(m_entity);
+                }
 
                 // Scale
                 ImGui::TextUnformatted("Scale");
                 ImGui::SameLine();
 
-
-                if (ImGui::SmallButton("Reset##scl")) tr.scale = Vector3D(1.f, 1.f, 1.f);
-                if (ImGui::DragFloat3("##scl", &tr.scale.x))
+                if (ImGui::SmallButton("Reset##scl")) {
+                    tr.scale = Vector3D(1.f, 1.f, 1.f);
+                    ECS::GetInstance().GetSystem<HierarchySystem>()->MarkDirty(m_entity);
+                }
+                if (ImGui::DragFloat3("##scl", &tr.scale.x)) {
+                    ECS::GetInstance().GetSystem<HierarchySystem>()->MarkDirty(m_entity);
+                }
                 {
                     constexpr float kMinScale = 0.0001f;
                     tr.scale.x = (tr.scale.x >= 0.f) ? fmaxf(tr.scale.x, kMinScale) : -fmaxf(-tr.scale.x, kMinScale);

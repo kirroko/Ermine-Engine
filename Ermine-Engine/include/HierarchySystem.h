@@ -53,6 +53,12 @@ namespace Ermine
         void UpdateHierarchy();
 
         /**
+         * @brief Marks an entity and all its children as dirty for transform updates.
+         * @param[in] entity The entity to mark as dirty.
+        */
+        void MarkDirty(EntityID entity);
+
+        /**
          * @brief Gets the parent of an entity.
          * @param[in] entity The entity to query.
          * @return The parent entity ID, or 0 if none.
@@ -65,5 +71,47 @@ namespace Ermine
           * @return Reference to a vector of child entity IDs.
          */
         const std::vector<EntityID>& GetChildren(EntityID entity) const;
+
+        /**
+         * @brief Gets the world position of an entity.
+         * @param[in] entity The entity to query.
+         * @return The world position vector.
+         */
+        Vec3 GetWorldPosition(EntityID entity) const;
+
+        /**
+         * @brief Gets the world rotation of an entity.
+         * @param[in] entity The entity to query.
+         * @return The world rotation quaternion.
+         */
+        Quaternion GetWorldRotation(EntityID entity) const;
+
+        /**
+         * @brief Gets the world scale of an entity.
+         * @param[in] entity The entity to query.
+         * @return The world scale vector.
+         */
+        Vec3 GetWorldScale(EntityID entity) const;
+
+        /**
+         * @brief Sets the world position of an entity, updating local transform accordingly.
+         * @param[in] entity The entity to modify.
+         * @param[in] worldPos The new world position.
+         */
+        void SetWorldPosition(EntityID entity, const Vec3& worldPos);
+
+        /**
+         * @brief Sets the world rotation of an entity, updating local transform accordingly.
+         * @param[in] entity The entity to modify.
+         * @param[in] worldRot The new world rotation.
+         */
+        void SetWorldRotation(EntityID entity, const Quaternion& worldRot);
+
+        /**
+         * @brief Sets the world scale of an entity, updating local transform accordingly.
+         * @param[in] entity The entity to modify.
+         * @param[in] worldScale The new world scale.
+         */
+        void SetWorldScale(EntityID entity, const Vec3& worldScale);
     };
 }

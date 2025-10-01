@@ -616,6 +616,10 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 	// Other non-fixed logic here
 	ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->Update();
 	ECS::GetInstance().GetSystem<AudioSystem>()->Update();
+	
+	// Update hierarchy transforms for all entities
+	ECS::GetInstance().GetSystem<HierarchySystem>()->UpdateHierarchy();
+	
 	// Update editor camera
 	editor::EditorCamera::GetInstance().Update();
 

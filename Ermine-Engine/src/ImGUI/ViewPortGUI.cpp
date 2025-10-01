@@ -442,6 +442,9 @@ void Ermine::ViewPortGUI::Update()
 				tr.position = Vector3D(translation.x, translation.y, translation.z);
 				tr.scale = Vector3D(scale.x, scale.y, scale.z);
 				tr.rotation = Quaternion(rotation.x, rotation.y, rotation.z, rotation.w);
+				
+				// Mark transform as dirty to trigger hierarchy update
+				ECS::GetInstance().GetSystem<HierarchySystem>()->MarkDirty(selectedEntity);
 			}
 		}
 	}
