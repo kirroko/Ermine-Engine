@@ -2926,6 +2926,7 @@ void Renderer::RenderShadowMapInstanced()
 		modelMat = glm::scale(modelMat, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
 
 		m_ShadowMapInstancedShader->SetUniformMatrix4fv("model", modelMat);
+		m_ShadowMapInstancedShader->SetUniform1i("u_UseSkinning", 0);
 
 		// Use instanced draw call
 		DrawInstanced(mesh.vertex_array, mesh.index_buffer, m_ShadowMapInstancedShader, totalInstances);
