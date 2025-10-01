@@ -560,6 +560,9 @@ void engine::Shutdown()
 
 	SaveConfigToFile(cfg, "Ermine-Engine.config", false);
 
+	skybox.reset();           // Destroy skybox before cubemap
+	environmentCubemap.reset(); // Destroy cubemap before AssetManager cleanup
+
 	CoUninitialize();
 
 	AssetManager::GetInstance().Clear();

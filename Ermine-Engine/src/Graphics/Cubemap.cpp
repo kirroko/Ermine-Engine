@@ -26,12 +26,12 @@ void Cubemap::Release(bool contextExpected) noexcept
     if (!m_RendererID)
         return;
 
-    GLFWwindow* current = glfwGetCurrentContext();
-    if (!current)
-    {
-        EE_CORE_ERROR("No current OpenGL context while deleting cubemap ID={0} (Leaking GPU resource)", m_RendererID);
-        m_RendererID = 0;
-        return;
+    GLFWwindow* current = nullptr;
+    try {
+        current = glfwGetCurrentContext();
+    } catch (...) {
+        // Context might be destroyed during shutdown
+        current = nullptr;
     }
 
     if (contextExpected && !glIsTexture(m_RendererID))
