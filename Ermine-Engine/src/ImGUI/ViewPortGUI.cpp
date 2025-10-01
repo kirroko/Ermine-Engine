@@ -20,6 +20,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Renderer.h"
 #include "GLFW/glfw3.h"
 #include "EditorGUI.h"
+#include "HierarchySystem.h"
 
 #include <ImGuizmo.h>
 #include <glm/gtx/matrix_decompose.hpp>

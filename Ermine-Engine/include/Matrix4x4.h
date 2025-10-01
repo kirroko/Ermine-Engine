@@ -340,4 +340,8 @@ namespace Ermine
         return deg * (static_cast<float>(M_PI) / 180.0f);
     }
     Quaternion FromEulerDegrees(float pitch, float yaw, float roll);
+
+    bool Mtx44Inverse(Matrix4x4& pResult, const Matrix4x4& pMtx);
+
+    Quaternion operator*(const Quaternion& lhs, const Quaternion& rhs);
 }

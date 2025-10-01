@@ -99,12 +99,14 @@ namespace Ermine
 	*************************************************************************/
 	struct Transform
 	{
-		Mtx44 transform_matrix{ 1.0f }; // Identity matrix
+		Mtx44 transform_matrix{ 1.0f }; // Local transform matrix
 		Vec3 position;
 		Quaternion rotation; // Euler angles in degrees
 		Vec3 scale;
+		bool isDirty{ true };
 
-		explicit Transform(const Vec3& pos = Vec3(), const Quaternion& rot = Quaternion(), const Vec3& scl = Vec3(1.f, 1.f, 1.f)) : position(pos), rotation(rot), scale(scl)
+		explicit Transform(const Vec3& pos = Vec3(), const Quaternion& rot = Quaternion(), const Vec3& scl = Vec3(1.f, 1.f, 1.f))
+			: position(pos), rotation(rot), scale(scl)
 		{
 		}
 

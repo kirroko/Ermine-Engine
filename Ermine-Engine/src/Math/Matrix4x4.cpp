@@ -412,4 +412,88 @@ namespace Ermine
         q.z = cx * cy * sz - sx * sy * cz;
         return q;
     }
+
+    /*!***********************************************************************
+    \brief
+     Calculate the inverse of a 4x4 matrix.
+    \param[out] pResult
+     The inverted matrix.
+    \param[in] pMtx
+     The input matrix to invert.
+    \return
+     True if the matrix is invertible, false otherwise.
+    *************************************************************************/
+    bool Mtx44Inverse(Matrix4x4& pResult, const Matrix4x4& pMtx)
+    {
+        float aug[4][8]; // Augmented matrix [M | I]
+
+        // Initialize augmented matrix
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 4; j++) {
+                aug[i][j] = pMtx.m2[i][j];
+                aug[i][j + 4] = (i == j) ? 1.0f : 0.0f;
+            }
+        }
+
+        // Forward elimination with partial pivoting
+        for (int i = 0; i < 4; i++) {
+            // Find pivot
+            int maxRow = i;
+            for (int k = i + 1; k < 4; k++) {
+                if (fabs(aug[k][i]) > fabs(aug[maxRow][i]))
+                    maxRow = k;
+            }
+
+            // Swap rows
+            if (maxRow != i) {
+                for (int k = 0; k < 8; k++)
+                    std::swap(aug[i][k], aug[maxRow][k]);
+            }
+
+            // Check for singular matrix
+            if (fabs(aug[i][i]) < 1e-6f)
+                return false;
+
+            // Make diagonal 1
+            float pivot = aug[i][i];
+            for (int j = 0; j < 8; j++)
+                aug[i][j] /= pivot;
+
+            // Eliminate column
+            for (int k = 0; k < 4; k++) {
+                if (k != i) {
+                    float factor = aug[k][i];
+                    for (int j = 0; j < 8; j++)
+                        aug[k][j] -= factor * aug[i][j];
+                }
+            }
+        }
+
+        // Extract result from right half
+        for (int i = 0; i < 4; i++)
+            for (int j = 0; j < 4; j++)
+                pResult.m2[i][j] = aug[i][j + 4];
+
+        return true;
+    }
+
+    /*!***********************************************************************
+    \brief
+     Multiply two quaternions.
+    \param[in] lhs
+     The first quaternion.
+    \param[in] rhs
+     The second quaternion.
+    \return
+     The product of the two quaternions.
+    *************************************************************************/
+    Quaternion operator*(const Quaternion& lhs, const Quaternion& rhs)
+    {
+        Quaternion result;
+        result.w = lhs.w * rhs.w - lhs.x * rhs.x - lhs.y * rhs.y - lhs.z * rhs.z;
+        result.x = lhs.w * rhs.x + lhs.x * rhs.w + lhs.y * rhs.z - lhs.z * rhs.y;
+        result.y = lhs.w * rhs.y - lhs.x * rhs.z + lhs.y * rhs.w + lhs.z * rhs.x;
+        result.z = lhs.w * rhs.z + lhs.x * rhs.y - lhs.y * rhs.x + lhs.z * rhs.w;
+        return result;
+    }
 }

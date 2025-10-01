@@ -184,7 +184,6 @@ IF EXIST ..\Build\bin\Release-windows-x86_64\Ermine-Engine\Ermine-Engine.dll\ (x
     <ClInclude Include="include\ScriptSystem.h" />
     <ClInclude Include="include\Serialisation.h" />
     <ClInclude Include="include\Shader.h" />
-    <ClInclude Include="include\shadow_config.h" />
     <ClInclude Include="include\Skybox.h" />
     <ClInclude Include="include\Systems.h" />
     <ClInclude Include="include\Texture.h" />
@@ -192,6 +191,7 @@ IF EXIST ..\Build\bin\Release-windows-x86_64\Ermine-Engine\Ermine-Engine.dll\ (x
     <ClInclude Include="include\VertexBuffer.h" />
     <ClInclude Include="include\ViewPortGUI.h" />
     <ClInclude Include="include\Window.h" />
+    <ClInclude Include="include\shadow_config.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\AssetBrowser\AssetBrowser.cpp" />
