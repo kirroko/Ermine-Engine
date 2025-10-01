@@ -3,9 +3,20 @@
 const int NUM_CASCADES = 4;
 
 layout(location = 0) in vec3 aPosition;
+layout(location = 1) in vec3 aNormal;      // Not used for shadows, but needed for attribute layout
+layout(location = 2) in vec2 aTexCoord;    // Not used for shadows, but needed for attribute layout
+layout(location = 3) in vec3 aTangent;     // Not used for shadows, but needed for attribute layout
+
+// Skinning attributes
+layout(location = 4) in ivec4 aBoneIDs;
+layout(location = 5) in vec4 aWeights;
 
 // Per-vertex uniforms
 uniform mat4 model;
+
+// Skinning uniforms
+uniform bool u_UseSkinning;
+uniform mat4 u_BoneMatrices[128];
 
 // Light structure
 struct Light {
@@ -30,6 +41,19 @@ flat out int v_Layer;
 
 void main()
 {
+    // Apply skinning transformation if enabled
+    vec4 skinnedPos = vec4(aPosition, 1.0);
+    
+    if (u_UseSkinning) {
+        mat4 boneTransform =
+            u_BoneMatrices[aBoneIDs[0]] * aWeights[0] +
+            u_BoneMatrices[aBoneIDs[1]] * aWeights[1] +
+            u_BoneMatrices[aBoneIDs[2]] * aWeights[2] +
+            u_BoneMatrices[aBoneIDs[3]] * aWeights[3];
+        
+        skinnedPos = boneTransform * vec4(aPosition, 1.0);
+    }
+
     // Calculate light and cascade from gl_InstanceID
     // Instance layout: light0_cascade0, light0_cascade1, ..., light0_cascade3, light1_cascade0, ...
     int cascadeIndex = gl_InstanceID % NUM_CASCADES;
@@ -46,7 +70,7 @@ void main()
     int targetLayer = startOffset + cascadeIndex;
 
     // Transform vertex to light space using the appropriate cascade matrix
-    gl_Position = light.lightSpaceMatrix[cascadeIndex] * model * vec4(aPosition, 1.0);
+    gl_Position = light.lightSpaceMatrix[cascadeIndex] * model * skinnedPos;
 
     // Pass layer to fragment shader (for gl_Layer assignment if needed)
     v_Layer = targetLayer;

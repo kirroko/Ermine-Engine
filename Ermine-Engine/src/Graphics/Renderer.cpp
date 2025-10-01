@@ -2879,6 +2879,20 @@ void Renderer::RenderShadowMapInstanced()
 		root *= glm::mat4_cast(rotQuat);
 		root = glm::scale(root, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
 
+		// Get bone transforms
+		const auto& boneTransforms = modelComp.m_model->GetBoneTransforms();
+		const bool hasBones = !boneTransforms.empty();
+
+		// Set skinning uniforms
+		m_ShadowMapInstancedShader->SetUniform1i("u_UseSkinning", hasBones ? 1 : 0);
+
+		if (hasBones)
+		{
+			GLsizei count = std::min((int)boneTransforms.size(), 128);
+			GLint loc = glGetUniformLocation(m_ShadowMapInstancedShader->GetRendererID(), "u_BoneMatrices");
+			glUniformMatrix4fv(loc, count, GL_FALSE, glm::value_ptr(boneTransforms[0]));
+		}
+
 		const auto& meshes = modelComp.m_model->GetMeshes();
 		for (const auto& mesh : meshes)
 		{
@@ -2912,6 +2926,7 @@ void Renderer::RenderShadowMapInstanced()
 		modelMat = glm::scale(modelMat, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
 
 		m_ShadowMapInstancedShader->SetUniformMatrix4fv("model", modelMat);
+		m_ShadowMapInstancedShader->SetUniform1i("u_UseSkinning", 0);
 
 		// Use instanced draw call
 		DrawInstanced(mesh.vertex_array, mesh.index_buffer, m_ShadowMapInstancedShader, totalInstances);

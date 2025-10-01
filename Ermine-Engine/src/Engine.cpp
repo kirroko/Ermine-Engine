@@ -391,6 +391,11 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().AddComponent<Transform>(yellowLightSpot, Transform(Vec3(0, 10, 0), Quaternion(0.707f, 0.f, 0.f, 0.707f), Vec3(1, 1, 1)));
 	ECS::GetInstance().AddComponent<ObjectMetaData>(yellowLightSpot, ObjectMetaData("Red", "Light", true));
 	ECS::GetInstance().AddComponent<Light>(yellowLightSpot, Light(Vec3(1, 0.8f, 0.6f), 1.f, LightType::SPOT, true, 50, 60, 100.f));
+	auto yellowLightSpotMaterial = std::make_shared<graphics::Material>(shader);
+	yellowLightSpotMaterial->LoadTemplate(graphics::MaterialTemplates::EMISSIVE(Vec3(1, 0.8f, 0.6f), 2.0f));
+	ECS::GetInstance().AddComponent(yellowLightSpot, graphics::GeometryFactory::CreateCube(0.1f, 0.1f, 0.1f));
+	ECS::GetInstance().AddComponent(yellowLightSpot, Material(yellowLightSpotMaterial));
+	ECS::GetInstance().AddComponent<Ermine::HierarchyComponent>(yellowLightSpot, Ermine::HierarchyComponent{});
 
 	// Red accent light
 	auto redLightEntity = ECS::GetInstance().CreateEntity();
@@ -400,7 +405,7 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	auto redLightMaterial = std::make_shared<graphics::Material>(shader);
 	redLightMaterial->LoadTemplate(graphics::MaterialTemplates::EMISSIVE(Vec3(1.0f, 0.f, 0.f), 10.0f));
-	ECS::GetInstance().AddComponent(redLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
+	ECS::GetInstance().AddComponent(redLightEntity, graphics::GeometryFactory::CreateCube(0.1f, 0.1f, 0.1f));
 	ECS::GetInstance().AddComponent(redLightEntity, Material(redLightMaterial));
 	ECS::GetInstance().AddComponent<Ermine::HierarchyComponent>(redLightEntity, Ermine::HierarchyComponent{});
 
@@ -417,7 +422,7 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	auto blueLightMaterial = std::make_shared<graphics::Material>(shader);
 	blueLightMaterial->LoadTemplate(graphics::MaterialTemplates::EMISSIVE(Vec3(0.f, 0.f, 1.0f), 10.0f));
-	ECS::GetInstance().AddComponent(blueLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
+	ECS::GetInstance().AddComponent(blueLightEntity, graphics::GeometryFactory::CreateCube(0.1f, 0.1f, 0.1f));
 	ECS::GetInstance().AddComponent(blueLightEntity, Material(blueLightMaterial));
 	ECS::GetInstance().AddComponent<Ermine::HierarchyComponent>(blueLightEntity, Ermine::HierarchyComponent{});
 
@@ -434,7 +439,7 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	auto greenLightMaterial = std::make_shared<graphics::Material>(shader);
 	greenLightMaterial->LoadTemplate(graphics::MaterialTemplates::EMISSIVE(Vec3(0.f, 1.f, 0.0f), 10.0f));
-	ECS::GetInstance().AddComponent(greenLightEntity, graphics::GeometryFactory::CreateSphere(0.1f));
+	ECS::GetInstance().AddComponent(greenLightEntity, graphics::GeometryFactory::CreateCube(0.1f, 0.1f, 0.1f));
 	ECS::GetInstance().AddComponent(greenLightEntity, Material(greenLightMaterial));
 	ECS::GetInstance().AddComponent<Ermine::HierarchyComponent>(greenLightEntity, Ermine::HierarchyComponent{});
 
