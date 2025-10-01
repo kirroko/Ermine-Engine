@@ -101,7 +101,12 @@ Ermine::Mesh GeometryFactory::CreateCube(float width, float height, float depth)
 
     auto ibo = std::make_shared<IndexBuffer>(indices.data(), indices.size() * sizeof(unsigned int));
 
-    return {vao, vbo, ibo};
+	auto mesh = Mesh(vao, vbo, ibo);
+	mesh.kind = Mesh::Kind::Primitive;
+	mesh.primitive.type = "Cube";
+	mesh.primitive.size = Vec3{ width, height, depth };
+
+    return mesh;
 }
 
 /**
@@ -139,8 +144,12 @@ Ermine::Mesh GeometryFactory::CreateQuad(float width, float height)
     vbo->Unbind();
 
     auto ibo = std::make_shared<IndexBuffer>(indices.data(), indices.size() * sizeof(unsigned int));
+	auto mesh = Mesh(vao, vbo, ibo);
+	mesh.kind = Mesh::Kind::Primitive;
+	mesh.primitive.type = "Quad";
+	mesh.primitive.size = Vec3{ width, height, 0.0f };
 
-    return {vao, vbo, ibo};
+    return mesh;
 }
 
 Ermine::Mesh GeometryFactory::CreateSphere(float radius, unsigned int sectors, unsigned int stacks)
@@ -220,5 +229,10 @@ Ermine::Mesh GeometryFactory::CreateSphere(float radius, unsigned int sectors, u
 
     auto ibo = std::make_shared<IndexBuffer>(indices.data(), indices.size() * sizeof(unsigned int));
 
-    return {vao, vbo, ibo};
+	auto mesh = Mesh(vao, vbo, ibo);
+	mesh.kind = Mesh::Kind::Primitive;
+	mesh.primitive.type = "Sphere";
+	mesh.primitive.size = Vec3{ radius, radius, radius };
+
+    return mesh;
 }

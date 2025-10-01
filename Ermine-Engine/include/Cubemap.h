@@ -126,5 +126,11 @@ namespace Ermine::graphics
         {
             return {"right", "left", "top", "bottom", "front", "back"};
         }
+
+        //const std::array<std::string, 6>& GetFaces() const { return m_FacePaths; }
+        //const std::string& GetEquirectangularPath() const { return m_EquirectangularPath; }
+
+        //bool IsFromFaces() const { return !m_FacePaths[0].empty(); }
+        //bool IsFromEquirect() const { return !m_EquirectangularPath.empty(); }
     };
 }

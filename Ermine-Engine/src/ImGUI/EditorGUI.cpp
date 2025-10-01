@@ -136,8 +136,13 @@ void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
             SceneManager::GetInstance().NewScene();
 
         if (ImGui::MenuItem("Open...", "Ctrl+O"))
+        {
             if (auto path = SceneManager::ShowOpenDialog(GetActiveWindow()))
+            {
+                SceneManager::GetInstance().NewScene();
                 SceneManager::GetInstance().OpenScene(*path);
+            }
+        }
 
         if (ImGui::MenuItem("Save", "Ctrl+S"))
             SceneManager::GetInstance().SaveScene();
