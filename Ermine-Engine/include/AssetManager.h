@@ -1,9 +1,9 @@
 /* Start Header ************************************************************************/
 /*!
 \file       AssetManager.h
-\author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu (80%)   
+\author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu (75%)   
 \co-author  Jeremy Lim Ting Jie, jeremytingjie.lim, 2301370, jeremytingjie.lim\@digipen.edu (20%)
-\co-authors Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu
+\co-authors Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu (5%)
 \date       10/09/2025
 \brief      This reflects the brief of the AssetManager system.
             This file is used to manage all the assets in the game.
