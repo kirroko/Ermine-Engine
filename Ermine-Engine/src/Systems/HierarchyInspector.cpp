@@ -2,6 +2,7 @@
 /*!
 \file       HierarchyInspector.cpp
 \author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu
+\co-author  WEE HONG RU Curtis, h.wee, 2301266, h.wee\@digipen.edu (70%)
 \date       27/03/2025
 \brief      Inspector panel for viewing and editing entity properties
 
@@ -146,9 +147,9 @@ namespace Ermine::editor {
             float rotation[3] = { eulerAngles.x, eulerAngles.y, eulerAngles.z };
             if (ImGui::DragFloat3("Rotation (Degrees)", rotation, 1.0f)) {
                 // Convert degrees to radians and create quaternion from Euler angles
-                float radX = rotation[0] * M_PI / 180.0f;
-                float radY = rotation[1] * M_PI / 180.0f;
-                float radZ = rotation[2] * M_PI / 180.0f;
+                float radX = rotation[0] * (float)M_PI / 180.0f;
+                float radY = rotation[1] * (float)M_PI / 180.0f;
+                float radZ = rotation[2] * (float)M_PI / 180.0f;
 
                 // Create rotation matrices for each axis
                 Matrix4x4 rotX, rotY, rotZ, combined;

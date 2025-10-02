@@ -135,6 +135,9 @@
     <ClInclude Include="include\GeometryFactory.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\GraphicsDebugGUI.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\HierarchyInspector.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -240,28 +243,7 @@
     <ClInclude Include="include\Window.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="include\MathVector.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Material.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\InspectorGUI.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\AudioImGUI.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Cubemap.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Skybox.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="include\shadow_config.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\GraphicsDebugGUI.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
@@ -279,6 +261,9 @@
       <Filter>src\AudioManager</Filter>
     </ClCompile>
     <ClCompile Include="src\ECS\Component.cpp">
+      <Filter>src\ECS</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ECS\ComponentRegistration.cpp">
       <Filter>src\ECS</Filter>
     </ClCompile>
     <ClCompile Include="src\ECS\ECS.cpp">
@@ -339,6 +324,9 @@
       <Filter>src\ImGUI</Filter>
     </ClCompile>
     <ClCompile Include="src\ImGUI\EditorGUI.cpp">
+      <Filter>src\ImGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ImGUI\GraphicsDebugGUI.cpp">
       <Filter>src\ImGUI</Filter>
     </ClCompile>
     <ClCompile Include="src\ImGUI\InspectorGUI.cpp">
@@ -418,21 +406,6 @@
     </ClCompile>
     <ClCompile Include="src\dllmain.cpp">
       <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ImGUI\InspectorGUI.cpp">
-      <Filter>src\ImGUI</Filter>
-    </ClCompile>
-    <ClCompile Include="src\AudioManager\AudioIMGUI.cpp">
-      <Filter>src\AudioManager</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Graphics\Cubemap.cpp">
-      <Filter>src\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Graphics\Skybox.cpp">
-      <Filter>src\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ImGUI\GraphicsDebugGUI.cpp">
-      <Filter>src\Graphics</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

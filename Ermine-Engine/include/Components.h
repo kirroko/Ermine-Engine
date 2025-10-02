@@ -1,14 +1,14 @@
 /* Start Header ************************************************************************/
 /*!
 \file       Components.h
-\author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu (65%)
+\author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu (55%)
 \co-author  Jeremy Lim Ting Jie, jeremytingjie.lim, 2301370, jeremytingjie.lim\@digipen.edu (10%)
 \co-author  Ridhwan (5%)
-\co-author  Curtis (20%)
+\co-author  WEE HONG RU Curtis, h.wee, 2301266, h.wee\@digipen.edu (30%)
 \date       Jan 24, 2025
 \brief      Updated components with modular material system
 
-Copyright (C) 2024 DigiPen Institute of Technology.
+Copyright (C) 2025 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents without the
 prior written consent of DigiPen Institute of Technology is prohibited.
 */
@@ -36,6 +36,10 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "AssetManager.h"
 #include <Jolt/Jolt.h>
 #include <Jolt/Physics/Body/Body.h>
+
+#include "xcore/my_properties.h"  
+#include "xproperty.h"      
+#include "sprop/property_sprop.h"  
 
 namespace Ermine
 {
@@ -108,6 +112,15 @@ namespace Ermine
 		{
 		}
 
+        //XPROPERTY_DEF(
+        //    "Transform", Transform,
+        //    xproperty::obj_member<"positionx", [](Transform& t) -> float& { return t.position.x; }>,
+        //    xproperty::obj_member<"positiony", [](Transform& t) -> float& { return t.position.y; }>,
+        //    xproperty::obj_member<"positionz", [](Transform& t) -> float& { return t.position.z; }>
+        //    //xproperty::obj_member<"rotation", &Transform::rotation>,
+        //    //xproperty::obj_member<"scale", &Transform::scale>
+        //);
+
 		template<typename Alloc>
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
 			out.SetObject();
@@ -143,7 +156,19 @@ namespace Ermine
 				}
 			}
 		}
+
+		static_assert(xproperty::settings::var_type<Ermine::Vec3>::guid_v != 0, "Vec3 not registered");
+		//static_assert(xproperty::settings::var_type<Ermine::Quaternion>::guid_v != 0, "Quat not registered");
+
+		//XPROPERTY_DEF(
+		//	"Transform", Transform,
+		//	xproperty::obj_member<"positionx", &Transform::position>
+		//	//xproperty::obj_member<"rotation", &Transform::rotation>,
+		//	//xproperty::obj_member<"scale", &Transform::scale>
+		//);
 	};
+
+	//XPROPERTY_REG(Transform);
 
 	/*!***********************************************************************
 	\brief
@@ -973,6 +998,7 @@ namespace Ermine
 				catch (const std::exception& e)
 				{
 					// Handle loading error if needed
+					UNREFERENCED_PARAMETER(e);
 				}
 			}
 		}
@@ -994,6 +1020,7 @@ namespace Ermine
 				catch (const std::exception& e)
 				{
 					// Handle loading error if needed
+					UNREFERENCED_PARAMETER(e);
 				}
 			}
 		}
@@ -1280,7 +1307,7 @@ namespace Ermine
 
 		}
 		void Deserialize(const rapidjson::Value& in) {
-
+			UNREFERENCED_PARAMETER(in);
 		}
 	};
 	/*!***********************************************************************
