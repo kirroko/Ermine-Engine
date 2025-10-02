@@ -20,21 +20,41 @@ namespace Ermine {
 	public:
 		/*!***********************************************************************
 		\brief
-		 <function brief>
-		\param[in/out] <param name>
-		 <parameter description>
-		\param[in/out] <param 2 name>
-		 <parameter 2 description>
-		\return
-		 <return description if any>
+		 Constructor for ImGUIWindow, initializes the window with a name.
+		\param[in] _name
+		 Optional name for the ImGui window. Defaults to an empty string.
 		*************************************************************************/
 		ImGUIWindow(std::string _name = "") : m_name{_name} {}
+		/*!***********************************************************************
+		\brief
+		 Virtual destructor for ImGUIWindow.
+		*************************************************************************/
 		virtual ~ImGUIWindow() {};
-
+		/*!***********************************************************************
+		\brief
+		 Update logic for the ImGui window.
+		 Intended to be overridden by derived classes.
+		*************************************************************************/
 		virtual void Update() {}
+		/*!***********************************************************************
+		\brief
+		 Pure virtual function to render the ImGui window.
+		 Must be implemented by derived classes.
+		*************************************************************************/
 		virtual void Render() = 0;
-
+		/*!***********************************************************************
+		\brief
+		 Getter for the window name.
+		\return
+		 The name of the ImGui window as a std::string.
+		*************************************************************************/
 		std::string Name() { return m_name; }
+		/*!***********************************************************************
+		\brief
+		 Setter for the window name.
+		\param[in] _name
+		 New name to assign to the ImGui window.
+		*************************************************************************/
 		void Name(std::string _name) { m_name = _name; }
 
 	private:

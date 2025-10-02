@@ -19,6 +19,15 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 namespace fs = std::filesystem;
 
 // Helper Functions
+/*!***********************************************************************
+\brief
+    Extracts the file name from a given path.
+\param[in] path
+    The full file path (can include directory separators).
+\return
+    The file name portion of the path. If no separator is found,
+    returns the entire input string.
+*************************************************************************/
 std::string getFileName(const std::string& path) {
     size_t lastSlash = path.find_last_of("/\\");
     if (lastSlash == std::string::npos) {
@@ -26,14 +35,26 @@ std::string getFileName(const std::string& path) {
     }
     return path.substr(lastSlash + 1); // Extracts everything after the last slash
 }
-
+/*!***********************************************************************
+\brief
+    Converts a UTF-8 encoded std::string into a std::wstring.
+\param[in] str
+    The UTF-8 encoded string to convert.
+\return
+    A wide string (std::wstring) equivalent of the input string.
+*************************************************************************/
 std::wstring StringToWString(const std::string& str) { // Helper function to convert std::string to std::wstring
     int size_needed = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), (int)str.size(), NULL, 0);
     std::wstring wstrTo(size_needed, 0);
     MultiByteToWideChar(CP_UTF8, 0, str.c_str(), (int)str.size(), &wstrTo[0], size_needed);
     return wstrTo;
 }
-
+/*!***********************************************************************
+\brief
+    Displays a small help marker "(?)" in ImGui with a tooltip description.
+\param[in] desc
+    The description text to show in the tooltip when hovered.
+*************************************************************************/
 static void HelpMarker(const char* desc)
 {
     ImGui::TextDisabled("(?)");

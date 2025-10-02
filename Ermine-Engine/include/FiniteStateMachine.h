@@ -24,29 +24,61 @@ namespace Ermine
     {
     public:
         virtual ~State() = default;
+        /*!***********************************************************************
+        \brief
+            Called when a state is entered by an entity.
+        *************************************************************************/
         virtual void Enter(EntityID entity) = 0;
-        virtual void Update(EntityID entity, float deltaTime) = 0;
+        /*!***********************************************************************
+        \brief
+            Called every frame to update the entity in this state.
+        *************************************************************************/
+        virtual void Update(EntityID entity, float dt) = 0;
+        /*!***********************************************************************
+        \brief
+            Called when a state is exited by an entity.
+        *************************************************************************/
         virtual void Exit(EntityID entity) = 0;
     };
 
     // State Machine
-    class StateMachine
+    class StateMachine // should be ECS component
     {
         State* m_CurrentState = nullptr;
 
     public:
+        /*!***********************************************************************
+        \brief
+           Change the current state of an entity.
+        *************************************************************************/
         void ChangeState(EntityID entity, State* newState);
-        void Update(EntityID entity, float deltaTime);
+        /*!***********************************************************************
+        \brief
+           Update the current state of an entity.
+        *************************************************************************/
+        void Update(EntityID entity, float dt);
     };
 
     // State Manager
-    class StateManager
+    class StateManager // should be ECS system
     {
         std::unordered_map<EntityID, StateMachine> m_StateMachines;
 
     public:
+        /*!***********************************************************************
+        \brief
+            Initialize a state machine for an entity with a starting state.
+        *************************************************************************/
         void Init(EntityID entity, State* startState);
-        void Update(float deltaTime);
+        /*!***********************************************************************
+        \brief
+            Update all managed state machines.
+        *************************************************************************/
+        void Update(float dt);
+        /*!***********************************************************************
+        \brief
+            Free the state machine belonging to an entity.
+        *************************************************************************/
         void Free(EntityID entity);
     };
 
@@ -55,7 +87,7 @@ namespace Ermine
     {
     public:
         void Enter(EntityID entity) override;
-        void Update(EntityID entity, float deltaTime) override;
+        void Update(EntityID entity, float dt) override;
         void Exit(EntityID entity) override;
     };
 
@@ -66,7 +98,7 @@ namespace Ermine
         float radius = 3.0f;
     public:
         void Enter(EntityID entity) override;
-        void Update(EntityID entity, float deltaTime) override;
+        void Update(EntityID entity, float dt) override;
         void Exit(EntityID entity) override;
     };
 
@@ -74,7 +106,7 @@ namespace Ermine
     {
     public:
         void Enter(EntityID entity) override;
-        void Update(EntityID entity, float deltaTime) override;
+        void Update(EntityID entity, float dt) override;
         void Exit(EntityID entity) override;
     };
 
@@ -82,7 +114,7 @@ namespace Ermine
     {
     public:
         void Enter(EntityID entity) override;
-        void Update(EntityID entity, float deltaTime) override;
+        void Update(EntityID entity, float dt) override;
         void Exit(EntityID entity) override;
     };
 }
