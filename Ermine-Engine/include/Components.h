@@ -31,6 +31,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <rapidjson/writer.h>
 #include <rapidjson/stringbuffer.h>
 #include "Model.h"
+#include "shadow_config.h"
 #include "Animator.h"
 #include "AssetManager.h"
 #include <Jolt/Jolt.h>
@@ -449,19 +450,21 @@ namespace Ermine
 		/**
 		 * @brief Legacy constructor for backwards compatibility.
 		 * @param shader The shader to associate with the material.
-		 * @param texture The texture to associate with the material (optional). If valid, it is set as the albedo map and a fallback texture.
+		 * @param texture The texture to associate with the material (optional). If valid, it is set as the albedo map only.
 		 */
 		Material(const std::shared_ptr<graphics::Shader>& shader, const std::shared_ptr<graphics::Texture>& texture)
 		{
 			m_material = std::make_shared<graphics::Material>(shader);
+			
+			// Only set texture and flags if texture is explicitly provided and valid
 			if (texture && texture->IsValid())
 			{
-				m_material->SetTexture("material.albedoMap", texture);
-				m_material->SetTexture("texture0", texture); // Fallback for old shaders
+				m_material->SetTexture("materialAlbedoMap", texture);
+				m_material->SetBool("materialHasAlbedoMap", true);
 			}
 
-			// Set default PBR values
-			m_material->LoadTemplate(graphics::MaterialTemplates::PBR_RED());
+			// Set default PBR values without any texture assumptions
+			m_material->LoadTemplate(graphics::MaterialTemplates::PBR_WHITE());
 		}
 
 
@@ -825,18 +828,6 @@ namespace Ermine
 
 	/*!***********************************************************************
 	\brief
-	 Light GPU structure
-	*************************************************************************/
-	struct LightGPU
-	{
-		glm::vec4 position_type;    // xyz = position (view space), w = light type
-		glm::vec4 color_intensity;  // xyz = color, w = intensity
-		glm::vec4 direction_range;  // xyz = direction (view space), w = range
-		glm::vec4 spot_angles_castshadows_resolution;      // x = inner cos, y = outer cos z = casts shadows (1.0 or 0.0), w = shadow map resolution
-	};
-
-	/*!***********************************************************************
-	\brief
 	 Light structure
 	*************************************************************************/
 	struct Light {
@@ -844,7 +835,12 @@ namespace Ermine
 		float intensity;
 		LightType type;
 		bool castsShadows{ false };
-		unsigned int resolution{ 1024 }; // Shadow map resolution
+		glm::mat4 lightSpaceMatrices[NUM_CASCADES]; // For shadow mapping
+		int startOffset{ 0 }; // For UBO indexing
+		float innerAngle{ -1.0f }; // For spotlights
+		float outerAngle{ -1.0f }; // For spotlights
+		float radius{ 3.0f }; // For point lights/spotlights
+		float splitDepths[NUM_CASCADES];
 
 		Light() : color(1.0f, 1.0f, 1.0f),
 			intensity(1.0f),
@@ -857,11 +853,15 @@ namespace Ermine
 		{
 		}
 
-		Light(const Vec3& col, float intens, LightType t, bool shadows, unsigned int res) :
-			color(col), intensity(intens), type(t), castsShadows(shadows), resolution(res)
+		Light(const Vec3& col, float intens, LightType t, bool shadows) :
+			color(col), intensity(intens), type(t), castsShadows(shadows)
 		{
 		}
 
+		Light(const Vec3& col, float intens, LightType t, bool shadows, float inner, float outer, float rad = 1.0f) :
+			color(col), intensity(intens), type(t), castsShadows(shadows), innerAngle(inner), outerAngle(outer), radius(rad)
+		{
+		}
 		template<typename Alloc>
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
 			out.SetObject();
@@ -876,7 +876,6 @@ namespace Ermine
 			out.AddMember("intensity", intensity, alloc);
 			out.AddMember("type", static_cast<int>(type), alloc);          // 0=POINT,1=DIR,2=SPOT
 			out.AddMember("castsShadows", castsShadows, alloc);
-			out.AddMember("resolution", resolution, alloc);
 		}
 
 		void Deserialize(const rapidjson::Value& in) {
@@ -896,8 +895,6 @@ namespace Ermine
 			}
 			if (in.HasMember("castsShadows") && in["castsShadows"].IsBool())
 				castsShadows = in["castsShadows"].GetBool();
-			if (in.HasMember("resolution") && in["resolution"].IsUint())
-				resolution = in["resolution"].GetUint();
 		}
 	};
 
@@ -1251,7 +1248,7 @@ namespace Ermine
 			if (in.HasMember("size"))     size = in["size"].GetFloat();
 		}
 	};
-
+	
 	/*!***********************************************************************
 	 \brief
 	  Hierarchy component structure for parent-child relationships.

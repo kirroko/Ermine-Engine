@@ -16,6 +16,15 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 namespace Ermine
 {
+    /*!***********************************************************************
+    \brief
+        Normalizes a 3D vector.
+    \param[in] v
+        The vector to normalize.
+    \return
+        A normalized vector (unit length). If the length is too small,
+        returns a zero vector.
+    *************************************************************************/
     inline Vec3 Normalize(const Vec3& v)
     {
         float len = std::sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
@@ -36,10 +45,10 @@ namespace Ermine
             m_CurrentState->Enter(entity);
     }
 
-    void StateMachine::Update(EntityID entity, float deltaTime)
+    void StateMachine::Update(EntityID entity, float dt)
     {
         if (m_CurrentState)
-            m_CurrentState->Update(entity, deltaTime);
+            m_CurrentState->Update(entity, dt);
     }
 
     // StateManager
@@ -48,11 +57,11 @@ namespace Ermine
         m_StateMachines[entity].ChangeState(entity, startState);
     }
 
-    void StateManager::Update(float deltaTime)
+    void StateManager::Update(float dt)
     {
         for (auto& [entity, machine] : m_StateMachines)
         {
-            machine.Update(entity, deltaTime);
+            machine.Update(entity, dt);
         }
     }
 
@@ -65,25 +74,30 @@ namespace Ermine
     void IdleState::Enter(EntityID entity)
     {
         //EE_CORE_INFO("Entity {0} entered Idle state.", entity);
+        (void)entity;
     }
 
-    void IdleState::Update(EntityID entity, float deltaTime)
+    void IdleState::Update(EntityID entity, float dt)
     {
         //EE_CORE_INFO("Entity {0} is idling...", entity);
+        (void)entity;
+        (void)dt;
     }
 
     void IdleState::Exit(EntityID entity)
     {
         //EE_CORE_INFO("Entity {0} exiting Idle state.", entity);
+        (void)entity;
     }
 
     // RoamState
     void RoamState::Enter(EntityID entity)
     {
         //EE_CORE_INFO("Entity {0} entered Roam state.", entity);
+        (void)entity;
     }
 
-    void RoamState::Update(EntityID entity, float deltaTime)
+    void RoamState::Update(EntityID entity, float dt)
     {
         //EE_CORE_INFO("Entity {0} is roaming...", entity);
         if (!ECS::GetInstance().IsEntityValid(entity))
@@ -92,11 +106,11 @@ namespace Ermine
         auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
 
         // Move cube
-        //transform.position.x += 1.0f * deltaTime;
+        //transform.position.x += 1.0f * dt;
 
         // Update orbit angle
-        angle += speed * deltaTime;
-        if (angle > 2.0f * M_PI) angle -= 2.0f * M_PI;
+        angle += speed * dt;
+        if (angle > 2.0f * static_cast<float>(M_PI)) angle -= 2.0f * static_cast<float>(M_PI);
 
         // Compute new position along circle (XZ plane)
         float x = radius * cos(angle);
@@ -119,37 +133,46 @@ namespace Ermine
     void RoamState::Exit(EntityID entity)
     {
         //EE_CORE_INFO("Entity {0} exiting Roam state.", entity);
+        (void)entity;
     }
 
     // AttackState
     void AttackState::Enter(EntityID entity)
     {
         //EE_CORE_INFO("Entity {0} entered Attack state.", entity);
+        (void)entity;
     }
 
-    void AttackState::Update(EntityID entity, float deltaTime)
+    void AttackState::Update(EntityID entity, float dt)
     {
         //EE_CORE_INFO("Entity {0} is attacking!", entity);
+        (void)entity;
+        (void)dt;
     }
 
     void AttackState::Exit(EntityID entity)
     {
         //EE_CORE_INFO("Entity {0} exiting Attack state.", entity);
+        (void)entity;
     }
 
     // DeadState
     void DeadState::Enter(EntityID entity)
     {
         //EE_CORE_INFO("Entity {0} entered Dead state.", entity);
+        (void)entity;
     }
 
-    void DeadState::Update(EntityID entity, float deltaTime)
+    void DeadState::Update(EntityID entity, float dt)
     {
         //EE_CORE_INFO("Entity {0} is dead...", entity);
+        (void)entity;
+        (void)dt;
     }
 
     void DeadState::Exit(EntityID entity)
     {
         //EE_CORE_INFO("Entity {0} exiting Dead state.", entity);
+        (void)entity;
     }
 }

@@ -325,11 +325,11 @@ void main()
         result += materialKe;
     } else {
         // PBR Lighting
-        vec3 F0 = vec3(0.04);
+        vec3 F0 = vec3(0.04); // Default dielectric F0
         F0 = mix(F0, albedo, metallic);
         
-        // Ambient lighting
-        vec3 ambient = vec3(0.08) * albedo * ao;
+        // Simple ambient lighting
+        vec3 ambient = vec3(0.03) * albedo * ao;
         result += ambient;
 
         // Add contribution from each light

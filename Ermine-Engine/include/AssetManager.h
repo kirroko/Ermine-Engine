@@ -1,9 +1,9 @@
 /* Start Header ************************************************************************/
 /*!
 \file       AssetManager.h
-\author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu (80%)   
+\author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu (75%)   
 \co-author  Jeremy Lim Ting Jie, jeremytingjie.lim, 2301370, jeremytingjie.lim\@digipen.edu (20%)
-\co-authors Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu
+\co-authors Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu (5%)
 \date       10/09/2025
 \brief      This reflects the brief of the AssetManager system.
             This file is used to manage all the assets in the game.
@@ -79,6 +79,13 @@ public:
          * @param fragmentPath The path to the fragment shader file
          * @return The loaded shader
          */
+        std::shared_ptr<graphics::Shader> LoadShader(const std::string& compouteShader);
+        /**
+         * @brief Load a shader from a vertex and fragment file
+         * @param vertexPath The path to the vertex shader file
+         * @param fragmentPath The path to the fragment shader file
+         * @return The loaded shader
+         */
         std::shared_ptr<graphics::Shader> LoadShader(const std::string& vertexPath, const std::string& fragmentPath);
 
         /*@brief Load a shader from a vertex, geometry and fragment file
@@ -88,8 +95,6 @@ public:
         * @return The loaded shader
         */
         std::shared_ptr<graphics::Shader> LoadShader(const std::string & vertexPath, const std::string & geometryPath, const std::string & fragmentPath);
-
-
         /**
          * @brief Get a shader from the cache
          * @param shaderName The name of the shader
@@ -119,7 +124,7 @@ public:
          */
         const char* load_file_contents(const char* filepath);
 
-        // Cubemap management
+        // ================== Cubemap management ==================
         /**
          * @brief Load a cubemap from individual face textures
          * @param faces Array of 6 face texture paths in order: +X, -X, +Y, -Y, +Z, -Z
@@ -143,7 +148,7 @@ public:
          */
         std::shared_ptr<graphics::Cubemap> GetCubemap(const std::string& name);
 
-        // Material management
+        // ================== Material management ==================
         /**
          * @brief Create and cache a material with the given name
          * @param name The name/key for the material

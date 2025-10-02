@@ -155,6 +155,7 @@ IF EXIST ..\Build\bin\Release-windows-x86_64\Ermine-Engine\Ermine-Engine.dll\ (x
     <ClInclude Include="include\GameObject.h" />
     <ClInclude Include="include\GameObjectFactory.h" />
     <ClInclude Include="include\GeometryFactory.h" />
+    <ClInclude Include="include\GraphicsDebugGUI.h" />
     <ClInclude Include="include\HierarchyInspector.h" />
     <ClInclude Include="include\HierarchyPanel.h" />
     <ClInclude Include="include\HierarchySystem.h" />
@@ -183,6 +184,7 @@ IF EXIST ..\Build\bin\Release-windows-x86_64\Ermine-Engine\Ermine-Engine.dll\ (x
     <ClInclude Include="include\ScriptSystem.h" />
     <ClInclude Include="include\Serialisation.h" />
     <ClInclude Include="include\Shader.h" />
+    <ClInclude Include="include\shadow_config.h" />
     <ClInclude Include="include\Skybox.h" />
     <ClInclude Include="include\Systems.h" />
     <ClInclude Include="include\Texture.h" />
@@ -217,6 +219,7 @@ IF EXIST ..\Build\bin\Release-windows-x86_64\Ermine-Engine\Ermine-Engine.dll\ (x
     <ClCompile Include="src\Graphics\VertexBuffer.cpp" />
     <ClCompile Include="src\ImGUI\AudioIMGUI.cpp" />
     <ClCompile Include="src\ImGUI\EditorGUI.cpp" />
+    <ClCompile Include="src\ImGUI\GraphicsDebugGUI.cpp" />
     <ClCompile Include="src\ImGUI\InspectorGUI.cpp" />
     <ClCompile Include="src\ImGUI\ViewPortGUI.cpp" />
     <ClCompile Include="src\Logger\Logger.cpp" />
