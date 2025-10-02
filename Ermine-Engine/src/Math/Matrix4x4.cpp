@@ -496,4 +496,26 @@ namespace Ermine
         result.z = lhs.w * rhs.z + lhs.x * rhs.y - lhs.y * rhs.x + lhs.z * rhs.w;
         return result;
     }
+
+    /**
+     * @brief Multiplies two 4x4 matrices.
+     * @param lhs The left-hand side matrix.
+     * @param rhs The right-hand side matrix.
+     * @return The resulting matrix from the multiplication.
+     */
+    Matrix4x4 operator*(const Matrix4x4& lhs, const Matrix4x4& rhs)
+    {
+        Matrix4x4 result;
+
+        for (int i = 0; i < 4; ++i) {
+            for (int j = 0; j < 4; ++j) {
+                result.m[i][j] = lhs.m[i][0] * rhs.m[0][j] +
+                    lhs.m[i][1] * rhs.m[1][j] +
+                    lhs.m[i][2] * rhs.m[2][j] +
+                    lhs.m[i][3] * rhs.m[3][j];
+            }
+        }
+
+        return result;
+    }
 }

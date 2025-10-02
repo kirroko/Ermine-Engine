@@ -197,6 +197,8 @@ namespace Ermine
         *************************************************************************/
         Matrix4x4& operator*=(const Matrix4x4& rhs);
 
+        friend Matrix4x4 operator*(const Matrix4x4& lhs, const Matrix4x4& rhs);
+
     } Matrix4x4, Mtx44;
 
 #ifdef _MSC_VER
