@@ -831,35 +831,43 @@ namespace Ermine
 	 Light structure
 	*************************************************************************/
 	struct Light {
-		Vec3 color;
-		float intensity;
-		LightType type;
+		Vec3 color{};
+		float intensity{};
+		LightType type{};
 		bool castsShadows{ false };
-		glm::mat4 lightSpaceMatrices[NUM_CASCADES]; // For shadow mapping
+		glm::mat4 lightSpaceMatrices[NUM_CASCADES]{}; // For shadow mapping
 		int startOffset{ 0 }; // For UBO indexing
 		float innerAngle{ -1.0f }; // For spotlights
 		float outerAngle{ -1.0f }; // For spotlights
 		float radius{ 3.0f }; // For point lights/spotlights
-		float splitDepths[NUM_CASCADES];
+		float splitDepths[NUM_CASCADES]{};
 
 		Light() : color(1.0f, 1.0f, 1.0f),
 			intensity(1.0f),
-			type(LightType::POINT)
+			type(LightType::POINT),
+			lightSpaceMatrices{},
+			splitDepths{}
 		{
 		}
 
 		Light(const Vec3& col, float intens, LightType t) :
-			color(col), intensity(intens), type(t)
+			color(col), intensity(intens), type(t),
+			lightSpaceMatrices{},
+			splitDepths{}
 		{
 		}
 
 		Light(const Vec3& col, float intens, LightType t, bool shadows) :
-			color(col), intensity(intens), type(t), castsShadows(shadows)
+			color(col), intensity(intens), type(t), castsShadows(shadows),
+			lightSpaceMatrices{},
+			splitDepths{}
 		{
 		}
 
 		Light(const Vec3& col, float intens, LightType t, bool shadows, float inner, float outer, float rad = 1.0f) :
-			color(col), intensity(intens), type(t), castsShadows(shadows), innerAngle(inner), outerAngle(outer), radius(rad)
+			color(col), intensity(intens), type(t), castsShadows(shadows), innerAngle(inner), outerAngle(outer), radius(rad),
+			lightSpaceMatrices{},
+			splitDepths{}
 		{
 		}
 		template<typename Alloc>

@@ -165,8 +165,8 @@ namespace Ermine::graphics
         //~Renderer();
         struct GBuffer
         {
-            unsigned int FBO;
-            unsigned int DepthTexture;
+            unsigned int FBO = 0;
+            unsigned int DepthTexture = 0;
 
             // Multiple Render Targets (MRTs)
 
@@ -177,15 +177,15 @@ namespace Ermine::graphics
             uint64_t HandleDepthTexture = 0;
 
 
-            unsigned int PackedTexture0;
-            unsigned int PackedTexture1;
-            unsigned int PackedTexture2;
-            unsigned int PackedTexture3;
+            unsigned int PackedTexture0 = 0;
+            unsigned int PackedTexture1 = 0;
+            unsigned int PackedTexture2 = 0;
+            unsigned int PackedTexture3 = 0;
 
 
 
-            int width;
-            int height;
+            int width = 0;
+            int height = 0;
         };
 
 
@@ -194,12 +194,12 @@ namespace Ermine::graphics
         */
         struct PostProcessBuffer
         {
-            unsigned int FBO;
-            unsigned int ColorTexture;
-            unsigned int DepthTexture = 0; // Optional depth texture for skybox rendering
+			unsigned int FBO = 0;
+			unsigned int ColorTexture = 0;
+            unsigned int DepthTexture = 0;
 
-            int width;
-            int height;
+			int width = 0;
+			int height = 0;
         };
 
 
@@ -324,12 +324,12 @@ namespace Ermine::graphics
         /**
          * @brief Draw the game objects to the screen.
          */
-        void Draw(const std::shared_ptr<VertexArray>& vao, const std::shared_ptr<IndexBuffer>& ibo, const std::shared_ptr<Shader>& shader) const;
+        void Draw(const std::shared_ptr<VertexArray>& vao, const std::shared_ptr<IndexBuffer>& ibo) const;
 
         /**
          * @brief Draw the game objects to the screen using instanced rendering.
          */
-        void DrawInstanced(const std::shared_ptr<VertexArray>& vao, const std::shared_ptr<IndexBuffer>& ibo, const std::shared_ptr<Shader>& shader, int instanceCount) const;
+        void DrawInstanced(const std::shared_ptr<VertexArray>& vao, const std::shared_ptr<IndexBuffer>& ibo, int instanceCount) const;
 
         /**
          * @brief Clear the screen.
@@ -356,11 +356,6 @@ namespace Ermine::graphics
          * @param view The view matrix to transform the positions and directions of the lights into view space.
          */
         void UpdateLightsSSBO(const Mtx44& view);
-        /**
-         * @brief Binds the Lights SSBO to the specified shader program if it has not been bound before.
-         * @param shader The shader program to which the lights SSBO should be bound.
-         */
-        void BindLightsBlockIfPresent(const std::shared_ptr<Shader>& shader);
         /**
          * @brief Updates the material's uniform buffer object (UBO) with the specified material data.
          * @param materialData The material data to be uploaded to the UBO, including properties like color, texture, etc.

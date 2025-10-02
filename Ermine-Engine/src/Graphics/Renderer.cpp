@@ -815,7 +815,7 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 			BindMaterialTextures(material);
 
 			// Draw the mesh
-			Draw(mesh.vertex_array, mesh.index_buffer, m_GBufferShader);
+			Draw(mesh.vertex_array, mesh.index_buffer);
 		}
 	}
 
@@ -868,14 +868,10 @@ void Renderer::RenderLightingPass(const Mtx44& view, const Mtx44& projection)
 	// Set shading mode
 	m_LightPassShader->SetUniform1i("u_ShadingMode", m_IsBlinnPhong ? 1 : 0);
 
-	// Update and bind lights UBO
-	// UpdateLightsUBO(view); // updated in shadow pass
-	BindLightsBlockIfPresent(m_LightPassShader);
-
 	// Render fullscreen quad 
 	if (m_QuadMesh.vertex_array && m_QuadMesh.index_buffer)
 	{
-		Draw(m_QuadMesh.vertex_array, m_QuadMesh.index_buffer, m_LightPassShader);
+		Draw(m_QuadMesh.vertex_array, m_QuadMesh.index_buffer);
 	}
 
 	EndLightingPass();
@@ -906,7 +902,7 @@ void Renderer::RenderPostProcessPass()
 	m_BloomShader->SetUniform1f("u_BloomThreshold", m_BloomThreshold);
 	m_BloomShader->SetUniform1f("u_BloomRadius", m_BloomRadius);
 
-	Draw(m_QuadMesh.vertex_array, m_QuadMesh.index_buffer, m_BloomShader);
+	Draw(m_QuadMesh.vertex_array, m_QuadMesh.index_buffer);
 
 	// Pass 2: Horizontal blur
 	glBindFramebuffer(GL_FRAMEBUFFER, m_BloomBlurBuffer1->FBO);
@@ -914,7 +910,7 @@ void Renderer::RenderPostProcessPass()
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, m_BloomExtractBuffer->ColorTexture);
 	m_BloomShader->SetUniform1i("u_Pass", 2);
-	Draw(m_QuadMesh.vertex_array, m_QuadMesh.index_buffer, m_BloomShader);
+	Draw(m_QuadMesh.vertex_array, m_QuadMesh.index_buffer);
 
 	// Pass 3: Vertical blur
 	glBindFramebuffer(GL_FRAMEBUFFER, m_BloomBlurBuffer2->FBO);
@@ -923,7 +919,7 @@ void Renderer::RenderPostProcessPass()
 	glBindTexture(GL_TEXTURE_2D, m_BloomBlurBuffer1->ColorTexture);
 	m_BloomShader->SetUniform1i("u_LightingTexture", 0);
 	m_BloomShader->SetUniform1i("u_Pass", 3);
-	Draw(m_QuadMesh.vertex_array, m_QuadMesh.index_buffer, m_BloomShader);
+	Draw(m_QuadMesh.vertex_array, m_QuadMesh.index_buffer);
 
 	// Final pass: Combine with post-processing
 #ifdef _DEBUG
@@ -976,7 +972,7 @@ void Renderer::RenderPostProcessPass()
 	m_PostProcessShader->SetUniform1f("u_FXAAReduceMin", m_FXAAReduceMin);
 	m_PostProcessShader->SetUniform1f("u_FXAAReduceMul", m_FXAAReduceMul);
 
-	Draw(m_QuadMesh.vertex_array, m_QuadMesh.index_buffer, m_PostProcessShader);
+	Draw(m_QuadMesh.vertex_array, m_QuadMesh.index_buffer);
 
 	glEnable(GL_DEPTH_TEST);
 
@@ -1309,18 +1305,6 @@ void Renderer::UpdateLightsSSBO(const Mtx44& view)
 }
 
 /**
- * @brief Binds the Lights SSBO to the specified shader program if it has not been bound before.
- * @param shader The shader program to which the lights SSBO should be bound.
- */
-void Renderer::BindLightsBlockIfPresent(const std::shared_ptr<Shader>& shader)
-{
-	// Since we use explicit binding in shaders (binding = 1),
-	// we don't need to manually bind SSBO blocks like we did with UBOs
-	// The shader binding layout handles this automatically
-	return;
-}
-
-/**
  * @brief Updates the material's uniform buffer object (UBO) with the specified material data.
  *
  * If the material UBO does not exist, this function creates one. It then uploads the given material data
@@ -1339,11 +1323,11 @@ void Renderer::UpdateMaterialUBO(const graphics::MaterialUBO& materialData)
 	}
 	
 	// Ensure size is reasonable (MaterialUBO should be 128 bytes with proper alignment)
-	if (expectedSize < 64 || expectedSize > 512)
-	{
-		EE_CORE_ERROR("MaterialUBO size out of expected range: {0} bytes (expected ~128 bytes)", expectedSize);
-		return;
-	}
+	//if (expectedSize < 64 || expectedSize > 512)
+	//{
+	//	EE_CORE_ERROR("MaterialUBO size out of expected range: {0} bytes (expected ~128 bytes)", expectedSize);
+	//	return;
+	//}
 
 	// Create Material UBO if it doesn't exist
 	if (!m_MaterialUBO)
@@ -1575,7 +1559,6 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 				material->Bind();
 
 				// Bind uniform blocks
-				BindLightsBlockIfPresent(shader);
 				BindMaterialBlockIfPresent(shader);
 
 				// Disable skinning for primitive meshes
@@ -1586,13 +1569,6 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 				shader->SetUniformMatrix4fv("view", &view.m2[0][0]);
 				shader->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
 
-				// Calculate normal matrix
-				glm::mat4 glmView = glm::mat4(
-					view.m00, view.m01, view.m02, view.m03,
-					view.m10, view.m11, view.m12, view.m13,
-					view.m20, view.m21, view.m22, view.m23,
-					view.m30, view.m31, view.m32, view.m33
-				);
 				glm::mat4 modelView = glmView * model;
 				glm::mat3 normalMatrix = transpose(inverse(glm::mat3(modelView)));
 				shader->SetUniformMatrix3fv("NormalMatrix", normalMatrix);
@@ -1601,7 +1577,7 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 				shader->SetUniform1i("isBlinnPhong", m_IsBlinnPhong ? 1 : 0);
 
 				// Draw the mesh
-				Draw(mesh.vertex_array, mesh.index_buffer, shader);
+				Draw(mesh.vertex_array, mesh.index_buffer);
 
 				// Unbind material
 				material->Unbind();
@@ -1666,7 +1642,6 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 					material->Bind();
 
 					// Bind uniform blocks
-					BindLightsBlockIfPresent(shader);
 					BindMaterialBlockIfPresent(shader);
 
 					// Set transformation matrices
@@ -1674,13 +1649,6 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 					shader->SetUniformMatrix4fv("view", &view.m2[0][0]);
 					shader->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
 
-					// Calculate normal matrix
-					glm::mat4 glmView = glm::mat4(
-						view.m00, view.m01, view.m02, view.m03,
-						view.m10, view.m11, view.m12, view.m13,
-						view.m20, view.m21, view.m22, view.m23,
-						view.m30, view.m31, view.m32, view.m33
-					);
 					glm::mat4 modelView = glmView * transparentObj.modelMatrix;
 					glm::mat3 normalMatrix = transpose(inverse(glm::mat3(modelView)));
 					shader->SetUniformMatrix3fv("NormalMatrix", normalMatrix);
@@ -1689,7 +1657,7 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 					shader->SetUniform1i("isBlinnPhong", m_IsBlinnPhong ? 1 : 0);
 
 					// Draw the mesh
-					Draw(mesh.vertex_array, mesh.index_buffer, shader);
+					Draw(mesh.vertex_array, mesh.index_buffer);
 
 					// Unbind material
 					material->Unbind();
@@ -1718,7 +1686,7 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
  * @param ibo The index buffer object
  * @param shader The shader object
  */
-void Renderer::Draw(const std::shared_ptr<VertexArray>& vao, const std::shared_ptr<IndexBuffer>& ibo, const std::shared_ptr<Shader>& shader) const
+void Renderer::Draw(const std::shared_ptr<VertexArray>& vao, const std::shared_ptr<IndexBuffer>& ibo) const
 {
    vao->Bind();
    glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(ibo->GetCount()), GL_UNSIGNED_INT, 0);
@@ -1729,7 +1697,7 @@ void Renderer::Draw(const std::shared_ptr<VertexArray>& vao, const std::shared_p
    vao->Unbind();
 }
 
-void Renderer::DrawInstanced(const std::shared_ptr<VertexArray>& vao, const std::shared_ptr<IndexBuffer>& ibo, const std::shared_ptr<Shader>& shader, int instanceCount) const
+void Renderer::DrawInstanced(const std::shared_ptr<VertexArray>& vao, const std::shared_ptr<IndexBuffer>& ibo, int instanceCount) const
 {
    vao->Bind();
    glDrawElementsInstanced(GL_TRIANGLES, static_cast<GLsizei>(ibo->GetCount()), GL_UNSIGNED_INT, 0, instanceCount);
@@ -1877,7 +1845,7 @@ void Renderer::RenderModelDeferred(const Model& model, graphics::Material* mater
 		glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(modelView)));
 		m_GBufferShader->SetUniformMatrix3fv("NormalMatrix", normalMatrix);
 
-		Draw(mesh.vao, mesh.ibo, m_GBufferShader);
+		Draw(mesh.vao, mesh.ibo);
 	}
 }
 
@@ -1913,7 +1881,6 @@ void Renderer::RenderModelForward(const Model& model, graphics::Material* materi
 
 	// bind material (textures, shader)
 	material->Bind();
-	BindLightsBlockIfPresent(shader);
 	BindMaterialBlockIfPresent(shader);
 
 	// Upload bone matrices if present
@@ -1936,7 +1903,7 @@ void Renderer::RenderModelForward(const Model& model, graphics::Material* materi
 		glm::mat4 modelView = glmView * modelMat;
 		glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(modelView)));
 		shader->SetUniformMatrix3fv("NormalMatrix", normalMatrix);
-		Draw(mesh.vao, mesh.ibo, shader);
+		Draw(mesh.vao, mesh.ibo);
 	}
 
 	material->Unbind();
@@ -2033,7 +2000,6 @@ void Renderer::RenderForwardPass(const Mtx44& view, const Mtx44& projection)
 		shader->Bind();
 
 		// Bind uniform blocks
-		BindLightsBlockIfPresent(shader);
 		BindMaterialBlockIfPresent(shader);
 
 		// Update material UBO
@@ -2119,7 +2085,7 @@ void Renderer::RenderForwardPass(const Mtx44& view, const Mtx44& projection)
 			// Handle regular mesh component
 			auto& mesh = ecs.GetComponent<Mesh>(entity);
 			if (mesh.vertex_array && mesh.index_buffer) {
-				Draw(mesh.vertex_array, mesh.index_buffer, shader);
+				Draw(mesh.vertex_array, mesh.index_buffer);
 			}
 		}
 
@@ -2381,7 +2347,7 @@ bool Renderer::testSpotlightFrustumIntersection(const glm::vec3& lightPos, const
 
 	// Test points around cone circumference
 	for (int i = 0; i < numSamples; ++i) {
-		float angle = (2.0f * M_PI * i) / numSamples;
+		float angle = (2.0f * static_cast<float>(M_PI) * static_cast<float>(i)) / static_cast<float>(numSamples);
 		glm::vec3 offset = right * (coneRadius * std::cos(angle)) + up * (coneRadius * std::sin(angle));
 		glm::vec3 conePoint = coneCenter + offset;
 
@@ -2478,7 +2444,7 @@ void Renderer::CalculateLightMatrix(const editor::EditorCamera& editorCamera)
 	glm::vec3 viewDir = glm::normalize(farPos - nearPos);
 
 	const auto& ecs = Ermine::ECS::GetInstance();
-	int currentLayer = 0;
+	unsigned int currentLayer = 0;
 
 	for (auto e : m_LightSystem->m_Entities) {
 		if (!ecs.HasComponent<Light>(e) || !ecs.HasComponent<Transform>(e)) continue;
@@ -2673,7 +2639,6 @@ void Renderer::CalculateLightMatrix(const editor::EditorCamera& editorCamera)
 void Renderer::RenderShadowMapInstanced()
 {
 	UpdateLightsSSBO(editor::EditorCamera::GetInstance().GetViewMatrix());
-	BindLightsBlockIfPresent(m_ShadowMapInstancedShader);
 
 	// Validate resources
 	if (!m_ShadowMapFBO || !m_ShadowMapArray || !m_ShadowMapInstancedShader)
@@ -2733,7 +2698,7 @@ void Renderer::RenderShadowMapInstanced()
 	int totalInstances = maxLights * NUM_CASCADES;
 
 	// Set up per-frame uniforms
-	for (int i = 0; i < maxLights; ++i) {
+	for (unsigned int i = 0; i < maxLights; ++i) {
 		std::string uniformName = "u_ActiveShadowLights[" + std::to_string(i) + "]";
 		m_ShadowMapInstancedShader->SetUniform1i(uniformName, activeShadowLights[i]);
 	}
@@ -2779,7 +2744,7 @@ void Renderer::RenderShadowMapInstanced()
 			m_ShadowMapInstancedShader->SetUniformMatrix4fv("model", modelMat);
 
 			// Use instanced draw call
-			DrawInstanced(mesh.vao, mesh.ibo, m_ShadowMapInstancedShader, totalInstances);
+			DrawInstanced(mesh.vao, mesh.ibo, totalInstances);
 		}
 	}
 
@@ -2806,7 +2771,7 @@ void Renderer::RenderShadowMapInstanced()
 		m_ShadowMapInstancedShader->SetUniform1i("u_UseSkinning", 0);
 
 		// Use instanced draw call
-		DrawInstanced(mesh.vertex_array, mesh.index_buffer, m_ShadowMapInstancedShader, totalInstances);
+		DrawInstanced(mesh.vertex_array, mesh.index_buffer, totalInstances);
 	}
 
 	// Restore culling state (back to normal)
@@ -2995,7 +2960,7 @@ void Renderer::RenderPickingPass(const Mtx44& view, const Mtx44& projection)
 			if (!mesh.vao || !mesh.ibo) continue;
 			glm::mat4 modelMat = model * mesh.localTransform;
 			m_PickingShader->SetUniformMatrix4fv("model", modelMat);
-			Draw(mesh.vao, mesh.ibo, m_PickingShader);
+			Draw(mesh.vao, mesh.ibo);
 		}
 	}
 
@@ -3020,7 +2985,7 @@ void Renderer::RenderPickingPass(const Mtx44& view, const Mtx44& projection)
 		m_PickingShader->SetUniform1ui("u_EntityId", encoded);
 		m_PickingShader->SetUniformMatrix4fv("model", model);
 
-		Draw(mesh.vertex_array, mesh.index_buffer, m_PickingShader);
+		Draw(mesh.vertex_array, mesh.index_buffer);
 	}
 
 	// Restore
