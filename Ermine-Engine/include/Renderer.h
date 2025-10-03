@@ -511,6 +511,12 @@ namespace Ermine::graphics
          */
         bool IsTransparentMaterial(const Ermine::graphics::Material* material) const;
 
+        /**
+         * @brief Handle window resize events to adjust buffers and viewports
+         * @param width New window width
+         * @param height New window height
+		 */
+		void OnWindowResize(const int& width, const int& height);
 
     private:
 		// Renderer state
