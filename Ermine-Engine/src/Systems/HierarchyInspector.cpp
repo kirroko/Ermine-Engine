@@ -82,6 +82,13 @@ namespace Ermine::editor {
         //    DrawParticleComponent(selected);
         //}
 
+        if (ECS::GetInstance().HasComponent<ModelComponent>(selected)) {
+            DrawModelComponent(selected);
+        }
+
+        if (ECS::GetInstance().HasComponent<AnimationComponent>(selected)) {
+            DrawAnimationComponent(selected);
+        }
 
         ImGui::PopID();
 
@@ -734,6 +741,172 @@ namespace Ermine::editor {
         }
     }
 
+    void HierarchyInspector::DrawModelComponent(EntityID entity)
+    {
+        if (!ImGui::CollapsingHeader("Model", ImGuiTreeNodeFlags_DefaultOpen))
+            return;
+
+        auto& modelComp = ECS::GetInstance().GetComponent<ModelComponent>(entity);
+
+        // --- Scan available models from ../Resources/Models/ ---
+        static std::vector<std::string> availableModels;
+        static bool initialized = false;
+        static const std::string modelsDir = "../Resources/Models/";
+
+        if (!initialized) {
+            availableModels.clear();
+            for (auto& entry : std::filesystem::directory_iterator(modelsDir)) {
+                if (entry.is_regular_file()) {
+                    std::string name = entry.path().filename().string();
+                    if (name.ends_with(".fbx") || name.ends_with(".obj") || name.ends_with(".gltf"))
+                        availableModels.push_back(name);
+                }
+            }
+            std::sort(availableModels.begin(), availableModels.end());
+            initialized = true;
+        }
+
+        // --- Current model name ---
+        std::string currentName = (modelComp.m_model ? modelComp.m_model->GetName() : "<None>");
+        if (currentName.empty()) currentName = "<None>";
+
+        // --- Dropdown menu ---
+        static int selectedModel = -1;
+        if (modelComp.m_model) {
+            auto it = std::find(availableModels.begin(), availableModels.end(), modelComp.m_model->GetName());
+            if (it != availableModels.end())
+                selectedModel = (int)std::distance(availableModels.begin(), it);
+        }
+
+        if (ImGui::BeginCombo("Model File", currentName.c_str())) {
+            for (int i = 0; i < (int)availableModels.size(); ++i) {
+                bool isSelected = (i == selectedModel);
+                if (ImGui::Selectable(availableModels[i].c_str(), isSelected)) {
+                    selectedModel = i;
+                    std::string fullPath = modelsDir + availableModels[i];
+
+                    // Use LoadModel (loads if missing, returns cached if present)
+                    auto model = AssetManager::GetInstance().LoadModel(fullPath);
+                    if (model) {
+                        modelComp.m_model = model;
+
+                        // Auto-attach animator if entity has AnimationComponent
+                        if (ECS::GetInstance().HasComponent<AnimationComponent>(entity)) {
+                            auto& animComp = ECS::GetInstance().GetComponent<AnimationComponent>(entity);
+                            const aiScene* scene = model->GetAssimpScene();
+                            if (scene && scene->mNumAnimations > 0)
+                                animComp.m_animator = std::make_shared<graphics::Animator>(model);
+                            else
+                                animComp.m_animator.reset();
+                        }
+                    }
+                }
+                if (isSelected) ImGui::SetItemDefaultFocus();
+            }
+            ImGui::EndCombo();
+        }
+
+        // --- Info about the model ---
+        if (modelComp.m_model) {
+            auto& model = modelComp.m_model;
+            ImGui::Text("Name: %s", model->GetName().c_str());
+            ImGui::Text("Meshes: %d", (int)model->GetMeshes().size());
+            ImGui::Text("Bones: %d", model->GetBoneCount());
+        }
+
+        // --- Reload Button ---
+        if (modelComp.m_model) {
+            if (ImGui::Button("Reload Model")) {
+                std::string fullPath = modelsDir + modelComp.m_model->GetName();
+
+                // Remove cached version (forces reload from disk)
+                auto& manager = AssetManager::GetInstance();
+                manager.UnloadModel(fullPath); // remove from cache
+
+                // Load fresh copy
+                auto reloaded = manager.LoadModel(fullPath);
+                if (reloaded) {
+                    modelComp.m_model = reloaded;
+
+                    // Refresh animator
+                    if (ECS::GetInstance().HasComponent<AnimationComponent>(entity)) {
+                        auto& animComp = ECS::GetInstance().GetComponent<AnimationComponent>(entity);
+                        const aiScene* scene = reloaded->GetAssimpScene();
+                        if (scene && scene->mNumAnimations > 0)
+                            animComp.m_animator = std::make_shared<graphics::Animator>(reloaded);
+                        else
+                            animComp.m_animator.reset();
+                    }
+                }
+            }
+        }
+    }
+
+    void HierarchyInspector::DrawAnimationComponent(EntityID entity)
+    {
+        if (!ImGui::CollapsingHeader("Animation", ImGuiTreeNodeFlags_DefaultOpen))
+            return;
+
+        auto& animComp = ECS::GetInstance().GetComponent<AnimationComponent>(entity);
+
+        if (!animComp.m_animator) {
+            ImGui::TextUnformatted("No animations available (model has no animations).");
+            return;
+        }
+
+        auto& animator = animComp.m_animator;
+        const auto& clips = animator->GetClips();
+
+        if (!clips.empty()) {
+            static int selectedClip = 0;
+            std::vector<const char*> names;
+            names.reserve(clips.size());
+            for (auto& c : clips) names.push_back(c.name.c_str());
+
+            if (ImGui::Combo("Active Clip", &selectedClip, names.data(), (int)names.size())) {
+                animator->PlayAnimation(selectedClip, animator->IsLooping());
+            }
+
+            if (ImGui::Button("Play")) animator->PlayAnimation(selectedClip, animator->IsLooping());
+            ImGui::SameLine();
+            if (ImGui::Button("Pause")) animator->PauseAnimation();
+            ImGui::SameLine();
+            if (ImGui::Button("Resume")) animator->ResumeAnimation();
+            ImGui::SameLine();
+            if (ImGui::Button("Stop")) animator->StopAnimation();
+
+            if (auto current = animator->GetCurrentClip()) {
+                ImGui::Separator();
+                ImGui::Text("Current: %s", current->name.c_str());
+                ImGui::Text("Duration: %.2fs", current->duration / current->ticksPerSecond);
+                ImGui::Text("Ticks: %.2f, TPS: %.2f", current->duration, current->ticksPerSecond);
+            }
+        }
+        else
+            ImGui::TextUnformatted("No animation clips found in this model.");
+
+        // Looping toggle (persisted)
+        bool looping = animator->IsLooping();
+        if (ImGui::Checkbox("Looping", &looping))
+            animator->IsLooping() = looping;
+
+        // Reload Animator Button
+        if (ImGui::Button("Reload Animation")) {
+            auto model = animator->GetModel();
+            if (model) {
+                const aiScene* scene = model->GetAssimpScene();
+                if (scene && scene->mNumAnimations > 0) {
+                    animComp.m_animator = std::make_shared<graphics::Animator>(model);
+                    ImGui::TextUnformatted("Animation reloaded successfully.");
+                }
+                else {
+                    animComp.m_animator.reset();
+                    ImGui::TextUnformatted("No animations found in this model.");
+                }
+            }
+        }
+    }
+
     void HierarchyInspector::DrawAddComponentMenu(EntityID entity) {
         if (ImGui::MenuItem("Transform") && !ECS::GetInstance().HasComponent<Transform>(entity)) {
             ECS::GetInstance().AddComponent(entity, Transform());
@@ -756,6 +929,12 @@ namespace Ermine::editor {
         //}
         if (ImGui::MenuItem("Script") && !ECS::GetInstance().HasComponent<Script>(entity)) {
             ECS::GetInstance().AddComponent(entity, Script());
+        }
+        if (ImGui::MenuItem("Model") && !ECS::GetInstance().HasComponent<ModelComponent>(entity)) {
+            ECS::GetInstance().AddComponent(entity, ModelComponent());
+        }
+        if (ImGui::MenuItem("Animation") && !ECS::GetInstance().HasComponent<AnimationComponent>(entity)) {
+            ECS::GetInstance().AddComponent(entity, AnimationComponent());
         }
         // Add more component types as needed
     }

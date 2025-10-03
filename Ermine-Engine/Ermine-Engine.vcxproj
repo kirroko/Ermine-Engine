@@ -64,7 +64,7 @@
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <AdditionalOptions>/MP /wd4251 /wd4005 /wd4267 /wd4324 /wd4201 /wd5054 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/MP /wd4251 /wd4005 /wd4267 /wd5054 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -103,7 +103,7 @@ IF EXIST ..\Build\bin\Debug-windows-x86_64\Ermine-Engine\Ermine-Engine.dll\ (xco
       <MinimalRebuild>false</MinimalRebuild>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalOptions>/MP /wd4251 /wd4005 /wd4267 /wd4324 /wd4201 /wd5054 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/MP /wd4251 /wd4005 /wd4267 /wd5054 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>

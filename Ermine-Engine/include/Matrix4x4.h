@@ -1,11 +1,12 @@
 /* Start Header ************************************************************************/
 /*!
 \file       Matrix4x4.h
-\author     Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu
-\date       Sept 09, 2024
+\author     Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu (60%)
+\co-authors Tan Si Han, t.sihan, 2301264, t.sihan\@digipen.edu (40%)
+\date       Sept 02, 2025
 \brief      This file contains the declaration of the Matrix4x4 structure.
 
-Copyright (C) 2024 DigiPen Institute of Technology.
+Copyright (C) 2025 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents without the
 prior written consent of DigiPen Institute of Technology is prohibited.
 */
@@ -346,4 +347,11 @@ namespace Ermine
     bool Mtx44Inverse(Matrix4x4& pResult, const Matrix4x4& pMtx);
 
     Quaternion operator*(const Quaternion& lhs, const Quaternion& rhs);
+    Quaternion QuaternionNormalize(const Quaternion& q);
+    Quaternion QuaternionMultiply(const Quaternion& a, const Quaternion& b);
+    Quaternion QuaternionConjugate(const Quaternion& q);
+    Vector3D   QuaternionRotateVector(const Quaternion& q, const Vector3D& v);
+
+    Quaternion QuaternionFromAxisAngle(const Vector3D& axis, float angleRad);
+    void       QuaternionToAxisAngle(const Quaternion& q, Vector3D& axis, float& angleRad);
 }

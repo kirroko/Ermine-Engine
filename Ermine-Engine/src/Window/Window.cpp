@@ -2,6 +2,7 @@
 /*!
 \file       Window.cpp
 \author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu
+\co-author  WEE HUNG RU, Curtis, h.wee, 230xxx, h.wee\@digipen.edu (25%)
 \date       09/03/2025
 \brief      This file contains the definition of the Window system.
             This file is used to create a window using GLFW.
@@ -15,6 +16,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "PreCompile.h"
 #include "Window.h"
 
+#include "Serialisation.h"
 #include "glad/glad.h"
 
 /**
@@ -28,14 +30,30 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 GLFWwindow* Ermine::Window::InitWindow(int width, int height, const char* title)
 {
     EE_CORE_TRACE("Initializing Window...");
-    window_width = width;
-    window_height = height;
+
+    const std::filesystem::path cfgPath = "Ermine-Engine.config";
+
+    Config cfg{};
+    try {
+        cfg = LoadConfigFromFile(cfgPath);
+        EE_CORE_INFO("Loaded config: {0}x{1}, fullscreen={2}, maximised={3}, title={4}",
+            cfg.windowWidth, cfg.windowHeight, cfg.fullscreen, cfg.maximized, cfg.title);
+    }
+    catch (const std::exception& e) {
+        EE_CORE_WARN("Config not found/invalid ({}). Using defaults.", e.what());
+        cfg = { .windowWidth= width, .windowHeight= height, .fullscreen= false, .maximized= false, .title= title};
+        try { SaveConfigToFile(cfg, cfgPath, /*pretty=*/true); }
+        catch (const std::exception& w) { EE_CORE_WARN("Could not write default config: {}", w.what()); }
+    }
+
+    window_width = cfg.windowWidth;
+    window_height = cfg.windowHeight;
 
     glfwSetErrorCallback([]([[maybe_unused]] int error , const char* description) { EE_CORE_ERROR("GLFW Error: {0}", description); });
     
     if (!glfwInit())
     {
-        EE_CORE_INFO("Failed to initialize GLFW");
+        EE_CORE_ERROR("Failed to initialize GLFW");
         return nullptr;
     }
 
@@ -59,12 +77,32 @@ GLFWwindow* Ermine::Window::InitWindow(int width, int height, const char* title)
     // glfwWindowHint( GLFW_REFRESH_RATE, mode->refreshRate );
     // GLFWwindow* window = glfwCreateWindow(mode->width, mode->height, title, nullptr, nullptr);
 
-    GLFWwindow* window = glfwCreateWindow(width, height, title, nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(cfg.windowWidth, cfg.windowHeight, cfg.title.c_str(), nullptr, nullptr);
     if (!window)
     {
         EE_CORE_ERROR("Failed to create window");
         glfwTerminate();
         return nullptr;
+    }
+
+    if (cfg.fullscreen)
+    {
+	    GLFWmonitor* mon = glfwGetPrimaryMonitor();
+	    const GLFWvidmode* mode = glfwGetVideoMode(mon);
+	    glfwSetWindowMonitor(window, mon, 0, 0,
+	        mode->width, mode->height,
+	        mode->refreshRate);
+    }
+    else 
+    {
+        glfwSetWindowSize(window, cfg.windowWidth, cfg.windowHeight);
+
+        if (cfg.maximized) {
+            glfwMaximizeWindow(window);
+        }
+        else {
+            glfwRestoreWindow(window);
+        }
     }
 
     glfwMakeContextCurrent(window);
@@ -77,24 +115,17 @@ GLFWwindow* Ermine::Window::InitWindow(int width, int height, const char* title)
         return nullptr;
     }
 
-    glViewport(0,0,width,height);
+    glViewport(0,0,cfg.windowWidth,cfg.windowHeight);
     
     glfwSwapInterval(1); // Enable V-Sync
 
     glEnable(GL_DEPTH_TEST);
 
-    // Input class handle this part already
-    //glfwSetMouseButtonCallback(window,nullptr);
-    //glfwSetScrollCallback(window,nullptr);
-    //glfwSetKeyCallback(window,nullptr);
-    //glfwSetCharCallback(window,nullptr);
-
     std::string glRenderer = std::string(reinterpret_cast<const char*>(glGetString(GL_RENDERER)));
     std::string glVersion = std::string(reinterpret_cast<const char*>(glGetString(GL_VERSION)));
     EE_CORE_TRACE("Renderer: {0}", glRenderer);
     EE_CORE_TRACE("OpenGL version supported {0}", glVersion);
-    
-    EE_CORE_INFO("Window creation with width: {0}, height: {1}, title: {2}", width, height, title);
+
     return window;
 }
 

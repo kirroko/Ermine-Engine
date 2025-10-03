@@ -2,7 +2,7 @@
 /*!
 \file       Animator.cpp
 \author     Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu
-\date       27/09/2025
+\date       03/10/2025
 \brief      This file contains the definition of the animator class. It is responsible for
             loading animation clips from an Assimp scene, managing playback state,
             updating bone transforms per frame, providing final matrices for GPU skinning
@@ -24,7 +24,7 @@ namespace Ermine::graphics
 {
     /**
      * @brief Construct an Animator for a given model.
-     * @param model The skinned model to animate
+     * @param model The skinned model to animate.
      */
     Animator::Animator(std::shared_ptr<Model> model) : m_Model(std::move(model))
     {
@@ -32,12 +32,18 @@ namespace Ermine::graphics
         m_FinalBoneMatrices.resize(m_Model->GetBoneCount(), glm::mat4(1.0f));
         
         LoadAnimations(); // Load all animation clips
-        PlayAnimation(0, true); // play first clip, temp
+
+        if (!m_Clips.empty())
+            PlayAnimation(0, true); // play first clip, TEMP
+        else
+            m_CurrentClip = nullptr;
     }
 
     /**
-     * @brief Load all animations from an Assimp scene.
-     * @param scene The Assimp scene containing animations
+     * @brief Load all animations from the model's Assimp scene.
+     *
+     * Converts each Assimp animation in the scene into an @ref AnimationClip
+     * and stores them internally for playback.
      */
     void Animator::LoadAnimations()
     {
@@ -52,9 +58,10 @@ namespace Ermine::graphics
     }
 
     /**
-     * @brief Build a single AnimationClip from Assimp data.
-     * @param anim Assimp animation
-     * @return Converted AnimationClip
+     * @brief Convert a single Assimp animation into an AnimationClip.
+     *
+     * @param anim Pointer to the Assimp animation to convert.
+     * @return A populated AnimationClip containing channels, keyframes, and metadata.
      */
     AnimationClip Animator::LoadAnimation(const aiAnimation* anim)
     {
@@ -156,6 +163,8 @@ namespace Ermine::graphics
 
     /**
      * @brief Clear all loaded animations.
+     *
+     * Removes all cached animation clips, current clip reference, and resets state.
      */
     void Animator::ClearAnimations()
     {
@@ -166,9 +175,12 @@ namespace Ermine::graphics
     }
 
     /**
-     * @brief Play an animation by index.
-     * @param index Index into loaded clips
-     * @param loop Whether to loop playback
+     * @brief Play an animation clip by index.
+     *
+     * Resets the playback time and sets the current animation to the selected clip.
+     *
+     * @param index The index of the clip in the internal clips list.
+     * @param loop Whether the animation should loop after finishing.
      */
     void Animator::PlayAnimation(size_t index, bool loop)
     {
@@ -180,9 +192,12 @@ namespace Ermine::graphics
     }
 
     /**
-     * @brief Play an animation by name.
-     * @param name Animation name
-     * @param loop Whether to loop playback
+     * @brief Play an animation clip by name.
+     *
+     * Searches for a clip with the given name and begins playback if found.
+     *
+     * @param name The name of the animation clip.
+     * @param loop Whether the animation should loop after finishing.
      */
     void Animator::PlayAnimation(const std::string& name, bool loop)
     {
@@ -199,7 +214,8 @@ namespace Ermine::graphics
 
     /**
      * @brief Stop the current animation.
-     * Resets to the beginning and clears the current clip.
+     *
+     * Clears the current clip, resets playback time to 0, and disables updates.
      */
     void Animator::StopAnimation()
     {
@@ -211,6 +227,8 @@ namespace Ermine::graphics
 
     /**
      * @brief Pause the current animation.
+     *
+     * Freezes playback at the current time without resetting state.
      * Does nothing if no animation is playing.
      */
     void Animator::PauseAnimation()
@@ -223,8 +241,9 @@ namespace Ermine::graphics
     }
 
     /**
-     * @brief Resume the current animation if paused.
-     * Does nothing if not paused or no animation is playing.
+     * @brief Resume playback of the current animation if paused.
+     *
+     * Does nothing if the animator is not paused or no animation is active.
      */
     void Animator::ResumeAnimation()
     {
@@ -236,8 +255,12 @@ namespace Ermine::graphics
     }
 
     /**
-     * @brief Advance animation and update bone transforms.
-     * @param deltaTime Time step in seconds
+     * @brief Advance animation playback and update bone transforms.
+     *
+     * Increments the playback timer by @p deltaTime and updates the skeleton's bone transforms
+     * according to the current animation clip. Updates the final bone matrices for rendering.
+     *
+     * @param deltaTime Time step in seconds since last frame.
      */
     void Animator::Update(double deltaTime)
     {
@@ -267,8 +290,11 @@ namespace Ermine::graphics
 
     /**
      * @brief Recursively calculate bone transforms by traversing Assimp node hierarchy.
-     * @param node Current node
-     * @param parentTransform Parent's transform
+     *
+     * Applies animations to nodes and accumulates parent transformations.
+     *
+     * @param node Current node being processed.
+     * @param parentTransform The accumulated transform of the parent node.
      */
     void Animator::CalculateBoneTransform(const aiNode* node, const glm::mat4& parentTransform)
     {

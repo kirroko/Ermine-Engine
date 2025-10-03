@@ -33,7 +33,10 @@ namespace Ermine::graphics
     constexpr int MAX_BONE_INFLUENCE = 4;
 
     /**
-     * @brief Per-vertex data including bone IDs and weights for skinning.
+     * @brief Per-vertex data including position, normal, UVs, and bone influences.
+     *
+     * This structure is used for skinned meshes where each vertex can be influenced
+     * by up to MAX_BONE_INFLUENCE bones.
      */
     struct VertexData
     {
@@ -84,18 +87,21 @@ namespace Ermine::graphics
     };
 
     /**
-     * @brief Mesh data wrapper for rendering.
+     * @brief Mesh data wrapper containing GPU buffers and local transform.
      */
     struct MeshData
     {
-        std::shared_ptr<VertexArray> vao;
-        std::shared_ptr<VertexBuffer> vbo;
-        std::shared_ptr<IndexBuffer> ibo;
-        glm::mat4 localTransform{ 1.0f };
+        std::shared_ptr<VertexArray> vao;  // Vertex array object
+        std::shared_ptr<VertexBuffer> vbo; // Vertex buffer object
+        std::shared_ptr<IndexBuffer> ibo;  // Index buffer object
+        glm::mat4 localTransform{ 1.0f };  // Local transform relative to parent
     };
 
     /**
-     * @brief Loads and stores a 3D model and its associated mesh/bone data.
+     * @brief Represents a 3D model loaded from file via Assimp.
+     *
+     * The Model class loads meshes, bones, and animations, and provides
+     * access to bone mappings and transforms for use in animation systems.
      */
     class Model
     {
@@ -106,34 +112,64 @@ namespace Ermine::graphics
          */
         Model(const std::string& path);
 
-        // @return Directory of the model file
+        /**
+         * @brief Get the directory of the model file.
+         * @return Directory as string reference
+         */
 		const std::string& GetDirectory() const { return m_directory; }
 		
-        // @return Name of the model file
+        /**
+         * @brief Get the name of the model file.
+         * @return File name as string reference
+         */
         const std::string& GetName() const { return m_name; }
 
-        // @return List of meshes in the model
+        /**
+         * @brief Get all meshes of the model.
+         * @return Vector of MeshData
+         */
         const std::vector<MeshData>& GetMeshes() const { return m_meshes; }
 
-        // @return Pointer to the original Assimp scene
+        /**
+         * @brief Get the raw Assimp scene pointer.
+         * @return Pointer to aiScene
+         */
         const aiScene* GetAssimpScene() const { return m_Scene; }
 
-        // @return Mapping from bone name to index
+        /**
+         * @brief Get mapping from bone name to bone index.
+         * @return Const reference to bone mapping
+         */
         const std::unordered_map<std::string, int>& GetBoneMapping() const { return m_BoneMapping; }
 
-        // @return Number of bones in the model
+        /**
+         * @brief Get the number of bones in the model.
+         * @return Number of bones
+         */
         int GetBoneCount() const { return static_cast<int>(m_BoneOffsets.size()); }
 
-        // @return Bone offset matrices (bind-pose transforms)
+        /**
+         * @brief Get bone offset matrices (bind-pose transforms).
+         * @return Const reference to vector of offset matrices
+         */
         const std::vector<glm::mat4>& GetBoneOffsets() const { return m_BoneOffsets; }
 
-        // @return Current bone transforms from animation
+        /**
+         * @brief Get the current animated bone transforms.
+         * @return Const reference to vector of bone transforms
+         */
         const std::vector<glm::mat4>& GetBoneTransforms() const { return m_BoneTransforms; }
 
-        // @brief Set the animated bone transforms
+        /**
+         * @brief Set the current animated bone transforms.
+         * @param transforms Vector of bone transform matrices
+         */
         void SetBoneTransforms(const std::vector<glm::mat4>& transforms) { m_BoneTransforms = transforms; }
 
-        // Load the model and process nodes
+        /**
+         * @brief Load a model from file and process its nodes and meshes.
+         * @param path Path to the model file
+         */
         void LoadModel(const std::string& path);
 
         /**
@@ -163,10 +199,19 @@ namespace Ermine::graphics
         std::vector<glm::mat4> m_BoneOffsets;               // Bone offset matrices
         std::vector<glm::mat4> m_BoneTransforms;            // Final bone transforms (for rendering)
 
-        // Recursively process Assimp nodes
+        /**
+         * @brief Recursively process Assimp nodes into MeshData.
+         * @param node Current node
+         * @param scene Assimp scene reference
+         * @param parentTransform Parent transformation matrix
+         */
         void ProcessNode(aiNode* node, const aiScene* scene, const aiMatrix4x4& parentTransform);
 
-        // Process an Assimp mesh into engine MeshData
+        /**
+         * @brief Convert an Assimp mesh into engine MeshData.
+         * @param mesh Pointer to aiMesh
+         * @return Processed MeshData
+         */
         MeshData ProcessMesh(aiMesh* mesh);
     };
 }

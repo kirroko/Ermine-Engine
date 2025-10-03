@@ -576,9 +576,9 @@ void EditorGUI::Update(GLFWwindow* windowContext)
 
 void EditorGUI::Render()
 {
-    static bool show_profiler = true;
-    if (show_profiler)
-        ProfilingWindow();
+    //static bool show_profiler = true;
+    //if (show_profiler)
+    //    ProfilingWindow();
 
     // Render additional ImGUI windows
     for (auto& window : m_Windows) {

@@ -24,6 +24,12 @@ namespace Ermine {
     class ParticleSystem : public System
     {
     public:
+        /*!***********************************************************************
+        \brief
+            Update all particles in the system.
+        \param[in] dt
+            Delta time used for simulation.
+        *************************************************************************/
         void Update(float dt);
 
     private:
@@ -34,10 +40,50 @@ namespace Ermine {
     class ParticleEmitter
     {
     public:
+        /*!***********************************************************************
+        \brief
+            Constructor for a particle emitter.
+        \param[in] quadMesh
+            Mesh used for rendering particles.
+        \param[in] shader
+            Shader used to draw the particles.
+        \param[in] texture
+            Texture applied to the particles.
+        *************************************************************************/
         ParticleEmitter(const Mesh& quadMesh, std::shared_ptr<graphics::Shader> shader, std::shared_ptr<graphics::Texture> texture);
+        /*!***********************************************************************
+        \brief
+            Destructor for the particle emitter.
+        *************************************************************************/
         ~ParticleEmitter();
+        /*!***********************************************************************
+        \brief
+           Emit a new particle into the system.
+        \param[in] pos
+           Position of the particle.
+        \param[in] vel
+           Velocity of the particle.
+        \param[in] lifetime
+           Lifetime of the particle in seconds.
+        \param[in] size
+           Size of the particle.
+        \param[in] colour
+           Color of the particle.
+       *************************************************************************/
         void Emit(const Vec3& pos, const Vec3& vel, float lifetime, float size, const Vec4& colour);
+        /*!***********************************************************************
+        \brief
+            Set the texture used by the emitter.
+        \param[in] texture
+            Pointer to the texture.
+        *************************************************************************/
         void SetTexture(std::shared_ptr<graphics::Texture> texture);
+        /*!***********************************************************************
+        \brief
+           Load and set a texture from a file path.
+        \param[in] path
+           File path of the texture.
+       *************************************************************************/
         void SetTexture(const std::string& path);
 
     private:
@@ -49,10 +95,27 @@ namespace Ermine {
     class ParticlesImGUI : public ImGUIWindow
     {
     public:
+        /*!***********************************************************************
+        \brief
+           Constructor for the Particles ImGui window.
+        \param[in] emitter
+           Pointer to the particle emitter controlled by this UI.
+       *************************************************************************/
         ParticlesImGUI(ParticleEmitter* emitter);
+        /*!***********************************************************************
+        \brief
+            Destructor for the Particles ImGui window.
+        *************************************************************************/
         ~ParticlesImGUI();
-
+        /*!***********************************************************************
+        \brief
+           Update logic for the Particles ImGui window.
+       *************************************************************************/
         void Update() override;
+        /*!***********************************************************************
+        \brief
+           Render the ImGui window for controlling particles.
+       *************************************************************************/
         void Render() override;
 
     private:

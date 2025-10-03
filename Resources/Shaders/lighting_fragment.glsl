@@ -23,18 +23,14 @@ uniform mat4 projection;
 // Shading mode
 uniform int u_ShadingMode; // 0 = PBR, 1 = Blinn-Phong
 
-// VBAO Parameters
-uniform int u_VBAO = 1;
-uniform int u_VBAOSlices = 4;
-uniform int u_VBAOSteps = 16;
-uniform float u_VBAORadius =  1.0;
-uniform float u_VBAOThickness =  1.0; 
-uniform float u_VBAOThicknessMultiplier = 0.2;
-uniform float u_VBAOIntensity = 0.9;
-uniform float u_VBAOFadeout = 0.9;
-uniform float u_VBAOBias = 0.002;
-
-
+// SSAO Parameters
+uniform int u_SSAO = 1;
+uniform int u_SSAOSamples = 16;
+uniform float u_SSAORadius = 10.0;
+uniform float u_SSAOBias = 0.01;
+uniform float u_SSAOIntensity = 1.0;
+uniform float u_SSAOFadeout = 0.1;
+uniform float u_SSAOMaxDistance = 100.0;
 
 // Light structure
 struct Light {
@@ -59,157 +55,10 @@ const int POINT_LIGHT = 0;
 const int DIRECTIONAL_LIGHT = 1;
 const int SPOT_LIGHT = 2;
 
-// Helpers
-uint fastBitCount(uint value) {
-    // Brian Kernighan's algorithm
-    value = value - ((value >> 1u) & 0x55555555u);
-    value = (value & 0x33333333u) + ((value >> 2u) & 0x33333333u);
-    return ((value + (value >> 4u) & 0xF0F0F0Fu) * 0x1010101u) >> 24u;
-}
-
-uint updateSectorBitmask(float minHorizon, float maxHorizon, uint existingMask) {
-    // Convert normalized horizon angles to bit positions
-    uint startBit = uint(clamp(minHorizon * float(SECTOR_COUNT), 0.0, 31.0));
-    uint endBit = uint(clamp(maxHorizon * float(SECTOR_COUNT), 0.0, 31.0));
-    
-    if (endBit <= startBit) return existingMask;
-    
-    uint bitCount = endBit - startBit;
-    uint mask = (bitCount >= 32u) ? 0xFFFFFFFFu : ((1u << bitCount) - 1u) << startBit;
-    
-    return existingMask | mask;
-}
-
-float bayer4x4(ivec2 coord) {
-    const uint bayer[16] = uint[](
-        0u, 8u, 2u, 10u,
-        12u, 4u, 14u, 6u,
-        3u, 11u, 1u, 9u,
-        15u, 7u, 13u, 5u
-    );
-    return float(bayer[(coord.x & 3) + (coord.y & 3) * 4]) * (1.0 / 16.0);
-}
-
-float interleavedGradientNoise(vec2 coord) {
-    // IGN - single multiply-add chain
-    return fract(52.9829189 * fract(0.06711056 * coord.x + 0.00583715 * coord.y));
-}
-
 vec3 getViewPosition(vec2 texCoord, float depth) {
     vec4 ndc = vec4(texCoord * 2.0 - 1.0, depth * 2.0 - 1.0, 1.0);
     vec4 viewPos = invProjection * ndc;
     return viewPos.xyz / viewPos.w;
-}
-
-vec2 fastAcos2(vec2 x) {
-    return (-0.69813170 * x * x - 0.87266463) * x + 1.57079633;
-}
-
-float fastDotNormalized(vec3 a, vec3 b) {
-    return dot(a, b) * inversesqrt(dot(a, a));
-}
-
-vec2 traceSliceBitmaskOptimized(vec2 texCoord, vec3 viewPos, vec3 viewDir, vec3 normal,
-                               vec2 sliceDir, float jitter, inout uint bitfield,
-                               float dirSign, float N, vec3 projectedNormal) {
-    
-    vec2 texelSize = 1.0 / textureSize(sampler2D(u_GBufferDepthHandle), 0);
-    vec2 rayOffset = 1.4 * dirSign * sliceDir * texelSize;
-    vec2 scaledDir = sliceDir * vec2(1.0, texelSize.x / texelSize.y);
-    
-    float h = dirSign * sin(N);
-    
-    // Pre-calculate constants outside loop
-    const float radiusScale = 0.1 * u_VBAORadius;
-    const float invSteps = 1.0 / float(u_VBAOSteps);
-    
-    for(int i = 0; i < u_VBAOSteps; i++) {
-        float stepRatio = (float(i) + jitter) * invSteps;
-        stepRatio = stepRatio * stepRatio * stepRatio; // Cubic distribution for better near sampling
-        
-        vec2 sampleCoord = texCoord + rayOffset + dirSign * radiusScale * scaledDir * stepRatio;
-        
-        // Optimized depth sampling - use texelFetch for near samples (faster)
-        float sampleDepth;
-        if(stepRatio < 0.7) {
-            ivec2 iCoord = ivec2(sampleCoord * textureSize(sampler2D(u_GBufferDepthHandle), 0));
-            sampleDepth = texelFetch(sampler2D(u_GBufferDepthHandle), iCoord, 0).r;
-        } else {
-            sampleDepth = texture(sampler2D(u_GBufferDepthHandle), sampleCoord).r;
-        }
-        
-        vec3 samplePos = getViewPosition(sampleCoord, sampleDepth);
-        vec3 toSample = samplePos - viewPos;
-        
-        float sampleDotView = fastDotNormalized(toSample, viewDir);
-        
-        // Apply user-adjustable thickness with optimized calculation
-        vec3 thicknessSample = normalize(samplePos) * u_VBAOThickness + 
-                              (1.0 + u_VBAOThicknessMultiplier) * samplePos - viewPos;
-        float thicknessDotView = fastDotNormalized(thicknessSample, viewDir);
-        
-        vec2 angles = fastAcos2(vec2(sampleDotView, thicknessDotView));
-        
-        // Distance-based attenuation (optimized)
-        float distSq = dot(toSample, toSample);
-        float attenuation = 1.0 / (0.01 * distSq / dot(samplePos, samplePos) + 1.0);
-        h = mix(h, max(h, sampleDotView), mix(1.0, stepRatio, 0.75) * attenuation);
-        
-        // Convert angles to normalized bitmask coordinates (optimized)
-        vec2 normalizedAngles = clamp((dirSign * -angles - N + HALF_PI) / PI, 0.0, 1.0);
-        normalizedAngles = normalizedAngles.x > normalizedAngles.y ? normalizedAngles.yx : normalizedAngles;
-        
-        // Fast bit operations - update bitmask
-        bitfield = updateSectorBitmask(normalizedAngles.x, normalizedAngles.y, bitfield);
-    }
-    
-    return vec2(h, 0.0);
-}
-
-float calculateVBAOOptimized(vec2 texCoord, vec3 viewPos, vec3 viewDir, vec3 normal, vec2 noise) {
-    float totalAO = 0.0;
-    float totalWeight = 0.0;
-    
-    // Pre-calculate slice rotation increment
-    const float sliceRotation = PI / float(u_VBAOSlices);
-    
-    for(int slice = 0; slice < u_VBAOSlices; slice++) {
-        float angle = (float(slice) + noise.x) * sliceRotation;
-        vec2 sliceDir = vec2(sin(angle), cos(angle));
-        
-        vec3 sliceNormal = normalize(cross(vec3(sliceDir, 0.0), viewDir));
-        vec3 tangent = cross(viewDir, sliceNormal);
-        
-        vec3 projectedNormal = normal - sliceNormal * dot(normal, sliceNormal);
-        float projectedLength = length(projectedNormal);
-        
-        if(projectedLength < 0.01) continue; // Skip perpendicular slices
-        
-        float N = -sign(dot(projectedNormal, tangent)) * 
-                  acos(clamp(dot(normalize(projectedNormal), viewDir), -1.0, 1.0));
-        
-        vec3 normalizedProjected = normalize(projectedNormal);
-        
-        // Initialize bitmask for this slice
-        uint bitfield = 0u;
-        vec4 horizons;
-        
-        // Trace both directions of the slice
-        horizons.xz = traceSliceBitmaskOptimized(texCoord, viewPos, viewDir, normal, sliceDir, 
-                                                noise.y, bitfield, 1.0, N, normalizedProjected);
-        horizons.yw = traceSliceBitmaskOptimized(texCoord, viewPos, viewDir, normal, sliceDir, 
-                                                noise.y, bitfield, -1.0, N, normalizedProjected);
-        
-        // Calculate visibility from bitmask using optimized bit count
-        float visibility = 1.0 - float(fastBitCount(bitfield)) / float(SECTOR_COUNT);
-        
-        // Weight by projected normal length (slice importance)
-        float sliceWeight = projectedLength;
-        totalAO += visibility * sliceWeight;
-        totalWeight += sliceWeight;
-    }
-    
-    return totalWeight > 0.0 ? totalAO / totalWeight : 1.0;
 }
 
 // Reconstruct world position from depth
@@ -217,14 +66,14 @@ vec3 reconstructWorldPosition(vec2 texCoord, float depth)
 {
     // Convert to NDC
     vec4 ndc = vec4(texCoord * 2.0 - 1.0, depth * 2.0 - 1.0, 1.0);
-    
+
     // Transform to view space
     vec4 viewPos = invProjection * ndc;
     viewPos /= viewPos.w;
-    
+
     // Transform to world space
     vec4 worldPos = invView * viewPos;
-    
+
     return worldPos.xyz;
 }
 
@@ -234,6 +83,101 @@ vec3 reconstructViewPosition(vec2 texCoord, float depth) {
     return viewPos.xyz / viewPos.w;
 }
 
+
+float calculateSSAO(vec2 texCoord, vec3 fragPosView, vec3 normalView, float depth) {
+    // Early exit if SSAO is disabled
+    if (u_SSAO == 0) {
+        return 1.0;
+    }
+    
+    // Early exit for background or very far pixels
+    if (depth >= 0.999) {
+        return 1.0;
+    }
+    
+    // Distance-based fadeout
+    float viewDistance = length(fragPosView);
+    float fadeoutFactor = smoothstep(u_SSAOMaxDistance * u_SSAOFadeout, u_SSAOMaxDistance, viewDistance);
+    if (fadeoutFactor >= 0.99) {
+        return 1.0;
+    }
+    
+    // Generate random rotation
+    float randomAngle = fract(sin(dot(texCoord * 1000.0, vec2(12.9898, 78.233))) * 43758.5453) * 2.0 * PI;
+    
+    // Create tangent space basis
+    vec3 randomVec = vec3(cos(randomAngle), sin(randomAngle), 0.0);
+    vec3 tangent = normalize(randomVec - normalView * dot(randomVec, normalView));
+    vec3 bitangent = cross(normalView, tangent);
+    mat3 TBN = mat3(tangent, bitangent, normalView);
+    
+    // Sample kernel - hemisphere distribution
+    float occlusion = 0.0;
+    int validSamples = 0;
+    
+    sampler2D depthSampler = sampler2D(u_GBufferDepthHandle);
+    
+    for (int i = 0; i < u_SSAOSamples; ++i) {
+        // Generate sample point in hemisphere
+        // Using Hammersley sequence for better distribution
+        float phi = 2.0 * PI * fract(float(i) * 0.618034);
+        float cosTheta = 1.0 - (float(i) + 0.5) / float(u_SSAOSamples);
+        float sinTheta = sqrt(1.0 - cosTheta * cosTheta);
+        
+        vec3 sampleDir = vec3(
+            cos(phi) * sinTheta,
+            sin(phi) * sinTheta,
+            cosTheta
+        );
+        
+        // Transform sample to view space
+        vec3 sampleVec = TBN * sampleDir;
+        
+        // Scale sample by radius with bias towards surface
+        float scale = float(i) / float(u_SSAOSamples);
+        scale = mix(0.1, 1.0, scale * scale); // More samples closer to surface
+        
+        vec3 samplePos = fragPosView + sampleVec * u_SSAORadius * scale;
+        
+        // Project sample position to screen space
+        vec4 offset = projection * vec4(samplePos, 1.0);
+        offset.xyz /= offset.w;
+        offset.xy = offset.xy * 0.5 + 0.5;
+        
+        // Check if sample is within screen bounds
+        if (offset.x < 0.0 || offset.x > 1.0 || offset.y < 0.0 || offset.y > 1.0) {
+            continue;
+        }
+        
+        // Sample depth at offset position
+        float sampleDepth = texture(depthSampler, offset.xy).r;
+        
+        // Reconstruct sample view position
+        vec3 samplePosActual = reconstructViewPosition(offset.xy, sampleDepth);
+        
+        // Range check to reduce artifacts at edges
+        float rangeCheck = smoothstep(0.0, 1.0, u_SSAORadius / abs(fragPosView.z - samplePosActual.z));
+        
+        // Check if sample is occluded
+        float occluded = (samplePosActual.z >= samplePos.z + u_SSAOBias) ? 1.0 : 0.0;
+        occlusion += occluded * rangeCheck;
+        validSamples++;
+    }
+    
+    // Average occlusion
+    if (validSamples > 0) {
+        occlusion = occlusion / float(validSamples);
+    }
+    
+    // Convert occlusion to ambient visibility
+    float aoFactor = 1.0 - (occlusion * u_SSAOIntensity);
+    aoFactor = clamp(aoFactor, 0.0, 1.0);
+    
+    // Apply distance fadeout
+    aoFactor = mix(aoFactor, 1.0, fadeoutFactor);
+    
+    return aoFactor;
+}
 
 // PBR Functions
 float DistributionGGX(vec3 N, vec3 H, float roughness)
@@ -282,9 +226,9 @@ float calculateAttenuation(int lightIndex, vec3 fragPosView, out vec3 lightDir)
     int lightType = int(lights[lightIndex].position_type.w);
     vec3 lightPosView = lights[lightIndex].position_type.xyz;
     float range = lights[lightIndex].direction_range.w;
-    
+
     float attenuation = 1.0;
-    
+
     if (lightType == DIRECTIONAL_LIGHT) {
         // Direction is stored directly in view space
         lightDir = normalize(lights[lightIndex].direction_range.xyz);
@@ -299,7 +243,7 @@ float calculateAttenuation(int lightIndex, vec3 fragPosView, out vec3 lightDir)
         float linearTerm = 0.045;
         float quadraticTerm = 0.0075;
         attenuation = 1.0 / (1.0 + linearTerm * distance + quadraticTerm * distance * distance);
-        
+
         // Range fade
         if (distance > range) {
             attenuation = 0.0;
@@ -309,19 +253,19 @@ float calculateAttenuation(int lightIndex, vec3 fragPosView, out vec3 lightDir)
             float fadeFactor = smoothstep(range, fadeStart, distance);
             attenuation *= fadeFactor;
         }
-        
+
         // Spot cone
         if (lightType == SPOT_LIGHT) {
             vec3 spotDir = normalize(lights[lightIndex].direction_range.xyz);
             float cosAngle = dot(-lightDir, spotDir);
             float innerCos = lights[lightIndex].spot_angles_castshadows_startOffset.x;
             float outerCos = lights[lightIndex].spot_angles_castshadows_startOffset.y;
-            
+
             float spotFactor = clamp((cosAngle - outerCos) / (innerCos - outerCos), 0.0, 1.0);
             attenuation *= spotFactor;
         }
     }
-    
+
     return attenuation;
 }
 
@@ -331,26 +275,25 @@ vec3 calculateBlinnPhong(int lightIndex, vec3 normal, vec3 viewDir, vec3 fragPos
 {
     vec3 lightDir;
     float attenuation = calculateAttenuation(lightIndex, fragPosView, lightDir);
-    
+
     if (attenuation <= 0.0) return vec3(0.0);
-    
+
     vec3 lightColor = lights[lightIndex].color_intensity.xyz * lights[lightIndex].color_intensity.w;
-    
+
     vec3 materialKd = albedo;
     vec3 materialKs = vec3(ksIntensity);
-    
+
     // Diffuse
     float diff = max(dot(normal, lightDir), 0.0);
     vec3 diffuse = diff * lightColor * materialKd;
-    
+
     // Specular
     vec3 halfwayDir = normalize(lightDir + viewDir);
     float spec = (shininess <= 0.0) ? 0.0 : pow(max(dot(normal, halfwayDir), 0.0), shininess * 256.0);
     vec3 specular = spec * lightColor * materialKs;
-    
+
     return (diffuse + specular) * attenuation;
 }
-
 
 // PBR shading
 vec3 calculatePBR(int lightIndex, vec3 normal, vec3 viewDir, vec3 fragPosView, 
@@ -358,27 +301,27 @@ vec3 calculatePBR(int lightIndex, vec3 normal, vec3 viewDir, vec3 fragPosView,
 {
     vec3 lightDir;
     float attenuation = calculateAttenuation(lightIndex, fragPosView, lightDir);
-    
+
     if (attenuation <= 0.0) return vec3(0.0);
-    
+
     vec3 lightColor = lights[lightIndex].color_intensity.xyz * lights[lightIndex].color_intensity.w;
     vec3 radiance = lightColor * attenuation;
-    
+
     vec3 H = normalize(viewDir + lightDir);
     roughness = clamp(roughness, 0.05, 1.0);
-    
+
     float NDF = DistributionGGX(normal, H, roughness);
     float G = GeometrySmith(normal, viewDir, lightDir, roughness);
     vec3 F = fresnelSchlick(max(dot(H, viewDir), 0.0), F0);
-    
+
     vec3 kS = F;
     vec3 kD = vec3(1.0) - kS;
     kD *= 1.0 - metallic;
-    
+
     vec3 numerator = NDF * G * F;
     float denominator = 4.0 * max(dot(normal, viewDir), 0.0) * max(dot(normal, lightDir), 0.0) + 0.0001;
     vec3 specular = numerator / denominator;
-    
+
     float NdotL = max(dot(normal, lightDir), 0.0);
     return (kD * albedo / PI + specular) * radiance * NdotL;
 }
@@ -400,7 +343,7 @@ vec3 unpackNormal(vec3 packedNormal) {
 void unpackEmissive(vec4 packedEmissive, out vec3 emissive, out float emissiveIntensity) {
     emissive = packedEmissive.rgb;
     emissiveIntensity = packedEmissive.a * 255.0;
-    
+
     // Check for no emissive contribution
     if (emissiveIntensity < 0.001 || length(emissive) < 0.001) {
         emissive = vec3(0.0);
@@ -421,13 +364,13 @@ void unpackMaterialProperties(vec4 packedMaterial, out float roughness,
 void readGBuffer(sampler2D gBuffer0, sampler2D gBuffer1, sampler2D gBuffer2, sampler2D gBuffer3,
                  vec2 texCoords, out vec3 albedo, out vec3 normal, out vec3 emissive, 
                  out float emissiveIntensity, out float roughness, out float metallic, out float ao) {
-    
+
     // Sample all G-Buffer textures
     vec3 packedAlbedo = texture(gBuffer0, texCoords).rgb;
     vec3 packedNormal = texture(gBuffer1, texCoords).rgb;
     vec4 packedEmissive = texture(gBuffer2, texCoords);
     vec4 packedMaterial = texture(gBuffer3, texCoords);
-    
+
     // Unpack all components
     albedo = unpackAlbedo(packedAlbedo);
     normal = unpackNormal(packedNormal);
@@ -438,13 +381,13 @@ void readGBuffer(sampler2D gBuffer0, sampler2D gBuffer1, sampler2D gBuffer2, sam
 void readGBufferBindless(uvec2 gBuffer0Handle, uvec2 gBuffer1Handle, uvec2 gBuffer2Handle, uvec2 gBuffer3Handle,
                         vec2 texCoords, out vec3 albedo, out vec3 normal, out vec3 emissive,
                         out float emissiveIntensity, out float roughness, out float metallic, out float ao) {
-    
+
     // Convert handles to samplers
     sampler2D gBuffer0 = sampler2D(gBuffer0Handle);
     sampler2D gBuffer1 = sampler2D(gBuffer1Handle);
     sampler2D gBuffer2 = sampler2D(gBuffer2Handle);
     sampler2D gBuffer3 = sampler2D(gBuffer3Handle);
-    
+
     readGBuffer(gBuffer0, gBuffer1, gBuffer2, gBuffer3, texCoords, 
                 albedo, normal, emissive, emissiveIntensity, roughness, metallic, ao);
 }
@@ -467,7 +410,7 @@ float calculateShadowFactor(mat4 lightSpaceMatrix, int lightIndex, vec3 fragPosW
 
     // Convert to [0,1] depth
     float currentDepth = projN.z * 0.5 + 0.5;
-    
+
     // Clamp depth to valid range
     currentDepth = clamp(currentDepth, 0.0, 1.0);
 
@@ -482,20 +425,20 @@ float calculateShadowFactor(mat4 lightSpaceMatrix, int lightIndex, vec3 fragPosW
         vec3 lightPosWorld = (invView * vec4(lightPosView, 1.0)).xyz;
         lightDirWorld = normalize(lightPosWorld - fragPosWorld);
     }
-    
+
     // Dynamic bias based on surface angle to light
     float cosAngle = max(0.0, dot(normalWorld, lightDirWorld));
     float bias = max(0.005 * (1.0 - cosAngle), 0.0005);
     vec2 texelSize = 1.0 / vec2(textureSize(shadowArraySampler, 0).xy);
     float shadow = 0.0;
-    
+
     // PCF 3x3
     for(int x = -1; x <= 1; ++x) {
         for(int y = -1; y <= 1; ++y) {
             vec2 offset = vec2(float(x), float(y)) * texelSize;
             vec3 sampleCoord = vec3(uv + offset, float(layerIndex));
             float sampledDepth = texture(shadowArraySampler, sampleCoord).r;
-            
+
             // Apply bias and compare
             if (currentDepth - bias > sampledDepth) {
                 shadow += 1.0;
@@ -508,7 +451,6 @@ float calculateShadowFactor(mat4 lightSpaceMatrix, int lightIndex, vec3 fragPosW
     return 1.0 - shadow;
 }
 
-
 void main()
 {    
     // Sample depth
@@ -520,7 +462,7 @@ void main()
         FragColor = vec4(0.2, 0.3, 0.3, 1.0);
         return;
     }
-    
+
     // Unpack G-Buffer data
     vec3 albedo, normalView, emissive;
     float emissiveIntensity, metallic, roughness, ao;
@@ -550,19 +492,19 @@ void main()
     // Shading model selection
     bool useBlinnPhong = (u_ShadingMode == 1);
 
-    // Apply bias to prevent self-occlusion
-    vec3 biasedViewPos = fragPosView + u_VBAOBias * normalView * length(fragPosView);
-
     // Calculate lighting using your existing system
     vec3 result = vec3(0.0);
 
+    // Calculate SSAO factor
+    float ssaoFactor = calculateSSAO(TexCoord, fragPosView, normalView, depth);
+
     if (useBlinnPhong) {
         // Ambient
-        vec3 ambient = vec3(0.2) * 0.1 * albedo * ao;
+        vec3 ambient = vec3(0.2) * 0.1 * albedo * ao * ssaoFactor;
         result += ambient;
 
         // Blinn-Phong lighting
-        for (int i = 0; i < numLights && i < 16; ++i) {
+        for (int i = 0; i < numLights; ++i) {
             float shininess = (1.0 - roughness) * 128.0;
             // Compute light contribution
             vec3 lightContrib = calculateBlinnPhong(i, normalView, viewDir, fragPosView, albedo, 1.0, shininess);
@@ -574,7 +516,7 @@ void main()
 
             if (castsShadows && lightType == DIRECTIONAL_LIGHT) {
                 int cascadeIndex = NUM_CASCADES - 1; // Default to last cascade
-                
+
                 // Select cascade based on depth buffer value (not view distance)
                 for (int c = 0; c < NUM_CASCADES; ++c) {
                     if (depth <= lights[i].splitDepths[c/4][c%4]) {
@@ -582,12 +524,11 @@ void main()
                         break;
                     }
                 }
-                
-               
+
                 // Calculate shadow with selected cascade
                 int startOffset = int(lights[i].spot_angles_castshadows_startOffset.w);
                 int layerIndex = startOffset + cascadeIndex;
-                
+
                 shadowFactor = calculateShadowFactor(
                     lights[i].lightSpaceMatrix[cascadeIndex], 
                     i, 
@@ -595,33 +536,18 @@ void main()
                     normalWorld, 
                     layerIndex
                 );
-                
-                
+
             }
             else if (castsShadows && (lightType == SPOT_LIGHT)) {
-
-                // Spotlight shadow calculation
-                int cascadeIndex = NUM_CASCADES - 1;
-        
-                // Select cascade based on depth buffer value
-                for (int c = 0; c < NUM_CASCADES; ++c) {
-                    if (depth <= lights[i].splitDepths[c/4][c%4]) {
-                        cascadeIndex = c;
-                        break;
-                    }
-                }
-        
                 // Check if this cascade has a valid matrix (non-zero)
-                mat4 cascadeMatrix = lights[i].lightSpaceMatrix[cascadeIndex];
+                mat4 cascadeMatrix = lights[i].lightSpaceMatrix[0];
                 bool hasValidMatrix = (cascadeMatrix[0][0] != 0.0 || cascadeMatrix[0][1] != 0.0 || 
                                       cascadeMatrix[0][2] != 0.0 || cascadeMatrix[0][3] != 0.0 ||
                                       cascadeMatrix[1][0] != 0.0 || cascadeMatrix[1][1] != 0.0 || 
                                       cascadeMatrix[1][2] != 0.0 || cascadeMatrix[1][3] != 0.0);
-        
+
                 if (hasValidMatrix) {
-                    int startOffset = int(lights[i].spot_angles_castshadows_startOffset.w);
-                    int layerIndex = startOffset + cascadeIndex;
-            
+                    int layerIndex = int(lights[i].spot_angles_castshadows_startOffset.w);            
                     shadowFactor = calculateShadowFactor(
                         cascadeMatrix, 
                         i, 
@@ -638,54 +564,36 @@ void main()
 
             result += lightContrib * shadowFactor;
         }
-        
-        // Calculate and apply VBAO
-        if(u_VBAO == 1) {
-            // Generate optimized temporal noise
-            ivec2 pixelCoord = ivec2(TexCoord * textureSize(sampler2D(u_GBufferDepthHandle), 0));
-            float bayerNoise = bayer4x4(pixelCoord);
-            float gradientNoise = interleavedGradientNoise(TexCoord);
-            vec2 noise = vec2(bayerNoise, gradientNoise);
-            
-            float aoFactor = calculateVBAOOptimized(TexCoord, biasedViewPos, viewDir, normalView, noise);
-            
-            // Apply intensity and distance fadeout
-            aoFactor = mix(1.0, aoFactor, u_VBAOIntensity);
-            aoFactor = mix(1.0, aoFactor, exp(-2.0 * (1.0 - u_VBAOFadeout) * depth));
-            
-            // Apply AO to lighting (multiply by AO factor)
-            result *= aoFactor;
-        }
 
         // Emissive
         result += emissive * emissiveIntensity;
     } else {
         // PBR ambient
-        vec3 ambient = vec3(0.08) * albedo * ao;
+        vec3 ambient = vec3(0.08) * albedo * ao * ssaoFactor;
         result += ambient;
 
         // PBR lighting
         vec3 F0 = mix(vec3(0.04), albedo, metallic);
-        for (int i = 0; i < numLights && i < 16; ++i) {
+        for (int i = 0; i < numLights; ++i) {
             vec3 lightContrib = calculatePBR(i, normalView, viewDir, fragPosView, albedo, metallic, roughness, F0, worldPos);
 
             float shadowFactor = 1.0;
             int lightType = int(lights[i].position_type.w);
             bool castsShadows = (lights[i].spot_angles_castshadows_startOffset.z > 0.5);
-            
+
             if (castsShadows && lightType == DIRECTIONAL_LIGHT) {
                 int cascadeIndex = NUM_CASCADES - 1;
-                
+
                 for (int c = 0; c < NUM_CASCADES; ++c) {
                     if (depth <= lights[i].splitDepths[c/4][c%4]) {
                         cascadeIndex = c;
                         break;
                     }
                 }
-                
+
                 int startOffset = int(lights[i].spot_angles_castshadows_startOffset.w);
                 int layerIndex = startOffset + cascadeIndex;
-                
+
                 shadowFactor = calculateShadowFactor(
                     lights[i].lightSpaceMatrix[cascadeIndex], 
                     i, 
@@ -696,29 +604,16 @@ void main()
 
             } 
             else if (castsShadows && (lightType == SPOT_LIGHT)) {
-
-                // Spotlight shadow calculation
-                int cascadeIndex = NUM_CASCADES - 1;
-        
-                // Select cascade based on depth buffer value
-                for (int c = 0; c < NUM_CASCADES; ++c) {
-                    if (depth <= lights[i].splitDepths[c/4][c%4]) {
-                        cascadeIndex = c;
-                        break;
-                    }
-                }
-        
                 // Check if this cascade has a valid matrix (non-zero)
-                mat4 cascadeMatrix = lights[i].lightSpaceMatrix[cascadeIndex];
+                mat4 cascadeMatrix = lights[i].lightSpaceMatrix[0];
                 bool hasValidMatrix = (cascadeMatrix[0][0] != 0.0 || cascadeMatrix[0][1] != 0.0 || 
                                       cascadeMatrix[0][2] != 0.0 || cascadeMatrix[0][3] != 0.0 ||
                                       cascadeMatrix[1][0] != 0.0 || cascadeMatrix[1][1] != 0.0 || 
                                       cascadeMatrix[1][2] != 0.0 || cascadeMatrix[1][3] != 0.0);
-        
+
                 if (hasValidMatrix) {
-                    int startOffset = int(lights[i].spot_angles_castshadows_startOffset.w);
-                    int layerIndex = startOffset + cascadeIndex;
-            
+                    int layerIndex = int(lights[i].spot_angles_castshadows_startOffset.w);
+
                     shadowFactor = calculateShadowFactor(
                         cascadeMatrix, 
                         i, 
@@ -739,24 +634,6 @@ void main()
         // Energy compensation for rough surfaces
         if (roughness > 0.7) {
             result *= mix(1.0, 1.4, (roughness - 0.7) / 0.3);
-        }
-
-        // Calculate and apply VBAO
-        if(u_VBAO == 1) {
-            // Generate optimized temporal noise
-            ivec2 pixelCoord = ivec2(TexCoord * textureSize(sampler2D(u_GBufferDepthHandle), 0));
-            float bayerNoise = bayer4x4(pixelCoord);
-            float gradientNoise = interleavedGradientNoise(TexCoord);
-            vec2 noise = vec2(bayerNoise, gradientNoise);
-            
-            float aoFactor = calculateVBAOOptimized(TexCoord, biasedViewPos, viewDir, normalView, noise);
-            
-            // Apply intensity and distance fadeout
-            aoFactor = mix(1.0, aoFactor, u_VBAOIntensity);
-            aoFactor = mix(1.0, aoFactor, exp(-2.0 * (1.0 - u_VBAOFadeout) * depth));
-            
-            // Apply AO to lighting (multiply by AO factor)
-            result *= aoFactor;
         }
 
         // Emissive
