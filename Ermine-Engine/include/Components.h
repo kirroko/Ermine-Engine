@@ -1,10 +1,10 @@
 /* Start Header ************************************************************************/
 /*!
 \file       Components.h
-\author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu (55%)
+\author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu (45%)
 \co-author  Jeremy Lim Ting Jie, jeremytingjie.lim, 2301370, jeremytingjie.lim\@digipen.edu (10%)
 \co-author  Ridhwan (5%)
-\co-author  WEE HONG RU Curtis, h.wee, 2301266, h.wee\@digipen.edu (30%)
+\co-author  WEE HONG RU Curtis, h.wee, 2301266, h.wee\@digipen.edu (40%)
 \date       Jan 24, 2025
 \brief      Updated components with modular material system
 
@@ -228,6 +228,12 @@ namespace Ermine
 			if (in.HasMember("active") && in["active"].IsBool()) selfActive = in["active"].GetBool();
 		}
 
+		XPROPERTY_DEF(
+			"ObjectMetaData", ObjectMetaData,
+			xproperty::obj_member<"name", &ObjectMetaData::name>,
+			xproperty::obj_member<"tag", &ObjectMetaData::tag>,
+			xproperty::obj_member<"selfActive", &ObjectMetaData::selfActive>
+		)
 	};
 
 	/*!***********************************************************************
@@ -304,6 +310,12 @@ namespace Ermine
 			if (in.HasMember("enabled") && in["enabled"].IsBool()) m_enabled = in["enabled"].GetBool();
 			// Note: re-create ScriptInstance when attaching to entity (needs EntityID)
 		}
+
+		XPROPERTY_DEF(
+			"Script", Script,
+			xproperty::obj_member<"class", &Script::m_className>,
+			xproperty::obj_member<"enabled", &Script::m_enabled>
+		)
 	};
 
 	/*!***********************************************************************
@@ -343,6 +355,46 @@ namespace Ermine
 		}
 	};
 
+	struct MeshPrimitiveDesc {
+		std::string type;
+		Vec3        size{ 1,1,1 };
+
+		XPROPERTY_DEF(
+			"MeshPrimitiveDesc", MeshPrimitiveDesc,
+			xproperty::obj_member<"type", &MeshPrimitiveDesc::type>,
+			xproperty::obj_member<"size", &MeshPrimitiveDesc::size>
+		)
+	};
+
+	struct MeshAssetDesc {
+		std::string meshName;
+
+		XPROPERTY_DEF(
+			"MeshAssetDesc", MeshAssetDesc,
+			xproperty::obj_member<"meshName", &MeshAssetDesc::meshName>
+		)
+	};
+
+	enum class MeshKind { None, Primitive, Asset };
+}
+
+namespace xproperty::settings {
+
+	template<>
+	struct var_type<Ermine::MeshKind> : var_defaults<"MeshKind", Ermine::MeshKind>
+	{
+		// Antlion xproperty: enum_item is constructed FROM THE ENUM (not ints)
+		inline static constexpr std::array enum_list_v{
+			enum_item{"None",      Ermine::MeshKind::None},
+			enum_item{"Primitive", Ermine::MeshKind::Primitive},
+			enum_item{"Asset",     Ermine::MeshKind::Asset},
+		};
+	};
+
+} // namespace xproperty::settings
+
+namespace Ermine
+{
 	/*!***********************************************************************
 	\brief
 	 Mesh structure
@@ -353,14 +405,9 @@ namespace Ermine
 		std::shared_ptr<graphics::VertexBuffer> vertex_buffer;
 		std::shared_ptr<graphics::IndexBuffer> index_buffer;
 
-		enum class Kind { None, Primitive, Asset };
-		Kind kind = Kind::None;
-
-		// Primitive description (enough for your CreateCube)
-		struct PrimitiveDesc { std::string type; Vec3 size{ 1,1,1 }; } primitive;
-
-		// Asset description
-		struct AssetDesc { std::string meshName; } asset;
+		MeshKind        kind = MeshKind::None;
+		MeshPrimitiveDesc primitive;
+		MeshAssetDesc     asset;
 
 		Mesh() = default;
 
@@ -380,7 +427,7 @@ namespace Ermine
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
 			out.SetObject();
 			switch (kind) {
-			case Kind::Primitive: {
+			case MeshKind::Primitive: {
 				out.AddMember("kind", "Primitive", alloc);
 				rapidjson::Value p(rapidjson::kObjectType);
 				p.AddMember("type", rapidjson::Value(primitive.type.c_str(), alloc), alloc);
@@ -388,7 +435,7 @@ namespace Ermine
 				out.AddMember("primitive", p, alloc);
 				break;
 			}
-			case Kind::Asset: {
+			case MeshKind::Asset: {
 				out.AddMember("kind", "Asset", alloc);
 				rapidjson::Value a(rapidjson::kObjectType);
 				a.AddMember("meshName", rapidjson::Value(asset.meshName.c_str(), alloc), alloc);
@@ -402,11 +449,11 @@ namespace Ermine
 		}
 
 		void Deserialize(const rapidjson::Value& in) {
-			if (!in.HasMember("kind")) { kind = Kind::None; return; }
+			if (!in.HasMember("kind")) { kind = MeshKind::None; return; }
 			const auto& k = in["kind"];
 			if (k.IsString()) {
 				if (strcmp(k.GetString(), "Primitive") == 0) {
-					kind = Kind::Primitive;
+					kind = MeshKind::Primitive;
 					const auto& p = in["primitive"];
 					if (p.HasMember("type") && p["type"].IsString()) primitive.type = p["type"].GetString();
 					if (p.HasMember("size")) primitive.size = JsonToVec3(p["size"]);
@@ -416,17 +463,24 @@ namespace Ermine
 				}
 
 				else if (strcmp(k.GetString(), "Asset") == 0) {
-					kind = Kind::Asset;
+					kind = MeshKind::Asset;
 					const auto& a = in["asset"];
 					if (a.HasMember("meshName") && a["meshName"].IsString()) asset.meshName = a["meshName"].GetString();
 					// Rebuild from asset if you have a mesh loader separate from Model
 				}
 				else {
-					kind = Kind::None;
+					kind = MeshKind::None;
 				}
 			}
 		}
 
+		// XPROPERTY_DEF
+		XPROPERTY_DEF(
+			"Mesh", Mesh,
+			xproperty::obj_member<"kind", &Mesh::kind>,
+			xproperty::obj_member<"primitive", &Mesh::primitive>,
+			xproperty::obj_member<"asset", &Mesh::asset>
+		)
 	};
 
 	/*!***********************************************************************
@@ -468,7 +522,7 @@ namespace Ermine
 		Material(const std::shared_ptr<graphics::Shader>& shader, const std::shared_ptr<graphics::Texture>& texture)
 		{
 			m_material = std::make_shared<graphics::Material>(shader);
-			
+
 			// Only set texture and flags if texture is explicitly provided and valid
 			if (texture && texture->IsValid())
 			{
@@ -826,6 +880,25 @@ namespace Ermine
 			}
 		}
 
+		XPROPERTY_DEF(
+			"Material", Material,
+			// authoring template name
+			xproperty::obj_member<"template", &Material::materialTemplate>,
+
+			// cached parameters
+			xproperty::obj_member<"hasAlbedo", &Material::hasAlbedo>,
+			xproperty::obj_member<"albedo", &Material::cacheAlbedo>,
+
+			xproperty::obj_member<"hasRough", &Material::hasRough>,
+			xproperty::obj_member<"roughness", &Material::cacheRoughness>,
+
+			xproperty::obj_member<"hasMetal", &Material::hasMetal>,
+			xproperty::obj_member<"metallic", &Material::cacheMetallic>,
+
+			xproperty::obj_member<"hasEmiss", &Material::hasEmiss>,
+			xproperty::obj_member<"emissive", &Material::cacheEmissive>,
+			xproperty::obj_member<"emissiveIntensity", &Material::cacheEmissiveIntensity>
+		)
 	};
 
 	/*!***********************************************************************
@@ -838,6 +911,23 @@ namespace Ermine
 		DIRECTIONAL = 1,
 		SPOT = 2
 	};
+}
+
+namespace xproperty::settings {
+	template<>
+	struct var_type<Ermine::LightType> : var_defaults<"LightType", Ermine::LightType>
+	{
+		// antlion: enum_item takes the enum, not integers
+		inline static constexpr std::array enum_list_v{
+			enum_item{"Point",       Ermine::LightType::POINT},
+			enum_item{"Directional", Ermine::LightType::DIRECTIONAL},
+			enum_item{"Spot",        Ermine::LightType::SPOT},
+		};
+	};
+}
+
+namespace Ermine
+{
 
 	/*!***********************************************************************
 	\brief
@@ -917,6 +1007,17 @@ namespace Ermine
 			if (in.HasMember("castsShadows") && in["castsShadows"].IsBool())
 				castsShadows = in["castsShadows"].GetBool();
 		}
+
+		XPROPERTY_DEF(
+			"Light", Light,
+			xproperty::obj_member<"color", &Light::color>,
+			xproperty::obj_member<"intensity", &Light::intensity>,
+			xproperty::obj_member<"type", &Light::type>,
+			xproperty::obj_member<"castsShadows", &Light::castsShadows>,
+			xproperty::obj_member<"innerAngle", &Light::innerAngle>,  // used for spot
+			xproperty::obj_member<"outerAngle", &Light::outerAngle>,  // used for spot
+			xproperty::obj_member<"radius", &Light::radius>       // used for point/spot
+		)
 	};
 
 	/*!***********************************************************************
@@ -932,6 +1033,14 @@ namespace Ermine
 		AudioSource(const std::string& name, const std::string& path, float vol = 0.2f) :
 			audioName(name), audioPath(path), volume(vol) {
 		}
+
+		// Reflect AudioSource (name, path, volume)
+		XPROPERTY_DEF(
+			"AudioSource", AudioSource,
+			xproperty::obj_member<"name", &AudioSource::audioName>,
+			xproperty::obj_member<"path", &AudioSource::audioPath>,
+			xproperty::obj_member<"volume", &AudioSource::volume>
+		)
 	};
 
 	/*!***********************************************************************
@@ -1144,6 +1253,13 @@ namespace Ermine
 
 			currentMusicIndex = -1; currentMusicChannelId = -1;
 		}
+
+		XPROPERTY_DEF(
+			"GlobalAudioComponent", GlobalAudioComponent,
+			xproperty::obj_member<"masterVolume", &GlobalAudioComponent::masterVolume>,
+			xproperty::obj_member<"musicVolume", &GlobalAudioComponent::musicVolume>,
+			xproperty::obj_member<"sfxVolume", &GlobalAudioComponent::sfxVolume>
+		)
 	};
 
 	/*!***********************************************************************
@@ -1237,6 +1353,18 @@ namespace Ermine
 			channelId = -1; isPlaying = false; shouldPlay = shouldStop = false;
 		}
 
+		XPROPERTY_DEF(
+			"AudioComponent", AudioComponent,
+			xproperty::obj_member<"soundName", &AudioComponent::soundName>,
+			xproperty::obj_member<"eventName", &AudioComponent::eventName>,
+			xproperty::obj_member<"is3D", &AudioComponent::is3D>,
+			xproperty::obj_member<"isLooping", &AudioComponent::isLooping>,
+			xproperty::obj_member<"isStreaming", &AudioComponent::isStreaming>,
+			xproperty::obj_member<"volume", &AudioComponent::volume>,
+			xproperty::obj_member<"followTransform", &AudioComponent::followTransform>,
+			xproperty::obj_member<"minDistance", &AudioComponent::minDistance>,
+			xproperty::obj_member<"maxDistance", &AudioComponent::maxDistance>
+		)
 	};
 
 	/*!***********************************************************************
@@ -1271,7 +1399,7 @@ namespace Ermine
 			if (in.HasMember("size"))     size = in["size"].GetFloat();
 		}
 	};
-	
+
 	/*!***********************************************************************
 	 \brief
 	  Hierarchy component structure for parent-child relationships.
@@ -1316,6 +1444,37 @@ namespace Ermine
 		Trigger
 	};
 	enum class ShapeType { Box, Sphere, Capsule, CustomMesh/*, Compound*/, Total };
+
+}
+
+namespace xproperty::settings {
+	template<> struct var_type<Ermine::PhysicsBodyType> : var_defaults<"PhysicsBodyType", Ermine::PhysicsBodyType> {
+		inline static constexpr std::array enum_list_v{
+			enum_item{"Rigid",   Ermine::PhysicsBodyType::Rigid},
+			enum_item{"Trigger", Ermine::PhysicsBodyType::Trigger},
+		};
+	};
+
+	template<> struct var_type<JPH::EMotionType> : var_defaults<"JPH_EMotionType", JPH::EMotionType> {
+		inline static constexpr std::array enum_list_v{
+			enum_item{"Static",    JPH::EMotionType::Static},
+			enum_item{"Kinematic", JPH::EMotionType::Kinematic},
+			enum_item{"Dynamic",   JPH::EMotionType::Dynamic},
+		};
+	};
+
+	template<> struct var_type<Ermine::ShapeType> : var_defaults<"ShapeType", Ermine::ShapeType> {
+		inline static constexpr std::array enum_list_v{
+			enum_item{"Box",        Ermine::ShapeType::Box},
+			enum_item{"Sphere",     Ermine::ShapeType::Sphere},
+			enum_item{"Capsule",    Ermine::ShapeType::Capsule},
+			enum_item{"CustomMesh", Ermine::ShapeType::CustomMesh},
+		};
+	};
+}
+
+namespace Ermine
+{
 
 	/*!***********************************************************************
 	 \brief
@@ -1400,6 +1559,14 @@ namespace Ermine
 
 			//bodyID = JPH::BodyID::cInvalidBodyID; // rebuilt by your physics system on scene init
 		}
+
+		XPROPERTY_DEF(
+			"PhysicComponent", PhysicComponent,
+			xproperty::obj_member<"bodyType", &PhysicComponent::bodyType>,
+			xproperty::obj_member<"motionType", &PhysicComponent::motionType>,
+			xproperty::obj_member<"mass", &PhysicComponent::mass>,
+			xproperty::obj_member<"shapeType", &PhysicComponent::shapeType>
+		)
 	};
 
 
@@ -1439,6 +1606,11 @@ namespace Ermine
 				m_model->LoadModel(std::string("../Resources/Models/") + name);
 			}
 		}
+
+		//XPROPERTY_DEF(
+		//	"ModelComponent", ModelComponent,
+		//	xproperty::obj_member<"modelName", &ModelComponent::modelName>
+		//)
 	};
 
 	/*!***********************************************************************
@@ -1482,5 +1654,10 @@ namespace Ermine
 				}
 			}
 		}
+
+		//XPROPERTY_DEF(
+		//	"AnimationComponent", AnimationComponent,
+		//	xproperty::obj_member<"animModelName", &AnimationComponent::animModelName>
+		//)
 	};
 }

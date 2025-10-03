@@ -1,11 +1,11 @@
 /* Start Header ************************************************************************/
 /*!
-\file       Component.cpp
-\author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu
-\date       Sep 15, 2024
+\file       ComponentRegistration.cpp
+\author     WEE HONG RU Curtis, h.wee, 2301266, h.wee\@digipen.edu
+\date       Sep 30, 2025
 \brief      This file contains the definition of the member function of ComponentManager.
 
-Copyright (C) 2024 DigiPen Institute of Technology.
+Copyright (C) 2025 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents without the
 prior written consent of DigiPen Institute of Technology is prohibited.
 */
@@ -17,4 +17,25 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "xcore/my_properties.h"  
 #include "xproperty.h"
 
-XPROPERTY_REG(Ermine::Transform)
+using Ermine::MeshPrimitiveDesc;
+using Ermine::MeshAssetDesc;
+using Ermine::Mesh;
+
+namespace Ermine 
+{
+	XPROPERTY_REG(Transform)
+	XPROPERTY_REG(ObjectMetaData)
+	XPROPERTY_REG(Script)
+	XPROPERTY_REG(MeshPrimitiveDesc)
+	XPROPERTY_REG(MeshAssetDesc)
+	XPROPERTY_REG(Mesh)
+	XPROPERTY_REG(Material)
+	XPROPERTY_REG(Light)
+	XPROPERTY_REG(AudioSource)
+	XPROPERTY_REG(GlobalAudioComponent)
+	XPROPERTY_REG(AudioComponent)
+	XPROPERTY_REG(PhysicComponent)
+
+	//XPROPERTY_REG(ModelComponent)
+	//XPROPERTY_REG(AnimationComponent)
+}

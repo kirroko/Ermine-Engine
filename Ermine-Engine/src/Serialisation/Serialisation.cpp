@@ -32,19 +32,19 @@ using Ermine::graphics::GeometryFactory; // make intent explicit
 void Ermine::Mesh::RebuildPrimitive() {
     if (primitive.type == "Cube") {
         *this = GeometryFactory::CreateCube(primitive.size.x, primitive.size.y, primitive.size.z);
-        kind = Kind::Primitive;
+        kind = MeshKind::Primitive;
     }
     else if (primitive.type == "Sphere") {
         *this = GeometryFactory::CreateSphere(primitive.size.x); // adapt to your API
-        kind = Kind::Primitive;
+        kind = MeshKind::Primitive;
     }
     else if (primitive.type == "Quad") {
         *this = GeometryFactory::CreateQuad(primitive.size.x, primitive.size.y); // adapt to your API
-        kind = Kind::Primitive;
+        kind = MeshKind::Primitive;
     }
     else {
         EE_CORE_WARN("Unknown primitive type: {}", primitive.type);
-        kind = Kind::None;
+        kind = MeshKind::None;
 	}
     // TODO: other primitives...
 }
