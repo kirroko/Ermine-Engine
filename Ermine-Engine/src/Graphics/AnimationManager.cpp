@@ -27,17 +27,34 @@ namespace Ermine::graphics
 
 		for (auto& entity : m_Entities)
 		{
-			if (ecs.HasComponent<AnimationComponent>(entity) && ecs.HasComponent<ModelComponent>(entity))
-			{
-				auto& animComp = ecs.GetComponent<AnimationComponent>(entity);
-				auto& modelComp = ecs.GetComponent<ModelComponent>(entity);
+			// Check if animation and model components exist
+			if (!ecs.HasComponent<AnimationComponent>(entity)
+				|| !ecs.HasComponent<ModelComponent>(entity))
+				continue;
 
-				if (animComp.m_animator && animComp.m_animator->GetCurrentClip())
-				{
-					animComp.m_animator->Update(deltaTime);
-					modelComp.m_model->SetBoneTransforms(animComp.m_animator->GetFinalBoneMatrices());
-				}
-			}
+			auto& animComp = ecs.GetComponent<AnimationComponent>(entity);
+			auto& modelComp = ecs.GetComponent<ModelComponent>(entity);
+
+			// Check if model exists and is valid
+			if (!modelComp.m_model || !modelComp.m_model->GetAssimpScene())
+				continue;
+
+			// Check if animator exists and has clips
+			if (!animComp.m_animator || animComp.m_animator->GetClips().empty())
+				continue;
+
+			// Check if animation is actually playing
+			if (!animComp.m_animator->GetCurrentClip())
+				continue;
+
+			// Update animator
+			animComp.m_animator->Update(deltaTime);
+
+			// Ensure bone transforms vector is sized correctly
+			const auto& finalBones = animComp.m_animator->GetFinalBoneMatrices();
+			if (!finalBones.empty())
+				modelComp.m_model->SetBoneTransforms(finalBones);
+			modelComp.m_model->SetBoneTransforms(animComp.m_animator->GetFinalBoneMatrices());
 		}
 	}
 }
