@@ -1,0 +1,3 @@
+C:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xtextfile-subbuild/CMakeFiles/xtextfile-populate.dir
+C:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xtextfile-subbuild/CMakeFiles/ALL_BUILD.dir
+C:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xtextfile-subbuild/CMakeFiles/ZERO_CHECK.dir

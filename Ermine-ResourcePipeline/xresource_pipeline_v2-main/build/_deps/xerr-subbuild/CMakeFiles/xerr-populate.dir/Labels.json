@@ -1,0 +1,46 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "C:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xerr-subbuild/CMakeFiles/xerr-populate"
+		},
+		{
+			"file" : "C:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xerr-subbuild/CMakeFiles/60ee75b1b8246c52edcd088aa566b0b1/xerr-populate.rule"
+		},
+		{
+			"file" : "C:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xerr-subbuild/CMakeFiles/1323f6decc10d4dd13111c025dd84b69/xerr-populate-complete.rule"
+		},
+		{
+			"file" : "C:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xerr-subbuild/CMakeFiles/787cc9fb2333a88387d3b7003895a249/xerr-populate-build.rule"
+		},
+		{
+			"file" : "C:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xerr-subbuild/CMakeFiles/787cc9fb2333a88387d3b7003895a249/xerr-populate-configure.rule"
+		},
+		{
+			"file" : "C:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xerr-subbuild/CMakeFiles/787cc9fb2333a88387d3b7003895a249/xerr-populate-download.rule"
+		},
+		{
+			"file" : "C:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xerr-subbuild/CMakeFiles/787cc9fb2333a88387d3b7003895a249/xerr-populate-install.rule"
+		},
+		{
+			"file" : "C:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xerr-subbuild/CMakeFiles/787cc9fb2333a88387d3b7003895a249/xerr-populate-mkdir.rule"
+		},
+		{
+			"file" : "C:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xerr-subbuild/CMakeFiles/787cc9fb2333a88387d3b7003895a249/xerr-populate-patch.rule"
+		},
+		{
+			"file" : "C:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xerr-subbuild/CMakeFiles/787cc9fb2333a88387d3b7003895a249/xerr-populate-test.rule"
+		},
+		{
+			"file" : "C:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xerr-subbuild/CMakeFiles/787cc9fb2333a88387d3b7003895a249/xerr-populate-update.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"xerr-populate"
+		],
+		"name" : "xerr-populate"
+	}
+}

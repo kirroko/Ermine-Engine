@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xproperty-subbuild\CMakeFiles\6a7421724166f50a6d880d975c5029ca\xproperty-populate-mkdir.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xproperty-subbuild\CMakeFiles\6a7421724166f50a6d880d975c5029ca\xproperty-populate-download.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xproperty-subbuild\CMakeFiles\6a7421724166f50a6d880d975c5029ca\xproperty-populate-update.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xproperty-subbuild\CMakeFiles\6a7421724166f50a6d880d975c5029ca\xproperty-populate-patch.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xproperty-subbuild\CMakeFiles\6a7421724166f50a6d880d975c5029ca\xproperty-populate-configure.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xproperty-subbuild\CMakeFiles\6a7421724166f50a6d880d975c5029ca\xproperty-populate-build.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xproperty-subbuild\CMakeFiles\6a7421724166f50a6d880d975c5029ca\xproperty-populate-install.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xproperty-subbuild\CMakeFiles\6a7421724166f50a6d880d975c5029ca\xproperty-populate-test.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xproperty-subbuild\CMakeFiles\2716395a6ef179ab22f368b9d6a43de2\xproperty-populate-complete.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xproperty-subbuild\CMakeFiles\9772c8494c163cdf625b477b86b91234\xproperty-populate.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xproperty-subbuild\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xproperty-subbuild\CMakeFiles\xproperty-populate" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{45AA395B-3828-37F0-8FEB-8DAF164DA00B}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,14 @@
+# Target labels
+ xstrtool-populate
+# Source files and their labels
+C:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xstrtool-subbuild/CMakeFiles/xstrtool-populate
+C:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xstrtool-subbuild/CMakeFiles/fa19f5be750de423704b9e1909f7bfee/xstrtool-populate.rule
+C:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xstrtool-subbuild/CMakeFiles/74dbb55adbd8ae38120a11a291851ba0/xstrtool-populate-complete.rule
+C:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xstrtool-subbuild/CMakeFiles/a8f43ffebe259e83d0d11f610fff090a/xstrtool-populate-build.rule
+C:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xstrtool-subbuild/CMakeFiles/a8f43ffebe259e83d0d11f610fff090a/xstrtool-populate-configure.rule
+C:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xstrtool-subbuild/CMakeFiles/a8f43ffebe259e83d0d11f610fff090a/xstrtool-populate-download.rule
+C:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xstrtool-subbuild/CMakeFiles/a8f43ffebe259e83d0d11f610fff090a/xstrtool-populate-install.rule
+C:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xstrtool-subbuild/CMakeFiles/a8f43ffebe259e83d0d11f610fff090a/xstrtool-populate-mkdir.rule
+C:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xstrtool-subbuild/CMakeFiles/a8f43ffebe259e83d0d11f610fff090a/xstrtool-populate-patch.rule
+C:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xstrtool-subbuild/CMakeFiles/a8f43ffebe259e83d0d11f610fff090a/xstrtool-populate-test.rule
+C:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xstrtool-subbuild/CMakeFiles/a8f43ffebe259e83d0d11f610fff090a/xstrtool-populate-update.rule

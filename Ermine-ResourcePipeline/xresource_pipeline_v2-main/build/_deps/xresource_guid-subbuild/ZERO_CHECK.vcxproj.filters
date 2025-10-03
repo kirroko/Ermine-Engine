@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xresource_guid-subbuild\CMakeFiles\0769b6dfba6f8ea76a5f4d14b89e4816\generate.stamp.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{88D346F7-4549-3195-AE65-F6B74F72FBBF}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

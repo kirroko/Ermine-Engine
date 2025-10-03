@@ -1,0 +1,301 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+  </PropertyGroup>
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{3085A638-4B69-3200-BB7C-AEAF9C2FAFD3}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <WindowsTargetPlatformVersion>10.0.26100.0</WindowsTargetPlatformVersion>
+    <Platform>x64</Platform>
+    <ProjectName>xresource_guid-populate</ProjectName>
+    <VCProjectUpgraderObjectName>NoUpgrade</VCProjectUpgraderObjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Utility</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Midl>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xresource_guid-subbuild\CMakeFiles\3f99770a882da5246461d16052a558f1\xresource_guid-populate-mkdir.rule">
+      <BuildInParallel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</BuildInParallel>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Creating directories for 'xresource_guid-populate'</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -Dcfgdir=/Debug -P C:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xresource_guid-subbuild/xresource_guid-populate-prefix/tmp/xresource_guid-populate-mkdirs.cmake
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E touch C:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xresource_guid-subbuild/xresource_guid-populate-prefix/src/xresource_guid-populate-stamp/Debug/xresource_guid-populate-mkdir
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xresource_guid-subbuild\xresource_guid-populate-prefix\src\xresource_guid-populate-stamp\Debug\xresource_guid-populate-mkdir</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xresource_guid-subbuild\CMakeFiles\3f99770a882da5246461d16052a558f1\xresource_guid-populate-download.rule">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Performing download step (git clone) for 'xresource_guid-populate'</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+cd C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\dependencies
+if %errorlevel% neq 0 goto :cmEnd
+C:
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -P C:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xresource_guid-subbuild/xresource_guid-populate-prefix/tmp/xresource_guid-populate-gitclone.cmake
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E touch C:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xresource_guid-subbuild/xresource_guid-populate-prefix/src/xresource_guid-populate-stamp/Debug/xresource_guid-populate-download
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xresource_guid-subbuild\xresource_guid-populate-prefix\src\xresource_guid-populate-stamp\xresource_guid-populate-gitinfo.txt;C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xresource_guid-subbuild\xresource_guid-populate-prefix\src\xresource_guid-populate-stamp\Debug\xresource_guid-populate-mkdir;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xresource_guid-subbuild\xresource_guid-populate-prefix\src\xresource_guid-populate-stamp\Debug\xresource_guid-populate-download</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xresource_guid-subbuild\CMakeFiles\3f99770a882da5246461d16052a558f1\xresource_guid-populate-update.rule">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Performing update step for 'xresource_guid-populate'</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+cd C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\dependencies\xresource_guid
+if %errorlevel% neq 0 goto :cmEnd
+C:
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -Dcan_fetch=YES -P C:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xresource_guid-subbuild/xresource_guid-populate-prefix/tmp/xresource_guid-populate-gitupdate.cmake
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xresource_guid-subbuild\xresource_guid-populate-prefix\tmp\xresource_guid-populate-gitupdate.cmake;C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xresource_guid-subbuild\xresource_guid-populate-prefix\src\xresource_guid-populate-stamp\xresource_guid-populate-update-info.txt;C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xresource_guid-subbuild\xresource_guid-populate-prefix\src\xresource_guid-populate-stamp\Debug\xresource_guid-populate-download;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xresource_guid-subbuild\xresource_guid-populate-prefix\src\xresource_guid-populate-stamp\Debug\xresource_guid-populate-update</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <VerifyInputsAndOutputsExist Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</VerifyInputsAndOutputsExist>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xresource_guid-subbuild\CMakeFiles\3f99770a882da5246461d16052a558f1\xresource_guid-populate-patch.rule">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">No patch step for 'xresource_guid-populate'</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -E echo_append
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E touch C:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xresource_guid-subbuild/xresource_guid-populate-prefix/src/xresource_guid-populate-stamp/Debug/xresource_guid-populate-patch
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xresource_guid-subbuild\xresource_guid-populate-prefix\src\xresource_guid-populate-stamp\xresource_guid-populate-patch-info.txt;C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xresource_guid-subbuild\xresource_guid-populate-prefix\src\xresource_guid-populate-stamp\Debug\xresource_guid-populate-update;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xresource_guid-subbuild\xresource_guid-populate-prefix\src\xresource_guid-populate-stamp\Debug\xresource_guid-populate-patch</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <VerifyInputsAndOutputsExist Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</VerifyInputsAndOutputsExist>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xresource_guid-subbuild\CMakeFiles\3f99770a882da5246461d16052a558f1\xresource_guid-populate-configure.rule">
+      <BuildInParallel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</BuildInParallel>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">No configure step for 'xresource_guid-populate'</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+cd C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xresource_guid-build
+if %errorlevel% neq 0 goto :cmEnd
+C:
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E echo_append
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E touch C:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xresource_guid-subbuild/xresource_guid-populate-prefix/src/xresource_guid-populate-stamp/Debug/xresource_guid-populate-configure
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xresource_guid-subbuild\xresource_guid-populate-prefix\tmp\xresource_guid-populate-cfgcmd.txt;C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xresource_guid-subbuild\xresource_guid-populate-prefix\src\xresource_guid-populate-stamp\Debug\xresource_guid-populate-patch;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xresource_guid-subbuild\xresource_guid-populate-prefix\src\xresource_guid-populate-stamp\Debug\xresource_guid-populate-configure</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xresource_guid-subbuild\CMakeFiles\3f99770a882da5246461d16052a558f1\xresource_guid-populate-build.rule">
+      <BuildInParallel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</BuildInParallel>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">No build step for 'xresource_guid-populate'</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+cd C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xresource_guid-build
+if %errorlevel% neq 0 goto :cmEnd
+C:
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E echo_append
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E touch C:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xresource_guid-subbuild/xresource_guid-populate-prefix/src/xresource_guid-populate-stamp/Debug/xresource_guid-populate-build
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xresource_guid-subbuild\xresource_guid-populate-prefix\src\xresource_guid-populate-stamp\Debug\xresource_guid-populate-configure;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xresource_guid-subbuild\xresource_guid-populate-prefix\src\xresource_guid-populate-stamp\Debug\xresource_guid-populate-build</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xresource_guid-subbuild\CMakeFiles\3f99770a882da5246461d16052a558f1\xresource_guid-populate-install.rule">
+      <BuildInParallel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</BuildInParallel>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">No install step for 'xresource_guid-populate'</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+cd C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xresource_guid-build
+if %errorlevel% neq 0 goto :cmEnd
+C:
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E echo_append
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E touch C:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xresource_guid-subbuild/xresource_guid-populate-prefix/src/xresource_guid-populate-stamp/Debug/xresource_guid-populate-install
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xresource_guid-subbuild\xresource_guid-populate-prefix\src\xresource_guid-populate-stamp\Debug\xresource_guid-populate-build;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xresource_guid-subbuild\xresource_guid-populate-prefix\src\xresource_guid-populate-stamp\Debug\xresource_guid-populate-install</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xresource_guid-subbuild\CMakeFiles\3f99770a882da5246461d16052a558f1\xresource_guid-populate-test.rule">
+      <BuildInParallel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</BuildInParallel>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">No test step for 'xresource_guid-populate'</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+cd C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xresource_guid-build
+if %errorlevel% neq 0 goto :cmEnd
+C:
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E echo_append
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E touch C:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xresource_guid-subbuild/xresource_guid-populate-prefix/src/xresource_guid-populate-stamp/Debug/xresource_guid-populate-test
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xresource_guid-subbuild\xresource_guid-populate-prefix\src\xresource_guid-populate-stamp\Debug\xresource_guid-populate-install;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xresource_guid-subbuild\xresource_guid-populate-prefix\src\xresource_guid-populate-stamp\Debug\xresource_guid-populate-test</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xresource_guid-subbuild\CMakeFiles\fbbe6c05a180adeb37dfed6413ad39c3\xresource_guid-populate-complete.rule">
+      <BuildInParallel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</BuildInParallel>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Completed 'xresource_guid-populate'</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -E make_directory C:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xresource_guid-subbuild/CMakeFiles/Debug
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E touch C:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xresource_guid-subbuild/CMakeFiles/Debug/xresource_guid-populate-complete
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E touch C:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xresource_guid-subbuild/xresource_guid-populate-prefix/src/xresource_guid-populate-stamp/Debug/xresource_guid-populate-done
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xresource_guid-subbuild\xresource_guid-populate-prefix\src\xresource_guid-populate-stamp\Debug\xresource_guid-populate-install;C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xresource_guid-subbuild\xresource_guid-populate-prefix\src\xresource_guid-populate-stamp\Debug\xresource_guid-populate-mkdir;C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xresource_guid-subbuild\xresource_guid-populate-prefix\src\xresource_guid-populate-stamp\Debug\xresource_guid-populate-download;C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xresource_guid-subbuild\xresource_guid-populate-prefix\src\xresource_guid-populate-stamp\Debug\xresource_guid-populate-update;C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xresource_guid-subbuild\xresource_guid-populate-prefix\src\xresource_guid-populate-stamp\Debug\xresource_guid-populate-patch;C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xresource_guid-subbuild\xresource_guid-populate-prefix\src\xresource_guid-populate-stamp\Debug\xresource_guid-populate-configure;C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xresource_guid-subbuild\xresource_guid-populate-prefix\src\xresource_guid-populate-stamp\Debug\xresource_guid-populate-build;C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xresource_guid-subbuild\xresource_guid-populate-prefix\src\xresource_guid-populate-stamp\Debug\xresource_guid-populate-test;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xresource_guid-subbuild\CMakeFiles\Debug\xresource_guid-populate-complete</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <VerifyInputsAndOutputsExist Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</VerifyInputsAndOutputsExist>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xresource_guid-subbuild\CMakeFiles\0769b6dfba6f8ea76a5f4d14b89e4816\xresource_guid-populate.rule">
+      <BuildInParallel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</BuildInParallel>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'"></Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xresource_guid-subbuild\CMakeFiles\Debug\xresource_guid-populate-complete;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xresource_guid-subbuild\CMakeFiles\xresource_guid-populate</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <VerifyInputsAndOutputsExist Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</VerifyInputsAndOutputsExist>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xresource_guid-subbuild\CMakeLists.txt">
+      <UseUtf8Encoding>Always</UseUtf8Encoding>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building Custom Rule C:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xresource_guid-subbuild/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xresource_guid-subbuild -BC:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xresource_guid-subbuild --check-stamp-file C:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xresource_guid-subbuild/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeDetermineSystem.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeSystem.cmake.in;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\ExternalProject.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\ExternalProject\PatchInfo.txt.in;C:\Program Files\CMake\share\cmake-3.29\Modules\ExternalProject\RepositoryInfo.txt.in;C:\Program Files\CMake\share\cmake-3.29\Modules\ExternalProject\UpdateInfo.txt.in;C:\Program Files\CMake\share\cmake-3.29\Modules\ExternalProject\cfgcmd.txt.in;C:\Program Files\CMake\share\cmake-3.29\Modules\ExternalProject\gitclone.cmake.in;C:\Program Files\CMake\share\cmake-3.29\Modules\ExternalProject\gitupdate.cmake.in;C:\Program Files\CMake\share\cmake-3.29\Modules\ExternalProject\mkdirs.cmake.in;C:\Program Files\CMake\share\cmake-3.29\Modules\ExternalProject\shared_internal_commands.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Platform\Windows-Initialize.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-3.29\Modules\Platform\WindowsPaths.cmake;C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xresource_guid-subbuild\CMakeFiles\3.29.2\CMakeSystem.cmake;C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xresource_guid-subbuild\xresource_guid-populate-prefix\tmp\xresource_guid-populate-mkdirs.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xresource_guid-subbuild\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xresource_guid-subbuild\CMakeFiles\xresource_guid-populate">
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="C:\Users\kairu\OneDrive\Desktop\GAM300\Ermine-Engine\Ermine-ResourcePipeline\xresource_pipeline_v2-main\build\_deps\xresource_guid-subbuild\ZERO_CHECK.vcxproj">
+      <Project>{EA33AF8B-D150-3650-AFD8-E124A86D1127}</Project>
+      <Name>ZERO_CHECK</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

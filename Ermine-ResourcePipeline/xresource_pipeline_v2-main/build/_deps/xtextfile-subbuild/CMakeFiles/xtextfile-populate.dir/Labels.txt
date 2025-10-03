@@ -1,0 +1,14 @@
+# Target labels
+ xtextfile-populate
+# Source files and their labels
+C:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xtextfile-subbuild/CMakeFiles/xtextfile-populate
+C:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xtextfile-subbuild/CMakeFiles/fd7112488aabaffc6b823122bd364dec/xtextfile-populate.rule
+C:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xtextfile-subbuild/CMakeFiles/7c2c5e2a5d716d18d2f20d4868d8005c/xtextfile-populate-complete.rule
+C:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xtextfile-subbuild/CMakeFiles/17882238927304f50d5f3bcbe5f606bf/xtextfile-populate-build.rule
+C:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xtextfile-subbuild/CMakeFiles/17882238927304f50d5f3bcbe5f606bf/xtextfile-populate-configure.rule
+C:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xtextfile-subbuild/CMakeFiles/17882238927304f50d5f3bcbe5f606bf/xtextfile-populate-download.rule
+C:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xtextfile-subbuild/CMakeFiles/17882238927304f50d5f3bcbe5f606bf/xtextfile-populate-install.rule
+C:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xtextfile-subbuild/CMakeFiles/17882238927304f50d5f3bcbe5f606bf/xtextfile-populate-mkdir.rule
+C:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xtextfile-subbuild/CMakeFiles/17882238927304f50d5f3bcbe5f606bf/xtextfile-populate-patch.rule
+C:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xtextfile-subbuild/CMakeFiles/17882238927304f50d5f3bcbe5f606bf/xtextfile-populate-test.rule
+C:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xtextfile-subbuild/CMakeFiles/17882238927304f50d5f3bcbe5f606bf/xtextfile-populate-update.rule
