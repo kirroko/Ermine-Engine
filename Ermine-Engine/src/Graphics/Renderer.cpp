@@ -92,6 +92,7 @@ void Renderer::Init(const int& screenWidth, const int& screenHeight)
 	m_LightPassShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/lighting_vertex.glsl", "../Resources/Shaders/lighting_fragment.glsl");
 	m_BloomShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/bloom_vertex.glsl", "../Resources/Shaders/bloom_fragment.glsl");
 	m_PostProcessShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/postprocess_vertex.glsl", "../Resources/Shaders/postprocess_fragment.glsl");
+	m_AAShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/FXAA_vertex.glsl", "../Resources/Shaders/FXAA_fragment.glsl");
 	// Load forward rendering shader for transparent objects
 	m_ForwardShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/vertex.glsl", "../Resources/Shaders/fragment_enhanced.glsl");
 	if (!m_ForwardShader || !m_ForwardShader->IsValid()) {
@@ -411,7 +412,7 @@ void Renderer::CreateGBuffer(const int& width, const int& height)
  */
 void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 {
-	PostProcessBuffer pPBuffer, bEBuffer, bBBuffer1, bBBuffer2;
+	PostProcessBuffer pPBuffer, bEBuffer, bBBuffer1, bBBuffer2, AABuffer;
 
 
 	// If an  buffer already exists, delete its OpenGL resources before creating a new one.
@@ -497,6 +498,19 @@ void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 	bBBuffer2.DepthTexture = 0;
 	glCheckError();
 
+	glGenFramebuffers(1, &AABuffer.FBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, AABuffer.FBO);
+	glGenTextures(1, &AABuffer.ColorTexture);
+	glBindTexture(GL_TEXTURE_2D, AABuffer.ColorTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_HALF_FLOAT, nullptr);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, AABuffer.ColorTexture, 0);
+	AABuffer.DepthTexture = 0;
+	glCheckError();
+
 	// Making sure dimensions are non-zero
 	if (width <= 0 || height <= 0)
 	{
@@ -557,6 +571,9 @@ void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 	bBBuffer2.width = width;
 	bBBuffer2.height = height;
 	m_BloomBlurBuffer2 = std::make_shared<PostProcessBuffer>(bBBuffer2);
+	AABuffer.width = width;
+	AABuffer.height = height;
+	m_AntiAliasingBuffer = std::make_shared<PostProcessBuffer>(AABuffer);
 }
 
 /**
@@ -903,7 +920,7 @@ void Renderer::RenderLightingPass(const Mtx44& view, const Mtx44& projection)
  */
 void Renderer::RenderPostProcessPass()
 {
-	if (!m_PostProcessBuffer || !m_BloomShader || !m_PostProcessShader)
+	if (!m_PostProcessBuffer || !m_BloomShader || !m_PostProcessShader || !m_AAShader)
 	{
 		EE_CORE_ERROR("Post-process buffers or shaders not initialized!");
 		return;
@@ -942,17 +959,8 @@ void Renderer::RenderPostProcessPass()
 	m_BloomShader->SetUniform1i("u_Pass", 3);
 	Draw(m_QuadMesh.vertex_array, m_QuadMesh.index_buffer);
 
-	// Final pass: Combine with post-processing
-#ifdef _DEBUG
-	glBindFramebuffer(GL_FRAMEBUFFER, m_OffscreenBuffer->FBO);
-	glViewport(0, 0, m_OffscreenBuffer->width, m_OffscreenBuffer->height);
-#else
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	GLint viewport[4];
-	glGetIntegerv(GL_VIEWPORT, viewport);
-	glViewport(0, 0, viewport[2], viewport[3]);
-#endif
-
+	// Pass 4: Post-processing (tone mapping, bloom combine, etc.)
+	glBindFramebuffer(GL_FRAMEBUFFER, m_AntiAliasingBuffer->FBO);
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	m_PostProcessShader->Bind();
@@ -973,7 +981,6 @@ void Renderer::RenderPostProcessPass()
 
 	// Set post-processing toggle parameters
 	m_PostProcessShader->SetUniform1i("u_Vignette", m_VignetteEnabled ? 1 : 0);
-	m_PostProcessShader->SetUniform1i("u_FXAA", m_FXAAEnabled ? 1 : 0);
 	m_PostProcessShader->SetUniform1i("u_ToneMapping", m_ToneMappingEnabled ? 1 : 0);
 	m_PostProcessShader->SetUniform1i("u_GammaCorrection", m_GammaCorrectionEnabled ? 1 : 0);
 	m_PostProcessShader->SetUniform1i("u_Bloom", m_BloomEnabled ? 1 : 0);
@@ -988,10 +995,32 @@ void Renderer::RenderPostProcessPass()
 	m_PostProcessShader->SetUniform1f("u_VignetteRadius", m_VignetteRadius);
 	m_PostProcessShader->SetUniform1f("u_BloomStrength", m_BloomStrength);
 
+
+	Draw(m_QuadMesh.vertex_array, m_QuadMesh.index_buffer);
+
+	// Final pass: FXAA
+#ifdef _DEBUG
+	glBindFramebuffer(GL_FRAMEBUFFER, m_OffscreenBuffer->FBO);
+	glViewport(0, 0, m_OffscreenBuffer->width, m_OffscreenBuffer->height);
+#else
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	GLint viewport[4];
+	glGetIntegerv(GL_VIEWPORT, viewport);
+	glViewport(0, 0, viewport[2], viewport[3]);
+#endif
+
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	m_AAShader->Bind();
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, m_AntiAliasingBuffer->ColorTexture);
+	m_AAShader->SetUniform1i("u_LightingTexture", 0);
+
 	// Set FXAA parameters
-	m_PostProcessShader->SetUniform1f("u_FXAASpanMax", m_FXAASpanMax);
-	m_PostProcessShader->SetUniform1f("u_FXAAReduceMin", m_FXAAReduceMin);
-	m_PostProcessShader->SetUniform1f("u_FXAAReduceMul", m_FXAAReduceMul);
+	m_AAShader->SetUniform1i("u_FXAA", m_FXAAEnabled ? 1 : 0);
+	m_AAShader->SetUniform1f("u_FXAASpanMax", m_FXAASpanMax);
+	m_AAShader->SetUniform1f("u_FXAAReduceMin", m_FXAAReduceMin);
+	m_AAShader->SetUniform1f("u_FXAAReduceMul", m_FXAAReduceMul);
 
 	Draw(m_QuadMesh.vertex_array, m_QuadMesh.index_buffer);
 
@@ -1235,6 +1264,26 @@ void Renderer::CleanupPostProcessBuffer()
 			m_BloomBlurBuffer2->ColorTexture = 0;
 		}
 		m_BloomBlurBuffer2.reset();
+	}
+	// Clean up anti-aliasing buffer
+	if (m_AntiAliasingBuffer)
+	{
+		if (m_AntiAliasingBuffer->FBO != 0)
+		{
+			glDeleteFramebuffers(1, &m_AntiAliasingBuffer->FBO);
+			m_AntiAliasingBuffer->FBO = 0;
+		}
+		if (m_AntiAliasingBuffer->ColorTexture != 0)
+		{
+			glDeleteTextures(1, &m_AntiAliasingBuffer->ColorTexture);
+			m_AntiAliasingBuffer->ColorTexture = 0;
+		}
+		if (m_AntiAliasingBuffer->DepthTexture != 0)
+		{
+			glDeleteTextures(1, &m_AntiAliasingBuffer->DepthTexture);
+			m_AntiAliasingBuffer->DepthTexture = 0;
+		}
+		m_AntiAliasingBuffer.reset();
 	}
 
 	// Check for OpenGL errors after cleanup

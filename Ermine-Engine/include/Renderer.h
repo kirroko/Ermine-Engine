@@ -544,8 +544,10 @@ namespace Ermine::graphics
         std::shared_ptr<PostProcessBuffer> m_BloomExtractBuffer;
         std::shared_ptr<PostProcessBuffer> m_BloomBlurBuffer1;
         std::shared_ptr<PostProcessBuffer> m_BloomBlurBuffer2;
+		std::shared_ptr<PostProcessBuffer> m_AntiAliasingBuffer;
         std::shared_ptr<Shader> m_BloomShader = 0; // Shader for bloom effect
         std::shared_ptr<Shader> m_PostProcessShader = 0; // Shader for post-processing effects
+		std::shared_ptr<Shader> m_AAShader = 0; // Shader for anti-aliasing
 
         // Skybox
         Skybox* m_skybox = nullptr;
