@@ -72,7 +72,14 @@ namespace Ermine::graphics
     {
     public:
         // Lighting Pass Parameters
+        // SSAO parameters
         bool m_SSAOEnabled = false;
+		int  m_SSAOSamples = 16;
+		float m_SSAORadius = 10.0f;
+		float m_SSAOBias = 0.01f;
+		float m_SSAOIntensity = 1.0f;
+		float m_SSAOFadeout = 0.1f;
+		float m_SSAOMaxDistance = 100.0f;
 
         // Post-processing uniforms - toggles
         bool m_VignetteEnabled = false;

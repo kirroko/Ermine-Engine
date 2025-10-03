@@ -863,7 +863,14 @@ void Renderer::RenderLightingPass(const Mtx44& view, const Mtx44& projection)
 	m_LightPassShader->SetUniformMatrix4fv("view", glmView);
 	m_LightPassShader->SetUniformMatrix4fv("invView", invView);
 	m_LightPassShader->SetUniformMatrix4fv("invProjection", invProjection);
-	m_LightPassShader->SetUniform1i("u_VBAO", m_SSAOEnabled ? 1 : 0);
+	m_LightPassShader->SetUniformMatrix4fv("projection", glmProjection);
+	m_LightPassShader->SetUniform1i("u_SSAO", m_SSAOEnabled ? 1 : 0);
+	m_LightPassShader->SetUniform1i("u_SSAOSamples", m_SSAOSamples);
+	m_LightPassShader->SetUniform1f("u_SSAORadius", m_SSAORadius);
+	m_LightPassShader->SetUniform1f("u_SSAOBias", m_SSAOBias);
+	m_LightPassShader->SetUniform1f("u_SSAOIntensity", m_SSAOIntensity);
+	m_LightPassShader->SetUniform1f("u_SSAOFadeout", m_SSAOFadeout);
+	m_LightPassShader->SetUniform1f("u_SSAOMaxDistance", m_SSAOMaxDistance);
 
 	// Set shading mode
 	m_LightPassShader->SetUniform1i("u_ShadingMode", m_IsBlinnPhong ? 1 : 0);
@@ -873,6 +880,7 @@ void Renderer::RenderLightingPass(const Mtx44& view, const Mtx44& projection)
 	{
 		Draw(m_QuadMesh.vertex_array, m_QuadMesh.index_buffer);
 	}
+
 
 	EndLightingPass();
 }
@@ -1841,8 +1849,7 @@ void Renderer::RenderModelDeferred(const Model& model, graphics::Material* mater
 		m_GBufferShader->SetUniformMatrix4fv("view", glmView);
 		m_GBufferShader->SetUniformMatrix4fv("projection", glmProj);
 
-		glm::mat4 modelView = glmView * modelMat;
-		glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(modelView)));
+		glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(modelMat)));
 		m_GBufferShader->SetUniformMatrix3fv("NormalMatrix", normalMatrix);
 
 		Draw(mesh.vao, mesh.ibo);
