@@ -1,10 +1,10 @@
 /* Start Header ************************************************************************/
 /*!
 \file       AssetManager.cpp
-\author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu (80%)
+\author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu (75%)
 \co-author  Jeremy Lim Ting Jie, jeremytingjie.lim, 2301370, jeremytingjie.lim\@digipen.edu (20%)
-\co-authors Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu
-\date       10/09/2025
+\co-authors Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu (5%)
+\date       03/10/2025
 \brief      This file contains the definition of the AssetManager system.
             This file is used to manage all the assets in the game.
 
@@ -249,16 +249,14 @@ std::string AssetManager::GetFullDDSPath(const ResourceEntry& entry) const
  */
 std::shared_ptr<graphics::Texture> AssetManager::LoadTexture(const std::string& filePath)
 {
-    
     EE_CORE_TRACE("Loading texture: {0}", filePath);
-
-    // Check cache first using original file path as key
     auto it = m_textures.find(filePath);
-    if (it != m_textures.end())
+    if (it != m_textures.end()) // If the texture is already loaded
     {
-        EE_CORE_TRACE("Texture found in cache: {0}", filePath);
+        EE_CORE_INFO("Texture {0} already loaded, returning cached version", filePath);
         return it->second;
     }
+
 
     std::shared_ptr<graphics::Texture> texture;
 
@@ -359,9 +357,37 @@ std::shared_ptr<graphics::Texture> AssetManager::GetTexture(const std::string& f
     return it != m_textures.end() ? it->second : nullptr;
 }
 
+/**
+ * @brief Get a read-only view of all currently loaded textures.
+ * @return A const reference to the unordered_map of loaded textures.
+ * The key is the texture file path, and the value is the shared Texture.
+ */
 const std::unordered_map<std::string, std::shared_ptr<graphics::Texture>>& AssetManager::GetLoadedTextures() const
 {
     return m_textures;
+}
+
+/**
+ * @brief Load a shader from the vertex and fragment file path and store it in the asset manager, if it is loaded before, return the shader
+ * @param vertexPath The file path of the vertex shader
+ * @param fragmentPath The file path of the fragment shader
+ * @return The shader that is loaded
+ */
+std::shared_ptr<graphics::Shader> AssetManager::LoadShader(const std::string& computePath)
+{
+    EE_CORE_TRACE("Loading compute shader: {0}", computePath);
+    auto it = m_shaders.find(computePath);
+    if (it != m_shaders.end())
+        return it->second;
+    std::shared_ptr<graphics::Shader> shader = std::make_shared<graphics::Shader>(computePath);
+    if (!shader->IsValid())
+    {
+        EE_CORE_ERROR("Failed to load compute shader: {0}", computePath);
+        return nullptr;
+    }
+    m_shaders[computePath] = shader;
+    EE_CORE_INFO("Compute shader loaded: {0}", computePath);
+	return shader;
 }
 
 /**
@@ -377,7 +403,10 @@ std::shared_ptr<graphics::Shader> AssetManager::LoadShader(const std::string& ve
     std::string key = vertexPath + "|" + fragmentPath;
     auto it = m_shaders.find(key);
     if (it != m_shaders.end())
+    {
+        EE_CORE_INFO("Shader {0} already loaded, returning cached version", key);
         return it->second;
+    }
 
     std::shared_ptr<graphics::Shader> shader = std::make_shared<graphics::Shader>(vertexPath, fragmentPath);
     if (!shader->IsValid())
@@ -402,6 +431,11 @@ std::shared_ptr<graphics::Shader> AssetManager::LoadShader(const std::string& ve
 {
     EE_CORE_TRACE("Loading shader: {0} | {1} | {2}", vertexPath, geometryPath, fragmentPath);
     std::string key = vertexPath + "|" + geometryPath + "|" + fragmentPath;
+    auto it = m_shaders.find(key);
+    if (it != m_shaders.end()) {
+        EE_CORE_INFO("Shader {0} already loaded, returning cached version", key);
+        return it->second;
+    }
 
     std::shared_ptr<graphics::Shader> shader = std::make_shared<graphics::Shader>(vertexPath, geometryPath, fragmentPath);
     if (!shader->IsValid())
@@ -414,6 +448,7 @@ std::shared_ptr<graphics::Shader> AssetManager::LoadShader(const std::string& ve
     EE_CORE_INFO("Shader loaded: {0} | {1} | {2}", vertexPath, geometryPath, fragmentPath);
     return shader;
 }
+
 
 /**
  * @brief Get the shader from the asset manager
@@ -436,7 +471,10 @@ std::shared_ptr<graphics::Model> AssetManager::LoadModel(const std::string& file
     EE_CORE_TRACE("Loading model: {0}", filePath);
     auto it = m_models.find(filePath);
     if (it != m_models.end()) // Already loaded
+    {
+        EE_CORE_INFO("Model {0} already loaded, returning cached version", filePath);
         return it->second;
+    }
 
     try
     {
@@ -461,6 +499,29 @@ std::shared_ptr<graphics::Model> AssetManager::GetModel(const std::string& fileP
 {
     auto it = m_models.find(filePath);
     return it != m_models.end() ? it->second : nullptr;
+}
+
+/**
+ * @brief Get a read-only view of all currently loaded models.
+ * @return A const reference to the unordered_map of loaded models.
+ * The key is the model file path, and the value is the shared Model.
+ */
+const std::unordered_map<std::string, std::shared_ptr<graphics::Model>>& Ermine::AssetManager::GetLoadedModels() const
+{
+    return m_models;
+}
+
+/**
+ * @brief Unload a specific model from the cache.
+ * @param filePath The full path to the model file to unload.
+ */
+void Ermine::AssetManager::UnloadModel(const std::string& filePath)
+{
+    auto it = m_models.find(filePath);
+    if (it != m_models.end()) {
+        EE_CORE_INFO("Unloading model: {0}", filePath);
+        m_models.erase(it);
+    }
 }
 
 /**
@@ -517,13 +578,15 @@ std::shared_ptr<graphics::Cubemap> AssetManager::LoadCubemap(const std::array<st
     std::string key = name.empty() ? 
         (faces[0] + "|" + faces[1] + "|" + faces[2] + "|" + faces[3] + "|" + faces[4] + "|" + faces[5]) : 
         name;
-    
     EE_CORE_TRACE("Loading cubemap: {0}", key);
-    
+
     // Check if already loaded
     auto it = m_cubemaps.find(key);
     if (it != m_cubemaps.end())
+    {
+        EE_CORE_INFO("Cubemap {0} already loaded, returning cached version", key);
         return it->second;
+    }
     
     // Create new cubemap
     std::shared_ptr<graphics::Cubemap> cubemap = std::make_shared<graphics::Cubemap>(faces);
@@ -553,7 +616,10 @@ std::shared_ptr<graphics::Cubemap> AssetManager::LoadCubemapFromEquirectangular(
     // Check if already loaded
     auto it = m_cubemaps.find(key);
     if (it != m_cubemaps.end())
+    {
+        EE_CORE_INFO("Cubemap {0} already loaded, returning cached version", key);
         return it->second;
+    }
     
     // Create new cubemap from equirectangular
     std::shared_ptr<graphics::Cubemap> cubemap = std::make_shared<graphics::Cubemap>(equirectangularPath);
@@ -618,10 +684,12 @@ std::shared_ptr<graphics::Material> AssetManager::CreateMaterial(const std::stri
             material->LoadTemplate(graphics::MaterialTemplates::PBR_RED());
         else if (materialTemplate == "PBR_METAL")
             material->LoadTemplate(graphics::MaterialTemplates::PBR_METAL());
-        else if (materialTemplate == "PBR_REFLECTIVE")
-            material->LoadTemplate(graphics::MaterialTemplates::PBR_REFLECTIVE(0.9f, 0.1f));
         else if (materialTemplate == "EMISSIVE_WHITE")
             material->LoadTemplate(graphics::MaterialTemplates::EMISSIVE(Vec3(1.0f, 1.0f, 1.0f), 10.0f));
+        else if (materialTemplate == "PBR_GLASS")
+            material->LoadTemplate(graphics::MaterialTemplates::PBR_GLASS(0.9f));
+        else if (materialTemplate == "PBR_WATER")
+            material->LoadTemplate(graphics::MaterialTemplates::PBR_WATER(0.7f));
         else
             EE_CORE_WARN("Unknown material template: {0}", materialTemplate);
     }
@@ -706,7 +774,8 @@ std::shared_ptr<graphics::Material> AssetManager::CreateSharedMaterial(const std
     if (baseTexture && baseTexture->IsValid())
     {
         material->SetTexture("materialAlbedoMap", baseTexture);
-        material->SetTexture("texture0", baseTexture); // Fallback for compatibility
+        material->SetBool("materialHasAlbedoMap", true);
+        // REMOVED: All legacy texture fallback assignments to prevent unwanted texture loading
     }
     
     m_materials[materialName] = material;

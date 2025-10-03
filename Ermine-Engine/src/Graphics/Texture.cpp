@@ -171,6 +171,10 @@ bool Texture::LoadFromDDS(const std::string& ddsFilePath)
     return true;
 }
 
+/**
+ * @brief Releases the texture and associated GPU resources.
+ * @param contextExpected Whether an OpenGL context is expected.
+ */
 void Texture::Release(bool contextExpected) noexcept
 {
     if (!m_RendererID)
@@ -240,11 +244,20 @@ Texture::~Texture()
 	glDeleteTextures(1, &m_RendererID);*/
 }
 
+/**
+ * @brief Move constructor.
+ * @param other Texture to move from.
+ */
 Texture::Texture(Texture&& other) noexcept
 {
     *this = std::move(other);
 }
 
+/**
+ * @brief Move assignment operator.
+ * @param other Texture to move from.
+ * @return Reference to this texture.
+ */
 Texture& Texture::operator=(Texture&& other) noexcept
 {
     if (this != &other)
@@ -292,13 +305,20 @@ void Texture::Unbind() const
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-/*!***********************************************************************
-\brief
- Getter for GLuint m_RendererID
-\return
- Returns GLuint m_RendererID
-*************************************************************************/
+/**
+ * @brief Gets the OpenGL renderer ID for this texture.
+ * @return Renderer ID (GLuint).
+ */
 GLuint Texture::GetRendererID() const
 {
     return m_RendererID;
+}
+
+/**
+ * @brief Gets the file path of the texture.
+ * @return File path as a string.
+ */
+std::string Ermine::graphics::Texture::GetFilePath()
+{
+    return m_filePath;
 }

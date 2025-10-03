@@ -1,8 +1,8 @@
 /* Start Header ************************************************************************/
 /*!
 \file       AudioSystem.cpp
-\author     [Your Name]
-\date       [Current Date]
+\author     Hurng Kai Rui, h.kairui, 2301278, h.kairui\@digipen.edu
+\date       15/9/2025
 \brief      Implementation of AudioSystem as a proper ECS System.
 
 Copyright (C) 2025 DigiPen Institute of Technology.
@@ -22,6 +22,95 @@ class ECS;
 using namespace Ermine;
 
 bool AudioSystem::s_initialized = false;
+
+void GlobalAudioComponent::PlayMusic(int index) {
+    AudioSystem::PlayGlobalMusic(*this, index);
+}
+
+void GlobalAudioComponent::StopMusic() {
+    AudioSystem::StopGlobalMusic(*this);
+}
+
+void GlobalAudioComponent::SetMusicVolume(float volume) {
+    musicVolume = std::clamp(volume, 0.0f, 1.0f);
+
+    // Update currently playing music volume if there's music playing
+    if (currentMusicChannelId != -1 && currentMusicIndex >= 0 && currentMusicIndex < music.size()) {
+        const auto& musicSource = music[currentMusicIndex];
+        float finalVolume = AudioSystem::ConvertVolumeToFMOD(
+            musicSource.volume * masterVolume * musicVolume
+        );
+        CAudioEngine::SetChannelVolume(currentMusicChannelId, finalVolume);
+    }
+}
+
+void GlobalAudioComponent::PlaySFX(int index) {
+    AudioSystem::PlayGlobalSFX(*this, index);
+}
+
+void GlobalAudioComponent::PlaySFX(const std::string& name) {
+    AudioSystem::PlayGlobalSFX(*this, name);
+}
+
+void GlobalAudioComponent::SetSFXVolume(float volume) {
+    sfxVolume = std::clamp(volume, 0.0f, 1.0f);
+    // Note: SFX volumes will be applied to new SFX plays
+    // Existing SFX can't be updated since we don't track their channel IDs
+}
+
+int GlobalAudioComponent::GetSFXIndex(const std::string& name) const {
+    for (size_t i = 0; i < sfx.size(); ++i) {
+        if (sfx[i].audioName == name) {
+            return static_cast<int>(i);
+        }
+    }
+    return -1; // Not found
+}
+
+int GlobalAudioComponent::GetMusicIndex(const std::string& name) const {
+    for (size_t i = 0; i < music.size(); ++i) {
+        if (music[i].audioName == name) {
+            return static_cast<int>(i);
+        }
+    }
+    return -1; // Not found
+}
+
+void GlobalAudioComponent::AddMusicSource(const std::string& name, const std::string& path) {
+    // Check if music with this name already exists
+    for (const auto& musicSource : music) {
+        if (musicSource.audioName == name) {
+            std::cout << "Music source '" << name << "' already exists!" << std::endl;
+            return;
+        }
+    }
+
+    // Add new music source
+    AudioSource newMusic;
+    newMusic.audioName = name;
+    newMusic.audioPath = path;
+    newMusic.volume = 1.0f; // Default volume
+    music.push_back(newMusic);
+}
+
+void GlobalAudioComponent::AddSFXSource(const std::string& name, const std::string& path) {
+    // Check if SFX with this name already exists
+    for (const auto& sfxSource : sfx) {
+        if (sfxSource.audioName == name) {
+            std::cout << "SFX source '" << name << "' already exists!" << std::endl;
+            return;
+        }
+    }
+
+    // Add new SFX source
+    AudioSource newSFX;
+    newSFX.audioName = name;
+    newSFX.audioPath = path;
+    newSFX.volume = 1.0f; // Default volume
+    sfx.push_back(newSFX);
+}
+
+
 
 void AudioSystem::Init()
 {

@@ -19,17 +19,61 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Input.h"
 #include "Renderer.h"
 #include "GLFW/glfw3.h"
+#include "EditorGUI.h"
 
 #include <ImGuizmo.h>
 #include <glm/gtx/matrix_decompose.hpp>
 
+#include "AssetManager.h"
+
+#include "EditorGUI.h"
+#include "HierarchyPanel.h"
+#include "Scene.h"
+
 using namespace Ermine::editor;
 
-Ermine::ViewPortGUI::ViewPortGUI() : ImGUIWindow("Viewport"), show(true), isPlaying(false), ref_Inspector(nullptr)
+EditorGUI::SimState EditorGUI::s_state = SimState::stopped;
+
+namespace
+{
+	ImTextureID gIconPlay = 0;
+	ImTextureID gIconStop = 0;
+	bool gIconsLoaded = false;
+
+	void LoadToolbarIcons()
+	{
+		if (gIconsLoaded) return;
+
+		auto loadTex = [](const char* path) -> ImTextureID
+			{
+				auto tex = Ermine::AssetManager::GetInstance().LoadTexture(path);
+				if (tex && tex->IsValid())
+					return static_cast<ImTextureID>(static_cast<intptr_t>(tex->GetRendererID()));
+				return 0;
+			};
+
+		gIconPlay = loadTex("../Resources/Textures/Icons/play.png");
+		if (!gIconPlay) EE_CORE_WARN("Cannot find play button!");
+
+		gIconStop = loadTex("../Resources/Textures/Icons/stop.png");
+		if (!gIconStop) EE_CORE_WARN("Cannot find stop button!");
+
+		gIconsLoaded = true;
+	}
+
+	bool DrawIconOrTextButton(ImTextureID icon, const char* text, const ImVec2& size)
+	{
+		if (icon)
+			return ImGui::ImageButton(text, icon, size, ImVec2(0, 1), ImVec2(1, 0));
+		return ImGui::Button(text, size);
+	}
+}
+
+Ermine::ViewPortGUI::ViewPortGUI() : ImGUIWindow("Viewport"), show(true), ref_Inspector(nullptr)
 {
 }
 
-Ermine::ViewPortGUI::ViewPortGUI(InspectorGUI* ref) : ImGUIWindow("Viewport"), show(true), isPlaying(false), ref_Inspector(ref)
+Ermine::ViewPortGUI::ViewPortGUI(InspectorGUI* ref) : ImGUIWindow("Viewport"), show(true), ref_Inspector(ref)
 {
 }
 
@@ -40,6 +84,72 @@ void Ermine::ViewPortGUI::Render()
 void Ermine::ViewPortGUI::Update()
 {
 	ImGui::Begin("Scene Viewer", &show);
+
+	LoadToolbarIcons();
+
+	const ImVec2 iconSize = ImVec2(28.f, 28.f);
+	const float spacing = ImGui::GetStyle().ItemSpacing.x;
+	const int buttonCount = 3;
+	const float totalWidth = buttonCount * iconSize.x + (buttonCount - 1) * spacing;
+
+	// Center horizontally
+	float availWidth = ImGui::GetContentRegionAvail().x;
+	float startOffsetX = (availWidth > totalWidth) ? (availWidth - totalWidth) * 0.5f : 0.0f;
+	float oldX = ImGui::GetCursorPosX();
+	ImGui::SetCursorPosX(oldX + startOffsetX);
+
+	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6.f, 6.f));
+	ImGui::BeginGroup();
+	{
+		const bool playing = (EditorGUI::s_state == EditorGUI::SimState::playing);
+		//const bool paused = (EditorGUI::s_state == EditorGUI::SimState::paused);
+		const bool stopped = (EditorGUI::s_state == EditorGUI::SimState::stopped);
+
+		// Play
+		ImGui::BeginDisabled(playing);
+		if (DrawIconOrTextButton(gIconPlay, "Play", iconSize))
+		{
+			EditorGUI::s_state = EditorGUI::SimState::playing;
+			EE_CORE_INFO("Simulation: Play");
+		}
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip("Play (Ctrl+P)");
+		ImGui::EndDisabled();
+
+		ImGui::SameLine();
+
+		// Pause/Resume
+		//ImGui::BeginDisabled(stopped);
+		//const char* pauseText = paused ? "Resume" : "Pause";
+		//ImTextureID pauseIcon = paused ? gIconPlay : gIconPause; // show Play icon for Resume
+		//if (DrawIconOrTextButton(pauseIcon, pauseText, iconSize))
+		//{
+		//	EditorGUI::s_state = paused ? EditorGUI::SimState::playing : EditorGUI::SimState::paused;
+		//	EE_CORE_INFO("Simulation: {0}", paused ? "Resume" : "Pause");
+		//}
+		//if (ImGui::IsItemHovered())
+		//	ImGui::SetTooltip("Pause/Resume (Ctrl+P)");
+		//ImGui::EndDisabled();
+
+		//ImGui::SameLine();
+
+		// Stop
+		ImGui::BeginDisabled(stopped);
+		if (DrawIconOrTextButton(gIconStop, "Stop", iconSize))
+		{
+			EditorGUI::s_state = EditorGUI::SimState::stopped;
+			EE_CORE_INFO("Simulation: Stop");
+		}
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip("Stop (Ctrl+Shift+P)");
+		ImGui::EndDisabled();
+	}
+	ImGui::EndGroup();
+	ImGui::PopStyleVar();
+
+	ImGui::Separator();
+
+	EditorGUI::isPlaying = EditorGUI::s_state == EditorGUI::SimState::playing;
 
 	// Begin ImGuizmo frame
 	ImGuizmo::BeginFrame();
@@ -131,7 +241,7 @@ void Ermine::ViewPortGUI::Update()
 	const bool viewportFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_None);
 
 	// Set manipulation mode based on keyboard shortcuts
-	if (viewportFocused && viewportHovered && !isPlaying && !Input::IsMouseButtonDownEditor(GLFW_MOUSE_BUTTON_RIGHT))
+	if (viewportFocused && viewportHovered && !EditorGUI::isPlaying && !Input::IsMouseButtonDownEditor(GLFW_MOUSE_BUTTON_RIGHT))
 	{
 		if (Input::IsKeyPressedEditor(GLFW_KEY_W)) gOperation = ImGuizmo::TRANSLATE;
 		if (Input::IsKeyPressedEditor(GLFW_KEY_E)) gOperation = ImGuizmo::ROTATE;
@@ -139,14 +249,49 @@ void Ermine::ViewPortGUI::Update()
 		if (Input::IsKeyPressedEditor(GLFW_KEY_Q)) gMode = gMode == ImGuizmo::LOCAL ? ImGuizmo::WORLD : ImGuizmo::LOCAL;
 	}
 
-	// Focus camera on selected entity
-	if(viewportFocused && viewportHovered && !isPlaying && Input::IsKeyPressedEditor(GLFW_KEY_F))
+	// Overlay current gizmo operation/mode
+	{
+		auto OpToString = [](ImGuizmo::OPERATION op) -> const char*
+			{
+				switch (op)
+				{
+				case ImGuizmo::TRANSLATE: return "Translate";
+				case ImGuizmo::ROTATE: return "Rotate";
+				case ImGuizmo::SCALE: return "Scale";
+				default: return "Unknown";
+				}
+			};
+
+		auto ModeToString = [](ImGuizmo::MODE m) -> const char*
+			{
+				return (m == ImGuizmo::LOCAL) ? "Local" : "World";
+			};
+
+		const char* opText = OpToString(gOperation);
+		const char* modeText = ModeToString(gMode);
+
+		char label[128];
+		(void)snprintf(label, sizeof(label), "Op: %s | Mode: %s", opText, modeText);
+
+		ImDrawList* dl = ImGui::GetForegroundDrawList();
+		const ImVec2 padPx(6.f, 4.f);
+		const ImVec2 textSize = ImGui::CalcTextSize(label);
+		const ImVec2 boxPos = ImVec2(imgMin.x + 8.f, imgMin.y + 8.f);
+		const ImVec2 boxMax = ImVec2(boxPos.x + textSize.x + padPx.x * 2.f,
+			boxPos.y + textSize.y * 2.f + padPx.y * 2.f);
+
+		dl->AddRectFilled(boxPos, boxMax, IM_COL32(0, 0, 0, 160), 4.0f);
+		dl->AddText(ImVec2(boxPos.x + padPx.x, boxPos.y + padPx.y), IM_COL32(255, 255, 255, 255), label);
+	}
+
+	// Focus camera on selected entity (F key)
+	if (viewportFocused && viewportHovered && !EditorGUI::isPlaying && Input::IsKeyPressedEditor(GLFW_KEY_F))
 	{
 		if (ECS::GetInstance().IsEntityValid(selectedEntity) && ECS::GetInstance().HasComponent<Transform>(selectedEntity))
 		{
 			auto& ecs = ECS::GetInstance();
 			auto& tr = ecs.GetComponent<Transform>(selectedEntity);
-			EditorCamera::GetInstance().Focus(tr.position,2.5f);
+			EditorCamera::GetInstance().Focus(tr.position, 2.5f); // TODO: Lerp for smoother transition
 		}
 	}
 
@@ -159,13 +304,14 @@ void Ermine::ViewPortGUI::Update()
 	const bool altDown = Input::IsKeyDownEditor(GLFW_KEY_LEFT_ALT);
 	const bool rightMouseDown = Input::IsMouseButtonDownEditor(GLFW_MOUSE_BUTTON_RIGHT);
 
-	if (viewportHovered && !isPlaying && altDown && rightMouseDown && !overViewCube)
+	// Orbit controls
+	if (viewportHovered && !EditorGUI::isPlaying && altDown && rightMouseDown && !overViewCube)
 	{
 		ImGuiIO& io = ImGui::GetIO();
 		if (!s_orbiting)
 		{
 			// Initialize orbit
-			if(ECS::GetInstance().IsEntityValid(selectedEntity) && ECS::GetInstance().HasComponent<Transform>(selectedEntity))
+			if (ECS::GetInstance().IsEntityValid(selectedEntity) && ECS::GetInstance().HasComponent<Transform>(selectedEntity))
 			{
 				auto& ecs = ECS::GetInstance();
 				auto& tr = ecs.GetComponent<Transform>(selectedEntity);
@@ -199,7 +345,7 @@ void Ermine::ViewPortGUI::Update()
 	}
 
 	// Camera controls
-	if (viewportHovered && !isPlaying && !s_orbiting)
+	if (viewportHovered && !EditorGUI::isPlaying && !s_orbiting)
 	{
 		if (!ImGuizmo::IsUsing())
 		{
@@ -210,7 +356,7 @@ void Ermine::ViewPortGUI::Update()
 	}
 
 	// Left-click within the image, perform picking
-	if (!isPlaying && ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+	if (!EditorGUI::isPlaying && ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
 	{
 		if (!s_orbiting && !overViewCube && !ImGuizmo::IsOver() && !ImGuizmo::IsUsing())
 		{
@@ -232,7 +378,11 @@ void Ermine::ViewPortGUI::Update()
 					EditorCamera::GetInstance().GetProjectionMatrix());
 
 				if (hit && ref_Inspector)
+				{
 					ref_Inspector->SetEntity(entity);
+					editor:EditorGUI::GetActiveScene().get()->SetSelectedEntity(entity);
+					//HierarchyPanel::GetScene().SetSelectedEntity(entity)
+				}
 			}
 		}
 	}
@@ -259,7 +409,7 @@ void Ermine::ViewPortGUI::Update()
 	ImGuizmo::SetRect(imgMin.x, imgMin.y, imgSize.x, imgSize.y);
 
 	// OBJECT Gizmo overlay
-	if (!isPlaying && ECS::GetInstance().IsEntityValid(selectedEntity) && ECS::GetInstance().HasComponent<Transform>(selectedEntity))
+	if (!EditorGUI::isPlaying && ECS::GetInstance().IsEntityValid(selectedEntity) && ECS::GetInstance().HasComponent<Transform>(selectedEntity))
 	{
 		auto& ecs = ECS::GetInstance();
 		auto& tr = ecs.GetComponent<Transform>(selectedEntity);
@@ -330,9 +480,9 @@ void Ermine::ViewPortGUI::Update()
 					if (!glm::epsilonEqual(a[c][r], b[c][r], eps))
 						return true;
 			return false;
-		};
+			};
 
-		if (matChanged(viewBefore,viewEdit))
+		if (matChanged(viewBefore, viewEdit))
 		{
 			glm::mat4 inv = glm::inverse(viewEdit);
 			glm::vec3 pos = glm::vec3(inv[3]);
@@ -350,12 +500,17 @@ void Ermine::ViewPortGUI::Update()
 	ImGui::EndChild();
 
 	Input::SetEditorInputActive(viewportFocused && viewportHovered);
+
+	// Hotkeys
 	if (Input::IsKeyDownEditor(GLFW_KEY_LEFT_CONTROL) && Input::IsKeyPressedEditor(GLFW_KEY_P))
-	{
-		isPlaying = !isPlaying;
-		EE_CORE_INFO("Play {0}", isPlaying);
-	}
-	Input::SetGameInputActive(isPlaying && viewportFocused && viewportHovered);
+		EditorGUI::s_state = EditorGUI::SimState::playing;
+	else if (Input::IsKeyDownEditor(GLFW_KEY_LEFT_CONTROL) && Input::IsKeyDownEditor(GLFW_KEY_LEFT_SHIFT)
+		&& Input::IsKeyPressedEditor(GLFW_KEY_P))
+		EditorGUI::s_state = EditorGUI::SimState::stopped;
+
+	EditorGUI::isPlaying = EditorGUI::s_state == EditorGUI::SimState::playing;
+
+	Input::SetGameInputActive(EditorGUI::isPlaying && viewportFocused && viewportHovered);
 
 	ImGui::End();
 }

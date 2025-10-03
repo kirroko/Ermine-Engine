@@ -18,6 +18,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #include "Components.h"
 #include "ECS.h"
+#include "EditorGUI.h"
 #include "Logger.h"
 
 Ermine::scripting::ScriptSystem::ScriptSystem()
@@ -43,6 +44,24 @@ Ermine::scripting::ScriptSystem::ScriptSystem()
 
 void Ermine::scripting::ScriptSystem::Update() const
 {
+	static bool s_wasStopped = false;
+
+	if (editor::EditorGUI::s_state == editor::EditorGUI::SimState::stopped)
+	{
+		if (s_wasStopped)
+			return;
+
+		for (auto& entity : m_Entities)
+		{
+			auto& sc = ECS::GetInstance().GetComponent<Script>(entity);
+			sc.m_started = false;
+		}
+		s_wasStopped = true;
+		return;
+	}
+
+	s_wasStopped = false;
+
 #ifdef _DEBUG
 	m_ScriptEngine->ProcessHotReload(
 		[this]() { this->PrepareForHotReload(); },
@@ -64,6 +83,24 @@ void Ermine::scripting::ScriptSystem::Update() const
 
 void Ermine::scripting::ScriptSystem::FixedUpdate() const
 {
+	static bool s_wasStopped = false;
+
+	if (editor::EditorGUI::s_state == editor::EditorGUI::SimState::stopped)
+	{
+		if (s_wasStopped)
+			return;
+
+		for (auto& entity : m_Entities)
+		{
+			auto& sc = ECS::GetInstance().GetComponent<Script>(entity);
+			sc.m_started = false;
+		}
+		s_wasStopped = true;
+		return;
+	}
+
+	s_wasStopped = false;
+
 #ifdef _DEBUG
 	m_ScriptEngine->ProcessHotReload(
 		[this]() { this->PrepareForHotReload(); },

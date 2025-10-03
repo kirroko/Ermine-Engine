@@ -25,16 +25,26 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Input.h"
 #include "InspectorGUI.h"
 #include "Renderer.h"
+#include "Scene.h"
+#include "HierarchyPanel.h"
+#include "HierarchyInspector.h"
 
-#include <ImGuizmo.h>
+
+#include "AssetManager.h"
+#include "imgui_internal.h"
+#include "Physics.h"
 #include "Serialisation.h"
+#include <optional>
+#include "SceneManager.h"
 
 namespace Ermine
 {
 	class InspectorGUI;
+    class Physics;
 }
 
 class Ermine::InspectorGUI;
+class Ermine::Physics;
 
 using namespace Ermine::editor;
 
@@ -42,6 +52,9 @@ using namespace Ermine::editor;
 std::vector<std::unique_ptr<Ermine::ImGUIWindow>>EditorGUI::m_Windows;
 bool Ermine::editor::EditorGUI::isPlaying = false; // TODO: tied to Play/Stop toolbar state.
 
+std::shared_ptr<Ermine::Scene> EditorGUI::s_ActiveScene = nullptr; 
+std::unique_ptr<Ermine::HierarchyPanel> Ermine::editor::EditorGUI::s_HierarchyPanel = nullptr;
+std::unique_ptr<Ermine::editor::HierarchyInspector> Ermine::editor::EditorGUI::s_Inspector = nullptr;
 namespace
 {
     std::string FormatNumber(uint64_t value)
@@ -80,6 +93,38 @@ namespace
         }
 		return std::string(buffer);
 	}
+
+    ImTextureID gIconPlay = 0;
+    ImTextureID gIconStop = 0;
+    bool gIconsLoaded = false;
+
+    void LoadToolbarIcons()
+    {
+        if (gIconsLoaded) return;
+
+        auto loadTex = [](const char* path) -> ImTextureID
+            {
+                auto tex = Ermine::AssetManager::GetInstance().LoadTexture(path);
+                if (tex && tex->IsValid())
+                    return static_cast<ImTextureID>(static_cast<intptr_t>(tex->GetRendererID()));
+                return 0;
+            };
+
+        gIconPlay = loadTex("../Resources/Textures/Icons/play.png");
+        if (!gIconPlay) EE_CORE_WARN("Cannot find play button!");
+
+        gIconStop = loadTex("../Resources/Textures/Icons/stop.png");
+        if (!gIconStop) EE_CORE_WARN("Cannot find stop button!");
+
+        gIconsLoaded = true;
+    }
+
+    bool DrawIconOrTextButton(ImTextureID icon, const char* text, const ImVec2& size)
+    {
+        if (icon)
+            return ImGui::ImageButton(text, icon, size, ImVec2(0, 1), ImVec2(1, 0));
+        return ImGui::Button(text, size);
+    }
 }
 
 void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
@@ -87,32 +132,39 @@ void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
     ImGui::BeginMainMenuBar();
     if (ImGui::BeginMenu("File"))
     {
-        if (ImGui::MenuItem("Open", "Ctrl+O"))
+        if (ImGui::MenuItem("New"))
+            SceneManager::GetInstance().NewScene();
+
+        if (ImGui::MenuItem("Open...", "Ctrl+O"))
         {
-			EE_CORE_INFO("Open file clicked");
-            // Code to open a file, the scene?
-			LoadScene("Scene01");
+            if (auto path = SceneManager::ShowOpenDialog(GetActiveWindow()))
+            {
+                SceneManager::GetInstance().NewScene();
+                SceneManager::GetInstance().OpenScene(*path);
+            }
         }
+
         if (ImGui::MenuItem("Save", "Ctrl+S"))
-        {
-            EE_CORE_INFO("Save file clicked");
-            // Code to save a file, maybe the scene
-			SaveCurrentScene("Scene01");
-        }
+            SceneManager::GetInstance().SaveScene();
+
+        if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S"))
+            if (auto path = SceneManager::ShowSaveDialog(L"untitled.scene", GetActiveWindow()))
+                SceneManager::GetInstance().SaveSceneTo(*path);
+
         if (ImGui::MenuItem("Exit", "Alt+F4"))
-        {
-			EE_CORE_INFO("Exit clicked");
-			// Code to exit the application
-			glfwSetWindowShouldClose(windowContext, GLFW_TRUE);
-        }
-		ImGui::EndMenu();
+            glfwSetWindowShouldClose(windowContext, GLFW_TRUE);
+
+        ImGui::EndMenu();
     }
+
 
     if (ImGui::BeginMenu("Edit"))
     {
 		if (ImGui::MenuItem("Undo", "Ctrl+Z"))
 		{
 			EE_CORE_INFO("Undo clicked");
+            ECS::GetInstance().ClearAllEntities();
+            ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
 			// Code to undo
 		}
 		if (ImGui::MenuItem("Redo", "Ctrl+Y"))
@@ -124,6 +176,70 @@ void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
     }
 
     ImGui::EndMainMenuBar();
+}
+
+void EditorGUI::Toolbar()
+{
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 2));
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemInnerSpacing, ImVec2(0, 0));
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+
+    auto& colors = ImGui::GetStyle().Colors;
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, colors[ImGuiCol_ButtonHovered]);
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, colors[ImGuiCol_ButtonActive]);
+
+    ImGui::Begin("Toolbar", nullptr,
+        ImGuiWindowFlags_NoDecoration |
+        ImGuiWindowFlags_NoMove |
+        ImGuiWindowFlags_NoSavedSettings |
+        ImGuiWindowFlags_NoScrollbar |
+        ImGuiWindowFlags_NoScrollWithMouse);
+
+    const float size = ImGui::GetWindowHeight() - 4.0f;
+    const float spacing = ImGui::GetStyle().ItemSpacing.x;
+    const float total = size * 2.0f + spacing;
+    const float content_w = ImGui::GetWindowContentRegionMax().x - ImGui::GetWindowContentRegionMin().x;
+    const float start_x = (content_w - total) * 0.5f;
+    ImGui::SetCursorPosX(ImGui::GetWindowContentRegionMax().x + ImMax(0.0f, start_x));
+
+    auto RenderToggledButton = [&](bool toggled, ImTextureID icon, const char* label)
+        {
+            if (toggled)
+            {
+                ImGui::PushStyleColor(ImGuiCol_Button, colors[ImGuiCol_ButtonActive]);
+                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, colors[ImGuiCol_ButtonActive]);
+                ImGui::PushStyleColor(ImGuiCol_ButtonActive, colors[ImGuiCol_ButtonActive]);
+                ImGui::BeginDisabled(true);
+            }
+
+            bool clicked = DrawIconOrTextButton(icon, label, ImVec2(size, size));
+
+            if (toggled)
+            {
+                ImGui::EndDisabled();
+                ImGui::PopStyleColor(3);
+            }
+            return clicked;
+        };
+
+	if (RenderToggledButton(isPlaying,gIconPlay,"Play"))
+	{
+		if (!isPlaying)
+            isPlaying = true;
+	}
+
+    ImGui::SameLine();
+
+    if (RenderToggledButton(!isPlaying,gIconStop,"Stop"))
+    {
+	    if (isPlaying)
+			isPlaying = false;
+    }
+
+    ImGui::End();
+
+    ImGui::PopStyleVar(2);
+    ImGui::PopStyleColor(3);
 }
 
 void EditorGUI::ProfilingWindow()
@@ -296,6 +412,31 @@ void EditorGUI::ViewPortWindow(bool &show)
 	ImGui::End();
 }
 
+void EditorGUI::SetActiveScene(std::shared_ptr<Ermine::Scene> scene) {
+    s_ActiveScene = scene;
+
+    // Debug logging to see what's happening
+    EE_CORE_INFO("Setting active scene: {}", scene ? scene->GetName() : "null");
+
+    // Update the hierarchy panel with the new scene
+    if (s_HierarchyPanel) {
+        s_HierarchyPanel->SetScene(scene.get());
+        EE_CORE_INFO("Scene set to hierarchy panel");
+
+        // Verify it was set correctly
+        auto retrievedScene = s_HierarchyPanel->GetScene();
+        EE_CORE_INFO("Retrieved scene from hierarchy panel: {}", retrievedScene ? "exists" : "null");
+    }
+    else {
+        EE_CORE_WARN("s_HierarchyPanel is null!");
+    }
+
+    // Update the inspector panel with the new scene  
+    if (s_Inspector) {
+        s_Inspector->SetScene(scene.get());
+    }
+}
+
 /**
  * @brief Initialize the ImGUI context
  * @param window The window to initialize the ImGUI context
@@ -340,6 +481,17 @@ void EditorGUI::Init(GLFWwindow* window)
     // Setup Platform/Renderer backends
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 460");
+
+    // Create Scene first
+    s_ActiveScene = std::make_unique<Scene>("Default Scene"); // Give it a name
+
+    // Then create HierarchyPanel with the scene
+    s_HierarchyPanel = std::make_unique<HierarchyPanel>();
+    s_HierarchyPanel->SetScene(s_ActiveScene.get());
+
+    // Create Inspector Panel
+    s_Inspector = std::make_unique<HierarchyInspector>();
+    s_Inspector->SetScene(s_ActiveScene.get());
 }
 
 /**
@@ -397,19 +549,24 @@ void EditorGUI::Update(GLFWwindow* windowContext)
   //  if (show_scene_viewer)
 		//ViewPortWindow(show_scene_viewer);
 
+
+    // Hierarchy Panel
+    static bool show_hierarchy = true;
+    if (s_HierarchyPanel && show_hierarchy) {
+        s_HierarchyPanel->SetVisible(show_hierarchy);
+        s_HierarchyPanel->OnImGuiRender();
+    }
+
+    // Inspector Panel
+    static bool show_inspector = true;
+    if (s_Inspector && show_inspector) {
+        s_Inspector->SetVisible(show_inspector);
+        s_Inspector->OnImGuiRender();
+    }
+
     static bool show_demo_window = true;
     if (show_demo_window)
         ImGui::ShowDemoWindow(&show_demo_window);
-
-    //static bool show_another_window = true;
-    //if (show_another_window)
-    //{
-    //    ImGui::Begin("Another Window", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-    //    ImGui::Text("Hello from another window!");
-    //    if (ImGui::Button("Close Me"))
-    //        show_another_window = false;
-    //    ImGui::End();
-    //}
 
     // Call Update() for all registered ImGui windows
     for (auto& window : m_Windows) {
@@ -419,9 +576,9 @@ void EditorGUI::Update(GLFWwindow* windowContext)
 
 void EditorGUI::Render()
 {
-    static bool show_profiler = true;
-    if (show_profiler)
-        ProfilingWindow();
+    //static bool show_profiler = true;
+    //if (show_profiler)
+    //    ProfilingWindow();
 
     // Render additional ImGUI windows
     for (auto& window : m_Windows) {
@@ -446,6 +603,11 @@ void EditorGUI::Render()
 
 void EditorGUI::ShutDown()
 {
+    // Clean up panels first
+    s_Inspector.reset();
+    s_HierarchyPanel.reset();
+    s_ActiveScene.reset();
+
     // Cleanup
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();

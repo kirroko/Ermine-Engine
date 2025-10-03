@@ -61,17 +61,20 @@ namespace Ermine::graphics
          * @param slot the slot to bind the texture to
          */
         void Bind(unsigned int slot = 0) const;
+
         /**
          * @brief Unbind the texture
          */
         void Unbind() const;
 
-        /*!***********************************************************************
-        \brief
-         Getter for GLuint m_RendererID
-        \return
-         Returns GLuint m_RendererID
-        *************************************************************************/
+        /**
+         * @brief  Getter for GLuint m_RendererID
+         */
         GLuint GetRendererID() const;
+
+        /**
+         * @brief  Getter for file path
+         */
+        std::string GetFilePath();
     };
 }

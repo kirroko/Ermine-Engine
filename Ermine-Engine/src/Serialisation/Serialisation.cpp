@@ -9,9 +9,32 @@
 #include <stringbuffer.h>
 #include <ostreamwrapper.h>
 #include <istreamwrapper.h>
+#include "GeometryFactory.h"
 
 
 using namespace rapidjson;
+
+using Ermine::graphics::GeometryFactory; // make intent explicit
+
+void Ermine::Mesh::RebuildPrimitive() {
+    if (primitive.type == "Cube") {
+        *this = GeometryFactory::CreateCube(primitive.size.x, primitive.size.y, primitive.size.z);
+        kind = Kind::Primitive;
+    }
+    else if (primitive.type == "Sphere") {
+        *this = GeometryFactory::CreateSphere(primitive.size.x); // adapt to your API
+        kind = Kind::Primitive;
+    }
+    else if (primitive.type == "Quad") {
+        *this = GeometryFactory::CreateQuad(primitive.size.x, primitive.size.y); // adapt to your API
+        kind = Kind::Primitive;
+    }
+    else {
+        EE_CORE_WARN("Unknown primitive type: {}", primitive.type);
+        kind = Kind::None;
+	}
+    // TODO: other primitives...
+}
 
 std::string SerializeConfig(const Config& config) {
     Document d;
@@ -189,6 +212,69 @@ void SaveSceneToFile(const Ermine::ECS& ecs, const std::filesystem::path& path, 
                 ecs.GetComponent<Ermine::Light>(id).Serialize(l, a);
                 comps.AddMember(Value("Light", a), l, a);
             }
+
+            // Mesh
+            if (name == "Mesh" && ecs.HasComponent<Ermine::Mesh>(id)) {
+                Value m(kObjectType);
+                ecs.GetComponent<Ermine::Mesh>(id).Serialize(m, a);
+                comps.AddMember(Value("Mesh", a), m, a);
+            }
+
+            // Material
+            if (name == "Material" && ecs.HasComponent<Ermine::Material>(id)) {
+                Value m(kObjectType);
+                ecs.GetComponent<Ermine::Material>(id).Serialize(m, a);
+                comps.AddMember(Value("Material", a), m, a);
+            }
+
+			// ModelComponent
+            if (name == "ModelComponent" && ecs.HasComponent<Ermine::ModelComponent>(id)) {
+                Value l(kObjectType);
+                ecs.GetComponent<Ermine::ModelComponent>(id).Serialize(l, a);
+                comps.AddMember(Value("ModelComponent", a), l, a);
+            }
+
+            // PhysicsComponent
+            if (name == "PhysicComponent" && ecs.HasComponent<Ermine::PhysicComponent>(id)) {
+                Value l(kObjectType);
+                ecs.GetComponent<Ermine::PhysicComponent>(id).Serialize(l, a);
+                comps.AddMember(Value("PhysicComponent", a), l, a);
+            }
+
+            // AudioComponent
+            if (name == "AudioComponent" && ecs.HasComponent<Ermine::AudioComponent>(id)) {
+                Value l(kObjectType);
+                ecs.GetComponent<Ermine::AudioComponent>(id).Serialize(l, a);
+                comps.AddMember(Value("AudioComponent", a), l, a);
+            }
+
+            // GlobalAudioComponent
+            if (name == "GlobalAudioComponent" && ecs.HasComponent<Ermine::GlobalAudioComponent>(id)) {
+                Value l(kObjectType);
+                ecs.GetComponent<Ermine::GlobalAudioComponent>(id).Serialize(l, a);
+                comps.AddMember(Value("GlobalAudioComponent", a), l, a);
+            }
+
+            // AnimationComponent
+            if (name == "AnimationComponent" && ecs.HasComponent<Ermine::AnimationComponent>(id)) {
+                Value l(kObjectType);
+                ecs.GetComponent<Ermine::AnimationComponent>(id).Serialize(l, a);
+                comps.AddMember(Value("AnimationComponent", a), l, a);
+            }
+
+            // Particle
+            if (name == "Particle" && ecs.HasComponent<Ermine::Particle>(id)) {
+                Value l(kObjectType);
+                ecs.GetComponent<Ermine::Particle>(id).Serialize(l, a);
+                comps.AddMember(Value("Particle", a), l, a);
+            }
+
+            // HierarchyComponent
+            if (name == "HierarchyComponent" && ecs.HasComponent<Ermine::HierarchyComponent>(id)) {
+                Value l(kObjectType);
+                ecs.GetComponent<Ermine::HierarchyComponent>(id).Serialize(l, a);
+                comps.AddMember(Value("HierarchyComponent", a), l, a);
+            }
         }
 
         e.AddMember("components", comps, a);
@@ -250,6 +336,87 @@ void LoadSceneFromFile(Ermine::ECS& ecs, const std::filesystem::path& path) {
 
             auto& l = ecs.GetComponent<Ermine::Light>(id);
             l.Deserialize(comps["Light"]);
+        }
+
+        // Mesh
+        if (comps.HasMember("Mesh") && comps["Mesh"].IsObject()) {
+            if (!ecs.HasComponent<Ermine::Mesh>(id))
+                ecs.AddComponent<Ermine::Mesh>(id, Ermine::Mesh{});
+
+            auto& m = ecs.GetComponent<Ermine::Mesh>(id);
+            m.Deserialize(comps["Mesh"]);
+        }
+
+        // Material
+        if (comps.HasMember("Material") && comps["Material"].IsObject()) {
+            if (!ecs.HasComponent<Ermine::Material>(id))
+                ecs.AddComponent<Ermine::Material>(id, Ermine::Material{});
+
+            auto& m = ecs.GetComponent<Ermine::Material>(id);
+            m.Deserialize(comps["Material"]);
+        }
+
+        // ModelComponent
+        if (comps.HasMember("ModelComponent") && comps["ModelComponent"].IsObject()) {
+            if (!ecs.HasComponent<Ermine::ModelComponent>(id))
+                ecs.AddComponent<Ermine::ModelComponent>(id, Ermine::ModelComponent{});
+
+            auto& m = ecs.GetComponent<Ermine::ModelComponent>(id);
+            m.Deserialize(comps["ModelComponent"]);
+        }
+
+        // PhysicComponent
+        if (comps.HasMember("PhysicComponent") && comps["PhysicComponent"].IsObject()) {
+            if (!ecs.HasComponent<Ermine::PhysicComponent>(id))
+                ecs.AddComponent<Ermine::PhysicComponent>(id, Ermine::PhysicComponent{});
+
+            auto& m = ecs.GetComponent<Ermine::PhysicComponent>(id);
+            m.Deserialize(comps["PhysicComponent"]);
+        }
+
+        // AudioComponent
+        if (comps.HasMember("AudioComponent") && comps["AudioComponent"].IsObject()) {
+            if (!ecs.HasComponent<Ermine::AudioComponent>(id))
+                ecs.AddComponent<Ermine::AudioComponent>(id, Ermine::AudioComponent{});
+
+            auto& m = ecs.GetComponent<Ermine::AudioComponent>(id);
+            m.Deserialize(comps["AudioComponent"]);
+        }
+
+        // GlobalAudioComponent
+        if (comps.HasMember("GlobalAudioComponent") && comps["GlobalAudioComponent"].IsObject()) {
+            if (!ecs.HasComponent<Ermine::GlobalAudioComponent>(id))
+                ecs.AddComponent<Ermine::GlobalAudioComponent>(id, Ermine::GlobalAudioComponent{});
+
+            auto& m = ecs.GetComponent<Ermine::GlobalAudioComponent>(id);
+            m.Deserialize(comps["GlobalAudioComponent"]);
+        }
+
+        // AnimationComponent
+        if (comps.HasMember("AnimationComponent") && comps["AnimationComponent"].IsObject()) {
+            if (!ecs.HasComponent<Ermine::AnimationComponent>(id))
+                ecs.AddComponent<Ermine::AnimationComponent>(id, Ermine::AnimationComponent{});
+
+            auto& m = ecs.GetComponent<Ermine::AnimationComponent>(id);
+            m.Deserialize(comps["AnimationComponent"]);
+        }
+
+        // Particle
+        if (comps.HasMember("Particle") && comps["Particle"].IsObject()) {
+            if (!ecs.HasComponent<Ermine::Particle>(id))
+                ecs.AddComponent<Ermine::Particle>(id, Ermine::Particle{});
+
+            auto& m = ecs.GetComponent<Ermine::Particle>(id);
+            m.Deserialize(comps["Particle"]);
+        }
+
+        // HierarchyComponent 
+        if (comps.HasMember("HierarchyComponent") && comps["HierarchyComponent"].IsObject()) {
+            if (!ecs.HasComponent<Ermine::HierarchyComponent>(id))
+                ecs.AddComponent<Ermine::HierarchyComponent>(id, Ermine::HierarchyComponent{});
+
+            auto& m = ecs.GetComponent<Ermine::HierarchyComponent>(id);
+            m.Deserialize(comps["HierarchyComponent"]);
         }
 
         // (If you later add more components, repeat this pattern.)

@@ -1,4 +1,4 @@
-/* Start Header ************************************************************************/
+﻿/* Start Header ************************************************************************/
 /*!
 \file       Physics.cpp
 \author     Tan Si Han, t.sihan, 2301264, t.sihan\@digipen.edu
@@ -20,7 +20,6 @@ using namespace std;
 
 namespace Ermine
 {
-    Physics* gPhysics = nullptr;
     // ------------------ Layer & Filter Implementations ------------------
     namespace Layers
     {
@@ -88,7 +87,11 @@ namespace Ermine
     class MyContactListener : public ContactListener
     {
     public:
-        virtual ValidateResult OnContactValidate(const Body& inBody1, const Body& inBody2, RVec3Arg, const CollideShapeResult&) override { return ValidateResult::AcceptAllContactsForThisBodyPair; }
+        virtual ValidateResult OnContactValidate(const Body& inBody1, const Body& inBody2, RVec3Arg, const CollideShapeResult&) override 
+        { 
+            (void)inBody1; (void)inBody2;
+            return ValidateResult::AcceptAllContactsForThisBodyPair;
+        }
         virtual void OnContactAdded(const Body&, const Body&, const ContactManifold&, ContactSettings&) override {}
         virtual void OnContactPersisted(const Body&, const Body&, const ContactManifold&, ContactSettings&) override {}
         virtual void OnContactRemoved(const SubShapeIDPair&) override {}
@@ -103,7 +106,7 @@ namespace Ermine
 
     // ------------------ Physics Class ------------------
     Physics::Physics()
-        : mTempAllocator(1 * 1024 * 1024),  // 10 MB
+        : mTempAllocator(10 * 1024 * 1024),  // 10 MB
         mJobSystem(cMaxPhysicsJobs, cMaxPhysicsBarriers, std::thread::hardware_concurrency() - 1)
     {
         // Allocate filter / listener objects
@@ -156,6 +159,7 @@ namespace Ermine
     void Physics::Shutdown()
     {
         UnregisterTypes();
+        mEntityToBody.clear();
         delete Factory::sInstance;
         Factory::sInstance = nullptr;
     }
@@ -182,72 +186,182 @@ namespace Ermine
 			t.rotation.x = rot.GetX();
             t.rotation.y = rot.GetY();
             t.rotation.z = rot.GetZ();
-            //t.rotation = QuaternionToEuler(Quaternion(rot.GetX(), rot.GetY(), rot.GetZ(), rot.GetW()), true);
-            //std::cout << "Entity " << entity << " position: "
-            //    << t.position.x << ", "
-            //    << t.position.y << ", "
-            //    << t.position.z << std::endl;
-            //EE_CORE_TRACE("Entity {0} position: {1} {2} {3}", entity, t.position.x, t.position.y, t.position.z);
         }
     }
 
-    BodyID Physics::CreateStaticBox(const JPH::Vec3& halfExtents, const RVec3& position)
+    //BodyID Physics::CreateStaticBox(const JPH::Vec3& halfExtents, const RVec3& position)
+    //{
+    //    BoxShapeSettings settings(halfExtents);
+    //    settings.SetEmbedded();
+    //    ShapeRefC shape = settings.Create().Get();
+    //    BodyCreationSettings bodySettings(shape, position, Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+    //    Body* body = mPhysicsSystem.GetBodyInterface().CreateBody(bodySettings);
+    //    mPhysicsSystem.GetBodyInterface().AddBody(body->GetID(), EActivation::DontActivate);
+    //    return body->GetID();
+    //}
+
+    //BodyID Physics::CreateDynamicSphere(float radius, const RVec3& position, const JPH::Vec3& initialVelocity)
+    //{
+    //    BodyCreationSettings settings(new SphereShape(radius), position, Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+    //    BodyID bodyID = mPhysicsSystem.GetBodyInterface().CreateAndAddBody(settings, EActivation::Activate);
+    //    mPhysicsSystem.GetBodyInterface().SetLinearVelocity(bodyID, initialVelocity);
+    //    return bodyID;
+    //}
+
+    //void Physics::CreatePhysicsBox(const Ermine::Vec3& position, const Ermine::Vec3& size, float mass)
+    //{
+    //    // 1. Create an ECS entity
+    //    auto entity = ECS::GetInstance().CreateEntity();
+
+    //    // 2. Add Transform
+    //    ECS::GetInstance().AddComponent(entity, Transform(position, Quaternion(), size));
+
+    //    // 3. Add Mesh
+    //    ECS::GetInstance().AddComponent(entity, graphics::GeometryFactory::CreateCube(size.x, size.y, size.z));
+
+    //    // 4. Add Material (optional, use existing shader/texture)
+    //    auto shader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/vertex.glsl", "../Resources/Shaders/fragment.glsl");
+    //    auto texture = AssetManager::GetInstance().LoadTexture("../Resources/Textures/greybox_grey_grid.png");
+    //    auto material = std::make_unique<graphics::Material>(shader);
+    //    material->LoadTemplate(graphics::MaterialTemplates::PBR_WHITE());
+    //    if (texture && texture->IsValid())
+    //        material->SetTexture("materialAlbedoMap", texture);
+    //    ECS::GetInstance().AddComponent(entity, Material(std::move(material)));
+
+    //    // 5. Create Jolt Physics box shape
+    //    ObjectLayer layer = mass > 0 ? Layers::MOVING : Layers::NON_MOVING;
+    //    JPH::BodyCreationSettings bodySettings(
+    //        new JPH::BoxShape(JPH::Vec3(size.x * 0.5f, size.y * 0.5f, size.z * 0.5f)), // half extents
+    //        JPH::Vec3(position.x, position.y, position.z),
+    //        JPH::Quat::sIdentity(),
+    //        mass > 0 ? JPH::EMotionType::Dynamic : JPH::EMotionType::Static,
+    //        layer
+    //    );
+    //    if (mass > 0)
+    //        bodySettings.mOverrideMassProperties = JPH::EOverrideMassProperties::CalculateInertia;
+    //    bodySettings.mMassPropertiesOverride.mMass = mass;
+    //    // 6. Create body and add it to physics
+    //    JPH::Body* body = mPhysicsSystem.GetBodyInterface().CreateBody(bodySettings);
+    //    mPhysicsSystem.GetBodyInterface().AddBody(body->GetID(), JPH::EActivation::Activate);
+
+    //    // 7. Optionally store body pointer or ID in a component if needed
+    //    mEntityToBody[entity] = body->GetID();
+    //}
+
+    void Physics::UpdatePhysicList()
     {
-        BoxShapeSettings settings(halfExtents);
-        settings.SetEmbedded();
-        ShapeRefC shape = settings.Create().Get();
-        BodyCreationSettings bodySettings(shape, position, Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
-        Body* body = mPhysicsSystem.GetBodyInterface().CreateBody(bodySettings);
-        mPhysicsSystem.GetBodyInterface().AddBody(body->GetID(), EActivation::DontActivate);
-        return body->GetID();
+        mEntityToBody.clear();
+
+        auto& ecs = ECS::GetInstance();
+        auto& bodyInterface = mPhysicsSystem.GetBodyInterface();
+
+        for (auto entity : m_Entities)
+        {
+            if (!ecs.HasComponent<Transform>(entity) ||
+                !ecs.HasComponent<PhysicComponent>(entity))
+                continue;
+
+            auto& t = ecs.GetComponent<Transform>(entity);
+            auto& p = ecs.GetComponent<PhysicComponent>(entity);
+
+            // Remove old body if it exists (to update settings properly)
+            if (p.bodyID != JPH::BodyID(JPH::BodyID::cInvalidBodyID))
+            {
+                bodyInterface.RemoveBody(p.bodyID);
+                bodyInterface.DestroyBody(p.bodyID);
+                p.bodyID = JPH::BodyID(JPH::BodyID::cInvalidBodyID);
+            }
+
+            // Determine object layer
+            ObjectLayer layer = (p.motionType == JPH::EMotionType::Dynamic)
+                ? Layers::MOVING
+                : Layers::NON_MOVING;
+
+            if (p.motionType == JPH::EMotionType::Dynamic && p.mass <= 0.0f)
+            {
+                p.mass = 1.0f;
+            }
+
+            // Create the correct shape
+            JPH::Shape* shape = nullptr;
+            switch (p.shapeType)
+            {
+            case ShapeType::Box:
+                shape = new JPH::BoxShape(JPH::Vec3(
+                    t.scale.x * 0.5f,
+                    t.scale.y * 0.5f,
+                    t.scale.z * 0.5f));
+                break;
+
+            case ShapeType::Sphere:
+                shape = new JPH::SphereShape(t.scale.x * 0.5f);
+                break;
+
+            case ShapeType::Capsule:
+                shape = new JPH::CapsuleShape(
+                    t.scale.y * 0.5f, // half height
+                    t.scale.x * 0.5f  // radius
+                );
+                break;
+
+            case ShapeType::CustomMesh:
+            {
+                std::vector<JPH::Vec3> jphVerts;
+                jphVerts.reserve(p.customMeshVertices.size());
+                for (const auto& v : p.customMeshVertices)
+                    jphVerts.emplace_back(v.x, v.y, v.z);
+
+                JPH::ConvexHullShapeSettings hullSettings(
+                    jphVerts.data(),
+                    jphVerts.size()
+                );
+
+                JPH::ShapeSettings::ShapeResult hullResult = hullSettings.Create();
+                if (hullResult.IsValid())
+                    shape = hullResult.Get();
+                break;
+            }
+            // case ShapeType::Compound:
+            //     shape = BuildCompoundShapeDirectly(...);
+            //     break;
+            }
+
+            if (!shape) // Skip if shape creation failed
+                continue;
+
+            // Create body settings with updated transform and properties
+            JPH::BodyCreationSettings bodySettings(
+                shape,
+                JPH::Vec3(t.position.x, t.position.y, t.position.z),
+                JPH::Quat(t.rotation.x, t.rotation.y, t.rotation.z, t.rotation.w),
+                p.motionType,
+                layer
+            );
+
+            // Apply mass and inertia if dynamic
+            if (p.motionType == JPH::EMotionType::Dynamic)
+            {
+                bodySettings.mOverrideMassProperties = JPH::EOverrideMassProperties::CalculateInertia;
+                bodySettings.mMassPropertiesOverride.mMass = p.mass;
+            }
+
+            // Create and add body to the world
+            JPH::Body* body = bodyInterface.CreateBody(bodySettings);
+            bodyInterface.AddBody(body->GetID(), JPH::EActivation::Activate);
+
+            // Store mapping
+            p.bodyID = body->GetID();
+            mEntityToBody[entity] = p.bodyID;
+        }
+
     }
 
-    BodyID Physics::CreateDynamicSphere(float radius, const RVec3& position, const JPH::Vec3& initialVelocity)
+    JPH::BodyID Physics::GetBodyID(EntityID objectID)
     {
-        BodyCreationSettings settings(new SphereShape(radius), position, Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
-        BodyID bodyID = mPhysicsSystem.GetBodyInterface().CreateAndAddBody(settings, EActivation::Activate);
-        mPhysicsSystem.GetBodyInterface().SetLinearVelocity(bodyID, initialVelocity);
-        return bodyID;
-    }
-
-    void Physics::CreatePhysicsBox(const Ermine::Vec3& position, const Ermine::Vec3& size, float mass)
-    {
-        // 1. Create an ECS entity
-        auto entity = ECS::GetInstance().CreateEntity();
-
-        // 2. Add Transform
-        ECS::GetInstance().AddComponent(entity, Transform(position, Quaternion(), size));
-
-        // 3. Add Mesh
-        ECS::GetInstance().AddComponent(entity, graphics::GeometryFactory::CreateCube(size.x, size.y, size.z));
-
-        // 4. Add Material (optional, use existing shader/texture)
-        auto shader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/vertex.glsl", "../Resources/Shaders/fragment.glsl");
-        auto texture = AssetManager::GetInstance().LoadTexture("../Resources/Textures/greybox_grey_grid.png");
-        auto material = std::make_unique<graphics::Material>(shader);
-        material->LoadTemplate(graphics::MaterialTemplates::PBR_WHITE());
-        if (texture && texture->IsValid())
-            material->SetTexture("materialAlbedoMap", texture);
-        ECS::GetInstance().AddComponent(entity, Material(std::move(material)));
-
-        // 5. Create Jolt Physics box shape
-        ObjectLayer layer = mass > 0 ? Layers::MOVING : Layers::NON_MOVING;
-        JPH::BodyCreationSettings bodySettings(
-            new JPH::BoxShape(JPH::Vec3(size.x * 0.5f, size.y * 0.5f, size.z * 0.5f)), // half extents
-            JPH::Vec3(position.x, position.y, position.z),
-            JPH::Quat::sIdentity(),
-            mass > 0 ? JPH::EMotionType::Dynamic : JPH::EMotionType::Static,
-            layer
-        );
-        if (mass > 0)
-            bodySettings.mOverrideMassProperties = JPH::EOverrideMassProperties::CalculateInertia;
-        bodySettings.mMassPropertiesOverride.mMass = mass;
-        // 6. Create body and add it to physics
-        JPH::Body* body = mPhysicsSystem.GetBodyInterface().CreateBody(bodySettings);
-        mPhysicsSystem.GetBodyInterface().AddBody(body->GetID(), JPH::EActivation::Activate);
-
-        // 7. Optionally store body pointer or ID in a component if needed
-        mEntityToBody[entity] = body->GetID();
+        auto it = mEntityToBody.find(objectID);
+        return (it != mEntityToBody.end())
+            ? it->second
+            : JPH::BodyID(JPH::BodyID::cInvalidBodyID);
     }
 
 }

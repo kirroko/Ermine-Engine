@@ -28,11 +28,15 @@ namespace Ermine::graphics
     class Skybox
     {
     private:
-        std::shared_ptr<Cubemap> m_cubemap;
-        std::shared_ptr<Shader> m_shader;
-        std::unique_ptr<VertexArray> m_vao;
-        std::unique_ptr<VertexBuffer> m_vbo;
-        
+        std::shared_ptr<Cubemap> m_cubemap;   /// Cubemap texture used for the skybox
+        std::shared_ptr<Shader> m_shader;     /// Shader used for rendering the skybox
+        std::unique_ptr<VertexArray> m_vao;   /// Vertex Array Object for skybox geometry
+        std::unique_ptr<VertexBuffer> m_vbo;  /// Vertex Buffer Object for skybox geometry
+
+
+        /**
+         * @brief Creates the geometry for the skybox cube.
+         */
         void CreateSkyboxGeometry();
 
     public:

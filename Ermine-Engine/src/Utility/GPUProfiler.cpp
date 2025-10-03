@@ -13,6 +13,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "PreCompile.h"
 #include "GPUProfiler.h"
 
+#include "FrameController.h"
+
 using namespace Ermine::graphics;
 
 void GPUProfiler::Init(size_t historyLength)
@@ -96,19 +98,22 @@ void GPUProfiler::EndFrame()
 
     // End GPU timing for the entire frame
     if (IsTimerQuerySupported())
-    {
         EndEvent();
-    }
 
     // Calculate frame time
     auto frameEndTime = std::chrono::high_resolution_clock::now();
-    float frameTimeMs = std::chrono::duration<float, std::milli>(frameEndTime - s_FrameStartTime).count();
+    float processTimeMs = std::chrono::duration<float, std::milli>(frameEndTime - s_FrameStartTime).count();
+
+    // Includes v-sync and any pacing (present-to-present time)
+	const float effectiveTimeMs = FrameController::GetDeltaTime() * 1000.0f;
 
     // Update metrics with this frame's data
-    UpdateMetrics(frameTimeMs);
+    UpdateMetrics(effectiveTimeMs);
+
+    s_CurrentMetrics.cpuFrameTimeMs = processTimeMs;
 
     // Add to history
-    s_FrameTimeHistory.push_back(frameTimeMs);
+    s_FrameTimeHistory.push_back(effectiveTimeMs);
     if (s_FrameTimeHistory.size() > s_MaxHistoryLength)
         s_FrameTimeHistory.pop_front();
 }

@@ -24,6 +24,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <sstream>
 #include <cassert>
 #include <algorithm>
+#include <numbers>
 
 #include <memory>
 #include <bitset>
@@ -31,6 +32,11 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #include <filesystem>
 #include <typeindex>
+
+#include <shobjidl.h>
+#include <windows.h>
+#undef max
+#undef min
 
 // Threading and synchronization
 #include <functional>
