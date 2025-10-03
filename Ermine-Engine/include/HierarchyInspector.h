@@ -40,6 +40,8 @@ private:
     void DrawAudioComponent(EntityID entity);
     //void DrawParticleComponent(EntityID entity);
     void DrawScriptComponent(EntityID entity);
+    void DrawModelComponent(EntityID entity);
+    void DrawAnimationComponent(EntityID entity);
     void DrawAddComponentMenu(EntityID entity);
 
     Scene* m_ActiveScene = nullptr;

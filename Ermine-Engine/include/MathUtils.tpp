@@ -2,10 +2,10 @@
 /*!
 \file       MathUtils.tpp
 \author     Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu
-\date       Oct 19, 2024
+\date       Sept 02, 2025
 \brief      This file contains the definition of the math utility functions.
 
-Copyright (C) 2024 DigiPen Institute of Technology.
+Copyright (C) 2025 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents without the
 prior written consent of DigiPen Institute of Technology is prohibited.
 */

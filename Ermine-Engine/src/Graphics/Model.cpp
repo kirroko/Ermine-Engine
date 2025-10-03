@@ -2,7 +2,7 @@
 /*!
 \file       Model.cpp
 \author     Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu
-\date       26/09/2025
+\date       27/09/2025
 \brief      This file contains the definition of the Model class for loading and processing
             3D models using Assimp. Provides mesh data, bone data, and animation integration
             for rendering and animation systems.
@@ -27,9 +27,18 @@ Model::Model(const std::string& path)
     LoadModel(path);
 }
 
-// Load the model and process nodes
+/**
+ * @brief Load a model from file and process its nodes and meshes.
+ * @param path Path to the model file
+ */
 void Model::LoadModel(const std::string& path)
 {
+    // Reset model data before loading
+    m_meshes.clear();
+    m_BoneMapping.clear();
+    m_BoneOffsets.clear();
+    m_BoneTransforms.clear();
+
     // Create importer owned by the Model instance
     m_Importer = std::make_unique<Assimp::Importer>();
 
@@ -59,7 +68,12 @@ void Model::LoadModel(const std::string& path)
     m_BoneTransforms.resize(m_BoneOffsets.size(), glm::mat4(1.0f));
 }
 
-// Recursively process Assimp nodes
+/**
+ * @brief Recursively process Assimp nodes into MeshData.
+ * @param node Current node
+ * @param scene Assimp scene reference
+ * @param parentTransform Parent transformation matrix
+ */
 void Model::ProcessNode(aiNode* node, const aiScene* scene, const aiMatrix4x4& parentTransform)
 {
     aiMatrix4x4 nodeTransform = parentTransform * node->mTransformation;
@@ -76,7 +90,11 @@ void Model::ProcessNode(aiNode* node, const aiScene* scene, const aiMatrix4x4& p
         ProcessNode(node->mChildren[i], scene, nodeTransform);
 }
 
-// Process an Assimp mesh into engine MeshData
+/**
+ * @brief Convert an Assimp mesh into engine MeshData.
+ * @param mesh Pointer to aiMesh
+ * @return Processed MeshData
+ */
 MeshData Model::ProcessMesh(aiMesh* mesh)
 {
     std::vector<unsigned int> indices;

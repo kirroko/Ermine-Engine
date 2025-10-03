@@ -1,6 +1,6 @@
 /* Start Header ************************************************************************/
 /*!
-\file       Math.cpp
+\file       MathVector.cpp
 \author     Tan Si Han, t.sihan, 2301264, t.sihan\@digipen.edu
 \co-authors WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu
 \date       Sept 02, 2025

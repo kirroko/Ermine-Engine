@@ -1,10 +1,10 @@
 /* Start Header ************************************************************************/
 /*!
 \file       AssetManager.h
-\author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu (80%)   
+\author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu (75%)   
 \co-author  Jeremy Lim Ting Jie, jeremytingjie.lim, 2301370, jeremytingjie.lim\@digipen.edu (20%)
-\co-authors Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu
-\date       10/09/2025
+\co-authors Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu (5%)
+\date       03/10/2025
 \brief      This reflects the brief of the AssetManager system.
             This file is used to manage all the assets in the game.
 
@@ -19,8 +19,6 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Shader.h"
 #include "Texture.h"
 #include "Cubemap.h"
-
-
 #include "Model.h"
 
 #include <assimp/Importer.hpp>  // for the importer class
@@ -70,9 +68,14 @@ public:
          * @return The texture if it exists, nullptr otherwise
          */
         std::shared_ptr<graphics::Texture> GetTexture(const std::string& filePath);
+        /**
+         * @brief Get a read-only view of all currently loaded textures.
+         * @return A const reference to the unordered_map of loaded textures.
+         * The key is the texture file path, and the value is the shared Texture.
+         */
+        const std::unordered_map<std::string, std::shared_ptr<graphics::Texture>>& GetLoadedTextures() const;
 
         // ================== Shader Management ==================
-        const std::unordered_map<std::string, std::shared_ptr<graphics::Texture>>& GetLoadedTextures() const;
         /**
          * @brief Load a shader from a vertex and fragment file
          * @param vertexPath The path to the vertex shader file
@@ -115,6 +118,17 @@ public:
          * @return The model if it exists, nullptr otherwise.
          */
         std::shared_ptr<graphics::Model> GetModel(const std::string& filePath);
+        /**
+         * @brief Get a read-only view of all currently loaded models.
+         * @return A const reference to the unordered_map of loaded models.
+         * The key is the model file path, and the value is the shared Model.
+         */
+        const std::unordered_map<std::string, std::shared_ptr<graphics::Model>>& GetLoadedModels() const;
+        /**
+         * @brief Unload a specific model from the cache.
+         * @param filePath The full path to the model file to unload.
+         */
+        void UnloadModel(const std::string& filePath);
 
         // ================== Utilities ==================
         /**

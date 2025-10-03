@@ -1,11 +1,12 @@
 /* Start Header ************************************************************************/
 /*!
 \file       Matrix3x3.cpp
-\author     Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu
-\date       Sept 09, 2024
+\author     Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu (60%)
+\co-authors Tan Si Han, t.sihan, 2301264, t.sihan\@digipen.edu (40%)
+\date       Sept 02, 2025
 \brief      This file contains the definition of the Matrix3x3 structure.
 
-Copyright (C) 2024 DigiPen Institute of Technology.
+Copyright (C) 2025 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents without the
 prior written consent of DigiPen Institute of Technology is prohibited.
 */

@@ -114,7 +114,6 @@ namespace Ermine {
 
             auto& textures = AssetManager::GetInstance().GetLoadedTextures();
             static int currentIndex = 0;
-            static std::vector<std::string> textureNames;
             static std::string loadStatus;
 
             if (textureNames.size() != textures.size())

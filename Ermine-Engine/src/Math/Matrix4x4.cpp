@@ -1,11 +1,12 @@
 /* Start Header ************************************************************************/
 /*!
 \file       Matrix4x4.cpp
-\author     Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu
-\date       Sept 09, 2024
+\author     Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu (60%)
+\co-authors Tan Si Han, t.sihan, 2301264, t.sihan\@digipen.edu (40%)
+\date       Sept 02, 2025
 \brief      This file contains the definition of the Matrix4x4 structure.
 
-Copyright (C) 2024 DigiPen Institute of Technology.
+Copyright (C) 2025 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents without the
 prior written consent of DigiPen Institute of Technology is prohibited.
 */
@@ -360,7 +361,7 @@ namespace Ermine
             }
         }
 
-        return q;
+        return QuaternionNormalize(q);
     }
 
     Vec3 QuaternionToEuler(const Quaternion& q, bool inDegrees)
@@ -411,5 +412,59 @@ namespace Ermine
         q.y = cx * sy * cz + sx * cy * sz;
         q.z = cx * cy * sz - sx * sy * cz;
         return q;
+    }
+
+    Quaternion QuaternionNormalize(const Quaternion& q)
+    {
+        float len = sqrtf(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w);
+        if (len <= 1e-6f)
+            return Quaternion(0, 0, 0, 1);
+        float inv = 1.0f / len;
+        return Quaternion(q.x * inv, q.y * inv, q.z * inv, q.w * inv);
+    }
+
+    Quaternion QuaternionMultiply(const Quaternion& a, const Quaternion& b)
+    {
+        return Quaternion(
+            a.w * b.x + a.x * b.w + a.y * b.z - a.z * b.y,
+            a.w * b.y - a.x * b.z + a.y * b.w + a.z * b.x,
+            a.w * b.z + a.x * b.y - a.y * b.x + a.z * b.w,
+            a.w * b.w - a.x * b.x - a.y * b.y - a.z * b.z
+        );
+    }
+
+    Quaternion QuaternionConjugate(const Quaternion& q)
+    {
+        return Quaternion(-q.x, -q.y, -q.z, q.w);
+    }
+
+    Vector3D QuaternionRotateVector(const Quaternion& q, const Vector3D& v)
+    {
+        Quaternion vq(v.x, v.y, v.z, 0.0f);
+        Quaternion inv = QuaternionConjugate(q);
+        Quaternion res = QuaternionMultiply(QuaternionMultiply(q, vq), inv);
+        return Vector3D(res.x, res.y, res.z);
+    }
+
+    Quaternion QuaternionFromAxisAngle(const Vector3D& axis, float angleRad)
+    {
+        float half = angleRad * 0.5f;
+        float s = sinf(half);
+        return Quaternion(axis.x * s, axis.y * s, axis.z * s, cosf(half));
+    }
+
+    void QuaternionToAxisAngle(const Quaternion& q, Vector3D& axis, float& angleRad)
+    {
+        Quaternion nq = QuaternionNormalize(q);
+        angleRad = 2.0f * acosf(nq.w);
+        float s = sqrtf(1.0f - nq.w * nq.w);
+        if (s < 1e-6f)
+        {
+            axis = Vector3D(1.0f, 0.0f, 0.0f);
+        }
+        else
+        {
+            axis = Vector3D(nq.x / s, nq.y / s, nq.z / s);
+        }
     }
 }

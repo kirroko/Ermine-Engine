@@ -36,8 +36,28 @@ namespace Ermine::ImguiUI {
 
 	struct SelectionWithDeletion : ImGuiSelectionBasicStorage
 	{
+		/*!***********************************************************************
+		\brief
+			Apply deletion before looping over items.
+		\param[in,out] ms_io
+			Pointer to ImGui multi-select IO.
+		\param[in] items_count
+			Total number of items.
+		\return
+			Number of items deleted.
+		*************************************************************************/
 		int ApplyDeletionPreLoop(ImGuiMultiSelectIO* ms_io, int items_count);
 
+		/*!***********************************************************************
+		\brief
+			Apply deletion after looping over items and update vector contents.
+		\param[in,out] ms_io
+			Pointer to ImGui multi-select IO.
+		\param[in,out] items
+			Vector of items to modify.
+		\param[in] item_curr_idx_to_select
+			Index of item currently selected.
+		*************************************************************************/
 		template<typename ITEM_TYPE>
 		void ApplyDeletionPostLoop(ImGuiMultiSelectIO* ms_io, ImVector<ITEM_TYPE>& items, int item_curr_idx_to_select)
 		{
@@ -68,12 +88,28 @@ namespace Ermine::ImguiUI {
 		ImTextureID Icon;
 		std::string realName;
 
+		/*!***********************************************************************
+		\brief
+			Construct an asset with all fields.
+		*************************************************************************/
 		Asset(ImGuiID id, int type, std::string name, bool select, ImTextureID icon, std::string _realName);
+		/*!***********************************************************************
+		\brief
+		   Construct an asset without a real name.
+		*************************************************************************/
 		Asset(ImGuiID id, int type, std::string name, bool select, ImTextureID icon);
 
 		static const ImGuiTableSortSpecs* current_sortSpecs;
 
+		/*!***********************************************************************
+		\brief
+		   Compare two assets using current sort specs.
+		*************************************************************************/
 		static int IMGUI_CDECL CompareWithSortSpecs(const void* lhs, const void* rhs);
+		/*!***********************************************************************
+		\brief
+		   Sort assets based on ImGui table sort specs.
+		*************************************************************************/
 		static void SortWithSortSpecs(ImGuiTableSortSpecs* sort_specs, Asset* items, int items_count);
 	};
 
@@ -111,20 +147,80 @@ namespace Ermine::ImguiUI {
 		ImTextureID placeholderIcon = 0;
 
 		// Functions
+		/*!***********************************************************************
+		\brief
+			Default constructor for Browser.
+		*************************************************************************/
 		Browser();
+		/*!***********************************************************************
+		\brief
+			Add items to the browser.
+		*************************************************************************/
 		void AddItems(int count, int type, std::string name);
+		/*!***********************************************************************
+		\brief
+		   Remove all items.
+		*************************************************************************/
 		void ClearItems();
+		/*!***********************************************************************
+		\brief
+			Get all items.
+		*************************************************************************/
 		const ImVector<Asset>& GetItems() const;
+		/*!***********************************************************************
+		\brief
+		   Get all item names.
+		*************************************************************************/
 		const std::vector<std::string>& GetItemNames() const;
+		/*!***********************************************************************
+		\brief
+		   Get the type of an asset by ID.
+		*************************************************************************/
 		const int GetType(ImGuiID id) const;
+		/*!***********************************************************************
+		\brief
+			Clear all item names.
+		*************************************************************************/
 		void ClearItemNames();
+		/*!***********************************************************************
+		\brief
+		   Update layout sizes based on available width.
+		*************************************************************************/
 		void UpdateLayoutSizes(float avail_width);
+		/*!***********************************************************************
+		\brief
+		   Extract the file name from a file path.
+		*************************************************************************/
 		std::string ExtractFileName(const std::string& filePath);
+		/*!***********************************************************************
+		\brief
+		   Get the file extension from a path.
+		*************************************************************************/
 		std::string GetFileExtension(const std::string& path);
+		/*!***********************************************************************
+		\brief
+		   Copy a file into the assets directory.
+		*************************************************************************/
 		bool CopyFileToAssets(const std::string& sourceFilePath);
+		/*!***********************************************************************
+		\brief
+			Handle external files dropped into the asset browser.
+		*************************************************************************/
 		void HandleDroppedFiles(const std::vector<std::string>& filePaths);
+		/*!***********************************************************************
+		\brief
+			Get directories containing assets.
+		*************************************************************************/
 		std::string GetDirectories();
+		/*!***********************************************************************
+		\brief
+		   Get the full path of a selected asset.
+		*************************************************************************/
 		std::string GetSelectedFilePath(std::string name);
+		/*!***********************************************************************
+		\brief
+		   Draw the asset browser window.
+		*************************************************************************/
 		void Draw(const char* title);
 
 		// Reference to functions for creating Game Objects with components using Asset Browser //
@@ -213,10 +309,20 @@ namespace Ermine::ImguiUI {
 	class AssetBrowser : public ImGUIWindow
 	{
 	public:
+		/*!***********************************************************************
+		\brief
+		   Constructor for AssetBrowser window.
+		*************************************************************************/
 		AssetBrowser() : ImGUIWindow("Asset Browser IMGUI") {}
-
+		/*!***********************************************************************
+		\brief
+		   Update the AssetBrowser window.
+		*************************************************************************/
 		void Update() override;
-
+		/*!***********************************************************************
+		\brief
+			Render the AssetBrowser window.
+		*************************************************************************/
 		void Render() override;
 
 		Browser assets_browser;
