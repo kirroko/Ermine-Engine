@@ -33,6 +33,12 @@ Model::Model(const std::string& path)
  */
 void Model::LoadModel(const std::string& path)
 {
+    // Reset model data before loading
+    m_meshes.clear();
+    m_BoneMapping.clear();
+    m_BoneOffsets.clear();
+    m_BoneTransforms.clear();
+
     // Create importer owned by the Model instance
     m_Importer = std::make_unique<Assimp::Importer>();
 

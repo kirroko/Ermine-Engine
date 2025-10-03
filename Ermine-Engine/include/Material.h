@@ -5,7 +5,7 @@
 \date       Sep 9, 2025
 \brief      Material system for graphics rendering with UBO support
 
-Copyright (C) 2024 DigiPen Institute of Technology.
+Copyright (C) 2025 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents without the
 prior written consent of DigiPen Institute of Technology is prohibited.
 */
@@ -100,6 +100,7 @@ namespace Ermine::graphics
     class MaterialTemplates
     {
     public:
+		// Returns a parameter map for a red PBR material.
         static std::map<std::string, MaterialParam> PBR_RED()
         {
             return {
@@ -119,7 +120,7 @@ namespace Ermine::graphics
                 {"materialHasEmissiveMap", false}
             };
         }
-
+        // Returns a parameter map for a metallic PBR material.
         static std::map<std::string, MaterialParam> PBR_METAL()
         {
             return {
@@ -140,6 +141,7 @@ namespace Ermine::graphics
             };
         }
 
+         // Returns a parameter map for a white PBR material.
         static std::map<std::string, MaterialParam> PBR_WHITE()
         {
             return {
@@ -159,7 +161,7 @@ namespace Ermine::graphics
                 {"materialHasEmissiveMap", false}
             };
         }
-
+		// Emissive material
         static std::map<std::string, MaterialParam> EMISSIVE(const Vec3& color, float intensity)
         {
             return {
@@ -243,6 +245,10 @@ namespace Ermine::graphics
         mutable MaterialUBO m_materialData;
         mutable bool m_uboDirty = true;
 
+        /**
+         * @brief Gets the UBO data for this material.
+         * @return Reference to MaterialUBO.
+         */
         void UpdateUBOData() const
         {
             if (!m_uboDirty) return;
@@ -312,15 +318,36 @@ namespace Ermine::graphics
         }
 
     public:
+        /**
+         * @brief Default constructor.
+         */
         Material() = default;
-
+        /**
+         * @brief Constructs a material with a shader and optional parameters.
+         * @param shader Shared pointer to Shader.
+         * @param params Map of parameter names to MaterialParam.
+         */
         Material(std::shared_ptr<Shader> shader, const std::map<std::string, MaterialParam>& params = {})
             : m_shader(std::move(shader)), m_parameters(params) {
         }
 
+        /**
+         * @brief Sets the shader for this material.
+         * @param shader Shared pointer to Shader.
+         */
         void SetShader(std::shared_ptr<Shader> shader) { m_shader = std::move(shader); }
+
+        /**
+         * @brief Gets the shader associated with this material.
+         * @return Shared pointer to Shader.
+         */
         std::shared_ptr<Shader> GetShader() const { return m_shader; }
 
+        /**
+         * @brief Sets a material parameter.
+         * @param name Parameter name.
+         * @param param MaterialParam value.
+         */
         void SetParameter(const std::string& name, const MaterialParam& param)
         {
             m_parameters[name] = param;
@@ -334,26 +361,61 @@ namespace Ermine::graphics
                 }
             }
         }
-
+        /**
+         * @brief Sets a float parameter.
+         * @param name Parameter name.
+         * @param value Float value.
+         */
         void SetFloat(const std::string& name, float value) {
             SetParameter(name, MaterialParam(value));
         }
+        /**
+         * @brief Sets a Vec3 parameter.
+         * @param name Parameter name.
+         * @param value Vec3 value.
+         */
         void SetVec3(const std::string& name, const Vec3& value) {
             SetParameter(name, MaterialParam(value));
         }
+        /**
+         * @brief Sets a Vec4 parameter.
+         * @param name Parameter name.
+         * @param value Vec4 value.
+         */
         void SetVec4(const std::string& name, const Vec4& value) {
             SetParameter(name, MaterialParam(value));
         }
+        /**
+         * @brief Sets an int parameter.
+         * @param name Parameter name.
+         * @param value Integer value.
+         */
         void SetInt(const std::string& name, int value) {
             SetParameter(name, MaterialParam(value));
         }
+        /**
+         * @brief Sets a bool parameter.
+         * @param name Parameter name.
+         * @param value Boolean value.
+         */
         void SetBool(const std::string& name, bool value) {
             SetParameter(name, MaterialParam(value));
         }
+        /**
+         * @brief Sets a texture parameter.
+         * @param name Parameter name.
+         * @param texture Shared pointer to Texture.
+         */
         void SetTexture(const std::string& name, std::shared_ptr<Texture> texture)
         {
             SetParameter(name, MaterialParam(std::move(texture)));
         }
+
+        /**
+         * @brief Gets a texture parameter.
+         * @param name Parameter name.
+         * @return Shared pointer to Texture, or nullptr if not found.
+         */
         std::shared_ptr<Texture> GetTexture(const std::string& name)
         {
             if (auto param = GetParameter(name))
@@ -365,24 +427,37 @@ namespace Ermine::graphics
             }
             return nullptr;
         }
-
+        /**
+         * @brief Checks if a parameter exists.
+         * @param name Parameter name.
+         * @return true if parameter exists, false otherwise.
+         */
         bool HasParameter(const std::string& name) const
         {
             return m_parameters.find(name) != m_parameters.end();
         }
-
+        /**
+         * @brief Gets a parameter by name.
+         * @param name Parameter name.
+         * @return Pointer to MaterialParam, or nullptr if not found.
+         */
         const MaterialParam* GetParameter(const std::string& name) const
         {
             auto it = m_parameters.find(name);
             return it != m_parameters.end() ? &it->second : nullptr;
         }
-
+        /**
+         * @brief Gets the UBO data for this material.
+         * @return Reference to MaterialUBO.
+         */
         const MaterialUBO& GetUBOData() const
         {
             UpdateUBOData();
             return m_materialData;
         }
-
+        /**
+         * @brief Binds all textures associated with this material.
+         */
         void BindTextures() const
         {
             if (!m_shader || !m_shader->IsValid()) return;
@@ -401,14 +476,18 @@ namespace Ermine::graphics
                 }
             }
         }
-
+        /**
+         * @brief Binds the material's shader and textures.
+         */
         void Bind() const
         {
             if (!m_shader || !m_shader->IsValid()) return;
             m_shader->Bind();
             BindTextures();
         }
-
+        /**
+         * @brief Unbinds all textures and the shader.
+         */
         void Unbind() const
         {
             for (const auto& [name, param] : m_parameters)
@@ -422,7 +501,10 @@ namespace Ermine::graphics
 
             if (m_shader) m_shader->Unbind();
         }
-
+        /**
+         * @brief Loads a material template into this material.
+         * @param templateParams Map of parameter names to MaterialParam.
+         */
         void LoadTemplate(const std::map<std::string, MaterialParam>& templateParams)
         {
             for (const auto& [name, param] : templateParams)
@@ -430,7 +512,10 @@ namespace Ermine::graphics
                 SetParameter(name, param);
             }
         }
-
+        /**
+         * @brief Copy constructor.
+         * @param other Material to copy from.
+         */
         Material(const Material& other)
             : m_parameters(other.m_parameters)
             , m_shader(other.m_shader)
@@ -440,7 +525,11 @@ namespace Ermine::graphics
             , m_uboDirty(true)
         {
         }
-
+        /**
+         * @brief Copy assignment operator.
+         * @param other Material to copy from.
+         * @return Reference to this material.
+         */
         Material& operator=(const Material& other)
         {
             if (this != &other)
@@ -454,7 +543,10 @@ namespace Ermine::graphics
             }
             return *this;
         }
-
+        /**
+         * @brief Gets the cubemap textures associated with this material.
+         * @return Unordered map of cubemap names to shared pointers.
+         */
         const std::unordered_map<std::string, std::shared_ptr<Cubemap>>& GetCubemaps() const {
             return cubemaps;
         }
@@ -467,6 +559,14 @@ namespace Ermine::graphics
     class MaterialFactory
     {
     public:
+        /**
+         * @brief Creates a PBR material with specified properties.
+         * @param shader Shared pointer to Shader.
+         * @param albedo Albedo color.
+         * @param metallic Metallic value.
+         * @param roughness Roughness value.
+         * @return Unique pointer to Material.
+         */
         static std::unique_ptr<Material> CreatePBRMaterial(std::shared_ptr<Shader> shader, const Vec3& albedo,
             float metallic, float roughness)
         {
@@ -481,6 +581,13 @@ namespace Ermine::graphics
             return material;
         }
 
+        /**
+         * @brief Creates an emissive material.
+         * @param shader Shared pointer to Shader.
+         * @param color Emissive color.
+         * @param intensity Emissive intensity.
+         * @return Unique pointer to Material.
+         */
         static std::unique_ptr<Material> CreateEmissiveMaterial(std::shared_ptr<Shader> shader,
             const Vec3& color, float intensity)
         {

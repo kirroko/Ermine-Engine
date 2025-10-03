@@ -72,7 +72,14 @@ namespace Ermine::graphics
     {
     public:
         // Lighting Pass Parameters
+        // SSAO parameters
         bool m_SSAOEnabled = false;
+		int  m_SSAOSamples = 16;
+		float m_SSAORadius = 10.0f;
+		float m_SSAOBias = 0.01f;
+		float m_SSAOIntensity = 1.0f;
+		float m_SSAOFadeout = 0.1f;
+		float m_SSAOMaxDistance = 100.0f;
 
         // Post-processing uniforms - toggles
         bool m_VignetteEnabled = false;
@@ -165,8 +172,8 @@ namespace Ermine::graphics
         //~Renderer();
         struct GBuffer
         {
-            unsigned int FBO;
-            unsigned int DepthTexture;
+            unsigned int FBO = 0;
+            unsigned int DepthTexture = 0;
 
             // Multiple Render Targets (MRTs)
 
@@ -177,15 +184,15 @@ namespace Ermine::graphics
             uint64_t HandleDepthTexture = 0;
 
 
-            unsigned int PackedTexture0;
-            unsigned int PackedTexture1;
-            unsigned int PackedTexture2;
-            unsigned int PackedTexture3;
+            unsigned int PackedTexture0 = 0;
+            unsigned int PackedTexture1 = 0;
+            unsigned int PackedTexture2 = 0;
+            unsigned int PackedTexture3 = 0;
 
 
 
-            int width;
-            int height;
+            int width = 0;
+            int height = 0;
         };
 
 
@@ -194,12 +201,12 @@ namespace Ermine::graphics
         */
         struct PostProcessBuffer
         {
-            unsigned int FBO;
-            unsigned int ColorTexture;
-            unsigned int DepthTexture = 0; // Optional depth texture for skybox rendering
+			unsigned int FBO = 0;
+			unsigned int ColorTexture = 0;
+            unsigned int DepthTexture = 0;
 
-            int width;
-            int height;
+			int width = 0;
+			int height = 0;
         };
 
 
@@ -324,12 +331,12 @@ namespace Ermine::graphics
         /**
          * @brief Draw the game objects to the screen.
          */
-        void Draw(const std::shared_ptr<VertexArray>& vao, const std::shared_ptr<IndexBuffer>& ibo, const std::shared_ptr<Shader>& shader) const;
+        void Draw(const std::shared_ptr<VertexArray>& vao, const std::shared_ptr<IndexBuffer>& ibo) const;
 
         /**
          * @brief Draw the game objects to the screen using instanced rendering.
          */
-        void DrawInstanced(const std::shared_ptr<VertexArray>& vao, const std::shared_ptr<IndexBuffer>& ibo, const std::shared_ptr<Shader>& shader, int instanceCount) const;
+        void DrawInstanced(const std::shared_ptr<VertexArray>& vao, const std::shared_ptr<IndexBuffer>& ibo, int instanceCount) const;
 
         /**
          * @brief Clear the screen.
@@ -356,11 +363,6 @@ namespace Ermine::graphics
          * @param view The view matrix to transform the positions and directions of the lights into view space.
          */
         void UpdateLightsSSBO(const Mtx44& view);
-        /**
-         * @brief Binds the Lights SSBO to the specified shader program if it has not been bound before.
-         * @param shader The shader program to which the lights SSBO should be bound.
-         */
-        void BindLightsBlockIfPresent(const std::shared_ptr<Shader>& shader);
         /**
          * @brief Updates the material's uniform buffer object (UBO) with the specified material data.
          * @param materialData The material data to be uploaded to the UBO, including properties like color, texture, etc.
@@ -542,8 +544,10 @@ namespace Ermine::graphics
         std::shared_ptr<PostProcessBuffer> m_BloomExtractBuffer;
         std::shared_ptr<PostProcessBuffer> m_BloomBlurBuffer1;
         std::shared_ptr<PostProcessBuffer> m_BloomBlurBuffer2;
+		std::shared_ptr<PostProcessBuffer> m_AntiAliasingBuffer;
         std::shared_ptr<Shader> m_BloomShader = 0; // Shader for bloom effect
         std::shared_ptr<Shader> m_PostProcessShader = 0; // Shader for post-processing effects
+		std::shared_ptr<Shader> m_AAShader = 0; // Shader for anti-aliasing
 
         // Skybox
         Skybox* m_skybox = nullptr;
