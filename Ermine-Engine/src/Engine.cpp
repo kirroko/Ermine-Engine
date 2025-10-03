@@ -85,47 +85,79 @@ namespace
 	float s_StateDuration = 3.0f; // switch every 3 seconds
 
 	State* g_CurrentState = nullptr;
+
+	struct VSyncVerifier
+	{
+		bool logged = false;
+		int samples = 0;
+		float accumMs = 0.0f;
+		int refresh = 0;
+		int swapInterval = -999;
+
+		void Init(GLFWwindow* window)
+		{
+			if (GLFWmonitor* mon = glfwGetPrimaryMonitor())
+			{
+				if (const GLFWvidmode* mode = glfwGetVideoMode(mon))
+					refresh = mode->refreshRate;
+			}
+
+#if defined(_WIN32)
+			// Try querying WGL_EXT_swap_control current interval
+			using PFNWGLGETSWAPINTERVALEXTPROC = int (WINAPI*)(void);
+			auto wglGetSwapIntervalEXT = reinterpret_cast<PFNWGLGETSWAPINTERVALEXTPROC>(
+				wglGetProcAddress("wglGetSwapIntervalEXT"));
+			if (wglGetSwapIntervalEXT)
+				swapInterval = wglGetSwapIntervalEXT();
+#endif
+		}
+
+		void UpdateAndMaybeLog()
+		{
+			if (logged) return;
+
+			// Accumulate effective present-to-present time (includes vsync / pacing)
+			accumMs += Ermine::FrameController::GetDeltaTime() * 1000.0f;
+			++samples;
+
+			constexpr int kMinSamples = 60; // ~1s at 60 Hz
+			if (samples < kMinSamples) return;
+
+			const float avgMs = accumMs / static_cast<float>(samples);
+			const float avgFps = avgMs > 0.0f ? 1000.0f / avgMs : 0.0f;
+
+			// If vsync interval=1 and GPU keeps up, avgMs ~= 1000/refresh within tolerance
+			float expectedMs = refresh > 0 ? 1000.0f / static_cast<float>(refresh) : 0.0f;
+			const float tol = expectedMs * 0.15f; // 15% tolerance
+
+			const bool likelyVSync =
+				(expectedMs > 0.0f) &&
+				(std::fabs(avgMs - expectedMs) <= tol) &&
+				(avgFps <= (refresh + 3)); // allow tiny jitter
+
+			EE_CORE_INFO("VSync verification: monitor={}Hz, avgFrameTime={:.2f}ms (~{:.1f} FPS), swapInterval={}",
+				refresh, avgMs, avgFps,
+				(swapInterval == -999 ? "unknown" : std::to_string(swapInterval)));
+
+			if (likelyVSync)
+				EE_CORE_INFO("VSync appears ACTIVE (effective frame time matches refresh rate)");
+			else
+				EE_CORE_WARN("VSync likely INACTIVE (effective frame time does not match refresh rate)");
+
+			EE_CORE_INFO("Tip: Ensure glfwSwapInterval(1) is called, driver settings are not forcing vsync OFF, "
+				"and compositing on your OS isn’t interfering.");
+
+			logged = true;
+		}
+	};
+
+	VSyncVerifier g_vsyncVerifier;
 }
 
 bool engine::Init(GLFWwindow* windowContext)
 {
 	if (s_isInitialized) // Already initialized
 		return true;
-
-	const std::filesystem::path cfgPath = "Ermine-Engine.config";
-
-	Config cfg{};
-	try {
-		cfg = LoadConfigFromFile(cfgPath);
-		EE_CORE_INFO("Loaded config: {0}x{1}, fullscreen={2}, maximised={3}, title={4}",
-			cfg.windowWidth, cfg.windowHeight, cfg.fullscreen, cfg.maximized, cfg.title);
-	}
-	catch (const std::exception& e) {
-		EE_CORE_WARN("Config not found/invalid ({}). Using defaults.", e.what());
-		cfg = { 1920, 1080, false, false, "Ermine Editor 0.1" };
-		try { SaveConfigToFile(cfg, cfgPath, /*pretty=*/true); }
-		catch (const std::exception& w) { EE_CORE_WARN("Could not write default config: {}", w.what()); }
-	}
-
-	// Apply config to the window
-	glfwSetWindowTitle(windowContext, cfg.title.c_str());
-	if (cfg.fullscreen) {
-		GLFWmonitor* mon = glfwGetPrimaryMonitor();
-		const GLFWvidmode* mode = glfwGetVideoMode(mon);
-		glfwSetWindowMonitor(windowContext, mon, 0, 0,
-			mode->width, mode->height,
-			mode->refreshRate);
-	}
-	else {
-		glfwSetWindowSize(windowContext, cfg.windowWidth, cfg.windowHeight);
-
-		if (cfg.maximized) {
-			glfwMaximizeWindow(windowContext);
-		}
-		else {
-			glfwRestoreWindow(windowContext);
-		}
-	}
 
 	CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
 
@@ -134,6 +166,8 @@ bool engine::Init(GLFWwindow* windowContext)
 	Input::Init(windowContext);
 
 	FrameController::Init(120.f, 60.f);
+
+	//g_vsyncVerifier.Init(windowContext);
 
 	graphics::GPUProfiler::Init(150); // Track last 150 frames
 
@@ -603,12 +637,13 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 	// Update FrameController
 	FrameController::BeginFrame();
 
-	// Handle shading mode toggle
-	HandleShadingToggle(windowContext);
-
 	// Profiler
 	graphics::GPUProfiler::BeginFrame();
 
+	//g_vsyncVerifier.UpdateAndMaybeLog();
+
+	// Handle shading mode toggle
+	HandleShadingToggle(windowContext);
 
 	// Update input states
 	Input::Update();
@@ -629,21 +664,6 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 	// Update editor camera
 	editor::EditorCamera::GetInstance().Update();
 
-
-	// Simple test to see if we can select an entity and view it in the inspector
-	//if (Input::IsKeyDown(GLFW_KEY_Q))
-	//	InspectorGUI::SetEntity(System::m_Entities);
-
-	/*
-	if (s_isInitialized && emitter)
-	{
-		// Emit x number of particles each frame
-		for (int i = 0; i < 2; i++)
-		{
-			Vec3 vel = { ((rand() % 100) / 100.0f - 0.5f) * 2.0f, 2.0f, 0.0f };
-			emitter->Emit({ 0,0,-3 }, vel, 2.0f, 0.5f, { 1,0,0,1 });
-		}
-	}*/
 	// Update for Particles
 	ECS::GetInstance().GetSystem<ParticleSystem>()->Update(FrameController::GetDeltaTime());
 

@@ -77,9 +77,11 @@ void GraphicsDebugGUI::Update()
         ImGui::Begin(m_title.c_str());
         ImGui::Text("Renderer system not available");
         ImGui::End();
-        return;
     }
+}
 
+void GraphicsDebugGUI::Render()
+{
     ImGui::Begin(m_title.c_str());
 
     // Create collapsible sections for organized UI
@@ -90,13 +92,6 @@ void GraphicsDebugGUI::Update()
     DrawPerformanceMetrics();
 
     ImGui::End();
-}
-
-void GraphicsDebugGUI::Render()
-{
-    // The ImGUIWindow base class requires this method
-    // For this GUI, all rendering is done in Update()
-    // This method is called by the editor framework but can be empty
 }
 
 void GraphicsDebugGUI::DrawRenderingModeControls()
@@ -290,11 +285,12 @@ void GraphicsDebugGUI::DrawPerformanceMetrics()
         
         // Frame timing
         float avgFps = metrics.averageFrameTimeMs > 0.0f ? 1000.0f / metrics.averageFrameTimeMs : 0.0f;
-        ImGui::Text("FPS: %.1f (%.2f ms)", avgFps, metrics.frameTimeMs);
+        ImGui::Text("FPS: %.1f (avg: %.1f)", metrics.fps, avgFps);
+        ImGui::Text("Frame Time: %.2f ms", metrics.frameTimeMs);
         ImGui::Text("CPU Time: %.2f ms", metrics.cpuFrameTimeMs);
         ImGui::Text("GPU Time: %.2f ms", metrics.gpuFrameTimeMs);
-        
-        ImGui::Separator();
+
+		ImGui::Separator();
         
         // Render statistics
         ImGui::Text("Draw Calls: %u", metrics.drawCallCount);
