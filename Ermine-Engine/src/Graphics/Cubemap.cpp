@@ -20,7 +20,12 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <stb_image.h>
 
 using namespace Ermine::graphics;
-
+/**
+* 
+ * @brief Releases the cubemap texture and associated resources.
+ * @param contextExpected Whether an OpenGL context is expected to be valid.
+ * @note Safe to call multiple times; will warn if texture is already deleted.
+ */
 void Cubemap::Release(bool contextExpected) noexcept
 {
     if (!m_RendererID)
@@ -45,32 +50,55 @@ void Cubemap::Release(bool contextExpected) noexcept
     m_IsValid = false;
 }
 
+/**
+ * @brief Default constructor. Initializes members to default values.
+ */
 Cubemap::Cubemap() : m_RendererID(0), m_Width(0), m_Height(0), m_IsValid(false)
 {
 }
 
+/**
+ * @brief Constructs a cubemap from 6 face textures.
+ * @param faces Array of 6 file paths in order: +X, -X, +Y, -Y, +Z, -Z.
+ */
 Cubemap::Cubemap(const std::array<std::string, 6>& faces) : Cubemap()
 {
     m_FacePaths = faces;
     m_IsValid = LoadFromFaces(faces);
 }
 
+/**
+ * @brief Constructs a cubemap from an equirectangular texture.
+ * @param equirectangularPath Path to the equirectangular texture.
+ */
 Cubemap::Cubemap(const std::string& equirectangularPath) : Cubemap()
 {
     m_EquirectangularPath = equirectangularPath;
     m_IsValid = LoadFromEquirectangular(equirectangularPath);
 }
 
+/**
+ * @brief Destructor. Releases resources.
+ */
 Cubemap::~Cubemap()
 {
     Release(true);
 }
 
+/**
+ * @brief Move constructor.
+ * @param other Cubemap to move from.
+ */
 Cubemap::Cubemap(Cubemap&& other) noexcept
 {
     *this = std::move(other);
 }
 
+/**
+ * @brief Move assignment operator.
+ * @param other Cubemap to move from.
+ * @return Reference to this cubemap.
+ */
 Cubemap& Cubemap::operator=(Cubemap&& other) noexcept
 {
     if (this != &other)
@@ -91,6 +119,11 @@ Cubemap& Cubemap::operator=(Cubemap&& other) noexcept
     return *this;
 }
 
+/**
+ * @brief Loads cubemap from 6 individual face textures.
+ * @param faces Array of 6 file paths in order: +X, -X, +Y, -Y, +Z, -Z.
+ * @return true if successful, false otherwise.
+ */
 bool Cubemap::LoadFromFaces(const std::array<std::string, 6>& faces)
 {
     glGenTextures(1, &m_RendererID);
@@ -162,6 +195,11 @@ bool Cubemap::LoadFromFaces(const std::array<std::string, 6>& faces)
     return success;
 }
 
+/**
+ * @brief Loads cubemap from an equirectangular (panoramic) texture.
+ * @param equirectangularPath Path to the equirectangular texture.
+ * @return true if successful, false otherwise.
+ */
 bool Cubemap::LoadFromEquirectangular(const std::string& equirectangularPath)
 {
     // Set stb_image to flip images vertically for correct OpenGL orientation
@@ -226,6 +264,12 @@ bool Cubemap::LoadFromEquirectangular(const std::string& equirectangularPath)
     return success;
 }
 
+/**
+ * @brief Generates a cubemap from an equirectangular texture.
+ * @param equirectangularTexture OpenGL texture ID of the equirectangular texture.
+ * @param resolution Resolution of each face of the resulting cubemap.
+ * @return true if successful, false otherwise.
+ */
 bool Cubemap::GenerateFromEquirectangular(GLuint equirectangularTexture, int resolution)
 {    
     // For now, I created a simple cubemap and note that proper conversion
@@ -252,14 +296,15 @@ bool Cubemap::GenerateFromEquirectangular(GLuint equirectangularTexture, int res
     // Track memory usage
     GPUProfiler::TrackMemoryAllocation(static_cast<size_t>(resolution) * resolution * 6 * 8, "Cubemap"); // 8 bytes for RGB16F
 
-    // TODO: Implement proper equirectangular to cubemap conversion using shaders
-    // For now, this creates an empty cubemap that can be used as a placeholder
     EE_CORE_WARN("Equirectangular to cubemap conversion is not fully implemented. Created empty cubemap.");
 
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
     return true;
 }
 
+/**
+ * @brief Generates mipmaps for the cubemap texture.
+ */
 void Cubemap::GenerateMipmaps()
 {
     if (!m_IsValid) return;
@@ -273,12 +318,19 @@ void Cubemap::GenerateMipmaps()
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 }
 
+/**
+ * @brief Binds the cubemap to a texture slot.
+ * @param slot The texture slot to bind to.
+ */
 void Cubemap::Bind(unsigned int slot) const
 {
     glActiveTexture(GL_TEXTURE0 + slot);
     glBindTexture(GL_TEXTURE_CUBE_MAP, m_RendererID);
 }
 
+/**
+ * @brief Unbinds the cubemap texture.
+ */
 void Cubemap::Unbind() const
 {
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);

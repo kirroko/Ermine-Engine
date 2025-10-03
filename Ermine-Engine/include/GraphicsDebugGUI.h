@@ -48,7 +48,7 @@ namespace Ermine::editor
         void Render() override;
 
     private:
-        std::string m_title; ///< Window title
+        std::string m_title; /// Window title
         
         // UI organization
         void DrawRenderingModeControls();

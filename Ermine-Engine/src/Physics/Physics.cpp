@@ -87,7 +87,11 @@ namespace Ermine
     class MyContactListener : public ContactListener
     {
     public:
-        virtual ValidateResult OnContactValidate(const Body& inBody1, const Body& inBody2, RVec3Arg, const CollideShapeResult&) override { return ValidateResult::AcceptAllContactsForThisBodyPair; }
+        virtual ValidateResult OnContactValidate(const Body& inBody1, const Body& inBody2, RVec3Arg, const CollideShapeResult&) override 
+        { 
+            (void)inBody1; (void)inBody2;
+            return ValidateResult::AcceptAllContactsForThisBodyPair;
+        }
         virtual void OnContactAdded(const Body&, const Body&, const ContactManifold&, ContactSettings&) override {}
         virtual void OnContactPersisted(const Body&, const Body&, const ContactManifold&, ContactSettings&) override {}
         virtual void OnContactRemoved(const SubShapeIDPair&) override {}

@@ -127,7 +127,11 @@ project "Ermine-Engine"
 
         warnings "Extra"
 
-        buildoptions { "/wd4251", "/wd4005", "/wd4267", "/wd4324", "/wd4201", "/wd5054" }
+        buildoptions {  "/wd4251", -- Level 2 dll-interface to be used by clients of class 'class'; see C4251
+                        "/wd4005", -- Level 1 macro redefinition
+                        "/wd4267", -- Level 3 conversion from 'size_t' to 'type', possible loss of data
+                        "/wd5054"  -- Level 4 operator '|': deprecated between enumerations of different types (Due to Rapidjson library at document.h)
+        }
 
         defines
         {

@@ -4,7 +4,7 @@
 \author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu (75%)
 \co-author  Jeremy Lim Ting Jie, jeremytingjie.lim, 2301370, jeremytingjie.lim\@digipen.edu (20%)
 \co-authors Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu (5%)
-\date       10/09/2025
+\date       03/10/2025
 \brief      This file contains the definition of the AssetManager system.
             This file is used to manage all the assets in the game.
 
@@ -59,6 +59,11 @@ std::shared_ptr<graphics::Texture> AssetManager::GetTexture(const std::string& f
     return it != m_textures.end() ? it->second : nullptr;
 }
 
+/**
+ * @brief Get a read-only view of all currently loaded textures.
+ * @return A const reference to the unordered_map of loaded textures.
+ * The key is the texture file path, and the value is the shared Texture.
+ */
 const std::unordered_map<std::string, std::shared_ptr<graphics::Texture>>& AssetManager::GetLoadedTextures() const
 {
     return m_textures;
@@ -196,6 +201,29 @@ std::shared_ptr<graphics::Model> AssetManager::GetModel(const std::string& fileP
 {
     auto it = m_models.find(filePath);
     return it != m_models.end() ? it->second : nullptr;
+}
+
+/**
+ * @brief Get a read-only view of all currently loaded models.
+ * @return A const reference to the unordered_map of loaded models.
+ * The key is the model file path, and the value is the shared Model.
+ */
+const std::unordered_map<std::string, std::shared_ptr<graphics::Model>>& Ermine::AssetManager::GetLoadedModels() const
+{
+    return m_models;
+}
+
+/**
+ * @brief Unload a specific model from the cache.
+ * @param filePath The full path to the model file to unload.
+ */
+void Ermine::AssetManager::UnloadModel(const std::string& filePath)
+{
+    auto it = m_models.find(filePath);
+    if (it != m_models.end()) {
+        EE_CORE_INFO("Unloading model: {0}", filePath);
+        m_models.erase(it);
+    }
 }
 
 /**
