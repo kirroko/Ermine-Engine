@@ -1,3 +1,17 @@
+/* Start Header ************************************************************************/
+/*!
+\file       HierarchyPanel.cpp
+\author     Edwin Lee Zirui, edwinzirui.lee, 2301299, edwinzirui.lee\@digipen.edu
+\date       Sep 05, 2025
+\brief      Hierarchy panel UI for scene entity tree management with drag-and-drop
+            parenting support.
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents without the
+prior written consent of DigiPen Institute of Technology is prohibited.
+*/
+/* End Header **************************************************************************/
+
 #include "PreCompile.h"
 #include "HierarchyPanel.h"
 #include "Components.h"
