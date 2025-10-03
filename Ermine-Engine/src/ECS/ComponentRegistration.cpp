@@ -17,4 +17,4 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "xcore/my_properties.h"  
 #include "xproperty.h"
 
-//XPROPERTY_REG(Ermine::Transform)
+XPROPERTY_REG(Ermine::Transform)

@@ -20,6 +20,11 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "imgui.h"
 #include "Physics.h"
 
+#include "xcore/my_properties.h"
+#include "xproperty.h"
+#include "sprop/property_sprop.h"
+#include "sprop/property_sprop_getset.h" 
+
 namespace Ermine::editor {
 
     void HierarchyInspector::OnImGuiRender() {
@@ -134,44 +139,57 @@ namespace Ermine::editor {
     }
 
     void HierarchyInspector::DrawTransformComponent(EntityID entity) {
-        if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen)) {
-            auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
-        
-            float position[3] = { transform.position.x, transform.position.y, transform.position.z };
-            if (ImGui::DragFloat3("Position", position, 0.1f)) {
-                transform.position = Vec3(position[0], position[1], position[2]);
+        if (!ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
+            return;
+
+        auto& t = ECS::GetInstance().GetComponent<Transform>(entity);
+
+        // Collect properties from the registered Transform
+        xproperty::settings::context ctx{};
+        xproperty::sprop::container bag;
+        xproperty::sprop::collector collect(t, bag, ctx, /*forEditors=*/true);
+
+        for (auto& p : bag.m_Properties)
+        {
+            const auto guid = p.m_Value.getTypeGuid();
+            ImGui::PushID(p.m_Path.c_str());
+
+            // Vec3 (position / scale)
+            if (guid == xproperty::settings::var_type<Ermine::Vec3>::guid_v) {
+                Ermine::Vec3 v = p.m_Value.get<Ermine::Vec3>();
+                float a[3] = { v.x, v.y, v.z };
+                if (ImGui::DragFloat3(p.m_Path.c_str(), a, 0.1f)) {
+                    p.m_Value.set<Ermine::Vec3>({ a[0], a[1], a[2] });
+                    std::string err;
+                    xproperty::sprop::setProperty(err, t, p, ctx);
+                }
+            }
+            // Quaternion (rotation) — show as Euler degrees like your current UI
+            else if (guid == xproperty::settings::var_type<Ermine::Quaternion>::guid_v) {
+                Ermine::Quaternion q = p.m_Value.get<Ermine::Quaternion>();
+
+                // Convert to Euler degrees for editing (reuse your helpers)
+                Ermine::Vec3 eulerDeg = QuaternionToEuler(q, /*degrees*/true);
+                float r[3] = { eulerDeg.x, eulerDeg.y, eulerDeg.z };
+                if (ImGui::DragFloat3("Rotation (Degrees)", r, 1.0f)) {
+                    // Build quaternion back from XYZ degrees (reuse your math)
+                    float rx = r[0] * (float)M_PI / 180.0f;
+                    float ry = r[1] * (float)M_PI / 180.0f;
+                    float rz = r[2] * (float)M_PI / 180.0f;
+
+                    Matrix4x4 mx, my, mz, m;
+                    Mtx44Identity(mx); Mtx44Identity(my); Mtx44Identity(mz);
+                    Mtx44RotXRad(mx, rx); Mtx44RotYRad(my, ry); Mtx44RotZRad(mz, rz);
+                    m = mz * my * mx;
+
+                    q = Mtx44GetQuaternion(m);
+                    p.m_Value.set<Ermine::Quaternion>(q);
+                    std::string err;
+                    xproperty::sprop::setProperty(err, t, p, ctx);
+                }
             }
 
-            // Convert quaternion to Euler angles for display (in degrees)
-            Vec3 eulerAngles = QuaternionToEuler(transform.rotation, true); // true = degrees
-            float rotation[3] = { eulerAngles.x, eulerAngles.y, eulerAngles.z };
-            if (ImGui::DragFloat3("Rotation (Degrees)", rotation, 1.0f)) {
-                // Convert degrees to radians and create quaternion from Euler angles
-                float radX = rotation[0] * (float)M_PI / 180.0f;
-                float radY = rotation[1] * (float)M_PI / 180.0f;
-                float radZ = rotation[2] * (float)M_PI / 180.0f;
-
-                // Create rotation matrices for each axis
-                Matrix4x4 rotX, rotY, rotZ, combined;
-                Mtx44Identity(rotX);
-                Mtx44Identity(rotY);
-                Mtx44Identity(rotZ);
-
-                Mtx44RotXRad(rotX, radX);
-                Mtx44RotYRad(rotY, radY);
-                Mtx44RotZRad(rotZ, radZ);
-
-                // Combine rotations (order: Z * Y * X)
-                combined = rotZ * rotY * rotX;
-
-                // Convert back to quaternion
-                transform.rotation = Mtx44GetQuaternion(combined);
-            }
-
-            float scale[3] = { transform.scale.x, transform.scale.y, transform.scale.z };
-            if (ImGui::DragFloat3("Scale", scale, 0.1f, 0.1f, 10.0f)) {
-                transform.scale = Vec3(scale[0], scale[1], scale[2]);
-            }
+            ImGui::PopID();
         }
     }
 

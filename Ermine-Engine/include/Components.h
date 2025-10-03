@@ -112,15 +112,6 @@ namespace Ermine
 		{
 		}
 
-        //XPROPERTY_DEF(
-        //    "Transform", Transform,
-        //    xproperty::obj_member<"positionx", [](Transform& t) -> float& { return t.position.x; }>,
-        //    xproperty::obj_member<"positiony", [](Transform& t) -> float& { return t.position.y; }>,
-        //    xproperty::obj_member<"positionz", [](Transform& t) -> float& { return t.position.z; }>
-        //    //xproperty::obj_member<"rotation", &Transform::rotation>,
-        //    //xproperty::obj_member<"scale", &Transform::scale>
-        //);
-
 		template<typename Alloc>
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
 			out.SetObject();
@@ -157,15 +148,12 @@ namespace Ermine
 			}
 		}
 
-		static_assert(xproperty::settings::var_type<Ermine::Vec3>::guid_v != 0, "Vec3 not registered");
-		//static_assert(xproperty::settings::var_type<Ermine::Quaternion>::guid_v != 0, "Quat not registered");
-
-		//XPROPERTY_DEF(
-		//	"Transform", Transform,
-		//	xproperty::obj_member<"positionx", &Transform::position>
-		//	//xproperty::obj_member<"rotation", &Transform::rotation>,
-		//	//xproperty::obj_member<"scale", &Transform::scale>
-		//);
+		XPROPERTY_DEF(
+			"Transform", Transform,
+			xproperty::obj_member<"position", &Transform::position>,
+			xproperty::obj_member<"rotation", &Transform::rotation>,
+			xproperty::obj_member<"scale", &Transform::scale>
+		);
 	};
 
 	//XPROPERTY_REG(Transform);

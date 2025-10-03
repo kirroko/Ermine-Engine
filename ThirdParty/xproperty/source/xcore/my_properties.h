@@ -267,12 +267,12 @@ namespace xproperty::settings
         static void Read(const Ermine::Vec3& src, Ermine::Vec3& dst, context&) noexcept { dst = src; }
     };
 
-    //// Quaternion
-    //template<> 
-    //struct var_type<Ermine::Quaternion> : var_defaults<"quat", Ermine::Quaternion> {
-    //    static void Write(Ermine::Quaternion& dst, const Ermine::Quaternion& src, context&) noexcept { dst = src; }
-    //    static void Read(const Ermine::Quaternion& src, Ermine::Quaternion& dst, context&) noexcept { dst = src; }
-    //};
+    // Quaternion
+    template<> 
+    struct var_type<Ermine::Quaternion> : var_defaults<"quat", Ermine::Quaternion> {
+        static void Write(Ermine::Quaternion& dst, const Ermine::Quaternion& src, context&) noexcept { dst = src; }
+        static void Read(const Ermine::Quaternion& src, Ermine::Quaternion& dst, context&) noexcept { dst = src; }
+    };
 }
 
 // 
