@@ -35,7 +35,7 @@ namespace Ermine
     /**
      * @brief Sets the parent of an entity, updating hierarchy and depth.
      * @param[in] child The entity to set the parent for.
-     * @param[in] parent The entity to set as parent.
+     * @param[in] parent The entity to be set as parent.
     */
     void HierarchySystem::SetParent(EntityID child, EntityID parent)
     {
@@ -54,6 +54,12 @@ namespace Ermine
         childHierarchy.parent = parent;
         childHierarchy.depth = parentHierarchy.depth + 1;
         childHierarchy.isDirty = true;
+        childHierarchy.worldTransformDirty = true;
+        
+        // Also mark the Transform component as dirty
+        auto& childTransform = ECS::GetInstance().GetComponent<Transform>(child);
+        childTransform.isDirty = true;
+        
         parentHierarchy.children.push_back(child);
     }
 
@@ -78,6 +84,11 @@ namespace Ermine
             childHierarchy.parent = 0;
             childHierarchy.depth = 0;
             childHierarchy.isDirty = true;
+            childHierarchy.worldTransformDirty = true;
+            
+            // Also mark the Transform component as dirty
+            auto& childTransform = ECS::GetInstance().GetComponent<Transform>(child);
+            childTransform.isDirty = true;
         }
     }
 
@@ -87,30 +98,26 @@ namespace Ermine
     */
     void HierarchySystem::UpdateWorldTransform(EntityID entity)
     {
-        auto& hierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(entity);
         auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
+        auto& hierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(entity);
 
-        // Only update if:
-        // 1. This entity's local transform is dirty
-        // 2. Entity's world transform is marked dirty
-        // 3. Parent's world transform is dirty
-        bool needsUpdate = hierarchy.isDirty || hierarchy.worldTransformDirty;
+        // Only log for Cube and Sphere entities  
+        auto& metadata = ECS::GetInstance().GetComponent<ObjectMetaData>(entity);
+        bool isCubeOrSphere = metadata.name.find("Cube") != std::string::npos || 
+                             metadata.name.find("Sphere") != std::string::npos;
 
-        if (hierarchy.parent != 0) {
-            auto& parentHierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(hierarchy.parent);
-            needsUpdate = needsUpdate || parentHierarchy.worldTransformDirty;
+        if (isCubeOrSphere) {
+            EE_CORE_INFO("=== {} Transform Update ===", metadata.name);
+            EE_CORE_INFO("Entity: {}", entity);
+            EE_CORE_INFO("Parent: {}", hierarchy.parent);
+            EE_CORE_INFO("Local Position: {},{},{}",
+                transform.position.x,
+                transform.position.y,
+                transform.position.z);
+            EE_CORE_INFO("Is Dirty: {}", transform.isDirty);
         }
 
-        if (!needsUpdate) {
-            // Still need to check children even if this entity doesn't need updating
-            // This handles cases where a child was modified but parent wasn't
-            for (auto child : hierarchy.children) {
-                UpdateWorldTransform(child);
-            }
-            return;
-        }
-
-        // Build local transform matrix in correct order: Scale * Rotation * Translation
+        // Build local transform matrix (order matters: T * R * S)
         Matrix4x4 localMatrix;
         {
             Matrix4x4 translation, rotation, scale;
@@ -118,39 +125,194 @@ namespace Ermine
             Mtx44Identity(rotation);
             Mtx44Identity(scale);
 
-            Mtx44Scale(scale, transform.scale.x, transform.scale.y, transform.scale.z);
-            Mtx44SetFromQuaternion(rotation, transform.rotation);
+            // Build matrices
             Mtx44Translate(translation, transform.position.x, transform.position.y, transform.position.z);
+            Mtx44SetFromQuaternion(rotation, transform.rotation);
+            Mtx44Scale(scale, transform.scale.x, transform.scale.y, transform.scale.z);
 
-            // Final local = Translation * Rotation * Scale
+            // Combine: Translation * Rotation * Scale
             localMatrix = translation * rotation * scale;
         }
+
+        // Store the previous world transform to check if it actually changed
+        Matrix4x4 previousWorldTransform = hierarchy.worldTransform;
+        bool worldTransformChanged = false;
 
         // Calculate world transform
         if (hierarchy.parent != 0) {
             auto& parentHierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(hierarchy.parent);
             
-            // Use parent's cached world transform instead of walking up the hierarchy
-            transform.transform_matrix = parentHierarchy.worldTransform * localMatrix;
-            hierarchy.worldTransform = transform.transform_matrix;
+            if (isCubeOrSphere) {
+                EE_CORE_INFO("Entity {} updating with parent {}", entity, hierarchy.parent);
+            }
+            
+            // Combine with parent's world transform: ParentWorld * LocalTransform
+            hierarchy.worldTransform = parentHierarchy.worldTransform * localMatrix;
         }
         else {
-            // Root entity - world transform = local transform 
-            transform.transform_matrix = localMatrix;
+            // Root entity: world transform = local transform
             hierarchy.worldTransform = localMatrix;
+        }
+
+        // CRITICAL FIX: Update the Transform component's transform_matrix
+        // The renderer uses transform.transform_matrix, so we must update it!
+        transform.transform_matrix = hierarchy.worldTransform;
+
+        // Check if the world transform actually changed
+        // Compare the matrices element by element with a small epsilon for floating point precision
+        const float epsilon = 1e-6f;
+        for (int i = 0; i < 16; ++i) {
+            if (std::abs(hierarchy.worldTransform.m[i] - previousWorldTransform.m[i]) > epsilon) {
+                worldTransformChanged = true;
+                break;
+            }
         }
 
         // Mark as clean
         hierarchy.isDirty = false;
         hierarchy.worldTransformDirty = false;
+        transform.isDirty = false;  // Also clear the Transform dirty flag
 
-        // Recursively update all children since our world transform changed
+        if (isCubeOrSphere) {
+            EE_CORE_INFO("Transform updated successfully");
+            EE_CORE_INFO("World transform changed: {}", worldTransformChanged);
+            EE_CORE_INFO("Final World Position: {},{},{}",
+                hierarchy.worldTransform.m03,
+                hierarchy.worldTransform.m13,
+                hierarchy.worldTransform.m23);
+            EE_CORE_INFO("===================");
+        }
+
+        // Update children
         for (auto child : hierarchy.children) {
             // Mark child's world transform as dirty since parent changed
             auto& childHierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(child);
-            childHierarchy.worldTransformDirty = true;
+            auto& childTransform = ECS::GetInstance().GetComponent<Transform>(child);
+            
+            if (worldTransformChanged) {
+                childHierarchy.worldTransformDirty = true;
+                childTransform.isDirty = true; // Make sure Transform is also marked dirty
+            }
             
             UpdateWorldTransform(child);
+        }
+    }
+
+    /**
+     * @brief Recursively updates world transforms and tracks updated entities to avoid double-updates
+     * @param[in] entity The entity to update
+     * @param[in/out] updatedEntities Set of entities that have already been updated
+     */
+    void HierarchySystem::UpdateWorldTransformRecursive(EntityID entity, std::set<EntityID>& updatedEntities)
+    {
+        // Skip if already updated in this frame
+        if (updatedEntities.find(entity) != updatedEntities.end()) {
+            return;
+        }
+
+        auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
+        auto& hierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(entity);
+
+        // Only log for Cube and Sphere entities and only if they're actually dirty
+        auto& metadata = ECS::GetInstance().GetComponent<ObjectMetaData>(entity);
+        bool isCubeOrSphere = metadata.name.find("Cube") != std::string::npos || 
+                             metadata.name.find("Sphere") != std::string::npos;
+        bool actuallyDirty = hierarchy.isDirty || hierarchy.worldTransformDirty || transform.isDirty;
+
+        if (isCubeOrSphere && actuallyDirty) {
+            EE_CORE_INFO("=== {} Transform Update (Recursive) ===", metadata.name);
+            EE_CORE_INFO("Entity: {}", entity);
+            EE_CORE_INFO("Parent: {}", hierarchy.parent);
+            EE_CORE_INFO("Local Position: {},{},{}",
+                transform.position.x,
+                transform.position.y,
+                transform.position.z);
+            EE_CORE_INFO("Is Dirty: {}", transform.isDirty);
+        }
+
+        // Build local transform matrix (order matters: T * R * S)
+        Matrix4x4 localMatrix;
+        {
+            Matrix4x4 translation, rotation, scale;
+            Mtx44Identity(translation);
+            Mtx44Identity(rotation);
+            Mtx44Identity(scale);
+
+            // Build matrices
+            Mtx44Translate(translation, transform.position.x, transform.position.y, transform.position.z);
+            Mtx44SetFromQuaternion(rotation, transform.rotation);
+            Mtx44Scale(scale, transform.scale.x, transform.scale.y, transform.scale.z);
+
+            // Combine: Translation * Rotation * Scale
+            localMatrix = translation * rotation * scale;
+        }
+
+        // Store the previous world transform to check if it actually changed
+        Matrix4x4 previousWorldTransform = hierarchy.worldTransform;
+        bool worldTransformChanged = false;
+
+        // Calculate world transform
+        if (hierarchy.parent != 0) {
+            auto& parentHierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(hierarchy.parent);
+            
+            if (isCubeOrSphere && actuallyDirty) {
+                EE_CORE_INFO("Entity {} updating with parent {}", entity, hierarchy.parent);
+            }
+            
+            // Combine with parent's world transform: ParentWorld * LocalTransform
+            hierarchy.worldTransform = parentHierarchy.worldTransform * localMatrix;
+        }
+        else {
+            // Root entity: world transform = local transform
+            hierarchy.worldTransform = localMatrix;
+        }
+
+        // CRITICAL FIX: Update the Transform component's transform_matrix
+        // The renderer uses transform.transform_matrix, so we must update it!
+        transform.transform_matrix = hierarchy.worldTransform;
+
+        // Check if the world transform actually changed
+        // Compare the matrices element by element with a small epsilon for floating point precision
+        const float epsilon = 1e-6f;
+        for (int i = 0; i < 16; ++i) {
+            if (std::abs(hierarchy.worldTransform.m[i] - previousWorldTransform.m[i]) > epsilon) {
+                worldTransformChanged = true;
+                break;
+            }
+        }
+
+        // Mark as clean ONLY if there was actual change or if we were dirty
+        if (actuallyDirty || worldTransformChanged) {
+            hierarchy.isDirty = false;
+            hierarchy.worldTransformDirty = false;
+            transform.isDirty = false;  // Also clear the Transform dirty flag
+        }
+
+        // Mark this entity as updated
+        updatedEntities.insert(entity);
+
+        if (isCubeOrSphere && actuallyDirty) {
+            EE_CORE_INFO("Transform updated successfully");
+            EE_CORE_INFO("World transform changed: {}", worldTransformChanged);
+            EE_CORE_INFO("Final World Position: {},{},{}",
+                hierarchy.worldTransform.m03,
+                hierarchy.worldTransform.m13,
+                hierarchy.worldTransform.m23);
+            EE_CORE_INFO("===================");
+        }
+
+        // Update children recursively
+        for (auto child : hierarchy.children) {
+            // If our world transform changed, mark children as needing updates
+            if (worldTransformChanged) {
+                auto& childHierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(child);
+                auto& childTransform = ECS::GetInstance().GetComponent<Transform>(child);
+                childHierarchy.worldTransformDirty = true;
+                childTransform.isDirty = true; // Make sure Transform is also marked dirty
+            }
+            
+            // Recursively update child
+            UpdateWorldTransformRecursive(child, updatedEntities);
         }
     }
 
@@ -159,11 +321,37 @@ namespace Ermine
     */
     void HierarchySystem::UpdateHierarchy()
     {
-        for (auto entity : m_Entities)
-        {
+        // Track which entities have been updated to avoid redundant updates
+        std::set<EntityID> updatedEntities;
+        
+        // First, find all root entities that are dirty or have dirty descendants
+        std::vector<EntityID> rootsToUpdate;
+        
+        for (auto entity : m_Entities) {
             auto& hierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(entity);
-            if (hierarchy.parent == 0) // Only update roots
-                UpdateWorldTransform(entity);
+            auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
+            
+            // If this entity is dirty, find its root
+            if (hierarchy.isDirty || hierarchy.worldTransformDirty || transform.isDirty) {
+                EntityID root = entity;
+                while (true) {
+                    auto& currentHierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(root);
+                    if (currentHierarchy.parent == 0) break;
+                    root = currentHierarchy.parent;
+                }
+                
+                // Add root to update list if not already there
+                if (std::find(rootsToUpdate.begin(), rootsToUpdate.end(), root) == rootsToUpdate.end()) {
+                    rootsToUpdate.push_back(root);
+                }
+            }
+        }
+        
+        // Now update each root hierarchy once
+        for (EntityID root : rootsToUpdate) {
+            if (updatedEntities.find(root) == updatedEntities.end()) {
+                UpdateWorldTransformRecursive(root, updatedEntities);
+            }
         }
     }
 
@@ -177,16 +365,46 @@ namespace Ermine
             return;
 
         auto& hierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(entity);
+        auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
         
         // Mark both local transform and world transform as needing update
         hierarchy.isDirty = true;
         hierarchy.worldTransformDirty = true;
+        transform.isDirty = true;  // Make sure Transform component is also marked dirty
 
-        // Mark all children's world transforms as needing update
+        // Mark all children's world transforms as needing update (but not their local transforms)
         for (auto child : hierarchy.children) {
             auto& childHierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(child);
+            auto& childTransform = ECS::GetInstance().GetComponent<Transform>(child);
+            
+            // Mark world transform as dirty for children - their local transforms haven't changed
             childHierarchy.worldTransformDirty = true;
-            MarkDirty(child); 
+            childTransform.isDirty = true; // Also mark Transform component dirty for proper rendering
+            
+            // Recursively mark children's world transforms as dirty
+            MarkChildrenWorldTransformDirty(child);
+        }
+    }
+
+    /**
+     * @brief Helper method to recursively mark only world transforms as dirty for children
+     * @param[in] entity The entity whose children need world transform updates
+     */
+    void HierarchySystem::MarkChildrenWorldTransformDirty(EntityID entity)
+    {
+        if (!ECS::GetInstance().IsEntityValid(entity))
+            return;
+
+        const auto& hierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(entity);
+        
+        for (auto child : hierarchy.children) {
+            auto& childHierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(child);
+            auto& childTransform = ECS::GetInstance().GetComponent<Transform>(child);
+            childHierarchy.worldTransformDirty = true;
+            childTransform.isDirty = true; // Also mark Transform component dirty
+            
+            // Recursively mark grandchildren
+            MarkChildrenWorldTransformDirty(child);
         }
     }
 
@@ -320,16 +538,17 @@ namespace Ermine
         if (hierarchy.parent != 0) {
             // Convert world position to local space using inverse parent transform
             auto& parentHierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(hierarchy.parent);
-            
+
             // Get inverse of parent's world transform
             Matrix4x4 invParentWorld;
-            Mtx44Inverse(invParentWorld, parentHierarchy.worldTransform); // Fixed function name
+            Mtx44Inverse(invParentWorld, parentHierarchy.worldTransform);
 
-            // Convert world position to parent-local space
-            Vec4 worldPos4(worldPos.x, worldPos.y, worldPos.z, 1.0f);
-            Vec4 localPos4 = invParentWorld * worldPos4;
+            // Convert world position to parent-local space using Vector3D
+            // Use existing Vector3D multiplication operator
+            Vector3D worldPosVec(worldPos.x, worldPos.y, worldPos.z);
+            Vector3D localPos = invParentWorld * worldPosVec;
 
-            transform.position = Vec3(localPos4.x, localPos4.y, localPos4.z);
+            transform.position = Vec3(localPos.x, localPos.y, localPos.z);
         }
         else {
             // Root entity - world position = local position
@@ -423,6 +642,51 @@ namespace Ermine
             transform.scale = worldScale;
         }
 
+        MarkDirty(entity);
+    }
+
+    /**
+     * @brief Adds a child entity to a parent, creating the hierarchy relationship.
+     * @param[in] parent The parent entity ID.
+     * @param[in] child The child entity ID.
+     * @return True if successful, false if it would create a cycle or entities are invalid.
+     */
+    bool HierarchySystem::AddChild(EntityID parent, EntityID child)
+    {
+        if (!ECS::GetInstance().IsEntityValid(parent) || !ECS::GetInstance().IsEntityValid(child))
+            return false;
+            
+        if (WouldCreateCycle(child, parent))
+            return false;
+            
+        SetParent(child, parent);
+        return true;
+    }
+
+    /**
+     * @brief Removes a child from its parent.
+     * @param[in] child The child entity ID.
+     * @return True if successful, false if child has no parent.
+     */
+    bool HierarchySystem::RemoveChild(EntityID child)
+    {
+        if (!ECS::GetInstance().IsEntityValid(child))
+            return false;
+            
+        auto& hierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(child);
+        if (hierarchy.parent == 0)
+            return false;
+            
+        UnsetParent(child);
+        return true;
+    }
+
+    /**
+     * @brief Call this when an entity's local transform has been modified to ensure proper propagation.
+     * @param[in] entity The entity whose transform was modified.
+     */
+    void HierarchySystem::OnTransformChanged(EntityID entity)
+    {
         MarkDirty(entity);
     }
 }

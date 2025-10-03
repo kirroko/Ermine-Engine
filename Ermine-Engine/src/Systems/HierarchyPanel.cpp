@@ -78,6 +78,23 @@ namespace Ermine {
         ImGui::End();
     }
 
+    void HierarchyPanel::DuplicateEntity(EntityID sourceEntity) {
+        if (sourceEntity == 0) return;
+
+        // Clone the entity and add it to the scene
+        EntityID newEntity = ECS::GetInstance().CloneEntity(sourceEntity);
+
+        // Set a new name for the duplicated entity
+        auto& meta = ECS::GetInstance().GetComponent<ObjectMetaData>(newEntity);
+        meta.name += " (Copy)";
+
+        // Make sure the new entity is added to the scene and selected
+        m_ActiveScene->SetSelectedEntity(newEntity);
+        ImGui::SetWindowFocus("Inspector");
+
+        EE_CORE_INFO("Duplicated entity {} to new entity {}", sourceEntity, newEntity);
+    }
+
     void HierarchyPanel::DrawEntityNode(EntityID entity, int depth) {
         if (!ECS::GetInstance().IsEntityValid(entity)) return;
 
@@ -133,20 +150,10 @@ namespace Ermine {
                 ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
                 ImGui::CloseCurrentPopup();
             }
-            if (ImGui::MenuItem("Duplicate Selected")) {
-                EntityID selectedEntity = m_ActiveScene->GetSelectedEntity();
-                if (selectedEntity != 0) {
-                    // Clone the entity and add it to the scene
-                    EntityID newEntity = ECS::GetInstance().CloneEntity(selectedEntity);
 
-                    // Optionally, set a new name for the duplicated entity
-                    auto& meta = ECS::GetInstance().GetComponent<ObjectMetaData>(newEntity);
-                    meta.name += " (Copy)";
-
-                    // Add the new entity to the scene and select it
-                    m_ActiveScene->SetSelectedEntity(newEntity);
-                    ImGui::SetWindowFocus("Inspector");
-                }
+            if (ImGui::MenuItem("Duplicate")) {
+                DuplicateEntity(entity);  // Use the right-clicked entity, not the selected one
+                ImGui::CloseCurrentPopup();
             }
             ImGui::EndPopup();
         }
@@ -164,7 +171,7 @@ namespace Ermine {
     }
 
     void HierarchyPanel::HandleDragDrop(EntityID entity) {
-        // Existing drag source code
+        // Drag source code
         if (ImGui::BeginDragDropSource()) {
             ImGui::SetDragDropPayload("HIERARCHY_ENTITY", &entity, sizeof(EntityID));
             auto& metadata = ECS::GetInstance().GetComponent<ObjectMetaData>(entity);
@@ -172,20 +179,48 @@ namespace Ermine {
             ImGui::EndDragDropSource();
         }
 
-        // Existing drop target code for parenting
+        // Drop target code for parenting
         if (ImGui::BeginDragDropTarget()) {
             if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("HIERARCHY_ENTITY")) {
                 EntityID droppedEntity = *(EntityID*)payload->Data;
 
                 if (droppedEntity != entity) {
-                    auto hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>();
+                    auto& parentMeta = ECS::GetInstance().GetComponent<ObjectMetaData>(entity);
+                    auto& childMeta = ECS::GetInstance().GetComponent<ObjectMetaData>(droppedEntity);
 
-                    if (!hierarchySystem->WouldCreateCycle(droppedEntity, entity)) {
-                        hierarchySystem->SetParent(droppedEntity, entity);
-                        EE_CORE_INFO("Reparented entity {} to {}", droppedEntity, entity);
-                    }
-                    else {
-                        EE_CORE_WARN("Cannot parent entity {} to {} - would create cycle", droppedEntity, entity);
+                    // ONLY log if both entities are either Cube or Sphere
+                    bool isCubeOrSphere = (parentMeta.name.find("Cube") != std::string::npos ||
+                        parentMeta.name.find("Sphere") != std::string::npos) &&
+                        (childMeta.name.find("Cube") != std::string::npos ||
+                            childMeta.name.find("Sphere") != std::string::npos);
+
+                    if (isCubeOrSphere) {
+                        EE_CORE_INFO("=== Cube/Sphere Parenting ===");
+                        if (auto hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>()) {
+                            if (!hierarchySystem->WouldCreateCycle(droppedEntity, entity)) {
+                                // Log initial state
+                                const auto& childTransform = ECS::GetInstance().GetComponent<Transform>(droppedEntity);
+                                EE_CORE_INFO("{} (Child) before parenting:", childMeta.name);
+                                EE_CORE_INFO("Position: {},{},{}",
+                                    childTransform.position.x,
+                                    childTransform.position.y,
+                                    childTransform.position.z);
+
+                                // Do the parenting
+                                hierarchySystem->SetParent(droppedEntity, entity);
+                                hierarchySystem->MarkDirty(entity);
+                                hierarchySystem->MarkDirty(droppedEntity);
+
+                                // Log after parenting
+                                const auto& updatedTransform = ECS::GetInstance().GetComponent<Transform>(droppedEntity);
+                                EE_CORE_INFO("{} is now child of {}", childMeta.name, parentMeta.name);
+                                EE_CORE_INFO("New Position: {},{},{}",
+                                    updatedTransform.position.x,
+                                    updatedTransform.position.y,
+                                    updatedTransform.position.z);
+                                EE_CORE_INFO("Is Transform Dirty: {}", updatedTransform.isDirty);
+                            }
+                        }
                     }
                 }
             }
@@ -229,6 +264,19 @@ namespace Ermine {
                     materialPtr->SetVec3("material.albedo", Vec3(1.0f, 1.0f, 1.0f)); // white color
 
                     ECS::GetInstance().AddComponent(entity, Material(materialPtr));
+
+                    // Log cube creation
+                    EE_CORE_INFO("=== Cube Created ===");
+                    EE_CORE_INFO("Entity ID: {}", entity);
+                    if (ECS::GetInstance().HasComponent<Transform>(entity)) {
+                        const auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
+                        EE_CORE_INFO("Initial Position: {},{},{}",
+                            transform.position.x,
+                            transform.position.y,
+                            transform.position.z);
+                    }
+                    EE_CORE_INFO("==================");
+
                     m_ActiveScene->SetSelectedEntity(entity);
                     ImGui::SetWindowFocus("Inspector");
                 }
@@ -241,6 +289,18 @@ namespace Ermine {
                     materialPtr->SetVec3("material.albedo", Vec3(0.8f, 0.8f, 0.8f)); // light grey color
 
                     ECS::GetInstance().AddComponent(entity, Material(materialPtr));
+
+                    // Log sphere creation
+                    EE_CORE_INFO("=== Sphere Created ===");
+                    EE_CORE_INFO("Entity ID: {}", entity);
+                    if (ECS::GetInstance().HasComponent<Transform>(entity)) {
+                        const auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
+                        EE_CORE_INFO("Initial Position: {},{},{}",
+                            transform.position.x,
+                            transform.position.y,
+                            transform.position.z);
+                    }
+                    EE_CORE_INFO("==================");
                     m_ActiveScene->SetSelectedEntity(entity);
                     ImGui::SetWindowFocus("Inspector");
                 }
@@ -250,8 +310,8 @@ namespace Ermine {
             if (ImGui::MenuItem("Create Light")) {
                 EntityID entity = m_ActiveScene->CreateEntity("Light");
                 ECS::GetInstance().AddComponent(entity, Light());
-                m_ActiveScene->SetSelectedEntity(entity); // ADD THIS LINE
-                ImGui::SetWindowFocus("Inspector"); // ADD THIS LINE
+                m_ActiveScene->SetSelectedEntity(entity); 
+                ImGui::SetWindowFocus("Inspector"); 
             }
 
 
@@ -271,11 +331,6 @@ namespace Ermine {
                 if (ImGui::MenuItem("Delete Selected")) {
                     m_ActiveScene->DestroyEntity(selected);
                     ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
-                }
-
-                if (ImGui::MenuItem("Duplicate Selected")) {
-                    // TODO: Implement entity duplication
-                    EE_CORE_INFO("Duplicate functionality not yet implemented");
                 }
             }
 

@@ -139,6 +139,13 @@ namespace Ermine::editor {
             float position[3] = { transform.position.x, transform.position.y, transform.position.z };
             if (ImGui::DragFloat3("Position", position, 0.1f)) {
                 transform.position = Vec3(position[0], position[1], position[2]);
+                transform.isDirty = true; // Mark as dirty when modified
+                
+                // Also mark the hierarchy as dirty if this entity has hierarchy component
+                if (ECS::GetInstance().HasComponent<HierarchyComponent>(entity)) {
+                    auto& hierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(entity);
+                    hierarchy.isDirty = true;
+                }
             }
 
             // Convert quaternion to Euler angles for display (in degrees)
@@ -146,9 +153,10 @@ namespace Ermine::editor {
             float rotation[3] = { eulerAngles.x, eulerAngles.y, eulerAngles.z };
             if (ImGui::DragFloat3("Rotation (Degrees)", rotation, 1.0f)) {
                 // Convert degrees to radians and create quaternion from Euler angles
-                float radX = rotation[0] * M_PI / 180.0f;
-                float radY = rotation[1] * M_PI / 180.0f;
-                float radZ = rotation[2] * M_PI / 180.0f;
+                constexpr float PI_F = 3.14159265358979323846f;
+                float radX = rotation[0] * PI_F / 180.0f;
+                float radY = rotation[1] * PI_F / 180.0f;
+                float radZ = rotation[2] * PI_F / 180.0f;
 
                 // Create rotation matrices for each axis
                 Matrix4x4 rotX, rotY, rotZ, combined;
@@ -165,11 +173,25 @@ namespace Ermine::editor {
 
                 // Convert back to quaternion
                 transform.rotation = Mtx44GetQuaternion(combined);
+                transform.isDirty = true; // Mark as dirty when modified
+                
+                // Also mark the hierarchy as dirty if this entity has hierarchy component
+                if (ECS::GetInstance().HasComponent<HierarchyComponent>(entity)) {
+                    auto& hierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(entity);
+                    hierarchy.isDirty = true;
+                }
             }
 
             float scale[3] = { transform.scale.x, transform.scale.y, transform.scale.z };
             if (ImGui::DragFloat3("Scale", scale, 0.1f, 0.1f, 10.0f)) {
                 transform.scale = Vec3(scale[0], scale[1], scale[2]);
+                transform.isDirty = true; // Mark as dirty when modified
+                
+                // Also mark the hierarchy as dirty if this entity has hierarchy component
+                if (ECS::GetInstance().HasComponent<HierarchyComponent>(entity)) {
+                    auto& hierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(entity);
+                    hierarchy.isDirty = true;
+                }
             }
         }
     }

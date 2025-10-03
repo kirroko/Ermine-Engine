@@ -113,5 +113,40 @@ namespace Ermine
          * @param[in] worldScale The new world scale.
          */
         void SetWorldScale(EntityID entity, const Vec3& worldScale);
+
+        /**
+         * @brief Adds a child entity to a parent, creating the hierarchy relationship.
+         * @param[in] parent The parent entity ID.
+         * @param[in] child The child entity ID.
+         * @return True if successful, false if it would create a cycle or entities are invalid.
+         */
+        bool AddChild(EntityID parent, EntityID child);
+
+        /**
+         * @brief Removes a child from its parent.
+         * @param[in] child The child entity ID.
+         * @return True if successful, false if child has no parent.
+         */
+        bool RemoveChild(EntityID child);
+
+        /**
+         * @brief Call this when an entity's local transform has been modified to ensure proper propagation.
+         * @param[in] entity The entity whose transform was modified.
+         */
+        void OnTransformChanged(EntityID entity);
+
+    private:
+        /**
+         * @brief Helper method to recursively mark only world transforms as dirty for children
+         * @param[in] entity The entity whose children need world transform updates
+         */
+        void MarkChildrenWorldTransformDirty(EntityID entity);
+
+        /**
+         * @brief Recursively updates world transforms and tracks updated entities to avoid double-updates
+         * @param[in] entity The entity to update
+         * @param[in/out] updatedEntities Set of entities that have already been updated
+         */
+        void UpdateWorldTransformRecursive(EntityID entity, std::set<EntityID>& updatedEntities);
     };
 }

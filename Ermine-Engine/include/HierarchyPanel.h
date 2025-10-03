@@ -11,6 +11,7 @@ namespace Ermine {
         //float m_FocusTimer = 0.0f;
 
         // UI helper functions
+        void DuplicateEntity(EntityID sourceEntity);
         void DrawEntityNode(EntityID entity, int depth);
         void DrawContextMenu();
         void HandleDragDrop(EntityID entity);
