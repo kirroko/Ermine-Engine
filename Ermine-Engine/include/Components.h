@@ -1102,6 +1102,7 @@ namespace Ermine
 				}
 				catch (const std::exception& e)
 				{
+					(void)e;
 					// Handle loading error if needed
 					UNREFERENCED_PARAMETER(e);
 				}
@@ -1124,6 +1125,7 @@ namespace Ermine
 				}
 				catch (const std::exception& e)
 				{
+					(void)e;
 					// Handle loading error if needed
 					UNREFERENCED_PARAMETER(e);
 				}
@@ -1431,7 +1433,7 @@ namespace Ermine
 
 		}
 		void Deserialize(const rapidjson::Value& in) {
-			UNREFERENCED_PARAMETER(in);
+			(void)in;
 		}
 	};
 	/*!***********************************************************************
