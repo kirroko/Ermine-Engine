@@ -1430,7 +1430,7 @@ namespace Ermine
 		template <typename Alloc>
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
 			out.SetObject();
-
+			UNREFERENCED_PARAMETER(alloc);
 		}
 		void Deserialize(const rapidjson::Value& in) {
 			(void)in;
