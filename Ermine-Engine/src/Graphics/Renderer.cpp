@@ -36,6 +36,12 @@ using namespace Ermine::graphics;
 
 unsigned int SHADOW_MAX_LAYERS = SHADOW_MAX_LAYERS_DESIRED;
 
+/**
+ * @brief Checks for OpenGL errors and logs them.
+ * @param file Source file name.
+ * @param line Line number.
+ * @return GLenum The last OpenGL error code.
+ */
 GLenum glCheckError_(const char* file, int line)
 {
 	GLenum errorCode;
@@ -59,6 +65,11 @@ GLenum glCheckError_(const char* file, int line)
 }
 #define glCheckError() glCheckError_(__FILE__, __LINE__)
 
+/**
+ * @brief Initializes the renderer and its resources.
+ * @param screenWidth Width of the screen.
+ * @param screenHeight Height of the screen.
+ */
 void Renderer::Init(const int& screenWidth, const int& screenHeight)
 {
 	// Check for ARB_bindless_texture support
@@ -108,16 +119,6 @@ void Renderer::Init(const int& screenWidth, const int& screenHeight)
 
 	CreatePickingBuffer(screenWidth, screenHeight);
 }
-
-//Renderer::~Renderer()
-//{
-//	//if (m_OffscreenBuffer)
-//	//{
-//	//	glDeleteFramebuffers(1, &m_OffscreenBuffer->FBO);
-//	//	glDeleteTextures(1, &m_OffscreenBuffer->ColorTexture);
-//	//	glDeleteRenderbuffers(1, &m_OffscreenBuffer->RBO);
-//	//}
-//}
 
 /**
  * @brief Create an offscreen buffer for viewport/scene rendering
@@ -559,7 +560,9 @@ void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 }
 
 /**
- * @brief Resize the g-buffer to new dimensions
+ * @brief Creates the G-buffer for deferred rendering.
+ * @param width Buffer width.
+ * @param height Buffer height.
  */
 void Renderer::ResizeGBuffer(const int& width, const int& height)
 {
@@ -640,7 +643,10 @@ void Renderer::EndLightingPass()
 	glCheckError();
 }
 
-
+/**
+ * @brief Binds material textures to the geometry shader.
+ * @param material Pointer to the material.
+ */
 void Renderer::BindMaterialTextures(Ermine::graphics::Material* material)
 {
 	if (!material) return;
@@ -695,6 +701,11 @@ void Renderer::BindMaterialTextures(Ermine::graphics::Material* material)
 	}
 }
 
+/**
+ * @brief Renders the geometry pass, collecting transparent objects.
+ * @param view View matrix.
+ * @param projection Projection matrix.
+ */
 void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 {
 	if (!m_GBuffer || !m_GBufferShader) {
@@ -826,7 +837,9 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 }
 
 /**
- * @brief Render lighting pass for deferred rendering
+ * @brief Renders the lighting pass for deferred rendering.
+ * @param view View matrix.
+ * @param projection Projection matrix.
  */
 void Renderer::RenderLightingPass(const Mtx44& view, const Mtx44& projection)
 {
@@ -1697,6 +1710,12 @@ void Renderer::Draw(const std::shared_ptr<VertexArray>& vao, const std::shared_p
    vao->Unbind();
 }
 
+/**
+ * @brief Draws a mesh using instanced rendering.
+ * @param vao Vertex array object.
+ * @param ibo Index buffer object.
+ * @param instanceCount Number of instances.
+ */
 void Renderer::DrawInstanced(const std::shared_ptr<VertexArray>& vao, const std::shared_ptr<IndexBuffer>& ibo, int instanceCount) const
 {
    vao->Bind();
@@ -1909,6 +1928,11 @@ void Renderer::RenderModelForward(const Model& model, graphics::Material* materi
 	material->Unbind();
 }
 
+/**
+ * @brief Checks if a material is transparent.
+ * @param material Material pointer.
+ * @return true if transparent, false otherwise.
+ */
 bool Renderer::IsTransparentMaterial(const Ermine::graphics::Material* material) const
 {
 	if (!material) return false;
@@ -1938,6 +1962,10 @@ bool Renderer::IsTransparentMaterial(const Ermine::graphics::Material* material)
 	return false;
 }
 
+/**
+ * @brief Sorts transparent objects by distance to camera.
+ * @param cameraPos Camera position.
+ */
 void Renderer::SortTransparentObjects(const Vec3& cameraPos)
 {
 	// Calculate distances and sort transparent objects back-to-front
@@ -1953,6 +1981,11 @@ void Renderer::SortTransparentObjects(const Vec3& cameraPos)
 	std::sort(m_transparentObjects.begin(), m_transparentObjects.end());
 }
 
+/**
+ * @brief Renders all transparent objects using forward rendering.
+ * @param view View matrix.
+ * @param projection Projection matrix.
+ */
 void Renderer::RenderForwardPass(const Mtx44& view, const Mtx44& projection)
 {
 	if (m_transparentObjects.empty()) return;
@@ -2800,6 +2833,11 @@ void Renderer::RenderShadowPass()
 
 #pragma endregion
 
+/**
+ * @brief Creates the picking buffer for entity selection.
+ * @param width Buffer width.
+ * @param height Buffer height.
+ */
 void Renderer::CreatePickingBuffer(const int& width, const int& height)
 {
 	if (m_PickingBuffer)
@@ -2846,6 +2884,11 @@ void Renderer::CreatePickingBuffer(const int& width, const int& height)
 	glCheckError();
 }
 
+/**
+ * @brief Resizes the picking buffer.
+ * @param width New width.
+ * @param height New height.
+ */
 void Renderer::ResizePickingBuffer(const int& width, const int& height)
 {
 	if (!m_PickingBuffer)
@@ -2873,6 +2916,11 @@ void Renderer::ResizePickingBuffer(const int& width, const int& height)
 	glCheckError();
 }
 
+/**
+ * @brief Renders the picking pass for entity selection.
+ * @param view View matrix.
+ * @param projection Projection matrix.
+ */
 void Renderer::RenderPickingPass(const Mtx44& view, const Mtx44& projection)
 {
 #ifdef _DEBUG
@@ -2997,6 +3045,14 @@ void Renderer::RenderPickingPass(const Mtx44& view, const Mtx44& projection)
 #endif
 }
 
+/**
+ * @brief Picks the entity at the given screen coordinates.
+ * @param x X coordinate.
+ * @param y Y coordinate.
+ * @param view View matrix.
+ * @param projection Projection matrix.
+ * @return Pair of (success, entity ID).
+ */
 std::pair<bool, Ermine::EntityID> Renderer::PickEntityAt(const int& x, const int& y, const Mtx44& view, const Mtx44& projection)
 {
 #ifndef _DEBUG

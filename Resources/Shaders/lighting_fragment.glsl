@@ -143,19 +143,19 @@ vec2 traceSliceBitmaskOptimized(vec2 texCoord, vec3 viewPos, vec3 viewDir, vec3 
         
         float sampleDotView = fastDotNormalized(toSample, viewDir);
         
-        // Apply user-adjustable thickness with optimized calculation
+        // Apply user-adjustable thickness
         vec3 thicknessSample = normalize(samplePos) * u_VBAOThickness + 
                               (1.0 + u_VBAOThicknessMultiplier) * samplePos - viewPos;
         float thicknessDotView = fastDotNormalized(thicknessSample, viewDir);
         
         vec2 angles = fastAcos2(vec2(sampleDotView, thicknessDotView));
         
-        // Distance-based attenuation (optimized)
+        // Distance-based attenuation
         float distSq = dot(toSample, toSample);
         float attenuation = 1.0 / (0.01 * distSq / dot(samplePos, samplePos) + 1.0);
         h = mix(h, max(h, sampleDotView), mix(1.0, stepRatio, 0.75) * attenuation);
         
-        // Convert angles to normalized bitmask coordinates (optimized)
+        // Convert angles to normalized bitmask coordinates
         vec2 normalizedAngles = clamp((dirSign * -angles - N + HALF_PI) / PI, 0.0, 1.0);
         normalizedAngles = normalizedAngles.x > normalizedAngles.y ? normalizedAngles.yx : normalizedAngles;
         
