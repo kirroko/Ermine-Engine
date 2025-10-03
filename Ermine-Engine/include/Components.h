@@ -980,6 +980,7 @@ namespace Ermine
 				}
 				catch (const std::exception& e)
 				{
+					(void)e;
 					// Handle loading error if needed
 				}
 			}
@@ -1001,6 +1002,7 @@ namespace Ermine
 				}
 				catch (const std::exception& e)
 				{
+					(void)e;
 					// Handle loading error if needed
 				}
 			}
@@ -1288,7 +1290,7 @@ namespace Ermine
 
 		}
 		void Deserialize(const rapidjson::Value& in) {
-
+			(void)in;
 		}
 	};
 	/*!***********************************************************************
