@@ -145,6 +145,32 @@ void GraphicsDebugGUI::DrawRenderingModeControls()
             EE_CORE_INFO("SSAO {}", renderer->m_SSAOEnabled ? "enabled" : "disabled");
         }
         
+        // SSAO Parameters (shown when SSAO is enabled)
+        if (renderer->m_SSAOEnabled && ImGui::TreeNode("SSAO Settings"))
+        {
+            if (ImGui::SliderInt("Sample Count", &renderer->m_SSAOSamples, 4, 64)) {
+                EE_CORE_INFO("SSAO Samples changed to {}", renderer->m_SSAOSamples);
+            }
+            DrawTooltip("Number of samples for SSAO calculation (higher = better quality but slower)");
+            
+            DrawFloatSlider("Sampling Radius", &renderer->m_SSAORadius, 0.1f, 50.0f, 
+                           "Radius of the sampling hemisphere in world space");
+            
+            DrawFloatSlider("Bias", &renderer->m_SSAOBias, 0.0f, 0.1f, 
+                           "Bias to prevent self-shadowing artifacts");
+            
+            DrawFloatSlider("Intensity", &renderer->m_SSAOIntensity, 0.0f, 5.0f, 
+                           "Strength of the ambient occlusion effect");
+            
+            DrawFloatSlider("Fadeout Distance", &renderer->m_SSAOFadeout, 0.0f, 1.0f, 
+                           "Distance factor for fading out SSAO effect");
+            
+            DrawFloatSlider("Max Distance", &renderer->m_SSAOMaxDistance, 10.0f, 500.0f, 
+                           "Maximum distance for SSAO calculation");
+            
+            ImGui::TreePop();
+        }
+        
         ImGui::Unindent(10.0f);
     }
 }
