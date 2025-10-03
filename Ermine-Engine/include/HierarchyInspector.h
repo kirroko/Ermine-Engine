@@ -1,7 +1,7 @@
 /* Start Header ************************************************************************/
 /*!
 \file       HierarchyInspector.h
-\author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu
+\author     Edwin Lee Zirui, edwinzirui.lee, 2301299, edwinzirui.lee\@digipen.edu
 \date       27/03/2025
 \brief      Inspector panel for viewing and editing entity properties
 

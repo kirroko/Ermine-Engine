@@ -213,6 +213,11 @@ namespace Ermine
         auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
         auto& hierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(entity);
 
+        // **FIX: Ensure parent is updated first**
+        if (hierarchy.parent != 0) {
+            UpdateWorldTransformRecursive(hierarchy.parent, updatedEntities);
+        }
+
         // Only log for Cube and Sphere entities and only if they're actually dirty
         auto& metadata = ECS::GetInstance().GetComponent<ObjectMetaData>(entity);
         bool isCubeOrSphere = metadata.name.find("Cube") != std::string::npos || 
@@ -257,6 +262,11 @@ namespace Ermine
             
             if (isCubeOrSphere && actuallyDirty) {
                 EE_CORE_INFO("Entity {} updating with parent {}", entity, hierarchy.parent);
+                // **ADD DEBUG LOG: Show parent's current world transform**
+                EE_CORE_INFO("Parent World Position: {},{},{}",
+                    parentHierarchy.worldTransform.m03,
+                    parentHierarchy.worldTransform.m13,
+                    parentHierarchy.worldTransform.m23);
             }
             
             // Combine with parent's world transform: ParentWorld * LocalTransform
