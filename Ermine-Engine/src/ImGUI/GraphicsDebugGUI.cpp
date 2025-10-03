@@ -27,6 +27,11 @@ using namespace Ermine::graphics;
 // Helper function for formatting numbers
 namespace
 {
+    /**
+     * @brief Formats a large integer value into a human-readable string with units (K, M, B, T).
+     * @param value The value to format.
+     * @return Formatted string.
+     */
     std::string FormatNumber(uint64_t value)
     {
         struct Unit { uint64_t base; const char* suffix; };
@@ -65,11 +70,18 @@ namespace
     }
 }
 
+/**
+ * @brief Constructs a GraphicsDebugGUI window with the given title.
+ * @param title The window title.
+ */
 GraphicsDebugGUI::GraphicsDebugGUI(const std::string& title)
     : ImGUIWindow(title), m_title(title)
 {
 }
 
+/**
+ * @brief Updates the debug GUI, rendering all graphics-related controls and metrics.
+ */
 void GraphicsDebugGUI::Update()
 {
     auto renderer = ECS::GetInstance().GetSystem<Renderer>();
@@ -92,13 +104,18 @@ void GraphicsDebugGUI::Update()
     ImGui::End();
 }
 
+/**
+ * @brief Renders the GUI window. All rendering is handled in Update().
+ */
 void GraphicsDebugGUI::Render()
 {
     // The ImGUIWindow base class requires this method
     // For this GUI, all rendering is done in Update()
     // This method is called by the editor framework but can be empty
 }
-
+/**
+ * @brief Draws controls for rendering mode selection and SSAO toggle.
+ */
 void GraphicsDebugGUI::DrawRenderingModeControls()
 {
     auto renderer = ECS::GetInstance().GetSystem<Renderer>();
@@ -132,6 +149,9 @@ void GraphicsDebugGUI::DrawRenderingModeControls()
     }
 }
 
+/**
+ * @brief Draws controls for post-processing effects and their parameters.
+ */
 void GraphicsDebugGUI::DrawPostProcessingControls()
 {
     auto renderer = ECS::GetInstance().GetSystem<Renderer>();
@@ -205,7 +225,9 @@ void GraphicsDebugGUI::DrawPostProcessingControls()
         ImGui::Unindent(10.0f);
     }
 }
-
+/**
+ * @brief Draws controls and information for shadow mapping configuration.
+ */
 void GraphicsDebugGUI::DrawShadowMappingControls()
 {
     if (ImGui::CollapsingHeader("Shadow Mapping"))
@@ -235,7 +257,9 @@ void GraphicsDebugGUI::DrawShadowMappingControls()
         ImGui::Unindent(10.0f);
     }
 }
-
+/**
+ * @brief Draws controls and statistics for the lighting system.
+ */
 void GraphicsDebugGUI::DrawLightingControls()
 {
     if (ImGui::CollapsingHeader("Lighting System"))
@@ -279,7 +303,9 @@ void GraphicsDebugGUI::DrawLightingControls()
         ImGui::Unindent(10.0f);
     }
 }
-
+/**
+ * @brief Draws performance metrics including frame timing, draw calls, and memory usage.
+ */
 void GraphicsDebugGUI::DrawPerformanceMetrics()
 {
     if (ImGui::CollapsingHeader("Performance Metrics", ImGuiTreeNodeFlags_DefaultOpen))
@@ -319,7 +345,10 @@ void GraphicsDebugGUI::DrawPerformanceMetrics()
         ImGui::Unindent(10.0f);
     }
 }
-
+/**
+ * @brief Shows a tooltip for the last hovered ImGui item.
+ * @param description The tooltip text.
+ */
 void GraphicsDebugGUI::DrawTooltip(const char* description)
 {
     if (ImGui::IsItemHovered() && description) {
@@ -330,14 +359,28 @@ void GraphicsDebugGUI::DrawTooltip(const char* description)
         ImGui::EndTooltip();
     }
 }
-
+/**
+ * @brief Draws a float slider with a label and optional tooltip.
+ * @param label The slider label.
+ * @param value Pointer to the float value.
+ * @param min Minimum slider value.
+ * @param max Maximum slider value.
+ * @param tooltip Optional tooltip text.
+ * @return true if the value was changed.
+ */
 bool GraphicsDebugGUI::DrawFloatSlider(const char* label, float* value, float min, float max, const char* tooltip)
 {
     bool changed = ImGui::SliderFloat(label, value, min, max, "%.3f");
     if (tooltip) DrawTooltip(tooltip);
     return changed;
 }
-
+/**
+ * @brief Draws a toggle button (checkbox) with a label and optional tooltip.
+ * @param label The checkbox label.
+ * @param value Pointer to the boolean value.
+ * @return true if the value was changed.
+ * @param tooltip Optional tooltip text.
+ */
 bool GraphicsDebugGUI::DrawToggleButton(const char* label, bool* value, const char* tooltip)
 {
     bool changed = ImGui::Checkbox(label, value);
