@@ -18,6 +18,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "GeometryFactory.h"
 #include "imgui.h"
 #include "Physics.h"
+#include <HierarchySystem.h>
 
 namespace Ermine::editor {
 
@@ -136,19 +137,32 @@ namespace Ermine::editor {
         if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen)) {
             auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
         
+            // Store original values to detect actual changes
+            Vec3 originalPosition = transform.position;
+            Quaternion originalRotation = transform.rotation;
+            Vec3 originalScale = transform.scale;
+            
+            // Position
             float position[3] = { transform.position.x, transform.position.y, transform.position.z };
             if (ImGui::DragFloat3("Position", position, 0.1f)) {
-                transform.position = Vec3(position[0], position[1], position[2]);
-                transform.isDirty = true; // Mark as dirty when modified
-                
-                // Also mark the hierarchy as dirty if this entity has hierarchy component
-                if (ECS::GetInstance().HasComponent<HierarchyComponent>(entity)) {
-                    auto& hierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(entity);
-                    hierarchy.isDirty = true;
+                Vec3 newPosition(position[0], position[1], position[2]);
+                // Only update if there's an actual change (with epsilon for floating point comparison)
+                constexpr float EPSILON = 1e-6f;
+                if (std::abs(newPosition.x - originalPosition.x) > EPSILON || 
+                    std::abs(newPosition.y - originalPosition.y) > EPSILON || 
+                    std::abs(newPosition.z - originalPosition.z) > EPSILON) {
+                    
+                    transform.position = newPosition;
+                    transform.isDirty = true;
+                    
+                    // Only notify hierarchy system if position actually changed
+                    if (auto hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>()) {
+                        hierarchySystem->OnTransformChanged(entity);
+                    }
                 }
             }
 
-            // Convert quaternion to Euler angles for display (in degrees)
+            // Rotation
             Vec3 eulerAngles = QuaternionToEuler(transform.rotation, true); // true = degrees
             float rotation[3] = { eulerAngles.x, eulerAngles.y, eulerAngles.z };
             if (ImGui::DragFloat3("Rotation (Degrees)", rotation, 1.0f)) {
@@ -172,25 +186,42 @@ namespace Ermine::editor {
                 combined = rotZ * rotY * rotX;
 
                 // Convert back to quaternion
-                transform.rotation = Mtx44GetQuaternion(combined);
-                transform.isDirty = true; // Mark as dirty when modified
+                Quaternion newRotation = Mtx44GetQuaternion(combined);
                 
-                // Also mark the hierarchy as dirty if this entity has hierarchy component
-                if (ECS::GetInstance().HasComponent<HierarchyComponent>(entity)) {
-                    auto& hierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(entity);
-                    hierarchy.isDirty = true;
+                // Only update if there's an actual change (compare quaternion components with epsilon)
+                constexpr float EPSILON = 1e-6f;
+                if (std::abs(newRotation.x - originalRotation.x) > EPSILON || 
+                    std::abs(newRotation.y - originalRotation.y) > EPSILON || 
+                    std::abs(newRotation.z - originalRotation.z) > EPSILON || 
+                    std::abs(newRotation.w - originalRotation.w) > EPSILON) {
+                
+                    transform.rotation = newRotation;
+                    transform.isDirty = true;
+                    
+                    // Only notify hierarchy system if rotation actually changed
+                    if (auto hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>()) {
+                        hierarchySystem->OnTransformChanged(entity);
+                    }
                 }
             }
 
+            // Scale
             float scale[3] = { transform.scale.x, transform.scale.y, transform.scale.z };
             if (ImGui::DragFloat3("Scale", scale, 0.1f, 0.1f, 10.0f)) {
-                transform.scale = Vec3(scale[0], scale[1], scale[2]);
-                transform.isDirty = true; // Mark as dirty when modified
+                Vec3 newScale(scale[0], scale[1], scale[2]);
+                // Only update if there's an actual change (with epsilon for floating point comparison)
+                constexpr float EPSILON = 1e-6f;
+                if (std::abs(newScale.x - originalScale.x) > EPSILON || 
+                    std::abs(newScale.y - originalScale.y) > EPSILON || 
+                    std::abs(newScale.z - originalScale.z) > EPSILON) {
                 
-                // Also mark the hierarchy as dirty if this entity has hierarchy component
-                if (ECS::GetInstance().HasComponent<HierarchyComponent>(entity)) {
-                    auto& hierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(entity);
-                    hierarchy.isDirty = true;
+                    transform.scale = newScale;
+                    transform.isDirty = true;
+                    
+                    // Only notify hierarchy system if scale actually changed
+                    if (auto hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>()) {
+                        hierarchySystem->OnTransformChanged(entity);
+                    }
                 }
             }
         }

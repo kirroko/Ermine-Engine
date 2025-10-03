@@ -517,6 +517,12 @@ bool engine::Init(GLFWwindow* windowContext)
 	// Init Renderer after objects haVe been initialised
 	ECS::GetInstance().GetSystem<graphics::Renderer>()->Init(1280, 720);
 
+	// Force initial transform update for all entities with HierarchyComponent
+	auto hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>();
+	if (hierarchySystem) {
+		hierarchySystem->ForceUpdateAllTransforms();
+	}
+
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
 	// Create ImGUI window for Asset Browser

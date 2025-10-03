@@ -689,4 +689,78 @@ namespace Ermine
     {
         MarkDirty(entity);
     }
+
+    void HierarchySystem::InitializeEntity(EntityID entity)
+    {
+        if (!ECS::GetInstance().IsEntityValid(entity))
+            return;
+            
+        if (!ECS::GetInstance().HasComponent<HierarchyComponent>(entity))
+            return;
+            
+        auto& hierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(entity);
+        auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
+        
+        // Mark as needing initial update
+        hierarchy.isDirty = true;
+        hierarchy.worldTransformDirty = true;
+        transform.isDirty = true;
+        
+        // Initialize world transform for root entities
+        if (hierarchy.parent == 0)
+        {
+            // Build initial local transform matrix
+            Matrix4x4 translation, rotation, scale;
+            Mtx44Identity(translation);
+            Mtx44Identity(rotation);
+            Mtx44Identity(scale);
+
+            Mtx44Translate(translation, transform.position.x, transform.position.y, transform.position.z);
+            Mtx44SetFromQuaternion(rotation, transform.rotation);
+            Mtx44Scale(scale, transform.scale.x, transform.scale.y, transform.scale.z);
+
+            Matrix4x4 localMatrix = translation * rotation * scale;
+            
+            // Set both hierarchy and transform matrices
+            hierarchy.worldTransform = localMatrix;
+            transform.transform_matrix = localMatrix;
+            
+            // Clear dirty flags since we just set everything up
+            hierarchy.isDirty = false;
+            hierarchy.worldTransformDirty = false;
+            transform.isDirty = false;
+        }
+    }
+
+    void HierarchySystem::ForceUpdateAllTransforms()
+    {
+        // Mark all entities as dirty
+        for (auto entity : m_Entities)
+        {
+            auto& hierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(entity);
+            auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
+            
+            hierarchy.isDirty = true;
+            hierarchy.worldTransformDirty = true;
+            transform.isDirty = true;
+        }
+        
+        // Force update hierarchy
+        UpdateHierarchy();
+    }
+
+    void HierarchySystem::SyncTransformMatrix(EntityID entity)
+    {
+        if (!ECS::GetInstance().IsEntityValid(entity))
+            return;
+            
+        if (!ECS::GetInstance().HasComponent<HierarchyComponent>(entity))
+            return;
+            
+        auto& hierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(entity);
+        auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
+        
+        // Sync the transform matrix with the world transform
+        transform.transform_matrix = hierarchy.worldTransform;
+    }
 }

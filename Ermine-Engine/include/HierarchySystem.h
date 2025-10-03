@@ -135,6 +135,23 @@ namespace Ermine
          */
         void OnTransformChanged(EntityID entity);
 
+        /**
+         * @brief Initialize hierarchy component for a newly created entity
+         * @param[in] entity The entity to initialize
+         */
+        void InitializeEntity(EntityID entity);
+
+        /**
+         * @brief Force update transforms for all entities (useful after loading/creating scenes)
+         */
+        void ForceUpdateAllTransforms();
+
+        /**
+         * @brief Ensures transform matrix is synchronized with world transform
+         * @param[in] entity The entity to sync
+         */
+        void SyncTransformMatrix(EntityID entity);
+
     private:
         /**
          * @brief Helper method to recursively mark only world transforms as dirty for children
