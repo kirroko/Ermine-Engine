@@ -247,22 +247,7 @@ void GraphicsDebugGUI::DrawPostProcessingControls()
                            "Luminance reduction multiplier");
             ImGui::TreePop();
         }
-        
-		// SSAO Controls
-        if (ImGui::TreeNode("SSAO Settings"))
-        {
-            DrawFloatSlider("SSAO Radius", &renderer->m_SSAORadius, 0.1f, 50.0f, 
-                           "Radius for sampling surrounding pixels");
-            DrawFloatSlider("SSAO Bias", &renderer->m_SSAOBias, 0.001f, 0.1f, 
-                           "Bias to reduce self-occlusion artifacts");
-            DrawFloatSlider("SSAO Intensity", &renderer->m_SSAOIntensity, 0.1f, 5.0f, 
-                           "Overall strength of SSAO effect");
-            DrawFloatSlider("SSAO Fadeout", &renderer->m_SSAOFadeout, 0.0f, 1.0f, 
-                           "Distance at which SSAO starts to fade out");
-            DrawFloatSlider("SSAO Max Distance", &renderer->m_SSAOMaxDistance, 10.0f, 500.0f, 
-                           "Maximum distance for SSAO effect");
-            ImGui::TreePop();
-		}
+
         ImGui::Unindent(10.0f);
     }
 }
