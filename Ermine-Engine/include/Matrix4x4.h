@@ -341,4 +341,12 @@ namespace Ermine
         return deg * (static_cast<float>(M_PI) / 180.0f);
     }
     Quaternion FromEulerDegrees(float pitch, float yaw, float roll);
+
+    Quaternion QuaternionNormalize(const Quaternion& q);
+    Quaternion QuaternionMultiply(const Quaternion& a, const Quaternion& b);
+    Quaternion QuaternionConjugate(const Quaternion& q);
+    Vector3D   QuaternionRotateVector(const Quaternion& q, const Vector3D& v);
+
+    Quaternion QuaternionFromAxisAngle(const Vector3D& axis, float angleRad);
+    void       QuaternionToAxisAngle(const Quaternion& q, Vector3D& axis, float& angleRad);
 }
