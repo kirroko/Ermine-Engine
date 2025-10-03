@@ -380,7 +380,7 @@ void Ermine::ViewPortGUI::Update()
 				if (hit && ref_Inspector)
 				{
 					ref_Inspector->SetEntity(entity);
-					editor:EditorGUI::GetActiveScene().get()->SetSelectedEntity(entity);
+					EditorGUI::GetActiveScene().get()->SetSelectedEntity(entity);
 					//HierarchyPanel::GetScene().SetSelectedEntity(entity)
 				}
 			}
