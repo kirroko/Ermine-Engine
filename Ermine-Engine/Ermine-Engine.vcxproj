@@ -185,6 +185,7 @@ IF EXIST ..\Build\bin\Release-windows-x86_64\Ermine-Engine\Ermine-Engine.dll\ (x
     <ClInclude Include="include\Serialisation.h" />
     <ClInclude Include="include\Shader.h" />
     <ClInclude Include="include\Skybox.h" />
+    <ClInclude Include="include\State.h" />
     <ClInclude Include="include\Systems.h" />
     <ClInclude Include="include\Texture.h" />
     <ClInclude Include="include\VertexArray.h" />
