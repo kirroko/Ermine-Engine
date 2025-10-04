@@ -123,39 +123,72 @@ public:
             return false;
         }
 
+        // Get the directory where the config file is located (the project root)
+        std::filesystem::path configDir = std::filesystem::path(configPath).parent_path().parent_path();
+        std::cout << "Project root (config parent): " << std::filesystem::absolute(configDir) << std::endl;
+
         std::string line;
         while (std::getline(file, line)) {
+            // Skip empty lines and comments
+            if (line.empty() || line[0] == '#' || line[0] == '[') {
+                continue;
+            }
+
             if (line.find("SourceAssetsPath=") == 0) {
                 sourceAssetsPath = line.substr(17);
                 sourceAssetsPath.erase(0, sourceAssetsPath.find_first_not_of(" \t"));
+                // Make it absolute relative to project root
+                sourceAssetsPath = std::filesystem::absolute(configDir / sourceAssetsPath).string();
             }
             else if (line.find("DatabasePath=") == 0) {
                 databasePath = line.substr(13);
                 databasePath.erase(0, databasePath.find_first_not_of(" \t"));
+                // Make it absolute relative to project root
+                databasePath = std::filesystem::absolute(configDir / databasePath).string();
             }
             else if (line.find("ProjectPath=") == 0) {
                 projectPath = line.substr(12);
                 projectPath.erase(0, projectPath.find_first_not_of(" \t"));
+                // Make it absolute relative to project root
+                projectPath = std::filesystem::absolute(configDir / projectPath).string();
             }
             else if (line.find("ProjectGUID=") == 0) {
                 projectGuid = line.substr(12);
                 projectGuid.erase(0, projectGuid.find_first_not_of(" \t"));
+                // Remove curly braces if present
+                projectGuid.erase(std::remove(projectGuid.begin(), projectGuid.end(), '{'), projectGuid.end());
+                projectGuid.erase(std::remove(projectGuid.begin(), projectGuid.end(), '}'), projectGuid.end());
             }
         }
 
+        std::cout << "=== Resolved Paths ===" << std::endl;
         std::cout << "Project GUID: " << projectGuid << std::endl;
         std::cout << "Source Assets Path: " << sourceAssetsPath << std::endl;
         std::cout << "Database Path: " << databasePath << std::endl;
         std::cout << "Project Path: " << projectPath << std::endl;
 
+        // Validate that source assets path exists
+        if (!std::filesystem::exists(sourceAssetsPath)) {
+            std::cout << "WARNING: Source assets path does not exist: " << sourceAssetsPath << std::endl;
+            std::cout << "Please check your config file paths!" << std::endl;
+        }
+
         return true;
     }
 
     bool LoadExistingResources() {
-        std::cout << "Loading existing resource database..." << std::endl;
+        std::cout << "\n=== DEBUG: Loading Existing Resources ===" << std::endl;
 
         std::string projectFolder = databasePath + "/" + projectGuid;
         std::string resourceDbPath = projectFolder + "/Browser.dbase/resource_database.txt";
+
+        // DEBUG OUTPUT - This is what we need to see!
+        std::cout << "Database Path: " << databasePath << std::endl;
+        std::cout << "Project GUID: " << projectGuid << std::endl;
+        std::cout << "Project Folder: " << projectFolder << std::endl;
+        std::cout << "Looking for database at: " << std::filesystem::absolute(resourceDbPath) << std::endl;
+        std::cout << "Database exists: " << (std::filesystem::exists(resourceDbPath) ? "YES" : "NO") << std::endl;
+        std::cout << "==================================\n" << std::endl;
 
         if (!std::filesystem::exists(resourceDbPath)) {
             std::cout << "No existing resource database found, starting fresh." << std::endl;
@@ -405,19 +438,14 @@ public:
                 // Update or add resource entry
                 if (existing != nullptr) {
                     existing->lastModified = std::filesystem::last_write_time(assetPath);
-                    existing->outputPath = finalOutput;
+                    existing->outputPath = "Windows.platform/Data/" + guidStr + ".dds";
                 }
                 else {
                     ResourceEntry newEntry;
                     newEntry.guid = resourceGuid;
-                    //newEntry.sourcePath = assetPath;
-                    std::filesystem::path assetRelPath = std::filesystem::relative(assetPath, "../../Ermine-Engine"); // or wherever your engine expects
-                    newEntry.sourcePath = assetRelPath.string(); // e.g., "Resources/Textures/greybox_blue_grid.png"
-
+                    newEntry.sourcePath = assetPath;
                     newEntry.lastModified = std::filesystem::last_write_time(assetPath);
-                    std::filesystem::path outputRelPath = std::filesystem::relative(finalOutput, projectFolder); // relative inside .lion_rcdbase
-                    newEntry.outputPath = outputRelPath.string(); // e.g., "Windows.platform/Data/<GUID>.dds"
-                    //newEntry.outputPath = finalOutput;
+                    newEntry.outputPath = "Windows.platform/Data/" + guidStr + ".dds";
                     existingResources.push_back(newEntry);
                 }
 
@@ -526,19 +554,44 @@ public:
 
 int main() {
     std::cout << "=== Ermine Resource Pipeline Runner ===" << std::endl;
-    std::cout << "Working directory: " << std::filesystem::current_path() << std::endl;
 
-    ErmineResourcePipeline pipeline("./Config/ResourcePipeline.config");
+    // Get the directory where the exe is located
+    std::filesystem::path exePath = std::filesystem::current_path();
+    std::cout << "Working directory: " << exePath << std::endl;
+
+    // Look for config in multiple locations
+    std::vector<std::string> configPaths = {
+        "Ermine-ResourcePipeline/Config/ResourcePipeline.config",  // From solution root
+        "./Config/ResourcePipeline.config",  // From project root (if run from there)
+        "../../Config/ResourcePipeline.config",  // From x64/Debug
+        "../../../Config/ResourcePipeline.config"  // Alternative
+    };
+
+    std::string foundConfigPath;
+    for (const auto& path : configPaths) {
+        std::filesystem::path absolutePath = std::filesystem::absolute(path);
+        std::cout << "Checking: " << absolutePath << std::endl;
+
+        if (std::filesystem::exists(absolutePath)) {
+            foundConfigPath = absolutePath.string();
+            std::cout << "✓ Found config at: " << foundConfigPath << std::endl;
+            break;
+        }
+    }
+
+    if (foundConfigPath.empty()) {
+        std::cout << "ERROR: Could not find ResourcePipeline.config in any expected location!" << std::endl;
+        std::cout << "Please ensure Config/ResourcePipeline.config exists." << std::endl;
+        return 1;
+    }
+
+    ErmineResourcePipeline pipeline(foundConfigPath);
 
     pipeline.CreateDatabaseStructure();
     pipeline.ScanSourceAssets();
     pipeline.GenerateReport();
 
     std::cout << "\n🎉 Pipeline execution complete!" << std::endl;
-    std::cout << "Check the generated database at: ./Ermine-Game.lion_rcdbase" << std::endl;
-
-    std::cout << "\nPress any key to continue..." << std::endl;
-    std::cin.get();
 
     return 0;
 }

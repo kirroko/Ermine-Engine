@@ -72,6 +72,14 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalOptions>/NODEFAULTLIB:LIBCMTD %(AdditionalOptions)</AdditionalOptions>
     </Link>
+    <PreBuildEvent>
+      <Command>cd "$(SolutionDir)"
+"$(SolutionDir)Ermine-ResourcePipeline\x64\$(Configuration)\Ermine-ResourcePipeline.exe"
+if errorlevel 1 exit 1</Command>
+    </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>xcopy /Y /E /I "$(SolutionDir)Ermine-ResourcePipeline\Ermine-Game.lion_rcdbase" "$(TargetDir)..\Ermine-Game.lion_rcdbase"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -95,6 +103,14 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalOptions>/NODEFAULTLIB:LIBCMT %(AdditionalOptions)</AdditionalOptions>
     </Link>
+    <PreBuildEvent>
+      <Command>cd "$(SolutionDir)"
+"$(SolutionDir)Ermine-ResourcePipeline\x64\$(Configuration)\Ermine-ResourcePipeline.exe"
+if errorlevel 1 exit 1</Command>
+    </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>xcopy /Y /E /I "$(SolutionDir)Ermine-ResourcePipeline\Ermine-Game.lion_rcdbase" "$(TargetDir)..\Ermine-Game.lion_rcdbase"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\Application.cpp" />

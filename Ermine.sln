@@ -1,9 +1,12 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36310.24 d17.14
+VisualStudioVersion = 17.14.36310.24
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Ermine-Editor", "Ermine-Editor\Ermine-Editor.vcxproj", "{397C7682-A53C-F2B8-6E77-3B36DAF63695}"
+	ProjectSection(ProjectDependencies) = postProject
+		{BF138E9B-9EE4-4961-90A7-61E710E4DA65} = {BF138E9B-9EE4-4961-90A7-61E710E4DA65}
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Dependencies", "Dependencies", "{53E47842-3FC8-3998-A828-34EB942B241A}"
 EndProject

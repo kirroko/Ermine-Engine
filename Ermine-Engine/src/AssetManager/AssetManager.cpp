@@ -178,31 +178,48 @@ bool AssetManager::ReloadResourceDatabase()
  */
 ResourceEntry* AssetManager::FindResourceBySourcePath(const std::string& sourcePath)
 {
-    // Normalize the path for lookup
-    std::string normalizedPath = ConvertToRelativePath(sourcePath);
+    // Normalize the search path
+    std::filesystem::path searchPath(sourcePath);
 
-    auto it = m_resourceDatabase.find(normalizedPath);
-    if (it != m_resourceDatabase.end())
+    if (!searchPath.is_absolute())
     {
-        return &it->second;
+        searchPath = std::filesystem::absolute(searchPath);
     }
 
-    // Try with different path separators
-    std::string altPath = normalizedPath;
-    std::replace(altPath.begin(), altPath.end(), '/', '\\');
-    it = m_resourceDatabase.find(altPath);
-    if (it != m_resourceDatabase.end())
+    std::string normalizedSearch = searchPath.string();
+    std::replace(normalizedSearch.begin(), normalizedSearch.end(), '\\', '/');
+
+    // Extract just "Resources/Textures/filename.png" for comparison
+    size_t resourcesPos = normalizedSearch.find("Resources/Textures/");
+    if (resourcesPos == std::string::npos)
     {
-        return &it->second;
+        EE_CORE_TRACE("Path doesn't contain 'Resources/Textures/', cannot match");
+        return nullptr;
     }
 
-    std::replace(altPath.begin(), altPath.end(), '\\', '/');
-    it = m_resourceDatabase.find(altPath);
-    if (it != m_resourceDatabase.end())
+    std::string relativeSearch = normalizedSearch.substr(resourcesPos);
+    EE_CORE_TRACE("Extracted relative path: {0}", relativeSearch);
+
+    // Search through database with relative path comparison
+    for (auto& [key, entry] : m_resourceDatabase)
     {
-        return &it->second;
+        std::string normalizedEntry = entry.sourcePath;
+        std::replace(normalizedEntry.begin(), normalizedEntry.end(), '\\', '/');
+
+        size_t entryResourcesPos = normalizedEntry.find("Resources/Textures/");
+        if (entryResourcesPos != std::string::npos)
+        {
+            std::string relativeEntry = normalizedEntry.substr(entryResourcesPos);
+
+            if (relativeEntry == relativeSearch)
+            {
+                EE_CORE_TRACE("MATCH FOUND! {0} == {1}", relativeEntry, relativeSearch);
+                return &entry;
+            }
+        }
     }
 
+    EE_CORE_TRACE("No match found in {0} database entries", m_resourceDatabase.size());
     return nullptr;
 }
 
@@ -213,20 +230,16 @@ ResourceEntry* AssetManager::FindResourceBySourcePath(const std::string& sourceP
  */
 std::string AssetManager::ConvertToRelativePath(const std::string& absolutePath)
 {
-    std::string normalized = absolutePath;
+    // If it's already absolute, return as-is
+    std::filesystem::path p(absolutePath);
+    if (p.is_absolute())
+    {
+        return absolutePath;
+    }
 
-    // Convert backslashes to forward slashes
-    std::replace(normalized.begin(), normalized.end(), '\\', '/');
-
-    // Remove leading "./"
-    if (normalized.starts_with("./"))
-        normalized = normalized.substr(2);
-
-    // Strip any leading "../"
-    while (normalized.rfind("../", 0) == 0)
-        normalized = normalized.substr(3);
-
-    return normalized;
+    // If it's relative, convert to absolute from working directory
+    std::filesystem::path absPath = std::filesystem::absolute(p);
+    return absPath.string();
 }
 
 std::string AssetManager::GetFullDDSPath(const ResourceEntry& entry) const

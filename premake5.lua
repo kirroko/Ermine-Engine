@@ -200,6 +200,18 @@ project "Ermine-Editor"
         "%{IncludeDir.xproperty}"
     }
 
+    prebuildcommands
+    {
+        'cd "%{wks.location}"',
+        '"%{wks.location}Ermine-ResourcePipeline/x64/%{cfg.buildcfg}/Ermine-ResourcePipeline.exe"',
+        'if errorlevel 1 exit 1'
+    }
+    
+    postbuildcommands
+    {
+        '{COPYDIR} "%{wks.location}Ermine-ResourcePipeline/Ermine-Game.lion_rcdbase" "%{cfg.targetdir}/../Ermine-Game.lion_rcdbase"'
+    }
+
     links
     {
         "Ermine-Engine"
