@@ -288,8 +288,20 @@ namespace
 void Ermine::scripting::ScriptEngine::InitMono(const std::string& assembly_path)
 {
 	EE_CORE_TRACE("Init Mono...");
-	mono_set_dirs("mono/lib", "mono/etc");
-	mono_set_assemblies_path("mono/lib/4.5");
+
+	fs::path base = fs::current_path() / "mono";
+	fs::path lib  = base / "lib";
+	fs::path etc  = base / "etc";
+	fs::path fx45 = lib / "4.5";
+
+	bool existsAll = true;
+	if (!fs::exists(lib))  { EE_CORE_ERROR("Mono lib directory missing: {0}", lib.string());   existsAll = false; }
+	if (!fs::exists(etc))  { EE_CORE_ERROR("Mono etc directory missing: {0}", etc.string());   existsAll = false; }
+	if (!fs::exists(fx45)) { EE_CORE_ERROR("Mono 4.5 profile missing: {0}", fx45.string());    existsAll = false; }
+	assert(existsAll && "Mono asset directories must exist (./mono/lib, ./mono/etc, ./mono/lib/4.5)");
+
+	mono_set_dirs(lib.string().c_str(), etc.string().c_str());
+	mono_set_assemblies_path(fx45.string().c_str());
 
 	m_coreDomain = mono_jit_init_version("ErmineCore", "v4.0.30319");
 	if (!m_coreDomain)

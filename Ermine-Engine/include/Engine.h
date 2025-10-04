@@ -39,8 +39,5 @@ namespace Ermine::engine
      */
     EE_API void Render(GLFWwindow* window);
 
-    // Free to use for testing purposes
-    EE_API void Dummy(GLFWwindow* wwindow);
-
     void HandleShadingToggle(GLFWwindow* windowContext);
 }

@@ -14,39 +14,43 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 /* End Header **************************************************************************/
 #include "PreCompile.h"
 #include "Engine.h"
-#include "GraphicsDebugGUI.h"
-#include "AssetManager.h"
-#include "AssetBrowser.h"
+// ECS and Components
 #include "ECS.h"
 #include "Components.h"
-#include "EditorCamera.h"
-#include "FrameController.h"
-#include "GeometryFactory.h"
+// Internal Engine Systems
 #include "Input.h"
 #include "Logger.h"
-#include "Renderer.h"
-#include "EditorGUI.h"
+#include "AssetManager.h"
+#include "FrameController.h"
+#include "GeometryFactory.h"
 #include "JobSystem.h"
-#include "ScriptEngine.h"
 #include "Serialisation.h"
+// Engine Systems
+#include "Renderer.h"
+#include "ScriptEngine.h"
 #include "AudioSystem.h"
 #include "Particles.h"
 #include "Physics.h"
-#include "InspectorGUI.h"
-#include "ViewPortGUI.h"
-#include "AudioImGUI.h"
 #include "MathVector.h"
 #include "FiniteStateMachine.h"
 #include "Skybox.h"
 #include "Cubemap.h"
-#include <random>
-
 #include "ScriptSystem.h"
 #include "AnimationManager.h"
 #include "Scene.h"
+#include "HierarchySystem.h"
+
+#if defined(EE_EDITOR)
+#include "GraphicsDebugGUI.h"
+#include "AssetBrowser.h"
+#include "EditorCamera.h"
+#include "EditorGUI.h"
+#include "InspectorGUI.h"
+#include "ViewPortGUI.h"
+#include "AudioImGUI.h"
 #include "HierarchyInspector.h"
 #include "HierarchyPanel.h"
-#include "HierarchySystem.h"
+#endif
 
 using namespace Ermine;
 
@@ -85,73 +89,6 @@ namespace
 	float s_StateDuration = 3.0f; // switch every 3 seconds
 
 	State* g_CurrentState = nullptr;
-
-	struct VSyncVerifier
-	{
-		bool logged = false;
-		int samples = 0;
-		float accumMs = 0.0f;
-		int refresh = 0;
-		int swapInterval = -999;
-
-		void Init(GLFWwindow* window)
-		{
-			if (GLFWmonitor* mon = glfwGetPrimaryMonitor())
-			{
-				if (const GLFWvidmode* mode = glfwGetVideoMode(mon))
-					refresh = mode->refreshRate;
-			}
-
-#if defined(_WIN32)
-			// Try querying WGL_EXT_swap_control current interval
-			using PFNWGLGETSWAPINTERVALEXTPROC = int (WINAPI*)(void);
-			auto wglGetSwapIntervalEXT = reinterpret_cast<PFNWGLGETSWAPINTERVALEXTPROC>(
-				wglGetProcAddress("wglGetSwapIntervalEXT"));
-			if (wglGetSwapIntervalEXT)
-				swapInterval = wglGetSwapIntervalEXT();
-#endif
-		}
-
-		void UpdateAndMaybeLog()
-		{
-			if (logged) return;
-
-			// Accumulate effective present-to-present time (includes vsync / pacing)
-			accumMs += Ermine::FrameController::GetDeltaTime() * 1000.0f;
-			++samples;
-
-			constexpr int kMinSamples = 60; // ~1s at 60 Hz
-			if (samples < kMinSamples) return;
-
-			const float avgMs = accumMs / static_cast<float>(samples);
-			const float avgFps = avgMs > 0.0f ? 1000.0f / avgMs : 0.0f;
-
-			// If vsync interval=1 and GPU keeps up, avgMs ~= 1000/refresh within tolerance
-			float expectedMs = refresh > 0 ? 1000.0f / static_cast<float>(refresh) : 0.0f;
-			const float tol = expectedMs * 0.15f; // 15% tolerance
-
-			const bool likelyVSync =
-				(expectedMs > 0.0f) &&
-				(std::fabs(avgMs - expectedMs) <= tol) &&
-				(avgFps <= (refresh + 3)); // allow tiny jitter
-
-			EE_CORE_INFO("VSync verification: monitor={}Hz, avgFrameTime={:.2f}ms (~{:.1f} FPS), swapInterval={}",
-				refresh, avgMs, avgFps,
-				(swapInterval == -999 ? "unknown" : std::to_string(swapInterval)));
-
-			if (likelyVSync)
-				EE_CORE_INFO("VSync appears ACTIVE (effective frame time matches refresh rate)");
-			else
-				EE_CORE_WARN("VSync likely INACTIVE (effective frame time does not match refresh rate)");
-
-			EE_CORE_INFO("Tip: Ensure glfwSwapInterval(1) is called, driver settings are not forcing vsync OFF, "
-				"and compositing on your OS isn’t interfering.");
-
-			logged = true;
-		}
-	};
-
-	VSyncVerifier g_vsyncVerifier;
 }
 
 bool engine::Init(GLFWwindow* windowContext)
@@ -268,7 +205,7 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	glfwSetFramebufferSizeCallback(windowContext, []([[maybe_unused]] GLFWwindow* window, int width, int height)
 		{
-#ifdef _DEBUG
+#if defined(EE_EDITOR)
 			editor::EditorCamera::GetInstance().SetViewportSize(static_cast<float>(width), static_cast<float>(height));
 #else
 			glViewport(0, 0, width, height);
@@ -559,18 +496,13 @@ bool engine::Init(GLFWwindow* windowContext)
 	else
 		ECS::GetInstance().GetSystem<graphics::Renderer>()->Init(1920, 1080); // Fallback to default size
 
-	// Create ImGUI window for Asset Browser
+	// Editor windows
 	editor::EditorGUI::CreateImGUIWindow<ImguiUI::AssetBrowser>(); //TODO: Standardize please, do we want namespace ImGui for all window or not
 	editor::EditorGUI::CreateImGUIWindow<ParticlesImGUI>(emitter.get());
 	editor::EditorGUI::CreateImGUIWindow<AudioImGUI>();
-	// Create ImGUI window for Inspector
 	//editor::EditorGUI::CreateImGUIWindow<InspectorGUI>();
 	//auto* inspector = editor::EditorGUI::CreateImGUIWindow<editor::HierarchyInspector>(editor::EditorGUI::GetActiveScene().get(), "Inspector");
-		//Create ImGUI window for Graphics
 	editor::EditorGUI::CreateImGUIWindow<editor::GraphicsDebugGUI>("Graphics Debug");
-
-	// hook viewport to same scene
-	//editor::EditorGUI::CreateImGUIWindow<ViewPortGUI>(inspector);
 	InspectorGUI* ref = editor::EditorGUI::CreateImGUIWindow<InspectorGUI>(entity2, "Inspector");
 	editor::EditorGUI::CreateImGUIWindow<ViewPortGUI>(ref);
 
@@ -616,7 +548,7 @@ void engine::Shutdown()
 
 	graphics::GPUProfiler::Shutdown();
 
-#ifdef _DEBUG
+#if defined(EE_EDITOR)
 	auto scriptSys = ECS::GetInstance().GetSystem<scripting::ScriptSystem>();
 	if (scriptSys && scriptSys->m_ScriptEngine)
 	{
@@ -668,7 +600,9 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 	ECS::GetInstance().GetSystem<AudioSystem>()->Update();
 
 	// Update editor camera
+#if defined(EE_EDITOR)
 	editor::EditorCamera::GetInstance().Update();
+#endif
 
 	// Update for Particles
 	ECS::GetInstance().GetSystem<ParticleSystem>()->Update(FrameController::GetDeltaTime());
@@ -717,26 +651,26 @@ void engine::Render(GLFWwindow* window)
 	// Start GPU timing for rendering
 	graphics::GPUProfiler::BeginEvent("Frame");
 
-	ECS::GetInstance().GetSystem<graphics::Renderer>()->Clear();
+	auto renderer = ECS::GetInstance().GetSystem<graphics::Renderer>();
+
+	// Clear buffers
+	renderer->Clear();
 
 	// Draw scene objects
-	auto renderer = ECS::GetInstance().GetSystem<graphics::Renderer>();
 	renderer->Update(view, proj);
 
+	// Stop GPU timing for rendering
 	graphics::GPUProfiler::EndEvent();
 
 	// Render ImGui/Editor on top of everything
+#if defined(EE_EDITOR)
 	if (editor::EditorGUI::IsInit())
 		editor::EditorGUI::Render();
+#endif
 
 	graphics::GPUProfiler::EndFrame();
 
 	glfwSwapBuffers(window);
-}
-
-void engine::Dummy([[maybe_unused]] GLFWwindow* wwindow)
-{
-	// Empty dummy function for testing
 }
 
 void engine::HandleShadingToggle(GLFWwindow* windowContext)

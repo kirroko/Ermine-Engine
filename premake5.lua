@@ -1,6 +1,6 @@
 workspace "Ermine"
     architecture "x64"
-    configurations { "Debug", "Release"}
+    configurations { "Editor-Debug", "Editor-Release", "Game-Debug", "Game-Release" }
     startproject "Ermine-Editor"
 
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
@@ -107,17 +107,37 @@ project "Ermine-Engine"
 
     postbuildcommands
     {
-        ("{COPY} %{cfg.buildtarget.relpath} ../Build/bin/" .. outputdir .. "/Ermine-Editor"),
-        ("{COPY} " .. fmod_dll .. " ../Build/bin/" .. outputdir .. "/Ermine-Editor"),
-        ("{COPY} " .. fmodL_dll .. " ../Build/bin/" .. outputdir .. "/Ermine-Editor"),
-        ("{COPY} " .. fmodstudio_dll .. " ../Build/bin/" .. outputdir .. "/Ermine-Editor"),
-        ("{COPY} " .. fmodstudioL_dll .. " ../Build/bin/" .. outputdir .. "/Ermine-Editor"),
-        ("{COPY} " .. mono_dll .. " ../Build/bin/" .. outputdir .. "/Ermine-Editor"),
-        ("{COPY} " .. assimp_dll .. " ../Build/bin/" .. outputdir .. "/Ermine-Editor"),
-        ("{COPYDIR} " .. mono_assembly .. " ../Build/bin/" .. outputdir .. "/Ermine-Editor/mono/lib"),
-        ("{COPYDIR} " .. mono_config .. " ../Build/bin/" .. outputdir .. "/Ermine-Editor/mono/etc"),
-        ("{COPYDIR} ../Resources ../Build/bin/" .. outputdir .. "/Resources"),
-        ("{COPY} %{cfg.buildtarget.relpath} ../Build/bin/" .. outputdir .. "/Ermine-Editor/Jolt")
+        -- Compute base output dir once per config
+        ("set OUTDIR=$(SolutionDir)Build\\bin\\" .. outputdir),
+
+        -- Copy engine DLL to Editor and Game
+        "{COPY} \"$(TargetPath)\" \"%OUTDIR%\\Ermine-Editor\"",
+        "{COPY} \"$(TargetPath)\" \"%OUTDIR%\\Ermine-Game\"",
+
+        -- Runtime DLLs (Editor)
+        "{COPY} \"$(SolutionDir)ThirdParty\\Fmod\\lib\\fmod.dll\" \"%OUTDIR%\\Ermine-Editor\"",
+        "{COPY} \"$(SolutionDir)ThirdParty\\Fmod\\lib\\fmodL.dll\" \"%OUTDIR%\\Ermine-Editor\"",
+        "{COPY} \"$(SolutionDir)ThirdParty\\Fmod\\lib\\fmodstudio.dll\" \"%OUTDIR%\\Ermine-Editor\"",
+        "{COPY} \"$(SolutionDir)ThirdParty\\Fmod\\lib\\fmodstudioL.dll\" \"%OUTDIR%\\Ermine-Editor\"",
+        "{COPY} \"$(SolutionDir)ThirdParty\\Mono\\lib\\mono-2.0-sgen.dll\" \"%OUTDIR%\\Ermine-Editor\"",
+        "{COPY} \"$(SolutionDir)ThirdParty\\assimp\\bin\\assimp-vc143-mt.dll\" \"%OUTDIR%\\Ermine-Editor\"",
+
+        -- Runtime DLLs (Game)
+        "{COPY} \"$(SolutionDir)ThirdParty\\Fmod\\lib\\fmod.dll\" \"%OUTDIR%\\Ermine-Game\"",
+        "{COPY} \"$(SolutionDir)ThirdParty\\Fmod\\lib\\fmodL.dll\" \"%OUTDIR%\\Ermine-Game\"",
+        "{COPY} \"$(SolutionDir)ThirdParty\\Fmod\\lib\\fmodstudio.dll\" \"%OUTDIR%\\Ermine-Game\"",
+        "{COPY} \"$(SolutionDir)ThirdParty\\Fmod\\lib\\fmodstudioL.dll\" \"%OUTDIR%\\Ermine-Game\"",
+        "{COPY} \"$(SolutionDir)ThirdParty\\Mono\\lib\\mono-2.0-sgen.dll\" \"%OUTDIR%\\Ermine-Game\"",
+        "{COPY} \"$(SolutionDir)ThirdParty\\assimp\\bin\\assimp-vc143-mt.dll\" \"%OUTDIR%\\Ermine-Game\"",
+
+        -- Mono redist
+        "{COPY} \"$(SolutionDir)ThirdParty\\Mono\\lib\" \"%OUTDIR%\\Ermine-Editor\\mono\\lib\"",
+        "{COPY} \"$(SolutionDir)ThirdParty\\Mono\\etc\" \"%OUTDIR%\\Ermine-Editor\\mono\\etc\"",
+        "{COPY} \"$(SolutionDir)ThirdParty\\Mono\\lib\" \"%OUTDIR%\\Ermine-Game\\mono\\lib\"",
+        "{COPY} \"$(SolutionDir)ThirdParty\\Mono\\etc\" \"%OUTDIR%\\Ermine-Game\\mono\\etc\"",
+
+        -- Resources (shared)
+        "{COPY} \"$(SolutionDir)Resources\" \"%OUTDIR%\\Resources\""
     }
 
     filter "system:windows"
@@ -141,20 +161,25 @@ project "Ermine-Engine"
             "_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING" -- To slience the warnings from Rapidjson
         }
 
-    filter "configurations:Debug"
+    -- Editor vs Game feature flags for the engine build
+    filter "configurations:*Editor*"
+        defines { "EE_EDITOR" }
+
+    filter "configurations:*Game*"
+        defines { "EE_GAME" }
+
+    filter "configurations:Editor-Debug or configurations:Game-Debug"
         defines "EE_DEBUG"
         runtime "Debug"
         symbols "on"
-        linkoptions { "/NODEFAULTLIB:LIBCMTD" }
-
+        linkoptions { "/NODEFAULTLIB:LIBCMTD", "/NODEFAULTLIB:LIBCMT", "/NODEFAULTLIB:MSVCRT" }
         defines { "VERBOSE_LOGGING=1" }
 
-    filter "configurations:Release"
+    filter "configurations:Editor-Release or configurations:Game-Release"
         defines "EE_RELEASE"
         runtime "Release"
         optimize "on"
-        linkoptions { "/NODEFAULTLIB:LIBCMT" }
-        
+        linkoptions { "/NODEFAULTLIB:LIBCMT", "/NODEFAULTLIB:LIBCMTD", "/NODEFAULTLIB:MSVCRTD" }
         defines { "VERBOSE_LOGGING=0" }
 
 -- Editor Project
@@ -205,13 +230,77 @@ project "Ermine-Editor"
             "EE_PLATFORM_WINDOWS"
         }
 
-    filter "configurations:Debug"
+    filter "configurations:*Editor*"
+        defines { "EE_EDITOR" }
+
+    filter "configurations:*Game*"
+        defines { "EE_GAME" } -- if selected, nothing SHOULD happen
+
+    filter "configurations:Editor-Debug"
         defines "EE_DEBUG"
         runtime "Debug"
         symbols "on"
         linkoptions { "/NODEFAULTLIB:LIBCMTD" }
 
-    filter "configurations:Release"
+    filter "configurations:Editor-Release"
+        defines "EE_RELEASE"
+        runtime "Release"
+        optimize "on"
+        linkoptions { "/NODEFAULTLIB:LIBCMT" }
+
+-- Game Project
+project "Ermine-Game"
+    location "Ermine-Game"
+    kind "WindowedApp"
+    language "C++"
+    cppdialect "C++20"
+    staticruntime "off"
+
+    targetdir ("Build/bin/" .. outputdir .. "/%{prj.name}")
+    objdir ("Build/obj/" .. outputdir .. "/%{prj.name}")
+    debugdir ("Build/bin/" .. outputdir .. "/%{prj.name}")
+
+    files
+    {
+        "%{prj.name}/src/**.h",
+        "%{prj.name}/src/**.cpp",
+    }
+
+    includedirs
+    {
+        "%{prj.name}/include",
+        "Ermine-Engine/include",
+        "%{IncludeDir.GLFW}",
+        "%{IncludeDir.Glad}",
+        -- "%{IncludeDir.ImGui}", -- May not be needed in the game
+        "%{IncludeDir.glm}",
+        "%{IncludeDir.spdlog}",
+        "%{IncludeDir.stb}",
+        "%{IncludeDir.Fmod}",
+        "%{IncludeDir.Mono}",
+        "%{IncludeDir.rapidjson}"
+    }
+
+    links
+    {
+        "Ermine-Engine"
+    }
+
+    filter "system:windows"
+        systemversion "latest"
+        buildoptions { "/wd4251", "/wd4005" }
+        defines { "EE_PLATFORM_WINDOWS" }
+
+    filter "configurations:*Game*"
+        defines { "EE_GAME" }
+
+    filter "configurations:Game-Debug"
+        defines "EE_DEBUG"
+        runtime "Debug"
+        symbols "on"
+        linkoptions { "/NODEFAULTLIB:LIBCMTD" }
+
+    filter "configurations:Game-Release"
         defines "EE_RELEASE"
         runtime "Release"
         optimize "on"
@@ -228,17 +317,14 @@ project "Ermine-ScriptAssembly"
     targetdir ("Build/bin/" .. outputdir .. "/%{prj.name}")
     objdir ("Build/obj/" .. outputdir .. "/%{prj.name}")
 
-    files
-    {
-        "%{prj.name}/**.cs"
-    }
+    files { "%{prj.name}/**.cs" }
 
     filter "system:windows"
         systemversion "latest"
-    filter "configurations:Debug"
+    filter "configurations:Editor-Debug or configurations:Game-Debug"
         defines { "DEBUG" }
         symbols "on"
-    filter "configurations:Release"
+    filter "configurations:Editor-Release or configurations:Game-Release"
         defines { "NDEBUG" }
         optimize "on"
 
@@ -253,23 +339,15 @@ project "Ermine-ScriptSandbox"
     targetdir ("Build/bin/" .. outputdir .. "/%{prj.name}")
     objdir ("Build/obj/" .. outputdir .. "/%{prj.name}")
 
-    files
-    {
-        "%{prj.name}/**.cs"
-    }
-    includedirs
-    {
-        "Ermine-ScriptAssembly"
-    }
-    links
-    {
-        "Ermine-ScriptAssembly"
-    }
+    files { "%{prj.name}/**.cs" }
+    includedirs { "Ermine-ScriptAssembly" }
+    links { "Ermine-ScriptAssembly" }
+
     filter "system:windows"
         systemversion "latest"
-    filter "configurations:Debug"
+    filter "configurations:Editor-Debug or configurations:Game-Debug"
         defines { "DEBUG" }
         symbols "on"
-    filter "configurations:Release"
+    filter "configurations:Editor-Release or configurations:Game-Release"
         defines { "NDEBUG" }
         optimize "on"
