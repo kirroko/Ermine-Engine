@@ -19,6 +19,10 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Logger.h"
 #include "Material.h"
 
+#include <assimp/Importer.hpp>  // for the importer class
+#include <assimp/scene.h>       // for the output data structure
+#include <assimp/postprocess.h> // for post processing flags
+
 using namespace Ermine;
 
 /**

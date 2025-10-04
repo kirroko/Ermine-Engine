@@ -1,30 +1,28 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    <Filter Include="xresource_pipeline_v2-main">
+      <UniqueIdentifier>{B338FF53-9F48-AB24-0802-1043F4309ABD}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    <Filter Include="xresource_pipeline_v2-main\dependencies">
+      <UniqueIdentifier>{492B52A7-B5BA-1392-BEB6-F4A92AC54E9E}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    <Filter Include="xresource_pipeline_v2-main\dependencies\xtextfile">
+      <UniqueIdentifier>{B587DFF4-214E-3C11-6AA9-CA73D6AEAA75}</UniqueIdentifier>
     </Filter>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="Ermine-ResourcePipeline.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="xresource_pipeline_v2-main\dependencies\xtextfile\source\xtextfile.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
+    <Filter Include="xresource_pipeline_v2-main\dependencies\xtextfile\source">
+      <UniqueIdentifier>{354C1ADC-2121-628F-4AD0-A18B360470A6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="xresource_pipeline_v2-main\dependencies\xtextfile\source\xtextfile.h">
-      <Filter>Source Files</Filter>
+      <Filter>xresource_pipeline_v2-main\dependencies\xtextfile\source</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Ermine-ResourcePipeline.cpp" />
+    <ClCompile Include="xresource_pipeline_v2-main\dependencies\xtextfile\source\xtextfile.cpp">
+      <Filter>xresource_pipeline_v2-main\dependencies\xtextfile\source</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

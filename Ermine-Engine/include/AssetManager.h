@@ -21,11 +21,6 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Cubemap.h"
 #include "Model.h"
 
-#include <assimp/Importer.hpp>  // for the importer class
-#include <assimp/scene.h>       // for the output data structure
-#include <assimp/postprocess.h> // for post processing flags
-
-
 // Forward declaration to avoid circular includes
 namespace Ermine::graphics {
     class Material;

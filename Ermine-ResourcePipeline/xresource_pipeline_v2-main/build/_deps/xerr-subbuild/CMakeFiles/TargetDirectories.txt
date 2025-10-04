@@ -1,3 +1,0 @@
-C:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xerr-subbuild/CMakeFiles/xerr-populate.dir
-C:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xerr-subbuild/CMakeFiles/ALL_BUILD.dir
-C:/Users/kairu/OneDrive/Desktop/GAM300/Ermine-Engine/Ermine-ResourcePipeline/xresource_pipeline_v2-main/build/_deps/xerr-subbuild/CMakeFiles/ZERO_CHECK.dir
