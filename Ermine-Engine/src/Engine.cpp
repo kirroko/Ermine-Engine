@@ -61,10 +61,6 @@ namespace
 {
 	bool s_isInitialized = false;
 
-	// For Particles
-	static std::shared_ptr<Ermine::graphics::Shader> particleShader;
-	static std::unique_ptr<Ermine::ParticleEmitter> emitter;
-
 	// For Skybox/Environment mapping
 	static std::unique_ptr<Ermine::graphics::Skybox> skybox;
 	static std::shared_ptr<Ermine::graphics::Cubemap> environmentCubemap;
@@ -78,8 +74,6 @@ namespace
 			_CrtSetBreakAlloc(breakAlloc);
 	}
 
-	std::unique_ptr<Ermine::StateManager> s_FSMManager;
-	//EntityID s_FSMCube = 0;
 	EntityID fbxEntity = 0;
 
 	IdleState g_IdleState;
@@ -128,6 +122,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	EE_AUTO_REGISTER_COMPONENT(ModelComponent, "ModelComponent")
 	EE_AUTO_REGISTER_COMPONENT(AnimationComponent, "AnimationComponent")
 	EE_AUTO_REGISTER_COMPONENT(HierarchyComponent, "HierarchyComponent");
+	EE_AUTO_REGISTER_COMPONENT(StateMachine, "StateMachine");
 
 	// Special Case for Script component, need to copy over the class name
 	ECS::GetInstance().RegisterComponent<Script>("Script",
@@ -147,6 +142,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().RegisterSystem<graphics::LightSystem>();
 	ECS::GetInstance().RegisterSystem<graphics::AnimationManager>();
 	ECS::GetInstance().RegisterSystem<HierarchySystem>();
+	ECS::GetInstance().RegisterSystem<StateManager>();
 
 	//Register JPH::TempAllocatorImpl for Physcis
 	RegisterDefaultAllocator();
@@ -202,6 +198,12 @@ bool engine::Init(GLFWwindow* windowContext)
 	hierarchySig.set(ECS::GetInstance().GetComponentType<HierarchyComponent>());
 	hierarchySig.set(ECS::GetInstance().GetComponentType<Transform>());
 	ECS::GetInstance().SetSystemSignature<HierarchySystem>(hierarchySig);
+
+	// For FSM
+	SignatureID fsmSig;
+	fsmSig.set(ECS::GetInstance().GetComponentType<StateMachine>());
+	fsmSig.set(ECS::GetInstance().GetComponentType<Transform>());
+	ECS::GetInstance().SetSystemSignature<StateManager>(fsmSig);
 
 	glfwSetFramebufferSizeCallback(windowContext, []([[maybe_unused]] GLFWwindow* window, int width, int height)
 		{
@@ -303,8 +305,8 @@ bool engine::Init(GLFWwindow* windowContext)
 	auto quadMesh = graphics::GeometryFactory::CreateQuad(1.0f, 1.0f);
 	auto tex = AssetManager::GetInstance().LoadTexture("../Resources/Textures/greybox_red_solid.png");
 
-	// Particles Emitter
-	emitter = std::make_unique<ParticleEmitter>(quadMesh, shader, tex);
+	// initialize particles emitter
+	ECS::GetInstance().GetSystem<ParticleSystem>()->Init(quadMesh, shader, tex);
 
 	// Create first cube
 	//auto entity = ECS::GetInstance().CreateEntity();
@@ -472,22 +474,6 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	EE_CORE_INFO("Total living entities after creation: {0}", ECS::GetInstance().GetLivingEntityCount());
 
-	// Create FSM test cube
-	//s_FSMCube = ECS::GetInstance().CreateEntity();
-	//ECS::GetInstance().AddComponent(s_FSMCube, Transform(Vec3(0, 0, -5), Quaternion(), Vec3(1, 1, 1)));
-	//ECS::GetInstance().AddComponent(s_FSMCube, ObjectMetaData("FSM Cube", "TestCube", true));
-	//ECS::GetInstance().AddComponent(s_FSMCube, graphics::GeometryFactory::CreateCube(1, 1, 1));
-
-	//// Give it a material
-	//auto fsmMat = std::make_unique<graphics::Material>(shader);
-	//fsmMat->LoadTemplate(graphics::MaterialTemplates::PBR_METAL());
-	//ECS::GetInstance().AddComponent(s_FSMCube, Material(std::move(fsmMat)));
-
-	// Init FSM
-	s_FSMManager = std::make_unique<StateManager>();
-	s_FSMManager->Init(fbxEntity, &g_IdleState);
-	g_CurrentState = &g_IdleState;
-
 	//EE_CORE_INFO("FSM Test Cube created with ID: {}", s_FSMCube);
 	int windowWidth, windowHeight;
 	glfwGetWindowSize(windowContext, &windowWidth, &windowHeight);
@@ -498,7 +484,7 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	// Editor windows
 	editor::EditorGUI::CreateImGUIWindow<ImguiUI::AssetBrowser>(); //TODO: Standardize please, do we want namespace ImGui for all window or not
-	editor::EditorGUI::CreateImGUIWindow<ParticlesImGUI>(emitter.get());
+	editor::EditorGUI::CreateImGUIWindow<ParticlesImGUI>(ECS::GetInstance().GetSystem<ParticleSystem>()->GetEmitter());
 	editor::EditorGUI::CreateImGUIWindow<AudioImGUI>();
 	//editor::EditorGUI::CreateImGUIWindow<InspectorGUI>();
 	//auto* inspector = editor::EditorGUI::CreateImGUIWindow<editor::HierarchyInspector>(editor::EditorGUI::GetActiveScene().get(), "Inspector");
@@ -544,7 +530,8 @@ void engine::Shutdown()
 
 	AssetManager::GetInstance().Clear();
 	ECS::GetInstance().GetSystem<Physics>()->Shutdown();
-	emitter.reset();
+
+	ECS::GetInstance().GetSystem<ParticleSystem>()->ClearEmitter();
 
 	graphics::GPUProfiler::Shutdown();
 
@@ -607,33 +594,11 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 	// Update for Particles
 	ECS::GetInstance().GetSystem<ParticleSystem>()->Update(FrameController::GetDeltaTime());
 
-	// FSM Update
-	if (s_FSMManager)
-	{
-		s_FSMManager->Update(FrameController::GetDeltaTime());
-
-		s_StateTimer += FrameController::GetDeltaTime();
-		if (s_StateTimer > s_StateDuration)
-		{
-			s_StateTimer = 0.0f;
-
-			if (g_CurrentState == &g_IdleState)
-			{
-				//s_FSMManager->Init(s_FSMCube, &g_RoamState);
-				s_FSMManager->Init(fbxEntity, &g_RoamState);
-				g_CurrentState = &g_RoamState;
-			}
-			else
-			{
-				//s_FSMManager->Init(s_FSMCube, &g_IdleState);
-				s_FSMManager->Init(fbxEntity, &g_IdleState);
-				g_CurrentState = &g_IdleState;
-			}
-		}
-	}
-
 	// Animation Update
 	ECS::GetInstance().GetSystem<graphics::AnimationManager>()->Update(FrameController::GetDeltaTime());
+
+	// FSM update
+	ECS::GetInstance().GetSystem<StateManager>()->Update(FrameController::GetFixedDeltaTime());
 }
 
 void engine::Render(GLFWwindow* window)

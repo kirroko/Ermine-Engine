@@ -26,6 +26,7 @@ IncludeDir["rapidjson"] = "ThirdParty/rapidjson"
 IncludeDir["Fmod"] = "ThirdParty/Fmod/inc"
 IncludeDir["Jolt"] = "ThirdParty"
 IncludeDir["assimp"] = "ThirdParty/assimp/include"
+IncludeDir["xproperty"] = "ThirdParty/xproperty/source"
 
 -- Libraries
 LibraryDir = {}
@@ -80,7 +81,8 @@ project "Ermine-Engine"
         "%{IncludeDir.Mono}",
         "%{IncludeDir.Jolt}",
         "%{IncludeDir.rapidjson}",
-        "%{IncludeDir.assimp}"
+        "%{IncludeDir.assimp}",
+        "%{IncludeDir.xproperty}"
     }
 
     libdirs
@@ -139,6 +141,12 @@ project "Ermine-Engine"
         -- Resources (shared)
         "{COPY} \"$(SolutionDir)Resources\" \"%OUTDIR%\\Resources\""
     }
+
+    filter "configurations:Editor-Debug or configurations:Game-Debug"
+        links { "fmodL_vc", "fmodstudioL_vc" }
+
+    filter "configurations:Editor-Release or configurations:Game-Release"
+        links { "fmod_vc", "fmodstudio_vc" }
 
     filter "system:windows"
         systemversion "latest"
@@ -212,7 +220,8 @@ project "Ermine-Editor"
         "%{IncludeDir.stb}",
         "%{IncludeDir.Fmod}",
         "%{IncludeDir.Mono}",
-        "%{IncludeDir.rapidjson}"
+        "%{IncludeDir.rapidjson}",
+        "%{IncludeDir.xproperty}"
     }
 
     links

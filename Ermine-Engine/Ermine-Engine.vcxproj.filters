@@ -225,6 +225,9 @@
     <ClInclude Include="include\Skybox.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\State.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\Systems.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -261,6 +264,9 @@
       <Filter>src\AudioManager</Filter>
     </ClCompile>
     <ClCompile Include="src\ECS\Component.cpp">
+      <Filter>src\ECS</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ECS\ComponentRegistration.cpp">
       <Filter>src\ECS</Filter>
     </ClCompile>
     <ClCompile Include="src\ECS\ECS.cpp">

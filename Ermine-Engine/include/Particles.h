@@ -21,22 +21,6 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "AssetManager.h"
 
 namespace Ermine {
-    class ParticleSystem : public System
-    {
-    public:
-        /*!***********************************************************************
-        \brief
-            Update all particles in the system.
-        \param[in] dt
-            Delta time used for simulation.
-        *************************************************************************/
-        void Update(float dt);
-
-    private:
-        std::vector<Particle> m_Particles;
-        //size_t m_MaxParticles;
-    };
-
     class ParticleEmitter
     {
     public:
@@ -90,6 +74,40 @@ namespace Ermine {
         Mesh m_QuadMesh;
         std::shared_ptr<graphics::Shader> m_Shader;
         std::shared_ptr<graphics::Texture> m_Texture;
+    };
+
+    class ParticleSystem : public System
+    {
+    public:
+        /*!***********************************************************************
+           \brief
+               Initialize the particle emitter with mesh, shader, and texture.
+           \param[in] quadMesh
+               Mesh used for rendering particles.
+           \param[in] shader
+               Shader to render particles.
+           \param[in] texture
+               Texture applied to particles.
+           *************************************************************************/
+        void Init(const Mesh& quadMesh, std::shared_ptr<graphics::Shader> shader, std::shared_ptr<graphics::Texture> texture);
+        /*!***********************************************************************
+        \brief
+            Update all particles in the system.
+        \param[in] dt
+            Delta time used for simulation.
+        *************************************************************************/
+        void Update(float dt);
+        ParticleEmitter* GetEmitter() { return m_Emitter.get(); }
+        /*!***********************************************************************
+        \brief
+            Clear and destroy the current particle emitter.
+        *************************************************************************/
+        void ClearEmitter();
+
+    private:
+        std::vector<Particle> m_Particles;
+        std::unique_ptr<ParticleEmitter> m_Emitter;
+        //size_t m_MaxParticles;
     };
 
     class ParticlesImGUI : public ImGUIWindow
