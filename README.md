@@ -13,6 +13,7 @@ The Ermine Engine made by third year students of Digipen Singapore.
 - Object Gizmos
 - Graphic Debugger
 - Imgizmo
+- Particle Editor
 - Add & Remove Audio component
 - Add & Remove Physics component
 - Add & Remove Mesh component
