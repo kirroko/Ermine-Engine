@@ -6,7 +6,21 @@ The Ermine Engine made by third year students of Digipen Singapore.
 
 ## Features
 
-- One of many things (WIP)
+- Save and Load Scenes
+- Create & Delete Entity
+- Parent & Child Hierarchy
+- Asset Browser
+- Object Gizmos
+- Graphic Debugger
+- Imgizmo
+- Particle Editor
+- Add & Remove Audio component
+- Add & Remove Physics component
+- Add & Remove Mesh component
+- Add & Remove Light component
+- Add & Remove Script component
+- Add & Remove Model component
+- Add & Remove Animation component
 
 ## **Build Information**
 
@@ -21,12 +35,14 @@ This can be solved by building Script-Assembly project from VS2022 as it can be 
 
 ### Programmers
 
+(IMGD)
+
 - Kean (Product Manager)
 - Brian
 - Ko Sand (Tech Lead)
 - Si Han
 - Curtis
-
+(RTIS)
 - Jeremy
 - Kai Rui
 - Ridhwan (Grahpics Lead)
