@@ -84,7 +84,7 @@ project "Ermine-Engine"
         "%{IncludeDir.Jolt}",
         "%{IncludeDir.rapidjson}",
         "%{IncludeDir.assimp}",
-        "%{IncludeDir.DirectXTex}"
+        "%{IncludeDir.DirectXTex}",
         "%{IncludeDir.xproperty}"
     }
 
