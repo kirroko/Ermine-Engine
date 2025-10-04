@@ -92,8 +92,8 @@ project "Ermine-Engine"
     {
         "%{LibraryDir.Fmod}",
         "%{LibraryDir.Mono}",
-        "%{LibraryDir.assimp}",
-        "%{LibraryDir.DirectXTex}"
+        "%{LibraryDir.assimp}"
+        -- "%{LibraryDir.DirectXTex}"
     }
 
     links
@@ -108,8 +108,8 @@ project "Ermine-Engine"
         "opengl32.lib",
 		"mono-2.0-sgen.lib",
         "Jolt",
-        "assimp-vc143-mt.lib",
-        "DirectXTex.lib"
+        "assimp-vc143-mt.lib"
+        --"DirectXTex.lib"
     }
 
     postbuildcommands
@@ -191,6 +191,8 @@ project "Ermine-Engine"
         symbols "on"
         linkoptions { "/NODEFAULTLIB:LIBCMTD", "/NODEFAULTLIB:LIBCMT", "/NODEFAULTLIB:MSVCRT" }
         defines { "VERBOSE_LOGGING=1" }
+        libdirs { "%{LibraryDir.DirectXTex}" }
+        links { "DirectXTexD.lib" }
 
     filter "configurations:Editor-Release or configurations:Game-Release"
         defines "EE_RELEASE"
@@ -198,6 +200,8 @@ project "Ermine-Engine"
         optimize "on"
         linkoptions { "/NODEFAULTLIB:LIBCMT", "/NODEFAULTLIB:LIBCMTD", "/NODEFAULTLIB:MSVCRTD" }
         defines { "VERBOSE_LOGGING=0" }
+        libdirs { "%{LibraryDir.DirectXTex}" }
+        links { "DirectXTex.lib" }
 
 -- Editor Project
 project "Ermine-Editor"
@@ -275,12 +279,16 @@ project "Ermine-Editor"
         runtime "Debug"
         symbols "on"
         linkoptions { "/NODEFAULTLIB:LIBCMTD" }
+        libdirs { "%{LibraryDir.DirectXTex}" }
+        links { "DirectXTexD.lib" }
 
     filter "configurations:Editor-Release"
         defines "EE_RELEASE"
         runtime "Release"
         optimize "on"
         linkoptions { "/NODEFAULTLIB:LIBCMT" }
+        libdirs { "%{LibraryDir.DirectXTex}" }
+        links { "DirectXTex.lib" }
 
 -- Game Project
 project "Ermine-Game"
@@ -369,11 +377,6 @@ project "Ermine-ResourcePipeline"
         "%{LibraryDir.DirectXTex}"
     }
 
-    links
-    {
-        "DirectXTex.lib"
-    }
-
     warnings "Extra"
     characterset "Unicode"
 
@@ -385,12 +388,16 @@ project "Ermine-ResourcePipeline"
         runtime "Debug"
         symbols "on"
         linkoptions { "/NODEFAULTLIB:LIBCMTD" }
+        libdirs { "%{LibraryDir.DirectXTex}" }
+        links { "DirectXTexD.lib" }
 
     filter "configurations:Editor-Release"
         defines "EE_RELEASE"
         runtime "Release"
         optimize "on"
         linkoptions { "/NODEFAULTLIB:LIBCMT" }
+        libdirs { "%{LibraryDir.DirectXTex}" }
+        links { "DirectXTex.lib" }
 
 -- Script Assembly Project
 project "Ermine-ScriptAssembly"

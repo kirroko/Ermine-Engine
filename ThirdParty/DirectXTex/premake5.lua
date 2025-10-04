@@ -1,6 +1,8 @@
-project "Fmod"
+project "DirectXTex"
 	kind "StaticLib"
 	language "C++"
+
+	staticruntime "off"
 
 	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
 	objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
@@ -17,15 +19,13 @@ project "Fmod"
 	    "DirectXTex.lib"
 	}
 
-
 	filter "system:windows"
 		systemversion "latest"
-		staticruntime "On" --staticly linking the runtime libraries
 
-	filter "configurations:Debug"
+	filter "configurations:*Debug"
 		runtime "Debug"
 		symbols "on"
 
-	filter "configurations:Release"
+	filter "configurations:*Release"
 		runtime "Release"
 		optimize "on"
