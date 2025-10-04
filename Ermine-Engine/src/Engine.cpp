@@ -57,10 +57,6 @@ namespace
 {
 	bool s_isInitialized = false;
 
-	// For Particles
-	static std::shared_ptr<Ermine::graphics::Shader> particleShader;
-	static std::unique_ptr<Ermine::ParticleEmitter> emitter;
-
 	// For Skybox/Environment mapping
 	static std::unique_ptr<Ermine::graphics::Skybox> skybox;
 	static std::shared_ptr<Ermine::graphics::Cubemap> environmentCubemap;
@@ -364,8 +360,8 @@ bool engine::Init(GLFWwindow* windowContext)
 	auto quadMesh = graphics::GeometryFactory::CreateQuad(1.0f, 1.0f);
 	auto tex = AssetManager::GetInstance().LoadTexture("../Resources/Textures/greybox_red_solid.png");
 
-	// Particles Emitter
-	emitter = std::make_unique<ParticleEmitter>(quadMesh, shader, tex);
+	// initialize particles emitter
+	ECS::GetInstance().GetSystem<ParticleSystem>()->Init(quadMesh, shader, tex);
 
 	// Create first cube
 	//auto entity = ECS::GetInstance().CreateEntity();
@@ -543,7 +539,7 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	// Create ImGUI window for Asset Browser
 	editor::EditorGUI::CreateImGUIWindow<ImguiUI::AssetBrowser>(); //TODO: Standardize please, do we want namespace ImGui for all window or not
-	editor::EditorGUI::CreateImGUIWindow<ParticlesImGUI>(emitter.get());
+	editor::EditorGUI::CreateImGUIWindow<ParticlesImGUI>(ECS::GetInstance().GetSystem<ParticleSystem>()->GetEmitter());
 	editor::EditorGUI::CreateImGUIWindow<AudioImGUI>();
 	// Create ImGUI window for Inspector
 	//editor::EditorGUI::CreateImGUIWindow<InspectorGUI>();
@@ -594,7 +590,8 @@ void engine::Shutdown()
 
 	AssetManager::GetInstance().Clear();
 	ECS::GetInstance().GetSystem<Physics>()->Shutdown();
-	emitter.reset();
+
+	ECS::GetInstance().GetSystem<ParticleSystem>()->ClearEmitter();
 
 	graphics::GPUProfiler::Shutdown();
 
