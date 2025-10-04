@@ -295,3 +295,69 @@ project "Ermine-ScriptSandbox"
     filter "configurations:Release"
         defines { "NDEBUG" }
         optimize "on"
+
+-- Resource Pipeline Project
+project "Ermine-ResourcePipeline"
+    location "Ermine-ResourcePipeline"
+    kind "ConsoleApp"
+    language "C++"
+    cppdialect "C++20"
+    staticruntime "off"
+
+    buildoptions { "/MP" }
+
+    targetdir ("Build/bin/" .. outputdir .. "/%{prj.name}")
+    objdir ("Build/obj/" .. outputdir .. "/%{prj.name}")
+
+    files
+    {
+        "%{prj.name}/Ermine-ResourcePipeline.cpp",
+        "%{prj.name}/xresource_pipeline_v2-main/source/**.h",
+        "%{prj.name}/xresource_pipeline_v2-main/source/**.cpp",
+        "%{prj.name}/xresource_pipeline_v2-main/dependencies/xerr/source/**.h",
+        "%{prj.name}/xresource_pipeline_v2-main/dependencies/xcmdline/source/**.h",
+        "%{prj.name}/xresource_pipeline_v2-main/dependencies/xproperty/source/**.h",
+        "%{prj.name}/xresource_pipeline_v2-main/dependencies/xresource_guid/source/**.h",
+        "%{prj.name}/xresource_pipeline_v2-main/dependencies/xstrtool/source/**.h",
+        "%{prj.name}/xresource_pipeline_v2-main/dependencies/xstrtool/source/**.cpp",
+        "%{prj.name}/xresource_pipeline_v2-main/dependencies/xtextfile/source/**.h",
+        "%{prj.name}/xresource_pipeline_v2-main/dependencies/xtextfile/source/**.cpp"
+    }
+
+    includedirs
+    {
+        "%{prj.name}/xresource_pipeline_v2-main/source",
+        "%{prj.name}/xresource_pipeline_v2-main/dependencies/xerr/source",
+        "%{prj.name}/xresource_pipeline_v2-main/dependencies/xcmdline/source",
+        "%{prj.name}/xresource_pipeline_v2-main/dependencies/xproperty/source",
+        "%{prj.name}/xresource_pipeline_v2-main/dependencies/xresource_guid/source",
+        "%{prj.name}/xresource_pipeline_v2-main/dependencies/xstrtool/source",
+        "%{prj.name}/xresource_pipeline_v2-main/dependencies/xtextfile/source",
+        "%{IncludeDir.DirectXTex}"
+    }
+
+    libdirs
+    {
+        "%{LibraryDir.DirectXTex}"
+    }
+
+    links
+    {
+        "DirectXTex.lib"
+    }
+
+    filter "system:windows"
+        systemversion "latest"
+        
+        warnings "Extra"
+        buildoptions { "/wd4251", "/wd4005", "/wd4267" }
+
+    filter "configurations:Debug"
+        runtime "Debug"
+        symbols "on"
+        linkoptions { "/NODEFAULTLIB:LIBCMTD" }
+
+    filter "configurations:Release"
+        runtime "Release"
+        optimize "on"
+        linkoptions { "/NODEFAULTLIB:LIBCMT" }
