@@ -15,6 +15,12 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Particles.h"
 
 namespace Ermine {
+    void ParticleSystem::Init(const Mesh& quadMesh, std::shared_ptr<graphics::Shader> shader, std::shared_ptr<graphics::Texture> texture)
+    {
+        // Create the emitter
+        m_Emitter = std::make_unique<ParticleEmitter>(quadMesh, shader, texture);
+    }
+
     void ParticleSystem::Update(float dt)
     {
         auto& ecs = ECS::GetInstance();
@@ -48,6 +54,11 @@ namespace Ermine {
             if (ECS::GetInstance().IsEntityValid(entity))
                 ecs.DestroyEntity(entity);
         }
+    }
+
+    void ParticleSystem::ClearEmitter()
+    {
+        m_Emitter.reset();
     }
 
     ParticleEmitter::ParticleEmitter(const Mesh& quadMesh, std::shared_ptr<graphics::Shader> shader, std::shared_ptr<graphics::Texture> texture)

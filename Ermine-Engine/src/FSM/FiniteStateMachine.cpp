@@ -1,9 +1,9 @@
 /* Start Header ************************************************************************/
 /*!
-\file       Particles.h
+\file       FiniteStateMachine.cpp
 \author     LEE Wen Jie, Brian, wenjiebrian.lee, 2301261, wenjiebrian.lee\@digipen.edu
 \date       07/09/2025
-\brief      This file contains declarations for ParticleSystem, ParticleEmitter and ParticlesImGUI.
+\brief      This file contains declarations for Finite State Machine.
 
 Copyright (C) 2025 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents without the
@@ -33,24 +33,6 @@ namespace Ermine
         return Vec3(0.0f, 0.0f, 0.0f);
     }
 
-    // StateMachine
-    void StateMachine::ChangeState(EntityID entity, State* newState)
-    {
-        if (m_CurrentState)
-            m_CurrentState->Exit(entity);
-
-        m_CurrentState = newState;
-
-        if (m_CurrentState)
-            m_CurrentState->Enter(entity);
-    }
-
-    void StateMachine::Update(EntityID entity, float dt)
-    {
-        if (m_CurrentState)
-            m_CurrentState->Update(entity, dt);
-    }
-
     // StateManager
     void StateManager::Init(EntityID entity, State* startState)
     {
@@ -59,9 +41,19 @@ namespace Ermine
 
     void StateManager::Update(float dt)
     {
-        for (auto& [entity, machine] : m_StateMachines)
+        //for (auto& [entity, machine] : m_StateMachines)
+        //{
+        //    machine.Update(entity, dt);
+        //}
+
+        for (auto entity : m_Entities)
         {
-            machine.Update(entity, dt);
+            // Check if state machine component exist
+            if (!ECS::GetInstance().HasComponent<StateMachine>(entity))
+                continue;
+
+            auto& sm = ECS::GetInstance().GetComponent<StateMachine>(entity);
+            sm.Update(entity, dt);
         }
     }
 

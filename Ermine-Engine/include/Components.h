@@ -41,6 +41,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "xproperty.h"      
 #include "sprop/property_sprop.h"  
 
+#include "State.h"
+
 namespace Ermine
 {
 	inline Quaternion QuaternionFromEulerDegrees(const Vec3& eulerDeg) {
@@ -1661,5 +1663,37 @@ namespace Ermine
 		//	"AnimationComponent", AnimationComponent,
 		//	xproperty::obj_member<"animModelName", &AnimationComponent::animModelName>
 		//)
+	};
+
+	/*!***********************************************************************
+	\brief
+	 State Machine component structure.
+	*************************************************************************/
+	struct StateMachine
+	{
+		State* m_CurrentState = nullptr;
+
+	public:
+		/*!***********************************************************************
+		\brief
+		   Change the current state of an entity.
+		*************************************************************************/
+		void ChangeState(EntityID entity, State* newState) {
+			if (m_CurrentState)
+				m_CurrentState->Exit(entity);
+
+			m_CurrentState = newState;
+
+			if (m_CurrentState)
+				m_CurrentState->Enter(entity);
+		}
+		/*!***********************************************************************
+		\brief
+		   Update the current state of an entity.
+		*************************************************************************/
+		void Update(EntityID entity, float dt) {
+			if (m_CurrentState)
+				m_CurrentState->Update(entity, dt);
+		}
 	};
 }
