@@ -92,6 +92,39 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
 
+	//std::string pipelinePath = "../../../../Ermine-ResourcePipeline";
+	//std::cout << "Contents of Ermine-ResourcePipeline:" << std::endl;
+	//try {
+	//	for (const auto& entry : std::filesystem::directory_iterator(pipelinePath)) {
+	//		std::cout << "  " << entry.path().filename().string() << std::endl;
+	//	}
+	//}
+	//catch (const std::exception& e) {
+	//	std::cout << "Error reading pipeline directory: " << e.what() << std::endl;
+	//}
+
+	//// Try the full path
+	//std::string databasePath = "../../../../Ermine-ResourcePipeline/Ermine-Game.lion_rcdbase";
+	//if (std::filesystem::exists(databasePath)) {
+	//	std::cout << "Found database at: " << std::filesystem::absolute(databasePath) << std::endl;
+
+	//	if (!AssetManager::GetInstance().Initialize(databasePath)) {
+	//		EE_CORE_WARN("AssetManager database initialization failed");
+	//	}
+	//}
+	//else {
+	//	std::cout << "Database still not found at: " << databasePath << std::endl;
+	//}
+
+	//std::cout << "Engine working directory: " << std::filesystem::current_path() << std::endl;
+
+	std::string databasePath = "../Ermine-Game.lion_rcdbase";  // Adjust path as needed
+	std::string projectGuid = "";  // Leave empty to auto-detect, or put your actual project GUID
+
+	if (!AssetManager::GetInstance().Initialize(databasePath, projectGuid)) {
+		EE_CORE_WARN("AssetManager database initialization failed, falling back to direct loading");
+	}
+
 	EnableMemoryLeakChecking();
 
 	Input::Init(windowContext);
@@ -219,7 +252,7 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	// Create graphics resources
 	auto shader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/vertex.glsl", "../Resources/Shaders/fragment.glsl");
-	auto texture = AssetManager::GetInstance().LoadTexture("../Resources/Textures/greybox_grey_grid.png");
+	auto texture = AssetManager::GetInstance().LoadTexture("../Resources/Textures/greybox_light_grid.png");
 
 	// Load skybox shader and create a simple test cubemap
 	auto skyboxShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/skybox_vertex.glsl", "../Resources/Shaders/skybox_fragment.glsl");

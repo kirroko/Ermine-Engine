@@ -26,6 +26,7 @@ IncludeDir["rapidjson"] = "ThirdParty/rapidjson"
 IncludeDir["Fmod"] = "ThirdParty/Fmod/inc"
 IncludeDir["Jolt"] = "ThirdParty"
 IncludeDir["assimp"] = "ThirdParty/assimp/include"
+IncludeDir["DirectXTex"] = "ThirdParty/DirectXTex/inc"
 IncludeDir["xproperty"] = "ThirdParty/xproperty/source"
 
 -- Libraries
@@ -33,6 +34,7 @@ LibraryDir = {}
 LibraryDir["Fmod"] = "ThirdParty/Fmod/lib"
 LibraryDir["Mono"] = "ThirdParty/Mono/lib"
 LibraryDir["assimp"] = "ThirdParty/assimp/lib"
+LibraryDir["DirectXTex"] = "ThirdParty/DirectXTex/lib"
 
 -- External libraries
 group "Dependencies"
@@ -82,6 +84,7 @@ project "Ermine-Engine"
         "%{IncludeDir.Jolt}",
         "%{IncludeDir.rapidjson}",
         "%{IncludeDir.assimp}",
+        "%{IncludeDir.DirectXTex}",
         "%{IncludeDir.xproperty}"
     }
 
@@ -89,7 +92,8 @@ project "Ermine-Engine"
     {
         "%{LibraryDir.Fmod}",
         "%{LibraryDir.Mono}",
-        "%{LibraryDir.assimp}"
+        "%{LibraryDir.assimp}",
+        "%{LibraryDir.DirectXTex}"
     }
 
     links
@@ -104,7 +108,8 @@ project "Ermine-Engine"
         "opengl32.lib",
 		"mono-2.0-sgen.lib",
         "Jolt",
-        "assimp-vc143-mt.lib"
+        "assimp-vc143-mt.lib",
+        "DirectXTex.lib"
     }
 
     postbuildcommands
@@ -115,6 +120,10 @@ project "Ermine-Engine"
         -- Copy engine DLL to Editor and Game
         "{COPY} \"$(TargetPath)\" \"%OUTDIR%\\Ermine-Editor\"",
         "{COPY} \"$(TargetPath)\" \"%OUTDIR%\\Ermine-Game\"",
+
+        -- Copy resource pipeline database and project to output dir
+        ("{COPYDIR} ../Ermine-ResourcePipeline/Ermine-Game.lion_rcdbase ../Build/bin/" .. outputdir .. "/Ermine-Game.lion_rcdbase"),
+        ("{COPYDIR} ../Ermine-ResourcePipeline/Ermine-Game.lion_project ../Build/bin/" .. outputdir .. "/Ermine-Game.lion_project"),
 
         -- Runtime DLLs (Editor)
         "{COPY} \"$(SolutionDir)ThirdParty\\Fmod\\lib\\fmod.dll\" \"%OUTDIR%\\Ermine-Editor\"",
@@ -222,6 +231,22 @@ project "Ermine-Editor"
         "%{IncludeDir.Mono}",
         "%{IncludeDir.rapidjson}",
         "%{IncludeDir.xproperty}"
+    } 
+
+    -- Ensure the resource pipeline builds before running it
+    dependson { "Ermine-ResourcePipeline" }
+
+    prebuildcommands
+    {
+        'cd "%{wks.location}"',
+        -- Run ResourcePipeline from Premake output directory
+        ("\"%{wks.location}Build\\bin\\" .. outputdir .. "\\Ermine-ResourcePipeline\\Ermine-ResourcePipeline.exe\""),
+        'if errorlevel 1 exit 1'
+    }
+    
+    postbuildcommands
+    {
+        '{COPYDIR} "%{wks.location}Ermine-ResourcePipeline/Ermine-Game.lion_rcdbase" "%{cfg.targetdir}/../Ermine-Game.lion_rcdbase"'
     }
 
     links
@@ -310,6 +335,58 @@ project "Ermine-Game"
         linkoptions { "/NODEFAULTLIB:LIBCMTD" }
 
     filter "configurations:Game-Release"
+        defines "EE_RELEASE"
+        runtime "Release"
+        optimize "on"
+        linkoptions { "/NODEFAULTLIB:LIBCMT" }
+
+-- Resource pipeline project
+project "Ermine-ResourcePipeline"
+    location "Ermine-ResourcePipeline"
+    kind "ConsoleApp"
+    language "C++"
+    cppdialect "C++20"
+    staticruntime "off"
+
+    targetdir ("Build/bin/" .. outputdir .. "/%{prj.name}")
+    objdir ("Build/obj/" .. outputdir .. "/%{prj.name}")
+
+    files {
+        "%{prj.name}/Ermine-ResourcePipeline.cpp",
+        "%{prj.name}/xresource_pipeline_v2-main/dependencies/xtextfile/source/xtextfile.cpp",
+        "%{prj.name}/xresource_pipeline_v2-main/dependencies/xtextfile/source/xtextfile.h"
+    }
+
+    includedirs {
+        "%{prj.name}/xresource_pipeline_v2-main/source",
+        "%{prj.name}/xresource_pipeline_v2-main/dependencies/xtextfile/source",
+        "%{prj.name}/xresource_pipeline_v2-main/dependencies/xerr/source",
+        "%{IncludeDir.DirectXTex}"
+    }
+
+    libdirs
+    {
+        "%{LibraryDir.DirectXTex}"
+    }
+
+    links
+    {
+        "DirectXTex.lib"
+    }
+
+    warnings "Extra"
+    characterset "Unicode"
+
+    filter "system:windows"
+        defines { "PLATFORM_WINDOWS" }
+
+    filter "configurations:Editor-Debug"
+        defines "EE_DEBUG"
+        runtime "Debug"
+        symbols "on"
+        linkoptions { "/NODEFAULTLIB:LIBCMTD" }
+
+    filter "configurations:Editor-Release"
         defines "EE_RELEASE"
         runtime "Release"
         optimize "on"

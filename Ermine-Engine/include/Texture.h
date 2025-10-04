@@ -48,6 +48,8 @@ namespace Ermine::graphics
         Texture(Texture && other) noexcept;
         Texture& operator=(Texture&& other) noexcept;
 
+        bool LoadFromDDS(const std::string& ddsFilePath);
+
         /**
          * @brief check if the texture is valid
          * @return true if the texture is valid, false otherwise

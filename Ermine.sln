@@ -2,6 +2,9 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Ermine-Editor", "Ermine-Editor\Ermine-Editor.vcxproj", "{397C7682-A53C-F2B8-6E77-3B36DAF63695}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D010C24B-3C48-0AE3-4552-6E06B10831DC} = {D010C24B-3C48-0AE3-4552-6E06B10831DC}
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Dependencies", "Dependencies", "{53E47842-3FC8-3998-A828-34EB942B241A}"
 EndProject
@@ -20,6 +23,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Ermine-Engine", "Ermine-Engine\Ermine-Engine.vcxproj", "{88292A83-F4E9-A5B9-BD24-EF3629A4EA95}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Ermine-Game", "Ermine-Game\Ermine-Game.vcxproj", "{ECBB8D2C-5871-0622-E165-00F94D1AFD25}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Ermine-ResourcePipeline", "Ermine-ResourcePipeline\Ermine-ResourcePipeline.vcxproj", "{D010C24B-3C48-0AE3-4552-6E06B10831DC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ermine-ScriptAssembly", "Ermine-ScriptAssembly\Ermine-ScriptAssembly.csproj", "{E76B644C-53D8-1F47-1CCC-B7A488F741AF}"
 EndProject
@@ -105,6 +110,14 @@ Global
 		{ECBB8D2C-5871-0622-E165-00F94D1AFD25}.Game-Debug|x64.Build.0 = Game-Debug|x64
 		{ECBB8D2C-5871-0622-E165-00F94D1AFD25}.Game-Release|x64.ActiveCfg = Game-Release|x64
 		{ECBB8D2C-5871-0622-E165-00F94D1AFD25}.Game-Release|x64.Build.0 = Game-Release|x64
+		{D010C24B-3C48-0AE3-4552-6E06B10831DC}.Editor-Debug|x64.ActiveCfg = Editor-Debug|x64
+		{D010C24B-3C48-0AE3-4552-6E06B10831DC}.Editor-Debug|x64.Build.0 = Editor-Debug|x64
+		{D010C24B-3C48-0AE3-4552-6E06B10831DC}.Editor-Release|x64.ActiveCfg = Editor-Release|x64
+		{D010C24B-3C48-0AE3-4552-6E06B10831DC}.Editor-Release|x64.Build.0 = Editor-Release|x64
+		{D010C24B-3C48-0AE3-4552-6E06B10831DC}.Game-Debug|x64.ActiveCfg = Game-Debug|x64
+		{D010C24B-3C48-0AE3-4552-6E06B10831DC}.Game-Debug|x64.Build.0 = Game-Debug|x64
+		{D010C24B-3C48-0AE3-4552-6E06B10831DC}.Game-Release|x64.ActiveCfg = Game-Release|x64
+		{D010C24B-3C48-0AE3-4552-6E06B10831DC}.Game-Release|x64.Build.0 = Game-Release|x64
 		{E76B644C-53D8-1F47-1CCC-B7A488F741AF}.Editor-Debug|x64.ActiveCfg = Editor-Debug|x64
 		{E76B644C-53D8-1F47-1CCC-B7A488F741AF}.Editor-Debug|x64.Build.0 = Editor-Debug|x64
 		{E76B644C-53D8-1F47-1CCC-B7A488F741AF}.Editor-Release|x64.ActiveCfg = Editor-Release|x64

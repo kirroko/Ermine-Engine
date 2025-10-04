@@ -112,6 +112,14 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalOptions>/NODEFAULTLIB:LIBCMTD %(AdditionalOptions)</AdditionalOptions>
     </Link>
+    <PreBuildEvent>
+      <Command>cd "$(SolutionDir)"
+"$(SolutionDir)Build\bin\Editor-Debug-windows-x86_64\Ermine-ResourcePipeline\Ermine-ResourcePipeline.exe"
+if errorlevel 1 exit 1</Command>
+    </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>xcopy /Q /E /Y /I "$(SolutionDir)Ermine-ResourcePipeline\Ermine-Game.lion_rcdbase" "..\Build\bin\Editor-Debug-windows-x86_64\Ermine-Game.lion_rcdbase"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Editor-Release|x64'">
     <ClCompile>
@@ -135,6 +143,14 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalOptions>/NODEFAULTLIB:LIBCMT %(AdditionalOptions)</AdditionalOptions>
     </Link>
+    <PreBuildEvent>
+      <Command>cd "$(SolutionDir)"
+"$(SolutionDir)Build\bin\Editor-Release-windows-x86_64\Ermine-ResourcePipeline\Ermine-ResourcePipeline.exe"
+if errorlevel 1 exit 1</Command>
+    </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>xcopy /Q /E /Y /I "$(SolutionDir)Ermine-ResourcePipeline\Ermine-Game.lion_rcdbase" "..\Build\bin\Editor-Release-windows-x86_64\Ermine-Game.lion_rcdbase"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Game-Debug|x64'">
     <ClCompile>
@@ -151,6 +167,14 @@
     <Link>
       <SubSystem>Console</SubSystem>
     </Link>
+    <PreBuildEvent>
+      <Command>cd "$(SolutionDir)"
+"$(SolutionDir)Build\bin\Game-Debug-windows-x86_64\Ermine-ResourcePipeline\Ermine-ResourcePipeline.exe"
+if errorlevel 1 exit 1</Command>
+    </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>xcopy /Q /E /Y /I "$(SolutionDir)Ermine-ResourcePipeline\Ermine-Game.lion_rcdbase" "..\Build\bin\Game-Debug-windows-x86_64\Ermine-Game.lion_rcdbase"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Game-Release|x64'">
     <ClCompile>
@@ -167,6 +191,14 @@
     <Link>
       <SubSystem>Console</SubSystem>
     </Link>
+    <PreBuildEvent>
+      <Command>cd "$(SolutionDir)"
+"$(SolutionDir)Build\bin\Game-Release-windows-x86_64\Ermine-ResourcePipeline\Ermine-ResourcePipeline.exe"
+if errorlevel 1 exit 1</Command>
+    </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>xcopy /Q /E /Y /I "$(SolutionDir)Ermine-ResourcePipeline\Ermine-Game.lion_rcdbase" "..\Build\bin\Game-Release-windows-x86_64\Ermine-Game.lion_rcdbase"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\Application.cpp" />
