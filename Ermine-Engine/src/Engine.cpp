@@ -303,8 +303,12 @@ bool engine::Init(GLFWwindow* windowContext)
 		{
 #ifdef _DEBUG
 			editor::EditorCamera::GetInstance().SetViewportSize(static_cast<float>(width), static_cast<float>(height));
-#endif
+#else
 			glViewport(0, 0, width, height);
+			auto renderer = ECS::GetInstance().GetSystem<graphics::Renderer>();
+			if (renderer && width > 0 && height > 0)
+				renderer->OnWindowResize(width, height);
+#endif
 		});
 
 	// Create graphics resources
@@ -581,10 +585,12 @@ bool engine::Init(GLFWwindow* windowContext)
 	g_CurrentState = &g_IdleState;
 
 	//EE_CORE_INFO("FSM Test Cube created with ID: {}", s_FSMCube);
-	// Init Renderer after objects haVe been initialised
-	ECS::GetInstance().GetSystem<graphics::Renderer>()->Init(1280, 720);
-
-	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+	int windowWidth, windowHeight;
+	glfwGetWindowSize(windowContext, &windowWidth, &windowHeight);
+	if (windowWidth > 0 && windowHeight > 0)
+		ECS::GetInstance().GetSystem<graphics::Renderer>()->Init(windowWidth, windowHeight);
+	else
+		ECS::GetInstance().GetSystem<graphics::Renderer>()->Init(1920, 1080); // Fallback to default size
 
 	// Create ImGUI window for Asset Browser
 	editor::EditorGUI::CreateImGUIWindow<ImguiUI::AssetBrowser>(); //TODO: Standardize please, do we want namespace ImGui for all window or not

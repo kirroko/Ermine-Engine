@@ -1,3 +1,17 @@
+/* Start Header ************************************************************************/
+/*!
+\file       HierarchyPanel.cpp
+\author     Edwin Lee Zirui, edwinzirui.lee, 2301299, edwinzirui.lee\@digipen.edu
+\date       Sep 05, 2025
+\brief      Hierarchy panel UI for scene entity tree management with drag-and-drop
+            parenting support.
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents without the
+prior written consent of DigiPen Institute of Technology is prohibited.
+*/
+/* End Header **************************************************************************/
+
 #include "PreCompile.h"
 #include "HierarchyPanel.h"
 #include "Components.h"
@@ -133,21 +147,21 @@ namespace Ermine {
                 ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
                 ImGui::CloseCurrentPopup();
             }
-            if (ImGui::MenuItem("Duplicate Selected")) {
-                EntityID selectedEntity = m_ActiveScene->GetSelectedEntity();
-                if (selectedEntity != 0) {
-                    // Clone the entity and add it to the scene
-                    EntityID newEntity = ECS::GetInstance().CloneEntity(selectedEntity);
+            //if (ImGui::MenuItem("Duplicate Selected")) {
+            //    EntityID selectedEntity = m_ActiveScene->GetSelectedEntity();
+            //    if (selectedEntity != 0) {
+            //        // Clone the entity and add it to the scene
+            //        EntityID newEntity = ECS::GetInstance().CloneEntity(selectedEntity);
 
-                    // Optionally, set a new name for the duplicated entity
-                    auto& meta = ECS::GetInstance().GetComponent<ObjectMetaData>(newEntity);
-                    meta.name += " (Copy)";
+            //        // Optionally, set a new name for the duplicated entity
+            //        auto& meta = ECS::GetInstance().GetComponent<ObjectMetaData>(newEntity);
+            //        meta.name += " (Copy)";
 
-                    // Add the new entity to the scene and select it
-                    m_ActiveScene->SetSelectedEntity(newEntity);
-                    ImGui::SetWindowFocus("Inspector");
-                }
-            }
+            //        // Add the new entity to the scene and select it
+            //        m_ActiveScene->SetSelectedEntity(newEntity);
+            //        ImGui::SetWindowFocus("Inspector");
+            //    }
+            //}
             ImGui::EndPopup();
         }
 

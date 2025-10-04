@@ -588,6 +588,8 @@ void Renderer::ResizeGBuffer(const int& width, const int& height)
 
 	CreateGBuffer(width, height);
 
+	CreatePostProcessBuffer(width, height);
+
 	ResizePickingBuffer(width, height);
 }
 
@@ -1004,9 +1006,6 @@ void Renderer::RenderPostProcessPass()
 	glViewport(0, 0, m_OffscreenBuffer->width, m_OffscreenBuffer->height);
 #else
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	GLint viewport[4];
-	glGetIntegerv(GL_VIEWPORT, viewport);
-	glViewport(0, 0, viewport[2], viewport[3]);
 #endif
 
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -3136,4 +3135,15 @@ std::pair<bool, Ermine::EntityID> Renderer::PickEntityAt(const int& x, const int
 
 	return { true, picked };
 #endif
+}
+
+/**
+ * @brief Handle window resize events to adjust buffers and viewports
+ * @param width New window width
+ * @param height New window height
+ */
+void Renderer::OnWindowResize(const int& width, const int& height)
+{
+	if (m_UseDeferredRendering)
+			ResizeGBuffer(width, height);
 }

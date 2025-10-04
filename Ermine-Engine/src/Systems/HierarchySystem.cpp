@@ -109,7 +109,7 @@ namespace Ermine
             // Get parent's world transform
             auto& parentHierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(hierarchy.parent);
             auto& parentTransform = ECS::GetInstance().GetComponent<Transform>(hierarchy.parent);
-
+			UNREFERENCED_PARAMETER(parentHierarchy);
             // World = Parent's World * Local
             transform.transform_matrix = parentTransform.transform_matrix * localMatrix;
 

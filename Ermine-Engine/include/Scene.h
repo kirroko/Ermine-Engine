@@ -3,14 +3,13 @@
 \file       Scene.h
 \author     Edwin Lee Zirui, edwinzirui.lee 2301299, edwinzirui.lee\@digipen.edu
 \date       Jan 24, 2025
-\brief      Updated components with modular material system
-
+\brief      Declares the Scene class for managing collections of entities and their
+            hierarchical relationships within the game world.
 Copyright (C) 2024 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents without the
 prior written consent of DigiPen Institute of Technology is prohibited.
 */
 /* End Header **************************************************************************/
-
 #pragma once
 #include "ECS.h"
 #include <string>
@@ -18,39 +17,115 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <unordered_set>
 
 namespace Ermine {
+    /*!
+    \class Scene
+    \brief Manages a collection of entities and provides scene-level operations
+    \details Handles entity creation/destruction, hierarchy queries, entity selection,
+             and scene-wide operations like clearing and naming.
+    */
     class Scene {
     private:
-        std::string m_Name;
-        std::unordered_set<EntityID> m_Entities;
-        EntityID m_SelectedEntity = 0;
+        std::string m_Name;                          ///< Name of the scene
+        std::unordered_set<EntityID> m_Entities;     ///< Set of all entities in this scene
+        EntityID m_SelectedEntity = 0;               ///< Currently selected entity (0 = none)
 
     public:
+        /*!
+        \brief Constructs a new scene with an optional name
+        \param name Name of the scene (defaults to "Untitled Scene")
+        */
         explicit Scene(const std::string& name = "Untitled Scene");
+
+        /*!
+        \brief Destructor - cleans up scene resources
+        */
         ~Scene();
 
         // Entity management
+        /*!
+        \brief Creates a new entity in the scene
+        \param name Name for the new entity
+        \param needsTransform If true, adds a Transform component to the entity (default: true)
+        \param needsHierarchy If true, adds a Hierarchy component to the entity (default: true)
+        \return EntityID of the newly created entity
+        */
         EntityID CreateEntity(const std::string& name, bool needsTransform = true, bool needsHierarchy = true);
+
+        /*!
+        \brief Destroys an entity and removes it from the scene
+        \param entity The entity ID to destroy
+        */
         void DestroyEntity(EntityID entity);
+
+        /*!
+        \brief Checks if an entity exists in this scene
+        \param entity The entity ID to check
+        \return True if the entity exists in this scene, false otherwise
+        */
         bool HasEntity(EntityID entity) const;
 
         // Hierarchy queries
+        /*!
+        \brief Gets all root-level entities (entities without parents) in the scene
+        \return Vector of root entity IDs
+        */
         std::vector<EntityID> GetRootEntities() const;
+
+        /*!
+        \brief Gets all entities in the scene
+        \return Vector of all entity IDs
+        */
         std::vector<EntityID> GetAllEntities() const;
 
         // Selection
+        /*!
+        \brief Sets the currently selected entity
+        \param entity The entity ID to select (0 to clear selection)
+        */
         void SetSelectedEntity(EntityID entity);
+
+        /*!
+        \brief Gets the currently selected entity
+        \return EntityID of the selected entity, or 0 if none is selected
+        */
         EntityID GetSelectedEntity() const { return m_SelectedEntity; }
 
-        // Selection management
+        /*!
+        \brief Clears the current entity selection
+        */
         void ClearSelection() { m_SelectedEntity = 0; }
+
+        /*!
+        \brief Checks if a specific entity is currently selected
+        \param entity The entity ID to check
+        \return True if the entity is selected, false otherwise
+        */
         bool IsEntitySelected(EntityID entity) const { return m_SelectedEntity == entity; }
 
         // Scene properties
+        /*!
+        \brief Gets the name of the scene
+        \return Reference to the scene name string
+        */
         const std::string& GetName() const { return m_Name; }
+
+        /*!
+        \brief Sets the name of the scene
+        \param name New name for the scene
+        */
         void SetName(const std::string& name) { m_Name = name; }
 
         // Cleanup
+        /*!
+        \brief Clears all entities from the scene
+        \details Destroys all entities and resets the scene to an empty state
+        */
         void Clear();
+
+        /*!
+        \brief Gets the total number of entities in the scene
+        \return Number of entities
+        */
         size_t GetEntityCount() const { return m_Entities.size(); }
     };
 }

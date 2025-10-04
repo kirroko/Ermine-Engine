@@ -683,7 +683,7 @@ namespace Ermine
         }
 
         auto& globalAudio = ecs.GetComponent<GlobalAudioComponent>(m_GlobalAudioEntity);
-
+		UNREFERENCED_PARAMETER(globalAudio);
         ImGui::Text("Entity ID: %u", m_GlobalAudioEntity);
         ImGui::Separator();
 

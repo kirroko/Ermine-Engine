@@ -27,6 +27,7 @@ IncludeDir["Fmod"] = "ThirdParty/Fmod/inc"
 IncludeDir["Jolt"] = "ThirdParty"
 IncludeDir["assimp"] = "ThirdParty/assimp/include"
 IncludeDir["DirectXTex"] = "ThirdParty/DirectXTex/inc"
+IncludeDir["xproperty"] = "ThirdParty/xproperty/source"
 
 -- Libraries
 LibraryDir = {}
@@ -84,6 +85,7 @@ project "Ermine-Engine"
         "%{IncludeDir.rapidjson}",
         "%{IncludeDir.assimp}",
         "%{IncludeDir.DirectXTex}"
+        "%{IncludeDir.xproperty}"
     }
 
     libdirs
@@ -194,7 +196,8 @@ project "Ermine-Editor"
         "%{IncludeDir.stb}",
         "%{IncludeDir.Fmod}",
         "%{IncludeDir.Mono}",
-        "%{IncludeDir.rapidjson}"
+        "%{IncludeDir.rapidjson}",
+        "%{IncludeDir.xproperty}"
     }
 
     links
