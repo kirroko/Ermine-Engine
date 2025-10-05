@@ -24,6 +24,7 @@ public:
 
     // File operations
     void NewScene();
+    void ClearScene();
     void OpenSceneDialog();
     void SaveScene();
     void SaveSceneAsDialog();

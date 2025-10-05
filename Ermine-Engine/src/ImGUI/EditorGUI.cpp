@@ -139,7 +139,7 @@ void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
         {
             if (auto path = SceneManager::ShowOpenDialog(GetActiveWindow()))
             {
-                SceneManager::GetInstance().NewScene();
+                SceneManager::GetInstance().ClearScene();
                 SceneManager::GetInstance().OpenScene(*path);
             }
         }

@@ -520,6 +520,8 @@ bool engine::Init(GLFWwindow* windowContext)
 	else
 		ECS::GetInstance().GetSystem<graphics::Renderer>()->Init(1920, 1080); // Fallback to default size
 
+	SceneManager::GetInstance().NewScene();
+
 	EE_CORE_INFO("Material system now supports efficient sharing between entities using shared_ptr");
 	EE_CORE_INFO("Systems and components registered successfully, Engine Initialized");
 
