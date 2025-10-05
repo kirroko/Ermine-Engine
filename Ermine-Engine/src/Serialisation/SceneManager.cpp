@@ -147,6 +147,8 @@ void SceneManager::NewScene()
 
     Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>()->UpdateShadowMap();
     Ermine::ECS::GetInstance().GetSystem<Ermine::Physics>()->UpdatePhysicList();
+    if (auto scene = SceneManager::GetInstance().GetActiveScene())
+        scene->EnsureSyncedWithECS(/*force=*/true);
     m_CurrentScenePath.reset();
     m_Dirty = false;
 }
@@ -157,6 +159,9 @@ void SceneManager::ClearScene()
     Ermine::ECS::GetInstance().ClearAllEntities();
 
     //Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>()->UpdateShadowMap();
+    if (auto scene = GetActiveScene()) {
+        scene->EnsureSyncedWithECS();
+    }
     Ermine::ECS::GetInstance().GetSystem<Ermine::Physics>()->UpdatePhysicList();
     m_CurrentScenePath.reset();
     m_Dirty = false;
@@ -176,9 +181,8 @@ void SceneManager::OpenScene(const std::string& path)
     LoadSceneFromFile(Ermine::ECS::GetInstance(), path);
     Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>()->UpdateShadowMap();
 
-    if (auto scene = GetActiveScene()) {
-        scene->EnsureSyncedWithECS();
-    }
+    if (auto scene = SceneManager::GetInstance().GetActiveScene())
+        scene->EnsureSyncedWithECS(/*force=*/true);
 
     m_CurrentScenePath = path;
     m_Dirty = false;

@@ -128,6 +128,6 @@ namespace Ermine {
         */
         size_t GetEntityCount() const { return m_Entities.size(); }
 
-        void EnsureSyncedWithECS() const;
+        void EnsureSyncedWithECS(bool force = false) const;
     };
 }
