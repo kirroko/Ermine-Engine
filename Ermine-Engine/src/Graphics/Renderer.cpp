@@ -65,6 +65,17 @@ GLenum glCheckError_(const char* file, int line)
 }
 #define glCheckError() glCheckError_(__FILE__, __LINE__)
 
+void Renderer::UpdateShadowMap()
+{
+	InitializeShadowMap();
+	for (EntityID entity : m_LightSystem->m_Entities)
+	{
+		auto& light = Ermine::ECS::GetInstance().GetComponent<Light>(entity);
+		if (light.castsShadows)
+			CreateShadowMapArray();
+	}
+}
+
 /**
  * @brief Initializes the renderer and its resources.
  * @param screenWidth Width of the screen.
@@ -105,13 +116,7 @@ void Renderer::Init(const int& screenWidth, const int& screenHeight)
 	CreatePostProcessBuffer(screenWidth, screenHeight);
 
 	// Create shadow map FBO and texture
-	InitializeShadowMap();
-	for (EntityID entity : m_LightSystem->m_Entities)
-	{
-		auto& light = Ermine::ECS::GetInstance().GetComponent<Light>(entity);
-		if (light.castsShadows)
-			CreateShadowMapArray();
-	}
+	UpdateShadowMap();
 
 	m_PickingShader = AssetManager::GetInstance().LoadShader(
 		"../Resources/Shaders/picking_vertex.glsl",
