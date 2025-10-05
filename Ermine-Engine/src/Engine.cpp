@@ -31,7 +31,6 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "AudioSystem.h"
 #include "Particles.h"
 #include "Physics.h"
-#include "MathVector.h"
 #include "FiniteStateMachine.h"
 #include "Skybox.h"
 #include "Cubemap.h"
@@ -45,11 +44,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "AssetBrowser.h"
 #include "EditorCamera.h"
 #include "EditorGUI.h"
-#include "InspectorGUI.h"
 #include "ViewPortGUI.h"
 #include "AudioImGUI.h"
-#include "HierarchyInspector.h"
-#include "HierarchyPanel.h"
 #include "SceneManager.h"
 #endif
 
@@ -675,9 +671,9 @@ void engine::Render(GLFWwindow* window)
 		editor::EditorGUI::Render();
 #endif
 
-	graphics::GPUProfiler::EndFrame();
-
 	glfwSwapBuffers(window);
+
+	graphics::GPUProfiler::EndFrame();
 }
 
 void engine::HandleShadingToggle(GLFWwindow* windowContext)

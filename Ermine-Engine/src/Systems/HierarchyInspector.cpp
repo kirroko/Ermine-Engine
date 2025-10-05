@@ -966,27 +966,29 @@ namespace Ermine::editor {
         // Editable class name
         char buf[256];
         strcpy_s(buf, script.m_className.c_str());
-        if (ImGui::InputText("Class", buf, sizeof(buf))) {
-            script.m_className = buf;
-            // TODO: rebuild ScriptInstance here if you support hot-reload
+        if (ImGui::InputText("Class", buf, sizeof(buf), ImGuiInputTextFlags_EnterReturnsTrue)) {
+			script = Script{ std::string(buf), entity };
+            //script.m_className = buf;
+            //ECS::GetInstance().RemoveComponent<Script>(entity);
+            //ECS::GetInstance().AddComponent<Script>(entity, Script{ std::string(buf), entity});
         }
 
         // Enable toggle
-        ImGui::Checkbox("Enabled", &script.m_enabled);
+        //ImGui::Checkbox("Enabled", &script.m_enabled);
 
         // Status
-        ImGui::Text("Started: %s", script.m_started ? "Yes" : "No");
+        //ImGui::Text("Started: %s", script.m_started ? "Yes" : "No");
 
         // Optional runtime controls
-        if (ImGui::Button("Start")) {
-            // TODO: call into your script system: script.Start(entity);
-            script.m_started = true;
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("Stop")) {
-            // TODO: ScriptSystem::Stop(entity);
-            script.m_started = false;
-        }
+        //if (ImGui::Button("Start")) {
+        //    // TODO: call into your script system: script.Start(entity);
+        //    script.m_started = true;
+        //}
+        //ImGui::SameLine();
+        //if (ImGui::Button("Stop")) {
+        //    // TODO: ScriptSystem::Stop(entity);
+        //    script.m_started = false;
+        //}
     }
 
     void HierarchyInspector::DrawModelComponent(EntityID entity)

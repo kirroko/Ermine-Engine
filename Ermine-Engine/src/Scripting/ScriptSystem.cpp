@@ -36,7 +36,11 @@ Ermine::scripting::ScriptSystem::ScriptSystem()
 		"../../../../Ermine-ScriptSandbox/Ermine-ScriptSandbox.csproj",
 		"../../../../Ermine-ScriptSandbox",
 		"../Ermine-ScriptSandbox/Ermine-ScriptSandbox.dll",
-		"Debug",
+#if defined(EE_DEBUG)
+		"Editor-Debug",
+#elif defined(EE_RELEASE)
+		"Editor-Release",
+#endif
 		"x64", "MSBuild.exe");
 	m_ScriptEngine->StartWatchingScriptSources();
 #endif
