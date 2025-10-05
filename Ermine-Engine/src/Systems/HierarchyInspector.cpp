@@ -3,7 +3,7 @@
 \file       HierarchyInspector.cpp
 \author     Edwin Lee Zirui, edwinzirui.lee, 2301299, edwinzirui.lee\@digipen.edu (30%)
 \co-author  WEE HONG RU Curtis, h.wee, 2301266, h.wee\@digipen.edu (70%)
-\date       27/03/2025
+\date       10/09/2025
 \brief      Inspector panel for viewing and editing entity properties
 
 Copyright (C) 2025 DigiPen Institute of Technology.
