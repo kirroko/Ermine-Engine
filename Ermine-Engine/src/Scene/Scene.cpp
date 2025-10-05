@@ -14,6 +14,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "PreCompile.h"
 #include "Scene.h"
 #include "Components.h"
+#include "ECS.h"
 #include "HierarchySystem.h"
 
 namespace Ermine {
@@ -22,7 +23,7 @@ namespace Ermine {
     }
 
     Scene::~Scene() {
-        Clear();
+        //Clear();
     }
 
     EntityID Scene::CreateEntity(const std::string& name, bool needsTransform, bool needsHierarchy) {
@@ -80,6 +81,7 @@ namespace Ermine {
     }
 
     std::vector<EntityID> Scene::GetRootEntities() const {
+        EnsureSyncedWithECS();
         std::vector<EntityID> roots;
 
         for (auto entity : m_Entities) {
@@ -112,6 +114,7 @@ namespace Ermine {
     }
 
     std::vector<EntityID> Scene::GetAllEntities() const {
+        EnsureSyncedWithECS();
         return std::vector<EntityID>(m_Entities.begin(), m_Entities.end());
     }
 
@@ -126,5 +129,27 @@ namespace Ermine {
         m_Entities.clear();
         m_SelectedEntity = 0;
         EE_CORE_INFO("Cleared scene: {}", m_Name);
+    }
+    void Scene::EnsureSyncedWithECS() const
+    {
+        if (!m_Entities.empty()) return; // already synced (cheap guard)
+
+        auto& ecs = ECS::GetInstance();
+        for (EntityID e = 0; e < MAX_ENTITIES; ++e) {
+            if (!ecs.IsEntityValid(e)) continue;
+
+            // Only list things that participate in the hierarchy
+            if (!ecs.HasComponent<HierarchyComponent>(e)) continue;
+
+            m_Entities.insert(e);
+
+            // If parent is invalid (or missing HC), adopt as root so it shows up
+            auto& hc = ecs.GetComponent<HierarchyComponent>(e);
+            if (hc.parent != 0 &&
+                (!ecs.IsEntityValid(hc.parent) || !ecs.HasComponent<HierarchyComponent>(hc.parent))) {
+                hc.parent = 0;
+                hc.depth = 0;
+            }
+        }
     }
 }

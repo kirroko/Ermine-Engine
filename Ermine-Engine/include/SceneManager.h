@@ -15,6 +15,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "PreCompile.h"
 #include <string>
 #include <optional>
+#include "Scene.h"
 
 class SceneManager
 {
@@ -42,9 +43,19 @@ public:
 
     static std::optional<std::string> ShowOpenDialog(HWND owner = nullptr);
 
+    void SetActiveScene(const std::shared_ptr<Ermine::Scene>& s) { m_ActiveScene = s; }
+    std::shared_ptr<Ermine::Scene> GetActiveScene() const { return m_ActiveScene; }
+
+    Ermine::Scene& EnsureActiveScene() {
+        if (!m_ActiveScene) m_ActiveScene = std::make_shared<Ermine::Scene>("Untitled Scene");
+        return *m_ActiveScene;
+    }
+
 private:
     SceneManager() = default;
 
     std::optional<std::string> m_CurrentScenePath; // full file path
     bool m_Dirty = false; // set true when scene modified
+
+    std::shared_ptr<Ermine::Scene> m_ActiveScene;
 };

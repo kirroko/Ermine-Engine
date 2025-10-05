@@ -711,8 +711,36 @@ namespace Ermine
 				}
 				};
 
-			// Core PBR parameters (names follow graphics::Material templates)
-			writeVec3("materialAlbedo");
+			auto writeVec4 = [&](const char* name) {
+				if (auto p = m_material->GetParameter(name); p && p->floatValues.size() >= 4) {
+					rapidjson::Value a(rapidjson::kArrayType);
+					a.PushBack(p->floatValues[0], alloc)
+						.PushBack(p->floatValues[1], alloc)
+						.PushBack(p->floatValues[2], alloc)
+						.PushBack(p->floatValues[3], alloc);
+					params.AddMember(rapidjson::StringRef(name), a, alloc);
+
+					// Also emit explicit alpha & transparency fields for compatibility
+					const float alpha = p->floatValues[3];
+					rapidjson::Value alphaVal; alphaVal.SetFloat(alpha);
+					params.AddMember("materialAlpha", alphaVal, alloc);
+
+					rapidjson::Value tVal; tVal.SetFloat(1.0f - alpha);
+					params.AddMember("materialTransparency", tVal, alloc);
+					return true;
+				}
+				return false;
+				};
+
+			// Core PBR parameters (prefer RGBA if available; fall back to RGB)
+			bool wroteRGBA = writeVec4("materialAlbedo");
+			if (!wroteRGBA) {
+				// Legacy RGB path
+				writeVec3("materialAlbedo");
+				// If an explicit alpha was authored as separate fields, preserve them too
+				writeFloat("materialAlpha");
+				writeFloat("materialTransparency");
+			}
 			writeFloat("materialMetallic");
 			writeFloat("materialRoughness");
 			writeFloat("materialAo");
@@ -810,8 +838,57 @@ namespace Ermine
 						if (compatName) m_material->SetBool(compatName, p[name].GetBool());
 					}
 					};
-				// Core PBR parameters
-				readVec3("materialAlbedo", "material.albedo");
+
+				// --- DESERIALIZE: accept vec4/vec3 + (alpha or transparency) and normalize to vec4 ---
+				auto readVec4 = [&](const char* name, const char* compatName = nullptr) {
+					if (p.HasMember(name) && p[name].IsArray() && p[name].Size() == 4) {
+						Vec4 v{ p[name][0].GetFloat(), p[name][1].GetFloat(), p[name][2].GetFloat(), p[name][3].GetFloat() };
+						m_material->SetVec4(name, v);
+						if (compatName) m_material->SetVec4(compatName, v);
+						// Keep explicit alpha/transparency mirrors in params for editor UIs
+						m_material->SetFloat("materialAlpha", v.w);
+						m_material->SetFloat("materialTransparency", 1.0f - v.w);
+						return true;
+					}
+					return false;
+					};
+
+				auto readAlphaOrTransparency = [&]() -> std::optional<float> {
+					// Prefer alpha if present; else compute from transparency
+					if (p.HasMember("materialAlpha") && p["materialAlpha"].IsNumber())
+						return p["materialAlpha"].GetFloat();
+					if (p.HasMember("materialTransparency") && p["materialTransparency"].IsNumber()) {
+						float tr = p["materialTransparency"].GetFloat();
+						return 1.0f - tr;
+					}
+					return std::nullopt;
+					};
+
+				// Core PBR parameters (albedo first)
+				bool readRGBA = readVec4("materialAlbedo", "material.albedo");
+				if (!readRGBA) {
+					// Legacy RGB load
+					readVec3("materialAlbedo", "material.albedo");
+					// If we only have RGB, try to augment with alpha/transparency
+					if (auto alphaOpt = readAlphaOrTransparency()) {
+						// Build a Vec4 from the currently set RGB (or defaults if absent)
+						Vec3 rgb{ 0.8f, 0.8f, 0.8f };
+						if (const auto* cur = m_material->GetParameter("materialAlbedo")) {
+							if (cur->floatValues.size() >= 3) {
+								rgb = Vec3(cur->floatValues[0], cur->floatValues[1], cur->floatValues[2]);
+							}
+						}
+						const float a = std::clamp(*alphaOpt, 0.0f, 1.0f);
+						m_material->SetVec4("materialAlbedo", Vec4(rgb.x, rgb.y, rgb.z, a));
+						m_material->SetVec4("material.albedo", Vec4(rgb.x, rgb.y, rgb.z, a));
+						m_material->SetFloat("materialAlpha", a);
+						m_material->SetFloat("materialTransparency", 1.0f - a);
+					}
+				}
+				else {
+					// If RGBA was present, we've already mirrored alpha/transparency above
+				}
+
 				readFloat("materialMetallic", "material.metallic");
 				readFloat("materialRoughness", "material.roughness");
 				readFloat("materialAo", "material.ao");
