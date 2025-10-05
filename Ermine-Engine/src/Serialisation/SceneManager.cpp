@@ -175,7 +175,7 @@ void SceneManager::OpenSceneDialog()
 
 void SceneManager::OpenScene(const std::string& path)
 {
-    auto& ecs = Ermine::ECS::GetInstance();
+    //auto& ecs = Ermine::ECS::GetInstance();
     //EnsureActiveScene().Clear();
 
     LoadSceneFromFile(Ermine::ECS::GetInstance(), path);
