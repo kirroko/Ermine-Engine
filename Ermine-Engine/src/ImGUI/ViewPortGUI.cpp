@@ -29,6 +29,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "EditorGUI.h"
 #include "HierarchyPanel.h"
 #include "Scene.h"
+#include "SceneManager.h"
 
 using namespace Ermine::editor;
 
@@ -69,11 +70,7 @@ namespace
 	}
 }
 
-Ermine::ViewPortGUI::ViewPortGUI() : ImGUIWindow("Viewport"), show(true), ref_Inspector(nullptr)
-{
-}
-
-Ermine::ViewPortGUI::ViewPortGUI(InspectorGUI* ref) : ImGUIWindow("Viewport"), show(true), ref_Inspector(ref)
+Ermine::ViewPortGUI::ViewPortGUI() : ImGUIWindow("Viewport"), show(true)
 {
 }
 
@@ -226,7 +223,8 @@ void Ermine::ViewPortGUI::Update()
 	const bool overViewCube = ImGui::IsMouseHoveringRect(vmPos, vmPosBR, false);
 
 	EntityID selectedEntity{};
-	selectedEntity = ref_Inspector->GetEntity();
+	//selectedEntity = ref_Inspector->GetEntity();
+	selectedEntity = SceneManager::GetInstance().GetActiveScene()->GetSelectedEntity();
 
 	// Keyboard shortcuts for gizmo
 	static ImGuizmo::OPERATION gOperation = ImGuizmo::TRANSLATE;
@@ -377,12 +375,8 @@ void Ermine::ViewPortGUI::Update()
 					EditorCamera::GetInstance().GetViewMatrix(),
 					EditorCamera::GetInstance().GetProjectionMatrix());
 
-				if (hit && ref_Inspector)
-				{
-					ref_Inspector->SetEntity(entity);
-					EditorGUI::GetActiveScene().get()->SetSelectedEntity(entity);
-					//HierarchyPanel::GetScene().SetSelectedEntity(entity)
-				}
+				if (hit)
+					SceneManager::GetInstance().GetActiveScene()->SetSelectedEntity(entity);
 			}
 		}
 	}

@@ -7,6 +7,7 @@ The Ermine Engine made by third year students of DigiPen Singapore.
 ## Key Features
 
 ### Core Systems
+
 - Entity-Component-System (ECS) architecture
 - Hierarchical entity parenting
 - Scene serialization (Save / Load)
@@ -14,6 +15,7 @@ The Ermine Engine made by third year students of DigiPen Singapore.
 - Asset database with pipeline integration
 
 ### Rendering
+
 - Physically-Based Rendering (PBR)
 - Image-Based Lighting (IBL)
 - HDR + Bloom post-processing
@@ -24,21 +26,25 @@ The Ermine Engine made by third year students of DigiPen Singapore.
 - Screen-space Ambient Occlusion (SSAO) toggle
 
 ### Animation & Models
+
 - Skeletal animation via Assimp FBX import
 - Soft skinning with GPU bone blending
 - Model import with material & texture binding
 
 ### Physics
+
 - Integrated with Jolt Physics (JPH)
 - Rigid body & trigger types
 - Box, Sphere, Capsule, and Mesh collider support
 - Dynamic, static, and kinematic motion types
 
 ### Audio
+
 - 3D positional audio
 - Global audio and ambient sounds
 
 ### Editor Tools
+
 - Real-time editor built with ImGui
 - Asset Browser (models, textures, shaders)
 - Scene Hierarchy & Inspector windows
@@ -53,6 +59,7 @@ The Ermine Engine made by third year students of DigiPen Singapore.
 - Parent and child Hierarchy
 
 ## Editor Controls
+
 Left Mouse         - Select an object
 Right Mouse + WASD - Move the editor camera forward and sideways
 Right Mouse + QE   - Move the editor camera up and down
@@ -85,7 +92,9 @@ Ensure that the Ermine-ResourcePipeline and .lion_rcdbase asset database are loc
 ## Team Roaster
 
 ### Programmers
+
 (IMGD)
+
 - Kean (Product Manager)
 - Ko Sand (Tech Lead)
 - Brian (Assets)
@@ -98,17 +107,22 @@ Ensure that the Ermine-ResourcePipeline and .lion_rcdbase asset database are loc
 - Edwin (Scene)
 
 ### Designers
+
 (UXGD)
+
 - Klive (Design Lead)
 - Brandon (Audio Lead)
 - Fabio (Mechanics Design)
 
 ### Artist
+
 (BFA)
+
 - Lera (Art Lead)
 - Naomi
 - Wei Jia
 
 ## License
+
 © 2025 DigiPen Institute of Technology.
 Reproduction or distribution of this project or its components without prior written consent is prohibited.

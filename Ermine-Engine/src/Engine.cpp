@@ -533,8 +533,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	//editor::EditorGUI::CreateImGUIWindow<InspectorGUI>();
 	//auto* inspector = editor::EditorGUI::CreateImGUIWindow<editor::HierarchyInspector>(editor::EditorGUI::GetActiveScene().get(), "Inspector");
 	editor::EditorGUI::CreateImGUIWindow<editor::GraphicsDebugGUI>("Graphics Debug");
-	InspectorGUI* ref = editor::EditorGUI::CreateImGUIWindow<InspectorGUI>();
-	editor::EditorGUI::CreateImGUIWindow<ViewPortGUI>(ref);
+	editor::EditorGUI::CreateImGUIWindow<ViewPortGUI>();
 
 	auto defaultScene = std::make_shared<Scene>("Main Scene");
 	editor::EditorGUI::SetActiveScene(defaultScene);
