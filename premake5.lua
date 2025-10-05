@@ -125,6 +125,9 @@ project "Ermine-Engine"
         ("{COPYDIR} ../Ermine-ResourcePipeline/Ermine-Game.lion_rcdbase ../Build/bin/" .. outputdir .. "/Ermine-Game.lion_rcdbase"),
         ("{COPYDIR} ../Ermine-ResourcePipeline/Ermine-Game.lion_project ../Build/bin/" .. outputdir .. "/Ermine-Game.lion_project"),
 
+        -- Copy DirectXTex pdb
+        ("{COPY} \"$(SolutionDir)ThirdParty\\DirectXTex\\lib\\DirectXTex.pdb\" \"%OUTDIR%\\Ermine-ResourcePipeline\""),
+
         -- Runtime DLLs (Editor)
         "{COPY} \"$(SolutionDir)ThirdParty\\Fmod\\lib\\fmod.dll\" \"%OUTDIR%\\Ermine-Editor\"",
         "{COPY} \"$(SolutionDir)ThirdParty\\Fmod\\lib\\fmodL.dll\" \"%OUTDIR%\\Ermine-Editor\"",
@@ -383,7 +386,7 @@ project "Ermine-ResourcePipeline"
     filter "system:windows"
         defines { "PLATFORM_WINDOWS" }
 
-    filter "configurations:Editor-Debug"
+    filter "configurations:*Debug"
         defines "EE_DEBUG"
         runtime "Debug"
         symbols "on"
@@ -391,7 +394,7 @@ project "Ermine-ResourcePipeline"
         libdirs { "%{LibraryDir.DirectXTex}" }
         links { "DirectXTexD.lib" }
 
-    filter "configurations:Editor-Release"
+    filter "configurations:*Release"
         defines "EE_RELEASE"
         runtime "Release"
         optimize "on"

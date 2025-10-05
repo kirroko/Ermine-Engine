@@ -515,7 +515,11 @@ bool engine::Init(GLFWwindow* windowContext)
 	else
 		ECS::GetInstance().GetSystem<graphics::Renderer>()->Init(1920, 1080); // Fallback to default size
 
+	EE_CORE_INFO("Material system now supports efficient sharing between entities using shared_ptr");
+	EE_CORE_INFO("Systems and components registered successfully, Engine Initialized");
+
 	// Editor windows
+#if defined(EE_EDITOR)
 	editor::EditorGUI::CreateImGUIWindow<ImguiUI::AssetBrowser>(); //TODO: Standardize please, do we want namespace ImGui for all window or not
 	editor::EditorGUI::CreateImGUIWindow<ParticlesImGUI>(ECS::GetInstance().GetSystem<ParticleSystem>()->GetEmitter());
 	editor::EditorGUI::CreateImGUIWindow<AudioImGUI>();
@@ -525,12 +529,10 @@ bool engine::Init(GLFWwindow* windowContext)
 	InspectorGUI* ref = editor::EditorGUI::CreateImGUIWindow<InspectorGUI>(entity2, "Inspector");
 	editor::EditorGUI::CreateImGUIWindow<ViewPortGUI>(ref);
 
-	EE_CORE_INFO("Material system now supports efficient sharing between entities using shared_ptr");
-	EE_CORE_INFO("Systems and components registered successfully, Engine Initialized");
-
 	auto defaultScene = std::make_shared<Scene>("Main Scene");
 	editor::EditorGUI::SetActiveScene(defaultScene);
 	EE_CORE_INFO("Created and set active scene: Main Scene");
+#endif
 
 	s_isInitialized = true;
 	return true;

@@ -231,7 +231,7 @@ namespace Ermine
                 }
 
                 char soundBuffer[256];
-                strncpy(soundBuffer, audioComp.soundName.c_str(), sizeof(soundBuffer) - 1);
+				strncpy_s(soundBuffer, sizeof(soundBuffer), audioComp.soundName.c_str(), sizeof(soundBuffer) - 1);
                 soundBuffer[sizeof(soundBuffer) - 1] = '\0';
 
                 if (ImGui::InputText("##EntitySoundPath", soundBuffer, sizeof(soundBuffer)))
@@ -293,7 +293,7 @@ namespace Ermine
             else
             {
                 // Entity DOESN'T have audio component - show add option
-                ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "⚠ No AudioComponent");
+                ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "No AudioComponent");
 
                 ImGui::Separator();
 
@@ -476,7 +476,7 @@ namespace Ermine
         {
             if (RenderAudioFileSelector())
             {
-                strncpy(m_SoundPath, m_SelectedAudioFile.c_str(), sizeof(m_SoundPath) - 1);
+				strncpy_s(m_SoundPath, sizeof(m_SoundPath), m_SelectedAudioFile.c_str(), sizeof(m_SoundPath) - 1);
                 m_SoundPath[sizeof(m_SoundPath) - 1] = '\0';
                 m_ShowTesterSoundBrowser = false;
                 ImGui::CloseCurrentPopup();
@@ -584,7 +584,7 @@ namespace Ermine
         ImGui::Text("Common Audio Files:");
         if (ImGui::Button("test.wav"))
         {
-            strncpy(m_SoundPath, "../Resources/Audio/test.wav", sizeof(m_SoundPath) - 1);
+			strncpy_s(m_SoundPath, sizeof(m_SoundPath), "../Resources/Audio/test.wav", sizeof(m_SoundPath) - 1);
         }
     }
 
@@ -724,7 +724,7 @@ namespace Ermine
 
                 if (ImGui::Button("Select") && !m_SelectedAudioFile.empty())
                 {
-                    strncpy(m_GlobalMusicPath, m_SelectedAudioFile.c_str(), sizeof(m_GlobalMusicPath) - 1);
+					strncpy_s(m_GlobalMusicPath, sizeof(m_GlobalMusicPath), m_SelectedAudioFile.c_str(), sizeof(m_GlobalMusicPath) - 1);
                     m_GlobalMusicPath[sizeof(m_GlobalMusicPath) - 1] = '\0';
                     m_ShowGlobalMusicBrowser = false;
                     ImGui::CloseCurrentPopup();
@@ -828,8 +828,8 @@ namespace Ermine
                         if (ImGui::Button("Edit"))
                         {
                             m_EditingMusicIndex = static_cast<int>(i);
-                            strncpy(m_EditMusicName, music.audioName.c_str(), sizeof(m_EditMusicName) - 1);
-                            strncpy(m_EditMusicPath, music.audioPath.c_str(), sizeof(m_EditMusicPath) - 1);
+							strncpy_s(m_EditMusicName, sizeof(m_EditMusicName), music.audioName.c_str(), sizeof(m_EditMusicName) - 1);
+							strncpy_s(m_EditMusicPath, sizeof(m_EditMusicPath), music.audioPath.c_str(), sizeof(m_EditMusicPath) - 1);
                             m_EditMusicName[sizeof(m_EditMusicName) - 1] = '\0';
                             m_EditMusicPath[sizeof(m_EditMusicPath) - 1] = '\0';
                         }
@@ -867,7 +867,7 @@ namespace Ermine
 
                 if (ImGui::Button("Select") && !m_SelectedAudioFile.empty())
                 {
-                    strncpy(m_EditMusicPath, m_SelectedAudioFile.c_str(), sizeof(m_EditMusicPath) - 1);
+					strncpy_s(m_EditMusicPath, sizeof(m_EditMusicPath), m_SelectedAudioFile.c_str(), sizeof(m_EditMusicPath) - 1);
                     m_EditMusicPath[sizeof(m_EditMusicPath) - 1] = '\0';
                     m_ShowEditMusicBrowser = false;
                     ImGui::CloseCurrentPopup();
@@ -920,7 +920,7 @@ namespace Ermine
 
                 if (ImGui::Button("Select") && !m_SelectedAudioFile.empty())
                 {
-                    strncpy(m_GlobalSFXPath, m_SelectedAudioFile.c_str(), sizeof(m_GlobalSFXPath) - 1);
+					strncpy_s(m_GlobalSFXPath, sizeof(m_GlobalSFXPath), m_SelectedAudioFile.c_str(), sizeof(m_GlobalSFXPath) - 1);
                     m_GlobalSFXPath[sizeof(m_GlobalSFXPath) - 1] = '\0';
                     m_ShowGlobalSFXBrowser = false;
                     ImGui::CloseCurrentPopup();
@@ -1023,8 +1023,8 @@ namespace Ermine
                         if (ImGui::Button("Edit"))
                         {
                             m_EditingSFXIndex = static_cast<int>(i);
-                            strncpy(m_EditSFXName, sfx.audioName.c_str(), sizeof(m_EditSFXName) - 1);
-                            strncpy(m_EditSFXPath, sfx.audioPath.c_str(), sizeof(m_EditSFXPath) - 1);
+							strncpy_s(m_EditSFXName, sizeof(m_EditSFXName), sfx.audioName.c_str(), sizeof(m_EditSFXName) - 1);
+							strncpy_s(m_EditSFXPath, sizeof(m_EditSFXPath), sfx.audioPath.c_str(), sizeof(m_EditSFXPath) - 1);
                             m_EditSFXName[sizeof(m_EditSFXName) - 1] = '\0';
                             m_EditSFXPath[sizeof(m_EditSFXPath) - 1] = '\0';
                         }
@@ -1062,7 +1062,7 @@ namespace Ermine
 
                 if (ImGui::Button("Select") && !m_SelectedAudioFile.empty())
                 {
-                    strncpy(m_EditSFXPath, m_SelectedAudioFile.c_str(), sizeof(m_EditSFXPath) - 1);
+					strncpy_s(m_EditSFXPath, sizeof(m_EditSFXPath), m_SelectedAudioFile.c_str(), sizeof(m_EditSFXPath) - 1);
                     m_EditSFXPath[sizeof(m_EditSFXPath) - 1] = '\0';
                     m_ShowEditSFXBrowser = false;
                     ImGui::CloseCurrentPopup();
