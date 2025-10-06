@@ -50,7 +50,7 @@ using namespace Ermine::editor;
 
 // Definition for static member m_Windows, for ImGUI Windows
 std::vector<std::unique_ptr<Ermine::ImGUIWindow>>EditorGUI::m_Windows;
-bool Ermine::editor::EditorGUI::isPlaying = false; // TODO: tied to Play/Stop toolbar state.
+bool EditorGUI::isPlaying = false; // tied to Play/Stop toolbar state.
 
 std::shared_ptr<Ermine::Scene> EditorGUI::s_ActiveScene = nullptr; 
 std::unique_ptr<Ermine::HierarchyPanel> Ermine::editor::EditorGUI::s_HierarchyPanel = nullptr;
@@ -163,8 +163,6 @@ void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
 		if (ImGui::MenuItem("Undo", "Ctrl+Z"))
 		{
 			EE_CORE_INFO("Undo clicked");
-            ECS::GetInstance().ClearAllEntities();
-            ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
 			// Code to undo
 		}
 		if (ImGui::MenuItem("Redo", "Ctrl+Y"))

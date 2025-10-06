@@ -445,6 +445,19 @@ namespace Ermine
     }
 
     /*!*************************************************************************
+	  \brief
+	    Creates a quaternion from Euler angles given in degrees.
+	  \param[in] eulerDeg
+	    Rotation about (X, Y, Z) axes in degrees.
+	  \return
+	    The resulting quaternion.
+	***************************************************************************/
+    Quaternion FromEulerDegrees(const Vec3& eulerDeg)
+    {
+        return FromEulerDegrees(eulerDeg.x, eulerDeg.y, eulerDeg.z);
+    }
+
+    /*!*************************************************************************
       \brief
         Creates a quaternion from Euler angles given in degrees.
       \param[in] pitch
@@ -477,6 +490,8 @@ namespace Ermine
         q.z = cx * cy * sz - sx * sy * cz;
         return q;
     }
+
+
 
     /*!*************************************************************************
       \brief
