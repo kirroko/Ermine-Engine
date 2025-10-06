@@ -1,12 +1,20 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
-    <ProjectConfiguration Include="Debug|x64">
-      <Configuration>Debug</Configuration>
+    <ProjectConfiguration Include="Editor-Debug|x64">
+      <Configuration>Editor-Debug</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="Release|x64">
-      <Configuration>Release</Configuration>
+    <ProjectConfiguration Include="Editor-Release|x64">
+      <Configuration>Editor-Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Game-Debug|x64">
+      <Configuration>Game-Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Game-Release|x64">
+      <Configuration>Game-Release</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
@@ -18,13 +26,25 @@
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Editor-Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Editor-Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Game-Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Game-Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
@@ -33,34 +53,54 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Editor-Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Editor-Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Game-Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Game-Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Editor-Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>..\Build\bin\Debug-windows-x86_64\Ermine-Engine\</OutDir>
-    <IntDir>..\Build\obj\Debug-windows-x86_64\Ermine-Engine\</IntDir>
+    <OutDir>..\Build\bin\Editor-Debug-windows-x86_64\Ermine-Engine\</OutDir>
+    <IntDir>..\Build\obj\Editor-Debug-windows-x86_64\Ermine-Engine\</IntDir>
     <TargetName>Ermine-Engine</TargetName>
     <TargetExt>.dll</TargetExt>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Editor-Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>..\Build\bin\Release-windows-x86_64\Ermine-Engine\</OutDir>
-    <IntDir>..\Build\obj\Release-windows-x86_64\Ermine-Engine\</IntDir>
+    <OutDir>..\Build\bin\Editor-Release-windows-x86_64\Ermine-Engine\</OutDir>
+    <IntDir>..\Build\obj\Editor-Release-windows-x86_64\Ermine-Engine\</IntDir>
     <TargetName>Ermine-Engine</TargetName>
     <TargetExt>.dll</TargetExt>
   </PropertyGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Game-Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>..\Build\bin\Game-Debug-windows-x86_64\Ermine-Engine\</OutDir>
+    <IntDir>..\Build\obj\Game-Debug-windows-x86_64\Ermine-Engine\</IntDir>
+    <TargetName>Ermine-Engine</TargetName>
+    <TargetExt>.dll</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Game-Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>..\Build\bin\Game-Release-windows-x86_64\Ermine-Engine\</OutDir>
+    <IntDir>..\Build\obj\Game-Release-windows-x86_64\Ermine-Engine\</IntDir>
+    <TargetName>Ermine-Engine</TargetName>
+    <TargetExt>.dll</TargetExt>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Editor-Debug|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>PreCompile.h</PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>EE_PLATFORM_WINDOWS;EE_BUILD_DLL;GLFW_INCLUDE_NONE;IMGUI_DEFINE_MATH_OPERATORS;GLM_ENABLE_EXPERIMENTAL;_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING;EE_DEBUG;VERBOSE_LOGGING=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>include;..\ThirdParty\GLFW\include;..\ThirdParty\Glad\include;..\ThirdParty\imgui;..\ThirdParty\glm;..\ThirdParty\spdlog\include;..\ThirdParty\stb;..\ThirdParty\Fmod\inc;..\ThirdParty\Mono\include;..\ThirdParty;..\ThirdParty\rapidjson;..\ThirdParty\assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>EE_PLATFORM_WINDOWS;EE_BUILD_DLL;GLFW_INCLUDE_NONE;IMGUI_DEFINE_MATH_OPERATORS;GLM_ENABLE_EXPERIMENTAL;_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING;EE_EDITOR;EE_DEBUG;VERBOSE_LOGGING=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>include;..\ThirdParty\GLFW\include;..\ThirdParty\Glad\include;..\ThirdParty\imgui;..\ThirdParty\glm;..\ThirdParty\spdlog\include;..\ThirdParty\stb;..\ThirdParty\Fmod\inc;..\ThirdParty\Mono\include;..\ThirdParty;..\ThirdParty\rapidjson;..\ThirdParty\assimp\include;..\ThirdParty\DirectXTex\inc;..\ThirdParty\xproperty\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -71,32 +111,44 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>fmod_vc.lib;fmodL_vc.lib;fmodstudio_vc.lib;fmodstudioL_vc.lib;opengl32.lib;mono-2.0-sgen.lib;assimp-vc143-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\ThirdParty\Fmod\lib;..\ThirdParty\Mono\lib;..\ThirdParty\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <ImportLibrary>..\Build\bin\Debug-windows-x86_64\Ermine-Engine\Ermine-Engine.lib</ImportLibrary>
-      <AdditionalOptions>/NODEFAULTLIB:LIBCMTD %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalDependencies>fmod_vc.lib;fmodstudio_vc.lib;opengl32.lib;mono-2.0-sgen.lib;assimp-vc143-mt.lib;fmodL_vc.lib;fmodstudioL_vc.lib;DirectXTexD.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\ThirdParty\Fmod\lib;..\ThirdParty\Mono\lib;..\ThirdParty\assimp\lib;..\ThirdParty\DirectXTex\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <ImportLibrary>..\Build\bin\Editor-Debug-windows-x86_64\Ermine-Engine\Ermine-Engine.lib</ImportLibrary>
+      <AdditionalOptions>/NODEFAULTLIB:LIBCMTD /NODEFAULTLIB:LIBCMT /NODEFAULTLIB:MSVCRT %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PostBuildEvent>
-      <Command>IF EXIST ..\Build\bin\Debug-windows-x86_64\Ermine-Engine\Ermine-Engine.dll\ (xcopy /Q /E /Y /I ..\Build\bin\Debug-windows-x86_64\Ermine-Engine\Ermine-Engine.dll ..\Build\bin\Debug-windows-x86_64\Ermine-Editor &gt; nul) ELSE (xcopy /Q /Y /I ..\Build\bin\Debug-windows-x86_64\Ermine-Engine\Ermine-Engine.dll ..\Build\bin\Debug-windows-x86_64\Ermine-Editor &gt; nul)
-IF EXIST ..\ThirdParty\Fmod\lib\fmod.dll\ (xcopy /Q /E /Y /I ..\ThirdParty\Fmod\lib\fmod.dll ..\Build\bin\Debug-windows-x86_64\Ermine-Editor &gt; nul) ELSE (xcopy /Q /Y /I ..\ThirdParty\Fmod\lib\fmod.dll ..\Build\bin\Debug-windows-x86_64\Ermine-Editor &gt; nul)
-IF EXIST ..\ThirdParty\Fmod\lib\fmodL.dll\ (xcopy /Q /E /Y /I ..\ThirdParty\Fmod\lib\fmodL.dll ..\Build\bin\Debug-windows-x86_64\Ermine-Editor &gt; nul) ELSE (xcopy /Q /Y /I ..\ThirdParty\Fmod\lib\fmodL.dll ..\Build\bin\Debug-windows-x86_64\Ermine-Editor &gt; nul)
-IF EXIST ..\ThirdParty\Fmod\lib\fmodstudio.dll\ (xcopy /Q /E /Y /I ..\ThirdParty\Fmod\lib\fmodstudio.dll ..\Build\bin\Debug-windows-x86_64\Ermine-Editor &gt; nul) ELSE (xcopy /Q /Y /I ..\ThirdParty\Fmod\lib\fmodstudio.dll ..\Build\bin\Debug-windows-x86_64\Ermine-Editor &gt; nul)
-IF EXIST ..\ThirdParty\Fmod\lib\fmodstudioL.dll\ (xcopy /Q /E /Y /I ..\ThirdParty\Fmod\lib\fmodstudioL.dll ..\Build\bin\Debug-windows-x86_64\Ermine-Editor &gt; nul) ELSE (xcopy /Q /Y /I ..\ThirdParty\Fmod\lib\fmodstudioL.dll ..\Build\bin\Debug-windows-x86_64\Ermine-Editor &gt; nul)
-IF EXIST ..\ThirdParty\Mono\lib\mono-2.0-sgen.dll\ (xcopy /Q /E /Y /I ..\ThirdParty\Mono\lib\mono-2.0-sgen.dll ..\Build\bin\Debug-windows-x86_64\Ermine-Editor &gt; nul) ELSE (xcopy /Q /Y /I ..\ThirdParty\Mono\lib\mono-2.0-sgen.dll ..\Build\bin\Debug-windows-x86_64\Ermine-Editor &gt; nul)
-IF EXIST ..\ThirdParty\assimp\bin\assimp-vc143-mt.dll\ (xcopy /Q /E /Y /I ..\ThirdParty\assimp\bin\assimp-vc143-mt.dll ..\Build\bin\Debug-windows-x86_64\Ermine-Editor &gt; nul) ELSE (xcopy /Q /Y /I ..\ThirdParty\assimp\bin\assimp-vc143-mt.dll ..\Build\bin\Debug-windows-x86_64\Ermine-Editor &gt; nul)
-xcopy /Q /E /Y /I ..\ThirdParty\Mono\lib ..\Build\bin\Debug-windows-x86_64\Ermine-Editor\mono\lib
-xcopy /Q /E /Y /I ..\ThirdParty\Mono\etc ..\Build\bin\Debug-windows-x86_64\Ermine-Editor\mono\etc
-xcopy /Q /E /Y /I ..\Resources ..\Build\bin\Debug-windows-x86_64\Resources
-IF EXIST ..\Build\bin\Debug-windows-x86_64\Ermine-Engine\Ermine-Engine.dll\ (xcopy /Q /E /Y /I ..\Build\bin\Debug-windows-x86_64\Ermine-Engine\Ermine-Engine.dll ..\Build\bin\Debug-windows-x86_64\Ermine-Editor\Jolt &gt; nul) ELSE (xcopy /Q /Y /I ..\Build\bin\Debug-windows-x86_64\Ermine-Engine\Ermine-Engine.dll ..\Build\bin\Debug-windows-x86_64\Ermine-Editor\Jolt &gt; nul)</Command>
+      <Command>set OUTDIR=$(SolutionDir)Build\bin\Editor-Debug-windows-x86_64
+IF EXIST "$(TargetPath)"\ (xcopy /Q /E /Y /I "$(TargetPath)" "%OUTDIR%\Ermine-Editor" &gt; nul) ELSE (xcopy /Q /Y /I "$(TargetPath)" "%OUTDIR%\Ermine-Editor" &gt; nul)
+IF EXIST "$(TargetPath)"\ (xcopy /Q /E /Y /I "$(TargetPath)" "%OUTDIR%\Ermine-Game" &gt; nul) ELSE (xcopy /Q /Y /I "$(TargetPath)" "%OUTDIR%\Ermine-Game" &gt; nul)
+xcopy /Q /E /Y /I ..\Ermine-ResourcePipeline\Ermine-Game.lion_rcdbase ..\Build\bin\Editor-Debug-windows-x86_64\Ermine-Game.lion_rcdbase
+xcopy /Q /E /Y /I ..\Ermine-ResourcePipeline\Ermine-Game.lion_project ..\Build\bin\Editor-Debug-windows-x86_64\Ermine-Game.lion_project
+IF EXIST "$(SolutionDir)ThirdParty\DirectXTex\lib\DirectXTex.pdb"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\DirectXTex\lib\DirectXTex.pdb" "%OUTDIR%\Ermine-ResourcePipeline" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\DirectXTex\lib\DirectXTex.pdb" "%OUTDIR%\Ermine-ResourcePipeline" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Fmod\lib\fmod.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmod.dll" "%OUTDIR%\Ermine-Editor" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmod.dll" "%OUTDIR%\Ermine-Editor" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Fmod\lib\fmodL.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmodL.dll" "%OUTDIR%\Ermine-Editor" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmodL.dll" "%OUTDIR%\Ermine-Editor" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Fmod\lib\fmodstudio.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmodstudio.dll" "%OUTDIR%\Ermine-Editor" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmodstudio.dll" "%OUTDIR%\Ermine-Editor" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Fmod\lib\fmodstudioL.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmodstudioL.dll" "%OUTDIR%\Ermine-Editor" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmodstudioL.dll" "%OUTDIR%\Ermine-Editor" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Mono\lib\mono-2.0-sgen.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Mono\lib\mono-2.0-sgen.dll" "%OUTDIR%\Ermine-Editor" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Mono\lib\mono-2.0-sgen.dll" "%OUTDIR%\Ermine-Editor" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\assimp\bin\assimp-vc143-mt.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\assimp\bin\assimp-vc143-mt.dll" "%OUTDIR%\Ermine-Editor" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\assimp\bin\assimp-vc143-mt.dll" "%OUTDIR%\Ermine-Editor" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Fmod\lib\fmod.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmod.dll" "%OUTDIR%\Ermine-Game" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmod.dll" "%OUTDIR%\Ermine-Game" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Fmod\lib\fmodL.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmodL.dll" "%OUTDIR%\Ermine-Game" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmodL.dll" "%OUTDIR%\Ermine-Game" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Fmod\lib\fmodstudio.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmodstudio.dll" "%OUTDIR%\Ermine-Game" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmodstudio.dll" "%OUTDIR%\Ermine-Game" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Fmod\lib\fmodstudioL.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmodstudioL.dll" "%OUTDIR%\Ermine-Game" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmodstudioL.dll" "%OUTDIR%\Ermine-Game" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Mono\lib\mono-2.0-sgen.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Mono\lib\mono-2.0-sgen.dll" "%OUTDIR%\Ermine-Game" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Mono\lib\mono-2.0-sgen.dll" "%OUTDIR%\Ermine-Game" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\assimp\bin\assimp-vc143-mt.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\assimp\bin\assimp-vc143-mt.dll" "%OUTDIR%\Ermine-Game" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\assimp\bin\assimp-vc143-mt.dll" "%OUTDIR%\Ermine-Game" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Mono\lib"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Mono\lib" "%OUTDIR%\Ermine-Editor\mono\lib" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Mono\lib" "%OUTDIR%\Ermine-Editor\mono\lib" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Mono\etc"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Mono\etc" "%OUTDIR%\Ermine-Editor\mono\etc" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Mono\etc" "%OUTDIR%\Ermine-Editor\mono\etc" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Mono\lib"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Mono\lib" "%OUTDIR%\Ermine-Game\mono\lib" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Mono\lib" "%OUTDIR%\Ermine-Game\mono\lib" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Mono\etc"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Mono\etc" "%OUTDIR%\Ermine-Game\mono\etc" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Mono\etc" "%OUTDIR%\Ermine-Game\mono\etc" &gt; nul)
+IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources" "%OUTDIR%\Resources" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)Resources" "%OUTDIR%\Resources" &gt; nul)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Editor-Release|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>PreCompile.h</PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>EE_PLATFORM_WINDOWS;EE_BUILD_DLL;GLFW_INCLUDE_NONE;IMGUI_DEFINE_MATH_OPERATORS;GLM_ENABLE_EXPERIMENTAL;_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING;EE_RELEASE;VERBOSE_LOGGING=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>include;..\ThirdParty\GLFW\include;..\ThirdParty\Glad\include;..\ThirdParty\imgui;..\ThirdParty\glm;..\ThirdParty\spdlog\include;..\ThirdParty\stb;..\ThirdParty\Fmod\inc;..\ThirdParty\Mono\include;..\ThirdParty;..\ThirdParty\rapidjson;..\ThirdParty\assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>EE_PLATFORM_WINDOWS;EE_BUILD_DLL;GLFW_INCLUDE_NONE;IMGUI_DEFINE_MATH_OPERATORS;GLM_ENABLE_EXPERIMENTAL;_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING;EE_EDITOR;EE_RELEASE;VERBOSE_LOGGING=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>include;..\ThirdParty\GLFW\include;..\ThirdParty\Glad\include;..\ThirdParty\imgui;..\ThirdParty\glm;..\ThirdParty\spdlog\include;..\ThirdParty\stb;..\ThirdParty\Fmod\inc;..\ThirdParty\Mono\include;..\ThirdParty;..\ThirdParty\rapidjson;..\ThirdParty\assimp\include;..\ThirdParty\DirectXTex\inc;..\ThirdParty\xproperty\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -111,23 +163,135 @@ IF EXIST ..\Build\bin\Debug-windows-x86_64\Ermine-Engine\Ermine-Engine.dll\ (xco
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>fmod_vc.lib;fmodL_vc.lib;fmodstudio_vc.lib;fmodstudioL_vc.lib;opengl32.lib;mono-2.0-sgen.lib;assimp-vc143-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\ThirdParty\Fmod\lib;..\ThirdParty\Mono\lib;..\ThirdParty\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <ImportLibrary>..\Build\bin\Release-windows-x86_64\Ermine-Engine\Ermine-Engine.lib</ImportLibrary>
-      <AdditionalOptions>/NODEFAULTLIB:LIBCMT %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalDependencies>fmodL_vc.lib;fmodstudioL_vc.lib;opengl32.lib;mono-2.0-sgen.lib;assimp-vc143-mt.lib;fmod_vc.lib;fmodstudio_vc.lib;DirectXTex.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\ThirdParty\Fmod\lib;..\ThirdParty\Mono\lib;..\ThirdParty\assimp\lib;..\ThirdParty\DirectXTex\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <ImportLibrary>..\Build\bin\Editor-Release-windows-x86_64\Ermine-Engine\Ermine-Engine.lib</ImportLibrary>
+      <AdditionalOptions>/NODEFAULTLIB:LIBCMT /NODEFAULTLIB:LIBCMTD /NODEFAULTLIB:MSVCRTD %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PostBuildEvent>
-      <Command>IF EXIST ..\Build\bin\Release-windows-x86_64\Ermine-Engine\Ermine-Engine.dll\ (xcopy /Q /E /Y /I ..\Build\bin\Release-windows-x86_64\Ermine-Engine\Ermine-Engine.dll ..\Build\bin\Release-windows-x86_64\Ermine-Editor &gt; nul) ELSE (xcopy /Q /Y /I ..\Build\bin\Release-windows-x86_64\Ermine-Engine\Ermine-Engine.dll ..\Build\bin\Release-windows-x86_64\Ermine-Editor &gt; nul)
-IF EXIST ..\ThirdParty\Fmod\lib\fmod.dll\ (xcopy /Q /E /Y /I ..\ThirdParty\Fmod\lib\fmod.dll ..\Build\bin\Release-windows-x86_64\Ermine-Editor &gt; nul) ELSE (xcopy /Q /Y /I ..\ThirdParty\Fmod\lib\fmod.dll ..\Build\bin\Release-windows-x86_64\Ermine-Editor &gt; nul)
-IF EXIST ..\ThirdParty\Fmod\lib\fmodL.dll\ (xcopy /Q /E /Y /I ..\ThirdParty\Fmod\lib\fmodL.dll ..\Build\bin\Release-windows-x86_64\Ermine-Editor &gt; nul) ELSE (xcopy /Q /Y /I ..\ThirdParty\Fmod\lib\fmodL.dll ..\Build\bin\Release-windows-x86_64\Ermine-Editor &gt; nul)
-IF EXIST ..\ThirdParty\Fmod\lib\fmodstudio.dll\ (xcopy /Q /E /Y /I ..\ThirdParty\Fmod\lib\fmodstudio.dll ..\Build\bin\Release-windows-x86_64\Ermine-Editor &gt; nul) ELSE (xcopy /Q /Y /I ..\ThirdParty\Fmod\lib\fmodstudio.dll ..\Build\bin\Release-windows-x86_64\Ermine-Editor &gt; nul)
-IF EXIST ..\ThirdParty\Fmod\lib\fmodstudioL.dll\ (xcopy /Q /E /Y /I ..\ThirdParty\Fmod\lib\fmodstudioL.dll ..\Build\bin\Release-windows-x86_64\Ermine-Editor &gt; nul) ELSE (xcopy /Q /Y /I ..\ThirdParty\Fmod\lib\fmodstudioL.dll ..\Build\bin\Release-windows-x86_64\Ermine-Editor &gt; nul)
-IF EXIST ..\ThirdParty\Mono\lib\mono-2.0-sgen.dll\ (xcopy /Q /E /Y /I ..\ThirdParty\Mono\lib\mono-2.0-sgen.dll ..\Build\bin\Release-windows-x86_64\Ermine-Editor &gt; nul) ELSE (xcopy /Q /Y /I ..\ThirdParty\Mono\lib\mono-2.0-sgen.dll ..\Build\bin\Release-windows-x86_64\Ermine-Editor &gt; nul)
-IF EXIST ..\ThirdParty\assimp\bin\assimp-vc143-mt.dll\ (xcopy /Q /E /Y /I ..\ThirdParty\assimp\bin\assimp-vc143-mt.dll ..\Build\bin\Release-windows-x86_64\Ermine-Editor &gt; nul) ELSE (xcopy /Q /Y /I ..\ThirdParty\assimp\bin\assimp-vc143-mt.dll ..\Build\bin\Release-windows-x86_64\Ermine-Editor &gt; nul)
-xcopy /Q /E /Y /I ..\ThirdParty\Mono\lib ..\Build\bin\Release-windows-x86_64\Ermine-Editor\mono\lib
-xcopy /Q /E /Y /I ..\ThirdParty\Mono\etc ..\Build\bin\Release-windows-x86_64\Ermine-Editor\mono\etc
-xcopy /Q /E /Y /I ..\Resources ..\Build\bin\Release-windows-x86_64\Resources
-IF EXIST ..\Build\bin\Release-windows-x86_64\Ermine-Engine\Ermine-Engine.dll\ (xcopy /Q /E /Y /I ..\Build\bin\Release-windows-x86_64\Ermine-Engine\Ermine-Engine.dll ..\Build\bin\Release-windows-x86_64\Ermine-Editor\Jolt &gt; nul) ELSE (xcopy /Q /Y /I ..\Build\bin\Release-windows-x86_64\Ermine-Engine\Ermine-Engine.dll ..\Build\bin\Release-windows-x86_64\Ermine-Editor\Jolt &gt; nul)</Command>
+      <Command>set OUTDIR=$(SolutionDir)Build\bin\Editor-Release-windows-x86_64
+IF EXIST "$(TargetPath)"\ (xcopy /Q /E /Y /I "$(TargetPath)" "%OUTDIR%\Ermine-Editor" &gt; nul) ELSE (xcopy /Q /Y /I "$(TargetPath)" "%OUTDIR%\Ermine-Editor" &gt; nul)
+IF EXIST "$(TargetPath)"\ (xcopy /Q /E /Y /I "$(TargetPath)" "%OUTDIR%\Ermine-Game" &gt; nul) ELSE (xcopy /Q /Y /I "$(TargetPath)" "%OUTDIR%\Ermine-Game" &gt; nul)
+xcopy /Q /E /Y /I ..\Ermine-ResourcePipeline\Ermine-Game.lion_rcdbase ..\Build\bin\Editor-Release-windows-x86_64\Ermine-Game.lion_rcdbase
+xcopy /Q /E /Y /I ..\Ermine-ResourcePipeline\Ermine-Game.lion_project ..\Build\bin\Editor-Release-windows-x86_64\Ermine-Game.lion_project
+IF EXIST "$(SolutionDir)ThirdParty\DirectXTex\lib\DirectXTex.pdb"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\DirectXTex\lib\DirectXTex.pdb" "%OUTDIR%\Ermine-ResourcePipeline" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\DirectXTex\lib\DirectXTex.pdb" "%OUTDIR%\Ermine-ResourcePipeline" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Fmod\lib\fmod.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmod.dll" "%OUTDIR%\Ermine-Editor" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmod.dll" "%OUTDIR%\Ermine-Editor" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Fmod\lib\fmodL.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmodL.dll" "%OUTDIR%\Ermine-Editor" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmodL.dll" "%OUTDIR%\Ermine-Editor" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Fmod\lib\fmodstudio.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmodstudio.dll" "%OUTDIR%\Ermine-Editor" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmodstudio.dll" "%OUTDIR%\Ermine-Editor" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Fmod\lib\fmodstudioL.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmodstudioL.dll" "%OUTDIR%\Ermine-Editor" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmodstudioL.dll" "%OUTDIR%\Ermine-Editor" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Mono\lib\mono-2.0-sgen.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Mono\lib\mono-2.0-sgen.dll" "%OUTDIR%\Ermine-Editor" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Mono\lib\mono-2.0-sgen.dll" "%OUTDIR%\Ermine-Editor" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\assimp\bin\assimp-vc143-mt.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\assimp\bin\assimp-vc143-mt.dll" "%OUTDIR%\Ermine-Editor" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\assimp\bin\assimp-vc143-mt.dll" "%OUTDIR%\Ermine-Editor" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Fmod\lib\fmod.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmod.dll" "%OUTDIR%\Ermine-Game" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmod.dll" "%OUTDIR%\Ermine-Game" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Fmod\lib\fmodL.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmodL.dll" "%OUTDIR%\Ermine-Game" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmodL.dll" "%OUTDIR%\Ermine-Game" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Fmod\lib\fmodstudio.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmodstudio.dll" "%OUTDIR%\Ermine-Game" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmodstudio.dll" "%OUTDIR%\Ermine-Game" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Fmod\lib\fmodstudioL.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmodstudioL.dll" "%OUTDIR%\Ermine-Game" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmodstudioL.dll" "%OUTDIR%\Ermine-Game" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Mono\lib\mono-2.0-sgen.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Mono\lib\mono-2.0-sgen.dll" "%OUTDIR%\Ermine-Game" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Mono\lib\mono-2.0-sgen.dll" "%OUTDIR%\Ermine-Game" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\assimp\bin\assimp-vc143-mt.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\assimp\bin\assimp-vc143-mt.dll" "%OUTDIR%\Ermine-Game" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\assimp\bin\assimp-vc143-mt.dll" "%OUTDIR%\Ermine-Game" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Mono\lib"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Mono\lib" "%OUTDIR%\Ermine-Editor\mono\lib" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Mono\lib" "%OUTDIR%\Ermine-Editor\mono\lib" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Mono\etc"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Mono\etc" "%OUTDIR%\Ermine-Editor\mono\etc" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Mono\etc" "%OUTDIR%\Ermine-Editor\mono\etc" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Mono\lib"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Mono\lib" "%OUTDIR%\Ermine-Game\mono\lib" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Mono\lib" "%OUTDIR%\Ermine-Game\mono\lib" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Mono\etc"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Mono\etc" "%OUTDIR%\Ermine-Game\mono\etc" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Mono\etc" "%OUTDIR%\Ermine-Game\mono\etc" &gt; nul)
+IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources" "%OUTDIR%\Resources" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)Resources" "%OUTDIR%\Resources" &gt; nul)</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Game-Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>PreCompile.h</PrecompiledHeaderFile>
+      <WarningLevel>Level4</WarningLevel>
+      <PreprocessorDefinitions>EE_PLATFORM_WINDOWS;EE_BUILD_DLL;GLFW_INCLUDE_NONE;IMGUI_DEFINE_MATH_OPERATORS;GLM_ENABLE_EXPERIMENTAL;_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING;EE_GAME;EE_DEBUG;VERBOSE_LOGGING=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>include;..\ThirdParty\GLFW\include;..\ThirdParty\Glad\include;..\ThirdParty\imgui;..\ThirdParty\glm;..\ThirdParty\spdlog\include;..\ThirdParty\stb;..\ThirdParty\Fmod\inc;..\ThirdParty\Mono\include;..\ThirdParty;..\ThirdParty\rapidjson;..\ThirdParty\assimp\include;..\ThirdParty\DirectXTex\inc;..\ThirdParty\xproperty\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <Optimization>Disabled</Optimization>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <AdditionalOptions>/MP /wd4251 /wd4005 /wd4267 /wd5054 %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>fmod_vc.lib;fmodstudio_vc.lib;opengl32.lib;mono-2.0-sgen.lib;assimp-vc143-mt.lib;fmodL_vc.lib;fmodstudioL_vc.lib;DirectXTexD.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\ThirdParty\Fmod\lib;..\ThirdParty\Mono\lib;..\ThirdParty\assimp\lib;..\ThirdParty\DirectXTex\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <ImportLibrary>..\Build\bin\Game-Debug-windows-x86_64\Ermine-Engine\Ermine-Engine.lib</ImportLibrary>
+      <AdditionalOptions>/NODEFAULTLIB:LIBCMTD /NODEFAULTLIB:LIBCMT /NODEFAULTLIB:MSVCRT %(AdditionalOptions)</AdditionalOptions>
+    </Link>
+    <PostBuildEvent>
+      <Command>set OUTDIR=$(SolutionDir)Build\bin\Game-Debug-windows-x86_64
+IF EXIST "$(TargetPath)"\ (xcopy /Q /E /Y /I "$(TargetPath)" "%OUTDIR%\Ermine-Editor" &gt; nul) ELSE (xcopy /Q /Y /I "$(TargetPath)" "%OUTDIR%\Ermine-Editor" &gt; nul)
+IF EXIST "$(TargetPath)"\ (xcopy /Q /E /Y /I "$(TargetPath)" "%OUTDIR%\Ermine-Game" &gt; nul) ELSE (xcopy /Q /Y /I "$(TargetPath)" "%OUTDIR%\Ermine-Game" &gt; nul)
+xcopy /Q /E /Y /I ..\Ermine-ResourcePipeline\Ermine-Game.lion_rcdbase ..\Build\bin\Game-Debug-windows-x86_64\Ermine-Game.lion_rcdbase
+xcopy /Q /E /Y /I ..\Ermine-ResourcePipeline\Ermine-Game.lion_project ..\Build\bin\Game-Debug-windows-x86_64\Ermine-Game.lion_project
+IF EXIST "$(SolutionDir)ThirdParty\DirectXTex\lib\DirectXTex.pdb"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\DirectXTex\lib\DirectXTex.pdb" "%OUTDIR%\Ermine-ResourcePipeline" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\DirectXTex\lib\DirectXTex.pdb" "%OUTDIR%\Ermine-ResourcePipeline" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Fmod\lib\fmod.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmod.dll" "%OUTDIR%\Ermine-Editor" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmod.dll" "%OUTDIR%\Ermine-Editor" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Fmod\lib\fmodL.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmodL.dll" "%OUTDIR%\Ermine-Editor" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmodL.dll" "%OUTDIR%\Ermine-Editor" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Fmod\lib\fmodstudio.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmodstudio.dll" "%OUTDIR%\Ermine-Editor" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmodstudio.dll" "%OUTDIR%\Ermine-Editor" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Fmod\lib\fmodstudioL.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmodstudioL.dll" "%OUTDIR%\Ermine-Editor" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmodstudioL.dll" "%OUTDIR%\Ermine-Editor" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Mono\lib\mono-2.0-sgen.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Mono\lib\mono-2.0-sgen.dll" "%OUTDIR%\Ermine-Editor" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Mono\lib\mono-2.0-sgen.dll" "%OUTDIR%\Ermine-Editor" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\assimp\bin\assimp-vc143-mt.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\assimp\bin\assimp-vc143-mt.dll" "%OUTDIR%\Ermine-Editor" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\assimp\bin\assimp-vc143-mt.dll" "%OUTDIR%\Ermine-Editor" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Fmod\lib\fmod.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmod.dll" "%OUTDIR%\Ermine-Game" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmod.dll" "%OUTDIR%\Ermine-Game" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Fmod\lib\fmodL.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmodL.dll" "%OUTDIR%\Ermine-Game" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmodL.dll" "%OUTDIR%\Ermine-Game" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Fmod\lib\fmodstudio.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmodstudio.dll" "%OUTDIR%\Ermine-Game" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmodstudio.dll" "%OUTDIR%\Ermine-Game" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Fmod\lib\fmodstudioL.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmodstudioL.dll" "%OUTDIR%\Ermine-Game" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmodstudioL.dll" "%OUTDIR%\Ermine-Game" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Mono\lib\mono-2.0-sgen.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Mono\lib\mono-2.0-sgen.dll" "%OUTDIR%\Ermine-Game" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Mono\lib\mono-2.0-sgen.dll" "%OUTDIR%\Ermine-Game" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\assimp\bin\assimp-vc143-mt.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\assimp\bin\assimp-vc143-mt.dll" "%OUTDIR%\Ermine-Game" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\assimp\bin\assimp-vc143-mt.dll" "%OUTDIR%\Ermine-Game" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Mono\lib"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Mono\lib" "%OUTDIR%\Ermine-Editor\mono\lib" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Mono\lib" "%OUTDIR%\Ermine-Editor\mono\lib" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Mono\etc"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Mono\etc" "%OUTDIR%\Ermine-Editor\mono\etc" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Mono\etc" "%OUTDIR%\Ermine-Editor\mono\etc" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Mono\lib"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Mono\lib" "%OUTDIR%\Ermine-Game\mono\lib" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Mono\lib" "%OUTDIR%\Ermine-Game\mono\lib" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Mono\etc"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Mono\etc" "%OUTDIR%\Ermine-Game\mono\etc" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Mono\etc" "%OUTDIR%\Ermine-Game\mono\etc" &gt; nul)
+IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources" "%OUTDIR%\Resources" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)Resources" "%OUTDIR%\Resources" &gt; nul)</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Game-Release|x64'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>PreCompile.h</PrecompiledHeaderFile>
+      <WarningLevel>Level4</WarningLevel>
+      <PreprocessorDefinitions>EE_PLATFORM_WINDOWS;EE_BUILD_DLL;GLFW_INCLUDE_NONE;IMGUI_DEFINE_MATH_OPERATORS;GLM_ENABLE_EXPERIMENTAL;_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING;EE_GAME;EE_RELEASE;VERBOSE_LOGGING=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>include;..\ThirdParty\GLFW\include;..\ThirdParty\Glad\include;..\ThirdParty\imgui;..\ThirdParty\glm;..\ThirdParty\spdlog\include;..\ThirdParty\stb;..\ThirdParty\Fmod\inc;..\ThirdParty\Mono\include;..\ThirdParty;..\ThirdParty\rapidjson;..\ThirdParty\assimp\include;..\ThirdParty\DirectXTex\inc;..\ThirdParty\xproperty\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <Optimization>Full</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <AdditionalOptions>/MP /wd4251 /wd4005 /wd4267 /wd5054 %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>fmodL_vc.lib;fmodstudioL_vc.lib;opengl32.lib;mono-2.0-sgen.lib;assimp-vc143-mt.lib;fmod_vc.lib;fmodstudio_vc.lib;DirectXTex.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\ThirdParty\Fmod\lib;..\ThirdParty\Mono\lib;..\ThirdParty\assimp\lib;..\ThirdParty\DirectXTex\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <ImportLibrary>..\Build\bin\Game-Release-windows-x86_64\Ermine-Engine\Ermine-Engine.lib</ImportLibrary>
+      <AdditionalOptions>/NODEFAULTLIB:LIBCMT /NODEFAULTLIB:LIBCMTD /NODEFAULTLIB:MSVCRTD %(AdditionalOptions)</AdditionalOptions>
+    </Link>
+    <PostBuildEvent>
+      <Command>set OUTDIR=$(SolutionDir)Build\bin\Game-Release-windows-x86_64
+IF EXIST "$(TargetPath)"\ (xcopy /Q /E /Y /I "$(TargetPath)" "%OUTDIR%\Ermine-Editor" &gt; nul) ELSE (xcopy /Q /Y /I "$(TargetPath)" "%OUTDIR%\Ermine-Editor" &gt; nul)
+IF EXIST "$(TargetPath)"\ (xcopy /Q /E /Y /I "$(TargetPath)" "%OUTDIR%\Ermine-Game" &gt; nul) ELSE (xcopy /Q /Y /I "$(TargetPath)" "%OUTDIR%\Ermine-Game" &gt; nul)
+xcopy /Q /E /Y /I ..\Ermine-ResourcePipeline\Ermine-Game.lion_rcdbase ..\Build\bin\Game-Release-windows-x86_64\Ermine-Game.lion_rcdbase
+xcopy /Q /E /Y /I ..\Ermine-ResourcePipeline\Ermine-Game.lion_project ..\Build\bin\Game-Release-windows-x86_64\Ermine-Game.lion_project
+IF EXIST "$(SolutionDir)ThirdParty\DirectXTex\lib\DirectXTex.pdb"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\DirectXTex\lib\DirectXTex.pdb" "%OUTDIR%\Ermine-ResourcePipeline" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\DirectXTex\lib\DirectXTex.pdb" "%OUTDIR%\Ermine-ResourcePipeline" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Fmod\lib\fmod.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmod.dll" "%OUTDIR%\Ermine-Editor" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmod.dll" "%OUTDIR%\Ermine-Editor" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Fmod\lib\fmodL.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmodL.dll" "%OUTDIR%\Ermine-Editor" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmodL.dll" "%OUTDIR%\Ermine-Editor" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Fmod\lib\fmodstudio.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmodstudio.dll" "%OUTDIR%\Ermine-Editor" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmodstudio.dll" "%OUTDIR%\Ermine-Editor" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Fmod\lib\fmodstudioL.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmodstudioL.dll" "%OUTDIR%\Ermine-Editor" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmodstudioL.dll" "%OUTDIR%\Ermine-Editor" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Mono\lib\mono-2.0-sgen.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Mono\lib\mono-2.0-sgen.dll" "%OUTDIR%\Ermine-Editor" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Mono\lib\mono-2.0-sgen.dll" "%OUTDIR%\Ermine-Editor" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\assimp\bin\assimp-vc143-mt.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\assimp\bin\assimp-vc143-mt.dll" "%OUTDIR%\Ermine-Editor" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\assimp\bin\assimp-vc143-mt.dll" "%OUTDIR%\Ermine-Editor" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Fmod\lib\fmod.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmod.dll" "%OUTDIR%\Ermine-Game" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmod.dll" "%OUTDIR%\Ermine-Game" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Fmod\lib\fmodL.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmodL.dll" "%OUTDIR%\Ermine-Game" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmodL.dll" "%OUTDIR%\Ermine-Game" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Fmod\lib\fmodstudio.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmodstudio.dll" "%OUTDIR%\Ermine-Game" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmodstudio.dll" "%OUTDIR%\Ermine-Game" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Fmod\lib\fmodstudioL.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmodstudioL.dll" "%OUTDIR%\Ermine-Game" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Fmod\lib\fmodstudioL.dll" "%OUTDIR%\Ermine-Game" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Mono\lib\mono-2.0-sgen.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Mono\lib\mono-2.0-sgen.dll" "%OUTDIR%\Ermine-Game" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Mono\lib\mono-2.0-sgen.dll" "%OUTDIR%\Ermine-Game" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\assimp\bin\assimp-vc143-mt.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\assimp\bin\assimp-vc143-mt.dll" "%OUTDIR%\Ermine-Game" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\assimp\bin\assimp-vc143-mt.dll" "%OUTDIR%\Ermine-Game" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Mono\lib"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Mono\lib" "%OUTDIR%\Ermine-Editor\mono\lib" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Mono\lib" "%OUTDIR%\Ermine-Editor\mono\lib" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Mono\etc"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Mono\etc" "%OUTDIR%\Ermine-Editor\mono\etc" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Mono\etc" "%OUTDIR%\Ermine-Editor\mono\etc" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Mono\lib"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Mono\lib" "%OUTDIR%\Ermine-Game\mono\lib" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Mono\lib" "%OUTDIR%\Ermine-Game\mono\lib" &gt; nul)
+IF EXIST "$(SolutionDir)ThirdParty\Mono\etc"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\Mono\etc" "%OUTDIR%\Ermine-Game\mono\etc" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\Mono\etc" "%OUTDIR%\Ermine-Game\mono\etc" &gt; nul)
+IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources" "%OUTDIR%\Resources" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)Resources" "%OUTDIR%\Resources" &gt; nul)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -185,6 +349,7 @@ IF EXIST ..\Build\bin\Release-windows-x86_64\Ermine-Engine\Ermine-Engine.dll\ (x
     <ClInclude Include="include\Serialisation.h" />
     <ClInclude Include="include\Shader.h" />
     <ClInclude Include="include\Skybox.h" />
+    <ClInclude Include="include\State.h" />
     <ClInclude Include="include\Systems.h" />
     <ClInclude Include="include\Texture.h" />
     <ClInclude Include="include\VertexArray.h" />
@@ -199,6 +364,7 @@ IF EXIST ..\Build\bin\Release-windows-x86_64\Ermine-Engine\Ermine-Engine.dll\ (x
     <ClCompile Include="src\AudioManager\AudioManager.cpp" />
     <ClCompile Include="src\AudioManager\AudioSystem.cpp" />
     <ClCompile Include="src\ECS\Component.cpp" />
+    <ClCompile Include="src\ECS\ComponentRegistration.cpp" />
     <ClCompile Include="src\ECS\ECS.cpp" />
     <ClCompile Include="src\ECS\Entity.cpp" />
     <ClCompile Include="src\ECS\Systems.cpp" />

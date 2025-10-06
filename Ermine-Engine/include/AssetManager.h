@@ -21,17 +21,24 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Cubemap.h"
 #include "Model.h"
 
-#include <assimp/Importer.hpp>  // for the importer class
-#include <assimp/scene.h>       // for the output data structure
-#include <assimp/postprocess.h> // for post processing flags
-
-
 // Forward declaration to avoid circular includes
 namespace Ermine::graphics {
     class Material;
 }
 namespace Ermine
 {
+
+    /**
+     * @brief Structure to hold resource database entry information
+     */
+    struct ResourceEntry {
+        uint64_t instanceGUID;
+        uint64_t typeGUID;
+        std::string sourcePath;
+        std::string outputPath;
+        std::filesystem::file_time_type lastModified;
+    };
+
     /**
      * @brief The AssetManager class is a singleton class that manages all the assets in the game.
      *        This includes textures and shaders.
@@ -47,6 +54,18 @@ namespace Ermine
         std::unordered_map<std::string, std::shared_ptr<graphics::Cubemap>> m_cubemaps;
         std::unordered_map<std::string, std::shared_ptr<graphics::Material>> m_materials;
         std::unordered_map<std::string, std::shared_ptr<graphics::Model>> m_models;
+
+        // Resource database management
+        std::unordered_map<std::string, ResourceEntry> m_resourceDatabase; // sourcePath -> ResourceEntry
+        std::string m_databasePath = "./Ermine-Game.lion_rcdbase"; // Default database path
+        std::string m_projectGuid = ""; // Will be loaded from config or database
+        bool m_databaseLoaded = false;
+
+        // Internal methods for resource database
+        bool LoadResourceDatabase();
+        ResourceEntry* FindResourceBySourcePath(const std::string& sourcePath);
+        std::string ConvertToRelativePath(const std::string& absolutePath);
+        std::string GetFullDDSPath(const ResourceEntry& entry) const;
     
 public:
         static AssetManager& GetInstance()
@@ -55,6 +74,22 @@ public:
             return instance;
         }
 
+        // ================== Database Management ==================
+        /**
+         * @brief Initialize the asset manager with database path
+         * @param databasePath Path to the resource database
+         * @param projectGuid Project GUID (optional, will try to auto-detect)
+         * @return true if initialization successful
+         */
+        bool Initialize(const std::string& databasePath = "./Ermine-Game.lion_rcdbase",
+            const std::string& projectGuid = "");
+
+        /**
+         * @brief Reload the resource database (useful after running resource pipeline)
+         * @return true if reload successful
+         */
+        bool ReloadResourceDatabase();
+
         // ================== Texture Management ==================
         /**
          * @brief Load a texture from a file
@@ -62,6 +97,14 @@ public:
          * @return The loaded texture
          */
         std::shared_ptr<graphics::Texture> LoadTexture(const std::string& filePath);
+
+         /**
+         * @brief Load a texture directly by GUID (for advanced usage)
+         * @param instanceGUID The instance GUID of the texture resource
+         * @return The loaded texture
+         */
+        std::shared_ptr<graphics::Texture> LoadTextureByGUID(uint64_t instanceGUID);
+
         /**
          * @brief Get a texture from the cache
          * @param filePath The path to the texture file

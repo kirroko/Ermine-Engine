@@ -35,6 +35,7 @@ namespace Ermine
         static constexpr uint NUM_LAYERS(2);
     };
 
+    // Defines collision rules between object layers
     class ObjectLayerPairFilterImpl : public ObjectLayerPairFilter
     {
     public:
@@ -49,6 +50,7 @@ namespace Ermine
         }
     };
 
+    // Maps object layers to broadphase layers (used for efficient collision detection)
     class BPLayerInterfaceImpl : public BroadPhaseLayerInterface
     {
     public:
@@ -59,6 +61,8 @@ namespace Ermine
         }
 
         virtual uint GetNumBroadPhaseLayers() const override { return BroadPhaseLayers::NUM_LAYERS; }
+        
+        // Returns the broadphase layer corresponding to an object layer
         virtual BroadPhaseLayer GetBroadPhaseLayer(ObjectLayer inLayer) const override
         {
             JPH_ASSERT(inLayer < Layers::NUM_LAYERS);
@@ -69,6 +73,7 @@ namespace Ermine
         BroadPhaseLayer mObjectToBroadPhase[Layers::NUM_LAYERS];
     };
 
+    // Defines object vs broadphase layer collision rules
     class ObjectVsBroadPhaseLayerFilterImpl : public ObjectVsBroadPhaseLayerFilter
     {
     public:
@@ -84,19 +89,28 @@ namespace Ermine
     };
 
     // ------------------ Listener Implementations ------------------
+    // Handles contact events (collisions)
     class MyContactListener : public ContactListener
     {
     public:
+        // Called to validate a potential collision
         virtual ValidateResult OnContactValidate(const Body& inBody1, const Body& inBody2, RVec3Arg, const CollideShapeResult&) override 
         { 
             (void)inBody1; (void)inBody2;
             return ValidateResult::AcceptAllContactsForThisBodyPair;
         }
+
+        // Called when contact begins
         virtual void OnContactAdded(const Body&, const Body&, const ContactManifold&, ContactSettings&) override {}
+        
+        // Called when contact persists across frames
         virtual void OnContactPersisted(const Body&, const Body&, const ContactManifold&, ContactSettings&) override {}
+        
+        // Called when contact ends
         virtual void OnContactRemoved(const SubShapeIDPair&) override {}
     };
 
+    // Handles activation/deactivation of bodies (e.g., sleeping/waking up)
     class MyBodyActivationListener : public BodyActivationListener
     {
     public:
@@ -105,11 +119,16 @@ namespace Ermine
     };
 
     // ------------------ Physics Class ------------------
+    /*!*************************************************************************
+    \brief
+     Constructor for the Physics class. Initializes temporary memory
+     allocators, job system, and sets up filter and listener objects.
+    ***************************************************************************/
     Physics::Physics()
-        : mTempAllocator(10 * 1024 * 1024),  // 10 MB
+        : mTempAllocator(10 * 1024 * 1024),  // Allocate 10 MB for temporary physics data
         mJobSystem(cMaxPhysicsJobs, cMaxPhysicsBarriers, std::thread::hardware_concurrency() - 1)
     {
-        // Allocate filter / listener objects
+        // Create filter and listener objects for collision handling
         mBroadPhaseLayerInterface = new BPLayerInterfaceImpl();
         mObjectVsBroadPhaseLayerFilter = new ObjectVsBroadPhaseLayerFilterImpl();
         mObjectLayerPairFilter = new ObjectLayerPairFilterImpl();
@@ -117,10 +136,16 @@ namespace Ermine
         mContactListener = new MyContactListener();
     }
 
+    /*!*************************************************************************
+      \brief
+        Destructor for the Physics class. Shuts down the physics system and
+        deallocates filter/listener objects.
+    ***************************************************************************/
     Physics::~Physics()
     {
         Shutdown();
 
+        // Clean up allocated filter/listener objects
         delete mBroadPhaseLayerInterface;
         delete mObjectVsBroadPhaseLayerFilter;
         delete mObjectLayerPairFilter;
@@ -128,6 +153,11 @@ namespace Ermine
         delete mContactListener;
     }
 
+    /*!*************************************************************************
+      \brief
+        Initializes the Jolt physics system, allocates core objects, and sets up
+        gravity, listeners, and broadphase optimizations.
+    ***************************************************************************/
     void Physics::Init()
     {
         RegisterDefaultAllocator();
@@ -156,6 +186,11 @@ namespace Ermine
         mPhysicsSystem.OptimizeBroadPhase();
     }
 
+    /*!*************************************************************************
+      \brief
+        Shuts down the physics system, clears entity-body mappings, and deletes
+        the physics factory.
+    ***************************************************************************/
     void Physics::Shutdown()
     {
         UnregisterTypes();
@@ -164,6 +199,13 @@ namespace Ermine
         Factory::sInstance = nullptr;
     }
 
+    /*!*************************************************************************
+      \brief
+        Updates the physics system for the given timestep and synchronizes ECS
+        transforms with the latest physics body positions and rotations.
+      \param[in] deltaTime
+        Time elapsed since the last frame, in seconds.
+    ***************************************************************************/
     void Physics::Update(float deltaTime)
     {
         mPhysicsSystem.Update(deltaTime, 1, &mTempAllocator, &mJobSystem);
@@ -189,6 +231,8 @@ namespace Ermine
         }
     }
 
+    //TEMP WILL BE REMOVE
+    /*
     //BodyID Physics::CreateStaticBox(const JPH::Vec3& halfExtents, const RVec3& position)
     //{
     //    BoxShapeSettings settings(halfExtents);
@@ -247,7 +291,14 @@ namespace Ermine
     //    // 7. Optionally store body pointer or ID in a component if needed
     //    mEntityToBody[entity] = body->GetID();
     //}
+    */
 
+    /*!*************************************************************************
+      \brief
+        Rebuilds the physics body list from ECS entities. Removes old bodies,
+        creates shapes based on component data, and registers them with the
+        physics system.
+    ***************************************************************************/
     void Physics::UpdatePhysicList()
     {
         mEntityToBody.clear();
@@ -321,6 +372,7 @@ namespace Ermine
                     shape = hullResult.Get();
                 break;
             }
+            ////NOT IN USED YET
             // case ShapeType::Compound:
             //     shape = BuildCompoundShapeDirectly(...);
             //     break;
@@ -356,6 +408,14 @@ namespace Ermine
 
     }
 
+    /*!*************************************************************************
+      \brief
+        Retrieves the physics BodyID corresponding to an ECS entity.
+      \param[in] objectID
+        The ECS entity ID to query.
+      \return
+        A valid BodyID if found, otherwise an invalid BodyID.
+    ***************************************************************************/
     JPH::BodyID Physics::GetBodyID(EntityID objectID)
     {
         auto it = mEntityToBody.find(objectID);

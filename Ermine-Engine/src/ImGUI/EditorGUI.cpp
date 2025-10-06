@@ -139,7 +139,7 @@ void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
         {
             if (auto path = SceneManager::ShowOpenDialog(GetActiveWindow()))
             {
-                SceneManager::GetInstance().NewScene();
+                SceneManager::GetInstance().ClearScene();
                 SceneManager::GetInstance().OpenScene(*path);
             }
         }
@@ -483,7 +483,7 @@ void EditorGUI::Init(GLFWwindow* window)
     ImGui_ImplOpenGL3_Init("#version 460");
 
     // Create Scene first
-    s_ActiveScene = std::make_unique<Scene>("Default Scene"); // Give it a name
+    //s_ActiveScene = std::make_unique<Scene>("Default Scene"); // Give it a name
 
     // Then create HierarchyPanel with the scene
     s_HierarchyPanel = std::make_unique<HierarchyPanel>();

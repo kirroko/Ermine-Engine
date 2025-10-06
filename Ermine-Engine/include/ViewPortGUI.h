@@ -14,17 +14,13 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #pragma once
 #include "ImguiUIWindow.h"
 
-class InspectorGUI;
-
 namespace Ermine
 {
 	class ViewPortGUI : public ImGUIWindow
 	{
 		bool show;
-		InspectorGUI* ref_Inspector;
 	public:
 		ViewPortGUI();
-		ViewPortGUI(InspectorGUI* ref);
 
 		void Update() override;
 		void Render() override;

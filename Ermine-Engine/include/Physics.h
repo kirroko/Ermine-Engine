@@ -38,22 +38,69 @@ namespace Ermine
     class Physics : public System
     {
     public:
+        /*!***********************************************************************
+          \brief
+            Constructor. Initializes memory allocator, job system, and prepares
+            listeners/filters for the physics system.
+        *************************************************************************/
         Physics();
+
+        /*!***********************************************************************
+          \brief
+            Destructor. Shuts down the physics system and cleans up resources.
+        *************************************************************************/
         ~Physics();
 
+        /*!***********************************************************************
+          \brief
+            Initializes the Jolt physics system, registers types, sets up gravity,
+            listeners, and optimizes the broadphase.
+        *************************************************************************/
         void Init();
+
+        /*!***********************************************************************
+          \brief
+            Shuts down the physics system and clears entity-to-body mappings.
+        *************************************************************************/
         void Shutdown();
+        
+        /*!***********************************************************************
+          \brief
+            Updates the physics simulation for a single frame and synchronizes ECS
+            transforms with physics bodies.
+          \param[in] deltaTime
+            Time elapsed since the last frame, in seconds.
+        *************************************************************************/
         void Update(float deltaTime);
 
-        // Body creation
+        //place holder, will be remove
         //BodyID CreateStaticBox(const JPH::Vec3& halfExtents, const RVec3& position);
         //BodyID CreateDynamicSphere(float radius, const RVec3& position, const JPH::Vec3& initialVelocity);
         //void CreatePhysicsBox(const Ermine::Vec3& position, const Ermine::Vec3& size, float mass);
 
+        /*!***********************************************************************
+          \brief
+            Rebuilds the list of physics bodies from ECS entities. Old bodies are
+            removed and new shapes are created and registered in the physics world.
+        *************************************************************************/
         void UpdatePhysicList();
 
+        /*!***********************************************************************
+          \brief
+            Retrieves the physics body ID associated with a given ECS entity.
+          \param[in] objectID
+            The ECS entity ID to query.
+          \return
+            A valid BodyID if the entity has a physics body, otherwise an invalid BodyID.
+        *************************************************************************/
         JPH::BodyID GetBodyID(EntityID objectID);
 
+        /*!***********************************************************************
+          \brief
+            Provides access to the Jolt BodyInterface for manual body operations.
+          \return
+            Reference to the BodyInterface instance.
+        *************************************************************************/
         BodyInterface& GetBodyInterface() { return mPhysicsSystem.GetBodyInterface(); }
 
     private:
@@ -71,6 +118,7 @@ namespace Ermine
 
         std::unordered_map<EntityID, JPH::BodyID> mEntityToBody;
 
-        void SetupLayers();
+        //not in used
+        //void SetupLayers();
     };
 }

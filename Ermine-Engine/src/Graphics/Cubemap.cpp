@@ -181,7 +181,7 @@ bool Cubemap::LoadFromFaces(const std::array<std::string, 6>& faces)
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
         // Track memory usage
-        GPUProfiler::TrackMemoryAllocation(static_cast<size_t>(m_Width) * m_Height * 6 * 4, "Cubemap");
+        GPUProfiler::TrackMemoryAllocation(static_cast<size_t>(m_Width) * m_Height * 6 * 4, "Texture");
         
         EE_CORE_INFO("Cubemap loaded successfully with {0} faces", faces.size());
     }
@@ -270,7 +270,7 @@ bool Cubemap::LoadFromEquirectangular(const std::string& equirectangularPath)
  * @param resolution Resolution of each face of the resulting cubemap.
  * @return true if successful, false otherwise.
  */
-bool Cubemap::GenerateFromEquirectangular(GLuint equirectangularTexture, int resolution)
+bool Cubemap::GenerateFromEquirectangular([[maybe_unused]] GLuint equirectangularTexture, int resolution)
 {    
     // For now, I created a simple cubemap and note that proper conversion
     // would require shader-based projection from equirectangular to cube faces
@@ -294,7 +294,7 @@ bool Cubemap::GenerateFromEquirectangular(GLuint equirectangularTexture, int res
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     // Track memory usage
-    GPUProfiler::TrackMemoryAllocation(static_cast<size_t>(resolution) * resolution * 6 * 8, "Cubemap"); // 8 bytes for RGB16F
+    GPUProfiler::TrackMemoryAllocation(static_cast<size_t>(resolution) * resolution * 6 * 8, "Texture"); // 8 bytes for RGB16F
 
     EE_CORE_WARN("Equirectangular to cubemap conversion is not fully implemented. Created empty cubemap.");
 

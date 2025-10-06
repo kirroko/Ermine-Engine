@@ -3,31 +3,33 @@ project "Jolt"
     language "C++"
     cppdialect "C++17"
 
-    buildoptions { "/bigobj", "/MP" } -- Jolt requires this flag on MSVC
+    -- Match engine’s dynamic CRT to avoid LNK2038/LNK4098
+    staticruntime "off"
+
+    buildoptions { "/bigobj", "/MP" } -- Jolt requires this flag on MSVC (bigobj)
 
     targetdir ("../../Build/bin/" .. outputdir .. "/Ermine-Editor/Jolt")
     objdir ("../../Build/obj/" .. outputdir .. "/Ermine-Editor/Jolt")
 
-	files
-	{
-	    "**.h",
-		"**.cpp"
-	}
+    files
+    {
+        "**.h",
+        "**.cpp"
+    }
 
     includedirs
     {
         "../"
     }
 
-
-    filter "configurations:Debug"
+    filter "configurations:*Debug"
         targetname "joltD"
-        runtime "Debug"
+        runtime "Debug"   -- /MDd
         symbols "on"
 
-    filter "configurations:Release"
+    filter "configurations:*Release"
         targetname "jolt"
-        runtime "Release"
+        runtime "Release" -- /MD
         optimize "on"
 
     filter "system:windows"

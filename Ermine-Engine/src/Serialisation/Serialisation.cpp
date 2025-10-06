@@ -1,3 +1,16 @@
+/* Start Header ************************************************************************/
+/*!
+\file       Serialisation.cpp
+\author     WEE HONG RU Curtis, h.wee, 2301266, h.wee\@digipen.edu
+\date       Sep 10, 2025
+\brief      Serialisation functions for Config and Scene
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents without the
+prior written consent of DigiPen Institute of Technology is prohibited.
+*/
+/* End Header **************************************************************************/
+
 #include "PreCompile.h"
 #include "Serialisation.h"
 #include "Entity.h"
@@ -19,19 +32,19 @@ using Ermine::graphics::GeometryFactory; // make intent explicit
 void Ermine::Mesh::RebuildPrimitive() {
     if (primitive.type == "Cube") {
         *this = GeometryFactory::CreateCube(primitive.size.x, primitive.size.y, primitive.size.z);
-        kind = Kind::Primitive;
+        kind = MeshKind::Primitive;
     }
     else if (primitive.type == "Sphere") {
         *this = GeometryFactory::CreateSphere(primitive.size.x); // adapt to your API
-        kind = Kind::Primitive;
+        kind = MeshKind::Primitive;
     }
     else if (primitive.type == "Quad") {
         *this = GeometryFactory::CreateQuad(primitive.size.x, primitive.size.y); // adapt to your API
-        kind = Kind::Primitive;
+        kind = MeshKind::Primitive;
     }
     else {
         EE_CORE_WARN("Unknown primitive type: {}", primitive.type);
-        kind = Kind::None;
+        kind = MeshKind::None;
 	}
     // TODO: other primitives...
 }

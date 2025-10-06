@@ -112,53 +112,43 @@ namespace Ermine {
     void HierarchyPanel::DrawEntityNode(EntityID entity, int depth) {
         if (!ECS::GetInstance().IsEntityValid(entity)) return;
 
-        auto& metadata = ECS::GetInstance().GetComponent<ObjectMetaData>(entity);
+        auto& ecs = ECS::GetInstance();
+        auto& metadata = ecs.GetComponent<ObjectMetaData>(entity);
         bool isSelected = m_ActiveScene->IsEntitySelected(entity);
 
-        ImGui::PushID(static_cast<int>(entity));
+        ImGui::PushID((int)entity); // keep this
 
-        // Get children
+        // children
         std::vector<EntityID> children;
-        bool hasChildren = false;
-        if (ECS::GetInstance().HasComponent<HierarchyComponent>(entity)) {
-            const auto& hierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(entity);
-            children = hierarchy.children;
-            hasChildren = !children.empty();
+        if (ecs.HasComponent<HierarchyComponent>(entity)) {
+            children = ecs.GetComponent<HierarchyComponent>(entity).children;
         }
 
-        // Add indentation for depth (16 pixels per level)
+        // indent
         float indent = depth * 16.0f;
         if (indent > 0) ImGui::Indent(indent);
 
-        // Simple display name without symbols
-        std::string displayName = metadata.name;
-        if (hasChildren) {
-            displayName += " (" + std::to_string(children.size()) + " children)";
-        }
+        // visible name + unique ID suffix
+        std::string visible = metadata.name.empty() ? "Entity" : metadata.name;
+        std::string label = visible + "##" + std::to_string((uint64_t)entity); // unique ID
 
-        // Tree node flags
-        ImGuiTreeNodeFlags nodeFlags = ImGuiTreeNodeFlags_OpenOnArrow |
-            ImGuiTreeNodeFlags_SpanAvailWidth |
-            ImGuiTreeNodeFlags_FramePadding;
+        ImGuiTreeNodeFlags nodeFlags = ImGuiTreeNodeFlags_OpenOnArrow
+            | ImGuiTreeNodeFlags_SpanAvailWidth
+            | ImGuiTreeNodeFlags_FramePadding;
 
-        if (isSelected) {
-            nodeFlags |= ImGuiTreeNodeFlags_Selected;
-        }
-        if (!hasChildren) {
-            nodeFlags |= ImGuiTreeNodeFlags_Leaf;
-        }
+        if (isSelected) nodeFlags |= ImGuiTreeNodeFlags_Selected;
+        if (children.empty()) nodeFlags |= ImGuiTreeNodeFlags_Leaf;
 
-        bool nodeOpen = ImGui::TreeNodeEx(displayName.c_str(), nodeFlags);
+        bool nodeOpen = ImGui::TreeNodeEx(label.c_str(), nodeFlags);
 
-        // Handle interaction
         HandleDragDrop(entity);
+
         if (ImGui::IsItemClicked()) {
             m_ActiveScene->SetSelectedEntity(entity);
             m_PendingFocusEntity = entity;
         }
 
-        // Context menu
-        if (ImGui::BeginPopupContextItem()) {
+        if (ImGui::BeginPopupContextItem(("ctx##" + std::to_string((uint64_t)entity)).c_str())) { // unique popup
             if (ImGui::MenuItem("Delete")) {
                 m_ActiveScene->DestroyEntity(entity);
                 ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
@@ -172,7 +162,6 @@ namespace Ermine {
             ImGui::EndPopup();
         }
 
-        // Draw children
         if (nodeOpen) {
             for (auto child : children) {
                 DrawEntityNode(child, depth + 1);
@@ -183,6 +172,7 @@ namespace Ermine {
         if (indent > 0) ImGui::Unindent(indent);
         ImGui::PopID();
     }
+
 
     void HierarchyPanel::HandleDragDrop(EntityID entity) {
         // Drag source code

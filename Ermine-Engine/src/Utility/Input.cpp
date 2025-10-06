@@ -50,7 +50,7 @@ namespace Ermine
 			return;
 		}
 
-#ifdef _DEBUG
+#if defined(EE_EDITOR)
 		// Scroll callback
 		glfwSetScrollCallback(window, []([[maybe_unused]] GLFWwindow* window, [[maybe_unused]] double offsetX, double offsetY)
 			{
