@@ -122,6 +122,10 @@ namespace Ermine::graphics
         std::pair<bool, EntityID> PickEntityAt(const int& x, const int& y, const Mtx44& view, const Mtx44& projection);
 
         /**
+		 * @brief Update the shadow maps for all lights that cast shadows.
+		 */
+        void UpdateShadowMap();
+        /**
          * @brief Initialize the renderer with the screen width and height.
          * @param screenWidth The width of the screen
          * @param screenHeight The height of the screen

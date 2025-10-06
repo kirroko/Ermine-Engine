@@ -130,26 +130,33 @@ namespace Ermine {
         m_SelectedEntity = 0;
         EE_CORE_INFO("Cleared scene: {}", m_Name);
     }
-    void Scene::EnsureSyncedWithECS() const
+    void Scene::EnsureSyncedWithECS(bool force) const
     {
-        if (!m_Entities.empty()) return; // already synced (cheap guard)
-
         auto& ecs = ECS::GetInstance();
+
+        // Count how many ECS entities *should* be in the scene snapshot
+        size_t ecsCount = 0;
+        for (EntityID e = 0; e < MAX_ENTITIES; ++e)
+            if (ecs.IsEntityValid(e) && ecs.HasComponent<HierarchyComponent>(e))
+                ++ecsCount;
+
+        // Rebuild if forced or if snapshot is out-of-date
+        if (!force && !m_Entities.empty() && m_Entities.size() == ecsCount)
+            return;
+
+        m_Entities.clear();
+
         for (EntityID e = 0; e < MAX_ENTITIES; ++e) {
             if (!ecs.IsEntityValid(e)) continue;
-
-            // Only list things that participate in the hierarchy
             if (!ecs.HasComponent<HierarchyComponent>(e)) continue;
 
-            m_Entities.insert(e);
-
-            // If parent is invalid (or missing HC), adopt as root so it shows up
             auto& hc = ecs.GetComponent<HierarchyComponent>(e);
             if (hc.parent != 0 &&
                 (!ecs.IsEntityValid(hc.parent) || !ecs.HasComponent<HierarchyComponent>(hc.parent))) {
                 hc.parent = 0;
                 hc.depth = 0;
             }
+            m_Entities.insert(e);
         }
     }
 }

@@ -19,6 +19,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <string>
 #include "ECS.h"
 
+
 struct Config {
     int windowWidth{};
     int windowHeight{};
@@ -27,16 +28,57 @@ struct Config {
     std::string title;
 };
 
+/**
+ * @brief Serialise config file
+ * @param config struct
+ */
 std::string SerializeConfig(const Config& config);
+
+/**
+ * @brief Deserialise config files
+ * @param string file name
+ */
 Config DeserializeConfig(const std::string& jsonStr);
 
+/**
+ * @brief Save config to json file
+ * @param config struct
+ * @param file path
+ * @param prettywriter bool
+ */
 void SaveConfigToFile(const Config& config, const std::filesystem::path& path, bool pretty = true);
+
+/**
+ * @brief Load config from json file
+ * @param file path
+ */
 Config LoadConfigFromFile(const std::filesystem::path& path);
 
+/**
+ * @brief Save scene to json file
+ * @param ecs reference
+ * @param file path
+ * @param prettywriter bool
+ */
 void SaveSceneToFile(const Ermine::ECS& ecs, const std::filesystem::path& path, bool pretty);
+
+/**
+ * @brief Load scene from json file
+ * @param ecs reference
+ * @param file path
+ */
 void LoadSceneFromFile(Ermine::ECS& ecs, const std::filesystem::path& path);
 
+/**
+ * @brief Save current scene calls SaveSceneToFile
+ * @param string scene name
+ */
 void SaveCurrentScene(const std::string& sceneName);
+
+/**
+ * @brief Load current scene calls LoadSceneFromFile
+ * @param string scene name
+ */
 void LoadScene(const std::string& sceneName);
 
 #endif // SERIALISATION_H

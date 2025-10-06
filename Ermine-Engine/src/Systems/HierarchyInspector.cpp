@@ -3,7 +3,7 @@
 \file       HierarchyInspector.cpp
 \author     Edwin Lee Zirui, edwinzirui.lee, 2301299, edwinzirui.lee\@digipen.edu (30%)
 \co-author  WEE HONG RU Curtis, h.wee, 2301266, h.wee\@digipen.edu (70%)
-\date       27/03/2025
+\date       10/09/2025
 \brief      Inspector panel for viewing and editing entity properties
 
 Copyright (C) 2025 DigiPen Institute of Technology.
@@ -330,12 +330,16 @@ namespace Ermine::editor {
                 matComp = Material(std::make_shared<graphics::Material>());
                 gm = matComp.GetMaterial();
                 if (gm) {
-                    // Seed defaults on both alias keys so future reads succeed
-                    gm->SetVec3("materialAlbedo", { 1.f, 1.f, 1.f }); gm->SetVec3("material.albedo", { 1.f, 1.f, 1.f });
+                    Vec4 alb{ 1.f,1.f,1.f,1.f };
+                    gm->SetVec4("materialAlbedo", alb);
+                    gm->SetVec4("material.albedo", alb);
+                    gm->SetFloat("materialAlpha", 1.0f);
+                    gm->SetFloat("materialTransparency", 0.0f);
+
                     gm->SetFloat("materialMetallic", 0.0f);           gm->SetFloat("material.metallic", 0.0f);
-                    gm->SetFloat("materialRoughness", 0.5f);           gm->SetFloat("material.roughness", 0.5f);
-                    gm->SetVec3("materialEmissive", { 0.f, 0.f, 0.f }); gm->SetVec3("material.emissive", { 0.f, 0.f, 0.f });
-                    gm->SetFloat("materialEmissiveIntensity", 1.0f);     gm->SetFloat("material.emissiveIntensity", 1.0f);
+                    gm->SetFloat("materialRoughness", 0.5f);          gm->SetFloat("material.roughness", 0.5f);
+                    gm->SetVec3("materialEmissive", { 0.f,0.f,0.f });   gm->SetVec3("material.emissive", { 0.f,0.f,0.f });
+                    gm->SetFloat("materialEmissiveIntensity", 1.0f);  gm->SetFloat("material.emissiveIntensity", 1.0f);
                 }
             }
             ImGui::Separator();
@@ -371,15 +375,56 @@ namespace Ermine::editor {
             gm->SetBool(a, v); if (b) gm->SetBool(b, v);
             };
 
-        // --- Albedo ---
+        auto getAlbedoRGBA = [&]() -> Vec4 {
+            // Try main param as vec4
+            if (auto p = gm->GetParameter("materialAlbedo"); p && p->floatValues.size() >= 4)
+                return Vec4(p->floatValues[0], p->floatValues[1], p->floatValues[2], p->floatValues[3]);
+
+            // Try alias as vec4
+            if (auto q = gm->GetParameter("material.albedo"); q && q->floatValues.size() >= 4)
+                return Vec4(q->floatValues[0], q->floatValues[1], q->floatValues[2], q->floatValues[3]);
+
+            // Fallback: RGB + (alpha from materialAlpha or 1 - transparency)
+            Vec3 rgb = getVec3("materialAlbedo", "material.albedo", matComp.cacheAlbedo);
+            float a = 1.0f;
+            if (auto aP = gm->GetParameter("materialAlpha"); aP && !aP->floatValues.empty())
+                a = aP->floatValues[0];
+            else if (auto tP = gm->GetParameter("materialTransparency"); tP && !tP->floatValues.empty())
+                a = 1.0f - tP->floatValues[0];
+
+            return Vec4(rgb.x, rgb.y, rgb.z, std::clamp(a, 0.0f, 1.0f));
+            };
+
+        auto setAlbedoRGBA = [&](const Vec4& rgba) {
+            Vec4 clamped{ std::clamp(rgba.x,0.f,1.f),
+                          std::clamp(rgba.y,0.f,1.f),
+                          std::clamp(rgba.z,0.f,1.f),
+                          std::clamp(rgba.w,0.f,1.f) };
+            gm->SetVec4("materialAlbedo", clamped);
+            gm->SetVec4("material.albedo", clamped);       // keep alias in lockstep
+            gm->SetFloat("materialAlpha", clamped.w);      // mirrors for compat
+            gm->SetFloat("materialTransparency", 1.0f - clamped.w);
+
+            // keep component caches updated (Vec3 only)
+            matComp.hasAlbedo = true;
+            matComp.cacheAlbedo = Vec3(clamped.x, clamped.y, clamped.z);
+            };
+
+        // --- Albedo (RGBA) ---
         {
-            Vec3 v = getVec3("materialAlbedo", "material.albedo", matComp.cacheAlbedo);
-            float col[3] = { v.x, v.y, v.z };
-            if (ImGui::ColorEdit3("Albedo", col)) {
-                v = { col[0], col[1], col[2] };
-                matComp.hasAlbedo = true;
-                matComp.cacheAlbedo = v;
-                setVec3Both("materialAlbedo", "material.albedo", v);
+            Vec4 rgba = getAlbedoRGBA();
+            float col4[4] = { rgba.x, rgba.y, rgba.z, rgba.w };
+
+            // Edit RGBA (with alpha bar/preview)
+            if (ImGui::ColorEdit4("Albedo", col4,
+                ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_AlphaPreviewHalf)) {
+                setAlbedoRGBA(Vec4(col4[0], col4[1], col4[2], col4[3]));
+            }
+
+            // Optional: separate Transparency (1 - alpha) control for clarity
+            float transparency = 1.0f - col4[3];
+            if (ImGui::SliderFloat("Transparency", &transparency, 0.0f, 1.0f)) {
+                setAlbedoRGBA(Vec4(col4[0], col4[1], col4[2], 1.0f - transparency));
             }
         }
 
@@ -455,9 +500,11 @@ namespace Ermine::editor {
 
         ImGui::Separator();
 
-        // --- Safe reset button (no null strings involved) ---
+        // --- Safe reset button ---
         if (ImGui::SmallButton("Reset to Defaults")) {
-            Vec3 alb{ 1.f,1.f,1.f }; setVec3Both("materialAlbedo", "material.albedo", alb);
+            Vec4 alb{ 1.f,1.f,1.f,1.f };
+            setAlbedoRGBA(alb);
+
             setFloatBoth("materialMetallic", "material.metallic", 0.0f);
             setFloatBoth("materialRoughness", "material.roughness", 0.5f);
             Vec3 emi{ 0.f,0.f,0.f }; setVec3Both("materialEmissive", "material.emissive", emi);
@@ -471,7 +518,6 @@ namespace Ermine::editor {
             gm->SetBool("materialHasEmissiveMap", false);
 
             matComp.hasAlbedo = matComp.hasMetal = matComp.hasRough = matComp.hasEmiss = true;
-            matComp.cacheAlbedo = alb;
             matComp.cacheMetallic = 0.0f;
             matComp.cacheRoughness = 0.5f;
             matComp.cacheEmissive = emi;
@@ -920,27 +966,29 @@ namespace Ermine::editor {
         // Editable class name
         char buf[256];
         strcpy_s(buf, script.m_className.c_str());
-        if (ImGui::InputText("Class", buf, sizeof(buf))) {
-            script.m_className = buf;
-            // TODO: rebuild ScriptInstance here if you support hot-reload
+        if (ImGui::InputText("Class", buf, sizeof(buf), ImGuiInputTextFlags_EnterReturnsTrue)) {
+			script = Script{ std::string(buf), entity };
+            //script.m_className = buf;
+            //ECS::GetInstance().RemoveComponent<Script>(entity);
+            //ECS::GetInstance().AddComponent<Script>(entity, Script{ std::string(buf), entity});
         }
 
         // Enable toggle
-        ImGui::Checkbox("Enabled", &script.m_enabled);
+        //ImGui::Checkbox("Enabled", &script.m_enabled);
 
         // Status
-        ImGui::Text("Started: %s", script.m_started ? "Yes" : "No");
+        //ImGui::Text("Started: %s", script.m_started ? "Yes" : "No");
 
         // Optional runtime controls
-        if (ImGui::Button("Start")) {
-            // TODO: call into your script system: script.Start(entity);
-            script.m_started = true;
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("Stop")) {
-            // TODO: ScriptSystem::Stop(entity);
-            script.m_started = false;
-        }
+        //if (ImGui::Button("Start")) {
+        //    // TODO: call into your script system: script.Start(entity);
+        //    script.m_started = true;
+        //}
+        //ImGui::SameLine();
+        //if (ImGui::Button("Stop")) {
+        //    // TODO: ScriptSystem::Stop(entity);
+        //    script.m_started = false;
+        //}
     }
 
     void HierarchyInspector::DrawModelComponent(EntityID entity)

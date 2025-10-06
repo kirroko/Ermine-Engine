@@ -31,7 +31,6 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "AudioSystem.h"
 #include "Particles.h"
 #include "Physics.h"
-#include "MathVector.h"
 #include "FiniteStateMachine.h"
 #include "Skybox.h"
 #include "Cubemap.h"
@@ -45,11 +44,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "AssetBrowser.h"
 #include "EditorCamera.h"
 #include "EditorGUI.h"
-#include "InspectorGUI.h"
 #include "ViewPortGUI.h"
 #include "AudioImGUI.h"
-#include "HierarchyInspector.h"
-#include "HierarchyPanel.h"
 #include "SceneManager.h"
 #endif
 
@@ -520,6 +516,8 @@ bool engine::Init(GLFWwindow* windowContext)
 	else
 		ECS::GetInstance().GetSystem<graphics::Renderer>()->Init(1920, 1080); // Fallback to default size
 
+	SceneManager::GetInstance().NewScene();
+
 	EE_CORE_INFO("Material system now supports efficient sharing between entities using shared_ptr");
 	EE_CORE_INFO("Systems and components registered successfully, Engine Initialized");
 
@@ -531,8 +529,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	//editor::EditorGUI::CreateImGUIWindow<InspectorGUI>();
 	//auto* inspector = editor::EditorGUI::CreateImGUIWindow<editor::HierarchyInspector>(editor::EditorGUI::GetActiveScene().get(), "Inspector");
 	editor::EditorGUI::CreateImGUIWindow<editor::GraphicsDebugGUI>("Graphics Debug");
-	InspectorGUI* ref = editor::EditorGUI::CreateImGUIWindow<InspectorGUI>();
-	editor::EditorGUI::CreateImGUIWindow<ViewPortGUI>(ref);
+	editor::EditorGUI::CreateImGUIWindow<ViewPortGUI>();
 
 	auto defaultScene = std::make_shared<Scene>("Main Scene");
 	editor::EditorGUI::SetActiveScene(defaultScene);
@@ -674,9 +671,9 @@ void engine::Render(GLFWwindow* window)
 		editor::EditorGUI::Render();
 #endif
 
-	graphics::GPUProfiler::EndFrame();
-
 	glfwSwapBuffers(window);
+
+	graphics::GPUProfiler::EndFrame();
 }
 
 void engine::HandleShadingToggle(GLFWwindow* windowContext)

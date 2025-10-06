@@ -209,7 +209,6 @@ project "Ermine-Engine"
 -- Editor Project
 project "Ermine-Editor"
     location "Ermine-Editor"
-    kind "ConsoleApp"
     language "C++"
     cppdialect "C++20"
     staticruntime "off" -- Use dynamic runtime
@@ -277,8 +276,17 @@ project "Ermine-Editor"
     filter "configurations:*Game*"
         defines { "EE_GAME" } -- if selected, nothing SHOULD happen
 
+    filter "configurations:Game-Debug"
+        kind "ConsoleApp"
+        defines "EE_DEBUG"
+
+    filter "configurations:Game-Release"
+        kind "WindowedApp"
+        defines "EE_RELEASE"
+
     filter "configurations:Editor-Debug"
         defines "EE_DEBUG"
+        kind "ConsoleApp"
         runtime "Debug"
         symbols "on"
         linkoptions { "/NODEFAULTLIB:LIBCMTD" }
@@ -287,6 +295,7 @@ project "Ermine-Editor"
 
     filter "configurations:Editor-Release"
         defines "EE_RELEASE"
+        kind "WindowedApp"
         runtime "Release"
         optimize "on"
         linkoptions { "/NODEFAULTLIB:LIBCMT" }
@@ -296,7 +305,6 @@ project "Ermine-Editor"
 -- Game Project
 project "Ermine-Game"
     location "Ermine-Game"
-    kind "WindowedApp"
     language "C++"
     cppdialect "C++20"
     staticruntime "off"
@@ -336,17 +344,26 @@ project "Ermine-Game"
         buildoptions { "/wd4251", "/wd4005" }
         defines { "EE_PLATFORM_WINDOWS" }
 
+
     filter "configurations:*Game*"
         defines { "EE_GAME" }
 
+    filter "configurations:Editor-Debug"
+        kind "ConsoleApp"
+
+    filter "configurations:Editor-Release"
+        kind "WindowedApp"
+
     filter "configurations:Game-Debug"
         defines "EE_DEBUG"
+        kind "ConsoleApp"
         runtime "Debug"
         symbols "on"
         linkoptions { "/NODEFAULTLIB:LIBCMTD" }
 
     filter "configurations:Game-Release"
         defines "EE_RELEASE"
+        kind "WindowedApp"
         runtime "Release"
         optimize "on"
         linkoptions { "/NODEFAULTLIB:LIBCMT" }

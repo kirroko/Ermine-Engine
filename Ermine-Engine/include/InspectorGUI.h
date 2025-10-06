@@ -21,12 +21,33 @@ namespace Ermine
     class InspectorGUI : public ImGUIWindow
     {
     public:
+        /**
+         * @brief Constructor
+         */
         InspectorGUI();
+
+        /**
+        * @brief Constructor
+        * @param EntityID
+        * @param Inspector name
+        */
         InspectorGUI(EntityID entity, std::string name = "Inspector");
 
+        /**
+        * @brief Set Selected Entity
+        * @param EntityID
+        */
         void SetEntity(EntityID entity);
+
+        /**
+        * @brief Get Selected Entity
+        * @return EntityID
+        */
 		EntityID GetEntity() const { return m_entity; }
 
+        /**
+        * @brief Inherited from ImGUIWindow, render loop
+        */
         void Render() override;  // defined in .cpp
 
     private:
