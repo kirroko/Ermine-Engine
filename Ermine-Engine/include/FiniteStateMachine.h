@@ -22,13 +22,6 @@ namespace Ermine
     // State Manager
     class StateManager : public System
     {
-        std::unordered_map<EntityID, StateMachine> m_StateMachines;
-        std::unordered_map<EntityID, float> m_StateTimers;
-        float m_StateDuration = 3.0f;
-
-        //IdleState g_IdleState;
-        //RoamState g_RoamState;
-
     public:
         /*!***********************************************************************
         \brief
@@ -82,4 +75,7 @@ namespace Ermine
         void Update(EntityID entity, float dt) override;
         void Exit(EntityID entity) override;
     };
+
+    extern IdleState g_IdleState;
+    extern RoamState g_RoamState;
 }

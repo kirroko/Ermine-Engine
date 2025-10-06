@@ -16,6 +16,10 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 namespace Ermine
 {
+    // Global FSM states
+    IdleState g_IdleState;
+    RoamState g_RoamState;
+
     /*!***********************************************************************
     \brief
         Normalizes a 3D vector.
@@ -36,30 +40,58 @@ namespace Ermine
     // StateManager
     void StateManager::Init(EntityID entity, State* startState)
     {
-        m_StateMachines[entity].ChangeState(entity, startState);
+        auto& fsm = ECS::GetInstance().GetComponent<StateMachine>(entity);
+        fsm.manager = this;
+        fsm.Init(entity, startState);
     }
 
     void StateManager::Update(float dt)
     {
-        //for (auto& [entity, machine] : m_StateMachines)
-        //{
-        //    machine.Update(entity, dt);
-        //}
-
         for (auto entity : m_Entities)
         {
-            // Check if state machine component exist
             if (!ECS::GetInstance().HasComponent<StateMachine>(entity))
                 continue;
 
-            auto& sm = ECS::GetInstance().GetComponent<StateMachine>(entity);
-            sm.Update(entity, dt);
+            auto& fsmComp = ECS::GetInstance().GetComponent<StateMachine>(entity);
+
+            if (fsmComp.m_CurrentState)
+                fsmComp.m_CurrentState->Update(entity, dt);
+
+            fsmComp.stateTimer += dt;
+            if (fsmComp.stateTimer > fsmComp.stateDuration)
+            {
+                fsmComp.stateTimer = 0.0f;
+
+                if (fsmComp.m_CurrentState == &g_IdleState)
+                {
+                    fsmComp.m_CurrentState->Exit(entity);
+                    fsmComp.m_CurrentState = &g_RoamState;
+                    fsmComp.m_CurrentState->Enter(entity);
+                }
+                else
+                {
+                    fsmComp.m_CurrentState->Exit(entity);
+                    fsmComp.m_CurrentState = &g_IdleState;
+                    fsmComp.m_CurrentState->Enter(entity);
+                }
+            }
         }
     }
 
     void StateManager::Free(EntityID entity)
     {
-        m_StateMachines.erase(entity);
+        if (!ECS::GetInstance().HasComponent<StateMachine>(entity))
+            return;
+
+        auto& fsm = ECS::GetInstance().GetComponent<StateMachine>(entity);
+
+        // Call Exit() on the current state before clearing
+        if (fsm.m_CurrentState)
+            fsm.m_CurrentState->Exit(entity);
+
+        fsm.m_CurrentState = nullptr;
+        fsm.manager = nullptr;
+        fsm.stateTimer = 0.0f;
     }
 
     // IdleState
@@ -91,35 +123,38 @@ namespace Ermine
 
     void RoamState::Update(EntityID entity, float dt)
     {
-        //EE_CORE_INFO("Entity {0} is roaming...", entity);
-        if (!ECS::GetInstance().IsEntityValid(entity))
-            return;
+        if (ECS::GetInstance().HasComponent<Transform>(entity))
+        {
+            //EE_CORE_INFO("Entity {0} is roaming...", entity);
+            if (!ECS::GetInstance().IsEntityValid(entity))
+                return;
 
-        auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
+            auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
 
-        // Move cube
-        //transform.position.x += 1.0f * dt;
+            // Move cube
+            //transform.position.x += 1.0f * dt;
 
-        // Update orbit angle
-        angle += speed * dt;
-        if (angle > 2.0f * static_cast<float>(M_PI)) angle -= 2.0f * static_cast<float>(M_PI);
+            // Update orbit angle
+            angle += speed * dt;
+            if (angle > 2.0f * static_cast<float>(M_PI)) angle -= 2.0f * static_cast<float>(M_PI);
 
-        // Compute new position along circle (XZ plane)
-        float x = radius * cos(angle);
-        float z = radius * sin(angle);
-        transform.position = Vec3(x, 0.0f, z);
+            // Compute new position along circle (XZ plane)
+            float x = radius * cos(angle);
+            float z = radius * sin(angle);
+            transform.position = Vec3(x, 0.0f, z);
 
-        // Compute forward direction (tangent to circle)
-        Vec3 forward(-sin(angle), 0.0f, cos(angle));
-        forward = Normalize(forward);
+            // Compute forward direction (tangent to circle)
+            Vec3 forward(-sin(angle), 0.0f, cos(angle));
+            forward = Normalize(forward);
 
-        // Convert forward vector into quaternion facing that way
-        float yaw = atan2(forward.x, forward.z);  // yaw in radians
-        float halfYaw = yaw * 0.5f;
-        transform.rotation = Quaternion(0.0f, sin(halfYaw), 0.0f, cos(halfYaw));
+            // Convert forward vector into quaternion facing that way
+            float yaw = atan2(forward.x, forward.z);  // yaw in radians
+            float halfYaw = yaw * 0.5f;
+            transform.rotation = Quaternion(0.0f, sin(halfYaw), 0.0f, cos(halfYaw));
 
-        //EE_CORE_INFO("Entity {0} is roaming at position ({1}, {2}, {3})",
-        //    entity, transform.position.x, transform.position.y, transform.position.z);
+            //EE_CORE_INFO("Entity {0} is roaming at position ({1}, {2}, {3})",
+            //    entity, transform.position.x, transform.position.y, transform.position.z);
+        }
     }
 
     void RoamState::Exit(EntityID entity)
