@@ -1,0 +1,43 @@
+{
+  "entities": [
+    {
+      "id": 1,
+      "components": {
+        "Transform": {
+          "position": [
+            0.0,
+            5.0,
+            0.0
+          ],
+          "rotation": [
+            0.8754260540008545,
+            0.4082179069519043,
+            -0.23456971347332,
+            0.10938165336847305
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "Light": {
+          "color": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "intensity": 1.0,
+          "type": 1,
+          "castsShadows": true
+        },
+        "ObjectMetaData": {
+          "name": "Main Light",
+          "tag": "Light",
+          "active": true
+        },
+        "HierarchyComponent": {}
+      }
+    }
+  ]
+}

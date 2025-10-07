@@ -559,7 +559,7 @@ void engine::Shutdown()
 	cfg.windowHeight = height;
 	cfg.fullscreen = (glfwGetWindowMonitor(glfwGetCurrentContext()) != nullptr);
 	cfg.maximized = (glfwGetWindowAttrib(glfwGetCurrentContext(), GLFW_MAXIMIZED) == GLFW_TRUE);
-	cfg.title = "Ermine Editor 0.1";
+	cfg.title = "Ermine Editor 0.2";
 
 	SaveConfigToFile(cfg, "Ermine-Engine.config", false);
 

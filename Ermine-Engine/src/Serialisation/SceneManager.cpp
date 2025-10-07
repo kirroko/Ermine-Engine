@@ -37,7 +37,7 @@ namespace
         namespace fs = std::filesystem;
         std::error_code ec;
 
-        fs::path scenes = fs::absolute(fs::path("Resources") / "Scenes");
+        fs::path scenes = "../Resources/Scenes";
         if (!fs::exists(scenes, ec)) fs::create_directories(scenes, ec); // best effort
 
         // Turn into an IShellItem
@@ -196,6 +196,25 @@ void SceneManager::SaveScene()
         return;
     }
     SaveSceneTo(*m_CurrentScenePath);
+}
+
+void SceneManager::SaveTemp()
+{
+    SaveSceneTo("../Temp/Temp.scene");
+}
+
+void SceneManager::LoadTemp()
+{
+    OpenScene("../Temp/Temp.scene");
+}
+
+void SceneManager::RemoveTemp()
+{
+    // Attempt to delete the file
+    int status = remove("../Temp/Temp.scene");
+    std::filesystem::remove("Temp");
+
+    EE_CORE_INFO("Removed: {}", status);
 }
 
 void SceneManager::SaveSceneAsDialog()
