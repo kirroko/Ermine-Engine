@@ -1746,11 +1746,22 @@ namespace Ermine
 	\brief
 	 State Machine component structure.
 	*************************************************************************/
+	class StateManager; // forward declaration
 	struct StateMachine
 	{
+		StateManager* manager = nullptr;
 		State* m_CurrentState = nullptr;
 
+		float stateTimer = 0.0f;
+		float stateDuration = 3.0f;
+
+		std::vector<State*> availableStates;
+		std::unordered_map<State*, State*> transitions;
 	public:
+		void Init(EntityID entity, State* initial)
+		{
+			m_CurrentState = initial;
+		}
 		/*!***********************************************************************
 		\brief
 		   Change the current state of an entity.
