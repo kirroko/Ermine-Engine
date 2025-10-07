@@ -47,6 +47,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "ViewPortGUI.h"
 #include "AudioImGUI.h"
 #include "SceneManager.h"
+#include "FSMEditor.h"
 #endif
 
 using namespace Ermine;
@@ -530,6 +531,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	//auto* inspector = editor::EditorGUI::CreateImGUIWindow<editor::HierarchyInspector>(editor::EditorGUI::GetActiveScene().get(), "Inspector");
 	editor::EditorGUI::CreateImGUIWindow<editor::GraphicsDebugGUI>("Graphics Debug");
 	editor::EditorGUI::CreateImGUIWindow<ViewPortGUI>();
+	editor::EditorGUI::CreateImGUIWindow<FSMEditorImGUI>();
 
 	auto defaultScene = std::make_shared<Scene>("Main Scene");
 	editor::EditorGUI::SetActiveScene(defaultScene);

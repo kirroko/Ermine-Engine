@@ -100,7 +100,7 @@
       <PrecompiledHeaderFile>PreCompile.h</PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
       <PreprocessorDefinitions>EE_PLATFORM_WINDOWS;EE_BUILD_DLL;GLFW_INCLUDE_NONE;IMGUI_DEFINE_MATH_OPERATORS;GLM_ENABLE_EXPERIMENTAL;_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING;EE_EDITOR;EE_DEBUG;VERBOSE_LOGGING=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>include;..\ThirdParty\GLFW\include;..\ThirdParty\Glad\include;..\ThirdParty\imgui;..\ThirdParty\glm;..\ThirdParty\spdlog\include;..\ThirdParty\stb;..\ThirdParty\Fmod\inc;..\ThirdParty\Mono\include;..\ThirdParty;..\ThirdParty\rapidjson;..\ThirdParty\assimp\include;..\ThirdParty\DirectXTex\inc;..\ThirdParty\xproperty\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;..\ThirdParty\GLFW\include;..\ThirdParty\Glad\include;..\ThirdParty\imgui;..\ThirdParty\glm;..\ThirdParty\spdlog\include;..\ThirdParty\stb;..\ThirdParty\Fmod\inc;..\ThirdParty\Mono\include;..\ThirdParty;..\ThirdParty\rapidjson;..\ThirdParty\assimp\include;..\ThirdParty\DirectXTex\inc;..\ThirdParty\xproperty\source;..\ThirdParty\imnodes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -148,7 +148,7 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
       <PrecompiledHeaderFile>PreCompile.h</PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
       <PreprocessorDefinitions>EE_PLATFORM_WINDOWS;EE_BUILD_DLL;GLFW_INCLUDE_NONE;IMGUI_DEFINE_MATH_OPERATORS;GLM_ENABLE_EXPERIMENTAL;_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING;EE_EDITOR;EE_RELEASE;VERBOSE_LOGGING=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>include;..\ThirdParty\GLFW\include;..\ThirdParty\Glad\include;..\ThirdParty\imgui;..\ThirdParty\glm;..\ThirdParty\spdlog\include;..\ThirdParty\stb;..\ThirdParty\Fmod\inc;..\ThirdParty\Mono\include;..\ThirdParty;..\ThirdParty\rapidjson;..\ThirdParty\assimp\include;..\ThirdParty\DirectXTex\inc;..\ThirdParty\xproperty\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;..\ThirdParty\GLFW\include;..\ThirdParty\Glad\include;..\ThirdParty\imgui;..\ThirdParty\glm;..\ThirdParty\spdlog\include;..\ThirdParty\stb;..\ThirdParty\Fmod\inc;..\ThirdParty\Mono\include;..\ThirdParty;..\ThirdParty\rapidjson;..\ThirdParty\assimp\include;..\ThirdParty\DirectXTex\inc;..\ThirdParty\xproperty\source;..\ThirdParty\imnodes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -200,7 +200,7 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
       <PrecompiledHeaderFile>PreCompile.h</PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
       <PreprocessorDefinitions>EE_PLATFORM_WINDOWS;EE_BUILD_DLL;GLFW_INCLUDE_NONE;IMGUI_DEFINE_MATH_OPERATORS;GLM_ENABLE_EXPERIMENTAL;_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING;EE_GAME;EE_DEBUG;VERBOSE_LOGGING=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>include;..\ThirdParty\GLFW\include;..\ThirdParty\Glad\include;..\ThirdParty\imgui;..\ThirdParty\glm;..\ThirdParty\spdlog\include;..\ThirdParty\stb;..\ThirdParty\Fmod\inc;..\ThirdParty\Mono\include;..\ThirdParty;..\ThirdParty\rapidjson;..\ThirdParty\assimp\include;..\ThirdParty\DirectXTex\inc;..\ThirdParty\xproperty\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;..\ThirdParty\GLFW\include;..\ThirdParty\Glad\include;..\ThirdParty\imgui;..\ThirdParty\glm;..\ThirdParty\spdlog\include;..\ThirdParty\stb;..\ThirdParty\Fmod\inc;..\ThirdParty\Mono\include;..\ThirdParty;..\ThirdParty\rapidjson;..\ThirdParty\assimp\include;..\ThirdParty\DirectXTex\inc;..\ThirdParty\xproperty\source;..\ThirdParty\imnodes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -248,7 +248,7 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
       <PrecompiledHeaderFile>PreCompile.h</PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
       <PreprocessorDefinitions>EE_PLATFORM_WINDOWS;EE_BUILD_DLL;GLFW_INCLUDE_NONE;IMGUI_DEFINE_MATH_OPERATORS;GLM_ENABLE_EXPERIMENTAL;_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING;EE_GAME;EE_RELEASE;VERBOSE_LOGGING=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>include;..\ThirdParty\GLFW\include;..\ThirdParty\Glad\include;..\ThirdParty\imgui;..\ThirdParty\glm;..\ThirdParty\spdlog\include;..\ThirdParty\stb;..\ThirdParty\Fmod\inc;..\ThirdParty\Mono\include;..\ThirdParty;..\ThirdParty\rapidjson;..\ThirdParty\assimp\include;..\ThirdParty\DirectXTex\inc;..\ThirdParty\xproperty\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;..\ThirdParty\GLFW\include;..\ThirdParty\Glad\include;..\ThirdParty\imgui;..\ThirdParty\glm;..\ThirdParty\spdlog\include;..\ThirdParty\stb;..\ThirdParty\Fmod\inc;..\ThirdParty\Mono\include;..\ThirdParty;..\ThirdParty\rapidjson;..\ThirdParty\assimp\include;..\ThirdParty\DirectXTex\inc;..\ThirdParty\xproperty\source;..\ThirdParty\imnodes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -313,6 +313,7 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClInclude Include="include\Engine.h" />
     <ClInclude Include="include\EngineAPI.h" />
     <ClInclude Include="include\Entity.h" />
+    <ClInclude Include="include\FSMEditor.h" />
     <ClInclude Include="include\FiniteStateMachine.h" />
     <ClInclude Include="include\FrameController.h" />
     <ClInclude Include="include\GPUProfiler.h" />
@@ -350,6 +351,7 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClInclude Include="include\Shader.h" />
     <ClInclude Include="include\Skybox.h" />
     <ClInclude Include="include\State.h" />
+    <ClInclude Include="include\States.h" />
     <ClInclude Include="include\Systems.h" />
     <ClInclude Include="include\Texture.h" />
     <ClInclude Include="include\VertexArray.h" />
@@ -369,7 +371,9 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClCompile Include="src\ECS\Entity.cpp" />
     <ClCompile Include="src\ECS\Systems.cpp" />
     <ClCompile Include="src\Engine.cpp" />
+    <ClCompile Include="src\FSM\FSMEditor.cpp" />
     <ClCompile Include="src\FSM\FiniteStateMachine.cpp" />
+    <ClCompile Include="src\FSM\States.cpp" />
     <ClCompile Include="src\Graphics\AnimationManager.cpp" />
     <ClCompile Include="src\Graphics\Animator.cpp" />
     <ClCompile Include="src\Graphics\Camera.cpp" />
@@ -434,6 +438,9 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     </ProjectReference>
     <ProjectReference Include="..\ThirdParty\Jolt\Jolt.vcxproj">
       <Project>{1E8A877C-0AC1-880D-B3AD-6E109FC3040F}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\ThirdParty\imnodes\imnodes.vcxproj">
+      <Project>{74F1A99C-E0D0-2838-E9E8-B30E55478F99}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

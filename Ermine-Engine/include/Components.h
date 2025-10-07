@@ -1755,6 +1755,8 @@ namespace Ermine
 		float stateTimer = 0.0f;
 		float stateDuration = 3.0f;
 
+		std::vector<State*> availableStates;
+		std::unordered_map<State*, State*> transitions;
 	public:
 		void Init(EntityID entity, State* initial)
 		{

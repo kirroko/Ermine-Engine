@@ -39,43 +39,4 @@ namespace Ermine
         *************************************************************************/
         void Free(EntityID entity);
     };
-
-    // Concrete States
-    class IdleState : public State
-    {
-    public:
-        void Enter(EntityID entity) override;
-        void Update(EntityID entity, float dt) override;
-        void Exit(EntityID entity) override;
-    };
-
-    class RoamState : public State
-    {
-        float angle = 0.0f;
-        float speed = 1.0f;
-        float radius = 3.0f;
-    public:
-        void Enter(EntityID entity) override;
-        void Update(EntityID entity, float dt) override;
-        void Exit(EntityID entity) override;
-    };
-
-    class AttackState : public State
-    {
-    public:
-        void Enter(EntityID entity) override;
-        void Update(EntityID entity, float dt) override;
-        void Exit(EntityID entity) override;
-    };
-
-    class DeadState : public State
-    {
-    public:
-        void Enter(EntityID entity) override;
-        void Update(EntityID entity, float dt) override;
-        void Exit(EntityID entity) override;
-    };
-
-    extern IdleState g_IdleState;
-    extern RoamState g_RoamState;
 }

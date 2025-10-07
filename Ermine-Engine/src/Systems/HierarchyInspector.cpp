@@ -20,6 +20,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "imgui.h"
 #include "Physics.h"
 #include "FiniteStateMachine.h"
+#include "FSMEditor.h"
+#include <EditorGUI.h>
 
 #include "xcore/my_properties.h"
 #include "xproperty.h"
@@ -1175,6 +1177,17 @@ namespace Ermine::editor {
 
         ImGui::DragFloat("State Duration", &fsmComp.stateDuration, 0.1f, 0.1f, 10.0f);
         ImGui::Text("Timer: %.2f", fsmComp.stateTimer);
+
+        ImGui::Separator();
+        if (ImGui::Button("Edit State Machine"))
+        {
+            auto fsmWindow = editor::EditorGUI::GetWindow<FSMEditorImGUI>();
+            if (fsmWindow)
+            {
+                fsmWindow->SetSelectedEntity(entity);
+                editor::EditorGUI::FocusWindow("FSM Editor");
+            }
+        }
     }
 
     void HierarchyInspector::DrawAddComponentMenu(EntityID entity) {
