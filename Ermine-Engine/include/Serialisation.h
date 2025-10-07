@@ -81,4 +81,8 @@ void SaveCurrentScene(const std::string& sceneName);
  */
 void LoadScene(const std::string& sceneName);
 
+void SavePrefabToFile(const Ermine::ECS& ecs, Ermine::EntityID id, const std::filesystem::path& path);
+
+Ermine::EntityID LoadPrefabFromFile(Ermine::ECS& ecs, const std::filesystem::path& path);
+
 #endif // SERIALISATION_H

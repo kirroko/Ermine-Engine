@@ -436,7 +436,6 @@ void LoadSceneFromFile(Ermine::ECS& ecs, const std::filesystem::path& path) {
     }
 }
 
-
 void SaveCurrentScene(const std::string& sceneName)
 {
     // "Level01" = Resources/Scenes/Level01.scene
@@ -450,4 +449,116 @@ void LoadScene(const std::string& sceneName)
     filesystem::path scenePath = filesystem::path("Resources") / "Scenes" / (sceneName + ".scene");
 
     LoadSceneFromFile(Ermine::ECS::GetInstance(), scenePath);
+}
+
+Ermine::EntityID LoadPrefabFromFile(Ermine::ECS& ecs, const std::filesystem::path& path)
+{
+	std::ifstream ifs(path, std::ios::binary);
+	if (!ifs) {
+		throw std::runtime_error("Could not open file for reading: " + path.string());
+	}
+	IStreamWrapper isw(ifs);
+	Document d;
+	d.ParseStream(isw);
+	if (d.HasParseError() || !d.IsObject()) {
+		throw std::runtime_error("Invalid JSON file: " + path.string());
+	}
+	// Defensive: ensure we have an "id" and "components" object
+	if (!d.HasMember("id") || !d["id"].IsUint64() ||
+		!d.HasMember("components") || !d["components"].IsObject()) {
+		throw std::runtime_error("Invalid prefab JSON (missing 'id' or 'components'): " + path.string());
+	}
+	Ermine::EntityID id = ecs.CreateEntity();
+	const auto& comps = d["components"];
+	// Transform
+	if (comps.HasMember("Transform") && comps["Transform"].IsObject()) {
+		if (!ecs.HasComponent<Ermine::Transform>(id))
+			ecs.AddComponent<Ermine::Transform>(id, Ermine::Transform{});
+		auto& c = ecs.GetComponent<Ermine::Transform>(id);
+		c.Deserialize(comps["Transform"]);
+	}
+	// ObjectMetaData
+	if (comps.HasMember("ObjectMetaData") && comps["ObjectMetaData"].IsObject()) {
+		if (!ecs.HasComponent<Ermine::ObjectMetaData>(id))
+			ecs.AddComponent<Ermine::ObjectMetaData>(id, Ermine::ObjectMetaData{});
+		auto& m = ecs.GetComponent<Ermine::ObjectMetaData>(id);
+		m.Deserialize(comps["ObjectMetaData"]);
+	}
+	// Light
+	if (comps.HasMember("Light") && comps["Light"].IsObject()) {
+		if (!ecs.HasComponent<Ermine::Light>(id))
+			ecs.AddComponent<Ermine::Light>(id, Ermine::Light{});
+		auto& l = ecs.GetComponent<Ermine::Light>(id);
+		l.Deserialize(comps["Light"]);
+	}
+	// Mesh
+	if (comps.HasMember("Mesh") && comps["Mesh"].IsObject()) {
+		if (!ecs.HasComponent<Ermine::Mesh>(id))
+			ecs.AddComponent<Ermine::Mesh>(id, Ermine::Mesh{});
+		auto& m = ecs.GetComponent<Ermine::Mesh>(id);
+		m.Deserialize(comps["Mesh"]);
+	}
+	// Material
+	if (comps.HasMember("Material") && comps["Material"].IsObject()) {
+		if (!ecs.HasComponent<Ermine::Material>(id))
+			ecs.AddComponent<Ermine::Material>(id, Ermine::Material{});
+		auto& m = ecs.GetComponent<Ermine::Material>(id);
+		m.Deserialize(comps["Material"]);
+	}
+	return id;
+	// If you later add more components, repeat this pattern.
+}
+
+void SavePrefabToFile(const Ermine::ECS& ecs, Ermine::EntityID id, const std::filesystem::path& path)
+{
+    if (path.has_parent_path()) {
+        std::error_code ec;
+        std::filesystem::create_directories(path.parent_path(), ec);
+        if (ec) {
+            throw std::runtime_error("Failed to create directory: " + path.parent_path().string());
+        }
+    }
+    std::ofstream ofs(path, std::ios::binary);
+    if (!ofs) throw std::runtime_error("Could not open file for writing: " + path.string());
+    OStreamWrapper osw(ofs);
+    Document d; d.SetObject();
+    auto& a = d.GetAllocator();
+    Value e(kObjectType);
+    e.AddMember("id", static_cast<uint64_t>(id), a);
+    Value comps(kObjectType);
+    for (auto& name : ecs.GetComponentNames(id)) {
+        // Transform
+        if (name == "Transform" && ecs.HasComponent<Ermine::Transform>(id)) {
+            Value t(kObjectType);
+            ecs.GetComponent<Ermine::Transform>(id).Serialize(t, a);
+            comps.AddMember(Value("Transform", a), t, a);
+        }
+        // ObjectMetaData
+        if (name == "ObjectMetaData" && ecs.HasComponent<Ermine::ObjectMetaData>(id)) {
+            Value m(kObjectType);
+            ecs.GetComponent<Ermine::ObjectMetaData>(id).Serialize(m, a);
+            comps.AddMember(Value("ObjectMetaData", a), m, a);
+        }
+        // Light
+        if (name == "Light" && ecs.HasComponent<Ermine::Light>(id)) {
+            Value l(kObjectType);
+            ecs.GetComponent<Ermine::Light>(id).Serialize(l, a);
+            comps.AddMember(Value("Light", a), l, a);
+        }
+        // Mesh
+        if (name == "Mesh" && ecs.HasComponent<Ermine::Mesh>(id)) {
+            Value m(kObjectType);
+            ecs.GetComponent<Ermine::Mesh>(id).Serialize(m, a);
+            comps.AddMember(Value("Mesh", a), m, a);
+        }
+        // Material
+        if (name == "Material" && ecs.HasComponent<Ermine::Material>(id)) {
+            Value m(kObjectType);
+            ecs.GetComponent<Ermine::Material>(id).Serialize(m, a);
+			comps.AddMember(Value("Material", a), m, a);
+            }
+    }
+    e.AddMember("components", comps, a);
+    d.AddMember("entity", e, a);
+	PrettyWriter<OStreamWrapper> w(osw); w.SetIndent(' ', 2); d.Accept(w);
 }
