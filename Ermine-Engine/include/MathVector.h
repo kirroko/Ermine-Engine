@@ -1021,6 +1021,32 @@ namespace Ermine
 
 #pragma endregion Vector4D
     /**********************************Vector4D***************************************/
+
+    /*!***********************************************************************
+    \brief
+     Converts an angle from radians to degrees.
+    \param[in] radians
+     The angle in radians.
+    \return
+     The angle in degrees.
+    *************************************************************************/
+    inline float Rad2Degree(float radians)
+    {
+        return radians * (180.0f / 3.14159265358979323846f);
+    }
+
+    /*!***********************************************************************
+    \brief
+     Converts an angle from degrees to radians.
+    \param[in] degrees
+     The angle in degrees.
+    \return
+     The angle in radians.
+    *************************************************************************/
+    inline float Degree2Rad(float degrees)
+    {
+        return degrees * (3.14159265358979323846f / 180.0f);
+    }
 }
 
 #include "Matrix3x3.h"

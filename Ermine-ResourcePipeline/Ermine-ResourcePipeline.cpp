@@ -8,6 +8,10 @@
 #include "xresource_pipeline.h"
 #include <DirectXTex.h>
 
+#ifdef _MSC_VER
+#pragma warning(disable : 4566)
+#endif
+
 using namespace DirectX;
 // Define a texture resource type GUID (you can generate this or use a fixed one)
 constexpr xresource::type_guid TEXTURE_TYPE_GUID("TEXTURE_RESOURCE_TYPE");

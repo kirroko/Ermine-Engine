@@ -25,7 +25,11 @@ extern "C"
 
 using namespace Ermine;
 
+#if (defined(EE_EDITOR) || defined(EE_GAME)) && defined(EE_RELEASE)
+int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
+#else
 int main()
+#endif
 {
     Logger::Init();
 

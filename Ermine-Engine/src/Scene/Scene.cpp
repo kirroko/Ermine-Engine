@@ -14,6 +14,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "PreCompile.h"
 #include "Scene.h"
 #include "Components.h"
+#include "ECS.h"
 #include "HierarchySystem.h"
 
 namespace Ermine {
@@ -22,7 +23,7 @@ namespace Ermine {
     }
 
     Scene::~Scene() {
-        Clear();
+        //Clear();
     }
 
     EntityID Scene::CreateEntity(const std::string& name, bool needsTransform, bool needsHierarchy) {
@@ -80,6 +81,7 @@ namespace Ermine {
     }
 
     std::vector<EntityID> Scene::GetRootEntities() const {
+        EnsureSyncedWithECS();
         std::vector<EntityID> roots;
 
         for (auto entity : m_Entities) {
@@ -112,6 +114,7 @@ namespace Ermine {
     }
 
     std::vector<EntityID> Scene::GetAllEntities() const {
+        EnsureSyncedWithECS();
         return std::vector<EntityID>(m_Entities.begin(), m_Entities.end());
     }
 
@@ -126,5 +129,34 @@ namespace Ermine {
         m_Entities.clear();
         m_SelectedEntity = 0;
         EE_CORE_INFO("Cleared scene: {}", m_Name);
+    }
+    void Scene::EnsureSyncedWithECS(bool force) const
+    {
+        auto& ecs = ECS::GetInstance();
+
+        // Count how many ECS entities *should* be in the scene snapshot
+        size_t ecsCount = 0;
+        for (EntityID e = 0; e < MAX_ENTITIES; ++e)
+            if (ecs.IsEntityValid(e) && ecs.HasComponent<HierarchyComponent>(e))
+                ++ecsCount;
+
+        // Rebuild if forced or if snapshot is out-of-date
+        if (!force && !m_Entities.empty() && m_Entities.size() == ecsCount)
+            return;
+
+        m_Entities.clear();
+
+        for (EntityID e = 0; e < MAX_ENTITIES; ++e) {
+            if (!ecs.IsEntityValid(e)) continue;
+            if (!ecs.HasComponent<HierarchyComponent>(e)) continue;
+
+            auto& hc = ecs.GetComponent<HierarchyComponent>(e);
+            if (hc.parent != 0 &&
+                (!ecs.IsEntityValid(hc.parent) || !ecs.HasComponent<HierarchyComponent>(hc.parent))) {
+                hc.parent = 0;
+                hc.depth = 0;
+            }
+            m_Entities.insert(e);
+        }
     }
 }

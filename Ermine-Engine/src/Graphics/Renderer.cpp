@@ -65,6 +65,17 @@ GLenum glCheckError_(const char* file, int line)
 }
 #define glCheckError() glCheckError_(__FILE__, __LINE__)
 
+void Renderer::UpdateShadowMap()
+{
+	InitializeShadowMap();
+	for (EntityID entity : m_LightSystem->m_Entities)
+	{
+		auto& light = Ermine::ECS::GetInstance().GetComponent<Light>(entity);
+		if (light.castsShadows)
+			CreateShadowMapArray();
+	}
+}
+
 /**
  * @brief Initializes the renderer and its resources.
  * @param screenWidth Width of the screen.
@@ -105,13 +116,7 @@ void Renderer::Init(const int& screenWidth, const int& screenHeight)
 	CreatePostProcessBuffer(screenWidth, screenHeight);
 
 	// Create shadow map FBO and texture
-	InitializeShadowMap();
-	for (EntityID entity : m_LightSystem->m_Entities)
-	{
-		auto& light = Ermine::ECS::GetInstance().GetComponent<Light>(entity);
-		if (light.castsShadows)
-			CreateShadowMapArray();
-	}
+	UpdateShadowMap();
 
 	m_PickingShader = AssetManager::GetInstance().LoadShader(
 		"../Resources/Shaders/picking_vertex.glsl",
@@ -1001,7 +1006,7 @@ void Renderer::RenderPostProcessPass()
 	Draw(m_QuadMesh.vertex_array, m_QuadMesh.index_buffer);
 
 	// Final pass: FXAA
-#ifdef _DEBUG
+#if defined(EE_EDITOR)
 	glBindFramebuffer(GL_FRAMEBUFFER, m_OffscreenBuffer->FBO);
 	glViewport(0, 0, m_OffscreenBuffer->width, m_OffscreenBuffer->height);
 #else
@@ -1025,7 +1030,7 @@ void Renderer::RenderPostProcessPass()
 
 	glEnable(GL_DEPTH_TEST);
 
-#ifdef _DEBUG
+#if defined(EE_EDITOR)
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 #endif
 }
@@ -1506,7 +1511,7 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 	else
 	{
 		// Forward rendering with transparency support
-#ifdef _DEBUG
+#if defined(EE_EDITOR)
 		glBindFramebuffer(GL_FRAMEBUFFER, m_OffscreenBuffer->FBO);
 		glViewport(0, 0, m_OffscreenBuffer->width, m_OffscreenBuffer->height);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -1740,7 +1745,7 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 			glDisable(GL_BLEND);
 		}
 
-#ifdef _DEBUG
+#if defined(EE_EDITOR)
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 #endif
 	}
@@ -2978,7 +2983,7 @@ void Renderer::ResizePickingBuffer(const int& width, const int& height)
  */
 void Renderer::RenderPickingPass(const Mtx44& view, const Mtx44& projection)
 {
-#ifdef _DEBUG
+#if defined(EE_EDITOR)
 	if (!m_PickingBuffer || !m_PickingShader)
 		return;
 
@@ -3110,9 +3115,8 @@ void Renderer::RenderPickingPass(const Mtx44& view, const Mtx44& projection)
  */
 std::pair<bool, Ermine::EntityID> Renderer::PickEntityAt(const int& x, const int& y, const Mtx44& view, const Mtx44& projection)
 {
-#ifndef _DEBUG
-	return { false, EntityID{} };
-#else
+
+#if defined(EE_EDITOR)
 	if (!m_PickingBuffer)
 		return { false, EntityID{} };
 
@@ -3134,6 +3138,8 @@ std::pair<bool, Ermine::EntityID> Renderer::PickEntityAt(const int& x, const int
 		return { false , EntityID{} };
 
 	return { true, picked };
+#else
+	return { false, EntityID{} };
 #endif
 }
 

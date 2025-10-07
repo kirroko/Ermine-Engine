@@ -16,6 +16,9 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Serialisation.h"
 #include "ECS.h"
 #include "Physics.h"
+#include "Renderer.h"
+#include "Components.h"
+#include "Matrix4x4.h"
 
 namespace
 {
@@ -128,6 +131,37 @@ void SceneManager::NewScene()
 {
     // Clear ECS
     Ermine::ECS::GetInstance().ClearAllEntities();
+    auto mainLight = Ermine::ECS::GetInstance().CreateEntity();
+
+    // Tilted down and slightly to the side, similar to Unity’s default
+    Ermine::ECS::GetInstance().AddComponent(
+        mainLight,
+        Ermine::Transform(
+            Ermine::Vec3(0, 5, 0),
+            Ermine::FromEulerDegrees(50.0f, -30.0f, 0.0f),
+            Ermine::Vec3(1, 1, 1)));
+
+    Ermine::ECS::GetInstance().AddComponent(mainLight, Ermine::ObjectMetaData("Main Light", "Light", true));
+    Ermine::ECS::GetInstance().AddComponent(mainLight, Ermine::Light(Ermine::Vec3(1, 1, 1), 1.0f, Ermine::LightType::DIRECTIONAL, true));
+    Ermine::ECS::GetInstance().AddComponent<Ermine::HierarchyComponent>(mainLight, Ermine::HierarchyComponent{});
+
+    Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>()->UpdateShadowMap();
+    Ermine::ECS::GetInstance().GetSystem<Ermine::Physics>()->UpdatePhysicList();
+    if (auto scene = SceneManager::GetInstance().GetActiveScene())
+        scene->EnsureSyncedWithECS(/*force=*/true);
+    m_CurrentScenePath.reset();
+    m_Dirty = false;
+}
+
+void SceneManager::ClearScene()
+{
+    // Clear ECS
+    Ermine::ECS::GetInstance().ClearAllEntities();
+
+    //Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>()->UpdateShadowMap();
+    if (auto scene = GetActiveScene()) {
+        scene->EnsureSyncedWithECS();
+    }
     Ermine::ECS::GetInstance().GetSystem<Ermine::Physics>()->UpdatePhysicList();
     m_CurrentScenePath.reset();
     m_Dirty = false;
@@ -141,7 +175,15 @@ void SceneManager::OpenSceneDialog()
 
 void SceneManager::OpenScene(const std::string& path)
 {
+    //auto& ecs = Ermine::ECS::GetInstance();
+    //EnsureActiveScene().Clear();
+
     LoadSceneFromFile(Ermine::ECS::GetInstance(), path);
+    Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>()->UpdateShadowMap();
+
+    if (auto scene = SceneManager::GetInstance().GetActiveScene())
+        scene->EnsureSyncedWithECS(/*force=*/true);
+
     m_CurrentScenePath = path;
     m_Dirty = false;
 }

@@ -156,7 +156,7 @@ bool Texture::LoadFromDDS(const std::string& ddsFilePath)
     }
 
     // Track memory usage
-    GPUProfiler::TrackMemoryAllocation(totalSize, "Texture DDS");
+    GPUProfiler::TrackMemoryAllocation(totalSize, "Texture");
 
     // Check for OpenGL errors
     GLenum error = glGetError();

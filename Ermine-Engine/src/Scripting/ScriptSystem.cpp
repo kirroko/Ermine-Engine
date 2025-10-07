@@ -29,14 +29,18 @@ Ermine::scripting::ScriptSystem::ScriptSystem()
 	m_ScriptEngine->LoadGameAssembly("../Ermine-ScriptSandbox/Ermine-ScriptSandbox.dll"); // TODO: Move dll into editor's build directory
 
 	// Configure MSBuild + source watcher (adjust paths as necessary)
-#ifdef _DEBUG // We only want to do this in debug cause debug in editor mode
+#if defined(EE_EDITOR) // Only in editor builds do we have hot-reload
 	// Start DLL watcher
 	m_ScriptEngine->StartWatchingGameAssembly();
 	m_ScriptEngine->ConfigureBuild(
 		"../../../../Ermine-ScriptSandbox/Ermine-ScriptSandbox.csproj",
 		"../../../../Ermine-ScriptSandbox",
 		"../Ermine-ScriptSandbox/Ermine-ScriptSandbox.dll",
-		"Debug",
+#if defined(EE_DEBUG)
+		"Editor-Debug",
+#elif defined(EE_RELEASE)
+		"Editor-Release",
+#endif
 		"x64", "MSBuild.exe");
 	m_ScriptEngine->StartWatchingScriptSources();
 #endif
@@ -62,7 +66,7 @@ void Ermine::scripting::ScriptSystem::Update() const
 
 	s_wasStopped = false;
 
-#ifdef _DEBUG
+#if defined(EE_EDITOR)
 	m_ScriptEngine->ProcessHotReload(
 		[this]() { this->PrepareForHotReload(); },
 		[this](bool ok) { this->FinishHotReload(ok); }
@@ -101,7 +105,7 @@ void Ermine::scripting::ScriptSystem::FixedUpdate() const
 
 	s_wasStopped = false;
 
-#ifdef _DEBUG
+#if defined(EE_EDITOR)
 	m_ScriptEngine->ProcessHotReload(
 		[this]() { this->PrepareForHotReload(); },
 		[this](bool ok) { this->FinishHotReload(ok); }

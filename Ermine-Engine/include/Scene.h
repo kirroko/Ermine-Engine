@@ -26,7 +26,7 @@ namespace Ermine {
     class Scene {
     private:
         std::string m_Name;                          ///< Name of the scene
-        std::unordered_set<EntityID> m_Entities;     ///< Set of all entities in this scene
+        mutable std::unordered_set<EntityID> m_Entities;     ///< Set of all entities in this scene
         EntityID m_SelectedEntity = 0;               ///< Currently selected entity (0 = none)
 
     public:
@@ -127,5 +127,11 @@ namespace Ermine {
         \return Number of entities
         */
         size_t GetEntityCount() const { return m_Entities.size(); }
+
+        /*!
+        \brief Ensures hierarchy is synced with ECS
+        \param Force sync
+        */
+        void EnsureSyncedWithECS(bool force = false) const;
     };
 }

@@ -8,7 +8,6 @@ project "Jolt"
 
     buildoptions { "/bigobj", "/MP" } -- Jolt requires this flag on MSVC (bigobj)
 
-    -- Keep your existing output layout
     targetdir ("../../Build/bin/" .. outputdir .. "/Ermine-Editor/Jolt")
     objdir ("../../Build/obj/" .. outputdir .. "/Ermine-Editor/Jolt")
 

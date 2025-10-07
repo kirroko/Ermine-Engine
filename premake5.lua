@@ -92,8 +92,8 @@ project "Ermine-Engine"
     {
         "%{LibraryDir.Fmod}",
         "%{LibraryDir.Mono}",
-        "%{LibraryDir.assimp}",
-        "%{LibraryDir.DirectXTex}"
+        "%{LibraryDir.assimp}"
+        -- "%{LibraryDir.DirectXTex}"
     }
 
     links
@@ -108,8 +108,8 @@ project "Ermine-Engine"
         "opengl32.lib",
 		"mono-2.0-sgen.lib",
         "Jolt",
-        "assimp-vc143-mt.lib",
-        "DirectXTex.lib"
+        "assimp-vc143-mt.lib"
+        --"DirectXTex.lib"
     }
 
     postbuildcommands
@@ -124,6 +124,9 @@ project "Ermine-Engine"
         -- Copy resource pipeline database and project to output dir
         ("{COPYDIR} ../Ermine-ResourcePipeline/Ermine-Game.lion_rcdbase ../Build/bin/" .. outputdir .. "/Ermine-Game.lion_rcdbase"),
         ("{COPYDIR} ../Ermine-ResourcePipeline/Ermine-Game.lion_project ../Build/bin/" .. outputdir .. "/Ermine-Game.lion_project"),
+
+        -- Copy DirectXTex pdb
+        ("{COPY} \"$(SolutionDir)ThirdParty\\DirectXTex\\lib\\DirectXTex.pdb\" \"%OUTDIR%\\Ermine-ResourcePipeline\""),
 
         -- Runtime DLLs (Editor)
         "{COPY} \"$(SolutionDir)ThirdParty\\Fmod\\lib\\fmod.dll\" \"%OUTDIR%\\Ermine-Editor\"",
@@ -191,6 +194,8 @@ project "Ermine-Engine"
         symbols "on"
         linkoptions { "/NODEFAULTLIB:LIBCMTD", "/NODEFAULTLIB:LIBCMT", "/NODEFAULTLIB:MSVCRT" }
         defines { "VERBOSE_LOGGING=1" }
+        libdirs { "%{LibraryDir.DirectXTex}" }
+        links { "DirectXTexD.lib" }
 
     filter "configurations:Editor-Release or configurations:Game-Release"
         defines "EE_RELEASE"
@@ -198,11 +203,12 @@ project "Ermine-Engine"
         optimize "on"
         linkoptions { "/NODEFAULTLIB:LIBCMT", "/NODEFAULTLIB:LIBCMTD", "/NODEFAULTLIB:MSVCRTD" }
         defines { "VERBOSE_LOGGING=0" }
+        libdirs { "%{LibraryDir.DirectXTex}" }
+        links { "DirectXTex.lib" }
 
 -- Editor Project
 project "Ermine-Editor"
     location "Ermine-Editor"
-    kind "ConsoleApp"
     language "C++"
     cppdialect "C++20"
     staticruntime "off" -- Use dynamic runtime
@@ -270,22 +276,35 @@ project "Ermine-Editor"
     filter "configurations:*Game*"
         defines { "EE_GAME" } -- if selected, nothing SHOULD happen
 
+    filter "configurations:Game-Debug"
+        kind "ConsoleApp"
+        defines "EE_DEBUG"
+
+    filter "configurations:Game-Release"
+        kind "WindowedApp"
+        defines "EE_RELEASE"
+
     filter "configurations:Editor-Debug"
         defines "EE_DEBUG"
+        kind "ConsoleApp"
         runtime "Debug"
         symbols "on"
         linkoptions { "/NODEFAULTLIB:LIBCMTD" }
+        libdirs { "%{LibraryDir.DirectXTex}" }
+        links { "DirectXTexD.lib" }
 
     filter "configurations:Editor-Release"
         defines "EE_RELEASE"
+        kind "WindowedApp"
         runtime "Release"
         optimize "on"
         linkoptions { "/NODEFAULTLIB:LIBCMT" }
+        libdirs { "%{LibraryDir.DirectXTex}" }
+        links { "DirectXTex.lib" }
 
 -- Game Project
 project "Ermine-Game"
     location "Ermine-Game"
-    kind "WindowedApp"
     language "C++"
     cppdialect "C++20"
     staticruntime "off"
@@ -325,17 +344,26 @@ project "Ermine-Game"
         buildoptions { "/wd4251", "/wd4005" }
         defines { "EE_PLATFORM_WINDOWS" }
 
+
     filter "configurations:*Game*"
         defines { "EE_GAME" }
 
+    filter "configurations:Editor-Debug"
+        kind "ConsoleApp"
+
+    filter "configurations:Editor-Release"
+        kind "WindowedApp"
+
     filter "configurations:Game-Debug"
         defines "EE_DEBUG"
+        kind "ConsoleApp"
         runtime "Debug"
         symbols "on"
         linkoptions { "/NODEFAULTLIB:LIBCMTD" }
 
     filter "configurations:Game-Release"
         defines "EE_RELEASE"
+        kind "WindowedApp"
         runtime "Release"
         optimize "on"
         linkoptions { "/NODEFAULTLIB:LIBCMT" }
@@ -369,28 +397,27 @@ project "Ermine-ResourcePipeline"
         "%{LibraryDir.DirectXTex}"
     }
 
-    links
-    {
-        "DirectXTex.lib"
-    }
-
     warnings "Extra"
     characterset "Unicode"
 
     filter "system:windows"
         defines { "PLATFORM_WINDOWS" }
 
-    filter "configurations:Editor-Debug"
+    filter "configurations:*Debug"
         defines "EE_DEBUG"
         runtime "Debug"
         symbols "on"
         linkoptions { "/NODEFAULTLIB:LIBCMTD" }
+        libdirs { "%{LibraryDir.DirectXTex}" }
+        links { "DirectXTexD.lib" }
 
-    filter "configurations:Editor-Release"
+    filter "configurations:*Release"
         defines "EE_RELEASE"
         runtime "Release"
         optimize "on"
         linkoptions { "/NODEFAULTLIB:LIBCMT" }
+        libdirs { "%{LibraryDir.DirectXTex}" }
+        links { "DirectXTex.lib" }
 
 -- Script Assembly Project
 project "Ermine-ScriptAssembly"
