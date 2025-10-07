@@ -73,13 +73,13 @@ namespace Ermine
             ImGui::TextUnformatted(node.name.c_str());
             ImNodes::EndNodeTitleBar();
 
-            ImNodes::BeginOutputAttribute(node.id * 10);
-            ImGui::Text("In");
-            ImNodes::EndOutputAttribute();
-
             ImNodes::BeginInputAttribute(node.id * 10 + 1);
-            ImGui::Text("Out");
+            ImGui::Text("In");
             ImNodes::EndInputAttribute();
+
+            ImNodes::BeginOutputAttribute(node.id * 10);
+            ImGui::Text("Out");
+            ImNodes::EndOutputAttribute();
 
             ImNodes::EndNode();
         }
