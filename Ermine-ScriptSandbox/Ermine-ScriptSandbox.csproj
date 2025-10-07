@@ -70,6 +70,7 @@
   <ItemGroup Condition=" '$(Configuration)|$(Platform)' == 'Game-Release|x64' ">
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ErmineScriptTemplate.cs" />
     <Compile Include="Sandbox.cs" />
   </ItemGroup>
   <ItemGroup>
