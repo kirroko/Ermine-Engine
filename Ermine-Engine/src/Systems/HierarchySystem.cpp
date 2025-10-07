@@ -88,6 +88,8 @@ namespace Ermine
     */
     void HierarchySystem::UpdateWorldTransform(EntityID entity)
     {
+        EE_CORE_INFO("UpdateWorldTransform called for entity {}", entity);
+
         auto& hierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(entity);
         auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
 
@@ -107,14 +109,11 @@ namespace Ermine
 
         // Calculate world transform
         if (hierarchy.parent != 0) {
-            // Get parent's world transform
+            // Get parent's world transform from hierarchy component (NOT Transform component!)
             auto& parentHierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(hierarchy.parent);
-            auto& parentTransform = ECS::GetInstance().GetComponent<Transform>(hierarchy.parent);
-			UNREFERENCED_PARAMETER(parentHierarchy);
-            // World = Parent's World * Local
-            transform.transform_matrix = parentTransform.transform_matrix * localMatrix;
-
-            // Cache in hierarchy component if using the optimization
+            
+            // Use parentHierarchy.worldTransform instead of parentTransform.transform_matrix
+            transform.transform_matrix = parentHierarchy.worldTransform * localMatrix;
             hierarchy.worldTransform = transform.transform_matrix;
         }
         else {
@@ -124,12 +123,20 @@ namespace Ermine
         }
 
         // Mark as clean
+        hierarchy.isDirty = false;
         hierarchy.worldTransformDirty = false;
+        transform.isDirty = false;
 
         // Recursively update children
         for (auto child : hierarchy.children) {
             UpdateWorldTransform(child);
         }
+
+        Vec3 worldPos;
+        worldPos.x = transform.transform_matrix.m03;
+        worldPos.y = transform.transform_matrix.m13;
+        worldPos.z = transform.transform_matrix.m23;
+        EE_CORE_INFO("Entity {} world position after update: {}, {}, {}", entity, worldPos.x, worldPos.y, worldPos.z);
     }
 
     /**
@@ -137,11 +144,16 @@ namespace Ermine
     */
     void HierarchySystem::UpdateHierarchy()
     {
+        // Only update root entities that are dirty or have dirty children
         for (auto entity : m_Entities)
         {
             auto& hierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(entity);
-            if (hierarchy.parent == 0) // Only update roots
+            auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
+
+            // Only update if this entity is dirty AND it's a root entity
+            if (hierarchy.parent == 0 && (hierarchy.isDirty || hierarchy.worldTransformDirty || transform.isDirty)) {
                 UpdateWorldTransform(entity);
+            }
         }
     }
 

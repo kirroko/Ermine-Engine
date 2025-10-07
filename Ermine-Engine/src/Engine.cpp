@@ -140,18 +140,18 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	// TODO: Register all components here, limit of 255 components
 	EE_AUTO_REGISTER_COMPONENT(Transform, "Transform")
-	EE_AUTO_REGISTER_COMPONENT(Rigidbody3D, "Rigidbody3D")
-	EE_AUTO_REGISTER_COMPONENT(Mesh, "Mesh")
-	EE_AUTO_REGISTER_COMPONENT(Material, "Material")
-	EE_AUTO_REGISTER_COMPONENT(ObjectMetaData, "ObjectMetaData")
-	EE_AUTO_REGISTER_COMPONENT(Light, "Light")
-	EE_AUTO_REGISTER_COMPONENT(Particle, "Particle")
-	EE_AUTO_REGISTER_COMPONENT(AudioComponent, "AudioComponent")
-	EE_AUTO_REGISTER_COMPONENT(GlobalAudioComponent, "GlobalAudioComponent")
-	EE_AUTO_REGISTER_COMPONENT(PhysicComponent, "PhysicComponent")
-	EE_AUTO_REGISTER_COMPONENT(ModelComponent, "ModelComponent")
-	EE_AUTO_REGISTER_COMPONENT(AnimationComponent, "AnimationComponent")
-	EE_AUTO_REGISTER_COMPONENT(HierarchyComponent, "HierarchyComponent");
+		EE_AUTO_REGISTER_COMPONENT(Rigidbody3D, "Rigidbody3D")
+		EE_AUTO_REGISTER_COMPONENT(Mesh, "Mesh")
+		EE_AUTO_REGISTER_COMPONENT(Material, "Material")
+		EE_AUTO_REGISTER_COMPONENT(ObjectMetaData, "ObjectMetaData")
+		EE_AUTO_REGISTER_COMPONENT(Light, "Light")
+		EE_AUTO_REGISTER_COMPONENT(Particle, "Particle")
+		EE_AUTO_REGISTER_COMPONENT(AudioComponent, "AudioComponent")
+		EE_AUTO_REGISTER_COMPONENT(GlobalAudioComponent, "GlobalAudioComponent")
+		EE_AUTO_REGISTER_COMPONENT(PhysicComponent, "PhysicComponent")
+		EE_AUTO_REGISTER_COMPONENT(ModelComponent, "ModelComponent")
+		EE_AUTO_REGISTER_COMPONENT(AnimationComponent, "AnimationComponent")
+		EE_AUTO_REGISTER_COMPONENT(HierarchyComponent, "HierarchyComponent");
 	EE_AUTO_REGISTER_COMPONENT(StateMachine, "StateMachine");
 
 	// Special Case for Script component, need to copy over the class name
@@ -222,7 +222,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	sig.set(ECS::GetInstance().GetComponentType<AnimationComponent>());
 	sig.set(ECS::GetInstance().GetComponentType<ModelComponent>());
 	ECS::GetInstance().SetSystemSignature<graphics::AnimationManager>(sig);
-	
+
 	// For Hierarchy System
 	SignatureID hierarchySig;
 	hierarchySig.set(ECS::GetInstance().GetComponentType<HierarchyComponent>());
@@ -623,7 +623,8 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 	// Other non-fixed logic
 	ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->Update();
 	ECS::GetInstance().GetSystem<AudioSystem>()->Update();
-
+	ECS::GetInstance().GetSystem<HierarchySystem>()->UpdateHierarchy();
+	
 	// Update editor camera
 #if defined(EE_EDITOR)
 	editor::EditorCamera::GetInstance().Update();

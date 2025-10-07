@@ -1,4 +1,4 @@
-/* Start Header ************************************************************************/
+﻿/* Start Header ************************************************************************/
 /*!
 \file       HierarchyInspector.cpp
 \author     Edwin Lee Zirui, edwinzirui.lee, 2301299, edwinzirui.lee\@digipen.edu (30%)
@@ -14,6 +14,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #include "PreCompile.h"
 #include "HierarchyInspector.h"
+#include "HierarchySystem.h"
 #include "Components.h"
 #include "ECS.h"
 #include "GeometryFactory.h"
@@ -231,9 +232,20 @@ namespace Ermine::editor {
                 if (ImGui::DragFloat3(label.c_str(), a, 0.1f)) {
                     p.m_Value.set<Ermine::Vec3>({ a[0], a[1], a[2] });
                     xproperty::sprop::setProperty(err, t, p, ctx);
+
+                    EE_CORE_INFO("Transform changed for entity {}: {}, {}, {}", entity, a[0], a[1], a[2]);
+
+                    
+                    // Mark entity dirty for hierarchy propagation
+                    if (ECS::GetInstance().HasComponent<HierarchyComponent>(entity)) {
+                        auto hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>();
+                        hierarchySystem->MarkDirty(entity);
+                        EE_CORE_INFO("Marked entity {} as dirty for hierarchy update", entity);
+
+                    }
                 }
             }
-            // Quaternion (rotation) � shown/edited as Euler degrees
+            // Quaternion (rotation) — shown/edited as Euler degrees
             else if (guid == xproperty::settings::var_type<Ermine::Quaternion>::guid_v) {
                 Ermine::Quaternion q = p.m_Value.get<Ermine::Quaternion>();
 
@@ -259,6 +271,12 @@ namespace Ermine::editor {
                     q = Mtx44GetQuaternion(m);
                     p.m_Value.set<Ermine::Quaternion>(q);
                     xproperty::sprop::setProperty(err, t, p, ctx);
+                
+                    // ✅ ADD THIS: Mark entity dirty for hierarchy propagation
+                    if (ECS::GetInstance().HasComponent<HierarchyComponent>(entity)) {
+                        auto hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>();
+                        hierarchySystem->MarkDirty(entity);
+                    }
                 }
             }
 
