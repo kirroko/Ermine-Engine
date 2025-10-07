@@ -1,7 +1,7 @@
 @echo off
 setlocal
-set "SOURCE=%~dp0templates\Ermine Script (MonoBehaviour).zip"
-set "DESTDIR=%USERPROFILE%\Documents\Visual Studio 2022\Templates\ItemTemplates\Visual C#\Ermine"
+set "SOURCE=%~dp0\.templates\Ermine Script (MonoBehaviour).zip"
+set "DESTDIR=%USERPROFILE%\Documents\Visual Studio 2022\Templates\ItemTemplates"
 
 if not exist "%DESTDIR%" mkdir "%DESTDIR%"
 copy /Y "%SOURCE%" "%DESTDIR%\Ermine Script (MonoBehaviour).zip" >nul
