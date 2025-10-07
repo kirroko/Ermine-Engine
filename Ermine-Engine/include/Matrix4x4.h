@@ -381,18 +381,42 @@ namespace Ermine
         return deg * (static_cast<float>(M_PI) / 180.0f);
     }
     /*!*************************************************************************
-  \brief
-    Creates a quaternion from Euler angles given in degrees.
-  \param[in] pitch
-    Rotation about X-axis in degrees.
-  \param[in] yaw
-    Rotation about Y-axis in degrees.
-  \param[in] roll
-    Rotation about Z-axis in degrees.
-  \return
-    The resulting quaternion.
-***************************************************************************/
+      \brief
+        Creates a quaternion from Euler angles given in degrees.
+      \param[in] pitch
+        Rotation about X-axis in degrees.
+      \param[in] yaw
+        Rotation about Y-axis in degrees.
+      \param[in] roll
+        Rotation about Z-axis in degrees.
+      \return
+        The resulting quaternion.
+    ***************************************************************************/
     Quaternion FromEulerDegrees(float pitch, float yaw, float roll);
+
+    /*!***********************************************************************
+    \brief
+     Calculate the inverse of a 4x4 matrix.
+    \param[out] pResult
+     The inverted matrix.
+    \param[in] pMtx
+     The input matrix to invert.
+    \return
+     True if the matrix is invertible, false otherwise.
+    *************************************************************************/
+    bool Mtx44Inverse(Matrix4x4& pResult, const Matrix4x4& pMtx);
+
+    /*!***********************************************************************
+    \brief
+     Multiply two quaternions.
+    \param[in] lhs
+     The first quaternion.
+    \param[in] rhs
+     The second quaternion.
+    \return
+     The product of the two quaternions.
+    *************************************************************************/
+    Quaternion operator*(const Quaternion& lhs, const Quaternion& rhs);
 
     /*!*************************************************************************
       \brief
