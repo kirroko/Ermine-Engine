@@ -56,6 +56,9 @@ namespace Ermine
         childHierarchy.depth = parentHierarchy.depth + 1;
         childHierarchy.isDirty = true;
         parentHierarchy.children.push_back(child);
+        
+        // IMPORTANT: Ensure child transforms are updated when parenting changes
+        MarkDirty(child);
     }
 
     /**
@@ -79,6 +82,9 @@ namespace Ermine
             childHierarchy.parent = 0;
             childHierarchy.depth = 0;
             childHierarchy.isDirty = true;
+            
+            // IMPORTANT: Update transforms when unparenting
+            MarkDirty(child);
         }
     }
 
@@ -90,6 +96,15 @@ namespace Ermine
     {
         auto& hierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(entity);
         auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
+
+        // Log the local transform values before update
+        EE_CORE_INFO("=== Transform Update for Entity {0} ===", entity);
+        EE_CORE_INFO("Local Position: ({0:.3f}, {1:.3f}, {2:.3f})", 
+                     transform.position.x, transform.position.y, transform.position.z);
+        EE_CORE_INFO("Local Rotation: ({0:.3f}, {1:.3f}, {2:.3f}, {3:.3f})", 
+                     transform.rotation.x, transform.rotation.y, transform.rotation.z, transform.rotation.w);
+        EE_CORE_INFO("Local Scale: ({0:.3f}, {1:.3f}, {2:.3f})", 
+                     transform.scale.x, transform.scale.y, transform.scale.z);
 
         // Build local transform matrix from position, rotation, and scale
         Matrix4x4 localMatrix;
@@ -113,13 +128,32 @@ namespace Ermine
             // Get parent's world transform
             auto& parentHierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(hierarchy.parent);
             
+            // Log parent's world position for reference
+            Vec3 parentWorldPos;
+            parentWorldPos.x = parentHierarchy.worldTransform.m03;
+            parentWorldPos.y = parentHierarchy.worldTransform.m13;
+            parentWorldPos.z = parentHierarchy.worldTransform.m23;
+            
+            EE_CORE_INFO("Parent {0} World Position: ({1:.3f}, {2:.3f}, {3:.3f})", 
+                         hierarchy.parent, parentWorldPos.x, parentWorldPos.y, parentWorldPos.z);
+            
             // World transform = Parent's world transform * Local transform
             hierarchy.worldTransform = parentHierarchy.worldTransform * localMatrix;
         }
         else {
             // Root entity: world transform equals local transform
             hierarchy.worldTransform = localMatrix;
+            EE_CORE_INFO("Entity {0} is ROOT - World = Local transform", entity);
         }
+
+        // Extract and log the calculated world position
+        Vec3 worldPos;
+        worldPos.x = hierarchy.worldTransform.m03;
+        worldPos.y = hierarchy.worldTransform.m13;
+        worldPos.z = hierarchy.worldTransform.m23;
+        
+        EE_CORE_INFO(">>> Entity {0} World Position: ({1:.3f}, {2:.3f}, {3:.3f})", 
+                     entity, worldPos.x, worldPos.y, worldPos.z);
 
         // Update the Transform component's transform_matrix (used by renderer)
         transform.transform_matrix = hierarchy.worldTransform;
@@ -131,8 +165,11 @@ namespace Ermine
 
         // Recursively update all children
         for (auto child : hierarchy.children) {
+            EE_CORE_INFO("--- Updating child entity {0} due to parent {1} change ---", child, entity);
             UpdateWorldTransform(child);
         }
+        
+        EE_CORE_INFO("=== End Transform Update for Entity {0} ===\n", entity);
     }
 
     /**
@@ -638,5 +675,56 @@ namespace Ermine
             // Recursively update child
             UpdateWorldTransformRecursive(child, updatedEntities);
         }
+    }
+
+    /**
+     * @brief Sets the local position of an entity and marks it dirty for transform updates.
+     * @param[in] entity The entity to modify.
+     * @param[in] localPos The new local position.
+     */
+    void HierarchySystem::SetLocalPosition(EntityID entity, const Vec3& localPos)
+    {
+        if (!ECS::GetInstance().IsEntityValid(entity))
+            return;
+
+        auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
+        transform.position = localPos;
+        
+        // Mark as dirty to trigger transform update propagation
+        MarkDirty(entity);
+    }
+
+    /**
+     * @brief Sets the local rotation of an entity and marks it dirty for transform updates.
+     * @param[in] entity The entity to modify.
+     * @param[in] localRot The new local rotation.
+     */
+    void HierarchySystem::SetLocalRotation(EntityID entity, const Quaternion& localRot)
+    {
+        if (!ECS::GetInstance().IsEntityValid(entity))
+            return;
+
+        auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
+        transform.rotation = localRot;
+        
+        // Mark as dirty to trigger transform update propagation
+        MarkDirty(entity);
+    }
+
+    /**
+     * @brief Sets the local scale of an entity and marks it dirty for transform updates.
+     * @param[in] entity The entity to modify.
+     * @param[in] localScale The new local scale.
+     */
+    void HierarchySystem::SetLocalScale(EntityID entity, const Vec3& localScale)
+    {
+        if (!ECS::GetInstance().IsEntityValid(entity))
+            return;
+
+        auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
+        transform.scale = localScale;
+        
+        // Mark as dirty to trigger transform update propagation
+        MarkDirty(entity);
     }
 }

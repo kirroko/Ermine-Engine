@@ -115,6 +115,27 @@ namespace Ermine
         void SetWorldScale(EntityID entity, const Vec3& worldScale);
 
         /**
+         * @brief Sets the local position of an entity and marks it dirty for transform updates.
+         * @param[in] entity The entity to modify.
+         * @param[in] localPos The new local position.
+         */
+        void SetLocalPosition(EntityID entity, const Vec3& localPos);
+
+        /**
+         * @brief Sets the local rotation of an entity and marks it dirty for transform updates.
+         * @param[in] entity The entity to modify.
+         * @param[in] localRot The new local rotation.
+         */
+        void SetLocalRotation(EntityID entity, const Quaternion& localRot);
+
+        /**
+         * @brief Sets the local scale of an entity and marks it dirty for transform updates.
+         * @param[in] entity The entity to modify.
+         * @param[in] localScale The new local scale.
+         */
+        void SetLocalScale(EntityID entity, const Vec3& localScale);
+
+        /**
          * @brief Adds a child entity to a parent, creating the hierarchy relationship.
          * @param[in] parent The parent entity ID.
          * @param[in] child The child entity ID.
