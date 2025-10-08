@@ -1,7 +1,14 @@
-﻿using ErmineEngine;
+﻿using System;
+using ErmineEngine;
 
 public class Sandbox : MonoBehaviour
 {
+    public float speed = 2.0f;
+
+    [SerializeField] private Vector3 MoveAxis = Vector3.up;
+
+    private int noShowPlox = 1;
+
     void Start()
     {
         //Debug.Log("ID: " + GetInstanceID());
@@ -17,7 +24,7 @@ public class Sandbox : MonoBehaviour
 
     void Update()
     {
-        transform.Rotate(new Vector3(0, 1f, 0) * Time.deltaTime);
+        transform.Rotate(Vector3.up * (Time.deltaTime * speed));
         //Debug.Log("Internal Quaternion: " + transform.rotation.ToString());
         if (Input.GetKeyDown(KeyCode.A))
             transform.Translate(new Vector3(-1f,0,0) * Time.deltaTime);

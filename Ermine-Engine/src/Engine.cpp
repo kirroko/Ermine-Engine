@@ -47,6 +47,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "ViewPortGUI.h"
 #include "AudioImGUI.h"
 #include "SceneManager.h"
+#include "FSMEditor.h"
 #endif
 
 using namespace Ermine;
@@ -523,13 +524,12 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	// Editor windows
 #if defined(EE_EDITOR)
-	editor::EditorGUI::CreateImGUIWindow<ImguiUI::AssetBrowser>(); //TODO: Standardize please, do we want namespace ImGui for all window or not
+	editor::EditorGUI::CreateImGUIWindow<ImguiUI::AssetBrowser>(); // TODO: Namespace required?
 	editor::EditorGUI::CreateImGUIWindow<ParticlesImGUI>(ECS::GetInstance().GetSystem<ParticleSystem>()->GetEmitter());
 	editor::EditorGUI::CreateImGUIWindow<AudioImGUI>();
-	//editor::EditorGUI::CreateImGUIWindow<InspectorGUI>();
-	//auto* inspector = editor::EditorGUI::CreateImGUIWindow<editor::HierarchyInspector>(editor::EditorGUI::GetActiveScene().get(), "Inspector");
-	editor::EditorGUI::CreateImGUIWindow<editor::GraphicsDebugGUI>("Graphics Debug");
+	editor::EditorGUI::CreateImGUIWindow<editor::GraphicsDebugGUI>("Graphics Debug"); // TODO: Namespace required?
 	editor::EditorGUI::CreateImGUIWindow<ViewPortGUI>();
+	editor::EditorGUI::CreateImGUIWindow<FSMEditorImGUI>();
 
 	auto defaultScene = std::make_shared<Scene>("Main Scene");
 	editor::EditorGUI::SetActiveScene(defaultScene);
@@ -557,7 +557,7 @@ void engine::Shutdown()
 	cfg.windowHeight = height;
 	cfg.fullscreen = (glfwGetWindowMonitor(glfwGetCurrentContext()) != nullptr);
 	cfg.maximized = (glfwGetWindowAttrib(glfwGetCurrentContext(), GLFW_MAXIMIZED) == GLFW_TRUE);
-	cfg.title = "Ermine Editor 0.1";
+	cfg.title = "Ermine Editor 0.2";
 
 	SaveConfigToFile(cfg, "Ermine-Engine.config", false);
 

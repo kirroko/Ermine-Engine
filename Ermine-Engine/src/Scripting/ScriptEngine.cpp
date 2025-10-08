@@ -27,6 +27,8 @@ namespace fs = std::filesystem;
 
 namespace
 {
+	constexpr unsigned int FIELD_ACCESS_MASK = 0x0007;
+	constexpr unsigned int FIELD_ATTRIBUTE_PUBLIC = 0x0006;
 	// Helper: convert file_time_type to local time string
 	//std::string FormatFileTime(std::filesystem::file_time_type tp)
 	//{
@@ -893,6 +895,15 @@ namespace
 	MonoClass* s_TransformClass = nullptr;
 	MonoClass* s_MonoBehaviourClass = nullptr;
 	MonoClass* s_ComponentClass = nullptr;
+	MonoClass* s_SerializeFieldAttr = nullptr;
+
+	// Discover field for a script instance
+	struct ScriptFieldInfo
+	{
+		std::string name;
+		MonoClassField* field = nullptr;
+		enum class Kind { Float, Int, Bool, String, Vector3, Quaternion, Unsupported } kind = Kind::Unsupported;
+	};
 
 	void ToTempUTF8(MonoString* str, std::string& out)
 	{
@@ -933,6 +944,69 @@ namespace
 		if (!s_APIImage)
 			return nullptr;
 		return mono_class_from_name(s_APIImage, nameSpace, name);
+	}
+
+	bool IsExposedField(MonoClass* owner, MonoClassField* field)
+	{
+		const unsigned int flags = mono_field_get_flags(field);
+		const bool isPublic = (flags & FIELD_ACCESS_MASK) == FIELD_ATTRIBUTE_PUBLIC; // FIELD_ATTRIBUTE_PUBLIC 0x0006
+		if (isPublic) return true;
+
+		if (!s_SerializeFieldAttr) return false;
+
+		if (MonoCustomAttrInfo* ca = mono_custom_attrs_from_field(owner,field))
+		{
+			const bool has = mono_custom_attrs_has_attr(ca, s_SerializeFieldAttr);
+			mono_custom_attrs_free(ca);
+			if (has) return true;
+		}
+
+		return false;
+	}
+
+	ScriptFieldInfo::Kind Classify(MonoType* t)
+	{
+		switch (mono_type_get_type(t))
+		{
+			case MONO_TYPE_R4: return ScriptFieldInfo::Kind::Float;
+			case MONO_TYPE_I4: return ScriptFieldInfo::Kind::Int;
+			case MONO_TYPE_BOOLEAN: return ScriptFieldInfo::Kind::Bool;
+			case MONO_TYPE_STRING: return ScriptFieldInfo::Kind::String;
+			case MONO_TYPE_VALUETYPE:
+			{
+				MonoClass* c = mono_class_from_mono_type(t);
+				const char* ns = mono_class_get_namespace(c);
+				const char* nm = mono_class_get_name(c);
+				if (ns && nm && std::strcmp(ns, "ErmineEngine") == 0)
+					// TODO: This grows for unique types exposed field
+				{
+					if (std::strcmp(nm, "Vector3") == 0) return ScriptFieldInfo::Kind::Vector3;
+					if (std::strcmp(nm, "Quaternion") == 0) return ScriptFieldInfo::Kind::Quaternion;
+				}
+				break;
+			}
+			default: break;
+		}
+		return ScriptFieldInfo::Kind::Unsupported;
+	}
+
+	std::vector<ScriptFieldInfo> DiscoverScriptFields(MonoClass* klass)
+	{
+		std::vector<ScriptFieldInfo> out;
+		void* iter = nullptr;
+		while (MonoClassField* f = mono_class_get_fields(klass,&iter))
+		{
+			if (!IsExposedField(klass, f)) continue;
+
+			MonoType* ft = mono_field_get_type(f);
+			auto kind = Classify(ft);
+			if (kind == ScriptFieldInfo::Kind::Unsupported) continue;
+
+			const char* fname = mono_field_get_name(f);
+			out.push_back(ScriptFieldInfo{ .name= fname ? fname : "", .field= f, .kind= kind});
+		}
+
+		return out;
 	}
 
 	bool IsSubclassOf(MonoClass* klass, MonoClass* parentKlass)
@@ -1244,7 +1318,10 @@ namespace
 
 			auto& scriptComp = ECS::GetInstance().GetComponent<Script>(id);
 			if (scriptComp.m_instance && scriptComp.m_instance->object)
+			{
 				SetComponentGameObject(scriptComp.m_instance->object, id);
+				scripting::ScriptEngine::PushCacheToManagedFields(scriptComp.m_instance->object, scriptComp.m_fields);
+			}
 			return scriptComp.m_instance ? scriptComp.m_instance->object : nullptr;
 		}
 
@@ -1432,6 +1509,133 @@ namespace Ermine::scripting
 	}
 }
 
+void Ermine::scripting::ScriptEngine::PullManagedFieldsToCache(MonoObject* obj,
+	std::unordered_map<std::string, ScriptFieldValue>& cache)
+{
+	if (!obj) return;
+	MonoClass* klass = mono_object_get_class(obj);
+	auto fields = DiscoverScriptFields(klass);
+
+	for (const auto& f : fields)
+	{
+		switch (f.kind)
+		{
+		case ScriptFieldInfo::Kind::Float:
+		{
+			float v = 0.0f; mono_field_get_value(obj, f.field, &v);
+			cache[f.name] = Ermine::ScriptFieldValue::MakeFloat(v);
+			break;
+		}
+		case ScriptFieldInfo::Kind::Int:
+		{
+			int v = 0; mono_field_get_value(obj, f.field, &v);
+			cache[f.name] = Ermine::ScriptFieldValue::MakeInt(v);
+			break;
+		}
+		case ScriptFieldInfo::Kind::Bool:
+		{
+			mono_bool v = 0; mono_field_get_value(obj, f.field, &v);
+			cache[f.name] = Ermine::ScriptFieldValue::MakeBool(v != 0);
+			break;
+		}
+		case ScriptFieldInfo::Kind::String:
+		{
+			MonoString* ms = nullptr; mono_field_get_value(obj, f.field, &ms);
+			std::string s; ToTempUTF8(ms, s);
+			cache[f.name] = Ermine::ScriptFieldValue::MakeString(std::move(s));
+			break;
+		}
+		case ScriptFieldInfo::Kind::Vector3:
+		{
+			ManagedVector3 mv{ 0,0,0 }; mono_field_get_value(obj, f.field, &mv);
+			cache[f.name] = Ermine::ScriptFieldValue::MakeVec3(Ermine::Vec3{ mv.x, mv.y, mv.z });
+			break;
+		}
+		case ScriptFieldInfo::Kind::Quaternion:
+		{
+			ManagedQuaternion mq{ 0,0,0,1 }; mono_field_get_value(obj, f.field, &mq);
+			cache[f.name] = Ermine::ScriptFieldValue::MakeQuat(Ermine::Quaternion{ mq.x, mq.y, mq.z, mq.w });
+			break;
+		}
+		default: break;
+		}
+	}
+}
+
+void Ermine::scripting::ScriptEngine::PushCacheToManagedFields(MonoObject* obj, const std::unordered_map<std::string, ScriptFieldValue>& cache)
+{
+	if (!obj || cache.empty()) return;
+	MonoClass* klass = mono_object_get_class(obj);
+	auto fields = DiscoverScriptFields(klass);
+
+	// name -> Mono field
+	std::unordered_map<std::string, MonoClassField*> monoByName;
+	std::unordered_map<std::string, ScriptFieldInfo::Kind> kindByName;
+	monoByName.reserve(fields.size());
+	kindByName.reserve(fields.size());
+	for (const auto& f : fields)
+	{
+		monoByName[f.name] = f.field;
+		kindByName[f.name] = f.kind;
+	}
+
+	for (const auto& kv : cache)
+	{
+		const auto it = monoByName.find(kv.first);
+		if (it == monoByName.end()) continue;
+
+		const auto kindIt = kindByName.find(kv.first);
+		if (kindIt == kindByName.end()) continue;
+
+		MonoClassField* fld = it->second;
+		auto kind = kindIt->second;
+		const auto& val = kv.second;
+
+		switch (kind)
+		{
+		case ScriptFieldInfo::Kind::Float:
+			if (val.kind == Ermine::ScriptFieldValue::Kind::Float) mono_field_set_value(obj, fld, const_cast<float*>(&val.f));
+			break;
+		case ScriptFieldInfo::Kind::Int:
+			if (val.kind == Ermine::ScriptFieldValue::Kind::Int) mono_field_set_value(obj, fld, const_cast<int*>(&val.i));
+			break;
+		case ScriptFieldInfo::Kind::Bool:
+		{
+			if (val.kind == Ermine::ScriptFieldValue::Kind::Bool) { mono_bool mb = val.b ? 1 : 0; mono_field_set_value(obj, fld, &mb); }
+			break;
+		}
+		case ScriptFieldInfo::Kind::String:
+		{
+			if (val.kind == Ermine::ScriptFieldValue::Kind::String)
+			{
+				MonoString* ms = mono_string_new(mono_domain_get(), val.s.c_str());
+				mono_field_set_value(obj, fld, ms);
+			}
+			break;
+		}
+		case ScriptFieldInfo::Kind::Vector3:
+		{
+			if (val.kind == Ermine::ScriptFieldValue::Kind::Vector3)
+			{
+				ManagedVector3 mv{ val.v3.x, val.v3.y, val.v3.z };
+				mono_field_set_value(obj, fld, &mv);
+			}
+			break;
+		}
+		case ScriptFieldInfo::Kind::Quaternion:
+		{
+			if (val.kind == Ermine::ScriptFieldValue::Kind::Quaternion)
+			{
+				ManagedQuaternion mq{ val.q.x, val.q.y, val.q.z, val.q.w };
+				mono_field_set_value(obj, fld, &mq);
+			}
+			break;
+		}
+		default: break;
+		}
+	}
+}
+
 void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 {
 	s_APIImage = mono_assembly_get_image(m_apiAsm);
@@ -1439,6 +1643,9 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	s_TransformClass = GetAPIClass("ErmineEngine", "Transform");
 	s_ComponentClass = GetAPIClass("ErmineEngine", "Component");
 	s_MonoBehaviourClass = GetAPIClass("ErmineEngine", "MonoBehaviour");
+	s_SerializeFieldAttr = mono_class_from_name(s_APIImage, "ErmineEngine", "SerializeFieldAttribute");
+	if (!s_SerializeFieldAttr)
+		s_SerializeFieldAttr = mono_class_from_name(s_APIImage, "ErmineEngine", "SerializeField");
 
 #pragma region Transform ICalls
 	mono_add_internal_call("ErmineEngine.Transform::get_position", (const void*)icall_transform_get_position);
