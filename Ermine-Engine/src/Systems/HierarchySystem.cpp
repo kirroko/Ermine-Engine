@@ -88,55 +88,51 @@ namespace Ermine
     */
     void HierarchySystem::UpdateWorldTransform(EntityID entity)
     {
-        EE_CORE_INFO("UpdateWorldTransform called for entity {}", entity);
-
         auto& hierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(entity);
         auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
 
-        // Create transformation matrices from position, rotation, scale
-        Matrix4x4 translation, rotation, scale, localMatrix;
-        Mtx44Identity(translation);
-        Mtx44Identity(rotation);
-        Mtx44Identity(scale);
+        // Build local transform matrix from position, rotation, and scale
+        Matrix4x4 localMatrix;
+        {
+            Matrix4x4 translation, rotation, scale;
+            Mtx44Identity(translation);
+            Mtx44Identity(rotation);
+            Mtx44Identity(scale);
 
-        // Build local transform matrix
-        Mtx44Translate(translation, transform.position.x, transform.position.y, transform.position.z);
-        Mtx44SetFromQuaternion(rotation, transform.rotation);
-        Mtx44Scale(scale, transform.scale.x, transform.scale.y, transform.scale.z);
+            // Build individual transform matrices
+            Mtx44Translate(translation, transform.position.x, transform.position.y, transform.position.z);
+            Mtx44SetFromQuaternion(rotation, transform.rotation);
+            Mtx44Scale(scale, transform.scale.x, transform.scale.y, transform.scale.z);
 
-        // Combine: Translation * Rotation * Scale
-        localMatrix = translation * rotation * scale;
+            // Combine in TRS order: Translation * Rotation * Scale
+            localMatrix = translation * rotation * scale;
+        }
 
-        // Calculate world transform
+        // Calculate world transform based on parent relationship
         if (hierarchy.parent != 0) {
-            // Get parent's world transform from hierarchy component (NOT Transform component!)
+            // Get parent's world transform
             auto& parentHierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(hierarchy.parent);
             
-            // Use parentHierarchy.worldTransform instead of parentTransform.transform_matrix
-            transform.transform_matrix = parentHierarchy.worldTransform * localMatrix;
-            hierarchy.worldTransform = transform.transform_matrix;
+            // World transform = Parent's world transform * Local transform
+            hierarchy.worldTransform = parentHierarchy.worldTransform * localMatrix;
         }
         else {
-            // Root entity - world transform = local transform
-            transform.transform_matrix = localMatrix;
+            // Root entity: world transform equals local transform
             hierarchy.worldTransform = localMatrix;
         }
+
+        // Update the Transform component's transform_matrix (used by renderer)
+        transform.transform_matrix = hierarchy.worldTransform;
 
         // Mark as clean
         hierarchy.isDirty = false;
         hierarchy.worldTransformDirty = false;
         transform.isDirty = false;
 
-        // Recursively update children
+        // Recursively update all children
         for (auto child : hierarchy.children) {
             UpdateWorldTransform(child);
         }
-
-        Vec3 worldPos;
-        worldPos.x = transform.transform_matrix.m03;
-        worldPos.y = transform.transform_matrix.m13;
-        worldPos.z = transform.transform_matrix.m23;
-        EE_CORE_INFO("Entity {} world position after update: {}, {}, {}", entity, worldPos.x, worldPos.y, worldPos.z);
     }
 
     /**
