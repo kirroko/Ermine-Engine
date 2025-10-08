@@ -428,6 +428,7 @@ MonoAssembly* Ermine::scripting::ScriptEngine::LoadGameAssembly(const std::strin
 	if (!m_gameAsm)
 	{
 		EE_CORE_ERROR("Failed to load game assembly: {0}", assemblyPath);
+		assert(false && "Failed to load game assembly, Missing DLL?");
 		return nullptr;
 	}
 
@@ -832,57 +833,6 @@ bool Ermine::scripting::ScriptEngine::BuildGameAssembly()
 	}
 
 	return true;
-	// NOTE: We don't need this portion because when msbuild builds, it will directly overwrite the game assembly
-	//try
-	//{
-	//	fs::path csproj(m_buildDLLPath);
-	//	const fs::path projDir = csproj.parent_path();
-
-	//	// Use filename from m_gameAssemblyPath
-	//	const fs::path targetDllName = fs::path(m_gameAssemblyPath).filename();
-
-	//	// Assume output is in bin/<Configuration>/
-	//	const fs::path builtDll = projDir / targetDllName;
-
-	//	if (!exists(builtDll))
-	//	{
-	//		EE_CORE_ERROR("Built DLL not found at: {0}", builtDll.string());
-	//		return false;
-	//	}
-
-	//	// Ensure destination directory exists
-	//	const fs::path destPath = fs::path(m_gameAssemblyPath);
-	//	if (destPath.has_parent_path())
-	//	{
-	//		std::error_code ec;
-	//		fs::create_directories(destPath.parent_path(), ec);
-	//	}
-
-	//	// Retry copy in case of antivirus/lock hiccups
-	//	const int maxAttemps = 10;
-	//	for (int i = 0; i < maxAttemps; ++i)
-	//	{
-	//		std::error_code ec;
-	//		fs::copy_file(builtDll,destPath , fs::copy_options::overwrite_existing, ec);
-	//		if (!ec)
-	//			return true;
-
-	//		std::this_thread::sleep_for(std::chrono::milliseconds(100));
-	//	}
-
-	//	EE_CORE_ERROR("Failed to copy built DLL to {0}", destPath.string());
-	//	return false;
-	//}
-	//catch (const std::exception& e)
-	//{
-	//	EE_CORE_ERROR("Exception during DLL copy: {0}", e.what());
-	//	return false;
-	//}
-	//catch (...)
-	//{
-	//	EE_CORE_ERROR("unknown exception");
-	//	return false;
-	//}
 }
 
 #pragma endregion
@@ -1594,21 +1544,21 @@ void Ermine::scripting::ScriptEngine::PushCacheToManagedFields(MonoObject* obj, 
 		switch (kind)
 		{
 		case ScriptFieldInfo::Kind::Float:
-			if (val.kind == Ermine::ScriptFieldValue::Kind::Float) mono_field_set_value(obj, fld, const_cast<float*>(&val.f));
+			if (val.kind == Ermine::ScriptFieldValue::Kind::Float) mono_field_set_value(obj, fld, const_cast<float*>(&std::get<float>(val.value)));
 			break;
 		case ScriptFieldInfo::Kind::Int:
-			if (val.kind == Ermine::ScriptFieldValue::Kind::Int) mono_field_set_value(obj, fld, const_cast<int*>(&val.i));
+			if (val.kind == Ermine::ScriptFieldValue::Kind::Int) mono_field_set_value(obj, fld, const_cast<int*>(&std::get<int>(val.value)));
 			break;
 		case ScriptFieldInfo::Kind::Bool:
 		{
-			if (val.kind == Ermine::ScriptFieldValue::Kind::Bool) { mono_bool mb = val.b ? 1 : 0; mono_field_set_value(obj, fld, &mb); }
+			if (val.kind == Ermine::ScriptFieldValue::Kind::Bool) { mono_bool mb = std::get<bool>(val.value) ? 1 : 0; mono_field_set_value(obj, fld, &mb); }
 			break;
 		}
 		case ScriptFieldInfo::Kind::String:
 		{
 			if (val.kind == Ermine::ScriptFieldValue::Kind::String)
 			{
-				MonoString* ms = mono_string_new(mono_domain_get(), val.s.c_str());
+				MonoString* ms = mono_string_new(mono_domain_get(), std::get<std::string>(val.value).c_str());
 				mono_field_set_value(obj, fld, ms);
 			}
 			break;
@@ -1617,7 +1567,7 @@ void Ermine::scripting::ScriptEngine::PushCacheToManagedFields(MonoObject* obj, 
 		{
 			if (val.kind == Ermine::ScriptFieldValue::Kind::Vector3)
 			{
-				ManagedVector3 mv{ val.v3.x, val.v3.y, val.v3.z };
+				ManagedVector3 mv{ .x= std::get<Vec3>(val.value).x, .y= std::get<Vec3>(val.value).y, .z= std::get<Vec3>(val.value).z};
 				mono_field_set_value(obj, fld, &mv);
 			}
 			break;
@@ -1626,7 +1576,8 @@ void Ermine::scripting::ScriptEngine::PushCacheToManagedFields(MonoObject* obj, 
 		{
 			if (val.kind == Ermine::ScriptFieldValue::Kind::Quaternion)
 			{
-				ManagedQuaternion mq{ val.q.x, val.q.y, val.q.z, val.q.w };
+				ManagedQuaternion mq{ .x= std::get<Quaternion>(val.value).x, .y= std::get<Quaternion>(val.value).y, .z=
+					std::get<Quaternion>(val.value).z, .w= std::get<Quaternion>(val.value).w };
 				mono_field_set_value(obj, fld, &mq);
 			}
 			break;

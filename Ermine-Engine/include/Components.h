@@ -219,20 +219,17 @@ namespace Ermine
 	struct ScriptFieldValue
 	{
 		enum class Kind { Float = 0, Int = 1, Bool = 2, String = 3, Vector3 = 4, Quaternion = 5 };
-		Kind kind = Kind::Float;
 
-		float f = 0.0f;
-		int i = 0;
-		bool b = false;
-		std::string s;
-		Vec3 v3{};
-		Quaternion q{};
+		using Value = std::variant<float, int, bool, std::string, Vec3, Quaternion>;
+
+		Kind  kind = Kind::Float;
+		Value value = 0.0f;
 
 		static ScriptFieldValue MakeFloat(float v)
 		{
 			ScriptFieldValue r;
 			r.kind = Kind::Float;
-			r.f = v;
+			r.value = v;
 			return r;
 		}
 
@@ -240,20 +237,23 @@ namespace Ermine
 		{
 			ScriptFieldValue r;
 			r.kind = Kind::Int;
-			r.i = v;
+			r.value = v;
 			return r;
 		}
 
 		static ScriptFieldValue MakeBool(bool v)
 		{
-			ScriptFieldValue r; r.kind = Kind::Bool; r.b = v; return r;
+			ScriptFieldValue r;
+			r.kind = Kind::Bool;
+			r.value = v;
+			return r;
 		}
 
 		static ScriptFieldValue MakeString(std::string v)
 		{
 			ScriptFieldValue r;
 			r.kind = Kind::String;
-			r.s = std::move(v);
+			r.value = std::move(v);
 			return r;
 		}
 
@@ -261,7 +261,7 @@ namespace Ermine
 		{
 			ScriptFieldValue r;
 			r.kind = Kind::Vector3;
-			r.v3 = v;
+			r.value = v;
 			return r;
 		}
 
@@ -269,7 +269,7 @@ namespace Ermine
 		{
 			ScriptFieldValue r;
 			r.kind = Kind::Quaternion;
-			r.q = v;
+			r.value = v;
 			return r;
 		}
 	};
@@ -351,22 +351,29 @@ namespace Ermine
 			{
 				rapidjson::Value fld(rapidjson::kObjectType);
 				fld.AddMember("t", static_cast<int>(kv.second.kind), alloc);
-
-				switch (kv.second.kind)
+				try
 				{
-				case ScriptFieldValue::Kind::Float:
-					fld.AddMember("v", kv.second.f, alloc); break;
-				case ScriptFieldValue::Kind::Int:
-					fld.AddMember("v", kv.second.i, alloc); break;
-				case ScriptFieldValue::Kind::Bool:
-					fld.AddMember("v", kv.second.b, alloc); break;
-				case ScriptFieldValue::Kind::String:
-					fld.AddMember("v", rapidjson::Value(kv.second.s.c_str(), alloc), alloc); break;
-				case ScriptFieldValue::Kind::Vector3:
-					fld.AddMember("v", Vec3ToJson(kv.second.v3, alloc), alloc); break;
-				case ScriptFieldValue::Kind::Quaternion:
-					fld.AddMember("v", QuatToJson(kv.second.q, alloc), alloc); break;
-				default: break;
+					switch (kv.second.kind)
+					{
+					case ScriptFieldValue::Kind::Float:
+						fld.AddMember("v", std::get<float>(kv.second.value), alloc); break;
+					case ScriptFieldValue::Kind::Int:
+						fld.AddMember("v", std::get<int>(kv.second.value), alloc); break;
+					case ScriptFieldValue::Kind::Bool:
+						fld.AddMember("v", std::get<bool>(kv.second.value), alloc); break;
+					case ScriptFieldValue::Kind::String:
+						fld.AddMember("v", rapidjson::Value(std::get<std::string>(kv.second.value), alloc), alloc); break;
+					case ScriptFieldValue::Kind::Vector3:
+						fld.AddMember("v", Vec3ToJson(std::get<Vec3>(kv.second.value), alloc), alloc); break;
+					case ScriptFieldValue::Kind::Quaternion:
+						fld.AddMember("v", QuatToJson(std::get<Quaternion>(kv.second.value), alloc), alloc); break;
+					default: break;
+					}
+				} catch (const std::bad_variant_access& ex)
+				{
+					// Skip invalid variant access
+					EE_CORE_WARN(ex.what());
+					continue;
 				}
 
 				fields.AddMember(rapidjson::Value(kv.first.c_str(), alloc), fld, alloc);
@@ -1850,7 +1857,7 @@ namespace Ermine
 		std::vector<State*> availableStates;
 		std::unordered_map<State*, State*> transitions;
 	public:
-		void Init(EntityID entity, State* initial)
+		void Init([[maybe_unused]] EntityID entity, State* initial)
 		{
 			m_CurrentState = initial;
 		}

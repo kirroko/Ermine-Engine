@@ -1053,28 +1053,28 @@ namespace Ermine::editor {
 			case ScriptFieldValue::Kind::Float:
 			{
 				PropertyRow(name.c_str(), [&] {
-					ImGui::InputFloat("##v", &val.f);
+					ImGui::InputFloat("##v", &std::get<float>(val.value));
 					});
 				break;
 			}
 			case ScriptFieldValue::Kind::Int:
 			{
 				PropertyRow(name.c_str(), [&] {
-					ImGui::InputInt("##v", &val.i);
+					ImGui::InputInt("##v", &std::get<int>(val.value));
 					});
 				break;
 			}
 			case ScriptFieldValue::Kind::Bool:
 			{
 				PropertyRow(name.c_str(), [&] {
-					ImGui::Checkbox("##v", &val.b);
+					ImGui::Checkbox("##v", &std::get<bool>(val.value));
 					});
 				break;
 			}
 			case ScriptFieldValue::Kind::Vector3:
 			{
 				// Uses internal two-column layout with label left
-				if (DrawVec3XYZ(name.c_str(), &val.v3.x))
+				if (DrawVec3XYZ(name.c_str(), &std::get<Vec3>(val.value).x))
 				{
 				}
 				break;
@@ -1082,24 +1082,24 @@ namespace Ermine::editor {
 			case ScriptFieldValue::Kind::Quaternion:
 			{
 				// Uses internal two-column layout with label left
-				Vec3 euler = QuaternionToEuler(val.q, true);
+				Vec3 euler = QuaternionToEuler(std::get<Quaternion>(val.value), true);
 				if (DrawVec3XYZ(name.c_str(), &euler.x))
 				{
 				}
-				val.q = FromEulerDegrees(euler);
+				val.value = FromEulerDegrees(euler);
 				break;
 			}
 			case ScriptFieldValue::Kind::String:
 			{
 				char innerBuff[256];
-				strcpy_s(innerBuff, val.s.c_str());
+				strcpy_s(innerBuff, std::get<std::string>(val.value).c_str());
 				PropertyRow(name.c_str(), [&] {
 					if (ImGui::InputText("##v", innerBuff, sizeof(innerBuff), ImGuiInputTextFlags_EnterReturnsTrue))
 					{
 						// nothing else to do here; value is set when pushing back to managed fields
 					}
 					});
-				val.s = innerBuff;
+				val.value = innerBuff;
 				break;
 			}
 			default: break;
