@@ -22,6 +22,7 @@ namespace Ermine
 	 */
 	EntityID EntityManager::CreateEntity()
 	{
+		assert(!m_AvailableEntities.empty() && "Max entities reached!");
 		EntityID id = m_AvailableEntities.front();
 		m_AvailableEntities.pop();
 		++m_ulLivingEntityCount;
@@ -35,6 +36,7 @@ namespace Ermine
 	 */
 	void EntityManager::DestroyEntity(EntityID entity)
 	{
+		assert(entity > 0 && entity < MAX_ENTITIES && "Entity ID is not valid!");
 		m_Signatures[entity].reset();
 
 		m_AvailableEntities.push(entity);
@@ -77,6 +79,6 @@ namespace Ermine
 	 */
 	bool EntityManager::IsEntityAlive(EntityID entity) const
 	{
-		return entity < MAX_ENTITIES && m_Signatures[entity].any();
+		return entity > 0 && entity < MAX_ENTITIES && m_Signatures[entity].any();
 	}
 }
