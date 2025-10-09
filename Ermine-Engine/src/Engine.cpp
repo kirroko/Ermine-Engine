@@ -36,6 +36,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Cubemap.h"
 #include "ScriptSystem.h"
 #include "AnimationManager.h"
+#include "GuidRegistry.h"
 #include "Scene.h"
 #include "HierarchySystem.h"
 
@@ -129,8 +130,6 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	FrameController::Init(120.f, 60.f);
 
-	//g_vsyncVerifier.Init(windowContext);
-
 	graphics::GPUProfiler::Init(150); // Track last 150 frames
 
 	job::Initialize();
@@ -164,6 +163,14 @@ bool engine::Init(GLFWwindow* windowContext)
 			cm.AddComponent<Script>(dst, Script(srcScript.m_className, dst));
 		});
 
+	// Special case for IDComponent with custom clone to force new GUID
+	ECS::GetInstance().RegisterComponent<IDComponent>("IDComponent",
+		[](ComponentManager& cm, EntityID src, EntityID dst)
+		{
+			auto g = Guid::New();
+			cm.AddComponent<IDComponent>(dst, IDComponent{ g });
+			ECS::GetInstance().GetGuidRegistry().Register(dst, g);
+		});
 
 	// Register all systems
 	ECS::GetInstance().RegisterSystem<graphics::Renderer>();
@@ -597,8 +604,6 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 
 	// Profiler
 	graphics::GPUProfiler::BeginFrame();
-
-	//g_vsyncVerifier.UpdateAndMaybeLog();
 
 	// Handle shading mode toggle
 	HandleShadingToggle(windowContext);

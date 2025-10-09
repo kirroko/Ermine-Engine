@@ -35,6 +35,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "AssetManager.h"
 #include <Jolt/Jolt.h>
 #include <Jolt/Physics/Body/Body.h>
+#include "Guid.h"
 
 #include "xcore/my_properties.h"
 #include "xproperty.h"
@@ -75,7 +76,24 @@ namespace Ermine
 		return a;
 	}
 
-	
+	struct IDComponent
+	{
+		Guid guid{};
+
+		IDComponent() = default;
+		explicit IDComponent(Guid g) : guid(g) {}
+
+		template<typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
+			out.SetObject();
+			out.AddMember("guid", rapidjson::Value(guid.ToString().c_str(), alloc), alloc);
+		}
+		void Deserialize(const rapidjson::Value& in) {
+			if (in.HasMember("guid") && in["guid"].IsString()) {
+				guid = Guid::FromString(in["guid"].GetString());
+			}
+		}
+	};
 
 	/*!***********************************************************************
 	\brief

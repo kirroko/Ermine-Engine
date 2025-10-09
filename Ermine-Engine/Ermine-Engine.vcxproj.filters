@@ -252,7 +252,15 @@
     <ClInclude Include="include\shadow_config.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\Guid.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\GuidRegistry.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\States.h" />
+        <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\AssetBrowser\AssetBrowser.cpp">
@@ -417,7 +425,15 @@
     <ClCompile Include="src\dllmain.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\Utility\Guid.cpp">
+      <Filter>src\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Utility\GuidRegistry.cpp">
+      <Filter>src\Utility</Filter>
+    </ClCompile>
     <ClCompile Include="src\FSM\States.cpp" />
+        <Filter>src\FSM</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="include\Component.tpp">
