@@ -239,13 +239,21 @@ namespace Ermine::editor {
 
                     EE_CORE_INFO("Transform changed for entity {}: {}, {}, {}", entity, a[0], a[1], a[2]);
 
-                    
                     // Mark entity dirty for hierarchy propagation
                     if (ECS::GetInstance().HasComponent<HierarchyComponent>(entity)) {
                         auto hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>();
                         hierarchySystem->MarkDirty(entity);
-                        EE_CORE_INFO("Marked entity {} as dirty for hierarchy update", entity);
 
+                        // ✅ ADD THIS: Sync the transform matrix for rendering
+                        hierarchySystem->SyncTransformMatrix(entity);
+
+                        // ✅ ADD THIS: Also sync children's transform matrices
+                        const auto& children = hierarchySystem->GetChildren(entity);
+                        for (auto child : children) {
+                            hierarchySystem->SyncTransformMatrix(child);
+                        }
+
+                        EE_CORE_INFO("Marked entity {} as dirty for hierarchy update", entity);
                     }
                 }
             }
@@ -276,10 +284,19 @@ namespace Ermine::editor {
                     p.m_Value.set<Ermine::Quaternion>(q);
                     xproperty::sprop::setProperty(err, t, p, ctx);
                 
-                    // ✅ ADD THIS: Mark entity dirty for hierarchy propagation
+                    // Mark entity dirty for hierarchy propagation
                     if (ECS::GetInstance().HasComponent<HierarchyComponent>(entity)) {
                         auto hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>();
                         hierarchySystem->MarkDirty(entity);
+
+                        // Sync the transform matrix for rendering
+                        hierarchySystem->SyncTransformMatrix(entity);
+
+                        // Also sync children's transform matrices  
+                        const auto& children = hierarchySystem->GetChildren(entity);
+                        for (auto child : children) {
+                            hierarchySystem->SyncTransformMatrix(child);
+                        }
                     }
                 }
             }
