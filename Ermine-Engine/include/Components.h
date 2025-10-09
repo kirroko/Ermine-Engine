@@ -1591,6 +1591,7 @@ namespace Ermine
 		float particleLifetime = 2.0f;
 		float particleSize = 0.2f;
 		Vec3 velocity = { 0, 2, 0 };
+		Vec3 position = { 0.0f, 0.0f, 0.0f };
 		std::string textureName = "../Resources/Textures/greybox_light_solid.png";
 		float timeAccumulator = 0.0f;
 

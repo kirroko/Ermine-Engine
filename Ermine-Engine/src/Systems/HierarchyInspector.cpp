@@ -23,6 +23,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "FiniteStateMachine.h"
 #include "FSMEditor.h"
 #include <EditorGUI.h>
+#include "Particles.h"
 
 #include "xcore/my_properties.h"
 #include "xproperty.h"
@@ -1318,11 +1319,20 @@ namespace Ermine::editor {
 			return;
 
 		auto& emitter = ECS::GetInstance().GetComponent<ParticleEmitter>(entity);
-		ImGui::Checkbox("Active", &emitter.active);
-		ImGui::DragFloat("Emission Rate", &emitter.emissionRate, 1.0f, 0.0f, 100.0f);
-		ImGui::DragFloat("Lifetime", &emitter.particleLifetime, 0.1f, 0.1f, 10.0f);
-		ImGui::DragFloat("Size", &emitter.particleSize, 0.01f, 0.01f, 10.0f);
-		ImGui::DragFloat3("Velocity", reinterpret_cast<float*>(&emitter.velocity), 0.1f);
+
+		auto particleSystem = ECS::GetInstance().GetSystem<ParticleSystem>();
+		if (!particleSystem)
+		{
+			ImGui::Text("Particle System not found.");
+			return;
+		}
+
+		// count alive particles for this emitter
+		int alive = particleSystem->GetParticleCount();
+
+		// Display info
+		ImGui::Text("Emitter Active: %s", emitter.active ? "Yes" : "No");
+		ImGui::Text("Particles Alive: %d", alive);
 	}
 
 	void HierarchyInspector::DrawAddComponentMenu(EntityID entity) {
