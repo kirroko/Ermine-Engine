@@ -185,10 +185,6 @@ namespace Ermine::editor {
 			DrawScriptComponent(selected);
 		}
 
-		//if (ECS::GetInstance().HasComponent<Particle>(selected)) {
-		//    DrawParticleComponent(selected);
-		//}
-
 		if (ECS::GetInstance().HasComponent<ModelComponent>(selected)) {
 			DrawModelComponent(selected);
 		}
@@ -199,6 +195,10 @@ namespace Ermine::editor {
 
 		if (ECS::GetInstance().HasComponent<StateMachine>(selected)) {
 			DrawStateMachineComponent(selected);
+		}
+
+		if (ECS::GetInstance().HasComponent<ParticleEmitter>(selected)) {
+			DrawParticleEmitterComponent(selected);
 		}
 
 		ImGui::PopID();
@@ -1312,6 +1312,19 @@ namespace Ermine::editor {
 		}
 	}
 
+	void HierarchyInspector::DrawParticleEmitterComponent(EntityID entity)
+	{
+		if (!ImGui::CollapsingHeader("Particle Emitter", ImGuiTreeNodeFlags_DefaultOpen))
+			return;
+
+		auto& emitter = ECS::GetInstance().GetComponent<ParticleEmitter>(entity);
+		ImGui::Checkbox("Active", &emitter.active);
+		ImGui::DragFloat("Emission Rate", &emitter.emissionRate, 1.0f, 0.0f, 100.0f);
+		ImGui::DragFloat("Lifetime", &emitter.particleLifetime, 0.1f, 0.1f, 10.0f);
+		ImGui::DragFloat("Size", &emitter.particleSize, 0.01f, 0.01f, 10.0f);
+		ImGui::DragFloat3("Velocity", reinterpret_cast<float*>(&emitter.velocity), 0.1f);
+	}
+
 	void HierarchyInspector::DrawAddComponentMenu(EntityID entity) {
 		if (ImGui::MenuItem("Transform") && !ECS::GetInstance().HasComponent<Transform>(entity)) {
 			ECS::GetInstance().AddComponent(entity, Transform());
@@ -1354,6 +1367,9 @@ namespace Ermine::editor {
 				fsmComp.Init(entity, &g_IdleState);
 				fsmComp.m_CurrentState = &g_IdleState;
 			}
+		}
+		if (ImGui::MenuItem("ParticleEmitter") && !ECS::GetInstance().HasComponent<ParticleEmitter>(entity)) {
+			ECS::GetInstance().AddComponent(entity, ParticleEmitter());
 		}
 		// Add more component types as needed
 	}

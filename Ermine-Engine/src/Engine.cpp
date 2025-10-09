@@ -146,7 +146,6 @@ bool engine::Init(GLFWwindow* windowContext)
 	EE_AUTO_REGISTER_COMPONENT(Material, "Material")
 	EE_AUTO_REGISTER_COMPONENT(ObjectMetaData, "ObjectMetaData")
 	EE_AUTO_REGISTER_COMPONENT(Light, "Light")
-	EE_AUTO_REGISTER_COMPONENT(Particle, "Particle")
 	EE_AUTO_REGISTER_COMPONENT(AudioComponent, "AudioComponent")
 	EE_AUTO_REGISTER_COMPONENT(GlobalAudioComponent, "GlobalAudioComponent")
 	EE_AUTO_REGISTER_COMPONENT(PhysicComponent, "PhysicComponent")
@@ -154,6 +153,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	EE_AUTO_REGISTER_COMPONENT(AnimationComponent, "AnimationComponent")
 	EE_AUTO_REGISTER_COMPONENT(HierarchyComponent, "HierarchyComponent");
 	EE_AUTO_REGISTER_COMPONENT(StateMachine, "StateMachine");
+	EE_AUTO_REGISTER_COMPONENT(ParticleEmitter, "ParticleEmitter");
 
 	// Special Case for Script component, need to copy over the class name
 	ECS::GetInstance().RegisterComponent<Script>("Script",
@@ -201,9 +201,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	// For Particles
 	sig.reset();
 	sig.set(ECS::GetInstance().GetComponentType<Transform>());
-	sig.set(ECS::GetInstance().GetComponentType<Mesh>());
-	sig.set(ECS::GetInstance().GetComponentType<Material>());
-	sig.set(ECS::GetInstance().GetComponentType<Particle>());
+	sig.set(ECS::GetInstance().GetComponentType<ParticleEmitter>());
 	ECS::GetInstance().SetSystemSignature<ParticleSystem>(sig);
 
 	// For Physics
@@ -333,11 +331,10 @@ bool engine::Init(GLFWwindow* windowContext)
 	//ECS::GetInstance().AddComponent(fbxEntity, Material(std::move(FBXMaterial)));
 
 	// Create a simple quad mesh for particles
-	auto quadMesh = graphics::GeometryFactory::CreateQuad(1.0f, 1.0f);
-	auto tex = AssetManager::GetInstance().LoadTexture("../Resources/Textures/greybox_red_solid.png");
+	//auto tex = AssetManager::GetInstance().LoadTexture("../Resources/Textures/greybox_red_solid.png");
 
 	// initialize particles emitter
-	ECS::GetInstance().GetSystem<ParticleSystem>()->Init(quadMesh, shader, tex);
+	ECS::GetInstance().GetSystem<ParticleSystem>()->Init(shader);
 
 	// Create first cube
 	//auto entity = ECS::GetInstance().CreateEntity();
@@ -525,7 +522,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	// Editor windows
 #if defined(EE_EDITOR)
 	editor::EditorGUI::CreateImGUIWindow<ImguiUI::AssetBrowser>(); // TODO: Namespace required?
-	editor::EditorGUI::CreateImGUIWindow<ParticlesImGUI>(ECS::GetInstance().GetSystem<ParticleSystem>()->GetEmitter());
+	editor::EditorGUI::CreateImGUIWindow<ParticlesImGUI>();
 	editor::EditorGUI::CreateImGUIWindow<AudioImGUI>();
 	editor::EditorGUI::CreateImGUIWindow<editor::GraphicsDebugGUI>("Graphics Debug"); // TODO: Namespace required?
 	editor::EditorGUI::CreateImGUIWindow<ViewPortGUI>();
@@ -568,8 +565,6 @@ void engine::Shutdown()
 
 	AssetManager::GetInstance().Clear();
 	ECS::GetInstance().GetSystem<Physics>()->Shutdown();
-
-	ECS::GetInstance().GetSystem<ParticleSystem>()->ClearEmitter();
 
 	graphics::GPUProfiler::Shutdown();
 

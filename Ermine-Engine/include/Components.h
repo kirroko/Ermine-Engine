@@ -1555,7 +1555,7 @@ namespace Ermine
 	 \brief
 	 Particle component structure.
 	*************************************************************************/
-	struct Particle
+	/*struct Particle
 	{
 		Vec3 velocity;
 		float lifetime;
@@ -1582,6 +1582,28 @@ namespace Ermine
 				colour = Vec4(in["colour"][0].GetFloat(), in["colour"][1].GetFloat(), in["colour"][2].GetFloat(), in["colour"][3].GetFloat());
 			if (in.HasMember("size"))     size = in["size"].GetFloat();
 		}
+	};*/
+
+	struct ParticleEmitter
+	{
+		bool active = true;
+		float emissionRate = 10.0f;  // particles per second
+		float particleLifetime = 2.0f;
+		float particleSize = 0.2f;
+		Vec3 velocity = { 0, 2, 0 };
+		std::string textureName = "../Resources/Textures/greybox_light_solid.png";
+		float timeAccumulator = 0.0f;
+
+		
+		XPROPERTY_DEF(
+			"ParticleEmitterComponent", ParticleEmitter,
+			xproperty::obj_member<"active", &ParticleEmitter::active>,
+			xproperty::obj_member<"emissionRate", &ParticleEmitter::emissionRate>,
+			xproperty::obj_member<"particleLifetime", &ParticleEmitter::particleLifetime>,
+			xproperty::obj_member<"particleSize", &ParticleEmitter::particleSize>,
+			xproperty::obj_member<"velocity", &ParticleEmitter::velocity>,
+			xproperty::obj_member<"textureName", &ParticleEmitter::textureName>
+		);
 	};
 
 	/*!***********************************************************************
