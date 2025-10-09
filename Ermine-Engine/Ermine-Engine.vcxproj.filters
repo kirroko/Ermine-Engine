@@ -117,6 +117,9 @@
     <ClInclude Include="include\Entity.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\FSMEditor.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\FiniteStateMachine.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -255,6 +258,9 @@
     <ClInclude Include="include\GuidRegistry.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\States.h" />
+        <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\AssetBrowser\AssetBrowser.cpp">
@@ -286,6 +292,9 @@
     </ClCompile>
     <ClCompile Include="src\Engine.cpp">
       <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\FSM\FSMEditor.cpp">
+      <Filter>src\FSM</Filter>
     </ClCompile>
     <ClCompile Include="src\FSM\FiniteStateMachine.cpp">
       <Filter>src\FSM</Filter>
@@ -421,6 +430,9 @@
     </ClCompile>
     <ClCompile Include="src\Utility\GuidRegistry.cpp">
       <Filter>src\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="src\FSM\States.cpp" />
+        <Filter>src\FSM</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

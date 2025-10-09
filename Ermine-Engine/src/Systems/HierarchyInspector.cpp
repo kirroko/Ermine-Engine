@@ -20,6 +20,9 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "imgui.h"
 #include "imgui_internal.h"
 #include "Physics.h"
+#include "FiniteStateMachine.h"
+#include "FSMEditor.h"
+#include <EditorGUI.h>
 
 #include "xcore/my_properties.h"
 #include "xproperty.h"
@@ -192,6 +195,10 @@ namespace Ermine::editor {
 
 		if (ECS::GetInstance().HasComponent<AnimationComponent>(selected)) {
 			DrawAnimationComponent(selected);
+		}
+
+		if (ECS::GetInstance().HasComponent<StateMachine>(selected)) {
+			DrawStateMachineComponent(selected);
 		}
 
 		ImGui::PopID();
@@ -1053,28 +1060,28 @@ namespace Ermine::editor {
 			case ScriptFieldValue::Kind::Float:
 			{
 				PropertyRow(name.c_str(), [&] {
-					ImGui::InputFloat("##v", &val.f);
+					ImGui::InputFloat("##v", &std::get<float>(val.value));
 					});
 				break;
 			}
 			case ScriptFieldValue::Kind::Int:
 			{
 				PropertyRow(name.c_str(), [&] {
-					ImGui::InputInt("##v", &val.i);
+					ImGui::InputInt("##v", &std::get<int>(val.value));
 					});
 				break;
 			}
 			case ScriptFieldValue::Kind::Bool:
 			{
 				PropertyRow(name.c_str(), [&] {
-					ImGui::Checkbox("##v", &val.b);
+					ImGui::Checkbox("##v", &std::get<bool>(val.value));
 					});
 				break;
 			}
 			case ScriptFieldValue::Kind::Vector3:
 			{
 				// Uses internal two-column layout with label left
-				if (DrawVec3XYZ(name.c_str(), &val.v3.x))
+				if (DrawVec3XYZ(name.c_str(), &std::get<Vec3>(val.value).x))
 				{
 				}
 				break;
@@ -1082,24 +1089,24 @@ namespace Ermine::editor {
 			case ScriptFieldValue::Kind::Quaternion:
 			{
 				// Uses internal two-column layout with label left
-				Vec3 euler = QuaternionToEuler(val.q, true);
+				Vec3 euler = QuaternionToEuler(std::get<Quaternion>(val.value), true);
 				if (DrawVec3XYZ(name.c_str(), &euler.x))
 				{
 				}
-				val.q = FromEulerDegrees(euler);
+				val.value = FromEulerDegrees(euler);
 				break;
 			}
 			case ScriptFieldValue::Kind::String:
 			{
 				char innerBuff[256];
-				strcpy_s(innerBuff, val.s.c_str());
+				strcpy_s(innerBuff, std::get<std::string>(val.value).c_str());
 				PropertyRow(name.c_str(), [&] {
 					if (ImGui::InputText("##v", innerBuff, sizeof(innerBuff), ImGuiInputTextFlags_EnterReturnsTrue))
 					{
 						// nothing else to do here; value is set when pushing back to managed fields
 					}
 					});
-				val.s = innerBuff;
+				val.value = innerBuff;
 				break;
 			}
 			default: break;
@@ -1279,6 +1286,32 @@ namespace Ermine::editor {
 		}
 	}
 
+	void HierarchyInspector::DrawStateMachineComponent(EntityID entity)
+	{
+		if (!ImGui::CollapsingHeader("State Machine", ImGuiTreeNodeFlags_DefaultOpen))
+			return;
+
+		auto& fsmComp = ECS::GetInstance().GetComponent<StateMachine>(entity);
+
+		ImGui::Text("Current State: %s",
+			(fsmComp.m_CurrentState == &g_IdleState ? "Idle" :
+				fsmComp.m_CurrentState == &g_RoamState ? "Roam" : "Unknown"));
+
+		ImGui::DragFloat("State Duration", &fsmComp.stateDuration, 0.1f, 0.1f, 10.0f);
+		ImGui::Text("Timer: %.2f", fsmComp.stateTimer);
+
+		ImGui::Separator();
+		if (ImGui::Button("Edit State Machine"))
+		{
+			auto fsmWindow = editor::EditorGUI::GetWindow<FSMEditorImGUI>();
+			if (fsmWindow)
+			{
+				fsmWindow->SetSelectedEntity(entity);
+				editor::EditorGUI::FocusWindow("FSM Editor");
+			}
+		}
+	}
+
 	void HierarchyInspector::DrawAddComponentMenu(EntityID entity) {
 		if (ImGui::MenuItem("Transform") && !ECS::GetInstance().HasComponent<Transform>(entity)) {
 			ECS::GetInstance().AddComponent(entity, Transform());
@@ -1307,6 +1340,20 @@ namespace Ermine::editor {
 		}
 		if (ImGui::MenuItem("Animation") && !ECS::GetInstance().HasComponent<AnimationComponent>(entity)) {
 			ECS::GetInstance().AddComponent(entity, AnimationComponent());
+		}
+		if (ImGui::MenuItem("State Machine") && !ECS::GetInstance().HasComponent<StateMachine>(entity)) {
+			ECS::GetInstance().AddComponent(entity, StateMachine());
+
+			auto& fsmComp = ECS::GetInstance().GetComponent<StateMachine>(entity);
+
+			// Get FSMManager system
+			auto fsmManager = ECS::GetInstance().GetSystem<StateManager>();
+			if (fsmManager)
+			{
+				// Initialize to Idle
+				fsmComp.Init(entity, &g_IdleState);
+				fsmComp.m_CurrentState = &g_IdleState;
+			}
 		}
 		// Add more component types as needed
 	}

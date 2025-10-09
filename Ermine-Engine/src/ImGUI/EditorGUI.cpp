@@ -36,6 +36,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Serialisation.h"
 #include <optional>
 #include "SceneManager.h"
+#include <imnodes.h>
 
 namespace Ermine
 {
@@ -410,6 +411,19 @@ void EditorGUI::ViewPortWindow(bool &show)
 	ImGui::End();
 }
 
+void Ermine::editor::EditorGUI::FocusWindow(const std::string& windowName)
+{
+    // Loop through all registered windows and match by name
+    for (auto& window : m_Windows)
+    {
+        if (window->Name() == windowName)
+        {
+            ImGui::SetWindowFocus(windowName.c_str());
+            return;
+        }
+    }
+}
+
 void EditorGUI::SetActiveScene(std::shared_ptr<Ermine::Scene> scene) {
     s_ActiveScene = scene;
 
@@ -479,6 +493,9 @@ void EditorGUI::Init(GLFWwindow* window)
     // Setup Platform/Renderer backends
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 460");
+
+    ImNodes::CreateContext();
+    ImNodes::StyleColorsDark();
 
     // Create Scene first
     //s_ActiveScene = std::make_unique<Scene>("Default Scene"); // Give it a name
@@ -609,6 +626,7 @@ void EditorGUI::ShutDown()
     // Cleanup
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
+    ImNodes::DestroyContext();
     ImGui::DestroyContext();
     m_Windows.clear(); // Clean up additional ImGUI windows
 }
