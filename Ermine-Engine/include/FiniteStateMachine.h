@@ -22,13 +22,6 @@ namespace Ermine
     // State Manager
     class StateManager : public System
     {
-        std::unordered_map<EntityID, StateMachine> m_StateMachines;
-        std::unordered_map<EntityID, float> m_StateTimers;
-        float m_StateDuration = 3.0f;
-
-        //IdleState g_IdleState;
-        //RoamState g_RoamState;
-
     public:
         /*!***********************************************************************
         \brief
@@ -45,41 +38,5 @@ namespace Ermine
             Free the state machine belonging to an entity.
         *************************************************************************/
         void Free(EntityID entity);
-    };
-
-    // Concrete States
-    class IdleState : public State
-    {
-    public:
-        void Enter(EntityID entity) override;
-        void Update(EntityID entity, float dt) override;
-        void Exit(EntityID entity) override;
-    };
-
-    class RoamState : public State
-    {
-        float angle = 0.0f;
-        float speed = 1.0f;
-        float radius = 3.0f;
-    public:
-        void Enter(EntityID entity) override;
-        void Update(EntityID entity, float dt) override;
-        void Exit(EntityID entity) override;
-    };
-
-    class AttackState : public State
-    {
-    public:
-        void Enter(EntityID entity) override;
-        void Update(EntityID entity, float dt) override;
-        void Exit(EntityID entity) override;
-    };
-
-    class DeadState : public State
-    {
-    public:
-        void Enter(EntityID entity) override;
-        void Update(EntityID entity, float dt) override;
-        void Exit(EntityID entity) override;
     };
 }

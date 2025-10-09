@@ -88,18 +88,18 @@ private:
         if (FAILED(hr))
             mipChain = std::move(standardized);
 
-        // Optional: Force fully opaque alpha for debug/placeholder textures
-        auto imgs = mipChain.GetImages();
-        for (size_t i = 0; i < mipChain.GetImageCount(); ++i)
-        {
-            uint32_t* pixels = reinterpret_cast<uint32_t*>(imgs[i].pixels);
-            for (size_t p = 0; p < imgs[i].width * imgs[i].height; ++p)
-            {
-                uint8_t alpha = pixels[p] >> 24;
-                if (alpha == 0)
-                    pixels[p] |= 0xFF000000;
-            }
-        }
+        //// Optional: Force fully opaque alpha for debug/placeholder textures
+        //auto imgs = mipChain.GetImages();
+        //for (size_t i = 0; i < mipChain.GetImageCount(); ++i)
+        //{
+        //    uint32_t* pixels = reinterpret_cast<uint32_t*>(imgs[i].pixels);
+        //    for (size_t p = 0; p < imgs[i].width * imgs[i].height; ++p)
+        //    {
+        //        uint8_t alpha = pixels[p] >> 24;
+        //        if (alpha == 0)
+        //            pixels[p] |= 0xFF000000;
+        //    }
+        //}
 
         // Save DDS uncompressed
         hr = SaveToDDSFile(mipChain.GetImages(), mipChain.GetImageCount(),

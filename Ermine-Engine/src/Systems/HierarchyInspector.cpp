@@ -19,12 +19,16 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "ECS.h"
 #include "GeometryFactory.h"
 #include "imgui.h"
+#include "imgui_internal.h"
 #include "Physics.h"
+#include "FiniteStateMachine.h"
+#include "FSMEditor.h"
+#include <EditorGUI.h>
 
 #include "xcore/my_properties.h"
 #include "xproperty.h"
 #include "sprop/property_sprop.h"
-#include "sprop/property_sprop_getset.h" 
+#include "sprop/property_sprop_getset.h"
 
 namespace Ermine::editor {
 

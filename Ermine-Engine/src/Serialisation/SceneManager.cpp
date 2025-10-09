@@ -37,19 +37,34 @@ namespace
         namespace fs = std::filesystem;
         std::error_code ec;
 
-        fs::path scenes = fs::absolute(fs::path("Resources") / "Scenes");
-        if (!fs::exists(scenes, ec)) fs::create_directories(scenes, ec); // best effort
+        // Get the absolute path of the solution (this file's directory)
+        fs::path exePath = fs::absolute(fs::current_path());
+        fs::path rootPath = exePath;
 
-        // Turn into an IShellItem
+        // Move up until we find the project root (with "Resources" or "premake5.lua")
+        while (!rootPath.empty() &&
+            !fs::exists(rootPath / "Resources") &&
+            !fs::exists(rootPath / "premake5.lua") &&
+            !fs::exists(rootPath / "Ermine.sln")) {
+            rootPath = rootPath.parent_path();
+        }
+
+        // Target folder
+        fs::path scenes = rootPath / "Resources" / "Scenes";
+
+        // Create it if it doesn't exist
+        if (!fs::exists(scenes, ec))
+            fs::create_directories(scenes, ec);
+
+        // Turn into an IShellItem for the file dialog
         IShellItem* folder = nullptr;
         if (SUCCEEDED(SHCreateItemFromParsingName(scenes.wstring().c_str(), nullptr, IID_PPV_ARGS(&folder)))) {
-            // Default folder when the dialog is first shown:
             dlg->SetDefaultFolder(folder);
-            // Also set current folder (useful if the dialog would otherwise restore last-used):
             dlg->SetFolder(folder);
             folder->Release();
         }
     }
+
 }
 
 std::optional<std::string> SceneManager::ShowSaveDialog(const wchar_t* defaultFileName, HWND owner) {
@@ -196,6 +211,25 @@ void SceneManager::SaveScene()
         return;
     }
     SaveSceneTo(*m_CurrentScenePath);
+}
+
+void SceneManager::SaveTemp()
+{
+    SaveSceneTo("../Temp/Temp.scene");
+}
+
+void SceneManager::LoadTemp()
+{
+    OpenScene("../Temp/Temp.scene");
+}
+
+void SceneManager::RemoveTemp()
+{
+    // Attempt to delete the file
+    int status = remove("../Temp/Temp.scene");
+    std::filesystem::remove("Temp");
+
+    EE_CORE_INFO("Removed: {}", status);
 }
 
 void SceneManager::SaveSceneAsDialog()

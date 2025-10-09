@@ -79,23 +79,8 @@ void Ermine::ViewPortGUI::Render()
 {
 }
 
-void Ermine::ViewPortGUI::Update()
+void Ermine::ViewPortGUI::TopBarSimulationControl(const ImVec2 iconSize)
 {
-	ImGui::Begin("Scene Viewer", &show);
-
-	LoadToolbarIcons();
-
-	const ImVec2 iconSize = ImVec2(28.f, 28.f);
-	const float spacing = ImGui::GetStyle().ItemSpacing.x;
-	const int buttonCount = 3;
-	const float totalWidth = buttonCount * iconSize.x + (buttonCount - 1) * spacing;
-
-	// Center horizontally
-	float availWidth = ImGui::GetContentRegionAvail().x;
-	float startOffsetX = (availWidth > totalWidth) ? (availWidth - totalWidth) * 0.5f : 0.0f;
-	float oldX = ImGui::GetCursorPosX();
-	ImGui::SetCursorPosX(oldX + startOffsetX);
-
 	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6.f, 6.f));
 	ImGui::BeginGroup();
 	{
@@ -144,26 +129,10 @@ void Ermine::ViewPortGUI::Update()
 	}
 	ImGui::EndGroup();
 	ImGui::PopStyleVar();
+}
 
-	ImGui::Separator();
-
-	EditorGUI::isPlaying = EditorGUI::s_state == EditorGUI::SimState::playing;
-
-	// Begin ImGuizmo frame
-	ImGuizmo::BeginFrame();
-	ImGuizmo::Enable(true);
-
-	// Obtain available context region in the window (viewport size)
-	ImVec2 viewport_size = ImGui::GetContentRegionAvail();
-
-	// Ensure the viewport size is within an acceptable range
-	constexpr int minSize = 1;
-	int max_size;
-	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_size);
-
-	viewport_size.x = std::clamp(viewport_size.x, static_cast<float>(minSize), static_cast<float>(max_size));
-	viewport_size.y = std::clamp(viewport_size.y, static_cast<float>(minSize), static_cast<float>(max_size));
-
+void Ermine::ViewPortGUI::FrameBufferHandler(const ImVec2& viewport_size)
+{
 	static bool first_time = true;
 	auto renderer = ECS::GetInstance().GetSystem<graphics::Renderer>();
 	if (first_time)
@@ -173,8 +142,7 @@ void Ermine::ViewPortGUI::Update()
 		first_time = false;
 	}
 
-	const auto offscreen_buffer = renderer->GetOffscreenBuffer(); // released at the end of the scope
-	if (offscreen_buffer)
+	if (const auto offscreen_buffer = renderer->GetOffscreenBuffer())
 	{
 		// Resize the offscreen buffer when viewport size changes
 		if (offscreen_buffer->width != static_cast<int>(viewport_size.x) ||
@@ -184,87 +152,27 @@ void Ermine::ViewPortGUI::Update()
 			renderer->ResizeGBuffer(static_cast<int>(viewport_size.x), static_cast<int>(viewport_size.y));
 		}
 	}
+}
 
-	// Set editor's camera viewport size
-	EditorCamera::GetInstance().SetViewportSize(viewport_size.x, viewport_size.y);
-
-	// Child region that ignores all ImGui inputs
-	ImGuiWindowFlags vpChildFlags =
-		ImGuiWindowFlags_NoNav |
-		ImGuiWindowFlags_NoScrollbar |
-		ImGuiWindowFlags_NoScrollWithMouse;
-
-	ImGui::BeginChild("SceneViewportRegion", ImVec2(0, 0), false, vpChildFlags);
-
-	// Draw the rendered scene
-	if (offscreen_buffer)
-	{
-		ImGui::Image(
-#if defined(IMGUI_IMPL_OPENGL_LOADER_GL3W) || defined(IMGUI_IMPL_OPENGL_ES2) || defined(IMGUI_IMPL_OPENGL_ES3) || defined(IMGUI_IMPL_OPENGL_LOADER_GLEW) || defined(IMGUI_IMPL_OPENGL_LOADER_GLAD)
-			(ImTextureID)(intptr_t)offscreen_buffer->ColorTexture,
-#else
-			offscreen_buffer->ColorTexture,
-#endif
-			ImGui::GetContentRegionAvail(),
-			ImVec2(0, 1), ImVec2(1, 0)
-		);
-	}
-
-	// Capture the image rect for mouse->pixel conversion
-	const ImVec2 imgMin = ImGui::GetItemRectMin();
-	const ImVec2 imgMax = ImGui::GetItemRectMax();
-	const ImVec2 imgSize = ImGui::GetItemRectSize();
-
-	// View cube (top-right corner)
-	const float pad = 10.f;
-	const ImVec2 vmSize = ImVec2(100.f, 100.f);
-	const ImVec2 vmPos = ImVec2(imgMax.x - vmSize.x - pad, imgMin.y + pad);
-	const ImVec2 vmPosBR = ImVec2(vmPos.x + vmSize.x, vmPos.y + vmSize.y);
-
-	const bool overViewCube = ImGui::IsMouseHoveringRect(vmPos, vmPosBR, false);
-
-	EntityID selectedEntity{};
-	//selectedEntity = ref_Inspector->GetEntity();
-	selectedEntity = SceneManager::GetInstance().GetActiveScene()->GetSelectedEntity();
-
-	// Keyboard shortcuts for gizmo
-	static ImGuizmo::OPERATION gOperation = ImGuizmo::TRANSLATE;
-	static ImGuizmo::MODE gMode = ImGuizmo::LOCAL;
-
-	const ImGuiHoveredFlags hovFlags =
-		ImGuiHoveredFlags_AllowWhenBlockedByActiveItem |
-		ImGuiHoveredFlags_AllowWhenOverlappedByWindow |
-		ImGuiHoveredFlags_AllowWhenOverlappedByItem;
-
-	const bool viewportHovered = ImGui::IsItemHovered(hovFlags);
-	const bool viewportFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_None);
-
-	// Set manipulation mode based on keyboard shortcuts
-	if (viewportFocused && viewportHovered && !EditorGUI::isPlaying && !Input::IsMouseButtonDownEditor(GLFW_MOUSE_BUTTON_RIGHT))
-	{
-		if (Input::IsKeyPressedEditor(GLFW_KEY_W)) gOperation = ImGuizmo::TRANSLATE;
-		if (Input::IsKeyPressedEditor(GLFW_KEY_E)) gOperation = ImGuizmo::ROTATE;
-		if (Input::IsKeyPressedEditor(GLFW_KEY_R)) gOperation = ImGuizmo::SCALE;
-		if (Input::IsKeyPressedEditor(GLFW_KEY_Q)) gMode = gMode == ImGuizmo::LOCAL ? ImGuizmo::WORLD : ImGuizmo::LOCAL;
-	}
-
+void Ermine::ViewPortGUI::OverlayGizmoOperation(const ImVec2& imgMin, const ImGuizmo::OPERATION& gOperation, const ImGuizmo::MODE& gMode)
+{
 	// Overlay current gizmo operation/mode
 	{
 		auto OpToString = [](ImGuizmo::OPERATION op) -> const char*
+		{
+			switch (op)
 			{
-				switch (op)
-				{
-				case ImGuizmo::TRANSLATE: return "Translate";
-				case ImGuizmo::ROTATE: return "Rotate";
-				case ImGuizmo::SCALE: return "Scale";
-				default: return "Unknown";
-				}
-			};
+			case ImGuizmo::TRANSLATE: return "Translate";
+			case ImGuizmo::ROTATE: return "Rotate";
+			case ImGuizmo::SCALE: return "Scale";
+			default: return "Unknown";
+			}
+		};
 
 		auto ModeToString = [](ImGuizmo::MODE m) -> const char*
-			{
-				return (m == ImGuizmo::LOCAL) ? "Local" : "World";
-			};
+		{
+			return (m == ImGuizmo::LOCAL) ? "Local" : "World";
+		};
 
 		const char* opText = OpToString(gOperation);
 		const char* modeText = ModeToString(gMode);
@@ -277,12 +185,15 @@ void Ermine::ViewPortGUI::Update()
 		const ImVec2 textSize = ImGui::CalcTextSize(label);
 		const ImVec2 boxPos = ImVec2(imgMin.x + 8.f, imgMin.y + 8.f);
 		const ImVec2 boxMax = ImVec2(boxPos.x + textSize.x + padPx.x * 2.f,
-			boxPos.y + textSize.y * 2.f + padPx.y * 2.f);
+		                             boxPos.y + textSize.y * 2.f + padPx.y * 2.f);
 
 		dl->AddRectFilled(boxPos, boxMax, IM_COL32(0, 0, 0, 160), 4.0f);
 		dl->AddText(ImVec2(boxPos.x + padPx.x, boxPos.y + padPx.y), IM_COL32(255, 255, 255, 255), label);
 	}
+}
 
+void Ermine::ViewPortGUI::FocusOnSelected(const Ermine::EntityID& selectedEntity, const bool& viewportHovered, const bool& viewportFocused)
+{
 	// Focus camera on selected entity (F key)
 	if (viewportFocused && viewportHovered && !EditorGUI::isPlaying && Input::IsKeyPressedEditor(GLFW_KEY_F))
 	{
@@ -293,18 +204,19 @@ void Ermine::ViewPortGUI::Update()
 			EditorCamera::GetInstance().Focus(tr.position, 2.5f); // TODO: Lerp for smoother transition
 		}
 	}
+}
 
-	// Orbit around pivot
-	static bool s_orbiting = false;
+void Ermine::ViewPortGUI::CameraControls(const bool& overViewCube, const Ermine::EntityID& selectedEntity, const bool& viewportHovered, bool& s_orbiting)
+{
 	static ImVec2 s_lastMouse = ImVec2(0, 0);
 	static Vector3D s_pivot = Vector3D(0.0f, 0.0f, 0.0f);
 	static float s_distance = 5.0f;
 
 	const bool altDown = Input::IsKeyDownEditor(GLFW_KEY_LEFT_ALT);
-	const bool rightMouseDown = Input::IsMouseButtonDownEditor(GLFW_MOUSE_BUTTON_RIGHT);
+	const bool MouseDown = Input::IsMouseButtonDownEditor(GLFW_MOUSE_BUTTON_LEFT);
 
 	// Orbit controls
-	if (viewportHovered && !EditorGUI::isPlaying && altDown && rightMouseDown && !overViewCube)
+	if (viewportHovered && !EditorGUI::isPlaying && altDown && MouseDown && !overViewCube)
 	{
 		ImGuiIO& io = ImGui::GetIO();
 		if (!s_orbiting)
@@ -353,7 +265,11 @@ void Ermine::ViewPortGUI::Update()
 			EditorCamera::GetInstance().ProcessScrollWheel(Input::GetMouseScrollOffsetEditor());
 		}
 	}
+}
 
+void Ermine::ViewPortGUI::ObjectPicking(const std::shared_ptr<Ermine::graphics::Renderer::OffscreenBuffer>& offscreen_buffer, const ImVec2& imgMin, const ImVec2
+                                        & imgSize, const bool& overViewCube, bool s_orbiting)
+{
 	// Left-click within the image, perform picking
 	if (!EditorGUI::isPlaying && ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
 	{
@@ -371,7 +287,7 @@ void Ermine::ViewPortGUI::Update()
 
 				const int px = static_cast<int>(u * offscreen_buffer->width);
 				const int py = static_cast<int>((1.0f - v) * offscreen_buffer->height);
-				auto [hit, entity] = renderer->PickEntityAt(std::clamp(px, 0, offscreen_buffer->width - 1),
+				auto [hit, entity] = ECS::GetInstance().GetSystem<graphics::Renderer>()->PickEntityAt(std::clamp(px, 0, offscreen_buffer->width - 1),
 					std::clamp(py, 0, offscreen_buffer->height - 1),
 					EditorCamera::GetInstance().GetViewMatrix(),
 					EditorCamera::GetInstance().GetProjectionMatrix());
@@ -381,7 +297,11 @@ void Ermine::ViewPortGUI::Update()
 			}
 		}
 	}
+}
 
+void Ermine::ViewPortGUI::GizmoOverlay(const ImVec2& imgMin, const ImVec2& imgSize, const ImVec2& vmSize, const ImVec2& vmPos, const Ermine::EntityID&
+                                       selectedEntity, ImGuizmo::OPERATION& gOperation, ImGuizmo::MODE& gMode)
+{
 	const Mtx44& v = EditorCamera::GetInstance().GetViewMatrix();
 	const Mtx44& p = EditorCamera::GetInstance().GetProjectionMatrix();
 
@@ -478,7 +398,7 @@ void Ermine::ViewPortGUI::Update()
 					if (!glm::epsilonEqual(a[c][r], b[c][r], eps))
 						return true;
 			return false;
-			};
+		};
 
 		if (matChanged(viewBefore, viewEdit))
 		{
@@ -494,6 +414,122 @@ void Ermine::ViewPortGUI::Update()
 			EditorCamera::GetInstance().SetYawPitch(yaw, pitch);
 		}
 	}
+}
+
+void Ermine::ViewPortGUI::Update()
+{
+	ImGui::Begin("Scene Viewer", &show);
+
+	LoadToolbarIcons();
+
+	const ImVec2 iconSize = ImVec2(28.f, 28.f);
+	const float spacing = ImGui::GetStyle().ItemSpacing.x;
+	const int buttonCount = 3;
+	const float totalWidth = buttonCount * iconSize.x + (buttonCount - 1) * spacing;
+
+	// Center horizontally
+	float availWidth = ImGui::GetContentRegionAvail().x;
+	float startOffsetX = (availWidth > totalWidth) ? (availWidth - totalWidth) * 0.5f : 0.0f;
+	float oldX = ImGui::GetCursorPosX();
+	ImGui::SetCursorPosX(oldX + startOffsetX);
+
+	TopBarSimulationControl(iconSize);
+
+	ImGui::Separator();
+
+	EditorGUI::isPlaying = EditorGUI::s_state == EditorGUI::SimState::playing;
+
+	// Begin ImGuizmo frame
+	ImGuizmo::BeginFrame();
+	ImGuizmo::Enable(true);
+
+	// Obtain available context region in the window (viewport size)
+	ImVec2 viewport_size = ImGui::GetContentRegionAvail();
+
+	// Ensure the viewport size is within an acceptable range
+	constexpr int minSize = 1;
+	int max_size;
+	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_size);
+
+	viewport_size.x = std::clamp(viewport_size.x, static_cast<float>(minSize), static_cast<float>(max_size));
+	viewport_size.y = std::clamp(viewport_size.y, static_cast<float>(minSize), static_cast<float>(max_size));
+
+	FrameBufferHandler(viewport_size);
+	const auto offscreen_buffer = ECS::GetInstance().GetSystem<graphics::Renderer>()->GetOffscreenBuffer();
+
+	// Set editor's camera viewport size
+	EditorCamera::GetInstance().SetViewportSize(viewport_size.x, viewport_size.y);
+
+	// Child region that ignores all ImGui inputs
+	ImGuiWindowFlags vpChildFlags =
+		ImGuiWindowFlags_NoNav |
+		ImGuiWindowFlags_NoScrollbar |
+		ImGuiWindowFlags_NoScrollWithMouse;
+
+	ImGui::BeginChild("SceneViewportRegion", ImVec2(0, 0), false, vpChildFlags);
+
+	// Draw the rendered scene
+	if (offscreen_buffer)
+	{
+		ImGui::Image(
+#if defined(IMGUI_IMPL_OPENGL_LOADER_GL3W) || defined(IMGUI_IMPL_OPENGL_ES2) || defined(IMGUI_IMPL_OPENGL_ES3) || defined(IMGUI_IMPL_OPENGL_LOADER_GLEW) || defined(IMGUI_IMPL_OPENGL_LOADER_GLAD)
+			(ImTextureID)(intptr_t)offscreen_buffer->ColorTexture,
+#else
+			offscreen_buffer->ColorTexture,
+#endif
+			ImGui::GetContentRegionAvail(),
+			ImVec2(0, 1), ImVec2(1, 0)
+		);
+	}
+
+	// Capture the image rect for mouse->pixel conversion
+	const ImVec2 imgMin = ImGui::GetItemRectMin();
+	const ImVec2 imgMax = ImGui::GetItemRectMax();
+	const ImVec2 imgSize = ImGui::GetItemRectSize();
+
+	// View cube (top-right corner)
+	const float pad = 10.f;
+	const ImVec2 vmSize = ImVec2(100.f, 100.f);
+	const ImVec2 vmPos = ImVec2(imgMax.x - vmSize.x - pad, imgMin.y + pad);
+	const ImVec2 vmPosBR = ImVec2(vmPos.x + vmSize.x, vmPos.y + vmSize.y);
+
+	const bool overViewCube = ImGui::IsMouseHoveringRect(vmPos, vmPosBR, false);
+
+	EntityID selectedEntity{};
+	//selectedEntity = ref_Inspector->GetEntity();
+	selectedEntity = SceneManager::GetInstance().GetActiveScene()->GetSelectedEntity();
+
+	// Keyboard shortcuts for gizmo
+	static ImGuizmo::OPERATION gOperation = ImGuizmo::TRANSLATE;
+	static ImGuizmo::MODE gMode = ImGuizmo::LOCAL;
+
+	const ImGuiHoveredFlags hovFlags =
+		ImGuiHoveredFlags_AllowWhenBlockedByActiveItem |
+		ImGuiHoveredFlags_AllowWhenOverlappedByWindow |
+		ImGuiHoveredFlags_AllowWhenOverlappedByItem;
+
+	const bool viewportHovered = ImGui::IsItemHovered(hovFlags);
+	const bool viewportFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_None);
+
+	// Set manipulation mode based on keyboard shortcuts
+	if (viewportFocused && viewportHovered && !EditorGUI::isPlaying && !Input::IsMouseButtonDownEditor(GLFW_MOUSE_BUTTON_RIGHT))
+	{
+		if (Input::IsKeyPressedEditor(GLFW_KEY_W)) gOperation = ImGuizmo::TRANSLATE;
+		if (Input::IsKeyPressedEditor(GLFW_KEY_E)) gOperation = ImGuizmo::ROTATE;
+		if (Input::IsKeyPressedEditor(GLFW_KEY_R)) gOperation = ImGuizmo::SCALE;
+		if (Input::IsKeyPressedEditor(GLFW_KEY_Q)) gMode = gMode == ImGuizmo::LOCAL ? ImGuizmo::WORLD : ImGuizmo::LOCAL;
+	}
+
+	OverlayGizmoOperation(imgMin, gOperation, gMode);
+
+	FocusOnSelected(selectedEntity, viewportHovered, viewportFocused);
+
+	static bool s_orbiting = false;
+	CameraControls(overViewCube, selectedEntity, viewportHovered, s_orbiting);
+
+	ObjectPicking(offscreen_buffer, imgMin, imgSize, overViewCube, s_orbiting);
+
+	GizmoOverlay(imgMin, imgSize, vmSize, vmPos, selectedEntity, gOperation, gMode);
 
 	ImGui::EndChild();
 

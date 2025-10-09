@@ -36,6 +36,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Serialisation.h"
 #include <optional>
 #include "SceneManager.h"
+#include <imnodes.h>
 
 namespace Ermine
 {
@@ -50,7 +51,7 @@ using namespace Ermine::editor;
 
 // Definition for static member m_Windows, for ImGUI Windows
 std::vector<std::unique_ptr<Ermine::ImGUIWindow>>EditorGUI::m_Windows;
-bool Ermine::editor::EditorGUI::isPlaying = false; // TODO: tied to Play/Stop toolbar state.
+bool EditorGUI::isPlaying = false; // tied to Play/Stop toolbar state.
 
 std::shared_ptr<Ermine::Scene> EditorGUI::s_ActiveScene = nullptr; 
 std::unique_ptr<Ermine::HierarchyPanel> Ermine::editor::EditorGUI::s_HierarchyPanel = nullptr;
@@ -163,8 +164,6 @@ void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
 		if (ImGui::MenuItem("Undo", "Ctrl+Z"))
 		{
 			EE_CORE_INFO("Undo clicked");
-            ECS::GetInstance().ClearAllEntities();
-            ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
 			// Code to undo
 		}
 		if (ImGui::MenuItem("Redo", "Ctrl+Y"))
@@ -412,6 +411,19 @@ void EditorGUI::ViewPortWindow(bool &show)
 	ImGui::End();
 }
 
+void Ermine::editor::EditorGUI::FocusWindow(const std::string& windowName)
+{
+    // Loop through all registered windows and match by name
+    for (auto& window : m_Windows)
+    {
+        if (window->Name() == windowName)
+        {
+            ImGui::SetWindowFocus(windowName.c_str());
+            return;
+        }
+    }
+}
+
 void EditorGUI::SetActiveScene(std::shared_ptr<Ermine::Scene> scene) {
     s_ActiveScene = scene;
 
@@ -481,6 +493,9 @@ void EditorGUI::Init(GLFWwindow* window)
     // Setup Platform/Renderer backends
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 460");
+
+    ImNodes::CreateContext();
+    ImNodes::StyleColorsDark();
 
     // Create Scene first
     //s_ActiveScene = std::make_unique<Scene>("Default Scene"); // Give it a name
@@ -611,6 +626,7 @@ void EditorGUI::ShutDown()
     // Cleanup
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
+    ImNodes::DestroyContext();
     ImGui::DestroyContext();
     m_Windows.clear(); // Clean up additional ImGUI windows
 }

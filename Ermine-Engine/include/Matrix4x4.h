@@ -381,16 +381,16 @@ namespace Ermine
         return deg * (static_cast<float>(M_PI) / 180.0f);
     }
     /*!*************************************************************************
-      \brief
-        Creates a quaternion from Euler angles given in degrees.
-      \param[in] pitch
-        Rotation about X-axis in degrees.
-      \param[in] yaw
-        Rotation about Y-axis in degrees.
-      \param[in] roll
-        Rotation about Z-axis in degrees.
-      \return
-        The resulting quaternion.
+	  \brief
+	    Creates a quaternion from Euler angles given in degrees.
+	  \param[in] pitch
+	    Rotation about X-axis in degrees.
+	  \param[in] yaw
+	    Rotation about Y-axis in degrees.
+	  \param[in] roll
+	    Rotation about Z-axis in degrees.
+	  \return
+	    The resulting quaternion.
     ***************************************************************************/
     Quaternion FromEulerDegrees(float pitch, float yaw, float roll);
 
@@ -417,6 +417,16 @@ namespace Ermine
      The product of the two quaternions.
     *************************************************************************/
     Quaternion operator*(const Quaternion& lhs, const Quaternion& rhs);
+
+    /*!*************************************************************************
+      \brief
+        Creates a quaternion from Euler angles given in degrees.
+      \param[in] eulerDeg
+        Rotation about (X, Y, Z) axes in degrees.
+      \return
+		The resulting quaternion.
+	***************************************************************************/
+	Quaternion FromEulerDegrees(const Vec3& eulerDeg);
 
     /*!*************************************************************************
       \brief
