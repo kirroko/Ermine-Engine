@@ -32,6 +32,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Scene.h"
 #include "SceneManager.h"
 
+#include "TransformMode.h"
+
 using namespace Ermine::editor;
 
 EditorGUI::SimState EditorGUI::s_state = SimState::stopped;
