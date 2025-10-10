@@ -189,41 +189,23 @@ namespace Ermine {
                 EntityID droppedEntity = *(EntityID*)payload->Data;
 
                 if (droppedEntity != entity) {
-                    auto& parentMeta = ECS::GetInstance().GetComponent<ObjectMetaData>(entity);
-                    auto& childMeta = ECS::GetInstance().GetComponent<ObjectMetaData>(droppedEntity);
+                    if (auto hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>()) {
+                        if (!hierarchySystem->WouldCreateCycle(droppedEntity, entity)) {
 
-                    // ONLY log if both entities are either Cube or Sphere
-                    bool isCubeOrSphere = (parentMeta.name.find("Cube") != std::string::npos ||
-                        parentMeta.name.find("Sphere") != std::string::npos) &&
-                        (childMeta.name.find("Cube") != std::string::npos ||
-                            childMeta.name.find("Sphere") != std::string::npos);
+                            // STORE current world position before any changes
+                            Vec3 childWorldPos = hierarchySystem->GetWorldPosition(droppedEntity);
 
-                    if (isCubeOrSphere) {
-                        EE_CORE_INFO("=== Cube/Sphere Parenting ===");
-                        if (auto hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>()) {
-                            if (!hierarchySystem->WouldCreateCycle(droppedEntity, entity)) {
-                                // Log initial state
-                                const auto& childTransform = ECS::GetInstance().GetComponent<Transform>(droppedEntity);
-                                EE_CORE_INFO("{} (Child) before parenting:", childMeta.name);
-                                EE_CORE_INFO("Position: {},{},{}",
-                                    childTransform.position.x,
-                                    childTransform.position.y,
-                                    childTransform.position.z);
+                            EE_CORE_INFO("=== Drag-Drop Parenting ===");
+                            EE_CORE_INFO("Child world pos before: ({:.3f}, {:.3f}, {:.3f})",
+                                childWorldPos.x, childWorldPos.y, childWorldPos.z);
 
-                                // Do the parenting
-                                hierarchySystem->SetParent(droppedEntity, entity);
-                                hierarchySystem->MarkDirty(entity);
-                                hierarchySystem->MarkDirty(droppedEntity);
+                            // Do the parenting (this will preserve world position)
+                            hierarchySystem->SetParent(droppedEntity, entity, true);
 
-                                // Log after parenting
-                                const auto& updatedTransform = ECS::GetInstance().GetComponent<Transform>(droppedEntity);
-                                EE_CORE_INFO("{} is now child of {}", childMeta.name, parentMeta.name);
-                                EE_CORE_INFO("New Position: {},{},{}",
-                                    updatedTransform.position.x,
-                                    updatedTransform.position.y,
-                                    updatedTransform.position.z);
-                                EE_CORE_INFO("Is Transform Dirty: {}", updatedTransform.isDirty);
-                            }
+                            // Verify world position is preserved
+                            Vec3 newWorldPos = hierarchySystem->GetWorldPosition(droppedEntity);
+                            EE_CORE_INFO("Child world pos after: ({:.3f}, {:.3f}, {:.3f})",
+                                newWorldPos.x, newWorldPos.y, newWorldPos.z);
                         }
                     }
                 }
