@@ -354,6 +354,7 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClInclude Include="include\States.h" />
     <ClInclude Include="include\Systems.h" />
     <ClInclude Include="include\Texture.h" />
+    <ClInclude Include="include\TransformMode.h" />
     <ClInclude Include="include\VertexArray.h" />
     <ClInclude Include="include\VertexBuffer.h" />
     <ClInclude Include="include\ViewPortGUI.h" />
@@ -411,6 +412,7 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClCompile Include="src\Systems\HierarchyInspector.cpp" />
     <ClCompile Include="src\Systems\HierarchyPanel.cpp" />
     <ClCompile Include="src\Systems\HierarchySystem.cpp" />
+    <ClCompile Include="src\Systems\TransformMode.cpp" />
     <ClCompile Include="src\Utility\EditorCamera.cpp" />
     <ClCompile Include="src\Utility\FrameController.cpp" />
     <ClCompile Include="src\Utility\GPUProfiler.cpp" />

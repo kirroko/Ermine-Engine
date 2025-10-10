@@ -253,6 +253,7 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\States.h" />
+    <ClInclude Include="include\TransformMode.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\AssetBrowser\AssetBrowser.cpp">
@@ -418,6 +419,7 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\FSM\States.cpp" />
+    <ClCompile Include="src\Systems\TransformMode.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="include\Component.tpp">
