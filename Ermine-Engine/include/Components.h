@@ -43,6 +43,81 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #include "State.h"
 
+namespace xprop_utils
+{
+	// Convert any xproperty-reflected object to JSON
+	template<typename T, typename Alloc>
+	void SerializeToJson(const T& obj, rapidjson::Value& out, Alloc& alloc)
+	{
+		out.SetObject();
+		xproperty::settings::context ctx{};
+		xproperty::sprop::container bag;
+		xproperty::sprop::collector collect(obj, bag, ctx, true);
+
+		for (auto& p : bag.m_Properties)
+		{
+			std::string key = p.m_Path.substr(p.m_Path.find_last_of('/') + 1);
+			rapidjson::Value keyVal;
+			keyVal.SetString(key.c_str(), (rapidjson::SizeType)key.size(), alloc);
+
+			const auto guid = p.m_Value.getTypeGuid();
+
+			// Serialize by GUID type
+			if (guid == xproperty::settings::var_type<std::string>::guid_v)
+			{
+				const std::string& s = p.m_Value.get<std::string>();
+				rapidjson::Value val;
+				val.SetString(s.c_str(), (rapidjson::SizeType)s.size(), alloc);
+				out.AddMember(keyVal, val, alloc);
+			}
+			else if (guid == xproperty::settings::var_type<bool>::guid_v)
+				out.AddMember(keyVal, p.m_Value.get<bool>(), alloc);
+			else if (guid == xproperty::settings::var_type<float>::guid_v)
+				out.AddMember(keyVal, p.m_Value.get<float>(), alloc);
+			else if (guid == xproperty::settings::var_type<int>::guid_v)
+				out.AddMember(keyVal, p.m_Value.get<int>(), alloc);
+			else if (guid == xproperty::settings::var_type<Ermine::Vec3>::guid_v)
+				out.AddMember(keyVal, Vec3ToJson(p.m_Value.get<Ermine::Vec3>(), alloc), alloc);
+			else if (guid == xproperty::settings::var_type<Ermine::Quaternion>::guid_v)
+				out.AddMember(keyVal, QuatToJson(p.m_Value.get<Ermine::Quaternion>(), alloc), alloc);
+		}
+	}
+
+	// Deserialize back into any reflected type
+	template<typename T>
+	void DeserializeFromJson(T& obj, const rapidjson::Value& in)
+	{
+		if (!in.IsObject()) return;
+		xproperty::settings::context ctx{};
+		xproperty::sprop::container bag;
+		xproperty::sprop::collector collect(obj, bag, ctx, true);
+		std::string err;
+
+		for (auto& p : bag.m_Properties)
+		{
+			std::string key = p.m_Path.substr(p.m_Path.find_last_of('/') + 1);
+			if (!in.HasMember(key.c_str())) continue;
+			const auto& v = in[key.c_str()];
+			const auto guid = p.m_Value.getTypeGuid();
+
+			if (guid == xproperty::settings::var_type<std::string>::guid_v && v.IsString())
+				p.m_Value.set<std::string>(v.GetString());
+			else if (guid == xproperty::settings::var_type<bool>::guid_v && v.IsBool())
+				p.m_Value.set<bool>(v.GetBool());
+			else if (guid == xproperty::settings::var_type<float>::guid_v && v.IsNumber())
+				p.m_Value.set<float>(v.GetFloat());
+			else if (guid == xproperty::settings::var_type<int>::guid_v && v.IsInt())
+				p.m_Value.set<int>(v.GetInt());
+			else if (guid == xproperty::settings::var_type<Ermine::Vec3>::guid_v && v.IsArray() && v.Size() == 3)
+				p.m_Value.set<Ermine::Vec3>(Ermine::Vec3(v[0].GetFloat(), v[1].GetFloat(), v[2].GetFloat()));
+			else if (guid == xproperty::settings::var_type<Ermine::Quaternion>::guid_v && v.IsArray() && v.Size() == 4)
+				p.m_Value.set<Ermine::Quaternion>(Ermine::Quaternion(v[0].GetFloat(), v[1].GetFloat(), v[2].GetFloat(), v[3].GetFloat()));
+
+			xproperty::sprop::setProperty(err, obj, p, ctx);
+		}
+	}
+}
+
 namespace Ermine
 {
 	inline Vec3 JsonToVec3(const rapidjson::Value& a) {
@@ -110,40 +185,19 @@ namespace Ermine
 		{
 		}
 
+		//static inline std::string ShortNameFromPath(const std::string& path)
+		//{
+		//	const size_t pos = path.find_last_of('/');
+		//	return (pos == std::string::npos) ? path : path.substr(pos + 1);
+		//}
+
 		template<typename Alloc>
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
-			out.SetObject();
-
-			out.AddMember("position", Vec3ToJson(position, alloc), alloc);
-			out.AddMember("rotation", QuatToJson(rotation, alloc), alloc);
-			out.AddMember("scale", Vec3ToJson(scale, alloc), alloc);
+			xprop_utils::SerializeToJson(*this, out, alloc);
 		}
 
 		void Deserialize(const rapidjson::Value& in) {
-			//auto json_to_vec3 = [&](const rapidjson::Value& arr) {
-			//	return Vector3D(arr[0].GetFloat(), arr[1].GetFloat(), arr[2].GetFloat());
-			//	};
-
-			if (in.HasMember("position") && in["position"].IsArray() && in["position"].Size() == 3)
-				position = JsonToVec3(in["position"]);
-
-			if (in.HasMember("scale") && in["scale"].IsArray() && in["scale"].Size() == 3)
-				scale = JsonToVec3(in["scale"]);
-
-			if (in.HasMember("rotation") && in["rotation"].IsArray()) {
-				const auto& r = in["rotation"];
-				if (r.Size() == 4) {
-					// Expecting [w, x, y, z]
-					rotation.w = r[0].GetFloat();
-					rotation.x = r[1].GetFloat();
-					rotation.y = r[2].GetFloat();
-					rotation.z = r[3].GetFloat();
-				}
-				else if (r.Size() == 3) {
-					Vec3 eulerDeg = JsonToVec3(r);
-					rotation = FromEulerDegrees(eulerDeg);
-				}
-			}
+			xprop_utils::DeserializeFromJson(*this, in);
 		}
 
 		XPROPERTY_DEF(
@@ -214,16 +268,11 @@ namespace Ermine
 
 		template<typename Alloc>
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
-			out.SetObject();
-			out.AddMember("name", rapidjson::Value(name.c_str(), alloc), alloc);
-			out.AddMember("tag", rapidjson::Value(tag.c_str(), alloc), alloc);
-			out.AddMember("active", selfActive, alloc);
+			xprop_utils::SerializeToJson(*this, out, alloc);
 		}
 
 		void Deserialize(const rapidjson::Value& in) {
-			if (in.HasMember("name") && in["name"].IsString())   name = in["name"].GetString();
-			if (in.HasMember("tag") && in["tag"].IsString())    tag = in["tag"].GetString();
-			if (in.HasMember("active") && in["active"].IsBool()) selfActive = in["active"].GetBool();
+			xprop_utils::DeserializeFromJson(*this, in);
 		}
 
 		XPROPERTY_DEF(
@@ -1174,39 +1223,14 @@ namespace Ermine
 			splitDepths{}
 		{
 		}
+
 		template<typename Alloc>
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
-			out.SetObject();
-
-			auto vec3_to_json = [&](const Vec3& v) {
-				rapidjson::Value a(rapidjson::kArrayType);
-				a.PushBack(v.x, alloc).PushBack(v.y, alloc).PushBack(v.z, alloc);
-				return a;
-				};
-
-			out.AddMember("color", vec3_to_json(color), alloc);
-			out.AddMember("intensity", intensity, alloc);
-			out.AddMember("type", static_cast<int>(type), alloc);          // 0=POINT,1=DIR,2=SPOT
-			out.AddMember("castsShadows", castsShadows, alloc);
+			xprop_utils::SerializeToJson(*this, out, alloc);
 		}
 
 		void Deserialize(const rapidjson::Value& in) {
-			auto json_to_vec3 = [&](const rapidjson::Value& arr) {
-				return Vec3(arr[0].GetFloat(), arr[1].GetFloat(), arr[2].GetFloat());
-				};
-
-			if (in.HasMember("color") && in["color"].IsArray() && in["color"].Size() == 3)
-				color = json_to_vec3(in["color"]);
-			if (in.HasMember("intensity") && in["intensity"].IsNumber())
-				intensity = in["intensity"].GetFloat();
-			if (in.HasMember("type") && in["type"].IsInt()) {
-				int t = in["type"].GetInt();
-				if (t == 1) type = LightType::DIRECTIONAL;
-				else if (t == 2) type = LightType::SPOT;
-				else             type = LightType::POINT;
-			}
-			if (in.HasMember("castsShadows") && in["castsShadows"].IsBool())
-				castsShadows = in["castsShadows"].GetBool();
+			xprop_utils::DeserializeFromJson(*this, in);
 		}
 
 		XPROPERTY_DEF(
@@ -1505,54 +1529,13 @@ namespace Ermine
 			eventName(event), is3D(false), volume(0.5f) {
 		} // Events typically handle their own 3D settings
 
-		template <typename Alloc>
+		template<typename Alloc>
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
-			out.SetObject();
-			out.AddMember("soundName", rapidjson::Value(soundName.c_str(), alloc), alloc);
-			out.AddMember("eventName", rapidjson::Value(eventName.c_str(), alloc), alloc);
-			out.AddMember("is3D", is3D, alloc);
-			out.AddMember("isLooping", isLooping, alloc);
-			out.AddMember("isStreaming", isStreaming, alloc);
-			out.AddMember("volume", volume, alloc);
-			out.AddMember("followTransform", followTransform, alloc);
-			out.AddMember("minDistance", minDistance, alloc);
-			out.AddMember("maxDistance", maxDistance, alloc);
-
-			rapidjson::Value params(rapidjson::kObjectType);
-
-			for (const auto& kv : eventParameters) {
-				// key
-				rapidjson::Value key;
-				key.SetString(kv.first.c_str(),
-					static_cast<rapidjson::SizeType>(kv.first.size()),
-					alloc);
-
-				// value (float/double)
-				rapidjson::Value val;
-				val.SetFloat(kv.second);              // or: val.SetDouble(static_cast<double>(kv.second));
-
-				// Add (moves key and val into the object)
-				params.AddMember(key, val, alloc);
-			}
-
-			out.AddMember(rapidjson::StringRef("eventParameters"), params, alloc);
+			xprop_utils::SerializeToJson(*this, out, alloc);
 		}
+
 		void Deserialize(const rapidjson::Value& in) {
-			if (in.HasMember("soundName") && in["soundName"].IsString()) soundName = in["soundName"].GetString();
-			if (in.HasMember("eventName") && in["eventName"].IsString()) eventName = in["eventName"].GetString();
-			if (in.HasMember("is3D")) is3D = in["is3D"].GetBool();
-			if (in.HasMember("isLooping")) isLooping = in["isLooping"].GetBool();
-			if (in.HasMember("isStreaming")) isStreaming = in["isStreaming"].GetBool();
-			if (in.HasMember("volume")) volume = in["volume"].GetFloat();
-			if (in.HasMember("followTransform")) followTransform = in["followTransform"].GetBool();
-			if (in.HasMember("minDistance")) minDistance = in["minDistance"].GetFloat();
-			if (in.HasMember("maxDistance")) maxDistance = in["maxDistance"].GetFloat();
-			eventParameters.clear();
-			if (in.HasMember("eventParameters") && in["eventParameters"].IsObject()) {
-				for (auto it = in["eventParameters"].MemberBegin(); it != in["eventParameters"].MemberEnd(); ++it)
-					if (it->value.IsNumber()) eventParameters[it->name.GetString()] = it->value.GetFloat();
-			}
-			channelId = -1; isPlaying = false; shouldPlay = shouldStop = false;
+			xprop_utils::DeserializeFromJson(*this, in);
 		}
 
 		XPROPERTY_DEF(
@@ -1613,6 +1596,14 @@ namespace Ermine
 		std::string textureName = "../Resources/Textures/greybox_light_solid.png";
 		float timeAccumulator = 0.0f;
 
+		template<typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
+			xprop_utils::SerializeToJson(*this, out, alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in) {
+			xprop_utils::DeserializeFromJson(*this, in);
+		}
 		
 		XPROPERTY_DEF(
 			"ParticleEmitterComponent", ParticleEmitter,
@@ -1723,65 +1714,13 @@ namespace Ermine
 		{
 		}
 
-		template <typename Alloc>
+		template<typename Alloc>
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
-			out.SetObject();
-			const char* body = (bodyType == PhysicsBodyType::Trigger ? "Trigger" : "Rigid");
-			out.AddMember("bodyType", rapidjson::Value(body, alloc), alloc);
-
-			const char* motion = "Static";
-			if (motionType == JPH::EMotionType::Kinematic) motion = "Kinematic";
-			else if (motionType == JPH::EMotionType::Dynamic) motion = "Dynamic";
-			out.AddMember("motionType", rapidjson::Value(motion, alloc), alloc);
-
-			out.AddMember("mass", mass, alloc);
-
-			static const char* shapeNames[] = { "Box", "Sphere", "Capsule", "CustomMesh" };
-			out.AddMember("shapeType", rapidjson::Value(shapeNames[(int)shapeType], alloc), alloc);
-
-			if (shapeType == ShapeType::CustomMesh) {
-				rapidjson::Value verts(rapidjson::kArrayType);
-				verts.Reserve(static_cast<rapidjson::SizeType>(customMeshVertices.size()), alloc);
-				for (const auto& v : customMeshVertices) {
-					rapidjson::Value arr(rapidjson::kArrayType);
-					arr.PushBack(v.x, alloc).PushBack(v.y, alloc).PushBack(v.z, alloc);
-					verts.PushBack(arr, alloc);
-				}
-				out.AddMember("customVertices", verts, alloc);
-			}
+			xprop_utils::SerializeToJson(*this, out, alloc);
 		}
 
 		void Deserialize(const rapidjson::Value& in) {
-			if (in.HasMember("bodyType") && in["bodyType"].IsString())
-				bodyType = (std::strcmp(in["bodyType"].GetString(), "Trigger") == 0) ? PhysicsBodyType::Trigger : PhysicsBodyType::Rigid;
-
-			if (in.HasMember("motionType") && in["motionType"].IsString()) {
-				auto s = in["motionType"].GetString();
-				if (std::strcmp(s, "Kinematic") == 0) motionType = JPH::EMotionType::Kinematic;
-				else if (std::strcmp(s, "Dynamic") == 0) motionType = JPH::EMotionType::Dynamic;
-				else motionType = JPH::EMotionType::Static;
-			}
-
-			if (in.HasMember("mass") && in["mass"].IsNumber())
-				mass = in["mass"].GetFloat();
-
-			if (in.HasMember("shapeType") && in["shapeType"].IsString()) {
-				auto s = in["shapeType"].GetString();
-				if (std::strcmp(s, "Box") == 0) shapeType = ShapeType::Box;
-				else if (std::strcmp(s, "Sphere") == 0) shapeType = ShapeType::Sphere;
-				else if (std::strcmp(s, "Capsule") == 0) shapeType = ShapeType::Capsule;
-				else shapeType = ShapeType::CustomMesh;
-			}
-
-			customMeshVertices.clear();
-			if (shapeType == ShapeType::CustomMesh && in.HasMember("customVertices") && in["customVertices"].IsArray()) {
-				for (auto& v : in["customVertices"].GetArray()) {
-					if (v.IsArray() && v.Size() == 3)
-						customMeshVertices.emplace_back(v[0].GetFloat(), v[1].GetFloat(), v[2].GetFloat());
-				}
-			}
-
-			//bodyID = JPH::BodyID::cInvalidBodyID; // rebuilt by your physics system on scene init
+			xprop_utils::DeserializeFromJson(*this, in);
 		}
 
 		XPROPERTY_DEF(
