@@ -432,7 +432,7 @@
       <Filter>src\Utility</Filter>
     </ClCompile>
     <ClCompile Include="src\FSM\States.cpp" />
-        <Filter>src\FSM</Filter>
+      <Filter>src\FSM</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
