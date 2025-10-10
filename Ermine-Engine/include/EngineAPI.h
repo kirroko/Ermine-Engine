@@ -19,4 +19,4 @@ Copyright (C) 2024 TwoJumpingRabbits
 #endif
 
 #define ERMINE_VERSION_MAJOR 0
-#define ERMINE_VERSION_MINOR 1
+#define ERMINE_VERSION_MINOR 2

@@ -29,44 +29,22 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "AudioManager.h"
 #include <rapidjson/document.h>
 #include <rapidjson/writer.h>
-#include <rapidjson/stringbuffer.h>
 #include "Model.h"
 #include "shadow_config.h"
 #include "Animator.h"
 #include "AssetManager.h"
 #include <Jolt/Jolt.h>
 #include <Jolt/Physics/Body/Body.h>
+#include "Guid.h"
 
-#include "xcore/my_properties.h"  
-#include "xproperty.h"      
-#include "sprop/property_sprop.h"  
+#include "xcore/my_properties.h"
+#include "xproperty.h"
+#include "sprop/property_sprop.h"
 
 #include "State.h"
 
 namespace Ermine
 {
-	inline Quaternion QuaternionFromEulerDegrees(const Vec3& eulerDeg) {
-		// Convert degrees to radians
-		float pitch = glm::radians(eulerDeg.x); // or your own math::ToRadians
-		float yaw = glm::radians(eulerDeg.y);
-		float roll = glm::radians(eulerDeg.z);
-
-		float cy = cosf(yaw * 0.5f);
-
-		float sy = sinf(yaw * 0.5f);
-		float cp = cosf(pitch * 0.5f);
-		float sp = sinf(pitch * 0.5f);
-		float cr = cosf(roll * 0.5f);
-		float sr = sinf(roll * 0.5f);
-
-		Quaternion q{};
-		q.w = cr * cp * cy + sr * sp * sy;
-		q.x = sr * cp * cy - cr * sp * sy;
-		q.y = cr * sp * cy + sr * cp * sy;
-		q.z = cr * cp * sy - sr * sp * cy;
-		return q;
-	}
-
 	inline Vec3 JsonToVec3(const rapidjson::Value& a) {
 		return a.IsArray() && a.Size() == 3
 			? Vec3(a[0].GetFloat(), a[1].GetFloat(), a[2].GetFloat())
@@ -79,11 +57,11 @@ namespace Ermine
 		return a;
 	}
 
-	inline Vec4 JsonToVec4(const rapidjson::Value& arr) {
+	inline Quaternion JsonToVec4(const rapidjson::Value& arr) {
 		if (arr.IsArray() && arr.Size() == 4) {
-			return Vec4(arr[0].GetFloat(), arr[1].GetFloat(), arr[2].GetFloat(), arr[3].GetFloat());
+			return Quaternion(arr[0].GetFloat(), arr[1].GetFloat(), arr[2].GetFloat(), arr[3].GetFloat());
 		}
-		return Vec4(0.f, 0.f, 0.f, 0.f); // default fallback
+		return Quaternion(0.f, 0.f, 0.f, 0.f); // default fallback
 	}
 
 	inline rapidjson::Value Vec3ToJson(const Vec3& v, rapidjson::Document::AllocatorType& alloc) {
@@ -98,6 +76,24 @@ namespace Ermine
 		return a;
 	}
 
+	struct IDComponent
+	{
+		Guid guid{};
+
+		IDComponent() = default;
+		explicit IDComponent(Guid g) : guid(g) {}
+
+		template<typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
+			out.SetObject();
+			out.AddMember("guid", rapidjson::Value(guid.ToString().c_str(), alloc), alloc);
+		}
+		void Deserialize(const rapidjson::Value& in) {
+			if (in.HasMember("guid") && in["guid"].IsString()) {
+				guid = Guid::FromString(in["guid"].GetString());
+			}
+		}
+	};
 
 	/*!***********************************************************************
 	\brief
@@ -145,7 +141,7 @@ namespace Ermine
 				}
 				else if (r.Size() == 3) {
 					Vec3 eulerDeg = JsonToVec3(r);
-					rotation = QuaternionFromEulerDegrees(eulerDeg);
+					rotation = FromEulerDegrees(eulerDeg);
 				}
 			}
 		}
@@ -193,7 +189,7 @@ namespace Ermine
 		{
 		}
 
-		// 
+		//
 	};
 
 	/*!***********************************************************************
@@ -238,6 +234,64 @@ namespace Ermine
 		)
 	};
 
+	struct ScriptFieldValue
+	{
+		enum class Kind { Float = 0, Int = 1, Bool = 2, String = 3, Vector3 = 4, Quaternion = 5 };
+
+		using Value = std::variant<float, int, bool, std::string, Vec3, Quaternion>;
+
+		Kind  kind = Kind::Float;
+		Value value = 0.0f;
+
+		static ScriptFieldValue MakeFloat(float v)
+		{
+			ScriptFieldValue r;
+			r.kind = Kind::Float;
+			r.value = v;
+			return r;
+		}
+
+		static ScriptFieldValue MakeInt(int v)
+		{
+			ScriptFieldValue r;
+			r.kind = Kind::Int;
+			r.value = v;
+			return r;
+		}
+
+		static ScriptFieldValue MakeBool(bool v)
+		{
+			ScriptFieldValue r;
+			r.kind = Kind::Bool;
+			r.value = v;
+			return r;
+		}
+
+		static ScriptFieldValue MakeString(std::string v)
+		{
+			ScriptFieldValue r;
+			r.kind = Kind::String;
+			r.value = std::move(v);
+			return r;
+		}
+
+		static ScriptFieldValue MakeVec3(const Vec3& v)
+		{
+			ScriptFieldValue r;
+			r.kind = Kind::Vector3;
+			r.value = v;
+			return r;
+		}
+
+		static ScriptFieldValue MakeQuat(const Quaternion& v)
+		{
+			ScriptFieldValue r;
+			r.kind = Kind::Quaternion;
+			r.value = v;
+			return r;
+		}
+	};
+
 	/*!***********************************************************************
 	\brief
 	 Script structure
@@ -249,6 +303,8 @@ namespace Ermine
 		bool m_enabled = true;
 		bool m_started = false;
 
+		std::unordered_map<std::string, ScriptFieldValue> m_fields;
+
 		Script() = default;
 		explicit Script(std::string className, EntityID id) : m_className(std::move(className))
 		{
@@ -256,7 +312,7 @@ namespace Ermine
 			m_instance = std::make_unique<scripting::ScriptInstance>(std::move(sc), id);
 		}
 
-		Script(const Script& other) : m_className(other.m_className)
+		Script(const Script& other) : m_className(other.m_className), m_fields(other.m_fields)
 		{
 			if (other.m_instance)
 			{
@@ -271,6 +327,7 @@ namespace Ermine
 			if (this != &other)
 			{
 				m_className = other.m_className;
+				m_fields = other.m_fields;
 				if (other.m_instance)
 				{
 					// Re-create the script instance with the same class
@@ -286,7 +343,7 @@ namespace Ermine
 		}
 
 		Script(Script&& other) noexcept : m_className(std::move(other.m_className)),
-			m_instance(std::move(other.m_instance))
+			m_instance(std::move(other.m_instance)), m_fields(std::move(other.m_fields))
 		{
 		}
 
@@ -296,6 +353,7 @@ namespace Ermine
 			{
 				m_className = std::move(other.m_className);
 				m_instance = std::move(other.m_instance);
+				m_fields = std::move(other.m_fields);
 			}
 			return *this;
 		}
@@ -305,12 +363,81 @@ namespace Ermine
 			out.SetObject();
 			out.AddMember("class", rapidjson::Value(m_className.c_str(), alloc), alloc);
 			out.AddMember("enabled", m_enabled, alloc);
+
+			rapidjson::Value fields(rapidjson::kObjectType);
+			for (const auto& kv : m_fields)
+			{
+				rapidjson::Value fld(rapidjson::kObjectType);
+				fld.AddMember("t", static_cast<int>(kv.second.kind), alloc);
+				try
+				{
+					switch (kv.second.kind)
+					{
+					case ScriptFieldValue::Kind::Float:
+						fld.AddMember("v", std::get<float>(kv.second.value), alloc); break;
+					case ScriptFieldValue::Kind::Int:
+						fld.AddMember("v", std::get<int>(kv.second.value), alloc); break;
+					case ScriptFieldValue::Kind::Bool:
+						fld.AddMember("v", std::get<bool>(kv.second.value), alloc); break;
+					case ScriptFieldValue::Kind::String:
+						fld.AddMember("v", rapidjson::Value(std::get<std::string>(kv.second.value), alloc), alloc); break;
+					case ScriptFieldValue::Kind::Vector3:
+						fld.AddMember("v", Vec3ToJson(std::get<Vec3>(kv.second.value), alloc), alloc); break;
+					case ScriptFieldValue::Kind::Quaternion:
+						fld.AddMember("v", QuatToJson(std::get<Quaternion>(kv.second.value), alloc), alloc); break;
+					default: break;
+					}
+				} catch (const std::bad_variant_access& ex)
+				{
+					// Skip invalid variant access
+					EE_CORE_WARN(ex.what());
+					continue;
+				}
+
+				fields.AddMember(rapidjson::Value(kv.first.c_str(), alloc), fld, alloc);
+			}
+			out.AddMember("fields", fields, alloc);
 		}
 
 		void Deserialize(const rapidjson::Value& in) {
 			if (in.HasMember("class") && in["class"].IsString()) m_className = in["class"].GetString();
 			if (in.HasMember("enabled") && in["enabled"].IsBool()) m_enabled = in["enabled"].GetBool();
 			// Note: re-create ScriptInstance when attaching to entity (needs EntityID)
+
+			m_fields.clear();
+			if (in.HasMember("fields") && in["fields"].IsObject())
+			{
+				for (auto it = in["fields"].MemberBegin(); it != in["fields"].MemberEnd(); ++it)
+				{
+					const std::string name = it->name.GetString();
+					const auto& fld = it->value;
+					if (!fld.IsObject() || !fld.HasMember("t") || !fld.HasMember("v")) continue;
+
+					const int t = fld["t"].GetInt();
+					switch (static_cast<ScriptFieldValue::Kind>(t))
+					{
+					case ScriptFieldValue::Kind::Float:
+						if (fld["v"].IsNumber()) m_fields[name] = ScriptFieldValue::MakeFloat(fld["v"].GetFloat());
+						break;
+					case ScriptFieldValue::Kind::Int:
+						if (fld["v"].IsInt()) m_fields[name] = ScriptFieldValue::MakeInt(fld["v"].GetInt());
+						break;
+					case ScriptFieldValue::Kind::Bool:
+						if (fld["v"].IsBool()) m_fields[name] = ScriptFieldValue::MakeBool(fld["v"].GetBool());
+						break;
+					case ScriptFieldValue::Kind::String:
+						if (fld["v"].IsString()) m_fields[name] = ScriptFieldValue::MakeString(fld["v"].GetString());
+						break;
+					case ScriptFieldValue::Kind::Vector3:
+						if (fld["v"].IsArray()) m_fields[name] = ScriptFieldValue::MakeVec3(JsonToVec3(fld["v"]));
+						break;
+					case ScriptFieldValue::Kind::Quaternion:
+						if (fld["v"].IsArray()) m_fields[name] = ScriptFieldValue::MakeQuat(JsonToVec4(fld["v"]));
+						break;
+					default: break;
+					}
+				}
+			}
 		}
 
 		XPROPERTY_DEF(
@@ -381,7 +508,6 @@ namespace Ermine
 }
 
 namespace xproperty::settings {
-
 	template<>
 	struct var_type<Ermine::MeshKind> : var_defaults<"MeshKind", Ermine::MeshKind>
 	{
@@ -392,7 +518,6 @@ namespace xproperty::settings {
 			enum_item{"Asset",     Ermine::MeshKind::Asset},
 		};
 	};
-
 } // namespace xproperty::settings
 
 namespace Ermine
@@ -535,7 +660,6 @@ namespace Ermine
 			// Set default PBR values without any texture assumptions
 			m_material->LoadTemplate(graphics::MaterialTemplates::PBR_WHITE());
 		}
-
 
 		/**
 		 * @brief Copy constructor for the Material class.
@@ -930,7 +1054,6 @@ namespace Ermine
 						else if (slot == "material.albedoMap")
 							m_material->SetTexture("materialAlbedoMap", tex);
 
-
 						// Update presence flags for known types
 						auto setPresence = [&](const char* nonDot, const char* dot) {
 							m_material->SetBool(nonDot, true);
@@ -1007,7 +1130,6 @@ namespace xproperty::settings {
 
 namespace Ermine
 {
-
 	/*!***********************************************************************
 	\brief
 	 Light structure
@@ -1148,7 +1270,7 @@ namespace Ermine
 		void StopMusic();
 		void SetMusicVolume(float volume);
 
-		// SFX management  
+		// SFX management
 		void PlaySFX(int index);
 		void PlaySFX(const std::string& name);
 		void SetSFXVolume(float volume);
@@ -1414,7 +1536,6 @@ namespace Ermine
 			}
 
 			out.AddMember(rapidjson::StringRef("eventParameters"), params, alloc);
-
 		}
 		void Deserialize(const rapidjson::Value& in) {
 			if (in.HasMember("soundName") && in["soundName"].IsString()) soundName = in["soundName"].GetString();
@@ -1452,7 +1573,7 @@ namespace Ermine
 	 \brief
 	 Particle component structure.
 	*************************************************************************/
-	struct Particle
+	/*struct Particle
 	{
 		Vec3 velocity;
 		float lifetime;
@@ -1479,6 +1600,29 @@ namespace Ermine
 				colour = Vec4(in["colour"][0].GetFloat(), in["colour"][1].GetFloat(), in["colour"][2].GetFloat(), in["colour"][3].GetFloat());
 			if (in.HasMember("size"))     size = in["size"].GetFloat();
 		}
+	};*/
+
+	struct ParticleEmitter
+	{
+		bool active = true;
+		float emissionRate = 10.0f;  // particles per second
+		float particleLifetime = 2.0f;
+		float particleSize = 0.2f;
+		Vec3 velocity = { 0, 2, 0 };
+		Vec3 position = { 0.0f, 0.0f, 0.0f };
+		std::string textureName = "../Resources/Textures/greybox_light_solid.png";
+		float timeAccumulator = 0.0f;
+
+		
+		XPROPERTY_DEF(
+			"ParticleEmitterComponent", ParticleEmitter,
+			xproperty::obj_member<"active", &ParticleEmitter::active>,
+			xproperty::obj_member<"emissionRate", &ParticleEmitter::emissionRate>,
+			xproperty::obj_member<"particleLifetime", &ParticleEmitter::particleLifetime>,
+			xproperty::obj_member<"particleSize", &ParticleEmitter::particleSize>,
+			xproperty::obj_member<"velocity", &ParticleEmitter::velocity>,
+			xproperty::obj_member<"textureName", &ParticleEmitter::textureName>
+		);
 	};
 
 	/*!***********************************************************************
@@ -1525,7 +1669,6 @@ namespace Ermine
 		Trigger
 	};
 	enum class ShapeType { Box, Sphere, Capsule, CustomMesh/*, Compound*/, Total };
-
 }
 
 namespace xproperty::settings {
@@ -1556,7 +1699,6 @@ namespace xproperty::settings {
 
 namespace Ermine
 {
-
 	/*!***********************************************************************
 	 \brief
 	 Physic component structure.
@@ -1578,7 +1720,8 @@ namespace Ermine
 			float m = 0.0f,
 			ShapeType shape = ShapeType::Box)
 			: bodyType(type), motionType(motion), mass(m), shapeType(shape)
-		{}
+		{
+		}
 
 		template <typename Alloc>
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
@@ -1650,7 +1793,6 @@ namespace Ermine
 		)
 	};
 
-
 	/*!***********************************************************************
 	\brief
 	 Model component structure.
@@ -1674,7 +1816,6 @@ namespace Ermine
 
 			out.AddMember("model", modelVal, alloc);
 		}
-
 
 		void Deserialize(const rapidjson::Value& in) {
 			if (in.HasMember("model") && in["model"].IsString()) {
@@ -1704,7 +1845,7 @@ namespace Ermine
 
 		AnimationComponent() = default;
 		explicit AnimationComponent(const std::shared_ptr<graphics::Model>& model) : m_animator(std::make_shared<graphics::Animator>(model)) {}
-		
+
 		template <typename Alloc>
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
 			const std::string& model_name = m_animator->GetModel()->GetName();
@@ -1717,7 +1858,6 @@ namespace Ermine
 
 			out.AddMember("model", modelVal, alloc);
 		}
-
 
 		void Deserialize(const rapidjson::Value& in) {
 			if (!in.IsObject()) return;
@@ -1746,11 +1886,22 @@ namespace Ermine
 	\brief
 	 State Machine component structure.
 	*************************************************************************/
+	class StateManager; // forward declaration
 	struct StateMachine
 	{
+		StateManager* manager = nullptr;
 		State* m_CurrentState = nullptr;
 
+		float stateTimer = 0.0f;
+		float stateDuration = 3.0f;
+
+		std::vector<State*> availableStates;
+		std::unordered_map<State*, State*> transitions;
 	public:
+		void Init([[maybe_unused]] EntityID entity, State* initial)
+		{
+			m_CurrentState = initial;
+		}
 		/*!***********************************************************************
 		\brief
 		   Change the current state of an entity.

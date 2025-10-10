@@ -119,6 +119,30 @@ namespace Ermine::editor
             return ptr;
         }
 
+        /*!***********************************************************************
+        \brief
+            Get a pointer to an existing ImGUI window of type T.
+            Returns nullptr if not found.
+        *************************************************************************/
+        template<typename T>
+        static T* GetWindow()
+        {
+            for (auto& window : m_Windows)
+            {
+                if (auto* casted = dynamic_cast<T*>(window.get()))
+                    return casted;
+            }
+            return nullptr;
+        }
+
+        /*!***********************************************************************
+        \brief
+            Focus an ImGUI window by its name (brings it to the front).
+        \param[in] windowName
+            Name of the window to focus.
+        *************************************************************************/
+        static void FocusWindow(const std::string& windowName);
+
         static void SetActiveScene(std::shared_ptr<Ermine::Scene> scene);        
         static std::shared_ptr<Ermine::Scene> GetActiveScene() { return s_ActiveScene; }
     };

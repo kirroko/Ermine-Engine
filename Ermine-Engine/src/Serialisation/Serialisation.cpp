@@ -200,11 +200,19 @@ void SaveSceneToFile(const Ermine::ECS& ecs, const std::filesystem::path& path, 
         if (!ecs.IsEntityValid(id)) continue;
 
         Value e(kObjectType);
-        e.AddMember("id", static_cast<uint64_t>(id), a);
+        e.AddMember("id", id, a);
 
         Value comps(kObjectType);
 
         for (auto& name : ecs.GetComponentNames(id)) {
+			// IDComponent
+            if (name == "IDComponent" && ecs.HasComponent<Ermine::IDComponent>(id))
+            {
+                Value t{ kObjectType };
+                ecs.GetComponent<Ermine::IDComponent>(id).Serialize(t, a);
+				comps.AddMember(Value("IDComponent", a), t, a);
+            }
+
             // Transform
             if (name == "Transform" && ecs.HasComponent<Ermine::Transform>(id)) {
                 Value t(kObjectType);
@@ -276,11 +284,11 @@ void SaveSceneToFile(const Ermine::ECS& ecs, const std::filesystem::path& path, 
             }
 
             // Particle
-            if (name == "Particle" && ecs.HasComponent<Ermine::Particle>(id)) {
-                Value l(kObjectType);
-                ecs.GetComponent<Ermine::Particle>(id).Serialize(l, a);
-                comps.AddMember(Value("Particle", a), l, a);
-            }
+            //if (name == "Particle" && ecs.HasComponent<Ermine::Particle>(id)) {
+            //    Value l(kObjectType);
+            //    ecs.GetComponent<Ermine::Particle>(id).Serialize(l, a);
+            //    comps.AddMember(Value("Particle", a), l, a);
+            //}
 
             // HierarchyComponent
             if (name == "HierarchyComponent" && ecs.HasComponent<Ermine::HierarchyComponent>(id)) {
@@ -323,6 +331,20 @@ void LoadSceneFromFile(Ermine::ECS& ecs, const std::filesystem::path& path) {
             continue;
 
         const auto& comps = e["components"];
+
+		// IDComponent
+        if (comps.HasMember("IDComponent") && comps["IDComponent"].IsObject())
+        {
+	        if (!ecs.HasComponent<Ermine::IDComponent>(id))
+				ecs.AddComponent<Ermine::IDComponent>(id, Ermine::IDComponent{});
+
+			auto& c = ecs.GetComponent<Ermine::IDComponent>(id);
+			c.Deserialize(comps["IDComponent"]);
+            ecs.GetGuidRegistry().Register(id, c.guid);
+            // We always have the GUID, so when referencing, we can always tie it to the "entity" we are looking for.
+			// Hence, we just need to refer the guid and look it up in the registry.
+            // How to resolve reference is to use GuidRegistry::FindEntity and then write it into the field.
+        }
 
         // Transform
         if (comps.HasMember("Transform") && comps["Transform"].IsObject()) {
@@ -415,13 +437,13 @@ void LoadSceneFromFile(Ermine::ECS& ecs, const std::filesystem::path& path) {
         }
 
         // Particle
-        if (comps.HasMember("Particle") && comps["Particle"].IsObject()) {
-            if (!ecs.HasComponent<Ermine::Particle>(id))
-                ecs.AddComponent<Ermine::Particle>(id, Ermine::Particle{});
+        //if (comps.HasMember("Particle") && comps["Particle"].IsObject()) {
+        //    if (!ecs.HasComponent<Ermine::Particle>(id))
+        //        ecs.AddComponent<Ermine::Particle>(id, Ermine::Particle{});
 
-            auto& m = ecs.GetComponent<Ermine::Particle>(id);
-            m.Deserialize(comps["Particle"]);
-        }
+        //    auto& m = ecs.GetComponent<Ermine::Particle>(id);
+        //    m.Deserialize(comps["Particle"]);
+        //}
 
         // HierarchyComponent 
         if (comps.HasMember("HierarchyComponent") && comps["HierarchyComponent"].IsObject()) {
