@@ -157,21 +157,21 @@ namespace Ermine
         void OnTransformChanged(EntityID entity);
 
         /**
-         * @brief Initialize hierarchy component for a newly created entity
-         * @param[in] entity The entity to initialize
-         */
+		 * @brief Ensures an entity has a GlobalTransform component
+		 * @param[in] entity The entity to check
+		 */
+		void EnsureGlobalTransform(EntityID entity);
+
+		/**
+		 * @brief Initialize hierarchy component for a newly created entity
+		 * @param[in] entity The entity to initialize
+		 */
         void InitializeEntity(EntityID entity);
 
-        /**
-         * @brief Force update transforms for all entities (useful after loading/creating scenes)
-         */
-        void ForceUpdateAllTransforms();
-
-        /**
-         * @brief Ensures transform matrix is synchronized with world transform
-         * @param[in] entity The entity to sync
-         */
-        void SyncTransformMatrix(EntityID entity);
+		/**
+		 * @brief Force update transforms for all entities (useful after loading/creating scenes)
+		 */
+		void ForceUpdateAllTransforms();
 
     private:
         /**
@@ -179,12 +179,5 @@ namespace Ermine
          * @param[in] entity The entity whose children need world transform updates
          */
         void MarkChildrenWorldTransformDirty(EntityID entity);
-
-        /**
-         * @brief Recursively updates world transforms and tracks updated entities to avoid double-updates
-         * @param[in] entity The entity to update
-         * @param[in/out] updatedEntities Set of entities that have already been updated
-         */
-        void UpdateWorldTransformRecursive(EntityID entity, std::set<EntityID>& updatedEntities);
     };
 }

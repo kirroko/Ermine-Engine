@@ -83,7 +83,7 @@ namespace Ermine
 	*************************************************************************/
 	struct Transform
 	{
-		Mtx44 transform_matrix{ 1.0f }; // Local transform matrix
+		//Mtx44 transform_matrix{ 1.0f }; // Local transform matrix
 		Vec3 position;
 		Quaternion rotation; // Euler angles in degrees
 		Vec3 scale;
@@ -92,6 +92,30 @@ namespace Ermine
 		explicit Transform(const Vec3& pos = Vec3(), const Quaternion& rot = Quaternion(), const Vec3& scl = Vec3(1.f, 1.f, 1.f))
 			: position(pos), rotation(rot), scale(scl)
 		{
+		}
+
+		// Helper method to build local transform matrix
+		Mtx44 GetLocalMatrix() const
+		{
+			Mtx44 translation, rotation_mtx, scale_mtx;
+			Mtx44Identity(translation);
+			Mtx44Identity(rotation_mtx);
+			Mtx44Identity(scale_mtx);
+
+			// Set translation - this overwrites the translation part of identity matrix
+			translation.m03 = position.x;
+			translation.m13 = position.y;
+			translation.m23 = position.z;
+
+			// Set rotation from quaternion
+			Mtx44SetFromQuaternion(rotation_mtx, rotation);
+
+			// Set scale - this overwrites the scale part of identity matrix
+			scale_mtx.m00 = scale.x;
+			scale_mtx.m11 = scale.y;
+			scale_mtx.m22 = scale.z;
+
+			return translation * rotation_mtx * scale_mtx;
 		}
 
 		template<typename Alloc>
@@ -139,6 +163,83 @@ namespace Ermine
 	};
 
 	//XPROPERTY_REG(Transform);
+
+	/*!***********************************************************************
+	\brief
+	 GlobalTransform component - WORLD TRANSFORM FOR RENDERING.
+	*************************************************************************/
+	struct GlobalTransform
+	{
+		Mtx44 worldMatrix{ 1.0f };  // World transform matrix used by renderer
+		bool isDirty{ true };
+
+		GlobalTransform() = default;
+
+		explicit GlobalTransform(const Mtx44& matrix) : worldMatrix(matrix), isDirty(false) {}
+
+		// Extract world position from matrix
+		Vec3 GetWorldPosition() const
+		{
+			return Vec3(worldMatrix.m03, worldMatrix.m13, worldMatrix.m23);
+		}
+
+		// Extract world rotation from matrix
+		Quaternion GetWorldRotation() const
+		{
+			// Remove translation and scale to get rotation matrix
+			Mtx44 rotMatrix = worldMatrix;
+			rotMatrix.m03 = 0.0f; rotMatrix.m13 = 0.0f; rotMatrix.m23 = 0.0f; rotMatrix.m33 = 1.0f;
+
+			// Remove scale
+			Vec3 xAxis(rotMatrix.m00, rotMatrix.m10, rotMatrix.m20);
+			Vec3 yAxis(rotMatrix.m01, rotMatrix.m11, rotMatrix.m21);
+			Vec3 zAxis(rotMatrix.m02, rotMatrix.m12, rotMatrix.m22);
+
+			float xLen = sqrtf(xAxis.x * xAxis.x + xAxis.y * xAxis.y + xAxis.z * xAxis.z);
+			float yLen = sqrtf(yAxis.x * yAxis.x + yAxis.y * yAxis.y + yAxis.z * yAxis.z);
+			float zLen = sqrtf(zAxis.x * zAxis.x + zAxis.y * zAxis.y + zAxis.z * zAxis.z);
+
+			if (xLen > 0.0f) { xAxis.x /= xLen; xAxis.y /= xLen; xAxis.z /= xLen; }
+			if (yLen > 0.0f) { yAxis.x /= yLen; yAxis.y /= yLen; yAxis.z /= yLen; }
+			if (zLen > 0.0f) { zAxis.x /= zLen; zAxis.y /= zLen; zAxis.z /= zLen; }
+
+			rotMatrix.m00 = xAxis.x; rotMatrix.m10 = xAxis.y; rotMatrix.m20 = xAxis.z;
+			rotMatrix.m01 = yAxis.x; rotMatrix.m11 = yAxis.y; rotMatrix.m21 = yAxis.z;
+			rotMatrix.m02 = zAxis.x; rotMatrix.m12 = zAxis.y; rotMatrix.m22 = zAxis.z;
+
+			return Mtx44GetQuaternion(rotMatrix);
+		}
+
+		// Extract world scale from matrix
+		Vec3 GetWorldScale() const
+		{
+			Vec3 xAxis(worldMatrix.m00, worldMatrix.m10, worldMatrix.m20);
+			Vec3 yAxis(worldMatrix.m01, worldMatrix.m11, worldMatrix.m21);
+			Vec3 zAxis(worldMatrix.m02, worldMatrix.m12, worldMatrix.m22);
+
+			return Vec3(
+				sqrtf(xAxis.x * xAxis.x + xAxis.y * xAxis.y + xAxis.z * xAxis.z),
+				sqrtf(yAxis.x * yAxis.x + yAxis.y * yAxis.y + yAxis.z * yAxis.z),
+				sqrtf(zAxis.x * zAxis.x + zAxis.y * zAxis.y + zAxis.z * zAxis.z)
+			);
+		}
+
+		template<typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
+			out.SetObject();
+			// Don't serialize the matrix - it gets recalculated from hierarchy
+		}
+
+		void Deserialize(const rapidjson::Value& in) {
+			// Don't deserialize the matrix - it gets recalculated from hierarchy
+			isDirty = true;
+		}
+
+		XPROPERTY_DEF(
+			"GlobalTransform", GlobalTransform,
+			xproperty::obj_member<"isDirty", &GlobalTransform::isDirty>
+		);
+	};
 
 	/*!***********************************************************************
 	\brief

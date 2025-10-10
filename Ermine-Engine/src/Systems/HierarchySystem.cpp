@@ -93,84 +93,111 @@ namespace Ermine
      * @param[in] entity The root entity to start updating from.
     */
     void HierarchySystem::UpdateWorldTransform(EntityID entity)
-    {
-        auto& hierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(entity);
-        auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
+	{
+		auto& hierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(entity);
+		auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
+		
+		// NEW: Get or create GlobalTransform component
+		GlobalTransform* globalTransform = nullptr;
+		if (ECS::GetInstance().HasComponent<GlobalTransform>(entity)) {
+			globalTransform = &ECS::GetInstance().GetComponent<GlobalTransform>(entity);
+		} else {
+			// Add GlobalTransform if it doesn't exist
+			ECS::GetInstance().AddComponent<GlobalTransform>(entity, GlobalTransform());
+			globalTransform = &ECS::GetInstance().GetComponent<GlobalTransform>(entity);
+		}
 
-        // Log the local transform values before update
-        EE_CORE_INFO("=== Transform Update for Entity {0} ===", entity);
-        EE_CORE_INFO("Local Position: ({0:.3f}, {1:.3f}, {2:.3f})", 
-                     transform.position.x, transform.position.y, transform.position.z);
-        EE_CORE_INFO("Local Rotation: ({0:.3f}, {1:.3f}, {2:.3f}, {3:.3f})", 
-                     transform.rotation.x, transform.rotation.y, transform.rotation.z, transform.rotation.w);
-        EE_CORE_INFO("Local Scale: ({0:.3f}, {1:.3f}, {2:.3f})", 
-                     transform.scale.x, transform.scale.y, transform.scale.z);
+		EE_CORE_INFO("=== Transform Update for Entity {0} ===", entity);
+		EE_CORE_INFO("Local Position: ({0:.3f}, {1:.3f}, {2:.3f})", 
+					 transform.position.x, transform.position.y, transform.position.z);
 
-        // Build local transform matrix from position, rotation, and scale
-        Matrix4x4 localMatrix;
-        {
-            Matrix4x4 translation, rotation, scale;
-            Mtx44Identity(translation);
-            Mtx44Identity(rotation);
-            Mtx44Identity(scale);
+		// Build local transform matrix from position, rotation, and scale
+		Mtx44 localMatrix = transform.GetLocalMatrix();
 
-            // Build individual transform matrices
-            Mtx44Translate(translation, transform.position.x, transform.position.y, transform.position.z);
-            Mtx44SetFromQuaternion(rotation, transform.rotation);
-            Mtx44Scale(scale, transform.scale.x, transform.scale.y, transform.scale.z);
+		// Calculate world transform based on parent relationship
+		if (hierarchy.parent != 0) {
+			// Get parent's GlobalTransform component
+			if (ECS::GetInstance().HasComponent<GlobalTransform>(hierarchy.parent)) {
+				auto& parentGlobalTransform = ECS::GetInstance().GetComponent<GlobalTransform>(hierarchy.parent);
+				
+				Vec3 parentWorldPos = parentGlobalTransform.GetWorldPosition();
+				EE_CORE_INFO("Parent {0} World Position: ({1:.3f}, {2:.3f}, {3:.3f})", 
+							 hierarchy.parent, parentWorldPos.x, parentWorldPos.y, parentWorldPos.z);
+				
+				// FIXED: World transform = Parent's world transform * Local transform
+				globalTransform->worldMatrix = parentGlobalTransform.worldMatrix * localMatrix;
+			} else {
+				// Parent doesn't have GlobalTransform - treat as root
+				globalTransform->worldMatrix = localMatrix;
+				EE_CORE_WARN("Parent {0} missing GlobalTransform, treating child {1} as root", hierarchy.parent, entity);
+			}
+		}
+		else {
+			// Root entity: world transform equals local transform
+			globalTransform->worldMatrix = localMatrix;
+			EE_CORE_INFO("Entity {0} is ROOT - World = Local transform", entity);
+		}
 
-            // Combine in TRS order: Translation * Rotation * Scale
-            localMatrix = translation * rotation * scale;
-        }
+		// REMOVED: Don't update transform.transform_matrix anymore - it was causing confusion
+		// The renderer will now use globalTransform->worldMatrix directly
 
-        // Calculate world transform based on parent relationship
-        if (hierarchy.parent != 0) {
-            // Get parent's world transform
-            auto& parentHierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(hierarchy.parent);
-            
-            // Log parent's world position for reference
-            Vec3 parentWorldPos;
-            parentWorldPos.x = parentHierarchy.worldTransform.m03;
-            parentWorldPos.y = parentHierarchy.worldTransform.m13;
-            parentWorldPos.z = parentHierarchy.worldTransform.m23;
-            
-            EE_CORE_INFO("Parent {0} World Position: ({1:.3f}, {2:.3f}, {3:.3f})", 
-                         hierarchy.parent, parentWorldPos.x, parentWorldPos.y, parentWorldPos.z);
-            
-            // World transform = Parent's world transform * Local transform
-            hierarchy.worldTransform = parentHierarchy.worldTransform * localMatrix;
-        }
-        else {
-            // Root entity: world transform equals local transform
-            hierarchy.worldTransform = localMatrix;
-            EE_CORE_INFO("Entity {0} is ROOT - World = Local transform", entity);
-        }
+		// Extract and log the calculated world position
+		Vec3 worldPos = globalTransform->GetWorldPosition();
+		EE_CORE_INFO(">>> Entity {0} World Position: ({1:.3f}, {2:.3f}, {3:.3f})", 
+					 entity, worldPos.x, worldPos.y, worldPos.z);
 
-        // Extract and log the calculated world position
-        Vec3 worldPos;
-        worldPos.x = hierarchy.worldTransform.m03;
-        worldPos.y = hierarchy.worldTransform.m13;
-        worldPos.z = hierarchy.worldTransform.m23;
-        
-        EE_CORE_INFO(">>> Entity {0} World Position: ({1:.3f}, {2:.3f}, {3:.3f})", 
-                     entity, worldPos.x, worldPos.y, worldPos.z);
+		// Mark as clean
+		hierarchy.isDirty = false;
+		hierarchy.worldTransformDirty = false;
+		transform.isDirty = false;
+		globalTransform->isDirty = false;
 
-        // Update the Transform component's transform_matrix (used by renderer)
-        transform.transform_matrix = hierarchy.worldTransform;
+		// Recursively update all children
+		for (auto child : hierarchy.children) {
+			EE_CORE_INFO("--- Updating child entity {0} due to parent {1} change ---", child, entity);
+			UpdateWorldTransform(child);
+		}
+		
+		EE_CORE_INFO("=== End Transform Update for Entity {0} ===\n", entity);
+	}
 
-        // Mark as clean
-        hierarchy.isDirty = false;
-        hierarchy.worldTransformDirty = false;
-        transform.isDirty = false;
+	// NEW: Helper method to ensure entities have GlobalTransform
+	void HierarchySystem::EnsureGlobalTransform(EntityID entity)
+	{
+		if (!ECS::GetInstance().HasComponent<GlobalTransform>(entity)) {
+			ECS::GetInstance().AddComponent<GlobalTransform>(entity, GlobalTransform());
+		}
+	}
 
-        // Recursively update all children
-        for (auto child : hierarchy.children) {
-            EE_CORE_INFO("--- Updating child entity {0} due to parent {1} change ---", child, entity);
-            UpdateWorldTransform(child);
-        }
-        
-        EE_CORE_INFO("=== End Transform Update for Entity {0} ===\n", entity);
-    }
+	// NEW: Initialize method to call when adding entities to hierarchy
+	void HierarchySystem::InitializeEntity(EntityID entity)
+	{
+		if (!ECS::GetInstance().IsEntityValid(entity))
+			return;
+			
+		if (!ECS::GetInstance().HasComponent<HierarchyComponent>(entity))
+			return;
+			
+		// Ensure the entity has a GlobalTransform component
+		EnsureGlobalTransform(entity);
+			
+		auto& hierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(entity);
+		auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
+		auto& globalTransform = ECS::GetInstance().GetComponent<GlobalTransform>(entity);
+		
+		// Mark as needing initial update
+		hierarchy.isDirty = true;
+		hierarchy.worldTransformDirty = true;
+		transform.isDirty = true;
+		globalTransform.isDirty = true;
+		
+		// Initialize world transform for root entities
+		if (hierarchy.parent == 0)
+		{
+			globalTransform.worldMatrix = transform.GetLocalMatrix();
+			globalTransform.isDirty = false;
+		}
+	}
 
     /**
      * @brief Updates the hierarchy for all root entities in the system.
@@ -185,6 +212,12 @@ namespace Ermine
 
             // Only update if this entity is dirty AND it's a root entity
             if (hierarchy.parent == 0 && (hierarchy.isDirty || hierarchy.worldTransformDirty || transform.isDirty)) {
+
+                // Clear flags immediately to prevent infinite loops
+                hierarchy.isDirty = false;
+                hierarchy.worldTransformDirty = false;
+                transform.isDirty = false;
+
                 UpdateWorldTransform(entity);
             }
         }
@@ -201,6 +234,9 @@ namespace Ermine
 
         auto& hierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(entity);
         auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
+
+        // ADD DEBUG LOG TO FIND THE CULPRIT
+        EE_CORE_WARN("MarkDirty called for entity {} - investigate why!", entity);
         
         // Mark both local transform and world transform as needing update
         hierarchy.isDirty = true;
@@ -278,15 +314,16 @@ namespace Ermine
         if (!ECS::GetInstance().IsEntityValid(entity))
             return Vec3(0.0f, 0.0f, 0.0f);
 
-        const auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
-        
-        // Extract position from world transform matrix
-        Vec3 worldPos;
-        worldPos.x = transform.transform_matrix.m03;
-        worldPos.y = transform.transform_matrix.m13;
-        worldPos.z = transform.transform_matrix.m23;
-        
-        return worldPos;
+        // Use GlobalTransform
+        if (ECS::GetInstance().HasComponent<GlobalTransform>(entity)) {
+            const auto& globalTransform = ECS::GetInstance().GetComponent<GlobalTransform>(entity);
+            return globalTransform.GetWorldPosition();
+        }
+        else {
+            // Fallback to local position if no GlobalTransform
+            const auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
+            return transform.position;
+        }
     }
 
     /**
@@ -299,37 +336,16 @@ namespace Ermine
         if (!ECS::GetInstance().IsEntityValid(entity))
             return Quaternion(0.0f, 0.0f, 0.0f, 1.0f);
 
-        const auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
-        
-        // Extract rotation from world transform matrix
-        Matrix4x4 rotationMatrix = transform.transform_matrix;
-        
-        // Remove translation
-        rotationMatrix.m03 = 0.0f;
-        rotationMatrix.m13 = 0.0f;
-        rotationMatrix.m23 = 0.0f;
-        rotationMatrix.m33 = 1.0f;
-        
-        // Remove scale by normalizing the rotation part
-        Vec3 xAxis(rotationMatrix.m00, rotationMatrix.m10, rotationMatrix.m20);
-        Vec3 yAxis(rotationMatrix.m01, rotationMatrix.m11, rotationMatrix.m21);
-        Vec3 zAxis(rotationMatrix.m02, rotationMatrix.m12, rotationMatrix.m22);
-        
-        // Normalize axes
-        float xLen = sqrtf(xAxis.x * xAxis.x + xAxis.y * xAxis.y + xAxis.z * xAxis.z);
-        float yLen = sqrtf(yAxis.x * yAxis.x + yAxis.y * yAxis.y + yAxis.z * yAxis.z);
-        float zLen = sqrtf(zAxis.x * zAxis.x + zAxis.y * zAxis.y + zAxis.z * zAxis.z);
-        
-        if (xLen > 0.0f) { xAxis.x /= xLen; xAxis.y /= xLen; xAxis.z /= xLen; }
-        if (yLen > 0.0f) { yAxis.x /= yLen; yAxis.y /= yLen; yAxis.z /= yLen; }
-        if (zLen > 0.0f) { zAxis.x /= zLen; zAxis.y /= zLen; zAxis.z /= zLen; }
-        
-        // Reconstruct rotation matrix
-        rotationMatrix.m00 = xAxis.x; rotationMatrix.m10 = xAxis.y; rotationMatrix.m20 = xAxis.z;
-        rotationMatrix.m01 = yAxis.x; rotationMatrix.m11 = yAxis.y; rotationMatrix.m21 = yAxis.z;
-        rotationMatrix.m02 = zAxis.x; rotationMatrix.m12 = zAxis.y; rotationMatrix.m22 = zAxis.z;
-        
-        return Mtx44GetQuaternion(rotationMatrix);
+        // FIXED: Use GlobalTransform instead of transform.transform_matrix
+        if (ECS::GetInstance().HasComponent<GlobalTransform>(entity)) {
+            const auto& globalTransform = ECS::GetInstance().GetComponent<GlobalTransform>(entity);
+            return globalTransform.GetWorldRotation();
+        }
+        else {
+            // Fallback to local rotation if no GlobalTransform
+            const auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
+            return transform.rotation;
+        }
     }
 
     /**
@@ -342,19 +358,16 @@ namespace Ermine
         if (!ECS::GetInstance().IsEntityValid(entity))
             return Vec3(1.0f, 1.0f, 1.0f);
 
-        const auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
-        
-        // Extract scale from world transform matrix
-        Vec3 xAxis(transform.transform_matrix.m00, transform.transform_matrix.m10, transform.transform_matrix.m20);
-        Vec3 yAxis(transform.transform_matrix.m01, transform.transform_matrix.m11, transform.transform_matrix.m21);
-        Vec3 zAxis(transform.transform_matrix.m02, transform.transform_matrix.m12, transform.transform_matrix.m22);
-        
-        Vec3 worldScale;
-        worldScale.x = sqrtf(xAxis.x * xAxis.x + xAxis.y * xAxis.y + xAxis.z * xAxis.z);
-        worldScale.y = sqrtf(yAxis.x * yAxis.x + yAxis.y * yAxis.y + yAxis.z * yAxis.z);
-        worldScale.z = sqrtf(zAxis.x * zAxis.x + zAxis.y * zAxis.y + zAxis.z * zAxis.z);
-        
-        return worldScale;
+        // FIXED: Use GlobalTransform instead of transform.transform_matrix
+        if (ECS::GetInstance().HasComponent<GlobalTransform>(entity)) {
+            const auto& globalTransform = ECS::GetInstance().GetComponent<GlobalTransform>(entity);
+            return globalTransform.GetWorldScale();
+        }
+        else {
+            // Fallback to local scale if no GlobalTransform
+            const auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
+            return transform.scale;
+        }
     }
 
     /**
@@ -371,18 +384,24 @@ namespace Ermine
         auto& hierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(entity);
 
         if (hierarchy.parent != 0) {
-            // Convert world position to local space using inverse parent transform
-            auto& parentHierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(hierarchy.parent);
+            // FIXED: Use parent's GlobalTransform instead of hierarchy.worldTransform
+            if (ECS::GetInstance().HasComponent<GlobalTransform>(hierarchy.parent)) {
+                auto& parentGlobalTransform = ECS::GetInstance().GetComponent<GlobalTransform>(hierarchy.parent);
 
-            // Get inverse of parent's world transform
-            Matrix4x4 invParentWorld;
-            Mtx44Inverse(invParentWorld, parentHierarchy.worldTransform);
+                // Get inverse of parent's world transform
+                Matrix4x4 invParentWorld;
+                Mtx44Inverse(invParentWorld, parentGlobalTransform.worldMatrix);
 
-            // Convert world position to parent-local space using Vector3D
-            Vector3D worldPosVec(worldPos.x, worldPos.y, worldPos.z);
-            Vector3D localPos = invParentWorld * worldPosVec;
+                // Convert world position to parent-local space using Vector3D
+                Vector3D worldPosVec(worldPos.x, worldPos.y, worldPos.z);
+                Vector3D localPos = invParentWorld * worldPosVec;
 
-            transform.position = Vec3(localPos.x, localPos.y, localPos.z);
+                transform.position = Vec3(localPos.x, localPos.y, localPos.z);
+            }
+            else {
+                // Parent doesn't have GlobalTransform - treat as root
+                transform.position = worldPos;
+            }
         }
         else {
             // Root entity - world position = local position
@@ -397,7 +416,7 @@ namespace Ermine
      * @param[in] entity The entity to modify.
      * @param[in] worldRot The new world rotation.
      */
-    void HierarchySystem::SetWorldRotation(EntityID entity, const Quaternion& worldRot) 
+    void HierarchySystem::SetWorldRotation(EntityID entity, const Quaternion& worldRot)
     {
         if (!ECS::GetInstance().IsEntityValid(entity))
             return;
@@ -406,40 +425,21 @@ namespace Ermine
         auto& hierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(entity);
 
         if (hierarchy.parent != 0) {
-            // Get parent's world rotation
-            auto& parentHierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(hierarchy.parent);
+            // FIXED: Use parent's GlobalTransform instead of hierarchy.worldTransform
+            if (ECS::GetInstance().HasComponent<GlobalTransform>(hierarchy.parent)) {
+                auto& parentGlobalTransform = ECS::GetInstance().GetComponent<GlobalTransform>(hierarchy.parent);
 
-            // Extract parent's world rotation
-            Matrix4x4 parentWorld = parentHierarchy.worldTransform;
-            
-            // Remove translation
-            parentWorld.m03 = 0.0f;
-            parentWorld.m13 = 0.0f;
-            parentWorld.m23 = 0.0f;
-            parentWorld.m33 = 1.0f;
+                // Extract parent's world rotation from GlobalTransform
+                Quaternion parentWorldRot = parentGlobalTransform.GetWorldRotation();
 
-            // Remove scale
-            Vec3 xAxis(parentWorld.m00, parentWorld.m10, parentWorld.m20);
-            Vec3 yAxis(parentWorld.m01, parentWorld.m11, parentWorld.m21);
-            Vec3 zAxis(parentWorld.m02, parentWorld.m12, parentWorld.m22);
-
-            float xLen = sqrtf(xAxis.x * xAxis.x + xAxis.y * xAxis.y + xAxis.z * xAxis.z);
-            float yLen = sqrtf(yAxis.x * yAxis.x + yAxis.y * yAxis.y + yAxis.z * yAxis.z);
-            float zLen = sqrtf(zAxis.x * zAxis.x + zAxis.y * zAxis.y + zAxis.z * zAxis.z);
-
-            if (xLen > 0.0f) { xAxis.x /= xLen; xAxis.y /= xLen; xAxis.z /= xLen; }
-            if (yLen > 0.0f) { yAxis.x /= yLen; yAxis.y /= yLen; yAxis.z /= yLen; }
-            if (zLen > 0.0f) { zAxis.x /= zLen; zAxis.y /= zLen; zAxis.z /= zLen; }
-
-            parentWorld.m00 = xAxis.x; parentWorld.m10 = xAxis.y; parentWorld.m20 = xAxis.z;
-            parentWorld.m01 = yAxis.x; parentWorld.m11 = yAxis.y; parentWorld.m21 = yAxis.z;
-            parentWorld.m02 = zAxis.x; parentWorld.m12 = zAxis.y; parentWorld.m22 = zAxis.z;
-
-            Quaternion parentWorldRot = Mtx44GetQuaternion(parentWorld);
-            
-            // Calculate local rotation: parentWorld^-1 * worldRot 
-            Quaternion invParentRot(-parentWorldRot.x, -parentWorldRot.y, -parentWorldRot.z, parentWorldRot.w);
-            transform.rotation = invParentRot * worldRot;
+                // Calculate local rotation: parentWorld^-1 * worldRot 
+                Quaternion invParentRot(-parentWorldRot.x, -parentWorldRot.y, -parentWorldRot.z, parentWorldRot.w);
+                transform.rotation = invParentRot * worldRot;
+            }
+            else {
+                // Parent doesn't have GlobalTransform - treat as root
+                transform.rotation = worldRot;
+            }
         }
         else {
             // Root entity - world rotation = local rotation
@@ -525,52 +525,6 @@ namespace Ermine
     }
 
     /**
-     * @brief Initialize hierarchy component for a newly created entity
-     * @param[in] entity The entity to initialize
-     */
-    void HierarchySystem::InitializeEntity(EntityID entity)
-    {
-        if (!ECS::GetInstance().IsEntityValid(entity))
-            return;
-            
-        if (!ECS::GetInstance().HasComponent<HierarchyComponent>(entity))
-            return;
-            
-        auto& hierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(entity);
-        auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
-        
-        // Mark as needing initial update
-        hierarchy.isDirty = true;
-        hierarchy.worldTransformDirty = true;
-        transform.isDirty = true;
-        
-        // Initialize world transform for root entities
-        if (hierarchy.parent == 0)
-        {
-            // Build initial local transform matrix
-            Matrix4x4 translation, rotation, scale;
-            Mtx44Identity(translation);
-            Mtx44Identity(rotation);
-            Mtx44Identity(scale);
-
-            Mtx44Translate(translation, transform.position.x, transform.position.y, transform.position.z);
-            Mtx44SetFromQuaternion(rotation, transform.rotation);
-            Mtx44Scale(scale, transform.scale.x, transform.scale.y, transform.scale.z);
-
-            Matrix4x4 localMatrix = translation * rotation * scale;
-            
-            // Set both hierarchy and transform matrices
-            hierarchy.worldTransform = localMatrix;
-            transform.transform_matrix = localMatrix;
-            
-            // Clear dirty flags since we just set everything up
-            hierarchy.isDirty = false;
-            hierarchy.worldTransformDirty = false;
-            transform.isDirty = false;
-        }
-    }
-
-    /**
      * @brief Force update transforms for all entities (useful after loading/creating scenes)
      */
     void HierarchySystem::ForceUpdateAllTransforms()
@@ -588,93 +542,6 @@ namespace Ermine
         
         // Force update hierarchy
         UpdateHierarchy();
-    }
-
-    /**
-     * @brief Ensures transform matrix is synchronized with world transform
-     * @param[in] entity The entity to sync
-     */
-    void HierarchySystem::SyncTransformMatrix(EntityID entity)
-    {
-        if (!ECS::GetInstance().IsEntityValid(entity))
-            return;
-            
-        if (!ECS::GetInstance().HasComponent<HierarchyComponent>(entity))
-            return;
-            
-        auto& hierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(entity);
-        auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
-        
-        // Sync the transform matrix with the world transform
-        transform.transform_matrix = hierarchy.worldTransform;
-    }
-
-    /**
-     * @brief Recursively updates world transforms and tracks updated entities to avoid double-updates
-     * @param[in] entity The entity to update
-     * @param[in/out] updatedEntities Set of entities that have already been updated
-     */
-    void HierarchySystem::UpdateWorldTransformRecursive(EntityID entity, std::set<EntityID>& updatedEntities)
-    {
-        // Skip if already updated in this frame
-        if (updatedEntities.find(entity) != updatedEntities.end()) {
-            return;
-        }
-
-        auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
-        auto& hierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(entity);
-
-        // **FIX: Ensure parent is updated first**
-        if (hierarchy.parent != 0) {
-            UpdateWorldTransformRecursive(hierarchy.parent, updatedEntities);
-        }
-
-        // Build local transform matrix (order matters: T * R * S)
-        Matrix4x4 localMatrix;
-        {
-            Matrix4x4 translation, rotation, scale;
-            Mtx44Identity(translation);
-            Mtx44Identity(rotation);
-            Mtx44Identity(scale);
-
-            // Build matrices
-            Mtx44Translate(translation, transform.position.x, transform.position.y, transform.position.z);
-            Mtx44SetFromQuaternion(rotation, transform.rotation);
-            Mtx44Scale(scale, transform.scale.x, transform.scale.y, transform.scale.z);
-
-            // Combine: Translation * Rotation * Scale
-            localMatrix = translation * rotation * scale;
-        }
-
-        // Calculate world transform
-        if (hierarchy.parent != 0) {
-            auto& parentHierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(hierarchy.parent);
-            
-            // Combine with parent's world transform: ParentWorld * LocalTransform
-            hierarchy.worldTransform = parentHierarchy.worldTransform * localMatrix;
-        }
-        else {
-            // Root entity: world transform = local transform
-            hierarchy.worldTransform = localMatrix;
-        }
-
-        // CRITICAL FIX: Update the Transform component's transform_matrix
-        // The renderer uses transform.transform_matrix, so we must update it!
-        transform.transform_matrix = hierarchy.worldTransform;
-
-        // Mark as clean
-        hierarchy.isDirty = false;
-        hierarchy.worldTransformDirty = false;
-        transform.isDirty = false;  // Also clear the Transform dirty flag
-
-        // Mark this entity as updated
-        updatedEntities.insert(entity);
-
-        // Update children recursively
-        for (auto child : hierarchy.children) {
-            // Recursively update child
-            UpdateWorldTransformRecursive(child, updatedEntities);
-        }
     }
 
     /**

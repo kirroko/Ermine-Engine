@@ -35,6 +35,7 @@ namespace Ermine
 	XPROPERTY_REG(GlobalAudioComponent)
 	XPROPERTY_REG(AudioComponent)
 	XPROPERTY_REG(PhysicComponent)
+	XPROPERTY_REG(GlobalTransform)
 
 	//XPROPERTY_REG(ModelComponent)
 	//XPROPERTY_REG(AnimationComponent)

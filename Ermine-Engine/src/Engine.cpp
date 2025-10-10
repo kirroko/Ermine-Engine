@@ -153,7 +153,8 @@ bool engine::Init(GLFWwindow* windowContext)
 		EE_AUTO_REGISTER_COMPONENT(ModelComponent, "ModelComponent")
 		EE_AUTO_REGISTER_COMPONENT(AnimationComponent, "AnimationComponent")
 		EE_AUTO_REGISTER_COMPONENT(HierarchyComponent, "HierarchyComponent");
-	EE_AUTO_REGISTER_COMPONENT(StateMachine, "StateMachine");
+		EE_AUTO_REGISTER_COMPONENT(StateMachine, "StateMachine");
+		EE_AUTO_REGISTER_COMPONENT(GlobalTransform, "GlobalTransform")
 
 	// Special Case for Script component, need to copy over the class name
 	ECS::GetInstance().RegisterComponent<Script>("Script",

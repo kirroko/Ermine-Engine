@@ -239,21 +239,14 @@ namespace Ermine::editor {
 
                     EE_CORE_INFO("Transform changed for entity {}: {}, {}, {}", entity, a[0], a[1], a[2]);
 
-                    // Mark entity dirty for hierarchy propagation
+                    // FIXED: Use proper hierarchy system integration
                     if (ECS::GetInstance().HasComponent<HierarchyComponent>(entity)) {
                         auto hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>();
-                        hierarchySystem->MarkDirty(entity);
-
-                        // ✅ ADD THIS: Sync the transform matrix for rendering
-                        hierarchySystem->SyncTransformMatrix(entity);
-
-                        // ✅ ADD THIS: Also sync children's transform matrices
-                        const auto& children = hierarchySystem->GetChildren(entity);
-                        for (auto child : children) {
-                            hierarchySystem->SyncTransformMatrix(child);
+                        if (hierarchySystem) {
+                            // Mark entity and children as dirty for hierarchy update
+                            hierarchySystem->OnTransformChanged(entity);
+                            EE_CORE_INFO("Marked entity {} as dirty for hierarchy update", entity);
                         }
-
-                        EE_CORE_INFO("Marked entity {} as dirty for hierarchy update", entity);
                     }
                 }
             }
@@ -284,18 +277,13 @@ namespace Ermine::editor {
                     p.m_Value.set<Ermine::Quaternion>(q);
                     xproperty::sprop::setProperty(err, t, p, ctx);
                 
-                    // Mark entity dirty for hierarchy propagation
+                    // FIXED: Use proper hierarchy system integration
                     if (ECS::GetInstance().HasComponent<HierarchyComponent>(entity)) {
                         auto hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>();
-                        hierarchySystem->MarkDirty(entity);
-
-                        // Sync the transform matrix for rendering
-                        hierarchySystem->SyncTransformMatrix(entity);
-
-                        // Also sync children's transform matrices  
-                        const auto& children = hierarchySystem->GetChildren(entity);
-                        for (auto child : children) {
-                            hierarchySystem->SyncTransformMatrix(child);
+                        if (hierarchySystem) {
+                            // Mark entity and children as dirty for hierarchy update
+                            hierarchySystem->OnTransformChanged(entity);
+                            EE_CORE_INFO("Marked entity {} as dirty for hierarchy update", entity);
                         }
                     }
                 }
@@ -1199,6 +1187,19 @@ namespace Ermine::editor {
     void HierarchyInspector::DrawAddComponentMenu(EntityID entity) {
         if (ImGui::MenuItem("Transform") && !ECS::GetInstance().HasComponent<Transform>(entity)) {
             ECS::GetInstance().AddComponent(entity, Transform());
+            // FIXED: Also add GlobalTransform and initialize hierarchy
+            if (!ECS::GetInstance().HasComponent<GlobalTransform>(entity)) {
+                ECS::GetInstance().AddComponent<GlobalTransform>(entity, GlobalTransform());
+            }
+            if (!ECS::GetInstance().HasComponent<HierarchyComponent>(entity)) {
+                ECS::GetInstance().AddComponent<HierarchyComponent>(entity, HierarchyComponent());
+
+                // Initialize the hierarchy system for this entity
+                auto hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>();
+                if (hierarchySystem) {
+                    hierarchySystem->InitializeEntity(entity);
+                }
+            }
         }
         if (ImGui::MenuItem("Mesh") && !ECS::GetInstance().HasComponent<Mesh>(entity)) {
             ECS::GetInstance().AddComponent(entity, graphics::GeometryFactory::CreateCube());
