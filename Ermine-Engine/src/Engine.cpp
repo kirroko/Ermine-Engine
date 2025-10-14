@@ -178,6 +178,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	RegisterDefaultAllocator();
 	ECS::GetInstance().RegisterSystem<Physics>();
 	ECS::GetInstance().GetSystem<Physics>()->Init();
+	ECS::GetInstance().GetSystem<Physics>()->AttachDebugRenderer(std::make_shared<MyDebugRenderer>());
 
 	// Set system signatures
 	SignatureID sig;
@@ -661,6 +662,19 @@ void engine::Render(GLFWwindow* window)
 
 	// Draw scene objects
 	renderer->Update(view, proj);
+
+	auto physicsSystem = ECS::GetInstance().GetSystem<Physics>();
+	if (physicsSystem)
+	{
+		// OpenGL setup for debug renderer
+		glMatrixMode(GL_PROJECTION);
+		glLoadMatrixf(proj.m); // Ensure column-major
+		glMatrixMode(GL_MODELVIEW);
+		glLoadMatrixf(view.m);
+		// Draw all physics bodies safely
+		physicsSystem->DrawDebug();
+	}
+
 
 	// Stop GPU timing for rendering
 	graphics::GPUProfiler::EndEvent();

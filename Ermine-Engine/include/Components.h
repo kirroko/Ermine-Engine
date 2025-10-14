@@ -1564,6 +1564,7 @@ namespace Ermine
 	struct PhysicComponent
 	{
 		JPH::BodyID bodyID{ JPH::BodyID::cInvalidBodyID };
+		JPH::Body* body{ nullptr };
 		PhysicsBodyType bodyType{ PhysicsBodyType::Rigid };
 		JPH::EMotionType motionType{ JPH::EMotionType::Static };
 		float mass{ 0.0f };

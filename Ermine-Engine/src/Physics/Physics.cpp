@@ -11,13 +11,30 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 */
 /* End Header **************************************************************************/
 
+
 #include "PreCompile.h"
 #include "Physics.h"
 #include <Jolt/Physics/Body/BodyActivationListener.h>
 #include "MathVector.h"
+#include "PhysicDebugRenderer.h"
+#include <Jolt/Physics/Body/BodyInterface.h>
+#include <Jolt/Physics/Body/Body.h>
+#include <Jolt/Physics/Collision/Shape/Shape.h>
+#include <Jolt/Core/Color.h>
 #include <iostream>
-using namespace std;
 
+#include <Jolt/Physics/PhysicsSystem.h>
+#include <Jolt/Physics/Body/BodyLock.h>
+#include <Jolt/Physics/Body/BodyManager.h>
+#include <Jolt/Renderer/DebugRenderer.h>
+
+
+
+
+
+
+
+using namespace std;
 namespace Ermine
 {
     // ------------------ Layer & Filter Implementations ------------------
@@ -184,6 +201,9 @@ namespace Ermine
         mPhysicsSystem.SetBodyActivationListener(mBodyActivationListener);
         mPhysicsSystem.SetContactListener(mContactListener);
         mPhysicsSystem.OptimizeBroadPhase();
+
+        JPH::DebugRenderer::sInstance = mDebugRenderer.get();
+
     }
 
     /*!*************************************************************************
@@ -193,8 +213,14 @@ namespace Ermine
     ***************************************************************************/
     void Physics::Shutdown()
     {
+        // unregister types and clear bodies
         UnregisterTypes();
         mEntityToBody.clear();
+
+        // Clear the global debug renderer so Jolt won't hold dangling pointer
+        JPH::DebugRenderer::sInstance = nullptr;
+        mDebugRenderer.reset();
+
         delete Factory::sInstance;
         Factory::sInstance = nullptr;
     }
@@ -301,87 +327,69 @@ namespace Ermine
     ***************************************************************************/
     void Physics::UpdatePhysicList()
     {
+        auto& ecs = ECS::GetInstance();
         mEntityToBody.clear();
 
-        auto& ecs = ECS::GetInstance();
         auto& bodyInterface = mPhysicsSystem.GetBodyInterface();
 
         for (auto entity : m_Entities)
         {
-            if (!ecs.HasComponent<Transform>(entity) ||
-                !ecs.HasComponent<PhysicComponent>(entity))
+            if (!ecs.HasComponent<Transform>(entity) || !ecs.HasComponent<PhysicComponent>(entity))
                 continue;
 
             auto& t = ecs.GetComponent<Transform>(entity);
             auto& p = ecs.GetComponent<PhysicComponent>(entity);
 
-            // Remove old body if it exists (to update settings properly)
-            if (p.bodyID != JPH::BodyID(JPH::BodyID::cInvalidBodyID))
+            // Remove old body if exists
+            if (p.body)
             {
                 bodyInterface.RemoveBody(p.bodyID);
                 bodyInterface.DestroyBody(p.bodyID);
+                p.body = nullptr;
                 p.bodyID = JPH::BodyID(JPH::BodyID::cInvalidBodyID);
             }
 
-            // Determine object layer
-            ObjectLayer layer = (p.motionType == JPH::EMotionType::Dynamic)
-                ? Layers::MOVING
-                : Layers::NON_MOVING;
+            // Skip zero-scale transforms
+            if (t.scale.x <= 0 || t.scale.y <= 0 || t.scale.z <= 0)
+                continue;
 
+            // Determine layer
+            ObjectLayer layer = (p.motionType == JPH::EMotionType::Dynamic) ? Layers::MOVING : Layers::NON_MOVING;
             if (p.motionType == JPH::EMotionType::Dynamic && p.mass <= 0.0f)
-            {
                 p.mass = 1.0f;
-            }
 
-            // Create the correct shape
+            // Create shape
             JPH::Shape* shape = nullptr;
             switch (p.shapeType)
             {
             case ShapeType::Box:
-                shape = new JPH::BoxShape(JPH::Vec3(
-                    t.scale.x * 0.5f,
-                    t.scale.y * 0.5f,
-                    t.scale.z * 0.5f));
+                shape = new JPH::BoxShape(JPH::Vec3(t.scale.x * 0.5f, t.scale.y * 0.5f, t.scale.z * 0.5f));
                 break;
-
             case ShapeType::Sphere:
                 shape = new JPH::SphereShape(t.scale.x * 0.5f);
                 break;
-
             case ShapeType::Capsule:
-                shape = new JPH::CapsuleShape(
-                    t.scale.y * 0.5f, // half height
-                    t.scale.x * 0.5f  // radius
-                );
+                shape = new JPH::CapsuleShape(t.scale.y * 0.5f, t.scale.x * 0.5f);
                 break;
-
             case ShapeType::CustomMesh:
-            {
-                std::vector<JPH::Vec3> jphVerts;
-                jphVerts.reserve(p.customMeshVertices.size());
-                for (const auto& v : p.customMeshVertices)
-                    jphVerts.emplace_back(v.x, v.y, v.z);
+                if (!p.customMeshVertices.empty())
+                {
+                    std::vector<JPH::Vec3> verts;
+                    verts.reserve(p.customMeshVertices.size());
+                    for (const auto& v : p.customMeshVertices)
+                        verts.emplace_back(v.x, v.y, v.z);
 
-                JPH::ConvexHullShapeSettings hullSettings(
-                    jphVerts.data(),
-                    jphVerts.size()
-                );
-
-                JPH::ShapeSettings::ShapeResult hullResult = hullSettings.Create();
-                if (hullResult.IsValid())
-                    shape = hullResult.Get();
+                    JPH::ConvexHullShapeSettings hull(verts.data(), verts.size());
+                    auto result = hull.Create();
+                    if (result.IsValid())
+                        shape = result.Get();
+                }
                 break;
             }
-            ////NOT IN USED YET
-            // case ShapeType::Compound:
-            //     shape = BuildCompoundShapeDirectly(...);
-            //     break;
-            }
 
-            if (!shape) // Skip if shape creation failed
-                continue;
+            if (!shape) continue; // Skip invalid shapes
 
-            // Create body settings with updated transform and properties
+            // Create body settings
             JPH::BodyCreationSettings bodySettings(
                 shape,
                 JPH::Vec3(t.position.x, t.position.y, t.position.z),
@@ -390,22 +398,23 @@ namespace Ermine
                 layer
             );
 
-            // Apply mass and inertia if dynamic
             if (p.motionType == JPH::EMotionType::Dynamic)
             {
                 bodySettings.mOverrideMassProperties = JPH::EOverrideMassProperties::CalculateInertia;
                 bodySettings.mMassPropertiesOverride.mMass = p.mass;
             }
 
-            // Create and add body to the world
+            // Create body
             JPH::Body* body = bodyInterface.CreateBody(bodySettings);
+            if (!body) continue;
+
             bodyInterface.AddBody(body->GetID(), JPH::EActivation::Activate);
 
-            // Store mapping
+            // Store in component
+            p.body = body;
             p.bodyID = body->GetID();
             mEntityToBody[entity] = p.bodyID;
         }
-
     }
 
     /*!*************************************************************************
@@ -423,5 +432,28 @@ namespace Ermine
             ? it->second
             : JPH::BodyID(JPH::BodyID::cInvalidBodyID);
     }
+
+    void Physics::DrawDebug()
+    {
+
+        if (!mDebugRenderer) // nothing to draw
+            return;
+
+        JPH::BodyManager::DrawSettings settings;
+        settings.mDrawShapeWireframe = true;
+        settings.mDrawShape = false;
+
+        mPhysicsSystem.DrawBodies(settings, mDebugRenderer.get());
+    }
+
+
+
+    void Physics::AttachDebugRenderer(std::shared_ptr<MyDebugRenderer> renderer)
+    {
+        mDebugRenderer = std::move(renderer);
+    }
+
+
+
 
 }
