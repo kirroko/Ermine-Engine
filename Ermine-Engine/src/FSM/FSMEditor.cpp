@@ -27,6 +27,17 @@ namespace Ermine
         m_nextNodeId = 5;
     }
 
+    void FSMEditorImGUI::CreateNode(const std::string& name)
+    {
+        FSMNode node;
+        node.id = m_nextNodeId++;
+        node.name = name;
+
+        node.statePtr = nullptr;
+
+        m_nodes.push_back(node);
+    }
+
     void FSMEditorImGUI::Render()
     {
         if (!ImNodes::GetCurrentContext())
@@ -43,6 +54,18 @@ namespace Ermine
             ImGui::End();
             return;
         }
+
+        ImGui::InputText("New Node Name", m_newNodeName, IM_ARRAYSIZE(m_newNodeName));
+        ImGui::SameLine();
+        if (ImGui::Button("Add Node"))
+        {
+            if (strlen(m_newNodeName) > 0)
+            {
+                CreateNode(m_newNodeName);
+                m_newNodeName[0] = '\0';
+            }
+        }
+        ImGui::Separator();
 
         auto& fsm = ECS::GetInstance().GetComponent<StateMachine>(m_SelectedEntity);
 

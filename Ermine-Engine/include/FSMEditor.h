@@ -46,6 +46,9 @@ namespace Ermine
         std::vector<FSMNode> m_nodes;
         std::vector<std::pair<int, int>> m_links; // (fromId, toId)
 
+        char m_newNodeName[64] = "";
+
         void InitializeDefaultNodes();
+        void CreateNode(const std::string& name);
     };
 }
