@@ -27,16 +27,11 @@ namespace Ermine
         \brief
             Initialize a state machine for an entity with a starting state.
         *************************************************************************/
-        void Init(EntityID entity, State* startState);
+        void Init(EntityID entity, ScriptNode* startScript);
         /*!***********************************************************************
         \brief
             Update all managed state machines.
         *************************************************************************/
         void Update(float dt);
-        /*!***********************************************************************
-        \brief
-            Free the state machine belonging to an entity.
-        *************************************************************************/
-        void Free(EntityID entity);
     };
 }

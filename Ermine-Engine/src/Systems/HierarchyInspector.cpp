@@ -1294,12 +1294,12 @@ namespace Ermine::editor {
 
 		auto& fsmComp = ECS::GetInstance().GetComponent<StateMachine>(entity);
 
-		ImGui::Text("Current State: %s",
-			(fsmComp.m_CurrentState == &g_IdleState ? "Idle" :
-				fsmComp.m_CurrentState == &g_RoamState ? "Roam" : "Unknown"));
+		//ImGui::Text("Current State: %s",
+		//	(fsmComp.m_CurrentState == &idleState ? "Idle" :
+		//		fsmComp.m_CurrentState == &roamState ? "Roam" : "Unknown"));
 
-		ImGui::DragFloat("State Duration", &fsmComp.stateDuration, 0.1f, 0.1f, 10.0f);
-		ImGui::Text("Timer: %.2f", fsmComp.stateTimer);
+		//ImGui::DragFloat("State Duration", &fsmComp.stateDuration, 0.1f, 0.1f, 10.0f);
+		//ImGui::Text("Timer: %.2f", fsmComp.stateTimer);
 
 		ImGui::Separator();
 		if (ImGui::Button("Edit State Machine"))
@@ -1373,9 +1373,35 @@ namespace Ermine::editor {
 			auto fsmManager = ECS::GetInstance().GetSystem<StateManager>();
 			if (fsmManager)
 			{
-				// Initialize to Idle
-				fsmComp.Init(entity, &g_IdleState);
-				fsmComp.m_CurrentState = &g_IdleState;
+				auto* fsmEditor = editor::EditorGUI::GetWindow<FSMEditorImGUI>();
+				ScriptNode* startNode = nullptr;
+
+				if (fsmEditor)
+				{
+					//auto& nodes = fsmEditor->GetNodesForEntity(entity);
+					//if (!nodes.empty())
+					//	startNode = &nodes.front();
+
+					auto& nodes = fsmEditor->GetNodesForEntity(entity);
+
+					// If no nodes exist, create a default one
+					if (nodes.empty())
+					{
+						ScriptNode defaultNode;
+						defaultNode.id = 0;
+						defaultNode.name = "Start";
+						defaultNode.scriptClassName = "Sandbox"; // or leave blank if you want manual assignment
+						defaultNode.isAttached = true;
+
+						nodes.push_back(std::move(defaultNode));
+
+						EE_CORE_INFO("Created default FSM node for entity {0}", entity);
+					}
+
+					startNode = &nodes.front();
+				}
+
+				fsmComp.Init(entity, startNode);
 			}
 		}
 		if (ImGui::MenuItem("ParticleEmitter") && !ECS::GetInstance().HasComponent<ParticleEmitter>(entity)) {

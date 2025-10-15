@@ -16,12 +16,11 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 namespace Ermine
 {
-    // StateManager
-    void StateManager::Init(EntityID entity, State* startState)
+    void StateManager::Init(EntityID entity, ScriptNode* startScript)
     {
         auto& fsm = ECS::GetInstance().GetComponent<StateMachine>(entity);
         fsm.manager = this;
-        fsm.Init(entity, startState);
+        fsm.Init(entity, startScript);
     }
 
     void StateManager::Update(float dt)
@@ -32,40 +31,7 @@ namespace Ermine
                 continue;
 
             auto& fsm = ECS::GetInstance().GetComponent<StateMachine>(entity);
-            if (!fsm.m_CurrentState)
-                continue;
-
-            fsm.m_CurrentState->Update(entity, dt);
-
-            fsm.stateTimer += dt;
-            if (fsm.stateTimer > fsm.stateDuration)
-            {
-                fsm.stateTimer = 0.0f;
-                fsm.m_CurrentState->Exit(entity);
-
-                auto it = fsm.transitions.find(fsm.m_CurrentState);
-                if (it != fsm.transitions.end())
-                {
-                    fsm.m_CurrentState = it->second;
-                    fsm.m_CurrentState->Enter(entity);
-                }
-            }
+            fsm.Update(entity, dt);
         }
-    }
-
-    void StateManager::Free(EntityID entity)
-    {
-        if (!ECS::GetInstance().HasComponent<StateMachine>(entity))
-            return;
-
-        auto& fsm = ECS::GetInstance().GetComponent<StateMachine>(entity);
-
-        // Call Exit() on the current state before clearing
-        if (fsm.m_CurrentState)
-            fsm.m_CurrentState->Exit(entity);
-
-        fsm.m_CurrentState = nullptr;
-        fsm.manager = nullptr;
-        fsm.stateTimer = 0.0f;
     }
 }

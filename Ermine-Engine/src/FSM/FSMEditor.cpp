@@ -16,26 +16,18 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 namespace Ermine
 {
-    void FSMEditorImGUI::InitializeDefaultNodes()
-    {
-        m_nodes = {
-        {1, "Idle", &g_IdleState},
-        {2, "Roam", &g_RoamState},
-        {3, "Attack", &g_AttackState},
-        {4, "Dead", &g_DeadState},
-        };
-        m_nextNodeId = 5;
-    }
-
     void FSMEditorImGUI::CreateNode(const std::string& name)
     {
-        FSMNode node;
+        if (m_SelectedEntity == 0)
+            return;
+
+        ScriptNode node;
         node.id = m_nextNodeId++;
         node.name = name;
+        node.isAttached = false;
+        node.scriptClassName = "";
 
-        node.statePtr = nullptr;
-
-        m_nodes.push_back(node);
+        m_entityNodes[m_SelectedEntity].push_back(std::move(node));
     }
 
     void FSMEditorImGUI::Render()
@@ -55,6 +47,9 @@ namespace Ermine
             return;
         }
 
+        auto& scriptNodes = m_entityNodes[m_SelectedEntity];
+        auto& links = m_entityLinks[m_SelectedEntity];
+
         ImGui::InputText("New Node Name", m_newNodeName, IM_ARRAYSIZE(m_newNodeName));
         ImGui::SameLine();
         if (ImGui::Button("Add Node"))
@@ -69,69 +64,114 @@ namespace Ermine
 
         auto& fsm = ECS::GetInstance().GetComponent<StateMachine>(m_SelectedEntity);
 
-        // Initialize if empty
-        if (m_nodes.empty())
-            InitializeDefaultNodes();
-
         // (Optional) sync m_links from fsm.transitions
-        m_links.clear();
-        for (auto& [fromState, toState] : fsm.transitions)
+        links.clear();
+
+        for (auto& [fromScript, toScript] : fsm.scriptTransitions)
         {
             int fromId = -1, toId = -1;
-            for (auto& node : m_nodes)
-            {
-                if (node.statePtr == fromState) fromId = node.id;
-                if (node.statePtr == toState)   toId = node.id;
+            for (auto& s : scriptNodes) {
+                if (&s == fromScript) fromId = s.id;
+                if (&s == toScript)   toId = s.id;
             }
+
             if (fromId != -1 && toId != -1)
-                m_links.emplace_back(fromId, toId);
+                links.emplace_back(fromId * 10, toId * 10 + 1);
         }
 
         // Draw editor
         ImNodes::BeginNodeEditor();
-        for (auto& node : m_nodes)
+
+        for (auto& snode : scriptNodes)
         {
-            ImNodes::BeginNode(node.id);
+            ImNodes::BeginNode(snode.id);
             ImNodes::BeginNodeTitleBar();
-            ImGui::TextUnformatted(node.name.c_str());
+            ImGui::TextUnformatted((snode.name + " (Script)").c_str());
             ImNodes::EndNodeTitleBar();
 
-            ImNodes::BeginInputAttribute(node.id * 10 + 1);
+            // Script attach UI
+            if (snode.isAttached)
+                ImGui::Text("Script: %s", snode.scriptClassName.c_str());
+            else if (ImGui::Button(("Attach Script##" + std::to_string(snode.id)).c_str()))
+                ImGui::OpenPopup(("AttachScriptPopup" + std::to_string(snode.id)).c_str());
+
+            if (ImGui::BeginPopup(("AttachScriptPopup" + std::to_string(snode.id)).c_str()))
+            {
+                static char scriptName[128] = "";
+                ImGui::InputText("Class Name", scriptName, IM_ARRAYSIZE(scriptName));
+                if (ImGui::Button("Confirm"))
+                {
+                    snode.isAttached = true;
+                    snode.scriptClassName = scriptName;
+
+                    if (!snode.scriptClassName.empty())
+                    {
+                        //auto sc = std::make_unique<scripting::ScriptClass>("", snode.scriptClassName);
+                        //snode.instance = std::make_unique<scripting::ScriptInstance>(
+                        //    std::move(sc),
+                        //    m_SelectedEntity // or the ECS entity currently selected
+                        //);
+                        snode.isAttached = true;
+                    }
+
+                    ImGui::CloseCurrentPopup();
+                }
+                ImGui::EndPopup();
+            }
+
+            ImNodes::BeginInputAttribute(snode.id * 10 + 1);
             ImGui::Text("In");
             ImNodes::EndInputAttribute();
 
-            ImNodes::BeginOutputAttribute(node.id * 10);
+            ImNodes::BeginOutputAttribute(snode.id * 10);
             ImGui::Text("Out");
             ImNodes::EndOutputAttribute();
 
             ImNodes::EndNode();
         }
 
+        //int linkId = 1;
+        //for (auto& link : m_links)
+        //    ImNodes::Link(linkId++, link.first * 10, link.second * 10 + 1);
+
         int linkId = 1;
-        for (auto& link : m_links)
-            ImNodes::Link(linkId++, link.first * 10, link.second * 10 + 1);
+        for (auto& link : links)
+            ImNodes::Link(linkId++, link.first, link.second);
         ImNodes::EndNodeEditor();
 
         // Handle new link
         int startAttr, endAttr;
         if (ImNodes::IsLinkCreated(&startAttr, &endAttr))
         {
-            int fromId = startAttr / 10;
-            int toId = (endAttr - 1) / 10;
+            // normalize so 'from' is an output pin and 'to' is an input pin
+            auto is_output = [](int attr) { return (attr % 10) == 0; };   // id*10
+            auto is_input = [](int attr) { return (attr % 10) == 1; };   // id*10+1
 
-            State* fromState = nullptr;
-            State* toState = nullptr;
-            for (auto& node : m_nodes)
-            {
-                if (node.id == fromId) fromState = node.statePtr;
-                if (node.id == toId)   toState = node.statePtr;
+            int fromAttr = startAttr;
+            int toAttr = endAttr;
+            if (is_input(fromAttr) && is_output(toAttr))
+                std::swap(fromAttr, toAttr);
+
+            // derive node IDs
+            int fromId = fromAttr / 10;
+            int toId = (toAttr - 1) / 10;
+
+            // find nodes
+            ScriptNode* fromScriptNode = nullptr;
+            ScriptNode* toScriptNode = nullptr;
+
+            for (auto& s : scriptNodes) {
+                if (s.id == fromId) fromScriptNode = &s;
+                if (s.id == toId)   toScriptNode = &s;
             }
 
-            if (fromState && toState)
-            {
-                m_links.emplace_back(fromId, toId);
-                fsm.transitions[fromState] = toState;
-            }
+            auto& fsm = ECS::GetInstance().GetComponent<StateMachine>(m_SelectedEntity);
+
+            if (fromScriptNode && toScriptNode)
+                fsm.scriptTransitions[fromScriptNode] = toScriptNode;
+
+            // store ATTRIBUTE IDs (pins) for drawing
+            links.emplace_back(fromAttr, toAttr);
         }
 
         ImGui::End();

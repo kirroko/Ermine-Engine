@@ -41,7 +41,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "xproperty.h"
 #include "sprop/property_sprop.h"
 
-#include "State.h"
+#include "FSMNode.h"
 
 namespace xprop_utils
 {
@@ -1829,38 +1829,61 @@ namespace Ermine
 	struct StateMachine
 	{
 		StateManager* manager = nullptr;
-		State* m_CurrentState = nullptr;
+		ScriptNode* m_CurrentScript = nullptr;
 
 		float stateTimer = 0.0f;
 		float stateDuration = 3.0f;
 
-		std::vector<State*> availableStates;
-		std::unordered_map<State*, State*> transitions;
+		std::unordered_map<ScriptNode*, ScriptNode*> scriptTransitions;
 	public:
-		void Init([[maybe_unused]] EntityID entity, State* initial)
+		// For script start
+		void Init(EntityID entity, ScriptNode* startScript)
 		{
-			m_CurrentState = initial;
+			m_CurrentScript = startScript;
+			if (m_CurrentScript)
+			{
+				m_CurrentScript->CreateInstance(entity);
+				m_CurrentScript->OnEnter();
+			}
 		}
 		/*!***********************************************************************
 		\brief
 		   Change the current state of an entity.
 		*************************************************************************/
-		void ChangeState(EntityID entity, State* newState) {
-			if (m_CurrentState)
-				m_CurrentState->Exit(entity);
+		//void ChangeState(EntityID entity, State* newState) {
+		//	if (m_CurrentState)
+		//		m_CurrentState->Exit(entity);
 
-			m_CurrentState = newState;
+		//	m_CurrentState = newState;
 
-			if (m_CurrentState)
-				m_CurrentState->Enter(entity);
-		}
+		//	if (m_CurrentState)
+		//		m_CurrentState->Enter(entity);
+		//}
 		/*!***********************************************************************
 		\brief
 		   Update the current state of an entity.
 		*************************************************************************/
-		void Update(EntityID entity, float dt) {
-			if (m_CurrentState)
-				m_CurrentState->Update(entity, dt);
+		void Update(EntityID entity, float dt)
+		{
+			// time-based way of changing state will be removed, just for testing
+			if (!m_CurrentScript) return;
+
+			m_CurrentScript->OnUpdate();
+			stateTimer += dt;
+
+			if (stateTimer >= stateDuration)
+			{
+				stateTimer = 0.0f;
+
+				auto it = scriptTransitions.find(m_CurrentScript);
+				if (it != scriptTransitions.end())
+				{
+					m_CurrentScript->OnExit();
+					m_CurrentScript = it->second;
+					m_CurrentScript->CreateInstance(entity);
+					m_CurrentScript->OnEnter();
+				}
+			}
 		}
 	};
 }
