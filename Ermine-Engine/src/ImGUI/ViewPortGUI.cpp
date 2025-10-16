@@ -301,8 +301,11 @@ void Ermine::ViewPortGUI::ObjectPicking(const std::shared_ptr<Ermine::graphics::
 	}
 }
 
-void Ermine::ViewPortGUI::GizmoOverlay(const ImVec2& imgMin, const ImVec2& imgSize, const ImVec2& vmSize, const ImVec2& vmPos, const Ermine::EntityID&
-                                       selectedEntity, ImGuizmo::OPERATION& gOperation, ImGuizmo::MODE& gMode)
+void Ermine::ViewPortGUI::GizmoOverlay(const ImVec2& imgMin, const ImVec2& imgSize,
+	const ImVec2& vmSize, const ImVec2& vmPos,
+	const Ermine::EntityID& selectedEntity,
+	ImGuizmo::OPERATION& gOperation,
+	ImGuizmo::MODE& gMode)
 {
 	const Mtx44& v = EditorCamera::GetInstance().GetViewMatrix();
 	const Mtx44& p = EditorCamera::GetInstance().GetProjectionMatrix();
@@ -325,21 +328,32 @@ void Ermine::ViewPortGUI::GizmoOverlay(const ImVec2& imgMin, const ImVec2& imgSi
 	ImGuizmo::SetDrawlist(ImGui::GetWindowDrawList());
 	ImGuizmo::SetRect(imgMin.x, imgMin.y, imgSize.x, imgSize.y);
 
+	// Move static variables outside the if block
+	static glm::mat4 s_previousModel = glm::mat4(1.0f);
+	static bool s_wasManipulating = false;
+
 	// OBJECT Gizmo overlay
-	if (!EditorGUI::isPlaying && ECS::GetInstance().IsEntityValid(selectedEntity) && ECS::GetInstance().HasComponent<Transform>(selectedEntity))
+	if (!EditorGUI::isPlaying && ECS::GetInstance().IsEntityValid(selectedEntity)
+		&& ECS::GetInstance().HasComponent<Transform>(selectedEntity))
 	{
 		auto& ecs = ECS::GetInstance();
 		auto& tr = ecs.GetComponent<Transform>(selectedEntity);
 
+		// Get manipulation position based on current transform mode
+		Vec3 manipulationPos = TransformModeManager::GetManipulationPosition(selectedEntity);
+
 		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(tr.position.x, tr.position.y, tr.position.z));
+		model = glm::translate(model, glm::vec3(manipulationPos.x, manipulationPos.y, manipulationPos.z));
+
+		// For rotation and scale, we still use the entity's own transform
 		glm::quat rotQuat(tr.rotation.w, tr.rotation.x, tr.rotation.y, tr.rotation.z);
 		rotQuat = glm::normalize(rotQuat);
 		model *= glm::mat4_cast(rotQuat);
 		model = glm::scale(model, glm::vec3(tr.scale.x, tr.scale.y, tr.scale.z));
 
 		// Snapping
-		const bool useSnap = Input::IsKeyDownEditor(GLFW_KEY_LEFT_CONTROL) || Input::IsKeyDownEditor(GLFW_KEY_RIGHT_CONTROL);
+		const bool useSnap = Input::IsKeyDownEditor(GLFW_KEY_LEFT_CONTROL)
+			|| Input::IsKeyDownEditor(GLFW_KEY_RIGHT_CONTROL);
 		float snap[3] = { 0.5f, 0.5f, 0.5f };
 		if (gOperation == ImGuizmo::ROTATE) { snap[0] = snap[1] = snap[2] = 5.0f; }
 		if (gOperation == ImGuizmo::SCALE) { snap[0] = snap[1] = snap[2] = 0.1f; }
@@ -355,22 +369,90 @@ void Ermine::ViewPortGUI::GizmoOverlay(const ImVec2& imgMin, const ImVec2& imgSi
 			useSnap ? snap : nullptr
 		);
 
-		// Apply result back into Transform
+		// Apply transformation
 		if (ImGuizmo::IsUsing())
 		{
+			// ✅ FIX: Store model matrix on first frame of manipulation
+			if (!s_wasManipulating) {
+				s_previousModel = model;
+				s_wasManipulating = true;
+			}
+
 			glm::vec3 skew, translation, scale;
 			glm::vec4 perspective;
 			glm::quat rotation;
+
 			if (glm::decompose(model, scale, rotation, translation, skew, perspective))
 			{
 				rotation = glm::normalize(rotation);
-				tr.position = Vector3D(translation.x, translation.y, translation.z);
-				tr.scale = Vector3D(scale.x, scale.y, scale.z);
-				tr.rotation = Quaternion(rotation.x, rotation.y, rotation.z, rotation.w);
-				
-				// Mark transform as dirty to trigger hierarchy update
-				ECS::GetInstance().GetSystem<HierarchySystem>()->MarkDirty(selectedEntity);
+				auto hierarchySystem = ecs.GetSystem<HierarchySystem>();
+
+				// Calculate delta transformation
+				switch (gOperation)
+				{
+				case ImGuizmo::TRANSLATE: {
+					// Translation: just update world position
+					Vec3 newPos(translation.x, translation.y, translation.z);
+					if (hierarchySystem) {
+						hierarchySystem->SetWorldPosition(selectedEntity, newPos);
+					}
+					else {
+						tr.position = newPos;
+					}
+					break;
+				}
+
+				case ImGuizmo::ROTATE: {
+					// Rotate around manipulation point!
+
+					// Decompose previous frame
+					glm::vec3 prevSkew, prevTranslation, prevScale;
+					glm::vec4 prevPerspective;
+					glm::quat prevRotation;
+					glm::decompose(s_previousModel, prevScale, prevRotation,
+						prevTranslation, prevSkew, prevPerspective);
+					prevRotation = glm::normalize(prevRotation);
+
+					// Calculate rotation delta
+					glm::quat deltaRotation = rotation * glm::inverse(prevRotation);
+
+					// Convert to Ermine quaternion
+					Quaternion ermineRotation(deltaRotation.x, deltaRotation.y,
+						deltaRotation.z, deltaRotation.w);
+
+					if (hierarchySystem) {
+						// Rotate around the manipulation position
+						hierarchySystem->RotateAroundPointQuat(
+							selectedEntity,
+							manipulationPos,
+							ermineRotation
+						);
+					}
+					else {
+						// Fallback: rotate in place
+						tr.rotation = ermineRotation * tr.rotation;
+					}
+					break;
+				}
+
+				case ImGuizmo::SCALE: {
+					// Scale: apply directly to entity
+					tr.scale = Vector3D(scale.x, scale.y, scale.z);
+
+					if (hierarchySystem) {
+						hierarchySystem->MarkDirty(selectedEntity);
+					}
+					break;
+				}
+				}
+
+				// Store current state for next frame
+				s_previousModel = model;
 			}
+		}
+		else {
+			// Reset flag when manipulation ends (correct scope now)
+			s_wasManipulating = false;
 		}
 	}
 
@@ -400,7 +482,7 @@ void Ermine::ViewPortGUI::GizmoOverlay(const ImVec2& imgMin, const ImVec2& imgSi
 					if (!glm::epsilonEqual(a[c][r], b[c][r], eps))
 						return true;
 			return false;
-		};
+			};
 
 		if (matChanged(viewBefore, viewEdit))
 		{
@@ -520,6 +602,14 @@ void Ermine::ViewPortGUI::Update()
 		if (Input::IsKeyPressedEditor(GLFW_KEY_E)) gOperation = ImGuizmo::ROTATE;
 		if (Input::IsKeyPressedEditor(GLFW_KEY_R)) gOperation = ImGuizmo::SCALE;
 		if (Input::IsKeyPressedEditor(GLFW_KEY_Q)) gMode = gMode == ImGuizmo::LOCAL ? ImGuizmo::WORLD : ImGuizmo::LOCAL;
+
+		// Toggle transform mode with Z key
+		if (Input::IsKeyPressedEditor(GLFW_KEY_Z)) {
+			TransformModeManager::ToggleMode();
+			const char* mode = (TransformModeManager::GetMode() == TransformMode::Pivot)
+				? "Pivot" : "Center";
+			EE_CORE_INFO("Transform mode: {0}", mode);
+		}
 	}
 
 	OverlayGizmoOperation(imgMin, gOperation, gMode);

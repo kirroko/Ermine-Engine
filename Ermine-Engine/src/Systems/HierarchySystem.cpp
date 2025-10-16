@@ -661,6 +661,127 @@ namespace Ermine
     }
 
     /**
+     * @brief Apply a rotation quaternion around a world-space point
+     * @param entity Entity to rotate
+     * @param point World-space point to rotate around
+     * @param rotation Rotation quaternion to apply
+     */
+    void HierarchySystem::RotateAroundPointQuat(EntityID entity, const Vec3& point,
+        const Quaternion& rotation)
+    {
+        auto& ecs = ECS::GetInstance();
+        if (!ecs.IsEntityValid(entity) || !ecs.HasComponent<Transform>(entity))
+            return;
+
+        auto& transform = ecs.GetComponent<Transform>(entity);
+
+        // Get current world position
+        Vec3 worldPos = GetWorldPosition(entity);
+
+        // Calculate offset from rotation point
+        Vec3 offset = worldPos - point;
+
+        // Rotate the offset vector
+        Vec3 rotatedOffset = QuaternionRotateVector(rotation, offset);
+
+        // Set new world position (point + rotated offset)
+        Vec3 newWorldPos = point + rotatedOffset;
+        SetWorldPosition(entity, newWorldPos);
+
+        // Apply rotation to entity's orientation
+        Quaternion currentWorldRot = GetWorldRotation(entity);
+        Quaternion newWorldRot = rotation * currentWorldRot;
+        SetWorldRotation(entity, newWorldRot);
+
+        // Mark dirty to propagate to children
+        MarkDirty(entity);
+    }
+
+    /**
+    * @brief Calculate the geometric center of an entity and all its children
+    * @param entity The root entity to calculate center for
+    * @return The world-space center position of the hierarchy
+    */
+    Vec3 HierarchySystem::CalculateHierarchyCenter(EntityID entity)
+    {
+        auto& ecs = ECS::GetInstance();
+
+        if (!ecs.IsEntityValid(entity) || !ecs.HasComponent<Transform>(entity)) {
+            return Vec3(0, 0, 0);
+        }
+
+        // Collect all entities in hierarchy (entity + all descendants)
+        std::vector<EntityID> allEntities;
+        allEntities.push_back(entity);
+
+        // Recursive lambda to collect all children
+        std::function<void(EntityID)> collectChildren = [&](EntityID e) {
+            if (ecs.HasComponent<HierarchyComponent>(e)) {
+                auto& hierarchy = ecs.GetComponent<HierarchyComponent>(e);
+                for (auto child : hierarchy.children) {
+                    allEntities.push_back(child);
+                    collectChildren(child);  // Recursively collect grandchildren
+                }
+            }
+            };
+        collectChildren(entity);
+
+        // Calculate combined bounds of all entities in hierarchy
+        Vec3 minBounds(FLT_MAX, FLT_MAX, FLT_MAX);
+        Vec3 maxBounds(-FLT_MAX, -FLT_MAX, -FLT_MAX);
+        bool foundAnyBounds = false;
+
+        for (auto e : allEntities) {
+            if (!ecs.IsEntityValid(e)) continue;
+
+            // Get world position of this entity
+            Vec3 worldPos = GetWorldPosition(e);
+
+            // Expand bounds to include this position
+            // TODO: In the future, you could use actual mesh bounds here
+            // For now, we just use entity positions with a small margin
+            const float entityRadius = 0.5f;  // Assume entities have some size
+
+            minBounds.x = std::min(minBounds.x, worldPos.x - entityRadius);
+            minBounds.y = std::min(minBounds.y, worldPos.y - entityRadius);
+            minBounds.z = std::min(minBounds.z, worldPos.z - entityRadius);
+
+            maxBounds.x = std::max(maxBounds.x, worldPos.x + entityRadius);
+            maxBounds.y = std::max(maxBounds.y, worldPos.y + entityRadius);
+            maxBounds.z = std::max(maxBounds.z, worldPos.z + entityRadius);
+
+            foundAnyBounds = true;
+        }
+
+        if (!foundAnyBounds) {
+            // Fallback to entity's world position
+            return GetWorldPosition(entity);
+        }
+
+        // Return center of bounds
+        return Vec3(
+            (minBounds.x + maxBounds.x) * 0.5f,
+            (minBounds.y + maxBounds.y) * 0.5f,
+            (minBounds.z + maxBounds.z) * 0.5f
+        );
+    }
+
+    /**
+     * @brief Rotate an entity (and its children) around a specific world-space point
+     * @param entity Entity to rotate
+     * @param point World-space point to rotate around
+     * @param axis Rotation axis (world space)
+     * @param angleDegrees Rotation angle in degrees
+     */
+    void HierarchySystem::RotateAroundPoint(EntityID entity, const Vec3& point,
+        const Vec3& axis, float angleDegrees)
+    {
+        float angleRad = angleDegrees * (M_PI / 180.0f);
+        Quaternion rotation = QuaternionFromAxisAngle(axis, angleRad);
+        RotateAroundPointQuat(entity, point, rotation);
+    }
+
+    /**
      * @brief Sets the local position of an entity and marks it dirty for transform updates.
      * @param[in] entity The entity to modify.
      * @param[in] localPos The new local position.

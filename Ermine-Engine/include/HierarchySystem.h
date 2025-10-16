@@ -183,6 +183,32 @@ namespace Ermine
 		 */
 		void ForceUpdateAllTransforms();
 
+        /**
+         * @brief Rotate an entity (and its children) around a specific world-space point
+         * @param entity Entity to rotate
+         * @param point World-space point to rotate around
+         * @param axis Rotation axis (world space)
+         * @param angleDegrees Rotation angle in degrees
+         */
+        void RotateAroundPoint(EntityID entity, const Vec3& point,
+            const Vec3& axis, float angleDegrees);
+
+        /**
+         * @brief Apply a rotation quaternion around a world-space point
+         * @param entity Entity to rotate
+         * @param point World-space point to rotate around
+         * @param rotation Rotation quaternion to apply
+         */
+        void RotateAroundPointQuat(EntityID entity, const Vec3& point,
+            const Quaternion& rotation);
+
+        /**
+         * @brief Calculate the geometric center of an entity and all its children
+         * @param entity The root entity to calculate center for
+         * @return The world-space center position of the hierarchy
+         */
+        Vec3 CalculateHierarchyCenter(EntityID entity);
+
     private:
         /**
          * @brief Helper method to recursively mark only world transforms as dirty for children
