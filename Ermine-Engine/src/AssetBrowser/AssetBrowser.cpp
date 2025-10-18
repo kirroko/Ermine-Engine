@@ -293,7 +293,7 @@ namespace Ermine::ImguiUI
             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0, 0, 0, 0));
             ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0, 0, 0, 0));
-            bool clicked = ImGui::ImageButton(("##icon" + asset->Name).c_str(), asset->Icon, ImVec2(iconSize, iconSize));
+            bool clicked = ImGui::ImageButton(("##icon" + asset->Name).c_str(), asset->Icon, ImVec2(iconSize, iconSize), ImVec2(0, 1), ImVec2(1, 0));
             ImGui::PopStyleColor(3);
 
             // Draw selection highlight background
@@ -409,7 +409,7 @@ namespace Ermine::ImguiUI
         ImGui::SameLine();
         if (refreshIcon) {
             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
-            if (ImGui::ImageButton("##RefreshBtn", refreshIcon, ImVec2(30, 30))) Refresh();
+            if (ImGui::ImageButton("##RefreshBtn", refreshIcon, ImVec2(30, 30), ImVec2(0, 1), ImVec2(1, 0))) Refresh();
             ImGui::PopStyleColor();
             if (ImGui::IsItemHovered()) ImGui::SetTooltip("Refresh Assets");
         }
