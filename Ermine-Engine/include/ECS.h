@@ -15,6 +15,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #include "Component.h"
 #include "Systems.h"
+#include "GuidRegistry.h"
 
 namespace Ermine
 {
@@ -23,6 +24,7 @@ namespace Ermine
 		std::unique_ptr<ComponentManager> m_ComponentManager;
 		std::unique_ptr<EntityManager> m_EntityManager;
 		std::unique_ptr<SystemManager> m_SystemManager;
+		std::unique_ptr<GuidRegistry> m_GuidRegistry;
 
 		ECS() = default;
 		~ECS() = default;
@@ -212,6 +214,8 @@ namespace Ermine
 		{
 			return m_EntityManager->IsEntityAlive(entity);
 		}
+
+		GuidRegistry& GetGuidRegistry() const { return *m_GuidRegistry; }
 	};
 }
 #include "ECS.tpp"

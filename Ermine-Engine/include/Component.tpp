@@ -69,7 +69,13 @@ namespace Ermine
 		.name = nameStr,
 		.typeID = id,
 		.size = sizeof(T),
-		.has = [this](EntityID entity) { return this->HasComponent<T>(entity); }
+		.has = [this](EntityID entity) { return this->HasComponent<T>(entity); },
+		.clone = [this](EntityID src, EntityID dst)
+		{
+			if (!this->HasComponent<T>(src)) return;
+			const T& s = this->GetComponent<T>(src);
+			this->AddComponent<T>(dst, s);
+		}
 		};
 		m_Descriptors.emplace(nameStr,std::move(desc));
 	}
@@ -113,7 +119,7 @@ namespace Ermine
 		auto typeIdx = std::type_index(typeid(T));
 		auto itName = m_TypeIndexToName.find(typeIdx);
 		assert(itName != m_TypeIndexToName.end() && "Component not registered before use!");
-		return m_ComponentTypes[itName->second];
+		return m_TypeIndexToID[typeIdx];
 	}
 
 	/**

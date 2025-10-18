@@ -295,6 +295,8 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="include\GuidRegistry.h" />
+    <ClInclude Include="include\Guid.h" />
     <ClInclude Include="include\AnimationClip.h" />
     <ClInclude Include="include\AnimationManager.h" />
     <ClInclude Include="include\Animator.h" />
@@ -361,6 +363,7 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClInclude Include="include\shadow_config.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Utility\GuidRegistry.cpp" />
     <ClCompile Include="src\AssetBrowser\AssetBrowser.cpp" />
     <ClCompile Include="src\AssetManager\AssetManager.cpp" />
     <ClCompile Include="src\AudioManager\AudioManager.cpp" />
@@ -414,6 +417,7 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClCompile Include="src\Utility\EditorCamera.cpp" />
     <ClCompile Include="src\Utility\FrameController.cpp" />
     <ClCompile Include="src\Utility\GPUProfiler.cpp" />
+    <ClCompile Include="src\Utility\Guid.cpp" />
     <ClCompile Include="src\Utility\Input.cpp" />
     <ClCompile Include="src\Utility\JobSystem.cpp" />
     <ClCompile Include="src\Window\Window.cpp" />

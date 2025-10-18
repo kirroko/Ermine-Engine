@@ -14,8 +14,12 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "PreCompile.h"
 #include "ECS.h"
 
+#include "GuidRegistry.h"
+#include "Components.h"
+
 namespace Ermine
 {
+
 	/**
 	 * @brief Initialize the ECS
 	 */
@@ -24,6 +28,7 @@ namespace Ermine
 		m_ComponentManager = std::make_unique<ComponentManager>();
 		m_EntityManager = std::make_unique<EntityManager>();
 		m_SystemManager = std::make_unique<SystemManager>();
+		m_GuidRegistry = std::make_unique<GuidRegistry>();
 	}
 
 	/**
@@ -35,6 +40,7 @@ namespace Ermine
 		m_SystemManager.reset();
 		m_ComponentManager.reset();
 		m_EntityManager.reset();
+		m_GuidRegistry.reset();
 	}
 
 	/**
@@ -43,7 +49,15 @@ namespace Ermine
 	 */
 	EntityID ECS::CreateEntity() const
 	{
-		return m_EntityManager->CreateEntity();
+		EntityID e = m_EntityManager->CreateEntity();
+		auto g = Guid::New();
+		m_ComponentManager->AddComponent<IDComponent>(e, IDComponent{ g });
+		m_GuidRegistry->Register(e, g);
+		auto sig = m_EntityManager->GetSignature(e);
+		sig.set(m_ComponentManager->GetComponentType<IDComponent>(), true);
+		m_EntityManager->SetSignature(e, sig);
+		m_SystemManager->EntitySignatureChanged(e, sig);
+		return e;
 	}
 
 	/**
@@ -52,6 +66,9 @@ namespace Ermine
 	 */
 	void ECS::DestroyEntity(EntityID entity) const
 	{
+		if (m_ComponentManager->HasComponent<IDComponent>(entity))
+			m_GuidRegistry->Unregister(entity);
+
 		m_EntityManager->DestroyEntity(entity);
 		m_ComponentManager->EntityDestroyed(entity);
 		m_SystemManager->EntityDestroyed(entity);
@@ -93,6 +110,7 @@ namespace Ermine
 	void ECS::ReloadEntityManager()
 	{
 		m_EntityManager.reset(new EntityManager());
+		m_GuidRegistry->Clear();
 	}
 
     /**

@@ -54,6 +54,21 @@ bool Texture::LoadFromDDS(const std::string& ddsFilePath)
         return false;
     }
 
+    ScratchImage flipped;
+    HRESULT flipHR = FlipRotate(
+        image.GetImages(),
+        image.GetImageCount(),
+        metadata,
+        TEX_FR_FLIP_VERTICAL,
+        flipped
+    );
+    if (SUCCEEDED(flipHR)) {
+        image = std::move(flipped);
+    }
+    else {
+        EE_CORE_WARN("Failed to vertically flip DDS texture: {0} (HRESULT: 0x{1:x})", ddsFilePath, flipHR);
+    }
+
     // Store basic info
     m_Width = static_cast<int>(metadata.width);
     m_Height = static_cast<int>(metadata.height);

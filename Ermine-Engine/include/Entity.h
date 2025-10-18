@@ -34,10 +34,8 @@ namespace Ermine
 	public:
 		EntityManager()
 		{
-			for (std::size_t entity = 1; entity <= MAX_ENTITIES; ++entity)
-			{
+			for (std::size_t entity = 1; entity < MAX_ENTITIES; ++entity) // Reserve 0 as invalid/null. Valid IDs are [1...MAX_ENTITIES-1]
 				m_AvailableEntities.push(entity);
-			}
 		}
 
 		/**

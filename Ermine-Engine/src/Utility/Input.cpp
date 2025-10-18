@@ -108,7 +108,6 @@ namespace Ermine
 
 		if (const char* keyMap = AssetManager::GetInstance().load_file_contents("../Resources/gamecontrollerdb.txt"))
 		{
-			EE_CORE_TRACE("Loading game controller database...");
 			glfwUpdateGamepadMappings(keyMap);
 			delete[] keyMap; // Release the keymap buffer
 		}
