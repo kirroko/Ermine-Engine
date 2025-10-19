@@ -216,6 +216,19 @@ namespace Ermine
 		}
 
 		GuidRegistry& GetGuidRegistry() const { return *m_GuidRegistry; }
+
+		template<typename Fn>
+		void ForEachComponentType(Fn&& fn) const
+		{
+			m_ComponentManager->ForEachComponentType(std::forward<Fn>(fn));
+		}
+
+		const ComponentDescriptor* GetDescriptor(std::string_view name) const
+		{
+			return m_ComponentManager->GetDescriptor(name);
+		}
+
+		void ResyncAllSignaturesFromStorage();
 	};
 }
 #include "ECS.tpp"
