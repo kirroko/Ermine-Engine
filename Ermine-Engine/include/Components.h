@@ -1834,6 +1834,8 @@ namespace Ermine
 		float stateTimer = 0.0f;
 		float stateDuration = 3.0f;
 
+		std::deque<std::shared_ptr<ScriptNode>> m_Nodes;
+		std::vector<std::pair<int, int>> m_Links;
 		std::unordered_map<ScriptNode*, ScriptNode*> scriptTransitions;
 	public:
 		// For script start

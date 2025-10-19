@@ -16,18 +16,39 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 namespace Ermine
 {
+    std::deque<std::shared_ptr<ScriptNode>>& FSMEditorImGUI::GetNodesForEntity(EntityID entity)
+    {
+        if (!ECS::GetInstance().HasComponent<StateMachine>(entity))
+            ECS::GetInstance().AddComponent(entity, StateMachine());
+        return ECS::GetInstance().GetComponent<StateMachine>(entity).m_Nodes;
+    }
+
+    const std::deque<std::shared_ptr<ScriptNode>>& FSMEditorImGUI::GetNodesForEntity(EntityID entity) const
+    {
+        static const std::deque<std::shared_ptr<ScriptNode>> empty;
+        if (!ECS::GetInstance().HasComponent<StateMachine>(entity))
+            return empty;
+        return ECS::GetInstance().GetComponent<StateMachine>(entity).m_Nodes;
+    }
+
     void FSMEditorImGUI::CreateNode(const std::string& name)
     {
         if (m_SelectedEntity == 0)
             return;
 
-        ScriptNode node;
-        node.id = m_nextNodeId++;
-        node.name = name;
-        node.isAttached = false;
-        node.scriptClassName = "";
+        if (!ECS::GetInstance().HasComponent<StateMachine>(m_SelectedEntity))
+            ECS::GetInstance().AddComponent(m_SelectedEntity, StateMachine());
 
-        m_entityNodes[m_SelectedEntity].push_back(std::move(node));
+        auto& fsm = ECS::GetInstance().GetComponent<StateMachine>(m_SelectedEntity);
+
+        auto node = std::make_shared<ScriptNode>();
+        node->id = m_nextNodeId++;
+        node->name = name;
+        node->isAttached = false;
+        node->scriptClassName = "";
+
+        //m_entityNodes[m_SelectedEntity].push_back(std::move(node));
+        fsm.m_Nodes.push_back(node);
     }
 
     void FSMEditorImGUI::Render()
@@ -47,8 +68,14 @@ namespace Ermine
             return;
         }
 
-        auto& scriptNodes = m_entityNodes[m_SelectedEntity];
-        auto& links = m_entityLinks[m_SelectedEntity];
+        if (!ECS::GetInstance().HasComponent<StateMachine>(m_SelectedEntity))
+        {
+            ImGui::Text("Entity has no StateMachine component.");
+            ImGui::End();
+            return;
+        }
+
+        auto& fsm = ECS::GetInstance().GetComponent<StateMachine>(m_SelectedEntity);
 
         ImGui::InputText("New Node Name", m_newNodeName, IM_ARRAYSIZE(m_newNodeName));
         ImGui::SameLine();
@@ -62,34 +89,18 @@ namespace Ermine
         }
         ImGui::Separator();
 
-        auto& fsm = ECS::GetInstance().GetComponent<StateMachine>(m_SelectedEntity);
-
-        // (Optional) sync m_links from fsm.transitions
-        links.clear();
-
-        for (auto& [fromScript, toScript] : fsm.scriptTransitions)
-        {
-            int fromId = -1, toId = -1;
-            for (auto& s : scriptNodes) {
-                if (&s == fromScript) fromId = s.id;
-                if (&s == toScript)   toId = s.id;
-            }
-
-            if (fromId != -1 && toId != -1)
-                links.emplace_back(fromId * 10, toId * 10 + 1);
-        }
-
-        // Draw editor
+        // Draw editor nodes and links
         ImNodes::BeginNodeEditor();
 
-        for (auto& snode : scriptNodes)
+        for (auto& nodePtr : fsm.m_Nodes)
         {
+            auto& snode = *nodePtr;
             ImNodes::BeginNode(snode.id);
             ImNodes::BeginNodeTitleBar();
             ImGui::TextUnformatted((snode.name + " (Script)").c_str());
             ImNodes::EndNodeTitleBar();
 
-            // Script attach UI
+            // Attach script UI
             if (snode.isAttached)
                 ImGui::Text("Script: %s", snode.scriptClassName.c_str());
             else if (ImGui::Button(("Attach Script##" + std::to_string(snode.id)).c_str()))
@@ -103,17 +114,6 @@ namespace Ermine
                 {
                     snode.isAttached = true;
                     snode.scriptClassName = scriptName;
-
-                    if (!snode.scriptClassName.empty())
-                    {
-                        //auto sc = std::make_unique<scripting::ScriptClass>("", snode.scriptClassName);
-                        //snode.instance = std::make_unique<scripting::ScriptInstance>(
-                        //    std::move(sc),
-                        //    m_SelectedEntity // or the ECS entity currently selected
-                        //);
-                        snode.isAttached = true;
-                    }
-
                     ImGui::CloseCurrentPopup();
                 }
                 ImGui::EndPopup();
@@ -130,48 +130,40 @@ namespace Ermine
             ImNodes::EndNode();
         }
 
-        //int linkId = 1;
-        //for (auto& link : m_links)
-        //    ImNodes::Link(linkId++, link.first * 10, link.second * 10 + 1);
-
         int linkId = 1;
-        for (auto& link : links)
+        for (auto& link : fsm.m_Links)
             ImNodes::Link(linkId++, link.first, link.second);
+
         ImNodes::EndNodeEditor();
 
-        // Handle new link
+        // Handle new link creation
         int startAttr, endAttr;
         if (ImNodes::IsLinkCreated(&startAttr, &endAttr))
         {
-            // normalize so 'from' is an output pin and 'to' is an input pin
-            auto is_output = [](int attr) { return (attr % 10) == 0; };   // id*10
-            auto is_input = [](int attr) { return (attr % 10) == 1; };   // id*10+1
+            auto is_output = [](int attr) { return (attr % 10) == 0; };
+            auto is_input = [](int attr) { return (attr % 10) == 1; };
 
             int fromAttr = startAttr;
             int toAttr = endAttr;
             if (is_input(fromAttr) && is_output(toAttr))
                 std::swap(fromAttr, toAttr);
 
-            // derive node IDs
             int fromId = fromAttr / 10;
             int toId = (toAttr - 1) / 10;
 
-            // find nodes
             ScriptNode* fromScriptNode = nullptr;
             ScriptNode* toScriptNode = nullptr;
 
-            for (auto& s : scriptNodes) {
-                if (s.id == fromId) fromScriptNode = &s;
-                if (s.id == toId)   toScriptNode = &s;
+            for (auto& sPtr : fsm.m_Nodes)
+            {
+                if (sPtr->id == fromId) fromScriptNode = sPtr.get();
+                if (sPtr->id == toId)   toScriptNode = sPtr.get();
             }
-
-            auto& fsm = ECS::GetInstance().GetComponent<StateMachine>(m_SelectedEntity);
 
             if (fromScriptNode && toScriptNode)
                 fsm.scriptTransitions[fromScriptNode] = toScriptNode;
 
-            // store ATTRIBUTE IDs (pins) for drawing
-            links.emplace_back(fromAttr, toAttr);
+            fsm.m_Links.emplace_back(fromAttr, toAttr);
         }
 
         ImGui::End();

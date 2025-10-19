@@ -1387,18 +1387,18 @@ namespace Ermine::editor {
 					// If no nodes exist, create a default one
 					if (nodes.empty())
 					{
-						ScriptNode defaultNode;
-						defaultNode.id = 0;
-						defaultNode.name = "Start";
-						defaultNode.scriptClassName = "Sandbox"; // or leave blank if you want manual assignment
-						defaultNode.isAttached = true;
+						auto defaultNode = std::make_shared<ScriptNode>();
+						defaultNode->id = 0;
+						defaultNode->name = "Start";
+						defaultNode->isAttached = true;
+						defaultNode->scriptClassName = "";
 
-						nodes.push_back(std::move(defaultNode));
+						nodes.push_back(defaultNode);
 
 						EE_CORE_INFO("Created default FSM node for entity {0}", entity);
 					}
 
-					startNode = &nodes.front();
+					startNode = nodes.front().get();
 				}
 
 				fsmComp.Init(entity, startNode);

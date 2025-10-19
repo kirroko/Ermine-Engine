@@ -33,17 +33,8 @@ namespace Ermine
 
         void SetSelectedEntity(EntityID entity) { m_SelectedEntity = entity; }
 
-        std::deque<ScriptNode>& GetNodesForEntity(EntityID entity)
-        {
-            return m_entityNodes[entity];
-        }
-
-        const std::deque<ScriptNode>& GetNodesForEntity(EntityID entity) const
-        {
-            static const std::deque<ScriptNode> empty;
-            auto it = m_entityNodes.find(entity);
-            return it != m_entityNodes.end() ? it->second : empty;
-        }
+        std::deque<std::shared_ptr<ScriptNode>>& GetNodesForEntity(EntityID entity);
+        const std::deque<std::shared_ptr<ScriptNode>>& GetNodesForEntity(EntityID entity) const;
 
     private:
         EntityID m_SelectedEntity = 0;
@@ -53,8 +44,9 @@ namespace Ermine
         //std::vector<std::pair<int, int>> m_links; // (fromId, toId)
 
         //std::unordered_map<EntityID, std::vector<ScriptNode>> m_entityNodes;
-        std::unordered_map<EntityID, std::deque<ScriptNode>> m_entityNodes;
-        std::unordered_map<EntityID, std::vector<std::pair<int, int>>> m_entityLinks;
+        //std::unordered_map<EntityID, std::deque<ScriptNode>> m_entityNodes;
+        //std::unordered_map<EntityID, std::vector<std::pair<int, int>>> m_entityLinks;
+
         char m_newNodeName[64] = "";
 
         void CreateNode(const std::string& name);
