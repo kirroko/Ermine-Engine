@@ -141,6 +141,12 @@
     <ClInclude Include="include\GraphicsDebugGUI.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\Guid.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\GuidRegistry.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\HierarchyInspector.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -231,6 +237,9 @@
     <ClInclude Include="include\State.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\States.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\Systems.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -251,15 +260,6 @@
     </ClInclude>
     <ClInclude Include="include\shadow_config.h">
       <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Guid.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\GuidRegistry.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\States.h" />
-        <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -297,6 +297,9 @@
       <Filter>src\FSM</Filter>
     </ClCompile>
     <ClCompile Include="src\FSM\FiniteStateMachine.cpp">
+      <Filter>src\FSM</Filter>
+    </ClCompile>
+    <ClCompile Include="src\FSM\States.cpp">
       <Filter>src\FSM</Filter>
     </ClCompile>
     <ClCompile Include="src\Graphics\AnimationManager.cpp">
@@ -413,6 +416,12 @@
     <ClCompile Include="src\Utility\GPUProfiler.cpp">
       <Filter>src\Utility</Filter>
     </ClCompile>
+    <ClCompile Include="src\Utility\Guid.cpp">
+      <Filter>src\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Utility\GuidRegistry.cpp">
+      <Filter>src\Utility</Filter>
+    </ClCompile>
     <ClCompile Include="src\Utility\Input.cpp">
       <Filter>src\Utility</Filter>
     </ClCompile>
@@ -424,15 +433,6 @@
     </ClCompile>
     <ClCompile Include="src\dllmain.cpp">
       <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Utility\Guid.cpp">
-      <Filter>src\Utility</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Utility\GuidRegistry.cpp">
-      <Filter>src\Utility</Filter>
-    </ClCompile>
-    <ClCompile Include="src\FSM\States.cpp" />
-      <Filter>src\FSM</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
