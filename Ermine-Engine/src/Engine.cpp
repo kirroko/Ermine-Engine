@@ -528,12 +528,12 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	// Editor windows
 #if defined(EE_EDITOR)
-	editor::EditorGUI::CreateImGUIWindow<ImguiUI::AssetBrowser>(); // TODO: Namespace required?
 	editor::EditorGUI::CreateImGUIWindow<ParticlesImGUI>();
 	editor::EditorGUI::CreateImGUIWindow<AudioImGUI>();
 	editor::EditorGUI::CreateImGUIWindow<editor::GraphicsDebugGUI>("Graphics Debug"); // TODO: Namespace required?
 	editor::EditorGUI::CreateImGUIWindow<ViewPortGUI>();
 	editor::EditorGUI::CreateImGUIWindow<FSMEditorImGUI>();
+	editor::EditorGUI::CreateImGUIWindow<ImguiUI::AssetBrowser>(); //TODO: Standardize please, do we want namespace ImGui for all window or not
 
 	auto defaultScene = std::make_shared<Scene>("Main Scene");
 	editor::EditorGUI::SetActiveScene(defaultScene);
