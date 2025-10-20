@@ -37,68 +37,66 @@ namespace Ermine::editor {
         }
 
         case TransformMode::Center: {
-            // Calculate combined bounds of all selected entities
+            // Calculate combined bounds of all selected entities and their children
             Vec3 minBounds(FLT_MAX, FLT_MAX, FLT_MAX);
             Vec3 maxBounds(-FLT_MAX, -FLT_MAX, -FLT_MAX);
             bool foundAnyBounds = false;
             
             auto& ecs = ECS::GetInstance();
             auto hierarchySystem = ecs.GetSystem<HierarchySystem>();
-
+            
+            // First pass: collect all entities including children in hierarchies
+            std::vector<EntityID> allEntities;
             for (EntityID entity : entities) {
                 if (!ecs.IsEntityValid(entity)) continue;
                 
-                // First, handle entities with a hierarchy of children
-                if (ecs.HasComponent<HierarchyComponent>(entity)) {
-                    auto& hierarchy = ecs.GetComponent<HierarchyComponent>(entity);
-                    
-                    // If the entity has children, use hierarchy center calculation
-                    if (!hierarchy.children.empty() && hierarchySystem) {
-                        // Get bounds from hierarchy center calculation
-                        Vec3 hierarchyCenter = hierarchySystem->CalculateHierarchyCenter(entity);
-                        
-                        // Get approximate size of hierarchy (can be refined if needed)
-                        float hierarchyRadius = 1.0f;  // Default radius
-                        
-                        // Expand bounds to include this hierarchy
-                        minBounds.x = std::min(minBounds.x, hierarchyCenter.x - hierarchyRadius);
-                        minBounds.y = std::min(minBounds.y, hierarchyCenter.y - hierarchyRadius);
-                        minBounds.z = std::min(minBounds.z, hierarchyCenter.z - hierarchyRadius);
-                        
-                        maxBounds.x = std::max(maxBounds.x, hierarchyCenter.x + hierarchyRadius);
-                        maxBounds.y = std::max(maxBounds.y, hierarchyCenter.y + hierarchyRadius);
-                        maxBounds.z = std::max(maxBounds.z, hierarchyCenter.z + hierarchyRadius);
-                        
-                        foundAnyBounds = true;
-                        continue; // Skip to next entity since we've handled this one's hierarchy
-                    }
-                }
+                // Add the entity itself
+                allEntities.push_back(entity);
                 
-                // For entities without children, get their world position
+                // If it has a hierarchy, add all children too
+                if (hierarchySystem && ecs.HasComponent<HierarchyComponent>(entity)) {
+                    // Recursive lambda to collect all children
+                    std::function<void(EntityID)> collectChildren = [&](EntityID e) {
+                        if (ecs.HasComponent<HierarchyComponent>(e)) {
+                            auto& hierarchy = ecs.GetComponent<HierarchyComponent>(e);
+                            for (auto child : hierarchy.children) {
+                                if (ecs.IsEntityValid(child)) {
+                                    allEntities.push_back(child);
+                                    collectChildren(child); // Recursively collect grandchildren
+                                }
+                            }
+                        }
+                    };
+                    
+                    collectChildren(entity);
+                }
+            }
+
+            // Second pass: calculate bounds of all collected entities
+            for (EntityID entity : allEntities) {
+                // Get world position and scale
                 Vec3 worldPos;
+                Vec3 worldScale(1.0f, 1.0f, 1.0f);
+                
                 if (hierarchySystem) {
                     worldPos = hierarchySystem->GetWorldPosition(entity);
-                } else if (ecs.HasComponent<Transform>(entity)) {
+                    worldScale = hierarchySystem->GetWorldScale(entity);
+                } 
+                else if (ecs.HasComponent<Transform>(entity)) {
                     auto& transform = ecs.GetComponent<Transform>(entity);
                     worldPos = transform.position;
-                } else {
+                    worldScale = transform.scale;
+                }
+                else {
                     continue; // Skip entities without transform
                 }
                 
-                // Get world scale for proper AABB calculation
-                Vec3 worldScale(1.0f, 1.0f, 1.0f);
-                if (hierarchySystem) {
-                    worldScale = hierarchySystem->GetWorldScale(entity);
-                } else if (ecs.HasComponent<Transform>(entity)) {
-                    worldScale = ecs.GetComponent<Transform>(entity).scale;
-                }
-                
-                // Default bounds for entities without a mesh
+                // Default entity bounds if no mesh
                 float entityRadius = 0.5f;
                 Vec3 entityMin = worldPos - Vec3(entityRadius, entityRadius, entityRadius);
                 Vec3 entityMax = worldPos + Vec3(entityRadius, entityRadius, entityRadius);
                 
-                // If entity has a mesh, use its AABB
+                // If entity has mesh, use its AABB
                 if (ecs.HasComponent<Mesh>(entity)) {
                     auto& mesh = ecs.GetComponent<Mesh>(entity);
                     auto aabb = graphics::GeometryFactory::CalculateAABB(mesh);
@@ -116,7 +114,7 @@ namespace Ermine::editor {
                     );
                 }
                 
-                // Expand combined bounds to include this entity
+                // Expand combined bounds
                 minBounds.x = std::min(minBounds.x, entityMin.x);
                 minBounds.y = std::min(minBounds.y, entityMin.y);
                 minBounds.z = std::min(minBounds.z, entityMin.z);
@@ -129,24 +127,32 @@ namespace Ermine::editor {
             }
 
             if (foundAnyBounds) {
-                // Return center of combined bounds
-                return Vec3(
+                // Calculate and return center of bounds
+                Vec3 center(
                     (minBounds.x + maxBounds.x) * 0.5f,
                     (minBounds.y + maxBounds.y) * 0.5f,
                     (minBounds.z + maxBounds.z) * 0.5f
                 );
-            } else {
-                // Fallback if we couldn't calculate bounds
-                if (!entities.empty() && ecs.IsEntityValid(entities[0])) {
-                    // Use first entity's position as fallback
-                    if (hierarchySystem) {
-                        return hierarchySystem->GetWorldPosition(entities[0]);
-                    } else if (ecs.HasComponent<Transform>(entities[0])) {
-                        return ecs.GetComponent<Transform>(entities[0]).position;
-                    }
-                }
-                return Vec3(0, 0, 0);
+                
+                // Log the calculated center point for debugging
+                EE_CORE_INFO("Center mode: calculated center at ({:.3f}, {:.3f}, {:.3f})",
+                            center.x, center.y, center.z);
+                
+                return center;
             }
+            
+            // Fallback: use first entity's position
+            if (!entities.empty() && ecs.IsEntityValid(entities[0])) {
+                if (hierarchySystem) {
+                    return hierarchySystem->GetWorldPosition(entities[0]);
+                }
+                else if (ecs.HasComponent<Transform>(entities[0])) {
+                    return ecs.GetComponent<Transform>(entities[0]).position;
+                }
+            }
+            
+            // Ultimate fallback
+            return Vec3(0, 0, 0);
         }
         }
 

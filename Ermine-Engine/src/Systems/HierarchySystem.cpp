@@ -725,41 +725,95 @@ namespace Ermine
         if (!ecs.IsEntityValid(entity) || !ecs.HasComponent<Transform>(entity))
             return;
 
-        auto& transform = ecs.GetComponent<Transform>(entity);
-
-        // Get current world position
+        // Get entity's world position
         Vec3 worldPos = GetWorldPosition(entity);
 
-        // Calculate offset from rotation point
+        // Calculate the offset from rotation point
         Vec3 offset = worldPos - point;
 
-        // Rotate the offset vector
+        // Apply rotation to this offset
         Vec3 rotatedOffset = QuaternionRotateVector(rotation, offset);
 
-        // Set new world position (point + rotated offset)
+        // Calculate new world position
         Vec3 newWorldPos = point + rotatedOffset;
-        SetWorldPosition(entity, newWorldPos);
 
-        // Apply rotation to entity's orientation
-        Quaternion currentWorldRot = GetWorldRotation(entity);
-        Quaternion newWorldRot = rotation * currentWorldRot;
-        SetWorldRotation(entity, newWorldRot);
-
-        // For hierarchies, we need to handle children specially
+        // Check if we're dealing with a parent entity that has children
+        bool hasChildren = false;
+        std::vector<EntityID> childEntities;
+        
         if (ecs.HasComponent<HierarchyComponent>(entity)) {
             auto& hierarchy = ecs.GetComponent<HierarchyComponent>(entity);
+            hasChildren = !hierarchy.children.empty();
             
-            // Mark transform dirty to update children (with optimizations)
-            if (!hierarchy.children.empty()) {
-                // Hierarchical rotation is more complex - we need to apply the rotation
-                // to each child separately to maintain relative positioning
-                MarkDirty(entity);
+            // If this is a parent with children, we need to handle all children specially
+            if (hasChildren) {
+                // Store world positions of all children before parent rotation
+                // so we can apply proper offsets after the parent rotates
+                for (auto childID : hierarchy.children) {
+                    if (ecs.IsEntityValid(childID) && ecs.HasComponent<Transform>(childID)) {
+                        childEntities.push_back(childID);
+                    }
+                }
                 
-                // Log the rotation for debugging
-                EE_CORE_INFO("Rotated entity {} around point ({:.3f}, {:.3f}, {:.3f})", 
-                             entity, point.x, point.y, point.z);
+                // Capture children's positions relative to rotation point
+                std::vector<Vec3> childOffsets;
+                for (auto childID : childEntities) {
+                    Vec3 childWorldPos = GetWorldPosition(childID);
+                    Vec3 childOffset = childWorldPos - point;  // Relative to rotation center
+                    childOffsets.push_back(childOffset);
+                }
+                
+                // First, rotate the parent entity
+                SetWorldPosition(entity, newWorldPos);
+                
+                Quaternion currentWorldRot = GetWorldRotation(entity);
+                Quaternion newWorldRot = rotation * currentWorldRot;
+                SetWorldRotation(entity, newWorldRot);
+                
+                // Now rotate each child's position around the same center point
+                for (size_t i = 0; i < childEntities.size(); i++) {
+                    EntityID childID = childEntities[i];
+                    Vec3 childOffset = childOffsets[i];
+                    
+                    // Rotate the child offset
+                    Vec3 rotatedChildOffset = QuaternionRotateVector(rotation, childOffset);
+                    
+                    // Calculate new child world position
+                    Vec3 newChildWorldPos = point + rotatedChildOffset;
+                    
+                    // Set child's world position
+                    SetWorldPosition(childID, newChildWorldPos);
+                    
+                    // Apply the same rotation to the child's orientation
+                    Quaternion childWorldRot = GetWorldRotation(childID);
+                    Quaternion newChildWorldRot = rotation * childWorldRot;
+                    SetWorldRotation(childID, newChildWorldRot);
+                }
+            }
+            else {
+                // For single entities, just apply the rotation and position
+                SetWorldPosition(entity, newWorldPos);
+                
+                Quaternion currentWorldRot = GetWorldRotation(entity);
+                Quaternion newWorldRot = rotation * currentWorldRot;
+                SetWorldRotation(entity, newWorldRot);
             }
         }
+        else {
+            // Non-hierarchical entity - apply position and rotation directly
+            SetWorldPosition(entity, newWorldPos);
+            
+            Quaternion currentWorldRot = GetWorldRotation(entity);
+            Quaternion newWorldRot = rotation * currentWorldRot;
+            SetWorldRotation(entity, newWorldRot);
+        }
+        
+        // Mark entity as dirty to ensure transforms propagate
+        MarkDirty(entity);
+        
+        // Log the rotation for debugging
+        EE_CORE_INFO("Rotated entity {} around point ({:.3f}, {:.3f}, {:.3f})", 
+                    entity, point.x, point.y, point.z);
     }
 
     /**
