@@ -96,6 +96,9 @@
     <ClInclude Include="include\Components.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\ConsoleGUI.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\Cubemap.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -342,6 +345,9 @@
       <Filter>src\Graphics</Filter>
     </ClCompile>
     <ClCompile Include="src\ImGUI\AudioIMGUI.cpp">
+      <Filter>src\ImGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ImGUI\ConsoleGUI.cpp">
       <Filter>src\ImGUI</Filter>
     </ClCompile>
     <ClCompile Include="src\ImGUI\EditorGUI.cpp">

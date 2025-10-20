@@ -36,6 +36,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Cubemap.h"
 #include "ScriptSystem.h"
 #include "AnimationManager.h"
+#include "ConsoleGUI.h"
 #include "GuidRegistry.h"
 #include "Scene.h"
 #include "HierarchySystem.h"
@@ -165,7 +166,7 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	// Special case for IDComponent with custom clone to force new GUID
 	ECS::GetInstance().RegisterComponent<IDComponent>("IDComponent",
-		[](ComponentManager& cm, EntityID src, EntityID dst)
+		[](ComponentManager& cm, [[maybe_unused]] EntityID src, EntityID dst)
 		{
 			auto g = Guid::New();
 			cm.AddComponent<IDComponent>(dst, IDComponent{ g });
@@ -534,6 +535,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	editor::EditorGUI::CreateImGUIWindow<ViewPortGUI>();
 	editor::EditorGUI::CreateImGUIWindow<FSMEditorImGUI>();
 	editor::EditorGUI::CreateImGUIWindow<ImguiUI::AssetBrowser>(); //TODO: Standardize please, do we want namespace ImGui for all window or not
+	editor::EditorGUI::CreateImGUIWindow<ConsoleGUI>();
 
 	auto defaultScene = std::make_shared<Scene>("Main Scene");
 	editor::EditorGUI::SetActiveScene(defaultScene);

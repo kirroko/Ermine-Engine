@@ -179,6 +179,7 @@ project "Ermine-Engine"
         {
             "EE_PLATFORM_WINDOWS",
             "EE_BUILD_DLL",
+            "ERMINE_USE_SPDLOG",
             "GLFW_INCLUDE_NONE",
             "IMGUI_DEFINE_MATH_OPERATORS",
             "GLM_ENABLE_EXPERIMENTAL",
