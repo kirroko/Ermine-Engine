@@ -22,6 +22,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Input.h"
 #include "Logger.h"
 #include "JobSystem.h"
+#include "FiniteStateMachine.h"
 
 namespace fs = std::filesystem;
 
@@ -1428,6 +1429,61 @@ namespace
 		ECS::GetInstance().DestroyEntity(id);
 	}
 #pragma endregion
+
+#pragma region StateMachine ICalls
+	static void icall_statemachine_request_next_state(uint64_t entityID)
+	{
+		using namespace Ermine;
+		if (entityID == 0 || !ECS::GetInstance().IsEntityValid(entityID))
+			return;
+
+		auto& fsm = ECS::GetInstance().GetComponent<StateMachine>(entityID);
+		if (fsm.manager)
+			fsm.manager->RequestNextState(entityID);
+
+		/*EE_CORE_INFO("[ICall] StateMachine.RequestNextState called from C#, entityID = {}", entityID);
+
+		if (entityID == 0)
+		{
+			EE_CORE_WARN("[ICall] Invalid entityID (0)");
+			return;
+		}
+
+		if (!ECS::GetInstance().IsEntityValid(entityID))
+		{
+			EE_CORE_WARN("[ICall] Entity {} is not valid", entityID);
+			return;
+		}
+
+		if (!ECS::GetInstance().HasComponent<StateMachine>(entityID))
+		{
+			EE_CORE_WARN("[ICall] Entity {} has no StateMachine component", entityID);
+			return;
+		}
+
+		auto& fsm = ECS::GetInstance().GetComponent<StateMachine>(entityID);
+
+		if (!fsm.manager)
+		{
+			EE_CORE_WARN("[ICall] Entity {} FSM has no manager assigned!", entityID);
+			return;
+		}
+
+		EE_CORE_INFO("[ICall] Forwarding to StateManager::RequestNextState()");
+		fsm.manager->RequestNextState(entityID);*/
+	}
+
+	static void icall_statemachine_request_previous_state(uint64_t entityID)
+	{
+		using namespace Ermine;
+		if (entityID == 0 || !ECS::GetInstance().IsEntityValid(entityID))
+			return;
+
+		auto& fsm = ECS::GetInstance().GetComponent<StateMachine>(entityID);
+		if (fsm.manager)
+			fsm.manager->RequestPreviousState(entityID);
+	}
+#pragma endregion
 }
 
 namespace Ermine::scripting
@@ -1649,4 +1705,9 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	mono_add_internal_call("ErmineEngine.GameObject::Internal_Instantiate", (const void*)icall_gameobject_instantiate);
 	mono_add_internal_call("ErmineEngine.GameObject::Internal_Destroy", (const void*)icall_gameobject_destroy);
 #pragma endregion
+#pragma region StateMachine ICalls
+	mono_add_internal_call("ErmineEngine.StateMachine::RequestNextState", (const void*)icall_statemachine_request_next_state);
+	mono_add_internal_call("ErmineEngine.StateMachine::RequestPreviousState", (const void*)icall_statemachine_request_previous_state);
+#pragma endregion
+
 }

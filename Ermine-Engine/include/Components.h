@@ -1830,62 +1830,97 @@ namespace Ermine
 	{
 		StateManager* manager = nullptr;
 		ScriptNode* m_CurrentScript = nullptr;
-
-		float stateTimer = 0.0f;
-		float stateDuration = 3.0f;
+		ScriptNode* m_PreviousScript = nullptr;
 
 		std::deque<std::shared_ptr<ScriptNode>> m_Nodes;
 		std::vector<std::pair<int, int>> m_Links;
 		std::unordered_map<ScriptNode*, ScriptNode*> scriptTransitions;
 	public:
 		// For script start
-		void Init(EntityID entity, ScriptNode* startScript)
+		void Init(EntityID entity)
 		{
+			ScriptNode* startScript = nullptr;
+
+			// Find node marked as start
+			for (auto& n : m_Nodes)
+			{
+				if (n->isStartNode)
+				{
+					startScript = n.get();
+					break;
+				}
+			}
+
+			// Fallback to first node if none is marked
+			if (!startScript && !m_Nodes.empty())
+			{
+				startScript = m_Nodes.front().get();
+				//EE_CORE_INFO("FSM: No start node marked, using first node '%s' (id=%d)", startScript->name.c_str(), startScript->id);
+			}
+
+			// Assign and initialize
 			m_CurrentScript = startScript;
+
 			if (m_CurrentScript)
 			{
 				m_CurrentScript->CreateInstance(entity);
 				m_CurrentScript->OnEnter();
+				EE_CORE_INFO("FSM: Initialized with start node '%s' (id=%d)",
+					m_CurrentScript->name.c_str(), m_CurrentScript->id);
+			}
+			else
+			{
+				EE_CORE_WARN("FSM: Init() called but no valid start node found for entity %d!", entity);
 			}
 		}
-		/*!***********************************************************************
-		\brief
-		   Change the current state of an entity.
-		*************************************************************************/
-		//void ChangeState(EntityID entity, State* newState) {
-		//	if (m_CurrentState)
-		//		m_CurrentState->Exit(entity);
-
-		//	m_CurrentState = newState;
-
-		//	if (m_CurrentState)
-		//		m_CurrentState->Enter(entity);
-		//}
 		/*!***********************************************************************
 		\brief
 		   Update the current state of an entity.
 		*************************************************************************/
 		void Update(EntityID entity, float dt)
 		{
-			// time-based way of changing state will be removed, just for testing
-			if (!m_CurrentScript) return;
-
-			m_CurrentScript->OnUpdate();
-			stateTimer += dt;
-
-			if (stateTimer >= stateDuration)
+			// Ensure current script exists and is valid
+			if (!m_CurrentScript ||
+				std::find_if(m_Nodes.begin(), m_Nodes.end(),
+					[&](const std::shared_ptr<ScriptNode>& n) { return n.get() == m_CurrentScript; }) == m_Nodes.end())
 			{
-				stateTimer = 0.0f;
+				//EE_CORE_WARN("FSM: Current script for entity %d invalid or deleted. Attempting recovery...", entity);
 
-				auto it = scriptTransitions.find(m_CurrentScript);
-				if (it != scriptTransitions.end())
+				// Try to find start node
+				m_CurrentScript = nullptr;
+				for (auto& n : m_Nodes)
 				{
-					m_CurrentScript->OnExit();
-					m_CurrentScript = it->second;
+					if (n->isStartNode)
+					{
+						m_CurrentScript = n.get();
+						//EE_CORE_INFO("FSM: Reset to start node '%s' (id=%d)", n->name.c_str(), n->id);
+						break;
+					}
+				}
+
+				// Fallback to first node if no start node
+				if (!m_CurrentScript && !m_Nodes.empty())
+				{
+					m_CurrentScript = m_Nodes.front().get();
+					//EE_CORE_INFO("FSM: Fallback to first node '%s' (id=%d)", m_CurrentScript->name.c_str(), m_CurrentScript->id);
+				}
+
+				// Initialize recovered node
+				if (m_CurrentScript)
+				{
 					m_CurrentScript->CreateInstance(entity);
 					m_CurrentScript->OnEnter();
 				}
+				else
+				{
+					//EE_CORE_WARN("FSM: No valid nodes found; skipping update.");
+					return;
+				}
 			}
+
+			// Run script update logic (C# handles transitions now)
+			if (m_CurrentScript && m_CurrentScript->instance)
+				m_CurrentScript->OnUpdate();
 		}
 	};
 }

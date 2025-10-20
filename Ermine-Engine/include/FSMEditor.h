@@ -39,15 +39,9 @@ namespace Ermine
     private:
         EntityID m_SelectedEntity = 0;
         int m_nextNodeId = 1;
-
-        //std::vector<ScriptNode> m_scriptNodes;
-        //std::vector<std::pair<int, int>> m_links; // (fromId, toId)
-
-        //std::unordered_map<EntityID, std::vector<ScriptNode>> m_entityNodes;
-        //std::unordered_map<EntityID, std::deque<ScriptNode>> m_entityNodes;
-        //std::unordered_map<EntityID, std::vector<std::pair<int, int>>> m_entityLinks;
-
         char m_newNodeName[64] = "";
+        std::vector<int> nodesToDetachScript;
+        std::vector<int> nodesToDelete;
 
         void CreateNode(const std::string& name);
     };

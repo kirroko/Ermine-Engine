@@ -33,5 +33,9 @@ namespace Ermine
             Update all managed state machines.
         *************************************************************************/
         void Update(float dt);
+
+        void RequestNextState(EntityID entity);
+
+        void RequestPreviousState(EntityID entity);
     };
 }

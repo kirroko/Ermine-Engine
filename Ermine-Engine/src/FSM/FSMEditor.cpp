@@ -13,6 +13,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #include "PreCompile.h"
 #include "FSMEditor.h"
+#include "FiniteStateMachine.h"
 
 namespace Ermine
 {
@@ -46,8 +47,6 @@ namespace Ermine
         node->name = name;
         node->isAttached = false;
         node->scriptClassName = "";
-
-        //m_entityNodes[m_SelectedEntity].push_back(std::move(node));
         fsm.m_Nodes.push_back(node);
     }
 
@@ -97,14 +96,37 @@ namespace Ermine
             auto& snode = *nodePtr;
             ImNodes::BeginNode(snode.id);
             ImNodes::BeginNodeTitleBar();
-            ImGui::TextUnformatted((snode.name + " (Script)").c_str());
+            ImGui::TextUnformatted(snode.name.c_str());
             ImNodes::EndNodeTitleBar();
 
             // Attach script UI
             if (snode.isAttached)
+            {
                 ImGui::Text("Script: %s", snode.scriptClassName.c_str());
-            else if (ImGui::Button(("Attach Script##" + std::to_string(snode.id)).c_str()))
-                ImGui::OpenPopup(("AttachScriptPopup" + std::to_string(snode.id)).c_str());
+                ImGui::SameLine();
+
+                if (ImGui::Button(("Remove##" + std::to_string(snode.id)).c_str()))
+                    ImGui::OpenPopup(("ConfirmRemoveScript" + std::to_string(snode.id)).c_str());
+
+                if (ImGui::BeginPopup(("ConfirmRemoveScript" + std::to_string(snode.id)).c_str()))
+                {
+                    ImGui::Text("Remove attached script?");
+                    if (ImGui::Button("Yes"))
+                    {
+                        nodesToDetachScript.push_back(snode.id);
+                        ImGui::CloseCurrentPopup();
+                    }
+                    ImGui::SameLine();
+                    if (ImGui::Button("Cancel"))
+                        ImGui::CloseCurrentPopup();
+                    ImGui::EndPopup();
+                }
+            }
+            else
+            {
+                if (ImGui::Button(("Attach Script##" + std::to_string(snode.id)).c_str()))
+                    ImGui::OpenPopup(("AttachScriptPopup" + std::to_string(snode.id)).c_str());
+            }
 
             if (ImGui::BeginPopup(("AttachScriptPopup" + std::to_string(snode.id)).c_str()))
             {
@@ -114,9 +136,64 @@ namespace Ermine
                 {
                     snode.isAttached = true;
                     snode.scriptClassName = scriptName;
+
+                    if (!snode.scriptClassName.empty())
+                    {
+                        // Create instance immediately
+                        snode.CreateInstance(m_SelectedEntity);
+                        //EE_CORE_INFO("FSMEditor: Attached script '%s' to node '%s' (entity %d)",
+                        //    snode.scriptClassName.c_str(), snode.name.c_str(), m_SelectedEntity);
+                    }
+
                     ImGui::CloseCurrentPopup();
                 }
+
+                auto fsmManager = ECS::GetInstance().GetSystem<StateManager>();
+                if (fsmManager)
+                {
+                    fsmManager->Init(m_SelectedEntity, nullptr);
+                    //EE_CORE_INFO("FSMEditor: Ensured FSM manager assigned for entity %d", m_SelectedEntity);
+                }
+                else
+                {
+                    EE_CORE_WARN("FSMEditor: No StateManager system found when attaching script!");
+                }
                 ImGui::EndPopup();
+            }
+
+            // Delete node button
+            if (ImGui::Button(("Delete Node##" + std::to_string(snode.id)).c_str()))
+            {
+                ImGui::OpenPopup(("ConfirmDeleteNode" + std::to_string(snode.id)).c_str());
+            }
+
+            if (ImGui::BeginPopup(("ConfirmDeleteNode" + std::to_string(snode.id)).c_str()))
+            {
+                ImGui::Text("Delete node '%s'?", snode.name.c_str());
+                if (ImGui::Button("Yes"))
+                {
+                    nodesToDelete.push_back(snode.id);
+                    ImGui::CloseCurrentPopup();
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Cancel"))
+                    ImGui::CloseCurrentPopup();
+                ImGui::EndPopup();
+            }
+
+            bool wasStart = snode.isStartNode;
+            ImGui::Checkbox(("Start Node##" + std::to_string(snode.id)).c_str(), &snode.isStartNode);
+
+            // Ensure only one node is marked as start at a time
+            if (snode.isStartNode && !wasStart)
+            {
+                for (auto& otherNodePtr : fsm.m_Nodes)
+                {
+                    if (otherNodePtr->id != snode.id)
+                        otherNodePtr->isStartNode = false;
+                }
+
+                EE_CORE_INFO("FSMEditor: Node %d set as Start Node", snode.id);
             }
 
             ImNodes::BeginInputAttribute(snode.id * 10 + 1);
@@ -135,6 +212,88 @@ namespace Ermine
             ImNodes::Link(linkId++, link.first, link.second);
 
         ImNodes::EndNodeEditor();
+
+        if (!nodesToDetachScript.empty())
+        {
+            for (int id : nodesToDetachScript)
+            {
+                for (auto& n : fsm.m_Nodes)
+                {
+                    if (n->id == id)
+                    {
+                        if (n->instance) n->instance.reset();
+                        n->scriptClassName.clear();
+                        n->isAttached = false;
+                        break;
+                    }
+                }
+            }
+            nodesToDetachScript.clear();
+        }
+
+        if (!nodesToDelete.empty())
+        {
+            for (int deleteId : nodesToDelete)
+            {
+                // If the FSM is currently using this node, reset it
+                if (fsm.m_CurrentScript && fsm.m_CurrentScript->id == deleteId)
+                {
+                    EE_CORE_INFO("FSMEditor: Current active node (%d) deleted, resetting FSM state.", deleteId);
+
+                    fsm.m_CurrentScript = nullptr;
+
+                    // pick a new start node automatically
+                    for (auto& nodePtr : fsm.m_Nodes)
+                    {
+                        if (nodePtr->isStartNode)
+                        {
+                            fsm.m_CurrentScript = nodePtr.get();
+                            EE_CORE_INFO("FSMEditor: Reassigned to new start node: %s (id=%d)",
+                                nodePtr->name.c_str(), nodePtr->id);
+                            break;
+                        }
+                    }
+
+                    // If none are marked as start, fallback to first node
+                    if (!fsm.m_CurrentScript && !fsm.m_Nodes.empty())
+                    {
+                        fsm.m_CurrentScript = fsm.m_Nodes.front().get();
+                        fsm.m_CurrentScript->isStartNode = true;
+                        EE_CORE_INFO("FSMEditor: Fallback start node assigned: %s (id=%d)",
+                            fsm.m_CurrentScript->name.c_str(), fsm.m_CurrentScript->id);
+                    }
+                }
+
+                // Remove all links referencing this node
+                fsm.m_Links.erase(std::remove_if(fsm.m_Links.begin(), fsm.m_Links.end(),
+                    [&](const std::pair<int, int>& link)
+                    {
+                        int fromId = link.first / 10;
+                        int toId = (link.second - 1) / 10;
+                        return fromId == deleteId || toId == deleteId;
+                    }),
+                    fsm.m_Links.end());
+
+                // Remove transitions referencing this node
+                for (auto it = fsm.scriptTransitions.begin(); it != fsm.scriptTransitions.end();)
+                {
+                    if ((it->first && it->first->id == deleteId) ||
+                        (it->second && it->second->id == deleteId))
+                        it = fsm.scriptTransitions.erase(it);
+                    else
+                        ++it;
+                }
+
+                // erase the node
+                fsm.m_Nodes.erase(std::remove_if(fsm.m_Nodes.begin(), fsm.m_Nodes.end(),
+                    [&](const std::shared_ptr<ScriptNode>& n) { return n->id == deleteId; }),
+                    fsm.m_Nodes.end());
+
+                EE_CORE_INFO("FSMEditor: Node %d deleted", deleteId);
+            }
+
+            nodesToDelete.clear();
+        }
 
         // Handle new link creation
         int startAttr, endAttr;

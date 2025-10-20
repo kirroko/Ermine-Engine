@@ -296,9 +296,6 @@
     <ClCompile Include="src\FSM\FiniteStateMachine.cpp">
       <Filter>src\FSM</Filter>
     </ClCompile>
-    <ClCompile Include="src\FSM\States.cpp">
-      <Filter>src\FSM</Filter>
-    </ClCompile>
     <ClCompile Include="src\Graphics\AnimationManager.cpp">
       <Filter>src\Graphics</Filter>
     </ClCompile>

@@ -1294,12 +1294,13 @@ namespace Ermine::editor {
 
 		auto& fsmComp = ECS::GetInstance().GetComponent<StateMachine>(entity);
 
-		//ImGui::Text("Current State: %s",
-		//	(fsmComp.m_CurrentState == &idleState ? "Idle" :
-		//		fsmComp.m_CurrentState == &roamState ? "Roam" : "Unknown"));
+		ImGui::Text("Current Node: %s",
+			(fsmComp.m_CurrentScript ? fsmComp.m_CurrentScript->name.c_str() : "(none)"));
 
-		//ImGui::DragFloat("State Duration", &fsmComp.stateDuration, 0.1f, 0.1f, 10.0f);
-		//ImGui::Text("Timer: %.2f", fsmComp.stateTimer);
+		ImGui::Text("Attached Script: %s",
+			(fsmComp.m_CurrentScript && fsmComp.m_CurrentScript->isAttached && !fsmComp.m_CurrentScript->scriptClassName.empty())
+			? fsmComp.m_CurrentScript->scriptClassName.c_str()
+			: "(none)");
 
 		ImGui::Separator();
 		if (ImGui::Button("Edit State Machine"))
@@ -1369,40 +1370,24 @@ namespace Ermine::editor {
 
 			auto& fsmComp = ECS::GetInstance().GetComponent<StateMachine>(entity);
 
-			// Get FSMManager system
-			auto fsmManager = ECS::GetInstance().GetSystem<StateManager>();
-			if (fsmManager)
+			if (fsmComp.m_Nodes.empty())
 			{
-				auto* fsmEditor = editor::EditorGUI::GetWindow<FSMEditorImGUI>();
-				ScriptNode* startNode = nullptr;
+				auto defaultNode = std::make_shared<ScriptNode>();
+				defaultNode->id = 0;
+				defaultNode->name = "Start";
+				defaultNode->isAttached = false;
+				defaultNode->scriptClassName = "";
+				defaultNode->isStartNode = true;
 
-				if (fsmEditor)
-				{
-					//auto& nodes = fsmEditor->GetNodesForEntity(entity);
-					//if (!nodes.empty())
-					//	startNode = &nodes.front();
+				fsmComp.m_Nodes.push_back(defaultNode);
 
-					auto& nodes = fsmEditor->GetNodesForEntity(entity);
-
-					// If no nodes exist, create a default one
-					if (nodes.empty())
-					{
-						auto defaultNode = std::make_shared<ScriptNode>();
-						defaultNode->id = 0;
-						defaultNode->name = "Start";
-						defaultNode->isAttached = true;
-						defaultNode->scriptClassName = "";
-
-						nodes.push_back(defaultNode);
-
-						EE_CORE_INFO("Created default FSM node for entity {0}", entity);
-					}
-
-					startNode = nodes.front().get();
-				}
-
-				fsmComp.Init(entity, startNode);
+				//EE_CORE_INFO("Created default FSM start node for entity {0}", entity);
 			}
+
+			// Initialize FSM
+			fsmComp.Init(entity);
+
+			//EE_CORE_INFO("StateMachine component added and initialized for entity {0}", entity);
 		}
 		if (ImGui::MenuItem("ParticleEmitter") && !ECS::GetInstance().HasComponent<ParticleEmitter>(entity)) {
 			ECS::GetInstance().AddComponent(entity, ParticleEmitter());
