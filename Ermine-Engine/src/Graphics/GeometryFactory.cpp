@@ -236,3 +236,113 @@ Ermine::Mesh GeometryFactory::CreateSphere(float radius, unsigned int sectors, u
 
     return mesh;
 }
+
+/**
+ * @brief Calculate AABB for a mesh
+ * 
+ * @param mesh The mesh to calculate AABB for
+ * @return AABB The calculated axis-aligned bounding box
+ */
+GeometryFactory::AABB GeometryFactory::CalculateAABB(const Mesh& mesh)
+{
+    // If it's a primitive type, use the optimized calculation
+    if (mesh.kind == MeshKind::Primitive) {
+        return CalculatePrimitiveAABB(mesh.primitive.type, mesh.primitive.size);
+    }
+    
+    // For non-primitive meshes, we need to iterate through the vertex data
+    AABB aabb;
+    aabb.min = Vec3(FLT_MAX, FLT_MAX, FLT_MAX);
+    aabb.max = Vec3(-FLT_MAX, -FLT_MAX, -FLT_MAX);
+    
+    if (!mesh.vertex_buffer || !mesh.vertex_array) {
+        // Return a default AABB if mesh is invalid
+        aabb.min = Vec3(-0.5f, -0.5f, -0.5f);
+        aabb.max = Vec3(0.5f, 0.5f, 0.5f);
+        return aabb;
+    }
+    
+    // For model meshes, try to use information from the asset
+    if (mesh.kind == MeshKind::Asset && !mesh.asset.meshName.empty()) {
+        auto& assetManager = AssetManager::GetInstance();
+        std::shared_ptr<Model> model = assetManager.GetModel("../Resources/Models/" + mesh.asset.meshName);
+        
+        if (model) {
+            // Use model's bounding box information if available
+            // This is a simplified approach - ideally we'd have actual bounding box data from the model
+            // For now, just use a heuristic based on model complexity
+            float approxSize = 1.0f; // Default size
+            size_t vertexCount = mesh.vertex_array->GetVertexCount();
+            
+            if (vertexCount > 0) {
+                // Scale based on vertex count - this is just a heuristic
+                approxSize = std::cbrt(static_cast<float>(vertexCount)) * 0.1f;
+            }
+            
+            aabb.min = Vec3(-approxSize, -approxSize, -approxSize);
+            aabb.max = Vec3(approxSize, approxSize, approxSize);
+            return aabb;
+        }
+    }
+    
+    // We don't have direct access to the vertex data at this point,
+    // so we'll use a reasonable approximation based on vertex count
+    size_t vertexCount = mesh.vertex_array->GetVertexCount();
+    if (vertexCount == 0) {
+        // Return a default AABB if mesh has no vertices
+        aabb.min = Vec3(-0.5f, -0.5f, -0.5f);
+        aabb.max = Vec3(0.5f, 0.5f, 0.5f);
+        return aabb;
+    }
+    
+    // Approximate size based on vertex count
+    float approxSize = std::cbrt(static_cast<float>(vertexCount)) * 0.1f;
+    aabb.min = Vec3(-approxSize, -approxSize, -approxSize);
+    aabb.max = Vec3(approxSize, approxSize, approxSize);
+    
+    return aabb;
+}
+
+/**
+ * @brief Calculate AABB for a primitive type
+ * 
+ * @param type The type of primitive ("Cube", "Quad", "Sphere", etc.")
+ * @param size The size/dimensions of the primitive
+ * @return AABB The calculated axis-aligned bounding box
+ */
+GeometryFactory::AABB GeometryFactory::CalculatePrimitiveAABB(const std::string& type, const Vec3& size)
+{
+    AABB aabb;
+    
+    if (type == "Cube") {
+        // For a cube, the AABB is straightforward - half extents in each direction
+        float halfWidth = size.x * 0.5f;
+        float halfHeight = size.y * 0.5f;
+        float halfDepth = size.z * 0.5f;
+        
+        aabb.min = Vec3(-halfWidth, -halfHeight, -halfDepth);
+        aabb.max = Vec3(halfWidth, halfHeight, halfDepth);
+    }
+    else if (type == "Quad") {
+        // For a quad, it's flat in Z
+        float halfWidth = size.x * 0.5f;
+        float halfHeight = size.y * 0.5f;
+        
+        aabb.min = Vec3(-halfWidth, -halfHeight, -0.01f);
+        aabb.max = Vec3(halfWidth, halfHeight, 0.01f);
+    }
+    else if (type == "Sphere") {
+        // For a sphere, the AABB is a cube with side length = 2*radius
+        float radius = size.x; // Assuming uniform scaling (x = y = z for radius)
+        
+        aabb.min = Vec3(-radius, -radius, -radius);
+        aabb.max = Vec3(radius, radius, radius);
+    }
+    else {
+        // Default AABB for unknown primitive types
+        aabb.min = Vec3(-0.5f, -0.5f, -0.5f);
+        aabb.max = Vec3(0.5f, 0.5f, 0.5f);
+    }
+    
+    return aabb;
+}

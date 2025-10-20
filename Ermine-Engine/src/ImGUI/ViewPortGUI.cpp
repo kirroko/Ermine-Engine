@@ -128,6 +128,42 @@ void Ermine::ViewPortGUI::TopBarSimulationControl(const ImVec2 iconSize)
 		if (ImGui::IsItemHovered())
 			ImGui::SetTooltip("Stop (Ctrl+Shift+P)");
 		ImGui::EndDisabled();
+
+		// Add Transform Mode Dropdown
+		ImGui::SameLine();
+		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 20.0f); // Add some spacing
+		
+		TransformMode currentMode = TransformModeManager::GetMode();
+		const char* currentModeStr = (currentMode == TransformMode::Pivot) ? "Pivot" : "Center";
+
+		ImGui::SetNextItemWidth(80.0f);
+		if (ImGui::BeginCombo("##TransformMode", currentModeStr, ImGuiComboFlags_NoArrowButton))
+		{
+			// Pivot option
+			bool isPivot = (currentMode == TransformMode::Pivot);
+			if (ImGui::Selectable("Pivot", isPivot))
+			{
+				TransformModeManager::SetMode(TransformMode::Pivot);
+				EE_CORE_INFO("Transform mode: Pivot");
+			}
+			if (isPivot)
+				ImGui::SetItemDefaultFocus();
+
+			// Center option
+			bool isCenter = (currentMode == TransformMode::Center);
+			if (ImGui::Selectable("Center", isCenter))
+			{
+				TransformModeManager::SetMode(TransformMode::Center);
+				EE_CORE_INFO("Transform mode: Center");
+			}
+			if (isCenter)
+				ImGui::SetItemDefaultFocus();
+
+			ImGui::EndCombo();
+		}
+
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip("Toggle Pivot/Center Mode (Z)");
 	}
 	ImGui::EndGroup();
 	ImGui::PopStyleVar();
@@ -175,12 +211,18 @@ void Ermine::ViewPortGUI::OverlayGizmoOperation(const ImVec2& imgMin, const ImGu
 		{
 			return (m == ImGuizmo::LOCAL) ? "Local" : "World";
 		};
+		
+		auto TransformModeToString = []() -> const char*
+		{
+			return (TransformModeManager::GetMode() == TransformMode::Pivot) ? "Pivot" : "Center";
+		};
 
 		const char* opText = OpToString(gOperation);
 		const char* modeText = ModeToString(gMode);
+		const char* transformModeText = TransformModeToString();
 
 		char label[128];
-		(void)snprintf(label, sizeof(label), "Op: %s | Mode: %s", opText, modeText);
+		(void)snprintf(label, sizeof(label), "Op: %s | Mode: %s | Transform: %s (Z)", opText, modeText, transformModeText);
 
 		ImDrawList* dl = ImGui::GetForegroundDrawList();
 		const ImVec2 padPx(6.f, 4.f);
@@ -331,6 +373,11 @@ void Ermine::ViewPortGUI::GizmoOverlay(const ImVec2& imgMin, const ImVec2& imgSi
 	// Move static variables outside the if block
 	static glm::mat4 s_previousModel = glm::mat4(1.0f);
 	static bool s_wasManipulating = false;
+    
+    // Cache the mode and other values we're using for this manipulation operation
+    static TransformMode s_activeTransformMode = TransformMode::Pivot;
+    static Vec3 s_manipulationPoint;
+    static Vec3 s_originalPosition;  // Cache the entity's original position
 
 	// OBJECT Gizmo overlay
 	if (!EditorGUI::isPlaying && ECS::GetInstance().IsEntityValid(selectedEntity)
@@ -338,14 +385,104 @@ void Ermine::ViewPortGUI::GizmoOverlay(const ImVec2& imgMin, const ImVec2& imgSi
 	{
 		auto& ecs = ECS::GetInstance();
 		auto& tr = ecs.GetComponent<Transform>(selectedEntity);
-
+		auto hierarchySystem = ecs.GetSystem<HierarchySystem>();
+		
+		// Get entity's actual world position
+		Vec3 entityWorldPos;
+		if (hierarchySystem) {
+			entityWorldPos = hierarchySystem->GetWorldPosition(selectedEntity);
+		} else {
+			entityWorldPos = tr.position;
+		}
+		
 		// Get manipulation position based on current transform mode
 		Vec3 manipulationPos = TransformModeManager::GetManipulationPosition(selectedEntity);
+		
+		// Visual indicators to help understand the difference between pivot and center
+		if (Vec3Length(entityWorldPos - manipulationPos) > 0.01f) {
+			// Project 3D points to screen space
+			auto worldToScreen = [&view, &proj, &imgMin, &imgSize](const Vec3& worldPos) -> ImVec2 {
+				// Create position vector with w=1
+				glm::vec4 pos(worldPos.x, worldPos.y, worldPos.z, 1.0f);
+				
+				// Transform to clip space
+				glm::vec4 clipPos = proj * view * pos;
+				
+				// Perspective divide
+				if (std::abs(clipPos.w) > 0.0001f) {
+					clipPos.x /= clipPos.w;
+					clipPos.y /= clipPos.w;
+				}
+				
+				// NDC to screen space
+				ImVec2 screenPos;
+				screenPos.x = imgMin.x + (clipPos.x + 1.0f) * 0.5f * imgSize.x;
+				screenPos.y = imgMin.y + (1.0f - (clipPos.y + 1.0f) * 0.5f) * imgSize.y;
+				
+				return screenPos;
+			};
+			
+			ImVec2 pivotScreenPos = worldToScreen(entityWorldPos);
+			ImVec2 centerScreenPos = worldToScreen(manipulationPos);
+			
+			// Check if points are in front of the camera (simple check)
+			glm::vec4 pivotViewPos = view * glm::vec4(entityWorldPos.x, entityWorldPos.y, entityWorldPos.z, 1.0f);
+			glm::vec4 centerViewPos = view * glm::vec4(manipulationPos.x, manipulationPos.y, manipulationPos.z, 1.0f);
+			
+			if (pivotViewPos.z < 0 && centerViewPos.z < 0) {
+				ImDrawList* drawList = ImGui::GetForegroundDrawList();
+				
+				// Draw pivot indicator (red)
+				drawList->AddCircleFilled(pivotScreenPos, 5.0f, IM_COL32(255, 0, 0, 180));
+				drawList->AddText(ImVec2(pivotScreenPos.x + 8, pivotScreenPos.y - 8), IM_COL32(255, 0, 0, 255), "Pivot");
+				
+				// Draw center indicator (green)
+				drawList->AddCircleFilled(centerScreenPos, 5.0f, IM_COL32(0, 255, 0, 180));
+				drawList->AddText(ImVec2(centerScreenPos.x + 8, centerScreenPos.y - 8), IM_COL32(0, 255, 0, 255), "Center");
+				
+				// Draw connecting line
+				drawList->AddLine(pivotScreenPos, centerScreenPos, IM_COL32(255, 255, 0, 150), 1.0f);
+				
+				// Add note about transform mode
+				TransformMode currentMode = TransformModeManager::GetMode();
+				const char* modeText = currentMode == TransformMode::Pivot ? 
+					"Current Mode: Pivot (press Z to toggle)" : 
+					"Current Mode: Center (press Z to toggle)";
+				drawList->AddText(ImVec2(imgMin.x + 10, imgMin.y + 40), IM_COL32(255, 255, 255, 200), modeText);
+			}
+		}
 
+        // Store state when starting manipulation
+        if (ImGuizmo::IsUsing() && !s_wasManipulating) {
+            s_activeTransformMode = TransformModeManager::GetMode();
+            s_manipulationPoint = (s_activeTransformMode == TransformMode::Center) ? 
+                manipulationPos : entityWorldPos;
+            s_originalPosition = entityWorldPos;
+            
+            EE_CORE_INFO("Starting manipulation in {} mode at point ({:.3f}, {:.3f}, {:.3f})",
+                        (s_activeTransformMode == TransformMode::Center) ? "CENTER" : "PIVOT",
+                        s_manipulationPoint.x, s_manipulationPoint.y, s_manipulationPoint.z);
+        }
+
+		// Build model matrix differently based on operation and mode
 		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(manipulationPos.x, manipulationPos.y, manipulationPos.z));
+		
+		// Choose the manipulation point based on operation and mode
+        Vec3 operationPos;
+        if (gOperation == ImGuizmo::TRANSLATE) {
+            // Translation always happens at entity's position for direct control
+            operationPos = entityWorldPos;
+        } else {
+            // When manipulating, use the same transform mode we started with
+            operationPos = ImGuizmo::IsUsing() ? s_manipulationPoint : 
+                          ((TransformModeManager::GetMode() == TransformMode::Center) ? 
+                           manipulationPos : entityWorldPos);
+        }
+        
+        // Build the model matrix at the operation position
+        model = glm::translate(model, glm::vec3(operationPos.x, operationPos.y, operationPos.z));
 
-		// For rotation and scale, we still use the entity's own transform
+		// For rotation and scale, we still use the entity's own rotation/scale
 		glm::quat rotQuat(tr.rotation.w, tr.rotation.x, tr.rotation.y, tr.rotation.z);
 		rotQuat = glm::normalize(rotQuat);
 		model *= glm::mat4_cast(rotQuat);
@@ -372,7 +509,7 @@ void Ermine::ViewPortGUI::GizmoOverlay(const ImVec2& imgMin, const ImVec2& imgSi
 		// Apply transformation
 		if (ImGuizmo::IsUsing())
 		{
-			// ✅ FIX: Store model matrix on first frame of manipulation
+			// Store model matrix on first frame of manipulation
 			if (!s_wasManipulating) {
 				s_previousModel = model;
 				s_wasManipulating = true;
@@ -385,9 +522,8 @@ void Ermine::ViewPortGUI::GizmoOverlay(const ImVec2& imgMin, const ImVec2& imgSi
 			if (glm::decompose(model, scale, rotation, translation, skew, perspective))
 			{
 				rotation = glm::normalize(rotation);
-				auto hierarchySystem = ecs.GetSystem<HierarchySystem>();
 
-				// Calculate delta transformation
+				// Calculate delta transformation based on operation
 				switch (gOperation)
 				{
 				case ImGuizmo::TRANSLATE: {
@@ -403,40 +539,72 @@ void Ermine::ViewPortGUI::GizmoOverlay(const ImVec2& imgMin, const ImVec2& imgSi
 				}
 
 				case ImGuizmo::ROTATE: {
-					// Rotate around manipulation point!
+					// Handle rotation differently based on transform mode
+					if (s_activeTransformMode == TransformMode::Center && hierarchySystem) {
+                        // CENTER MODE: For rotation in center mode, we need to calculate the delta rotation
+                        // and apply it around the center point (not the pivot)
+                        
+						// Decompose previous frame
+						glm::vec3 prevSkew, prevTranslation, prevScale;
+						glm::vec4 prevPerspective;
+						glm::quat prevRotation;
+						glm::decompose(s_previousModel, prevScale, prevRotation,
+							prevTranslation, prevSkew, prevPerspective);
+						prevRotation = glm::normalize(prevRotation);
 
-					// Decompose previous frame
-					glm::vec3 prevSkew, prevTranslation, prevScale;
-					glm::vec4 prevPerspective;
-					glm::quat prevRotation;
-					glm::decompose(s_previousModel, prevScale, prevRotation,
-						prevTranslation, prevSkew, prevPerspective);
-					prevRotation = glm::normalize(prevRotation);
+						// Calculate rotation delta
+						glm::quat deltaRotation = rotation * glm::inverse(prevRotation);
 
-					// Calculate rotation delta
-					glm::quat deltaRotation = rotation * glm::inverse(prevRotation);
+						// Convert to Ermine quaternion
+						Quaternion ermineRotation(deltaRotation.x, deltaRotation.y,
+							deltaRotation.z, deltaRotation.w);
 
-					// Convert to Ermine quaternion
-					Quaternion ermineRotation(deltaRotation.x, deltaRotation.y,
-						deltaRotation.z, deltaRotation.w);
-
-					if (hierarchySystem) {
-						// Rotate around the manipulation position
-						hierarchySystem->RotateAroundPointQuat(
-							selectedEntity,
-							manipulationPos,
-							ermineRotation
-						);
+                        // Rotate around the center point
+                        hierarchySystem->RotateAroundPointQuat(
+                            selectedEntity,
+                            s_manipulationPoint,  // Use the cached center point
+                            ermineRotation
+                        );
+                        
+                        EE_CORE_INFO("Rotating entity {} around CENTER point ({:.3f}, {:.3f}, {:.3f})",
+                                     selectedEntity,
+                                     s_manipulationPoint.x, s_manipulationPoint.y, s_manipulationPoint.z);
 					}
 					else {
-						// Fallback: rotate in place
-						tr.rotation = ermineRotation * tr.rotation;
+                        // PIVOT MODE: Just set world rotation directly
+						// Decompose previous frame
+						glm::vec3 prevSkew, prevTranslation, prevScale;
+						glm::vec4 prevPerspective;
+						glm::quat prevRotation;
+						glm::decompose(s_previousModel, prevScale, prevRotation,
+							prevTranslation, prevSkew, prevPerspective);
+						prevRotation = glm::normalize(prevRotation);
+
+						// Calculate rotation delta
+						glm::quat deltaRotation = rotation * glm::inverse(prevRotation);
+
+						// Convert to Ermine quaternion
+						Quaternion ermineRotation(deltaRotation.x, deltaRotation.y,
+							deltaRotation.z, deltaRotation.w);
+
+                        if (hierarchySystem) {
+                            hierarchySystem->SetWorldRotation(
+                                selectedEntity,
+                                ermineRotation * hierarchySystem->GetWorldRotation(selectedEntity)
+                            );
+                        }
+                        else {
+                            // Fallback: rotate in place
+                            tr.rotation = ermineRotation * tr.rotation;
+                        }
+                        
+                        EE_CORE_INFO("Rotating entity {} at PIVOT point", selectedEntity);
 					}
 					break;
 				}
 
 				case ImGuizmo::SCALE: {
-					// Scale: apply directly to entity
+					// Scale: apply directly to entity's local transform
 					tr.scale = Vector3D(scale.x, scale.y, scale.z);
 
 					if (hierarchySystem) {
@@ -451,7 +619,7 @@ void Ermine::ViewPortGUI::GizmoOverlay(const ImVec2& imgMin, const ImVec2& imgSi
 			}
 		}
 		else {
-			// Reset flag when manipulation ends (correct scope now)
+			// Reset flags when manipulation ends
 			s_wasManipulating = false;
 		}
 	}
@@ -508,8 +676,8 @@ void Ermine::ViewPortGUI::Update()
 
 	const ImVec2 iconSize = ImVec2(28.f, 28.f);
 	const float spacing = ImGui::GetStyle().ItemSpacing.x;
-	const int buttonCount = 3;
-	const float totalWidth = buttonCount * iconSize.x + (buttonCount - 1) * spacing;
+	const int buttonCount = 4; // Increased from 3 to include transform mode dropdown
+	const float totalWidth = buttonCount * iconSize.x + (buttonCount - 1) * spacing + 80.0f; // Added width for dropdown
 
 	// Center horizontally
 	float availWidth = ImGui::GetContentRegionAvail().x;

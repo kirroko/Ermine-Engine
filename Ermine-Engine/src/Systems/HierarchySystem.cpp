@@ -14,6 +14,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "PreCompile.h"
 #include "HierarchySystem.h"
 #include "Matrix4x4.h"
+#include "GeometryFactory.h"  // Added include for GeometryFactory.h
 
 namespace Ermine
 {
@@ -596,6 +597,57 @@ namespace Ermine
     }
 
     /**
+     * @brief Sets the local position of an entity and marks it dirty for transform updates.
+     * @param[in] entity The entity to modify.
+     * @param[in] localPos The new local position.
+     */
+    void HierarchySystem::SetLocalPosition(EntityID entity, const Vec3& localPos)
+    {
+        if (!ECS::GetInstance().IsEntityValid(entity))
+            return;
+
+        auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
+        transform.position = localPos;
+        
+        // Mark as dirty to trigger transform update propagation
+        MarkDirty(entity);
+    }
+
+    /**
+     * @brief Sets the local rotation of an entity and marks it dirty for transform updates.
+     * @param[in] entity The entity to modify.
+     * @param[in] localRot The new local rotation.
+     */
+    void HierarchySystem::SetLocalRotation(EntityID entity, const Quaternion& localRot)
+    {
+        if (!ECS::GetInstance().IsEntityValid(entity))
+            return;
+
+        auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
+        transform.rotation = localRot;
+        
+        // Mark as dirty to trigger transform update propagation
+        MarkDirty(entity);
+    }
+
+    /**
+     * @brief Sets the local scale of an entity and marks it dirty for transform updates.
+     * @param[in] entity The entity to modify.
+     * @param[in] localScale The new local scale.
+     */
+    void HierarchySystem::SetLocalScale(EntityID entity, const Vec3& localScale)
+    {
+        if (!ECS::GetInstance().IsEntityValid(entity))
+            return;
+
+        auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
+        transform.scale = localScale;
+        
+        // Mark as dirty to trigger transform update propagation
+        MarkDirty(entity);
+    }
+
+    /**
      * @brief Adds a child entity to a parent, creating the hierarchy relationship.
      * @param[in] parent The parent entity ID.
      * @param[in] child The child entity ID.
@@ -693,8 +745,45 @@ namespace Ermine
         Quaternion newWorldRot = rotation * currentWorldRot;
         SetWorldRotation(entity, newWorldRot);
 
-        // Mark dirty to propagate to children
-        MarkDirty(entity);
+        // For hierarchies, we need to handle children specially
+        if (ecs.HasComponent<HierarchyComponent>(entity)) {
+            auto& hierarchy = ecs.GetComponent<HierarchyComponent>(entity);
+            
+            // Mark transform dirty to update children (with optimizations)
+            if (!hierarchy.children.empty()) {
+                // Hierarchical rotation is more complex - we need to apply the rotation
+                // to each child separately to maintain relative positioning
+                MarkDirty(entity);
+                
+                // Log the rotation for debugging
+                EE_CORE_INFO("Rotated entity {} around point ({:.3f}, {:.3f}, {:.3f})", 
+                             entity, point.x, point.y, point.z);
+            }
+        }
+    }
+
+    /**
+     * @brief Rotate an entity (and its children) around a specific world-space point
+     * @param entity Entity to rotate
+     * @param point World-space point to rotate around
+     * @param axis Rotation axis (world space)
+     * @param angleDegrees Rotation angle in degrees
+     */
+    void HierarchySystem::RotateAroundPoint(EntityID entity, const Vec3& point,
+        const Vec3& axis, float angleDegrees)
+    {
+        // Convert degrees to radians
+        float angleRad = angleDegrees * (M_PI / 180.0f);
+        
+        // Create rotation quaternion from axis and angle
+        Quaternion rotation = QuaternionFromAxisAngle(axis, angleRad);
+        
+        // Use the quaternion version of rotate around point
+        RotateAroundPointQuat(entity, point, rotation);
+        
+        // Log the rotation for debugging
+        EE_CORE_INFO("Rotated entity {} around point ({:.3f}, {:.3f}, {:.3f}) by {:.1f} degrees", 
+                     entity, point.x, point.y, point.z, angleDegrees);
     }
 
     /**
@@ -719,11 +808,13 @@ namespace Ermine
             if (ecs.HasComponent<HierarchyComponent>(e)) {
                 auto& hierarchy = ecs.GetComponent<HierarchyComponent>(e);
                 for (auto child : hierarchy.children) {
-                    allEntities.push_back(child);
-                    collectChildren(child);  // Recursively collect grandchildren
+                    if (ecs.IsEntityValid(child)) {  // Add validity check for child
+                        allEntities.push_back(child);
+                        collectChildren(child);  // Recursively collect grandchildren
+                    }
                 }
             }
-            };
+        };
         collectChildren(entity);
 
         // Calculate combined bounds of all entities in hierarchy
@@ -736,20 +827,40 @@ namespace Ermine
 
             // Get world position of this entity
             Vec3 worldPos = GetWorldPosition(e);
-
-            // Expand bounds to include this position
-            // TODO: In the future, you could use actual mesh bounds here
-            // For now, we just use entity positions with a small margin
-            const float entityRadius = 0.5f;  // Assume entities have some size
-
-            minBounds.x = std::min(minBounds.x, worldPos.x - entityRadius);
-            minBounds.y = std::min(minBounds.y, worldPos.y - entityRadius);
-            minBounds.z = std::min(minBounds.z, worldPos.z - entityRadius);
-
-            maxBounds.x = std::max(maxBounds.x, worldPos.x + entityRadius);
-            maxBounds.y = std::max(maxBounds.y, worldPos.y + entityRadius);
-            maxBounds.z = std::max(maxBounds.z, worldPos.z + entityRadius);
-
+            Vec3 worldScale = GetWorldScale(e);
+            
+            // Get the bounds of this entity
+            float entityRadius = 0.5f; // Default radius for entities without mesh
+            Vec3 entityMin = worldPos - Vec3(entityRadius, entityRadius, entityRadius);
+            Vec3 entityMax = worldPos + Vec3(entityRadius, entityRadius, entityRadius);
+            
+            // If entity has a mesh, use its AABB
+            if (ecs.HasComponent<Mesh>(e)) {
+                auto& mesh = ecs.GetComponent<Mesh>(e);
+                auto aabb = graphics::GeometryFactory::CalculateAABB(mesh);
+                
+                // Scale and translate the AABB to world space
+                entityMin = worldPos + Vec3(
+                    aabb.min.x * worldScale.x, 
+                    aabb.min.y * worldScale.y, 
+                    aabb.min.z * worldScale.z
+                );
+                entityMax = worldPos + Vec3(
+                    aabb.max.x * worldScale.x, 
+                    aabb.max.y * worldScale.y, 
+                    aabb.max.z * worldScale.z
+                );
+            }
+            
+            // Expand bounds
+            minBounds.x = std::min(minBounds.x, entityMin.x);
+            minBounds.y = std::min(minBounds.y, entityMin.y);
+            minBounds.z = std::min(minBounds.z, entityMin.z);
+            
+            maxBounds.x = std::max(maxBounds.x, entityMax.x);
+            maxBounds.y = std::max(maxBounds.y, entityMax.y);
+            maxBounds.z = std::max(maxBounds.z, entityMax.z);
+            
             foundAnyBounds = true;
         }
 
@@ -764,71 +875,5 @@ namespace Ermine
             (minBounds.y + maxBounds.y) * 0.5f,
             (minBounds.z + maxBounds.z) * 0.5f
         );
-    }
-
-    /**
-     * @brief Rotate an entity (and its children) around a specific world-space point
-     * @param entity Entity to rotate
-     * @param point World-space point to rotate around
-     * @param axis Rotation axis (world space)
-     * @param angleDegrees Rotation angle in degrees
-     */
-    void HierarchySystem::RotateAroundPoint(EntityID entity, const Vec3& point,
-        const Vec3& axis, float angleDegrees)
-    {
-        float angleRad = angleDegrees * (M_PI / 180.0f);
-        Quaternion rotation = QuaternionFromAxisAngle(axis, angleRad);
-        RotateAroundPointQuat(entity, point, rotation);
-    }
-
-    /**
-     * @brief Sets the local position of an entity and marks it dirty for transform updates.
-     * @param[in] entity The entity to modify.
-     * @param[in] localPos The new local position.
-     */
-    void HierarchySystem::SetLocalPosition(EntityID entity, const Vec3& localPos)
-    {
-        if (!ECS::GetInstance().IsEntityValid(entity))
-            return;
-
-        auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
-        transform.position = localPos;
-        
-        // Mark as dirty to trigger transform update propagation
-        MarkDirty(entity);
-    }
-
-    /**
-     * @brief Sets the local rotation of an entity and marks it dirty for transform updates.
-     * @param[in] entity The entity to modify.
-     * @param[in] localRot The new local rotation.
-     */
-    void HierarchySystem::SetLocalRotation(EntityID entity, const Quaternion& localRot)
-    {
-        if (!ECS::GetInstance().IsEntityValid(entity))
-            return;
-
-        auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
-        transform.rotation = localRot;
-        
-        // Mark as dirty to trigger transform update propagation
-        MarkDirty(entity);
-    }
-
-    /**
-     * @brief Sets the local scale of an entity and marks it dirty for transform updates.
-     * @param[in] entity The entity to modify.
-     * @param[in] localScale The new local scale.
-     */
-    void HierarchySystem::SetLocalScale(EntityID entity, const Vec3& localScale)
-    {
-        if (!ECS::GetInstance().IsEntityValid(entity))
-            return;
-
-        auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
-        transform.scale = localScale;
-        
-        // Mark as dirty to trigger transform update propagation
-        MarkDirty(entity);
     }
 }
