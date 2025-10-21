@@ -220,7 +220,7 @@ namespace Ermine::ImguiUI
             renamePending = true;
             renameFrom = filePath.string();
             renameTo = filePath.filename().string();
-            std::strncpy(renameBuffer, renameTo.c_str(), sizeof(renameBuffer) - 1);
+            strncpy_s(renameBuffer, sizeof(renameBuffer), renameTo.c_str(), _TRUNCATE);
         }
     }
 
@@ -466,11 +466,11 @@ namespace Ermine::ImguiUI
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6, 4));
 
         // Search box
-        static char searchBuf[256] = { 0 };
-        std::strncpy(searchBuf, searchQuery.c_str(), sizeof(searchBuf) - 1);
+        static char searchBuffer[256] = { 0 };
+        strncpy_s(searchBuffer, sizeof(searchBuffer), searchQuery.c_str(), _TRUNCATE);
         ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - 300.f);
-        if (ImGui::InputTextWithHint("##SearchAssets", "Search assets...", searchBuf, IM_ARRAYSIZE(searchBuf))) {
-            searchQuery = std::string(searchBuf);
+        if (ImGui::InputTextWithHint("##SearchAssets", "Search assets...", searchBuffer, IM_ARRAYSIZE(searchBuffer))) {
+            searchQuery = std::string(searchBuffer);
             LoadDirectoryContents(currentDirectory);
         }
 
