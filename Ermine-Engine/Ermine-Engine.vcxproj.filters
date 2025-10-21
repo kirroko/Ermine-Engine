@@ -123,6 +123,9 @@
     <ClInclude Include="include\FSMEditor.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\FSMNode.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\FiniteStateMachine.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -237,12 +240,6 @@
     <ClInclude Include="include\Skybox.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="include\State.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\States.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="include\Systems.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -300,9 +297,6 @@
       <Filter>src\FSM</Filter>
     </ClCompile>
     <ClCompile Include="src\FSM\FiniteStateMachine.cpp">
-      <Filter>src\FSM</Filter>
-    </ClCompile>
-    <ClCompile Include="src\FSM\States.cpp">
       <Filter>src\FSM</Filter>
     </ClCompile>
     <ClCompile Include="src\Graphics\AnimationManager.cpp">

@@ -75,14 +75,6 @@ namespace
 	}
 
 	EntityID fbxEntity = 0;
-
-	IdleState g_IdleState;
-	RoamState g_RoamState;
-
-	float s_StateTimer = 0.0f;
-	float s_StateDuration = 3.0f; // switch every 3 seconds
-
-	State* g_CurrentState = nullptr;
 }
 
 bool engine::Init(GLFWwindow* windowContext)
