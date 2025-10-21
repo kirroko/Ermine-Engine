@@ -28,7 +28,7 @@ Ermine::scripting::ScriptSystem::ScriptSystem()
 	m_ScriptEngine->InitMono("../Ermine-ScriptAssembly/Ermine-ScriptAssembly.dll"); // TODO: Move dll into editor's build directory
 	m_ScriptEngine->LoadGameAssembly("../Ermine-ScriptSandbox/Ermine-ScriptSandbox.dll"); // TODO: Move dll into editor's build directory
 
-	// Configure MSBuild + source watcher (adjust paths as necessary)
+	// TODO: Configure MSBuild + source watcher (adjust paths as necessary)
 #if defined(EE_EDITOR) // Only in editor builds do we have hot-reload
 	// Start DLL watcher
 	m_ScriptEngine->StartWatchingGameAssembly();

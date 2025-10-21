@@ -392,7 +392,7 @@ void ConsoleGUI::Update()
         const float detailsHeight = 120.0f;
         ImVec2 avail = ImGui::GetContentRegionAvail();
         ImGui::BeginChild("ConsoleListRegion", ImVec2(0, avail.y - detailsHeight), false,
-            ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+            ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar /*| ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse*/);
 
         ImGuiListClipper clipper;
         clipper.Begin(static_cast<int>(displayIndices.size()));
