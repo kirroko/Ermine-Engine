@@ -528,12 +528,14 @@ void Ermine::ViewPortGUI::Update()
 
 	if (ImGui::BeginDragDropTarget()) { // Begin drag & drop target
 		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_FILE")) {
-			//std::string droppedEntity = *(std::string*)payload->Data;
+			const char* cpath = static_cast<const char*>(payload->Data);
 
-			EE_CORE_INFO("Dropped prefab file: {}", payload->Data);
-
-			//auto hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>();
-			//PrefabManager::GetInstance().LoadPrefab(droppedEntity);
+			if (cpath && payload->DataSize > 0 && cpath[payload->DataSize - 1] == '\0')
+			{
+				std::string path = cpath;
+				PrefabManager::GetInstance().LoadPrefab(path);
+			}
+			//EE_CORE_INFO("Dropped prefab file: {}", payload->Data);
 		}
 		ImGui::EndDragDropTarget(); // End drag & drop target
 	}

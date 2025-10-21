@@ -306,14 +306,16 @@ namespace Ermine::ImguiUI
 
             // Hover highlight
             if (ImGui::IsItemHovered() && !asset->IsSelected)
+            {
                 dl->AddRect(cursor, { cursor.x + iconSize, cursor.y + iconSize }, IM_COL32(80, 150, 255, 180), 0, 0, 4.0f);
+                isSelectedFile = asset->realName.empty() ? (currentDirectory / asset->Name).string() : asset->realName;
+            }
 
             // --- Handle click behaviours ---
             // Single-click to select
             if (clicked) {
                 for (auto& a : Items) a.IsSelected = false;
                 asset->IsSelected = true;
-				isSelectedFile = asset->realName.empty() ? (currentDirectory / asset->Name).string() : asset->realName;
             }
 
             // Double-click to open
@@ -337,9 +339,9 @@ namespace Ermine::ImguiUI
             }
 
             if (ImGui::BeginDragDropSource()) {
-                ImGui::SetDragDropPayload("ASSET_BROWSER_FILE", &isSelectedFile, sizeof(EntityID));
+                ImGui::SetDragDropPayload("ASSET_BROWSER_FILE", isSelectedFile.c_str(), isSelectedFile.size() + 1);
                 //auto& metadata = ECS::GetInstance().GetComponent<ObjectMetaData>(entity);
-                ImGui::Text("Moving: %s", isSelectedFile.c_str());
+                ImGui::Text("Moving File");
                 ImGui::EndDragDropSource();
             }
 
