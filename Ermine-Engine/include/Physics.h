@@ -30,11 +30,21 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Components.h"
 #include "GeometryFactory.h"
 #include "AssetManager.h"
+#include "PhysicDebugRenderer.h"
 
 
 using namespace JPH;
 namespace Ermine
 {
+    struct BodyDrawSettings
+    {
+        bool mDrawShapeWireframe = true;   // toggle wireframe drawing
+        bool mDrawInactiveBodies = true;   // optionally draw inactive bodies
+        bool mDrawCenterOfMass = false;    // optional
+        bool mDrawBodyAxes = false;        // optional
+    };
+
+
     class Physics : public System
     {
     public:
@@ -103,6 +113,21 @@ namespace Ermine
         *************************************************************************/
         BodyInterface& GetBodyInterface() { return mPhysicsSystem.GetBodyInterface(); }
 
+        /*!***********************************************************************
+          \brief
+            Renders the current physics world using Jolt's debug renderer.
+            Typically used for wireframe visualization in the editor.
+        *************************************************************************/
+        void DrawDebug();
+
+        void DrawDebugPhysics();
+
+        void AttachDebugRenderer(std::shared_ptr<MyDebugRenderer> renderer);
+
+        std::shared_ptr<MyDebugRenderer> mDebugRenderer;
+
+        bool wireframe;
+
     private:
         // --- Important: allocator first, job system second, physics system third ---
         JPH::TempAllocatorImpl       mTempAllocator;
@@ -117,6 +142,8 @@ namespace Ermine
         class MyContactListener* mContactListener = nullptr;
 
         std::unordered_map<EntityID, JPH::BodyID> mEntityToBody;
+
+        JPH::BodyManager::DrawSettings mBodyDrawSettings{};
 
         //not in used
         //void SetupLayers();

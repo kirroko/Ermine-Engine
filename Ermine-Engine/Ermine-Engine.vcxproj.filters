@@ -201,6 +201,9 @@
     <ClInclude Include="include\Particles.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\PhysicDebugRenderer.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\Physics.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -379,6 +382,9 @@
     </ClCompile>
     <ClCompile Include="src\Particles\Particles.cpp">
       <Filter>src\Particles</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Physics\PhysicDebugRenderer.cpp">
+      <Filter>src\Physics</Filter>
     </ClCompile>
     <ClCompile Include="src\Physics\Physics.cpp">
       <Filter>src\Physics</Filter>

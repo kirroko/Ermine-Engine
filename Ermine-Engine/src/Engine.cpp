@@ -179,6 +179,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	RegisterDefaultAllocator();
 	ECS::GetInstance().RegisterSystem<Physics>();
 	ECS::GetInstance().GetSystem<Physics>()->Init();
+	ECS::GetInstance().GetSystem<Physics>()->AttachDebugRenderer(std::make_shared<MyDebugRenderer>());
 
 	// Set system signatures
 	SignatureID sig;

@@ -25,6 +25,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <EditorGUI.h>
 #include "Particles.h"
 
+
 #include "xcore/my_properties.h"
 #include "xproperty.h"
 #include "sprop/property_sprop.h"
@@ -298,7 +299,7 @@ namespace Ermine::editor {
 					xproperty::sprop::setProperty(err, t, p, ctx);
 				}
 			}
-			// Quaternion (rotation) — shown/edited as Euler degrees
+			// Quaternion (rotation) ï¿½ shown/edited as Euler degrees
 			else if (guid == xproperty::settings::var_type<Ermine::Quaternion>::guid_v) {
 				Ermine::Quaternion q = p.m_Value.get<Ermine::Quaternion>();
 
@@ -885,37 +886,6 @@ namespace Ermine::editor {
 			ImGui::PopID();
 		}
 
-		// Now handle the vector manually (no xproperty access!)
-		if (pc.shapeType == ShapeType::CustomMesh) {
-			ImGui::SeparatorText("Custom Mesh Vertices");
-
-			// Add / remove
-			if (ImGui::SmallButton("Add Vertex")) {
-				pc.customMeshVertices.emplace_back(0.f, 0.f, 0.f);
-				ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
-			}
-			ImGui::SameLine();
-			if (!pc.customMeshVertices.empty() && ImGui::SmallButton("Remove Last")) {
-				pc.customMeshVertices.pop_back();
-				ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
-			}
-
-			// List editor
-			for (size_t i = 0; i < pc.customMeshVertices.size(); ++i) {
-				ImGui::PushID((int)i);
-				float v[3] = {
-					pc.customMeshVertices[i].x,
-					pc.customMeshVertices[i].y,
-					pc.customMeshVertices[i].z
-				};
-				if (DrawVec3XYZ("Vertex", v, 0.01f, 0.0f)) {
-					pc.customMeshVertices[i] = Ermine::Vec3{ v[0], v[1], v[2] };
-					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
-				}
-				ImGui::PopID();
-			}
-		}
-
 		if (!err.empty())
 			ImGui::TextColored(ImVec4(1, 0.3f, 0.3f, 1), "xprop: %s", err.c_str());
 
@@ -1349,6 +1319,7 @@ namespace Ermine::editor {
 		}
 		if (ImGui::MenuItem("Physics") && !ECS::GetInstance().HasComponent<PhysicComponent>(entity)) {
 			ECS::GetInstance().AddComponent(entity, PhysicComponent());
+			ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
 		}
 		if (ImGui::MenuItem("Audio") && !ECS::GetInstance().HasComponent<AudioComponent>(entity)) {
 			ECS::GetInstance().AddComponent(entity, AudioComponent());

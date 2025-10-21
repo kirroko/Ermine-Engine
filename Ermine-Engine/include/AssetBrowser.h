@@ -265,6 +265,12 @@ namespace Ermine::ImguiUI
 		 * including the directory tree, asset grid, and context menus.
 		 */
 		void Render() override;
+		
+		/**
+		 * @brief Static callback for handling external files dropped into the asset browser.
+		 * @param filePaths Vector of paths representing dropped files.
+		 */
+		static void OnExternalFilesDropped(const std::vector<std::string>& filePaths);
 
 	private:
 		Browser assets_browser; // Access the underlying Browser instance.

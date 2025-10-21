@@ -183,7 +183,9 @@ project "Ermine-Engine"
             "GLFW_INCLUDE_NONE",
             "IMGUI_DEFINE_MATH_OPERATORS",
             "GLM_ENABLE_EXPERIMENTAL",
-            "_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING" -- To slience the warnings from Rapidjson
+            "_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING", -- To slience the warnings from Rapidjson
+            "JPH_USE_SUBMERGENCE",
+            "JPH_DEBUG_RENDERER"
         }
 
     -- Editor vs Game feature flags for the engine build

@@ -28,6 +28,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Scene.h"
 #include "SceneManager.h"
 #include "PrefabManager.h"
+#include "Physics.h"
 
 using namespace Ermine::editor;
 
@@ -125,6 +126,14 @@ void Ermine::ViewPortGUI::TopBarSimulationControl(const ImVec2 iconSize)
 		ImGui::EndDisabled();
 	}
 	ImGui::EndGroup();
+
+	float rightOffset = ImGui::GetContentRegionAvail().x - 150.0f;
+	ImGui::SameLine(ImGui::GetCursorPosX() + rightOffset);
+
+	ImGui::Checkbox("Physics Wireframe", &ECS::GetInstance().GetSystem<Physics>()->wireframe);
+	if (ImGui::IsItemHovered())
+		ImGui::SetTooltip("Requires Physics Component");
+
 	ImGui::PopStyleVar();
 }
 

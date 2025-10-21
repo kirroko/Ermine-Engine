@@ -13,6 +13,7 @@
 	#define JPH_DEBUG_RENDERER_EXPORT JPH_EXPORT
 #endif // !JPH_DEBUG_RENDERER_EXPORT
 
+#include <Jolt/Jolt.h>
 #include <Jolt/Core/Color.h>
 #include <Jolt/Core/Reference.h>
 #include <Jolt/Core/HashCombine.h>
