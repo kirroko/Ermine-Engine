@@ -344,12 +344,43 @@ namespace Ermine::ImguiUI
                 ImGui::EndPopup();
             }
 
-            // Draw filename label below the icon
+            // Draw asset name label below the icon (with rename support)
             ImVec2 textSize = ImGui::CalcTextSize(asset->Name.c_str());
             float textOffset = (iconSize - textSize.x) * 0.5f;
             if (textOffset < 0.0f) textOffset = 0.0f;
             ImGui::SetCursorPosX(ImGui::GetCursorPosX() + textOffset);
-            ImGui::TextWrapped(asset->Name.c_str());
+            ImGui::PushID(("##label" + asset->Name).c_str());
+
+            // Rename input box if renaming is active
+            bool isRenamingThis = renamePending && (renameFrom == asset->realName);
+            if (isRenamingThis) {
+                ImGui::SetKeyboardFocusHere();
+                ImGui::SetNextItemWidth(iconSize * 1.2f);
+
+                if (ImGui::InputText("##RenameInput", renameBuffer, IM_ARRAYSIZE(renameBuffer),
+                    ImGuiInputTextFlags_EnterReturnsTrue)) {
+                    try {
+                        fs::path from(renameFrom);
+                        fs::path to = from.parent_path() / std::string(renameBuffer);
+                        fs::rename(from, to);
+                        EE_CORE_INFO("Renamed {} -> {}", from.string(), to.string());
+                        Refresh();
+                    }
+                    catch (std::exception& e) {
+                        EE_CORE_ERROR("Rename failed: {}", e.what());
+                    }
+                    renamePending = false;
+                }
+
+                // Escape key cancels rename
+                if (ImGui::IsKeyPressed(ImGuiKey_Escape))
+                    renamePending = false;
+            }
+            else {
+                // Display text label normally
+                ImGui::TextWrapped(asset->Name.c_str());
+            }
+            ImGui::PopID(); // Pop label ID
 
             // Advance to next column
             ImGui::NextColumn();
@@ -366,27 +397,57 @@ namespace Ermine::ImguiUI
         ImGui::Columns(1);
         ImGui::PopStyleVar();
 
-        // Rename popup dialog
-        if (renamePending) ImGui::OpenPopup("Rename File");
-        if (ImGui::BeginPopupModal("Rename File", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
-            ImGui::InputText("##Rename", renameBuffer, IM_ARRAYSIZE(renameBuffer));
+        // Keyboard delete for selected assets with confirmation
+        static bool deletePopupOpen = false;
+        static std::vector<std::filesystem::path> deleteTargets;
+
+        // Detect delete key press
+        if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) &&
+            ImGui::IsKeyPressed(ImGuiKey_Delete)) {
+            // Gather selected items for deletion
+            deleteTargets.clear();
+            for (auto& asset : Items)
+                if (asset.IsSelected)
+                    deleteTargets.push_back(asset.realName);
+
+            // Open confirmation popup if there are targets
+            if (!deleteTargets.empty()) {
+                deletePopupOpen = true;
+                ImGui::OpenPopup("Confirm Delete");
+            }
+        }
+
+        // Delete confirmation popup
+        if (ImGui::BeginPopupModal("Confirm Delete", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+            ImGui::Text("Are you sure you want to delete %d item(s)?", (int)deleteTargets.size());
             ImGui::Separator();
-            if (ImGui::Button("OK", ImVec2(120, 0))) {
-                try {
-                    fs::path from(renameFrom);
-                    fs::path to = from.parent_path() / std::string(renameBuffer);
-                    fs::rename(from, to);
-                    Refresh();
+            ImGui::TextDisabled("This action cannot be undone.");
+            ImGui::Separator();
+            if (ImGui::Button("Delete", ImVec2(120, 0))) {
+                for (auto& path : deleteTargets) {
+                    try {
+                        if (std::filesystem::exists(path)) {
+                            std::filesystem::remove_all(path);
+                            EE_CORE_INFO("Deleted asset: {}", path.string());
+                        }
+                    }
+                    catch (std::exception& e) {
+                        EE_CORE_ERROR("Delete failed: {}", e.what());
+                    }
                 }
-                catch (std::exception& e) {
-                    EE_CORE_ERROR("Rename failed: {}", e.what());
-                }
+                deleteTargets.clear();
+                deletePopupOpen = false;
                 ImGui::CloseCurrentPopup();
+                Refresh();
             }
             ImGui::SameLine();
-            if (ImGui::Button("Cancel", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
-            ImGui::EndPopup();
-            renamePending = false;
+            if (ImGui::Button("Cancel", ImVec2(120, 0))) {
+                deleteTargets.clear();
+                deletePopupOpen = false;
+                ImGui::CloseCurrentPopup();
+            }
+
+            ImGui::EndPopup(); // End delete confirmation popup
         }
     }
 
