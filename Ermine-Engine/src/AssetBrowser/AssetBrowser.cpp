@@ -20,6 +20,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "AssetBrowser.h"
 #include "AssetManager.h" // For loading textures
 #include "SceneManager.h" // For opening scenes
+#include "EditorGUI.h" // For forwarding dropped files to the asset browser
 
 namespace fs = std::filesystem;
 
@@ -123,7 +124,9 @@ namespace Ermine::ImguiUI
                 std::string name = entry.path().filename().string();
                 ImTextureID icon = GetPreviewIconForFile(entry.path());
                 int type = entry.is_directory() ? 1 : 0;
-                Items.emplace_back(ImGui::GetID(name.c_str()), type, name, false, icon, entry.path().string());
+                std::string uniqueKey = entry.path().string();
+                ImGuiID id = static_cast<ImGuiID>(std::hash<std::string>{}(uniqueKey));
+                Items.emplace_back(id, type, name, false, icon, uniqueKey);
             }
         }
         catch (std::exception& e) {
@@ -532,5 +535,24 @@ namespace Ermine::ImguiUI
 
         // Draw the asset browser window
         assets_browser.Draw("Asset Browser");
+    }
+
+    /**
+     * @brief Static callback for handling external files dropped into the asset browser.
+     * @param filePaths Vector of paths representing dropped files.
+     */
+    void AssetBrowser::OnExternalFilesDropped(const std::vector<std::string>& filePaths)
+    {
+        // Find existing AssetBrowser window
+        auto* browserWindow = Ermine::editor::EditorGUI::GetWindow<Ermine::ImguiUI::AssetBrowser>();
+        if (!browserWindow)
+        {
+            EE_CORE_WARN("AssetBrowser window not found — cannot import dropped files.");
+            return;
+        }
+
+        // Forward dropped files to the asset browser
+        EE_CORE_INFO("Importing {} dropped files into Asset Browser...", filePaths.size());
+        browserWindow->assets_browser.HandleDroppedFiles(filePaths);
     }
 }
