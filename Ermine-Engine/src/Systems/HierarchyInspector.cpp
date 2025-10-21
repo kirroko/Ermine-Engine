@@ -20,6 +20,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "imgui.h"
 #include "Physics.h"
 
+
 #include "xcore/my_properties.h"
 #include "xproperty.h"
 #include "sprop/property_sprop.h"
@@ -835,20 +836,6 @@ namespace Ermine::editor {
                 ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
             }
 
-            // List editor
-            for (size_t i = 0; i < pc.customMeshVertices.size(); ++i) {
-                ImGui::PushID((int)i);
-                float v[3] = {
-                    pc.customMeshVertices[i].x,
-                    pc.customMeshVertices[i].y,
-                    pc.customMeshVertices[i].z
-                };
-                if (ImGui::DragFloat3("Vertex", v, 0.01f)) {
-                    pc.customMeshVertices[i] = Ermine::Vec3{ v[0], v[1], v[2] };
-                    ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
-                }
-                ImGui::PopID();
-            }
         }
 
         if (!err.empty())

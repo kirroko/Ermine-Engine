@@ -663,19 +663,6 @@ void engine::Render(GLFWwindow* window)
 	// Draw scene objects
 	renderer->Update(view, proj);
 
-	auto physicsSystem = ECS::GetInstance().GetSystem<Physics>();
-	if (physicsSystem)
-	{
-		// OpenGL setup for debug renderer
-		glMatrixMode(GL_PROJECTION);
-		glLoadMatrixf(proj.m); // Ensure column-major
-		glMatrixMode(GL_MODELVIEW);
-		glLoadMatrixf(view.m);
-		// Draw all physics bodies safely
-		physicsSystem->DrawDebug();
-	}
-
-
 	// Stop GPU timing for rendering
 	graphics::GPUProfiler::EndEvent();
 

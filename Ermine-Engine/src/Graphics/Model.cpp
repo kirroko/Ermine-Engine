@@ -198,3 +198,33 @@ MeshData Model::ProcessMesh(aiMesh* mesh)
 
     return MeshData{ vao, vbo, ibo, glm::mat4(1.0f) };
 }
+
+std::vector<glm::vec3> Ermine::graphics::Model::GetMeshVertices() const
+{
+    std::vector<glm::vec3> vertices;
+
+    // Iterate through all meshes
+    for (const auto& mesh : m_meshes)
+    {
+        if (!mesh.vbo) continue;
+
+        // Assuming your VertexBuffer stores VertexData in CPU-side memory
+        // If you only have GPU-side data, you need to store a CPU copy when loading the mesh.
+        const VertexData* vertexData = reinterpret_cast<const VertexData*>(mesh.vbo->GetDataPointer());
+        if (!vertexData) continue;
+
+        // Number of vertices
+        unsigned int numVertices = mesh.vbo->GetSize() / sizeof(VertexData);
+
+        for (unsigned int i = 0; i < numVertices; ++i)
+        {
+            vertices.emplace_back(
+                vertexData[i].position[0],
+                vertexData[i].position[1],
+                vertexData[i].position[2]
+            );
+        }
+    }
+
+    return vertices;
+}

@@ -120,6 +120,8 @@ namespace Ermine
         *************************************************************************/
         void DrawDebug();
 
+        void DrawDebugPhysics();
+
         void AttachDebugRenderer(std::shared_ptr<MyDebugRenderer> renderer);
 
         std::shared_ptr<MyDebugRenderer> mDebugRenderer;
@@ -139,7 +141,7 @@ namespace Ermine
 
         std::unordered_map<EntityID, JPH::BodyID> mEntityToBody;
 
-        BodyDrawSettings mBodyDrawSettings;   // instance of the settings
+        JPH::BodyManager::DrawSettings mBodyDrawSettings{};
 
         //not in used
         //void SetupLayers();

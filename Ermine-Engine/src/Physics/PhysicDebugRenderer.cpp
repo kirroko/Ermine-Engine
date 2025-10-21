@@ -1,25 +1,27 @@
 #include "PreCompile.h"
 #include "PhysicDebugRenderer.h"
 #include "MathVector.h"
-#include <glad/glad.h>
+#include "Renderer.h"
+#include "ECS.h"
 
 using namespace JPH;
 namespace Ermine
 {
-    // Draw a line in 3D space
     void MyDebugRenderer::DrawLine(JPH::RVec3Arg from, JPH::RVec3Arg to, JPH::ColorArg color)
     {
-        glLineWidth(2.0f); // thicker lines
-        glDisable(GL_DEPTH_TEST); // optional: draw on top
-        glBegin(GL_LINES);
-        glColor3f(color.r / 255.0f, color.g / 255.0f, color.b / 255.0f);
-        glVertex3f((float)from.GetX(), (float)from.GetY(), (float)from.GetZ());
-        glVertex3f((float)to.GetX(), (float)to.GetY(), (float)to.GetZ());
-        glEnd();
-        glEnable(GL_DEPTH_TEST);
+        const auto& renderer = ECS::GetInstance().GetSystem<graphics::Renderer>();
+        glm::vec3 col(color.r / 255.0f, color.g / 255.0f, color.b / 255.0f);
+        renderer->SubmitDebugLine(
+            glm::vec3((float)from.GetX(), (float)from.GetY(), (float)from.GetZ()),
+            glm::vec3((float)to.GetX(), (float)to.GetY(), (float)to.GetZ()),
+            col
+        );
     }
 
-    // Draw a triangle (optional for wireframe)
+    static inline JPH::RVec3 Txf(JPH::RMat44Arg M, const JPH::Float3& p) {
+        return M * JPH::RVec3((double)p.x, (double)p.y, (double)p.z);
+    }
+
     void MyDebugRenderer::DrawTriangle(JPH::RVec3Arg v1, JPH::RVec3Arg v2, JPH::RVec3Arg v3, JPH::ColorArg color, ECastShadow castShadow)
     {
         // Draw edges of triangle as lines
@@ -29,28 +31,29 @@ namespace Ermine
     }
 
 
-    // Draw 3D text (optional)
     void MyDebugRenderer::DrawText3D(RVec3Arg, const std::string_view&, ColorArg, float)
     {
-        // Optional: ignore
+     
     }
 
-    // Create a triangle batch from an array of triangles
-    DebugRenderer::Batch MyDebugRenderer::CreateTriangleBatch(const Triangle*, int)
-    {
-        return {}; // empty batch
-    }
-    DebugRenderer::Batch MyDebugRenderer::CreateTriangleBatch(const Vertex* inVertices, int inVertexCount, const JPH::uint32* inIndices, int inIndexCount)
+    JPH::DebugRenderer::Batch
+        MyDebugRenderer::CreateTriangleBatch(const Triangle* t, int n)
     {
         return {};
     }
-    void MyDebugRenderer::DrawGeometry(JPH::RMat44Arg inModelMatrix, const JPH::AABox& inWorldSpaceBounds, float inLODScaleSq, JPH::ColorArg inModelColor, const GeometryRef& inGeometry, ECullMode inCullMode, ECastShadow inCastShadow, EDrawMode inDrawMode)
+
+    JPH::DebugRenderer::Batch
+        MyDebugRenderer::CreateTriangleBatch(const Vertex* v, int vcount,
+            const JPH::uint32* idx, int icount)
     {
+        return {};
     }
 
-    MyDebugRenderer& MyDebugRenderer::GetInstance()
+    void MyDebugRenderer::DrawGeometry(JPH::RMat44Arg model,
+        const JPH::AABox&, float,
+        JPH::ColorArg color, const GeometryRef& geom,
+        ECullMode, ECastShadow, EDrawMode)
     {
-        static MyDebugRenderer instance;
-        return instance;
+
     }
 }

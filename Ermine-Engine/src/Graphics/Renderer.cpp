@@ -29,6 +29,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "AssetManager.h"
 #include "Skybox.h"
 #include <random>  
+#include "Physics.h"
+#include "ECS.h"
 
 #include <GLFW/glfw3.h>
 
@@ -124,6 +126,70 @@ void Renderer::Init(const int& screenWidth, const int& screenHeight)
 	);
 
 	CreatePickingBuffer(screenWidth, screenHeight);
+}
+
+void Renderer::SubmitDebugLine(const glm::vec3& from, const glm::vec3& to, const glm::vec3& color)
+{
+	m_DebugLines.push_back({ from, color });
+	m_DebugLines.push_back({ to, color });
+}
+
+void Renderer::RenderDebugLines(const glm::mat4& view, const glm::mat4& proj)
+{
+	if (m_DebugLines.empty()) return;
+
+	// 1) Create VAO/VBO once
+	if (m_DebugVAO == 0) {
+		glGenVertexArrays(1, &m_DebugVAO);
+		glGenBuffers(1, &m_DebugVBO);
+
+		glBindVertexArray(m_DebugVAO);
+		glBindBuffer(GL_ARRAY_BUFFER, m_DebugVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(DebugVertex) * 65536, nullptr, GL_DYNAMIC_DRAW);
+
+		glEnableVertexAttribArray(0); // position
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(DebugVertex),
+			(void*)offsetof(DebugVertex, position));
+		glEnableVertexAttribArray(1); // color
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(DebugVertex),
+			(void*)offsetof(DebugVertex, color));
+		glBindVertexArray(0);
+	}
+
+	// 2) Load shader once (make sure it’s valid)
+	if (!debugShader) {
+		debugShader = AssetManager::GetInstance().LoadShader(
+			"../Resources/Shaders/debug_line_vert.glsl",
+			"../Resources/Shaders/debug_line_frag.glsl"
+		);
+		if (!debugShader || !debugShader->IsValid()) {
+			m_DebugLines.clear();
+			return; // avoid Bind() on null
+		}
+	}
+
+	// 3) Bind VAO/VBO and upload THIS FRAME’S data
+	glBindVertexArray(m_DebugVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, m_DebugVBO);
+	glBufferSubData(GL_ARRAY_BUFFER, 0,
+		(GLsizeiptr)(m_DebugLines.size() * sizeof(DebugVertex)),
+		m_DebugLines.data());
+
+	// 4) Shader + uniforms
+	debugShader->Bind();
+	debugShader->SetUniformMatrix4fv("uView", view);
+	debugShader->SetUniformMatrix4fv("uProj", proj);
+
+	// 5) States (depth to taste)
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LEQUAL);
+	glDisable(GL_CULL_FACE);
+	glLineWidth(2.0f);
+
+	// 6) Draw and cleanup
+	glDrawArrays(GL_LINES, 0, (GLsizei)m_DebugLines.size());
+	glBindVertexArray(0);
+	m_DebugLines.clear();
 }
 
 /**
@@ -1035,6 +1101,23 @@ void Renderer::RenderPostProcessPass()
 #endif
 }
 
+// helper – convert your Mtx44 to glm::mat4
+static inline glm::mat4 ToGlm(const Ermine::Mtx44& m)
+{
+	return glm::mat4(
+		m.m00, m.m01, m.m02, m.m03,
+		m.m10, m.m11, m.m12, m.m13,
+		m.m20, m.m21, m.m22, m.m23,
+		m.m30, m.m31, m.m32, m.m33
+	);
+}
+
+// overload that forwards to the existing glm version
+void Renderer::RenderDebugLines(const Mtx44& view, const Mtx44& proj)
+{
+	RenderDebugLines(ToGlm(view), ToGlm(proj));
+}
+
 /**
  * @brief Complete deferred rendering pipeline
  * @param view The view matrix
@@ -1081,6 +1164,20 @@ void Renderer::RenderDeferredPipeline(const Mtx44& view, const Mtx44& projection
 	// TRANSPARENCY PASS - render transparent objects using forward rendering
 	RenderForwardPass(view, projection);
 
+	if (m_PostProcessBuffer) {
+		glBindFramebuffer(GL_FRAMEBUFFER, m_PostProcessBuffer->FBO);
+		glViewport(0, 0, m_PostProcessBuffer->width, m_PostProcessBuffer->height);
+
+		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_LEQUAL);
+		glDisable(GL_CULL_FACE);
+
+		 if (auto physics = ECS::GetInstance().GetSystem<Physics>()) {
+		     physics->DrawDebugPhysics();
+		 }
+		 RenderDebugLines(view, projection);
+	}
+	
 	// Post-processing pass - read from lighting + transparency pass output
 	RenderPostProcessPass();
 }

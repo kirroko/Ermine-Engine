@@ -65,6 +65,12 @@ namespace Ermine::graphics
     struct MaterialUBO;
     class Skybox;
 
+    //physic wireframe
+    struct DebugVertex {
+        glm::vec3 position;
+        glm::vec3 color;
+    };
+
     /**
      * @brief The Renderer class is responsible for rendering the game objects to the screen.
      */
@@ -131,6 +137,11 @@ namespace Ermine::graphics
          * @param screenHeight The height of the screen
          */
         void Init(const int& screenWidth, const int& screenHeight);
+
+        //PHYSICS
+        void SubmitDebugLine(const glm::vec3& from, const glm::vec3& to, const glm::vec3& color);
+        void RenderDebugLines(const glm::mat4& view, const glm::mat4& proj);
+        void RenderDebugLines(const Mtx44& view, const Mtx44& proj);
 
         /**
          * @brief Offscreen buffer structure for rendering to texture
@@ -572,6 +583,11 @@ namespace Ermine::graphics
         // Forward rendering shader for transparent objects
         std::shared_ptr<Shader> m_ForwardShader = nullptr;
         std::vector<TransparentObject> m_transparentObjects;
+
+        //Physics
+        std::vector<DebugVertex> m_DebugLines;
+        unsigned int m_DebugVAO = 0, m_DebugVBO = 0;
+        std::shared_ptr<Shader> debugShader = nullptr;
 
         void BindMaterialTextures(Ermine::graphics::Material* material);
 

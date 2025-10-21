@@ -1569,7 +1569,8 @@ namespace Ermine
 		JPH::EMotionType motionType{ JPH::EMotionType::Static };
 		float mass{ 0.0f };
 		ShapeType shapeType{ ShapeType::Box };
-		std::vector<Ermine::Vec3> customMeshVertices;   // For custom mesh
+		std::vector<glm::vec3> customMeshVertices;   // For custom mesh
+		JPH::RefConst<JPH::Shape> shapeRef;
 
 		PhysicComponent() = default;
 
