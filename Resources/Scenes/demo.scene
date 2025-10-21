@@ -1,0 +1,828 @@
+{
+  "entities": [
+    {
+      "id": 1,
+      "components": {
+        "Transform": {
+          "position": [
+            2.0,
+            0.0,
+            -1.0
+          ],
+          "rotation": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "GameObject",
+          "tag": "Untagged",
+          "active": true
+        },
+        "AudioComponent": {
+          "soundName": "",
+          "eventName": "",
+          "is3D": true,
+          "isLooping": false,
+          "isStreaming": false,
+          "volume": 0.5,
+          "followTransform": true,
+          "minDistance": 1.0,
+          "maxDistance": 100.0,
+          "eventParameters": {}
+        },
+        "HierarchyComponent": {}
+      }
+    },
+    {
+      "id": 2,
+      "components": {
+        "Transform": {
+          "position": [
+            2.0,
+            -0.5,
+            0.0
+          ],
+          "rotation": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "scale": [
+            0.009999999776482582,
+            0.009999999776482582,
+            0.009999999776482582
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Character",
+          "tag": "Model",
+          "active": true
+        },
+        "Mesh": {
+          "kind": "None"
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              1.0
+            ],
+            "materialAlpha": 1.0,
+            "materialTransparency": 0.0,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.30000001192092898,
+            "materialAo": 1.0,
+            "materialEmissive": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 0.0,
+            "materialNormalStrength": 1.0,
+            "materialShadingModel": 0,
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": false,
+            "materialHasRoughnessMap": false,
+            "materialHasMetallicMap": false,
+            "materialHasAoMap": false,
+            "materialHasEmissiveMap": false
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources/Textures/Pants_Base_color.png"
+            }
+          ]
+        },
+        "ModelComponent": {
+          "model": "Walking.fbx"
+        },
+        "AnimationComponent": {
+          "model": "Walking.fbx"
+        },
+        "HierarchyComponent": {}
+      }
+    },
+    {
+      "id": 3,
+      "components": {
+        "Transform": {
+          "position": [
+            0.0,
+            -1.0,
+            0.0
+          ],
+          "rotation": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "scale": [
+            100.0,
+            0.10000000149011612,
+            100.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "GameObject",
+          "tag": "Untagged",
+          "active": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cube",
+            "size": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources/Textures/greybox_light_grid.png"
+            }
+          ]
+        },
+        "HierarchyComponent": {}
+      }
+    },
+    {
+      "id": 4,
+      "components": {
+        "Transform": {
+          "position": [
+            0.0,
+            4.0,
+            2.0
+          ],
+          "rotation": [
+            -0.30000001192092898,
+            0.8999999761581421,
+            0.20000000298023225,
+            0.10000000149011612
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "Light": {
+          "color": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "intensity": 0.800000011920929,
+          "type": 1,
+          "castsShadows": true
+        },
+        "ObjectMetaData": {
+          "name": "MainLight",
+          "tag": "Light",
+          "active": true
+        },
+        "HierarchyComponent": {}
+      }
+    },
+    {
+      "id": 5,
+      "components": {
+        "Transform": {
+          "position": [
+            0.0,
+            10.0,
+            0.0
+          ],
+          "rotation": [
+            0.7070000171661377,
+            0.7070000171661377,
+            0.0,
+            0.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "Light": {
+          "color": [
+            1.0,
+            0.800000011920929,
+            0.6000000238418579
+          ],
+          "intensity": 1.0,
+          "type": 2,
+          "castsShadows": true
+        },
+        "ObjectMetaData": {
+          "name": "Red",
+          "tag": "Light",
+          "active": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cube",
+            "size": [
+              0.10000000149011612,
+              0.10000000149011612,
+              0.10000000149011612
+            ]
+          }
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "materialAlpha": 1.0,
+            "materialTransparency": 0.0,
+            "materialMetallic": 0.0,
+            "materialRoughness": 1.0,
+            "materialAo": 1.0,
+            "materialEmissive": [
+              1.0,
+              0.800000011920929,
+              0.6000000238418579
+            ],
+            "materialEmissiveIntensity": 2.0,
+            "materialNormalStrength": 1.0,
+            "materialShadingModel": 0,
+            "materialHasAlbedoMap": false,
+            "materialHasNormalMap": false,
+            "materialHasRoughnessMap": false,
+            "materialHasMetallicMap": false,
+            "materialHasAoMap": false,
+            "materialHasEmissiveMap": false
+          },
+          "textures": []
+        },
+        "HierarchyComponent": {}
+      }
+    },
+    {
+      "id": 6,
+      "components": {
+        "Transform": {
+          "position": [
+            3.0,
+            2.0,
+            0.0
+          ],
+          "rotation": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "Light": {
+          "color": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "intensity": 0.5,
+          "type": 0,
+          "castsShadows": false
+        },
+        "ObjectMetaData": {
+          "name": "LightRed",
+          "tag": "Light",
+          "active": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cube",
+            "size": [
+              0.10000000149011612,
+              0.10000000149011612,
+              0.10000000149011612
+            ]
+          }
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "materialAlpha": 1.0,
+            "materialTransparency": 0.0,
+            "materialMetallic": 0.0,
+            "materialRoughness": 1.0,
+            "materialAo": 1.0,
+            "materialEmissive": [
+              1.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 10.0,
+            "materialNormalStrength": 1.0,
+            "materialShadingModel": 0,
+            "materialHasAlbedoMap": false,
+            "materialHasNormalMap": false,
+            "materialHasRoughnessMap": false,
+            "materialHasMetallicMap": false,
+            "materialHasAoMap": false,
+            "materialHasEmissiveMap": false
+          },
+          "textures": []
+        },
+        "HierarchyComponent": {}
+      }
+    },
+    {
+      "id": 7,
+      "components": {
+        "Transform": {
+          "position": [
+            -3.0,
+            2.0,
+            0.0
+          ],
+          "rotation": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "Light": {
+          "color": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "intensity": 0.5,
+          "type": 0,
+          "castsShadows": false
+        },
+        "ObjectMetaData": {
+          "name": "LightBlue",
+          "tag": "Light",
+          "active": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cube",
+            "size": [
+              0.10000000149011612,
+              0.10000000149011612,
+              0.10000000149011612
+            ]
+          }
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "materialAlpha": 1.0,
+            "materialTransparency": 0.0,
+            "materialMetallic": 0.0,
+            "materialRoughness": 1.0,
+            "materialAo": 1.0,
+            "materialEmissive": [
+              0.0,
+              0.0,
+              1.0
+            ],
+            "materialEmissiveIntensity": 10.0,
+            "materialNormalStrength": 1.0,
+            "materialShadingModel": 0,
+            "materialHasAlbedoMap": false,
+            "materialHasNormalMap": false,
+            "materialHasRoughnessMap": false,
+            "materialHasMetallicMap": false,
+            "materialHasAoMap": false,
+            "materialHasEmissiveMap": false
+          },
+          "textures": []
+        },
+        "HierarchyComponent": {}
+      }
+    },
+    {
+      "id": 8,
+      "components": {
+        "Transform": {
+          "position": [
+            0.0,
+            2.0,
+            -3.0
+          ],
+          "rotation": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "Light": {
+          "color": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "intensity": 0.5,
+          "type": 0,
+          "castsShadows": false
+        },
+        "ObjectMetaData": {
+          "name": "LightGreen",
+          "tag": "Light",
+          "active": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cube",
+            "size": [
+              0.10000000149011612,
+              0.10000000149011612,
+              0.10000000149011612
+            ]
+          }
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "materialAlpha": 1.0,
+            "materialTransparency": 0.0,
+            "materialMetallic": 0.0,
+            "materialRoughness": 1.0,
+            "materialAo": 1.0,
+            "materialEmissive": [
+              0.0,
+              1.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 10.0,
+            "materialNormalStrength": 1.0,
+            "materialShadingModel": 0,
+            "materialHasAlbedoMap": false,
+            "materialHasNormalMap": false,
+            "materialHasRoughnessMap": false,
+            "materialHasMetallicMap": false,
+            "materialHasAoMap": false,
+            "materialHasEmissiveMap": false
+          },
+          "textures": []
+        },
+        "HierarchyComponent": {}
+      }
+    },
+    {
+      "id": 9,
+      "components": {
+        "Transform": {
+          "position": [
+            2.0,
+            0.0,
+            -1.0
+          ],
+          "rotation": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "GlassSphere",
+          "tag": "Transparent",
+          "active": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Sphere",
+            "size": [
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929
+            ]
+          }
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              0.949999988079071,
+              0.949999988079071,
+              0.949999988079071,
+              0.10000002384185791
+            ],
+            "materialAlpha": 0.10000002384185791,
+            "materialTransparency": 0.8999999761581421,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.05000000074505806,
+            "materialAo": 1.0,
+            "materialEmissive": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 0.0,
+            "materialNormalStrength": 1.0,
+            "materialShadingModel": 0,
+            "materialHasAlbedoMap": false,
+            "materialHasNormalMap": false,
+            "materialHasRoughnessMap": false,
+            "materialHasMetallicMap": false,
+            "materialHasAoMap": false,
+            "materialHasEmissiveMap": false
+          },
+          "textures": []
+        },
+        "HierarchyComponent": {}
+      }
+    },
+    {
+      "id": 10,
+      "components": {
+        "Transform": {
+          "position": [
+            -2.0,
+            0.0,
+            -1.0
+          ],
+          "rotation": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            0.30000001192092898
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "ColouredGlass",
+          "tag": "Transparent",
+          "active": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cube",
+            "size": [
+              2.0,
+              2.0,
+              0.6000000238418579
+            ]
+          }
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              0.10000000149011612,
+              0.30000001192092898,
+              0.6000000238418579,
+              0.30000001192092898
+            ],
+            "materialAlpha": 0.30000001192092898,
+            "materialTransparency": 0.699999988079071,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.10000000149011612,
+            "materialAo": 1.0,
+            "materialEmissive": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 0.0,
+            "materialNormalStrength": 1.0,
+            "materialShadingModel": 0,
+            "materialHasAlbedoMap": false,
+            "materialHasNormalMap": false,
+            "materialHasRoughnessMap": false,
+            "materialHasMetallicMap": false,
+            "materialHasAoMap": false,
+            "materialHasEmissiveMap": false
+          },
+          "textures": []
+        },
+        "HierarchyComponent": {}
+      }
+    },
+    {
+      "id": 11,
+      "components": {
+        "Transform": {
+          "position": [
+            -4.0,
+            0.0,
+            -1.0
+          ],
+          "rotation": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "MetalCube",
+          "tag": "Metal",
+          "active": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cube",
+            "size": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              0.699999988079071,
+              0.699999988079071,
+              0.800000011920929,
+              1.0
+            ],
+            "materialAlpha": 1.0,
+            "materialTransparency": 0.0,
+            "materialMetallic": 1.0,
+            "materialRoughness": 0.15000000596046449,
+            "materialAo": 1.0,
+            "materialEmissive": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 0.0,
+            "materialNormalStrength": 1.0,
+            "materialShadingModel": 0,
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": false,
+            "materialHasRoughnessMap": false,
+            "materialHasMetallicMap": false,
+            "materialHasAoMap": false,
+            "materialHasEmissiveMap": false
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources/Textures/greybox_light_grid.png"
+            }
+          ]
+        },
+        "HierarchyComponent": {}
+      }
+    },
+    {
+      "id": 12,
+      "components": {
+        "Transform": {
+          "position": [
+            -6.0,
+            0.0,
+            -1.0
+          ],
+          "rotation": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "redCube",
+          "tag": "Red",
+          "active": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cube",
+            "size": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              1.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "materialAlpha": 1.0,
+            "materialTransparency": 0.0,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.30000001192092898,
+            "materialAo": 1.0,
+            "materialEmissive": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 0.0,
+            "materialNormalStrength": 1.0,
+            "materialShadingModel": 0,
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": false,
+            "materialHasRoughnessMap": false,
+            "materialHasMetallicMap": false,
+            "materialHasAoMap": false,
+            "materialHasEmissiveMap": false
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources/Textures/greybox_light_grid.png"
+            }
+          ]
+        },
+        "HierarchyComponent": {}
+      }
+    }
+  ]
+}

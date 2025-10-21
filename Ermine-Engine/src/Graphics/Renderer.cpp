@@ -70,12 +70,7 @@ GLenum glCheckError_(const char* file, int line)
 void Renderer::UpdateShadowMap()
 {
 	InitializeShadowMap();
-	for (EntityID entity : m_LightSystem->m_Entities)
-	{
-		auto& light = Ermine::ECS::GetInstance().GetComponent<Light>(entity);
-		if (light.castsShadows)
-			CreateShadowMapArray();
-	}
+	CreateShadowMapArray();
 }
 
 /**
@@ -2302,6 +2297,12 @@ void Renderer::RenderForwardPass(const Mtx44& view, const Mtx44& projection)
  */
 bool Renderer::InitializeShadowMap()
 {
+	if (m_ShadowMapFBO != 0)
+	{
+		glDeleteFramebuffers(1, &m_ShadowMapFBO);
+		m_ShadowMapFBO = 0;
+	}
+
 	glGenFramebuffers(1, &m_ShadowMapFBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, m_ShadowMapFBO);
 
@@ -2309,7 +2310,7 @@ bool Renderer::InitializeShadowMap()
 	// and defer attachment until CreateShadowMap is called.
 	if (m_ShadowMapArray != 0)
 	{
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_ShadowMapArray, 0);
+		glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_ShadowMapArray, 0);
 	}
 
 	// No color buffer is drawn

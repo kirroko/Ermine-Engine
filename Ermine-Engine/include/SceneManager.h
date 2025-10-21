@@ -46,6 +46,12 @@ public:
     */
     void SaveScene();
 
+    void SaveTemp();
+
+    void LoadTemp();
+
+    void RemoveTemp();
+
     /*!
     \brief Save scene dialog pop up
     */

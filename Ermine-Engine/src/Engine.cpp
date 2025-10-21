@@ -36,6 +36,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Cubemap.h"
 #include "ScriptSystem.h"
 #include "AnimationManager.h"
+#include "ConsoleGUI.h"
+#include "GuidRegistry.h"
 #include "Scene.h"
 #include "HierarchySystem.h"
 
@@ -47,6 +49,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "ViewPortGUI.h"
 #include "AudioImGUI.h"
 #include "SceneManager.h"
+#include "FSMEditor.h"
 #endif
 
 using namespace Ermine;
@@ -72,14 +75,6 @@ namespace
 	}
 
 	EntityID fbxEntity = 0;
-
-	IdleState g_IdleState;
-	RoamState g_RoamState;
-
-	float s_StateTimer = 0.0f;
-	float s_StateDuration = 3.0f; // switch every 3 seconds
-
-	State* g_CurrentState = nullptr;
 }
 
 bool engine::Init(GLFWwindow* windowContext)
@@ -128,8 +123,6 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	FrameController::Init(120.f, 60.f);
 
-	//g_vsyncVerifier.Init(windowContext);
-
 	graphics::GPUProfiler::Init(150); // Track last 150 frames
 
 	job::Initialize();
@@ -145,7 +138,6 @@ bool engine::Init(GLFWwindow* windowContext)
 	EE_AUTO_REGISTER_COMPONENT(Material, "Material")
 	EE_AUTO_REGISTER_COMPONENT(ObjectMetaData, "ObjectMetaData")
 	EE_AUTO_REGISTER_COMPONENT(Light, "Light")
-	EE_AUTO_REGISTER_COMPONENT(Particle, "Particle")
 	EE_AUTO_REGISTER_COMPONENT(AudioComponent, "AudioComponent")
 	EE_AUTO_REGISTER_COMPONENT(GlobalAudioComponent, "GlobalAudioComponent")
 	EE_AUTO_REGISTER_COMPONENT(PhysicComponent, "PhysicComponent")
@@ -153,6 +145,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	EE_AUTO_REGISTER_COMPONENT(AnimationComponent, "AnimationComponent")
 	EE_AUTO_REGISTER_COMPONENT(HierarchyComponent, "HierarchyComponent");
 	EE_AUTO_REGISTER_COMPONENT(StateMachine, "StateMachine");
+	EE_AUTO_REGISTER_COMPONENT(ParticleEmitter, "ParticleEmitter");
 
 	// Special Case for Script component, need to copy over the class name
 	ECS::GetInstance().RegisterComponent<Script>("Script",
@@ -163,6 +156,14 @@ bool engine::Init(GLFWwindow* windowContext)
 			cm.AddComponent<Script>(dst, Script(srcScript.m_className, dst));
 		});
 
+	// Special case for IDComponent with custom clone to force new GUID
+	ECS::GetInstance().RegisterComponent<IDComponent>("IDComponent",
+		[](ComponentManager& cm, [[maybe_unused]] EntityID src, EntityID dst)
+		{
+			auto g = Guid::New();
+			cm.AddComponent<IDComponent>(dst, IDComponent{ g });
+			ECS::GetInstance().GetGuidRegistry().Register(dst, g);
+		});
 
 	// Register all systems
 	ECS::GetInstance().RegisterSystem<graphics::Renderer>();
@@ -201,9 +202,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	// For Particles
 	sig.reset();
 	sig.set(ECS::GetInstance().GetComponentType<Transform>());
-	sig.set(ECS::GetInstance().GetComponentType<Mesh>());
-	sig.set(ECS::GetInstance().GetComponentType<Material>());
-	sig.set(ECS::GetInstance().GetComponentType<Particle>());
+	sig.set(ECS::GetInstance().GetComponentType<ParticleEmitter>());
 	ECS::GetInstance().SetSystemSignature<ParticleSystem>(sig);
 
 	// For Physics
@@ -333,11 +332,10 @@ bool engine::Init(GLFWwindow* windowContext)
 	//ECS::GetInstance().AddComponent(fbxEntity, Material(std::move(FBXMaterial)));
 
 	// Create a simple quad mesh for particles
-	auto quadMesh = graphics::GeometryFactory::CreateQuad(1.0f, 1.0f);
-	auto tex = AssetManager::GetInstance().LoadTexture("../Resources/Textures/greybox_red_solid.png");
+	//auto tex = AssetManager::GetInstance().LoadTexture("../Resources/Textures/greybox_red_solid.png");
 
 	// initialize particles emitter
-	ECS::GetInstance().GetSystem<ParticleSystem>()->Init(quadMesh, shader, tex);
+	ECS::GetInstance().GetSystem<ParticleSystem>()->Init(shader);
 
 	// Create first cube
 	//auto entity = ECS::GetInstance().CreateEntity();
@@ -524,13 +522,13 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	// Editor windows
 #if defined(EE_EDITOR)
-	editor::EditorGUI::CreateImGUIWindow<ImguiUI::AssetBrowser>(); //TODO: Standardize please, do we want namespace ImGui for all window or not
-	editor::EditorGUI::CreateImGUIWindow<ParticlesImGUI>(ECS::GetInstance().GetSystem<ParticleSystem>()->GetEmitter());
+	editor::EditorGUI::CreateImGUIWindow<ParticlesImGUI>();
 	editor::EditorGUI::CreateImGUIWindow<AudioImGUI>();
-	//editor::EditorGUI::CreateImGUIWindow<InspectorGUI>();
-	//auto* inspector = editor::EditorGUI::CreateImGUIWindow<editor::HierarchyInspector>(editor::EditorGUI::GetActiveScene().get(), "Inspector");
-	editor::EditorGUI::CreateImGUIWindow<editor::GraphicsDebugGUI>("Graphics Debug");
+	editor::EditorGUI::CreateImGUIWindow<editor::GraphicsDebugGUI>("Graphics Debug"); // TODO: Namespace required?
 	editor::EditorGUI::CreateImGUIWindow<ViewPortGUI>();
+	editor::EditorGUI::CreateImGUIWindow<FSMEditorImGUI>();
+	editor::EditorGUI::CreateImGUIWindow<ImguiUI::AssetBrowser>(); //TODO: Standardize please, do we want namespace ImGui for all window or not
+	editor::EditorGUI::CreateImGUIWindow<ConsoleGUI>();
 
 	auto defaultScene = std::make_shared<Scene>("Main Scene");
 	editor::EditorGUI::SetActiveScene(defaultScene);
@@ -558,7 +556,7 @@ void engine::Shutdown()
 	cfg.windowHeight = height;
 	cfg.fullscreen = (glfwGetWindowMonitor(glfwGetCurrentContext()) != nullptr);
 	cfg.maximized = (glfwGetWindowAttrib(glfwGetCurrentContext(), GLFW_MAXIMIZED) == GLFW_TRUE);
-	cfg.title = "Ermine Editor 0.1";
+	cfg.title = "Ermine Editor 0.2";
 
 	SaveConfigToFile(cfg, "Ermine-Engine.config", false);
 
@@ -569,8 +567,6 @@ void engine::Shutdown()
 
 	AssetManager::GetInstance().Clear();
 	ECS::GetInstance().GetSystem<Physics>()->Shutdown();
-
-	ECS::GetInstance().GetSystem<ParticleSystem>()->ClearEmitter();
 
 	graphics::GPUProfiler::Shutdown();
 
@@ -603,8 +599,6 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 
 	// Profiler
 	graphics::GPUProfiler::BeginFrame();
-
-	//g_vsyncVerifier.UpdateAndMaybeLog();
 
 	// Handle shading mode toggle
 	HandleShadingToggle(windowContext);

@@ -96,6 +96,9 @@
     <ClInclude Include="include\Components.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\ConsoleGUI.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\Cubemap.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -117,6 +120,12 @@
     <ClInclude Include="include\Entity.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\FSMEditor.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\FSMNode.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\FiniteStateMachine.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -136,6 +145,12 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\GraphicsDebugGUI.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Guid.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\GuidRegistry.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\HierarchyInspector.h">
@@ -228,9 +243,6 @@
     <ClInclude Include="include\Skybox.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="include\State.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="include\Systems.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -284,6 +296,9 @@
     <ClCompile Include="src\Engine.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\FSM\FSMEditor.cpp">
+      <Filter>src\FSM</Filter>
+    </ClCompile>
     <ClCompile Include="src\FSM\FiniteStateMachine.cpp">
       <Filter>src\FSM</Filter>
     </ClCompile>
@@ -327,6 +342,9 @@
       <Filter>src\Graphics</Filter>
     </ClCompile>
     <ClCompile Include="src\ImGUI\AudioIMGUI.cpp">
+      <Filter>src\ImGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ImGUI\ConsoleGUI.cpp">
       <Filter>src\ImGUI</Filter>
     </ClCompile>
     <ClCompile Include="src\ImGUI\EditorGUI.cpp">
@@ -402,6 +420,12 @@
       <Filter>src\Utility</Filter>
     </ClCompile>
     <ClCompile Include="src\Utility\GPUProfiler.cpp">
+      <Filter>src\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Utility\Guid.cpp">
+      <Filter>src\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Utility\GuidRegistry.cpp">
       <Filter>src\Utility</Filter>
     </ClCompile>
     <ClCompile Include="src\Utility\Input.cpp">

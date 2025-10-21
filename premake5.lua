@@ -28,6 +28,7 @@ IncludeDir["Jolt"] = "ThirdParty"
 IncludeDir["assimp"] = "ThirdParty/assimp/include"
 IncludeDir["DirectXTex"] = "ThirdParty/DirectXTex/inc"
 IncludeDir["xproperty"] = "ThirdParty/xproperty/source"
+IncludeDir["imnodes"] = "ThirdParty/imnodes"
 
 -- Libraries
 LibraryDir = {}
@@ -44,6 +45,7 @@ group "Dependencies"
     include "ThirdParty/Fmod"
     include "ThirdParty/Mono"
     include "ThirdParty/Jolt"
+    include "ThirdParty/imnodes"
 group ""
 
 -- Engine Project
@@ -85,7 +87,8 @@ project "Ermine-Engine"
         "%{IncludeDir.rapidjson}",
         "%{IncludeDir.assimp}",
         "%{IncludeDir.DirectXTex}",
-        "%{IncludeDir.xproperty}"
+        "%{IncludeDir.xproperty}",
+        "%{IncludeDir.imnodes}"
     }
 
     libdirs
@@ -108,7 +111,8 @@ project "Ermine-Engine"
         "opengl32.lib",
 		"mono-2.0-sgen.lib",
         "Jolt",
-        "assimp-vc143-mt.lib"
+        "assimp-vc143-mt.lib",
+        "imnodes"
         --"DirectXTex.lib"
     }
 
@@ -175,6 +179,7 @@ project "Ermine-Engine"
         {
             "EE_PLATFORM_WINDOWS",
             "EE_BUILD_DLL",
+            "ERMINE_USE_SPDLOG",
             "GLFW_INCLUDE_NONE",
             "IMGUI_DEFINE_MATH_OPERATORS",
             "GLM_ENABLE_EXPERIMENTAL",
@@ -238,7 +243,8 @@ project "Ermine-Editor"
         "%{IncludeDir.Fmod}",
         "%{IncludeDir.Mono}",
         "%{IncludeDir.rapidjson}",
-        "%{IncludeDir.xproperty}"
+        "%{IncludeDir.xproperty}",
+        "%{IncludeDir.imnodes}"
     } 
 
     -- Ensure the resource pipeline builds before running it

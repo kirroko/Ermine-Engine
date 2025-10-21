@@ -17,6 +17,11 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <mono/jit/jit.h>
 #include <mono/metadata/assembly.h>
 
+namespace Ermine
+{
+	struct ScriptFieldValue;
+}
+
 namespace Ermine::scripting
 {
 	class ScriptEngine
@@ -191,6 +196,20 @@ namespace Ermine::scripting
 		 * @param post A function to call after the reload. This can be used to re-initialize resources.
 		 */
 		void ProcessHotReload(const std::function<void()>& pre, const std::function<void(bool success)>& post);
+
+		/**
+		 * @brief Pull the managed fields from a MonoObject into a cache.
+		 * @param obj The MonoObject to pull the fields from.
+		 * @param cache The cache to store the fields in.
+		 */
+		static void PullManagedFieldsToCache(MonoObject* obj, std::unordered_map<std::string, ScriptFieldValue>& cache);
+
+		/**
+		 * @brief Push the cached fields back to the MonoObject.
+		 * @param obj The MonoObject to push the fields to.
+		 * @param cache The cache to get the fields from.
+		 */
+		static void PushCacheToManagedFields(MonoObject* obj, const std::unordered_map<std::string, ScriptFieldValue>& cache);
 
 		MonoAssembly* GetGameAsm() const { return m_gameAsm; }
 		MonoDomain* GetGameDomain() const { return m_gameDomain; }

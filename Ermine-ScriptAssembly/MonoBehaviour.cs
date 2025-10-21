@@ -13,6 +13,11 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 namespace ErmineEngine
 {
+    [System.AttributeUsage(System.AttributeTargets.Field, Inherited = false, AllowMultiple = false)]
+    public sealed class SerializeFieldAttribute : System.Attribute
+    {
+    }
+
     public class MonoBehaviour : Component
     {
         
