@@ -151,6 +151,7 @@ namespace Ermine
         mObjectLayerPairFilter = new ObjectLayerPairFilterImpl();
         mBodyActivationListener = new MyBodyActivationListener();
         mContactListener = new MyContactListener();
+        wireframe = false;
     }
 
     /*!*************************************************************************

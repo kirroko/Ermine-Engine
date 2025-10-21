@@ -126,6 +126,8 @@ namespace Ermine
 
         std::shared_ptr<MyDebugRenderer> mDebugRenderer;
 
+        bool wireframe;
+
     private:
         // --- Important: allocator first, job system second, physics system third ---
         JPH::TempAllocatorImpl       mTempAllocator;

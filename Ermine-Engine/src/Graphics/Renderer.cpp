@@ -1164,7 +1164,7 @@ void Renderer::RenderDeferredPipeline(const Mtx44& view, const Mtx44& projection
 	// TRANSPARENCY PASS - render transparent objects using forward rendering
 	RenderForwardPass(view, projection);
 
-	if (m_PostProcessBuffer) {
+	if (m_PostProcessBuffer && ECS::GetInstance().GetSystem<Physics>()->wireframe) {
 		glBindFramebuffer(GL_FRAMEBUFFER, m_PostProcessBuffer->FBO);
 		glViewport(0, 0, m_PostProcessBuffer->width, m_PostProcessBuffer->height);
 
