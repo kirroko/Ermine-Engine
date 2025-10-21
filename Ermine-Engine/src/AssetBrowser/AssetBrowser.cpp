@@ -18,7 +18,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #include "PreCompile.h"
 #include "AssetBrowser.h"
-#include "AssetManager.h"
+#include "AssetManager.h" // For loading textures
+#include "SceneManager.h" // For opening scenes
 
 namespace fs = std::filesystem;
 
@@ -318,8 +319,19 @@ namespace Ermine::ImguiUI
                 fs::path full = asset->realName.empty() ? (currentDirectory / asset->Name) : fs::path(asset->realName);
                 if (fs::is_directory(full))
                     folderToOpen = full;
-                else
-                    ShellExecuteA(NULL, "open", full.string().c_str(), NULL, NULL, SW_SHOWDEFAULT);
+                else {
+                    std::string ext = GetExtensionLower(full.string());
+                    if (ext == "scene") {
+                        // Open scene file in editor
+                        EE_CORE_INFO("Opening scene: {}", full.string());
+                        SceneManager::GetInstance().ClearScene();
+                        SceneManager::GetInstance().OpenScene(full.string().c_str());
+                    }
+                    else {
+                        // Open file with default application
+                        ShellExecuteA(NULL, "open", full.string().c_str(), NULL, NULL, SW_SHOWDEFAULT);
+                    }
+                }
             }
 
             // Right-click for context menu
