@@ -1157,6 +1157,7 @@ namespace Ermine::editor {
         }
         if (ImGui::MenuItem("Physics") && !ECS::GetInstance().HasComponent<PhysicComponent>(entity)) {
             ECS::GetInstance().AddComponent(entity, PhysicComponent());
+            ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
         }
         if (ImGui::MenuItem("Audio") && !ECS::GetInstance().HasComponent<AudioComponent>(entity)) {
             ECS::GetInstance().AddComponent(entity, AudioComponent());
