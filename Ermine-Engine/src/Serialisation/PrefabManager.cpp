@@ -16,6 +16,12 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 namespace Ermine
 {
+	PrefabManager& PrefabManager::GetInstance()
+	{
+		static PrefabManager instance;
+		return instance;
+	}
+
 	void PrefabManager::SavePrefab(EntityID root, const std::filesystem::path & path)
 	{
 		SavePrefabToFile(ECS::GetInstance(), root, path);

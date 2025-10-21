@@ -27,6 +27,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #include "Scene.h"
 #include "SceneManager.h"
+#include "PrefabManager.h"
 
 using namespace Ermine::editor;
 
@@ -524,6 +525,18 @@ void Ermine::ViewPortGUI::Update()
 	GizmoOverlay(imgMin, imgSize, vmSize, vmPos, selectedEntity, gOperation, gMode);
 
 	ImGui::EndChild();
+
+	if (ImGui::BeginDragDropTarget()) { // Begin drag & drop target
+		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_FILE")) {
+			//std::string droppedEntity = *(std::string*)payload->Data;
+
+			EE_CORE_INFO("Dropped prefab file: {}", payload->Data);
+
+			//auto hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>();
+			//PrefabManager::GetInstance().LoadPrefab(droppedEntity);
+		}
+		ImGui::EndDragDropTarget(); // End drag & drop target
+	}
 
 	Input::SetEditorInputActive(viewportFocused && viewportHovered);
 
