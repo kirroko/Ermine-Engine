@@ -237,7 +237,7 @@ namespace Ermine::editor {
                     p.m_Value.set<Ermine::Vec3>({ a[0], a[1], a[2] });
                     xproperty::sprop::setProperty(err, t, p, ctx);
 
-                    EE_CORE_INFO("Transform changed for entity {}: {}, {}, {}", entity, a[0], a[1], a[2]);
+                    //EE_CORE_INFO("Transform changed for entity {}: {}, {}, {}", entity, a[0], a[1], a[2]);
 
                     // FIXED: Use proper hierarchy system integration
                     if (ECS::GetInstance().HasComponent<HierarchyComponent>(entity)) {
@@ -245,7 +245,7 @@ namespace Ermine::editor {
                         if (hierarchySystem) {
                             // Mark entity and children as dirty for hierarchy update
                             hierarchySystem->OnTransformChanged(entity);
-                            EE_CORE_INFO("Marked entity {} as dirty for hierarchy update", entity);
+                            //EE_CORE_INFO("Marked entity {} as dirty for hierarchy update", entity);
                         }
                     }
                 }
@@ -283,7 +283,7 @@ namespace Ermine::editor {
                         if (hierarchySystem) {
                             // Mark entity and children as dirty for hierarchy update
                             hierarchySystem->OnTransformChanged(entity);
-                            EE_CORE_INFO("Marked entity {} as dirty for hierarchy update", entity);
+                            //EE_CORE_INFO("Marked entity {} as dirty for hierarchy update", entity);
                         }
                     }
                 }

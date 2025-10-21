@@ -33,8 +33,18 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "SceneManager.h"
 
 #include "TransformMode.h"
+#include "Matrix4x4.h"
 
 using namespace Ermine::editor;
+
+// Initialize static variables
+glm::mat4 Ermine::ViewPortGUI::s_previousModel = glm::mat4(1.0f);
+bool Ermine::ViewPortGUI::s_wasManipulating = false;
+TransformMode Ermine::ViewPortGUI::s_activeTransformMode = TransformMode::Pivot;
+Ermine::Vec3 Ermine::ViewPortGUI::s_manipulationPoint(0.0f, 0.0f, 0.0f);
+Ermine::Vec3 Ermine::ViewPortGUI::s_originalPosition(0.0f, 0.0f, 0.0f);
+float Ermine::ViewPortGUI::s_modeMessageTimer = 0.0f;
+const char* Ermine::ViewPortGUI::s_modeMessage = nullptr;
 
 EditorGUI::SimState EditorGUI::s_state = SimState::stopped;
 
@@ -71,6 +81,28 @@ namespace
 			return ImGui::ImageButton(text, icon, size, ImVec2(0, 1), ImVec2(1, 0));
 		return ImGui::Button(text, size);
 	}
+    
+    // Helper function to rotate a vector by a quaternion
+    Ermine::Vec3 QuaternionRotateVector(const Ermine::Quaternion& q, const Ermine::Vec3& v)
+    {
+        // Quaternion rotation formula: q * v * q^-1 where v is treated as a quaternion with w=0
+        // We'll use a more efficient implementation
+        
+        // Extract components
+        float qx = q.x, qy = q.y, qz = q.z, qw = q.w;
+        float vx = v.x, vy = v.y, vz = v.z;
+        
+        // Calculate qvq^-1
+        float tx = 2.0f * (qy * vz - qz * vy);
+        float ty = 2.0f * (qz * vx - qx * vz);
+        float tz = 2.0f * (qx * vy - qy * vx);
+        
+        return Ermine::Vec3(
+            vx + qw * tx + qy * tz - qz * ty,
+            vy + qw * ty + qz * tx - qx * tz,
+            vz + qw * tz + qx * ty - qy * tx
+        );
+    }
 }
 
 Ermine::ViewPortGUI::ViewPortGUI() : ImGUIWindow("Viewport"), show(true)
@@ -136,7 +168,7 @@ void Ermine::ViewPortGUI::TopBarSimulationControl(const ImVec2 iconSize)
 		TransformMode currentMode = TransformModeManager::GetMode();
 		const char* currentModeStr = (currentMode == TransformMode::Pivot) ? "Pivot" : "Center";
 
-		ImGui::SetNextItemWidth(80.0f);
+		ImGui::SetNextItemWidth(90.0f);
 		if (ImGui::BeginCombo("##TransformMode", currentModeStr, ImGuiComboFlags_NoArrowButton))
 		{
 			// Pivot option
@@ -144,6 +176,11 @@ void Ermine::ViewPortGUI::TopBarSimulationControl(const ImVec2 iconSize)
 			if (ImGui::Selectable("Pivot", isPivot))
 			{
 				TransformModeManager::SetMode(TransformMode::Pivot);
+				s_activeTransformMode = TransformMode::Pivot;
+				EntityID selectedEntity = SceneManager::GetInstance().GetActiveScene()->GetSelectedEntity();
+				if (ECS::GetInstance().IsEntityValid(selectedEntity)) {
+					UpdateManipulationPoint(selectedEntity);
+				}
 				EE_CORE_INFO("Transform mode: Pivot");
 			}
 			if (isPivot)
@@ -154,6 +191,11 @@ void Ermine::ViewPortGUI::TopBarSimulationControl(const ImVec2 iconSize)
 			if (ImGui::Selectable("Center", isCenter))
 			{
 				TransformModeManager::SetMode(TransformMode::Center);
+				s_activeTransformMode = TransformMode::Center;
+				EntityID selectedEntity = SceneManager::GetInstance().GetActiveScene()->GetSelectedEntity();
+				if (ECS::GetInstance().IsEntityValid(selectedEntity)) {
+					UpdateManipulationPoint(selectedEntity);
+				}
 				EE_CORE_INFO("Transform mode: Center");
 			}
 			if (isCenter)
@@ -337,7 +379,15 @@ void Ermine::ViewPortGUI::ObjectPicking(const std::shared_ptr<Ermine::graphics::
 					EditorCamera::GetInstance().GetProjectionMatrix());
 
 				if (hit)
+				{
+					auto previousEntity = SceneManager::GetInstance().GetActiveScene()->GetSelectedEntity();
 					SceneManager::GetInstance().GetActiveScene()->SetSelectedEntity(entity);
+					
+					// If entity changed, update manipulation point for new entity
+					if (previousEntity != entity) {
+						UpdateManipulationPoint(entity);
+					}
+				}
 			}
 		}
 	}
@@ -369,15 +419,6 @@ void Ermine::ViewPortGUI::GizmoOverlay(const ImVec2& imgMin, const ImVec2& imgSi
 	ImGuizmo::SetOrthographic(false);
 	ImGuizmo::SetDrawlist(ImGui::GetWindowDrawList());
 	ImGuizmo::SetRect(imgMin.x, imgMin.y, imgSize.x, imgSize.y);
-
-	// Move static variables outside the if block
-	static glm::mat4 s_previousModel = glm::mat4(1.0f);
-	static bool s_wasManipulating = false;
-    
-    // Cache the mode and other values we're using for this manipulation operation
-    static TransformMode s_activeTransformMode = TransformMode::Pivot;
-    static Vec3 s_manipulationPoint;
-    static Vec3 s_originalPosition;  // Cache the entity's original position
 
 	// OBJECT Gizmo overlay
 	if (!EditorGUI::isPlaying && ECS::GetInstance().IsEntityValid(selectedEntity)
@@ -449,6 +490,15 @@ void Ermine::ViewPortGUI::GizmoOverlay(const ImVec2& imgMin, const ImVec2& imgSi
 					"Current Mode: Pivot (press Z to toggle)" : 
 					"Current Mode: Center (press Z to toggle)";
 				drawList->AddText(ImVec2(imgMin.x + 10, imgMin.y + 40), IM_COL32(255, 255, 255, 200), modeText);
+				
+				// If we're in manipulation mode, show the actual manipulation point
+				if (s_wasManipulating) {
+					ImVec2 manipPoint = worldToScreen(s_manipulationPoint);
+					drawList->AddCircleFilled(manipPoint, 7.0f, IM_COL32(255, 255, 0, 200));
+					drawList->AddCircle(manipPoint, 8.0f, IM_COL32(0, 0, 0, 200), 0, 2.0f);
+					drawList->AddText(ImVec2(manipPoint.x + 10, manipPoint.y), 
+						IM_COL32(255, 255, 0, 255), "Active Point");
+				}
 			}
 		}
 
@@ -549,7 +599,7 @@ void Ermine::ViewPortGUI::GizmoOverlay(const ImVec2& imgMin, const ImVec2& imgSi
 						glm::vec4 prevPerspective;
 						glm::quat prevRotation;
 						glm::decompose(s_previousModel, prevScale, prevRotation,
-							prevTranslation, prevSkew, prevPerspective);
+										prevTranslation, prevSkew, prevPerspective);
 						prevRotation = glm::normalize(prevRotation);
 
 						// Calculate rotation delta
@@ -557,17 +607,59 @@ void Ermine::ViewPortGUI::GizmoOverlay(const ImVec2& imgMin, const ImVec2& imgSi
 
 						// Convert to Ermine quaternion
 						Quaternion ermineRotation(deltaRotation.x, deltaRotation.y,
-							deltaRotation.z, deltaRotation.w);
+												  deltaRotation.z, deltaRotation.w);
 
-                        // Rotate around the center point
-                        hierarchySystem->RotateAroundPointQuat(
-                            selectedEntity,
-                            s_manipulationPoint,  // Use the cached center point
-                            ermineRotation
-                        );
+                        // *** THE KEY FIX: Properly handle center mode rotation ***
+
+                        // 1. Get all entities in the hierarchy
+                        std::vector<EntityID> entitiesToRotate;
+                        entitiesToRotate.push_back(selectedEntity);
                         
-                        EE_CORE_INFO("Rotating entity {} around CENTER point ({:.3f}, {:.3f}, {:.3f})",
-                                     selectedEntity,
+                        // Recursively collect all children
+                        std::function<void(EntityID)> collectChildren = [&](EntityID parentID) {
+                            if (ecs.HasComponent<HierarchyComponent>(parentID)) {
+                                auto& hierarchyComp = ecs.GetComponent<HierarchyComponent>(parentID);
+                                for (auto childID : hierarchyComp.children) {
+                                    if (ecs.IsEntityValid(childID)) {
+                                        entitiesToRotate.push_back(childID);
+                                        collectChildren(childID);
+                                    }
+                                }
+                            }
+                        };
+                        collectChildren(selectedEntity);
+                        
+                        // 2. Store all world positions before modifying anything
+                        std::vector<Vec3> initialPositions;
+                        initialPositions.reserve(entitiesToRotate.size());
+                        
+                        for (EntityID entity : entitiesToRotate) {
+                            Vec3 worldPos = hierarchySystem->GetWorldPosition(entity);
+                            initialPositions.push_back(worldPos);
+                        }
+                        
+                        // 3. Apply rotation around center to each entity
+                        for (size_t i = 0; i < entitiesToRotate.size(); ++i) {
+                            EntityID entityID = entitiesToRotate[i];
+                            Vec3 worldPos = initialPositions[i];
+                            
+                            // Calculate offset from center point
+                            Vec3 offsetFromCenter = worldPos - s_manipulationPoint;
+                            
+                            // Rotate the offset using built-in quaternion rotation function
+                            Vec3 rotatedOffset = QuaternionRotateVector(ermineRotation, offsetFromCenter);
+                            
+                            // Calculate new world position
+                            Vec3 newWorldPos = s_manipulationPoint + rotatedOffset;
+                            hierarchySystem->SetWorldPosition(entityID, newWorldPos);
+                            
+                            // Also update world rotation
+                            Quaternion currentRot = hierarchySystem->GetWorldRotation(entityID);
+                            hierarchySystem->SetWorldRotation(entityID, ermineRotation * currentRot);
+                        }
+                        
+                        EE_CORE_INFO("Rotated {} entities around CENTER point ({:.3f}, {:.3f}, {:.3f})",
+                                     entitiesToRotate.size(),
                                      s_manipulationPoint.x, s_manipulationPoint.y, s_manipulationPoint.z);
 					}
 					else {
@@ -577,7 +669,7 @@ void Ermine::ViewPortGUI::GizmoOverlay(const ImVec2& imgMin, const ImVec2& imgSi
 						glm::vec4 prevPerspective;
 						glm::quat prevRotation;
 						glm::decompose(s_previousModel, prevScale, prevRotation,
-							prevTranslation, prevSkew, prevPerspective);
+										prevTranslation, prevSkew, prevPerspective);
 						prevRotation = glm::normalize(prevRotation);
 
 						// Calculate rotation delta
@@ -585,7 +677,7 @@ void Ermine::ViewPortGUI::GizmoOverlay(const ImVec2& imgMin, const ImVec2& imgSi
 
 						// Convert to Ermine quaternion
 						Quaternion ermineRotation(deltaRotation.x, deltaRotation.y,
-							deltaRotation.z, deltaRotation.w);
+												  deltaRotation.z, deltaRotation.w);
 
                         if (hierarchySystem) {
                             hierarchySystem->SetWorldRotation(
@@ -668,6 +760,35 @@ void Ermine::ViewPortGUI::GizmoOverlay(const ImVec2& imgMin, const ImVec2& imgSi
 	}
 }
 
+void Ermine::ViewPortGUI::UpdateManipulationPoint(EntityID entity)
+{
+    if (!ECS::GetInstance().IsEntityValid(entity))
+        return;
+
+    TransformMode currentMode = TransformModeManager::GetMode();
+    s_activeTransformMode = currentMode;
+    
+    // Calculate the manipulation point based on mode
+    s_manipulationPoint = TransformModeManager::GetManipulationPosition(entity);
+    
+    // Get original position for reference
+    auto& ecs = ECS::GetInstance();
+    auto hierarchySystem = ecs.GetSystem<HierarchySystem>();
+    if (hierarchySystem) {
+        s_originalPosition = hierarchySystem->GetWorldPosition(entity);
+    } else if (ecs.HasComponent<Transform>(entity)) {
+        s_originalPosition = ecs.GetComponent<Transform>(entity).position;
+    }
+    
+    EE_CORE_INFO("Updated manipulation point: mode={}, point=({:.3f}, {:.3f}, {:.3f})",
+                (currentMode == TransformMode::Pivot) ? "PIVOT" : "CENTER",
+                s_manipulationPoint.x, s_manipulationPoint.y, s_manipulationPoint.z);
+                
+    // Set temporary UI feedback
+    s_modeMessage = (currentMode == TransformMode::Pivot) ? "Pivot Mode" : "Center Mode";
+    s_modeMessageTimer = 2.0f; // Show for 2 seconds
+}
+
 void Ermine::ViewPortGUI::Update()
 {
 	ImGui::Begin("Scene Viewer", &show);
@@ -748,7 +869,6 @@ void Ermine::ViewPortGUI::Update()
 	const bool overViewCube = ImGui::IsMouseHoveringRect(vmPos, vmPosBR, false);
 
 	EntityID selectedEntity{};
-	//selectedEntity = ref_Inspector->GetEntity();
 	selectedEntity = SceneManager::GetInstance().GetActiveScene()->GetSelectedEntity();
 
 	// Keyboard shortcuts for gizmo
@@ -773,10 +893,14 @@ void Ermine::ViewPortGUI::Update()
 
 		// Toggle transform mode with Z key
 		if (Input::IsKeyPressedEditor(GLFW_KEY_Z)) {
-			TransformModeManager::ToggleMode();
-			const char* mode = (TransformModeManager::GetMode() == TransformMode::Pivot)
-				? "Pivot" : "Center";
-			EE_CORE_INFO("Transform mode: {0}", mode);
+			// Toggle the mode
+			TransformMode newMode = TransformModeManager::ToggleMode();
+			s_activeTransformMode = newMode;
+
+			// ALWAYS update the manipulation point when toggling modes
+			if (ECS::GetInstance().IsEntityValid(selectedEntity)) {
+				UpdateManipulationPoint(selectedEntity);
+			}
 		}
 	}
 
@@ -790,6 +914,23 @@ void Ermine::ViewPortGUI::Update()
 	ObjectPicking(offscreen_buffer, imgMin, imgSize, overViewCube, s_orbiting);
 
 	GizmoOverlay(imgMin, imgSize, vmSize, vmPos, selectedEntity, gOperation, gMode);
+	
+	// Display mode change message if active
+	if (s_modeMessageTimer > 0.0f) {
+		s_modeMessageTimer -= FrameController::GetDeltaTime();
+		
+		if (s_modeMessage) {
+			ImDrawList* dl = ImGui::GetForegroundDrawList();
+			ImVec2 screenCenter = ImVec2(ImGui::GetIO().DisplaySize.x * 0.5f, 
+									   ImGui::GetIO().DisplaySize.y * 0.2f);
+			
+			float alpha = std::min(1.0f, s_modeMessageTimer);
+			
+			dl->AddText(ImGui::GetFont(), ImGui::GetFontSize() * 1.5f, 
+					   ImVec2(screenCenter.x - ImGui::CalcTextSize(s_modeMessage).x * 0.75f, screenCenter.y),
+					   ImColor(1.0f, 1.0f, 1.0f, alpha), s_modeMessage);
+		}
+	}
 
 	ImGui::EndChild();
 

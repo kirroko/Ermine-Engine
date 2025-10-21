@@ -144,12 +144,12 @@ namespace Ermine
                 // Extract position, rotation, scale from the new local matrix
                 DecomposeMatrix(newLocalMatrix, childTransform.position, childTransform.rotation, childTransform.scale);
 
-                EE_CORE_INFO("=== REPARENTING ENTITY {} to PARENT {} ===", child, parent);
-                EE_CORE_INFO("New local position: ({:.3f}, {:.3f}, {:.3f})",
-                    childTransform.position.x, childTransform.position.y, childTransform.position.z);
+                //EE_CORE_INFO("=== REPARENTING ENTITY {} to PARENT {} ===", child, parent);
+                //EE_CORE_INFO("New local position: ({:.3f}, {:.3f}, {:.3f})",
+                //    childTransform.position.x, childTransform.position.y, childTransform.position.z);
             }
             else {
-                EE_CORE_WARN("Failed to invert parent matrix during reparenting");
+                //EE_CORE_WARN("Failed to invert parent matrix during reparenting");
             }
         }
 
@@ -176,9 +176,9 @@ namespace Ermine
             Quaternion worldRotation = GetWorldRotation(child);
             Vec3 worldScale = GetWorldScale(child);
 
-            EE_CORE_INFO("=== UNPARENTING ENTITY {} ===", child);
-            EE_CORE_INFO("Preserving world position: ({:.3f}, {:.3f}, {:.3f})", 
-                         worldPosition.x, worldPosition.y, worldPosition.z);
+            //EE_CORE_INFO("=== UNPARENTING ENTITY {} ===", child);
+            //EE_CORE_INFO("Preserving world position: ({:.3f}, {:.3f}, {:.3f})",
+            //             worldPosition.x, worldPosition.y, worldPosition.z);
 
             // 2. Remove parent relationship
             auto& parentHierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(childHierarchy.parent);
@@ -196,9 +196,9 @@ namespace Ermine
             childTransform.rotation = worldRotation;
             childTransform.scale = worldScale;
 
-            EE_CORE_INFO("Set new local position: ({:.3f}, {:.3f}, {:.3f})", 
+            /*EE_CORE_INFO("Set new local position: ({:.3f}, {:.3f}, {:.3f})", 
                          childTransform.position.x, childTransform.position.y, childTransform.position.z);
-            EE_CORE_INFO("Entity {} is now a root entity", child);
+            EE_CORE_INFO("Entity {} is now a root entity", child);*/
 
             // Update transforms
             MarkDirty(child);
@@ -224,9 +224,9 @@ namespace Ermine
 			globalTransform = &ECS::GetInstance().GetComponent<GlobalTransform>(entity);
 		}
 
-		EE_CORE_INFO("=== Transform Update for Entity {0} ===", entity);
+		/*EE_CORE_INFO("=== Transform Update for Entity {0} ===", entity);
 		EE_CORE_INFO("Local Position: ({0:.3f}, {1:.3f}, {2:.3f})", 
-					 transform.position.x, transform.position.y, transform.position.z);
+					 transform.position.x, transform.position.y, transform.position.z);*/
 
 		// Build local transform matrix from position, rotation, and scale
 		Mtx44 localMatrix = transform.GetLocalMatrix();
@@ -238,21 +238,21 @@ namespace Ermine
 				auto& parentGlobalTransform = ECS::GetInstance().GetComponent<GlobalTransform>(hierarchy.parent);
 				
 				Vec3 parentWorldPos = parentGlobalTransform.GetWorldPosition();
-				EE_CORE_INFO("Parent {0} World Position: ({1:.3f}, {2:.3f}, {3:.3f})", 
-							 hierarchy.parent, parentWorldPos.x, parentWorldPos.y, parentWorldPos.z);
+				/*EE_CORE_INFO("Parent {0} World Position: ({1:.3f}, {2:.3f}, {3:.3f})", 
+							 hierarchy.parent, parentWorldPos.x, parentWorldPos.y, parentWorldPos.z);*/
 				
 				// FIXED: World transform = Parent's world transform * Local transform
 				globalTransform->worldMatrix = parentGlobalTransform.worldMatrix * localMatrix;
 			} else {
 				// Parent doesn't have GlobalTransform - treat as root
 				globalTransform->worldMatrix = localMatrix;
-				EE_CORE_WARN("Parent {0} missing GlobalTransform, treating child {1} as root", hierarchy.parent, entity);
+				//EE_CORE_WARN("Parent {0} missing GlobalTransform, treating child {1} as root", hierarchy.parent, entity);
 			}
 		}
 		else {
 			// Root entity: world transform equals local transform
 			globalTransform->worldMatrix = localMatrix;
-			EE_CORE_INFO("Entity {0} is ROOT - World = Local transform", entity);
+			//EE_CORE_INFO("Entity {0} is ROOT - World = Local transform", entity);
 		}
 
 		// REMOVED: Don't update transform.transform_matrix anymore - it was causing confusion
@@ -260,8 +260,8 @@ namespace Ermine
 
 		// Extract and log the calculated world position
 		Vec3 worldPos = globalTransform->GetWorldPosition();
-		EE_CORE_INFO(">>> Entity {0} World Position: ({1:.3f}, {2:.3f}, {3:.3f})", 
-					 entity, worldPos.x, worldPos.y, worldPos.z);
+		/*EE_CORE_INFO(">>> Entity {0} World Position: ({1:.3f}, {2:.3f}, {3:.3f})", 
+					 entity, worldPos.x, worldPos.y, worldPos.z);*/
 
 		// Mark as clean
 		hierarchy.isDirty = false;
@@ -271,11 +271,11 @@ namespace Ermine
 
 		// Recursively update all children
 		for (auto child : hierarchy.children) {
-			EE_CORE_INFO("--- Updating child entity {0} due to parent {1} change ---", child, entity);
+			//EE_CORE_INFO("--- Updating child entity {0} due to parent {1} change ---", child, entity);
 			UpdateWorldTransform(child);
 		}
 		
-		EE_CORE_INFO("=== End Transform Update for Entity {0} ===\n", entity);
+		//EE_CORE_INFO("=== End Transform Update for Entity {0} ===\n", entity);
 	}
 
 	// NEW: Helper method to ensure entities have GlobalTransform
@@ -353,7 +353,7 @@ namespace Ermine
         auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
 
         // ADD DEBUG LOG TO FIND THE CULPRIT
-        EE_CORE_WARN("MarkDirty called for entity {} - investigate why!", entity);
+        //EE_CORE_WARN("MarkDirty called for entity {} - investigate why!", entity);
         
         // Mark both local transform and world transform as needing update
         hierarchy.isDirty = true;
@@ -718,102 +718,35 @@ namespace Ermine
      * @param point World-space point to rotate around
      * @param rotation Rotation quaternion to apply
      */
-    void HierarchySystem::RotateAroundPointQuat(EntityID entity, const Vec3& point,
-        const Quaternion& rotation)
+    void HierarchySystem::RotateAroundPointQuat(EntityID entity, const Vec3& point, const Quaternion& rotation) 
     {
         auto& ecs = ECS::GetInstance();
         if (!ecs.IsEntityValid(entity) || !ecs.HasComponent<Transform>(entity))
             return;
 
-        // Get entity's world position
+        // Get current world position
         Vec3 worldPos = GetWorldPosition(entity);
-
-        // Calculate the offset from rotation point
+    
+        // Calculate offset from rotation point
         Vec3 offset = worldPos - point;
-
-        // Apply rotation to this offset
+    
+        // Rotate the offset vector
         Vec3 rotatedOffset = QuaternionRotateVector(rotation, offset);
-
-        // Calculate new world position
+    
+        // Set new world position (point + rotated offset)
         Vec3 newWorldPos = point + rotatedOffset;
-
-        // Check if we're dealing with a parent entity that has children
-        bool hasChildren = false;
-        std::vector<EntityID> childEntities;
-        
-        if (ecs.HasComponent<HierarchyComponent>(entity)) {
-            auto& hierarchy = ecs.GetComponent<HierarchyComponent>(entity);
-            hasChildren = !hierarchy.children.empty();
-            
-            // If this is a parent with children, we need to handle all children specially
-            if (hasChildren) {
-                // Store world positions of all children before parent rotation
-                // so we can apply proper offsets after the parent rotates
-                for (auto childID : hierarchy.children) {
-                    if (ecs.IsEntityValid(childID) && ecs.HasComponent<Transform>(childID)) {
-                        childEntities.push_back(childID);
-                    }
-                }
-                
-                // Capture children's positions relative to rotation point
-                std::vector<Vec3> childOffsets;
-                for (auto childID : childEntities) {
-                    Vec3 childWorldPos = GetWorldPosition(childID);
-                    Vec3 childOffset = childWorldPos - point;  // Relative to rotation center
-                    childOffsets.push_back(childOffset);
-                }
-                
-                // First, rotate the parent entity
-                SetWorldPosition(entity, newWorldPos);
-                
-                Quaternion currentWorldRot = GetWorldRotation(entity);
-                Quaternion newWorldRot = rotation * currentWorldRot;
-                SetWorldRotation(entity, newWorldRot);
-                
-                // Now rotate each child's position around the same center point
-                for (size_t i = 0; i < childEntities.size(); i++) {
-                    EntityID childID = childEntities[i];
-                    Vec3 childOffset = childOffsets[i];
-                    
-                    // Rotate the child offset
-                    Vec3 rotatedChildOffset = QuaternionRotateVector(rotation, childOffset);
-                    
-                    // Calculate new child world position
-                    Vec3 newChildWorldPos = point + rotatedChildOffset;
-                    
-                    // Set child's world position
-                    SetWorldPosition(childID, newChildWorldPos);
-                    
-                    // Apply the same rotation to the child's orientation
-                    Quaternion childWorldRot = GetWorldRotation(childID);
-                    Quaternion newChildWorldRot = rotation * childWorldRot;
-                    SetWorldRotation(childID, newChildWorldRot);
-                }
-            }
-            else {
-                // For single entities, just apply the rotation and position
-                SetWorldPosition(entity, newWorldPos);
-                
-                Quaternion currentWorldRot = GetWorldRotation(entity);
-                Quaternion newWorldRot = rotation * currentWorldRot;
-                SetWorldRotation(entity, newWorldRot);
-            }
-        }
-        else {
-            // Non-hierarchical entity - apply position and rotation directly
-            SetWorldPosition(entity, newWorldPos);
-            
-            Quaternion currentWorldRot = GetWorldRotation(entity);
-            Quaternion newWorldRot = rotation * currentWorldRot;
-            SetWorldRotation(entity, newWorldRot);
-        }
-        
-        // Mark entity as dirty to ensure transforms propagate
+        SetWorldPosition(entity, newWorldPos);
+    
+        // Apply rotation to entity's orientation
+        Quaternion currentWorldRot = GetWorldRotation(entity);
+        Quaternion newWorldRot = rotation * currentWorldRot;
+        SetWorldRotation(entity, newWorldRot);
+    
+        // Mark entity as dirty to update its transforms
         MarkDirty(entity);
-        
-        // Log the rotation for debugging
-        EE_CORE_INFO("Rotated entity {} around point ({:.3f}, {:.3f}, {:.3f})", 
-                    entity, point.x, point.y, point.z);
+    
+        /*EE_CORE_INFO("Rotated entity {} around point ({:.3f}, {:.3f}, {:.3f})", 
+                    entity, point.x, point.y, point.z);*/
     }
 
     /**
@@ -836,8 +769,8 @@ namespace Ermine
         RotateAroundPointQuat(entity, point, rotation);
         
         // Log the rotation for debugging
-        EE_CORE_INFO("Rotated entity {} around point ({:.3f}, {:.3f}, {:.3f}) by {:.1f} degrees", 
-                     entity, point.x, point.y, point.z, angleDegrees);
+        /*EE_CORE_INFO("Rotated entity {} around point ({:.3f}, {:.3f}, {:.3f}) by {:.1f} degrees", 
+                     entity, point.x, point.y, point.z, angleDegrees);*/
     }
 
     /**

@@ -16,12 +16,26 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "ImguiUIWindow.h"
 #include "ImGuizmo.h"
 #include "Renderer.h"
+#include "TransformMode.h"
 
 namespace Ermine
 {
 	class ViewPortGUI : public ImGUIWindow
 	{
 		bool show;
+
+	private:
+		// Static variables for transform manipulation that persist between function calls
+		static glm::mat4 s_previousModel;
+		static bool s_wasManipulating;
+		static editor::TransformMode s_activeTransformMode;
+		static Vec3 s_manipulationPoint;
+		static Vec3 s_originalPosition;
+		
+		// Optional: for UI feedback when toggling modes
+		static float s_modeMessageTimer;
+		static const char* s_modeMessage;
+
 	public:
 		ViewPortGUI();
 
@@ -82,5 +96,11 @@ namespace Ermine
 		void GizmoOverlay(const ImVec2& imgMin, const ImVec2& imgSize, const ImVec2& vmSize, const ImVec2& vmPos, const Ermine::EntityID&
 		                  selectedEntity,
 		                  ImGuizmo::OPERATION& gOperation, ImGuizmo::MODE& gMode);
+						  
+		/**
+		 * @brief Update the manipulation point for the current selected entity based on transform mode
+		 * @param entity The selected entity
+		 */
+		void UpdateManipulationPoint(EntityID entity);
 	};
 }

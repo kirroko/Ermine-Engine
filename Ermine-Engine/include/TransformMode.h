@@ -45,10 +45,12 @@ namespace Ermine::editor {
         /**
          * @brief Toggle between pivot and center modes
          */
-        static void ToggleMode() {
-            s_currentMode = (s_currentMode == TransformMode::Pivot) 
-                ? TransformMode::Center 
+        static TransformMode ToggleMode() {
+            s_currentMode = (s_currentMode == TransformMode::Pivot)
+                ? TransformMode::Center
                 : TransformMode::Pivot;
+
+            return s_currentMode;
         }
         
         /**
