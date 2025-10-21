@@ -395,7 +395,7 @@ namespace Ermine
                     if (!model) break;
 
                     // Fill the custom mesh vertices for physics
-                    p.customMeshVertices = model->GetMeshVertices();
+                    p.customMeshVertices = model->GetSkinnedVertices();
                 }
                 else
                 {
