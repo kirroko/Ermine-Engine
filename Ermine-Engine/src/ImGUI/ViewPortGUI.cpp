@@ -11,7 +11,6 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 */
 /* End Header **************************************************************************/
 #include "PreCompile.h"
-#include "InspectorGUI.h"
 #include "ViewPortGUI.h"
 
 #include "ECS.h"
@@ -26,8 +25,6 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #include "AssetManager.h"
 
-#include "EditorGUI.h"
-#include "HierarchyPanel.h"
 #include "Scene.h"
 #include "SceneManager.h"
 
@@ -156,8 +153,8 @@ void Ermine::ViewPortGUI::FrameBufferHandler(const ImVec2& viewport_size)
 void Ermine::ViewPortGUI::OverlayGizmoOperation(const ImVec2& imgMin, const ImGuizmo::OPERATION& gOperation, const ImGuizmo::MODE& gMode)
 {
 	// Overlay current gizmo operation/mode
-	{
-		auto OpToString = [](ImGuizmo::OPERATION op) -> const char*
+
+	auto OpToString = [](ImGuizmo::OPERATION op) -> const char*
 		{
 			switch (op)
 			{
@@ -168,27 +165,26 @@ void Ermine::ViewPortGUI::OverlayGizmoOperation(const ImVec2& imgMin, const ImGu
 			}
 		};
 
-		auto ModeToString = [](ImGuizmo::MODE m) -> const char*
+	auto ModeToString = [](ImGuizmo::MODE m) -> const char*
 		{
 			return (m == ImGuizmo::LOCAL) ? "Local" : "World";
 		};
 
-		const char* opText = OpToString(gOperation);
-		const char* modeText = ModeToString(gMode);
+	const char* opText = OpToString(gOperation);
+	const char* modeText = ModeToString(gMode);
 
-		char label[128];
-		(void)snprintf(label, sizeof(label), "Op: %s | Mode: %s", opText, modeText);
+	char label[128];
+	(void)snprintf(label, sizeof(label), "Op: %s | Mode: %s", opText, modeText);
 
-		ImDrawList* dl = ImGui::GetForegroundDrawList();
-		const ImVec2 padPx(6.f, 4.f);
-		const ImVec2 textSize = ImGui::CalcTextSize(label);
-		const ImVec2 boxPos = ImVec2(imgMin.x + 8.f, imgMin.y + 8.f);
-		const ImVec2 boxMax = ImVec2(boxPos.x + textSize.x + padPx.x * 2.f,
-		                             boxPos.y + textSize.y * 2.f + padPx.y * 2.f);
+	ImDrawList* dl = ImGui::GetWindowDrawList();
+	const ImVec2 padPx(6.f, 4.f);
+	const ImVec2 textSize = ImGui::CalcTextSize(label);
+	const ImVec2 boxPos = ImVec2(imgMin.x + 8.f, imgMin.y + 8.f);
+	const ImVec2 boxMax = ImVec2(boxPos.x + textSize.x + padPx.x * 2.f,
+		boxPos.y + textSize.y * 2.f + padPx.y * 2.f);
 
-		dl->AddRectFilled(boxPos, boxMax, IM_COL32(0, 0, 0, 160), 4.0f);
-		dl->AddText(ImVec2(boxPos.x + padPx.x, boxPos.y + padPx.y), IM_COL32(255, 255, 255, 255), label);
-	}
+	dl->AddRectFilled(boxPos, boxMax, IM_COL32(0, 0, 0, 160), 4.0f);
+	dl->AddText(ImVec2(boxPos.x + padPx.x, boxPos.y + padPx.y), IM_COL32(255, 255, 255, 255), label);
 }
 
 void Ermine::ViewPortGUI::FocusOnSelected(const Ermine::EntityID& selectedEntity, const bool& viewportHovered, const bool& viewportFocused)
@@ -267,7 +263,7 @@ void Ermine::ViewPortGUI::CameraControls(const bool& overViewCube, const Ermine:
 }
 
 void Ermine::ViewPortGUI::ObjectPicking(const std::shared_ptr<Ermine::graphics::Renderer::OffscreenBuffer>& offscreen_buffer, const ImVec2& imgMin, const ImVec2
-                                        & imgSize, const bool& overViewCube, bool s_orbiting)
+	& imgSize, const bool& overViewCube, bool s_orbiting)
 {
 	// Left-click within the image, perform picking
 	if (!EditorGUI::isPlaying && ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
@@ -299,7 +295,7 @@ void Ermine::ViewPortGUI::ObjectPicking(const std::shared_ptr<Ermine::graphics::
 }
 
 void Ermine::ViewPortGUI::GizmoOverlay(const ImVec2& imgMin, const ImVec2& imgSize, const ImVec2& vmSize, const ImVec2& vmPos, const Ermine::EntityID&
-                                       selectedEntity, ImGuizmo::OPERATION& gOperation, ImGuizmo::MODE& gMode)
+	selectedEntity, ImGuizmo::OPERATION& gOperation, ImGuizmo::MODE& gMode)
 {
 	const Mtx44& v = EditorCamera::GetInstance().GetViewMatrix();
 	const Mtx44& p = EditorCamera::GetInstance().GetProjectionMatrix();
@@ -394,7 +390,7 @@ void Ermine::ViewPortGUI::GizmoOverlay(const ImVec2& imgMin, const ImVec2& imgSi
 					if (!glm::epsilonEqual(a[c][r], b[c][r], eps))
 						return true;
 			return false;
-		};
+			};
 
 		if (matChanged(viewBefore, viewEdit))
 		{
@@ -418,9 +414,9 @@ void Ermine::ViewPortGUI::Update()
 
 	LoadToolbarIcons();
 
-	const ImVec2 iconSize = ImVec2(28.f, 28.f);
+	constexpr ImVec2 iconSize = ImVec2(28.f, 28.f);
 	const float spacing = ImGui::GetStyle().ItemSpacing.x;
-	const int buttonCount = 3;
+	constexpr int buttonCount = 3;
 	const float totalWidth = buttonCount * iconSize.x + (buttonCount - 1) * spacing;
 
 	// Center horizontally

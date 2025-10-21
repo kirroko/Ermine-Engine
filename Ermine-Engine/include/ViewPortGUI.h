@@ -21,7 +21,7 @@ namespace Ermine
 {
 	class ViewPortGUI : public ImGUIWindow
 	{
-		bool show;
+		bool show = true;
 	public:
 		ViewPortGUI();
 
