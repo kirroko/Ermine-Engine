@@ -9,8 +9,8 @@ in vec3 Bitangent;
 
 out vec4 FragColor;
 
-// Material uniform block
-layout (std140) uniform MaterialBlock {
+// Material SSBO block
+layout (std430, binding = 2) restrict readonly buffer MaterialBlock {
     vec4 albedo;
     float metallic;
     float roughness;
@@ -21,19 +21,14 @@ layout (std140) uniform MaterialBlock {
     float emissiveIntensity;
     
     int shadingModel; // 0 = PBR, 1 = Blinn-Phong
-    float _pad0;
-    float _pad1;
-    float _pad2;
-    
     int hasAlbedoMap;
     int hasNormalMap;
     int hasRoughnessMap;
-    int hasMetallicMap;
     
+    int hasMetallicMap;
     int hasAoMap;
     int hasEmissiveMap;
-    float _pad3;
-    float _pad4;
+    float _pad0;
 } material;
 
 // Texture samplers

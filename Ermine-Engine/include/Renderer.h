@@ -62,7 +62,7 @@ namespace Ermine::graphics
 
 
     // Forward declarations
-    struct MaterialUBO;
+    struct MaterialSSBO;
     class Skybox;
 
     //physic wireframe
@@ -378,13 +378,23 @@ namespace Ermine::graphics
          * @param view The view matrix to transform the positions and directions of the lights into view space.
          */
         void UpdateLightsSSBO(const Mtx44& view);
+        
         /**
-         * @brief Updates the material's uniform buffer object (UBO) with the specified material data.
-         * @param materialData The material data to be uploaded to the UBO, including properties like color, texture, etc.
+         * @brief Updates the material's shader storage buffer object (SSBO) with the specified material data.
+         * @param materialData The material data to be uploaded to the SSBO, including properties like albedo, metallic, roughness, etc.
          */
-        void UpdateMaterialUBO(const MaterialUBO& materialData);
+        void UpdateMaterialSSBO(const MaterialSSBO& materialData);
+        
         /**
-         * @brief Binds the MaterialBlock uniform block to the specified shader program if it has not been bound before.
+         * @brief Compiles all materials from entities with Material and Model components into a single SSBO.
+         * This function collects material data from all entities, uploads it to GPU memory, and assigns
+         * material indices to each entity for shader access. Should be called once after scene load or
+         * when materials are added/removed.
+         */
+        void CompileMaterials();
+        
+        /**
+         * @brief Binds the MaterialBlock shader storage buffer to the specified shader program if it has not been bound before.
          * @param shader The shader program to which the material block should be bound.
          */
         void BindMaterialBlockIfPresent(const std::shared_ptr<Shader>& shader);
@@ -547,10 +557,11 @@ namespace Ermine::graphics
         std::unordered_set<GLuint> m_LightBlockBoundPrograms;
         bool m_IsBlinnPhong = false; // Default to PBR shading
 
-        // Material UBO
-        GLuint m_MaterialUBO = 0;
+        // Material SSBO
+        GLuint m_MaterialSSBO = 0;
         static constexpr GLuint MaterialBindingPoint = 2;
         std::unordered_set<GLuint> m_MaterialBlockBoundPrograms;
+        std::unordered_map<EntityID, uint32_t> m_EntityMaterialIndices; // Maps entity to material index in SSBO
 
         // Deferred rendering buffers
         bool m_UseDeferredRendering = true;
