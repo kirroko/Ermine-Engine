@@ -657,11 +657,23 @@ namespace Ermine
         if (!ecs.IsEntityValid(objectB) || !ecs.IsEntityValid(objectA))
             return;
 
-        EE_CORE_INFO("[Physics] Collision Stay");
-
         if (!ecs.HasComponent<Script>(objectB) || !ecs.HasComponent<Script>(objectA))
             return;
 
+        switch (type)
+        {
+        case Ermine::Physics::CollisionEventType::Begin:
+            EE_CORE_INFO("[Physics] Collision Begin");
+            break;
+        case Ermine::Physics::CollisionEventType::Stay:
+            EE_CORE_INFO("[Physics] Collision Stay");
+            break;
+        case Ermine::Physics::CollisionEventType::End:
+            //does nth as collision exit alr, if want need lmk 
+            break;
+        default:
+            break;
+        }
         //run script
 
     }
