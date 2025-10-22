@@ -27,6 +27,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #include "Scene.h"
 #include "SceneManager.h"
+#include "PrefabManager.h"
 #include "Physics.h"
 
 using namespace Ermine::editor;
@@ -533,6 +534,20 @@ void Ermine::ViewPortGUI::Update()
 	GizmoOverlay(imgMin, imgSize, vmSize, vmPos, selectedEntity, gOperation, gMode);
 
 	ImGui::EndChild();
+
+	if (ImGui::BeginDragDropTarget()) { // Begin drag & drop target
+		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_FILE")) {
+			const char* cpath = static_cast<const char*>(payload->Data);
+
+			if (cpath && payload->DataSize > 0 && cpath[payload->DataSize - 1] == '\0')
+			{
+				std::string path = cpath;
+				PrefabManager::GetInstance().LoadPrefab(path);
+			}
+			//EE_CORE_INFO("Dropped prefab file: {}", payload->Data);
+		}
+		ImGui::EndDragDropTarget(); // End drag & drop target
+	}
 
 	Input::SetEditorInputActive(viewportFocused && viewportHovered);
 

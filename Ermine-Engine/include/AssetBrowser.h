@@ -73,6 +73,7 @@ namespace Ermine::ImguiUI
 		std::filesystem::path projectRoot;		// Root path of the project
 		std::filesystem::path currentDirectory; // Currently viewed directory
 		std::vector<Asset> Items;				// List of assets in the current directory
+		std::string isSelectedFile;				// Currently selected file
 
 		// --- UI State ---
 		std::string searchQuery;				// Current search query

@@ -20,6 +20,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "AssetBrowser.h"
 #include "AssetManager.h" // For loading textures
 #include "SceneManager.h" // For opening scenes
+#include "PrefabManager.h" // For opening prefabs
 #include "EditorGUI.h" // For forwarding dropped files to the asset browser
 
 namespace fs = std::filesystem;
@@ -308,7 +309,10 @@ namespace Ermine::ImguiUI
 
             // Hover highlight
             if (ImGui::IsItemHovered() && !asset->IsSelected)
+            {
                 dl->AddRect(cursor, { cursor.x + iconSize, cursor.y + iconSize }, IM_COL32(80, 150, 255, 180), 0, 0, 4.0f);
+                isSelectedFile = asset->realName.empty() ? (currentDirectory / asset->Name).string() : asset->realName;
+            }
 
             // --- Handle click behaviours ---
             // Single-click to select
@@ -335,6 +339,13 @@ namespace Ermine::ImguiUI
                         ShellExecuteA(NULL, "open", full.string().c_str(), NULL, NULL, SW_SHOWDEFAULT);
                     }
                 }
+            }
+
+            if (ImGui::BeginDragDropSource()) {
+                ImGui::SetDragDropPayload("ASSET_BROWSER_FILE", isSelectedFile.c_str(), isSelectedFile.size() + 1);
+                //auto& metadata = ECS::GetInstance().GetComponent<ObjectMetaData>(entity);
+                ImGui::Text("Moving File");
+                ImGui::EndDragDropSource();
             }
 
             // Right-click for context menu
@@ -545,6 +556,35 @@ namespace Ermine::ImguiUI
         DrawFileGrid();
         ImGui::EndChild(); // End file grid
 
+        // Drag & drop import: try to accept external file list or a raw path payload
+        if (ImGui::BeginDragDropTarget()) { // Begin drag & drop target
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("EXTERNAL_FILES")) {
+                const auto* files = static_cast<const std::vector<std::string>*>(payload->Data);
+                if (files) HandleDroppedFiles(*files);
+            }
+            if (const ImGuiPayload* p2 = ImGui::AcceptDragDropPayload("Path")) {
+                const char* s = (const char*)p2->Data;
+                if (s && *s) HandleDroppedFiles({ std::string(s) });
+            }
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("HIERARCHY_ENTITY")) {
+                EntityID droppedEntity = *(EntityID*)payload->Data;
+
+                //auto hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>();
+
+                PrefabManager::GetInstance().SavePrefab(droppedEntity, currentDirectory / "NewPrefab.prefab");
+                EE_CORE_INFO("Saved entity {} as prefab in {}", droppedEntity, (currentDirectory / "NewPrefab.prefab").string());
+
+                // Check if entity currently has a parent
+                //EntityID currentParent = hierarchySystem->GetParent(droppedEntity);
+                //if (currentParent != 0) {
+                //    hierarchySystem->UnsetParent(droppedEntity);
+                //    EE_CORE_INFO("Unparented entity {} - now a root entity", droppedEntity);
+                //}
+				Refresh();
+            }
+            ImGui::EndDragDropTarget(); // End drag & drop target
+        }
+
         // Footer with selected path
         ImGui::Separator();
         ImGui::BeginChild("Footer", ImVec2(0, 35), false); // Begin footer
@@ -566,18 +606,8 @@ namespace Ermine::ImguiUI
         }
         ImGui::EndChild(); // End footer
 
-        // Drag & drop import: try to accept external file list or a raw path payload
-        if (ImGui::BeginDragDropTarget()) { // Begin drag & drop target
-            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("EXTERNAL_FILES")) {
-                const auto* files = static_cast<const std::vector<std::string>*>(payload->Data);
-                if (files) HandleDroppedFiles(*files);
-            }
-            if (const ImGuiPayload* p2 = ImGui::AcceptDragDropPayload("Path")) {
-                const char* s = (const char*)p2->Data;
-                if (s && *s) HandleDroppedFiles({ std::string(s) });
-            }
-            ImGui::EndDragDropTarget(); // End drag & drop target
-        }
+       
+
         ImGui::EndChild(); // End files panel
 
         ImGui::Columns(1); // End columns
@@ -608,7 +638,7 @@ namespace Ermine::ImguiUI
         auto* browserWindow = Ermine::editor::EditorGUI::GetWindow<Ermine::ImguiUI::AssetBrowser>();
         if (!browserWindow)
         {
-            EE_CORE_WARN("AssetBrowser window not found — cannot import dropped files.");
+            EE_CORE_WARN("AssetBrowser window not found ï¿½ cannot import dropped files.");
             return;
         }
 

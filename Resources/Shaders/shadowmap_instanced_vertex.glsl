@@ -1,5 +1,17 @@
 #version 460 core
 
+#ifdef GL_NV_viewport_array2
+#extension GL_NV_viewport_array2 : enable
+#endif
+
+#ifdef GL_AMD_vertex_shader_layer
+#extension GL_AMD_vertex_shader_layer : enable
+#endif
+
+#ifdef GL_ARB_shader_viewport_layer_array
+#extension GL_ARB_shader_viewport_layer_array : enable
+#endif
+
 const int NUM_CASCADES = 4;
 
 layout(location = 0) in vec3 aPosition;
@@ -36,9 +48,6 @@ layout (std430, binding = 1) restrict readonly buffer LightsSSBO {
 // Per-frame uniforms - avoid additional SSBOs
 uniform int u_ActiveShadowLights[16];    // Indices of shadow-casting directional lights
 
-// Output for fragment shader
-flat out int v_Layer;
-
 void main()
 {
     // Apply skinning transformation if enabled
@@ -73,5 +82,5 @@ void main()
     gl_Position = light.lightSpaceMatrix[cascadeIndex] * model * skinnedPos;
 
     // Pass layer to fragment shader (for gl_Layer assignment if needed)
-    v_Layer = targetLayer;
+    gl_Layer = targetLayer;
 }

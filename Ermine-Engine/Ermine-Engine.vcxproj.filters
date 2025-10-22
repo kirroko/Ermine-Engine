@@ -264,6 +264,9 @@
     <ClInclude Include="include\shadow_config.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\PrefabManager.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\AssetBrowser\AssetBrowser.cpp">
@@ -439,6 +442,9 @@
     </ClCompile>
     <ClCompile Include="src\dllmain.cpp">
       <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Serialisation\PrefabManager.cpp">
+      <Filter>src\Serialisation</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

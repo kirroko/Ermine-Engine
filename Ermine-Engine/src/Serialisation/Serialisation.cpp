@@ -290,7 +290,15 @@ void LoadScene(const std::string& sceneName)
 
 Ermine::EntityID LoadPrefabFromFile(Ermine::ECS& ecs, const std::filesystem::path& path)
 {
-    std::ifstream ifs(path, std::ios::binary);
+    if (!path.has_extension() || path.extension() != ".prefab")
+    {
+        EE_CORE_ERROR("LoadPrefabFromFile rejected non-prefab file: {}", path.string());
+        return {}; // or return {}; or throw, your style
+    }
+
+    std::filesystem::path norm = std::filesystem::weakly_canonical(path);
+    //EE_CORE_INFO("Normalized prefab path = {}", norm.string());
+    std::ifstream ifs(norm, std::ios::binary);
     if (!ifs) throw std::runtime_error("Could not open file for reading: " + path.string());
 
     IStreamWrapper isw(ifs);

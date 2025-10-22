@@ -344,6 +344,7 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClInclude Include="include\PhysicDebugRenderer.h" />
     <ClInclude Include="include\Physics.h" />
     <ClInclude Include="include\PreCompile.h" />
+    <ClInclude Include="include\PrefabManager.h" />
     <ClInclude Include="include\Registry.h" />
     <ClInclude Include="include\Renderer.h" />
     <ClInclude Include="include\Scene.h" />
@@ -410,6 +411,7 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClCompile Include="src\Scene\Scene.cpp" />
     <ClCompile Include="src\Scripting\ScriptEngine.cpp" />
     <ClCompile Include="src\Scripting\ScriptSystem.cpp" />
+    <ClCompile Include="src\Serialisation\PrefabManager.cpp" />
     <ClCompile Include="src\Serialisation\SceneManager.cpp" />
     <ClCompile Include="src\Serialisation\Serialisation.cpp" />
     <ClCompile Include="src\Systems\HierarchyInspector.cpp" />
