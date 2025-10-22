@@ -128,6 +128,9 @@ namespace Ermine
 
         bool wireframe;
 
+        enum class CollisionEventType { Begin, Stay, End };
+
+        void HandleCollisionEvent(const Body& a, const Body& b, CollisionEventType type);
     private:
         // --- Important: allocator first, job system second, physics system third ---
         JPH::TempAllocatorImpl       mTempAllocator;

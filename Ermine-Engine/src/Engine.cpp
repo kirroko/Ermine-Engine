@@ -623,7 +623,6 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 #if defined(EE_EDITOR)
 	editor::EditorCamera::GetInstance().Update();
 #endif
-
 	// Update for Particles
 	ECS::GetInstance().GetSystem<ParticleSystem>()->Update(FrameController::GetDeltaTime());
 
