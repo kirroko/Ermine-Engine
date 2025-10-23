@@ -13,8 +13,8 @@ public class Test2 : MonoBehaviour
 
     void Update()
     {
-        transform.Rotate(Vector3.down * (Time.deltaTime * speed));
-
+        //transform.Rotate(Vector3.down * (Time.deltaTime * speed));
+        transform.Translate(Vector3.forward * speed * Time.deltaTime);
         // After 3 seconds, trigger next FSM state
         stateTimer += Time.deltaTime;
         if (stateTimer >= switchTime)

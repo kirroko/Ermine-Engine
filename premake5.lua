@@ -29,6 +29,7 @@ IncludeDir["assimp"] = "ThirdParty/assimp/include"
 IncludeDir["DirectXTex"] = "ThirdParty/DirectXTex/inc"
 IncludeDir["xproperty"] = "ThirdParty/xproperty/source"
 IncludeDir["imnodes"] = "ThirdParty/imnodes"
+IncludeDir["recastnavigation"] = "ThirdParty/recastnavigation"
 
 -- Libraries
 LibraryDir = {}
@@ -46,6 +47,7 @@ group "Dependencies"
     include "ThirdParty/Mono"
     include "ThirdParty/Jolt"
     include "ThirdParty/imnodes"
+    include "ThirdParty/recastnavigation"
 group ""
 
 -- Engine Project
@@ -88,7 +90,8 @@ project "Ermine-Engine"
         "%{IncludeDir.assimp}",
         "%{IncludeDir.DirectXTex}",
         "%{IncludeDir.xproperty}",
-        "%{IncludeDir.imnodes}"
+        "%{IncludeDir.imnodes}",
+        "%{IncludeDir.recastnavigation}"
     }
 
     libdirs
@@ -112,7 +115,8 @@ project "Ermine-Engine"
 		"mono-2.0-sgen.lib",
         "Jolt",
         "assimp-vc143-mt.lib",
-        "imnodes"
+        "imnodes",
+        "recastnavigation"
         --"DirectXTex.lib"
     }
 
@@ -244,7 +248,8 @@ project "Ermine-Editor"
         "%{IncludeDir.Mono}",
         "%{IncludeDir.rapidjson}",
         "%{IncludeDir.xproperty}",
-        "%{IncludeDir.imnodes}"
+        "%{IncludeDir.imnodes}",
+        "%{IncludeDir.recastnavigation}"
     } 
 
     -- Ensure the resource pipeline builds before running it
