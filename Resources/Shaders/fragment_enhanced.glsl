@@ -64,9 +64,9 @@ struct Light {
     vec4 spot_angles;
 };
 
-layout (std430, binding = 1) restrict readonly buffer LightsSSBO {
+layout (std140, binding = 1) uniform LightsUBO {
     vec4 lightCount;
-    Light lights[];
+    Light lights[MAX_LIGHTS]; // Fixed size array
 };
 
 const float PI = 3.14159265359;

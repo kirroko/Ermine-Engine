@@ -205,16 +205,15 @@ Renderer::OffscreenBuffer Renderer::CreateOffscreenBuffer(const int& width, cons
 		glDeleteRenderbuffers(1, &m_OffscreenBuffer->RBO);
 	}
 
-	// If Light SSBO doesn't exist, create it
-	if (!m_LightsSSBO)
+	if (!m_LightsUBO)
 	{
-		glGenBuffers(1, &m_LightsSSBO);
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_LightsSSBO);
+		glGenBuffers(1, &m_LightsUBO);
+		glBindBuffer(GL_UNIFORM_BUFFER, m_LightsUBO);
 		const GLsizeiptr headerSize = static_cast<GLsizeiptr>(sizeof(glm::vec4));
 		const GLsizeiptr bodySize = static_cast<GLsizeiptr>(MAX_LIGHTS * sizeof(LightGPU));
-		glBufferData(GL_SHADER_STORAGE_BUFFER, headerSize + bodySize, nullptr, GL_DYNAMIC_DRAW);
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, LightsBindingPoint, m_LightsSSBO);
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+		glBufferData(GL_UNIFORM_BUFFER, headerSize + bodySize, nullptr, GL_DYNAMIC_DRAW);
+		glBindBufferBase(GL_UNIFORM_BUFFER, LightsBindingPoint, m_LightsUBO);
+		glBindBuffer(GL_UNIFORM_BUFFER, 0);
 		glCheckError();
 	}
 
@@ -367,15 +366,15 @@ void Renderer::CreateGBuffer(const int& width, const int& height)
 		EE_CORE_ERROR("ERROR: Invalid G-Buffer dimensions: {0}x{1}", width, height);
 	}
 
-	// If Light SSBO doesn't exist, create it
-	if (!m_LightsSSBO)
+	// If Light UBO doesn't exist, create it
+	if (!m_LightsUBO)
 	{
-		glGenBuffers(1, &m_LightsSSBO);
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_LightsSSBO);
+		glGenBuffers(1, &m_LightsUBO);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_LightsUBO);
 		const GLsizeiptr headerSize = static_cast<GLsizeiptr>(sizeof(glm::vec4));
 		const GLsizeiptr bodySize = static_cast<GLsizeiptr>(MAX_LIGHTS * sizeof(LightGPU));
 		glBufferData(GL_SHADER_STORAGE_BUFFER, headerSize + bodySize, nullptr, GL_DYNAMIC_DRAW);
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, LightsBindingPoint, m_LightsSSBO);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, LightsBindingPoint, m_LightsUBO);
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 		glCheckError();
 	}
@@ -1386,11 +1385,11 @@ void Renderer::CleanupPostProcessBuffer()
 	glCheckError();
 }
 
-/**
- * @brief Updates the lights' uniform buffer object (UBO) with the current light and transform data from all living entities.
- * @param view The view matrix to transform the positions and directions of the lights into view space.
- */
-void Renderer::UpdateLightsSSBO(const Mtx44& view)
+ /**
+  * @brief Updates the lights' uniform buffer object (UBO) with the current light and transform data from all living entities.
+  * @param view The view matrix to transform the positions and directions of the lights into view space.
+  */
+void Renderer::UpdateLightsUBO(const Mtx44& view)
 {
 	std::vector<LightGPU> lights;
 	lights.reserve(MAX_LIGHTS);
@@ -1405,9 +1404,8 @@ void Renderer::UpdateLightsSSBO(const Mtx44& view)
 
 	// Gather Light and Transform across all alive entities
 	const auto& ecs = Ermine::ECS::GetInstance();
-	for(EntityID e : m_LightSystem->m_Entities)
+	for (EntityID e : m_LightSystem->m_Entities)
 	{
-
 		const auto& trans = ecs.GetComponent<Transform>(e);
 		const auto& light = ecs.GetComponent<Light>(e);
 
@@ -1415,19 +1413,16 @@ void Renderer::UpdateLightsSSBO(const Mtx44& view)
 		glm::vec4 posWorld(trans.position.x, trans.position.y, trans.position.z, 1.0f);
 		glm::vec4 posView = glmView * posWorld;
 
-		// Build rotation from Euler angles using GLM
+		// Build rotation from quaternion using GLM
 		glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
 		rotQuat = glm::normalize(rotQuat);
-		//rotationMatrix = glm::rotate(rotationMatrix, glm::radians(trans.rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
-		//rotationMatrix = glm::rotate(rotationMatrix, glm::radians(trans.rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-		//rotationMatrix = glm::rotate(rotationMatrix, glm::radians(trans.rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
 
 		// World-space direction using GLM
-		glm::vec3 fwd(0.0f, 0.0f, 1.0f); // Light coming from +Z when unrotated
+		glm::vec3 fwd(0.0f, 0.0f, 1.0f);
 		glm::vec3 dirWorld = glm::normalize(rotQuat * fwd);
 
 		// View-space direction using GLM
-		glm::vec4 dirWorldH(dirWorld, 0.0f); // Homogeneous coordinate with w=0 for directions
+		glm::vec4 dirWorldH(dirWorld, 0.0f);
 		glm::vec4 dirViewH = glmView * dirWorldH;
 		glm::vec3 dirView = glm::normalize(glm::vec3(dirViewH));
 
@@ -1440,7 +1435,7 @@ void Renderer::UpdateLightsSSBO(const Mtx44& view)
 			outerCos = glm::cos(outerAngle);
 		}
 
-		// Convert back to glm::vec4 for LightGPU structure (maintaining compatibility)
+		// Convert to LightGPU structure
 		LightGPU gpu{};
 		gpu.position_type = glm::vec4(posView.x, posView.y, posView.z, static_cast<float>(light.type));
 		gpu.color_intensity = glm::vec4(light.color.x, light.color.y, light.color.z, light.intensity);
@@ -1453,20 +1448,20 @@ void Renderer::UpdateLightsSSBO(const Mtx44& view)
 		lights.emplace_back(gpu);
 	}
 
-	// Upload to SSBO
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_LightsSSBO);
+	// Upload to UBO
+	glBindBuffer(GL_UNIFORM_BUFFER, m_LightsUBO);
 
 	glm::vec4 count(static_cast<float>(lights.size()), 0.0f, 0.0f, 0.0f);
-	glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(glm::vec4), &count);
+	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::vec4), &count);
 
 	if (!lights.empty())
 	{
 		const GLsizeiptr bodyOffset = static_cast<GLsizeiptr>(sizeof(glm::vec4));
 		const GLsizeiptr bodySize = static_cast<GLsizeiptr>(lights.size() * sizeof(LightGPU));
-		glBufferSubData(GL_SHADER_STORAGE_BUFFER, bodyOffset, bodySize, lights.data());
+		glBufferSubData(GL_UNIFORM_BUFFER, bodyOffset, bodySize, lights.data());
 	}
 
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 	glCheckError();
 }
 
@@ -1624,7 +1619,7 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 		Vec3 cameraPos = Vec3(invView[3][0], invView[3][1], invView[3][2]);
 
 		// Update lights UBO for forward rendering
-		UpdateLightsSSBO(view);
+		UpdateLightsUBO(view);
 
 		auto& ecs = ECS::GetInstance();
 
@@ -1896,9 +1891,9 @@ const GPUProfiler::PerformanceMetrics& Renderer::GetPerformanceMetrics() const
  */
 Renderer::~Renderer()
 {
-	if (m_LightsSSBO) {
-		glDeleteBuffers(1, &m_LightsSSBO);
-		m_LightsSSBO = 0;
+	if (m_LightsUBO) {
+		glDeleteBuffers(1, &m_LightsUBO);
+		m_LightsUBO = 0;
 	}
 
 	if (m_MaterialSSBO) {
@@ -2823,7 +2818,7 @@ void Renderer::CalculateLightMatrix(const editor::EditorCamera& editorCamera)
  */
 void Renderer::RenderShadowMapInstanced()
 {
-	UpdateLightsSSBO(editor::EditorCamera::GetInstance().GetViewMatrix());
+	UpdateLightsUBO(editor::EditorCamera::GetInstance().GetViewMatrix());
 
 	// Validate resources
 	if (!m_ShadowMapFBO || !m_ShadowMapArray || !m_ShadowMapInstancedShader)
