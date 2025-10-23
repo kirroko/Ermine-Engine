@@ -374,10 +374,10 @@ namespace Ermine::graphics
          */
         bool GetShadingMode() const { return m_IsBlinnPhong; }
         /**
-         * @brief Updates the lights' shader storage buffer object (SSBO) with the current light and transform data from all living entities.
+         * @brief Updates the lights' shader UBO with the current light and transform data from all living entities.
          * @param view The view matrix to transform the positions and directions of the lights into view space.
          */
-        void UpdateLightsSSBO(const Mtx44& view);
+        void UpdateLightsUBO(const Mtx44& view);
         
         /**
          * @brief Updates the material's shader storage buffer object (SSBO) with the specified material data.
@@ -551,8 +551,8 @@ namespace Ermine::graphics
 		std::shared_ptr<LightSystem> m_LightSystem = nullptr;
         std::shared_ptr<OffscreenBuffer> m_OffscreenBuffer;
 
-        // Lighting SSBO
-        GLuint m_LightsSSBO = 0;
+        // Lighting UBO
+        GLuint m_LightsUBO = 0;
         static constexpr GLuint LightsBindingPoint = 1;
         std::unordered_set<GLuint> m_LightBlockBoundPrograms;
         bool m_IsBlinnPhong = false; // Default to PBR shading
