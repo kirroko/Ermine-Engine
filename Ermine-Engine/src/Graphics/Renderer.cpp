@@ -370,12 +370,12 @@ void Renderer::CreateGBuffer(const int& width, const int& height)
 	if (!m_LightsUBO)
 	{
 		glGenBuffers(1, &m_LightsUBO);
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_LightsUBO);
+		glBindBuffer(GL_UNIFORM_BUFFER, m_LightsUBO);
 		const GLsizeiptr headerSize = static_cast<GLsizeiptr>(sizeof(glm::vec4));
 		const GLsizeiptr bodySize = static_cast<GLsizeiptr>(MAX_LIGHTS * sizeof(LightGPU));
-		glBufferData(GL_SHADER_STORAGE_BUFFER, headerSize + bodySize, nullptr, GL_DYNAMIC_DRAW);
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, LightsBindingPoint, m_LightsUBO);
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+		glBufferData(GL_UNIFORM_BUFFER, headerSize + bodySize, nullptr, GL_DYNAMIC_DRAW);
+		glBindBufferBase(GL_UNIFORM_BUFFER, LightsBindingPoint, m_LightsUBO);
+		glBindBuffer(GL_UNIFORM_BUFFER, 0);
 		glCheckError();
 	}
 
@@ -1095,17 +1095,6 @@ void Renderer::RenderPostProcessPass()
 #endif
 }
 
-// helper – convert your Mtx44 to glm::mat4
-static inline glm::mat4 ToGlm(const Ermine::Mtx44& m)
-{
-	return glm::mat4(
-		m.m00, m.m01, m.m02, m.m03,
-		m.m10, m.m11, m.m12, m.m13,
-		m.m20, m.m21, m.m22, m.m23,
-		m.m30, m.m31, m.m32, m.m33
-	);
-}
-
 // overload that forwards to the existing glm version
 void Renderer::RenderDebugLines(const Mtx44& view, const Mtx44& proj)
 {
@@ -1617,9 +1606,6 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 		);
 		glm::mat4 invView = glm::inverse(glmView);
 		Vec3 cameraPos = Vec3(invView[3][0], invView[3][1], invView[3][2]);
-
-		// Update lights UBO for forward rendering
-		UpdateLightsUBO(view);
 
 		auto& ecs = ECS::GetInstance();
 

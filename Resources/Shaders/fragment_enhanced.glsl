@@ -1,5 +1,8 @@
 #version 460
 
+const int MAX_LIGHTS = 32;
+const int NUM_CASCADES = 4;
+
 in vec2 TexCoord;
 in vec3 Normal;
 in vec3 FragPos;
@@ -57,11 +60,14 @@ uniform float pbrAO = 1.0;
 uniform vec3 pbrEmissive = vec3(0.0);
 uniform float pbrEmissiveIntensity = 0.0;
 
+// Light structure
 struct Light {
-    vec4 position_type;
-    vec4 color_intensity;
-    vec4 direction_range;
-    vec4 spot_angles;
+    vec4 position_type;    // xyz = position (view space), w = light type
+    vec4 color_intensity;  // xyz = color, w = intensity
+    vec4 direction_range;  // xyz = direction (view space), w = range
+    vec4 spot_angles_castshadows_startOffset; // x = inner angle (cos), y = outer angle (cos), z = cast shadows (bool), w = shadow map index or 0 if no shadows
+    mat4 lightSpaceMatrix[NUM_CASCADES]; // Light view-projection matrices for cascaded shadow maps
+    vec4 splitDepths[(NUM_CASCADES + 3) / 4]; // Split depths for cascaded shadow maps
 };
 
 layout (std140, binding = 1) uniform LightsUBO {
@@ -219,9 +225,9 @@ float calculateAttenuation(int lightIndex, vec3 fragPosView, out vec3 lightDir)
         if (lightType == SPOT_LIGHT) {
             vec3 spotDir = normalize(lights[lightIndex].direction_range.xyz);
             float cosAngle = dot(-lightDir, spotDir);
-            float innerCos = lights[lightIndex].spot_angles.x;
-            float outerCos = lights[lightIndex].spot_angles.y;
-            
+            float innerCos = lights[lightIndex].spot_angles_castshadows_startOffset.x;
+            float outerCos = lights[lightIndex].spot_angles_castshadows_startOffset.y;
+
             float spotFactor = clamp((cosAngle - outerCos) / (innerCos - outerCos), 0.0, 1.0);
             attenuation *= spotFactor;
         }
