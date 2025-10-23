@@ -91,7 +91,11 @@ project "Ermine-Engine"
         "%{IncludeDir.DirectXTex}",
         "%{IncludeDir.xproperty}",
         "%{IncludeDir.imnodes}",
-        "%{IncludeDir.recastnavigation}"
+        "%{IncludeDir.recastnavigation}/Recast/Include",
+        "%{IncludeDir.recastnavigation}/Detour/Include",
+        "%{IncludeDir.recastnavigation}/DetourCrowd/Include",
+        "%{IncludeDir.recastnavigation}/DetourTileCache/Include",
+        "%{IncludeDir.recastnavigation}/DebugUtils/Include"
     }
 
     libdirs
@@ -249,7 +253,11 @@ project "Ermine-Editor"
         "%{IncludeDir.rapidjson}",
         "%{IncludeDir.xproperty}",
         "%{IncludeDir.imnodes}",
-        "%{IncludeDir.recastnavigation}"
+        "%{IncludeDir.recastnavigation}/Recast/Include",
+        "%{IncludeDir.recastnavigation}/Detour/Include",
+        "%{IncludeDir.recastnavigation}/DetourCrowd/Include",
+        "%{IncludeDir.recastnavigation}/DetourTileCache/Include",
+        "%{IncludeDir.recastnavigation}/DebugUtils/Include"
     } 
 
     -- Ensure the resource pipeline builds before running it
