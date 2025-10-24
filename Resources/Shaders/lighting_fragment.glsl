@@ -1,7 +1,8 @@
 #version 460 core
 #extension GL_ARB_bindless_texture : require
 
-    const int NUM_CASCADES = 4;
+const int MAX_LIGHTS = 32;
+const int NUM_CASCADES = 4;
 
 in vec2 TexCoord;
 out vec4 FragColor;
@@ -42,9 +43,9 @@ struct Light {
     vec4 splitDepths[(NUM_CASCADES + 3) / 4]; // Split depths for cascaded shadow maps
 };
 
-layout (std430, binding = 1) restrict readonly buffer LightsSSBO {
-    vec4 lightCount;       // x = count, yzw unused
-    Light lights[];
+layout (std140, binding = 1) uniform LightsUBO {
+    vec4 lightCount;
+    Light lights[MAX_LIGHTS]; // Fixed-size array required for UBO
 };
 
 // Constants
