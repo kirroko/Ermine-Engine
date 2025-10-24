@@ -71,6 +71,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Sandbox.cs" />
+    <Compile Include="Test1.cs" />
+    <Compile Include="Test2.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Ermine-ScriptAssembly\Ermine-ScriptAssembly.csproj">

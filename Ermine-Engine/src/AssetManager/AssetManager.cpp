@@ -581,6 +581,9 @@ void AssetManager::Clear()
     m_cubemaps.clear();
     m_materials.clear();
     m_models.clear();
+    
+    // Clear material compilation data
+    InvalidateMaterialCompilation();
 }
 
 /**
@@ -712,6 +715,10 @@ std::shared_ptr<graphics::Material> AssetManager::CreateMaterial(const std::stri
     }
     
     m_materials[name] = material;
+    
+    // Invalidate material compilation since we added a new material
+    InvalidateMaterialCompilation();
+    
     EE_CORE_INFO("Material created and cached: {0}", name);
     return material;
 }
@@ -796,6 +803,145 @@ std::shared_ptr<graphics::Material> AssetManager::CreateSharedMaterial(const std
     }
     
     m_materials[materialName] = material;
+    
+    // Invalidate material compilation since we added a new material
+    InvalidateMaterialCompilation();
+    
     EE_CORE_INFO("Shared material created and cached: {0}", materialName);
     return material;
+}
+
+/**
+ * @brief Compile all loaded materials into a contiguous vector with indexing
+ * This should be called after all materials are loaded but before rendering
+ * @return Number of materials compiled
+ */
+size_t AssetManager::CompileMaterials()
+{
+    EE_CORE_TRACE("Compiling materials into indexed vector...");
+    
+    // Clear existing compilation
+    m_compiledMaterials.clear();
+    m_materialNameToIndex.clear();
+    
+    // Reserve space for efficiency
+    m_compiledMaterials.reserve(m_materials.size());
+    
+    // Compile materials into vector with indices
+    uint32_t index = 0;
+    for (const auto& [name, material] : m_materials)
+    {
+        if (!material)
+        {
+            EE_CORE_WARN("Null material encountered with name: {0}", name);
+            continue;
+        }
+        
+        IndexedMaterial indexedMat(index, name, material);
+        m_compiledMaterials.push_back(indexedMat);
+        m_materialNameToIndex[name] = index;
+        
+        EE_CORE_TRACE("  [{0}] {1}", index, name);
+        index++;
+    }
+    
+    m_materialsCompiled = true;
+    EE_CORE_INFO("Material compilation complete: {0} materials compiled", m_compiledMaterials.size());
+    
+    return m_compiledMaterials.size();
+}
+
+/**
+ * @brief Get the compiled materials vector (read-only)
+ * @return Const reference to the compiled materials vector
+ */
+const std::vector<IndexedMaterial>& AssetManager::GetCompiledMaterials() const
+{
+    if (!m_materialsCompiled)
+    {
+        EE_CORE_WARN("GetCompiledMaterials called but materials not yet compiled. Call CompileMaterials first!");
+    }
+    return m_compiledMaterials;
+}
+
+/**
+ * @brief Get a material by its compiled index
+ * @param index The index in the compiled materials vector
+ * @return Pointer to the material, or nullptr if index is invalid
+ */
+graphics::Material* AssetManager::GetMaterialByIndex(uint32_t index) const
+{
+    if (!m_materialsCompiled)
+    {
+        EE_CORE_WARN("GetMaterialByIndex called but materials not yet compiled");
+        return nullptr;
+    }
+    
+    if (index >= m_compiledMaterials.size())
+    {
+        EE_CORE_ERROR("Material index {0} out of range (max: {1})", index, m_compiledMaterials.size() - 1);
+        return nullptr;
+    }
+    
+    return m_compiledMaterials[index].material.get();
+}
+
+/**
+ * @brief Get the index of a material by its name
+ * @param name The name of the material
+ * @return The index, or UINT32_MAX if not found
+ */
+uint32_t AssetManager::GetMaterialIndex(const std::string& name) const
+{
+    if (!m_materialsCompiled)
+    {
+        EE_CORE_WARN("GetMaterialIndex called but materials not yet compiled");
+        return UINT32_MAX;
+    }
+    
+    auto it = m_materialNameToIndex.find(name);
+    if (it != m_materialNameToIndex.end())
+    {
+        return it->second;
+    }
+    
+    EE_CORE_WARN("Material not found in compiled index: {0}", name);
+    return UINT32_MAX;
+}
+
+/**
+ * @brief Check if materials have been compiled
+ * @return True if materials are compiled, false otherwise
+ */
+bool AssetManager::AreMaterialsCompiled() const
+{
+    return m_materialsCompiled;
+}
+
+/**
+ * @brief Clear the compiled materials (forces recompilation on next CompileMaterials call)
+ */
+void AssetManager::InvalidateMaterialCompilation()
+{
+    m_materialsCompiled = false;
+    m_compiledMaterials.clear();
+    m_materialNameToIndex.clear();
+    EE_CORE_TRACE("Material compilation invalidated");
+}
+
+/**
+ * @brief Get all material names in the compiled vector
+ * @return Vector of material names in index order
+ */
+std::vector<std::string> AssetManager::GetCompiledMaterialNames() const
+{
+    std::vector<std::string> names;
+    names.reserve(m_compiledMaterials.size());
+    
+    for (const auto& indexedMat : m_compiledMaterials)
+    {
+        names.push_back(indexedMat.name);
+    }
+    
+    return names;
 }

@@ -16,12 +16,11 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 namespace Ermine
 {
-    // StateManager
-    void StateManager::Init(EntityID entity, State* startState)
+    void StateManager::Init(EntityID entity, ScriptNode*)
     {
         auto& fsm = ECS::GetInstance().GetComponent<StateMachine>(entity);
         fsm.manager = this;
-        fsm.Init(entity, startState);
+        fsm.Init(entity);
     }
 
     void StateManager::Update(float dt)
@@ -32,40 +31,44 @@ namespace Ermine
                 continue;
 
             auto& fsm = ECS::GetInstance().GetComponent<StateMachine>(entity);
-            if (!fsm.m_CurrentState)
-                continue;
-
-            fsm.m_CurrentState->Update(entity, dt);
-
-            fsm.stateTimer += dt;
-            if (fsm.stateTimer > fsm.stateDuration)
-            {
-                fsm.stateTimer = 0.0f;
-                fsm.m_CurrentState->Exit(entity);
-
-                auto it = fsm.transitions.find(fsm.m_CurrentState);
-                if (it != fsm.transitions.end())
-                {
-                    fsm.m_CurrentState = it->second;
-                    fsm.m_CurrentState->Enter(entity);
-                }
-            }
+            fsm.Update(entity, dt);
         }
     }
 
-    void StateManager::Free(EntityID entity)
+    void StateManager::RequestNextState(EntityID entity)
     {
-        if (!ECS::GetInstance().HasComponent<StateMachine>(entity))
-            return;
+        //EE_CORE_INFO("FSM: RequestNextState called for entity {}", entity);
 
         auto& fsm = ECS::GetInstance().GetComponent<StateMachine>(entity);
+        auto it = fsm.scriptTransitions.find(fsm.m_CurrentScript);
 
-        // Call Exit() on the current state before clearing
-        if (fsm.m_CurrentState)
-            fsm.m_CurrentState->Exit(entity);
+        if (it == fsm.scriptTransitions.end())
+        {
+            //EE_CORE_WARN("FSM: No transition found from current script '{}'", fsm.m_CurrentScript ? fsm.m_CurrentScript->scriptClassName : "NULL");
+            return;
+        }
 
-        fsm.m_CurrentState = nullptr;
-        fsm.manager = nullptr;
-        fsm.stateTimer = 0.0f;
+        if (it != fsm.scriptTransitions.end())
+        {
+            fsm.m_CurrentScript->OnExit();
+            fsm.m_PreviousScript = fsm.m_CurrentScript;
+            fsm.m_CurrentScript = it->second;
+            fsm.m_CurrentScript->CreateInstance(entity);
+            fsm.m_CurrentScript->OnEnter();
+        }
+
+        //EE_CORE_INFO("FSM: Switched to next script '{}'", fsm.m_CurrentScript->scriptClassName);
+    }
+
+    void StateManager::RequestPreviousState(EntityID entity)
+    {
+        auto& fsm = ECS::GetInstance().GetComponent<StateMachine>(entity);
+        if (fsm.m_PreviousScript)
+        {
+            fsm.m_CurrentScript->OnExit();
+            fsm.m_CurrentScript = fsm.m_PreviousScript;
+            fsm.m_CurrentScript->CreateInstance(entity);
+            fsm.m_CurrentScript->OnEnter();
+        }
     }
 }

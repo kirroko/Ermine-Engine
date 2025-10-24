@@ -17,39 +17,27 @@ layout(location = 2) out vec4 gBuffer2; // RT2: Emissive
 layout(location = 3) out vec4 gBuffer3; // RT3: Material
 
 
-// Material UBO
-layout(std140) uniform MaterialBlock
+// Material SSBO
+layout(std430, binding = 2) restrict readonly buffer MaterialBlock
 {
-    vec4 albedo;                    // 16-byte 
+    vec4 albedo;                    // 16 bytes 
     float metallic;                 // 4 bytes
     float roughness;                // 4 bytes  
     float ao;                       // 4 bytes
     float normalStrength;           // 4 bytes
 
-    vec3 emissive;                  // 12-byte 
+    vec3 emissive;                  // 12 bytes 
     float emissiveIntensity;        // 4 bytes 
 
     int shadingModel;               // 4 bytes (0 = PBR, 1 = Blinn-Phong)
-    float reflectance;
-    float environmentIntensity;
-    float _pad0;
-    
     int hasAlbedoMap;               // 4 bytes
     int hasNormalMap;               // 4 bytes
     int hasRoughnessMap;            // 4 bytes
-    int hasMetallicMap;             // 4 bytes
 
+    int hasMetallicMap;             // 4 bytes
     int hasAoMap;                   // 4 bytes
     int hasEmissiveMap;             // 4 bytes
-    int hasEnvironmentMap;
-    int hasIrradianceMap;
-    
-    float indexOfRefraction;
-    float transmissionFactor;
-    int hasRefractionMap;
-    float _pad1;                   // 4 bytes
-
-
+    float _pad0;                    // 4 bytes (padding)
 };
 
 // Texture Samplers

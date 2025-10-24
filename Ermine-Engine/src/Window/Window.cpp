@@ -18,6 +18,31 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #include "Serialisation.h"
 #include "glad/glad.h"
+#include "AssetBrowser.h" // For forwarding dropped files to the asset browser
+
+/**
+ * @brief GLFW callback function for handling file drops.
+ * This function is registered with GLFW to receive notifications
+ * when files are dropped onto the application window. It collects
+ * the file paths and forwards them to the asset browser for processing.
+ * @param window Pointer to the GLFW window where files were dropped.
+ * @param count Number of files dropped.
+ * @param paths Array of C-style strings representing the dropped file paths.
+ */
+static void GLFW_DropCallback(GLFWwindow* window, int count, const char** paths)
+{
+    // Collect dropped file paths into a vector of strings
+    std::vector<std::string> droppedFiles;
+    droppedFiles.reserve(count);
+
+    // Copy paths to the vector
+    for (int i = 0; i < count; ++i)
+        droppedFiles.emplace_back(paths[i]);
+
+    // Log the dropped files and forward them to the asset browser
+    EE_CORE_INFO("Dropped {} files into the editor window.", count);
+    Ermine::ImguiUI::AssetBrowser::OnExternalFilesDropped(droppedFiles);
+}
 
 /**
  * @brief Initialize the window, You can find openGL (MSAA, V-Sync) settings here
@@ -107,6 +132,9 @@ GLFWwindow* Ermine::Window::InitWindow(int width, int height, const char* title)
 
     glfwMakeContextCurrent(window);
 
+    // Set the drop callback to handle file drops
+    glfwSetDropCallback(window, GLFW_DropCallback);
+
     // We'll like to initialize GLAD as well...
     if (!gladLoadGL())
     {
@@ -152,5 +180,3 @@ void Ermine::Window::ShutDownWindow(GLFWwindow* window)
     glfwTerminate();
     EE_CORE_INFO("Window terminated successfully!");
 }
-
-

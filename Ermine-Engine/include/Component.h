@@ -15,6 +15,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #include "Registry.h"
 #include <array>
+#include "rapidjson/document.h"
 
 namespace Ermine
 {
@@ -26,6 +27,10 @@ namespace Ermine
 		size_t size{}; // sizeof(component)
 		std::function<bool(EntityID)> has; // Check if an entity has this component
 		std::function<void(EntityID, EntityID)> clone; // Clone component from src to dst
+
+		using Alloc = rapidjson::Document::AllocatorType;
+		std::function<void(EntityID, rapidjson::Value&, Alloc&)> serialize;
+		std::function<void(EntityID, const rapidjson::Value&)>    deserialize;
 	};
 
 	// The component manager class that manages all the different component arrays that are attached to the component type
