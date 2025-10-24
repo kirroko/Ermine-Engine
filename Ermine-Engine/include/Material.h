@@ -87,6 +87,10 @@ namespace Ermine::graphics
         int hasAoMap{ 0 };                       // 4 bytes (68-71)
         int hasEmissiveMap{ 0 };                 // 4 bytes (72-75)
         float _pad0{};                           // 4 bytes (76-79) - padding for alignment
+
+        // UV Scale and Offset
+        Vec2 uvScale{ 1.0f, 1.0f };             // 8 bytes (80-87)
+        Vec2 uvOffset{ 0.0f, 0.0f };            // 8 bytes (88-95)
     };
 
     // Forward declaration
@@ -240,6 +244,9 @@ namespace Ermine::graphics
         // SSBO management
         mutable MaterialSSBO m_materialData;
         mutable bool m_ssboDirty = true;
+        
+        // Material indexing for SSBO upload
+        int m_materialIndex = -1;  // Index in the global material buffer
 
         /**
          * @brief Gets the SSBO data for this material.
@@ -539,6 +546,50 @@ namespace Ermine::graphics
             }
             return *this;
         }
+        /**
+         * @brief Sets the UV scale for texture sampling.
+         * @param scale Vec2 representing the UV scale factor.
+         */
+        void SetUVScale(const Vec2& scale)
+        {
+            m_materialData.uvScale = scale;
+            m_ssboDirty = true;
+        }
+        
+        /**
+         * @brief Sets the UV offset for texture sampling.
+         * @param offset Vec2 representing the UV offset.
+         */
+        void SetUVOffset(const Vec2& offset)
+        {
+            m_materialData.uvOffset = offset;
+            m_ssboDirty = true;
+        }
+        
+        /**
+         * @brief Gets the UV scale.
+         * @return Vec2 UV scale.
+         */
+        Vec2 GetUVScale() const { return m_materialData.uvScale; }
+        
+        /**
+         * @brief Gets the UV offset.
+         * @return Vec2 UV offset.
+         */
+        Vec2 GetUVOffset() const { return m_materialData.uvOffset; }
+        
+        /**
+         * @brief Sets the material index in the global buffer.
+         * @param index The material index.
+         */
+        void SetMaterialIndex(int index) { m_materialIndex = index; }
+        
+        /**
+         * @brief Gets the material index in the global buffer.
+         * @return The material index, or -1 if not assigned.
+         */
+        int GetMaterialIndex() const { return m_materialIndex; }
+
         /**
          * @brief Gets the cubemap textures associated with this material.
          * @return Unordered map of cubemap names to shared pointers.

@@ -12,8 +12,8 @@ in vec3 Bitangent;
 
 out vec4 FragColor;
 
-// Material SSBO block
-layout (std430, binding = 2) restrict readonly buffer MaterialBlock {
+// Material structure
+struct MaterialData {
     vec4 albedo;
     float metallic;
     float roughness;
@@ -32,7 +32,18 @@ layout (std430, binding = 2) restrict readonly buffer MaterialBlock {
     int hasAoMap;
     int hasEmissiveMap;
     float _pad0;
-} material;
+    
+    vec2 uvScale;   // UV scale for texture tiling
+    vec2 uvOffset;  // UV offset for texture positioning
+};
+
+// Material SSBO block - array of materials
+layout (std430, binding = 2) restrict readonly buffer MaterialBlock {
+    MaterialData materials[];
+};
+
+// Material index uniform - which material to use from the array
+uniform int u_MaterialIndex = 0;
 
 // Texture samplers
 uniform sampler2D materialAlbedoMap;
@@ -81,12 +92,12 @@ const int DIRECTIONAL_LIGHT = 1;
 const int SPOT_LIGHT = 2;
 
 // Normal mapping function
-vec3 calculateNormal()
+vec3 calculateNormal(MaterialData material, vec2 uv)
 {
     vec3 normal = normalize(Normal);
     
     if (material.hasNormalMap != 0) {
-        vec3 normalMap = texture(materialNormalMap, TexCoord).rgb * 2.0 - 1.0;
+        vec3 normalMap = texture(materialNormalMap, uv).rgb * 2.0 - 1.0;
         normalMap.xy *= material.normalStrength;
         
         vec3 T = normalize(Tangent);
@@ -101,50 +112,50 @@ vec3 calculateNormal()
 }
 
 // Sample material properties
-vec3 getAlbedo()
+vec3 getAlbedo(MaterialData material, vec2 uv)
 {
     vec3 albedo = material.albedo.rgb;
     
     if (material.hasAlbedoMap != 0) {
-        vec4 texColor = texture(materialAlbedoMap, TexCoord);
+        vec4 texColor = texture(materialAlbedoMap, uv);
         albedo *= texColor.rgb;
     }
     
     return albedo;
 }
 
-float getRoughness()
+float getRoughness(MaterialData material, vec2 uv)
 {
     float roughness = material.roughness;
     if (material.hasRoughnessMap != 0) {
-        roughness *= texture(materialRoughnessMap, TexCoord).r;
+        roughness *= texture(materialRoughnessMap, uv).r;
     }
     return clamp(roughness, 0.05, 1.0);
 }
 
-float getMetallic()
+float getMetallic(MaterialData material, vec2 uv)
 {
     float metallic = material.metallic;
     if (material.hasMetallicMap != 0) {
-        metallic *= texture(materialMetallicMap, TexCoord).r;
+        metallic *= texture(materialMetallicMap, uv).r;
     }
     return clamp(metallic, 0.0, 1.0);
 }
 
-float getAO()
+float getAO(MaterialData material, vec2 uv)
 {
     float ao = material.ao;
     if (material.hasAoMap != 0) {
-        ao *= texture(materialAoMap, TexCoord).r;
+        ao *= texture(materialAoMap, uv).r;
     }
     return ao;
 }
 
-vec3 getEmissive()
+vec3 getEmissive(MaterialData material, vec2 uv)
 {
     vec3 emissive = material.emissive * material.emissiveIntensity;
     if (material.hasEmissiveMap != 0) {
-        vec4 emissiveTexel = texture(materialEmissiveMap, TexCoord);
+        vec4 emissiveTexel = texture(materialEmissiveMap, uv);
         emissive *= emissiveTexel.rgb;
     }
     return emissive;
@@ -294,16 +305,22 @@ vec3 calculatePBR(int lightIndex, vec3 normal, vec3 viewDir, vec3 fragPosView, v
 
 void main()
 {
+    // Get the material for this draw call from the array
+    MaterialData material = materials[u_MaterialIndex];
+    
+    // Apply UV transform (scale and offset)
+    vec2 transformedUV = TexCoord * material.uvScale + material.uvOffset;
+    
     // Calculate normal (with potential normal mapping)
-    vec3 norm = calculateNormal();
+    vec3 norm = calculateNormal(material, transformedUV);
     vec3 viewDir = normalize(-ViewPos);
     
     // Sample material properties
-    vec3 albedo = getAlbedo();
-    float roughness = getRoughness();
-    float metallic = getMetallic();
-    float ao = getAO();
-    vec3 emissive = getEmissive();
+    vec3 albedo = getAlbedo(material, transformedUV);
+    float roughness = getRoughness(material, transformedUV);
+    float metallic = getMetallic(material, transformedUV);
+    float ao = getAO(material, transformedUV);
+    vec3 emissive = getEmissive(material, transformedUV);
     
     vec3 result = vec3(0.0);
     int numLights = int(lightCount.x);

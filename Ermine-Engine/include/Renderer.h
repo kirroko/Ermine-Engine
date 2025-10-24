@@ -562,6 +562,16 @@ namespace Ermine::graphics
         static constexpr GLuint MaterialBindingPoint = 2;
         std::unordered_set<GLuint> m_MaterialBlockBoundPrograms;
         std::unordered_map<EntityID, uint32_t> m_EntityMaterialIndices; // Maps entity to material index in SSBO
+        
+        // Material compilation system - upload all materials at load time
+        std::vector<MaterialSSBO> m_CompiledMaterials; // All materials compiled into a single vector
+        bool m_MaterialsDirty = true; // Flag to trigger recompilation when materials change
+
+        /**
+         * @brief Uploads all compiled materials to the GPU SSBO at once.
+         * This should be called once after CompileMaterials() during load time.
+         */
+        void UploadMaterialsToGPU();
 
         // Deferred rendering buffers
         bool m_UseDeferredRendering = true;
