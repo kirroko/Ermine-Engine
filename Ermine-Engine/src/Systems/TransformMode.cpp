@@ -168,33 +168,54 @@ namespace Ermine::editor {
 
         auto hierarchySystem = ecs.GetSystem<HierarchySystem>();
 
+        // Get entity's world position first for logging
+        Vec3 entityWorldPos;
+        if (hierarchySystem) {
+            entityWorldPos = hierarchySystem->GetWorldPosition(entity);
+        } else {
+            entityWorldPos = ecs.GetComponent<Transform>(entity).position;
+        }
+
         // Handle mode for single entity with potential children
         switch (s_currentMode) {
         case TransformMode::Pivot: {
             // Use entity's world position (pivot point)
-            if (hierarchySystem) {
-                return hierarchySystem->GetWorldPosition(entity);
-            }
-            else {
-                auto& transform = ecs.GetComponent<Transform>(entity);
-                return transform.position;
-            }
+            EE_CORE_INFO("=== PIVOT MODE ===");
+            EE_CORE_INFO("Entity {}: returning pivot at ({:.3f}, {:.3f}, {:.3f})", 
+                        entity, entityWorldPos.x, entityWorldPos.y, entityWorldPos.z);
+            return entityWorldPos;
         }
 
         case TransformMode::Center: {
+            EE_CORE_INFO("=== CENTER MODE ===");
+            EE_CORE_INFO("Entity {}: pivot is at ({:.3f}, {:.3f}, {:.3f})", 
+                        entity, entityWorldPos.x, entityWorldPos.y, entityWorldPos.z);
+            
             // If entity has children, use hierarchy center calculation
             if (ecs.HasComponent<HierarchyComponent>(entity)) {
                 auto& hierarchy = ecs.GetComponent<HierarchyComponent>(entity);
                 if (!hierarchy.children.empty() && hierarchySystem) {
-                    return hierarchySystem->CalculateHierarchyCenter(entity);
+                    Vec3 hierarchyCenter = hierarchySystem->CalculateHierarchyCenter(entity);
+                    EE_CORE_INFO("Entity {} has {} children", entity, hierarchy.children.size());
+                    EE_CORE_INFO("Calculated hierarchy center: ({:.3f}, {:.3f}, {:.3f})", 
+                               hierarchyCenter.x, hierarchyCenter.y, hierarchyCenter.z);
+                    
+                    float distance = Vec3Length(hierarchyCenter - entityWorldPos);
+                    EE_CORE_INFO("Distance from pivot to center: {:.3f} units", distance);
+                    
+                    return hierarchyCenter;
+                } else {
+                    EE_CORE_INFO("Entity {} has no children, using mesh center", entity);
                 }
             }
             
-            // For entities without children or if hierarchy system unavailable,
-            // calculate center based on mesh AABB
+            // For entities without children, calculate center based on mesh AABB
             if (ecs.HasComponent<Mesh>(entity)) {
                 auto& mesh = ecs.GetComponent<Mesh>(entity);
                 auto aabb = graphics::GeometryFactory::CalculateAABB(mesh);
+                
+                EE_CORE_INFO("Mesh AABB: min=({:.3f}, {:.3f}, {:.3f}), max=({:.3f}, {:.3f}, {:.3f})",
+                            aabb.min.x, aabb.min.y, aabb.min.z, aabb.max.x, aabb.max.y, aabb.max.z);
                 
                 // Get world position and scale for AABB transformation
                 Vec3 worldPos;
@@ -209,6 +230,9 @@ namespace Ermine::editor {
                     worldScale = transform.scale;
                 }
                 
+                EE_CORE_INFO("World transform: pos=({:.3f}, {:.3f}, {:.3f}), scale=({:.3f}, {:.3f}, {:.3f})",
+                            worldPos.x, worldPos.y, worldPos.z, worldScale.x, worldScale.y, worldScale.z);
+                
                 // Calculate center of scaled AABB in world space
                 Vec3 aabbMin = worldPos + Vec3(
                     aabb.min.x * worldScale.x, 
@@ -221,21 +245,30 @@ namespace Ermine::editor {
                     aabb.max.z * worldScale.z
                 );
                 
-                return Vec3(
+                Vec3 meshCenter = Vec3(
                     (aabbMin.x + aabbMax.x) * 0.5f,
                     (aabbMin.y + aabbMax.y) * 0.5f,
                     (aabbMin.z + aabbMax.z) * 0.5f
                 );
+                
+                EE_CORE_INFO("Calculated mesh center: ({:.3f}, {:.3f}, {:.3f})", 
+                            meshCenter.x, meshCenter.y, meshCenter.z);
+                
+                float distance = Vec3Length(meshCenter - worldPos);
+                EE_CORE_INFO("Distance from pivot to mesh center: {:.3f} units", distance);
+                
+                // For symmetric meshes centered at origin, this should equal worldPos
+                if (distance < 0.001f) {
+                    EE_CORE_WARN("Mesh appears to be centered at pivot (distance < 0.001) - this is correct for default cubes!");
+                }
+                
+                return meshCenter;
             }
             
+            EE_CORE_INFO("No mesh or children found, falling back to pivot position");
+            
             // Fallback to entity position if no mesh
-            if (hierarchySystem) {
-                return hierarchySystem->GetWorldPosition(entity);
-            }
-            else {
-                auto& transform = ecs.GetComponent<Transform>(entity);
-                return transform.position;
-            }
+            return entityWorldPos;
         }
         }
 

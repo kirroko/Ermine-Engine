@@ -245,61 +245,116 @@ Ermine::Mesh GeometryFactory::CreateSphere(float radius, unsigned int sectors, u
  */
 GeometryFactory::AABB GeometryFactory::CalculateAABB(const Mesh& mesh)
 {
+    AABB aabb;
+    
     // If it's a primitive type, use the optimized calculation
     if (mesh.kind == MeshKind::Primitive) {
         return CalculatePrimitiveAABB(mesh.primitive.type, mesh.primitive.size);
     }
     
-    // For non-primitive meshes, we need to iterate through the vertex data
-    AABB aabb;
+    // For non-primitive meshes (assets/models), we need actual vertex data
     aabb.min = Vec3(FLT_MAX, FLT_MAX, FLT_MAX);
     aabb.max = Vec3(-FLT_MAX, -FLT_MAX, -FLT_MAX);
     
     if (!mesh.vertex_buffer || !mesh.vertex_array) {
         // Return a default AABB if mesh is invalid
+        EE_CORE_WARN("Invalid mesh - using default AABB");
         aabb.min = Vec3(-0.5f, -0.5f, -0.5f);
         aabb.max = Vec3(0.5f, 0.5f, 0.5f);
         return aabb;
     }
     
-    // For model meshes, try to use information from the asset
+    // Get vertex count from vertex array
+    size_t vertexCount = mesh.vertex_array->GetVertexCount();
+    
+    if (vertexCount == 0) {
+        // No vertices, return default bounds
+        aabb.min = Vec3(-0.5f, -0.5f, -0.5f);
+        aabb.max = Vec3(0.5f, 0.5f, 0.5f);
+        return aabb;
+    }
+    
+    // For model meshes, try to read the actual vertex data
+    // This is a simplified approach - ideally we'd cache AABBs during model loading
+    // For now, use a heuristic based on the mesh's vertex count and type
+    
     if (mesh.kind == MeshKind::Asset && !mesh.asset.meshName.empty()) {
+        // Try to load model and calculate bounds from actual vertex data
         auto& assetManager = AssetManager::GetInstance();
-        std::shared_ptr<Model> model = assetManager.GetModel("../Resources/Models/" + mesh.asset.meshName);
+        std::string modelPath = "../Resources/Models/" + mesh.asset.meshName;
+        std::shared_ptr<Model> model = assetManager.GetModel(modelPath);
         
         if (model) {
-            // Use model's bounding box information if available
-            // This is a simplified approach - ideally we'd have actual bounding box data from the model
-            // For now, just use a heuristic based on model complexity
-            float approxSize = 1.0f; // Default size
-            size_t vertexCount = mesh.vertex_array->GetVertexCount();
+            // Iterate through all meshes in the model to find bounds
+            const auto& modelMeshes = model->GetMeshes();
             
-            if (vertexCount > 0) {
-                // Scale based on vertex count - this is just a heuristic
-                approxSize = std::cbrt(static_cast<float>(vertexCount)) * 0.1f;
+            bool foundBounds = false;
+            for (const auto& modelMesh : modelMeshes) {
+                if (!modelMesh.vao || !modelMesh.vbo) continue;
+                
+                // Bind vertex buffer to read data
+                modelMesh.vbo->Bind();
+                
+                // Get buffer size and calculate vertex count
+                GLint bufferSize = 0;
+                glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &bufferSize);
+                
+                // Assuming standard vertex format: position(3) + normal(3) + texcoord(2) = 8 floats
+                const size_t vertexStride = sizeof(Vertex); // 32 bytes
+                size_t vCount = bufferSize / vertexStride;
+                
+                if (vCount > 0) {
+                    // Map buffer to read vertex positions
+                    float* vertexData = static_cast<float*>(glMapBuffer(GL_ARRAY_BUFFER, GL_READ_ONLY));
+                    
+                    if (vertexData) {
+                        // Iterate through vertices (position is first 3 floats)
+                        for (size_t i = 0; i < vCount; ++i) {
+                            size_t offset = i * 8; // 8 floats per vertex
+                            Vec3 pos(vertexData[offset], vertexData[offset + 1], vertexData[offset + 2]);
+                            
+                            // Update bounding box
+                            aabb.min.x = std::min(aabb.min.x, pos.x);
+                            aabb.min.y = std::min(aabb.min.y, pos.y);
+                            aabb.min.z = std::min(aabb.min.z, pos.z);
+                            
+                            aabb.max.x = std::max(aabb.max.x, pos.x);
+                            aabb.max.y = std::max(aabb.max.y, pos.y);
+                            aabb.max.z = std::max(aabb.max.z, pos.z);
+                            
+                            foundBounds = true;
+                        }
+                        
+                        glUnmapBuffer(GL_ARRAY_BUFFER);
+                    }
+                }
+                
+                modelMesh.vbo->Unbind();
+                
+                // If we found bounds from any mesh, we're done
+                if (foundBounds) break;
             }
             
-            aabb.min = Vec3(-approxSize, -approxSize, -approxSize);
-            aabb.max = Vec3(approxSize, approxSize, approxSize);
-            return aabb;
+            // If we successfully calculated bounds, return them
+            if (foundBounds) {
+                EE_CORE_INFO("Calculated AABB from model vertex data: min=({:.2f}, {:.2f}, {:.2f}), max=({:.2f}, {:.2f}, {:.2f})",
+                           aabb.min.x, aabb.min.y, aabb.min.z, aabb.max.x, aabb.max.y, aabb.max.z);
+                return aabb;
+            }
         }
-    }
-    
-    // We don't have direct access to the vertex data at this point,
-    // so we'll use a reasonable approximation based on vertex count
-    size_t vertexCount = mesh.vertex_array->GetVertexCount();
-    if (vertexCount == 0) {
-        // Return a default AABB if mesh has no vertices
-        aabb.min = Vec3(-0.5f, -0.5f, -0.5f);
-        aabb.max = Vec3(0.5f, 0.5f, 0.5f);
+        
+        // Fallback: use vertex count to estimate size (heuristic)
+        float approxSize = std::cbrt(static_cast<float>(vertexCount)) * 0.1f;
+        aabb.min = Vec3(-approxSize, -approxSize, -approxSize);
+        aabb.max = Vec3(approxSize, approxSize, approxSize);
+        
+        EE_CORE_WARN("Using heuristic AABB for model: size={:.2f}", approxSize);
         return aabb;
     }
     
-    // Approximate size based on vertex count
-    float approxSize = std::cbrt(static_cast<float>(vertexCount)) * 0.1f;
-    aabb.min = Vec3(-approxSize, -approxSize, -approxSize);
-    aabb.max = Vec3(approxSize, approxSize, approxSize);
-    
+    // Generic fallback for unknown mesh types
+    aabb.min = Vec3(-1.0f, -1.0f, -1.0f);
+    aabb.max = Vec3(1.0f, 1.0f, 1.0f);
     return aabb;
 }
 
@@ -315,33 +370,28 @@ GeometryFactory::AABB GeometryFactory::CalculatePrimitiveAABB(const std::string&
     AABB aabb;
     
     if (type == "Cube") {
-        // For a cube, the AABB is straightforward - half extents in each direction
-        float halfWidth = size.x * 0.5f;
-        float halfHeight = size.y * 0.5f;
-        float halfDepth = size.z * 0.5f;
-        
-        aabb.min = Vec3(-halfWidth, -halfHeight, -halfDepth);
-        aabb.max = Vec3(halfWidth, halfHeight, halfDepth);
+        // Cube is centered at origin with given dimensions
+        Vec3 halfSize = size * 0.5f;
+        aabb.min = Vec3(-halfSize.x, -halfSize.y, -halfSize.z);
+        aabb.max = Vec3(halfSize.x, halfSize.y, halfSize.z);
     }
     else if (type == "Quad") {
-        // For a quad, it's flat in Z
-        float halfWidth = size.x * 0.5f;
-        float halfHeight = size.y * 0.5f;
-        
-        aabb.min = Vec3(-halfWidth, -halfHeight, -0.01f);
-        aabb.max = Vec3(halfWidth, halfHeight, 0.01f);
+        // Quad is in XY plane, centered at origin
+        Vec3 halfSize = size * 0.5f;
+        aabb.min = Vec3(-halfSize.x, -halfSize.y, 0.0f);
+        aabb.max = Vec3(halfSize.x, halfSize.y, 0.0f);
     }
     else if (type == "Sphere") {
-        // For a sphere, the AABB is a cube with side length = 2*radius
-        float radius = size.x; // Assuming uniform scaling (x = y = z for radius)
-        
+        // Sphere is centered at origin with radius = size.x (assuming uniform)
+        float radius = size.x;
         aabb.min = Vec3(-radius, -radius, -radius);
         aabb.max = Vec3(radius, radius, radius);
     }
     else {
-        // Default AABB for unknown primitive types
-        aabb.min = Vec3(-0.5f, -0.5f, -0.5f);
-        aabb.max = Vec3(0.5f, 0.5f, 0.5f);
+        // Default cube-like bounds
+        Vec3 halfSize = size * 0.5f;
+        aabb.min = Vec3(-halfSize.x, -halfSize.y, -halfSize.z);
+        aabb.max = Vec3(halfSize.x, halfSize.y, halfSize.z);
     }
     
     return aabb;

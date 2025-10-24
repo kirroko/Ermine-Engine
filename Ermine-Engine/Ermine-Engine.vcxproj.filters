@@ -437,5 +437,6 @@
     <None Include="include\Systems.tpp">
       <Filter>include</Filter>
     </None>
+    <None Include="TESTING_CENTER_MODE.md" />
   </ItemGroup>
 </Project>

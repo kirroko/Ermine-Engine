@@ -428,7 +428,7 @@ void Ermine::ViewPortGUI::GizmoOverlay(const ImVec2& imgMin, const ImVec2& imgSi
 		auto& tr = ecs.GetComponent<Transform>(selectedEntity);
 		auto hierarchySystem = ecs.GetSystem<HierarchySystem>();
 		
-		// Get entity's actual world position
+		// Get entity's actual world position (pivot)
 		Vec3 entityWorldPos;
 		if (hierarchySystem) {
 			entityWorldPos = hierarchySystem->GetWorldPosition(selectedEntity);
@@ -436,11 +436,17 @@ void Ermine::ViewPortGUI::GizmoOverlay(const ImVec2& imgMin, const ImVec2& imgSi
 			entityWorldPos = tr.position;
 		}
 		
-		// Get manipulation position based on current transform mode
-		Vec3 manipulationPos = TransformModeManager::GetManipulationPosition(selectedEntity);
+		// FIXED: Get the correct manipulation position based on current mode
+		Vec3 operationPos = entityWorldPos; // Default to pivot
+		
+		TransformMode currentMode = TransformModeManager::GetMode();
+		if (currentMode == TransformMode::Center) {
+			// Use center point calculation from TransformModeManager
+			operationPos = TransformModeManager::GetManipulationPosition(selectedEntity);
+		}
 		
 		// Visual indicators to help understand the difference between pivot and center
-		if (Vec3Length(entityWorldPos - manipulationPos) > 0.01f) {
+		if (Vec3Length(entityWorldPos - operationPos) > 0.01f) {
 			// Project 3D points to screen space
 			auto worldToScreen = [&view, &proj, &imgMin, &imgSize](const Vec3& worldPos) -> ImVec2 {
 				// Create position vector with w=1
@@ -464,11 +470,11 @@ void Ermine::ViewPortGUI::GizmoOverlay(const ImVec2& imgMin, const ImVec2& imgSi
 			};
 			
 			ImVec2 pivotScreenPos = worldToScreen(entityWorldPos);
-			ImVec2 centerScreenPos = worldToScreen(manipulationPos);
+			ImVec2 centerScreenPos = worldToScreen(operationPos);
 			
 			// Check if points are in front of the camera (simple check)
 			glm::vec4 pivotViewPos = view * glm::vec4(entityWorldPos.x, entityWorldPos.y, entityWorldPos.z, 1.0f);
-			glm::vec4 centerViewPos = view * glm::vec4(manipulationPos.x, manipulationPos.y, manipulationPos.z, 1.0f);
+			glm::vec4 centerViewPos = view * glm::vec4(operationPos.x, operationPos.y, operationPos.z, 1.0f);
 			
 			if (pivotViewPos.z < 0 && centerViewPos.z < 0) {
 				ImDrawList* drawList = ImGui::GetForegroundDrawList();
@@ -485,28 +491,19 @@ void Ermine::ViewPortGUI::GizmoOverlay(const ImVec2& imgMin, const ImVec2& imgSi
 				drawList->AddLine(pivotScreenPos, centerScreenPos, IM_COL32(255, 255, 0, 150), 1.0f);
 				
 				// Add note about transform mode
-				TransformMode currentMode = TransformModeManager::GetMode();
 				const char* modeText = currentMode == TransformMode::Pivot ? 
 					"Current Mode: Pivot (press Z to toggle)" : 
 					"Current Mode: Center (press Z to toggle)";
 				drawList->AddText(ImVec2(imgMin.x + 10, imgMin.y + 40), IM_COL32(255, 255, 255, 200), modeText);
-				
-				// If we're in manipulation mode, show the actual manipulation point
-				if (s_wasManipulating) {
-					ImVec2 manipPoint = worldToScreen(s_manipulationPoint);
-					drawList->AddCircleFilled(manipPoint, 7.0f, IM_COL32(255, 255, 0, 200));
-					drawList->AddCircle(manipPoint, 8.0f, IM_COL32(0, 0, 0, 200), 0, 2.0f);
-					drawList->AddText(ImVec2(manipPoint.x + 10, manipPoint.y), 
-						IM_COL32(255, 255, 0, 255), "Active Point");
-				}
 			}
 		}
 
-        // Store state when starting manipulation
+        // FIXED: When starting manipulation, lock the manipulation point based on CURRENT mode
         if (ImGuizmo::IsUsing() && !s_wasManipulating) {
             s_activeTransformMode = TransformModeManager::GetMode();
-            s_manipulationPoint = (s_activeTransformMode == TransformMode::Center) ? 
-                manipulationPos : entityWorldPos;
+            
+            // Lock to whatever point we're using NOW
+            s_manipulationPoint = operationPos; // This is already correct based on current mode
             s_originalPosition = entityWorldPos;
             
             EE_CORE_INFO("Starting manipulation in {} mode at point ({:.3f}, {:.3f}, {:.3f})",
@@ -514,23 +511,14 @@ void Ermine::ViewPortGUI::GizmoOverlay(const ImVec2& imgMin, const ImVec2& imgSi
                         s_manipulationPoint.x, s_manipulationPoint.y, s_manipulationPoint.z);
         }
 
-		// Build model matrix differently based on operation and mode
+		// FIXED: Build model matrix at the correct position
 		glm::mat4 model = glm::mat4(1.0f);
 		
-		// Choose the manipulation point based on operation and mode
-        Vec3 operationPos;
-        if (gOperation == ImGuizmo::TRANSLATE) {
-            // Translation always happens at entity's position for direct control
-            operationPos = entityWorldPos;
-        } else {
-            // When manipulating, use the same transform mode we started with
-            operationPos = ImGuizmo::IsUsing() ? s_manipulationPoint : 
-                          ((TransformModeManager::GetMode() == TransformMode::Center) ? 
-                           manipulationPos : entityWorldPos);
-        }
+		// CRITICAL FIX: Use operationPos consistently throughout the gizmo operation
+        // When manipulating, keep using the locked point; otherwise use current mode's point
+        Vec3 gizmoPos = ImGuizmo::IsUsing() ? s_manipulationPoint : operationPos;
         
-        // Build the model matrix at the operation position
-        model = glm::translate(model, glm::vec3(operationPos.x, operationPos.y, operationPos.z));
+        model = glm::translate(model, glm::vec3(gizmoPos.x, gizmoPos.y, gizmoPos.z));
 
 		// For rotation and scale, we still use the entity's own rotation/scale
 		glm::quat rotQuat(tr.rotation.w, tr.rotation.x, tr.rotation.y, tr.rotation.z);
@@ -540,223 +528,92 @@ void Ermine::ViewPortGUI::GizmoOverlay(const ImVec2& imgMin, const ImVec2& imgSi
 
 		// Snapping
 		const bool useSnap = Input::IsKeyDownEditor(GLFW_KEY_LEFT_CONTROL)
-			|| Input::IsKeyDownEditor(GLFW_KEY_RIGHT_CONTROL);
-		float snap[3] = { 0.5f, 0.5f, 0.5f };
-		if (gOperation == ImGuizmo::ROTATE) { snap[0] = snap[1] = snap[2] = 5.0f; }
-		if (gOperation == ImGuizmo::SCALE) { snap[0] = snap[1] = snap[2] = 0.1f; }
+			|| Input::IsKeyDownEditor(GLFW_KEY_LEFT_SHIFT);
+		
+		float snapValue = 0.5f;
+		if (gOperation == ImGuizmo::ROTATE) snapValue = 15.0f;
+		else if (gOperation == ImGuizmo::SCALE) snapValue = 0.1f;
 
-		// Manipulate
+		float snapArr[3] = { snapValue, snapValue, snapValue };
+
+		// Store previous model for delta calculation
+		glm::mat4 previousModel = model;
+		
+		// Manipulate the gizmo
 		ImGuizmo::Manipulate(
-			glm::value_ptr(view),
-			glm::value_ptr(proj),
-			gOperation,
-			gMode,
-			glm::value_ptr(model),
-			nullptr,
-			useSnap ? snap : nullptr
+			&view[0][0], &proj[0][0],
+			gOperation, gMode,
+			&model[0][0],
+			nullptr, useSnap ? snapArr : nullptr
 		);
 
-		// Apply transformation
-		if (ImGuizmo::IsUsing())
-		{
-			// Store model matrix on first frame of manipulation
-			if (!s_wasManipulating) {
-				s_previousModel = model;
-				s_wasManipulating = true;
-			}
-
-			glm::vec3 skew, translation, scale;
-			glm::vec4 perspective;
-			glm::quat rotation;
-
-			if (glm::decompose(model, scale, rotation, translation, skew, perspective))
-			{
-				rotation = glm::normalize(rotation);
-
-				// Calculate delta transformation based on operation
-				switch (gOperation)
-				{
-				case ImGuizmo::TRANSLATE: {
-					// Translation: just update world position
-					Vec3 newPos(translation.x, translation.y, translation.z);
-					if (hierarchySystem) {
-						hierarchySystem->SetWorldPosition(selectedEntity, newPos);
-					}
-					else {
-						tr.position = newPos;
-					}
-					break;
-				}
-
-				case ImGuizmo::ROTATE: {
-					// Handle rotation differently based on transform mode
-					if (s_activeTransformMode == TransformMode::Center && hierarchySystem) {
-                        // CENTER MODE: For rotation in center mode, we need to calculate the delta rotation
-                        // and apply it around the center point (not the pivot)
-                        
-						// Decompose previous frame
-						glm::vec3 prevSkew, prevTranslation, prevScale;
-						glm::vec4 prevPerspective;
-						glm::quat prevRotation;
-						glm::decompose(s_previousModel, prevScale, prevRotation,
-										prevTranslation, prevSkew, prevPerspective);
-						prevRotation = glm::normalize(prevRotation);
-
-						// Calculate rotation delta
-						glm::quat deltaRotation = rotation * glm::inverse(prevRotation);
-
-						// Convert to Ermine quaternion
-						Quaternion ermineRotation(deltaRotation.x, deltaRotation.y,
-												  deltaRotation.z, deltaRotation.w);
-
-                        // *** THE KEY FIX: Properly handle center mode rotation ***
-
-                        // 1. Get all entities in the hierarchy
-                        std::vector<EntityID> entitiesToRotate;
-                        entitiesToRotate.push_back(selectedEntity);
-                        
-                        // Recursively collect all children
-                        std::function<void(EntityID)> collectChildren = [&](EntityID parentID) {
-                            if (ecs.HasComponent<HierarchyComponent>(parentID)) {
-                                auto& hierarchyComp = ecs.GetComponent<HierarchyComponent>(parentID);
-                                for (auto childID : hierarchyComp.children) {
-                                    if (ecs.IsEntityValid(childID)) {
-                                        entitiesToRotate.push_back(childID);
-                                        collectChildren(childID);
-                                    }
-                                }
-                            }
-                        };
-                        collectChildren(selectedEntity);
-                        
-                        // 2. Store all world positions before modifying anything
-                        std::vector<Vec3> initialPositions;
-                        initialPositions.reserve(entitiesToRotate.size());
-                        
-                        for (EntityID entity : entitiesToRotate) {
-                            Vec3 worldPos = hierarchySystem->GetWorldPosition(entity);
-                            initialPositions.push_back(worldPos);
-                        }
-                        
-                        // 3. Apply rotation around center to each entity
-                        for (size_t i = 0; i < entitiesToRotate.size(); ++i) {
-                            EntityID entityID = entitiesToRotate[i];
-                            Vec3 worldPos = initialPositions[i];
-                            
-                            // Calculate offset from center point
-                            Vec3 offsetFromCenter = worldPos - s_manipulationPoint;
-                            
-                            // Rotate the offset using built-in quaternion rotation function
-                            Vec3 rotatedOffset = QuaternionRotateVector(ermineRotation, offsetFromCenter);
-                            
-                            // Calculate new world position
-                            Vec3 newWorldPos = s_manipulationPoint + rotatedOffset;
-                            hierarchySystem->SetWorldPosition(entityID, newWorldPos);
-                            
-                            // Also update world rotation
-                            Quaternion currentRot = hierarchySystem->GetWorldRotation(entityID);
-                            hierarchySystem->SetWorldRotation(entityID, ermineRotation * currentRot);
-                        }
-                        
-                        EE_CORE_INFO("Rotated {} entities around CENTER point ({:.3f}, {:.3f}, {:.3f})",
-                                     entitiesToRotate.size(),
-                                     s_manipulationPoint.x, s_manipulationPoint.y, s_manipulationPoint.z);
-					}
-					else {
-                        // PIVOT MODE: Just set world rotation directly
-						// Decompose previous frame
-						glm::vec3 prevSkew, prevTranslation, prevScale;
-						glm::vec4 prevPerspective;
-						glm::quat prevRotation;
-						glm::decompose(s_previousModel, prevScale, prevRotation,
-										prevTranslation, prevSkew, prevPerspective);
-						prevRotation = glm::normalize(prevRotation);
-
-						// Calculate rotation delta
-						glm::quat deltaRotation = rotation * glm::inverse(prevRotation);
-
-						// Convert to Ermine quaternion
-						Quaternion ermineRotation(deltaRotation.x, deltaRotation.y,
-												  deltaRotation.z, deltaRotation.w);
-
-                        if (hierarchySystem) {
-                            hierarchySystem->SetWorldRotation(
-                                selectedEntity,
-                                ermineRotation * hierarchySystem->GetWorldRotation(selectedEntity)
-                            );
-                        }
-                        else {
-                            // Fallback: rotate in place
-                            tr.rotation = ermineRotation * tr.rotation;
-                        }
-                        
-                        EE_CORE_INFO("Rotating entity {} at PIVOT point", selectedEntity);
-					}
-					break;
-				}
-
-				case ImGuizmo::SCALE: {
-					// Scale: apply directly to entity's local transform
-					tr.scale = Vector3D(scale.x, scale.y, scale.z);
-
-					if (hierarchySystem) {
-						hierarchySystem->MarkDirty(selectedEntity);
-					}
-					break;
-				}
-				}
-
-				// Store current state for next frame
-				s_previousModel = model;
-			}
+		// FIXED: Handle transformation changes properly
+		if (ImGuizmo::IsUsing()) {
+            s_wasManipulating = true;
+            
+            // Calculate the delta transformation
+            glm::mat4 delta = model * glm::inverse(previousModel);
+            
+            if (gOperation == ImGuizmo::TRANSLATE) {
+                // Translation: Extract translation from delta and apply to entity
+                glm::vec3 deltaPos(delta[3][0], delta[3][1], delta[3][2]);
+                Vec3 newWorldPos = hierarchySystem->GetWorldPosition(selectedEntity) + 
+                                  Vec3(deltaPos.x, deltaPos.y, deltaPos.z);
+                hierarchySystem->SetWorldPosition(selectedEntity, newWorldPos);
+                
+            } else if (gOperation == ImGuizmo::ROTATE) {
+                // Rotation around manipulation point
+                // Extract rotation from delta matrix
+                glm::mat3 rotMat(delta);
+                glm::quat deltaQuat = glm::normalize(glm::quat_cast(rotMat));
+                Quaternion deltaRot(deltaQuat.x, deltaQuat.y, deltaQuat.z, deltaQuat.w);
+                
+                // Rotate around the manipulation point
+                hierarchySystem->RotateAroundPointQuat(selectedEntity, s_manipulationPoint, deltaRot);
+                
+            } else if (gOperation == ImGuizmo::SCALE) {
+                // Scale from manipulation point
+                glm::vec3 deltaScale = glm::vec3(
+                    glm::length(glm::vec3(delta[0])),
+                    glm::length(glm::vec3(delta[1])),
+                    glm::length(glm::vec3(delta[2]))
+                );
+                
+                Vec3 currentScale = hierarchySystem->GetWorldScale(selectedEntity);
+                Vec3 newScale(
+                    currentScale.x * deltaScale.x,
+                    currentScale.y * deltaScale.y,
+                    currentScale.z * deltaScale.z
+                );
+                hierarchySystem->SetWorldScale(selectedEntity, newScale);
+                
+                // If scaling from center, adjust position to maintain center point
+                if (s_activeTransformMode == TransformMode::Center) {
+                    Vec3 currentPos = hierarchySystem->GetWorldPosition(selectedEntity);
+                    Vec3 toEntity = currentPos - s_manipulationPoint;
+                    
+                    // Scale the offset vector
+                    Vec3 scaledOffset(
+                        toEntity.x * deltaScale.x,
+                        toEntity.y * deltaScale.y,
+                        toEntity.z * deltaScale.z
+                    );
+                    
+                    Vec3 newPos = s_manipulationPoint + scaledOffset;
+                    hierarchySystem->SetWorldPosition(selectedEntity, newPos);
+                }
+            }
 		}
-		else {
-			// Reset flags when manipulation ends
-			s_wasManipulating = false;
-		}
-	}
-
-	// VIEW gizmo (camera nav cube)
-	{
-		glm::mat4 viewBefore = view;
-		glm::mat4 viewEdit = view;
-
-		const Vector3D camPos = EditorCamera::GetInstance().GetPosition();
-		float viewLength = Vec3Length(camPos);
-		if (viewLength < 0.001f) viewLength = 5.0f;
-
-		ImGuizmo::SetDrawlist(ImGui::GetForegroundDrawList());
-
-		ImGuizmo::ViewManipulate(
-			glm::value_ptr(viewEdit),
-			viewLength,
-			vmPos,
-			vmSize,
-			0x10101010
-		);
-
-		auto matChanged = [](const glm::mat4& a, const glm::mat4& b) {
-			const float eps = 1e-5f;
-			for (int c = 0; c < 4; ++c)
-				for (int r = 0; r < 4; ++r)
-					if (!glm::epsilonEqual(a[c][r], b[c][r], eps))
-						return true;
-			return false;
-			};
-
-		if (matChanged(viewBefore, viewEdit))
-		{
-			glm::mat4 inv = glm::inverse(viewEdit);
-			glm::vec3 pos = glm::vec3(inv[3]);
-			glm::vec3 fwd = glm::normalize(-glm::vec3(inv[2])); // -Z axis
-
-			auto rad2deg = [](float r) { return r * 57.29577951308232f; };
-			float yaw = rad2deg(std::atan2(fwd.z, fwd.x));
-			float pitch = rad2deg(std::asin(std::clamp(fwd.y, -1.0f, 1.0f)));
-
-			EditorCamera::GetInstance().SetPosition(Vector3D(pos.x, pos.y, pos.z));
-			EditorCamera::GetInstance().SetYawPitch(yaw, pitch);
-		}
+		else if (s_wasManipulating) {
+            // Just finished manipulating
+            s_wasManipulating = false;
+            EE_CORE_INFO("Finished manipulation");
+            
+            // Update manipulation point if mode is still Center
+            if (TransformModeManager::GetMode() == TransformMode::Center) {
+                UpdateManipulationPoint(selectedEntity);
+            }
+        }
 	}
 }
 
