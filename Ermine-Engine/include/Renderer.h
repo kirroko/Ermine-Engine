@@ -384,10 +384,27 @@ namespace Ermine::graphics
         void UpdateLightsUBO(const Mtx44& view);
         
         /**
-         * @brief Updates the material's shader storage buffer object (SSBO) with the specified material data.
-         * @param materialData The material data to be uploaded to the SSBO, including properties like albedo, metallic, roughness, etc.
+         * @brief Updates the material's shader storage buffer object (SSBO) at a specific index.
+         * Used for dynamic material updates after initial compilation.
+         * @param materialData The material data to be uploaded to the SSBO.
+         * @param materialIndex The index in the material array to update.
          */
-        void UpdateMaterialSSBO(const MaterialSSBO& materialData);
+        void UpdateMaterialSSBO(const graphics::MaterialSSBO& materialData, uint32_t materialIndex);
+
+        /**
+         * @brief Updates the material's SSBO with the specified material data (legacy version).
+         * Updates index 0 by default. Prefer using the indexed version.
+         * @param materialData The material data to be uploaded to the SSBO.
+         */
+        void UpdateMaterialSSBO(const graphics::MaterialSSBO& materialData);
+        /**
+         * @brief Sets the u_MaterialIndex uniform for the entity's material.
+         * Call this before each draw call to tell the shader which material to use.
+         * @param entity The entity whose material index to set.
+         * @param shader The shader program to set the uniform on.
+         */
+        void SetMaterialIndex(EntityID entity, const std::shared_ptr<Shader>& shader);
+
         
         /**
          * @brief Compiles all materials from entities with Material and Model components into a single SSBO.
@@ -396,6 +413,12 @@ namespace Ermine::graphics
          * when materials are added/removed.
          */
         void CompileMaterials();
+
+        /**
+         * @brief Marks materials as dirty, triggering recompilation on next frame.
+         * Call this when materials are added, removed, or modified.
+         */
+        void MarkMaterialsDirty() { m_MaterialsDirty = true; }
 
         /**
          * @brief Builds indirect draw commands and draw info for all entities with meshes.
@@ -555,6 +578,13 @@ namespace Ermine::graphics
 		 */
 		void OnWindowResize(const int& width, const int& height);
 
+    protected:
+		/**
+		 * @brief Called when an entity is added to this system
+		 * @param entity The entity that was added
+		 */
+		
+
     private:
         // Renderer state
 		uint8_t frameCounter = 0;
@@ -584,7 +614,6 @@ namespace Ermine::graphics
          * This should be called once after CompileMaterials() during load time.
          */
         void UploadMaterialsToGPU();
-
         // Deferred rendering buffers
         bool m_UseDeferredRendering = true;
         Ermine::Mesh m_QuadMesh;

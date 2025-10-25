@@ -103,7 +103,7 @@ void GraphicsDebugGUI::Render()
 
     // Create collapsible sections for organized UI
     DrawRenderingModeControls();
-    DrawMaterialControls();
+  //  DrawMaterialControls();
     DrawPostProcessingControls();
     DrawShadowMappingControls();
     DrawLightingControls();
@@ -174,196 +174,196 @@ void GraphicsDebugGUI::DrawRenderingModeControls()
     }
 }
 
-/**
- * @brief Draws controls for material properties including UV scale and offset.
- */
-void GraphicsDebugGUI::DrawMaterialControls()
-{
-    auto renderer = ECS::GetInstance().GetSystem<Renderer>();
-    
-    if (ImGui::CollapsingHeader("Material Properties"))
-    {
-        ImGui::Indent(10.0f);
-        
-        // Entity selection for material editing
-        static EntityID selectedEntity = 0;
-        auto& ecs = ECS::GetInstance();
-        
-        // Get all entities with Material component
-        std::vector<EntityID> materialEntities;
-        for (EntityID entity = 1; entity <= MAX_ENTITIES; ++entity)
-        {
-            if (ecs.IsEntityValid(entity) && ecs.HasComponent<Material>(entity))
-            {
-                materialEntities.push_back(entity);
-            }
-        }
-        
-        if (materialEntities.empty())
-        {
-            ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "No entities with Material component found");
-            ImGui::TextWrapped("Add a Material component to an entity to edit UV transforms");
-            ImGui::Unindent(10.0f);
-            return;
-        }
-        
-        // Entity selector
-        ImGui::Text("Select Entity:");
-        if (ImGui::BeginCombo("##EntitySelector", 
-            selectedEntity == 0 ? "Select Entity..." : 
-            (ecs.HasComponent<ObjectMetaData>(selectedEntity) ? 
-                ecs.GetComponent<ObjectMetaData>(selectedEntity).name.c_str() : 
-                ("Entity " + std::to_string(selectedEntity)).c_str())))
-        {
-            for (EntityID entity : materialEntities)
-            {
-                std::string label = ecs.HasComponent<ObjectMetaData>(entity) ?
-                    ecs.GetComponent<ObjectMetaData>(entity).name + " (ID: " + std::to_string(entity) + ")" :
-                    "Entity " + std::to_string(entity);
-                
-                bool isSelected = (selectedEntity == entity);
-                if (ImGui::Selectable(label.c_str(), isSelected))
-                {
-                    selectedEntity = entity;
-                }
-                if (isSelected)
-                    ImGui::SetItemDefaultFocus();
-            }
-            ImGui::EndCombo();
-        }
-        DrawTooltip("Select an entity with a Material component to edit its UV transform");
-        
-        ImGui::Separator();
-        
-        // If entity is selected and valid, show UV controls
-        if (selectedEntity != 0 && ecs.IsEntityValid(selectedEntity) && ecs.HasComponent<Material>(selectedEntity))
-        {
-            auto& materialComp = ecs.GetComponent<Material>(selectedEntity);
-            auto* material = materialComp.GetMaterial();
-            
-            if (material)
-            {
-                // UV Transform section
-                if (ImGui::TreeNode("UV Transform"))
-                {
-                    ImGui::Text("Transform texture coordinates for all material maps");
-                    ImGui::Spacing();
-                    
-                    // Get current UV transform values from material
-                    Vec2 currentScale = material->GetUVScale();
-                    Vec2 currentOffset = material->GetUVOffset();
-                    
-                    float uvScale[2] = {currentScale.x, currentScale.y};
-                    float uvOffset[2] = {currentOffset.x, currentOffset.y};
-                    
-                    // UV Scale control
-                    if (ImGui::DragFloat2("UV Scale", uvScale, 0.01f, 0.01f, 10.0f, "%.2f"))
-                    {
-                        material->SetUVScale(Vec2(uvScale[0], uvScale[1]));
-                        renderer->UpdateMaterialSSBO(material->GetSSBOData());
-                        EE_CORE_INFO("UV Scale changed to ({}, {}) for Entity {}", uvScale[0], uvScale[1], selectedEntity);
-                    }
-                    DrawTooltip("Scale factor for texture coordinates in U and V directions");
-                    
-                    // UV Offset control
-                    if (ImGui::DragFloat2("UV Offset", uvOffset, 0.01f, -10.0f, 10.0f, "%.2f"))
-                    {
-                        material->SetUVOffset(Vec2(uvOffset[0], uvOffset[1]));
-                        renderer->UpdateMaterialSSBO(material->GetSSBOData());
-                        EE_CORE_INFO("UV Offset changed to ({}, {}) for Entity {}", uvOffset[0], uvOffset[1], selectedEntity);
-                    }
-                    DrawTooltip("Offset for texture coordinates in U and V directions");
-                    
-                    ImGui::Separator();
-                    
-                    // Quick preset buttons
-                    if (ImGui::Button("Reset##UV"))
-                    {
-                        material->SetUVScale(Vec2(1.0f, 1.0f));
-                        material->SetUVOffset(Vec2(0.0f, 0.0f));
-                        renderer->UpdateMaterialSSBO(material->GetSSBOData());
-                        EE_CORE_INFO("UV Transform reset to defaults for Entity {}", selectedEntity);
-                    }
-                    DrawTooltip("Reset UV transform to default values (scale 1.0, offset 0.0)");
-                    
-                    ImGui::SameLine();
-                    
-                    if (ImGui::Button("Tile 2x2##UV"))
-                    {
-                        material->SetUVScale(Vec2(2.0f, 2.0f));
-                        renderer->UpdateMaterialSSBO(material->GetSSBOData());
-                        EE_CORE_INFO("UV Scale set to 2x2 tiling for Entity {}", selectedEntity);
-                    }
-                    DrawTooltip("Set UV scale to create 2x2 texture tiling");
-                    
-                    ImGui::SameLine();
-                    
-                    if (ImGui::Button("Tile 4x4##UV"))
-                    {
-                        material->SetUVScale(Vec2(4.0f, 4.0f));
-                        renderer->UpdateMaterialSSBO(material->GetSSBOData());
-                        EE_CORE_INFO("UV Scale set to 4x4 tiling for Entity {}", selectedEntity);
-                    }
-                    DrawTooltip("Set UV scale to create 4x4 texture tiling");
-                    
-                    ImGui::Spacing();
-                    
-                    // Animation controls
-                    ImGui::Separator();
-                    ImGui::Text("Animation (Experimental)");
-                    
-                    static bool animateOffset = false;
-                    static float animSpeed[2] = {0.1f, 0.0f};
-                    
-                    ImGui::Checkbox("Animate UV Offset", &animateOffset);
-                    DrawTooltip("Enable automatic UV offset animation (for scrolling effects)");
-                    
-                    if (animateOffset)
-                    {
-                        ImGui::DragFloat2("Anim Speed", animSpeed, 0.01f, -1.0f, 1.0f, "%.2f");
-                        DrawTooltip("Animation speed for U and V directions (units per second)");
-                        
-                        // Apply animation
-                        float deltaTime = Ermine::FrameController::GetDeltaTime();
-                        Vec2 newOffset = material->GetUVOffset();
-                        newOffset.x += animSpeed[0] * deltaTime;
-                        newOffset.y += animSpeed[1] * deltaTime;
-                        
-                        // Wrap offset to keep values reasonable
-                        if (newOffset.x > 100.0f) newOffset.x -= 100.0f;
-                        if (newOffset.x < -100.0f) newOffset.x += 100.0f;
-                        if (newOffset.y > 100.0f) newOffset.y -= 100.0f;
-                        if (newOffset.y < -100.0f) newOffset.y += 100.0f;
-                        
-                        material->SetUVOffset(newOffset);
-                        renderer->UpdateMaterialSSBO(material->GetSSBOData());
-                    }
-                    
-                    ImGui::TreePop();
-                }
-                
-                // Display current material info
-                ImGui::Separator();
-                ImGui::Text("Material Info:");
-                ImGui::Text("  Index: %d", material->GetMaterialIndex());
-                Vec2 scale = material->GetUVScale();
-                Vec2 offset = material->GetUVOffset();
-                ImGui::Text("  UV Scale: (%.2f, %.2f)", scale.x, scale.y);
-                ImGui::Text("  UV Offset: (%.2f, %.2f)", offset.x, offset.y);
-            }
-            else
-            {
-                ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Material pointer is null!");
-            }
-        }
-        else if (selectedEntity != 0)
-        {
-            ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "Selected entity no longer valid or missing Material component");
-        }
-        
-        ImGui::Unindent(10.0f);
-    }
-}
+///**
+// * @brief Draws controls for material properties including UV scale and offset.
+// */
+//void GraphicsDebugGUI::DrawMaterialControls()
+//{
+//    auto renderer = ECS::GetInstance().GetSystem<Renderer>();
+//    
+//    if (ImGui::CollapsingHeader("Material Properties"))
+//    {
+//        ImGui::Indent(10.0f);
+//        
+//        // Entity selection for material editing
+//        static EntityID selectedEntity = 0;
+//        auto& ecs = ECS::GetInstance();
+//        
+//        // Get all entities with Material component
+//        std::vector<EntityID> materialEntities;
+//        for (EntityID entity = 1; entity <= MAX_ENTITIES; ++entity)
+//        {
+//            if (ecs.IsEntityValid(entity) && ecs.HasComponent<Material>(entity))
+//            {
+//                materialEntities.push_back(entity);
+//            }
+//        }
+//        
+//        if (materialEntities.empty())
+//        {
+//            ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "No entities with Material component found");
+//            ImGui::TextWrapped("Add a Material component to an entity to edit UV transforms");
+//            ImGui::Unindent(10.0f);
+//            return;
+//        }
+//        
+//        // Entity selector
+//        ImGui::Text("Select Entity:");
+//        if (ImGui::BeginCombo("##EntitySelector", 
+//            selectedEntity == 0 ? "Select Entity..." : 
+//            (ecs.HasComponent<ObjectMetaData>(selectedEntity) ? 
+//                ecs.GetComponent<ObjectMetaData>(selectedEntity).name.c_str() : 
+//                ("Entity " + std::to_string(selectedEntity)).c_str())))
+//        {
+//            for (EntityID entity : materialEntities)
+//            {
+//                std::string label = ecs.HasComponent<ObjectMetaData>(entity) ?
+//                    ecs.GetComponent<ObjectMetaData>(entity).name + " (ID: " + std::to_string(entity) + ")" :
+//                    "Entity " + std::to_string(entity);
+//                
+//                bool isSelected = (selectedEntity == entity);
+//                if (ImGui::Selectable(label.c_str(), isSelected))
+//                {
+//                    selectedEntity = entity;
+//                }
+//                if (isSelected)
+//                    ImGui::SetItemDefaultFocus();
+//            }
+//            ImGui::EndCombo();
+//        }
+//        DrawTooltip("Select an entity with a Material component to edit its UV transform");
+//        
+//        ImGui::Separator();
+//        
+//        // If entity is selected and valid, show UV controls
+//        if (selectedEntity != 0 && ecs.IsEntityValid(selectedEntity) && ecs.HasComponent<Material>(selectedEntity))
+//        {
+//            auto& materialComp = ecs.GetComponent<Material>(selectedEntity);
+//            auto* material = materialComp.GetMaterial();
+//            
+//            if (material)
+//            {
+//                // UV Transform section
+//                if (ImGui::TreeNode("UV Transform"))
+//                {
+//                    ImGui::Text("Transform texture coordinates for all material maps");
+//                    ImGui::Spacing();
+//                    
+//                    // Get current UV transform values from material
+//                    Vec2 currentScale = material->GetUVScale();
+//                    Vec2 currentOffset = material->GetUVOffset();
+//                    
+//                    float uvScale[2] = {currentScale.x, currentScale.y};
+//                    float uvOffset[2] = {currentOffset.x, currentOffset.y};
+//                    
+//                    // UV Scale control
+//                    if (ImGui::DragFloat2("UV Scale", uvScale, 0.01f, 0.01f, 10.0f, "%.2f"))
+//                    {
+//                        material->SetUVScale(Vec2(uvScale[0], uvScale[1]));
+//                        renderer->UpdateMaterialSSBO(material->GetSSBOData());
+//                        EE_CORE_INFO("UV Scale changed to ({}, {}) for Entity {}", uvScale[0], uvScale[1], selectedEntity);
+//                    }
+//                    DrawTooltip("Scale factor for texture coordinates in U and V directions");
+//                    
+//                    // UV Offset control
+//                    if (ImGui::DragFloat2("UV Offset", uvOffset, 0.01f, -10.0f, 10.0f, "%.2f"))
+//                    {
+//                        material->SetUVOffset(Vec2(uvOffset[0], uvOffset[1]));
+//                        renderer->UpdateMaterialSSBO(material->GetSSBOData());
+//                        EE_CORE_INFO("UV Offset changed to ({}, {}) for Entity {}", uvOffset[0], uvOffset[1], selectedEntity);
+//                    }
+//                    DrawTooltip("Offset for texture coordinates in U and V directions");
+//                    
+//                    ImGui::Separator();
+//                    
+//                    // Quick preset buttons
+//                    if (ImGui::Button("Reset##UV"))
+//                    {
+//                        material->SetUVScale(Vec2(1.0f, 1.0f));
+//                        material->SetUVOffset(Vec2(0.0f, 0.0f));
+//                        renderer->UpdateMaterialSSBO(material->GetSSBOData());
+//                        EE_CORE_INFO("UV Transform reset to defaults for Entity {}", selectedEntity);
+//                    }
+//                    DrawTooltip("Reset UV transform to default values (scale 1.0, offset 0.0)");
+//                    
+//                    ImGui::SameLine();
+//                    
+//                    if (ImGui::Button("Tile 2x2##UV"))
+//                    {
+//                        material->SetUVScale(Vec2(2.0f, 2.0f));
+//                        renderer->UpdateMaterialSSBO(material->GetSSBOData());
+//                        EE_CORE_INFO("UV Scale set to 2x2 tiling for Entity {}", selectedEntity);
+//                    }
+//                    DrawTooltip("Set UV scale to create 2x2 texture tiling");
+//                    
+//                    ImGui::SameLine();
+//                    
+//                    if (ImGui::Button("Tile 4x4##UV"))
+//                    {
+//                        material->SetUVScale(Vec2(4.0f, 4.0f));
+//                        renderer->UpdateMaterialSSBO(material->GetSSBOData());
+//                        EE_CORE_INFO("UV Scale set to 4x4 tiling for Entity {}", selectedEntity);
+//                    }
+//                    DrawTooltip("Set UV scale to create 4x4 texture tiling");
+//                    
+//                    ImGui::Spacing();
+//                    
+//                    // Animation controls
+//                    ImGui::Separator();
+//                    ImGui::Text("Animation (Experimental)");
+//                    
+//                    static bool animateOffset = false;
+//                    static float animSpeed[2] = {0.1f, 0.0f};
+//                    
+//                    ImGui::Checkbox("Animate UV Offset", &animateOffset);
+//                    DrawTooltip("Enable automatic UV offset animation (for scrolling effects)");
+//                    
+//                    if (animateOffset)
+//                    {
+//                        ImGui::DragFloat2("Anim Speed", animSpeed, 0.01f, -1.0f, 1.0f, "%.2f");
+//                        DrawTooltip("Animation speed for U and V directions (units per second)");
+//                        
+//                        // Apply animation
+//                        float deltaTime = Ermine::FrameController::GetDeltaTime();
+//                        Vec2 newOffset = material->GetUVOffset();
+//                        newOffset.x += animSpeed[0] * deltaTime;
+//                        newOffset.y += animSpeed[1] * deltaTime;
+//                        
+//                        // Wrap offset to keep values reasonable
+//                        if (newOffset.x > 100.0f) newOffset.x -= 100.0f;
+//                        if (newOffset.x < -100.0f) newOffset.x += 100.0f;
+//                        if (newOffset.y > 100.0f) newOffset.y -= 100.0f;
+//                        if (newOffset.y < -100.0f) newOffset.y += 100.0f;
+//                        
+//                        material->SetUVOffset(newOffset);
+//                        renderer->UpdateMaterialSSBO(material->GetSSBOData());
+//                    }
+//                    
+//                    ImGui::TreePop();
+//                }
+//                
+//                // Display current material info
+//                ImGui::Separator();
+//                ImGui::Text("Material Info:");
+//                ImGui::Text("  Index: %d", material->GetMaterialIndex());
+//                Vec2 scale = material->GetUVScale();
+//                Vec2 offset = material->GetUVOffset();
+//                ImGui::Text("  UV Scale: (%.2f, %.2f)", scale.x, scale.y);
+//                ImGui::Text("  UV Offset: (%.2f, %.2f)", offset.x, offset.y);
+//            }
+//            else
+//            {
+//                ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Material pointer is null!");
+//            }
+//        }
+//        else if (selectedEntity != 0)
+//        {
+//            ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "Selected entity no longer valid or missing Material component");
+//        }
+//        
+//        ImGui::Unindent(10.0f);
+//    }
+//}
 
 /**
  * @brief Draws controls for post-processing effects and their parameters.

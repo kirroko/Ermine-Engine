@@ -30,7 +30,6 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Skybox.h"
 #include <random>  
 #include "Physics.h"
-#include "ECS.h"
 
 #include <GLFW/glfw3.h>
 
@@ -145,6 +144,8 @@ void Renderer::Init(const int& screenWidth, const int& screenHeight)
 	);
 
 	CreatePickingBuffer(screenWidth, screenHeight);
+
+	m_MaterialsDirty = true;
 }
 
 void Renderer::SubmitDebugLine(const glm::vec3& from, const glm::vec3& to, const glm::vec3& color)
@@ -827,6 +828,11 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 	m_GBufferShader->Bind();
 	BindMaterialBlockIfPresent(m_GBufferShader);
 
+	// Recompile materials if dirty
+	if (m_MaterialsDirty) {
+		CompileMaterials();
+	}
+
 	// Clear transparent objects from previous frame
 	m_transparentObjects.clear();
 
@@ -876,12 +882,15 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 				continue; // Skip rendering in geometry pass
 			}
 
-			// Render opaque model in geometry pass
+			// Set material index ONCE before rendering
+			SetMaterialIndex(entity, m_GBufferShader);
+
+			// Bind material textures
 			if (material) {
-				UpdateMaterialSSBO(material->GetSSBOData());
 				BindMaterialTextures(material);
 			}
-				RenderModelDeferred(*modelComp.m_model, material, view, projection, entityModel);
+
+			RenderModelDeferred(*modelComp.m_model, material, view, projection, entityModel);
 		}
 		// Mesh + material pipeline
 		else if (ecs.HasComponent<Mesh>(entity) && ecs.HasComponent<Ermine::Material>(entity)) {
@@ -916,21 +925,22 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 				continue; // Skip opaque rendering in geometry pass
 			}
 
-			// Render opaque object in geometry pass
+			// Set material index ONCE before rendering
+			SetMaterialIndex(entity, m_GBufferShader);
+
 			// Disable skinning for primitive meshes
 			m_GBufferShader->SetUniform1i("u_UseSkinning", 0);
 
-			// Set transformation matrices for g-buffer shader
+			// Set transformation matrices
 			m_GBufferShader->SetUniformMatrix4fv("model", model);
 			m_GBufferShader->SetUniformMatrix4fv("view", &view.m2[0][0]);
 			m_GBufferShader->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
 
-			// Calculate and set normal matrix
+			// Calculate normal matrix
 			glm::mat4 modelView = glmView * model;
 			glm::mat3 normalMatrix = transpose(inverse(glm::mat3(model)));
 			m_GBufferShader->SetUniformMatrix3fv("NormalMatrix", normalMatrix);
 
-			UpdateMaterialSSBO(material->GetSSBOData());
 			BindMaterialTextures(material);
 
 			// Draw the mesh
@@ -1667,89 +1677,58 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
  *
  * @param materialData The material data to be uploaded to the SSBO, including properties like color, texture, etc.
  */
-void Renderer::UpdateMaterialSSBO(const graphics::MaterialSSBO& materialData)
+void Renderer::UpdateMaterialSSBO(const graphics::MaterialSSBO& materialData, uint32_t materialIndex)
 {
-	// Validate material data size first
-	constexpr size_t expectedSize = sizeof(graphics::MaterialSSBO);
-	if (expectedSize == 0)
-	{
-		EE_CORE_ERROR("Invalid MaterialSSBO size: {0}", expectedSize);
-		return;
-	}
-
-	// Create Material SSBO if it doesn't exist
 	if (!m_MaterialSSBO)
 	{
-		glGenBuffers(1, &m_MaterialSSBO);
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_MaterialSSBO);
-		glBufferData(GL_SHADER_STORAGE_BUFFER, expectedSize, nullptr, GL_DYNAMIC_DRAW);
-
-		// Check for errors during buffer creation
-		GLenum error = glGetError();
-		if (error != GL_NO_ERROR)
-		{
-			EE_CORE_ERROR("OpenGL error during MaterialSSBO creation: {0}", error);
-			return;
-		}
-
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, MaterialBindingPoint, m_MaterialSSBO);
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-
-		EE_CORE_INFO("Created MaterialSSBO with size: {0} bytes", expectedSize);
+		EE_CORE_ERROR("MaterialSSBO not initialized - call CompileMaterials() first");
+		return;
 	}
 
-	// Upload material data with comprehensive error checking
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_MaterialSSBO);
 
-	// Check if buffer is properly bound
-	GLint boundBuffer;
-	glGetIntegerv(GL_SHADER_STORAGE_BUFFER_BINDING, &boundBuffer);
-	if (static_cast<GLuint>(boundBuffer) != m_MaterialSSBO)
-	{
-		EE_CORE_ERROR("Failed to bind MaterialSSBO for update");
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-		return;
-	}
+	const size_t materialSize = sizeof(graphics::MaterialSSBO);
+	const size_t offset = materialSize * materialIndex;
 
-	// Check buffer size matches expectation
-	GLint bufferSize;
-	glGetBufferParameteriv(GL_SHADER_STORAGE_BUFFER, GL_BUFFER_SIZE, &bufferSize);
-	if (static_cast<size_t>(bufferSize) != expectedSize)
-	{
-		EE_CORE_ERROR("MaterialSSBO buffer size mismatch. Expected: {0}, Got: {1}", expectedSize, bufferSize);
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-		return;
-	}
+	// Upload to specific index in the array
+	glBufferSubData(GL_SHADER_STORAGE_BUFFER, offset, materialSize, &materialData);
 
-	// Perform the buffer update
-	glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, expectedSize, &materialData);
-
-	// Check for errors immediately after the critical operation
 	GLenum error = glGetError();
 	if (error != GL_NO_ERROR)
 	{
-		const char* errorString = "";
-		switch (error)
-		{
-		case GL_INVALID_ENUM: errorString = "GL_INVALID_ENUM"; break;
-		case GL_INVALID_VALUE: errorString = "GL_INVALID_VALUE"; break;
-		case GL_INVALID_OPERATION: errorString = "GL_INVALID_OPERATION"; break;
-		case GL_OUT_OF_MEMORY: errorString = "GL_OUT_OF_MEMORY"; break;
-		default: errorString = "UNKNOWN_ERROR"; break;
-		}
-		EE_CORE_ERROR("OpenGL error in UpdateMaterialSSBO during glBufferSubData: {0} ({1})", error, errorString);
-		EE_CORE_ERROR("Buffer size: {0}, MaterialSSBO size: {1}", bufferSize, expectedSize);
-
-		// Additional debug information
-		EE_CORE_ERROR("MaterialSSBO contents preview:");
-		EE_CORE_ERROR("  albedo: [{0}, {1}, {2}, {3}]", materialData.albedo.x, materialData.albedo.y, materialData.albedo.z, materialData.albedo.w);
-		EE_CORE_ERROR("  metallic: {0}, roughness: {1}, ao: {2}", materialData.metallic, materialData.roughness, materialData.ao);
+		EE_CORE_ERROR("Failed to update material at index {0}, error: {1}",
+			materialIndex, error);
 	}
 
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-	glCheckError();
+}
+void Renderer::UpdateMaterialSSBO(const graphics::MaterialSSBO& materialData)
+{
+	// This version is kept for backward compatibility
+	// It updates index 0 by default
+	UpdateMaterialSSBO(materialData, 0);
 }
 
+
+/**
+ * @brief Sets the material index uniform before drawing
+ * Call this before each draw call to tell shader which material to use
+ */
+void Renderer::SetMaterialIndex(EntityID entity, const std::shared_ptr<Shader>& shader)
+{
+	if (!shader || !shader->IsValid()) return;
+
+	auto it = m_EntityMaterialIndices.find(entity);
+	if (it != m_EntityMaterialIndices.end())
+	{
+		shader->SetUniform1i("u_MaterialIndex", static_cast<int>(it->second));
+	}
+	else
+	{
+		EE_CORE_WARN("Entity {0} has no material index, using default 0", entity);
+		shader->SetUniform1i("u_MaterialIndex", 0);
+	}
+}
 
 /**
  * @brief Binds the MaterialBlock uniform block to the specified shader program if it has not been bound before.
@@ -1785,6 +1764,11 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 		EE_CORE_INFO("MeshManager: Uploaded {} new meshes during runtime", m_MeshManager.GetMeshCount());
 	}
 
+	// Compile materials on first update when entities exist
+	if (m_MaterialsDirty && !m_Entities.empty())
+	{
+		CompileMaterials();
+	}
 	if (m_UseDeferredRendering)
 	{
 		// Use deferred rendering pipeline (now includes transparency)
@@ -1859,10 +1843,7 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 					continue; // Skip opaque rendering
 				}
 
-				// Render opaque model
-				if (material) {
-					UpdateMaterialSSBO(material->GetSSBOData());
-				}
+
 				RenderModelDeferred(*modelComp.m_model, materialComp.GetMaterial(), view, projection, entityModel);
 			}
 			// Mesh + material pipeline
@@ -1905,8 +1886,6 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 					continue;
 				}
 
-				// Update Material UBO with current material data
-				UpdateMaterialSSBO(material->GetSSBOData());
 
 				// Bind material (this handles shader binding and texture binding)
 				material->Bind();
@@ -1969,10 +1948,6 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 							auto& materialComponent = ecs.GetComponent<Ermine::Material>(entity);
 							material = materialComponent.GetMaterial();
 						}
-
-						if (material) {
-							UpdateMaterialSSBO(material->GetSSBOData());
-						}
 					}
 				}
 				// Handle Mesh entities
@@ -1988,9 +1963,6 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 					auto shader = material->GetShader();
 					if (!shader || !shader->IsValid()) continue;
 
-					// Update Material UBO
-					UpdateMaterialSSBO(material->GetSSBOData());
-
 					// Bind material
 					material->Bind();
 
@@ -2002,12 +1974,58 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 					shader->SetUniformMatrix4fv("view", &view.m2[0][0]);
 					shader->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
 
+					// Calculate normal matrix
+					glm::mat4 glmView = glm::mat4(
+						view.m00, view.m01, view.m02, view.m03,
+						view.m10, view.m11, view.m12, view.m13,
+						view.m20, view.m21, view.m22, view.m23,
+						view.m30, view.m31, view.m32, view.m33
+					);
+
 					glm::mat4 modelView = glmView * transparentObj.modelMatrix;
 					glm::mat3 normalMatrix = transpose(inverse(glm::mat3(modelView)));
 					shader->SetUniformMatrix3fv("NormalMatrix", normalMatrix);
 
 					// Set shading mode
 					shader->SetUniform1i("isBlinnPhong", m_IsBlinnPhong ? 1 : 0);
+
+					// Bind textures
+					int texUnit = 0;
+					if (material->HasParameter("materialAlbedoMap")) {
+						std::shared_ptr<Texture> albedo = material->GetParameter("materialAlbedoMap")->texture;
+						if (albedo && albedo->IsValid()) {
+							albedo->Bind(texUnit);
+							shader->SetUniform1i("materialAlbedoMap", texUnit);
+						}
+					}
+					texUnit++;
+
+					if (material->HasParameter("materialNormalMap")) {
+						std::shared_ptr<Texture> normal = material->GetParameter("materialNormalMap")->texture;
+						if (normal && normal->IsValid()) {
+							normal->Bind(texUnit);
+							shader->SetUniform1i("materialNormalMap", texUnit);
+						}
+					}
+					texUnit++;
+
+					if (material->HasParameter("materialRoughnessMap")) {
+						std::shared_ptr<Texture> roughness = material->GetParameter("materialRoughnessMap")->texture;
+						if (roughness && roughness->IsValid()) {
+							roughness->Bind(texUnit);
+							shader->SetUniform1i("materialRoughnessMap", texUnit);
+						}
+					}
+					texUnit++;
+
+					if (material->HasParameter("materialMetallicMap")) {
+						std::shared_ptr<Texture> metallic = material->GetParameter("materialMetallicMap")->texture;
+						if (metallic && metallic->IsValid()) {
+							metallic->Bind(texUnit);
+							shader->SetUniform1i("materialMetallicMap", texUnit);
+						}
+					}
+					texUnit++;
 
 					// Draw the mesh
 					Draw(mesh.vertex_array, mesh.index_buffer);
@@ -2228,7 +2246,6 @@ void Renderer::RenderModelForward(const Model& model, graphics::Material* materi
 	auto shader = material->GetShader();
 	if (!shader || !shader->IsValid()) return;
 
-	UpdateMaterialSSBO(material->GetSSBOData());
 
 	glm::mat4 glmView = ToGlm(view);
 	glm::mat4 glmProj = ToGlm(projection);
@@ -2357,82 +2374,87 @@ void Renderer::RenderForwardPass(const Mtx44& view, const Mtx44& projection)
 	// Render all transparent objects in sorted order
 	for (const auto& transparentObj : m_transparentObjects) {
 		EntityID entity = transparentObj.entity;
+		// Set material index
+		auto it = m_EntityMaterialIndices.find(entity);
+		if (it != m_EntityMaterialIndices.end())
+		{
+			m_ForwardShader->SetUniform1i("u_MaterialIndex", it->second);
+		}
 
 		if (!ecs.HasComponent<Ermine::Material>(entity)) continue;
 
 		auto& materialComponent = ecs.GetComponent<Ermine::Material>(entity);
-		Ermine::graphics::Material* material = materialComponent.GetMaterial();
+			Ermine::graphics::Material* material = materialComponent.GetMaterial();
 
 		if (!material || !IsTransparentMaterial(material)) continue;
 
 		// Use forward shader for transparent objects (enhanced fragment shader)
 		auto shader = m_ForwardShader ? m_ForwardShader : material->GetShader();
-		if (!shader || !shader->IsValid()) continue;
+			if (!shader || !shader->IsValid()) continue;
 
 		shader->Bind();
 
-		// Bind uniform blocks
-		BindMaterialBlockIfPresent(shader);
+			// Bind uniform blocks
+			BindMaterialBlockIfPresent(shader);
+		SetMaterialIndex(entity, shader);
 
-		// Update material UBO
-		UpdateMaterialSSBO(material->GetSSBOData());
 
-		// Set transformation matrices
-		shader->SetUniformMatrix4fv("model", transparentObj.modelMatrix);
+			// Set transformation matrices
+			shader->SetUniformMatrix4fv("model", transparentObj.modelMatrix);
 		shader->SetUniformMatrix4fv("view", &view.m2[0][0]);
-		shader->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
+			shader->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
 
-		// Calculate normal matrix
-		glm::mat4 glmView = glm::mat4(
-			view.m00, view.m01, view.m02, view.m03,
-			view.m10, view.m11, view.m12, view.m13,
-			view.m20, view.m21, view.m22, view.m23,
-			view.m30, view.m31, view.m32, view.m33
-		);
-		glm::mat4 modelView = glmView * transparentObj.modelMatrix;
-		glm::mat3 normalMatrix = transpose(inverse(glm::mat3(modelView)));
-		shader->SetUniformMatrix3fv("NormalMatrix", normalMatrix);
+			// Calculate normal matrix
+			glm::mat4 glmView = glm::mat4(
+				view.m00, view.m01, view.m02, view.m03,
+				view.m10, view.m11, view.m12, view.m13,
+				view.m20, view.m21, view.m22, view.m23,
+				view.m30, view.m31, view.m32, view.m33
+			);
+			glm::mat4 modelView = glmView * transparentObj.modelMatrix;
+			glm::mat3 normalMatrix = transpose(inverse(glm::mat3(modelView)));
+			shader->SetUniformMatrix3fv("NormalMatrix", normalMatrix);
 
-		// Set shading mode
-		shader->SetUniform1i("isBlinnPhong", m_IsBlinnPhong ? 1 : 0);
+			// Set shading mode
+			shader->SetUniform1i("isBlinnPhong", m_IsBlinnPhong ? 1 : 0);
 
-		// Bind textures
-		int texUnit = 0;
-		if (material->HasParameter("materialAlbedoMap")) {
-			std::shared_ptr<Texture> albedo = material->GetParameter("materialAlbedoMap")->texture;
-			if (albedo && albedo->IsValid()) {
-				albedo->Bind(texUnit);
-				shader->SetUniform1i("materialAlbedoMap", texUnit);
+			// Bind textures
+			int texUnit = 0;
+			if (material->HasParameter("materialAlbedoMap")) {
+				std::shared_ptr<Texture> albedo = material->GetParameter("materialAlbedoMap")->texture;
+				if (albedo && albedo->IsValid()) {
+					albedo->Bind(texUnit);
+					shader->SetUniform1i("materialAlbedoMap", texUnit);
+				}
 			}
-		}
-		texUnit++;
+			texUnit++;
 
-		if (material->HasParameter("materialNormalMap")) {
-			std::shared_ptr<Texture> normal = material->GetParameter("materialNormalMap")->texture;
-			if (normal && normal->IsValid()) {
-				normal->Bind(texUnit);
-				shader->SetUniform1i("materialNormalMap", texUnit);
+			if (material->HasParameter("materialNormalMap")) {
+				std::shared_ptr<Texture> normal = material->GetParameter("materialNormalMap")->texture;
+				if (normal && normal->IsValid()) {
+					normal->Bind(texUnit);
+					shader->SetUniform1i("materialNormalMap", texUnit);
+				}
 			}
-		}
-		texUnit++;
+			texUnit++;
 
-		if (material->HasParameter("materialRoughnessMap")) {
-			std::shared_ptr<Texture> roughness = material->GetParameter("materialRoughnessMap")->texture;
-			if (roughness && roughness->IsValid()) {
-				roughness->Bind(texUnit);
-				shader->SetUniform1i("materialRoughnessMap", texUnit);
+			if (material->HasParameter("materialRoughnessMap")) {
+				std::shared_ptr<Texture> roughness = material->GetParameter("materialRoughnessMap")->texture;
+				if (roughness && roughness->IsValid()) {
+					roughness->Bind(texUnit);
+					shader->SetUniform1i("materialRoughnessMap", texUnit);
+				}
 			}
-		}
-		texUnit++;
+			texUnit++;
 
-		if (material->HasParameter("materialMetallicMap")) {
-			std::shared_ptr<Texture> metallic = material->GetParameter("materialMetallicMap")->texture;
-			if (metallic && metallic->IsValid()) {
-				metallic->Bind(texUnit);
-				shader->SetUniform1i("materialMetallicMap", texUnit);
+			if (material->HasParameter("materialMetallicMap")) {
+				std::shared_ptr<Texture> metallic = material->GetParameter("materialMetallicMap")->texture;
+				if (metallic && metallic->IsValid()) {
+					metallic->Bind(texUnit);
+					shader->SetUniform1i("materialMetallicMap", texUnit);
+				}
 			}
-		}
-		texUnit++;
+			texUnit++;
 
 		// Render the mesh
 		if (ecs.HasComponent<ModelComponent>(entity)) {
@@ -2457,13 +2479,13 @@ void Renderer::RenderForwardPass(const Mtx44& view, const Mtx44& projection)
 			// Handle regular mesh component
 			auto& mesh = ecs.GetComponent<Mesh>(entity);
 			if (mesh.vertex_array && mesh.index_buffer) {
-				Draw(mesh.vertex_array, mesh.index_buffer);
+			Draw(mesh.vertex_array, mesh.index_buffer);
 			}
 		}
 
-		// Unbind material
-		material->Unbind();
-	}
+			// Unbind material
+			material->Unbind();
+		}
 
 	// Restore render state
 	glDepthMask(GL_TRUE);
@@ -3441,4 +3463,123 @@ void Renderer::OnWindowResize(const int& width, const int& height)
 {
 	if (m_UseDeferredRendering)
 			ResizeGBuffer(width, height);
+}
+
+/**
+ * @brief Compiles all materials from entities into a single SSBO.
+ * This collects material data, uploads to GPU, and assigns indices.
+ */
+void Renderer::CompileMaterials()
+{
+	if (!m_MaterialsDirty) return;
+
+	EE_CORE_INFO("Compiling materials for GPU upload...");
+
+	// Clear previous compiled data
+	m_CompiledMaterials.clear();
+	m_EntityMaterialIndices.clear();
+
+	// Map to track unique materials and avoid duplicates
+	std::map<const graphics::Material*, uint32_t> materialToIndex;
+
+	const auto& ecs = Ermine::ECS::GetInstance();
+
+	// First pass: Collect unique materials
+	for (auto entity : m_Entities)
+	{
+		if (!ecs.HasComponent<Ermine::Material>(entity)) continue;
+
+		auto& materialComponent = ecs.GetComponent<Ermine::Material>(entity);
+		graphics::Material* material = materialComponent.GetMaterial();
+
+		if (!material) {
+			EE_CORE_WARN("Entity {0} has null material", entity);
+			continue;
+		}
+
+		// Check if we've already seen this material
+		if (materialToIndex.find(material) != materialToIndex.end()) {
+			// Reuse existing index
+			m_EntityMaterialIndices[entity] = materialToIndex[material];
+			continue;
+		}
+
+		// New material - add to compiled list
+		uint32_t materialIndex = static_cast<uint32_t>(m_CompiledMaterials.size());
+		m_CompiledMaterials.push_back(material->GetSSBOData());
+
+		// Store the mapping
+		materialToIndex[material] = materialIndex;
+		m_EntityMaterialIndices[entity] = materialIndex;
+
+		// Update the material with its index
+		material->SetMaterialIndex(static_cast<int>(materialIndex));
+	}
+
+	// Upload all materials to GPU
+	UploadMaterialsToGPU();
+
+	m_MaterialsDirty = false;
+
+	EE_CORE_INFO("Compiled {0} unique materials for {1} entities",
+		m_CompiledMaterials.size(), m_EntityMaterialIndices.size());
+}
+
+
+/**
+ * @brief Uploads all compiled materials to the GPU SSBO in one batch.
+ */
+void Renderer::UploadMaterialsToGPU()
+{
+	if (m_CompiledMaterials.empty()) {
+		EE_CORE_WARN("No materials to upload to GPU");
+		return;
+	}
+
+	// Create Material SSBO if it doesn't exist
+	if (!m_MaterialSSBO)
+	{
+		glGenBuffers(1, &m_MaterialSSBO);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_MaterialSSBO);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, MaterialBindingPoint, m_MaterialSSBO);
+		EE_CORE_INFO("Created MaterialSSBO");
+	}
+	else
+	{
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_MaterialSSBO);
+	}
+
+	// Calculate total size needed
+	const size_t materialSize = sizeof(graphics::MaterialSSBO);
+	const size_t totalSize = materialSize * m_CompiledMaterials.size();
+
+	// Reallocate buffer to fit all materials
+	glBufferData(GL_SHADER_STORAGE_BUFFER, totalSize, nullptr, GL_DYNAMIC_DRAW);
+
+	// Check for allocation errors
+	GLenum error = glGetError();
+	if (error != GL_NO_ERROR)
+	{
+		EE_CORE_ERROR("Failed to allocate MaterialSSBO: {0} bytes, error: {1}",
+			totalSize, error);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+		return;
+	}
+
+	// Upload all materials at once
+	glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, totalSize, m_CompiledMaterials.data());
+
+	error = glGetError();
+	if (error != GL_NO_ERROR)
+	{
+		EE_CORE_ERROR("Failed to upload materials to GPU, error: {0}", error);
+	}
+	else
+	{
+		EE_CORE_INFO("Uploaded {0} materials ({1} bytes) to GPU",
+			m_CompiledMaterials.size(), totalSize);
+	}
+
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+	glCheckError();
 }

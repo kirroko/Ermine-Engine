@@ -1,4 +1,4 @@
-#version 460
+﻿#version 460
 
 const int MAX_LIGHTS = 32;
 const int NUM_CASCADES = 4;
@@ -62,14 +62,6 @@ uniform vec3 materialKd = vec3(0.8, 0.8, 0.8);
 uniform vec3 materialKs = vec3(1.0, 1.0, 1.0);
 uniform vec3 materialKe = vec3(0.0, 0.0, 0.0);
 uniform float materialShininess = 64.0;
-
-// Legacy uniforms for backwards compatibility
-uniform vec3 pbrAlbedo = vec3(0.8, 0.8, 0.8);
-uniform float pbrMetallic = 0.0;
-uniform float pbrRoughness = 0.5;
-uniform float pbrAO = 1.0;
-uniform vec3 pbrEmissive = vec3(0.0);
-uniform float pbrEmissiveIntensity = 0.0;
 
 // Light structure
 struct Light {
@@ -360,9 +352,7 @@ void main()
             result *= mix(1.0, 1.4, (roughness - 0.7) / 0.3);
         }
         
-        // Add emissive
         result += emissive;
-        result += pbrEmissive * pbrEmissiveIntensity;
     }
     
     // Tone mapping (ACES approximation)

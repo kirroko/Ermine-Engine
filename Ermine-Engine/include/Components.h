@@ -1130,6 +1130,26 @@ namespace Ermine
 					}
 				}
 			}
+
+			//  Ensure material has a valid shader after deserialization
+			if (!m_material->GetShader() || !m_material->GetShader()->IsValid())
+			{
+				// Assign default enhanced shader for forward rendering compatibility
+				auto defaultShader = AssetManager::GetInstance().LoadShader(
+					"../Resources/Shaders/vertex.glsl",
+					"../Resources/Shaders/fragment_enhanced.glsl"
+				);
+				
+				if (defaultShader && defaultShader->IsValid())
+				{
+					m_material->SetShader(defaultShader);
+					EE_CORE_INFO("Auto-assigned default shader to material");
+				}
+				else
+				{
+					EE_CORE_WARN("Failed to assign default shader to material - shader loading failed");
+				}
+			}
 		}
 
 		XPROPERTY_DEF(
