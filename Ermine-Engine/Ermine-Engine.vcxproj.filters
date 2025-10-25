@@ -267,6 +267,9 @@
     <ClInclude Include="include\PrefabManager.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\DrawCommands.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\AssetBrowser\AssetBrowser.cpp">
@@ -445,6 +448,9 @@
     </ClCompile>
     <ClCompile Include="src\Serialisation\PrefabManager.cpp">
       <Filter>src\Serialisation</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Graphics\MeshManager.cpp">
+      <Filter>src\Graphics</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

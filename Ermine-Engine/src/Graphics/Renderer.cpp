@@ -67,10 +67,32 @@ GLenum glCheckError_(const char* file, int line)
 }
 #define glCheckError() glCheckError_(__FILE__, __LINE__)
 
-void Renderer::UpdateShadowMap()
+void Renderer::InitializeShadowMapResources()
 {
+	if (m_ShadowMapArrayHandle != 0) {
+		glMakeTextureHandleNonResidentARB(m_ShadowMapArrayHandle);
+		m_ShadowMapArrayHandle = 0;
+	}
+
+	if (m_ShadowMapArray != 0) {
+		glDeleteTextures(1, &m_ShadowMapArray);
+		m_ShadowMapArray = 0;
+	}
+
+	if (m_ShadowMapFBO != 0) {
+		glDeleteFramebuffers(1, &m_ShadowMapFBO);
+		m_ShadowMapFBO = 0;
+	}
+
+	// Clear any OpenGL errors from cleanup
+	while (glGetError() != GL_NO_ERROR);
+
 	InitializeShadowMap();
 	CreateShadowMapArray();
+
+
+	EE_CORE_INFO("Shadow map initialized: FBO={0}, Texture={1}, Layers={2}",
+		m_ShadowMapFBO, m_ShadowMapArray, SHADOW_MAX_LAYERS);
 }
 
 /**
@@ -88,6 +110,8 @@ void Renderer::Init(const int& screenWidth, const int& screenHeight)
 	}
 	// Create a fullscreen quad for rendering the offscreen buffer to the screen
 
+	// Initialize MeshManager for centralized mesh storage and indirect rendering
+	m_MeshManager.Initialize();
 
 	// Add light system reference
 	m_LightSystem = Ermine::ECS::GetInstance().GetSystem<LightSystem>();
@@ -113,7 +137,7 @@ void Renderer::Init(const int& screenWidth, const int& screenHeight)
 	CreatePostProcessBuffer(screenWidth, screenHeight);
 
 	// Create shadow map FBO and texture
-	UpdateShadowMap();
+	InitializeShadowMapResources();
 
 	m_PickingShader = AssetManager::GetInstance().LoadShader(
 		"../Resources/Shaders/picking_vertex.glsl",
@@ -151,7 +175,7 @@ void Renderer::RenderDebugLines(const glm::mat4& view, const glm::mat4& proj)
 		glBindVertexArray(0);
 	}
 
-	// 2) Load shader once (make sure it’s valid)
+	// 2) Load shader once (make sure itï¿½s valid)
 	if (!debugShader) {
 		debugShader = AssetManager::GetInstance().LoadShader(
 			"../Resources/Shaders/debug_line_vert.glsl",
@@ -163,7 +187,7 @@ void Renderer::RenderDebugLines(const glm::mat4& view, const glm::mat4& proj)
 		}
 	}
 
-	// 3) Bind VAO/VBO and upload THIS FRAME’S data
+	// 3) Bind VAO/VBO and upload THIS FRAMEï¿½S data
 	glBindVertexArray(m_DebugVAO);
 	glBindBuffer(GL_ARRAY_BUFFER, m_DebugVBO);
 	glBufferSubData(GL_ARRAY_BUFFER, 0,
@@ -921,6 +945,184 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 }
 
 /**
+ * @brief Builds indirect draw commands and draw info for all entities with meshes.
+ */
+void Renderer::BuildIndirectCommands()
+{
+	const auto& ecs = Ermine::ECS::GetInstance();
+
+	// Build draw commands and draw info on CPU
+	std::vector<DrawElementsIndirectCommand> commands;
+	std::vector<DrawInfo> drawInfos;
+	commands.reserve(m_Entities.size());
+	drawInfos.reserve(m_Entities.size());
+
+	for (auto& entity : m_Entities) {
+		// Process entities with Model component
+		if (ecs.HasComponent<ModelComponent>(entity)) {
+			auto& modelComp = ecs.GetComponent<ModelComponent>(entity);
+			auto& trans = ecs.GetComponent<Transform>(entity);
+
+			if (!modelComp.m_model) continue;
+
+			// Check if entity has material component for transparency/custom shader check
+			Ermine::graphics::Material* material = nullptr;
+			if (ecs.HasComponent<Ermine::Material>(entity)) {
+				auto& materialComponent = ecs.GetComponent<Ermine::Material>(entity);
+				material = materialComponent.GetMaterial();
+			}
+
+			// Skip transparent materials (rendered in forward pass)
+			if (material && IsTransparentMaterial(material)) {
+				continue;
+			}
+
+			// Skip materials with custom shaders (not using standard deferred pipeline)
+			//if (material && material->GetShader() && material->GetShader() != m_GBufferShader) {
+			//	continue;
+			//}
+
+			// Get material index
+			uint32_t materialIndex = 0;
+			auto it = m_EntityMaterialIndices.find(entity);
+			if (it != m_EntityMaterialIndices.end()) {
+				materialIndex = it->second;
+			}
+
+			// Build entity transform
+			glm::mat4 modelMatrix = glm::mat4(1.0f);
+			modelMatrix = glm::translate(modelMatrix, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
+			glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
+			rotQuat = glm::normalize(rotQuat);
+			modelMatrix *= glm::mat4_cast(rotQuat);
+			modelMatrix = glm::scale(modelMatrix, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
+
+			// Process each mesh in the model
+			for (const auto& mesh : modelComp.m_model->GetMeshes()) {
+				// Get mesh handle from MeshManager
+				MeshHandle meshHandle = m_MeshManager.GetMeshHandle(mesh.meshID);
+				if (!meshHandle.isValid()) continue;
+
+				const MeshSubset* meshData = m_MeshManager.GetMeshData(meshHandle);
+				if (!meshData) continue;
+
+				// Build draw command
+				DrawElementsIndirectCommand cmd;
+				cmd.count = meshData->indexCount;
+				cmd.instanceCount = 1;
+				cmd.firstIndex = meshData->indexOffset;
+				cmd.baseVertex = meshData->baseVertex;
+				cmd.baseInstance = 0;
+				commands.push_back(cmd);
+
+				// Build draw info with AABB and model matrix
+				DrawInfo info;
+				info.modelMatrix = modelMatrix;
+				info.aabbMin = mesh.aabbMin;
+				info.materialIndex = materialIndex;
+				info.aabbMax = mesh.aabbMax;
+				info.entityID = entity;
+				drawInfos.push_back(info);
+			}
+		}
+		// Process entities with Mesh component (primitives)
+		else if (ecs.HasComponent<Mesh>(entity) && ecs.HasComponent<Ermine::Material>(entity)) {
+			auto& trans = ecs.GetComponent<Transform>(entity);
+			auto& mesh = ecs.GetComponent<Mesh>(entity);
+			auto& materialComponent = ecs.GetComponent<Ermine::Material>(entity);
+
+			if (!mesh.vertex_array || !mesh.index_buffer) continue;
+
+			// Skip if no registered mesh ID
+			if (mesh.registeredMeshID.empty()) continue;
+
+			Ermine::graphics::Material* material = materialComponent.GetMaterial();
+			if (!material) {
+				continue;
+			}
+
+			// Skip transparent materials (rendered in forward pass)
+			if (IsTransparentMaterial(material)) {
+				continue;
+			}
+
+			// Skip materials with custom shaders (not using standard deferred pipeline)
+			//if (material->GetShader() && material->GetShader() != m_GBufferShader) {
+			//	continue;
+			//}
+
+			// Get material index
+			uint32_t materialIndex = 0;
+			auto it = m_EntityMaterialIndices.find(entity);
+			if (it != m_EntityMaterialIndices.end()) {
+				materialIndex = it->second;
+			}
+
+			// Build model matrix
+			glm::mat4 modelMatrix = glm::mat4(1.0f);
+			modelMatrix = glm::translate(modelMatrix, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
+			glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
+			rotQuat = glm::normalize(rotQuat);
+			modelMatrix *= glm::mat4_cast(rotQuat);
+			modelMatrix = glm::scale(modelMatrix, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
+
+			// Get mesh handle from MeshManager using the stored registered mesh ID
+			MeshHandle meshHandle = m_MeshManager.GetMeshHandle(mesh.registeredMeshID);
+			if (!meshHandle.isValid()) continue;
+
+			const MeshSubset* meshData = m_MeshManager.GetMeshData(meshHandle);
+			if (!meshData) continue;
+
+			// Build draw command
+			DrawElementsIndirectCommand cmd;
+			cmd.count = meshData->indexCount;
+			cmd.instanceCount = 1;
+			cmd.firstIndex = meshData->indexOffset;
+			cmd.baseVertex = meshData->baseVertex;
+			cmd.baseInstance = 0;
+			commands.push_back(cmd);
+
+			// Build draw info
+			DrawInfo info;
+			info.modelMatrix = modelMatrix;
+			info.aabbMin = glm::vec3(-1.0f); // TODO: Calculate proper AABB for primitives
+			info.materialIndex = materialIndex;
+			info.aabbMax = glm::vec3(1.0f);
+			info.entityID = entity;
+			drawInfos.push_back(info);
+		}
+	}
+
+	// Upload draw commands to GPU (Draw Commands SSBO)
+	if (!commands.empty()) {
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_MeshManager.m_DrawCommandsSSBO);
+		size_t commandsBufferSize = commands.size() * sizeof(DrawElementsIndirectCommand);
+		glBufferData(GL_SHADER_STORAGE_BUFFER,
+			commandsBufferSize,
+			commands.data(),
+			GL_DYNAMIC_DRAW);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+		EE_CORE_INFO("Renderer: Uploaded {} draw commands ({} bytes) to Draw Commands SSBO",
+			commands.size(), commandsBufferSize);
+	}
+
+	// Upload draw info to GPU (Draw Info SSBO)
+	if (!drawInfos.empty()) {
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_MeshManager.m_DrawInfoSSBO);
+		size_t drawInfoBufferSize = drawInfos.size() * sizeof(DrawInfo);
+		glBufferData(GL_SHADER_STORAGE_BUFFER,
+			drawInfoBufferSize,
+			drawInfos.data(),
+			GL_DYNAMIC_DRAW);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+		EE_CORE_INFO("Renderer: Uploaded {} draw infos ({} bytes) to Draw Info SSBO",
+			drawInfos.size(), drawInfoBufferSize);
+	}
+}
+
+/**
  * @brief Renders the lighting pass for deferred rendering.
  * @param view View matrix.
  * @param projection Projection matrix.
@@ -1109,8 +1311,9 @@ void Renderer::RenderDebugLines(const Mtx44& view, const Mtx44& proj)
 void Renderer::RenderDeferredPipeline(const Mtx44& view, const Mtx44& projection)
 {
 	// Shadow pass - render scene from light's perspective
-	if (frameCounter % SHADOW_MAP_REFRESH_INTERVAL_IN_FRAMES == 0) // Update shadows every 4 frames for performance
+	if (frameCounter % SHADOW_MAP_REFRESH_INTERVAL_IN_FRAMES == 0)
 		RenderShadowPass();
+
 	// Geometry pass - write opaque objects to g-buffer, collect transparent objects
 	RenderGeometryPass(view, projection);
 
@@ -1147,6 +1350,7 @@ void Renderer::RenderDeferredPipeline(const Mtx44& view, const Mtx44& projection
 	// TRANSPARENCY PASS - render transparent objects using forward rendering
 	RenderForwardPass(view, projection);
 
+#if defined(EE_EDITOR)
 	if (m_PostProcessBuffer && ECS::GetInstance().GetSystem<Physics>()->wireframe) {
 		glBindFramebuffer(GL_FRAMEBUFFER, m_PostProcessBuffer->FBO);
 		glViewport(0, 0, m_PostProcessBuffer->width, m_PostProcessBuffer->height);
@@ -1160,7 +1364,8 @@ void Renderer::RenderDeferredPipeline(const Mtx44& view, const Mtx44& projection
 		 }
 		 RenderDebugLines(view, projection);
 	}
-	
+#endif
+
 	// Post-processing pass - read from lighting + transparency pass output
 	RenderPostProcessPass();
 }
@@ -1573,6 +1778,13 @@ void Renderer::BindMaterialBlockIfPresent(const std::shared_ptr<Shader>& shader)
  */
 void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 {
+	// Check if new meshes have been registered and need uploading
+	if (m_MeshManager.IsDirty() && m_MeshManager.HasStagedData())
+	{
+		m_MeshManager.UploadAndBuild();
+		EE_CORE_INFO("MeshManager: Uploaded {} new meshes during runtime", m_MeshManager.GetMeshCount());
+	}
+
 	if (m_UseDeferredRendering)
 	{
 		// Use deferred rendering pipeline (now includes transparency)
@@ -2327,6 +2539,10 @@ bool Renderer::CreateShadowMapArray()
 	// Clean up previous array if it exists
 	if (m_ShadowMapArray)
 	{
+		if (m_ShadowMapArrayHandle != 0) {
+			glMakeTextureHandleNonResidentARB(m_ShadowMapArrayHandle);
+			m_ShadowMapArrayHandle = 0;
+		}
 		glDeleteTextures(1, &m_ShadowMapArray);
 		m_ShadowMapArray = 0;
 	}

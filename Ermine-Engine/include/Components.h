@@ -584,6 +584,7 @@ namespace Ermine
 		MeshKind        kind = MeshKind::None;
 		MeshPrimitiveDesc primitive;
 		MeshAssetDesc     asset;
+		std::string registeredMeshID; // Mesh ID registered in MeshManager
 
 		Mesh() = default;
 

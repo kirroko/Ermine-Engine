@@ -42,7 +42,7 @@ struct MaterialData {
 };
 
 // Material SSBO - array of materials
-layout(std430, binding = 2) restrict readonly buffer MaterialBlock
+layout(std430, binding = 5) restrict readonly buffer MaterialBlock
 {
     MaterialData materials[];
 };

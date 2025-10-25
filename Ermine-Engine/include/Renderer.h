@@ -25,6 +25,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Components.h"
 #include "EditorCamera.h"
 #include "shadow_config.h"
+#include "MeshManager.h"
 
 namespace Ermine::graphics
 {
@@ -77,6 +78,9 @@ namespace Ermine::graphics
     class Renderer : public System
     {
     public:
+		// Mesh Manager - Composition
+		MeshManager m_MeshManager;
+
         // Lighting Pass Parameters
         // SSAO parameters
         bool m_SSAOEnabled = false;
@@ -130,7 +134,7 @@ namespace Ermine::graphics
         /**
 		 * @brief Update the shadow maps for all lights that cast shadows.
 		 */
-        void UpdateShadowMap();
+        void InitializeShadowMapResources();
         /**
          * @brief Initialize the renderer with the screen width and height.
          * @param screenWidth The width of the screen
@@ -392,7 +396,15 @@ namespace Ermine::graphics
          * when materials are added/removed.
          */
         void CompileMaterials();
-        
+
+        /**
+         * @brief Builds indirect draw commands and draw info for all entities with meshes.
+         * This function iterates through all entities, gathers mesh, material, transform, and AABB data,
+         * and uploads them to the Draw Commands SSBO (binding 2) and Draw Info SSBO (binding 3).
+         * Should be called after materials are compiled and whenever the scene changes.
+         */
+        void BuildIndirectCommands();
+
         /**
          * @brief Binds the MaterialBlock shader storage buffer to the specified shader program if it has not been bound before.
          * @param shader The shader program to which the material block should be bound.
@@ -544,7 +556,7 @@ namespace Ermine::graphics
 		void OnWindowResize(const int& width, const int& height);
 
     private:
-		// Renderer state
+        // Renderer state
 		uint8_t frameCounter = 0;
 
 		// Light System
@@ -559,7 +571,7 @@ namespace Ermine::graphics
 
         // Material SSBO
         GLuint m_MaterialSSBO = 0;
-        static constexpr GLuint MaterialBindingPoint = 2;
+        static constexpr GLuint MaterialBindingPoint = 5;  // Moved to 5 to make room for mesh SSBOs (0-3)
         std::unordered_set<GLuint> m_MaterialBlockBoundPrograms;
         std::unordered_map<EntityID, uint32_t> m_EntityMaterialIndices; // Maps entity to material index in SSBO
         
@@ -661,5 +673,9 @@ namespace Ermine::graphics
                 m.m30, m.m31, m.m32, m.m33
             );
         }
+
+#pragma region IndirectDraw
+        void DrawIndirect();
+#pragma endregion
     };
 }
