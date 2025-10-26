@@ -198,6 +198,7 @@ Ermine::Mesh GeometryFactory::CreateCube(float width, float height, float depth)
             graphics::Vertex meshVert;
 			meshVert.position.x = v.pos.x;
 			meshVert.position.y = v.pos.y;
+			meshVert.position.z = v.pos.z;  // Fixed: Was missing Z coordinate!
 			meshVert.normal.x = v.norms.x;
 			meshVert.normal.y = v.norms.y;
 			meshVert.normal.z = v.norms.z;
@@ -272,6 +273,7 @@ Ermine::Mesh GeometryFactory::CreateQuad(float width, float height)
             graphics::Vertex meshVert;
             meshVert.position.x = v.pos.x;
             meshVert.position.y = v.pos.y;
+            meshVert.position.z = v.pos.z;  // Fixed: Was missing Z coordinate!
             meshVert.normal.x = v.norms.x;
             meshVert.normal.y = v.norms.y;
             meshVert.normal.z = v.norms.z;
@@ -387,6 +389,7 @@ Ermine::Mesh GeometryFactory::CreateSphere(float radius, unsigned int sectors, u
             graphics::Vertex meshVert;
             meshVert.position.x = v.pos.x;
             meshVert.position.y = v.pos.y;
+            meshVert.position.z = v.pos.z;  // Fixed: Was missing Z coordinate!
             meshVert.normal.x = v.norms.x;
             meshVert.normal.y = v.norms.y;
             meshVert.normal.z = v.norms.z;

@@ -421,6 +421,26 @@ namespace Ermine::graphics
         void MarkMaterialsDirty() { m_MaterialsDirty = true; }
 
         /**
+         * @brief Registers a texture in the global texture array.
+         * @param texture Shared pointer to the texture.
+         * @return The index of the texture in the array, or -1 if registration failed.
+         */
+        int RegisterTexture(std::shared_ptr<Texture> texture);
+
+        /**
+         * @brief Gets the texture array index for a given texture ID.
+         * @param textureID The OpenGL texture ID.
+         * @return The array index, or -1 if not found.
+         */
+        int GetTextureArrayIndex(GLuint textureID) const;
+
+        /**
+         * @brief Builds the bindless texture array SSBO.
+         * This should be called after all textures are registered and before rendering.
+         */
+        void BuildTextureArray();
+
+        /**
          * @brief Builds indirect draw commands and draw info for all entities with meshes.
          * This function iterates through all entities, gathers mesh, material, transform, and AABB data,
          * and uploads them to the Draw Commands SSBO (binding 2) and Draw Info SSBO (binding 3).
@@ -586,6 +606,21 @@ namespace Ermine::graphics
 		
 
     private:
+        // Texture Array Management (Bindless Texture System)
+        struct TextureArrayEntry
+        {
+            GLuint textureID = 0;
+            std::string filePath;
+            int arrayIndex = -1;
+        };
+
+        std::vector<GLuint> m_TextureArray;                           // All textures in the array
+        std::unordered_map<std::string, int> m_TexturePathToIndex;    // Map file path to array index
+        std::unordered_map<GLuint, int> m_TextureIDToIndex;           // Map texture ID to array index
+        GLuint m_TextureArraySSBO = 0;                                // SSBO containing texture handles
+        static constexpr GLuint TextureArrayBindingPoint = 6;         // SSBO binding point for texture array
+        bool m_TextureArrayDirty = true;                              // Flag to trigger texture array rebuild
+
         // Renderer state
 		uint8_t frameCounter = 0;
 

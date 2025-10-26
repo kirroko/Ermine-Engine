@@ -56,7 +56,9 @@ namespace Ermine::graphics
         uint32_t materialIndex; // 4 bytes  - Index into the material SSBO
         glm::vec3 aabbMax;      // 12 bytes - AABB maximum bounds
         uint32_t entityID;      // 4 bytes  - Entity ID for identification
-        // Total: 96 bytes (aligned to 16 bytes)
+        uint32_t flags;         // 4 bytes  - Flags (bit 0: useSkinning, bits 1-31: reserved)
+        uint32_t _pad[3];       // 12 bytes - Padding to maintain 16-byte alignment
+        // Total: 112 bytes (aligned to 16 bytes)
     };
 
     /**

@@ -846,105 +846,51 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 	glm::mat4 invView = glm::inverse(glmView);
 	Vec3 cameraPos = Vec3(invView[3][0], invView[3][1], invView[3][2]);
 
-	const auto& ecs = Ermine::ECS::GetInstance();
+	// Build indirect draw commands for opaque geometry (also handles transparent object collection)
+	BuildIndirectCommands();
 
-	for (auto& entity : m_Entities) {
-		// Model pipeline
-		if (ecs.HasComponent<ModelComponent>(entity)) {
-			auto& modelComp = ecs.GetComponent<ModelComponent>(entity);
-			auto& trans = ecs.GetComponent<Transform>(entity);
+	// Set view and projection uniforms (model matrix comes from DrawInfo SSBO per draw)
+	m_GBufferShader->SetUniformMatrix4fv("view", &view.m2[0][0]);
+	m_GBufferShader->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
 
-			if (!modelComp.m_model) continue;
+	// Execute multi-draw indirect call
+	if (m_MeshManager.m_DrawCommandsSSBO != 0 && m_MeshManager.m_DrawInfoSSBO != 0) {
+		// Get the number of draw commands
+		GLint commandCount = 0;
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_MeshManager.m_DrawCommandsSSBO);
+		glGetBufferParameteriv(GL_SHADER_STORAGE_BUFFER, GL_BUFFER_SIZE, &commandCount);
+		commandCount /= sizeof(DrawElementsIndirectCommand);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
-			// Check if entity has material component for transparency check
-			Ermine::graphics::Material* material = nullptr;
-			if (ecs.HasComponent<Ermine::Material>(entity)) {
-				auto& materialComponent = ecs.GetComponent<Ermine::Material>(entity);
-				material = materialComponent.GetMaterial();
+		if (commandCount > 0) {
+			// Create a dummy VAO if it doesn't exist
+			static GLuint dummyVAO = 0;
+			if (dummyVAO == 0) {
+				glGenVertexArrays(1, &dummyVAO);
 			}
 
-			// Build entity transform
-			glm::mat4 entityModel = glm::mat4(1.0f);
-			entityModel = glm::translate(entityModel, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
-			glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
-			rotQuat = glm::normalize(rotQuat);
-			entityModel *= glm::mat4_cast(rotQuat);
-			entityModel = glm::scale(entityModel, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
+			// Bind dummy VAO (required for indirect draw calls)
+			glBindVertexArray(dummyVAO);
 
-			// Check if material is transparent
-			if (material && IsTransparentMaterial(material)) {
-				// Add to transparent objects list
-				TransparentObject transparentObj;
-				transparentObj.entity = entity;
-				transparentObj.modelMatrix = entityModel;
-				transparentObj.distanceToCamera = 0.0f; // Will be calculated in SortTransparentObjects
-				m_transparentObjects.push_back(transparentObj);
-				continue; // Skip rendering in geometry pass
-			}
+			// Bind index buffer to the VAO's element array buffer binding
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_MeshManager.m_IndexSSBO);
 
-			// Set material index ONCE before rendering
-			SetMaterialIndex(entity, m_GBufferShader);
+			// Bind the draw commands buffer
+			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_MeshManager.m_DrawCommandsSSBO);
 
-			// Bind material textures
-			if (material) {
-				BindMaterialTextures(material);
-			}
+			// Issue the multi-draw indirect call
+			glMultiDrawElementsIndirect(
+				GL_TRIANGLES,
+				GL_UNSIGNED_INT,
+				nullptr, // offset into the command buffer (0 = start)
+				commandCount,
+				0 // stride (0 = tightly packed)
+			);
 
-			RenderModelDeferred(*modelComp.m_model, material, view, projection, entityModel);
-		}
-		// Mesh + material pipeline
-		else if (ecs.HasComponent<Mesh>(entity) && ecs.HasComponent<Ermine::Material>(entity)) {
-			auto& trans = ecs.GetComponent<Transform>(entity);
-			auto& mesh = ecs.GetComponent<Mesh>(entity);
-			auto& materialComponent = ecs.GetComponent<Ermine::Material>(entity);
-
-			if (!mesh.vertex_array || !mesh.index_buffer) continue;
-
-			Ermine::graphics::Material* material = materialComponent.GetMaterial();
-			if (!material) {
-				EE_CORE_WARN("Entity {0} has null material", entity);
-				continue;
-			}
-
-			// Build model matrix
-			glm::mat4 model = glm::mat4(1.0f);
-			model = glm::translate(model, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
-			glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
-			rotQuat = glm::normalize(rotQuat);
-			model *= glm::mat4_cast(rotQuat);
-			model = glm::scale(model, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
-
-			// Check if material is transparent
-			if (IsTransparentMaterial(material)) {
-				// Add to transparent objects list
-				TransparentObject transparentObj;
-				transparentObj.entity = entity;
-				transparentObj.modelMatrix = model;
-				transparentObj.distanceToCamera = 0.0f; // Will be calculated in SortTransparentObjects
-				m_transparentObjects.push_back(transparentObj);
-				continue; // Skip opaque rendering in geometry pass
-			}
-
-			// Set material index ONCE before rendering
-			SetMaterialIndex(entity, m_GBufferShader);
-
-			// Disable skinning for primitive meshes
-			m_GBufferShader->SetUniform1i("u_UseSkinning", 0);
-
-			// Set transformation matrices
-			m_GBufferShader->SetUniformMatrix4fv("model", model);
-			m_GBufferShader->SetUniformMatrix4fv("view", &view.m2[0][0]);
-			m_GBufferShader->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
-
-			// Calculate normal matrix
-			glm::mat4 modelView = glmView * model;
-			glm::mat3 normalMatrix = transpose(inverse(glm::mat3(model)));
-			m_GBufferShader->SetUniformMatrix3fv("NormalMatrix", normalMatrix);
-
-			BindMaterialTextures(material);
-
-			// Draw the mesh
-			Draw(mesh.vertex_array, mesh.index_buffer);
+			// Unbind
+			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+			glBindVertexArray(0);
 		}
 	}
 
@@ -975,6 +921,21 @@ void Renderer::BuildIndirectCommands()
 
 			if (!modelComp.m_model) continue;
 
+
+			// Get bone transforms (may be empty for static meshes)
+			const auto& boneTransforms = modelComp.m_model->GetBoneTransforms();
+			const bool hasBones = !boneTransforms.empty();
+
+			// Upload bone matrices if present
+			if (hasBones)
+			{
+				// TODO: Optimize: Use a UBO or SSBO for bone matrices instead of uniforms for large numbers of bones
+
+				GLsizei count = std::min((int)boneTransforms.size(), MAX_BONE_UNIFORMS);
+				GLint loc = glGetUniformLocation(m_GBufferShader->GetRendererID(), "u_BoneMatrices");
+				glUniformMatrix4fv(loc, count, GL_FALSE, glm::value_ptr(boneTransforms[0]));
+			}
+
 			// Check if entity has material component for transparency/custom shader check
 			Ermine::graphics::Material* material = nullptr;
 			if (ecs.HasComponent<Ermine::Material>(entity)) {
@@ -982,8 +943,21 @@ void Renderer::BuildIndirectCommands()
 				material = materialComponent.GetMaterial();
 			}
 
-			// Skip transparent materials (rendered in forward pass)
+			// Build entity transform
+			glm::mat4 modelMatrix = glm::mat4(1.0f);
+			modelMatrix = glm::translate(modelMatrix, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
+			glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
+			rotQuat = glm::normalize(rotQuat);
+			modelMatrix *= glm::mat4_cast(rotQuat);
+			modelMatrix = glm::scale(modelMatrix, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
+
+			// Handle transparent materials separately (collect for forward pass)
 			if (material && IsTransparentMaterial(material)) {
+				TransparentObject transparentObj;
+				transparentObj.entity = entity;
+				transparentObj.modelMatrix = modelMatrix;
+				transparentObj.distanceToCamera = 0.0f; // Will be calculated in SortTransparentObjects
+				m_transparentObjects.push_back(transparentObj);
 				continue;
 			}
 
@@ -998,14 +972,6 @@ void Renderer::BuildIndirectCommands()
 			if (it != m_EntityMaterialIndices.end()) {
 				materialIndex = it->second;
 			}
-
-			// Build entity transform
-			glm::mat4 modelMatrix = glm::mat4(1.0f);
-			modelMatrix = glm::translate(modelMatrix, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
-			glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
-			rotQuat = glm::normalize(rotQuat);
-			modelMatrix *= glm::mat4_cast(rotQuat);
-			modelMatrix = glm::scale(modelMatrix, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
 
 			// Process each mesh in the model
 			for (const auto& mesh : modelComp.m_model->GetMeshes()) {
@@ -1032,11 +998,16 @@ void Renderer::BuildIndirectCommands()
 				info.materialIndex = materialIndex;
 				info.aabbMax = mesh.aabbMax;
 				info.entityID = entity;
+				// Set flags: bit 0 = useSkinning
+				info.flags = (modelComp.m_model->GetBoneCount() > 0) ? 1 : 0;
+				info._pad[0] = 0;
+				info._pad[1] = 0;
+				info._pad[2] = 0;
 				drawInfos.push_back(info);
 			}
 		}
 		// Process entities with Mesh component (primitives)
-		else if (ecs.HasComponent<Mesh>(entity) && ecs.HasComponent<Ermine::Material>(entity)) {
+		if (ecs.HasComponent<Mesh>(entity) && ecs.HasComponent<Ermine::Material>(entity)) {
 			auto& trans = ecs.GetComponent<Transform>(entity);
 			auto& mesh = ecs.GetComponent<Mesh>(entity);
 			auto& materialComponent = ecs.GetComponent<Ermine::Material>(entity);
@@ -1051,8 +1022,21 @@ void Renderer::BuildIndirectCommands()
 				continue;
 			}
 
-			// Skip transparent materials (rendered in forward pass)
+			// Build model matrix
+			glm::mat4 modelMatrix = glm::mat4(1.0f);
+			modelMatrix = glm::translate(modelMatrix, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
+			glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
+			rotQuat = glm::normalize(rotQuat);
+			modelMatrix *= glm::mat4_cast(rotQuat);
+			modelMatrix = glm::scale(modelMatrix, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
+
+			// Handle transparent materials separately (collect for forward pass)
 			if (IsTransparentMaterial(material)) {
+				TransparentObject transparentObj;
+				transparentObj.entity = entity;
+				transparentObj.modelMatrix = modelMatrix;
+				transparentObj.distanceToCamera = 0.0f; // Will be calculated in SortTransparentObjects
+				m_transparentObjects.push_back(transparentObj);
 				continue;
 			}
 
@@ -1067,14 +1051,6 @@ void Renderer::BuildIndirectCommands()
 			if (it != m_EntityMaterialIndices.end()) {
 				materialIndex = it->second;
 			}
-
-			// Build model matrix
-			glm::mat4 modelMatrix = glm::mat4(1.0f);
-			modelMatrix = glm::translate(modelMatrix, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
-			glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
-			rotQuat = glm::normalize(rotQuat);
-			modelMatrix *= glm::mat4_cast(rotQuat);
-			modelMatrix = glm::scale(modelMatrix, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
 
 			// Get mesh handle from MeshManager using the stored registered mesh ID
 			MeshHandle meshHandle = m_MeshManager.GetMeshHandle(mesh.registeredMeshID);
@@ -1099,6 +1075,11 @@ void Renderer::BuildIndirectCommands()
 			info.materialIndex = materialIndex;
 			info.aabbMax = glm::vec3(1.0f);
 			info.entityID = entity;
+			// Primitives never use skinning
+			info.flags = 0;
+			info._pad[0] = 0;
+			info._pad[1] = 0;
+			info._pad[2] = 0;
 			drawInfos.push_back(info);
 		}
 	}
@@ -1112,9 +1093,6 @@ void Renderer::BuildIndirectCommands()
 			commands.data(),
 			GL_DYNAMIC_DRAW);
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-
-		EE_CORE_INFO("Renderer: Uploaded {} draw commands ({} bytes) to Draw Commands SSBO",
-			commands.size(), commandsBufferSize);
 	}
 
 	// Upload draw info to GPU (Draw Info SSBO)
@@ -1126,9 +1104,6 @@ void Renderer::BuildIndirectCommands()
 			drawInfos.data(),
 			GL_DYNAMIC_DRAW);
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-
-		EE_CORE_INFO("Renderer: Uploaded {} draw infos ({} bytes) to Draw Info SSBO",
-			drawInfos.size(), drawInfoBufferSize);
 	}
 }
 
@@ -3504,8 +3479,32 @@ void Renderer::CompileMaterials()
 			continue;
 		}
 
-		// New material - add to compiled list
+		// New material - register textures and assign indices
 		uint32_t materialIndex = static_cast<uint32_t>(m_CompiledMaterials.size());
+
+		// Register all textures used by this material
+		const std::vector<std::string> textureTypes = {
+			"materialAlbedoMap",
+			"materialNormalMap",
+			"materialRoughnessMap",
+			"materialMetallicMap",
+			"materialAoMap",
+			"materialEmissiveMap"
+		};
+
+		for (const auto& texName : textureTypes)
+		{
+			if (auto texture = material->GetTexture(texName))
+			{
+				int textureIndex = RegisterTexture(texture);
+				if (textureIndex >= 0)
+				{
+					material->SetTextureArrayIndex(texName, textureIndex);
+				}
+			}
+		}
+
+		// Add material data to compiled list
 		m_CompiledMaterials.push_back(material->GetSSBOData());
 
 		// Store the mapping
@@ -3515,6 +3514,9 @@ void Renderer::CompileMaterials()
 		// Update the material with its index
 		material->SetMaterialIndex(static_cast<int>(materialIndex));
 	}
+
+	// Build the texture array
+	BuildTextureArray();
 
 	// Upload all materials to GPU
 	UploadMaterialsToGPU();
@@ -3582,4 +3584,128 @@ void Renderer::UploadMaterialsToGPU()
 
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 	glCheckError();
+}
+
+/**
+ * @brief Registers a texture in the global texture array.
+ * @param texture Shared pointer to the texture.
+ * @return The index of the texture in the array, or -1 if registration failed.
+ */
+int Renderer::RegisterTexture(std::shared_ptr<Texture> texture)
+{
+	if (!texture || !texture->IsValid())
+	{
+		return -1;
+	}
+
+	GLuint textureID = texture->GetRendererID();
+	std::string filePath = texture->GetFilePath();
+
+	// Check if texture is already registered by ID
+	auto idIt = m_TextureIDToIndex.find(textureID);
+	if (idIt != m_TextureIDToIndex.end())
+	{
+		return idIt->second;
+	}
+
+	// Check if texture is already registered by path
+	auto pathIt = m_TexturePathToIndex.find(filePath);
+	if (pathIt != m_TexturePathToIndex.end())
+	{
+		return pathIt->second;
+	}
+
+	// Register new texture
+	int index = static_cast<int>(m_TextureArray.size());
+	m_TextureArray.push_back(textureID);
+	m_TextureIDToIndex[textureID] = index;
+	if (!filePath.empty())
+	{
+		m_TexturePathToIndex[filePath] = index;
+	}
+
+	m_TextureArrayDirty = true;
+
+	EE_CORE_INFO("Registered texture '{0}' at index {1}", filePath, index);
+	return index;
+}
+
+/**
+ * @brief Gets the texture array index for a given texture ID.
+ * @param textureID The OpenGL texture ID.
+ * @return The array index, or -1 if not found.
+ */
+int Renderer::GetTextureArrayIndex(GLuint textureID) const
+{
+	auto it = m_TextureIDToIndex.find(textureID);
+	return it != m_TextureIDToIndex.end() ? it->second : -1;
+}
+
+/**
+ * @brief Builds the bindless texture array SSBO.
+ * This should be called after all textures are registered and before rendering.
+ */
+void Renderer::BuildTextureArray()
+{
+	if (!m_TextureArrayDirty || m_TextureArray.empty())
+	{
+		return;
+	}
+
+	EE_CORE_INFO("Building bindless texture array with {0} textures...", m_TextureArray.size());
+
+	// Create texture array SSBO if it doesn't exist
+	if (!m_TextureArraySSBO)
+	{
+		glGenBuffers(1, &m_TextureArraySSBO);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_TextureArraySSBO);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, TextureArrayBindingPoint, m_TextureArraySSBO);
+		EE_CORE_INFO("Created Texture Array SSBO at binding point {0}", TextureArrayBindingPoint);
+	}
+	else
+	{
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_TextureArraySSBO);
+	}
+
+	// Create bindless texture handles for all textures
+	std::vector<GLuint64> textureHandles;
+	textureHandles.reserve(m_TextureArray.size());
+
+	for (GLuint textureID : m_TextureArray)
+	{
+		// Get bindless handle for this texture
+		GLuint64 handle = glGetTextureHandleARB(textureID);
+		if (handle == 0)
+		{
+			EE_CORE_ERROR("Failed to get bindless texture handle for texture ID {0}", textureID);
+			textureHandles.push_back(0);
+			continue;
+		}
+
+		// Make the handle resident (accessible in shaders)
+		if (!glIsTextureHandleResidentARB(handle))
+		{
+			glMakeTextureHandleResidentARB(handle);
+		}
+
+		textureHandles.push_back(handle);
+	}
+
+	// Upload texture handles to SSBO
+	const size_t totalSize = textureHandles.size() * sizeof(GLuint64);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, totalSize, textureHandles.data(), GL_STATIC_DRAW);
+
+	GLenum error = glGetError();
+	if (error != GL_NO_ERROR)
+	{
+		EE_CORE_ERROR("Failed to upload texture array to GPU, error: {0}", error);
+	}
+	else
+	{
+		EE_CORE_INFO("Uploaded {0} texture handles ({1} bytes) to GPU",
+			textureHandles.size(), totalSize);
+	}
+
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+	m_TextureArrayDirty = false;
 }

@@ -73,7 +73,6 @@ namespace Ermine::graphics {
         // Getters for rendering (SSBOs)
         GLuint GetVertexSSBO() const { return m_VertexSSBO; }
         GLuint GetSkinnedVertexSSBO() const { return m_SkinnedVertexSSBO; }
-        GLuint GetIndexSSBO() const { return m_IndexSSBO; }
         GLuint GetIndirectBuffer() const { return m_IndirectBuffer.bufferID; }
         const IndirectDrawBuffer& GetIndirectBufferInfo() const { return m_IndirectBuffer; }
         size_t GetMeshCount() const { return m_LoadedMeshes.size(); }
@@ -85,6 +84,7 @@ namespace Ermine::graphics {
         // Public SSBO handles for Renderer access
         GLuint m_DrawCommandsSSBO = 0;    // Binding 2 - Draw commands
         GLuint m_DrawInfoSSBO = 0;        // Binding 3 - Draw info (per-draw data)
+        GLuint m_IndexSSBO = 0;           // Binding 1 - All indices
 
     private:
         void CreateBuffers();
@@ -94,6 +94,7 @@ namespace Ermine::graphics {
         static constexpr GLuint INDEX_SSBO_BINDING = 1;
         static constexpr GLuint DRAW_COMMANDS_SSBO_BINDING = 2;
         static constexpr GLuint DRAW_INFO_SSBO_BINDING = 3;
+		static constexpr GLuint SKINNED_VERTEX_SSBO_BINDING = 4;
 
         // Mesh registry
         std::vector<MeshSubset> m_LoadedMeshes;
@@ -102,7 +103,6 @@ namespace Ermine::graphics {
         // OpenGL SSBO buffers (no VAOs needed for SSBO-based rendering)
         GLuint m_VertexSSBO = 0;          // Binding 0 - All vertices
         GLuint m_SkinnedVertexSSBO = 0;   // Separate SSBO for skinned vertices (optional)
-        GLuint m_IndexSSBO = 0;           // Binding 1 - All indices
 
         IndirectDrawBuffer m_IndirectBuffer;  // Draw commands buffer metadata
 
