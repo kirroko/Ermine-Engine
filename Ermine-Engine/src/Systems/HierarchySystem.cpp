@@ -34,30 +34,124 @@ namespace Ermine
     }
 
     /**
+     * @brief Decomposes a 4x4 matrix into position, rotation, and scale components.
+     * @param[in] matrix The matrix to decompose.
+     * @param[out] position The extracted position.
+     * @param[out] rotation The extracted rotation as quaternion.
+     * @param[out] scale The extracted scale.
+    */
+    void HierarchySystem::DecomposeMatrix(const Mtx44& matrix, Vec3& position, Quaternion& rotation, Vec3& scale)
+    {
+        // Extract position (translation) from the last column
+        position.x = matrix.m03;
+        position.y = matrix.m13;
+        position.z = matrix.m23;
+
+        // Extract scale from the lengths of the first three columns
+        Vec3 col0(matrix.m00, matrix.m10, matrix.m20);
+        Vec3 col1(matrix.m01, matrix.m11, matrix.m21);
+        Vec3 col2(matrix.m02, matrix.m12, matrix.m22);
+
+        scale.x = Vec3Length(col0);
+        scale.y = Vec3Length(col1);
+        scale.z = Vec3Length(col2);
+
+        // Handle negative determinant (reflection)
+        float det = matrix.m00 * (matrix.m11 * matrix.m22 - matrix.m12 * matrix.m21) -
+            matrix.m01 * (matrix.m10 * matrix.m22 - matrix.m12 * matrix.m20) +
+            matrix.m02 * (matrix.m10 * matrix.m21 - matrix.m11 * matrix.m20);
+
+        if (det < 0.0f) {
+            scale.x = -scale.x;
+        }
+
+        // Create rotation matrix by normalizing the columns
+        if (scale.x != 0.0f && scale.y != 0.0f && scale.z != 0.0f) {
+            Mtx44 rotMatrix;
+            Mtx44Identity(rotMatrix);
+
+            rotMatrix.m00 = col0.x / scale.x; rotMatrix.m01 = col1.x / scale.y; rotMatrix.m02 = col2.x / scale.z;
+            rotMatrix.m10 = col0.y / scale.x; rotMatrix.m11 = col1.y / scale.y; rotMatrix.m12 = col2.y / scale.z;
+            rotMatrix.m20 = col0.z / scale.x; rotMatrix.m21 = col1.z / scale.y; rotMatrix.m22 = col2.z / scale.z;
+
+            // Convert rotation matrix to quaternion
+            rotation = Mtx44GetQuaternion(rotMatrix);
+        }
+        else {
+            // Identity rotation if scale is zero
+            rotation = Quaternion(0.0f, 0.0f, 0.0f, 1.0f);
+        }
+    }
+
+    /**
      * @brief Sets the parent of an entity, updating hierarchy and depth.
      * @param[in] child The entity to set the parent for.
      * @param[in] parent The entity to set as parent.
-    */
-    void HierarchySystem::SetParent(EntityID child, EntityID parent)
+     * @param[in] preserveWorldTransform Whether to preserve world transform during reparenting.
+     */
+    void HierarchySystem::SetParent(EntityID child, EntityID parent, bool preserveWorldTransform)
     {
         if (!ECS::GetInstance().IsEntityValid(child) || !ECS::GetInstance().IsEntityValid(parent))
             return;
 
         if (WouldCreateCycle(child, parent))
-            return; // Prevent cycles
+            return;
 
+        // Get references to components - PROPERLY INITIALIZED
         auto& childHierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(child);
         auto& parentHierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(parent);
+        auto& childTransform = ECS::GetInstance().GetComponent<Transform>(child);
 
-        if (childHierarchy.parent != 0)
-            UnsetParent(child);
+        Mtx44 childWorldMatrix;
+        if (preserveWorldTransform) {
+            // Get current world matrix before changing parent
+            if (ECS::GetInstance().HasComponent<GlobalTransform>(child)) {
+                childWorldMatrix = ECS::GetInstance().GetComponent<GlobalTransform>(child).worldMatrix;
+            }
+            else {
+                childWorldMatrix = childTransform.GetLocalMatrix();
+            }
+        }
 
+        // Remove from old parent if exists (this will preserve world position)
+        if (childHierarchy.parent != 0) {
+            UnsetParent(child); // This already preserves world position
+        }
+
+        // Set new parent relationship
         childHierarchy.parent = parent;
         childHierarchy.depth = parentHierarchy.depth + 1;
         childHierarchy.isDirty = true;
         parentHierarchy.children.push_back(child);
-        
-        // IMPORTANT: Ensure child transforms are updated when parenting changes
+
+        if (preserveWorldTransform) {
+            // Get parent's world matrix
+            Mtx44 parentWorldMatrix;
+            if (ECS::GetInstance().HasComponent<GlobalTransform>(parent)) {
+                parentWorldMatrix = ECS::GetInstance().GetComponent<GlobalTransform>(parent).worldMatrix;
+            }
+            else {
+                auto& parentTransform = ECS::GetInstance().GetComponent<Transform>(parent);
+                parentWorldMatrix = parentTransform.GetLocalMatrix();
+            }
+
+            // Calculate: LocalMatrix = ParentWorldMatrix^-1 * ChildWorldMatrix
+            Mtx44 parentInverse;
+            if (Mtx44Inverse(parentInverse, parentWorldMatrix)) {
+                Mtx44 newLocalMatrix = parentInverse * childWorldMatrix;
+
+                // Extract position, rotation, scale from the new local matrix
+                DecomposeMatrix(newLocalMatrix, childTransform.position, childTransform.rotation, childTransform.scale);
+
+                EE_CORE_INFO("=== REPARENTING ENTITY {} to PARENT {} ===", child, parent);
+                EE_CORE_INFO("New local position: ({:.3f}, {:.3f}, {:.3f})",
+                    childTransform.position.x, childTransform.position.y, childTransform.position.z);
+            }
+            else {
+                EE_CORE_WARN("Failed to invert parent matrix during reparenting");
+            }
+        }
+
         MarkDirty(child);
     }
 
@@ -71,9 +165,21 @@ namespace Ermine
             return;
 
         auto& childHierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(child);
+        auto& childTransform = ECS::GetInstance().GetComponent<Transform>(child);
 
         if (childHierarchy.parent != 0)
         {
+            // UNITY-STYLE FIX: Preserve world position when unparenting
+            // 1. Get current world position/rotation/scale before unparenting
+            Vec3 worldPosition = GetWorldPosition(child);
+            Quaternion worldRotation = GetWorldRotation(child);
+            Vec3 worldScale = GetWorldScale(child);
+
+            EE_CORE_INFO("=== UNPARENTING ENTITY {} ===", child);
+            EE_CORE_INFO("Preserving world position: ({:.3f}, {:.3f}, {:.3f})",
+                         worldPosition.x, worldPosition.y, worldPosition.z);
+
+            // 2. Remove parent relationship
             auto& parentHierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(childHierarchy.parent);
             auto it = std::find(parentHierarchy.children.begin(), parentHierarchy.children.end(), child);
             if (it != parentHierarchy.children.end())
@@ -82,8 +188,18 @@ namespace Ermine
             childHierarchy.parent = 0;
             childHierarchy.depth = 0;
             childHierarchy.isDirty = true;
-            
-            // IMPORTANT: Update transforms when unparenting
+
+            // 3. CRITICAL: Set local transform to maintain world position
+            // Since this entity is now a root (no parent), local = world
+            childTransform.position = worldPosition;
+            childTransform.rotation = worldRotation;
+            childTransform.scale = worldScale;
+
+            EE_CORE_INFO("Set new local position: ({:.3f}, {:.3f}, {:.3f})", 
+                         childTransform.position.x, childTransform.position.y, childTransform.position.z);
+            EE_CORE_INFO("Entity {} is now a root entity", child);
+
+            // Update transforms
             MarkDirty(child);
         }
     }

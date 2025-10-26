@@ -428,6 +428,7 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClCompile Include="src\dllmain.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="FIX_PARENTING_POSITION.md" />
     <None Include="include\Component.tpp" />
     <None Include="include\ECS.tpp" />
     <None Include="include\MathUtils.tpp" />

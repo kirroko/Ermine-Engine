@@ -29,11 +29,22 @@ namespace Ermine
         bool WouldCreateCycle(EntityID child, EntityID parent) const;
 
         /**
+         * @brief Decomposes a 4x4 matrix into position, rotation, and scale components.
+         * @param[in] matrix The matrix to decompose.
+         * @param[out] position The extracted position.
+         * @param[out] rotation The extracted rotation as quaternion.
+         * @param[out] scale The extracted scale.
+        */
+        void DecomposeMatrix(const Mtx44& matrix, Vec3& position, Quaternion& rotation, Vec3& scale);
+
+
+        /**
          * @brief Sets the parent of an entity, updating hierarchy and depth.
          * @param[in] child The entity to set the parent for.
          * @param[in] parent The entity to set as parent.
+         * @param[in] preserveWorldTransform Whether to preserve world transform during reparenting.
         */
-        void SetParent(EntityID child, EntityID parent);
+        void SetParent(EntityID child, EntityID parent, bool preserveWorldTransform = true);
 
         /**
          * @brief Removes the parent of an entity, updating hierarchy and depth.
