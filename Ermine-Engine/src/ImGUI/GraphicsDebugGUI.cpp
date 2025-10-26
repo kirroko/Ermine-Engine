@@ -264,6 +264,7 @@ void GraphicsDebugGUI::DrawMaterialControls()
                     albedoColor[2] = albedoParam->floatValues[2];
                 }
 
+                // Only log on mouse release (when user finishes editing)
                 if (ImGui::ColorEdit3("Color", albedoColor))
                 {
                     material->SetVec3("materialAlbedo", Vec3(albedoColor[0], albedoColor[1], albedoColor[2]));
@@ -277,14 +278,28 @@ void GraphicsDebugGUI::DrawMaterialControls()
             // === MATERIAL PROPERTIES ===
             if (ImGui::TreeNodeEx("Material Properties", ImGuiTreeNodeFlags_DefaultOpen))
             {
-                // Roughness
+                // Track previous values to detect actual changes
+                static std::map<EntityID, float> previousRoughnessMap;
+                static std::map<EntityID, float> previousMetallicMap;
+                static std::map<EntityID, float> previousAoMap;
+
+                // Initialize if not present
                 auto roughnessParam = material->GetParameter("materialRoughness");
                 float roughness = roughnessParam ? roughnessParam->floatValues[0] : 0.5f;
+
+                if (previousRoughnessMap.find(selectedEntity) == previousRoughnessMap.end()) {
+                    previousRoughnessMap[selectedEntity] = roughness;
+                }
 
                 if (ImGui::SliderFloat("Roughness", &roughness, 0.0f, 1.0f, "%.3f"))
                 {
                     material->SetFloat("materialRoughness", roughness);
                     materialChanged = true;
+
+                    // Only log when value actually changed
+                    if (std::abs(previousRoughnessMap[selectedEntity] - roughness) > 0.001f) {
+                        previousRoughnessMap[selectedEntity] = roughness;
+                    }
                 }
                 DrawTooltip("Surface roughness (0 = smooth/reflective, 1 = rough/diffuse)");
 
@@ -292,10 +307,18 @@ void GraphicsDebugGUI::DrawMaterialControls()
                 auto metallicParam = material->GetParameter("materialMetallic");
                 float metallic = metallicParam ? metallicParam->floatValues[0] : 0.0f;
 
+                if (previousMetallicMap.find(selectedEntity) == previousMetallicMap.end()) {
+                    previousMetallicMap[selectedEntity] = metallic;
+                }
+
                 if (ImGui::SliderFloat("Metallic", &metallic, 0.0f, 1.0f, "%.3f"))
                 {
                     material->SetFloat("materialMetallic", metallic);
                     materialChanged = true;
+
+                    if (std::abs(previousMetallicMap[selectedEntity] - metallic) > 0.001f) {
+                        previousMetallicMap[selectedEntity] = metallic;
+                    }
                 }
                 DrawTooltip("Metallic property (0 = dielectric, 1 = metal)");
 
@@ -303,10 +326,18 @@ void GraphicsDebugGUI::DrawMaterialControls()
                 auto aoParam = material->GetParameter("materialAo");
                 float ao = aoParam ? aoParam->floatValues[0] : 1.0f;
 
+                if (previousAoMap.find(selectedEntity) == previousAoMap.end()) {
+                    previousAoMap[selectedEntity] = ao;
+                }
+
                 if (ImGui::SliderFloat("Ambient Occlusion", &ao, 0.0f, 1.0f, "%.3f"))
                 {
                     material->SetFloat("materialAo", ao);
                     materialChanged = true;
+
+                    if (std::abs(previousAoMap[selectedEntity] - ao) > 0.001f) {
+                        previousAoMap[selectedEntity] = ao;
+                    }
                 }
                 DrawTooltip("Ambient occlusion factor (1 = no occlusion, 0 = fully occluded)");
 
@@ -332,13 +363,22 @@ void GraphicsDebugGUI::DrawMaterialControls()
                 }
                 DrawTooltip("Self-illumination color for glowing effects");
 
+                static std::map<EntityID, float> previousEmissiveIntensityMap;
                 auto emissiveIntensityParam = material->GetParameter("materialEmissiveIntensity");
                 float emissiveIntensity = emissiveIntensityParam ? emissiveIntensityParam->floatValues[0] : 1.0f;
+
+                if (previousEmissiveIntensityMap.find(selectedEntity) == previousEmissiveIntensityMap.end()) {
+                    previousEmissiveIntensityMap[selectedEntity] = emissiveIntensity;
+                }
 
                 if (ImGui::SliderFloat("Intensity", &emissiveIntensity, 0.0f, 10.0f, "%.2f"))
                 {
                     material->SetFloat("materialEmissiveIntensity", emissiveIntensity);
                     materialChanged = true;
+
+                    if (std::abs(previousEmissiveIntensityMap[selectedEntity] - emissiveIntensity) > 0.01f) {
+                        previousEmissiveIntensityMap[selectedEntity] = emissiveIntensity;
+                    }
                 }
                 DrawTooltip("Brightness multiplier for emissive color");
 
@@ -368,12 +408,131 @@ void GraphicsDebugGUI::DrawMaterialControls()
                 }
                 DrawTooltip("Offset texture coordinates (scrolling)");
 
-                // Quick presets
                 ImGui::Separator();
+
+                // === ANIMATED UV OFFSET ===
+                ImGui::Text("UV Animation");
+
+                // Use a map to store animation state per entity
+                static std::map<EntityID, bool> animateOffsetMap;
+                static std::map<EntityID, float[2]> animSpeedMap;
+
+                // Initialize if not present
+                if (animateOffsetMap.find(selectedEntity) == animateOffsetMap.end()) {
+                    animateOffsetMap[selectedEntity] = false;
+                    animSpeedMap[selectedEntity][0] = 0.1f;
+                    animSpeedMap[selectedEntity][1] = 0.0f;
+                }
+
+                bool& animateOffset = animateOffsetMap[selectedEntity];
+                float* animSpeed = animSpeedMap[selectedEntity];
+
+                if (ImGui::Checkbox("Animate UV Offset", &animateOffset))
+                {
+                    // Only log when toggling
+                    if (!animateOffset) {
+                        EE_CORE_INFO("UV offset animation disabled for Entity {0}", selectedEntity);
+                    }
+                    else {
+                        EE_CORE_INFO("UV offset animation enabled for Entity {0}", selectedEntity);
+                    }
+                }
+                DrawTooltip("Enable automatic UV offset animation for scrolling/flowing effects");
+
+                if (animateOffset)
+                {
+                    ImGui::Indent(10.0f);
+
+                    // Track previous speed to only log when changed by user
+                    static std::map<EntityID, std::pair<float, float>> previousSpeedMap;
+                    if (previousSpeedMap.find(selectedEntity) == previousSpeedMap.end()) {
+                        previousSpeedMap[selectedEntity] = { animSpeed[0], animSpeed[1] };
+                    }
+
+                    if (ImGui::DragFloat2("Animation Speed (U, V)", animSpeed, 0.01f, -5.0f, 5.0f, "%.2f"))
+                    {
+                        // Only log when user actually changes the speed
+                        if (std::abs(previousSpeedMap[selectedEntity].first - animSpeed[0]) > 0.001f ||
+                            std::abs(previousSpeedMap[selectedEntity].second - animSpeed[1]) > 0.001f) {
+                            previousSpeedMap[selectedEntity] = { animSpeed[0], animSpeed[1] };
+                        }
+                    }
+                    DrawTooltip("Animation speed in texture units per second\nU = Horizontal, V = Vertical\nNegative values reverse direction");
+
+                    ImGui::Spacing();
+
+                    // Quick preset buttons - no logging
+                    if (ImGui::Button("Scroll Right"))
+                    {
+                        animSpeed[0] = 0.2f;
+                        animSpeed[1] = 0.0f;
+                        previousSpeedMap[selectedEntity] = { animSpeed[0], animSpeed[1] };
+                    }
+                    ImGui::SameLine();
+                    if (ImGui::Button("Scroll Left"))
+                    {
+                        animSpeed[0] = -0.2f;
+                        animSpeed[1] = 0.0f;
+                        previousSpeedMap[selectedEntity] = { animSpeed[0], animSpeed[1] };
+                    }
+
+                    if (ImGui::Button("Scroll Up"))
+                    {
+                        animSpeed[0] = 0.0f;
+                        animSpeed[1] = 0.2f;
+                        previousSpeedMap[selectedEntity] = { animSpeed[0], animSpeed[1] };
+                    }
+                    ImGui::SameLine();
+                    if (ImGui::Button("Scroll Down"))
+                    {
+                        animSpeed[0] = 0.0f;
+                        animSpeed[1] = -0.2f;
+                        previousSpeedMap[selectedEntity] = { animSpeed[0], animSpeed[1] };
+                    }
+
+                    if (ImGui::Button("Diagonal"))
+                    {
+                        animSpeed[0] = 0.15f;
+                        animSpeed[1] = 0.15f;
+                        previousSpeedMap[selectedEntity] = { animSpeed[0], animSpeed[1] };
+                    }
+                    ImGui::SameLine();
+                    if (ImGui::Button("Stop##Anim"))
+                    {
+                        animSpeed[0] = 0.0f;
+                        animSpeed[1] = 0.0f;
+                        previousSpeedMap[selectedEntity] = { animSpeed[0], animSpeed[1] };
+                    }
+
+                    ImGui::Spacing();
+                    ImGui::TextColored(ImVec4(0.5f, 1.0f, 0.5f, 1.0f), "Animation Active");
+
+                    // Apply animation(runs every frame)
+                    float deltaTime = Ermine::FrameController::GetDeltaTime();
+                    Vec2 newOffset = material->GetUVOffset();
+                    newOffset.x += animSpeed[0] * deltaTime;
+                    newOffset.y += animSpeed[1] * deltaTime;
+
+                    // Wrap offset to keep values reasonable
+                    if (newOffset.x > 100.0f) newOffset.x -= 100.0f;
+                    if (newOffset.x < -100.0f) newOffset.x += 100.0f;
+                    if (newOffset.y > 100.0f) newOffset.y -= 100.0f;
+                    if (newOffset.y < -100.0f) newOffset.y += 100.0f;
+
+                    material->SetUVOffset(newOffset);
+                    materialChanged = true;
+
+                    ImGui::Unindent(10.0f);
+                }
+
+                ImGui::Separator();
+
+                // Quick presets - no logging
                 if (ImGui::Button("Reset UV"))
                 {
                     material->SetUVScale(Vec2(1.0f, 1.0f));
                     material->SetUVOffset(Vec2(0.0f, 0.0f));
+                    animateOffset = false;
                     materialChanged = true;
                 }
                 ImGui::SameLine();
@@ -395,12 +554,17 @@ void GraphicsDebugGUI::DrawMaterialControls()
             // === TRANSPARENCY ===
             if (ImGui::TreeNode("Transparency"))
             {
+                static std::map<EntityID, float> previousAlphaMap;
                 auto albedoParam = material->GetParameter("materialAlbedo");
                 float alpha = 1.0f;
 
                 if (albedoParam && albedoParam->type == MaterialParamType::VEC4 &&
                     albedoParam->floatValues.size() >= 4) {
                     alpha = albedoParam->floatValues[3];
+                }
+
+                if (previousAlphaMap.find(selectedEntity) == previousAlphaMap.end()) {
+                    previousAlphaMap[selectedEntity] = alpha;
                 }
 
                 if (ImGui::SliderFloat("Alpha", &alpha, 0.0f, 1.0f, "%.3f"))
@@ -416,6 +580,10 @@ void GraphicsDebugGUI::DrawMaterialControls()
                     // Update as Vec4
                     material->SetVec4("materialAlbedo", Vec4(rgb.x, rgb.y, rgb.z, alpha));
                     materialChanged = true;
+
+                    if (std::abs(previousAlphaMap[selectedEntity] - alpha) > 0.001f) {
+                        previousAlphaMap[selectedEntity] = alpha;
+                    }
                 }
                 DrawTooltip("Material transparency (0 = transparent, 1 = opaque)");
 
@@ -428,10 +596,8 @@ void GraphicsDebugGUI::DrawMaterialControls()
                 // Get updated SSBO data
                 auto ssboData = material->GetSSBOData();
 
-                // Upload to GPU
+                // Upload to GPU 
                 renderer->UpdateMaterialSSBO(ssboData, materialIndex);
-
-                EE_CORE_INFO("Material updated for Entity {0}", selectedEntity);
             }
 
             ImGui::Separator();

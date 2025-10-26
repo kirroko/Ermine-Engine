@@ -2024,7 +2024,6 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 						std::shared_ptr<Texture> albedo = material->GetParameter("materialAlbedoMap")->texture;
 						if (albedo && albedo->IsValid()) {
 							albedo->Bind(texUnit);
-							shader->SetUniform1i("materialAlbedoMap", texUnit);
 						}
 					}
 					texUnit++;
@@ -2453,7 +2452,6 @@ void Renderer::RenderForwardPass(const Mtx44& view, const Mtx44& projection)
 				std::shared_ptr<Texture> albedo = material->GetParameter("materialAlbedoMap")->texture;
 				if (albedo && albedo->IsValid()) {
 					albedo->Bind(texUnit);
-					shader->SetUniform1i("materialAlbedoMap", texUnit);
 				}
 			}
 			texUnit++;
