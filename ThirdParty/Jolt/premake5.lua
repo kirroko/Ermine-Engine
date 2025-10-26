@@ -3,10 +3,10 @@ project "Jolt"
     language "C++"
     cppdialect "C++17"
 
-    -- Match engine’s dynamic CRT to avoid LNK2038/LNK4098
+    
     staticruntime "off"
 
-    buildoptions { "/bigobj", "/MP" } -- Jolt requires this flag on MSVC (bigobj)
+    buildoptions { "/bigobj", "/MP" }
 
     targetdir ("../../Build/bin/" .. outputdir .. "/Ermine-Editor/Jolt")
     objdir ("../../Build/obj/" .. outputdir .. "/Ermine-Editor/Jolt")
@@ -21,6 +21,8 @@ project "Jolt"
     {
         "../"
     }
+
+    defines {"JPH_DEBUG_RENDERER","JPH_USE_SUBMERGENCE" }
 
     filter "configurations:*Debug"
         targetname "joltD"

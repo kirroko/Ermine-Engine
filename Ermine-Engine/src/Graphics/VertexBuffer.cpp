@@ -25,6 +25,10 @@ VertexBuffer::VertexBuffer(const void* data, unsigned int size)
     m_Size = size;
     GPUProfiler::TrackMemoryAllocation(size, "Buffer");
     glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW); // usage is static draw because the data will not change, unless we are using dynamic draw
+
+    // Store CPU-side copy
+    m_Data.resize(size / sizeof(float));
+    std::memcpy(m_Data.data(), data, size);
 }
 
 VertexBuffer::~VertexBuffer()

@@ -13,18 +13,41 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #include "PreCompile.h"
 #include "FSMEditor.h"
+#include "FiniteStateMachine.h"
 
 namespace Ermine
 {
-    void FSMEditorImGUI::InitializeDefaultNodes()
+    std::deque<std::shared_ptr<ScriptNode>>& FSMEditorImGUI::GetNodesForEntity(EntityID entity)
     {
-        m_nodes = {
-        {1, "Idle", &g_IdleState},
-        {2, "Roam", &g_RoamState},
-        {3, "Attack", &g_AttackState},
-        {4, "Dead", &g_DeadState},
-        };
-        m_nextNodeId = 5;
+        if (!ECS::GetInstance().HasComponent<StateMachine>(entity))
+            ECS::GetInstance().AddComponent(entity, StateMachine());
+        return ECS::GetInstance().GetComponent<StateMachine>(entity).m_Nodes;
+    }
+
+    const std::deque<std::shared_ptr<ScriptNode>>& FSMEditorImGUI::GetNodesForEntity(EntityID entity) const
+    {
+        static const std::deque<std::shared_ptr<ScriptNode>> empty;
+        if (!ECS::GetInstance().HasComponent<StateMachine>(entity))
+            return empty;
+        return ECS::GetInstance().GetComponent<StateMachine>(entity).m_Nodes;
+    }
+
+    void FSMEditorImGUI::CreateNode(const std::string& name)
+    {
+        if (m_SelectedEntity == 0)
+            return;
+
+        if (!ECS::GetInstance().HasComponent<StateMachine>(m_SelectedEntity))
+            ECS::GetInstance().AddComponent(m_SelectedEntity, StateMachine());
+
+        auto& fsm = ECS::GetInstance().GetComponent<StateMachine>(m_SelectedEntity);
+
+        auto node = std::make_shared<ScriptNode>();
+        node->id = m_nextNodeId++;
+        node->name = name;
+        node->isAttached = false;
+        node->scriptClassName = "";
+        fsm.m_Nodes.push_back(node);
     }
 
     void FSMEditorImGUI::Render()
@@ -44,40 +67,140 @@ namespace Ermine
             return;
         }
 
-        auto& fsm = ECS::GetInstance().GetComponent<StateMachine>(m_SelectedEntity);
-
-        // Initialize if empty
-        if (m_nodes.empty())
-            InitializeDefaultNodes();
-
-        // (Optional) sync m_links from fsm.transitions
-        m_links.clear();
-        for (auto& [fromState, toState] : fsm.transitions)
+        if (!ECS::GetInstance().HasComponent<StateMachine>(m_SelectedEntity))
         {
-            int fromId = -1, toId = -1;
-            for (auto& node : m_nodes)
-            {
-                if (node.statePtr == fromState) fromId = node.id;
-                if (node.statePtr == toState)   toId = node.id;
-            }
-            if (fromId != -1 && toId != -1)
-                m_links.emplace_back(fromId, toId);
+            ImGui::Text("Entity has no StateMachine component.");
+            ImGui::End();
+            return;
         }
 
-        // Draw editor
-        ImNodes::BeginNodeEditor();
-        for (auto& node : m_nodes)
+        auto& fsm = ECS::GetInstance().GetComponent<StateMachine>(m_SelectedEntity);
+
+        ImGui::InputText("New Node Name", m_newNodeName, IM_ARRAYSIZE(m_newNodeName));
+        ImGui::SameLine();
+        if (ImGui::Button("Add Node"))
         {
-            ImNodes::BeginNode(node.id);
+            if (strlen(m_newNodeName) > 0)
+            {
+                CreateNode(m_newNodeName);
+                m_newNodeName[0] = '\0';
+            }
+        }
+        ImGui::Separator();
+
+        // Draw editor nodes and links
+        ImNodes::BeginNodeEditor();
+
+        for (auto& nodePtr : fsm.m_Nodes)
+        {
+            auto& snode = *nodePtr;
+            ImNodes::BeginNode(snode.id);
             ImNodes::BeginNodeTitleBar();
-            ImGui::TextUnformatted(node.name.c_str());
+            ImGui::TextUnformatted(snode.name.c_str());
             ImNodes::EndNodeTitleBar();
 
-            ImNodes::BeginInputAttribute(node.id * 10 + 1);
+            // Attach script UI
+            if (snode.isAttached)
+            {
+                ImGui::Text("Script: %s", snode.scriptClassName.c_str());
+                ImGui::SameLine();
+
+                if (ImGui::Button(("Remove##" + std::to_string(snode.id)).c_str()))
+                    ImGui::OpenPopup(("ConfirmRemoveScript" + std::to_string(snode.id)).c_str());
+
+                if (ImGui::BeginPopup(("ConfirmRemoveScript" + std::to_string(snode.id)).c_str()))
+                {
+                    ImGui::Text("Remove attached script?");
+                    if (ImGui::Button("Yes"))
+                    {
+                        nodesToDetachScript.push_back(snode.id);
+                        ImGui::CloseCurrentPopup();
+                    }
+                    ImGui::SameLine();
+                    if (ImGui::Button("Cancel"))
+                        ImGui::CloseCurrentPopup();
+                    ImGui::EndPopup();
+                }
+            }
+            else
+            {
+                if (ImGui::Button(("Attach Script##" + std::to_string(snode.id)).c_str()))
+                    ImGui::OpenPopup(("AttachScriptPopup" + std::to_string(snode.id)).c_str());
+            }
+
+            if (ImGui::BeginPopup(("AttachScriptPopup" + std::to_string(snode.id)).c_str()))
+            {
+                static char scriptName[128] = "";
+                ImGui::InputText("Class Name", scriptName, IM_ARRAYSIZE(scriptName));
+                if (ImGui::Button("Confirm"))
+                {
+                    snode.isAttached = true;
+                    snode.scriptClassName = scriptName;
+
+                    if (!snode.scriptClassName.empty())
+                    {
+                        // Create instance immediately
+                        snode.CreateInstance(m_SelectedEntity);
+                        //EE_CORE_INFO("FSMEditor: Attached script '%s' to node '%s' (entity %d)",
+                        //    snode.scriptClassName.c_str(), snode.name.c_str(), m_SelectedEntity);
+                    }
+
+                    ImGui::CloseCurrentPopup();
+                }
+
+                auto fsmManager = ECS::GetInstance().GetSystem<StateManager>();
+                if (fsmManager)
+                {
+                    fsmManager->Init(m_SelectedEntity, nullptr);
+                    //EE_CORE_INFO("FSMEditor: Ensured FSM manager assigned for entity %d", m_SelectedEntity);
+                }
+                else
+                {
+                    EE_CORE_WARN("FSMEditor: No StateManager system found when attaching script!");
+                }
+                ImGui::EndPopup();
+            }
+
+            // Delete node button
+            if (ImGui::Button(("Delete Node##" + std::to_string(snode.id)).c_str()))
+            {
+                ImGui::OpenPopup(("ConfirmDeleteNode" + std::to_string(snode.id)).c_str());
+            }
+
+            if (ImGui::BeginPopup(("ConfirmDeleteNode" + std::to_string(snode.id)).c_str()))
+            {
+                ImGui::Text("Delete node '%s'?", snode.name.c_str());
+                if (ImGui::Button("Yes"))
+                {
+                    nodesToDelete.push_back(snode.id);
+                    ImGui::CloseCurrentPopup();
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Cancel"))
+                    ImGui::CloseCurrentPopup();
+                ImGui::EndPopup();
+            }
+
+            bool wasStart = snode.isStartNode;
+            ImGui::Checkbox(("Start Node##" + std::to_string(snode.id)).c_str(), &snode.isStartNode);
+
+            // Ensure only one node is marked as start at a time
+            if (snode.isStartNode && !wasStart)
+            {
+                for (auto& otherNodePtr : fsm.m_Nodes)
+                {
+                    if (otherNodePtr->id != snode.id)
+                        otherNodePtr->isStartNode = false;
+                }
+
+                EE_CORE_INFO("FSMEditor: Node %d set as Start Node", snode.id);
+            }
+
+            ImNodes::BeginInputAttribute(snode.id * 10 + 1);
             ImGui::Text("In");
             ImNodes::EndInputAttribute();
 
-            ImNodes::BeginOutputAttribute(node.id * 10);
+            ImNodes::BeginOutputAttribute(snode.id * 10);
             ImGui::Text("Out");
             ImNodes::EndOutputAttribute();
 
@@ -85,30 +208,121 @@ namespace Ermine
         }
 
         int linkId = 1;
-        for (auto& link : m_links)
-            ImNodes::Link(linkId++, link.first * 10, link.second * 10 + 1);
+        for (auto& link : fsm.m_Links)
+            ImNodes::Link(linkId++, link.first, link.second);
+
         ImNodes::EndNodeEditor();
 
-        // Handle new link
+        if (!nodesToDetachScript.empty())
+        {
+            for (int id : nodesToDetachScript)
+            {
+                for (auto& n : fsm.m_Nodes)
+                {
+                    if (n->id == id)
+                    {
+                        if (n->instance) n->instance.reset();
+                        n->scriptClassName.clear();
+                        n->isAttached = false;
+                        break;
+                    }
+                }
+            }
+            nodesToDetachScript.clear();
+        }
+
+        if (!nodesToDelete.empty())
+        {
+            for (int deleteId : nodesToDelete)
+            {
+                // If the FSM is currently using this node, reset it
+                if (fsm.m_CurrentScript && fsm.m_CurrentScript->id == deleteId)
+                {
+                    EE_CORE_INFO("FSMEditor: Current active node (%d) deleted, resetting FSM state.", deleteId);
+
+                    fsm.m_CurrentScript = nullptr;
+
+                    // pick a new start node automatically
+                    for (auto& nodePtr : fsm.m_Nodes)
+                    {
+                        if (nodePtr->isStartNode)
+                        {
+                            fsm.m_CurrentScript = nodePtr.get();
+                            EE_CORE_INFO("FSMEditor: Reassigned to new start node: %s (id=%d)",
+                                nodePtr->name.c_str(), nodePtr->id);
+                            break;
+                        }
+                    }
+
+                    // If none are marked as start, fallback to first node
+                    if (!fsm.m_CurrentScript && !fsm.m_Nodes.empty())
+                    {
+                        fsm.m_CurrentScript = fsm.m_Nodes.front().get();
+                        fsm.m_CurrentScript->isStartNode = true;
+                        EE_CORE_INFO("FSMEditor: Fallback start node assigned: %s (id=%d)",
+                            fsm.m_CurrentScript->name.c_str(), fsm.m_CurrentScript->id);
+                    }
+                }
+
+                // Remove all links referencing this node
+                fsm.m_Links.erase(std::remove_if(fsm.m_Links.begin(), fsm.m_Links.end(),
+                    [&](const std::pair<int, int>& link)
+                    {
+                        int fromId = link.first / 10;
+                        int toId = (link.second - 1) / 10;
+                        return fromId == deleteId || toId == deleteId;
+                    }),
+                    fsm.m_Links.end());
+
+                // Remove transitions referencing this node
+                for (auto it = fsm.scriptTransitions.begin(); it != fsm.scriptTransitions.end();)
+                {
+                    if ((it->first && it->first->id == deleteId) ||
+                        (it->second && it->second->id == deleteId))
+                        it = fsm.scriptTransitions.erase(it);
+                    else
+                        ++it;
+                }
+
+                // erase the node
+                fsm.m_Nodes.erase(std::remove_if(fsm.m_Nodes.begin(), fsm.m_Nodes.end(),
+                    [&](const std::shared_ptr<ScriptNode>& n) { return n->id == deleteId; }),
+                    fsm.m_Nodes.end());
+
+                EE_CORE_INFO("FSMEditor: Node %d deleted", deleteId);
+            }
+
+            nodesToDelete.clear();
+        }
+
+        // Handle new link creation
         int startAttr, endAttr;
         if (ImNodes::IsLinkCreated(&startAttr, &endAttr))
         {
-            int fromId = startAttr / 10;
-            int toId = (endAttr - 1) / 10;
+            auto is_output = [](int attr) { return (attr % 10) == 0; };
+            auto is_input = [](int attr) { return (attr % 10) == 1; };
 
-            State* fromState = nullptr;
-            State* toState = nullptr;
-            for (auto& node : m_nodes)
+            int fromAttr = startAttr;
+            int toAttr = endAttr;
+            if (is_input(fromAttr) && is_output(toAttr))
+                std::swap(fromAttr, toAttr);
+
+            int fromId = fromAttr / 10;
+            int toId = (toAttr - 1) / 10;
+
+            ScriptNode* fromScriptNode = nullptr;
+            ScriptNode* toScriptNode = nullptr;
+
+            for (auto& sPtr : fsm.m_Nodes)
             {
-                if (node.id == fromId) fromState = node.statePtr;
-                if (node.id == toId)   toState = node.statePtr;
+                if (sPtr->id == fromId) fromScriptNode = sPtr.get();
+                if (sPtr->id == toId)   toScriptNode = sPtr.get();
             }
 
-            if (fromState && toState)
-            {
-                m_links.emplace_back(fromId, toId);
-                fsm.transitions[fromState] = toState;
-            }
+            if (fromScriptNode && toScriptNode)
+                fsm.scriptTransitions[fromScriptNode] = toScriptNode;
+
+            fsm.m_Links.emplace_back(fromAttr, toAttr);
         }
 
         ImGui::End();

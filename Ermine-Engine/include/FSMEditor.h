@@ -17,7 +17,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "ECS.h"
 #include "imgui.h"
 #include "imnodes.h"
-#include "States.h"
+#include "FSMNode.h"
+#include <deque>
 
 namespace Ermine
 {
@@ -32,20 +33,16 @@ namespace Ermine
 
         void SetSelectedEntity(EntityID entity) { m_SelectedEntity = entity; }
 
+        std::deque<std::shared_ptr<ScriptNode>>& GetNodesForEntity(EntityID entity);
+        const std::deque<std::shared_ptr<ScriptNode>>& GetNodesForEntity(EntityID entity) const;
+
     private:
         EntityID m_SelectedEntity = 0;
         int m_nextNodeId = 1;
+        char m_newNodeName[64] = "";
+        std::vector<int> nodesToDetachScript;
+        std::vector<int> nodesToDelete;
 
-        struct FSMNode
-        {
-            int id;
-            std::string name;
-            State* statePtr;
-        };
-
-        std::vector<FSMNode> m_nodes;
-        std::vector<std::pair<int, int>> m_links; // (fromId, toId)
-
-        void InitializeDefaultNodes();
+        void CreateNode(const std::string& name);
     };
 }

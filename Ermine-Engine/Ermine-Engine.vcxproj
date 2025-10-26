@@ -99,7 +99,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>PreCompile.h</PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>EE_PLATFORM_WINDOWS;EE_BUILD_DLL;GLFW_INCLUDE_NONE;IMGUI_DEFINE_MATH_OPERATORS;GLM_ENABLE_EXPERIMENTAL;_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING;EE_EDITOR;EE_DEBUG;VERBOSE_LOGGING=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>EE_PLATFORM_WINDOWS;EE_BUILD_DLL;ERMINE_USE_SPDLOG;GLFW_INCLUDE_NONE;IMGUI_DEFINE_MATH_OPERATORS;GLM_ENABLE_EXPERIMENTAL;_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING;JPH_USE_SUBMERGENCE;JPH_DEBUG_RENDERER;EE_EDITOR;EE_DEBUG;VERBOSE_LOGGING=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>include;..\ThirdParty\GLFW\include;..\ThirdParty\Glad\include;..\ThirdParty\imgui;..\ThirdParty\glm;..\ThirdParty\spdlog\include;..\ThirdParty\stb;..\ThirdParty\Fmod\inc;..\ThirdParty\Mono\include;..\ThirdParty;..\ThirdParty\rapidjson;..\ThirdParty\assimp\include;..\ThirdParty\DirectXTex\inc;..\ThirdParty\xproperty\source;..\ThirdParty\imnodes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
@@ -147,7 +147,7 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>PreCompile.h</PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>EE_PLATFORM_WINDOWS;EE_BUILD_DLL;GLFW_INCLUDE_NONE;IMGUI_DEFINE_MATH_OPERATORS;GLM_ENABLE_EXPERIMENTAL;_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING;EE_EDITOR;EE_RELEASE;VERBOSE_LOGGING=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>EE_PLATFORM_WINDOWS;EE_BUILD_DLL;ERMINE_USE_SPDLOG;GLFW_INCLUDE_NONE;IMGUI_DEFINE_MATH_OPERATORS;GLM_ENABLE_EXPERIMENTAL;_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING;JPH_USE_SUBMERGENCE;JPH_DEBUG_RENDERER;EE_EDITOR;EE_RELEASE;VERBOSE_LOGGING=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>include;..\ThirdParty\GLFW\include;..\ThirdParty\Glad\include;..\ThirdParty\imgui;..\ThirdParty\glm;..\ThirdParty\spdlog\include;..\ThirdParty\stb;..\ThirdParty\Fmod\inc;..\ThirdParty\Mono\include;..\ThirdParty;..\ThirdParty\rapidjson;..\ThirdParty\assimp\include;..\ThirdParty\DirectXTex\inc;..\ThirdParty\xproperty\source;..\ThirdParty\imnodes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -199,7 +199,7 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>PreCompile.h</PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>EE_PLATFORM_WINDOWS;EE_BUILD_DLL;GLFW_INCLUDE_NONE;IMGUI_DEFINE_MATH_OPERATORS;GLM_ENABLE_EXPERIMENTAL;_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING;EE_GAME;EE_DEBUG;VERBOSE_LOGGING=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>EE_PLATFORM_WINDOWS;EE_BUILD_DLL;ERMINE_USE_SPDLOG;GLFW_INCLUDE_NONE;IMGUI_DEFINE_MATH_OPERATORS;GLM_ENABLE_EXPERIMENTAL;_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING;JPH_USE_SUBMERGENCE;JPH_DEBUG_RENDERER;EE_GAME;EE_DEBUG;VERBOSE_LOGGING=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>include;..\ThirdParty\GLFW\include;..\ThirdParty\Glad\include;..\ThirdParty\imgui;..\ThirdParty\glm;..\ThirdParty\spdlog\include;..\ThirdParty\stb;..\ThirdParty\Fmod\inc;..\ThirdParty\Mono\include;..\ThirdParty;..\ThirdParty\rapidjson;..\ThirdParty\assimp\include;..\ThirdParty\DirectXTex\inc;..\ThirdParty\xproperty\source;..\ThirdParty\imnodes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
@@ -247,7 +247,7 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>PreCompile.h</PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>EE_PLATFORM_WINDOWS;EE_BUILD_DLL;GLFW_INCLUDE_NONE;IMGUI_DEFINE_MATH_OPERATORS;GLM_ENABLE_EXPERIMENTAL;_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING;EE_GAME;EE_RELEASE;VERBOSE_LOGGING=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>EE_PLATFORM_WINDOWS;EE_BUILD_DLL;ERMINE_USE_SPDLOG;GLFW_INCLUDE_NONE;IMGUI_DEFINE_MATH_OPERATORS;GLM_ENABLE_EXPERIMENTAL;_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING;JPH_USE_SUBMERGENCE;JPH_DEBUG_RENDERER;EE_GAME;EE_RELEASE;VERBOSE_LOGGING=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>include;..\ThirdParty\GLFW\include;..\ThirdParty\Glad\include;..\ThirdParty\imgui;..\ThirdParty\glm;..\ThirdParty\spdlog\include;..\ThirdParty\stb;..\ThirdParty\Fmod\inc;..\ThirdParty\Mono\include;..\ThirdParty;..\ThirdParty\rapidjson;..\ThirdParty\assimp\include;..\ThirdParty\DirectXTex\inc;..\ThirdParty\xproperty\source;..\ThirdParty\imnodes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -306,6 +306,7 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClInclude Include="include\Camera.h" />
     <ClInclude Include="include\Component.h" />
     <ClInclude Include="include\Components.h" />
+    <ClInclude Include="include\ConsoleGUI.h" />
     <ClInclude Include="include\Cubemap.h" />
     <ClInclude Include="include\ECS.h" />
     <ClInclude Include="include\EditorCamera.h" />
@@ -314,6 +315,7 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClInclude Include="include\EngineAPI.h" />
     <ClInclude Include="include\Entity.h" />
     <ClInclude Include="include\FSMEditor.h" />
+    <ClInclude Include="include\FSMNode.h" />
     <ClInclude Include="include\FiniteStateMachine.h" />
     <ClInclude Include="include\FrameController.h" />
     <ClInclude Include="include\GPUProfiler.h" />
@@ -321,6 +323,8 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClInclude Include="include\GameObjectFactory.h" />
     <ClInclude Include="include\GeometryFactory.h" />
     <ClInclude Include="include\GraphicsDebugGUI.h" />
+    <ClInclude Include="include\Guid.h" />
+    <ClInclude Include="include\GuidRegistry.h" />
     <ClInclude Include="include\HierarchyInspector.h" />
     <ClInclude Include="include\HierarchyPanel.h" />
     <ClInclude Include="include\HierarchySystem.h" />
@@ -337,8 +341,10 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClInclude Include="include\Matrix4x4.h" />
     <ClInclude Include="include\Model.h" />
     <ClInclude Include="include\Particles.h" />
+    <ClInclude Include="include\PhysicDebugRenderer.h" />
     <ClInclude Include="include\Physics.h" />
     <ClInclude Include="include\PreCompile.h" />
+    <ClInclude Include="include\PrefabManager.h" />
     <ClInclude Include="include\Registry.h" />
     <ClInclude Include="include\Renderer.h" />
     <ClInclude Include="include\Scene.h" />
@@ -350,8 +356,6 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClInclude Include="include\Serialisation.h" />
     <ClInclude Include="include\Shader.h" />
     <ClInclude Include="include\Skybox.h" />
-    <ClInclude Include="include\State.h" />
-    <ClInclude Include="include\States.h" />
     <ClInclude Include="include\Systems.h" />
     <ClInclude Include="include\Texture.h" />
     <ClInclude Include="include\VertexArray.h" />
@@ -373,7 +377,6 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClCompile Include="src\Engine.cpp" />
     <ClCompile Include="src\FSM\FSMEditor.cpp" />
     <ClCompile Include="src\FSM\FiniteStateMachine.cpp" />
-    <ClCompile Include="src\FSM\States.cpp" />
     <ClCompile Include="src\Graphics\AnimationManager.cpp" />
     <ClCompile Include="src\Graphics\Animator.cpp" />
     <ClCompile Include="src\Graphics\Camera.cpp" />
@@ -388,6 +391,7 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClCompile Include="src\Graphics\VertexArray.cpp" />
     <ClCompile Include="src\Graphics\VertexBuffer.cpp" />
     <ClCompile Include="src\ImGUI\AudioIMGUI.cpp" />
+    <ClCompile Include="src\ImGUI\ConsoleGUI.cpp" />
     <ClCompile Include="src\ImGUI\EditorGUI.cpp" />
     <ClCompile Include="src\ImGUI\GraphicsDebugGUI.cpp" />
     <ClCompile Include="src\ImGUI\InspectorGUI.cpp" />
@@ -399,6 +403,7 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClCompile Include="src\Object\GameObject.cpp" />
     <ClCompile Include="src\Object\GameObjectFactory.cpp" />
     <ClCompile Include="src\Particles\Particles.cpp" />
+    <ClCompile Include="src\Physics\PhysicDebugRenderer.cpp" />
     <ClCompile Include="src\Physics\Physics.cpp" />
     <ClCompile Include="src\PreCompile.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
@@ -406,6 +411,7 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClCompile Include="src\Scene\Scene.cpp" />
     <ClCompile Include="src\Scripting\ScriptEngine.cpp" />
     <ClCompile Include="src\Scripting\ScriptSystem.cpp" />
+    <ClCompile Include="src\Serialisation\PrefabManager.cpp" />
     <ClCompile Include="src\Serialisation\SceneManager.cpp" />
     <ClCompile Include="src\Serialisation\Serialisation.cpp" />
     <ClCompile Include="src\Systems\HierarchyInspector.cpp" />
@@ -414,6 +420,8 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClCompile Include="src\Utility\EditorCamera.cpp" />
     <ClCompile Include="src\Utility\FrameController.cpp" />
     <ClCompile Include="src\Utility\GPUProfiler.cpp" />
+    <ClCompile Include="src\Utility\Guid.cpp" />
+    <ClCompile Include="src\Utility\GuidRegistry.cpp" />
     <ClCompile Include="src\Utility\Input.cpp" />
     <ClCompile Include="src\Utility\JobSystem.cpp" />
     <ClCompile Include="src\Window\Window.cpp" />
