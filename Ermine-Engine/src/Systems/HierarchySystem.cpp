@@ -143,12 +143,12 @@ namespace Ermine
                 // Extract position, rotation, scale from the new local matrix
                 DecomposeMatrix(newLocalMatrix, childTransform.position, childTransform.rotation, childTransform.scale);
 
-                EE_CORE_INFO("=== REPARENTING ENTITY {} to PARENT {} ===", child, parent);
-                EE_CORE_INFO("New local position: ({:.3f}, {:.3f}, {:.3f})",
-                    childTransform.position.x, childTransform.position.y, childTransform.position.z);
+                //EE_CORE_INFO("=== REPARENTING ENTITY {} to PARENT {} ===", child, parent);
+                //EE_CORE_INFO("New local position: ({:.3f}, {:.3f}, {:.3f})",
+                //    childTransform.position.x, childTransform.position.y, childTransform.position.z);
             }
             else {
-                EE_CORE_WARN("Failed to invert parent matrix during reparenting");
+                //EE_CORE_WARN("Failed to invert parent matrix during reparenting");
             }
         }
 
@@ -175,9 +175,9 @@ namespace Ermine
             Quaternion worldRotation = GetWorldRotation(child);
             Vec3 worldScale = GetWorldScale(child);
 
-            EE_CORE_INFO("=== UNPARENTING ENTITY {} ===", child);
-            EE_CORE_INFO("Preserving world position: ({:.3f}, {:.3f}, {:.3f})",
-                         worldPosition.x, worldPosition.y, worldPosition.z);
+            //EE_CORE_INFO("=== UNPARENTING ENTITY {} ===", child);
+            //EE_CORE_INFO("Preserving world position: ({:.3f}, {:.3f}, {:.3f})",
+            //             worldPosition.x, worldPosition.y, worldPosition.z);
 
             // 2. Remove parent relationship
             auto& parentHierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(childHierarchy.parent);
@@ -195,9 +195,9 @@ namespace Ermine
             childTransform.rotation = worldRotation;
             childTransform.scale = worldScale;
 
-            EE_CORE_INFO("Set new local position: ({:.3f}, {:.3f}, {:.3f})", 
-                         childTransform.position.x, childTransform.position.y, childTransform.position.z);
-            EE_CORE_INFO("Entity {} is now a root entity", child);
+            //EE_CORE_INFO("Set new local position: ({:.3f}, {:.3f}, {:.3f})", 
+            //             childTransform.position.x, childTransform.position.y, childTransform.position.z);
+            //EE_CORE_INFO("Entity {} is now a root entity", child);
 
             // Update transforms
             MarkDirty(child);
@@ -223,9 +223,9 @@ namespace Ermine
 			globalTransform = &ECS::GetInstance().GetComponent<GlobalTransform>(entity);
 		}
 
-		EE_CORE_INFO("=== Transform Update for Entity {0} ===", entity);
-		EE_CORE_INFO("Local Position: ({0:.3f}, {1:.3f}, {2:.3f})", 
-					 transform.position.x, transform.position.y, transform.position.z);
+		//EE_CORE_INFO("=== Transform Update for Entity {0} ===", entity);
+		//EE_CORE_INFO("Local Position: ({0:.3f}, {1:.3f}, {2:.3f})", 
+		//			 transform.position.x, transform.position.y, transform.position.z);
 
 		// Build local transform matrix from position, rotation, and scale
 		Mtx44 localMatrix = transform.GetLocalMatrix();
@@ -236,31 +236,28 @@ namespace Ermine
 			if (ECS::GetInstance().HasComponent<GlobalTransform>(hierarchy.parent)) {
 				auto& parentGlobalTransform = ECS::GetInstance().GetComponent<GlobalTransform>(hierarchy.parent);
 				
-				Vec3 parentWorldPos = parentGlobalTransform.GetWorldPosition();
-				EE_CORE_INFO("Parent {0} World Position: ({1:.3f}, {2:.3f}, {3:.3f})", 
-							 hierarchy.parent, parentWorldPos.x, parentWorldPos.y, parentWorldPos.z);
+				//Vec3 parentWorldPos = parentGlobalTransform.GetWorldPosition();
+				//EE_CORE_INFO("Parent {0} World Position: ({1:.3f}, {2:.3f}, {3:.3f})", 
+				//			 hierarchy.parent, parentWorldPos.x, parentWorldPos.y, parentWorldPos.z);
 				
 				// FIXED: World transform = Parent's world transform * Local transform
 				globalTransform->worldMatrix = parentGlobalTransform.worldMatrix * localMatrix;
 			} else {
 				// Parent doesn't have GlobalTransform - treat as root
 				globalTransform->worldMatrix = localMatrix;
-				EE_CORE_WARN("Parent {0} missing GlobalTransform, treating child {1} as root", hierarchy.parent, entity);
+				//EE_CORE_WARN("Parent {0} missing GlobalTransform, treating child {1} as root", hierarchy.parent, entity);
 			}
 		}
 		else {
 			// Root entity: world transform equals local transform
 			globalTransform->worldMatrix = localMatrix;
-			EE_CORE_INFO("Entity {0} is ROOT - World = Local transform", entity);
+			//EE_CORE_INFO("Entity {0} is ROOT - World = Local transform", entity);
 		}
 
-		// REMOVED: Don't update transform.transform_matrix anymore - it was causing confusion
-		// The renderer will now use globalTransform->worldMatrix directly
-
 		// Extract and log the calculated world position
-		Vec3 worldPos = globalTransform->GetWorldPosition();
-		EE_CORE_INFO(">>> Entity {0} World Position: ({1:.3f}, {2:.3f}, {3:.3f})", 
-					 entity, worldPos.x, worldPos.y, worldPos.z);
+		//Vec3 worldPos = globalTransform->GetWorldPosition();
+		//EE_CORE_INFO(">>> Entity {0} World Position: ({1:.3f}, {2:.3f}, {3:.3f})", 
+		//			 entity, worldPos.x, worldPos.y, worldPos.z);
 
 		// Mark as clean
 		hierarchy.isDirty = false;
@@ -270,11 +267,11 @@ namespace Ermine
 
 		// Recursively update all children
 		for (auto child : hierarchy.children) {
-			EE_CORE_INFO("--- Updating child entity {0} due to parent {1} change ---", child, entity);
+			//EE_CORE_INFO("--- Updating child entity {0} due to parent {1} change ---", child, entity);
 			UpdateWorldTransform(child);
 		}
 		
-		EE_CORE_INFO("=== End Transform Update for Entity {0} ===\n", entity);
+		//EE_CORE_INFO("=== End Transform Update for Entity {0} ===\n", entity);
 	}
 
 	// NEW: Helper method to ensure entities have GlobalTransform
@@ -351,8 +348,8 @@ namespace Ermine
         auto& hierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(entity);
         auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
 
-        // ADD DEBUG LOG TO FIND THE CULPRIT
-        EE_CORE_WARN("MarkDirty called for entity {} - investigate why!", entity);
+        // DEBUG LOG - Can be commented out in production
+        //EE_CORE_WARN("MarkDirty called for entity {} - investigate why!", entity);
         
         // Mark both local transform and world transform as needing update
         hierarchy.isDirty = true;
