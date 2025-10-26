@@ -188,10 +188,10 @@ namespace Ermine::graphics {
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SkinnedVertexSSBO);
         // Allocate empty buffer - will be filled in UploadAndBuild()
         glBufferData(GL_SHADER_STORAGE_BUFFER, 0, nullptr, GL_STATIC_DRAW);
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, m_SkinnedVertexSSBO);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SKINNED_VERTEX_SSBO_BINDING, m_SkinnedVertexSSBO);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
-        EE_CORE_INFO("MeshManager: Created Skinned Vertex SSBO at binding 4");
+        EE_CORE_INFO("MeshManager: Created Skinned Vertex SSBO at binding {}", SKINNED_VERTEX_SSBO_BINDING);
     }
 
     MeshHandle MeshManager::RegisterMesh(const std::vector<Vertex>& vertices,

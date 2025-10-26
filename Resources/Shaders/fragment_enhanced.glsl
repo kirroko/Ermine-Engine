@@ -1,4 +1,4 @@
-﻿#version 460
+#version 460
 
 const int MAX_LIGHTS = 32;
 const int NUM_CASCADES = 4;
@@ -19,22 +19,33 @@ struct MaterialData {
     float roughness;
     float ao;
     float normalStrength;
-    
+
     vec3 emissive;
     float emissiveIntensity;
-    
+
     int shadingModel; // 0 = PBR, 1 = Blinn-Phong
     int hasAlbedoMap;
     int hasNormalMap;
     int hasRoughnessMap;
-    
+
     int hasMetallicMap;
     int hasAoMap;
     int hasEmissiveMap;
     float _pad0;
-    
+
     vec2 uvScale;   // UV scale for texture tiling
     vec2 uvOffset;  // UV offset for texture positioning
+
+    // Texture Array Indices
+    int albedoMapIndex;
+    int normalMapIndex;
+    int roughnessMapIndex;
+    int metallicMapIndex;
+
+    int aoMapIndex;
+    int emissiveMapIndex;
+    int _pad1;
+    int _pad2;
 };
 
 // Material SSBO block - array of materials
@@ -42,16 +53,14 @@ layout (std430, binding = 5) restrict readonly buffer MaterialBlock {
     MaterialData materials[];
 };
 
+// Bindless texture array SSBO - stores texture handles as uvec2 (64-bit split into two 32-bit values)
+layout(std430, binding = 6) restrict readonly buffer TextureArrayBlock
+{
+    uvec2 textureHandles[];
+};
+
 // Material index uniform - which material to use from the array
 uniform int u_MaterialIndex = 0;
-
-// Texture samplers
-uniform sampler2D materialAlbedoMap;
-uniform sampler2D materialNormalMap;
-uniform sampler2D materialRoughnessMap;
-uniform sampler2D materialMetallicMap;
-uniform sampler2D materialAoMap;
-uniform sampler2D materialEmissiveMap;
 
 // Shading mode toggle
 uniform bool isBlinnPhong;
@@ -87,19 +96,19 @@ const int SPOT_LIGHT = 2;
 vec3 calculateNormal(MaterialData material, vec2 uv)
 {
     vec3 normal = normalize(Normal);
-    
-    if (material.hasNormalMap != 0) {
-        vec3 normalMap = texture(materialNormalMap, uv).rgb * 2.0 - 1.0;
+
+    if (material.hasNormalMap != 0 && material.normalMapIndex >= 0) {
+        vec3 normalMap = texture(sampler2D(textureHandles[material.normalMapIndex]), uv).rgb * 2.0 - 1.0;
         normalMap.xy *= material.normalStrength;
-        
+
         vec3 T = normalize(Tangent);
         vec3 B = normalize(Bitangent);
         vec3 N = normal;
         mat3 TBN = mat3(T, B, N);
-        
+
         normal = normalize(TBN * normalMap);
     }
-    
+
     return normal;
 }
 
@@ -107,20 +116,20 @@ vec3 calculateNormal(MaterialData material, vec2 uv)
 vec3 getAlbedo(MaterialData material, vec2 uv)
 {
     vec3 albedo = material.albedo.rgb;
-    
-    if (material.hasAlbedoMap != 0) {
-        vec4 texColor = texture(materialAlbedoMap, uv);
+
+    if (material.hasAlbedoMap != 0 && material.albedoMapIndex >= 0) {
+        vec4 texColor = texture(sampler2D(textureHandles[material.albedoMapIndex]), uv);
         albedo *= texColor.rgb;
     }
-    
+
     return albedo;
 }
 
 float getRoughness(MaterialData material, vec2 uv)
 {
     float roughness = material.roughness;
-    if (material.hasRoughnessMap != 0) {
-        roughness *= texture(materialRoughnessMap, uv).r;
+    if (material.hasRoughnessMap != 0 && material.roughnessMapIndex >= 0) {
+        roughness *= texture(sampler2D(textureHandles[material.roughnessMapIndex]), uv).r;
     }
     return clamp(roughness, 0.05, 1.0);
 }
@@ -128,8 +137,8 @@ float getRoughness(MaterialData material, vec2 uv)
 float getMetallic(MaterialData material, vec2 uv)
 {
     float metallic = material.metallic;
-    if (material.hasMetallicMap != 0) {
-        metallic *= texture(materialMetallicMap, uv).r;
+    if (material.hasMetallicMap != 0 && material.metallicMapIndex >= 0) {
+        metallic *= texture(sampler2D(textureHandles[material.metallicMapIndex]), uv).r;
     }
     return clamp(metallic, 0.0, 1.0);
 }
@@ -137,8 +146,8 @@ float getMetallic(MaterialData material, vec2 uv)
 float getAO(MaterialData material, vec2 uv)
 {
     float ao = material.ao;
-    if (material.hasAoMap != 0) {
-        ao *= texture(materialAoMap, uv).r;
+    if (material.hasAoMap != 0 && material.aoMapIndex >= 0) {
+        ao *= texture(sampler2D(textureHandles[material.aoMapIndex]), uv).r;
     }
     return ao;
 }
@@ -146,8 +155,8 @@ float getAO(MaterialData material, vec2 uv)
 vec3 getEmissive(MaterialData material, vec2 uv)
 {
     vec3 emissive = material.emissive * material.emissiveIntensity;
-    if (material.hasEmissiveMap != 0) {
-        vec4 emissiveTexel = texture(materialEmissiveMap, uv);
+    if (material.hasEmissiveMap != 0 && material.emissiveMapIndex >= 0) {
+        vec4 emissiveTexel = texture(sampler2D(textureHandles[material.emissiveMapIndex]), uv);
         emissive *= emissiveTexel.rgb;
     }
     return emissive;
