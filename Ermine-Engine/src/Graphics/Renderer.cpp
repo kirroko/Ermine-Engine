@@ -1702,6 +1702,14 @@ void Renderer::UpdateMaterialSSBO(const graphics::MaterialSSBO& materialData, ui
 
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }
+
+/**
+* @brief Updates the material's SSBO at index 0 with the specified material data.
+ *
+ * This is a convenience overload that defaults to updating the first material (index 0).
+ *
+ * @param materialData The material data to be uploaded to the SSBO, including properties like color, texture, etc.
+ */
 void Renderer::UpdateMaterialSSBO(const graphics::MaterialSSBO& materialData)
 {
 	// This version is kept for backward compatibility
@@ -1709,6 +1717,52 @@ void Renderer::UpdateMaterialSSBO(const graphics::MaterialSSBO& materialData)
 	UpdateMaterialSSBO(materialData, 0);
 }
 
+/**
+ * @brief Update material color properties and upload to SSBO
+ * @param entity The entity whose material to update
+ * @param albedo The new albedo color
+ * @param roughness The new roughness value
+ * @param metallic The new metallic value
+ * @param emissive The new emissive color
+ */
+void Renderer::UpdateMaterialColor(EntityID entity,
+	const Vec3& albedo,
+	float roughness,
+	float metallic,
+	const Vec3& emissive)
+{
+	auto& ecs = ECS::GetInstance();
+	auto renderer = ecs.GetSystem<Renderer>();
+	auto& materialComp = ecs.GetComponent<Ermine::Material>(entity);
+	auto* material = materialComp.GetMaterial();
+
+	if (!material) return;
+
+	// Update all properties
+	material->SetVec3("materialAlbedo", albedo);
+	material->SetFloat("materialRoughness", roughness);
+	material->SetFloat("materialMetallic", metallic);
+	material->SetVec3("materialEmissive", emissive);
+
+	// Single upload for all changes
+	auto ssboData = material->GetSSBOData();
+	uint32_t materialIndex = renderer->GetMaterialIndex(entity);
+	renderer->UpdateMaterialSSBO(ssboData, materialIndex);
+}
+
+/**
+ * @brief Retrieves the material index associated with the given entity.
+ * @param entity The entity whose material index is to be retrieved.
+ * @return The material index for the specified entity, or 0 if not found.
+ */
+uint32_t Renderer::GetMaterialIndex(EntityID entity) const
+{
+	auto it = m_EntityMaterialIndices.find(entity);
+	if (it != m_EntityMaterialIndices.end()) {
+		return it->second;
+	}
+	return 0; // Default to first material
+}
 
 /**
  * @brief Sets the material index uniform before drawing

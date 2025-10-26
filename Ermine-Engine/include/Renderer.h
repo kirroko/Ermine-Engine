@@ -397,6 +397,56 @@ namespace Ermine::graphics
          * @param materialData The material data to be uploaded to the SSBO.
          */
         void UpdateMaterialSSBO(const graphics::MaterialSSBO& materialData);
+
+        /**
+         * @brief Update multiple entities' material albedo color and upload to GPU.
+         * @param entities Vector of entity IDs whose materials will be updated.
+         * @param color The new albedo color to set for each material.
+		 */ 
+        void UpdateMultipleEntitiesMaterials(const std::vector<EntityID>& entities,
+            const Vec3& color)
+        {
+            auto& ecs = ECS::GetInstance();
+            auto renderer = ecs.GetSystem<Renderer>();
+
+            for (EntityID entity : entities) {
+                if (!ecs.HasComponent<Ermine::Material>(entity)) continue;
+
+                auto& materialComp = ecs.GetComponent<Ermine::Material>(entity);
+                auto* material = materialComp.GetMaterial();
+
+                if (!material) continue;
+
+                // Update material
+                material->SetVec3("materialAlbedo", color);
+
+                // Upload to GPU
+                auto ssboData = material->GetSSBOData();
+                uint32_t materialIndex = renderer->GetMaterialIndex(entity);
+                renderer->UpdateMaterialSSBO(ssboData, materialIndex);
+            }
+        }
+
+        /**
+         * @brief Update an entity's material properties and upload to GPU.
+         * @param entity The entity whose material will be updated.
+         * @param albedo The new albedo color.
+         * @param roughness The new roughness value.
+         * @param metallic The new metallic value.
+         * @param emissive The new emissive color.
+		 */
+        void UpdateMaterialColor(EntityID entity,
+            const Vec3& albedo,
+            float roughness,
+            float metallic,
+            const Vec3& emissive);
+
+        /**
+		* @brief Retrieves the material index for the specified entity.
+		* @param entity The entity whose material index to retrieve.
+        */
+        uint32_t GetMaterialIndex(EntityID entity) const;
+
         /**
          * @brief Sets the u_MaterialIndex uniform for the entity's material.
          * Call this before each draw call to tell the shader which material to use.
