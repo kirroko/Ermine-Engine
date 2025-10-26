@@ -287,6 +287,10 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	EE_CORE_INFO("Created shared materials with proper texture assignment control");
 
+	// Compile materials into SSBO after material creation - deferred to Renderer.cpp implementation
+	// ECS::GetInstance().GetSystem<graphics::Renderer>()->CompileMaterials();
+	// EE_CORE_INFO("Materials compiled into SSBO system");
+
 	// Audio test entity
 	//auto audioTestEntity = ECS::GetInstance().CreateEntity();
 	//ECS::GetInstance().AddComponent(audioTestEntity, Transform(Vec3(2, 0, -1), Quaternion(), Vec3(1, 1, 1)));
@@ -312,6 +316,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	//ECS::GetInstance().AddComponent(fbxEntity, ObjectMetaData("Character", "Model", true));
 	//ECS::GetInstance().AddComponent(fbxEntity, Mesh{}); // empty mesh component for renderer signature
 	//ECS::GetInstance().AddComponent(fbxEntity, ModelComponent(model));
+	//ECS::GetInstance().AddComponent(fbxEntity, AnimationComponent("Walking"));
 	//ECS::GetInstance().AddComponent<Ermine::HierarchyComponent>(fbxEntity, Ermine::HierarchyComponent{});
 
 	//// Adding animation component
