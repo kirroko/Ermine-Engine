@@ -69,6 +69,26 @@ namespace Ermine::editor {
 		// color, intensity, castsShadows, type are always shown
 		return true;
 	}
+	template<typename T>
+	static bool ComponentHeaderWithRemove(const char* headerLabel, EntityID entity,
+		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_DefaultOpen)
+	{
+		bool open = ImGui::CollapsingHeader(headerLabel, flags);
+
+		// Open context menu when right-clicking the header row
+		if (ImGui::BeginPopupContextItem()) {
+			if (ImGui::MenuItem("Remove Component")) {
+				auto& ecs = Ermine::ECS::GetInstance();
+				ecs.RemoveComponent<T>(entity);
+				ImGui::EndPopup();
+				return false;
+			}
+			ImGui::EndPopup();
+		}
+
+		if (!open) return false;
+		return true;
+	}
 
 	// Unity-like XYZ control. Returns true if any component changed.
 // - Clicking X/Y/Z button resets that axis to resetValue.
@@ -336,7 +356,7 @@ namespace Ermine::editor {
 	}
 
 	void HierarchyInspector::DrawMeshComponent(EntityID entity) {
-		if (!ImGui::CollapsingHeader("Mesh", ImGuiTreeNodeFlags_DefaultOpen))
+		if (!ComponentHeaderWithRemove<Mesh>("Mesh", entity))
 			return;
 
 		auto& mesh = ECS::GetInstance().GetComponent<Mesh>(entity);
@@ -383,7 +403,7 @@ namespace Ermine::editor {
 	}
 
 	void HierarchyInspector::DrawMaterialComponent(EntityID entity) {
-		if (!ImGui::CollapsingHeader("Material", ImGuiTreeNodeFlags_DefaultOpen))
+		if (!ComponentHeaderWithRemove<Material>("Material", entity))
 			return;
 
 		// --- Fetch component & underlying material safely ---
@@ -391,24 +411,40 @@ namespace Ermine::editor {
 		graphics::Material* gm = matComp.GetMaterial();
 
 		if (!gm) {
-			ImGui::TextUnformatted("No material bound.");
-			if (ImGui::Button("Create Default PBR")) {
-				matComp = Material(std::make_shared<graphics::Material>());
-				gm = matComp.GetMaterial();
-				if (gm) {
-					Vec4 alb{ 1.f,1.f,1.f,1.f };
-					gm->SetVec4("materialAlbedo", alb);
-					gm->SetVec4("material.albedo", alb);
-					gm->SetFloat("materialAlpha", 1.0f);
-					gm->SetFloat("materialTransparency", 0.0f);
+			//ImGui::TextUnformatted("No material bound.");
+			//if (ImGui::Button("Create Default PBR")) {
+			//	matComp = Material(std::make_shared<graphics::Material>());
+			//	gm = matComp.GetMaterial();
+			//	if (gm) {
+			//		Vec4 alb{ 1.f,1.f,1.f,1.f };
+			//		gm->SetVec4("materialAlbedo", alb);
+			//		gm->SetVec4("material.albedo", alb);
+			//		gm->SetFloat("materialAlpha", 1.0f);
+			//		gm->SetFloat("materialTransparency", 0.0f);
 
-					gm->SetFloat("materialMetallic", 0.0f);           gm->SetFloat("material.metallic", 0.0f);
-					gm->SetFloat("materialRoughness", 0.5f);          gm->SetFloat("material.roughness", 0.5f);
-					gm->SetVec3("materialEmissive", { 0.f,0.f,0.f });   gm->SetVec3("material.emissive", { 0.f,0.f,0.f });
-					gm->SetFloat("materialEmissiveIntensity", 1.0f);  gm->SetFloat("material.emissiveIntensity", 1.0f);
-				}
+			//		gm->SetFloat("materialMetallic", 0.0f);           gm->SetFloat("material.metallic", 0.0f);
+			//		gm->SetFloat("materialRoughness", 0.5f);          gm->SetFloat("material.roughness", 0.5f);
+			//		gm->SetVec3("materialEmissive", { 0.f,0.f,0.f });   gm->SetVec3("material.emissive", { 0.f,0.f,0.f });
+			//		gm->SetFloat("materialEmissiveIntensity", 1.0f);  gm->SetFloat("material.emissiveIntensity", 1.0f);
+			//	}
+			//}
+			//ImGui::Separator();
+
+			matComp = Material(std::make_shared<graphics::Material>());
+			gm = matComp.GetMaterial();
+			if (gm) {
+				Vec4 alb{ 1.f,1.f,1.f,1.f };
+				gm->SetVec4("materialAlbedo", alb);
+				gm->SetVec4("material.albedo", alb);
+				gm->SetFloat("materialAlpha", 1.0f);
+				gm->SetFloat("materialTransparency", 0.0f);
+
+				gm->SetFloat("materialMetallic", 0.0f);           gm->SetFloat("material.metallic", 0.0f);
+				gm->SetFloat("materialRoughness", 0.5f);          gm->SetFloat("material.roughness", 0.5f);
+				gm->SetVec3("materialEmissive", { 0.f,0.f,0.f });   gm->SetVec3("material.emissive", { 0.f,0.f,0.f });
+				gm->SetFloat("materialEmissiveIntensity", 1.0f);  gm->SetFloat("material.emissiveIntensity", 1.0f);
 			}
-			ImGui::Separator();
+
 			return;
 		}
 
@@ -675,7 +711,7 @@ namespace Ermine::editor {
 
 	void HierarchyInspector::DrawLightComponent(EntityID entity)
 	{
-		if (!ImGui::CollapsingHeader("Light", ImGuiTreeNodeFlags_DefaultOpen))
+		if (!ComponentHeaderWithRemove<Light>("Light", entity))
 			return;
 
 		auto& light = ECS::GetInstance().GetComponent<Light>(entity);
@@ -822,8 +858,18 @@ namespace Ermine::editor {
 
 	void HierarchyInspector::DrawPhysicsComponent(EntityID entity)
 	{
-		if (!ImGui::CollapsingHeader("Physics", ImGuiTreeNodeFlags_DefaultOpen))
-			return;
+		bool open = ImGui::CollapsingHeader("Physics", ImGuiTreeNodeFlags_DefaultOpen);
+		if (ImGui::BeginPopupContextItem()) {
+			if (ImGui::MenuItem("Remove Component")) {
+				auto& ecs = ECS::GetInstance();
+				ecs.RemoveComponent<PhysicComponent>(entity);
+				ecs.GetSystem<Physics>()->UpdatePhysicList();  // keep physics in sync
+				ImGui::EndPopup();
+				return;
+			}
+			ImGui::EndPopup();
+		}
+		if (!open) return;
 
 		auto& pc = ECS::GetInstance().GetComponent<PhysicComponent>(entity);
 
@@ -894,6 +940,9 @@ namespace Ermine::editor {
 
 	void HierarchyInspector::DrawAudioComponent(EntityID entity)
 	{
+		if (!ComponentHeaderWithRemove<AudioComponent>("Audio", entity))
+			return;
+
 		if (!ImGui::CollapsingHeader("Audio", ImGuiTreeNodeFlags_DefaultOpen))
 			return;
 
@@ -966,31 +1015,9 @@ namespace Ermine::editor {
 			ImGui::TextColored(ImVec4(1, 0.3f, 0.3f, 1), "Error: %s", err.c_str());
 	}
 
-	/*void HierarchyInspector::DrawParticleComponent(EntityID entity)
-	{
-		if (!ImGui::CollapsingHeader("Particle")) return;
-
-		auto& particle = ECS::GetInstance().GetComponent<Particle>(entity);
-
-		float vel[3] = { particle.velocity.x, particle.velocity.y, particle.velocity.z };
-		if (ImGui::DragFloat3("Velocity", vel, 0.1f)) {
-			particle.velocity = Vec3(vel[0], vel[1], vel[2]);
-		}
-
-		ImGui::DragFloat("Lifetime", &particle.lifetime, 0.1f, 0.0f, 100.0f);
-		ImGui::DragFloat("Age", &particle.age, 0.1f, 0.0f, particle.lifetime);
-
-		float col[4] = { particle.colour.x, particle.colour.y, particle.colour.z, particle.colour.w };
-		if (ImGui::ColorEdit4("Colour", col)) {
-			particle.colour = Vec4(col[0], col[1], col[2], col[3]);
-		}
-
-		ImGui::DragFloat("Size", &particle.size, 0.1f, 0.01f, 100.0f);
-	}*/
-
 	void HierarchyInspector::DrawScriptComponent(EntityID entity)
 	{
-		if (!ImGui::CollapsingHeader("Script", ImGuiTreeNodeFlags_DefaultOpen))
+		if (!ComponentHeaderWithRemove<Script>("Script", entity))
 			return;
 
 		auto& script = ECS::GetInstance().GetComponent<Script>(entity);
@@ -1093,7 +1120,7 @@ namespace Ermine::editor {
 
 	void HierarchyInspector::DrawModelComponent(EntityID entity)
 	{
-		if (!ImGui::CollapsingHeader("Model", ImGuiTreeNodeFlags_DefaultOpen))
+		if (!ComponentHeaderWithRemove<ModelComponent>("Model", entity))
 			return;
 
 		auto& modelComp = ECS::GetInstance().GetComponent<ModelComponent>(entity);
@@ -1194,7 +1221,7 @@ namespace Ermine::editor {
 
 	void HierarchyInspector::DrawAnimationComponent(EntityID entity)
 	{
-		if (!ImGui::CollapsingHeader("Animation", ImGuiTreeNodeFlags_DefaultOpen))
+		if (!ComponentHeaderWithRemove<AnimationComponent>("Animation", entity))
 			return;
 
 		auto& animComp = ECS::GetInstance().GetComponent<AnimationComponent>(entity);
@@ -1259,7 +1286,10 @@ namespace Ermine::editor {
 
 	void HierarchyInspector::DrawStateMachineComponent(EntityID entity)
 	{
-		if (!ImGui::CollapsingHeader("State Machine", ImGuiTreeNodeFlags_DefaultOpen))
+		//if (!ImGui::CollapsingHeader("State Machine", ImGuiTreeNodeFlags_DefaultOpen))
+		//	return;
+
+		if (!ComponentHeaderWithRemove<StateMachine>("State Machine", entity))
 			return;
 
 		auto& fsmComp = ECS::GetInstance().GetComponent<StateMachine>(entity);
@@ -1286,7 +1316,10 @@ namespace Ermine::editor {
 
 	void HierarchyInspector::DrawParticleEmitterComponent(EntityID entity)
 	{
-		if (!ImGui::CollapsingHeader("Particle Emitter", ImGuiTreeNodeFlags_DefaultOpen))
+		//if (!ImGui::CollapsingHeader("Particle Emitter", ImGuiTreeNodeFlags_DefaultOpen))
+		//	return;
+
+		if (!ComponentHeaderWithRemove<ParticleEmitter>("Particle Emitter", entity))
 			return;
 
 		auto& emitter = ECS::GetInstance().GetComponent<ParticleEmitter>(entity);
@@ -1312,6 +1345,9 @@ namespace Ermine::editor {
 		}
 		if (ImGui::MenuItem("Mesh") && !ECS::GetInstance().HasComponent<Mesh>(entity)) {
 			ECS::GetInstance().AddComponent(entity, graphics::GeometryFactory::CreateCube());
+			ECS::GetInstance().AddComponent(entity, Material());
+		}
+		if (ImGui::MenuItem("Material") && !ECS::GetInstance().HasComponent<Material>(entity)) {
 			ECS::GetInstance().AddComponent(entity, Material());
 		}
 		if (ImGui::MenuItem("Light") && !ECS::GetInstance().HasComponent<Light>(entity)) {
