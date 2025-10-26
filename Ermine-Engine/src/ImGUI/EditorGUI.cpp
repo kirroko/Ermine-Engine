@@ -228,6 +228,38 @@ void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
 		ImGui::EndMenu();
     }
 
+    if (ImGui::BeginMenu("Settings"))
+    {
+        if (ImGui::MenuItem("Light Mode"))
+        {
+            EE_CORE_INFO("Light clicked");
+        }
+        if (ImGui::MenuItem("Dark Mode"))
+        {
+            EE_CORE_INFO("Dark clicked");
+        }
+        if (ImGui::MenuItem("Pink Mode"))
+        {
+            EE_CORE_INFO("Pink clicked");
+        }
+        if (ImGui::MenuItem("Cyberpunk Mode"))
+        {
+            EE_CORE_INFO("Cyberpunk clicked");
+        }
+
+        ImGui::EndMenu();
+    }
+
+    if (ImGui::BeginMenu("Windows"))
+    {
+        if (ImGui::MenuItem("Console"))
+        {
+            EE_CORE_INFO("Console open");
+        }
+
+        ImGui::EndMenu();
+    }
+
     ImGui::EndMainMenuBar();
 }
 
