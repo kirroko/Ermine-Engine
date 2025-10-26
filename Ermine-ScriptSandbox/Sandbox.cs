@@ -35,4 +35,10 @@ public class Sandbox : MonoBehaviour
         if(Input.GetKeyDown(KeyCode.S))
             transform.Translate(new Vector3(0f,-1f,0) * Time.deltaTime);
     }
+
+    void OnCollisionEnter(Collision col)
+    {
+        Debug.Log("Yes me lord? : " + gameObject.name);
+        //Debug.Log("Gameobject: " + gameObject.name + " hit " + col.gameObject.name);
+    }
 }

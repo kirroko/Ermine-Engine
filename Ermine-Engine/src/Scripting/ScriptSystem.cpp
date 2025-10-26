@@ -77,6 +77,8 @@ void Ermine::scripting::ScriptSystem::Update() const
 	{
 		auto& sc = ECS::GetInstance().GetComponent<Script>(entity);
 
+		sc.m_instance->SetEnabled(sc.m_enabled); // Reconcile enable state every frame
+
 		if (!sc.m_enabled) continue;
 
 		if (!sc.m_started) { sc.m_instance->Start(); sc.m_started = true; }
@@ -116,9 +118,9 @@ void Ermine::scripting::ScriptSystem::FixedUpdate() const
 	{
 		auto& sc = ECS::GetInstance().GetComponent<Script>(entity);
 
-		if (!sc.m_enabled) continue;
+		sc.m_instance->SetEnabled(sc.m_enabled); // Reconcile enable state every frame
 
-		if (!sc.m_started) { sc.m_instance->Start(); sc.m_started = true; }
+		if (!sc.m_enabled) continue;
 
 		sc.m_instance->FixedUpdate();
 	}
@@ -165,6 +167,7 @@ void Ermine::scripting::ScriptSystem::FinishHotReload(bool success) const
 		sc.m_className = className;
 		auto scriptClass = std::make_unique<ScriptClass>(ScriptClass("", className));
 		sc.m_instance = std::make_unique<ScriptInstance>(std::move(scriptClass), entity);
+		sc.m_instance->SetEnabled(sc.m_enabled);
 		sc.m_started = false;
 	}
 

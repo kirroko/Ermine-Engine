@@ -1,4 +1,4 @@
-/* Start Header ************************************************************************/
+﻿/* Start Header ************************************************************************/
 /*!
 \file       EditorGUI.h
 \author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu (98%)
@@ -449,6 +449,260 @@ void EditorGUI::SetActiveScene(std::shared_ptr<Ermine::Scene> scene) {
     }
 }
 
+void SetCutesyPinkTheme()
+{
+    ImGuiStyle& style = ImGui::GetStyle();
+    ImVec4* colors = style.Colors;
+
+    colors[ImGuiCol_Text] = ImVec4(0.15f, 0.10f, 0.10f, 1.00f);
+    colors[ImGuiCol_TextDisabled] = ImVec4(0.60f, 0.50f, 0.55f, 1.00f);
+    colors[ImGuiCol_WindowBg] = ImVec4(1.00f, 0.93f, 0.96f, 1.00f);
+    colors[ImGuiCol_ChildBg] = ImVec4(1.00f, 0.96f, 0.98f, 1.00f);
+    colors[ImGuiCol_PopupBg] = ImVec4(1.00f, 0.92f, 0.95f, 0.98f);
+    colors[ImGuiCol_Border] = ImVec4(0.90f, 0.70f, 0.80f, 0.60f);
+    colors[ImGuiCol_BorderShadow] = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
+
+    colors[ImGuiCol_FrameBg] = ImVec4(1.00f, 0.88f, 0.93f, 1.00f);
+    colors[ImGuiCol_FrameBgHovered] = ImVec4(1.00f, 0.82f, 0.90f, 1.00f);
+    colors[ImGuiCol_FrameBgActive] = ImVec4(1.00f, 0.75f, 0.85f, 1.00f);
+
+    colors[ImGuiCol_TitleBg] = ImVec4(1.00f, 0.85f, 0.90f, 1.00f);
+    colors[ImGuiCol_TitleBgActive] = ImVec4(1.00f, 0.80f, 0.88f, 1.00f);
+    colors[ImGuiCol_TitleBgCollapsed] = ImVec4(1.00f, 0.85f, 0.88f, 0.60f);
+
+    colors[ImGuiCol_MenuBarBg] = ImVec4(1.00f, 0.90f, 0.93f, 1.00f);
+    colors[ImGuiCol_ScrollbarBg] = ImVec4(1.00f, 0.94f, 0.96f, 0.53f);
+    colors[ImGuiCol_ScrollbarGrab] = ImVec4(1.00f, 0.80f, 0.88f, 0.8f);
+    colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(1.00f, 0.72f, 0.84f, 1.0f);
+    colors[ImGuiCol_ScrollbarGrabActive] = ImVec4(1.00f, 0.65f, 0.78f, 1.0f);
+
+    colors[ImGuiCol_CheckMark] = ImVec4(0.90f, 0.30f, 0.55f, 1.00f);
+    colors[ImGuiCol_SliderGrab] = ImVec4(1.00f, 0.70f, 0.82f, 1.00f);
+    colors[ImGuiCol_SliderGrabActive] = ImVec4(1.00f, 0.55f, 0.75f, 1.00f);
+
+    colors[ImGuiCol_Button] = ImVec4(1.00f, 0.82f, 0.90f, 1.00f);
+    colors[ImGuiCol_ButtonHovered] = ImVec4(1.00f, 0.75f, 0.87f, 1.00f);
+    colors[ImGuiCol_ButtonActive] = ImVec4(1.00f, 0.68f, 0.82f, 1.00f);
+
+    colors[ImGuiCol_Header] = ImVec4(1.00f, 0.80f, 0.88f, 1.00f);
+    colors[ImGuiCol_HeaderHovered] = ImVec4(1.00f, 0.70f, 0.85f, 1.00f);
+    colors[ImGuiCol_HeaderActive] = ImVec4(1.00f, 0.65f, 0.80f, 1.00f);
+
+    colors[ImGuiCol_Separator] = ImVec4(0.95f, 0.70f, 0.80f, 0.6f);
+    colors[ImGuiCol_ResizeGrip] = ImVec4(1.00f, 0.82f, 0.90f, 0.7f);
+    colors[ImGuiCol_ResizeGripHovered] = ImVec4(1.00f, 0.75f, 0.87f, 0.9f);
+    colors[ImGuiCol_ResizeGripActive] = ImVec4(1.00f, 0.68f, 0.82f, 1.0f);
+
+    colors[ImGuiCol_Tab] = ImVec4(1.00f, 0.84f, 0.90f, 1.00f);
+    colors[ImGuiCol_TabHovered] = ImVec4(1.00f, 0.75f, 0.87f, 1.00f);
+    colors[ImGuiCol_TabActive] = ImVec4(1.00f, 0.70f, 0.84f, 1.00f);
+    colors[ImGuiCol_TabUnfocused] = ImVec4(1.00f, 0.87f, 0.93f, 1.00f);
+    colors[ImGuiCol_TabUnfocusedActive] = ImVec4(1.00f, 0.80f, 0.88f, 1.00f);
+
+    colors[ImGuiCol_DockingPreview] = ImVec4(1.00f, 0.60f, 0.80f, 0.4f);
+    colors[ImGuiCol_NavHighlight] = ImVec4(1.00f, 0.65f, 0.80f, 1.00f);
+
+    // Style tweaks (rounded and soft)
+    style.FrameRounding = 8.0f;
+    style.GrabRounding = 8.0f;
+    style.ChildRounding = 8.0f;
+    style.PopupRounding = 8.0f;
+    style.WindowRounding = 10.0f;
+    style.ScrollbarRounding = 10.0f;
+
+    style.WindowPadding = ImVec2(8, 8);
+    style.FramePadding = ImVec2(6, 4);
+    style.ItemSpacing = ImVec2(6, 6);
+}
+
+void SetCyberpunk2077Theme()
+{
+    ImGuiStyle& style = ImGui::GetStyle();
+    ImVec4* colors = style.Colors;
+
+    // 🔤 Text
+    colors[ImGuiCol_Text] = ImVec4(1.00f, 0.93f, 0.00f, 1.00f); // neon yellow
+    colors[ImGuiCol_TextDisabled] = ImVec4(0.60f, 0.55f, 0.20f, 1.00f);
+
+    // 🪟 Backgrounds
+    colors[ImGuiCol_WindowBg] = ImVec4(0.02f, 0.03f, 0.06f, 1.00f);
+    colors[ImGuiCol_ChildBg] = ImVec4(0.05f, 0.05f, 0.10f, 1.00f);
+    colors[ImGuiCol_PopupBg] = ImVec4(0.07f, 0.08f, 0.12f, 0.98f);
+
+    // 🟦 Borders / Lines
+    colors[ImGuiCol_Border] = ImVec4(0.0f, 0.9f, 1.0f, 0.60f); // neon cyan
+    colors[ImGuiCol_BorderShadow] = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
+
+    // 🧱 Frames (buttons, inputs, etc.)
+    colors[ImGuiCol_FrameBg] = ImVec4(0.08f, 0.05f, 0.15f, 1.00f);
+    colors[ImGuiCol_FrameBgHovered] = ImVec4(0.00f, 0.85f, 1.00f, 0.40f);
+    colors[ImGuiCol_FrameBgActive] = ImVec4(1.00f, 0.93f, 0.00f, 0.45f);
+
+    // 🎛️ Buttons
+    colors[ImGuiCol_Button] = ImVec4(0.10f, 0.05f, 0.18f, 1.00f);
+    colors[ImGuiCol_ButtonHovered] = ImVec4(1.00f, 0.93f, 0.00f, 0.65f);
+    colors[ImGuiCol_ButtonActive] = ImVec4(0.00f, 0.85f, 1.00f, 0.90f);
+
+    // 🎚️ Sliders / Grab handles
+    colors[ImGuiCol_SliderGrab] = ImVec4(1.00f, 0.93f, 0.00f, 1.00f);
+    colors[ImGuiCol_SliderGrabActive] = ImVec4(0.00f, 0.85f, 1.00f, 1.00f);
+    colors[ImGuiCol_CheckMark] = ImVec4(1.00f, 0.93f, 0.00f, 1.00f);
+
+    // 📁 Tabs / Headers
+    colors[ImGuiCol_Header] = ImVec4(0.00f, 0.85f, 1.00f, 0.45f);
+    colors[ImGuiCol_HeaderHovered] = ImVec4(1.00f, 0.93f, 0.00f, 0.55f);
+    colors[ImGuiCol_HeaderActive] = ImVec4(0.00f, 0.85f, 1.00f, 0.70f);
+
+    colors[ImGuiCol_TitleBg] = ImVec4(0.10f, 0.00f, 0.20f, 1.00f);
+    colors[ImGuiCol_TitleBgActive] = ImVec4(0.15f, 0.00f, 0.35f, 1.00f);
+    colors[ImGuiCol_MenuBarBg] = ImVec4(0.10f, 0.02f, 0.18f, 1.00f);
+
+    // 🌀 Tabs
+    colors[ImGuiCol_Tab] = ImVec4(0.12f, 0.05f, 0.25f, 1.00f);
+    colors[ImGuiCol_TabHovered] = ImVec4(1.00f, 0.93f, 0.00f, 0.75f);
+    colors[ImGuiCol_TabActive] = ImVec4(0.00f, 0.85f, 1.00f, 1.00f);
+
+    // ✨ Accent
+    colors[ImGuiCol_NavHighlight] = ImVec4(1.00f, 0.93f, 0.00f, 1.00f);
+    colors[ImGuiCol_Separator] = ImVec4(0.00f, 0.85f, 1.00f, 0.8f);
+    colors[ImGuiCol_DockingPreview] = ImVec4(1.00f, 0.93f, 0.00f, 0.4f);
+
+    // ⚙️ Rounding & padding for that sleek neon look
+    style.FrameRounding = 4.0f;
+    style.GrabRounding = 3.0f;
+    style.WindowRounding = 6.0f;
+    style.ScrollbarRounding = 9.0f;
+    style.TabRounding = 4.0f;
+    style.WindowPadding = ImVec2(8, 8);
+    style.FramePadding = ImVec2(6, 4);
+    style.ItemSpacing = ImVec2(6, 6);
+}
+
+// Call: SetOverwatchTheme(true);  // true = dark, false = light
+// --------------------------------------
+void SetOverwatchTheme(bool dark_variant = true)
+{
+    auto OW_Orange = [](float a = 1.0f) { return ImVec4(0.98f, 0.62f, 0.10f, a); };
+    auto OW_Blue = [](float a = 1.0f) { return ImVec4(0.10f, 0.70f, 1.00f, a); };
+
+    ImGuiStyle& style = ImGui::GetStyle();
+    ImVec4* colors = style.Colors;
+
+    if (dark_variant)
+    {
+        // DARK MODE
+        colors[ImGuiCol_Text] = ImVec4(0.96f, 0.96f, 0.98f, 1.00f);
+        colors[ImGuiCol_TextDisabled] = ImVec4(0.55f, 0.58f, 0.63f, 1.00f);
+        colors[ImGuiCol_WindowBg] = ImVec4(0.07f, 0.08f, 0.10f, 1.00f);
+        colors[ImGuiCol_ChildBg] = ImVec4(0.10f, 0.11f, 0.14f, 1.00f);
+        colors[ImGuiCol_PopupBg] = ImVec4(0.10f, 0.11f, 0.14f, 0.98f);
+        colors[ImGuiCol_Border] = ImVec4(0.23f, 0.25f, 0.30f, 1.00f);
+        colors[ImGuiCol_BorderShadow] = ImVec4(0, 0, 0, 0);
+
+        colors[ImGuiCol_FrameBg] = ImVec4(0.14f, 0.15f, 0.18f, 1.00f);
+        colors[ImGuiCol_FrameBgHovered] = OW_Blue(0.35f);
+        colors[ImGuiCol_FrameBgActive] = OW_Blue(0.60f);
+
+        colors[ImGuiCol_Button] = ImVec4(0.15f, 0.16f, 0.19f, 1.00f);
+        colors[ImGuiCol_ButtonHovered] = OW_Orange(0.85f);
+        colors[ImGuiCol_ButtonActive] = OW_Orange(1.00f);
+
+        colors[ImGuiCol_Header] = ImVec4(0.16f, 0.17f, 0.20f, 1.00f);
+        colors[ImGuiCol_HeaderHovered] = OW_Orange(0.55f);
+        colors[ImGuiCol_HeaderActive] = OW_Orange(0.80f);
+
+        colors[ImGuiCol_CheckMark] = OW_Orange(1.00f);
+        colors[ImGuiCol_SliderGrab] = OW_Blue(0.80f);
+        colors[ImGuiCol_SliderGrabActive] = OW_Blue(1.00f);
+
+        colors[ImGuiCol_Tab] = ImVec4(0.13f, 0.14f, 0.17f, 1.00f);
+        colors[ImGuiCol_TabHovered] = OW_Orange(0.95f);
+        colors[ImGuiCol_TabActive] = ImVec4(0.18f, 0.19f, 0.22f, 1.00f);
+        colors[ImGuiCol_TabUnfocused] = ImVec4(0.10f, 0.11f, 0.14f, 1.00f);
+        colors[ImGuiCol_TabUnfocusedActive] = ImVec4(0.16f, 0.17f, 0.20f, 1.00f);
+
+        colors[ImGuiCol_TitleBg] = ImVec4(0.10f, 0.11f, 0.14f, 1.00f);
+        colors[ImGuiCol_TitleBgActive] = ImVec4(0.12f, 0.13f, 0.16f, 1.00f);
+        colors[ImGuiCol_MenuBarBg] = ImVec4(0.09f, 0.10f, 0.13f, 1.00f);
+
+        colors[ImGuiCol_Separator] = ImVec4(0.28f, 0.30f, 0.34f, 1.00f);
+        colors[ImGuiCol_ResizeGrip] = OW_Blue(0.55f);
+        colors[ImGuiCol_ResizeGripHovered] = OW_Blue(0.80f);
+        colors[ImGuiCol_ResizeGripActive] = OW_Blue(1.00f);
+
+        colors[ImGuiCol_ScrollbarBg] = ImVec4(0.07f, 0.08f, 0.10f, 0.53f);
+        colors[ImGuiCol_ScrollbarGrab] = ImVec4(0.24f, 0.26f, 0.30f, 1.00f);
+        colors[ImGuiCol_ScrollbarGrabHovered] = OW_Orange(0.75f);
+        colors[ImGuiCol_ScrollbarGrabActive] = OW_Orange(1.00f);
+
+        colors[ImGuiCol_DockingPreview] = OW_Orange(0.40f);
+        colors[ImGuiCol_NavHighlight] = OW_Blue(1.00f);
+    }
+    else
+    {
+        // LIGHT MODE
+        colors[ImGuiCol_Text] = ImVec4(0.10f, 0.11f, 0.13f, 1.00f);
+        colors[ImGuiCol_TextDisabled] = ImVec4(0.60f, 0.62f, 0.66f, 1.00f);
+        colors[ImGuiCol_WindowBg] = ImVec4(0.97f, 0.98f, 0.99f, 1.00f);
+        colors[ImGuiCol_ChildBg] = ImVec4(0.98f, 0.99f, 1.00f, 1.00f);
+        colors[ImGuiCol_PopupBg] = ImVec4(1.00f, 1.00f, 1.00f, 0.98f);
+        colors[ImGuiCol_Border] = ImVec4(0.85f, 0.87f, 0.90f, 1.00f);
+        colors[ImGuiCol_BorderShadow] = ImVec4(0, 0, 0, 0);
+
+        colors[ImGuiCol_FrameBg] = ImVec4(0.94f, 0.95f, 0.97f, 1.00f);
+        colors[ImGuiCol_FrameBgHovered] = OW_Blue(0.25f);
+        colors[ImGuiCol_FrameBgActive] = OW_Blue(0.45f);
+        colors[ImGuiCol_Button] = ImVec4(0.95f, 0.96f, 0.98f, 1.00f);
+        colors[ImGuiCol_ButtonHovered] = OW_Orange(0.85f);
+        colors[ImGuiCol_ButtonActive] = OW_Orange(1.00f);
+
+        colors[ImGuiCol_Header] = ImVec4(0.94f, 0.95f, 0.97f, 1.00f);
+        colors[ImGuiCol_HeaderHovered] = OW_Orange(0.45f);
+        colors[ImGuiCol_HeaderActive] = OW_Orange(0.70f);
+
+        colors[ImGuiCol_CheckMark] = OW_Orange(1.00f);
+        colors[ImGuiCol_SliderGrab] = OW_Blue(0.80f);
+        colors[ImGuiCol_SliderGrabActive] = OW_Blue(1.00f);
+
+        colors[ImGuiCol_Tab] = ImVec4(0.92f, 0.94f, 0.97f, 1.00f);
+        colors[ImGuiCol_TabHovered] = OW_Orange(0.90f);
+        colors[ImGuiCol_TabActive] = ImVec4(0.88f, 0.91f, 0.95f, 1.00f);
+        colors[ImGuiCol_TabUnfocused] = ImVec4(0.95f, 0.96f, 0.98f, 1.00f);
+        colors[ImGuiCol_TabUnfocusedActive] = ImVec4(0.92f, 0.94f, 0.97f, 1.00f);
+
+        colors[ImGuiCol_TitleBg] = ImVec4(0.95f, 0.96f, 0.98f, 1.00f);
+        colors[ImGuiCol_TitleBgActive] = ImVec4(0.92f, 0.94f, 0.97f, 1.00f);
+        colors[ImGuiCol_MenuBarBg] = ImVec4(0.96f, 0.97f, 0.99f, 1.00f);
+
+        colors[ImGuiCol_Separator] = ImVec4(0.82f, 0.84f, 0.88f, 1.00f);
+        colors[ImGuiCol_ResizeGrip] = OW_Blue(0.45f);
+        colors[ImGuiCol_ResizeGripHovered] = OW_Blue(0.75f);
+        colors[ImGuiCol_ResizeGripActive] = OW_Blue(1.00f);
+        colors[ImGuiCol_ScrollbarBg] = ImVec4(0.96f, 0.97f, 0.99f, 0.70f);
+        colors[ImGuiCol_ScrollbarGrab] = ImVec4(0.86f, 0.88f, 0.92f, 1.00f);
+        colors[ImGuiCol_ScrollbarGrabHovered] = OW_Orange(0.70f);
+        colors[ImGuiCol_ScrollbarGrabActive] = OW_Orange(0.95f);
+        colors[ImGuiCol_DockingPreview] = OW_Orange(0.35f);
+        colors[ImGuiCol_NavHighlight] = OW_Blue(1.00f);
+    }
+
+    // 🎨 Shared Overwatch style DNA
+    style.WindowRounding = 6.0f;
+    style.ChildRounding = 6.0f;
+    style.FrameRounding = 6.0f;
+    style.GrabRounding = 4.0f;
+    style.PopupRounding = 5.0f;
+    style.ScrollbarRounding = 6.0f;
+    style.TabRounding = 6.0f;
+    style.WindowPadding = ImVec2(10, 10);
+    style.FramePadding = ImVec2(10, 6);
+    style.ItemSpacing = ImVec2(8, 8);
+    style.ItemInnerSpacing = ImVec2(6, 6);
+    style.IndentSpacing = 18.0f;
+    style.GrabMinSize = 14.0f;
+    style.ScrollbarSize = 14.0f;
+}
+
 /**
  * @brief Initialize the ImGUI context
  * @param window The window to initialize the ImGUI context
@@ -479,8 +733,11 @@ void EditorGUI::Init(GLFWwindow* window)
     //ImGui::GetStyle().ScaleAllSizes(xScale);
 
     // Setup Dear ImGui style
-    //ImGui::StyleColorsLight();
+    /*ImGui::StyleColorsLight();
+    SetCutesyPinkTheme();*/
     ImGui::StyleColorsDark();
+    SetCyberpunk2077Theme();
+    //SetOverwatchTheme(false);
 
     // When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
     ImGuiStyle& style = ImGui::GetStyle();
