@@ -1,4 +1,5 @@
 #version 460
+#extension GL_ARB_bindless_texture : require
 
 const int MAX_LIGHTS = 32;
 const int NUM_CASCADES = 4;
