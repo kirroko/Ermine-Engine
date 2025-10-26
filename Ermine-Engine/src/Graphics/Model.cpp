@@ -228,3 +228,44 @@ std::vector<glm::vec3> Ermine::graphics::Model::GetMeshVertices() const
 
     return vertices;
 }
+
+std::vector<glm::vec3> Model::GetSkinnedVertices() const
+{
+    std::vector<glm::vec3> vertices;
+
+    for (const auto& mesh : m_meshes)
+    {
+        if (!mesh.vbo) continue;
+
+        const VertexData* vertexData = reinterpret_cast<const VertexData*>(mesh.vbo->GetDataPointer());
+        if (!vertexData) continue;
+
+        unsigned int numVertices = mesh.vbo->GetSize() / sizeof(VertexData);
+        vertices.reserve(vertices.size() + numVertices);
+
+        for (unsigned int i = 0; i < numVertices; ++i)
+        {
+            const VertexData& v = vertexData[i];
+            glm::vec4 skinnedPos = glm::vec4(0.0f);
+
+            // Apply bone transforms
+            for (int j = 0; j < MAX_BONE_INFLUENCE; ++j)
+            {
+                int boneID = v.IDs[j];
+                float weight = v.Weights[j];
+
+                if (boneID < 0 || boneID >= static_cast<int>(m_BoneTransforms.size()))
+                    continue;
+
+                // BoneTransform = globalTransform * offset
+                glm::mat4 transform = m_BoneTransforms[boneID];
+                skinnedPos += transform * glm::vec4(v.position[0], v.position[1], v.position[2], 1.0f) * weight;
+            }
+
+            vertices.emplace_back(skinnedPos.x, skinnedPos.y, skinnedPos.z);
+        }
+    }
+
+    return vertices;
+}
+

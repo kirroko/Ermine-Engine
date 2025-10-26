@@ -95,7 +95,7 @@ void Renderer::Init(const int& screenWidth, const int& screenHeight)
 	m_QuadMesh = GeometryFactory::CreateQuad(2.0f, 2.0f);
 
 	// Load deferred shading shaders
-	m_ShadowMapInstancedShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/shadowmap_instanced_vertex.glsl", "../Resources/Shaders/shadowmap_instanced_geometry.glsl", "../Resources/Shaders/shadowmap_fragment.glsl");
+	m_ShadowMapInstancedShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/shadowmap_instanced_vertex.glsl", "../Resources/Shaders/shadowmap_fragment.glsl");
 	m_GBufferShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/gBuffer_vertex.glsl", "../Resources/Shaders/gBuffer_fragment.glsl");
 	m_LightPassShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/lighting_vertex.glsl", "../Resources/Shaders/lighting_fragment.glsl");
 	m_BloomShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/bloom_vertex.glsl", "../Resources/Shaders/bloom_fragment.glsl");
@@ -205,16 +205,15 @@ Renderer::OffscreenBuffer Renderer::CreateOffscreenBuffer(const int& width, cons
 		glDeleteRenderbuffers(1, &m_OffscreenBuffer->RBO);
 	}
 
-	// If Light SSBO doesn't exist, create it
-	if (!m_LightsSSBO)
+	if (!m_LightsUBO)
 	{
-		glGenBuffers(1, &m_LightsSSBO);
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_LightsSSBO);
+		glGenBuffers(1, &m_LightsUBO);
+		glBindBuffer(GL_UNIFORM_BUFFER, m_LightsUBO);
 		const GLsizeiptr headerSize = static_cast<GLsizeiptr>(sizeof(glm::vec4));
 		const GLsizeiptr bodySize = static_cast<GLsizeiptr>(MAX_LIGHTS * sizeof(LightGPU));
-		glBufferData(GL_SHADER_STORAGE_BUFFER, headerSize + bodySize, nullptr, GL_DYNAMIC_DRAW);
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, LightsBindingPoint, m_LightsSSBO);
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+		glBufferData(GL_UNIFORM_BUFFER, headerSize + bodySize, nullptr, GL_DYNAMIC_DRAW);
+		glBindBufferBase(GL_UNIFORM_BUFFER, LightsBindingPoint, m_LightsUBO);
+		glBindBuffer(GL_UNIFORM_BUFFER, 0);
 		glCheckError();
 	}
 
@@ -367,16 +366,16 @@ void Renderer::CreateGBuffer(const int& width, const int& height)
 		EE_CORE_ERROR("ERROR: Invalid G-Buffer dimensions: {0}x{1}", width, height);
 	}
 
-	// If Light SSBO doesn't exist, create it
-	if (!m_LightsSSBO)
+	// If Light UBO doesn't exist, create it
+	if (!m_LightsUBO)
 	{
-		glGenBuffers(1, &m_LightsSSBO);
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_LightsSSBO);
+		glGenBuffers(1, &m_LightsUBO);
+		glBindBuffer(GL_UNIFORM_BUFFER, m_LightsUBO);
 		const GLsizeiptr headerSize = static_cast<GLsizeiptr>(sizeof(glm::vec4));
 		const GLsizeiptr bodySize = static_cast<GLsizeiptr>(MAX_LIGHTS * sizeof(LightGPU));
-		glBufferData(GL_SHADER_STORAGE_BUFFER, headerSize + bodySize, nullptr, GL_DYNAMIC_DRAW);
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, LightsBindingPoint, m_LightsSSBO);
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+		glBufferData(GL_UNIFORM_BUFFER, headerSize + bodySize, nullptr, GL_DYNAMIC_DRAW);
+		glBindBufferBase(GL_UNIFORM_BUFFER, LightsBindingPoint, m_LightsUBO);
+		glBindBuffer(GL_UNIFORM_BUFFER, 0);
 		glCheckError();
 	}
 
@@ -855,7 +854,7 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 
 			// Render opaque model in geometry pass
 			if (material) {
-				UpdateMaterialUBO(material->GetUBOData());
+				UpdateMaterialSSBO(material->GetSSBOData());
 				BindMaterialTextures(material);
 			}
 				RenderModelDeferred(*modelComp.m_model, material, view, projection, entityModel);
@@ -907,7 +906,7 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 			glm::mat3 normalMatrix = transpose(inverse(glm::mat3(model)));
 			m_GBufferShader->SetUniformMatrix3fv("NormalMatrix", normalMatrix);
 
-			UpdateMaterialUBO(material->GetUBOData());
+			UpdateMaterialSSBO(material->GetSSBOData());
 			BindMaterialTextures(material);
 
 			// Draw the mesh
@@ -1094,17 +1093,6 @@ void Renderer::RenderPostProcessPass()
 #if defined(EE_EDITOR)
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 #endif
-}
-
-// helper – convert your Mtx44 to glm::mat4
-static inline glm::mat4 ToGlm(const Ermine::Mtx44& m)
-{
-	return glm::mat4(
-		m.m00, m.m01, m.m02, m.m03,
-		m.m10, m.m11, m.m12, m.m13,
-		m.m20, m.m21, m.m22, m.m23,
-		m.m30, m.m31, m.m32, m.m33
-	);
 }
 
 // overload that forwards to the existing glm version
@@ -1386,11 +1374,11 @@ void Renderer::CleanupPostProcessBuffer()
 	glCheckError();
 }
 
-/**
- * @brief Updates the lights' uniform buffer object (UBO) with the current light and transform data from all living entities.
- * @param view The view matrix to transform the positions and directions of the lights into view space.
- */
-void Renderer::UpdateLightsSSBO(const Mtx44& view)
+ /**
+  * @brief Updates the lights' uniform buffer object (UBO) with the current light and transform data from all living entities.
+  * @param view The view matrix to transform the positions and directions of the lights into view space.
+  */
+void Renderer::UpdateLightsUBO(const Mtx44& view)
 {
 	std::vector<LightGPU> lights;
 	lights.reserve(MAX_LIGHTS);
@@ -1405,9 +1393,8 @@ void Renderer::UpdateLightsSSBO(const Mtx44& view)
 
 	// Gather Light and Transform across all alive entities
 	const auto& ecs = Ermine::ECS::GetInstance();
-	for(EntityID e : m_LightSystem->m_Entities)
+	for (EntityID e : m_LightSystem->m_Entities)
 	{
-
 		const auto& trans = ecs.GetComponent<Transform>(e);
 		const auto& light = ecs.GetComponent<Light>(e);
 
@@ -1415,19 +1402,16 @@ void Renderer::UpdateLightsSSBO(const Mtx44& view)
 		glm::vec4 posWorld(trans.position.x, trans.position.y, trans.position.z, 1.0f);
 		glm::vec4 posView = glmView * posWorld;
 
-		// Build rotation from Euler angles using GLM
+		// Build rotation from quaternion using GLM
 		glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
 		rotQuat = glm::normalize(rotQuat);
-		//rotationMatrix = glm::rotate(rotationMatrix, glm::radians(trans.rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
-		//rotationMatrix = glm::rotate(rotationMatrix, glm::radians(trans.rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-		//rotationMatrix = glm::rotate(rotationMatrix, glm::radians(trans.rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
 
 		// World-space direction using GLM
-		glm::vec3 fwd(0.0f, 0.0f, 1.0f); // Light coming from +Z when unrotated
+		glm::vec3 fwd(0.0f, 0.0f, 1.0f);
 		glm::vec3 dirWorld = glm::normalize(rotQuat * fwd);
 
 		// View-space direction using GLM
-		glm::vec4 dirWorldH(dirWorld, 0.0f); // Homogeneous coordinate with w=0 for directions
+		glm::vec4 dirWorldH(dirWorld, 0.0f);
 		glm::vec4 dirViewH = glmView * dirWorldH;
 		glm::vec3 dirView = glm::normalize(glm::vec3(dirViewH));
 
@@ -1440,7 +1424,7 @@ void Renderer::UpdateLightsSSBO(const Mtx44& view)
 			outerCos = glm::cos(outerAngle);
 		}
 
-		// Convert back to glm::vec4 for LightGPU structure (maintaining compatibility)
+		// Convert to LightGPU structure
 		LightGPU gpu{};
 		gpu.position_type = glm::vec4(posView.x, posView.y, posView.z, static_cast<float>(light.type));
 		gpu.color_intensity = glm::vec4(light.color.x, light.color.y, light.color.z, light.intensity);
@@ -1453,95 +1437,88 @@ void Renderer::UpdateLightsSSBO(const Mtx44& view)
 		lights.emplace_back(gpu);
 	}
 
-	// Upload to SSBO
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_LightsSSBO);
+	// Upload to UBO
+	glBindBuffer(GL_UNIFORM_BUFFER, m_LightsUBO);
 
 	glm::vec4 count(static_cast<float>(lights.size()), 0.0f, 0.0f, 0.0f);
-	glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(glm::vec4), &count);
+	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::vec4), &count);
 
 	if (!lights.empty())
 	{
 		const GLsizeiptr bodyOffset = static_cast<GLsizeiptr>(sizeof(glm::vec4));
 		const GLsizeiptr bodySize = static_cast<GLsizeiptr>(lights.size() * sizeof(LightGPU));
-		glBufferSubData(GL_SHADER_STORAGE_BUFFER, bodyOffset, bodySize, lights.data());
+		glBufferSubData(GL_UNIFORM_BUFFER, bodyOffset, bodySize, lights.data());
 	}
 
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 	glCheckError();
 }
 
 /**
- * @brief Updates the material's uniform buffer object (UBO) with the specified material data.
+ * @brief Updates the material's SSBO with the specified material data.
  *
- * If the material UBO does not exist, this function creates one. It then uploads the given material data
+ * If the material SSBO does not exist, this function creates one. It then uploads the given material data
  * into the UBO, making it available to the shader for rendering.
  *
- * @param materialData The material data to be uploaded to the UBO, including properties like color, texture, etc.
+ * @param materialData The material data to be uploaded to the SSBO, including properties like color, texture, etc.
  */
-void Renderer::UpdateMaterialUBO(const graphics::MaterialUBO& materialData)
+void Renderer::UpdateMaterialSSBO(const graphics::MaterialSSBO& materialData)
 {
 	// Validate material data size first
-	constexpr size_t expectedSize = sizeof(graphics::MaterialUBO);
+	constexpr size_t expectedSize = sizeof(graphics::MaterialSSBO);
 	if (expectedSize == 0)
 	{
-		EE_CORE_ERROR("Invalid MaterialUBO size: {0}", expectedSize);
+		EE_CORE_ERROR("Invalid MaterialSSBO size: {0}", expectedSize);
 		return;
 	}
-	
-	// Ensure size is reasonable (MaterialUBO should be 128 bytes with proper alignment)
-	//if (expectedSize < 64 || expectedSize > 512)
-	//{
-	//	EE_CORE_ERROR("MaterialUBO size out of expected range: {0} bytes (expected ~128 bytes)", expectedSize);
-	//	return;
-	//}
 
-	// Create Material UBO if it doesn't exist
-	if (!m_MaterialUBO)
+	// Create Material SSBO if it doesn't exist
+	if (!m_MaterialSSBO)
 	{
-		glGenBuffers(1, &m_MaterialUBO);
-		glBindBuffer(GL_UNIFORM_BUFFER, m_MaterialUBO);
-		glBufferData(GL_UNIFORM_BUFFER, expectedSize, nullptr, GL_DYNAMIC_DRAW);
-		
+		glGenBuffers(1, &m_MaterialSSBO);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_MaterialSSBO);
+		glBufferData(GL_SHADER_STORAGE_BUFFER, expectedSize, nullptr, GL_DYNAMIC_DRAW);
+
 		// Check for errors during buffer creation
 		GLenum error = glGetError();
 		if (error != GL_NO_ERROR)
 		{
-			EE_CORE_ERROR("OpenGL error during MaterialUBO creation: {0}", error);
+			EE_CORE_ERROR("OpenGL error during MaterialSSBO creation: {0}", error);
 			return;
 		}
-		
-		glBindBufferBase(GL_UNIFORM_BUFFER, MaterialBindingPoint, m_MaterialUBO);
-		glBindBuffer(GL_UNIFORM_BUFFER, 0);
-		
-		EE_CORE_INFO("Created MaterialUBO with size: {0} bytes", expectedSize);
+
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, MaterialBindingPoint, m_MaterialSSBO);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+		EE_CORE_INFO("Created MaterialSSBO with size: {0} bytes", expectedSize);
 	}
 
 	// Upload material data with comprehensive error checking
-	glBindBuffer(GL_UNIFORM_BUFFER, m_MaterialUBO);
-	
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_MaterialSSBO);
+
 	// Check if buffer is properly bound
 	GLint boundBuffer;
-	glGetIntegerv(GL_UNIFORM_BUFFER_BINDING, &boundBuffer);
-	if (static_cast<GLuint>(boundBuffer) != m_MaterialUBO)
+	glGetIntegerv(GL_SHADER_STORAGE_BUFFER_BINDING, &boundBuffer);
+	if (static_cast<GLuint>(boundBuffer) != m_MaterialSSBO)
 	{
-		EE_CORE_ERROR("Failed to bind MaterialUBO for update");
-		glBindBuffer(GL_UNIFORM_BUFFER, 0);
+		EE_CORE_ERROR("Failed to bind MaterialSSBO for update");
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 		return;
 	}
 
 	// Check buffer size matches expectation
 	GLint bufferSize;
-	glGetBufferParameteriv(GL_UNIFORM_BUFFER, GL_BUFFER_SIZE, &bufferSize);
+	glGetBufferParameteriv(GL_SHADER_STORAGE_BUFFER, GL_BUFFER_SIZE, &bufferSize);
 	if (static_cast<size_t>(bufferSize) != expectedSize)
 	{
-		EE_CORE_ERROR("MaterialUBO buffer size mismatch. Expected: {0}, Got: {1}", expectedSize, bufferSize);
-		glBindBuffer(GL_UNIFORM_BUFFER, 0);
+		EE_CORE_ERROR("MaterialSSBO buffer size mismatch. Expected: {0}, Got: {1}", expectedSize, bufferSize);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 		return;
 	}
 
 	// Perform the buffer update
-	glBufferSubData(GL_UNIFORM_BUFFER, 0, expectedSize, &materialData);
-	
+	glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, expectedSize, &materialData);
+
 	// Check for errors immediately after the critical operation
 	GLenum error = glGetError();
 	if (error != GL_NO_ERROR)
@@ -1555,19 +1532,19 @@ void Renderer::UpdateMaterialUBO(const graphics::MaterialUBO& materialData)
 		case GL_OUT_OF_MEMORY: errorString = "GL_OUT_OF_MEMORY"; break;
 		default: errorString = "UNKNOWN_ERROR"; break;
 		}
-		EE_CORE_ERROR("OpenGL error in UpdateMaterialUBO during glBufferSubData: {0} ({1})", error, errorString);
-		EE_CORE_ERROR("Buffer size: {0}, MaterialUBO size: {1}", bufferSize, expectedSize);
-		
+		EE_CORE_ERROR("OpenGL error in UpdateMaterialSSBO during glBufferSubData: {0} ({1})", error, errorString);
+		EE_CORE_ERROR("Buffer size: {0}, MaterialSSBO size: {1}", bufferSize, expectedSize);
+
 		// Additional debug information
-		EE_CORE_ERROR("MaterialUBO contents preview:");
+		EE_CORE_ERROR("MaterialSSBO contents preview:");
 		EE_CORE_ERROR("  albedo: [{0}, {1}, {2}, {3}]", materialData.albedo.x, materialData.albedo.y, materialData.albedo.z, materialData.albedo.w);
 		EE_CORE_ERROR("  metallic: {0}, roughness: {1}, ao: {2}", materialData.metallic, materialData.roughness, materialData.ao);
-		EE_CORE_ERROR("  normalStrength: {0}, shadingModel: {1}", materialData.normalStrength, materialData.shadingModel);
 	}
-	
-	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 	glCheckError();
 }
+
 
 /**
  * @brief Binds the MaterialBlock uniform block to the specified shader program if it has not been bound before.
@@ -1582,10 +1559,11 @@ void Renderer::BindMaterialBlockIfPresent(const std::shared_ptr<Shader>& shader)
 	if (m_MaterialBlockBoundPrograms.find(program) != m_MaterialBlockBoundPrograms.end())
 		return;
 
-	GLuint blockIndex = glGetUniformBlockIndex(program, "MaterialBlock");
+	// Get the shader storage block index instead of uniform block index
+	GLuint blockIndex = glGetProgramResourceIndex(program, GL_SHADER_STORAGE_BLOCK, "MaterialBlock");
 	if (blockIndex != GL_INVALID_INDEX)
 	{
-		glUniformBlockBinding(program, blockIndex, MaterialBindingPoint);
+		glShaderStorageBlockBinding(program, blockIndex, MaterialBindingPoint);
 		m_MaterialBlockBoundPrograms.insert(program);
 	}
 }
@@ -1629,9 +1607,6 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 		glm::mat4 invView = glm::inverse(glmView);
 		Vec3 cameraPos = Vec3(invView[3][0], invView[3][1], invView[3][2]);
 
-		// Update lights UBO for forward rendering
-		UpdateLightsSSBO(view);
-
 		auto& ecs = ECS::GetInstance();
 
 		// First pass: Render opaque objects and collect transparent objects
@@ -1674,7 +1649,7 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 
 				// Render opaque model
 				if (material) {
-					UpdateMaterialUBO(material->GetUBOData());
+					UpdateMaterialSSBO(material->GetSSBOData());
 				}
 				RenderModelDeferred(*modelComp.m_model, materialComp.GetMaterial(), view, projection, entityModel);
 			}
@@ -1719,7 +1694,7 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 				}
 
 				// Update Material UBO with current material data
-				UpdateMaterialUBO(material->GetUBOData());
+				UpdateMaterialSSBO(material->GetSSBOData());
 
 				// Bind material (this handles shader binding and texture binding)
 				material->Bind();
@@ -1784,7 +1759,7 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 						}
 
 						if (material) {
-							UpdateMaterialUBO(material->GetUBOData());
+							UpdateMaterialSSBO(material->GetSSBOData());
 						}
 					}
 				}
@@ -1802,7 +1777,7 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 					if (!shader || !shader->IsValid()) continue;
 
 					// Update Material UBO
-					UpdateMaterialUBO(material->GetUBOData());
+					UpdateMaterialSSBO(material->GetSSBOData());
 
 					// Bind material
 					material->Bind();
@@ -1902,14 +1877,14 @@ const GPUProfiler::PerformanceMetrics& Renderer::GetPerformanceMetrics() const
  */
 Renderer::~Renderer()
 {
-	if (m_LightsSSBO) {
-		glDeleteBuffers(1, &m_LightsSSBO);
-		m_LightsSSBO = 0;
+	if (m_LightsUBO) {
+		glDeleteBuffers(1, &m_LightsUBO);
+		m_LightsUBO = 0;
 	}
 
-	if (m_MaterialUBO) {
-		glDeleteBuffers(1, &m_MaterialUBO);
-		m_MaterialUBO = 0;
+	if (m_MaterialSSBO) {
+		glDeleteBuffers(1, &m_MaterialSSBO);
+		m_MaterialSSBO = 0;
 	}
 
 	if (m_ShadowMapArrayHandle != 0) {
@@ -2041,7 +2016,7 @@ void Renderer::RenderModelForward(const Model& model, graphics::Material* materi
 	auto shader = material->GetShader();
 	if (!shader || !shader->IsValid()) return;
 
-	UpdateMaterialUBO(material->GetUBOData());
+	UpdateMaterialSSBO(material->GetSSBOData());
 
 	glm::mat4 glmView = ToGlm(view);
 	glm::mat4 glmProj = ToGlm(projection);
@@ -2188,7 +2163,7 @@ void Renderer::RenderForwardPass(const Mtx44& view, const Mtx44& projection)
 		BindMaterialBlockIfPresent(shader);
 
 		// Update material UBO
-		UpdateMaterialUBO(material->GetUBOData());
+		UpdateMaterialSSBO(material->GetSSBOData());
 
 		// Set transformation matrices
 		shader->SetUniformMatrix4fv("model", transparentObj.modelMatrix);
@@ -2785,7 +2760,7 @@ void Renderer::CalculateLightMatrix(const editor::EditorCamera& editorCamera)
 
 				// Add margins to prevent clipping
 				const float xyMargin = 0.5f;
-				const float zMargin = 10.0f;
+				const float zMargin = 4.0f;
 				lsMin -= glm::vec3(xyMargin, xyMargin, zMargin);
 				lsMax += glm::vec3(xyMargin, xyMargin, zMargin);
 
@@ -2829,7 +2804,7 @@ void Renderer::CalculateLightMatrix(const editor::EditorCamera& editorCamera)
  */
 void Renderer::RenderShadowMapInstanced()
 {
-	UpdateLightsSSBO(editor::EditorCamera::GetInstance().GetViewMatrix());
+	UpdateLightsUBO(editor::EditorCamera::GetInstance().GetViewMatrix());
 
 	// Validate resources
 	if (!m_ShadowMapFBO || !m_ShadowMapArray || !m_ShadowMapInstancedShader)

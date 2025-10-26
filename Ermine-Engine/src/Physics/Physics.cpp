@@ -118,13 +118,25 @@ namespace Ermine
         }
 
         // Called when contact begins
-        virtual void OnContactAdded(const Body&, const Body&, const ContactManifold&, ContactSettings&) override {}
+        virtual void OnContactAdded(const Body& inBody1, const Body& inBody2, const ContactManifold&, ContactSettings&) override
+        {
+            EE_CORE_INFO("[Physics] Collision Begin");
+
+            ECS::GetInstance().GetSystem<Physics>()->HandleCollisionEvent(inBody1, inBody2, Physics::CollisionEventType::Begin);
+        }
         
         // Called when contact persists across frames
-        virtual void OnContactPersisted(const Body&, const Body&, const ContactManifold&, ContactSettings&) override {}
+        virtual void OnContactPersisted(const Body& inBody1, const Body& inBody2, const ContactManifold&, ContactSettings&) override
+        {
+            ECS::GetInstance().GetSystem<Physics>()->HandleCollisionEvent(inBody1, inBody2, Physics::CollisionEventType::Stay);
+        }
         
         // Called when contact ends
-        virtual void OnContactRemoved(const SubShapeIDPair&) override {}
+        virtual void OnContactRemoved(const SubShapeIDPair& inPair) override
+        {
+            // We can still get body references using BodyLockRead
+            EE_CORE_INFO("[Physics] Collision End");
+        }
     };
 
     // Handles activation/deactivation of bodies (e.g., sleeping/waking up)
@@ -395,7 +407,7 @@ namespace Ermine
                     if (!model) break;
 
                     // Fill the custom mesh vertices for physics
-                    p.customMeshVertices = model->GetMeshVertices();
+                    p.customMeshVertices = model->GetSkinnedVertices();
                 }
                 else
                 {
@@ -625,5 +637,44 @@ namespace Ermine
     void Physics::AttachDebugRenderer(std::shared_ptr<MyDebugRenderer> renderer)
     {
         mDebugRenderer = std::move(renderer);
+    }
+    void Physics::HandleCollisionEvent(const Body& a, const Body& b, CollisionEventType type)
+    {
+        auto& ecs = ECS::GetInstance();
+        EntityID objectA = 0, objectB = 0;
+        for (auto phylist : mEntityToBody)
+        {
+            if (phylist.second == a.GetID())
+            {
+                objectA = phylist.first;
+            }
+            if (phylist.second == b.GetID())
+            {
+                objectB = phylist.first;
+            }
+        }
+
+        if (!ecs.IsEntityValid(objectB) || !ecs.IsEntityValid(objectA))
+            return;
+
+        if (!ecs.HasComponent<Script>(objectB) || !ecs.HasComponent<Script>(objectA))
+            return;
+
+        switch (type)
+        {
+        case Ermine::Physics::CollisionEventType::Begin:
+            EE_CORE_INFO("[Physics] Collision Begin");
+            break;
+        case Ermine::Physics::CollisionEventType::Stay:
+            EE_CORE_INFO("[Physics] Collision Stay");
+            break;
+        case Ermine::Physics::CollisionEventType::End:
+            //does nth as collision exit alr, if want need lmk 
+            break;
+        default:
+            break;
+        }
+        //run script
+
     }
 }
