@@ -452,6 +452,9 @@
     <ClCompile Include="src\Graphics\MeshManager.cpp">
       <Filter>src\Graphics</Filter>
     </ClCompile>
+    <ClCompile Include="src\Graphics\DrawCommands.cpp">
+      <Filter>src\Graphics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="include\Component.tpp">

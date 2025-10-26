@@ -382,6 +382,7 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClCompile Include="src\Graphics\Animator.cpp" />
     <ClCompile Include="src\Graphics\Camera.cpp" />
     <ClCompile Include="src\Graphics\Cubemap.cpp" />
+    <ClCompile Include="src\Graphics\DrawCommands.cpp" />
     <ClCompile Include="src\Graphics\GeometryFactory.cpp" />
     <ClCompile Include="src\Graphics\IndexBuffer.cpp" />
     <ClCompile Include="src\Graphics\MeshManager.cpp" />

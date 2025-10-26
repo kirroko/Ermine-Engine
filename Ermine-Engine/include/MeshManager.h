@@ -83,8 +83,11 @@ namespace Ermine::graphics {
 
         // Public SSBO handles for Renderer access
         GLuint m_DrawCommandsSSBO = 0;    // Binding 2 - Draw commands
-        GLuint m_DrawInfoSSBO = 0;        // Binding 3 - Draw info (per-draw data)
+        GLuint m_DrawInfoSSBO = 0;        // Binding 3 - Draw info (per-draw data) [DEPRECATED - use m_PersistentDrawInfoBuffer]
         GLuint m_IndexSSBO = 0;           // Binding 1 - All indices
+
+        // Persistent mapped buffer for efficient DrawInfo updates
+        PersistentDrawInfoBuffer m_PersistentDrawInfoBuffer;
 
     private:
         void CreateBuffers();

@@ -854,7 +854,7 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 	m_GBufferShader->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
 
 	// Execute multi-draw indirect call
-	if (m_MeshManager.m_DrawCommandsSSBO != 0 && m_MeshManager.m_DrawInfoSSBO != 0) {
+	if (m_MeshManager.m_DrawCommandsSSBO != 0 && m_MeshManager.m_PersistentDrawInfoBuffer.IsValid()) {
 		// Get the number of draw commands
 		GLint commandCount = 0;
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_MeshManager.m_DrawCommandsSSBO);
@@ -1095,15 +1095,9 @@ void Renderer::BuildIndirectCommands()
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 	}
 
-	// Upload draw info to GPU (Draw Info SSBO)
+	// Upload draw info to GPU using persistent mapped buffer (zero-copy)
 	if (!drawInfos.empty()) {
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_MeshManager.m_DrawInfoSSBO);
-		size_t drawInfoBufferSize = drawInfos.size() * sizeof(DrawInfo);
-		glBufferData(GL_SHADER_STORAGE_BUFFER,
-			drawInfoBufferSize,
-			drawInfos.data(),
-			GL_DYNAMIC_DRAW);
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+		m_MeshManager.m_PersistentDrawInfoBuffer.WriteDrawInfos(drawInfos);
 	}
 }
 

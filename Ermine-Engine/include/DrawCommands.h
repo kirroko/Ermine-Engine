@@ -1,7 +1,7 @@
 /* Start Header ************************************************************************/
 /*!
 \file       DrawCommands.h
-\author     Generated with Claude Code
+\author     Ridhwan Afandi, mohamedridhwan.b, 2301367, mohamedridhwan.b\@digipen.edu
 \date       25/10/2025
 \brief      This file contains the declaration of draw command and draw info structs
             for the Ermine graphics system. These structures are used for indirect
@@ -124,6 +124,59 @@ namespace Ermine::graphics
         void MarkDirty() { isDirty = true; }
         void MarkClean() { isDirty = false; }
         bool IsValid() const { return bufferID != 0; }
+    };
+
+    /**
+     * @brief Persistent mapped buffer for DrawInfo data
+     * Uses persistent mapping for efficient CPU writes without explicit buffer uploads
+     */
+    class PersistentDrawInfoBuffer
+    {
+    public:
+        PersistentDrawInfoBuffer() = default;
+        ~PersistentDrawInfoBuffer();
+
+        // Disable copy
+        PersistentDrawInfoBuffer(const PersistentDrawInfoBuffer&) = delete;
+        PersistentDrawInfoBuffer& operator=(const PersistentDrawInfoBuffer&) = delete;
+
+        /**
+         * @brief Initialize the persistent mapped buffer
+         * @param maxDrawCalls Maximum number of draw calls to support
+         * @return true if successful
+         */
+        bool Initialize(size_t maxDrawCalls);
+
+        /**
+         * @brief Write draw info data to the mapped buffer
+         * @param drawInfos Vector of draw info to write
+         */
+        void WriteDrawInfos(const std::vector<DrawInfo>& drawInfos);
+
+        /**
+         * @brief Get the OpenGL buffer ID
+         * @return Buffer ID
+         */
+        uint32_t GetBufferID() const { return m_BufferID; }
+
+        /**
+         * @brief Check if the buffer is initialized
+         * @return true if initialized
+         */
+        bool IsValid() const { return m_BufferID != 0 && m_MappedPtr != nullptr; }
+
+        /**
+         * @brief Get the current number of draw infos
+         * @return Number of draw infos
+         */
+        size_t GetDrawCount() const { return m_DrawCount; }
+
+    private:
+        uint32_t m_BufferID = 0;        // OpenGL buffer object
+        void* m_MappedPtr = nullptr;    // Persistent mapped pointer
+        size_t m_MaxDrawCalls = 0;      // Maximum capacity
+        size_t m_DrawCount = 0;         // Current number of draws
+        size_t m_BufferSize = 0;        // Total buffer size in bytes
     };
 
 } // namespace Ermine::graphics

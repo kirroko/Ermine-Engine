@@ -73,6 +73,13 @@ namespace Ermine::graphics {
         // Create GPU buffers (SSBOs)
         CreateBuffers();
 
+        // Initialize persistent mapped buffer for DrawInfo (max 10000 draws)
+        constexpr size_t MAX_DRAW_CALLS = 10000;
+        if (!m_PersistentDrawInfoBuffer.Initialize(MAX_DRAW_CALLS))
+        {
+            EE_CORE_ERROR("Failed to initialize persistent DrawInfo buffer");
+        }
+
         /*
 
         // Setup standard vertex VAO
