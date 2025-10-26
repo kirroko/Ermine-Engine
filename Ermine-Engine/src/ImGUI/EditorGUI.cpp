@@ -192,6 +192,24 @@ void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
                 }
             }
         }
+
+        if (ImGui::IsKeyPressed(ImGuiKey_Z, false))
+        {
+            if (ctrl)
+            {
+                EE_CORE_INFO("Ctrl + Z = UNDO");
+                // code to undo
+            }
+        }
+
+        if (ImGui::IsKeyPressed(ImGuiKey_Y, false))
+        {
+            if (ctrl)
+            {
+                EE_CORE_INFO("Ctrl + Y = REDO");
+                // code to redo
+            }
+        }
     }
 
 
