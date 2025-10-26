@@ -158,6 +158,42 @@ void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
         ImGui::EndMenu();
     }
 
+    ImGuiIO& io = ImGui::GetIO();
+
+    if (!io.WantTextInput)  // don't trigger if user is typing in text fields
+    {
+        bool ctrl = io.KeyCtrl;
+        bool shift = io.KeyShift;
+
+        if (ImGui::IsKeyPressed(ImGuiKey_S, false))
+        {
+            if (ctrl && shift)
+            {
+                //EE_CORE_INFO("Ctrl + Shift + S = SAVE AS");
+                if (auto path = SceneManager::ShowSaveDialog(L"untitled.scene", GetActiveWindow()))
+                    SceneManager::GetInstance().SaveSceneTo(*path);
+            }
+            else if (ctrl)
+            {
+                //EE_CORE_INFO("Ctrl + S = SAVE");
+                SceneManager::GetInstance().SaveScene();
+            }
+        }
+
+        if (ImGui::IsKeyPressed(ImGuiKey_O, false))
+        {
+            if (ctrl)
+            {
+                //EE_CORE_INFO("Ctrl + O = OPEN");
+                if (auto path = SceneManager::ShowOpenDialog(GetActiveWindow()))
+                {
+                    SceneManager::GetInstance().ClearScene();
+                    SceneManager::GetInstance().OpenScene(*path);
+                }
+            }
+        }
+    }
+
 
     if (ImGui::BeginMenu("Edit"))
     {
