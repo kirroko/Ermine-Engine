@@ -490,11 +490,10 @@ namespace Ermine::ImguiUI
             if (ImGui::IsItemHovered()) ImGui::SetTooltip("Refresh Assets");
         }
         ImGui::EndGroup();
-        ImGui::PopStyleVar();
-        ImGui::Separator(); // --- End top bar ---
+        ImGui::PopStyleVar(); // --- End top bar ---
 
         // --- Asset browser columns ---
-        ImGui::Columns(2, "AssetBrowserColumns", true);
+        ImGui::Columns(2, "AssetBrowserColumns", false);
         ImGui::SetColumnWidth(0, 260);
 
         ImGui::BeginChild("Folders", ImVec2(0, 0), true); // Begin left folder tree panel
@@ -546,7 +545,6 @@ namespace Ermine::ImguiUI
         ImGui::EndChild(); // End file grid
 
         // Footer with selected path
-        ImGui::Separator();
         ImGui::BeginChild("Footer", ImVec2(0, 35), false); // Begin footer
         {
             // Show selected path below
@@ -555,7 +553,6 @@ namespace Ermine::ImguiUI
                     fs::path rel = fs::relative(asset.realName, projectRoot);
                     std::string shortPath = "Resources/" + rel.string();
                     std::replace(shortPath.begin(), shortPath.end(), '\\', '/');
-                    ImGui::Separator();
                     ImGui::TextDisabled("%s", shortPath.c_str());
                     ImGui::SameLine();
                     ImGui::SmallButton("Copy Path");
