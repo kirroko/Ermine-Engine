@@ -595,12 +595,12 @@ void Ermine::ViewPortGUI::Update()
 		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_FILE")) {
 			const char* cpath = static_cast<const char*>(payload->Data);
 
-			if (cpath && payload->DataSize > 0 && cpath[payload->DataSize - 1] == '\0')
-			{
-				std::string path = cpath;
+			std::filesystem::path path = cpath;
+
+			if (path.extension() != ".prefab")
+				EE_CORE_INFO("Ignored drop: {} (only .prefab is allowed here)", path.string());
+			else
 				PrefabManager::GetInstance().LoadPrefab(path);
-			}
-			//EE_CORE_INFO("Dropped prefab file: {}", payload->Data);
 		}
 		ImGui::EndDragDropTarget(); // End drag & drop target
 	}
