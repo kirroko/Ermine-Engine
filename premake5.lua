@@ -397,12 +397,19 @@ project "Ermine-ResourcePipeline"
         "%{prj.name}/xresource_pipeline_v2-main/source",
         "%{prj.name}/xresource_pipeline_v2-main/dependencies/xtextfile/source",
         "%{prj.name}/xresource_pipeline_v2-main/dependencies/xerr/source",
-        "%{IncludeDir.DirectXTex}"
+        "%{IncludeDir.DirectXTex}",
+        "%{IncludeDir.assimp}"
     }
 
     libdirs
     {
-        "%{LibraryDir.DirectXTex}"
+        "%{LibraryDir.DirectXTex}",
+        "%{LibraryDir.assimp}"
+    }
+
+    postbuildcommands
+    {
+        "{COPY} \"$(SolutionDir)ThirdParty\\assimp\\bin\\assimp-vc143-mt.dll\" \"$(TargetDir)\""
     }
 
     warnings "Extra"
@@ -416,16 +423,16 @@ project "Ermine-ResourcePipeline"
         runtime "Debug"
         symbols "on"
         linkoptions { "/NODEFAULTLIB:LIBCMTD" }
-        libdirs { "%{LibraryDir.DirectXTex}" }
-        links { "DirectXTexD.lib" }
+        libdirs { "%{LibraryDir.DirectXTex}", "%{LibraryDir.assimp}" }
+        links { "DirectXTexD.lib", "assimp-vc143-mt.lib" }
 
     filter "configurations:*Release"
         defines "EE_RELEASE"
         runtime "Release"
         optimize "on"
         linkoptions { "/NODEFAULTLIB:LIBCMT" }
-        libdirs { "%{LibraryDir.DirectXTex}" }
-        links { "DirectXTex.lib" }
+        libdirs { "%{LibraryDir.DirectXTex}" ,"%{LibraryDir.assimp}" }
+        links { "DirectXTex.lib", "assimp-vc143-mt.lib" }
 
 -- Script Assembly Project
 project "Ermine-ScriptAssembly"

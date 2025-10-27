@@ -1135,8 +1135,12 @@ namespace Ermine::editor {
 			for (auto& entry : std::filesystem::directory_iterator(modelsDir)) {
 				if (entry.is_regular_file()) {
 					std::string name = entry.path().filename().string();
-					if (name.ends_with(".fbx") || name.ends_with(".obj") || name.ends_with(".gltf"))
+					std::string ext = entry.path().extension().string();
+					// Added .skin and .mesh to the filter
+					if (ext == ".fbx" || ext == ".obj" || ext == ".gltf" ||
+						ext == ".skin" || ext == ".mesh") {
 						availableModels.push_back(name);
+					}
 				}
 			}
 			std::sort(availableModels.begin(), availableModels.end());

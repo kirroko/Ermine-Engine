@@ -8,6 +8,11 @@
 #include "xresource_pipeline.h"
 #include <DirectXTex.h>
 
+// Assimp includes
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+
 #ifdef _MSC_VER
 #pragma warning(disable : 4566)
 #endif
@@ -15,6 +20,42 @@
 using namespace DirectX;
 // Define a texture resource type GUID (you can generate this or use a fixed one)
 constexpr xresource::type_guid TEXTURE_TYPE_GUID("TEXTURE_RESOURCE_TYPE");
+constexpr xresource::type_guid STATIC_MESH_TYPE_GUID("STATIC_MESH_RESOURCE");   
+constexpr xresource::type_guid SKINNED_MESH_TYPE_GUID("SKINNED_MESH_RESOURCE");
+
+// Mesh data structures
+struct Vertex {
+    float position[3];
+    float normal[3];
+    float texCoord[2];
+    float tangent[3];
+};
+
+struct SkinnedVertex {
+    float position[3];
+    float normal[3];
+    float texCoord[2];
+    float tangent[3];
+    int boneIndices[4];
+    float boneWeights[4];
+};
+
+struct MeshData {
+    std::vector<Vertex> vertices;
+    std::vector<uint32_t> indices;
+};
+
+struct BoneInfo {
+    std::string name;
+    aiMatrix4x4 offsetMatrix;
+    int index;
+};
+
+struct SkinnedMeshData {
+    std::vector<SkinnedVertex> vertices;
+    std::vector<uint32_t> indices;
+    std::vector<BoneInfo> bones;
+};
 
 class ErmineResourcePipeline {
 private:
@@ -33,6 +74,7 @@ private:
         std::string sourcePath;
         std::filesystem::file_time_type lastModified;
         std::string outputPath;
+        std::string resourceType;
     };
     std::vector<ResourceEntry> existingResources;
 
@@ -48,6 +90,444 @@ private:
 
     void CleanupDirectXTex() {
         CoUninitialize();
+    }
+
+    // Assimp helper methods
+    bool LoadAssimpScene(const std::string& filePath, const aiScene*& outScene, Assimp::Importer& importer) {
+        // Import flags for optimal mesh processing
+        unsigned int importFlags =
+            aiProcess_Triangulate |           // Convert to triangles
+            aiProcess_GenNormals |            // Generate normals if missing
+            aiProcess_CalcTangentSpace |      // Calculate tangents for normal mapping
+            aiProcess_JoinIdenticalVertices | // Index optimization
+            aiProcess_SortByPType |           // Split by primitive type
+            aiProcess_FlipUVs |               // Flip V coordinate (DirectX convention)
+            aiProcess_LimitBoneWeights;      // Limit to 4 bones per vertex
+            //aiProcess_ConvertToLeftHanded;    // Convert to DirectX coordinate system
+
+        outScene = importer.ReadFile(filePath, importFlags);
+
+        if (!outScene || outScene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !outScene->mRootNode) {
+            std::cout << "ERROR: Assimp failed to load file: " << importer.GetErrorString() << std::endl;
+            return false;
+        }
+
+        std::cout << "  ✓ Loaded scene with " << outScene->mNumMeshes << " mesh(es)" << std::endl;
+        return true;
+    }
+
+    bool HasSkinning(const aiMesh* mesh) {
+        return mesh->HasBones();
+    }
+
+    bool ProcessStaticMesh(const aiMesh* mesh, MeshData& outData) {
+        std::cout << "    Processing static mesh: " << mesh->mName.C_Str() << std::endl;
+        std::cout << "    Vertices: " << mesh->mNumVertices << ", Faces: " << mesh->mNumFaces << std::endl;
+
+        // Process vertices
+        for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
+            Vertex vertex = {};
+
+            // Position
+            vertex.position[0] = mesh->mVertices[i].x;
+            vertex.position[1] = mesh->mVertices[i].y;
+            vertex.position[2] = mesh->mVertices[i].z;
+
+            // Normal
+            if (mesh->HasNormals()) {
+                vertex.normal[0] = mesh->mNormals[i].x;
+                vertex.normal[1] = mesh->mNormals[i].y;
+                vertex.normal[2] = mesh->mNormals[i].z;
+            }
+
+            // Texture coordinates (use first UV channel)
+            if (mesh->HasTextureCoords(0)) {
+                vertex.texCoord[0] = mesh->mTextureCoords[0][i].x;
+                vertex.texCoord[1] = mesh->mTextureCoords[0][i].y;
+            }
+
+            // Tangent
+            if (mesh->HasTangentsAndBitangents()) {
+                vertex.tangent[0] = mesh->mTangents[i].x;
+                vertex.tangent[1] = mesh->mTangents[i].y;
+                vertex.tangent[2] = mesh->mTangents[i].z;
+            }
+
+            outData.vertices.push_back(vertex);
+        }
+
+        // Process indices
+        for (unsigned int i = 0; i < mesh->mNumFaces; i++) {
+            aiFace face = mesh->mFaces[i];
+            for (unsigned int j = 0; j < face.mNumIndices; j++) {
+                outData.indices.push_back(face.mIndices[j]);
+            }
+        }
+
+        std::cout << "    ✓ Processed " << outData.vertices.size() << " vertices, "
+            << outData.indices.size() << " indices" << std::endl;
+
+        return !outData.vertices.empty();
+    }
+
+    bool ProcessSkinnedMesh(const aiScene* scene, const aiMesh* mesh, SkinnedMeshData& outData) {
+        std::cout << "    Processing skinned mesh: " << mesh->mName.C_Str() << std::endl;
+        std::cout << "    Vertices: " << mesh->mNumVertices << ", Bones: " << mesh->mNumBones << std::endl;
+
+        // Build bone mapping from ALL meshes in the scene (not just this one)
+        std::map<std::string, int> boneMapping;
+
+        // First pass: collect all unique bones from all meshes
+        for (unsigned int meshIdx = 0; meshIdx < scene->mNumMeshes; meshIdx++) {
+            const aiMesh* sceneMesh = scene->mMeshes[meshIdx];
+            if (!sceneMesh->HasBones()) continue;
+
+            for (unsigned int i = 0; i < sceneMesh->mNumBones; i++) {
+                aiBone* bone = sceneMesh->mBones[i];
+                std::string boneName = bone->mName.C_Str();
+
+                // Only add if not already added
+                if (boneMapping.find(boneName) == boneMapping.end()) {
+                    BoneInfo boneInfo;
+                    boneInfo.name = boneName;
+                    boneInfo.offsetMatrix = bone->mOffsetMatrix;
+                    boneInfo.index = (int)outData.bones.size();
+
+                    outData.bones.push_back(boneInfo);
+                    boneMapping[boneName] = boneInfo.index;
+                }
+            }
+        }
+
+        std::cout << "    Total unique bones in skeleton: " << outData.bones.size() << std::endl;
+
+        // Initialize vertices with zero bone weights
+        std::vector<std::vector<std::pair<int, float>>> vertexWeights(mesh->mNumVertices);
+
+        // Process bone weights (only for THIS mesh)
+        for (unsigned int boneIndex = 0; boneIndex < mesh->mNumBones; boneIndex++) {
+            aiBone* bone = mesh->mBones[boneIndex];
+            std::string boneName = bone->mName.C_Str();
+
+            // Get the global bone index from our complete skeleton
+            int globalBoneIndex = boneMapping[boneName];
+
+            for (unsigned int weightIndex = 0; weightIndex < bone->mNumWeights; weightIndex++) {
+                aiVertexWeight weight = bone->mWeights[weightIndex];
+                unsigned int vertexId = weight.mVertexId;
+                float weightValue = weight.mWeight;
+
+                vertexWeights[vertexId].push_back({ globalBoneIndex, weightValue });
+            }
+        }
+
+        // Process vertices
+        for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
+            SkinnedVertex vertex = {};
+
+            // Position
+            vertex.position[0] = mesh->mVertices[i].x;
+            vertex.position[1] = mesh->mVertices[i].y;
+            vertex.position[2] = mesh->mVertices[i].z;
+
+            // Normal
+            if (mesh->HasNormals()) {
+                vertex.normal[0] = mesh->mNormals[i].x;
+                vertex.normal[1] = mesh->mNormals[i].y;
+                vertex.normal[2] = mesh->mNormals[i].z;
+            }
+
+            // Texture coordinates
+            if (mesh->HasTextureCoords(0)) {
+                vertex.texCoord[0] = mesh->mTextureCoords[0][i].x;
+                vertex.texCoord[1] = mesh->mTextureCoords[0][i].y;
+            }
+
+            // Tangent
+            if (mesh->HasTangentsAndBitangents()) {
+                vertex.tangent[0] = mesh->mTangents[i].x;
+                vertex.tangent[1] = mesh->mTangents[i].y;
+                vertex.tangent[2] = mesh->mTangents[i].z;
+            }
+
+            // Bone weights (limit to 4, sorted by weight)
+            auto& weights = vertexWeights[i];
+            std::sort(weights.begin(), weights.end(),
+                [](const auto& a, const auto& b) { return a.second > b.second; });
+
+            // Initialize with defaults
+            for (int j = 0; j < 4; j++) {
+                vertex.boneIndices[j] = 0;
+                vertex.boneWeights[j] = 0.0f;
+            }
+
+            // Fill in actual weights (up to 4)
+            float totalWeight = 0.0f;
+            int weightCount = std::min(4, (int)weights.size());
+
+            for (int j = 0; j < weightCount; j++) {
+                vertex.boneIndices[j] = weights[j].first;
+                vertex.boneWeights[j] = weights[j].second;
+                totalWeight += weights[j].second;
+            }
+
+            // Normalize weights to sum to 1.0
+            if (totalWeight > 0.0f) {
+                for (int j = 0; j < 4; j++) {
+                    vertex.boneWeights[j] /= totalWeight;
+                }
+            }
+            else {
+                // Vertex has no weights - assign to bone 0
+                vertex.boneIndices[0] = 0;
+                vertex.boneWeights[0] = 1.0f;
+            }
+
+            outData.vertices.push_back(vertex);
+        }
+
+        // Process indices
+        for (unsigned int i = 0; i < mesh->mNumFaces; i++) {
+            aiFace face = mesh->mFaces[i];
+            for (unsigned int j = 0; j < face.mNumIndices; j++) {
+                outData.indices.push_back(face.mIndices[j]);
+            }
+        }
+
+        std::cout << "    ✓ Processed " << outData.vertices.size() << " skinned vertices, "
+            << outData.indices.size() << " indices, " << outData.bones.size() << " bones" << std::endl;
+
+        return !outData.vertices.empty();
+    }
+
+    bool ProcessSkinnedMeshCombined(const aiScene* scene, SkinnedMeshData& outData) {
+        std::cout << "    Processing combined skinned meshes" << std::endl;
+
+        // Build bone mapping from ALL meshes in the scene
+        std::map<std::string, int> boneMapping;
+
+        // First pass: collect all unique bones from all meshes
+        for (unsigned int meshIdx = 0; meshIdx < scene->mNumMeshes; meshIdx++) {
+            const aiMesh* sceneMesh = scene->mMeshes[meshIdx];
+            if (!sceneMesh->HasBones()) continue;
+
+            for (unsigned int i = 0; i < sceneMesh->mNumBones; i++) {
+                aiBone* bone = sceneMesh->mBones[i];
+                std::string boneName = bone->mName.C_Str();
+
+                if (boneMapping.find(boneName) == boneMapping.end()) {
+                    BoneInfo boneInfo;
+                    boneInfo.name = boneName;
+                    boneInfo.offsetMatrix = bone->mOffsetMatrix;
+                    boneInfo.index = (int)outData.bones.size();
+
+                    outData.bones.push_back(boneInfo);
+                    boneMapping[boneName] = boneInfo.index;
+                }
+            }
+        }
+
+        std::cout << "    Total unique bones in skeleton: " << outData.bones.size() << std::endl;
+
+        // Process all meshes
+        uint32_t totalVertices = 0;
+        uint32_t totalFaces = 0;
+
+        for (unsigned int meshIdx = 0; meshIdx < scene->mNumMeshes; meshIdx++) {
+            const aiMesh* mesh = scene->mMeshes[meshIdx];
+
+            // Skip non-skinned meshes
+            if (!mesh->HasBones()) {
+                std::cout << "    ⚠ Skipping non-skinned mesh: " << mesh->mName.C_Str() << std::endl;
+                continue;
+            }
+
+            std::cout << "    Processing mesh " << meshIdx << ": " << mesh->mName.C_Str()
+                << " (vertices: " << mesh->mNumVertices << ")" << std::endl;
+
+            uint32_t baseVertex = (uint32_t)outData.vertices.size();
+
+            // Initialize vertex weights for this mesh
+            std::vector<std::vector<std::pair<int, float>>> vertexWeights(mesh->mNumVertices);
+
+            // Process bone weights for this mesh
+            for (unsigned int boneIndex = 0; boneIndex < mesh->mNumBones; boneIndex++) {
+                aiBone* bone = mesh->mBones[boneIndex];
+                std::string boneName = bone->mName.C_Str();
+                int globalBoneIndex = boneMapping[boneName];
+
+                for (unsigned int weightIndex = 0; weightIndex < bone->mNumWeights; weightIndex++) {
+                    aiVertexWeight weight = bone->mWeights[weightIndex];
+                    unsigned int vertexId = weight.mVertexId;
+                    float weightValue = weight.mWeight;
+
+                    vertexWeights[vertexId].push_back({ globalBoneIndex, weightValue });
+                }
+            }
+
+            // Process vertices
+            for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
+                SkinnedVertex vertex = {};
+
+                // Position
+                vertex.position[0] = mesh->mVertices[i].x;
+                vertex.position[1] = mesh->mVertices[i].y;
+                vertex.position[2] = mesh->mVertices[i].z;
+
+                // Normal
+                if (mesh->HasNormals()) {
+                    vertex.normal[0] = mesh->mNormals[i].x;
+                    vertex.normal[1] = mesh->mNormals[i].y;
+                    vertex.normal[2] = mesh->mNormals[i].z;
+                }
+
+                // Texture coordinates
+                if (mesh->HasTextureCoords(0)) {
+                    vertex.texCoord[0] = mesh->mTextureCoords[0][i].x;
+                    vertex.texCoord[1] = mesh->mTextureCoords[0][i].y;
+                }
+
+                // Tangent
+                if (mesh->HasTangentsAndBitangents()) {
+                    vertex.tangent[0] = mesh->mTangents[i].x;
+                    vertex.tangent[1] = mesh->mTangents[i].y;
+                    vertex.tangent[2] = mesh->mTangents[i].z;
+                }
+
+                // Bone weights (limit to 4, sorted by weight)
+                auto& weights = vertexWeights[i];
+                std::sort(weights.begin(), weights.end(),
+                    [](const auto& a, const auto& b) { return a.second > b.second; });
+
+                // Initialize with defaults
+                for (int j = 0; j < 4; j++) {
+                    vertex.boneIndices[j] = 0;
+                    vertex.boneWeights[j] = 0.0f;
+                }
+
+                // Fill in actual weights (up to 4)
+                float totalWeight = 0.0f;
+                int weightCount = std::min(4, (int)weights.size());
+
+                for (int j = 0; j < weightCount; j++) {
+                    vertex.boneIndices[j] = weights[j].first;
+                    vertex.boneWeights[j] = weights[j].second;
+                    totalWeight += weights[j].second;
+                }
+
+                // Normalize weights to sum to 1.0
+                if (totalWeight > 0.0f) {
+                    for (int j = 0; j < 4; j++) {
+                        vertex.boneWeights[j] /= totalWeight;
+                    }
+                }
+                else {
+                    // Vertex has no weights - assign to bone 0
+                    vertex.boneIndices[0] = 0;
+                    vertex.boneWeights[0] = 1.0f;
+                }
+
+                outData.vertices.push_back(vertex);
+            }
+
+            // Process indices (offset by base vertex)
+            for (unsigned int i = 0; i < mesh->mNumFaces; i++) {
+                aiFace face = mesh->mFaces[i];
+                for (unsigned int j = 0; j < face.mNumIndices; j++) {
+                    outData.indices.push_back(baseVertex + face.mIndices[j]);
+                }
+            }
+
+            totalVertices += mesh->mNumVertices;
+            totalFaces += mesh->mNumFaces;
+        }
+
+        std::cout << "    ✓ Combined " << scene->mNumMeshes << " meshes into one" << std::endl;
+        std::cout << "    ✓ Total vertices: " << totalVertices
+            << ", indices: " << outData.indices.size()
+            << ", bones: " << outData.bones.size() << std::endl;
+
+        return !outData.vertices.empty();
+    }
+
+    bool WriteMeshFile(const std::string& outputPath, const MeshData& meshData) {
+        std::ofstream file(outputPath, std::ios::binary);
+        if (!file.is_open()) {
+            std::cout << "    ❌ Failed to open output file: " << outputPath << std::endl;
+            return false;
+        }
+
+        // Write header
+        file.write("MESH", 4);
+        uint32_t version = 1;
+        file.write((char*)&version, sizeof(version));
+
+        // Write vertex count and data
+        uint32_t vertexCount = (uint32_t)meshData.vertices.size();
+        file.write((char*)&vertexCount, sizeof(vertexCount));
+        file.write((char*)meshData.vertices.data(), vertexCount * sizeof(Vertex));
+
+        // Write index count and data
+        uint32_t indexCount = (uint32_t)meshData.indices.size();
+        file.write((char*)&indexCount, sizeof(indexCount));
+        file.write((char*)meshData.indices.data(), indexCount * sizeof(uint32_t));
+
+        std::cout << "    ✓ Written .mesh file: " << std::filesystem::path(outputPath).filename() << std::endl;
+        std::cout << "      Size: " << file.tellp() << " bytes" << std::endl;
+
+        return true;
+    }
+
+    bool WriteSkinFile(const std::string& outputPath, const SkinnedMeshData& meshData) {
+        std::ofstream file(outputPath, std::ios::binary);
+        if (!file.is_open()) {
+            std::cout << "    ❌ Failed to open output file: " << outputPath << std::endl;
+            return false;
+        }
+
+        // Write header
+        file.write("SKIN", 4);
+        uint32_t version = 1;
+        file.write((char*)&version, sizeof(version));
+
+        // Write vertex count and data
+        uint32_t vertexCount = (uint32_t)meshData.vertices.size();
+        file.write((char*)&vertexCount, sizeof(vertexCount));
+        file.write((char*)meshData.vertices.data(), vertexCount * sizeof(SkinnedVertex));
+
+        // Write index count and data
+        uint32_t indexCount = (uint32_t)meshData.indices.size();
+        file.write((char*)&indexCount, sizeof(indexCount));
+        file.write((char*)meshData.indices.data(), indexCount * sizeof(uint32_t));
+
+        // Write bone count
+        uint32_t boneCount = (uint32_t)meshData.bones.size();
+        file.write((char*)&boneCount, sizeof(boneCount));
+
+        // Write bone data
+        for (const auto& bone : meshData.bones) {
+            // Write bone name
+            uint32_t nameLen = (uint32_t)bone.name.length();
+            file.write((char*)&nameLen, sizeof(nameLen));
+            file.write(bone.name.c_str(), nameLen);
+
+            // Write bone index
+            file.write((char*)&bone.index, sizeof(bone.index));
+
+            // Write offset matrix (4x4 float matrix)
+            float matrix[16];
+            for (int i = 0; i < 4; i++) {
+                for (int j = 0; j < 4; j++) {
+                    matrix[i * 4 + j] = bone.offsetMatrix[i][j];
+                }
+            }
+            file.write((char*)matrix, sizeof(matrix));
+        }
+
+        std::cout << "    ✓ Written .skin file: " << std::filesystem::path(outputPath).filename() << std::endl;
+        std::cout << "      Size: " << file.tellp() << " bytes" << std::endl;
+
+        return true;
     }
 
     bool ConvertPNGtoDDS(const std::string& inputPath, const std::string& outputPath) {
@@ -181,18 +661,8 @@ public:
     }
 
     bool LoadExistingResources() {
-        std::cout << "\n=== DEBUG: Loading Existing Resources ===" << std::endl;
-
         std::string projectFolder = databasePath + "/" + projectGuid;
         std::string resourceDbPath = projectFolder + "/Browser.dbase/resource_database.txt";
-
-        // DEBUG OUTPUT - This is what we need to see!
-        std::cout << "Database Path: " << databasePath << std::endl;
-        std::cout << "Project GUID: " << projectGuid << std::endl;
-        std::cout << "Project Folder: " << projectFolder << std::endl;
-        std::cout << "Looking for database at: " << std::filesystem::absolute(resourceDbPath) << std::endl;
-        std::cout << "Database exists: " << (std::filesystem::exists(resourceDbPath) ? "YES" : "NO") << std::endl;
-        std::cout << "==================================\n" << std::endl;
 
         if (!std::filesystem::exists(resourceDbPath)) {
             std::cout << "No existing resource database found, starting fresh." << std::endl;
@@ -200,10 +670,7 @@ public:
         }
 
         std::ifstream dbFile(resourceDbPath);
-        if (!dbFile.is_open()) {
-            std::cout << "Warning: Could not open resource database file." << std::endl;
-            return false;
-        }
+        if (!dbFile.is_open()) return false;
 
         std::string line;
         ResourceEntry currentEntry;
@@ -222,12 +689,10 @@ public:
             }
             else if (readingEntry) {
                 if (line.find("InstanceGUID=") == 0) {
-                    uint64_t instanceVal = std::stoull(line.substr(13), nullptr, 16);
-                    currentEntry.guid.m_Instance.m_Value = instanceVal;
+                    currentEntry.guid.m_Instance.m_Value = std::stoull(line.substr(13), nullptr, 16);
                 }
                 else if (line.find("TypeGUID=") == 0) {
-                    uint64_t typeVal = std::stoull(line.substr(9), nullptr, 16);
-                    currentEntry.guid.m_Type.m_Value = typeVal;
+                    currentEntry.guid.m_Type.m_Value = std::stoull(line.substr(9), nullptr, 16);
                 }
                 else if (line.find("SourcePath=") == 0) {
                     currentEntry.sourcePath = line.substr(11);
@@ -239,6 +704,9 @@ public:
                 }
                 else if (line.find("OutputPath=") == 0) {
                     currentEntry.outputPath = line.substr(11);
+                }
+                else if (line.find("ResourceType=") == 0) {
+                    currentEntry.resourceType = line.substr(13);
                 }
             }
         }
@@ -252,37 +720,20 @@ public:
         std::string resourceDbPath = projectFolder + "/Browser.dbase/resource_database.txt";
 
         std::ofstream dbFile(resourceDbPath);
-        if (!dbFile.is_open()) {
-            std::cout << "Warning: Could not save resource database." << std::endl;
-            return;
-        }
+        if (!dbFile.is_open()) return;
 
-        // Save all existing resources (both old and newly processed)
-        auto allResources = existingResources;
-
-        for (const auto& guid : processedResources) {
-            // Find the corresponding resource entry
-            auto it = std::find_if(allResources.begin(), allResources.end(),
-                [&guid](const ResourceEntry& entry) {
-                    return entry.guid.m_Instance.m_Value == guid.m_Instance.m_Value &&
-                        entry.guid.m_Type.m_Value == guid.m_Type.m_Value;
-                });
-
-            // If not found in existing, it's a new one we need to add
-            // (This case should be handled by the processing logic)
-        }
-
-        for (const auto& entry : allResources) {
+        for (const auto& entry : existingResources) {
             dbFile << "RESOURCE_START" << std::endl;
             dbFile << "InstanceGUID=" << std::hex << entry.guid.m_Instance.m_Value << std::endl;
             dbFile << "TypeGUID=" << std::hex << entry.guid.m_Type.m_Value << std::endl;
             dbFile << "SourcePath=" << entry.sourcePath << std::endl;
             dbFile << "LastModified=" << std::dec << entry.lastModified.time_since_epoch().count() << std::endl;
             dbFile << "OutputPath=" << entry.outputPath << std::endl;
+            dbFile << "ResourceType=" << entry.resourceType << std::endl;
             dbFile << "RESOURCE_END" << std::endl;
         }
 
-        std::cout << "Saved resource database with " << allResources.size() << " entries." << std::endl;
+        std::cout << "Saved resource database with " << existingResources.size() << " entries." << std::endl;
     }
 
     ResourceEntry* FindExistingResource(const std::string& sourcePath) {
@@ -290,15 +741,11 @@ public:
             [&sourcePath](const ResourceEntry& entry) {
                 return entry.sourcePath == sourcePath;
             });
-
         return (it != existingResources.end()) ? &(*it) : nullptr;
     }
 
     bool IsFileModified(const std::string& filePath, std::filesystem::file_time_type lastKnown) {
-        if (!std::filesystem::exists(filePath)) {
-            return false;
-        }
-
+        if (!std::filesystem::exists(filePath)) return false;
         auto currentModTime = std::filesystem::last_write_time(filePath);
         return currentModTime > lastKnown;
     }
@@ -336,18 +783,25 @@ public:
             return;
         }
 
-        // Load existing resources first
         LoadExistingResources();
 
         std::vector<std::string> pngFiles;
+        std::vector<std::string> meshFiles;
 
         try {
             for (const auto& entry : std::filesystem::recursive_directory_iterator(sourceAssetsPath)) {
                 if (entry.is_regular_file()) {
                     std::string extension = entry.path().extension().string();
+
                     if (extension == ".png" || extension == ".PNG") {
                         pngFiles.push_back(entry.path().string());
                         std::cout << "Found PNG: " << entry.path().filename().string() << std::endl;
+                    }
+                    else if (extension == ".fbx" || extension == ".FBX" ||
+                        extension == ".obj" || extension == ".OBJ" ||
+                        extension == ".gltf" || extension == ".glb") {
+                        meshFiles.push_back(entry.path().string());
+                        std::cout << "Found mesh: " << entry.path().filename().string() << std::endl;
                     }
                 }
             }
@@ -357,92 +811,52 @@ public:
             return;
         }
 
-        std::cout << "Total PNG files found: " << pngFiles.size() << std::endl;
+        std::cout << "\nTotal PNG files found: " << pngFiles.size() << std::endl;
+        std::cout << "Total mesh files found: " << meshFiles.size() << std::endl;
 
-        // Process each PNG file through the pipeline
-        ProcessAssets(pngFiles);
+        ProcessTextures(pngFiles);
+        ProcessMeshFiles(meshFiles);
 
-        // Save the updated resource database
         SaveResourceDatabase();
     }
 
-    void ProcessAssets(const std::vector<std::string>& assetPaths) {
-        std::cout << "\n=== Processing Assets ===" << std::endl;
+    void ProcessTextures(const std::vector<std::string>& assetPaths) {
+        if (assetPaths.empty()) return;
 
+        std::cout << "\n=== Processing Textures ===" << std::endl;
         std::string projectFolder = databasePath + "/" + projectGuid;
         std::string outputDir = projectFolder + "/Windows.platform/Data";
 
-        int skippedCount = 0;
-        int processedCount = 0;
-        int updatedCount = 0;
+        int processed = 0, skipped = 0;
 
         for (const auto& assetPath : assetPaths) {
-            std::cout << "Checking: " << assetPath << std::endl;
-
-            // Check if this resource already exists
             ResourceEntry* existing = FindExistingResource(assetPath);
 
-            if (existing != nullptr) {
-                // Check if the file has been modified
-                if (!IsFileModified(assetPath, existing->lastModified)) {
-                    std::cout << "  ⏭ Skipping (unchanged): " << std::filesystem::path(assetPath).filename().string() << std::endl;
-                    skippedCount++;
-                    continue;
-                }
-                else {
-                    std::cout << "  🔄 File modified, updating..." << std::endl;
-                    updatedCount++;
-                }
-            }
-            else {
-                std::cout << "  ➕ New asset, processing..." << std::endl;
-                processedCount++;
-            }
-
-            xresource::full_guid resourceGuid;
-            std::string guidStr;
-
-            if (existing != nullptr) {
-                // Reuse existing GUID for modified files
-                resourceGuid = existing->guid;
-                guidStr = std::to_string(resourceGuid.m_Instance.m_Value);
-                std::cout << "  Reusing GUID: Instance=" << std::hex << resourceGuid.m_Instance.m_Value
-                    << ", Type=" << resourceGuid.m_Type.m_Value << std::dec << std::endl;
-            }
-            else {
-                // Generate new GUID for new files
-                auto instanceGuid = xresource::instance_guid::GenerateGUIDCopy();
-                resourceGuid = xresource::full_guid{ instanceGuid, TEXTURE_TYPE_GUID };
-                guidStr = std::to_string(instanceGuid.m_Value);
-                std::cout << "  Generated GUID: Instance=" << std::hex << instanceGuid.m_Value
-                    << ", Type=" << TEXTURE_TYPE_GUID.m_Value << std::dec << std::endl;
-            }
-
-            // Create resource-specific folder in Generated.dbase using GUID
-            std::string generatedPath = projectFolder + "/Generated.dbase/" + guidStr;
-            std::filesystem::create_directories(generatedPath);
-
-            // Copy source file to generated folder (for backup/reference)
-            std::string tempFile = generatedPath + "/" + std::filesystem::path(assetPath).filename().string();
-            try {
-                std::filesystem::copy_file(assetPath, tempFile,
-                    std::filesystem::copy_options::overwrite_existing);
-                std::cout << "  ✓ Staged in Generated.dbase: " << guidStr << std::endl;
-            }
-            catch (const std::exception& e) {
-                std::cout << "  ❌ Failed to stage: " << e.what() << std::endl;
+            if (existing && !IsFileModified(assetPath, existing->lastModified)) {
+                std::cout << "  ⏭ Skipping (unchanged): " << std::filesystem::path(assetPath).filename() << std::endl;
+                skipped++;
                 continue;
             }
 
-            // Convert PNG to DDS using DirectXTex
-            std::string finalOutput = outputDir + "/" + guidStr + ".dds";
-            if (ConvertPNGtoDDS(assetPath, finalOutput)) {
-                std::cout << "  ✓ Successfully converted to DDS: " << guidStr << ".dds" << std::endl;
+            xresource::full_guid resourceGuid;
+            if (existing) {
+                resourceGuid = existing->guid;
+                std::cout << "  🔄 Updating: " << std::filesystem::path(assetPath).filename() << std::endl;
+            }
+            else {
+                auto instanceGuid = xresource::instance_guid::GenerateGUIDCopy();
+                resourceGuid = xresource::full_guid{ instanceGuid, TEXTURE_TYPE_GUID };
+                std::cout << "  ➕ New: " << std::filesystem::path(assetPath).filename() << std::endl;
+            }
 
-                // Update or add resource entry
-                if (existing != nullptr) {
+            std::string guidStr = std::to_string(resourceGuid.m_Instance.m_Value);
+            std::string finalOutput = outputDir + "/" + guidStr + ".dds";
+
+            if (ConvertPNGtoDDS(assetPath, finalOutput)) {
+                std::cout << "    ✓ Converted to: " << guidStr << ".dds" << std::endl;
+
+                if (existing) {
                     existing->lastModified = std::filesystem::last_write_time(assetPath);
-                    existing->outputPath = "Windows.platform/Data/" + guidStr + ".dds";
                 }
                 else {
                     ResourceEntry newEntry;
@@ -450,28 +864,127 @@ public:
                     newEntry.sourcePath = assetPath;
                     newEntry.lastModified = std::filesystem::last_write_time(assetPath);
                     newEntry.outputPath = "Windows.platform/Data/" + guidStr + ".dds";
+                    newEntry.resourceType = "TEXTURE";
                     existingResources.push_back(newEntry);
                 }
-
-                // Store processed resource info
-                processedResources.push_back(resourceGuid);
-
-                // Log the resource info
-                LogResourceInfo(resourceGuid, assetPath, finalOutput);
-            }
-            else {
-                std::cout << "  ❌ Failed to convert PNG to DDS" << std::endl;
+                processed++;
             }
         }
 
-        std::cout << "\n📊 Processing Summary:" << std::endl;
-        std::cout << "  New assets processed: " << processedCount << std::endl;
-        std::cout << "  Existing assets updated: " << updatedCount << std::endl;
-        std::cout << "  Assets skipped (unchanged): " << skippedCount << std::endl;
-        std::cout << "  Total assets in pipeline: " << processedCount + updatedCount + skippedCount << std::endl;
+        std::cout << "\n📊 Textures: " << processed << " processed, " << skipped << " skipped" << std::endl;
     }
 
-    void LogResourceInfo(const xresource::full_guid& resourceGuid, const std::string& sourcePath, const std::string& outputPath) {
+
+    void ProcessMeshFiles(const std::vector<std::string>& assetPaths) {
+        if (assetPaths.empty()) return;
+
+        std::cout << "\n=== Processing Mesh Files ===" << std::endl;
+        std::string projectFolder = databasePath + "/" + projectGuid;
+        std::string outputDir = projectFolder + "/Windows.platform/Data";
+
+        int staticProcessed = 0, skinnedProcessed = 0, skipped = 0, failed = 0;
+
+        for (const auto& assetPath : assetPaths) {
+            std::cout << "\n  📦 " << std::filesystem::path(assetPath).filename() << std::endl;
+
+            ResourceEntry* existing = FindExistingResource(assetPath);
+
+            if (existing && !IsFileModified(assetPath, existing->lastModified)) {
+                std::cout << "    ⏭ Skipping (unchanged)" << std::endl;
+                skipped++;
+                continue;
+            }
+
+            // Load scene with Assimp
+            Assimp::Importer importer;
+            const aiScene* scene = nullptr;
+
+            if (!LoadAssimpScene(assetPath, scene, importer)) {
+                failed++;
+                continue;
+            }
+
+            // Process first mesh in the scene
+            if (scene->mNumMeshes == 0) {
+                std::cout << "    ❌ No meshes found in file" << std::endl;
+                failed++;
+                continue;
+            }
+
+            const aiMesh* mesh = scene->mMeshes[0];
+            bool isSkinned = HasSkinning(mesh);
+
+            // Determine resource type and GUID
+            xresource::full_guid resourceGuid;
+            xresource::type_guid typeGuid = isSkinned ? SKINNED_MESH_TYPE_GUID : STATIC_MESH_TYPE_GUID;
+            std::string resourceType = isSkinned ? "SKINNED_MESH" : "STATIC_MESH";
+            std::string extension = isSkinned ? ".skin" : ".mesh";
+
+            if (existing) {
+                resourceGuid = existing->guid;
+                std::cout << "    🔄 Updating existing resource" << std::endl;
+            }
+            else {
+                auto instanceGuid = xresource::instance_guid::GenerateGUIDCopy();
+                resourceGuid = xresource::full_guid{ instanceGuid, typeGuid };
+                std::cout << "    ➕ Creating new resource" << std::endl;
+            }
+
+            std::string guidStr = std::to_string(resourceGuid.m_Instance.m_Value);
+            std::string finalOutput = outputDir + "/" + guidStr + extension;
+
+            bool success = false;
+
+            if (isSkinned) {
+                // Process as skinned mesh (combine all meshes)
+                SkinnedMeshData skinnedData;
+                if (ProcessSkinnedMeshCombined(scene, skinnedData)) {
+                    success = WriteSkinFile(finalOutput, skinnedData);
+                    if (success) skinnedProcessed++;
+                }
+            }
+            else {
+                // Process as static mesh
+                MeshData meshData;
+                if (ProcessStaticMesh(mesh, meshData)) {
+                    success = WriteMeshFile(finalOutput, meshData);
+                    if (success) staticProcessed++;
+                }
+            }
+
+            if (success) {
+                // Update or add resource entry
+                if (existing) {
+                    existing->lastModified = std::filesystem::last_write_time(assetPath);
+                    existing->resourceType = resourceType;
+                }
+                else {
+                    ResourceEntry newEntry;
+                    newEntry.guid = resourceGuid;
+                    newEntry.sourcePath = assetPath;
+                    newEntry.lastModified = std::filesystem::last_write_time(assetPath);
+                    newEntry.outputPath = "Windows.platform/Data/" + guidStr + extension;
+                    newEntry.resourceType = resourceType;
+                    existingResources.push_back(newEntry);
+                }
+
+                processedResources.push_back(resourceGuid);
+                LogResourceInfo(resourceGuid, assetPath, finalOutput, resourceType);
+            }
+            else {
+                std::cout << "    ❌ Failed to process mesh" << std::endl;
+                failed++;
+            }
+        }
+
+        std::cout << "\n📊 Meshes: " << staticProcessed << " static, "
+            << skinnedProcessed << " skinned, "
+            << skipped << " skipped, "
+            << failed << " failed" << std::endl;
+    }
+
+    void LogResourceInfo(const xresource::full_guid& resourceGuid, const std::string& sourcePath,
+        const std::string& outputPath, const std::string& resourceType) {
         std::string projectFolder = databasePath + "/" + projectGuid;
 
         // Log to Browser.dbase with resource type folder structure
@@ -488,11 +1001,10 @@ public:
             logFile << "===================" << std::endl;
             logFile << "Instance GUID: 0x" << std::hex << resourceGuid.m_Instance.m_Value << std::dec << std::endl;
             logFile << "Type GUID: 0x" << std::hex << resourceGuid.m_Type.m_Value << std::dec << std::endl;
+            logFile << "Resource Type: " << resourceType << std::endl;
             logFile << "Source: " << sourcePath << std::endl;
             logFile << "Output: " << outputPath << std::endl;
             logFile << "Platform: WINDOWS" << std::endl;
-            logFile << "Resource Type: TEXTURE" << std::endl;
-            logFile << "Format: DDS (DirectX Texture)" << std::endl;
             logFile << "Generated: " << std::chrono::system_clock::now().time_since_epoch().count() << std::endl;
             logFile.close();
         }
@@ -503,9 +1015,9 @@ public:
         if (mainLog.is_open()) {
             mainLog << "Resource: 0x" << std::hex << resourceGuid.m_Instance.m_Value
                 << " (Type: 0x" << resourceGuid.m_Type.m_Value << ")" << std::dec << std::endl;
+            mainLog << "  Type: " << resourceType << std::endl;
             mainLog << "  Source: " << sourcePath << std::endl;
             mainLog << "  Output: " << outputPath << std::endl;
-            mainLog << "  Format: DDS" << std::endl;
             mainLog << "  ---" << std::endl;
             mainLog.close();
         }
@@ -516,37 +1028,57 @@ public:
         std::string projectFolder = databasePath + "/" + projectGuid;
         std::cout << "Project Database: " << projectFolder << std::endl;
 
-        // Count files in Windows platform data
+        // Count files by type in Windows platform data
         std::string dataPath = projectFolder + "/Windows.platform/Data";
         if (std::filesystem::exists(dataPath)) {
-            int fileCount = 0;
+            int textureCount = 0, meshCount = 0, skinCount = 0;
+            size_t totalSize = 0;
+
             for (const auto& entry : std::filesystem::directory_iterator(dataPath)) {
                 if (entry.is_regular_file()) {
-                    fileCount++;
-                    std::cout << "  Resource: " << entry.path().filename().string()
-                        << " (Size: " << std::filesystem::file_size(entry.path()) << " bytes)" << std::endl;
+                    std::string ext = entry.path().extension().string();
+                    size_t size = std::filesystem::file_size(entry.path());
+                    totalSize += size;
+
+                    if (ext == ".dds") textureCount++;
+                    else if (ext == ".mesh") meshCount++;
+                    else if (ext == ".skin") skinCount++;
+
+                    std::cout << "  " << entry.path().filename().string()
+                        << " (" << size << " bytes)" << std::endl;
                 }
             }
-            std::cout << "Total processed assets: " << fileCount << std::endl;
+
+            std::cout << "\n📊 Total Assets:" << std::endl;
+            std::cout << "  Textures: " << textureCount << std::endl;
+            std::cout << "  Static Meshes: " << meshCount << std::endl;
+            std::cout << "  Skinned Meshes: " << skinCount << std::endl;
+            std::cout << "  Total Size: " << totalSize << " bytes ("
+                << (totalSize / 1024.0 / 1024.0) << " MB)" << std::endl;
         }
 
         // Show processed resources with their GUIDs
         std::cout << "\n=== Resource GUIDs ===" << std::endl;
         for (const auto& guid : processedResources) {
-            std::cout << "Resource GUID: Instance=0x" << std::hex << guid.m_Instance.m_Value
+            std::string typeName;
+            if (guid.m_Type.m_Value == TEXTURE_TYPE_GUID.m_Value) typeName = "TEXTURE";
+            else if (guid.m_Type.m_Value == STATIC_MESH_TYPE_GUID.m_Value) typeName = "STATIC_MESH";
+            else if (guid.m_Type.m_Value == SKINNED_MESH_TYPE_GUID.m_Value) typeName = "SKINNED_MESH";
+
+            std::cout << "  " << typeName << ": Instance=0x" << std::hex << guid.m_Instance.m_Value
                 << ", Type=0x" << guid.m_Type.m_Value << std::dec << std::endl;
         }
 
         // Show log file if it exists
         std::string logPath = projectFolder + "/Browser.dbase/resource_log.txt";
         if (std::filesystem::exists(logPath)) {
-            std::cout << "\nMain resource log: " << logPath << std::endl;
+            std::cout << "\n📄 Main resource log: " << logPath << std::endl;
         }
 
         // Show Browser.dbase structure
         std::string browserPath = projectFolder + "/Browser.dbase";
         if (std::filesystem::exists(browserPath)) {
-            std::cout << "Resource type folders in Browser.dbase:" << std::endl;
+            std::cout << "\n📁 Resource type folders in Browser.dbase:" << std::endl;
             for (const auto& entry : std::filesystem::directory_iterator(browserPath)) {
                 if (entry.is_directory()) {
                     std::cout << "  Type: " << entry.path().filename().string() << std::endl;
@@ -558,6 +1090,7 @@ public:
 
 int main() {
     std::cout << "=== Ermine Resource Pipeline Runner ===" << std::endl;
+    std::cout << "Using Assimp for mesh processing" << std::endl;
 
     // Get the directory where the exe is located
     std::filesystem::path exePath = std::filesystem::current_path();
@@ -595,7 +1128,7 @@ int main() {
     pipeline.ScanSourceAssets();
     pipeline.GenerateReport();
 
-    std::cout << "\n🎉 Pipeline execution complete!" << std::endl;
+    std::cout << "\n Pipeline execution complete!" << std::endl;
 
     return 0;
 }

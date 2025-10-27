@@ -27,6 +27,185 @@ Model::Model(const std::string& path)
     LoadModel(path);
 }
 
+Model::Model(const std::string& path, bool isSkinFile)
+{
+    if (isSkinFile) {
+        m_directory = path.substr(0, path.find_last_of('/'));
+        m_name = path.substr(path.find_last_of('/') + 1);
+
+        if (!LoadSkinFile(path)) {
+            EE_CORE_ERROR("Failed to load .skin file: " + path);
+        }
+    }
+}
+
+bool Model::LoadSkinFile(const std::string& path)
+{
+    std::ifstream file(path, std::ios::binary);
+    if (!file.is_open()) {
+        EE_CORE_ERROR("Failed to open .skin file: " + path);
+        return false;
+    }
+
+    // Read and verify magic number
+    char magic[4];
+    file.read(magic, 4);
+    if (std::string(magic, 4) != "SKIN") {
+        EE_CORE_ERROR("Invalid .skin file format (bad magic): " + path);
+        return false;
+    }
+
+    // Read version
+    uint32_t version;
+    file.read((char*)&version, sizeof(version));
+    if (version != 1) {
+        EE_CORE_WARN("Unexpected .skin version: " + std::to_string(version));
+    }
+
+    // Read vertex count
+    uint32_t vertexCount;
+    file.read((char*)&vertexCount, sizeof(vertexCount));
+
+    // Define the pipeline's SkinnedVertex structure
+    struct SkinnedVertex {
+        float position[3];
+        float normal[3];
+        float texCoord[2];
+        float tangent[3];
+        int boneIndices[4];
+        float boneWeights[4];
+    };
+
+    // Read all vertices from file
+    std::vector<SkinnedVertex> skinVertices(vertexCount);
+    file.read((char*)skinVertices.data(), vertexCount * sizeof(SkinnedVertex));
+
+    // Convert to engine's VertexData format
+    std::vector<VertexData> vertices(vertexCount);
+    for (uint32_t i = 0; i < vertexCount; ++i) {
+        const auto& src = skinVertices[i];
+        auto& dst = vertices[i];
+
+        // Copy position
+        memcpy(dst.position, src.position, sizeof(float) * 3);
+
+        // Copy normal
+        memcpy(dst.normal, src.normal, sizeof(float) * 3);
+
+        // Copy texture coordinates
+        memcpy(dst.texCoords, src.texCoord, sizeof(float) * 2);
+
+        // Copy bone data
+        memcpy(dst.IDs, src.boneIndices, sizeof(int) * MAX_BONE_INFLUENCE);
+        memcpy(dst.Weights, src.boneWeights, sizeof(float) * MAX_BONE_INFLUENCE);
+    }
+
+    // Read index count
+    uint32_t indexCount;
+    file.read((char*)&indexCount, sizeof(indexCount));
+
+    // Read indices
+    std::vector<uint32_t> indices(indexCount);
+    file.read((char*)indices.data(), indexCount * sizeof(uint32_t));
+
+    // Read bone count
+    uint32_t boneCount;
+    file.read((char*)&boneCount, sizeof(boneCount));
+
+    // Reserve space for bones
+    m_BoneOffsets.reserve(boneCount);
+    m_BoneMapping.reserve(boneCount);
+
+    for (uint32_t i = 0; i < boneCount; ++i) {
+        // Read bone name length and name
+        uint32_t nameLen;
+        file.read((char*)&nameLen, sizeof(nameLen));
+
+        // Validate name length (sanity check)
+        if (nameLen > 256) {  // Reasonable max bone name length
+            EE_CORE_ERROR("Invalid bone name length in .skin file: " + std::to_string(nameLen));
+            return false;
+        }
+
+        // Read bone name into a vector first, then construct string
+        std::vector<char> nameBuffer(nameLen);
+        file.read(nameBuffer.data(), nameLen);
+        std::string boneName(nameBuffer.begin(), nameBuffer.end());
+
+        // Read bone index
+        uint32_t boneIndex;
+        file.read((char*)&boneIndex, sizeof(boneIndex));
+
+        // Read offset matrix (stored as row-major 4x4)
+        float matrix[16];
+        file.read((char*)matrix, sizeof(matrix));
+
+        // Verify read succeeded
+        if (!file.good()) {
+            EE_CORE_ERROR("Failed to read bone " + std::to_string(i) + " from .skin file");
+            return false;
+        }
+
+        // Convert row-major to column-major glm::mat4
+        glm::mat4 offsetMatrix;
+        for (int row = 0; row < 4; ++row) {
+            for (int col = 0; col < 4; ++col) {
+                offsetMatrix[col][row] = matrix[row * 4 + col];
+            }
+        }
+
+        // Store bone mapping and offset
+        m_BoneMapping[boneName] = static_cast<int>(i);
+        m_BoneOffsets.push_back(offsetMatrix);
+    }
+
+    if (!file) {
+        EE_CORE_ERROR("Error reading .skin file (corrupted?): " + path);
+        return false;
+    }
+
+    // Create GPU buffers
+    auto vao = std::make_shared<VertexArray>();
+    auto vbo = std::make_shared<VertexBuffer>(vertices.data(), vertices.size() * sizeof(VertexData));
+    auto ibo = std::make_shared<IndexBuffer>(indices.data(), indices.size() * sizeof(unsigned int));
+
+    vao->Bind();
+    vbo->Bind();
+    ibo->Bind();
+
+    // Setup vertex attributes (same as ProcessMesh)
+    vao->LinkAttribute(0, 3, GL_FLOAT, sizeof(VertexData), (void*)offsetof(VertexData, position));
+    vao->LinkAttribute(1, 3, GL_FLOAT, sizeof(VertexData), (void*)offsetof(VertexData, normal));
+    vao->LinkAttribute(2, 2, GL_FLOAT, sizeof(VertexData), (void*)offsetof(VertexData, texCoords));
+
+    // Bone IDs (integer attribute)
+    glEnableVertexAttribArray(4);
+    glVertexAttribIPointer(4, MAX_BONE_INFLUENCE, GL_INT, sizeof(VertexData), (void*)offsetof(VertexData, IDs));
+
+    // Bone weights (float attribute)
+    glEnableVertexAttribArray(5);
+    glVertexAttribPointer(5, MAX_BONE_INFLUENCE, GL_FLOAT, GL_FALSE, sizeof(VertexData), (void*)offsetof(VertexData, Weights));
+
+    vao->Unbind();
+    vbo->Unbind();
+    ibo->Unbind();
+
+    // Add mesh to model
+    MeshData meshData{ vao, vbo, ibo, glm::mat4(1.0f) };
+    m_meshes.push_back(meshData);
+
+    // Initialize bone transforms to identity
+    m_BoneTransforms.resize(boneCount, glm::mat4(1.0f));
+
+    // Success! Log the results
+    EE_CORE_INFO("Loaded .skin file: " + path);
+    EE_CORE_INFO("  Vertices: " + std::to_string(vertexCount));
+    EE_CORE_INFO("  Indices: " + std::to_string(indexCount));
+    EE_CORE_INFO("  Bones: " + std::to_string(boneCount));
+
+    return true;
+}
+
 /**
  * @brief Load a model from file and process its nodes and meshes.
  * @param path Path to the model file

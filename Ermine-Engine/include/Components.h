@@ -1741,32 +1741,46 @@ namespace Ermine
 	struct ModelComponent
 	{
 		std::shared_ptr<graphics::Model> m_model;
+		std::string m_modelPath;  // Store the path for serialization
+		bool m_isSkinFile = false; // Track if it's a .skin file
 
 		ModelComponent() = default;
-		explicit ModelComponent(const std::shared_ptr<graphics::Model>& model) : m_model(model) {}
+
+		explicit ModelComponent(const std::shared_ptr<graphics::Model>& model)
+			: m_model(model) {
+		}
 
 		template <typename Alloc>
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
-			const std::string& model_name = m_model->GetName();
 			out.SetObject();
 
-			rapidjson::Value modelVal;
-			modelVal.SetString(model_name.c_str(),
-				static_cast<rapidjson::SizeType>(model_name.size()),
-				alloc);  // required for strings
+			// Serialize model path
+			rapidjson::Value pathVal;
+			pathVal.SetString(m_modelPath.c_str(),
+				static_cast<rapidjson::SizeType>(m_modelPath.size()),
+				alloc);
+			out.AddMember("modelPath", pathVal, alloc);
 
-			out.AddMember("model", modelVal, alloc);
+			// Serialize file type flag
+			out.AddMember("isSkinFile", m_isSkinFile, alloc);
 		}
 
 		void Deserialize(const rapidjson::Value& in) {
-			if (in.HasMember("model") && in["model"].IsString()) {
-				const char* name = in["model"].GetString();
+			if (in.HasMember("modelPath") && in["modelPath"].IsString()) {
+				m_modelPath = in["modelPath"].GetString();
 
-				if (!m_model) {
-					m_model = AssetManager::GetInstance().GetModel("../Resources/Models/" + std::string(name));
+				// Check if it's a .skin file
+				if (in.HasMember("isSkinFile") && in["isSkinFile"].IsBool()) {
+					m_isSkinFile = in["isSkinFile"].GetBool();
+				}
+				else {
+					// Auto-detect based on extension
+					std::string ext = std::filesystem::path(m_modelPath).extension().string();
+					m_isSkinFile = (ext == ".skin");
 				}
 
-				m_model->LoadModel(std::string("../Resources/Models/") + name);
+				// Load through AssetManager
+				m_model = AssetManager::GetInstance().LoadModel(m_modelPath);
 			}
 		}
 
