@@ -834,12 +834,14 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 			}
 
 			// Build entity transform
-			glm::mat4 entityModel = glm::mat4(1.0f);
-			entityModel = glm::translate(entityModel, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
-			glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
-			rotQuat = glm::normalize(rotQuat);
-			entityModel *= glm::mat4_cast(rotQuat);
-			entityModel = glm::scale(entityModel, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
+			glm::mat4 entityModel = GetEntityWorldMatrix(entity);
+
+			//glm::mat4 entityModel = glm::mat4(1.0f);
+			//entityModel = glm::translate(entityModel, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
+			//glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
+			//rotQuat = glm::normalize(rotQuat);
+			//entityModel *= glm::mat4_cast(rotQuat);
+			//entityModel = glm::scale(entityModel, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
 
 			// Check if material is transparent
 			if (material && IsTransparentMaterial(material)) {
@@ -874,12 +876,14 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 			}
 
 			// Build model matrix
-			glm::mat4 model = glm::mat4(1.0f);
-			model = glm::translate(model, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
-			glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
-			rotQuat = glm::normalize(rotQuat);
-			model *= glm::mat4_cast(rotQuat);
-			model = glm::scale(model, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
+			glm::mat4 model = GetEntityWorldMatrix(entity);
+
+			//glm::mat4 model = glm::mat4(1.0f);
+			//model = glm::translate(model, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
+			//glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
+			//rotQuat = glm::normalize(rotQuat);
+			//model *= glm::mat4_cast(rotQuat);
+			//model = glm::scale(model, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
 
 			// Check if material is transparent
 			if (IsTransparentMaterial(material)) {
@@ -3176,6 +3180,43 @@ void Renderer::RenderPickingPass(const Mtx44& view, const Mtx44& projection)
 
 	glCheckError();
 #endif
+}
+
+/**
+ * @brief Gets the world transform matrix for an entity using GlobalTransform component
+ * @param entity The entity to get the world matrix for
+ * @return glm::mat4 The world transform matrix
+ */
+glm::mat4 Renderer::GetEntityWorldMatrix(EntityID entity) const
+{
+	const auto& ecs = Ermine::ECS::GetInstance();
+
+	if (ecs.HasComponent<GlobalTransform>(entity)) {
+		auto& globalTransform = ecs.GetComponent<GlobalTransform>(entity);
+
+		// CONVERT your custom matrix to GLM format
+		Mtx44& m = globalTransform.worldMatrix;
+		return glm::mat4(
+			m.m00, m.m10, m.m20, m.m30,  // Column 0
+			m.m01, m.m11, m.m21, m.m31,  // Column 1  
+			m.m02, m.m12, m.m22, m.m32,  // Column 2
+			m.m03, m.m13, m.m23, m.m33   // Column 3
+		);
+	}
+
+	// Fallback to local transform using GLM
+	if (ecs.HasComponent<Transform>(entity)) {
+		auto& trans = ecs.GetComponent<Transform>(entity);
+		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
+		glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
+		rotQuat = glm::normalize(rotQuat);
+		model *= glm::mat4_cast(rotQuat);
+		model = glm::scale(model, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
+		return model;
+	}
+
+	return glm::mat4(1.0f);
 }
 
 /**

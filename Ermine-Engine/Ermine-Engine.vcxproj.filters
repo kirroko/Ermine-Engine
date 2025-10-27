@@ -446,6 +446,7 @@
     <ClCompile Include="src\dllmain.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\Systems\TransformMode.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="include\Component.tpp">
