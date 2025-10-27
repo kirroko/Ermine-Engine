@@ -38,9 +38,9 @@ namespace Ermine
             Vec3 pivotPos = hierarchySystem->GetWorldPosition(entity);
             
             // DEBUG: Log pivot position
-            EE_CORE_INFO("=== PIVOT MODE ===");
-            EE_CORE_INFO("Entity {}: Pivot Position = ({:.3f}, {:.3f}, {:.3f})",
-                entity, pivotPos.x, pivotPos.y, pivotPos.z);
+            //EE_CORE_INFO("=== PIVOT MODE ===");
+            //EE_CORE_INFO("Entity {}: Pivot Position = ({:.3f}, {:.3f}, {:.3f})",
+            //    entity, pivotPos.x, pivotPos.y, pivotPos.z);
             
             return pivotPos;
         }
@@ -49,10 +49,10 @@ namespace Ermine
             Vec3 centerPos = CalculateGeometricCenter(entity);
             
             // DEBUG: Log center position
-            EE_CORE_INFO("=== CENTER MODE ===");
-            EE_CORE_INFO("Entity {}: Center Position = ({:.3f}, {:.3f}, {:.3f})",
-                entity, centerPos.x, centerPos.y, centerPos.z);
-            
+            //EE_CORE_INFO("=== CENTER MODE ===");
+            //EE_CORE_INFO("Entity {}: Center Position = ({:.3f}, {:.3f}, {:.3f})",
+            //    entity, centerPos.x, centerPos.y, centerPos.z);
+
             return centerPos;
         }
     }
@@ -192,11 +192,11 @@ namespace Ermine
             );
             
             // DEBUG: Print bounds to console
-            EE_CORE_INFO("Entity {}: Min({:.3f}, {:.3f}, {:.3f}) Max({:.3f}, {:.3f}, {:.3f}) Center({:.3f}, {:.3f}, {:.3f})",
-                entity,
-                minBounds.x, minBounds.y, minBounds.z,
-                maxBounds.x, maxBounds.y, maxBounds.z,
-                center.x, center.y, center.z);
+            //EE_CORE_INFO("Entity {}: Min({:.3f}, {:.3f}, {:.3f}) Max({:.3f}, {:.3f}, {:.3f}) Center({:.3f}, {:.3f}, {:.3f})",
+            //    entity,
+            //    minBounds.x, minBounds.y, minBounds.z,
+            //    maxBounds.x, maxBounds.y, maxBounds.z,
+            //    center.x, center.y, center.z);
             
             return center;
         }
@@ -221,8 +221,8 @@ namespace Ermine
             // Pivot mode: Use the LAST selected entity's pivot (Unity behavior)
             // NOTE: This requires tracking selection order, which we don't have yet.
             // For now, just use the first entity in the list
-            EE_CORE_INFO("=== MULTI-SELECTION PIVOT MODE ===");
-            EE_CORE_INFO("Using first entity's pivot (Unity uses last selected)");
+            //EE_CORE_INFO("=== MULTI-SELECTION PIVOT MODE ===");
+            //EE_CORE_INFO("Using first entity's pivot (Unity uses last selected)");
             return GetManipulationPosition(entities[0], mode);
         }
         else
@@ -340,9 +340,9 @@ namespace Ermine
                     (minBounds.z + maxBounds.z) * 0.5f
                 );
 
-                EE_CORE_INFO("=== MULTI-SELECTION CENTER MODE ===");
-                EE_CORE_INFO("Combined {} entities: Center({:.3f}, {:.3f}, {:.3f})",
-                    entities.size(), center.x, center.y, center.z);
+               // EE_CORE_INFO("=== MULTI-SELECTION CENTER MODE ===");
+               // EE_CORE_INFO("Combined {} entities: Center({:.3f}, {:.3f}, {:.3f})",
+               //     entities.size(), center.x, center.y, center.z);
 
                 return center;
             }

@@ -351,8 +351,8 @@ void Ermine::ViewPortGUI::GizmoOverlay(const ImVec2& imgMin, const ImVec2& imgSi
 			editor::s_transformMode = (editor::s_transformMode == TransformMode::Pivot) 
 				? TransformMode::Center 
 				: TransformMode::Pivot;
-			EE_CORE_INFO("Transform mode: {}", 
-				(editor::s_transformMode == TransformMode::Pivot) ? "Pivot" : "Center");
+			//EE_CORE_INFO("Transform mode: {}", 
+			//	(editor::s_transformMode == TransformMode::Pivot) ? "Pivot" : "Center");
 		}
 
 		// Get the position where gizmo should appear
