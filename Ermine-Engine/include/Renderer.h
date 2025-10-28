@@ -25,6 +25,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Components.h"
 #include "EditorCamera.h"
 #include "shadow_config.h"
+#include <AABB.h>
 
 namespace Ermine::graphics
 {
@@ -658,5 +659,35 @@ namespace Ermine::graphics
          * @return glm::mat4 The world transform matrix
          */
         glm::mat4 GetEntityWorldMatrix(EntityID entity) const;
+
+    private:
+        // NEW: AABB storage and management
+        std::unordered_map<EntityID, AABB> m_entityAABBs;
+        std::unordered_set<EntityID> m_dirtyAABBs;  // Optional: for dirty flag optimization
+
+    public:
+        /**
+         * @brief Update AABBs for all entities with geometry
+         * Call once per frame or when transforms change
+         */
+        void UpdateAABBs();
+
+        /**
+         * @brief Get AABB for a specific entity
+         * @param entity The entity ID to get AABB for
+         * @return Pointer to AABB if exists, nullptr otherwise
+         */
+        const AABB* GetEntityAABB(EntityID entity) const;
+
+        /**
+         * @brief Get all stored AABBs (for debugging/visualization)
+         */
+        const std::unordered_map<EntityID, AABB>& GetAllAABBs() const { return m_entityAABBs; }
+
+        /**
+         * @brief Mark an entity's AABB as dirty (needs recalculation)
+         * Called by HierarchySystem when transforms change
+         */
+        void InvalidateAABB(EntityID entity) { m_dirtyAABBs.insert(entity); }
     };
 }

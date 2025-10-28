@@ -295,6 +295,8 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="include\AABB.h" />
+    <ClInclude Include="include\AABBHelper.h" />
     <ClInclude Include="include\AnimationClip.h" />
     <ClInclude Include="include\AnimationManager.h" />
     <ClInclude Include="include\Animator.h" />
@@ -418,6 +420,8 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClCompile Include="src\Systems\HierarchyPanel.cpp" />
     <ClCompile Include="src\Systems\HierarchySystem.cpp" />
     <ClCompile Include="src\Systems\TransformMode.cpp" />
+    <ClCompile Include="src\Utility\AABB.cpp" />
+    <ClCompile Include="src\Utility\AABBHelper.cpp" />
     <ClCompile Include="src\Utility\EditorCamera.cpp" />
     <ClCompile Include="src\Utility\FrameController.cpp" />
     <ClCompile Include="src\Utility\GPUProfiler.cpp" />

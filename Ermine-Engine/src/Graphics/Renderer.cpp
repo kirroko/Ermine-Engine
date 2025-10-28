@@ -31,6 +31,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <random>  
 #include "Physics.h"
 #include "ECS.h"
+#include "AABBHelper.h"
 
 #include <GLFW/glfw3.h>
 
@@ -1577,6 +1578,9 @@ void Renderer::BindMaterialBlockIfPresent(const std::shared_ptr<Shader>& shader)
  */
 void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 {
+	// Update AABBs at start of frame
+	UpdateAABBs();
+
 	if (m_UseDeferredRendering)
 	{
 		// Use deferred rendering pipeline (now includes transparency)
@@ -1821,7 +1825,7 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 #endif
 	}
 
-	// Increment  frame counter at the end of the frame
+	// Increment frame counter at the end of the frame
 	frameCounter++;
 }
 
@@ -3218,6 +3222,43 @@ glm::mat4 Renderer::GetEntityWorldMatrix(EntityID entity) const
 
 	return glm::mat4(1.0f);
 }
+
+void Ermine::graphics::Renderer::UpdateAABBs()
+{
+	auto& ecs = ECS::GetInstance();
+
+	// Option A: Simple approach - recalculate all AABBs every frame
+	m_entityAABBs.clear();
+
+	for (auto entity : m_Entities) {
+		// Only calculate AABB if entity has mesh or model
+		if (ecs.HasComponent<Mesh>(entity) || ecs.HasComponent<ModelComponent>(entity)) {
+			AABB aabb = AABBHelper::CalculateWorldAABB(entity);
+
+			// Only store valid AABBs
+			if (aabb.IsValid()) {
+				m_entityAABBs[entity] = aabb;
+			}
+		}
+	}
+
+#ifdef _DEBUG
+	// Optional: Log statistics every 5 seconds
+	static int frameCounter = 0;
+	if (++frameCounter % 300 == 0) {
+		EE_CORE_INFO("Updated {0} AABBs for {1} entities",
+			m_entityAABBs.size(), m_Entities.size());
+	}
+#endif
+}
+
+const Ermine::AABB* Ermine::graphics::Renderer::GetEntityAABB(EntityID entity) const
+{
+	auto it = m_entityAABBs.find(entity);
+	return (it != m_entityAABBs.end()) ? &it->second : nullptr;
+}
+
+
 
 /**
  * @brief Picks the entity at the given screen coordinates.

@@ -267,6 +267,12 @@
     <ClInclude Include="include\shadow_config.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\AABB.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\AABBHelper.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\AssetBrowser\AssetBrowser.cpp">
@@ -447,6 +453,12 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\Systems\TransformMode.cpp" />
+    <ClCompile Include="src\Utility\AABBHelper.cpp">
+      <Filter>src\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Utility\AABB.cpp">
+      <Filter>src\Utility</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="include\Component.tpp">
