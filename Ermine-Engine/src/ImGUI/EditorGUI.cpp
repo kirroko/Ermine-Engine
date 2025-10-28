@@ -822,7 +822,7 @@ void EditorGUI::Init(GLFWwindow* window)
     /*ImGui::StyleColorsLight();
     SetCutesyPinkTheme();*/
     ImGui::StyleColorsDark();
-    SetCyberpunk2077Theme();
+    //SetCyberpunk2077Theme();
     //SetOverwatchTheme(false);
 
     // When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
