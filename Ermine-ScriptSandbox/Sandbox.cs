@@ -38,6 +38,5 @@ public class Sandbox : MonoBehaviour
     {
         Debug.Log("Yes me lord? : " + gameObject.name);
         Debug.Log("Jobs done : " + col.gameObject.name);
-        //Debug.Log("Gameobject: " + gameObject.name + " hit " + col.gameObject.name);
     }
 }

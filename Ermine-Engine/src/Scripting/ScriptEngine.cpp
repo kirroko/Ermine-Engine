@@ -1199,7 +1199,6 @@ namespace
 		using namespace Ermine;
 		if (entityID == 0 || !ECS::GetInstance().IsEntityValid(entityID))
 			return nullptr;
-		EE_CORE_WARN("Poi");
 		MonoObject* obj = CreateManagedGameObjectWrapper(entityID);
 		return obj;
 	}
