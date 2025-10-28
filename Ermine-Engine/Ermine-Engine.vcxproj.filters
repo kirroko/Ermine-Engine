@@ -210,6 +210,9 @@
     <ClInclude Include="include\PreCompile.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\PrefabManager.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\Registry.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -262,9 +265,6 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\shadow_config.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\PrefabManager.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
@@ -401,6 +401,9 @@
     <ClCompile Include="src\Scripting\ScriptSystem.cpp">
       <Filter>src\Scripting</Filter>
     </ClCompile>
+    <ClCompile Include="src\Serialisation\PrefabManager.cpp">
+      <Filter>src\Serialisation</Filter>
+    </ClCompile>
     <ClCompile Include="src\Serialisation\SceneManager.cpp">
       <Filter>src\Serialisation</Filter>
     </ClCompile>
@@ -443,9 +446,7 @@
     <ClCompile Include="src\dllmain.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\Serialisation\PrefabManager.cpp">
-      <Filter>src\Serialisation</Filter>
-    </ClCompile>
+    <ClCompile Include="src\Systems\TransformMode.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="include\Component.tpp">
