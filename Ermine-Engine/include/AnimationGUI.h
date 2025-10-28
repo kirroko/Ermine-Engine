@@ -158,14 +158,14 @@ namespace Ermine
          * @param id The ID of the state to find.
          * @return Shared pointer to the found AnimationStateNode, or nullptr if not found.
          */
-        std::shared_ptr<AnimationStateNode> FindStateById(AnimationGraph& graph, int id);
+        std::shared_ptr<AnimationStateNode> FindStateById(const std::shared_ptr<AnimationGraph>& graph, int id);
 
         /**
          * @brief Draws the node editor for the animation graph.
          * @param graph The animation graph being edited.
          * @param animator The animator associated with the entity.
          */
-        void DrawNodeEditor(AnimationGraph& graph, const std::shared_ptr<graphics::Animator>& animator);
+        void DrawNodeEditor(const std::shared_ptr<AnimationGraph>& graph, const std::shared_ptr<graphics::Animator>& animator);
 
         /**
          * @brief Draws a single animation state node.
@@ -173,25 +173,25 @@ namespace Ermine
          * @param graph The animation graph being edited.
          * @param animator The animator associated with the entity.
          */
-        void DrawNode(AnimationStateNode& n, AnimationGraph& graph, const std::shared_ptr<graphics::Animator>& animator);
+        void DrawNode(AnimationStateNode& n, const std::shared_ptr<AnimationGraph>& graph, const std::shared_ptr<graphics::Animator>& animator);
 
         /**
          * @brief Draws the state inspector panel.
          * @param graph The animation graph being edited.
          * @param animator The animator associated with the entity.
          */
-        void DrawStateInspector(AnimationGraph& graph, const std::shared_ptr<graphics::Animator>& animator);
+        void DrawStateInspector(const std::shared_ptr<AnimationGraph>& graph, const std::shared_ptr<graphics::Animator>& animator);
 
         /**
          * @brief Draws the parameter inspector panel.
          * @param graph The animation graph being edited.
          */
-        void DrawParameterInspector(AnimationGraph& graph);
+        void DrawParameterInspector(const std::shared_ptr<AnimationGraph>& graph);
 
         /**
          * @brief Draws the transition inspector panel.
          * @param graph The animation graph being edited.
          */
-        void DrawTransitionInspector(AnimationGraph& graph);
+        void DrawTransitionInspector(const std::shared_ptr<AnimationGraph>& graph);
     };
 }

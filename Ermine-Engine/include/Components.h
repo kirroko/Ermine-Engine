@@ -1781,11 +1781,12 @@ namespace Ermine
 	*************************************************************************/
 	struct AnimationComponent
 	{
-		std::shared_ptr<graphics::Animator> m_animator; // Handles animation playback
-		AnimationGraph m_animationGraph;				// Animation graph for managing states and transitions
+		std::shared_ptr<graphics::Animator> m_animator;   // Handles animation playback
+		std::shared_ptr<AnimationGraph> m_animationGraph; // Handles animation states and transitions
 
 		AnimationComponent() = default;
-		explicit AnimationComponent(const std::shared_ptr<graphics::Model>& model) : m_animator(std::make_shared<graphics::Animator>(model)) {}
+		explicit AnimationComponent(const std::shared_ptr<graphics::Model>& model)
+			: m_animator(std::make_shared<graphics::Animator>(model)), m_animationGraph(std::make_shared<AnimationGraph>()) {}
 
 		template <typename Alloc>
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
@@ -1816,8 +1817,8 @@ namespace Ermine
 				}
 			}
 
-			// Deserialize the animation graph
-			if (m_animator) m_animator->SetGraph(&m_animationGraph);
+			if (!m_animationGraph)
+				m_animationGraph = std::make_shared<AnimationGraph>();
 		}
 
 		//XPROPERTY_DEF(

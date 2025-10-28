@@ -36,10 +36,10 @@ namespace Ermine
         s->clipName.clear();
 
         // Stagger each new node
-        float offset = static_cast<float>(graph.states.size()) * 10.f;
+        float offset = static_cast<float>(graph->states.size()) * 10.f;
         s->editorPos = ImVec2(100.f + offset, 100.f + offset);
 
-        graph.states.push_back(s);
+        graph->states.push_back(s);
 
         // Set visible position
         ImNodes::SetNodeEditorSpacePos(s->id, s->editorPos);
@@ -51,9 +51,9 @@ namespace Ermine
      * @param id The ID of the state to find.
      * @return Shared pointer to the found AnimationStateNode, or nullptr if not found.
      */
-    std::shared_ptr<AnimationStateNode> AnimationEditorImGUI::FindStateById(AnimationGraph& graph, int id)
+    std::shared_ptr<AnimationStateNode> AnimationEditorImGUI::FindStateById(const std::shared_ptr<AnimationGraph>& graph, int id)
     {
-        for (auto& s : graph.states)
+        for (auto& s : graph->states)
             if (s->id == id) return s;
         return nullptr;
     }
@@ -63,7 +63,7 @@ namespace Ermine
      * @param graph The animation graph being edited.
      * @param animator The animator associated with the entity.
      */
-    void AnimationEditorImGUI::DrawNodeEditor(AnimationGraph& graph, const std::shared_ptr<graphics::Animator>& animator)
+    void AnimationEditorImGUI::DrawNodeEditor(const std::shared_ptr<AnimationGraph>& graph, const std::shared_ptr<graphics::Animator>& animator)
     {
         ImGui::BeginChild("NodeEditor", ImGui::GetContentRegionAvail(), true);
 
@@ -74,11 +74,11 @@ namespace Ermine
         ImNodes::BeginNodeEditor();
 
         // Render nodes
-        for (auto& nPtr : graph.states)
+        for (auto& nPtr : graph->states)
             DrawNode(*nPtr, graph, animator);
 
         // Draw links
-        for (auto& link : graph.links) {
+        for (auto& link : graph->links) {
             int startAttr = link.fromNodeId * 10; // Out attr
             int endAttr = link.toNodeId * 10 + 1; // In attr
             ImNodes::Link(link.id, startAttr, endAttr);
@@ -97,7 +97,7 @@ namespace Ermine
                 // Prevent self-links and validate nodes
                 if (fromId != toId) {
                     bool fromExists = false, toExists = false;
-                    for (auto& s : graph.states) {
+                    for (auto& s : graph->states) {
                         if (s->id == fromId) fromExists = true;
                         if (s->id == toId)   toExists = true;
                     }
@@ -107,8 +107,8 @@ namespace Ermine
                         static int nextLinkId = 1;
                         int newLinkId = nextLinkId++;
 
-                        graph.links.push_back({ newLinkId, fromId, toId });
-                        graph.transitions.push_back(AnimationTransition{ fromId, toId, 0.0f, 0.25f });
+                        graph->links.push_back({ newLinkId, fromId, toId });
+                        graph->transitions.push_back(AnimationTransition{ fromId, toId, 0.0f, 0.25f });
                         EE_CORE_INFO("Created link %d: %d -> %d", newLinkId, fromId, toId);
                     }
                     else
@@ -124,18 +124,18 @@ namespace Ermine
         // Handle link deletion
         int destroyedLinkId;
         while (ImNodes::IsLinkDestroyed(&destroyedLinkId)) {
-            auto it = std::find_if(graph.links.begin(), graph.links.end(),
+            auto it = std::find_if(graph->links.begin(), graph->links.end(),
                 [&](const AnimationLink& l) { return l.id == destroyedLinkId; });
 
-            if (it != graph.links.end()) {
+            if (it != graph->links.end()) {
                 EE_CORE_INFO("Deleted link %d -> %d", it->fromNodeId, it->toNodeId);
 
                 // Remove corresponding transition
-                graph.transitions.erase(std::remove_if(graph.transitions.begin(), graph.transitions.end(),
-                    [&](const AnimationTransition& t) { return (t.fromNodeId == it->fromNodeId && t.toNodeId == it->toNodeId); }), graph.transitions.end());
+                graph->transitions.erase(std::remove_if(graph->transitions.begin(), graph->transitions.end(),
+                    [&](const AnimationTransition& t) { return (t.fromNodeId == it->fromNodeId && t.toNodeId == it->toNodeId); }), graph->transitions.end());
 
                 // Remove the actual link
-                graph.links.erase(it);
+                graph->links.erase(it);
             }
         }
 
@@ -153,10 +153,10 @@ namespace Ermine
         if (ImGui::BeginPopup("LinkContextMenu")) {
             if (selectedLinkId > 0) {
                 // Find link object
-                auto it = std::find_if(graph.links.begin(), graph.links.end(),
+                auto it = std::find_if(graph->links.begin(), graph->links.end(),
                     [&](const AnimationLink& l) { return l.id == selectedLinkId; });
 
-                if (it != graph.links.end()) {
+                if (it != graph->links.end()) {
                     // Find readable state names
                     std::string fromName = "Unknown";
                     std::string toName = "Unknown";
@@ -173,11 +173,11 @@ namespace Ermine
                         EE_CORE_INFO("Deleted link via context menu %s -> %s", fromName.c_str(), toName.c_str());
 
                         // Remove the corresponding transition
-                        graph.transitions.erase(std::remove_if(graph.transitions.begin(), graph.transitions.end(),
-                            [&](const AnimationTransition& t) { return (t.fromNodeId == it->fromNodeId && t.toNodeId == it->toNodeId); }), graph.transitions.end());
+                        graph->transitions.erase(std::remove_if(graph->transitions.begin(), graph->transitions.end(),
+                            [&](const AnimationTransition& t) { return (t.fromNodeId == it->fromNodeId && t.toNodeId == it->toNodeId); }), graph->transitions.end());
 
                         // Remove the link itself
-                        graph.links.erase(it);
+                        graph->links.erase(it);
                         selectedLinkId = -1;
                         ImGui::CloseCurrentPopup();
                     }
@@ -192,14 +192,14 @@ namespace Ermine
         // Handle node deletions
         if (!nodesToDelete.empty()) {
             for (int del : nodesToDelete) {
-                graph.states.erase(std::remove_if(graph.states.begin(), graph.states.end(),
-                    [&](auto& s) { return s->id == del; }), graph.states.end());
+                graph->states.erase(std::remove_if(graph->states.begin(), graph->states.end(),
+                    [&](auto& s) { return s->id == del; }), graph->states.end());
 
-                graph.links.erase(std::remove_if(graph.links.begin(), graph.links.end(),
-                    [&](const AnimationLink& l) { return l.fromNodeId == del || l.toNodeId == del; }), graph.links.end());
+                graph->links.erase(std::remove_if(graph->links.begin(), graph->links.end(),
+                    [&](const AnimationLink& l) { return l.fromNodeId == del || l.toNodeId == del; }), graph->links.end());
 
-                graph.transitions.erase(std::remove_if(graph.transitions.begin(), graph.transitions.end(),
-                    [&](auto& t) { return t.fromNodeId == del || t.toNodeId == del; }), graph.transitions.end());
+                graph->transitions.erase(std::remove_if(graph->transitions.begin(), graph->transitions.end(),
+                    [&](auto& t) { return t.fromNodeId == del || t.toNodeId == del; }), graph->transitions.end());
             }
             nodesToDelete.clear();
         }
@@ -213,10 +213,10 @@ namespace Ermine
      * @param graph The animation graph being edited.
      * @param animator The animator associated with the entity.
      */
-    void AnimationEditorImGUI::DrawNode(AnimationStateNode& n, AnimationGraph& graph, const std::shared_ptr<graphics::Animator>& animator)
+    void AnimationEditorImGUI::DrawNode(AnimationStateNode& n, const std::shared_ptr<AnimationGraph>& graph, const std::shared_ptr<graphics::Animator>& animator)
     {
         // Check if this is the active node
-        const bool isActive = (graph.current && graph.current->id == n.id);
+        const bool isActive = (graph->current && graph->current->id == n.id);
 
         // Highlight current playing node
         ImNodes::PushColorStyle(ImNodesCol_TitleBar, isActive ? IM_COL32(80, 150, 255, 255) : IM_COL32(50, 50, 80, 255));
@@ -303,9 +303,9 @@ namespace Ermine
             bool prevStart = n.isStartState;
             ImGui::Checkbox(("Start##" + std::to_string(n.id)).c_str(), &n.isStartState);
             if (n.isStartState && !prevStart) {
-                for (auto& other : graph.states)
+                for (auto& other : graph->states)
                     if (other->id != n.id) other->isStartState = false;
-                graph.current = FindStateById(graph, n.id);
+                graph->current = FindStateById(graph, n.id);
             }
 
             // Parameters
@@ -316,8 +316,8 @@ namespace Ermine
             if (ImGui::Button(("Preview##" + std::to_string(n.id)).c_str())) {
                 if (n.isAttached && animator) {
                     animator->PlayAnimation(n.clipName);
-                    graph.current = FindStateById(graph, n.id);
-                    graph.playing = true;
+                    graph->current = FindStateById(graph, n.id);
+                    graph->playing = true;
                 }
             }
             ImGui::SameLine();
@@ -346,7 +346,7 @@ namespace Ermine
      * @param graph The animation graph being edited.
      * @param animator The animator associated with the entity.
      */
-    void AnimationEditorImGUI::DrawStateInspector(AnimationGraph& graph, const std::shared_ptr<graphics::Animator>& animator)
+    void AnimationEditorImGUI::DrawStateInspector(const std::shared_ptr<AnimationGraph>& graph, const std::shared_ptr<graphics::Animator>& animator)
     {
         ImGui::BeginChild("StateInspector", ImVec2(0, 230), true);
 
@@ -364,35 +364,35 @@ namespace Ermine
         // Small timeline scrubber
         if (auto clip = animator->GetCurrentClip()) {
             float durationSec = static_cast<float>(clip->duration / clip->ticksPerSecond);
-            ImGui::SliderFloat("Timeline", &graph.currentTime, 0.f, durationSec, "%.2fs");
+            ImGui::SliderFloat("Timeline", &graph->currentTime, 0.f, durationSec, "%.2fs");
             if (ImGui::IsItemActive() || ImGui::IsItemDeactivatedAfterEdit()) {
-                animator->Seek(graph.currentTime);
-                graph.playing = false;
+                animator->Seek(graph->currentTime);
+                graph->playing = false;
             }
         }
 
         // Playback speed
-        ImGui::DragFloat("Speed", &graph.playbackSpeed, 0.1f, 0.1f, 5.f);
+        ImGui::DragFloat("Speed", &graph->playbackSpeed, 0.1f, 0.1f, 5.f);
 
         // Playback controls
         if (ImGui::Button("Play")) {
-            graph.playing = true;
-            if (graph.current && animator)
-                animator->PlayAnimation(graph.current->clipName);
+            graph->playing = true;
+            if (graph->current && animator)
+                animator->PlayAnimation(graph->current->clipName);
         }
         ImGui::SameLine();
         if (ImGui::Button("Pause")) {
-            graph.playing = false;
+            graph->playing = false;
             if (animator) animator->PauseAnimation();
         }
         ImGui::SameLine();
         if (ImGui::Button("Resume")) {
-            graph.playing = true;
+            graph->playing = true;
             if (animator) animator->ResumeAnimation();
         }
         ImGui::SameLine();
         if (ImGui::Button("Stop")) {
-            graph.playing = false;
+            graph->playing = false;
             if (animator) animator->StopAnimation();
         }
         ImGui::SameLine();
@@ -408,7 +408,7 @@ namespace Ermine
      * @brief Draws the parameter inspector panel.
      * @param graph The animation graph being edited.
      */
-    void AnimationEditorImGUI::DrawParameterInspector(AnimationGraph& graph)
+    void AnimationEditorImGUI::DrawParameterInspector(const std::shared_ptr<AnimationGraph>& graph)
     {
         ImGui::BeginChild("ParameterInspector", ImVec2(0, 0), true);
 
@@ -424,20 +424,20 @@ namespace Ermine
             AnimationParameter p;
             p.name = paramName;
             p.type = static_cast<AnimationParameter::Type>(paramType);
-            graph.parameters.push_back(p);
+            graph->parameters.push_back(p);
             paramName[0] = '\0';
         }
 
         ImGui::Separator();
 
         // List parameters
-        for (size_t i = 0; i < graph.parameters.size(); ++i) {
-            auto& p = graph.parameters[i];
+        for (size_t i = 0; i < graph->parameters.size(); ++i) {
+            auto& p = graph->parameters[i];
             ImGui::PushID(static_cast<int>(i));
             ImGui::Text("%s", p.name.c_str());
             ImGui::SameLine(ImGui::GetColumnWidth(0) - 60);
             if (ImGui::Button("X")) {
-                graph.parameters.erase(graph.parameters.begin() + i);
+                graph->parameters.erase(graph->parameters.begin() + i);
                 ImGui::PopID();
                 break;
             }
@@ -468,19 +468,19 @@ namespace Ermine
      * @brief Draws the transition inspector panel.
      * @param graph The animation graph being edited.
      */
-    void AnimationEditorImGUI::DrawTransitionInspector(AnimationGraph& graph)
+    void AnimationEditorImGUI::DrawTransitionInspector(const std::shared_ptr<AnimationGraph>& graph)
     {
         ImGui::BeginChild("TransitionInspector", ImVec2(0, 230), true);
 
-        if (graph.transitions.empty()) {
+        if (graph->transitions.empty()) {
             ImGui::TextDisabled("No transitions yet. Connect states in the graph.");
             ImGui::EndChild();
             return;
         }
 
         // List transitions
-        for (size_t i = 0; i < graph.transitions.size(); ++i) {
-            auto& t = graph.transitions[i];
+        for (size_t i = 0; i < graph->transitions.size(); ++i) {
+            auto& t = graph->transitions[i];
             ImGui::PushID(static_cast<int>(i));
 
             // Resolve readable state names
@@ -513,7 +513,7 @@ namespace Ermine
 
                     // Parameter selection
                     if (ImGui::BeginCombo("Parameter", cond.parameterName.empty() ? "Select..." : cond.parameterName.c_str())) {
-                        for (auto& p : graph.parameters)
+                        for (auto& p : graph->parameters)
                             if (ImGui::Selectable(p.name.c_str(), p.name == cond.parameterName))
                                 cond.parameterName = p.name;
                         ImGui::EndCombo();
@@ -534,10 +534,10 @@ namespace Ermine
 
                     // Value field (bool/float/int/trigger)
                     if (!cond.parameterName.empty()) {
-                        auto it = std::find_if(graph.parameters.begin(), graph.parameters.end(),
+                        auto it = std::find_if(graph->parameters.begin(), graph->parameters.end(),
                             [&](auto& p) { return p.name == cond.parameterName; });
 
-                        if (it != graph.parameters.end()) {
+                        if (it != graph->parameters.end()) {
                             switch (it->type) {
                             case AnimationParameter::Type::Bool:
                                 ImGui::Checkbox("Value", &cond.boolValue);
@@ -577,16 +577,11 @@ namespace Ermine
                     int toId = t.toNodeId;
 
                     // Remove transition itself
-                    graph.transitions.erase(graph.transitions.begin() + i);
+                    graph->transitions.erase(graph->transitions.begin() + i);
 
                     // Remove matching link in the node editor
-                    graph.links.erase(std::remove_if(graph.links.begin(), graph.links.end(),
-                        [&](const AnimationLink& l)
-                        {
-                            return (l.fromNodeId == fromId && l.toNodeId == toId);
-                        }),
-                        graph.links.end()
-                    );
+                    graph->links.erase(std::remove_if(graph->links.begin(), graph->links.end(),
+                        [&](const AnimationLink& l) { return (l.fromNodeId == fromId && l.toNodeId == toId); }), graph->links.end());
 
                     EE_CORE_INFO("Deleted transition %d -> %d and its corresponding link", fromId, toId);
                     ImGui::PopID();

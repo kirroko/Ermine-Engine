@@ -17,6 +17,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "PreCompile.h"
 #include "Animator.h"
 #include "Logger.h"
+#include "Components.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/quaternion.hpp>
 
@@ -286,23 +287,27 @@ namespace Ermine::graphics
      * Checks for any transition conditions in the linked AnimationGraph
      * and switches animations accordingly.
      */
-    void Animator::EvaluateTransitions()
+    void Animator::EvaluateTransitions(EntityID entity)
     {
-        // No graph or no current state
-        if (!m_Graph || !m_Graph->current) return;
+        if (!ECS::GetInstance().HasComponent<AnimationComponent>(entity)) return;
 
-        for (auto& transition : m_Graph->transitions) {
+        auto& graph = ECS::GetInstance().GetComponent<AnimationComponent>(entity).m_animationGraph;
+
+        // No graph or no current state
+        if (!graph || !graph->current) return;
+
+        for (auto& transition : graph->transitions) {
             // Match transition source node
-            if (transition.fromNodeId != m_Graph->current->id)
+            if (transition.fromNodeId != graph->current->id)
                 continue;
 
             // Evaluate all conditions for this transition
             bool allTrue = true;
             for (auto& cond : transition.conditions) {
-                auto it = std::find_if(m_Graph->parameters.begin(), m_Graph->parameters.end(),
+                auto it = std::find_if(graph->parameters.begin(), graph->parameters.end(),
                     [&](const AnimationParameter& p) { return p.name == cond.parameterName; });
 
-                if (it == m_Graph->parameters.end())
+                if (it == graph->parameters.end())
                     continue; // parameter not found
 
                 const auto& param = *it;
@@ -344,19 +349,19 @@ namespace Ermine::graphics
 
             if (allTrue) {
                 // Transition fires
-                auto nextNode = std::find_if(m_Graph->states.begin(), m_Graph->states.end(),
+                auto nextNode = std::find_if(graph->states.begin(), graph->states.end(),
                     [&](auto& s) { return s->id == transition.toNodeId; });
 
-                if (nextNode != m_Graph->states.end() && (*nextNode)->isAttached) {
-                    m_Graph->current = *nextNode;
-                    PlayAnimation(m_Graph->current->clipName);
+                if (nextNode != graph->states.end() && (*nextNode)->isAttached) {
+                    graph->current = *nextNode;
+                    PlayAnimation(graph->current->clipName);
 
                     // Reset trigger parameters
-                    for (auto& p : m_Graph->parameters)
+                    for (auto& p : graph->parameters)
                         if (p.type == AnimationParameter::Type::Trigger)
                             p.triggerValue = false;
 
-                    EE_CORE_INFO("Transitioned to state: {}", m_Graph->current->name);
+                    EE_CORE_INFO("Transitioned to state: {}", graph->current->name);
                     break;
                 }
             }
@@ -371,7 +376,7 @@ namespace Ermine::graphics
      *
      * @param deltaTime Time step in seconds since last frame.
      */
-    void Animator::Update(double deltaTime)
+    void Animator::Update(double deltaTime, EntityID entity)
     {
         // Ensure there is a current clip and valid scene
         if (!m_CurrentClip || !m_Scene || !m_Scene->mRootNode) return;
@@ -379,7 +384,10 @@ namespace Ermine::graphics
 
         // Handle playback speed from graph
         double playbackSpeed = 1.0;
-        if (m_Graph) playbackSpeed = m_Graph->playbackSpeed;
+        if (ECS::GetInstance().HasComponent<AnimationComponent>(entity)) {
+            auto& graph = ECS::GetInstance().GetComponent<AnimationComponent>(entity).m_animationGraph;
+            playbackSpeed = graph->playbackSpeed;
+        }
 
         // Advance animation time in ticks
         double ticksPerSecond = m_CurrentClip->ticksPerSecond != 0.0
@@ -402,11 +410,11 @@ namespace Ermine::graphics
         m_Model->SetBoneTransforms(m_FinalBoneMatrices);
 
         // Evaluate any animation graph transitions
-        EvaluateTransitions();
+        EvaluateTransitions(entity);
 
         // Example of setting a parameter (to be replaced with actual game logic)
-        //auto& animComp = ECS::GetInstance().GetComponent<AnimationComponent>(entity);
-        //for (auto& p : animComp.m_animationGraph.parameters)
+        //auto& graph = ECS::GetInstance().GetComponent<AnimationComponent>(entity).m_animationGraph;
+        //for (auto& p : graph->parameters)
         //{
         //    if (p.name == "isRunning") p.boolValue = true;
         //}

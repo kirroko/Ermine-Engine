@@ -18,7 +18,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #include "AnimationClip.h"   // For AnimationClip definition
 #include "Model.h"           // For Model definition
-#include "AnimationGUI.h"    // For AnimationGraph definition
+#include "ECS.h"
 #include <assimp/scene.h>    // For aiScene
 
 namespace Ermine::graphics
@@ -114,18 +114,12 @@ namespace Ermine::graphics
         void Seek(double timeInSeconds);
 
         /**
-		 * @brief Set the animation graph for advanced animation blending.
-		 * @param graph Pointer to the AnimationGraph to use.
-		 */
-        void SetGraph(AnimationGraph* graph) { m_Graph = graph; }
-
-        /**
 		 * @brief Evaluate and process animation transitions in the graph.
          *
 		 * Checks for any transition conditions in the linked AnimationGraph
 		 * and switches animations accordingly.
 		 */
-        void EvaluateTransitions();
+        void EvaluateTransitions(EntityID entity);
 
         /**
          * @brief Advance animation playback and update bone transforms.
@@ -135,7 +129,7 @@ namespace Ermine::graphics
          *
          * @param deltaTime Time step in seconds since last frame.
          */
-        void Update(double deltaTime);
+        void Update(double deltaTime, EntityID entity);
 
         /**
          * @brief Get the animated model.
@@ -193,8 +187,6 @@ namespace Ermine::graphics
         bool m_Paused = false;                        // Pausing flag
 
         std::vector<glm::mat4> m_FinalBoneMatrices;   // Final transforms per bone
-
-        AnimationGraph* m_Graph = nullptr;            // Link to the entity's animation graph
 
         /**
          * @brief Recursively calculate bone transforms by traversing Assimp node hierarchy.
