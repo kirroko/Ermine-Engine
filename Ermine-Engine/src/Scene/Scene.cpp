@@ -16,6 +16,9 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Components.h"
 #include "ECS.h"
 #include "HierarchySystem.h"
+#include "Physics.h"
+#include <algorithm>
+#include <cctype>
 
 namespace Ermine {
     Scene::Scene(const std::string& name) : m_Name(name) {
@@ -37,6 +40,13 @@ namespace Ermine {
 
         if (needsHierarchy) {
             ECS::GetInstance().AddComponent(entity, HierarchyComponent());
+            
+            // Initialize GlobalTransform for hierarchy entities
+            auto hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>();
+            if (hierarchySystem) {
+                hierarchySystem->EnsureGlobalTransform(entity);
+                hierarchySystem->InitializeEntity(entity);
+            }
         }
 
         m_Entities.insert(entity);
@@ -74,6 +84,105 @@ namespace Ermine {
 
         ECS::GetInstance().DestroyEntity(entity);
         EE_CORE_TRACE("Destroyed entity {} from scene {}", entity, m_Name);
+    }
+
+    EntityID Scene::DuplicateEntity(EntityID sourceEntity) {
+        if (!HasEntity(sourceEntity)) {
+            EE_CORE_WARN("Cannot duplicate entity {} - not in scene {}", sourceEntity, m_Name);
+            return 0;
+        }
+
+        auto& ecs = ECS::GetInstance();
+        auto hierarchySystem = ecs.GetSystem<HierarchySystem>();
+
+        // Clone the entity (copies all components)
+        EntityID newEntity = ecs.CloneEntity(sourceEntity);
+
+        // Update metadata name with Unity-style numbering
+        if (ecs.HasComponent<ObjectMetaData>(newEntity)) {
+            auto& meta = ecs.GetComponent<ObjectMetaData>(newEntity);
+            
+            // Extract base name (strip existing numbering if present)
+            std::string baseName = meta.name;
+            
+            // Remove existing " (n)" pattern if present
+            size_t openParen = baseName.rfind(" (");
+            if (openParen != std::string::npos) {
+                size_t closeParen = baseName.find(')', openParen);
+                if (closeParen != std::string::npos) {
+                    // Check if content between parentheses is a number
+                    std::string numberStr = baseName.substr(openParen + 2, closeParen - openParen - 2);
+                    bool isNumber = !numberStr.empty() && 
+                                    std::all_of(numberStr.begin(), numberStr.end(), ::isdigit);
+                    
+                    if (isNumber) {
+                        baseName = baseName.substr(0, openParen);
+                    }
+                }
+            }
+            
+            // Find the highest existing number for this base name
+            int highestNumber = 0;
+            for (auto entity : m_Entities) {
+                if (!ecs.IsEntityValid(entity) || !ecs.HasComponent<ObjectMetaData>(entity)) 
+                    continue;
+                
+                const auto& existingMeta = ecs.GetComponent<ObjectMetaData>(entity);
+                
+                // Check if name starts with baseName
+                if (existingMeta.name.find(baseName) == 0) {
+                    // Check for " (n)" pattern
+                    size_t pos = existingMeta.name.rfind(" (");
+                    if (pos != std::string::npos && pos == baseName.length()) {
+                        size_t closePos = existingMeta.name.find(')', pos);
+                        if (closePos != std::string::npos) {
+                            std::string numStr = existingMeta.name.substr(pos + 2, closePos - pos - 2);
+                            if (!numStr.empty() && std::all_of(numStr.begin(), numStr.end(), ::isdigit)) {
+                                int num = std::stoi(numStr);
+                                highestNumber = std::max(highestNumber, num);
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Set new name with next number
+            meta.name = baseName + " (" + std::to_string(highestNumber + 1) + ")";
+        }
+
+        // Preserve hierarchy relationship (make duplicate a sibling of original)
+        if (ecs.HasComponent<HierarchyComponent>(sourceEntity)) {
+            auto& sourceHierarchy = ecs.GetComponent<HierarchyComponent>(sourceEntity);
+            
+            // If source has a parent, set same parent for duplicate
+            if (sourceHierarchy.parent != 0 && ecs.IsEntityValid(sourceHierarchy.parent)) {
+                hierarchySystem->SetParent(newEntity, sourceHierarchy.parent, false);
+            }
+            // Otherwise duplicate is also root (default from CloneEntity)
+        }
+
+        // Initialize transform system
+        if (ecs.HasComponent<HierarchyComponent>(newEntity)) {
+            hierarchySystem->EnsureGlobalTransform(newEntity);
+            hierarchySystem->MarkDirty(newEntity);
+        }
+
+        // Update physics if needed
+        if (ecs.HasComponent<PhysicComponent>(newEntity)) {
+            ecs.GetSystem<Physics>()->UpdatePhysicList();
+        }
+
+        // Add to scene
+        m_Entities.insert(newEntity);
+
+        EE_CORE_INFO("Duplicated entity {} ('{}') to {} ('{}') in scene {}", 
+            sourceEntity,
+            ecs.GetComponent<ObjectMetaData>(sourceEntity).name,
+            newEntity,
+            ecs.GetComponent<ObjectMetaData>(newEntity).name,
+            m_Name);
+
+        return newEntity;
     }
 
     bool Scene::HasEntity(EntityID entity) const {

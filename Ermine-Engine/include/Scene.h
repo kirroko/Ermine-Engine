@@ -58,6 +58,13 @@ namespace Ermine {
         void DestroyEntity(EntityID entity);
 
         /*!
+        \brief Duplicates an entity and all its components
+        \param sourceEntity The entity ID to duplicate
+        \return EntityID of the newly created duplicate entity
+        */
+        EntityID DuplicateEntity(EntityID sourceEntity);
+
+        /*!
         \brief Checks if an entity exists in this scene
         \param entity The entity ID to check
         \return True if the entity exists in this scene, false otherwise

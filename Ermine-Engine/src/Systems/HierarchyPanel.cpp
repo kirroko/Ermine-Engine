@@ -59,6 +59,12 @@ namespace Ermine {
             if (ImGui::Button("Delete Selected")) {
                 m_ActiveScene->DestroyEntity(selected);
             }
+            
+            // Add Duplicate button next to Delete
+            ImGui::SameLine();
+            if (ImGui::Button("Duplicate Selected")) {
+                DuplicateEntity(selected);
+            }
         }
 
         ImGui::Separator();
@@ -78,6 +84,13 @@ namespace Ermine {
         // Right-click context menu
         DrawContextMenu();
 
+        // ? KEYBOARD SHORTCUT: Ctrl+D to duplicate selected entity
+        if (ImGui::IsWindowFocused() && selected != 0) {
+            if (ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_D)) {
+                DuplicateEntity(selected);
+            }
+        }
+
         // Handle delayed inspector focus - wait for mouse release
             if (m_PendingFocusEntity != 0) {
                 if (!ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
@@ -93,20 +106,16 @@ namespace Ermine {
     }
 
     void HierarchyPanel::DuplicateEntity(EntityID sourceEntity) {
-        if (sourceEntity == 0) return;
+        if (sourceEntity == 0 || !m_ActiveScene) return;
 
-        // Clone the entity and add it to the scene
-        EntityID newEntity = ECS::GetInstance().CloneEntity(sourceEntity);
+        // Use Scene's DuplicateEntity for proper integration
+        EntityID newEntity = m_ActiveScene->DuplicateEntity(sourceEntity);
 
-        // Set a new name for the duplicated entity
-        auto& meta = ECS::GetInstance().GetComponent<ObjectMetaData>(newEntity);
-        meta.name += " (Copy)";
-
-        // Make sure the new entity is added to the scene and selected
-        m_ActiveScene->SetSelectedEntity(newEntity);
-        ImGui::SetWindowFocus("Inspector");
-
-        EE_CORE_INFO("Duplicated entity {} to new entity {}", sourceEntity, newEntity);
+        if (newEntity != 0) {
+            // Select the new entity and focus inspector
+            m_ActiveScene->SetSelectedEntity(newEntity);
+            ImGui::SetWindowFocus("Inspector");
+        }
     }
 
     void HierarchyPanel::DrawEntityNode(EntityID entity, int depth) {
