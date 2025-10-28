@@ -22,6 +22,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "SceneManager.h" // For opening scenes
 #include "PrefabManager.h" // For opening prefabs
 #include "EditorGUI.h" // For forwarding dropped files to the asset browser
+#include "Components.h"
 
 namespace fs = std::filesystem;
 
@@ -571,8 +572,15 @@ namespace Ermine::ImguiUI
 
                 //auto hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>();
 
-                PrefabManager::GetInstance().SavePrefab(droppedEntity, currentDirectory / "NewPrefab.prefab");
-                EE_CORE_INFO("Saved entity {} as prefab in {}", droppedEntity, (currentDirectory / "NewPrefab.prefab").string());
+                auto& ecs = Ermine::ECS::GetInstance();
+
+                std::string name = "NewPrefab";
+
+                if (ecs.HasComponent<ObjectMetaData>(droppedEntity))
+                    name = ecs.GetComponent<ObjectMetaData>(droppedEntity).name;
+
+                PrefabManager::GetInstance().SavePrefab(droppedEntity, currentDirectory / (name + ".prefab"));
+                EE_CORE_INFO("Saved entity {} as prefab in {}", droppedEntity, (currentDirectory / (name + ".prefab")).string());
 
                 // Check if entity currently has a parent
                 //EntityID currentParent = hierarchySystem->GetParent(droppedEntity);

@@ -71,6 +71,7 @@ Q                  - Toggle Local / World translate
 W                  - Switch to Translate mode
 E                  - Switch to Rotate mode
 R                  - Switch to Scale mode
+Y                  - Toggle Pivot / Center mode (where gizmo appears)
 1 / 2              - Toggle PBR / Blinn-Phong shading
 3                  - Toggle Deferred Rendering
 4                  - Toggle SSAO

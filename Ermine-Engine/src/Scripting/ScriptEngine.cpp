@@ -22,6 +22,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Input.h"
 #include "Logger.h"
 #include "JobSystem.h"
+#include <HierarchySystem.h>
 #include "FiniteStateMachine.h"
 
 namespace fs = std::filesystem;
@@ -1067,22 +1068,79 @@ namespace
 		return { 1,1,1 };
 	}
 
+	//void icall_transform_set_position(MonoObject* thisObj, ManagedVector3 value)
+	//{
+	//	if (auto* t = GetTransformFromManaged(thisObj))
+	//		t->position = ToNativeVec(value);
+	//}
+
+	//void icall_transform_set_rotation(MonoObject* thisObj, ManagedQuaternion value)
+	//{
+	//	if (auto* t = GetTransformFromManaged(thisObj))
+	//		t->rotation = ToNativeQuat(value);
+	//}
+
+	//void icall_transform_set_scale(MonoObject* thisObj, ManagedVector3 value)
+	//{
+	//	if (auto* t = GetTransformFromManaged(thisObj))
+	//		t->scale = ToNativeVec(value);
+	//}
+
 	void icall_transform_set_position(MonoObject* thisObj, ManagedVector3 value)
 	{
-		if (auto* t = GetTransformFromManaged(thisObj))
-			t->position = ToNativeVec(value);
+		using namespace Ermine;
+		EntityID id = GetEntityIDFromManaged(thisObj);
+		if (id == 0 || !ECS::GetInstance().IsEntityValid(id) || !ECS::GetInstance().HasComponent<Transform>(id))
+			return;
+
+		// Use HierarchySystem to properly propagate transform changes
+		std::shared_ptr<HierarchySystem> hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>();
+		if (hierarchySystem) {
+			hierarchySystem->SetLocalPosition(id, ToNativeVec(value));
+		}
+		else {
+			// Fallback if hierarchy system not available
+			auto& transform = ECS::GetInstance().GetComponent<Transform>(id);
+			transform.position = ToNativeVec(value);
+		}
 	}
 
 	void icall_transform_set_rotation(MonoObject* thisObj, ManagedQuaternion value)
 	{
-		if (auto* t = GetTransformFromManaged(thisObj))
-			t->rotation = ToNativeQuat(value);
+		using namespace Ermine;
+		EntityID id = GetEntityIDFromManaged(thisObj);
+		if (id == 0 || !ECS::GetInstance().IsEntityValid(id) || !ECS::GetInstance().HasComponent<Transform>(id))
+			return;
+
+		// Use HierarchySystem to properly propagate transform changes
+		std::shared_ptr<HierarchySystem> hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>();
+		if (hierarchySystem) {
+			hierarchySystem->SetLocalRotation(id, ToNativeQuat(value));
+		}
+		else {
+			// Fallback if hierarchy system not available
+			auto& transform = ECS::GetInstance().GetComponent<Transform>(id);
+			transform.rotation = ToNativeQuat(value);
+		}
 	}
 
 	void icall_transform_set_scale(MonoObject* thisObj, ManagedVector3 value)
 	{
-		if (auto* t = GetTransformFromManaged(thisObj))
-			t->scale = ToNativeVec(value);
+		using namespace Ermine;
+		EntityID id = GetEntityIDFromManaged(thisObj);
+		if (id == 0 || !ECS::GetInstance().IsEntityValid(id) || !ECS::GetInstance().HasComponent<Transform>(id))
+			return;
+
+		// Use HierarchySystem to properly propagate transform changes
+		std::shared_ptr<HierarchySystem> hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>();
+		if (hierarchySystem) {
+			hierarchySystem->SetLocalScale(id, ToNativeVec(value));
+		}
+		else {
+			// Fallback if hierarchy system not available
+			auto& transform = ECS::GetInstance().GetComponent<Transform>(id);
+			transform.scale = ToNativeVec(value);
+		}
 	}
 #pragma endregion
 
@@ -1199,7 +1257,6 @@ namespace
 		using namespace Ermine;
 		if (entityID == 0 || !ECS::GetInstance().IsEntityValid(entityID))
 			return nullptr;
-		EE_CORE_WARN("Poi");
 		MonoObject* obj = CreateManagedGameObjectWrapper(entityID);
 		return obj;
 	}

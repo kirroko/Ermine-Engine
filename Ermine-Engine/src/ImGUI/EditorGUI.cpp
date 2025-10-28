@@ -158,6 +158,60 @@ void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
         ImGui::EndMenu();
     }
 
+    ImGuiIO& io = ImGui::GetIO();
+
+    if (!io.WantTextInput)  // don't trigger if user is typing in text fields
+    {
+        bool ctrl = io.KeyCtrl;
+        bool shift = io.KeyShift;
+
+        if (ImGui::IsKeyPressed(ImGuiKey_S, false))
+        {
+            if (ctrl && shift)
+            {
+                //EE_CORE_INFO("Ctrl + Shift + S = SAVE AS");
+                if (auto path = SceneManager::ShowSaveDialog(L"untitled.scene", GetActiveWindow()))
+                    SceneManager::GetInstance().SaveSceneTo(*path);
+            }
+            else if (ctrl)
+            {
+                //EE_CORE_INFO("Ctrl + S = SAVE");
+                SceneManager::GetInstance().SaveScene();
+            }
+        }
+
+        if (ImGui::IsKeyPressed(ImGuiKey_O, false))
+        {
+            if (ctrl)
+            {
+                //EE_CORE_INFO("Ctrl + O = OPEN");
+                if (auto path = SceneManager::ShowOpenDialog(GetActiveWindow()))
+                {
+                    SceneManager::GetInstance().ClearScene();
+                    SceneManager::GetInstance().OpenScene(*path);
+                }
+            }
+        }
+
+        if (ImGui::IsKeyPressed(ImGuiKey_Z, false))
+        {
+            if (ctrl)
+            {
+                EE_CORE_INFO("Ctrl + Z = UNDO");
+                // code to undo
+            }
+        }
+
+        if (ImGui::IsKeyPressed(ImGuiKey_Y, false))
+        {
+            if (ctrl)
+            {
+                EE_CORE_INFO("Ctrl + Y = REDO");
+                // code to redo
+            }
+        }
+    }
+
 
     if (ImGui::BeginMenu("Edit"))
     {
@@ -172,6 +226,38 @@ void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
 			// Code to redo
 		}
 		ImGui::EndMenu();
+    }
+
+    if (ImGui::BeginMenu("Settings"))
+    {
+        if (ImGui::MenuItem("Light Mode"))
+        {
+            EE_CORE_INFO("Light clicked");
+        }
+        if (ImGui::MenuItem("Dark Mode"))
+        {
+            EE_CORE_INFO("Dark clicked");
+        }
+        if (ImGui::MenuItem("Pink Mode"))
+        {
+            EE_CORE_INFO("Pink clicked");
+        }
+        if (ImGui::MenuItem("Cyberpunk Mode"))
+        {
+            EE_CORE_INFO("Cyberpunk clicked");
+        }
+
+        ImGui::EndMenu();
+    }
+
+    if (ImGui::BeginMenu("Windows"))
+    {
+        if (ImGui::MenuItem("Console"))
+        {
+            EE_CORE_INFO("Console open");
+        }
+
+        ImGui::EndMenu();
     }
 
     ImGui::EndMainMenuBar();
@@ -736,7 +822,7 @@ void EditorGUI::Init(GLFWwindow* window)
     /*ImGui::StyleColorsLight();
     SetCutesyPinkTheme();*/
     ImGui::StyleColorsDark();
-    SetCyberpunk2077Theme();
+    //SetCyberpunk2077Theme();
     //SetOverwatchTheme(false);
 
     // When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.

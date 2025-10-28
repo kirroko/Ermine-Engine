@@ -1,4 +1,4 @@
-/* Start Header ************************************************************************/
+﻿/* Start Header ************************************************************************/
 /*!
 \file       HierarchyInspector.cpp
 \author     Edwin Lee Zirui, edwinzirui.lee, 2301299, edwinzirui.lee\@digipen.edu (30%)
@@ -14,6 +14,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #include "PreCompile.h"
 #include "HierarchyInspector.h"
+#include "HierarchySystem.h"
 #include "Components.h"
 #include "ECS.h"
 #include "GeometryFactory.h"
@@ -67,6 +68,26 @@ namespace Ermine::editor {
 		if (key == "innerAngle" || key == "outerAngle") return t == LightType::SPOT;
 		if (key == "radius") return t == LightType::SPOT || t == LightType::POINT;
 		// color, intensity, castsShadows, type are always shown
+		return true;
+	}
+	template<typename T>
+	static bool ComponentHeaderWithRemove(const char* headerLabel, EntityID entity,
+		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_DefaultOpen)
+	{
+		bool open = ImGui::CollapsingHeader(headerLabel, flags);
+
+		// Open context menu when right-clicking the header row
+		if (ImGui::BeginPopupContextItem()) {
+			if (ImGui::MenuItem("Remove Component")) {
+				auto& ecs = Ermine::ECS::GetInstance();
+				ecs.RemoveComponent<T>(entity);
+				ImGui::EndPopup();
+				return false;
+			}
+			ImGui::EndPopup();
+		}
+
+		if (!open) return false;
 		return true;
 	}
 
@@ -276,6 +297,7 @@ namespace Ermine::editor {
 			return;
 
 		auto& t = ECS::GetInstance().GetComponent<Transform>(entity);
+		auto hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>();
 
 		xproperty::settings::context ctx{};
 		xproperty::sprop::container bag;
@@ -294,12 +316,17 @@ namespace Ermine::editor {
 			// Vec3 (position / scale)
 			if (guid == xproperty::settings::var_type<Ermine::Vec3>::guid_v) {
 				Ermine::Vec3 v = p.m_Value.get<Ermine::Vec3>();
-				if (DrawVec3XYZ(label.c_str(), &v.x)) {
+				
+				// FIXED: Check if widget is being actively edited OR if value changed
+				if (DrawVec3XYZ(label.c_str(), &v.x) || ImGui::IsItemActive()) {
 					p.m_Value.set<Ermine::Vec3>({ v.x, v.y, v.z });
 					xproperty::sprop::setProperty(err, t, p, ctx);
+					
+					// CRITICAL: Mark entity dirty so hierarchy system updates immediately
+					hierarchySystem->MarkDirty(entity);
 				}
 			}
-			// Quaternion (rotation) � shown/edited as Euler degrees
+			// Quaternion (rotation) – shown/edited as Euler degrees
 			else if (guid == xproperty::settings::var_type<Ermine::Quaternion>::guid_v) {
 				Ermine::Quaternion q = p.m_Value.get<Ermine::Quaternion>();
 
@@ -310,21 +337,13 @@ namespace Ermine::editor {
 				const bool isRotation = (label == "Rotation");
 				const char* rotLabel = isRotation ? "Rotation (Degrees)" : label.c_str();
 
-				if (DrawVec3XYZ(rotLabel, &eulerDeg.x, 1.0f, 0.0f, -360.0f, 360.0f)) {
-					// Build quaternion back from XYZ degrees (Z * Y * X like before)
-
-					//const float rx = eulerDeg.x * (float)M_PI / 180.0f;
-					//const float ry = eulerDeg.y * (float)M_PI / 180.0f;
-					//const float rz = eulerDeg.z * (float)M_PI / 180.0f;
-
-					//Matrix4x4 mx, my, mz, m;
-					//Mtx44Identity(mx); Mtx44Identity(my); Mtx44Identity(mz);
-					//Mtx44RotXRad(mx, rx); Mtx44RotYRad(my, ry); Mtx44RotZRad(mz, rz);
-					//m = mz * my * mx;
-
-					//q = Mtx44GetQuaternion(m);
+				// FIXED: Check if widget is being actively edited OR if value changed
+				if (DrawVec3XYZ(rotLabel, &eulerDeg.x, 1.0f, 0.0f, -360.0f, 360.0f) || ImGui::IsItemActive()) {
 					p.m_Value.set<Ermine::Quaternion>(FromEulerDegrees(eulerDeg));
 					xproperty::sprop::setProperty(err, t, p, ctx);
+					
+					// CRITICAL: Mark entity dirty so hierarchy system updates immediately
+					hierarchySystem->MarkDirty(entity);
 				}
 			}
 
@@ -336,7 +355,7 @@ namespace Ermine::editor {
 	}
 
 	void HierarchyInspector::DrawMeshComponent(EntityID entity) {
-		if (!ImGui::CollapsingHeader("Mesh", ImGuiTreeNodeFlags_DefaultOpen))
+		if (!ComponentHeaderWithRemove<Mesh>("Mesh", entity))
 			return;
 
 		auto& mesh = ECS::GetInstance().GetComponent<Mesh>(entity);
@@ -383,7 +402,7 @@ namespace Ermine::editor {
 	}
 
 	void HierarchyInspector::DrawMaterialComponent(EntityID entity) {
-		if (!ImGui::CollapsingHeader("Material", ImGuiTreeNodeFlags_DefaultOpen))
+		if (!ComponentHeaderWithRemove<Material>("Material", entity))
 			return;
 
 		// --- Fetch component & underlying material safely ---
@@ -391,24 +410,40 @@ namespace Ermine::editor {
 		graphics::Material* gm = matComp.GetMaterial();
 
 		if (!gm) {
-			ImGui::TextUnformatted("No material bound.");
-			if (ImGui::Button("Create Default PBR")) {
-				matComp = Material(std::make_shared<graphics::Material>());
-				gm = matComp.GetMaterial();
-				if (gm) {
-					Vec4 alb{ 1.f,1.f,1.f,1.f };
-					gm->SetVec4("materialAlbedo", alb);
-					gm->SetVec4("material.albedo", alb);
-					gm->SetFloat("materialAlpha", 1.0f);
-					gm->SetFloat("materialTransparency", 0.0f);
+			//ImGui::TextUnformatted("No material bound.");
+			//if (ImGui::Button("Create Default PBR")) {
+			//	matComp = Material(std::make_shared<graphics::Material>());
+			//	gm = matComp.GetMaterial();
+			//	if (gm) {
+			//		Vec4 alb{ 1.f,1.f,1.f,1.f };
+			//		gm->SetVec4("materialAlbedo", alb);
+			//		gm->SetVec4("material.albedo", alb);
+			//		gm->SetFloat("materialAlpha", 1.0f);
+			//		gm->SetFloat("materialTransparency", 0.0f);
 
-					gm->SetFloat("materialMetallic", 0.0f);           gm->SetFloat("material.metallic", 0.0f);
-					gm->SetFloat("materialRoughness", 0.5f);          gm->SetFloat("material.roughness", 0.5f);
-					gm->SetVec3("materialEmissive", { 0.f,0.f,0.f });   gm->SetVec3("material.emissive", { 0.f,0.f,0.f });
-					gm->SetFloat("materialEmissiveIntensity", 1.0f);  gm->SetFloat("material.emissiveIntensity", 1.0f);
-				}
+			//		gm->SetFloat("materialMetallic", 0.0f);           gm->SetFloat("material.metallic", 0.0f);
+			//		gm->SetFloat("materialRoughness", 0.5f);          gm->SetFloat("material.roughness", 0.5f);
+			//		gm->SetVec3("materialEmissive", { 0.f,0.f,0.f });   gm->SetVec3("material.emissive", { 0.f,0.f,0.f });
+			//		gm->SetFloat("materialEmissiveIntensity", 1.0f);  gm->SetFloat("material.emissiveIntensity", 1.0f);
+			//	}
+			//}
+			//ImGui::Separator();
+
+			matComp = Material(std::make_shared<graphics::Material>());
+			gm = matComp.GetMaterial();
+			if (gm) {
+				Vec4 alb{ 1.f,1.f,1.f,1.f };
+				gm->SetVec4("materialAlbedo", alb);
+				gm->SetVec4("material.albedo", alb);
+				gm->SetFloat("materialAlpha", 1.0f);
+				gm->SetFloat("materialTransparency", 0.0f);
+
+				gm->SetFloat("materialMetallic", 0.0f);           gm->SetFloat("material.metallic", 0.0f);
+				gm->SetFloat("materialRoughness", 0.5f);          gm->SetFloat("material.roughness", 0.5f);
+				gm->SetVec3("materialEmissive", { 0.f,0.f,0.f });   gm->SetVec3("material.emissive", { 0.f,0.f,0.f });
+				gm->SetFloat("materialEmissiveIntensity", 1.0f);  gm->SetFloat("material.emissiveIntensity", 1.0f);
 			}
-			ImGui::Separator();
+
 			return;
 		}
 
@@ -675,7 +710,7 @@ namespace Ermine::editor {
 
 	void HierarchyInspector::DrawLightComponent(EntityID entity)
 	{
-		if (!ImGui::CollapsingHeader("Light", ImGuiTreeNodeFlags_DefaultOpen))
+		if (!ComponentHeaderWithRemove<Light>("Light", entity))
 			return;
 
 		auto& light = ECS::GetInstance().GetComponent<Light>(entity);
@@ -822,8 +857,18 @@ namespace Ermine::editor {
 
 	void HierarchyInspector::DrawPhysicsComponent(EntityID entity)
 	{
-		if (!ImGui::CollapsingHeader("Physics", ImGuiTreeNodeFlags_DefaultOpen))
-			return;
+		bool open = ImGui::CollapsingHeader("Physics", ImGuiTreeNodeFlags_DefaultOpen);
+		if (ImGui::BeginPopupContextItem()) {
+			if (ImGui::MenuItem("Remove Component")) {
+				auto& ecs = ECS::GetInstance();
+				ecs.RemoveComponent<PhysicComponent>(entity);
+				ecs.GetSystem<Physics>()->UpdatePhysicList();  // keep physics in sync
+				ImGui::EndPopup();
+				return;
+			}
+			ImGui::EndPopup();
+		}
+		if (!open) return;
 
 		auto& pc = ECS::GetInstance().GetComponent<PhysicComponent>(entity);
 
@@ -894,103 +939,84 @@ namespace Ermine::editor {
 
 	void HierarchyInspector::DrawAudioComponent(EntityID entity)
 	{
+		if (!ComponentHeaderWithRemove<AudioComponent>("Audio", entity))
+			return;
+
 		if (!ImGui::CollapsingHeader("Audio", ImGuiTreeNodeFlags_DefaultOpen))
 			return;
 
 		auto& audio = ECS::GetInstance().GetComponent<AudioComponent>(entity);
 
 		// Collect reflective properties
-		xproperty::settings::context ctx{};
-		xproperty::sprop::container  bag;
-		xproperty::sprop::collector  collect(audio, bag, ctx, true);
+	 xproperty::settings::context ctx{};
+	 xproperty::sprop::container  bag;
+	 xproperty::sprop::collector  collect(audio, bag, ctx, true);
 
-		std::string err;
+	 std::string err;
 
-		for (auto& p : bag.m_Properties)
-		{
-			const auto guid = p.m_Value.getTypeGuid();
-			const char* id = p.m_Path.c_str();
-			std::string label = PrettyLabelFromPath(p.m_Path);
+	 for (auto& p : bag.m_Properties)
+	 {
+		 const auto guid = p.m_Value.getTypeGuid();
+		 const char* id = p.m_Path.c_str();
+		 std::string label = PrettyLabelFromPath(p.m_Path);
 
-			ImGui::PushID(id);
+		 ImGui::PushID(id);
 
-			// string fields
-			if (guid == xproperty::settings::var_type<std::string>::guid_v) {
-				std::string s = p.m_Value.get<std::string>();
-				char buf[256]; std::snprintf(buf, sizeof(buf), "%s", s.c_str());
-				if (ImGui::InputText(label.c_str(), buf, IM_ARRAYSIZE(buf))) {
-					p.m_Value.set<std::string>(buf);
-					xproperty::sprop::setProperty(err, audio, p, ctx);
-				}
-			}
-			// bool fields
-			else if (guid == xproperty::settings::var_type<bool>::guid_v) {
-				bool v = p.m_Value.get<bool>();
-				if (ImGui::Checkbox(label.c_str(), &v)) {
-					p.m_Value.set<bool>(v);
-					xproperty::sprop::setProperty(err, audio, p, ctx);
-				}
-			}
-			// float fields
-			else if (guid == xproperty::settings::var_type<float>::guid_v) {
-				float v = p.m_Value.get<float>();
-				if (ImGui::DragFloat(label.c_str(), &v, 0.01f, 0.0f, 1.0f)) {
-					p.m_Value.set<float>(v);
-					xproperty::sprop::setProperty(err, audio, p, ctx);
-				}
-			}
-			// int fields
-			else if (guid == xproperty::settings::var_type<int>::guid_v) {
-				int v = p.m_Value.get<int>();
-				if (ImGui::DragInt(label.c_str(), &v)) {
-					p.m_Value.set<int>(v);
-					xproperty::sprop::setProperty(err, audio, p, ctx);
-				}
-			}
+		 // string fields
+		 if (guid == xproperty::settings::var_type<std::string>::guid_v) {
+			 std::string s = p.m_Value.get<std::string>();
+			 char buf[256]; std::snprintf(buf, sizeof(buf), "%s", s.c_str());
+			 if (ImGui::InputText(label.c_str(), buf, IM_ARRAYSIZE(buf))) {
+				 p.m_Value.set<std::string>(buf);
+				 xproperty::sprop::setProperty(err, audio, p, ctx);
+			 }
+		 }
+		 // bool fields
+		 else if (guid == xproperty::settings::var_type<bool>::guid_v) {
+			 bool v = p.m_Value.get<bool>();
+			 if (ImGui::Checkbox(label.c_str(), &v)) {
+				 p.m_Value.set<bool>(v);
+				 xproperty::sprop::setProperty(err, audio, p, ctx);
+			 }
+		 }
+		 // float fields
+		 else if (guid == xproperty::settings::var_type<float>::guid_v) {
+			 float v = p.m_Value.get<float>();
+			 if (ImGui::DragFloat(label.c_str(), &v, 0.01f, 0.0f, 1.0f)) {
+				 p.m_Value.set<float>(v);
+				 xproperty::sprop::setProperty(err, audio, p, ctx);
+			 }
+		 }
+		 // int fields
+		 else if (guid == xproperty::settings::var_type<int>::guid_v) {
+			 int v = p.m_Value.get<int>();
+			 if (ImGui::DragInt(label.c_str(), &v)) {
+				 p.m_Value.set<int>(v);
+				 xproperty::sprop::setProperty(err, audio, p, ctx);
+			 }
+		 }
 
-			ImGui::PopID();
-		}
+		 ImGui::PopID();
+	 }
 
-		ImGui::Separator();
+	 ImGui::Separator();
 
-		// Optional quick preview buttons
-		if (ImGui::Button("Play")) {
-			// TODO: AudioSystem::Get().Play(audio.soundName, entity);
-		}
-		ImGui::SameLine();
-		if (ImGui::Button("Stop")) {
-			// TODO: AudioSystem::Get().Stop(entity);
-		}
+	 // Optional quick preview buttons
+	 if (ImGui::Button("Play")) {
+		 // TODO: AudioSystem::Get().Play(audio.soundName, entity);
+	 }
+	 ImGui::SameLine();
+	 if (ImGui::Button("Stop")) {
+		 // TODO: AudioSystem::Get().Stop(entity);
+	 }
 
-		if (!err.empty())
-			ImGui::TextColored(ImVec4(1, 0.3f, 0.3f, 1), "Error: %s", err.c_str());
+	 if (!err.empty())
+		 ImGui::TextColored(ImVec4(1, 0.3f, 0.3f, 1), "Error: %s", err.c_str());
 	}
-
-	/*void HierarchyInspector::DrawParticleComponent(EntityID entity)
-	{
-		if (!ImGui::CollapsingHeader("Particle")) return;
-
-		auto& particle = ECS::GetInstance().GetComponent<Particle>(entity);
-
-		float vel[3] = { particle.velocity.x, particle.velocity.y, particle.velocity.z };
-		if (ImGui::DragFloat3("Velocity", vel, 0.1f)) {
-			particle.velocity = Vec3(vel[0], vel[1], vel[2]);
-		}
-
-		ImGui::DragFloat("Lifetime", &particle.lifetime, 0.1f, 0.0f, 100.0f);
-		ImGui::DragFloat("Age", &particle.age, 0.1f, 0.0f, particle.lifetime);
-
-		float col[4] = { particle.colour.x, particle.colour.y, particle.colour.z, particle.colour.w };
-		if (ImGui::ColorEdit4("Colour", col)) {
-			particle.colour = Vec4(col[0], col[1], col[2], col[3]);
-		}
-
-		ImGui::DragFloat("Size", &particle.size, 0.1f, 0.01f, 100.0f);
-	}*/
 
 	void HierarchyInspector::DrawScriptComponent(EntityID entity)
 	{
-		if (!ImGui::CollapsingHeader("Script", ImGuiTreeNodeFlags_DefaultOpen))
+		if (!ComponentHeaderWithRemove<Script>("Script", entity))
 			return;
 
 		auto& script = ECS::GetInstance().GetComponent<Script>(entity);
@@ -1093,7 +1119,7 @@ namespace Ermine::editor {
 
 	void HierarchyInspector::DrawModelComponent(EntityID entity)
 	{
-		if (!ImGui::CollapsingHeader("Model", ImGuiTreeNodeFlags_DefaultOpen))
+		if (!ComponentHeaderWithRemove<ModelComponent>("Model", entity))
 			return;
 
 		auto& modelComp = ECS::GetInstance().GetComponent<ModelComponent>(entity);
@@ -1194,7 +1220,7 @@ namespace Ermine::editor {
 
 	void HierarchyInspector::DrawAnimationComponent(EntityID entity)
 	{
-		if (!ImGui::CollapsingHeader("Animation", ImGuiTreeNodeFlags_DefaultOpen))
+		if (!ComponentHeaderWithRemove<AnimationComponent>("Animation", entity))
 			return;
 
 		auto& animComp = ECS::GetInstance().GetComponent<AnimationComponent>(entity);
@@ -1259,7 +1285,10 @@ namespace Ermine::editor {
 
 	void HierarchyInspector::DrawStateMachineComponent(EntityID entity)
 	{
-		if (!ImGui::CollapsingHeader("State Machine", ImGuiTreeNodeFlags_DefaultOpen))
+		//if (!ImGui::CollapsingHeader("State Machine", ImGuiTreeNodeFlags_DefaultOpen))
+		//	return;
+
+		if (!ComponentHeaderWithRemove<StateMachine>("State Machine", entity))
 			return;
 
 		auto& fsmComp = ECS::GetInstance().GetComponent<StateMachine>(entity);
@@ -1286,7 +1315,10 @@ namespace Ermine::editor {
 
 	void HierarchyInspector::DrawParticleEmitterComponent(EntityID entity)
 	{
-		if (!ImGui::CollapsingHeader("Particle Emitter", ImGuiTreeNodeFlags_DefaultOpen))
+		//if (!ImGui::CollapsingHeader("Particle Emitter", ImGuiTreeNodeFlags_DefaultOpen))
+		//	return;
+
+		if (!ComponentHeaderWithRemove<ParticleEmitter>("Particle Emitter", entity))
 			return;
 
 		auto& emitter = ECS::GetInstance().GetComponent<ParticleEmitter>(entity);
@@ -1312,6 +1344,9 @@ namespace Ermine::editor {
 		}
 		if (ImGui::MenuItem("Mesh") && !ECS::GetInstance().HasComponent<Mesh>(entity)) {
 			ECS::GetInstance().AddComponent(entity, graphics::GeometryFactory::CreateCube());
+			ECS::GetInstance().AddComponent(entity, Material());
+		}
+		if (ImGui::MenuItem("Material") && !ECS::GetInstance().HasComponent<Material>(entity)) {
 			ECS::GetInstance().AddComponent(entity, Material());
 		}
 		if (ImGui::MenuItem("Light") && !ECS::GetInstance().HasComponent<Light>(entity)) {
