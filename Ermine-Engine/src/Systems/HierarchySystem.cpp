@@ -1,4 +1,4 @@
-/* Start Header ************************************************************************/
+﻿/* Start Header ************************************************************************/
 /*!
 \file       HierarchySystem.cpp
 \author     Edwin Lee Zirui, edwinzirui.lee, 2301299, edwinzirui.lee\@digipen.edu
@@ -14,6 +14,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "PreCompile.h"
 #include "HierarchySystem.h"
 #include "Matrix4x4.h"
+#include "Renderer.h"
 
 namespace Ermine
 {
@@ -356,6 +357,12 @@ namespace Ermine
         hierarchy.worldTransformDirty = true;
         transform.isDirty = true;  // Make sure Transform component is also marked dirty
 
+        // Invalidate AABB when transform changes
+        auto renderer = ECS::GetInstance().GetSystem<graphics::Renderer>();
+        if (renderer) {
+            renderer->InvalidateAABB(entity);
+        }
+
         // Mark all children's world transforms as needing update (but not their local transforms)
         for (auto child : hierarchy.children) {
             auto& childHierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(child);
@@ -365,6 +372,11 @@ namespace Ermine
             childHierarchy.worldTransformDirty = true;
             childTransform.isDirty = true; // Also mark Transform component dirty for proper rendering
             
+            // Also invalidate child AABBs (their world positions changed)
+            if (renderer) {
+                renderer->InvalidateAABB(child);
+            }
+
             // Recursively mark children's world transforms as dirty
             MarkChildrenWorldTransformDirty(child);
         }
@@ -380,12 +392,18 @@ namespace Ermine
             return;
 
         const auto& hierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(entity);
+        auto renderer = ECS::GetInstance().GetSystem<graphics::Renderer>(); // ✅ Get renderer once
         
         for (auto child : hierarchy.children) {
             auto& childHierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(child);
             auto& childTransform = ECS::GetInstance().GetComponent<Transform>(child);
             childHierarchy.worldTransformDirty = true;
             childTransform.isDirty = true; // Also mark Transform component dirty
+
+            // Invalidate child AABB
+            if (renderer) {
+                renderer->InvalidateAABB(child);
+            }
             
             // Recursively mark grandchildren
             MarkChildrenWorldTransformDirty(child);

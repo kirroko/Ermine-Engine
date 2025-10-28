@@ -661,7 +661,7 @@ namespace Ermine::graphics
         glm::mat4 GetEntityWorldMatrix(EntityID entity) const;
 
     private:
-        // NEW: AABB storage and management
+        // AABB storage and management
         std::unordered_map<EntityID, AABB> m_entityAABBs;
         std::unordered_set<EntityID> m_dirtyAABBs;  // Optional: for dirty flag optimization
 

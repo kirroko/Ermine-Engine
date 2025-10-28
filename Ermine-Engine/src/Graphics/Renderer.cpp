@@ -3225,30 +3225,45 @@ glm::mat4 Renderer::GetEntityWorldMatrix(EntityID entity) const
 
 void Ermine::graphics::Renderer::UpdateAABBs()
 {
-	auto& ecs = ECS::GetInstance();
+    auto& ecs = ECS::GetInstance();
 
-	// Option A: Simple approach - recalculate all AABBs every frame
-	m_entityAABBs.clear();
+    // Recalculate ALL AABBs every frame
+    // m_entityAABBs.clear();
 
-	for (auto entity : m_Entities) {
-		// Only calculate AABB if entity has mesh or model
-		if (ecs.HasComponent<Mesh>(entity) || ecs.HasComponent<ModelComponent>(entity)) {
-			AABB aabb = AABBHelper::CalculateWorldAABB(entity);
+    // Only update dirty AABBs
+    if (!m_dirtyAABBs.empty()) {
+        for (auto entity : m_dirtyAABBs) {
+            // Remove old AABB if entity no longer valid
+            if (!ecs.IsEntityValid(entity)) {
+                m_entityAABBs.erase(entity);
+                continue;
+            }
 
-			// Only store valid AABBs
-			if (aabb.IsValid()) {
-				m_entityAABBs[entity] = aabb;
-			}
-		}
-	}
+            // Only calculate AABB if entity has mesh or model
+            if (ecs.HasComponent<Mesh>(entity) || ecs.HasComponent<ModelComponent>(entity)) {
+                AABB aabb = AABBHelper::CalculateWorldAABB(entity);
+
+                // Store or update AABB
+                if (aabb.IsValid()) {
+                    m_entityAABBs[entity] = aabb;
+                } else {
+                    m_entityAABBs.erase(entity); // Remove invalid AABBs
+                }
+            } else {
+                // Entity no longer has geometry, remove AABB
+                m_entityAABBs.erase(entity);
+            }
+        }
+        m_dirtyAABBs.clear(); // Clear dirty flags after update
+    }
 
 #ifdef _DEBUG
-	// Optional: Log statistics every 5 seconds
-	static int frameCounter = 0;
-	if (++frameCounter % 300 == 0) {
-		EE_CORE_INFO("Updated {0} AABBs for {1} entities",
-			m_entityAABBs.size(), m_Entities.size());
-	}
+    // Optional: Log statistics every 5 seconds
+    static int frameCounter = 0;
+    if (++frameCounter % 300 == 0) {
+        EE_CORE_INFO("AABB cache: {0} entities, dirty updates this cycle: {1}",
+            m_entityAABBs.size(), m_dirtyAABBs.size());
+    }
 #endif
 }
 
