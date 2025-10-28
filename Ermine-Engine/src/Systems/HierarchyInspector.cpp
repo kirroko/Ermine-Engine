@@ -24,6 +24,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "FiniteStateMachine.h"
 #include "FSMEditor.h"
 #include <EditorGUI.h>
+#include "NavMesh.h"
 #include "Particles.h"
 
 
@@ -218,6 +219,10 @@ namespace Ermine::editor {
 
 		if (ECS::GetInstance().HasComponent<StateMachine>(selected)) {
 			DrawStateMachineComponent(selected);
+		}
+
+		if (ECS::GetInstance().HasComponent<NavMeshComponent>(selected)) {
+			DrawNavMeshComponent(selected);
 		}
 
 		if (ECS::GetInstance().HasComponent<ParticleEmitter>(selected)) {
@@ -1313,6 +1318,34 @@ namespace Ermine::editor {
 		}
 	}
 
+	void HierarchyInspector::DrawNavMeshComponent(EntityID entity)
+	{
+		if (!ImGui::CollapsingHeader("NavMesh", ImGuiTreeNodeFlags_DefaultOpen))
+			return;
+
+		auto& nav = ECS::GetInstance().GetComponent<NavMeshComponent>(entity);
+
+		ImGui::TextUnformatted("Recast Build Settings");
+		ImGui::DragFloat("Cell Size", &nav.cellSize, 0.01f, 0.01f, 2.0f);
+		ImGui::DragFloat("Cell Height", &nav.cellHeight, 0.01f, 0.01f, 2.0f);
+		ImGui::DragFloat("Agent Height", &nav.agentHeight, 0.01f, 0.1f, 5.0f);
+		ImGui::DragFloat("Agent Radius", &nav.agentRadius, 0.01f, 0.05f, 2.0f);
+		ImGui::DragFloat("Max Climb", &nav.agentMaxClimb, 0.01f, 0.0f, 2.0f);
+		ImGui::DragFloat("Max Slope", &nav.agentMaxSlope, 0.1f, 0.0f, 89.0f);
+
+		ImGui::Separator();
+
+		if (ImGui::Button("Bake Top of Cube"))
+		{
+			if (auto sys = ECS::GetInstance().GetSystem<NavMeshSystem>())
+				sys->BakeTopOfCube(entity);
+		}
+
+		ImGui::Separator();
+		ImGui::Checkbox("Draw Walkable (CHT)", &nav.drawWalkable);
+		ImGui::Checkbox("Draw NavMesh", &nav.drawNavMesh);
+	}
+
 	void HierarchyInspector::DrawParticleEmitterComponent(EntityID entity)
 	{
 		//if (!ImGui::CollapsingHeader("Particle Emitter", ImGuiTreeNodeFlags_DefaultOpen))
@@ -1395,6 +1428,9 @@ namespace Ermine::editor {
 			fsmComp.Init(entity);
 
 			//EE_CORE_INFO("StateMachine component added and initialized for entity {0}", entity);
+		}
+		if (ImGui::MenuItem("NavMesh") && !ECS::GetInstance().HasComponent<NavMeshComponent>(entity)) {
+			ECS::GetInstance().AddComponent(entity, NavMeshComponent());
 		}
 		if (ImGui::MenuItem("ParticleEmitter") && !ECS::GetInstance().HasComponent<ParticleEmitter>(entity)) {
 			ECS::GetInstance().AddComponent(entity, ParticleEmitter());

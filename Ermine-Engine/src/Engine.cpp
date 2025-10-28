@@ -50,6 +50,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "AudioImGUI.h"
 #include "SceneManager.h"
 #include "FSMEditor.h"
+#include "NavMesh.h"
 #endif
 
 using namespace Ermine;
@@ -145,6 +146,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	EE_AUTO_REGISTER_COMPONENT(AnimationComponent, "AnimationComponent")
 	EE_AUTO_REGISTER_COMPONENT(HierarchyComponent, "HierarchyComponent");
 	EE_AUTO_REGISTER_COMPONENT(StateMachine, "StateMachine");
+	EE_AUTO_REGISTER_COMPONENT(NavMeshComponent, "NavMesh")
 	EE_AUTO_REGISTER_COMPONENT(GlobalTransform, "GlobalTransform")
 	EE_AUTO_REGISTER_COMPONENT(ParticleEmitter, "ParticleEmitter");
 
@@ -175,6 +177,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().RegisterSystem<graphics::AnimationManager>();
 	ECS::GetInstance().RegisterSystem<HierarchySystem>();
 	ECS::GetInstance().RegisterSystem<StateManager>();
+	ECS::GetInstance().RegisterSystem<NavMeshSystem>();
 
 	//Register JPH::TempAllocatorImpl for Physcis
 	RegisterDefaultAllocator();
@@ -235,6 +238,11 @@ bool engine::Init(GLFWwindow* windowContext)
 	fsmSig.set(ECS::GetInstance().GetComponentType<StateMachine>());
 	fsmSig.set(ECS::GetInstance().GetComponentType<Transform>());
 	ECS::GetInstance().SetSystemSignature<StateManager>(fsmSig);
+
+	SignatureID navSig;
+	navSig.set(ECS::GetInstance().GetComponentType<NavMeshComponent>());
+	navSig.set(ECS::GetInstance().GetComponentType<Transform>());
+	ECS::GetInstance().SetSystemSignature<NavMeshSystem>(navSig);
 
 	glfwSetFramebufferSizeCallback(windowContext, []([[maybe_unused]] GLFWwindow* window, int width, int height)
 		{
@@ -340,6 +348,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	// Create a simple quad mesh for particles
 	//auto tex = AssetManager::GetInstance().LoadTexture("../Resources/Textures/greybox_red_solid.png");
 
+	ECS::GetInstance().GetSystem<NavMeshSystem>()->Init();
 	// initialize particles emitter
 	ECS::GetInstance().GetSystem<ParticleSystem>()->Init(shader);
 
@@ -589,6 +598,8 @@ void engine::Shutdown()
 
 	ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->m_ScriptEngine->Shutdown();
 	AudioSystem::Shutdown();
+
+	if (auto n = ECS::GetInstance().GetSystem<NavMeshSystem>()) n->Shutdown();
 
 	ECS::GetInstance().Shutdown();
 

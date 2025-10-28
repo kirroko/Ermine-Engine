@@ -143,6 +143,10 @@ namespace Ermine::graphics
         void RenderDebugLines(const glm::mat4& view, const glm::mat4& proj);
         void RenderDebugLines(const Mtx44& view, const Mtx44& proj);
 
+        // NavMesh
+        void SubmitDebugTriangle(const glm::vec3& a, const glm::vec3& b, const glm::vec3& c, const glm::vec3& color);
+        void RenderDebugTriangles(const Mtx44& view, const Mtx44& proj);
+
         /**
          * @brief Offscreen buffer structure for rendering to texture
          */
@@ -614,6 +618,9 @@ namespace Ermine::graphics
 
         std::shared_ptr<PickingBuffer> m_PickingBuffer;
         std::shared_ptr<Shader> m_PickingShader = nullptr;
+
+        // NavMesh
+        std::vector<DebugVertex> m_DebugTriangleVertices;
 
         /**
          * @brief Create an offscreen buffer for entity picking using stencil buffer

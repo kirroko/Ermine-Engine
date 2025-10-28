@@ -2023,4 +2023,28 @@ namespace Ermine
 				m_CurrentScript->OnUpdate();
 		}
 	};
+
+	struct NavMeshComponent
+	{
+		// Recast build config
+		float cellSize = 0.05f;
+		float cellHeight = 0.05f;
+		float agentHeight = 0.2f;
+		float agentRadius = 0.1f;
+		float agentMaxClimb = 0.1f;
+		float agentMaxSlope = 45.0f;
+
+		// Debug toggles
+		bool  drawInputTri = false;
+		bool  drawWalkable = true;
+		bool  drawNavMesh = true;
+
+		// Recast transient build data
+		struct BuildData;
+		BuildData* build = nullptr;
+
+		// Detour runtime
+		struct Runtime;
+		Runtime* runtime = nullptr;
+	};
 }
