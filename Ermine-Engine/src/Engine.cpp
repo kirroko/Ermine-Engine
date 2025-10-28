@@ -50,6 +50,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "AudioImGUI.h"
 #include "SceneManager.h"
 #include "FSMEditor.h"
+#include "AnimationGUI.h"
 #endif
 
 using namespace Ermine;
@@ -526,8 +527,9 @@ bool engine::Init(GLFWwindow* windowContext)
 	editor::EditorGUI::CreateImGUIWindow<editor::GraphicsDebugGUI>("Graphics Debug"); // TODO: Namespace required?
 	editor::EditorGUI::CreateImGUIWindow<ViewPortGUI>();
 	editor::EditorGUI::CreateImGUIWindow<FSMEditorImGUI>();
-	editor::EditorGUI::CreateImGUIWindow<ImguiUI::AssetBrowser>(); //TODO: Standardize please, do we want namespace ImGui for all window or not
+	editor::EditorGUI::CreateImGUIWindow<AnimationEditorImGUI>();
 	editor::EditorGUI::CreateImGUIWindow<ConsoleGUI>();
+	editor::EditorGUI::CreateImGUIWindow<ImguiUI::AssetBrowser>(); //TODO: Standardize please, do we want namespace ImGui for all window or not
 
 	auto defaultScene = std::make_shared<Scene>("Main Scene");
 	editor::EditorGUI::SetActiveScene(defaultScene);

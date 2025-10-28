@@ -24,6 +24,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "FSMEditor.h"
 #include <EditorGUI.h>
 #include "Particles.h"
+#include "AnimationGUI.h"
 
 #include "xcore/my_properties.h"
 #include "xproperty.h"
@@ -1283,6 +1284,16 @@ namespace Ermine::editor {
 					animComp.m_animator.reset();
 					ImGui::TextUnformatted("No animations found in this model.");
 				}
+			}
+		}
+
+		// Open Animation Editor Button
+		ImGui::SameLine();
+		if (ImGui::Button("Edit Animation")) {
+			auto animationWindow = editor::EditorGUI::GetWindow<AnimationEditorImGUI>();
+			if (animationWindow) {
+				animationWindow->SetSelectedEntity(entity);
+				editor::EditorGUI::FocusWindow("Animation Editor");
 			}
 		}
 	}

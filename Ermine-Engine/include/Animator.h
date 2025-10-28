@@ -2,7 +2,7 @@
 /*!
 \file       Animator.h
 \author     Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu
-\date       03/10/2025
+\date       28/10/2025
 \brief      This file contains the declaration of the animator class. It is responsible for
             loading animation clips from an Assimp scene, managing playback state,
             updating bone transforms per frame, providing final matrices for GPU skinning
@@ -16,9 +16,10 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #pragma once
 
-#include "AnimationClip.h"
-#include "Model.h"
-#include <assimp/scene.h>
+#include "AnimationClip.h"   // For AnimationClip definition
+#include "Model.h"           // For Model definition
+#include "AnimationGUI.h"    // For AnimationGraph definition
+#include <assimp/scene.h>    // For aiScene
 
 namespace Ermine::graphics
 {
@@ -104,6 +105,29 @@ namespace Ermine::graphics
         void ResumeAnimation();
 
         /**
+         * @brief Seek the current animation to a specific time position (in seconds).
+         *
+         * Recalculates all bone transforms at that time without advancing playback.
+         *
+         * @param timeInSeconds Target playback time in seconds.
+         */
+        void Seek(double timeInSeconds);
+
+        /**
+		 * @brief Set the animation graph for advanced animation blending.
+		 * @param graph Pointer to the AnimationGraph to use.
+		 */
+        void SetGraph(AnimationGraph* graph) { m_Graph = graph; }
+
+        /**
+		 * @brief Evaluate and process animation transitions in the graph.
+         *
+		 * Checks for any transition conditions in the linked AnimationGraph
+		 * and switches animations accordingly.
+		 */
+        void EvaluateTransitions();
+
+        /**
          * @brief Advance animation playback and update bone transforms.
          *
          * Increments the playback timer by @p deltaTime and updates the skeleton's bone transforms
@@ -169,6 +193,8 @@ namespace Ermine::graphics
         bool m_Paused = false;                        // Pausing flag
 
         std::vector<glm::mat4> m_FinalBoneMatrices;   // Final transforms per bone
+
+        AnimationGraph* m_Graph = nullptr;            // Link to the entity's animation graph
 
         /**
          * @brief Recursively calculate bone transforms by traversing Assimp node hierarchy.

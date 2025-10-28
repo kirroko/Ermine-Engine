@@ -36,6 +36,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <Jolt/Jolt.h>
 #include <Jolt/Physics/Body/Body.h>
 #include "Guid.h"
+#include "AnimationGUI.h"
 
 #include "xcore/my_properties.h"
 #include "xproperty.h"
@@ -1780,7 +1781,8 @@ namespace Ermine
 	*************************************************************************/
 	struct AnimationComponent
 	{
-		std::shared_ptr<graphics::Animator> m_animator;
+		std::shared_ptr<graphics::Animator> m_animator; // Handles animation playback
+		AnimationGraph m_animationGraph;				// Animation graph for managing states and transitions
 
 		AnimationComponent() = default;
 		explicit AnimationComponent(const std::shared_ptr<graphics::Model>& model) : m_animator(std::make_shared<graphics::Animator>(model)) {}
@@ -1813,6 +1815,9 @@ namespace Ermine
 					}
 				}
 			}
+
+			// Deserialize the animation graph
+			if (m_animator) m_animator->SetGraph(&m_animationGraph);
 		}
 
 		//XPROPERTY_DEF(

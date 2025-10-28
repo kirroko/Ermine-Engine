@@ -2,7 +2,7 @@
 /*!
 \file       Animator.cpp
 \author     Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu
-\date       03/10/2025
+\date       28/10/2025
 \brief      This file contains the definition of the animator class. It is responsible for
             loading animation clips from an Assimp scene, managing playback state,
             updating bone transforms per frame, providing final matrices for GPU skinning
@@ -255,6 +255,115 @@ namespace Ermine::graphics
     }
 
     /**
+     * @brief Seek the current animation to a specific time position (in seconds).
+     *
+     * Recalculates all bone transforms at that time without advancing playback.
+     *
+     * @param timeInSeconds Target playback time in seconds.
+     */
+    void Animator::Seek(double timeInSeconds)
+    {
+        // Ensure there is a current clip and model
+        if (!m_CurrentClip || !m_Model)
+            return;
+
+        // Convert seconds to ticks based on the clip's ticks-per-second
+        double ticksPerSecond = m_CurrentClip->ticksPerSecond != 0.0
+            ? m_CurrentClip->ticksPerSecond
+            : 25.0;
+        m_CurrentTime = fmod(timeInSeconds * ticksPerSecond, m_CurrentClip->duration);
+
+        // Recalculate bone transforms at this exact time
+        m_FinalBoneMatrices.assign(m_Model->GetBoneCount(), glm::mat4(1.0f));
+
+        if (const aiNode* rootNode = m_Model->GetAssimpScene()->mRootNode)
+            CalculateBoneTransform(rootNode, glm::mat4(1.0f));
+    }
+
+    /**
+     * @brief Evaluate and process animation transitions in the graph.
+     *
+     * Checks for any transition conditions in the linked AnimationGraph
+     * and switches animations accordingly.
+     */
+    void Animator::EvaluateTransitions()
+    {
+        // No graph or no current state
+        if (!m_Graph || !m_Graph->current) return;
+
+        for (auto& transition : m_Graph->transitions) {
+            // Match transition source node
+            if (transition.fromNodeId != m_Graph->current->id)
+                continue;
+
+            // Evaluate all conditions for this transition
+            bool allTrue = true;
+            for (auto& cond : transition.conditions) {
+                auto it = std::find_if(m_Graph->parameters.begin(), m_Graph->parameters.end(),
+                    [&](const AnimationParameter& p) { return p.name == cond.parameterName; });
+
+                if (it == m_Graph->parameters.end())
+                    continue; // parameter not found
+
+                const auto& param = *it;
+                bool result = true;
+
+                // Evaluate based on parameter type and condition
+                switch (param.type) {
+                case AnimationParameter::Type::Bool:
+                    if (cond.comparison == "==") result = param.boolValue == cond.boolValue;
+                    else if (cond.comparison == "!=") result = param.boolValue != cond.boolValue;
+                    break;
+                case AnimationParameter::Type::Float:
+                    if (cond.comparison == ">") result = param.floatValue > cond.threshold;
+                    else if (cond.comparison == "<") result = param.floatValue < cond.threshold;
+                    else if (cond.comparison == ">=") result = param.floatValue >= cond.threshold;
+                    else if (cond.comparison == "<=") result = param.floatValue <= cond.threshold;
+                    else if (cond.comparison == "==") result = param.floatValue == cond.threshold;
+                    else if (cond.comparison == "!=") result = param.floatValue != cond.threshold;
+                    break;
+                case AnimationParameter::Type::Int:
+                    if (cond.comparison == ">") result = param.intValue > static_cast<int>(cond.threshold);
+                    else if (cond.comparison == "<") result = param.intValue < static_cast<int>(cond.threshold);
+                    else if (cond.comparison == ">=") result = param.intValue >= static_cast<int>(cond.threshold);
+                    else if (cond.comparison == "<=") result = param.intValue <= static_cast<int>(cond.threshold);
+                    else if (cond.comparison == "==") result = param.intValue == static_cast<int>(cond.threshold);
+                    else if (cond.comparison == "!=") result = param.intValue != static_cast<int>(cond.threshold);
+                    break;
+                case AnimationParameter::Type::Trigger:
+                    result = param.triggerValue;
+                    break;
+                }
+
+                // If any condition fails, break early
+                if (!result) {
+                    allTrue = false;
+                    break;
+                }
+            }
+
+            if (allTrue) {
+                // Transition fires
+                auto nextNode = std::find_if(m_Graph->states.begin(), m_Graph->states.end(),
+                    [&](auto& s) { return s->id == transition.toNodeId; });
+
+                if (nextNode != m_Graph->states.end() && (*nextNode)->isAttached) {
+                    m_Graph->current = *nextNode;
+                    PlayAnimation(m_Graph->current->clipName);
+
+                    // Reset trigger parameters
+                    for (auto& p : m_Graph->parameters)
+                        if (p.type == AnimationParameter::Type::Trigger)
+                            p.triggerValue = false;
+
+                    EE_CORE_INFO("Transitioned to state: {}", m_Graph->current->name);
+                    break;
+                }
+            }
+        }
+    }
+
+    /**
      * @brief Advance animation playback and update bone transforms.
      *
      * Increments the playback timer by @p deltaTime and updates the skeleton's bone transforms
@@ -264,13 +373,18 @@ namespace Ermine::graphics
      */
     void Animator::Update(double deltaTime)
     {
+        // Ensure there is a current clip and valid scene
         if (!m_CurrentClip || !m_Scene || !m_Scene->mRootNode) return;
         if (m_Paused) return;
+
+        // Handle playback speed from graph
+        double playbackSpeed = 1.0;
+        if (m_Graph) playbackSpeed = m_Graph->playbackSpeed;
 
         // Advance animation time in ticks
         double ticksPerSecond = m_CurrentClip->ticksPerSecond != 0.0
             ? m_CurrentClip->ticksPerSecond : 25.0;
-        m_CurrentTime += deltaTime * ticksPerSecond;
+        m_CurrentTime += deltaTime * ticksPerSecond * playbackSpeed;
 
         // Check animation looping
         if (m_Loop)
@@ -286,6 +400,16 @@ namespace Ermine::graphics
 
         // Push back results to the model
         m_Model->SetBoneTransforms(m_FinalBoneMatrices);
+
+        // Evaluate any animation graph transitions
+        EvaluateTransitions();
+
+        // Example of setting a parameter (to be replaced with actual game logic)
+        //auto& animComp = ECS::GetInstance().GetComponent<AnimationComponent>(entity);
+        //for (auto& p : animComp.m_animationGraph.parameters)
+        //{
+        //    if (p.name == "isRunning") p.boolValue = true;
+        //}
     }
 
     /**
