@@ -32,6 +32,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <Jolt/Physics/Collision/Shape/MeshShape.h>
 
 #include "EditorGUI.h"
+#include "HierarchySystem.h"
 
 using namespace std;
 namespace Ermine
@@ -334,7 +335,7 @@ namespace Ermine
 				continue;
 
 			auto& p = ecs.GetComponent<PhysicComponent>(entity);
-			if (p.motionType != JPH::EMotionType::Dynamic)
+			if (p.motionType == JPH::EMotionType::Static)
 				continue;
 
 			auto& t = ecs.GetComponent<Transform>(entity);
@@ -352,6 +353,9 @@ namespace Ermine
 			t.rotation.x = rot.GetX();
 			t.rotation.y = rot.GetY();
 			t.rotation.z = rot.GetZ();
+
+			auto hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>();
+			hierarchySystem->MarkDirty(entity);
 		}
 	}
 
@@ -687,11 +691,11 @@ namespace Ermine
 				JPH::RMat44 matrix = ts.GetCenterOfMassTransform().PreScaled(scale);
 
 				constexpr int cMax = 1000;
-				JPH::Float3 verts[3 * cMax];
+				std::vector<JPH::Float3> verts(3 * cMax);
 
 				for (;;)
 				{
-					int triCount = ts.mShape->GetTrianglesNext(ctx, cMax, verts);
+					int triCount = ts.mShape->GetTrianglesNext(ctx, cMax, verts.data());
 					if (triCount == 0) break;
 
 					// Emit each triangle’s 3 edges as lines
