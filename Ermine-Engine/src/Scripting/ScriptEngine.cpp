@@ -869,11 +869,25 @@ namespace
 			mono_free(raw);
 	}
 
+	MonoClassField* FindFieldInHierarchy(MonoClass* klass, const char* name)
+	{
+		if (!klass || !name) return nullptr;
+		for (MonoClass* c = klass; c; c = mono_class_get_parent(c))
+		{
+			mono_class_init(c);
+			if (MonoClassField* f = mono_class_get_field_from_name(c, name))
+				return f;
+		}
+		return nullptr;
+	}
+
 	Ermine::EntityID GetEntityIDFromManaged(MonoObject* obj)
 	{
 		if (!obj) return 0;
 		MonoClass* klass = mono_object_get_class(obj);
-		if (MonoClassField* field = mono_class_get_field_from_name(klass, "EntityID"))
+		if (!klass) return 0;
+
+		if (MonoClassField* field = FindFieldInHierarchy(klass,"EntityID"))
 		{
 			Ermine::EntityID id = 0;
 			mono_field_get_value(obj, field, &id);
@@ -886,7 +900,9 @@ namespace
 	{
 		if (!obj) return;
 		MonoClass* klass = mono_object_get_class(obj);
-		if (MonoClassField* field = mono_class_get_field_from_name(klass, "EntityID"))
+		if (!klass) return;
+
+		if (MonoClassField* field = FindFieldInHierarchy(klass,"EntityID"))
 			mono_field_set_value(obj, field, &id);
 	}
 
@@ -1183,7 +1199,7 @@ namespace
 		using namespace Ermine;
 		if (entityID == 0 || !ECS::GetInstance().IsEntityValid(entityID))
 			return nullptr;
-
+		EE_CORE_WARN("Poi");
 		MonoObject* obj = CreateManagedGameObjectWrapper(entityID);
 		return obj;
 	}
