@@ -115,13 +115,14 @@ namespace Ermine::scripting
 		{
 			if (!method || !object) return;
 			MonoObject* exc = nullptr;
-			mono_runtime_invoke(method, object, args, &exc);
+			mono_runtime_invoke(method, object, args, &exc); // Invoke monobehaviour method and object
 			if (exc) ReportManagedException(exc);
 		}
 
 		void InvokeWithCollision(MonoMethod* method, EntityID other, bool isTrigger)
 		{
 			if (!method || !object) return;
+			assert(ECS::GetInstance().IsEntityValid(other) && "ScriptInstance: other entity is not valid!");
 
 			auto scriptSystem = ECS::GetInstance().GetSystem<ScriptSystem>();
 			auto* engine = scriptSystem->m_ScriptEngine.get();
@@ -131,8 +132,8 @@ namespace Ermine::scripting
 			// Crafting the collision object (collider, gameobject, rigidbody, transform)
 
 			MonoImage* apiImage = mono_assembly_get_image(apiAsm);
-			MonoClass* colClass = mono_class_from_name(apiImage, "ErmineEngine", "Collision");
-			if (!colClass) { EE_CORE_ERROR("ScriptInstance: ErmineEngine.Collision not found"); return; }
+			MonoClass* collisionClass = mono_class_from_name(apiImage, "ErmineEngine", "Collision");
+			if (!collisionClass) { EE_CORE_ERROR("ScriptInstance: ErmineEngine.Collision not found"); return; }
 			MonoClass* colliderClass = mono_class_from_name(apiImage, "ErmineEngine", "Collider");
 			if (!colliderClass) { EE_CORE_ERROR("ScriptInstance: ErmineEngine.Collider not found"); return; }
 			MonoClass* goClass = mono_class_from_name(apiImage, "ErmineEngine", "GameObject");
@@ -142,17 +143,38 @@ namespace Ermine::scripting
 			MonoClass* tfClass = mono_class_from_name(apiImage, "ErmineEngine", "Transform");
 			if (!tfClass) { EE_CORE_ERROR("ScriptInstance: ErmineEngine.Transform not found"); return; }
 
+			MonoDomain* domain = engine->GetGameDomain();
+
 			// Setting up fields
-			MonoObject* colObj = mono_object_new(engine->GetGameDomain(), colClass);
+			MonoObject* colObj = mono_object_new(engine->GetGameDomain(), collisionClass);
 			if (!colObj) { EE_CORE_ERROR("ScriptInstance: Failed to allocate Collision"); return; }
 			mono_runtime_object_init(colObj);
 
 			MonoObject* colliderObj = mono_object_new(engine->GetGameDomain(), colliderClass);
 			if (!colliderClass) { EE_CORE_ERROR("ScriptInstance: Failed to allocate Collider"); return; }
 			mono_runtime_object_init(colliderObj);
-			MonoObject* goObj = mono_object_new(engine->GetGameDomain(), goClass);
-			if (!goObj) { EE_CORE_ERROR("ScriptInstance: Failed to allocate GameObject"); return; }
-			//mono_runtime_object_init(goObj);
+
+			MonoObject* goObj = nullptr;
+			{
+				MonoMethod* fromEntity = mono_class_get_method_from_name(goClass, "FromEntityID", 1);
+				if (!fromEntity) EE_CORE_ERROR("Method {0} not found on or not used {1}.{2}", "FromEntityID", "ErmineEngine", "GameObject");
+				else
+				{
+					MonoObject* exc = nullptr;
+					void* argsGO[1]{ &other };
+					goObj = mono_runtime_invoke(fromEntity, nullptr, argsGO, &exc); // Run FromEntityID to populate
+					if (exc) ReportManagedException(exc);
+				}
+			}
+			if (!goObj)
+			{
+				goObj = mono_object_new(engine->GetGameDomain(), goClass);
+				if (!goObj) { EE_CORE_ERROR("ScriptInstance: Failed to allocate GameObject"); return; }
+				mono_runtime_object_init(goObj);
+				if (MonoClassField* f = mono_class_get_field_from_name(goClass, "EntityID"))
+					mono_field_set_value(goObj, f, &other);
+			}
+
 			MonoObject* rbObj = mono_object_new(engine->GetGameDomain(), rbClass);
 			if (!rbObj) { EE_CORE_ERROR("ScriptInstance: Failed to allocate Rigidbody"); return; }
 			mono_runtime_object_init(rbObj);
@@ -160,35 +182,33 @@ namespace Ermine::scripting
 			if (!tfObj) { EE_CORE_ERROR("ScriptInstance: Failed to allocate Transform"); return; }
 			mono_runtime_object_init(tfObj);
 			// Collider
-			if (MonoClassField* field = mono_class_get_field_from_name(colliderClass, "EntityID")) {
-				EntityID id = other;
-				mono_field_set_value(colliderObj, field, &id);
-			}
+			if (MonoClassField* field = mono_class_get_field_from_name(colliderClass, "EntityID")) 
+				mono_field_set_value(colliderObj, field, &other);
+			else EE_CORE_WARN("ScriptInstance: Failed to set field ColliderClass");
 			// GameObject
 			if (MonoClassField* field = mono_class_get_field_from_name(goClass, "EntityID"))
-			{
-				EntityID id = other;
-				mono_field_set_value(goObj, field, &id);
-			}
+				mono_field_set_value(goObj, field, &other);
+			else EE_CORE_WARN("ScriptInstance: Failed to set field goClass");
 			// Rigidbody
 			if (MonoClassField* field = mono_class_get_field_from_name(rbClass, "EntityID"))
-			{
-				EntityID id = other;
-				mono_field_set_value(rbObj, field, &id);
-			}
+				mono_field_set_value(rbObj, field, &other);
+			else EE_CORE_WARN("ScriptInstance: Failed to set field rbClass");
 			// Transform
 			if (MonoClassField* field = mono_class_get_field_from_name(tfClass, "EntityID"))
-			{
-				EntityID id = other;
-				mono_field_set_value(tfObj, field, &id);
-			}
+				mono_field_set_value(tfObj, field, &other);
+			else EE_CORE_WARN("ScriptInstance: Failed to set field tfClass");
 
 			// Set fields of Collision
 			if (MonoClassField* f = mono_class_get_field_from_name(colliderClass, "isTrigger")) mono_field_set_value(colliderObj, f, &isTrigger);
-			if (MonoClassField* f = mono_class_get_field_from_name(colClass, "Collider"))   mono_field_set_value(colObj, f, &colliderObj);
-			if (MonoClassField* f = mono_class_get_field_from_name(colClass, "GameObject")) mono_field_set_value(colObj, f, &goObj);
-			if (MonoClassField* f = mono_class_get_field_from_name(colClass, "Rigidbody"))  mono_field_set_value(colObj, f, &rbObj);
-			if (MonoClassField* f = mono_class_get_field_from_name(colClass, "Transform"))   mono_field_set_value(colObj, f, &tfObj);
+			else EE_CORE_WARN("ScriptInstance: Failed to set field to colliderClass");
+			if (MonoClassField* f = mono_class_get_field_from_name(collisionClass, "collider"))   mono_field_set_value(colObj, f, colliderObj);
+			else EE_CORE_WARN("ScriptInstance: Failed to set field to collider");
+			if (MonoClassField* f = mono_class_get_field_from_name(collisionClass, "gameObject")) mono_field_set_value(colObj, f, goObj);
+			else EE_CORE_WARN("ScriptInstance: Failed to set field to Gameobject");
+			if (MonoClassField* f = mono_class_get_field_from_name(collisionClass, "rigidbody"))  mono_field_set_value(colObj, f, rbObj);
+			else EE_CORE_WARN("ScriptInstance: Failed to set field to Rigidbody");
+			if (MonoClassField* f = mono_class_get_field_from_name(collisionClass, "transform"))   mono_field_set_value(colObj, f, tfObj);
+			else EE_CORE_WARN("ScriptInstance: Failed to set field to Transform");
 
 			void* args[1]{ colObj };
 			InvokeArgs(method , args);

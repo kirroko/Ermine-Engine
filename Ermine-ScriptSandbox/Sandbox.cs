@@ -7,8 +7,6 @@ public class Sandbox : MonoBehaviour
 
     [SerializeField] private Vector3 MoveAxis = Vector3.up;
 
-    private int noShowPlox = 1;
-
     void Start()
     {
         //Debug.Log("ID: " + GetInstanceID());
@@ -24,21 +22,22 @@ public class Sandbox : MonoBehaviour
 
     void Update()
     {
-        transform.Rotate(Vector3.up * (Time.deltaTime * speed));
+        //transform.Rotate(Vector3.up * (Time.deltaTime * speed));
         //Debug.Log("Internal Quaternion: " + transform.rotation.ToString());
-        if (Input.GetKeyDown(KeyCode.A))
-            transform.Translate(new Vector3(-1f,0,0) * Time.deltaTime);
-        if(Input.GetKeyDown(KeyCode.D))
-            transform.Translate(new Vector3(1f,0f,0f) * Time.deltaTime);
-        if(Input.GetKeyDown(KeyCode.W))
-            transform.Translate(new Vector3(0f,1f,0) * Time.deltaTime);
-        if(Input.GetKeyDown(KeyCode.S))
-            transform.Translate(new Vector3(0f,-1f,0) * Time.deltaTime);
+        //if (Input.GetKeyDown(KeyCode.A))
+        //    transform.Translate(new Vector3(-1f,0,0) * Time.deltaTime);
+        //if(Input.GetKeyDown(KeyCode.D))
+        //    transform.Translate(new Vector3(1f,0f,0f) * Time.deltaTime);
+        //if(Input.GetKeyDown(KeyCode.W))
+        //    transform.Translate(new Vector3(0f,1f,0) * Time.deltaTime);
+        //if(Input.GetKeyDown(KeyCode.S))
+        //    transform.Translate(new Vector3(0f,-1f,0) * Time.deltaTime);
     }
 
     void OnCollisionEnter(Collision col)
     {
         Debug.Log("Yes me lord? : " + gameObject.name);
+        Debug.Log("Jobs done : " + col.gameObject.name);
         //Debug.Log("Gameobject: " + gameObject.name + " hit " + col.gameObject.name);
     }
 }
