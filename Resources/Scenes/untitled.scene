@@ -28,15 +28,18 @@
             1.0
           ],
           "intensity": 1.0,
-          "type": 1,
-          "castsShadows": true
+          "castsShadows": true,
+          "innerAngle": -1.0,
+          "outerAngle": -1.0,
+          "radius": 3.0
         },
         "ObjectMetaData": {
           "name": "Main Light",
           "tag": "Light",
-          "active": true
+          "selfActive": true
         },
-        "HierarchyComponent": {}
+        "HierarchyComponent": {},
+        "GlobalTransform": {}
       }
     }
   ]

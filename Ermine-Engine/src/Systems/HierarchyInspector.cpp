@@ -942,9 +942,6 @@ namespace Ermine::editor {
 		if (!ComponentHeaderWithRemove<AudioComponent>("Audio", entity))
 			return;
 
-		if (!ImGui::CollapsingHeader("Audio", ImGuiTreeNodeFlags_DefaultOpen))
-			return;
-
 		auto& audio = ECS::GetInstance().GetComponent<AudioComponent>(entity);
 
 		// Collect reflective properties

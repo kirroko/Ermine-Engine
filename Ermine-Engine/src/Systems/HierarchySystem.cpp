@@ -317,9 +317,21 @@ namespace Ermine
     */
     void HierarchySystem::UpdateHierarchy()
     {
+        if (m_Entities.size() == 0)
+			return;
+
         // Only update root entities that are dirty or have dirty children
         for (auto entity : m_Entities)
         {
+            if (!ECS::GetInstance().HasComponent<GlobalTransform>(entity))
+            {
+                return;
+            }
+
+            if (!ECS::GetInstance().HasComponent<HierarchyComponent>(entity) && !ECS::GetInstance().HasComponent<Transform>(entity))
+                continue;
+
+
             auto& hierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(entity);
             auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
 
