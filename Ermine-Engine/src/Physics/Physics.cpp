@@ -687,11 +687,11 @@ namespace Ermine
 				JPH::RMat44 matrix = ts.GetCenterOfMassTransform().PreScaled(scale);
 
 				constexpr int cMax = 1000;
-				JPH::Float3 verts[3 * cMax];
+				std::vector<JPH::Float3> verts(3 * cMax);
 
 				for (;;)
 				{
-					int triCount = ts.mShape->GetTrianglesNext(ctx, cMax, verts);
+					int triCount = ts.mShape->GetTrianglesNext(ctx, cMax, verts.data());
 					if (triCount == 0) break;
 
 					// Emit each triangle’s 3 edges as lines
