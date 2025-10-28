@@ -56,10 +56,10 @@ namespace Ermine
      */
     struct AnimationCondition
     {
-        std::string parameterName; // which parameter it uses
-        std::string comparison;    // "==", "!=", ">", "<", ">=", "<="
-        float threshold = 0.0f;    // used for float/int comparison
-        bool boolValue = false;    // used if the param is a bool
+        std::string parameterName;     // which parameter it uses
+        std::string comparison = "=="; // "==", "!=", ">", "<", ">=", "<="
+        float threshold = 0.0f;        // used for float/int comparison
+        bool boolValue = false;        // used if the param is a bool
     };
 
     /**

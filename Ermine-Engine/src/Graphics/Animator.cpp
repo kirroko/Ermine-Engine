@@ -307,11 +307,14 @@ namespace Ermine::graphics
                 auto it = std::find_if(graph->parameters.begin(), graph->parameters.end(),
                     [&](const AnimationParameter& p) { return p.name == cond.parameterName; });
 
-                if (it == graph->parameters.end())
-                    continue; // parameter not found
+                // Parameter missing
+                if (it == graph->parameters.end()) {
+                    allTrue = false;
+                    break;
+                }
 
                 const auto& param = *it;
-                bool result = true;
+                bool result = false;
 
                 // Evaluate based on parameter type and condition
                 switch (param.type) {
@@ -348,7 +351,7 @@ namespace Ermine::graphics
             }
 
             if (allTrue) {
-                // Transition fires
+                // Execute transistion
                 auto nextNode = std::find_if(graph->states.begin(), graph->states.end(),
                     [&](auto& s) { return s->id == transition.toNodeId; });
 
