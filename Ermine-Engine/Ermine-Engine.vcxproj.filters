@@ -270,6 +270,9 @@
     <ClInclude Include="include\DrawCommands.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\SkeletalSSBO.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\AssetBrowser\AssetBrowser.cpp">
@@ -453,6 +456,9 @@
       <Filter>src\Graphics</Filter>
     </ClCompile>
     <ClCompile Include="src\Graphics\DrawCommands.cpp">
+      <Filter>src\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Graphics\SkeletalSSBO.cpp">
       <Filter>src\Graphics</Filter>
     </ClCompile>
   </ItemGroup>

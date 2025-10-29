@@ -51,13 +51,14 @@ namespace Ermine::graphics
      */
     struct DrawInfo
     {
-        glm::mat4 modelMatrix;  // 64 bytes - Model transformation matrix
-        glm::vec3 aabbMin;      // 12 bytes - AABB minimum bounds
-        uint32_t materialIndex; // 4 bytes  - Index into the material SSBO
-        glm::vec3 aabbMax;      // 12 bytes - AABB maximum bounds
-        uint32_t entityID;      // 4 bytes  - Entity ID for identification
-        uint32_t flags;         // 4 bytes  - Flags (bit 0: useSkinning, bits 1-31: reserved)
-        uint32_t _pad[3];       // 12 bytes - Padding to maintain 16-byte alignment
+        glm::mat4 modelMatrix;      // 64 bytes (offset 0-63) - Model transformation matrix
+        glm::vec3 aabbMin;          // 12 bytes (offset 64-75) - AABB minimum bounds
+        uint32_t materialIndex;     // 4 bytes (offset 76-79) - Index into the material SSBO
+        glm::vec3 aabbMax;          // 12 bytes (offset 80-91) - AABB maximum bounds
+        uint32_t entityID;          // 4 bytes (offset 92-95) - Entity ID for identification
+        uint32_t flags;             // 4 bytes (offset 96-99) - Flags (bit 0: useSkinning, bits 1-31: reserved)
+        uint32_t boneTransformOffset; // 4 bytes (offset 100-103) - Starting index in skeletal SSBO
+        uint32_t _pad[2];           // 8 bytes (offset 104-111) - Padding to maintain 16-byte alignment
         // Total: 112 bytes (aligned to 16 bytes)
     };
 

@@ -31,13 +31,14 @@ struct SkinnedVertex {
 // Draw info structure matching CPU-side DrawInfo (std430 layout)
 // Total size: 112 bytes (must match C++ DrawInfo in DrawCommands.h)
 struct DrawInfo {
-    mat4 modelMatrix;       // 64 bytes (offset 0-63) - Model transformation matrix
-    vec3 aabbMin;           // 12 bytes (offset 64-75) - AABB minimum bounds
-    uint materialIndex;     // 4 bytes (offset 76-79) - Index into material SSBO
-    vec3 aabbMax;           // 12 bytes (offset 80-91) - AABB maximum bounds
-    uint entityID;          // 4 bytes (offset 92-95) - Entity ID for identification
-    uint flags;             // 4 bytes (offset 96-99) - Flags (bit 0: useSkinning)
-    uint _pad[3];           // 12 bytes (offset 100-111) - Explicit padding to 16-byte alignment
+    mat4 modelMatrix;           // 64 bytes (offset 0-63) - Model transformation matrix
+    vec3 aabbMin;               // 12 bytes (offset 64-75) - AABB minimum bounds
+    uint materialIndex;         // 4 bytes (offset 76-79) - Index into material SSBO
+    vec3 aabbMax;               // 12 bytes (offset 80-91) - AABB maximum bounds
+    uint entityID;              // 4 bytes (offset 92-95) - Entity ID for identification
+    uint flags;                 // 4 bytes (offset 96-99) - Flags (bit 0: useSkinning)
+    uint boneTransformOffset;   // 4 bytes (offset 100-103) - Starting index in skeletal SSBO
+    uint _pad[2];               // 8 bytes (offset 104-111) - Explicit padding to 16-byte alignment
 };
 
 // SSBO bindings
@@ -57,11 +58,14 @@ layout(std430, binding = 4) restrict readonly buffer SkinnedVertexBuffer {
     SkinnedVertex skinnedVertices[];
 };
 
+// Skeletal animation bone transforms SSBO (Binding 7)
+layout(std430, binding = 7) restrict readonly buffer BoneTransformBuffer {
+    mat4 boneTransforms[]; // All bone transforms for all entities
+};
+
 // Transformation matrices
 uniform mat4 view;
 uniform mat4 projection;
-
-uniform mat4 u_BoneMatrices[128]; // bone transforms from Animator
 
 // Outputs to fragment shader
 out vec2 TexCoord;
@@ -112,12 +116,16 @@ void main()
 
     // Does it use skinning
     if (useSkinning) {
+        // Get bone offset for this entity from DrawInfo
+        uint boneOffset = drawInfo.boneTransformOffset;
+
+        // Calculate final bone transform using weighted blend
         mat4 boneTransform =
-            u_BoneMatrices[aBoneIDs[0]] * aWeights[0] +
-            u_BoneMatrices[aBoneIDs[1]] * aWeights[1] +
-            u_BoneMatrices[aBoneIDs[2]] * aWeights[2] +
-            u_BoneMatrices[aBoneIDs[3]] * aWeights[3];
-        
+            boneTransforms[boneOffset + aBoneIDs[0]] * aWeights[0] +
+            boneTransforms[boneOffset + aBoneIDs[1]] * aWeights[1] +
+            boneTransforms[boneOffset + aBoneIDs[2]] * aWeights[2] +
+            boneTransforms[boneOffset + aBoneIDs[3]] * aWeights[3];
+
         skinnedPos     = boneTransform * vec4(aPos, 1.0);
         skinnedNormal  = mat3(boneTransform) * aNormal;
         skinnedTangent = mat3(boneTransform) * aTangent;

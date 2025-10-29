@@ -2,7 +2,8 @@
 /*!
 \file       Animator.cpp
 \author     Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu
-\date       03/10/2025
+\co-author     Ridhwan Afandi, mohamedridhwan.b, 2301367, mohamedridhwan.b\@digipen.edu
+\date       27/10/2025
 \brief      This file contains the definition of the animator class. It is responsible for
             loading animation clips from an Assimp scene, managing playback state,
             updating bone transforms per frame, providing final matrices for GPU skinning
@@ -18,6 +19,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Animator.h"
 #include "Logger.h"
 #include <glm/gtc/matrix_transform.hpp>
+#include <algorithm> // for std::upper_bound
 #include <glm/gtx/quaternion.hpp>
 
 namespace Ermine::graphics
@@ -283,9 +285,6 @@ namespace Ermine::graphics
 
         // Start recursion at root
         CalculateBoneTransform(m_Scene->mRootNode, glm::mat4(1.0f));
-
-        // Push back results to the model
-        m_Model->SetBoneTransforms(m_FinalBoneMatrices);
     }
 
     /**

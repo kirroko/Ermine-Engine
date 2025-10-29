@@ -80,6 +80,13 @@ namespace Ermine::graphics {
             EE_CORE_ERROR("Failed to initialize persistent DrawInfo buffer");
         }
 
+        // Initialize skeletal SSBO (max 100 skeletons = 100 * 128 bones = 12800 bones)
+        constexpr size_t MAX_SKELETONS = 100;
+        if (!m_SkeletalSSBO.Initialize(MAX_SKELETONS))
+        {
+            EE_CORE_ERROR("Failed to initialize skeletal SSBO");
+        }
+
         /*
 
         // Setup standard vertex VAO
@@ -208,6 +215,8 @@ namespace Ermine::graphics {
         // Check if mesh already exists
         auto it = m_MeshCache.find(meshID);
         if (it != m_MeshCache.end()) {
+            EE_CORE_WARN("MeshManager: Mesh '{}' already exists in cache (handle index: {}), returning cached handle",
+                         meshID, it->second.index);
             return it->second;
         }
 
@@ -232,7 +241,8 @@ namespace Ermine::graphics {
         // Mark indirect buffer as dirty so it will be uploaded
         m_IndirectBuffer.MarkDirty();
 
-		EE_CORE_INFO("MeshManager: Registered mesh '{}'", meshID);
+		EE_CORE_INFO("MeshManager: Registered NEW mesh '{}' (handle index: {}, vertexOffset: {}, vertices: {}, indexOffset: {}, indices: {})",
+                     meshID, handle.index, subset.vertexOffset, vertices.size(), subset.indexOffset, indices.size());
 
         return handle;
     }
@@ -244,6 +254,8 @@ namespace Ermine::graphics {
         // Check if mesh already exists
         auto it = m_MeshCache.find(meshID);
         if (it != m_MeshCache.end()) {
+            EE_CORE_WARN("MeshManager: Skinned mesh '{}' already exists in cache (handle index: {}), returning cached handle",
+                         meshID, it->second.index);
             return it->second;
         }
 
@@ -268,7 +280,8 @@ namespace Ermine::graphics {
         // Mark indirect buffer as dirty so it will be uploaded
         m_IndirectBuffer.MarkDirty();
 
-        EE_CORE_INFO("MeshManager: Registered mesh '{}'", meshID);
+        EE_CORE_INFO("MeshManager: Registered NEW skinned mesh '{}' (handle index: {}, vertexOffset: {}, vertices: {}, indexOffset: {}, indices: {})",
+                     meshID, handle.index, subset.vertexOffset, vertices.size(), subset.indexOffset, indices.size());
 
         return handle;
     }
@@ -302,8 +315,8 @@ namespace Ermine::graphics {
                         GL_STATIC_DRAW);
             glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
-            EE_CORE_INFO("MeshManager: Uploaded {} vertices ({} bytes) to Vertex SSBO",
-                         m_StagedVertices.size(), vertexBufferSize);
+            EE_CORE_INFO("MeshManager: Uploaded {} vertices ({} bytes, {} per vertex) to Vertex SSBO",
+                         m_StagedVertices.size(), vertexBufferSize, sizeof(Vertex));
         }
 
         // Upload Index SSBO data
@@ -324,14 +337,27 @@ namespace Ermine::graphics {
         if (!m_StagedSkinnedVertices.empty()) {
             glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_SkinnedVertexSSBO);
             size_t skinnedVertexBufferSize = m_StagedSkinnedVertices.size() * sizeof(SkinnedVertex);
+
+            // CRITICAL: Verify struct size matches expectation
+            EE_CORE_INFO("MeshManager: sizeof(SkinnedVertex) = {} bytes (expected 96)", sizeof(SkinnedVertex));
+
             glBufferData(GL_SHADER_STORAGE_BUFFER,
                         skinnedVertexBufferSize,
                         m_StagedSkinnedVertices.data(),
                         GL_STATIC_DRAW);
             glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
-            EE_CORE_INFO("MeshManager: Uploaded {} skinned vertices ({} bytes) to Skinned Vertex SSBO",
-                         m_StagedSkinnedVertices.size(), skinnedVertexBufferSize);
+            EE_CORE_INFO("MeshManager: Uploaded {} skinned vertices ({} bytes, {} per vertex) to Skinned Vertex SSBO",
+                         m_StagedSkinnedVertices.size(), skinnedVertexBufferSize, sizeof(SkinnedVertex));
+
+            // Debug: Log first skinned vertex to verify data
+            if (!m_StagedSkinnedVertices.empty()) {
+                const auto& v0 = m_StagedSkinnedVertices[0];
+                EE_CORE_INFO("  First skinned vertex: pos=({:.3f},{:.3f},{:.3f}), boneIDs=({},{},{},{}), weights=({:.3f},{:.3f},{:.3f},{:.3f})",
+                           v0.position.x, v0.position.y, v0.position.z,
+                           v0.boneIDs[0], v0.boneIDs[1], v0.boneIDs[2], v0.boneIDs[3],
+                           v0.boneWeights[0], v0.boneWeights[1], v0.boneWeights[2], v0.boneWeights[3]);
+            }
         }
 
 		// Clear staged data to free CPU memory (need to reregister meshes for new scene)

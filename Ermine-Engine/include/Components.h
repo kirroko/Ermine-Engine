@@ -1800,10 +1800,15 @@ namespace Ermine
 	/*!***********************************************************************
 	\brief
 	 Animation component structure.
+
+	 Each entity with this component has its own Animator instance, allowing
+	 multiple instances of the same model to have independent animation states.
+	 Each entity gets its own bone transform offset in the SkeletalSSBO.
 	*************************************************************************/
 	struct AnimationComponent
 	{
-		std::shared_ptr<graphics::Animator> m_animator;
+		std::shared_ptr<graphics::Animator> m_animator;         // Per-entity animator (independent state)
+		int boneTransformOffset = -1;                           // Per-entity bone offset in SkeletalSSBO (allocated by AnimationManager)
 
 		AnimationComponent() = default;
 		explicit AnimationComponent(const std::shared_ptr<graphics::Model>& model) : m_animator(std::make_shared<graphics::Animator>(model)) {}

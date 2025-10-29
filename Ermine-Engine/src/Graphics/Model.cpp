@@ -2,7 +2,8 @@
 /*!
 \file       Model.cpp
 \author     Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu
-\date       27/09/2025
+\author     Ridhwan Afandi, mohamedridhwan.b, 2301367, mohamedridhwan.b\@digipen.edu
+\date       27/10/2025
 \brief      This file contains the definition of the Model class for loading and processing
             3D models using Assimp. Provides mesh data, bone data, and animation integration
             for rendering and animation systems.
@@ -80,7 +81,13 @@ void Model::LoadModel(const std::string& path)
 
     m_directory = path.substr(0, path.find_last_of('/'));
 	m_name = path.substr(path.find_last_of('/') + 1);
+
+    EE_CORE_INFO("Model::LoadModel - Loading model: {}", m_name);
+    EE_CORE_INFO("  Total meshes in scene: {}", scene->mNumMeshes);
+
     ProcessNode(scene->mRootNode, scene, aiMatrix4x4());
+
+    EE_CORE_INFO("  Processed {} meshes from model", m_meshes.size());
 
     // Init bone transforms to identity
     m_BoneTransforms.resize(m_BoneOffsets.size(), glm::mat4(1.0f));
@@ -234,12 +241,21 @@ MeshData Model::ProcessMesh(aiMesh* mesh)
     if (renderer) {
         bool hasBones = mesh->HasBones();
 
-        // Create unique mesh ID
-        // For first instance of a file: "modelName_meshName"
-        // For subsequent instances: "modelName_meshName_inst1", "modelName_meshName_inst2", etc.
-        std::string meshID = m_name + "_" + std::string(mesh->mName.C_Str());
-        if (m_instanceID > 0) {
-            meshID += "_inst" + std::to_string(m_instanceID);
+        // Create unique mesh ID based on model name, mesh name, and mesh index
+        // Use m_meshes.size() as the mesh index to ensure uniqueness even if mesh names are the same/empty
+        std::string meshName = std::string(mesh->mName.C_Str());
+        std::string meshID = m_name + "_" + meshName + "_mesh" + std::to_string(m_meshes.size());
+
+        // Debug logging
+        EE_CORE_INFO("Model::ProcessMesh - Processing mesh: '{}'", meshName.empty() ? "[unnamed]" : meshName);
+        EE_CORE_INFO("  Generated meshID: '{}'", meshID);
+        EE_CORE_INFO("  Vertex count: {}, Index count: {}", vertices.size(), indices.size());
+        EE_CORE_INFO("  Has bones: {}", hasBones==true?"true":"false");
+
+        // Log bone information for this model
+        if (hasBones) {
+            EE_CORE_INFO("  Total bones in model: {}", m_BoneOffsets.size());
+            EE_CORE_INFO("  Bone count for this mesh: {}", mesh->mNumBones);
         }
 
         if (hasBones) {
