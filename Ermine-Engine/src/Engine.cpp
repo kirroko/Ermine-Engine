@@ -146,6 +146,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	EE_AUTO_REGISTER_COMPONENT(AnimationComponent, "AnimationComponent")
 	EE_AUTO_REGISTER_COMPONENT(HierarchyComponent, "HierarchyComponent");
 	EE_AUTO_REGISTER_COMPONENT(StateMachine, "StateMachine");
+	EE_AUTO_REGISTER_COMPONENT(GlobalTransform, "GlobalTransform")
 	EE_AUTO_REGISTER_COMPONENT(ParticleEmitter, "ParticleEmitter");
 
 	// Special Case for Script component, need to copy over the class name
@@ -180,6 +181,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	RegisterDefaultAllocator();
 	ECS::GetInstance().RegisterSystem<Physics>();
 	ECS::GetInstance().GetSystem<Physics>()->Init();
+	ECS::GetInstance().GetSystem<Physics>()->AttachDebugRenderer(std::make_shared<MyDebugRenderer>());
 
 	// Set system signatures
 	SignatureID sig;
@@ -222,7 +224,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	sig.set(ECS::GetInstance().GetComponentType<AnimationComponent>());
 	sig.set(ECS::GetInstance().GetComponentType<ModelComponent>());
 	ECS::GetInstance().SetSystemSignature<graphics::AnimationManager>(sig);
-	
+
 	// For Hierarchy System
 	SignatureID hierarchySig;
 	hierarchySig.set(ECS::GetInstance().GetComponentType<HierarchyComponent>());
@@ -287,6 +289,10 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	EE_CORE_INFO("Created shared materials with proper texture assignment control");
 
+	// Compile materials into SSBO after material creation - deferred to Renderer.cpp implementation
+	// ECS::GetInstance().GetSystem<graphics::Renderer>()->CompileMaterials();
+	// EE_CORE_INFO("Materials compiled into SSBO system");
+
 	// Audio test entity
 	//auto audioTestEntity = ECS::GetInstance().CreateEntity();
 	//ECS::GetInstance().AddComponent(audioTestEntity, Transform(Vec3(2, 0, -1), Quaternion(), Vec3(1, 1, 1)));
@@ -312,6 +318,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	//ECS::GetInstance().AddComponent(fbxEntity, ObjectMetaData("Character", "Model", true));
 	//ECS::GetInstance().AddComponent(fbxEntity, Mesh{}); // empty mesh component for renderer signature
 	//ECS::GetInstance().AddComponent(fbxEntity, ModelComponent(model));
+	//ECS::GetInstance().AddComponent(fbxEntity, AnimationComponent("Walking"));
 	//ECS::GetInstance().AddComponent<Ermine::HierarchyComponent>(fbxEntity, Ermine::HierarchyComponent{});
 
 	//// Adding animation component
@@ -619,12 +626,12 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 	// Other non-fixed logic
 	ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->Update();
 	ECS::GetInstance().GetSystem<AudioSystem>()->Update();
-
+	ECS::GetInstance().GetSystem<HierarchySystem>()->UpdateHierarchy();
+	
 	// Update editor camera
 #if defined(EE_EDITOR)
 	editor::EditorCamera::GetInstance().Update();
 #endif
-
 	// Update for Particles
 	ECS::GetInstance().GetSystem<ParticleSystem>()->Update(FrameController::GetDeltaTime());
 

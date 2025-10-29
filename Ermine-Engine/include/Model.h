@@ -186,6 +186,10 @@ namespace Ermine::graphics
             return to;
         }
 
+        std::vector<glm::vec3> GetMeshVertices() const;
+
+        std::vector<glm::vec3> GetSkinnedVertices() const;
+
     private:
         std::string m_directory;                            // Directory of the model
         std::string m_name;                                 // Name of the model

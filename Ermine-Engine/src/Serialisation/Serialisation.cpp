@@ -208,10 +208,12 @@ void SaveSceneToFile(const Ermine::ECS& ecs, const std::filesystem::path& path, 
         for (const std::string& name : ecs.GetComponentNames(id)) {                 // :contentReference[oaicite:1]{index=1}
             const auto* desc = ecs.GetDescriptor(name);         // :contentReference[oaicite:2]{index=2}
             if (!desc || !desc->serialize) continue;
+
             rapidjson::Value payload(rapidjson::kObjectType);
             desc->serialize(id, payload, a);  // <- no ECS here
             comps.AddMember(rapidjson::Value(name.c_str(), a), payload, a);
         }
+
 
         e.AddMember("components", comps, a);
         entities.PushBack(e, a);
@@ -290,7 +292,15 @@ void LoadScene(const std::string& sceneName)
 
 Ermine::EntityID LoadPrefabFromFile(Ermine::ECS& ecs, const std::filesystem::path& path)
 {
-    std::ifstream ifs(path, std::ios::binary);
+    if (!path.has_extension() || path.extension() != ".prefab")
+    {
+        EE_CORE_ERROR("LoadPrefabFromFile rejected non-prefab file: {}", path.string());
+        return {}; // or return {}; or throw, your style
+    }
+
+    std::filesystem::path norm = std::filesystem::weakly_canonical(path);
+    //EE_CORE_INFO("Normalized prefab path = {}", norm.string());
+    std::ifstream ifs(norm, std::ios::binary);
     if (!ifs) throw std::runtime_error("Could not open file for reading: " + path.string());
 
     IStreamWrapper isw(ifs);

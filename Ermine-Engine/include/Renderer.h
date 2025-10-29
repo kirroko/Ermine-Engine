@@ -62,8 +62,14 @@ namespace Ermine::graphics
 
 
     // Forward declarations
-    struct MaterialUBO;
+    struct MaterialSSBO;
     class Skybox;
+
+    //physic wireframe
+    struct DebugVertex {
+        glm::vec3 position;
+        glm::vec3 color;
+    };
 
     /**
      * @brief The Renderer class is responsible for rendering the game objects to the screen.
@@ -131,6 +137,11 @@ namespace Ermine::graphics
          * @param screenHeight The height of the screen
          */
         void Init(const int& screenWidth, const int& screenHeight);
+
+        //PHYSICS
+        void SubmitDebugLine(const glm::vec3& from, const glm::vec3& to, const glm::vec3& color);
+        void RenderDebugLines(const glm::mat4& view, const glm::mat4& proj);
+        void RenderDebugLines(const Mtx44& view, const Mtx44& proj);
 
         /**
          * @brief Offscreen buffer structure for rendering to texture
@@ -363,17 +374,27 @@ namespace Ermine::graphics
          */
         bool GetShadingMode() const { return m_IsBlinnPhong; }
         /**
-         * @brief Updates the lights' shader storage buffer object (SSBO) with the current light and transform data from all living entities.
+         * @brief Updates the lights' shader UBO with the current light and transform data from all living entities.
          * @param view The view matrix to transform the positions and directions of the lights into view space.
          */
-        void UpdateLightsSSBO(const Mtx44& view);
+        void UpdateLightsUBO(const Mtx44& view);
+        
         /**
-         * @brief Updates the material's uniform buffer object (UBO) with the specified material data.
-         * @param materialData The material data to be uploaded to the UBO, including properties like color, texture, etc.
+         * @brief Updates the material's shader storage buffer object (SSBO) with the specified material data.
+         * @param materialData The material data to be uploaded to the SSBO, including properties like albedo, metallic, roughness, etc.
          */
-        void UpdateMaterialUBO(const MaterialUBO& materialData);
+        void UpdateMaterialSSBO(const MaterialSSBO& materialData);
+        
         /**
-         * @brief Binds the MaterialBlock uniform block to the specified shader program if it has not been bound before.
+         * @brief Compiles all materials from entities with Material and Model components into a single SSBO.
+         * This function collects material data from all entities, uploads it to GPU memory, and assigns
+         * material indices to each entity for shader access. Should be called once after scene load or
+         * when materials are added/removed.
+         */
+        void CompileMaterials();
+        
+        /**
+         * @brief Binds the MaterialBlock shader storage buffer to the specified shader program if it has not been bound before.
          * @param shader The shader program to which the material block should be bound.
          */
         void BindMaterialBlockIfPresent(const std::shared_ptr<Shader>& shader);
@@ -530,16 +551,17 @@ namespace Ermine::graphics
 		std::shared_ptr<LightSystem> m_LightSystem = nullptr;
         std::shared_ptr<OffscreenBuffer> m_OffscreenBuffer;
 
-        // Lighting SSBO
-        GLuint m_LightsSSBO = 0;
+        // Lighting UBO
+        GLuint m_LightsUBO = 0;
         static constexpr GLuint LightsBindingPoint = 1;
         std::unordered_set<GLuint> m_LightBlockBoundPrograms;
         bool m_IsBlinnPhong = false; // Default to PBR shading
 
-        // Material UBO
-        GLuint m_MaterialUBO = 0;
+        // Material SSBO
+        GLuint m_MaterialSSBO = 0;
         static constexpr GLuint MaterialBindingPoint = 2;
         std::unordered_set<GLuint> m_MaterialBlockBoundPrograms;
+        std::unordered_map<EntityID, uint32_t> m_EntityMaterialIndices; // Maps entity to material index in SSBO
 
         // Deferred rendering buffers
         bool m_UseDeferredRendering = true;
@@ -572,6 +594,11 @@ namespace Ermine::graphics
         // Forward rendering shader for transparent objects
         std::shared_ptr<Shader> m_ForwardShader = nullptr;
         std::vector<TransparentObject> m_transparentObjects;
+
+        //Physics
+        std::vector<DebugVertex> m_DebugLines;
+        unsigned int m_DebugVAO = 0, m_DebugVBO = 0;
+        std::shared_ptr<Shader> debugShader = nullptr;
 
         void BindMaterialTextures(Ermine::graphics::Material* material);
 
@@ -624,5 +651,12 @@ namespace Ermine::graphics
                 m.m30, m.m31, m.m32, m.m33
             );
         }
+
+        /**
+         * @brief Gets the world transform matrix for an entity using GlobalTransform component
+         * @param entity The entity to get the world matrix for
+         * @return glm::mat4 The world transform matrix
+         */
+        glm::mat4 GetEntityWorldMatrix(EntityID entity) const;
     };
 }

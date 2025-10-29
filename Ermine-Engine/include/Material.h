@@ -3,7 +3,7 @@
 \file       Material.h
 \author     Jeremy Lim Ting Jie, jeremytingjie.lim, 2301370, jeremytingjie.lim\@digipen.edu
 \date       Sep 9, 2025
-\brief      Material system for graphics rendering with UBO support
+\brief      Material system for graphics rendering with SSBO support
 
 Copyright (C) 2025 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents without the
@@ -63,9 +63,10 @@ namespace Ermine::graphics
 
     /*!***********************************************************************
     \brief
-        GPU-compatible material structure
+        GPU-compatible material structure for SSBO
+        Uses std430 layout rules (no padding required)
     *************************************************************************/
-    struct MaterialUBO
+    struct MaterialSSBO
     {
         Vec4 albedo{ 0.8f, 0.8f, 0.8f, 1.0f };  // 16 bytes (0-15)
 
@@ -78,19 +79,14 @@ namespace Ermine::graphics
         float emissiveIntensity{ 0.0f };         // 4 bytes (44-47)
 
         int shadingModel{ 0 };                   // 4 bytes (48-51)
-        float _pad0{};                           // 4 bytes (52-55)
-        float _pad1{};                           // 4 bytes (56-59)
-        float _pad2{};                           // 4 bytes (60-63)
+        int hasAlbedoMap{ 0 };                   // 4 bytes (52-55)
+        int hasNormalMap{ 0 };                   // 4 bytes (56-59)
+        int hasRoughnessMap{ 0 };                // 4 bytes (60-63)
 
-        int hasAlbedoMap{ 0 };                   // 4 bytes (64-67)
-        int hasNormalMap{ 0 };                   // 4 bytes (68-71)
-        int hasRoughnessMap{ 0 };                // 4 bytes (72-75)
-        int hasMetallicMap{ 0 };                 // 4 bytes (76-79)
-
-        int hasAoMap{ 0 };                       // 4 bytes (80-83)
-        int hasEmissiveMap{ 0 };                 // 4 bytes (84-87)
-        float _pad3{};                           // 4 bytes (88-91)
-        float _pad4{};                           // 4 bytes (92-95)
+        int hasMetallicMap{ 0 };                 // 4 bytes (64-67)
+        int hasAoMap{ 0 };                       // 4 bytes (68-71)
+        int hasEmissiveMap{ 0 };                 // 4 bytes (72-75)
+        float _pad0{};                           // 4 bytes (76-79) - padding for alignment
     };
 
     // Forward declaration
@@ -228,7 +224,7 @@ namespace Ermine::graphics
 
     /*!***********************************************************************
     \brief
-        Main Material class with UBO support
+        Main Material class with SSBO support
     *************************************************************************/
     class Material
     {
@@ -241,17 +237,17 @@ namespace Ermine::graphics
         int m_nextTextureSlot = 0;
         std::unordered_map<std::string, std::shared_ptr<Cubemap>> cubemaps;
 
-        // UBO management
-        mutable MaterialUBO m_materialData;
-        mutable bool m_uboDirty = true;
+        // SSBO management
+        mutable MaterialSSBO m_materialData;
+        mutable bool m_ssboDirty = true;
 
         /**
-         * @brief Gets the UBO data for this material.
-         * @return Reference to MaterialUBO.
+         * @brief Gets the SSBO data for this material.
+         * @return Reference to MaterialSSBO.
          */
-        void UpdateUBOData() const
+        void UpdateSSBOData() const
         {
-            if (!m_uboDirty) return;
+            if (!m_ssboDirty) return;
 
             // Update material data from parameters
             if (auto param = GetParameter("materialAlbedo"))
@@ -314,7 +310,7 @@ namespace Ermine::graphics
             m_materialData.hasEmissiveMap = GetParameter("materialHasEmissiveMap") &&
                 GetParameter("materialHasEmissiveMap")->boolValue ? 1 : 0;
 
-            m_uboDirty = false;
+            m_ssboDirty = false;
         }
 
     public:
@@ -351,7 +347,7 @@ namespace Ermine::graphics
         void SetParameter(const std::string& name, const MaterialParam& param)
         {
             m_parameters[name] = param;
-            m_uboDirty = true;
+            m_ssboDirty = true;
 
             if (param.type == MaterialParamType::TEXTURE_2D)
             {
@@ -447,12 +443,12 @@ namespace Ermine::graphics
             return it != m_parameters.end() ? &it->second : nullptr;
         }
         /**
-         * @brief Gets the UBO data for this material.
-         * @return Reference to MaterialUBO.
+         * @brief Gets the SSBO data for this material.
+         * @return Reference to MaterialSSBO.
          */
-        const MaterialUBO& GetUBOData() const
+        const MaterialSSBO& GetSSBOData() const
         {
-            UpdateUBOData();
+            UpdateSSBOData();
             return m_materialData;
         }
         /**
@@ -522,7 +518,7 @@ namespace Ermine::graphics
             , m_textureSlots(other.m_textureSlots)
             , m_nextTextureSlot(other.m_nextTextureSlot)
             , m_materialData(other.m_materialData)
-            , m_uboDirty(true)
+            , m_ssboDirty(true)
         {
         }
         /**
@@ -539,7 +535,7 @@ namespace Ermine::graphics
                 m_textureSlots = other.m_textureSlots;
                 m_nextTextureSlot = other.m_nextTextureSlot;
                 m_materialData = other.m_materialData;
-                m_uboDirty = true;
+                m_ssboDirty = true;
             }
             return *this;
         }

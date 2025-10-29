@@ -11,6 +11,7 @@ Reproduction or disclosure of this file or its contents without the
 prior written consent of DigiPen Institute of Technology is prohibited.
 */
 /* End Header **************************************************************************/
+
 #pragma once
 #include "Scene.h"
 #include "imgui.h"
@@ -26,6 +27,8 @@ namespace Ermine {
         bool m_IsVisible = true;              ///< Panel visibility state
         EntityID m_PendingFocusEntity = 0;    ///< Entity waiting for inspector focus after interaction
 
+        // UI helper functions
+        void DuplicateEntity(EntityID sourceEntity);
         /*!
         \brief Recursively draws an entity node and its children in the hierarchy tree
         \param entity The entity ID to draw
