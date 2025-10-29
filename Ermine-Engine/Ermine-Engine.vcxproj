@@ -356,6 +356,7 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClInclude Include="include\ScriptSystem.h" />
     <ClInclude Include="include\Serialisation.h" />
     <ClInclude Include="include\Shader.h" />
+    <ClInclude Include="include\SkeletalSSBO.h" />
     <ClInclude Include="include\Skybox.h" />
     <ClInclude Include="include\Systems.h" />
     <ClInclude Include="include\Texture.h" />
@@ -389,6 +390,7 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClCompile Include="src\Graphics\Model.cpp" />
     <ClCompile Include="src\Graphics\Renderer.cpp" />
     <ClCompile Include="src\Graphics\Shader.cpp" />
+    <ClCompile Include="src\Graphics\SkeletalSSBO.cpp" />
     <ClCompile Include="src\Graphics\Skybox.cpp" />
     <ClCompile Include="src\Graphics\Texture.cpp" />
     <ClCompile Include="src\Graphics\VertexArray.cpp" />

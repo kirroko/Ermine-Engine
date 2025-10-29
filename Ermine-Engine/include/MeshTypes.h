@@ -31,6 +31,7 @@ namespace Ermine::graphics {
         float _pad3;            // offset 60, size 4 bytes (padding to reach 64)
         // Total: 64 bytes matching std430 layout
     };
+	static_assert(sizeof(Vertex) == 64, "Vertex size mismatch - expected 64 bytes for std430 layout");
 
     // SkinnedVertex structure matching GPU std430 layout
     struct SkinnedVertex {
@@ -46,6 +47,7 @@ namespace Ermine::graphics {
         glm::vec4 boneWeights;  // offset 80, size 16 bytes
         // Total: 96 bytes matching std430 layout
     };
+    static_assert(sizeof(SkinnedVertex) == 96, "SkinnedVertex size mismatch - expected 96 bytes for std430 layout");
 
     struct MeshSubset  {
         uint32_t vertexOffset;

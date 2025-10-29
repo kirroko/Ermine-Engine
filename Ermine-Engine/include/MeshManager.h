@@ -24,6 +24,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #pragma once
 #include "MeshTypes.h"
 #include "DrawCommands.h"
+#include "SkeletalSSBO.h"
 #include <vector>
 #include <unordered_map>
 #include <string>
@@ -88,6 +89,9 @@ namespace Ermine::graphics {
 
         // Persistent mapped buffer for efficient DrawInfo updates
         PersistentDrawInfoBuffer m_PersistentDrawInfoBuffer;
+
+        // Skeletal animation SSBO for bone transforms (Binding 7)
+        SkeletalSSBO m_SkeletalSSBO;
 
     private:
         void CreateBuffers();

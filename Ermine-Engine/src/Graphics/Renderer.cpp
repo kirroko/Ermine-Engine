@@ -30,6 +30,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Skybox.h"
 #include <random>  
 #include "Physics.h"
+#include "AnimationManager.h"
 
 #include <GLFW/glfw3.h>
 
@@ -111,6 +112,13 @@ void Renderer::Init(const int& screenWidth, const int& screenHeight)
 
 	// Initialize MeshManager for centralized mesh storage and indirect rendering
 	m_MeshManager.Initialize();
+
+	// Connect AnimationManager to SkeletalSSBO for efficient bone transform updates
+	auto animationManager = Ermine::ECS::GetInstance().GetSystem<AnimationManager>();
+	if (animationManager)
+	{
+		animationManager->SetSkeletalSSBO(&m_MeshManager.m_SkeletalSSBO);
+	}
 
 	// Add light system reference
 	m_LightSystem = Ermine::ECS::GetInstance().GetSystem<LightSystem>();
@@ -716,6 +724,10 @@ void Renderer::BeginGeometryPass()
  */
 void Renderer::EndGeometryPass()
 {
+	// Insert fence to track when GPU finishes reading bone data
+	// This allows AnimationManager to wait before overwriting data in the next frame
+	m_MeshManager.m_SkeletalSSBO.InsertFence();
+
 	// Check for errors
 	glCheckError();
 }
@@ -921,21 +933,6 @@ void Renderer::BuildIndirectCommands()
 
 			if (!modelComp.m_model) continue;
 
-
-			// Get bone transforms (may be empty for static meshes)
-			const auto& boneTransforms = modelComp.m_model->GetBoneTransforms();
-			const bool hasBones = !boneTransforms.empty();
-
-			// Upload bone matrices if present
-			if (hasBones)
-			{
-				// TODO: Optimize: Use a UBO or SSBO for bone matrices instead of uniforms for large numbers of bones
-
-				GLsizei count = std::min((int)boneTransforms.size(), MAX_BONE_UNIFORMS);
-				GLint loc = glGetUniformLocation(m_GBufferShader->GetRendererID(), "u_BoneMatrices");
-				glUniformMatrix4fv(loc, count, GL_FALSE, glm::value_ptr(boneTransforms[0]));
-			}
-
 			// Check if entity has material component for transparency/custom shader check
 			Ermine::graphics::Material* material = nullptr;
 			if (ecs.HasComponent<Ermine::Material>(entity)) {
@@ -998,11 +995,25 @@ void Renderer::BuildIndirectCommands()
 				info.materialIndex = materialIndex;
 				info.aabbMax = mesh.aabbMax;
 				info.entityID = entity;
-				// Set flags: bit 0 = useSkinning
-				info.flags = (modelComp.m_model->GetBoneCount() > 0) ? 1 : 0;
+
+				// Check if entity has animation component with valid bone offset
+				bool useSkinning = false;
+				uint32_t boneOffset = 0;
+				if (ecs.HasComponent<AnimationComponent>(entity))
+				{
+					auto& animComp = ecs.GetComponent<AnimationComponent>(entity);
+					if (animComp.boneTransformOffset >= 0)
+					{
+						useSkinning = true;
+						boneOffset = static_cast<uint32_t>(animComp.boneTransformOffset);
+					}
+				}
+
+				info.flags = useSkinning ? 1 : 0;
+				info.boneTransformOffset = boneOffset;
 				info._pad[0] = 0;
 				info._pad[1] = 0;
-				info._pad[2] = 0;
+
 				drawInfos.push_back(info);
 			}
 		}
@@ -1077,9 +1088,9 @@ void Renderer::BuildIndirectCommands()
 			info.entityID = entity;
 			// Primitives never use skinning
 			info.flags = 0;
+			info.boneTransformOffset = 0; // Primitives don't use bones
 			info._pad[0] = 0;
 			info._pad[1] = 0;
-			info._pad[2] = 0;
 			drawInfos.push_back(info);
 		}
 	}
