@@ -2140,45 +2140,136 @@ const GPUProfiler::PerformanceMetrics& Renderer::GetPerformanceMetrics() const
  */
 Renderer::~Renderer()
 {
-	if (m_LightsUBO) {
-		glDeleteBuffers(1, &m_LightsUBO);
-		m_LightsUBO = 0;
+	// Check if we have a valid OpenGL context
+	if (glfwGetCurrentContext() == nullptr)
+	{
+		// DO NOT LOG - logger may be destroyed during shutdown
+		return;
 	}
 
-	if (m_MaterialSSBO) {
-		glDeleteBuffers(1, &m_MaterialSSBO);
-		m_MaterialSSBO = 0;
-	}
-
-	if (m_ShadowMapArrayHandle != 0) {
-		glMakeTextureHandleNonResidentARB(m_ShadowMapArrayHandle);
-		m_ShadowMapArrayHandle = 0;
-	}
-
-	if (m_ShadowMapArray) {
-		glDeleteTextures(1, &m_ShadowMapArray);
-		m_ShadowMapArray = 0;
-	}
-	if (m_ShadowMapFBO) {
-		glDeleteFramebuffers(1, &m_ShadowMapFBO);
-		m_ShadowMapFBO = 0;
-	}
-
-	CleanupGBuffer();
-	CleanupPostProcessBuffer();
-
-	// Clean up offscreen buffer
-	if (m_OffscreenBuffer) {
-		if (m_OffscreenBuffer->FBO != 0) {
-			glDeleteFramebuffers(1, &m_OffscreenBuffer->FBO);
+	// Make all bindless texture handles non-resident FIRST
+	try
+	{
+		// Make texture array handles non-resident
+		if (m_TextureArraySSBO != 0)
+		{
+			// Get all texture handles and make them non-resident
+			for (GLuint textureID : m_TextureArray)
+			{
+				GLuint64 handle = glGetTextureHandleARB(textureID);
+				if (handle != 0 && glIsTextureHandleResidentARB(handle))
+				{
+					glMakeTextureHandleNonResidentARB(handle);
+				}
+			}
+			m_TextureArray.clear();
+			m_TextureIDToIndex.clear();
+			m_TexturePathToIndex.clear();
 		}
-		if (m_OffscreenBuffer->ColorTexture != 0) {
-			glDeleteTextures(1, &m_OffscreenBuffer->ColorTexture);
+
+		// Clean up shadow map handle
+		if (m_ShadowMapArrayHandle != 0)
+		{
+			if (glIsTextureHandleResidentARB(m_ShadowMapArrayHandle))
+			{
+				glMakeTextureHandleNonResidentARB(m_ShadowMapArrayHandle);
+			}
+			m_ShadowMapArrayHandle = 0;
 		}
-		if (m_OffscreenBuffer->RBO != 0) {
-			glDeleteRenderbuffers(1, &m_OffscreenBuffer->RBO);
+
+		// Clean up g-buffer handles
+		CleanupGBuffer();
+
+		// Clean up post-process buffers
+		CleanupPostProcessBuffer();
+
+		// Now delete buffers
+		if (m_LightsUBO)
+		{
+			glDeleteBuffers(1, &m_LightsUBO);
+			m_LightsUBO = 0;
 		}
-		m_OffscreenBuffer.reset();
+
+		if (m_MaterialSSBO)
+		{
+			glDeleteBuffers(1, &m_MaterialSSBO);
+			m_MaterialSSBO = 0;
+		}
+
+		if (m_TextureArraySSBO)
+		{
+			glDeleteBuffers(1, &m_TextureArraySSBO);
+			m_TextureArraySSBO = 0;
+		}
+
+		// Delete shadow map resources
+		if (m_ShadowMapArray)
+		{
+			glDeleteTextures(1, &m_ShadowMapArray);
+			m_ShadowMapArray = 0;
+		}
+
+		if (m_ShadowMapFBO)
+		{
+			glDeleteFramebuffers(1, &m_ShadowMapFBO);
+			m_ShadowMapFBO = 0;
+		}
+
+		// Clean up offscreen buffer
+		if (m_OffscreenBuffer)
+		{
+			if (m_OffscreenBuffer->FBO != 0)
+			{
+				glDeleteFramebuffers(1, &m_OffscreenBuffer->FBO);
+			}
+			if (m_OffscreenBuffer->ColorTexture != 0)
+			{
+				glDeleteTextures(1, &m_OffscreenBuffer->ColorTexture);
+			}
+			if (m_OffscreenBuffer->RBO != 0)
+			{
+				glDeleteRenderbuffers(1, &m_OffscreenBuffer->RBO);
+			}
+			m_OffscreenBuffer.reset();
+		}
+
+		// Clean up picking buffer
+		if (m_PickingBuffer)
+		{
+			if (m_PickingBuffer->FBO != 0)
+			{
+				glDeleteFramebuffers(1, &m_PickingBuffer->FBO);
+			}
+			if (m_PickingBuffer->ColorID != 0)
+			{
+				glDeleteTextures(1, &m_PickingBuffer->ColorID);
+			}
+			if (m_PickingBuffer->Depth != 0)
+			{
+				glDeleteRenderbuffers(1, &m_PickingBuffer->Depth);
+			}
+			m_PickingBuffer.reset();
+		}
+
+		// Clean up debug rendering resources
+		if (m_DebugVAO != 0)
+		{
+			glDeleteVertexArrays(1, &m_DebugVAO);
+			m_DebugVAO = 0;
+		}
+
+		if (m_DebugVBO != 0)
+		{
+			glDeleteBuffers(1, &m_DebugVBO);
+			m_DebugVBO = 0;
+		}
+
+		// Don't call glCheckError here as context might be shutting down
+		// Instead, just clear any pending errors silently
+		while (glGetError() != GL_NO_ERROR);
+	}
+	catch (...)
+	{
 	}
 }
 
