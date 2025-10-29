@@ -342,6 +342,65 @@ namespace Ermine
     }
 
     /**
+     * @brief Draws the information inspector panel.
+     * @param graph The animation graph being edited.
+     * @param animator The animator associated with the entity.
+     */
+    void AnimationEditorImGUI::DrawInformationInspector(const std::shared_ptr<AnimationGraph>& graph, const std::shared_ptr<graphics::Animator>& animator)
+    {
+        ImGui::BeginChild("InformationInspector", ImVec2(0, 0), true);
+        ImGui::SeparatorText("Animator Info");
+
+        if (animator) {
+            if (const auto* clip = animator->GetCurrentClip()) {
+                ImGui::Text("Current Clip: %s", clip->name.c_str());
+                ImGui::Text("Duration: %.2fs", clip->duration / clip->ticksPerSecond);
+                ImGui::Text("Ticks: %.2f, TPS: %.2f", clip->duration, clip->ticksPerSecond);
+            }
+            else
+                ImGui::Text("Current Clip: <None>");
+            ImGui::Text("Paused: %s", animator->IsPaused() ? "Yes" : "No");
+            ImGui::Text("Looping: %s", animator->IsLooping() ? "Yes" : "No");
+
+            const auto& clips = animator->GetClips();
+            ImGui::Text("Clip Count: %zu", clips.size());
+            if (!clips.empty()) {
+                ImGui::SeparatorText("Available Clips:");
+                for (const auto& clip : clips)
+                    ImGui::BulletText("%s", clip.name.c_str());
+            }
+        }
+        else
+            ImGui::TextDisabled("No Animator Found.");
+
+        ImGui::SeparatorText("Animation Graph Info");
+        if (graph) {
+            ImGui::Text("States: %zu", graph->states.size());
+            ImGui::Text("Transitions: %zu", graph->transitions.size());
+            ImGui::Text("Parameters: %zu", graph->parameters.size());
+            ImGui::Text("Current State: %s",
+                (graph->current && !graph->current->name.empty()) ? graph->current->name.c_str() : "<None>");
+            ImGui::Text("Playback Speed: %.2f", graph->playbackSpeed);
+            ImGui::Text("Is Playing: %s", graph->playing ? "Yes" : "No");
+        }
+        else
+            ImGui::TextDisabled("No Animation Graph Found.");
+
+        ImGui::Separator();
+        if (ImGui::Button("Save Graph", ImVec2(0, 0))) {
+            // TODO: Hook into your graph serialization (JSON/YAML)
+            EE_CORE_INFO("Animation graph saved (placeholder)");
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Load Graph", ImVec2(0, 0))) {
+            // TODO: Hook into your graph serialization (JSON/YAML)
+            EE_CORE_INFO("Animation graph loaded (placeholder)");
+        }
+
+        ImGui::EndChild();
+    }
+
+    /**
      * @brief Draws the state inspector panel.
      * @param graph The animation graph being edited.
      * @param animator The animator associated with the entity.
@@ -361,18 +420,18 @@ namespace Ermine
         // Clip search
         ImGui::InputTextWithHint("##SearchClip", "Search clip...", m_clipSearch, IM_ARRAYSIZE(m_clipSearch));
 
-        // Small timeline scrubber
         if (auto clip = animator->GetCurrentClip()) {
+            // Small timeline scrubber
             float durationSec = static_cast<float>(clip->duration / clip->ticksPerSecond);
             ImGui::SliderFloat("Timeline", &graph->currentTime, 0.f, durationSec, "%.2fs");
             if (ImGui::IsItemActive() || ImGui::IsItemDeactivatedAfterEdit()) {
                 animator->Seek(graph->currentTime);
                 graph->playing = false;
             }
-        }
 
-        // Playback speed
-        ImGui::DragFloat("Speed", &graph->playbackSpeed, 0.1f, 0.1f, 5.f);
+            // Playback speed
+            ImGui::DragFloat("Speed", &graph->playbackSpeed, 0.1f, 0.1f, 5.f);
+        }
 
         // Playback controls
         if (ImGui::Button("Play")) {
@@ -396,10 +455,8 @@ namespace Ermine
             if (animator) animator->StopAnimation();
         }
         ImGui::SameLine();
-        if (ImGui::Button("Save Graph")) {
-            // TODO: hook into your JSON or YAML serialization system
-            EE_CORE_INFO("Animation graph saved (placeholder)");
-        }
+        bool looping = animator->IsLooping();
+        if (ImGui::Checkbox("Looping", &looping)) animator->IsLooping() = looping;
 
         ImGui::EndChild(); // StateInspector end
     }
@@ -648,10 +705,16 @@ namespace Ermine
 
         ImGui::NextColumn();
 
-        // Right Column: States + Transitions + Node Editor
+        // Right Column: Information + States + Transitions + Node Editor
         ImGui::BeginChild("RightColumn", ImVec2(0, 0), false);
         {
             if (ImGui::BeginTabBar("RightTopTabs", ImGuiTabBarFlags_None)) {
+
+                // Information
+                if (ImGui::BeginTabItem("Info")) {
+                    DrawInformationInspector(graph, animator);
+                    ImGui::EndTabItem();
+                }
 
                 // States
                 if (ImGui::BeginTabItem("States")) {

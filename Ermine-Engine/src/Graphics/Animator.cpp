@@ -31,13 +31,8 @@ namespace Ermine::graphics
     {
         m_Scene = m_Model->GetAssimpScene(); // cache scene for hierarchy traversal
         m_FinalBoneMatrices.resize(m_Model->GetBoneCount(), glm::mat4(1.0f));
-        
-        LoadAnimations(); // Load all animation clips
 
-        if (!m_Clips.empty())
-            PlayAnimation(0, true); // play first clip, TEMP
-        else
-            m_CurrentClip = nullptr;
+        LoadAnimations(); // Load all animation clips
     }
 
     /**

@@ -176,6 +176,13 @@ namespace Ermine
         void DrawNode(AnimationStateNode& n, const std::shared_ptr<AnimationGraph>& graph, const std::shared_ptr<graphics::Animator>& animator);
 
         /**
+         * @brief Draws the information inspector panel.
+         * @param graph The animation graph being edited.
+         * @param animator The animator associated with the entity.
+         */
+        void DrawInformationInspector(const std::shared_ptr<AnimationGraph>& graph, const std::shared_ptr<graphics::Animator>& animator);
+
+        /**
          * @brief Draws the state inspector panel.
          * @param graph The animation graph being edited.
          * @param animator The animator associated with the entity.

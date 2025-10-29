@@ -1248,21 +1248,12 @@ namespace Ermine::editor {
 			if (ImGui::Button("Resume")) animator->ResumeAnimation();
 			ImGui::SameLine();
 			if (ImGui::Button("Stop")) animator->StopAnimation();
-
-			if (auto current = animator->GetCurrentClip()) {
-				ImGui::Separator();
-				ImGui::Text("Current: %s", current->name.c_str());
-				ImGui::Text("Duration: %.2fs", current->duration / current->ticksPerSecond);
-				ImGui::Text("Ticks: %.2f, TPS: %.2f", current->duration, current->ticksPerSecond);
-			}
+			ImGui::SameLine();
+			bool looping = animator->IsLooping();
+			if (ImGui::Checkbox("Looping", &looping)) animator->IsLooping() = looping;
 		}
 		else
 			ImGui::TextUnformatted("No animation clips found in this model.");
-
-		// Looping toggle (persisted)
-		bool looping = animator->IsLooping();
-		if (ImGui::Checkbox("Looping", &looping))
-			animator->IsLooping() = looping;
 
 		// Reload Animator Button
 		if (ImGui::Button("Reload Animation")) {
@@ -1282,7 +1273,7 @@ namespace Ermine::editor {
 
 		// Open Animation Editor Button
 		ImGui::SameLine();
-		if (ImGui::Button("Edit Animation")) {
+		if (ImGui::Button("Open Editor")) {
 			auto animationWindow = editor::EditorGUI::GetWindow<AnimationEditorImGUI>();
 			if (animationWindow) {
 				animationWindow->SetSelectedEntity(entity);
