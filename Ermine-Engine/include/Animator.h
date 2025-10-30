@@ -2,7 +2,7 @@
 /*!
 \file       Animator.h
 \author     Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu
-\date       03/10/2025
+\date       28/10/2025
 \brief      This file contains the declaration of the animator class. It is responsible for
             loading animation clips from an Assimp scene, managing playback state,
             updating bone transforms per frame, providing final matrices for GPU skinning
@@ -16,9 +16,10 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #pragma once
 
-#include "AnimationClip.h"
-#include "Model.h"
-#include <assimp/scene.h>
+#include "AnimationClip.h"   // For AnimationClip definition
+#include "Model.h"           // For Model definition
+#include "ECS.h"
+#include <assimp/scene.h>    // For aiScene
 
 namespace Ermine::graphics
 {
@@ -104,6 +105,23 @@ namespace Ermine::graphics
         void ResumeAnimation();
 
         /**
+         * @brief Seek the current animation to a specific time position (in seconds).
+         *
+         * Recalculates all bone transforms at that time without advancing playback.
+         *
+         * @param timeInSeconds Target playback time in seconds.
+         */
+        void Seek(double timeInSeconds);
+
+        /**
+		 * @brief Evaluate and process animation transitions in the graph.
+         *
+		 * Checks for any transition conditions in the linked AnimationGraph
+		 * and switches animations accordingly.
+		 */
+        void EvaluateTransitions(EntityID entity);
+
+        /**
          * @brief Advance animation playback and update bone transforms.
          *
          * Increments the playback timer by @p deltaTime and updates the skeleton's bone transforms
@@ -111,7 +129,7 @@ namespace Ermine::graphics
          *
          * @param deltaTime Time step in seconds since last frame.
          */
-        void Update(double deltaTime);
+        void Update(double deltaTime, EntityID entity);
 
         /**
          * @brief Get the animated model.

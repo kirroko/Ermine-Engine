@@ -31,124 +31,139 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "GeometryFactory.h"
 #include "AssetManager.h"
 #include "PhysicDebugRenderer.h"
-
+#include <tuple>
+#include <queue>
 
 using namespace JPH;
 namespace Ermine
 {
-    struct BodyDrawSettings
-    {
-        bool mDrawShapeWireframe = true;   // toggle wireframe drawing
-        bool mDrawInactiveBodies = true;   // optionally draw inactive bodies
-        bool mDrawCenterOfMass = false;    // optional
-        bool mDrawBodyAxes = false;        // optional
-    };
+	struct BodyDrawSettings
+	{
+		bool mDrawShapeWireframe = true;   // toggle wireframe drawing
+		bool mDrawInactiveBodies = true;   // optionally draw inactive bodies
+		bool mDrawCenterOfMass = false;    // optional
+		bool mDrawBodyAxes = false;        // optional
+	};
 
+	class Physics : public System
+	{
+	public:
+		/*!***********************************************************************
+		  \brief
+			Constructor. Initializes memory allocator, job system, and prepares
+			listeners/filters for the physics system.
+		*************************************************************************/
+		Physics();
 
-    class Physics : public System
-    {
-    public:
-        /*!***********************************************************************
-          \brief
-            Constructor. Initializes memory allocator, job system, and prepares
-            listeners/filters for the physics system.
-        *************************************************************************/
-        Physics();
+		/*!***********************************************************************
+		  \brief
+			Destructor. Shuts down the physics system and cleans up resources.
+		*************************************************************************/
+		~Physics();
 
-        /*!***********************************************************************
-          \brief
-            Destructor. Shuts down the physics system and cleans up resources.
-        *************************************************************************/
-        ~Physics();
+		/*!***********************************************************************
+		  \brief
+			Initializes the Jolt physics system, registers types, sets up gravity,
+			listeners, and optimizes the broadphase.
+		*************************************************************************/
+		void Init();
 
-        /*!***********************************************************************
-          \brief
-            Initializes the Jolt physics system, registers types, sets up gravity,
-            listeners, and optimizes the broadphase.
-        *************************************************************************/
-        void Init();
+		/*!***********************************************************************
+		  \brief
+			Shuts down the physics system and clears entity-to-body mappings.
+		*************************************************************************/
+		void Shutdown();
 
-        /*!***********************************************************************
-          \brief
-            Shuts down the physics system and clears entity-to-body mappings.
-        *************************************************************************/
-        void Shutdown();
-        
-        /*!***********************************************************************
-          \brief
-            Updates the physics simulation for a single frame and synchronizes ECS
-            transforms with physics bodies.
-          \param[in] deltaTime
-            Time elapsed since the last frame, in seconds.
-        *************************************************************************/
-        void Update(float deltaTime);
+		/*!***********************************************************************
+		  \brief
+			Updates the physics simulation for a single frame and synchronizes ECS
+			transforms with physics bodies.
+		  \param[in] deltaTime
+			Time elapsed since the last frame, in seconds.
+		*************************************************************************/
+		void Update(float deltaTime);
 
-        //place holder, will be remove
-        //BodyID CreateStaticBox(const JPH::Vec3& halfExtents, const RVec3& position);
-        //BodyID CreateDynamicSphere(float radius, const RVec3& position, const JPH::Vec3& initialVelocity);
-        //void CreatePhysicsBox(const Ermine::Vec3& position, const Ermine::Vec3& size, float mass);
+		//place holder, will be remove
+		//BodyID CreateStaticBox(const JPH::Vec3& halfExtents, const RVec3& position);
+		//BodyID CreateDynamicSphere(float radius, const RVec3& position, const JPH::Vec3& initialVelocity);
+		//void CreatePhysicsBox(const Ermine::Vec3& position, const Ermine::Vec3& size, float mass);
 
-        /*!***********************************************************************
-          \brief
-            Rebuilds the list of physics bodies from ECS entities. Old bodies are
-            removed and new shapes are created and registered in the physics world.
-        *************************************************************************/
-        void UpdatePhysicList();
+		/*!***********************************************************************
+		  \brief
+			Rebuilds the list of physics bodies from ECS entities. Old bodies are
+			removed and new shapes are created and registered in the physics world.
+		*************************************************************************/
+		void UpdatePhysicList();
 
-        /*!***********************************************************************
-          \brief
-            Retrieves the physics body ID associated with a given ECS entity.
-          \param[in] objectID
-            The ECS entity ID to query.
-          \return
-            A valid BodyID if the entity has a physics body, otherwise an invalid BodyID.
-        *************************************************************************/
-        JPH::BodyID GetBodyID(EntityID objectID);
+		/*!***********************************************************************
+		  \brief
+			Retrieves the physics body ID associated with a given ECS entity.
+		  \param[in] objectID
+			The ECS entity ID to query.
+		  \return
+			A valid BodyID if the entity has a physics body, otherwise an invalid BodyID.
+		*************************************************************************/
+		JPH::BodyID GetBodyID(EntityID objectID);
 
-        /*!***********************************************************************
-          \brief
-            Provides access to the Jolt BodyInterface for manual body operations.
-          \return
-            Reference to the BodyInterface instance.
-        *************************************************************************/
-        BodyInterface& GetBodyInterface() { return mPhysicsSystem.GetBodyInterface(); }
+		/*!***********************************************************************
+		  \brief
+			Provides access to the Jolt BodyInterface for manual body operations.
+		  \return
+			Reference to the BodyInterface instance.
+		*************************************************************************/
+		BodyInterface& GetBodyInterface() { return mPhysicsSystem.GetBodyInterface(); }
 
-        /*!***********************************************************************
-          \brief
-            Renders the current physics world using Jolt's debug renderer.
-            Typically used for wireframe visualization in the editor.
-        *************************************************************************/
-        void DrawDebug();
+		/*!***********************************************************************
+		  \brief
+			Renders the current physics world using Jolt's debug renderer.
+			Typically used for wireframe visualization in the editor.
+		*************************************************************************/
+		void DrawDebug();
 
-        void DrawDebugPhysics();
+		void DrawDebugPhysics();
 
-        void AttachDebugRenderer(std::shared_ptr<MyDebugRenderer> renderer);
+		void AttachDebugRenderer(std::shared_ptr<MyDebugRenderer> renderer);
 
-        std::shared_ptr<MyDebugRenderer> mDebugRenderer;
+		std::shared_ptr<MyDebugRenderer> mDebugRenderer;
 
-        bool wireframe;
+		bool wireframe;
 
-        enum class CollisionEventType { Begin, Stay, End };
+		enum class CollisionEventType : char { Begin, Stay, End };
 
-        void HandleCollisionEvent(const Body& a, const Body& b, CollisionEventType type);
-    private:
-        // --- Important: allocator first, job system second, physics system third ---
-        JPH::TempAllocatorImpl       mTempAllocator;
-        JPH::JobSystemThreadPool     mJobSystem;
-        JPH::PhysicsSystem           mPhysicsSystem;
+		void HandleCollisionEvent(const Body& a, const Body& b, CollisionEventType type);
 
-        class BPLayerInterfaceImpl* mBroadPhaseLayerInterface = nullptr;
-        class ObjectVsBroadPhaseLayerFilterImpl* mObjectVsBroadPhaseLayerFilter = nullptr;
-        class ObjectLayerPairFilterImpl* mObjectLayerPairFilter = nullptr;
+		void HandleCollisionEvent(JPH::BodyID a, JPH::BodyID b, CollisionEventType type);
+	private:
+		// --- Important: allocator first, job system second, physics system third ---
+		JPH::TempAllocatorImpl       mTempAllocator;
+		JPH::JobSystemThreadPool     mJobSystem;
+		JPH::PhysicsSystem           mPhysicsSystem;
 
-        class MyBodyActivationListener* mBodyActivationListener = nullptr;
-        class MyContactListener* mContactListener = nullptr;
+		class BPLayerInterfaceImpl* mBroadPhaseLayerInterface = nullptr;
+		class ObjectVsBroadPhaseLayerFilterImpl* mObjectVsBroadPhaseLayerFilter = nullptr;
+		class ObjectLayerPairFilterImpl* mObjectLayerPairFilter = nullptr;
 
-        std::unordered_map<EntityID, JPH::BodyID> mEntityToBody;
+		class MyBodyActivationListener* mBodyActivationListener = nullptr;
+		class MyContactListener* mContactListener = nullptr;
 
-        JPH::BodyManager::DrawSettings mBodyDrawSettings{};
+		std::unordered_map<EntityID, JPH::BodyID> mEntityToBody;
 
-        //not in used
-        //void SetupLayers();
-    };
+		JPH::BodyManager::DrawSettings mBodyDrawSettings{};
+
+		std::queue<std::tuple<CollisionEventType, EntityID, EntityID, bool>> mCollisionEvent;
+
+		struct PendingPair
+		{
+			CollisionEventType type;
+			JPH::BodyID a;
+			JPH::BodyID b;
+		};
+		std::mutex mPendingMutex;
+		std::vector<PendingPair> mPendingPairs;
+
+		void FlushPendingPairsToEntityEvents();
+
+		//not in used
+		//void SetupLayers();
+	};
 }

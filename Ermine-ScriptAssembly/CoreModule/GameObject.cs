@@ -21,15 +21,29 @@ namespace ErmineEngine
         Transform _transform;
 
         #region Constructors
-        public GameObject()
+
+        public GameObject(string name = "GameObject")
         {
-            Internal_CreateGameObject(this,"GameObject");
+            Internal_CreateGameObject(this,name);
         }
 
-        public GameObject(string name)
+        internal GameObject(ulong entityID)
         {
-            Internal_CreateGameObject(this, name ?? "GameObject");
+            if (!Internal_BindExisting(entityID))
+                throw new System.ArgumentException("Invalid or dead entityID.", nameof(entityID));
         }
+
+        public static GameObject FromEntityID(ulong entityID) => Internal_WrapExisting(entityID);
+
+        //public GameObject()
+        //{
+        //    Internal_CreateGameObject(this,"GameObject");
+        //}
+
+        //public GameObject(string name)
+        //{
+        //    Internal_CreateGameObject(this, name ?? "GameObject");
+        //}
         #endregion
 
         #region Core Properties
@@ -116,6 +130,12 @@ namespace ErmineEngine
         #endregion
 
         #region Internal Calls
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern GameObject Internal_WrapExisting(ulong entityID);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal extern bool Internal_BindExisting(ulong entityID);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
         private static extern void Internal_CreateGameObject(GameObject self, string name);
