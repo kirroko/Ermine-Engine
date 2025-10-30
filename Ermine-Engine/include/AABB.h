@@ -72,10 +72,13 @@ namespace Ermine
 			AABB result;
 			for (int i = 0; i < 8; ++i)
 			{
-				// Transform corner
-				Vector3D corner4(corners[i].x, corners[i].y, corners[i].z);
-				Vector3D transformed = matrix * corner4;
-				result.Expand(Vec3(transformed.x, transformed.y, transformed.z));
+				// Transform corner using matrix multiplication
+				// Convert Vec3 to homogeneous coordinates (w=1) for transformation
+				float x = corners[i].x * matrix.m00 + corners[i].y * matrix.m01 + corners[i].z * matrix.m02 + matrix.m03;
+				float y = corners[i].x * matrix.m10 + corners[i].y * matrix.m11 + corners[i].z * matrix.m12 + matrix.m13;
+				float z = corners[i].x * matrix.m20 + corners[i].y * matrix.m21 + corners[i].z * matrix.m22 + matrix.m23;
+				
+				result.Expand(Vec3(x, y, z));
 			}
 
 			return result;

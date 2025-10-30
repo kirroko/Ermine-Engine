@@ -210,6 +210,7 @@ namespace Ermine
 			scale_mtx.m11 = scale.y;
 			scale_mtx.m22 = scale.z;
 
+			// Correct multiplication order - Scale -> Rotate -> Translate (SRT)
 			return translation * rotation_mtx * scale_mtx;
 		}
 
@@ -1738,7 +1739,7 @@ namespace Ermine
 		explicit HierarchyComponent(EntityID parentId)
 			: parent(parentId), depth(0), isDirty(true), worldTransformDirty(true)
 		{
-		}
+				}
 
 		template <typename Alloc>
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
