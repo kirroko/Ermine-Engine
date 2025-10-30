@@ -43,6 +43,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "sprop/property_sprop.h"
 
 #include "FSMNode.h"
+#include "AABB.h"
 
 namespace xprop_utils
 {
@@ -2335,4 +2336,34 @@ namespace Ermine
 				m_CurrentScript->OnUpdate();
 		}
 	};
-}
+	/*!***********************************************************************
+	\brief
+	 AABB component for caching bounding boxes - used for frustum culling optimization
+	*************************************************************************/
+	struct AABBComponent
+	{
+		AABB worldAABB;      // Cached world-space AABB
+		bool isDirty = true; // True if transform changed since last calculation
+
+		AABBComponent() = default;
+		explicit AABBComponent(const AABB& box) : worldAABB(box), isDirty(false) {}
+
+		template<typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
+			out.SetObject();
+			// Don't serialize AABB - it gets recalculated from mesh/transform
+			out.AddMember("isDirty", isDirty, alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in) {
+			// Don't deserialize AABB - force recalculation
+			isDirty = true;
+			(void)in;
+		}
+
+		XPROPERTY_DEF(
+			"AABBComponent", AABBComponent,
+			xproperty::obj_member<"isDirty", &AABBComponent::isDirty>
+		)
+	};
+} // namespace Ermine
