@@ -295,6 +295,7 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="include\AABB.h" />
     <ClInclude Include="include\AnimationClip.h" />
     <ClInclude Include="include\AnimationGUI.h" />
     <ClInclude Include="include\AnimationManager.h" />
