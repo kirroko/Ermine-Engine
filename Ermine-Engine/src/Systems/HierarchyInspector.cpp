@@ -323,6 +323,7 @@ namespace Ermine::editor {
 					p.m_Value.set<Ermine::Vec3>({ v.x, v.y, v.z });
 					xproperty::sprop::setProperty(err, t, p, ctx);
 					
+					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
 					// CRITICAL: Mark entity dirty so hierarchy system updates immediately
 					hierarchySystem->MarkDirty(entity);
 				}
@@ -343,6 +344,7 @@ namespace Ermine::editor {
 					p.m_Value.set<Ermine::Quaternion>(FromEulerDegrees(eulerDeg));
 					xproperty::sprop::setProperty(err, t, p, ctx);
 					
+					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
 					// CRITICAL: Mark entity dirty so hierarchy system updates immediately
 					hierarchySystem->MarkDirty(entity);
 				}
@@ -387,6 +389,7 @@ namespace Ermine::editor {
 			float size[3] = { mesh.primitive.size.x, mesh.primitive.size.y, mesh.primitive.size.z };
 			if (ImGui::DragFloat3("Size", size, 0.1f, 0.01f, 100.f)) {
 				mesh.primitive.size = { size[0], size[1], size[2] };
+				ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
 				mesh.RebuildPrimitive();
 			}
 		}

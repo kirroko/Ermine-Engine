@@ -441,6 +441,12 @@ namespace Ermine
 
 			auto& t = ecs.GetComponent<Transform>(entity);
 			auto& p = ecs.GetComponent<PhysicComponent>(entity);
+			JPH::Vec3 meshsize = JPH::Vec3(1, 1, 1);
+			if (ecs.HasComponent<Mesh>(entity))
+			{
+				meshsize = JPH::Vec3(ecs.GetComponent<Mesh>(entity).primitive.size.x, ecs.GetComponent<Mesh>(entity).primitive.size.y, ecs.GetComponent<Mesh>(entity).primitive.size.z);
+			}
+
 
 			// Remove old body if exists
 			if (p.body)
@@ -466,7 +472,7 @@ namespace Ermine
 			{
 			case ShapeType::Box:
 			{
-				Vec3 halfExtent = { t.scale.x * 0.5f, t.scale.y * 0.5f, t.scale.z * 0.5f };
+				Vec3 halfExtent = { t.scale.x * 0.5f * meshsize.GetX(), t.scale.y * 0.5f * meshsize.GetY(), t.scale.z * 0.5f * meshsize.GetZ() };
 				constexpr float minSize = 0.01f;
 				halfExtent.x = std::max(halfExtent.x, minSize);
 				halfExtent.y = std::max(halfExtent.y, minSize);
@@ -481,10 +487,10 @@ namespace Ermine
 				break;
 			}
 			case ShapeType::Sphere:
-				shape = new JPH::SphereShape(t.scale.x); //for our current sphere
+				shape = new JPH::SphereShape(t.scale.x * meshsize.GetX()); //for our current sphere
 				break;
 			case ShapeType::Capsule:
-				shape = new JPH::CapsuleShape(t.scale.y * 0.5f, t.scale.x * 0.5f);
+				shape = new JPH::CapsuleShape(t.scale.y * 0.5f * meshsize.GetY(), t.scale.x * 0.5f * meshsize.GetX());
 				break;
 			case ShapeType::CustomMesh:
 
