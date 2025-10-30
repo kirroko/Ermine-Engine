@@ -359,68 +359,6 @@ namespace Ermine
 		}
 	}
 
-	//TEMP WILL BE REMOVE
-	/*
-	//BodyID Physics::CreateStaticBox(const JPH::Vec3& halfExtents, const RVec3& position)
-	//{
-	//    BoxShapeSettings settings(halfExtents);
-	//    settings.SetEmbedded();
-	//    ShapeRefC shape = settings.Create().Get();
-	//    BodyCreationSettings bodySettings(shape, position, Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
-	//    Body* body = mPhysicsSystem.GetBodyInterface().CreateBody(bodySettings);
-	//    mPhysicsSystem.GetBodyInterface().AddBody(body->GetID(), EActivation::DontActivate);
-	//    return body->GetID();
-	//}
-
-	//BodyID Physics::CreateDynamicSphere(float radius, const RVec3& position, const JPH::Vec3& initialVelocity)
-	//{
-	//    BodyCreationSettings settings(new SphereShape(radius), position, Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
-	//    BodyID bodyID = mPhysicsSystem.GetBodyInterface().CreateAndAddBody(settings, EActivation::Activate);
-	//    mPhysicsSystem.GetBodyInterface().SetLinearVelocity(bodyID, initialVelocity);
-	//    return bodyID;
-	//}
-
-	//void Physics::CreatePhysicsBox(const Ermine::Vec3& position, const Ermine::Vec3& size, float mass)
-	//{
-	//    // 1. Create an ECS entity
-	//    auto entity = ECS::GetInstance().CreateEntity();
-
-	//    // 2. Add Transform
-	//    ECS::GetInstance().AddComponent(entity, Transform(position, Quaternion(), size));
-
-	//    // 3. Add Mesh
-	//    ECS::GetInstance().AddComponent(entity, graphics::GeometryFactory::CreateCube(size.x, size.y, size.z));
-
-	//    // 4. Add Material (optional, use existing shader/texture)
-	//    auto shader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/vertex.glsl", "../Resources/Shaders/fragment.glsl");
-	//    auto texture = AssetManager::GetInstance().LoadTexture("../Resources/Textures/greybox_grey_grid.png");
-	//    auto material = std::make_unique<graphics::Material>(shader);
-	//    material->LoadTemplate(graphics::MaterialTemplates::PBR_WHITE());
-	//    if (texture && texture->IsValid())
-	//        material->SetTexture("materialAlbedoMap", texture);
-	//    ECS::GetInstance().AddComponent(entity, Material(std::move(material)));
-
-	//    // 5. Create Jolt Physics box shape
-	//    ObjectLayer layer = mass > 0 ? Layers::MOVING : Layers::NON_MOVING;
-	//    JPH::BodyCreationSettings bodySettings(
-	//        new JPH::BoxShape(JPH::Vec3(size.x * 0.5f, size.y * 0.5f, size.z * 0.5f)), // half extents
-	//        JPH::Vec3(position.x, position.y, position.z),
-	//        JPH::Quat::sIdentity(),
-	//        mass > 0 ? JPH::EMotionType::Dynamic : JPH::EMotionType::Static,
-	//        layer
-	//    );
-	//    if (mass > 0)
-	//        bodySettings.mOverrideMassProperties = JPH::EOverrideMassProperties::CalculateInertia;
-	//    bodySettings.mMassPropertiesOverride.mMass = mass;
-	//    // 6. Create body and add it to physics
-	//    JPH::Body* body = mPhysicsSystem.GetBodyInterface().CreateBody(bodySettings);
-	//    mPhysicsSystem.GetBodyInterface().AddBody(body->GetID(), JPH::EActivation::Activate);
-
-	//    // 7. Optionally store body pointer or ID in a component if needed
-	//    mEntityToBody[entity] = body->GetID();
-	//}
-	*/
-
 	/*!*************************************************************************
 	  \brief
 		Rebuilds the physics body list from ECS entities. Removes old bodies,
