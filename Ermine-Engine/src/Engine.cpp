@@ -305,7 +305,7 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	// Example FBX entity
 	//fbxEntity = ECS::GetInstance().CreateEntity();
-	auto model = AssetManager::GetInstance().LoadModel("../Resources/Models/Walking.fbx");
+	//auto model = AssetManager::GetInstance().LoadModel("../Resources/Models/Walking.fbx");
 	//ECS::GetInstance().AddComponent(fbxEntity, Transform(Vec3(2, -0.5f, 0), Quaternion(), Vec3(0.01f, 0.01f, 0.01f)));
 	////ECS::GetInstance().AddComponent(
 	////	fbxEntity,
