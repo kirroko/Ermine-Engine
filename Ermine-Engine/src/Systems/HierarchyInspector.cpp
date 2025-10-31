@@ -26,6 +26,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <EditorGUI.h>
 #include "NavMesh.h"
 #include "Particles.h"
+#include "AnimationGUI.h"
 
 
 #include "xcore/my_properties.h"
@@ -327,6 +328,7 @@ namespace Ermine::editor {
 					p.m_Value.set<Ermine::Vec3>({ v.x, v.y, v.z });
 					xproperty::sprop::setProperty(err, t, p, ctx);
 					
+					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
 					// CRITICAL: Mark entity dirty so hierarchy system updates immediately
 					hierarchySystem->MarkDirty(entity);
 				}
@@ -347,6 +349,7 @@ namespace Ermine::editor {
 					p.m_Value.set<Ermine::Quaternion>(FromEulerDegrees(eulerDeg));
 					xproperty::sprop::setProperty(err, t, p, ctx);
 					
+					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
 					// CRITICAL: Mark entity dirty so hierarchy system updates immediately
 					hierarchySystem->MarkDirty(entity);
 				}
@@ -391,6 +394,7 @@ namespace Ermine::editor {
 			float size[3] = { mesh.primitive.size.x, mesh.primitive.size.y, mesh.primitive.size.z };
 			if (ImGui::DragFloat3("Size", size, 0.1f, 0.01f, 100.f)) {
 				mesh.primitive.size = { size[0], size[1], size[2] };
+				ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
 				mesh.RebuildPrimitive();
 			}
 		}
@@ -947,9 +951,6 @@ namespace Ermine::editor {
 		if (!ComponentHeaderWithRemove<AudioComponent>("Audio", entity))
 			return;
 
-		if (!ImGui::CollapsingHeader("Audio", ImGuiTreeNodeFlags_DefaultOpen))
-			return;
-
 		auto& audio = ECS::GetInstance().GetComponent<AudioComponent>(entity);
 
 		// Collect reflective properties
@@ -1255,21 +1256,12 @@ namespace Ermine::editor {
 			if (ImGui::Button("Resume")) animator->ResumeAnimation();
 			ImGui::SameLine();
 			if (ImGui::Button("Stop")) animator->StopAnimation();
-
-			if (auto current = animator->GetCurrentClip()) {
-				ImGui::Separator();
-				ImGui::Text("Current: %s", current->name.c_str());
-				ImGui::Text("Duration: %.2fs", current->duration / current->ticksPerSecond);
-				ImGui::Text("Ticks: %.2f, TPS: %.2f", current->duration, current->ticksPerSecond);
-			}
+			ImGui::SameLine();
+			bool looping = animator->IsLooping();
+			if (ImGui::Checkbox("Looping", &looping)) animator->IsLooping() = looping;
 		}
 		else
 			ImGui::TextUnformatted("No animation clips found in this model.");
-
-		// Looping toggle (persisted)
-		bool looping = animator->IsLooping();
-		if (ImGui::Checkbox("Looping", &looping))
-			animator->IsLooping() = looping;
 
 		// Reload Animator Button
 		if (ImGui::Button("Reload Animation")) {
@@ -1284,6 +1276,16 @@ namespace Ermine::editor {
 					animComp.m_animator.reset();
 					ImGui::TextUnformatted("No animations found in this model.");
 				}
+			}
+		}
+
+		// Open Animation Editor Button
+		ImGui::SameLine();
+		if (ImGui::Button("Open Editor")) {
+			auto animationWindow = editor::EditorGUI::GetWindow<AnimationEditorImGUI>();
+			if (animationWindow) {
+				animationWindow->SetSelectedEntity(entity);
+				editor::EditorGUI::FocusWindow("Animation Editor");
 			}
 		}
 	}

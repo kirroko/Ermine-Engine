@@ -51,6 +51,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "SceneManager.h"
 #include "FSMEditor.h"
 #include "NavMesh.h"
+#include "AnimationGUI.h"
 #endif
 
 using namespace Ermine;
@@ -312,7 +313,7 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	// Example FBX entity
 	//fbxEntity = ECS::GetInstance().CreateEntity();
-	auto model = AssetManager::GetInstance().LoadModel("../Resources/Models/Walking.fbx");
+	//auto model = AssetManager::GetInstance().LoadModel("../Resources/Models/Walking.fbx");
 	//ECS::GetInstance().AddComponent(fbxEntity, Transform(Vec3(2, -0.5f, 0), Quaternion(), Vec3(0.01f, 0.01f, 0.01f)));
 	////ECS::GetInstance().AddComponent(
 	////	fbxEntity,
@@ -542,8 +543,9 @@ bool engine::Init(GLFWwindow* windowContext)
 	editor::EditorGUI::CreateImGUIWindow<editor::GraphicsDebugGUI>("Graphics Debug"); // TODO: Namespace required?
 	editor::EditorGUI::CreateImGUIWindow<ViewPortGUI>();
 	editor::EditorGUI::CreateImGUIWindow<FSMEditorImGUI>();
-	editor::EditorGUI::CreateImGUIWindow<ImguiUI::AssetBrowser>(); //TODO: Standardize please, do we want namespace ImGui for all window or not
+	editor::EditorGUI::CreateImGUIWindow<AnimationEditorImGUI>();
 	editor::EditorGUI::CreateImGUIWindow<ConsoleGUI>();
+	editor::EditorGUI::CreateImGUIWindow<ImguiUI::AssetBrowser>(); //TODO: Standardize please, do we want namespace ImGui for all window or not
 
 	auto defaultScene = std::make_shared<Scene>("Main Scene");
 	editor::EditorGUI::SetActiveScene(defaultScene);

@@ -36,12 +36,14 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <Jolt/Jolt.h>
 #include <Jolt/Physics/Body/Body.h>
 #include "Guid.h"
+#include "AnimationGUI.h"
 
 #include "xcore/my_properties.h"
 #include "xproperty.h"
 #include "sprop/property_sprop.h"
 
 #include "FSMNode.h"
+#include "AABB.h"
 
 namespace xprop_utils
 {
@@ -208,6 +210,7 @@ namespace Ermine
 			scale_mtx.m11 = scale.y;
 			scale_mtx.m22 = scale.z;
 
+			// Correct multiplication order - Scale -> Rotate -> Translate (SRT)
 			return translation * rotation_mtx * scale_mtx;
 		}
 
@@ -1736,7 +1739,7 @@ namespace Ermine
 		explicit HierarchyComponent(EntityID parentId)
 			: parent(parentId), depth(0), isDirty(true), worldTransformDirty(true)
 		{
-		}
+				}
 
 		template <typename Alloc>
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
@@ -1861,10 +1864,9 @@ namespace Ermine
 				const char* name = in["model"].GetString();
 
 				if (!m_model) {
-					m_model = AssetManager::GetInstance().GetModel("../Resources/Models/" + std::string(name));
+					m_model = AssetManager::GetInstance().LoadModel("../Resources/Models/" + std::string(name));
+					m_model->LoadModel(std::string("../Resources/Models/") + name);
 				}
-
-				m_model->LoadModel(std::string("../Resources/Models/") + name);
 			}
 		}
 
@@ -1880,40 +1882,352 @@ namespace Ermine
 	*************************************************************************/
 	struct AnimationComponent
 	{
-		std::shared_ptr<graphics::Animator> m_animator;
+		std::shared_ptr<graphics::Animator> m_animator;   // Handles animation playback
+		std::shared_ptr<AnimationGraph> m_animationGraph; // Handles animation states and transitions
 
 		AnimationComponent() = default;
-		explicit AnimationComponent(const std::shared_ptr<graphics::Model>& model) : m_animator(std::make_shared<graphics::Animator>(model)) {}
+		explicit AnimationComponent(const std::shared_ptr<graphics::Model>& model)
+			: m_animator(std::make_shared<graphics::Animator>(model)), m_animationGraph(std::make_shared<AnimationGraph>()) {}
 
 		template <typename Alloc>
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
-			const std::string& model_name = m_animator->GetModel()->GetName();
 			out.SetObject();
 
-			rapidjson::Value modelVal;
-			modelVal.SetString(model_name.c_str(),
-				static_cast<rapidjson::SizeType>(model_name.size()),
-				alloc);  // required for strings
+			// -----------------
+			// model
+			// -----------------
+			std::string modelName;
+			if (m_animator && m_animator->GetModel())
+				modelName = m_animator->GetModel()->GetName();
 
-			out.AddMember("model", modelVal, alloc);
+			{
+				rapidjson::Value modelVal;
+				modelVal.SetString(modelName.c_str(),
+					static_cast<rapidjson::SizeType>(modelName.size()),
+					alloc);
+				out.AddMember("model", modelVal, alloc);
+			}
+
+			// -----------------
+			// graph
+			// -----------------
+			rapidjson::Value graphVal(rapidjson::kObjectType);
+
+			if (m_animationGraph)
+			{
+				// basic playback info
+				graphVal.AddMember("playbackSpeed", m_animationGraph->playbackSpeed, alloc);
+				graphVal.AddMember("playing", m_animationGraph->playing, alloc);
+				graphVal.AddMember("currentTime", m_animationGraph->currentTime, alloc);
+
+				// ----- states -----
+				{
+					rapidjson::Value statesArr(rapidjson::kArrayType);
+					for (const auto& sPtr : m_animationGraph->states)
+					{
+						const AnimationStateNode& s = *sPtr;
+						rapidjson::Value js(rapidjson::kObjectType);
+
+						js.AddMember("id", s.id, alloc);
+
+						rapidjson::Value nameVal;
+						nameVal.SetString(s.name.c_str(),
+							static_cast<rapidjson::SizeType>(s.name.size()),
+							alloc);
+						js.AddMember("name", nameVal, alloc);
+
+						rapidjson::Value clipVal;
+						clipVal.SetString(s.clipName.c_str(),
+							static_cast<rapidjson::SizeType>(s.clipName.size()),
+							alloc);
+						js.AddMember("clipName", clipVal, alloc);
+
+						js.AddMember("isStartState", s.isStartState, alloc);
+						js.AddMember("isAttached", s.isAttached, alloc);
+						js.AddMember("speed", s.speed, alloc);
+						js.AddMember("blendWeight", s.blendWeight, alloc);
+
+						// editorPos as [x, y]
+						rapidjson::Value posArr(rapidjson::kArrayType);
+						posArr.PushBack(s.editorPos.x, alloc);
+						posArr.PushBack(s.editorPos.y, alloc);
+						js.AddMember("editorPos", posArr, alloc);
+
+						statesArr.PushBack(js, alloc);
+					}
+					graphVal.AddMember("states", statesArr, alloc);
+				}
+
+				// ----- transitions -----
+				{
+					rapidjson::Value transArr(rapidjson::kArrayType);
+					for (const AnimationTransition& t : m_animationGraph->transitions)
+					{
+						rapidjson::Value jt(rapidjson::kObjectType);
+						jt.AddMember("fromNodeId", t.fromNodeId, alloc);
+						jt.AddMember("toNodeId", t.toNodeId, alloc);
+						jt.AddMember("exitTime", t.exitTime, alloc);
+						jt.AddMember("duration", t.duration, alloc);
+
+						// conditions[]
+						rapidjson::Value condArr(rapidjson::kArrayType);
+						for (const AnimationCondition& c : t.conditions)
+						{
+							rapidjson::Value jc(rapidjson::kObjectType);
+
+							// parameterName
+							{
+								rapidjson::Value pnameVal;
+								pnameVal.SetString(c.parameterName.c_str(),
+									static_cast<rapidjson::SizeType>(c.parameterName.size()),
+									alloc);
+								jc.AddMember("parameterName", pnameVal, alloc);
+							}
+
+							// comparison operator string (==, >, etc.)
+							{
+								rapidjson::Value compVal;
+								compVal.SetString(c.comparison.c_str(),
+									static_cast<rapidjson::SizeType>(c.comparison.size()),
+									alloc);
+								jc.AddMember("comparison", compVal, alloc);
+							}
+
+							jc.AddMember("threshold", c.threshold, alloc);
+							jc.AddMember("boolValue", c.boolValue, alloc);
+
+							condArr.PushBack(jc, alloc);
+						}
+						jt.AddMember("conditions", condArr, alloc);
+
+						transArr.PushBack(jt, alloc);
+					}
+					graphVal.AddMember("transitions", transArr, alloc);
+				}
+
+				// ----- parameters -----
+				{
+					rapidjson::Value paramArr(rapidjson::kArrayType);
+					for (const AnimationParameter& p : m_animationGraph->parameters)
+					{
+						rapidjson::Value jp(rapidjson::kObjectType);
+
+						// name
+						{
+							rapidjson::Value pnameVal;
+							pnameVal.SetString(p.name.c_str(),
+								static_cast<rapidjson::SizeType>(p.name.size()),
+								alloc);
+							jp.AddMember("name", pnameVal, alloc);
+						}
+
+						// enum class Type = int
+						jp.AddMember("type", static_cast<int>(p.type), alloc);
+
+						jp.AddMember("boolValue", p.boolValue, alloc);
+						jp.AddMember("floatValue", p.floatValue, alloc);
+						jp.AddMember("intValue", p.intValue, alloc);
+						jp.AddMember("triggerValue", p.triggerValue, alloc);
+
+						paramArr.PushBack(jp, alloc);
+					}
+					graphVal.AddMember("parameters", paramArr, alloc);
+				}
+			}
+
+			out.AddMember("graph", graphVal, alloc);
 		}
 
+
 		void Deserialize(const rapidjson::Value& in) {
+
 			if (!in.IsObject()) return;
 
-			if (in.HasMember("model") && in["model"].IsString()) {
+			// -------- model --------
+			if (in.HasMember("model") && in["model"].IsString())
+			{
 				std::string modelName = in["model"].GetString();
 
-				// Reload the model from assets
 				auto model = AssetManager::GetInstance().GetModel("../Resources/Models/" + modelName);
-				if (model) {
+				if (model)
+				{
 					const aiScene* scene = model->GetAssimpScene();
-					if (scene && scene->mNumAnimations > 0) {
+					if (scene && scene->mNumAnimations > 0)
+					{
 						m_animator = std::make_shared<graphics::Animator>(model);
 					}
 				}
 			}
+
+			// Ensure graph exists
+			if (!m_animationGraph)
+				m_animationGraph = std::make_shared<AnimationGraph>();
+
+			// Reset runtime data
+			m_animationGraph->states.clear();
+			m_animationGraph->links.clear();
+			m_animationGraph->transitions.clear();
+			m_animationGraph->parameters.clear();
+			m_animationGraph->current.reset();
+			m_animationGraph->currentTime = 0.0f;
+			m_animationGraph->playing = false;
+			m_animationGraph->playbackSpeed = 1.0f;
+
+			// -------- graph --------
+			if (!in.HasMember("graph") || !in["graph"].IsObject())
+				return;
+
+			const rapidjson::Value& g = in["graph"];
+
+			// playback info
+			if (g.HasMember("playbackSpeed") && g["playbackSpeed"].IsNumber())
+				m_animationGraph->playbackSpeed = g["playbackSpeed"].GetFloat();
+
+			if (g.HasMember("playing") && g["playing"].IsBool())
+				m_animationGraph->playing = g["playing"].GetBool();
+
+			if (g.HasMember("currentTime") && g["currentTime"].IsNumber())
+				m_animationGraph->currentTime = g["currentTime"].GetFloat();
+
+			// ----- states -----
+			if (g.HasMember("states") && g["states"].IsArray())
+			{
+				const auto& arr = g["states"];
+				for (rapidjson::SizeType i = 0; i < arr.Size(); ++i)
+				{
+					const auto& js = arr[i];
+					auto s = std::make_shared<AnimationStateNode>();
+
+					if (js.HasMember("id") && js["id"].IsInt())
+						s->id = js["id"].GetInt();
+
+					if (js.HasMember("name") && js["name"].IsString())
+						s->name = js["name"].GetString();
+
+					if (js.HasMember("clipName") && js["clipName"].IsString())
+						s->clipName = js["clipName"].GetString();
+
+					if (js.HasMember("isStartState") && js["isStartState"].IsBool())
+						s->isStartState = js["isStartState"].GetBool();
+
+					if (js.HasMember("isAttached") && js["isAttached"].IsBool())
+						s->isAttached = js["isAttached"].GetBool();
+
+					if (js.HasMember("speed") && js["speed"].IsNumber())
+						s->speed = js["speed"].GetFloat();
+
+					if (js.HasMember("blendWeight") && js["blendWeight"].IsNumber())
+						s->blendWeight = js["blendWeight"].GetFloat();
+
+					if (js.HasMember("editorPos") && js["editorPos"].IsArray() && js["editorPos"].Size() == 2)
+					{
+						s->editorPos.x = js["editorPos"][0].GetFloat();
+						s->editorPos.y = js["editorPos"][1].GetFloat();
+						ImNodes::SetNodeEditorSpacePos(s->id, s->editorPos);
+					}
+					else
+					{
+						s->editorPos = ImVec2{ 100.f, 100.f };
+						ImNodes::SetNodeEditorSpacePos(s->id, s->editorPos);
+					}
+
+					m_animationGraph->states.push_back(s);
+
+					// Pick start state as current
+					if (s->isStartState)
+						m_animationGraph->current = s;
+				}
+			}
+
+			// ----- transitions -----
+			if (g.HasMember("transitions") && g["transitions"].IsArray())
+			{
+				const auto& arr = g["transitions"];
+				for (rapidjson::SizeType i = 0; i < arr.Size(); ++i)
+				{
+					const auto& jt = arr[i];
+					AnimationTransition t{};
+
+					if (jt.HasMember("fromNodeId") && jt["fromNodeId"].IsInt())
+						t.fromNodeId = jt["fromNodeId"].GetInt();
+
+					if (jt.HasMember("toNodeId") && jt["toNodeId"].IsInt())
+						t.toNodeId = jt["toNodeId"].GetInt();
+
+					if (jt.HasMember("exitTime") && jt["exitTime"].IsNumber())
+						t.exitTime = jt["exitTime"].GetFloat();
+
+					if (jt.HasMember("duration") && jt["duration"].IsNumber())
+						t.duration = jt["duration"].GetFloat();
+
+					// conditions[]
+					if (jt.HasMember("conditions") && jt["conditions"].IsArray())
+					{
+						const auto& condArr = jt["conditions"];
+						for (rapidjson::SizeType ci = 0; ci < condArr.Size(); ++ci)
+						{
+							const auto& jc = condArr[ci];
+							AnimationCondition c{};
+
+							if (jc.HasMember("parameterName") && jc["parameterName"].IsString())
+								c.parameterName = jc["parameterName"].GetString();
+
+							if (jc.HasMember("comparison") && jc["comparison"].IsString())
+								c.comparison = jc["comparison"].GetString();
+
+							if (jc.HasMember("threshold") && jc["threshold"].IsNumber())
+								c.threshold = jc["threshold"].GetFloat();
+
+							if (jc.HasMember("boolValue") && jc["boolValue"].IsBool())
+								c.boolValue = jc["boolValue"].GetBool();
+
+							t.conditions.push_back(c);
+						}
+					}
+
+					m_animationGraph->transitions.push_back(t);
+
+					// Rebuild editor link from transition
+					AnimationLink link{};
+					link.id = static_cast<int>(m_animationGraph->links.size()) + 1;
+					link.fromNodeId = t.fromNodeId;
+					link.toNodeId = t.toNodeId;
+					m_animationGraph->links.push_back(link);
+				}
+			}
+
+			// ----- parameters -----
+			if (g.HasMember("parameters") && g["parameters"].IsArray())
+			{
+				const auto& arr = g["parameters"];
+				for (rapidjson::SizeType i = 0; i < arr.Size(); ++i)
+				{
+					const auto& jp = arr[i];
+					AnimationParameter p{};
+
+					if (jp.HasMember("name") && jp["name"].IsString())
+						p.name = jp["name"].GetString();
+
+					if (jp.HasMember("type") && jp["type"].IsInt())
+						p.type = static_cast<AnimationParameter::Type>(jp["type"].GetInt());
+
+					if (jp.HasMember("boolValue") && jp["boolValue"].IsBool())
+						p.boolValue = jp["boolValue"].GetBool();
+
+					if (jp.HasMember("floatValue") && jp["floatValue"].IsNumber())
+						p.floatValue = jp["floatValue"].GetFloat();
+
+					if (jp.HasMember("intValue") && jp["intValue"].IsInt())
+						p.intValue = jp["intValue"].GetInt();
+
+					if (jp.HasMember("triggerValue") && jp["triggerValue"].IsBool())
+						p.triggerValue = jp["triggerValue"].GetBool();
+
+					m_animationGraph->parameters.push_back(p);
+				}
+			}
 		}
+
 
 		//XPROPERTY_DEF(
 		//	"AnimationComponent", AnimationComponent,
@@ -2047,4 +2361,35 @@ namespace Ermine
 		struct Runtime;
 		Runtime* runtime = nullptr;
 	};
-}
+
+	/*!***********************************************************************
+	\brief
+	 AABB component for caching bounding boxes - used for frustum culling optimization
+	*************************************************************************/
+	struct AABBComponent
+	{
+		AABB worldAABB;      // Cached world-space AABB
+		bool isDirty = true; // True if transform changed since last calculation
+
+		AABBComponent() = default;
+		explicit AABBComponent(const AABB& box) : worldAABB(box), isDirty(false) {}
+
+		template<typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
+			out.SetObject();
+			// Don't serialize AABB - it gets recalculated from mesh/transform
+			out.AddMember("isDirty", isDirty, alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in) {
+			// Don't deserialize AABB - force recalculation
+			isDirty = true;
+			(void)in;
+		}
+
+		XPROPERTY_DEF(
+			"AABBComponent", AABBComponent,
+			xproperty::obj_member<"isDirty", &AABBComponent::isDirty>
+		)
+	};
+} // namespace Ermine

@@ -31,6 +31,14 @@ namespace Ermine::scripting
 		MonoMethod* MethodOnDisable = nullptr; // Method to disable the script
 		MonoMethod* MethodOnDestroy = nullptr; // Method to destroy the script
 
+		MonoMethod* MethodOnCollisionEnter = nullptr; // Method to handle collision enter
+		MonoMethod* MethodOnCollisionExit = nullptr; // Method to handle collision exit
+		MonoMethod* MethodOnCollisionStay = nullptr; // Method to handle collision stay
+
+		MonoMethod* MethodOnTriggerEnter = nullptr; // Method to handle trigger enter
+		MonoMethod* MethodOnTriggerExit = nullptr; // Method to handle trigger exit
+		MonoMethod* MethodOnTriggerStay = nullptr; // Method to handle trigger stay
+
 		ScriptClass(const std::string& namespaceName, const std::string& className)
 		{
 			EE_CORE_TRACE("ScriptClass: resolving {0}.{1}", namespaceName, className);
@@ -51,7 +59,7 @@ namespace Ermine::scripting
 			auto get = [&](const char* n, int argc = 0) -> MonoMethod*
 				{
 					MonoMethod* m = mono_class_get_method_from_name(Class, n, argc);
-					if (!m) EE_CORE_WARN("Method {0} not found on or not used {1}.{2}", n, namespaceName, className);
+					if (!m) EE_CORE_TRACE("Method {0} not found on or not used {1}.{2}", n, namespaceName, className);
 					return m;
 				};
 
@@ -62,6 +70,12 @@ namespace Ermine::scripting
 			MethodFixedUpdate = get("FixedUpdate", 0);
 			MethodOnDisable = get("OnDisable", 0);
 			MethodOnDestroy = get("OnDestroy", 0);
+			MethodOnCollisionEnter = get("OnCollisionEnter", 1);
+			MethodOnCollisionExit = get("OnCollisionExit", 1);
+			MethodOnCollisionStay = get("OnCollisionStay", 1);
+			MethodOnTriggerEnter = get("OnTriggerEnter", 1);
+			MethodOnTriggerExit = get("OnTriggerExit", 1);
+			MethodOnTriggerStay = get("OnTriggerStay", 1);
 		}
 
 		MonoObject* Instantiate() const

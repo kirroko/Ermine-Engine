@@ -10,10 +10,10 @@
             -1.0
           ],
           "rotation": [
-            1.0,
             0.0,
             0.0,
-            0.0
+            0.0,
+            1.0
           ],
           "scale": [
             1.0,
@@ -24,7 +24,7 @@
         "ObjectMetaData": {
           "name": "GameObject",
           "tag": "Untagged",
-          "active": true
+          "selfActive": true
         },
         "AudioComponent": {
           "soundName": "",
@@ -35,10 +35,10 @@
           "volume": 0.5,
           "followTransform": true,
           "minDistance": 1.0,
-          "maxDistance": 100.0,
-          "eventParameters": {}
+          "maxDistance": 100.0
         },
-        "HierarchyComponent": {}
+        "HierarchyComponent": {},
+        "GlobalTransform": {}
       }
     },
     {
@@ -51,10 +51,10 @@
             0.0
           ],
           "rotation": [
-            1.0,
             0.0,
             0.0,
-            0.0
+            0.0,
+            1.0
           ],
           "scale": [
             0.009999999776482582,
@@ -65,7 +65,7 @@
         "ObjectMetaData": {
           "name": "Character",
           "tag": "Model",
-          "active": true
+          "selfActive": true
         },
         "Mesh": {
           "kind": "None"
@@ -103,6 +103,10 @@
             {
               "slot": "materialAlbedoMap",
               "path": "../Resources/Textures/Pants_Base_color.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources/Textures/Pants_Base_color.png"
             }
           ]
         },
@@ -112,7 +116,8 @@
         "AnimationComponent": {
           "model": "Walking.fbx"
         },
-        "HierarchyComponent": {}
+        "HierarchyComponent": {},
+        "GlobalTransform": {}
       }
     },
     {
@@ -125,10 +130,10 @@
             0.0
           ],
           "rotation": [
-            1.0,
             0.0,
             0.0,
-            0.0
+            0.0,
+            1.0
           ],
           "scale": [
             100.0,
@@ -139,7 +144,7 @@
         "ObjectMetaData": {
           "name": "GameObject",
           "tag": "Untagged",
-          "active": true
+          "selfActive": true
         },
         "Mesh": {
           "kind": "Primitive",
@@ -161,10 +166,15 @@
             {
               "slot": "materialAlbedoMap",
               "path": "../Resources/Textures/greybox_light_grid.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources/Textures/greybox_light_grid.png"
             }
           ]
         },
-        "HierarchyComponent": {}
+        "HierarchyComponent": {},
+        "GlobalTransform": {}
       }
     },
     {
@@ -177,10 +187,10 @@
             2.0
           ],
           "rotation": [
-            -0.30000001192092898,
             0.8999999761581421,
             0.20000000298023225,
-            0.10000000149011612
+            0.10000000149011612,
+            -0.30000001192092898
           ],
           "scale": [
             1.0,
@@ -195,15 +205,18 @@
             1.0
           ],
           "intensity": 0.800000011920929,
-          "type": 1,
-          "castsShadows": true
+          "castsShadows": true,
+          "innerAngle": -1.0,
+          "outerAngle": -1.0,
+          "radius": 3.0
         },
         "ObjectMetaData": {
           "name": "MainLight",
           "tag": "Light",
-          "active": true
+          "selfActive": true
         },
-        "HierarchyComponent": {}
+        "HierarchyComponent": {},
+        "GlobalTransform": {}
       }
     },
     {
@@ -217,9 +230,9 @@
           ],
           "rotation": [
             0.7070000171661377,
-            0.7070000171661377,
             0.0,
-            0.0
+            0.0,
+            0.7070000171661377
           ],
           "scale": [
             1.0,
@@ -234,13 +247,15 @@
             0.6000000238418579
           ],
           "intensity": 1.0,
-          "type": 2,
-          "castsShadows": true
+          "castsShadows": true,
+          "innerAngle": -1.0,
+          "outerAngle": -1.0,
+          "radius": 3.0
         },
         "ObjectMetaData": {
           "name": "Red",
           "tag": "Light",
-          "active": true
+          "selfActive": true
         },
         "Mesh": {
           "kind": "Primitive",
@@ -284,7 +299,8 @@
           },
           "textures": []
         },
-        "HierarchyComponent": {}
+        "HierarchyComponent": {},
+        "GlobalTransform": {}
       }
     },
     {
@@ -297,10 +313,10 @@
             0.0
           ],
           "rotation": [
-            1.0,
             0.0,
             0.0,
-            0.0
+            0.0,
+            1.0
           ],
           "scale": [
             1.0,
@@ -315,13 +331,15 @@
             0.0
           ],
           "intensity": 0.5,
-          "type": 0,
-          "castsShadows": false
+          "castsShadows": false,
+          "innerAngle": -1.0,
+          "outerAngle": -1.0,
+          "radius": 3.0
         },
         "ObjectMetaData": {
           "name": "LightRed",
           "tag": "Light",
-          "active": true
+          "selfActive": true
         },
         "Mesh": {
           "kind": "Primitive",
@@ -365,7 +383,8 @@
           },
           "textures": []
         },
-        "HierarchyComponent": {}
+        "HierarchyComponent": {},
+        "GlobalTransform": {}
       }
     },
     {
@@ -378,10 +397,10 @@
             0.0
           ],
           "rotation": [
-            1.0,
             0.0,
             0.0,
-            0.0
+            0.0,
+            1.0
           ],
           "scale": [
             1.0,
@@ -396,13 +415,15 @@
             1.0
           ],
           "intensity": 0.5,
-          "type": 0,
-          "castsShadows": false
+          "castsShadows": false,
+          "innerAngle": -1.0,
+          "outerAngle": -1.0,
+          "radius": 3.0
         },
         "ObjectMetaData": {
           "name": "LightBlue",
           "tag": "Light",
-          "active": true
+          "selfActive": true
         },
         "Mesh": {
           "kind": "Primitive",
@@ -446,7 +467,8 @@
           },
           "textures": []
         },
-        "HierarchyComponent": {}
+        "HierarchyComponent": {},
+        "GlobalTransform": {}
       }
     },
     {
@@ -459,10 +481,10 @@
             -3.0
           ],
           "rotation": [
-            1.0,
             0.0,
             0.0,
-            0.0
+            0.0,
+            1.0
           ],
           "scale": [
             1.0,
@@ -477,13 +499,15 @@
             0.0
           ],
           "intensity": 0.5,
-          "type": 0,
-          "castsShadows": false
+          "castsShadows": false,
+          "innerAngle": -1.0,
+          "outerAngle": -1.0,
+          "radius": 3.0
         },
         "ObjectMetaData": {
           "name": "LightGreen",
           "tag": "Light",
-          "active": true
+          "selfActive": true
         },
         "Mesh": {
           "kind": "Primitive",
@@ -527,7 +551,8 @@
           },
           "textures": []
         },
-        "HierarchyComponent": {}
+        "HierarchyComponent": {},
+        "GlobalTransform": {}
       }
     },
     {
@@ -540,10 +565,10 @@
             -1.0
           ],
           "rotation": [
-            1.0,
             0.0,
             0.0,
-            0.0
+            0.0,
+            1.0
           ],
           "scale": [
             1.0,
@@ -554,7 +579,7 @@
         "ObjectMetaData": {
           "name": "GlassSphere",
           "tag": "Transparent",
-          "active": true
+          "selfActive": true
         },
         "Mesh": {
           "kind": "Primitive",
@@ -598,7 +623,8 @@
           },
           "textures": []
         },
-        "HierarchyComponent": {}
+        "HierarchyComponent": {},
+        "GlobalTransform": {}
       }
     },
     {
@@ -611,10 +637,10 @@
             -1.0
           ],
           "rotation": [
-            1.0,
             0.0,
             0.0,
-            0.0
+            0.0,
+            1.0
           ],
           "scale": [
             1.0,
@@ -625,7 +651,7 @@
         "ObjectMetaData": {
           "name": "ColouredGlass",
           "tag": "Transparent",
-          "active": true
+          "selfActive": true
         },
         "Mesh": {
           "kind": "Primitive",
@@ -669,7 +695,8 @@
           },
           "textures": []
         },
-        "HierarchyComponent": {}
+        "HierarchyComponent": {},
+        "GlobalTransform": {}
       }
     },
     {
@@ -682,10 +709,10 @@
             -1.0
           ],
           "rotation": [
-            1.0,
             0.0,
             0.0,
-            0.0
+            0.0,
+            1.0
           ],
           "scale": [
             1.0,
@@ -696,7 +723,7 @@
         "ObjectMetaData": {
           "name": "MetalCube",
           "tag": "Metal",
-          "active": true
+          "selfActive": true
         },
         "Mesh": {
           "kind": "Primitive",
@@ -742,10 +769,15 @@
             {
               "slot": "materialAlbedoMap",
               "path": "../Resources/Textures/greybox_light_grid.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources/Textures/greybox_light_grid.png"
             }
           ]
         },
-        "HierarchyComponent": {}
+        "HierarchyComponent": {},
+        "GlobalTransform": {}
       }
     },
     {
@@ -758,10 +790,10 @@
             -1.0
           ],
           "rotation": [
-            1.0,
             0.0,
             0.0,
-            0.0
+            0.0,
+            1.0
           ],
           "scale": [
             1.0,
@@ -772,7 +804,7 @@
         "ObjectMetaData": {
           "name": "redCube",
           "tag": "Red",
-          "active": true
+          "selfActive": true
         },
         "Mesh": {
           "kind": "Primitive",
@@ -818,10 +850,15 @@
             {
               "slot": "materialAlbedoMap",
               "path": "../Resources/Textures/greybox_light_grid.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources/Textures/greybox_light_grid.png"
             }
           ]
         },
-        "HierarchyComponent": {}
+        "HierarchyComponent": {},
+        "GlobalTransform": {}
       }
     }
   ]

@@ -69,6 +69,9 @@
     <ClInclude Include="include\AnimationClip.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\AnimationGUI.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\AnimationManager.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -273,6 +276,9 @@
     <ClInclude Include="include\shadow_config.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\AABB.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\AssetBrowser\AssetBrowser.cpp">
@@ -349,6 +355,9 @@
     </ClCompile>
     <ClCompile Include="src\Graphics\VertexBuffer.cpp">
       <Filter>src\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ImGUI\AnimationGUI.cpp">
+      <Filter>src\ImGUI</Filter>
     </ClCompile>
     <ClCompile Include="src\ImGUI\AudioIMGUI.cpp">
       <Filter>src\ImGUI</Filter>

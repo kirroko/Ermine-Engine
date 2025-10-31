@@ -48,7 +48,7 @@ namespace Ermine::graphics
 				continue;
 
 			// Update animator
-			animComp.m_animator->Update(deltaTime);
+			animComp.m_animator->Update(deltaTime, entity);
 
 			// Ensure bone transforms vector is sized correctly
 			const auto& finalBones = animComp.m_animator->GetFinalBoneMatrices();

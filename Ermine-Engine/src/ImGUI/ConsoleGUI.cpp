@@ -365,7 +365,7 @@ void ConsoleGUI::Update()
             ImGui::SameLine();
 
             // Search
-            const float searchWidth = 240.0f;
+            constexpr float searchWidth = 240.0f;
             ImGui::SetNextItemWidth(searchWidth);
             if (m_focusSearch) { ImGui::SetKeyboardFocusHere(); m_focusSearch = false; }
             m_filter.Draw("Search");
@@ -389,7 +389,7 @@ void ConsoleGUI::Update()
         buildDisplayList(displayIndices, collapsedCounts);
 
         // Main list region
-        const float detailsHeight = 120.0f;
+        constexpr float detailsHeight = 120.0f;
         ImVec2 avail = ImGui::GetContentRegionAvail();
         ImGui::BeginChild("ConsoleListRegion", ImVec2(0, avail.y - detailsHeight), false,
             ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar /*| ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse*/);

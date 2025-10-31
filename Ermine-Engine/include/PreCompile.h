@@ -29,6 +29,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <memory>
 #include <bitset>
 #include <set>
+#include <tuple>
 
 #include <filesystem>
 #include <typeindex>
