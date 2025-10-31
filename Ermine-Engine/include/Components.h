@@ -82,6 +82,18 @@ namespace xprop_utils
 				out.AddMember(keyVal, Vec3ToJson(p.m_Value.get<Ermine::Vec3>(), alloc), alloc);
 			else if (guid == xproperty::settings::var_type<Ermine::Quaternion>::guid_v)
 				out.AddMember(keyVal, QuatToJson(p.m_Value.get<Ermine::Quaternion>(), alloc), alloc);
+			else if (guid == xproperty::settings::var_type<Ermine::Guid>::guid_v)
+			{
+				const Ermine::Guid& g = p.m_Value.get<Ermine::Guid>();
+				std::string s = g.ToString(); // You already use Guid::ToString() in IDComponent
+
+				rapidjson::Value val;
+				val.SetString(s.c_str(),
+					static_cast<rapidjson::SizeType>(s.size()),
+					alloc);
+
+				out.AddMember(keyVal, val, alloc);
+			}
 		}
 	}
 
@@ -114,6 +126,11 @@ namespace xprop_utils
 				p.m_Value.set<Ermine::Vec3>(Ermine::Vec3(v[0].GetFloat(), v[1].GetFloat(), v[2].GetFloat()));
 			else if (guid == xproperty::settings::var_type<Ermine::Quaternion>::guid_v && v.IsArray() && v.Size() == 4)
 				p.m_Value.set<Ermine::Quaternion>(Ermine::Quaternion(v[0].GetFloat(), v[1].GetFloat(), v[2].GetFloat(), v[3].GetFloat()));
+			else if (guid == xproperty::settings::var_type<Ermine::Guid>::guid_v && v.IsString())
+			{
+				Ermine::Guid g = Ermine::Guid::FromString(v.GetString());
+				p.m_Value.set<Ermine::Guid>(g);
+			}
 
 			xproperty::sprop::setProperty(err, obj, p, ctx);
 		}
@@ -1733,6 +1750,10 @@ namespace Ermine
 		Mtx44 worldTransform{ 1.0f };             // Cached world transform
 		bool worldTransformDirty = true;        // Separate flag for world transform cache
 
+		// --- serialized form ---
+		Guid parentGuid;                             // guid of my parent (Nil if root)
+		std::vector<Guid> childrenGuids;            // guids of my direct children
+
 		// Constructors
 		HierarchyComponent() = default;
 
@@ -1742,13 +1763,103 @@ namespace Ermine
 				}
 
 		template <typename Alloc>
-		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const
+		{
 			out.SetObject();
-			UNREFERENCED_PARAMETER(alloc);
+
+			// parent
+			{
+				rapidjson::Value parentVal;
+				parentVal.SetUint64(static_cast<uint64_t>(parent));
+				out.AddMember(
+					rapidjson::Value("parent", alloc),
+					parentVal,
+					alloc
+				);
+			}
+
+			// children
+			{
+				rapidjson::Value arr(rapidjson::kArrayType);
+				arr.Reserve(static_cast<rapidjson::SizeType>(children.size()), alloc);
+
+				for (EntityID cid : children)
+				{
+					rapidjson::Value childVal;
+					childVal.SetUint64(static_cast<uint64_t>(cid));
+					arr.PushBack(childVal, alloc);
+				}
+
+				out.AddMember(
+					rapidjson::Value("children", alloc),
+					arr,
+					alloc
+				);
+			}
+
+			// depth
+			{
+				rapidjson::Value depthVal;
+				depthVal.SetInt(depth);
+				out.AddMember(
+					rapidjson::Value("depth", alloc),
+					depthVal,
+					alloc
+				);
+			}
 		}
-		void Deserialize(const rapidjson::Value& in) {
-			(void)in;
+
+		void Deserialize(const rapidjson::Value& in)
+		{
+			if (!in.IsObject()) return;
+
+			// parent
+			if (in.HasMember("parent") && in["parent"].IsUint64())
+			{
+				parent = static_cast<EntityID>(in["parent"].GetUint64());
+			}
+			else
+			{
+				parent = INVALID_PARENT;
+			}
+
+			// children
+			children.clear();
+			if (in.HasMember("children") && in["children"].IsArray())
+			{
+				const auto& arr = in["children"].GetArray();
+				children.reserve(arr.Size());
+				for (rapidjson::SizeType i = 0; i < arr.Size(); ++i)
+				{
+					if (arr[i].IsUint64())
+					{
+						children.push_back(
+							static_cast<EntityID>(arr[i].GetUint64())
+						);
+					}
+				}
+			}
+
+			// depth
+			if (in.HasMember("depth") && in["depth"].IsInt())
+			{
+				depth = in["depth"].GetInt();
+			}
+			else
+			{
+				depth = 0;
+			}
+
+			// housekeeping so world transforms get recomputed
+			isDirty = true;
+			worldTransform = Mtx44{ 1.0f };
+			worldTransformDirty = true;
 		}
+
+		XPROPERTY_DEF(
+			"HierarchyComponent", HierarchyComponent,
+			xproperty::obj_member<"depth", &HierarchyComponent::depth>
+		);
 	};
 
 	/*!***********************************************************************
