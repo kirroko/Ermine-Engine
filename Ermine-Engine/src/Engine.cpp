@@ -191,37 +191,18 @@ bool engine::Init(GLFWwindow* windowContext)
 	EE_AUTO_REGISTER_COMPONENT(Transform, "Transform")
 	EE_AUTO_REGISTER_COMPONENT(Rigidbody3D, "Rigidbody3D")
 	EE_AUTO_REGISTER_COMPONENT(Mesh, "Mesh")
-	//EE_AUTO_REGISTER_COMPONENT(Material, "Material")  // Registered manually below with custom clone
-	//EE_AUTO_REGISTER_COMPONENT(ObjectMetaData, "ObjectMetaData")  // Registered manually below with custom clone
+	EE_AUTO_REGISTER_COMPONENT(Material, "Material")
+	EE_AUTO_REGISTER_COMPONENT(ObjectMetaData, "ObjectMetaData")
 	EE_AUTO_REGISTER_COMPONENT(Light, "Light")
-	//EE_AUTO_REGISTER_COMPONENT(AudioComponent, "AudioComponent")  // Registered manually below with custom clone
+	EE_AUTO_REGISTER_COMPONENT(AudioComponent, "AudioComponent") 
 	EE_AUTO_REGISTER_COMPONENT(GlobalAudioComponent, "GlobalAudioComponent")
-	//EE_AUTO_REGISTER_COMPONENT(PhysicComponent, "PhysicComponent")  // Registered manually below with custom clone
+	EE_AUTO_REGISTER_COMPONENT(PhysicComponent, "PhysicComponent")
 	EE_AUTO_REGISTER_COMPONENT(ModelComponent, "ModelComponent")
 	EE_AUTO_REGISTER_COMPONENT(AnimationComponent, "AnimationComponent")
-	//EE_AUTO_REGISTER_COMPONENT(HierarchyComponent, "HierarchyComponent");  // Registered manually below with custom clone
+	EE_AUTO_REGISTER_COMPONENT(HierarchyComponent, "HierarchyComponent"); 
 	EE_AUTO_REGISTER_COMPONENT(StateMachine, "StateMachine");
 	EE_AUTO_REGISTER_COMPONENT(GlobalTransform, "GlobalTransform")
 	EE_AUTO_REGISTER_COMPONENT(ParticleEmitter, "ParticleEmitter");
-
-	// Special case for ObjectMetaData with Unity-style naming
-	ECS::GetInstance().RegisterComponent<ObjectMetaData>("ObjectMetaData",
-		[](ComponentManager& cm, EntityID src, EntityID dst)
-		{
-			if (!cm.HasComponent<ObjectMetaData>(src)) return;
-			auto& srcMeta = cm.GetComponent<ObjectMetaData>(src);
-			
-			// Generate Unity-style duplicate name
-			std::string newName = GenerateUnityStyleName(srcMeta.name);
-			
-			// Copy metadata with new name
-			ObjectMetaData newMeta;
-			newMeta.name = newName;
-			newMeta.tag = srcMeta.tag;
-			newMeta.selfActive = srcMeta.selfActive;
-			
-			cm.AddComponent<ObjectMetaData>(dst, newMeta);
-		});
 
 	// Special case for Script component, need to copy over the class name
 	ECS::GetInstance().RegisterComponent<Script>("Script",
@@ -239,112 +220,6 @@ bool engine::Init(GLFWwindow* windowContext)
 			auto g = Guid::New();
 			cm.AddComponent<IDComponent>(dst, IDComponent{ g });
 			ECS::GetInstance().GetGuidRegistry().Register(dst, g);
-		});
-
-	// Special case for HierarchyComponent - Unity behavior: don't clone parent/children
-	ECS::GetInstance().RegisterComponent<HierarchyComponent>("HierarchyComponent",
-		[](ComponentManager& cm, EntityID src, EntityID dst)
-		{
-			if (!cm.HasComponent<HierarchyComponent>(src)) return;
-			
-			// Create fresh hierarchy component - Unity doesn't clone parent/children
-			HierarchyComponent newHierarchy;
-			newHierarchy.parent = 0; // Will be set by CloneEntity if needed
-			newHierarchy.children.clear(); // Don't clone children
-			newHierarchy.depth = 0;
-			newHierarchy.isDirty = true;
-			newHierarchy.worldTransformDirty = true;
-			
-			cm.AddComponent<HierarchyComponent>(dst, newHierarchy);
-		});
-
-	// Special case for Material - deep copy the material instance
-	ECS::GetInstance().RegisterComponent<Material>("Material",
-		[](ComponentManager& cm, EntityID src, EntityID dst)
-		{
-			if (!cm.HasComponent<Material>(src)) return;
-			auto& srcMaterial = cm.GetComponent<Material>(src);
-			
-			// Create a new material instance (deep copy)
-			if (srcMaterial.m_material)
-			{
-				auto newMaterialInstance = std::make_shared<graphics::Material>(*srcMaterial.m_material);
-				Material newMatComp(newMaterialInstance);
-				
-				// Copy authoring metadata
-				newMatComp.materialTemplate = srcMaterial.materialTemplate;
-				newMatComp.hasAlbedo = srcMaterial.hasAlbedo;
-				newMatComp.cacheAlbedo = srcMaterial.cacheAlbedo;
-				newMatComp.hasRough = srcMaterial.hasRough;
-				newMatComp.cacheRoughness = srcMaterial.cacheRoughness;
-				newMatComp.hasMetal = srcMaterial.hasMetal;
-				newMatComp.cacheMetallic = srcMaterial.cacheMetallic;
-				newMatComp.hasEmiss = srcMaterial.hasEmiss;
-				newMatComp.cacheEmissive = srcMaterial.cacheEmissive;
-				newMatComp.cacheEmissiveIntensity = srcMaterial.cacheEmissiveIntensity;
-				
-				cm.AddComponent<Material>(dst, newMatComp);
-			}
-			else
-			{
-				// No material to copy
-				cm.AddComponent<Material>(dst, Material{});
-			}
-		});
-
-	// Special case for PhysicComponent - create new physics body for clone
-	ECS::GetInstance().RegisterComponent<PhysicComponent>("PhysicComponent",
-		[](ComponentManager& cm, EntityID src, EntityID dst)
-		{
-			if (!cm.HasComponent<PhysicComponent>(src)) return;
-			auto& srcPhysics = cm.GetComponent<PhysicComponent>(src);
-			
-			// Create new physics component with same properties
-			PhysicComponent newPhysics;
-			newPhysics.bodyType = srcPhysics.bodyType;
-			newPhysics.motionType = srcPhysics.motionType;
-			newPhysics.mass = srcPhysics.mass;
-			newPhysics.shapeType = srcPhysics.shapeType;
-			newPhysics.customMeshVertices = srcPhysics.customMeshVertices;
-			newPhysics.shapeRef = srcPhysics.shapeRef; // Share shape (immutable)
-			
-			// DON'T copy bodyID or body pointer - they'll be created by Physics::UpdatePhysicList()
-			newPhysics.bodyID = JPH::BodyID(); // Default invalid ID
-			newPhysics.body = nullptr;
-			
-			cm.AddComponent<PhysicComponent>(dst, newPhysics);
-			
-			// Note: Physics::UpdatePhysicList() will be called in CloneEntity() 
-			// to actually create the new physics body
-		});
-
-	// Special case for AudioComponent - reset runtime state for clone
-	ECS::GetInstance().RegisterComponent<AudioComponent>("AudioComponent",
-		[](ComponentManager& cm, EntityID src, EntityID dst)
-		{
-			if (!cm.HasComponent<AudioComponent>(src)) return;
-			auto& srcAudio = cm.GetComponent<AudioComponent>(src);
-			
-			// Copy audio properties but reset runtime state
-			AudioComponent newAudio;
-			newAudio.soundName = srcAudio.soundName;
-			newAudio.eventName = srcAudio.eventName;
-			newAudio.is3D = srcAudio.is3D;
-			newAudio.isLooping = srcAudio.isLooping;
-			newAudio.isStreaming = srcAudio.isStreaming;
-			newAudio.volume = srcAudio.volume;
-			newAudio.followTransform = srcAudio.followTransform;
-			newAudio.minDistance = srcAudio.minDistance;
-			newAudio.maxDistance = srcAudio.maxDistance;
-			newAudio.eventParameters = srcAudio.eventParameters;
-			
-			// Reset runtime state - clone should NOT auto-play
-			newAudio.channelId = -1;
-			newAudio.isPlaying = false;
-			newAudio.shouldPlay = false;
-			newAudio.shouldStop = false;
-			
-			cm.AddComponent<AudioComponent>(dst, newAudio);
 		});
 
 	// Register all systems
