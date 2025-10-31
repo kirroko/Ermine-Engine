@@ -66,12 +66,34 @@ namespace Ermine::graphics {
             glDeleteBuffers(1, &m_IndirectBuffer.bufferID);
             m_IndirectBuffer.bufferID = 0;
         }
+
+        // Cleanup VBO and VAO resources
+        if (m_VertexVBO != 0) {
+            glDeleteBuffers(1, &m_VertexVBO);
+            m_VertexVBO = 0;
+        }
+        if (m_StandardVAO != 0) {
+            glDeleteVertexArrays(1, &m_StandardVAO);
+            m_StandardVAO = 0;
+        }
+        if (m_SkinnedVBO != 0) {
+            glDeleteBuffers(1, &m_SkinnedVBO);
+            m_SkinnedVBO = 0;
+        }
+        if (m_SkinnedVAO != 0) {
+            glDeleteVertexArrays(1, &m_SkinnedVAO);
+            m_SkinnedVAO = 0;
+        }
     }
 
     void MeshManager::Initialize()
     {
         // Create GPU buffers (SSBOs)
         CreateBuffers();
+
+        // Setup VAOs with attribute bindings
+        SetupStandardVAO();
+        SetupSkinnedVAO();
 
         // Initialize persistent mapped buffer for DrawInfo (max 10000 draws)
         constexpr size_t MAX_DRAW_CALLS = 10000;
@@ -87,71 +109,6 @@ namespace Ermine::graphics {
             EE_CORE_ERROR("Failed to initialize skeletal SSBO");
         }
 
-        /*
-
-        // Setup standard vertex VAO
-        glBindVertexArray(m_VertexVAO);
-        glBindBuffer(GL_ARRAY_BUFFER, m_VertexVBO);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_VertexEBO);
-
-        // Position attribute (location 0)
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
-                             (void*)offsetof(Vertex, position));
-
-        // Normal attribute (location 1)
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
-                             (void*)offsetof(Vertex, normal));
-
-        // TexCoord attribute (location 2)
-        glEnableVertexAttribArray(2);
-        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex),
-                             (void*)offsetof(Vertex, texCoord));
-
-        // Tangent attribute (location 3)
-        glEnableVertexAttribArray(3);
-        glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
-                             (void*)offsetof(Vertex, tangent));
-
-        // Setup skinned vertex VAO
-        glBindVertexArray(m_SkinnedVertexVAO);
-        glBindBuffer(GL_ARRAY_BUFFER, m_SkinnedVertexVBO);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_SkinnedVertexEBO);
-
-        // Position attribute (location 0)
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(SkinnedVertex),
-                             (void*)offsetof(SkinnedVertex, position));
-
-        // Normal attribute (location 1)
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(SkinnedVertex),
-                             (void*)offsetof(SkinnedVertex, normal));
-
-        // TexCoord attribute (location 2)
-        glEnableVertexAttribArray(2);
-        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(SkinnedVertex),
-                             (void*)offsetof(SkinnedVertex, texCoord));
-
-        // Tangent attribute (location 3)
-        glEnableVertexAttribArray(3);
-        glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(SkinnedVertex),
-                             (void*)offsetof(SkinnedVertex, tangent));
-
-        // BoneIDs attribute (location 4)
-        glEnableVertexAttribArray(4);
-        glVertexAttribIPointer(4, 4, GL_INT, sizeof(SkinnedVertex),
-                              (void*)offsetof(SkinnedVertex, boneIDs));
-
-        // BoneWeights attribute (location 5)
-        glEnableVertexAttribArray(5);
-        glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(SkinnedVertex),
-                             (void*)offsetof(SkinnedVertex, boneWeights));
-
-        glBindVertexArray(0);
-        */
-
         EE_CORE_INFO("MeshManager: Initialized");
     }
 
@@ -166,6 +123,24 @@ namespace Ermine::graphics {
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
         EE_CORE_INFO("MeshManager: Created Vertex SSBO at binding {}", VERTEX_SSBO_BINDING);
+
+        // Create Vertex VBO for standard vertices (64 bytes each)
+        glGenBuffers(1, &m_VertexVBO);
+        glBindBuffer(GL_ARRAY_BUFFER, m_VertexVBO);
+        // Allocate empty buffer - will be filled in UploadAndBuild()
+        glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_STATIC_DRAW);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+        EE_CORE_INFO("MeshManager: Created Vertex VBO (standard vertices)");
+
+        // Create Skinned VBO for skinned vertices (96 bytes each)
+        glGenBuffers(1, &m_SkinnedVBO);
+        glBindBuffer(GL_ARRAY_BUFFER, m_SkinnedVBO);
+        // Allocate empty buffer - will be filled in UploadAndBuild()
+        glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_STATIC_DRAW);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+        EE_CORE_INFO("MeshManager: Created Skinned VBO (skinned vertices)");
 
         // Create Index SSBO (Binding 1)
         glGenBuffers(1, &m_IndexSSBO);
@@ -206,6 +181,99 @@ namespace Ermine::graphics {
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
         EE_CORE_INFO("MeshManager: Created Skinned Vertex SSBO at binding {}", SKINNED_VERTEX_SSBO_BINDING);
+    }
+
+    void MeshManager::SetupStandardVAO()
+    {
+        // Create Standard VAO
+        glGenVertexArrays(1, &m_StandardVAO);
+        glBindVertexArray(m_StandardVAO);
+
+        // Bind vertex buffer (VBO)
+        glBindBuffer(GL_ARRAY_BUFFER, m_VertexVBO);
+
+        // Bind index buffer (still using SSBO for indices)
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_IndexSSBO);
+
+        // Position attribute (location 0)
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
+                             (void*)offsetof(Vertex, position));
+
+        // Normal attribute (location 1)
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
+                             (void*)offsetof(Vertex, normal));
+
+        // TexCoord attribute (location 2)
+        glEnableVertexAttribArray(2);
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex),
+                             (void*)offsetof(Vertex, texCoord));
+
+        // Tangent attribute (location 3)
+        glEnableVertexAttribArray(3);
+        glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
+                             (void*)offsetof(Vertex, tangent));
+
+        EE_CORE_INFO("MeshManager: Configured Standard VAO (locations 0-3) - NOT USED YET");
+
+        // CRITICAL: Unbind array buffer to avoid VAO 0 corruption, but DON'T unbind element buffer!
+        // Element buffer binding is VAO state - unbinding it here would remove it from the VAO!
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+        // Unbind VAO (element buffer remains bound to the VAO)
+        glBindVertexArray(0);
+    }
+
+    void MeshManager::SetupSkinnedVAO()
+    {
+        // Create Skinned VAO
+        glGenVertexArrays(1, &m_SkinnedVAO);
+        glBindVertexArray(m_SkinnedVAO);
+
+        // Bind skinned vertex buffer (VBO)
+        glBindBuffer(GL_ARRAY_BUFFER, m_SkinnedVBO);
+
+        // Bind index buffer (still using SSBO for indices)
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_IndexSSBO);
+
+        // Position attribute (location 0) - offset 0
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(SkinnedVertex),
+                             (void*)offsetof(SkinnedVertex, position));
+
+        // Normal attribute (location 1) - offset 16
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(SkinnedVertex),
+                             (void*)offsetof(SkinnedVertex, normal));
+
+        // TexCoord attribute (location 2) - offset 32
+        glEnableVertexAttribArray(2);
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(SkinnedVertex),
+                             (void*)offsetof(SkinnedVertex, texCoord));
+
+        // Tangent attribute (location 3) - offset 48
+        glEnableVertexAttribArray(3);
+        glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(SkinnedVertex),
+                             (void*)offsetof(SkinnedVertex, tangent));
+
+        // BoneIDs attribute (location 4) - offset 64 (ivec4)
+        glEnableVertexAttribArray(4);
+        glVertexAttribIPointer(4, 4, GL_INT, sizeof(SkinnedVertex),
+                              (void*)offsetof(SkinnedVertex, boneIDs));
+
+        // BoneWeights attribute (location 5) - offset 80 (vec4)
+        glEnableVertexAttribArray(5);
+        glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(SkinnedVertex),
+                             (void*)offsetof(SkinnedVertex, boneWeights));
+
+        EE_CORE_INFO("MeshManager: Configured Skinned VAO (locations 0-5)");
+
+        // CRITICAL: Unbind array buffer to avoid VAO 0 corruption, but DON'T unbind element buffer!
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+        // Unbind VAO (element buffer remains bound to the VAO)
+        glBindVertexArray(0);
     }
 
     MeshHandle MeshManager::RegisterMesh(const std::vector<Vertex>& vertices,
@@ -317,6 +385,22 @@ namespace Ermine::graphics {
 
             EE_CORE_INFO("MeshManager: Uploaded {} vertices ({} bytes, {} per vertex) to Vertex SSBO",
                          m_StagedVertices.size(), vertexBufferSize, sizeof(Vertex));
+
+            // NEW: Also upload to VBO (for testing incremental migration)
+            glBindBuffer(GL_ARRAY_BUFFER, m_VertexVBO);
+            glBufferData(GL_ARRAY_BUFFER,
+                        vertexBufferSize,
+                        m_StagedVertices.data(),
+                        GL_STATIC_DRAW);
+
+            // DIAGNOSTIC: Verify VBO has data
+            GLint vboSize = 0;
+            glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &vboSize);
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+            EE_CORE_INFO("MeshManager: Uploaded {} vertices ({} bytes) to Vertex VBO (ID: {})",
+                         m_StagedVertices.size(), vertexBufferSize, m_VertexVBO);
+            EE_CORE_INFO("MeshManager: VBO size verified: {} bytes", vboSize);
         }
 
         // Upload Index SSBO data
@@ -349,6 +433,22 @@ namespace Ermine::graphics {
 
             EE_CORE_INFO("MeshManager: Uploaded {} skinned vertices ({} bytes, {} per vertex) to Skinned Vertex SSBO",
                          m_StagedSkinnedVertices.size(), skinnedVertexBufferSize, sizeof(SkinnedVertex));
+
+            // Also upload to Skinned VBO
+            glBindBuffer(GL_ARRAY_BUFFER, m_SkinnedVBO);
+            glBufferData(GL_ARRAY_BUFFER,
+                        skinnedVertexBufferSize,
+                        m_StagedSkinnedVertices.data(),
+                        GL_STATIC_DRAW);
+
+            // Verify SkinnedVBO has data
+            GLint skinnedVboSize = 0;
+            glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &skinnedVboSize);
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+            EE_CORE_INFO("MeshManager: Uploaded {} skinned vertices ({} bytes) to Skinned VBO (ID: {})",
+                         m_StagedSkinnedVertices.size(), skinnedVertexBufferSize, m_SkinnedVBO);
+            EE_CORE_INFO("MeshManager: Skinned VBO size verified: {} bytes", skinnedVboSize);
 
             // Debug: Log first skinned vertex to verify data
             if (!m_StagedSkinnedVertices.empty()) {
@@ -399,6 +499,101 @@ namespace Ermine::graphics {
         m_IndirectBuffer.commandCount = 0;
         m_IndirectBuffer.bufferSize = 0;
         m_IndirectBuffer.MarkClean();
+    }
+
+    void MeshManager::SetupShadowVAOs(GLuint preSkinnedBuffer)
+    {
+        // ==================== STANDARD SHADOW VAO ====================
+        // Create shadow VAO for standard (non-skinned) meshes
+        glGenVertexArrays(1, &m_StandardShadowVAO);
+        glBindVertexArray(m_StandardShadowVAO);
+
+        // Bind standard vertex buffer for attributes 0-3
+        glBindBuffer(GL_ARRAY_BUFFER, m_VertexVBO);
+
+        // Bind index buffer
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_IndexSSBO);
+
+        // Position attribute (location 0)
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
+                             (void*)offsetof(Vertex, position));
+
+        // Normal attribute (location 1)
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
+                             (void*)offsetof(Vertex, normal));
+
+        // TexCoord attribute (location 2)
+        glEnableVertexAttribArray(2);
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex),
+                             (void*)offsetof(Vertex, texCoord));
+
+        // Tangent attribute (location 3)
+        glEnableVertexAttribArray(3);
+        glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
+                             (void*)offsetof(Vertex, tangent));
+
+        // Bind pre-skinned buffer for attribute 6 (vec4 - xyz = position, w = unused)
+        glBindBuffer(GL_ARRAY_BUFFER, preSkinnedBuffer);
+        glEnableVertexAttribArray(6);
+        glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(glm::vec4), (void*)0);
+
+        EE_CORE_INFO("MeshManager: Configured Standard Shadow VAO (locations 0-3, 6)");
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindVertexArray(0);
+
+        // ==================== SKINNED SHADOW VAO ====================
+        // Create shadow VAO for skinned meshes
+        glGenVertexArrays(1, &m_SkinnedShadowVAO);
+        glBindVertexArray(m_SkinnedShadowVAO);
+
+        // Bind skinned vertex buffer for attributes 0-5
+        glBindBuffer(GL_ARRAY_BUFFER, m_SkinnedVBO);
+
+        // Bind index buffer
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_IndexSSBO);
+
+        // Position attribute (location 0)
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(SkinnedVertex),
+                             (void*)offsetof(SkinnedVertex, position));
+
+        // Normal attribute (location 1)
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(SkinnedVertex),
+                             (void*)offsetof(SkinnedVertex, normal));
+
+        // TexCoord attribute (location 2)
+        glEnableVertexAttribArray(2);
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(SkinnedVertex),
+                             (void*)offsetof(SkinnedVertex, texCoord));
+
+        // Tangent attribute (location 3)
+        glEnableVertexAttribArray(3);
+        glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(SkinnedVertex),
+                             (void*)offsetof(SkinnedVertex, tangent));
+
+        // BoneIDs attribute (location 4)
+        glEnableVertexAttribArray(4);
+        glVertexAttribIPointer(4, 4, GL_INT, sizeof(SkinnedVertex),
+                              (void*)offsetof(SkinnedVertex, boneIDs));
+
+        // BoneWeights attribute (location 5)
+        glEnableVertexAttribArray(5);
+        glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(SkinnedVertex),
+                             (void*)offsetof(SkinnedVertex, boneWeights));
+
+        // Bind pre-skinned buffer for attribute 6 (vec4 - xyz = position, w = unused)
+        glBindBuffer(GL_ARRAY_BUFFER, preSkinnedBuffer);
+        glEnableVertexAttribArray(6);
+        glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(glm::vec4), (void*)0);
+
+        EE_CORE_INFO("MeshManager: Configured Skinned Shadow VAO (locations 0-6)");
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindVertexArray(0);
     }
 
 } // namespace Ermine::graphics

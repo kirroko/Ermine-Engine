@@ -10,6 +10,7 @@ in vec3 FragPos;
 in vec3 ViewPos;
 in vec3 Tangent;
 in vec3 Bitangent;
+flat in uint vMaterialIndex;
 
 out vec4 FragColor;
 
@@ -59,9 +60,6 @@ layout(std430, binding = 6) restrict readonly buffer TextureArrayBlock
 {
     uvec2 textureHandles[];
 };
-
-// Material index uniform - which material to use from the array
-uniform int u_MaterialIndex = 0;
 
 // Shading mode toggle
 uniform bool isBlinnPhong;
@@ -308,7 +306,7 @@ vec3 calculatePBR(int lightIndex, vec3 normal, vec3 viewDir, vec3 fragPosView, v
 void main()
 {
     // Get the material for this draw call from the array
-    MaterialData material = materials[u_MaterialIndex];
+    MaterialData material = materials[vMaterialIndex];
     
     // Apply UV transform (scale and offset)
     vec2 transformedUV = TexCoord * material.uvScale + material.uvOffset;

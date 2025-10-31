@@ -518,9 +518,10 @@ void main()
             if (castsShadows && lightType == DIRECTIONAL_LIGHT) {
                 int cascadeIndex = NUM_CASCADES - 1; // Default to last cascade
 
-                // Select cascade based on depth buffer value (not view distance)
+                // Select cascade based on view-space distance
+                float viewDistance = length(fragPosView);
                 for (int c = 0; c < NUM_CASCADES; ++c) {
-                    if (depth <= lights[i].splitDepths[c/4][c%4]) {
+                    if (viewDistance <= lights[i].splitDepths[c/4][c%4]) {
                         cascadeIndex = c;
                         break;
                     }
@@ -585,8 +586,10 @@ void main()
             if (castsShadows && lightType == DIRECTIONAL_LIGHT) {
                 int cascadeIndex = NUM_CASCADES - 1;
 
+                // Select cascade based on view-space distance
+                float viewDistance = length(fragPosView);
                 for (int c = 0; c < NUM_CASCADES; ++c) {
-                    if (depth <= lights[i].splitDepths[c/4][c%4]) {
+                    if (viewDistance <= lights[i].splitDepths[c/4][c%4]) {
                         cascadeIndex = c;
                         break;
                     }
@@ -596,10 +599,10 @@ void main()
                 int layerIndex = startOffset + cascadeIndex;
 
                 shadowFactor = calculateShadowFactor(
-                    lights[i].lightSpaceMatrix[cascadeIndex], 
-                    i, 
-                    worldPos, 
-                    normalWorld, 
+                    lights[i].lightSpaceMatrix[cascadeIndex],
+                    i,
+                    worldPos,
+                    normalWorld,
                     layerIndex
                 );
 

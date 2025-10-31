@@ -491,12 +491,12 @@ namespace Ermine::graphics
         void BuildTextureArray();
 
         /**
-         * @brief Builds indirect draw commands and draw info for all entities with meshes.
-         * This function iterates through all entities, gathers mesh, material, transform, and AABB data,
-         * and uploads them to the Draw Commands SSBO (binding 2) and Draw Info SSBO (binding 3).
-         * Should be called after materials are compiled and whenever the scene changes.
+         * @brief Compiles draw commands and draw info for all passes.
+         * Routes opaque meshes to geometry/shadow passes, transparent/custom shader meshes to forward pass.
+         * Iterates through all entities once and builds DrawElementsIndirectCommand + DrawInfo for all rendering.
+         * Should be called every frame.
          */
-        void BuildIndirectCommands();
+        void CompileDrawData();
 
         /**
          * @brief Binds the MaterialBlock shader storage buffer to the specified shader program if it has not been bound before.
@@ -574,8 +574,8 @@ namespace Ermine::graphics
          */
         void CalculateLightMatrix(const editor::EditorCamera& editorCamera);
         /**
-         * @brief Renders the shadow map using instanced rendering for all shadow-casting lights and cascades.
-         * Sets up the shadow map FBO, viewport, and render state, then draws all geometry using instanced draw calls.
+         * @brief Renders the shadow map for all shadow-casting lights and cascades.
+         * Reuses pre-skinned positions from geometry pass to avoid redundant bone calculations.
          * Restores previous OpenGL state after rendering.
          */
 		void RenderShadowMapInstanced();
@@ -642,6 +642,13 @@ namespace Ermine::graphics
         bool IsTransparentMaterial(const Ermine::graphics::Material* material) const;
 
         /**
+         * @brief Check if material uses a custom shader (not standard deferred pipeline)
+         * @param material Material to check
+         * @return true if material has custom shader
+         */
+        bool HasCustomShader(const Ermine::graphics::Material* material) const;
+
+        /**
          * @brief Handle window resize events to adjust buffers and viewports
          * @param width New window width
          * @param height New window height
@@ -699,6 +706,21 @@ namespace Ermine::graphics
          * This should be called once after CompileMaterials() during load time.
          */
         void UploadMaterialsToGPU();
+
+        // Draw data for geometry/shadow passes (opaque, non-custom shader meshes)
+        std::vector<DrawElementsIndirectCommand> m_StandardDrawCommands;
+        std::vector<DrawInfo> m_StandardDrawInfos;
+        std::vector<DrawElementsIndirectCommand> m_SkinnedDrawCommands;
+        std::vector<DrawInfo> m_SkinnedDrawInfos;
+
+        // Draw data for forward pass (transparent + custom shader meshes)
+        std::vector<DrawElementsIndirectCommand> m_ForwardPassDrawCommands;
+        std::vector<DrawInfo> m_ForwardPassDrawInfos;
+
+        // Cached shadow pass draw commands (reused to avoid per-frame allocation)
+        std::vector<DrawElementsIndirectCommand> m_ShadowStandardCommands;
+        std::vector<DrawElementsIndirectCommand> m_ShadowSkinnedCommands;
+
         // Deferred rendering buffers
         bool m_UseDeferredRendering = true;
         Ermine::Mesh m_QuadMesh;
@@ -726,6 +748,11 @@ namespace Ermine::graphics
         uint64_t m_ShadowMapArrayHandle = 0;
         GLuint m_ShadowMapFBO = 0;
         GLuint m_ShadowMapArray = 0;
+
+        // Pre-skinned positions buffer (binding 8) - written by geometry pass, read by shadow pass
+        GLuint m_PreSkinnedPositionsSSBO = 0;
+        size_t m_PreSkinnedBufferSize = 0;
+        unsigned int m_TotalShadowLayers = 0; // Total layers used by all shadow-casting lights
 
         // Forward rendering shader for transparent objects
         std::shared_ptr<Shader> m_ForwardShader = nullptr;

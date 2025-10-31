@@ -151,8 +151,9 @@ namespace Ermine::graphics
         /**
          * @brief Write draw info data to the mapped buffer
          * @param drawInfos Vector of draw info to write
+         * @param offset Offset in number of DrawInfo elements (default 0)
          */
-        void WriteDrawInfos(const std::vector<DrawInfo>& drawInfos);
+        void WriteDrawInfos(const std::vector<DrawInfo>& drawInfos, size_t offset = 0);
 
         /**
          * @brief Get the OpenGL buffer ID

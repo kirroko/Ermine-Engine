@@ -78,6 +78,13 @@ namespace Ermine::graphics {
         const IndirectDrawBuffer& GetIndirectBufferInfo() const { return m_IndirectBuffer; }
         size_t GetMeshCount() const { return m_LoadedMeshes.size(); }
 
+        GLuint GetStandardVAO() const { return m_StandardVAO; }
+        GLuint GetSkinnedVAO() const { return m_SkinnedVAO; }
+
+        // Shadow VAOs with pre-skinned position attribute for optimized shadow rendering
+        GLuint GetStandardShadowVAO() const { return m_StandardShadowVAO; }
+        GLuint GetSkinnedShadowVAO() const { return m_SkinnedShadowVAO; }
+
         // Check if new meshes have been registered and need uploading
         bool IsDirty() const { return m_IndirectBuffer.isDirty; }
         bool HasStagedData() const { return !m_StagedVertices.empty() || !m_StagedSkinnedVertices.empty(); }
@@ -93,8 +100,14 @@ namespace Ermine::graphics {
         // Skeletal animation SSBO for bone transforms (Binding 7)
         SkeletalSSBO m_SkeletalSSBO;
 
+		// VBO/VAO system for hardware vertex fetch
+        void SetupShadowVAOs(GLuint preSkinnedBuffer);  // Configure shadow VAOs with pre-skinned position attribute
+
+
     private:
         void CreateBuffers();
+        void SetupStandardVAO();   // Configure StandardVAO attribute bindings (locations 0-3)
+        void SetupSkinnedVAO();    // Configure SkinnedVAO attribute bindings (locations 0-5)
 
         // SSBO Binding Points
         static constexpr GLuint VERTEX_SSBO_BINDING = 0;
@@ -110,6 +123,15 @@ namespace Ermine::graphics {
         // OpenGL SSBO buffers (no VAOs needed for SSBO-based rendering)
         GLuint m_VertexSSBO = 0;          // Binding 0 - All vertices
         GLuint m_SkinnedVertexSSBO = 0;   // Separate SSBO for skinned vertices (optional)
+
+        GLuint m_VertexVBO = 0;           // VBO for standard vertices (64 bytes each)
+        GLuint m_StandardVAO = 0;         // VAO for standard vertices (locations 0-3)
+        GLuint m_SkinnedVBO = 0;          // VBO for skinned vertices (96 bytes each)
+        GLuint m_SkinnedVAO = 0;          // VAO for skinned vertices (locations 0-5)
+
+        // Shadow VAOs with pre-skinned position attribute (location 6)
+        GLuint m_StandardShadowVAO = 0;   // Shadow VAO for standard meshes + pre-skinned attribute
+        GLuint m_SkinnedShadowVAO = 0;    // Shadow VAO for skinned meshes + pre-skinned attribute
 
         IndirectDrawBuffer m_IndirectBuffer;  // Draw commands buffer metadata
 

@@ -1,32 +1,11 @@
 #version 460 core
 
-// Vertex structure matching CPU-side Vertex (std430 layout)
-// Total size: 64 bytes (must match C++ Vertex in MeshTypes.h)
-struct Vertex {
-    vec3 position;      // offset 0, size 12 bytes
-    float _pad0;        // offset 12, size 4 bytes (padding to reach 16)
-    vec3 normal;        // offset 16, size 12 bytes
-    float _pad1;        // offset 28, size 4 bytes (padding to reach 32)
-    vec2 texCoord;      // offset 32, size 8 bytes
-    float _pad2[2];     // offset 40, size 8 bytes (padding to reach 48)
-    vec3 tangent;       // offset 48, size 12 bytes
-    float _pad3;        // offset 60, size 4 bytes (padding to reach 64)
-};
-
-// Skinned vertex structure matching CPU-side SkinnedVertex (std430 layout)
-// Total size: 96 bytes (must match C++ SkinnedVertex in MeshTypes.h)
-struct SkinnedVertex {
-    vec3 position;      // offset 0, size 12 bytes
-    float _pad0;        // offset 12, size 4 bytes (padding to reach 16)
-    vec3 normal;        // offset 16, size 12 bytes
-    float _pad1;        // offset 28, size 4 bytes (padding to reach 32)
-    vec2 texCoord;      // offset 32, size 8 bytes
-    float _pad2[2];     // offset 40, size 8 bytes (padding to reach 48)
-    vec3 tangent;       // offset 48, size 12 bytes
-    float _pad3;        // offset 60, size 4 bytes (padding to reach 64)
-    ivec4 boneIDs;      // offset 64, size 16 bytes
-    vec4 boneWeights;   // offset 80, size 16 bytes
-};
+layout(location = 0) in vec3 aPos;
+layout(location = 1) in vec3 aNormal;
+layout(location = 2) in vec2 aTexCoord;
+layout(location = 3) in vec3 aTangent;
+layout(location = 4) in ivec4 aBoneIDs;      // Only present in SkinnedVAO
+layout(location = 5) in vec4 aBoneWeights;    // Only present in SkinnedVAO
 
 // Draw info structure matching CPU-side DrawInfo (std430 layout)
 // Total size: 112 bytes (must match C++ DrawInfo in DrawCommands.h)
@@ -41,21 +20,9 @@ struct DrawInfo {
     uint _pad[2];               // 8 bytes (offset 104-111) - Explicit padding to 16-byte alignment
 };
 
-// SSBO bindings
-layout(std430, binding = 0) restrict readonly buffer VertexBuffer {
-    Vertex vertices[];
-};
-
-layout(std430, binding = 1) restrict readonly buffer IndexBuffer {
-    uint indices[];
-};
-
+// SSBO bindings (still used for DrawInfo and bone transforms)
 layout(std430, binding = 3) restrict readonly buffer DrawInfoBuffer {
     DrawInfo drawInfos[];
-};
-
-layout(std430, binding = 4) restrict readonly buffer SkinnedVertexBuffer {
-    SkinnedVertex skinnedVertices[];
 };
 
 // Skeletal animation bone transforms SSBO (Binding 7)
@@ -63,9 +30,17 @@ layout(std430, binding = 7) restrict readonly buffer BoneTransformBuffer {
     mat4 boneTransforms[]; // All bone transforms for all entities
 };
 
+// Pre-skinned positions output (Binding 8) - for shadow pass reuse
+layout(std430, binding = 8) restrict writeonly buffer PreSkinnedBuffer {
+    vec4 preSkinnedPositions[];  // xyz = skinned position, w = unused
+};
+
 // Transformation matrices
 uniform mat4 view;
 uniform mat4 projection;
+
+// Base draw ID offset for multi-batch rendering
+uniform uint baseDrawID;
 
 // Outputs to fragment shader
 out vec2 TexCoord;
@@ -79,56 +54,36 @@ flat out uint vMaterialIndex; // Pass material index to fragment shader
 
 void main()
 {
-    // Get draw info for this draw call
-    DrawInfo drawInfo = drawInfos[gl_DrawID];
+    // Get draw info for this draw call (offset by baseDrawID for multi-batch rendering)
+    DrawInfo drawInfo = drawInfos[baseDrawID + gl_DrawID];
     mat4 model = drawInfo.modelMatrix;
 
     // Extract useSkinning flag from bit 0 of flags
     bool useSkinning = (drawInfo.flags & 1u) != 0u;
 
-    vec3 aPos;
-    vec3 aNormal;
-    vec2 aTexCoord;
-    vec3 aTangent;
-    ivec4 aBoneIDs = ivec4(0);
-    vec4 aWeights = vec4(0.0);
-
-    // Fetch vertex data from appropriate buffer
-    if (useSkinning) {
-        SkinnedVertex sv = skinnedVertices[gl_VertexID];
-        aPos = sv.position;
-        aNormal = sv.normal;
-        aTexCoord = sv.texCoord;
-        aTangent = sv.tangent;
-        aBoneIDs = sv.boneIDs;
-        aWeights = sv.boneWeights;
-    } else {
-        Vertex v = vertices[gl_VertexID];
-        aPos = v.position;
-        aNormal = v.normal;
-        aTexCoord = v.texCoord;
-        aTangent = v.tangent;
-    }
 
     vec4 skinnedPos = vec4(aPos, 1.0);
     vec3 skinnedNormal  = aNormal;
     vec3 skinnedTangent = aTangent;
 
-    // Does it use skinning
+    // Apply skeletal animation if enabled
     if (useSkinning) {
         // Get bone offset for this entity from DrawInfo
         uint boneOffset = drawInfo.boneTransformOffset;
 
         // Calculate final bone transform using weighted blend
         mat4 boneTransform =
-            boneTransforms[boneOffset + aBoneIDs[0]] * aWeights[0] +
-            boneTransforms[boneOffset + aBoneIDs[1]] * aWeights[1] +
-            boneTransforms[boneOffset + aBoneIDs[2]] * aWeights[2] +
-            boneTransforms[boneOffset + aBoneIDs[3]] * aWeights[3];
+            boneTransforms[boneOffset + aBoneIDs[0]] * aBoneWeights[0] +
+            boneTransforms[boneOffset + aBoneIDs[1]] * aBoneWeights[1] +
+            boneTransforms[boneOffset + aBoneIDs[2]] * aBoneWeights[2] +
+            boneTransforms[boneOffset + aBoneIDs[3]] * aBoneWeights[3];
 
         skinnedPos     = boneTransform * vec4(aPos, 1.0);
         skinnedNormal  = mat3(boneTransform) * aNormal;
         skinnedTangent = mat3(boneTransform) * aTangent;
+
+        // Write skinned position to SSBO for shadow pass reuse (eliminates redundant calculations)
+        preSkinnedPositions[gl_VertexID] = skinnedPos;
     }
 
     // Calculate normal matrix from model matrix

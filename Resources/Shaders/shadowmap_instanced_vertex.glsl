@@ -24,12 +24,28 @@ layout(location = 3) in vec3 aTangent;     // Not used for shadows, but needed f
 layout(location = 4) in ivec4 aBoneIDs;
 layout(location = 5) in vec4 aWeights;
 
-// Per-vertex uniforms
-uniform mat4 model;
+// Pre-skinned position attribute (location 6) - hardware vertex fetch from pre-skinned buffer
+layout(location = 6) in vec4 aPreSkinnedPosition;
 
-// Skinning uniforms
-uniform bool u_UseSkinning;
-uniform mat4 u_BoneMatrices[128];
+// Draw info structure matching CPU-side DrawInfo (std430 layout)
+struct DrawInfo {
+    mat4 modelMatrix;           // 64 bytes - Model transformation matrix
+    vec3 aabbMin;               // 12 bytes - AABB minimum bounds
+    uint materialIndex;         // 4 bytes - Index into material SSBO
+    vec3 aabbMax;               // 12 bytes - AABB maximum bounds
+    uint entityID;              // 4 bytes - Entity ID
+    uint flags;                 // 4 bytes - Flags (bit 0: useSkinning)
+    uint boneTransformOffset;   // 4 bytes - Starting index in skeletal SSBO
+    uint _pad[2];               // 8 bytes - Padding
+};
+
+// SSBO binding for indirect rendering DrawInfo
+layout(std430, binding = 3) restrict readonly buffer DrawInfoBuffer {
+    DrawInfo drawInfos[];
+};
+
+// Base draw ID offset for multi-batch indirect rendering
+uniform uint baseDrawID;
 
 // Light structure
 struct Light {
@@ -51,17 +67,23 @@ uniform int u_ActiveShadowLights[16];    // Indices of shadow-casting directiona
 
 void main()
 {
+    // Get draw info from SSBO using gl_DrawID (indirect rendering)
+    DrawInfo drawInfo = drawInfos[baseDrawID + gl_DrawID];
+    mat4 modelMatrix = drawInfo.modelMatrix;
+    bool useSkinning = (drawInfo.flags & 1u) != 0u;
+
     // Apply skinning transformation if enabled
-    vec4 skinnedPos = vec4(aPosition, 1.0);
-    
-    if (u_UseSkinning) {
-        mat4 boneTransform =
-            u_BoneMatrices[aBoneIDs[0]] * aWeights[0] +
-            u_BoneMatrices[aBoneIDs[1]] * aWeights[1] +
-            u_BoneMatrices[aBoneIDs[2]] * aWeights[2] +
-            u_BoneMatrices[aBoneIDs[3]] * aWeights[3];
-        
-        skinnedPos = boneTransform * vec4(aPosition, 1.0);
+    // OPTIMIZATION: Use hardware vertex fetch from pre-skinned attribute instead of SSBO random access
+    vec4 skinnedPos;
+
+    if (useSkinning) {
+        // Read pre-skinned position from vertex attribute (location 6)
+        // Hardware vertex fetch is MUCH faster than SSBO random access!
+        // Geometry pass wrote these positions, shadow pass reads via vertex fetch units
+        skinnedPos = aPreSkinnedPosition;
+    } else {
+        // Non-skinned mesh: use vertex position directly
+        skinnedPos = vec4(aPosition, 1.0);
     }
 
     // Calculate light and cascade from gl_InstanceID
@@ -80,7 +102,7 @@ void main()
     int targetLayer = startOffset + cascadeIndex;
 
     // Transform vertex to light space using the appropriate cascade matrix
-    gl_Position = light.lightSpaceMatrix[cascadeIndex] * model * skinnedPos;
+    gl_Position = light.lightSpaceMatrix[cascadeIndex] * modelMatrix * skinnedPos;
 
     // Pass layer to fragment shader (for gl_Layer assignment if needed)
     gl_Layer = targetLayer;

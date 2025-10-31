@@ -91,7 +91,7 @@ namespace Ermine::graphics
         return true;
     }
 
-    void PersistentDrawInfoBuffer::WriteDrawInfos(const std::vector<DrawInfo>& drawInfos)
+    void PersistentDrawInfoBuffer::WriteDrawInfos(const std::vector<DrawInfo>& drawInfos, size_t offset)
     {
         if (!IsValid())
         {
@@ -99,20 +99,21 @@ namespace Ermine::graphics
             return;
         }
 
-        if (drawInfos.size() > m_MaxDrawCalls)
+        if (offset + drawInfos.size() > m_MaxDrawCalls)
         {
-            EE_CORE_WARN("DrawInfo count ({0}) exceeds max capacity ({1}), clamping",
-                         drawInfos.size(), m_MaxDrawCalls);
+            EE_CORE_WARN("DrawInfo offset + count ({0}) exceeds max capacity ({1}), clamping",
+                         offset + drawInfos.size(), m_MaxDrawCalls);
         }
 
         // Calculate how many draws to actually write
-        size_t drawsToWrite = std::min(drawInfos.size(), m_MaxDrawCalls);
-        m_DrawCount = drawsToWrite;
+        size_t drawsToWrite = std::min(drawInfos.size(), m_MaxDrawCalls - offset);
+        m_DrawCount = offset + drawsToWrite;
 
-        // Direct memory copy to persistent mapped buffer
+        // Direct memory copy to persistent mapped buffer at offset
         // No glBufferData/glBufferSubData needed - just memcpy!
         size_t bytesToWrite = drawsToWrite * sizeof(DrawInfo);
-        std::memcpy(m_MappedPtr, drawInfos.data(), bytesToWrite);
+        void* destPtr = static_cast<char*>(m_MappedPtr) + (offset * sizeof(DrawInfo));
+        std::memcpy(destPtr, drawInfos.data(), bytesToWrite);
 
         // With GL_MAP_COHERENT_BIT, no manual flush is needed
         // GPU will see the changes automatically

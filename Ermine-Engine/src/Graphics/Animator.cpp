@@ -97,62 +97,110 @@ namespace Ermine::graphics
                 Keyframe kf;
                 kf.time = t;
 
-                // position
+                // Position interpolation using binary search
                 if (channel->mNumPositionKeys > 0) {
-                    aiVector3D pos = channel->mPositionKeys[0].mValue;
-                    for (unsigned int j = 0; j < channel->mNumPositionKeys - 1; ++j) {
-                        if (t < channel->mPositionKeys[j + 1].mTime) {
-                            double dt = channel->mPositionKeys[j + 1].mTime - channel->mPositionKeys[j].mTime;
-                            double factor = (dt > 0.0) ? (t - channel->mPositionKeys[j].mTime) / dt : 0.0;
-                            aiVector3D start = channel->mPositionKeys[j].mValue;
-                            aiVector3D end = channel->mPositionKeys[j + 1].mValue;
-                            pos = start + static_cast<float>(factor) * (end - start);
-                            break;
-                        }
+                    // Use upper_bound to find the next keyframe after time t
+                    auto it = std::upper_bound(
+                        channel->mPositionKeys,
+                        channel->mPositionKeys + channel->mNumPositionKeys,
+                        t,
+                        [](double time, const aiVectorKey& key) { return time < key.mTime; }
+                    );
+
+                    if (it == channel->mPositionKeys) {
+                        // t is before first keyframe, use first keyframe
+                        kf.position = glm::vec3(
+                            channel->mPositionKeys[0].mValue.x,
+                            channel->mPositionKeys[0].mValue.y,
+                            channel->mPositionKeys[0].mValue.z
+                        );
                     }
-                    kf.position = glm::vec3(pos.x, pos.y, pos.z);
+                    else if (it == channel->mPositionKeys + channel->mNumPositionKeys) {
+                        // t is after last keyframe, use last keyframe
+                        auto& lastKey = channel->mPositionKeys[channel->mNumPositionKeys - 1];
+                        kf.position = glm::vec3(lastKey.mValue.x, lastKey.mValue.y, lastKey.mValue.z);
+                    }
+                    else {
+                        // Interpolate between previous and current keyframe
+                        auto& nextKey = *it;
+                        auto& prevKey = *(it - 1);
+
+                        double dt = nextKey.mTime - prevKey.mTime;
+                        double factor = (dt > 0.0) ? (t - prevKey.mTime) / dt : 0.0;
+
+                        aiVector3D pos = prevKey.mValue + static_cast<float>(factor) * (nextKey.mValue - prevKey.mValue);
+                        kf.position = glm::vec3(pos.x, pos.y, pos.z);
+                    }
                 }
-                else
+                else {
                     kf.position = glm::vec3(0.0f);
+                }
 
-                // rotation
+                // Rotation interpolation using binary search
                 if (channel->mNumRotationKeys > 0) {
-                    aiQuaternion rot = channel->mRotationKeys[0].mValue;
-                    for (unsigned int j = 0; j < channel->mNumRotationKeys - 1; ++j) {
-                        if (t < channel->mRotationKeys[j + 1].mTime) {
-                            double dt = channel->mRotationKeys[j + 1].mTime - channel->mRotationKeys[j].mTime;
-                            double factor = (dt > 0.0) ? (t - channel->mRotationKeys[j].mTime) / dt : 0.0;
-                            aiQuaternion start = channel->mRotationKeys[j].mValue;
-                            aiQuaternion end = channel->mRotationKeys[j + 1].mValue;
-                            aiQuaternion result;
-                            aiQuaternion::Interpolate(result, start, end, static_cast<float>(factor));
-                            result.Normalize();
-                            rot = result;
-                            break;
-                        }
-                    }
-                    kf.rotation = glm::quat(rot.w, rot.x, rot.y, rot.z);
-                }
-                else
-                    kf.rotation = glm::quat(1, 0, 0, 0);
+                    auto it = std::upper_bound(
+                        channel->mRotationKeys,
+                        channel->mRotationKeys + channel->mNumRotationKeys,
+                        t,
+                        [](double time, const aiQuatKey& key) { return time < key.mTime; }
+                    );
 
-                // scaling
-                if (channel->mNumScalingKeys > 0) {
-                    aiVector3D scl = channel->mScalingKeys[0].mValue;
-                    for (unsigned int j = 0; j < channel->mNumScalingKeys - 1; ++j) {
-                        if (t < channel->mScalingKeys[j + 1].mTime) {
-                            double dt = channel->mScalingKeys[j + 1].mTime - channel->mScalingKeys[j].mTime;
-                            double factor = (dt > 0.0) ? (t - channel->mScalingKeys[j].mTime) / dt : 0.0;
-                            aiVector3D start = channel->mScalingKeys[j].mValue;
-                            aiVector3D end = channel->mScalingKeys[j + 1].mValue;
-                            scl = start + static_cast<float>(factor) * (end - start);
-                            break;
-                        }
+                    if (it == channel->mRotationKeys) {
+                        auto& firstKey = channel->mRotationKeys[0];
+                        kf.rotation = glm::quat(firstKey.mValue.w, firstKey.mValue.x, firstKey.mValue.y, firstKey.mValue.z);
                     }
-                    kf.scale = glm::vec3(scl.x, scl.y, scl.z);
+                    else if (it == channel->mRotationKeys + channel->mNumRotationKeys) {
+                        auto& lastKey = channel->mRotationKeys[channel->mNumRotationKeys - 1];
+                        kf.rotation = glm::quat(lastKey.mValue.w, lastKey.mValue.x, lastKey.mValue.y, lastKey.mValue.z);
+                    }
+                    else {
+                        auto& nextKey = *it;
+                        auto& prevKey = *(it - 1);
+
+                        double dt = nextKey.mTime - prevKey.mTime;
+                        double factor = (dt > 0.0) ? (t - prevKey.mTime) / dt : 0.0;
+
+                        aiQuaternion result;
+                        aiQuaternion::Interpolate(result, prevKey.mValue, nextKey.mValue, static_cast<float>(factor));
+                        result.Normalize();
+                        kf.rotation = glm::quat(result.w, result.x, result.y, result.z);
+                    }
                 }
-                else
+                else {
+                    kf.rotation = glm::quat(1, 0, 0, 0);
+                }
+
+                // Scaling interpolation using binary search
+                if (channel->mNumScalingKeys > 0) {
+                    auto it = std::upper_bound(
+                        channel->mScalingKeys,
+                        channel->mScalingKeys + channel->mNumScalingKeys,
+                        t,
+                        [](double time, const aiVectorKey& key) { return time < key.mTime; }
+                    );
+
+                    if (it == channel->mScalingKeys) {
+                        auto& firstKey = channel->mScalingKeys[0];
+                        kf.scale = glm::vec3(firstKey.mValue.x, firstKey.mValue.y, firstKey.mValue.z);
+                    }
+                    else if (it == channel->mScalingKeys + channel->mNumScalingKeys) {
+                        auto& lastKey = channel->mScalingKeys[channel->mNumScalingKeys - 1];
+                        kf.scale = glm::vec3(lastKey.mValue.x, lastKey.mValue.y, lastKey.mValue.z);
+                    }
+                    else {
+                        auto& nextKey = *it;
+                        auto& prevKey = *(it - 1);
+
+                        double dt = nextKey.mTime - prevKey.mTime;
+                        double factor = (dt > 0.0) ? (t - prevKey.mTime) / dt : 0.0;
+
+                        aiVector3D scl = prevKey.mValue + static_cast<float>(factor) * (nextKey.mValue - prevKey.mValue);
+                        kf.scale = glm::vec3(scl.x, scl.y, scl.z);
+                    }
+                }
+                else {
                     kf.scale = glm::vec3(1.0f);
+                }
 
                 boneAnim.keys.push_back(std::move(kf));
             }
@@ -311,10 +359,9 @@ namespace Ermine::graphics
         {
             // Find keyframes around current time
             const auto& keys = boneAnim->keys;
-            size_t i = 0;
-            for (; i < keys.size() - 1; ++i) {
-                if (m_CurrentTime < keys[i + 1].time) break;
-            }
+            auto it = std::upper_bound(keys.begin(), keys.end(), m_CurrentTime,
+                [](double time, const Keyframe& kf) { return time < kf.time; });
+            size_t i = (it == keys.begin()) ? 0 : std::distance(keys.begin(), it) - 1;
 
             const Keyframe& curr = keys[i];
             const Keyframe& next = (i + 1 < keys.size()) ? keys[i + 1] : curr;
