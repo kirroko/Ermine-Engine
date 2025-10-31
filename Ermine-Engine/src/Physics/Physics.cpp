@@ -31,6 +31,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
 #include <Jolt/Physics/Collision/Shape/MeshShape.h>
 
+#include "Input.h"
+
 #include "EditorGUI.h"
 #include "HierarchySystem.h"
 
@@ -357,6 +359,11 @@ namespace Ermine
 			auto hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>();
 			hierarchySystem->MarkDirty(entity);
 		}
+
+		if (Input::IsKeyDown(GLFW_KEY_1))
+		{
+			auto hits = RaycastAll({ 0, 5, 0 }, { 0, -1, 0 }, 100.0f);
+		}
 	}
 
 	/*!*************************************************************************
@@ -565,6 +572,19 @@ namespace Ermine
 			: JPH::BodyID(JPH::BodyID::cInvalidBodyID);
 	}
 
+	EntityID Physics::GetEntityID(JPH::BodyID bodyID)
+	{
+		for (auto& [entity, rigidBody] : mEntityToBody)
+		{
+			if (rigidBody == bodyID)
+			{
+				return entity;
+			}
+		}
+
+		return 0;
+	}
+
 	void Physics::DrawDebug()
 	{
 #ifdef JPH_DEBUG_RENDERER
@@ -733,6 +753,54 @@ namespace Ermine
 	{
 		std::lock_guard<std::mutex> _l(mPendingMutex);
 		mPendingPairs.push_back(PendingPair{ type, a, b });
+	}
+
+	bool Physics::Raycast(const JPH::RVec3& origin, const JPH::RVec3& direction, float maxDistance, JPH::RayCastResult& outResult)
+	{
+		JPH::Vec3 dirNormalized = direction.Normalized();
+		JPH::RRayCast ray(origin, dirNormalized * maxDistance);
+
+		// Get a query context from PhysicsSystem
+		const JPH::NarrowPhaseQuery& query = mPhysicsSystem.GetNarrowPhaseQuery();
+
+		// Perform the cast
+		bool hit = query.CastRay(ray, outResult);
+
+		return hit;
+	}
+
+	std::vector<JPH::RayCastResult> Physics::RaycastAll(const JPH::RVec3& origin, const JPH::RVec3& direction, float maxDistance)
+	{
+		std::vector<JPH::RayCastResult> results;
+
+		// Normalize direction
+		JPH::Vec3 dirNormalized = direction.Normalized();
+
+		// Build the ray (RRayCast takes origin and direction *distance)
+		JPH::RRayCast ray(origin, dirNormalized * maxDistance);
+
+		// Ray cast settings WIP to add ignore layer
+		JPH::RayCastSettings settings;
+		settings.SetBackFaceMode(JPH::EBackFaceMode::IgnoreBackFaces);
+
+		JPH::AllHitCollisionCollector<JPH::CastRayCollector> collector;
+
+		// Get the narrow phase query and perform the cast
+		const JPH::NarrowPhaseQuery& query = mPhysicsSystem.GetNarrowPhaseQuery();
+		query.CastRay(ray, settings, collector);
+
+		// collector.mHits is an Array<RayCastResult> — copy into std::vector
+		for (const auto& hit : collector.mHits)
+			results.push_back(hit);
+
+		// Sort nearest -> farthest (mFraction is 0..1 along the ray)
+		std::sort(results.begin(), results.end(),
+			[](const JPH::RayCastResult& a, const JPH::RayCastResult& b)
+			{
+				return a.mFraction < b.mFraction;
+			});
+
+		return results;
 	}
 
 	void Physics::FlushPendingPairsToEntityEvents()
