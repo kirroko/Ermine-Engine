@@ -174,16 +174,6 @@ bool engine::Init(GLFWwindow* windowContext)
 	}
 
 	EnableMemoryLeakChecking();
-	//std::cout << "Engine working directory: " << std::filesystem::current_path() << std::endl;
-
-	std::string databasePath = "../Ermine-Game.lion_rcdbase";  // Adjust path as needed
-	std::string projectGuid = "";  // Leave empty to auto-detect, or put your actual project GUID
-
-	if (!AssetManager::GetInstance().Initialize(databasePath, projectGuid)) {
-		EE_CORE_WARN("AssetManager database initialization failed, falling back to direct loading");
-	}
-
-	EnableMemoryLeakChecking();
 
 	Input::Init(windowContext);
 
