@@ -972,17 +972,10 @@ void Renderer::CompileDrawData()
 	m_ForwardPassDrawCommands.reserve(m_Entities.size() / 4);
 	m_ForwardPassDrawInfos.reserve(m_Entities.size() / 4);
 
-	std::vector<EntityID> skinnedEntities;
-	skinnedEntities.reserve(m_Entities.size()/4);
-
 	// ========== STANDARD (NON-SKINNED) MESHES ==========
 	for (auto& entity : m_Entities) {
 		// Skip entities with AnimationComponent (handled in skinned mesh section)
-		if (ecs.HasComponent<AnimationComponent>(entity))
-		{
-			skinnedEntities.push_back(entity);
-			continue;
-		}
+		if (ecs.HasComponent<AnimationComponent>(entity)) continue;
 
 		// Process entities with Model component
 		if (ecs.HasComponent<ModelComponent>(entity)) {
@@ -1145,7 +1138,7 @@ void Renderer::CompileDrawData()
 
 	// ========== SKINNED (ANIMATED) MESHES ==========
 	// Iterate through AnimationManager's entities (entities with AnimationComponent)
-	for (auto& entity : skinnedEntities) {
+	for (auto& entity : ecs.GetSystem<graphics::AnimationManager>()->m_Entities) {
 		// All entities here have AnimationComponent, no need to check
 		if (!ecs.HasComponent<ModelComponent>(entity)) continue;
 
