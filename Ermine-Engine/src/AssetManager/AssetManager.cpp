@@ -486,6 +486,8 @@ std::shared_ptr<graphics::Shader> AssetManager::GetShader(const std::string& sha
 std::shared_ptr<graphics::Model> AssetManager::LoadModel(const std::string& filePath)
 {
     EE_CORE_TRACE("Loading model: {0}", filePath);
+
+    // Check cache first
     auto it = m_models.find(filePath);
     if (it != m_models.end()) // Already loaded
     {
@@ -495,10 +497,31 @@ std::shared_ptr<graphics::Model> AssetManager::LoadModel(const std::string& file
 
     try
     {
-        std::shared_ptr<graphics::Model> model = std::make_shared<graphics::Model>(filePath);
-        m_models[filePath] = model;
-        EE_CORE_INFO("Model loaded: {0}", filePath);
-        return model;
+        std::shared_ptr<graphics::Model> model;
+
+        // Determine file type by extension
+        std::string ext = std::filesystem::path(filePath).extension().string();
+
+        if (ext == ".skin") {
+            // Load binary .skin file from resource pipeline
+            EE_CORE_INFO("Loading .skin file: {0}", filePath);
+            model = std::make_shared<graphics::Model>(filePath, true);
+        }
+        else {
+            // Load via Assimp (.fbx, .obj, .gltf, etc.)
+            EE_CORE_INFO("Loading model via Assimp: {0}", filePath);
+            model = std::make_shared<graphics::Model>(filePath);
+        }
+
+        if (model) {
+            m_models[filePath] = model;
+            EE_CORE_INFO("Model loaded successfully: {0}", filePath);
+            return model;
+        }
+        else {
+            EE_CORE_ERROR("Failed to create model: {0}", filePath);
+            return nullptr;
+        }
     }
     catch (const std::exception& e)
     {

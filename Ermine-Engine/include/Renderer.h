@@ -818,5 +818,11 @@ namespace Ermine::graphics
 #pragma region IndirectDraw
         void DrawIndirect();
 #pragma endregion
+        /**
+         * @brief Gets the world transform matrix for an entity using GlobalTransform component
+         * @param entity The entity to get the world matrix for
+         * @return glm::mat4 The world transform matrix
+         */
+        glm::mat4 GetEntityWorldMatrix(EntityID entity) const;
     };
 }

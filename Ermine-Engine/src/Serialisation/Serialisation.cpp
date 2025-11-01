@@ -210,10 +210,12 @@ void SaveSceneToFile(const Ermine::ECS& ecs, const std::filesystem::path& path, 
         for (const std::string& name : ecs.GetComponentNames(id)) {                 // :contentReference[oaicite:1]{index=1}
             const auto* desc = ecs.GetDescriptor(name);         // :contentReference[oaicite:2]{index=2}
             if (!desc || !desc->serialize) continue;
+
             rapidjson::Value payload(rapidjson::kObjectType);
             desc->serialize(id, payload, a);  // <- no ECS here
             comps.AddMember(rapidjson::Value(name.c_str(), a), payload, a);
         }
+
 
         e.AddMember("components", comps, a);
         entities.PushBack(e, a);

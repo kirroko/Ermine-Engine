@@ -19,6 +19,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Renderer.h"
 #include "GLFW/glfw3.h"
 #include "EditorGUI.h"
+#include "HierarchySystem.h"
 
 #include <ImGuizmo.h>
 #include <glm/gtx/matrix_decompose.hpp>
@@ -29,10 +30,17 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "SceneManager.h"
 #include "PrefabManager.h"
 #include "Physics.h"
+#include "TransformMode.h"
 
 using namespace Ermine::editor;
 
 EditorGUI::SimState EditorGUI::s_state = SimState::stopped;
+
+namespace Ermine::editor
+{
+	// NEW: Global transform mode state
+	static TransformMode s_transformMode = TransformMode::Pivot;
+}
 
 namespace
 {
@@ -183,17 +191,21 @@ void Ermine::ViewPortGUI::OverlayGizmoOperation(const ImVec2& imgMin, const ImGu
 	const char* opText = OpToString(gOperation);
 	const char* modeText = ModeToString(gMode);
 
-	char label[128];
-	(void)snprintf(label, sizeof(label), "Op: %s | Mode: %s", opText, modeText);
+	// Access transform mode from namespace
+	const char* transformModeText = (editor::s_transformMode == TransformMode::Pivot) ? "Pivot" : "Center";
+
+	char label[256];
+	(void)snprintf(label, sizeof(label), "Op: %s | Mode: %s | Transform: %s (Y to toggle)", 
+		opText, modeText, transformModeText);
 
 	ImDrawList* dl = ImGui::GetWindowDrawList();
-	const ImVec2 padPx(6.f, 4.f);
+	const ImVec2 padPx(8.f, 6.f);
 	const ImVec2 textSize = ImGui::CalcTextSize(label);
 	const ImVec2 boxPos = ImVec2(imgMin.x + 8.f, imgMin.y + 8.f);
 	const ImVec2 boxMax = ImVec2(boxPos.x + textSize.x + padPx.x * 2.f,
-		boxPos.y + textSize.y * 2.f + padPx.y * 2.f);
+		boxPos.y + textSize.y + padPx.y * 2.f);
 
-	dl->AddRectFilled(boxPos, boxMax, IM_COL32(0, 0, 0, 160), 4.0f);
+	dl->AddRectFilled(boxPos, boxMax, IM_COL32(0, 0, 0, 180), 4.0f);
 	dl->AddText(ImVec2(boxPos.x + padPx.x, boxPos.y + padPx.y), IM_COL32(255, 255, 255, 255), label);
 }
 
@@ -334,8 +346,21 @@ void Ermine::ViewPortGUI::GizmoOverlay(const ImVec2& imgMin, const ImVec2& imgSi
 		auto& ecs = ECS::GetInstance();
 		auto& tr = ecs.GetComponent<Transform>(selectedEntity);
 
+		// --- NEW: Toggle transform mode with Y key ---
+		if (Input::IsKeyPressedEditor(GLFW_KEY_Y)) {
+			editor::s_transformMode = (editor::s_transformMode == TransformMode::Pivot) 
+				? TransformMode::Center 
+				: TransformMode::Pivot;
+			//EE_CORE_INFO("Transform mode: {}", 
+			//	(editor::s_transformMode == TransformMode::Pivot) ? "Pivot" : "Center");
+		}
+
+		// Get the position where gizmo should appear
+		Vec3 gizmoPosition = TransformModeHelper::GetManipulationPosition(selectedEntity, editor::s_transformMode);
+
+		// Build model matrix using gizmo position instead of transform.position
 		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(tr.position.x, tr.position.y, tr.position.z));
+		model = glm::translate(model, glm::vec3(gizmoPosition.x, gizmoPosition.y, gizmoPosition.z));
 		glm::quat rotQuat(tr.rotation.w, tr.rotation.x, tr.rotation.y, tr.rotation.z);
 		rotQuat = glm::normalize(rotQuat);
 		model *= glm::mat4_cast(rotQuat);
@@ -367,9 +392,40 @@ void Ermine::ViewPortGUI::GizmoOverlay(const ImVec2& imgMin, const ImVec2& imgSi
 			if (glm::decompose(model, scale, rotation, translation, skew, perspective))
 			{
 				rotation = glm::normalize(rotation);
-				tr.position = Vector3D(translation.x, translation.y, translation.z);
+				
+				// --- NEW: Calculate offset from geometric center to pivot ---
+				Vec3 centerOffset = gizmoPosition - tr.position;
+				
+				// The gizmo manipulated the center point, so we need to adjust for pivot
+				if (editor::s_transformMode == TransformMode::Center && gOperation == ImGuizmo::ROTATE)
+				{
+					// When rotating around center, we need to orbit the pivot around that center
+					glm::vec3 centerPos = glm::vec3(gizmoPosition.x, gizmoPosition.y, gizmoPosition.z);
+					glm::vec3 pivotOffset = glm::vec3(centerOffset.x, centerOffset.y, centerOffset.z);
+					
+					// Rotate the offset vector by the rotation difference
+					glm::quat oldRot(tr.rotation.w, tr.rotation.x, tr.rotation.y, tr.rotation.z);
+					glm::quat deltaRot = rotation * glm::inverse(oldRot);
+					glm::vec3 rotatedOffset = deltaRot * pivotOffset;
+					
+					// New pivot position = center position - rotated offset
+					tr.position = Vector3D(
+						translation.x - rotatedOffset.x,
+						translation.y - rotatedOffset.y,
+						translation.z - rotatedOffset.z
+					);
+				}
+				else
+				{
+					// For translation and pivot mode, just use the manipulated position directly
+					tr.position = Vector3D(translation.x, translation.y, translation.z);
+				}
+				
 				tr.scale = Vector3D(scale.x, scale.y, scale.z);
 				tr.rotation = Quaternion(rotation.x, rotation.y, rotation.z, rotation.w);
+				
+				// Mark transform as dirty to trigger hierarchy update
+				ECS::GetInstance().GetSystem<HierarchySystem>()->MarkDirty(selectedEntity);
 			}
 		}
 	}
@@ -539,12 +595,12 @@ void Ermine::ViewPortGUI::Update()
 		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_FILE")) {
 			const char* cpath = static_cast<const char*>(payload->Data);
 
-			if (cpath && payload->DataSize > 0 && cpath[payload->DataSize - 1] == '\0')
-			{
-				std::string path = cpath;
+			std::filesystem::path path = cpath;
+
+			if (path.extension() != ".prefab")
+				EE_CORE_INFO("Ignored drop: {} (only .prefab is allowed here)", path.string());
+			else
 				PrefabManager::GetInstance().LoadPrefab(path);
-			}
-			//EE_CORE_INFO("Dropped prefab file: {}", payload->Data);
 		}
 		ImGui::EndDragDropTarget(); // End drag & drop target
 	}

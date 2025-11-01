@@ -61,7 +61,7 @@ namespace Ermine::graphics
 				continue;
 
 			// Update animator
-			animComp.m_animator->Update(deltaTime);
+			animComp.m_animator->Update(deltaTime, entity);
 
 			// Update bone transforms using SkeletalSSBO
 			const auto& finalBones = animComp.m_animator->GetFinalBoneMatrices();

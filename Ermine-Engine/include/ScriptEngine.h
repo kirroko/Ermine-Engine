@@ -212,6 +212,7 @@ namespace Ermine::scripting
 		static void PushCacheToManagedFields(MonoObject* obj, const std::unordered_map<std::string, ScriptFieldValue>& cache);
 
 		MonoAssembly* GetGameAsm() const { return m_gameAsm; }
-		MonoDomain* GetGameDomain() const { return m_gameDomain; }
+		MonoDomain* GetGameDomain() const { assert(m_gameDomain != nullptr && "Game Domain missing?"); return m_gameDomain; }
+		MonoAssembly* GetAPIAsm() const { return m_apiAsm; }
 	};
 }
