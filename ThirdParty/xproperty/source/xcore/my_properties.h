@@ -275,6 +275,24 @@ namespace xproperty::settings
         static void Write(Ermine::Quaternion& dst, const Ermine::Quaternion& src, context&) noexcept { dst = src; }
         static void Read(const Ermine::Quaternion& src, Ermine::Quaternion& dst, context&) noexcept { dst = src; }
     };
+
+    template<>
+    struct var_type<Ermine::Guid> : var_defaults<"guid", Ermine::Guid>
+    {
+        static void Write(Ermine::Guid& dst,
+            const Ermine::Guid& src,
+            context&) noexcept
+        {
+            dst = src;
+        }
+
+        static void Read(const Ermine::Guid& src,
+            Ermine::Guid& dst,
+            context&) noexcept
+        {
+            dst = src;
+        }
+    };
 }
 
 // 
