@@ -199,21 +199,23 @@ bool engine::Init(GLFWwindow* windowContext)
 	EE_AUTO_REGISTER_COMPONENT(PhysicComponent, "PhysicComponent")
 	EE_AUTO_REGISTER_COMPONENT(ModelComponent, "ModelComponent")
 	EE_AUTO_REGISTER_COMPONENT(AnimationComponent, "AnimationComponent")
-	EE_AUTO_REGISTER_COMPONENT(HierarchyComponent, "HierarchyComponent"); 
-	EE_AUTO_REGISTER_COMPONENT(StateMachine, "StateMachine");
+	EE_AUTO_REGISTER_COMPONENT(HierarchyComponent, "HierarchyComponent")
+	EE_AUTO_REGISTER_COMPONENT(StateMachine, "StateMachine")
 	EE_AUTO_REGISTER_COMPONENT(GlobalTransform, "GlobalTransform")
-	EE_AUTO_REGISTER_COMPONENT(ParticleEmitter, "ParticleEmitter");
+	EE_AUTO_REGISTER_COMPONENT(ParticleEmitter, "ParticleEmitter")
 
-	// Special case for Script component, need to copy over the class name
+	// NOTE : THESE ARE SPECIAL CASES DUE TO THE FACT THAT THEIR COMPONENTS ARE UNIQUE AND WOULDN'T WORK BY SHALLOW COPIED OR DEEP COPIED
+	// THE CLONING FUNCTIONALITY HAVE BEEN CONSIDERED INTO ECS ITSELF. UNSURE, ASK.
+	// Special case for Script component, ctor a new script with same class name
 	ECS::GetInstance().RegisterComponent<Script>("Script",
-		[](Ermine::ComponentManager& cm, EntityID src, EntityID dst)
+		[](ComponentManager& cm, EntityID src, EntityID dst)
 		{
 			if (!cm.HasComponent<Script>(src)) return;
 			auto& srcScript = cm.GetComponent<Script>(src);
 			cm.AddComponent<Script>(dst, Script(srcScript.m_className, dst));
 		});
 
-	// Special case for IDComponent with custom clone to force new GUID
+	// Special case for IDComponent with custom clone to force new GUID, as IDs should be unique
 	ECS::GetInstance().RegisterComponent<IDComponent>("IDComponent",
 		[](ComponentManager& cm, [[maybe_unused]] EntityID src, EntityID dst)
 		{
