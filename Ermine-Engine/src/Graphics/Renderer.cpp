@@ -16,6 +16,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "PreCompile.h"
 #include "Renderer.h"
 #include "Material.h"
+#include "SSBO_Bindings.h"
 
 #include <numeric> // For std::iota
 
@@ -154,7 +155,7 @@ void Renderer::Init(const int& screenWidth, const int& screenHeight)
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_PreSkinnedPositionsSSBO);
 	// Allocate large enough buffer for all vertices (will resize if needed)
 	glBufferData(GL_SHADER_STORAGE_BUFFER, 50000 * sizeof(glm::vec4), nullptr, GL_DYNAMIC_COPY);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 8, m_PreSkinnedPositionsSSBO); // Binding 8
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, PRESKINNED_POSITIONS_SSBO_BINDING, m_PreSkinnedPositionsSSBO); // Binding 8
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 	m_PreSkinnedBufferSize = 50000 * sizeof(glm::vec4);
 
@@ -991,21 +992,14 @@ void Renderer::CompileDrawData()
 			}
 
 			// Build entity transform
-			// glm::mat4 modelMatrix = glm::mat4(1.0f);
-			// modelMatrix = glm::translate(modelMatrix, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
-			// glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
-			// rotQuat = glm::normalize(rotQuat);
-			// modelMatrix *= glm::mat4_cast(rotQuat);
-			// modelMatrix = glm::scale(modelMatrix, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
-
-			glm::mat4 entityModel = GetEntityWorldMatrix(entity);
-
-			//glm::mat4 entityModel = glm::mat4(1.0f);
-			//entityModel = glm::translate(entityModel, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
+			//glm::mat4 modelMatrix = glm::mat4(1.0f);
+			//modelMatrix = glm::translate(modelMatrix, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
 			//glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
 			//rotQuat = glm::normalize(rotQuat);
-			//entityModel *= glm::mat4_cast(rotQuat);
-			//entityModel = glm::scale(entityModel, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
+			//modelMatrix *= glm::mat4_cast(rotQuat);
+			//modelMatrix = glm::scale(modelMatrix, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
+
+			glm::mat4 entityModel = GetEntityWorldMatrix(entity);
 
 			// Determine which pass this entity belongs to
 			bool isTransparent = material && IsTransparentMaterial(material);
@@ -1079,21 +1073,14 @@ void Renderer::CompileDrawData()
 			}
 
 			// Build model matrix
-			// glm::mat4 modelMatrix = glm::mat4(1.0f);
-			// modelMatrix = glm::translate(modelMatrix, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
-			// glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
-			// rotQuat = glm::normalize(rotQuat);
-			// modelMatrix *= glm::mat4_cast(rotQuat);
-			// modelMatrix = glm::scale(modelMatrix, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
+			 //glm::mat4 modelMatrix = glm::mat4(1.0f);
+			 //modelMatrix = glm::translate(modelMatrix, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
+			 //glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
+			 //rotQuat = glm::normalize(rotQuat);
+			 //modelMatrix *= glm::mat4_cast(rotQuat);
+			 //modelMatrix = glm::scale(modelMatrix, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
 
 			glm::mat4 model = GetEntityWorldMatrix(entity);
-
-			//glm::mat4 model = glm::mat4(1.0f);
-			//model = glm::translate(model, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
-			//glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
-			//rotQuat = glm::normalize(rotQuat);
-			//model *= glm::mat4_cast(rotQuat);
-			//model = glm::scale(model, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
 
 			// Determine which pass this entity belongs to
 			bool isTransparent = IsTransparentMaterial(material);
@@ -1160,8 +1147,18 @@ void Renderer::CompileDrawData()
 		auto& animComp = ecs.GetComponent<AnimationComponent>(entity);
 
 		if (!modelComp.m_model) continue;
-		if (animComp.boneTransformOffset < 0) continue; // Skip if no valid bone data
+		if (animComp.boneTransformOffset < 0 && animComp.m_animator) {
+			const auto& finalBones = animComp.m_animator->GetFinalBoneMatrices();
+			if (!finalBones.empty() && m_MeshManager.m_SkeletalSSBO.IsValid()) {
+				animComp.boneTransformOffset = m_MeshManager.m_SkeletalSSBO.AllocateBoneSpace(finalBones.size());
+				EE_CORE_INFO("Late-allocated bone space for entity {}: offset = {}", entity, animComp.boneTransformOffset);
 
+				// Initialize with current bone transforms
+				if (animComp.boneTransformOffset >= 0) {
+					m_MeshManager.m_SkeletalSSBO.UpdateBoneTransforms(animComp.boneTransformOffset, finalBones);
+				}
+			}
+		}
 		// Check if entity has material component for transparency/custom shader check
 		Ermine::graphics::Material* material = nullptr;
 		if (ecs.HasComponent<Ermine::Material>(entity)) {
@@ -1169,13 +1166,7 @@ void Renderer::CompileDrawData()
 			material = materialComponent.GetMaterial();
 		}
 
-		// Build entity transform
-		glm::mat4 modelMatrix = glm::mat4(1.0f);
-		modelMatrix = glm::translate(modelMatrix, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
-		glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
-		rotQuat = glm::normalize(rotQuat);
-		modelMatrix *= glm::mat4_cast(rotQuat);
-		modelMatrix = glm::scale(modelMatrix, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
+		glm::mat4 model = GetEntityWorldMatrix(entity);
 
 		// Determine which pass this entity belongs to
 		bool isTransparent = material && IsTransparentMaterial(material);
@@ -1212,7 +1203,7 @@ void Renderer::CompileDrawData()
 
 			// Build draw info with AABB and model matrix
 			DrawInfo info;
-			info.modelMatrix = modelMatrix;
+			info.modelMatrix = model;
 			info.aabbMin = mesh.aabbMin;
 			info.materialIndex = materialIndex;
 			info.aabbMax = mesh.aabbMax;
@@ -1706,22 +1697,37 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
 	std::vector<LightGPU> lights;
 	lights.reserve(MAX_LIGHTS);
 
+	// Convert view matrix to glm once for better performance
+	glm::mat4 glmView = glm::mat4(
+		view.m00, view.m01, view.m02, view.m03,
+		view.m10, view.m11, view.m12, view.m13,
+		view.m20, view.m21, view.m22, view.m23,
+		view.m30, view.m31, view.m32, view.m33
+	);
+
+	// Gather Light and Transform across all alive entities
 	const auto& ecs = Ermine::ECS::GetInstance();
 	for (EntityID e : m_LightSystem->m_Entities)
 	{
 		const auto& trans = ecs.GetComponent<Transform>(e);
 		const auto& light = ecs.GetComponent<Light>(e);
 
-		// Keep position in WORLD SPACE instead of view space
+		// View-space position using GLM
 		glm::vec4 posWorld(trans.position.x, trans.position.y, trans.position.z, 1.0f);
+		glm::vec4 posView = glmView * posWorld;
 
-		// Build rotation from quaternion
+		// Build rotation from quaternion using GLM
 		glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
 		rotQuat = glm::normalize(rotQuat);
 
-		// Keep direction in WORLD SPACE
+		// World-space direction using GLM
 		glm::vec3 fwd(0.0f, 0.0f, 1.0f);
 		glm::vec3 dirWorld = glm::normalize(rotQuat * fwd);
+
+		// View-space direction using GLM
+		glm::vec4 dirWorldH(dirWorld, 0.0f);
+		glm::vec4 dirViewH = glmView * dirWorldH;
+		glm::vec3 dirView = glm::normalize(glm::vec3(dirViewH));
 
 		// Set spot angles
 		float innerCos = 1.0f, outerCos = 1.0f;
@@ -1732,13 +1738,12 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
 			outerCos = glm::cos(outerAngle);
 		}
 
-		// Convert to LightGPU structure - NOW IN WORLD SPACE
+		// Convert to LightGPU structure
 		LightGPU gpu{};
-		gpu.position_type = glm::vec4(posWorld.x, posWorld.y, posWorld.z, static_cast<float>(light.type));
+		gpu.position_type = glm::vec4(posView.x, posView.y, posView.z, static_cast<float>(light.type));
 		gpu.color_intensity = glm::vec4(light.color.x, light.color.y, light.color.z, light.intensity);
-		gpu.direction_range = glm::vec4(dirWorld.x, dirWorld.y, dirWorld.z, light.radius);
+		gpu.direction_range = glm::vec4(dirView.x, dirView.y, dirView.z, light.radius);
 		gpu.spot_angles_castshadows_startOffset = glm::vec4(innerCos, outerCos, light.castsShadows, light.startOffset);
-
 		for (int i = 0; i < NUM_CASCADES; ++i) {
 			gpu.lightSpaceMatrix[i] = light.lightSpaceMatrices[i];
 			gpu.splitDepths[i / 4][i % 4] = light.splitDepths[i];
@@ -1895,7 +1900,7 @@ void Renderer::BindMaterialBlockIfPresent(const std::shared_ptr<Shader>& shader)
 	GLuint blockIndex = glGetProgramResourceIndex(program, GL_SHADER_STORAGE_BLOCK, "MaterialBlock");
 	if (blockIndex != GL_INVALID_INDEX)
 	{
-		glShaderStorageBlockBinding(program, blockIndex, MaterialBindingPoint);
+		glShaderStorageBlockBinding(program, blockIndex, MATERIAL_SSBO_BINDING);
 		m_MaterialBlockBoundPrograms.insert(program);
 	}
 }
@@ -3808,7 +3813,7 @@ void Renderer::UploadMaterialsToGPU()
 	{
 		glGenBuffers(1, &m_MaterialSSBO);
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_MaterialSSBO);
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, MaterialBindingPoint, m_MaterialSSBO);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, MATERIAL_SSBO_BINDING, m_MaterialSSBO);
 		EE_CORE_INFO("Created MaterialSSBO");
 	}
 	else
@@ -3924,8 +3929,8 @@ void Renderer::BuildTextureArray()
 	{
 		glGenBuffers(1, &m_TextureArraySSBO);
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_TextureArraySSBO);
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, TextureArrayBindingPoint, m_TextureArraySSBO);
-		EE_CORE_INFO("Created Texture Array SSBO at binding point {0}", TextureArrayBindingPoint);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, TEXTURE_SSBO_BINDING, m_TextureArraySSBO);
+		EE_CORE_INFO("Created Texture Array SSBO at binding point {0}", TEXTURE_SSBO_BINDING);
 	}
 	else
 	{

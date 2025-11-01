@@ -31,7 +31,14 @@ namespace Ermine::graphics
      */
     Animator::Animator(std::shared_ptr<Model> model) : m_Model(std::move(model))
     {
+        EE_CORE_WARN("Animator::Constructor - Model ptr: {}, Model name: '{}'",
+                     (void*)m_Model.get(), m_Model->GetName());
+
         m_Scene = m_Model->GetAssimpScene(); // cache scene for hierarchy traversal
+
+        EE_CORE_WARN("Animator::Constructor - m_Scene: {}, mRootNode: {}",
+                     (void*)m_Scene, (m_Scene ? (void*)m_Scene->mRootNode : nullptr));
+
         m_FinalBoneMatrices.resize(m_Model->GetBoneCount(), glm::mat4(1.0f));
 
         LoadAnimations(); // Load all animation clips

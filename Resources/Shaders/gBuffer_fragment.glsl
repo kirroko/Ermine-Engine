@@ -54,13 +54,13 @@ struct MaterialData {
 };
 
 // Material SSBO - array of materials
-layout(std430, binding = 5) restrict readonly buffer MaterialBlock
+layout(std430, binding = 3) restrict readonly buffer MaterialBlock
 {
     MaterialData materials[];
 };
 
 // Bindless texture array SSBO - stores texture handles as uvec2 (64-bit split into two 32-bit values)
-layout(std430, binding = 6) restrict readonly buffer TextureArrayBlock
+layout(std430, binding = 5) restrict readonly buffer TextureArrayBlock
 {
     uvec2 textureHandles[];
 };

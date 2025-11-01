@@ -564,6 +564,15 @@ void Ermine::AssetManager::UnloadModel(const std::string& filePath)
     }
 }
 
+/** 
+ * @brief Clear all cached models.
+ */
+void Ermine::AssetManager::ClearModelCache()
+{
+    EE_CORE_INFO("Clearing all cached models ({} models)", m_models.size());
+    m_models.clear();
+}
+
 /**
  * @brief Load the contents of a file into a buffer.
  * @param filepath The path to the file to load.

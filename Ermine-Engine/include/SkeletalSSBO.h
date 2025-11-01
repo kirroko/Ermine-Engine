@@ -14,7 +14,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #pragma once
 #include <glm/glm.hpp>
 #include <vector>
-#include <cstdint>
+#include <cstdint> 
 
 namespace Ermine::graphics
 {

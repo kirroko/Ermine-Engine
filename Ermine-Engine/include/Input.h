@@ -118,12 +118,6 @@ namespace Ermine
          */
         static std::pair<float, float> GetMouseDelta();
         
-        /**
-         * @brief Get the mouse delta for game mode (unaffected by editor blocking)
-         * @return The mouse delta for game
-         */
-        static std::pair<float, float> GetMouseDeltaGame();
-        
         // Initialization
         /**
          * @brief Initialize the input system
@@ -192,13 +186,6 @@ namespace Ermine
         static float s_MouseScrollOffset;
 
         static float s_MouseScrollOffsetEditor;
-
-        // Game mode mouse tracking
-        static float s_GameLastMouseX;
-        static float s_GameLastMouseY;
-        static float s_GameMouseDeltaX;
-        static float s_GameMouseDeltaY;
-        static bool s_GameMouseFirstMove;
         
         // Track previous frame's key/mouse button states
         static std::unordered_map<int, bool> s_PreviousKeyStates;

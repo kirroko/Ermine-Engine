@@ -225,23 +225,17 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0)
 float calculateAttenuation(int lightIndex, vec3 fragPosView, out vec3 lightDir)
 {
     int lightType = int(lights[lightIndex].position_type.w);
-    
-    // Transform light position from world space to view space
-    vec3 lightPosWorld = lights[lightIndex].position_type.xyz;
-    vec4 lightPosView4 = view * vec4(lightPosWorld, 1.0);
-    vec3 lightPosView = lightPosView4.xyz / lightPosView4.w;
-    
+    vec3 lightPosView = lights[lightIndex].position_type.xyz;
     float range = lights[lightIndex].direction_range.w;
+
     float attenuation = 1.0;
 
     if (lightType == DIRECTIONAL_LIGHT) {
-        // Transform direction from world space to view space
-        vec3 dirWorld = lights[lightIndex].direction_range.xyz;
-        vec4 dirView4 = view * vec4(dirWorld, 0.0);
-        lightDir = normalize(dirView4.xyz);
+        // Direction is stored directly in view space
+        lightDir = normalize(lights[lightIndex].direction_range.xyz);
         attenuation = 1.0;
     } else {
-        // Point or spot: direction from light to fragment (both now in view space)
+        // Point or spot: direction from light to fragment
         lightDir = normalize(lightPosView - fragPosView);
         float distance = length(lightPosView - fragPosView);
         distance = max(distance, 0.01); // Prevent division issues

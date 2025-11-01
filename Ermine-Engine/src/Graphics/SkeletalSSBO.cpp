@@ -13,6 +13,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #include "PreCompile.h"
 #include "SkeletalSSBO.h"
+#include "SSBO_Bindings.h"
 #include "Logger.h"
 #include <glad/glad.h>
 #include <cstring>
@@ -80,9 +81,6 @@ namespace Ermine::graphics
             m_BufferID = 0;
             return false;
         }
-
-        // Bind to SSBO binding point 7 (SKELETAL_SSBO_BINDING)
-        constexpr GLuint SKELETAL_SSBO_BINDING = 7;
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SKELETAL_SSBO_BINDING, m_BufferID);
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
