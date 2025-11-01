@@ -1,6 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <Filter Include="ThirdParty">
+      <UniqueIdentifier>{107145F9-FC28-8746-6530-60A251072237}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ThirdParty\xresource_pipeline_v2-main">
+      <UniqueIdentifier>{6D7B93CA-D93F-92BA-A2A5-C2840E292EF0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ThirdParty\xresource_pipeline_v2-main\dependencies">
+      <UniqueIdentifier>{438CEBC9-2F20-E171-98E4-3A2684971B64}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ThirdParty\xresource_pipeline_v2-main\dependencies\xtextfile">
+      <UniqueIdentifier>{2FE939EB-1B54-FAF6-C46F-5F5CB0B9BDD9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ThirdParty\xresource_pipeline_v2-main\dependencies\xtextfile\source">
+      <UniqueIdentifier>{6F003D72-DB69-D2D4-64AD-807FD0158319}</UniqueIdentifier>
+    </Filter>
     <Filter Include="include">
       <UniqueIdentifier>{89AF369E-F58E-B539-FEA6-40106A051C9B}</UniqueIdentifier>
     </Filter>
@@ -43,6 +58,9 @@
     <Filter Include="src\Physics">
       <UniqueIdentifier>{9F8B9316-0B41-0C0C-9435-06E300EA0210}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\ResourcePipe">
+      <UniqueIdentifier>{B26DC439-9E66-E38B-C798-C810B3F0C297}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Scene">
       <UniqueIdentifier>{0A06D2B3-7670-862A-BFAE-37D02B58647F}</UniqueIdentifier>
     </Filter>
@@ -63,6 +81,12 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\ThirdParty\xresource_pipeline_v2-main\dependencies\xtextfile\source\xtextfile.h">
+      <Filter>ThirdParty\xresource_pipeline_v2-main\dependencies\xtextfile\source</Filter>
+    </ClInclude>
+    <ClInclude Include="include\AABB.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\AnimationClip.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -76,6 +100,9 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\AssetBrowser.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\AssetDatabase.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\AssetManager.h">
@@ -222,6 +249,9 @@
     <ClInclude Include="include\Renderer.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\ResourcePipe.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\Scene.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -255,6 +285,9 @@
     <ClInclude Include="include\Texture.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\TransformMode.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\VertexArray.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -270,11 +303,11 @@
     <ClInclude Include="include\shadow_config.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="include\AABB.h">
-      <Filter>include</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\ThirdParty\xresource_pipeline_v2-main\dependencies\xtextfile\source\xtextfile.cpp">
+      <Filter>ThirdParty\xresource_pipeline_v2-main\dependencies\xtextfile\source</Filter>
+    </ClCompile>
     <ClCompile Include="src\AssetBrowser\AssetBrowser.cpp">
       <Filter>src\AssetBrowser</Filter>
     </ClCompile>
@@ -401,6 +434,12 @@
     <ClCompile Include="src\PreCompile.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\ResourcePipe\AssetDatabase.cpp">
+      <Filter>src\ResourcePipe</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ResourcePipe\ResourcePipe.cpp">
+      <Filter>src\ResourcePipe</Filter>
+    </ClCompile>
     <ClCompile Include="src\Scene\Scene.cpp">
       <Filter>src\Scene</Filter>
     </ClCompile>
@@ -426,6 +465,9 @@
       <Filter>src\Systems</Filter>
     </ClCompile>
     <ClCompile Include="src\Systems\HierarchySystem.cpp">
+      <Filter>src\Systems</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Systems\TransformMode.cpp">
       <Filter>src\Systems</Filter>
     </ClCompile>
     <ClCompile Include="src\Utility\EditorCamera.cpp">
@@ -455,7 +497,6 @@
     <ClCompile Include="src\dllmain.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\Systems\TransformMode.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="include\Component.tpp">

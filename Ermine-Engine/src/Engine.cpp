@@ -51,6 +51,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "SceneManager.h"
 #include "FSMEditor.h"
 #include "AnimationGUI.h"
+#include "ResourcePipe.h"
 #endif
 
 using namespace Ermine;
@@ -592,6 +593,25 @@ bool engine::Init(GLFWwindow* windowContext)
 	editor::EditorGUI::CreateImGUIWindow<AnimationEditorImGUI>();
 	editor::EditorGUI::CreateImGUIWindow<ConsoleGUI>();
 	editor::EditorGUI::CreateImGUIWindow<ImguiUI::AssetBrowser>(); //TODO: Standardize please, do we want namespace ImGui for all window or not
+
+	{
+		static Ermine::ResourcePipeline pipeline;
+		if (pipeline.Initialize("../Resources")) { 
+			EE_CORE_INFO("ResourcePipeline initialized successfully");
+
+			auto* assetBrowser = editor::EditorGUI::GetWindow<ImguiUI::AssetBrowser>();
+			if (assetBrowser) {
+				assetBrowser->InitWithPipeline(&pipeline);
+				EE_CORE_INFO("AssetBrowser connected to ResourcePipeline");
+			}
+			else {
+				EE_CORE_ERROR("Failed to get AssetBrowser window");
+			}
+		}
+		else {
+			EE_CORE_ERROR("Failed to initialize ResourcePipeline");
+		}
+	}
 
 	auto defaultScene = std::make_shared<Scene>("Main Scene");
 	editor::EditorGUI::SetActiveScene(defaultScene);

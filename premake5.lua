@@ -28,6 +28,7 @@ IncludeDir["Jolt"] = "ThirdParty"
 IncludeDir["assimp"] = "ThirdParty/assimp/include"
 IncludeDir["DirectXTex"] = "ThirdParty/DirectXTex/inc"
 IncludeDir["xproperty"] = "ThirdParty/xproperty/source"
+IncludeDir["xresource_Pipeline"] = "ThirdParty/xresource_pipeline_v2-main/source"
 IncludeDir["imnodes"] = "ThirdParty/imnodes"
 
 -- Libraries
@@ -69,7 +70,9 @@ project "Ermine-Engine"
         "%{prj.name}/include/**.h",
         "%{prj.name}/include/**.tpp",
         "%{prj.name}/src/**.tpp",
-        "%{prj.name}/src/**.cpp"
+        "%{prj.name}/src/**.cpp",
+        "ThirdParty/xresource_pipeline_v2-main/dependencies/xtextfile/source/xtextfile.cpp",
+        "ThirdParty/xresource_pipeline_v2-main/dependencies/xtextfile/source/xtextfile.h"
     }
 
     includedirs
@@ -88,6 +91,9 @@ project "Ermine-Engine"
         "%{IncludeDir.assimp}",
         "%{IncludeDir.DirectXTex}",
         "%{IncludeDir.xproperty}",
+        "%{IncludeDir.xresource_Pipeline}",
+        "ThirdParty/xresource_pipeline_v2-main/dependencies/xtextfile/source",
+        "ThirdParty/xresource_pipeline_v2-main/dependencies/xerr/source",
         "%{IncludeDir.imnodes}"
     }
 
@@ -228,6 +234,8 @@ project "Ermine-Editor"
     {
         "%{prj.name}/src/**.h",
         "%{prj.name}/src/**.cpp",
+        "ThirdParty/xresource_pipeline_v2-main/dependencies/xtextfile/source/xtextfile.cpp",
+        "ThirdParty/xresource_pipeline_v2-main/dependencies/xtextfile/source/xtextfile.h"
     }
 
     includedirs
@@ -244,6 +252,9 @@ project "Ermine-Editor"
         "%{IncludeDir.Mono}",
         "%{IncludeDir.rapidjson}",
         "%{IncludeDir.xproperty}",
+        "%{IncludeDir.xresource_Pipeline}",
+        "ThirdParty/xresource_pipeline_v2-main/dependencies/xtextfile/source",
+        "ThirdParty/xresource_pipeline_v2-main/dependencies/xerr/source",
         "%{IncludeDir.imnodes}"
     } 
 
