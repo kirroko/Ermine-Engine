@@ -1688,37 +1688,22 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
 	std::vector<LightGPU> lights;
 	lights.reserve(MAX_LIGHTS);
 
-	// Convert view matrix to glm once for better performance
-	glm::mat4 glmView = glm::mat4(
-		view.m00, view.m01, view.m02, view.m03,
-		view.m10, view.m11, view.m12, view.m13,
-		view.m20, view.m21, view.m22, view.m23,
-		view.m30, view.m31, view.m32, view.m33
-	);
-
-	// Gather Light and Transform across all alive entities
 	const auto& ecs = Ermine::ECS::GetInstance();
 	for (EntityID e : m_LightSystem->m_Entities)
 	{
 		const auto& trans = ecs.GetComponent<Transform>(e);
 		const auto& light = ecs.GetComponent<Light>(e);
 
-		// View-space position using GLM
+		// Keep position in WORLD SPACE instead of view space
 		glm::vec4 posWorld(trans.position.x, trans.position.y, trans.position.z, 1.0f);
-		glm::vec4 posView = glmView * posWorld;
 
-		// Build rotation from quaternion using GLM
+		// Build rotation from quaternion
 		glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
 		rotQuat = glm::normalize(rotQuat);
 
-		// World-space direction using GLM
+		// Keep direction in WORLD SPACE
 		glm::vec3 fwd(0.0f, 0.0f, 1.0f);
 		glm::vec3 dirWorld = glm::normalize(rotQuat * fwd);
-
-		// View-space direction using GLM
-		glm::vec4 dirWorldH(dirWorld, 0.0f);
-		glm::vec4 dirViewH = glmView * dirWorldH;
-		glm::vec3 dirView = glm::normalize(glm::vec3(dirViewH));
 
 		// Set spot angles
 		float innerCos = 1.0f, outerCos = 1.0f;
@@ -1729,12 +1714,13 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
 			outerCos = glm::cos(outerAngle);
 		}
 
-		// Convert to LightGPU structure
+		// Convert to LightGPU structure - NOW IN WORLD SPACE
 		LightGPU gpu{};
-		gpu.position_type = glm::vec4(posView.x, posView.y, posView.z, static_cast<float>(light.type));
+		gpu.position_type = glm::vec4(posWorld.x, posWorld.y, posWorld.z, static_cast<float>(light.type));
 		gpu.color_intensity = glm::vec4(light.color.x, light.color.y, light.color.z, light.intensity);
-		gpu.direction_range = glm::vec4(dirView.x, dirView.y, dirView.z, light.radius);
+		gpu.direction_range = glm::vec4(dirWorld.x, dirWorld.y, dirWorld.z, light.radius);
 		gpu.spot_angles_castshadows_startOffset = glm::vec4(innerCos, outerCos, light.castsShadows, light.startOffset);
+
 		for (int i = 0; i < NUM_CASCADES; ++i) {
 			gpu.lightSpaceMatrix[i] = light.lightSpaceMatrices[i];
 			gpu.splitDepths[i / 4][i % 4] = light.splitDepths[i];

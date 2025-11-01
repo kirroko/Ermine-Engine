@@ -507,10 +507,14 @@ namespace Ermine
 		float nearPlane;
 		float farPlane;
 		bool isPrimary; // Is this the main camera?
+		bool isGameCamera; // Is this a first-person game camera (vs editor camera)?
+		float mouseSensitivity; // Mouse look sensitivity
 
 		CameraComponent() = default;
-		CameraComponent(float fov = 60.0f, float aspect = 16.0f / 9.0f, float nearP = 0.1f, float farP = 1000.0f, bool primary = false) :
-			fov(fov), aspectRatio(aspect), nearPlane(nearP), farPlane(farP), isPrimary(primary)
+		CameraComponent(float fov_, float aspect, float nearP, float farP,
+			bool primary, bool gameCamera, float sensitivity) :
+			fov(fov_), aspectRatio(aspect), nearPlane(nearP), farPlane(farP),
+			isPrimary(primary), isGameCamera(gameCamera), mouseSensitivity(sensitivity)
 		{
 		}
 
@@ -522,15 +526,30 @@ namespace Ermine
 			out.AddMember("near", nearPlane, alloc);
 			out.AddMember("far", farPlane, alloc);
 			out.AddMember("primary", isPrimary, alloc);
+			out.AddMember("isGameCamera", isGameCamera, alloc);
+			out.AddMember("mouseSensitivity", mouseSensitivity, alloc);
 		}
 
 		void Deserialize(const rapidjson::Value& in) {
-			if (in.HasMember("fov"))       fov = in["fov"].GetFloat();
-			if (in.HasMember("aspect"))    aspectRatio = in["aspect"].GetFloat();
-			if (in.HasMember("near"))      nearPlane = in["near"].GetFloat();
-			if (in.HasMember("far"))       farPlane = in["far"].GetFloat();
-			if (in.HasMember("primary"))   isPrimary = in["primary"].GetBool();
+			if (in.HasMember("fov")) fov = in["fov"].GetFloat();
+			if (in.HasMember("aspect")) aspectRatio = in["aspect"].GetFloat();
+			if (in.HasMember("near")) nearPlane = in["near"].GetFloat();
+			if (in.HasMember("far")) farPlane = in["far"].GetFloat();
+			if (in.HasMember("primary")) isPrimary = in["primary"].GetBool();
+			if (in.HasMember("isGameCamera")) isGameCamera = in["isGameCamera"].GetBool();
+			if (in.HasMember("mouseSensitivity")) mouseSensitivity = in["mouseSensitivity"].GetFloat();
 		}
+
+		XPROPERTY_DEF(
+			"CameraComponent", CameraComponent,
+			xproperty::obj_member<"fov", &CameraComponent::fov>,
+			xproperty::obj_member<"aspectRatio", &CameraComponent::aspectRatio>,
+			xproperty::obj_member<"nearPlane", &CameraComponent::nearPlane>,
+			xproperty::obj_member<"farPlane", &CameraComponent::farPlane>,
+			xproperty::obj_member<"isPrimary", &CameraComponent::isPrimary>,
+			xproperty::obj_member<"isGameCamera", &CameraComponent::isGameCamera>,
+			xproperty::obj_member<"mouseSensitivity", &CameraComponent::mouseSensitivity>
+		)
 	};
 
 	struct MeshPrimitiveDesc {

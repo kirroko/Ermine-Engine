@@ -754,44 +754,36 @@
         "Transform": {
           "position": [
             -6.0,
-            0.0,
+            -1.0,
             -1.0
           ],
           "rotation": [
-            1.0,
+            0.0,
             0.0,
             0.0,
             0.0
           ],
           "scale": [
-            1.0,
-            1.0,
-            1.0
+            0.010,
+            0.010,
+            0.010
           ]
         },
         "ObjectMetaData": {
-          "name": "redCube",
-          "tag": "Red",
+          "name": "Player",
+          "tag": "Model",
           "active": true
         },
         "Mesh": {
-          "kind": "Primitive",
-          "primitive": {
-            "type": "Cube",
-            "size": [
-              1.0,
-              1.0,
-              1.0
-            ]
-          }
+          "kind": "None"
         },
         "Material": {
           "hasMaterial": true,
           "params": {
             "materialAlbedo": [
-              1.0,
-              0.0,
-              0.0,
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
               1.0
             ],
             "materialAlpha": 1.0,
@@ -817,9 +809,24 @@
           "textures": [
             {
               "slot": "materialAlbedoMap",
-              "path": "../Resources/Textures/greybox_light_grid.png"
+              "path": "../Resources/Textures/Pants_Base_color.png"
             }
           ]
+        },
+        "ModelComponent": {
+          "model": "Walking.fbx"
+        },
+        "AnimationComponent": {
+          "model": "Walking.fbx"
+        },
+        "CameraComponent": {
+          "fov": 75.0,
+          "aspect": 1.7777777777777777,
+          "near": 0.1,
+          "far": 1000.0,
+          "primary": true,
+          "isGameCamera": true,
+          "mouseSensitivity": 0.1
         },
         "HierarchyComponent": {}
       }
