@@ -102,14 +102,59 @@ namespace Ermine::ImguiUI
             if (ImGui::BeginMenu("Import as Texture"))
             {
                 static Ermine::TextureImportSettings settings;
+                static int selectedFormatIndex = 1; // Default to BGRA8
 
-                ImGui::TextDisabled("Options:");
-                ImGui::Checkbox("Generate Mipmaps", &settings.generateMipmaps);
+                ImGui::TextDisabled("Format:");
+                ImGui::Separator();
+
+                // ✅ Format dropdown
+                auto formats = Ermine::ResourcePipeline::GetSupportedFormats();
+                if (ImGui::BeginCombo("##Format", Ermine::ResourcePipeline::GetFormatName(settings.targetFormat))) {
+                    for (int i = 0; i < formats.size(); i++) {
+                        bool isSelected = (settings.targetFormat == formats[i]);
+                        if (ImGui::Selectable(Ermine::ResourcePipeline::GetFormatName(formats[i]), isSelected)) {
+                            settings.targetFormat = formats[i];
+                            selectedFormatIndex = i;
+                        }
+                        if (isSelected) {
+                            ImGui::SetItemDefaultFocus();
+                        }
+
+                        // ✅ Add helpful tooltips
+                        if (ImGui::IsItemHovered()) {
+                            switch (formats[i]) {
+                            case DXGI_FORMAT_BC1_UNORM:
+                                ImGui::SetTooltip("6:1 compression, no alpha. Best for diffuse textures.");
+                                break;
+                            case DXGI_FORMAT_BC3_UNORM:
+                                ImGui::SetTooltip("4:1 compression with alpha. Good for most textures.");
+                                break;
+                            case DXGI_FORMAT_BC7_UNORM:
+                                ImGui::SetTooltip("High quality compression. Slower but better quality.");
+                                break;
+                            case DXGI_FORMAT_BC5_UNORM:
+                                ImGui::SetTooltip("Specialized for normal maps (2-channel).");
+                                break;
+                            }
+                        }
+                    }
+                    ImGui::EndCombo();
+                }
 
                 ImGui::Separator();
-                if (ImGui::MenuItem("Import Now"))
+                ImGui::TextDisabled("Options:");
+                ImGui::Checkbox("Generate Mipmaps", &settings.generateMipmaps);
+                if (ImGui::IsItemHovered()) {
+                    ImGui::SetTooltip("Creates smaller versions for distant rendering");
+                }
+
+                ImGui::Separator();
+                if (ImGui::Button("Import Now", ImVec2(120, 0)))
                 {
-                    EE_CORE_INFO("Importing texture: {}", filePath.string());
+                    EE_CORE_INFO("Importing texture: {} as {}",
+                        filePath.string(),
+                        Ermine::ResourcePipeline::GetFormatName(settings.targetFormat));
+
                     auto result = m_Pipeline->ImportTexture(filePath.string(), settings);
 
                     if (result.success) {
@@ -121,6 +166,7 @@ namespace Ermine::ImguiUI
                     else {
                         EE_CORE_ERROR("✗ Import failed: {}", result.errorMessage);
                     }
+                    ImGui::CloseCurrentPopup();
                 }
 
                 ImGui::EndMenu();
@@ -146,13 +192,13 @@ namespace Ermine::ImguiUI
                     auto result = m_Pipeline->ImportMesh(filePath.string(), settings);
 
                     if (result.success) {
-                        EE_CORE_INFO("✓ Import successful: {} ({}ms)",
+                        EE_CORE_INFO("Import successful: {} ({}ms)",
                             result.outputPath, result.importTimeMs);
                         m_Pipeline->GetDatabase().Save();
                         Refresh();
                     }
                     else {
-                        EE_CORE_ERROR("✗ Import failed: {}", result.errorMessage);
+                        EE_CORE_ERROR("Import failed: {}", result.errorMessage);
                     }
                 }
 
@@ -167,18 +213,18 @@ namespace Ermine::ImguiUI
         if (canReimport && m_Pipeline->NeedsReimport(filePath.string()))
         {
             ImGui::Separator();
-            if (ImGui::MenuItem("⟳ Reimport (Modified)"))
+            if (ImGui::MenuItem("Reimport (Modified)"))
             {
                 EE_CORE_INFO("Reimporting: {}", filePath.string());
                 auto result = m_Pipeline->ReimportAsset(filePath.string());
 
                 if (result.success) {
-                    EE_CORE_INFO("✓ Reimport successful ({}ms)", result.importTimeMs);
+                    EE_CORE_INFO("Reimport successful ({}ms)", result.importTimeMs);
                     m_Pipeline->GetDatabase().Save();
                     Refresh();
                 }
                 else {
-                    EE_CORE_ERROR("✗ Reimport failed: {}", result.errorMessage);
+                    EE_CORE_ERROR("Reimport failed: {}", result.errorMessage);
                 }
             }
         }

@@ -101,6 +101,31 @@ namespace Ermine {
         }
     }
 
+    const char* ResourcePipeline::GetFormatName(DXGI_FORMAT format) {
+        switch (format) {
+        case DXGI_FORMAT_R8G8B8A8_UNORM: return "RGBA8 (Uncompressed)";
+        case DXGI_FORMAT_B8G8R8A8_UNORM: return "BGRA8 (Uncompressed)";
+        case DXGI_FORMAT_BC1_UNORM: return "BC1 (DXT1) - No Alpha";
+        case DXGI_FORMAT_BC2_UNORM: return "BC2 (DXT3) - Sharp Alpha";
+        case DXGI_FORMAT_BC3_UNORM: return "BC3 (DXT5) - Smooth Alpha";
+        //case DXGI_FORMAT_BC7_UNORM: return "BC7 (High Quality)";
+        case DXGI_FORMAT_BC4_UNORM: return "BC4 (Grayscale)";
+        case DXGI_FORMAT_BC5_UNORM: return "BC5 (Normal Maps)";
+        default: return "Unknown";
+        }
+    }
+
+    std::vector<DXGI_FORMAT> ResourcePipeline::GetSupportedFormats() {
+        return {
+            DXGI_FORMAT_R8G8B8A8_UNORM,  // Good for UI, requires alpha
+            DXGI_FORMAT_B8G8R8A8_UNORM,  // Default uncompressed
+            DXGI_FORMAT_BC1_UNORM,       // Best compression, no alpha
+            DXGI_FORMAT_BC3_UNORM,       // Good compression with alpha
+            //DXGI_FORMAT_BC7_UNORM,       // Best quality compression
+            DXGI_FORMAT_BC5_UNORM        // For normal maps
+        };
+    }
+
     ImportResult ResourcePipeline::ImportTexture(const std::string& sourcePath,
         const TextureImportSettings& settings) {
         if (!m_Initialized) {
@@ -384,43 +409,87 @@ namespace Ermine {
         }
 
         TexMetadata metadata = image.GetMetadata();
+        const Image* sourceImages = image.GetImages();
+        size_t sourceImageCount = image.GetImageCount();
 
-        // Convert to target format if needed
-        ScratchImage converted;
-        if (metadata.format != settings.targetFormat) {
-            hr = Convert(image.GetImages(), image.GetImageCount(), metadata,
-                settings.targetFormat, TEX_FILTER_DEFAULT, TEX_THRESHOLD_DEFAULT, converted);
+        // ✅ Step 1: Generate mipmaps FIRST (before compression)
+        ScratchImage mipChain;
+        if (settings.generateMipmaps && metadata.mipLevels == 1) {
+            hr = GenerateMipMaps(sourceImages, sourceImageCount, metadata,
+                TEX_FILTER_DEFAULT, 0, mipChain);
+            if (SUCCEEDED(hr)) {
+                sourceImages = mipChain.GetImages();
+                sourceImageCount = mipChain.GetImageCount();
+                metadata = mipChain.GetMetadata();
+                std::cout << "    Generated " << metadata.mipLevels << " mip levels" << std::endl;
+            }
+        }
+
+        // ✅ Step 2: Check if target format is compressed (BC formats)
+        bool isCompressedFormat = IsCompressed(settings.targetFormat);
+
+        ScratchImage finalImage;
+
+        if (isCompressedFormat) {
+            // ✅ COMPRESS to BC1/BC3/BC5/BC7
+            std::cout << "    Compressing to " << GetFormatName(settings.targetFormat) << "..." << std::endl;
+
+            hr = Compress(sourceImages, sourceImageCount, metadata,
+                settings.targetFormat,
+                TEX_COMPRESS_DEFAULT,  // Can use TEX_COMPRESS_PARALLEL for speed
+                TEX_THRESHOLD_DEFAULT,
+                finalImage);
+
             if (FAILED(hr)) {
-                std::cerr << "    Failed to convert texture format" << std::endl;
+                std::cerr << "    Failed to compress texture" << std::endl;
                 return false;
             }
-            metadata = converted.GetMetadata();
         }
         else {
-            converted = std::move(image);
-        }
+            // ✅ Just convert pixel format (RGBA, BGRA, etc.)
+            if (metadata.format != settings.targetFormat) {
+                std::cout << "    Converting format to " << GetFormatName(settings.targetFormat) << "..." << std::endl;
 
-        // Generate mipmaps if requested
-        ScratchImage mipChain;
-        if (settings.generateMipmaps) {
-            hr = GenerateMipMaps(converted.GetImages(), converted.GetImageCount(),
-                metadata, TEX_FILTER_DEFAULT, 0, mipChain);
-            if (FAILED(hr)) {
-                mipChain = std::move(converted);
+                hr = Convert(sourceImages, sourceImageCount, metadata,
+                    settings.targetFormat,
+                    TEX_FILTER_DEFAULT,
+                    TEX_THRESHOLD_DEFAULT,
+                    finalImage);
+
+                if (FAILED(hr)) {
+                    std::cerr << "    Failed to convert texture format" << std::endl;
+                    return false;
+                }
+            }
+            else {
+                // No conversion needed, use source directly
+                if (settings.generateMipmaps && mipChain.GetImageCount() > 0) {
+                    finalImage = std::move(mipChain);
+                }
+                else {
+                    finalImage = std::move(image);
+                }
             }
         }
-        else {
-            mipChain = std::move(converted);
-        }
 
-        // Save to DDS
-        hr = SaveToDDSFile(mipChain.GetImages(), mipChain.GetImageCount(),
-            mipChain.GetMetadata(), DDS_FLAGS_NONE, wOutput.c_str());
+        // ✅ Step 3: Save to DDS
+        std::cout << "    Saving DDS file..." << std::endl;
+        hr = SaveToDDSFile(finalImage.GetImages(), finalImage.GetImageCount(),
+            finalImage.GetMetadata(), DDS_FLAGS_NONE, wOutput.c_str());
 
         if (FAILED(hr)) {
             std::cerr << "    Failed to save DDS file" << std::endl;
             return false;
         }
+
+        // ✅ Print compression stats
+        size_t inputSize = std::filesystem::file_size(inputPath);
+        size_t outputSize = std::filesystem::file_size(outputPath);
+        float ratio = (float)inputSize / (float)outputSize;
+
+        std::cout << "    ✓ Compressed: " << inputSize / 1024 << " KB → "
+            << outputSize / 1024 << " KB (" << std::fixed << std::setprecision(1)
+            << ratio << "x compression)" << std::endl;
 
         return true;
     }

@@ -132,6 +132,9 @@ namespace Ermine {
         // Check if pipeline is initialized
         bool IsInitialized() const { return m_Initialized; }
 
+        static const char* GetFormatName(DXGI_FORMAT format);
+        static std::vector<DXGI_FORMAT> GetSupportedFormats();
+
     private:
         // Internal import functions
         ImportResult ImportTextureInternal(const std::string& sourcePath,
