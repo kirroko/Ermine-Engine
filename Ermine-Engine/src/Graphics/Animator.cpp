@@ -2,7 +2,7 @@
 /*!
 \file       Animator.cpp
 \author     Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu
-\date       03/10/2025
+\date       28/10/2025
 \brief      This file contains the definition of the animator class. It is responsible for
             loading animation clips from an Assimp scene, managing playback state,
             updating bone transforms per frame, providing final matrices for GPU skinning
@@ -17,6 +17,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "PreCompile.h"
 #include "Animator.h"
 #include "Logger.h"
+#include "Components.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/quaternion.hpp>
 
@@ -30,13 +31,8 @@ namespace Ermine::graphics
     {
         m_Scene = m_Model->GetAssimpScene(); // cache scene for hierarchy traversal
         m_FinalBoneMatrices.resize(m_Model->GetBoneCount(), glm::mat4(1.0f));
-        
-        LoadAnimations(); // Load all animation clips
 
-        if (!m_Clips.empty())
-            PlayAnimation(0, true); // play first clip, TEMP
-        else
-            m_CurrentClip = nullptr;
+        LoadAnimations(); // Load all animation clips
     }
 
     /**
@@ -255,6 +251,122 @@ namespace Ermine::graphics
     }
 
     /**
+     * @brief Seek the current animation to a specific time position (in seconds).
+     *
+     * Recalculates all bone transforms at that time without advancing playback.
+     *
+     * @param timeInSeconds Target playback time in seconds.
+     */
+    void Animator::Seek(double timeInSeconds)
+    {
+        // Ensure there is a current clip and model
+        if (!m_CurrentClip || !m_Model)
+            return;
+
+        // Convert seconds to ticks based on the clip's ticks-per-second
+        double ticksPerSecond = m_CurrentClip->ticksPerSecond != 0.0
+            ? m_CurrentClip->ticksPerSecond
+            : 25.0;
+        m_CurrentTime = fmod(timeInSeconds * ticksPerSecond, m_CurrentClip->duration);
+
+        // Recalculate bone transforms at this exact time
+        m_FinalBoneMatrices.assign(m_Model->GetBoneCount(), glm::mat4(1.0f));
+
+        if (const aiNode* rootNode = m_Model->GetAssimpScene()->mRootNode)
+            CalculateBoneTransform(rootNode, glm::mat4(1.0f));
+    }
+
+    /**
+     * @brief Evaluate and process animation transitions in the graph.
+     *
+     * Checks for any transition conditions in the linked AnimationGraph
+     * and switches animations accordingly.
+     */
+    void Animator::EvaluateTransitions(EntityID entity)
+    {
+        if (!ECS::GetInstance().HasComponent<AnimationComponent>(entity)) return;
+
+        auto& graph = ECS::GetInstance().GetComponent<AnimationComponent>(entity).m_animationGraph;
+
+        // No graph or no current state
+        if (!graph || !graph->current) return;
+
+        for (auto& transition : graph->transitions) {
+            // Match transition source node
+            if (transition.fromNodeId != graph->current->id)
+                continue;
+
+            // Evaluate all conditions for this transition
+            bool allTrue = true;
+            for (auto& cond : transition.conditions) {
+                auto it = std::find_if(graph->parameters.begin(), graph->parameters.end(),
+                    [&](const AnimationParameter& p) { return p.name == cond.parameterName; });
+
+                // Parameter missing
+                if (it == graph->parameters.end()) {
+                    allTrue = false;
+                    break;
+                }
+
+                const auto& param = *it;
+                bool result = false;
+
+                // Evaluate based on parameter type and condition
+                switch (param.type) {
+                case AnimationParameter::Type::Bool:
+                    if (cond.comparison == "==") result = param.boolValue == cond.boolValue;
+                    else if (cond.comparison == "!=") result = param.boolValue != cond.boolValue;
+                    break;
+                case AnimationParameter::Type::Float:
+                    if (cond.comparison == ">") result = param.floatValue > cond.threshold;
+                    else if (cond.comparison == "<") result = param.floatValue < cond.threshold;
+                    else if (cond.comparison == ">=") result = param.floatValue >= cond.threshold;
+                    else if (cond.comparison == "<=") result = param.floatValue <= cond.threshold;
+                    else if (cond.comparison == "==") result = param.floatValue == cond.threshold;
+                    else if (cond.comparison == "!=") result = param.floatValue != cond.threshold;
+                    break;
+                case AnimationParameter::Type::Int:
+                    if (cond.comparison == ">") result = param.intValue > static_cast<int>(cond.threshold);
+                    else if (cond.comparison == "<") result = param.intValue < static_cast<int>(cond.threshold);
+                    else if (cond.comparison == ">=") result = param.intValue >= static_cast<int>(cond.threshold);
+                    else if (cond.comparison == "<=") result = param.intValue <= static_cast<int>(cond.threshold);
+                    else if (cond.comparison == "==") result = param.intValue == static_cast<int>(cond.threshold);
+                    else if (cond.comparison == "!=") result = param.intValue != static_cast<int>(cond.threshold);
+                    break;
+                case AnimationParameter::Type::Trigger:
+                    result = param.triggerValue;
+                    break;
+                }
+
+                // If any condition fails, break early
+                if (!result) {
+                    allTrue = false;
+                    break;
+                }
+            }
+
+            if (allTrue) {
+                // Execute transistion
+                auto nextNode = std::find_if(graph->states.begin(), graph->states.end(),
+                    [&](auto& s) { return s->id == transition.toNodeId; });
+
+                if (nextNode != graph->states.end() && (*nextNode)->isAttached) {
+                    graph->current = *nextNode;
+                    PlayAnimation(graph->current->clipName);
+
+                    // Reset trigger parameters
+                    for (auto& p : graph->parameters)
+                        if (p.type == AnimationParameter::Type::Trigger)
+                            p.triggerValue = false;
+
+                    EE_CORE_INFO("Transitioned to state: {}", graph->current->name);
+                    break;
+                }
+            }
+        }
+    }
+
+    /**
      * @brief Advance animation playback and update bone transforms.
      *
      * Increments the playback timer by @p deltaTime and updates the skeleton's bone transforms
@@ -262,15 +374,23 @@ namespace Ermine::graphics
      *
      * @param deltaTime Time step in seconds since last frame.
      */
-    void Animator::Update(double deltaTime)
+    void Animator::Update(double deltaTime, EntityID entity)
     {
+        // Ensure there is a current clip and valid scene
         if (!m_CurrentClip || !m_Scene || !m_Scene->mRootNode) return;
         if (m_Paused) return;
+
+        // Handle playback speed from graph
+        double playbackSpeed = 1.0;
+        if (ECS::GetInstance().HasComponent<AnimationComponent>(entity)) {
+            auto& graph = ECS::GetInstance().GetComponent<AnimationComponent>(entity).m_animationGraph;
+            playbackSpeed = graph->playbackSpeed;
+        }
 
         // Advance animation time in ticks
         double ticksPerSecond = m_CurrentClip->ticksPerSecond != 0.0
             ? m_CurrentClip->ticksPerSecond : 25.0;
-        m_CurrentTime += deltaTime * ticksPerSecond;
+        m_CurrentTime += deltaTime * ticksPerSecond * playbackSpeed;
 
         // Check animation looping
         if (m_Loop)
@@ -286,6 +406,16 @@ namespace Ermine::graphics
 
         // Push back results to the model
         m_Model->SetBoneTransforms(m_FinalBoneMatrices);
+
+        // Evaluate any animation graph transitions
+        EvaluateTransitions(entity);
+
+        // Example of setting a parameter (to be replaced with actual game logic)
+        //auto& graph = ECS::GetInstance().GetComponent<AnimationComponent>(entity).m_animationGraph;
+        //for (auto& p : graph->parameters)
+        //{
+        //    if (p.name == "isRunning") p.boolValue = true;
+        //}
     }
 
     /**

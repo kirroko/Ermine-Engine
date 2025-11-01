@@ -22,6 +22,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Input.h"
 #include "Logger.h"
 #include "JobSystem.h"
+#include <HierarchySystem.h>
 #include "FiniteStateMachine.h"
 
 namespace fs = std::filesystem;
@@ -869,11 +870,25 @@ namespace
 			mono_free(raw);
 	}
 
+	MonoClassField* FindFieldInHierarchy(MonoClass* klass, const char* name)
+	{
+		if (!klass || !name) return nullptr;
+		for (MonoClass* c = klass; c; c = mono_class_get_parent(c))
+		{
+			mono_class_init(c);
+			if (MonoClassField* f = mono_class_get_field_from_name(c, name))
+				return f;
+		}
+		return nullptr;
+	}
+
 	Ermine::EntityID GetEntityIDFromManaged(MonoObject* obj)
 	{
 		if (!obj) return 0;
 		MonoClass* klass = mono_object_get_class(obj);
-		if (MonoClassField* field = mono_class_get_field_from_name(klass, "EntityID"))
+		if (!klass) return 0;
+
+		if (MonoClassField* field = FindFieldInHierarchy(klass,"EntityID"))
 		{
 			Ermine::EntityID id = 0;
 			mono_field_get_value(obj, field, &id);
@@ -886,7 +901,9 @@ namespace
 	{
 		if (!obj) return;
 		MonoClass* klass = mono_object_get_class(obj);
-		if (MonoClassField* field = mono_class_get_field_from_name(klass, "EntityID"))
+		if (!klass) return;
+
+		if (MonoClassField* field = FindFieldInHierarchy(klass,"EntityID"))
 			mono_field_set_value(obj, field, &id);
 	}
 
@@ -1051,22 +1068,79 @@ namespace
 		return { 1,1,1 };
 	}
 
+	//void icall_transform_set_position(MonoObject* thisObj, ManagedVector3 value)
+	//{
+	//	if (auto* t = GetTransformFromManaged(thisObj))
+	//		t->position = ToNativeVec(value);
+	//}
+
+	//void icall_transform_set_rotation(MonoObject* thisObj, ManagedQuaternion value)
+	//{
+	//	if (auto* t = GetTransformFromManaged(thisObj))
+	//		t->rotation = ToNativeQuat(value);
+	//}
+
+	//void icall_transform_set_scale(MonoObject* thisObj, ManagedVector3 value)
+	//{
+	//	if (auto* t = GetTransformFromManaged(thisObj))
+	//		t->scale = ToNativeVec(value);
+	//}
+
 	void icall_transform_set_position(MonoObject* thisObj, ManagedVector3 value)
 	{
-		if (auto* t = GetTransformFromManaged(thisObj))
-			t->position = ToNativeVec(value);
+		using namespace Ermine;
+		EntityID id = GetEntityIDFromManaged(thisObj);
+		if (id == 0 || !ECS::GetInstance().IsEntityValid(id) || !ECS::GetInstance().HasComponent<Transform>(id))
+			return;
+
+		// Use HierarchySystem to properly propagate transform changes
+		std::shared_ptr<HierarchySystem> hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>();
+		if (hierarchySystem) {
+			hierarchySystem->SetLocalPosition(id, ToNativeVec(value));
+		}
+		else {
+			// Fallback if hierarchy system not available
+			auto& transform = ECS::GetInstance().GetComponent<Transform>(id);
+			transform.position = ToNativeVec(value);
+		}
 	}
 
 	void icall_transform_set_rotation(MonoObject* thisObj, ManagedQuaternion value)
 	{
-		if (auto* t = GetTransformFromManaged(thisObj))
-			t->rotation = ToNativeQuat(value);
+		using namespace Ermine;
+		EntityID id = GetEntityIDFromManaged(thisObj);
+		if (id == 0 || !ECS::GetInstance().IsEntityValid(id) || !ECS::GetInstance().HasComponent<Transform>(id))
+			return;
+
+		// Use HierarchySystem to properly propagate transform changes
+		std::shared_ptr<HierarchySystem> hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>();
+		if (hierarchySystem) {
+			hierarchySystem->SetLocalRotation(id, ToNativeQuat(value));
+		}
+		else {
+			// Fallback if hierarchy system not available
+			auto& transform = ECS::GetInstance().GetComponent<Transform>(id);
+			transform.rotation = ToNativeQuat(value);
+		}
 	}
 
 	void icall_transform_set_scale(MonoObject* thisObj, ManagedVector3 value)
 	{
-		if (auto* t = GetTransformFromManaged(thisObj))
-			t->scale = ToNativeVec(value);
+		using namespace Ermine;
+		EntityID id = GetEntityIDFromManaged(thisObj);
+		if (id == 0 || !ECS::GetInstance().IsEntityValid(id) || !ECS::GetInstance().HasComponent<Transform>(id))
+			return;
+
+		// Use HierarchySystem to properly propagate transform changes
+		std::shared_ptr<HierarchySystem> hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>();
+		if (hierarchySystem) {
+			hierarchySystem->SetLocalScale(id, ToNativeVec(value));
+		}
+		else {
+			// Fallback if hierarchy system not available
+			auto& transform = ECS::GetInstance().GetComponent<Transform>(id);
+			transform.scale = ToNativeVec(value);
+		}
 	}
 #pragma endregion
 
@@ -1178,6 +1252,26 @@ namespace
 #pragma endregion
 
 #pragma region GameObject ICalls
+	MonoObject* icall_gameobject_wrap_existing(uint64_t entityID)
+	{
+		using namespace Ermine;
+		if (entityID == 0 || !ECS::GetInstance().IsEntityValid(entityID))
+			return nullptr;
+		MonoObject* obj = CreateManagedGameObjectWrapper(entityID);
+		return obj;
+	}
+
+	mono_bool icall_gameobject_bind_existing(MonoObject* self, uint64_t entityID)
+	{
+		using namespace Ermine;
+		if (!self) return 0;
+		if (entityID == 0 || !ECS::GetInstance().IsEntityValid(entityID))
+			return 0;
+
+		SetEntityIDOnManaged(self, entityID);
+		return 1;
+	}
+
 	void icall_gameobject_creategameobject(MonoObject* self, MonoString* name)
 	{
 		EE_CORE_WARN("GameObject created!");
@@ -1704,6 +1798,9 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	mono_add_internal_call("ErmineEngine.GameObject::Internal_FindGameObjectsWithTag", (const void*)icall_gameobject_find_gameobjects_with_tag);
 	mono_add_internal_call("ErmineEngine.GameObject::Internal_Instantiate", (const void*)icall_gameobject_instantiate);
 	mono_add_internal_call("ErmineEngine.GameObject::Internal_Destroy", (const void*)icall_gameobject_destroy);
+
+	mono_add_internal_call("ErmineEngine.GameObject::Internal_WrapExisting", (const void*)icall_gameobject_wrap_existing);
+	mono_add_internal_call("ErmineEngine.GameObject::Internal_BindExisting", (const void*)icall_gameobject_bind_existing);
 #pragma endregion
 #pragma region StateMachine ICalls
 	mono_add_internal_call("ErmineEngine.StateMachine::RequestNextState", (const void*)icall_statemachine_request_next_state);

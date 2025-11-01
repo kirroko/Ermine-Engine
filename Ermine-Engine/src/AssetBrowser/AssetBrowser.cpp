@@ -222,7 +222,7 @@ namespace Ermine::ImguiUI
             renamePending = true;
             renameFrom = filePath.string();
             renameTo = filePath.filename().string();
-            std::strncpy(renameBuffer, renameTo.c_str(), sizeof(renameBuffer) - 1);
+            strncpy_s(renameBuffer, sizeof(renameBuffer), renameTo.c_str(), _TRUNCATE);
         }
     }
 
@@ -478,11 +478,11 @@ namespace Ermine::ImguiUI
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6, 4));
 
         // Search box
-        static char searchBuf[256] = { 0 };
-        std::strncpy(searchBuf, searchQuery.c_str(), sizeof(searchBuf) - 1);
+        static char searchBuffer[256] = { 0 };
+        strncpy_s(searchBuffer, sizeof(searchBuffer), searchQuery.c_str(), _TRUNCATE);
         ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - 300.f);
-        if (ImGui::InputTextWithHint("##SearchAssets", "Search assets...", searchBuf, IM_ARRAYSIZE(searchBuf))) {
-            searchQuery = std::string(searchBuf);
+        if (ImGui::InputTextWithHint("##SearchAssets", "Search assets...", searchBuffer, IM_ARRAYSIZE(searchBuffer))) {
+            searchQuery = std::string(searchBuffer);
             LoadDirectoryContents(currentDirectory);
         }
 
@@ -502,11 +502,10 @@ namespace Ermine::ImguiUI
             if (ImGui::IsItemHovered()) ImGui::SetTooltip("Refresh Assets");
         }
         ImGui::EndGroup();
-        ImGui::PopStyleVar();
-        ImGui::Separator(); // --- End top bar ---
+        ImGui::PopStyleVar(); // --- End top bar ---
 
         // --- Asset browser columns ---
-        ImGui::Columns(2, "AssetBrowserColumns", true);
+        ImGui::Columns(2, "AssetBrowserColumns", false);
         ImGui::SetColumnWidth(0, 260);
 
         ImGui::BeginChild("Folders", ImVec2(0, 0), true); // Begin left folder tree panel
@@ -594,7 +593,6 @@ namespace Ermine::ImguiUI
         }
 
         // Footer with selected path
-        ImGui::Separator();
         ImGui::BeginChild("Footer", ImVec2(0, 35), false); // Begin footer
         {
             // Show selected path below
@@ -603,7 +601,6 @@ namespace Ermine::ImguiUI
                     fs::path rel = fs::relative(asset.realName, projectRoot);
                     std::string shortPath = "Resources/" + rel.string();
                     std::replace(shortPath.begin(), shortPath.end(), '\\', '/');
-                    ImGui::Separator();
                     ImGui::TextDisabled("%s", shortPath.c_str());
                     ImGui::SameLine();
                     ImGui::SmallButton("Copy Path");

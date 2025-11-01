@@ -1,4 +1,4 @@
-/* Start Header ************************************************************************/
+﻿/* Start Header ************************************************************************/
 /*!
 \file       HierarchyInspector.cpp
 \author     Edwin Lee Zirui, edwinzirui.lee, 2301299, edwinzirui.lee\@digipen.edu (30%)
@@ -14,6 +14,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #include "PreCompile.h"
 #include "HierarchyInspector.h"
+#include "HierarchySystem.h"
 #include "Components.h"
 #include "ECS.h"
 #include "GeometryFactory.h"
@@ -24,6 +25,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "FSMEditor.h"
 #include <EditorGUI.h>
 #include "Particles.h"
+#include "AnimationGUI.h"
 
 
 #include "xcore/my_properties.h"
@@ -296,6 +298,7 @@ namespace Ermine::editor {
 			return;
 
 		auto& t = ECS::GetInstance().GetComponent<Transform>(entity);
+		auto hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>();
 
 		xproperty::settings::context ctx{};
 		xproperty::sprop::container bag;
@@ -314,12 +317,18 @@ namespace Ermine::editor {
 			// Vec3 (position / scale)
 			if (guid == xproperty::settings::var_type<Ermine::Vec3>::guid_v) {
 				Ermine::Vec3 v = p.m_Value.get<Ermine::Vec3>();
-				if (DrawVec3XYZ(label.c_str(), &v.x)) {
+				
+				// FIXED: Check if widget is being actively edited OR if value changed
+				if (DrawVec3XYZ(label.c_str(), &v.x) || ImGui::IsItemActive()) {
 					p.m_Value.set<Ermine::Vec3>({ v.x, v.y, v.z });
 					xproperty::sprop::setProperty(err, t, p, ctx);
+					
+					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
+					// CRITICAL: Mark entity dirty so hierarchy system updates immediately
+					hierarchySystem->MarkDirty(entity);
 				}
 			}
-			// Quaternion (rotation) � shown/edited as Euler degrees
+			// Quaternion (rotation) – shown/edited as Euler degrees
 			else if (guid == xproperty::settings::var_type<Ermine::Quaternion>::guid_v) {
 				Ermine::Quaternion q = p.m_Value.get<Ermine::Quaternion>();
 
@@ -330,21 +339,14 @@ namespace Ermine::editor {
 				const bool isRotation = (label == "Rotation");
 				const char* rotLabel = isRotation ? "Rotation (Degrees)" : label.c_str();
 
-				if (DrawVec3XYZ(rotLabel, &eulerDeg.x, 1.0f, 0.0f, -360.0f, 360.0f)) {
-					// Build quaternion back from XYZ degrees (Z * Y * X like before)
-
-					//const float rx = eulerDeg.x * (float)M_PI / 180.0f;
-					//const float ry = eulerDeg.y * (float)M_PI / 180.0f;
-					//const float rz = eulerDeg.z * (float)M_PI / 180.0f;
-
-					//Matrix4x4 mx, my, mz, m;
-					//Mtx44Identity(mx); Mtx44Identity(my); Mtx44Identity(mz);
-					//Mtx44RotXRad(mx, rx); Mtx44RotYRad(my, ry); Mtx44RotZRad(mz, rz);
-					//m = mz * my * mx;
-
-					//q = Mtx44GetQuaternion(m);
+				// FIXED: Check if widget is being actively edited OR if value changed
+				if (DrawVec3XYZ(rotLabel, &eulerDeg.x, 1.0f, 0.0f, -360.0f, 360.0f) || ImGui::IsItemActive()) {
 					p.m_Value.set<Ermine::Quaternion>(FromEulerDegrees(eulerDeg));
 					xproperty::sprop::setProperty(err, t, p, ctx);
+					
+					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
+					// CRITICAL: Mark entity dirty so hierarchy system updates immediately
+					hierarchySystem->MarkDirty(entity);
 				}
 			}
 
@@ -387,6 +389,7 @@ namespace Ermine::editor {
 			float size[3] = { mesh.primitive.size.x, mesh.primitive.size.y, mesh.primitive.size.z };
 			if (ImGui::DragFloat3("Size", size, 0.1f, 0.01f, 100.f)) {
 				mesh.primitive.size = { size[0], size[1], size[2] };
+				ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
 				mesh.RebuildPrimitive();
 			}
 		}
@@ -943,76 +946,73 @@ namespace Ermine::editor {
 		if (!ComponentHeaderWithRemove<AudioComponent>("Audio", entity))
 			return;
 
-		if (!ImGui::CollapsingHeader("Audio", ImGuiTreeNodeFlags_DefaultOpen))
-			return;
-
 		auto& audio = ECS::GetInstance().GetComponent<AudioComponent>(entity);
 
 		// Collect reflective properties
-		xproperty::settings::context ctx{};
-		xproperty::sprop::container  bag;
-		xproperty::sprop::collector  collect(audio, bag, ctx, true);
+	 xproperty::settings::context ctx{};
+	 xproperty::sprop::container  bag;
+	 xproperty::sprop::collector  collect(audio, bag, ctx, true);
 
-		std::string err;
+	 std::string err;
 
-		for (auto& p : bag.m_Properties)
-		{
-			const auto guid = p.m_Value.getTypeGuid();
-			const char* id = p.m_Path.c_str();
-			std::string label = PrettyLabelFromPath(p.m_Path);
+	 for (auto& p : bag.m_Properties)
+	 {
+		 const auto guid = p.m_Value.getTypeGuid();
+		 const char* id = p.m_Path.c_str();
+		 std::string label = PrettyLabelFromPath(p.m_Path);
 
-			ImGui::PushID(id);
+		 ImGui::PushID(id);
 
-			// string fields
-			if (guid == xproperty::settings::var_type<std::string>::guid_v) {
-				std::string s = p.m_Value.get<std::string>();
-				char buf[256]; std::snprintf(buf, sizeof(buf), "%s", s.c_str());
-				if (ImGui::InputText(label.c_str(), buf, IM_ARRAYSIZE(buf))) {
-					p.m_Value.set<std::string>(buf);
-					xproperty::sprop::setProperty(err, audio, p, ctx);
-				}
-			}
-			// bool fields
-			else if (guid == xproperty::settings::var_type<bool>::guid_v) {
-				bool v = p.m_Value.get<bool>();
-				if (ImGui::Checkbox(label.c_str(), &v)) {
-					p.m_Value.set<bool>(v);
-					xproperty::sprop::setProperty(err, audio, p, ctx);
-				}
-			}
-			// float fields
-			else if (guid == xproperty::settings::var_type<float>::guid_v) {
-				float v = p.m_Value.get<float>();
-				if (ImGui::DragFloat(label.c_str(), &v, 0.01f, 0.0f, 1.0f)) {
-					p.m_Value.set<float>(v);
-					xproperty::sprop::setProperty(err, audio, p, ctx);
-				}
-			}
-			// int fields
-			else if (guid == xproperty::settings::var_type<int>::guid_v) {
-				int v = p.m_Value.get<int>();
-				if (ImGui::DragInt(label.c_str(), &v)) {
-					p.m_Value.set<int>(v);
-					xproperty::sprop::setProperty(err, audio, p, ctx);
-				}
-			}
+		 // string fields
+		 if (guid == xproperty::settings::var_type<std::string>::guid_v) {
+			 std::string s = p.m_Value.get<std::string>();
+			 char buf[256]; std::snprintf(buf, sizeof(buf), "%s", s.c_str());
+			 if (ImGui::InputText(label.c_str(), buf, IM_ARRAYSIZE(buf))) {
+				 p.m_Value.set<std::string>(buf);
+				 xproperty::sprop::setProperty(err, audio, p, ctx);
+			 }
+		 }
+		 // bool fields
+		 else if (guid == xproperty::settings::var_type<bool>::guid_v) {
+			 bool v = p.m_Value.get<bool>();
+			 if (ImGui::Checkbox(label.c_str(), &v)) {
+				 p.m_Value.set<bool>(v);
+				 xproperty::sprop::setProperty(err, audio, p, ctx);
+			 }
+		 }
+		 // float fields
+		 else if (guid == xproperty::settings::var_type<float>::guid_v) {
+			 float v = p.m_Value.get<float>();
+			 if (ImGui::DragFloat(label.c_str(), &v, 0.01f, 0.0f, 1.0f)) {
+				 p.m_Value.set<float>(v);
+				 xproperty::sprop::setProperty(err, audio, p, ctx);
+			 }
+		 }
+		 // int fields
+		 else if (guid == xproperty::settings::var_type<int>::guid_v) {
+			 int v = p.m_Value.get<int>();
+			 if (ImGui::DragInt(label.c_str(), &v)) {
+				 p.m_Value.set<int>(v);
+				 xproperty::sprop::setProperty(err, audio, p, ctx);
+			 }
+		 }
 
-			ImGui::PopID();
-		}
+		 ImGui::PopID();
+	 }
 
-		ImGui::Separator();
+	 ImGui::Separator();
 
-		// Optional quick preview buttons
-		if (ImGui::Button("Play")) {
-			// TODO: AudioSystem::Get().Play(audio.soundName, entity);
-		}
-		ImGui::SameLine();
-		if (ImGui::Button("Stop")) {
-			// TODO: AudioSystem::Get().Stop(entity);
-		}
+	 // Optional quick preview buttons
+	 if (ImGui::Button("Play")) {
+		 // TODO: AudioSystem::Get().Play(audio.soundName, entity);
+	 }
+	 ImGui::SameLine();
+	 if (ImGui::Button("Stop")) {
+		 // TODO: AudioSystem::Get().Stop(entity);
+	 }
 
-		if (!err.empty())
-			ImGui::TextColored(ImVec4(1, 0.3f, 0.3f, 1), "Error: %s", err.c_str());
+	 if (!err.empty())
+		 ImGui::TextColored(ImVec4(1, 0.3f, 0.3f, 1), "Error: %s", err.c_str());
 	}
 
 	void HierarchyInspector::DrawScriptComponent(EntityID entity)
@@ -1255,21 +1255,12 @@ namespace Ermine::editor {
 			if (ImGui::Button("Resume")) animator->ResumeAnimation();
 			ImGui::SameLine();
 			if (ImGui::Button("Stop")) animator->StopAnimation();
-
-			if (auto current = animator->GetCurrentClip()) {
-				ImGui::Separator();
-				ImGui::Text("Current: %s", current->name.c_str());
-				ImGui::Text("Duration: %.2fs", current->duration / current->ticksPerSecond);
-				ImGui::Text("Ticks: %.2f, TPS: %.2f", current->duration, current->ticksPerSecond);
-			}
+			ImGui::SameLine();
+			bool looping = animator->IsLooping();
+			if (ImGui::Checkbox("Looping", &looping)) animator->IsLooping() = looping;
 		}
 		else
 			ImGui::TextUnformatted("No animation clips found in this model.");
-
-		// Looping toggle (persisted)
-		bool looping = animator->IsLooping();
-		if (ImGui::Checkbox("Looping", &looping))
-			animator->IsLooping() = looping;
 
 		// Reload Animator Button
 		if (ImGui::Button("Reload Animation")) {
@@ -1284,6 +1275,16 @@ namespace Ermine::editor {
 					animComp.m_animator.reset();
 					ImGui::TextUnformatted("No animations found in this model.");
 				}
+			}
+		}
+
+		// Open Animation Editor Button
+		ImGui::SameLine();
+		if (ImGui::Button("Open Editor")) {
+			auto animationWindow = editor::EditorGUI::GetWindow<AnimationEditorImGUI>();
+			if (animationWindow) {
+				animationWindow->SetSelectedEntity(entity);
+				editor::EditorGUI::FocusWindow("Animation Editor");
 			}
 		}
 	}

@@ -295,7 +295,9 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="include\AABB.h" />
     <ClInclude Include="include\AnimationClip.h" />
+    <ClInclude Include="include\AnimationGUI.h" />
     <ClInclude Include="include\AnimationManager.h" />
     <ClInclude Include="include\Animator.h" />
     <ClInclude Include="include\AssetBrowser.h" />
@@ -390,6 +392,7 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClCompile Include="src\Graphics\Texture.cpp" />
     <ClCompile Include="src\Graphics\VertexArray.cpp" />
     <ClCompile Include="src\Graphics\VertexBuffer.cpp" />
+    <ClCompile Include="src\ImGUI\AnimationGUI.cpp" />
     <ClCompile Include="src\ImGUI\AudioIMGUI.cpp" />
     <ClCompile Include="src\ImGUI\ConsoleGUI.cpp" />
     <ClCompile Include="src\ImGUI\EditorGUI.cpp" />
@@ -417,6 +420,7 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClCompile Include="src\Systems\HierarchyInspector.cpp" />
     <ClCompile Include="src\Systems\HierarchyPanel.cpp" />
     <ClCompile Include="src\Systems\HierarchySystem.cpp" />
+    <ClCompile Include="src\Systems\TransformMode.cpp" />
     <ClCompile Include="src\Utility\EditorCamera.cpp" />
     <ClCompile Include="src\Utility\FrameController.cpp" />
     <ClCompile Include="src\Utility\GPUProfiler.cpp" />

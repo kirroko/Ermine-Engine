@@ -25,10 +25,12 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <cassert>
 #include <algorithm>
 #include <numbers>
+#include <regex>
 
 #include <memory>
 #include <bitset>
 #include <set>
+#include <tuple>
 
 #include <filesystem>
 #include <typeindex>

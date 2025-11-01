@@ -36,12 +36,14 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <Jolt/Jolt.h>
 #include <Jolt/Physics/Body/Body.h>
 #include "Guid.h"
+#include "AnimationGUI.h"
 
 #include "xcore/my_properties.h"
 #include "xproperty.h"
 #include "sprop/property_sprop.h"
 
 #include "FSMNode.h"
+#include "AABB.h"
 
 namespace xprop_utils
 {
@@ -176,20 +178,41 @@ namespace Ermine
 	*************************************************************************/
 	struct Transform
 	{
-		Mtx44 transform_matrix{ 1.0f }; // Identity matrix
+		//Mtx44 transform_matrix{ 1.0f }; // Local transform matrix
 		Vec3 position;
 		Quaternion rotation; // Euler angles in degrees
 		Vec3 scale;
+		bool isDirty{ true };
 
-		explicit Transform(const Vec3& pos = Vec3(), const Quaternion& rot = Quaternion(), const Vec3& scl = Vec3(1.f, 1.f, 1.f)) : position(pos), rotation(rot), scale(scl)
+		explicit Transform(const Vec3& pos = Vec3(), const Quaternion& rot = Quaternion(), const Vec3& scl = Vec3(1.f, 1.f, 1.f))
+			: position(pos), rotation(rot), scale(scl)
 		{
 		}
 
-		//static inline std::string ShortNameFromPath(const std::string& path)
-		//{
-		//	const size_t pos = path.find_last_of('/');
-		//	return (pos == std::string::npos) ? path : path.substr(pos + 1);
-		//}
+		// Helper method to build local transform matrix
+		Mtx44 GetLocalMatrix() const
+		{
+			Mtx44 translation, rotation_mtx, scale_mtx;
+			Mtx44Identity(translation);
+			Mtx44Identity(rotation_mtx);
+			Mtx44Identity(scale_mtx);
+
+			// Set translation - this overwrites the translation part of identity matrix
+			translation.m03 = position.x;
+			translation.m13 = position.y;
+			translation.m23 = position.z;
+
+			// Set rotation from quaternion
+			Mtx44SetFromQuaternion(rotation_mtx, rotation);
+
+			// Set scale - this overwrites the scale part of identity matrix
+			scale_mtx.m00 = scale.x;
+			scale_mtx.m11 = scale.y;
+			scale_mtx.m22 = scale.z;
+
+			// Correct multiplication order - Scale -> Rotate -> Translate (SRT)
+			return translation * rotation_mtx * scale_mtx;
+		}
 
 		template<typename Alloc>
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
@@ -209,6 +232,83 @@ namespace Ermine
 	};
 
 	//XPROPERTY_REG(Transform);
+
+	/*!***********************************************************************
+	\brief
+	 GlobalTransform component - WORLD TRANSFORM FOR RENDERING.
+	*************************************************************************/
+	struct GlobalTransform
+	{
+		Mtx44 worldMatrix{ 1.0f };  // World transform matrix used by renderer
+		bool isDirty{ true };
+
+		GlobalTransform() = default;
+
+		explicit GlobalTransform(const Mtx44& matrix) : worldMatrix(matrix), isDirty(false) {}
+
+		// Extract world position from matrix
+		Vec3 GetWorldPosition() const
+		{
+			return Vec3(worldMatrix.m03, worldMatrix.m13, worldMatrix.m23);
+		}
+
+		// Extract world rotation from matrix
+		Quaternion GetWorldRotation() const
+		{
+			// Remove translation and scale to get rotation matrix
+			Mtx44 rotMatrix = worldMatrix;
+			rotMatrix.m03 = 0.0f; rotMatrix.m13 = 0.0f; rotMatrix.m23 = 0.0f; rotMatrix.m33 = 1.0f;
+
+			// Remove scale
+			Vec3 xAxis(rotMatrix.m00, rotMatrix.m10, rotMatrix.m20);
+			Vec3 yAxis(rotMatrix.m01, rotMatrix.m11, rotMatrix.m21);
+			Vec3 zAxis(rotMatrix.m02, rotMatrix.m12, rotMatrix.m22);
+
+			float xLen = sqrtf(xAxis.x * xAxis.x + xAxis.y * xAxis.y + xAxis.z * xAxis.z);
+			float yLen = sqrtf(yAxis.x * yAxis.x + yAxis.y * yAxis.y + yAxis.z * yAxis.z);
+			float zLen = sqrtf(zAxis.x * zAxis.x + zAxis.y * zAxis.y + zAxis.z * zAxis.z);
+
+			if (xLen > 0.0f) { xAxis.x /= xLen; xAxis.y /= xLen; xAxis.z /= xLen; }
+			if (yLen > 0.0f) { yAxis.x /= yLen; yAxis.y /= yLen; yAxis.z /= yLen; }
+			if (zLen > 0.0f) { zAxis.x /= zLen; zAxis.y /= zLen; zAxis.z /= zLen; }
+
+			rotMatrix.m00 = xAxis.x; rotMatrix.m10 = xAxis.y; rotMatrix.m20 = xAxis.z;
+			rotMatrix.m01 = yAxis.x; rotMatrix.m11 = yAxis.y; rotMatrix.m21 = yAxis.z;
+			rotMatrix.m02 = zAxis.x; rotMatrix.m12 = zAxis.y; rotMatrix.m22 = zAxis.z;
+
+			return Mtx44GetQuaternion(rotMatrix);
+		}
+
+		// Extract world scale from matrix
+		Vec3 GetWorldScale() const
+		{
+			Vec3 xAxis(worldMatrix.m00, worldMatrix.m10, worldMatrix.m20);
+			Vec3 yAxis(worldMatrix.m01, worldMatrix.m11, worldMatrix.m21);
+			Vec3 zAxis(worldMatrix.m02, worldMatrix.m12, worldMatrix.m22);
+
+			return Vec3(
+				sqrtf(xAxis.x * xAxis.x + xAxis.y * xAxis.y + xAxis.z * xAxis.z),
+				sqrtf(yAxis.x * yAxis.x + yAxis.y * yAxis.y + yAxis.z * yAxis.z),
+				sqrtf(zAxis.x * zAxis.x + zAxis.y * zAxis.y + zAxis.z * zAxis.z)
+			);
+		}
+
+		template<typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
+			out.SetObject();
+			// Don't serialize the matrix - it gets recalculated from hierarchy
+		}
+
+		void Deserialize(const rapidjson::Value& in) {
+			// Don't deserialize the matrix - it gets recalculated from hierarchy
+			isDirty = true;
+		}
+
+		XPROPERTY_DEF(
+			"GlobalTransform", GlobalTransform,
+			xproperty::obj_member<"isDirty", &GlobalTransform::isDirty>
+		);
+	};
 
 	/*!***********************************************************************
 	\brief
@@ -1639,7 +1739,7 @@ namespace Ermine
 		explicit HierarchyComponent(EntityID parentId)
 			: parent(parentId), depth(0), isDirty(true), worldTransformDirty(true)
 		{
-		}
+				}
 
 		template <typename Alloc>
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
@@ -1650,6 +1750,7 @@ namespace Ermine
 			(void)in;
 		}
 	};
+
 	/*!***********************************************************************
 	 \brief
 	 Enum for Physic component.
@@ -1766,21 +1867,24 @@ namespace Ermine
 		}
 
 		void Deserialize(const rapidjson::Value& in) {
-			if (in.HasMember("modelPath") && in["modelPath"].IsString()) {
-				m_modelPath = in["modelPath"].GetString();
+			if (in.HasMember("model") && in["model"].IsString()) {
+				const char* name = in["model"].GetString();
+				std::string modelPath = "../Resources/Models/" + std::string(name);
 
 				// Check if it's a .skin file
 				if (in.HasMember("isSkinFile") && in["isSkinFile"].IsBool()) {
 					m_isSkinFile = in["isSkinFile"].GetBool();
-				}
-				else {
-					// Auto-detect based on extension
-					std::string ext = std::filesystem::path(m_modelPath).extension().string();
+				} else {
+					// Auto-detect based on file extension
+					std::string ext = std::filesystem::path(modelPath).extension().string();
 					m_isSkinFile = (ext == ".skin");
 				}
 
-				// Load through AssetManager
-				m_model = AssetManager::GetInstance().LoadModel(m_modelPath);
+				// Load the model if not already loaded
+				if (!m_model) {
+					m_model = AssetManager::GetInstance().LoadModel(modelPath);
+					m_model->LoadModel(modelPath);
+				}
 			}
 		}
 
@@ -1796,40 +1900,352 @@ namespace Ermine
 	*************************************************************************/
 	struct AnimationComponent
 	{
-		std::shared_ptr<graphics::Animator> m_animator;
+		std::shared_ptr<graphics::Animator> m_animator;   // Handles animation playback
+		std::shared_ptr<AnimationGraph> m_animationGraph; // Handles animation states and transitions
 
 		AnimationComponent() = default;
-		explicit AnimationComponent(const std::shared_ptr<graphics::Model>& model) : m_animator(std::make_shared<graphics::Animator>(model)) {}
+		explicit AnimationComponent(const std::shared_ptr<graphics::Model>& model)
+			: m_animator(std::make_shared<graphics::Animator>(model)), m_animationGraph(std::make_shared<AnimationGraph>()) {}
 
 		template <typename Alloc>
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
-			const std::string& model_name = m_animator->GetModel()->GetName();
 			out.SetObject();
 
-			rapidjson::Value modelVal;
-			modelVal.SetString(model_name.c_str(),
-				static_cast<rapidjson::SizeType>(model_name.size()),
-				alloc);  // required for strings
+			// -----------------
+			// model
+			// -----------------
+			std::string modelName;
+			if (m_animator && m_animator->GetModel())
+				modelName = m_animator->GetModel()->GetName();
 
-			out.AddMember("model", modelVal, alloc);
+			{
+				rapidjson::Value modelVal;
+				modelVal.SetString(modelName.c_str(),
+					static_cast<rapidjson::SizeType>(modelName.size()),
+					alloc);
+				out.AddMember("model", modelVal, alloc);
+			}
+
+			// -----------------
+			// graph
+			// -----------------
+			rapidjson::Value graphVal(rapidjson::kObjectType);
+
+			if (m_animationGraph)
+			{
+				// basic playback info
+				graphVal.AddMember("playbackSpeed", m_animationGraph->playbackSpeed, alloc);
+				graphVal.AddMember("playing", m_animationGraph->playing, alloc);
+				graphVal.AddMember("currentTime", m_animationGraph->currentTime, alloc);
+
+				// ----- states -----
+				{
+					rapidjson::Value statesArr(rapidjson::kArrayType);
+					for (const auto& sPtr : m_animationGraph->states)
+					{
+						const AnimationStateNode& s = *sPtr;
+						rapidjson::Value js(rapidjson::kObjectType);
+
+						js.AddMember("id", s.id, alloc);
+
+						rapidjson::Value nameVal;
+						nameVal.SetString(s.name.c_str(),
+							static_cast<rapidjson::SizeType>(s.name.size()),
+							alloc);
+						js.AddMember("name", nameVal, alloc);
+
+						rapidjson::Value clipVal;
+						clipVal.SetString(s.clipName.c_str(),
+							static_cast<rapidjson::SizeType>(s.clipName.size()),
+							alloc);
+						js.AddMember("clipName", clipVal, alloc);
+
+						js.AddMember("isStartState", s.isStartState, alloc);
+						js.AddMember("isAttached", s.isAttached, alloc);
+						js.AddMember("speed", s.speed, alloc);
+						js.AddMember("blendWeight", s.blendWeight, alloc);
+
+						// editorPos as [x, y]
+						rapidjson::Value posArr(rapidjson::kArrayType);
+						posArr.PushBack(s.editorPos.x, alloc);
+						posArr.PushBack(s.editorPos.y, alloc);
+						js.AddMember("editorPos", posArr, alloc);
+
+						statesArr.PushBack(js, alloc);
+					}
+					graphVal.AddMember("states", statesArr, alloc);
+				}
+
+				// ----- transitions -----
+				{
+					rapidjson::Value transArr(rapidjson::kArrayType);
+					for (const AnimationTransition& t : m_animationGraph->transitions)
+					{
+						rapidjson::Value jt(rapidjson::kObjectType);
+						jt.AddMember("fromNodeId", t.fromNodeId, alloc);
+						jt.AddMember("toNodeId", t.toNodeId, alloc);
+						jt.AddMember("exitTime", t.exitTime, alloc);
+						jt.AddMember("duration", t.duration, alloc);
+
+						// conditions[]
+						rapidjson::Value condArr(rapidjson::kArrayType);
+						for (const AnimationCondition& c : t.conditions)
+						{
+							rapidjson::Value jc(rapidjson::kObjectType);
+
+							// parameterName
+							{
+								rapidjson::Value pnameVal;
+								pnameVal.SetString(c.parameterName.c_str(),
+									static_cast<rapidjson::SizeType>(c.parameterName.size()),
+									alloc);
+								jc.AddMember("parameterName", pnameVal, alloc);
+							}
+
+							// comparison operator string (==, >, etc.)
+							{
+								rapidjson::Value compVal;
+								compVal.SetString(c.comparison.c_str(),
+									static_cast<rapidjson::SizeType>(c.comparison.size()),
+									alloc);
+								jc.AddMember("comparison", compVal, alloc);
+							}
+
+							jc.AddMember("threshold", c.threshold, alloc);
+							jc.AddMember("boolValue", c.boolValue, alloc);
+
+							condArr.PushBack(jc, alloc);
+						}
+						jt.AddMember("conditions", condArr, alloc);
+
+						transArr.PushBack(jt, alloc);
+					}
+					graphVal.AddMember("transitions", transArr, alloc);
+				}
+
+				// ----- parameters -----
+				{
+					rapidjson::Value paramArr(rapidjson::kArrayType);
+					for (const AnimationParameter& p : m_animationGraph->parameters)
+					{
+						rapidjson::Value jp(rapidjson::kObjectType);
+
+						// name
+						{
+							rapidjson::Value pnameVal;
+							pnameVal.SetString(p.name.c_str(),
+								static_cast<rapidjson::SizeType>(p.name.size()),
+								alloc);
+							jp.AddMember("name", pnameVal, alloc);
+						}
+
+						// enum class Type = int
+						jp.AddMember("type", static_cast<int>(p.type), alloc);
+
+						jp.AddMember("boolValue", p.boolValue, alloc);
+						jp.AddMember("floatValue", p.floatValue, alloc);
+						jp.AddMember("intValue", p.intValue, alloc);
+						jp.AddMember("triggerValue", p.triggerValue, alloc);
+
+						paramArr.PushBack(jp, alloc);
+					}
+					graphVal.AddMember("parameters", paramArr, alloc);
+				}
+			}
+
+			out.AddMember("graph", graphVal, alloc);
 		}
 
+
 		void Deserialize(const rapidjson::Value& in) {
+
 			if (!in.IsObject()) return;
 
-			if (in.HasMember("model") && in["model"].IsString()) {
+			// -------- model --------
+			if (in.HasMember("model") && in["model"].IsString())
+			{
 				std::string modelName = in["model"].GetString();
 
-				// Reload the model from assets
 				auto model = AssetManager::GetInstance().GetModel("../Resources/Models/" + modelName);
-				if (model) {
+				if (model)
+				{
 					const aiScene* scene = model->GetAssimpScene();
-					if (scene && scene->mNumAnimations > 0) {
+					if (scene && scene->mNumAnimations > 0)
+					{
 						m_animator = std::make_shared<graphics::Animator>(model);
 					}
 				}
 			}
+
+			// Ensure graph exists
+			if (!m_animationGraph)
+				m_animationGraph = std::make_shared<AnimationGraph>();
+
+			// Reset runtime data
+			m_animationGraph->states.clear();
+			m_animationGraph->links.clear();
+			m_animationGraph->transitions.clear();
+			m_animationGraph->parameters.clear();
+			m_animationGraph->current.reset();
+			m_animationGraph->currentTime = 0.0f;
+			m_animationGraph->playing = false;
+			m_animationGraph->playbackSpeed = 1.0f;
+
+			// -------- graph --------
+			if (!in.HasMember("graph") || !in["graph"].IsObject())
+				return;
+
+			const rapidjson::Value& g = in["graph"];
+
+			// playback info
+			if (g.HasMember("playbackSpeed") && g["playbackSpeed"].IsNumber())
+				m_animationGraph->playbackSpeed = g["playbackSpeed"].GetFloat();
+
+			if (g.HasMember("playing") && g["playing"].IsBool())
+				m_animationGraph->playing = g["playing"].GetBool();
+
+			if (g.HasMember("currentTime") && g["currentTime"].IsNumber())
+				m_animationGraph->currentTime = g["currentTime"].GetFloat();
+
+			// ----- states -----
+			if (g.HasMember("states") && g["states"].IsArray())
+			{
+				const auto& arr = g["states"];
+				for (rapidjson::SizeType i = 0; i < arr.Size(); ++i)
+				{
+					const auto& js = arr[i];
+					auto s = std::make_shared<AnimationStateNode>();
+
+					if (js.HasMember("id") && js["id"].IsInt())
+						s->id = js["id"].GetInt();
+
+					if (js.HasMember("name") && js["name"].IsString())
+						s->name = js["name"].GetString();
+
+					if (js.HasMember("clipName") && js["clipName"].IsString())
+						s->clipName = js["clipName"].GetString();
+
+					if (js.HasMember("isStartState") && js["isStartState"].IsBool())
+						s->isStartState = js["isStartState"].GetBool();
+
+					if (js.HasMember("isAttached") && js["isAttached"].IsBool())
+						s->isAttached = js["isAttached"].GetBool();
+
+					if (js.HasMember("speed") && js["speed"].IsNumber())
+						s->speed = js["speed"].GetFloat();
+
+					if (js.HasMember("blendWeight") && js["blendWeight"].IsNumber())
+						s->blendWeight = js["blendWeight"].GetFloat();
+
+					if (js.HasMember("editorPos") && js["editorPos"].IsArray() && js["editorPos"].Size() == 2)
+					{
+						s->editorPos.x = js["editorPos"][0].GetFloat();
+						s->editorPos.y = js["editorPos"][1].GetFloat();
+						ImNodes::SetNodeEditorSpacePos(s->id, s->editorPos);
+					}
+					else
+					{
+						s->editorPos = ImVec2{ 100.f, 100.f };
+						ImNodes::SetNodeEditorSpacePos(s->id, s->editorPos);
+					}
+
+					m_animationGraph->states.push_back(s);
+
+					// Pick start state as current
+					if (s->isStartState)
+						m_animationGraph->current = s;
+				}
+			}
+
+			// ----- transitions -----
+			if (g.HasMember("transitions") && g["transitions"].IsArray())
+			{
+				const auto& arr = g["transitions"];
+				for (rapidjson::SizeType i = 0; i < arr.Size(); ++i)
+				{
+					const auto& jt = arr[i];
+					AnimationTransition t{};
+
+					if (jt.HasMember("fromNodeId") && jt["fromNodeId"].IsInt())
+						t.fromNodeId = jt["fromNodeId"].GetInt();
+
+					if (jt.HasMember("toNodeId") && jt["toNodeId"].IsInt())
+						t.toNodeId = jt["toNodeId"].GetInt();
+
+					if (jt.HasMember("exitTime") && jt["exitTime"].IsNumber())
+						t.exitTime = jt["exitTime"].GetFloat();
+
+					if (jt.HasMember("duration") && jt["duration"].IsNumber())
+						t.duration = jt["duration"].GetFloat();
+
+					// conditions[]
+					if (jt.HasMember("conditions") && jt["conditions"].IsArray())
+					{
+						const auto& condArr = jt["conditions"];
+						for (rapidjson::SizeType ci = 0; ci < condArr.Size(); ++ci)
+						{
+							const auto& jc = condArr[ci];
+							AnimationCondition c{};
+
+							if (jc.HasMember("parameterName") && jc["parameterName"].IsString())
+								c.parameterName = jc["parameterName"].GetString();
+
+							if (jc.HasMember("comparison") && jc["comparison"].IsString())
+								c.comparison = jc["comparison"].GetString();
+
+							if (jc.HasMember("threshold") && jc["threshold"].IsNumber())
+								c.threshold = jc["threshold"].GetFloat();
+
+							if (jc.HasMember("boolValue") && jc["boolValue"].IsBool())
+								c.boolValue = jc["boolValue"].GetBool();
+
+							t.conditions.push_back(c);
+						}
+					}
+
+					m_animationGraph->transitions.push_back(t);
+
+					// Rebuild editor link from transition
+					AnimationLink link{};
+					link.id = static_cast<int>(m_animationGraph->links.size()) + 1;
+					link.fromNodeId = t.fromNodeId;
+					link.toNodeId = t.toNodeId;
+					m_animationGraph->links.push_back(link);
+				}
+			}
+
+			// ----- parameters -----
+			if (g.HasMember("parameters") && g["parameters"].IsArray())
+			{
+				const auto& arr = g["parameters"];
+				for (rapidjson::SizeType i = 0; i < arr.Size(); ++i)
+				{
+					const auto& jp = arr[i];
+					AnimationParameter p{};
+
+					if (jp.HasMember("name") && jp["name"].IsString())
+						p.name = jp["name"].GetString();
+
+					if (jp.HasMember("type") && jp["type"].IsInt())
+						p.type = static_cast<AnimationParameter::Type>(jp["type"].GetInt());
+
+					if (jp.HasMember("boolValue") && jp["boolValue"].IsBool())
+						p.boolValue = jp["boolValue"].GetBool();
+
+					if (jp.HasMember("floatValue") && jp["floatValue"].IsNumber())
+						p.floatValue = jp["floatValue"].GetFloat();
+
+					if (jp.HasMember("intValue") && jp["intValue"].IsInt())
+						p.intValue = jp["intValue"].GetInt();
+
+					if (jp.HasMember("triggerValue") && jp["triggerValue"].IsBool())
+						p.triggerValue = jp["triggerValue"].GetBool();
+
+					m_animationGraph->parameters.push_back(p);
+				}
+			}
 		}
+
 
 		//XPROPERTY_DEF(
 		//	"AnimationComponent", AnimationComponent,
@@ -1939,4 +2355,34 @@ namespace Ermine
 				m_CurrentScript->OnUpdate();
 		}
 	};
-}
+	/*!***********************************************************************
+	\brief
+	 AABB component for caching bounding boxes - used for frustum culling optimization
+	*************************************************************************/
+	struct AABBComponent
+	{
+		AABB worldAABB;      // Cached world-space AABB
+		bool isDirty = true; // True if transform changed since last calculation
+
+		AABBComponent() = default;
+		explicit AABBComponent(const AABB& box) : worldAABB(box), isDirty(false) {}
+
+		template<typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
+			out.SetObject();
+			// Don't serialize AABB - it gets recalculated from mesh/transform
+			out.AddMember("isDirty", isDirty, alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in) {
+			// Don't deserialize AABB - force recalculation
+			isDirty = true;
+			(void)in;
+		}
+
+		XPROPERTY_DEF(
+			"AABBComponent", AABBComponent,
+			xproperty::obj_member<"isDirty", &AABBComponent::isDirty>
+		)
+	};
+} // namespace Ermine
