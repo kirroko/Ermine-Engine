@@ -312,7 +312,7 @@
     <ClInclude Include="include\SkeletalSSBO.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="include\SSBO_Bindings.h">
+    <ClInclude Include="include\GameCamera.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
@@ -516,6 +516,9 @@
       <Filter>src\Graphics</Filter>
     </ClCompile>
     <ClCompile Include="src\Graphics\SkeletalSSBO.cpp">
+      <Filter>src\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Graphics\GameCamera.cpp">
       <Filter>src\Graphics</Filter>
     </ClCompile>
   </ItemGroup>

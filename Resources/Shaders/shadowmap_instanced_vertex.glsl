@@ -40,7 +40,7 @@ struct DrawInfo {
 };
 
 // SSBO binding for indirect rendering DrawInfo
-layout(std430, binding = 1) restrict readonly buffer DrawInfoBuffer {
+layout(std430, binding = 3) restrict readonly buffer DrawInfoBuffer {
     DrawInfo drawInfos[];
 };
 

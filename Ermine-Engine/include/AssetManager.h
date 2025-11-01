@@ -173,14 +173,6 @@ public:
          */
         void UnloadModel(const std::string& filePath);
 
-        /**
-         * @brief Clear all cached models.
-         *
-         * This should be called when MeshManager is cleared to ensure Models
-         * are reloaded and re-register their meshes.
-         */
-        void ClearModelCache();
-
         // ================== Utilities ==================
         /**
          * @brief Load the contents of a file into a buffer.

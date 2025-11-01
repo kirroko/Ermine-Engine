@@ -13,7 +13,6 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #include "PreCompile.h"
 #include "DrawCommands.h"
-#include "SSBO_Bindings.h"
 #include "Logger.h"
 #include <glad/glad.h>
 #include <cstring>
@@ -80,7 +79,8 @@ namespace Ermine::graphics
             return false;
         }
 
-        // Bind to SSBO binding point (DRAW_INFO_SSBO_BINDING)
+        // Bind to SSBO binding point 3 (DRAW_INFO_SSBO_BINDING)
+        constexpr GLuint DRAW_INFO_SSBO_BINDING = 3;
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_BufferID);
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);

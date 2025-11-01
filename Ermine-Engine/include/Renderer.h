@@ -675,6 +675,7 @@ namespace Ermine::graphics
         std::unordered_map<std::string, int> m_TexturePathToIndex;    // Map file path to array index
         std::unordered_map<GLuint, int> m_TextureIDToIndex;           // Map texture ID to array index
         GLuint m_TextureArraySSBO = 0;                                // SSBO containing texture handles
+        static constexpr GLuint TextureArrayBindingPoint = 6;         // SSBO binding point for texture array
         bool m_TextureArrayDirty = true;                              // Flag to trigger texture array rebuild
 
         // Renderer state
@@ -692,6 +693,7 @@ namespace Ermine::graphics
 
         // Material SSBO
         GLuint m_MaterialSSBO = 0;
+        static constexpr GLuint MaterialBindingPoint = 5;  // Moved to 5 to make room for mesh SSBOs (0-3)
         std::unordered_set<GLuint> m_MaterialBlockBoundPrograms;
         std::unordered_map<EntityID, uint32_t> m_EntityMaterialIndices; // Maps entity to material index in SSBO
         
@@ -812,6 +814,10 @@ namespace Ermine::graphics
                 m.m30, m.m31, m.m32, m.m33
             );
         }
+
+#pragma region IndirectDraw
+        void DrawIndirect();
+#pragma endregion
         /**
          * @brief Gets the world transform matrix for an entity using GlobalTransform component
          * @param entity The entity to get the world matrix for

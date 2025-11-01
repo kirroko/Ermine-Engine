@@ -21,17 +21,17 @@ struct DrawInfo {
 };
 
 // SSBO bindings (still used for DrawInfo and bone transforms)
-layout(std430, binding = 1) restrict readonly buffer DrawInfoBuffer {
+layout(std430, binding = 3) restrict readonly buffer DrawInfoBuffer {
     DrawInfo drawInfos[];
 };
 
 // Skeletal animation bone transforms SSBO (Binding 7)
-layout(std430, binding = 2) restrict readonly buffer BoneTransformBuffer {
+layout(std430, binding = 7) restrict readonly buffer BoneTransformBuffer {
     mat4 boneTransforms[]; // All bone transforms for all entities
 };
 
 // Pre-skinned positions output (Binding 8) - for shadow pass reuse
-layout(std430, binding = 4) restrict writeonly buffer PreSkinnedBuffer {
+layout(std430, binding = 8) restrict writeonly buffer PreSkinnedBuffer {
     vec4 preSkinnedPositions[];  // xyz = skinned position, w = unused
 };
 
