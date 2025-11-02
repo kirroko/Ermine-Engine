@@ -1795,12 +1795,14 @@ namespace Ermine
 	*************************************************************************/
 	struct PhysicComponent
 	{
-		JPH::BodyID bodyID{ JPH::BodyID::cInvalidBodyID };
-		JPH::Body* body{ nullptr };
 		PhysicsBodyType bodyType{ PhysicsBodyType::Rigid };
 		JPH::EMotionType motionType{ JPH::EMotionType::Static };
 		float mass{ 0.0f };
 		ShapeType shapeType{ ShapeType::Box };
+		Ermine::Vec3 collidersize{ 1,1,1 };
+
+		JPH::BodyID bodyID{ JPH::BodyID::cInvalidBodyID };
+		JPH::Body* body{ nullptr };
 		std::vector<glm::vec3> customMeshVertices;   // For custom mesh
 		JPH::RefConst<JPH::Shape> shapeRef;
 
@@ -1829,7 +1831,8 @@ namespace Ermine
 			xproperty::obj_member<"bodyType", &PhysicComponent::bodyType>,
 			xproperty::obj_member<"motionType", &PhysicComponent::motionType>,
 			xproperty::obj_member<"mass", &PhysicComponent::mass>,
-			xproperty::obj_member<"shapeType", &PhysicComponent::shapeType>
+			xproperty::obj_member<"shapeType", &PhysicComponent::shapeType>,
+			xproperty::obj_member<"collidersize", &PhysicComponent::collidersize>
 		)
 	};
 

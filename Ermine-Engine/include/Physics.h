@@ -144,7 +144,6 @@ namespace Ermine
 		bool Raycast(const JPH::RVec3& origin, const JPH::RVec3& direction, float maxDistance, JPH::RayCastResult& outResult);
 
 		std::vector<JPH::RayCastResult> RaycastAll(const JPH::RVec3& origin, const JPH::RVec3& direction, float maxDistance);
-
 	private:
 		// --- Important: allocator first, job system second, physics system third ---
 		JPH::TempAllocatorImpl       mTempAllocator;

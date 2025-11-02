@@ -417,7 +417,7 @@ namespace Ermine
 			{
 			case ShapeType::Box:
 			{
-				Vec3 halfExtent = { t.scale.x * 0.5f * meshsize.GetX(), t.scale.y * 0.5f * meshsize.GetY(), t.scale.z * 0.5f * meshsize.GetZ() };
+				Vec3 halfExtent = { t.scale.x * 0.5f * meshsize.GetX() * p.collidersize.x, t.scale.y * 0.5f * meshsize.GetY() * p.collidersize.y, t.scale.z * 0.5f * meshsize.GetZ() * p.collidersize.z };
 				constexpr float minSize = 0.01f;
 				halfExtent.x = std::max(halfExtent.x, minSize);
 				halfExtent.y = std::max(halfExtent.y, minSize);
@@ -432,11 +432,46 @@ namespace Ermine
 				break;
 			}
 			case ShapeType::Sphere:
-				shape = new JPH::SphereShape(t.scale.x * meshsize.GetX()); //for our current sphere
+			{
+				float radius = t.scale.x * meshsize.GetX() * p.collidersize.x;
+
+				if (radius <= 0.0f || !std::isfinite(radius))
+				{
+					radius = 0.01f;
+				}
+
+				p.collidersize.y = p.collidersize.z = std::max(p.collidersize.x, 0.01f);
+
+				shape = new JPH::SphereShape(radius); //for our current sphere
 				break;
+			}
 			case ShapeType::Capsule:
-				shape = new JPH::CapsuleShape(t.scale.y * 0.5f * meshsize.GetY(), t.scale.x * 0.5f * meshsize.GetX());
+			{
+				//shape = new JPH::CapsuleShape(t.scale.y * 0.5f * meshsize.GetY(), t.scale.x * 0.5f * meshsize.GetX());
+					// Compute half-height (excluding the hemispherical caps)
+				float halfHeight = t.scale.y * 0.5f * meshsize.GetY() * p.collidersize.y;
+				float capradius = t.scale.x * 0.5f * meshsize.GetX() * p.collidersize.x;
+
+				// --- Safety checks ---
+				if (halfHeight <= 0.0f || !std::isfinite(halfHeight))
+				{
+					halfHeight = 0.01f; // fallback
+				}
+
+				if (capradius <= 0.0f || !std::isfinite(capradius))
+				{
+					capradius = 0.01f; // fallback
+				}
+
+				// Ensure capsule collider size stays valid
+				p.collidersize.x = std::max(p.collidersize.x, 0.01f);
+				p.collidersize.y = std::max(p.collidersize.y, 0.01f);
+				p.collidersize.z = p.collidersize.x; // capsule is symmetric around Y
+
+				// Create shape safely
+				shape = new JPH::CapsuleShape(halfHeight, capradius);
 				break;
+			}
 			case ShapeType::CustomMesh:
 
 				//check the parent object if got model
@@ -860,4 +895,5 @@ namespace Ermine
 				mCollisionEvent.emplace(pp.type, entB, entA, aIsSensor);
 		}
 	}
+
 }
