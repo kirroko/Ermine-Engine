@@ -860,7 +860,8 @@
           "isGameCamera": true,
           "mouseSensitivity": 0.1
         },
-        "HierarchyComponent": {}
+        "HierarchyComponent": {},
+        "GlobalTransform": {}
       }
     }
   ]

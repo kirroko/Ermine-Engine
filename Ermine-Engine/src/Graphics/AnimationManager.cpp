@@ -52,18 +52,16 @@ namespace Ermine::graphics
 			if (!modelComp.m_model || !modelComp.m_model->GetAssimpScene())
 				continue;
 
-			// Check if animator exists and has clips
-			if (!animComp.m_animator || animComp.m_animator->GetClips().empty())
+			// Check if animator exists
+			if (!animComp.m_animator)
 				continue;
 
-			// Check if animation is actually playing
-			if (!animComp.m_animator->GetCurrentClip())
-				continue;
+			// Update animator if animation is playing
+			if (animComp.m_animator->GetCurrentClip())
+			{
+				animComp.m_animator->Update(deltaTime, entity);
+			}
 
-			// Update animator
-			animComp.m_animator->Update(deltaTime, entity);
-
-			// Update bone transforms using SkeletalSSBO
 			const auto& finalBones = animComp.m_animator->GetFinalBoneMatrices();
 			if (!finalBones.empty() && m_SkeletalSSBO)
 			{

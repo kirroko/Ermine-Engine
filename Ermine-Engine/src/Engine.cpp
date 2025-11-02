@@ -245,7 +245,6 @@ bool engine::Init(GLFWwindow* windowContext)
 	// Set system signatures
 	SignatureID sig;
 	sig.set(ECS::GetInstance().GetComponentType<Transform>());
-	sig.set(ECS::GetInstance().GetComponentType<Mesh>());
 	sig.set(ECS::GetInstance().GetComponentType<Material>());
 	ECS::GetInstance().SetSystemSignature<graphics::Renderer>(sig);
 
@@ -286,7 +285,6 @@ bool engine::Init(GLFWwindow* windowContext)
 	// For Animation system
 	sig.reset();
 	sig.set(ECS::GetInstance().GetComponentType<AnimationComponent>());
-	sig.set(ECS::GetInstance().GetComponentType<ModelComponent>());
 	ECS::GetInstance().SetSystemSignature<graphics::AnimationManager>(sig);
 
 	// For Hierarchy System
