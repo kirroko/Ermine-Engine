@@ -577,6 +577,8 @@ namespace Ermine
 				bodySettings.mMassPropertiesOverride.mMass = p.mass;
 			}
 
+			bodySettings.mIsSensor = (p.bodyType == PhysicsBodyType::Trigger);
+
 			// Create body
 			JPH::Body* body = bodyInterface.CreateBody(bodySettings);
 			if (!body) continue;
