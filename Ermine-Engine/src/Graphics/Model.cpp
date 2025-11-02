@@ -48,6 +48,17 @@ Model::Model(const std::string& path)
 
 Model::Model(const std::string& path, bool isSkinFile)
 {
+    // Get or create counter for this file path
+    {
+        std::lock_guard<std::mutex> lock(s_counterMutex);
+        // If this is the first time loading this file, create counter starting at 0
+        if (s_fileInstanceCounters.find(path) == s_fileInstanceCounters.end()) {
+            s_fileInstanceCounters[path].store(0);
+        }
+        // Assign instance ID and increment counter for this file
+        m_instanceID = s_fileInstanceCounters[path].fetch_add(1);
+    }
+
     if (isSkinFile) {
         m_directory = path.substr(0, path.find_last_of('/'));
         m_name = path.substr(path.find_last_of('/') + 1);
@@ -55,6 +66,9 @@ Model::Model(const std::string& path, bool isSkinFile)
         if (!LoadSkinFile(path)) {
             EE_CORE_ERROR("Failed to load .skin file: " + path);
         }
+    }
+    else {
+        LoadModel(path);
     }
 }
 

@@ -247,6 +247,8 @@ void LoadSceneFromFile(Ermine::ECS& ecs, const std::filesystem::path& path) {
         renderer->m_MeshManager.Clear();
     }
 
+    Ermine::AssetManager::GetInstance().ClearModelCache();
+
     for (auto& e : d["entities"].GetArray()) {
         if (!e.IsObject()) continue;
 

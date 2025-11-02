@@ -16,6 +16,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "PreCompile.h"
 #include "Renderer.h"
 #include "Material.h"
+#include "SSBO_Bindings.h"
 
 #include <numeric> // For std::iota
 
@@ -154,7 +155,7 @@ void Renderer::Init(const int& screenWidth, const int& screenHeight)
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_PreSkinnedPositionsSSBO);
 	// Allocate large enough buffer for all vertices (will resize if needed)
 	glBufferData(GL_SHADER_STORAGE_BUFFER, 50000 * sizeof(glm::vec4), nullptr, GL_DYNAMIC_COPY);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 8, m_PreSkinnedPositionsSSBO); // Binding 8
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, PRESKINNED_POSITIONS_SSBO_BINDING, m_PreSkinnedPositionsSSBO); // Binding 8
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 	m_PreSkinnedBufferSize = 50000 * sizeof(glm::vec4);
 
@@ -1895,7 +1896,7 @@ void Renderer::BindMaterialBlockIfPresent(const std::shared_ptr<Shader>& shader)
 	GLuint blockIndex = glGetProgramResourceIndex(program, GL_SHADER_STORAGE_BLOCK, "MaterialBlock");
 	if (blockIndex != GL_INVALID_INDEX)
 	{
-		glShaderStorageBlockBinding(program, blockIndex, MaterialBindingPoint);
+		glShaderStorageBlockBinding(program, blockIndex, MATERIAL_SSBO_BINDING);
 		m_MaterialBlockBoundPrograms.insert(program);
 	}
 }
@@ -3808,7 +3809,7 @@ void Renderer::UploadMaterialsToGPU()
 	{
 		glGenBuffers(1, &m_MaterialSSBO);
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_MaterialSSBO);
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, MaterialBindingPoint, m_MaterialSSBO);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, MATERIAL_SSBO_BINDING, m_MaterialSSBO);
 		EE_CORE_INFO("Created MaterialSSBO");
 	}
 	else
@@ -3924,8 +3925,8 @@ void Renderer::BuildTextureArray()
 	{
 		glGenBuffers(1, &m_TextureArraySSBO);
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_TextureArraySSBO);
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, TextureArrayBindingPoint, m_TextureArraySSBO);
-		EE_CORE_INFO("Created Texture Array SSBO at binding point {0}", TextureArrayBindingPoint);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, TEXTURE_SSBO_BINDING, m_TextureArraySSBO);
+		EE_CORE_INFO("Created Texture Array SSBO at binding point {0}", TEXTURE_SSBO_BINDING);
 	}
 	else
 	{

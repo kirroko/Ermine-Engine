@@ -2025,16 +2025,18 @@ namespace Ermine
 				// Check if it's a .skin file
 				if (in.HasMember("isSkinFile") && in["isSkinFile"].IsBool()) {
 					m_isSkinFile = in["isSkinFile"].GetBool();
-				} else {
+				}
+				else {
 					// Auto-detect based on file extension
 					std::string ext = std::filesystem::path(modelPath).extension().string();
 					m_isSkinFile = (ext == ".skin");
 				}
+				// Try to get cached model first
+				m_model = AssetManager::GetInstance().GetModel(modelPath);
 
-				// Load the model if not already loaded
+				// If not cached, load it (which will also cache it)
 				if (!m_model) {
 					m_model = AssetManager::GetInstance().LoadModel(modelPath);
-					m_model->LoadModel(modelPath);
 				}
 			}
 		}

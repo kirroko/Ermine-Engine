@@ -21,12 +21,12 @@ struct DrawInfo {
 };
 
 // SSBO bindings
-layout(std430, binding = 3) restrict readonly buffer DrawInfoBuffer {
+layout(std430, binding = 1) restrict readonly buffer DrawInfoBuffer {
     DrawInfo drawInfos[];
 };
 
 // Skeletal animation bone transforms SSBO (Binding 7)
-layout(std430, binding = 7) restrict readonly buffer BoneTransformBuffer {
+layout(std430, binding = 2) restrict readonly buffer BoneTransformBuffer {
     mat4 boneTransforms[];
 };
 

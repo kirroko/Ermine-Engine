@@ -312,6 +312,9 @@
     <ClInclude Include="include\SkeletalSSBO.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\SSBO_Bindings.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\GameCamera.h">
       <Filter>include</Filter>
     </ClInclude>

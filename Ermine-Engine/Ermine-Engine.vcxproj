@@ -364,6 +364,7 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClInclude Include="include\Shader.h" />
     <ClInclude Include="include\SkeletalSSBO.h" />
     <ClInclude Include="include\Skybox.h" />
+    <ClInclude Include="include\SSBO_Bindings.h" />
     <ClInclude Include="include\Systems.h" />
     <ClInclude Include="include\Texture.h" />
     <ClInclude Include="include\TransformMode.h" />
