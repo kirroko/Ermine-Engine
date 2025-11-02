@@ -26,6 +26,11 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <Jolt/Core/TempAllocator.h>
 #include <Jolt/RegisterTypes.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
+#include <Jolt/Physics/Collision/RayCast.h>
+#include <Jolt/Physics/Collision/NarrowPhaseQuery.h>
+#include <Jolt/Physics/Collision/CastResult.h>
+#include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
+
 #include "ECS.h"
 #include "Components.h"
 #include "GeometryFactory.h"
@@ -105,6 +110,8 @@ namespace Ermine
 		*************************************************************************/
 		JPH::BodyID GetBodyID(EntityID objectID);
 
+		EntityID GetEntityID(JPH::BodyID bodyID);
+
 		/*!***********************************************************************
 		  \brief
 			Provides access to the Jolt BodyInterface for manual body operations.
@@ -133,6 +140,11 @@ namespace Ermine
 		void HandleCollisionEvent(const Body& a, const Body& b, CollisionEventType type);
 
 		void HandleCollisionEvent(JPH::BodyID a, JPH::BodyID b, CollisionEventType type);
+	
+		bool Raycast(const JPH::RVec3& origin, const JPH::RVec3& direction, float maxDistance, JPH::RayCastResult& outResult);
+
+		std::vector<JPH::RayCastResult> RaycastAll(const JPH::RVec3& origin, const JPH::RVec3& direction, float maxDistance);
+
 	private:
 		// --- Important: allocator first, job system second, physics system third ---
 		JPH::TempAllocatorImpl       mTempAllocator;

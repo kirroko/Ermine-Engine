@@ -31,6 +31,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
 #include <Jolt/Physics/Collision/Shape/MeshShape.h>
 
+#include "Input.h"
+
 #include "EditorGUI.h"
 #include "HierarchySystem.h"
 
@@ -357,69 +359,12 @@ namespace Ermine
 			auto hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>();
 			hierarchySystem->MarkDirty(entity);
 		}
+
+		if (Input::IsKeyDown(GLFW_KEY_1))
+		{
+			auto hits = RaycastAll({ 0, 5, 0 }, { 0, -1, 0 }, 100.0f);
+		}
 	}
-
-	//TEMP WILL BE REMOVE
-	/*
-	//BodyID Physics::CreateStaticBox(const JPH::Vec3& halfExtents, const RVec3& position)
-	//{
-	//    BoxShapeSettings settings(halfExtents);
-	//    settings.SetEmbedded();
-	//    ShapeRefC shape = settings.Create().Get();
-	//    BodyCreationSettings bodySettings(shape, position, Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
-	//    Body* body = mPhysicsSystem.GetBodyInterface().CreateBody(bodySettings);
-	//    mPhysicsSystem.GetBodyInterface().AddBody(body->GetID(), EActivation::DontActivate);
-	//    return body->GetID();
-	//}
-
-	//BodyID Physics::CreateDynamicSphere(float radius, const RVec3& position, const JPH::Vec3& initialVelocity)
-	//{
-	//    BodyCreationSettings settings(new SphereShape(radius), position, Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
-	//    BodyID bodyID = mPhysicsSystem.GetBodyInterface().CreateAndAddBody(settings, EActivation::Activate);
-	//    mPhysicsSystem.GetBodyInterface().SetLinearVelocity(bodyID, initialVelocity);
-	//    return bodyID;
-	//}
-
-	//void Physics::CreatePhysicsBox(const Ermine::Vec3& position, const Ermine::Vec3& size, float mass)
-	//{
-	//    // 1. Create an ECS entity
-	//    auto entity = ECS::GetInstance().CreateEntity();
-
-	//    // 2. Add Transform
-	//    ECS::GetInstance().AddComponent(entity, Transform(position, Quaternion(), size));
-
-	//    // 3. Add Mesh
-	//    ECS::GetInstance().AddComponent(entity, graphics::GeometryFactory::CreateCube(size.x, size.y, size.z));
-
-	//    // 4. Add Material (optional, use existing shader/texture)
-	//    auto shader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/vertex.glsl", "../Resources/Shaders/fragment.glsl");
-	//    auto texture = AssetManager::GetInstance().LoadTexture("../Resources/Textures/greybox_grey_grid.png");
-	//    auto material = std::make_unique<graphics::Material>(shader);
-	//    material->LoadTemplate(graphics::MaterialTemplates::PBR_WHITE());
-	//    if (texture && texture->IsValid())
-	//        material->SetTexture("materialAlbedoMap", texture);
-	//    ECS::GetInstance().AddComponent(entity, Material(std::move(material)));
-
-	//    // 5. Create Jolt Physics box shape
-	//    ObjectLayer layer = mass > 0 ? Layers::MOVING : Layers::NON_MOVING;
-	//    JPH::BodyCreationSettings bodySettings(
-	//        new JPH::BoxShape(JPH::Vec3(size.x * 0.5f, size.y * 0.5f, size.z * 0.5f)), // half extents
-	//        JPH::Vec3(position.x, position.y, position.z),
-	//        JPH::Quat::sIdentity(),
-	//        mass > 0 ? JPH::EMotionType::Dynamic : JPH::EMotionType::Static,
-	//        layer
-	//    );
-	//    if (mass > 0)
-	//        bodySettings.mOverrideMassProperties = JPH::EOverrideMassProperties::CalculateInertia;
-	//    bodySettings.mMassPropertiesOverride.mMass = mass;
-	//    // 6. Create body and add it to physics
-	//    JPH::Body* body = mPhysicsSystem.GetBodyInterface().CreateBody(bodySettings);
-	//    mPhysicsSystem.GetBodyInterface().AddBody(body->GetID(), JPH::EActivation::Activate);
-
-	//    // 7. Optionally store body pointer or ID in a component if needed
-	//    mEntityToBody[entity] = body->GetID();
-	//}
-	*/
 
 	/*!*************************************************************************
 	  \brief
@@ -627,6 +572,19 @@ namespace Ermine
 			: JPH::BodyID(JPH::BodyID::cInvalidBodyID);
 	}
 
+	EntityID Physics::GetEntityID(JPH::BodyID bodyID)
+	{
+		for (auto& [entity, rigidBody] : mEntityToBody)
+		{
+			if (rigidBody == bodyID)
+			{
+				return entity;
+			}
+		}
+
+		return 0;
+	}
+
 	void Physics::DrawDebug()
 	{
 #ifdef JPH_DEBUG_RENDERER
@@ -795,6 +753,54 @@ namespace Ermine
 	{
 		std::lock_guard<std::mutex> _l(mPendingMutex);
 		mPendingPairs.push_back(PendingPair{ type, a, b });
+	}
+
+	bool Physics::Raycast(const JPH::RVec3& origin, const JPH::RVec3& direction, float maxDistance, JPH::RayCastResult& outResult)
+	{
+		JPH::Vec3 dirNormalized = direction.Normalized();
+		JPH::RRayCast ray(origin, dirNormalized * maxDistance);
+
+		// Get a query context from PhysicsSystem
+		const JPH::NarrowPhaseQuery& query = mPhysicsSystem.GetNarrowPhaseQuery();
+
+		// Perform the cast
+		bool hit = query.CastRay(ray, outResult);
+
+		return hit;
+	}
+
+	std::vector<JPH::RayCastResult> Physics::RaycastAll(const JPH::RVec3& origin, const JPH::RVec3& direction, float maxDistance)
+	{
+		std::vector<JPH::RayCastResult> results;
+
+		// Normalize direction
+		JPH::Vec3 dirNormalized = direction.Normalized();
+
+		// Build the ray (RRayCast takes origin and direction *distance)
+		JPH::RRayCast ray(origin, dirNormalized * maxDistance);
+
+		// Ray cast settings WIP to add ignore layer
+		JPH::RayCastSettings settings;
+		settings.SetBackFaceMode(JPH::EBackFaceMode::IgnoreBackFaces);
+
+		JPH::AllHitCollisionCollector<JPH::CastRayCollector> collector;
+
+		// Get the narrow phase query and perform the cast
+		const JPH::NarrowPhaseQuery& query = mPhysicsSystem.GetNarrowPhaseQuery();
+		query.CastRay(ray, settings, collector);
+
+		// collector.mHits is an Array<RayCastResult> — copy into std::vector
+		for (const auto& hit : collector.mHits)
+			results.push_back(hit);
+
+		// Sort nearest -> farthest (mFraction is 0..1 along the ray)
+		std::sort(results.begin(), results.end(),
+			[](const JPH::RayCastResult& a, const JPH::RayCastResult& b)
+			{
+				return a.mFraction < b.mFraction;
+			});
+
+		return results;
 	}
 
 	void Physics::FlushPendingPairsToEntityEvents()
