@@ -465,6 +465,12 @@ namespace Ermine::graphics
         void CompileMaterials();
 
         /**
+         * @brief Checks if any materials have been modified and marks for recompilation.
+         * This is called every frame to detect ImGui or runtime material changes.
+         */
+        void CheckMaterialUpdates();
+
+        /**
          * @brief Marks materials as dirty, triggering recompilation on next frame.
          * Call this when materials are added, removed, or modified.
          */

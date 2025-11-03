@@ -481,6 +481,15 @@ namespace Ermine::graphics
             UpdateSSBOData();
             return m_materialData;
         }
+
+        /**
+         * @brief Checks if the material SSBO data is dirty and needs GPU update.
+         * @return True if material has been modified since last GPU upload.
+         */
+        bool IsDirty() const
+        {
+            return m_ssboDirty;
+        }
         /**
          * @brief Binds all textures associated with this material.
          */
