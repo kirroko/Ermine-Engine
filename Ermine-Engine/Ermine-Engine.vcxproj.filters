@@ -135,6 +135,9 @@
     <ClInclude Include="include\Cubemap.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\DrawCommands.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\ECS.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -166,6 +169,9 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\GPUProfiler.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\GameCamera.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\GameObject.h">
@@ -228,6 +234,12 @@
     <ClInclude Include="include\Matrix4x4.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\MeshManager.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\MeshTypes.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\Model.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -258,6 +270,9 @@
     <ClInclude Include="include\ResourcePipe.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\SSBO_Bindings.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\Scene.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -280,6 +295,9 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\Shader.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\SkeletalSSBO.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\Skybox.h">
@@ -307,21 +325,6 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\shadow_config.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\PrefabManager.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\DrawCommands.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\SkeletalSSBO.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\SSBO_Bindings.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\GameCamera.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
@@ -377,10 +380,19 @@
     <ClCompile Include="src\Graphics\Cubemap.cpp">
       <Filter>src\Graphics</Filter>
     </ClCompile>
+    <ClCompile Include="src\Graphics\DrawCommands.cpp">
+      <Filter>src\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Graphics\GameCamera.cpp">
+      <Filter>src\Graphics</Filter>
+    </ClCompile>
     <ClCompile Include="src\Graphics\GeometryFactory.cpp">
       <Filter>src\Graphics</Filter>
     </ClCompile>
     <ClCompile Include="src\Graphics\IndexBuffer.cpp">
+      <Filter>src\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Graphics\MeshManager.cpp">
       <Filter>src\Graphics</Filter>
     </ClCompile>
     <ClCompile Include="src\Graphics\Model.cpp">
@@ -390,6 +402,9 @@
       <Filter>src\Graphics</Filter>
     </ClCompile>
     <ClCompile Include="src\Graphics\Shader.cpp">
+      <Filter>src\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Graphics\SkeletalSSBO.cpp">
       <Filter>src\Graphics</Filter>
     </ClCompile>
     <ClCompile Include="src\Graphics\Skybox.cpp">
@@ -520,18 +535,6 @@
     </ClCompile>
     <ClCompile Include="src\dllmain.cpp">
       <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Graphics\MeshManager.cpp">
-      <Filter>src\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Graphics\DrawCommands.cpp">
-      <Filter>src\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Graphics\SkeletalSSBO.cpp">
-      <Filter>src\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Graphics\GameCamera.cpp">
-      <Filter>src\Graphics</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
