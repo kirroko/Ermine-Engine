@@ -2066,7 +2066,7 @@ namespace Ermine
 	{
 		std::shared_ptr<graphics::Animator> m_animator;         // Per-entity animator (independent state)
 		int boneTransformOffset = -1;                           // Per-entity bone offset in SkeletalSSBO (allocated by AnimationManager)
-		std::shared_ptr<AnimationGraph> m_animationGraph; // Handles animation states and transitions
+		std::shared_ptr<AnimationGraph> m_animationGraph;		// Handles animation states and transitions
 
 		AnimationComponent() = default;
 		explicit AnimationComponent(const std::shared_ptr<graphics::Model>& model)
