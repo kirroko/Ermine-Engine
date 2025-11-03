@@ -624,14 +624,10 @@ namespace Ermine
 		float nearPlane;
 		float farPlane;
 		bool isPrimary; // Is this the main camera?
-		bool isGameCamera; // Is this a first-person game camera (vs editor camera)?
-		float mouseSensitivity; // Mouse look sensitivity
 
 		CameraComponent() = default;
-		CameraComponent(float fov_, float aspect, float nearP, float farP,
-			bool primary, bool gameCamera, float sensitivity) :
-			fov(fov_), aspectRatio(aspect), nearPlane(nearP), farPlane(farP),
-			isPrimary(primary), isGameCamera(gameCamera), mouseSensitivity(sensitivity)
+		CameraComponent(float fov = 60.0f, float aspect = 16.0f / 9.0f, float nearP = 0.1f, float farP = 1000.0f, bool primary = false) :
+			fov(fov), aspectRatio(aspect), nearPlane(nearP), farPlane(farP), isPrimary(primary)
 		{
 		}
 
@@ -643,30 +639,15 @@ namespace Ermine
 			out.AddMember("near", nearPlane, alloc);
 			out.AddMember("far", farPlane, alloc);
 			out.AddMember("primary", isPrimary, alloc);
-			out.AddMember("isGameCamera", isGameCamera, alloc);
-			out.AddMember("mouseSensitivity", mouseSensitivity, alloc);
 		}
 
 		void Deserialize(const rapidjson::Value& in) {
-			if (in.HasMember("fov")) fov = in["fov"].GetFloat();
-			if (in.HasMember("aspect")) aspectRatio = in["aspect"].GetFloat();
-			if (in.HasMember("near")) nearPlane = in["near"].GetFloat();
-			if (in.HasMember("far")) farPlane = in["far"].GetFloat();
-			if (in.HasMember("primary")) isPrimary = in["primary"].GetBool();
-			if (in.HasMember("isGameCamera")) isGameCamera = in["isGameCamera"].GetBool();
-			if (in.HasMember("mouseSensitivity")) mouseSensitivity = in["mouseSensitivity"].GetFloat();
+			if (in.HasMember("fov"))       fov = in["fov"].GetFloat();
+			if (in.HasMember("aspect"))    aspectRatio = in["aspect"].GetFloat();
+			if (in.HasMember("near"))      nearPlane = in["near"].GetFloat();
+			if (in.HasMember("far"))       farPlane = in["far"].GetFloat();
+			if (in.HasMember("primary"))   isPrimary = in["primary"].GetBool();
 		}
-
-		XPROPERTY_DEF(
-			"CameraComponent", CameraComponent,
-			xproperty::obj_member<"fov", &CameraComponent::fov>,
-			xproperty::obj_member<"aspectRatio", &CameraComponent::aspectRatio>,
-			xproperty::obj_member<"nearPlane", &CameraComponent::nearPlane>,
-			xproperty::obj_member<"farPlane", &CameraComponent::farPlane>,
-			xproperty::obj_member<"isPrimary", &CameraComponent::isPrimary>,
-			xproperty::obj_member<"isGameCamera", &CameraComponent::isGameCamera>,
-			xproperty::obj_member<"mouseSensitivity", &CameraComponent::mouseSensitivity>
-		)
 	};
 
 	struct MeshPrimitiveDesc {
@@ -720,7 +701,6 @@ namespace Ermine
 		MeshKind        kind = MeshKind::None;
 		MeshPrimitiveDesc primitive;
 		MeshAssetDesc     asset;
-		std::string registeredMeshID; // Mesh ID registered in MeshManager
 
 		Mesh() = default;
 
@@ -1264,26 +1244,6 @@ namespace Ermine
 							m_material->SetBool("materialHasEmissiveMap", true);
 						}
 					}
-				}
-			}
-
-			//  Ensure material has a valid shader after deserialization
-			if (!m_material->GetShader() || !m_material->GetShader()->IsValid())
-			{
-				// Assign default enhanced shader for forward rendering compatibility
-				auto defaultShader = AssetManager::GetInstance().LoadShader(
-					"../Resources/Shaders/vertex.glsl",
-					"../Resources/Shaders/fragment_enhanced.glsl"
-				);
-				
-				if (defaultShader && defaultShader->IsValid())
-				{
-					m_material->SetShader(defaultShader);
-					EE_CORE_INFO("Auto-assigned default shader to material");
-				}
-				else
-				{
-					EE_CORE_WARN("Failed to assign default shader to material - shader loading failed");
 				}
 			}
 		}
@@ -2025,18 +1985,16 @@ namespace Ermine
 				// Check if it's a .skin file
 				if (in.HasMember("isSkinFile") && in["isSkinFile"].IsBool()) {
 					m_isSkinFile = in["isSkinFile"].GetBool();
-				}
-				else {
+				} else {
 					// Auto-detect based on file extension
 					std::string ext = std::filesystem::path(modelPath).extension().string();
 					m_isSkinFile = (ext == ".skin");
 				}
-				// Try to get cached model first
-				m_model = AssetManager::GetInstance().GetModel(modelPath);
 
-				// If not cached, load it (which will also cache it)
+				// Load the model if not already loaded
 				if (!m_model) {
 					m_model = AssetManager::GetInstance().LoadModel(modelPath);
+					m_model->LoadModel(modelPath);
 				}
 			}
 		}
@@ -2050,15 +2008,10 @@ namespace Ermine
 	/*!***********************************************************************
 	\brief
 	 Animation component structure.
-
-	 Each entity with this component has its own Animator instance, allowing
-	 multiple instances of the same model to have independent animation states.
-	 Each entity gets its own bone transform offset in the SkeletalSSBO.
 	*************************************************************************/
 	struct AnimationComponent
 	{
-		std::shared_ptr<graphics::Animator> m_animator;         // Per-entity animator (independent state)
-		int boneTransformOffset = -1;                           // Per-entity bone offset in SkeletalSSBO (allocated by AnimationManager)
+		std::shared_ptr<graphics::Animator> m_animator;   // Handles animation playback
 		std::shared_ptr<AnimationGraph> m_animationGraph; // Handles animation states and transitions
 
 		AnimationComponent() = default;

@@ -303,21 +303,6 @@
     <ClInclude Include="include\shadow_config.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="include\PrefabManager.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\DrawCommands.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\SkeletalSSBO.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\SSBO_Bindings.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\GameCamera.h">
-      <Filter>include</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\ThirdParty\xresource_pipeline_v2-main\dependencies\xtextfile\source\xtextfile.cpp">
@@ -511,18 +496,6 @@
     </ClCompile>
     <ClCompile Include="src\dllmain.cpp">
       <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Graphics\MeshManager.cpp">
-      <Filter>src\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Graphics\DrawCommands.cpp">
-      <Filter>src\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Graphics\SkeletalSSBO.cpp">
-      <Filter>src\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Graphics\GameCamera.cpp">
-      <Filter>src\Graphics</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

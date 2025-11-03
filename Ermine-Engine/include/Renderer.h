@@ -25,7 +25,6 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Components.h"
 #include "EditorCamera.h"
 #include "shadow_config.h"
-#include "MeshManager.h"
 
 namespace Ermine::graphics
 {
@@ -78,9 +77,6 @@ namespace Ermine::graphics
     class Renderer : public System
     {
     public:
-		// Mesh Manager - Composition
-		MeshManager m_MeshManager;
-
         // Lighting Pass Parameters
         // SSAO parameters
         bool m_SSAOEnabled = false;
@@ -134,7 +130,7 @@ namespace Ermine::graphics
         /**
 		 * @brief Update the shadow maps for all lights that cast shadows.
 		 */
-        void InitializeShadowMapResources();
+        void UpdateShadowMap();
         /**
          * @brief Initialize the renderer with the screen width and height.
          * @param screenWidth The width of the screen
@@ -162,28 +158,28 @@ namespace Ermine::graphics
         };
 
 
-        //struct InstanceData {
-        //    glm::mat4 model; // per-entity transform
-        //    glm::mat3 normalMat; // per-entity normal matrix
-        //    //glm::vec4 colour; // optional tint
-        //};
+        struct InstanceData {
+            glm::mat4 model; // per-entity transform
+            glm::mat3 normalMat; // per-entity normal matrix
+            //glm::vec4 colour; // optional tint
+        };
 
-        //// group by mesh pointer, shader, texture
-        //struct BatchKey {
-        //    //Mesh* k_mesh;
-        //    const graphics::VertexArray* k_vao;
-        //    const graphics::IndexBuffer* k_ibo;
+        // group by mesh pointer, shader, texture
+        struct BatchKey {
+            //Mesh* k_mesh;
+            const graphics::VertexArray* k_vao;
+            const graphics::IndexBuffer* k_ibo;
 
-        //    std::shared_ptr<Shader> k_shader;
-        //    std::shared_ptr<Texture> k_texture;
+            std::shared_ptr<Shader> k_shader;
+            std::shared_ptr<Texture> k_texture;
 
-        //    bool operator<(const BatchKey& other) const {
-        //        if (k_vao != other.k_vao) return k_vao < other.k_vao;
-        //        if (k_ibo != other.k_ibo) return k_ibo < other.k_ibo;
-        //        if (k_shader != other.k_shader) return k_shader < other.k_shader;
-        //        return k_texture < other.k_texture;
-        //    }
-        //};
+            bool operator<(const BatchKey& other) const {
+                if (k_vao != other.k_vao) return k_vao < other.k_vao;
+                if (k_ibo != other.k_ibo) return k_ibo < other.k_ibo;
+                if (k_shader != other.k_shader) return k_shader < other.k_shader;
+                return k_texture < other.k_texture;
+            }
+        };
 
         /**
         * @brief G buffer structure for rendering to Lighting pass
@@ -384,77 +380,10 @@ namespace Ermine::graphics
         void UpdateLightsUBO(const Mtx44& view);
         
         /**
-         * @brief Updates the material's shader storage buffer object (SSBO) at a specific index.
-         * Used for dynamic material updates after initial compilation.
-         * @param materialData The material data to be uploaded to the SSBO.
-         * @param materialIndex The index in the material array to update.
+         * @brief Updates the material's shader storage buffer object (SSBO) with the specified material data.
+         * @param materialData The material data to be uploaded to the SSBO, including properties like albedo, metallic, roughness, etc.
          */
-        void UpdateMaterialSSBO(const graphics::MaterialSSBO& materialData, uint32_t materialIndex);
-
-        /**
-         * @brief Updates the material's SSBO with the specified material data (legacy version).
-         * Updates index 0 by default. Prefer using the indexed version.
-         * @param materialData The material data to be uploaded to the SSBO.
-         */
-        void UpdateMaterialSSBO(const graphics::MaterialSSBO& materialData);
-
-        /**
-         * @brief Update multiple entities' material albedo color and upload to GPU.
-         * @param entities Vector of entity IDs whose materials will be updated.
-         * @param color The new albedo color to set for each material.
-		 */ 
-        void UpdateMultipleEntitiesMaterials(const std::vector<EntityID>& entities,
-            const Vec3& color)
-        {
-            auto& ecs = ECS::GetInstance();
-            auto renderer = ecs.GetSystem<Renderer>();
-
-            for (EntityID entity : entities) {
-                if (!ecs.HasComponent<Ermine::Material>(entity)) continue;
-
-                auto& materialComp = ecs.GetComponent<Ermine::Material>(entity);
-                auto* material = materialComp.GetMaterial();
-
-                if (!material) continue;
-
-                // Update material
-                material->SetVec3("materialAlbedo", color);
-
-                // Upload to GPU
-                auto ssboData = material->GetSSBOData();
-                uint32_t materialIndex = renderer->GetMaterialIndex(entity);
-                renderer->UpdateMaterialSSBO(ssboData, materialIndex);
-            }
-        }
-
-        /**
-         * @brief Update an entity's material properties and upload to GPU.
-         * @param entity The entity whose material will be updated.
-         * @param albedo The new albedo color.
-         * @param roughness The new roughness value.
-         * @param metallic The new metallic value.
-         * @param emissive The new emissive color.
-		 */
-        void UpdateMaterialColor(EntityID entity,
-            const Vec3& albedo,
-            float roughness,
-            float metallic,
-            const Vec3& emissive);
-
-        /**
-		* @brief Retrieves the material index for the specified entity.
-		* @param entity The entity whose material index to retrieve.
-        */
-        uint32_t GetMaterialIndex(EntityID entity) const;
-
-        /**
-         * @brief Sets the u_MaterialIndex uniform for the entity's material.
-         * Call this before each draw call to tell the shader which material to use.
-         * @param entity The entity whose material index to set.
-         * @param shader The shader program to set the uniform on.
-         */
-        void SetMaterialIndex(EntityID entity, const std::shared_ptr<Shader>& shader);
-
+        void UpdateMaterialSSBO(const MaterialSSBO& materialData);
         
         /**
          * @brief Compiles all materials from entities with Material and Model components into a single SSBO.
@@ -463,41 +392,7 @@ namespace Ermine::graphics
          * when materials are added/removed.
          */
         void CompileMaterials();
-
-        /**
-         * @brief Marks materials as dirty, triggering recompilation on next frame.
-         * Call this when materials are added, removed, or modified.
-         */
-        void MarkMaterialsDirty() { m_MaterialsDirty = true; }
-
-        /**
-         * @brief Registers a texture in the global texture array.
-         * @param texture Shared pointer to the texture.
-         * @return The index of the texture in the array, or -1 if registration failed.
-         */
-        int RegisterTexture(std::shared_ptr<Texture> texture);
-
-        /**
-         * @brief Gets the texture array index for a given texture ID.
-         * @param textureID The OpenGL texture ID.
-         * @return The array index, or -1 if not found.
-         */
-        int GetTextureArrayIndex(GLuint textureID) const;
-
-        /**
-         * @brief Builds the bindless texture array SSBO.
-         * This should be called after all textures are registered and before rendering.
-         */
-        void BuildTextureArray();
-
-        /**
-         * @brief Compiles draw commands and draw info for all passes.
-         * Routes opaque meshes to geometry/shadow passes, transparent/custom shader meshes to forward pass.
-         * Iterates through all entities once and builds DrawElementsIndirectCommand + DrawInfo for all rendering.
-         * Should be called every frame.
-         */
-        void CompileDrawData();
-
+        
         /**
          * @brief Binds the MaterialBlock shader storage buffer to the specified shader program if it has not been bound before.
          * @param shader The shader program to which the material block should be bound.
@@ -574,8 +469,8 @@ namespace Ermine::graphics
          */
         void CalculateLightMatrix(const editor::EditorCamera& editorCamera);
         /**
-         * @brief Renders the shadow map for all shadow-casting lights and cascades.
-         * Reuses pre-skinned positions from geometry pass to avoid redundant bone calculations.
+         * @brief Renders the shadow map using instanced rendering for all shadow-casting lights and cascades.
+         * Sets up the shadow map FBO, viewport, and render state, then draws all geometry using instanced draw calls.
          * Restores previous OpenGL state after rendering.
          */
 		void RenderShadowMapInstanced();
@@ -642,42 +537,14 @@ namespace Ermine::graphics
         bool IsTransparentMaterial(const Ermine::graphics::Material* material) const;
 
         /**
-         * @brief Check if material uses a custom shader (not standard deferred pipeline)
-         * @param material Material to check
-         * @return true if material has custom shader
-         */
-        bool HasCustomShader(const Ermine::graphics::Material* material) const;
-
-        /**
          * @brief Handle window resize events to adjust buffers and viewports
          * @param width New window width
          * @param height New window height
 		 */
 		void OnWindowResize(const int& width, const int& height);
 
-    protected:
-		/**
-		 * @brief Called when an entity is added to this system
-		 * @param entity The entity that was added
-		 */
-		
-
     private:
-        // Texture Array Management (Bindless Texture System)
-        struct TextureArrayEntry
-        {
-            GLuint textureID = 0;
-            std::string filePath;
-            int arrayIndex = -1;
-        };
-
-        std::vector<GLuint> m_TextureArray;                           // All textures in the array
-        std::unordered_map<std::string, int> m_TexturePathToIndex;    // Map file path to array index
-        std::unordered_map<GLuint, int> m_TextureIDToIndex;           // Map texture ID to array index
-        GLuint m_TextureArraySSBO = 0;                                // SSBO containing texture handles
-        bool m_TextureArrayDirty = true;                              // Flag to trigger texture array rebuild
-
-        // Renderer state
+		// Renderer state
 		uint8_t frameCounter = 0;
 
 		// Light System
@@ -692,32 +559,9 @@ namespace Ermine::graphics
 
         // Material SSBO
         GLuint m_MaterialSSBO = 0;
+        static constexpr GLuint MaterialBindingPoint = 2;
         std::unordered_set<GLuint> m_MaterialBlockBoundPrograms;
         std::unordered_map<EntityID, uint32_t> m_EntityMaterialIndices; // Maps entity to material index in SSBO
-        
-        // Material compilation system - upload all materials at load time
-        std::vector<MaterialSSBO> m_CompiledMaterials; // All materials compiled into a single vector
-        bool m_MaterialsDirty = true; // Flag to trigger recompilation when materials change
-
-        /**
-         * @brief Uploads all compiled materials to the GPU SSBO at once.
-         * This should be called once after CompileMaterials() during load time.
-         */
-        void UploadMaterialsToGPU();
-
-        // Draw data for geometry/shadow passes (opaque, non-custom shader meshes)
-        std::vector<DrawElementsIndirectCommand> m_StandardDrawCommands;
-        std::vector<DrawInfo> m_StandardDrawInfos;
-        std::vector<DrawElementsIndirectCommand> m_SkinnedDrawCommands;
-        std::vector<DrawInfo> m_SkinnedDrawInfos;
-
-        // Draw data for forward pass (transparent + custom shader meshes)
-        std::vector<DrawElementsIndirectCommand> m_ForwardPassDrawCommands;
-        std::vector<DrawInfo> m_ForwardPassDrawInfos;
-
-        // Cached shadow pass draw commands (reused to avoid per-frame allocation)
-        std::vector<DrawElementsIndirectCommand> m_ShadowStandardCommands;
-        std::vector<DrawElementsIndirectCommand> m_ShadowSkinnedCommands;
 
         // Deferred rendering buffers
         bool m_UseDeferredRendering = true;
@@ -746,11 +590,6 @@ namespace Ermine::graphics
         uint64_t m_ShadowMapArrayHandle = 0;
         GLuint m_ShadowMapFBO = 0;
         GLuint m_ShadowMapArray = 0;
-
-        // Pre-skinned positions buffer (binding 8) - written by geometry pass, read by shadow pass
-        GLuint m_PreSkinnedPositionsSSBO = 0;
-        size_t m_PreSkinnedBufferSize = 0;
-        unsigned int m_TotalShadowLayers = 0; // Total layers used by all shadow-casting lights
 
         // Forward rendering shader for transparent objects
         std::shared_ptr<Shader> m_ForwardShader = nullptr;
@@ -812,6 +651,7 @@ namespace Ermine::graphics
                 m.m30, m.m31, m.m32, m.m33
             );
         }
+
         /**
          * @brief Gets the world transform matrix for an entity using GlobalTransform component
          * @param entity The entity to get the world matrix for

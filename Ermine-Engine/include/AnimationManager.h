@@ -13,13 +13,9 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #pragma once
 #include "ECS.h"
-#include "SkeletalSSBO.h"
 
 namespace Ermine::graphics
 {
-	// Forward declaration
-	class SkeletalSSBO;
-
 	/**
 	 * @brief ECS system that updates Animator components.
 	 */
@@ -30,14 +26,5 @@ namespace Ermine::graphics
 		 * @param deltaTime Frame time step in seconds
 		 */
 		void Update(double deltaTime);
-
-		/**
-		 * @brief Set the skeletal SSBO for efficient bone transform updates
-		 * @param skeletalSSBO Pointer to the skeletal SSBO
-		 */
-		void SetSkeletalSSBO(SkeletalSSBO* skeletalSSBO) { m_SkeletalSSBO = skeletalSSBO; }
-
-	private:
-		SkeletalSSBO* m_SkeletalSSBO = nullptr;
 	};
 }

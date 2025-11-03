@@ -15,8 +15,6 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Serialisation.h"
 #include "Entity.h"
 #include "Components.h"
-#include "Renderer.h"
-#include "MeshTypes.h"
 
 #include <document.h>
 #include <writer.h>
@@ -241,14 +239,6 @@ void LoadSceneFromFile(Ermine::ECS& ecs, const std::filesystem::path& path) {
     if (!d.HasMember("entities") || !d["entities"].IsArray())
         throw std::runtime_error("Invalid scene JSON (missing 'entities'): " + path.string());
 
-    // Clear MeshManager for new scene
-    auto renderer = ecs.GetSystem<Ermine::graphics::Renderer>();
-    if (renderer) {
-        renderer->m_MeshManager.Clear();
-    }
-
-    Ermine::AssetManager::GetInstance().ClearModelCache();
-
     for (auto& e : d["entities"].GetArray()) {
         if (!e.IsObject()) continue;
 
@@ -283,13 +273,6 @@ void LoadSceneFromFile(Ermine::ECS& ecs, const std::filesystem::path& path) {
     }
 
     ecs.ResyncAllSignaturesFromStorage();
-
-    // Upload all registered meshes to GPU and build indirect draw commands
-    if (renderer) {
-        renderer->m_MeshManager.UploadAndBuild();
-        EE_CORE_INFO("Scene loaded: MeshManager populated with {} meshes",
-                     renderer->m_MeshManager.GetMeshCount());
-    }
 }
 
 void SaveCurrentScene(const std::string& sceneName)

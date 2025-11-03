@@ -40,6 +40,19 @@ namespace Ermine
     };
 
     /**
+     * @brief Structure to hold indexed material information
+     */
+    struct IndexedMaterial {
+        uint32_t index;                                      // Index in the compiled vector
+        std::string name;                                     // Material name/key
+        std::shared_ptr<graphics::Material> material;        // The actual material
+        
+        IndexedMaterial() : index(0), name(""), material(nullptr) {}
+        IndexedMaterial(uint32_t idx, const std::string& n, std::shared_ptr<graphics::Material> mat)
+            : index(idx), name(n), material(mat) {}
+    };
+
+    /**
      * @brief The AssetManager class is a singleton class that manages all the assets in the game.
      *        This includes textures and shaders.
      */
@@ -60,6 +73,11 @@ namespace Ermine
         std::string m_databasePath = "./Ermine-Game.lion_rcdbase"; // Default database path
         std::string m_projectGuid = ""; // Will be loaded from config or database
         bool m_databaseLoaded = false;
+
+        // Material compilation system
+        std::vector<IndexedMaterial> m_compiledMaterials;              // Compiled vector of all materials
+        std::unordered_map<std::string, uint32_t> m_materialNameToIndex; // Quick lookup: name -> index
+        bool m_materialsCompiled = false;                               // Whether materials have been compiled
 
         // Internal methods for resource database
         bool LoadResourceDatabase();
@@ -173,14 +191,6 @@ public:
          */
         void UnloadModel(const std::string& filePath);
 
-        /**
-         * @brief Clear all cached models.
-         *
-         * This should be called when MeshManager is cleared to ensure Models
-         * are reloaded and re-register their meshes.
-         */
-        void ClearModelCache();
-
         // ================== Utilities ==================
         /**
          * @brief Load the contents of a file into a buffer.
@@ -242,6 +252,51 @@ public:
         std::shared_ptr<graphics::Material> CreateSharedMaterial(const std::string& materialType,
                                                                std::shared_ptr<graphics::Shader> shader,
                                                                std::shared_ptr<graphics::Texture> baseTexture = nullptr);
+
+        // ================== Material Compilation System ==================
+        /**
+         * @brief Compile all loaded materials into a contiguous vector with indexing
+         * This should be called after all materials are loaded but before rendering
+         * @return Number of materials compiled
+         */
+        size_t CompileMaterials();
+
+        /**
+         * @brief Get the compiled materials vector (read-only)
+         * @return Const reference to the compiled materials vector
+         */
+        const std::vector<IndexedMaterial>& GetCompiledMaterials() const;
+
+        /**
+         * @brief Get a material by its compiled index
+         * @param index The index in the compiled materials vector
+         * @return Pointer to the material, or nullptr if index is invalid
+         */
+        graphics::Material* GetMaterialByIndex(uint32_t index) const;
+
+        /**
+         * @brief Get the index of a material by its name
+         * @param name The name of the material
+         * @return The index, or UINT32_MAX if not found
+         */
+        uint32_t GetMaterialIndex(const std::string& name) const;
+
+        /**
+         * @brief Check if materials have been compiled
+         * @return True if materials are compiled, false otherwise
+         */
+        bool AreMaterialsCompiled() const;
+
+        /**
+         * @brief Clear the compiled materials (forces recompilation on next CompileMaterials call)
+         */
+        void InvalidateMaterialCompilation();
+
+        /**
+         * @brief Get all material names in the compiled vector
+         * @return Vector of material names in index order
+         */
+        std::vector<std::string> GetCompiledMaterialNames() const;
 
         // Clear all loaded assets
         void Clear();

@@ -27,7 +27,7 @@ namespace Ermine
 					sig.set(d.typeID);                  // descriptor already stores dense typeID
 			});
 
-			// Update systems?entity lists using your normal path
+			// Update systems’ entity lists using your normal path
 			m_SystemManager->EntitySignatureChanged(e, sig);
 		}
 	}

@@ -323,29 +323,18 @@ namespace Ermine
     */
     void HierarchySystem::UpdateHierarchy()
     {
-        if (m_Entities.empty())
-            return;
+        if (m_Entities.size() == 0)
+			return;
 
-        std::vector<uint64_t> entities_to_process;
-        entities_to_process.reserve(m_Entities.size());
-
-        // Collect entities first
+        // Only update root entities that are dirty or have dirty children
         for (auto entity : m_Entities)
         {
-            entities_to_process.push_back(entity);
-        }
-
-        // Process collected entities
-        for (auto entity : entities_to_process)
-        {
-            // Verify entity still exists
-            if (m_Entities.find(entity) == m_Entities.end())
-                continue;
-
-            if (!ECS::GetInstance().HasComponent<HierarchyComponent>(entity) ||
+            // Skip if missing required components
+            if (!ECS::GetInstance().HasComponent<HierarchyComponent>(entity) || 
                 !ECS::GetInstance().HasComponent<Transform>(entity))
                 continue;
 
+            // Ensure GlobalTransform exists
             if (!ECS::GetInstance().HasComponent<GlobalTransform>(entity))
             {
                 ECS::GetInstance().AddComponent<GlobalTransform>(entity, GlobalTransform());
@@ -354,7 +343,10 @@ namespace Ermine
             auto& hierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(entity);
             auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
 
+            // Only update if this entity is dirty AND it's a root entity (no parent)
             if (hierarchy.parent == 0 && (hierarchy.isDirty || hierarchy.worldTransformDirty || transform.isDirty)) {
+                // DON'T clear flags here - let UpdateWorldTransform do it
+                // This was causing the update to not propagate to children
                 UpdateWorldTransform(entity);
             }
         }

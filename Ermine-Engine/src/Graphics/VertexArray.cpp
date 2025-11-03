@@ -25,7 +25,6 @@ VertexArray::VertexArray()
 {
     glGenVertexArrays(1, &m_RendererID);
     glBindVertexArray(m_RendererID);
-	EE_INFO("Vertex Array: Created Vertex Array Object with ID: {}", m_RendererID);
 }
 
 /*!

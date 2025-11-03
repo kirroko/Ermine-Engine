@@ -1,9 +1,8 @@
 /* Start Header ************************************************************************/
 /*!
 \file       EditorGUI.h
-\author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu (90%)
-\co-authors LEE Wen Jie, Brian, wenjiebrian.lee, 2301261, wenjiebrian.lee\@digipen.edu (2%)
-\co-authors Jeremy Lim Ting Jie, jeremytingjie.lim, 2301370, jeremytingjie.lim\@digipen.edu (8%)
+\author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu (95%)
+\co-authors LEE Wen Jie, Brian, wenjiebrian.lee, 2301261, wenjiebrian.lee\@digipen.edu (5%)
 \date       27/03/2025
 \brief      This file contains the declaration of the EditorGUI class.
             Function just like a wrapper for the ImGUI library.
@@ -24,7 +23,6 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <memory> // Add this include for shared_ptr
 
 namespace Ermine {
-    using EntityID = unsigned long long int;
     class Scene;
     class HierarchyPanel;
 }
@@ -33,8 +31,8 @@ namespace Ermine::editor
 {
     class HierarchyInspector;
     /**
-     * @brief The EditorGUI class, function just like a wrapper for the ImGUI library
-     */
+	 * @brief The EditorGUI class, function just like a wrapper for the ImGUI library
+	 */
     class EE_API EditorGUI
     {
         // Keeps track of all registered ImGui windows
@@ -46,9 +44,9 @@ namespace Ermine::editor
 
         static std::unique_ptr<Ermine::editor::HierarchyInspector> s_Inspector;
 
-        /**
-         * @brief Top menu bar for the editor
-         */
+		/**
+		 * @brief Top menu bar for the editor
+		 */
         static void TopMenuBar(GLFWwindow* windowContext);
 
         /**
@@ -56,27 +54,16 @@ namespace Ermine::editor
          */
         static void Toolbar();
 
-        /**
-         * @brief Profiling window for the editor
-         */
-        static void ProfilingWindow();
+		/**
+		 * @brief Profiling window for the editor
+		 */
+		static void ProfilingWindow();
 
-        /**
-         * @brief Show the viewport for the editor
-         * @param show
-         */
-        static void ViewPortWindow(bool& show);
-
-        /**
-         * @brief Handle play mode start - attach game camera to primary camera entity
-         */
-        static void StartPlayMode();
-
-        /**
-         * @brief Handle play mode stop - restore editor camera
-         */
-        static void StopPlayMode();
-
+		/**
+		 * @brief Show the viewport for the editor
+		 * @param show 
+		 */
+		static void ViewPortWindow(bool& show);
     public:
         enum class SimState : uint8_t { stopped, playing, paused };
         static SimState s_state;
@@ -88,22 +75,22 @@ namespace Ermine::editor
          */
         static void Init(GLFWwindow* window);
 
-        /**
-         * @brief Check if the ImGUI context is initialized
-         */
+		/**
+		 * @brief Check if the ImGUI context is initialized
+		 */
         static bool IsInit();
 
-        /**
-         * @brief Dock the ImGUI window
-         */
-        static void DockingWindow();
+		/**
+		 * @brief Dock the ImGUI window
+		 */
+		static void DockingWindow();
 
-        /**
+		/**
         * @brief Update the ImGUI context (Render)
         */
         static void Update(GLFWwindow* windowContext);
 
-        /**
+		/**
          * @brief Render the ImGUI context
          */
         static void Render();
@@ -156,16 +143,7 @@ namespace Ermine::editor
         *************************************************************************/
         static void FocusWindow(const std::string& windowName);
 
-        static void SetActiveScene(std::shared_ptr<Ermine::Scene> scene);
+        static void SetActiveScene(std::shared_ptr<Ermine::Scene> scene);        
         static std::shared_ptr<Ermine::Scene> GetActiveScene() { return s_ActiveScene; }
-
-        /**
-         * @brief Get the window context (for cursor locking)
-         */
-        static GLFWwindow* GetWindowContext() { return s_WindowContext; }
-
-    private:
-        static GLFWwindow* s_WindowContext;
-        static Ermine::EntityID s_PrimaryCameraEntity;
     };
 }
