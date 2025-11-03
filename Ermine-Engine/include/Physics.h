@@ -88,11 +88,6 @@ namespace Ermine
 		*************************************************************************/
 		void Update(float deltaTime);
 
-		//place holder, will be remove
-		//BodyID CreateStaticBox(const JPH::Vec3& halfExtents, const RVec3& position);
-		//BodyID CreateDynamicSphere(float radius, const RVec3& position, const JPH::Vec3& initialVelocity);
-		//void CreatePhysicsBox(const Ermine::Vec3& position, const Ermine::Vec3& size, float mass);
-
 		/*!***********************************************************************
 		  \brief
 			Rebuilds the list of physics bodies from ECS entities. Old bodies are
@@ -173,8 +168,5 @@ namespace Ermine
 		std::vector<PendingPair> mPendingPairs;
 
 		void FlushPendingPairsToEntityEvents();
-
-		//not in used
-		//void SetupLayers();
 	};
 }
