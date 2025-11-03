@@ -396,6 +396,14 @@ namespace Ermine::graphics
             SetParameter(name, MaterialParam(value));
         }
         /**
+         * @brief Sets a Vec2 parameter.
+         * @param name Parameter name.
+         * @param value Vec2 value.
+         */
+        void SetVec2(const std::string& name, const Vec2& value) {
+            SetParameter(name, MaterialParam(value));
+        }
+        /**
          * @brief Sets a Vec3 parameter.
          * @param name Parameter name.
          * @param value Vec3 value.
