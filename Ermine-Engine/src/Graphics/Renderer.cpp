@@ -906,6 +906,9 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 	m_GBufferShader->Bind();
 	BindMaterialBlockIfPresent(m_GBufferShader);
 
+	// Check if any materials have been modified via ImGui or code
+	CheckMaterialUpdates();
+
 	// Recompile materials if dirty
 	if (m_MaterialsDirty) {
 		CompileMaterials();
@@ -3923,6 +3926,27 @@ void Renderer::OnWindowResize(const int& width, const int& height)
  * @brief Compiles all materials from entities into a single SSBO.
  * This collects material data, uploads to GPU, and assigns indices.
  */
+void Renderer::CheckMaterialUpdates()
+{
+	// Check if any materials have been modified (e.g., via ImGui)
+	const auto& ecs = Ermine::ECS::GetInstance();
+
+	for (auto entity : m_Entities)
+	{
+		if (!ecs.HasComponent<Ermine::Material>(entity)) continue;
+
+		auto& materialComponent = ecs.GetComponent<Ermine::Material>(entity);
+		graphics::Material* material = materialComponent.GetMaterial();
+
+		if (material && material->IsDirty())
+		{
+			// Material has been modified, trigger recompilation
+			m_MaterialsDirty = true;
+			return;
+		}
+	}
+}
+
 void Renderer::CompileMaterials()
 {
 	if (!m_MaterialsDirty) return;
