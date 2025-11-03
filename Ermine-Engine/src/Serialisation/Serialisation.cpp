@@ -208,12 +208,43 @@ void SaveSceneToFile(const Ermine::ECS& ecs, const std::filesystem::path& path, 
 
 
         for (const std::string& name : ecs.GetComponentNames(id)) {                 // :contentReference[oaicite:1]{index=1}
-            const auto* desc = ecs.GetDescriptor(name);         // :contentReference[oaicite:2]{index=2}
-            if (!desc || !desc->serialize) continue;
+            const auto* desc = ecs.GetDescriptor(name);
 
             rapidjson::Value payload(rapidjson::kObjectType);
-            desc->serialize(id, payload, a);  // <- no ECS here
-            comps.AddMember(rapidjson::Value(name.c_str(), a), payload, a);
+            bool wrote = false;
+
+            // Prefer the generic serializer if present
+            if (desc && desc->serialize)
+            {
+                desc->serialize(id, payload, a);
+                wrote = true;
+            }
+            else
+            {
+                // --- Custom fallbacks ---
+                //if (name == "IDComponent" && ecs.HasComponent<Ermine::IDComponent>(id))
+                //{
+                //    const auto& c = ecs.GetComponent<Ermine::IDComponent>(id);
+                //    const std::string guid_str = c.guid.ToString();
+                //    payload.AddMember(rapidjson::Value("guid", a),
+                //        rapidjson::Value(guid_str.c_str(), a), a);
+                //    wrote = true;
+                //}
+                if (name == "Script" && ecs.HasComponent<Ermine::Script>(id))
+                {
+                    const auto& s = ecs.GetComponent<Ermine::Script>(id);
+                    payload.AddMember(rapidjson::Value("class", a),
+                        rapidjson::Value(s.m_className.c_str(), a), a);
+                    // TODO: add more script state here if you later expose it
+                    wrote = true;
+                }
+            }
+
+            // Only write if we actually produced a payload
+            if (wrote)
+            {
+                comps.AddMember(rapidjson::Value(name.c_str(), a), payload, a);
+            }
         }
 
 
@@ -267,17 +298,50 @@ void LoadSceneFromFile(Ermine::ECS& ecs, const std::filesystem::path& path) {
 
             // Look up the component descriptor and call its type-erased deserializer
             const auto* desc = ecs.GetDescriptor(compName);
-            if (!desc || !desc->deserialize) {
-                EE_CORE_WARN("Unknown or non-deserializable component '{}'; skipping.", compName.c_str());
-                continue;
+            bool handled = false;
+
+            // Prefer the generic deserializer if present
+            if (desc && desc->deserialize)
+            {
+                desc->deserialize(id, payload);
+                handled = true;
+
+                // If the generic path handled IDComponent, keep your registry hookup:
+                if (compName == "IDComponent")
+                {
+                    auto& c = ecs.GetComponent<Ermine::IDComponent>(id);
+                    ecs.GetGuidRegistry().Register(id, c.guid);
+                }
+            }
+            else
+            {
+                // --- Custom fallbacks ---
+                //if (compName == "IDComponent")
+                //{
+                //    Ermine::Guid g =
+                //        (payload.HasMember("guid") && payload["guid"].IsString())
+                //        ? Ermine::Guid::FromString(payload["guid"].GetString())
+                //        : Ermine::Guid::New(); // backward-compatible
+
+                //    ecs.AddComponent<Ermine::IDComponent>(id, Ermine::IDComponent{ g });
+                //    ecs.GetGuidRegistry().Register(id, g);
+                //    handled = true;
+                //}
+                if (compName == "Script")
+                {
+                    if (payload.HasMember("class") && payload["class"].IsString())
+                    {
+                        const std::string cls = payload["class"].GetString();
+                        ecs.AddComponent<Ermine::Script>(id, Ermine::Script(cls, id));
+                        // TODO: post-load hook if you have one, e.g. ScriptSystem::OnAdded(id);
+                        handled = true;
+                    }
+                }
             }
 
-            desc->deserialize(id, payload);
-
-            // Keep your GUID registration behavior
-            if (compName == "IDComponent") {
-                auto& c = ecs.GetComponent<Ermine::IDComponent>(id);
-                ecs.GetGuidRegistry().Register(id, c.guid);
+            if (!handled)
+            {
+                EE_CORE_WARN("Unknown or non-deserializable component '{}'; skipping.", compName.c_str());
             }
         }
     }
@@ -312,11 +376,10 @@ Ermine::EntityID LoadPrefabFromFile(Ermine::ECS& ecs, const std::filesystem::pat
     if (!path.has_extension() || path.extension() != ".prefab")
     {
         EE_CORE_ERROR("LoadPrefabFromFile rejected non-prefab file: {}", path.string());
-        return {}; // or return {}; or throw, your style
+        return {};
     }
 
     std::filesystem::path norm = std::filesystem::weakly_canonical(path);
-    //EE_CORE_INFO("Normalized prefab path = {}", norm.string());
     std::ifstream ifs(norm, std::ios::binary);
     if (!ifs) throw std::runtime_error("Could not open file for reading: " + path.string());
 
@@ -325,7 +388,7 @@ Ermine::EntityID LoadPrefabFromFile(Ermine::ECS& ecs, const std::filesystem::pat
     if (d.HasParseError() || !d.IsObject())
         throw std::runtime_error("Invalid JSON file: " + path.string());
 
-    // Accept either { "entity": { "id", "components" } } or { "id", "components" }
+    // Accept either { "entity": { ... } } or a flat object
     const rapidjson::Value* root = &d;
     if (d.HasMember("entity") && d["entity"].IsObject()) root = &d["entity"];
 
@@ -336,38 +399,47 @@ Ermine::EntityID LoadPrefabFromFile(Ermine::ECS& ecs, const std::filesystem::pat
     Ermine::EntityID id = ecs.CreateEntity();
     const rapidjson::Value& comps = (*root)["components"];
 
-    // 1) Load IDComponent first (if present), then register GUID
-    if (auto it = comps.FindMember("IDComponent");
-        it != comps.MemberEnd() && it->value.IsObject())
+    // Load all components. Prefer generic descriptor; otherwise custom Script fallback.
+    for (auto it = comps.MemberBegin(); it != comps.MemberEnd(); ++it)
     {
-        if (const auto* desc = ecs.GetDescriptor("IDComponent"); desc && desc->deserialize) {
-            desc->deserialize(id, it->value);
-            auto& c = ecs.GetComponent<Ermine::IDComponent>(id);
-            ecs.GetGuidRegistry().Register(id, c.guid);
-        }
-    }
-
-    // 2) Load remaining components generically (any order is fine for a prefab)
-    for (auto it = comps.MemberBegin(); it != comps.MemberEnd(); ++it) {
         if (!it->value.IsObject()) continue;
         const char* compName = it->name.GetString();
-        if (std::strcmp(compName, "IDComponent") == 0) continue;
 
-        if (const auto* desc = ecs.GetDescriptor(compName); desc && desc->deserialize) {
+        if (const auto* desc = ecs.GetDescriptor(compName); desc && desc->deserialize)
+        {
             desc->deserialize(id, it->value);
+        }
+        else if (std::strcmp(compName, "Script") == 0)
+        {
+            // Fallback for Script: expect { "class": "<ClassName>" }
+            const rapidjson::Value& payload = it->value;
+            if (payload.HasMember("class") && payload["class"].IsString())
+            {
+                const std::string cls = payload["class"].GetString();
+                ecs.AddComponent<Ermine::Script>(id, Ermine::Script(cls, id));
+            }
+            else
+            {
+                EE_CORE_WARN("Prefab Script missing 'class' string; skipping.");
+            }
+        }
+        else
+        {
+            EE_CORE_WARN("Prefab component '{}' has no deserializer; skipping.", compName);
         }
     }
 
-    // Recompute signatures so systems see this new entity
+    // Ensure signatures are up to date
     ecs.ResyncAllSignaturesFromStorage();
-
     return id;
 }
 
 
+
 void SavePrefabToFile(const Ermine::ECS& ecs, Ermine::EntityID id, const std::filesystem::path& path)
 {
-    if (path.has_parent_path()) {
+    if (path.has_parent_path())
+    {
         std::error_code ec;
         std::filesystem::create_directories(path.parent_path(), ec);
         if (ec) throw std::runtime_error("Failed to create directory: " + path.parent_path().string());
@@ -385,13 +457,29 @@ void SavePrefabToFile(const Ermine::ECS& ecs, Ermine::EntityID id, const std::fi
 
     rapidjson::Value comps(rapidjson::kObjectType);
 
-    for (const std::string& name : ecs.GetComponentNames(id)) {
+    for (const std::string& name : ecs.GetComponentNames(id))
+    {
         const auto* desc = ecs.GetDescriptor(name);
-        if (!desc || !desc->serialize) continue;
-
         rapidjson::Value payload(rapidjson::kObjectType);
-        desc->serialize(id, payload, a);
-        comps.AddMember(rapidjson::Value(name.c_str(), a), payload, a);
+        bool wrote = false;
+
+        if (desc && desc->serialize)
+        {
+            desc->serialize(id, payload, a);
+            wrote = true;
+        }
+        else if (name == "Script" && ecs.HasComponent<Ermine::Script>(id))
+        {
+            const auto& s = ecs.GetComponent<Ermine::Script>(id);
+            payload.AddMember(rapidjson::Value("class", a),
+                rapidjson::Value(s.m_className.c_str(), a), a);
+            wrote = true;
+        }
+
+        if (wrote)
+            comps.AddMember(rapidjson::Value(name.c_str(), a), payload, a);
+        else
+            EE_CORE_WARN("Prefab save: component '{}' has no serializer; skipping.", name.c_str());
     }
 
     e.AddMember("components", comps, a);

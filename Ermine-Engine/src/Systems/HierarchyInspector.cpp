@@ -467,6 +467,13 @@ namespace Ermine::editor {
 				return Vec3(q->floatValues[0], q->floatValues[1], q->floatValues[2]);
 			return fb;
 			};
+		auto getVec2 = [&](const char* a, const char* b, const Vec2& fb) -> Vec2 {
+			if (auto p = gm->GetParameter(a); p && p->floatValues.size() >= 2)
+				return Vec2(p->floatValues[0], p->floatValues[1]);
+			if (auto q = gm->GetParameter(b); q && q->floatValues.size() >= 2)
+				return Vec2(q->floatValues[0], q->floatValues[1]);
+			return fb;
+			};
 		auto getBool = [&](const char* a, const char* b, bool fb) -> bool {
 			if (auto p = gm->GetParameter(a)) return p->boolValue;
 			if (b) { if (auto q = gm->GetParameter(b)) return q->boolValue; }
@@ -475,6 +482,9 @@ namespace Ermine::editor {
 
 		auto setFloatBoth = [&](const char* a, const char* b, float v) {
 			gm->SetFloat(a, v); gm->SetFloat(b, v);
+			};
+		auto setVec2Both = [&](const char* a, const char* b, const Vec2& v) {
+			gm->SetVec2(a, v); gm->SetVec2(b, v);
 			};
 		auto setVec3Both = [&](const char* a, const char* b, const Vec3& v) {
 			gm->SetVec3(a, v); gm->SetVec3(b, v);
@@ -577,6 +587,26 @@ namespace Ermine::editor {
 			}
 		}
 
+		ImGui::SeparatorText("UV Mapping");
+
+		// --- UV Scale ---
+		{
+			Vec2 uvScale = gm->GetUVScale();
+			float scale[2] = { uvScale.x, uvScale.y };
+			if (ImGui::DragFloat2("UV Scale", scale, 0.01f, 0.001f, 100.0f)) {
+				gm->SetUVScale(Vec2(scale[0], scale[1]));
+			}
+		}
+
+		// --- UV Offset ---
+		{
+			Vec2 uvOffset = gm->GetUVOffset();
+			float offset[2] = { uvOffset.x, uvOffset.y };
+			if (ImGui::DragFloat2("UV Offset", offset, 0.01f, -10.0f, 10.0f)) {
+				gm->SetUVOffset(Vec2(offset[0], offset[1]));
+			}
+		}
+
 		ImGui::SeparatorText("Maps");
 
 		// --- Presence flags (use same keys as (de)serialize) ---
@@ -617,6 +647,9 @@ namespace Ermine::editor {
 			setFloatBoth("materialRoughness", "material.roughness", 0.5f);
 			Vec3 emi{ 0.f,0.f,0.f }; setVec3Both("materialEmissive", "material.emissive", emi);
 			setFloatBoth("materialEmissiveIntensity", "material.emissiveIntensity", 1.0f);
+
+			gm->SetUVScale(Vec2(1.0f, 1.0f));
+			gm->SetUVOffset(Vec2(0.0f, 0.0f));
 
 			gm->SetBool("materialHasAlbedoMap", false);
 			setBoolBoth("materialHasNormalMap", "material.hasNormalMap", false);

@@ -17,6 +17,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Renderer.h"
 #include "Material.h"
 #include "SSBO_Bindings.h"
+#include "GameCamera.h"
+#include "EditorGUI.h"
 
 #include <numeric> // For std::iota
 
@@ -1036,9 +1038,50 @@ void Renderer::CompileDrawData()
 
 	// ========== FRUSTUM CULLING SETUP ==========
 	// Get camera view and projection matrices
-	const auto& camera = editor::EditorCamera::GetInstance();
-	const Mtx44& viewMtx = camera.GetViewMatrix();
-	const Mtx44& projMtx = camera.GetProjectionMatrix();
+	// Use GameCamera if active (playing), otherwise use EditorCamera
+	Mtx44 viewMtx, projMtx;
+
+#if defined(EE_EDITOR)
+	// In editor build, check if playing
+	if (editor::EditorGUI::isPlaying)
+	{
+		auto gameCamera = ecs.GetSystem<graphics::GameCamera>();
+		if (gameCamera && gameCamera->HasValidCamera())
+		{
+			// Use player camera when in play mode
+			viewMtx = gameCamera->GetViewMatrix();
+			projMtx = gameCamera->GetProjectionMatrix();
+		}
+		else
+		{
+			// Fallback to editor camera if no valid game camera
+			const auto& editorCamera = editor::EditorCamera::GetInstance();
+			viewMtx = editorCamera.GetViewMatrix();
+			projMtx = editorCamera.GetProjectionMatrix();
+		}
+	}
+	else
+	{
+		// Use editor camera when not playing
+		const auto& editorCamera = editor::EditorCamera::GetInstance();
+		viewMtx = editorCamera.GetViewMatrix();
+		projMtx = editorCamera.GetProjectionMatrix();
+	}
+#else
+	// Standalone build - use game camera
+	auto gameCamera = ecs.GetSystem<graphics::GameCamera>();
+	if (gameCamera && gameCamera->HasValidCamera())
+	{
+		viewMtx = gameCamera->GetViewMatrix();
+		projMtx = gameCamera->GetProjectionMatrix();
+	}
+	else
+	{
+		// Fallback if no camera is available
+		viewMtx = Mtx44(); // Identity matrix
+		projMtx = Mtx44(); // Identity matrix
+	}
+#endif
 
 	// Convert to glm for frustum extraction (use ToGlm helper)
 	glm::mat4 viewGlm = ToGlm(viewMtx);
