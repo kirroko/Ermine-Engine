@@ -52,7 +52,6 @@ namespace Ermine::editor
         
         // UI organization
         void DrawRenderingModeControls();
-        void DrawMaterialControls();
         void DrawPostProcessingControls();
         void DrawShadowMappingControls();
         void DrawPerformanceMetrics();
