@@ -24,6 +24,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "JobSystem.h"
 #include <HierarchySystem.h>
 #include "FiniteStateMachine.h"
+#include "SceneManager.h"
+#include "Serialisation.h"
 
 namespace fs = std::filesystem;
 
@@ -52,6 +54,17 @@ namespace
 	//	std::strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &tm);
 	//	return std::string(buf);
 	//}
+
+	static std::mutex s_LateDestroyMutex;
+	static std::vector<Ermine::EntityID> s_LateDestroyQueue;
+
+	static inline void EnqueueLateDestory(Ermine::EntityID id)
+	{
+		if (id == 0) return;
+		std::scoped_lock locks(s_LateDestroyMutex);
+		if (std::find(s_LateDestroyQueue.begin(), s_LateDestroyQueue.end(), id) == s_LateDestroyQueue.end())
+			s_LateDestroyQueue.push_back(id);
+	}
 
 	std::string Trim(const std::string& s)
 	{
@@ -1164,6 +1177,21 @@ namespace
 	{
 		return Ermine::Input::IsKeyReleased(key);
 	}
+
+	bool icall_input_getmousebutton(int button)
+	{
+		return Ermine::Input::IsMouseButtonPressed(button);
+	}
+
+	bool icall_input_getmousebuttondown(int button)
+	{
+		return Ermine::Input::IsMouseButtonDown(button);
+	}
+
+	bool icall_input_getmousebuttonrelease(int button)
+	{
+		return Ermine::Input::IsMouseButtonReleased(button);
+	}
 #pragma endregion
 
 #pragma region Debug ICalls
@@ -1461,15 +1489,25 @@ namespace
 		ToTempUTF8(name, name_);
 		if (name_.empty()) return nullptr;
 		auto& ecs = ECS::GetInstance();
-		for (unsigned long int i = 0; i < ecs.GetLivingEntityCount(); i++) // TODO: Optimize this later
+
+		std::vector<EntityID> FreshEntity = SceneManager::GetInstance().GetActiveScene()->GetAllEntities();
+		for (auto id : FreshEntity)
 		{
-			EntityID id = i + 1; // Entity IDs start from 1
 			if (!ecs.IsEntityValid(id) || !ecs.HasComponent<ObjectMetaData>(id))
 				continue;
 			auto& meta = ecs.GetComponent<ObjectMetaData>(id);
 			if (meta.name == name_)
 				return CreateManagedGameObjectWrapper(id);
 		}
+		//for (unsigned long int i = 0; i < ecs.GetLivingEntityCount(); i++) // TODO: Optimize this later
+		//{
+		//	Ermine::EntityID id = i + 1; // Entity IDs start from 1
+		//	if (!ecs.IsEntityValid(id) || !ecs.HasComponent<ObjectMetaData>(id))
+		//		continue;
+		//	auto& meta = ecs.GetComponent<ObjectMetaData>(id);
+		//	if (meta.name == name_)
+		//		return CreateManagedGameObjectWrapper(id);
+		//}
 		return nullptr;
 	}
 
@@ -1520,7 +1558,47 @@ namespace
 		EntityID id = GetEntityIDFromManaged(target);
 		if (id == 0 || !ECS::GetInstance().IsEntityValid(id))
 			return;
-		ECS::GetInstance().DestroyEntity(id);
+		//ECS::GetInstance().DestroyEntity(id);
+		EnqueueLateDestory(id);
+	}
+#pragma endregion
+
+#pragma region Prefab ICalls
+	MonoObject* icall_prefab_instantiate(MonoString* mpath)
+	{
+		if (!mpath) return nullptr;
+
+		std::string rel;
+		ToTempUTF8(mpath, rel);
+		if (rel.empty()) return nullptr;
+
+		fs::path p(rel);
+
+		if (p.is_relative())
+		{
+			if (p.extension() != ".prefab")
+				p += ".prefab";
+			if (p.empty() || !p.string().starts_with("../Resources"))
+				p = fs::path("Resources") / p;
+		}
+
+		try
+		{
+			Ermine::EntityID id = LoadPrefabFromFile(Ermine::ECS::GetInstance(), p);
+			if (id == 0 || !Ermine::ECS::GetInstance().IsEntityValid(id))
+			{
+				EE_CORE_WARN("Prefab instantiate failed for path: {}", p.string());
+				return nullptr;
+			}
+			MonoObject* go = CreateManagedGameObjectWrapper(id);
+			SetComponentGameObject(go, id);
+			return go;
+		}
+		catch (const std::exception& e)
+		{
+			EE_CORE_ERROR("Prefab instantiate exception for path: {} ; what(): {}", p.string(), e.what());
+			return nullptr;
+		}
 	}
 #pragma endregion
 
@@ -1607,6 +1685,29 @@ namespace Ermine::scripting
 			if (utf8) mono_free(utf8);
 		}
 	}
+
+	void ScriptEngine::QueueLateDestroy(EntityID id)
+	{
+		EnqueueLateDestory(id);
+	}
+
+	void ScriptEngine::FlushLateDestroy()
+	{
+		std::vector<EntityID> toDestroy;
+		{
+			std::scoped_lock lock(s_LateDestroyMutex);
+			if (s_LateDestroyQueue.empty()) return;
+			toDestroy.swap(s_LateDestroyQueue);
+		}
+
+		auto& ecs = ECS::GetInstance();
+		for (EntityID id : toDestroy)
+		{
+			if (id != 0 && ecs.IsEntityValid(id))
+				ecs.DestroyEntity(id);
+		}
+	}
+
 }
 
 void Ermine::scripting::ScriptEngine::PullManagedFieldsToCache(MonoObject* obj,
@@ -1766,6 +1867,9 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	mono_add_internal_call("ErmineEngine.Input::InternalGetKey", (const void*)icall_input_getkey);
 	mono_add_internal_call("ErmineEngine.Input::InternalGetKeyDown", (const void*)icall_input_getkeydown);
 	mono_add_internal_call("ErmineEngine.Input::InternalGetKeyUp", (const void*)icall_input_getkeyup);
+	mono_add_internal_call("ErmineEngine.Input::InternalGetMouseButton", (const void*)icall_input_getmousebutton);
+	mono_add_internal_call("ErmineEngine.Input::InternalGetMouseButtonDown", (const void*)icall_input_getmousebuttondown);
+	mono_add_internal_call("ErmineEngine.Input::InternalGetMouseButtonUp", (const void*)icall_input_getmousebuttonrelease);
 #pragma endregion
 
 #pragma region Debug ICalls
@@ -1802,6 +1906,11 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	mono_add_internal_call("ErmineEngine.GameObject::Internal_WrapExisting", (const void*)icall_gameobject_wrap_existing);
 	mono_add_internal_call("ErmineEngine.GameObject::Internal_BindExisting", (const void*)icall_gameobject_bind_existing);
 #pragma endregion
+
+#pragma region Prefab ICalls
+	mono_add_internal_call("ErmineEngine.Prefab::Internal_LoadPrefab", (const void*)icall_prefab_instantiate);
+#pragma endregion
+
 #pragma region StateMachine ICalls
 	mono_add_internal_call("ErmineEngine.StateMachine::RequestNextState", (const void*)icall_statemachine_request_next_state);
 	mono_add_internal_call("ErmineEngine.StateMachine::RequestPreviousState", (const void*)icall_statemachine_request_previous_state);
