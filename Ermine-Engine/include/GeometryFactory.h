@@ -30,6 +30,17 @@ namespace Ermine::graphics
         };
         GeometryFactory() = default;
         ~GeometryFactory() = default;
+
+        /**
+         * @brief Calculate tangents for a mesh using the indices and vertices
+         * @param vertices The vertex data (position, normal, texCoord)
+         * @param indices The index data forming triangles
+         * @return Vector of tangents, one per vertex
+         */
+        static std::vector<glm::vec3> CalculateTangents(
+            const std::vector<Vertex>& vertices,
+            const std::vector<unsigned int>& indices);
+
     public:
         static GeometryFactory& GetInstance()
         {

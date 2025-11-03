@@ -65,6 +65,120 @@ namespace
         }
     }
 
+    static void SyncHierarchyGuidsFromRuntime(Ermine::ECS& ecs)
+    {
+        for (Ermine::EntityID e = 0; e < Ermine::MAX_ENTITIES; ++e)
+        {
+            if (!ecs.IsEntityValid(e)) continue;
+            if (!ecs.HasComponent<Ermine::HierarchyComponent>(e)) continue;
+
+            auto& hc = ecs.GetComponent<Ermine::HierarchyComponent>(e);
+
+            // --- parentGuid ---
+            if (hc.parent != Ermine::HierarchyComponent::INVALID_PARENT
+                && ecs.IsEntityValid(hc.parent)
+                && ecs.HasComponent<Ermine::IDComponent>(hc.parent))
+            {
+                const auto& parentID = ecs.GetComponent<Ermine::IDComponent>(hc.parent);
+                hc.parentGuid = parentID.guid; // <-- CRITICAL LINE
+            }
+            else
+            {
+                // no parent, root object
+                hc.parentGuid = Ermine::Guid{}; // zero GUID
+            }
+
+            // --- childrenGuids ---
+            hc.childrenGuids.clear();
+            hc.childrenGuids.reserve(hc.children.size());
+
+            for (Ermine::EntityID childEid : hc.children)
+            {
+                if (!ecs.IsEntityValid(childEid)) continue;
+                if (!ecs.HasComponent<Ermine::IDComponent>(childEid)) continue;
+
+                const auto& childID = ecs.GetComponent<Ermine::IDComponent>(childEid);
+                hc.childrenGuids.push_back(childID.guid);
+            }
+        }
+    }
+
+    static void RebuildRuntimeHierarchyFromGuids(Ermine::ECS& ecs)
+    {
+        using namespace Ermine;
+
+        // 1. Rebuild parent / children EntityIDs based on stored GUIDs
+        for (EntityID e = 0; e < MAX_ENTITIES; ++e)
+        {
+            if (!ecs.IsEntityValid(e)) continue;
+            if (!ecs.HasComponent<HierarchyComponent>(e)) continue;
+
+            auto& hc = ecs.GetComponent<HierarchyComponent>(e);
+
+            // ----- parent -----
+            if (hc.parentGuid.IsValid()) // non-zero guid
+            {
+                EntityID parentEid = ecs.GetGuidRegistry().FindEntity(hc.parentGuid);
+
+                if (ecs.IsEntityValid(parentEid))
+                {
+                    hc.parent = parentEid;
+                }
+                else
+                {
+                    hc.parent = HierarchyComponent::INVALID_PARENT;
+                }
+            }
+            else
+            {
+                // root entity, no parent
+                hc.parent = HierarchyComponent::INVALID_PARENT;
+            }
+
+            // ----- children -----
+            hc.children.clear();
+            hc.children.reserve(hc.childrenGuids.size());
+
+            for (const Guid& cg : hc.childrenGuids)
+            {
+                if (!cg.IsValid()) continue;
+
+                EntityID childEid = ecs.GetGuidRegistry().FindEntity(cg);
+                if (ecs.IsEntityValid(childEid))
+                {
+                    hc.children.push_back(childEid);
+                }
+            }
+
+            // We'll recompute depth in a second pass
+        }
+
+        // 2. Recompute depth (optional but nice, and prevents stale depths)
+        for (EntityID e = 0; e < MAX_ENTITIES; ++e)
+        {
+            if (!ecs.IsEntityValid(e)) continue;
+            if (!ecs.HasComponent<HierarchyComponent>(e)) continue;
+
+            auto& hc = ecs.GetComponent<HierarchyComponent>(e);
+
+            int d = 0;
+            EntityID walk = hc.parent;
+            while (walk != HierarchyComponent::INVALID_PARENT &&
+                ecs.IsEntityValid(walk) &&
+                ecs.HasComponent<HierarchyComponent>(walk))
+            {
+                ++d;
+                walk = ecs.GetComponent<HierarchyComponent>(walk).parent;
+            }
+            hc.depth = d;
+
+            // force transforms to update next frame
+            hc.isDirty = true;
+            hc.worldTransformDirty = true;
+        }
+    }
+
+
 }
 
 std::optional<std::string> SceneManager::ShowSaveDialog(const wchar_t* defaultFileName, HWND owner) {
@@ -148,7 +262,7 @@ void SceneManager::NewScene()
     Ermine::ECS::GetInstance().ClearAllEntities();
     auto mainLight = Ermine::ECS::GetInstance().CreateEntity();
 
-    // Tilted down and slightly to the side, similar to Unity’s default
+    // Tilted down and slightly to the side, similar to Unity's default
     Ermine::ECS::GetInstance().AddComponent(
         mainLight,
         Ermine::Transform(
@@ -159,8 +273,12 @@ void SceneManager::NewScene()
     Ermine::ECS::GetInstance().AddComponent(mainLight, Ermine::ObjectMetaData("Main Light", "Light", true));
     Ermine::ECS::GetInstance().AddComponent(mainLight, Ermine::Light(Ermine::Vec3(1, 1, 1), 1.0f, Ermine::LightType::DIRECTIONAL, true));
     Ermine::ECS::GetInstance().AddComponent<Ermine::HierarchyComponent>(mainLight, Ermine::HierarchyComponent{});
-
-    Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>()->UpdateShadowMap();
+    // Mark materials dirty to trigger recompilation
+    auto renderer = Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>();
+    if (renderer) {
+        renderer->MarkMaterialsDirty();
+    }
+    Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>()->InitializeShadowMapResources();
     Ermine::ECS::GetInstance().GetSystem<Ermine::Physics>()->UpdatePhysicList();
     if (auto scene = SceneManager::GetInstance().GetActiveScene())
         scene->EnsureSyncedWithECS(/*force=*/true);
@@ -174,6 +292,13 @@ void SceneManager::ClearScene()
     Ermine::ECS::GetInstance().ClearAllEntities();
 
     //Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>()->UpdateShadowMap();
+    
+    // Mark materials dirty to trigger recompilation
+    auto renderer = Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>();
+    if (renderer) {
+        renderer->MarkMaterialsDirty();
+    }
+    
     if (auto scene = GetActiveScene()) {
         scene->EnsureSyncedWithECS();
     }
@@ -194,7 +319,15 @@ void SceneManager::OpenScene(const std::string& path)
     //EnsureActiveScene().Clear();
 
     LoadSceneFromFile(Ermine::ECS::GetInstance(), path);
-    Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>()->UpdateShadowMap();
+    Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>()->InitializeShadowMapResources();
+
+    // Mark materials dirty to trigger recompilation after scene load
+    auto renderer = Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>();
+    if (renderer) {
+        renderer->MarkMaterialsDirty();
+    }
+
+    //RebuildRuntimeHierarchyFromGuids(Ermine::ECS::GetInstance());
 
     if (auto scene = SceneManager::GetInstance().GetActiveScene())
         scene->EnsureSyncedWithECS(/*force=*/true);
@@ -240,6 +373,7 @@ void SceneManager::SaveSceneAsDialog()
 
 void SceneManager::SaveSceneTo(const std::string& path)
 {
+    //SyncHierarchyGuidsFromRuntime(Ermine::ECS::GetInstance());
     SaveSceneToFile(Ermine::ECS::GetInstance(), path, true);
     m_CurrentScenePath = path;
     m_Dirty = false;

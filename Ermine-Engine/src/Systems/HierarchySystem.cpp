@@ -210,18 +210,23 @@ namespace Ermine
     */
     void HierarchySystem::UpdateWorldTransform(EntityID entity)
 	{
+		// Validate entity and required components
+		if (!ECS::GetInstance().IsEntityValid(entity))
+			return;
+
+		if (!ECS::GetInstance().HasComponent<HierarchyComponent>(entity) ||
+			!ECS::GetInstance().HasComponent<Transform>(entity))
+			return;
+
 		auto& hierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(entity);
 		auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
 		
-		// NEW: Get or create GlobalTransform component
-		GlobalTransform* globalTransform = nullptr;
-		if (ECS::GetInstance().HasComponent<GlobalTransform>(entity)) {
-			globalTransform = &ECS::GetInstance().GetComponent<GlobalTransform>(entity);
-		} else {
-			// Add GlobalTransform if it doesn't exist
+		// Ensure GlobalTransform exists
+		if (!ECS::GetInstance().HasComponent<GlobalTransform>(entity)) {
 			ECS::GetInstance().AddComponent<GlobalTransform>(entity, GlobalTransform());
-			globalTransform = &ECS::GetInstance().GetComponent<GlobalTransform>(entity);
 		}
+		
+		auto& globalTransform = ECS::GetInstance().GetComponent<GlobalTransform>(entity);
 
 		//EE_CORE_INFO("=== Transform Update for Entity {0} ===", entity);
 		//EE_CORE_INFO("Local Position: ({0:.3f}, {1:.3f}, {2:.3f})", 
@@ -232,8 +237,13 @@ namespace Ermine
 
 		// Calculate world transform based on parent relationship
 		if (hierarchy.parent != 0) {
-			// Get parent's GlobalTransform component
-			if (ECS::GetInstance().HasComponent<GlobalTransform>(hierarchy.parent)) {
+			// Ensure parent has GlobalTransform before using it
+			if (!ECS::GetInstance().HasComponent<GlobalTransform>(hierarchy.parent)) {
+				// Parent missing GlobalTransform - treat as root
+				EE_CORE_WARN("Parent {} missing GlobalTransform, treating child {} as root", hierarchy.parent, entity);
+				globalTransform.worldMatrix = localMatrix;
+			}
+			else {
 				auto& parentGlobalTransform = ECS::GetInstance().GetComponent<GlobalTransform>(hierarchy.parent);
 				
 				//Vec3 parentWorldPos = parentGlobalTransform.GetWorldPosition();
@@ -241,29 +251,25 @@ namespace Ermine
 				//			 hierarchy.parent, parentWorldPos.x, parentWorldPos.y, parentWorldPos.z);
 				
 				// FIXED: World transform = Parent's world transform * Local transform
-				globalTransform->worldMatrix = parentGlobalTransform.worldMatrix * localMatrix;
-			} else {
-				// Parent doesn't have GlobalTransform - treat as root
-				globalTransform->worldMatrix = localMatrix;
-				//EE_CORE_WARN("Parent {0} missing GlobalTransform, treating child {1} as root", hierarchy.parent, entity);
+				globalTransform.worldMatrix = parentGlobalTransform.worldMatrix * localMatrix;
 			}
 		}
 		else {
 			// Root entity: world transform equals local transform
-			globalTransform->worldMatrix = localMatrix;
+			globalTransform.worldMatrix = localMatrix;
 			//EE_CORE_INFO("Entity {0} is ROOT - World = Local transform", entity);
 		}
 
 		// Extract and log the calculated world position
-		//Vec3 worldPos = globalTransform->GetWorldPosition();
+		//Vec3 worldPos = globalTransform.GetWorldPosition();
 		//EE_CORE_INFO(">>> Entity {0} World Position: ({1:.3f}, {2:.3f}, {3:.3f})", 
 		//			 entity, worldPos.x, worldPos.y, worldPos.z);
 
-		// Mark as clean
+		// Mark as clean AFTER calculating transforms
 		hierarchy.isDirty = false;
 		hierarchy.worldTransformDirty = false;
 		transform.isDirty = false;
-		globalTransform->isDirty = false;
+		globalTransform.isDirty = false;
 
 		// Recursively update all children
 		for (auto child : hierarchy.children) {
@@ -317,32 +323,38 @@ namespace Ermine
     */
     void HierarchySystem::UpdateHierarchy()
     {
-        if (m_Entities.size() == 0)
-			return;
+        if (m_Entities.empty())
+            return;
 
-        // Only update root entities that are dirty or have dirty children
+        std::vector<uint64_t> entities_to_process;
+        entities_to_process.reserve(m_Entities.size());
+
+        // Collect entities first
         for (auto entity : m_Entities)
         {
-            if (!ECS::GetInstance().HasComponent<GlobalTransform>(entity))
-            {
-                return;
-            }
+            entities_to_process.push_back(entity);
+        }
 
-            if (!ECS::GetInstance().HasComponent<HierarchyComponent>(entity) && !ECS::GetInstance().HasComponent<Transform>(entity))
+        // Process collected entities
+        for (auto entity : entities_to_process)
+        {
+            // Verify entity still exists
+            if (m_Entities.find(entity) == m_Entities.end())
                 continue;
 
+            if (!ECS::GetInstance().HasComponent<HierarchyComponent>(entity) ||
+                !ECS::GetInstance().HasComponent<Transform>(entity))
+                continue;
+
+            if (!ECS::GetInstance().HasComponent<GlobalTransform>(entity))
+            {
+                ECS::GetInstance().AddComponent<GlobalTransform>(entity, GlobalTransform());
+            }
 
             auto& hierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(entity);
             auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
 
-            // Only update if this entity is dirty AND it's a root entity
             if (hierarchy.parent == 0 && (hierarchy.isDirty || hierarchy.worldTransformDirty || transform.isDirty)) {
-
-                // Clear flags immediately to prevent infinite loops
-                hierarchy.isDirty = false;
-                hierarchy.worldTransformDirty = false;
-                transform.isDirty = false;
-
                 UpdateWorldTransform(entity);
             }
         }

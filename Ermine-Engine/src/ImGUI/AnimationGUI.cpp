@@ -386,16 +386,16 @@ namespace Ermine
         else
             ImGui::TextDisabled("No Animation Graph Found.");
 
-        ImGui::Separator();
-        if (ImGui::Button("Save Graph", ImVec2(0, 0))) {
-            // TODO: Hook into your graph serialization (JSON/YAML)
-            EE_CORE_INFO("Animation graph saved (placeholder)");
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("Load Graph", ImVec2(0, 0))) {
-            // TODO: Hook into your graph serialization (JSON/YAML)
-            EE_CORE_INFO("Animation graph loaded (placeholder)");
-        }
+        //ImGui::Separator();
+        //if (ImGui::Button("Save Graph", ImVec2(0, 0))) {
+        //    // TODO: Hook into your graph serialization (JSON/YAML)
+        //    EE_CORE_INFO("Animation graph saved (placeholder)");
+        //}
+        //ImGui::SameLine();
+        //if (ImGui::Button("Load Graph", ImVec2(0, 0))) {
+        //    // TODO: Hook into your graph serialization (JSON/YAML)
+        //    EE_CORE_INFO("Animation graph loaded (placeholder)");
+        //}
 
         ImGui::EndChild();
     }
@@ -407,7 +407,7 @@ namespace Ermine
      */
     void AnimationEditorImGUI::DrawStateInspector(const std::shared_ptr<AnimationGraph>& graph, const std::shared_ptr<graphics::Animator>& animator)
     {
-        ImGui::BeginChild("StateInspector", ImVec2(0, 230), true);
+        ImGui::BeginChild("StateInspector", ImVec2(0, 200), true);
 
         // State creation
         ImGui::InputTextWithHint("##NewState", "New state name...", m_newStateName, IM_ARRAYSIZE(m_newStateName));
@@ -527,7 +527,7 @@ namespace Ermine
      */
     void AnimationEditorImGUI::DrawTransitionInspector(const std::shared_ptr<AnimationGraph>& graph)
     {
-        ImGui::BeginChild("TransitionInspector", ImVec2(0, 230), true);
+        ImGui::BeginChild("TransitionInspector", ImVec2(0, 200), true);
 
         if (graph->transitions.empty()) {
             ImGui::TextDisabled("No transitions yet. Connect states in the graph.");

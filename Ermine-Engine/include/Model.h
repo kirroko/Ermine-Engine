@@ -23,6 +23,9 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <string>
 #include <vector>
 #include <memory>
+#include <atomic>
+#include <mutex>
+#include <unordered_map>
 #include <glm/glm.hpp>
 #include <assimp/scene.h>
 #include <assimp/Importer.hpp>
@@ -43,6 +46,7 @@ namespace Ermine::graphics
         float position[3];                  // Position of the vertex
         float normal[3];                    // Normal vector
         float texCoords[2];                 // Texture coordinates
+        float tangent[3];                   // Tangent vector for normal mapping
         int IDs[MAX_BONE_INFLUENCE];        // Bone IDs affecting this vertex
         float Weights[MAX_BONE_INFLUENCE];  // Bone weights corresponding to IDs
 
@@ -55,6 +59,7 @@ namespace Ermine::graphics
             {
                 position[i] = 0.0f;
                 normal[i] = 0.0f;
+                tangent[i] = 0.0f;
             }
 
             for (int i = 0; i < 2; ++i)
@@ -95,6 +100,9 @@ namespace Ermine::graphics
         std::shared_ptr<VertexBuffer> vbo; // Vertex buffer object
         std::shared_ptr<IndexBuffer> ibo;  // Index buffer object
         glm::mat4 localTransform{ 1.0f };  // Local transform relative to parent
+        std::string meshID;                // Unique mesh identifier (for MeshManager lookup)
+        glm::vec3 aabbMin{ 0.0f };        // AABB minimum bounds
+        glm::vec3 aabbMax{ 0.0f };        // AABB maximum bounds
     };
 
     /**
@@ -111,6 +119,9 @@ namespace Ermine::graphics
          * @param path Path to the 3D model file
          */
         Model(const std::string& path);
+
+        // In Model class, add a new constructor:
+        Model(const std::string& skinPath, bool isSkinFile);
 
         /**
          * @brief Get the directory of the model file.
@@ -194,6 +205,7 @@ namespace Ermine::graphics
         std::string m_directory;                            // Directory of the model
         std::string m_name;                                 // Name of the model
         std::vector<MeshData> m_meshes;                     // All meshes of the model
+        uint32_t m_instanceID;                              // Instance ID for this specific file path
 
         std::unique_ptr<Assimp::Importer> m_Importer;       // Assimp importer
         const aiScene* m_Scene = nullptr;                   // Raw Assimp scene
@@ -202,6 +214,10 @@ namespace Ermine::graphics
         std::unordered_map<std::string, int> m_BoneMapping; // Name-to-index bone map
         std::vector<glm::mat4> m_BoneOffsets;               // Bone offset matrices
         std::vector<glm::mat4> m_BoneTransforms;            // Final bone transforms (for rendering)
+
+        // Per-file instance counters: tracks how many instances of each file have been created
+        static std::unordered_map<std::string, std::atomic<uint32_t>> s_fileInstanceCounters;
+        static std::mutex s_counterMutex;
 
         /**
          * @brief Recursively process Assimp nodes into MeshData.
@@ -217,5 +233,8 @@ namespace Ermine::graphics
          * @return Processed MeshData
          */
         MeshData ProcessMesh(aiMesh* mesh);
+
+        bool LoadSkinFile(const std::string& path);
+
     };
 }

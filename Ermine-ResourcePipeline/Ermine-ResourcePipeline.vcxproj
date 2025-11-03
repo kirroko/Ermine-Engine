@@ -98,7 +98,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <PreprocessorDefinitions>PLATFORM_WINDOWS;EE_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>xresource_pipeline_v2-main\source;xresource_pipeline_v2-main\dependencies\xtextfile\source;xresource_pipeline_v2-main\dependencies\xerr\source;..\ThirdParty\DirectXTex\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>xresource_pipeline_v2-main\source;xresource_pipeline_v2-main\dependencies\xtextfile\source;xresource_pipeline_v2-main\dependencies\xerr\source;..\ThirdParty\DirectXTex\inc;..\ThirdParty\assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -108,17 +108,20 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>DirectXTexD.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\ThirdParty\DirectXTex\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>DirectXTexD.lib;assimp-vc143-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\ThirdParty\DirectXTex\lib;..\ThirdParty\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>/NODEFAULTLIB:LIBCMTD %(AdditionalOptions)</AdditionalOptions>
     </Link>
+    <PostBuildEvent>
+      <Command>IF EXIST "$(SolutionDir)ThirdParty\assimp\bin\assimp-vc143-mt.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\assimp\bin\assimp-vc143-mt.dll" "$(TargetDir)" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\assimp\bin\assimp-vc143-mt.dll" "$(TargetDir)" &gt; nul)</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Editor-Release|x64'">
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <PreprocessorDefinitions>PLATFORM_WINDOWS;EE_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>xresource_pipeline_v2-main\source;xresource_pipeline_v2-main\dependencies\xtextfile\source;xresource_pipeline_v2-main\dependencies\xerr\source;..\ThirdParty\DirectXTex\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>xresource_pipeline_v2-main\source;xresource_pipeline_v2-main\dependencies\xtextfile\source;xresource_pipeline_v2-main\dependencies\xerr\source;..\ThirdParty\DirectXTex\inc;..\ThirdParty\assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -132,17 +135,20 @@
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>DirectXTex.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\ThirdParty\DirectXTex\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>DirectXTex.lib;assimp-vc143-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\ThirdParty\DirectXTex\lib;..\ThirdParty\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>/NODEFAULTLIB:LIBCMT %(AdditionalOptions)</AdditionalOptions>
     </Link>
+    <PostBuildEvent>
+      <Command>IF EXIST "$(SolutionDir)ThirdParty\assimp\bin\assimp-vc143-mt.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\assimp\bin\assimp-vc143-mt.dll" "$(TargetDir)" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\assimp\bin\assimp-vc143-mt.dll" "$(TargetDir)" &gt; nul)</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Game-Debug|x64'">
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <PreprocessorDefinitions>PLATFORM_WINDOWS;EE_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>xresource_pipeline_v2-main\source;xresource_pipeline_v2-main\dependencies\xtextfile\source;xresource_pipeline_v2-main\dependencies\xerr\source;..\ThirdParty\DirectXTex\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>xresource_pipeline_v2-main\source;xresource_pipeline_v2-main\dependencies\xtextfile\source;xresource_pipeline_v2-main\dependencies\xerr\source;..\ThirdParty\DirectXTex\inc;..\ThirdParty\assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -152,17 +158,20 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>DirectXTexD.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\ThirdParty\DirectXTex\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>DirectXTexD.lib;assimp-vc143-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\ThirdParty\DirectXTex\lib;..\ThirdParty\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>/NODEFAULTLIB:LIBCMTD %(AdditionalOptions)</AdditionalOptions>
     </Link>
+    <PostBuildEvent>
+      <Command>IF EXIST "$(SolutionDir)ThirdParty\assimp\bin\assimp-vc143-mt.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\assimp\bin\assimp-vc143-mt.dll" "$(TargetDir)" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\assimp\bin\assimp-vc143-mt.dll" "$(TargetDir)" &gt; nul)</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Game-Release|x64'">
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <PreprocessorDefinitions>PLATFORM_WINDOWS;EE_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>xresource_pipeline_v2-main\source;xresource_pipeline_v2-main\dependencies\xtextfile\source;xresource_pipeline_v2-main\dependencies\xerr\source;..\ThirdParty\DirectXTex\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>xresource_pipeline_v2-main\source;xresource_pipeline_v2-main\dependencies\xtextfile\source;xresource_pipeline_v2-main\dependencies\xerr\source;..\ThirdParty\DirectXTex\inc;..\ThirdParty\assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -176,10 +185,13 @@
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>DirectXTex.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\ThirdParty\DirectXTex\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>DirectXTex.lib;assimp-vc143-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\ThirdParty\DirectXTex\lib;..\ThirdParty\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>/NODEFAULTLIB:LIBCMT %(AdditionalOptions)</AdditionalOptions>
     </Link>
+    <PostBuildEvent>
+      <Command>IF EXIST "$(SolutionDir)ThirdParty\assimp\bin\assimp-vc143-mt.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\assimp\bin\assimp-vc143-mt.dll" "$(TargetDir)" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\assimp\bin\assimp-vc143-mt.dll" "$(TargetDir)" &gt; nul)</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="xresource_pipeline_v2-main\dependencies\xtextfile\source\xtextfile.h" />

@@ -633,82 +633,132 @@ namespace Ermine::editor {
 
 		struct SlotRow {
 			const char* label;          // UI label
-			const char* slot;           // primary slot name used by your material
-			const char* altSlot;        // optional alias slot (only albedo needs this)
-			const char* hasFlag;        // presence flag (primary)
-			const char* hasFlagAlias;   // presence flag alias (only normal uses this)
+			const char* slot;           // primary slot name in Material
+			const char* altSlot;        // optional alias slot (albedo uses this mirror)
+			const char* hasFlag;        // "materialHasAlbedoMap", etc.
+			const char* hasFlagAlias;   // alt presence flag (normal map alias)
 		};
+
 		SlotRow rows[] = {
-			{ "Albedo",    "materialAlbedoMap", "material.albedoMap", "materialHasAlbedoMap", nullptr },
-			{ "Normal",    "material.normalMap", nullptr,              "materialHasNormalMap", "material.hasNormalMap" },
-			{ "Roughness", "materialRoughnessMap", nullptr,            "materialHasRoughnessMap", nullptr },
-			{ "Metallic",  "material.metallicMap", nullptr,            "materialHasMetallicMap", nullptr },
-			{ "AO",        "materialAoMap", nullptr,                   "materialHasAoMap", nullptr },
-			{ "Emissive",  "materialEmissiveMap", nullptr,             "materialHasEmissiveMap", nullptr },
+			{ "Albedo",    "materialAlbedoMap",   "material.albedoMap",   "materialHasAlbedoMap",    nullptr },
+			{ "Normal",    "material.normalMap",  nullptr,                 "materialHasNormalMap",   "material.hasNormalMap" },
+			{ "Roughness", "materialRoughnessMap",nullptr,                 "materialHasRoughnessMap",nullptr },
+			{ "Metallic",  "material.metallicMap",nullptr,                 "materialHasMetallicMap", nullptr },
+			{ "AO",        "materialAoMap",       nullptr,                 "materialHasAoMap",       nullptr },
+			{ "Emissive",  "materialEmissiveMap", nullptr,                 "materialHasEmissiveMap", nullptr },
 		};
 
-		// Build a stable list of choices: <None> + all loaded texture paths
-		std::vector<std::string> choices;
-		choices.emplace_back("<None>");
-		std::vector<std::shared_ptr<graphics::Texture>> choicePtrs;
-		choicePtrs.emplace_back(nullptr);
+		// Helper to render ONE row as a drag-and-drop target
+		auto showTextureSlotDropTarget = [&](const SlotRow& r)
+			{
+				// 1. Resolve current texture bound in this slot
+				std::shared_ptr<graphics::Texture> curTex = gm->GetTexture(r.slot);
 
-		const auto& loaded = AssetManager::GetInstance().GetLoadedTextures(); // map<path, texture>
-		choices.reserve(choices.size() + loaded.size());
-		choicePtrs.reserve(choicePtrs.size() + loaded.size());
-		for (const auto& kv : loaded) {
-			choices.emplace_back(kv.first);
-			choicePtrs.emplace_back(kv.second);
-		}
-
-		// Utility to show a combo for one slot
-		auto showTextureCombo = [&](const SlotRow& r) {
-			// Resolve current texture for this slot
-			std::shared_ptr<graphics::Texture> curTex = gm->GetTexture(r.slot);
-			// Find current index
-			int currentIdx = 0; // <None>
-			if (curTex) {
-				for (int i = 1; i < (int)choicePtrs.size(); ++i) {
-					if (choicePtrs[i].get() == curTex.get()) { currentIdx = i; break; }
+				// 2. Build display name (stable std::string so ImGui can safely use c_str())
+				std::string slotLabelStr;
+				if (curTex && curTex->IsValid()) {
+					std::string fullPath = curTex->GetFilePath(); // e.g. "../Resources/Textures/Wood.png"
+					std::filesystem::path p(fullPath);
+					slotLabelStr = p.filename().string();         // "Wood.png"
+					if (slotLabelStr.empty())
+						slotLabelStr = fullPath;
 				}
-			}
+				else {
+					slotLabelStr = "<None>";
+				}
+				const char* displayName = slotLabelStr.c_str();
 
-			// Combo UI
-			ImGui::PushID(r.slot);
-			if (ImGui::BeginCombo(r.label, choices[currentIdx].c_str())) {
-				for (int i = 0; i < (int)choices.size(); ++i) {
-					bool selected = (i == currentIdx);
-					if (ImGui::Selectable(choices[i].c_str(), selected)) {
-						currentIdx = i;
+				ImGui::PushID(r.slot);
 
-						// Apply selection
-						if (currentIdx == 0) {
-							// None -> clear slot
-							gm->SetTexture(r.slot, nullptr);
-							if (r.altSlot) gm->SetTexture(r.altSlot, nullptr);
-							if (r.hasFlag) gm->SetBool(r.hasFlag, false);
-							if (r.hasFlagAlias) gm->SetBool(r.hasFlagAlias, false);
-						}
-						else {
-							auto newTex = choicePtrs[currentIdx];
+				// Label (e.g. "Albedo")
+				ImGui::TextUnformatted(r.label);
+				ImGui::SameLine();
+
+				// A button-looking box that:
+				//  - shows the current texture name
+				//  - can be right-clicked to clear
+				//  - acts as a drop target
+				ImVec2 boxSize = ImVec2(220.0f, 0.0f);
+				ImGui::Button(displayName, boxSize);
+
+				// Hover tooltip with full path (and any debug info you want)
+				if (ImGui::IsItemHovered() && curTex && curTex->IsValid()) {
+					ImGui::BeginTooltip();
+					ImGui::Text("File: %s", curTex->GetFilePath().c_str());
+					ImGui::EndTooltip();
+				}
+
+				// Right-click popup menu to Clear this texture
+				if (ImGui::BeginPopupContextItem("TexSlotContext")) {
+					if (ImGui::MenuItem("Clear Texture")) {
+						// same logic as your combo 'currentIdx == 0' branch
+						gm->SetTexture(r.slot, nullptr);
+						if (r.altSlot)      gm->SetTexture(r.altSlot, nullptr);
+						if (r.hasFlag)      gm->SetBool(r.hasFlag, false);
+						if (r.hasFlagAlias) gm->SetBool(r.hasFlagAlias, false);
+					}
+					ImGui::EndPopup();
+				}
+
+				// Accept drag & drop from AssetBrowser
+				if (ImGui::BeginDragDropTarget()) {
+					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_FILE")) {
+						const char* droppedPathCStr = static_cast<const char*>(payload->Data);
+						std::filesystem::path droppedPath = droppedPathCStr;
+
+						// Only accept texture-ish files
+						std::string ext = droppedPath.extension().string();
+						for (auto& c : ext) c = (char)tolower(c);
+
+						bool isTextureFile =
+							(ext == ".png" ||
+								ext == ".jpg" || ext == ".jpeg" ||
+								ext == ".tga" ||
+								ext == ".bmp" ||
+								ext == ".dds" ||
+								ext == ".ktx" ||
+								ext == ".hdr");
+
+						if (isTextureFile) {
+							// Ask AssetManager for / load the texture.
+							// Adjust this call for your engine's API:
+							std::shared_ptr<graphics::Texture> newTex =
+								AssetManager::GetInstance().LoadTexture(droppedPath.string());
+
 							if (newTex && newTex->IsValid()) {
+								// Assign to this slot
 								gm->SetTexture(r.slot, newTex);
-								if (r.altSlot) gm->SetTexture(r.altSlot, newTex); // albedo alias
-								if (r.hasFlag) gm->SetBool(r.hasFlag, true);
-								if (r.hasFlagAlias) gm->SetBool(r.hasFlagAlias, true); // normal alias
+
+								// Mirror to altSlot if provided (e.g. albedo alias)
+								if (r.altSlot)
+									gm->SetTexture(r.altSlot, newTex);
+
+								// Flip presence flags true
+								if (r.hasFlag)
+									gm->SetBool(r.hasFlag, true);
+
+								if (r.hasFlagAlias)
+									gm->SetBool(r.hasFlagAlias, true);
+							}
+							else {
+								EE_CORE_WARN("Failed to load dropped texture: {}", droppedPath.string());
 							}
 						}
+						else {
+							// Ignore non-texture drops so we don't crash
+							EE_CORE_INFO("Ignored drop '%s': not a supported texture format",
+								droppedPath.string().c_str());
+						}
 					}
-					if (selected) ImGui::SetItemDefaultFocus();
+					ImGui::EndDragDropTarget();
 				}
-				ImGui::EndCombo();
-			}
-			ImGui::PopID();
+
+				ImGui::PopID();
 			};
 
-		// Rows
+		// Draw all rows
 		for (const auto& row : rows) {
-			showTextureCombo(row);
+			showTextureSlotDropTarget(row);
 		}
 	}
 
@@ -1152,8 +1202,12 @@ namespace Ermine::editor {
 			for (auto& entry : std::filesystem::directory_iterator(modelsDir)) {
 				if (entry.is_regular_file()) {
 					std::string name = entry.path().filename().string();
-					if (name.ends_with(".fbx") || name.ends_with(".obj") || name.ends_with(".gltf"))
+					std::string ext = entry.path().extension().string();
+					// Added .skin and .mesh to the filter
+					if (ext == ".fbx" || ext == ".obj" || ext == ".gltf" ||
+						ext == ".skin" || ext == ".mesh") {
 						availableModels.push_back(name);
+					}
 				}
 			}
 			std::sort(availableModels.begin(), availableModels.end());
