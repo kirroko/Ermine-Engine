@@ -74,6 +74,7 @@ struct Ermine::NavMeshComponent::Runtime
 {
     dtNavMesh* nav = nullptr;
     dtNavMeshQuery* query = nullptr;
+    unsigned char* navData = nullptr;
 };
 
 namespace Ermine {
@@ -91,12 +92,15 @@ namespace Ermine {
 
     void NavMeshSystem::Shutdown()
     {
-        EE_CORE_INFO("[NavMeshSystem] Shutdown - freeing all navmesh data");
+        //EE_CORE_INFO("[NavMeshSystem] Shutdown - freeing all navmesh data");
 
-        for (auto e : m_Entities)
+        auto& ecs = ECS::GetInstance();
+        for (EntityID e = 1; e <= MAX_ENTITIES; ++e)
         {
-            if (!ECS::GetInstance().HasComponent<NavMeshComponent>(e)) continue;
-            auto& c = ECS::GetInstance().GetComponent<NavMeshComponent>(e);
+            if (!ecs.IsEntityValid(e)) continue;
+            if (!ecs.HasComponent<NavMeshComponent>(e)) continue;
+
+            auto& c = ecs.GetComponent<NavMeshComponent>(e);
             DestroyBuild(c);
             DestroyRuntime(c);
         }
@@ -108,7 +112,7 @@ namespace Ermine {
     void NavMeshSystem::DestroyBuild(NavMeshComponent& c)
     {
         if (!c.build) return;
-        EE_CORE_INFO("[NavMeshSystem] DestroyBuild");
+        //EE_CORE_INFO("[NavMeshSystem] DestroyBuild");
 
         if (c.build->dmesh) { rcFreePolyMeshDetail(c.build->dmesh); c.build->dmesh = nullptr; }
         if (c.build->pmesh) { rcFreePolyMesh(c.build->pmesh); c.build->pmesh = nullptr; }
@@ -124,11 +128,18 @@ namespace Ermine {
     void NavMeshSystem::DestroyRuntime(NavMeshComponent& c)
     {
         if (!c.runtime) return;
-        EE_CORE_INFO("[NavMeshSystem] DestroyRuntime");
 
         if (c.runtime->query) { dtFree(c.runtime->query); c.runtime->query = nullptr; }
-        if (c.runtime->nav) { dtFree(c.runtime->nav); c.runtime->nav = nullptr; }
-        delete c.runtime; c.runtime = nullptr;
+        if (c.runtime->nav) { dtFree(c.runtime->nav);   c.runtime->nav = nullptr; }
+
+        if (c.runtime->navData)
+        {
+            dtFree(c.runtime->navData);
+            c.runtime->navData = nullptr;
+        }
+
+        delete c.runtime;
+        c.runtime = nullptr;
     }
 
     bool NavMeshSystem::BuildFromTriangles(NavMeshComponent& c,
@@ -307,8 +318,9 @@ namespace Ermine {
         }
 
         c.runtime = new NavMeshComponent::Runtime();
+        c.runtime->navData = navData;
         c.runtime->nav = dtAllocNavMesh();
-        if (dtStatusFailed(c.runtime->nav->init(navData, navDataSize, DT_TILE_FREE_DATA)))
+        if (dtStatusFailed(c.runtime->nav->init(navData, navDataSize, 0)))
         {
             EE_CORE_ERROR("[NavMeshSystem] NavMesh init failed");
             DestroyBuild(c);
@@ -581,9 +593,6 @@ namespace Ermine {
         if (!query)
             return false;
 
-        // --------------------------------------------------------------------
-        // Use a query filter so Detour can include polygons properly
-        // --------------------------------------------------------------------
         dtQueryFilter filter;
         filter.setIncludeFlags(0xFFFF); // include all
         filter.setExcludeFlags(0);      // exclude none
@@ -595,9 +604,6 @@ namespace Ermine {
         float spos[3] = { start.x, start.y, start.z };
         float epos[3] = { end.x, end.y, end.z };
 
-        // --------------------------------------------------------------------
-        // Find nearest polygons to start and end
-        // --------------------------------------------------------------------
         if (dtStatusFailed(query->findNearestPoly(spos, extents, &filter, &startRef, nullptr)))
         {
             EE_CORE_WARN("[NavMeshSystem] findNearestPoly failed for start point");
@@ -618,9 +624,6 @@ namespace Ermine {
             return false;
         }
 
-        // --------------------------------------------------------------------
-        // Find a corridor path of polygons
-        // --------------------------------------------------------------------
         dtPolyRef polys[256];
         int nPolys = 0;
         if (dtStatusFailed(query->findPath(startRef, endRef, spos, epos, &filter,
@@ -636,9 +639,6 @@ namespace Ermine {
             return false;
         }
 
-        // --------------------------------------------------------------------
-        // Generate a straight path through the corridor
-        // --------------------------------------------------------------------
         float straightPath[256 * 3];
         unsigned char straightFlags[256];
         dtPolyRef straightPolys[256];
@@ -652,9 +652,6 @@ namespace Ermine {
             return false;
         }
 
-        // --------------------------------------------------------------------
-        // Output + diagnostics
-        // --------------------------------------------------------------------
         outPath.clear();
         outPath.reserve(static_cast<size_t>(nStraight));
 

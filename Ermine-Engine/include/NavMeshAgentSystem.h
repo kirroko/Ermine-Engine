@@ -34,6 +34,3 @@ namespace Ermine
         EntityID FindNearestNavMeshEntity(const Ermine::Vec3& pos);
     };
 }
-
-// Render debug path for nav agent same way as highlight
-// The AI is not moving due to the nav mesh or nav agent, debug info
