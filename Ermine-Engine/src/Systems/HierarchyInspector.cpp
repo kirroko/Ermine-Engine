@@ -225,6 +225,9 @@ namespace Ermine::editor {
 			DrawParticleEmitterComponent(selected);
 		}
 
+		if (ECS::GetInstance().HasComponent<CameraComponent>(selected))
+			DrawCameraComponent(selected);
+
 		ImGui::PopID();
 
 		ImGui::Separator();
@@ -1524,6 +1527,39 @@ namespace Ermine::editor {
 		// Display info
 		ImGui::Text("Emitter Active: %s", emitter.active ? "Yes" : "No");
 		ImGui::Text("Particles Alive: %d", alive);
+	}
+
+	void HierarchyInspector::DrawCameraComponent(EntityID entity)
+	{
+		if (!ComponentHeaderWithRemove<CameraComponent>("Camera Component", entity))
+			return;
+
+		auto& cameraComp = ECS::GetInstance().GetComponent<CameraComponent>(entity);
+
+		ImGui::SliderFloat("Field of View", &cameraComp.fov, 40, 120);
+
+		ImGui::Text("Clipping Planes");
+		if (ImGui::BeginTable("clipPlanesTable",2))
+		{
+			ImGui::TableNextRow();
+			ImGui::TableNextColumn();
+			ImGui::Text("Near:");
+
+			ImGui::TableNextColumn();
+
+			ImGui::SetNextItemWidth(-FLT_MIN);
+			ImGui::InputFloat("##Near", &cameraComp.nearPlane, 0.0f, 0.0f, "%.1f");
+
+			ImGui::TableNextRow();
+			ImGui::TableNextColumn();
+			ImGui::Text("Far");
+
+			ImGui::TableNextColumn();
+			ImGui::SetNextItemWidth(-FLT_MIN);
+			ImGui::InputFloat("##Far", &cameraComp.farPlane, 0.0f, 0.0f, "%.1f");
+
+			ImGui::EndTable();
+		}
 	}
 
 	void HierarchyInspector::DrawAddComponentMenu(EntityID entity) {

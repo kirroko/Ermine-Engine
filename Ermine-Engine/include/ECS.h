@@ -79,7 +79,7 @@ namespace Ermine
 		 * @param entity The entity to clone
 		 * @return The ID of the cloned entity
 		 */
-		EntityID CloneEntity(EntityID entity);
+		EntityID CloneEntity(EntityID entity) const;
 
 		/**
 		 * @brief Get the number of living entities in the ECS
