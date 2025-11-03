@@ -2,7 +2,8 @@
 /*!
 \file       AnimationManager.cpp
 \author     Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu
-\date       27/09/2025
+\co-author  Ridhwan Afandi, moahamedridhwan.b, 2301367, moahamedridhwan.b\@digipen.edu
+\date       27/10/2025
 \brief      This file contains the definition of the animation manager.
 
 Copyright (C) 2025 DigiPen Institute of Technology.
@@ -19,11 +20,23 @@ namespace Ermine::graphics
 {
 	/**
 	 * @brief Update all entities with AnimationComponent.
+	 *
+	 * Multiple instances of the same model can have independent skeletal animation states:
+	 * - Each entity has its own AnimationComponent with its own Animator instance
+	 * - Each entity gets its own bone transform offset in the SkeletalSSBO
+	 * - Bone transforms are updated independently per entity
+	 *
 	 * @param deltaTime Frame time step in seconds
 	 */
 	void AnimationManager::Update(double deltaTime)
 	{
 		auto& ecs = ECS::GetInstance();
+
+		// Wait for GPU to finish reading bone data from previous frame before overwriting
+		if (m_SkeletalSSBO && m_SkeletalSSBO->IsValid())
+		{
+			m_SkeletalSSBO->WaitForGPU();
+		}
 
 		for (auto& entity : m_Entities)
 		{
@@ -39,22 +52,31 @@ namespace Ermine::graphics
 			if (!modelComp.m_model || !modelComp.m_model->GetAssimpScene())
 				continue;
 
-			// Check if animator exists and has clips
-			if (!animComp.m_animator || animComp.m_animator->GetClips().empty())
+			// Check if animator exists
+			if (!animComp.m_animator)
 				continue;
 
-			// Check if animation is actually playing
-			if (!animComp.m_animator->GetCurrentClip())
-				continue;
+			// Update animator if animation is playing
+			if (animComp.m_animator->GetCurrentClip())
+			{
+				animComp.m_animator->Update(deltaTime, entity);
+			}
 
-			// Update animator
-			animComp.m_animator->Update(deltaTime, entity);
-
-			// Ensure bone transforms vector is sized correctly
 			const auto& finalBones = animComp.m_animator->GetFinalBoneMatrices();
-			if (!finalBones.empty())
-				modelComp.m_model->SetBoneTransforms(finalBones);
-			modelComp.m_model->SetBoneTransforms(animComp.m_animator->GetFinalBoneMatrices());
+			if (!finalBones.empty() && m_SkeletalSSBO)
+			{
+				// Allocate bone space if not already allocated
+				if (animComp.boneTransformOffset == -1)
+				{
+					animComp.boneTransformOffset = m_SkeletalSSBO->AllocateBoneSpace(finalBones.size());
+				}
+
+				// Update bone transforms using persistent mapped buffer (direct memcpy, zero-copy)
+				if (animComp.boneTransformOffset >= 0)
+				{
+					m_SkeletalSSBO->UpdateBoneTransforms(animComp.boneTransformOffset, finalBones);
+				}
+			}
 		}
 	}
 }

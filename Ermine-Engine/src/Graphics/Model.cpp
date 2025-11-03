@@ -2,7 +2,8 @@
 /*!
 \file       Model.cpp
 \author     Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu
-\date       27/09/2025
+\author     Ridhwan Afandi, mohamedridhwan.b, 2301367, mohamedridhwan.b\@digipen.edu
+\date       27/10/2025
 \brief      This file contains the definition of the Model class for loading and processing
             3D models using Assimp. Provides mesh data, bone data, and animation integration
             for rendering and animation systems.
@@ -15,8 +16,15 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #include "PreCompile.h"
 #include "Model.h"
+#include "Renderer.h"
+#include "ECS.h"
+#include "MeshTypes.h"
 
 using namespace Ermine::graphics;
+
+// Initialize static per-file instance counters
+std::unordered_map<std::string, std::atomic<uint32_t>> Model::s_fileInstanceCounters;
+std::mutex Model::s_counterMutex;
 
 /**
  * @brief Construct a new Model by loading a file.
@@ -24,11 +32,33 @@ using namespace Ermine::graphics;
  */
 Model::Model(const std::string& path)
 {
+    // Get or create counter for this file path
+    {
+        std::lock_guard<std::mutex> lock(s_counterMutex);
+        // If this is the first time loading this file, create counter starting at 0
+        if (s_fileInstanceCounters.find(path) == s_fileInstanceCounters.end()) {
+            s_fileInstanceCounters[path].store(0);
+        }
+        // Assign instance ID and increment counter for this file
+        m_instanceID = s_fileInstanceCounters[path].fetch_add(1);
+    }
+
     LoadModel(path);
 }
 
 Model::Model(const std::string& path, bool isSkinFile)
 {
+    // Get or create counter for this file path
+    {
+        std::lock_guard<std::mutex> lock(s_counterMutex);
+        // If this is the first time loading this file, create counter starting at 0
+        if (s_fileInstanceCounters.find(path) == s_fileInstanceCounters.end()) {
+            s_fileInstanceCounters[path].store(0);
+        }
+        // Assign instance ID and increment counter for this file
+        m_instanceID = s_fileInstanceCounters[path].fetch_add(1);
+    }
+
     if (isSkinFile) {
         m_directory = path.substr(0, path.find_last_of('/'));
         m_name = path.substr(path.find_last_of('/') + 1);
@@ -36,6 +66,9 @@ Model::Model(const std::string& path, bool isSkinFile)
         if (!LoadSkinFile(path)) {
             EE_CORE_ERROR("Failed to load .skin file: " + path);
         }
+    }
+    else {
+        LoadModel(path);
     }
 }
 
@@ -241,7 +274,13 @@ void Model::LoadModel(const std::string& path)
 
     m_directory = path.substr(0, path.find_last_of('/'));
 	m_name = path.substr(path.find_last_of('/') + 1);
+
+    EE_CORE_INFO("Model::LoadModel - Loading model: {}", m_name);
+    EE_CORE_INFO("  Total meshes in scene: {}", scene->mNumMeshes);
+
     ProcessNode(scene->mRootNode, scene, aiMatrix4x4());
+
+    EE_CORE_INFO("  Processed {} meshes from model", m_meshes.size());
 
     // Init bone transforms to identity
     m_BoneTransforms.resize(m_BoneOffsets.size(), glm::mat4(1.0f));
@@ -304,6 +343,20 @@ MeshData Model::ProcessMesh(aiMesh* mesh)
             vertex.texCoords[0] = mesh->mTextureCoords[0][i].x;
             vertex.texCoords[1] = mesh->mTextureCoords[0][i].y;
         }
+
+        // Tangents (calculated by Assimp via aiProcess_CalcTangentSpace)
+        if (mesh->HasTangentsAndBitangents())
+        {
+            vertex.tangent[0] = mesh->mTangents[i].x;
+            vertex.tangent[1] = mesh->mTangents[i].y;
+            vertex.tangent[2] = mesh->mTangents[i].z;
+        }
+        else
+        {
+            vertex.tangent[0] = 0.0f;
+            vertex.tangent[1] = 0.0f;
+            vertex.tangent[2] = 0.0f;
+        }
     }
 
     // Process bones
@@ -362,6 +415,7 @@ MeshData Model::ProcessMesh(aiMesh* mesh)
     vao->LinkAttribute(0, 3, GL_FLOAT, sizeof(VertexData), (void*)offsetof(VertexData, position));
     vao->LinkAttribute(1, 3, GL_FLOAT, sizeof(VertexData), (void*)offsetof(VertexData, normal));
     vao->LinkAttribute(2, 2, GL_FLOAT, sizeof(VertexData), (void*)offsetof(VertexData, texCoords));
+    vao->LinkAttribute(3, 3, GL_FLOAT, sizeof(VertexData), (void*)offsetof(VertexData, tangent));
 
     // Bone IDs (integer)
     glEnableVertexAttribArray(4);
@@ -375,7 +429,72 @@ MeshData Model::ProcessMesh(aiMesh* mesh)
     vbo->Unbind();
     ibo->Unbind();
 
+    // Register mesh with MeshManager for indirect rendering
+    auto renderer = Ermine::ECS::GetInstance().GetSystem<Renderer>();
+    if (renderer) {
+        bool hasBones = mesh->HasBones();
+
+        // Create unique mesh ID based on model name, mesh name, and mesh index
+        // Use m_meshes.size() as the mesh index to ensure uniqueness even if mesh names are the same/empty
+        std::string meshName = std::string(mesh->mName.C_Str());
+        std::string meshID = m_name + "_" + meshName + "_mesh" + std::to_string(m_meshes.size());
+
+        // Debug logging
+        EE_CORE_INFO("Model::ProcessMesh - Processing mesh: '{}'", meshName.empty() ? "[unnamed]" : meshName);
+        EE_CORE_INFO("  Generated meshID: '{}'", meshID);
+        EE_CORE_INFO("  Vertex count: {}, Index count: {}", vertices.size(), indices.size());
+        EE_CORE_INFO("  Has bones: {}", hasBones==true?"true":"false");
+
+        // Log bone information for this model
+        if (hasBones) {
+            EE_CORE_INFO("  Total bones in model: {}", m_BoneOffsets.size());
+            EE_CORE_INFO("  Bone count for this mesh: {}", mesh->mNumBones);
+        }
+
+        if (hasBones) {
+            // Register as skinned mesh
+            std::vector<SkinnedVertex> skinnedVertices;
+            skinnedVertices.reserve(vertices.size());
+            for (const auto& v : vertices) {
+                SkinnedVertex sv;
+                sv.position = glm::vec3(v.position[0], v.position[1], v.position[2]);
+                sv.normal = glm::vec3(v.normal[0], v.normal[1], v.normal[2]);
+                sv.texCoord = glm::vec2(v.texCoords[0], v.texCoords[1]);
+                sv.tangent = glm::vec3(v.tangent[0], v.tangent[1], v.tangent[2]);
+                sv.boneIDs = glm::ivec4(v.IDs[0], v.IDs[1], v.IDs[2], v.IDs[3]);
+                sv.boneWeights = glm::vec4(v.Weights[0], v.Weights[1], v.Weights[2], v.Weights[3]);
+                skinnedVertices.push_back(sv);
+            }
+            renderer->m_MeshManager.RegisterSkinnedMesh(skinnedVertices, indices, meshID);
+        } else {
+            // Register as regular mesh
+            std::vector<Vertex> meshVertices;
+            meshVertices.reserve(vertices.size());
+            for (const auto& v : vertices) {
+                Vertex mv;
+                mv.position = glm::vec3(v.position[0], v.position[1], v.position[2]);
+                mv.normal = glm::vec3(v.normal[0], v.normal[1], v.normal[2]);
+                mv.texCoord = glm::vec2(v.texCoords[0], v.texCoords[1]);
+                mv.tangent = glm::vec3(v.tangent[0], v.tangent[1], v.tangent[2]);
+                meshVertices.push_back(mv);
+            }
+            renderer->m_MeshManager.RegisterMesh(meshVertices, indices, meshID);
+        }
+        
+        // Calculate AABB from vertex positions
+        glm::vec3 aabbMin(FLT_MAX);
+        glm::vec3 aabbMax(-FLT_MAX);
+        for (const auto& v : vertices) {
+            glm::vec3 pos(v.position[0], v.position[1], v.position[2]);
+            aabbMin = glm::min(aabbMin, pos);
+            aabbMax = glm::max(aabbMax, pos);
+        }
+
+        return MeshData{ vao, vbo, ibo, glm::mat4(1.0f), meshID, aabbMin, aabbMax };
+    }
+
     return MeshData{ vao, vbo, ibo, glm::mat4(1.0f) };
+
 }
 
 std::vector<glm::vec3> Ermine::graphics::Model::GetMeshVertices() const

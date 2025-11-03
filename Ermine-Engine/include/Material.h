@@ -2,6 +2,7 @@
 /*!
 \file       Material.h
 \author     Jeremy Lim Ting Jie, jeremytingjie.lim, 2301370, jeremytingjie.lim\@digipen.edu
+\co-author  Ridhwan Afandi, moahamedridhwan.b, 2301367, moahamedridhwan.b\@digipen.edu
 \date       Sep 9, 2025
 \brief      Material system for graphics rendering with SSBO support
 
@@ -87,6 +88,21 @@ namespace Ermine::graphics
         int hasAoMap{ 0 };                       // 4 bytes (68-71)
         int hasEmissiveMap{ 0 };                 // 4 bytes (72-75)
         float _pad0{};                           // 4 bytes (76-79) - padding for alignment
+
+        // UV Scale and Offset
+        Vec2 uvScale{ 1.0f, 1.0f };             // 8 bytes (80-87)
+        Vec2 uvOffset{ 0.0f, 0.0f };            // 8 bytes (88-95)
+
+        // Texture Array Indices (indices into bindless texture array)
+        int albedoMapIndex{ -1 };               // 4 bytes (96-99)
+        int normalMapIndex{ -1 };               // 4 bytes (100-103)
+        int roughnessMapIndex{ -1 };            // 4 bytes (104-107)
+        int metallicMapIndex{ -1 };             // 4 bytes (108-111)
+
+        int aoMapIndex{ -1 };                   // 4 bytes (112-115)
+        int emissiveMapIndex{ -1 };             // 4 bytes (116-119)
+        int _pad1{};                            // 4 bytes (120-123) - padding
+        int _pad2{};                            // 4 bytes (124-127) - padding for vec4 alignment
     };
 
     // Forward declaration
@@ -241,6 +257,12 @@ namespace Ermine::graphics
         mutable MaterialSSBO m_materialData;
         mutable bool m_ssboDirty = true;
 
+        // Material indexing for SSBO upload
+        int m_materialIndex = -1;  // Index in the global material buffer
+
+        // Texture array indices (for bindless texture array)
+        std::map<std::string, int> m_textureArrayIndices;
+
         /**
          * @brief Gets the SSBO data for this material.
          * @return Reference to MaterialSSBO.
@@ -309,6 +331,14 @@ namespace Ermine::graphics
                 GetParameter("materialHasAoMap")->boolValue ? 1 : 0;
             m_materialData.hasEmissiveMap = GetParameter("materialHasEmissiveMap") &&
                 GetParameter("materialHasEmissiveMap")->boolValue ? 1 : 0;
+
+            // Update texture array indices
+            m_materialData.albedoMapIndex = GetTextureArrayIndex("materialAlbedoMap");
+            m_materialData.normalMapIndex = GetTextureArrayIndex("materialNormalMap");
+            m_materialData.roughnessMapIndex = GetTextureArrayIndex("materialRoughnessMap");
+            m_materialData.metallicMapIndex = GetTextureArrayIndex("materialMetallicMap");
+            m_materialData.aoMapIndex = GetTextureArrayIndex("materialAoMap");
+            m_materialData.emissiveMapIndex = GetTextureArrayIndex("materialEmissiveMap");
 
             m_ssboDirty = false;
         }
@@ -539,6 +569,81 @@ namespace Ermine::graphics
             }
             return *this;
         }
+        /**
+         * @brief Sets the UV scale for texture sampling.
+         * @param scale Vec2 representing the UV scale factor.
+         */
+        void SetUVScale(const Vec2& scale)
+        {
+            m_materialData.uvScale = scale;
+            m_ssboDirty = true;
+        }
+        
+        /**
+         * @brief Sets the UV offset for texture sampling.
+         * @param offset Vec2 representing the UV offset.
+         */
+        void SetUVOffset(const Vec2& offset)
+        {
+            m_materialData.uvOffset = offset;
+            m_ssboDirty = true;
+        }
+        
+        /**
+         * @brief Gets the UV scale.
+         * @return Vec2 UV scale.
+         */
+        Vec2 GetUVScale() const { return m_materialData.uvScale; }
+        
+        /**
+         * @brief Gets the UV offset.
+         * @return Vec2 UV offset.
+         */
+        Vec2 GetUVOffset() const { return m_materialData.uvOffset; }
+        
+        /**
+         * @brief Sets the material index in the global buffer.
+         * @param index The material index.
+         */
+        void SetMaterialIndex(int index) { m_materialIndex = index; }
+        
+        /**
+         * @brief Gets the material index in the global buffer.
+         * @return The material index, or -1 if not assigned.
+         */
+        int GetMaterialIndex() const { return m_materialIndex; }
+
+        /**
+         * @brief Sets a texture array index for a specific texture type.
+         * @param textureName The name of the texture parameter (e.g., "materialAlbedoMap").
+         * @param index The index in the global texture array.
+         */
+        void SetTextureArrayIndex(const std::string& textureName, int index)
+        {
+            m_textureArrayIndices[textureName] = index;
+            m_ssboDirty = true;
+        }
+
+        /**
+         * @brief Gets the texture array index for a specific texture type.
+         * @param textureName The name of the texture parameter.
+         * @return The texture array index, or -1 if not found.
+         */
+        int GetTextureArrayIndex(const std::string& textureName) const
+        {
+            auto it = m_textureArrayIndices.find(textureName);
+            return it != m_textureArrayIndices.end() ? it->second : -1;
+        }
+
+        /**
+         * @brief Gets all texture array indices.
+         * @return Map of texture names to array indices.
+         */
+        const std::map<std::string, int>& GetTextureArrayIndices() const
+        {
+            return m_textureArrayIndices;
+        }
+
         /**
          * @brief Gets the cubemap textures associated with this material.
          * @return Unordered map of cubemap names to shared pointers.
