@@ -179,6 +179,55 @@ void Renderer::SubmitDebugLine(const glm::vec3& from, const glm::vec3& to, const
 	m_DebugLines.push_back({ to, color });
 }
 
+void Renderer::SubmitDebugAABB(const glm::vec3& min, const glm::vec3& max, const glm::vec3& color)
+{
+	// Draw 12 edges of the AABB
+	// Bottom face (4 edges)
+	SubmitDebugLine(glm::vec3(min.x, min.y, min.z), glm::vec3(max.x, min.y, min.z), color);
+	SubmitDebugLine(glm::vec3(max.x, min.y, min.z), glm::vec3(max.x, min.y, max.z), color);
+	SubmitDebugLine(glm::vec3(max.x, min.y, max.z), glm::vec3(min.x, min.y, max.z), color);
+	SubmitDebugLine(glm::vec3(min.x, min.y, max.z), glm::vec3(min.x, min.y, min.z), color);
+
+	// Top face (4 edges)
+	SubmitDebugLine(glm::vec3(min.x, max.y, min.z), glm::vec3(max.x, max.y, min.z), color);
+	SubmitDebugLine(glm::vec3(max.x, max.y, min.z), glm::vec3(max.x, max.y, max.z), color);
+	SubmitDebugLine(glm::vec3(max.x, max.y, max.z), glm::vec3(min.x, max.y, max.z), color);
+	SubmitDebugLine(glm::vec3(min.x, max.y, max.z), glm::vec3(min.x, max.y, min.z), color);
+
+	// Vertical edges (4 edges)
+	SubmitDebugLine(glm::vec3(min.x, min.y, min.z), glm::vec3(min.x, max.y, min.z), color);
+	SubmitDebugLine(glm::vec3(max.x, min.y, min.z), glm::vec3(max.x, max.y, min.z), color);
+	SubmitDebugLine(glm::vec3(max.x, min.y, max.z), glm::vec3(max.x, max.y, max.z), color);
+	SubmitDebugLine(glm::vec3(min.x, min.y, max.z), glm::vec3(min.x, max.y, max.z), color);
+}
+
+void Renderer::SubmitDebugFrustum(const Frustum& frustum, const glm::mat4& invViewProj, const glm::vec3& color)
+{
+	// Get the 8 corners of the frustum directly from inverse view-projection
+	// This is more reliable than computing plane intersections
+	auto corners = frustum.GetCorners(invViewProj);
+
+	// Corner indices: 0=nearBL, 1=nearBR, 2=nearTR, 3=nearTL, 4=farBL, 5=farBR, 6=farTR, 7=farTL
+
+	// Draw near plane (4 edges)
+	SubmitDebugLine(corners[0], corners[1], color); // bottom
+	SubmitDebugLine(corners[1], corners[2], color); // right
+	SubmitDebugLine(corners[2], corners[3], color); // top
+	SubmitDebugLine(corners[3], corners[0], color); // left
+
+	// Draw far plane (4 edges)
+	SubmitDebugLine(corners[4], corners[5], color); // bottom
+	SubmitDebugLine(corners[5], corners[6], color); // right
+	SubmitDebugLine(corners[6], corners[7], color); // top
+	SubmitDebugLine(corners[7], corners[4], color); // left
+
+	// Draw connecting edges (4 edges from near to far)
+	SubmitDebugLine(corners[0], corners[4], color); // bottom-left
+	SubmitDebugLine(corners[1], corners[5], color); // bottom-right
+	SubmitDebugLine(corners[2], corners[6], color); // top-right
+	SubmitDebugLine(corners[3], corners[7], color); // top-left
+}
+
 void Renderer::RenderDebugLines(const glm::mat4& view, const glm::mat4& proj)
 {
 	if (m_DebugLines.empty()) return;
@@ -903,6 +952,7 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 			static_cast<GLsizei>(m_StandardDrawCommands.size()),
 			0
 		);
+		GPUProfiler::TrackDrawCall();
 
 		// Unbind
 		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
@@ -934,6 +984,7 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 			static_cast<GLsizei>(m_SkinnedDrawCommands.size()),
 			0
 		);
+		GPUProfiler::TrackDrawCall();
 
 		// Unbind
 		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
@@ -971,6 +1022,30 @@ void Renderer::CompileDrawData()
 	// Reserve space for forward pass (transparent/custom shader)
 	m_ForwardPassDrawCommands.reserve(m_Entities.size() / 4);
 	m_ForwardPassDrawInfos.reserve(m_Entities.size() / 4);
+
+	// ========== FRUSTUM CULLING SETUP ==========
+	// Get camera view and projection matrices
+	const auto& camera = editor::EditorCamera::GetInstance();
+	const Mtx44& viewMtx = camera.GetViewMatrix();
+	const Mtx44& projMtx = camera.GetProjectionMatrix();
+
+	// Convert to glm for frustum extraction (use ToGlm helper)
+	glm::mat4 viewGlm = ToGlm(viewMtx);
+	glm::mat4 projGlm = ToGlm(projMtx);
+
+	// Build frustum from view-projection matrix
+	Frustum frustum;
+	glm::mat4 viewProj = projGlm * viewGlm;
+	frustum.ExtractFromViewProjection(viewProj);
+
+	// Debug: Draw frustum if enabled
+	if (m_DebugDrawFrustum) {
+		glm::mat4 invViewProj = glm::inverse(viewProj);
+		SubmitDebugFrustum(frustum, invViewProj, glm::vec3(0.0f, 1.0f, 1.0f)); // Cyan color
+	}
+
+	// Culling statistics
+	culledMeshes = 0;
 
 	// ========== STANDARD (NON-SKINNED) MESHES ==========
 	for (auto& entity : m_Entities) {
@@ -1023,12 +1098,50 @@ void Renderer::CompileDrawData()
 
 			// Process each mesh in the model
 			for (const auto& mesh : modelComp.m_model->GetMeshes()) {
+
 				// Get mesh handle from MeshManager
 				MeshHandle meshHandle = m_MeshManager.GetMeshHandle(mesh.meshID);
 				if (!meshHandle.isValid()) continue;
 
 				const MeshSubset* meshData = m_MeshManager.GetMeshData(meshHandle);
 				if (!meshData) continue;
+
+				// ========== FRUSTUM CULLING TEST ==========
+				// Transform AABB to world space by transforming all 8 corners
+				// This is necessary because rotation can change which corners are min/max
+				glm::vec3 corners[8] = {
+					glm::vec3(mesh.aabbMin.x, mesh.aabbMin.y, mesh.aabbMin.z),
+					glm::vec3(mesh.aabbMax.x, mesh.aabbMin.y, mesh.aabbMin.z),
+					glm::vec3(mesh.aabbMin.x, mesh.aabbMax.y, mesh.aabbMin.z),
+					glm::vec3(mesh.aabbMax.x, mesh.aabbMax.y, mesh.aabbMin.z),
+					glm::vec3(mesh.aabbMin.x, mesh.aabbMin.y, mesh.aabbMax.z),
+					glm::vec3(mesh.aabbMax.x, mesh.aabbMin.y, mesh.aabbMax.z),
+					glm::vec3(mesh.aabbMin.x, mesh.aabbMax.y, mesh.aabbMax.z),
+					glm::vec3(mesh.aabbMax.x, mesh.aabbMax.y, mesh.aabbMax.z)
+				};
+
+				glm::vec3 actualMin = glm::vec3(FLT_MAX);
+				glm::vec3 actualMax = glm::vec3(-FLT_MAX);
+
+				for (int i = 0; i < 8; ++i) {
+					glm::vec3 worldCorner = glm::vec3(entityModel * glm::vec4(corners[i], 1.0f));
+					actualMin = glm::min(actualMin, worldCorner);
+					actualMax = glm::max(actualMax, worldCorner);
+				}
+
+				// Test against frustum
+				bool isCulled = !frustum.TestAABB(actualMin, actualMax);
+				if (isCulled) {
+					culledMeshes++; // Count culled meshes
+					continue; // Skip this mesh - it's outside the frustum
+				}
+
+				// Debug: Draw AABB if enabled
+				if (m_DebugDrawAABBs) {
+					// Color: Green for visible, Red for culled
+					glm::vec3 aabbColor = isCulled ? glm::vec3(1.0f, 0.0f, 0.0f) : glm::vec3(0.0f, 1.0f, 0.0f);
+					SubmitDebugAABB(actualMin, actualMax, aabbColor);
+				}
 
 				// Build draw command
 				DrawElementsIndirectCommand cmd;
@@ -1116,6 +1229,43 @@ void Renderer::CompileDrawData()
 			const MeshSubset* meshData = m_MeshManager.GetMeshData(meshHandle);
 			if (!meshData) continue;
 
+			// ========== FRUSTUM CULLING TEST ==========
+			// Transform AABB to world space by transforming all 8 corners
+			// This is necessary because rotation can change which corners are min/max
+			glm::vec3 corners[8] = {
+				glm::vec3(mesh.aabbMin.x, mesh.aabbMin.y, mesh.aabbMin.z),
+				glm::vec3(mesh.aabbMax.x, mesh.aabbMin.y, mesh.aabbMin.z),
+				glm::vec3(mesh.aabbMin.x, mesh.aabbMax.y, mesh.aabbMin.z),
+				glm::vec3(mesh.aabbMax.x, mesh.aabbMax.y, mesh.aabbMin.z),
+				glm::vec3(mesh.aabbMin.x, mesh.aabbMin.y, mesh.aabbMax.z),
+				glm::vec3(mesh.aabbMax.x, mesh.aabbMin.y, mesh.aabbMax.z),
+				glm::vec3(mesh.aabbMin.x, mesh.aabbMax.y, mesh.aabbMax.z),
+				glm::vec3(mesh.aabbMax.x, mesh.aabbMax.y, mesh.aabbMax.z)
+			};
+
+			glm::vec3 actualMin = glm::vec3(FLT_MAX);
+			glm::vec3 actualMax = glm::vec3(-FLT_MAX);
+
+			for (int i = 0; i < 8; ++i) {
+				glm::vec3 worldCorner = glm::vec3(model * glm::vec4(corners[i], 1.0f));
+				actualMin = glm::min(actualMin, worldCorner);
+				actualMax = glm::max(actualMax, worldCorner);
+			}
+
+			// Test against frustum
+			bool isCulled = !frustum.TestAABB(actualMin, actualMax);
+			if (isCulled) {
+				culledMeshes++;
+				continue; // Skip - outside frustum
+			}
+
+			// Debug: Draw AABB if enabled (primitives)
+			if (m_DebugDrawAABBs) {
+				// Color: Green for visible, Red for culled
+				glm::vec3 aabbColor = isCulled ? glm::vec3(1.0f, 0.0f, 0.0f) : glm::vec3(0.0f, 1.0f, 0.0f);
+				SubmitDebugAABB(actualMin, actualMax, aabbColor);
+			}
+
 			// Build draw command
 			DrawElementsIndirectCommand cmd;
 			cmd.count = meshData->indexCount;
@@ -1127,9 +1277,9 @@ void Renderer::CompileDrawData()
 			// Build draw info
 			DrawInfo info;
 			info.modelMatrix = model;
-			info.aabbMin = glm::vec3(-1.0f); // TODO: Calculate proper AABB for primitives
+			info.aabbMin = glm::vec3(mesh.aabbMin.x, mesh.aabbMin.y, mesh.aabbMin.z);
 			info.materialIndex = materialIndex;
-			info.aabbMax = glm::vec3(1.0f);
+			info.aabbMax = glm::vec3(mesh.aabbMax.x, mesh.aabbMax.y, mesh.aabbMax.z);
 			info.entityID = entity;
 			info.flags = 0; // Primitives never use skinning
 			info.boneTransformOffset = 0;
@@ -1196,12 +1346,50 @@ void Renderer::CompileDrawData()
 
 		// Process each mesh in the model
 		for (const auto& mesh : modelComp.m_model->GetMeshes()) {
+
 			// Get mesh handle from MeshManager
 			MeshHandle meshHandle = m_MeshManager.GetMeshHandle(mesh.meshID);
 			if (!meshHandle.isValid()) continue;
 
 			const MeshSubset* meshData = m_MeshManager.GetMeshData(meshHandle);
 			if (!meshData) continue;
+
+			// ========== FRUSTUM CULLING TEST ==========
+			// Transform AABB to world space by transforming all 8 corners
+			// This is necessary because rotation can change which corners are min/max
+			glm::vec3 corners[8] = {
+				glm::vec3(mesh.aabbMin.x, mesh.aabbMin.y, mesh.aabbMin.z),
+				glm::vec3(mesh.aabbMax.x, mesh.aabbMin.y, mesh.aabbMin.z),
+				glm::vec3(mesh.aabbMin.x, mesh.aabbMax.y, mesh.aabbMin.z),
+				glm::vec3(mesh.aabbMax.x, mesh.aabbMax.y, mesh.aabbMin.z),
+				glm::vec3(mesh.aabbMin.x, mesh.aabbMin.y, mesh.aabbMax.z),
+				glm::vec3(mesh.aabbMax.x, mesh.aabbMin.y, mesh.aabbMax.z),
+				glm::vec3(mesh.aabbMin.x, mesh.aabbMax.y, mesh.aabbMax.z),
+				glm::vec3(mesh.aabbMax.x, mesh.aabbMax.y, mesh.aabbMax.z)
+			};
+
+			glm::vec3 actualMin = glm::vec3(FLT_MAX);
+			glm::vec3 actualMax = glm::vec3(-FLT_MAX);
+
+			for (int i = 0; i < 8; ++i) {
+				glm::vec3 worldCorner = glm::vec3(modelMatrix * glm::vec4(corners[i], 1.0f));
+				actualMin = glm::min(actualMin, worldCorner);
+				actualMax = glm::max(actualMax, worldCorner);
+			}
+
+			// Test against frustum
+			bool isCulled = !frustum.TestAABB(actualMin, actualMax);
+			if (isCulled) {
+				culledMeshes++;
+				continue; // Skip - outside frustum
+			}
+
+			// Debug: Draw AABB if enabled (skinned meshes)
+			if (m_DebugDrawAABBs) {
+				// Color: Green for visible, Red for culled
+				glm::vec3 aabbColor = isCulled ? glm::vec3(1.0f, 0.0f, 0.0f) : glm::vec3(0.0f, 1.0f, 0.0f);
+				SubmitDebugAABB(actualMin, actualMax, aabbColor);
+			}
 
 			// Build draw command
 			DrawElementsIndirectCommand cmd;
@@ -1236,6 +1424,7 @@ void Renderer::CompileDrawData()
 			}
 		}
 	}
+	GPUProfiler::SetCulledMeshesCount(culledMeshes);
 }
 
 /**
@@ -2701,6 +2890,7 @@ void Renderer::RenderForwardPass(const Mtx44& view, const Mtx44& projection)
 		static_cast<GLsizei>(m_ForwardPassDrawCommands.size()),
 		0
 	);
+	GPUProfiler::TrackDrawCall();
 
 	// Unbind
 	glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
@@ -3364,6 +3554,7 @@ void Renderer::RenderShadowMapInstanced()
 		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_MeshManager.m_DrawCommandsSSBO);
 		glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_INT, nullptr,
 			static_cast<GLsizei>(m_StandardDrawCommands.size()), 0);
+		GPUProfiler::TrackDrawCall();
 		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
 		glBindVertexArray(0);
 	}
@@ -3377,6 +3568,7 @@ void Renderer::RenderShadowMapInstanced()
 		size_t offset = m_StandardDrawCommands.size() * sizeof(DrawElementsIndirectCommand);
 		glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_INT, reinterpret_cast<const void*>(offset),
 			static_cast<GLsizei>(m_SkinnedDrawCommands.size()), 0);
+		GPUProfiler::TrackDrawCall();
 		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
 		glBindVertexArray(0);
 	}

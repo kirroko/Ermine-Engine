@@ -722,6 +722,10 @@ namespace Ermine
 		MeshAssetDesc     asset;
 		std::string registeredMeshID; // Mesh ID registered in MeshManager
 
+		// AABB for frustum culling (in local/model space)
+		Vec3 aabbMin{ -1.0f, -1.0f, -1.0f };
+		Vec3 aabbMax{  1.0f,  1.0f,  1.0f };
+
 		Mesh() = default;
 
 		Mesh(const std::shared_ptr<graphics::VertexArray>& vao, const std::shared_ptr<graphics::VertexBuffer>& vbo, const std::shared_ptr<graphics::IndexBuffer>& ibo) :

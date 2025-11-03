@@ -964,10 +964,12 @@ void GraphicsDebugGUI::DrawLightingControls()
  */
 void GraphicsDebugGUI::DrawPerformanceMetrics()
 {
+    auto renderer = ECS::GetInstance().GetSystem<Renderer>();
+
     if (ImGui::CollapsingHeader("Performance Metrics", ImGuiTreeNodeFlags_DefaultOpen))
     {
         ImGui::Indent(10.0f);
-        
+
         const auto& metrics = GPUProfiler::GetMetrics();
         
         // Frame timing
@@ -978,12 +980,30 @@ void GraphicsDebugGUI::DrawPerformanceMetrics()
         ImGui::Text("GPU Time: %.2f ms", metrics.gpuFrameTimeMs);
 
 		ImGui::Separator();
-        
+
         // Render statistics
         ImGui::Text("Draw Calls: %u", metrics.drawCallCount);
         ImGui::Text("Triangles: %s", FormatNumber(metrics.triangleCount).c_str());
         ImGui::Text("Vertices: %s", FormatNumber(metrics.vertexCount).c_str());
-        
+        ImGui::Text("Meshes Culled: %u", metrics.culledMeshes);
+
+        ImGui::Separator();
+
+        // Debug Visualization Controls
+        if (renderer) {
+            ImGui::Text("Debug Visualization:");
+
+            if (DrawToggleButton("Show AABBs", &renderer->m_DebugDrawAABBs,
+                                "Draw bounding boxes for all meshes (Green = visible, Red = culled)")) {
+                EE_CORE_INFO("AABB visualization {}", renderer->m_DebugDrawAABBs ? "enabled" : "disabled");
+            }
+
+            if (DrawToggleButton("Show Frustum", &renderer->m_DebugDrawFrustum,
+                                "Draw camera frustum planes (Cyan)")) {
+                EE_CORE_INFO("Frustum visualization {}", renderer->m_DebugDrawFrustum ? "enabled" : "disabled");
+            }
+        }
+
         ImGui::Separator();
         
         // Memory usage
