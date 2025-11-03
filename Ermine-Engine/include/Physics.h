@@ -175,6 +175,8 @@ namespace Ermine
 			Performs a raycast and returns all hits along the ray's path.
 		*************************************************************************/
 		std::vector<JPH::RayCastResult> RaycastAll(const JPH::RVec3& origin, const JPH::RVec3& direction, float maxDistance);
+
+		void ClearPhysicBody();
 		
 		//! Shared pointer to the debug renderer used for visualizing physics.
 		std::shared_ptr<MyDebugRenderer> mDebugRenderer;
