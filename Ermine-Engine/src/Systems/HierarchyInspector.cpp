@@ -1410,7 +1410,6 @@ namespace Ermine::editor {
 		}
 		if (ImGui::MenuItem("Physics") && !ECS::GetInstance().HasComponent<PhysicComponent>(entity)) {
 			ECS::GetInstance().AddComponent(entity, PhysicComponent());
-			ECS::GetInstance().ResyncAllSignaturesFromStorage();
 			ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
 		}
 		if (ImGui::MenuItem("Audio") && !ECS::GetInstance().HasComponent<AudioComponent>(entity)) {
@@ -1456,5 +1455,7 @@ namespace Ermine::editor {
 			ECS::GetInstance().AddComponent(entity, ParticleEmitter());
 		}
 		// Add more component types as needed
+
+		ECS::GetInstance().ResyncAllSignaturesFromStorage();
 	}
 } // namespace Ermine::editor
