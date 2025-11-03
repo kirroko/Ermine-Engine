@@ -42,6 +42,7 @@ namespace Ermine::graphics
 			uint32_t drawCallCount = 0;		// Number of draw calls
 			uint32_t triangleCount = 0;			// Number of triangles drawn
 			uint32_t vertexCount = 0;			// Number of vertices drawn
+			uint32_t culledMeshes = 0;		// Number of culled entities
 
 			// Memory Metrics
 			uint64_t totalVRAMUsageMB = 0;		// Total VRAM usage in MB
@@ -139,6 +140,12 @@ namespace Ermine::graphics
 		 * @param type Memory type (e.g., "Texture", "Buffer")
 		 */
 		static void TrackMemoryDeallocation(uint64_t sizeBytes, const std::string& type);
+
+		/**
+		* @brief Set culled entities count
+		* @param count Number of culled entities
+		*/
+		static void SetCulledMeshesCount(uint32_t count);
 
 		/**
 		 * @brief Get the current performance metrics
