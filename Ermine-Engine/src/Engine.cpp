@@ -79,60 +79,6 @@ namespace
 
 	EntityID fbxEntity = 0;
 
-	// Unity-style duplicate name generator
-	std::string GenerateUnityStyleName(const std::string& baseName)
-	{
-		auto& ecs = ECS::GetInstance();
-	
-		// Extract base name without existing number suffix
-		std::string cleanBaseName = baseName;
-		std::smatch match;
-		std::regex pattern(R"(^(.+)\s+\((\d+)\)$)");
-		
-		if (std::regex_match(baseName, match, pattern))
-		{
-			cleanBaseName = match[1].str();
-		}
-		
-		// Find the next available number
-		int maxNumber = 0;
-		bool baseNameExists = false;
-		
-		// Check all existing entities for name conflicts
-		for (EntityID e = 1; e < MAX_ENTITIES; ++e)
-		{
-			if (!ecs.IsEntityValid(e) || !ecs.HasComponent<ObjectMetaData>(e))
-				continue;
-				
-			const auto& meta = ecs.GetComponent<ObjectMetaData>(e);
-			
-			// Check if exact base name exists
-			if (meta.name == cleanBaseName)
-			{
-				baseNameExists = true;
-			}
-			
-			// Check for numbered variants
-			std::smatch numberMatch;
-			if (std::regex_match(meta.name, numberMatch, pattern))
-			{
-				if (numberMatch[1].str() == cleanBaseName)
-				{
-					int num = std::stoi(numberMatch[2].str());
-					maxNumber = std::max(maxNumber, num);
-				}
-			}
-		}
-		
-		// If base name exists or we found numbered variants, use next number
-		if (baseNameExists || maxNumber > 0)
-		{
-			return cleanBaseName + " (" + std::to_string(maxNumber + 1) + ")";
-		}
-		
-		// Otherwise, append (1)
-		return cleanBaseName + " (1)";
-	}
 }
 
 bool engine::Init(GLFWwindow* windowContext)
@@ -625,6 +571,7 @@ bool engine::Init(GLFWwindow* windowContext)
 #endif
 
 	s_isInitialized = true;
+	return true;
 }
 
 void engine::Shutdown()
