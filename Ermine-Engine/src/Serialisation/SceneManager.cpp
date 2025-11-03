@@ -354,6 +354,7 @@ void SceneManager::SaveTemp()
 
 void SceneManager::LoadTemp()
 {
+    ClearScene();
     OpenScene("../Temp/Temp.scene");
 }
 

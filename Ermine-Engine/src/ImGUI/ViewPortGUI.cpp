@@ -99,6 +99,7 @@ void Ermine::ViewPortGUI::TopBarSimulationControl(const ImVec2 iconSize)
 		if (DrawIconOrTextButton(gIconPlay, "Play", iconSize))
 		{
 			EditorGUI::s_state = EditorGUI::SimState::playing;
+			SceneManager::GetInstance().SaveTemp();
 			EE_CORE_INFO("Simulation: Play");
 		}
 		if (ImGui::IsItemHovered())
@@ -127,6 +128,7 @@ void Ermine::ViewPortGUI::TopBarSimulationControl(const ImVec2 iconSize)
 		if (DrawIconOrTextButton(gIconStop, "Stop", iconSize))
 		{
 			EditorGUI::s_state = EditorGUI::SimState::stopped;
+			SceneManager::GetInstance().LoadTemp();
 			EE_CORE_INFO("Simulation: Stop");
 		}
 		if (ImGui::IsItemHovered())
