@@ -1,4 +1,4 @@
-/* Start Header ************************************************************************/
+﻿/* Start Header ************************************************************************/
 /*!
 \file       Texture.cpp
 \author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu (99%)
@@ -54,19 +54,32 @@ bool Texture::LoadFromDDS(const std::string& ddsFilePath)
         return false;
     }
 
-    ScratchImage flipped;
-    HRESULT flipHR = FlipRotate(
-        image.GetImages(),
-        image.GetImageCount(),
-        metadata,
-        TEX_FR_FLIP_VERTICAL,
-        flipped
-    );
-    if (SUCCEEDED(flipHR)) {
-        image = std::move(flipped);
+    bool shouldFlip = false;  // Default: don't flip
+    switch (metadata.format) {
+    case DXGI_FORMAT_R8G8B8A8_UNORM:
+    case DXGI_FORMAT_B8G8R8A8_UNORM:
+        shouldFlip = true;  // Flip these specific uncompressed formats
+        break;
+    default:
+        shouldFlip = false;  // Don't flip compressed BC formats and others
+        break;
     }
-    else {
-        EE_CORE_WARN("Failed to vertically flip DDS texture: {0} (HRESULT: 0x{1:x})", ddsFilePath, flipHR);
+
+    if (shouldFlip) {
+        ScratchImage flipped;
+        HRESULT flipHR = FlipRotate(
+            image.GetImages(),
+            image.GetImageCount(),
+            metadata,
+            TEX_FR_FLIP_VERTICAL,
+            flipped
+        );
+        if (SUCCEEDED(flipHR)) {
+            image = std::move(flipped);
+        }
+        else {
+            EE_CORE_WARN("Failed to vertically flip DDS texture: {0} (HRESULT: 0x{1:x})", ddsFilePath, flipHR);
+        }
     }
 
     // Store basic info
@@ -226,17 +239,29 @@ Texture::Texture() : m_RendererID(0), m_LocalBuffer(nullptr), m_Width(0), m_Heig
  */
 Texture::Texture(const std::string& filePath) : m_filePath(filePath)
 {
+    // Check if it's a DDS file
+    std::string extension = std::filesystem::path(filePath).extension().string();
+    std::transform(extension.begin(), extension.end(), extension.begin(), ::tolower);
+    
+    if (extension == ".dds") {
+        // Use DDS loader
+        if (!LoadFromDDS(filePath)) {
+            EE_CORE_ERROR("Failed to load DDS texture: {0}", filePath);
+        }
+        return;
+    }
+    
+    // Original stb_image path for other formats
     glGenTextures(1, &m_RendererID);
-    glBindTexture(GL_TEXTURE_2D, m_RendererID); // all upcoming GL_TEXTURE_2D operations now have effect on this texture object
-    // set the texture wrapping/filtering options (on the currently bound texture object)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // set texture wrapping to GL_REPEAT (default wrapping method)
+    glBindTexture(GL_TEXTURE_2D, m_RendererID);
+    
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    // set texture filtering parameters
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     
-    stbi_set_flip_vertically_on_load(1); // Flip the image vertically
-    m_LocalBuffer = stbi_load(filePath.c_str(), &m_Width, &m_Height, &m_BPP, 4); // 4 channels for RGBA
+    stbi_set_flip_vertically_on_load(1);
+    m_LocalBuffer = stbi_load(filePath.c_str(), &m_Width, &m_Height, &m_BPP, 4);
     if (!m_LocalBuffer)
     {
         EE_CORE_WARN("Failed to load texture: {0}", filePath);
