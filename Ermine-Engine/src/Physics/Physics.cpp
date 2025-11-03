@@ -184,6 +184,7 @@ namespace Ermine
 		delete mObjectLayerPairFilter;
 		delete mBodyActivationListener;
 		delete mContactListener;
+		mDebugRenderer.reset();
 	}
 
 	/*!*************************************************************************
@@ -360,10 +361,10 @@ namespace Ermine
 			hierarchySystem->MarkDirty(entity);
 		}
 
-		if (Input::IsKeyDown(GLFW_KEY_1))
-		{
-			auto hits = RaycastAll({ 0, 5, 0 }, { 0, -1, 0 }, 100.0f);
-		}
+		//if (Input::IsKeyDown(GLFW_KEY_1))
+		//{
+		//	auto hits = RaycastAll({ 0, 5, 0 }, { 0, -1, 0 }, 100.0f);
+		//}
 	}
 
 	/*!*************************************************************************
@@ -378,6 +379,11 @@ namespace Ermine
 		mEntityToBody.clear();
 
 		auto& bodyInterface = mPhysicsSystem.GetBodyInterface();
+
+		if (m_Entities.empty())
+		{
+			ClearPhysicBody();
+		}
 
 		for (auto entity : m_Entities)
 		{
@@ -838,6 +844,19 @@ namespace Ermine
 			});
 
 		return results;
+	}
+
+	void Physics::ClearPhysicBody()
+	{
+		JPH::BodyInterface& bi = mPhysicsSystem.GetBodyInterfaceNoLock();
+		JPH::BodyIDVector bodyIDs;
+		mPhysicsSystem.GetBodies(bodyIDs);
+
+		for (JPH::BodyID id : bodyIDs)
+		{
+			bi.RemoveBody(id);
+			bi.DestroyBody(id);
+		}
 	}
 
 	void Physics::FlushPendingPairsToEntityEvents()
