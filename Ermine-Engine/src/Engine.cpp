@@ -52,6 +52,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "SceneManager.h"
 #include "FSMEditor.h"
 #include "NavMesh.h"
+#include "NavMeshAgentSystem.h"
 #include "AnimationGUI.h"
 #include "ResourcePipe.h"
 #endif
@@ -203,10 +204,11 @@ bool engine::Init(GLFWwindow* windowContext)
 	EE_AUTO_REGISTER_COMPONENT(ModelComponent, "ModelComponent")
 	EE_AUTO_REGISTER_COMPONENT(AnimationComponent, "AnimationComponent")
 	EE_AUTO_REGISTER_COMPONENT(HierarchyComponent, "HierarchyComponent"); 
-	EE_AUTO_REGISTER_COMPONENT(StateMachine, "StateMachine");
+	EE_AUTO_REGISTER_COMPONENT(StateMachine, "StateMachine")
 	EE_AUTO_REGISTER_COMPONENT(NavMeshComponent, "NavMesh")
+	EE_AUTO_REGISTER_COMPONENT(NavMeshAgent, "NavMeshAgent")
 	EE_AUTO_REGISTER_COMPONENT(GlobalTransform, "GlobalTransform")
-	EE_AUTO_REGISTER_COMPONENT(ParticleEmitter, "ParticleEmitter");
+	EE_AUTO_REGISTER_COMPONENT(ParticleEmitter, "ParticleEmitter")
 	EE_AUTO_REGISTER_COMPONENT(CameraComponent, "CameraComponent");
 
 	// Special case for Script component, need to copy over the class name
@@ -237,6 +239,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().RegisterSystem<HierarchySystem>();
 	ECS::GetInstance().RegisterSystem<StateManager>();
 	ECS::GetInstance().RegisterSystem<NavMeshSystem>();
+	ECS::GetInstance().RegisterSystem<NavMeshAgentSystem>();
 	ECS::GetInstance().RegisterSystem<graphics::GameCamera>();
 
 	//Register JPH::TempAllocatorImpl for Physcis
@@ -306,6 +309,11 @@ bool engine::Init(GLFWwindow* windowContext)
 	navSig.set(ECS::GetInstance().GetComponentType<NavMeshComponent>());
 	navSig.set(ECS::GetInstance().GetComponentType<Transform>());
 	ECS::GetInstance().SetSystemSignature<NavMeshSystem>(navSig);
+
+	SignatureID navAgentSig;
+	navAgentSig.set(ECS::GetInstance().GetComponentType<NavMeshAgent>());
+	navAgentSig.set(ECS::GetInstance().GetComponentType<Transform>());
+	ECS::GetInstance().SetSystemSignature<NavMeshAgentSystem>(navAgentSig);
 
 	glfwSetFramebufferSizeCallback(windowContext, []([[maybe_unused]] GLFWwindow* window, int width, int height)
 		{
@@ -789,6 +797,8 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 
 	// FSM update
 	ECS::GetInstance().GetSystem<StateManager>()->Update(FrameController::GetFixedDeltaTime());
+
+	ECS::GetInstance().GetSystem<NavMeshAgentSystem>()->Update(FrameController::GetFixedDeltaTime());
 }
 
 void engine::Render(GLFWwindow* window)

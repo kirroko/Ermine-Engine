@@ -2538,6 +2538,51 @@ namespace Ermine
 		Runtime* runtime = nullptr;
 	};
 
+	struct NavMeshAgent
+	{
+		float speed = 3.0f;
+		float acceleration = 8.0f;
+		float stoppingDistance = 0.2f;
+		bool autoRotate = true;
+		bool debugDrawPath = true;
+
+		bool hasPath = false;
+		Ermine::Vec3 destination{};
+		std::vector<Ermine::Vec3> path;
+		size_t currentCorner = 0;
+
+		unsigned long long startPoly = 0;
+		unsigned long long endPoly = 0;
+
+		// Serialization
+		/*
+		template<typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const
+		{
+			out.SetObject();
+			out.AddMember("speed", speed, alloc);
+			out.AddMember("acceleration", acceleration, alloc);
+			out.AddMember("stoppingDistance", stoppingDistance, alloc);
+			out.AddMember("autoRotate", autoRotate, alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in)
+		{
+			if (in.HasMember("speed")) speed = in["speed"].GetFloat();
+			if (in.HasMember("acceleration")) acceleration = in["acceleration"].GetFloat();
+			if (in.HasMember("stoppingDistance")) stoppingDistance = in["stoppingDistance"].GetFloat();
+			if (in.HasMember("autoRotate")) autoRotate = in["autoRotate"].GetBool();
+		}
+
+		XPROPERTY_DEF(
+			"NavMeshAgent", NavMeshAgent,
+			xproperty::obj_member<"speed", &NavMeshAgent::speed>,
+			xproperty::obj_member<"acceleration", &NavMeshAgent::acceleration>,
+			xproperty::obj_member<"stoppingDistance", &NavMeshAgent::stoppingDistance>,
+			xproperty::obj_member<"autoRotate", &NavMeshAgent::autoRotate>
+		);*/
+	};
+
 	/*!***********************************************************************
 	\brief
 	 AABB component for caching bounding boxes - used for frustum culling optimization

@@ -9,6 +9,7 @@ public class Test1 : MonoBehaviour
 
     void Start()
     {
+        NavAgent.SetDestination((ulong)gameObject.GetInstanceID(), new Vector3(0, 0, 10));
     }
 
     void Update()

@@ -9,12 +9,13 @@ public class Test2 : MonoBehaviour
 
     void Start()
     {
+        NavAgent.SetDestination((ulong)gameObject.GetInstanceID(), new Vector3(0, 0, 0));
     }
 
     void Update()
     {
         //transform.Rotate(Vector3.down * (Time.deltaTime * speed));
-        transform.Translate(Vector3.forward * speed * Time.deltaTime);
+        //transform.Translate(Vector3.forward * speed * Time.deltaTime);
         // After 3 seconds, trigger next FSM state
         stateTimer += Time.deltaTime;
         if (stateTimer >= switchTime)

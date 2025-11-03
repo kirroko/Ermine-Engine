@@ -24,6 +24,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "JobSystem.h"
 #include <HierarchySystem.h>
 #include "FiniteStateMachine.h"
+#include "NavMeshAgentSystem.h"
 
 namespace fs = std::filesystem;
 
@@ -1806,5 +1807,15 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	mono_add_internal_call("ErmineEngine.StateMachine::RequestNextState", (const void*)icall_statemachine_request_next_state);
 	mono_add_internal_call("ErmineEngine.StateMachine::RequestPreviousState", (const void*)icall_statemachine_request_previous_state);
 #pragma endregion
-
+#pragma region NavAgent ICalls
+	mono_add_internal_call("ErmineEngine.NavAgent::SetDestination",
+		(const void*)+[](uint64_t entityID, glm::vec3 dest)
+		{
+			Ermine::Vec3 v;
+			v.x = dest.x;
+			v.y = dest.y;
+			v.z = dest.z;
+			Ermine::RequestPathForAgent((Ermine::EntityID)entityID, v);
+		});
+#pragma endregion
 }

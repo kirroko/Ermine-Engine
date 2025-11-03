@@ -243,7 +243,12 @@ namespace Ermine {
         params.vertCount = c.build->pmesh->nverts;
         params.polys = c.build->pmesh->polys;
         params.polyAreas = c.build->pmesh->areas;
-        params.polyFlags = c.build->pmesh->flags;
+        //params.polyFlags = c.build->pmesh->flags;
+
+        static const unsigned short WALKABLE = 0x01;
+        std::vector<unsigned short> polyFlagsTemp(c.build->pmesh->npolys, WALKABLE);
+        params.polyFlags = polyFlagsTemp.data();
+
         params.polyCount = c.build->pmesh->npolys;
         params.nvp = c.build->pmesh->nvp;
         params.detailMeshes = c.build->dmesh->meshes;
@@ -505,5 +510,166 @@ namespace Ermine {
 
         //EE_CORE_INFO("[NavMeshSystem] DebugDrawFilled: %d tris submitted", trisSubmitted);
         renderer->RenderDebugTriangles(view, proj);
+    }
+
+    bool NavMeshSystem::ComputeStraightPath(EntityID navEntity, const Vec3& start, const Vec3& end, std::vector<Vec3>& outPath)
+    {
+        //auto& ecs = ECS::GetInstance();
+        //if (!ecs.IsEntityValid(navEntity) || !ecs.HasComponent<NavMeshComponent>(navEntity))
+        //    return false;
+
+        //EE_CORE_INFO("[NavMeshSystem] ComputeStraightPath called");
+
+        //auto& navComp = ecs.GetComponent<NavMeshComponent>(navEntity);
+        //if (!navComp.runtime) return false;
+
+        //// Access to runtime internals is legal here (this TU defines Runtime)
+        //dtNavMeshQuery* query = navComp.runtime->query;
+        //if (!query) return false;
+
+        //const float extents[3] = { 2.0f, 4.0f, 2.0f };
+
+        //dtPolyRef startRef = 0, endRef = 0;
+        //float spos[3] = { start.x, start.y, start.z };
+        //float epos[3] = { end.x,   end.y,   end.z };
+
+        //// Find nearest polys
+        //if (dtStatusFailed(query->findNearestPoly(spos, extents, nullptr, &startRef, nullptr))) return false;
+        //if (dtStatusFailed(query->findNearestPoly(epos, extents, nullptr, &endRef, nullptr))) return false;
+        //if (!startRef || !endRef) return false;
+
+        //// Find corridor polys
+        //dtPolyRef polys[256];
+        //int nPolys = 0;
+        //if (dtStatusFailed(query->findPath(startRef, endRef, spos, epos, nullptr, polys, &nPolys, 256)))
+        //    return false;
+        //if (nPolys == 0) return false;
+
+        //// Straight path
+        //float straightPath[256 * 3];
+        //unsigned char straightFlags[256];
+        //dtPolyRef straightPolys[256];
+        //int nStraight = 0;
+
+        //if (dtStatusFailed(query->findStraightPath(spos, epos, polys, nPolys,
+        //    straightPath, straightFlags, straightPolys,
+        //    &nStraight, 256)))
+        //    return false;
+
+        //outPath.clear();
+        //outPath.reserve((size_t)nStraight);
+        //for (int i = 0; i < nStraight; ++i)
+        //{
+        //    Vec3 p;
+        //    p.x = straightPath[i * 3 + 0];
+        //    p.y = straightPath[i * 3 + 1];
+        //    p.z = straightPath[i * 3 + 2];
+        //    outPath.push_back(p);
+        //}
+        //return !outPath.empty();
+
+        auto& ecs = ECS::GetInstance();
+        if (!ecs.IsEntityValid(navEntity) || !ecs.HasComponent<NavMeshComponent>(navEntity))
+            return false;
+
+        auto& navComp = ecs.GetComponent<NavMeshComponent>(navEntity);
+        if (!navComp.runtime)
+            return false;
+
+        // Access the Detour query object
+        dtNavMeshQuery* query = navComp.runtime->query;
+        if (!query)
+            return false;
+
+        // --------------------------------------------------------------------
+        // Use a query filter so Detour can include polygons properly
+        // --------------------------------------------------------------------
+        dtQueryFilter filter;
+        filter.setIncludeFlags(0xFFFF); // include all
+        filter.setExcludeFlags(0);      // exclude none
+
+        // Broader extents for testing — you can reduce later (e.g. 2,4,2)
+        const float extents[3] = { 10.0f, 20.0f, 10.0f };
+
+        dtPolyRef startRef = 0, endRef = 0;
+        float spos[3] = { start.x, start.y, start.z };
+        float epos[3] = { end.x, end.y, end.z };
+
+        // --------------------------------------------------------------------
+        // Find nearest polygons to start and end
+        // --------------------------------------------------------------------
+        if (dtStatusFailed(query->findNearestPoly(spos, extents, &filter, &startRef, nullptr)))
+        {
+            EE_CORE_WARN("[NavMeshSystem] findNearestPoly failed for start point");
+            return false;
+        }
+
+        if (dtStatusFailed(query->findNearestPoly(epos, extents, &filter, &endRef, nullptr)))
+        {
+            EE_CORE_WARN("[NavMeshSystem] findNearestPoly failed for end point");
+            return false;
+        }
+
+        if (!startRef || !endRef)
+        {
+            EE_CORE_WARN("[NavMeshSystem] Invalid start or end poly (start=%llu end=%llu)",
+                static_cast<unsigned long long>(startRef),
+                static_cast<unsigned long long>(endRef));
+            return false;
+        }
+
+        // --------------------------------------------------------------------
+        // Find a corridor path of polygons
+        // --------------------------------------------------------------------
+        dtPolyRef polys[256];
+        int nPolys = 0;
+        if (dtStatusFailed(query->findPath(startRef, endRef, spos, epos, &filter,
+            polys, &nPolys, 256)))
+        {
+            EE_CORE_WARN("[NavMeshSystem] findPath failed");
+            return false;
+        }
+
+        if (nPolys == 0)
+        {
+            EE_CORE_WARN("[NavMeshSystem] No corridor polys found");
+            return false;
+        }
+
+        // --------------------------------------------------------------------
+        // Generate a straight path through the corridor
+        // --------------------------------------------------------------------
+        float straightPath[256 * 3];
+        unsigned char straightFlags[256];
+        dtPolyRef straightPolys[256];
+        int nStraight = 0;
+
+        if (dtStatusFailed(query->findStraightPath(spos, epos, polys, nPolys,
+            straightPath, straightFlags, straightPolys,
+            &nStraight, 256)))
+        {
+            EE_CORE_WARN("[NavMeshSystem] findStraightPath failed");
+            return false;
+        }
+
+        // --------------------------------------------------------------------
+        // Output + diagnostics
+        // --------------------------------------------------------------------
+        outPath.clear();
+        outPath.reserve(static_cast<size_t>(nStraight));
+
+        EE_CORE_INFO("[NavMeshSystem] Straight path points: %d", nStraight);
+        for (int i = 0; i < nStraight; ++i)
+        {
+            Vec3 p;
+            p.x = straightPath[i * 3 + 0];
+            p.y = straightPath[i * 3 + 1];
+            p.z = straightPath[i * 3 + 2];
+            outPath.push_back(p);
+
+            EE_CORE_INFO("  Path[%d]: %.3f %.3f %.3f", i, p.x, p.y, p.z);
+        }
+
+        return !outPath.empty();
     }
 }

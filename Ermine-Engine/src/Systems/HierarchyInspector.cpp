@@ -226,6 +226,9 @@ namespace Ermine::editor {
 			DrawNavMeshComponent(selected);
 		}
 
+		if (ECS::GetInstance().HasComponent<NavMeshAgent>(selected))
+			DrawNavMeshAgentComponent(selected);
+
 		if (ECS::GetInstance().HasComponent<ParticleEmitter>(selected)) {
 			DrawParticleEmitterComponent(selected);
 		}
@@ -1402,6 +1405,25 @@ namespace Ermine::editor {
 		ImGui::Checkbox("Draw NavMesh", &nav.drawNavMesh);
 	}
 
+	void HierarchyInspector::DrawNavMeshAgentComponent(EntityID entity)
+	{
+		if (!ComponentHeaderWithRemove<NavMeshAgent>("NavMesh Agent", entity))
+			return;
+
+		auto& agent = ECS::GetInstance().GetComponent<NavMeshAgent>(entity);
+
+		// Editable fields
+		ImGui::DragFloat("Speed", &agent.speed, 0.1f, 0.0f, 100.0f);
+		ImGui::DragFloat("Acceleration", &agent.acceleration, 0.1f, 0.0f, 100.0f);
+		ImGui::DragFloat("Stopping Distance", &agent.stoppingDistance, 0.01f, 0.0f, 10.0f);
+		ImGui::Checkbox("Auto Rotate", &agent.autoRotate);
+
+#if defined(EE_EDITOR)
+		ImGui::SeparatorText("Debug");
+		ImGui::Checkbox("Show Path", &agent.debugDrawPath);
+#endif
+	}
+
 	void HierarchyInspector::DrawParticleEmitterComponent(EntityID entity)
 	{
 		//if (!ImGui::CollapsingHeader("Particle Emitter", ImGuiTreeNodeFlags_DefaultOpen))
@@ -1487,6 +1509,9 @@ namespace Ermine::editor {
 		}
 		if (ImGui::MenuItem("NavMesh") && !ECS::GetInstance().HasComponent<NavMeshComponent>(entity)) {
 			ECS::GetInstance().AddComponent(entity, NavMeshComponent());
+		}
+		if (ImGui::MenuItem("NavMeshAgent") && !ECS::GetInstance().HasComponent<NavMeshAgent>(entity)) {
+			ECS::GetInstance().AddComponent(entity, NavMeshAgent());
 		}
 		if (ImGui::MenuItem("ParticleEmitter") && !ECS::GetInstance().HasComponent<ParticleEmitter>(entity)) {
 			ECS::GetInstance().AddComponent(entity, ParticleEmitter());

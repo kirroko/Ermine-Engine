@@ -349,6 +349,7 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClInclude Include="include\MeshTypes.h" />
     <ClInclude Include="include\Model.h" />
     <ClInclude Include="include\NavMesh.h" />
+    <ClInclude Include="include\NavMeshAgentSystem.h" />
     <ClInclude Include="include\Particles.h" />
     <ClInclude Include="include\PhysicDebugRenderer.h" />
     <ClInclude Include="include\Physics.h" />
@@ -420,6 +421,7 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClCompile Include="src\Math\Matrix3x3.cpp" />
     <ClCompile Include="src\Math\Matrix4x4.cpp" />
     <ClCompile Include="src\NavMesh\NavMesh.cpp" />
+    <ClCompile Include="src\NavMesh\NavMeshAgentSystem.cpp" />
     <ClCompile Include="src\Object\GameObject.cpp" />
     <ClCompile Include="src\Object\GameObjectFactory.cpp" />
     <ClCompile Include="src\Particles\Particles.cpp" />

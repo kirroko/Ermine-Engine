@@ -18,6 +18,8 @@ namespace Ermine {
         void DebugDraw();
         void DebugHighLight();
 
+        bool ComputeStraightPath(EntityID navEntity, const Vec3& start, const Vec3& end, std::vector<Vec3>& outPath);
+
     private:
         void DestroyBuild(NavMeshComponent& c);
         void DestroyRuntime(NavMeshComponent& c);
