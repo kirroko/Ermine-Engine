@@ -184,6 +184,10 @@ Ermine::Mesh GeometryFactory::CreateCube(float width, float height, float depth)
 	mesh.primitive.type = "Cube";
 	mesh.primitive.size = Vec3{ width, height, depth };
 
+	// Set AABB for frustum culling (cube extents are half-sizes)
+	mesh.aabbMin = Vec3{ -w, -h, -d };
+	mesh.aabbMax = Vec3{  w,  h,  d };
+
     // Register mesh with MeshManager for indirect rendering
     auto renderer = Ermine::ECS::GetInstance().GetSystem<Renderer>();
     if (renderer) {
@@ -258,6 +262,10 @@ Ermine::Mesh GeometryFactory::CreateQuad(float width, float height)
 	mesh.kind = MeshKind::Primitive;
 	mesh.primitive.type = "Quad";
 	mesh.primitive.size = Vec3{ width, height, 0.0f };
+
+	// Set AABB for frustum culling (quad extents are half-sizes)
+	mesh.aabbMin = Vec3{ -w, -h, 0.0f };
+	mesh.aabbMax = Vec3{  w,  h, 0.0f };
 
     // Register mesh with MeshManager for indirect rendering
     auto renderer = Ermine::ECS::GetInstance().GetSystem<Renderer>();
@@ -374,6 +382,10 @@ Ermine::Mesh GeometryFactory::CreateSphere(float radius, unsigned int sectors, u
 	mesh.kind = MeshKind::Primitive;
 	mesh.primitive.type = "Sphere";
 	mesh.primitive.size = Vec3{ radius, radius, radius };
+
+	// Set AABB for frustum culling (sphere is contained within a cube of side length 2*radius)
+	mesh.aabbMin = Vec3{ -radius, -radius, -radius };
+	mesh.aabbMax = Vec3{  radius,  radius,  radius };
 
     // Register mesh with MeshManager for indirect rendering
     auto renderer = Ermine::ECS::GetInstance().GetSystem<Renderer>();

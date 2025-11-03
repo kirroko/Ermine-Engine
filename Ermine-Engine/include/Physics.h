@@ -1,9 +1,14 @@
-/* Start Header ************************************************************************/
+﻿/* Start Header ************************************************************************/
 /*!
 \file       Physics.h
 \author     Tan Si Han, t.sihan, 2301264, t.sihan\@digipen.edu
 \date       Sept 02, 2025
 \brief      This file contains the declaration of the Physics structure.
+
+			The Physics class serves as a wrapper around the Jolt Physics
+			engine, managing initialization, simulation updates, body creation,
+			ECS synchronization, and debug visualization. It integrates with
+			the ECS system to keep physics bodies and entities consistent.
 
 Copyright (C) 2025 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents without the
@@ -26,6 +31,11 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <Jolt/Core/TempAllocator.h>
 #include <Jolt/RegisterTypes.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
+#include <Jolt/Physics/Collision/RayCast.h>
+#include <Jolt/Physics/Collision/NarrowPhaseQuery.h>
+#include <Jolt/Physics/Collision/CastResult.h>
+#include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
+
 #include "ECS.h"
 #include "Components.h"
 #include "GeometryFactory.h"
@@ -35,16 +45,20 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <queue>
 
 using namespace JPH;
+
 namespace Ermine
 {
+	// ------------------------------- Debug Settings -------------------------------
+	//! Settings for how bodies are visualized in the physics debug renderer.///////
 	struct BodyDrawSettings
 	{
 		bool mDrawShapeWireframe = true;   // toggle wireframe drawing
-		bool mDrawInactiveBodies = true;   // optionally draw inactive bodies
-		bool mDrawCenterOfMass = false;    // optional
-		bool mDrawBodyAxes = false;        // optional
+		bool mDrawInactiveBodies = true;   // draw inactive bodies
+		bool mDrawCenterOfMass = false;
+		bool mDrawBodyAxes = false;
 	};
 
+	// ------------------------------- Physics Class -------------------------------
 	class Physics : public System
 	{
 	public:
@@ -83,11 +97,6 @@ namespace Ermine
 		*************************************************************************/
 		void Update(float deltaTime);
 
-		//place holder, will be remove
-		//BodyID CreateStaticBox(const JPH::Vec3& halfExtents, const RVec3& position);
-		//BodyID CreateDynamicSphere(float radius, const RVec3& position, const JPH::Vec3& initialVelocity);
-		//void CreatePhysicsBox(const Ermine::Vec3& position, const Ermine::Vec3& size, float mass);
-
 		/*!***********************************************************************
 		  \brief
 			Rebuilds the list of physics bodies from ECS entities. Old bodies are
@@ -107,6 +116,14 @@ namespace Ermine
 
 		/*!***********************************************************************
 		  \brief
+			Finds the ECS EntityID linked to a physics body.
+		  \param[in] bodyID
+			The JPH::BodyID to look up.
+		*************************************************************************/
+		EntityID GetEntityID(JPH::BodyID bodyID);
+
+		/*!***********************************************************************
+		  \brief
 			Provides access to the Jolt BodyInterface for manual body operations.
 		  \return
 			Reference to the BodyInterface instance.
@@ -115,25 +132,64 @@ namespace Ermine
 
 		/*!***********************************************************************
 		  \brief
-			Renders the current physics world using Jolt's debug renderer.
-			Typically used for wireframe visualization in the editor.
+			Debug setting for drawing wireframe
 		*************************************************************************/
 		void DrawDebug();
 
+		/*!***********************************************************************
+		  \brief
+			Draws wireframe
+		*************************************************************************/
 		void DrawDebugPhysics();
 
+		/*!***********************************************************************
+		  \brief
+			move debugrenderer
+		*************************************************************************/
 		void AttachDebugRenderer(std::shared_ptr<MyDebugRenderer> renderer);
 
-		std::shared_ptr<MyDebugRenderer> mDebugRenderer;
-
-		bool wireframe;
-
+		//! Enumeration representing collision event type.
 		enum class CollisionEventType : char { Begin, Stay, End };
 
+		/*!***********************************************************************
+		  \brief
+			Handles collision events between two bodies, invoked when contact
+			is detected or ended.
+		*************************************************************************/
 		void HandleCollisionEvent(const Body& a, const Body& b, CollisionEventType type);
 
+		/*!***********************************************************************
+		  \brief
+			Simplified version using BodyIDs instead of references.
+		*************************************************************************/
 		void HandleCollisionEvent(JPH::BodyID a, JPH::BodyID b, CollisionEventType type);
+		
+		/*!***********************************************************************
+		  \brief
+			Performs a raycast and returns the first hit.
+		*************************************************************************/
+		bool Raycast(const JPH::RVec3& origin, const JPH::RVec3& direction, float maxDistance, JPH::RayCastResult& outResult);
+
+		/*!***********************************************************************
+		  \brief
+			Performs a raycast and returns all hits along the ray's path.
+		*************************************************************************/
+		std::vector<JPH::RayCastResult> RaycastAll(const JPH::RVec3& origin, const JPH::RVec3& direction, float maxDistance);
+		
+		//! Shared pointer to the debug renderer used for visualizing physics.
+		std::shared_ptr<MyDebugRenderer> mDebugRenderer;
+		
+		//! Whether to draw wireframe physics bodies.
+		bool wireframe;
+
 	private:
+
+		/*!***********************************************************************
+		  \brief
+			Converts pending BodyID collision pairs into ECS-level collision events.
+		*************************************************************************/
+		void FlushPendingPairsToEntityEvents();
+
 		// --- Important: allocator first, job system second, physics system third ---
 		JPH::TempAllocatorImpl       mTempAllocator;
 		JPH::JobSystemThreadPool     mJobSystem;
@@ -146,10 +202,13 @@ namespace Ermine
 		class MyBodyActivationListener* mBodyActivationListener = nullptr;
 		class MyContactListener* mContactListener = nullptr;
 
+		//Store entity and bodyID
 		std::unordered_map<EntityID, JPH::BodyID> mEntityToBody;
 
+		//Debug Rendering
 		JPH::BodyManager::DrawSettings mBodyDrawSettings{};
 
+		//Collision event Queue
 		std::queue<std::tuple<CollisionEventType, EntityID, EntityID, bool>> mCollisionEvent;
 
 		struct PendingPair
@@ -160,10 +219,5 @@ namespace Ermine
 		};
 		std::mutex mPendingMutex;
 		std::vector<PendingPair> mPendingPairs;
-
-		void FlushPendingPairsToEntityEvents();
-
-		//not in used
-		//void SetupLayers();
 	};
 }

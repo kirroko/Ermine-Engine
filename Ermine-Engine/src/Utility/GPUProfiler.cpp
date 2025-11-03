@@ -255,6 +255,13 @@ void GPUProfiler::TrackMemoryDeallocation(uint64_t sizeBytes, const std::string&
     }
 }
 
+void GPUProfiler::SetCulledMeshesCount(uint32_t count)
+{
+    if (!s_Initialized)
+        return;
+	s_CurrentMetrics.culledMeshes = static_cast<uint32_t>(count);
+}
+
 void GPUProfiler::ProcessTimerQueries()
 {
     if (!s_Initialized || !IsTimerQuerySupported() || s_TimerQueries.empty())

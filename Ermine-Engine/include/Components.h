@@ -722,6 +722,10 @@ namespace Ermine
 		MeshAssetDesc     asset;
 		std::string registeredMeshID; // Mesh ID registered in MeshManager
 
+		// AABB for frustum culling (in local/model space)
+		Vec3 aabbMin{ -1.0f, -1.0f, -1.0f };
+		Vec3 aabbMax{  1.0f,  1.0f,  1.0f };
+
 		Mesh() = default;
 
 		Mesh(const std::shared_ptr<graphics::VertexArray>& vao, const std::shared_ptr<graphics::VertexBuffer>& vbo, const std::shared_ptr<graphics::IndexBuffer>& ibo) :
@@ -1948,12 +1952,14 @@ namespace Ermine
 	*************************************************************************/
 	struct PhysicComponent
 	{
-		JPH::BodyID bodyID{ JPH::BodyID::cInvalidBodyID };
-		JPH::Body* body{ nullptr };
 		PhysicsBodyType bodyType{ PhysicsBodyType::Rigid };
 		JPH::EMotionType motionType{ JPH::EMotionType::Static };
 		float mass{ 0.0f };
 		ShapeType shapeType{ ShapeType::Box };
+		Ermine::Vec3 collidersize{ 1,1,1 };
+
+		JPH::BodyID bodyID{ JPH::BodyID::cInvalidBodyID };
+		JPH::Body* body{ nullptr };
 		std::vector<glm::vec3> customMeshVertices;   // For custom mesh
 		JPH::RefConst<JPH::Shape> shapeRef;
 
@@ -1982,7 +1988,8 @@ namespace Ermine
 			xproperty::obj_member<"bodyType", &PhysicComponent::bodyType>,
 			xproperty::obj_member<"motionType", &PhysicComponent::motionType>,
 			xproperty::obj_member<"mass", &PhysicComponent::mass>,
-			xproperty::obj_member<"shapeType", &PhysicComponent::shapeType>
+			xproperty::obj_member<"shapeType", &PhysicComponent::shapeType>,
+			xproperty::obj_member<"collidersize", &PhysicComponent::collidersize>
 		)
 	};
 
@@ -2059,9 +2066,9 @@ namespace Ermine
 	{
 		std::shared_ptr<graphics::Animator> m_animator;         // Per-entity animator (independent state)
 		int boneTransformOffset = -1;                           // Per-entity bone offset in SkeletalSSBO (allocated by AnimationManager)
-		std::shared_ptr<AnimationGraph> m_animationGraph; // Handles animation states and transitions
+		std::shared_ptr<AnimationGraph> m_animationGraph;		// Handles animation states and transitions
 
-		AnimationComponent() = default;
+		AnimationComponent() : m_animationGraph(std::make_shared<AnimationGraph>()) {}
 		explicit AnimationComponent(const std::shared_ptr<graphics::Model>& model)
 			: m_animator(std::make_shared<graphics::Animator>(model)), m_animationGraph(std::make_shared<AnimationGraph>()) {}
 
