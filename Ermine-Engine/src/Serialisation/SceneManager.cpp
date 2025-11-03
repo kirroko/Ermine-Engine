@@ -356,6 +356,7 @@ void SceneManager::LoadTemp()
 {
     ClearScene();
     OpenScene("../Temp/Temp.scene");
+    RemoveTemp();
 }
 
 void SceneManager::RemoveTemp()
