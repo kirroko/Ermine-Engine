@@ -824,12 +824,18 @@ namespace Ermine::graphics
         // Draw data for geometry/shadow passes (opaque, non-custom shader meshes)
         std::vector<DrawElementsIndirectCommand> m_StandardDrawCommands;
         std::vector<DrawInfo> m_StandardDrawInfos;
+		GLuint m_StandardDrawCommandsVertexCount = 0;
+		GLuint m_StandardDrawCommandsIndexCount = 0;
         std::vector<DrawElementsIndirectCommand> m_SkinnedDrawCommands;
         std::vector<DrawInfo> m_SkinnedDrawInfos;
+		GLuint m_SkinnedDrawCommandsVertexCount = 0;
+		GLuint m_SkinnedDrawCommandsIndexCount = 0;
 
         // Draw data for forward pass (transparent + custom shader meshes)
         std::vector<DrawElementsIndirectCommand> m_ForwardPassDrawCommands;
         std::vector<DrawInfo> m_ForwardPassDrawInfos;
+		GLuint m_ForwardPassDrawCommandsVertexCount = 0;
+		GLuint m_ForwardPassDrawCommandsIndexCount = 0;
 
         // Cached shadow pass draw commands (reused to avoid per-frame allocation)
         std::vector<DrawElementsIndirectCommand> m_ShadowStandardCommands;

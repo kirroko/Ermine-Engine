@@ -455,7 +455,7 @@ void EditorGUI::ProfilingWindow()
     ImGui::Text("Draw Calls: %u", metrics.drawCallCount);
     ImGui::Text("Tris: %s", FormatNumber(metrics.triangleCount).c_str());
     ImGui::Text("Verts: %s", FormatNumber(metrics.vertexCount).c_str());
-	ImGui::Text("Meshes Culled: %s", FormatNumber(metrics.culledMeshes));
+	ImGui::Text("Meshes Culled: %u", metrics.culledMeshes);
 
     ImGui::Separator();
 

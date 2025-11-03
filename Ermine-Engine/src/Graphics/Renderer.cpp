@@ -952,7 +952,7 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 			static_cast<GLsizei>(m_StandardDrawCommands.size()),
 			0
 		);
-		GPUProfiler::TrackDrawCall();
+		GPUProfiler::TrackDrawCall(m_StandardDrawCommandsVertexCount, m_StandardDrawCommandsIndexCount);
 
 		// Unbind
 		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
@@ -984,7 +984,7 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 			static_cast<GLsizei>(m_SkinnedDrawCommands.size()),
 			0
 		);
-		GPUProfiler::TrackDrawCall();
+		GPUProfiler::TrackDrawCall(m_SkinnedDrawCommandsVertexCount, m_SkinnedDrawCommandsIndexCount);
 
 		// Unbind
 		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
@@ -1012,6 +1012,14 @@ void Renderer::CompileDrawData()
 	m_SkinnedDrawInfos.clear();
 	m_ForwardPassDrawCommands.clear();
 	m_ForwardPassDrawInfos.clear();
+
+	// Reset vertex/index counters
+	m_StandardDrawCommandsVertexCount = 0;
+	m_StandardDrawCommandsIndexCount = 0;
+	m_SkinnedDrawCommandsVertexCount = 0;
+	m_SkinnedDrawCommandsIndexCount = 0;
+	m_ForwardPassDrawCommandsVertexCount = 0;
+	m_ForwardPassDrawCommandsIndexCount = 0;
 
 	// Reserve space for geometry pass (opaque)
 	m_StandardDrawCommands.reserve(m_Entities.size());
@@ -1168,11 +1176,15 @@ void Renderer::CompileDrawData()
 					// Forward pass (transparent/custom shader)
 					m_ForwardPassDrawCommands.push_back(cmd);
 					m_ForwardPassDrawInfos.push_back(info);
+					m_ForwardPassDrawCommandsVertexCount += meshData->vertexCount;
+					m_ForwardPassDrawCommandsIndexCount += cmd.count;
 				}
 				else {
 					// Geometry pass (opaque, standard shader)
 					m_StandardDrawCommands.push_back(cmd);
 					m_StandardDrawInfos.push_back(info);
+					m_StandardDrawCommandsVertexCount += meshData->vertexCount;
+					m_StandardDrawCommandsIndexCount += cmd.count;
 				}
 			}
 		}
@@ -1291,11 +1303,15 @@ void Renderer::CompileDrawData()
 				// Forward pass (transparent/custom shader)
 				m_ForwardPassDrawCommands.push_back(cmd);
 				m_ForwardPassDrawInfos.push_back(info);
+				m_ForwardPassDrawCommandsVertexCount += meshData->vertexCount;
+				m_ForwardPassDrawCommandsIndexCount += cmd.count;
 			}
 			else {
 				// Geometry pass (opaque, standard shader)
 				m_StandardDrawCommands.push_back(cmd);
 				m_StandardDrawInfos.push_back(info);
+				m_StandardDrawCommandsVertexCount += meshData->vertexCount;
+				m_StandardDrawCommandsIndexCount += cmd.count;
 			}
 		}
 	}
@@ -1416,15 +1432,20 @@ void Renderer::CompileDrawData()
 				// Forward pass (transparent/custom shader)
 				m_ForwardPassDrawCommands.push_back(cmd);
 				m_ForwardPassDrawInfos.push_back(info);
+				m_ForwardPassDrawCommandsVertexCount += meshData->vertexCount;
+				m_ForwardPassDrawCommandsIndexCount += cmd.count;
 			}
 			else {
 				// Geometry pass (opaque, standard shader)
 				m_SkinnedDrawCommands.push_back(cmd);
 				m_SkinnedDrawInfos.push_back(info);
+				m_SkinnedDrawCommandsVertexCount += meshData->vertexCount;
+				m_SkinnedDrawCommandsIndexCount += cmd.count;
 			}
 		}
 	}
 	GPUProfiler::SetCulledMeshesCount(culledMeshes);
+
 }
 
 /**
@@ -2890,7 +2911,7 @@ void Renderer::RenderForwardPass(const Mtx44& view, const Mtx44& projection)
 		static_cast<GLsizei>(m_ForwardPassDrawCommands.size()),
 		0
 	);
-	GPUProfiler::TrackDrawCall();
+	GPUProfiler::TrackDrawCall(m_ForwardPassDrawCommandsVertexCount, m_ForwardPassDrawCommandsIndexCount);
 
 	// Unbind
 	glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
@@ -3554,7 +3575,7 @@ void Renderer::RenderShadowMapInstanced()
 		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_MeshManager.m_DrawCommandsSSBO);
 		glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_INT, nullptr,
 			static_cast<GLsizei>(m_StandardDrawCommands.size()), 0);
-		GPUProfiler::TrackDrawCall();
+		GPUProfiler::TrackDrawCall(m_StandardDrawCommandsVertexCount, m_StandardDrawCommandsIndexCount);
 		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
 		glBindVertexArray(0);
 	}
@@ -3568,7 +3589,7 @@ void Renderer::RenderShadowMapInstanced()
 		size_t offset = m_StandardDrawCommands.size() * sizeof(DrawElementsIndirectCommand);
 		glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_INT, reinterpret_cast<const void*>(offset),
 			static_cast<GLsizei>(m_SkinnedDrawCommands.size()), 0);
-		GPUProfiler::TrackDrawCall();
+		GPUProfiler::TrackDrawCall(m_SkinnedDrawCommandsVertexCount, m_SkinnedDrawCommandsIndexCount);
 		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
 		glBindVertexArray(0);
 	}
