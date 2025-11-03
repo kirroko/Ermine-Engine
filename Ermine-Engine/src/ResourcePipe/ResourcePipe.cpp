@@ -412,7 +412,27 @@ namespace Ermine {
         const Image* sourceImages = image.GetImages();
         size_t sourceImageCount = image.GetImageCount();
 
-        // ✅ Step 1: Generate mipmaps FIRST (before compression)
+        // ✅ Step 1: Flip based on target format
+        // Compressed formats need flipping during conversion
+        // Uncompressed formats will be flipped during loading
+        bool isCompressedFormat = IsCompressed(settings.targetFormat);
+
+        ScratchImage flipped;
+        if (isCompressedFormat) {
+            hr = FlipRotate(sourceImages, sourceImageCount, metadata,
+                TEX_FR_FLIP_VERTICAL, flipped);
+            if (SUCCEEDED(hr)) {
+                sourceImages = flipped.GetImages();
+                sourceImageCount = flipped.GetImageCount();
+                metadata = flipped.GetMetadata();
+                std::cout << "    Flipped texture vertically for OpenGL (compressed format)" << std::endl;
+            }
+            else {
+                std::cerr << "    Warning: Failed to flip texture" << std::endl;
+            }
+        }
+
+        // ✅ Step 2: Generate mipmaps (after flip, before compression)
         ScratchImage mipChain;
         if (settings.generateMipmaps && metadata.mipLevels == 1) {
             hr = GenerateMipMaps(sourceImages, sourceImageCount, metadata,
@@ -425,9 +445,7 @@ namespace Ermine {
             }
         }
 
-        // ✅ Step 2: Check if target format is compressed (BC formats)
-        bool isCompressedFormat = IsCompressed(settings.targetFormat);
-
+        // ✅ Step 3: Compress or Convert
         ScratchImage finalImage;
 
         if (isCompressedFormat) {
@@ -436,12 +454,12 @@ namespace Ermine {
 
             hr = Compress(sourceImages, sourceImageCount, metadata,
                 settings.targetFormat,
-                TEX_COMPRESS_DEFAULT,  // Can use TEX_COMPRESS_PARALLEL for speed
+                TEX_COMPRESS_DEFAULT,
                 TEX_THRESHOLD_DEFAULT,
                 finalImage);
 
             if (FAILED(hr)) {
-                std::cerr << "    Failed to compress texture" << std::endl;
+                std::cerr << "    Failed to compress texture (HRESULT: 0x" << std::hex << hr << std::dec << ")" << std::endl;
                 return false;
             }
         }
@@ -466,13 +484,16 @@ namespace Ermine {
                 if (settings.generateMipmaps && mipChain.GetImageCount() > 0) {
                     finalImage = std::move(mipChain);
                 }
+                else if (flipped.GetImageCount() > 0) {
+                    finalImage = std::move(flipped);
+                }
                 else {
                     finalImage = std::move(image);
                 }
             }
         }
 
-        // ✅ Step 3: Save to DDS
+        // ✅ Step 4: Save to DDS
         std::cout << "    Saving DDS file..." << std::endl;
         hr = SaveToDDSFile(finalImage.GetImages(), finalImage.GetImageCount(),
             finalImage.GetMetadata(), DDS_FLAGS_NONE, wOutput.c_str());

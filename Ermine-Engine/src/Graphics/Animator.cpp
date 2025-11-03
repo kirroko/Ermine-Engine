@@ -441,7 +441,7 @@ namespace Ermine::graphics
         double playbackSpeed = 1.0;
         if (ECS::GetInstance().HasComponent<AnimationComponent>(entity)) {
             auto& graph = ECS::GetInstance().GetComponent<AnimationComponent>(entity).m_animationGraph;
-            playbackSpeed = graph->playbackSpeed;
+            if (graph) playbackSpeed = graph->playbackSpeed;
         }
 
         // Advance animation time in ticks

@@ -264,6 +264,7 @@ namespace Ermine::graphics {
         MeshSubset subset;
         subset.meshID = meshID;
         subset.vertexOffset = static_cast<uint32_t>(m_StagedVertices.size());
+		subset.vertexCount = static_cast<uint32_t>(vertices.size());
         subset.indexOffset = static_cast<uint32_t>(m_StagedIndices.size());
         subset.indexCount = static_cast<uint32_t>(indices.size());
         subset.baseVertex = subset.vertexOffset;
@@ -303,6 +304,7 @@ namespace Ermine::graphics {
         MeshSubset subset;
         subset.meshID = meshID;
         subset.vertexOffset = static_cast<uint32_t>(m_StagedSkinnedVertices.size());
+        subset.vertexCount = static_cast<uint32_t>(vertices.size());
         subset.indexOffset = static_cast<uint32_t>(m_StagedIndices.size());
         subset.indexCount = static_cast<uint32_t>(indices.size());
         subset.baseVertex = subset.vertexOffset;

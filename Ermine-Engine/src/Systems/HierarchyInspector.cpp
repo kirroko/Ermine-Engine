@@ -656,7 +656,10 @@ namespace Ermine::editor {
 			{ "Emissive",  "materialEmissiveMap", nullptr,                 "materialHasEmissiveMap", nullptr },
 		};
 
-		// Helper to render ONE row as a drag-and-drop target
+		// Track if material was changed for GPU update
+		bool materialChanged = false;
+
+		// Helper to render ONE row with dropdown texture selection and drag-and-drop
 		auto showTextureSlotDropTarget = [&](const SlotRow& r)
 			{
 				// 1. Resolve current texture bound in this slot
@@ -674,7 +677,6 @@ namespace Ermine::editor {
 				else {
 					slotLabelStr = "<None>";
 				}
-				const char* displayName = slotLabelStr.c_str();
 
 				ImGui::PushID(r.slot);
 
@@ -682,33 +684,101 @@ namespace Ermine::editor {
 				ImGui::TextUnformatted(r.label);
 				ImGui::SameLine();
 
-				// A button-looking box that:
-				//  - shows the current texture name
-				//  - can be right-clicked to clear
-				//  - acts as a drop target
-				ImVec2 boxSize = ImVec2(220.0f, 0.0f);
-				ImGui::Button(displayName, boxSize);
+				// DROPDOWN SELECTION: Build texture list from AssetManager
+				auto& assetManager = AssetManager::GetInstance();
+				const auto& loadedTextures = assetManager.GetLoadedTextures();
 
-				// Hover tooltip with full path (and any debug info you want)
+				std::vector<std::pair<std::string, std::shared_ptr<graphics::Texture>>> textureList;
+				textureList.emplace_back("<None>", nullptr);
+
+				for (const auto& [path, texture] : loadedTextures) {
+					if (texture && texture->IsValid()) {
+						std::filesystem::path p(path);
+						std::string displayName = p.filename().string();
+						if (displayName.empty()) displayName = path;
+						textureList.emplace_back(displayName, texture);
+					}
+				}
+
+				// Combo box for texture selection
+				std::string comboLabel = "##TextureCombo_" + std::string(r.slot);
+				if (ImGui::BeginCombo(comboLabel.c_str(), slotLabelStr.c_str(), ImGuiComboFlags_None)) {
+					for (size_t i = 0; i < textureList.size(); i++) {
+						const auto& [name, tex] = textureList[i];
+						bool isSelected = false;
+
+						if (i == 0) {
+							// "<None>" is selected if current texture is null
+							isSelected = (curTex == nullptr || !curTex->IsValid());
+						} else {
+							// Match by texture pointer or filepath
+							isSelected = (curTex == tex) ||
+										 (curTex && tex && curTex->GetFilePath() == tex->GetFilePath());
+						}
+
+						if (ImGui::Selectable(name.c_str(), isSelected)) {
+							if (tex && tex->IsValid()) {
+								// Set texture
+								gm->SetTexture(r.slot, tex);
+								if (r.altSlot) gm->SetTexture(r.altSlot, tex);
+
+								// Set flags
+								if (r.hasFlag) gm->SetBool(r.hasFlag, true);
+								if (r.hasFlagAlias) gm->SetBool(r.hasFlagAlias, true);
+
+								// Register texture with renderer and get array index
+								auto renderer = ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>();
+								int arrayIndex = renderer->RegisterTexture(tex);
+								gm->SetTextureArrayIndex(r.slot, arrayIndex);
+								if (r.altSlot) gm->SetTextureArrayIndex(r.altSlot, arrayIndex);
+
+								// Mark for GPU update
+								renderer->BuildTextureArray();
+								materialChanged = true;
+							} else {
+								// Clear texture ("<None>" selected)
+								gm->SetTexture(r.slot, nullptr);
+								if (r.altSlot) gm->SetTexture(r.altSlot, nullptr);
+								if (r.hasFlag) gm->SetBool(r.hasFlag, false);
+								if (r.hasFlagAlias) gm->SetBool(r.hasFlagAlias, false);
+								gm->SetTextureArrayIndex(r.slot, -1);
+								if (r.altSlot) gm->SetTextureArrayIndex(r.altSlot, -1);
+								materialChanged = true;
+							}
+						}
+
+						if (isSelected) {
+							ImGui::SetItemDefaultFocus();
+						}
+					}
+					ImGui::EndCombo();
+				}
+
+				// Hover tooltip with full path
 				if (ImGui::IsItemHovered() && curTex && curTex->IsValid()) {
 					ImGui::BeginTooltip();
 					ImGui::Text("File: %s", curTex->GetFilePath().c_str());
+					int arrayIdx = gm->GetTextureArrayIndex(r.slot);
+					if (arrayIdx >= 0) {
+						ImGui::Text("Array Index: %d", arrayIdx);
+					}
 					ImGui::EndTooltip();
 				}
 
 				// Right-click popup menu to Clear this texture
 				if (ImGui::BeginPopupContextItem("TexSlotContext")) {
 					if (ImGui::MenuItem("Clear Texture")) {
-						// same logic as your combo 'currentIdx == 0' branch
 						gm->SetTexture(r.slot, nullptr);
-						if (r.altSlot)      gm->SetTexture(r.altSlot, nullptr);
-						if (r.hasFlag)      gm->SetBool(r.hasFlag, false);
+						if (r.altSlot) gm->SetTexture(r.altSlot, nullptr);
+						if (r.hasFlag) gm->SetBool(r.hasFlag, false);
 						if (r.hasFlagAlias) gm->SetBool(r.hasFlagAlias, false);
+						gm->SetTextureArrayIndex(r.slot, -1);
+						if (r.altSlot) gm->SetTextureArrayIndex(r.altSlot, -1);
 					}
 					ImGui::EndPopup();
 				}
 
-				// Accept drag & drop from AssetBrowser
+				// Accept drag & drop from AssetBrowser (keeping this as bonus feature)
 				if (ImGui::BeginDragDropTarget()) {
 					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_FILE")) {
 						const char* droppedPathCStr = static_cast<const char*>(payload->Data);
@@ -728,25 +798,27 @@ namespace Ermine::editor {
 								ext == ".hdr");
 
 						if (isTextureFile) {
-							// Ask AssetManager for / load the texture.
-							// Adjust this call for your engine's API:
 							std::shared_ptr<graphics::Texture> newTex =
 								AssetManager::GetInstance().LoadTexture(droppedPath.string());
 
 							if (newTex && newTex->IsValid()) {
 								// Assign to this slot
 								gm->SetTexture(r.slot, newTex);
-
-								// Mirror to altSlot if provided (e.g. albedo alias)
-								if (r.altSlot)
-									gm->SetTexture(r.altSlot, newTex);
+								if (r.altSlot) gm->SetTexture(r.altSlot, newTex);
 
 								// Flip presence flags true
-								if (r.hasFlag)
-									gm->SetBool(r.hasFlag, true);
+								if (r.hasFlag) gm->SetBool(r.hasFlag, true);
+								if (r.hasFlagAlias) gm->SetBool(r.hasFlagAlias, true);
 
-								if (r.hasFlagAlias)
-									gm->SetBool(r.hasFlagAlias, true);
+								// Register texture with renderer and get array index
+								auto renderer = ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>();
+								int arrayIndex = renderer->RegisterTexture(newTex);
+								gm->SetTextureArrayIndex(r.slot, arrayIndex);
+								if (r.altSlot) gm->SetTextureArrayIndex(r.altSlot, arrayIndex);
+
+								// Mark for GPU update
+								renderer->BuildTextureArray();
+								materialChanged = true;
 							}
 							else {
 								EE_CORE_WARN("Failed to load dropped texture: {}", droppedPath.string());
@@ -767,6 +839,16 @@ namespace Ermine::editor {
 		// Draw all rows
 		for (const auto& row : rows) {
 			showTextureSlotDropTarget(row);
+		}
+
+		// Update material SSBO on GPU if textures were changed
+		if (materialChanged) {
+			auto renderer = ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>();
+			if (renderer) {
+				uint32_t materialIndex = renderer->GetMaterialIndex(entity);
+				auto ssboData = gm->GetSSBOData();
+				renderer->UpdateMaterialSSBO(ssboData, materialIndex);
+			}
 		}
 	}
 
@@ -986,6 +1068,23 @@ namespace Ermine::editor {
 				if (ImGui::Combo("Shape Type", &idx, names, (int)ShapeType::Total)) {
 					p.m_Value.set<ShapeType>(static_cast<ShapeType>(idx));
 					xproperty::sprop::setProperty(err, pc, p, ctx);
+					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
+				}
+			}
+			else if (guid == xproperty::settings::var_type<Ermine::Vec3>::guid_v && label == "Collidersize")
+			{
+				Ermine::Vec3 v = p.m_Value.get<Ermine::Vec3>();
+				float arr[3] = { v.x, v.y, v.z };
+
+				if (ImGui::DragFloat3("Collider Size", arr, 0.05f, 0.0f, 100.0f))
+				{
+					v.x = arr[0];
+					v.y = arr[1];
+					v.z = arr[2];
+					p.m_Value.set<Ermine::Vec3>(v);
+					xproperty::sprop::setProperty(err, pc, p, ctx);
+
+					// Rebuild physics body with updated size
 					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
 				}
 			}
@@ -1465,7 +1564,6 @@ namespace Ermine::editor {
 		}
 		if (ImGui::MenuItem("Physics") && !ECS::GetInstance().HasComponent<PhysicComponent>(entity)) {
 			ECS::GetInstance().AddComponent(entity, PhysicComponent());
-			ECS::GetInstance().ResyncAllSignaturesFromStorage();
 			ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
 		}
 		if (ImGui::MenuItem("Audio") && !ECS::GetInstance().HasComponent<AudioComponent>(entity)) {
@@ -1517,5 +1615,7 @@ namespace Ermine::editor {
 			ECS::GetInstance().AddComponent(entity, ParticleEmitter());
 		}
 		// Add more component types as needed
+
+		ECS::GetInstance().ResyncAllSignaturesFromStorage();
 	}
 } // namespace Ermine::editor

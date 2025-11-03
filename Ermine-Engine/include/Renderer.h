@@ -41,6 +41,100 @@ namespace Ermine::graphics
         }
     };
 
+    // Frustum culling support
+    struct Frustum {
+        glm::vec4 planes[6]; // Left, Right, Bottom, Top, Near, Far
+
+        /**
+         * @brief Extract frustum planes from view-projection matrix
+         * @param viewProj Combined view-projection matrix
+         */
+        void ExtractFromViewProjection(const glm::mat4& viewProj) {
+            // Extract using Gribb & Hartmann method
+            // Matrix is accessed as mat[col][row] in GLM (column-major)
+            // We want row vectors, so we transpose the access pattern
+
+            glm::vec4 row0(viewProj[0][0], viewProj[1][0], viewProj[2][0], viewProj[3][0]);
+            glm::vec4 row1(viewProj[0][1], viewProj[1][1], viewProj[2][1], viewProj[3][1]);
+            glm::vec4 row2(viewProj[0][2], viewProj[1][2], viewProj[2][2], viewProj[3][2]);
+            glm::vec4 row3(viewProj[0][3], viewProj[1][3], viewProj[2][3], viewProj[3][3]);
+
+            // Left plane
+            planes[0] = row3 + row0;
+            // Right plane
+            planes[1] = row3 - row0;
+            // Bottom plane
+            planes[2] = row3 + row1;
+            // Top plane
+            planes[3] = row3 - row1;
+            // Near plane
+            planes[4] = row3 + row2;
+            // Far plane
+            planes[5] = row3 - row2;
+
+            // Normalize planes
+            for (int i = 0; i < 6; i++) {
+                float length = glm::length(glm::vec3(planes[i]));
+                if (length > 0.0001f) {
+                    planes[i] /= length;
+                }
+            }
+        }
+
+
+        /**
+         * @brief Get the 8 frustum corners in world space
+         * @param invViewProj Inverse of the view-projection matrix
+         * @return Array of 8 corners [nearBL, nearBR, nearTR, nearTL, farBL, farBR, farTR, farTL]
+         */
+        std::array<glm::vec3, 8> GetCorners(const glm::mat4& invViewProj) const {
+            std::array<glm::vec3, 8> corners;
+
+            // NDC corners of the frustum (normalized device coordinates)
+            // Near plane: z = -1, Far plane: z = 1
+            glm::vec4 ndcCorners[8] = {
+                glm::vec4(-1, -1, -1, 1), // near bottom-left
+                glm::vec4( 1, -1, -1, 1), // near bottom-right
+                glm::vec4( 1,  1, -1, 1), // near top-right
+                glm::vec4(-1,  1, -1, 1), // near top-left
+                glm::vec4(-1, -1,  1, 1), // far bottom-left
+                glm::vec4( 1, -1,  1, 1), // far bottom-right
+                glm::vec4( 1,  1,  1, 1), // far top-right
+                glm::vec4(-1,  1,  1, 1)  // far top-left
+            };
+
+            for (int i = 0; i < 8; i++) {
+                glm::vec4 worldCorner = invViewProj * ndcCorners[i];
+                corners[i] = glm::vec3(worldCorner) / worldCorner.w; // Perspective divide
+            }
+
+            return corners;
+        }
+
+        /**
+         * @brief Test if AABB is inside or intersecting frustum
+         * @param aabbMin AABB minimum in world space
+         * @param aabbMax AABB maximum in world space
+         * @return true if visible (inside or intersecting), false if completely outside
+         */
+        bool TestAABB(const glm::vec3& aabbMin, const glm::vec3& aabbMax) const {
+            // Test AABB against all 6 frustum planes
+            for (int i = 0; i < 6; i++) {
+                // Get positive vertex (furthest point in plane normal direction)
+                glm::vec3 positiveVertex;
+                positiveVertex.x = (planes[i].x >= 0.0f) ? aabbMax.x : aabbMin.x;
+                positiveVertex.y = (planes[i].y >= 0.0f) ? aabbMax.y : aabbMin.y;
+                positiveVertex.z = (planes[i].z >= 0.0f) ? aabbMax.z : aabbMin.z;
+
+                // If positive vertex is outside, AABB is completely outside
+                if (glm::dot(glm::vec3(planes[i]), positiveVertex) + planes[i].w < 0.0f) {
+                    return false; // Outside this plane
+                }
+            }
+            return true; // Inside or intersecting
+        }
+    };
+
     // Lights
 
     /*!***********************************************************************
@@ -78,8 +172,14 @@ namespace Ermine::graphics
     class Renderer : public System
     {
     public:
-		// Mesh Manager - Composition
+		// Mesh Manager
 		MeshManager m_MeshManager;
+
+        size_t culledMeshes = 0;
+
+        // Debug visualization toggles
+        bool m_DebugDrawAABBs = false;
+        bool m_DebugDrawFrustum = false;
 
         // Lighting Pass Parameters
         // SSAO parameters
@@ -150,6 +250,22 @@ namespace Ermine::graphics
         // NavMesh
         void SubmitDebugTriangle(const glm::vec3& a, const glm::vec3& b, const glm::vec3& c, const glm::vec3& color);
         void RenderDebugTriangles(const Mtx44& view, const Mtx44& proj);
+
+        /**
+         * @brief Submit an AABB wireframe for debug visualization
+         * @param min AABB minimum corner in world space
+         * @param max AABB maximum corner in world space
+         * @param color Color of the wireframe
+         */
+        void SubmitDebugAABB(const glm::vec3& min, const glm::vec3& max, const glm::vec3& color);
+
+        /**
+         * @brief Submit frustum wireframe for debug visualization
+         * @param frustum The frustum to visualize
+         * @param invViewProj Inverse view-projection matrix for corner calculation
+         * @param color Color of the wireframe
+         */
+        void SubmitDebugFrustum(const Frustum& frustum, const glm::mat4& invViewProj, const glm::vec3& color);
 
         /**
          * @brief Offscreen buffer structure for rendering to texture
@@ -469,6 +585,12 @@ namespace Ermine::graphics
         void CompileMaterials();
 
         /**
+         * @brief Checks if any materials have been modified and marks for recompilation.
+         * This is called every frame to detect ImGui or runtime material changes.
+         */
+        void CheckMaterialUpdates();
+
+        /**
          * @brief Marks materials as dirty, triggering recompilation on next frame.
          * Call this when materials are added, removed, or modified.
          */
@@ -712,12 +834,18 @@ namespace Ermine::graphics
         // Draw data for geometry/shadow passes (opaque, non-custom shader meshes)
         std::vector<DrawElementsIndirectCommand> m_StandardDrawCommands;
         std::vector<DrawInfo> m_StandardDrawInfos;
+		GLuint m_StandardDrawCommandsVertexCount = 0;
+		GLuint m_StandardDrawCommandsIndexCount = 0;
         std::vector<DrawElementsIndirectCommand> m_SkinnedDrawCommands;
         std::vector<DrawInfo> m_SkinnedDrawInfos;
+		GLuint m_SkinnedDrawCommandsVertexCount = 0;
+		GLuint m_SkinnedDrawCommandsIndexCount = 0;
 
         // Draw data for forward pass (transparent + custom shader meshes)
         std::vector<DrawElementsIndirectCommand> m_ForwardPassDrawCommands;
         std::vector<DrawInfo> m_ForwardPassDrawInfos;
+		GLuint m_ForwardPassDrawCommandsVertexCount = 0;
+		GLuint m_ForwardPassDrawCommandsIndexCount = 0;
 
         // Cached shadow pass draw commands (reused to avoid per-frame allocation)
         std::vector<DrawElementsIndirectCommand> m_ShadowStandardCommands;

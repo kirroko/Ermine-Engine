@@ -692,6 +692,13 @@ namespace Ermine
             return;
         }
 
+        // Check if graph exists
+        if (!graph) {
+            ImGui::Text("Graph is null.");
+            ImGui::End();
+            return;
+        }
+
         ImGui::Columns(2, "AnimationEditorColumns", false);
         ImGui::SetColumnWidth(0, 400.0f);
 
