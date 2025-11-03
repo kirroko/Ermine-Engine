@@ -100,7 +100,7 @@
       <PrecompiledHeaderFile>PreCompile.h</PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
       <PreprocessorDefinitions>EE_PLATFORM_WINDOWS;EE_BUILD_DLL;ERMINE_USE_SPDLOG;GLFW_INCLUDE_NONE;IMGUI_DEFINE_MATH_OPERATORS;GLM_ENABLE_EXPERIMENTAL;_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING;JPH_USE_SUBMERGENCE;JPH_DEBUG_RENDERER;EE_EDITOR;EE_DEBUG;VERBOSE_LOGGING=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>include;..\ThirdParty\GLFW\include;..\ThirdParty\Glad\include;..\ThirdParty\imgui;..\ThirdParty\glm;..\ThirdParty\spdlog\include;..\ThirdParty\stb;..\ThirdParty\Fmod\inc;..\ThirdParty\Mono\include;..\ThirdParty;..\ThirdParty\rapidjson;..\ThirdParty\assimp\include;..\ThirdParty\DirectXTex\inc;..\ThirdParty\xproperty\source;..\ThirdParty\imnodes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;..\ThirdParty\GLFW\include;..\ThirdParty\Glad\include;..\ThirdParty\imgui;..\ThirdParty\glm;..\ThirdParty\spdlog\include;..\ThirdParty\stb;..\ThirdParty\Fmod\inc;..\ThirdParty\Mono\include;..\ThirdParty;..\ThirdParty\rapidjson;..\ThirdParty\assimp\include;..\ThirdParty\DirectXTex\inc;..\ThirdParty\xproperty\source;..\ThirdParty\xresource_pipeline_v2-main\source;..\ThirdParty\xresource_pipeline_v2-main\dependencies\xtextfile\source;..\ThirdParty\xresource_pipeline_v2-main\dependencies\xerr\source;..\ThirdParty\imnodes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -148,7 +148,7 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
       <PrecompiledHeaderFile>PreCompile.h</PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
       <PreprocessorDefinitions>EE_PLATFORM_WINDOWS;EE_BUILD_DLL;ERMINE_USE_SPDLOG;GLFW_INCLUDE_NONE;IMGUI_DEFINE_MATH_OPERATORS;GLM_ENABLE_EXPERIMENTAL;_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING;JPH_USE_SUBMERGENCE;JPH_DEBUG_RENDERER;EE_EDITOR;EE_RELEASE;VERBOSE_LOGGING=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>include;..\ThirdParty\GLFW\include;..\ThirdParty\Glad\include;..\ThirdParty\imgui;..\ThirdParty\glm;..\ThirdParty\spdlog\include;..\ThirdParty\stb;..\ThirdParty\Fmod\inc;..\ThirdParty\Mono\include;..\ThirdParty;..\ThirdParty\rapidjson;..\ThirdParty\assimp\include;..\ThirdParty\DirectXTex\inc;..\ThirdParty\xproperty\source;..\ThirdParty\imnodes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;..\ThirdParty\GLFW\include;..\ThirdParty\Glad\include;..\ThirdParty\imgui;..\ThirdParty\glm;..\ThirdParty\spdlog\include;..\ThirdParty\stb;..\ThirdParty\Fmod\inc;..\ThirdParty\Mono\include;..\ThirdParty;..\ThirdParty\rapidjson;..\ThirdParty\assimp\include;..\ThirdParty\DirectXTex\inc;..\ThirdParty\xproperty\source;..\ThirdParty\xresource_pipeline_v2-main\source;..\ThirdParty\xresource_pipeline_v2-main\dependencies\xtextfile\source;..\ThirdParty\xresource_pipeline_v2-main\dependencies\xerr\source;..\ThirdParty\imnodes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -200,7 +200,7 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
       <PrecompiledHeaderFile>PreCompile.h</PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
       <PreprocessorDefinitions>EE_PLATFORM_WINDOWS;EE_BUILD_DLL;ERMINE_USE_SPDLOG;GLFW_INCLUDE_NONE;IMGUI_DEFINE_MATH_OPERATORS;GLM_ENABLE_EXPERIMENTAL;_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING;JPH_USE_SUBMERGENCE;JPH_DEBUG_RENDERER;EE_GAME;EE_DEBUG;VERBOSE_LOGGING=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>include;..\ThirdParty\GLFW\include;..\ThirdParty\Glad\include;..\ThirdParty\imgui;..\ThirdParty\glm;..\ThirdParty\spdlog\include;..\ThirdParty\stb;..\ThirdParty\Fmod\inc;..\ThirdParty\Mono\include;..\ThirdParty;..\ThirdParty\rapidjson;..\ThirdParty\assimp\include;..\ThirdParty\DirectXTex\inc;..\ThirdParty\xproperty\source;..\ThirdParty\imnodes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;..\ThirdParty\GLFW\include;..\ThirdParty\Glad\include;..\ThirdParty\imgui;..\ThirdParty\glm;..\ThirdParty\spdlog\include;..\ThirdParty\stb;..\ThirdParty\Fmod\inc;..\ThirdParty\Mono\include;..\ThirdParty;..\ThirdParty\rapidjson;..\ThirdParty\assimp\include;..\ThirdParty\DirectXTex\inc;..\ThirdParty\xproperty\source;..\ThirdParty\xresource_pipeline_v2-main\source;..\ThirdParty\xresource_pipeline_v2-main\dependencies\xtextfile\source;..\ThirdParty\xresource_pipeline_v2-main\dependencies\xerr\source;..\ThirdParty\imnodes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -248,7 +248,7 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
       <PrecompiledHeaderFile>PreCompile.h</PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
       <PreprocessorDefinitions>EE_PLATFORM_WINDOWS;EE_BUILD_DLL;ERMINE_USE_SPDLOG;GLFW_INCLUDE_NONE;IMGUI_DEFINE_MATH_OPERATORS;GLM_ENABLE_EXPERIMENTAL;_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING;JPH_USE_SUBMERGENCE;JPH_DEBUG_RENDERER;EE_GAME;EE_RELEASE;VERBOSE_LOGGING=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>include;..\ThirdParty\GLFW\include;..\ThirdParty\Glad\include;..\ThirdParty\imgui;..\ThirdParty\glm;..\ThirdParty\spdlog\include;..\ThirdParty\stb;..\ThirdParty\Fmod\inc;..\ThirdParty\Mono\include;..\ThirdParty;..\ThirdParty\rapidjson;..\ThirdParty\assimp\include;..\ThirdParty\DirectXTex\inc;..\ThirdParty\xproperty\source;..\ThirdParty\imnodes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;..\ThirdParty\GLFW\include;..\ThirdParty\Glad\include;..\ThirdParty\imgui;..\ThirdParty\glm;..\ThirdParty\spdlog\include;..\ThirdParty\stb;..\ThirdParty\Fmod\inc;..\ThirdParty\Mono\include;..\ThirdParty;..\ThirdParty\rapidjson;..\ThirdParty\assimp\include;..\ThirdParty\DirectXTex\inc;..\ThirdParty\xproperty\source;..\ThirdParty\xresource_pipeline_v2-main\source;..\ThirdParty\xresource_pipeline_v2-main\dependencies\xtextfile\source;..\ThirdParty\xresource_pipeline_v2-main\dependencies\xerr\source;..\ThirdParty\imnodes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -295,12 +295,14 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\ThirdParty\xresource_pipeline_v2-main\dependencies\xtextfile\source\xtextfile.h" />
     <ClInclude Include="include\AABB.h" />
     <ClInclude Include="include\AnimationClip.h" />
     <ClInclude Include="include\AnimationGUI.h" />
     <ClInclude Include="include\AnimationManager.h" />
     <ClInclude Include="include\Animator.h" />
     <ClInclude Include="include\AssetBrowser.h" />
+    <ClInclude Include="include\AssetDatabase.h" />
     <ClInclude Include="include\AssetManager.h" />
     <ClInclude Include="include\AudioImGUI.h" />
     <ClInclude Include="include\AudioManager.h" />
@@ -310,6 +312,7 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClInclude Include="include\Components.h" />
     <ClInclude Include="include\ConsoleGUI.h" />
     <ClInclude Include="include\Cubemap.h" />
+    <ClInclude Include="include\DrawCommands.h" />
     <ClInclude Include="include\ECS.h" />
     <ClInclude Include="include\EditorCamera.h" />
     <ClInclude Include="include\EditorGUI.h" />
@@ -321,6 +324,7 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClInclude Include="include\FiniteStateMachine.h" />
     <ClInclude Include="include\FrameController.h" />
     <ClInclude Include="include\GPUProfiler.h" />
+    <ClInclude Include="include\GameCamera.h" />
     <ClInclude Include="include\GameObject.h" />
     <ClInclude Include="include\GameObjectFactory.h" />
     <ClInclude Include="include\GeometryFactory.h" />
@@ -341,6 +345,8 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClInclude Include="include\MathVector.h" />
     <ClInclude Include="include\Matrix3x3.h" />
     <ClInclude Include="include\Matrix4x4.h" />
+    <ClInclude Include="include\MeshManager.h" />
+    <ClInclude Include="include\MeshTypes.h" />
     <ClInclude Include="include\Model.h" />
     <ClInclude Include="include\Particles.h" />
     <ClInclude Include="include\PhysicDebugRenderer.h" />
@@ -349,6 +355,8 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClInclude Include="include\PrefabManager.h" />
     <ClInclude Include="include\Registry.h" />
     <ClInclude Include="include\Renderer.h" />
+    <ClInclude Include="include\ResourcePipe.h" />
+    <ClInclude Include="include\SSBO_Bindings.h" />
     <ClInclude Include="include\Scene.h" />
     <ClInclude Include="include\SceneManager.h" />
     <ClInclude Include="include\ScriptClass.h" />
@@ -357,9 +365,11 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClInclude Include="include\ScriptSystem.h" />
     <ClInclude Include="include\Serialisation.h" />
     <ClInclude Include="include\Shader.h" />
+    <ClInclude Include="include\SkeletalSSBO.h" />
     <ClInclude Include="include\Skybox.h" />
     <ClInclude Include="include\Systems.h" />
     <ClInclude Include="include\Texture.h" />
+    <ClInclude Include="include\TransformMode.h" />
     <ClInclude Include="include\VertexArray.h" />
     <ClInclude Include="include\VertexBuffer.h" />
     <ClInclude Include="include\ViewPortGUI.h" />
@@ -367,6 +377,7 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClInclude Include="include\shadow_config.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\ThirdParty\xresource_pipeline_v2-main\dependencies\xtextfile\source\xtextfile.cpp" />
     <ClCompile Include="src\AssetBrowser\AssetBrowser.cpp" />
     <ClCompile Include="src\AssetManager\AssetManager.cpp" />
     <ClCompile Include="src\AudioManager\AudioManager.cpp" />
@@ -383,11 +394,15 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClCompile Include="src\Graphics\Animator.cpp" />
     <ClCompile Include="src\Graphics\Camera.cpp" />
     <ClCompile Include="src\Graphics\Cubemap.cpp" />
+    <ClCompile Include="src\Graphics\DrawCommands.cpp" />
+    <ClCompile Include="src\Graphics\GameCamera.cpp" />
     <ClCompile Include="src\Graphics\GeometryFactory.cpp" />
     <ClCompile Include="src\Graphics\IndexBuffer.cpp" />
+    <ClCompile Include="src\Graphics\MeshManager.cpp" />
     <ClCompile Include="src\Graphics\Model.cpp" />
     <ClCompile Include="src\Graphics\Renderer.cpp" />
     <ClCompile Include="src\Graphics\Shader.cpp" />
+    <ClCompile Include="src\Graphics\SkeletalSSBO.cpp" />
     <ClCompile Include="src\Graphics\Skybox.cpp" />
     <ClCompile Include="src\Graphics\Texture.cpp" />
     <ClCompile Include="src\Graphics\VertexArray.cpp" />
@@ -411,6 +426,8 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClCompile Include="src\PreCompile.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="src\ResourcePipe\AssetDatabase.cpp" />
+    <ClCompile Include="src\ResourcePipe\ResourcePipe.cpp" />
     <ClCompile Include="src\Scene\Scene.cpp" />
     <ClCompile Include="src\Scripting\ScriptEngine.cpp" />
     <ClCompile Include="src\Scripting\ScriptSystem.cpp" />

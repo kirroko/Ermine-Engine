@@ -40,6 +40,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "GuidRegistry.h"
 #include "Scene.h"
 #include "HierarchySystem.h"
+#include "GameCamera.h"
 
 #if defined(EE_EDITOR)
 #include "GraphicsDebugGUI.h"
@@ -51,6 +52,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "SceneManager.h"
 #include "FSMEditor.h"
 #include "AnimationGUI.h"
+#include "ResourcePipe.h"
 #endif
 
 using namespace Ermine;
@@ -202,7 +204,8 @@ bool engine::Init(GLFWwindow* windowContext)
 	EE_AUTO_REGISTER_COMPONENT(HierarchyComponent, "HierarchyComponent")
 	EE_AUTO_REGISTER_COMPONENT(StateMachine, "StateMachine")
 	EE_AUTO_REGISTER_COMPONENT(GlobalTransform, "GlobalTransform")
-	EE_AUTO_REGISTER_COMPONENT(ParticleEmitter, "ParticleEmitter")
+	EE_AUTO_REGISTER_COMPONENT(ParticleEmitter, "ParticleEmitter");
+	EE_AUTO_REGISTER_COMPONENT(CameraComponent, "CameraComponent");
 
 	// NOTE : THESE ARE SPECIAL CASES DUE TO THE FACT THAT THEIR COMPONENTS ARE UNIQUE AND WOULDN'T WORK BY SHALLOW COPIED OR DEEP COPIED
 	// THE CLONING FUNCTIONALITY HAVE BEEN CONSIDERED INTO ECS ITSELF. UNSURE, ASK.
@@ -233,6 +236,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().RegisterSystem<graphics::AnimationManager>();
 	ECS::GetInstance().RegisterSystem<HierarchySystem>();
 	ECS::GetInstance().RegisterSystem<StateManager>();
+	ECS::GetInstance().RegisterSystem<graphics::GameCamera>();
 
 	//Register JPH::TempAllocatorImpl for Physcis
 	RegisterDefaultAllocator();
@@ -243,9 +247,13 @@ bool engine::Init(GLFWwindow* windowContext)
 	// Set system signatures
 	SignatureID sig;
 	sig.set(ECS::GetInstance().GetComponentType<Transform>());
-	sig.set(ECS::GetInstance().GetComponentType<Mesh>());
 	sig.set(ECS::GetInstance().GetComponentType<Material>());
 	ECS::GetInstance().SetSystemSignature<graphics::Renderer>(sig);
+
+	// For GameCamera system
+	SignatureID gameCameraSig;
+	// GameCamera doesn't require any components to exist (it's a singleton system)
+	ECS::GetInstance().SetSystemSignature<graphics::GameCamera>(gameCameraSig);
 
 	// For Script system
 	sig.reset();
@@ -279,7 +287,6 @@ bool engine::Init(GLFWwindow* windowContext)
 	// For Animation system
 	sig.reset();
 	sig.set(ECS::GetInstance().GetComponentType<AnimationComponent>());
-	sig.set(ECS::GetInstance().GetComponentType<ModelComponent>());
 	ECS::GetInstance().SetSystemSignature<graphics::AnimationManager>(sig);
 
 	// For Hierarchy System
@@ -346,10 +353,11 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	EE_CORE_INFO("Created shared materials with proper texture assignment control");
 
-	// Compile materials into SSBO after material creation - deferred to Renderer.cpp implementation
-	// ECS::GetInstance().GetSystem<graphics::Renderer>()->CompileMaterials();
-	// EE_CORE_INFO("Materials compiled into SSBO system");
-
+	// Initialize game camera
+	auto gameCamera = ECS::GetInstance().GetSystem<graphics::GameCamera>();
+	int windowWidth, windowHeight;
+	glfwGetFramebufferSize(windowContext, &windowWidth, &windowHeight);
+	gameCamera->SetViewportSize(static_cast<float>(windowWidth), static_cast<float>(windowHeight));
 	// Audio test entity
 	//auto audioTestEntity = ECS::GetInstance().CreateEntity();
 	//ECS::GetInstance().AddComponent(audioTestEntity, Transform(Vec3(2, 0, -1), Quaternion(), Vec3(1, 1, 1)));
@@ -572,8 +580,6 @@ bool engine::Init(GLFWwindow* windowContext)
 	EE_CORE_INFO("Total living entities after creation: {0}", ECS::GetInstance().GetLivingEntityCount());
 
 	//EE_CORE_INFO("FSM Test Cube created with ID: {}", s_FSMCube);
-	int windowWidth, windowHeight;
-	glfwGetWindowSize(windowContext, &windowWidth, &windowHeight);
 	if (windowWidth > 0 && windowHeight > 0)
 		ECS::GetInstance().GetSystem<graphics::Renderer>()->Init(windowWidth, windowHeight);
 	else
@@ -594,6 +600,25 @@ bool engine::Init(GLFWwindow* windowContext)
 	editor::EditorGUI::CreateImGUIWindow<AnimationEditorImGUI>();
 	editor::EditorGUI::CreateImGUIWindow<ConsoleGUI>();
 	editor::EditorGUI::CreateImGUIWindow<ImguiUI::AssetBrowser>(); //TODO: Standardize please, do we want namespace ImGui for all window or not
+
+	{
+		static Ermine::ResourcePipeline pipeline;
+		if (pipeline.Initialize("../Resources")) { 
+			EE_CORE_INFO("ResourcePipeline initialized successfully");
+
+			auto* assetBrowser = editor::EditorGUI::GetWindow<ImguiUI::AssetBrowser>();
+			if (assetBrowser) {
+				assetBrowser->InitWithPipeline(&pipeline);
+				EE_CORE_INFO("AssetBrowser connected to ResourcePipeline");
+			}
+			else {
+				EE_CORE_ERROR("Failed to get AssetBrowser window");
+			}
+		}
+		else {
+			EE_CORE_ERROR("Failed to initialize ResourcePipeline");
+		}
+	}
 
 	auto defaultScene = std::make_shared<Scene>("Main Scene");
 	editor::EditorGUI::SetActiveScene(defaultScene);
@@ -682,11 +707,70 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 	// Other non-fixed logic
 	ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->Update();
 	ECS::GetInstance().GetSystem<AudioSystem>()->Update();
+
 	ECS::GetInstance().GetSystem<HierarchySystem>()->UpdateHierarchy();
 	
 	// Update editor camera
 #if defined(EE_EDITOR)
-	editor::EditorCamera::GetInstance().Update();
+	// Update appropriate camera based on play state
+	if (editor::EditorGUI::isPlaying)
+	{
+		// Update game camera when playing
+		auto gameCamera = ECS::GetInstance().GetSystem<graphics::GameCamera>();
+		if (gameCamera)
+		{
+			// If camera doesn't have a valid entity, try to find one
+			if (!gameCamera->HasValidCamera())
+			{
+				// Find the first entity with CameraComponent that's marked as isGameCamera
+				auto& ecs = ECS::GetInstance();
+				for (EntityID entity = 1; entity <= MAX_ENTITIES; ++entity)
+				{
+					if (ecs.IsEntityValid(entity) && ecs.HasComponent<CameraComponent>(entity))
+					{
+						auto& camComp = ecs.GetComponent<CameraComponent>(entity);
+						if (camComp.isGameCamera && camComp.isPrimary)
+						{
+							gameCamera->SetCameraEntity(entity);
+							EE_CORE_INFO("GameCamera: Found and set camera entity {}", entity);
+							break;
+						}
+					}
+				}
+			}
+			gameCamera->Update();
+		}
+	}
+	else
+	{
+		// Update editor camera when not playing
+		editor::EditorCamera::GetInstance().Update();
+	}
+#else
+	// In standalone build, always update game camera
+	auto gameCamera = ECS::GetInstance().GetSystem<graphics::GameCamera>();
+	if (gameCamera)
+	{
+		// If camera doesn't have a valid entity, try to find one
+		if (!gameCamera->HasValidCamera())
+		{
+			// Find the first entity with CameraComponent that's marked as isGameCamera
+			auto& ecs = ECS::GetInstance();
+			for (EntityID entity = 1; entity <= MAX_ENTITIES; ++entity)
+			{
+				if (ecs.IsEntityValid(entity) && ecs.HasComponent<CameraComponent>(entity))
+				{
+					auto& camComp = ecs.GetComponent<CameraComponent>(entity);
+					if (camComp.isGameCamera && camComp.isPrimary)
+					{
+						gameCamera->SetCameraEntity(entity);
+						break;
+					}
+				}
+			}
+		}
+		gameCamera->Update();
+	}
 #endif
 	// Update for Particles
 	ECS::GetInstance().GetSystem<ParticleSystem>()->Update(FrameController::GetDeltaTime());
@@ -707,8 +791,47 @@ void engine::Render(GLFWwindow* window)
 	glfwGetFramebufferSize(window, &width, &height);
 	glViewport(0, 0, width, height);
 
-	Mtx44 view = editor::EditorCamera::GetInstance().GetViewMatrix();
-	Mtx44 proj = editor::EditorCamera::GetInstance().GetProjectionMatrix();
+	Mtx44 view;
+	Mtx44 proj;
+
+#if defined(EE_EDITOR)
+	// Use appropriate camera based on play state
+	if (editor::EditorGUI::isPlaying)
+	{
+		auto gameCamera = ECS::GetInstance().GetSystem<graphics::GameCamera>();
+		if (gameCamera && gameCamera->HasValidCamera())
+		{
+			view = gameCamera->GetViewMatrix();
+			proj = gameCamera->GetProjectionMatrix();
+		}
+		else
+		{
+			// Fallback to editor camera if no valid game camera
+			view = editor::EditorCamera::GetInstance().GetViewMatrix();
+			proj = editor::EditorCamera::GetInstance().GetProjectionMatrix();
+		}
+	}
+	else
+	{
+		// Use editor camera when not playing
+		view = editor::EditorCamera::GetInstance().GetViewMatrix();
+		proj = editor::EditorCamera::GetInstance().GetProjectionMatrix();
+	}
+#else
+	// Standalone build - use game camera
+	auto gameCamera = ECS::GetInstance().GetSystem<graphics::GameCamera>();
+	if (gameCamera && gameCamera->HasValidCamera())
+	{
+		view = gameCamera->GetViewMatrix();
+		proj = gameCamera->GetProjectionMatrix();
+	}
+	else
+	{
+		// Fallback if no camera is available
+		view = Mtx44(); // Identity matrix
+		proj = Mtx44(); // Identity matrix
+	}
+#endif
 
 	// Start GPU timing for rendering
 	graphics::GPUProfiler::BeginEvent("Frame");

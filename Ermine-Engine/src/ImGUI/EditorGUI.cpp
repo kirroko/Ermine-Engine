@@ -1,8 +1,9 @@
 ﻿/* Start Header ************************************************************************/
 /*!
 \file       EditorGUI.h
-\author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu (98%)
+\author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu (90%)
 \co-authors LEE Wen Jie, Brian, wenjiebrian.lee, 2301261, wenjiebrian.lee\@digipen.edu (2%)
+\co-authors Jeremy Lim Ting Jie, jeremytingjie.lim, 2301370, jeremytingjie.lim\@digipen.edu (8%)
 \date       27/03/2025
 \brief      This file contains the declaration of the EditorGUI class.
             Function just like a wrapper for the ImGUI library.
@@ -29,6 +30,9 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "HierarchyPanel.h"
 #include "HierarchyInspector.h"
 
+#include "GameCamera.h"
+#include "Components.h"
+#include "Entity.h"
 
 #include "AssetManager.h"
 #include "imgui_internal.h"
@@ -40,7 +44,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 namespace Ermine
 {
-	class InspectorGUI;
+    class InspectorGUI;
     class Physics;
 }
 
@@ -52,6 +56,8 @@ using namespace Ermine::editor;
 // Definition for static member m_Windows, for ImGUI Windows
 std::vector<std::unique_ptr<Ermine::ImGUIWindow>>EditorGUI::m_Windows;
 bool EditorGUI::isPlaying = false; // tied to Play/Stop toolbar state.
+GLFWwindow* EditorGUI::s_WindowContext = nullptr;
+Ermine::EntityID EditorGUI::s_PrimaryCameraEntity = 0;
 
 std::shared_ptr<Ermine::Scene> EditorGUI::s_ActiveScene = nullptr; 
 std::unique_ptr<Ermine::HierarchyPanel> Ermine::editor::EditorGUI::s_HierarchyPanel = nullptr;
@@ -62,11 +68,11 @@ namespace
     {
         struct Unit { uint64_t base; const char* suffix; };
         static constexpr Unit units[] = {
-			{.base= 1'000'000'000'000ULL, .suffix= "T"},
-	        {.base= 1'000'000'000ULL, .suffix= "B"},
-	        {.base= 1'000'000ULL, .suffix= "M"},
-	        {.base= 1'000ULL, .suffix= "K"},
-	        {.base= 1, .suffix= ""}
+            {.base = 1'000'000'000'000ULL, .suffix = "T"},
+            {.base = 1'000'000'000ULL, .suffix = "B"},
+            {.base = 1'000'000ULL, .suffix = "M"},
+            {.base = 1'000ULL, .suffix = "K"},
+            {.base = 1, .suffix = ""}
         };
 
         for (const auto& u : units)
@@ -86,14 +92,14 @@ namespace
         }
 
         char buffer[32];
-		const int written = snprintf(buffer, sizeof(buffer), "%llu", value);
+        const int written = snprintf(buffer, sizeof(buffer), "%llu", value);
         if (written < 0)
         {
             EE_CORE_WARN("FormatNumber error occurred");
             return std::to_string(value);
         }
-		return std::string(buffer);
-	}
+        return std::string(buffer);
+    }
 
     ImTextureID gIconPlay = 0;
     ImTextureID gIconStop = 0;
@@ -126,6 +132,97 @@ namespace
             return ImGui::ImageButton(text, icon, size, ImVec2(0, 1), ImVec2(1, 0));
         return ImGui::Button(text, size);
     }
+}
+
+void EditorGUI::StartPlayMode()
+{
+    EE_CORE_INFO("Starting Play Mode...");
+
+    auto& ecs = ECS::GetInstance();
+
+    // Find primary camera entity
+    s_PrimaryCameraEntity = 0;
+    for (EntityID entity = 1; entity < ecs.GetLivingEntityCount() + 1; ++entity)
+    {
+        if (!ecs.IsEntityValid(entity))
+            continue;
+
+        if (ecs.HasComponent<CameraComponent>(entity))
+        {
+            auto& camComp = ecs.GetComponent<CameraComponent>(entity);
+            if (camComp.isPrimary)
+            {
+                s_PrimaryCameraEntity = entity;
+                break;
+            }
+        }
+    }
+
+    if (s_PrimaryCameraEntity == 0)
+    {
+        EE_CORE_WARN("No primary camera found in scene. Play mode will use editor camera.");
+        return;
+    }
+
+    // Get or create GameCamera system
+    auto gameCamera = ecs.GetSystem<graphics::GameCamera>();
+    if (!gameCamera)
+    {
+        EE_CORE_ERROR("GameCamera system not found!");
+        return;
+    }
+
+    // Get camera component settings
+    if (!ecs.HasComponent<CameraComponent>(s_PrimaryCameraEntity))
+    {
+        EE_CORE_ERROR("Primary camera entity missing CameraComponent!");
+        return;
+    }
+    
+    auto& camComp = ecs.GetComponent<CameraComponent>(s_PrimaryCameraEntity);
+
+    // Attach game camera to the entity
+    gameCamera->SetCameraEntity(s_PrimaryCameraEntity);
+    gameCamera->SetPerspective(camComp.fov, camComp.aspectRatio, camComp.nearPlane, camComp.farPlane);
+
+    // Set position from Transform if it exists
+    if (ecs.HasComponent<Transform>(s_PrimaryCameraEntity))
+    {
+        auto& transform = ecs.GetComponent<Transform>(s_PrimaryCameraEntity);
+        gameCamera->SetPosition(transform.position);
+    }
+
+    // Lock cursor for FPS controls
+    if (s_WindowContext)
+    {
+        glfwSetInputMode(s_WindowContext, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        EE_CORE_INFO("Cursor locked for FPS controls");
+    }
+
+    EE_CORE_INFO("Play mode started with camera entity {}", s_PrimaryCameraEntity);
+}
+
+void EditorGUI::StopPlayMode()
+{
+    EE_CORE_INFO("Stopping Play Mode...");
+
+    // Unlock cursor
+    if (s_WindowContext)
+    {
+        glfwSetInputMode(s_WindowContext, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        EE_CORE_INFO("Cursor unlocked");
+    }
+
+    // Reset game camera
+    auto& ecs = ECS::GetInstance();
+    auto gameCamera = ecs.GetSystem<graphics::GameCamera>();
+    if (gameCamera)
+    {
+        gameCamera->SetCameraEntity(0);
+    }
+
+    s_PrimaryCameraEntity = 0;
+    EE_CORE_INFO("Play mode stopped");
 }
 
 // Add near the top of this file (forward declarations for theme setters)
@@ -347,18 +444,24 @@ void EditorGUI::Toolbar()
             return clicked;
         };
 
-	if (RenderToggledButton(isPlaying,gIconPlay,"Play"))
-	{
-		if (!isPlaying)
+    if (RenderToggledButton(isPlaying, gIconPlay, "Play"))
+    {
+        if (!isPlaying)
+        {
             isPlaying = true;
-	}
+            StartPlayMode();
+        }
+    }
 
     ImGui::SameLine();
 
-    if (RenderToggledButton(!isPlaying,gIconStop,"Stop"))
+    if (RenderToggledButton(!isPlaying, gIconStop, "Stop"))
     {
-	    if (isPlaying)
-			isPlaying = false;
+        if (isPlaying)
+        {
+            isPlaying = false;
+            StopPlayMode();
+        }
     }
 
     ImGui::End();
@@ -411,12 +514,12 @@ void EditorGUI::ProfilingWindow()
 }
 
 // This function is called before rendering the scene
-void EditorGUI::ViewPortWindow(bool &show)
+void EditorGUI::ViewPortWindow(bool& show)
 {
     ImGui::Begin("Scene Viewer", &show);
 
     // Obtain available context region in the window (viewport size)
-	ImVec2 viewport_size = ImGui::GetContentRegionAvail();
+    ImVec2 viewport_size = ImGui::GetContentRegionAvail();
 
     // Ensure the viewport size is within an acceptable range
     constexpr int minSize = 1;
@@ -427,7 +530,7 @@ void EditorGUI::ViewPortWindow(bool &show)
     viewport_size.y = std::clamp(viewport_size.y, static_cast<float>(minSize), static_cast<float>(max_size));
 
     static bool first_time = true;
-	auto renderer = ECS::GetInstance().GetSystem<graphics::Renderer>();
+    auto renderer = ECS::GetInstance().GetSystem<graphics::Renderer>();
     if (first_time)
     {
         renderer->CreateOffscreenBuffer(static_cast<int>(viewport_size.x), static_cast<int>(viewport_size.y));
@@ -435,20 +538,20 @@ void EditorGUI::ViewPortWindow(bool &show)
         first_time = false;
     }
 
-	const auto offscreen_buffer = renderer->GetOffscreenBuffer(); // released at the end of the scope
+    const auto offscreen_buffer = renderer->GetOffscreenBuffer(); // released at the end of the scope
     if (offscreen_buffer)
     {
         // Resize the offscreen buffer when viewport size changes
-	    if (offscreen_buffer->width != static_cast<int>(viewport_size.x) ||
+        if (offscreen_buffer->width != static_cast<int>(viewport_size.x) ||
             offscreen_buffer->height != static_cast<int>(viewport_size.y))
-	    {
-		    renderer->ResizeOffscreenBuffer(static_cast<int>(viewport_size.x), static_cast<int>(viewport_size.y));
-			renderer->ResizeGBuffer(static_cast<int>(viewport_size.x), static_cast<int>(viewport_size.y));
-	    }
+        {
+            renderer->ResizeOffscreenBuffer(static_cast<int>(viewport_size.x), static_cast<int>(viewport_size.y));
+            renderer->ResizeGBuffer(static_cast<int>(viewport_size.x), static_cast<int>(viewport_size.y));
+        }
     }
 
     // Set editor's camera viewport size
-	EditorCamera::GetInstance().SetViewportSize(viewport_size.x, viewport_size.y);
+    EditorCamera::GetInstance().SetViewportSize(viewport_size.x, viewport_size.y);
 
     // Child region that ignores all ImGui inputs
     ImGuiWindowFlags vpChildFlags =
@@ -456,7 +559,7 @@ void EditorGUI::ViewPortWindow(bool &show)
         ImGuiWindowFlags_NoScrollbar |
         ImGuiWindowFlags_NoScrollWithMouse;
 
-    ImGui::BeginChild("SceneViewportRegion", ImVec2(0,0), false, vpChildFlags);
+    ImGui::BeginChild("SceneViewportRegion", ImVec2(0, 0), false, vpChildFlags);
 
     // Draw the rendered scene
     if (offscreen_buffer)
@@ -472,7 +575,7 @@ void EditorGUI::ViewPortWindow(bool &show)
         );
     }
 
-	// Capture the image rect for mouse->pixel conversion
+    // Capture the image rect for mouse->pixel conversion
     const ImVec2 imgMin = ImGui::GetItemRectMin();
     const ImVec2 imgMax = ImGui::GetItemRectMax();
     const ImVec2 imgSize = ImGui::GetItemRectSize();
@@ -482,30 +585,30 @@ void EditorGUI::ViewPortWindow(bool &show)
     {
         ImGuiIO io = ImGui::GetIO();
         const float localX = io.MousePos.x - imgMin.x;
-		const float localY = io.MousePos.y - imgMin.y;
+        const float localY = io.MousePos.y - imgMin.y;
 
         if (localX >= 0.0f && localY >= 0.0f && localX <= imgSize.x && localY <= imgSize.y)
         {
             // Convert to framebuffer coordinates (y is flipped)
-			const float u = imgSize.x > 0.0f ? localX / imgSize.x : 0.0f;
-			const float v = imgSize.y > 0.0f ? localY / imgSize.y : 0.0f;
+            const float u = imgSize.x > 0.0f ? localX / imgSize.x : 0.0f;
+            const float v = imgSize.y > 0.0f ? localY / imgSize.y : 0.0f;
 
-			const int px = static_cast<int>(u * offscreen_buffer->width);
+            const int px = static_cast<int>(u * offscreen_buffer->width);
             const int py = static_cast<int>((1.0f - v) * offscreen_buffer->height);
-            auto [hit, entity] = renderer->PickEntityAt(std::clamp(px,0,offscreen_buffer->width - 1),
-                std::clamp(py,0,offscreen_buffer->height - 1),
+            auto [hit, entity] = renderer->PickEntityAt(std::clamp(px, 0, offscreen_buffer->width - 1),
+                std::clamp(py, 0, offscreen_buffer->height - 1),
                 EditorCamera::GetInstance().GetViewMatrix(),
                 EditorCamera::GetInstance().GetProjectionMatrix());
 
             if (hit)
             {
-				// Set selection in Inspector?
+                // Set selection in Inspector?
                 for (auto& w : m_Windows)
                 {
                     if (auto* inspector = dynamic_cast<InspectorGUI*>(w.get()))
                         inspector->SetEntity(entity);
                 }
-			}
+            }
         }
     }
 
@@ -515,26 +618,34 @@ void EditorGUI::ViewPortWindow(bool &show)
         ImGuiHoveredFlags_AllowWhenOverlappedByItem;
 
     const bool viewportHovered = ImGui::IsItemHovered(hovFlags);
-	const bool viewportFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_None);
+    const bool viewportFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_None);
 
     ImGui::EndChild();
 
     Input::SetEditorInputActive(viewportFocused && viewportHovered);
+
+    // Hotkey to toggle play mode
     if (Input::IsKeyDownEditor(GLFW_KEY_LEFT_CONTROL) && Input::IsKeyPressedEditor(GLFW_KEY_P))
     {
-		isPlaying = !isPlaying;
+        isPlaying = !isPlaying;
+        if (isPlaying)
+            StartPlayMode();
+        else
+            StopPlayMode();
         EE_CORE_INFO("Play {0}", isPlaying);
     }
+
     Input::SetGameInputActive(isPlaying && viewportFocused && viewportHovered);
 
+    // Editor camera controls (only when not playing)
     if (viewportHovered && !isPlaying)
     {
-	    EditorCamera::GetInstance().ProcessMouseMovement();
-		EditorCamera::GetInstance().ProcessKeyboardInput(FrameController::GetDeltaTime());
-		EditorCamera::GetInstance().ProcessScrollWheel(Input::GetMouseScrollOffsetEditor());
+        EditorCamera::GetInstance().ProcessMouseMovement();
+        EditorCamera::GetInstance().ProcessKeyboardInput(FrameController::GetDeltaTime());
+        EditorCamera::GetInstance().ProcessScrollWheel(Input::GetMouseScrollOffsetEditor());
     }
 
-	ImGui::End();
+    ImGui::End();
 }
 
 void Ermine::editor::EditorGUI::FocusWindow(const std::string& windowName)
@@ -831,6 +942,8 @@ void SetOverwatchTheme(bool dark_variant)
  */
 void EditorGUI::Init(GLFWwindow* window)
 {
+    s_WindowContext = window;
+
     // Setup Dear ImGUI context
     EE_CORE_TRACE("Setting up ImGUI...");
     IMGUI_CHECKVERSION();
@@ -841,7 +954,7 @@ void EditorGUI::Init(GLFWwindow* window)
     //
     // // Make the ImGui context current
     // ImGui::SetCurrentContext(ImGui::GetCurrentContext());
-    
+
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;   // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;    // Enable Gamepad Controls
@@ -901,7 +1014,7 @@ void EditorGUI::Init(GLFWwindow* window)
         style.WindowRounding = 0.0f;
         style.Colors[ImGuiCol_WindowBg].w = 1.0f;
     }
-    
+
     // Setup Platform/Renderer backends
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 460");
@@ -925,39 +1038,39 @@ void EditorGUI::Init(GLFWwindow* window)
  */
 bool EditorGUI::IsInit()
 {
-	return ImGui::GetCurrentContext() != nullptr;
+    return ImGui::GetCurrentContext() != nullptr;
 }
 
 void EditorGUI::DockingWindow()
 {
-	// Create a dock space window inside the main viewport (i.e. the entire window)
-	ImGuiViewport* Viewport = ImGui::GetMainViewport();
-	ImGui::SetNextWindowPos(Viewport->WorkPos);
-	ImGui::SetNextWindowSize(Viewport->WorkSize);
-	ImGui::SetNextWindowViewport(Viewport->ID);
+    // Create a dock space window inside the main viewport (i.e. the entire window)
+    ImGuiViewport* Viewport = ImGui::GetMainViewport();
+    ImGui::SetNextWindowPos(Viewport->WorkPos);
+    ImGui::SetNextWindowSize(Viewport->WorkSize);
+    ImGui::SetNextWindowViewport(Viewport->ID);
 
-	// 2. Create a main dock space in your main render loop
-	ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoTitleBar
-		| ImGuiWindowFlags_NoCollapse
-		| ImGuiWindowFlags_NoDocking
-		| ImGuiWindowFlags_NoResize
-		| ImGuiWindowFlags_NoMove
-		| ImGuiWindowFlags_NoBringToFrontOnFocus;
+    // 2. Create a main dock space in your main render loop
+    ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoTitleBar
+        | ImGuiWindowFlags_NoCollapse
+        | ImGuiWindowFlags_NoDocking
+        | ImGuiWindowFlags_NoResize
+        | ImGuiWindowFlags_NoMove
+        | ImGuiWindowFlags_NoBringToFrontOnFocus;
 
-	// optionally disable background if you want a clean area
-	ImGui::SetNextWindowBgAlpha(0.0f);
+    // optionally disable background if you want a clean area
+    ImGui::SetNextWindowBgAlpha(0.0f);
 
-	// Remove docking flag from the dockspace window so it behaves as a container
-	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-	ImGui::Begin("MainDockSpace", nullptr, windowFlags);
+    // Remove docking flag from the dockspace window so it behaves as a container
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+    ImGui::Begin("MainDockSpace", nullptr, windowFlags);
 
-	// Pass docking ID to create the dock space
-	ImGuiID dockSpaceId = ImGui::GetID("MyDockSpace");
-	ImGui::DockSpace(dockSpaceId, ImVec2(0.0f, 0.0f));
+    // Pass docking ID to create the dock space
+    ImGuiID dockSpaceId = ImGui::GetID("MyDockSpace");
+    ImGui::DockSpace(dockSpaceId, ImVec2(0.0f, 0.0f));
 
-	ImGui::End();
-	ImGui::PopStyleVar(2);
+    ImGui::End();
+    ImGui::PopStyleVar(2);
 }
 
 void EditorGUI::Update(GLFWwindow* windowContext)
@@ -967,16 +1080,16 @@ void EditorGUI::Update(GLFWwindow* windowContext)
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
-	DockingWindow();
+    DockingWindow();
 
     // Windows that imgui has to render
     TopMenuBar(windowContext);
-  //  static bool show_scene_viewer = true;
-  //  if (show_scene_viewer)
-		//ViewPortWindow(show_scene_viewer);
+    //  static bool show_scene_viewer = true;
+    //  if (show_scene_viewer)
+          //ViewPortWindow(show_scene_viewer);
 
 
-    // Hierarchy Panel
+      // Hierarchy Panel
     static bool show_hierarchy = true;
     if (s_HierarchyPanel && show_hierarchy) {
         s_HierarchyPanel->SetVisible(show_hierarchy);
@@ -1012,7 +1125,7 @@ void EditorGUI::Render()
     }
 
     ImGui::Render();
-    
+
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
     // Update and Render additional Platform Windows
@@ -1029,6 +1142,13 @@ void EditorGUI::Render()
 
 void EditorGUI::ShutDown()
 {
+    // Stop play mode if active
+    if (isPlaying)
+    {
+        StopPlayMode();
+        isPlaying = false;
+    }
+
     // Clean up panels first
     s_Inspector.reset();
     s_HierarchyPanel.reset();

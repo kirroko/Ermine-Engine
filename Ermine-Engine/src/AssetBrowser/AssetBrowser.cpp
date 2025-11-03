@@ -23,6 +23,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "PrefabManager.h" // For opening prefabs
 #include "EditorGUI.h" // For forwarding dropped files to the asset browser
 #include "Components.h"
+#include "ResourcePipe.h"
 
 namespace fs = std::filesystem;
 
@@ -42,6 +43,194 @@ namespace Ermine::ImguiUI
         if (!ext.empty() && ext[0] == '.') ext.erase(0, 1);
         return ext;
     }
+
+    void Browser::InitWithPipeline(Ermine::ResourcePipeline* pipeline)
+    {
+        m_Pipeline = pipeline;
+        if (m_Pipeline) {
+            EE_CORE_INFO("[AssetBrowser] Connected to ResourcePipeline");
+        }
+    }
+
+    void Browser::CheckImportStatus(Asset& asset)
+    {
+        if (!m_Pipeline) return;
+        if (asset.Type == 1) return; // Skip folders
+
+        namespace fs = std::filesystem;
+        fs::path fullPath = asset.realName.empty() ?
+            (currentDirectory / asset.Name) : fs::path(asset.realName);
+
+        auto GetExtLower = [](const std::string& path) {
+            auto ext = fs::path(path).extension().string();
+            for (auto& c : ext) c = (char)std::tolower((unsigned char)c);
+            if (!ext.empty() && ext[0] == '.') ext.erase(0, 1);
+            return ext;
+            };
+
+        std::string ext = GetExtLower(fullPath.string());
+
+        // Check if source asset
+        bool isSourceAsset = (ext == "png" || ext == "jpg" || ext == "jpeg" ||
+            ext == "fbx" || ext == "obj" || ext == "gltf" || ext == "glb");
+
+        if (isSourceAsset) {
+            asset.needsReimport = m_Pipeline->NeedsReimport(fullPath.string());
+        }
+
+        // Check if processed asset
+        asset.isProcessedAsset = (ext == "dds" || ext == "mesh" || ext == "skin");
+    }
+
+    void Browser::HandleImportContextMenu(const std::filesystem::path& filePath)
+    {
+        if (!m_Pipeline) return;
+
+        namespace fs = std::filesystem;
+        auto GetExtLower = [](const std::string& path) {
+            auto ext = fs::path(path).extension().string();
+            for (auto& c : ext) c = (char)std::tolower((unsigned char)c);
+            if (!ext.empty() && ext[0] == '.') ext.erase(0, 1);
+            return ext;
+            };
+
+        std::string ext = GetExtLower(filePath.string());
+
+        // Texture import
+        if (ext == "png" || ext == "jpg" || ext == "jpeg")
+        {
+            if (ImGui::BeginMenu("Import as Texture"))
+            {
+                static Ermine::TextureImportSettings settings;
+                static int selectedFormatIndex = 1; // Default to BGRA8
+
+                ImGui::TextDisabled("Format:");
+                ImGui::Separator();
+
+                // ✅ Format dropdown
+                auto formats = Ermine::ResourcePipeline::GetSupportedFormats();
+                if (ImGui::BeginCombo("##Format", Ermine::ResourcePipeline::GetFormatName(settings.targetFormat))) {
+                    for (int i = 0; i < formats.size(); i++) {
+                        bool isSelected = (settings.targetFormat == formats[i]);
+                        if (ImGui::Selectable(Ermine::ResourcePipeline::GetFormatName(formats[i]), isSelected)) {
+                            settings.targetFormat = formats[i];
+                            selectedFormatIndex = i;
+                        }
+                        if (isSelected) {
+                            ImGui::SetItemDefaultFocus();
+                        }
+
+                        // ✅ Add helpful tooltips
+                        if (ImGui::IsItemHovered()) {
+                            switch (formats[i]) {
+                            case DXGI_FORMAT_BC1_UNORM:
+                                ImGui::SetTooltip("6:1 compression, no alpha. Best for diffuse textures.");
+                                break;
+                            case DXGI_FORMAT_BC3_UNORM:
+                                ImGui::SetTooltip("4:1 compression with alpha. Good for most textures.");
+                                break;
+                            case DXGI_FORMAT_BC7_UNORM:
+                                ImGui::SetTooltip("High quality compression. Slower but better quality.");
+                                break;
+                            case DXGI_FORMAT_BC5_UNORM:
+                                ImGui::SetTooltip("Specialized for normal maps (2-channel).");
+                                break;
+                            }
+                        }
+                    }
+                    ImGui::EndCombo();
+                }
+
+                ImGui::Separator();
+                ImGui::TextDisabled("Options:");
+                ImGui::Checkbox("Generate Mipmaps", &settings.generateMipmaps);
+                if (ImGui::IsItemHovered()) {
+                    ImGui::SetTooltip("Creates smaller versions for distant rendering");
+                }
+
+                ImGui::Separator();
+                if (ImGui::Button("Import Now", ImVec2(120, 0)))
+                {
+                    EE_CORE_INFO("Importing texture: {} as {}",
+                        filePath.string(),
+                        Ermine::ResourcePipeline::GetFormatName(settings.targetFormat));
+
+                    auto result = m_Pipeline->ImportTexture(filePath.string(), settings);
+
+                    if (result.success) {
+                        EE_CORE_INFO("✓ Import successful: {} ({}ms)",
+                            result.outputPath, result.importTimeMs);
+                        m_Pipeline->GetDatabase().Save();
+                        Refresh();
+                    }
+                    else {
+                        EE_CORE_ERROR("✗ Import failed: {}", result.errorMessage);
+                    }
+                    ImGui::CloseCurrentPopup();
+                }
+
+                ImGui::EndMenu();
+            }
+        }
+
+        // Mesh import
+        if (ext == "fbx" || ext == "obj" || ext == "gltf" || ext == "glb")
+        {
+            if (ImGui::BeginMenu("Import as Mesh"))
+            {
+                static Ermine::MeshImportSettings settings;
+
+                ImGui::Checkbox("Generate Normals", &settings.generateNormals);
+                ImGui::Checkbox("Generate Tangents", &settings.generateTangents);
+                ImGui::Checkbox("Flip UVs", &settings.flipUVs);
+                ImGui::Checkbox("Optimize", &settings.optimizeVertices);
+
+                ImGui::Separator();
+                if (ImGui::MenuItem("Import Now"))
+                {
+                    EE_CORE_INFO("Importing mesh: {}", filePath.string());
+                    auto result = m_Pipeline->ImportMesh(filePath.string(), settings);
+
+                    if (result.success) {
+                        EE_CORE_INFO("Import successful: {} ({}ms)",
+                            result.outputPath, result.importTimeMs);
+                        m_Pipeline->GetDatabase().Save();
+                        Refresh();
+                    }
+                    else {
+                        EE_CORE_ERROR("Import failed: {}", result.errorMessage);
+                    }
+                }
+
+                ImGui::EndMenu();
+            }
+        }
+
+        // Quick reimport
+        bool canReimport = (ext == "png" || ext == "jpg" || ext == "jpeg" ||
+            ext == "fbx" || ext == "obj" || ext == "gltf" || ext == "glb");
+
+        if (canReimport && m_Pipeline->NeedsReimport(filePath.string()))
+        {
+            ImGui::Separator();
+            if (ImGui::MenuItem("Reimport (Modified)"))
+            {
+                EE_CORE_INFO("Reimporting: {}", filePath.string());
+                auto result = m_Pipeline->ReimportAsset(filePath.string());
+
+                if (result.success) {
+                    EE_CORE_INFO("Reimport successful ({}ms)", result.importTimeMs);
+                    m_Pipeline->GetDatabase().Save();
+                    Refresh();
+                }
+                else {
+                    EE_CORE_ERROR("Reimport failed: {}", result.errorMessage);
+                }
+            }
+        }
+    }
+
+
 
     /**
      * @brief Default constructor that initializes the asset browser state.
@@ -128,7 +317,16 @@ namespace Ermine::ImguiUI
                 int type = entry.is_directory() ? 1 : 0;
                 std::string uniqueKey = entry.path().string();
                 ImGuiID id = static_cast<ImGuiID>(std::hash<std::string>{}(uniqueKey));
-                Items.emplace_back(id, type, name, false, icon, uniqueKey);
+
+                // ❌ Remove this line:
+                // Items.emplace_back(id, type, name, false, icon, uniqueKey);
+
+                // ✅ Create asset and check import status
+                Asset asset(id, type, name, false, icon, uniqueKey);
+                CheckImportStatus(asset);
+
+                // ✅ Add only once
+                Items.emplace_back(asset);
             }
         }
         catch (std::exception& e) {
@@ -158,17 +356,46 @@ namespace Ermine::ImguiUI
      */
     bool Browser::CopyFileToAssets(const std::string& sourceFilePath)
     {
-        // Validate source file
+        namespace fs = std::filesystem;
         fs::path src(sourceFilePath);
         if (!fs::exists(src)) return false;
 
-        // Determine destination path
         fs::path dest = currentDirectory / src.filename();
+
         try {
-            // Copy file into current directory
             fs::create_directories(currentDirectory);
             fs::copy_file(src, dest, fs::copy_options::overwrite_existing);
             EE_CORE_INFO("Imported {} -> {}", src.string(), dest.string());
+
+            // ✅ NEW: Auto-import
+            if (m_Pipeline)
+            {
+                auto GetExtLower = [](const std::string& path) {
+                    auto ext = fs::path(path).extension().string();
+                    for (auto& c : ext) c = (char)std::tolower((unsigned char)c);
+                    if (!ext.empty() && ext[0] == '.') ext.erase(0, 1);
+                    return ext;
+                    };
+
+                std::string ext = GetExtLower(dest.string());
+                bool shouldImport = (ext == "png" || ext == "jpg" || ext == "jpeg" ||
+                    ext == "fbx" || ext == "obj" || ext == "gltf" || ext == "glb");
+
+                if (shouldImport)
+                {
+                    EE_CORE_INFO("Auto-importing dropped file...");
+                    auto result = m_Pipeline->ReimportAsset(dest.string());
+
+                    if (result.success) {
+                        EE_CORE_INFO("✓ Auto-import successful ({}ms)", result.importTimeMs);
+                        m_Pipeline->GetDatabase().Save();
+                    }
+                    else {
+                        EE_CORE_WARN("⚠ Auto-import failed: {}", result.errorMessage);
+                    }
+                }
+            }
+
             return true;
         }
         catch (std::exception& e) {
@@ -183,6 +410,12 @@ namespace Ermine::ImguiUI
      */
     void Browser::HandleFileContextMenu(const std::filesystem::path& filePath)
     {
+        HandleImportContextMenu(filePath);
+
+        if (m_Pipeline) {
+            ImGui::Separator();
+        }
+
         // --- Context menu options for a file or folder ---
         // "Open" option
         if (ImGui::MenuItem("Open"))
@@ -301,6 +534,18 @@ namespace Ermine::ImguiUI
             ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0, 0, 0, 0));
             bool clicked = ImGui::ImageButton(("##icon" + asset->Name).c_str(), asset->Icon, ImVec2(iconSize, iconSize), ImVec2(0, 1), ImVec2(1, 0));
             ImGui::PopStyleColor(3);
+
+            if (asset->needsReimport) {
+                ImVec2 badgePos = { cursor.x + iconSize - 20, cursor.y + 5 };
+                dl->AddCircleFilled(badgePos, 8, IM_COL32(255, 165, 0, 255)); // Orange badge
+                dl->AddText(ImVec2(badgePos.x - 3, badgePos.y - 7),
+                    IM_COL32(255, 255, 255, 255), "!");
+            }
+
+            // ✅ ADD THIS: Show tooltip on hover
+            if (ImGui::IsItemHovered() && asset->needsReimport) {
+                ImGui::SetTooltip("Source file modified - needs reimport");
+            }
 
             // Draw selection highlight background
             if (asset->IsSelected) {

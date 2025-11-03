@@ -88,11 +88,6 @@ namespace Ermine
 		*************************************************************************/
 		void Update(float deltaTime);
 
-		//place holder, will be remove
-		//BodyID CreateStaticBox(const JPH::Vec3& halfExtents, const RVec3& position);
-		//BodyID CreateDynamicSphere(float radius, const RVec3& position, const JPH::Vec3& initialVelocity);
-		//void CreatePhysicsBox(const Ermine::Vec3& position, const Ermine::Vec3& size, float mass);
-
 		/*!***********************************************************************
 		  \brief
 			Rebuilds the list of physics bodies from ECS entities. Old bodies are
@@ -144,7 +139,6 @@ namespace Ermine
 		bool Raycast(const JPH::RVec3& origin, const JPH::RVec3& direction, float maxDistance, JPH::RayCastResult& outResult);
 
 		std::vector<JPH::RayCastResult> RaycastAll(const JPH::RVec3& origin, const JPH::RVec3& direction, float maxDistance);
-
 	private:
 		// --- Important: allocator first, job system second, physics system third ---
 		JPH::TempAllocatorImpl       mTempAllocator;
@@ -174,8 +168,5 @@ namespace Ermine
 		std::vector<PendingPair> mPendingPairs;
 
 		void FlushPendingPairsToEntityEvents();
-
-		//not in used
-		//void SetupLayers();
 	};
 }

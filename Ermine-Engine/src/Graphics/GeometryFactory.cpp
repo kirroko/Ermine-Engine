@@ -14,8 +14,86 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "PreCompile.h"
 #include "GeometryFactory.h"
 #include "MathUtils.h"
+#include "Renderer.h"
+#include "ECS.h"
 
 using namespace Ermine::graphics;
+
+/**
+ * @brief Calculate tangents for a mesh using the indices and vertices
+ * Uses the Lengyel's Method for computing tangent space basis vectors
+ * @param vertices The vertex data (position, normal, texCoord)
+ * @param indices The index data forming triangles
+ * @return Vector of tangents, one per vertex
+ */
+std::vector<glm::vec3> GeometryFactory::CalculateTangents(
+    const std::vector<Vertex>& vertices,
+    const std::vector<unsigned int>& indices)
+{
+    std::vector<glm::vec3> tangents(vertices.size(), glm::vec3(0.0f));
+    std::vector<glm::vec3> bitangents(vertices.size(), glm::vec3(0.0f));
+
+    // Calculate tangent and bitangent for each triangle
+    for (size_t i = 0; i < indices.size(); i += 3)
+    {
+        unsigned int i0 = indices[i];
+        unsigned int i1 = indices[i + 1];
+        unsigned int i2 = indices[i + 2];
+
+        const Vec3& v0 = vertices[i0].pos;
+        const Vec3& v1 = vertices[i1].pos;
+        const Vec3& v2 = vertices[i2].pos;
+
+        const Vec2& uv0 = vertices[i0].tex;
+        const Vec2& uv1 = vertices[i1].tex;
+        const Vec2& uv2 = vertices[i2].tex;
+
+        // Calculate edges
+        glm::vec3 edge1 = glm::vec3(v1.x - v0.x, v1.y - v0.y, v1.z - v0.z);
+        glm::vec3 edge2 = glm::vec3(v2.x - v0.x, v2.y - v0.y, v2.z - v0.z);
+
+        glm::vec2 deltaUV1 = glm::vec2(uv1.x - uv0.x, uv1.y - uv0.y);
+        glm::vec2 deltaUV2 = glm::vec2(uv2.x - uv0.x, uv2.y - uv0.y);
+
+        float f = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+
+        glm::vec3 tangent;
+        tangent.x = f * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
+        tangent.y = f * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
+        tangent.z = f * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
+
+        glm::vec3 bitangent;
+        bitangent.x = f * (-deltaUV2.x * edge1.x + deltaUV1.x * edge2.x);
+        bitangent.y = f * (-deltaUV2.x * edge1.y + deltaUV1.x * edge2.y);
+        bitangent.z = f * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z);
+
+        // Accumulate tangents and bitangents for each vertex of the triangle
+        tangents[i0] += tangent;
+        tangents[i1] += tangent;
+        tangents[i2] += tangent;
+
+        bitangents[i0] += bitangent;
+        bitangents[i1] += bitangent;
+        bitangents[i2] += bitangent;
+    }
+
+    // Orthogonalize and normalize tangents using Gram-Schmidt process
+    for (size_t i = 0; i < vertices.size(); ++i)
+    {
+        glm::vec3 n = glm::vec3(vertices[i].norms.x, vertices[i].norms.y, vertices[i].norms.z);
+        glm::vec3 t = tangents[i];
+
+        // Gram-Schmidt orthogonalize
+        t = glm::normalize(t - n * glm::dot(n, t));
+
+        // Calculate handedness (optional, for bitangent calculation)
+        // float handedness = (glm::dot(glm::cross(n, t), bitangents[i]) < 0.0f) ? -1.0f : 1.0f;
+
+        tangents[i] = t;
+    }
+
+    return tangents;
+}
 
 /**
  * @brief Create a cube
@@ -106,6 +184,38 @@ Ermine::Mesh GeometryFactory::CreateCube(float width, float height, float depth)
 	mesh.primitive.type = "Cube";
 	mesh.primitive.size = Vec3{ width, height, depth };
 
+    // Register mesh with MeshManager for indirect rendering
+    auto renderer = Ermine::ECS::GetInstance().GetSystem<Renderer>();
+    if (renderer) {
+        // Calculate tangents
+        std::vector<glm::vec3> tangents = CalculateTangents(vertices, indices);
+
+        // Convert local Vertex to MeshTypes::Vertex
+        std::vector<graphics::Vertex> meshVertices;
+        meshVertices.reserve(vertices.size());
+        for (size_t i = 0; i < vertices.size(); ++i) {
+            const auto& v = vertices[i];
+            graphics::Vertex meshVert;
+			meshVert.position.x = v.pos.x;
+			meshVert.position.y = v.pos.y;
+			meshVert.position.z = v.pos.z;  // Fixed: Was missing Z coordinate!
+			meshVert.normal.x = v.norms.x;
+			meshVert.normal.y = v.norms.y;
+			meshVert.normal.z = v.norms.z;
+			meshVert.texCoord.x = v.tex.x;
+			meshVert.texCoord.y = v.tex.y;
+            meshVert.tangent = tangents[i];
+            meshVertices.push_back(meshVert);
+        }
+
+        std::string meshID = "Cube_" + std::to_string(width) + "x" +
+                            std::to_string(height) + "x" + std::to_string(depth);
+        renderer->m_MeshManager.RegisterMesh(meshVertices, indices, meshID);
+
+        // Store the registered mesh ID in the Mesh component
+        mesh.registeredMeshID = meshID;
+    }
+
     return mesh;
 }
 
@@ -148,6 +258,37 @@ Ermine::Mesh GeometryFactory::CreateQuad(float width, float height)
 	mesh.kind = MeshKind::Primitive;
 	mesh.primitive.type = "Quad";
 	mesh.primitive.size = Vec3{ width, height, 0.0f };
+
+    // Register mesh with MeshManager for indirect rendering
+    auto renderer = Ermine::ECS::GetInstance().GetSystem<Renderer>();
+    if (renderer) {
+        // Calculate tangents
+        std::vector<glm::vec3> tangents = CalculateTangents(vertices, indices);
+
+        // Convert local Vertex to MeshTypes::Vertex
+        std::vector<graphics::Vertex> meshVertices;
+        meshVertices.reserve(vertices.size());
+        for (size_t i = 0; i < vertices.size(); ++i) {
+            const auto& v = vertices[i];
+            graphics::Vertex meshVert;
+            meshVert.position.x = v.pos.x;
+            meshVert.position.y = v.pos.y;
+            meshVert.position.z = v.pos.z;  // Fixed: Was missing Z coordinate!
+            meshVert.normal.x = v.norms.x;
+            meshVert.normal.y = v.norms.y;
+            meshVert.normal.z = v.norms.z;
+            meshVert.texCoord.x = v.tex.x;
+            meshVert.texCoord.y = v.tex.y;
+            meshVert.tangent = tangents[i];
+            meshVertices.push_back(meshVert);
+        }
+
+        std::string meshID = "Quad_" + std::to_string(width) + "x" + std::to_string(height);
+        renderer->m_MeshManager.RegisterMesh(meshVertices, indices, meshID);
+
+        // Store the registered mesh ID in the Mesh component
+        mesh.registeredMeshID = meshID;
+    }
 
     return mesh;
 }
@@ -233,6 +374,38 @@ Ermine::Mesh GeometryFactory::CreateSphere(float radius, unsigned int sectors, u
 	mesh.kind = MeshKind::Primitive;
 	mesh.primitive.type = "Sphere";
 	mesh.primitive.size = Vec3{ radius, radius, radius };
+
+    // Register mesh with MeshManager for indirect rendering
+    auto renderer = Ermine::ECS::GetInstance().GetSystem<Renderer>();
+    if (renderer) {
+        // Calculate tangents
+        std::vector<glm::vec3> tangents = CalculateTangents(vertices, indices);
+
+        // Convert local Vertex to MeshTypes::Vertex
+        std::vector<graphics::Vertex> meshVertices;
+        meshVertices.reserve(vertices.size());
+        for (size_t i = 0; i < vertices.size(); ++i) {
+            const auto& v = vertices[i];
+            graphics::Vertex meshVert;
+            meshVert.position.x = v.pos.x;
+            meshVert.position.y = v.pos.y;
+            meshVert.position.z = v.pos.z;  // Fixed: Was missing Z coordinate!
+            meshVert.normal.x = v.norms.x;
+            meshVert.normal.y = v.norms.y;
+            meshVert.normal.z = v.norms.z;
+            meshVert.texCoord.x = v.tex.x;
+            meshVert.texCoord.y = v.tex.y;
+            meshVert.tangent = tangents[i];
+            meshVertices.push_back(meshVert);
+        }
+
+        std::string meshID = "Sphere_" + std::to_string(radius) + "_" +
+                            std::to_string(sectors) + "x" + std::to_string(stacks);
+        renderer->m_MeshManager.RegisterMesh(meshVertices, indices, meshID);
+
+        // Store the registered mesh ID in the Mesh component
+        mesh.registeredMeshID = meshID;
+    }
 
     return mesh;
 }

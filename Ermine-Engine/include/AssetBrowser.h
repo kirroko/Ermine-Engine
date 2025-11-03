@@ -30,6 +30,12 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #endif
 #endif
 
+namespace Ermine {
+	class ResourcePipeline;
+	struct TextureImportSettings;
+	struct MeshImportSettings;
+}
+
 namespace Ermine::ImguiUI
 {
 	/**
@@ -46,6 +52,11 @@ namespace Ermine::ImguiUI
 		bool IsSelected;	  // Selection state
 		ImTextureID Icon;	  // Icon representing the asset
 		std::string realName; // Actual file name of the asset
+
+
+		bool needsReimport = false;      // Source file modified
+		bool isProcessedAsset = false;   // Is .dds, .mesh, .skin
+		std::string sourceFile;          // Original source if processed
 
 		/**
 		 * @brief Construct an asset with all fields.
@@ -92,10 +103,15 @@ namespace Ermine::ImguiUI
 		std::string renameTo;					// New name after renaming
 		char renameBuffer[256] = { 0 };			// Buffer for rename input
 
+
+		Ermine::ResourcePipeline* m_Pipeline = nullptr;
+
 		/**
 		 * @brief Default constructor that initializes the asset browser state.
 		 */
 		Browser();
+
+		void InitWithPipeline(Ermine::ResourcePipeline* pipeline);
 
 		/**
 		 * @brief Loads all required icons for folders, files, and refresh buttons.
@@ -242,6 +258,9 @@ namespace Ermine::ImguiUI
 
 			return false;
 		}*/
+		private:
+			void CheckImportStatus(Asset& asset);
+			void HandleImportContextMenu(const std::filesystem::path& filePath);
 	};
 
 	/**
@@ -259,6 +278,10 @@ namespace Ermine::ImguiUI
 		 */
 		AssetBrowser() : ImGUIWindow("Asset Browser IMGUI") {}
 
+		void InitWithPipeline(Ermine::ResourcePipeline* pipeline) {
+			assets_browser.InitWithPipeline(pipeline);
+		}
+
 		/**
 		 * @brief Render the AssetBrowser window.
 		 * This function is responsible for drawing the asset browser UI,
@@ -271,6 +294,8 @@ namespace Ermine::ImguiUI
 		 * @param filePaths Vector of paths representing dropped files.
 		 */
 		static void OnExternalFilesDropped(const std::vector<std::string>& filePaths);
+
+		Browser& GetBrowser() { return assets_browser; }
 
 	private:
 		Browser assets_browser; // Access the underlying Browser instance.

@@ -37,6 +37,8 @@ namespace Ermine
 	XPROPERTY_REG(PhysicComponent)
 	XPROPERTY_REG(GlobalTransform)
 	XPROPERTY_REG(ParticleEmitter)
+	XPROPERTY_REG(AABBComponent)
+	XPROPERTY_REG(HierarchyComponent)
 
 	//XPROPERTY_REG(ModelComponent)
 	//XPROPERTY_REG(AnimationComponent)
