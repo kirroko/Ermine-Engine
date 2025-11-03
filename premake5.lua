@@ -28,6 +28,7 @@ IncludeDir["Jolt"] = "ThirdParty"
 IncludeDir["assimp"] = "ThirdParty/assimp/include"
 IncludeDir["DirectXTex"] = "ThirdParty/DirectXTex/inc"
 IncludeDir["xproperty"] = "ThirdParty/xproperty/source"
+IncludeDir["xresource_Pipeline"] = "ThirdParty/xresource_pipeline_v2-main/source"
 IncludeDir["imnodes"] = "ThirdParty/imnodes"
 IncludeDir["recastnavigation"] = "ThirdParty/recastnavigation"
 
@@ -71,7 +72,9 @@ project "Ermine-Engine"
         "%{prj.name}/include/**.h",
         "%{prj.name}/include/**.tpp",
         "%{prj.name}/src/**.tpp",
-        "%{prj.name}/src/**.cpp"
+        "%{prj.name}/src/**.cpp",
+        "ThirdParty/xresource_pipeline_v2-main/dependencies/xtextfile/source/xtextfile.cpp",
+        "ThirdParty/xresource_pipeline_v2-main/dependencies/xtextfile/source/xtextfile.h"
     }
 
     includedirs
@@ -90,12 +93,15 @@ project "Ermine-Engine"
         "%{IncludeDir.assimp}",
         "%{IncludeDir.DirectXTex}",
         "%{IncludeDir.xproperty}",
-        "%{IncludeDir.imnodes}",
         "%{IncludeDir.recastnavigation}/Recast/Include",
         "%{IncludeDir.recastnavigation}/Detour/Include",
         "%{IncludeDir.recastnavigation}/DetourCrowd/Include",
         "%{IncludeDir.recastnavigation}/DetourTileCache/Include",
-        "%{IncludeDir.recastnavigation}/DebugUtils/Include"
+        "%{IncludeDir.recastnavigation}/DebugUtils/Include",
+        "%{IncludeDir.xresource_Pipeline}",
+        "ThirdParty/xresource_pipeline_v2-main/dependencies/xtextfile/source",
+        "ThirdParty/xresource_pipeline_v2-main/dependencies/xerr/source",
+        "%{IncludeDir.imnodes}"
     }
 
     libdirs
@@ -236,6 +242,8 @@ project "Ermine-Editor"
     {
         "%{prj.name}/src/**.h",
         "%{prj.name}/src/**.cpp",
+        "ThirdParty/xresource_pipeline_v2-main/dependencies/xtextfile/source/xtextfile.cpp",
+        "ThirdParty/xresource_pipeline_v2-main/dependencies/xtextfile/source/xtextfile.h"
     }
 
     includedirs
@@ -252,12 +260,15 @@ project "Ermine-Editor"
         "%{IncludeDir.Mono}",
         "%{IncludeDir.rapidjson}",
         "%{IncludeDir.xproperty}",
-        "%{IncludeDir.imnodes}",
         "%{IncludeDir.recastnavigation}/Recast/Include",
         "%{IncludeDir.recastnavigation}/Detour/Include",
         "%{IncludeDir.recastnavigation}/DetourCrowd/Include",
         "%{IncludeDir.recastnavigation}/DetourTileCache/Include",
-        "%{IncludeDir.recastnavigation}/DebugUtils/Include"
+        "%{IncludeDir.recastnavigation}/DebugUtils/Include",
+        "%{IncludeDir.xresource_Pipeline}",
+        "ThirdParty/xresource_pipeline_v2-main/dependencies/xtextfile/source",
+        "ThirdParty/xresource_pipeline_v2-main/dependencies/xerr/source",
+        "%{IncludeDir.imnodes}"
     } 
 
     -- Ensure the resource pipeline builds before running it
@@ -410,12 +421,19 @@ project "Ermine-ResourcePipeline"
         "%{prj.name}/xresource_pipeline_v2-main/source",
         "%{prj.name}/xresource_pipeline_v2-main/dependencies/xtextfile/source",
         "%{prj.name}/xresource_pipeline_v2-main/dependencies/xerr/source",
-        "%{IncludeDir.DirectXTex}"
+        "%{IncludeDir.DirectXTex}",
+        "%{IncludeDir.assimp}"
     }
 
     libdirs
     {
-        "%{LibraryDir.DirectXTex}"
+        "%{LibraryDir.DirectXTex}",
+        "%{LibraryDir.assimp}"
+    }
+
+    postbuildcommands
+    {
+        "{COPY} \"$(SolutionDir)ThirdParty\\assimp\\bin\\assimp-vc143-mt.dll\" \"$(TargetDir)\""
     }
 
     warnings "Extra"
@@ -429,16 +447,16 @@ project "Ermine-ResourcePipeline"
         runtime "Debug"
         symbols "on"
         linkoptions { "/NODEFAULTLIB:LIBCMTD" }
-        libdirs { "%{LibraryDir.DirectXTex}" }
-        links { "DirectXTexD.lib" }
+        libdirs { "%{LibraryDir.DirectXTex}", "%{LibraryDir.assimp}" }
+        links { "DirectXTexD.lib", "assimp-vc143-mt.lib" }
 
     filter "configurations:*Release"
         defines "EE_RELEASE"
         runtime "Release"
         optimize "on"
         linkoptions { "/NODEFAULTLIB:LIBCMT" }
-        libdirs { "%{LibraryDir.DirectXTex}" }
-        links { "DirectXTex.lib" }
+        libdirs { "%{LibraryDir.DirectXTex}" ,"%{LibraryDir.assimp}" }
+        links { "DirectXTex.lib", "assimp-vc143-mt.lib" }
 
 -- Script Assembly Project
 project "Ermine-ScriptAssembly"
