@@ -166,7 +166,7 @@ namespace Ermine
 
 	inline rapidjson::Value QuatToJson(const Quaternion& q, rapidjson::Document::AllocatorType& alloc) {
 		rapidjson::Value a(rapidjson::kArrayType);
-		a.PushBack(q.w, alloc).PushBack(q.x, alloc).PushBack(q.y, alloc).PushBack(q.z, alloc);
+		a.PushBack(q.x, alloc).PushBack(q.y, alloc).PushBack(q.z, alloc).PushBack(q.w, alloc);
 		return a;
 	}
 
