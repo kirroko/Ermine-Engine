@@ -27,7 +27,7 @@ struct Material {
 };
 
 // Light structure (existing Lights SSBO)
-layout(std430, binding = 1) restrict readonly buffer LightsSSBO
+layout(std130, binding = 1) restrict readonly buffer LightsSSBO
 {
     vec4 lightCount;
     struct LightData {

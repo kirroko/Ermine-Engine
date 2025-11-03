@@ -27,6 +27,14 @@ namespace Ermine
 	float Input::s_MouseDeltaY = 0.0f;
 	float Input::s_MouseScrollOffset = 0.0f;
 	float Input::s_MouseScrollOffsetEditor = 0.0f;
+
+	// Game mode mouse tracking
+	float Input::s_GameLastMouseX = 0.0f;
+	float Input::s_GameLastMouseY = 0.0f;
+	float Input::s_GameMouseDeltaX = 0.0f;
+	float Input::s_GameMouseDeltaY = 0.0f;
+	bool Input::s_GameMouseFirstMove = true;
+
 	std::unordered_map<int, bool> Input::s_PreviousKeyStates;
 	std::unordered_map<int, bool> Input::s_PreviousMouseButtonStates;
 	std::unordered_map<int, bool> Input::s_PreviousKeyStatesEditor;
@@ -557,5 +565,31 @@ namespace Ermine
 	std::pair<float, float> Input::GetMouseDelta()
 	{
 		return { s_MouseDeltaX, s_MouseDeltaY };
+	}
+
+	std::pair<float, float> Input::GetMouseDeltaGame()
+	{
+		if (!s_Window)
+			return { 0.0f, 0.0f };
+
+		double mouseX, mouseY;
+		glfwGetCursorPos(s_Window, &mouseX, &mouseY);
+
+		// Handle first mouse movement to avoid large delta jump
+		if (s_GameMouseFirstMove)
+		{
+			s_GameLastMouseX = static_cast<float>(mouseX);
+			s_GameLastMouseY = static_cast<float>(mouseY);
+			s_GameMouseFirstMove = false;
+			return { 0.0f, 0.0f };
+		}
+
+		s_GameMouseDeltaX = static_cast<float>(mouseX) - s_GameLastMouseX;
+		s_GameMouseDeltaY = s_GameLastMouseY - static_cast<float>(mouseY); // Reversed: y-coordinates range from bottom to top
+
+		s_GameLastMouseX = static_cast<float>(mouseX);
+		s_GameLastMouseY = static_cast<float>(mouseY);
+
+		return { s_GameMouseDeltaX, s_GameMouseDeltaY };
 	}
 }

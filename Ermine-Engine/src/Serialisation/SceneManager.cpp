@@ -262,7 +262,7 @@ void SceneManager::NewScene()
     Ermine::ECS::GetInstance().ClearAllEntities();
     auto mainLight = Ermine::ECS::GetInstance().CreateEntity();
 
-    // Tilted down and slightly to the side, similar to Unity’s default
+    // Tilted down and slightly to the side, similar to Unity's default
     Ermine::ECS::GetInstance().AddComponent(
         mainLight,
         Ermine::Transform(
@@ -273,8 +273,12 @@ void SceneManager::NewScene()
     Ermine::ECS::GetInstance().AddComponent(mainLight, Ermine::ObjectMetaData("Main Light", "Light", true));
     Ermine::ECS::GetInstance().AddComponent(mainLight, Ermine::Light(Ermine::Vec3(1, 1, 1), 1.0f, Ermine::LightType::DIRECTIONAL, true));
     Ermine::ECS::GetInstance().AddComponent<Ermine::HierarchyComponent>(mainLight, Ermine::HierarchyComponent{});
-
-    Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>()->UpdateShadowMap();
+    // Mark materials dirty to trigger recompilation
+    auto renderer = Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>();
+    if (renderer) {
+        renderer->MarkMaterialsDirty();
+    }
+    Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>()->InitializeShadowMapResources();
     Ermine::ECS::GetInstance().GetSystem<Ermine::Physics>()->UpdatePhysicList();
     if (auto scene = SceneManager::GetInstance().GetActiveScene())
         scene->EnsureSyncedWithECS(/*force=*/true);
@@ -288,6 +292,13 @@ void SceneManager::ClearScene()
     Ermine::ECS::GetInstance().ClearAllEntities();
 
     //Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>()->UpdateShadowMap();
+    
+    // Mark materials dirty to trigger recompilation
+    auto renderer = Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>();
+    if (renderer) {
+        renderer->MarkMaterialsDirty();
+    }
+    
     if (auto scene = GetActiveScene()) {
         scene->EnsureSyncedWithECS();
     }
@@ -308,7 +319,13 @@ void SceneManager::OpenScene(const std::string& path)
     //EnsureActiveScene().Clear();
 
     LoadSceneFromFile(Ermine::ECS::GetInstance(), path);
-    Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>()->UpdateShadowMap();
+    Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>()->InitializeShadowMapResources();
+
+    // Mark materials dirty to trigger recompilation after scene load
+    auto renderer = Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>();
+    if (renderer) {
+        renderer->MarkMaterialsDirty();
+    }
 
     //RebuildRuntimeHierarchyFromGuids(Ermine::ECS::GetInstance());
 
