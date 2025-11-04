@@ -185,6 +185,7 @@ namespace Ermine
 		void SetRotation(EntityID ID, Ermine::Quaternion rotation);
 
 		void Move(EntityID ID, Ermine::Vec3 position, Ermine::Vec3 rotation);
+
 		void Move(EntityID ID, Ermine::Vec3 position, Ermine::Quaternion rotation);
 		
 		//! Shared pointer to the debug renderer used for visualizing physics.
