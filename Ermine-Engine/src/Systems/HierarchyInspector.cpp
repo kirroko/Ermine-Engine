@@ -1317,9 +1317,8 @@ namespace Ermine::editor {
 
 		if (!initialized) {
 			availableModels.clear();
-			for (auto& entry : std::filesystem::directory_iterator(modelsDir)) {
+			for (auto& entry : std::filesystem::recursive_directory_iterator(modelsDir)) {
 				if (entry.is_regular_file()) {
-					std::string name = entry.path().filename().string();
 					std::string ext = entry.path().extension().string();
 					// Added .skin and .mesh to the filter
 					if (ext == ".fbx" || ext == ".obj" || ext == ".gltf" ||
