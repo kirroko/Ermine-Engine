@@ -1317,14 +1317,17 @@ namespace Ermine::editor {
 
 		if (!initialized) {
 			availableModels.clear();
-			for (auto& entry : std::filesystem::directory_iterator(modelsDir)) {
+			for (auto& entry : std::filesystem::recursive_directory_iterator(modelsDir)) {
 				if (entry.is_regular_file()) {
-					std::string name = entry.path().filename().string();
 					std::string ext = entry.path().extension().string();
 					// Added .skin and .mesh to the filter
 					if (ext == ".fbx" || ext == ".obj" || ext == ".gltf" ||
 						ext == ".skin" || ext == ".mesh") {
-						availableModels.push_back(name);
+						// Store relative path from modelsDir with forward slashes
+						std::string relativePath = std::filesystem::relative(entry.path(), modelsDir).string();
+						// Normalize path separators to forward slashes
+						std::replace(relativePath.begin(), relativePath.end(), '\\', '/');
+						availableModels.push_back(relativePath);
 					}
 				}
 			}
