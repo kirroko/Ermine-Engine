@@ -2775,6 +2775,37 @@ namespace Ermine
 		float crosshairThickness = 0.003f;
 		int crosshairStyle = 0;        // 0 = cross, 1 = dot, 2 = circle
 
+		// Health system
+		float currentHealth = 100.0f;
+		float maxHealth = 100.0f;
+
+		// Mana bar settings
+		bool showManaBar = true;
+		float currentMana = 100.0f;
+		float maxMana = 100.0f;
+		float manaRegenRate = 10.0f;          // Mana per second
+		float manaRegenDelay = 2.0f;          // Delay after skill use before regen starts
+		float manaRegenTimer = 0.0f;          // Internal timer (don't serialize)
+		Ermine::Vec3 manaBarColor = { 0.0f, 0.5f, 1.0f };       // Blue
+		Ermine::Vec3 manaBarBgColor = { 0.2f, 0.2f, 0.3f };     // Dark blue-gray
+		float manaBarWidth = 0.3f;            // Percentage of screen width
+		float manaBarHeight = 0.03f;          // Percentage of screen height
+		Ermine::Vec3 manaBarPosition = { 0.1f, 0.85f, 0.0f };   // Below health bar
+
+		// Skill slot data
+		struct SkillSlot
+		{
+			float currentCooldown = 0.0f;     // Current cooldown remaining (seconds)
+			float maxCooldown = 5.0f;         // Total cooldown duration
+			float manaCost = 20.0f;           // Mana required to cast
+			bool isOnCooldown = false;        // Is skill currently on cooldown?
+			Ermine::Vec3 slotColor = { 0.3f, 0.3f, 0.3f };        // Background color
+			Ermine::Vec3 readyColor = { 0.0f, 0.8f, 0.0f };       // Color when ready (green)
+			Ermine::Vec3 cooldownColor = { 0.5f, 0.0f, 0.0f };    // Color during cooldown (red)
+			Ermine::Vec3 cooldownOverlayColor = { 0.0f, 0.0f, 0.0f };  // Overlay during cooldown (black)
+		};
+		std::array<SkillSlot, 4> skills;      // 4 skill slots
+
 		template<typename Alloc>
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const
 		{
@@ -2796,6 +2827,34 @@ namespace Ermine
 			out.AddMember("crosshairSize", crosshairSize, alloc);
 			out.AddMember("crosshairThickness", crosshairThickness, alloc);
 			out.AddMember("crosshairStyle", crosshairStyle, alloc);
+
+			// Health and Mana
+			out.AddMember("currentHealth", currentHealth, alloc);
+			out.AddMember("maxHealth", maxHealth, alloc);
+			out.AddMember("showManaBar", showManaBar, alloc);
+			out.AddMember("currentMana", currentMana, alloc);
+			out.AddMember("maxMana", maxMana, alloc);
+			out.AddMember("manaRegenRate", manaRegenRate, alloc);
+			out.AddMember("manaRegenDelay", manaRegenDelay, alloc);
+			out.AddMember("manaBarColor", Vec3ToJson(manaBarColor, alloc), alloc);
+			out.AddMember("manaBarBgColor", Vec3ToJson(manaBarBgColor, alloc), alloc);
+			out.AddMember("manaBarWidth", manaBarWidth, alloc);
+			out.AddMember("manaBarHeight", manaBarHeight, alloc);
+			out.AddMember("manaBarPosition", Vec3ToJson(manaBarPosition, alloc), alloc);
+
+			// Skill slots
+			rapidjson::Value skillsArray(rapidjson::kArrayType);
+			for (const auto& skill : skills) {
+				rapidjson::Value skillObj(rapidjson::kObjectType);
+				skillObj.AddMember("maxCooldown", skill.maxCooldown, alloc);
+				skillObj.AddMember("manaCost", skill.manaCost, alloc);
+				skillObj.AddMember("slotColor", Vec3ToJson(skill.slotColor, alloc), alloc);
+				skillObj.AddMember("readyColor", Vec3ToJson(skill.readyColor, alloc), alloc);
+				skillObj.AddMember("cooldownColor", Vec3ToJson(skill.cooldownColor, alloc), alloc);
+				skillObj.AddMember("cooldownOverlayColor", Vec3ToJson(skill.cooldownOverlayColor, alloc), alloc);
+				skillsArray.PushBack(skillObj, alloc);
+			}
+			out.AddMember("skillSlots", skillsArray, alloc);
 		}
 
 		void Deserialize(const rapidjson::Value& in)
@@ -2832,6 +2891,53 @@ namespace Ermine
 				crosshairThickness = in["crosshairThickness"].GetFloat();
 			if (in.HasMember("crosshairStyle") && in["crosshairStyle"].IsInt())
 				crosshairStyle = in["crosshairStyle"].GetInt();
+
+			// Health and Mana
+			if (in.HasMember("currentHealth") && in["currentHealth"].IsNumber())
+				currentHealth = in["currentHealth"].GetFloat();
+			if (in.HasMember("maxHealth") && in["maxHealth"].IsNumber())
+				maxHealth = in["maxHealth"].GetFloat();
+			if (in.HasMember("showManaBar") && in["showManaBar"].IsBool())
+				showManaBar = in["showManaBar"].GetBool();
+			if (in.HasMember("currentMana") && in["currentMana"].IsNumber())
+				currentMana = in["currentMana"].GetFloat();
+			if (in.HasMember("maxMana") && in["maxMana"].IsNumber())
+				maxMana = in["maxMana"].GetFloat();
+			if (in.HasMember("manaRegenRate") && in["manaRegenRate"].IsNumber())
+				manaRegenRate = in["manaRegenRate"].GetFloat();
+			if (in.HasMember("manaRegenDelay") && in["manaRegenDelay"].IsNumber())
+				manaRegenDelay = in["manaRegenDelay"].GetFloat();
+			if (in.HasMember("manaBarColor") && in["manaBarColor"].IsObject())
+				manaBarColor = JsonToVec3(in["manaBarColor"]);
+			if (in.HasMember("manaBarBgColor") && in["manaBarBgColor"].IsObject())
+				manaBarBgColor = JsonToVec3(in["manaBarBgColor"]);
+			if (in.HasMember("manaBarWidth") && in["manaBarWidth"].IsNumber())
+				manaBarWidth = in["manaBarWidth"].GetFloat();
+			if (in.HasMember("manaBarHeight") && in["manaBarHeight"].IsNumber())
+				manaBarHeight = in["manaBarHeight"].GetFloat();
+			if (in.HasMember("manaBarPosition") && in["manaBarPosition"].IsObject())
+				manaBarPosition = JsonToVec3(in["manaBarPosition"]);
+
+			// Skill slots
+			if (in.HasMember("skillSlots") && in["skillSlots"].IsArray()) {
+				const auto& skillsArray = in["skillSlots"];
+				size_t count = std::min(skillsArray.Size(), static_cast<unsigned int>(skills.size()));
+				for (size_t i = 0; i < count; ++i) {
+					const auto& skillObj = skillsArray[i];
+					if (skillObj.HasMember("maxCooldown") && skillObj["maxCooldown"].IsNumber())
+						skills[i].maxCooldown = skillObj["maxCooldown"].GetFloat();
+					if (skillObj.HasMember("manaCost") && skillObj["manaCost"].IsNumber())
+						skills[i].manaCost = skillObj["manaCost"].GetFloat();
+					if (skillObj.HasMember("slotColor") && skillObj["slotColor"].IsObject())
+						skills[i].slotColor = JsonToVec3(skillObj["slotColor"]);
+					if (skillObj.HasMember("readyColor") && skillObj["readyColor"].IsObject())
+						skills[i].readyColor = JsonToVec3(skillObj["readyColor"]);
+					if (skillObj.HasMember("cooldownColor") && skillObj["cooldownColor"].IsObject())
+						skills[i].cooldownColor = JsonToVec3(skillObj["cooldownColor"]);
+					if (skillObj.HasMember("cooldownOverlayColor") && skillObj["cooldownOverlayColor"].IsObject())
+						skills[i].cooldownOverlayColor = JsonToVec3(skillObj["cooldownOverlayColor"]);
+				}
+			}
 		}
 
 		XPROPERTY_DEF(
@@ -2840,6 +2946,14 @@ namespace Ermine
 			xproperty::obj_member<"healthbarColor", &UIComponent::healthbarColor>,
 			xproperty::obj_member<"healthbarWidth", &UIComponent::healthbarWidth>,
 			xproperty::obj_member<"healthbarHeight", &UIComponent::healthbarHeight>,
+			xproperty::obj_member<"currentHealth", &UIComponent::currentHealth>,
+			xproperty::obj_member<"maxHealth", &UIComponent::maxHealth>,
+			xproperty::obj_member<"showManaBar", &UIComponent::showManaBar>,
+			xproperty::obj_member<"currentMana", &UIComponent::currentMana>,
+			xproperty::obj_member<"maxMana", &UIComponent::maxMana>,
+			xproperty::obj_member<"manaRegenRate", &UIComponent::manaRegenRate>,
+			xproperty::obj_member<"manaRegenDelay", &UIComponent::manaRegenDelay>,
+			xproperty::obj_member<"manaBarColor", &UIComponent::manaBarColor>,
 			xproperty::obj_member<"showSkills", &UIComponent::showSkills>,
 			xproperty::obj_member<"skillSlotSize", &UIComponent::skillSlotSize>,
 			xproperty::obj_member<"showCrosshair", &UIComponent::showCrosshair>,

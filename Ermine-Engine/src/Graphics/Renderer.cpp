@@ -1664,9 +1664,8 @@ void Renderer::RenderPostProcessPass()
 
 	glEnable(GL_DEPTH_TEST);
 
-#if defined(EE_EDITOR)
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-#endif
+	// NOTE: Don't unbind framebuffer here - UI needs to render to it!
+	// Framebuffer will be unbound in Engine.cpp after UI rendering
 }
 
 // overload that forwards to the existing glm version
@@ -2450,9 +2449,8 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 			glDisable(GL_BLEND);
 		}
 
-#if defined(EE_EDITOR)
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-#endif
+		// NOTE: Don't unbind framebuffer yet - UI needs to render to it!
+		// Framebuffer will be unbound after UI rendering in Engine.cpp
 	}
 
 	// Increment  frame counter at the end of the frame

@@ -39,6 +39,7 @@ namespace Ermine
 	XPROPERTY_REG(ParticleEmitter)
 	XPROPERTY_REG(AABBComponent)
 	XPROPERTY_REG(HierarchyComponent)
+	XPROPERTY_REG(UIComponent)
 
 	//XPROPERTY_REG(ModelComponent)
 	//XPROPERTY_REG(AnimationComponent)

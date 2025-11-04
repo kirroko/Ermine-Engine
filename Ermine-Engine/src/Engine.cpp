@@ -41,6 +41,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Scene.h"
 #include "HierarchySystem.h"
 #include "GameCamera.h"
+#include "UIRenderSystem.h"
 
 #if defined(EE_EDITOR)
 #include "GraphicsDebugGUI.h"
@@ -152,6 +153,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	EE_AUTO_REGISTER_COMPONENT(GlobalTransform, "GlobalTransform")
 	EE_AUTO_REGISTER_COMPONENT(ParticleEmitter, "ParticleEmitter");
 	EE_AUTO_REGISTER_COMPONENT(CameraComponent, "CameraComponent");
+	EE_AUTO_REGISTER_COMPONENT(UIComponent, "UIComponent");
 
 	// NOTE : THESE ARE SPECIAL CASES DUE TO THE FACT THAT THEIR COMPONENTS ARE UNIQUE AND WOULDN'T WORK BY SHALLOW COPIED OR DEEP COPIED
 	// THE CLONING FUNCTIONALITY HAVE BEEN CONSIDERED INTO ECS ITSELF. UNSURE, ASK.
@@ -183,6 +185,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().RegisterSystem<HierarchySystem>();
 	ECS::GetInstance().RegisterSystem<StateManager>();
 	ECS::GetInstance().RegisterSystem<graphics::GameCamera>();
+	ECS::GetInstance().RegisterSystem<UIRenderSystem>();
 
 	//Register JPH::TempAllocatorImpl for Physcis
 	RegisterDefaultAllocator();
@@ -247,6 +250,11 @@ bool engine::Init(GLFWwindow* windowContext)
 	fsmSig.set(ECS::GetInstance().GetComponentType<Transform>());
 	ECS::GetInstance().SetSystemSignature<StateManager>(fsmSig);
 
+	// For UI Rendering System
+	SignatureID uiSig;
+	uiSig.set(ECS::GetInstance().GetComponentType<UIComponent>());
+	ECS::GetInstance().SetSystemSignature<UIRenderSystem>(uiSig);
+
 	glfwSetFramebufferSizeCallback(windowContext, []([[maybe_unused]] GLFWwindow* window, int width, int height)
 		{
 #if defined(EE_EDITOR)
@@ -256,6 +264,10 @@ bool engine::Init(GLFWwindow* windowContext)
 			auto renderer = ECS::GetInstance().GetSystem<graphics::Renderer>();
 			if (renderer && width > 0 && height > 0)
 				renderer->OnWindowResize(width, height);
+
+			auto uiSystem = ECS::GetInstance().GetSystem<UIRenderSystem>();
+			if (uiSystem && width > 0 && height > 0)
+				uiSystem->OnScreenResize(width, height);
 #endif
 		});
 
@@ -531,6 +543,12 @@ bool engine::Init(GLFWwindow* windowContext)
 	else
 		ECS::GetInstance().GetSystem<graphics::Renderer>()->Init(1920, 1080); // Fallback to default size
 
+	// Initialize UI Render System
+	if (windowWidth > 0 && windowHeight > 0)
+		ECS::GetInstance().GetSystem<UIRenderSystem>()->Init(windowWidth, windowHeight);
+	else
+		ECS::GetInstance().GetSystem<UIRenderSystem>()->Init(1920, 1080);
+
 	SceneManager::GetInstance().NewScene();
 
 	EE_CORE_INFO("Material system now supports efficient sharing between entities using shared_ptr");
@@ -570,6 +588,12 @@ bool engine::Init(GLFWwindow* windowContext)
 	editor::EditorGUI::SetActiveScene(defaultScene);
 	SceneManager::GetInstance().SetActiveScene(defaultScene);
 	EE_CORE_INFO("Created and set active scene: Main Scene");
+
+	// Create a test entity with UIComponent for HUD rendering
+	EntityID uiEntity = defaultScene->CreateEntity("HUD", false, false);  // No transform or hierarchy needed
+	UIComponent uiComp;  // Default values are already set in the struct
+	ECS::GetInstance().AddComponent<UIComponent>(uiEntity, uiComp);
+	EE_CORE_INFO("Created HUD entity with UIComponent");
 #endif
 
 	s_isInitialized = true;
@@ -727,6 +751,9 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 
 	// FSM update
 	ECS::GetInstance().GetSystem<StateManager>()->Update(FrameController::GetFixedDeltaTime());
+
+	// UI update (mana regen, cooldowns)
+	ECS::GetInstance().GetSystem<UIRenderSystem>()->Update(FrameController::GetDeltaTime());
 }
 
 void engine::Render(GLFWwindow* window)
@@ -793,6 +820,17 @@ void engine::Render(GLFWwindow* window)
 
 	// Stop GPU timing for rendering
 	graphics::GPUProfiler::EndEvent();
+
+	// Render UI overlays (health bars, mana, skills, crosshairs)
+	// This renders to the offscreen framebuffer (before it's captured for the viewport)
+	auto uiSystem = ECS::GetInstance().GetSystem<UIRenderSystem>();
+	if (uiSystem)
+		uiSystem->Render();
+
+#if defined(EE_EDITOR)
+	// Unbind framebuffer after UI rendering (so ImGui renders to the window)
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+#endif
 
 	// Render ImGui/Editor on top of everything
 #if defined(EE_EDITOR)
