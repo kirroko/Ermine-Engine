@@ -323,8 +323,8 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClInclude Include="include\FSMNode.h" />
     <ClInclude Include="include\FiniteStateMachine.h" />
     <ClInclude Include="include\FrameController.h" />
-    <ClInclude Include="include\GameCamera.h" />
     <ClInclude Include="include\GPUProfiler.h" />
+    <ClInclude Include="include\GameCamera.h" />
     <ClInclude Include="include\GameObject.h" />
     <ClInclude Include="include\GameObjectFactory.h" />
     <ClInclude Include="include\GeometryFactory.h" />
@@ -345,6 +345,8 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClInclude Include="include\MathVector.h" />
     <ClInclude Include="include\Matrix3x3.h" />
     <ClInclude Include="include\Matrix4x4.h" />
+    <ClInclude Include="include\MeshManager.h" />
+    <ClInclude Include="include\MeshTypes.h" />
     <ClInclude Include="include\Model.h" />
     <ClInclude Include="include\Particles.h" />
     <ClInclude Include="include\PhysicDebugRenderer.h" />
@@ -354,6 +356,7 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClInclude Include="include\Registry.h" />
     <ClInclude Include="include\Renderer.h" />
     <ClInclude Include="include\ResourcePipe.h" />
+    <ClInclude Include="include\SSBO_Bindings.h" />
     <ClInclude Include="include\Scene.h" />
     <ClInclude Include="include\SceneManager.h" />
     <ClInclude Include="include\ScriptClass.h" />
@@ -364,7 +367,6 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClInclude Include="include\Shader.h" />
     <ClInclude Include="include\SkeletalSSBO.h" />
     <ClInclude Include="include\Skybox.h" />
-    <ClInclude Include="include\SSBO_Bindings.h" />
     <ClInclude Include="include\Systems.h" />
     <ClInclude Include="include\Texture.h" />
     <ClInclude Include="include\TransformMode.h" />

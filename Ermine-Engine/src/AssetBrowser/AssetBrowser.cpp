@@ -432,7 +432,7 @@ namespace Ermine::ImguiUI
             while (fs::exists(newFolder))
                 newFolder = currentDirectory / ("New Folder " + std::to_string(counter++));
             fs::create_directory(newFolder);
-            Refresh();
+            pendingRefresh = true;
         }
 
         // "Duplicate" option
@@ -440,14 +440,14 @@ namespace Ermine::ImguiUI
             fs::path dest = filePath.parent_path() / (filePath.stem().string() + "_copy" + filePath.extension().string());
             try { fs::copy_file(filePath, dest, fs::copy_options::overwrite_existing); }
             catch (...) { EE_CORE_ERROR("Failed to duplicate {}", filePath.string()); }
-            Refresh();
+            pendingRefresh = true;
         }
 
         // "Delete" option
         if (ImGui::MenuItem("Delete")) {
             try { fs::remove(filePath); }
             catch (...) { EE_CORE_ERROR("Failed to delete {}", filePath.string()); }
-            Refresh();
+            pendingRefresh = true;
         }
 
         // "Rename" option
@@ -648,6 +648,12 @@ namespace Ermine::ImguiUI
         if (!folderToOpen.empty()) {
             currentDirectory = folderToOpen;
             LoadDirectoryContents(folderToOpen);
+        }
+
+        // Refresh assets if requested
+        if (pendingRefresh) {
+            pendingRefresh = false;
+            Refresh();
         }
 
         // End grid layout

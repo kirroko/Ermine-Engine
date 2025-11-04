@@ -75,6 +75,7 @@
     <Compile Include="CoreModule\Debug.cs" />
     <Compile Include="CoreModule\GameObject.cs" />
     <Compile Include="CoreModule\Input.cs" />
+    <Compile Include="CoreModule\Prefab.cs" />
     <Compile Include="CoreModule\Quaternion.cs" />
     <Compile Include="CoreModule\Rigidbody.cs" />
     <Compile Include="CoreModule\Time.cs" />

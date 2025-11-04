@@ -85,6 +85,7 @@ namespace Ermine::ImguiUI
 		std::filesystem::path currentDirectory; // Currently viewed directory
 		std::vector<Asset> Items;				// List of assets in the current directory
 		std::string isSelectedFile;				// Currently selected file
+		bool pendingRefresh = false;			// Flag to check to refresh assets
 
 		// --- UI State ---
 		std::string searchQuery;				// Current search query

@@ -26,16 +26,37 @@ namespace ErmineEngine
         [MethodImpl(MethodImplOptions.InternalCall)]
         private static extern bool InternalGetKeyUp(KeyCode key);
 
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        private static extern bool InternalGetMouseButton(KeyCode key);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        private static extern bool InternalGetMouseButtonDown(KeyCode key);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        private static extern bool InternalGetMouseButtonUp(KeyCode key);
+
         public static bool GetKey(KeyCode key) => InternalGetKey(key);
 
         public static bool GetKeyDown(KeyCode key) => InternalGetKeyDown(key);
 
         public static bool GetKeyUp(KeyCode key) => InternalGetKeyUp(key);
+
+        public static bool GetMouseButton(KeyCode key) => InternalGetMouseButton(key);
+
+        public static bool GetMouseButton(int key) => InternalGetMouseButton((KeyCode)key);
+
+        public static bool GetMouseButtonDown(KeyCode key) => InternalGetMouseButtonDown(key);
+
+        public static bool GetMouseButtonDown(int key) => InternalGetMouseButtonDown((KeyCode)key);
+
+        public static bool GetMouseButtonUp(KeyCode key) => InternalGetMouseButtonUp(key);
     }
 
     // Key code based on GLFW Key codes
     public enum KeyCode : int
     {
+        LeftMouseButton = 0,
+        RightMouseButton = 1,
         Tab = 258,
         RightArrow = 262,
         LeftArrow = 263,

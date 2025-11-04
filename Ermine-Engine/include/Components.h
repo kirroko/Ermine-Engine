@@ -166,7 +166,7 @@ namespace Ermine
 
 	inline rapidjson::Value QuatToJson(const Quaternion& q, rapidjson::Document::AllocatorType& alloc) {
 		rapidjson::Value a(rapidjson::kArrayType);
-		a.PushBack(q.w, alloc).PushBack(q.x, alloc).PushBack(q.y, alloc).PushBack(q.z, alloc);
+		a.PushBack(q.x, alloc).PushBack(q.y, alloc).PushBack(q.z, alloc).PushBack(q.w, alloc);
 		return a;
 	}
 
@@ -2000,7 +2000,7 @@ namespace Ermine
 	struct ModelComponent
 	{
 		std::shared_ptr<graphics::Model> m_model;
-		std::string m_modelPath;  // Store the path for serialization
+		//std::string m_modelPath;  // Store the path for serialization
 		bool m_isSkinFile = false; // Track if it's a .skin file
 
 		ModelComponent() = default;
@@ -2015,10 +2015,10 @@ namespace Ermine
 
 			// Serialize model path
 			rapidjson::Value pathVal;
-			pathVal.SetString(m_modelPath.c_str(),
-				static_cast<rapidjson::SizeType>(m_modelPath.size()),
+			pathVal.SetString(m_model->GetName().c_str(),
+				static_cast<rapidjson::SizeType>(m_model->GetName().size()),
 				alloc);
-			out.AddMember("modelPath", pathVal, alloc);
+			out.AddMember("model", pathVal, alloc);
 
 			// Serialize file type flag
 			out.AddMember("isSkinFile", m_isSkinFile, alloc);
