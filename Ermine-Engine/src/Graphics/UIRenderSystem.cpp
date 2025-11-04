@@ -218,15 +218,45 @@ namespace Ermine
         float width = ui.healthbarWidth;
         float height = ui.healthbarHeight;
 
-        // Render background
-        RenderQuad(x, y, width, height, ui.healthbarBgColor, 0.8f);
+        // Outer border (black outline for contrast)
+        float outerBorder = 0.003f;
+        Vec3 outerBorderColor = { 0.0f, 0.0f, 0.0f };
+        RenderQuad(x - outerBorder, y - outerBorder, width + outerBorder * 2.0f, height + outerBorder * 2.0f, outerBorderColor, 0.9f);
 
-        // Render health fill
+        // Inner border (bright accent)
+        float innerBorder = 0.0015f;
+        Vec3 innerBorderColor = { 0.8f, 0.8f, 0.8f };
+        RenderQuad(x - innerBorder, y - innerBorder, width + innerBorder * 2.0f, height + innerBorder * 2.0f, innerBorderColor, 0.8f);
+
+        // Render background
+        RenderQuad(x, y, width, height, ui.healthbarBgColor, 0.9f);
+
+        // Render health fill with gradient effect (darker at bottom, brighter at top)
         float healthPercent = ui.currentHealth / ui.maxHealth;
         if (healthPercent > 0.0f)
         {
-            RenderQuad(x, y, width * healthPercent, height, ui.healthbarColor, 1.0f);
+            float fillWidth = width * healthPercent;
+
+            // Determine health color based on percentage
+            Vec3 healthColor = ui.healthbarColor;
+            if (healthPercent < 0.25f)
+                healthColor = { 1.0f, 0.0f, 0.0f }; // Red when critical
+            else if (healthPercent < 0.5f)
+                healthColor = { 1.0f, 0.5f, 0.0f }; // Orange when low
+
+            // Main health bar
+            RenderQuad(x, y, fillWidth, height, healthColor, 1.0f);
+
+            // Shine effect on top of health bar (brighter overlay)
+            float shineHeight = height * 0.4f;
+            Vec3 shineColor = { 1.0f, 1.0f, 1.0f };
+            RenderQuad(x, y + height - shineHeight, fillWidth, shineHeight, shineColor, 0.3f);
         }
+
+        // Inner shadow at the bottom for depth
+        float shadowHeight = height * 0.2f;
+        Vec3 shadowColor = { 0.0f, 0.0f, 0.0f };
+        RenderQuad(x, y, width, shadowHeight, shadowColor, 0.3f);
     }
 
     void UIRenderSystem::RenderManaBar(const UIComponent& ui)
@@ -253,46 +283,60 @@ namespace Ermine
         float startY = ui.skillsPosition.y;
         float slotSize = ui.skillSlotSize;
         float spacing = ui.skillSlotSpacing;
+        float radius = slotSize * 0.5f; // Circle radius is half the slot size
 
         // Calculate total width of all slots to center them
         float totalWidth = (slotSize * ui.skills.size()) + (spacing * (ui.skills.size() - 1));
         float currentX = startX - (totalWidth * 0.5f);
 
+        // Get current time for animation (using glfwGetTime or similar)
+        static float animTime = 0.0f;
+        animTime += 0.016f; // Approximate 60 FPS for smooth animation
+
         for (size_t i = 0; i < ui.skills.size(); ++i)
         {
             const auto& skill = ui.skills[i];
 
+            // Calculate center of circle
+            float centerX = currentX + radius;
+            float centerY = startY + radius;
+
             // Determine slot color based on cooldown state and life essence
             Vec3 slotColor = skill.slotColor;
+            bool isReady = !skill.isOnCooldown && ui.currentHealth >= skill.manaCost;
+
             if (skill.isOnCooldown)
                 slotColor = skill.cooldownColor;
-            else if (ui.currentHealth >= skill.manaCost)  // Check life essence (health)
+            else if (isReady)
                 slotColor = skill.readyColor;
 
-            // Render slot background
-            RenderQuad(currentX, startY, slotSize, slotSize, slotColor, 0.9f);
+            // Add pulsing glow effect when skill is ready (outer glow)
+            if (isReady)
+            {
+                float pulse = 0.5f + 0.5f * sinf(animTime * 3.0f + i * 0.5f); // Pulse between 0.5 and 1.0
+                float glowRadius = radius + 0.004f * pulse;
+                Vec3 glowColor = { 0.0f, 1.0f, 0.0f }; // Bright green glow
+                RenderFilledCircle(centerX, centerY, glowRadius, glowColor, 0.3f * pulse);
+            }
+
+            // Render outer border (dark shadow for depth)
+            float outerBorderRadius = radius + 0.002f;
+            RenderFilledCircle(centerX, centerY, outerBorderRadius, { 0.0f, 0.0f, 0.0f }, 0.8f);
+
+            // Render slot background circle
+            RenderFilledCircle(centerX, centerY, radius, slotColor, 0.9f);
 
             // Render cooldown overlay (radial)
             if (skill.isOnCooldown && skill.maxCooldown > 0.0f)
             {
                 float progress = skill.currentCooldown / skill.maxCooldown;
-                float centerX = currentX + slotSize * 0.5f;
-                float centerY = startY + slotSize * 0.5f;
-                RenderRadialCooldown(centerX, centerY, slotSize * 0.5f, progress, skill.cooldownOverlayColor, 0.7f);
+                RenderRadialCooldown(centerX, centerY, radius, progress, skill.cooldownOverlayColor, 0.7f);
             }
 
-            // Border around slot
-            float borderThickness = 0.002f;
-            Vec3 borderColor = { 1.0f, 1.0f, 1.0f };
-
-            // Top border
-            RenderQuad(currentX, startY + slotSize - borderThickness, slotSize, borderThickness, borderColor, 1.0f);
-            // Bottom border
-            RenderQuad(currentX, startY, slotSize, borderThickness, borderColor, 1.0f);
-            // Left border
-            RenderQuad(currentX, startY, borderThickness, slotSize, borderColor, 1.0f);
-            // Right border
-            RenderQuad(currentX + slotSize - borderThickness, startY, borderThickness, slotSize, borderColor, 1.0f);
+            // Border around slot (circle outline - thicker and brighter when ready)
+            float borderThickness = isReady ? 0.003f : 0.002f;
+            Vec3 borderColor = isReady ? Vec3{0.0f, 1.0f, 0.0f} : Vec3{0.8f, 0.8f, 0.8f};
+            RenderCircle(centerX, centerY, radius, borderThickness, borderColor);
 
             currentX += slotSize + spacing;
         }
@@ -304,23 +348,70 @@ namespace Ermine
         float centerY = 0.5f;
         float size = ui.crosshairSize;
         float thickness = ui.crosshairThickness;
+        float gap = ui.crosshairGap;
 
         switch (ui.crosshairStyle)
         {
-        case 0: // Cross
+        case 0: // Sniper scope style crosshair
         {
-            // Horizontal line
-            RenderQuad(centerX - size, centerY - thickness * 0.5f, size * 2.0f, thickness, ui.crosshairColor, 1.0f);
-            // Vertical line
-            RenderQuad(centerX - thickness * 0.5f, centerY - size, thickness, size * 2.0f, ui.crosshairColor, 1.0f);
+            // Center dot for precision
+            float dotSize = thickness * 1.5f;
+            RenderQuad(centerX - dotSize * 0.5f, centerY - dotSize * 0.5f, dotSize, dotSize, ui.crosshairColor, 1.0f);
+
+            // Inner circle
+            float innerRadius = size * 0.6f;
+            RenderCircle(centerX, centerY, innerRadius, thickness * 0.8f, ui.crosshairColor);
+
+            // Outer crosshair lines extending from circle
+            float outerGap = innerRadius + gap * 2.0f;
+            float lineLength = size * 1.2f;
+
+            // Horizontal lines (left and right)
+            RenderQuad(centerX - lineLength - outerGap, centerY - thickness * 0.5f, lineLength, thickness, ui.crosshairColor, 0.9f);  // Left
+            RenderQuad(centerX + outerGap, centerY - thickness * 0.5f, lineLength, thickness, ui.crosshairColor, 0.9f);               // Right
+
+            // Vertical lines (top and bottom)
+            RenderQuad(centerX - thickness * 0.5f, centerY + outerGap, thickness, lineLength, ui.crosshairColor, 0.9f);               // Top
+            RenderQuad(centerX - thickness * 0.5f, centerY - lineLength - outerGap, thickness, lineLength, ui.crosshairColor, 0.9f);  // Bottom
+
+            // Tick marks on the lines for range estimation
+            float tickSize = thickness * 2.0f;
+            float tickSpacing = size * 0.4f;
+
+            // Left tick marks
+            for (int i = 1; i <= 2; ++i)
+            {
+                float tickX = centerX - outerGap - (tickSpacing * i);
+                RenderQuad(tickX - thickness * 0.25f, centerY - tickSize * 0.5f, thickness * 0.5f, tickSize, ui.crosshairColor, 0.7f);
+            }
+            // Right tick marks
+            for (int i = 1; i <= 2; ++i)
+            {
+                float tickX = centerX + outerGap + (tickSpacing * i);
+                RenderQuad(tickX - thickness * 0.25f, centerY - tickSize * 0.5f, thickness * 0.5f, tickSize, ui.crosshairColor, 0.7f);
+            }
+            // Top tick marks
+            for (int i = 1; i <= 2; ++i)
+            {
+                float tickY = centerY + outerGap + (tickSpacing * i);
+                RenderQuad(centerX - tickSize * 0.5f, tickY - thickness * 0.25f, tickSize, thickness * 0.5f, ui.crosshairColor, 0.7f);
+            }
+            // Bottom tick marks
+            for (int i = 1; i <= 2; ++i)
+            {
+                float tickY = centerY - outerGap - (tickSpacing * i);
+                RenderQuad(centerX - tickSize * 0.5f, tickY - thickness * 0.25f, tickSize, thickness * 0.5f, ui.crosshairColor, 0.7f);
+            }
+
             break;
         }
-        case 1: // Dot
+        case 1: // Precise center dot
         {
-            RenderQuad(centerX - thickness * 0.5f, centerY - thickness * 0.5f, thickness, thickness, ui.crosshairColor, 1.0f);
+            float dotSize = thickness * 2.0f;
+            RenderQuad(centerX - dotSize * 0.5f, centerY - dotSize * 0.5f, dotSize, dotSize, ui.crosshairColor, 1.0f);
             break;
         }
-        case 2: // Circle
+        case 2: // Circle outline
         {
             RenderCircle(centerX, centerY, size, thickness, ui.crosshairColor);
             break;
@@ -423,6 +514,44 @@ namespace Ermine
         glBufferSubData(GL_ARRAY_BUFFER, 0, m_vertexData.size() * sizeof(float), m_vertexData.data());
         glDrawArrays(GL_LINE_LOOP, 0, segments + 1);
         glLineWidth(1.0f);
+        glBindVertexArray(0);
+    }
+
+    void UIRenderSystem::RenderFilledCircle(float centerX, float centerY, float radius, const Vec3& color, float alpha)
+    {
+        const int segments = 64;
+        m_vertexData.clear();
+        m_vertexData.reserve((segments + 2) * 6); // Center + perimeter vertices
+
+        // Center vertex
+        m_vertexData.push_back(centerX);
+        m_vertexData.push_back(centerY);
+        m_vertexData.push_back(color.x);
+        m_vertexData.push_back(color.y);
+        m_vertexData.push_back(color.z);
+        m_vertexData.push_back(alpha);
+
+        // Perimeter vertices
+        float angleStep = (2.0f * static_cast<float>(M_PI)) / segments;
+        for (int i = 0; i <= segments; ++i)
+        {
+            float angle = i * angleStep;
+            float x = centerX + radius * cosf(angle);
+            float y = centerY + radius * sinf(angle);
+
+            m_vertexData.push_back(x);
+            m_vertexData.push_back(y);
+            m_vertexData.push_back(color.x);
+            m_vertexData.push_back(color.y);
+            m_vertexData.push_back(color.z);
+            m_vertexData.push_back(alpha);
+        }
+
+        // Render as triangle fan
+        glBindVertexArray(m_VAO);
+        glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, m_vertexData.size() * sizeof(float), m_vertexData.data());
+        glDrawArrays(GL_TRIANGLE_FAN, 0, static_cast<GLsizei>(m_vertexData.size() / 6));
         glBindVertexArray(0);
     }
 

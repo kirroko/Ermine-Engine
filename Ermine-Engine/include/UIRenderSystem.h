@@ -149,7 +149,7 @@ namespace Ermine
 
         /*!***********************************************************************
         \brief
-            Renders a circle outline (for crosshair style 2).
+            Renders a circle outline (for crosshair and borders).
         \param[in] centerX
             Center X position in normalized screen coordinates (0-1).
         \param[in] centerY
@@ -162,6 +162,22 @@ namespace Ermine
             RGB color values (0-1).
         *************************************************************************/
         void RenderCircle(float centerX, float centerY, float radius, float thickness, const Vec3& color);
+
+        /*!***********************************************************************
+        \brief
+            Renders a filled circle (for skill slots and UI elements).
+        \param[in] centerX
+            Center X position in normalized screen coordinates (0-1).
+        \param[in] centerY
+            Center Y position in normalized screen coordinates (0-1).
+        \param[in] radius
+            Radius in normalized screen coordinates (0-1).
+        \param[in] color
+            RGB color values (0-1).
+        \param[in] alpha
+            Alpha transparency (0-1, default 1.0).
+        *************************************************************************/
+        void RenderFilledCircle(float centerX, float centerY, float radius, const Vec3& color, float alpha = 1.0f);
 
         // OpenGL resources
         std::shared_ptr<graphics::Shader> m_uiShader;

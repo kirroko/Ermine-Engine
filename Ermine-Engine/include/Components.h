@@ -2758,9 +2758,9 @@ namespace Ermine
 		bool showHealthbar = true;
 		Ermine::Vec3 healthbarColor = { 0.0f, 1.0f, 0.0f };      // Green
 		Ermine::Vec3 healthbarBgColor = { 0.2f, 0.2f, 0.2f };    // Dark gray
-		float healthbarWidth = 0.3f;   // Percentage of screen width
-		float healthbarHeight = 0.03f; // Percentage of screen height
-		Ermine::Vec3 healthbarPosition = { 0.1f, 0.9f, 0.0f };  // Normalized screen coords (0-1)
+		float healthbarWidth = 0.25f;  // Percentage of screen width
+		float healthbarHeight = 0.025f; // Percentage of screen height
+		Ermine::Vec3 healthbarPosition = { 0.02f, 0.05f, 0.0f };  // Bottom-left corner
 
 		// Skills UI settings
 		bool showSkills = true;
@@ -2770,17 +2770,18 @@ namespace Ermine
 
 		// Crosshair settings
 		bool showCrosshair = true;
-		Ermine::Vec3 crosshairColor = { 1.0f, 1.0f, 1.0f };  // White
-		float crosshairSize = 0.02f;   // Percentage of screen size
-		float crosshairThickness = 0.003f;
+		Ermine::Vec3 crosshairColor = { 0.0f, 1.0f, 0.0f };  // Bright green for visibility
+		float crosshairSize = 0.015f;   // Slightly smaller for precision
+		float crosshairThickness = 0.002f;  // Thinner for sharpness
 		int crosshairStyle = 0;        // 0 = cross, 1 = dot, 2 = circle
+		float crosshairGap = 0.005f;   // Gap in center for aiming
 
 		// Health system
 		float currentHealth = 100.0f;
 		float maxHealth = 100.0f;
 
 		// Mana bar settings
-		bool showManaBar = true;
+		bool showManaBar = false;      // Disabled - using health bar only
 		float currentMana = 100.0f;
 		float maxMana = 100.0f;
 		float manaRegenRate = 10.0f;          // Mana per second
@@ -2827,6 +2828,7 @@ namespace Ermine
 			out.AddMember("crosshairSize", crosshairSize, alloc);
 			out.AddMember("crosshairThickness", crosshairThickness, alloc);
 			out.AddMember("crosshairStyle", crosshairStyle, alloc);
+			out.AddMember("crosshairGap", crosshairGap, alloc);
 
 			// Health and Mana
 			out.AddMember("currentHealth", currentHealth, alloc);
@@ -2891,6 +2893,8 @@ namespace Ermine
 				crosshairThickness = in["crosshairThickness"].GetFloat();
 			if (in.HasMember("crosshairStyle") && in["crosshairStyle"].IsInt())
 				crosshairStyle = in["crosshairStyle"].GetInt();
+			if (in.HasMember("crosshairGap") && in["crosshairGap"].IsNumber())
+				crosshairGap = in["crosshairGap"].GetFloat();
 
 			// Health and Mana
 			if (in.HasMember("currentHealth") && in["currentHealth"].IsNumber())
