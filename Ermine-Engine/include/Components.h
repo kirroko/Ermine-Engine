@@ -2550,4 +2550,301 @@ namespace Ermine
 			xproperty::obj_member<"isDirty", &AABBComponent::isDirty>
 		)
 	};
+
+	/*!***********************************************************************
+	\brief
+	  Health component for player/entity stats
+	*************************************************************************/
+	struct HealthComponent
+	{
+		float maxHealth = 100.0f;
+		float currentHealth = 100.0f;
+		float healthRegenRate = 0.0f; // Health regenerated per second
+		bool isDead = false;
+
+		HealthComponent() = default;
+		explicit HealthComponent(float max) : maxHealth(max), currentHealth(max) {}
+
+		void TakeDamage(float damage)
+		{
+			currentHealth = std::max(0.0f, currentHealth - damage);
+			if (currentHealth <= 0.0f)
+			{
+				isDead = true;
+			}
+		}
+
+		void Heal(float amount)
+		{
+			currentHealth = std::min(maxHealth, currentHealth + amount);
+			if (currentHealth > 0.0f)
+			{
+				isDead = false;
+			}
+		}
+
+		float GetHealthPercentage() const
+		{
+			return maxHealth > 0.0f ? (currentHealth / maxHealth) : 0.0f;
+		}
+
+		void Update(float dt)
+		{
+			if (healthRegenRate > 0.0f && currentHealth < maxHealth)
+			{
+				Heal(healthRegenRate * dt);
+			}
+		}
+
+		template<typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const
+		{
+			out.SetObject();
+			out.AddMember("maxHealth", maxHealth, alloc);
+			out.AddMember("currentHealth", currentHealth, alloc);
+			out.AddMember("healthRegenRate", healthRegenRate, alloc);
+			out.AddMember("isDead", isDead, alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in)
+		{
+			if (in.HasMember("maxHealth") && in["maxHealth"].IsNumber())
+				maxHealth = in["maxHealth"].GetFloat();
+			if (in.HasMember("currentHealth") && in["currentHealth"].IsNumber())
+				currentHealth = in["currentHealth"].GetFloat();
+			if (in.HasMember("healthRegenRate") && in["healthRegenRate"].IsNumber())
+				healthRegenRate = in["healthRegenRate"].GetFloat();
+			if (in.HasMember("isDead") && in["isDead"].IsBool())
+				isDead = in["isDead"].GetBool();
+		}
+
+		XPROPERTY_DEF(
+			"HealthComponent", HealthComponent,
+			xproperty::obj_member<"maxHealth", &HealthComponent::maxHealth>,
+			xproperty::obj_member<"currentHealth", &HealthComponent::currentHealth>,
+			xproperty::obj_member<"healthRegenRate", &HealthComponent::healthRegenRate>,
+			xproperty::obj_member<"isDead", &HealthComponent::isDead>
+		)
+	};
+
+	/*!***********************************************************************
+	\brief
+	  Skill slot data for skills UI
+	*************************************************************************/
+	struct SkillSlot
+	{
+		std::string skillName = "";
+		std::string iconPath = "";
+		float cooldownTime = 0.0f;     // Total cooldown duration
+		float currentCooldown = 0.0f;  // Current cooldown remaining
+		bool isActive = false;
+		int keyBinding = -1;           // Key code for activation
+
+		bool IsOnCooldown() const { return currentCooldown > 0.0f; }
+		float GetCooldownPercentage() const
+		{
+			return cooldownTime > 0.0f ? (currentCooldown / cooldownTime) : 0.0f;
+		}
+
+		void Activate()
+		{
+			if (!IsOnCooldown())
+			{
+				isActive = true;
+				currentCooldown = cooldownTime;
+			}
+		}
+
+		void Update(float dt)
+		{
+			if (currentCooldown > 0.0f)
+			{
+				currentCooldown = std::max(0.0f, currentCooldown - dt);
+			}
+		}
+	};
+
+	/*!***********************************************************************
+	\brief
+	  Skills component for managing player abilities
+	*************************************************************************/
+	struct SkillsComponent
+	{
+		static constexpr int MAX_SKILLS = 6;
+		std::array<SkillSlot, MAX_SKILLS> skills;
+
+		SkillsComponent() = default;
+
+		void Update(float dt)
+		{
+			for (auto& skill : skills)
+			{
+				skill.Update(dt);
+			}
+		}
+
+		bool ActivateSkill(int index)
+		{
+			if (index >= 0 && index < MAX_SKILLS)
+			{
+				skills[index].Activate();
+				return true;
+			}
+			return false;
+		}
+
+		template<typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const
+		{
+			out.SetObject();
+			rapidjson::Value skillsArray(rapidjson::kArrayType);
+
+			for (const auto& skill : skills)
+			{
+				rapidjson::Value skillObj(rapidjson::kObjectType);
+				rapidjson::Value nameVal;
+				nameVal.SetString(skill.skillName.c_str(), static_cast<rapidjson::SizeType>(skill.skillName.size()), alloc);
+				skillObj.AddMember("skillName", nameVal, alloc);
+
+				rapidjson::Value iconVal;
+				iconVal.SetString(skill.iconPath.c_str(), static_cast<rapidjson::SizeType>(skill.iconPath.size()), alloc);
+				skillObj.AddMember("iconPath", iconVal, alloc);
+
+				skillObj.AddMember("cooldownTime", skill.cooldownTime, alloc);
+				skillObj.AddMember("keyBinding", skill.keyBinding, alloc);
+
+				skillsArray.PushBack(skillObj, alloc);
+			}
+
+			out.AddMember("skills", skillsArray, alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in)
+		{
+			if (in.HasMember("skills") && in["skills"].IsArray())
+			{
+				const auto& skillsArray = in["skills"].GetArray();
+				int index = 0;
+				for (auto& skillVal : skillsArray)
+				{
+					if (index >= MAX_SKILLS) break;
+
+					if (skillVal.HasMember("skillName") && skillVal["skillName"].IsString())
+						skills[index].skillName = skillVal["skillName"].GetString();
+					if (skillVal.HasMember("iconPath") && skillVal["iconPath"].IsString())
+						skills[index].iconPath = skillVal["iconPath"].GetString();
+					if (skillVal.HasMember("cooldownTime") && skillVal["cooldownTime"].IsNumber())
+						skills[index].cooldownTime = skillVal["cooldownTime"].GetFloat();
+					if (skillVal.HasMember("keyBinding") && skillVal["keyBinding"].IsInt())
+						skills[index].keyBinding = skillVal["keyBinding"].GetInt();
+
+					index++;
+				}
+			}
+		}
+
+		XPROPERTY_DEF(
+			"SkillsComponent", SkillsComponent
+		)
+	};
+
+	/*!***********************************************************************
+	\brief
+	  UI configuration component for HUD elements
+	*************************************************************************/
+	struct UIComponent
+	{
+		// Healthbar settings
+		bool showHealthbar = true;
+		Ermine::Vec3 healthbarColor = { 0.0f, 1.0f, 0.0f };      // Green
+		Ermine::Vec3 healthbarBgColor = { 0.2f, 0.2f, 0.2f };    // Dark gray
+		float healthbarWidth = 0.3f;   // Percentage of screen width
+		float healthbarHeight = 0.03f; // Percentage of screen height
+		Ermine::Vec3 healthbarPosition = { 0.1f, 0.9f, 0.0f };  // Normalized screen coords (0-1)
+
+		// Skills UI settings
+		bool showSkills = true;
+		float skillSlotSize = 0.06f;   // Percentage of screen size
+		float skillSlotSpacing = 0.01f;
+		Ermine::Vec3 skillsPosition = { 0.5f, 0.1f, 0.0f };  // Center bottom
+
+		// Crosshair settings
+		bool showCrosshair = true;
+		Ermine::Vec3 crosshairColor = { 1.0f, 1.0f, 1.0f };  // White
+		float crosshairSize = 0.02f;   // Percentage of screen size
+		float crosshairThickness = 0.003f;
+		int crosshairStyle = 0;        // 0 = cross, 1 = dot, 2 = circle
+
+		template<typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const
+		{
+			out.SetObject();
+			out.AddMember("showHealthbar", showHealthbar, alloc);
+			out.AddMember("healthbarColor", Vec3ToJson(healthbarColor, alloc), alloc);
+			out.AddMember("healthbarBgColor", Vec3ToJson(healthbarBgColor, alloc), alloc);
+			out.AddMember("healthbarWidth", healthbarWidth, alloc);
+			out.AddMember("healthbarHeight", healthbarHeight, alloc);
+			out.AddMember("healthbarPosition", Vec3ToJson(healthbarPosition, alloc), alloc);
+
+			out.AddMember("showSkills", showSkills, alloc);
+			out.AddMember("skillSlotSize", skillSlotSize, alloc);
+			out.AddMember("skillSlotSpacing", skillSlotSpacing, alloc);
+			out.AddMember("skillsPosition", Vec3ToJson(skillsPosition, alloc), alloc);
+
+			out.AddMember("showCrosshair", showCrosshair, alloc);
+			out.AddMember("crosshairColor", Vec3ToJson(crosshairColor, alloc), alloc);
+			out.AddMember("crosshairSize", crosshairSize, alloc);
+			out.AddMember("crosshairThickness", crosshairThickness, alloc);
+			out.AddMember("crosshairStyle", crosshairStyle, alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in)
+		{
+			if (in.HasMember("showHealthbar") && in["showHealthbar"].IsBool())
+				showHealthbar = in["showHealthbar"].GetBool();
+			if (in.HasMember("healthbarColor") && in["healthbarColor"].IsObject())
+				healthbarColor = JsonToVec3(in["healthbarColor"]);
+			if (in.HasMember("healthbarBgColor") && in["healthbarBgColor"].IsObject())
+				healthbarBgColor = JsonToVec3(in["healthbarBgColor"]);
+			if (in.HasMember("healthbarWidth") && in["healthbarWidth"].IsNumber())
+				healthbarWidth = in["healthbarWidth"].GetFloat();
+			if (in.HasMember("healthbarHeight") && in["healthbarHeight"].IsNumber())
+				healthbarHeight = in["healthbarHeight"].GetFloat();
+			if (in.HasMember("healthbarPosition") && in["healthbarPosition"].IsObject())
+				healthbarPosition = JsonToVec3(in["healthbarPosition"]);
+
+			if (in.HasMember("showSkills") && in["showSkills"].IsBool())
+				showSkills = in["showSkills"].GetBool();
+			if (in.HasMember("skillSlotSize") && in["skillSlotSize"].IsNumber())
+				skillSlotSize = in["skillSlotSize"].GetFloat();
+			if (in.HasMember("skillSlotSpacing") && in["skillSlotSpacing"].IsNumber())
+				skillSlotSpacing = in["skillSlotSpacing"].GetFloat();
+			if (in.HasMember("skillsPosition") && in["skillsPosition"].IsObject())
+				skillsPosition = JsonToVec3(in["skillsPosition"]);
+
+			if (in.HasMember("showCrosshair") && in["showCrosshair"].IsBool())
+				showCrosshair = in["showCrosshair"].GetBool();
+			if (in.HasMember("crosshairColor") && in["crosshairColor"].IsObject())
+				crosshairColor = JsonToVec3(in["crosshairColor"]);
+			if (in.HasMember("crosshairSize") && in["crosshairSize"].IsNumber())
+				crosshairSize = in["crosshairSize"].GetFloat();
+			if (in.HasMember("crosshairThickness") && in["crosshairThickness"].IsNumber())
+				crosshairThickness = in["crosshairThickness"].GetFloat();
+			if (in.HasMember("crosshairStyle") && in["crosshairStyle"].IsInt())
+				crosshairStyle = in["crosshairStyle"].GetInt();
+		}
+
+		XPROPERTY_DEF(
+			"UIComponent", UIComponent,
+			xproperty::obj_member<"showHealthbar", &UIComponent::showHealthbar>,
+			xproperty::obj_member<"healthbarColor", &UIComponent::healthbarColor>,
+			xproperty::obj_member<"healthbarWidth", &UIComponent::healthbarWidth>,
+			xproperty::obj_member<"healthbarHeight", &UIComponent::healthbarHeight>,
+			xproperty::obj_member<"showSkills", &UIComponent::showSkills>,
+			xproperty::obj_member<"skillSlotSize", &UIComponent::skillSlotSize>,
+			xproperty::obj_member<"showCrosshair", &UIComponent::showCrosshair>,
+			xproperty::obj_member<"crosshairSize", &UIComponent::crosshairSize>,
+			xproperty::obj_member<"crosshairStyle", &UIComponent::crosshairStyle>
+		)
+	};
 } // namespace Ermine
