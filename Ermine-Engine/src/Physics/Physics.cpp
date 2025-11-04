@@ -859,6 +859,61 @@ namespace Ermine
 		}
 	}
 
+	void Physics::SetPosition(EntityID ID, Ermine::Vec3 position)
+	{
+		auto& bodyInterface = mPhysicsSystem.GetBodyInterface();
+		Ermine::Quaternion rot = ECS::GetInstance().GetComponent<Transform>(ID).rotation;
+		bodyInterface.SetPositionAndRotation(
+			GetBodyID(ID),
+			JPH::Vec3(position.x, position.y, position.z),
+			JPH::Quat(rot.x, rot.y, rot.z, rot.w),
+			JPH::EActivation::Activate);
+	}
+
+	void Physics::SetRotation(EntityID ID, Ermine::Vec3 rotation)
+	{
+		auto& bodyInterface = mPhysicsSystem.GetBodyInterface();
+		Ermine::Vec3 pos = ECS::GetInstance().GetComponent<Transform>(ID).position;
+		Ermine::Quaternion rot = FromEulerDegrees(rotation);
+		bodyInterface.SetPositionAndRotation(
+			GetBodyID(ID),
+			JPH::Vec3(pos.x, pos.y, pos.z),
+			JPH::Quat(rot.x, rot.y, rot.z, rot.w),
+			JPH::EActivation::Activate);
+	}
+
+	void Physics::SetRotation(EntityID ID, Ermine::Quaternion rotation)
+	{
+		auto& bodyInterface = mPhysicsSystem.GetBodyInterface();
+		Ermine::Vec3 pos = ECS::GetInstance().GetComponent<Transform>(ID).position;
+		bodyInterface.SetPositionAndRotation(
+			GetBodyID(ID),
+			JPH::Vec3(pos.x, pos.y, pos.z),
+			JPH::Quat(rotation.x, rotation.y, rotation.z, rotation.w),
+			JPH::EActivation::Activate);
+	}
+
+	void Physics::Move(EntityID ID, Ermine::Vec3 position, Ermine::Vec3 rotation)
+	{
+		auto& bodyInterface = mPhysicsSystem.GetBodyInterface();
+		Ermine::Quaternion rot = FromEulerDegrees(rotation);
+		bodyInterface.SetPositionAndRotation(
+			GetBodyID(ID),
+			JPH::Vec3(position.x, position.y, position.z),
+			JPH::Quat(rot.x, rot.y, rot.z, rot.w),
+			JPH::EActivation::Activate);
+	}
+
+	void Physics::Move(EntityID ID, Ermine::Vec3 position, Ermine::Quaternion rotation)
+	{
+		auto& bodyInterface = mPhysicsSystem.GetBodyInterface();
+		bodyInterface.SetPositionAndRotation(
+			GetBodyID(ID),
+			JPH::Vec3(position.x, position.y, position.z),
+			JPH::Quat(rotation.x, rotation.y, rotation.z, rotation.w),
+			JPH::EActivation::Activate);
+	}
+
 	void Physics::FlushPendingPairsToEntityEvents()
 	{
 		std::vector<PendingPair> local;

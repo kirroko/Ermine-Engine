@@ -177,6 +177,15 @@ namespace Ermine
 		std::vector<JPH::RayCastResult> RaycastAll(const JPH::RVec3& origin, const JPH::RVec3& direction, float maxDistance);
 
 		void ClearPhysicBody();
+
+		void SetPosition(EntityID ID, Ermine::Vec3 position);
+
+		void SetRotation(EntityID ID, Ermine::Vec3 rotation);
+
+		void SetRotation(EntityID ID, Ermine::Quaternion rotation);
+
+		void Move(EntityID ID, Ermine::Vec3 position, Ermine::Vec3 rotation);
+		void Move(EntityID ID, Ermine::Vec3 position, Ermine::Quaternion rotation);
 		
 		//! Shared pointer to the debug renderer used for visualizing physics.
 		std::shared_ptr<MyDebugRenderer> mDebugRenderer;
