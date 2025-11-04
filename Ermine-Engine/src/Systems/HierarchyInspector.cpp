@@ -1324,7 +1324,11 @@ namespace Ermine::editor {
 					// Added .skin and .mesh to the filter
 					if (ext == ".fbx" || ext == ".obj" || ext == ".gltf" ||
 						ext == ".skin" || ext == ".mesh") {
-						availableModels.push_back(name);
+						// Store relative path from modelsDir with forward slashes
+						std::string relativePath = std::filesystem::relative(entry.path(), modelsDir).string();
+						// Normalize path separators to forward slashes
+						std::replace(relativePath.begin(), relativePath.end(), '\\', '/');
+						availableModels.push_back(relativePath);
 					}
 				}
 			}
