@@ -1113,6 +1113,40 @@ namespace Ermine::editor {
 					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
 				}
 			}
+			else if (guid == xproperty::settings::var_type<Ermine::Vec3>::guid_v && label == "Colliderpivot")
+			{
+				Ermine::Vec3 v = p.m_Value.get<Ermine::Vec3>();
+				float arr[3] = { v.x, v.y, v.z };
+
+				if (ImGui::DragFloat3("Collider Pos", arr, 0.05f, -FLT_MAX, FLT_MAX))
+				{
+					v.x = arr[0];
+					v.y = arr[1];
+					v.z = arr[2];
+					p.m_Value.set<Ermine::Vec3>(v);
+					xproperty::sprop::setProperty(err, pc, p, ctx);
+
+					// Rebuild physics body with updated size
+					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
+				}
+			}
+			else if (guid == xproperty::settings::var_type<Ermine::Vec3>::guid_v && label == "Colliderrot")
+			{
+				Ermine::Vec3 v = p.m_Value.get<Ermine::Vec3>();
+				float arr[3] = { v.x, v.y, v.z };
+
+				if (ImGui::DragFloat3("Collider Rot", arr, 0.05f, -FLT_MAX, FLT_MAX))
+				{
+					v.x = arr[0];
+					v.y = arr[1];
+					v.z = arr[2];
+					p.m_Value.set<Ermine::Vec3>(v);
+					xproperty::sprop::setProperty(err, pc, p, ctx);
+
+					// Rebuild physics body with updated size
+					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
+				}
+			}
 
 			ImGui::PopID();
 		}

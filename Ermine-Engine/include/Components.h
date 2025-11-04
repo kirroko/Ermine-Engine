@@ -1956,7 +1956,9 @@ namespace Ermine
 		JPH::EMotionType motionType{ JPH::EMotionType::Static };
 		float mass{ 0.0f };
 		ShapeType shapeType{ ShapeType::Box };
-		Ermine::Vec3 collidersize{ 1,1,1 };
+		Ermine::Vec3 colliderPivot{ 0,0,0 };
+		Ermine::Vec3 colliderRot{ 0,0,0 };
+		Ermine::Vec3 colliderSize{ 1,1,1 };
 
 		JPH::BodyID bodyID{ JPH::BodyID::cInvalidBodyID };
 		JPH::Body* body{ nullptr };
@@ -1989,7 +1991,9 @@ namespace Ermine
 			xproperty::obj_member<"motionType", &PhysicComponent::motionType>,
 			xproperty::obj_member<"mass", &PhysicComponent::mass>,
 			xproperty::obj_member<"shapeType", &PhysicComponent::shapeType>,
-			xproperty::obj_member<"collidersize", &PhysicComponent::collidersize>
+			xproperty::obj_member<"collidersize", &PhysicComponent::colliderSize>,
+			xproperty::obj_member<"colliderpivot", &PhysicComponent::colliderPivot>,
+			xproperty::obj_member<"colliderrot", &PhysicComponent::colliderRot>
 		)
 	};
 

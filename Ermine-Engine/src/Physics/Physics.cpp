@@ -266,10 +266,13 @@ namespace Ermine
 				auto& p = ecs.GetComponent<PhysicComponent>(entity);
 				auto& t = ecs.GetComponent<Transform>(entity);
 
+				Ermine::Quaternion rot = QuaternionNormalize(FromEulerDegrees(p.colliderRot));
+				Ermine::Quaternion combined = QuaternionNormalize(t.rotation * rot);
+
 				bodyInterface.SetPositionAndRotationWhenChanged(
 					rigidBody,
-					JPH::Vec3(t.position.x, t.position.y, t.position.z),
-					JPH::Quat(t.rotation.x, t.rotation.y, t.rotation.z, t.rotation.w),
+					JPH::Vec3(t.position.x + p.colliderPivot.x, t.position.y + p.colliderPivot.y, t.position.z + p.colliderPivot.z),
+					JPH::Quat(combined.x, combined.y, combined.z, combined.w),
 					JPH::EActivation::DontActivate);
 
 				if (p.motionType == JPH::EMotionType::Dynamic)
@@ -294,10 +297,13 @@ namespace Ermine
 
 			if (p.motionType == JPH::EMotionType::Kinematic)
 			{
+				Ermine::Quaternion rot = QuaternionNormalize(FromEulerDegrees(p.colliderRot));
+				Ermine::Quaternion combined = QuaternionNormalize(t.rotation * rot);
+
 				bodyInterface.SetPositionAndRotation(
 					rigidBody,
-					JPH::Vec3(t.position.x, t.position.y, t.position.z),
-					JPH::Quat(t.rotation.x, t.rotation.y, t.rotation.z, t.rotation.w),
+					JPH::Vec3(t.position.x + p.colliderPivot.x, t.position.y + p.colliderPivot.y, t.position.z + p.colliderPivot.z),
+					JPH::Quat(combined.x, combined.y, combined.z, combined.w),
 					JPH::EActivation::Activate);
 			}
 		}
@@ -423,7 +429,7 @@ namespace Ermine
 			{
 			case ShapeType::Box:
 			{
-				Vec3 halfExtent = { t.scale.x * 0.5f * meshsize.GetX() * p.collidersize.x, t.scale.y * 0.5f * meshsize.GetY() * p.collidersize.y, t.scale.z * 0.5f * meshsize.GetZ() * p.collidersize.z };
+				Vec3 halfExtent = { t.scale.x * 0.5f * meshsize.GetX() * p.colliderSize.x, t.scale.y * 0.5f * meshsize.GetY() * p.colliderSize.y, t.scale.z * 0.5f * meshsize.GetZ() * p.colliderSize.z };
 				constexpr float minSize = 0.01f;
 				halfExtent.x = std::max(halfExtent.x, minSize);
 				halfExtent.y = std::max(halfExtent.y, minSize);
@@ -439,24 +445,23 @@ namespace Ermine
 			}
 			case ShapeType::Sphere:
 			{
-				float radius = t.scale.x * meshsize.GetX() * p.collidersize.x;
+				float radius = t.scale.x * meshsize.GetX() * p.colliderSize.x;
 
 				if (radius <= 0.0f || !std::isfinite(radius))
 				{
 					radius = 0.01f;
 				}
 
-				p.collidersize.y = p.collidersize.z = std::max(p.collidersize.x, 0.01f);
+				p.colliderSize.y = p.colliderSize.z = std::max(p.colliderSize.x, 0.01f);
 
 				shape = new JPH::SphereShape(radius); //for our current sphere
 				break;
 			}
 			case ShapeType::Capsule:
 			{
-				//shape = new JPH::CapsuleShape(t.scale.y * 0.5f * meshsize.GetY(), t.scale.x * 0.5f * meshsize.GetX());
-					// Compute half-height (excluding the hemispherical caps)
-				float halfHeight = t.scale.y * 0.5f * meshsize.GetY() * p.collidersize.y;
-				float capradius = t.scale.x * 0.5f * meshsize.GetX() * p.collidersize.x;
+				// Compute half-height (excluding the hemispherical caps)
+				float halfHeight = t.scale.y * 0.5f * meshsize.GetY() * p.colliderSize.y;
+				float capradius = t.scale.x * 0.5f * meshsize.GetX() * p.colliderSize.x;
 
 				// --- Safety checks ---
 				if (halfHeight <= 0.0f || !std::isfinite(halfHeight))
@@ -470,9 +475,9 @@ namespace Ermine
 				}
 
 				// Ensure capsule collider size stays valid
-				p.collidersize.x = std::max(p.collidersize.x, 0.01f);
-				p.collidersize.y = std::max(p.collidersize.y, 0.01f);
-				p.collidersize.z = p.collidersize.x; // capsule is symmetric around Y
+				p.colliderSize.x = std::max(p.colliderSize.x, 0.01f);
+				p.colliderSize.y = std::max(p.colliderSize.y, 0.01f);
+				p.colliderSize.z = p.colliderSize.x; // capsule is symmetric around Y
 
 				// Create shape safely
 				shape = new JPH::CapsuleShape(halfHeight, capradius);
@@ -585,6 +590,10 @@ namespace Ermine
 
 			bodySettings.mIsSensor = (p.bodyType == PhysicsBodyType::Trigger);
 
+			bodySettings.mPosition = JPH::Vec3(t.position.x + p.colliderPivot.x, t.position.y + p.colliderPivot.y, t.position.z + p.colliderPivot.z);
+			Ermine::Quaternion rot = QuaternionNormalize(FromEulerDegrees(p.colliderRot));
+			Ermine::Quaternion combined = QuaternionNormalize(t.rotation * rot);
+			bodySettings.mRotation = JPH::Quat(combined.x, combined.y, combined.z, combined.w);
 			// Create body
 			JPH::Body* body = bodyInterface.CreateBody(bodySettings);
 			if (!body) continue;
