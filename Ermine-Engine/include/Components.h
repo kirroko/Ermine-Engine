@@ -1991,9 +1991,9 @@ namespace Ermine
 			xproperty::obj_member<"motionType", &PhysicComponent::motionType>,
 			xproperty::obj_member<"mass", &PhysicComponent::mass>,
 			xproperty::obj_member<"shapeType", &PhysicComponent::shapeType>,
-			xproperty::obj_member<"collidersize", &PhysicComponent::colliderSize>,
 			xproperty::obj_member<"colliderpivot", &PhysicComponent::colliderPivot>,
-			xproperty::obj_member<"colliderrot", &PhysicComponent::colliderRot>
+			xproperty::obj_member<"colliderrot", &PhysicComponent::colliderRot>,
+			xproperty::obj_member<"collidersize", &PhysicComponent::colliderSize>
 		)
 	};
 
