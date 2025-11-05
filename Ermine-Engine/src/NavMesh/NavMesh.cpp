@@ -559,60 +559,6 @@ namespace Ermine {
 
     bool NavMeshSystem::ComputeStraightPath(EntityID navEntity, const Vec3& start, const Vec3& end, std::vector<Vec3>& outPath)
     {
-        //auto& ecs = ECS::GetInstance();
-        //if (!ecs.IsEntityValid(navEntity) || !ecs.HasComponent<NavMeshComponent>(navEntity))
-        //    return false;
-
-        //EE_CORE_INFO("[NavMeshSystem] ComputeStraightPath called");
-
-        //auto& navComp = ecs.GetComponent<NavMeshComponent>(navEntity);
-        //if (!navComp.runtime) return false;
-
-        //// Access to runtime internals is legal here (this TU defines Runtime)
-        //dtNavMeshQuery* query = navComp.runtime->query;
-        //if (!query) return false;
-
-        //const float extents[3] = { 2.0f, 4.0f, 2.0f };
-
-        //dtPolyRef startRef = 0, endRef = 0;
-        //float spos[3] = { start.x, start.y, start.z };
-        //float epos[3] = { end.x,   end.y,   end.z };
-
-        //// Find nearest polys
-        //if (dtStatusFailed(query->findNearestPoly(spos, extents, nullptr, &startRef, nullptr))) return false;
-        //if (dtStatusFailed(query->findNearestPoly(epos, extents, nullptr, &endRef, nullptr))) return false;
-        //if (!startRef || !endRef) return false;
-
-        //// Find corridor polys
-        //dtPolyRef polys[256];
-        //int nPolys = 0;
-        //if (dtStatusFailed(query->findPath(startRef, endRef, spos, epos, nullptr, polys, &nPolys, 256)))
-        //    return false;
-        //if (nPolys == 0) return false;
-
-        //// Straight path
-        //float straightPath[256 * 3];
-        //unsigned char straightFlags[256];
-        //dtPolyRef straightPolys[256];
-        //int nStraight = 0;
-
-        //if (dtStatusFailed(query->findStraightPath(spos, epos, polys, nPolys,
-        //    straightPath, straightFlags, straightPolys,
-        //    &nStraight, 256)))
-        //    return false;
-
-        //outPath.clear();
-        //outPath.reserve((size_t)nStraight);
-        //for (int i = 0; i < nStraight; ++i)
-        //{
-        //    Vec3 p;
-        //    p.x = straightPath[i * 3 + 0];
-        //    p.y = straightPath[i * 3 + 1];
-        //    p.z = straightPath[i * 3 + 2];
-        //    outPath.push_back(p);
-        //}
-        //return !outPath.empty();
-
         auto& ecs = ECS::GetInstance();
         if (!ecs.IsEntityValid(navEntity) || !ecs.HasComponent<NavMeshComponent>(navEntity))
             return false;
@@ -701,5 +647,19 @@ namespace Ermine {
         }
 
         return !outPath.empty();
+    }
+
+    void NavMeshSystem::RemoveEntity(EntityID e)
+    {
+        auto& ecs = ECS::GetInstance();
+        if (ecs.HasComponent<NavMeshComponent>(e))
+        {
+            auto& c = ecs.GetComponent<NavMeshComponent>(e);
+            EE_CORE_INFO("[NavMeshSystem] Cleaning up navmesh for removed entity {}", (uint32_t)e);
+            DestroyBuild(c);
+            DestroyRuntime(c);
+        }
+
+        m_Entities.erase(e);
     }
 }

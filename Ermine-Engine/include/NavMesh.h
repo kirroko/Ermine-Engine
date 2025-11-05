@@ -19,10 +19,11 @@ namespace Ermine {
         void DebugHighLight();
 
         bool ComputeStraightPath(EntityID navEntity, const Vec3& start, const Vec3& end, std::vector<Vec3>& outPath);
+        void RemoveEntity(EntityID e);
 
-    private:
         void DestroyBuild(NavMeshComponent& c);
         void DestroyRuntime(NavMeshComponent& c);
+    private:
         bool BuildFromTriangles(NavMeshComponent& c, const float* verts, int nverts, const int* tris, int ntris);
         duDebugDraw* m_dd = nullptr;
     };
