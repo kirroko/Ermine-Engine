@@ -192,7 +192,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().RegisterSystem<StateManager>();
 	ECS::GetInstance().RegisterSystem<NavMeshSystem>();
 	ECS::GetInstance().RegisterSystem<NavMeshAgentSystem>();
-	ECS::GetInstance().RegisterSystem<graphics::GameCamera>();
+	//ECS::GetInstance().RegisterSystem<graphics::GameCamera>();
 	ECS::GetInstance().RegisterSystem<graphics::CameraSystem>();
 	ECS::GetInstance().RegisterSystem<UIRenderSystem>();
 
