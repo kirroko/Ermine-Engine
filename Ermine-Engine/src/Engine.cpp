@@ -177,6 +177,8 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	// Register all systems
 	ECS::GetInstance().RegisterSystem<graphics::Renderer>();
+	ECS::GetInstance().RegisterSystem<graphics::ModelSystem>();
+	ECS::GetInstance().RegisterSystem<graphics::MaterialSystem>();
 	ECS::GetInstance().RegisterSystem<scripting::ScriptSystem>();
 	ECS::GetInstance().RegisterSystem<AudioSystem>();
 	ECS::GetInstance().RegisterSystem<ParticleSystem>();
@@ -195,9 +197,20 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	// Set system signatures
 	SignatureID sig;
-	sig.set(ECS::GetInstance().GetComponentType<Transform>());
-	sig.set(ECS::GetInstance().GetComponentType<Material>());
+
+	// For Renderer system
+	sig.set(ECS::GetInstance().GetComponentType<Mesh>());
 	ECS::GetInstance().SetSystemSignature<graphics::Renderer>(sig);
+
+	// For Model system
+	sig.reset();
+	sig.set(ECS::GetInstance().GetComponentType<ModelComponent>());
+	ECS::GetInstance().SetSystemSignature<graphics::ModelSystem>(sig);
+
+	// For Material system
+	sig.reset();
+	sig.set(ECS::GetInstance().GetComponentType<Material>());
+	ECS::GetInstance().SetSystemSignature<graphics::MaterialSystem>(sig);
 
 	// For GameCamera system
 	SignatureID gameCameraSig;

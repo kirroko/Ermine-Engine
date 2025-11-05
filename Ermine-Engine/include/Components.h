@@ -45,8 +45,152 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "FSMNode.h"
 #include "AABB.h"
 
+namespace Ermine {
+	// NOTE: ALL ENUMS TO BE ADDED UP HERE
+
+	enum class MeshKind { None, Primitive, Asset };
+
+	/*!***********************************************************************
+	\brief
+	 Light type structure
+	*************************************************************************/
+	enum class LightType : int
+	{
+		POINT = 0,
+		DIRECTIONAL = 1,
+		SPOT = 2
+	};
+
+	/*!***********************************************************************
+	 \brief
+	 Enum for Physic component.
+	*************************************************************************/
+	enum class PhysicsBodyType
+	{
+		Rigid,
+		Trigger
+	};
+	enum class ShapeType { Box, Sphere, Capsule, CustomMesh/*, Compound*/, Total };
+}
+
+namespace xproperty::settings {
+	template<>
+	struct var_type<Ermine::MeshKind> : var_defaults<"MeshKind", Ermine::MeshKind>
+	{
+		inline static constexpr std::array enum_list_v{
+			enum_item{"None",      Ermine::MeshKind::None},
+			enum_item{"Primitive", Ermine::MeshKind::Primitive},
+			enum_item{"Asset",     Ermine::MeshKind::Asset},
+		};
+	};
+
+	template<>
+	struct var_type<Ermine::LightType> : var_defaults<"LightType", Ermine::LightType>
+	{
+		// antlion: enum_item takes the enum, not integers
+		inline static constexpr std::array enum_list_v{
+			enum_item{"Point",       Ermine::LightType::POINT},
+			enum_item{"Directional", Ermine::LightType::DIRECTIONAL},
+			enum_item{"Spot",        Ermine::LightType::SPOT},
+		};
+	};
+
+	template<> struct var_type<Ermine::PhysicsBodyType> : var_defaults<"PhysicsBodyType", Ermine::PhysicsBodyType> {
+		inline static constexpr std::array enum_list_v{
+			enum_item{"Rigid",   Ermine::PhysicsBodyType::Rigid},
+			enum_item{"Trigger", Ermine::PhysicsBodyType::Trigger},
+		};
+	};
+
+	template<> struct var_type<JPH::EMotionType> : var_defaults<"JPH_EMotionType", JPH::EMotionType> {
+		inline static constexpr std::array enum_list_v{
+			enum_item{"Static",    JPH::EMotionType::Static},
+			enum_item{"Kinematic", JPH::EMotionType::Kinematic},
+			enum_item{"Dynamic",   JPH::EMotionType::Dynamic},
+		};
+	};
+
+	template<> struct var_type<Ermine::ShapeType> : var_defaults<"ShapeType", Ermine::ShapeType> {
+		inline static constexpr std::array enum_list_v{
+			enum_item{"Box",        Ermine::ShapeType::Box},
+			enum_item{"Sphere",     Ermine::ShapeType::Sphere},
+			enum_item{"Capsule",    Ermine::ShapeType::Capsule},
+			enum_item{"CustomMesh", Ermine::ShapeType::CustomMesh},
+		};
+	};
+}
+
 namespace xprop_utils
 {
+	template<typename E>
+	struct EnumMap; // specialize per-enum below
+
+	template<typename E>
+	constexpr const char* EnumToString(E e) {
+		for (const auto& [name, val] : EnumMap<E>::items)
+			if (val == e) return name;
+		return nullptr;
+	}
+
+	template<typename E>
+	inline bool StringToEnum(const char* s, E& out) {
+		for (const auto& [name, val] : EnumMap<E>::items)
+			if (std::strcmp(name, s) == 0) { out = val; return true; }
+		return false;
+	}
+
+	// ---------- Enum maps (one-time specializations) ----------
+
+	template<> struct EnumMap<Ermine::MeshKind> {
+		using E = Ermine::MeshKind;
+		static constexpr std::pair<const char*, E> items[] = {
+			{"None",      E::None},
+			{"Primitive", E::Primitive},
+			{"Asset",     E::Asset},
+		};
+	};
+	constexpr std::pair<const char*, Ermine::MeshKind> EnumMap<Ermine::MeshKind>::items[];
+
+	template<> struct EnumMap<Ermine::LightType> {
+		using E = Ermine::LightType;
+		static constexpr std::pair<const char*, E> items[] = {
+			{"Point",       E::POINT},
+			{"Directional", E::DIRECTIONAL},
+			{"Spot",        E::SPOT},
+		};
+	};
+	constexpr std::pair<const char*, Ermine::LightType> EnumMap<Ermine::LightType>::items[];
+
+	template<> struct EnumMap<Ermine::PhysicsBodyType> {
+		using E = Ermine::PhysicsBodyType;
+		static constexpr std::pair<const char*, E> items[] = {
+			{"Rigid",   E::Rigid},
+			{"Trigger", E::Trigger},
+		};
+	};
+	constexpr std::pair<const char*, Ermine::PhysicsBodyType> EnumMap<Ermine::PhysicsBodyType>::items[];
+
+	template<> struct EnumMap<JPH::EMotionType> {
+		using E = JPH::EMotionType;
+		static constexpr std::pair<const char*, E> items[] = {
+			{"Static",    E::Static},
+			{"Kinematic", E::Kinematic},
+			{"Dynamic",   E::Dynamic},
+		};
+	};
+	constexpr std::pair<const char*, JPH::EMotionType> EnumMap<JPH::EMotionType>::items[];
+
+	template<> struct EnumMap<Ermine::ShapeType> {
+		using E = Ermine::ShapeType;
+		static constexpr std::pair<const char*, E> items[] = {
+			{"Box",        E::Box},
+			{"Sphere",     E::Sphere},
+			{"Capsule",    E::Capsule},
+			{"CustomMesh", E::CustomMesh},
+		};
+	};
+	constexpr std::pair<const char*, Ermine::ShapeType> EnumMap<Ermine::ShapeType>::items[];
+
 	// Convert any xproperty-reflected object to JSON
 	template<typename T, typename Alloc>
 	void SerializeToJson(const T& obj, rapidjson::Value& out, Alloc& alloc)
@@ -94,6 +238,36 @@ namespace xprop_utils
 
 				out.AddMember(keyVal, val, alloc);
 			}
+			else if (guid == xproperty::settings::var_type<Ermine::MeshKind>::guid_v) {
+				if (const char* name = EnumToString(p.m_Value.get<Ermine::MeshKind>())) {
+					rapidjson::Value val; val.SetString(name, (rapidjson::SizeType)std::strlen(name), alloc);
+					out.AddMember(keyVal, val, alloc);
+				}
+			}
+			else if (guid == xproperty::settings::var_type<Ermine::LightType>::guid_v) {
+				if (const char* name = EnumToString(p.m_Value.get<Ermine::LightType>())) {
+					rapidjson::Value val; val.SetString(name, (rapidjson::SizeType)std::strlen(name), alloc);
+					out.AddMember(keyVal, val, alloc);
+				}
+			}
+			else if (guid == xproperty::settings::var_type<Ermine::PhysicsBodyType>::guid_v) {
+				if (const char* name = EnumToString(p.m_Value.get<Ermine::PhysicsBodyType>())) {
+					rapidjson::Value val; val.SetString(name, (rapidjson::SizeType)std::strlen(name), alloc);
+					out.AddMember(keyVal, val, alloc);
+				}
+			}
+			else if (guid == xproperty::settings::var_type<JPH::EMotionType>::guid_v) {
+				if (const char* name = EnumToString(p.m_Value.get<JPH::EMotionType>())) {
+					rapidjson::Value val; val.SetString(name, (rapidjson::SizeType)std::strlen(name), alloc);
+					out.AddMember(keyVal, val, alloc);
+				}
+			}
+			else if (guid == xproperty::settings::var_type<Ermine::ShapeType>::guid_v) {
+				if (const char* name = EnumToString(p.m_Value.get<Ermine::ShapeType>())) {
+					rapidjson::Value val; val.SetString(name, (rapidjson::SizeType)std::strlen(name), alloc);
+					out.AddMember(keyVal, val, alloc);
+				}
+			}
 		}
 	}
 
@@ -131,6 +305,36 @@ namespace xprop_utils
 				Ermine::Guid g = Ermine::Guid::FromString(v.GetString());
 				p.m_Value.set<Ermine::Guid>(g);
 			}
+			else if (guid == xproperty::settings::var_type<Ermine::MeshKind>::guid_v) {
+				Ermine::MeshKind tmp{};
+				bool ok = v.IsString() ? StringToEnum(v.GetString(), tmp)
+					: (v.IsInt() ? (tmp = static_cast<Ermine::MeshKind>(v.GetInt()), true) : false);
+				if (ok) p.m_Value.set<Ermine::MeshKind>(tmp);
+			}
+			else if (guid == xproperty::settings::var_type<Ermine::LightType>::guid_v) {
+				Ermine::LightType tmp{};
+				bool ok = v.IsString() ? StringToEnum(v.GetString(), tmp)
+					: (v.IsInt() ? (tmp = static_cast<Ermine::LightType>(v.GetInt()), true) : false);
+				if (ok) p.m_Value.set<Ermine::LightType>(tmp);
+			}
+			else if (guid == xproperty::settings::var_type<Ermine::PhysicsBodyType>::guid_v) {
+				Ermine::PhysicsBodyType tmp{};
+				bool ok = v.IsString() ? StringToEnum(v.GetString(), tmp)
+					: (v.IsInt() ? (tmp = static_cast<Ermine::PhysicsBodyType>(v.GetInt()), true) : false);
+				if (ok) p.m_Value.set<Ermine::PhysicsBodyType>(tmp);
+			}
+			else if (guid == xproperty::settings::var_type<JPH::EMotionType>::guid_v) {
+				JPH::EMotionType tmp{};
+				bool ok = v.IsString() ? StringToEnum(v.GetString(), tmp)
+					: (v.IsInt() ? (tmp = static_cast<JPH::EMotionType>(v.GetInt()), true) : false);
+				if (ok) p.m_Value.set<JPH::EMotionType>(tmp);
+			}
+			else if (guid == xproperty::settings::var_type<Ermine::ShapeType>::guid_v) {
+				Ermine::ShapeType tmp{};
+				bool ok = v.IsString() ? StringToEnum(v.GetString(), tmp)
+					: (v.IsInt() ? (tmp = static_cast<Ermine::ShapeType>(v.GetInt()), true) : false);
+				if (ok) p.m_Value.set<Ermine::ShapeType>(tmp);
+			}
 
 			xproperty::sprop::setProperty(err, obj, p, ctx);
 		}
@@ -139,6 +343,17 @@ namespace xprop_utils
 
 namespace Ermine
 {
+	template<typename Alloc>
+	inline rapidjson::Value Vec2ToJson(const Ermine::Vec2& v, Alloc& a) {
+		rapidjson::Value arr(rapidjson::kArrayType);
+		arr.PushBack(v.x, a).PushBack(v.y, a);
+		return arr;
+	}
+
+	inline Ermine::Vec2 JsonToVec2(const rapidjson::Value& v) {
+		return Ermine::Vec2(v[0].GetFloat(), v[1].GetFloat());
+	}
+
 	inline Vec3 JsonToVec3(const rapidjson::Value& a) {
 		return a.IsArray() && a.Size() == 3
 			? Vec3(a[0].GetFloat(), a[1].GetFloat(), a[2].GetFloat())
@@ -688,22 +903,7 @@ namespace Ermine
 			xproperty::obj_member<"meshName", &MeshAssetDesc::meshName>
 		)
 	};
-
-	enum class MeshKind { None, Primitive, Asset };
 }
-
-namespace xproperty::settings {
-	template<>
-	struct var_type<Ermine::MeshKind> : var_defaults<"MeshKind", Ermine::MeshKind>
-	{
-		// Antlion xproperty: enum_item is constructed FROM THE ENUM (not ints)
-		inline static constexpr std::array enum_list_v{
-			enum_item{"None",      Ermine::MeshKind::None},
-			enum_item{"Primitive", Ermine::MeshKind::Primitive},
-			enum_item{"Asset",     Ermine::MeshKind::Asset},
-		};
-	};
-} // namespace xproperty::settings
 
 namespace Ermine
 {
@@ -1113,6 +1313,14 @@ namespace Ermine
 			}
 
 			out.AddMember("textures", textures, alloc);
+
+			if (auto gm = GetMaterial()) {
+				Ermine::Vec2 uvScale = gm->GetUVScale();
+				Ermine::Vec2 uvOffset = gm->GetUVOffset();
+
+				out.AddMember("uvScale", Vec2ToJson(uvScale, alloc), alloc);
+				out.AddMember("uvOffset", Vec2ToJson(uvOffset, alloc), alloc);
+			}
 		}
 
 		void Deserialize(const rapidjson::Value& in) {
@@ -1290,6 +1498,18 @@ namespace Ermine
 					EE_CORE_WARN("Failed to assign default shader to material - shader loading failed");
 				}
 			}
+
+			if (auto gm = GetMaterial()) {
+				// uvScale
+				if (auto it = in.FindMember("uvScale"); it != in.MemberEnd() && it->value.IsArray() && it->value.Size() == 2) {
+					gm->SetUVScale(JsonToVec2(it->value));
+				}
+
+				// uvOffset
+				if (auto it = in.FindMember("uvOffset"); it != in.MemberEnd() && it->value.IsArray() && it->value.Size() == 2) {
+					gm->SetUVOffset(JsonToVec2(it->value));
+				}
+			}
 		}
 
 		XPROPERTY_DEF(
@@ -1311,30 +1531,6 @@ namespace Ermine
 			xproperty::obj_member<"emissive", &Material::cacheEmissive>,
 			xproperty::obj_member<"emissiveIntensity", &Material::cacheEmissiveIntensity>
 		)
-	};
-
-	/*!***********************************************************************
-	\brief
-	 Light type structure
-	*************************************************************************/
-	enum class LightType : int
-	{
-		POINT = 0,
-		DIRECTIONAL = 1,
-		SPOT = 2
-	};
-}
-
-namespace xproperty::settings {
-	template<>
-	struct var_type<Ermine::LightType> : var_defaults<"LightType", Ermine::LightType>
-	{
-		// antlion: enum_item takes the enum, not integers
-		inline static constexpr std::array enum_list_v{
-			enum_item{"Point",       Ermine::LightType::POINT},
-			enum_item{"Directional", Ermine::LightType::DIRECTIONAL},
-			enum_item{"Spot",        Ermine::LightType::SPOT},
-		};
 	};
 }
 
@@ -1904,43 +2100,6 @@ namespace Ermine
 			"HierarchyComponent", HierarchyComponent,
 			xproperty::obj_member<"depth", &HierarchyComponent::depth>
 		);
-	};
-
-	/*!***********************************************************************
-	 \brief
-	 Enum for Physic component.
-	*************************************************************************/
-	enum class PhysicsBodyType
-	{
-		Rigid,
-		Trigger
-	};
-	enum class ShapeType { Box, Sphere, Capsule, CustomMesh/*, Compound*/, Total };
-}
-
-namespace xproperty::settings {
-	template<> struct var_type<Ermine::PhysicsBodyType> : var_defaults<"PhysicsBodyType", Ermine::PhysicsBodyType> {
-		inline static constexpr std::array enum_list_v{
-			enum_item{"Rigid",   Ermine::PhysicsBodyType::Rigid},
-			enum_item{"Trigger", Ermine::PhysicsBodyType::Trigger},
-		};
-	};
-
-	template<> struct var_type<JPH::EMotionType> : var_defaults<"JPH_EMotionType", JPH::EMotionType> {
-		inline static constexpr std::array enum_list_v{
-			enum_item{"Static",    JPH::EMotionType::Static},
-			enum_item{"Kinematic", JPH::EMotionType::Kinematic},
-			enum_item{"Dynamic",   JPH::EMotionType::Dynamic},
-		};
-	};
-
-	template<> struct var_type<Ermine::ShapeType> : var_defaults<"ShapeType", Ermine::ShapeType> {
-		inline static constexpr std::array enum_list_v{
-			enum_item{"Box",        Ermine::ShapeType::Box},
-			enum_item{"Sphere",     Ermine::ShapeType::Sphere},
-			enum_item{"Capsule",    Ermine::ShapeType::Capsule},
-			enum_item{"CustomMesh", Ermine::ShapeType::CustomMesh},
-		};
 	};
 }
 
