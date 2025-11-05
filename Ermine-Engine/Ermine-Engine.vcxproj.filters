@@ -168,7 +168,7 @@
     <ClInclude Include="include\GPUProfiler.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="include\GameCamera.h">
+    <ClInclude Include="include\CameraSystem.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\GameObject.h">
@@ -377,7 +377,7 @@
     <ClCompile Include="src\Graphics\DrawCommands.cpp">
       <Filter>src\Graphics</Filter>
     </ClCompile>
-    <ClCompile Include="src\Graphics\GameCamera.cpp">
+    <ClCompile Include="src\Graphics\CameraSystem.cpp">
       <Filter>src\Graphics</Filter>
     </ClCompile>
     <ClCompile Include="src\Graphics\GeometryFactory.cpp">
@@ -527,6 +527,7 @@
     <ClCompile Include="src\dllmain.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\Graphics\UIRenderSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="include\Component.tpp">

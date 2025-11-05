@@ -17,7 +17,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Renderer.h"
 #include "Material.h"
 #include "SSBO_Bindings.h"
-#include "GameCamera.h"
+#include "CameraSystem.h"
 #include "EditorGUI.h"
 
 #include <numeric> // For std::iota
@@ -1045,7 +1045,7 @@ void Renderer::CompileDrawData()
 	// In editor build, check if playing
 	if (editor::EditorGUI::isPlaying)
 	{
-		auto gameCamera = ecs.GetSystem<graphics::GameCamera>();
+		auto gameCamera = ecs.GetSystem<graphics::CameraSystem>();
 		if (gameCamera && gameCamera->HasValidCamera())
 		{
 			// Use player camera when in play mode
@@ -1069,7 +1069,7 @@ void Renderer::CompileDrawData()
 	}
 #else
 	// Standalone build - use game camera
-	auto gameCamera = ecs.GetSystem<graphics::GameCamera>();
+	auto gameCamera = ecs.GetSystem<graphics::CameraSystem>();
 	if (gameCamera && gameCamera->HasValidCamera())
 	{
 		viewMtx = gameCamera->GetViewMatrix();
