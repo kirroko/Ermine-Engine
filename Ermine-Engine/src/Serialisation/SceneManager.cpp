@@ -260,6 +260,10 @@ void SceneManager::NewScene()
 {
     // Clear ECS
     Ermine::ECS::GetInstance().ClearAllEntities();
+
+    // Recreate HUD entity (UI elements)
+    CreateHUDEntity();
+
     auto mainLight = Ermine::ECS::GetInstance().CreateEntity();
 
     // Tilted down and slightly to the side, similar to Unity's default
@@ -291,14 +295,17 @@ void SceneManager::ClearScene()
     // Clear ECS
     Ermine::ECS::GetInstance().ClearAllEntities();
 
+    // Recreate HUD entity (UI elements)
+    CreateHUDEntity();
+
     //Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>()->UpdateShadowMap();
-    
+
     // Mark materials dirty to trigger recompilation
     auto renderer = Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>();
     if (renderer) {
         renderer->MarkMaterialsDirty();
     }
-    
+
     if (auto scene = GetActiveScene()) {
         scene->EnsureSyncedWithECS();
     }
@@ -319,6 +326,10 @@ void SceneManager::OpenScene(const std::string& path)
     //EnsureActiveScene().Clear();
 
     LoadSceneFromFile(Ermine::ECS::GetInstance(), path);
+
+    // Recreate HUD entity (UI elements)
+    CreateHUDEntity();
+
     Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>()->InitializeShadowMapResources();
 
     // Mark materials dirty to trigger recompilation after scene load
@@ -380,4 +391,21 @@ void SceneManager::SaveSceneTo(const std::string& path)
     SaveSceneToFile(Ermine::ECS::GetInstance(), path, true);
     m_CurrentScenePath = path;
     m_Dirty = false;
+}
+
+void SceneManager::CreateHUDEntity()
+{
+#if defined(EE_EDITOR)
+    // Create HUD entity with UIComponent for rendering UI elements
+    auto scene = GetActiveScene();
+    if (!scene) {
+        EE_CORE_ERROR("SceneManager::CreateHUDEntity() - No active scene!");
+        return;
+    }
+
+    Ermine::EntityID uiEntity = scene->CreateEntity("HUD", false, false);  // No transform or hierarchy needed
+    Ermine::UIComponent uiComp;  // Default values are already set in the struct
+    Ermine::ECS::GetInstance().AddComponent<Ermine::UIComponent>(uiEntity, uiComp);
+    EE_CORE_INFO("Created HUD entity with UIComponent");
+#endif
 }

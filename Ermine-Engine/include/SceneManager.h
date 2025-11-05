@@ -114,6 +114,11 @@ public:
         return *m_ActiveScene;
     }
 
+    /*!
+    \brief Creates the persistent HUD entity with UIComponent
+    */
+    void CreateHUDEntity();
+
 private:
     SceneManager() = default;
 
