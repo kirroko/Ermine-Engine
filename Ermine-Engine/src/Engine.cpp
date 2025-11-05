@@ -671,6 +671,7 @@ void engine::Shutdown()
 
 	AssetManager::GetInstance().Clear();
 	ECS::GetInstance().GetSystem<Physics>()->Shutdown();
+	ECS::GetInstance().GetSystem<NavMeshSystem>()->Shutdown();
 
 	graphics::GPUProfiler::Shutdown();
 
@@ -687,8 +688,6 @@ void engine::Shutdown()
 
 	ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->m_ScriptEngine->Shutdown();
 	AudioSystem::Shutdown();
-
-	if (auto n = ECS::GetInstance().GetSystem<NavMeshSystem>()) n->Shutdown();
 
 	ECS::GetInstance().Shutdown();
 

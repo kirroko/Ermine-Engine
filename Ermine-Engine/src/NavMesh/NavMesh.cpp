@@ -17,6 +17,35 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <cfloat>
 
+#include "RecastAlloc.h"
+#include "DetourAlloc.h"
+
+static std::atomic<int> g_rcAllocs{ 0 }, g_rcFrees{ 0 };
+static std::atomic<int> g_dtAllocs{ 0 }, g_dtFrees{ 0 };
+
+// Recast alloc hooks
+static void* MyRcAlloc(size_t size, rcAllocHint)
+{
+    g_rcAllocs++;
+    return malloc(size);
+}
+static void MyRcFree(void* p)
+{
+    if (p) { g_rcFrees++; free(p); }
+}
+
+// Detour alloc hooks
+static void* MyDtAlloc(size_t size, dtAllocHint)
+{
+    g_dtAllocs++;
+    return malloc(size);
+}
+static void MyDtFree(void* p)
+{
+    if (p) { g_dtFrees++; free(p); }
+}
+
+
 class DebugDrawGL : public duDebugDraw
 {
 public:
@@ -74,7 +103,8 @@ struct Ermine::NavMeshComponent::Runtime
 {
     dtNavMesh* nav = nullptr;
     dtNavMeshQuery* query = nullptr;
-    unsigned char* navData = nullptr;
+    //unsigned char* navData = nullptr;
+    dtTileRef tileRef = 0;
 };
 
 namespace Ermine {
@@ -88,22 +118,30 @@ namespace Ermine {
     {
         if (!m_dd) m_dd = new DebugDrawGL();
         EE_CORE_INFO("[NavMeshSystem] Initialized");
+
+        rcAllocSetCustom(MyRcAlloc, MyRcFree);
+        dtAllocSetCustom(MyDtAlloc, MyDtFree);
     }
 
     void NavMeshSystem::Shutdown()
     {
-        //EE_CORE_INFO("[NavMeshSystem] Shutdown - freeing all navmesh data");
-
-        auto& ecs = ECS::GetInstance();
-        for (EntityID e = 1; e <= MAX_ENTITIES; ++e)
+        EE_CORE_INFO("[NavMeshSystem] Shutdown - freeing all navmesh data");
+        EE_CORE_INFO("[NavMeshSystem] Entities to destroy: {}", m_Entities.size());
+        for (auto e : m_Entities)
         {
-            if (!ecs.IsEntityValid(e)) continue;
-            if (!ecs.HasComponent<NavMeshComponent>(e)) continue;
-
-            auto& c = ecs.GetComponent<NavMeshComponent>(e);
+            if (!ECS::GetInstance().HasComponent<NavMeshComponent>(e)) continue;
+            auto& c = ECS::GetInstance().GetComponent<NavMeshComponent>(e);
             DestroyBuild(c);
             DestroyRuntime(c);
         }
+
+        EE_CORE_INFO("[NavMesh] RC outstanding = {} (allocs={} frees={})",
+            g_rcAllocs.load() - g_rcFrees.load(),
+            g_rcAllocs.load(), g_rcFrees.load());
+
+        EE_CORE_INFO("[NavMesh] DT outstanding = {} (allocs={} frees={})",
+            g_dtAllocs.load() - g_dtFrees.load(),
+            g_dtAllocs.load(), g_dtFrees.load());
 
         delete m_dd;
         m_dd = nullptr;
@@ -112,7 +150,6 @@ namespace Ermine {
     void NavMeshSystem::DestroyBuild(NavMeshComponent& c)
     {
         if (!c.build) return;
-        //EE_CORE_INFO("[NavMeshSystem] DestroyBuild");
 
         if (c.build->dmesh) { rcFreePolyMeshDetail(c.build->dmesh); c.build->dmesh = nullptr; }
         if (c.build->pmesh) { rcFreePolyMesh(c.build->pmesh); c.build->pmesh = nullptr; }
@@ -127,22 +164,49 @@ namespace Ermine {
 
     void NavMeshSystem::DestroyRuntime(NavMeshComponent& c)
     {
+        EE_CORE_INFO("[NavMeshSystem] DestroyRuntime {}", (void*)c.runtime);
         if (!c.runtime) return;
 
-        if (c.runtime->query) { dtFree(c.runtime->query); c.runtime->query = nullptr; }
-        if (c.runtime->nav) { dtFree(c.runtime->nav);   c.runtime->nav = nullptr; }
+        if (c.runtime->query) {
+#ifdef DETOURNAVMESHQUERY_H
+            dtFreeNavMeshQuery(c.runtime->query);
+#else
+            dtFree(c.runtime->query);
+#endif
+            c.runtime->query = nullptr;
+        }
 
-        if (c.runtime->navData)
-        {
-            dtFree(c.runtime->navData);
-            c.runtime->navData = nullptr;
+        if (c.runtime->nav) {
+            if (c.runtime->tileRef) {
+                unsigned char* data = nullptr; int size = 0;
+                c.runtime->nav->removeTile(c.runtime->tileRef, &data, &size);
+                EE_CORE_INFO("[NavMeshSystem] removeTile ref={} data={} size={}", (unsigned)c.runtime->tileRef, (void*)data, size);
+                c.runtime->tileRef = 0;
+            }
+
+            const dtNavMesh* navc = c.runtime->nav;
+            int removed = 0;
+            for (int i = 0; i < navc->getMaxTiles(); ++i) {
+                const dtMeshTile* t = navc->getTile(i);
+                if (!t || !t->data) continue;
+                dtTileRef r = c.runtime->nav->getTileRef(t);
+                if (!r) continue;
+                unsigned char* d = t->data;
+                c.runtime->nav->removeTile(r, &d, nullptr);
+                ++removed;
+            }
+            EE_CORE_INFO("[NavMeshSystem] Removed {} Detour tiles (sweep)", removed);
+
+            dtFreeNavMesh(c.runtime->nav);
+            c.runtime->nav = nullptr;
         }
 
         delete c.runtime;
         c.runtime = nullptr;
     }
 
-    bool NavMeshSystem::BuildFromTriangles(NavMeshComponent& c,
+    bool NavMeshSystem::BuildFromTriangles(
+        NavMeshComponent& c,
         const float* verts, int nverts,
         const int* tris, int ntris)
     {
@@ -174,8 +238,6 @@ namespace Ermine {
 
         const float pad = c.cellSize * 2.0f;
         for (int i = 0; i < 3; ++i) { bmin[i] -= pad; bmax[i] += pad; }
-        LogVec3("bmin", bmin);
-        LogVec3("bmax", bmax);
 
         rcConfig cfg{};
         cfg.cs = c.cellSize;
@@ -197,8 +259,6 @@ namespace Ermine {
         cfg.detailSampleDist = 6.0f;
         cfg.detailSampleMaxError = 1.0f;
 
-       // EE_CORE_INFO("[NavMeshSystem] cfg width=%d height=%d", cfg.width, cfg.height);
-
         c.build->hf = rcAllocHeightfield();
         if (!c.build->hf)
         {
@@ -215,8 +275,7 @@ namespace Ermine {
         }
 
         std::vector<unsigned char> areas(ntris, RC_WALKABLE_AREA);
-        if (!rcRasterizeTriangles(c.build->ctx, verts, nverts,
-            tris, areas.data(), ntris,
+        if (!rcRasterizeTriangles(c.build->ctx, verts, nverts, tris, areas.data(), ntris,
             *c.build->hf, cfg.walkableClimb))
         {
             EE_CORE_ERROR("[NavMeshSystem] rcRasterizeTriangles failed");
@@ -239,9 +298,6 @@ namespace Ermine {
         rcBuildPolyMeshDetail(c.build->ctx, *c.build->pmesh, *c.build->chf,
             cfg.detailSampleDist, cfg.detailSampleMaxError, *c.build->dmesh);
 
-        //EE_CORE_INFO("[NavMeshSystem] PolyMesh: verts=%d polys=%d", c.build->pmesh->nverts, c.build->pmesh->npolys);
-        //EE_CORE_INFO("[NavMesh] PolyMesh data check: nverts=%d npolys=%d nvp=%d", c.build->pmesh->nverts, c.build->pmesh->npolys, c.build->pmesh->nvp);
-
         if (c.build->pmesh->nverts == 0 || c.build->pmesh->npolys == 0)
         {
             EE_CORE_ERROR("[NavMesh] Empty pmesh! Possible over-eroded geometry or agent too tall.");
@@ -254,7 +310,6 @@ namespace Ermine {
         params.vertCount = c.build->pmesh->nverts;
         params.polys = c.build->pmesh->polys;
         params.polyAreas = c.build->pmesh->areas;
-        //params.polyFlags = c.build->pmesh->flags;
 
         static const unsigned short WALKABLE = 0x01;
         std::vector<unsigned short> polyFlagsTemp(c.build->pmesh->npolys, WALKABLE);
@@ -279,37 +334,6 @@ namespace Ermine {
         unsigned char* navData = nullptr;
         int navDataSize = 0;
 
-        for (int i = 0; i < 3; ++i)
-        {
-            if (params.bmax[i] - params.bmin[i] < 0.05f)
-            {
-                const float pad = 0.05f;
-                params.bmin[i] -= pad;
-                params.bmax[i] += pad;
-            }
-        }
-
-        if (params.vertCount <= 0 || params.polyCount <= 0)
-        {
-            EE_CORE_ERROR("[NavMesh] Detour build aborted: no vertices or polygons to process.");
-            DestroyBuild(c);
-            return false;
-        }
-
-        for (int i = 0; i < 3; ++i)
-        {
-            if (!std::isfinite(params.bmin[i])) params.bmin[i] = 0.0f;
-            if (!std::isfinite(params.bmax[i])) params.bmax[i] = 1.0f;
-        }
-
-        cfg.minRegionArea = std::max(1, (int)rcSqr(8));
-        cfg.mergeRegionArea = std::max(1, (int)rcSqr(20));
-
-        EE_CORE_INFO("[NavMesh] Detour bounds check: x=%.3f y=%.3f z=%.3f",
-            params.bmax[0] - params.bmin[0],
-            params.bmax[1] - params.bmin[1],
-            params.bmax[2] - params.bmin[2]);
-
         if (!dtCreateNavMeshData(&params, &navData, &navDataSize))
         {
             EE_CORE_ERROR("[NavMeshSystem] dtCreateNavMeshData failed");
@@ -318,28 +342,37 @@ namespace Ermine {
         }
 
         c.runtime = new NavMeshComponent::Runtime();
-        c.runtime->navData = navData;
         c.runtime->nav = dtAllocNavMesh();
-        if (dtStatusFailed(c.runtime->nav->init(navData, navDataSize, 0)))
-        {
-            EE_CORE_ERROR("[NavMeshSystem] NavMesh init failed");
-            DestroyBuild(c);
-            DestroyRuntime(c);
-            return false;
-        }
+
+        dtNavMeshParams navParams{};
+        navParams.orig[0] = bmin[0];
+        navParams.orig[1] = bmin[1];
+        navParams.orig[2] = bmin[2];
+        navParams.tileWidth = bmax[0] - bmin[0];
+        navParams.tileHeight = bmax[2] - bmin[2];
+        navParams.maxTiles = 1;
+        navParams.maxPolys = 0x8000;
+
+        auto st = c.runtime->nav->init(&navParams);
+        EE_CORE_INFO("[NavMeshSystem] nav->init(tiled) status={} maxTiles={}", (int)st, c.runtime->nav->getMaxTiles());
+        if (dtStatusFailed(st)) { dtFree(navData); DestroyBuild(c); DestroyRuntime(c); return false; }
+
+        dtTileRef tileRef = 0;
+        st = c.runtime->nav->addTile(navData, navDataSize, DT_TILE_FREE_DATA, 0, &tileRef);
+        EE_CORE_INFO("[NavMeshSystem] addTile status={} ref={}", (int)st, (unsigned)tileRef);
+        if (dtStatusFailed(st)) { dtFree(navData); DestroyBuild(c); DestroyRuntime(c); return false; }
+
+        c.runtime->tileRef = tileRef;
 
         c.runtime->query = dtAllocNavMeshQuery();
-        if (dtStatusFailed(c.runtime->query->init(c.runtime->nav, 2048)))
-        {
-            EE_CORE_ERROR("[NavMeshSystem] NavMeshQuery init failed");
-            DestroyBuild(c);
-            DestroyRuntime(c);
-            return false;
-        }
+        if (dtStatusFailed(c.runtime->query->init(c.runtime->nav, 2048))) { DestroyBuild(c); DestroyRuntime(c); return false; }
+
+        c.runtime->tileRef = tileRef;
 
         EE_CORE_INFO("[NavMeshSystem] Build complete!");
         return true;
     }
+
 
     bool NavMeshSystem::BakeTopOfCube(EntityID e)
     {

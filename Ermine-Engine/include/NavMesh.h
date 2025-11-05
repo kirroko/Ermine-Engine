@@ -26,5 +26,4 @@ namespace Ermine {
         bool BuildFromTriangles(NavMeshComponent& c, const float* verts, int nverts, const int* tris, int ntris);
         duDebugDraw* m_dd = nullptr;
     };
-
 }
