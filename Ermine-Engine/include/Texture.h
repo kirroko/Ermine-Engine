@@ -21,7 +21,7 @@ namespace Ermine::graphics
 {
     class Texture
     {
-        GLuint m_RendererID;
+        GLuint m_RendererID = 0;
         std::string m_filePath;
         unsigned char* m_LocalBuffer;
         int m_Width, m_Height, m_BPP;
