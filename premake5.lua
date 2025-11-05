@@ -363,15 +363,19 @@ project "Ermine-Game"
         buildoptions { "/wd4251", "/wd4005" }
         defines { "EE_PLATFORM_WINDOWS" }
 
+    filter "configurations:*Editor*"
+        defines { "EE_EDITOR" }
 
     filter "configurations:*Game*"
         defines { "EE_GAME" }
 
     filter "configurations:Editor-Debug"
         kind "ConsoleApp"
+        defines "EE_DEBUG"
 
     filter "configurations:Editor-Release"
         kind "WindowedApp"
+        defines "EE_RELEASE"
 
     filter "configurations:Game-Debug"
         defines "EE_DEBUG"

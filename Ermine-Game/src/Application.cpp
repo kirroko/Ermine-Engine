@@ -4,7 +4,7 @@
 #include <Windows.h>
 #endif
 
-#if defined(EE_GAME) && defined(EE_RELEASE)
+#if (defined(EE_EDITOR) || defined(EE_GAME)) && defined(EE_RELEASE)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 #else
 int main()
