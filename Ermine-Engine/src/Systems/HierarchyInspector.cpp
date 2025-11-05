@@ -1942,6 +1942,13 @@ namespace Ermine::editor {
 		if (ImGui::MenuItem("ParticleEmitter") && !ECS::GetInstance().HasComponent<ParticleEmitter>(entity)) {
 			ECS::GetInstance().AddComponent(entity, ParticleEmitter());
 		}
+		if (ImGui::MenuItem("Camera") && !ECS::GetInstance().HasComponent<CameraComponent>(entity))
+		{
+			auto tempCam = CameraComponent{};
+			tempCam.fov = 45;
+			tempCam.nearPlane = 5.0f;
+			ECS::GetInstance().AddComponent(entity, tempCam);
+		}
 		// Add more component types as needed
 
 		ECS::GetInstance().ResyncAllSignaturesFromStorage();
