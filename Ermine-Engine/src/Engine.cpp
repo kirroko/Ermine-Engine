@@ -80,60 +80,6 @@ namespace
 
 	EntityID fbxEntity = 0;
 
-	// Unity-style duplicate name generator
-	std::string GenerateUnityStyleName(const std::string& baseName)
-	{
-		auto& ecs = ECS::GetInstance();
-	
-		// Extract base name without existing number suffix
-		std::string cleanBaseName = baseName;
-		std::smatch match;
-		std::regex pattern(R"(^(.+)\s+\((\d+)\)$)");
-		
-		if (std::regex_match(baseName, match, pattern))
-		{
-			cleanBaseName = match[1].str();
-		}
-		
-		// Find the next available number
-		int maxNumber = 0;
-		bool baseNameExists = false;
-		
-		// Check all existing entities for name conflicts
-		for (EntityID e = 1; e < MAX_ENTITIES; ++e)
-		{
-			if (!ecs.IsEntityValid(e) || !ecs.HasComponent<ObjectMetaData>(e))
-				continue;
-				
-			const auto& meta = ecs.GetComponent<ObjectMetaData>(e);
-			
-			// Check if exact base name exists
-			if (meta.name == cleanBaseName)
-			{
-				baseNameExists = true;
-			}
-			
-			// Check for numbered variants
-			std::smatch numberMatch;
-			if (std::regex_match(meta.name, numberMatch, pattern))
-			{
-				if (numberMatch[1].str() == cleanBaseName)
-				{
-					int num = std::stoi(numberMatch[2].str());
-					maxNumber = std::max(maxNumber, num);
-				}
-			}
-		}
-		
-		// If base name exists or we found numbered variants, use next number
-		if (baseNameExists || maxNumber > 0)
-		{
-			return cleanBaseName + " (" + std::to_string(maxNumber + 1) + ")";
-		}
-		
-		// Otherwise, append (1)
-		return cleanBaseName + " (1)";
-	}
 }
 
 bool engine::Init(GLFWwindow* windowContext)
@@ -207,6 +153,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	EE_AUTO_REGISTER_COMPONENT(GlobalTransform, "GlobalTransform")
 	EE_AUTO_REGISTER_COMPONENT(ParticleEmitter, "ParticleEmitter");
 	EE_AUTO_REGISTER_COMPONENT(CameraComponent, "CameraComponent");
+	EE_AUTO_REGISTER_COMPONENT(UIComponent, "UIComponent");
 
 	// NOTE : THESE ARE SPECIAL CASES DUE TO THE FACT THAT THEIR COMPONENTS ARE UNIQUE AND WOULDN'T WORK BY SHALLOW COPIED OR DEEP COPIED
 	// THE CLONING FUNCTIONALITY HAVE BEEN CONSIDERED INTO ECS ITSELF. UNSURE, ASK.
@@ -230,6 +177,8 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	// Register all systems
 	ECS::GetInstance().RegisterSystem<graphics::Renderer>();
+	ECS::GetInstance().RegisterSystem<graphics::ModelSystem>();
+	ECS::GetInstance().RegisterSystem<graphics::MaterialSystem>();
 	ECS::GetInstance().RegisterSystem<scripting::ScriptSystem>();
 	ECS::GetInstance().RegisterSystem<AudioSystem>();
 	ECS::GetInstance().RegisterSystem<ParticleSystem>();
@@ -248,9 +197,20 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	// Set system signatures
 	SignatureID sig;
-	sig.set(ECS::GetInstance().GetComponentType<Transform>());
-	sig.set(ECS::GetInstance().GetComponentType<Material>());
+
+	// For Renderer system
+	sig.set(ECS::GetInstance().GetComponentType<Mesh>());
 	ECS::GetInstance().SetSystemSignature<graphics::Renderer>(sig);
+
+	// For Model system
+	sig.reset();
+	sig.set(ECS::GetInstance().GetComponentType<ModelComponent>());
+	ECS::GetInstance().SetSystemSignature<graphics::ModelSystem>(sig);
+
+	// For Material system
+	sig.reset();
+	sig.set(ECS::GetInstance().GetComponentType<Material>());
+	ECS::GetInstance().SetSystemSignature<graphics::MaterialSystem>(sig);
 
 	// For CameraSystem system
 	// CameraSystem doesn't require any components to exist (it's a singleton system) ???? that is not how it works!
@@ -304,6 +264,11 @@ bool engine::Init(GLFWwindow* windowContext)
 	fsmSig.set(ECS::GetInstance().GetComponentType<Transform>());
 	ECS::GetInstance().SetSystemSignature<StateManager>(fsmSig);
 
+	// For UI Rendering System
+	SignatureID uiSig;
+	uiSig.set(ECS::GetInstance().GetComponentType<UIComponent>());
+	ECS::GetInstance().SetSystemSignature<UIRenderSystem>(uiSig);
+
 	glfwSetFramebufferSizeCallback(windowContext, []([[maybe_unused]] GLFWwindow* window, int width, int height)
 		{
 #if defined(EE_EDITOR)
@@ -314,6 +279,10 @@ bool engine::Init(GLFWwindow* windowContext)
 			auto renderer = ECS::GetInstance().GetSystem<graphics::Renderer>();
 			if (renderer && width > 0 && height > 0)
 				renderer->OnWindowResize(width, height);
+
+			auto uiSystem = ECS::GetInstance().GetSystem<UIRenderSystem>();
+			if (uiSystem && width > 0 && height > 0)
+				uiSystem->OnScreenResize(width, height);
 #endif
 		});
 
@@ -383,6 +352,12 @@ bool engine::Init(GLFWwindow* windowContext)
 	else
 		ECS::GetInstance().GetSystem<graphics::Renderer>()->Init(1920, 1080); // Fallback to default size
 
+	// Initialize UI Render System
+	if (windowWidth > 0 && windowHeight > 0)
+		ECS::GetInstance().GetSystem<UIRenderSystem>()->Init(windowWidth, windowHeight);
+	else
+		ECS::GetInstance().GetSystem<UIRenderSystem>()->Init(1920, 1080);
+
 	SceneManager::GetInstance().NewScene();
 
 	EE_CORE_INFO("Material system now supports efficient sharing between entities using shared_ptr");
@@ -434,6 +409,7 @@ bool engine::Init(GLFWwindow* windowContext)
 #endif
 
 	s_isInitialized = true;
+	return true;
 }
 
 void engine::Shutdown()
@@ -545,6 +521,9 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 
 	// FSM update
 	ECS::GetInstance().GetSystem<StateManager>()->Update(FrameController::GetFixedDeltaTime());
+
+	// UI update (mana regen, cooldowns)
+	ECS::GetInstance().GetSystem<UIRenderSystem>()->Update(FrameController::GetDeltaTime());
 }
 
 void engine::Render(GLFWwindow* window)
@@ -611,6 +590,17 @@ void engine::Render(GLFWwindow* window)
 
 	// Stop GPU timing for rendering
 	graphics::GPUProfiler::EndEvent();
+
+	// Render UI overlays (health bars, mana, skills, crosshairs)
+	// This renders to the offscreen framebuffer (before it's captured for the viewport)
+	auto uiSystem = ECS::GetInstance().GetSystem<UIRenderSystem>();
+	if (uiSystem)
+		uiSystem->Render();
+
+#if defined(EE_EDITOR)
+	// Unbind framebuffer after UI rendering (so ImGui renders to the window)
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+#endif
 
 	// Render ImGui/Editor on top of everything
 #if defined(EE_EDITOR)
