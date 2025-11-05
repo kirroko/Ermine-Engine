@@ -26,6 +26,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "EditorCamera.h"
 #include "shadow_config.h"
 #include "MeshManager.h"
+#include "HierarchySystem.h"
 
 namespace Ermine::graphics
 {
@@ -141,6 +142,18 @@ namespace Ermine::graphics
     \brief Light System. Contains all light entities in the scene.
     *************************************************************************/
     class LightSystem : public System {};
+
+    /*!***********************************************************************
+    \brief Light System. Contains all light entities in the scene.
+    *************************************************************************/
+    class ModelSystem : public System {};
+
+    /*!***********************************************************************
+    \brief Light System. Contains all light entities in the scene.
+    *************************************************************************/
+    class MaterialSystem : public System {};
+
+
 
     /*!***********************************************************************
     \brief Light GPU structure
@@ -804,6 +817,10 @@ namespace Ermine::graphics
 
 		// Light System
 		std::shared_ptr<LightSystem> m_LightSystem = nullptr;
+		// Model System
+		std::shared_ptr<ModelSystem> m_ModelSystem = nullptr;
+		// Material System
+		std::shared_ptr<MaterialSystem> m_MaterialSystem = nullptr;
         std::shared_ptr<OffscreenBuffer> m_OffscreenBuffer;
 
         // Lighting UBO
@@ -947,4 +964,219 @@ namespace Ermine::graphics
          */
         glm::mat4 GetEntityWorldMatrix(EntityID entity) const;
     };
+
+
+
+    /*!***********************************************************************
+    \brief
+     Helper function to setup mesh child entities for a model.
+
+     Creates child entities for each mesh to track per-mesh materials.
+     Each child has: MaterialComponent, HierarchyComponent, Transform.
+     Children are named "Mesh_<meshID>" for reliable matching during reloads.
+
+     \param parentEntity The entity with the ModelComponent
+     \param model The loaded model whose meshes need child entities
+    *************************************************************************/
+    inline void SetupModelMeshChildren(EntityID parentEntity, std::shared_ptr<graphics::Model> model)
+    {
+        if (!model) return;
+
+        auto& ecs = ECS::GetInstance();
+        auto hierarchySystem = ecs.GetSystem<HierarchySystem>();
+        auto renderer = ecs.GetSystem<graphics::Renderer>();
+
+        if (!hierarchySystem || !renderer) return;
+
+        // Ensure parent has HierarchyComponent
+        if (!ecs.HasComponent<HierarchyComponent>(parentEntity)) {
+            ecs.AddComponent<HierarchyComponent>(parentEntity, HierarchyComponent());
+        }
+
+        auto& hierarchy = ecs.GetComponent<HierarchyComponent>(parentEntity);
+        const aiScene* scene = model->GetAssimpScene();
+
+        // Track which children we've matched to meshes
+        std::unordered_set<EntityID> matchedChildren;
+
+        // Process each mesh in the model
+        const auto& meshes = model->GetMeshes();
+        for (size_t meshIndex = 0; meshIndex < meshes.size(); ++meshIndex) {
+            const auto& meshData = meshes[meshIndex];
+            const std::string& meshID = meshData.meshID;
+            const std::string expectedChildName = "Mesh_" + meshID;
+
+            // Try to find existing child with matching name
+            EntityID childEntity = 0;
+            for (EntityID child : hierarchy.children) {
+                if (ecs.HasComponent<ObjectMetaData>(child)) {
+                    auto& metadata = ecs.GetComponent<ObjectMetaData>(child);
+                    if (metadata.name == expectedChildName) {
+                        childEntity = child;
+                        matchedChildren.insert(child);
+                        break;
+                    }
+                }
+            }
+
+            // If no matching child found, create one
+            if (childEntity == 0) {
+                childEntity = ecs.CreateEntity();
+
+                // Add required components
+                ecs.AddComponent<HierarchyComponent>(childEntity, HierarchyComponent());
+                ecs.AddComponent<Transform>(childEntity, Transform());
+                ecs.AddComponent<ObjectMetaData>(childEntity, ObjectMetaData(expectedChildName, "Mesh", true));
+
+                // Set parent-child relationship
+                hierarchySystem->SetParent(childEntity, parentEntity, true);
+            }
+
+            // Get material index from aiScene using mesh index
+            uint32_t materialIndex = UINT32_MAX;
+            if (scene && meshIndex < scene->mNumMeshes) {
+                aiMesh* aiMsh = scene->mMeshes[meshIndex];
+                if (aiMsh) {
+                    materialIndex = aiMsh->mMaterialIndex;
+                }
+            }
+
+            // Skip material creation if no valid material
+            if (materialIndex == UINT32_MAX || !scene || materialIndex >= scene->mNumMaterials) {
+                EE_CORE_WARN("Mesh '{}' has no valid material (index: {}), child created without material", meshID, materialIndex);
+                continue;
+            }
+
+            // Create or update material component
+            aiMaterial* aiMat = scene->mMaterials[materialIndex];
+            auto materialPtr = std::make_shared<graphics::Material>();
+            materialPtr->LoadTemplate(graphics::MaterialTemplates::PBR_WHITE());
+
+            // Load textures using AssetManager
+            aiString texPath;
+
+            // Albedo: Try BASE_COLOR first, fallback to DIFFUSE
+            if (aiMat->GetTexture(aiTextureType_BASE_COLOR, 0, &texPath) == AI_SUCCESS ||
+                aiMat->GetTexture(aiTextureType_DIFFUSE, 0, &texPath) == AI_SUCCESS) {
+                std::string texPathStr = std::string(texPath.C_Str());
+                std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
+                std::string fullTexPath = "../Resources/Textures/" + texPathStr;
+                auto albedoTex = AssetManager::GetInstance().LoadTexture(fullTexPath);
+                if (albedoTex && albedoTex->IsValid()) {
+                    materialPtr->SetTexture("materialAlbedoMap", albedoTex);
+                    materialPtr->SetTexture("material.albedoMap", albedoTex);
+                    materialPtr->SetBool("materialHasAlbedoMap", true);
+                }
+            }
+
+            // Normal map
+            if (aiMat->GetTexture(aiTextureType_NORMALS, 0, &texPath) == AI_SUCCESS) {
+                std::string texPathStr = std::string(texPath.C_Str());
+                std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
+                std::string fullTexPath = "../Resources/Textures/" + texPathStr;
+                auto normalTex = AssetManager::GetInstance().LoadTexture(fullTexPath);
+                if (normalTex && normalTex->IsValid()) {
+                    materialPtr->SetTexture("materialNormalMap", normalTex);
+                    materialPtr->SetTexture("material.normalMap", normalTex);
+                    materialPtr->SetBool("materialHasNormalMap", true);
+                    materialPtr->SetBool("material.hasNormalMap", true);
+                }
+            }
+
+            // Roughness map (SHININESS in Assimp)
+            if (aiMat->GetTexture(aiTextureType_SHININESS, 0, &texPath) == AI_SUCCESS) {
+                std::string texPathStr = std::string(texPath.C_Str());
+                std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
+                std::string fullTexPath = "../Resources/Textures/" + texPathStr;
+                auto roughnessTex = AssetManager::GetInstance().LoadTexture(fullTexPath);
+                if (roughnessTex && roughnessTex->IsValid()) {
+                    materialPtr->SetTexture("materialRoughnessMap", roughnessTex);
+                    materialPtr->SetBool("materialHasRoughnessMap", true);
+                }
+            }
+
+            // Metallic map
+            if (aiMat->GetTexture(aiTextureType_METALNESS, 0, &texPath) == AI_SUCCESS) {
+                std::string texPathStr = std::string(texPath.C_Str());
+                std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
+                std::string fullTexPath = "../Resources/Textures/" + texPathStr;
+                auto metallicTex = AssetManager::GetInstance().LoadTexture(fullTexPath);
+                if (metallicTex && metallicTex->IsValid()) {
+                    materialPtr->SetTexture("materialMetallicMap", metallicTex);
+                    materialPtr->SetTexture("material.metallicMap", metallicTex);
+                    materialPtr->SetBool("materialHasMetallicMap", true);
+                }
+            }
+
+            // AO map
+            if (aiMat->GetTexture(aiTextureType_LIGHTMAP, 0, &texPath) == AI_SUCCESS ||
+                aiMat->GetTexture(aiTextureType_AMBIENT_OCCLUSION, 0, &texPath) == AI_SUCCESS) {
+                std::string texPathStr = std::string(texPath.C_Str());
+                std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
+                std::string fullTexPath = "../Resources/Textures/" + texPathStr;
+                auto aoTex = AssetManager::GetInstance().LoadTexture(fullTexPath);
+                if (aoTex && aoTex->IsValid()) {
+                    materialPtr->SetTexture("materialAoMap", aoTex);
+                    materialPtr->SetBool("materialHasAoMap", true);
+                }
+            }
+
+            // Emissive map
+            if (aiMat->GetTexture(aiTextureType_EMISSIVE, 0, &texPath) == AI_SUCCESS) {
+                std::string texPathStr = std::string(texPath.C_Str());
+                std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
+                std::string fullTexPath = "../Resources/Textures/" + texPathStr;
+                auto emissiveTex = AssetManager::GetInstance().LoadTexture(fullTexPath);
+                if (emissiveTex && emissiveTex->IsValid()) {
+                    materialPtr->SetTexture("materialEmissiveMap", emissiveTex);
+                    materialPtr->SetBool("materialHasEmissiveMap", true);
+                }
+            }
+
+            // Fetch UV transform and apply V-flip
+            aiUVTransform uvTransform;
+            if (aiMat->Get(AI_MATKEY_UVTRANSFORM(aiTextureType_DIFFUSE, 0), uvTransform) == AI_SUCCESS) {
+                // Apply V-flip
+                materialPtr->SetUVScale(Vec2(uvTransform.mScaling.x, -uvTransform.mScaling.y));
+                materialPtr->SetUVOffset(Vec2(uvTransform.mTranslation.x, 1.0f - uvTransform.mTranslation.y));
+            }
+            else {
+                // Default V-flip for FBX compatibility
+                materialPtr->SetUVScale(Vec2(1.0f, -1.0f));
+                materialPtr->SetUVOffset(Vec2(0.0f, 1.0f));
+            }
+
+            // Add or update material component on child entity
+            if (ecs.HasComponent<Ermine::Material>(childEntity)) {
+                // Update existing material
+                auto& matComp = ecs.GetComponent<Ermine::Material>(childEntity);
+                matComp = Ermine::Material(materialPtr);
+            }
+            else {
+                // Add new material component
+                ecs.AddComponent<Ermine::Material>(childEntity, Ermine::Material(materialPtr));
+            }
+        }
+
+        // Delete orphaned children (children with "Mesh_" prefix that don't match any current mesh)
+        std::vector<EntityID> childrenToDelete;
+        for (EntityID child : hierarchy.children) {
+            if (matchedChildren.find(child) == matchedChildren.end()) {
+                // This child wasn't matched, check if it's a mesh child
+                if (ecs.HasComponent<ObjectMetaData>(child)) {
+                    auto& metadata = ecs.GetComponent<ObjectMetaData>(child);
+                    // Only delete if it follows the "Mesh_" naming convention
+                    if (metadata.name.rfind("Mesh_", 0) == 0) {
+                        childrenToDelete.push_back(child);
+                    }
+                }
+            }
+        }
+
+        // Delete orphaned mesh children
+        for (EntityID child : childrenToDelete) {
+            ecs.DestroyEntity(child);
+        }
+    }
+
 }
