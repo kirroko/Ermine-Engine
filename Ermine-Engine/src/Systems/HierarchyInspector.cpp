@@ -417,25 +417,6 @@ namespace Ermine::editor {
 		graphics::Material* gm = matComp.GetMaterial();
 
 		if (!gm) {
-			//ImGui::TextUnformatted("No material bound.");
-			//if (ImGui::Button("Create Default PBR")) {
-			//	matComp = Material(std::make_shared<graphics::Material>());
-			//	gm = matComp.GetMaterial();
-			//	if (gm) {
-			//		Vec4 alb{ 1.f,1.f,1.f,1.f };
-			//		gm->SetVec4("materialAlbedo", alb);
-			//		gm->SetVec4("material.albedo", alb);
-			//		gm->SetFloat("materialAlpha", 1.0f);
-			//		gm->SetFloat("materialTransparency", 0.0f);
-
-			//		gm->SetFloat("materialMetallic", 0.0f);           gm->SetFloat("material.metallic", 0.0f);
-			//		gm->SetFloat("materialRoughness", 0.5f);          gm->SetFloat("material.roughness", 0.5f);
-			//		gm->SetVec3("materialEmissive", { 0.f,0.f,0.f });   gm->SetVec3("material.emissive", { 0.f,0.f,0.f });
-			//		gm->SetFloat("materialEmissiveIntensity", 1.0f);  gm->SetFloat("material.emissiveIntensity", 1.0f);
-			//	}
-			//}
-			//ImGui::Separator();
-
 			matComp = Material(std::make_shared<graphics::Material>());
 			gm = matComp.GetMaterial();
 			if (gm) {
