@@ -155,6 +155,8 @@ namespace Ermine::editor {
         */
         void DrawParticleEmitterComponent(EntityID entity);
 
+        void DrawCameraComponent(EntityID entity);
+
         Scene* m_ActiveScene = nullptr;  ///< Pointer to the currently active scene
         bool m_IsVisible = true;         ///< Inspector panel visibility state
     };

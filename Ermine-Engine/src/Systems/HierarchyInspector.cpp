@@ -233,6 +233,9 @@ namespace Ermine::editor {
 			DrawParticleEmitterComponent(selected);
 		}
 
+		if (ECS::GetInstance().HasComponent<CameraComponent>(selected))
+			DrawCameraComponent(selected);
+
 		ImGui::PopID();
 
 		ImGui::Separator();
@@ -422,25 +425,6 @@ namespace Ermine::editor {
 		graphics::Material* gm = matComp.GetMaterial();
 
 		if (!gm) {
-			//ImGui::TextUnformatted("No material bound.");
-			//if (ImGui::Button("Create Default PBR")) {
-			//	matComp = Material(std::make_shared<graphics::Material>());
-			//	gm = matComp.GetMaterial();
-			//	if (gm) {
-			//		Vec4 alb{ 1.f,1.f,1.f,1.f };
-			//		gm->SetVec4("materialAlbedo", alb);
-			//		gm->SetVec4("material.albedo", alb);
-			//		gm->SetFloat("materialAlpha", 1.0f);
-			//		gm->SetFloat("materialTransparency", 0.0f);
-
-			//		gm->SetFloat("materialMetallic", 0.0f);           gm->SetFloat("material.metallic", 0.0f);
-			//		gm->SetFloat("materialRoughness", 0.5f);          gm->SetFloat("material.roughness", 0.5f);
-			//		gm->SetVec3("materialEmissive", { 0.f,0.f,0.f });   gm->SetVec3("material.emissive", { 0.f,0.f,0.f });
-			//		gm->SetFloat("materialEmissiveIntensity", 1.0f);  gm->SetFloat("material.emissiveIntensity", 1.0f);
-			//	}
-			//}
-			//ImGui::Separator();
-
 			matComp = Material(std::make_shared<graphics::Material>());
 			gm = matComp.GetMaterial();
 			if (gm) {
@@ -472,6 +456,13 @@ namespace Ermine::editor {
 				return Vec3(q->floatValues[0], q->floatValues[1], q->floatValues[2]);
 			return fb;
 			};
+		auto getVec2 = [&](const char* a, const char* b, const Vec2& fb) -> Vec2 {
+			if (auto p = gm->GetParameter(a); p && p->floatValues.size() >= 2)
+				return Vec2(p->floatValues[0], p->floatValues[1]);
+			if (auto q = gm->GetParameter(b); q && q->floatValues.size() >= 2)
+				return Vec2(q->floatValues[0], q->floatValues[1]);
+			return fb;
+			};
 		auto getBool = [&](const char* a, const char* b, bool fb) -> bool {
 			if (auto p = gm->GetParameter(a)) return p->boolValue;
 			if (b) { if (auto q = gm->GetParameter(b)) return q->boolValue; }
@@ -480,6 +471,9 @@ namespace Ermine::editor {
 
 		auto setFloatBoth = [&](const char* a, const char* b, float v) {
 			gm->SetFloat(a, v); gm->SetFloat(b, v);
+			};
+		auto setVec2Both = [&](const char* a, const char* b, const Vec2& v) {
+			gm->SetVec2(a, v); gm->SetVec2(b, v);
 			};
 		auto setVec3Both = [&](const char* a, const char* b, const Vec3& v) {
 			gm->SetVec3(a, v); gm->SetVec3(b, v);
@@ -582,6 +576,26 @@ namespace Ermine::editor {
 			}
 		}
 
+		ImGui::SeparatorText("UV Mapping");
+
+		// --- UV Scale ---
+		{
+			Vec2 uvScale = gm->GetUVScale();
+			float scale[2] = { uvScale.x, uvScale.y };
+			if (ImGui::DragFloat2("UV Scale", scale, 0.01f, 0.001f, 100.0f)) {
+				gm->SetUVScale(Vec2(scale[0], scale[1]));
+			}
+		}
+
+		// --- UV Offset ---
+		{
+			Vec2 uvOffset = gm->GetUVOffset();
+			float offset[2] = { uvOffset.x, uvOffset.y };
+			if (ImGui::DragFloat2("UV Offset", offset, 0.01f, -10.0f, 10.0f)) {
+				gm->SetUVOffset(Vec2(offset[0], offset[1]));
+			}
+		}
+
 		ImGui::SeparatorText("Maps");
 
 		// --- Presence flags (use same keys as (de)serialize) ---
@@ -622,6 +636,9 @@ namespace Ermine::editor {
 			setFloatBoth("materialRoughness", "material.roughness", 0.5f);
 			Vec3 emi{ 0.f,0.f,0.f }; setVec3Both("materialEmissive", "material.emissive", emi);
 			setFloatBoth("materialEmissiveIntensity", "material.emissiveIntensity", 1.0f);
+
+			gm->SetUVScale(Vec2(1.0f, 1.0f));
+			gm->SetUVOffset(Vec2(0.0f, 0.0f));
 
 			gm->SetBool("materialHasAlbedoMap", false);
 			setBoolBoth("materialHasNormalMap", "material.hasNormalMap", false);
@@ -1289,14 +1306,17 @@ namespace Ermine::editor {
 
 		if (!initialized) {
 			availableModels.clear();
-			for (auto& entry : std::filesystem::directory_iterator(modelsDir)) {
+			for (auto& entry : std::filesystem::recursive_directory_iterator(modelsDir)) {
 				if (entry.is_regular_file()) {
-					std::string name = entry.path().filename().string();
 					std::string ext = entry.path().extension().string();
 					// Added .skin and .mesh to the filter
 					if (ext == ".fbx" || ext == ".obj" || ext == ".gltf" ||
 						ext == ".skin" || ext == ".mesh") {
-						availableModels.push_back(name);
+						// Store relative path from modelsDir with forward slashes
+						std::string relativePath = std::filesystem::relative(entry.path(), modelsDir).string();
+						// Normalize path separators to forward slashes
+						std::replace(relativePath.begin(), relativePath.end(), '\\', '/');
+						availableModels.push_back(relativePath);
 					}
 				}
 			}
@@ -1328,6 +1348,169 @@ namespace Ermine::editor {
 					if (model) {
 						modelComp.m_model = model;
 
+						// Create child entities for each mesh with a material
+						auto& ecs = ECS::GetInstance();
+						auto hierarchySystem = ecs.GetSystem<HierarchySystem>();
+						auto renderer = ecs.GetSystem<graphics::Renderer>();
+						const aiScene* scene = model->GetAssimpScene();
+
+						EE_CORE_INFO("Loading model: {} with {} meshes", fullPath, model->GetMeshes().size());
+
+						if (hierarchySystem && renderer && scene) {
+							const auto& meshes = model->GetMeshes();
+							int childrenCreated = 0;
+
+							for (size_t meshIndex = 0; meshIndex < meshes.size(); ++meshIndex) {
+								const auto& meshData = meshes[meshIndex];
+								const std::string& meshID = meshData.meshID;
+
+								// Get material index from aiScene
+								if (meshIndex >= scene->mNumMeshes) {
+									EE_CORE_WARN("Mesh index {} >= scene->mNumMeshes {}, skipping", meshIndex, scene->mNumMeshes);
+									continue;
+								}
+								aiMesh* aiMsh = scene->mMeshes[meshIndex];
+								if (!aiMsh) {
+									EE_CORE_WARN("aiMesh at index {} is null, skipping", meshIndex);
+									continue;
+								}
+								uint32_t matIndex = aiMsh->mMaterialIndex;
+								if (matIndex >= scene->mNumMaterials) {
+									EE_CORE_WARN("Material index {} >= scene->mNumMaterials {}, skipping mesh {}", matIndex, scene->mNumMaterials, meshID);
+									continue;
+								}
+
+								// Create child entity
+								EntityID childEntity = ecs.CreateEntity();
+								EE_CORE_INFO("Created child entity {} for mesh {}", childEntity, meshID);
+
+								// Add required components
+								if (!ecs.HasComponent<HierarchyComponent>(childEntity)) {
+									ecs.AddComponent<HierarchyComponent>(childEntity, HierarchyComponent());
+								}
+								else {
+									auto& hc = ecs.GetComponent<HierarchyComponent>(childEntity);
+									hc.parent = 0;
+									hc.children.clear();
+								}
+								if (!ecs.HasComponent<Transform>(childEntity))
+									ecs.AddComponent<Transform>(childEntity, Transform());
+								else {
+									ecs.GetComponent<Transform>(childEntity) = Transform();
+								}
+								if (!ecs.HasComponent<ObjectMetaData>(childEntity)) {
+									ecs.AddComponent<ObjectMetaData>(childEntity,
+										ObjectMetaData("Mesh_" + meshID, "Mesh", true));
+								}
+								else {
+									ecs.GetComponent<ObjectMetaData>(childEntity) =
+										ObjectMetaData("Mesh_" + meshID, "Mesh", true);
+								}
+
+								// Set parent-child relationship
+								hierarchySystem->SetParent(childEntity, entity, true);
+
+								// Create and assign material
+								aiMaterial* aiMat = scene->mMaterials[matIndex];
+								auto materialPtr = std::make_shared<graphics::Material>();
+								// Don't load template - start with empty material
+
+								aiString texPath;
+
+								// Albedo
+								if (aiMat->GetTexture(aiTextureType_BASE_COLOR, 0, &texPath) == AI_SUCCESS ||
+									aiMat->GetTexture(aiTextureType_DIFFUSE, 0, &texPath) == AI_SUCCESS) {
+									std::string texPathStr = std::string(texPath.C_Str());
+									std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
+									auto lastSlash = texPathStr.find_last_of('/');
+									std::string filename = (lastSlash != std::string::npos) ? texPathStr.substr(lastSlash + 1) : texPathStr;
+									auto albedoTex = AssetManager::GetInstance().LoadTexture("../Resources/Textures/" + filename);
+									if (albedoTex->IsValid()) {
+										materialPtr->SetTexture("materialAlbedoMap", albedoTex);
+										materialPtr->SetBool("materialHasAlbedoMap", true);
+									}
+								}
+
+								// Normal
+								if (aiMat->GetTexture(aiTextureType_NORMALS, 0, &texPath) == AI_SUCCESS) {
+									std::string texPathStr = std::string(texPath.C_Str());
+									std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
+									auto lastSlash = texPathStr.find_last_of('/');
+									std::string filename = (lastSlash != std::string::npos) ? texPathStr.substr(lastSlash + 1) : texPathStr;
+									EE_CORE_INFO("Loading normal texture: {}", texPathStr);
+									auto normalTex = AssetManager::GetInstance().LoadTexture("../Resources/Textures/" + filename);
+									if (normalTex->IsValid()) {
+										materialPtr->SetTexture("materialNormalMap", normalTex);
+										materialPtr->SetBool("materialHasNormalMap", true);
+										EE_CORE_INFO("Normal map loaded successfully");
+									}
+									else {
+										EE_CORE_WARN("Failed to load normal texture from: {}", "../Resources/Textures/" + filename);
+									}
+								}
+								else {
+									EE_CORE_INFO("No normal map found in material");
+								}
+
+								// Roughness
+								if (aiMat->GetTexture(aiTextureType_SHININESS, 0, &texPath) == AI_SUCCESS) {
+									std::string texPathStr = std::string(texPath.C_Str());
+									std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
+									auto lastSlash = texPathStr.find_last_of('/');
+									std::string filename = (lastSlash != std::string::npos) ? texPathStr.substr(lastSlash + 1) : texPathStr;
+									auto roughnessTex = AssetManager::GetInstance().LoadTexture("../Resources/Textures/" + filename);
+									if (roughnessTex->IsValid()) {
+										materialPtr->SetTexture("materialRoughnessMap", roughnessTex);
+										materialPtr->SetBool("materialHasRoughnessMap", true);
+									}
+								}
+
+								// Metallic
+								if (aiMat->GetTexture(aiTextureType_METALNESS, 0, &texPath) == AI_SUCCESS) {
+									std::string texPathStr = std::string(texPath.C_Str());
+									std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
+									auto lastSlash = texPathStr.find_last_of('/');
+									std::string filename = (lastSlash != std::string::npos) ? texPathStr.substr(lastSlash + 1) : texPathStr;
+									EE_CORE_INFO("Loading metallic texture: {}", texPathStr);
+									auto metallicTex = AssetManager::GetInstance().LoadTexture("../Resources/Textures/" + filename);
+									if (metallicTex->IsValid()) {
+										materialPtr->SetTexture("materialMetallicMap", metallicTex);
+										materialPtr->SetBool("materialHasMetallicMap", true);
+										EE_CORE_INFO("Metallic map loaded successfully");
+									}
+									else {
+										EE_CORE_WARN("Failed to load metallic texture from: {}", "../Resources/Textures/" + texPathStr);
+									}
+								}
+								else {
+									EE_CORE_INFO("No metallic map found in material");
+								}
+
+								// UV transform with V-flip
+								aiUVTransform uvTransform;
+								if (aiMat->Get(AI_MATKEY_UVTRANSFORM(aiTextureType_DIFFUSE, 0), uvTransform) == AI_SUCCESS) {
+									materialPtr->SetUVScale(Vec2(uvTransform.mScaling.x, -uvTransform.mScaling.y));
+									materialPtr->SetUVOffset(Vec2(uvTransform.mTranslation.x, 1.0f - uvTransform.mTranslation.y));
+								}
+								else {
+									materialPtr->SetUVScale(Vec2(1.0f, -1.0f));
+									materialPtr->SetUVOffset(Vec2(0.0f, 1.0f));
+								}
+
+								// Add material component
+								ecs.AddComponent<Ermine::Material>(childEntity, Ermine::Material(materialPtr));
+								EE_CORE_INFO("Added material to child entity {}", childEntity);
+								childrenCreated++;
+							}
+
+							EE_CORE_INFO("Created {} child entities for model", childrenCreated);
+						}
+						else {
+							if (!hierarchySystem) EE_CORE_ERROR("HierarchySystem is null");
+							if (!renderer) EE_CORE_ERROR("Renderer is null");
+							if (!scene) EE_CORE_ERROR("aiScene is null");
+						}
+
 						// Auto-attach animator if entity has AnimationComponent
 						if (ECS::GetInstance().HasComponent<AnimationComponent>(entity)) {
 							auto& animComp = ECS::GetInstance().GetComponent<AnimationComponent>(entity);
@@ -1357,24 +1540,197 @@ namespace Ermine::editor {
 			if (ImGui::Button("Reload Model")) {
 				std::string fullPath = modelsDir + modelComp.m_model->GetName();
 
+				auto& ecs = ECS::GetInstance();
+				auto hierarchySystem = ecs.GetSystem<HierarchySystem>();
+
+				// Store existing children to reuse them
+				std::vector<EntityID> existingChildren;
+				if (hierarchySystem && ecs.HasComponent<HierarchyComponent>(entity)) {
+					auto& hierarchy = ecs.GetComponent<HierarchyComponent>(entity);
+					existingChildren = hierarchy.children;
+					EE_CORE_INFO("Reusing {} existing child entities for reload", existingChildren.size());
+				}
+
 				// Remove cached version (forces reload from disk)
 				auto& manager = AssetManager::GetInstance();
-				manager.UnloadModel(fullPath); // remove from cache
+				manager.UnloadModel(fullPath);
 
-				// Load fresh copy
+				// Load fresh copy from disk
 				auto reloaded = manager.LoadModel(fullPath);
 				if (reloaded) {
 					modelComp.m_model = reloaded;
 
+					// Reuse or create child entities for each mesh with a material
+					auto renderer = ecs.GetSystem<graphics::Renderer>();
+					const aiScene* scene = reloaded->GetAssimpScene();
+
+					if (hierarchySystem && renderer && scene) {
+						const auto& meshes = reloaded->GetMeshes();
+
+						for (size_t meshIndex = 0; meshIndex < meshes.size(); ++meshIndex) {
+							const auto& meshData = meshes[meshIndex];
+							const std::string& meshID = meshData.meshID;
+
+							// Get material index from aiScene
+							if (meshIndex >= scene->mNumMeshes) continue;
+							aiMesh* aiMsh = scene->mMeshes[meshIndex];
+							if (!aiMsh) continue;
+							uint32_t matIndex = aiMsh->mMaterialIndex;
+							if (matIndex >= scene->mNumMaterials) continue;
+
+							// Reuse existing child entity if available, otherwise create new one
+							EntityID childEntity;
+							if (meshIndex < existingChildren.size()) {
+								childEntity = existingChildren[meshIndex];
+								EE_CORE_INFO("Reusing child entity {} for mesh {}", childEntity, meshID);
+							}
+							else {
+								childEntity = ecs.CreateEntity();
+								EE_CORE_INFO("Creating new child entity {} for mesh {}", childEntity, meshID);
+							}
+
+							// Reset/add required components
+							if (!ecs.HasComponent<HierarchyComponent>(childEntity)) {
+								ecs.AddComponent<HierarchyComponent>(childEntity, HierarchyComponent());
+							}
+							else {
+								auto& hc = ecs.GetComponent<HierarchyComponent>(childEntity);
+								hc.parent = entity;
+								hc.children.clear();
+								hc.depth = 1;
+								hc.isDirty = true;
+							}
+
+							if (!ecs.HasComponent<Transform>(childEntity))
+								ecs.AddComponent<Transform>(childEntity, Transform());
+							else {
+								ecs.GetComponent<Transform>(childEntity) = Transform();
+							}
+
+							if (!ecs.HasComponent<ObjectMetaData>(childEntity)) {
+								ecs.AddComponent<ObjectMetaData>(childEntity,
+									ObjectMetaData("Mesh_" + meshID, "Mesh", true));
+							}
+							else {
+								ecs.GetComponent<ObjectMetaData>(childEntity) =
+									ObjectMetaData("Mesh_" + meshID, "Mesh", true);
+							}
+
+							// Only set parent if this is a newly created child
+							if (meshIndex >= existingChildren.size()) {
+								hierarchySystem->SetParent(childEntity, entity, true);
+							}
+
+							// Create and assign material
+							aiMaterial* aiMat = scene->mMaterials[matIndex];
+							auto materialPtr = std::make_shared<graphics::Material>();
+							// Don't load template - start with empty material
+
+							aiString texPath;
+
+							// Albedo
+							if (aiMat->GetTexture(aiTextureType_BASE_COLOR, 0, &texPath) == AI_SUCCESS ||
+								aiMat->GetTexture(aiTextureType_DIFFUSE, 0, &texPath) == AI_SUCCESS) {
+								std::string texPathStr = std::string(texPath.C_Str());
+								std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
+								// Extract just the filename without subdirectories
+								auto lastSlash = texPathStr.find_last_of('/');
+								std::string filename = (lastSlash != std::string::npos) ? texPathStr.substr(lastSlash + 1) : texPathStr;
+								auto albedoTex = AssetManager::GetInstance().LoadTexture("../Resources/Textures/" + filename);
+								if (albedoTex->IsValid()) {
+									materialPtr->SetTexture("materialAlbedoMap", albedoTex);
+									materialPtr->SetBool("materialHasAlbedoMap", true);
+								}
+							}
+
+							// Normal
+							if (aiMat->GetTexture(aiTextureType_NORMALS, 0, &texPath) == AI_SUCCESS) {
+								std::string texPathStr = std::string(texPath.C_Str());
+								std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
+								auto lastSlash = texPathStr.find_last_of('/');
+								std::string filename = (lastSlash != std::string::npos) ? texPathStr.substr(lastSlash + 1) : texPathStr;
+								auto normalTex = AssetManager::GetInstance().LoadTexture("../Resources/Textures/" + filename);
+								if (normalTex->IsValid()) {
+									materialPtr->SetTexture("materialNormalMap", normalTex);
+									materialPtr->SetBool("materialHasNormalMap", true);
+								}
+							}
+
+							// Roughness
+							if (aiMat->GetTexture(aiTextureType_SHININESS, 0, &texPath) == AI_SUCCESS) {
+								std::string texPathStr = std::string(texPath.C_Str());
+								std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
+								auto lastSlash = texPathStr.find_last_of('/');
+								std::string filename = (lastSlash != std::string::npos) ? texPathStr.substr(lastSlash + 1) : texPathStr;
+								auto roughnessTex = AssetManager::GetInstance().LoadTexture("../Resources/Textures/" + filename);
+								if (roughnessTex->IsValid()) {
+									materialPtr->SetTexture("materialRoughnessMap", roughnessTex);
+									materialPtr->SetBool("materialHasRoughnessMap", true);
+								}
+							}
+
+							// Metallic
+							if (aiMat->GetTexture(aiTextureType_METALNESS, 0, &texPath) == AI_SUCCESS) {
+								std::string texPathStr = std::string(texPath.C_Str());
+								std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
+								auto lastSlash = texPathStr.find_last_of('/');
+								std::string filename = (lastSlash != std::string::npos) ? texPathStr.substr(lastSlash + 1) : texPathStr;
+								auto metallicTex = AssetManager::GetInstance().LoadTexture("../Resources/Textures/" + filename);
+								if (metallicTex->IsValid()) {
+									materialPtr->SetTexture("materialMetallicMap", metallicTex);
+									materialPtr->SetBool("materialHasMetallicMap", true);
+								}
+							}
+
+							// UV transform with V-flip
+							aiUVTransform uvTransform;
+							if (aiMat->Get(AI_MATKEY_UVTRANSFORM(aiTextureType_DIFFUSE, 0), uvTransform) == AI_SUCCESS) {
+								materialPtr->SetUVScale(Vec2(uvTransform.mScaling.x, -uvTransform.mScaling.y));
+								materialPtr->SetUVOffset(Vec2(uvTransform.mTranslation.x, 1.0f - uvTransform.mTranslation.y));
+							}
+							else {
+								materialPtr->SetUVScale(Vec2(1.0f, -1.0f));
+								materialPtr->SetUVOffset(Vec2(0.0f, 1.0f));
+							}
+
+							// Reset or add material component
+							if (ecs.HasComponent<Ermine::Material>(childEntity)) {
+								auto& matComp = ecs.GetComponent<Ermine::Material>(childEntity);
+								matComp = Ermine::Material(materialPtr);
+								EE_CORE_INFO("Reset material on child entity {}", childEntity);
+							}
+							else {
+								ecs.AddComponent<Ermine::Material>(childEntity, Ermine::Material(materialPtr));
+								EE_CORE_INFO("Added material to child entity {}", childEntity);
+							}
+						}
+
+						// Delete any excess children that are no longer needed
+						if (meshes.size() < existingChildren.size()) {
+							EE_CORE_INFO("Deleting {} excess child entities", existingChildren.size() - meshes.size());
+							for (size_t i = meshes.size(); i < existingChildren.size(); ++i) {
+								EntityID excessChild = existingChildren[i];
+								EE_CORE_INFO("Deleting excess child entity {}", excessChild);
+								hierarchySystem->UnsetParent(excessChild);
+								ecs.DestroyEntity(excessChild);
+							}
+						}
+					}
+
 					// Refresh animator
-					if (ECS::GetInstance().HasComponent<AnimationComponent>(entity)) {
-						auto& animComp = ECS::GetInstance().GetComponent<AnimationComponent>(entity);
+					if (ecs.HasComponent<AnimationComponent>(entity)) {
+						auto& animComp = ecs.GetComponent<AnimationComponent>(entity);
 						const aiScene* scene = reloaded->GetAssimpScene();
 						if (scene && scene->mNumAnimations > 0)
 							animComp.m_animator = std::make_shared<graphics::Animator>(reloaded);
 						else
 							animComp.m_animator.reset();
 					}
+
+					EE_CORE_INFO("Model reloaded successfully");
+				}
+				else {
+					EE_CORE_ERROR("Failed to reload model from: {}", fullPath);
 				}
 			}
 		}
@@ -1548,6 +1904,39 @@ namespace Ermine::editor {
 		ImGui::Text("Particles Alive: %d", alive);
 	}
 
+	void HierarchyInspector::DrawCameraComponent(EntityID entity)
+	{
+		if (!ComponentHeaderWithRemove<CameraComponent>("Camera Component", entity))
+			return;
+
+		auto& cameraComp = ECS::GetInstance().GetComponent<CameraComponent>(entity);
+
+		ImGui::SliderFloat("Field of View", &cameraComp.fov, 40, 120);
+
+		ImGui::Text("Clipping Planes");
+		if (ImGui::BeginTable("clipPlanesTable",2))
+		{
+			ImGui::TableNextRow();
+			ImGui::TableNextColumn();
+			ImGui::Text("Near:");
+
+			ImGui::TableNextColumn();
+
+			ImGui::SetNextItemWidth(-FLT_MIN);
+			ImGui::InputFloat("##Near", &cameraComp.nearPlane, 0.0f, 0.0f, "%.1f");
+
+			ImGui::TableNextRow();
+			ImGui::TableNextColumn();
+			ImGui::Text("Far");
+
+			ImGui::TableNextColumn();
+			ImGui::SetNextItemWidth(-FLT_MIN);
+			ImGui::InputFloat("##Far", &cameraComp.farPlane, 0.0f, 0.0f, "%.1f");
+
+			ImGui::EndTable();
+		}
+	}
+
 	void HierarchyInspector::DrawAddComponentMenu(EntityID entity) {
 		if (ImGui::MenuItem("Transform") && !ECS::GetInstance().HasComponent<Transform>(entity)) {
 			ECS::GetInstance().AddComponent(entity, Transform());
@@ -1613,6 +2002,13 @@ namespace Ermine::editor {
 		}
 		if (ImGui::MenuItem("ParticleEmitter") && !ECS::GetInstance().HasComponent<ParticleEmitter>(entity)) {
 			ECS::GetInstance().AddComponent(entity, ParticleEmitter());
+		}
+		if (ImGui::MenuItem("Camera") && !ECS::GetInstance().HasComponent<CameraComponent>(entity))
+		{
+			auto tempCam = CameraComponent{};
+			tempCam.fov = 45;
+			tempCam.nearPlane = 5.0f;
+			ECS::GetInstance().AddComponent(entity, tempCam);
 		}
 		// Add more component types as needed
 

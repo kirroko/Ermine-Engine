@@ -85,6 +85,9 @@ void Ermine::scripting::ScriptSystem::Update() const
 
 		sc.m_instance->Update();
 	}
+
+	if (m_ScriptEngine)
+		m_ScriptEngine->FlushLateDestroy();
 }
 
 void Ermine::scripting::ScriptSystem::FixedUpdate() const

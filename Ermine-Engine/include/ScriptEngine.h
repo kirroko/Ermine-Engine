@@ -17,6 +17,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <mono/jit/jit.h>
 #include <mono/metadata/assembly.h>
 
+#include "Entity.h"
+
 namespace Ermine
 {
 	struct ScriptFieldValue;
@@ -210,6 +212,19 @@ namespace Ermine::scripting
 		 * @param cache The cache to get the fields from.
 		 */
 		static void PushCacheToManagedFields(MonoObject* obj, const std::unordered_map<std::string, ScriptFieldValue>& cache);
+
+		/**
+		 * @brief Flush and destroy all entities that were queued for late destruction.
+		 * This should be called at a safe point in the game loop to avoid issues with dangling references.
+		 */
+		void FlushLateDestroy();
+
+		/**
+		 * @brief Queue an entity for late destruction.
+		 * The entity will be destroyed when FlushLateDestroy is called.
+		 * @param id The EntityID of the entity to destroy.
+		 */
+		void QueueLateDestroy(EntityID id);
 
 		MonoAssembly* GetGameAsm() const { return m_gameAsm; }
 		MonoDomain* GetGameDomain() const { assert(m_gameDomain != nullptr && "Game Domain missing?"); return m_gameDomain; }

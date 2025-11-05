@@ -45,8 +45,152 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "FSMNode.h"
 #include "AABB.h"
 
+namespace Ermine {
+	// NOTE: ALL ENUMS TO BE ADDED UP HERE
+
+	enum class MeshKind { None, Primitive, Asset };
+
+	/*!***********************************************************************
+	\brief
+	 Light type structure
+	*************************************************************************/
+	enum class LightType : int
+	{
+		POINT = 0,
+		DIRECTIONAL = 1,
+		SPOT = 2
+	};
+
+	/*!***********************************************************************
+	 \brief
+	 Enum for Physic component.
+	*************************************************************************/
+	enum class PhysicsBodyType
+	{
+		Rigid,
+		Trigger
+	};
+	enum class ShapeType { Box, Sphere, Capsule, CustomMesh/*, Compound*/, Total };
+}
+
+namespace xproperty::settings {
+	template<>
+	struct var_type<Ermine::MeshKind> : var_defaults<"MeshKind", Ermine::MeshKind>
+	{
+		inline static constexpr std::array enum_list_v{
+			enum_item{"None",      Ermine::MeshKind::None},
+			enum_item{"Primitive", Ermine::MeshKind::Primitive},
+			enum_item{"Asset",     Ermine::MeshKind::Asset},
+		};
+	};
+
+	template<>
+	struct var_type<Ermine::LightType> : var_defaults<"LightType", Ermine::LightType>
+	{
+		// antlion: enum_item takes the enum, not integers
+		inline static constexpr std::array enum_list_v{
+			enum_item{"Point",       Ermine::LightType::POINT},
+			enum_item{"Directional", Ermine::LightType::DIRECTIONAL},
+			enum_item{"Spot",        Ermine::LightType::SPOT},
+		};
+	};
+
+	template<> struct var_type<Ermine::PhysicsBodyType> : var_defaults<"PhysicsBodyType", Ermine::PhysicsBodyType> {
+		inline static constexpr std::array enum_list_v{
+			enum_item{"Rigid",   Ermine::PhysicsBodyType::Rigid},
+			enum_item{"Trigger", Ermine::PhysicsBodyType::Trigger},
+		};
+	};
+
+	template<> struct var_type<JPH::EMotionType> : var_defaults<"JPH_EMotionType", JPH::EMotionType> {
+		inline static constexpr std::array enum_list_v{
+			enum_item{"Static",    JPH::EMotionType::Static},
+			enum_item{"Kinematic", JPH::EMotionType::Kinematic},
+			enum_item{"Dynamic",   JPH::EMotionType::Dynamic},
+		};
+	};
+
+	template<> struct var_type<Ermine::ShapeType> : var_defaults<"ShapeType", Ermine::ShapeType> {
+		inline static constexpr std::array enum_list_v{
+			enum_item{"Box",        Ermine::ShapeType::Box},
+			enum_item{"Sphere",     Ermine::ShapeType::Sphere},
+			enum_item{"Capsule",    Ermine::ShapeType::Capsule},
+			enum_item{"CustomMesh", Ermine::ShapeType::CustomMesh},
+		};
+	};
+}
+
 namespace xprop_utils
 {
+	template<typename E>
+	struct EnumMap; // specialize per-enum below
+
+	template<typename E>
+	constexpr const char* EnumToString(E e) {
+		for (const auto& [name, val] : EnumMap<E>::items)
+			if (val == e) return name;
+		return nullptr;
+	}
+
+	template<typename E>
+	inline bool StringToEnum(const char* s, E& out) {
+		for (const auto& [name, val] : EnumMap<E>::items)
+			if (std::strcmp(name, s) == 0) { out = val; return true; }
+		return false;
+	}
+
+	// ---------- Enum maps (one-time specializations) ----------
+
+	template<> struct EnumMap<Ermine::MeshKind> {
+		using E = Ermine::MeshKind;
+		static constexpr std::pair<const char*, E> items[] = {
+			{"None",      E::None},
+			{"Primitive", E::Primitive},
+			{"Asset",     E::Asset},
+		};
+	};
+	constexpr std::pair<const char*, Ermine::MeshKind> EnumMap<Ermine::MeshKind>::items[];
+
+	template<> struct EnumMap<Ermine::LightType> {
+		using E = Ermine::LightType;
+		static constexpr std::pair<const char*, E> items[] = {
+			{"Point",       E::POINT},
+			{"Directional", E::DIRECTIONAL},
+			{"Spot",        E::SPOT},
+		};
+	};
+	constexpr std::pair<const char*, Ermine::LightType> EnumMap<Ermine::LightType>::items[];
+
+	template<> struct EnumMap<Ermine::PhysicsBodyType> {
+		using E = Ermine::PhysicsBodyType;
+		static constexpr std::pair<const char*, E> items[] = {
+			{"Rigid",   E::Rigid},
+			{"Trigger", E::Trigger},
+		};
+	};
+	constexpr std::pair<const char*, Ermine::PhysicsBodyType> EnumMap<Ermine::PhysicsBodyType>::items[];
+
+	template<> struct EnumMap<JPH::EMotionType> {
+		using E = JPH::EMotionType;
+		static constexpr std::pair<const char*, E> items[] = {
+			{"Static",    E::Static},
+			{"Kinematic", E::Kinematic},
+			{"Dynamic",   E::Dynamic},
+		};
+	};
+	constexpr std::pair<const char*, JPH::EMotionType> EnumMap<JPH::EMotionType>::items[];
+
+	template<> struct EnumMap<Ermine::ShapeType> {
+		using E = Ermine::ShapeType;
+		static constexpr std::pair<const char*, E> items[] = {
+			{"Box",        E::Box},
+			{"Sphere",     E::Sphere},
+			{"Capsule",    E::Capsule},
+			{"CustomMesh", E::CustomMesh},
+		};
+	};
+	constexpr std::pair<const char*, Ermine::ShapeType> EnumMap<Ermine::ShapeType>::items[];
+
 	// Convert any xproperty-reflected object to JSON
 	template<typename T, typename Alloc>
 	void SerializeToJson(const T& obj, rapidjson::Value& out, Alloc& alloc)
@@ -94,6 +238,36 @@ namespace xprop_utils
 
 				out.AddMember(keyVal, val, alloc);
 			}
+			else if (guid == xproperty::settings::var_type<Ermine::MeshKind>::guid_v) {
+				if (const char* name = EnumToString(p.m_Value.get<Ermine::MeshKind>())) {
+					rapidjson::Value val; val.SetString(name, (rapidjson::SizeType)std::strlen(name), alloc);
+					out.AddMember(keyVal, val, alloc);
+				}
+			}
+			else if (guid == xproperty::settings::var_type<Ermine::LightType>::guid_v) {
+				if (const char* name = EnumToString(p.m_Value.get<Ermine::LightType>())) {
+					rapidjson::Value val; val.SetString(name, (rapidjson::SizeType)std::strlen(name), alloc);
+					out.AddMember(keyVal, val, alloc);
+				}
+			}
+			else if (guid == xproperty::settings::var_type<Ermine::PhysicsBodyType>::guid_v) {
+				if (const char* name = EnumToString(p.m_Value.get<Ermine::PhysicsBodyType>())) {
+					rapidjson::Value val; val.SetString(name, (rapidjson::SizeType)std::strlen(name), alloc);
+					out.AddMember(keyVal, val, alloc);
+				}
+			}
+			else if (guid == xproperty::settings::var_type<JPH::EMotionType>::guid_v) {
+				if (const char* name = EnumToString(p.m_Value.get<JPH::EMotionType>())) {
+					rapidjson::Value val; val.SetString(name, (rapidjson::SizeType)std::strlen(name), alloc);
+					out.AddMember(keyVal, val, alloc);
+				}
+			}
+			else if (guid == xproperty::settings::var_type<Ermine::ShapeType>::guid_v) {
+				if (const char* name = EnumToString(p.m_Value.get<Ermine::ShapeType>())) {
+					rapidjson::Value val; val.SetString(name, (rapidjson::SizeType)std::strlen(name), alloc);
+					out.AddMember(keyVal, val, alloc);
+				}
+			}
 		}
 	}
 
@@ -131,6 +305,36 @@ namespace xprop_utils
 				Ermine::Guid g = Ermine::Guid::FromString(v.GetString());
 				p.m_Value.set<Ermine::Guid>(g);
 			}
+			else if (guid == xproperty::settings::var_type<Ermine::MeshKind>::guid_v) {
+				Ermine::MeshKind tmp{};
+				bool ok = v.IsString() ? StringToEnum(v.GetString(), tmp)
+					: (v.IsInt() ? (tmp = static_cast<Ermine::MeshKind>(v.GetInt()), true) : false);
+				if (ok) p.m_Value.set<Ermine::MeshKind>(tmp);
+			}
+			else if (guid == xproperty::settings::var_type<Ermine::LightType>::guid_v) {
+				Ermine::LightType tmp{};
+				bool ok = v.IsString() ? StringToEnum(v.GetString(), tmp)
+					: (v.IsInt() ? (tmp = static_cast<Ermine::LightType>(v.GetInt()), true) : false);
+				if (ok) p.m_Value.set<Ermine::LightType>(tmp);
+			}
+			else if (guid == xproperty::settings::var_type<Ermine::PhysicsBodyType>::guid_v) {
+				Ermine::PhysicsBodyType tmp{};
+				bool ok = v.IsString() ? StringToEnum(v.GetString(), tmp)
+					: (v.IsInt() ? (tmp = static_cast<Ermine::PhysicsBodyType>(v.GetInt()), true) : false);
+				if (ok) p.m_Value.set<Ermine::PhysicsBodyType>(tmp);
+			}
+			else if (guid == xproperty::settings::var_type<JPH::EMotionType>::guid_v) {
+				JPH::EMotionType tmp{};
+				bool ok = v.IsString() ? StringToEnum(v.GetString(), tmp)
+					: (v.IsInt() ? (tmp = static_cast<JPH::EMotionType>(v.GetInt()), true) : false);
+				if (ok) p.m_Value.set<JPH::EMotionType>(tmp);
+			}
+			else if (guid == xproperty::settings::var_type<Ermine::ShapeType>::guid_v) {
+				Ermine::ShapeType tmp{};
+				bool ok = v.IsString() ? StringToEnum(v.GetString(), tmp)
+					: (v.IsInt() ? (tmp = static_cast<Ermine::ShapeType>(v.GetInt()), true) : false);
+				if (ok) p.m_Value.set<Ermine::ShapeType>(tmp);
+			}
 
 			xproperty::sprop::setProperty(err, obj, p, ctx);
 		}
@@ -139,6 +343,17 @@ namespace xprop_utils
 
 namespace Ermine
 {
+	template<typename Alloc>
+	inline rapidjson::Value Vec2ToJson(const Ermine::Vec2& v, Alloc& a) {
+		rapidjson::Value arr(rapidjson::kArrayType);
+		arr.PushBack(v.x, a).PushBack(v.y, a);
+		return arr;
+	}
+
+	inline Ermine::Vec2 JsonToVec2(const rapidjson::Value& v) {
+		return Ermine::Vec2(v[0].GetFloat(), v[1].GetFloat());
+	}
+
 	inline Vec3 JsonToVec3(const rapidjson::Value& a) {
 		return a.IsArray() && a.Size() == 3
 			? Vec3(a[0].GetFloat(), a[1].GetFloat(), a[2].GetFloat())
@@ -166,7 +381,7 @@ namespace Ermine
 
 	inline rapidjson::Value QuatToJson(const Quaternion& q, rapidjson::Document::AllocatorType& alloc) {
 		rapidjson::Value a(rapidjson::kArrayType);
-		a.PushBack(q.w, alloc).PushBack(q.x, alloc).PushBack(q.y, alloc).PushBack(q.z, alloc);
+		a.PushBack(q.x, alloc).PushBack(q.y, alloc).PushBack(q.z, alloc).PushBack(q.w, alloc);
 		return a;
 	}
 
@@ -625,13 +840,11 @@ namespace Ermine
 		float farPlane;
 		bool isPrimary; // Is this the main camera?
 		bool isGameCamera; // Is this a first-person game camera (vs editor camera)?
-		float mouseSensitivity; // Mouse look sensitivity
 
-		CameraComponent() = default;
-		CameraComponent(float fov_, float aspect, float nearP, float farP,
-			bool primary, bool gameCamera, float sensitivity) :
+		explicit CameraComponent(float fov_ = 45.0f, float aspect = 16.0f / 9.0f, float nearP = 0.1f, float farP = 100.0f,
+			bool primary = false, bool gameCamera = false) :
 			fov(fov_), aspectRatio(aspect), nearPlane(nearP), farPlane(farP),
-			isPrimary(primary), isGameCamera(gameCamera), mouseSensitivity(sensitivity)
+			isPrimary(primary), isGameCamera(gameCamera)
 		{
 		}
 
@@ -644,7 +857,6 @@ namespace Ermine
 			out.AddMember("far", farPlane, alloc);
 			out.AddMember("primary", isPrimary, alloc);
 			out.AddMember("isGameCamera", isGameCamera, alloc);
-			out.AddMember("mouseSensitivity", mouseSensitivity, alloc);
 		}
 
 		void Deserialize(const rapidjson::Value& in) {
@@ -654,7 +866,6 @@ namespace Ermine
 			if (in.HasMember("far")) farPlane = in["far"].GetFloat();
 			if (in.HasMember("primary")) isPrimary = in["primary"].GetBool();
 			if (in.HasMember("isGameCamera")) isGameCamera = in["isGameCamera"].GetBool();
-			if (in.HasMember("mouseSensitivity")) mouseSensitivity = in["mouseSensitivity"].GetFloat();
 		}
 
 		XPROPERTY_DEF(
@@ -664,8 +875,7 @@ namespace Ermine
 			xproperty::obj_member<"nearPlane", &CameraComponent::nearPlane>,
 			xproperty::obj_member<"farPlane", &CameraComponent::farPlane>,
 			xproperty::obj_member<"isPrimary", &CameraComponent::isPrimary>,
-			xproperty::obj_member<"isGameCamera", &CameraComponent::isGameCamera>,
-			xproperty::obj_member<"mouseSensitivity", &CameraComponent::mouseSensitivity>
+			xproperty::obj_member<"isGameCamera", &CameraComponent::isGameCamera>
 		)
 	};
 
@@ -688,22 +898,7 @@ namespace Ermine
 			xproperty::obj_member<"meshName", &MeshAssetDesc::meshName>
 		)
 	};
-
-	enum class MeshKind { None, Primitive, Asset };
 }
-
-namespace xproperty::settings {
-	template<>
-	struct var_type<Ermine::MeshKind> : var_defaults<"MeshKind", Ermine::MeshKind>
-	{
-		// Antlion xproperty: enum_item is constructed FROM THE ENUM (not ints)
-		inline static constexpr std::array enum_list_v{
-			enum_item{"None",      Ermine::MeshKind::None},
-			enum_item{"Primitive", Ermine::MeshKind::Primitive},
-			enum_item{"Asset",     Ermine::MeshKind::Asset},
-		};
-	};
-} // namespace xproperty::settings
 
 namespace Ermine
 {
@@ -1113,6 +1308,14 @@ namespace Ermine
 			}
 
 			out.AddMember("textures", textures, alloc);
+
+			if (auto gm = GetMaterial()) {
+				Ermine::Vec2 uvScale = gm->GetUVScale();
+				Ermine::Vec2 uvOffset = gm->GetUVOffset();
+
+				out.AddMember("uvScale", Vec2ToJson(uvScale, alloc), alloc);
+				out.AddMember("uvOffset", Vec2ToJson(uvOffset, alloc), alloc);
+			}
 		}
 
 		void Deserialize(const rapidjson::Value& in) {
@@ -1290,6 +1493,18 @@ namespace Ermine
 					EE_CORE_WARN("Failed to assign default shader to material - shader loading failed");
 				}
 			}
+
+			if (auto gm = GetMaterial()) {
+				// uvScale
+				if (auto it = in.FindMember("uvScale"); it != in.MemberEnd() && it->value.IsArray() && it->value.Size() == 2) {
+					gm->SetUVScale(JsonToVec2(it->value));
+				}
+
+				// uvOffset
+				if (auto it = in.FindMember("uvOffset"); it != in.MemberEnd() && it->value.IsArray() && it->value.Size() == 2) {
+					gm->SetUVOffset(JsonToVec2(it->value));
+				}
+			}
 		}
 
 		XPROPERTY_DEF(
@@ -1311,30 +1526,6 @@ namespace Ermine
 			xproperty::obj_member<"emissive", &Material::cacheEmissive>,
 			xproperty::obj_member<"emissiveIntensity", &Material::cacheEmissiveIntensity>
 		)
-	};
-
-	/*!***********************************************************************
-	\brief
-	 Light type structure
-	*************************************************************************/
-	enum class LightType : int
-	{
-		POINT = 0,
-		DIRECTIONAL = 1,
-		SPOT = 2
-	};
-}
-
-namespace xproperty::settings {
-	template<>
-	struct var_type<Ermine::LightType> : var_defaults<"LightType", Ermine::LightType>
-	{
-		// antlion: enum_item takes the enum, not integers
-		inline static constexpr std::array enum_list_v{
-			enum_item{"Point",       Ermine::LightType::POINT},
-			enum_item{"Directional", Ermine::LightType::DIRECTIONAL},
-			enum_item{"Spot",        Ermine::LightType::SPOT},
-		};
 	};
 }
 
@@ -1905,43 +2096,6 @@ namespace Ermine
 			xproperty::obj_member<"depth", &HierarchyComponent::depth>
 		);
 	};
-
-	/*!***********************************************************************
-	 \brief
-	 Enum for Physic component.
-	*************************************************************************/
-	enum class PhysicsBodyType
-	{
-		Rigid,
-		Trigger
-	};
-	enum class ShapeType { Box, Sphere, Capsule, CustomMesh/*, Compound*/, Total };
-}
-
-namespace xproperty::settings {
-	template<> struct var_type<Ermine::PhysicsBodyType> : var_defaults<"PhysicsBodyType", Ermine::PhysicsBodyType> {
-		inline static constexpr std::array enum_list_v{
-			enum_item{"Rigid",   Ermine::PhysicsBodyType::Rigid},
-			enum_item{"Trigger", Ermine::PhysicsBodyType::Trigger},
-		};
-	};
-
-	template<> struct var_type<JPH::EMotionType> : var_defaults<"JPH_EMotionType", JPH::EMotionType> {
-		inline static constexpr std::array enum_list_v{
-			enum_item{"Static",    JPH::EMotionType::Static},
-			enum_item{"Kinematic", JPH::EMotionType::Kinematic},
-			enum_item{"Dynamic",   JPH::EMotionType::Dynamic},
-		};
-	};
-
-	template<> struct var_type<Ermine::ShapeType> : var_defaults<"ShapeType", Ermine::ShapeType> {
-		inline static constexpr std::array enum_list_v{
-			enum_item{"Box",        Ermine::ShapeType::Box},
-			enum_item{"Sphere",     Ermine::ShapeType::Sphere},
-			enum_item{"Capsule",    Ermine::ShapeType::Capsule},
-			enum_item{"CustomMesh", Ermine::ShapeType::CustomMesh},
-		};
-	};
 }
 
 namespace Ermine
@@ -2000,7 +2154,7 @@ namespace Ermine
 	struct ModelComponent
 	{
 		std::shared_ptr<graphics::Model> m_model;
-		std::string m_modelPath;  // Store the path for serialization
+		//std::string m_modelPath;  // Store the path for serialization
 		bool m_isSkinFile = false; // Track if it's a .skin file
 
 		ModelComponent() = default;
@@ -2015,10 +2169,10 @@ namespace Ermine
 
 			// Serialize model path
 			rapidjson::Value pathVal;
-			pathVal.SetString(m_modelPath.c_str(),
-				static_cast<rapidjson::SizeType>(m_modelPath.size()),
+			pathVal.SetString(m_model->GetName().c_str(),
+				static_cast<rapidjson::SizeType>(m_model->GetName().size()),
 				alloc);
-			out.AddMember("modelPath", pathVal, alloc);
+			out.AddMember("model", pathVal, alloc);
 
 			// Serialize file type flag
 			out.AddMember("isSkinFile", m_isSkinFile, alloc);
@@ -2629,6 +2783,421 @@ namespace Ermine
 		XPROPERTY_DEF(
 			"AABBComponent", AABBComponent,
 			xproperty::obj_member<"isDirty", &AABBComponent::isDirty>
+		)
+	};
+
+	/*!***********************************************************************
+	\brief
+	  Health component for player/entity stats
+	*************************************************************************/
+	struct HealthComponent
+	{
+		float maxHealth = 100.0f;
+		float currentHealth = 100.0f;
+		float healthRegenRate = 0.0f; // Health regenerated per second
+		bool isDead = false;
+
+		HealthComponent() = default;
+		explicit HealthComponent(float max) : maxHealth(max), currentHealth(max) {}
+
+		void TakeDamage(float damage)
+		{
+			currentHealth = std::max(0.0f, currentHealth - damage);
+			if (currentHealth <= 0.0f)
+			{
+				isDead = true;
+			}
+		}
+
+		void Heal(float amount)
+		{
+			currentHealth = std::min(maxHealth, currentHealth + amount);
+			if (currentHealth > 0.0f)
+			{
+				isDead = false;
+			}
+		}
+
+		float GetHealthPercentage() const
+		{
+			return maxHealth > 0.0f ? (currentHealth / maxHealth) : 0.0f;
+		}
+
+		void Update(float dt)
+		{
+			if (healthRegenRate > 0.0f && currentHealth < maxHealth)
+			{
+				Heal(healthRegenRate * dt);
+			}
+		}
+
+		template<typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const
+		{
+			out.SetObject();
+			out.AddMember("maxHealth", maxHealth, alloc);
+			out.AddMember("currentHealth", currentHealth, alloc);
+			out.AddMember("healthRegenRate", healthRegenRate, alloc);
+			out.AddMember("isDead", isDead, alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in)
+		{
+			if (in.HasMember("maxHealth") && in["maxHealth"].IsNumber())
+				maxHealth = in["maxHealth"].GetFloat();
+			if (in.HasMember("currentHealth") && in["currentHealth"].IsNumber())
+				currentHealth = in["currentHealth"].GetFloat();
+			if (in.HasMember("healthRegenRate") && in["healthRegenRate"].IsNumber())
+				healthRegenRate = in["healthRegenRate"].GetFloat();
+			if (in.HasMember("isDead") && in["isDead"].IsBool())
+				isDead = in["isDead"].GetBool();
+		}
+
+		XPROPERTY_DEF(
+			"HealthComponent", HealthComponent,
+			xproperty::obj_member<"maxHealth", &HealthComponent::maxHealth>,
+			xproperty::obj_member<"currentHealth", &HealthComponent::currentHealth>,
+			xproperty::obj_member<"healthRegenRate", &HealthComponent::healthRegenRate>,
+			xproperty::obj_member<"isDead", &HealthComponent::isDead>
+		)
+	};
+
+	/*!***********************************************************************
+	\brief
+	  Skill slot data for skills UI
+	*************************************************************************/
+	struct SkillSlot
+	{
+		std::string skillName = "";
+		std::string iconPath = "";
+		float cooldownTime = 0.0f;     // Total cooldown duration
+		float currentCooldown = 0.0f;  // Current cooldown remaining
+		bool isActive = false;
+		int keyBinding = -1;           // Key code for activation
+
+		bool IsOnCooldown() const { return currentCooldown > 0.0f; }
+		float GetCooldownPercentage() const
+		{
+			return cooldownTime > 0.0f ? (currentCooldown / cooldownTime) : 0.0f;
+		}
+
+		void Activate()
+		{
+			if (!IsOnCooldown())
+			{
+				isActive = true;
+				currentCooldown = cooldownTime;
+			}
+		}
+
+		void Update(float dt)
+		{
+			if (currentCooldown > 0.0f)
+			{
+				currentCooldown = std::max(0.0f, currentCooldown - dt);
+			}
+		}
+	};
+
+	/*!***********************************************************************
+	\brief
+	  Skills component for managing player abilities
+	*************************************************************************/
+	struct SkillsComponent
+	{
+		static constexpr int MAX_SKILLS = 6;
+		std::array<SkillSlot, MAX_SKILLS> skills;
+
+		SkillsComponent() = default;
+
+		void Update(float dt)
+		{
+			for (auto& skill : skills)
+			{
+				skill.Update(dt);
+			}
+		}
+
+		bool ActivateSkill(int index)
+		{
+			if (index >= 0 && index < MAX_SKILLS)
+			{
+				skills[index].Activate();
+				return true;
+			}
+			return false;
+		}
+
+		template<typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const
+		{
+			out.SetObject();
+			rapidjson::Value skillsArray(rapidjson::kArrayType);
+
+			for (const auto& skill : skills)
+			{
+				rapidjson::Value skillObj(rapidjson::kObjectType);
+				rapidjson::Value nameVal;
+				nameVal.SetString(skill.skillName.c_str(), static_cast<rapidjson::SizeType>(skill.skillName.size()), alloc);
+				skillObj.AddMember("skillName", nameVal, alloc);
+
+				rapidjson::Value iconVal;
+				iconVal.SetString(skill.iconPath.c_str(), static_cast<rapidjson::SizeType>(skill.iconPath.size()), alloc);
+				skillObj.AddMember("iconPath", iconVal, alloc);
+
+				skillObj.AddMember("cooldownTime", skill.cooldownTime, alloc);
+				skillObj.AddMember("keyBinding", skill.keyBinding, alloc);
+
+				skillsArray.PushBack(skillObj, alloc);
+			}
+
+			out.AddMember("skills", skillsArray, alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in)
+		{
+			if (in.HasMember("skills") && in["skills"].IsArray())
+			{
+				const auto& skillsArray = in["skills"].GetArray();
+				int index = 0;
+				for (auto& skillVal : skillsArray)
+				{
+					if (index >= MAX_SKILLS) break;
+
+					if (skillVal.HasMember("skillName") && skillVal["skillName"].IsString())
+						skills[index].skillName = skillVal["skillName"].GetString();
+					if (skillVal.HasMember("iconPath") && skillVal["iconPath"].IsString())
+						skills[index].iconPath = skillVal["iconPath"].GetString();
+					if (skillVal.HasMember("cooldownTime") && skillVal["cooldownTime"].IsNumber())
+						skills[index].cooldownTime = skillVal["cooldownTime"].GetFloat();
+					if (skillVal.HasMember("keyBinding") && skillVal["keyBinding"].IsInt())
+						skills[index].keyBinding = skillVal["keyBinding"].GetInt();
+
+					index++;
+				}
+			}
+		}
+
+		XPROPERTY_DEF(
+			"SkillsComponent", SkillsComponent
+		)
+	};
+
+	/*!***********************************************************************
+	\brief
+	  UI configuration component for HUD elements
+	*************************************************************************/
+	struct UIComponent
+	{
+		// Healthbar settings
+		bool showHealthbar = true;
+		Ermine::Vec3 healthbarColor = { 0.0f, 1.0f, 0.0f };      // Green
+		Ermine::Vec3 healthbarBgColor = { 0.2f, 0.2f, 0.2f };    // Dark gray
+		float healthbarWidth = 0.25f;  // Percentage of screen width
+		float healthbarHeight = 0.025f; // Percentage of screen height
+		Ermine::Vec3 healthbarPosition = { 0.02f, 0.05f, 0.0f };  // Bottom-left corner
+
+		// Skills UI settings
+		bool showSkills = true;
+		float skillSlotSize = 0.06f;   // Percentage of screen size
+		float skillSlotSpacing = 0.01f;
+		Ermine::Vec3 skillsPosition = { 0.5f, 0.1f, 0.0f };  // Center bottom
+
+		// Crosshair settings
+		bool showCrosshair = true;
+		Ermine::Vec3 crosshairColor = { 0.0f, 1.0f, 0.0f };  // Bright green for visibility
+		float crosshairSize = 0.015f;   // Slightly smaller for precision
+		float crosshairThickness = 0.002f;  // Thinner for sharpness
+		int crosshairStyle = 0;        // 0 = cross, 1 = dot, 2 = circle
+		float crosshairGap = 0.005f;   // Gap in center for aiming
+
+		// Health system
+		float currentHealth = 100.0f;
+		float maxHealth = 100.0f;
+
+		// Mana bar settings
+		bool showManaBar = false;      // Disabled - using health bar only
+		float currentMana = 100.0f;
+		float maxMana = 100.0f;
+		float manaRegenRate = 10.0f;          // Mana per second
+		float manaRegenDelay = 2.0f;          // Delay after skill use before regen starts
+		float manaRegenTimer = 0.0f;          // Internal timer (don't serialize)
+		Ermine::Vec3 manaBarColor = { 0.0f, 0.5f, 1.0f };       // Blue
+		Ermine::Vec3 manaBarBgColor = { 0.2f, 0.2f, 0.3f };     // Dark blue-gray
+		float manaBarWidth = 0.3f;            // Percentage of screen width
+		float manaBarHeight = 0.03f;          // Percentage of screen height
+		Ermine::Vec3 manaBarPosition = { 0.1f, 0.85f, 0.0f };   // Below health bar
+
+		// Skill slot data
+		struct SkillSlot
+		{
+			float currentCooldown = 0.0f;     // Current cooldown remaining (seconds)
+			float maxCooldown = 5.0f;         // Total cooldown duration
+			float manaCost = 20.0f;           // Mana required to cast
+			bool isOnCooldown = false;        // Is skill currently on cooldown?
+			Ermine::Vec3 slotColor = { 0.3f, 0.3f, 0.3f };        // Background color
+			Ermine::Vec3 readyColor = { 0.0f, 0.8f, 0.0f };       // Color when ready (green)
+			Ermine::Vec3 cooldownColor = { 0.5f, 0.0f, 0.0f };    // Color during cooldown (red)
+			Ermine::Vec3 cooldownOverlayColor = { 0.0f, 0.0f, 0.0f };  // Overlay during cooldown (black)
+		};
+		std::array<SkillSlot, 4> skills;      // 4 skill slots
+
+		template<typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const
+		{
+			out.SetObject();
+			out.AddMember("showHealthbar", showHealthbar, alloc);
+			out.AddMember("healthbarColor", Vec3ToJson(healthbarColor, alloc), alloc);
+			out.AddMember("healthbarBgColor", Vec3ToJson(healthbarBgColor, alloc), alloc);
+			out.AddMember("healthbarWidth", healthbarWidth, alloc);
+			out.AddMember("healthbarHeight", healthbarHeight, alloc);
+			out.AddMember("healthbarPosition", Vec3ToJson(healthbarPosition, alloc), alloc);
+
+			out.AddMember("showSkills", showSkills, alloc);
+			out.AddMember("skillSlotSize", skillSlotSize, alloc);
+			out.AddMember("skillSlotSpacing", skillSlotSpacing, alloc);
+			out.AddMember("skillsPosition", Vec3ToJson(skillsPosition, alloc), alloc);
+
+			out.AddMember("showCrosshair", showCrosshair, alloc);
+			out.AddMember("crosshairColor", Vec3ToJson(crosshairColor, alloc), alloc);
+			out.AddMember("crosshairSize", crosshairSize, alloc);
+			out.AddMember("crosshairThickness", crosshairThickness, alloc);
+			out.AddMember("crosshairStyle", crosshairStyle, alloc);
+			out.AddMember("crosshairGap", crosshairGap, alloc);
+
+			// Health and Mana
+			out.AddMember("currentHealth", currentHealth, alloc);
+			out.AddMember("maxHealth", maxHealth, alloc);
+			out.AddMember("showManaBar", showManaBar, alloc);
+			out.AddMember("currentMana", currentMana, alloc);
+			out.AddMember("maxMana", maxMana, alloc);
+			out.AddMember("manaRegenRate", manaRegenRate, alloc);
+			out.AddMember("manaRegenDelay", manaRegenDelay, alloc);
+			out.AddMember("manaBarColor", Vec3ToJson(manaBarColor, alloc), alloc);
+			out.AddMember("manaBarBgColor", Vec3ToJson(manaBarBgColor, alloc), alloc);
+			out.AddMember("manaBarWidth", manaBarWidth, alloc);
+			out.AddMember("manaBarHeight", manaBarHeight, alloc);
+			out.AddMember("manaBarPosition", Vec3ToJson(manaBarPosition, alloc), alloc);
+
+			// Skill slots
+			rapidjson::Value skillsArray(rapidjson::kArrayType);
+			for (const auto& skill : skills) {
+				rapidjson::Value skillObj(rapidjson::kObjectType);
+				skillObj.AddMember("maxCooldown", skill.maxCooldown, alloc);
+				skillObj.AddMember("manaCost", skill.manaCost, alloc);
+				skillObj.AddMember("slotColor", Vec3ToJson(skill.slotColor, alloc), alloc);
+				skillObj.AddMember("readyColor", Vec3ToJson(skill.readyColor, alloc), alloc);
+				skillObj.AddMember("cooldownColor", Vec3ToJson(skill.cooldownColor, alloc), alloc);
+				skillObj.AddMember("cooldownOverlayColor", Vec3ToJson(skill.cooldownOverlayColor, alloc), alloc);
+				skillsArray.PushBack(skillObj, alloc);
+			}
+			out.AddMember("skillSlots", skillsArray, alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in)
+		{
+			if (in.HasMember("showHealthbar") && in["showHealthbar"].IsBool())
+				showHealthbar = in["showHealthbar"].GetBool();
+			if (in.HasMember("healthbarColor") && in["healthbarColor"].IsObject())
+				healthbarColor = JsonToVec3(in["healthbarColor"]);
+			if (in.HasMember("healthbarBgColor") && in["healthbarBgColor"].IsObject())
+				healthbarBgColor = JsonToVec3(in["healthbarBgColor"]);
+			if (in.HasMember("healthbarWidth") && in["healthbarWidth"].IsNumber())
+				healthbarWidth = in["healthbarWidth"].GetFloat();
+			if (in.HasMember("healthbarHeight") && in["healthbarHeight"].IsNumber())
+				healthbarHeight = in["healthbarHeight"].GetFloat();
+			if (in.HasMember("healthbarPosition") && in["healthbarPosition"].IsObject())
+				healthbarPosition = JsonToVec3(in["healthbarPosition"]);
+
+			if (in.HasMember("showSkills") && in["showSkills"].IsBool())
+				showSkills = in["showSkills"].GetBool();
+			if (in.HasMember("skillSlotSize") && in["skillSlotSize"].IsNumber())
+				skillSlotSize = in["skillSlotSize"].GetFloat();
+			if (in.HasMember("skillSlotSpacing") && in["skillSlotSpacing"].IsNumber())
+				skillSlotSpacing = in["skillSlotSpacing"].GetFloat();
+			if (in.HasMember("skillsPosition") && in["skillsPosition"].IsObject())
+				skillsPosition = JsonToVec3(in["skillsPosition"]);
+
+			if (in.HasMember("showCrosshair") && in["showCrosshair"].IsBool())
+				showCrosshair = in["showCrosshair"].GetBool();
+			if (in.HasMember("crosshairColor") && in["crosshairColor"].IsObject())
+				crosshairColor = JsonToVec3(in["crosshairColor"]);
+			if (in.HasMember("crosshairSize") && in["crosshairSize"].IsNumber())
+				crosshairSize = in["crosshairSize"].GetFloat();
+			if (in.HasMember("crosshairThickness") && in["crosshairThickness"].IsNumber())
+				crosshairThickness = in["crosshairThickness"].GetFloat();
+			if (in.HasMember("crosshairStyle") && in["crosshairStyle"].IsInt())
+				crosshairStyle = in["crosshairStyle"].GetInt();
+			if (in.HasMember("crosshairGap") && in["crosshairGap"].IsNumber())
+				crosshairGap = in["crosshairGap"].GetFloat();
+
+			// Health and Mana
+			if (in.HasMember("currentHealth") && in["currentHealth"].IsNumber())
+				currentHealth = in["currentHealth"].GetFloat();
+			if (in.HasMember("maxHealth") && in["maxHealth"].IsNumber())
+				maxHealth = in["maxHealth"].GetFloat();
+			if (in.HasMember("showManaBar") && in["showManaBar"].IsBool())
+				showManaBar = in["showManaBar"].GetBool();
+			if (in.HasMember("currentMana") && in["currentMana"].IsNumber())
+				currentMana = in["currentMana"].GetFloat();
+			if (in.HasMember("maxMana") && in["maxMana"].IsNumber())
+				maxMana = in["maxMana"].GetFloat();
+			if (in.HasMember("manaRegenRate") && in["manaRegenRate"].IsNumber())
+				manaRegenRate = in["manaRegenRate"].GetFloat();
+			if (in.HasMember("manaRegenDelay") && in["manaRegenDelay"].IsNumber())
+				manaRegenDelay = in["manaRegenDelay"].GetFloat();
+			if (in.HasMember("manaBarColor") && in["manaBarColor"].IsObject())
+				manaBarColor = JsonToVec3(in["manaBarColor"]);
+			if (in.HasMember("manaBarBgColor") && in["manaBarBgColor"].IsObject())
+				manaBarBgColor = JsonToVec3(in["manaBarBgColor"]);
+			if (in.HasMember("manaBarWidth") && in["manaBarWidth"].IsNumber())
+				manaBarWidth = in["manaBarWidth"].GetFloat();
+			if (in.HasMember("manaBarHeight") && in["manaBarHeight"].IsNumber())
+				manaBarHeight = in["manaBarHeight"].GetFloat();
+			if (in.HasMember("manaBarPosition") && in["manaBarPosition"].IsObject())
+				manaBarPosition = JsonToVec3(in["manaBarPosition"]);
+
+			// Skill slots
+			if (in.HasMember("skillSlots") && in["skillSlots"].IsArray()) {
+				const auto& skillsArray = in["skillSlots"];
+				size_t count = std::min(skillsArray.Size(), static_cast<unsigned int>(skills.size()));
+				for (size_t i = 0; i < count; ++i) {
+					const auto& skillObj = skillsArray[i];
+					if (skillObj.HasMember("maxCooldown") && skillObj["maxCooldown"].IsNumber())
+						skills[i].maxCooldown = skillObj["maxCooldown"].GetFloat();
+					if (skillObj.HasMember("manaCost") && skillObj["manaCost"].IsNumber())
+						skills[i].manaCost = skillObj["manaCost"].GetFloat();
+					if (skillObj.HasMember("slotColor") && skillObj["slotColor"].IsObject())
+						skills[i].slotColor = JsonToVec3(skillObj["slotColor"]);
+					if (skillObj.HasMember("readyColor") && skillObj["readyColor"].IsObject())
+						skills[i].readyColor = JsonToVec3(skillObj["readyColor"]);
+					if (skillObj.HasMember("cooldownColor") && skillObj["cooldownColor"].IsObject())
+						skills[i].cooldownColor = JsonToVec3(skillObj["cooldownColor"]);
+					if (skillObj.HasMember("cooldownOverlayColor") && skillObj["cooldownOverlayColor"].IsObject())
+						skills[i].cooldownOverlayColor = JsonToVec3(skillObj["cooldownOverlayColor"]);
+				}
+			}
+		}
+
+		XPROPERTY_DEF(
+			"UIComponent", UIComponent,
+			xproperty::obj_member<"showHealthbar", &UIComponent::showHealthbar>,
+			xproperty::obj_member<"healthbarColor", &UIComponent::healthbarColor>,
+			xproperty::obj_member<"healthbarWidth", &UIComponent::healthbarWidth>,
+			xproperty::obj_member<"healthbarHeight", &UIComponent::healthbarHeight>,
+			xproperty::obj_member<"currentHealth", &UIComponent::currentHealth>,
+			xproperty::obj_member<"maxHealth", &UIComponent::maxHealth>,
+			xproperty::obj_member<"showManaBar", &UIComponent::showManaBar>,
+			xproperty::obj_member<"currentMana", &UIComponent::currentMana>,
+			xproperty::obj_member<"maxMana", &UIComponent::maxMana>,
+			xproperty::obj_member<"manaRegenRate", &UIComponent::manaRegenRate>,
+			xproperty::obj_member<"manaRegenDelay", &UIComponent::manaRegenDelay>,
+			xproperty::obj_member<"manaBarColor", &UIComponent::manaBarColor>,
+			xproperty::obj_member<"showSkills", &UIComponent::showSkills>,
+			xproperty::obj_member<"skillSlotSize", &UIComponent::skillSlotSize>,
+			xproperty::obj_member<"showCrosshair", &UIComponent::showCrosshair>,
+			xproperty::obj_member<"crosshairSize", &UIComponent::crosshairSize>,
+			xproperty::obj_member<"crosshairStyle", &UIComponent::crosshairStyle>
 		)
 	};
 } // namespace Ermine

@@ -334,6 +334,7 @@ void SceneManager::OpenScene(const std::string& path)
 
     m_CurrentScenePath = path;
     m_Dirty = false;
+    Ermine::ECS::GetInstance().GetSystem<Ermine::Physics>()->UpdatePhysicList();
 }
 
 void SceneManager::SaveScene()
@@ -353,7 +354,9 @@ void SceneManager::SaveTemp()
 
 void SceneManager::LoadTemp()
 {
+    ClearScene();
     OpenScene("../Temp/Temp.scene");
+    RemoveTemp();
 }
 
 void SceneManager::RemoveTemp()

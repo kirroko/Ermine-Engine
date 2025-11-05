@@ -37,7 +37,11 @@
           "minDistance": 1.0,
           "maxDistance": 100.0
         },
-        "HierarchyComponent": {},
+        "HierarchyComponent": {
+          "parent": 0,
+          "children": [],
+          "depth": 0
+        },
         "GlobalTransform": {}
       }
     },
@@ -111,12 +115,28 @@
           ]
         },
         "ModelComponent": {
-          "model": "Walking.fbx"
+          "model": "Walking.fbx",
+          "isSkinFile": false
         },
         "AnimationComponent": {
-          "model": "Walking.fbx"
+          "model": "Walking.fbx",
+          "graph": {
+            "playbackSpeed": 1.0,
+            "playing": false,
+            "currentTime": 0.0,
+            "states": [],
+            "transitions": [],
+            "parameters": []
+          }
         },
-        "HierarchyComponent": {},
+        "HierarchyComponent": {
+          "parent": 0,
+          "children": [
+            13,
+            14
+          ],
+          "depth": 0
+        },
         "GlobalTransform": {}
       }
     },
@@ -142,7 +162,7 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "GameObject",
+          "name": "Floor",
           "tag": "Untagged",
           "selfActive": true
         },
@@ -165,15 +185,19 @@
           "textures": [
             {
               "slot": "materialAlbedoMap",
-              "path": "../Resources/Textures/greybox_light_grid.png"
+              "path": "../Resources/Textures/Prison/Floor_BaseColor.png"
             },
             {
               "slot": "material.albedoMap",
-              "path": "../Resources/Textures/greybox_light_grid.png"
+              "path": "../Resources/Textures/Prison/Floor_BaseColor.png"
             }
           ]
         },
-        "HierarchyComponent": {},
+        "HierarchyComponent": {
+          "parent": 0,
+          "children": [],
+          "depth": 0
+        },
         "GlobalTransform": {}
       }
     },
@@ -215,7 +239,11 @@
           "tag": "Light",
           "selfActive": true
         },
-        "HierarchyComponent": {},
+        "HierarchyComponent": {
+          "parent": 0,
+          "children": [],
+          "depth": 0
+        },
         "GlobalTransform": {}
       }
     },
@@ -299,7 +327,11 @@
           },
           "textures": []
         },
-        "HierarchyComponent": {},
+        "HierarchyComponent": {
+          "parent": 0,
+          "children": [],
+          "depth": 0
+        },
         "GlobalTransform": {}
       }
     },
@@ -383,7 +415,11 @@
           },
           "textures": []
         },
-        "HierarchyComponent": {},
+        "HierarchyComponent": {
+          "parent": 0,
+          "children": [],
+          "depth": 0
+        },
         "GlobalTransform": {}
       }
     },
@@ -467,7 +503,11 @@
           },
           "textures": []
         },
-        "HierarchyComponent": {},
+        "HierarchyComponent": {
+          "parent": 0,
+          "children": [],
+          "depth": 0
+        },
         "GlobalTransform": {}
       }
     },
@@ -551,7 +591,11 @@
           },
           "textures": []
         },
-        "HierarchyComponent": {},
+        "HierarchyComponent": {
+          "parent": 0,
+          "children": [],
+          "depth": 0
+        },
         "GlobalTransform": {}
       }
     },
@@ -623,7 +667,11 @@
           },
           "textures": []
         },
-        "HierarchyComponent": {},
+        "HierarchyComponent": {
+          "parent": 0,
+          "children": [],
+          "depth": 0
+        },
         "GlobalTransform": {}
       }
     },
@@ -695,7 +743,11 @@
           },
           "textures": []
         },
-        "HierarchyComponent": {},
+        "HierarchyComponent": {
+          "parent": 0,
+          "children": [],
+          "depth": 0
+        },
         "GlobalTransform": {}
       }
     },
@@ -776,7 +828,11 @@
             }
           ]
         },
-        "HierarchyComponent": {},
+        "HierarchyComponent": {
+          "parent": 0,
+          "children": [],
+          "depth": 0
+        },
         "GlobalTransform": {}
       }
     },
@@ -796,9 +852,9 @@
             1.0
           ],
           "scale": [
-            0.010,
-            0.010,
-            0.010
+            0.009999999776482582,
+            0.009999999776482582,
+            0.009999999776482582
           ]
         },
         "ObjectMetaData": {
@@ -842,25 +898,223 @@
             {
               "slot": "materialAlbedoMap",
               "path": "../Resources/Textures/Pants_Base_color.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources/Textures/Pants_Base_color.png"
             }
           ]
         },
         "ModelComponent": {
-          "model": "Walking.fbx"
+          "model": "Walking.fbx",
+          "isSkinFile": false
         },
         "AnimationComponent": {
-          "model": "Walking.fbx"
+          "model": "Walking.fbx",
+          "graph": {
+            "playbackSpeed": 1.0,
+            "playing": false,
+            "currentTime": 0.0,
+            "states": [],
+            "transitions": [],
+            "parameters": []
+          }
         },
+        "HierarchyComponent": {
+          "parent": 0,
+          "children": [
+            15,
+            16
+          ],
+          "depth": 0
+        },
+        "GlobalTransform": {},
         "CameraComponent": {
           "fov": 75.0,
-          "aspect": 1.7777777777777777,
-          "near": 0.1,
+          "aspect": 1.7777777910232545,
+          "near": 0.10000000149011612,
           "far": 1000.0,
           "primary": true,
           "isGameCamera": true,
-          "mouseSensitivity": 0.1
+          "mouseSensitivity": 0.10000000149011612
+        }
+      }
+    },
+    {
+      "id": 13,
+      "components": {
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
         },
-        "HierarchyComponent": {},
+        "ObjectMetaData": {
+          "name": "Mesh_Walking.fbx_Alpha_Surface_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources/Textures/Pants_Base_color.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources/Textures/Pants_Base_color.png"
+            }
+          ]
+        },
+        "HierarchyComponent": {
+          "parent": 2,
+          "children": [],
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 14,
+      "components": {
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Walking.fbx_Alpha_Joints_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {},
+          "textures": []
+        },
+        "HierarchyComponent": {
+          "parent": 2,
+          "children": [],
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 15,
+      "components": {
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Walking.fbx_Alpha_Surface_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources/Textures/Prison/Floor_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources/Textures/Prison/Floor_BaseColor.png"
+            }
+          ]
+        },
+        "HierarchyComponent": {
+          "parent": 12,
+          "children": [],
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 16,
+      "components": {
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Walking.fbx_Alpha_Joints_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {},
+          "textures": []
+        },
+        "HierarchyComponent": {
+          "parent": 12,
+          "children": [],
+          "depth": 1
+        },
         "GlobalTransform": {}
       }
     }

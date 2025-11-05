@@ -76,6 +76,7 @@
     <Compile Include="CoreModule\Debug.cs" />
     <Compile Include="CoreModule\GameObject.cs" />
     <Compile Include="CoreModule\Input.cs" />
+    <Compile Include="CoreModule\Prefab.cs" />
     <Compile Include="CoreModule\Quaternion.cs" />
     <Compile Include="CoreModule\Rigidbody.cs" />
     <Compile Include="CoreModule\Time.cs" />
@@ -84,6 +85,7 @@
     <Compile Include="MonoBehaviour.cs" />
     <Compile Include="Object.cs" />
     <Compile Include="PhysicsModule\Collider.cs" />
+    <Compile Include="PhysicsModule\Physics.cs" />
     <Compile Include="StateMachine.cs" />
   </ItemGroup>
   <ItemGroup>

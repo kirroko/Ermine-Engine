@@ -77,11 +77,11 @@ namespace Ermine
 				ImGuiIO& io = ImGui::GetIO();
 				io.AddMouseButtonEvent(button, action == GLFW_PRESS);
 
-				if (s_GameInputActive)
-				{
-					// Update mouse button states
-					s_PreviousMouseButtonStates[button] = (action == GLFW_PRESS);
-				}
+				//if (s_GameInputActive)
+				//{
+				//	// Update mouse button states
+				//	s_PreviousMouseButtonStates[button] = (action == GLFW_PRESS);
+				//}
 			});
 
 		// Key callback
@@ -148,22 +148,22 @@ namespace Ermine
 			s_MouseDeltaY = 0.0f;
 		}
 
-		if (!s_BlockKeyboard)
-		{
-			for (auto& [key, state] : s_PreviousKeyStates)
-				state = IsKeyDown(key);
-		}
-		if (!s_BlockMouse)
-		{
-			for (auto& [button, state] : s_PreviousMouseButtonStates)
-				state = IsMouseButtonDown(button);
-		}
+		//if (!s_BlockKeyboard)
+		//{
+		//	for (auto& [key, state] : s_PreviousKeyStates)
+		//		state = IsKeyDown(key);
+		//}
+		//if (!s_BlockMouse)
+		//{
+		//	for (auto& [button, state] : s_PreviousMouseButtonStates)
+		//		state = IsMouseButtonDown(button);
+		//}
 
-		if (s_EditorInputActive)
-		{
-			for (auto& [key, state] : s_PreviousKeyStatesEditor)
-				state = IsKeyDownEditor(key);
-		}
+		//if (s_EditorInputActive)
+		//{
+		//	for (auto& [key, state] : s_PreviousKeyStatesEditor)
+		//		state = IsKeyDownEditor(key);
+		//}
 	}
 
 	void Input::SetGameInputActive(bool active)
@@ -402,16 +402,20 @@ namespace Ermine
 			return false;
 
 		// Check if key exists in previous states map
-		auto it = s_PreviousKeyStates.find(keyCode);
-		if (it == s_PreviousKeyStates.end())
-		{
+		if (!s_PreviousKeyStates.contains(keyCode))
 			s_PreviousKeyStates[keyCode] = false;
-		}
+		//auto it = s_PreviousKeyStates.find(keyCode);
+		//if (it == s_PreviousKeyStates.end())
+		//{
+		//	s_PreviousKeyStates[keyCode] = false;
+		//}
 
 		bool previous = s_PreviousKeyStates[keyCode];
 		bool current = IsKeyDown(keyCode);
 
-		return current && !previous;
+		bool pressed = current && !previous;
+		s_PreviousKeyStates[keyCode] = current;
+		return pressed;
 	}
 
 	bool Input::IsKeyReleased(int keyCode)
@@ -420,16 +424,15 @@ namespace Ermine
 			return false;
 
 		// Check if key exists in previous states map
-		auto it = s_PreviousKeyStates.find(keyCode);
-		if (it == s_PreviousKeyStates.end())
-		{
+		if (!s_PreviousKeyStates.contains(keyCode))
 			s_PreviousKeyStates[keyCode] = false;
-		}
 
 		bool previous = s_PreviousKeyStates[keyCode];
 		bool current = IsKeyDown(keyCode);
 
-		return !current && previous;
+		bool released = !current && previous;
+		s_PreviousKeyStates[keyCode] = current; // update after computing result
+		return released;
 	}
 
 	bool Input::IsKeyDown(int keyCode)
@@ -447,16 +450,15 @@ namespace Ermine
 			return false;
 
 		// Check if button exists in previous states map
-		auto it = s_PreviousMouseButtonStates.find(button);
-		if (it == s_PreviousMouseButtonStates.end())
-		{
+		if (!s_PreviousMouseButtonStates.contains(button))
 			s_PreviousMouseButtonStates[button] = false;
-		}
 
 		bool previous = s_PreviousMouseButtonStates[button];
 		bool current = IsMouseButtonDown(button);
 
-		return current && !previous;
+		bool pressed = current && !previous;
+		s_PreviousMouseButtonStates[button] = current; // update after computing result
+		return pressed;
 	}
 
 	bool Input::IsMouseButtonReleased(int button)
@@ -465,16 +467,15 @@ namespace Ermine
 			return false;
 
 		// Check if button exists in previous states map
-		auto it = s_PreviousMouseButtonStates.find(button);
-		if (it == s_PreviousMouseButtonStates.end())
-		{
+		if (!s_PreviousMouseButtonStates.contains(button))
 			s_PreviousMouseButtonStates[button] = false;
-		}
 
 		bool previous = s_PreviousMouseButtonStates[button];
 		bool current = IsMouseButtonDown(button);
 
-		return !current && previous;
+		bool released = !current && previous;
+		s_PreviousMouseButtonStates[button] = current; // update after computing result
+		return released;
 	}
 
 	bool Input::IsMouseButtonDown(int button)
