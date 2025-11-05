@@ -32,6 +32,7 @@ namespace Ermine
     private:
         // Static initialization flag
         static bool s_initialized;
+        static EntityID s_globalAudioEntity;
 
     public:
         AudioSystem() = default;

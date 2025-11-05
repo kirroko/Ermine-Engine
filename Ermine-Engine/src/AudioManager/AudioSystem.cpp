@@ -1,4 +1,4 @@
-/* Start Header ************************************************************************/
+﻿/* Start Header ************************************************************************/
 /*!
 \file       AudioSystem.cpp
 \author     Hurng Kai Rui, h.kairui, 2301278, h.kairui\@digipen.edu
@@ -16,6 +16,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #include "MathVector.h"
 #include "AudioManager.h" // Include the CAudioEngine
+#include "EditorGUI.h"
 
 class ECS;
 
@@ -124,8 +125,201 @@ void AudioSystem::Init()
 
 void AudioSystem::Update()
 {
-    // First, update the underlying FMOD system
+    auto& ecs = ECS::GetInstance();
+    static bool s_WasPlaying = false; // Track previous state
+
+    bool isPlaying = (editor::EditorGUI::s_state == editor::EditorGUI::SimState::playing);
+
+    // Handle STOPPED/PAUSED state
+    if (!isPlaying)
+    {
+        if (s_WasPlaying)
+        {
+            std::cout << "=== STOPPING ALL AUDIO ===" << std::endl;
+            CAudioEngine::StopAllChannels();
+
+            // Clear entity audio states
+            for (EntityID entity : m_Entities)
+            {
+                if (!ecs.IsEntityValid(entity)) continue;
+                if (ecs.HasComponent<AudioComponent>(entity))
+                {
+                    auto& audioComp = ecs.GetComponent<AudioComponent>(entity);
+                    audioComp.shouldPlay = false;
+                    audioComp.shouldStop = false;
+                    audioComp.channelId = -1;
+                    audioComp.isPlaying = false;
+                }
+            }
+
+            // Clear global audio
+            for (EntityID entity = 1; entity <= MAX_ENTITIES; ++entity)
+            {
+                if (ecs.IsEntityValid(entity) && ecs.HasComponent<GlobalAudioComponent>(entity))
+                {
+                    auto& globalAudio = ecs.GetComponent<GlobalAudioComponent>(entity);
+                    globalAudio.currentMusicChannelId = -1;
+                    globalAudio.currentMusicIndex = -1;
+                    break;
+                }
+            }
+
+            std::cout << "=== ALL AUDIO STOPPED ===" << std::endl;
+        }
+
+        s_WasPlaying = false;
+
+        // Still update audio components in editor mode for testing
+        CAudioEngine::Update();
+        UpdateAudioComponents();
+        return;
+    }
+
+    // ===== PLAYING STATE =====
+
+    // Find global audio entity
+    EntityID globalAudioEntity = 0;
+    for (EntityID entity = 1; entity <= MAX_ENTITIES; ++entity)
+    {
+        if (ecs.IsEntityValid(entity) && ecs.HasComponent<GlobalAudioComponent>(entity))
+        {
+            globalAudioEntity = entity;
+            break;
+        }
+    }
+
+    // Handle global audio
+    if (globalAudioEntity != 0)
+    {
+        auto& globalAudio = ecs.GetComponent<GlobalAudioComponent>(globalAudioEntity);
+
+        if (globalAudio.autoPlay &&
+            globalAudio.currentMusicChannelId == -1 &&
+            !globalAudio.music.empty())
+        {
+            PlayGlobalMusic(globalAudio, 0);
+        }
+
+        UpdateGlobalAudio(globalAudio);
+    }
+
+    // Update audio
     CAudioEngine::Update();
+    UpdateAudioComponents();
+
+    s_WasPlaying = true;
+
+	// Previous implementation kept for reference 
+	// This version auto-plays sounds only once per play session
+    //auto& ecs = ECS::GetInstance();
+    //static bool s_WasPlaying = false; // Track previous state
+    //static bool s_HasAutoPlayed = false; // Track if we've auto-played this session
+
+    //bool isPlaying = (editor::EditorGUI::s_state == editor::EditorGUI::SimState::playing);
+
+    //// Handle STOPPED/PAUSED state (ALWAYS, regardless of global audio)
+    //if (!isPlaying)
+    //{
+    //    if (s_WasPlaying)
+    //    {
+    //        std::cout << "=== STOPPING ALL AUDIO ===" << std::endl;
+
+    //        // FIRST: Stop all FMOD channels immediately
+    //        CAudioEngine::StopAllChannels();
+
+    //        // THEN: Clear all entity audio states
+    //        for (EntityID entity : m_Entities)
+    //        {
+    //            if (!ecs.IsEntityValid(entity)) continue;
+    //            if (ecs.HasComponent<AudioComponent>(entity))
+    //            {
+    //                auto& audioComp = ecs.GetComponent<AudioComponent>(entity);
+    //                audioComp.shouldPlay = false;
+    //                audioComp.shouldStop = false;
+    //                audioComp.channelId = -1;
+    //                audioComp.isPlaying = false;
+    //                std::cout << "Cleared entity " << entity << " audio state" << std::endl;
+    //            }
+    //        }
+
+    //        // Clear global audio if it exists
+    //        for (EntityID entity = 1; entity <= MAX_ENTITIES; ++entity)
+    //        {
+    //            if (ecs.IsEntityValid(entity) && ecs.HasComponent<GlobalAudioComponent>(entity))
+    //            {
+    //                auto& globalAudio = ecs.GetComponent<GlobalAudioComponent>(entity);
+    //                globalAudio.currentMusicChannelId = -1;
+    //                globalAudio.currentMusicIndex = -1;
+    //                break;
+    //            }
+    //        }
+
+    //        std::cout << "=== ALL AUDIO STOPPED ===" << std::endl;
+    //    }
+
+    //    s_WasPlaying = false;
+    //    s_HasAutoPlayed = false;
+    //    CAudioEngine::Update();
+    //    UpdateAudioComponents();
+    //    return; // Exit early
+    //}
+
+    //// ===== PLAYING STATE =====
+
+    //// Find the entity with GlobalAudioComponent (if it exists)
+    //EntityID globalAudioEntity = 0;
+    //for (EntityID entity = 1; entity <= MAX_ENTITIES; ++entity)
+    //{
+    //    if (ecs.IsEntityValid(entity) && ecs.HasComponent<GlobalAudioComponent>(entity))
+    //    {
+    //        globalAudioEntity = entity;
+    //        break;
+    //    }
+    //}
+
+    //// Handle global audio if it exists
+    //if (globalAudioEntity != 0)
+    //{
+    //    auto& globalAudio = ecs.GetComponent<GlobalAudioComponent>(globalAudioEntity);
+
+    //    // Autoplay global music if needed
+    //    if (globalAudio.autoPlay &&
+    //        globalAudio.currentMusicChannelId == -1 &&
+    //        !globalAudio.music.empty())
+    //    {
+    //        PlayGlobalMusic(globalAudio, 0);
+    //    }
+
+    //    UpdateGlobalAudio(globalAudio);
+    //}
+
+    //// Auto-play entities ONLY ONCE on first frame
+    //if (!s_HasAutoPlayed)
+    //{
+    //    std::cout << "=== AUTO-PLAY CHECK ===" << std::endl;
+    //    for (EntityID entity : m_Entities)
+    //    {
+    //        if (ecs.IsEntityValid(entity) && ecs.HasComponent<AudioComponent>(entity))
+    //        {
+    //            auto& audioComp = ecs.GetComponent<AudioComponent>(entity);
+    //            if (audioComp.playOnStart && !audioComp.soundName.empty())
+    //            {
+    //                std::cout << "Auto-playing entity " << entity
+    //                    << " (" << audioComp.soundName << ")" << std::endl;
+    //                audioComp.shouldPlay = true;
+    //            }
+    //        }
+    //    }
+    //    s_HasAutoPlayed = true;
+    //    std::cout << "=== AUTO-PLAY DONE ===" << std::endl;
+    //}
+
+    //// Update FMOD and entity audio components
+    //CAudioEngine::Update();
+    //UpdateAudioComponents();
+
+    //s_WasPlaying = true;
+
 
     // Update listener to follow main camera 
     //if (HasMainCamera()) {
@@ -139,7 +333,7 @@ void AudioSystem::Update()
     //}
 
     // Update all entities with AudioComponents
-    UpdateAudioComponents();
+    //UpdateAudioComponents();
 }
 
 void AudioSystem::UpdateAudioComponents()

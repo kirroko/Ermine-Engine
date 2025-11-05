@@ -1444,6 +1444,8 @@ namespace Ermine
 		float musicVolume{ 1.0f };
 		float sfxVolume{ 1.0f };
 
+		bool autoPlay{true};
+
 		// Currently playing tracks
 		int currentMusicIndex{ -1 };
 		int currentMusicChannelId{ -1 };
@@ -1604,6 +1606,7 @@ namespace Ermine
 			out.AddMember("masterVolume", masterVolume, alloc);
 			out.AddMember("musicVolume", musicVolume, alloc);
 			out.AddMember("sfxVolume", sfxVolume, alloc);
+			out.AddMember("autoPlay", autoPlay, alloc);
 
 			auto writeList = [&](const std::vector<AudioSource>& list, const char* key) {
 				rapidjson::Value arr(rapidjson::kArrayType);
@@ -1623,6 +1626,7 @@ namespace Ermine
 			if (in.HasMember("masterVolume")) masterVolume = in["masterVolume"].GetFloat();
 			if (in.HasMember("musicVolume")) musicVolume = in["musicVolume"].GetFloat();
 			if (in.HasMember("sfxVolume"))   sfxVolume = in["sfxVolume"].GetFloat();
+			if (in.HasMember("autoPlay"))    autoPlay = in["autoPlay"].GetBool();
 
 			auto readList = [&](const char* key, std::vector<AudioSource>& list) {
 				list.clear();
@@ -1646,7 +1650,8 @@ namespace Ermine
 			"GlobalAudioComponent", GlobalAudioComponent,
 			xproperty::obj_member<"masterVolume", &GlobalAudioComponent::masterVolume>,
 			xproperty::obj_member<"musicVolume", &GlobalAudioComponent::musicVolume>,
-			xproperty::obj_member<"sfxVolume", &GlobalAudioComponent::sfxVolume>
+			xproperty::obj_member<"sfxVolume", &GlobalAudioComponent::sfxVolume>,
+			xproperty::obj_member<"autoPlay", &GlobalAudioComponent::autoPlay>
 		)
 	};
 
@@ -1664,8 +1669,9 @@ namespace Ermine
 		// Playback control
 		int channelId{ -1 }; // Managed by CAudioEngine
 		bool isPlaying{ false };
-		bool shouldPlay{ false }; // Trigger flag for AudioSystem
+		bool shouldPlay{ true }; // Trigger flag for AudioSystem
 		bool shouldStop{ false }; // Trigger flag for AudioSystem
+		//bool playOnStart = false;
 
 		// Audio settings
 		bool is3D{ true };

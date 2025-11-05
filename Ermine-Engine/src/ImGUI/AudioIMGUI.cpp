@@ -265,6 +265,7 @@ namespace Ermine
 
                 ImGui::SliderFloat("Volume", &audioComp.volume, 0.0f, 1.0f);
                 ImGui::Checkbox("3D Audio", &audioComp.is3D);
+                //ImGui::Checkbox("Auto-play on Start", &audioComp.playOnStart);
                 ImGui::Checkbox("Looping", &audioComp.isLooping);
                 ImGui::Checkbox("Streaming", &audioComp.isStreaming);
                 ImGui::Checkbox("Follow Transform", &audioComp.followTransform);
