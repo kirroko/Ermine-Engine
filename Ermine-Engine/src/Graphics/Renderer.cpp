@@ -127,6 +127,8 @@ void Renderer::Init(const int& screenWidth, const int& screenHeight)
 
 	// Add light system reference
 	m_LightSystem = Ermine::ECS::GetInstance().GetSystem<LightSystem>();
+	m_ModelSystem = Ermine::ECS::GetInstance().GetSystem<ModelSystem>();
+	m_MaterialSystem = Ermine::ECS::GetInstance().GetSystem<MaterialSystem>();
 
 	m_QuadMesh = GeometryFactory::CreateQuad(2.0f, 2.0f);
 
@@ -1002,6 +1004,7 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 	EndGeometryPass();
 }
 
+
 /**
  * @brief Compiles draw commands and draw info for all passes (geometry/shadow and forward).
  * Routes opaque meshes to geometry pass, transparent/custom shader meshes to forward pass.
@@ -1101,141 +1104,10 @@ void Renderer::CompileDrawData()
 	// Culling statistics
 	culledMeshes = 0;
 
-	// ========== STANDARD (NON-SKINNED) MESHES ==========
+
+	// ========== MESHES ==========
 	for (auto& entity : m_Entities) {
-		// Skip entities with AnimationComponent (handled in skinned mesh section)
-		if (ecs.HasComponent<AnimationComponent>(entity)) continue;
-
-		// Process entities with Model component
-		if (ecs.HasComponent<ModelComponent>(entity)) {
-			auto& modelComp = ecs.GetComponent<ModelComponent>(entity);
-			auto& trans = ecs.GetComponent<Transform>(entity);
-
-			if (!modelComp.m_model) continue;
-
-			// Check if entity has material component for transparency/custom shader check
-			Ermine::graphics::Material* material = nullptr;
-			if (ecs.HasComponent<Ermine::Material>(entity)) {
-				auto& materialComponent = ecs.GetComponent<Ermine::Material>(entity);
-				material = materialComponent.GetMaterial();
-			}
-
-			// Build entity transform
-			// glm::mat4 modelMatrix = glm::mat4(1.0f);
-			// modelMatrix = glm::translate(modelMatrix, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
-			// glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
-			// rotQuat = glm::normalize(rotQuat);
-			// modelMatrix *= glm::mat4_cast(rotQuat);
-			// modelMatrix = glm::scale(modelMatrix, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
-
-			glm::mat4 entityModel = GetEntityWorldMatrix(entity);
-
-			//glm::mat4 entityModel = glm::mat4(1.0f);
-			//entityModel = glm::translate(entityModel, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
-			//glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
-			//rotQuat = glm::normalize(rotQuat);
-			//entityModel *= glm::mat4_cast(rotQuat);
-			//entityModel = glm::scale(entityModel, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
-
-			// Determine which pass this entity belongs to
-			bool isTransparent = material && IsTransparentMaterial(material);
-			// TODO: Uncomment when use of custom shaders is supported
-			//bool isCustomShader = HasCustomShader(material);
-			bool isCustomShader = false;
-
-			// Get material index
-			uint32_t materialIndex = 0;
-			auto it = m_EntityMaterialIndices.find(entity);
-			if (it != m_EntityMaterialIndices.end()) {
-				materialIndex = it->second;
-			}
-
-			// Process each mesh in the model
-			for (const auto& mesh : modelComp.m_model->GetMeshes()) {
-
-				// Get mesh handle from MeshManager
-				MeshHandle meshHandle = m_MeshManager.GetMeshHandle(mesh.meshID);
-				if (!meshHandle.isValid()) continue;
-
-				const MeshSubset* meshData = m_MeshManager.GetMeshData(meshHandle);
-				if (!meshData) continue;
-
-				// ========== FRUSTUM CULLING TEST ==========
-				// Transform AABB to world space by transforming all 8 corners
-				// This is necessary because rotation can change which corners are min/max
-				glm::vec3 corners[8] = {
-					glm::vec3(mesh.aabbMin.x, mesh.aabbMin.y, mesh.aabbMin.z),
-					glm::vec3(mesh.aabbMax.x, mesh.aabbMin.y, mesh.aabbMin.z),
-					glm::vec3(mesh.aabbMin.x, mesh.aabbMax.y, mesh.aabbMin.z),
-					glm::vec3(mesh.aabbMax.x, mesh.aabbMax.y, mesh.aabbMin.z),
-					glm::vec3(mesh.aabbMin.x, mesh.aabbMin.y, mesh.aabbMax.z),
-					glm::vec3(mesh.aabbMax.x, mesh.aabbMin.y, mesh.aabbMax.z),
-					glm::vec3(mesh.aabbMin.x, mesh.aabbMax.y, mesh.aabbMax.z),
-					glm::vec3(mesh.aabbMax.x, mesh.aabbMax.y, mesh.aabbMax.z)
-				};
-
-				glm::vec3 actualMin = glm::vec3(FLT_MAX);
-				glm::vec3 actualMax = glm::vec3(-FLT_MAX);
-
-				for (int i = 0; i < 8; ++i) {
-					glm::vec3 worldCorner = glm::vec3(entityModel * glm::vec4(corners[i], 1.0f));
-					actualMin = glm::min(actualMin, worldCorner);
-					actualMax = glm::max(actualMax, worldCorner);
-				}
-
-				// Test against frustum
-				bool isCulled = !frustum.TestAABB(actualMin, actualMax);
-				if (isCulled) {
-					culledMeshes++; // Count culled meshes
-					continue; // Skip this mesh - it's outside the frustum
-				}
-
-				// Debug: Draw AABB if enabled
-				if (m_DebugDrawAABBs) {
-					// Color: Green for visible, Red for culled
-					glm::vec3 aabbColor = isCulled ? glm::vec3(1.0f, 0.0f, 0.0f) : glm::vec3(0.0f, 1.0f, 0.0f);
-					SubmitDebugAABB(actualMin, actualMax, aabbColor);
-				}
-
-				// Build draw command
-				DrawElementsIndirectCommand cmd;
-				cmd.count = meshData->indexCount;
-				cmd.instanceCount = 1;
-				cmd.firstIndex = meshData->indexOffset;
-				cmd.baseVertex = meshData->baseVertex;
-				cmd.baseInstance = 0;
-
-				// Build draw info with AABB and model matrix
-				DrawInfo info;
-				info.modelMatrix = entityModel;
-				info.aabbMin = mesh.aabbMin;
-				info.materialIndex = materialIndex;
-				info.aabbMax = mesh.aabbMax;
-				info.entityID = entity;
-				info.flags = 0; // No skinning for standard meshes
-				info.boneTransformOffset = 0;
-				info._pad[0] = 0;
-				info._pad[1] = 0;
-
-				// Route to appropriate pass
-				if (isTransparent || isCustomShader) {
-					// Forward pass (transparent/custom shader)
-					m_ForwardPassDrawCommands.push_back(cmd);
-					m_ForwardPassDrawInfos.push_back(info);
-					m_ForwardPassDrawCommandsVertexCount += meshData->vertexCount;
-					m_ForwardPassDrawCommandsIndexCount += cmd.count;
-				}
-				else {
-					// Geometry pass (opaque, standard shader)
-					m_StandardDrawCommands.push_back(cmd);
-					m_StandardDrawInfos.push_back(info);
-					m_StandardDrawCommandsVertexCount += meshData->vertexCount;
-					m_StandardDrawCommandsIndexCount += cmd.count;
-				}
-			}
-		}
-		// Process entities with Mesh component (primitives)
-		if (ecs.HasComponent<Mesh>(entity) && ecs.HasComponent<Ermine::Material>(entity)) {
+		if (ecs.HasComponent<Ermine::Material>(entity)) {
 			auto& trans = ecs.GetComponent<Transform>(entity);
 			auto& mesh = ecs.GetComponent<Mesh>(entity);
 			auto& materialComponent = ecs.GetComponent<Ermine::Material>(entity);
@@ -1267,25 +1139,21 @@ void Renderer::CompileDrawData()
 			//model *= glm::mat4_cast(rotQuat);
 			//model = glm::scale(model, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
 
-			// Determine which pass this entity belongs to
-			bool isTransparent = IsTransparentMaterial(material);
-			// TODO: Uncomment when use of custom shaders is supported
-			//bool isCustomShader = HasCustomShader(material);
-			bool isCustomShader = false;
-
-			// Get material index
-			uint32_t materialIndex = 0;
-			auto it = m_EntityMaterialIndices.find(entity);
-			if (it != m_EntityMaterialIndices.end()) {
-				materialIndex = it->second;
-			}
-
 			// Get mesh handle from MeshManager using the stored registered mesh ID
 			MeshHandle meshHandle = m_MeshManager.GetMeshHandle(mesh.registeredMeshID);
 			if (!meshHandle.isValid()) continue;
 
 			const MeshSubset* meshData = m_MeshManager.GetMeshData(meshHandle);
 			if (!meshData) continue;
+
+			graphics::Material* meshMaterial = materialComponent.GetMaterial();
+			uint32_t materialIndex = meshMaterial->GetMaterialIndex();
+
+			// Determine which pass this mesh belongs to
+			bool isTransparent = meshMaterial && IsTransparentMaterial(meshMaterial);
+			// TODO: Uncomment when use of custom shaders is supported
+			//bool isCustomShader = HasCustomShader(meshMaterial);
+			bool isCustomShader = false;
 
 			// ========== FRUSTUM CULLING TEST ==========
 			// Transform AABB to world space by transforming all 8 corners
@@ -1362,134 +1230,293 @@ void Renderer::CompileDrawData()
 		}
 	}
 
-	// ========== SKINNED (ANIMATED) MESHES ==========
-	// Iterate through AnimationManager's entities (entities with AnimationComponent)
-	for (auto& entity : ecs.GetSystem<graphics::AnimationManager>()->m_Entities) {
-		// All entities here have AnimationComponent, no need to check
-		if (!ecs.HasComponent<ModelComponent>(entity)) continue;
+	// ========== STATIC MODELS ==========
+	for (auto& entity : m_ModelSystem->m_Entities) {
+		if (!ecs.HasComponent<AnimationComponent>(entity)) {
+			// Process entities with Model component
+			auto& modelComp = ecs.GetComponent<ModelComponent>(entity);
+			auto& trans = ecs.GetComponent<Transform>(entity);
 
-		auto& modelComp = ecs.GetComponent<ModelComponent>(entity);
-		auto& trans = ecs.GetComponent<Transform>(entity);
-		auto& animComp = ecs.GetComponent<AnimationComponent>(entity);
+			if (!modelComp.m_model) continue;
 
-		if (!modelComp.m_model) continue;
-		if (animComp.boneTransformOffset < 0) continue; // Skip if no valid bone data
+			// Build entity transform
+			glm::mat4 entityModel = GetEntityWorldMatrix(entity);
 
-		// Check if entity has material component for transparency/custom shader check
-		Ermine::graphics::Material* material = nullptr;
-		if (ecs.HasComponent<Ermine::Material>(entity)) {
-			auto& materialComponent = ecs.GetComponent<Ermine::Material>(entity);
-			material = materialComponent.GetMaterial();
+			// Process each mesh in the model
+			for (const auto& mesh : modelComp.m_model->GetMeshes()) {
+
+				// Get mesh handle from MeshManager
+				MeshHandle meshHandle = m_MeshManager.GetMeshHandle(mesh.meshID);
+				if (!meshHandle.isValid()) continue;
+
+				const MeshSubset* meshData = m_MeshManager.GetMeshData(meshHandle);
+				if (!meshData) continue;
+
+
+					// Get material from the mesh's child entity (if it has one), otherwise use parent entity
+				Ermine::graphics::Material* material = nullptr;
+
+				// Look for child entity with matching mesh name
+				Ermine::EntityID childEntity = 0;
+				if (ecs.HasComponent<Ermine::HierarchyComponent>(entity)) {
+					const auto& hierarchy = ecs.GetComponent<Ermine::HierarchyComponent>(entity);
+					const std::string expectedChildName = "Mesh_" + meshData->meshID;
+
+					for (Ermine::EntityID child : hierarchy.children) {
+						if (ecs.HasComponent<Ermine::ObjectMetaData>(child)) {
+							const auto& metadata = ecs.GetComponent<Ermine::ObjectMetaData>(child);
+							if (metadata.name == expectedChildName) {
+								childEntity = child;
+								break;
+							}
+						}
+					}
+				}
+
+				if (childEntity != 0 && ecs.HasComponent<Ermine::Material>(childEntity)) {
+					// Use child entity's material
+					auto& materialComponent = ecs.GetComponent<Ermine::Material>(childEntity);
+					material = materialComponent.GetMaterial();
+				}
+				else if (ecs.HasComponent<Ermine::Material>(entity)) {
+					// Fallback to parent entity's material
+					auto& materialComponent = ecs.GetComponent<Ermine::Material>(entity);
+					material = materialComponent.GetMaterial();
+				}
+				uint32_t materialIndex = material->GetMaterialIndex();
+
+				// Determine which pass this mesh belongs to
+				bool isTransparent = material && IsTransparentMaterial(material);
+				// TODO: Uncomment when use of custom shaders is supported
+				//bool isCustomShader = HasCustomShader(material);
+				bool isCustomShader = false;
+
+				// ========== FRUSTUM CULLING TEST ==========
+				// Transform AABB to world space by transforming all 8 corners
+				// This is necessary because rotation can change which corners are min/max
+				glm::vec3 corners[8] = {
+					glm::vec3(mesh.aabbMin.x, mesh.aabbMin.y, mesh.aabbMin.z),
+					glm::vec3(mesh.aabbMax.x, mesh.aabbMin.y, mesh.aabbMin.z),
+					glm::vec3(mesh.aabbMin.x, mesh.aabbMax.y, mesh.aabbMin.z),
+					glm::vec3(mesh.aabbMax.x, mesh.aabbMax.y, mesh.aabbMin.z),
+					glm::vec3(mesh.aabbMin.x, mesh.aabbMin.y, mesh.aabbMax.z),
+					glm::vec3(mesh.aabbMax.x, mesh.aabbMin.y, mesh.aabbMax.z),
+					glm::vec3(mesh.aabbMin.x, mesh.aabbMax.y, mesh.aabbMax.z),
+					glm::vec3(mesh.aabbMax.x, mesh.aabbMax.y, mesh.aabbMax.z)
+				};
+
+				glm::vec3 actualMin = glm::vec3(FLT_MAX);
+				glm::vec3 actualMax = glm::vec3(-FLT_MAX);
+
+				for (int i = 0; i < 8; ++i) {
+					glm::vec3 worldCorner = glm::vec3(entityModel * glm::vec4(corners[i], 1.0f));
+					actualMin = glm::min(actualMin, worldCorner);
+					actualMax = glm::max(actualMax, worldCorner);
+				}
+
+				// Test against frustum
+				bool isCulled = !frustum.TestAABB(actualMin, actualMax);
+				if (isCulled) {
+					culledMeshes++; // Count culled meshes
+					continue; // Skip this mesh - it's outside the frustum
+				}
+
+				// Debug: Draw AABB if enabled
+				if (m_DebugDrawAABBs) {
+					// Color: Green for visible, Red for culled
+					glm::vec3 aabbColor = isCulled ? glm::vec3(1.0f, 0.0f, 0.0f) : glm::vec3(0.0f, 1.0f, 0.0f);
+					SubmitDebugAABB(actualMin, actualMax, aabbColor);
+				}
+
+				// Build draw command
+				DrawElementsIndirectCommand cmd;
+				cmd.count = meshData->indexCount;
+				cmd.instanceCount = 1;
+				cmd.firstIndex = meshData->indexOffset;
+				cmd.baseVertex = meshData->baseVertex;
+				cmd.baseInstance = 0;
+
+				// Build draw info with AABB and model matrix
+				DrawInfo info;
+				info.modelMatrix = entityModel;
+				info.aabbMin = mesh.aabbMin;
+				info.materialIndex = materialIndex;
+				info.aabbMax = mesh.aabbMax;
+				info.entityID = entity;
+				info.flags = 0; // No skinning for standard meshes
+				info.boneTransformOffset = 0;
+				info._pad[0] = 0;
+				info._pad[1] = 0;
+
+				// Route to appropriate pass
+				if (isTransparent || isCustomShader) {
+					// Forward pass (transparent/custom shader)
+					m_ForwardPassDrawCommands.push_back(cmd);
+					m_ForwardPassDrawInfos.push_back(info);
+					m_ForwardPassDrawCommandsVertexCount += meshData->vertexCount;
+					m_ForwardPassDrawCommandsIndexCount += cmd.count;
+				}
+				else {
+					// Geometry pass (opaque, standard shader)
+					m_StandardDrawCommands.push_back(cmd);
+					m_StandardDrawInfos.push_back(info);
+					m_StandardDrawCommandsVertexCount += meshData->vertexCount;
+					m_StandardDrawCommandsIndexCount += cmd.count;
+				}
+			}
 		}
+		else {
+			auto& modelComp = ecs.GetComponent<ModelComponent>(entity);
+			auto& trans = ecs.GetComponent<Transform>(entity);
+			auto& animComp = ecs.GetComponent<AnimationComponent>(entity);
 
-		// Build entity transform
-		glm::mat4 modelMatrix = glm::mat4(1.0f);
-		modelMatrix = glm::translate(modelMatrix, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
-		glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
-		rotQuat = glm::normalize(rotQuat);
-		modelMatrix *= glm::mat4_cast(rotQuat);
-		modelMatrix = glm::scale(modelMatrix, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
+			if (!modelComp.m_model) continue;
+			if (animComp.boneTransformOffset < 0) continue; // Skip if no valid bone data
 
-		// Determine which pass this entity belongs to
-		bool isTransparent = material && IsTransparentMaterial(material);
-		// TODO: Uncomment when use of custom shaders is supported
-		//bool isCustomShader = HasCustomShader(material);
-		bool isCustomShader = false;
-
-		// Get material index
-		uint32_t materialIndex = 0;
-		auto it = m_EntityMaterialIndices.find(entity);
-		if (it != m_EntityMaterialIndices.end()) {
-			materialIndex = it->second;
-		}
-
-		// Get bone transform offset
-		uint32_t boneOffset = static_cast<uint32_t>(animComp.boneTransformOffset);
-
-		// Process each mesh in the model
-		for (const auto& mesh : modelComp.m_model->GetMeshes()) {
-
-			// Get mesh handle from MeshManager
-			MeshHandle meshHandle = m_MeshManager.GetMeshHandle(mesh.meshID);
-			if (!meshHandle.isValid()) continue;
-
-			const MeshSubset* meshData = m_MeshManager.GetMeshData(meshHandle);
-			if (!meshData) continue;
-
-			// ========== FRUSTUM CULLING TEST ==========
-			// Transform AABB to world space by transforming all 8 corners
-			// This is necessary because rotation can change which corners are min/max
-			glm::vec3 corners[8] = {
-				glm::vec3(mesh.aabbMin.x, mesh.aabbMin.y, mesh.aabbMin.z),
-				glm::vec3(mesh.aabbMax.x, mesh.aabbMin.y, mesh.aabbMin.z),
-				glm::vec3(mesh.aabbMin.x, mesh.aabbMax.y, mesh.aabbMin.z),
-				glm::vec3(mesh.aabbMax.x, mesh.aabbMax.y, mesh.aabbMin.z),
-				glm::vec3(mesh.aabbMin.x, mesh.aabbMin.y, mesh.aabbMax.z),
-				glm::vec3(mesh.aabbMax.x, mesh.aabbMin.y, mesh.aabbMax.z),
-				glm::vec3(mesh.aabbMin.x, mesh.aabbMax.y, mesh.aabbMax.z),
-				glm::vec3(mesh.aabbMax.x, mesh.aabbMax.y, mesh.aabbMax.z)
-			};
-
-			glm::vec3 actualMin = glm::vec3(FLT_MAX);
-			glm::vec3 actualMax = glm::vec3(-FLT_MAX);
-
-			for (int i = 0; i < 8; ++i) {
-				glm::vec3 worldCorner = glm::vec3(modelMatrix * glm::vec4(corners[i], 1.0f));
-				actualMin = glm::min(actualMin, worldCorner);
-				actualMax = glm::max(actualMax, worldCorner);
+			// Check if entity has material component for transparency/custom shader check
+			Ermine::graphics::Material* material = nullptr;
+			if (ecs.HasComponent<Ermine::Material>(entity)) {
+				auto& materialComponent = ecs.GetComponent<Ermine::Material>(entity);
+				material = materialComponent.GetMaterial();
 			}
 
-			// Test against frustum
-			bool isCulled = !frustum.TestAABB(actualMin, actualMax);
-			if (isCulled) {
-				culledMeshes++;
-				continue; // Skip - outside frustum
+			// Build entity transform
+			glm::mat4 modelMatrix = glm::mat4(1.0f);
+			modelMatrix = glm::translate(modelMatrix, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
+			glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
+			rotQuat = glm::normalize(rotQuat);
+			modelMatrix *= glm::mat4_cast(rotQuat);
+			modelMatrix = glm::scale(modelMatrix, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
+
+			// Determine which pass this entity belongs to
+			bool isTransparent = material && IsTransparentMaterial(material);
+			// TODO: Uncomment when use of custom shaders is supported
+			//bool isCustomShader = HasCustomShader(material);
+			bool isCustomShader = false;
+
+			// Get material index
+			uint32_t materialIndex = 0;
+			auto it = m_EntityMaterialIndices.find(entity);
+			if (it != m_EntityMaterialIndices.end()) {
+				materialIndex = it->second;
 			}
 
-			// Debug: Draw AABB if enabled (skinned meshes)
-			if (m_DebugDrawAABBs) {
-				// Color: Green for visible, Red for culled
-				glm::vec3 aabbColor = isCulled ? glm::vec3(1.0f, 0.0f, 0.0f) : glm::vec3(0.0f, 1.0f, 0.0f);
-				SubmitDebugAABB(actualMin, actualMax, aabbColor);
-			}
+			// Get bone transform offset
+			uint32_t boneOffset = static_cast<uint32_t>(animComp.boneTransformOffset);
 
-			// Build draw command
-			DrawElementsIndirectCommand cmd;
-			cmd.count = meshData->indexCount;
-			cmd.instanceCount = 1;
-			cmd.firstIndex = meshData->indexOffset;
-			cmd.baseVertex = meshData->baseVertex;
-			cmd.baseInstance = 0;
+			// Process each mesh in the model
+			for (const auto& mesh : modelComp.m_model->GetMeshes()) {
 
-			// Build draw info with AABB and model matrix
-			DrawInfo info;
-			info.modelMatrix = modelMatrix;
-			info.aabbMin = mesh.aabbMin;
-			info.materialIndex = materialIndex;
-			info.aabbMax = mesh.aabbMax;
-			info.entityID = entity;
-			info.flags = 1; // Skinning enabled
-			info.boneTransformOffset = boneOffset;
-			info._pad[0] = 0;
-			info._pad[1] = 0;
+				// Get mesh handle from MeshManager
+				MeshHandle meshHandle = m_MeshManager.GetMeshHandle(mesh.meshID);
+				if (!meshHandle.isValid()) continue;
 
-			// Route to appropriate pass
-			if (isTransparent || isCustomShader) {
-				// Forward pass (transparent/custom shader)
-				m_ForwardPassDrawCommands.push_back(cmd);
-				m_ForwardPassDrawInfos.push_back(info);
-				m_ForwardPassDrawCommandsVertexCount += meshData->vertexCount;
-				m_ForwardPassDrawCommandsIndexCount += cmd.count;
-			}
-			else {
-				// Geometry pass (opaque, standard shader)
-				m_SkinnedDrawCommands.push_back(cmd);
-				m_SkinnedDrawInfos.push_back(info);
-				m_SkinnedDrawCommandsVertexCount += meshData->vertexCount;
-				m_SkinnedDrawCommandsIndexCount += cmd.count;
+				const MeshSubset* meshData = m_MeshManager.GetMeshData(meshHandle);
+				if (!meshData) continue;
+
+					// Get material from the mesh's child entity (if it has one)
+				Ermine::graphics::Material* meshMaterial = nullptr;
+
+				// Look for child entity with matching mesh name
+				Ermine::EntityID childEntity = 0;
+				if (ecs.HasComponent<Ermine::HierarchyComponent>(entity)) {
+					const auto& hierarchy = ecs.GetComponent<Ermine::HierarchyComponent>(entity);
+					const std::string expectedChildName = "Mesh_" + meshData->meshID;
+
+					for (Ermine::EntityID child : hierarchy.children) {
+						if (ecs.HasComponent<Ermine::ObjectMetaData>(child)) {
+							const auto& metadata = ecs.GetComponent<Ermine::ObjectMetaData>(child);
+							if (metadata.name == expectedChildName) {
+								childEntity = child;
+								break;
+							}
+						}
+					}
+				}
+
+				if (childEntity != 0 && ecs.HasComponent<Ermine::Material>(childEntity)) {
+					// Use child entity's material
+					auto& materialComponent = ecs.GetComponent<Ermine::Material>(childEntity);
+					meshMaterial = materialComponent.GetMaterial();
+					materialIndex = meshMaterial->GetMaterialIndex();
+				}
+
+				// ========== FRUSTUM CULLING TEST ==========
+				// Transform AABB to world space by transforming all 8 corners
+				// This is necessary because rotation can change which corners are min/max
+				glm::vec3 corners[8] = {
+					glm::vec3(mesh.aabbMin.x, mesh.aabbMin.y, mesh.aabbMin.z),
+					glm::vec3(mesh.aabbMax.x, mesh.aabbMin.y, mesh.aabbMin.z),
+					glm::vec3(mesh.aabbMin.x, mesh.aabbMax.y, mesh.aabbMin.z),
+					glm::vec3(mesh.aabbMax.x, mesh.aabbMax.y, mesh.aabbMin.z),
+					glm::vec3(mesh.aabbMin.x, mesh.aabbMin.y, mesh.aabbMax.z),
+					glm::vec3(mesh.aabbMax.x, mesh.aabbMin.y, mesh.aabbMax.z),
+					glm::vec3(mesh.aabbMin.x, mesh.aabbMax.y, mesh.aabbMax.z),
+					glm::vec3(mesh.aabbMax.x, mesh.aabbMax.y, mesh.aabbMax.z)
+				};
+
+				glm::vec3 actualMin = glm::vec3(FLT_MAX);
+				glm::vec3 actualMax = glm::vec3(-FLT_MAX);
+
+				for (int i = 0; i < 8; ++i) {
+					glm::vec3 worldCorner = glm::vec3(modelMatrix * glm::vec4(corners[i], 1.0f));
+					actualMin = glm::min(actualMin, worldCorner);
+					actualMax = glm::max(actualMax, worldCorner);
+				}
+
+				// Test against frustum
+				bool isCulled = !frustum.TestAABB(actualMin, actualMax);
+				if (isCulled) {
+					culledMeshes++;
+					continue; // Skip - outside frustum
+				}
+
+				// Debug: Draw AABB if enabled (skinned meshes)
+				if (m_DebugDrawAABBs) {
+					// Color: Green for visible, Red for culled
+					glm::vec3 aabbColor = isCulled ? glm::vec3(1.0f, 0.0f, 0.0f) : glm::vec3(0.0f, 1.0f, 0.0f);
+					SubmitDebugAABB(actualMin, actualMax, aabbColor);
+				}
+
+				// Build draw command
+				DrawElementsIndirectCommand cmd;
+				cmd.count = meshData->indexCount;
+				cmd.instanceCount = 1;
+				cmd.firstIndex = meshData->indexOffset;
+				cmd.baseVertex = meshData->baseVertex;
+				cmd.baseInstance = 0;
+
+				// Build draw info with AABB and model matrix
+				DrawInfo info;
+				info.modelMatrix = modelMatrix;
+				info.aabbMin = mesh.aabbMin;
+				info.materialIndex = materialIndex;
+				info.aabbMax = mesh.aabbMax;
+				info.entityID = entity;
+				info.flags = 1; // Skinning enabled
+				info.boneTransformOffset = boneOffset;
+				info._pad[0] = 0;
+				info._pad[1] = 0;
+
+				// Route to appropriate pass
+				if (isTransparent || isCustomShader) {
+					// Forward pass (transparent/custom shader)
+					m_ForwardPassDrawCommands.push_back(cmd);
+					m_ForwardPassDrawInfos.push_back(info);
+					m_ForwardPassDrawCommandsVertexCount += meshData->vertexCount;
+					m_ForwardPassDrawCommandsIndexCount += cmd.count;
+				}
+				else {
+					// Geometry pass (opaque, standard shader)
+					m_SkinnedDrawCommands.push_back(cmd);
+					m_SkinnedDrawInfos.push_back(info);
+					m_SkinnedDrawCommandsVertexCount += meshData->vertexCount;
+					m_SkinnedDrawCommandsIndexCount += cmd.count;
+				}
 			}
 		}
 	}
+
 	GPUProfiler::SetCulledMeshesCount(culledMeshes);
 
 }
@@ -1950,8 +1977,6 @@ void Renderer::CleanupPostProcessBuffer()
 		m_AntiAliasingBuffer.reset();
 	}
 
-	// Check for OpenGL errors after cleanup
-	glCheckError();
 }
 
 /**
@@ -3974,7 +3999,7 @@ void Renderer::CheckMaterialUpdates()
 	// Check if any materials have been modified (e.g., via ImGui)
 	const auto& ecs = Ermine::ECS::GetInstance();
 
-	for (auto entity : m_Entities)
+	for (auto entity : m_MaterialSystem->m_Entities)
 	{
 		if (!ecs.HasComponent<Ermine::Material>(entity)) continue;
 
@@ -4006,7 +4031,7 @@ void Renderer::CompileMaterials()
 	const auto& ecs = Ermine::ECS::GetInstance();
 
 	// First pass: Collect unique materials
-	for (auto entity : m_Entities)
+	for (auto entity : m_MaterialSystem->m_Entities)
 	{
 		if (!ecs.HasComponent<Ermine::Material>(entity)) continue;
 
