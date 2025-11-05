@@ -131,12 +131,28 @@ namespace Ermine::editor {
         */
         void DrawAddComponentMenu(EntityID entity);
 
+        /*!
+        \brief Draws UI for FSM component
+        \param entity The entity to add components to
+        */
         void DrawStateMachineComponent(EntityID entity);
 
+        /*!
+        \brief Draws UI for Nav Mesh component
+        \param entity The entity to add components to
+        */
         void DrawNavMeshComponent(EntityID entity);
 
+        /*!
+        \brief Draws UI for Nav Mesh Agent component
+        \param entity The entity to add components to
+        */
         void DrawNavMeshAgentComponent(EntityID entity);
 
+        /*!
+        \brief Draws UI for Particle Emitter component
+        \param entity The entity to add components to
+        */
         void DrawParticleEmitterComponent(EntityID entity);
 
         Scene* m_ActiveScene = nullptr;  ///< Pointer to the currently active scene

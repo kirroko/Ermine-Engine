@@ -2433,7 +2433,10 @@ namespace Ermine
 		std::vector<std::pair<int, int>> m_Links;
 		std::unordered_map<ScriptNode*, ScriptNode*> scriptTransitions;
 	public:
-		// For script start
+		/*!***********************************************************************
+		\brief
+		   Initialize FSM node and script instance for the entity.
+		*************************************************************************/
 		void Init(EntityID entity)
 		{
 			ScriptNode* startScript = nullptr;
@@ -2462,13 +2465,13 @@ namespace Ermine
 			{
 				m_CurrentScript->CreateInstance(entity);
 				m_CurrentScript->OnEnter();
-				EE_CORE_INFO("FSM: Initialized with start node '%s' (id=%d)",
-					m_CurrentScript->name.c_str(), m_CurrentScript->id);
+				//EE_CORE_INFO("FSM: Initialized with start node '%s' (id=%d)",
+				//	m_CurrentScript->name.c_str(), m_CurrentScript->id);
 			}
-			else
-			{
-				EE_CORE_WARN("FSM: Init() called but no valid start node found for entity %d!", entity);
-			}
+			//else
+			//{
+			//	EE_CORE_WARN("FSM: Init() called but no valid start node found for entity %d!", entity);
+			//}
 		}
 		/*!***********************************************************************
 		\brief
@@ -2521,6 +2524,10 @@ namespace Ermine
 		}
 	};
 
+	/*!***********************************************************************
+	\brief
+	 Nav Mesh component structure.
+	*************************************************************************/
 	struct NavMeshComponent
 	{
 		// Recast build config
@@ -2545,6 +2552,10 @@ namespace Ermine
 		Runtime* runtime = nullptr;
 	};
 
+	/*!***********************************************************************
+	\brief
+	 Nav Mesh Agent component structure.
+	*************************************************************************/
 	struct NavMeshAgent
 	{
 		float speed = 3.0f;

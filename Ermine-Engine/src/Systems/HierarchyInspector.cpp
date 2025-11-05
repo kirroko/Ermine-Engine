@@ -1493,14 +1493,14 @@ namespace Ermine::editor {
 
 		ImGui::Separator();
 
-		if (ImGui::Button("Bake Top of Cube"))
+		if (ImGui::Button("Bake Nav Mesh"))
 		{
 			if (auto sys = ECS::GetInstance().GetSystem<NavMeshSystem>())
-				sys->BakeTopOfCube(entity);
+				sys->BakeNavMesh(entity);
 		}
 
 		ImGui::Separator();
-		ImGui::Checkbox("Draw Walkable (CHT)", &nav.drawWalkable);
+		ImGui::Checkbox("Draw Walkable", &nav.drawWalkable);
 		ImGui::Checkbox("Draw NavMesh", &nav.drawNavMesh);
 	}
 

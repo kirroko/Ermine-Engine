@@ -1,3 +1,17 @@
+/* Start Header ************************************************************************/
+/*!
+\file       NavMesh.cpp
+\author     LEE Wen Jie, Brian, wenjiebrian.lee, 2301261, wenjiebrian.lee\@digipen.edu
+\date       03/11/2025
+\brief      This file defines the NavMeshSystem class, which manages navigation mesh
+            data and pathfinding functionality for AI.
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents without the
+prior written consent of DigiPen Institute of Technology is prohibited.
+*/
+/* End Header **************************************************************************/
+
 #include "PreCompile.h"
 #include "NavMesh.h"
 #include "ECS.h"
@@ -108,12 +122,6 @@ struct Ermine::NavMeshComponent::Runtime
 };
 
 namespace Ermine {
-
-    static void LogVec3(const char* name, const float* v)
-    {
-        //EE_CORE_INFO("  %s: %.3f %.3f %.3f", name, v[0], v[1], v[2]);
-    }
-
     void NavMeshSystem::Init()
     {
         if (!m_dd) m_dd = new DebugDrawGL();
@@ -125,7 +133,7 @@ namespace Ermine {
 
     void NavMeshSystem::Shutdown()
     {
-        EE_CORE_INFO("[NavMeshSystem] Shutdown - freeing all navmesh data");
+        EE_CORE_INFO("[NavMeshSystem] Freeing all navmesh data");
         EE_CORE_INFO("[NavMeshSystem] Entities to destroy: {}", m_Entities.size());
         for (auto e : m_Entities)
         {
@@ -205,12 +213,9 @@ namespace Ermine {
         c.runtime = nullptr;
     }
 
-    bool NavMeshSystem::BuildFromTriangles(
-        NavMeshComponent& c,
-        const float* verts, int nverts,
-        const int* tris, int ntris)
+    bool NavMeshSystem::BuildFromTriangles(NavMeshComponent& c, const float* verts, int nverts, const int* tris, int ntris)
     {
-        EE_CORE_INFO("[NavMeshSystem] Begin BuildFromTriangles (verts=%d tris=%d)", nverts, ntris);
+        //EE_CORE_INFO("[NavMeshSystem] Begin BuildFromTriangles (verts=%d tris=%d)", nverts, ntris);
         DestroyBuild(c);
         DestroyRuntime(c);
 
@@ -354,12 +359,12 @@ namespace Ermine {
         navParams.maxPolys = 0x8000;
 
         auto st = c.runtime->nav->init(&navParams);
-        EE_CORE_INFO("[NavMeshSystem] nav->init(tiled) status={} maxTiles={}", (int)st, c.runtime->nav->getMaxTiles());
+        //EE_CORE_INFO("[NavMeshSystem] nav->init(tiled) status={} maxTiles={}", (int)st, c.runtime->nav->getMaxTiles());
         if (dtStatusFailed(st)) { dtFree(navData); DestroyBuild(c); DestroyRuntime(c); return false; }
 
         dtTileRef tileRef = 0;
         st = c.runtime->nav->addTile(navData, navDataSize, DT_TILE_FREE_DATA, 0, &tileRef);
-        EE_CORE_INFO("[NavMeshSystem] addTile status={} ref={}", (int)st, (unsigned)tileRef);
+        //EE_CORE_INFO("[NavMeshSystem] addTile status={} ref={}", (int)st, (unsigned)tileRef);
         if (dtStatusFailed(st)) { dtFree(navData); DestroyBuild(c); DestroyRuntime(c); return false; }
 
         c.runtime->tileRef = tileRef;
@@ -374,7 +379,7 @@ namespace Ermine {
     }
 
 
-    bool NavMeshSystem::BakeTopOfCube(EntityID e)
+    bool NavMeshSystem::BakeNavMesh(EntityID e)
     {
         if (!ECS::GetInstance().HasComponent<NavMeshComponent>(e) ||
             !ECS::GetInstance().HasComponent<Transform>(e) ||
@@ -391,7 +396,7 @@ namespace Ermine {
             return false;
         }
 
-        EE_CORE_INFO("[NavMeshSystem] Baking navmesh for cube entity %u", e);
+        //EE_CORE_INFO("[NavMeshSystem] Baking navmesh for cube entity %u", e);
 
         // Bake only the TOP face of the cube
         const float topVerts[] = {
@@ -434,11 +439,11 @@ namespace Ermine {
             return false;
         }
 
-        if (nm.build && nm.build->pmesh)
-        {
-            EE_CORE_INFO("[NavMeshSystem] Baked navmesh verts=%d polys=%d",
-                nm.build->pmesh->nverts, nm.build->pmesh->npolys);
-        }
+        //if (nm.build && nm.build->pmesh)
+        //{
+        //    EE_CORE_INFO("[NavMeshSystem] Baked navmesh verts=%d polys=%d",
+        //        nm.build->pmesh->nverts, nm.build->pmesh->npolys);
+        //}
 
         return true;
     }
@@ -634,7 +639,7 @@ namespace Ermine {
         outPath.clear();
         outPath.reserve(static_cast<size_t>(nStraight));
 
-        EE_CORE_INFO("[NavMeshSystem] Straight path points: %d", nStraight);
+        //EE_CORE_INFO("[NavMeshSystem] Straight path points: %d", nStraight);
         for (int i = 0; i < nStraight; ++i)
         {
             Vec3 p;
@@ -643,7 +648,7 @@ namespace Ermine {
             p.z = straightPath[i * 3 + 2];
             outPath.push_back(p);
 
-            EE_CORE_INFO("  Path[%d]: %.3f %.3f %.3f", i, p.x, p.y, p.z);
+            //EE_CORE_INFO("  Path[%d]: %.3f %.3f %.3f", i, p.x, p.y, p.z);
         }
 
         return !outPath.empty();

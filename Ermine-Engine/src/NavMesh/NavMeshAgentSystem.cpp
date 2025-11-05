@@ -1,19 +1,28 @@
+/* Start Header ************************************************************************/
+/*!
+\file       NavMeshAgentSystem.cpp
+\author     LEE Wen Jie, Brian, wenjiebrian.lee, 2301261, wenjiebrian.lee\@digipen.edu
+\date       03/11/2025
+\brief      This file defines the NavMeshAgentSystem class, which manages
+            navigation agents that move across baked navigation meshes.
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents without the
+prior written consent of DigiPen Institute of Technology is prohibited.
+*/
+/* End Header **************************************************************************/
+
 #include "PreCompile.h"
 #include "NavMeshAgentSystem.h"
 
 namespace Ermine
 {
-    // ------------------------------------------------------
-    // Public convenience API
-    // ------------------------------------------------------
     bool RequestPathForAgent(EntityID agentEntity, const Ermine::Vec3& destination)
     {
         auto& ecs = ECS::GetInstance();
         if (!ecs.HasComponent<NavMeshAgent>(agentEntity) ||
             !ecs.HasComponent<Transform>(agentEntity))
             return false;
-
-        EE_CORE_INFO("[NavMeshAgentSystem] RequestPathForAgent called for entity %llu", agentEntity);
 
         auto& agent = ecs.GetComponent<NavMeshAgent>(agentEntity);
         auto& trans = ecs.GetComponent<Transform>(agentEntity);
@@ -27,11 +36,9 @@ namespace Ermine
             return false;
 
         agent.path = path;
-        EE_CORE_INFO("[NavMeshAgentSystem] Path assigned: %zu points", path.size());
         for (size_t i = 0; i < path.size(); ++i)
         {
             auto& p = path[i];
-            EE_CORE_INFO("  [%zu] %.3f %.3f %.3f", i, p.x, p.y, p.z);
         }
         agent.currentCorner = 0;
         agent.hasPath = true;
@@ -40,7 +47,6 @@ namespace Ermine
 
     void NavMeshAgentSystem::Init()
     {
-        EE_CORE_INFO("[NavMeshAgentSystem] Initialized");
     }
 
     void NavMeshAgentSystem::Update(float dt)
@@ -78,8 +84,7 @@ namespace Ermine
             {
                 if (++agent.currentCorner >= agent.path.size())
                 {
-                    agent.hasPath = false; // Path complete
-                    EE_CORE_INFO("[NavMeshAgentSystem] Entity %u reached destination", e);
+                    agent.hasPath = false;
                     continue;
                 }
                 else
@@ -103,8 +108,8 @@ namespace Ermine
                 if (ecs.HasComponent<GlobalTransform>(e))
                 {
                     auto& global = ecs.GetComponent<GlobalTransform>(e);
-                    global.worldMatrix = trans.GetLocalMatrix(); // build from updated Transform
-                    global.isDirty = true; // mark as changed for renderer
+                    global.worldMatrix = trans.GetLocalMatrix();
+                    global.isDirty = true;
                 }
 
                 if (ecs.HasComponent<HierarchyComponent>(e))
@@ -114,14 +119,11 @@ namespace Ermine
                 }
             }
 
-            // Debug info
-            EE_CORE_TRACE("[NavMeshAgentSystem] Entity %u -> (%.2f, %.2f, %.2f)", e, trans.position.x, trans.position.y, trans.position.z);
-
 #if defined(EE_EDITOR)
-            // Draw the current path if debugDrawPath is true
+
             if (agent.debugDrawPath && !agent.path.empty())
             {
-                Vec3 color = { 0.0f, 0.4f, 1.0f };
+                Vec3 color = { 0.0f, 0.0f, 1.0f };
                 Vec3 offset = { 0.0f, 0.05f, 0.0f };
 
                 for (size_t i = 1; i < agent.path.size(); ++i)
@@ -139,13 +141,7 @@ namespace Ermine
         }
     }
 
-    // ------------------------------------------------------
-    // FindPath — delegates Detour work to NavMeshSystem
-    // ------------------------------------------------------
-    bool NavMeshAgentSystem::FindPath(EntityID /*agentEntity*/,
-        const Ermine::Vec3& startPos,
-        const Ermine::Vec3& endPos,
-        std::vector<Ermine::Vec3>& outPath)
+    bool NavMeshAgentSystem::FindPath(EntityID /*agentEntity*/, const Ermine::Vec3& startPos, const Ermine::Vec3& endPos, std::vector<Ermine::Vec3>& outPath)
     {
         auto& ecs = ECS::GetInstance();
 
@@ -157,18 +153,10 @@ namespace Ermine
         if (!navSystem)
             return false;
 
-        EE_CORE_INFO("[NavMeshAgentSystem] FindPath start=(%.2f, %.2f, %.2f) end=(%.2f, %.2f, %.2f)",
-            startPos.x, startPos.y, startPos.z, endPos.x, endPos.y, endPos.z);
-
         outPath.clear();
-        // NEW: ask NavMeshSystem to compute straight path; it can
-        // access its private runtime safely inside its TU.
         return navSystem->ComputeStraightPath(nearestNav, startPos, endPos, outPath);
     }
 
-    // ------------------------------------------------------
-    // FindNearestNavMeshEntity — scan valid entities that have NavMeshComponent
-    // ------------------------------------------------------
     EntityID NavMeshAgentSystem::FindNearestNavMeshEntity(const Ermine::Vec3& pos)
     {
         auto& ecs = ECS::GetInstance();
@@ -176,7 +164,6 @@ namespace Ermine
         EntityID best = 0;
         float bestDistSq = FLT_MAX;
 
-        // Brute force scan; consistent with your existing style (see Engine.cpp)
         for (EntityID e = 1; e < MAX_ENTITIES; ++e)
         {
             if (!ecs.IsEntityValid(e)) continue;

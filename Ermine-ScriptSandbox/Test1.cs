@@ -20,7 +20,7 @@ public class Test1 : MonoBehaviour
         stateTimer += Time.deltaTime;
         if (stateTimer >= switchTime)
         {
-            Debug.Log("Test1 requesting transition to next state");
+            //Debug.Log("Test1 requesting transition to next state");
             StateMachine.RequestNextState((ulong)gameObject.GetInstanceID());
             stateTimer = 0f;
         }

@@ -247,8 +247,35 @@ namespace Ermine::graphics
         void RenderDebugLines(const glm::mat4& view, const glm::mat4& proj);
         void RenderDebugLines(const Mtx44& view, const Mtx44& proj);
 
-        // NavMesh
+        /*!***********************************************************************
+        \brief
+         Adds a filled debug triangle to the renderer’s internal vertex list for
+         visualization purposes. The triangle will be rendered during the next call
+         to RenderDebugTriangles().
+        \param[in] a
+         The first vertex position of the triangle in world space.
+        \param[in] b
+         The second vertex position of the triangle in world space.
+        \param[in] c
+         The third vertex position of the triangle in world space.
+        \param[in] color
+         The RGB color of the triangle to render.
+        \return
+         None.
+        *************************************************************************/
         void SubmitDebugTriangle(const glm::vec3& a, const glm::vec3& b, const glm::vec3& c, const glm::vec3& color);
+        /*!***********************************************************************
+        \brief
+         Renders all submitted debug triangles in 3D space using the provided
+         view and projection matrices. This is typically used for visualizing
+         geometry such as collision shapes, navigation meshes, or debug overlays.
+        \param[in] view
+         The view matrix representing the current camera orientation and position.
+        \param[in] proj
+         The projection matrix defining the camera’s perspective or orthographic view.
+        \return
+         None.
+        *************************************************************************/
         void RenderDebugTriangles(const Mtx44& view, const Mtx44& proj);
 
         /**
