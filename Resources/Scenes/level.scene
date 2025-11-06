@@ -10,10 +10,10 @@
             0.0
           ],
           "rotation": [
+            0.8754260540008545,
             0.4082179069519043,
             -0.23456971347332,
-            0.10938165336847305,
-            0.8754260540008545
+            0.10938165336847305
           ],
           "scale": [
             1.0,
@@ -28,7 +28,7 @@
             1.0
           ],
           "intensity": 1.0,
-          "type": "Directional",
+          "type": "Point",
           "castsShadows": true,
           "innerAngle": -1.0,
           "outerAngle": -1.0,
@@ -69,7 +69,7 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Starting Platform",
+          "name": "Start Platform",
           "tag": "Untagged",
           "selfActive": true
         },
@@ -103,16 +103,20 @@
               0.0
             ],
             "materialEmissiveIntensity": 1.0,
-            "materialHasAlbedoMap": true
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": false,
+            "materialHasRoughnessMap": false,
+            "materialHasMetallicMap": false,
+            "materialHasAoMap": false
           },
           "textures": [
             {
               "slot": "materialAlbedoMap",
-              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\floor.png"
+              "path": "../Resources\\Textures\\floor.png"
             },
             {
               "slot": "material.albedoMap",
-              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\floor.png"
+              "path": "../Resources\\Textures\\floor.png"
             }
           ],
           "uvScale": [
@@ -126,10 +130,7 @@
         },
         "HierarchyComponent": {
           "parent": 0,
-          "children": [
-            3,
-            5
-          ],
+          "children": [],
           "depth": 0
         },
         "GlobalTransform": {}
@@ -140,7 +141,7 @@
       "components": {
         "Transform": {
           "position": [
-            -1.0,
+            -5.0,
             0.0,
             0.0
           ],
@@ -151,13 +152,13 @@
             1.0
           ],
           "scale": [
-            1.0,
-            1.0,
-            1.0
+            5.0,
+            0.5,
+            5.0
           ]
         },
         "ObjectMetaData": {
-          "name": "Starting Platform",
+          "name": "Start Platform (1)",
           "tag": "Untagged",
           "selfActive": true
         },
@@ -196,11 +197,11 @@
           "textures": [
             {
               "slot": "materialAlbedoMap",
-              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\floor.png"
+              "path": "../Resources\\Textures\\floor.png"
             },
             {
               "slot": "material.albedoMap",
-              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\floor.png"
+              "path": "../Resources\\Textures\\floor.png"
             }
           ],
           "uvScale": [
@@ -213,9 +214,94 @@
           ]
         },
         "HierarchyComponent": {
-          "parent": 2,
+          "parent": 0,
           "children": [],
-          "depth": 1
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 4,
+      "components": {
+        "Transform": {
+          "position": [
+            5.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            5.0,
+            0.5,
+            5.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Start Platform (2)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cube",
+            "size": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "materialAlpha": 1.0,
+            "materialTransparency": 0.0,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.5,
+            "materialEmissive": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 1.0,
+            "materialHasAlbedoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources\\Textures\\floor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources\\Textures\\floor.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parent": 0,
+          "children": [],
+          "depth": 0
         },
         "GlobalTransform": {}
       }
@@ -225,9 +311,9 @@
       "components": {
         "Transform": {
           "position": [
-            1.0,
+            12.0,
             0.0,
-            0.0
+            -12.0
           ],
           "rotation": [
             0.0,
@@ -236,94 +322,9 @@
             1.0
           ],
           "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Starting Platform",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "Mesh": {
-          "kind": "Primitive",
-          "primitive": {
-            "type": "Cube",
-            "size": [
-              1.0,
-              1.0,
-              1.0
-            ]
-          }
-        },
-        "Material": {
-          "hasMaterial": true,
-          "params": {
-            "materialAlbedo": [
-              1.0,
-              1.0,
-              1.0,
-              1.0
-            ],
-            "materialAlpha": 1.0,
-            "materialTransparency": 0.0,
-            "materialMetallic": 0.0,
-            "materialRoughness": 0.5,
-            "materialEmissive": [
-              0.0,
-              0.0,
-              0.0
-            ],
-            "materialEmissiveIntensity": 1.0,
-            "materialHasAlbedoMap": true
-          },
-          "textures": [
-            {
-              "slot": "materialAlbedoMap",
-              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\floor.png"
-            },
-            {
-              "slot": "material.albedoMap",
-              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\floor.png"
-            }
-          ],
-          "uvScale": [
-            1.0,
-            1.0
-          ],
-          "uvOffset": [
-            0.0,
-            0.0
-          ]
-        },
-        "HierarchyComponent": {
-          "parent": 2,
-          "children": [],
-          "depth": 1
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "id": 6,
-      "components": {
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            -6.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            2.5,
+            4.0,
             0.5,
-            5.0
+            2.5
           ]
         },
         "ObjectMetaData": {
@@ -366,11 +367,11 @@
           "textures": [
             {
               "slot": "materialAlbedoMap",
-              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\floor.png"
+              "path": "../Resources\\Textures\\floor.png"
             },
             {
               "slot": "material.albedoMap",
-              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\floor.png"
+              "path": "../Resources\\Textures\\floor.png"
             }
           ],
           "uvScale": [
@@ -391,13 +392,13 @@
       }
     },
     {
-      "id": 7,
+      "id": 6,
       "components": {
         "Transform": {
           "position": [
-            12.0,
             0.0,
-            -12.0
+            0.0,
+            -6.0
           ],
           "rotation": [
             0.0,
@@ -406,9 +407,9 @@
             1.0
           ],
           "scale": [
-            4.0,
+            2.5,
             0.5,
-            2.0
+            5.0
           ]
         },
         "ObjectMetaData": {
@@ -451,11 +452,96 @@
           "textures": [
             {
               "slot": "materialAlbedoMap",
-              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\floor.png"
+              "path": "../Resources\\Textures\\floor.png"
             },
             {
               "slot": "material.albedoMap",
-              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\floor.png"
+              "path": "../Resources\\Textures\\floor.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parent": 0,
+          "children": [],
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 7,
+      "components": {
+        "Transform": {
+          "position": [
+            -5.0,
+            0.0,
+            -13.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            2.0,
+            0.5,
+            5.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Rotate Platform",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cube",
+            "size": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "materialAlpha": 1.0,
+            "materialTransparency": 0.0,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.5,
+            "materialEmissive": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 1.0,
+            "materialHasAlbedoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources\\Textures\\floor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources\\Textures\\floor.png"
             }
           ],
           "uvScale": [
@@ -480,9 +566,9 @@
       "components": {
         "Transform": {
           "position": [
-            -5.0,
+            -10.0,
             0.0,
-            -13.0
+            -20.0
           ],
           "rotation": [
             0.0,
@@ -491,13 +577,13 @@
             1.0
           ],
           "scale": [
-            2.0,
+            5.0,
             0.5,
             5.0
           ]
         },
         "ObjectMetaData": {
-          "name": "Rotating Platform",
+          "name": "Left Platform",
           "tag": "Untagged",
           "selfActive": true
         },
@@ -536,11 +622,11 @@
           "textures": [
             {
               "slot": "materialAlbedoMap",
-              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\floor.png"
+              "path": "../Resources\\Textures\\floor.png"
             },
             {
               "slot": "material.albedoMap",
-              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\floor.png"
+              "path": "../Resources\\Textures\\floor.png"
             }
           ],
           "uvScale": [
@@ -565,96 +651,9 @@
       "components": {
         "Transform": {
           "position": [
-            -10.0,
+            12.0,
             0.0,
-            -20.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            5.0,
-            0.5,
-            5.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Leftside Platform",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "Mesh": {
-          "kind": "Primitive",
-          "primitive": {
-            "type": "Cube",
-            "size": [
-              1.0,
-              1.0,
-              1.0
-            ]
-          }
-        },
-        "Material": {
-          "hasMaterial": true,
-          "params": {
-            "materialAlbedo": [
-              1.0,
-              1.0,
-              1.0,
-              1.0
-            ],
-            "materialAlpha": 1.0,
-            "materialTransparency": 0.0,
-            "materialMetallic": 0.0,
-            "materialRoughness": 0.5,
-            "materialEmissive": [
-              0.0,
-              0.0,
-              0.0
-            ],
-            "materialEmissiveIntensity": 1.0,
-            "materialHasAlbedoMap": true
-          },
-          "textures": [
-            {
-              "slot": "materialAlbedoMap",
-              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\floor.png"
-            },
-            {
-              "slot": "material.albedoMap",
-              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\floor.png"
-            }
-          ],
-          "uvScale": [
-            1.0,
-            1.0
-          ],
-          "uvOffset": [
-            0.0,
-            0.0
-          ]
-        },
-        "HierarchyComponent": {
-          "parent": 0,
-          "children": [
-            18
-          ],
-          "depth": 0
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "id": 10,
-      "components": {
-        "Transform": {
-          "position": [
-            10.0,
-            0.0,
-            -20.0
+            -19.0
           ],
           "rotation": [
             0.0,
@@ -669,7 +668,7 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Rotating Platform",
+          "name": "Rotate Platform",
           "tag": "Untagged",
           "selfActive": true
         },
@@ -708,11 +707,96 @@
           "textures": [
             {
               "slot": "materialAlbedoMap",
-              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\floor.png"
+              "path": "../Resources\\Textures\\floor.png"
             },
             {
               "slot": "material.albedoMap",
-              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\floor.png"
+              "path": "../Resources\\Textures\\floor.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parent": 0,
+          "children": [],
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 10,
+      "components": {
+        "Transform": {
+          "position": [
+            20.0,
+            0.0,
+            -15.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            5.0,
+            0.5,
+            5.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Right Platform",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cube",
+            "size": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "materialAlpha": 1.0,
+            "materialTransparency": 0.0,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.5,
+            "materialEmissive": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 1.0,
+            "materialHasAlbedoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources\\Textures\\floor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources\\Textures\\floor.png"
             }
           ],
           "uvScale": [
@@ -737,7 +821,7 @@
       "components": {
         "Transform": {
           "position": [
-            19.0,
+            20.0,
             0.0,
             -10.0
           ],
@@ -754,7 +838,7 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Rightside Platform",
+          "name": "Right Platform (1)",
           "tag": "Untagged",
           "selfActive": true
         },
@@ -793,11 +877,11 @@
           "textures": [
             {
               "slot": "materialAlbedoMap",
-              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\floor.png"
+              "path": "../Resources\\Textures\\floor.png"
             },
             {
               "slot": "material.albedoMap",
-              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\floor.png"
+              "path": "../Resources\\Textures\\floor.png"
             }
           ],
           "uvScale": [
@@ -811,22 +895,20 @@
         },
         "HierarchyComponent": {
           "parent": 0,
-          "children": [
-            13
-          ],
+          "children": [],
           "depth": 0
         },
         "GlobalTransform": {}
       }
     },
     {
-      "id": 13,
+      "id": 12,
       "components": {
         "Transform": {
           "position": [
+            -10.0,
             0.0,
-            0.0,
-            -1.0
+            -25.0
           ],
           "rotation": [
             0.0,
@@ -835,13 +917,13 @@
             1.0
           ],
           "scale": [
-            1.0,
-            1.0,
-            1.0
+            5.0,
+            0.5,
+            5.0
           ]
         },
         "ObjectMetaData": {
-          "name": "Rightside Platform",
+          "name": "Left Platform (1)",
           "tag": "Untagged",
           "selfActive": true
         },
@@ -880,11 +962,11 @@
           "textures": [
             {
               "slot": "materialAlbedoMap",
-              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\floor.png"
+              "path": "../Resources\\Textures\\floor.png"
             },
             {
               "slot": "material.albedoMap",
-              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\floor.png"
+              "path": "../Resources\\Textures\\floor.png"
             }
           ],
           "uvScale": [
@@ -897,9 +979,94 @@
           ]
         },
         "HierarchyComponent": {
-          "parent": 11,
+          "parent": 0,
           "children": [],
-          "depth": 1
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 13,
+      "components": {
+        "Transform": {
+          "position": [
+            2.5,
+            0.0,
+            -32.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            5.0,
+            5.0,
+            5.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "End Platform",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cube",
+            "size": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "materialAlpha": 1.0,
+            "materialTransparency": 0.0,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.5,
+            "materialEmissive": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 1.0,
+            "materialHasAlbedoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources\\Textures\\floor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources\\Textures\\floor.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parent": 0,
+          "children": [],
+          "depth": 0
         },
         "GlobalTransform": {}
       }
@@ -909,9 +1076,94 @@
       "components": {
         "Transform": {
           "position": [
+            5.0,
+            0.0,
+            -12.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            5.0,
+            0.5,
+            5.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Platform (3)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cube",
+            "size": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "materialAlpha": 1.0,
+            "materialTransparency": 0.0,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.5,
+            "materialEmissive": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 1.0,
+            "materialHasAlbedoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources\\Textures\\floor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources\\Textures\\floor.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parent": 0,
+          "children": [],
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 15,
+      "components": {
+        "Transform": {
+          "position": [
             12.0,
             0.0,
-            -27.5
+            -26.0
           ],
           "rotation": [
             0.0,
@@ -965,96 +1217,11 @@
           "textures": [
             {
               "slot": "materialAlbedoMap",
-              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\floor.png"
+              "path": "../Resources\\Textures\\floor.png"
             },
             {
               "slot": "material.albedoMap",
-              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\floor.png"
-            }
-          ],
-          "uvScale": [
-            1.0,
-            1.0
-          ],
-          "uvOffset": [
-            0.0,
-            0.0
-          ]
-        },
-        "HierarchyComponent": {
-          "parent": 0,
-          "children": [],
-          "depth": 0
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "id": 15,
-      "components": {
-        "Transform": {
-          "position": [
-            5.0,
-            0.0,
-            -12.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            4.0,
-            0.5,
-            4.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Platform (3)",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "Mesh": {
-          "kind": "Primitive",
-          "primitive": {
-            "type": "Cube",
-            "size": [
-              1.0,
-              1.0,
-              1.0
-            ]
-          }
-        },
-        "Material": {
-          "hasMaterial": true,
-          "params": {
-            "materialAlbedo": [
-              1.0,
-              1.0,
-              1.0,
-              1.0
-            ],
-            "materialAlpha": 1.0,
-            "materialTransparency": 0.0,
-            "materialMetallic": 0.0,
-            "materialRoughness": 0.5,
-            "materialEmissive": [
-              0.0,
-              0.0,
-              0.0
-            ],
-            "materialEmissiveIntensity": 1.0,
-            "materialHasAlbedoMap": true
-          },
-          "textures": [
-            {
-              "slot": "materialAlbedoMap",
-              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\floor.png"
-            },
-            {
-              "slot": "material.albedoMap",
-              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\floor.png"
+              "path": "../Resources\\Textures\\floor.png"
             }
           ],
           "uvScale": [
@@ -1081,7 +1248,7 @@
           "position": [
             0.0,
             0.0,
-            -32.0
+            -20.0
           ],
           "rotation": [
             0.0,
@@ -1096,7 +1263,7 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Ending Platform",
+          "name": "Platform (5)",
           "tag": "Untagged",
           "selfActive": true
         },
@@ -1135,11 +1302,11 @@
           "textures": [
             {
               "slot": "materialAlbedoMap",
-              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\floor.png"
+              "path": "../Resources\\Textures\\floor.png"
             },
             {
               "slot": "material.albedoMap",
-              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\floor.png"
+              "path": "../Resources\\Textures\\floor.png"
             }
           ],
           "uvScale": [
@@ -1153,23 +1320,20 @@
         },
         "HierarchyComponent": {
           "parent": 0,
-          "children": [
-            21,
-            22
-          ],
+          "children": [],
           "depth": 0
         },
         "GlobalTransform": {}
       }
     },
     {
-      "id": 18,
+      "id": 17,
       "components": {
         "Transform": {
           "position": [
+            -2.5,
             0.0,
-            0.0,
-            -1.0
+            -32.0
           ],
           "rotation": [
             0.0,
@@ -1178,13 +1342,13 @@
             1.0
           ],
           "scale": [
-            1.0,
-            1.0,
-            1.0
+            5.0,
+            5.0,
+            5.0
           ]
         },
         "ObjectMetaData": {
-          "name": "Leftside Platform",
+          "name": "End Platform (1)",
           "tag": "Untagged",
           "selfActive": true
         },
@@ -1223,11 +1387,11 @@
           "textures": [
             {
               "slot": "materialAlbedoMap",
-              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\floor.png"
+              "path": "../Resources\\Textures\\floor.png"
             },
             {
               "slot": "material.albedoMap",
-              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\floor.png"
+              "path": "../Resources\\Textures\\floor.png"
             }
           ],
           "uvScale": [
@@ -1240,21 +1404,21 @@
           ]
         },
         "HierarchyComponent": {
-          "parent": 9,
+          "parent": 0,
           "children": [],
-          "depth": 1
+          "depth": 0
         },
         "GlobalTransform": {}
       }
     },
     {
-      "id": 19,
+      "id": 18,
       "components": {
         "Transform": {
           "position": [
-            0.0,
-            0.0,
-            -20.0
+            3.5,
+            -5.0,
+            -16.0
           ],
           "rotation": [
             0.0,
@@ -1263,13 +1427,13 @@
             1.0
           ],
           "scale": [
-            4.0,
+            40.0,
             0.5,
-            4.0
+            40.0
           ]
         },
         "ObjectMetaData": {
-          "name": "Platform (2)",
+          "name": "Floor",
           "tag": "Untagged",
           "selfActive": true
         },
@@ -1303,16 +1467,189 @@
               0.0
             ],
             "materialEmissiveIntensity": 1.0,
-            "materialHasAlbedoMap": true
+            "materialHasAlbedoMap": true,
+            "materialHasAoMap": false
           },
           "textures": [
             {
               "slot": "materialAlbedoMap",
-              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\floor.png"
+              "path": "../Resources\\Textures\\seemlessbricktexture.png"
             },
             {
               "slot": "material.albedoMap",
-              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\floor.png"
+              "path": "../Resources\\Textures\\seemlessbricktexture.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parent": 0,
+          "children": [],
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 19,
+      "components": {
+        "Transform": {
+          "position": [
+            -16.5,
+            2.700000047683716,
+            -16.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.5,
+            15.0,
+            40.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Wall",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cube",
+            "size": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "materialAlpha": 1.0,
+            "materialTransparency": 0.0,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.5,
+            "materialEmissive": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 1.0,
+            "materialHasAlbedoMap": true,
+            "materialHasAoMap": false
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources\\Textures\\seemlessbricktexture.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources\\Textures\\seemlessbricktexture.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parent": 0,
+          "children": [],
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 20,
+      "components": {
+        "Transform": {
+          "position": [
+            3.5,
+            2.700000047683716,
+            4.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            40.0,
+            15.0,
+            0.5
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Wall (1)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cube",
+            "size": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "materialAlpha": 1.0,
+            "materialTransparency": 0.0,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.5,
+            "materialEmissive": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 1.0,
+            "materialHasAlbedoMap": true,
+            "materialHasAoMap": false
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources\\Textures\\seemlessbricktexture.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources\\Textures\\seemlessbricktexture.png"
             }
           ],
           "uvScale": [
@@ -1337,9 +1674,9 @@
       "components": {
         "Transform": {
           "position": [
-            1.0,
-            0.0,
-            0.0
+            23.5,
+            2.700000047683716,
+            -16.0
           ],
           "rotation": [
             0.0,
@@ -1348,13 +1685,13 @@
             1.0
           ],
           "scale": [
-            1.0,
-            1.0,
-            1.0
+            0.5,
+            15.0,
+            40.0
           ]
         },
         "ObjectMetaData": {
-          "name": "Ending Platform",
+          "name": "Wall (2)",
           "tag": "Untagged",
           "selfActive": true
         },
@@ -1388,16 +1725,17 @@
               0.0
             ],
             "materialEmissiveIntensity": 1.0,
-            "materialHasAlbedoMap": true
+            "materialHasAlbedoMap": true,
+            "materialHasAoMap": false
           },
           "textures": [
             {
               "slot": "materialAlbedoMap",
-              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\floor.png"
+              "path": "../Resources\\Textures\\seemlessbricktexture.png"
             },
             {
               "slot": "material.albedoMap",
-              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\floor.png"
+              "path": "../Resources\\Textures\\seemlessbricktexture.png"
             }
           ],
           "uvScale": [
@@ -1410,9 +1748,9 @@
           ]
         },
         "HierarchyComponent": {
-          "parent": 16,
+          "parent": 0,
           "children": [],
-          "depth": 1
+          "depth": 0
         },
         "GlobalTransform": {}
       }
@@ -1422,9 +1760,9 @@
       "components": {
         "Transform": {
           "position": [
-            -1.0,
-            0.0,
-            0.0
+            3.5,
+            2.700000047683716,
+            -36.0
           ],
           "rotation": [
             0.0,
@@ -1433,13 +1771,13 @@
             1.0
           ],
           "scale": [
-            1.0,
-            1.0,
-            1.0
+            40.0,
+            15.0,
+            0.5
           ]
         },
         "ObjectMetaData": {
-          "name": "Ending Platform",
+          "name": "Wall (3)",
           "tag": "Untagged",
           "selfActive": true
         },
@@ -1473,16 +1811,17 @@
               0.0
             ],
             "materialEmissiveIntensity": 1.0,
-            "materialHasAlbedoMap": true
+            "materialHasAlbedoMap": true,
+            "materialHasAoMap": false
           },
           "textures": [
             {
               "slot": "materialAlbedoMap",
-              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\floor.png"
+              "path": "../Resources\\Textures\\seemlessbricktexture.png"
             },
             {
               "slot": "material.albedoMap",
-              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\floor.png"
+              "path": "../Resources\\Textures\\seemlessbricktexture.png"
             }
           ],
           "uvScale": [
@@ -1495,9 +1834,95 @@
           ]
         },
         "HierarchyComponent": {
-          "parent": 16,
+          "parent": 0,
           "children": [],
-          "depth": 1
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 23,
+      "components": {
+        "Transform": {
+          "position": [
+            3.5,
+            10.0,
+            -16.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            40.0,
+            0.5,
+            40.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Ceiling",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cube",
+            "size": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "materialAlpha": 1.0,
+            "materialTransparency": 0.0,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.5,
+            "materialEmissive": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 1.0,
+            "materialHasAlbedoMap": true,
+            "materialHasAoMap": false
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources\\Textures\\seemlessbricktexture.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources\\Textures\\seemlessbricktexture.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parent": 0,
+          "children": [],
+          "depth": 0
         },
         "GlobalTransform": {}
       }
