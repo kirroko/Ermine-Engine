@@ -111,7 +111,171 @@ void GlobalAudioComponent::AddSFXSource(const std::string& name, const std::stri
     sfx.push_back(newSFX);
 }
 
+void GlobalAudioComponent::PlayAmbience(int index) {
+    AudioSystem::PlayGlobalAmbience(*this, index);
+}
 
+void GlobalAudioComponent::PlayAmbience(const std::string& name) {
+    AudioSystem::PlayGlobalAmbience(*this, name);
+}
+
+void GlobalAudioComponent::StopAmbience() {
+    AudioSystem::StopGlobalAmbience(*this);
+}
+
+void GlobalAudioComponent::SetAmbienceVolume(float volume) {
+    ambienceVolume = std::clamp(volume, 0.0f, 1.0f);
+
+    // Update currently playing ambience volume
+    if (currentAmbienceChannelId != -1 &&
+        currentAmbienceIndex >= 0 &&
+        currentAmbienceIndex < ambience.size()) {
+        const auto& ambienceSource = ambience[currentAmbienceIndex];
+        float finalVolume = AudioSystem::ConvertVolumeToFMOD(
+            ambienceSource.volume * masterVolume * ambienceVolume
+        );
+        CAudioEngine::SetChannelVolume(currentAmbienceChannelId, finalVolume);
+    }
+}
+
+int GlobalAudioComponent::GetAmbienceIndex(const std::string& name) const {
+    for (size_t i = 0; i < ambience.size(); ++i) {
+        if (ambience[i].audioName == name) {
+            return static_cast<int>(i);
+        }
+    }
+    return -1;
+}
+
+void GlobalAudioComponent::AddAmbienceSource(const std::string& name, const std::string& path) {
+    // Check if ambience with this name already exists
+    for (const auto& amb : ambience) {
+        if (amb.audioName == name) {
+            std::cout << "Ambience '" << name << "' already exists!" << std::endl;
+            return;
+        }
+    }
+
+    // Add new ambience source
+    AudioSource newAmbience;
+    newAmbience.audioName = name;
+    newAmbience.audioPath = path;
+    newAmbience.volume = 1.0f;
+    ambience.push_back(newAmbience);
+}
+
+void GlobalAudioComponent::UpdateAmbienceSource(int index, const std::string& name, const std::string& path) {
+    if (index >= 0 && index < static_cast<int>(ambience.size())) {
+        // Stop current ambience if we're updating the currently playing track
+        if (currentAmbienceIndex == index && currentAmbienceChannelId != -1) {
+            CAudioEngine::StopChannel(currentAmbienceChannelId);
+            currentAmbienceChannelId = -1;
+        }
+
+        // Update the ambience source
+        ambience[index].audioName = name;
+        ambience[index].audioPath = path;
+
+        // Reload the sound with new path
+        try {
+            CAudioEngine::LoadSound(path, false, true, true); // Looped and streamed
+        }
+        catch (const std::exception& e) {
+            (void)e;
+            UNREFERENCED_PARAMETER(e);
+        }
+    }
+}
+
+void GlobalAudioComponent::RemoveAmbienceSource(int index) {
+    if (index >= 0 && index < static_cast<int>(ambience.size())) {
+        // Stop current ambience if we're removing the currently playing track
+        if (currentAmbienceIndex == index && currentAmbienceChannelId != -1) {
+            CAudioEngine::StopChannel(currentAmbienceChannelId);
+            currentAmbienceChannelId = -1;
+            currentAmbienceIndex = -1;
+        }
+        else if (currentAmbienceIndex > index) {
+            currentAmbienceIndex--;
+        }
+
+        ambience.erase(ambience.begin() + index);
+    }
+}
+
+const AudioSource* GlobalAudioComponent::GetAmbienceSource(int index) const {
+    if (index >= 0 && index < static_cast<int>(ambience.size())) {
+        return &ambience[index];
+    }
+    return nullptr;
+}
+
+int GlobalAudioComponent::FindAmbienceIndex(const std::string& name) const {
+    for (size_t i = 0; i < ambience.size(); ++i) {
+        if (ambience[i].audioName == name) {
+            return static_cast<int>(i);
+        }
+    }
+    return -1;
+}
+
+
+// ========== AudioSystem Static Methods ==========
+
+void AudioSystem::PlayGlobalAmbience(GlobalAudioComponent& globalAudio, int index)
+{
+    if (index < 0 || index >= globalAudio.ambience.size())
+        return;
+
+    // Stop current ambience if playing
+    StopGlobalAmbience(globalAudio);
+
+    const auto& ambienceSource = globalAudio.ambience[index];
+
+    // Load and play the ambience (2D, looping, streaming)
+    CAudioEngine::LoadSound(ambienceSource.audioPath, false, true, true);
+
+    // Convert volume from 0-1 to dB and apply master/ambience volume
+    float finalVolume = ConvertVolumeToFMOD(
+        ambienceSource.volume * globalAudio.masterVolume * globalAudio.ambienceVolume
+    );
+
+    // Play the ambience
+    Vector3D position(0.0f, 0.0f, 0.0f);
+    globalAudio.currentAmbienceChannelId = CAudioEngine::PlaySounds(
+        ambienceSource.audioPath, position, finalVolume
+    );
+    globalAudio.currentAmbienceIndex = index;
+
+    std::cout << "Playing ambience: " << ambienceSource.audioName << std::endl;
+}
+
+void AudioSystem::PlayGlobalAmbience(GlobalAudioComponent& globalAudio, const std::string& name)
+{
+    // Find the ambience by name
+    for (size_t i = 0; i < globalAudio.ambience.size(); ++i)
+    {
+        if (globalAudio.ambience[i].audioName == name)
+        {
+            PlayGlobalAmbience(globalAudio, static_cast<int>(i));
+            return;
+        }
+    }
+
+    // Ambience not found
+    std::cout << "Ambience '" << name << "' not found in GlobalAudioComponent" << std::endl;
+}
+
+void AudioSystem::StopGlobalAmbience(GlobalAudioComponent& globalAudio)
+{
+    if (globalAudio.currentAmbienceChannelId != -1)
+    {
+        CAudioEngine::StopChannel(globalAudio.currentAmbienceChannelId);
+        globalAudio.currentAmbienceChannelId = -1;
+        globalAudio.currentAmbienceIndex = -1;
+        std::cout << "Stopped ambience" << std::endl;
+    }
+}
 
 void AudioSystem::Init()
 {
@@ -160,6 +324,8 @@ void AudioSystem::Update()
                     auto& globalAudio = ecs.GetComponent<GlobalAudioComponent>(entity);
                     globalAudio.currentMusicChannelId = -1;
                     globalAudio.currentMusicIndex = -1;
+                    globalAudio.currentAmbienceChannelId = -1;  
+                    globalAudio.currentAmbienceIndex = -1;      
                     break;
                 }
             }
@@ -198,6 +364,12 @@ void AudioSystem::Update()
             !globalAudio.music.empty())
         {
             PlayGlobalMusic(globalAudio, 0);
+        }
+
+        // Auto-play ambience if not already playing
+        if (globalAudio.currentAmbienceChannelId == -1 && !globalAudio.ambience.empty())
+        {
+            PlayGlobalAmbience(globalAudio, 0);
         }
 
         UpdateGlobalAudio(globalAudio);
@@ -399,6 +571,16 @@ void AudioSystem::UpdateGlobalAudio(GlobalAudioComponent& globalAudio)
         {
             globalAudio.currentMusicChannelId = -1;
             globalAudio.currentMusicIndex = -1;
+        }
+    }
+
+    // *** NEW: Check if current ambience is still playing ***
+    if (globalAudio.currentAmbienceChannelId != -1)
+    {
+        if (!CAudioEngine::IsPlaying(globalAudio.currentAmbienceChannelId))
+        {
+            globalAudio.currentAmbienceChannelId = -1;
+            globalAudio.currentAmbienceIndex = -1;
         }
     }
 }

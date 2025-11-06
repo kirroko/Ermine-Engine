@@ -1438,11 +1438,13 @@ namespace Ermine
 	{
 		std::vector<AudioSource> music; // Music category
 		std::vector<AudioSource> sfx;   // SFX category
+		std::vector<AudioSource> ambience;
 
 		// Global volume controls
 		float masterVolume{ 1.0f };
 		float musicVolume{ 1.0f };
 		float sfxVolume{ 1.0f };
+		float ambienceVolume{ 1.0f };  // *** NEW ***
 
 		bool autoPlay{true};
 
@@ -1450,12 +1452,28 @@ namespace Ermine
 		int currentMusicIndex{ -1 };
 		int currentMusicChannelId{ -1 };
 
+		// *** NEW: Ambience tracking ***
+		int currentAmbienceIndex{ -1 };
+		int currentAmbienceChannelId{ -1 };
+
 		GlobalAudioComponent() = default;
 
 		// Music management
 		void PlayMusic(int index);
 		void StopMusic();
 		void SetMusicVolume(float volume);
+
+		// *** NEW: Ambience management ***
+		void PlayAmbience(int index);
+		void PlayAmbience(const std::string& name);
+		void StopAmbience();
+		void SetAmbienceVolume(float volume);
+		int GetAmbienceIndex(const std::string& name) const;
+		void AddAmbienceSource(const std::string& name, const std::string& path);
+		void UpdateAmbienceSource(int index, const std::string& name, const std::string& path);
+		void RemoveAmbienceSource(int index);
+		const AudioSource* GetAmbienceSource(int index) const;
+		int FindAmbienceIndex(const std::string& name) const;
 
 		// SFX management
 		void PlaySFX(int index);
@@ -1606,6 +1624,7 @@ namespace Ermine
 			out.AddMember("masterVolume", masterVolume, alloc);
 			out.AddMember("musicVolume", musicVolume, alloc);
 			out.AddMember("sfxVolume", sfxVolume, alloc);
+			out.AddMember("ambienceVolume", ambienceVolume, alloc);
 			out.AddMember("autoPlay", autoPlay, alloc);
 
 			auto writeList = [&](const std::vector<AudioSource>& list, const char* key) {
@@ -1621,11 +1640,13 @@ namespace Ermine
 				};
 			writeList(music, "music");
 			writeList(sfx, "sfx");
+			writeList(ambience, "ambience");
 		}
 		void Deserialize(const rapidjson::Value& in) {
 			if (in.HasMember("masterVolume")) masterVolume = in["masterVolume"].GetFloat();
 			if (in.HasMember("musicVolume")) musicVolume = in["musicVolume"].GetFloat();
 			if (in.HasMember("sfxVolume"))   sfxVolume = in["sfxVolume"].GetFloat();
+			if (in.HasMember("ambienceVolume")) ambienceVolume = in["ambienceVolume"].GetFloat();
 			if (in.HasMember("autoPlay"))    autoPlay = in["autoPlay"].GetBool();
 
 			auto readList = [&](const char* key, std::vector<AudioSource>& list) {
@@ -1642,8 +1663,11 @@ namespace Ermine
 				};
 			readList("music", music);
 			readList("sfx", sfx);
+			readList("ambience", ambience);
 
 			currentMusicIndex = -1; currentMusicChannelId = -1;
+			currentAmbienceIndex = -1;      // *** NEW ***
+			currentAmbienceChannelId = -1;  // *** NEW ***
 		}
 
 		XPROPERTY_DEF(
@@ -1651,6 +1675,7 @@ namespace Ermine
 			xproperty::obj_member<"masterVolume", &GlobalAudioComponent::masterVolume>,
 			xproperty::obj_member<"musicVolume", &GlobalAudioComponent::musicVolume>,
 			xproperty::obj_member<"sfxVolume", &GlobalAudioComponent::sfxVolume>,
+			xproperty::obj_member<"ambienceVolume", &GlobalAudioComponent::ambienceVolume>,
 			xproperty::obj_member<"autoPlay", &GlobalAudioComponent::autoPlay>
 		)
 	};

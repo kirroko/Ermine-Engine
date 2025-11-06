@@ -80,6 +80,8 @@ namespace Ermine
         bool m_ShowTesterSoundBrowser = false;
         bool m_ShowGlobalSFXBrowser = false;
         bool m_ShowGlobalMusicBrowser = false;
+        bool m_ShowGlobalAmbienceBrowser = false;
+        bool m_ShowEditAmbienceBrowser = false;
 
         int m_EditingMusicIndex = -1;
         int m_EditingSFXIndex = -1;
@@ -87,11 +89,15 @@ namespace Ermine
         char m_EditMusicPath[256] = "";
         char m_EditSFXName[256] = "";
         char m_EditSFXPath[256] = "";
+        char m_EditAmbienceName[256] = "";
+        char m_EditAmbiencePath[256] = "";
         bool m_ShowEditMusicBrowser = false;
         bool m_ShowEditSFXBrowser = false;
         bool m_ShowDeleteConfirmation = false;
         int m_DeleteTargetIndex = -1;
+        int m_EditingAmbienceIndex = -1;
         bool m_DeletingMusic = true;
+        int m_DeleteTargetType = 0; // 0 = Music, 1 = SFX, 2 = Ambience
 
         // Add these private methods to your AudioImGUI class:
         void RenderAudioBrowser();
@@ -103,6 +109,8 @@ namespace Ermine
         bool m_HasGlobalAudio = false;
         char m_GlobalMusicPath[256] = "../Resources/Audio/";
         char m_GlobalSFXPath[256] = "../Resources/Audio/";
+        char m_GlobalAmbienceName[256] = "";
+        char m_GlobalAmbiencePath[512] = "";
         char m_GlobalMusicName[128] = "test_music";
         char m_GlobalSFXName[128] = "test_sfx";
         void CreateTestGlobalAudioEntity();

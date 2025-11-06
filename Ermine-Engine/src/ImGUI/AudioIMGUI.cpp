@@ -1080,6 +1080,201 @@ namespace Ermine
             }
         }
 
+        // === AMBIENCE SECTION ===
+        if (ImGui::CollapsingHeader("Ambient Sounds", ImGuiTreeNodeFlags_DefaultOpen))
+        {
+            ImGui::Text("Ambience Tracks: %zu", globalAudio.ambience.size());
+
+            // Add new ambience track
+            ImGui::InputText("Ambience Name##GlobalAmbience", m_GlobalAmbienceName, sizeof(m_GlobalAmbienceName));
+
+            ImGui::Text("Ambience Path:");
+            ImGui::SameLine();
+            if (ImGui::Button("Browse##GlobalAmbienceBrowse"))
+            {
+                m_ShowGlobalAmbienceBrowser = true;
+            }
+            ImGui::InputText("##GlobalAmbiencePath", m_GlobalAmbiencePath, sizeof(m_GlobalAmbiencePath));
+
+            // Audio file browser popup for global ambience
+            if (m_ShowGlobalAmbienceBrowser)
+            {
+                ImGui::OpenPopup("Select Audio File##GlobalAmbience");
+            }
+
+            if (ImGui::BeginPopupModal("Select Audio File##GlobalAmbience", &m_ShowGlobalAmbienceBrowser))
+            {
+                RenderAudioBrowser();
+
+                if (ImGui::Button("Select") && !m_SelectedAudioFile.empty())
+                {
+                    strncpy_s(m_GlobalAmbiencePath, sizeof(m_GlobalAmbiencePath), m_SelectedAudioFile.c_str(), sizeof(m_GlobalAmbiencePath) - 1);
+                    m_GlobalAmbiencePath[sizeof(m_GlobalAmbiencePath) - 1] = '\0';
+                    m_ShowGlobalAmbienceBrowser = false;
+                    ImGui::CloseCurrentPopup();
+                }
+
+                ImGui::SameLine();
+                if (ImGui::Button("Cancel"))
+                {
+                    m_ShowGlobalAmbienceBrowser = false;
+                    ImGui::CloseCurrentPopup();
+                }
+
+                ImGui::EndPopup();
+            }
+
+            if (ImGui::Button("Add Ambience Track"))
+            {
+                if (strlen(m_GlobalAmbienceName) > 0 && strlen(m_GlobalAmbiencePath) > 0)
+                {
+                    globalAudio.AddAmbienceSource(m_GlobalAmbienceName, m_GlobalAmbiencePath);
+                    SetStatusMessage("Added ambience track: " + std::string(m_GlobalAmbienceName));
+
+                    memset(m_GlobalAmbienceName, 0, sizeof(m_GlobalAmbienceName));
+                    memset(m_GlobalAmbiencePath, 0, sizeof(m_GlobalAmbiencePath));
+                }
+            }
+
+            ImGui::Separator();
+
+            // Ambience volume control
+            if (ImGui::SliderFloat("Ambience Volume", &globalAudio.ambienceVolume, 0.0f, 1.0f))
+            {
+                globalAudio.SetAmbienceVolume(globalAudio.ambienceVolume);
+            }
+
+            // List existing ambience tracks
+            if (!globalAudio.ambience.empty())
+            {
+                ImGui::Text("Existing Ambience Tracks:");
+
+                for (size_t i = 0; i < globalAudio.ambience.size(); ++i)
+                {
+                    const auto& ambience = globalAudio.ambience[i];
+                    ImGui::PushID(("ambience_" + std::to_string(i)).c_str());
+
+                    if (m_EditingAmbienceIndex == static_cast<int>(i))
+                    {
+                        // Edit mode
+                        ImGui::Text("Editing Ambience %zu:", i);
+                        ImGui::InputText("Name##EditAmbience", m_EditAmbienceName, sizeof(m_EditAmbienceName));
+
+                        ImGui::Text("Path:");
+                        ImGui::SameLine();
+                        if (ImGui::Button("Browse##EditAmbienceBrowse"))
+                        {
+                            m_ShowEditAmbienceBrowser = true;
+                        }
+                        ImGui::InputText("##EditAmbiencePath", m_EditAmbiencePath, sizeof(m_EditAmbiencePath));
+
+                        if (ImGui::Button("Save"))
+                        {
+                            if (strlen(m_EditAmbienceName) > 0 && strlen(m_EditAmbiencePath) > 0)
+                            {
+                                globalAudio.UpdateAmbienceSource(i, m_EditAmbienceName, m_EditAmbiencePath);
+                                SetStatusMessage("Updated ambience track: " + std::string(m_EditAmbienceName));
+                                m_EditingAmbienceIndex = -1;
+                            }
+                        }
+                        ImGui::SameLine();
+                        if (ImGui::Button("Cancel"))
+                        {
+                            m_EditingAmbienceIndex = -1;
+                        }
+                    }
+                    else
+                    {
+                        // Display mode
+                        ImGui::Text("Ambience %zu: %s", i, ambience.audioName.c_str());
+                        ImGui::SameLine();
+
+                        if (ImGui::Button("Play by Index"))
+                        {
+                            globalAudio.PlayAmbience(static_cast<int>(i));
+                            SetStatusMessage("Playing ambience: " + ambience.audioName);
+                        }
+                        ImGui::SameLine();
+
+                        if (ImGui::Button("Play by Name"))
+                        {
+                            globalAudio.PlayAmbience(ambience.audioName);
+                            SetStatusMessage("Playing ambience by name: " + ambience.audioName);
+                        }
+                        ImGui::SameLine();
+
+                        if (ImGui::Button("Stop"))
+                        {
+                            globalAudio.StopAmbience();
+                            SetStatusMessage("Stopped ambience");
+                        }
+                        ImGui::SameLine();
+
+                        if (ImGui::Button("Edit"))
+                        {
+                            m_EditingAmbienceIndex = static_cast<int>(i);
+                            strncpy_s(m_EditAmbienceName, sizeof(m_EditAmbienceName), ambience.audioName.c_str(), sizeof(m_EditAmbienceName) - 1);
+                            strncpy_s(m_EditAmbiencePath, sizeof(m_EditAmbiencePath), ambience.audioPath.c_str(), sizeof(m_EditAmbiencePath) - 1);
+                            m_EditAmbienceName[sizeof(m_EditAmbienceName) - 1] = '\0';
+                            m_EditAmbiencePath[sizeof(m_EditAmbiencePath) - 1] = '\0';
+                        }
+                        ImGui::SameLine();
+
+                        if (ImGui::Button("Delete"))
+                        {
+                            m_ShowDeleteConfirmation = true;
+                            m_DeleteTargetIndex = static_cast<int>(i);
+                            m_DeleteTargetType = 2; // Ambience
+                        }
+
+                        if (ImGui::IsItemHovered())
+                        {
+                            ImGui::SetTooltip("Path: %s", ambience.audioPath.c_str());
+                        }
+                    }
+
+                    ImGui::PopID();
+                    ImGui::Separator();
+                }
+            }
+
+            // Edit ambience browser popup
+            if (m_ShowEditAmbienceBrowser)
+            {
+                ImGui::OpenPopup("Select Audio File##EditAmbience");
+            }
+
+            if (ImGui::BeginPopupModal("Select Audio File##EditAmbience", &m_ShowEditAmbienceBrowser))
+            {
+                RenderAudioBrowser();
+
+                if (ImGui::Button("Select") && !m_SelectedAudioFile.empty())
+                {
+                    strncpy_s(m_EditAmbiencePath, sizeof(m_EditAmbiencePath), m_SelectedAudioFile.c_str(), sizeof(m_EditAmbiencePath) - 1);
+                    m_EditAmbiencePath[sizeof(m_EditAmbiencePath) - 1] = '\0';
+                    m_ShowEditAmbienceBrowser = false;
+                    ImGui::CloseCurrentPopup();
+                }
+
+                ImGui::SameLine();
+                if (ImGui::Button("Cancel"))
+                {
+                    m_ShowEditAmbienceBrowser = false;
+                    ImGui::CloseCurrentPopup();
+                }
+
+                ImGui::EndPopup();
+            }
+
+            // Current ambience status
+            ImGui::Separator();
+            ImGui::Text("Current Ambience Index: %d", globalAudio.currentAmbienceIndex);
+            ImGui::Text("Current Ambience Channel: %d", globalAudio.currentAmbienceChannelId);
+            bool isAmbiencePlaying = (globalAudio.currentAmbienceChannelId != -1 &&
+                CAudioEngine::IsPlaying(globalAudio.currentAmbienceChannelId));
+            ImGui::Text("Ambience Playing: %s", isAmbiencePlaying ? "Yes" : "No");
+        }
+
         // === DELETE CONFIRMATION POPUP ===
         if (m_ShowDeleteConfirmation)
         {
@@ -1088,10 +1283,12 @@ namespace Ermine
 
         if (ImGui::BeginPopupModal("Confirm Delete", &m_ShowDeleteConfirmation, ImGuiWindowFlags_AlwaysAutoResize))
         {
-            const char* itemType = m_DeletingMusic ? "music track" : "SFX track";
-            const auto& targetItem = m_DeletingMusic ?
-                globalAudio.music[m_DeleteTargetIndex] :
-                globalAudio.sfx[m_DeleteTargetIndex];
+            const char* itemType = (m_DeleteTargetType == 0) ? "music track" :
+                (m_DeleteTargetType == 1) ? "SFX track" : "ambience track";
+
+            const auto& targetItem = (m_DeleteTargetType == 0) ? globalAudio.music[m_DeleteTargetIndex] :
+                (m_DeleteTargetType == 1) ? globalAudio.sfx[m_DeleteTargetIndex] :
+                globalAudio.ambience[m_DeleteTargetIndex];
 
             ImGui::Text("Are you sure you want to delete this %s?", itemType);
             ImGui::Text("Name: %s", targetItem.audioName.c_str());
@@ -1100,41 +1297,41 @@ namespace Ermine
 
             if (ImGui::Button("Yes, Delete"))
             {
-                if (m_DeletingMusic)
+                if (m_DeleteTargetType == 0) // Music
                 {
-                    // Stop music if it's currently playing this track
                     if (globalAudio.currentMusicIndex == m_DeleteTargetIndex)
-                    {
                         globalAudio.StopMusic();
-                    }
 
                     globalAudio.RemoveMusicSource(m_DeleteTargetIndex);
                     SetStatusMessage("Deleted music track: " + targetItem.audioName);
 
-                    // Reset editing state if we were editing this item
                     if (m_EditingMusicIndex == m_DeleteTargetIndex)
-                    {
                         m_EditingMusicIndex = -1;
-                    }
                     else if (m_EditingMusicIndex > m_DeleteTargetIndex)
-                    {
-                        m_EditingMusicIndex--; // Adjust index after deletion
-                    }
+                        m_EditingMusicIndex--;
                 }
-                else
+                else if (m_DeleteTargetType == 1) // SFX
                 {
                     globalAudio.RemoveSFXSource(m_DeleteTargetIndex);
                     SetStatusMessage("Deleted SFX track: " + targetItem.audioName);
 
-                    // Reset editing state if we were editing this item
                     if (m_EditingSFXIndex == m_DeleteTargetIndex)
-                    {
                         m_EditingSFXIndex = -1;
-                    }
                     else if (m_EditingSFXIndex > m_DeleteTargetIndex)
-                    {
-                        m_EditingSFXIndex--; // Adjust index after deletion
-                    }
+                        m_EditingSFXIndex--;
+                }
+                else // Ambience
+                {
+                    if (globalAudio.currentAmbienceIndex == m_DeleteTargetIndex)
+                        globalAudio.StopAmbience();
+
+                    globalAudio.RemoveAmbienceSource(m_DeleteTargetIndex);
+                    SetStatusMessage("Deleted ambience track: " + targetItem.audioName);
+
+                    if (m_EditingAmbienceIndex == m_DeleteTargetIndex)
+                        m_EditingAmbienceIndex = -1;
+                    else if (m_EditingAmbienceIndex > m_DeleteTargetIndex)
+                        m_EditingAmbienceIndex--;
                 }
 
                 m_ShowDeleteConfirmation = false;
