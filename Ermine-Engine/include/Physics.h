@@ -49,13 +49,24 @@ using namespace JPH;
 namespace Ermine
 {
 	// ------------------------------- Debug Settings -------------------------------
-	//! Settings for how bodies are visualized in the physics debug renderer.///////
+	/*!***********************************************************************
+		\brief
+			Settings for how bodies are visualized in the physics debug renderer.
+	*************************************************************************/
 	struct BodyDrawSettings
 	{
 		bool mDrawShapeWireframe = true;   // toggle wireframe drawing
 		bool mDrawInactiveBodies = true;   // draw inactive bodies
 		bool mDrawCenterOfMass = false;
 		bool mDrawBodyAxes = false;
+	};
+
+	struct RaycastHit
+	{
+		Vec3 point{};
+		Vec3 normal{};
+		float distance{};
+		EntityID entityID{};
 	};
 
 	// ------------------------------- Physics Class -------------------------------
@@ -132,7 +143,7 @@ namespace Ermine
 
 		/*!***********************************************************************
 		  \brief
-			Debug setting for drawing wireframe
+			BodyManager DrawSettings setup for draw debug
 		*************************************************************************/
 		void DrawDebug();
 
@@ -144,17 +155,27 @@ namespace Ermine
 
 		/*!***********************************************************************
 		  \brief
-			move debugrenderer
+			Connects a debug renderer for visualizing physics.
+		  \param[in] 
+			renderer Shared pointer to a custom debug renderer.
 		*************************************************************************/
 		void AttachDebugRenderer(std::shared_ptr<MyDebugRenderer> renderer);
 
-		//! Enumeration representing collision event type.
+		/*!***********************************************************************
+		  \brief
+			Enumeration representing collision event type.
+		*************************************************************************/
 		enum class CollisionEventType : char { Begin, Stay, End };
 
 		/*!***********************************************************************
-		  \brief
-			Handles collision events between two bodies, invoked when contact
-			is detected or ended.
+		  \brief 
+			Handles a collision event between two bodies.
+		  \param[in] 
+			a First body.
+		  \param[in] 
+			b Second body.
+		  \param[in] 
+			type Type of collision event (Begin, Stay, or End).
 		*************************************************************************/
 		void HandleCollisionEvent(const Body& a, const Body& b, CollisionEventType type);
 
@@ -165,23 +186,75 @@ namespace Ermine
 		void HandleCollisionEvent(JPH::BodyID a, JPH::BodyID b, CollisionEventType type);
 		
 		/*!***********************************************************************
-		  \brief
-			Performs a raycast and returns the first hit.
+		  \brief 
+			Performs a single raycast and returns the first intersection.
+		  \param[in] 
+			origin Start of the ray.
+		  \param[in] 
+			direction Normalized direction vector.
+		  \param[in] 
+			maxDistance Maximum distance of the ray.
+		  \param[out] 
+			outResult Populated with hit data if an intersection occurs.
+		  \return 
+			True if the ray hit a body, false otherwise.
 		*************************************************************************/
 		bool Raycast(const JPH::RVec3& origin, const JPH::RVec3& direction, float maxDistance, JPH::RayCastResult& outResult);
 
 		/*!***********************************************************************
-		  \brief
-			Performs a raycast and returns all hits along the ray's path.
+		  \brief 
+			Performs a raycast and collects all intersections along the ray.
+		  \param[in] 
+			origin Start of the ray.
+		  \param[in] 
+			direction Normalized direction vector.
+		  \param[in] 
+			maxDistance Maximum distance of the ray.
+		  \return 
+			A vector of all RayCastResults encountered.
 		*************************************************************************/
 		std::vector<JPH::RayCastResult> RaycastAll(const JPH::RVec3& origin, const JPH::RVec3& direction, float maxDistance);
 
+		/*!***********************************************************************
+		  \brief
+			Removes all physics bodies currently registered.
+		*************************************************************************/
 		void ClearPhysicBody();
+
+		/*!***********************************************************************
+		  \brief
+			Sets the world position of a physics body by entity ID
+		*************************************************************************/
+		void SetPosition(EntityID ID, Ermine::Vec3 position);
+
+		/*!***********************************************************************
+		  \brief
+			Sets the world rotation using Euler angles.
+		*************************************************************************/
+		void SetRotation(EntityID ID, Ermine::Vec3 rotation);
+
+		/*!***********************************************************************
+		  \brief
+			Sets the world rotation using a quaternion.
+		*************************************************************************/
+		void SetRotation(EntityID ID, Ermine::Quaternion rotation);
+
+		/*!***********************************************************************
+		  \brief
+			Moves the body using (position + rotation in Euler).
+		*************************************************************************/
+		void Move(EntityID ID, Ermine::Vec3 position, Ermine::Vec3 rotation);
+
+		/*!***********************************************************************
+		  \brief
+			Moves the body using (position + rotation in Quaternion).
+		*************************************************************************/
+		void Move(EntityID ID, Ermine::Vec3 position, Ermine::Quaternion rotation);
 		
-		//! Shared pointer to the debug renderer used for visualizing physics.
+		// Shared pointer to the debug renderer used for visualizing physics.
 		std::shared_ptr<MyDebugRenderer> mDebugRenderer;
 		
-		//! Whether to draw wireframe physics bodies.
+		// Whether to draw wireframe physics bodies.
 		bool wireframe;
 
 	private:

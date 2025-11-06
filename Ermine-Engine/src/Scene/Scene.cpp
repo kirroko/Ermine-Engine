@@ -16,6 +16,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Components.h"
 #include "ECS.h"
 #include "HierarchySystem.h"
+#include "NavMesh.h"
 
 namespace Ermine {
     Scene::Scene(const std::string& name) : m_Name(name) {
@@ -46,6 +47,15 @@ namespace Ermine {
 
     void Scene::DestroyEntity(EntityID entity) {
         if (!HasEntity(entity)) return;
+
+        // Destroy Nav Mesh Build and Runtime when deleting an ECS entity with Nav Mesh component. If not memory leak!
+        auto navMeshSystem = ECS::GetInstance().GetSystem<Ermine::NavMeshSystem>();
+        if (navMeshSystem && ECS::GetInstance().HasComponent<Ermine::NavMeshComponent>(entity))
+        {
+            auto& navComp = ECS::GetInstance().GetComponent<Ermine::NavMeshComponent>(entity);
+            navMeshSystem->DestroyBuild(navComp);
+            navMeshSystem->DestroyRuntime(navComp);
+        }
 
         auto hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>();
 
