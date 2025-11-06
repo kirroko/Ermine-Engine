@@ -19,27 +19,25 @@ namespace Ermine::graphics
     /**
      * @brief First-person game camera system that follows an entity
      */
-    class GameCamera : public System
+    class CameraSystem : public System
     {
     public:
         /**
          * @brief Get the singleton instance
          */
-        static GameCamera& GetInstance()
-        {
-            static GameCamera instance;
-            return instance;
-        }
+        //static CameraSystem& GetInstance()
+        //{
+        //    static CameraSystem instance;
+        //    return instance;
+        //}
 
-        // Delete copy constructor and assignment
-        GameCamera(const GameCamera&) = delete;
-        GameCamera& operator=(const GameCamera&) = delete;
+        CameraSystem() = default;
 
         /**
          * @brief Constructor with default perspective parameters (matching EditorCamera)
          */
-        GameCamera(float fov = 45.0f, float aspectRatio = 16.0f / 9.0f,
-            float nearClip = 0.1f, float farClip = 1000.0f);
+        //CameraSystem(float fov = 45.0f, float aspectRatio = 16.0f / 9.0f,
+        //    float nearClip = 0.1f, float farClip = 1000.0f);
 
         /**
          * @brief Update camera each frame
@@ -59,7 +57,7 @@ namespace Ermine::graphics
         /**
          * @brief Check if camera is attached to a valid entity
          */
-        bool HasValidCamera() const;
+        bool HasValidCamera();
 
         // Matrix getters
         const Mtx44& GetViewMatrix() const { return m_ViewMatrix; }
@@ -72,11 +70,6 @@ namespace Ermine::graphics
         void SetPerspective(float fov, float aspectRatio, float nearClip, float farClip);
         void SetViewportSize(float width, float height);
 
-        // Mouse control
-        void ProcessMouseMovement(float deltaX, float deltaY);
-        void SetMouseSensitivity(float sensitivity) { m_MouseSensitivity = sensitivity; }
-        float GetMouseSensitivity() const { return m_MouseSensitivity; }
-
         // Get camera vectors
         Vector3D GetForward() const { return m_Front; }
         Vector3D GetRight() const { return m_Right; }
@@ -88,7 +81,7 @@ namespace Ermine::graphics
     private:
         void UpdateViewMatrix();
         void UpdateProjectionMatrix();
-        void UpdateFromEntity();
+        void UpdateTransformFromEntity();
         void InitializeOrientationFromEntity();
 
         // Camera entity

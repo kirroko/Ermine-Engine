@@ -143,8 +143,6 @@ namespace Ermine::scripting
 			MonoClass* tfClass = mono_class_from_name(apiImage, "ErmineEngine", "Transform");
 			if (!tfClass) { EE_CORE_ERROR("ScriptInstance: ErmineEngine.Transform not found"); return; }
 
-			MonoDomain* domain = engine->GetGameDomain();
-
 			// Setting up fields
 			MonoObject* colObj = mono_object_new(engine->GetGameDomain(), collisionClass);
 			if (!colObj) { EE_CORE_ERROR("ScriptInstance: Failed to allocate Collision"); return; }

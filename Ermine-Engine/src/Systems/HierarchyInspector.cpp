@@ -24,6 +24,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "FiniteStateMachine.h"
 #include "FSMEditor.h"
 #include <EditorGUI.h>
+#include "NavMesh.h"
 #include "Particles.h"
 #include "AnimationGUI.h"
 
@@ -220,6 +221,13 @@ namespace Ermine::editor {
 		if (ECS::GetInstance().HasComponent<StateMachine>(selected)) {
 			DrawStateMachineComponent(selected);
 		}
+
+		if (ECS::GetInstance().HasComponent<NavMeshComponent>(selected)) {
+			DrawNavMeshComponent(selected);
+		}
+
+		if (ECS::GetInstance().HasComponent<NavMeshAgent>(selected))
+			DrawNavMeshAgentComponent(selected);
 
 		if (ECS::GetInstance().HasComponent<ParticleEmitter>(selected)) {
 			DrawParticleEmitterComponent(selected);
@@ -1824,6 +1832,53 @@ namespace Ermine::editor {
 		}
 	}
 
+	void HierarchyInspector::DrawNavMeshComponent(EntityID entity)
+	{
+		if (!ImGui::CollapsingHeader("NavMesh", ImGuiTreeNodeFlags_DefaultOpen))
+			return;
+
+		auto& nav = ECS::GetInstance().GetComponent<NavMeshComponent>(entity);
+
+		ImGui::TextUnformatted("Recast Build Settings");
+		ImGui::DragFloat("Cell Size", &nav.cellSize, 0.01f, 0.01f, 2.0f);
+		ImGui::DragFloat("Cell Height", &nav.cellHeight, 0.01f, 0.01f, 2.0f);
+		ImGui::DragFloat("Agent Height", &nav.agentHeight, 0.01f, 0.1f, 5.0f);
+		ImGui::DragFloat("Agent Radius", &nav.agentRadius, 0.01f, 0.05f, 2.0f);
+		ImGui::DragFloat("Max Climb", &nav.agentMaxClimb, 0.01f, 0.0f, 2.0f);
+		ImGui::DragFloat("Max Slope", &nav.agentMaxSlope, 0.1f, 0.0f, 89.0f);
+
+		ImGui::Separator();
+
+		if (ImGui::Button("Bake Nav Mesh"))
+		{
+			if (auto sys = ECS::GetInstance().GetSystem<NavMeshSystem>())
+				sys->BakeNavMesh(entity);
+		}
+
+		ImGui::Separator();
+		ImGui::Checkbox("Draw Walkable", &nav.drawWalkable);
+		ImGui::Checkbox("Draw NavMesh", &nav.drawNavMesh);
+	}
+
+	void HierarchyInspector::DrawNavMeshAgentComponent(EntityID entity)
+	{
+		if (!ComponentHeaderWithRemove<NavMeshAgent>("NavMesh Agent", entity))
+			return;
+
+		auto& agent = ECS::GetInstance().GetComponent<NavMeshAgent>(entity);
+
+		// Editable fields
+		ImGui::DragFloat("Speed", &agent.speed, 0.1f, 0.0f, 100.0f);
+		ImGui::DragFloat("Acceleration", &agent.acceleration, 0.1f, 0.0f, 100.0f);
+		ImGui::DragFloat("Stopping Distance", &agent.stoppingDistance, 0.01f, 0.0f, 10.0f);
+		ImGui::Checkbox("Auto Rotate", &agent.autoRotate);
+
+#if defined(EE_EDITOR)
+		ImGui::SeparatorText("Debug");
+		ImGui::Checkbox("Show Path", &agent.debugDrawPath);
+#endif
+	}
+
 	void HierarchyInspector::DrawParticleEmitterComponent(EntityID entity)
 	{
 		//if (!ImGui::CollapsingHeader("Particle Emitter", ImGuiTreeNodeFlags_DefaultOpen))
@@ -1939,8 +1994,21 @@ namespace Ermine::editor {
 
 			//EE_CORE_INFO("StateMachine component added and initialized for entity {0}", entity);
 		}
+		if (ImGui::MenuItem("NavMesh") && !ECS::GetInstance().HasComponent<NavMeshComponent>(entity)) {
+			ECS::GetInstance().AddComponent(entity, NavMeshComponent());
+		}
+		if (ImGui::MenuItem("NavMeshAgent") && !ECS::GetInstance().HasComponent<NavMeshAgent>(entity)) {
+			ECS::GetInstance().AddComponent(entity, NavMeshAgent());
+		}
 		if (ImGui::MenuItem("ParticleEmitter") && !ECS::GetInstance().HasComponent<ParticleEmitter>(entity)) {
 			ECS::GetInstance().AddComponent(entity, ParticleEmitter());
+		}
+		if (ImGui::MenuItem("Camera") && !ECS::GetInstance().HasComponent<CameraComponent>(entity))
+		{
+			auto tempCam = CameraComponent{};
+			tempCam.fov = 45;
+			tempCam.nearPlane = 5.0f;
+			ECS::GetInstance().AddComponent(entity, tempCam);
 		}
 		// Add more component types as needed
 

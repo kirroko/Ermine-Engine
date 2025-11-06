@@ -24,6 +24,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "JobSystem.h"
 #include <HierarchySystem.h>
 #include "FiniteStateMachine.h"
+#include "NavMeshAgentSystem.h"
+#include "Physics.h"
 #include "SceneManager.h"
 #include "Serialisation.h"
 
@@ -1499,15 +1501,6 @@ namespace
 			if (meta.name == name_)
 				return CreateManagedGameObjectWrapper(id);
 		}
-		//for (unsigned long int i = 0; i < ecs.GetLivingEntityCount(); i++) // TODO: Optimize this later
-		//{
-		//	Ermine::EntityID id = i + 1; // Entity IDs start from 1
-		//	if (!ecs.IsEntityValid(id) || !ecs.HasComponent<ObjectMetaData>(id))
-		//		continue;
-		//	auto& meta = ecs.GetComponent<ObjectMetaData>(id);
-		//	if (meta.name == name_)
-		//		return CreateManagedGameObjectWrapper(id);
-		//}
 		return nullptr;
 	}
 
@@ -1518,9 +1511,9 @@ namespace
 		ToTempUTF8(tag, tag_);
 		if (tag_.empty()) return nullptr;
 		auto& ecs = ECS::GetInstance();
-		for (unsigned long int i = 0; i < ecs.GetLivingEntityCount(); i++) // TODO: Optimize this later
+		std::vector<EntityID> FreshEntity = SceneManager::GetInstance().GetActiveScene()->GetAllEntities();
+		for (auto id : FreshEntity)
 		{
-			EntityID id = i + 1; // Entity IDs start from 1
 			if (!ecs.IsEntityValid(id) || !ecs.HasComponent<ObjectMetaData>(id))
 				continue;
 			auto& meta = ecs.GetComponent<ObjectMetaData>(id);
@@ -1560,6 +1553,27 @@ namespace
 			return;
 		//ECS::GetInstance().DestroyEntity(id);
 		EnqueueLateDestory(id);
+	}
+#pragma endregion
+
+#pragma region Physics ICalls
+	mono_bool icall_physics_raycast(ManagedVector3 mOrigin, ManagedVector3 mDirection, Ermine::RaycastHit* hitInfo, float maxDistance)
+	{
+		using namespace Ermine;
+		if (!ECS::GetInstance().GetSystem<Physics>())
+			return 0;
+
+		const RVec3 rOrigin = RVec3{ mOrigin.x, mOrigin.y, mOrigin.z };
+		const RVec3 rDirection = RVec3{ mDirection.x, mDirection.y, mDirection.z };
+		RayCastResult hit{};
+
+		bool result = ECS::GetInstance().GetSystem<Physics>()->Raycast(rOrigin, rDirection, maxDistance, hit);
+
+		if (result && hitInfo)
+		{
+			EE_CORE_WARN("Not ready yet!");
+		}
+		return result ? 1 : 0;
 	}
 #pragma endregion
 
@@ -1915,5 +1929,15 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	mono_add_internal_call("ErmineEngine.StateMachine::RequestNextState", (const void*)icall_statemachine_request_next_state);
 	mono_add_internal_call("ErmineEngine.StateMachine::RequestPreviousState", (const void*)icall_statemachine_request_previous_state);
 #pragma endregion
-
+#pragma region NavAgent ICalls
+	mono_add_internal_call("ErmineEngine.NavAgent::SetDestination",
+		(const void*)+[](uint64_t entityID, glm::vec3 dest)
+		{
+			Ermine::Vec3 v;
+			v.x = dest.x;
+			v.y = dest.y;
+			v.z = dest.z;
+			Ermine::RequestPathForAgent((Ermine::EntityID)entityID, v);
+		});
+#pragma endregion
 }

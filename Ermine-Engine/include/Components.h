@@ -840,13 +840,11 @@ namespace Ermine
 		float farPlane;
 		bool isPrimary; // Is this the main camera?
 		bool isGameCamera; // Is this a first-person game camera (vs editor camera)?
-		float mouseSensitivity; // Mouse look sensitivity
 
-		CameraComponent() = default;
-		CameraComponent(float fov_, float aspect, float nearP, float farP,
-			bool primary, bool gameCamera, float sensitivity) :
+		explicit CameraComponent(float fov_ = 45.0f, float aspect = 16.0f / 9.0f, float nearP = 0.1f, float farP = 100.0f,
+			bool primary = false, bool gameCamera = false) :
 			fov(fov_), aspectRatio(aspect), nearPlane(nearP), farPlane(farP),
-			isPrimary(primary), isGameCamera(gameCamera), mouseSensitivity(sensitivity)
+			isPrimary(primary), isGameCamera(gameCamera)
 		{
 		}
 
@@ -859,7 +857,6 @@ namespace Ermine
 			out.AddMember("far", farPlane, alloc);
 			out.AddMember("primary", isPrimary, alloc);
 			out.AddMember("isGameCamera", isGameCamera, alloc);
-			out.AddMember("mouseSensitivity", mouseSensitivity, alloc);
 		}
 
 		void Deserialize(const rapidjson::Value& in) {
@@ -869,7 +866,6 @@ namespace Ermine
 			if (in.HasMember("far")) farPlane = in["far"].GetFloat();
 			if (in.HasMember("primary")) isPrimary = in["primary"].GetBool();
 			if (in.HasMember("isGameCamera")) isGameCamera = in["isGameCamera"].GetBool();
-			if (in.HasMember("mouseSensitivity")) mouseSensitivity = in["mouseSensitivity"].GetFloat();
 		}
 
 		XPROPERTY_DEF(
@@ -879,8 +875,7 @@ namespace Ermine
 			xproperty::obj_member<"nearPlane", &CameraComponent::nearPlane>,
 			xproperty::obj_member<"farPlane", &CameraComponent::farPlane>,
 			xproperty::obj_member<"isPrimary", &CameraComponent::isPrimary>,
-			xproperty::obj_member<"isGameCamera", &CameraComponent::isGameCamera>,
-			xproperty::obj_member<"mouseSensitivity", &CameraComponent::mouseSensitivity>
+			xproperty::obj_member<"isGameCamera", &CameraComponent::isGameCamera>
 		)
 	};
 
@@ -2592,7 +2587,10 @@ namespace Ermine
 		std::vector<std::pair<int, int>> m_Links;
 		std::unordered_map<ScriptNode*, ScriptNode*> scriptTransitions;
 	public:
-		// For script start
+		/*!***********************************************************************
+		\brief
+		   Initialize FSM node and script instance for the entity.
+		*************************************************************************/
 		void Init(EntityID entity)
 		{
 			ScriptNode* startScript = nullptr;
@@ -2621,13 +2619,13 @@ namespace Ermine
 			{
 				m_CurrentScript->CreateInstance(entity);
 				m_CurrentScript->OnEnter();
-				EE_CORE_INFO("FSM: Initialized with start node '%s' (id=%d)",
-					m_CurrentScript->name.c_str(), m_CurrentScript->id);
+				//EE_CORE_INFO("FSM: Initialized with start node '%s' (id=%d)",
+				//	m_CurrentScript->name.c_str(), m_CurrentScript->id);
 			}
-			else
-			{
-				EE_CORE_WARN("FSM: Init() called but no valid start node found for entity %d!", entity);
-			}
+			//else
+			//{
+			//	EE_CORE_WARN("FSM: Init() called but no valid start node found for entity %d!", entity);
+			//}
 		}
 		/*!***********************************************************************
 		\brief
@@ -2679,6 +2677,84 @@ namespace Ermine
 				m_CurrentScript->OnUpdate();
 		}
 	};
+
+	/*!***********************************************************************
+	\brief
+	 Nav Mesh component structure.
+	*************************************************************************/
+	struct NavMeshComponent
+	{
+		// Recast build config
+		float cellSize = 0.05f;
+		float cellHeight = 0.05f;
+		float agentHeight = 0.2f;
+		float agentRadius = 0.1f;
+		float agentMaxClimb = 0.1f;
+		float agentMaxSlope = 45.0f;
+
+		// Debug toggles
+		bool  drawInputTri = false;
+		bool  drawWalkable = true;
+		bool  drawNavMesh = true;
+
+		// Recast transient build data
+		struct BuildData;
+		BuildData* build = nullptr;
+
+		// Detour runtime
+		struct Runtime;
+		Runtime* runtime = nullptr;
+	};
+
+	/*!***********************************************************************
+	\brief
+	 Nav Mesh Agent component structure.
+	*************************************************************************/
+	struct NavMeshAgent
+	{
+		float speed = 3.0f;
+		float acceleration = 8.0f;
+		float stoppingDistance = 0.2f;
+		bool autoRotate = true;
+		bool debugDrawPath = true;
+
+		bool hasPath = false;
+		Ermine::Vec3 destination{};
+		std::vector<Ermine::Vec3> path;
+		size_t currentCorner = 0;
+
+		unsigned long long startPoly = 0;
+		unsigned long long endPoly = 0;
+
+		// Serialization
+		/*
+		template<typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const
+		{
+			out.SetObject();
+			out.AddMember("speed", speed, alloc);
+			out.AddMember("acceleration", acceleration, alloc);
+			out.AddMember("stoppingDistance", stoppingDistance, alloc);
+			out.AddMember("autoRotate", autoRotate, alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in)
+		{
+			if (in.HasMember("speed")) speed = in["speed"].GetFloat();
+			if (in.HasMember("acceleration")) acceleration = in["acceleration"].GetFloat();
+			if (in.HasMember("stoppingDistance")) stoppingDistance = in["stoppingDistance"].GetFloat();
+			if (in.HasMember("autoRotate")) autoRotate = in["autoRotate"].GetBool();
+		}
+
+		XPROPERTY_DEF(
+			"NavMeshAgent", NavMeshAgent,
+			xproperty::obj_member<"speed", &NavMeshAgent::speed>,
+			xproperty::obj_member<"acceleration", &NavMeshAgent::acceleration>,
+			xproperty::obj_member<"stoppingDistance", &NavMeshAgent::stoppingDistance>,
+			xproperty::obj_member<"autoRotate", &NavMeshAgent::autoRotate>
+		);*/
+	};
+
 	/*!***********************************************************************
 	\brief
 	 AABB component for caching bounding boxes - used for frustum culling optimization
