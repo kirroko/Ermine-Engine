@@ -243,8 +243,26 @@ namespace Ermine::graphics
         void Init(const int& screenWidth, const int& screenHeight);
 
         //PHYSICS
+        /**
+         * @brief Submits a debug line to be rendered in the scene.
+         * @param from Starting point of the line in world space.
+         * @param to Ending point of the line in world space.
+         * @param color RGB color of the line.
+         */
         void SubmitDebugLine(const glm::vec3& from, const glm::vec3& to, const glm::vec3& color);
+
+        /**
+         * @brief Renders all submitted debug lines using the provided view and projection matrices.
+         * @param view View matrix for the camera.
+         * @param proj Projection matrix for the camera.
+         */
         void RenderDebugLines(const glm::mat4& view, const glm::mat4& proj);
+
+        /**
+         * @brief Renders all submitted debug lines using the provided view and projection matrices.
+         * @param view View matrix for the camera (custom Mtx44 type).
+         * @param proj Projection matrix for the camera (custom Mtx44 type).
+         */
         void RenderDebugLines(const Mtx44& view, const Mtx44& proj);
 
         /**

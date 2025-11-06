@@ -500,14 +500,14 @@ namespace Ermine
 				if (p.customMeshVertices.empty())
 					continue;
 
-				const size_t vertexSkip = 5;
+				const size_t vertexSkip = 12;
 				JPH::Array<JPH::Vec3> vertd;
 				JPH::Array<JPH::Float3> verts;
 				verts.reserve(p.customMeshVertices.size());
 				for (size_t i = 0; i < p.customMeshVertices.size(); i++)
 				{
 					const auto& v = p.customMeshVertices[i];
-					if (i % 12 == 0)
+					if (i % vertexSkip == 0)
 					{
 						verts.push_back(JPH::Float3(v.x * t.scale.x, v.y * t.scale.y, v.z * t.scale.z));
 					}
@@ -719,9 +719,9 @@ namespace Ermine
 						const JPH::Float3& p1 = verts[3 * t + 1];
 						const JPH::Float3& p2 = verts[3 * t + 2];
 
-						JPH::RVec3 a((double)p0.x, (double)p0.y, (double)p0.z);
-						JPH::RVec3 b((double)p1.x, (double)p1.y, (double)p1.z);
-						JPH::RVec3 c((double)p2.x, (double)p2.y, (double)p2.z);
+						JPH::RVec3 a(p0.x, p0.y, p0.z);
+						JPH::RVec3 b(p1.x, p1.y, p1.z);
+						JPH::RVec3 c(p2.x, p2.y, p2.z);
 
 						a = matrix * a;
 						b = matrix * b;

@@ -175,6 +175,12 @@ void Renderer::Init(const int& screenWidth, const int& screenHeight)
 	m_MaterialsDirty = true;
 }
 
+/**
+ * @brief Submits a debug line to be rendered in the scene.
+ * @param from Starting point of the line in world space.
+ * @param to Ending point of the line in world space.
+ * @param color RGB color of the line.
+ */
 void Renderer::SubmitDebugLine(const glm::vec3& from, const glm::vec3& to, const glm::vec3& color)
 {
 	m_DebugLines.push_back({ from, color });
@@ -230,6 +236,11 @@ void Renderer::SubmitDebugFrustum(const Frustum& frustum, const glm::mat4& invVi
 	SubmitDebugLine(corners[3], corners[7], color); // top-left
 }
 
+/**
+ * @brief Renders all submitted debug lines using the provided view and projection matrices.
+ * @param view View matrix for the camera.
+ * @param proj Projection matrix for the camera.
+ */
 void Renderer::RenderDebugLines(const glm::mat4& view, const glm::mat4& proj)
 {
 	if (m_DebugLines.empty()) return;
@@ -1669,7 +1680,11 @@ void Renderer::RenderPostProcessPass()
 #endif
 }
 
-// overload that forwards to the existing glm version
+/**
+ * @brief Renders all submitted debug lines using the provided view and projection matrices.
+ * @param view View matrix for the camera (custom Mtx44 type).
+ * @param proj Projection matrix for the camera (custom Mtx44 type).
+ */
 void Renderer::RenderDebugLines(const Mtx44& view, const Mtx44& proj)
 {
 	RenderDebugLines(ToGlm(view), ToGlm(proj));
