@@ -615,6 +615,10 @@ namespace Ermine
 		)
 	};
 
+	/*!***********************************************************************
+	 \brief
+	 Script field value structure for storing different types of script variables
+	 *************************************************************************/
 	struct ScriptFieldValue
 	{
 		enum class Kind { Float = 0, Int = 1, Bool = 2, String = 3, Vector3 = 4, Quaternion = 5 };
@@ -760,15 +764,23 @@ namespace Ermine
 						fld.AddMember("v", std::get<int>(kv.second.value), alloc); break;
 					case ScriptFieldValue::Kind::Bool:
 						fld.AddMember("v", std::get<bool>(kv.second.value), alloc); break;
-					case ScriptFieldValue::Kind::String:
-						fld.AddMember("v", rapidjson::Value(std::get<std::string>(kv.second.value), alloc), alloc); break;
+					case ScriptFieldValue::Kind::String: {
+						const std::string& s = std::get<std::string>(kv.second.value);
+						rapidjson::Value vs;
+						vs.SetString(s.c_str(),
+							static_cast<rapidjson::SizeType>(s.size()),
+							alloc);
+						fld.AddMember(rapidjson::StringRef("v"), vs, alloc);
+						break;
+					}
 					case ScriptFieldValue::Kind::Vector3:
 						fld.AddMember("v", Vec3ToJson(std::get<Vec3>(kv.second.value), alloc), alloc); break;
 					case ScriptFieldValue::Kind::Quaternion:
 						fld.AddMember("v", QuatToJson(std::get<Quaternion>(kv.second.value), alloc), alloc); break;
 					default: break;
 					}
-				} catch (const std::bad_variant_access& ex)
+				}
+				catch (const std::bad_variant_access& ex)
 				{
 					// Skip invalid variant access
 					EE_CORE_WARN(ex.what());
@@ -826,6 +838,89 @@ namespace Ermine
 			xproperty::obj_member<"class", &Script::m_className>,
 			xproperty::obj_member<"enabled", &Script::m_enabled>
 		)
+	};
+
+	struct ScriptsComponent
+	{
+		std::vector<Script> scripts;
+
+		void AttachAll(EntityID id)
+		{
+			for (auto& s : scripts)
+			{
+				if (!s.m_instance)
+				{
+					auto sc = std::make_unique<scripting::ScriptClass>(scripting::ScriptClass("", s.m_className));
+					s.m_instance = std::make_unique<scripting::ScriptInstance>(std::move(sc), id);
+					// Match enabled state so OnEnable is invoked appropriately
+					s.m_instance->SetEnabled(s.m_enabled);
+					s.m_started = false;
+				}
+			}
+		}
+
+		// Add a new script by class name (instantiates immediately for the given entity)
+		void Add(const std::string& className, EntityID id, bool enabled = true)
+		{
+			Script s;
+			s.m_className = className;
+			s.m_enabled = enabled;
+			auto sc = std::make_unique<scripting::ScriptClass>(scripting::ScriptClass("", s.m_className));
+			s.m_instance = std::make_unique<scripting::ScriptInstance>(std::move(sc), id);
+			s.m_instance->SetEnabled(enabled);
+			scripts.emplace_back(std::move(s));
+		}
+
+		void AddEmpty()
+		{
+			Script s;
+			scripts.emplace_back(std::move(s));
+		}
+
+		// Remove first script matching class name
+		bool RemoveByClass(const std::string& className)
+		{
+			auto it = std::find_if(scripts.begin(), scripts.end(),
+				[&](const Script& s) { return s.m_className == className; });
+			if (it == scripts.end()) return false;
+			scripts.erase(it);
+			return true;
+		}
+
+		// Serialize as an array of Script objects
+		template <typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const
+		{
+			out.SetObject();
+			rapidjson::Value arr(rapidjson::kArrayType);
+			for (const auto& s : scripts)
+			{
+				rapidjson::Value js(rapidjson::kObjectType);
+				s.Serialize(js, alloc);
+				arr.PushBack(js, alloc);
+			}
+			out.AddMember("scripts", arr, alloc);
+		}
+
+		// Deserialize Script authoring data only (instances are created later with AttachAll/Add)
+		void Deserialize(const rapidjson::Value& in)
+		{
+			scripts.clear();
+			if (!in.IsObject() || !in.HasMember("scripts") || !in["scripts"].IsArray())
+				return;
+
+			for (const auto& v : in["scripts"].GetArray())
+			{
+				if (!v.IsObject()) continue;
+				Script s;
+				s.Deserialize(v);
+				// Do not create ScriptInstance here (no EntityID yet) — ScriptSystem should call AttachAll
+				scripts.emplace_back(std::move(s));
+			}
+		}
+
+		// Optional reflection stub (no per-field reflection for vectors)
+		XPROPERTY_DEF("ScriptsComponent", ScriptsComponent)
 	};
 
 	/*!***********************************************************************
@@ -919,7 +1014,7 @@ namespace Ermine
 
 		// AABB for frustum culling (in local/model space)
 		Vec3 aabbMin{ -1.0f, -1.0f, -1.0f };
-		Vec3 aabbMax{  1.0f,  1.0f,  1.0f };
+		Vec3 aabbMax{ 1.0f,  1.0f,  1.0f };
 
 		Mesh() = default;
 
@@ -1482,7 +1577,7 @@ namespace Ermine
 					"../Resources/Shaders/vertex.glsl",
 					"../Resources/Shaders/fragment_enhanced.glsl"
 				);
-				
+
 				if (defaultShader && defaultShader->IsValid())
 				{
 					m_material->SetShader(defaultShader);
@@ -1956,7 +2051,7 @@ namespace Ermine
 		void Deserialize(const rapidjson::Value& in) {
 			xprop_utils::DeserializeFromJson(*this, in);
 		}
-		
+
 		XPROPERTY_DEF(
 			"ParticleEmitterComponent", ParticleEmitter,
 			xproperty::obj_member<"active", &ParticleEmitter::active>,
@@ -1995,7 +2090,7 @@ namespace Ermine
 		explicit HierarchyComponent(EntityID parentId)
 			: parent(parentId), depth(0), isDirty(true), worldTransformDirty(true)
 		{
-				}
+		}
 
 		template <typename Alloc>
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const
@@ -2224,7 +2319,8 @@ namespace Ermine
 
 		AnimationComponent() : m_animationGraph(std::make_shared<AnimationGraph>()) {}
 		explicit AnimationComponent(const std::shared_ptr<graphics::Model>& model)
-			: m_animator(std::make_shared<graphics::Animator>(model)), m_animationGraph(std::make_shared<AnimationGraph>()) {}
+			: m_animator(std::make_shared<graphics::Animator>(model)), m_animationGraph(std::make_shared<AnimationGraph>()) {
+		}
 
 		template <typename Alloc>
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
@@ -2375,9 +2471,7 @@ namespace Ermine
 			out.AddMember("graph", graphVal, alloc);
 		}
 
-
 		void Deserialize(const rapidjson::Value& in) {
-
 			if (!in.IsObject()) return;
 
 			// -------- model --------
@@ -2564,7 +2658,6 @@ namespace Ermine
 				}
 			}
 		}
-
 
 		//XPROPERTY_DEF(
 		//	"AnimationComponent", AnimationComponent,

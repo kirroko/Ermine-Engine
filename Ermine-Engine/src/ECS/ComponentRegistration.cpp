@@ -26,6 +26,7 @@ namespace Ermine
 	XPROPERTY_REG(Transform)
 	XPROPERTY_REG(ObjectMetaData)
 	XPROPERTY_REG(Script)
+	XPROPERTY_REG(ScriptsComponent)
 	XPROPERTY_REG(MeshPrimitiveDesc)
 	XPROPERTY_REG(MeshAssetDesc)
 	XPROPERTY_REG(Mesh)

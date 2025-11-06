@@ -1374,15 +1374,18 @@ namespace
 			SetComponentGameObject(obj, id);
 			return obj;
 		}
-
+		// TODO: PLEASE COME BACK AND FIX THIS LATER FOR MULTIPLE SCRIPTS PER GAMEOBJECT
 		// MonoBehaviour derived -> Script component
 		if (IsSubclassOf(klass,s_MonoBehaviourClass))
 		{
 			const char* cname = mono_class_get_name(klass);
 			EE_CORE_WARN("Is subclass of MonoBehaviour!");
-			if (!ECS::GetInstance().HasComponent<Script>(id))
+			if (!ECS::GetInstance().HasComponent<ScriptsComponent>(id))
 			{
-				ECS::GetInstance().AddComponent(id, Script(std::string(cname), id));
+				ECS::GetInstance().AddComponent(id, ScriptsComponent());
+				auto& scs = ECS::GetInstance().GetComponent<ScriptsComponent>(id);
+				scs.Add(std::string(cname), id);
+				//ECS::GetInstance().AddComponent(id, Script(std::string(cname), id));
 			}
 			else
 			{
@@ -1398,7 +1401,7 @@ namespace
 			}
 			return scriptComp.m_instance ? scriptComp.m_instance->object : nullptr;
 		}
-
+		// TODO: Adding other component like Rigidbody, Collider, etc.?
 		EE_CORE_WARN("AddComponent: Unsupported component type '{0}'", mono_class_get_name(klass));
 		return nullptr;
 	}
@@ -1435,6 +1438,7 @@ namespace
 			return scriptComp.m_instance ? scriptComp.m_instance->object : nullptr;
 		}
 
+		EE_CORE_WARN("GetComponent: Unsupported component type '{}'", mono_class_get_name(klass));
 		return nullptr;
 	}
 
@@ -1455,7 +1459,8 @@ namespace
 		
 		if (IsSubclassOf(klass, s_MonoBehaviourClass))
 			return ECS::GetInstance().HasComponent<Script>(id);
-		
+
+		EE_CORE_WARN("HasComponent: Unsupported component type '{}'", mono_class_get_name(klass));
 		return false;
 	}
 
@@ -1480,7 +1485,9 @@ namespace
 		{
 			if (ECS::GetInstance().HasComponent<Script>(id))
 				ECS::GetInstance().RemoveComponent<Script>(id);
+			return;
 		}
+		EE_CORE_WARN("RemoveComponent: Unsupported component type '{}'", mono_class_get_name(klass));
 	}
 
 	MonoObject* icall_gameobject_find_by_name(MonoString* name)

@@ -57,8 +57,9 @@ void Ermine::scripting::ScriptSystem::Update() const
 
 		for (auto& entity : m_Entities)
 		{
-			auto& sc = ECS::GetInstance().GetComponent<Script>(entity);
-			sc.m_started = false;
+			auto& scs = ECS::GetInstance().GetComponent<ScriptsComponent>(entity);
+			for (auto& sc : scs.scripts)
+				sc.m_started = false;
 		}
 		s_wasStopped = true;
 		return;
@@ -75,15 +76,15 @@ void Ermine::scripting::ScriptSystem::Update() const
 
 	for (auto& entity : m_Entities)
 	{
-		auto& sc = ECS::GetInstance().GetComponent<Script>(entity);
-
-		sc.m_instance->SetEnabled(sc.m_enabled); // Reconcile enable state every frame
-
-		if (!sc.m_enabled) continue;
-
-		if (!sc.m_started) { sc.m_instance->Start(); sc.m_started = true; }
-
-		sc.m_instance->Update();
+		//auto& sc = ECS::GetInstance().GetComponent<Script>(entity);
+		auto& scs = ECS::GetInstance().GetComponent<ScriptsComponent>(entity);
+		for (auto& sc : scs.scripts)
+		{
+			sc.m_instance->SetEnabled(sc.m_enabled); // Reconcile enable state every frame
+			if (!sc.m_enabled) continue;
+			if (!sc.m_started) { sc.m_instance->Start(); sc.m_started = true; }
+			sc.m_instance->Update();
+		}
 	}
 
 	if (m_ScriptEngine)
@@ -101,8 +102,9 @@ void Ermine::scripting::ScriptSystem::FixedUpdate() const
 
 		for (auto& entity : m_Entities)
 		{
-			auto& sc = ECS::GetInstance().GetComponent<Script>(entity);
-			sc.m_started = false;
+			auto& scs = ECS::GetInstance().GetComponent<ScriptsComponent>(entity);
+			for (auto& sc : scs.scripts)
+				sc.m_started = false;
 		}
 		s_wasStopped = true;
 		return;
@@ -119,13 +121,16 @@ void Ermine::scripting::ScriptSystem::FixedUpdate() const
 
 	for (auto& entity : m_Entities)
 	{
-		auto& sc = ECS::GetInstance().GetComponent<Script>(entity);
+		//auto& sc = ECS::GetInstance().GetComponent<Script>(entity);
+		auto& scs = ECS::GetInstance().GetComponent<ScriptsComponent>(entity);
+		for (auto& sc : scs.scripts)
+		{
+			sc.m_instance->SetEnabled(sc.m_enabled); // Reconcile enable state every frame
 
-		sc.m_instance->SetEnabled(sc.m_enabled); // Reconcile enable state every frame
+			if (!sc.m_enabled) continue;
 
-		if (!sc.m_enabled) continue;
-
-		sc.m_instance->FixedUpdate();
+			sc.m_instance->FixedUpdate();
+		}
 	}
 }
 
@@ -136,15 +141,18 @@ void Ermine::scripting::ScriptSystem::PrepareForHotReload() const
 
 	for (auto& entity : m_Entities)
 	{
-		if (!ecs.IsEntityValid(entity) || !ecs.HasComponent<Script>(entity))
+		if (!ecs.IsEntityValid(entity) || !ecs.HasComponent<ScriptsComponent>(entity))
 			continue;
 
-		auto& sc = ecs.GetComponent<Script>(entity);
-		m_RestoreList.emplace_back(entity, sc.m_className);
-
-		// Dispose existing managed instance
-		sc.m_instance.reset();
-		sc.m_started = false;
+		//auto& sc = ecs.GetComponent<Script>(entity);
+		auto& scs = ecs.GetComponent<ScriptsComponent>(entity);
+		for (auto& sc : scs.scripts)
+		{
+			m_RestoreList.emplace_back(entity, sc.m_className);
+			// Dispose existing managed instance
+			sc.m_instance.reset();
+			sc.m_started = false;
+		}
 	}
 }
 
@@ -161,17 +169,20 @@ void Ermine::scripting::ScriptSystem::FinishHotReload(bool success) const
 
 	for (auto& [entity, className] : m_RestoreList)
 	{
-		if (!ecs.IsEntityValid(entity) || !ecs.HasComponent<Script>(entity))
+		if (!ecs.IsEntityValid(entity) || !ecs.HasComponent<ScriptsComponent>(entity))
 			continue;
 
-		auto& sc = ecs.GetComponent<Script>(entity);
-
-		// REcreate instance with same class + entity
-		sc.m_className = className;
-		auto scriptClass = std::make_unique<ScriptClass>(ScriptClass("", className));
-		sc.m_instance = std::make_unique<ScriptInstance>(std::move(scriptClass), entity);
-		sc.m_instance->SetEnabled(sc.m_enabled);
-		sc.m_started = false;
+		//auto& sc = ecs.GetComponent<Script>(entity);
+		auto& scs = ecs.GetComponent<ScriptsComponent>(entity);
+		for (auto& sc : scs.scripts)
+		{
+			// REcreate instance with same class + entity
+			sc.m_className = className;
+			auto scriptClass = std::make_unique<ScriptClass>(ScriptClass("", className));
+			sc.m_instance = std::make_unique<ScriptInstance>(std::move(scriptClass), entity);
+			sc.m_instance->SetEnabled(sc.m_enabled);
+			sc.m_started = false;
+		}
 	}
 
 	m_RestoreList.clear();
