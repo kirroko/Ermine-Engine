@@ -232,9 +232,6 @@ namespace Ermine
 		// unregister types and clear bodies
 		UnregisterTypes();
 		mEntityToBody.clear();
-
-		// Clear the global debug renderer so Jolt won't hold dangling pointer
-		//JPH::DebugRenderer::sInstance = nullptr;
 		mDebugRenderer.reset();
 
 		delete Factory::sInstance;
@@ -266,10 +263,13 @@ namespace Ermine
 				auto& p = ecs.GetComponent<PhysicComponent>(entity);
 				auto& t = ecs.GetComponent<Transform>(entity);
 
+				Ermine::Quaternion rot = QuaternionNormalize(FromEulerDegrees(p.colliderRot));
+				Ermine::Quaternion combined = QuaternionNormalize(t.rotation * rot);
+
 				bodyInterface.SetPositionAndRotationWhenChanged(
 					rigidBody,
-					JPH::Vec3(t.position.x, t.position.y, t.position.z),
-					JPH::Quat(t.rotation.x, t.rotation.y, t.rotation.z, t.rotation.w),
+					JPH::Vec3(t.position.x + p.colliderPivot.x, t.position.y + p.colliderPivot.y, t.position.z + p.colliderPivot.z),
+					JPH::Quat(combined.x, combined.y, combined.z, combined.w),
 					JPH::EActivation::DontActivate);
 
 				if (p.motionType == JPH::EMotionType::Dynamic)
@@ -294,10 +294,13 @@ namespace Ermine
 
 			if (p.motionType == JPH::EMotionType::Kinematic)
 			{
+				Ermine::Quaternion rot = QuaternionNormalize(FromEulerDegrees(p.colliderRot));
+				Ermine::Quaternion combined = QuaternionNormalize(t.rotation * rot);
+
 				bodyInterface.SetPositionAndRotation(
 					rigidBody,
-					JPH::Vec3(t.position.x, t.position.y, t.position.z),
-					JPH::Quat(t.rotation.x, t.rotation.y, t.rotation.z, t.rotation.w),
+					JPH::Vec3(t.position.x + p.colliderPivot.x, t.position.y + p.colliderPivot.y, t.position.z + p.colliderPivot.z),
+					JPH::Quat(combined.x, combined.y, combined.z, combined.w),
 					JPH::EActivation::Activate);
 			}
 		}
@@ -423,7 +426,7 @@ namespace Ermine
 			{
 			case ShapeType::Box:
 			{
-				Vec3 halfExtent = { t.scale.x * 0.5f * meshsize.GetX() * p.collidersize.x, t.scale.y * 0.5f * meshsize.GetY() * p.collidersize.y, t.scale.z * 0.5f * meshsize.GetZ() * p.collidersize.z };
+				Vec3 halfExtent = { t.scale.x * 0.5f * meshsize.GetX() * p.colliderSize.x, t.scale.y * 0.5f * meshsize.GetY() * p.colliderSize.y, t.scale.z * 0.5f * meshsize.GetZ() * p.colliderSize.z };
 				constexpr float minSize = 0.01f;
 				halfExtent.x = std::max(halfExtent.x, minSize);
 				halfExtent.y = std::max(halfExtent.y, minSize);
@@ -439,24 +442,23 @@ namespace Ermine
 			}
 			case ShapeType::Sphere:
 			{
-				float radius = t.scale.x * meshsize.GetX() * p.collidersize.x;
+				float radius = t.scale.x * meshsize.GetX() * p.colliderSize.x;
 
 				if (radius <= 0.0f || !std::isfinite(radius))
 				{
 					radius = 0.01f;
 				}
 
-				p.collidersize.y = p.collidersize.z = std::max(p.collidersize.x, 0.01f);
+				p.colliderSize.y = p.colliderSize.z = std::max(p.colliderSize.x, 0.01f);
 
 				shape = new JPH::SphereShape(radius); //for our current sphere
 				break;
 			}
 			case ShapeType::Capsule:
 			{
-				//shape = new JPH::CapsuleShape(t.scale.y * 0.5f * meshsize.GetY(), t.scale.x * 0.5f * meshsize.GetX());
-					// Compute half-height (excluding the hemispherical caps)
-				float halfHeight = t.scale.y * 0.5f * meshsize.GetY() * p.collidersize.y;
-				float capradius = t.scale.x * 0.5f * meshsize.GetX() * p.collidersize.x;
+				// Compute half-height (excluding the hemispherical caps)
+				float halfHeight = t.scale.y * 0.5f * meshsize.GetY() * p.colliderSize.y;
+				float capradius = t.scale.x * 0.5f * meshsize.GetX() * p.colliderSize.x;
 
 				// --- Safety checks ---
 				if (halfHeight <= 0.0f || !std::isfinite(halfHeight))
@@ -470,9 +472,9 @@ namespace Ermine
 				}
 
 				// Ensure capsule collider size stays valid
-				p.collidersize.x = std::max(p.collidersize.x, 0.01f);
-				p.collidersize.y = std::max(p.collidersize.y, 0.01f);
-				p.collidersize.z = p.collidersize.x; // capsule is symmetric around Y
+				p.colliderSize.x = std::max(p.colliderSize.x, 0.01f);
+				p.colliderSize.y = std::max(p.colliderSize.y, 0.01f);
+				p.colliderSize.z = p.colliderSize.x; // capsule is symmetric around Y
 
 				// Create shape safely
 				shape = new JPH::CapsuleShape(halfHeight, capradius);
@@ -498,14 +500,14 @@ namespace Ermine
 				if (p.customMeshVertices.empty())
 					continue;
 
-				const size_t vertexSkip = 5;
+				const size_t vertexSkip = 12;
 				JPH::Array<JPH::Vec3> vertd;
 				JPH::Array<JPH::Float3> verts;
 				verts.reserve(p.customMeshVertices.size());
 				for (size_t i = 0; i < p.customMeshVertices.size(); i++)
 				{
 					const auto& v = p.customMeshVertices[i];
-					if (i % 12 == 0)
+					if (i % vertexSkip == 0)
 					{
 						verts.push_back(JPH::Float3(v.x * t.scale.x, v.y * t.scale.y, v.z * t.scale.z));
 					}
@@ -533,12 +535,6 @@ namespace Ermine
 						continue;
 					}
 					shapeRef = result.Get();
-
-					// --- Option 2 (recommended for complex FBX): Convex decomposition ---
-					// std::vector<JPH::ConvexHullShapeSettings*> convexParts;
-					// Split FBX vertices into smaller convex hulls (external tool/library)
-					// JPH::CompoundShapeSettings compoundSettings(convexParts);
-					// shapeRef = compoundSettings.Create();
 				}
 				else
 				{
@@ -585,6 +581,10 @@ namespace Ermine
 
 			bodySettings.mIsSensor = (p.bodyType == PhysicsBodyType::Trigger);
 
+			bodySettings.mPosition = JPH::Vec3(t.position.x + p.colliderPivot.x, t.position.y + p.colliderPivot.y, t.position.z + p.colliderPivot.z);
+			Ermine::Quaternion rot = QuaternionNormalize(FromEulerDegrees(p.colliderRot));
+			Ermine::Quaternion combined = QuaternionNormalize(t.rotation * rot);
+			bodySettings.mRotation = JPH::Quat(combined.x, combined.y, combined.z, combined.w);
 			// Create body
 			JPH::Body* body = bodyInterface.CreateBody(bodySettings);
 			if (!body) continue;
@@ -615,6 +615,14 @@ namespace Ermine
 			: JPH::BodyID(JPH::BodyID::cInvalidBodyID);
 	}
 
+	/*!*************************************************************************
+	  \brief
+		Retrieves the ECS entity corresponding to a physics BodyID.
+	  \param[in] bodyID
+		The BodyID to query.
+	  \return
+		The entity ID if found, otherwise 0.
+	***************************************************************************/
 	EntityID Physics::GetEntityID(JPH::BodyID bodyID)
 	{
 		for (auto& [entity, rigidBody] : mEntityToBody)
@@ -628,39 +636,39 @@ namespace Ermine
 		return 0;
 	}
 
+	/*!*************************************************************************
+	  \brief
+		BodyManager DrawSettings setup for draw debug
+	***************************************************************************/
 	void Physics::DrawDebug()
 	{
 #ifdef JPH_DEBUG_RENDERER
 		if (!mDebugRenderer) // nothing to draw
 			return;
 
-		// If your MyDebugRenderer batches to the engine’s Renderer,
-		// make sure you started a frame outside (see step 3).
 		BodyManager::DrawSettings ds{};
 		ds.mDrawShape = false;  // solid off
 		ds.mDrawShapeWireframe = true;   // wireframe on
 		ds.mDrawBoundingBox = true;
 
-		// (optional) ds.mDrawConstraints = true; etc.
-
 		mPhysicsSystem.DrawBodies(ds, mDebugRenderer.get());
-		// (optional) mPhysicsSystem->DrawConstraints(dbg);
 #endif
 	}
 
+	/*!*************************************************************************
+	  \brief
+		Draws detailed wireframe visualization for all physics bodies, including
+		custom mesh geometry.
+	***************************************************************************/
 	void Physics::DrawDebugPhysics()
 	{
 #ifdef JPH_DEBUG_RENDERER
 
-		// 1) Let Jolt draw primitives via DrawLine (box/sphere/capsule/constraints)
 		JPH::BodyManager::DrawSettings ds{};
-		//ds.mDrawBoundingBox = true;
 		ds.mDrawShape = false;   // no solid fill
 		ds.mDrawShapeWireframe = true;    // wireframe only
-		// ds.mDrawConstraints = true;    // optional
 		mPhysicsSystem.DrawBodies(ds, mDebugRenderer.get());
 
-		// 2) Wireframe for custom meshes via GetTriangles
 		JPH::BodyIDVector bodies;
 		mPhysicsSystem.GetBodies(bodies);
 
@@ -676,7 +684,6 @@ namespace Ermine
 			JPH::AllHitCollisionCollector<JPH::TransformedShapeCollector> collector;
 			body.GetTransformedShape().CollectTransformedShapes(body.GetWorldSpaceBounds(), collector);
 
-			// Pick a color (same idea as Jolt sample)
 			JPH::Color color;
 			switch (body.GetMotionType())
 			{
@@ -712,9 +719,9 @@ namespace Ermine
 						const JPH::Float3& p1 = verts[3 * t + 1];
 						const JPH::Float3& p2 = verts[3 * t + 2];
 
-						JPH::RVec3 a((double)p0.x, (double)p0.y, (double)p0.z);
-						JPH::RVec3 b((double)p1.x, (double)p1.y, (double)p1.z);
-						JPH::RVec3 c((double)p2.x, (double)p2.y, (double)p2.z);
+						JPH::RVec3 a(p0.x, p0.y, p0.z);
+						JPH::RVec3 b(p1.x, p1.y, p1.z);
+						JPH::RVec3 c(p2.x, p2.y, p2.z);
 
 						a = matrix * a;
 						b = matrix * b;
@@ -730,80 +737,68 @@ namespace Ermine
 #endif
 	}
 
+	/*!*************************************************************************
+	  \brief
+		Attaches a debug renderer for visualization.
+	  \param[in] renderer
+		Shared pointer to a MyDebugRenderer instance.
+	***************************************************************************/
 	void Physics::AttachDebugRenderer(std::shared_ptr<MyDebugRenderer> renderer)
 	{
 		mDebugRenderer = std::move(renderer);
 	}
 
+	/*!*************************************************************************
+	  \brief
+		Handles a collision event given physics Body references.
+	  \param[in] a
+		First body in collision.
+	  \param[in] b
+		Second body in collision.
+	  \param[in] type
+		Type of collision event (Begin, Stay, End).
+	***************************************************************************/
 	void Physics::HandleCollisionEvent(const Body& a, const Body& b, CollisionEventType type)
 	{
 		std::lock_guard<std::mutex> _l(mPendingMutex);
 		mPendingPairs.push_back(PendingPair{ type, a.GetID(), b.GetID() });
-		//auto& ecs = ECS::GetInstance();
-		//EntityID objectA = 0, objectB = 0;
-		//for (auto phylist : mEntityToBody)
-		//{
-		//	if (phylist.second == a.GetID())
-		//	{
-		//		objectA = phylist.first;
-		//	}
-		//	if (phylist.second == b.GetID())
-		//	{
-		//		objectB = phylist.first;
-		//	}
-		//}
-
-		//if (!ecs.IsEntityValid(objectB) || !ecs.IsEntityValid(objectA))
-		//	return;
-
-		//if (ecs.HasComponent<Script>(objectA))
-		//	mCollisionEvent.emplace(type, objectA, b.IsSensor());
-		//if (ecs.HasComponent<Script>(objectB))
-		//	mCollisionEvent.emplace(type, objectB, a.IsSensor());
-		//EE_CORE_INFO("Hi {} {} {}", type, objectB, a.IsSensor());
-		//EE_CORE_INFO("Hi {} {} {}", type, objectA, b.IsSensor());
-
-		//switch (type)
-		//{
-		//case Ermine::Physics::CollisionEventType::Begin:
-		//	//EE_CORE_INFO("[Physics] Collision Begin");
-		//	if (ecs.HasComponent<Script>(objectA))
-		//		ecs.GetComponent<Script>(objectA).m_instance->OnCollisionEnter(objectB, a.IsSensor());
-		//	if (ecs.HasComponent<Script>(objectB))
-		//		ecs.GetComponent<Script>(objectB).m_instance->OnCollisionEnter(objectA, b.IsSensor());
-		//	break;
-		//case Ermine::Physics::CollisionEventType::Stay:
-		//	//EE_CORE_INFO("[Physics] Collision Stay");
-		//	if (ecs.HasComponent<Script>(objectA))
-		//		ecs.GetComponent<Script>(objectA).m_instance->OnCollisionStay(objectB, a.IsSensor());
-		//	if (ecs.HasComponent<Script>(objectB))
-		//		ecs.GetComponent<Script>(objectB).m_instance->OnCollisionStay(objectA, b.IsSensor());
-		//	break;
-		//case Ermine::Physics::CollisionEventType::End:
-		//	//does nth as collision exit alr, if want need lmk
-		//	if (ecs.HasComponent<Script>(objectA))
-		//		ecs.GetComponent<Script>(objectA).m_instance->OnCollisionExit(objectB, a.IsSensor());
-		//	if (ecs.HasComponent<Script>(objectB))
-		//		ecs.GetComponent<Script>(objectB).m_instance->OnCollisionExit(objectA, b.IsSensor());
-		//	break;
-		//default:
-		//	break;
-		//}
-		//run script
 	}
 
+	/*!*************************************************************************
+	  \brief
+		Handles a collision event given BodyIDs.
+	  \param[in] a
+		First BodyID.
+	  \param[in] b
+		Second BodyID.
+	  \param[in] type
+		Type of collision event (Begin, Stay, End).
+	***************************************************************************/
 	void Physics::HandleCollisionEvent(JPH::BodyID a, JPH::BodyID b, CollisionEventType type)
 	{
 		std::lock_guard<std::mutex> _l(mPendingMutex);
 		mPendingPairs.push_back(PendingPair{ type, a, b });
 	}
 
+	/*!*************************************************************************
+	  \brief
+		Performs a raycast in the physics world.
+	  \param[in] origin
+		Starting point of the ray.
+	  \param[in] direction
+		Direction of the ray.
+	  \param[in] maxDistance
+		Maximum distance to check.
+	  \param[out] outResult
+		Raycast hit information if a hit occurs.
+	  \return
+		True if a collision was detected, false otherwise.
+	***************************************************************************/
 	bool Physics::Raycast(const JPH::RVec3& origin, const JPH::RVec3& direction, float maxDistance, JPH::RayCastResult& outResult)
 	{
 		JPH::Vec3 dirNormalized = direction.Normalized();
 		JPH::RRayCast ray(origin, dirNormalized * maxDistance);
 
-		// Get a query context from PhysicsSystem
 		const JPH::NarrowPhaseQuery& query = mPhysicsSystem.GetNarrowPhaseQuery();
 
 		// Perform the cast
@@ -812,6 +807,18 @@ namespace Ermine
 		return hit;
 	}
 
+	/*!*************************************************************************
+	  \brief
+		Performs a raycast and returns all hits sorted by distance.
+	  \param[in] origin
+		Starting point of the ray.
+	  \param[in] direction
+		Direction of the ray.
+	  \param[in] maxDistance
+		Maximum distance to check.
+	  \return
+		A vector of RayCastResults, sorted nearest to farthest.
+	***************************************************************************/
 	std::vector<JPH::RayCastResult> Physics::RaycastAll(const JPH::RVec3& origin, const JPH::RVec3& direction, float maxDistance)
 	{
 		std::vector<JPH::RayCastResult> results;
@@ -822,7 +829,7 @@ namespace Ermine
 		// Build the ray (RRayCast takes origin and direction *distance)
 		JPH::RRayCast ray(origin, dirNormalized * maxDistance);
 
-		// Ray cast settings WIP to add ignore layer
+																			// Ray cast settings WIP to add ignore layer
 		JPH::RayCastSettings settings;
 		settings.SetBackFaceMode(JPH::EBackFaceMode::IgnoreBackFaces);
 
@@ -832,11 +839,10 @@ namespace Ermine
 		const JPH::NarrowPhaseQuery& query = mPhysicsSystem.GetNarrowPhaseQuery();
 		query.CastRay(ray, settings, collector);
 
-		// collector.mHits is an Array<RayCastResult> — copy into std::vector
 		for (const auto& hit : collector.mHits)
 			results.push_back(hit);
 
-		// Sort nearest -> farthest (mFraction is 0..1 along the ray)
+		// Sort nearest to farthest
 		std::sort(results.begin(), results.end(),
 			[](const JPH::RayCastResult& a, const JPH::RayCastResult& b)
 			{
@@ -846,6 +852,10 @@ namespace Ermine
 		return results;
 	}
 
+	/*!*************************************************************************
+	 \brief
+		Removes all physics bodies from the system and clears the internal mapping.
+	***************************************************************************/
 	void Physics::ClearPhysicBody()
 	{
 		JPH::BodyInterface& bi = mPhysicsSystem.GetBodyInterfaceNoLock();
@@ -859,6 +869,110 @@ namespace Ermine
 		}
 	}
 
+	/*!*************************************************************************
+	  \brief
+		Sets the world position of a physics body corresponding to the given entity.
+	  \param[in] ID
+		ECS entity ID.
+	  \param[in] position
+		New world position.
+	***************************************************************************/
+	void Physics::SetPosition(EntityID ID, Ermine::Vec3 position)
+	{
+		auto& bodyInterface = mPhysicsSystem.GetBodyInterface();
+		Ermine::Quaternion rot = ECS::GetInstance().GetComponent<Transform>(ID).rotation;
+		bodyInterface.SetPositionAndRotation(
+			GetBodyID(ID),
+			JPH::Vec3(position.x, position.y, position.z),
+			JPH::Quat(rot.x, rot.y, rot.z, rot.w),
+			JPH::EActivation::Activate);
+	}
+
+	/*!*************************************************************************
+	  \brief
+		Sets the world rotation of a physics body corresponding to the given entity using Euler angles.
+	  \param[in] ID
+		ECS entity ID.
+	  \param[in] rotation
+		Rotation in Euler angles.
+	***************************************************************************/
+	void Physics::SetRotation(EntityID ID, Ermine::Vec3 rotation)
+	{
+		auto& bodyInterface = mPhysicsSystem.GetBodyInterface();
+		Ermine::Vec3 pos = ECS::GetInstance().GetComponent<Transform>(ID).position;
+		Ermine::Quaternion rot = FromEulerDegrees(rotation);
+		bodyInterface.SetPositionAndRotation(
+			GetBodyID(ID),
+			JPH::Vec3(pos.x, pos.y, pos.z),
+			JPH::Quat(rot.x, rot.y, rot.z, rot.w),
+			JPH::EActivation::Activate);
+	}
+
+	/*!*************************************************************************
+	  \brief
+		Sets the world rotation of a physics body corresponding to the given entity using a quaternion.
+	  \param[in] ID
+		ECS entity ID.
+	  \param[in] rotation
+		Rotation as a quaternion.
+	***************************************************************************/
+	void Physics::SetRotation(EntityID ID, Ermine::Quaternion rotation)
+	{
+		auto& bodyInterface = mPhysicsSystem.GetBodyInterface();
+		Ermine::Vec3 pos = ECS::GetInstance().GetComponent<Transform>(ID).position;
+		bodyInterface.SetPositionAndRotation(
+			GetBodyID(ID),
+			JPH::Vec3(pos.x, pos.y, pos.z),
+			JPH::Quat(rotation.x, rotation.y, rotation.z, rotation.w),
+			JPH::EActivation::Activate);
+	}
+
+	/*!*************************************************************************
+	  \brief
+		Moves a physics body to a new position and rotation (Euler angles).
+	  \param[in] ID
+		ECS entity ID.
+	  \param[in] position
+		Target position.
+	  \param[in] rotation
+		Target rotation in Euler angles.
+	***************************************************************************/
+	void Physics::Move(EntityID ID, Ermine::Vec3 position, Ermine::Vec3 rotation)
+	{
+		auto& bodyInterface = mPhysicsSystem.GetBodyInterface();
+		Ermine::Quaternion rot = FromEulerDegrees(rotation);
+		bodyInterface.SetPositionAndRotation(
+			GetBodyID(ID),
+			JPH::Vec3(position.x, position.y, position.z),
+			JPH::Quat(rot.x, rot.y, rot.z, rot.w),
+			JPH::EActivation::Activate);
+	}
+
+	/*!*************************************************************************
+	  \brief
+		Moves a physics body to a new position and rotation (quaternion).
+	  \param[in] ID
+		ECS entity ID.
+	  \param[in] position
+		Target position.
+	  \param[in] rotation
+		Target rotation as a quaternion.
+	***************************************************************************/
+	void Physics::Move(EntityID ID, Ermine::Vec3 position, Ermine::Quaternion rotation)
+	{
+		auto& bodyInterface = mPhysicsSystem.GetBodyInterface();
+		bodyInterface.SetPositionAndRotation(
+			GetBodyID(ID),
+			JPH::Vec3(position.x, position.y, position.z),
+			JPH::Quat(rotation.x, rotation.y, rotation.z, rotation.w),
+			JPH::EActivation::Activate);
+	}
+
+	/*!*************************************************************************
+	  \brief
+		Converts pending physics collision pairs into ECS collision events.
+		This ensures that scripts receive callbacks in the correct order.
+	***************************************************************************/
 	void Physics::FlushPendingPairsToEntityEvents()
 	{
 		std::vector<PendingPair> local;

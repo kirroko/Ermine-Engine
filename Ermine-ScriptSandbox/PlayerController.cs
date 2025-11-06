@@ -2,6 +2,8 @@
 
 public class PlayerController : MonoBehaviour
 {
+    public Vector3 origin = new Vector3(0, 2, 0);
+
     void Start()
     {
 
@@ -14,7 +16,7 @@ public class PlayerController : MonoBehaviour
             var projectile = Prefab.Instantiate("../Resources/Prefabs/Sphere.prefab");
             if (projectile != null)
             {
-                projectile.transform.position = transform.position;
+                projectile.transform.position = transform.position + origin;
                 projectile.transform.rotation = transform.rotation;
             }
         }
