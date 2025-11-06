@@ -61,6 +61,14 @@ namespace Ermine
 		bool mDrawBodyAxes = false;
 	};
 
+	struct RaycastHit
+	{
+		Vec3 point{};
+		Vec3 normal{};
+		float distance{};
+		EntityID entityID{};
+	};
+
 	// ------------------------------- Physics Class -------------------------------
 	class Physics : public System
 	{

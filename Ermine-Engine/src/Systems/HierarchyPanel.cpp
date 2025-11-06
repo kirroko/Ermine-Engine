@@ -20,6 +20,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "GeometryFactory.h"
 #include "AssetManager.h"
 #include "Physics.h"
+#include "Serialisation.h" // Added for prefab support
 
 namespace Ermine {
     void HierarchyPanel::SetScene(Scene* scene) {
@@ -95,18 +96,79 @@ namespace Ermine {
     void HierarchyPanel::DuplicateEntity(EntityID sourceEntity) {
         if (sourceEntity == 0) return;
 
-        // Clone the entity and add it to the scene
-        EntityID newEntity = ECS::GetInstance().CloneEntity(sourceEntity);
+        auto& ecs = ECS::GetInstance();
+        if (!ecs.IsEntityValid(sourceEntity)) return;
 
-        // Set a new name for the duplicated entity
-        auto& meta = ECS::GetInstance().GetComponent<ObjectMetaData>(newEntity);
-        meta.name += " (Copy)";
+        // Store the original transform before duplication
+        Transform originalTransform;
+        if (ecs.HasComponent<Transform>(sourceEntity)) {
+            originalTransform = ecs.GetComponent<Transform>(sourceEntity);
+        }
 
-        // Make sure the new entity is added to the scene and selected
-        m_ActiveScene->SetSelectedEntity(newEntity);
-        ImGui::SetWindowFocus("Inspector");
+        // Create a temporary prefab path in a system temp directory
+        const auto tempPrefabPath = std::filesystem::temp_directory_path() / "temp_duplicate.prefab";
 
-        EE_CORE_INFO("Duplicated entity {} to new entity {}", sourceEntity, newEntity);
+        try {
+            // Save source entity as a prefab
+            SavePrefabToFile(ecs, sourceEntity, tempPrefabPath);
+            
+            // Load the prefab which creates our new entity
+            EntityID newEntity = LoadPrefabFromFile(ecs, tempPrefabPath);
+
+            // Ensure we maintain the exact transform values
+            if (ecs.HasComponent<Transform>(newEntity)) {
+                auto& newTransform = ecs.GetComponent<Transform>(newEntity);
+                newTransform = originalTransform; // Copy the exact transform
+            }
+
+            // Update the name to indicate it's a copy using Unity-style numbering
+            if (ecs.HasComponent<ObjectMetaData>(newEntity)) {
+                auto& meta = ecs.GetComponent<ObjectMetaData>(newEntity);
+                const auto& sourceMeta = ecs.GetComponent<ObjectMetaData>(sourceEntity);
+                
+                // Get the base name (without any existing numeric suffix)
+                std::string baseName = sourceMeta.name;
+                size_t parenPos = baseName.find(" (");
+                if (parenPos != std::string::npos) {
+                    baseName = baseName.substr(0, parenPos);
+                }
+
+                // Find the next available number
+                int suffix = 1;
+                std::string newName;
+                bool nameExists;
+                do {
+                    newName = baseName + " (" + std::to_string(suffix) + ")";
+                    nameExists = false;
+                    
+                    // Check if this name is already taken
+                    for (EntityID id = 1; id < MAX_ENTITIES; ++id) {
+                        if (id != newEntity && ecs.IsEntityValid(id) && ecs.HasComponent<ObjectMetaData>(id)) {
+                            const auto& otherMeta = ecs.GetComponent<ObjectMetaData>(id);
+                            if (otherMeta.name == newName) {
+                                nameExists = true;
+                                break;
+                            }
+                        }
+                    }
+                    suffix++;
+                } while (nameExists);
+
+                meta.name = newName;
+            }
+
+            // Make sure the new entity is added to the scene and selected
+            m_ActiveScene->SetSelectedEntity(newEntity);
+            ImGui::SetWindowFocus("Inspector");
+
+            // Clean up the temporary prefab file
+            std::filesystem::remove(tempPrefabPath);
+
+            EE_CORE_INFO("Duplicated entity {} to new entity {} using prefab system", sourceEntity, newEntity);
+        }
+        catch (const std::exception& e) {
+            EE_CORE_ERROR("Failed to duplicate entity: {}", e.what());
+        }
     }
 
     void HierarchyPanel::DrawEntityNode(EntityID entity, int depth) {

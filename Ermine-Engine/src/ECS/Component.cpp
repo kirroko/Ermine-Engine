@@ -55,7 +55,7 @@ namespace Ermine
 		for (auto& desc : m_Descriptors | std::views::values)
 		{
 			if (desc.has(src))
-				desc.clone(src, dst);
+				desc.clone(src, dst); // RegisterComponent will have set up the clone function | If there's a custom clone, it will declare in the engine.cpp during registration
 		}
 	}
 

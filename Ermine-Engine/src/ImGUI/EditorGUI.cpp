@@ -30,7 +30,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "HierarchyPanel.h"
 #include "HierarchyInspector.h"
 
-#include "GameCamera.h"
+#include "CameraSystem.h"
 #include "Components.h"
 #include "Entity.h"
 
@@ -164,11 +164,11 @@ void EditorGUI::StartPlayMode()
         return;
     }
 
-    // Get or create GameCamera system
-    auto gameCamera = ecs.GetSystem<graphics::GameCamera>();
+    // Get or create CameraSystem system
+    auto gameCamera = ecs.GetSystem<graphics::CameraSystem>();
     if (!gameCamera)
     {
-        EE_CORE_ERROR("GameCamera system not found!");
+        EE_CORE_ERROR("CameraSystem system not found!");
         return;
     }
 
@@ -215,7 +215,7 @@ void EditorGUI::StopPlayMode()
 
     // Reset game camera
     auto& ecs = ECS::GetInstance();
-    auto gameCamera = ecs.GetSystem<graphics::GameCamera>();
+    auto gameCamera = ecs.GetSystem<graphics::CameraSystem>();
     if (gameCamera)
     {
         gameCamera->SetCameraEntity(0);
@@ -225,6 +225,12 @@ void EditorGUI::StopPlayMode()
     EE_CORE_INFO("Play mode stopped");
 }
 
+// Add near the top of this file (forward declarations for theme setters)
+void SetCutesyPinkTheme();
+void SetCyberpunk2077Theme();
+void SetOverwatchTheme(bool dark_variant = true);
+
+// Replace the existing EditorGUI::TopMenuBar implementation with this updated version
 void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
 {
     ImGui::BeginMainMenuBar();
@@ -266,13 +272,11 @@ void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
         {
             if (ctrl && shift)
             {
-                //EE_CORE_INFO("Ctrl + Shift + S = SAVE AS");
                 if (auto path = SceneManager::ShowSaveDialog(L"untitled.scene", GetActiveWindow()))
                     SceneManager::GetInstance().SaveSceneTo(*path);
             }
             else if (ctrl)
             {
-                //EE_CORE_INFO("Ctrl + S = SAVE");
                 SceneManager::GetInstance().SaveScene();
             }
         }
@@ -281,7 +285,6 @@ void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
         {
             if (ctrl)
             {
-                //EE_CORE_INFO("Ctrl + O = OPEN");
                 if (auto path = SceneManager::ShowOpenDialog(GetActiveWindow()))
                 {
                     SceneManager::GetInstance().ClearScene();
@@ -309,7 +312,6 @@ void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
         }
     }
 
-
     if (ImGui::BeginMenu("Edit"))
     {
         if (ImGui::MenuItem("Undo", "Ctrl+Z"))
@@ -327,21 +329,59 @@ void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
 
     if (ImGui::BeginMenu("Settings"))
     {
+        // Ensure consistent styling when multi-viewports are enabled
+        const auto fixViewportsStyling = []()
+        {
+            ImGuiIO& ioFix = ImGui::GetIO();
+            if (ioFix.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+            {
+                ImGuiStyle& style = ImGui::GetStyle();
+                style.WindowRounding = 0.0f;
+                style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+            }
+        };
+
         if (ImGui::MenuItem("Light Mode"))
         {
-            EE_CORE_INFO("Light clicked");
+            ImGui::StyleColorsLight();
+            fixViewportsStyling();
+            EE_CORE_INFO("Light theme applied");
         }
         if (ImGui::MenuItem("Dark Mode"))
         {
-            EE_CORE_INFO("Dark clicked");
+            ImGui::StyleColorsDark();
+            fixViewportsStyling();
+            EE_CORE_INFO("Dark theme applied");
         }
         if (ImGui::MenuItem("Pink Mode"))
         {
-            EE_CORE_INFO("Pink clicked");
+            ImGui::StyleColorsLight();
+            SetCutesyPinkTheme();
+            fixViewportsStyling();
+            EE_CORE_INFO("Pink theme applied");
         }
         if (ImGui::MenuItem("Cyberpunk Mode"))
         {
-            EE_CORE_INFO("Cyberpunk clicked");
+            ImGui::StyleColorsDark();
+            SetCyberpunk2077Theme();
+            fixViewportsStyling();
+            EE_CORE_INFO("Cyberpunk theme applied");
+        }
+        if (ImGui::BeginMenu("Overwatch Mode"))
+        {
+            if (ImGui::MenuItem("Overwatch - Dark"))
+            {
+                SetOverwatchTheme(true);
+                fixViewportsStyling();
+                EE_CORE_INFO("Overwatch (Dark) theme applied");
+            }
+            if (ImGui::MenuItem("Overwatch - Light"))
+            {
+                SetOverwatchTheme(false);
+                fixViewportsStyling();
+                EE_CORE_INFO("Overwatch (Light) theme applied");
+            }
+            ImGui::EndMenu();
         }
 
         ImGui::EndMenu();
@@ -778,7 +818,7 @@ void SetCyberpunk2077Theme()
 
 // Call: SetOverwatchTheme(true);  // true = dark, false = light
 // --------------------------------------
-void SetOverwatchTheme(bool dark_variant = true)
+void SetOverwatchTheme(bool dark_variant)
 {
     auto OW_Orange = [](float a = 1.0f) { return ImVec4(0.98f, 0.62f, 0.10f, a); };
     auto OW_Blue = [](float a = 1.0f) { return ImVec4(0.10f, 0.70f, 1.00f, a); };
@@ -895,10 +935,6 @@ void SetOverwatchTheme(bool dark_variant = true)
     style.WindowPadding = ImVec2(10, 10);
     style.FramePadding = ImVec2(10, 6);
     style.ItemSpacing = ImVec2(8, 8);
-    style.ItemInnerSpacing = ImVec2(6, 6);
-    style.IndentSpacing = 18.0f;
-    style.GrabMinSize = 14.0f;
-    style.ScrollbarSize = 14.0f;
 }
 
 /**
@@ -929,15 +965,48 @@ void EditorGUI::Init(GLFWwindow* window)
     // --- DPI scaling for UI ---
     float xScale, yScale;
     glfwGetWindowContentScale(window, &xScale, &yScale);
-    io.FontGlobalScale = xScale; // Apply the xScale to the global font scale
+	io.FontGlobalScale = xScale; // Apply the xScale to the global font scale
+    {
+        const char* kFontPath = "../Resources/Fonts/Rajdhani-Regular.ttf";
+        constexpr float kFontSizePx = 18.0f; // base pixel size at scale 1.0
+
+        if (std::filesystem::exists(kFontPath))
+        {
+            ImFontConfig cfg{};
+            cfg.OversampleH = 3;
+            cfg.OversampleV = 2;
+            cfg.PixelSnapH = true;
+            cfg.RasterizerMultiply = 1.15f; // slightly crisper
+
+            // Note: We keep kFontSizePx independent; global scaling is already applied via io.FontGlobalScale
+            ImFont* custom = io.Fonts->AddFontFromFileTTF(
+                kFontPath,
+                kFontSizePx,
+                &cfg,
+                io.Fonts->GetGlyphRangesDefault()
+            );
+
+            if (custom)
+            {
+                io.FontDefault = custom; // make it the default
+                EE_CORE_INFO("Loaded custom ImGui font: {}", kFontPath);
+            }
+            else
+            {
+                EE_CORE_WARN("Failed to load custom ImGui font at {}", kFontPath);
+            }
+        }
+        else
+        {
+            EE_CORE_WARN("Custom ImGui font file not found: {}", kFontPath);
+        }
+    }
     //ImGui::GetStyle().ScaleAllSizes(xScale);
 
     // Setup Dear ImGui style
     /*ImGui::StyleColorsLight();
     SetCutesyPinkTheme();*/
     ImGui::StyleColorsDark();
-    //SetCyberpunk2077Theme();
-    //SetOverwatchTheme(false);
 
     // When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
     ImGuiStyle& style = ImGui::GetStyle();
@@ -952,7 +1021,6 @@ void EditorGUI::Init(GLFWwindow* window)
     ImGui_ImplOpenGL3_Init("#version 460");
 
     ImNodes::CreateContext();
-    ImNodes::StyleColorsDark();
 
     // Create Scene first
     //s_ActiveScene = std::make_unique<Scene>("Default Scene"); // Give it a name

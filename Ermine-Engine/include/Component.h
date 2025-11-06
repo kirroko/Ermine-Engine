@@ -109,12 +109,32 @@ namespace Ermine
 		template<typename T>
 		void ForEachComponentType(T&& fn) const;
 
+		/**
+		 * @brief Check if an entity has a component by name
+		 * @param entity The entity to check
+		 * @param name The name of the component
+		 * @return True if the entity has the component, false otherwise
+		 */
 		bool HasComponent(EntityID entity, std::string_view name) const;
 
+		/**
+		 * @brief Clone all components from one entity to another
+		 * @param src The source entity
+		 * @param dst The destination entity
+		 */
 		void CloneAllComponents(EntityID src, EntityID dst);
 
+		/**
+		 * @brief Get all component names attached to an entity
+		 * @param entity The entity to query
+		 * @return A vector of component names
+		 */
 		std::vector<std::string> GetComponentNames(EntityID entity) const;
 
+		/**
+		 * @brief Get the component descriptor by name
+		 * @param name The name of the component
+		 */
 		const ComponentDescriptor* GetDescriptor(std::string_view name) const;
 	};
 }
