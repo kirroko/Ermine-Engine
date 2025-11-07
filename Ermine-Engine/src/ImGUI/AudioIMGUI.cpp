@@ -222,50 +222,162 @@ namespace Ermine
 
                 ImGui::Separator();
 
-                // Display and edit audio component properties
-                ImGui::Text("Sound Path:");
-                ImGui::SameLine();
-                if (ImGui::Button("Browse##EntityBrowse"))
-                {
-                    m_ShowEntitySoundBrowser = true;
-                }
+                ImGui::Text("Audio Mode:");
+                static const char* modes[] = { "Single Sound", "Random Variations" };
+                int currentMode = audioComp.useRandomVariation ? 1 : 0;
 
-                char soundBuffer[256];
-				strncpy_s(soundBuffer, sizeof(soundBuffer), audioComp.soundName.c_str(), sizeof(soundBuffer) - 1);
-                soundBuffer[sizeof(soundBuffer) - 1] = '\0';
-
-                if (ImGui::InputText("##EntitySoundPath", soundBuffer, sizeof(soundBuffer)))
+                if (ImGui::Combo("##AudioMode", &currentMode, modes, 2))
                 {
-                    audioComp.soundName = std::string(soundBuffer);
-                }
+                    audioComp.useRandomVariation = (currentMode == 1);
 
-                // Audio file browser popup for entity
-                if (m_ShowEntitySoundBrowser)
-                {
-                    ImGui::OpenPopup("Select Audio File##Entity");
-                }
-
-                if (ImGui::BeginPopupModal("Select Audio File##Entity", &m_ShowEntitySoundBrowser, ImGuiWindowFlags_AlwaysAutoResize))
-                {
-                    if (RenderAudioFileSelector())
+                    // *** CLEAR THE OTHER MODE'S DATA ***
+                    if (audioComp.useRandomVariation)
                     {
-                        audioComp.soundName = m_SelectedAudioFile;
-                        m_ShowEntitySoundBrowser = false;
-                        ImGui::CloseCurrentPopup();
+                        // Switched to variation mode - clear single sound
+                        audioComp.soundName.clear();
+                    }
+                    else
+                    {
+                        // Switched to single mode - clear variations
+                        audioComp.soundVariations.clear();
+                    }
+                }
+
+                ImGui::Separator();
+
+                // === Single Sound Mode ===
+                if (!audioComp.useRandomVariation)
+                {
+                    ImGui::Text("Sound Path:");
+                    ImGui::SameLine();
+                    if (ImGui::Button("Browse##EntityBrowse"))
+                    {
+                        m_ShowEntitySoundBrowser = true;
                     }
 
-                    if (ImGui::Button("Cancel"))
+                    char soundBuffer[256];
+                    strncpy_s(soundBuffer, sizeof(soundBuffer), audioComp.soundName.c_str(), sizeof(soundBuffer) - 1);
+                    soundBuffer[sizeof(soundBuffer) - 1] = '\0';
+
+                    if (ImGui::InputText("##EntitySoundPath", soundBuffer, sizeof(soundBuffer)))
                     {
-                        m_ShowEntitySoundBrowser = false;
-                        ImGui::CloseCurrentPopup();
+                        audioComp.soundName = std::string(soundBuffer);
                     }
 
-                    ImGui::EndPopup();
+                    // Audio file browser popup for entity
+                    if (m_ShowEntitySoundBrowser)
+                    {
+                        ImGui::OpenPopup("Select Audio File##Entity");
+                    }
+
+                    if (ImGui::BeginPopupModal("Select Audio File##Entity", &m_ShowEntitySoundBrowser, ImGuiWindowFlags_AlwaysAutoResize))
+                    {
+                        if (RenderAudioFileSelector())
+                        {
+                            audioComp.soundName = m_SelectedAudioFile;
+                            m_ShowEntitySoundBrowser = false;
+                            ImGui::CloseCurrentPopup();
+                        }
+
+                        if (ImGui::Button("Cancel"))
+                        {
+                            m_ShowEntitySoundBrowser = false;
+                            ImGui::CloseCurrentPopup();
+                        }
+
+                        ImGui::EndPopup();
+                    }
+                }
+                // === Variation Mode ===
+                else
+                {
+                    ImGui::Text("Sound Variations:");
+                    ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "Each play will randomly pick one variation");
+
+                    // Display existing variations
+                    for (size_t i = 0; i < audioComp.soundVariations.size(); ++i)
+                    {
+                        ImGui::PushID(static_cast<int>(i));
+
+                        ImGui::Text("%d.", static_cast<int>(i + 1));
+                        ImGui::SameLine();
+
+                        // Show filename only, not full path
+                        std::string filename = audioComp.soundVariations[i];
+                        size_t lastSlash = filename.find_last_of("/\\");
+                        if (lastSlash != std::string::npos)
+                        {
+                            filename = filename.substr(lastSlash + 1);
+                        }
+                        ImGui::Text("%s", filename.c_str());
+
+                        ImGui::SameLine();
+                        if (ImGui::Button("Remove"))
+                        {
+                            audioComp.soundVariations.erase(audioComp.soundVariations.begin() + i);
+                            ImGui::PopID();
+                            break; // Exit loop after modifying vector
+                        }
+
+                        ImGui::PopID();
+                    }
+
+                    // Add new variation
+                    ImGui::Separator();
+                    static char variationBuffer[256] = "";
+                    ImGui::InputText("New Variation Path", variationBuffer, sizeof(variationBuffer));
+                    ImGui::SameLine();
+                    if (ImGui::Button("Browse##AddVariation"))
+                    {
+                        m_ShowEntitySoundBrowser = true;
+                    }
+
+                    if (ImGui::Button("Add Variation"))
+                    {
+                        if (strlen(variationBuffer) > 0)
+                        {
+                            audioComp.soundVariations.push_back(std::string(variationBuffer));
+                            memset(variationBuffer, 0, sizeof(variationBuffer));
+                            SetStatusMessage("Added sound variation");
+                        }
+                    }
+
+                    // Audio file browser for variations
+                    if (m_ShowEntitySoundBrowser)
+                    {
+                        ImGui::OpenPopup("Select Audio File##Variation");
+                    }
+
+                    if (ImGui::BeginPopupModal("Select Audio File##Variation", &m_ShowEntitySoundBrowser, ImGuiWindowFlags_AlwaysAutoResize))
+                    {
+                        if (RenderAudioFileSelector())
+                        {
+                            strncpy_s(variationBuffer, sizeof(variationBuffer), m_SelectedAudioFile.c_str(), sizeof(variationBuffer) - 1);
+                            variationBuffer[sizeof(variationBuffer) - 1] = '\0';
+                            m_ShowEntitySoundBrowser = false;
+                            ImGui::CloseCurrentPopup();
+                        }
+
+                        if (ImGui::Button("Cancel"))
+                        {
+                            m_ShowEntitySoundBrowser = false;
+                            ImGui::CloseCurrentPopup();
+                        }
+
+                        ImGui::EndPopup();
+                    }
+
+                    if (audioComp.soundVariations.empty())
+                    {
+                        ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.0f, 1.0f), "Warning: No variations added yet!");
+                    }
                 }
 
+                ImGui::Separator();
+
+                // Common audio settings (work for both modes)
                 ImGui::SliderFloat("Volume", &audioComp.volume, 0.0f, 1.0f);
                 ImGui::Checkbox("3D Audio", &audioComp.is3D);
-                //ImGui::Checkbox("Auto-play on Start", &audioComp.playOnStart);
                 ImGui::Checkbox("Looping", &audioComp.isLooping);
                 ImGui::Checkbox("Streaming", &audioComp.isStreaming);
                 ImGui::Checkbox("Follow Transform", &audioComp.followTransform);
@@ -290,6 +402,11 @@ namespace Ermine
                 ImGui::Text("Status:");
                 ImGui::Text("Playing: %s", audioComp.isPlaying ? "Yes" : "No");
                 ImGui::Text("Channel ID: %d", audioComp.channelId);
+
+                if (audioComp.useRandomVariation)
+                {
+                    ImGui::Text("Variations: %d", static_cast<int>(audioComp.soundVariations.size()));
+                }
             }
             else
             {

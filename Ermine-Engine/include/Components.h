@@ -1691,6 +1691,10 @@ namespace Ermine
 		std::string soundName{};
 		std::string eventName{}; // For FMOD Studio events
 
+		std::vector<std::string> soundVariations{};  // Audio bank for random variations
+		bool useRandomVariation{ false };            // Toggle between single sound and variations
+		int lastPlayedVariationIndex{ -1 };
+
 		// Playback control
 		int channelId{ -1 }; // Managed by CAudioEngine
 		bool isPlaying{ false };
@@ -1723,17 +1727,40 @@ namespace Ermine
 
 		template<typename Alloc>
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
+			// Use xproperty for most fields
 			xprop_utils::SerializeToJson(*this, out, alloc);
+
+			// Manually serialize soundVariations as a proper array
+			if (!soundVariations.empty()) {
+				rapidjson::Value arr(rapidjson::kArrayType);
+				for (const auto& variation : soundVariations) {
+					arr.PushBack(rapidjson::Value(variation.c_str(), alloc), alloc);
+				}
+				out.AddMember("soundVariations", arr, alloc);
+			}
 		}
 
 		void Deserialize(const rapidjson::Value& in) {
 			xprop_utils::DeserializeFromJson(*this, in);
+
+			// Manually deserialize soundVariations array
+			soundVariations.clear();
+			if (in.HasMember("soundVariations") && in["soundVariations"].IsArray()) {
+				for (const auto& v : in["soundVariations"].GetArray()) {
+					if (v.IsString()) {
+						soundVariations.push_back(v.GetString());
+					}
+				}
+			}
+
+			lastPlayedVariationIndex = -1;
 		}
 
 		XPROPERTY_DEF(
 			"AudioComponent", AudioComponent,
 			xproperty::obj_member<"soundName", &AudioComponent::soundName>,
-			xproperty::obj_member<"eventName", &AudioComponent::eventName>,
+			xproperty::obj_member<"eventName", &AudioComponent::eventName>,   
+			xproperty::obj_member<"useRandomVariation", &AudioComponent::useRandomVariation>,
 			xproperty::obj_member<"is3D", &AudioComponent::is3D>,
 			xproperty::obj_member<"isLooping", &AudioComponent::isLooping>,
 			xproperty::obj_member<"isStreaming", &AudioComponent::isStreaming>,

@@ -653,7 +653,36 @@ void AudioSystem::StopGlobalMusic(GlobalAudioComponent& globalAudio)
 
 void AudioSystem::PlayEntityAudio(AudioComponent& audioComp, const Transform& transform)
 {
-    if (audioComp.soundName.empty() && audioComp.eventName.empty())
+    std::string soundToPlay;
+
+    // Determine which sound to play
+    if (audioComp.useRandomVariation && !audioComp.soundVariations.empty())
+    {
+        // Pick random variation (avoid playing the same one twice in a row)
+        int randomIndex;
+
+        if (audioComp.soundVariations.size() == 1)
+        {
+            randomIndex = 0;
+        }
+        else
+        {
+            do {
+                randomIndex = rand() % audioComp.soundVariations.size();
+            } while (randomIndex == audioComp.lastPlayedVariationIndex);
+        }
+
+        audioComp.lastPlayedVariationIndex = randomIndex;
+        soundToPlay = audioComp.soundVariations[randomIndex];
+        //std::cout << "Playing variation " << randomIndex << ": " << soundToPlay << std::endl;
+    }
+    else
+    {
+        // Use single sound
+        soundToPlay = audioComp.soundName;
+    }
+
+    if (soundToPlay.empty() && audioComp.eventName.empty())
         return;
 
     if (!audioComp.eventName.empty())
@@ -664,10 +693,10 @@ void AudioSystem::PlayEntityAudio(AudioComponent& audioComp, const Transform& tr
         audioComp.isPlaying = CAudioEngine::IsEventPlaying(audioComp.eventName);
         audioComp.channelId = -1; // Events don't use channel IDs
     }
-    else if (!audioComp.soundName.empty())
+    else if (!soundToPlay.empty())  // ← Changed from soundName to soundToPlay
     {
-        // Handle regular sounds
-        CAudioEngine::LoadSound(audioComp.soundName, audioComp.is3D, audioComp.isLooping, audioComp.isStreaming);
+        // Handle regular sounds (including variations!)
+        CAudioEngine::LoadSound(soundToPlay, audioComp.is3D, audioComp.isLooping, audioComp.isStreaming);  // ← Changed
 
         // Convert Vec3 to Vector3D for CAudioEngine compatibility
         Vector3D position(0.0f, 0.0f, 0.0f);
@@ -679,7 +708,7 @@ void AudioSystem::PlayEntityAudio(AudioComponent& audioComp, const Transform& tr
         // Convert 0-1 volume to dB
         float volumeDB = ConvertVolumeToFMOD(audioComp.volume);
 
-        audioComp.channelId = CAudioEngine::PlaySounds(audioComp.soundName, position, volumeDB);
+        audioComp.channelId = CAudioEngine::PlaySounds(soundToPlay, position, volumeDB);  // ← Changed
         audioComp.isPlaying = (audioComp.channelId != -1);
     }
 }
