@@ -1926,6 +1926,38 @@
         },
         "GlobalTransform": {}
       }
+    },
+    {
+      "id": 24,
+      "components": {
+        "GlobalAudioComponent": {
+          "masterVolume": 1.0,
+          "musicVolume": 0.3529999852180481,
+          "sfxVolume": 0.800000011920929,
+          "ambienceVolume": 0.20399999618530274,
+          "autoPlay": true,
+          "music": [
+            {
+              "name": "test_music",
+              "path": "../Resources/Audio/231113-industrial-noise-dark-176107.mp3",
+              "volume": 1.0
+            }
+          ],
+          "sfx": [],
+          "ambience": [
+            {
+              "name": "Steampunk",
+              "path": "../Resources/Audio/futuristic-factory-noise-002-311136.mp3",
+              "volume": 1.0
+            }
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "GlobalAudio",
+          "tag": "Audio",
+          "selfActive": false
+        }
+      }
     }
   ]
 }
