@@ -30,7 +30,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "HierarchyPanel.h"
 #include "HierarchyInspector.h"
 
-#include "GameCamera.h"
+#include "CameraSystem.h"
 #include "Components.h"
 #include "Entity.h"
 
@@ -164,11 +164,11 @@ void EditorGUI::StartPlayMode()
         return;
     }
 
-    // Get or create GameCamera system
-    auto gameCamera = ecs.GetSystem<graphics::GameCamera>();
+    // Get or create CameraSystem system
+    auto gameCamera = ecs.GetSystem<graphics::CameraSystem>();
     if (!gameCamera)
     {
-        EE_CORE_ERROR("GameCamera system not found!");
+        EE_CORE_ERROR("CameraSystem system not found!");
         return;
     }
 
@@ -215,7 +215,7 @@ void EditorGUI::StopPlayMode()
 
     // Reset game camera
     auto& ecs = ECS::GetInstance();
-    auto gameCamera = ecs.GetSystem<graphics::GameCamera>();
+    auto gameCamera = ecs.GetSystem<graphics::CameraSystem>();
     if (gameCamera)
     {
         gameCamera->SetCameraEntity(0);

@@ -100,7 +100,7 @@
       <PrecompiledHeaderFile>PreCompile.h</PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
       <PreprocessorDefinitions>EE_PLATFORM_WINDOWS;EE_BUILD_DLL;ERMINE_USE_SPDLOG;GLFW_INCLUDE_NONE;IMGUI_DEFINE_MATH_OPERATORS;GLM_ENABLE_EXPERIMENTAL;_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING;JPH_USE_SUBMERGENCE;JPH_DEBUG_RENDERER;EE_EDITOR;EE_DEBUG;VERBOSE_LOGGING=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>include;..\ThirdParty\GLFW\include;..\ThirdParty\Glad\include;..\ThirdParty\imgui;..\ThirdParty\glm;..\ThirdParty\spdlog\include;..\ThirdParty\stb;..\ThirdParty\Fmod\inc;..\ThirdParty\Mono\include;..\ThirdParty;..\ThirdParty\rapidjson;..\ThirdParty\assimp\include;..\ThirdParty\DirectXTex\inc;..\ThirdParty\xproperty\source;..\ThirdParty\xresource_pipeline_v2-main\source;..\ThirdParty\xresource_pipeline_v2-main\dependencies\xtextfile\source;..\ThirdParty\xresource_pipeline_v2-main\dependencies\xerr\source;..\ThirdParty\imnodes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;..\ThirdParty\GLFW\include;..\ThirdParty\Glad\include;..\ThirdParty\imgui;..\ThirdParty\glm;..\ThirdParty\spdlog\include;..\ThirdParty\stb;..\ThirdParty\Fmod\inc;..\ThirdParty\Mono\include;..\ThirdParty;..\ThirdParty\rapidjson;..\ThirdParty\assimp\include;..\ThirdParty\DirectXTex\inc;..\ThirdParty\xproperty\source;..\ThirdParty\recastnavigation\Recast\Include;..\ThirdParty\recastnavigation\Detour\Include;..\ThirdParty\recastnavigation\DetourCrowd\Include;..\ThirdParty\recastnavigation\DetourTileCache\Include;..\ThirdParty\recastnavigation\DebugUtils\Include;..\ThirdParty\xresource_pipeline_v2-main\source;..\ThirdParty\xresource_pipeline_v2-main\dependencies\xtextfile\source;..\ThirdParty\xresource_pipeline_v2-main\dependencies\xerr\source;..\ThirdParty\imnodes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -148,7 +148,7 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
       <PrecompiledHeaderFile>PreCompile.h</PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
       <PreprocessorDefinitions>EE_PLATFORM_WINDOWS;EE_BUILD_DLL;ERMINE_USE_SPDLOG;GLFW_INCLUDE_NONE;IMGUI_DEFINE_MATH_OPERATORS;GLM_ENABLE_EXPERIMENTAL;_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING;JPH_USE_SUBMERGENCE;JPH_DEBUG_RENDERER;EE_EDITOR;EE_RELEASE;VERBOSE_LOGGING=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>include;..\ThirdParty\GLFW\include;..\ThirdParty\Glad\include;..\ThirdParty\imgui;..\ThirdParty\glm;..\ThirdParty\spdlog\include;..\ThirdParty\stb;..\ThirdParty\Fmod\inc;..\ThirdParty\Mono\include;..\ThirdParty;..\ThirdParty\rapidjson;..\ThirdParty\assimp\include;..\ThirdParty\DirectXTex\inc;..\ThirdParty\xproperty\source;..\ThirdParty\xresource_pipeline_v2-main\source;..\ThirdParty\xresource_pipeline_v2-main\dependencies\xtextfile\source;..\ThirdParty\xresource_pipeline_v2-main\dependencies\xerr\source;..\ThirdParty\imnodes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;..\ThirdParty\GLFW\include;..\ThirdParty\Glad\include;..\ThirdParty\imgui;..\ThirdParty\glm;..\ThirdParty\spdlog\include;..\ThirdParty\stb;..\ThirdParty\Fmod\inc;..\ThirdParty\Mono\include;..\ThirdParty;..\ThirdParty\rapidjson;..\ThirdParty\assimp\include;..\ThirdParty\DirectXTex\inc;..\ThirdParty\xproperty\source;..\ThirdParty\recastnavigation\Recast\Include;..\ThirdParty\recastnavigation\Detour\Include;..\ThirdParty\recastnavigation\DetourCrowd\Include;..\ThirdParty\recastnavigation\DetourTileCache\Include;..\ThirdParty\recastnavigation\DebugUtils\Include;..\ThirdParty\xresource_pipeline_v2-main\source;..\ThirdParty\xresource_pipeline_v2-main\dependencies\xtextfile\source;..\ThirdParty\xresource_pipeline_v2-main\dependencies\xerr\source;..\ThirdParty\imnodes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -200,7 +200,7 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
       <PrecompiledHeaderFile>PreCompile.h</PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
       <PreprocessorDefinitions>EE_PLATFORM_WINDOWS;EE_BUILD_DLL;ERMINE_USE_SPDLOG;GLFW_INCLUDE_NONE;IMGUI_DEFINE_MATH_OPERATORS;GLM_ENABLE_EXPERIMENTAL;_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING;JPH_USE_SUBMERGENCE;JPH_DEBUG_RENDERER;EE_GAME;EE_DEBUG;VERBOSE_LOGGING=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>include;..\ThirdParty\GLFW\include;..\ThirdParty\Glad\include;..\ThirdParty\imgui;..\ThirdParty\glm;..\ThirdParty\spdlog\include;..\ThirdParty\stb;..\ThirdParty\Fmod\inc;..\ThirdParty\Mono\include;..\ThirdParty;..\ThirdParty\rapidjson;..\ThirdParty\assimp\include;..\ThirdParty\DirectXTex\inc;..\ThirdParty\xproperty\source;..\ThirdParty\xresource_pipeline_v2-main\source;..\ThirdParty\xresource_pipeline_v2-main\dependencies\xtextfile\source;..\ThirdParty\xresource_pipeline_v2-main\dependencies\xerr\source;..\ThirdParty\imnodes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;..\ThirdParty\GLFW\include;..\ThirdParty\Glad\include;..\ThirdParty\imgui;..\ThirdParty\glm;..\ThirdParty\spdlog\include;..\ThirdParty\stb;..\ThirdParty\Fmod\inc;..\ThirdParty\Mono\include;..\ThirdParty;..\ThirdParty\rapidjson;..\ThirdParty\assimp\include;..\ThirdParty\DirectXTex\inc;..\ThirdParty\xproperty\source;..\ThirdParty\recastnavigation\Recast\Include;..\ThirdParty\recastnavigation\Detour\Include;..\ThirdParty\recastnavigation\DetourCrowd\Include;..\ThirdParty\recastnavigation\DetourTileCache\Include;..\ThirdParty\recastnavigation\DebugUtils\Include;..\ThirdParty\xresource_pipeline_v2-main\source;..\ThirdParty\xresource_pipeline_v2-main\dependencies\xtextfile\source;..\ThirdParty\xresource_pipeline_v2-main\dependencies\xerr\source;..\ThirdParty\imnodes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -248,7 +248,7 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
       <PrecompiledHeaderFile>PreCompile.h</PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
       <PreprocessorDefinitions>EE_PLATFORM_WINDOWS;EE_BUILD_DLL;ERMINE_USE_SPDLOG;GLFW_INCLUDE_NONE;IMGUI_DEFINE_MATH_OPERATORS;GLM_ENABLE_EXPERIMENTAL;_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING;JPH_USE_SUBMERGENCE;JPH_DEBUG_RENDERER;EE_GAME;EE_RELEASE;VERBOSE_LOGGING=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>include;..\ThirdParty\GLFW\include;..\ThirdParty\Glad\include;..\ThirdParty\imgui;..\ThirdParty\glm;..\ThirdParty\spdlog\include;..\ThirdParty\stb;..\ThirdParty\Fmod\inc;..\ThirdParty\Mono\include;..\ThirdParty;..\ThirdParty\rapidjson;..\ThirdParty\assimp\include;..\ThirdParty\DirectXTex\inc;..\ThirdParty\xproperty\source;..\ThirdParty\xresource_pipeline_v2-main\source;..\ThirdParty\xresource_pipeline_v2-main\dependencies\xtextfile\source;..\ThirdParty\xresource_pipeline_v2-main\dependencies\xerr\source;..\ThirdParty\imnodes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;..\ThirdParty\GLFW\include;..\ThirdParty\Glad\include;..\ThirdParty\imgui;..\ThirdParty\glm;..\ThirdParty\spdlog\include;..\ThirdParty\stb;..\ThirdParty\Fmod\inc;..\ThirdParty\Mono\include;..\ThirdParty;..\ThirdParty\rapidjson;..\ThirdParty\assimp\include;..\ThirdParty\DirectXTex\inc;..\ThirdParty\xproperty\source;..\ThirdParty\recastnavigation\Recast\Include;..\ThirdParty\recastnavigation\Detour\Include;..\ThirdParty\recastnavigation\DetourCrowd\Include;..\ThirdParty\recastnavigation\DetourTileCache\Include;..\ThirdParty\recastnavigation\DebugUtils\Include;..\ThirdParty\xresource_pipeline_v2-main\source;..\ThirdParty\xresource_pipeline_v2-main\dependencies\xtextfile\source;..\ThirdParty\xresource_pipeline_v2-main\dependencies\xerr\source;..\ThirdParty\imnodes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -325,6 +325,7 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClInclude Include="include\FrameController.h" />
     <ClInclude Include="include\GPUProfiler.h" />
     <ClInclude Include="include\GameCamera.h" />
+    <ClInclude Include="include\CameraSystem.h" />
     <ClInclude Include="include\GameObject.h" />
     <ClInclude Include="include\GameObjectFactory.h" />
     <ClInclude Include="include\GeometryFactory.h" />
@@ -348,6 +349,8 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClInclude Include="include\MeshManager.h" />
     <ClInclude Include="include\MeshTypes.h" />
     <ClInclude Include="include\Model.h" />
+    <ClInclude Include="include\NavMesh.h" />
+    <ClInclude Include="include\NavMeshAgentSystem.h" />
     <ClInclude Include="include\Particles.h" />
     <ClInclude Include="include\PhysicDebugRenderer.h" />
     <ClInclude Include="include\Physics.h" />
@@ -395,7 +398,7 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClCompile Include="src\Graphics\Camera.cpp" />
     <ClCompile Include="src\Graphics\Cubemap.cpp" />
     <ClCompile Include="src\Graphics\DrawCommands.cpp" />
-    <ClCompile Include="src\Graphics\GameCamera.cpp" />
+    <ClCompile Include="src\Graphics\CameraSystem.cpp" />
     <ClCompile Include="src\Graphics\GeometryFactory.cpp" />
     <ClCompile Include="src\Graphics\IndexBuffer.cpp" />
     <ClCompile Include="src\Graphics\MeshManager.cpp" />
@@ -405,6 +408,7 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClCompile Include="src\Graphics\SkeletalSSBO.cpp" />
     <ClCompile Include="src\Graphics\Skybox.cpp" />
     <ClCompile Include="src\Graphics\Texture.cpp" />
+    <ClCompile Include="src\Graphics\UIRenderSystem.cpp" />
     <ClCompile Include="src\Graphics\VertexArray.cpp" />
     <ClCompile Include="src\Graphics\VertexBuffer.cpp" />
     <ClCompile Include="src\ImGUI\AnimationGUI.cpp" />
@@ -418,6 +422,8 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClCompile Include="src\Math\MathVector.cpp" />
     <ClCompile Include="src\Math\Matrix3x3.cpp" />
     <ClCompile Include="src\Math\Matrix4x4.cpp" />
+    <ClCompile Include="src\NavMesh\NavMesh.cpp" />
+    <ClCompile Include="src\NavMesh\NavMeshAgentSystem.cpp" />
     <ClCompile Include="src\Object\GameObject.cpp" />
     <ClCompile Include="src\Object\GameObjectFactory.cpp" />
     <ClCompile Include="src\Particles\Particles.cpp" />
@@ -470,6 +476,9 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     </ProjectReference>
     <ProjectReference Include="..\ThirdParty\imnodes\imnodes.vcxproj">
       <Project>{74F1A99C-E0D0-2838-E9E8-B30E55478F99}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\ThirdParty\recastnavigation\recastnavigation.vcxproj">
+      <Project>{F7E4DE50-E3DD-FDA2-0C10-E327F867DDAE}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -48,9 +48,19 @@ namespace Ermine::graphics
          */
         void Unbind() const;
 
-        // Get a pointer to CPU-side data
+        /**
+         * @brief Get a pointer to the CPU-side copy of the vertex data
+         *
+         * Useful for physics calculations or readback operations.
+         * @return const void* Pointer to the buffer data
+         */
         const void* GetDataPointer() const { return m_Data.data(); }
 
+        /**
+         * @brief Get the size of the buffer in bytes
+         *
+         * @return unsigned int Size of the buffer
+         */
         unsigned int GetSize() const { return m_Size; }
     };
     
