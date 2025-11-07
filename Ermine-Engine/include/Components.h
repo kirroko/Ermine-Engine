@@ -2993,10 +2993,10 @@ namespace Ermine
 	*************************************************************************/
 	struct UIComponent
 	{
-		// Healthbar settings - STEAMPUNK THEME
+		// Healthbar settings
 		bool showHealthbar = true;
-		Ermine::Vec3 healthbarColor = { 0.90f, 0.65f, 0.20f };      // Warm copper/brass
-		Ermine::Vec3 healthbarBgColor = { 0.15f, 0.12f, 0.10f };    // Dark iron
+		Ermine::Vec3 healthbarColor = { 0.85f, 0.15f, 0.15f };      // Red for health
+		Ermine::Vec3 healthbarBgColor = { 0.2f, 0.2f, 0.2f };       // Dark gray
 		float healthbarWidth = 0.30f;  // Percentage of screen width (increased for visibility)
 		float healthbarHeight = 0.03f; // Percentage of screen height (increased for visibility)
 		Ermine::Vec3 healthbarPosition = { 0.02f, 0.92f, 0.0f };  // Top-left corner, slightly lower
@@ -3013,13 +3013,13 @@ namespace Ermine
 		float skillSlotSpacing = 0.01f;
 		Ermine::Vec3 skillsPosition = { 0.5f, 0.1f, 0.0f };  // Center bottom
 
-		// Crosshair settings - STEAMPUNK THEME
+		// Crosshair settings
 		bool showCrosshair = true;
-		Ermine::Vec3 crosshairColor = { 0.85f, 0.75f, 0.50f };  // Brass/gold for visibility
-		float crosshairSize = 0.015f;   // Slightly smaller for precision
-		float crosshairThickness = 0.002f;  // Thinner for sharpness
-		int crosshairStyle = 0;        // 0 = sniper scope, 1 = dot, 2 = circle, 3 = steampunk ornate
-		float crosshairGap = 0.005f;   // Gap in center for aiming
+		Ermine::Vec3 crosshairColor = { 0.95f, 0.95f, 0.95f };  // Bright white for maximum visibility
+		float crosshairSize = 0.012f;   // Reduced size for better precision
+		float crosshairThickness = 0.001f;  // Thinner and sharper
+		int crosshairStyle = 0;        // 0 = sniper scope, 1 = dot, 2 = circle
+		float crosshairGap = 0.004f;   // Small center gap for precise aiming
 
 		// Health system (Life Essence)
 		float currentHealth = 100.0f;
@@ -3041,22 +3041,17 @@ namespace Ermine
 		float manaBarHeight = 0.03f;          // Percentage of screen height
 		Ermine::Vec3 manaBarPosition = { 0.1f, 0.85f, 0.0f };   // Below health bar
 
-		// Skill slot data - STEAMPUNK THEME
+		// Skill slot data
 		struct SkillSlot
 		{
 			float currentCooldown = 0.0f;     // Current cooldown remaining (seconds)
 			float maxCooldown = 5.0f;         // Total cooldown duration
 			float manaCost = 20.0f;           // Life essence cost to cast
 			bool isOnCooldown = false;        // Is skill currently on cooldown?
-			Ermine::Vec3 slotColor = { 0.25f, 0.20f, 0.15f };        // Dark brass background
-			Ermine::Vec3 readyColor = { 0.90f, 0.75f, 0.40f };       // Bright brass/gold when ready
-			Ermine::Vec3 cooldownColor = { 0.50f, 0.25f, 0.15f };    // Dim copper during cooldown
-			Ermine::Vec3 cooldownOverlayColor = { 0.10f, 0.08f, 0.06f };  // Dark overlay during cooldown
-
-			// Activation animation (plays when skill is cast)
-			float activationAnimTimer = 0.0f; // Animation progress (0 = not animating)
-			float activationAnimDuration = 0.4f; // Total animation duration (seconds)
-			bool isAnimating = false;         // Is activation animation playing?
+			Ermine::Vec3 slotColor = { 0.25f, 0.25f, 0.25f };        // Dark gray background
+			Ermine::Vec3 readyColor = { 0.85f, 0.85f, 0.85f };       // Light gray when ready
+			Ermine::Vec3 cooldownColor = { 0.45f, 0.45f, 0.45f };    // Medium gray during cooldown
+			Ermine::Vec3 cooldownOverlayColor = { 0.15f, 0.15f, 0.15f };  // Dark overlay during cooldown
 
 			// Skill icon texture (optional - leave empty for solid color)
 			std::string iconTexturePath = ""; // Path to skill icon image (PNG, JPG, DDS)
@@ -3122,9 +3117,15 @@ namespace Ermine
 				skillObj.AddMember("readyColor", Vec3ToJson(skill.readyColor, alloc), alloc);
 				skillObj.AddMember("cooldownColor", Vec3ToJson(skill.cooldownColor, alloc), alloc);
 				skillObj.AddMember("cooldownOverlayColor", Vec3ToJson(skill.cooldownOverlayColor, alloc), alloc);
-				// Serialize icon texture path
+				// Serialize icon texture path and skill info
 				rapidjson::Value iconPathVal(skill.iconTexturePath.c_str(), alloc);
 				skillObj.AddMember("iconTexturePath", iconPathVal, alloc);
+				rapidjson::Value skillNameVal(skill.skillName.c_str(), alloc);
+				skillObj.AddMember("skillName", skillNameVal, alloc);
+				rapidjson::Value keyBindingVal(skill.keyBinding.c_str(), alloc);
+				skillObj.AddMember("keyBinding", keyBindingVal, alloc);
+				rapidjson::Value descriptionVal(skill.description.c_str(), alloc);
+				skillObj.AddMember("description", descriptionVal, alloc);
 				skillsArray.PushBack(skillObj, alloc);
 			}
 			out.AddMember("skillSlots", skillsArray, alloc);
@@ -3224,11 +3225,25 @@ namespace Ermine
 						skills[i].cooldownColor = JsonToVec3(skillObj["cooldownColor"]);
 					if (skillObj.HasMember("cooldownOverlayColor") && skillObj["cooldownOverlayColor"].IsObject())
 						skills[i].cooldownOverlayColor = JsonToVec3(skillObj["cooldownOverlayColor"]);
-					// Deserialize icon texture path
+					// Deserialize icon texture path and skill info
 					if (skillObj.HasMember("iconTexturePath") && skillObj["iconTexturePath"].IsString())
 						skills[i].iconTexturePath = skillObj["iconTexturePath"].GetString();
+					if (skillObj.HasMember("skillName") && skillObj["skillName"].IsString())
+						skills[i].skillName = skillObj["skillName"].GetString();
+					if (skillObj.HasMember("keyBinding") && skillObj["keyBinding"].IsString())
+						skills[i].keyBinding = skillObj["keyBinding"].GetString();
+					if (skillObj.HasMember("description") && skillObj["description"].IsString())
+						skills[i].description = skillObj["description"].GetString();
+
+					// Reset runtime values (these should not persist between sessions)
+					skills[i].currentCooldown = 0.0f;
+					skills[i].isOnCooldown = false;
 				}
 			}
+
+			// Reset component runtime timers
+			healthRegenTimer = 0.0f;
+			manaRegenTimer = 0.0f;
 		}
 
 		XPROPERTY_DEF(

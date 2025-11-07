@@ -109,17 +109,6 @@ namespace Ermine
                         anySkillOnCooldown = true;
                     }
                 }
-
-                // Update activation animation
-                if (skill.isAnimating)
-                {
-                    skill.activationAnimTimer += deltaTime;
-                    if (skill.activationAnimTimer >= skill.activationAnimDuration)
-                    {
-                        skill.activationAnimTimer = 0.0f;
-                        skill.isAnimating = false;
-                    }
-                }
             }
 
             // Life Essence (Health) Regeneration System
@@ -240,10 +229,6 @@ namespace Ermine
         ui.currentHealth -= skill.manaCost;
         skill.currentCooldown = skill.maxCooldown;
         skill.isOnCooldown = true;
-
-        // Trigger activation animation
-        skill.isAnimating = true;
-        skill.activationAnimTimer = 0.0f;
 
         // Reset health regeneration timer when skill is cast
         ui.healthRegenTimer = 0.0f;
