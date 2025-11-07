@@ -119,6 +119,25 @@ public:
     */
     void CreateHUDEntity();
 
+    /*!
+    \brief Checks if a HUD entity with UIComponent exists in the current scene
+    \return True if HUD entity exists, false otherwise
+    */
+    bool HasHUDEntity() const;
+
+    /*!
+    \brief Ensures a HUD entity exists, creating one if needed
+    \details This is the recommended way to guarantee HUD presence.
+             Safe to call multiple times - only creates if missing.
+    */
+    void EnsureHUDExists();
+
+    /*!
+    \brief Removes any existing HUD entity from the scene
+    \details Useful before saving if you want clean scene files without HUD data
+    */
+    void RemoveHUDEntity();
+
 private:
     SceneManager() = default;
 
