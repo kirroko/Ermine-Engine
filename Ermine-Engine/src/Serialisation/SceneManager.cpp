@@ -262,7 +262,7 @@ void SceneManager::NewScene()
     Ermine::ECS::GetInstance().ClearAllEntities();
 
     // Recreate HUD entity (UI elements)
-    CreateHUDEntity();
+    //CreateHUDEntity();
 
     auto mainLight = Ermine::ECS::GetInstance().CreateEntity();
 
@@ -296,7 +296,7 @@ void SceneManager::ClearScene()
     Ermine::ECS::GetInstance().ClearAllEntities();
 
     // Recreate HUD entity (UI elements)
-    CreateHUDEntity();
+    //CreateHUDEntity();
 
     //Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>()->UpdateShadowMap();
 
@@ -328,7 +328,7 @@ void SceneManager::OpenScene(const std::string& path)
     LoadSceneFromFile(Ermine::ECS::GetInstance(), path);
 
     // Recreate HUD entity (UI elements)
-    CreateHUDEntity();
+    //CreateHUDEntity();
 
     Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>()->InitializeShadowMapResources();
 

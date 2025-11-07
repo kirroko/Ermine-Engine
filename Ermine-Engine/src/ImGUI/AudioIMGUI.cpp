@@ -758,8 +758,10 @@ namespace Ermine
 
         // Create entity for global audio
         m_GlobalAudioEntity = ecs.CreateEntity();
-        //ecs.AddComponent(m_GlobalAudioEntity, Transform());
+        ecs.AddComponent(m_GlobalAudioEntity, Transform());
         ecs.AddComponent(m_GlobalAudioEntity, ObjectMetaData("GlobalAudio", "Audio", false));
+        ecs.AddComponent(m_GlobalAudioEntity, HierarchyComponent());
+        ecs.AddComponent(m_GlobalAudioEntity, GlobalTransform());
 
         // Create and setup GlobalAudioComponent
         GlobalAudioComponent globalAudio;
