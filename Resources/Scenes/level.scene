@@ -28,7 +28,7 @@
             1.0
           ],
           "intensity": 1.0,
-          "type": "Point",
+          "type": "Directional",
           "castsShadows": true,
           "innerAngle": -1.0,
           "outerAngle": -1.0,
@@ -53,7 +53,7 @@
         "Transform": {
           "position": [
             0.0,
-            0.0,
+            -2.25,
             0.0
           ],
           "rotation": [
@@ -64,7 +64,7 @@
           ],
           "scale": [
             5.0,
-            0.5,
+            5.0,
             5.0
           ]
         },
@@ -142,7 +142,7 @@
         "Transform": {
           "position": [
             -5.0,
-            0.0,
+            -2.25,
             0.0
           ],
           "rotation": [
@@ -153,7 +153,7 @@
           ],
           "scale": [
             5.0,
-            0.5,
+            5.0,
             5.0
           ]
         },
@@ -227,7 +227,7 @@
         "Transform": {
           "position": [
             5.0,
-            0.0,
+            -2.25,
             0.0
           ],
           "rotation": [
@@ -238,7 +238,7 @@
           ],
           "scale": [
             5.0,
-            0.5,
+            5.0,
             5.0
           ]
         },
@@ -311,7 +311,7 @@
       "components": {
         "Transform": {
           "position": [
-            12.0,
+            13.0,
             0.0,
             -12.0
           ],
@@ -567,7 +567,7 @@
         "Transform": {
           "position": [
             -10.0,
-            0.0,
+            -2.25,
             -20.0
           ],
           "rotation": [
@@ -578,7 +578,7 @@
           ],
           "scale": [
             5.0,
-            0.5,
+            5.0,
             5.0
           ]
         },
@@ -737,7 +737,7 @@
         "Transform": {
           "position": [
             20.0,
-            0.0,
+            -2.25,
             -15.0
           ],
           "rotation": [
@@ -748,7 +748,7 @@
           ],
           "scale": [
             5.0,
-            0.5,
+            5.0,
             5.0
           ]
         },
@@ -822,7 +822,7 @@
         "Transform": {
           "position": [
             20.0,
-            0.0,
+            -2.25,
             -10.0
           ],
           "rotation": [
@@ -833,7 +833,7 @@
           ],
           "scale": [
             5.0,
-            0.5,
+            5.0,
             5.0
           ]
         },
@@ -907,7 +907,7 @@
         "Transform": {
           "position": [
             -10.0,
-            0.0,
+            -2.25,
             -25.0
           ],
           "rotation": [
@@ -918,7 +918,7 @@
           ],
           "scale": [
             5.0,
-            0.5,
+            5.0,
             5.0
           ]
         },
@@ -992,7 +992,7 @@
         "Transform": {
           "position": [
             2.5,
-            0.0,
+            -1.2999999523162842,
             -32.0
           ],
           "rotation": [
@@ -1003,7 +1003,7 @@
           ],
           "scale": [
             5.0,
-            5.0,
+            7.0,
             5.0
           ]
         },
@@ -1332,7 +1332,7 @@
         "Transform": {
           "position": [
             -2.5,
-            0.0,
+            -1.2999999523162842,
             -32.0
           ],
           "rotation": [
@@ -1343,7 +1343,7 @@
           ],
           "scale": [
             5.0,
-            5.0,
+            7.0,
             5.0
           ]
         },
@@ -1468,21 +1468,25 @@
             ],
             "materialEmissiveIntensity": 1.0,
             "materialHasAlbedoMap": true,
-            "materialHasAoMap": false
+            "materialHasAoMap": true
           },
           "textures": [
             {
               "slot": "materialAlbedoMap",
-              "path": "../Resources\\Textures\\seemlessbricktexture.png"
+              "path": "../Resources\\Textures\\Floor_BaseColor.png"
             },
             {
               "slot": "material.albedoMap",
-              "path": "../Resources\\Textures\\seemlessbricktexture.png"
+              "path": "../Resources\\Textures\\Floor_BaseColor.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "../Resources\\Textures\\Floor_AO.png"
             }
           ],
           "uvScale": [
-            1.0,
-            1.0
+            2.0,
+            2.0
           ],
           "uvOffset": [
             0.0,
@@ -1502,8 +1506,8 @@
       "components": {
         "Transform": {
           "position": [
-            -16.5,
-            2.700000047683716,
+            -12.699999809265137,
+            0.0,
             -16.0
           ],
           "rotation": [
@@ -1554,21 +1558,25 @@
             ],
             "materialEmissiveIntensity": 1.0,
             "materialHasAlbedoMap": true,
-            "materialHasAoMap": false
+            "materialHasAoMap": true
           },
           "textures": [
             {
               "slot": "materialAlbedoMap",
-              "path": "../Resources\\Textures\\seemlessbricktexture.png"
+              "path": "../Resources\\Textures\\Floor_BaseColor.png"
             },
             {
               "slot": "material.albedoMap",
-              "path": "../Resources\\Textures\\seemlessbricktexture.png"
+              "path": "../Resources\\Textures\\Floor_BaseColor.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "../Resources\\Textures\\Floor_AO.png"
             }
           ],
           "uvScale": [
-            1.0,
-            1.0
+            2.0,
+            2.0
           ],
           "uvOffset": [
             0.0,
@@ -1589,8 +1597,8 @@
         "Transform": {
           "position": [
             3.5,
-            2.700000047683716,
-            4.0
+            0.0,
+            2.799999952316284
           ],
           "rotation": [
             0.0,
@@ -1640,21 +1648,25 @@
             ],
             "materialEmissiveIntensity": 1.0,
             "materialHasAlbedoMap": true,
-            "materialHasAoMap": false
+            "materialHasAoMap": true
           },
           "textures": [
             {
               "slot": "materialAlbedoMap",
-              "path": "../Resources\\Textures\\seemlessbricktexture.png"
+              "path": "../Resources\\Textures\\Floor_BaseColor.png"
             },
             {
               "slot": "material.albedoMap",
-              "path": "../Resources\\Textures\\seemlessbricktexture.png"
+              "path": "../Resources\\Textures\\Floor_BaseColor.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "../Resources\\Textures\\Floor_AO.png"
             }
           ],
           "uvScale": [
-            1.0,
-            1.0
+            2.0,
+            2.0
           ],
           "uvOffset": [
             0.0,
@@ -1674,8 +1686,8 @@
       "components": {
         "Transform": {
           "position": [
-            23.5,
-            2.700000047683716,
+            22.799999237060548,
+            0.0,
             -16.0
           ],
           "rotation": [
@@ -1726,21 +1738,25 @@
             ],
             "materialEmissiveIntensity": 1.0,
             "materialHasAlbedoMap": true,
-            "materialHasAoMap": false
+            "materialHasAoMap": true
           },
           "textures": [
             {
               "slot": "materialAlbedoMap",
-              "path": "../Resources\\Textures\\seemlessbricktexture.png"
+              "path": "../Resources\\Textures\\Floor_BaseColor.png"
             },
             {
               "slot": "material.albedoMap",
-              "path": "../Resources\\Textures\\seemlessbricktexture.png"
+              "path": "../Resources\\Textures\\Floor_BaseColor.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "../Resources\\Textures\\Floor_AO.png"
             }
           ],
           "uvScale": [
-            1.0,
-            1.0
+            2.0,
+            2.0
           ],
           "uvOffset": [
             0.0,
@@ -1761,8 +1777,8 @@
         "Transform": {
           "position": [
             3.5,
-            2.700000047683716,
-            -36.0
+            0.0,
+            -34.79999923706055
           ],
           "rotation": [
             0.0,
@@ -1812,21 +1828,25 @@
             ],
             "materialEmissiveIntensity": 1.0,
             "materialHasAlbedoMap": true,
-            "materialHasAoMap": false
+            "materialHasAoMap": true
           },
           "textures": [
             {
               "slot": "materialAlbedoMap",
-              "path": "../Resources\\Textures\\seemlessbricktexture.png"
+              "path": "../Resources\\Textures\\Floor_BaseColor.png"
             },
             {
               "slot": "material.albedoMap",
-              "path": "../Resources\\Textures\\seemlessbricktexture.png"
+              "path": "../Resources\\Textures\\Floor_BaseColor.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "../Resources\\Textures\\Floor_AO.png"
             }
           ],
           "uvScale": [
-            1.0,
-            1.0
+            2.0,
+            2.0
           ],
           "uvOffset": [
             0.0,
@@ -1847,7 +1867,7 @@
         "Transform": {
           "position": [
             3.5,
-            10.0,
+            7.5,
             -16.0
           ],
           "rotation": [
@@ -1898,21 +1918,25 @@
             ],
             "materialEmissiveIntensity": 1.0,
             "materialHasAlbedoMap": true,
-            "materialHasAoMap": false
+            "materialHasAoMap": true
           },
           "textures": [
             {
               "slot": "materialAlbedoMap",
-              "path": "../Resources\\Textures\\seemlessbricktexture.png"
+              "path": "../Resources\\Textures\\Floor_BaseColor.png"
             },
             {
               "slot": "material.albedoMap",
-              "path": "../Resources\\Textures\\seemlessbricktexture.png"
+              "path": "../Resources\\Textures\\Floor_BaseColor.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "../Resources\\Textures\\Floor_AO.png"
             }
           ],
           "uvScale": [
-            1.0,
-            1.0
+            2.0,
+            2.0
           ],
           "uvOffset": [
             0.0,
@@ -1957,6 +1981,1510 @@
           "tag": "Audio",
           "selfActive": false
         }
+      }
+    },
+    {
+      "id": 25,
+      "components": {
+        "Transform": {
+          "position": [
+            0.0,
+            2.200000047683716,
+            -34.20000076293945
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.009999999776482582,
+            0.009999999776482582,
+            0.009999999776482582
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Doorway",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "Doorway.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parent": 0,
+          "children": [
+            26
+          ],
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 26,
+      "components": {
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Doorway.fbx_Doorway_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
+            "materialHasRoughnessMap": true,
+            "materialHasMetallicMap": true,
+            "materialHasAoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources\\Textures\\Walls_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources\\Textures\\Walls_BaseColor.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "../Resources\\Textures\\Walls_Normal.png"
+            },
+            {
+              "slot": "materialRoughnessMap",
+              "path": "../Resources\\Textures\\Walls_Height.png"
+            },
+            {
+              "slot": "material.metallicMap",
+              "path": "../Resources\\Textures\\Walls_MetallicSmoothness.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "../Resources\\Textures\\Walls_AO.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            -1.0
+          ],
+          "uvOffset": [
+            0.0,
+            1.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parent": 25,
+          "children": [],
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 27,
+      "components": {
+        "Transform": {
+          "position": [
+            0.0,
+            -4.699999809265137,
+            -12.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.019999999552965165,
+            0.03999999910593033,
+            0.019999999552965165
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Column",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "Column.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parent": 0,
+          "children": [
+            28
+          ],
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 28,
+      "components": {
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Column.fbx_Column_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
+            "materialHasRoughnessMap": true,
+            "materialHasMetallicMap": true,
+            "materialHasAoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources\\Textures\\Walls_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources\\Textures\\Walls_BaseColor.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "../Resources\\Textures\\Walls_Normal.png"
+            },
+            {
+              "slot": "materialRoughnessMap",
+              "path": "../Resources\\Textures\\Walls_Height.png"
+            },
+            {
+              "slot": "material.metallicMap",
+              "path": "../Resources\\Textures\\Walls_MetallicSmoothness.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "../Resources\\Textures\\Walls_AO.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            -1.0
+          ],
+          "uvOffset": [
+            0.0,
+            1.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parent": 27,
+          "children": [],
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 29,
+      "components": {
+        "Transform": {
+          "position": [
+            -5.0,
+            -4.699999809265137,
+            -13.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.019999999552965165,
+            0.03999999910593033,
+            0.019999999552965165
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Column (1)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "Column.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parent": 0,
+          "children": [
+            28
+          ],
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 30,
+      "components": {
+        "Transform": {
+          "position": [
+            12.0,
+            -4.699999809265137,
+            -19.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.019999999552965165,
+            0.03999999910593033,
+            0.019999999552965165
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Column (2)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "Column.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parent": 0,
+          "children": [
+            28
+          ],
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 31,
+      "components": {
+        "Transform": {
+          "position": [
+            6.0,
+            -4.699999809265137,
+            -27.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.019999999552965165,
+            0.03999999910593033,
+            0.019999999552965165
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Column (3)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "Column.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parent": 0,
+          "children": [
+            28
+          ],
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 32,
+      "components": {
+        "Transform": {
+          "position": [
+            -6.0,
+            -4.699999809265137,
+            -27.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.019999999552965165,
+            0.03999999910593033,
+            0.019999999552965165
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Column (4)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "Column.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parent": 0,
+          "children": [
+            28
+          ],
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 33,
+      "components": {
+        "Transform": {
+          "position": [
+            17.700000762939454,
+            0.30000001192092898,
+            -15.0
+          ],
+          "rotation": [
+            0.0,
+            0.7071067690849304,
+            0.0,
+            0.7071067690849304
+          ],
+          "scale": [
+            0.019999999552965165,
+            0.019999999552965165,
+            0.019999999552965165
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Bars",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "Bars.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parent": 0,
+          "children": [
+            34
+          ],
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 34,
+      "components": {
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Bars.fbx_Bars_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
+            "materialHasMetallicMap": true,
+            "materialHasAoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources\\Textures\\Bars_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources\\Textures\\Bars_BaseColor.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "../Resources\\Textures\\Bars_Normal.png"
+            },
+            {
+              "slot": "material.metallicMap",
+              "path": "../Resources\\Textures\\Bars_MetallicSmoothness.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "../Resources\\Textures\\Bars_AO.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            -1.0
+          ],
+          "uvOffset": [
+            0.0,
+            1.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parent": 33,
+          "children": [],
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 35,
+      "components": {
+        "Transform": {
+          "position": [
+            17.700000762939454,
+            0.30000001192092898,
+            -10.0
+          ],
+          "rotation": [
+            0.0,
+            0.7071067690849304,
+            0.0,
+            0.7071067690849304
+          ],
+          "scale": [
+            0.019999999552965165,
+            0.019999999552965165,
+            0.019999999552965165
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Bars (1)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "Bars.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parent": 0,
+          "children": [
+            34
+          ],
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 36,
+      "components": {
+        "Transform": {
+          "position": [
+            10.0,
+            -4.699999809265137,
+            -6.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.019999999552965165,
+            0.03999999910593033,
+            0.019999999552965165
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Column (5)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "Column.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parent": 0,
+          "children": [
+            28
+          ],
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 37,
+      "components": {
+        "Transform": {
+          "position": [
+            0.0,
+            -4.699999809265137,
+            -6.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.019999999552965165,
+            0.014999999664723874,
+            0.019999999552965165
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Column (6)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "Column.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parent": 0,
+          "children": [
+            28
+          ],
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 38,
+      "components": {
+        "Transform": {
+          "position": [
+            5.0,
+            -4.699999809265137,
+            -12.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.019999999552965165,
+            0.014999999664723874,
+            0.019999999552965165
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Column (7)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "Column.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parent": 0,
+          "children": [
+            28
+          ],
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 39,
+      "components": {
+        "Transform": {
+          "position": [
+            0.0,
+            -4.699999809265137,
+            -20.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.019999999552965165,
+            0.014999999664723874,
+            0.019999999552965165
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Column (8)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "Column.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parent": 0,
+          "children": [
+            28
+          ],
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 40,
+      "components": {
+        "Transform": {
+          "position": [
+            13.0,
+            -4.699999809265137,
+            -12.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.019999999552965165,
+            0.014999999664723874,
+            0.019999999552965165
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Column (9)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "Column.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parent": 0,
+          "children": [
+            28
+          ],
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 41,
+      "components": {
+        "Transform": {
+          "position": [
+            12.0,
+            -4.699999809265137,
+            -26.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.019999999552965165,
+            0.014999999664723874,
+            0.019999999552965165
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Column (10)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "Column.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parent": 0,
+          "children": [
+            28
+          ],
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 42,
+      "components": {
+        "Transform": {
+          "position": [
+            -10.0,
+            0.0,
+            -7.5
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            5.0,
+            15.0,
+            20.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Corner Wall",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cube",
+            "size": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "materialAlpha": 1.0,
+            "materialTransparency": 0.0,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.5,
+            "materialEmissive": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 1.0,
+            "materialHasAlbedoMap": true,
+            "materialHasAoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources\\Textures\\Floor_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources\\Textures\\Floor_BaseColor.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "../Resources\\Textures\\Floor_AO.png"
+            }
+          ],
+          "uvScale": [
+            2.0,
+            2.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parent": 0,
+          "children": [],
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 43,
+      "components": {
+        "Transform": {
+          "position": [
+            20.0,
+            0.0,
+            -2.5
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            5.0,
+            15.0,
+            10.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Corner Wall (1)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cube",
+            "size": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "materialAlpha": 1.0,
+            "materialTransparency": 0.0,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.5,
+            "materialEmissive": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 1.0,
+            "materialHasAlbedoMap": true,
+            "materialHasAoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources\\Textures\\Floor_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources\\Textures\\Floor_BaseColor.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "../Resources\\Textures\\Floor_AO.png"
+            }
+          ],
+          "uvScale": [
+            2.0,
+            2.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parent": 0,
+          "children": [],
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 44,
+      "components": {
+        "Transform": {
+          "position": [
+            12.5,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            10.0,
+            15.0,
+            5.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Corner Wall (2)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cube",
+            "size": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "materialAlpha": 1.0,
+            "materialTransparency": 0.0,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.5,
+            "materialEmissive": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 1.0,
+            "materialHasAlbedoMap": true,
+            "materialHasAoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources\\Textures\\Floor_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources\\Textures\\Floor_BaseColor.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "../Resources\\Textures\\Floor_AO.png"
+            }
+          ],
+          "uvScale": [
+            2.0,
+            2.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parent": 0,
+          "children": [],
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 45,
+      "components": {
+        "Transform": {
+          "position": [
+            20.0,
+            0.0,
+            -26.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            5.0,
+            15.0,
+            17.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Corner Wall (3)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cube",
+            "size": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "materialAlpha": 1.0,
+            "materialTransparency": 0.0,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.5,
+            "materialEmissive": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 1.0,
+            "materialHasAlbedoMap": true,
+            "materialHasAoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources\\Textures\\Floor_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources\\Textures\\Floor_BaseColor.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "../Resources\\Textures\\Floor_AO.png"
+            }
+          ],
+          "uvScale": [
+            2.0,
+            2.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parent": 0,
+          "children": [],
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 46,
+      "components": {
+        "Transform": {
+          "position": [
+            7.5,
+            4.0,
+            -34.0
+          ],
+          "rotation": [
+            0.7071068286895752,
+            0.0,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.009999999776482582,
+            0.009999905712902546,
+            0.009999905712902546
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Gear",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "Gear2.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parent": 0,
+          "children": [
+            47
+          ],
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 47,
+      "components": {
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Gear2.fbx_Gear.001_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
+            "materialHasRoughnessMap": true,
+            "materialHasMetallicMap": true,
+            "materialHasAoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources\\Textures\\Gear2_DefaultMaterial_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources\\Textures\\Gear2_DefaultMaterial_BaseColor.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "../Resources\\Textures\\Gear2_DefaultMaterial_Normal.png"
+            },
+            {
+              "slot": "materialRoughnessMap",
+              "path": "../Resources\\Textures\\Gear2_DefaultMaterial_Roughness.png"
+            },
+            {
+              "slot": "material.metallicMap",
+              "path": "../Resources\\Textures\\Gear2_DefaultMaterial_Metallic.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "../Resources\\Textures\\Gear2_DefaultMaterial_Height.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            -1.0
+          ],
+          "uvOffset": [
+            0.0,
+            1.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parent": 46,
+          "children": [],
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 48,
+      "components": {
+        "Transform": {
+          "position": [
+            -7.5,
+            4.0,
+            -34.0
+          ],
+          "rotation": [
+            0.7071068286895752,
+            0.0,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.009999999776482582,
+            0.009999905712902546,
+            0.009999905712902546
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Gear (1)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "Gear2.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parent": 0,
+          "children": [
+            47
+          ],
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 49,
+      "components": {
+        "Transform": {
+          "position": [
+            22.399999618530275,
+            2.5,
+            -12.5
+          ],
+          "rotation": [
+            0.0,
+            -0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.04000000283122063,
+            0.03999999910593033,
+            0.04000000283122063
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Switch",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "Switch.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parent": 0,
+          "children": [
+            50,
+            51
+          ],
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 50,
+      "components": {
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Switch.fbx_SwitchBase_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
+            "materialHasRoughnessMap": true,
+            "materialHasMetallicMap": true,
+            "materialHasAoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources\\Textures\\Switch_openPBR_shader1_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources\\Textures\\Switch_openPBR_shader1_BaseColor.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "../Resources\\Textures\\Switch_openPBR_shader1_Normal.png"
+            },
+            {
+              "slot": "materialRoughnessMap",
+              "path": "../Resources\\Textures\\Switch_openPBR_shader1_Roughness.png"
+            },
+            {
+              "slot": "material.metallicMap",
+              "path": "../Resources\\Textures\\Switch_openPBR_shader1_Metallic.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "../Resources\\Textures\\Switch_openPBR_shader1_Height.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            -1.0
+          ],
+          "uvOffset": [
+            0.0,
+            1.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parent": 49,
+          "children": [],
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 51,
+      "components": {
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Switch.fbx_Handle_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
+            "materialHasRoughnessMap": true,
+            "materialHasMetallicMap": true,
+            "materialHasAoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources\\Textures\\Switch_openPBR_shader1_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources\\Textures\\Switch_openPBR_shader1_BaseColor.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "../Resources\\Textures\\Switch_openPBR_shader1_Normal.png"
+            },
+            {
+              "slot": "materialRoughnessMap",
+              "path": "../Resources\\Textures\\Switch_openPBR_shader1_Roughness.png"
+            },
+            {
+              "slot": "material.metallicMap",
+              "path": "../Resources\\Textures\\Switch_openPBR_shader1_Metallic.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "../Resources\\Textures\\Switch_openPBR_shader1_Height.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            -1.0
+          ],
+          "uvOffset": [
+            0.0,
+            1.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parent": 49,
+          "children": [],
+          "depth": 1
+        },
+        "GlobalTransform": {}
       }
     }
   ]
