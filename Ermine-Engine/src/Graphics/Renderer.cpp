@@ -35,6 +35,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Skybox.h"
 #include <random>  
 #include "Physics.h"
+#include "NavMesh.h"
 #include "AnimationManager.h"
 
 #include <GLFW/glfw3.h>
@@ -177,6 +178,12 @@ void Renderer::Init(const int& screenWidth, const int& screenHeight)
 	m_MaterialsDirty = true;
 }
 
+/**
+ * @brief Submits a debug line to be rendered in the scene.
+ * @param from Starting point of the line in world space.
+ * @param to Ending point of the line in world space.
+ * @param color RGB color of the line.
+ */
 void Renderer::SubmitDebugLine(const glm::vec3& from, const glm::vec3& to, const glm::vec3& color)
 {
 	m_DebugLines.push_back({ from, color });
@@ -232,6 +239,11 @@ void Renderer::SubmitDebugFrustum(const Frustum& frustum, const glm::mat4& invVi
 	SubmitDebugLine(corners[3], corners[7], color); // top-left
 }
 
+/**
+ * @brief Renders all submitted debug lines using the provided view and projection matrices.
+ * @param view View matrix for the camera.
+ * @param proj Projection matrix for the camera.
+ */
 void Renderer::RenderDebugLines(const glm::mat4& view, const glm::mat4& proj)
 {
 	if (m_DebugLines.empty()) return;
@@ -288,6 +300,73 @@ void Renderer::RenderDebugLines(const glm::mat4& view, const glm::mat4& proj)
 	glDrawArrays(GL_LINES, 0, (GLsizei)m_DebugLines.size());
 	glBindVertexArray(0);
 	m_DebugLines.clear();
+}
+
+void Renderer::SubmitDebugTriangle(const glm::vec3& a, const glm::vec3& b, const glm::vec3& c, const glm::vec3& color)
+{
+	m_DebugTriangleVertices.push_back({ a, color });
+	m_DebugTriangleVertices.push_back({ b, color });
+	m_DebugTriangleVertices.push_back({ c, color });
+}
+
+void Renderer::RenderDebugTriangles(const Mtx44& view, const Mtx44& proj)
+{
+	if (m_DebugTriangleVertices.empty()) return;
+
+	if (!debugShader)
+	{
+		debugShader = AssetManager::GetInstance().LoadShader(
+			"../Resources/Shaders/debug_line_vert.glsl",
+			"../Resources/Shaders/debug_line_frag.glsl"
+		);
+		if (!debugShader || !debugShader->IsValid())
+		{
+			m_DebugTriangleVertices.clear();
+			return;
+		}
+	}
+
+	debugShader->Bind();
+	debugShader->SetUniformMatrix4fv("uView", view);
+	debugShader->SetUniformMatrix4fv("uProj", proj);
+	debugShader->SetUniform1f("u_Alpha", 0.35f);
+
+	if (m_DebugVAO == 0)
+	{
+		glGenVertexArrays(1, &m_DebugVAO);
+		glGenBuffers(1, &m_DebugVBO);
+
+		glBindVertexArray(m_DebugVAO);
+		glBindBuffer(GL_ARRAY_BUFFER, m_DebugVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(DebugVertex) * 65536, nullptr, GL_DYNAMIC_DRAW);
+
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(DebugVertex), (void*)offsetof(DebugVertex, position));
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(DebugVertex), (void*)offsetof(DebugVertex, color));
+		glBindVertexArray(0);
+	}
+
+	glBindVertexArray(m_DebugVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, m_DebugVBO);
+	glBufferSubData(GL_ARRAY_BUFFER, 0,
+		(GLsizeiptr)(m_DebugTriangleVertices.size() * sizeof(DebugVertex)),
+		m_DebugTriangleVertices.data());
+
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glDisable(GL_CULL_FACE);
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LEQUAL);
+
+	glDrawArrays(GL_TRIANGLES, 0, (GLsizei)m_DebugTriangleVertices.size());
+
+	glBindVertexArray(0);
+	debugShader->Unbind();
+
+	m_DebugTriangleVertices.clear();
+
+	glDisable(GL_BLEND);
 }
 
 /**
@@ -1695,7 +1774,11 @@ void Renderer::RenderPostProcessPass()
 	// Framebuffer will be unbound in Engine.cpp after UI rendering
 }
 
-// overload that forwards to the existing glm version
+/**
+ * @brief Renders all submitted debug lines using the provided view and projection matrices.
+ * @param view View matrix for the camera (custom Mtx44 type).
+ * @param proj Projection matrix for the camera (custom Mtx44 type).
+ */
 void Renderer::RenderDebugLines(const Mtx44& view, const Mtx44& proj)
 {
 	RenderDebugLines(ToGlm(view), ToGlm(proj));
@@ -1765,6 +1848,27 @@ void Renderer::RenderDeferredPipeline(const Mtx44& view, const Mtx44& projection
 		}
 		RenderDebugLines(view, projection);
 	}
+
+	if (m_PostProcessBuffer)
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, m_PostProcessBuffer->FBO);
+		glViewport(0, 0, m_PostProcessBuffer->width, m_PostProcessBuffer->height);
+
+		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_LEQUAL);
+		glDisable(GL_CULL_FACE);
+
+		if (auto navSys = ECS::GetInstance().GetSystem<NavMeshSystem>())
+		{
+			//EE_CORE_INFO("[Renderer] Drawing NavMesh debug lines");
+			navSys->DebugDraw();
+			navSys->DebugHighLight();
+		}
+
+		// Flush the navmesh debug lines to screen
+		RenderDebugLines(view, projection);
+	}
+	
 #endif
 
 	// Post-processing pass - read from lighting + transparency pass output

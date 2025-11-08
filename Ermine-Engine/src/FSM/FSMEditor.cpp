@@ -193,7 +193,7 @@ namespace Ermine
                         otherNodePtr->isStartNode = false;
                 }
 
-                EE_CORE_INFO("FSMEditor: Node %d set as Start Node", snode.id);
+                //EE_CORE_INFO("FSMEditor: Node %d set as Start Node", snode.id);
             }
 
             ImNodes::BeginInputAttribute(snode.id * 10 + 1);
@@ -238,7 +238,7 @@ namespace Ermine
                 // If the FSM is currently using this node, reset it
                 if (fsm.m_CurrentScript && fsm.m_CurrentScript->id == deleteId)
                 {
-                    EE_CORE_INFO("FSMEditor: Current active node (%d) deleted, resetting FSM state.", deleteId);
+                    //EE_CORE_INFO("FSMEditor: Current active node (%d) deleted, resetting FSM state.", deleteId);
 
                     fsm.m_CurrentScript = nullptr;
 
@@ -248,8 +248,8 @@ namespace Ermine
                         if (nodePtr->isStartNode)
                         {
                             fsm.m_CurrentScript = nodePtr.get();
-                            EE_CORE_INFO("FSMEditor: Reassigned to new start node: %s (id=%d)",
-                                nodePtr->name.c_str(), nodePtr->id);
+                            //EE_CORE_INFO("FSMEditor: Reassigned to new start node: %s (id=%d)",
+                            //    nodePtr->name.c_str(), nodePtr->id);
                             break;
                         }
                     }
@@ -259,8 +259,8 @@ namespace Ermine
                     {
                         fsm.m_CurrentScript = fsm.m_Nodes.front().get();
                         fsm.m_CurrentScript->isStartNode = true;
-                        EE_CORE_INFO("FSMEditor: Fallback start node assigned: %s (id=%d)",
-                            fsm.m_CurrentScript->name.c_str(), fsm.m_CurrentScript->id);
+                        //EE_CORE_INFO("FSMEditor: Fallback start node assigned: %s (id=%d)",
+                        //    fsm.m_CurrentScript->name.c_str(), fsm.m_CurrentScript->id);
                     }
                 }
 
@@ -289,7 +289,7 @@ namespace Ermine
                     [&](const std::shared_ptr<ScriptNode>& n) { return n->id == deleteId; }),
                     fsm.m_Nodes.end());
 
-                EE_CORE_INFO("FSMEditor: Node %d deleted", deleteId);
+                //EE_CORE_INFO("FSMEditor: Node %d deleted", deleteId);
             }
 
             nodesToDelete.clear();

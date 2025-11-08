@@ -1,7 +1,7 @@
 /* Start Header ************************************************************************/
 /*!
 \file       UIRenderSystem.cpp
-\author     Claude Code Assistant
+\author     Edwin Lee Zirui, edwinzirui.lee, 2301299, edwinzirui.lee@digipen.edu
 \date       04/11/2025
 \brief      Implementation of the UIRenderSystem for rendering HUD elements.
 
@@ -16,6 +16,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "ECS.h"
 #include "AssetManager.h"
 #include "Logger.h"
+#include "Texture.h"
 #include <cmath>
 
 #if defined(EE_EDITOR)
@@ -55,18 +56,30 @@ namespace Ermine
         glBindVertexArray(m_VAO);
         glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
 
-        // Reserve space for vertex data (position + color)
-        glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 1024, nullptr, GL_DYNAMIC_DRAW);
+        // Reserve space for vertex data (position + color + texCoord)
+        glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 2048, nullptr, GL_DYNAMIC_DRAW);
 
         // Position attribute (x, y)
         glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
 
         // Color attribute (r, g, b, a)
         glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(2 * sizeof(float)));
+        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(2 * sizeof(float)));
+
+        // Texture coordinate attribute (u, v)
+        glEnableVertexAttribArray(2);
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
 
         glBindVertexArray(0);
+
+        // Initialize text renderer for keybind labels
+        m_textRenderer = std::make_shared<UITextRenderer>();
+        // Try to load a TTF font, fallback to simple bitmap if not found
+        if (!m_textRenderer->Initialize("../Resources/Fonts/times.ttf", 32))
+        {
+            EE_CORE_WARN("UITextRenderer: Failed to load font, using fallback");
+        }
 
         EE_CORE_INFO("UIRenderSystem initialized successfully");
     }
@@ -78,27 +91,11 @@ namespace Ermine
         {
             auto& ui = ECS::GetInstance().GetComponent<UIComponent>(entity);
 
-            // Note: Mana regeneration disabled for life essence system
-            // Life essence (health) does not regenerate automatically
-            // If you want life essence regeneration, uncomment the code below and modify to use currentHealth
-            /*
-            if (ui.currentMana < ui.maxMana)
-            {
-                ui.manaRegenTimer += deltaTime;
-
-                // Only regenerate mana after the delay
-                if (ui.manaRegenTimer >= ui.manaRegenDelay)
-                {
-                    ui.currentMana += ui.manaRegenRate * deltaTime;
-                    if (ui.currentMana > ui.maxMana)
-                        ui.currentMana = ui.maxMana;
-                }
-            }
-            */
-
-            // Update skill cooldowns
+            // Update skill cooldowns and activation animations
+            bool anySkillOnCooldown = false;
             for (auto& skill : ui.skills)
             {
+                // Update cooldown
                 if (skill.isOnCooldown && skill.currentCooldown > 0.0f)
                 {
                     skill.currentCooldown -= deltaTime;
@@ -107,7 +104,31 @@ namespace Ermine
                         skill.currentCooldown = 0.0f;
                         skill.isOnCooldown = false;
                     }
+                    else
+                    {
+                        anySkillOnCooldown = true;
+                    }
                 }
+            }
+
+            // Life Essence (Health) Regeneration System
+            // Only regenerate when no skills are on cooldown (player is idle)
+            if (!anySkillOnCooldown && ui.currentHealth < ui.maxHealth)
+            {
+                ui.healthRegenTimer += deltaTime;
+
+                // Only regenerate health after the delay
+                if (ui.healthRegenTimer >= ui.healthRegenDelay)
+                {
+                    ui.currentHealth += ui.healthRegenRate * deltaTime;
+                    if (ui.currentHealth > ui.maxHealth)
+                        ui.currentHealth = ui.maxHealth;
+                }
+            }
+            else
+            {
+                // Reset timer when skills are being used
+                ui.healthRegenTimer = 0.0f;
             }
         }
     }
@@ -150,6 +171,7 @@ namespace Ermine
         // Use UI shader
         m_uiShader->Bind();
         m_uiShader->SetUniformMatrix4fv("projection", m_orthoProjection);
+        m_uiShader->SetUniform1i("uUseTexture", 0); // Default: don't use textures
 
         // Render UI for all entities with UIComponent
         for (EntityID entity : m_Entities)
@@ -158,6 +180,9 @@ namespace Ermine
 
             if (ui.showHealthbar)
                 RenderHealthBar(ui);
+
+            if (ui.showBookCounter)
+                RenderBookCounter(ui);
 
             if (ui.showManaBar)
                 RenderManaBar(ui);
@@ -205,8 +230,8 @@ namespace Ermine
         skill.currentCooldown = skill.maxCooldown;
         skill.isOnCooldown = true;
 
-        // Note: Mana regen timer not needed for life essence system
-        // ui.manaRegenTimer = 0.0f;
+        // Reset health regeneration timer when skill is cast
+        ui.healthRegenTimer = 0.0f;
 
         return true;
     }
@@ -237,12 +262,12 @@ namespace Ermine
         {
             float fillWidth = width * healthPercent;
 
-            // Determine health color based on percentage
+            // Determine health color based on percentage - STEAMPUNK THEME
             Vec3 healthColor = ui.healthbarColor;
             if (healthPercent < 0.25f)
-                healthColor = { 1.0f, 0.0f, 0.0f }; // Red when critical
+                healthColor = { 0.75f, 0.20f, 0.10f }; // Dark rusty copper when critical
             else if (healthPercent < 0.5f)
-                healthColor = { 1.0f, 0.5f, 0.0f }; // Orange when low
+                healthColor = { 0.85f, 0.45f, 0.15f }; // Dimmer brass/copper when low
 
             // Main health bar
             RenderQuad(x, y, fillWidth, height, healthColor, 1.0f);
@@ -277,66 +302,151 @@ namespace Ermine
         }
     }
 
+    void UIRenderSystem::RenderBookCounter(const UIComponent& ui)
+    {
+        if (!m_textRenderer || !m_uiShader)
+            return;
+
+        // Create counter text (e.g., "0/4", "2/4")
+        std::string counterText = std::to_string(ui.booksCollected) + "/" + std::to_string(ui.totalBooks);
+
+        // Position at top-left
+        float x = ui.bookCounterPosition.x;
+        float y = ui.bookCounterPosition.y;
+
+        // Text styling - professional and readable
+        float textScale = 1.0f;  // Larger text for visibility
+        Vec3 textColor = { 0.95f, 0.85f, 0.55f };  // Bright brass/gold color
+
+        // Render the counter text
+        m_textRenderer->RenderText(m_uiShader, counterText, x, y, textScale, textColor, 1.0f);
+    }
+
     void UIRenderSystem::RenderSkillSlots(const UIComponent& ui)
     {
         float startX = ui.skillsPosition.x;
         float startY = ui.skillsPosition.y;
         float slotSize = ui.skillSlotSize;
         float spacing = ui.skillSlotSpacing;
-        float radius = slotSize * 0.5f; // Circle radius is half the slot size
+        float radius = slotSize * 0.5f;
 
-        // Calculate total width of all slots to center them
-        float totalWidth = (slotSize * ui.skills.size()) + (spacing * (ui.skills.size() - 1));
+        // Only render 3 visual slots (indices 0, 2, 3)
+        // Skills[0] = LMB (Shoot Orb / Teleport) - combined visual
+        // Skills[1] = (skipped, part of LMB sequence)
+        // Skills[2] = RMB (Blind Burst)
+        // Skills[3] = R (Recall Orb)
+        const int visualSlotIndices[] = {0, 2, 3};
+        const int numVisualSlots = 3;
+
+        // Calculate total width of visual slots to center them
+        float totalWidth = (slotSize * numVisualSlots) + (spacing * (numVisualSlots - 1));
         float currentX = startX - (totalWidth * 0.5f);
 
-        // Get current time for animation (using glfwGetTime or similar)
-        static float animTime = 0.0f;
-        animTime += 0.016f; // Approximate 60 FPS for smooth animation
-
-        for (size_t i = 0; i < ui.skills.size(); ++i)
+        for (int slotIdx = 0; slotIdx < numVisualSlots; ++slotIdx)
         {
+            size_t i = visualSlotIndices[slotIdx];
             const auto& skill = ui.skills[i];
 
-            // Calculate center of circle
+            // Calculate center position
             float centerX = currentX + radius;
             float centerY = startY + radius;
 
-            // Determine slot color based on cooldown state and life essence
-            Vec3 slotColor = skill.slotColor;
-            bool isReady = !skill.isOnCooldown && ui.currentHealth >= skill.manaCost;
-
-            if (skill.isOnCooldown)
-                slotColor = skill.cooldownColor;
-            else if (isReady)
-                slotColor = skill.readyColor;
-
-            // Add pulsing glow effect when skill is ready (outer glow)
-            if (isReady)
+            // Check if skill has a texture icon
+            std::shared_ptr<graphics::Texture> skillTexture = nullptr;
+            if (!skill.iconTexturePath.empty())
             {
-                float pulse = 0.5f + 0.5f * sinf(animTime * 3.0f + i * 0.5f); // Pulse between 0.5 and 1.0
-                float glowRadius = radius + 0.004f * pulse;
-                Vec3 glowColor = { 0.0f, 1.0f, 0.0f }; // Bright green glow
-                RenderFilledCircle(centerX, centerY, glowRadius, glowColor, 0.3f * pulse);
+                // Check if texture is already cached
+                auto it = m_textureCache.find(skill.iconTexturePath);
+                if (it != m_textureCache.end())
+                {
+                    skillTexture = it->second;
+                }
+                else
+                {
+                    // Load texture via AssetManager
+                    skillTexture = AssetManager::GetInstance().LoadTexture(skill.iconTexturePath);
+                    if (skillTexture && skillTexture->IsValid())
+                    {
+                        m_textureCache[skill.iconTexturePath] = skillTexture; // Cache it
+                    }
+                }
             }
 
-            // Render outer border (dark shadow for depth)
-            float outerBorderRadius = radius + 0.002f;
-            RenderFilledCircle(centerX, centerY, outerBorderRadius, { 0.0f, 0.0f, 0.0f }, 0.8f);
+            // ========================================================================
+            // RENDER SKILL ICON (Clean PNG texture, no borders or backgrounds)
+            // ========================================================================
+            if (skillTexture && skillTexture->IsValid())
+            {
+                // Render clean icon texture with full brightness
+                Vec3 tintColor = { 1.0f, 1.0f, 1.0f }; // No tinting - show texture as-is
+                float alpha = 1.0f;
 
-            // Render slot background circle
-            RenderFilledCircle(centerX, centerY, radius, slotColor, 0.9f);
+                // Slightly dim when on cooldown
+                if (skill.isOnCooldown)
+                {
+                    tintColor = { 0.5f, 0.5f, 0.5f }; // Darken when on cooldown
+                    alpha = 0.6f;
+                }
+                // Slightly dim when insufficient health
+                else if (ui.currentHealth < skill.manaCost)
+                {
+                    tintColor = { 0.7f, 0.7f, 0.7f };
+                    alpha = 0.7f;
+                }
 
-            // Render cooldown overlay (radial)
+                RenderTexturedCircle(centerX, centerY, radius, skillTexture, tintColor, alpha);
+            }
+            else
+            {
+                // Fallback: render simple circle if no texture
+                Vec3 fallbackColor = { 0.3f, 0.3f, 0.3f };
+                RenderFilledCircle(centerX, centerY, radius, fallbackColor, 0.5f);
+            }
+
+            // ========================================================================
+            // RENDER COOLDOWN OVERLAY (Radial pie chart over icon)
+            // ========================================================================
             if (skill.isOnCooldown && skill.maxCooldown > 0.0f)
             {
                 float progress = skill.currentCooldown / skill.maxCooldown;
-                RenderRadialCooldown(centerX, centerY, radius, progress, skill.cooldownOverlayColor, 0.7f);
+                Vec3 cooldownColor = { 0.0f, 0.0f, 0.0f }; // Black overlay
+                RenderRadialCooldown(centerX, centerY, radius, progress, cooldownColor, 0.7f);
             }
 
-            // Border around slot (circle outline - thicker and brighter when ready)
-            float borderThickness = isReady ? 0.003f : 0.002f;
-            Vec3 borderColor = isReady ? Vec3{0.0f, 1.0f, 0.0f} : Vec3{0.8f, 0.8f, 0.8f};
-            RenderCircle(centerX, centerY, radius, borderThickness, borderColor);
+            // ========================================================================
+            // SUBTLE ANIMATION AROUND ICON (Glow when ready)
+            // ========================================================================
+            static float animTime = 0.0f;
+            animTime += 0.016f;
+
+            bool isReady = !skill.isOnCooldown && ui.currentHealth >= skill.manaCost;
+            if (isReady)
+            {
+                // Subtle pulsing glow when skill is ready
+                float pulse = 0.3f + 0.2f * sinf(animTime * 2.0f + slotIdx * 0.5f); // Gentle pulse
+                float glowRadius = radius + 0.005f;
+                Vec3 glowColor = { 1.0f, 0.85f, 0.50f }; // Soft brass/gold glow
+                RenderFilledCircle(centerX, centerY, glowRadius, glowColor, pulse * 0.3f);
+            }
+
+            // ========================================================================
+            // RENDER KEYBIND LABEL BELOW SKILL SLOT
+            // ========================================================================
+            if (m_textRenderer && m_uiShader && !skill.keyBinding.empty())
+            {
+                // Calculate label position (centered below the skill slot)
+                float textScale = 0.6f; // Slightly larger text for better readability
+                float textWidth = m_textRenderer->GetTextWidth(skill.keyBinding, textScale);
+                float labelX = centerX - (textWidth * 0.5f); // Center horizontally
+                float labelY = centerY - radius - 0.02f; // Position below the slot
+
+                // Professional white text with slight transparency
+                Vec3 labelColor = { 1.0f, 1.0f, 1.0f };
+                float labelAlpha = isReady ? 1.0f : 0.6f;
+
+                // Render the keybind text (e.g., "LMB", "RMB", "R")
+                m_textRenderer->RenderText(m_uiShader, skill.keyBinding, labelX, labelY, textScale, labelColor, labelAlpha);
+            }
 
             currentX += slotSize + spacing;
         }
@@ -416,6 +526,53 @@ namespace Ermine
             RenderCircle(centerX, centerY, size, thickness, ui.crosshairColor);
             break;
         }
+        case 3: // Steampunk ornate crosshair
+        {
+            // Center dot
+            float dotSize = thickness * 1.5f;
+            RenderQuad(centerX - dotSize * 0.5f, centerY - dotSize * 0.5f, dotSize, dotSize, ui.crosshairColor, 1.0f);
+
+            // Inner circle (brass ring)
+            float innerRadius = size * 0.4f;
+            RenderCircle(centerX, centerY, innerRadius, thickness * 1.2f, ui.crosshairColor);
+
+            // Outer decorative ring
+            float outerRadius = size * 0.8f;
+            RenderCircle(centerX, centerY, outerRadius, thickness * 0.6f, ui.crosshairColor);
+
+            // Ornate corner brackets (4 corners)
+            float bracketLength = size * 0.6f;
+            float bracketThickness = thickness * 1.5f;
+            float cornerOffset = outerRadius + gap;
+
+            // Top-right bracket
+            RenderQuad(centerX + cornerOffset, centerY + cornerOffset, bracketLength, bracketThickness, ui.crosshairColor, 0.8f);
+            RenderQuad(centerX + cornerOffset, centerY + cornerOffset, bracketThickness, bracketLength, ui.crosshairColor, 0.8f);
+
+            // Top-left bracket
+            RenderQuad(centerX - cornerOffset - bracketLength, centerY + cornerOffset, bracketLength, bracketThickness, ui.crosshairColor, 0.8f);
+            RenderQuad(centerX - cornerOffset, centerY + cornerOffset, bracketThickness, bracketLength, ui.crosshairColor, 0.8f);
+
+            // Bottom-right bracket
+            RenderQuad(centerX + cornerOffset, centerY - cornerOffset, bracketLength, bracketThickness, ui.crosshairColor, 0.8f);
+            RenderQuad(centerX + cornerOffset, centerY - cornerOffset - bracketLength, bracketThickness, bracketLength, ui.crosshairColor, 0.8f);
+
+            // Bottom-left bracket
+            RenderQuad(centerX - cornerOffset - bracketLength, centerY - cornerOffset, bracketLength, bracketThickness, ui.crosshairColor, 0.8f);
+            RenderQuad(centerX - cornerOffset, centerY - cornerOffset - bracketLength, bracketThickness, bracketLength, ui.crosshairColor, 0.8f);
+
+            // Small decorative gears (circles at cardinal points)
+            float gearRadius = thickness * 2.0f;
+            float gearDistance = outerRadius + gap + size * 0.2f;
+            Vec3 dimColor = { ui.crosshairColor.x * 0.7f, ui.crosshairColor.y * 0.7f, ui.crosshairColor.z * 0.7f };
+
+            RenderFilledCircle(centerX + gearDistance, centerY, gearRadius, dimColor, 0.6f);
+            RenderFilledCircle(centerX - gearDistance, centerY, gearRadius, dimColor, 0.6f);
+            RenderFilledCircle(centerX, centerY + gearDistance, gearRadius, dimColor, 0.6f);
+            RenderFilledCircle(centerX, centerY - gearDistance, gearRadius, dimColor, 0.6f);
+
+            break;
+        }
         default:
             break;
         }
@@ -423,16 +580,16 @@ namespace Ermine
 
     void UIRenderSystem::RenderQuad(float posX, float posY, float width, float height, const Vec3& color, float alpha)
     {
-        // Define quad vertices (2 triangles)
+        // Define quad vertices (2 triangles) with dummy texture coordinates
         float vertices[] = {
-            // Position (x, y)    // Color (r, g, b, a)
-            posX,         posY,          color.x, color.y, color.z, alpha,  // Bottom-left
-            posX + width, posY,          color.x, color.y, color.z, alpha,  // Bottom-right
-            posX + width, posY + height, color.x, color.y, color.z, alpha,  // Top-right
+            // Position (x, y)    // Color (r, g, b, a)        // TexCoord (u, v)
+            posX,         posY,          color.x, color.y, color.z, alpha,  0.0f, 0.0f,  // Bottom-left
+            posX + width, posY,          color.x, color.y, color.z, alpha,  0.0f, 0.0f,  // Bottom-right
+            posX + width, posY + height, color.x, color.y, color.z, alpha,  0.0f, 0.0f,  // Top-right
 
-            posX,         posY,          color.x, color.y, color.z, alpha,  // Bottom-left
-            posX + width, posY + height, color.x, color.y, color.z, alpha,  // Top-right
-            posX,         posY + height, color.x, color.y, color.z, alpha   // Top-left
+            posX,         posY,          color.x, color.y, color.z, alpha,  0.0f, 0.0f,  // Bottom-left
+            posX + width, posY + height, color.x, color.y, color.z, alpha,  0.0f, 0.0f,  // Top-right
+            posX,         posY + height, color.x, color.y, color.z, alpha,  0.0f, 0.0f   // Top-left
         };
 
         glBindVertexArray(m_VAO);
@@ -449,7 +606,7 @@ namespace Ermine
 
         const int segments = 32;
         m_vertexData.clear();
-        m_vertexData.reserve((segments + 2) * 6); // Center + perimeter vertices
+        m_vertexData.reserve((segments + 2) * 8); // Center + perimeter vertices (8 floats per vertex)
 
         // Center vertex
         m_vertexData.push_back(centerX);
@@ -458,6 +615,8 @@ namespace Ermine
         m_vertexData.push_back(color.y);
         m_vertexData.push_back(color.z);
         m_vertexData.push_back(alpha);
+        m_vertexData.push_back(0.0f); // texCoord u
+        m_vertexData.push_back(0.0f); // texCoord v
 
         // Calculate how many segments to draw based on progress
         int segmentsToDraw = static_cast<int>(progress * segments);
@@ -476,13 +635,15 @@ namespace Ermine
             m_vertexData.push_back(color.y);
             m_vertexData.push_back(color.z);
             m_vertexData.push_back(alpha);
+            m_vertexData.push_back(0.0f); // texCoord u
+            m_vertexData.push_back(0.0f); // texCoord v
         }
 
         // Render as triangle fan
         glBindVertexArray(m_VAO);
         glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
         glBufferSubData(GL_ARRAY_BUFFER, 0, m_vertexData.size() * sizeof(float), m_vertexData.data());
-        glDrawArrays(GL_TRIANGLE_FAN, 0, static_cast<GLsizei>(m_vertexData.size() / 6));
+        glDrawArrays(GL_TRIANGLE_FAN, 0, static_cast<GLsizei>(m_vertexData.size() / 8));
         glBindVertexArray(0);
     }
 
@@ -492,7 +653,7 @@ namespace Ermine
         float angleStep = (2.0f * static_cast<float>(M_PI)) / segments;
 
         m_vertexData.clear();
-        m_vertexData.reserve(segments * 2 * 6);
+        m_vertexData.reserve(segments * 2 * 8); // 8 floats per vertex
 
         for (int i = 0; i <= segments; ++i)
         {
@@ -506,6 +667,8 @@ namespace Ermine
             m_vertexData.push_back(color.y);
             m_vertexData.push_back(color.z);
             m_vertexData.push_back(1.0f);
+            m_vertexData.push_back(0.0f); // texCoord u
+            m_vertexData.push_back(0.0f); // texCoord v
         }
 
         glLineWidth(thickness * static_cast<float>(m_screenHeight));
@@ -521,7 +684,7 @@ namespace Ermine
     {
         const int segments = 64;
         m_vertexData.clear();
-        m_vertexData.reserve((segments + 2) * 6); // Center + perimeter vertices
+        m_vertexData.reserve((segments + 2) * 8); // Center + perimeter vertices (8 floats per vertex)
 
         // Center vertex
         m_vertexData.push_back(centerX);
@@ -530,6 +693,8 @@ namespace Ermine
         m_vertexData.push_back(color.y);
         m_vertexData.push_back(color.z);
         m_vertexData.push_back(alpha);
+        m_vertexData.push_back(0.5f); // texCoord u (center of texture)
+        m_vertexData.push_back(0.5f); // texCoord v (center of texture)
 
         // Perimeter vertices
         float angleStep = (2.0f * static_cast<float>(M_PI)) / segments;
@@ -539,20 +704,86 @@ namespace Ermine
             float x = centerX + radius * cosf(angle);
             float y = centerY + radius * sinf(angle);
 
+            // Calculate texture coordinates (circular mapping)
+            float u = 0.5f + 0.5f * cosf(angle);
+            float v = 0.5f + 0.5f * sinf(angle);
+
             m_vertexData.push_back(x);
             m_vertexData.push_back(y);
             m_vertexData.push_back(color.x);
             m_vertexData.push_back(color.y);
             m_vertexData.push_back(color.z);
             m_vertexData.push_back(alpha);
+            m_vertexData.push_back(u);
+            m_vertexData.push_back(v);
         }
 
         // Render as triangle fan
         glBindVertexArray(m_VAO);
         glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
         glBufferSubData(GL_ARRAY_BUFFER, 0, m_vertexData.size() * sizeof(float), m_vertexData.data());
-        glDrawArrays(GL_TRIANGLE_FAN, 0, static_cast<GLsizei>(m_vertexData.size() / 6));
+        glDrawArrays(GL_TRIANGLE_FAN, 0, static_cast<GLsizei>(m_vertexData.size() / 8));
         glBindVertexArray(0);
+    }
+
+    void UIRenderSystem::RenderTexturedCircle(float centerX, float centerY, float radius,
+                                              std::shared_ptr<graphics::Texture> texture,
+                                              const Vec3& color, float alpha)
+    {
+        if (!texture || !texture->IsValid())
+            return;
+
+        const int segments = 64;
+        m_vertexData.clear();
+        m_vertexData.reserve((segments + 2) * 8); // Center + perimeter vertices (8 floats per vertex)
+
+        // Center vertex
+        m_vertexData.push_back(centerX);
+        m_vertexData.push_back(centerY);
+        m_vertexData.push_back(color.x);
+        m_vertexData.push_back(color.y);
+        m_vertexData.push_back(color.z);
+        m_vertexData.push_back(alpha);
+        m_vertexData.push_back(0.5f); // texCoord u (center of texture)
+        m_vertexData.push_back(0.5f); // texCoord v (center of texture)
+
+        // Perimeter vertices
+        float angleStep = (2.0f * static_cast<float>(M_PI)) / segments;
+        for (int i = 0; i <= segments; ++i)
+        {
+            float angle = i * angleStep;
+            float x = centerX + radius * cosf(angle);
+            float y = centerY + radius * sinf(angle);
+
+            // Calculate texture coordinates (circular mapping)
+            float u = 0.5f + 0.5f * cosf(angle);
+            float v = 0.5f + 0.5f * sinf(angle);
+
+            m_vertexData.push_back(x);
+            m_vertexData.push_back(y);
+            m_vertexData.push_back(color.x);
+            m_vertexData.push_back(color.y);
+            m_vertexData.push_back(color.z);
+            m_vertexData.push_back(alpha);
+            m_vertexData.push_back(u);
+            m_vertexData.push_back(v);
+        }
+
+        // Enable texture mode in shader
+        m_uiShader->SetUniform1i("uUseTexture", 1);
+        texture->Bind(0); // Bind to texture unit 0
+        m_uiShader->SetUniform1i("uTexture", 0);
+
+        // Render as triangle fan
+        glBindVertexArray(m_VAO);
+        glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, m_vertexData.size() * sizeof(float), m_vertexData.data());
+        glDrawArrays(GL_TRIANGLE_FAN, 0, static_cast<GLsizei>(m_vertexData.size() / 8));
+        glBindVertexArray(0);
+
+        // Disable texture mode
+        texture->Unbind();
+        m_uiShader->SetUniform1i("uUseTexture", 0);
     }
 
 } // namespace Ermine

@@ -506,8 +506,6 @@ std::vector<glm::vec3> Ermine::graphics::Model::GetMeshVertices() const
     {
         if (!mesh.vbo) continue;
 
-        // Assuming your VertexBuffer stores VertexData in CPU-side memory
-        // If you only have GPU-side data, you need to store a CPU copy when loading the mesh.
         const VertexData* vertexData = reinterpret_cast<const VertexData*>(mesh.vbo->GetDataPointer());
         if (!vertexData) continue;
 

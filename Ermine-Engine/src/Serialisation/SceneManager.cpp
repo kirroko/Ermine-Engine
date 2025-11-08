@@ -260,6 +260,10 @@ void SceneManager::NewScene()
 {
     // Clear ECS
     Ermine::ECS::GetInstance().ClearAllEntities();
+
+    // Recreate HUD entity (UI elements)
+    //CreateHUDEntity();
+
     auto mainLight = Ermine::ECS::GetInstance().CreateEntity();
 
     // Tilted down and slightly to the side, similar to Unity's default
@@ -291,14 +295,17 @@ void SceneManager::ClearScene()
     // Clear ECS
     Ermine::ECS::GetInstance().ClearAllEntities();
 
+    // Recreate HUD entity (UI elements)
+    //CreateHUDEntity();
+
     //Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>()->UpdateShadowMap();
-    
+
     // Mark materials dirty to trigger recompilation
     auto renderer = Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>();
     if (renderer) {
         renderer->MarkMaterialsDirty();
     }
-    
+
     if (auto scene = GetActiveScene()) {
         scene->EnsureSyncedWithECS();
     }
@@ -319,6 +326,10 @@ void SceneManager::OpenScene(const std::string& path)
     //EnsureActiveScene().Clear();
 
     LoadSceneFromFile(Ermine::ECS::GetInstance(), path);
+
+    // Recreate HUD entity (UI elements)
+    //CreateHUDEntity();
+
     Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>()->InitializeShadowMapResources();
 
     // Mark materials dirty to trigger recompilation after scene load
@@ -380,4 +391,66 @@ void SceneManager::SaveSceneTo(const std::string& path)
     SaveSceneToFile(Ermine::ECS::GetInstance(), path, true);
     m_CurrentScenePath = path;
     m_Dirty = false;
+}
+
+void SceneManager::CreateHUDEntity()
+{
+#if defined(EE_EDITOR)
+    // Create HUD entity with UIComponent for rendering UI elements
+    auto scene = GetActiveScene();
+    if (!scene) {
+        EE_CORE_ERROR("SceneManager::CreateHUDEntity() - No active scene!");
+        return;
+    }
+
+    Ermine::EntityID uiEntity = scene->CreateEntity("HUD", false, false);  // No transform or hierarchy needed
+    Ermine::UIComponent uiComp;  // Default values are already set in the struct
+
+    // ============================================================================
+    // HUD LAYOUT CONFIGURATION
+    // ============================================================================
+    uiComp.skillSlotSize = 0.08f;       // Make slots bigger (default: 0.06, now: 0.08 = 33% larger)
+    uiComp.skillSlotSpacing = 0.015f;   // Increase spacing between slots
+
+    // ============================================================================
+    // CONFIGURE SKILL ICONS (Auto-configured for all scenes)
+    // 3 VISUAL SLOTS: LMB (Shoot/Teleport), RMB (Blind Burst), R (Recall)
+    // ============================================================================
+
+    // Skill 0: Shoot Orb / Teleport (LMB - Sequential)
+    // This slot represents BOTH LMB actions used in sequence
+    uiComp.skills[0].iconTexturePath = "../Resources/Textures/UI/Skills/shoot_orb_icon.png";
+    uiComp.skills[0].manaCost = 15.0f;
+    uiComp.skills[0].maxCooldown = 1.5f;
+    uiComp.skills[0].skillName = "Orb Control";
+    uiComp.skills[0].keyBinding = "LMB";
+    uiComp.skills[0].description = "Shoot orb, then teleport to it";
+
+    // Skill 1: Teleport to Orb (Internal state - not shown as separate slot)
+    uiComp.skills[1].iconTexturePath = "../Resources/Textures/UI/Skills/teleport_icon.png";
+    uiComp.skills[1].manaCost = 20.0f;
+    uiComp.skills[1].maxCooldown = 3.0f;
+    uiComp.skills[1].skillName = "Teleport";
+    uiComp.skills[1].keyBinding = "LMB";
+    uiComp.skills[1].description = "Teleport to the orb's location";
+
+    // Skill 2: Blind Burst
+    uiComp.skills[2].iconTexturePath = "../Resources/Textures/UI/Skills/disable_light_icon.png";
+    uiComp.skills[2].manaCost = 25.0f;
+    uiComp.skills[2].maxCooldown = 5.0f;
+    uiComp.skills[2].skillName = "Blind Burst";
+    uiComp.skills[2].keyBinding = "RMB";
+    uiComp.skills[2].description = "Disable lights and blind enemies";
+
+    // Skill 3: Recall Orb
+    uiComp.skills[3].iconTexturePath = "../Resources/Textures/UI/Skills/recall_icon.png";
+    uiComp.skills[3].manaCost = 10.0f;
+    uiComp.skills[3].maxCooldown = 2.0f;
+    uiComp.skills[3].skillName = "Recall";
+    uiComp.skills[3].keyBinding = "R";
+    uiComp.skills[3].description = "Recall the orb back to you";
+
+    Ermine::ECS::GetInstance().AddComponent<Ermine::UIComponent>(uiEntity, uiComp);
+    EE_CORE_INFO("Created HUD entity with UIComponent and skill icons configured");
+#endif
 }

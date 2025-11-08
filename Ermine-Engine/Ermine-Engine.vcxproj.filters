@@ -49,6 +49,9 @@
     <Filter Include="src\Math">
       <UniqueIdentifier>{261422CF-12E1-7CDA-3BFA-6A822726B268}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\NavMesh">
+      <UniqueIdentifier>{CEC6FF6B-3A7C-7861-C370-72382F256F65}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Object">
       <UniqueIdentifier>{13A4AE24-FF5B-F071-6863-C9CD543A8B62}</UniqueIdentifier>
     </Filter>
@@ -168,6 +171,9 @@
     <ClInclude Include="include\GPUProfiler.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\GameCamera.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\CameraSystem.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -238,6 +244,9 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\Model.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\NavMesh.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\Particles.h">
@@ -319,6 +328,9 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\shadow_config.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\NavMeshAgentSystem.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
@@ -446,6 +458,9 @@
     <ClCompile Include="src\Math\Matrix4x4.cpp">
       <Filter>src\Math</Filter>
     </ClCompile>
+    <ClCompile Include="src\NavMesh\NavMesh.cpp">
+      <Filter>src\NavMesh</Filter>
+    </ClCompile>
     <ClCompile Include="src\Object\GameObject.cpp">
       <Filter>src\Object</Filter>
     </ClCompile>
@@ -527,7 +542,15 @@
     <ClCompile Include="src\dllmain.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\Graphics\UIRenderSystem.cpp" />
+    <ClCompile Include="src\NavMesh\NavMeshAgentSystem.cpp">
+      <Filter>src\NavMesh</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Graphics\UIRenderSystem.cpp">
+      <Filter>src\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Graphics\UITextRenderer.cpp">
+      <Filter>src\Graphics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="include\Component.tpp">

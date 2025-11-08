@@ -152,6 +152,15 @@ void CAudioEngine::SetChannelVolume(int nChannelId, float fVolumedB)
 	CAudioEngine::ErrorCheck(tFoundIt->second->setVolume(dbToVolume(fVolumedB)));
 }
 
+void CAudioEngine::SetChannelPaused(int nChannelId, bool paused)
+{
+	auto tFoundIt = sgpImplementation->mChannels.find(nChannelId);
+	if (tFoundIt == sgpImplementation->mChannels.end())
+		return;
+
+	CAudioEngine::ErrorCheck(tFoundIt->second->setPaused(paused));
+}
+
 void CAudioEngine::LoadBank(const std::string& strBankName, FMOD_STUDIO_LOAD_BANK_FLAGS flags) {
 	auto tFoundIt = sgpImplementation->mBanks.find(strBankName);
 	if (tFoundIt != sgpImplementation->mBanks.end())

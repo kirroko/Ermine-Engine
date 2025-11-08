@@ -256,9 +256,58 @@ namespace Ermine::graphics
         void Init(const int& screenWidth, const int& screenHeight);
 
         //PHYSICS
+        /**
+         * @brief Submits a debug line to be rendered in the scene.
+         * @param from Starting point of the line in world space.
+         * @param to Ending point of the line in world space.
+         * @param color RGB color of the line.
+         */
         void SubmitDebugLine(const glm::vec3& from, const glm::vec3& to, const glm::vec3& color);
+
+        /**
+         * @brief Renders all submitted debug lines using the provided view and projection matrices.
+         * @param view View matrix for the camera.
+         * @param proj Projection matrix for the camera.
+         */
         void RenderDebugLines(const glm::mat4& view, const glm::mat4& proj);
+
+        /**
+         * @brief Renders all submitted debug lines using the provided view and projection matrices.
+         * @param view View matrix for the camera (custom Mtx44 type).
+         * @param proj Projection matrix for the camera (custom Mtx44 type).
+         */
         void RenderDebugLines(const Mtx44& view, const Mtx44& proj);
+
+        /*!***********************************************************************
+        \brief
+         Adds a filled debug triangle to the renderer’s internal vertex list for
+         visualization purposes. The triangle will be rendered during the next call
+         to RenderDebugTriangles().
+        \param[in] a
+         The first vertex position of the triangle in world space.
+        \param[in] b
+         The second vertex position of the triangle in world space.
+        \param[in] c
+         The third vertex position of the triangle in world space.
+        \param[in] color
+         The RGB color of the triangle to render.
+        \return
+         None.
+        *************************************************************************/
+        void SubmitDebugTriangle(const glm::vec3& a, const glm::vec3& b, const glm::vec3& c, const glm::vec3& color);
+        /*!***********************************************************************
+        \brief
+         Renders all submitted debug triangles in 3D space using the provided
+         view and projection matrices. This is typically used for visualizing
+         geometry such as collision shapes, navigation meshes, or debug overlays.
+        \param[in] view
+         The view matrix representing the current camera orientation and position.
+        \param[in] proj
+         The projection matrix defining the camera’s perspective or orthographic view.
+        \return
+         None.
+        *************************************************************************/
+        void RenderDebugTriangles(const Mtx44& view, const Mtx44& proj);
 
         /**
          * @brief Submit an AABB wireframe for debug visualization
@@ -920,6 +969,9 @@ namespace Ermine::graphics
 
         std::shared_ptr<PickingBuffer> m_PickingBuffer;
         std::shared_ptr<Shader> m_PickingShader = nullptr;
+
+        // NavMesh
+        std::vector<DebugVertex> m_DebugTriangleVertices;
 
         /**
          * @brief Create an offscreen buffer for entity picking using stencil buffer

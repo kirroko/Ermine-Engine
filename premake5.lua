@@ -30,6 +30,7 @@ IncludeDir["DirectXTex"] = "ThirdParty/DirectXTex/inc"
 IncludeDir["xproperty"] = "ThirdParty/xproperty/source"
 IncludeDir["xresource_Pipeline"] = "ThirdParty/xresource_pipeline_v2-main/source"
 IncludeDir["imnodes"] = "ThirdParty/imnodes"
+IncludeDir["recastnavigation"] = "ThirdParty/recastnavigation"
 
 -- Libraries
 LibraryDir = {}
@@ -47,6 +48,7 @@ group "Dependencies"
     include "ThirdParty/Mono"
     include "ThirdParty/Jolt"
     include "ThirdParty/imnodes"
+    include "ThirdParty/recastnavigation"
 group ""
 
 -- Engine Project
@@ -91,6 +93,11 @@ project "Ermine-Engine"
         "%{IncludeDir.assimp}",
         "%{IncludeDir.DirectXTex}",
         "%{IncludeDir.xproperty}",
+        "%{IncludeDir.recastnavigation}/Recast/Include",
+        "%{IncludeDir.recastnavigation}/Detour/Include",
+        "%{IncludeDir.recastnavigation}/DetourCrowd/Include",
+        "%{IncludeDir.recastnavigation}/DetourTileCache/Include",
+        "%{IncludeDir.recastnavigation}/DebugUtils/Include",
         "%{IncludeDir.xresource_Pipeline}",
         "ThirdParty/xresource_pipeline_v2-main/dependencies/xtextfile/source",
         "ThirdParty/xresource_pipeline_v2-main/dependencies/xerr/source",
@@ -118,7 +125,8 @@ project "Ermine-Engine"
 		"mono-2.0-sgen.lib",
         "Jolt",
         "assimp-vc143-mt.lib",
-        "imnodes"
+        "imnodes",
+        "recastnavigation"
         --"DirectXTex.lib"
     }
 
@@ -252,6 +260,11 @@ project "Ermine-Editor"
         "%{IncludeDir.Mono}",
         "%{IncludeDir.rapidjson}",
         "%{IncludeDir.xproperty}",
+        "%{IncludeDir.recastnavigation}/Recast/Include",
+        "%{IncludeDir.recastnavigation}/Detour/Include",
+        "%{IncludeDir.recastnavigation}/DetourCrowd/Include",
+        "%{IncludeDir.recastnavigation}/DetourTileCache/Include",
+        "%{IncludeDir.recastnavigation}/DebugUtils/Include",
         "%{IncludeDir.xresource_Pipeline}",
         "ThirdParty/xresource_pipeline_v2-main/dependencies/xtextfile/source",
         "ThirdParty/xresource_pipeline_v2-main/dependencies/xerr/source",
