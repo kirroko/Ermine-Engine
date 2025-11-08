@@ -43,7 +43,7 @@ namespace ErmineEngine
         public float Magnitude => (float)System.Math.Sqrt(x * x + y * y + z * z);
         public float SqrMagnitude => x * x + y * y + z * z;
 
-        public Vector3 Normalized
+        public Vector3 normalized
         {
             get
             {
@@ -57,6 +57,11 @@ namespace ErmineEngine
         new Vector3(a.y * b.z - a.z * b.y,
             a.z * b.x - a.x * b.z,
             a.x * b.y - a.y * b.x);
+        public static Vector3 ProjectOnPlane(Vector3 vector, Vector3 planeNormal)
+        {
+            float dot = Dot(vector, planeNormal);
+            return vector - planeNormal * dot;
+        }
 
         public static Vector3 operator +(Vector3 a, Vector3 b) => new Vector3(a.x + b.x, a.y + b.y, a.z + b.z);
         public static Vector3 operator -(Vector3 a, Vector3 b) => new Vector3(a.x - b.x, a.y - b.y, a.z - b.z);

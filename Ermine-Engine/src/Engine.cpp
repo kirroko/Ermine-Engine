@@ -505,10 +505,10 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 	}
 
 	// Other non-fixed logic
-	ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->Update();
 	ECS::GetInstance().GetSystem<AudioSystem>()->Update();
-
 	ECS::GetInstance().GetSystem<HierarchySystem>()->UpdateHierarchy();
+
+	ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->Update();
 	
 	// Update editor camera
 #if defined(EE_EDITOR)

@@ -1239,6 +1239,8 @@ namespace Ermine::editor {
 				continue; // removed or closed
 			}
 
+			ImGui::Checkbox("Enabled", &script.m_enabled);
+
 			// Editable class name (label left)
 			// TODO: Change to a drop-down of available scripts in project
 			{
@@ -1254,12 +1256,14 @@ namespace Ermine::editor {
 
 			// Display fields
 			std::unordered_map<std::string, ScriptFieldValue> fields;
-			if (script.m_instance)
+			if (script.m_instance && script.m_instance->object)
 				scripting::ScriptEngine::PullManagedFieldsToCache(script.m_instance->object, fields);
 
+			// Draw each exposed field
 			for (auto& [name, val] : fields)
 			{
 				ImGui::PushID(name.c_str());
+				bool changed = false;
 
 				switch (val.kind)
 				{
@@ -1267,6 +1271,7 @@ namespace Ermine::editor {
 				{
 					PropertyRow(name.c_str(), [&] {
 						ImGui::InputFloat("##v", &std::get<float>(val.value));
+						changed = true;
 						});
 					break;
 				}
@@ -1274,6 +1279,7 @@ namespace Ermine::editor {
 				{
 					PropertyRow(name.c_str(), [&] {
 						ImGui::InputInt("##v", &std::get<int>(val.value));
+						changed = true;
 						});
 					break;
 				}
@@ -1281,13 +1287,14 @@ namespace Ermine::editor {
 				{
 					PropertyRow(name.c_str(), [&] {
 						ImGui::Checkbox("##v", &std::get<bool>(val.value));
+						changed = true;
 						});
 					break;
 				}
 				case ScriptFieldValue::Kind::Vector3:
 				{
 					// Uses internal two-column layout with label left
-					if (DrawVec3XYZ(name.c_str(), &std::get<Vec3>(val.value).x))
+					if (changed = DrawVec3XYZ(name.c_str(), &std::get<Vec3>(val.value).x))
 					{
 					}
 					break;
@@ -1296,7 +1303,7 @@ namespace Ermine::editor {
 				{
 					// Uses internal two-column layout with label left
 					Vec3 euler = QuaternionToEuler(std::get<Quaternion>(val.value), true);
-					if (DrawVec3XYZ(name.c_str(), &euler.x))
+					if (changed = DrawVec3XYZ(name.c_str(), &euler.x))
 					{
 					}
 					val.value = FromEulerDegrees(euler);
@@ -1310,6 +1317,7 @@ namespace Ermine::editor {
 						if (ImGui::InputText("##v", innerBuff, sizeof(innerBuff), ImGuiInputTextFlags_EnterReturnsTrue))
 						{
 							// nothing else to do here; value is set when pushing back to managed fields
+							changed = true;
 						}
 						});
 					val.value = innerBuff;
@@ -1321,9 +1329,15 @@ namespace Ermine::editor {
 				}
 
 				ImGui::PopID();
+
+				if (changed && script.m_instance && script.m_instance->object)
+				{
+					ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->m_ScriptEngine->PushSingleField(script.m_instance->object, name, val);
+					// Mark dirty for scene save?
+				}
 			}
 			// Push change to managed object
-			if (script.m_instance)
+			if (script.m_instance && script.m_instance->object)
 				scripting::ScriptEngine::PushCacheToManagedFields(script.m_instance->object, fields);
 
 			ImGui::PopID();

@@ -525,6 +525,23 @@ namespace Ermine
 			);
 		}
 
+		Vec3 GetWorldForward() const {
+			// Column 2 of worldMatrix (assuming column-major and +Z forward)
+			Vec3 f(worldMatrix.m02, worldMatrix.m12, worldMatrix.m22);
+			float len = Vec3Length(f);
+			return (len > 0.0f) ? f / len : Vec3(0.f, 0.f, 1.f);
+		}
+		Vec3 GetWorldRight() const {
+			Vec3 r(worldMatrix.m00, worldMatrix.m10, worldMatrix.m20);
+			float len = Vec3Length(r);
+			return (len > 0.0f) ? r / len : Vec3(1.f, 0.f, 0.f);
+		}
+		Vec3 GetWorldUp() const {
+			Vec3 u(worldMatrix.m01, worldMatrix.m11, worldMatrix.m21);
+			float len = Vec3Length(u);
+			return (len > 0.0f) ? u / len : Vec3(0.f, 1.f, 0.f);
+		}
+
 		template<typename Alloc>
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
 			out.SetObject();
@@ -885,6 +902,17 @@ namespace Ermine
 			if (it == scripts.end()) return false;
 			scripts.erase(it);
 			return true;
+		}
+
+		Script& GetByClass(const std::string& className)
+		{
+			auto it = ranges::find_if(scripts,
+			                          [&](const Script& s) { return s.m_className == className; });
+			if (it == scripts.end())
+			{
+				throw std::runtime_error("Script class not found: " + className);
+			}
+			return *it;
 		}
 
 		// Serialize as an array of Script objects
