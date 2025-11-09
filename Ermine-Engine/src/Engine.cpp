@@ -89,7 +89,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	if (s_isInitialized) // Already initialized
 		return true;
 
-	CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+	(void)CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
 
 	//std::string pipelinePath = "../../../../Ermine-ResourcePipeline";
 	//std::cout << "Contents of Ermine-ResourcePipeline:" << std::endl;
