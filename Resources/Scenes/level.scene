@@ -3682,6 +3682,301 @@
         },
         "GlobalTransform": {}
       }
+    },
+    {
+      "id": 53,
+      "components": {
+        "Transform": {
+          "position": [
+            0.0,
+            0.25,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.009999999776482582,
+            0.009999999776482582,
+            0.009999999776482582
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Player",
+          "tag": "Model",
+          "selfActive": true
+        },
+        "Mesh": {
+          "kind": "None"
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              1.0
+            ],
+            "materialAlpha": 1.0,
+            "materialTransparency": 0.0,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.30000001192092898,
+            "materialAo": 1.0,
+            "materialEmissive": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 0.0,
+            "materialNormalStrength": 1.0,
+            "materialShadingModel": 0,
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": false,
+            "materialHasRoughnessMap": false,
+            "materialHasMetallicMap": false,
+            "materialHasAoMap": false,
+            "materialHasEmissiveMap": false
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources/Textures/Pants_Base_color.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources/Textures/Pants_Base_color.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ]
+        },
+        "ModelComponent": {
+          "model": "Walking.fbx",
+          "isSkinFile": false
+        },
+        "AnimationComponent": {
+          "model": "Walking.fbx",
+          "graph": {
+            "playbackSpeed": 1.0,
+            "playing": false,
+            "currentTime": 0.0,
+            "states": [],
+            "transitions": [],
+            "parameters": []
+          }
+        },
+        "HierarchyComponent": {
+          "parent": 0,
+          "children": [
+            54
+          ],
+          "depth": 0
+        },
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "class": "PlayerController"
+            },
+            {
+              "class": "OrbTeleport"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": 54,
+      "components": {
+        "Transform": {
+          "position": [
+            0.0,
+            -25.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            100.0,
+            100.0,
+            100.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Main Camera",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "parent": 53,
+          "children": [],
+          "depth": 1
+        },
+        "GlobalTransform": {},
+        "CameraComponent": {
+          "fov": 75.02400207519531,
+          "aspect": 1.7777777910232545,
+          "near": 0.10000000149011612,
+          "far": 1000.0,
+          "primary": false,
+          "isGameCamera": false
+        }
+      }
+    },
+    {
+      "id": 55,
+      "components": {
+        "Transform": {
+          "position": [
+            0.0,
+            3.0,
+            -7.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "Light": {
+          "color": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "intensity": 3.062000036239624,
+          "type": "Spot",
+          "castsShadows": false,
+          "innerAngle": 1.0,
+          "outerAngle": 0.0,
+          "radius": 4.0
+        },
+        "ObjectMetaData": {
+          "name": "Red Light",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "parent": 0,
+          "children": [],
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 56,
+      "components": {
+        "Transform": {
+          "position": [
+            22.399999618530275,
+            3.0,
+            -12.5
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "Light": {
+          "color": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "intensity": 3.062000036239624,
+          "type": "Point",
+          "castsShadows": false,
+          "innerAngle": 1.0,
+          "outerAngle": 0.0,
+          "radius": 4.0
+        },
+        "ObjectMetaData": {
+          "name": "Switch Light (1)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "parent": 0,
+          "children": [],
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 57,
+      "components": {
+        "Transform": {
+          "position": [
+            0.0,
+            4.0,
+            -34.20000076293945
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "Light": {
+          "color": [
+            0.9411765336990356,
+            1.0,
+            0.0
+          ],
+          "intensity": 3.0139999389648439,
+          "type": "Point",
+          "castsShadows": false,
+          "innerAngle": 1.0,
+          "outerAngle": 0.0,
+          "radius": 4.0
+        },
+        "ObjectMetaData": {
+          "name": "Door Light (2)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "parent": 0,
+          "children": [],
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
     }
   ]
 }

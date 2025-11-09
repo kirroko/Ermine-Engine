@@ -6,7 +6,8 @@ public class OrbTeleport : MonoBehaviour
 
     void Start()
     {
-        origin = GameObject.Find("Origin").GetComponent<Transform>();
+        //origin = GameObject.Find("Origin").GetComponent<Transform>();
+        origin = GameObject.Find("Player").GetComponent<Transform>();
     }
 
     void Update()
@@ -16,7 +17,7 @@ public class OrbTeleport : MonoBehaviour
             var projectile = Prefab.Instantiate("../Resources/Prefabs/Sphere.prefab");
             if (projectile != null)
             {
-                projectile.transform.position = origin.transform.position;
+                projectile.transform.position = new Vector3(origin.transform.position.x, 1.5f, origin.transform.position.z);
                 projectile.transform.rotation = transform.rotation;
                 projectile.GetComponent<Sphere>().direction = -transform.forward;
             }
