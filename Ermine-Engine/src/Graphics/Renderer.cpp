@@ -3512,7 +3512,7 @@ void Renderer::CalculateLightMatrix(const editor::EditorCamera& editorCamera)
 				// Compute depth for depth buffer
 				glm::vec4 clipFar = glmProj * glmView * glm::vec4(splitFarWorld, 1.0f);
 				float ndcZ_splitFar = (clipFar.w == 0.0f) ? 1.0f : (clipFar.z / clipFar.w);
-				float depthBufferFar = ndcZ_splitFar * 0.5f + 0.5f;
+				//float depthBufferFar = ndcZ_splitFar * 0.5f + 0.5f;
 
 				// Build frustum corners
 				std::array<glm::vec3, 8> frustumCornersWorld;

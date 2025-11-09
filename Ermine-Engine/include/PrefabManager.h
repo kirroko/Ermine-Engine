@@ -3,7 +3,7 @@
 \file       PrefabManager.h
 \author     WEE HONG RU Curtis, h.wee, 2301266, h.wee\@digipen.edu
 \date       Sep 10, 2025
-\brief      Prrefab management including open, save
+\brief      Prefab management including open, save
 
 Copyright (C) 2025 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents without the

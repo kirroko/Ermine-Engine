@@ -100,7 +100,7 @@ public:
     void vertex(const float* pos, unsigned int color, const float* uv) override { vertex(pos, color); }
     void vertex(const float x, const float y, const float z, unsigned int color, const float u, const float v) override { vertex(x, y, z, color); }
     void end() override { glEnd(); }
-    void texture(bool state) override {}
+    void texture(bool) override {}
 };
 
 struct Ermine::NavMeshComponent::BuildData
