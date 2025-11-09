@@ -46,10 +46,19 @@ public:
     */
     void SaveScene();
 
+    /*!
+    \brief Save temp scene on play
+    */
     void SaveTemp();
 
+    /*!
+    \brief Load temp scene on stop
+    */
     void LoadTemp();
 
+    /*!
+    \brief Removes temp scene
+    */
     void RemoveTemp();
 
     /*!
