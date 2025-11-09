@@ -573,11 +573,13 @@ namespace Ermine
 
 		template<typename Alloc>
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
+			(void)alloc;
 			out.SetObject();
 			// Don't serialize the matrix - it gets recalculated from hierarchy
 		}
 
 		void Deserialize(const rapidjson::Value& in) {
+			(void)in;
 			// Don't deserialize the matrix - it gets recalculated from hierarchy
 			isDirty = true;
 		}
@@ -2845,6 +2847,7 @@ namespace Ermine
 		*************************************************************************/
 		void Update(EntityID entity, float dt)
 		{
+			(void)dt;
 			// Ensure current script exists and is valid
 			if (!m_CurrentScript ||
 				std::find_if(m_Nodes.begin(), m_Nodes.end(),
