@@ -1,0 +1,98 @@
+{
+  "entity": {
+    "id": 56,
+    "components": {
+      "Transform": {
+        "position": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "scale": [
+          0.25,
+          0.25,
+          0.25
+        ]
+      },
+      "Light": {
+        "color": [
+          0.0,
+          0.5590777397155762,
+          1.0
+        ],
+        "intensity": 1.0,
+        "type": "Point",
+        "castsShadows": false,
+        "innerAngle": -1.0,
+        "outerAngle": -1.0,
+        "radius": 1.7000000476837159
+      },
+      "ObjectMetaData": {
+        "name": "Sphere",
+        "tag": "Untagged",
+        "selfActive": true
+      },
+      "Mesh": {
+        "kind": "Primitive",
+        "primitive": {
+          "type": "Sphere",
+          "size": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        }
+      },
+      "Material": {
+        "hasMaterial": true,
+        "params": {
+          "materialAlbedo": [
+            0.09967845678329468,
+            0.09967869520187378,
+            1.0,
+            0.5
+          ],
+          "materialAlpha": 0.5,
+          "materialTransparency": 0.5,
+          "materialMetallic": 0.0,
+          "materialRoughness": 0.5,
+          "materialEmissive": [
+            0.0,
+            0.5607843399047852,
+            1.0
+          ],
+          "materialEmissiveIntensity": 1.0,
+          "materialHasAlbedoMap": false
+        },
+        "textures": [],
+        "uvScale": [
+          1.0,
+          1.0
+        ],
+        "uvOffset": [
+          0.0,
+          0.0
+        ]
+      },
+      "HierarchyComponent": {
+        "parent": 0,
+        "children": [],
+        "depth": 0
+      },
+      "GlobalTransform": {},
+      "ScriptsComponent": {
+        "scripts": [
+          {
+            "class": "Sphere"
+          }
+        ]
+      }
+    }
+  }
+}

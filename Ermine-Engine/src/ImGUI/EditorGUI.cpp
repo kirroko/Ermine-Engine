@@ -134,6 +134,7 @@ namespace
     }
 }
 
+[[deprecated("viewportgui handles toolbar")]]
 void EditorGUI::StartPlayMode()
 {
     EE_CORE_INFO("Starting Play Mode...");
@@ -202,6 +203,7 @@ void EditorGUI::StartPlayMode()
     EE_CORE_INFO("Play mode started with camera entity {}", s_PrimaryCameraEntity);
 }
 
+[[deprecated("viewportgui handles toolbar")]]
 void EditorGUI::StopPlayMode()
 {
     EE_CORE_INFO("Stopping Play Mode...");
@@ -400,6 +402,7 @@ void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
     ImGui::EndMainMenuBar();
 }
 
+[[deprecated("viewportgui handles toolbar")]]
 void EditorGUI::Toolbar()
 {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 2));

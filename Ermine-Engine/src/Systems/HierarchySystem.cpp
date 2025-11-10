@@ -326,22 +326,12 @@ namespace Ermine
         if (m_Entities.empty())
             return;
 
-        std::vector<uint64_t> entities_to_process;
-        entities_to_process.reserve(m_Entities.size());
-
-        // Collect entities first
         for (auto entity : m_Entities)
         {
-            entities_to_process.push_back(entity);
-        }
-
-        // Process collected entities
-        for (auto entity : entities_to_process)
-        {
             // Verify entity still exists
-            if (m_Entities.find(entity) == m_Entities.end())
+            if (!ECS::GetInstance().IsEntityValid(entity))
                 continue;
-
+			
             if (!ECS::GetInstance().HasComponent<HierarchyComponent>(entity) ||
                 !ECS::GetInstance().HasComponent<Transform>(entity))
                 continue;
@@ -354,7 +344,8 @@ namespace Ermine
             auto& hierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(entity);
             auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
 
-            if (hierarchy.parent == 0 && (hierarchy.isDirty || hierarchy.worldTransformDirty || transform.isDirty)) {
+			const bool dirty = hierarchy.isDirty || hierarchy.worldTransformDirty || transform.isDirty;
+            if (hierarchy.parent == HierarchyComponent::INVALID_PARENT && dirty) {
                 UpdateWorldTransform(entity);
             }
         }
@@ -379,6 +370,21 @@ namespace Ermine
         hierarchy.isDirty = true;
         hierarchy.worldTransformDirty = true;
         transform.isDirty = true;  // Make sure Transform component is also marked dirty
+
+        // Bubble up so a root (or any ancestor) triggers UpdateWorldTransform
+        EntityID ancestor = hierarchy.parent;
+        while (ancestor != HierarchyComponent::INVALID_PARENT)
+        {
+            auto& ancHier = ECS::GetInstance().GetComponent<HierarchyComponent>(ancestor);
+            // No need to mark ancestor's local transform dirty unless its own local changed.
+            // We only need worldTransform recompute.
+            ancHier.worldTransformDirty = true;
+
+            // Optionally mark isDirty if you treat it as "needs recompute" (keeps semantics simple):
+            // ancHier.isDirty = true;
+
+            ancestor = ancHier.parent;
+        }
 
         // Mark all children's world transforms as needing update (but not their local transforms)
         for (auto child : hierarchy.children) {

@@ -36,10 +36,10 @@ namespace Ermine
             return false;
 
         agent.path = path;
-        for (size_t i = 0; i < path.size(); ++i)
-        {
-            auto& p = path[i];
-        }
+        //for (size_t i = 0; i < path.size(); ++i)
+        //{
+        //    auto& p = path[i];
+        //}
         agent.currentCorner = 0;
         agent.hasPath = true;
         return true;

@@ -215,11 +215,11 @@ namespace Ermine {
 
             if (ImGui::Button("Emit"))
             {
-                EntityID selected = SceneManager::GetInstance().EnsureActiveScene().GetSelectedEntity();
+                //EntityID selected = SceneManager::GetInstance().EnsureActiveScene().GetSelectedEntity();
 
                 if (ecs.HasComponent<Transform>(selected) && ecs.HasComponent<ParticleEmitter>(selected))
                 {
-                    auto& emitter = ecs.GetComponent<ParticleEmitter>(selected);
+                    //auto& emitter = ecs.GetComponent<ParticleEmitter>(selected);
                     auto& transform = ecs.GetComponent<Transform>(selected);
 
                     auto particleSystem = ecs.GetSystem<ParticleSystem>();

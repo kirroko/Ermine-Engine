@@ -310,23 +310,26 @@ namespace Ermine
 		for (; !mCollisionEvent.empty(); mCollisionEvent.pop())
 		{
 			auto& [type, recipientEntity, otherEntity, sensor] = mCollisionEvent.front();
-			if (ecs.IsEntityValid(recipientEntity) && ecs.HasComponent<Script>(recipientEntity))
+			if (ecs.IsEntityValid(recipientEntity) && ecs.HasComponent<ScriptsComponent>(recipientEntity))
 			{
-				auto& scriptComp = ecs.GetComponent<Script>(recipientEntity);
-				if (!scriptComp.m_instance)
-					continue;
-
-				switch (type)
+				auto& scs = ecs.GetComponent<ScriptsComponent>(recipientEntity);
+				for (auto& scriptComp : scs.scripts)
 				{
-				case CollisionEventType::Begin:
-					scriptComp.m_instance->OnCollisionEnter(otherEntity, sensor);
-					break;
-				case CollisionEventType::Stay:
-					scriptComp.m_instance->OnCollisionStay(otherEntity, sensor);
-					break;
-				case CollisionEventType::End:
-					scriptComp.m_instance->OnCollisionExit(otherEntity, sensor);
-					break;
+					if (!scriptComp.m_instance)
+						continue;
+
+					switch (type)
+					{
+					case CollisionEventType::Begin:
+						scriptComp.m_instance->OnCollisionEnter(otherEntity, sensor);
+						break;
+					case CollisionEventType::Stay:
+						scriptComp.m_instance->OnCollisionStay(otherEntity, sensor);
+						break;
+					case CollisionEventType::End:
+						scriptComp.m_instance->OnCollisionExit(otherEntity, sensor);
+						break;
+					}
 				}
 			}
 		}
@@ -1024,9 +1027,9 @@ namespace Ermine
 			if (!ecs.IsEntityValid(entA) && !ecs.IsEntityValid(entB))
 				continue;
 
-			if (ecs.IsEntityValid(entA) && ecs.HasComponent<Script>(entA))
+			if (ecs.IsEntityValid(entA) && ecs.HasComponent<ScriptsComponent>(entA))
 				mCollisionEvent.emplace(pp.type, entA, entB, bIsSensor);
-			if (ecs.IsEntityValid(entB) && ecs.HasComponent<Script>(entB))
+			if (ecs.IsEntityValid(entB) && ecs.HasComponent<ScriptsComponent>(entB))
 				mCollisionEvent.emplace(pp.type, entB, entA, aIsSensor);
 		}
 	}

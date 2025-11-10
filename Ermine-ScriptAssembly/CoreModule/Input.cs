@@ -50,6 +50,18 @@ namespace ErmineEngine
         public static bool GetMouseButtonDown(int key) => InternalGetMouseButtonDown((KeyCode)key);
 
         public static bool GetMouseButtonUp(KeyCode key) => InternalGetMouseButtonUp(key);
+
+        public static Vector3 mousePosition
+        {
+            [MethodImpl(MethodImplOptions.InternalCall)]
+            get;
+        }
+
+        public static Vector3 mousePositionDelta
+        {
+            [MethodImpl(MethodImplOptions.InternalCall)]
+            get;
+        }
     }
 
     // Key code based on GLFW Key codes

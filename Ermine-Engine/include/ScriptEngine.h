@@ -226,6 +226,16 @@ namespace Ermine::scripting
 		 */
 		void QueueLateDestroy(EntityID id);
 
+		/**
+		 * @brief Set a single field on a MonoObject.
+		 * @param obj the MonoObject to set the field on.
+		 * @param name the name of the field to set.
+		 * @param val the value to set the field to.
+		 */
+		void PushSingleField(MonoObject* obj,
+		                                   const std::string& name,
+		                                   const ScriptFieldValue& val);
+
 		MonoAssembly* GetGameAsm() const { return m_gameAsm; }
 		MonoDomain* GetGameDomain() const { assert(m_gameDomain != nullptr && "Game Domain missing?"); return m_gameDomain; }
 		MonoAssembly* GetAPIAsm() const { return m_apiAsm; }

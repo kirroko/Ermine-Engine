@@ -71,6 +71,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="LifeEssenceSkillController.cs" />
+    <Compile Include="OrbTeleport.cs" />
     <Compile Include="PlayerController.cs" />
     <Compile Include="Sandbox.cs" />
     <Compile Include="Sphere.cs" />

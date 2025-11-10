@@ -213,15 +213,15 @@ namespace Ermine
 
         // OpenGL resources
         std::shared_ptr<graphics::Shader> m_uiShader;
-        GLuint m_VAO;
-        GLuint m_VBO;
+        GLuint m_VAO = 0;
+        GLuint m_VBO = 0;
 
         // Screen dimensions
-        int m_screenWidth;
-        int m_screenHeight;
+        int m_screenWidth = 0;
+        int m_screenHeight = 0;
 
         // Orthographic projection matrix for screen-space rendering
-        glm::mat4 m_orthoProjection;
+        glm::mat4 m_orthoProjection{};
 
         // Vertex data for dynamic rendering
         std::vector<float> m_vertexData;
