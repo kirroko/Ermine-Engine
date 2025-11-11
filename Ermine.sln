@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36518.9 d17.14
+VisualStudioVersion = 17.14.36518.9
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Ermine-Editor", "Ermine-Editor\Ermine-Editor.vcxproj", "{397C7682-A53C-F2B8-6E77-3B36DAF63695}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -101,7 +101,9 @@ Global
 		{74F1A99C-E0D0-2838-E9E8-B30E55478F99}.Editor-Release|x64.ActiveCfg = Editor-Release|x64
 		{74F1A99C-E0D0-2838-E9E8-B30E55478F99}.Editor-Release|x64.Build.0 = Editor-Release|x64
 		{74F1A99C-E0D0-2838-E9E8-B30E55478F99}.Game-Debug|x64.ActiveCfg = Game-Debug|x64
+		{74F1A99C-E0D0-2838-E9E8-B30E55478F99}.Game-Debug|x64.Build.0 = Game-Debug|x64
 		{74F1A99C-E0D0-2838-E9E8-B30E55478F99}.Game-Release|x64.ActiveCfg = Game-Release|x64
+		{74F1A99C-E0D0-2838-E9E8-B30E55478F99}.Game-Release|x64.Build.0 = Game-Release|x64
 		{F7E4DE50-E3DD-FDA2-0C10-E327F867DDAE}.Editor-Debug|x64.ActiveCfg = Editor-Debug|x64
 		{F7E4DE50-E3DD-FDA2-0C10-E327F867DDAE}.Editor-Debug|x64.Build.0 = Editor-Debug|x64
 		{F7E4DE50-E3DD-FDA2-0C10-E327F867DDAE}.Editor-Release|x64.ActiveCfg = Editor-Release|x64
