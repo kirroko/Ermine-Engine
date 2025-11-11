@@ -600,9 +600,9 @@ void Ermine::ViewPortGUI::Update()
 	static bool s_orbiting = false;
 	CameraControls(overViewCube, selectedEntity, viewportHovered, s_orbiting);
 
-	ObjectPicking(offscreen_buffer, imgMin, imgSize, overViewCube, s_orbiting);
-
 	GizmoOverlay(imgMin, imgSize, vmSize, vmPos, selectedEntity, gOperation, gMode);
+
+	ObjectPicking(offscreen_buffer, imgMin, imgSize, overViewCube, s_orbiting);
 
 	ImGui::EndChild();
 
