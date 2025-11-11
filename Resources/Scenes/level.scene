@@ -3884,7 +3884,7 @@
         },
         "HierarchyComponent": {
           "parent": 0,
-          "children": [58],
+          "children": [ 58 ],
           "depth": 0
         },
         "GlobalTransform": {}
@@ -3895,20 +3895,20 @@
       "components": {
         "Transform": {
           "position": [
-            0.0,
-            0.0,
-            0.0
+            -0.367,
+            1.0,
+            -4.878
           ],
           "rotation": [
-            0.7071067690849304,
             0.0,
             0.0,
-            0.7071067690849304
+            0.0,
+            1.0
           ],
           "scale": [
-            2.0,
-            2.0,
-            2.0
+            1.5,
+            1.3,
+            1.5
           ]
         },
         "ObjectMetaData": {
@@ -3963,9 +3963,9 @@
           ]
         },
         "HierarchyComponent": {
-          "parent": 55,
+          "parent": 0,
           "children": [],
-          "depth": 1
+          "depth": 0
         },
         "GlobalTransform": {}
       }
