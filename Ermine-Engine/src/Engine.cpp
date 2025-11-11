@@ -42,6 +42,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "HierarchySystem.h"
 #include "CameraSystem.h"
 #include "UIRenderSystem.h"
+#include "NavMesh.h"
+#include "NavMeshAgentSystem.h"
 
 #if defined(EE_EDITOR)
 #include "GraphicsDebugGUI.h"
@@ -52,8 +54,6 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "AudioImGUI.h"
 #include "SceneManager.h"
 #include "FSMEditor.h"
-#include "NavMesh.h"
-#include "NavMeshAgentSystem.h"
 #include "AnimationGUI.h"
 #include "ResourcePipe.h"
 #endif
@@ -430,13 +430,13 @@ bool engine::Init(GLFWwindow* windowContext)
 	else
 		ECS::GetInstance().GetSystem<UIRenderSystem>()->Init(1920, 1080);
 
+	// Editor windows
+#if defined(EE_EDITOR)
 	SceneManager::GetInstance().NewScene();
 
 	EE_CORE_INFO("Material system now supports efficient sharing between entities using shared_ptr");
 	EE_CORE_INFO("Systems and components registered successfully, Engine Initialized");
 
-	// Editor windows
-#if defined(EE_EDITOR)
 	editor::EditorGUI::CreateImGUIWindow<ParticlesImGUI>();
 	editor::EditorGUI::CreateImGUIWindow<AudioImGUI>();
 	editor::EditorGUI::CreateImGUIWindow<editor::GraphicsDebugGUI>("Graphics Debug"); // TODO: Namespace required?
@@ -478,6 +478,9 @@ bool engine::Init(GLFWwindow* windowContext)
 #else
 	auto defaultScene = std::make_shared<Scene>("Main Scene");
 	SceneManager::GetInstance().SetActiveScene(defaultScene);
+
+	// TEMP - load level scene manually
+	SceneManager::GetInstance().OpenScene("../Resources/Scenes/level.scene");
 #endif
 
 	s_isInitialized = true;
