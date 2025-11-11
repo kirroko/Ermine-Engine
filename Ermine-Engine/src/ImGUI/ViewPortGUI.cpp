@@ -88,7 +88,7 @@ void Ermine::ViewPortGUI::Render()
 void Ermine::ViewPortGUI::TopBarSimulationControl(const ImVec2 iconSize)
 {
 	// Find primary camera entity
-	auto& ecs = ECS::GetInstance();
+	//auto& ecs = ECS::GetInstance();
 
 	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6.f, 6.f));
 	ImGui::BeginGroup();

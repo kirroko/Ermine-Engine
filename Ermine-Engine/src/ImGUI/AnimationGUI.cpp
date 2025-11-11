@@ -254,7 +254,7 @@ namespace Ermine
                 if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
                     m_isRenaming = true;
                     m_renameNodeId = n.id;
-                    strncpy(m_renameBuffer, n.name.c_str(), sizeof(m_renameBuffer));
+                    strncpy_s(m_renameBuffer, sizeof(m_renameBuffer), n.name.c_str(), _TRUNCATE);
                     m_renameBuffer[sizeof(m_renameBuffer) - 1] = '\0';
                 }
             }

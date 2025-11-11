@@ -48,6 +48,10 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 namespace Ermine {
 	// NOTE: ALL ENUMS TO BE ADDED UP HERE
 
+	/*!***********************************************************************
+	\brief
+	 Meshkind type structure
+	*************************************************************************/
 	enum class MeshKind { None, Primitive, Asset };
 
 	/*!***********************************************************************
@@ -74,6 +78,10 @@ namespace Ermine {
 }
 
 namespace xproperty::settings {
+	/*!***********************************************************************
+	\brief
+	 Meshkind type structure for xproperty
+	*************************************************************************/
 	template<>
 	struct var_type<Ermine::MeshKind> : var_defaults<"MeshKind", Ermine::MeshKind>
 	{
@@ -84,6 +92,10 @@ namespace xproperty::settings {
 		};
 	};
 
+	/*!***********************************************************************
+	\brief
+	 light type structure for xproperty
+	*************************************************************************/
 	template<>
 	struct var_type<Ermine::LightType> : var_defaults<"LightType", Ermine::LightType>
 	{
@@ -95,6 +107,10 @@ namespace xproperty::settings {
 		};
 	};
 
+	/*!***********************************************************************
+	\brief
+	 Physics body type structure for xproperty
+	*************************************************************************/
 	template<> struct var_type<Ermine::PhysicsBodyType> : var_defaults<"PhysicsBodyType", Ermine::PhysicsBodyType> {
 		inline static constexpr std::array enum_list_v{
 			enum_item{"Rigid",   Ermine::PhysicsBodyType::Rigid},
@@ -102,6 +118,10 @@ namespace xproperty::settings {
 		};
 	};
 
+	/*!***********************************************************************
+	\brief
+	 JPH body type structure for xproperty
+	*************************************************************************/
 	template<> struct var_type<JPH::EMotionType> : var_defaults<"JPH_EMotionType", JPH::EMotionType> {
 		inline static constexpr std::array enum_list_v{
 			enum_item{"Static",    JPH::EMotionType::Static},
@@ -110,6 +130,10 @@ namespace xproperty::settings {
 		};
 	};
 
+	/*!***********************************************************************
+	\brief
+	 Shape type structure for xproperty
+	*************************************************************************/
 	template<> struct var_type<Ermine::ShapeType> : var_defaults<"ShapeType", Ermine::ShapeType> {
 		inline static constexpr std::array enum_list_v{
 			enum_item{"Box",        Ermine::ShapeType::Box},
@@ -120,6 +144,11 @@ namespace xproperty::settings {
 	};
 }
 
+
+/*!***********************************************************************
+\brief
+ Helpers for xproperty
+*************************************************************************/
 namespace xprop_utils
 {
 	template<typename E>
@@ -544,11 +573,13 @@ namespace Ermine
 
 		template<typename Alloc>
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
+			(void)alloc;
 			out.SetObject();
 			// Don't serialize the matrix - it gets recalculated from hierarchy
 		}
 
 		void Deserialize(const rapidjson::Value& in) {
+			(void)in;
 			// Don't deserialize the matrix - it gets recalculated from hierarchy
 			isDirty = true;
 		}
@@ -2816,6 +2847,7 @@ namespace Ermine
 		*************************************************************************/
 		void Update(EntityID entity, float dt)
 		{
+			(void)dt;
 			// Ensure current script exists and is valid
 			if (!m_CurrentScript ||
 				std::find_if(m_Nodes.begin(), m_Nodes.end(),

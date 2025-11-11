@@ -31,8 +31,8 @@ public class PlayerController : MonoBehaviour
     private Vector3 velocity;                    // vertical velocity is used; horizontal is per-frame input
     private bool isSprinting;
     private bool isCrouching;
-    private float camDefaultY;
-    private float camCrouchY;
+    private float camDefaultY = 200f;
+    private float camCrouchY = 50f;
 
     void Start()
     {

@@ -69,11 +69,11 @@ namespace Ermine {
         int GetParticleCount() const;
     private:
         struct Particle {
-            EntityID entity;
-            EntityID emitterID;
-            Vec3 velocity;
-            float lifetime;
-            float age;
+            EntityID entity = 0;
+            EntityID emitterID = 0;
+            Vec3 velocity = { 0.0f, 0.0f, 0.0f };
+            float lifetime = 0.0f;
+            float age = 0.0f;
         };
 
         std::vector<Particle> m_Particles;

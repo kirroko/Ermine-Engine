@@ -25,23 +25,23 @@ namespace Ermine::graphics
         /**
          * @brief Get the singleton instance
          */
-        //static CameraSystem& GetInstance()
-        //{
-        //    static CameraSystem instance;
-        //    return instance;
-        //}
+         //static CameraSystem& GetInstance()
+         //{
+         //    static CameraSystem instance;
+         //    return instance;
+         //}
 
         CameraSystem() = default;
 
         /**
          * @brief Constructor with default perspective parameters (matching EditorCamera)
          */
-        //CameraSystem(float fov = 45.0f, float aspectRatio = 16.0f / 9.0f,
-        //    float nearClip = 0.1f, float farClip = 1000.0f);
+         //CameraSystem(float fov = 45.0f, float aspectRatio = 16.0f / 9.0f,
+         //    float nearClip = 0.1f, float farClip = 1000.0f);
 
-        /**
-         * @brief Update camera each frame
-         */
+         /**
+          * @brief Update camera each frame
+          */
         void Update();
 
         /**
@@ -100,10 +100,10 @@ namespace Ermine::graphics
         float m_Pitch = 0.0f;
 
         // Perspective parameters
-        float m_FOV;
-        float m_AspectRatio;
-        float m_NearClip;
-        float m_FarClip;
+        float m_FOV = 0.0f;
+        float m_AspectRatio = 0.0f;
+        float m_NearClip = 0.0f;
+        float m_FarClip = 0.0f;
 
         // Matrices
         Mtx44 m_ViewMatrix;

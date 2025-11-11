@@ -976,8 +976,7 @@ namespace Ermine::editor {
 				}
 			}
 			// --- Vec3 (color) ---
-			else if (guid == xproperty::settings::var_type<Ermine::Vec3>::guid_v
-				|| guid == xproperty::settings::var_type<Vec3>::guid_v) {
+			else if (guid == xproperty::settings::var_type<Ermine::Vec3>::guid_v/* || guid == xproperty::settings::var_type<Vec3>::guid_v*/) {
 				auto v = (guid == xproperty::settings::var_type<Ermine::Vec3>::guid_v)
 					? p.m_Value.get<Ermine::Vec3>()
 					: Ermine::Vec3{ p.m_Value.get<Vec3>().x, p.m_Value.get<Vec3>().y, p.m_Value.get<Vec3>().z };
@@ -1336,7 +1335,7 @@ namespace Ermine::editor {
 				case ScriptFieldValue::Kind::Vector3:
 				{
 					// Uses internal two-column layout with label left
-					if (changed = DrawVec3XYZ(name.c_str(), &std::get<Vec3>(val.value).x))
+					if (changed == DrawVec3XYZ(name.c_str(), &std::get<Vec3>(val.value).x))
 					{
 					}
 					break;
@@ -1345,7 +1344,7 @@ namespace Ermine::editor {
 				{
 					// Uses internal two-column layout with label left
 					Vec3 euler = QuaternionToEuler(std::get<Quaternion>(val.value), true);
-					if (changed = DrawVec3XYZ(name.c_str(), &euler.x))
+					if (changed == DrawVec3XYZ(name.c_str(), &euler.x))
 					{
 					}
 					val.value = FromEulerDegrees(euler);
@@ -1608,7 +1607,7 @@ namespace Ermine::editor {
 						// Auto-attach animator if entity has AnimationComponent
 						if (ECS::GetInstance().HasComponent<AnimationComponent>(entity)) {
 							auto& animComp = ECS::GetInstance().GetComponent<AnimationComponent>(entity);
-							const aiScene* scene = model->GetAssimpScene();
+							scene = model->GetAssimpScene();
 							if (scene && scene->mNumAnimations > 0)
 								animComp.m_animator = std::make_shared<graphics::Animator>(model);
 							else
@@ -1814,7 +1813,7 @@ namespace Ermine::editor {
 					// Refresh animator
 					if (ecs.HasComponent<AnimationComponent>(entity)) {
 						auto& animComp = ecs.GetComponent<AnimationComponent>(entity);
-						const aiScene* scene = reloaded->GetAssimpScene();
+						scene = reloaded->GetAssimpScene();
 						if (scene && scene->mNumAnimations > 0)
 							animComp.m_animator = std::make_shared<graphics::Animator>(reloaded);
 						else
