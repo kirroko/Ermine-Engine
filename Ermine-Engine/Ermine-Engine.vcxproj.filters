@@ -306,6 +306,9 @@
     <ClInclude Include="include\TransformMode.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\UIRenderSystem.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\VertexArray.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -405,6 +408,9 @@
       <Filter>src\Graphics</Filter>
     </ClCompile>
     <ClCompile Include="src\Graphics\Texture.cpp">
+      <Filter>src\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Graphics\UIRenderSystem.cpp">
       <Filter>src\Graphics</Filter>
     </ClCompile>
     <ClCompile Include="src\Graphics\VertexArray.cpp">

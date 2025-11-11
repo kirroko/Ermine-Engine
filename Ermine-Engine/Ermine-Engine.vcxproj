@@ -370,6 +370,7 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClInclude Include="include\Systems.h" />
     <ClInclude Include="include\Texture.h" />
     <ClInclude Include="include\TransformMode.h" />
+    <ClInclude Include="include\UIRenderSystem.h" />
     <ClInclude Include="include\VertexArray.h" />
     <ClInclude Include="include\VertexBuffer.h" />
     <ClInclude Include="include\ViewPortGUI.h" />
