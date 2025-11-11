@@ -750,6 +750,26 @@ namespace Ermine
         }
     }
 
+    void AudioImGUI::ScanForExistingGlobalAudio()
+    {
+        auto& ecs = ECS::GetInstance();
+
+        // Scan through all entities to find existing GlobalAudioComponent
+        for (EntityID entity = 1; entity <= MAX_ENTITIES; ++entity)
+        {
+            if (ecs.IsEntityValid(entity) && ecs.HasComponent<GlobalAudioComponent>(entity))
+            {
+                m_GlobalAudioEntity = entity;
+                m_HasGlobalAudio = true;
+                SetStatusMessage("Found existing Global Audio Entity (ID: " + std::to_string(entity) + ")");
+                return; // Found it, no need to continue
+            }
+        }
+
+        // If we get here, no GlobalAudioComponent was found
+        m_HasGlobalAudio = false;
+    }
+
     void AudioImGUI::CreateTestGlobalAudioEntity()
     {
         if (m_HasGlobalAudio) return; // Already created
@@ -782,7 +802,26 @@ namespace Ermine
         ImGui::Text("Global Audio System");
         ImGui::Separator();
 
-        // Create test entity button
+        if (m_HasGlobalAudio)
+        {
+            auto& ecs = ECS::GetInstance();
+            // Check if the entity we think exists is still valid
+            if (!ecs.IsEntityValid(m_GlobalAudioEntity) ||
+                !ecs.HasComponent<GlobalAudioComponent>(m_GlobalAudioEntity))
+            {
+                // Our cached entity is invalid, rescan the scene
+                m_HasGlobalAudio = false;
+                m_GlobalAudioEntity = 0;
+            }
+        }
+
+        // If we don't have a valid global audio reference, scan for one
+        if (!m_HasGlobalAudio)
+        {
+            ScanForExistingGlobalAudio();
+        }
+
+        // Now render based on the current state
         if (!m_HasGlobalAudio)
         {
             if (ImGui::Button("Create Test Global Audio Entity"))
