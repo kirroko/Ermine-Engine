@@ -973,7 +973,7 @@ namespace Ermine
 				if (!v.IsObject()) continue;
 				Script s;
 				s.Deserialize(v);
-				// Do not create ScriptInstance here (no EntityID yet) — ScriptSystem should call AttachAll
+				// Do not create ScriptInstance here (no EntityID yet) ï¿½ ScriptSystem should call AttachAll
 				scripts.emplace_back(std::move(s));
 			}
 		}
@@ -3259,6 +3259,7 @@ namespace Ermine
 			float maxCooldown = 5.0f;         // Total cooldown duration
 			float manaCost = 20.0f;           // Life essence cost to cast
 			bool isOnCooldown = false;        // Is skill currently on cooldown?
+			float activationFlashTimer = 0.0f; // Flash effect duration when skill is activated
 			Ermine::Vec3 slotColor = { 0.25f, 0.25f, 0.25f };        // Dark gray background
 			Ermine::Vec3 readyColor = { 0.85f, 0.85f, 0.85f };       // Light gray when ready
 			Ermine::Vec3 cooldownColor = { 0.45f, 0.45f, 0.45f };    // Medium gray during cooldown

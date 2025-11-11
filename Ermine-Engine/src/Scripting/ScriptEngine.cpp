@@ -28,6 +28,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Physics.h"
 #include "SceneManager.h"
 #include "Serialisation.h"
+#include "UIRenderSystem.h"
 
 namespace fs = std::filesystem;
 
@@ -2152,6 +2153,17 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 			v.y = dest.y;
 			v.z = dest.z;
 			Ermine::RequestPathForAgent((Ermine::EntityID)entityID, v);
+		});
+#pragma endregion
+
+#pragma region UISystem ICalls
+	mono_add_internal_call("ErmineEngine.UISystem::Internal_CastSkill",
+		(const void*)+[](uint64_t entityID, int skillIndex) -> bool
+		{
+			auto uiSystem = Ermine::ECS::GetInstance().GetSystem<Ermine::UIRenderSystem>();
+			if (!uiSystem)
+				return false;
+			return uiSystem->CastSkill((Ermine::EntityID)entityID, skillIndex);
 		});
 #pragma endregion
 }

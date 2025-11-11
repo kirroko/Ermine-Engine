@@ -33,6 +33,7 @@ namespace Ermine
     {
         m_screenWidth = screenWidth;
         m_screenHeight = screenHeight;
+        m_aspectRatio = (screenHeight > 0) ? static_cast<float>(screenWidth) / static_cast<float>(screenHeight) : 1.0f;
 
         // Load UI shader
         m_uiShader = AssetManager::GetInstance().LoadShader(
@@ -108,6 +109,14 @@ namespace Ermine
                     {
                         anySkillOnCooldown = true;
                     }
+                }
+
+                // Update activation flash timer
+                if (skill.activationFlashTimer > 0.0f)
+                {
+                    skill.activationFlashTimer -= deltaTime;
+                    if (skill.activationFlashTimer < 0.0f)
+                        skill.activationFlashTimer = 0.0f;
                 }
             }
 
@@ -203,6 +212,7 @@ namespace Ermine
     {
         m_screenWidth = width;
         m_screenHeight = height;
+        m_aspectRatio = (height > 0) ? static_cast<float>(width) / static_cast<float>(height) : 1.0f;
     }
 
     bool UIRenderSystem::CastSkill(EntityID entity, int skillIndex)
@@ -229,6 +239,9 @@ namespace Ermine
         ui.currentHealth -= skill.manaCost;
         skill.currentCooldown = skill.maxCooldown;
         skill.isOnCooldown = true;
+
+        // Trigger activation flash effect (0.2 seconds)
+        skill.activationFlashTimer = 0.2f;
 
         // Reset health regeneration timer when skill is cast
         ui.healthRegenTimer = 0.0f;
@@ -373,7 +386,7 @@ namespace Ermine
             }
 
             // ========================================================================
-            // RENDER SKILL ICON (Clean PNG texture, no borders or backgrounds)
+            // RENDER SKILL ICON (Square with correct aspect ratio)
             // ========================================================================
             if (skillTexture && skillTexture->IsValid())
             {
@@ -394,13 +407,17 @@ namespace Ermine
                     alpha = 0.7f;
                 }
 
-                RenderTexturedCircle(centerX, centerY, radius, skillTexture, tintColor, alpha);
+                // Use square rendering to maintain aspect ratio (size = diameter of old circle)
+                RenderTexturedSquare(centerX, centerY, slotSize, skillTexture, tintColor, alpha);
             }
             else
             {
-                // Fallback: render simple circle if no texture
+                // Fallback: render simple square if no texture
                 Vec3 fallbackColor = { 0.3f, 0.3f, 0.3f };
-                RenderFilledCircle(centerX, centerY, radius, fallbackColor, 0.5f);
+                float halfSize = slotSize * 0.5f;
+                float adjustedHalfWidth = halfSize / m_aspectRatio;
+                RenderQuad(centerX - adjustedHalfWidth, centerY - halfSize,
+                          adjustedHalfWidth * 2.0f, slotSize, fallbackColor, 0.5f);
             }
 
             // ========================================================================
@@ -410,23 +427,27 @@ namespace Ermine
             {
                 float progress = skill.currentCooldown / skill.maxCooldown;
                 Vec3 cooldownColor = { 0.0f, 0.0f, 0.0f }; // Black overlay
-                RenderRadialCooldown(centerX, centerY, radius, progress, cooldownColor, 0.7f);
+                // Use radius for cooldown overlay (centered on square icon)
+                RenderRadialCooldown(centerX, centerY, slotSize * 0.5f, progress, cooldownColor, 0.7f);
             }
 
             // ========================================================================
-            // SUBTLE ANIMATION AROUND ICON (Glow when ready)
+            // ACTIVATION FLASH EFFECT (Flash when skill is activated)
             // ========================================================================
-            static float animTime = 0.0f;
-            animTime += 0.016f;
-
-            bool isReady = !skill.isOnCooldown && ui.currentHealth >= skill.manaCost;
-            if (isReady)
+            if (skill.activationFlashTimer > 0.0f)
             {
-                // Subtle pulsing glow when skill is ready
-                float pulse = 0.3f + 0.2f * sinf(animTime * 2.0f + slotIdx * 0.5f); // Gentle pulse
-                float glowRadius = radius + 0.005f;
-                Vec3 glowColor = { 1.0f, 0.85f, 0.50f }; // Soft brass/gold glow
-                RenderFilledCircle(centerX, centerY, glowRadius, glowColor, pulse * 0.3f);
+                // Calculate flash intensity (fades from 1.0 to 0.0 over 0.2 seconds)
+                float flashIntensity = skill.activationFlashTimer / 0.2f;
+
+                // Bright white/yellow flash
+                float glowSize = slotSize + 0.02f; // Slightly larger than icon
+                Vec3 flashColor = { 1.0f, 1.0f, 0.8f }; // Bright white-yellow
+
+                // Render flash as a square border
+                float halfSize = glowSize * 0.5f;
+                float adjustedHalfWidth = halfSize / m_aspectRatio;
+                RenderQuad(centerX - adjustedHalfWidth, centerY - halfSize,
+                          adjustedHalfWidth * 2.0f, glowSize, flashColor, flashIntensity * 0.8f);
             }
 
             // ========================================================================
@@ -438,7 +459,10 @@ namespace Ermine
                 float textScale = 0.6f; // Slightly larger text for better readability
                 float textWidth = m_textRenderer->GetTextWidth(skill.keyBinding, textScale);
                 float labelX = centerX - (textWidth * 0.5f); // Center horizontally
-                float labelY = centerY - radius - 0.02f; // Position below the slot
+                float labelY = centerY - (slotSize * 0.5f) - 0.02f; // Position below the square slot
+
+                // Check if skill is ready to use
+                bool isReady = !skill.isOnCooldown && ui.currentHealth >= skill.manaCost;
 
                 // Professional white text with slight transparency
                 Vec3 labelColor = { 1.0f, 1.0f, 1.0f };
@@ -779,6 +803,63 @@ namespace Ermine
         glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
         glBufferSubData(GL_ARRAY_BUFFER, 0, m_vertexData.size() * sizeof(float), m_vertexData.data());
         glDrawArrays(GL_TRIANGLE_FAN, 0, static_cast<GLsizei>(m_vertexData.size() / 8));
+        glBindVertexArray(0);
+
+        // Disable texture mode
+        texture->Unbind();
+        m_uiShader->SetUniform1i("uUseTexture", 0);
+    }
+
+    void UIRenderSystem::RenderTexturedSquare(float centerX, float centerY, float size,
+                                              std::shared_ptr<graphics::Texture> texture,
+                                              const Vec3& color, float alpha)
+    {
+        if (!texture || !texture->IsValid())
+            return;
+
+        // Get texture dimensions to calculate its aspect ratio
+        int texWidth = texture->GetWidth();
+        int texHeight = texture->GetHeight();
+
+        // Calculate texture aspect ratio (width / height)
+        float textureAspectRatio = (texHeight > 0) ? static_cast<float>(texWidth) / static_cast<float>(texHeight) : 1.0f;
+
+        // Calculate base dimensions accounting for screen aspect ratio
+        float halfSize = size * 0.5f;
+
+        // Adjust dimensions to maintain BOTH screen aspect ratio and texture aspect ratio
+        // This prevents stretching of non-square textures
+        float adjustedHalfWidth = (halfSize * textureAspectRatio) / m_aspectRatio;
+        float adjustedHalfHeight = halfSize;
+
+        // Calculate corner positions
+        float left = centerX - adjustedHalfWidth;
+        float right = centerX + adjustedHalfWidth;
+        float bottom = centerY - adjustedHalfHeight;
+        float top = centerY + adjustedHalfHeight;
+
+        // Define quad vertices (2 triangles) with texture coordinates
+        float vertices[] = {
+            // Position (x, y)    // Color (r, g, b, a)                  // TexCoord (u, v)
+            left,  bottom,        color.x, color.y, color.z, alpha,     0.0f, 0.0f,  // Bottom-left
+            right, bottom,        color.x, color.y, color.z, alpha,     1.0f, 0.0f,  // Bottom-right
+            right, top,           color.x, color.y, color.z, alpha,     1.0f, 1.0f,  // Top-right
+
+            left,  bottom,        color.x, color.y, color.z, alpha,     0.0f, 0.0f,  // Bottom-left
+            right, top,           color.x, color.y, color.z, alpha,     1.0f, 1.0f,  // Top-right
+            left,  top,           color.x, color.y, color.z, alpha,     0.0f, 1.0f   // Top-left
+        };
+
+        // Enable texture mode in shader
+        m_uiShader->SetUniform1i("uUseTexture", 1);
+        texture->Bind(0); // Bind to texture unit 0
+        m_uiShader->SetUniform1i("uTexture", 0);
+
+        // Render the square
+        glBindVertexArray(m_VAO);
+        glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
         glBindVertexArray(0);
 
         // Disable texture mode

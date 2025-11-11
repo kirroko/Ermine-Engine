@@ -261,9 +261,6 @@ void SceneManager::NewScene()
     // Clear ECS
     Ermine::ECS::GetInstance().ClearAllEntities();
 
-    // Ensure HUD entity exists (global UI - always created)
-    EnsureHUDExists();
-
     auto mainLight = Ermine::ECS::GetInstance().CreateEntity();
 
     // Tilted down and slightly to the side, similar to Unity's default
@@ -295,9 +292,6 @@ void SceneManager::ClearScene()
     // Clear ECS
     Ermine::ECS::GetInstance().ClearAllEntities();
 
-    // Ensure HUD entity exists (global UI - always created)
-    EnsureHUDExists();
-
     //Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>()->UpdateShadowMap();
 
     // Mark materials dirty to trigger recompilation
@@ -326,12 +320,6 @@ void SceneManager::OpenScene(const std::string& path)
     //EnsureActiveScene().Clear();
 
     LoadSceneFromFile(Ermine::ECS::GetInstance(), path);
-
-    // Remove any HUD loaded from scene file (prevents serialization conflicts)
-    RemoveHUDEntity();
-
-    // Create fresh HUD with current code defaults (simple approach: always create)
-    EnsureHUDExists();
 
     Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>()->InitializeShadowMapResources();
 
@@ -458,49 +446,3 @@ void SceneManager::CreateHUDEntity()
 #endif
 }
 
-bool SceneManager::HasHUDEntity() const
-{
-    auto& ecs = Ermine::ECS::GetInstance();
-
-    // Check if any entity has UIComponent (indicates HUD exists)
-    for (Ermine::EntityID entity = 0; entity < Ermine::MAX_ENTITIES; ++entity)
-    {
-        if (ecs.IsEntityValid(entity) && ecs.HasComponent<Ermine::UIComponent>(entity))
-        {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-void SceneManager::EnsureHUDExists()
-{
-    if (!HasHUDEntity())
-    {
-        EE_CORE_INFO("SceneManager: No HUD entity found, creating default HUD");
-        CreateHUDEntity();
-    }
-    else
-    {
-        EE_CORE_INFO("SceneManager: HUD entity already exists");
-    }
-}
-
-void SceneManager::RemoveHUDEntity()
-{
-    auto& ecs = Ermine::ECS::GetInstance();
-
-    // Find and remove any entity with UIComponent
-    for (Ermine::EntityID entity = 0; entity < Ermine::MAX_ENTITIES; ++entity)
-    {
-        if (ecs.IsEntityValid(entity) && ecs.HasComponent<Ermine::UIComponent>(entity))
-        {
-            EE_CORE_INFO("SceneManager: Removing HUD entity (ID: {})", entity);
-            ecs.DestroyEntity(entity);
-            return; // Only remove the first one found
-        }
-    }
-
-    EE_CORE_WARN("SceneManager: No HUD entity to remove");
-}
