@@ -44,6 +44,10 @@ void Ermine::Mesh::RebuildPrimitive() {
         *this = GeometryFactory::CreateQuad(primitive.size.x, primitive.size.y); // adapt to your API
         kind = MeshKind::Primitive;
     }
+    else if (primitive.type == "Cone") {
+        *this = GeometryFactory::CreateCone(primitive.size.x, primitive.size.y); // radius, height
+        kind = MeshKind::Primitive;
+    }
     else {
         EE_CORE_WARN("Unknown primitive type: {}", primitive.type);
         kind = MeshKind::None;
