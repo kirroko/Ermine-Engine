@@ -2176,7 +2176,13 @@
           "name": "GlobalAudio",
           "tag": "Audio",
           "selfActive": false
-        }
+        },
+        "HierarchyComponent": {
+          "parent": 0,
+          "children": [],
+          "depth": 0
+        },
+        "GlobalTransform": {}
       }
     },
     {
