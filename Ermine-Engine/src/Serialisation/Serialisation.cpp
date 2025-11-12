@@ -230,11 +230,20 @@ void SaveSceneToFile(const Ermine::ECS& ecs, const std::filesystem::path& path, 
                 //        rapidjson::Value(guid_str.c_str(), a), a);
                 //    wrote = true;
                 //}
-                if (name == "Script" && ecs.HasComponent<Ermine::Script>(id))
+                if (name == "ScriptsComponent" && ecs.HasComponent<Ermine::ScriptsComponent>(id))
                 {
-                    const auto& s = ecs.GetComponent<Ermine::Script>(id);
+                    auto& scs = ecs.GetComponent<Ermine::ScriptsComponent>(id);
+                    rapidjson::Value arr(rapidjson::kArrayType);
+                    for (const auto& sc : scs.scripts)
+                    {
+                        rapidjson::Value obj(rapidjson::kObjectType);
+                        obj.AddMember(rapidjson::Value("class", a), rapidjson::Value(sc.m_className.c_str(), a), a);
+                        arr.PushBack(obj, a);
+                    }
+                    payload.AddMember(rapidjson::Value("scripts", a), arr, a);
+                    /*const auto& s = ecs.GetComponent<Ermine::Script>(id);
                     payload.AddMember(rapidjson::Value("class", a),
-                        rapidjson::Value(s.m_className.c_str(), a), a);
+                        rapidjson::Value(s.m_className.c_str(), a), a);*/
                     // TODO: add more script state here if you later expose it
                     wrote = true;
                 }
@@ -327,15 +336,44 @@ void LoadSceneFromFile(Ermine::ECS& ecs, const std::filesystem::path& path) {
                 //    ecs.GetGuidRegistry().Register(id, g);
                 //    handled = true;
                 //}
-                if (compName == "Script")
+                if (compName == "ScriptsComponent")
                 {
-                    if (payload.HasMember("class") && payload["class"].IsString())
+                    std::vector<std::string> classNames;
+                    if (payload.HasMember("scripts") && payload["scripts"].IsArray())
                     {
-                        const std::string cls = payload["class"].GetString();
-                        ecs.AddComponent<Ermine::Script>(id, Ermine::Script(cls, id));
-                        // TODO: post-load hook if you have one, e.g. ScriptSystem::OnAdded(id);
-                        handled = true;
+      //                  const std::string cls = payload["class"].GetString();
+						//ecs.AddComponent<Ermine::ScriptsComponent>(id, Ermine::ScriptsComponent{});
+      //                  scs.Add(cls, id);
+      //                  //ecs.AddComponent<Ermine::Script>(id, Ermine::Script(cls, id));
+      //                  // TODO: post-load hook if you have one, e.g. ScriptSystem::OnAdded(id);
+      //                  handled = true;
+                        const auto arr = payload["scripts"].GetArray();
+                        classNames.reserve(arr.Size());
+
+                        for (const auto& v : arr)
+                        {
+                            if (!v.IsObject()) continue;
+
+                            const auto it = v.FindMember("class");
+                            if (it != v.MemberEnd() && it->value.IsString())
+                                classNames.emplace_back(it->value.GetString());
+                        }
                     }
+                    else if (payload.HasMember("class") && payload["class"].IsString())
+                    {
+                        classNames.emplace_back(payload["class"].GetString());
+                    }
+
+					ecs.AddComponent<Ermine::ScriptsComponent>(id, Ermine::ScriptsComponent{});
+					auto& scs = ecs.GetComponent<Ermine::ScriptsComponent>(id);
+                    
+                    for (const auto& cls : classNames)
+                    {
+                        scs.Add(cls, id);
+                    }
+
+                    if (!classNames.empty())
+                        handled = true;
                 }
             }
 
@@ -409,19 +447,39 @@ Ermine::EntityID LoadPrefabFromFile(Ermine::ECS& ecs, const std::filesystem::pat
         {
             desc->deserialize(id, it->value);
         }
-        else if (std::strcmp(compName, "Script") == 0)
+        else if (std::strcmp(compName, "ScriptsComponent") == 0)
         {
-            // Fallback for Script: expect { "class": "<ClassName>" }
             const rapidjson::Value& payload = it->value;
-            if (payload.HasMember("class") && payload["class"].IsString())
+
+            std::vector<std::string> classNames;
+
+            if (payload.HasMember("scripts") && payload["scripts"].IsArray())
             {
-                const std::string cls = payload["class"].GetString();
-                ecs.AddComponent<Ermine::Script>(id, Ermine::Script(cls, id));
+                const auto arr = payload["scripts"].GetArray();
+                classNames.reserve(arr.Size());
+                for (const auto& v : arr)
+                {
+                    if (!v.IsObject()) continue;
+                    const auto mem = v.FindMember("class");
+                    if (mem != v.MemberEnd() && mem->value.IsString())
+                        classNames.emplace_back(mem->value.GetString());
+                }
             }
-            else
+            else if (payload.HasMember("class") && payload["class"].IsString())
             {
-                EE_CORE_WARN("Prefab Script missing 'class' string; skipping.");
+                classNames.emplace_back(payload["class"].GetString());
             }
+
+            ecs.AddComponent<Ermine::ScriptsComponent>(id, Ermine::ScriptsComponent{});
+            auto& scs = ecs.GetComponent<Ermine::ScriptsComponent>(id);
+
+            for (const auto& cls : classNames)
+            {
+                scs.Add(cls, id);
+            }
+
+            if (classNames.empty())
+                EE_CORE_WARN("CURTIS SAY ONE, BUT IF DID POP-UP BLAME KORN Prefab Script payload had no class entries; skipping.");
         }
         else
         {
@@ -466,6 +524,19 @@ void SavePrefabToFile(const Ermine::ECS& ecs, Ermine::EntityID id, const std::fi
         if (desc && desc->serialize)
         {
             desc->serialize(id, payload, a);
+            wrote = true;
+        }
+        else if (name == "ScriptsComponent" && ecs.HasComponent<Ermine::ScriptsComponent>(id))
+        {
+            auto& scs = ecs.GetComponent<Ermine::ScriptsComponent>(id);
+            rapidjson::Value arr(rapidjson::kArrayType);
+            for (const auto& sc : scs.scripts)
+            {
+                rapidjson::Value obj(rapidjson::kObjectType);
+                obj.AddMember(rapidjson::Value("class", a), rapidjson::Value(sc.m_className.c_str(), a), a);
+                arr.PushBack(obj, a);
+            }
+            payload.AddMember(rapidjson::Value("scripts", a), arr, a);
             wrote = true;
         }
         else if (name == "Script" && ecs.HasComponent<Ermine::Script>(id))

@@ -178,6 +178,12 @@ void Renderer::Init(const int& screenWidth, const int& screenHeight)
 	m_MaterialsDirty = true;
 }
 
+/**
+ * @brief Submits a debug line to be rendered in the scene.
+ * @param from Starting point of the line in world space.
+ * @param to Ending point of the line in world space.
+ * @param color RGB color of the line.
+ */
 void Renderer::SubmitDebugLine(const glm::vec3& from, const glm::vec3& to, const glm::vec3& color)
 {
 	m_DebugLines.push_back({ from, color });
@@ -233,6 +239,11 @@ void Renderer::SubmitDebugFrustum(const Frustum& frustum, const glm::mat4& invVi
 	SubmitDebugLine(corners[3], corners[7], color); // top-left
 }
 
+/**
+ * @brief Renders all submitted debug lines using the provided view and projection matrices.
+ * @param view View matrix for the camera.
+ * @param proj Projection matrix for the camera.
+ */
 void Renderer::RenderDebugLines(const glm::mat4& view, const glm::mat4& proj)
 {
 	if (m_DebugLines.empty()) return;
@@ -1180,6 +1191,8 @@ void Renderer::CompileDrawData()
 			auto& mesh = ecs.GetComponent<Mesh>(entity);
 			auto& materialComponent = ecs.GetComponent<Ermine::Material>(entity);
 
+			(void)trans;
+
 			if (!mesh.vertex_array || !mesh.index_buffer) continue;
 
 			// Skip if no registered mesh ID
@@ -1274,7 +1287,7 @@ void Renderer::CompileDrawData()
 			info.aabbMin = glm::vec3(mesh.aabbMin.x, mesh.aabbMin.y, mesh.aabbMin.z);
 			info.materialIndex = materialIndex;
 			info.aabbMax = glm::vec3(mesh.aabbMax.x, mesh.aabbMax.y, mesh.aabbMax.z);
-			info.entityID = entity;
+			info.entityID = static_cast<uint32_t>(entity);
 			info.flags = 0; // Primitives never use skinning
 			info.boneTransformOffset = 0;
 			info._pad[0] = 0;
@@ -1304,6 +1317,8 @@ void Renderer::CompileDrawData()
 			// Process entities with Model component
 			auto& modelComp = ecs.GetComponent<ModelComponent>(entity);
 			auto& trans = ecs.GetComponent<Transform>(entity);
+
+			(void)trans;
 
 			if (!modelComp.m_model) continue;
 
@@ -1410,7 +1425,7 @@ void Renderer::CompileDrawData()
 				info.aabbMin = mesh.aabbMin;
 				info.materialIndex = materialIndex;
 				info.aabbMax = mesh.aabbMax;
-				info.entityID = entity;
+				info.entityID = static_cast<uint32_t>(entity);
 				info.flags = 0; // No skinning for standard meshes
 				info.boneTransformOffset = 0;
 				info._pad[0] = 0;
@@ -1560,7 +1575,7 @@ void Renderer::CompileDrawData()
 				info.aabbMin = mesh.aabbMin;
 				info.materialIndex = materialIndex;
 				info.aabbMax = mesh.aabbMax;
-				info.entityID = entity;
+				info.entityID = static_cast<uint32_t>(entity);
 				info.flags = 1; // Skinning enabled
 				info.boneTransformOffset = boneOffset;
 				info._pad[0] = 0;
@@ -1763,7 +1778,11 @@ void Renderer::RenderPostProcessPass()
 	// Framebuffer will be unbound in Engine.cpp after UI rendering
 }
 
-// overload that forwards to the existing glm version
+/**
+ * @brief Renders all submitted debug lines using the provided view and projection matrices.
+ * @param view View matrix for the camera (custom Mtx44 type).
+ * @param proj Projection matrix for the camera (custom Mtx44 type).
+ */
 void Renderer::RenderDebugLines(const Mtx44& view, const Mtx44& proj)
 {
 	RenderDebugLines(ToGlm(view), ToGlm(proj));
@@ -2073,6 +2092,8 @@ void Renderer::CleanupPostProcessBuffer()
  */
 void Renderer::UpdateLightsUBO(const Mtx44& view)
 {
+	(void)view;
+
 	std::vector<LightGPU> lights;
 	lights.reserve(MAX_LIGHTS);
 
@@ -3497,7 +3518,7 @@ void Renderer::CalculateLightMatrix(const editor::EditorCamera& editorCamera)
 				// Compute depth for depth buffer
 				glm::vec4 clipFar = glmProj * glmView * glm::vec4(splitFarWorld, 1.0f);
 				float ndcZ_splitFar = (clipFar.w == 0.0f) ? 1.0f : (clipFar.z / clipFar.w);
-				float depthBufferFar = ndcZ_splitFar * 0.5f + 0.5f;
+				//float depthBufferFar = ndcZ_splitFar * 0.5f + 0.5f;
 
 				// Build frustum corners
 				std::array<glm::vec3, 8> frustumCornersWorld;

@@ -122,8 +122,8 @@ namespace ErmineEngine
         {
             const float EPS = 1e-6f;
 
-            Vector3 f = fromDirection.Normalized;
-            Vector3 t = toDirection.Normalized;
+            Vector3 f = fromDirection.normalized;
+            Vector3 t = toDirection.normalized;
 
             if (f.SqrMagnitude < EPS || t.SqrMagnitude < EPS)
             {
@@ -146,7 +146,7 @@ namespace ErmineEngine
                 Vector3 axis = Vector3.Cross(Vector3.right, f);
                 if (axis.SqrMagnitude < EPS)
                     axis = Vector3.Cross(Vector3.up, f);
-                axis = axis.Normalized;
+                axis = axis.normalized;
 
                 x = axis.x;
                 y = axis.y;
@@ -187,7 +187,7 @@ namespace ErmineEngine
             const float EPS = 1e-6f;
 
             // Forward
-            Vector3 f = view.Normalized;
+            Vector3 f = view.normalized;
             if (f.SqrMagnitude < EPS)
             {
                 x = y = z = 0f;
@@ -195,7 +195,7 @@ namespace ErmineEngine
                 return;
             }
 
-            Vector3 u = (up.SqrMagnitude < EPS ? Vector3.up : up).Normalized;
+            Vector3 u = (up.SqrMagnitude < EPS ? Vector3.up : up).normalized;
 
             Vector3 r = Vector3.Cross(u, f);
             if (r.SqrMagnitude < EPS)
@@ -204,7 +204,7 @@ namespace ErmineEngine
                 r = Vector3.Cross(u, f);
             }
 
-            r = r.Normalized;
+            r = r.normalized;
 
             u = Vector3.Cross(f, r);
 

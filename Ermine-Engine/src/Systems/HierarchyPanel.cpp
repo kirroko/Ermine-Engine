@@ -251,8 +251,8 @@ namespace Ermine {
                 EntityID droppedEntity = *(EntityID*)payload->Data;
 
                 if (droppedEntity != entity) {
-                    auto& parentMeta = ECS::GetInstance().GetComponent<ObjectMetaData>(entity);
-                    auto& childMeta = ECS::GetInstance().GetComponent<ObjectMetaData>(droppedEntity);
+                    //auto& parentMeta = ECS::GetInstance().GetComponent<ObjectMetaData>(entity);
+                    //auto& childMeta = ECS::GetInstance().GetComponent<ObjectMetaData>(droppedEntity);
 
                     // ONLY log if both entities are either Cube or Sphere
                     //bool isCubeOrSphere = (parentMeta.name.find("Cube") != std::string::npos ||

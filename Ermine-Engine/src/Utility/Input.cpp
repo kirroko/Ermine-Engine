@@ -398,7 +398,7 @@ namespace Ermine
 
 	bool Input::IsKeyPressed(int keyCode)
 	{
-		if (!s_Window || s_BlockKeyboard)
+		if (!s_Window /*|| s_BlockKeyboard*/)
 			return false;
 
 		// Check if key exists in previous states map
@@ -420,7 +420,7 @@ namespace Ermine
 
 	bool Input::IsKeyReleased(int keyCode)
 	{
-		if (!s_Window || s_BlockKeyboard)
+		if (!s_Window /*|| s_BlockKeyboard*/)
 			return false;
 
 		// Check if key exists in previous states map
@@ -437,7 +437,7 @@ namespace Ermine
 
 	bool Input::IsKeyDown(int keyCode)
 	{
-		if (!s_Window || s_BlockKeyboard)
+		if (!s_Window /*|| s_BlockKeyboard*/)
 			return false;
 
 		auto state = glfwGetKey(s_Window, keyCode);
@@ -446,7 +446,7 @@ namespace Ermine
 
 	bool Input::IsMouseButtonPressed(int button)
 	{
-		if (!s_Window || s_BlockMouse)
+		if (!s_Window /*|| s_BlockMouse*/)
 			return false;
 
 		// Check if button exists in previous states map
@@ -463,7 +463,7 @@ namespace Ermine
 
 	bool Input::IsMouseButtonReleased(int button)
 	{
-		if (!s_Window || s_BlockMouse)
+		if (!s_Window /*|| s_BlockMouse*/)
 			return false;
 
 		// Check if button exists in previous states map
@@ -480,7 +480,7 @@ namespace Ermine
 
 	bool Input::IsMouseButtonDown(int button)
 	{
-		if (!s_Window || s_BlockMouse)
+		if (!s_Window /*|| s_BlockMouse*/)
 			return false;
 
 		auto state = glfwGetMouseButton(s_Window, button);

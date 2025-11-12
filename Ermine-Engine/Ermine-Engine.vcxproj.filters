@@ -389,9 +389,6 @@
     <ClCompile Include="src\Graphics\DrawCommands.cpp">
       <Filter>src\Graphics</Filter>
     </ClCompile>
-    <ClCompile Include="src\Graphics\GameCamera.cpp">
-      <Filter>src\Graphics</Filter>
-    </ClCompile>
     <ClCompile Include="src\Graphics\CameraSystem.cpp">
       <Filter>src\Graphics</Filter>
     </ClCompile>
@@ -549,6 +546,9 @@
       <Filter>src\NavMesh</Filter>
     </ClCompile>
     <ClCompile Include="src\Graphics\UIRenderSystem.cpp">
+      <Filter>src\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Graphics\UITextRenderer.cpp">
       <Filter>src\Graphics</Filter>
     </ClCompile>
   </ItemGroup>

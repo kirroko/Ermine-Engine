@@ -46,10 +46,18 @@ namespace Ermine::graphics
         m_FarClip = camComp.farPlane;
         UpdateProjectionMatrix();
 
-        m_Position = transform.position;
+        Vec3 worldPos = transform.position;
+		Quaternion worldRot = transform.rotation;
+        if (ecs.HasComponent<GlobalTransform>(m_CameraEntity))
+        {
+			const auto& g = ecs.GetComponent<GlobalTransform>(m_CameraEntity);
+			worldPos = g.GetWorldPosition();
+			worldRot = g.GetWorldRotation();
+        }
+        m_Position = worldPos;
 
         // Rotate basis vectors by the entity quaternion
-        const Quaternion& q = transform.rotation;
+        const Quaternion& q = worldRot;
 
         auto rotateVecByQuat = [](const Vector3D& v, const Quaternion& r)
             {
@@ -76,7 +84,7 @@ namespace Ermine::graphics
 
         // Engine forward = +Z, up = +Y
         Vector3D fwd = rotateVecByQuat(Vector3D{ 0.0f, 0.0f, 1.0f }, q);
-        Vector3D up = rotateVecByQuat(Vector3D{ 0.0f, 1.0f, 0.0f }, q);
+        //Vector3D up = rotateVecByQuat(Vector3D{ 0.0f, 1.0f, 0.0f }, q);
 
         // Normalize and build basis
         Vector3D nf, nr, nu;
@@ -175,7 +183,13 @@ namespace Ermine::graphics
         auto& transform = ecs.GetComponent<Transform>(m_CameraEntity);
 
         // Update camera position from entity transform (with eye height offset)
-        m_Position = transform.position;
+        if (ecs.HasComponent<GlobalTransform>(m_CameraEntity))
+        {
+	        const auto& g = ecs.GetComponent<GlobalTransform>(m_CameraEntity);
+            m_Position = g.GetWorldPosition();
+        }
+        else
+			m_Position = transform.position;
     }
 
     void CameraSystem::InitializeOrientationFromEntity()

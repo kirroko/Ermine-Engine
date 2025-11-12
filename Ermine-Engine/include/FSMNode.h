@@ -20,7 +20,7 @@ namespace Ermine
 {
     struct ScriptNode
     {
-        int id;
+        int id = 0;
         std::string name;
         std::string scriptClassName;
         bool isAttached = false;

@@ -42,6 +42,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "HierarchySystem.h"
 #include "CameraSystem.h"
 #include "UIRenderSystem.h"
+#include "NavMesh.h"
+#include "NavMeshAgentSystem.h"
 
 #if defined(EE_EDITOR)
 #include "GraphicsDebugGUI.h"
@@ -52,8 +54,6 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "AudioImGUI.h"
 #include "SceneManager.h"
 #include "FSMEditor.h"
-#include "NavMesh.h"
-#include "NavMeshAgentSystem.h"
 #include "AnimationGUI.h"
 #include "ResourcePipe.h"
 #endif
@@ -89,7 +89,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	if (s_isInitialized) // Already initialized
 		return true;
 
-	CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+	(void)CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
 
 	//std::string pipelinePath = "../../../../Ermine-ResourcePipeline";
 	//std::cout << "Contents of Ermine-ResourcePipeline:" << std::endl;
@@ -170,6 +170,22 @@ bool engine::Init(GLFWwindow* windowContext)
 			cm.AddComponent<Script>(dst, Script(srcScript.m_className, dst));
 		});
 
+	ECS::GetInstance().RegisterComponent<ScriptsComponent>("ScriptsComponent",
+		[](ComponentManager& cm, EntityID src, EntityID dst)
+		{
+			if (!cm.HasComponent<ScriptsComponent>(src)) return;
+			auto& srcScriptsComp = cm.GetComponent<ScriptsComponent>(src);
+			ScriptsComponent dstScriptsComp;
+			for (const auto& srcScript : srcScriptsComp.scripts)
+			{
+				Script newScript(srcScript.m_className, dst);
+				newScript.m_enabled = srcScript.m_enabled;
+				newScript.m_fields = srcScript.m_fields; // Copy fields
+				dstScriptsComp.scripts.emplace_back(std::move(newScript));
+			}
+			cm.AddComponent<ScriptsComponent>(dst, std::move(dstScriptsComp));
+		});
+
 	// Special case for IDComponent with custom clone to force new GUID, as IDs should be unique
 	ECS::GetInstance().RegisterComponent<IDComponent>("IDComponent",
 		[](ComponentManager& cm, [[maybe_unused]] EntityID src, EntityID dst)
@@ -227,7 +243,8 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	// For Script system
 	sig.reset();
-	sig.set(ECS::GetInstance().GetComponentType<Script>());
+	//sig.set(ECS::GetInstance().GetComponentType<Script>());
+	sig.set(ECS::GetInstance().GetComponentType<ScriptsComponent>());
 	ECS::GetInstance().SetSystemSignature<scripting::ScriptSystem>(sig);
 
 	// For Audio system
@@ -413,13 +430,13 @@ bool engine::Init(GLFWwindow* windowContext)
 	else
 		ECS::GetInstance().GetSystem<UIRenderSystem>()->Init(1920, 1080);
 
+	// Editor windows
+#if defined(EE_EDITOR)
 	SceneManager::GetInstance().NewScene();
 
 	EE_CORE_INFO("Material system now supports efficient sharing between entities using shared_ptr");
 	EE_CORE_INFO("Systems and components registered successfully, Engine Initialized");
 
-	// Editor windows
-#if defined(EE_EDITOR)
 	editor::EditorGUI::CreateImGUIWindow<ParticlesImGUI>();
 	editor::EditorGUI::CreateImGUIWindow<AudioImGUI>();
 	editor::EditorGUI::CreateImGUIWindow<editor::GraphicsDebugGUI>("Graphics Debug"); // TODO: Namespace required?
@@ -461,6 +478,9 @@ bool engine::Init(GLFWwindow* windowContext)
 #else
 	auto defaultScene = std::make_shared<Scene>("Main Scene");
 	SceneManager::GetInstance().SetActiveScene(defaultScene);
+
+	// TEMP - load level scene manually
+	SceneManager::GetInstance().OpenScene("../Resources/Scenes/level.scene");
 #endif
 
 	s_isInitialized = true;
@@ -544,10 +564,10 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 	}
 
 	// Other non-fixed logic
-	ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->Update();
 	ECS::GetInstance().GetSystem<AudioSystem>()->Update();
-
 	ECS::GetInstance().GetSystem<HierarchySystem>()->UpdateHierarchy();
+
+	ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->Update();
 	
 	// Update editor camera
 #if defined(EE_EDITOR)

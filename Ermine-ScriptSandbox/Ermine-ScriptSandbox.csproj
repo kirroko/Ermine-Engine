@@ -70,6 +70,8 @@
   <ItemGroup Condition=" '$(Configuration)|$(Platform)' == 'Game-Release|x64' ">
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="LifeEssenceSkillController.cs" />
+    <Compile Include="OrbTeleport.cs" />
     <Compile Include="PlayerController.cs" />
     <Compile Include="Sandbox.cs" />
     <Compile Include="Sphere.cs" />

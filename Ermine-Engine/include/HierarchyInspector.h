@@ -155,6 +155,10 @@ namespace Ermine::editor {
         */
         void DrawParticleEmitterComponent(EntityID entity);
 
+        /*!
+        \brief Draws UI for Camera component
+        \param entity The entity to add components to
+        */
         void DrawCameraComponent(EntityID entity);
 
         Scene* m_ActiveScene = nullptr;  ///< Pointer to the currently active scene
