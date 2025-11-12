@@ -1183,6 +1183,35 @@ void Renderer::CompileDrawData()
 	// Culling statistics
 	culledMeshes = 0;
 
+	auto FindChildEntityForMesh = [&](Ermine::EntityID parent, const std::string& meshID) -> Ermine::EntityID
+		{
+			auto& ecsLocal = ECS::GetInstance();
+			if (!ecsLocal.HasComponent<Ermine::HierarchyComponent>(parent))
+				return 0;
+
+			const auto& h = ecsLocal.GetComponent<Ermine::HierarchyComponent>(parent);
+			const std::string expected = "Mesh_" + meshID;
+
+			// --- Prefer GUID-based children
+			for (const Ermine::Guid& cg : h.childrenGuids) {
+				Ermine::EntityID child = ecsLocal.GetGuidRegistry().FindEntity(cg); // 0 if not found
+				if (child == 0) continue;
+				if (!ecsLocal.HasComponent<Ermine::ObjectMetaData>(child)) continue;
+				const auto& meta = ecsLocal.GetComponent<Ermine::ObjectMetaData>(child);
+				if (meta.name == expected) return child;
+			}
+
+			// --- Fallback: legacy EntityID list (for old saves / transitional scenes)
+			for (Ermine::EntityID child : h.children) {
+				if (!ecsLocal.IsEntityValid(child)) continue;
+				if (!ecsLocal.HasComponent<Ermine::ObjectMetaData>(child)) continue;
+				const auto& meta = ecsLocal.GetComponent<Ermine::ObjectMetaData>(child);
+				if (meta.name == expected) return child;
+			}
+
+			return 0;
+		};
+
 
 	// ========== MESHES ==========
 	for (auto& entity : m_Entities) {
@@ -1336,37 +1365,26 @@ void Renderer::CompileDrawData()
 				if (!meshData) continue;
 
 
-					// Get material from the mesh's child entity (if it has one), otherwise use parent entity
+				// Get material from the mesh's child entity (if it has one), otherwise use parent entity
 				Ermine::graphics::Material* material = nullptr;
 
-				// Look for child entity with matching mesh name
-				Ermine::EntityID childEntity = 0;
-				if (ecs.HasComponent<Ermine::HierarchyComponent>(entity)) {
-					const auto& hierarchy = ecs.GetComponent<Ermine::HierarchyComponent>(entity);
-					const std::string expectedChildName = "Mesh_" + meshData->meshID;
+				// Find child by GUID/name
+				Ermine::EntityID childEntity = FindChildEntityForMesh(entity, meshData->meshID);
 
-					for (Ermine::EntityID child : hierarchy.children) {
-						if (ecs.HasComponent<Ermine::ObjectMetaData>(child)) {
-							const auto& metadata = ecs.GetComponent<Ermine::ObjectMetaData>(child);
-							if (metadata.name == expectedChildName) {
-								childEntity = child;
-								break;
-							}
-						}
-					}
-				}
-
+				// Prefer child material if present
 				if (childEntity != 0 && ecs.HasComponent<Ermine::Material>(childEntity)) {
-					// Use child entity's material
-					auto& materialComponent = ecs.GetComponent<Ermine::Material>(childEntity);
-					material = materialComponent.GetMaterial();
+					auto& matComp = ecs.GetComponent<Ermine::Material>(childEntity);
+					material = matComp.GetMaterial();
 				}
 				else if (ecs.HasComponent<Ermine::Material>(entity)) {
-					// Fallback to parent entity's material
-					auto& materialComponent = ecs.GetComponent<Ermine::Material>(entity);
-					material = materialComponent.GetMaterial();
+					auto& matComp = ecs.GetComponent<Ermine::Material>(entity);
+					material = matComp.GetMaterial();
 				}
-				uint32_t materialIndex = material->GetMaterialIndex();
+
+				uint32_t materialIndex = 0;
+				if (material) {
+					materialIndex = material->GetMaterialIndex();
+				}
 
 				// Determine which pass this mesh belongs to
 				bool isTransparent = material && IsTransparentMaterial(material);
@@ -1497,23 +1515,17 @@ void Renderer::CompileDrawData()
 				const MeshSubset* meshData = m_MeshManager.GetMeshData(meshHandle);
 				if (!meshData) continue;
 
-					// Get material from the mesh's child entity (if it has one)
+				// Get material from the mesh's child entity (if it has one)
 				Ermine::graphics::Material* meshMaterial = nullptr;
 
-				// Look for child entity with matching mesh name
-				Ermine::EntityID childEntity = 0;
-				if (ecs.HasComponent<Ermine::HierarchyComponent>(entity)) {
-					const auto& hierarchy = ecs.GetComponent<Ermine::HierarchyComponent>(entity);
-					const std::string expectedChildName = "Mesh_" + meshData->meshID;
+				// Find child by GUID/name
+				Ermine::EntityID childEntity = FindChildEntityForMesh(entity, meshData->meshID);
 
-					for (Ermine::EntityID child : hierarchy.children) {
-						if (ecs.HasComponent<Ermine::ObjectMetaData>(child)) {
-							const auto& metadata = ecs.GetComponent<Ermine::ObjectMetaData>(child);
-							if (metadata.name == expectedChildName) {
-								childEntity = child;
-								break;
-							}
-						}
+				if (childEntity != 0 && ecs.HasComponent<Ermine::Material>(childEntity)) {
+					auto& matComp = ecs.GetComponent<Ermine::Material>(childEntity);
+					meshMaterial = matComp.GetMaterial();
+					if (meshMaterial) {
+						materialIndex = meshMaterial->GetMaterialIndex();
 					}
 				}
 

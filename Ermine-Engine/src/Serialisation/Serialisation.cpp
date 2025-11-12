@@ -51,6 +51,72 @@ void Ermine::Mesh::RebuildPrimitive() {
     // TODO: other primitives...
 }
 
+namespace Ermine {
+    static inline EntityID FindByGuid(const Guid& g) {
+        return ECS::GetInstance().GetGuidRegistry().FindEntity(g);
+    }
+
+    void ResolveHierarchyGuids(Ermine::ECS& ecs)
+    {
+        // 1) Clear runtime links
+        for (EntityID id = 0; id < Ermine::MAX_ENTITIES; ++id) {
+            if (!ecs.IsEntityValid(id) || !ecs.HasComponent<HierarchyComponent>(id)) continue;
+            auto& h = ecs.GetComponent<HierarchyComponent>(id);
+            h.parent = HierarchyComponent::INVALID_PARENT;
+            h.children.clear();
+        }
+
+        // 2) Rebuild from GUIDs
+        for (EntityID id = 0; id < Ermine::MAX_ENTITIES; ++id) {
+            if (!ecs.IsEntityValid(id) || !ecs.HasComponent<HierarchyComponent>(id)) continue;
+            auto& h = ecs.GetComponent<HierarchyComponent>(id);
+
+            if (h.parentGuid.IsValid()) {
+                const EntityID p = FindByGuid(h.parentGuid);
+                if (ecs.IsEntityValid(p) && ecs.HasComponent<HierarchyComponent>(p)) {
+                    h.parent = p;
+                    ecs.GetComponent<HierarchyComponent>(p).children.push_back(id);
+                }
+                else {
+                    h.parent = HierarchyComponent::INVALID_PARENT; // dangling -> root
+                }
+            }
+
+            // Optional symmetry (not strictly required if parent is authoritative)
+            for (const Guid& cg : h.childrenGuids) {
+                const EntityID cid = FindByGuid(cg);
+                if (ecs.IsEntityValid(cid) && ecs.HasComponent<HierarchyComponent>(cid)) {
+                    // ensure child has me as parent
+                    ecs.GetComponent<HierarchyComponent>(cid).parent = id;
+                    h.children.push_back(cid);
+                }
+            }
+        }
+
+        // 3) Recompute depth + dirties
+        auto computeDepth = [&](EntityID n) {
+            int d = 0;
+            std::unordered_set<EntityID> seen;
+            EntityID cur = n;
+            while (ecs.IsEntityValid(cur)) {
+                const auto& h = ecs.GetComponent<HierarchyComponent>(cur);
+                if (h.parent == HierarchyComponent::INVALID_PARENT) break;
+                if (!seen.insert(cur).second) break; // cycle guard
+                cur = h.parent; ++d;
+            }
+            return d;
+            };
+
+        for (EntityID id = 0; id < Ermine::MAX_ENTITIES; ++id) {
+            if (!ecs.IsEntityValid(id) || !ecs.HasComponent<HierarchyComponent>(id)) continue;
+            auto& h = ecs.GetComponent<HierarchyComponent>(id);
+            h.depth = computeDepth(id);
+            h.isDirty = true;
+            h.worldTransformDirty = true;
+        }
+    }
+}
+
 std::string SerializeConfig(const Config& config) {
     Document d;
     d.SetObject();
@@ -206,6 +272,19 @@ void SaveSceneToFile(const Ermine::ECS& ecs, const std::filesystem::path& path, 
 
         Value comps(kObjectType);
 
+        if (ecs.HasComponent<Ermine::IDComponent>(id)) {
+            rapidjson::Value idPayload(rapidjson::kObjectType);
+            const auto& c = ecs.GetComponent<Ermine::IDComponent>(id);
+
+            const std::string guid_str = c.guid.ToString();
+            idPayload.AddMember(
+                rapidjson::Value("guid", a),
+                rapidjson::Value(guid_str.c_str(), (rapidjson::SizeType)guid_str.size(), a),
+                a
+            );
+
+            comps.AddMember(rapidjson::Value("IDComponent", a), idPayload, a);
+        }
 
         for (const std::string& name : ecs.GetComponentNames(id)) {                 // :contentReference[oaicite:1]{index=1}
             const auto* desc = ecs.GetDescriptor(name);
@@ -299,6 +378,24 @@ void LoadSceneFromFile(Ermine::ECS& ecs, const std::filesystem::path& path) {
 
         const auto& comps = e["components"];
 
+        if (comps.HasMember("IDComponent") && comps["IDComponent"].IsObject()) {
+            const auto& payload = comps["IDComponent"];
+
+            Ermine::Guid g =
+                (payload.HasMember("guid") && payload["guid"].IsString())
+                ? Ermine::Guid::FromString(payload["guid"].GetString())
+                : Ermine::Guid::New(); // fallback for old files
+
+            if (ecs.HasComponent<Ermine::IDComponent>(id)) {
+                auto& c = ecs.GetComponent<Ermine::IDComponent>(id);
+                c.guid = g;
+            }
+            else {
+                ecs.AddComponent<Ermine::IDComponent>(id, Ermine::IDComponent{ g });
+            }
+            ecs.GetGuidRegistry().Register(id, g);
+        }
+
         for (auto it = comps.MemberBegin(); it != comps.MemberEnd(); ++it) {
             if (!it->value.IsObject()) continue;
 
@@ -314,13 +411,6 @@ void LoadSceneFromFile(Ermine::ECS& ecs, const std::filesystem::path& path) {
             {
                 desc->deserialize(id, payload);
                 handled = true;
-
-                // If the generic path handled IDComponent, keep your registry hookup:
-                if (compName == "IDComponent")
-                {
-                    auto& c = ecs.GetComponent<Ermine::IDComponent>(id);
-                    ecs.GetGuidRegistry().Register(id, c.guid);
-                }
             }
             else
             {
@@ -385,6 +475,8 @@ void LoadSceneFromFile(Ermine::ECS& ecs, const std::filesystem::path& path) {
     }
 
     ecs.ResyncAllSignaturesFromStorage();
+
+    Ermine::ResolveHierarchyGuids(ecs);
 
     // Upload all registered meshes to GPU and build indirect draw commands
     if (renderer) {
