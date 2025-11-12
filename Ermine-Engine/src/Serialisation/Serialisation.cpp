@@ -117,6 +117,21 @@ namespace Ermine {
     }
 }
 
+static void CollectSubtree(const Ermine::ECS& ecs, Ermine::EntityID root, std::vector<Ermine::EntityID>& out)
+{
+    if (!ecs.IsEntityValid(root)) return;
+    std::vector<Ermine::EntityID> stack{ root };
+    while (!stack.empty()) {
+        Ermine::EntityID e = stack.back(); stack.pop_back();
+        if (!ecs.IsEntityValid(e)) continue;
+        out.push_back(e);
+        if (ecs.HasComponent<Ermine::HierarchyComponent>(e)) {
+            const auto& h = ecs.GetComponent<Ermine::HierarchyComponent>(e);
+            for (Ermine::EntityID c : h.children) stack.push_back(c);
+        }
+    }
+}
+
 std::string SerializeConfig(const Config& config) {
     Document d;
     d.SetObject();
@@ -509,146 +524,203 @@ Ermine::EntityID LoadPrefabFromFile(Ermine::ECS& ecs, const std::filesystem::pat
         return {};
     }
 
-    std::filesystem::path norm = std::filesystem::weakly_canonical(path);
-    std::ifstream ifs(norm, std::ios::binary);
+    std::ifstream ifs(path, std::ios::binary);
     if (!ifs) throw std::runtime_error("Could not open file for reading: " + path.string());
 
     IStreamWrapper isw(ifs);
-    rapidjson::Document d; d.ParseStream(isw);
+    Document d; d.ParseStream(isw);
     if (d.HasParseError() || !d.IsObject())
         throw std::runtime_error("Invalid JSON file: " + path.string());
 
-    // Accept either { "entity": { ... } } or a flat object
-    const rapidjson::Value* root = &d;
-    if (d.HasMember("entity") && d["entity"].IsObject()) root = &d["entity"];
+    if (!d.HasMember("entities") || !d["entities"].IsArray())
+        throw std::runtime_error("Invalid prefab JSON (missing 'entities'): " + path.string());
 
-    if (!root->HasMember("components") || !(*root)["components"].IsObject())
-        throw std::runtime_error("Invalid prefab JSON (missing 'components'): " + path.string());
+    const auto& ents = d["entities"];
+    std::unordered_map<std::string, Ermine::EntityID> oldGuidToNew;
 
-    // Create a fresh entity for the prefab instance
-    Ermine::EntityID id = ecs.CreateEntity();
-    const rapidjson::Value& comps = (*root)["components"];
+    // Pass 1: create entities and assign NEW GUIDs (no duplicate add)
+    for (auto& e : ents.GetArray()) {
+        const auto& comps = e["components"];
 
-    // Load all components. Prefer generic descriptor; otherwise custom Script fallback.
-    for (auto it = comps.MemberBegin(); it != comps.MemberEnd(); ++it)
-    {
-        if (!it->value.IsObject()) continue;
-        const char* compName = it->name.GetString();
-
-        if (const auto* desc = ecs.GetDescriptor(compName); desc && desc->deserialize)
-        {
-            desc->deserialize(id, it->value);
+        std::string oldGuid;
+        if (comps.HasMember("IDComponent")) {
+            const auto& idc = comps["IDComponent"];
+            if (idc.HasMember("guid") && idc["guid"].IsString())
+                oldGuid = idc["guid"].GetString();
         }
-        else if (std::strcmp(compName, "ScriptsComponent") == 0)
-        {
-            const rapidjson::Value& payload = it->value;
 
-            std::vector<std::string> classNames;
+        Ermine::EntityID newEntity = ecs.CreateEntity();
 
-            if (payload.HasMember("scripts") && payload["scripts"].IsArray())
-            {
-                const auto arr = payload["scripts"].GetArray();
-                classNames.reserve(arr.Size());
-                for (const auto& v : arr)
-                {
-                    if (!v.IsObject()) continue;
-                    const auto mem = v.FindMember("class");
-                    if (mem != v.MemberEnd() && mem->value.IsString())
-                        classNames.emplace_back(mem->value.GetString());
+        // If CreateEntity already gave you an IDComponent, reuse it; otherwise add one.
+        Ermine::Guid newGuid;
+        if (ecs.HasComponent<Ermine::IDComponent>(newEntity)) {
+            auto& c = ecs.GetComponent<Ermine::IDComponent>(newEntity);
+            // pick a fresh GUID for the instance (or keep c.guid if you want)
+            newGuid = Ermine::Guid::New();
+            c.guid = newGuid;
+        }
+        else {
+            newGuid = Ermine::Guid::New();
+            ecs.AddComponent<Ermine::IDComponent>(newEntity, Ermine::IDComponent{ newGuid });
+        }
+
+        // keep the registry in sync (bijective)
+        ecs.GetGuidRegistry().Unregister(newEntity);   // safe even if not present
+        ecs.GetGuidRegistry().Register(newEntity, newGuid);
+
+        if (!oldGuid.empty())
+            oldGuidToNew.emplace(oldGuid, newEntity);
+    }
+
+    auto remapGuid = [&](const std::string& old) -> Ermine::EntityID {
+        auto it = oldGuidToNew.find(old);
+        return it != oldGuidToNew.end() ? it->second : Ermine::HierarchyComponent::INVALID_PARENT;
+        };
+
+    Ermine::EntityID rootEntity = 0;
+
+    // Pass 2: deserialize components
+    for (auto& e : ents.GetArray()) {
+        const auto& comps = e["components"];
+        std::string oldGuid;
+        if (comps.HasMember("IDComponent")) {
+            const auto& idc = comps["IDComponent"];
+            if (idc.HasMember("guid") && idc["guid"].IsString())
+                oldGuid = idc["guid"].GetString();
+        }
+
+        Ermine::EntityID entity = remapGuid(oldGuid);
+        if (!ecs.IsEntityValid(entity)) continue;
+
+        for (auto it = comps.MemberBegin(); it != comps.MemberEnd(); ++it) {
+            const std::string compName = it->name.GetString();
+            const auto& payload = it->value;
+
+            if (compName == "IDComponent") continue;
+
+            if (compName == "HierarchyComponent") {
+                Ermine::Guid parentGuid{};
+                Ermine::EntityID parent = Ermine::HierarchyComponent::INVALID_PARENT;
+
+                if (payload.HasMember("parentGuid") && payload["parentGuid"].IsString()) {
+                    std::string oldParentGuid = payload["parentGuid"].GetString();
+                    parent = remapGuid(oldParentGuid);
                 }
-            }
-            else if (payload.HasMember("class") && payload["class"].IsString())
-            {
-                classNames.emplace_back(payload["class"].GetString());
+
+                Ermine::HierarchyComponent hc;
+                hc.parent = parent;
+                if (ecs.HasComponent<Ermine::IDComponent>(parent))
+                    hc.parentGuid = ecs.GetComponent<Ermine::IDComponent>(parent).guid;
+                else
+                    hc.parentGuid = {};
+
+                ecs.AddComponent<Ermine::HierarchyComponent>(entity, hc);
+                if (hc.parent == Ermine::HierarchyComponent::INVALID_PARENT && rootEntity == 0)
+                    rootEntity = entity;
+                continue;
             }
 
-            ecs.AddComponent<Ermine::ScriptsComponent>(id, Ermine::ScriptsComponent{});
-            auto& scs = ecs.GetComponent<Ermine::ScriptsComponent>(id);
-
-            for (const auto& cls : classNames)
-            {
-                scs.Add(cls, id);
+            // generic
+            if (const auto* desc = ecs.GetDescriptor(compName); desc && desc->deserialize) {
+                desc->deserialize(entity, payload);
             }
-
-            if (classNames.empty())
-                EE_CORE_WARN("CURTIS SAY ONE, BUT IF DID POP-UP BLAME KORN Prefab Script payload had no class entries; skipping.");
-        }
-        else
-        {
-            EE_CORE_WARN("Prefab component '{}' has no deserializer; skipping.", compName);
         }
     }
 
-    // Ensure signatures are up to date
     ecs.ResyncAllSignaturesFromStorage();
-    return id;
+    Ermine::ResolveHierarchyGuids(ecs);
+
+    return rootEntity;
 }
 
 
 
-void SavePrefabToFile(const Ermine::ECS& ecs, Ermine::EntityID id, const std::filesystem::path& path)
+void SavePrefabToFile(const Ermine::ECS& ecs, Ermine::EntityID root, const std::filesystem::path& path)
 {
-    if (path.has_parent_path())
-    {
+    if (path.has_parent_path()) {
         std::error_code ec;
         std::filesystem::create_directories(path.parent_path(), ec);
-        if (ec) throw std::runtime_error("Failed to create directory: " + path.parent_path().string());
+        if (ec) {
+            throw std::runtime_error("Failed to create directory: " + path.parent_path().string());
+        }
     }
 
     std::ofstream ofs(path, std::ios::binary);
     if (!ofs) throw std::runtime_error("Could not open file for writing: " + path.string());
-    rapidjson::OStreamWrapper osw(ofs);
+    OStreamWrapper osw(ofs);
 
-    rapidjson::Document d; d.SetObject();
+    Document d; d.SetObject();
     auto& a = d.GetAllocator();
+    Value entities(kArrayType);
 
-    rapidjson::Value e(rapidjson::kObjectType);
-    e.AddMember("id", id, a);
+    // collect subtree
+    std::vector<Ermine::EntityID> toProcess{ root };
+    std::vector<Ermine::EntityID> all;
+    while (!toProcess.empty()) {
+        Ermine::EntityID e = toProcess.back();
+        toProcess.pop_back();
+        if (!ecs.IsEntityValid(e)) continue;
+        all.push_back(e);
 
-    rapidjson::Value comps(rapidjson::kObjectType);
-
-    for (const std::string& name : ecs.GetComponentNames(id))
-    {
-        const auto* desc = ecs.GetDescriptor(name);
-        rapidjson::Value payload(rapidjson::kObjectType);
-        bool wrote = false;
-
-        if (desc && desc->serialize)
-        {
-            desc->serialize(id, payload, a);
-            wrote = true;
+        if (ecs.HasComponent<Ermine::HierarchyComponent>(e)) {
+            const auto& h = ecs.GetComponent<Ermine::HierarchyComponent>(e);
+            for (auto c : h.children)
+                toProcess.push_back(c);
         }
-        else if (name == "ScriptsComponent" && ecs.HasComponent<Ermine::ScriptsComponent>(id))
-        {
-            auto& scs = ecs.GetComponent<Ermine::ScriptsComponent>(id);
-            rapidjson::Value arr(rapidjson::kArrayType);
-            for (const auto& sc : scs.scripts)
-            {
-                rapidjson::Value obj(rapidjson::kObjectType);
-                obj.AddMember(rapidjson::Value("class", a), rapidjson::Value(sc.m_className.c_str(), a), a);
-                arr.PushBack(obj, a);
-            }
-            payload.AddMember(rapidjson::Value("scripts", a), arr, a);
-            wrote = true;
-        }
-        else if (name == "Script" && ecs.HasComponent<Ermine::Script>(id))
-        {
-            const auto& s = ecs.GetComponent<Ermine::Script>(id);
-            payload.AddMember(rapidjson::Value("class", a),
-                rapidjson::Value(s.m_className.c_str(), a), a);
-            wrote = true;
-        }
-
-        if (wrote)
-            comps.AddMember(rapidjson::Value(name.c_str(), a), payload, a);
-        else
-            EE_CORE_WARN("Prefab save: component '{}' has no serializer; skipping.", name.c_str());
     }
 
-    e.AddMember("components", comps, a);
-    d.AddMember("entity", e, a);
+    for (Ermine::EntityID id : all) {
+        Value e(kObjectType);
+        Value comps(kObjectType);
 
-    rapidjson::PrettyWriter<rapidjson::OStreamWrapper> w(osw);
+        // always write IDComponent
+        if (ecs.HasComponent<Ermine::IDComponent>(id)) {
+            const auto& c = ecs.GetComponent<Ermine::IDComponent>(id);
+            std::string guid_str = c.guid.ToString();
+            Value idPayload(kObjectType);
+            idPayload.AddMember("guid", Value(guid_str.c_str(), (rapidjson::SizeType)guid_str.size(), a), a);
+            comps.AddMember("IDComponent", idPayload, a);
+        }
+
+        // write all other components like the scene
+        for (const std::string& name : ecs.GetComponentNames(id)) {
+            const auto* desc = ecs.GetDescriptor(name);
+            Value payload(kObjectType);
+            bool wrote = false;
+
+            if (desc && desc->serialize) {
+                desc->serialize(id, payload, a);
+                wrote = true;
+            }
+
+            // HierarchyComponent uses parentGuid instead of numeric parent ID
+            if (name == "HierarchyComponent" && ecs.HasComponent<Ermine::HierarchyComponent>(id)) {
+                const auto& h = ecs.GetComponent<Ermine::HierarchyComponent>(id);
+                payload.SetObject();
+
+                if (h.parent != Ermine::HierarchyComponent::INVALID_PARENT &&
+                    ecs.HasComponent<Ermine::IDComponent>(h.parent)) {
+                    const auto& pid = ecs.GetComponent<Ermine::IDComponent>(h.parent);
+                    std::string pg = pid.guid.ToString();
+                    payload.AddMember("parentGuid", Value(pg.c_str(), a), a);
+                }
+
+                payload.AddMember("depth", Value(h.depth), a);
+                wrote = true;
+            }
+
+            if (wrote)
+                comps.AddMember(Value(name.c_str(), a), payload, a);
+        }
+
+        e.AddMember("components", comps, a);
+        entities.PushBack(e, a);
+    }
+
+    d.AddMember("entities", entities, a);
+
+    PrettyWriter<OStreamWrapper> w(osw);
     w.SetIndent(' ', 2);
     d.Accept(w);
 }
+
