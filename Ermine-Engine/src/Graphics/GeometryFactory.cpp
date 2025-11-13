@@ -427,39 +427,50 @@ Ermine::Mesh GeometryFactory::CreateSphere(float radius, unsigned int sectors, u
  * 
  * @param radius The radius of the cone base
  * @param height The height of the cone
- * @param sectors The number of sectors around the cone
- * @return Mesh The cone mesh
+ * @param sectors The number of sectors around the cone (default 32 for smooth appearance)
+ * @return Mesh The cone mesh with smooth normals and proper UV mapping
  */
 Ermine::Mesh GeometryFactory::CreateCone(float radius, float height, unsigned int sectors)
 {
     std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;
 
-    // Apex vertex (tip of the cone at top)
+    // Apex vertex (tip of the cone at top) - shared by all side triangles
     vertices.push_back({{0.0f, height, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.5f, 1.0f}});
 
-    // Base center vertex
+    // Base center vertex - for bottom cap
     vertices.push_back({{0.0f, 0.0f, 0.0f}, {0.0f, -1.0f, 0.0f}, {0.5f, 0.0f}});
 
     float sectorStep = 2 * PI<float> / sectors;
+    
+    // Calculate slant length for proper normal calculation
+    float slantLength = sqrtf(radius * radius + height * height);
 
-    // Generate base circle vertices
+    // Generate vertices for cone sides (smooth normals pointing outward from surface)
+    // For smooth shading, we need unique normals per vertex
     for (unsigned int i = 0; i <= sectors; ++i)
     {
         float sectorAngle = i * sectorStep;
         float x = radius * cosf(sectorAngle);
         float z = radius * sinf(sectorAngle);
 
-        // For side surface (pointing outward and up)
-        glm::vec3 toApex = glm::normalize(glm::vec3(-x, height, -z));
-        glm::vec3 tangent = glm::normalize(glm::vec3(-sinf(sectorAngle), 0.0f, cosf(sectorAngle)));
-        glm::vec3 normal = glm::normalize(glm::cross(tangent, toApex));
+        // Calculate smooth surface normal (perpendicular to cone surface)
+        // The normal at the base points outward and slightly upward
+        float normalY = radius / slantLength;      // Vertical component
+        float normalXZ = height / slantLength;     // Horizontal component
+        
+        float nx = normalXZ * cosf(sectorAngle);
+        float nz = normalXZ * sinf(sectorAngle);
+        float ny = normalY;
 
+        // UV coordinates wrapping around the cone
         float u = (float)i / sectors;
-        vertices.push_back({{x, 0.0f, z}, {normal.x, normal.y, normal.z}, {u, 0.0f}});
+        float v = 0.0f; // Base is at v=0, apex is at v=1
+
+        vertices.push_back({{x, 0.0f, z}, {nx, ny, nz}, {u, v}});
     }
 
-    // Generate base circle vertices (for bottom cap with downward normals)
+    // Generate duplicate vertices for bottom cap (different normals pointing down)
     for (unsigned int i = 0; i <= sectors; ++i)
     {
         float sectorAngle = i * sectorStep;
@@ -467,24 +478,31 @@ Ermine::Mesh GeometryFactory::CreateCone(float radius, float height, unsigned in
         float z = radius * sinf(sectorAngle);
         float u = (float)i / sectors;
 
+        // Bottom face normals point straight down
         vertices.push_back({{x, 0.0f, z}, {0.0f, -1.0f, 0.0f}, {u, 0.0f}});
     }
 
     // Generate indices for cone sides
+    // Connect apex (index 0) to base circle vertices (starting at index 2)
     unsigned int apexIndex = 0;
     unsigned int baseStartIndex = 2;
+    
     for (unsigned int i = 0; i < sectors; ++i)
     {
+        // Triangle: apex -> current base vertex -> next base vertex
         indices.push_back(apexIndex);
         indices.push_back(baseStartIndex + i);
         indices.push_back(baseStartIndex + i + 1);
     }
 
     // Generate indices for base (bottom cap)
+    // Connect center (index 1) to base circle vertices (starting after side vertices)
     unsigned int baseCenterIndex = 1;
     unsigned int baseCapStartIndex = baseStartIndex + sectors + 1;
+    
     for (unsigned int i = 0; i < sectors; ++i)
     {
+        // Triangle: center -> next vertex -> current vertex (winding for downward normal)
         indices.push_back(baseCenterIndex);
         indices.push_back(baseCapStartIndex + i + 1);
         indices.push_back(baseCapStartIndex + i);
@@ -515,7 +533,7 @@ Ermine::Mesh GeometryFactory::CreateCone(float radius, float height, unsigned in
     // Register mesh with MeshManager for indirect rendering
     auto renderer = Ermine::ECS::GetInstance().GetSystem<Renderer>();
     if (renderer) {
-        // Calculate tangents
+        // Calculate tangents for normal mapping support
         std::vector<glm::vec3> tangents = CalculateTangents(vertices, indices);
 
         // Convert local Vertex to MeshTypes::Vertex
