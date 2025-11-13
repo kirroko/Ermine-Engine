@@ -45,7 +45,9 @@ void Ermine::Mesh::RebuildPrimitive() {
         kind = MeshKind::Primitive;
     }
     else if (primitive.type == "Cone") {
-        *this = GeometryFactory::CreateCone(primitive.size.x, primitive.size.y); // radius, height
+        // primitive.size.x stores diameter (radius * 2), so divide by 2 to get actual radius
+        // primitive.size.y = height
+        *this = GeometryFactory::CreateCone(primitive.size.x / 2.0f, primitive.size.y);
         kind = MeshKind::Primitive;
     }
     else {
