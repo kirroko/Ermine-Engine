@@ -343,21 +343,26 @@ namespace Ermine
         float spacing = ui.skillSlotSpacing;
         float radius = slotSize * 0.5f;
 
-        // Only render 3 visual slots (indices 0, 2, 3)
-        // Skills[0] = LMB (Shoot Orb / Teleport) - combined visual
-        // Skills[1] = (skipped, part of LMB sequence)
-        // Skills[2] = RMB (Blind Burst)
-        // Skills[3] = R (Recall Orb)
-        const int visualSlotIndices[] = {0, 2, 3};
-        const int numVisualSlots = 3;
+        // Collect non-empty skill slots to render
+        std::vector<int> activeSlots;
+        for (int i = 0; i < 4; ++i)
+        {
+            if (!ui.skills[i].skillName.empty())
+            {
+                activeSlots.push_back(i);
+            }
+        }
 
-        // Calculate total width of visual slots to center them
-        float totalWidth = (slotSize * numVisualSlots) + (spacing * (numVisualSlots - 1));
+        if (activeSlots.empty())
+            return;
+
+        // Calculate total width of active slots to center them
+        float totalWidth = (slotSize * activeSlots.size()) + (spacing * (activeSlots.size() - 1));
         float currentX = startX - (totalWidth * 0.5f);
 
-        for (int slotIdx = 0; slotIdx < numVisualSlots; ++slotIdx)
+        for (size_t slotIdx = 0; slotIdx < activeSlots.size(); ++slotIdx)
         {
-            size_t i = visualSlotIndices[slotIdx];
+            size_t i = activeSlots[slotIdx];
             const auto& skill = ui.skills[i];
 
             // Calculate center position
@@ -481,124 +486,36 @@ namespace Ermine
         float centerX = 0.5f;
         float centerY = 0.5f;
         float size = ui.crosshairSize;
-        float thickness = ui.crosshairThickness;
-        float gap = ui.crosshairGap;
 
-        switch (ui.crosshairStyle)
+        // Check if crosshair has a texture icon
+        std::shared_ptr<graphics::Texture> crosshairTexture = nullptr;
+        std::string crosshairPath = "../Resources/Textures/UI/crosshair.png";
+
+        // Check if texture is already cached
+        auto it = m_textureCache.find(crosshairPath);
+        if (it != m_textureCache.end())
         {
-        case 0: // Sniper scope style crosshair
-        {
-            // Center dot for precision
-            float dotSize = thickness * 1.5f;
-            RenderQuad(centerX - dotSize * 0.5f, centerY - dotSize * 0.5f, dotSize, dotSize, ui.crosshairColor, 1.0f);
-
-            // Inner circle
-            float innerRadius = size * 0.6f;
-            RenderCircle(centerX, centerY, innerRadius, thickness * 0.8f, ui.crosshairColor);
-
-            // Outer crosshair lines extending from circle
-            float outerGap = innerRadius + gap * 2.0f;
-            float lineLength = size * 1.2f;
-
-            // Horizontal lines (left and right)
-            RenderQuad(centerX - lineLength - outerGap, centerY - thickness * 0.5f, lineLength, thickness, ui.crosshairColor, 0.9f);  // Left
-            RenderQuad(centerX + outerGap, centerY - thickness * 0.5f, lineLength, thickness, ui.crosshairColor, 0.9f);               // Right
-
-            // Vertical lines (top and bottom)
-            RenderQuad(centerX - thickness * 0.5f, centerY + outerGap, thickness, lineLength, ui.crosshairColor, 0.9f);               // Top
-            RenderQuad(centerX - thickness * 0.5f, centerY - lineLength - outerGap, thickness, lineLength, ui.crosshairColor, 0.9f);  // Bottom
-
-            // Tick marks on the lines for range estimation
-            float tickSize = thickness * 2.0f;
-            float tickSpacing = size * 0.4f;
-
-            // Left tick marks
-            for (int i = 1; i <= 2; ++i)
-            {
-                float tickX = centerX - outerGap - (tickSpacing * i);
-                RenderQuad(tickX - thickness * 0.25f, centerY - tickSize * 0.5f, thickness * 0.5f, tickSize, ui.crosshairColor, 0.7f);
-            }
-            // Right tick marks
-            for (int i = 1; i <= 2; ++i)
-            {
-                float tickX = centerX + outerGap + (tickSpacing * i);
-                RenderQuad(tickX - thickness * 0.25f, centerY - tickSize * 0.5f, thickness * 0.5f, tickSize, ui.crosshairColor, 0.7f);
-            }
-            // Top tick marks
-            for (int i = 1; i <= 2; ++i)
-            {
-                float tickY = centerY + outerGap + (tickSpacing * i);
-                RenderQuad(centerX - tickSize * 0.5f, tickY - thickness * 0.25f, tickSize, thickness * 0.5f, ui.crosshairColor, 0.7f);
-            }
-            // Bottom tick marks
-            for (int i = 1; i <= 2; ++i)
-            {
-                float tickY = centerY - outerGap - (tickSpacing * i);
-                RenderQuad(centerX - tickSize * 0.5f, tickY - thickness * 0.25f, tickSize, thickness * 0.5f, ui.crosshairColor, 0.7f);
-            }
-
-            break;
+            crosshairTexture = it->second;
         }
-        case 1: // Precise center dot
+        else
         {
-            float dotSize = thickness * 2.0f;
-            RenderQuad(centerX - dotSize * 0.5f, centerY - dotSize * 0.5f, dotSize, dotSize, ui.crosshairColor, 1.0f);
-            break;
+            // Load texture via AssetManager
+            crosshairTexture = AssetManager::GetInstance().LoadTexture(crosshairPath);
+            if (crosshairTexture && crosshairTexture->IsValid())
+            {
+                m_textureCache[crosshairPath] = crosshairTexture; // Cache it
+            }
         }
-        case 2: // Circle outline
+
+        // Render crosshair icon if texture loaded successfully
+        if (crosshairTexture && crosshairTexture->IsValid())
         {
-            RenderCircle(centerX, centerY, size, thickness, ui.crosshairColor);
-            break;
-        }
-        case 3: // Steampunk ornate crosshair
-        {
-            // Center dot
-            float dotSize = thickness * 1.5f;
-            RenderQuad(centerX - dotSize * 0.5f, centerY - dotSize * 0.5f, dotSize, dotSize, ui.crosshairColor, 1.0f);
+            // Render clean icon texture with full brightness (no tinting)
+            Vec3 tintColor = { 1.0f, 1.0f, 1.0f }; // No tinting - show texture as-is
+            float alpha = 1.0f;
 
-            // Inner circle (brass ring)
-            float innerRadius = size * 0.4f;
-            RenderCircle(centerX, centerY, innerRadius, thickness * 1.2f, ui.crosshairColor);
-
-            // Outer decorative ring
-            float outerRadius = size * 0.8f;
-            RenderCircle(centerX, centerY, outerRadius, thickness * 0.6f, ui.crosshairColor);
-
-            // Ornate corner brackets (4 corners)
-            float bracketLength = size * 0.6f;
-            float bracketThickness = thickness * 1.5f;
-            float cornerOffset = outerRadius + gap;
-
-            // Top-right bracket
-            RenderQuad(centerX + cornerOffset, centerY + cornerOffset, bracketLength, bracketThickness, ui.crosshairColor, 0.8f);
-            RenderQuad(centerX + cornerOffset, centerY + cornerOffset, bracketThickness, bracketLength, ui.crosshairColor, 0.8f);
-
-            // Top-left bracket
-            RenderQuad(centerX - cornerOffset - bracketLength, centerY + cornerOffset, bracketLength, bracketThickness, ui.crosshairColor, 0.8f);
-            RenderQuad(centerX - cornerOffset, centerY + cornerOffset, bracketThickness, bracketLength, ui.crosshairColor, 0.8f);
-
-            // Bottom-right bracket
-            RenderQuad(centerX + cornerOffset, centerY - cornerOffset, bracketLength, bracketThickness, ui.crosshairColor, 0.8f);
-            RenderQuad(centerX + cornerOffset, centerY - cornerOffset - bracketLength, bracketThickness, bracketLength, ui.crosshairColor, 0.8f);
-
-            // Bottom-left bracket
-            RenderQuad(centerX - cornerOffset - bracketLength, centerY - cornerOffset, bracketLength, bracketThickness, ui.crosshairColor, 0.8f);
-            RenderQuad(centerX - cornerOffset, centerY - cornerOffset - bracketLength, bracketThickness, bracketLength, ui.crosshairColor, 0.8f);
-
-            // Small decorative gears (circles at cardinal points)
-            float gearRadius = thickness * 2.0f;
-            float gearDistance = outerRadius + gap + size * 0.2f;
-            Vec3 dimColor = { ui.crosshairColor.x * 0.7f, ui.crosshairColor.y * 0.7f, ui.crosshairColor.z * 0.7f };
-
-            RenderFilledCircle(centerX + gearDistance, centerY, gearRadius, dimColor, 0.6f);
-            RenderFilledCircle(centerX - gearDistance, centerY, gearRadius, dimColor, 0.6f);
-            RenderFilledCircle(centerX, centerY + gearDistance, gearRadius, dimColor, 0.6f);
-            RenderFilledCircle(centerX, centerY - gearDistance, gearRadius, dimColor, 0.6f);
-
-            break;
-        }
-        default:
-            break;
+            // Use square rendering to maintain aspect ratio
+            RenderTexturedSquare(centerX, centerY, size, crosshairTexture, tintColor, alpha);
         }
     }
 
