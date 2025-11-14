@@ -14,8 +14,86 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "PreCompile.h"
 #include "GeometryFactory.h"
 #include "MathUtils.h"
+#include "Renderer.h"
+#include "ECS.h"
 
 using namespace Ermine::graphics;
+
+/**
+ * @brief Calculate tangents for a mesh using the indices and vertices
+ * Uses the Lengyel's Method for computing tangent space basis vectors
+ * @param vertices The vertex data (position, normal, texCoord)
+ * @param indices The index data forming triangles
+ * @return Vector of tangents, one per vertex
+ */
+std::vector<glm::vec3> GeometryFactory::CalculateTangents(
+    const std::vector<Vertex>& vertices,
+    const std::vector<unsigned int>& indices)
+{
+    std::vector<glm::vec3> tangents(vertices.size(), glm::vec3(0.0f));
+    std::vector<glm::vec3> bitangents(vertices.size(), glm::vec3(0.0f));
+
+    // Calculate tangent and bitangent for each triangle
+    for (size_t i = 0; i < indices.size(); i += 3)
+    {
+        unsigned int i0 = indices[i];
+        unsigned int i1 = indices[i + 1];
+        unsigned int i2 = indices[i + 2];
+
+        const Vec3& v0 = vertices[i0].pos;
+        const Vec3& v1 = vertices[i1].pos;
+        const Vec3& v2 = vertices[i2].pos;
+
+        const Vec2& uv0 = vertices[i0].tex;
+        const Vec2& uv1 = vertices[i1].tex;
+        const Vec2& uv2 = vertices[i2].tex;
+
+        // Calculate edges
+        glm::vec3 edge1 = glm::vec3(v1.x - v0.x, v1.y - v0.y, v1.z - v0.z);
+        glm::vec3 edge2 = glm::vec3(v2.x - v0.x, v2.y - v0.y, v2.z - v0.z);
+
+        glm::vec2 deltaUV1 = glm::vec2(uv1.x - uv0.x, uv1.y - uv0.y);
+        glm::vec2 deltaUV2 = glm::vec2(uv2.x - uv0.x, uv2.y - uv0.y);
+
+        float f = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+
+        glm::vec3 tangent;
+        tangent.x = f * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
+        tangent.y = f * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
+        tangent.z = f * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
+
+        glm::vec3 bitangent;
+        bitangent.x = f * (-deltaUV2.x * edge1.x + deltaUV1.x * edge2.x);
+        bitangent.y = f * (-deltaUV2.x * edge1.y + deltaUV1.x * edge2.y);
+        bitangent.z = f * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z);
+
+        // Accumulate tangents and bitangents for each vertex of the triangle
+        tangents[i0] += tangent;
+        tangents[i1] += tangent;
+        tangents[i2] += tangent;
+
+        bitangents[i0] += bitangent;
+        bitangents[i1] += bitangent;
+        bitangents[i2] += bitangent;
+    }
+
+    // Orthogonalize and normalize tangents using Gram-Schmidt process
+    for (size_t i = 0; i < vertices.size(); ++i)
+    {
+        glm::vec3 n = glm::vec3(vertices[i].norms.x, vertices[i].norms.y, vertices[i].norms.z);
+        glm::vec3 t = tangents[i];
+
+        // Gram-Schmidt orthogonalize
+        t = glm::normalize(t - n * glm::dot(n, t));
+
+        // Calculate handedness (optional, for bitangent calculation)
+        // float handedness = (glm::dot(glm::cross(n, t), bitangents[i]) < 0.0f) ? -1.0f : 1.0f;
+
+        tangents[i] = t;
+    }
+
+    return tangents;
+}
 
 /**
  * @brief Create a cube
@@ -101,7 +179,48 @@ Ermine::Mesh GeometryFactory::CreateCube(float width, float height, float depth)
 
     auto ibo = std::make_shared<IndexBuffer>(indices.data(), indices.size() * sizeof(unsigned int));
 
-    return {vao, vbo, ibo};
+	auto mesh = Mesh(vao, vbo, ibo);
+	mesh.kind = MeshKind::Primitive;
+	mesh.primitive.type = "Cube";
+	mesh.primitive.size = Vec3{ width, height, depth };
+
+	// Set AABB for frustum culling (cube extents are half-sizes)
+	mesh.aabbMin = Vec3{ -w, -h, -d };
+	mesh.aabbMax = Vec3{  w,  h,  d };
+
+    // Register mesh with MeshManager for indirect rendering
+    auto renderer = Ermine::ECS::GetInstance().GetSystem<Renderer>();
+    if (renderer) {
+        // Calculate tangents
+        std::vector<glm::vec3> tangents = CalculateTangents(vertices, indices);
+
+        // Convert local Vertex to MeshTypes::Vertex
+        std::vector<graphics::Vertex> meshVertices;
+        meshVertices.reserve(vertices.size());
+        for (size_t i = 0; i < vertices.size(); ++i) {
+            const auto& v = vertices[i];
+            graphics::Vertex meshVert;
+			meshVert.position.x = v.pos.x;
+			meshVert.position.y = v.pos.y;
+			meshVert.position.z = v.pos.z;  // Fixed: Was missing Z coordinate!
+			meshVert.normal.x = v.norms.x;
+			meshVert.normal.y = v.norms.y;
+			meshVert.normal.z = v.norms.z;
+			meshVert.texCoord.x = v.tex.x;
+			meshVert.texCoord.y = v.tex.y;
+            meshVert.tangent = tangents[i];
+            meshVertices.push_back(meshVert);
+        }
+
+        std::string meshID = "Cube_" + std::to_string(width) + "x" +
+                            std::to_string(height) + "x" + std::to_string(depth);
+        renderer->m_MeshManager.RegisterMesh(meshVertices, indices, meshID);
+
+        // Store the registered mesh ID in the Mesh component
+        mesh.registeredMeshID = meshID;
+    }
+
+    return mesh;
 }
 
 /**
@@ -139,8 +258,47 @@ Ermine::Mesh GeometryFactory::CreateQuad(float width, float height)
     vbo->Unbind();
 
     auto ibo = std::make_shared<IndexBuffer>(indices.data(), indices.size() * sizeof(unsigned int));
+	auto mesh = Mesh(vao, vbo, ibo);
+	mesh.kind = MeshKind::Primitive;
+	mesh.primitive.type = "Quad";
+	mesh.primitive.size = Vec3{ width, height, 0.0f };
 
-    return {vao, vbo, ibo};
+	// Set AABB for frustum culling (quad extents are half-sizes)
+	mesh.aabbMin = Vec3{ -w, -h, 0.0f };
+	mesh.aabbMax = Vec3{  w,  h, 0.0f };
+
+    // Register mesh with MeshManager for indirect rendering
+    auto renderer = Ermine::ECS::GetInstance().GetSystem<Renderer>();
+    if (renderer) {
+        // Calculate tangents
+        std::vector<glm::vec3> tangents = CalculateTangents(vertices, indices);
+
+        // Convert local Vertex to MeshTypes::Vertex
+        std::vector<graphics::Vertex> meshVertices;
+        meshVertices.reserve(vertices.size());
+        for (size_t i = 0; i < vertices.size(); ++i) {
+            const auto& v = vertices[i];
+            graphics::Vertex meshVert;
+            meshVert.position.x = v.pos.x;
+            meshVert.position.y = v.pos.y;
+            meshVert.position.z = v.pos.z;  // Fixed: Was missing Z coordinate!
+            meshVert.normal.x = v.norms.x;
+            meshVert.normal.y = v.norms.y;
+            meshVert.normal.z = v.norms.z;
+            meshVert.texCoord.x = v.tex.x;
+            meshVert.texCoord.y = v.tex.y;
+            meshVert.tangent = tangents[i];
+            meshVertices.push_back(meshVert);
+        }
+
+        std::string meshID = "Quad_" + std::to_string(width) + "x" + std::to_string(height);
+        renderer->m_MeshManager.RegisterMesh(meshVertices, indices, meshID);
+
+        // Store the registered mesh ID in the Mesh component
+        mesh.registeredMeshID = meshID;
+    }
+
+    return mesh;
 }
 
 Ermine::Mesh GeometryFactory::CreateSphere(float radius, unsigned int sectors, unsigned int stacks)
@@ -220,5 +378,188 @@ Ermine::Mesh GeometryFactory::CreateSphere(float radius, unsigned int sectors, u
 
     auto ibo = std::make_shared<IndexBuffer>(indices.data(), indices.size() * sizeof(unsigned int));
 
-    return {vao, vbo, ibo};
+	auto mesh = Mesh(vao, vbo, ibo);
+	mesh.kind = MeshKind::Primitive;
+	mesh.primitive.type = "Sphere";
+	mesh.primitive.size = Vec3{ radius, radius, radius };
+
+	// Set AABB for frustum culling (sphere is contained within a cube of side length 2*radius)
+	mesh.aabbMin = Vec3{ -radius, -radius, -radius };
+	mesh.aabbMax = Vec3{  radius,  radius,  radius };
+
+    // Register mesh with MeshManager for indirect rendering
+    auto renderer = Ermine::ECS::GetInstance().GetSystem<Renderer>();
+    if (renderer) {
+        // Calculate tangents
+        std::vector<glm::vec3> tangents = CalculateTangents(vertices, indices);
+
+        // Convert local Vertex to MeshTypes::Vertex
+        std::vector<graphics::Vertex> meshVertices;
+        meshVertices.reserve(vertices.size());
+        for (size_t i = 0; i < vertices.size(); ++i) {
+            const auto& v = vertices[i];
+            graphics::Vertex meshVert;
+            meshVert.position.x = v.pos.x;
+            meshVert.position.y = v.pos.y;
+            meshVert.position.z = v.pos.z;  // Fixed: Was missing Z coordinate!
+            meshVert.normal.x = v.norms.x;
+            meshVert.normal.y = v.norms.y;
+            meshVert.normal.z = v.norms.z;
+            meshVert.texCoord.x = v.tex.x;
+            meshVert.texCoord.y = v.tex.y;
+            meshVert.tangent = tangents[i];
+            meshVertices.push_back(meshVert);
+        }
+
+        std::string meshID = "Sphere_" + std::to_string(radius) + "_" +
+                            std::to_string(sectors) + "x" + std::to_string(stacks);
+        renderer->m_MeshManager.RegisterMesh(meshVertices, indices, meshID);
+
+        // Store the registered mesh ID in the Mesh component
+        mesh.registeredMeshID = meshID;
+    }
+
+    return mesh;
+}
+
+/**
+ * @brief Create a cone mesh
+ * 
+ * @param radius The radius of the cone base
+ * @param height The height of the cone
+ * @param sectors The number of sectors around the cone (default 32 for smooth appearance)
+ * @return Mesh The cone mesh with smooth normals and proper UV mapping
+ */
+Ermine::Mesh GeometryFactory::CreateCone(float radius, float height, unsigned int sectors)
+{
+    std::vector<Vertex> vertices;
+    std::vector<unsigned int> indices;
+
+    // Apex vertex (tip of the cone at top) - shared by all side triangles
+    vertices.push_back({{0.0f, height, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.5f, 1.0f}});
+
+    // Base center vertex - for bottom cap
+    vertices.push_back({{0.0f, 0.0f, 0.0f}, {0.0f, -1.0f, 0.0f}, {0.5f, 0.0f}});
+
+    float sectorStep = 2 * PI<float> / sectors;
+    
+    // Calculate slant length for proper normal calculation
+    float slantLength = sqrtf(radius * radius + height * height);
+
+    // Generate vertices for cone sides (smooth normals pointing outward from surface)
+    // For smooth shading, we need unique normals per vertex
+    for (unsigned int i = 0; i <= sectors; ++i)
+    {
+        float sectorAngle = i * sectorStep;
+        float x = radius * cosf(sectorAngle);
+        float z = radius * sinf(sectorAngle);
+
+        // Calculate smooth surface normal (perpendicular to cone surface)
+        // The normal at the base points outward and slightly upward
+        float normalY = radius / slantLength;      // Vertical component
+        float normalXZ = height / slantLength;     // Horizontal component
+        
+        float nx = normalXZ * cosf(sectorAngle);
+        float nz = normalXZ * sinf(sectorAngle);
+        float ny = normalY;
+
+        // UV coordinates wrapping around the cone
+        float u = (float)i / sectors;
+        float v = 0.0f; // Base is at v=0, apex is at v=1
+
+        vertices.push_back({{x, 0.0f, z}, {nx, ny, nz}, {u, v}});
+    }
+
+    // Generate duplicate vertices for bottom cap (different normals pointing down)
+    for (unsigned int i = 0; i <= sectors; ++i)
+    {
+        float sectorAngle = i * sectorStep;
+        float x = radius * cosf(sectorAngle);
+        float z = radius * sinf(sectorAngle);
+        float u = (float)i / sectors;
+
+        // Bottom face normals point straight down
+        vertices.push_back({{x, 0.0f, z}, {0.0f, -1.0f, 0.0f}, {u, 0.0f}});
+    }
+
+    // Generate indices for cone sides
+    // Connect apex (index 0) to base circle vertices (starting at index 2)
+    unsigned int apexIndex = 0;
+    unsigned int baseStartIndex = 2;
+    
+    for (unsigned int i = 0; i < sectors; ++i)
+    {
+        // Triangle: apex -> current base vertex -> next base vertex
+        indices.push_back(apexIndex);
+        indices.push_back(baseStartIndex + i);
+        indices.push_back(baseStartIndex + i + 1);
+    }
+
+    // Generate indices for base (bottom cap)
+    // Connect center (index 1) to base circle vertices (starting after side vertices)
+    unsigned int baseCenterIndex = 1;
+    unsigned int baseCapStartIndex = baseStartIndex + sectors + 1;
+    
+    for (unsigned int i = 0; i < sectors; ++i)
+    {
+        // Triangle: center -> next vertex -> current vertex (winding for downward normal)
+        indices.push_back(baseCenterIndex);
+        indices.push_back(baseCapStartIndex + i + 1);
+        indices.push_back(baseCapStartIndex + i);
+    }
+
+    // Create VAO, VBO, IBO
+    auto vao = std::make_shared<VertexArray>();
+    vao->SetVertexCount(vertices.size());
+
+    auto vbo = std::make_shared<VertexBuffer>(vertices.data(), vertices.size() * sizeof(Vertex));
+
+    vao->LinkAttribute(0, 3, GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, pos));
+    vao->LinkAttribute(1, 3, GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, norms));
+    vao->LinkAttribute(2, 2, GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, tex));
+    vbo->Unbind();
+
+    auto ibo = std::make_shared<IndexBuffer>(indices.data(), indices.size() * sizeof(unsigned int));
+
+    auto mesh = Mesh(vao, vbo, ibo);
+    mesh.kind = MeshKind::Primitive;
+    mesh.primitive.type = "Cone";
+    mesh.primitive.size = Vec3{ radius * 2.0f, height, radius * 2.0f };
+
+    // Set AABB for frustum culling
+    mesh.aabbMin = Vec3{ -radius, 0.0f, -radius };
+    mesh.aabbMax = Vec3{  radius, height,  radius };
+
+    // Register mesh with MeshManager for indirect rendering
+    auto renderer = Ermine::ECS::GetInstance().GetSystem<Renderer>();
+    if (renderer) {
+        // Calculate tangents for normal mapping support
+        std::vector<glm::vec3> tangents = CalculateTangents(vertices, indices);
+
+        // Convert local Vertex to MeshTypes::Vertex
+        std::vector<graphics::Vertex> meshVertices;
+        meshVertices.reserve(vertices.size());
+        for (size_t i = 0; i < vertices.size(); ++i) {
+            const auto& v = vertices[i];
+            graphics::Vertex meshVert;
+            meshVert.position.x = v.pos.x;
+            meshVert.position.y = v.pos.y;
+            meshVert.position.z = v.pos.z;
+            meshVert.normal.x = v.norms.x;
+            meshVert.normal.y = v.norms.y;
+            meshVert.normal.z = v.norms.z;
+            meshVert.texCoord.x = v.tex.x;
+            meshVert.texCoord.y = v.tex.y;
+            meshVert.tangent = tangents[i];
+            meshVertices.push_back(meshVert);
+        }
+
+        std::string meshID = "Cone_" + std::to_string(radius) + "_" + std::to_string(height) + "_" + std::to_string(sectors);
+        renderer->m_MeshManager.RegisterMesh(meshVertices, indices, meshID);
+
+        // Store the registered mesh ID in the Mesh component
+        mesh.registeredMeshID = meshID;
+    }
+
+    return mesh;
 }

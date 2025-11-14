@@ -1,10 +1,10 @@
 /* Start Header ************************************************************************/
 /*!
 \file       AssetManager.h
-\author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu (80%)   
+\author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu (75%)   
 \co-author  Jeremy Lim Ting Jie, jeremytingjie.lim, 2301370, jeremytingjie.lim\@digipen.edu (20%)
-\co-authors Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu
-\date       10/09/2025
+\co-authors Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu (5%)
+\date       03/10/2025
 \brief      This reflects the brief of the AssetManager system.
             This file is used to manage all the assets in the game.
 
@@ -19,14 +19,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Shader.h"
 #include "Texture.h"
 #include "Cubemap.h"
-
-
 #include "Model.h"
-
-#include <assimp/Importer.hpp>  // for the importer class
-#include <assimp/scene.h>       // for the output data structure
-#include <assimp/postprocess.h> // for post processing flags
-
 
 // Forward declaration to avoid circular includes
 namespace Ermine::graphics {
@@ -34,6 +27,18 @@ namespace Ermine::graphics {
 }
 namespace Ermine
 {
+
+    /**
+     * @brief Structure to hold resource database entry information
+     */
+    struct ResourceEntry {
+        uint64_t instanceGUID;
+        uint64_t typeGUID;
+        std::string sourcePath;
+        std::string outputPath;
+        std::filesystem::file_time_type lastModified;
+    };
+
     /**
      * @brief The AssetManager class is a singleton class that manages all the assets in the game.
      *        This includes textures and shaders.
@@ -49,6 +54,18 @@ namespace Ermine
         std::unordered_map<std::string, std::shared_ptr<graphics::Cubemap>> m_cubemaps;
         std::unordered_map<std::string, std::shared_ptr<graphics::Material>> m_materials;
         std::unordered_map<std::string, std::shared_ptr<graphics::Model>> m_models;
+
+        // Resource database management
+        std::unordered_map<std::string, ResourceEntry> m_resourceDatabase; // sourcePath -> ResourceEntry
+        std::string m_databasePath = "./Ermine-Game.lion_rcdbase"; // Default database path
+        std::string m_projectGuid = ""; // Will be loaded from config or database
+        bool m_databaseLoaded = false;
+
+        // Internal methods for resource database
+        bool LoadResourceDatabase();
+        ResourceEntry* FindResourceBySourcePath(const std::string& sourcePath);
+        std::string ConvertToRelativePath(const std::string& absolutePath);
+        std::string GetFullDDSPath(const ResourceEntry& entry) const;
     
 public:
         static AssetManager& GetInstance()
@@ -57,6 +74,22 @@ public:
             return instance;
         }
 
+        // ================== Database Management ==================
+        /**
+         * @brief Initialize the asset manager with database path
+         * @param databasePath Path to the resource database
+         * @param projectGuid Project GUID (optional, will try to auto-detect)
+         * @return true if initialization successful
+         */
+        bool Initialize(const std::string& databasePath = "./Ermine-Game.lion_rcdbase",
+            const std::string& projectGuid = "");
+
+        /**
+         * @brief Reload the resource database (useful after running resource pipeline)
+         * @return true if reload successful
+         */
+        bool ReloadResourceDatabase();
+
         // ================== Texture Management ==================
         /**
          * @brief Load a texture from a file
@@ -64,15 +97,28 @@ public:
          * @return The loaded texture
          */
         std::shared_ptr<graphics::Texture> LoadTexture(const std::string& filePath);
+
+         /**
+         * @brief Load a texture directly by GUID (for advanced usage)
+         * @param instanceGUID The instance GUID of the texture resource
+         * @return The loaded texture
+         */
+        std::shared_ptr<graphics::Texture> LoadTextureByGUID(uint64_t instanceGUID);
+
         /**
          * @brief Get a texture from the cache
          * @param filePath The path to the texture file
          * @return The texture if it exists, nullptr otherwise
          */
         std::shared_ptr<graphics::Texture> GetTexture(const std::string& filePath);
+        /**
+         * @brief Get a read-only view of all currently loaded textures.
+         * @return A const reference to the unordered_map of loaded textures.
+         * The key is the texture file path, and the value is the shared Texture.
+         */
+        const std::unordered_map<std::string, std::shared_ptr<graphics::Texture>>& GetLoadedTextures() const;
 
         // ================== Shader Management ==================
-        const std::unordered_map<std::string, std::shared_ptr<graphics::Texture>>& GetLoadedTextures() const;
         /**
          * @brief Load a shader from a vertex and fragment file
          * @param vertexPath The path to the vertex shader file
@@ -95,8 +141,6 @@ public:
         * @return The loaded shader
         */
         std::shared_ptr<graphics::Shader> LoadShader(const std::string & vertexPath, const std::string & geometryPath, const std::string & fragmentPath);
-
-
         /**
          * @brief Get a shader from the cache
          * @param shaderName The name of the shader
@@ -117,6 +161,25 @@ public:
          * @return The model if it exists, nullptr otherwise.
          */
         std::shared_ptr<graphics::Model> GetModel(const std::string& filePath);
+        /**
+         * @brief Get a read-only view of all currently loaded models.
+         * @return A const reference to the unordered_map of loaded models.
+         * The key is the model file path, and the value is the shared Model.
+         */
+        const std::unordered_map<std::string, std::shared_ptr<graphics::Model>>& GetLoadedModels() const;
+        /**
+         * @brief Unload a specific model from the cache.
+         * @param filePath The full path to the model file to unload.
+         */
+        void UnloadModel(const std::string& filePath);
+
+        /**
+         * @brief Clear all cached models.
+         *
+         * This should be called when MeshManager is cleared to ensure Models
+         * are reloaded and re-register their meshes.
+         */
+        void ClearModelCache();
 
         // ================== Utilities ==================
         /**
@@ -126,7 +189,7 @@ public:
          */
         const char* load_file_contents(const char* filepath);
 
-        // Cubemap management
+        // ================== Cubemap management ==================
         /**
          * @brief Load a cubemap from individual face textures
          * @param faces Array of 6 face texture paths in order: +X, -X, +Y, -Y, +Z, -Z
@@ -150,7 +213,7 @@ public:
          */
         std::shared_ptr<graphics::Cubemap> GetCubemap(const std::string& name);
 
-        // Material management
+        // ================== Material management ==================
         /**
          * @brief Create and cache a material with the given name
          * @param name The name/key for the material

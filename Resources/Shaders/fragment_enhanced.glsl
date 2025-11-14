@@ -1,87 +1,68 @@
 #version 460
+#extension GL_ARB_bindless_texture : require
+
+const int MAX_LIGHTS = 32;
+const int NUM_CASCADES = 4;
 
 in vec2 TexCoord;
 in vec3 Normal;
 in vec3 FragPos;
-in vec3 ViewPos; // Position in view space
-in vec3 Tangent;   // For normal mapping
-in vec3 Bitangent; // For normal mapping
+in vec3 ViewPos;
+in vec3 Tangent;
+in vec3 Bitangent;
+flat in uint vMaterialIndex;
 
 out vec4 FragColor;
 
-// Material uniform block - must match MaterialUBO structure exactly
-layout (std140) uniform MaterialBlock {
-    vec3 albedo;                  // 12 bytes + 4 padding = 16 bytes - changed back to vec3
-    float metallic;               // 4 bytes (16-19)
-    float roughness;              // 4 bytes (20-23)
-    float ao;                     // 4 bytes (24-27)
-    float normalStrength;         // 4 bytes (28-31)
-    
-    vec3 emissive;                // 16 bytes (32-47) - vec3 uses 16 bytes in std140
-    float emissiveIntensity;      // 4 bytes (48-51)
-    int shadingModel;             // 4 bytes (52-55) // 0 = PBR, 1 = Blinn-Phong
-    float reflectance;            // 4 bytes (56-59)
-    float environmentIntensity;   // 4 bytes (60-63)
-    
-    // Texture presence flags
-    int hasAlbedoMap;             // 4 bytes (64-67)
-    int hasNormalMap;             // 4 bytes (68-71)
-    int hasRoughnessMap;          // 4 bytes (72-75)
-    int hasMetallicMap;           // 4 bytes (76-79)
-    
-    int hasAoMap;                 // 4 bytes (80-83)
-    int hasEmissiveMap;           // 4 bytes (84-87)
-    int hasEnvironmentMap;        // 4 bytes (88-91)
-    int hasIrradianceMap;         // 4 bytes (92-95)
-    
-    // Transparency parameters (moved from albedo.alpha to dedicated fields)
-    float transparency;           // 4 bytes (96-99) - 0.0 = opaque, 1.0 = fully transparent
-    float indexOfRefraction;      // 4 bytes (100-103)
-    float transmissionFactor;     // 4 bytes (104-107)
-    int hasRefractionMap;         // 4 bytes (108-111)
-    
-} material;
+// Material structure
+struct MaterialData {
+    vec4 albedo;
+    float metallic;
+    float roughness;
+    float ao;
+    float normalStrength;
 
-// Separate texture samplers (cannot be in uniform blocks)
-uniform sampler2D materialAlbedoMap;
-uniform sampler2D materialNormalMap;
-uniform sampler2D materialRoughnessMap;
-uniform sampler2D materialMetallicMap;
-uniform sampler2D materialAoMap;
-uniform sampler2D materialEmissiveMap;
+    vec3 emissive;
+    float emissiveIntensity;
 
-// Environment mapping samplers
-uniform samplerCube materialEnvironmentMap;  // Main environment/reflection map
-uniform samplerCube materialIrradianceMap;   // Irradiance map for diffuse IBL
+    int shadingModel; // 0 = PBR, 1 = Blinn-Phong
+    int hasAlbedoMap;
+    int hasNormalMap;
+    int hasRoughnessMap;
 
-// Local reflection probes (up to 4 active probes)
-struct ReflectionProbe {
-    vec3 position;
-    float intensity;
-    vec3 boxMin;
-    float blendDistance;
-    vec3 boxMax;
-    int isActive;
-    vec4 influence; // xyz = size, w = priority
+    int hasMetallicMap;
+    int hasAoMap;
+    int hasEmissiveMap;
+    float _pad0;
+
+    vec2 uvScale;   // UV scale for texture tiling
+    vec2 uvOffset;  // UV offset for texture positioning
+
+    // Texture Array Indices
+    int albedoMapIndex;
+    int normalMapIndex;
+    int roughnessMapIndex;
+    int metallicMapIndex;
+
+    int aoMapIndex;
+    int emissiveMapIndex;
+    int _pad1;
+    int _pad2;
 };
 
-layout (std140) uniform ReflectionProbes {
-    int activeProbeCount;
-    ReflectionProbe probes[4];
+// Material SSBO block - array of materials
+layout(std430, binding = 3) restrict readonly buffer MaterialBlock {
+    MaterialData materials[];
 };
 
-// Individual probe cubemaps
-uniform samplerCube reflectionProbe0;
-uniform samplerCube reflectionProbe1;
-uniform samplerCube reflectionProbe2;
-uniform samplerCube reflectionProbe3;
+// Bindless texture array SSBO - stores texture handles as uvec2 (64-bit split into two 32-bit values)
+layout(std430, binding = 5) restrict readonly buffer TextureArrayBlock
+{
+    uvec2 textureHandles[];
+};
 
 // Shading mode toggle
 uniform bool isBlinnPhong;
-
-// View matrix for world space calculations
-uniform mat4 view;
-uniform mat4 model;
 
 // Material properties for Blinn-Phong
 uniform vec3 materialKa = vec3(0.2, 0.2, 0.2);
@@ -90,25 +71,19 @@ uniform vec3 materialKs = vec3(1.0, 1.0, 1.0);
 uniform vec3 materialKe = vec3(0.0, 0.0, 0.0);
 uniform float materialShininess = 64.0;
 
-// Legacy uniforms for backwards compatibility
-uniform vec3 pbrAlbedo = vec3(0.8, 0.8, 0.8);
-uniform float pbrMetallic = 0.0;
-uniform float pbrRoughness = 0.5;
-uniform float pbrAO = 1.0;
-uniform vec3 pbrEmissive = vec3(0.0);
-uniform float pbrEmissiveIntensity = 0.0;
-
+// Light structure
 struct Light {
     vec4 position_type;    // xyz = position (view space), w = light type
     vec4 color_intensity;  // xyz = color, w = intensity
     vec4 direction_range;  // xyz = direction (view space), w = range
-    vec4 spot_angles;      // x = inner cos, y = outer cos
+    vec4 spot_angles_castshadows_startOffset; // x = inner angle (cos), y = outer angle (cos), z = cast shadows (bool), w = shadow map index or 0 if no shadows
+    mat4 lightSpaceMatrix[NUM_CASCADES]; // Light view-projection matrices for cascaded shadow maps
+    vec4 splitDepths[(NUM_CASCADES + 3) / 4]; // Split depths for cascaded shadow maps
 };
 
-// SSBO for multiple lights
-layout (std430, binding = 1) restrict readonly buffer LightsSSBO {
-    vec4 lightCount;      // x = number of lights
-    Light lights[];       // array of Light structs
+layout (std140, binding = 1) uniform LightsUBO {
+    vec4 lightCount;
+    Light lights[MAX_LIGHTS]; // Fixed size array
 };
 
 const float PI = 3.14159265359;
@@ -117,72 +92,70 @@ const int DIRECTIONAL_LIGHT = 1;
 const int SPOT_LIGHT = 2;
 
 // Normal mapping function
-vec3 calculateNormal()
+vec3 calculateNormal(MaterialData material, vec2 uv)
 {
     vec3 normal = normalize(Normal);
-    
-    if (material.hasNormalMap != 0) {
-        // Sample normal map
-        vec3 normalMap = texture(materialNormalMap, TexCoord).rgb * 2.0 - 1.0;
+
+    if (material.hasNormalMap != 0 && material.normalMapIndex >= 0) {
+        vec3 normalMap = texture(sampler2D(textureHandles[material.normalMapIndex]), uv).rgb * 2.0 - 1.0;
         normalMap.xy *= material.normalStrength;
-        
-        // Create TBN matrix
+
         vec3 T = normalize(Tangent);
         vec3 B = normalize(Bitangent);
         vec3 N = normal;
         mat3 TBN = mat3(T, B, N);
-        
+
         normal = normalize(TBN * normalMap);
     }
-    
+
     return normal;
 }
 
-// Sample material properties with texture support
-vec3 getAlbedo()
+// Sample material properties
+vec3 getAlbedo(MaterialData material, vec2 uv)
 {
-    vec3 albedo = material.albedo; // Use vec3 directly
-    
-    if (material.hasAlbedoMap != 0) {
-        vec4 texColor = texture(materialAlbedoMap, TexCoord);
+    vec3 albedo = material.albedo.rgb;
+
+    if (material.hasAlbedoMap != 0 && material.albedoMapIndex >= 0) {
+        vec4 texColor = texture(sampler2D(textureHandles[material.albedoMapIndex]), uv);
         albedo *= texColor.rgb;
     }
-    
+
     return albedo;
 }
 
-float getRoughness()
+float getRoughness(MaterialData material, vec2 uv)
 {
     float roughness = material.roughness;
-    if (material.hasRoughnessMap != 0) {
-        roughness *= texture(materialRoughnessMap, TexCoord).r;
+    if (material.hasRoughnessMap != 0 && material.roughnessMapIndex >= 0) {
+        roughness *= texture(sampler2D(textureHandles[material.roughnessMapIndex]), uv).r;
     }
     return clamp(roughness, 0.05, 1.0);
 }
 
-float getMetallic()
+float getMetallic(MaterialData material, vec2 uv)
 {
     float metallic = material.metallic;
-    if (material.hasMetallicMap != 0) {
-        metallic *= texture(materialMetallicMap, TexCoord).r;
+    if (material.hasMetallicMap != 0 && material.metallicMapIndex >= 0) {
+        metallic *= texture(sampler2D(textureHandles[material.metallicMapIndex]), uv).r;
     }
     return clamp(metallic, 0.0, 1.0);
 }
 
-float getAO()
+float getAO(MaterialData material, vec2 uv)
 {
     float ao = material.ao;
-    if (material.hasAoMap != 0) {
-        ao *= texture(materialAoMap, TexCoord).r;
+    if (material.hasAoMap != 0 && material.aoMapIndex >= 0) {
+        ao *= texture(sampler2D(textureHandles[material.aoMapIndex]), uv).r;
     }
     return ao;
 }
 
-vec3 getEmissive()
+vec3 getEmissive(MaterialData material, vec2 uv)
 {
     vec3 emissive = material.emissive * material.emissiveIntensity;
-    if (material.hasEmissiveMap != 0) {
-        vec4 emissiveTexel = texture(materialEmissiveMap, TexCoord);
+    if (material.hasEmissiveMap != 0 && material.emissiveMapIndex >= 0) {
+        vec4 emissiveTexel = texture(sampler2D(textureHandles[material.emissiveMapIndex]), uv);
         emissive *= emissiveTexel.rgb;
     }
     return emissive;
@@ -227,137 +200,9 @@ float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
 vec3 fresnelSchlick(float cosTheta, vec3 F0)
 {
     return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
-}   
-
-vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
-{
-    return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
-}   
-
-// Box projection for local reflection probes
-vec3 boxProjection(vec3 direction, vec3 position, vec3 boxMin, vec3 boxMax)
-{
-    vec3 rbmax = (boxMax - position) / direction;
-    vec3 rbmin = (boxMin - position) / direction;
-    
-    vec3 rbminmax = max(rbmax, rbmin);
-    float fa = min(min(rbminmax.x, rbminmax.y), rbminmax.z);
-    
-    vec3 worldPos = position + direction * fa;
-    return worldPos;
 }
 
-// Calculate local reflection probe contribution
-vec3 calculateLocalReflection(vec3 worldPos, vec3 normal, vec3 viewDir, float roughness)
-{
-    vec3 reflectionColor = vec3(0.0);
-    float totalWeight = 0.0;
-    
-    for (int i = 0; i < activeProbeCount && i < 4; ++i) {
-        ReflectionProbe probe = probes[i];
-        if (probe.isActive == 0) continue;
-        
-        // Check if fragment is within probe influence
-        vec3 localPos = worldPos - probe.position;
-        if (all(greaterThan(localPos, probe.boxMin)) && all(lessThan(localPos, probe.boxMax))) {
-            
-            // Calculate blend weight based on distance to edge
-            vec3 distToEdge = min(localPos - probe.boxMin, probe.boxMax - localPos);
-            float minDist = min(min(distToEdge.x, distToEdge.y), distToEdge.z);
-            float weight = clamp(minDist / probe.blendDistance, 0.0, 1.0);
-            
-            // Calculate reflection direction
-            vec3 R = reflect(-viewDir, normal);
-            
-            // Apply box projection for more accurate local reflections
-            vec3 projectedR = boxProjection(R, worldPos, 
-                                          probe.position + probe.boxMin, 
-                                          probe.position + probe.boxMax);
-            vec3 correctedR = normalize(projectedR - probe.position);
-            
-            // Sample appropriate probe cubemap
-            vec3 probeReflection;
-            float mipLevel = roughness * 8.0; // Assuming 8 mip levels
-            
-            if (i == 0) probeReflection = textureLod(reflectionProbe0, correctedR, mipLevel).rgb;
-            else if (i == 1) probeReflection = textureLod(reflectionProbe1, correctedR, mipLevel).rgb;
-            else if (i == 2) probeReflection = textureLod(reflectionProbe2, correctedR, mipLevel).rgb;
-            else if (i == 3) probeReflection = textureLod(reflectionProbe3, correctedR, mipLevel).rgb;
-            
-            // Apply probe intensity and weight
-            reflectionColor += probeReflection * probe.intensity * weight;
-            totalWeight += weight;
-        }
-    }
-    
-    // Fallback to global environment map if no local probes
-    if (totalWeight < 0.001 && material.hasEnvironmentMap != 0) {
-        mat3 viewToWorld = transpose(mat3(view));
-        vec3 worldNormal = viewToWorld * normal;
-        vec3 worldViewDir = viewToWorld * viewDir;
-        
-        vec3 R = reflect(-worldViewDir, worldNormal);
-        float mipLevel = roughness * 8.0;
-        reflectionColor = textureLod(materialEnvironmentMap, R, mipLevel).rgb * material.environmentIntensity;
-        totalWeight = 1.0;
-    }
-    
-    return reflectionColor / max(totalWeight, 0.001);
-}
-
-// Calculate environment refraction
-vec3 calculateEnvironmentRefraction(vec3 normal, vec3 viewDir, float ior)
-{
-    if (material.hasRefractionMap == 0) return vec3(0.0);
-    
-    // Convert to world space for consistent environment mapping
-    mat3 viewToWorld = transpose(mat3(view));
-    vec3 worldNormal = viewToWorld * normal;
-    vec3 worldViewDir = viewToWorld * viewDir;
-    
-    // Calculate refraction vector in world space
-    vec3 refractionDir = refract(-worldViewDir, worldNormal, 1.0 / ior);
-    
-    // If total internal reflection occurs, fall back to reflection
-    if (length(refractionDir) < 0.001) {
-        refractionDir = reflect(-worldViewDir, worldNormal);
-    }
-    
-    // Sample environment map for refraction with slight blur for realism
-    vec3 envRefraction = vec3(0.0);
-    if (material.hasEnvironmentMap != 0) {
-        // Use slight mip bias for refracted rays to simulate scattering
-        float mipLevel = 1.0; // Slightly blurred refraction
-        envRefraction = textureLod(materialEnvironmentMap, refractionDir, mipLevel).rgb;
-    } else {
-        // Fallback color
-        envRefraction = vec3(0.7, 0.9, 1.0); // Sky-like blue
-    }
-    
-    return envRefraction * material.environmentIntensity;
-}
-
-// Enhanced environment reflection calculation
-vec3 calculateEnvironmentReflection(vec3 normal, vec3 viewDir, float roughness)
-{
-    if (material.hasEnvironmentMap == 0) return vec3(0.0);
-    
-    // Convert to world space for consistent environment mapping
-    mat3 viewToWorld = transpose(mat3(view));
-    vec3 worldNormal = viewToWorld * normal;
-    vec3 worldViewDir = viewToWorld * viewDir;
-    
-    // Calculate reflection vector in world space
-    vec3 reflectionDir = reflect(-worldViewDir, worldNormal);
-    
-    // Use roughness to determine mip level for varying reflection sharpness
-    float mipLevel = roughness * 8.0; // Assuming 8 mip levels
-    vec3 envReflection = textureLod(materialEnvironmentMap, reflectionDir, mipLevel).rgb;
-    
-    return envReflection * material.environmentIntensity;
-}
-
-// Calculate light attenuation and spot effect
+// Calculate light attenuation
 float calculateAttenuation(int lightIndex, vec3 fragPosView, out vec3 lightDir)
 {
     int lightType = int(lights[lightIndex].position_type.w);
@@ -391,9 +236,9 @@ float calculateAttenuation(int lightIndex, vec3 fragPosView, out vec3 lightDir)
         if (lightType == SPOT_LIGHT) {
             vec3 spotDir = normalize(lights[lightIndex].direction_range.xyz);
             float cosAngle = dot(-lightDir, spotDir);
-            float innerCos = lights[lightIndex].spot_angles.x;
-            float outerCos = lights[lightIndex].spot_angles.y;
-            
+            float innerCos = lights[lightIndex].spot_angles_castshadows_startOffset.x;
+            float outerCos = lights[lightIndex].spot_angles_castshadows_startOffset.y;
+
             float spotFactor = clamp((cosAngle - outerCos) / (innerCos - outerCos), 0.0, 1.0);
             attenuation *= spotFactor;
         }
@@ -460,19 +305,22 @@ vec3 calculatePBR(int lightIndex, vec3 normal, vec3 viewDir, vec3 fragPosView, v
 
 void main()
 {
+    // Get the material for this draw call from the array
+    MaterialData material = materials[vMaterialIndex];
+    
+    // Apply UV transform (scale and offset)
+    vec2 transformedUV = TexCoord * material.uvScale + material.uvOffset;
+    
     // Calculate normal (with potential normal mapping)
-    vec3 norm = calculateNormal();
+    vec3 norm = calculateNormal(material, transformedUV);
     vec3 viewDir = normalize(-ViewPos);
     
-    // Calculate world position for local reflection probes
-    vec3 worldPos = vec3(model * vec4(FragPos, 1.0));
-    
     // Sample material properties
-    vec3 albedo = getAlbedo();
-    float roughness = getRoughness();
-    float metallic = getMetallic();
-    float ao = getAO();
-    vec3 emissive = getEmissive();
+    vec3 albedo = getAlbedo(material, transformedUV);
+    float roughness = getRoughness(material, transformedUV);
+    float metallic = getMetallic(material, transformedUV);
+    float ao = getAO(material, transformedUV);
+    vec3 emissive = getEmissive(material, transformedUV);
     
     vec3 result = vec3(0.0);
     int numLights = int(lightCount.x);
@@ -490,33 +338,16 @@ void main()
             result += calculateBlinnPhong(i, norm, viewDir, ViewPos, albedo);
         }
         
-        // Add simple environment reflection for Blinn-Phong
-        vec3 envReflection = calculateLocalReflection(worldPos, norm, viewDir, 0.2);
-        result += envReflection * materialKs * 0.5;
-        
         // Add emissive
         result += emissive;
         result += materialKe;
     } else {
-        // PBR Lighting with advanced environment effects
-        vec3 F0 = vec3(material.reflectance);
+        // PBR Lighting
+        vec3 F0 = vec3(0.04); // Default dielectric F0
         F0 = mix(F0, albedo, metallic);
         
-        // Ambient lighting from environment or fallback
-        vec3 ambient = vec3(0.08) * albedo * ao;
-        if (material.hasIrradianceMap != 0) {
-            mat3 viewToWorld = transpose(mat3(view));
-            vec3 worldNormal = viewToWorld * norm;
-            
-            vec3 kS = fresnelSchlickRoughness(max(dot(norm, viewDir), 0.0), F0, roughness);
-            vec3 kD = 1.0 - kS;
-            kD *= 1.0 - metallic;
-            
-            vec3 irradiance = texture(materialIrradianceMap, worldNormal).rgb;
-            vec3 diffuse = irradiance * albedo;
-            ambient = (kD * diffuse) * ao * material.environmentIntensity;
-        }
-        
+        // Simple ambient lighting
+        vec3 ambient = vec3(0.03) * albedo * ao;
         result += ambient;
 
         // Add contribution from each light
@@ -524,54 +355,12 @@ void main()
             result += calculatePBR(i, norm, viewDir, ViewPos, albedo, F0, roughness, metallic);
         }
         
-        // Calculate Fresnel for reflection/refraction mixing
-        float cosTheta = max(dot(norm, viewDir), 0.0);
-        vec3 kS = fresnelSchlickRoughness(cosTheta, F0, roughness);
-        float fresnel = kS.r; // Use red component as scalar
-        
-        // Environment reflections (local probes with fallback)
-        vec3 envReflection = calculateLocalReflection(worldPos, norm, viewDir, roughness);
-        
-        // Environment refraction for transparent materials
-        vec3 envRefraction = vec3(0.0);
-        float transparency = material.transparency; // Use dedicated transparency field
-        if (transparency > 0.0 && material.hasRefractionMap != 0) {
-            envRefraction = calculateEnvironmentRefraction(norm, viewDir, material.indexOfRefraction);
-        }
-        
-        // Enhanced Fresnel calculation for better mixing
-        float fresnelFactor = (kS.r + kS.g + kS.b) / 3.0; // Average Fresnel as scalar
-        
-        // Mix reflection and refraction based on fresnel and material properties
-        vec3 environmentContribution = vec3(0.0);
-        if (transparency > 0.0) {
-            // For transparent materials: blend reflection and refraction
-            float reflectionStrength = fresnelFactor;
-            float refractionStrength = (1.0 - fresnelFactor) * material.transmissionFactor * transparency;
-            
-            // Normalize to ensure energy conservation
-            float totalStrength = reflectionStrength + refractionStrength;
-            if (totalStrength > 0.0) {
-                reflectionStrength /= totalStrength;
-                refractionStrength /= totalStrength;
-            }
-            
-            environmentContribution = envReflection * reflectionStrength + envRefraction * refractionStrength;
-        } else {
-            // For opaque materials: only reflection
-            environmentContribution = envReflection * kS;
-        }
-        
-        result += environmentContribution * ao;
-        
         // Energy compensation for very rough surfaces
         if (roughness > 0.7) {
             result *= mix(1.0, 1.4, (roughness - 0.7) / 0.3);
         }
         
-        // Add emissive
         result += emissive;
-        result += pbrEmissive * pbrEmissiveIntensity;
     }
     
     // Tone mapping (ACES approximation)
@@ -584,7 +373,7 @@ void main()
     // Gamma correction
     result = pow(result, vec3(1.0/2.2));
     
-    // Use alpha from transparency field
-    float alpha = 1.0 - material.transparency; // Convert transparency to alpha (1.0 = opaque, 0.0 = transparent)
+    // Use alpha directly from albedo
+    float alpha = material.albedo.a;
     FragColor = vec4(result, alpha);
 }

@@ -1,3 +1,17 @@
+/* Start Header ************************************************************************/
+/*!
+\file       AudioManager.h
+\author     Hurng Kai Rui, h.kairui, 2301278, h.kairui\@digipen.edu
+\date       15/9/2025
+\brief      AudioManager is where the FMOD audio engine is wrapped.
+			Provides a simple interface for loading, playing, and managing sounds.
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents without the
+prior written consent of DigiPen Institute of Technology is prohibited.
+*/
+/* End Header **************************************************************************/
+
 #pragma once
 
 #include "PreCompile.h"
@@ -41,6 +55,7 @@ namespace Ermine {
         static int PlaySounds(const string& strSoundName, const Vector3D& vPos = Vector3D{ 0, 0, 0 }, float fVolumedB = 0.0f);
         static void SetChannel3dPosition(int nChannelId, const Vector3D& vPosition);
         static void SetChannelVolume(int nChannelId, float fVolumedB);
+        static void SetChannelPaused(int nChannelId, bool paused);
         static bool IsPlaying(int nChannelId);
         static void StopChannel(int nChannelId);
         static void StopAllChannels();

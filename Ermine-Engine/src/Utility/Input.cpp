@@ -27,6 +27,14 @@ namespace Ermine
 	float Input::s_MouseDeltaY = 0.0f;
 	float Input::s_MouseScrollOffset = 0.0f;
 	float Input::s_MouseScrollOffsetEditor = 0.0f;
+
+	// Game mode mouse tracking
+	float Input::s_GameLastMouseX = 0.0f;
+	float Input::s_GameLastMouseY = 0.0f;
+	float Input::s_GameMouseDeltaX = 0.0f;
+	float Input::s_GameMouseDeltaY = 0.0f;
+	bool Input::s_GameMouseFirstMove = true;
+
 	std::unordered_map<int, bool> Input::s_PreviousKeyStates;
 	std::unordered_map<int, bool> Input::s_PreviousMouseButtonStates;
 	std::unordered_map<int, bool> Input::s_PreviousKeyStatesEditor;
@@ -50,7 +58,7 @@ namespace Ermine
 			return;
 		}
 
-#ifdef _DEBUG
+#if defined(EE_EDITOR)
 		// Scroll callback
 		glfwSetScrollCallback(window, []([[maybe_unused]] GLFWwindow* window, [[maybe_unused]] double offsetX, double offsetY)
 			{
@@ -69,11 +77,11 @@ namespace Ermine
 				ImGuiIO& io = ImGui::GetIO();
 				io.AddMouseButtonEvent(button, action == GLFW_PRESS);
 
-				if (s_GameInputActive)
-				{
-					// Update mouse button states
-					s_PreviousMouseButtonStates[button] = (action == GLFW_PRESS);
-				}
+				//if (s_GameInputActive)
+				//{
+				//	// Update mouse button states
+				//	s_PreviousMouseButtonStates[button] = (action == GLFW_PRESS);
+				//}
 			});
 
 		// Key callback
@@ -108,7 +116,6 @@ namespace Ermine
 
 		if (const char* keyMap = AssetManager::GetInstance().load_file_contents("../Resources/gamecontrollerdb.txt"))
 		{
-			EE_CORE_TRACE("Loading game controller database...");
 			glfwUpdateGamepadMappings(keyMap);
 			delete[] keyMap; // Release the keymap buffer
 		}
@@ -141,22 +148,22 @@ namespace Ermine
 			s_MouseDeltaY = 0.0f;
 		}
 
-		if (!s_BlockKeyboard)
-		{
-			for (auto& [key, state] : s_PreviousKeyStates)
-				state = IsKeyDown(key);
-		}
-		if (!s_BlockMouse)
-		{
-			for (auto& [button, state] : s_PreviousMouseButtonStates)
-				state = IsMouseButtonDown(button);
-		}
+		//if (!s_BlockKeyboard)
+		//{
+		//	for (auto& [key, state] : s_PreviousKeyStates)
+		//		state = IsKeyDown(key);
+		//}
+		//if (!s_BlockMouse)
+		//{
+		//	for (auto& [button, state] : s_PreviousMouseButtonStates)
+		//		state = IsMouseButtonDown(button);
+		//}
 
-		if (s_EditorInputActive)
-		{
-			for (auto& [key, state] : s_PreviousKeyStatesEditor)
-				state = IsKeyDownEditor(key);
-		}
+		//if (s_EditorInputActive)
+		//{
+		//	for (auto& [key, state] : s_PreviousKeyStatesEditor)
+		//		state = IsKeyDownEditor(key);
+		//}
 	}
 
 	void Input::SetGameInputActive(bool active)
@@ -391,43 +398,46 @@ namespace Ermine
 
 	bool Input::IsKeyPressed(int keyCode)
 	{
-		if (!s_Window || s_BlockKeyboard)
+		if (!s_Window /*|| s_BlockKeyboard*/)
 			return false;
 
 		// Check if key exists in previous states map
-		auto it = s_PreviousKeyStates.find(keyCode);
-		if (it == s_PreviousKeyStates.end())
-		{
+		if (!s_PreviousKeyStates.contains(keyCode))
 			s_PreviousKeyStates[keyCode] = false;
-		}
+		//auto it = s_PreviousKeyStates.find(keyCode);
+		//if (it == s_PreviousKeyStates.end())
+		//{
+		//	s_PreviousKeyStates[keyCode] = false;
+		//}
 
 		bool previous = s_PreviousKeyStates[keyCode];
 		bool current = IsKeyDown(keyCode);
 
-		return current && !previous;
+		bool pressed = current && !previous;
+		s_PreviousKeyStates[keyCode] = current;
+		return pressed;
 	}
 
 	bool Input::IsKeyReleased(int keyCode)
 	{
-		if (!s_Window || s_BlockKeyboard)
+		if (!s_Window /*|| s_BlockKeyboard*/)
 			return false;
 
 		// Check if key exists in previous states map
-		auto it = s_PreviousKeyStates.find(keyCode);
-		if (it == s_PreviousKeyStates.end())
-		{
+		if (!s_PreviousKeyStates.contains(keyCode))
 			s_PreviousKeyStates[keyCode] = false;
-		}
 
 		bool previous = s_PreviousKeyStates[keyCode];
 		bool current = IsKeyDown(keyCode);
 
-		return !current && previous;
+		bool released = !current && previous;
+		s_PreviousKeyStates[keyCode] = current; // update after computing result
+		return released;
 	}
 
 	bool Input::IsKeyDown(int keyCode)
 	{
-		if (!s_Window || s_BlockKeyboard)
+		if (!s_Window /*|| s_BlockKeyboard*/)
 			return false;
 
 		auto state = glfwGetKey(s_Window, keyCode);
@@ -436,43 +446,41 @@ namespace Ermine
 
 	bool Input::IsMouseButtonPressed(int button)
 	{
-		if (!s_Window || s_BlockMouse)
+		if (!s_Window /*|| s_BlockMouse*/)
 			return false;
 
 		// Check if button exists in previous states map
-		auto it = s_PreviousMouseButtonStates.find(button);
-		if (it == s_PreviousMouseButtonStates.end())
-		{
+		if (!s_PreviousMouseButtonStates.contains(button))
 			s_PreviousMouseButtonStates[button] = false;
-		}
 
 		bool previous = s_PreviousMouseButtonStates[button];
 		bool current = IsMouseButtonDown(button);
 
-		return current && !previous;
+		bool pressed = current && !previous;
+		s_PreviousMouseButtonStates[button] = current; // update after computing result
+		return pressed;
 	}
 
 	bool Input::IsMouseButtonReleased(int button)
 	{
-		if (!s_Window || s_BlockMouse)
+		if (!s_Window /*|| s_BlockMouse*/)
 			return false;
 
 		// Check if button exists in previous states map
-		auto it = s_PreviousMouseButtonStates.find(button);
-		if (it == s_PreviousMouseButtonStates.end())
-		{
+		if (!s_PreviousMouseButtonStates.contains(button))
 			s_PreviousMouseButtonStates[button] = false;
-		}
 
 		bool previous = s_PreviousMouseButtonStates[button];
 		bool current = IsMouseButtonDown(button);
 
-		return !current && previous;
+		bool released = !current && previous;
+		s_PreviousMouseButtonStates[button] = current; // update after computing result
+		return released;
 	}
 
 	bool Input::IsMouseButtonDown(int button)
 	{
-		if (!s_Window || s_BlockMouse)
+		if (!s_Window /*|| s_BlockMouse*/)
 			return false;
 
 		auto state = glfwGetMouseButton(s_Window, button);
@@ -558,5 +566,31 @@ namespace Ermine
 	std::pair<float, float> Input::GetMouseDelta()
 	{
 		return { s_MouseDeltaX, s_MouseDeltaY };
+	}
+
+	std::pair<float, float> Input::GetMouseDeltaGame()
+	{
+		if (!s_Window)
+			return { 0.0f, 0.0f };
+
+		double mouseX, mouseY;
+		glfwGetCursorPos(s_Window, &mouseX, &mouseY);
+
+		// Handle first mouse movement to avoid large delta jump
+		if (s_GameMouseFirstMove)
+		{
+			s_GameLastMouseX = static_cast<float>(mouseX);
+			s_GameLastMouseY = static_cast<float>(mouseY);
+			s_GameMouseFirstMove = false;
+			return { 0.0f, 0.0f };
+		}
+
+		s_GameMouseDeltaX = static_cast<float>(mouseX) - s_GameLastMouseX;
+		s_GameMouseDeltaY = s_GameLastMouseY - static_cast<float>(mouseY); // Reversed: y-coordinates range from bottom to top
+
+		s_GameLastMouseX = static_cast<float>(mouseX);
+		s_GameLastMouseY = static_cast<float>(mouseY);
+
+		return { s_GameMouseDeltaX, s_GameMouseDeltaY };
 	}
 }

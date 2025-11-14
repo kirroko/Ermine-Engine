@@ -1,7 +1,7 @@
 #pragma once
 /* Start Header ************************************************************************/
 /*!
-\file       Math.h
+\file       MathVector.h
 \author     Tan Si Han, t.sihan, 2301264, t.sihan\@digipen.edu
 \co-authors WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu
 \date       Sept 02, 2025
@@ -1021,6 +1021,32 @@ namespace Ermine
 
 #pragma endregion Vector4D
     /**********************************Vector4D***************************************/
+
+    /*!***********************************************************************
+    \brief
+     Converts an angle from radians to degrees.
+    \param[in] radians
+     The angle in radians.
+    \return
+     The angle in degrees.
+    *************************************************************************/
+    inline float Rad2Degree(float radians)
+    {
+        return radians * (180.0f / 3.14159265358979323846f);
+    }
+
+    /*!***********************************************************************
+    \brief
+     Converts an angle from degrees to radians.
+    \param[in] degrees
+     The angle in degrees.
+    \return
+     The angle in radians.
+    *************************************************************************/
+    inline float Degree2Rad(float degrees)
+    {
+        return degrees * (3.14159265358979323846f / 180.0f);
+    }
 }
 
 #include "Matrix3x3.h"

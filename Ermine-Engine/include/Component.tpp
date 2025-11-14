@@ -18,8 +18,19 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #include "Component.h"
 
-namespace Ermine
-{
+namespace Ermine {
+	template <typename, typename=void> struct has_ser  : std::false_type {};
+	template <typename T>
+	struct has_ser<T, std::void_t<
+	  decltype(std::declval<const T&>().Serialize(
+		  std::declval<rapidjson::Value&>(),
+		  std::declval<rapidjson::Document::AllocatorType&>()))>> : std::true_type {};
+
+	template <typename, typename=void> struct has_deser : std::false_type {};
+	template <typename T>
+	struct has_deser<T, std::void_t<
+	  decltype(std::declval<T&>().Deserialize(std::declval<const rapidjson::Value&>()))>> : std::true_type {};
+
 	/**
 	 * @brief Get the component array of type T
 	 */
@@ -65,13 +76,31 @@ namespace Ermine
 		m_TypeIndexToID.insert({typeIdx,id});
 		m_ArraysByTypeID[id] = arr;
 
-		ComponentDescriptor desc {
-		.name = nameStr,
-		.typeID = id,
-		.size = sizeof(T),
-		.has = [this](EntityID entity) { return this->HasComponent<T>(entity); }
+		auto& d   = m_Descriptors[nameStr];
+		d.name    = nameStr;
+		d.typeID  = id;
+		d.size    = sizeof(T);
+		d.has     = [this](EntityID e){ return this->HasComponent<T>(e); };
+		d.clone   = [this](EntityID src, EntityID dst){
+			if (!this->HasComponent<T>(src)) return;
+			const T& s = this->GetComponent<T>(src);
+			this->AddComponent<T>(dst, s);
 		};
-		m_Descriptors.emplace(nameStr,std::move(desc));
+
+		// Optional hooks auto-wired if T provides them
+		if constexpr (has_ser<T>::value) {
+			d.serialize = [this](EntityID e, rapidjson::Value& out, rapidjson::Document::AllocatorType& a){
+				const T& c = this->GetComponent<T>(e);
+				c.Serialize(out, a);
+			};
+		}
+		if constexpr (has_deser<T>::value) {
+			d.deserialize = [this](EntityID e, const rapidjson::Value& in){
+				if (!this->HasComponent<T>(e)) this->AddComponent<T>(e, T{});
+				auto& c = this->GetComponent<T>(e);
+				c.Deserialize(in);
+			};
+		}
 	}
 
 	template <typename T, typename CloneFn>
@@ -113,7 +142,7 @@ namespace Ermine
 		auto typeIdx = std::type_index(typeid(T));
 		auto itName = m_TypeIndexToName.find(typeIdx);
 		assert(itName != m_TypeIndexToName.end() && "Component not registered before use!");
-		return m_ComponentTypes[itName->second];
+		return m_TypeIndexToID[typeIdx];
 	}
 
 	/**

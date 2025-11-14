@@ -1,5 +1,5 @@
 project "Fmod"
-	kind "StaticLib"
+	kind "Utility"
 	language "C++"
 
 	targetdir ("bin/" .. outputdir .. "/%{prj.name}")

@@ -1,8 +1,8 @@
 /* Start Header ************************************************************************/
 /*!
 \file       AudioSystem.h
-\author     [Your Name]
-\date       [Current Date]
+\author     Hurng Kai Rui, h.kairui, 2301278, h.kairui\@digipen.edu
+\date       15/9/2025
 \brief      AudioSystem as a proper ECS System that manages audio components.
             Integrates with the Ermine ECS architecture and handles both
             GlobalAudioComponent and individual AudioComponent updates.
@@ -32,6 +32,7 @@ namespace Ermine
     private:
         // Static initialization flag
         static bool s_initialized;
+        static EntityID s_globalAudioEntity;
 
     public:
         AudioSystem() = default;
@@ -50,6 +51,11 @@ namespace Ermine
         static void PlayGlobalSFX(GlobalAudioComponent& globalAudio, int index);
         static void PlayGlobalSFX(GlobalAudioComponent& globalAudio, const std::string& name);
         static void StopGlobalMusic(GlobalAudioComponent& globalAudio);
+
+        // *** NEW: Ambience playback ***
+        static void PlayGlobalAmbience(GlobalAudioComponent& globalAudio, int index);
+        static void PlayGlobalAmbience(GlobalAudioComponent& globalAudio, const std::string& name);
+        static void StopGlobalAmbience(GlobalAudioComponent& globalAudio);
 
         // Individual AudioComponent management (instance methods)
         void UpdateAudioComponents();

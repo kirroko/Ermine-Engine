@@ -24,6 +24,9 @@ namespace Ermine::graphics
     {
         GLuint m_RendererID;
         unsigned int m_Size;
+
+        // CPU-side copy for physics / readback
+        std::vector<float> m_Data;
     public:
         /**
          * @brief Construct a new Vertex Buffer object
@@ -44,6 +47,21 @@ namespace Ermine::graphics
          * @brief Unbind the buffer
          */
         void Unbind() const;
+
+        /**
+         * @brief Get a pointer to the CPU-side copy of the vertex data
+         *
+         * Useful for physics calculations or readback operations.
+         * @return const void* Pointer to the buffer data
+         */
+        const void* GetDataPointer() const { return m_Data.data(); }
+
+        /**
+         * @brief Get the size of the buffer in bytes
+         *
+         * @return unsigned int Size of the buffer
+         */
+        unsigned int GetSize() const { return m_Size; }
     };
     
 }

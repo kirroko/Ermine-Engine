@@ -3,31 +3,35 @@ project "Jolt"
     language "C++"
     cppdialect "C++17"
 
-    buildoptions { "/bigobj", "/MP" } -- Jolt requires this flag on MSVC
+    
+    staticruntime "off"
+
+    buildoptions { "/bigobj", "/MP" }
 
     targetdir ("../../Build/bin/" .. outputdir .. "/Ermine-Editor/Jolt")
     objdir ("../../Build/obj/" .. outputdir .. "/Ermine-Editor/Jolt")
 
-	files
-	{
-	    "**.h",
-		"**.cpp"
-	}
+    files
+    {
+        "**.h",
+        "**.cpp"
+    }
 
     includedirs
     {
         "../"
     }
 
+    defines {"JPH_DEBUG_RENDERER","JPH_USE_SUBMERGENCE" }
 
-    filter "configurations:Debug"
+    filter "configurations:*Debug"
         targetname "joltD"
-        runtime "Debug"
+        runtime "Debug"   -- /MDd
         symbols "on"
 
-    filter "configurations:Release"
+    filter "configurations:*Release"
         targetname "jolt"
-        runtime "Release"
+        runtime "Release" -- /MD
         optimize "on"
 
     filter "system:windows"

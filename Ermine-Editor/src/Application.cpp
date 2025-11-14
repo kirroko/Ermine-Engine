@@ -14,8 +14,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <Window.h> // Window management for editor
 #include <Engine.h> // Core engine systems
 #include <EditorGUI.h> // ImGUI wrapper for editor
-#include <FrameController.h> // Frame rate controller
-#include <Logger.h> // Logging system
+//#include <FrameController.h> // Frame rate controller
+//#include <Logger.h> // Logging system
 
 extern "C"
 {
@@ -25,23 +25,23 @@ extern "C"
 
 using namespace Ermine;
 
+#if (defined(EE_EDITOR) || defined(EE_GAME)) && defined(EE_RELEASE)
+int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
+#else
 int main()
+#endif
 {
     Logger::Init();
-    EE_CORE_INFO("Logger Initialized");
 
-    GLFWwindow* window = Window::InitWindow(1920,1080, "Ermine Editor 0.1");
+    GLFWwindow* window = Window::InitWindow(1920,1080, "Ermine Editor 0.2");
     if (window == nullptr)
         return -1;
 
     if (!engine::Init(window)) // if engine fails to initialize
         return -1;
 
-#ifdef _DEBUG
     editor::EditorGUI::Init(window);
-#endif
 
-    EE_CORE_TRACE("Program running...");
     bool running = true;
     while (running && !Window::ShouldCloseWindow(window))
     {
@@ -53,13 +53,10 @@ int main()
         engine::Render(window);
     }
 
-#ifdef _DEBUG
     editor::EditorGUI::ShutDown();
-#endif
 
     engine::Shutdown();
     Window::ShutDownWindow(window);
-	EE_CORE_INFO("Application closed");
 
     return 0;
 }

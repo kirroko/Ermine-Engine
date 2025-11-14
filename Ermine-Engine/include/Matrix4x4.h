@@ -1,11 +1,12 @@
 /* Start Header ************************************************************************/
 /*!
 \file       Matrix4x4.h
-\author     Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu
-\date       Sept 09, 2024
+\author     Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu (60%)
+\co-authors Tan Si Han, t.sihan, 2301264, t.sihan\@digipen.edu (40%)
+\date       Sept 02, 2025
 \brief      This file contains the declaration of the Matrix4x4 structure.
 
-Copyright (C) 2024 DigiPen Institute of Technology.
+Copyright (C) 2025 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents without the
 prior written consent of DigiPen Institute of Technology is prohibited.
 */
@@ -29,6 +30,10 @@ namespace Ermine
     //        : x(_x), y(_y), z(_z), w(_w) {}
     //};
 
+#ifdef _MSC_VER
+// Supress warning: nonstandard extension used : nameless struct/union
+#pragma warning( disable : 4201 )
+#endif
     typedef union Quaternion
     {
         struct
@@ -37,7 +42,7 @@ namespace Ermine
         };
         float m[4];
 
-        Quaternion(float _x = 0.0, float _y = 0.0, float _z = 0.0, float _w = 1.0)
+        Quaternion(float _x = 0.0f, float _y = 0.0f, float _z = 0.0f, float _w = 1.0f)
             : x(_x), y(_y), z(_z), w(_w) {}
 	} Quaternion;
 
@@ -316,18 +321,177 @@ namespace Ermine
     *************************************************************************/
     void Mtx44Perspective(Matrix4x4& pResult, float fovy, float aspect, float zn, float zf);
 
-    /**
-     * @brief Implementation to create a view matrix 
-     * @param pResult The view matrix
-     * @param eye is the camera position
-     * @param center is the look-at target point
-     * @param up is the world up direction
-     */
-    void Mtx44LookAt(Matrix4x4& pResult, const Vector3D& eye, const Vector3D& center, const Vector3D& up);
+     /*!*************************************************************************
+       \brief
+         Builds a look-at (view) matrix.
+       \param[out] pResult
+         The resulting view matrix.
+       \param[in] eye
+         Position of the camera.
+       \param[in] center
+         Target point the camera looks at.
+       \param[in] up
+         Up direction vector.
+     ***************************************************************************/
+    void Mtx44LookAt(Matrix4x4& pResult, const Vector3D& eye,
+        const Vector3D& center, const Vector3D& up);
 
+    /*!*************************************************************************
+      \brief
+        Builds a rotation matrix from a quaternion.
+      \param[out] pResult
+        The resulting rotation matrix.
+      \param[in] q
+        Input quaternion.
+    ***************************************************************************/
     void Mtx44SetFromQuaternion(Matrix4x4& pResult, const Quaternion& q);
 
+    /*!*************************************************************************
+      \brief
+        Converts a rotation matrix into a quaternion.
+      \param[in] m
+        Input rotation matrix.
+      \return
+        The equivalent quaternion.
+    ***************************************************************************/
     Quaternion Mtx44GetQuaternion(const Matrix4x4& m);
 
-    Vec3 QuaternionToEuler(const Quaternion& q, bool inDegrees = true);
-}
+    /*!*************************************************************************
+      \brief
+        Converts a quaternion into Euler angles.
+      \param[in] q
+        Input quaternion.
+      \param[in] inDegrees
+        True if result should be in degrees, false for radians.
+      \return
+        Euler angles (roll, pitch, yaw).
+    ***************************************************************************/
+    Vec3 QuaternionToEuler(const Quaternion& q, bool inDegrees);
+
+    /*!*************************************************************************
+      \brief
+        Converts an angle from degrees to radians.
+      \param[in] deg
+        Angle in degrees.
+      \return
+        Angle in radians.
+    ***************************************************************************/
+    inline float DegToRad(float deg)
+    {
+        return deg * (static_cast<float>(M_PI) / 180.0f);
+    }
+    /*!*************************************************************************
+	  \brief
+	    Creates a quaternion from Euler angles given in degrees.
+	  \param[in] pitch
+	    Rotation about X-axis in degrees.
+	  \param[in] yaw
+	    Rotation about Y-axis in degrees.
+	  \param[in] roll
+	    Rotation about Z-axis in degrees.
+	  \return
+	    The resulting quaternion.
+    ***************************************************************************/
+    Quaternion FromEulerDegrees(float pitch, float yaw, float roll);
+
+    /*!***********************************************************************
+    \brief
+     Calculate the inverse of a 4x4 matrix.
+    \param[out] pResult
+     The inverted matrix.
+    \param[in] pMtx
+     The input matrix to invert.
+    \return
+     True if the matrix is invertible, false otherwise.
+    *************************************************************************/
+    bool Mtx44Inverse(Matrix4x4& pResult, const Matrix4x4& pMtx);
+
+    /*!***********************************************************************
+    \brief
+     Multiply two quaternions.
+    \param[in] lhs
+     The first quaternion.
+    \param[in] rhs
+     The second quaternion.
+    \return
+     The product of the two quaternions.
+    *************************************************************************/
+    Quaternion operator*(const Quaternion& lhs, const Quaternion& rhs);
+
+    /*!*************************************************************************
+      \brief
+        Creates a quaternion from Euler angles given in degrees.
+      \param[in] eulerDeg
+        Rotation about (X, Y, Z) axes in degrees.
+      \return
+		The resulting quaternion.
+	***************************************************************************/
+	Quaternion FromEulerDegrees(const Vec3& eulerDeg);
+
+    /*!*************************************************************************
+      \brief
+        Normalizes a quaternion.
+      \param[in] q
+        Input quaternion.
+      \return
+        Normalized quaternion.
+    ***************************************************************************/
+    Quaternion QuaternionNormalize(const Quaternion& q);
+
+    /*!*************************************************************************
+      \brief
+        Multiplies two quaternions.
+      \param[in] a
+        First quaternion.
+      \param[in] b
+        Second quaternion.
+      \return
+        The product quaternion.
+    ***************************************************************************/
+    Quaternion QuaternionMultiply(const Quaternion& a, const Quaternion& b);
+
+    /*!*************************************************************************
+      \brief
+        Returns the conjugate of a quaternion.
+      \param[in] q
+        Input quaternion.
+      \return
+        Conjugated quaternion.
+    ***************************************************************************/
+    Quaternion QuaternionConjugate(const Quaternion& q);
+
+    /*!*************************************************************************
+      \brief
+        Rotates a vector by a quaternion.
+      \param[in] q
+        Rotation quaternion.
+      \param[in] v
+        Vector to rotate.
+      \return
+        Rotated vector.
+    ***************************************************************************/
+    Vector3D QuaternionRotateVector(const Quaternion& q, const Vector3D& v);
+
+    /*!*************************************************************************
+      \brief
+        Creates a quaternion from an axis and rotation angle.
+      \param[in] axis
+        Axis of rotation.
+      \param[in] angleRad
+        Rotation angle in radians.
+      \return
+        The resulting quaternion.
+    ***************************************************************************/
+    Quaternion QuaternionFromAxisAngle(const Vector3D& axis, float angleRad);
+
+    /*!*************************************************************************
+      \brief
+        Converts a quaternion into axis-angle representation.
+      \param[in] q
+        Input quaternion.
+      \param[out] axis
+        Resulting rotation axis.
+      \param[out] angleRad
+        Resulting rotation angle in radians.
+    ***************************************************************************/
+    void QuaternionToAxisAngle(const Quaternion& q, Vector3D& axis, float& angleRad); }

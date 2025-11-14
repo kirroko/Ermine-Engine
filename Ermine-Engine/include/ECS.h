@@ -15,6 +15,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #include "Component.h"
 #include "Systems.h"
+#include "GuidRegistry.h"
 
 namespace Ermine
 {
@@ -23,6 +24,7 @@ namespace Ermine
 		std::unique_ptr<ComponentManager> m_ComponentManager;
 		std::unique_ptr<EntityManager> m_EntityManager;
 		std::unique_ptr<SystemManager> m_SystemManager;
+		std::unique_ptr<GuidRegistry> m_GuidRegistry;
 
 		ECS() = default;
 		~ECS() = default;
@@ -66,11 +68,18 @@ namespace Ermine
 		void DestroyEntity(EntityID entity) const;
 
 		/**
+		 * @brief Destroy all entities and reclaim IDs
+		 * Destroys all entities that have components (notifying components/systems),
+		 * then resets the EntityManager to reclaim IDs for entities without components.
+		 */
+		void ClearAllEntities();
+
+		/**
 		 * @brief Clone an entity
 		 * @param entity The entity to clone
 		 * @return The ID of the cloned entity
 		 */
-		EntityID CloneEntity(EntityID entity);
+		EntityID CloneEntity(EntityID entity) const;
 
 		/**
 		 * @brief Get the number of living entities in the ECS
@@ -205,6 +214,21 @@ namespace Ermine
 		{
 			return m_EntityManager->IsEntityAlive(entity);
 		}
+
+		GuidRegistry& GetGuidRegistry() const { return *m_GuidRegistry; }
+
+		template<typename Fn>
+		void ForEachComponentType(Fn&& fn) const
+		{
+			m_ComponentManager->ForEachComponentType(std::forward<Fn>(fn));
+		}
+
+		const ComponentDescriptor* GetDescriptor(std::string_view name) const
+		{
+			return m_ComponentManager->GetDescriptor(name);
+		}
+
+		void ResyncAllSignaturesFromStorage();
 	};
 }
 #include "ECS.tpp"

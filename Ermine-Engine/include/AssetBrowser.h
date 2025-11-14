@@ -1,9 +1,14 @@
 /* Start Header ************************************************************************/
 /*!
 \file       AssetBrowser.h
-\author     LEE Wen Jie, Brian, wenjiebrian.lee, 2301261, wenjiebrian.lee\@digipen.edu
-\date       02/09/2025
-\brief      This file contains declarations for for ImGUI UI Asset Browser.
+\author     LEE Wen Jie, Brian, wenjiebrian.lee, 2301261, wenjiebrian.lee\@digipen.edu (30%)
+\co-author  Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu (70%)
+\date       18/10/2025
+\brief      This file contains the declaration of the ImGui-based Asset Browser system.
+            It provides UI functionality for browsing, previewing, and managing
+            project assets such as textures, audio, and shaders. It includes a
+            folder tree view, search filtering, context menus, and file
+            management features.
 
 Copyright (C) 2025 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents without the
@@ -25,203 +30,275 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #endif
 #endif
 
-#define IM_MIN(A, B)            (((A) < (B)) ? (A) : (B))
-#define IM_MAX(A, B)            (((A) >= (B)) ? (A) : (B))
-#define IM_CLAMP(V, MN, MX)     ((V) < (MN) ? (MN) : (V) > (MX) ? (MX) : (V))
-
 namespace Ermine {
-    namespace ImguiUI {
-        //inline constexpr const char* categories[] = { "Audio", "Images", "Fonts", "Prefabs", "Scenes" };
-        inline constexpr const char* categories[] = { "Textures", "Shaders" };
-        struct SelectionWithDeletion : ImGuiSelectionBasicStorage
-        {
-            int ApplyDeletionPreLoop(ImGuiMultiSelectIO* ms_io, int items_count);
+	class ResourcePipeline;
+	struct TextureImportSettings;
+	struct MeshImportSettings;
+}
 
-            template<typename ITEM_TYPE>
-            void ApplyDeletionPostLoop(ImGuiMultiSelectIO* ms_io, ImVector<ITEM_TYPE>& items, int item_curr_idx_to_select)
-            {
-                ImVector<ITEM_TYPE> new_items;
-                new_items.reserve(items.Size - Size);
-                int item_next_idx_to_select = -1;
-                for (int idx = 0; idx < items.Size; idx++)
-                {
-                    if (!Contains(GetStorageIdFromIndex(idx)))
-                        new_items.push_back(items[idx]);
-                    if (item_curr_idx_to_select == idx)
-                        item_next_idx_to_select = new_items.Size - 1;
-                }
-                items.swap(new_items);
-
-                Clear();
-                if (item_next_idx_to_select != -1 && ms_io->NavIdSelected)
-                    SetItemSelected(GetStorageIdFromIndex(item_next_idx_to_select), true);
-            }
-        };
-
-        struct Asset
-        {
-            ImGuiID ID;
-            int     Type;
-            std::string Name;
-            bool IsSelected;
-            ImTextureID Icon;
-            std::string realName;
-
-            Asset(ImGuiID id, int type, std::string name, bool select, ImTextureID icon, std::string _realName);
-            Asset(ImGuiID id, int type, std::string name, bool select, ImTextureID icon);
-
-            static const ImGuiTableSortSpecs* current_sortSpecs;
-
-            static int IMGUI_CDECL CompareWithSortSpecs(const void* lhs, const void* rhs);
-            static void SortWithSortSpecs(ImGuiTableSortSpecs* sort_specs, Asset* items, int items_count);
-        };
-
-        struct Browser
-        {
-            // Options
-            bool            ShowTypeOverlay = true;
-            bool            AllowSorting = true;
-            bool            AllowDragUnselected = false;
-            bool            AllowBoxSelect = true;
-            float           IconSize = 120.0f;
-            int             IconSpacing = 30;
-            int             IconHitSpacing = 4;
-            bool            StretchSpacing = true;
-
-            // State
-            std::vector<std::string> ItemNames;
-            ImVector<Asset> Items;
-            ImVector<Asset*> filteredAssets;
-            SelectionWithDeletion Selection;
-            ImGuiID         NextItemId = 0;
-            bool            RequestDelete = false;
-            bool            RequestSort = false;
-            float           ZoomWheelAccum = 0.0f;
+namespace Ermine::ImguiUI
+{
+	/**
+	 * @struct Asset
+	 * @brief Represents an asset in the asset browser.
+	 * An asset can be of various types such as audio, texture, or font.
+	 * It contains metadata including a unique ID, type, name, selection state, icon, and real file name.
+	 */
+	struct Asset
+	{
+		ImGuiID ID;			  // Unique identifier for the asset
+		int Type;			  // 0 = Audio, 1 = Texture, 2 = Font
+		std::string Name;	  // Display name of the asset
+		bool IsSelected;	  // Selection state
+		ImTextureID Icon;	  // Icon representing the asset
+		std::string realName; // Actual file name of the asset
 
 
-            ImVec2          LayoutItemSize;
-            ImVec2          LayoutItemStep;
-            float           LayoutItemSpacing = 0.0f;
-            float           LayoutSelectableSpacing = 0.0f;
-            float           LayoutOuterPadding = 0.0f;
-            int             LayoutColumnCount = 0;
-            int             LayoutLineCount = 0;
+		bool needsReimport = false;      // Source file modified
+		bool isProcessedAsset = false;   // Is .dds, .mesh, .skin
+		std::string sourceFile;          // Original source if processed
 
-            ImVector<std::string> myStrings;
-            ImTextureID placeholderIcon = 0;
+		/**
+		 * @brief Construct an asset with all fields.
+		 * @param id Unique identifier for the asset.
+		 * @param type Type of the asset (0 = Audio, 1 = Texture, 2 = Font).
+		 * @param name Display name of the asset.
+		 * @param select Selection state of the asset.
+		 * @param icon Icon representing the asset.
+		 * @param _realName Actual file name of the asset.
+		 * @return An instance of the Asset struct.
+		 */
+		Asset(ImGuiID id, int type, std::string name, bool select, ImTextureID icon, std::string realName)
+			: ID(id), Type(type), Name(std::move(name)), IsSelected(select), Icon(icon), realName(std::move(realName)) {}
+	};
 
-            // Functions
-            Browser();
-            void AddItems(int count, int type, std::string name);
-            void ClearItems();
-            const ImVector<Asset>& GetItems() const;
-            const std::vector<std::string>& GetItemNames() const;
-            const int GetType(ImGuiID id) const;
-            void ClearItemNames();
-            void UpdateLayoutSizes(float avail_width);
-            std::string ExtractFileName(const std::string& filePath);
-            std::string GetFileExtension(const std::string& path);
-            bool CopyFileToAssets(const std::string& sourceFilePath);
-            void HandleDroppedFiles(const std::vector<std::string>& filePaths);
-            std::string GetDirectories();
-            std::string GetSelectedFilePath(std::string name);
-            void Draw(const char* title);
+	/**
+	 * @struct Browser
+	 * @brief Manages the state and functionality of the asset browser.
+	 * It handles directory navigation, item management, UI layout, and rendering.
+	 * The browser supports searching, displaying icons, and interacting with assets.
+	 */
+	struct Browser
+	{
+		// --- Paths and State ---
+		std::filesystem::path projectRoot;		// Root path of the project
+		std::filesystem::path currentDirectory; // Currently viewed directory
+		std::vector<Asset> Items;				// List of assets in the current directory
+		std::string isSelectedFile;				// Currently selected file
+		bool pendingRefresh = false;			// Flag to check to refresh assets
 
-            // Reference to functions for creating Game Objects with components using Asset Browser //
+		// --- UI State ---
+		std::string searchQuery;				// Current search query
+		float iconSize;							// Size of the icons
+		float iconSpacing;						// Spacing between icons
 
-            /*bool CreateObjectWithAsset(ImGuiID id) {
-                GameObject* newObj;
-                std::string name = "GameObject_" + std::to_string(GAMEOBJECTFACTORY.GetGameObjects().size());
-                newObj = GAMEOBJECTFACTORY.CreateGameObject(name);
+		// --- Icons ---
+		ImTextureID folderIcon = 0;				// Icon for folders
+		ImTextureID fileIcon = 0;				// Icon for generic files
+		ImTextureID refreshIcon = 0;			// Icon for refresh action
+		bool iconsInitialized = false;			// Flag to check if icons are initialized
 
-                if (!newObj)
-                    return false;
+		// --- Rename modal state ---
+		bool renamePending = false;				// Flag to indicate if a rename operation is pending
+		std::string renameFrom;					// Original name before renaming
+		std::string renameTo;					// New name after renaming
+		char renameBuffer[256] = { 0 };			// Buffer for rename input
 
-                if (Items[id].Type == 0) {
-                    newObj->AddComponent(Component::ComponentType::Audio);
-                    BS::Component::AudioComponent* audio = newObj->GetComponent<BS::Component::AudioComponent>();
 
-                    if (!audio)
-                        return false;
+		Ermine::ResourcePipeline* m_Pipeline = nullptr;
 
-                    audio->SetAudio(GetItemNames()[id]);
-                    return true;
-                }
-                if (Items[id].Type == 1) {
-                    newObj->AddComponent(Component::ComponentType::Renderer);
-                    BS::Component::RendererComponent* renderer = newObj->GetComponent<BS::Component::RendererComponent>();
+		/**
+		 * @brief Default constructor that initializes the asset browser state.
+		 */
+		Browser();
 
-                    if (!renderer)
-                        return false;
+		void InitWithPipeline(Ermine::ResourcePipeline* pipeline);
 
-                    renderer->SetTextureName(GetItemNames()[id]);
-                    return true;
-                }
-                if (Items[id].Type == 2) {
-                    newObj->AddComponent(Component::ComponentType::Text);
-                    BS::Component::TextComponent* text = newObj->GetComponent<BS::Component::TextComponent>();
+		/**
+		 * @brief Loads all required icons for folders, files, and refresh buttons.
+		 */
+		void InitIcons();
 
-                    if (!text)
-                        return false;
+		/**
+		 * @brief Retrieves or generates an icon preview for the given file.
+		 * @param path Filesystem path to the target file.
+		 * @return ImTextureID handle for the appropriate preview icon.
+		 */
+		ImTextureID GetPreviewIconForFile(const std::filesystem::path& path);
 
-                    text->SetFontType(GetItemNames()[id]);
-                    return true;
-                }
+		/**
+		 * @brief Refreshes the current directory contents.
+		 * This function reloads assets and updates their display icons
+		 * and metadata, typically called after changes to the filesystem.
+		 */
+		void Refresh();
 
-                return false;
-            }*/
+		/**
+		 * @brief Loads all files and subfolders from the specified directory.
+		 * @param dir Path to the directory to be loaded.
+		 */
+		void LoadDirectoryContents(const std::filesystem::path& dir);
 
-            /*bool CreateComponentWithAsset(ImGuiID id, IObject* obj) {
-                if (!obj)
-                    return false;
+		/**
+		 * @brief Handles files dropped into the asset browser window.
+		 * @param filePaths Vector of paths representing dropped files.
+		 */
+		void HandleDroppedFiles(const std::vector<std::string>& filePaths);
 
-                if (Items[id].Type == 0) {
-                    obj->AddComponent(Component::ComponentType::Audio);
-                    BS::Component::AudioComponent* audio = obj->GetComponent<BS::Component::AudioComponent>();
+		/**
+		 * @brief Copies an external file into the asset folder.
+		 * @param sourceFilePath Path to the file being imported.
+		 * @return True if the file was successfully copied, false otherwise.
+		 */
+		bool CopyFileToAssets(const std::string& sourceFilePath);
 
-                    if (!audio)
-                        return false;
+		/**
+		 * @brief Displays and processes right-click context menu for a file.
+		 * @param filePath Path to the target file.
+		 */
+		void HandleFileContextMenu(const std::filesystem::path& filePath);
 
-                    audio->SetAudio(GetItemNames()[id]);
-                    return true;
-                }
-                if (Items[id].Type == 1) {
-                    obj->AddComponent(Component::ComponentType::Renderer);
-                    BS::Component::RendererComponent* renderer = obj->GetComponent<BS::Component::RendererComponent>();
+		/**
+		 * @brief Draws the hierarchical folder tree on the left panel.
+		 * @param rootPath Root path for the folder tree traversal.
+		 */
+		void DrawFolderTree(const std::filesystem::path& rootPath);
 
-                    if (!renderer)
-                        return false;
+		/**
+		 * @brief Draws the grid of files and folders in the right panel.
+		 * Handles file selection, double-click navigation, and contextual
+		 * interactions like new folder creation and refresh.
+		 */
+		void DrawFileGrid();
 
-                    renderer->SetTextureName(GetItemNames()[id]);
-                    return true;
-                }
-                if (Items[id].Type == 2) {
-                    obj->AddComponent(Component::ComponentType::Text);
-                    BS::Component::TextComponent* text = obj->GetComponent<BS::Component::TextComponent>();
+		/**
+		 * @brief Renders the main asset browser window, including both
+		 * the folder tree and the file grid.
+		 * @param title Title of the ImGui window.
+		 */
+		void Draw(const char* title);
 
-                    if (!text)
-                        return false;
+		// Reference to functions for creating Game Objects with components using Asset Browser //
 
-                    text->SetFontType(GetItemNames()[id]);
-                    return true;
-                }
+		/*bool CreateObjectWithAsset(ImGuiID id) {
+			GameObject* newObj;
+			std::string name = "GameObject_" + std::to_string(GAMEOBJECTFACTORY.GetGameObjects().size());
+			newObj = GAMEOBJECTFACTORY.CreateGameObject(name);
 
-                return false;
-            }*/
-        };
+			if (!newObj)
+				return false;
 
-        class AssetBrowser : public ImGUIWindow
-        {
-        public:
-            AssetBrowser() : ImGUIWindow("Asset Browser IMGUI") {}
+			if (Items[id].Type == 0) {
+				newObj->AddComponent(Component::ComponentType::Audio);
+				BS::Component::AudioComponent* audio = newObj->GetComponent<BS::Component::AudioComponent>();
 
-            void Update() override;
+				if (!audio)
+					return false;
 
-            void Render() override;
+				audio->SetAudio(GetItemNames()[id]);
+				return true;
+			}
+			if (Items[id].Type == 1) {
+				newObj->AddComponent(Component::ComponentType::Renderer);
+				BS::Component::RendererComponent* renderer = newObj->GetComponent<BS::Component::RendererComponent>();
 
-            Browser assets_browser;
-        private:
-            int m_objToSpawn{ 0 };
-        };
-    }
+				if (!renderer)
+					return false;
+
+				renderer->SetTextureName(GetItemNames()[id]);
+				return true;
+			}
+			if (Items[id].Type == 2) {
+				newObj->AddComponent(Component::ComponentType::Text);
+				BS::Component::TextComponent* text = newObj->GetComponent<BS::Component::TextComponent>();
+
+				if (!text)
+					return false;
+
+				text->SetFontType(GetItemNames()[id]);
+				return true;
+			}
+
+			return false;
+		}*/
+
+		/*bool CreateComponentWithAsset(ImGuiID id, IObject* obj) {
+			if (!obj)
+				return false;
+
+			if (Items[id].Type == 0) {
+				obj->AddComponent(Component::ComponentType::Audio);
+				BS::Component::AudioComponent* audio = obj->GetComponent<BS::Component::AudioComponent>();
+
+				if (!audio)
+					return false;
+
+				audio->SetAudio(GetItemNames()[id]);
+				return true;
+			}
+			if (Items[id].Type == 1) {
+				obj->AddComponent(Component::ComponentType::Renderer);
+				BS::Component::RendererComponent* renderer = obj->GetComponent<BS::Component::RendererComponent>();
+
+				if (!renderer)
+					return false;
+
+				renderer->SetTextureName(GetItemNames()[id]);
+				return true;
+			}
+			if (Items[id].Type == 2) {
+				obj->AddComponent(Component::ComponentType::Text);
+				BS::Component::TextComponent* text = obj->GetComponent<BS::Component::TextComponent>();
+
+				if (!text)
+					return false;
+
+				text->SetFontType(GetItemNames()[id]);
+				return true;
+			}
+
+			return false;
+		}*/
+		private:
+			void CheckImportStatus(Asset& asset);
+			void HandleImportContextMenu(const std::filesystem::path& filePath);
+	};
+
+	/**
+	 * @class AssetBrowser
+	 * @brief ImGUI window for browsing and managing assets.
+	 * The AssetBrowser class provides a user interface for navigating directories,
+	 * viewing assets, and performing actions such as searching, selecting, and importing assets.
+	 */
+	class AssetBrowser : public ImGUIWindow
+	{
+	public:
+		/**
+		 * @brief Construct an AssetBrowser window with a default title.
+		 * The window allows users to browse and manage assets.
+		 */
+		AssetBrowser() : ImGUIWindow("Asset Browser IMGUI") {}
+
+		void InitWithPipeline(Ermine::ResourcePipeline* pipeline) {
+			assets_browser.InitWithPipeline(pipeline);
+		}
+
+		/**
+		 * @brief Render the AssetBrowser window.
+		 * This function is responsible for drawing the asset browser UI,
+		 * including the directory tree, asset grid, and context menus.
+		 */
+		void Render() override;
+		
+		/**
+		 * @brief Static callback for handling external files dropped into the asset browser.
+		 * @param filePaths Vector of paths representing dropped files.
+		 */
+		static void OnExternalFilesDropped(const std::vector<std::string>& filePaths);
+
+		Browser& GetBrowser() { return assets_browser; }
+
+	private:
+		Browser assets_browser; // Access the underlying Browser instance.
+	};
 }

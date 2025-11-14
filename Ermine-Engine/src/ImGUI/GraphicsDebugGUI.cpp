@@ -20,6 +20,9 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "GPUProfiler.h"
 #include "Logger.h"
 #include "shadow_config.h"
+#include "Material.h"
+#include "FrameController.h"
+#include "AssetManager.h"
 
 using namespace Ermine::editor;
 using namespace Ermine::graphics;
@@ -27,6 +30,11 @@ using namespace Ermine::graphics;
 // Helper function for formatting numbers
 namespace
 {
+    /**
+     * @brief Formats a large integer value into a human-readable string with units (K, M, B, T).
+     * @param value The value to format.
+     * @return Formatted string.
+     */
     std::string FormatNumber(uint64_t value)
     {
         struct Unit { uint64_t base; const char* suffix; };
@@ -65,11 +73,18 @@ namespace
     }
 }
 
+/**
+ * @brief Constructs a GraphicsDebugGUI window with the given title.
+ * @param title The window title.
+ */
 GraphicsDebugGUI::GraphicsDebugGUI(const std::string& title)
     : ImGUIWindow(title), m_title(title)
 {
 }
 
+/**
+ * @brief Updates the debug GUI, rendering all graphics-related controls and metrics.
+ */
 void GraphicsDebugGUI::Update()
 {
     auto renderer = ECS::GetInstance().GetSystem<Renderer>();
@@ -77,9 +92,14 @@ void GraphicsDebugGUI::Update()
         ImGui::Begin(m_title.c_str());
         ImGui::Text("Renderer system not available");
         ImGui::End();
-        return;
     }
+}
 
+/**
+ * @brief Renders the GUI window. All rendering is handled in Update().
+ */
+void GraphicsDebugGUI::Render()
+{
     ImGui::Begin(m_title.c_str());
 
     // Create collapsible sections for organized UI
@@ -88,18 +108,13 @@ void GraphicsDebugGUI::Update()
     DrawShadowMappingControls();
     DrawLightingControls();
     DrawPerformanceMetrics();
-    DrawDebugVisualization();
 
     ImGui::End();
 }
 
-void GraphicsDebugGUI::Render()
-{
-    // The ImGUIWindow base class requires this method
-    // For this GUI, all rendering is done in Update()
-    // This method is called by the editor framework but can be empty
-}
-
+/**
+ * @brief Draws controls for rendering mode selection and SSAO toggle.
+ */
 void GraphicsDebugGUI::DrawRenderingModeControls()
 {
     auto renderer = ECS::GetInstance().GetSystem<Renderer>();
@@ -123,22 +138,45 @@ void GraphicsDebugGUI::DrawRenderingModeControls()
         
         ImGui::Separator();
         
-        // Deferred vs Forward Rendering Toggle
-        if (ImGui::Button("Toggle Deferred/Forward Rendering")) {
-            renderer->ToggleDeferredRendering();
-        }
-        DrawTooltip("Switch between Deferred Rendering (better for many lights) and Forward Rendering (simpler pipeline)");
-        
         // SSAO Toggle
         if (DrawToggleButton("Screen Space Ambient Occlusion", &renderer->m_SSAOEnabled, 
                             "Enable/disable Screen Space Ambient Occlusion for enhanced depth perception")) {
             EE_CORE_INFO("SSAO {}", renderer->m_SSAOEnabled ? "enabled" : "disabled");
         }
         
+        // SSAO Parameters (shown when SSAO is enabled)
+        if (renderer->m_SSAOEnabled && ImGui::TreeNode("SSAO Settings"))
+        {
+            if (ImGui::SliderInt("Sample Count", &renderer->m_SSAOSamples, 4, 64)) {
+                EE_CORE_INFO("SSAO Samples changed to {}", renderer->m_SSAOSamples);
+            }
+            DrawTooltip("Number of samples for SSAO calculation (higher = better quality but slower)");
+            
+            DrawFloatSlider("Sampling Radius", &renderer->m_SSAORadius, 0.1f, 50.0f, 
+                           "Radius of the sampling hemisphere in world space");
+            
+            DrawFloatSlider("Bias", &renderer->m_SSAOBias, 0.0f, 0.1f, 
+                           "Bias to prevent self-shadowing artifacts");
+            
+            DrawFloatSlider("Intensity", &renderer->m_SSAOIntensity, 0.0f, 5.0f, 
+                           "Strength of the ambient occlusion effect");
+            
+            DrawFloatSlider("Fadeout Distance", &renderer->m_SSAOFadeout, 0.0f, 1.0f, 
+                           "Distance factor for fading out SSAO effect");
+            
+            DrawFloatSlider("Max Distance", &renderer->m_SSAOMaxDistance, 10.0f, 500.0f, 
+                           "Maximum distance for SSAO calculation");
+            
+            ImGui::TreePop();
+        }
+        
         ImGui::Unindent(10.0f);
     }
 }
 
+/**
+ * @brief Draws controls for post-processing effects and their parameters.
+ */
 void GraphicsDebugGUI::DrawPostProcessingControls()
 {
     auto renderer = ECS::GetInstance().GetSystem<Renderer>();
@@ -208,11 +246,14 @@ void GraphicsDebugGUI::DrawPostProcessingControls()
                            "Luminance reduction multiplier");
             ImGui::TreePop();
         }
-        
+
         ImGui::Unindent(10.0f);
     }
 }
 
+/**
+ * @brief Draws controls and statistics for shadow mapping configuration.
+ */
 void GraphicsDebugGUI::DrawShadowMappingControls()
 {
     if (ImGui::CollapsingHeader("Shadow Mapping"))
@@ -243,6 +284,9 @@ void GraphicsDebugGUI::DrawShadowMappingControls()
     }
 }
 
+/**
+ * @brief Draws controls and statistics for the lighting system.
+ */
 void GraphicsDebugGUI::DrawLightingControls()
 {
     if (ImGui::CollapsingHeader("Lighting System"))
@@ -287,27 +331,51 @@ void GraphicsDebugGUI::DrawLightingControls()
     }
 }
 
+/**
+ * @brief Draws performance metrics including frame timing, draw calls, and memory usage.
+ */
 void GraphicsDebugGUI::DrawPerformanceMetrics()
 {
+    auto renderer = ECS::GetInstance().GetSystem<Renderer>();
+
     if (ImGui::CollapsingHeader("Performance Metrics", ImGuiTreeNodeFlags_DefaultOpen))
     {
         ImGui::Indent(10.0f);
-        
+
         const auto& metrics = GPUProfiler::GetMetrics();
         
         // Frame timing
         float avgFps = metrics.averageFrameTimeMs > 0.0f ? 1000.0f / metrics.averageFrameTimeMs : 0.0f;
-        ImGui::Text("FPS: %.1f (%.2f ms)", avgFps, metrics.frameTimeMs);
+        ImGui::Text("FPS: %.1f (avg: %.1f)", metrics.fps, avgFps);
+        ImGui::Text("Frame Time: %.2f ms", metrics.frameTimeMs);
         ImGui::Text("CPU Time: %.2f ms", metrics.cpuFrameTimeMs);
         ImGui::Text("GPU Time: %.2f ms", metrics.gpuFrameTimeMs);
-        
-        ImGui::Separator();
-        
+
+		ImGui::Separator();
+
         // Render statistics
         ImGui::Text("Draw Calls: %u", metrics.drawCallCount);
         ImGui::Text("Triangles: %s", FormatNumber(metrics.triangleCount).c_str());
         ImGui::Text("Vertices: %s", FormatNumber(metrics.vertexCount).c_str());
-        
+        ImGui::Text("Meshes Culled: %u", metrics.culledMeshes);
+
+        ImGui::Separator();
+
+        // Debug Visualization Controls
+        if (renderer) {
+            ImGui::Text("Debug Visualization:");
+
+            if (DrawToggleButton("Show AABBs", &renderer->m_DebugDrawAABBs,
+                                "Draw bounding boxes for all meshes (Green = visible, Red = culled)")) {
+                EE_CORE_INFO("AABB visualization {}", renderer->m_DebugDrawAABBs ? "enabled" : "disabled");
+            }
+
+            if (DrawToggleButton("Show Frustum", &renderer->m_DebugDrawFrustum,
+                                "Draw camera frustum planes (Cyan)")) {
+                EE_CORE_INFO("Frustum visualization {}", renderer->m_DebugDrawFrustum ? "enabled" : "disabled");
+            }
+        }
+
         ImGui::Separator();
         
         // Memory usage
@@ -327,34 +395,10 @@ void GraphicsDebugGUI::DrawPerformanceMetrics()
     }
 }
 
-void GraphicsDebugGUI::DrawDebugVisualization()
-{
-    if (ImGui::CollapsingHeader("Debug Visualization"))
-    {
-        ImGui::Indent(10.0f);
-        
-        if (ImGui::Button("Reload Shaders")) {
-            EE_CORE_INFO("Shader reload triggered");
-        }
-        DrawTooltip("Reload all shaders from disk (useful for shader development)");
-        
-        if (ImGui::Button("Capture Screenshot")) {
-            EE_CORE_INFO("Screenshot capture requested");
-        }
-        DrawTooltip("Capture a screenshot of the current frame");
-        
-        // Debug render modes
-        static int debugMode = 0;
-        const char* debugModes[] = { "Final Render", "Albedo Only", "Normals", "Depth", "Shadow Maps" };
-        if (ImGui::Combo("Debug View", &debugMode, debugModes, IM_ARRAYSIZE(debugModes))) {
-            EE_CORE_INFO("Debug view mode changed to: {}", debugModes[debugMode]);
-        }
-        DrawTooltip("Switch between different debug visualization modes");
-        
-        ImGui::Unindent(10.0f);
-    }
-}
-
+/**
+ * @brief Shows a tooltip for the last hovered ImGui item.
+ * @param description The tooltip text.
+ */
 void GraphicsDebugGUI::DrawTooltip(const char* description)
 {
     if (ImGui::IsItemHovered() && description) {
@@ -366,6 +410,15 @@ void GraphicsDebugGUI::DrawTooltip(const char* description)
     }
 }
 
+/**
+ * @brief Draws a float slider with a label and optional tooltip.
+ * @param label The slider label.
+ * @param value Pointer to the float value.
+ * @param min Minimum slider value.
+ * @param max Maximum slider value.
+ * @param tooltip Optional tooltip text.
+ * @return true if the value was changed.
+ */
 bool GraphicsDebugGUI::DrawFloatSlider(const char* label, float* value, float min, float max, const char* tooltip)
 {
     bool changed = ImGui::SliderFloat(label, value, min, max, "%.3f");
@@ -373,6 +426,13 @@ bool GraphicsDebugGUI::DrawFloatSlider(const char* label, float* value, float mi
     return changed;
 }
 
+/**
+ * @brief Draws a toggle button (checkbox) with a label and optional tooltip.
+ * @param label The checkbox label.
+ * @param value Pointer to the boolean value.
+ * @return true if the value was changed.
+ * @param tooltip Optional tooltip text.
+ */
 bool GraphicsDebugGUI::DrawToggleButton(const char* label, bool* value, const char* tooltip)
 {
     bool changed = ImGui::Checkbox(label, value);

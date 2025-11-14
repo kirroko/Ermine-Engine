@@ -48,7 +48,7 @@ namespace Ermine::editor
         void Render() override;
 
     private:
-        std::string m_title; ///< Window title
+        std::string m_title; /// Window title
         
         // UI organization
         void DrawRenderingModeControls();
@@ -56,7 +56,6 @@ namespace Ermine::editor
         void DrawShadowMappingControls();
         void DrawPerformanceMetrics();
         void DrawLightingControls();
-        void DrawDebugVisualization();
         
         // Helper methods
         void DrawTooltip(const char* description);

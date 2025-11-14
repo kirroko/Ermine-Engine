@@ -16,6 +16,21 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 namespace Ermine
 {
+	inline void ECS::ResyncAllSignaturesFromStorage()
+	{
+		for (EntityID e = 0; e < MAX_ENTITIES; ++e) {
+			if (!IsEntityValid(e)) continue;
+
+			SignatureID sig{};                          // same bitset type you use for systems
+			ForEachComponentType([&](const ComponentDescriptor& d) {
+				if (d.has && d.has(e))                  // generic presence check
+					sig.set(d.typeID);                  // descriptor already stores dense typeID
+			});
+
+			// Update systems?entity lists using your normal path
+			m_SystemManager->EntitySignatureChanged(e, sig);
+		}
+	}
 	/**
 	* @brief Register a component type with the ECS
 	* @tparam T The component type to register

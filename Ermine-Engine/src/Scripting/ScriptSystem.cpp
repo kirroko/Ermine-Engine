@@ -18,6 +18,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #include "Components.h"
 #include "ECS.h"
+#include "EditorGUI.h"
 #include "Logger.h"
 
 Ermine::scripting::ScriptSystem::ScriptSystem()
@@ -27,15 +28,19 @@ Ermine::scripting::ScriptSystem::ScriptSystem()
 	m_ScriptEngine->InitMono("../Ermine-ScriptAssembly/Ermine-ScriptAssembly.dll"); // TODO: Move dll into editor's build directory
 	m_ScriptEngine->LoadGameAssembly("../Ermine-ScriptSandbox/Ermine-ScriptSandbox.dll"); // TODO: Move dll into editor's build directory
 
-	// Configure MSBuild + source watcher (adjust paths as necessary)
-#ifdef _DEBUG // We only want to do this in debug cause debug in editor mode
+	// TODO: Configure MSBuild + source watcher (adjust paths as necessary)
+#if defined(EE_EDITOR) // Only in editor builds do we have hot-reload
 	// Start DLL watcher
 	m_ScriptEngine->StartWatchingGameAssembly();
 	m_ScriptEngine->ConfigureBuild(
 		"../../../../Ermine-ScriptSandbox/Ermine-ScriptSandbox.csproj",
 		"../../../../Ermine-ScriptSandbox",
 		"../Ermine-ScriptSandbox/Ermine-ScriptSandbox.dll",
-		"Debug",
+#if defined(EE_DEBUG)
+		"Editor-Debug",
+#elif defined(EE_RELEASE)
+		"Editor-Release",
+#endif
 		"x64", "MSBuild.exe");
 	m_ScriptEngine->StartWatchingScriptSources();
 #endif
@@ -43,7 +48,26 @@ Ermine::scripting::ScriptSystem::ScriptSystem()
 
 void Ermine::scripting::ScriptSystem::Update() const
 {
-#ifdef _DEBUG
+	static bool s_wasStopped = false;
+
+	if (editor::EditorGUI::s_state == editor::EditorGUI::SimState::stopped)
+	{
+		if (s_wasStopped)
+			return;
+
+		for (auto& entity : m_Entities)
+		{
+			auto& scs = ECS::GetInstance().GetComponent<ScriptsComponent>(entity);
+			for (auto& sc : scs.scripts)
+				sc.m_started = false;
+		}
+		s_wasStopped = true;
+		return;
+	}
+
+	s_wasStopped = false;
+
+#if defined(EE_EDITOR)
 	m_ScriptEngine->ProcessHotReload(
 		[this]() { this->PrepareForHotReload(); },
 		[this](bool ok) { this->FinishHotReload(ok); }
@@ -52,19 +76,43 @@ void Ermine::scripting::ScriptSystem::Update() const
 
 	for (auto& entity : m_Entities)
 	{
-		auto& sc = ECS::GetInstance().GetComponent<Script>(entity);
-
-		if (!sc.m_enabled) continue;
-
-		if (!sc.m_started) { sc.m_instance->Start(); sc.m_started = true; }
-
-		sc.m_instance->Update();
+		//auto& sc = ECS::GetInstance().GetComponent<Script>(entity);
+		auto& scs = ECS::GetInstance().GetComponent<ScriptsComponent>(entity);
+		for (auto& sc : scs.scripts)
+		{
+			sc.m_instance->SetEnabled(sc.m_enabled); // Reconcile enable state every frame
+			if (!sc.m_enabled) continue;
+			if (!sc.m_started) { sc.m_instance->Start(); sc.m_started = true; }
+			sc.m_instance->Update();
+		}
 	}
+
+	if (m_ScriptEngine)
+		m_ScriptEngine->FlushLateDestroy();
 }
 
 void Ermine::scripting::ScriptSystem::FixedUpdate() const
 {
-#ifdef _DEBUG
+	static bool s_wasStopped = false;
+
+	if (editor::EditorGUI::s_state == editor::EditorGUI::SimState::stopped)
+	{
+		if (s_wasStopped)
+			return;
+
+		for (auto& entity : m_Entities)
+		{
+			auto& scs = ECS::GetInstance().GetComponent<ScriptsComponent>(entity);
+			for (auto& sc : scs.scripts)
+				sc.m_started = false;
+		}
+		s_wasStopped = true;
+		return;
+	}
+
+	s_wasStopped = false;
+
+#if defined(EE_EDITOR)
 	m_ScriptEngine->ProcessHotReload(
 		[this]() { this->PrepareForHotReload(); },
 		[this](bool ok) { this->FinishHotReload(ok); }
@@ -73,13 +121,16 @@ void Ermine::scripting::ScriptSystem::FixedUpdate() const
 
 	for (auto& entity : m_Entities)
 	{
-		auto& sc = ECS::GetInstance().GetComponent<Script>(entity);
+		//auto& sc = ECS::GetInstance().GetComponent<Script>(entity);
+		auto& scs = ECS::GetInstance().GetComponent<ScriptsComponent>(entity);
+		for (auto& sc : scs.scripts)
+		{
+			sc.m_instance->SetEnabled(sc.m_enabled); // Reconcile enable state every frame
 
-		if (!sc.m_enabled) continue;
+			if (!sc.m_enabled) continue;
 
-		if (!sc.m_started) { sc.m_instance->Start(); sc.m_started = true; }
-
-		sc.m_instance->FixedUpdate();
+			sc.m_instance->FixedUpdate();
+		}
 	}
 }
 
@@ -90,15 +141,18 @@ void Ermine::scripting::ScriptSystem::PrepareForHotReload() const
 
 	for (auto& entity : m_Entities)
 	{
-		if (!ecs.IsEntityValid(entity) || !ecs.HasComponent<Script>(entity))
+		if (!ecs.IsEntityValid(entity) || !ecs.HasComponent<ScriptsComponent>(entity))
 			continue;
 
-		auto& sc = ecs.GetComponent<Script>(entity);
-		m_RestoreList.emplace_back(entity, sc.m_className);
-
-		// Dispose existing managed instance
-		sc.m_instance.reset();
-		sc.m_started = false;
+		//auto& sc = ecs.GetComponent<Script>(entity);
+		auto& scs = ecs.GetComponent<ScriptsComponent>(entity);
+		for (auto& sc : scs.scripts)
+		{
+			m_RestoreList.emplace_back(entity, sc.m_className);
+			// Dispose existing managed instance
+			sc.m_instance.reset();
+			sc.m_started = false;
+		}
 	}
 }
 
@@ -115,16 +169,20 @@ void Ermine::scripting::ScriptSystem::FinishHotReload(bool success) const
 
 	for (auto& [entity, className] : m_RestoreList)
 	{
-		if (!ecs.IsEntityValid(entity) || !ecs.HasComponent<Script>(entity))
+		if (!ecs.IsEntityValid(entity) || !ecs.HasComponent<ScriptsComponent>(entity))
 			continue;
 
-		auto& sc = ecs.GetComponent<Script>(entity);
-
-		// REcreate instance with same class + entity
-		sc.m_className = className;
-		auto scriptClass = std::make_unique<ScriptClass>(ScriptClass("", className));
-		sc.m_instance = std::make_unique<ScriptInstance>(std::move(scriptClass), entity);
-		sc.m_started = false;
+		//auto& sc = ecs.GetComponent<Script>(entity);
+		auto& scs = ecs.GetComponent<ScriptsComponent>(entity);
+		for (auto& sc : scs.scripts)
+		{
+			// REcreate instance with same class + entity
+			sc.m_className = className;
+			auto scriptClass = std::make_unique<ScriptClass>(ScriptClass("", className));
+			sc.m_instance = std::make_unique<ScriptInstance>(std::move(scriptClass), entity);
+			sc.m_instance->SetEnabled(sc.m_enabled);
+			sc.m_started = false;
+		}
 	}
 
 	m_RestoreList.clear();

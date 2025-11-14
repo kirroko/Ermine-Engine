@@ -2,10 +2,11 @@
 /*!
 \file       Material.h
 \author     Jeremy Lim Ting Jie, jeremytingjie.lim, 2301370, jeremytingjie.lim\@digipen.edu
+\co-author  Ridhwan Afandi, moahamedridhwan.b, 2301367, moahamedridhwan.b\@digipen.edu
 \date       Sep 9, 2025
-\brief      Material system for graphics rendering with UBO support
+\brief      Material system for graphics rendering with SSBO support
 
-Copyright (C) 2024 DigiPen Institute of Technology.
+Copyright (C) 2025 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents without the
 prior written consent of DigiPen Institute of Technology is prohibited.
 */
@@ -20,7 +21,6 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 namespace Ermine::graphics
 {
-
     /*!***********************************************************************
     \brief
         Material parameter types for type safety
@@ -33,8 +33,7 @@ namespace Ermine::graphics
         VEC4,
         INT,
         BOOL,
-        TEXTURE_2D,
-        TEXTURE_CUBE
+        TEXTURE_2D
     };
 
     /*!***********************************************************************
@@ -60,55 +59,50 @@ namespace Ermine::graphics
         MaterialParam(const Vec4& value) : type(MaterialParamType::VEC4), floatValues{ value.x, value.y, value.z, value.w } {}
         MaterialParam(int value) : type(MaterialParamType::INT), intValue(value) {}
         MaterialParam(bool value) : type(MaterialParamType::BOOL), boolValue(value) {}
-        MaterialParam(std::shared_ptr<Texture> tex, MaterialParamType texType = MaterialParamType::TEXTURE_2D)
-            : type(texType), texture(std::move(tex)) {
-        }
-        MaterialParam(std::shared_ptr<Cubemap> cube) 
-            : type(MaterialParamType::TEXTURE_CUBE), cubemap(std::move(cube)) {
-        }
+        MaterialParam(std::shared_ptr<Texture> tex) : type(MaterialParamType::TEXTURE_2D), texture(std::move(tex)) {}
     };
 
     /*!***********************************************************************
     \brief
-        GPU-compatible material structure
+        GPU-compatible material structure for SSBO
+        Uses std430 layout rules (no padding required)
     *************************************************************************/
-    struct MaterialUBO
+    struct MaterialSSBO
     {
-        alignas(16) Vec3 albedo { 0.8f, 0.8f, 0.8f };    // 12 bytes + 4 padding = 16 bytes (0-15)
-        alignas(4) float metallic{ 0.0f };                // 4 bytes (16-19)
-        alignas(4) float roughness{ 0.5f };               // 4 bytes (20-23)
-        alignas(4) float ao{ 1.0f };                      // 4 bytes (24-27)
-        alignas(4) float normalStrength{ 1.0f };          // 4 bytes (28-31)
-        
-        alignas(16) Vec3 emissive { 0.0f, 0.0f, 0.0f };   // 16 bytes (32-47)
-        alignas(4) float emissiveIntensity{ 0.0f };       // 4 bytes (48-51)
-        alignas(4) int shadingModel{ 0 };                 // 4 bytes (52-55) // 0 = PBR, 1 = Blinn-Phong
-        alignas(4) float reflectance{ 0.04f };            // 4 bytes (56-59)
-        alignas(4) float environmentIntensity{ 1.0f };    // 4 bytes (60-63)
-        
-        // Texture presence flags (packed as ints for std140 compatibility)
-        alignas(4) int hasAlbedoMap{ 0 };        // 4 bytes (64-67)
-        alignas(4) int hasNormalMap{ 0 };        // 4 bytes (68-71)
-        alignas(4) int hasRoughnessMap{ 0 };     // 4 bytes (72-75)
-        alignas(4) int hasMetallicMap{ 0 };      // 4 bytes (76-79)
-        
-        alignas(4) int hasAoMap{ 0 };            // 4 bytes (80-83)
-        alignas(4) int hasEmissiveMap{ 0 };      // 4 bytes (84-87)
-        alignas(4) int hasEnvironmentMap{ 0 };   // 4 bytes (88-91)
-        alignas(4) int hasIrradianceMap{ 0 };    // 4 bytes (92-95)
-        
-        // Transparency parameters (moved from albedo.alpha to dedicated transparency field)
-        alignas(4) float transparency{ 0.0f };           // 4 bytes (96-99)   // 0.0 = opaque, 1.0 = fully transparent
-        alignas(4) float indexOfRefraction{ 1.0f };     // 4 bytes (100-103) // IOR for refraction (glass ~1.5, water ~1.33)
-        alignas(4) float transmissionFactor{ 0.0f };    // 4 bytes (104-107) // How much light passes through vs reflects
-        alignas(4) int hasRefractionMap{ 0 };           // 4 bytes (108-111) // Whether material uses refraction
-        
-        // Padding to ensure proper alignment (total size should be multiple of 16)
-        alignas(4) int padding1{ 0 };            // 4 bytes (112-115)
-        alignas(4) int padding2{ 0 };            // 4 bytes (116-119)
-        alignas(4) int padding3{ 0 };            // 4 bytes (120-123)
-        alignas(4) int padding4{ 0 };            // 4 bytes (124-127)
-        // Total: 128 bytes (multiple of 16)
+        Vec4 albedo{ 0.8f, 0.8f, 0.8f, 1.0f };  // 16 bytes (0-15)
+
+        float metallic{ 0.0f };                  // 4 bytes (16-19)
+        float roughness{ 0.5f };                 // 4 bytes (20-23)
+        float ao{ 1.0f };                        // 4 bytes (24-27)
+        float normalStrength{ 1.0f };            // 4 bytes (28-31)
+
+        Vec3 emissive{ 0.0f, 0.0f, 0.0f };      // 12 bytes (32-43)
+        float emissiveIntensity{ 0.0f };         // 4 bytes (44-47)
+
+        int shadingModel{ 0 };                   // 4 bytes (48-51)
+        int hasAlbedoMap{ 0 };                   // 4 bytes (52-55)
+        int hasNormalMap{ 0 };                   // 4 bytes (56-59)
+        int hasRoughnessMap{ 0 };                // 4 bytes (60-63)
+
+        int hasMetallicMap{ 0 };                 // 4 bytes (64-67)
+        int hasAoMap{ 0 };                       // 4 bytes (68-71)
+        int hasEmissiveMap{ 0 };                 // 4 bytes (72-75)
+        float _pad0{};                           // 4 bytes (76-79) - padding for alignment
+
+        // UV Scale and Offset
+        Vec2 uvScale{ 1.0f, 1.0f };             // 8 bytes (80-87)
+        Vec2 uvOffset{ 0.0f, 0.0f };            // 8 bytes (88-95)
+
+        // Texture Array Indices (indices into bindless texture array)
+        int albedoMapIndex{ -1 };               // 4 bytes (96-99)
+        int normalMapIndex{ -1 };               // 4 bytes (100-103)
+        int roughnessMapIndex{ -1 };            // 4 bytes (104-107)
+        int metallicMapIndex{ -1 };             // 4 bytes (108-111)
+
+        int aoMapIndex{ -1 };                   // 4 bytes (112-115)
+        int emissiveMapIndex{ -1 };             // 4 bytes (116-119)
+        int _pad1{};                            // 4 bytes (120-123) - padding
+        int _pad2{};                            // 4 bytes (124-127) - padding for vec4 alignment
     };
 
     // Forward declaration
@@ -118,78 +112,72 @@ namespace Ermine::graphics
     class MaterialTemplates
     {
     public:
-        // PBR Material templates
+		// Returns a parameter map for a red PBR material.
         static std::map<std::string, MaterialParam> PBR_RED()
         {
             return {
-                {"materialAlbedo", Vec3(1.0f, 0.0f, 0.0f)},
+                {"materialAlbedo", Vec4(1.0f, 0.0f, 0.0f, 1.0f)},
                 {"materialMetallic", 0.0f},
                 {"materialRoughness", 0.3f},
-                {"materialAo", 1.0f},
-                {"materialEmissive", Vec3(0.0f, 0.0f, 0.0f)},
-                {"materialEmissiveIntensity", 0.0f},
-                {"materialNormalStrength", 1.0f},
-                {"materialShadingModel", 0}, // 0 = PBR
-                {"materialHasAlbedoMap", false},
-                {"materialHasNormalMap", false},
-                {"materialHasRoughnessMap", false},
-                {"materialHasMetallicMap", false},
-                {"materialHasAoMap", false},
-                {"materialHasEmissiveMap", false},
-                {"materialHasEnvironmentMap", false},
-                {"materialHasIrradianceMap", false}
-            };
-        }
-
-        static std::map<std::string, MaterialParam> PBR_METAL()
-        {
-            return {
-                {"materialAlbedo", Vec3(0.7f, 0.7f, 0.8f)},
-                {"materialMetallic", 1.0f},
-                {"materialRoughness", 0.1f},
                 {"materialAo", 1.0f},
                 {"materialEmissive", Vec3(0.0f, 0.0f, 0.0f)},
                 {"materialEmissiveIntensity", 0.0f},
                 {"materialNormalStrength", 1.0f},
                 {"materialShadingModel", 0},
-                {"materialHasAlbedoMap", false}, // FIXED: Don't assume texture usage
+                {"materialHasAlbedoMap", false},
                 {"materialHasNormalMap", false},
                 {"materialHasRoughnessMap", false},
                 {"materialHasMetallicMap", false},
                 {"materialHasAoMap", false},
-                {"materialHasEmissiveMap", false},
-                {"materialHasEnvironmentMap", false},
-                {"materialHasIrradianceMap", false}
+                {"materialHasEmissiveMap", false}
+            };
+        }
+        // Returns a parameter map for a metallic PBR material.
+        static std::map<std::string, MaterialParam> PBR_METAL()
+        {
+            return {
+                {"materialAlbedo", Vec4(0.7f, 0.7f, 0.8f, 1.0f)},
+                {"materialMetallic", 1.0f},  // Full metallic
+                {"materialRoughness", 0.15f}, // Slightly rough for visible reflections
+                {"materialAo", 1.0f},
+                {"materialEmissive", Vec3(0.0f, 0.0f, 0.0f)},
+                {"materialEmissiveIntensity", 0.0f},
+                {"materialNormalStrength", 1.0f},
+                {"materialShadingModel", 0},
+                {"materialHasAlbedoMap", false},
+                {"materialHasNormalMap", false},
+                {"materialHasRoughnessMap", false},
+                {"materialHasMetallicMap", false},
+                {"materialHasAoMap", false},
+                {"materialHasEmissiveMap", false}
             };
         }
 
+         // Returns a parameter map for a white PBR material.
         static std::map<std::string, MaterialParam> PBR_WHITE()
         {
             return {
-                {"materialAlbedo", Vec3(0.8f, 0.8f, 0.8f)},
+                {"materialAlbedo", Vec4(0.8f, 0.8f, 0.8f, 1.0f)},
                 {"materialMetallic", 0.0f},
                 {"materialRoughness", 0.3f},
                 {"materialAo", 1.0f},
                 {"materialEmissive", Vec3(0.0f, 0.0f, 0.0f)},
                 {"materialEmissiveIntensity", 0.0f},
                 {"materialNormalStrength", 1.0f},
-                {"materialShadingModel", 0}, // 0 = PBR
-                {"materialHasAlbedoMap", false}, // FIXED: Don't assume texture usage
+                {"materialShadingModel", 0},
+                {"materialHasAlbedoMap", false},
                 {"materialHasNormalMap", false},
                 {"materialHasRoughnessMap", false},
                 {"materialHasMetallicMap", false},
                 {"materialHasAoMap", false},
-                {"materialHasEmissiveMap", false},
-                {"materialHasEnvironmentMap", false},
-                {"materialHasIrradianceMap", false}
+                {"materialHasEmissiveMap", false}
             };
         }
-
-        // Emissive material for lights
+		// Emissive material
         static std::map<std::string, MaterialParam> EMISSIVE(const Vec3& color, float intensity)
         {
             return {
-                {"materialAlbedo", Vec3(0.0f, 0.0f, 0.0f)},
+                {"materialAlbedo", Vec4(0.0f, 0.0f, 0.0f, 1.0f)},
                 {"materialMetallic", 0.0f},
                 {"materialRoughness", 1.0f},
                 {"materialAo", 1.0f},
@@ -202,46 +190,15 @@ namespace Ermine::graphics
                 {"materialHasRoughnessMap", false},
                 {"materialHasMetallicMap", false},
                 {"materialHasAoMap", false},
-                {"materialHasEmissiveMap", false},
-                {"materialHasEnvironmentMap", false},
-                {"materialHasIrradianceMap", false}
+                {"materialHasEmissiveMap", false}
             };
         }
 
-        // Reflective material template with environment mapping
-        static std::map<std::string, MaterialParam> PBR_REFLECTIVE(float metallic = 1.0f, float roughness = 0.1f)
+        // Glass material (transparent)
+        static std::map<std::string, MaterialParam> PBR_GLASS(float transparency = 0.9f)
         {
             return {
-                {"materialAlbedo", Vec3(0.8f, 0.8f, 0.8f)},
-                {"materialMetallic", metallic},
-                {"materialRoughness", roughness},
-                {"materialAo", 1.0f},
-                {"materialEmissive", Vec3(0.0f, 0.0f, 0.0f)},
-                {"materialEmissiveIntensity", 0.0f},
-                {"materialNormalStrength", 1.0f},
-                {"materialShadingModel", 0},
-                {"materialHasAlbedoMap", false}, // FIXED: Don't assume texture usage
-                {"materialHasNormalMap", false},
-                {"materialHasRoughnessMap", false},
-                {"materialHasMetallicMap", false},
-                {"materialHasAoMap", false},
-                {"materialHasEmissiveMap", false},
-                {"materialHasEnvironmentMap", true}, // Only set environment maps for reflective materials
-                {"materialHasIrradianceMap", true},
-                {"materialReflectance", 0.04f},
-                {"materialEnvironmentIntensity", 1.0f},
-                {"materialIndexOfRefraction", 1.0f},
-                {"materialTransmissionFactor", 0.0f},
-                {"materialHasRefractionMap", false}
-            };
-        }
-        
-        // Glass material template with refraction
-        static std::map<std::string, MaterialParam> PBR_GLASS(float transparency = 0.9f, float ior = 1.5f)
-        {
-            return {
-                {"materialAlbedo", Vec3(0.95f, 0.95f, 0.95f)}, // Vec3 albedo
-                {"materialTransparency", transparency}, // Separate transparency parameter
+                {"materialAlbedo", Vec4(0.95f, 0.95f, 0.95f, 1.0f - transparency)},
                 {"materialMetallic", 0.0f},
                 {"materialRoughness", 0.05f},
                 {"materialAo", 1.0f},
@@ -254,23 +211,15 @@ namespace Ermine::graphics
                 {"materialHasRoughnessMap", false},
                 {"materialHasMetallicMap", false},
                 {"materialHasAoMap", false},
-                {"materialHasEmissiveMap", false},
-                {"materialHasEnvironmentMap", false},
-                {"materialHasIrradianceMap", false},
-                {"materialReflectance", 0.04f},
-                {"materialEnvironmentIntensity", 1.0f},
-                {"materialIndexOfRefraction", ior},
-                {"materialTransmissionFactor", transparency * 0.9f},
-                {"materialHasRefractionMap", true}
+                {"materialHasEmissiveMap", false}
             };
         }
-        
-        // Water material template
+
+        // Water material (transparent)
         static std::map<std::string, MaterialParam> PBR_WATER(float transparency = 0.7f)
         {
             return {
-                {"materialAlbedo", Vec3(0.1f, 0.3f, 0.6f)}, // Vec3 albedo
-                {"materialTransparency", transparency}, // Separate transparency parameter
+                {"materialAlbedo", Vec4(0.1f, 0.3f, 0.6f, 1.0f - transparency)},
                 {"materialMetallic", 0.0f},
                 {"materialRoughness", 0.1f},
                 {"materialAo", 1.0f},
@@ -283,21 +232,15 @@ namespace Ermine::graphics
                 {"materialHasRoughnessMap", false},
                 {"materialHasMetallicMap", false},
                 {"materialHasAoMap", false},
-                {"materialHasEmissiveMap", false},
-                {"materialHasEnvironmentMap", false},
-                {"materialHasIrradianceMap", false},
-                {"materialReflectance", 0.04f},
-                {"materialEnvironmentIntensity", 1.0f},
-                {"materialIndexOfRefraction", 1.33f}, // Water IOR
-                {"materialTransmissionFactor", transparency * 0.8f},
-                {"materialHasRefractionMap", true}
+                {"materialHasEmissiveMap", false}
             };
         }
+
     };
 
     /*!***********************************************************************
     \brief
-        Main Material class with UBO support
+        Main Material class with SSBO support
     *************************************************************************/
     class Material
     {
@@ -308,30 +251,44 @@ namespace Ermine::graphics
         // Texture slots management
         std::map<std::string, int> m_textureSlots;
         int m_nextTextureSlot = 0;
+        std::unordered_map<std::string, std::shared_ptr<Cubemap>> cubemaps;
 
-        // UBO management
-        mutable MaterialUBO m_materialData;
-        mutable bool m_uboDirty = true;
+        // SSBO management
+        mutable MaterialSSBO m_materialData;
+        mutable bool m_ssboDirty = true;
 
-        void UpdateUBOData() const
+        // Material indexing for SSBO upload
+        int m_materialIndex = -1;  // Index in the global material buffer
+
+        // Texture array indices (for bindless texture array)
+        std::map<std::string, int> m_textureArrayIndices;
+
+        /**
+         * @brief Gets the SSBO data for this material.
+         * @return Reference to MaterialSSBO.
+         */
+        void UpdateSSBOData() const
         {
-            if (!m_uboDirty) return;
+            if (!m_ssboDirty) return;
 
-            // Update material data from parameters - use Vec3 albedo only
+            // Update material data from parameters
             if (auto param = GetParameter("materialAlbedo"))
             {
-                if (param->type == MaterialParamType::VEC3 && param->floatValues.size() >= 3)
+                if (param->type == MaterialParamType::VEC4 && param->floatValues.size() >= 4)
                 {
-                    // Vec3 albedo 
-                    m_materialData.albedo = Vec3(param->floatValues[0],
+                    m_materialData.albedo = Vec4(param->floatValues[0],
                         param->floatValues[1],
-                        param->floatValues[2]);
+                        param->floatValues[2],
+                        param->floatValues[3]);
+                }
+                else if (param->type == MaterialParamType::VEC3 && param->floatValues.size() >= 3)
+                {
+                    m_materialData.albedo = Vec4(param->floatValues[0],
+                        param->floatValues[1],
+                        param->floatValues[2],
+                        1.0f);
                 }
             }
-
-            // Handle transparency separately from albedo
-            if (auto param = GetParameter("materialTransparency"))
-                m_materialData.transparency = param->floatValues[0];
 
             if (auto param = GetParameter("materialMetallic"))
                 m_materialData.metallic = param->floatValues[0];
@@ -361,19 +318,6 @@ namespace Ermine::graphics
             if (auto param = GetParameter("materialShadingModel"))
                 m_materialData.shadingModel = param->intValue;
 
-            if (auto param = GetParameter("materialReflectance"))
-                m_materialData.reflectance = param->floatValues[0];
-
-            if (auto param = GetParameter("materialEnvironmentIntensity"))
-                m_materialData.environmentIntensity = param->floatValues[0];
-
-            // Update refraction parameters (transparency now handled via albedo alpha)
-            if (auto param = GetParameter("materialIndexOfRefraction"))
-                m_materialData.indexOfRefraction = param->floatValues[0];
-
-            if (auto param = GetParameter("materialTransmissionFactor"))
-                m_materialData.transmissionFactor = param->floatValues[0];
-
             // Update texture flags
             m_materialData.hasAlbedoMap = GetParameter("materialHasAlbedoMap") &&
                 GetParameter("materialHasAlbedoMap")->boolValue ? 1 : 0;
@@ -387,44 +331,55 @@ namespace Ermine::graphics
                 GetParameter("materialHasAoMap")->boolValue ? 1 : 0;
             m_materialData.hasEmissiveMap = GetParameter("materialHasEmissiveMap") &&
                 GetParameter("materialHasEmissiveMap")->boolValue ? 1 : 0;
-            m_materialData.hasEnvironmentMap = GetParameter("materialHasEnvironmentMap") &&
-                GetParameter("materialHasEnvironmentMap")->boolValue ? 1 : 0;
-            m_materialData.hasIrradianceMap = GetParameter("materialHasIrradianceMap") &&
-                GetParameter("materialHasIrradianceMap")->boolValue ? 1 : 0;
-            m_materialData.hasRefractionMap = GetParameter("materialHasRefractionMap") &&
-                GetParameter("materialHasRefractionMap")->boolValue ? 1 : 0;
 
-            m_uboDirty = false;
+            // Update texture array indices
+            m_materialData.albedoMapIndex = GetTextureArrayIndex("materialAlbedoMap");
+            m_materialData.normalMapIndex = GetTextureArrayIndex("materialNormalMap");
+            m_materialData.roughnessMapIndex = GetTextureArrayIndex("materialRoughnessMap");
+            m_materialData.metallicMapIndex = GetTextureArrayIndex("materialMetallicMap");
+            m_materialData.aoMapIndex = GetTextureArrayIndex("materialAoMap");
+            m_materialData.emissiveMapIndex = GetTextureArrayIndex("materialEmissiveMap");
+
+            m_ssboDirty = false;
         }
 
     public:
+        /**
+         * @brief Default constructor.
+         */
         Material() = default;
-
+        /**
+         * @brief Constructs a material with a shader and optional parameters.
+         * @param shader Shared pointer to Shader.
+         * @param params Map of parameter names to MaterialParam.
+         */
         Material(std::shared_ptr<Shader> shader, const std::map<std::string, MaterialParam>& params = {})
             : m_shader(std::move(shader)), m_parameters(params) {
         }
 
         /**
-         * @brief Sets the shader for the material.
-         * @param shader A shared pointer to the shader to be set.
+         * @brief Sets the shader for this material.
+         * @param shader Shared pointer to Shader.
          */
         void SetShader(std::shared_ptr<Shader> shader) { m_shader = std::move(shader); }
-        
-        //Getter for shader
+
+        /**
+         * @brief Gets the shader associated with this material.
+         * @return Shared pointer to Shader.
+         */
         std::shared_ptr<Shader> GetShader() const { return m_shader; }
 
         /**
          * @brief Sets a material parameter.
-         * @param name The name of the parameter.
-         * @param param The parameter to set.
+         * @param name Parameter name.
+         * @param param MaterialParam value.
          */
         void SetParameter(const std::string& name, const MaterialParam& param)
         {
             m_parameters[name] = param;
-            m_uboDirty = true;
+            m_ssboDirty = true;
 
-            // Assign texture slots for textures
-            if (param.type == MaterialParamType::TEXTURE_2D || param.type == MaterialParamType::TEXTURE_CUBE)
+            if (param.type == MaterialParamType::TEXTURE_2D)
             {
                 if (m_textureSlots.find(name) == m_textureSlots.end())
                 {
@@ -432,62 +387,68 @@ namespace Ermine::graphics
                 }
             }
         }
-
         /**
-         * @brief Sets a float material parameter.
-         * @param name The name of the parameter.
-         * @param value The float value to set.
+         * @brief Sets a float parameter.
+         * @param name Parameter name.
+         * @param value Float value.
          */
         void SetFloat(const std::string& name, float value) {
             SetParameter(name, MaterialParam(value));
         }
         /**
-         * @brief Sets a `Vec3` material parameter.
-         * @param name The name of the parameter.
-         * @param value The `Vec3` value to set.
+         * @brief Sets a Vec2 parameter.
+         * @param name Parameter name.
+         * @param value Vec2 value.
+         */
+        void SetVec2(const std::string& name, const Vec2& value) {
+            SetParameter(name, MaterialParam(value));
+        }
+        /**
+         * @brief Sets a Vec3 parameter.
+         * @param name Parameter name.
+         * @param value Vec3 value.
          */
         void SetVec3(const std::string& name, const Vec3& value) {
             SetParameter(name, MaterialParam(value));
         }
         /**
-         * @brief Sets a `Vec4` material parameter.
-         * @param name The name of the parameter.
-         * @param value The `Vec4` value to set.
+         * @brief Sets a Vec4 parameter.
+         * @param name Parameter name.
+         * @param value Vec4 value.
          */
         void SetVec4(const std::string& name, const Vec4& value) {
             SetParameter(name, MaterialParam(value));
         }
-
         /**
-         * @brief Sets an integer material parameter.
-         * @param name The name of the parameter.
-         * @param value The integer value to set.
+         * @brief Sets an int parameter.
+         * @param name Parameter name.
+         * @param value Integer value.
          */
         void SetInt(const std::string& name, int value) {
             SetParameter(name, MaterialParam(value));
         }
-
         /**
-         * @brief Sets a boolean material parameter.
-         * @param name The name of the parameter.
-         * @param value The boolean value to set.
+         * @brief Sets a bool parameter.
+         * @param name Parameter name.
+         * @param value Boolean value.
          */
         void SetBool(const std::string& name, bool value) {
             SetParameter(name, MaterialParam(value));
         }
         /**
-         * @brief Sets a texture material parameter.
-         * @param name The name of the parameter.
-         * @param texture A shared pointer to the texture to set.
+         * @brief Sets a texture parameter.
+         * @param name Parameter name.
+         * @param texture Shared pointer to Texture.
          */
         void SetTexture(const std::string& name, std::shared_ptr<Texture> texture)
         {
             SetParameter(name, MaterialParam(std::move(texture)));
         }
+
         /**
-         * @brief Gets a texture
-         * @param name The name of the parameter.
-         * @return texture A shared pointer to the texture to set.
+         * @brief Gets a texture parameter.
+         * @param name Parameter name.
+         * @return Shared pointer to Texture, or nullptr if not found.
          */
         std::shared_ptr<Texture> GetTexture(const std::string& name)
         {
@@ -498,51 +459,47 @@ namespace Ermine::graphics
                     return param->texture;
                 }
             }
-			return nullptr;
-        }
-
-        /**
-         * @brief Sets a cubemap material parameter.
-         * @param name The name of the parameter.
-         * @param cubemap A shared pointer to the cubemap to set.
-         */
-        void SetCubemap(const std::string& name, std::shared_ptr<Cubemap> cubemap)
-        {
-            SetParameter(name, MaterialParam(std::move(cubemap)));
+            return nullptr;
         }
         /**
-         * @brief Checks if a material parameter exists.
-         * @param name The name of the parameter.
-         * @return True if the parameter exists, false otherwise.
+         * @brief Checks if a parameter exists.
+         * @param name Parameter name.
+         * @return true if parameter exists, false otherwise.
          */
         bool HasParameter(const std::string& name) const
         {
             return m_parameters.find(name) != m_parameters.end();
         }
-
         /**
-         * @brief Gets a material parameter by name.
-         * @param name The name of the parameter.
-         * @return A pointer to the material parameter, or nullptr if not found.
+         * @brief Gets a parameter by name.
+         * @param name Parameter name.
+         * @return Pointer to MaterialParam, or nullptr if not found.
          */
         const MaterialParam* GetParameter(const std::string& name) const
         {
             auto it = m_parameters.find(name);
             return it != m_parameters.end() ? &it->second : nullptr;
         }
-
         /**
-         * @brief Retrieves the material's UBO data for binding.
-         * @return A reference to the material's UBO data.
+         * @brief Gets the SSBO data for this material.
+         * @return Reference to MaterialSSBO.
          */
-        const MaterialUBO& GetUBOData() const
+        const MaterialSSBO& GetSSBOData() const
         {
-            UpdateUBOData();
+            UpdateSSBOData();
             return m_materialData;
         }
 
         /**
-         * @brief Binds all textures associated with the material.
+         * @brief Checks if the material SSBO data is dirty and needs GPU update.
+         * @return True if material has been modified since last GPU upload.
+         */
+        bool IsDirty() const
+        {
+            return m_ssboDirty;
+        }
+        /**
+         * @brief Binds all textures associated with this material.
          */
         void BindTextures() const
         {
@@ -550,7 +507,7 @@ namespace Ermine::graphics
 
             for (const auto& [name, param] : m_parameters)
             {
-                if (param.type == MaterialParamType::TEXTURE_2D && 
+                if (param.type == MaterialParamType::TEXTURE_2D &&
                     param.texture && param.texture->IsValid())
                 {
                     auto slotIt = m_textureSlots.find(name);
@@ -560,21 +517,10 @@ namespace Ermine::graphics
                         m_shader->SetUniform1i(name, slotIt->second);
                     }
                 }
-                else if (param.type == MaterialParamType::TEXTURE_CUBE &&
-                         param.cubemap && param.cubemap->IsValid())
-                {
-                    auto slotIt = m_textureSlots.find(name);
-                    if (slotIt != m_textureSlots.end())
-                    {
-                        param.cubemap->Bind(slotIt->second);
-                        m_shader->SetUniform1i(name, slotIt->second);
-                    }
-                }
             }
         }
-
         /**
-         * @brief Binds the material's shader and textures for rendering.
+         * @brief Binds the material's shader and textures.
          */
         void Bind() const
         {
@@ -582,13 +528,11 @@ namespace Ermine::graphics
             m_shader->Bind();
             BindTextures();
         }
-
         /**
-         * @brief Unbinds the material's shader and textures after rendering.
+         * @brief Unbinds all textures and the shader.
          */
         void Unbind() const
         {
-            // Unbind textures
             for (const auto& [name, param] : m_parameters)
             {
                 if (param.type == MaterialParamType::TEXTURE_2D &&
@@ -596,19 +540,13 @@ namespace Ermine::graphics
                 {
                     param.texture->Unbind();
                 }
-                else if (param.type == MaterialParamType::TEXTURE_CUBE &&
-                         param.cubemap && param.cubemap->IsValid())
-                {
-                    param.cubemap->Unbind();
-                }
             }
 
             if (m_shader) m_shader->Unbind();
         }
-
         /**
-         * @brief Loads a material template into the material.
-         * @param templateParams The template parameters to load.
+         * @brief Loads a material template into this material.
+         * @param templateParams Map of parameter names to MaterialParam.
          */
         void LoadTemplate(const std::map<std::string, MaterialParam>& templateParams)
         {
@@ -617,10 +555,9 @@ namespace Ermine::graphics
                 SetParameter(name, param);
             }
         }
-
-         /**
-         * @brief Copy constructor and assignment
-         * @param other The material to copy from.
+        /**
+         * @brief Copy constructor.
+         * @param other Material to copy from.
          */
         Material(const Material& other)
             : m_parameters(other.m_parameters)
@@ -628,13 +565,13 @@ namespace Ermine::graphics
             , m_textureSlots(other.m_textureSlots)
             , m_nextTextureSlot(other.m_nextTextureSlot)
             , m_materialData(other.m_materialData)
-            , m_uboDirty(true)
+            , m_ssboDirty(true)
         {
         }
         /**
-         * @brief Assignment operator for the Material class.
-         * @param other The material to copy from.
-         * @return A reference to the current material after the assignment.
+         * @brief Copy assignment operator.
+         * @param other Material to copy from.
+         * @return Reference to this material.
          */
         Material& operator=(const Material& other)
         {
@@ -645,9 +582,91 @@ namespace Ermine::graphics
                 m_textureSlots = other.m_textureSlots;
                 m_nextTextureSlot = other.m_nextTextureSlot;
                 m_materialData = other.m_materialData;
-                m_uboDirty = true;
+                m_ssboDirty = true;
             }
             return *this;
+        }
+        /**
+         * @brief Sets the UV scale for texture sampling.
+         * @param scale Vec2 representing the UV scale factor.
+         */
+        void SetUVScale(const Vec2& scale)
+        {
+            m_materialData.uvScale = scale;
+            m_ssboDirty = true;
+        }
+        
+        /**
+         * @brief Sets the UV offset for texture sampling.
+         * @param offset Vec2 representing the UV offset.
+         */
+        void SetUVOffset(const Vec2& offset)
+        {
+            m_materialData.uvOffset = offset;
+            m_ssboDirty = true;
+        }
+        
+        /**
+         * @brief Gets the UV scale.
+         * @return Vec2 UV scale.
+         */
+        Vec2 GetUVScale() const { return m_materialData.uvScale; }
+        
+        /**
+         * @brief Gets the UV offset.
+         * @return Vec2 UV offset.
+         */
+        Vec2 GetUVOffset() const { return m_materialData.uvOffset; }
+        
+        /**
+         * @brief Sets the material index in the global buffer.
+         * @param index The material index.
+         */
+        void SetMaterialIndex(int index) { m_materialIndex = index; }
+        
+        /**
+         * @brief Gets the material index in the global buffer.
+         * @return The material index, or -1 if not assigned.
+         */
+        int GetMaterialIndex() const { return m_materialIndex; }
+
+        /**
+         * @brief Sets a texture array index for a specific texture type.
+         * @param textureName The name of the texture parameter (e.g., "materialAlbedoMap").
+         * @param index The index in the global texture array.
+         */
+        void SetTextureArrayIndex(const std::string& textureName, int index)
+        {
+            m_textureArrayIndices[textureName] = index;
+            m_ssboDirty = true;
+        }
+
+        /**
+         * @brief Gets the texture array index for a specific texture type.
+         * @param textureName The name of the texture parameter.
+         * @return The texture array index, or -1 if not found.
+         */
+        int GetTextureArrayIndex(const std::string& textureName) const
+        {
+            auto it = m_textureArrayIndices.find(textureName);
+            return it != m_textureArrayIndices.end() ? it->second : -1;
+        }
+
+        /**
+         * @brief Gets all texture array indices.
+         * @return Map of texture names to array indices.
+         */
+        const std::map<std::string, int>& GetTextureArrayIndices() const
+        {
+            return m_textureArrayIndices;
+        }
+
+        /**
+         * @brief Gets the cubemap textures associated with this material.
+         * @return Unordered map of cubemap names to shared pointers.
+         */
+        const std::unordered_map<std::string, std::shared_ptr<Cubemap>>& GetCubemaps() const {
+            return cubemaps;
         }
     };
 
@@ -659,12 +678,12 @@ namespace Ermine::graphics
     {
     public:
         /**
-         * @brief Creates a PBR material with the given properties.
-         * @param shader A shared pointer to the shader.
-         * @param albedo The albedo color of the material.
-         * @param metallic The metallic factor of the material.
-         * @param roughness The roughness factor of the material.
-         * @return A unique pointer to the created material.
+         * @brief Creates a PBR material with specified properties.
+         * @param shader Shared pointer to Shader.
+         * @param albedo Albedo color.
+         * @param metallic Metallic value.
+         * @param roughness Roughness value.
+         * @return Unique pointer to Material.
          */
         static std::unique_ptr<Material> CreatePBRMaterial(std::shared_ptr<Shader> shader, const Vec3& albedo,
             float metallic, float roughness)
@@ -681,11 +700,11 @@ namespace Ermine::graphics
         }
 
         /**
-         * @brief Creates an emissive material with the given color and intensity.
-         * @param shader A shared pointer to the shader.
-         * @param color The color of the emissive material.
-         * @param intensity The intensity of the emissive material.
-         * @return A unique pointer to the created material.
+         * @brief Creates an emissive material.
+         * @param shader Shared pointer to Shader.
+         * @param color Emissive color.
+         * @param intensity Emissive intensity.
+         * @return Unique pointer to Material.
          */
         static std::unique_ptr<Material> CreateEmissiveMaterial(std::shared_ptr<Shader> shader,
             const Vec3& color, float intensity)

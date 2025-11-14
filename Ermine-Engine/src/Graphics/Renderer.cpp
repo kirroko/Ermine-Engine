@@ -4,9 +4,9 @@
 \author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu
 \co-author  Jeremy Lim Ting Jie, jeremytingjie.lim, 2301370, jeremytingjie.lim\@digipen.edu
 \co-author  Ridhwan Afandi, moahamedridhwan.b, 2301367, moahamedridhwan.b\@digipen.edu
+\co-author  Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu
 \date       09/27/2025
 \brief      This file contains the definition of the Renderer system.
-			This file is used to render the game objects.
 
 Copyright (C) 2025 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents without the
@@ -16,6 +16,11 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "PreCompile.h"
 #include "Renderer.h"
 #include "Material.h"
+#include "SSBO_Bindings.h"
+#include "CameraSystem.h"
+#include "EditorGUI.h"
+
+#include <numeric> // For std::iota
 
 #include "ECS.h"
 #include "Logger.h"
@@ -29,6 +34,9 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "AssetManager.h"
 #include "Skybox.h"
 #include <random>  
+#include "Physics.h"
+#include "NavMesh.h"
+#include "AnimationManager.h"
 
 #include <GLFW/glfw3.h>
 
@@ -36,6 +44,12 @@ using namespace Ermine::graphics;
 
 unsigned int SHADOW_MAX_LAYERS = SHADOW_MAX_LAYERS_DESIRED;
 
+/**
+ * @brief Checks for OpenGL errors and logs them.
+ * @param file Source file name.
+ * @param line Line number.
+ * @return GLenum The last OpenGL error code.
+ */
 GLenum glCheckError_(const char* file, int line)
 {
 	GLenum errorCode;
@@ -59,6 +73,39 @@ GLenum glCheckError_(const char* file, int line)
 }
 #define glCheckError() glCheckError_(__FILE__, __LINE__)
 
+void Renderer::InitializeShadowMapResources()
+{
+	if (m_ShadowMapArrayHandle != 0) {
+		glMakeTextureHandleNonResidentARB(m_ShadowMapArrayHandle);
+		m_ShadowMapArrayHandle = 0;
+	}
+
+	if (m_ShadowMapArray != 0) {
+		glDeleteTextures(1, &m_ShadowMapArray);
+		m_ShadowMapArray = 0;
+	}
+
+	if (m_ShadowMapFBO != 0) {
+		glDeleteFramebuffers(1, &m_ShadowMapFBO);
+		m_ShadowMapFBO = 0;
+	}
+
+	// Clear any OpenGL errors from cleanup
+	while (glGetError() != GL_NO_ERROR);
+
+	InitializeShadowMap();
+	CreateShadowMapArray();
+
+
+	EE_CORE_INFO("Shadow map initialized: FBO={0}, Texture={1}, Layers={2}",
+		m_ShadowMapFBO, m_ShadowMapArray, SHADOW_MAX_LAYERS);
+}
+
+/**
+ * @brief Initializes the renderer and its resources.
+ * @param screenWidth Width of the screen.
+ * @param screenHeight Height of the screen.
+ */
 void Renderer::Init(const int& screenWidth, const int& screenHeight)
 {
 	// Check for ARB_bindless_texture support
@@ -69,18 +116,30 @@ void Renderer::Init(const int& screenWidth, const int& screenHeight)
 	}
 	// Create a fullscreen quad for rendering the offscreen buffer to the screen
 
+	// Initialize MeshManager for centralized mesh storage and indirect rendering
+	m_MeshManager.Initialize();
+
+	// Connect AnimationManager to SkeletalSSBO for efficient bone transform updates
+	auto animationManager = Ermine::ECS::GetInstance().GetSystem<AnimationManager>();
+	if (animationManager)
+	{
+		animationManager->SetSkeletalSSBO(&m_MeshManager.m_SkeletalSSBO);
+	}
 
 	// Add light system reference
 	m_LightSystem = Ermine::ECS::GetInstance().GetSystem<LightSystem>();
+	m_ModelSystem = Ermine::ECS::GetInstance().GetSystem<ModelSystem>();
+	m_MaterialSystem = Ermine::ECS::GetInstance().GetSystem<MaterialSystem>();
 
 	m_QuadMesh = GeometryFactory::CreateQuad(2.0f, 2.0f);
 
 	// Load deferred shading shaders
-	m_ShadowMapInstancedShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/shadowmap_instanced_vertex.glsl", "../Resources/Shaders/shadowmap_instanced_geometry.glsl", "../Resources/Shaders/shadowmap_fragment.glsl");
+	m_ShadowMapInstancedShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/shadowmap_instanced_vertex.glsl", "../Resources/Shaders/shadowmap_fragment.glsl");
 	m_GBufferShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/gBuffer_vertex.glsl", "../Resources/Shaders/gBuffer_fragment.glsl");
 	m_LightPassShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/lighting_vertex.glsl", "../Resources/Shaders/lighting_fragment.glsl");
 	m_BloomShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/bloom_vertex.glsl", "../Resources/Shaders/bloom_fragment.glsl");
 	m_PostProcessShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/postprocess_vertex.glsl", "../Resources/Shaders/postprocess_fragment.glsl");
+	m_AAShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/FXAA_vertex.glsl", "../Resources/Shaders/FXAA_fragment.glsl");
 	// Load forward rendering shader for transparent objects
 	m_ForwardShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/vertex.glsl", "../Resources/Shaders/fragment_enhanced.glsl");
 	if (!m_ForwardShader || !m_ForwardShader->IsValid()) {
@@ -93,24 +152,222 @@ void Renderer::Init(const int& screenWidth, const int& screenHeight)
 	CreatePostProcessBuffer(screenWidth, screenHeight);
 
 	// Create shadow map FBO and texture
-	InitializeShadowMap();
-	for (EntityID entity : m_LightSystem->m_Entities)
-	{
-		auto& light = Ermine::ECS::GetInstance().GetComponent<Light>(entity);
-		if (light.castsShadows)
-			CreateShadowMapArray();
-	}
+	InitializeShadowMapResources();
+
+	// Create pre-skinned positions SSBO for geometry pass to write and shadow pass to read
+	// Geometry pass writes skinned positions here, shadow pass reuses them (eliminates redundant bone calculations)
+	glGenBuffers(1, &m_PreSkinnedPositionsSSBO);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_PreSkinnedPositionsSSBO);
+	// Allocate large enough buffer for all vertices (will resize if needed)
+	glBufferData(GL_SHADER_STORAGE_BUFFER, 50000 * sizeof(glm::vec4), nullptr, GL_DYNAMIC_COPY);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, PRESKINNED_POSITIONS_SSBO_BINDING, m_PreSkinnedPositionsSSBO); // Binding 8
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+	m_PreSkinnedBufferSize = 50000 * sizeof(glm::vec4);
+
+	// Setup shadow VAOs that include pre-skinned position attribute (location 6)
+	// These VAOs allow hardware vertex fetching instead of SSBO random access for better performance
+	m_MeshManager.SetupShadowVAOs(m_PreSkinnedPositionsSSBO);
+
+	m_PickingShader = AssetManager::GetInstance().LoadShader(
+		"../Resources/Shaders/picking_vertex.glsl",
+		"../Resources/Shaders/picking_fragment_uint.glsl"
+	);
+
+	CreatePickingBuffer(screenWidth, screenHeight);
+
+	m_MaterialsDirty = true;
 }
 
-//Renderer::~Renderer()
-//{
-//	//if (m_OffscreenBuffer)
-//	//{
-//	//	glDeleteFramebuffers(1, &m_OffscreenBuffer->FBO);
-//	//	glDeleteTextures(1, &m_OffscreenBuffer->ColorTexture);
-//	//	glDeleteRenderbuffers(1, &m_OffscreenBuffer->RBO);
-//	//}
-//}
+/**
+ * @brief Submits a debug line to be rendered in the scene.
+ * @param from Starting point of the line in world space.
+ * @param to Ending point of the line in world space.
+ * @param color RGB color of the line.
+ */
+void Renderer::SubmitDebugLine(const glm::vec3& from, const glm::vec3& to, const glm::vec3& color)
+{
+	m_DebugLines.push_back({ from, color });
+	m_DebugLines.push_back({ to, color });
+}
+
+void Renderer::SubmitDebugAABB(const glm::vec3& min, const glm::vec3& max, const glm::vec3& color)
+{
+	// Draw 12 edges of the AABB
+	// Bottom face (4 edges)
+	SubmitDebugLine(glm::vec3(min.x, min.y, min.z), glm::vec3(max.x, min.y, min.z), color);
+	SubmitDebugLine(glm::vec3(max.x, min.y, min.z), glm::vec3(max.x, min.y, max.z), color);
+	SubmitDebugLine(glm::vec3(max.x, min.y, max.z), glm::vec3(min.x, min.y, max.z), color);
+	SubmitDebugLine(glm::vec3(min.x, min.y, max.z), glm::vec3(min.x, min.y, min.z), color);
+
+	// Top face (4 edges)
+	SubmitDebugLine(glm::vec3(min.x, max.y, min.z), glm::vec3(max.x, max.y, min.z), color);
+	SubmitDebugLine(glm::vec3(max.x, max.y, min.z), glm::vec3(max.x, max.y, max.z), color);
+	SubmitDebugLine(glm::vec3(max.x, max.y, max.z), glm::vec3(min.x, max.y, max.z), color);
+	SubmitDebugLine(glm::vec3(min.x, max.y, max.z), glm::vec3(min.x, max.y, min.z), color);
+
+	// Vertical edges (4 edges)
+	SubmitDebugLine(glm::vec3(min.x, min.y, min.z), glm::vec3(min.x, max.y, min.z), color);
+	SubmitDebugLine(glm::vec3(max.x, min.y, min.z), glm::vec3(max.x, max.y, min.z), color);
+	SubmitDebugLine(glm::vec3(max.x, min.y, max.z), glm::vec3(max.x, max.y, max.z), color);
+	SubmitDebugLine(glm::vec3(min.x, min.y, max.z), glm::vec3(min.x, max.y, max.z), color);
+}
+
+void Renderer::SubmitDebugFrustum(const Frustum& frustum, const glm::mat4& invViewProj, const glm::vec3& color)
+{
+	// Get the 8 corners of the frustum directly from inverse view-projection
+	// This is more reliable than computing plane intersections
+	auto corners = frustum.GetCorners(invViewProj);
+
+	// Corner indices: 0=nearBL, 1=nearBR, 2=nearTR, 3=nearTL, 4=farBL, 5=farBR, 6=farTR, 7=farTL
+
+	// Draw near plane (4 edges)
+	SubmitDebugLine(corners[0], corners[1], color); // bottom
+	SubmitDebugLine(corners[1], corners[2], color); // right
+	SubmitDebugLine(corners[2], corners[3], color); // top
+	SubmitDebugLine(corners[3], corners[0], color); // left
+
+	// Draw far plane (4 edges)
+	SubmitDebugLine(corners[4], corners[5], color); // bottom
+	SubmitDebugLine(corners[5], corners[6], color); // right
+	SubmitDebugLine(corners[6], corners[7], color); // top
+	SubmitDebugLine(corners[7], corners[4], color); // left
+
+	// Draw connecting edges (4 edges from near to far)
+	SubmitDebugLine(corners[0], corners[4], color); // bottom-left
+	SubmitDebugLine(corners[1], corners[5], color); // bottom-right
+	SubmitDebugLine(corners[2], corners[6], color); // top-right
+	SubmitDebugLine(corners[3], corners[7], color); // top-left
+}
+
+/**
+ * @brief Renders all submitted debug lines using the provided view and projection matrices.
+ * @param view View matrix for the camera.
+ * @param proj Projection matrix for the camera.
+ */
+void Renderer::RenderDebugLines(const glm::mat4& view, const glm::mat4& proj)
+{
+	if (m_DebugLines.empty()) return;
+
+	// 1) Create VAO/VBO once
+	if (m_DebugVAO == 0) {
+		glGenVertexArrays(1, &m_DebugVAO);
+		glGenBuffers(1, &m_DebugVBO);
+
+		glBindVertexArray(m_DebugVAO);
+		glBindBuffer(GL_ARRAY_BUFFER, m_DebugVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(DebugVertex) * 65536, nullptr, GL_DYNAMIC_DRAW);
+
+		glEnableVertexAttribArray(0); // position
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(DebugVertex),
+			(void*)offsetof(DebugVertex, position));
+		glEnableVertexAttribArray(1); // color
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(DebugVertex),
+			(void*)offsetof(DebugVertex, color));
+		glBindVertexArray(0);
+	}
+
+	// 2) Load shader once (make sure it�s valid)
+	if (!debugShader) {
+		debugShader = AssetManager::GetInstance().LoadShader(
+			"../Resources/Shaders/debug_line_vert.glsl",
+			"../Resources/Shaders/debug_line_frag.glsl"
+		);
+		if (!debugShader || !debugShader->IsValid()) {
+			m_DebugLines.clear();
+			return; // avoid Bind() on null
+		}
+	}
+
+	// 3) Bind VAO/VBO and upload THIS FRAME�S data
+	glBindVertexArray(m_DebugVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, m_DebugVBO);
+	glBufferSubData(GL_ARRAY_BUFFER, 0,
+		(GLsizeiptr)(m_DebugLines.size() * sizeof(DebugVertex)),
+		m_DebugLines.data());
+
+	// 4) Shader + uniforms
+	debugShader->Bind();
+	debugShader->SetUniformMatrix4fv("uView", view);
+	debugShader->SetUniformMatrix4fv("uProj", proj);
+
+	// 5) States (depth to taste)
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LEQUAL);
+	glDisable(GL_CULL_FACE);
+	glLineWidth(2.0f);
+
+	// 6) Draw and cleanup
+	glDrawArrays(GL_LINES, 0, (GLsizei)m_DebugLines.size());
+	glBindVertexArray(0);
+	m_DebugLines.clear();
+}
+
+void Renderer::SubmitDebugTriangle(const glm::vec3& a, const glm::vec3& b, const glm::vec3& c, const glm::vec3& color)
+{
+	m_DebugTriangleVertices.push_back({ a, color });
+	m_DebugTriangleVertices.push_back({ b, color });
+	m_DebugTriangleVertices.push_back({ c, color });
+}
+
+void Renderer::RenderDebugTriangles(const Mtx44& view, const Mtx44& proj)
+{
+	if (m_DebugTriangleVertices.empty()) return;
+
+	if (!debugShader)
+	{
+		debugShader = AssetManager::GetInstance().LoadShader(
+			"../Resources/Shaders/debug_line_vert.glsl",
+			"../Resources/Shaders/debug_line_frag.glsl"
+		);
+		if (!debugShader || !debugShader->IsValid())
+		{
+			m_DebugTriangleVertices.clear();
+			return;
+		}
+	}
+
+	debugShader->Bind();
+	debugShader->SetUniformMatrix4fv("uView", view);
+	debugShader->SetUniformMatrix4fv("uProj", proj);
+	debugShader->SetUniform1f("u_Alpha", 0.35f);
+
+	if (m_DebugVAO == 0)
+	{
+		glGenVertexArrays(1, &m_DebugVAO);
+		glGenBuffers(1, &m_DebugVBO);
+
+		glBindVertexArray(m_DebugVAO);
+		glBindBuffer(GL_ARRAY_BUFFER, m_DebugVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(DebugVertex) * 65536, nullptr, GL_DYNAMIC_DRAW);
+
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(DebugVertex), (void*)offsetof(DebugVertex, position));
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(DebugVertex), (void*)offsetof(DebugVertex, color));
+		glBindVertexArray(0);
+	}
+
+	glBindVertexArray(m_DebugVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, m_DebugVBO);
+	glBufferSubData(GL_ARRAY_BUFFER, 0,
+		(GLsizeiptr)(m_DebugTriangleVertices.size() * sizeof(DebugVertex)),
+		m_DebugTriangleVertices.data());
+
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glDisable(GL_CULL_FACE);
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LEQUAL);
+
+	glDrawArrays(GL_TRIANGLES, 0, (GLsizei)m_DebugTriangleVertices.size());
+
+	glBindVertexArray(0);
+	debugShader->Unbind();
+
+	m_DebugTriangleVertices.clear();
+
+	glDisable(GL_BLEND);
+}
 
 /**
  * @brief Create an offscreen buffer for viewport/scene rendering
@@ -130,16 +387,15 @@ Renderer::OffscreenBuffer Renderer::CreateOffscreenBuffer(const int& width, cons
 		glDeleteRenderbuffers(1, &m_OffscreenBuffer->RBO);
 	}
 
-	// If Light SSBO doesn't exist, create it
-	if (!m_LightsSSBO)
+	if (!m_LightsUBO)
 	{
-		glGenBuffers(1, &m_LightsSSBO);
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_LightsSSBO);
+		glGenBuffers(1, &m_LightsUBO);
+		glBindBuffer(GL_UNIFORM_BUFFER, m_LightsUBO);
 		const GLsizeiptr headerSize = static_cast<GLsizeiptr>(sizeof(glm::vec4));
 		const GLsizeiptr bodySize = static_cast<GLsizeiptr>(MAX_LIGHTS * sizeof(LightGPU));
-		glBufferData(GL_SHADER_STORAGE_BUFFER, headerSize + bodySize, nullptr, GL_DYNAMIC_DRAW);
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, LightsBindingPoint, m_LightsSSBO);
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+		glBufferData(GL_UNIFORM_BUFFER, headerSize + bodySize, nullptr, GL_DYNAMIC_DRAW);
+		glBindBufferBase(GL_UNIFORM_BUFFER, LightsBindingPoint, m_LightsUBO);
+		glBindBuffer(GL_UNIFORM_BUFFER, 0);
 		glCheckError();
 	}
 
@@ -265,6 +521,8 @@ void Renderer::ResizeOffscreenBuffer(const int& width, const int& height)
 	m_OffscreenBuffer->height = height;
 
 	glCheckError();
+
+	ResizePickingBuffer(width, height);
 }
 
 /**
@@ -290,16 +548,16 @@ void Renderer::CreateGBuffer(const int& width, const int& height)
 		EE_CORE_ERROR("ERROR: Invalid G-Buffer dimensions: {0}x{1}", width, height);
 	}
 
-	// If Light SSBO doesn't exist, create it
-	if (!m_LightsSSBO)
+	// If Light UBO doesn't exist, create it
+	if (!m_LightsUBO)
 	{
-		glGenBuffers(1, &m_LightsSSBO);
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_LightsSSBO);
+		glGenBuffers(1, &m_LightsUBO);
+		glBindBuffer(GL_UNIFORM_BUFFER, m_LightsUBO);
 		const GLsizeiptr headerSize = static_cast<GLsizeiptr>(sizeof(glm::vec4));
 		const GLsizeiptr bodySize = static_cast<GLsizeiptr>(MAX_LIGHTS * sizeof(LightGPU));
-		glBufferData(GL_SHADER_STORAGE_BUFFER, headerSize + bodySize, nullptr, GL_DYNAMIC_DRAW);
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, LightsBindingPoint, m_LightsSSBO);
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+		glBufferData(GL_UNIFORM_BUFFER, headerSize + bodySize, nullptr, GL_DYNAMIC_DRAW);
+		glBindBufferBase(GL_UNIFORM_BUFFER, LightsBindingPoint, m_LightsUBO);
+		glBindBuffer(GL_UNIFORM_BUFFER, 0);
 		glCheckError();
 	}
 
@@ -401,7 +659,7 @@ void Renderer::CreateGBuffer(const int& width, const int& height)
  */
 void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 {
-	PostProcessBuffer pPBuffer, bEBuffer, bBBuffer1, bBBuffer2;
+	PostProcessBuffer pPBuffer, bEBuffer, bBBuffer1, bBBuffer2, AABuffer;
 
 
 	// If an  buffer already exists, delete its OpenGL resources before creating a new one.
@@ -423,7 +681,7 @@ void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 	// Create main post-process buffer with depth attachment for skybox rendering
 	glGenFramebuffers(1, &pPBuffer.FBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, pPBuffer.FBO);
-	
+
 	// Color texture
 	glGenTextures(1, &pPBuffer.ColorTexture);
 	glBindTexture(GL_TEXTURE_2D, pPBuffer.ColorTexture);
@@ -433,7 +691,7 @@ void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pPBuffer.ColorTexture, 0);
-	
+
 	// Depth texture for skybox rendering
 	glGenTextures(1, &pPBuffer.DepthTexture);
 	glBindTexture(GL_TEXTURE_2D, pPBuffer.DepthTexture);
@@ -485,6 +743,19 @@ void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, bBBuffer2.ColorTexture, 0);
 	bBBuffer2.DepthTexture = 0;
+	glCheckError();
+
+	glGenFramebuffers(1, &AABuffer.FBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, AABuffer.FBO);
+	glGenTextures(1, &AABuffer.ColorTexture);
+	glBindTexture(GL_TEXTURE_2D, AABuffer.ColorTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_HALF_FLOAT, nullptr);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, AABuffer.ColorTexture, 0);
+	AABuffer.DepthTexture = 0;
 	glCheckError();
 
 	// Making sure dimensions are non-zero
@@ -547,17 +818,26 @@ void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 	bBBuffer2.width = width;
 	bBBuffer2.height = height;
 	m_BloomBlurBuffer2 = std::make_shared<PostProcessBuffer>(bBBuffer2);
+	AABuffer.width = width;
+	AABuffer.height = height;
+	m_AntiAliasingBuffer = std::make_shared<PostProcessBuffer>(AABuffer);
 }
 
 /**
- * @brief Resize the g-buffer to new dimensions
+ * @brief Creates the G-buffer for deferred rendering.
+ * @param width Buffer width.
+ * @param height Buffer height.
  */
 void Renderer::ResizeGBuffer(const int& width, const int& height)
 {
 	if (m_GBuffer && m_GBuffer->width == width && m_GBuffer->height == height)
-		return; 
+		return;
 
 	CreateGBuffer(width, height);
+
+	CreatePostProcessBuffer(width, height);
+
+	ResizePickingBuffer(width, height);
 }
 
 /**
@@ -593,6 +873,10 @@ void Renderer::BeginGeometryPass()
  */
 void Renderer::EndGeometryPass()
 {
+	// Insert fence to track when GPU finishes reading bone data
+	// This allows AnimationManager to wait before overwriting data in the next frame
+	m_MeshManager.m_SkeletalSSBO.InsertFence();
+
 	// Check for errors
 	glCheckError();
 }
@@ -629,7 +913,10 @@ void Renderer::EndLightingPass()
 	glCheckError();
 }
 
-
+/**
+ * @brief Binds material textures to the geometry shader.
+ * @param material Pointer to the material.
+ */
 void Renderer::BindMaterialTextures(Ermine::graphics::Material* material)
 {
 	if (!material) return;
@@ -684,6 +971,11 @@ void Renderer::BindMaterialTextures(Ermine::graphics::Material* material)
 	}
 }
 
+/**
+ * @brief Renders the geometry pass, collecting transparent objects.
+ * @param view View matrix.
+ * @param projection Projection matrix.
+ */
 void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 {
 	if (!m_GBuffer || !m_GBufferShader) {
@@ -696,6 +988,14 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 	// Bind geometry shader that writes to g-buffer
 	m_GBufferShader->Bind();
 	BindMaterialBlockIfPresent(m_GBufferShader);
+
+	// Check if any materials have been modified via ImGui or code
+	CheckMaterialUpdates();
+
+	// Recompile materials if dirty
+	if (m_MaterialsDirty) {
+		CompileMaterials();
+	}
 
 	// Clear transparent objects from previous frame
 	m_transparentObjects.clear();
@@ -710,98 +1010,71 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 	glm::mat4 invView = glm::inverse(glmView);
 	Vec3 cameraPos = Vec3(invView[3][0], invView[3][1], invView[3][2]);
 
-	const auto& ecs = Ermine::ECS::GetInstance();
+	// Set view and projection uniforms (model matrix comes from DrawInfo SSBO per draw)
+	m_GBufferShader->SetUniformMatrix4fv("view", &view.m2[0][0]);
+	m_GBufferShader->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
+	glGetError(); // Clear any existing errors
+	// Render standard (non-skinned) meshes with StandardVAO
+	if (!m_StandardDrawCommands.empty() && m_MeshManager.GetStandardVAO() != 0) {
+		// Upload standard draw commands to GPU
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_MeshManager.m_DrawCommandsSSBO);
+		size_t commandsBufferSize = m_StandardDrawCommands.size() * sizeof(DrawElementsIndirectCommand);
+		glBufferData(GL_SHADER_STORAGE_BUFFER, commandsBufferSize, m_StandardDrawCommands.data(), GL_DYNAMIC_DRAW);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
-	for (auto& entity : m_Entities) {
-		// Model pipeline
-		if (ecs.HasComponent<ModelComponent>(entity)) {
-			auto& modelComp = ecs.GetComponent<ModelComponent>(entity);
-			auto& trans = ecs.GetComponent<Transform>(entity);
+		// Upload standard draw infos to persistent mapped buffer at offset 0
+		m_MeshManager.m_PersistentDrawInfoBuffer.WriteDrawInfos(m_StandardDrawInfos, 0);
 
-			if (!modelComp.m_model) continue;
+		// Set baseDrawID = 0 for standard batch
+		m_GBufferShader->SetUniform1ui("baseDrawID", 0);
 
-			// Check if entity has material component for transparency check
-			Ermine::graphics::Material* material = nullptr;
-			if (ecs.HasComponent<Ermine::Material>(entity)) {
-				auto& materialComponent = ecs.GetComponent<Ermine::Material>(entity);
-				material = materialComponent.GetMaterial();
-			}
+		// Bind StandardVAO and issue draw call
+		glBindVertexArray(m_MeshManager.GetStandardVAO());
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_MeshManager.m_DrawCommandsSSBO);
+		glMultiDrawElementsIndirect(
+			GL_TRIANGLES,
+			GL_UNSIGNED_INT,
+			nullptr,
+			static_cast<GLsizei>(m_StandardDrawCommands.size()),
+			0
+		);
+		GPUProfiler::TrackDrawCall(m_StandardDrawCommandsVertexCount, m_StandardDrawCommandsIndexCount);
 
-			// Build entity transform
-			glm::mat4 entityModel = glm::mat4(1.0f);
-			entityModel = glm::translate(entityModel, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
-			glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
-			rotQuat = glm::normalize(rotQuat);
-			entityModel *= glm::mat4_cast(rotQuat);
-			entityModel = glm::scale(entityModel, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
+		// Unbind
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
+		glBindVertexArray(0);
+	}
 
-			// Check if material is transparent
-			if (material && IsTransparentMaterial(material)) {
-				// Add to transparent objects list
-				TransparentObject transparentObj;
-				transparentObj.entity = entity;
-				transparentObj.modelMatrix = entityModel;
-				transparentObj.distanceToCamera = 0.0f; // Will be calculated in SortTransparentObjects
-				m_transparentObjects.push_back(transparentObj);
-				continue; // Skip rendering in geometry pass
-			}
+	// Render skinned (animated) meshes with SkinnedVAO
+	if (!m_SkinnedDrawCommands.empty() && m_MeshManager.GetSkinnedVAO() != 0) {
+		// Upload skinned draw commands to GPU
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_MeshManager.m_DrawCommandsSSBO);
+		size_t skinnedCommandsBufferSize = m_SkinnedDrawCommands.size() * sizeof(DrawElementsIndirectCommand);
+		glBufferData(GL_SHADER_STORAGE_BUFFER, skinnedCommandsBufferSize, m_SkinnedDrawCommands.data(), GL_DYNAMIC_DRAW);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
-			// Render opaque model in geometry pass
-			if (material) {
-				UpdateMaterialUBO(material->GetUBOData());
-				BindMaterialTextures(material);
-			}
-			RenderModel(*modelComp.m_model, view, projection, entityModel);
-		}
-		// Mesh + material pipeline
-		else if (ecs.HasComponent<Mesh>(entity) && ecs.HasComponent<Ermine::Material>(entity)) {
-			auto& trans = ecs.GetComponent<Transform>(entity);
-			auto& mesh = ecs.GetComponent<Mesh>(entity);
-			auto& materialComponent = ecs.GetComponent<Ermine::Material>(entity);
+		// Upload skinned draw infos to persistent mapped buffer at offset = number of standard draws
+		size_t drawInfoOffset = m_StandardDrawCommands.size();
+		m_MeshManager.m_PersistentDrawInfoBuffer.WriteDrawInfos(m_SkinnedDrawInfos, drawInfoOffset);
 
-			if (!mesh.vertex_array || !mesh.index_buffer) continue;
+		// Set baseDrawID = offset so gl_DrawID in shader accesses correct DrawInfo indices
+		m_GBufferShader->SetUniform1ui("baseDrawID", static_cast<uint32_t>(drawInfoOffset));
 
-			Ermine::graphics::Material* material = materialComponent.GetMaterial();
-			if (!material) {
-				EE_CORE_WARN("Entity {0} has null material", entity);
-				continue;
-			}
+		// Bind SkinnedVAO and issue draw call
+		glBindVertexArray(m_MeshManager.GetSkinnedVAO());
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_MeshManager.m_DrawCommandsSSBO);
+		glMultiDrawElementsIndirect(
+			GL_TRIANGLES,
+			GL_UNSIGNED_INT,
+			nullptr,
+			static_cast<GLsizei>(m_SkinnedDrawCommands.size()),
+			0
+		);
+		GPUProfiler::TrackDrawCall(m_SkinnedDrawCommandsVertexCount, m_SkinnedDrawCommandsIndexCount);
 
-			// Build model matrix
-			glm::mat4 model = glm::mat4(1.0f);
-			model = glm::translate(model, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
-			glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
-			rotQuat = glm::normalize(rotQuat);
-			model *= glm::mat4_cast(rotQuat);
-			model = glm::scale(model, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
-
-			// Check if material is transparent
-			if (IsTransparentMaterial(material)) {
-				// Add to transparent objects list
-				TransparentObject transparentObj;
-				transparentObj.entity = entity;
-				transparentObj.modelMatrix = model;
-				transparentObj.distanceToCamera = 0.0f; // Will be calculated in SortTransparentObjects
-				m_transparentObjects.push_back(transparentObj);
-				continue; // Skip opaque rendering in geometry pass
-			}
-
-			// Render opaque object in geometry pass
-			m_GBufferShader->SetUniformMatrix4fv("model", model);
-			m_GBufferShader->SetUniformMatrix4fv("view", &view.m2[0][0]);
-			m_GBufferShader->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
-
-			// Calculate and set normal matrix
-			glm::mat4 modelView = glmView * model;
-			glm::mat3 normalMatrix = transpose(inverse(glm::mat3(model)));
-			m_GBufferShader->SetUniformMatrix3fv("NormalMatrix", normalMatrix);
-
-			UpdateMaterialUBO(material->GetUBOData());
-			BindMaterialTextures(material);
-
-			// Draw the mesh
-			Draw(mesh.vertex_array, mesh.index_buffer, m_GBufferShader);
-		}
+		// Unbind
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
+		glBindVertexArray(0);
 	}
 
 	// Sort transparent objects by distance from camera
@@ -810,8 +1083,543 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 	EndGeometryPass();
 }
 
+
 /**
- * @brief Render lighting pass for deferred rendering
+ * @brief Compiles draw commands and draw info for all passes (geometry/shadow and forward).
+ * Routes opaque meshes to geometry pass, transparent/custom shader meshes to forward pass.
+ */
+void Renderer::CompileDrawData()
+{
+	const auto& ecs = Ermine::ECS::GetInstance();
+
+	// Clear previous frame's commands for both passes
+	m_StandardDrawCommands.clear();
+	m_StandardDrawInfos.clear();
+	m_SkinnedDrawCommands.clear();
+	m_SkinnedDrawInfos.clear();
+	m_ForwardPassDrawCommands.clear();
+	m_ForwardPassDrawInfos.clear();
+
+	// Reset vertex/index counters
+	m_StandardDrawCommandsVertexCount = 0;
+	m_StandardDrawCommandsIndexCount = 0;
+	m_SkinnedDrawCommandsVertexCount = 0;
+	m_SkinnedDrawCommandsIndexCount = 0;
+	m_ForwardPassDrawCommandsVertexCount = 0;
+	m_ForwardPassDrawCommandsIndexCount = 0;
+
+	// Reserve space for geometry pass (opaque)
+	m_StandardDrawCommands.reserve(m_Entities.size());
+	m_StandardDrawInfos.reserve(m_Entities.size());
+	m_SkinnedDrawCommands.reserve(m_Entities.size() / 4);
+	m_SkinnedDrawInfos.reserve(m_Entities.size() / 4);
+
+	// Reserve space for forward pass (transparent/custom shader)
+	m_ForwardPassDrawCommands.reserve(m_Entities.size() / 4);
+	m_ForwardPassDrawInfos.reserve(m_Entities.size() / 4);
+
+	// ========== FRUSTUM CULLING SETUP ==========
+	// Get camera view and projection matrices
+	// Use GameCamera if active (playing), otherwise use EditorCamera
+	Mtx44 viewMtx, projMtx;
+
+#if defined(EE_EDITOR)
+	// In editor build, check if playing
+	if (editor::EditorGUI::isPlaying)
+	{
+		auto gameCamera = ecs.GetSystem<graphics::CameraSystem>();
+		if (gameCamera && gameCamera->HasValidCamera())
+		{
+			// Use player camera when in play mode
+			viewMtx = gameCamera->GetViewMatrix();
+			projMtx = gameCamera->GetProjectionMatrix();
+		}
+		else
+		{
+			// Fallback to editor camera if no valid game camera
+			const auto& editorCamera = editor::EditorCamera::GetInstance();
+			viewMtx = editorCamera.GetViewMatrix();
+			projMtx = editorCamera.GetProjectionMatrix();
+		}
+	}
+	else
+	{
+		// Use editor camera when not playing
+		const auto& editorCamera = editor::EditorCamera::GetInstance();
+		viewMtx = editorCamera.GetViewMatrix();
+		projMtx = editorCamera.GetProjectionMatrix();
+	}
+#else
+	// Standalone build - use game camera
+	auto gameCamera = ecs.GetSystem<graphics::CameraSystem>();
+	if (gameCamera && gameCamera->HasValidCamera())
+	{
+		viewMtx = gameCamera->GetViewMatrix();
+		projMtx = gameCamera->GetProjectionMatrix();
+	}
+	else
+	{
+		// Fallback if no camera is available
+		viewMtx = Mtx44(); // Identity matrix
+		projMtx = Mtx44(); // Identity matrix
+	}
+#endif
+
+	// Convert to glm for frustum extraction (use ToGlm helper)
+	glm::mat4 viewGlm = ToGlm(viewMtx);
+	glm::mat4 projGlm = ToGlm(projMtx);
+
+	// Build frustum from view-projection matrix
+	Frustum frustum;
+	glm::mat4 viewProj = projGlm * viewGlm;
+	frustum.ExtractFromViewProjection(viewProj);
+
+	// Debug: Draw frustum if enabled
+	if (m_DebugDrawFrustum) {
+		glm::mat4 invViewProj = glm::inverse(viewProj);
+		SubmitDebugFrustum(frustum, invViewProj, glm::vec3(0.0f, 1.0f, 1.0f)); // Cyan color
+	}
+
+	// Culling statistics
+	culledMeshes = 0;
+
+	auto FindChildEntityForMesh = [&](Ermine::EntityID parent, const std::string& meshID) -> Ermine::EntityID
+		{
+			auto& ecsLocal = ECS::GetInstance();
+			if (!ecsLocal.HasComponent<Ermine::HierarchyComponent>(parent))
+				return 0;
+
+			const auto& h = ecsLocal.GetComponent<Ermine::HierarchyComponent>(parent);
+			const std::string expected = "Mesh_" + meshID;
+
+			// --- Prefer GUID-based children
+			for (const Ermine::Guid& cg : h.childrenGuids) {
+				Ermine::EntityID child = ecsLocal.GetGuidRegistry().FindEntity(cg); // 0 if not found
+				if (child == 0) continue;
+				if (!ecsLocal.HasComponent<Ermine::ObjectMetaData>(child)) continue;
+				const auto& meta = ecsLocal.GetComponent<Ermine::ObjectMetaData>(child);
+				if (meta.name == expected) return child;
+			}
+
+			// --- Fallback: legacy EntityID list (for old saves / transitional scenes)
+			for (Ermine::EntityID child : h.children) {
+				if (!ecsLocal.IsEntityValid(child)) continue;
+				if (!ecsLocal.HasComponent<Ermine::ObjectMetaData>(child)) continue;
+				const auto& meta = ecsLocal.GetComponent<Ermine::ObjectMetaData>(child);
+				if (meta.name == expected) return child;
+			}
+
+			return 0;
+		};
+
+
+	// ========== MESHES ==========
+	for (auto& entity : m_Entities) {
+		if (ecs.HasComponent<Ermine::Material>(entity)) {
+			auto& trans = ecs.GetComponent<Transform>(entity);
+			auto& mesh = ecs.GetComponent<Mesh>(entity);
+			auto& materialComponent = ecs.GetComponent<Ermine::Material>(entity);
+
+			(void)trans;
+
+			if (!mesh.vertex_array || !mesh.index_buffer) continue;
+
+			// Skip if no registered mesh ID
+			if (mesh.registeredMeshID.empty()) continue;
+
+			Ermine::graphics::Material* material = materialComponent.GetMaterial();
+			if (!material) {
+				continue;
+			}
+
+			// Build model matrix
+			// glm::mat4 modelMatrix = glm::mat4(1.0f);
+			// modelMatrix = glm::translate(modelMatrix, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
+			// glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
+			// rotQuat = glm::normalize(rotQuat);
+			// modelMatrix *= glm::mat4_cast(rotQuat);
+			// modelMatrix = glm::scale(modelMatrix, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
+
+			glm::mat4 model = GetEntityWorldMatrix(entity);
+
+			//glm::mat4 model = glm::mat4(1.0f);
+			//model = glm::translate(model, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
+			//glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
+			//rotQuat = glm::normalize(rotQuat);
+			//model *= glm::mat4_cast(rotQuat);
+			//model = glm::scale(model, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
+
+			// Get mesh handle from MeshManager using the stored registered mesh ID
+			MeshHandle meshHandle = m_MeshManager.GetMeshHandle(mesh.registeredMeshID);
+			if (!meshHandle.isValid()) continue;
+
+			const MeshSubset* meshData = m_MeshManager.GetMeshData(meshHandle);
+			if (!meshData) continue;
+
+			graphics::Material* meshMaterial = materialComponent.GetMaterial();
+			uint32_t materialIndex = meshMaterial->GetMaterialIndex();
+
+			// Determine which pass this mesh belongs to
+			bool isTransparent = meshMaterial && IsTransparentMaterial(meshMaterial);
+			// TODO: Uncomment when use of custom shaders is supported
+			//bool isCustomShader = HasCustomShader(meshMaterial);
+			bool isCustomShader = false;
+
+			// ========== FRUSTUM CULLING TEST ==========
+			// Transform AABB to world space by transforming all 8 corners
+			// This is necessary because rotation can change which corners are min/max
+			glm::vec3 corners[8] = {
+				glm::vec3(mesh.aabbMin.x, mesh.aabbMin.y, mesh.aabbMin.z),
+				glm::vec3(mesh.aabbMax.x, mesh.aabbMin.y, mesh.aabbMin.z),
+				glm::vec3(mesh.aabbMin.x, mesh.aabbMax.y, mesh.aabbMin.z),
+				glm::vec3(mesh.aabbMax.x, mesh.aabbMax.y, mesh.aabbMin.z),
+				glm::vec3(mesh.aabbMin.x, mesh.aabbMin.y, mesh.aabbMax.z),
+				glm::vec3(mesh.aabbMax.x, mesh.aabbMin.y, mesh.aabbMax.z),
+				glm::vec3(mesh.aabbMin.x, mesh.aabbMax.y, mesh.aabbMax.z),
+				glm::vec3(mesh.aabbMax.x, mesh.aabbMax.y, mesh.aabbMax.z)
+			};
+
+			glm::vec3 actualMin = glm::vec3(FLT_MAX);
+			glm::vec3 actualMax = glm::vec3(-FLT_MAX);
+
+			for (int i = 0; i < 8; ++i) {
+				glm::vec3 worldCorner = glm::vec3(model * glm::vec4(corners[i], 1.0f));
+				actualMin = glm::min(actualMin, worldCorner);
+				actualMax = glm::max(actualMax, worldCorner);
+			}
+
+			// Test against frustum
+			bool isCulled = !frustum.TestAABB(actualMin, actualMax);
+			if (isCulled) {
+				culledMeshes++;
+				continue; // Skip - outside frustum
+			}
+
+			// Debug: Draw AABB if enabled (primitives)
+			if (m_DebugDrawAABBs) {
+				// Color: Green for visible, Red for culled
+				glm::vec3 aabbColor = isCulled ? glm::vec3(1.0f, 0.0f, 0.0f) : glm::vec3(0.0f, 1.0f, 0.0f);
+				SubmitDebugAABB(actualMin, actualMax, aabbColor);
+			}
+
+			// Build draw command
+			DrawElementsIndirectCommand cmd;
+			cmd.count = meshData->indexCount;
+			cmd.instanceCount = 1;
+			cmd.firstIndex = meshData->indexOffset;
+			cmd.baseVertex = meshData->baseVertex;
+			cmd.baseInstance = 0;
+
+			// Build draw info
+			DrawInfo info;
+			info.modelMatrix = model;
+			info.aabbMin = glm::vec3(mesh.aabbMin.x, mesh.aabbMin.y, mesh.aabbMin.z);
+			info.materialIndex = materialIndex;
+			info.aabbMax = glm::vec3(mesh.aabbMax.x, mesh.aabbMax.y, mesh.aabbMax.z);
+			info.entityID = static_cast<uint32_t>(entity);
+			info.flags = 0; // Primitives never use skinning
+			info.boneTransformOffset = 0;
+			info._pad[0] = 0;
+			info._pad[1] = 0;
+
+			// Route to appropriate pass
+			if (isTransparent || isCustomShader) {
+				// Forward pass (transparent/custom shader)
+				m_ForwardPassDrawCommands.push_back(cmd);
+				m_ForwardPassDrawInfos.push_back(info);
+				m_ForwardPassDrawCommandsVertexCount += meshData->vertexCount;
+				m_ForwardPassDrawCommandsIndexCount += cmd.count;
+			}
+			else {
+				// Geometry pass (opaque, standard shader)
+				m_StandardDrawCommands.push_back(cmd);
+				m_StandardDrawInfos.push_back(info);
+				m_StandardDrawCommandsVertexCount += meshData->vertexCount;
+				m_StandardDrawCommandsIndexCount += cmd.count;
+			}
+		}
+	}
+
+	// ========== STATIC MODELS ==========
+	for (auto& entity : m_ModelSystem->m_Entities) {
+		if (!ecs.HasComponent<AnimationComponent>(entity)) {
+			// Process entities with Model component
+			auto& modelComp = ecs.GetComponent<ModelComponent>(entity);
+			auto& trans = ecs.GetComponent<Transform>(entity);
+
+			(void)trans;
+
+			if (!modelComp.m_model) continue;
+
+			// Build entity transform
+			glm::mat4 entityModel = GetEntityWorldMatrix(entity);
+
+			// Process each mesh in the model
+			for (const auto& mesh : modelComp.m_model->GetMeshes()) {
+
+				// Get mesh handle from MeshManager
+				MeshHandle meshHandle = m_MeshManager.GetMeshHandle(mesh.meshID);
+				if (!meshHandle.isValid()) continue;
+
+				const MeshSubset* meshData = m_MeshManager.GetMeshData(meshHandle);
+				if (!meshData) continue;
+
+
+				// Get material from the mesh's child entity (if it has one), otherwise use parent entity
+				Ermine::graphics::Material* material = nullptr;
+
+				// Find child by GUID/name
+				Ermine::EntityID childEntity = FindChildEntityForMesh(entity, meshData->meshID);
+
+				// Prefer child material if present
+				if (childEntity != 0 && ecs.HasComponent<Ermine::Material>(childEntity)) {
+					auto& matComp = ecs.GetComponent<Ermine::Material>(childEntity);
+					material = matComp.GetMaterial();
+				}
+				else if (ecs.HasComponent<Ermine::Material>(entity)) {
+					auto& matComp = ecs.GetComponent<Ermine::Material>(entity);
+					material = matComp.GetMaterial();
+				}
+
+				uint32_t materialIndex = 0;
+				if (material) {
+					materialIndex = material->GetMaterialIndex();
+				}
+
+				// Determine which pass this mesh belongs to
+				bool isTransparent = material && IsTransparentMaterial(material);
+				// TODO: Uncomment when use of custom shaders is supported
+				//bool isCustomShader = HasCustomShader(material);
+				bool isCustomShader = false;
+
+				// ========== FRUSTUM CULLING TEST ==========
+				// Transform AABB to world space by transforming all 8 corners
+				// This is necessary because rotation can change which corners are min/max
+				glm::vec3 corners[8] = {
+					glm::vec3(mesh.aabbMin.x, mesh.aabbMin.y, mesh.aabbMin.z),
+					glm::vec3(mesh.aabbMax.x, mesh.aabbMin.y, mesh.aabbMin.z),
+					glm::vec3(mesh.aabbMin.x, mesh.aabbMax.y, mesh.aabbMin.z),
+					glm::vec3(mesh.aabbMax.x, mesh.aabbMax.y, mesh.aabbMin.z),
+					glm::vec3(mesh.aabbMin.x, mesh.aabbMin.y, mesh.aabbMax.z),
+					glm::vec3(mesh.aabbMax.x, mesh.aabbMin.y, mesh.aabbMax.z),
+					glm::vec3(mesh.aabbMin.x, mesh.aabbMax.y, mesh.aabbMax.z),
+					glm::vec3(mesh.aabbMax.x, mesh.aabbMax.y, mesh.aabbMax.z)
+				};
+
+				glm::vec3 actualMin = glm::vec3(FLT_MAX);
+				glm::vec3 actualMax = glm::vec3(-FLT_MAX);
+
+				for (int i = 0; i < 8; ++i) {
+					glm::vec3 worldCorner = glm::vec3(entityModel * glm::vec4(corners[i], 1.0f));
+					actualMin = glm::min(actualMin, worldCorner);
+					actualMax = glm::max(actualMax, worldCorner);
+				}
+
+				// Test against frustum
+				bool isCulled = !frustum.TestAABB(actualMin, actualMax);
+				if (isCulled) {
+					culledMeshes++; // Count culled meshes
+					continue; // Skip this mesh - it's outside the frustum
+				}
+
+				// Debug: Draw AABB if enabled
+				if (m_DebugDrawAABBs) {
+					// Color: Green for visible, Red for culled
+					glm::vec3 aabbColor = isCulled ? glm::vec3(1.0f, 0.0f, 0.0f) : glm::vec3(0.0f, 1.0f, 0.0f);
+					SubmitDebugAABB(actualMin, actualMax, aabbColor);
+				}
+
+				// Build draw command
+				DrawElementsIndirectCommand cmd;
+				cmd.count = meshData->indexCount;
+				cmd.instanceCount = 1;
+				cmd.firstIndex = meshData->indexOffset;
+				cmd.baseVertex = meshData->baseVertex;
+				cmd.baseInstance = 0;
+
+				// Build draw info with AABB and model matrix
+				DrawInfo info;
+				info.modelMatrix = entityModel;
+				info.aabbMin = mesh.aabbMin;
+				info.materialIndex = materialIndex;
+				info.aabbMax = mesh.aabbMax;
+				info.entityID = static_cast<uint32_t>(entity);
+				info.flags = 0; // No skinning for standard meshes
+				info.boneTransformOffset = 0;
+				info._pad[0] = 0;
+				info._pad[1] = 0;
+
+				// Route to appropriate pass
+				if (isTransparent || isCustomShader) {
+					// Forward pass (transparent/custom shader)
+					m_ForwardPassDrawCommands.push_back(cmd);
+					m_ForwardPassDrawInfos.push_back(info);
+					m_ForwardPassDrawCommandsVertexCount += meshData->vertexCount;
+					m_ForwardPassDrawCommandsIndexCount += cmd.count;
+				}
+				else {
+					// Geometry pass (opaque, standard shader)
+					m_StandardDrawCommands.push_back(cmd);
+					m_StandardDrawInfos.push_back(info);
+					m_StandardDrawCommandsVertexCount += meshData->vertexCount;
+					m_StandardDrawCommandsIndexCount += cmd.count;
+				}
+			}
+		}
+		else {
+			auto& modelComp = ecs.GetComponent<ModelComponent>(entity);
+			auto& trans = ecs.GetComponent<Transform>(entity);
+			auto& animComp = ecs.GetComponent<AnimationComponent>(entity);
+
+			if (!modelComp.m_model) continue;
+			if (animComp.boneTransformOffset < 0) continue; // Skip if no valid bone data
+
+			// Check if entity has material component for transparency/custom shader check
+			Ermine::graphics::Material* material = nullptr;
+			if (ecs.HasComponent<Ermine::Material>(entity)) {
+				auto& materialComponent = ecs.GetComponent<Ermine::Material>(entity);
+				material = materialComponent.GetMaterial();
+			}
+
+			// Build entity transform
+			glm::mat4 modelMatrix = glm::mat4(1.0f);
+			modelMatrix = glm::translate(modelMatrix, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
+			glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
+			rotQuat = glm::normalize(rotQuat);
+			modelMatrix *= glm::mat4_cast(rotQuat);
+			modelMatrix = glm::scale(modelMatrix, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
+
+			// Determine which pass this entity belongs to
+			bool isTransparent = material && IsTransparentMaterial(material);
+			// TODO: Uncomment when use of custom shaders is supported
+			//bool isCustomShader = HasCustomShader(material);
+			bool isCustomShader = false;
+
+			// Get material index
+			uint32_t materialIndex = 0;
+			auto it = m_EntityMaterialIndices.find(entity);
+			if (it != m_EntityMaterialIndices.end()) {
+				materialIndex = it->second;
+			}
+
+			// Get bone transform offset
+			uint32_t boneOffset = static_cast<uint32_t>(animComp.boneTransformOffset);
+
+			// Process each mesh in the model
+			for (const auto& mesh : modelComp.m_model->GetMeshes()) {
+
+				// Get mesh handle from MeshManager
+				MeshHandle meshHandle = m_MeshManager.GetMeshHandle(mesh.meshID);
+				if (!meshHandle.isValid()) continue;
+
+				const MeshSubset* meshData = m_MeshManager.GetMeshData(meshHandle);
+				if (!meshData) continue;
+
+				// Get material from the mesh's child entity (if it has one)
+				Ermine::graphics::Material* meshMaterial = nullptr;
+
+				// Find child by GUID/name
+				Ermine::EntityID childEntity = FindChildEntityForMesh(entity, meshData->meshID);
+
+				if (childEntity != 0 && ecs.HasComponent<Ermine::Material>(childEntity)) {
+					auto& matComp = ecs.GetComponent<Ermine::Material>(childEntity);
+					meshMaterial = matComp.GetMaterial();
+					if (meshMaterial) {
+						materialIndex = meshMaterial->GetMaterialIndex();
+					}
+				}
+
+				if (childEntity != 0 && ecs.HasComponent<Ermine::Material>(childEntity)) {
+					// Use child entity's material
+					auto& materialComponent = ecs.GetComponent<Ermine::Material>(childEntity);
+					meshMaterial = materialComponent.GetMaterial();
+					materialIndex = meshMaterial->GetMaterialIndex();
+				}
+
+				// ========== FRUSTUM CULLING TEST ==========
+				// Transform AABB to world space by transforming all 8 corners
+				// This is necessary because rotation can change which corners are min/max
+				glm::vec3 corners[8] = {
+					glm::vec3(mesh.aabbMin.x, mesh.aabbMin.y, mesh.aabbMin.z),
+					glm::vec3(mesh.aabbMax.x, mesh.aabbMin.y, mesh.aabbMin.z),
+					glm::vec3(mesh.aabbMin.x, mesh.aabbMax.y, mesh.aabbMin.z),
+					glm::vec3(mesh.aabbMax.x, mesh.aabbMax.y, mesh.aabbMin.z),
+					glm::vec3(mesh.aabbMin.x, mesh.aabbMin.y, mesh.aabbMax.z),
+					glm::vec3(mesh.aabbMax.x, mesh.aabbMin.y, mesh.aabbMax.z),
+					glm::vec3(mesh.aabbMin.x, mesh.aabbMax.y, mesh.aabbMax.z),
+					glm::vec3(mesh.aabbMax.x, mesh.aabbMax.y, mesh.aabbMax.z)
+				};
+
+				glm::vec3 actualMin = glm::vec3(FLT_MAX);
+				glm::vec3 actualMax = glm::vec3(-FLT_MAX);
+
+				for (int i = 0; i < 8; ++i) {
+					glm::vec3 worldCorner = glm::vec3(modelMatrix * glm::vec4(corners[i], 1.0f));
+					actualMin = glm::min(actualMin, worldCorner);
+					actualMax = glm::max(actualMax, worldCorner);
+				}
+
+				// Test against frustum
+				bool isCulled = !frustum.TestAABB(actualMin, actualMax);
+				if (isCulled) {
+					culledMeshes++;
+					continue; // Skip - outside frustum
+				}
+
+				// Debug: Draw AABB if enabled (skinned meshes)
+				if (m_DebugDrawAABBs) {
+					// Color: Green for visible, Red for culled
+					glm::vec3 aabbColor = isCulled ? glm::vec3(1.0f, 0.0f, 0.0f) : glm::vec3(0.0f, 1.0f, 0.0f);
+					SubmitDebugAABB(actualMin, actualMax, aabbColor);
+				}
+
+				// Build draw command
+				DrawElementsIndirectCommand cmd;
+				cmd.count = meshData->indexCount;
+				cmd.instanceCount = 1;
+				cmd.firstIndex = meshData->indexOffset;
+				cmd.baseVertex = meshData->baseVertex;
+				cmd.baseInstance = 0;
+
+				// Build draw info with AABB and model matrix
+				DrawInfo info;
+				info.modelMatrix = modelMatrix;
+				info.aabbMin = mesh.aabbMin;
+				info.materialIndex = materialIndex;
+				info.aabbMax = mesh.aabbMax;
+				info.entityID = static_cast<uint32_t>(entity);
+				info.flags = 1; // Skinning enabled
+				info.boneTransformOffset = boneOffset;
+				info._pad[0] = 0;
+				info._pad[1] = 0;
+
+				// Route to appropriate pass
+				if (isTransparent || isCustomShader) {
+					// Forward pass (transparent/custom shader)
+					m_ForwardPassDrawCommands.push_back(cmd);
+					m_ForwardPassDrawInfos.push_back(info);
+					m_ForwardPassDrawCommandsVertexCount += meshData->vertexCount;
+					m_ForwardPassDrawCommandsIndexCount += cmd.count;
+				}
+				else {
+					// Geometry pass (opaque, standard shader)
+					m_SkinnedDrawCommands.push_back(cmd);
+					m_SkinnedDrawInfos.push_back(info);
+					m_SkinnedDrawCommandsVertexCount += meshData->vertexCount;
+					m_SkinnedDrawCommandsIndexCount += cmd.count;
+				}
+			}
+		}
+	}
+
+	GPUProfiler::SetCulledMeshesCount(culledMeshes);
+
+}
+
+/**
+ * @brief Renders the lighting pass for deferred rendering.
+ * @param view View matrix.
+ * @param projection Projection matrix.
  */
 void Renderer::RenderLightingPass(const Mtx44& view, const Mtx44& projection)
 {
@@ -848,20 +1656,24 @@ void Renderer::RenderLightingPass(const Mtx44& view, const Mtx44& projection)
 	m_LightPassShader->SetUniformMatrix4fv("view", glmView);
 	m_LightPassShader->SetUniformMatrix4fv("invView", invView);
 	m_LightPassShader->SetUniformMatrix4fv("invProjection", invProjection);
-	m_LightPassShader->SetUniform1i("u_VBAO", m_SSAOEnabled ? 1 : 0);
+	m_LightPassShader->SetUniformMatrix4fv("projection", glmProjection);
+	m_LightPassShader->SetUniform1i("u_SSAO", m_SSAOEnabled ? 1 : 0);
+	m_LightPassShader->SetUniform1i("u_SSAOSamples", m_SSAOSamples);
+	m_LightPassShader->SetUniform1f("u_SSAORadius", m_SSAORadius);
+	m_LightPassShader->SetUniform1f("u_SSAOBias", m_SSAOBias);
+	m_LightPassShader->SetUniform1f("u_SSAOIntensity", m_SSAOIntensity);
+	m_LightPassShader->SetUniform1f("u_SSAOFadeout", m_SSAOFadeout);
+	m_LightPassShader->SetUniform1f("u_SSAOMaxDistance", m_SSAOMaxDistance);
 
 	// Set shading mode
 	m_LightPassShader->SetUniform1i("u_ShadingMode", m_IsBlinnPhong ? 1 : 0);
 
-	// Update and bind lights UBO
-	// UpdateLightsUBO(view); // updated in shadow pass
-	BindLightsBlockIfPresent(m_LightPassShader);
-
-	// Render fullscreen quad 
+	// Render fullscreen quad
 	if (m_QuadMesh.vertex_array && m_QuadMesh.index_buffer)
 	{
-		Draw(m_QuadMesh.vertex_array, m_QuadMesh.index_buffer, m_LightPassShader);
+		Draw(m_QuadMesh.vertex_array, m_QuadMesh.index_buffer);
 	}
+
 
 	EndLightingPass();
 }
@@ -871,7 +1683,7 @@ void Renderer::RenderLightingPass(const Mtx44& view, const Mtx44& projection)
  */
 void Renderer::RenderPostProcessPass()
 {
-	if (!m_PostProcessBuffer || !m_BloomShader || !m_PostProcessShader)
+	if (!m_PostProcessBuffer || !m_BloomShader || !m_PostProcessShader || !m_AAShader)
 	{
 		EE_CORE_ERROR("Post-process buffers or shaders not initialized!");
 		return;
@@ -891,7 +1703,7 @@ void Renderer::RenderPostProcessPass()
 	m_BloomShader->SetUniform1f("u_BloomThreshold", m_BloomThreshold);
 	m_BloomShader->SetUniform1f("u_BloomRadius", m_BloomRadius);
 
-	Draw(m_QuadMesh.vertex_array, m_QuadMesh.index_buffer, m_BloomShader);
+	Draw(m_QuadMesh.vertex_array, m_QuadMesh.index_buffer);
 
 	// Pass 2: Horizontal blur
 	glBindFramebuffer(GL_FRAMEBUFFER, m_BloomBlurBuffer1->FBO);
@@ -899,7 +1711,7 @@ void Renderer::RenderPostProcessPass()
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, m_BloomExtractBuffer->ColorTexture);
 	m_BloomShader->SetUniform1i("u_Pass", 2);
-	Draw(m_QuadMesh.vertex_array, m_QuadMesh.index_buffer, m_BloomShader);
+	Draw(m_QuadMesh.vertex_array, m_QuadMesh.index_buffer);
 
 	// Pass 3: Vertical blur
 	glBindFramebuffer(GL_FRAMEBUFFER, m_BloomBlurBuffer2->FBO);
@@ -908,19 +1720,10 @@ void Renderer::RenderPostProcessPass()
 	glBindTexture(GL_TEXTURE_2D, m_BloomBlurBuffer1->ColorTexture);
 	m_BloomShader->SetUniform1i("u_LightingTexture", 0);
 	m_BloomShader->SetUniform1i("u_Pass", 3);
-	Draw(m_QuadMesh.vertex_array, m_QuadMesh.index_buffer, m_BloomShader);
+	Draw(m_QuadMesh.vertex_array, m_QuadMesh.index_buffer);
 
-	// Final pass: Combine with post-processing
-#ifdef _DEBUG
-	glBindFramebuffer(GL_FRAMEBUFFER, m_OffscreenBuffer->FBO);
-	glViewport(0, 0, m_OffscreenBuffer->width, m_OffscreenBuffer->height);
-#else
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	GLint viewport[4];
-	glGetIntegerv(GL_VIEWPORT, viewport);
-	glViewport(0, 0, viewport[2], viewport[3]);
-#endif
-
+	// Pass 4: Post-processing (tone mapping, bloom combine, etc.)
+	glBindFramebuffer(GL_FRAMEBUFFER, m_AntiAliasingBuffer->FBO);
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	m_PostProcessShader->Bind();
@@ -941,7 +1744,6 @@ void Renderer::RenderPostProcessPass()
 
 	// Set post-processing toggle parameters
 	m_PostProcessShader->SetUniform1i("u_Vignette", m_VignetteEnabled ? 1 : 0);
-	m_PostProcessShader->SetUniform1i("u_FXAA", m_FXAAEnabled ? 1 : 0);
 	m_PostProcessShader->SetUniform1i("u_ToneMapping", m_ToneMappingEnabled ? 1 : 0);
 	m_PostProcessShader->SetUniform1i("u_GammaCorrection", m_GammaCorrectionEnabled ? 1 : 0);
 	m_PostProcessShader->SetUniform1i("u_Bloom", m_BloomEnabled ? 1 : 0);
@@ -956,18 +1758,46 @@ void Renderer::RenderPostProcessPass()
 	m_PostProcessShader->SetUniform1f("u_VignetteRadius", m_VignetteRadius);
 	m_PostProcessShader->SetUniform1f("u_BloomStrength", m_BloomStrength);
 
-	// Set FXAA parameters
-	m_PostProcessShader->SetUniform1f("u_FXAASpanMax", m_FXAASpanMax);
-	m_PostProcessShader->SetUniform1f("u_FXAAReduceMin", m_FXAAReduceMin);
-	m_PostProcessShader->SetUniform1f("u_FXAAReduceMul", m_FXAAReduceMul);
 
-	Draw(m_QuadMesh.vertex_array, m_QuadMesh.index_buffer, m_PostProcessShader);
+	Draw(m_QuadMesh.vertex_array, m_QuadMesh.index_buffer);
+
+	// Final pass: FXAA
+#if defined(EE_EDITOR)
+	glBindFramebuffer(GL_FRAMEBUFFER, m_OffscreenBuffer->FBO);
+	glViewport(0, 0, m_OffscreenBuffer->width, m_OffscreenBuffer->height);
+#else
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+#endif
+
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	m_AAShader->Bind();
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, m_AntiAliasingBuffer->ColorTexture);
+	m_AAShader->SetUniform1i("u_LightingTexture", 0);
+
+	// Set FXAA parameters
+	m_AAShader->SetUniform1i("u_FXAA", m_FXAAEnabled ? 1 : 0);
+	m_AAShader->SetUniform1f("u_FXAASpanMax", m_FXAASpanMax);
+	m_AAShader->SetUniform1f("u_FXAAReduceMin", m_FXAAReduceMin);
+	m_AAShader->SetUniform1f("u_FXAAReduceMul", m_FXAAReduceMul);
+
+	Draw(m_QuadMesh.vertex_array, m_QuadMesh.index_buffer);
 
 	glEnable(GL_DEPTH_TEST);
 
-#ifdef _DEBUG
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-#endif
+	// NOTE: Don't unbind framebuffer here - UI needs to render to it!
+	// Framebuffer will be unbound in Engine.cpp after UI rendering
+}
+
+/**
+ * @brief Renders all submitted debug lines using the provided view and projection matrices.
+ * @param view View matrix for the camera (custom Mtx44 type).
+ * @param proj Projection matrix for the camera (custom Mtx44 type).
+ */
+void Renderer::RenderDebugLines(const Mtx44& view, const Mtx44& proj)
+{
+	RenderDebugLines(ToGlm(view), ToGlm(proj));
 }
 
 /**
@@ -977,11 +1807,15 @@ void Renderer::RenderPostProcessPass()
  */
 void Renderer::RenderDeferredPipeline(const Mtx44& view, const Mtx44& projection)
 {
-	// Shadow pass - render scene from light's perspective
-	if (frameCounter % SHADOW_MAP_REFRESH_INTERVAL_IN_FRAMES == 0) // Update shadows every 4 frames for performance
-		RenderShadowPass();
+	// Compile draw data for all passes (routes opaque to geometry, transparent to forward)
+	CompileDrawData();
+
 	// Geometry pass - write opaque objects to g-buffer, collect transparent objects
 	RenderGeometryPass(view, projection);
+
+	// Shadow pass - render scene from light's perspective
+	if (frameCounter % SHADOW_MAP_REFRESH_INTERVAL_IN_FRAMES == 0)
+		RenderShadowPass();
 
 	// Lighting pass - read from g-buffer and perform lighting on opaque objects
 	RenderLightingPass(view, projection);
@@ -1014,7 +1848,44 @@ void Renderer::RenderDeferredPipeline(const Mtx44& view, const Mtx44& projection
 	}
 
 	// TRANSPARENCY PASS - render transparent objects using forward rendering
-	RenderTransparentPass(view, projection);
+	RenderForwardPass(view, projection);
+
+#if defined(EE_EDITOR)
+	if (m_PostProcessBuffer && ECS::GetInstance().GetSystem<Physics>()->wireframe) {
+		glBindFramebuffer(GL_FRAMEBUFFER, m_PostProcessBuffer->FBO);
+		glViewport(0, 0, m_PostProcessBuffer->width, m_PostProcessBuffer->height);
+
+		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_LEQUAL);
+		glDisable(GL_CULL_FACE);
+
+		if (auto physics = ECS::GetInstance().GetSystem<Physics>()) {
+			physics->DrawDebugPhysics();
+		}
+		RenderDebugLines(view, projection);
+	}
+
+	if (m_PostProcessBuffer)
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, m_PostProcessBuffer->FBO);
+		glViewport(0, 0, m_PostProcessBuffer->width, m_PostProcessBuffer->height);
+
+		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_LEQUAL);
+		glDisable(GL_CULL_FACE);
+
+		if (auto navSys = ECS::GetInstance().GetSystem<NavMeshSystem>())
+		{
+			//EE_CORE_INFO("[Renderer] Drawing NavMesh debug lines");
+			navSys->DebugDraw();
+			navSys->DebugHighLight();
+		}
+
+		// Flush the navmesh debug lines to screen
+		RenderDebugLines(view, projection);
+	}
+	
+#endif
 
 	// Post-processing pass - read from lighting + transparency pass output
 	RenderPostProcessPass();
@@ -1082,8 +1953,29 @@ void Renderer::CleanupGBuffer()
 {
 	if (m_GBuffer)
 	{
-		if (m_GBuffer->FBO != 0)
-		{
+		// Make bindless handles non-resident BEFORE deleting textures
+		if (m_GBuffer->HandlePackedTexture0 != 0) {
+			glMakeTextureHandleNonResidentARB(m_GBuffer->HandlePackedTexture0);
+			m_GBuffer->HandlePackedTexture0 = 0;
+		}
+		if (m_GBuffer->HandlePackedTexture1 != 0) {
+			glMakeTextureHandleNonResidentARB(m_GBuffer->HandlePackedTexture1);
+			m_GBuffer->HandlePackedTexture1 = 0;
+		}
+		if (m_GBuffer->HandlePackedTexture2 != 0) {
+			glMakeTextureHandleNonResidentARB(m_GBuffer->HandlePackedTexture2);
+			m_GBuffer->HandlePackedTexture2 = 0;
+		}
+		if (m_GBuffer->HandlePackedTexture3 != 0) {
+			glMakeTextureHandleNonResidentARB(m_GBuffer->HandlePackedTexture3);
+			m_GBuffer->HandlePackedTexture3 = 0;
+		}
+		if (m_GBuffer->HandleDepthTexture != 0) {
+			glMakeTextureHandleNonResidentARB(m_GBuffer->HandleDepthTexture);
+			m_GBuffer->HandleDepthTexture = 0;
+		}
+
+		if (m_GBuffer->FBO != 0) {
 			glDeleteFramebuffers(1, &m_GBuffer->FBO);
 		}
 		if (m_GBuffer->PackedTexture0 != 0)
@@ -1183,9 +2075,27 @@ void Renderer::CleanupPostProcessBuffer()
 		}
 		m_BloomBlurBuffer2.reset();
 	}
+	// Clean up anti-aliasing buffer
+	if (m_AntiAliasingBuffer)
+	{
+		if (m_AntiAliasingBuffer->FBO != 0)
+		{
+			glDeleteFramebuffers(1, &m_AntiAliasingBuffer->FBO);
+			m_AntiAliasingBuffer->FBO = 0;
+		}
+		if (m_AntiAliasingBuffer->ColorTexture != 0)
+		{
+			glDeleteTextures(1, &m_AntiAliasingBuffer->ColorTexture);
+			m_AntiAliasingBuffer->ColorTexture = 0;
+		}
+		if (m_AntiAliasingBuffer->DepthTexture != 0)
+		{
+			glDeleteTextures(1, &m_AntiAliasingBuffer->DepthTexture);
+			m_AntiAliasingBuffer->DepthTexture = 0;
+		}
+		m_AntiAliasingBuffer.reset();
+	}
 
-	// Check for OpenGL errors after cleanup
-	glCheckError();
 }
 
 /**
@@ -1194,44 +2104,27 @@ void Renderer::CleanupPostProcessBuffer()
  */
 void Renderer::UpdateLightsUBO(const Mtx44& view)
 {
+	(void)view;
+
 	std::vector<LightGPU> lights;
 	lights.reserve(MAX_LIGHTS);
 
-	// Convert view matrix to glm once for better performance
-	glm::mat4 glmView = glm::mat4(
-		view.m00, view.m01, view.m02, view.m03,
-		view.m10, view.m11, view.m12, view.m13,
-		view.m20, view.m21, view.m22, view.m23,
-		view.m30, view.m31, view.m32, view.m33
-	);
-
-	// Gather Light and Transform across all alive entities
 	const auto& ecs = Ermine::ECS::GetInstance();
-	for(EntityID e : m_LightSystem->m_Entities)
+	for (EntityID e : m_LightSystem->m_Entities)
 	{
-
 		const auto& trans = ecs.GetComponent<Transform>(e);
 		const auto& light = ecs.GetComponent<Light>(e);
 
-		// View-space position using GLM
+		// Keep position in WORLD SPACE instead of view space
 		glm::vec4 posWorld(trans.position.x, trans.position.y, trans.position.z, 1.0f);
-		glm::vec4 posView = glmView * posWorld;
 
-		// Build rotation from Euler angles using GLM
+		// Build rotation from quaternion
 		glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
 		rotQuat = glm::normalize(rotQuat);
-		//rotationMatrix = glm::rotate(rotationMatrix, glm::radians(trans.rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
-		//rotationMatrix = glm::rotate(rotationMatrix, glm::radians(trans.rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-		//rotationMatrix = glm::rotate(rotationMatrix, glm::radians(trans.rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
 
-		// World-space direction using GLM
-		glm::vec3 fwd(0.0f, 0.0f, 1.0f); // Light coming from +Z when unrotated
+		// Keep direction in WORLD SPACE
+		glm::vec3 fwd(0.0f, 0.0f, 1.0f);
 		glm::vec3 dirWorld = glm::normalize(rotQuat * fwd);
-
-		// View-space direction using GLM
-		glm::vec4 dirWorldH(dirWorld, 0.0f); // Homogeneous coordinate with w=0 for directions
-		glm::vec4 dirViewH = glmView * dirWorldH;
-		glm::vec3 dirView = glm::normalize(glm::vec3(dirViewH));
 
 		// Set spot angles
 		float innerCos = 1.0f, outerCos = 1.0f;
@@ -1242,12 +2135,13 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
 			outerCos = glm::cos(outerAngle);
 		}
 
-		// Convert back to glm::vec4 for LightGPU structure (maintaining compatibility)
+		// Convert to LightGPU structure - NOW IN WORLD SPACE
 		LightGPU gpu{};
-		gpu.position_type = glm::vec4(posView.x, posView.y, posView.z, static_cast<float>(light.type));
+		gpu.position_type = glm::vec4(posWorld.x, posWorld.y, posWorld.z, static_cast<float>(light.type));
 		gpu.color_intensity = glm::vec4(light.color.x, light.color.y, light.color.z, light.intensity);
-		gpu.direction_range = glm::vec4(dirView.x, dirView.y, dirView.z, light.radius);
+		gpu.direction_range = glm::vec4(dirWorld.x, dirWorld.y, dirWorld.z, light.radius);
 		gpu.spot_angles_castshadows_startOffset = glm::vec4(innerCos, outerCos, light.castsShadows, light.startOffset);
+
 		for (int i = 0; i < NUM_CASCADES; ++i) {
 			gpu.lightSpaceMatrix[i] = light.lightSpaceMatrices[i];
 			gpu.splitDepths[i / 4][i % 4] = light.splitDepths[i];
@@ -1255,131 +2149,136 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
 		lights.emplace_back(gpu);
 	}
 
-	// Upload to SSBO
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_LightsSSBO);
+	// Upload to UBO
+	glBindBuffer(GL_UNIFORM_BUFFER, m_LightsUBO);
 
 	glm::vec4 count(static_cast<float>(lights.size()), 0.0f, 0.0f, 0.0f);
-	glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(glm::vec4), &count);
+	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::vec4), &count);
 
 	if (!lights.empty())
 	{
 		const GLsizeiptr bodyOffset = static_cast<GLsizeiptr>(sizeof(glm::vec4));
 		const GLsizeiptr bodySize = static_cast<GLsizeiptr>(lights.size() * sizeof(LightGPU));
-		glBufferSubData(GL_SHADER_STORAGE_BUFFER, bodyOffset, bodySize, lights.data());
+		glBufferSubData(GL_UNIFORM_BUFFER, bodyOffset, bodySize, lights.data());
 	}
 
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 	glCheckError();
 }
 
 /**
- * @brief Binds the Lights SSBO to the specified shader program if it has not been bound before.
- * @param shader The shader program to which the lights SSBO should be bound.
- */
-void Renderer::BindLightsBlockIfPresent(const std::shared_ptr<Shader>& shader)
-{
-	// Since we use explicit binding in shaders (binding = 1),
-	// we don't need to manually bind SSBO blocks like we did with UBOs
-	// The shader binding layout handles this automatically
-	return;
-}
-
-/**
- * @brief Updates the material's uniform buffer object (UBO) with the specified material data.
+ * @brief Updates the material's SSBO with the specified material data.
  *
- * If the material UBO does not exist, this function creates one. It then uploads the given material data
+ * If the material SSBO does not exist, this function creates one. It then uploads the given material data
  * into the UBO, making it available to the shader for rendering.
  *
- * @param materialData The material data to be uploaded to the UBO, including properties like color, texture, etc.
+ * @param materialData The material data to be uploaded to the SSBO, including properties like color, texture, etc.
  */
-void Renderer::UpdateMaterialUBO(const graphics::MaterialUBO& materialData)
+void Renderer::UpdateMaterialSSBO(const graphics::MaterialSSBO& materialData, uint32_t materialIndex)
 {
-	// Validate material data size first
-	constexpr size_t expectedSize = sizeof(graphics::MaterialUBO);
-	if (expectedSize == 0)
+	if (!m_MaterialSSBO)
 	{
-		EE_CORE_ERROR("Invalid MaterialUBO size: {0}", expectedSize);
-		return;
-	}
-	
-	// Ensure size is reasonable (MaterialUBO should be 128 bytes with proper alignment)
-	if (expectedSize < 64 || expectedSize > 512)
-	{
-		EE_CORE_ERROR("MaterialUBO size out of expected range: {0} bytes (expected ~128 bytes)", expectedSize);
+		EE_CORE_ERROR("MaterialSSBO not initialized - call CompileMaterials() first");
 		return;
 	}
 
-	// Create Material UBO if it doesn't exist
-	if (!m_MaterialUBO)
-	{
-		glGenBuffers(1, &m_MaterialUBO);
-		glBindBuffer(GL_UNIFORM_BUFFER, m_MaterialUBO);
-		glBufferData(GL_UNIFORM_BUFFER, expectedSize, nullptr, GL_DYNAMIC_DRAW);
-		
-		// Check for errors during buffer creation
-		GLenum error = glGetError();
-		if (error != GL_NO_ERROR)
-		{
-			EE_CORE_ERROR("OpenGL error during MaterialUBO creation: {0}", error);
-			return;
-		}
-		
-		glBindBufferBase(GL_UNIFORM_BUFFER, MaterialBindingPoint, m_MaterialUBO);
-		glBindBuffer(GL_UNIFORM_BUFFER, 0);
-		
-		EE_CORE_INFO("Created MaterialUBO with size: {0} bytes", expectedSize);
-	}
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_MaterialSSBO);
 
-	// Upload material data with comprehensive error checking
-	glBindBuffer(GL_UNIFORM_BUFFER, m_MaterialUBO);
-	
-	// Check if buffer is properly bound
-	GLint boundBuffer;
-	glGetIntegerv(GL_UNIFORM_BUFFER_BINDING, &boundBuffer);
-	if (static_cast<GLuint>(boundBuffer) != m_MaterialUBO)
-	{
-		EE_CORE_ERROR("Failed to bind MaterialUBO for update");
-		glBindBuffer(GL_UNIFORM_BUFFER, 0);
-		return;
-	}
+	const size_t materialSize = sizeof(graphics::MaterialSSBO);
+	const size_t offset = materialSize * materialIndex;
 
-	// Check buffer size matches expectation
-	GLint bufferSize;
-	glGetBufferParameteriv(GL_UNIFORM_BUFFER, GL_BUFFER_SIZE, &bufferSize);
-	if (static_cast<size_t>(bufferSize) != expectedSize)
-	{
-		EE_CORE_ERROR("MaterialUBO buffer size mismatch. Expected: {0}, Got: {1}", expectedSize, bufferSize);
-		glBindBuffer(GL_UNIFORM_BUFFER, 0);
-		return;
-	}
+	// Upload to specific index in the array
+	glBufferSubData(GL_SHADER_STORAGE_BUFFER, offset, materialSize, &materialData);
 
-	// Perform the buffer update
-	glBufferSubData(GL_UNIFORM_BUFFER, 0, expectedSize, &materialData);
-	
-	// Check for errors immediately after the critical operation
 	GLenum error = glGetError();
 	if (error != GL_NO_ERROR)
 	{
-		const char* errorString = "";
-		switch (error)
-		{
-		case GL_INVALID_ENUM: errorString = "GL_INVALID_ENUM"; break;
-		case GL_INVALID_VALUE: errorString = "GL_INVALID_VALUE"; break;
-		case GL_INVALID_OPERATION: errorString = "GL_INVALID_OPERATION"; break;
-		case GL_OUT_OF_MEMORY: errorString = "GL_OUT_OF_MEMORY"; break;
-		default: errorString = "UNKNOWN_ERROR"; break;
-		}
-		EE_CORE_ERROR("OpenGL error in UpdateMaterialUBO during glBufferSubData: {0} ({1})", error, errorString);
-		EE_CORE_ERROR("Buffer size: {0}, MaterialUBO size: {1}", bufferSize, expectedSize);
-		
-		// Additional debug information
-		EE_CORE_ERROR("MaterialUBO contents preview:");
-		EE_CORE_ERROR("  metallic: {0}, roughness: {1}, ao: {2}", materialData.metallic, materialData.roughness, materialData.ao);
-		EE_CORE_ERROR("  normalStrength: {0}, shadingModel: {1}", materialData.normalStrength, materialData.shadingModel);
+		EE_CORE_ERROR("Failed to update material at index {0}, error: {1}",
+			materialIndex, error);
 	}
-	
-	glBindBuffer(GL_UNIFORM_BUFFER, 0);
-	glCheckError();
+
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+}
+
+/**
+* @brief Updates the material's SSBO at index 0 with the specified material data.
+ *
+ * This is a convenience overload that defaults to updating the first material (index 0).
+ *
+ * @param materialData The material data to be uploaded to the SSBO, including properties like color, texture, etc.
+ */
+void Renderer::UpdateMaterialSSBO(const graphics::MaterialSSBO& materialData)
+{
+	// This version is kept for backward compatibility
+	// It updates index 0 by default
+	UpdateMaterialSSBO(materialData, 0);
+}
+
+/**
+ * @brief Update material color properties and upload to SSBO
+ * @param entity The entity whose material to update
+ * @param albedo The new albedo color
+ * @param roughness The new roughness value
+ * @param metallic The new metallic value
+ * @param emissive The new emissive color
+ */
+void Renderer::UpdateMaterialColor(EntityID entity,
+	const Vec3& albedo,
+	float roughness,
+	float metallic,
+	const Vec3& emissive)
+{
+	auto& ecs = ECS::GetInstance();
+	auto renderer = ecs.GetSystem<Renderer>();
+	auto& materialComp = ecs.GetComponent<Ermine::Material>(entity);
+	auto* material = materialComp.GetMaterial();
+
+	if (!material) return;
+
+	// Update all properties
+	material->SetVec3("materialAlbedo", albedo);
+	material->SetFloat("materialRoughness", roughness);
+	material->SetFloat("materialMetallic", metallic);
+	material->SetVec3("materialEmissive", emissive);
+
+	// Single upload for all changes
+	auto ssboData = material->GetSSBOData();
+	uint32_t materialIndex = renderer->GetMaterialIndex(entity);
+	renderer->UpdateMaterialSSBO(ssboData, materialIndex);
+}
+
+/**
+ * @brief Retrieves the material index associated with the given entity.
+ * @param entity The entity whose material index is to be retrieved.
+ * @return The material index for the specified entity, or 0 if not found.
+ */
+uint32_t Renderer::GetMaterialIndex(EntityID entity) const
+{
+	auto it = m_EntityMaterialIndices.find(entity);
+	if (it != m_EntityMaterialIndices.end()) {
+		return it->second;
+	}
+	return 0; // Default to first material
+}
+
+/**
+ * @brief Sets the material index uniform before drawing
+ * Call this before each draw call to tell shader which material to use
+ */
+void Renderer::SetMaterialIndex(EntityID entity, const std::shared_ptr<Shader>& shader)
+{
+	if (!shader || !shader->IsValid()) return;
+
+	auto it = m_EntityMaterialIndices.find(entity);
+	if (it != m_EntityMaterialIndices.end())
+	{
+		shader->SetUniform1i("u_MaterialIndex", static_cast<int>(it->second));
+	}
+	else
+	{
+		EE_CORE_WARN("Entity {0} has no material index, using default 0", entity);
+		shader->SetUniform1i("u_MaterialIndex", 0);
+	}
 }
 
 /**
@@ -1395,10 +2294,11 @@ void Renderer::BindMaterialBlockIfPresent(const std::shared_ptr<Shader>& shader)
 	if (m_MaterialBlockBoundPrograms.find(program) != m_MaterialBlockBoundPrograms.end())
 		return;
 
-	GLuint blockIndex = glGetUniformBlockIndex(program, "MaterialBlock");
+	// Get the shader storage block index instead of uniform block index
+	GLuint blockIndex = glGetProgramResourceIndex(program, GL_SHADER_STORAGE_BLOCK, "MaterialBlock");
 	if (blockIndex != GL_INVALID_INDEX)
 	{
-		glUniformBlockBinding(program, blockIndex, MaterialBindingPoint);
+		glShaderStorageBlockBinding(program, blockIndex, MATERIAL_SSBO_BINDING);
 		m_MaterialBlockBoundPrograms.insert(program);
 	}
 }
@@ -1408,6 +2308,22 @@ void Renderer::BindMaterialBlockIfPresent(const std::shared_ptr<Shader>& shader)
  */
 void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 {
+	// Update lights UBO
+	UpdateLightsUBO(editor::EditorCamera::GetInstance().GetViewMatrix());
+
+
+	// Check if new meshes have been registered and need uploading
+	if (m_MeshManager.IsDirty() && m_MeshManager.HasStagedData())
+	{
+		m_MeshManager.UploadAndBuild();
+		EE_CORE_INFO("MeshManager: Uploaded {} new meshes during runtime", m_MeshManager.GetMeshCount());
+	}
+
+	// Compile materials on first update when entities exist
+	if (m_MaterialsDirty && !m_Entities.empty())
+	{
+		CompileMaterials();
+	}
 	if (m_UseDeferredRendering)
 	{
 		// Use deferred rendering pipeline (now includes transparency)
@@ -1416,7 +2332,7 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 	else
 	{
 		// Forward rendering with transparency support
-#ifdef _DEBUG
+#if defined(EE_EDITOR)
 		glBindFramebuffer(GL_FRAMEBUFFER, m_OffscreenBuffer->FBO);
 		glViewport(0, 0, m_OffscreenBuffer->width, m_OffscreenBuffer->height);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -1442,20 +2358,18 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 		glm::mat4 invView = glm::inverse(glmView);
 		Vec3 cameraPos = Vec3(invView[3][0], invView[3][1], invView[3][2]);
 
-		// Update lights UBO for forward rendering
-		UpdateLightsUBO(view);
-
 		auto& ecs = ECS::GetInstance();
 
 		// First pass: Render opaque objects and collect transparent objects
 		for (auto& entity : m_Entities
-		)
+			)
 		{
 			// Model pipeline
-			if (ecs.HasComponent<ModelComponent>(entity))
+			if (ecs.HasComponent<ModelComponent>(entity) && ecs.HasComponent<Ermine::Material>(entity))
 			{
-				auto& modelComp = ecs.GetComponent<ModelComponent>(entity);
 				auto& trans = ecs.GetComponent<Transform>(entity);
+				auto& modelComp = ecs.GetComponent<ModelComponent>(entity);
+				auto& materialComp = ecs.GetComponent<Ermine::Material>(entity);
 
 				if (!modelComp.m_model) continue;
 
@@ -1484,11 +2398,8 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 					continue; // Skip opaque rendering
 				}
 
-				// Render opaque model
-				if (material) {
-					UpdateMaterialUBO(material->GetUBOData());
-				}
-				RenderModel(*modelComp.m_model, view, projection, entityModel);
+
+				RenderModelDeferred(*modelComp.m_model, materialComp.GetMaterial(), view, projection, entityModel);
 			}
 			// Mesh + material pipeline
 			else if (ecs.HasComponent<Mesh>(entity) && ecs.HasComponent<Ermine::Material>(entity))
@@ -1530,29 +2441,21 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 					continue;
 				}
 
-				// Update Material UBO with current material data
-				UpdateMaterialUBO(material->GetUBOData());
 
 				// Bind material (this handles shader binding and texture binding)
 				material->Bind();
 
 				// Bind uniform blocks
-				BindLightsBlockIfPresent(shader);
 				BindMaterialBlockIfPresent(shader);
 
+				// Disable skinning for primitive meshes
+				shader->SetUniform1i("u_UseSkinning", 0);
 
 				// Set transformation matrices
 				shader->SetUniformMatrix4fv("model", model);
 				shader->SetUniformMatrix4fv("view", &view.m2[0][0]);
 				shader->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
 
-				// Calculate normal matrix
-				glm::mat4 glmView = glm::mat4(
-					view.m00, view.m01, view.m02, view.m03,
-					view.m10, view.m11, view.m12, view.m13,
-					view.m20, view.m21, view.m22, view.m23,
-					view.m30, view.m31, view.m32, view.m33
-				);
 				glm::mat4 modelView = glmView * model;
 				glm::mat3 normalMatrix = transpose(inverse(glm::mat3(modelView)));
 				shader->SetUniformMatrix3fv("NormalMatrix", normalMatrix);
@@ -1561,7 +2464,7 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 				shader->SetUniform1i("isBlinnPhong", m_IsBlinnPhong ? 1 : 0);
 
 				// Draw the mesh
-				Draw(mesh.vertex_array, mesh.index_buffer, shader);
+				Draw(mesh.vertex_array, mesh.index_buffer);
 
 				// Unbind material
 				material->Unbind();
@@ -1600,12 +2503,6 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 							auto& materialComponent = ecs.GetComponent<Ermine::Material>(entity);
 							material = materialComponent.GetMaterial();
 						}
-
-						if (material) {
-							UpdateMaterialUBO(material->GetUBOData());
-						}
-
-						RenderModel(*modelComp.m_model, view, projection, transparentObj.modelMatrix);
 					}
 				}
 				// Handle Mesh entities
@@ -1621,14 +2518,10 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 					auto shader = material->GetShader();
 					if (!shader || !shader->IsValid()) continue;
 
-					// Update Material UBO
-					UpdateMaterialUBO(material->GetUBOData());
-
 					// Bind material
 					material->Bind();
 
 					// Bind uniform blocks
-					BindLightsBlockIfPresent(shader);
 					BindMaterialBlockIfPresent(shader);
 
 					// Set transformation matrices
@@ -1643,6 +2536,7 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 						view.m20, view.m21, view.m22, view.m23,
 						view.m30, view.m31, view.m32, view.m33
 					);
+
 					glm::mat4 modelView = glmView * transparentObj.modelMatrix;
 					glm::mat3 normalMatrix = transpose(inverse(glm::mat3(modelView)));
 					shader->SetUniformMatrix3fv("NormalMatrix", normalMatrix);
@@ -1650,8 +2544,45 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 					// Set shading mode
 					shader->SetUniform1i("isBlinnPhong", m_IsBlinnPhong ? 1 : 0);
 
+					// Bind textures
+					int texUnit = 0;
+					if (material->HasParameter("materialAlbedoMap")) {
+						std::shared_ptr<Texture> albedo = material->GetParameter("materialAlbedoMap")->texture;
+						if (albedo && albedo->IsValid()) {
+							albedo->Bind(texUnit);
+						}
+					}
+					texUnit++;
+
+					if (material->HasParameter("materialNormalMap")) {
+						std::shared_ptr<Texture> normal = material->GetParameter("materialNormalMap")->texture;
+						if (normal && normal->IsValid()) {
+							normal->Bind(texUnit);
+							shader->SetUniform1i("materialNormalMap", texUnit);
+						}
+					}
+					texUnit++;
+
+					if (material->HasParameter("materialRoughnessMap")) {
+						std::shared_ptr<Texture> roughness = material->GetParameter("materialRoughnessMap")->texture;
+						if (roughness && roughness->IsValid()) {
+							roughness->Bind(texUnit);
+							shader->SetUniform1i("materialRoughnessMap", texUnit);
+						}
+					}
+					texUnit++;
+
+					if (material->HasParameter("materialMetallicMap")) {
+						std::shared_ptr<Texture> metallic = material->GetParameter("materialMetallicMap")->texture;
+						if (metallic && metallic->IsValid()) {
+							metallic->Bind(texUnit);
+							shader->SetUniform1i("materialMetallicMap", texUnit);
+						}
+					}
+					texUnit++;
+
 					// Draw the mesh
-					Draw(mesh.vertex_array, mesh.index_buffer, shader);
+					Draw(mesh.vertex_array, mesh.index_buffer);
 
 					// Unbind material
 					material->Unbind();
@@ -1665,9 +2596,8 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 			glDisable(GL_BLEND);
 		}
 
-#ifdef _DEBUG
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-#endif
+		// NOTE: Don't unbind framebuffer yet - UI needs to render to it!
+		// Framebuffer will be unbound after UI rendering in Engine.cpp
 	}
 
 	// Increment  frame counter at the end of the frame
@@ -1675,31 +2605,37 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 }
 
 /**
-* @brief Draw the mesh
-* @param vao The vertex array object
-* @param ibo The index buffer object
-* @param shader The shader object
-*/
-void Renderer::Draw(const std::shared_ptr<VertexArray>& vao, const std::shared_ptr<IndexBuffer>& ibo, const std::shared_ptr<Shader>& shader) const
+ * @brief Draw the mesh
+ * @param vao The vertex array object
+ * @param ibo The index buffer object
+ * @param shader The shader object
+ */
+void Renderer::Draw(const std::shared_ptr<VertexArray>& vao, const std::shared_ptr<IndexBuffer>& ibo) const
 {
-   vao->Bind();
-   glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(ibo->GetCount()), GL_UNSIGNED_INT, 0);
-   GPUProfiler::TrackDrawCall(
-       static_cast<uint32_t>(vao->GetVertexCount()),
-       ibo->GetCount()
-   );
-   vao->Unbind();
+	vao->Bind();
+	glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(ibo->GetCount()), GL_UNSIGNED_INT, 0);
+	GPUProfiler::TrackDrawCall(
+		static_cast<uint32_t>(vao->GetVertexCount()),
+		ibo->GetCount()
+	);
+	vao->Unbind();
 }
 
-void Renderer::DrawInstanced(const std::shared_ptr<VertexArray>& vao, const std::shared_ptr<IndexBuffer>& ibo, const std::shared_ptr<Shader>& shader, int instanceCount) const
+/**
+ * @brief Draws a mesh using instanced rendering.
+ * @param vao Vertex array object.
+ * @param ibo Index buffer object.
+ * @param instanceCount Number of instances.
+ */
+void Renderer::DrawInstanced(const std::shared_ptr<VertexArray>& vao, const std::shared_ptr<IndexBuffer>& ibo, int instanceCount) const
 {
-   vao->Bind();
-   glDrawElementsInstanced(GL_TRIANGLES, static_cast<GLsizei>(ibo->GetCount()), GL_UNSIGNED_INT, 0, instanceCount);
-   GPUProfiler::TrackDrawCall(
-       static_cast<uint32_t>(vao->GetVertexCount()) ,
-       ibo->GetCount()
-   );
-   vao->Unbind();
+	vao->Bind();
+	glDrawElementsInstanced(GL_TRIANGLES, static_cast<GLsizei>(ibo->GetCount()), GL_UNSIGNED_INT, 0, instanceCount);
+	GPUProfiler::TrackDrawCall(
+		static_cast<uint32_t>(vao->GetVertexCount()),
+		ibo->GetCount()
+	);
+	vao->Unbind();
 }
 
 /**
@@ -1724,28 +2660,149 @@ const GPUProfiler::PerformanceMetrics& Renderer::GetPerformanceMetrics() const
  */
 Renderer::~Renderer()
 {
-	if (m_LightsSSBO) {
-		glDeleteBuffers(1, &m_LightsSSBO);
-		m_LightsSSBO = 0;
+	// Check if we have a valid OpenGL context
+	if (glfwGetCurrentContext() == nullptr)
+	{
+		// DO NOT LOG - logger may be destroyed during shutdown
+		return;
 	}
 
-	if (m_MaterialUBO) {
-		glDeleteBuffers(1, &m_MaterialUBO);
-		m_MaterialUBO = 0;
-	}
-	if (m_ShadowMapArray) {
-		glDeleteTextures(1, &m_ShadowMapArray);
-		m_ShadowMapArray = 0;
-	}
-	if (m_ShadowMapFBO) {
-		glDeleteFramebuffers(1, &m_ShadowMapFBO);
-		m_ShadowMapFBO = 0;
-	}
+	// Make all bindless texture handles non-resident FIRST
+	try
+	{
+		// Make texture array handles non-resident
+		if (m_TextureArraySSBO != 0)
+		{
+			// Get all texture handles and make them non-resident
+			for (GLuint textureID : m_TextureArray)
+			{
+				GLuint64 handle = glGetTextureHandleARB(textureID);
+				if (handle != 0 && glIsTextureHandleResidentARB(handle))
+				{
+					glMakeTextureHandleNonResidentARB(handle);
+				}
+			}
+			m_TextureArray.clear();
+			m_TextureIDToIndex.clear();
+			m_TexturePathToIndex.clear();
+		}
 
-	CleanupGBuffer();
-	CleanupPostProcessBuffer();
+		// Clean up shadow map handle
+		if (m_ShadowMapArrayHandle != 0)
+		{
+			if (glIsTextureHandleResidentARB(m_ShadowMapArrayHandle))
+			{
+				glMakeTextureHandleNonResidentARB(m_ShadowMapArrayHandle);
+			}
+			m_ShadowMapArrayHandle = 0;
+		}
+
+		// Clean up g-buffer handles
+		CleanupGBuffer();
+
+		// Clean up post-process buffers
+		CleanupPostProcessBuffer();
+
+		// Now delete buffers
+		if (m_LightsUBO)
+		{
+			glDeleteBuffers(1, &m_LightsUBO);
+			m_LightsUBO = 0;
+		}
+
+		if (m_MaterialSSBO)
+		{
+			glDeleteBuffers(1, &m_MaterialSSBO);
+			m_MaterialSSBO = 0;
+		}
+
+		if (m_TextureArraySSBO)
+		{
+			glDeleteBuffers(1, &m_TextureArraySSBO);
+			m_TextureArraySSBO = 0;
+		}
+
+		// Delete shadow map resources
+		if (m_ShadowMapArray)
+		{
+			glDeleteTextures(1, &m_ShadowMapArray);
+			m_ShadowMapArray = 0;
+		}
+
+		if (m_ShadowMapFBO)
+		{
+			glDeleteFramebuffers(1, &m_ShadowMapFBO);
+			m_ShadowMapFBO = 0;
+		}
+
+		// Clean up offscreen buffer
+		if (m_OffscreenBuffer)
+		{
+			if (m_OffscreenBuffer->FBO != 0)
+			{
+				glDeleteFramebuffers(1, &m_OffscreenBuffer->FBO);
+			}
+			if (m_OffscreenBuffer->ColorTexture != 0)
+			{
+				glDeleteTextures(1, &m_OffscreenBuffer->ColorTexture);
+			}
+			if (m_OffscreenBuffer->RBO != 0)
+			{
+				glDeleteRenderbuffers(1, &m_OffscreenBuffer->RBO);
+			}
+			m_OffscreenBuffer.reset();
+		}
+
+		// Clean up picking buffer
+		if (m_PickingBuffer)
+		{
+			if (m_PickingBuffer->FBO != 0)
+			{
+				glDeleteFramebuffers(1, &m_PickingBuffer->FBO);
+			}
+			if (m_PickingBuffer->ColorID != 0)
+			{
+				glDeleteTextures(1, &m_PickingBuffer->ColorID);
+			}
+			if (m_PickingBuffer->Depth != 0)
+			{
+				glDeleteRenderbuffers(1, &m_PickingBuffer->Depth);
+			}
+			m_PickingBuffer.reset();
+		}
+
+		// Clean up debug rendering resources
+		if (m_DebugVAO != 0)
+		{
+			glDeleteVertexArrays(1, &m_DebugVAO);
+			m_DebugVAO = 0;
+		}
+
+		if (m_DebugVBO != 0)
+		{
+			glDeleteBuffers(1, &m_DebugVBO);
+			m_DebugVBO = 0;
+		}
+
+		// Don't call glCheckError here as context might be shutting down
+		// Instead, just clear any pending errors silently
+		while (glGetError() != GL_NO_ERROR);
+	}
+	catch (...)
+	{
+	}
 }
 
+/**
+ * @brief Toggles between forward and deferred rendering pipelines.
+ *
+ * This function flips the internal flag @c m_UseDeferredRendering. When enabled,
+ * all rendering will go through the deferred pipeline using a G-buffer and lighting pass.
+ * When disabled, rendering falls back to forward shading, where each object is drawn directly
+ * with its material and lighting applied in a single pass.
+ *
+ * It also logs a message indicating the current rendering mode.
+ */
 void Renderer::ToggleDeferredRendering()
 {
 	m_UseDeferredRendering = !m_UseDeferredRendering;
@@ -1756,73 +2813,148 @@ void Renderer::ToggleDeferredRendering()
 
 }
 
-void Renderer::RenderModel(const Model& model, const Mtx44& view, const Mtx44& projection, const glm::mat4& rootTransform)
+/**
+ * @brief Renders a model using the deferred rendering pipeline.
+ *
+ * In this mode, the function uses the shared G-buffer shader (@c m_GBufferShader) to
+ * write geometry data (position, normals, material properties) into the G-buffer.
+ * Per-entity materials are not bound as shaders, but their UBO data (albedo, metallic,
+ * roughness, emissive, etc.) is uploaded to the GPU so the G-buffer can store them.
+ *
+ * @param model The model to render, containing mesh geometry and local transforms.
+ * @param material Pointer to the material providing UBO data (albedo, metallic, etc.).
+ * @param view The view matrix representing the camera transform.
+ * @param projection The projection matrix (perspective or orthographic).
+ * @param rootTransform Root transform matrix for the entity (translation, rotation, scale).
+ */
+void Renderer::RenderModelDeferred(const Model& model, graphics::Material* material, const Mtx44& view, const Mtx44& projection, const glm::mat4& rootTransform)
 {
 	const auto& meshes = model.GetMeshes();
-	if (meshes.empty())
-		return;
+	if (meshes.empty() || !material) return;
+	if (!m_GBufferShader || !m_GBufferShader->IsValid()) return;
+
+	// Bind shared g-buffer shader used to write geometry information
+	m_GBufferShader->Bind();
+
+	// convert the Mtx44 view/projection into glm mats for convenience
+	glm::mat4 glmView = ToGlm(view);
+	glm::mat4 glmProj = ToGlm(projection);
+
+	// Get bone transforms (may be empty for static meshes)
+	const auto& boneTransforms = model.GetBoneTransforms();
+	const bool hasBones = !boneTransforms.empty();
+	m_GBufferShader->SetUniform1i("u_UseSkinning", hasBones ? 1 : 0); // Enable skinning for model
+
+	// Upload bone matrices if present
+	if (hasBones)
+	{
+		GLsizei count = std::min((int)boneTransforms.size(), MAX_BONE_UNIFORMS);
+		GLint loc = glGetUniformLocation(m_GBufferShader->GetRendererID(), "u_BoneMatrices");
+		glUniformMatrix4fv(loc, count, GL_FALSE, glm::value_ptr(boneTransforms[0]));
+	}
 
 	for (const auto& mesh : meshes)
 	{
 		if (!mesh.vao || !mesh.ibo) continue;
 
-		auto shader = m_GBufferShader ? m_GBufferShader : AssetManager::GetInstance().GetShader("default");
-		if (!shader || !shader->IsValid()) continue;
-
-		shader->Bind();
-		BindLightsBlockIfPresent(shader);
-		BindMaterialBlockIfPresent(shader);
-
 		glm::mat4 modelMat = rootTransform * mesh.localTransform;
+		m_GBufferShader->SetUniformMatrix4fv("model", modelMat);
+		m_GBufferShader->SetUniformMatrix4fv("view", glmView);
+		m_GBufferShader->SetUniformMatrix4fv("projection", glmProj);
 
-		shader->SetUniformMatrix4fv("model", modelMat);
-		shader->SetUniformMatrix4fv("view", &view.m2[0][0]);
-		shader->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
+		glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(modelMat)));
+		m_GBufferShader->SetUniformMatrix3fv("NormalMatrix", normalMatrix);
 
-		glm::mat4 glmView = glm::mat4(
-			view.m00, view.m01, view.m02, view.m03,
-			view.m10, view.m11, view.m12, view.m13,
-			view.m20, view.m21, view.m22, view.m23,
-			view.m30, view.m31, view.m32, view.m33
-		);
-		glm::mat4 modelView = glmView * modelMat;
-		glm::mat3 normalMatrix = transpose(inverse(glm::mat3(modelView)));
-		shader->SetUniformMatrix3fv("NormalMatrix", normalMatrix);
-
-		if (mesh.texture && mesh.texture->IsValid())
-		{
-			// Bind texture to texture unit 0
-			mesh.texture->Bind(0);
-
-			// Tell the shader which texture unit the sampler uses
-			if (shader->HasUniform("materialAlbedoMap"))
-			shader->SetUniform1i("materialAlbedoMap", 0);
-		}
-
-		Draw(mesh.vao, mesh.ibo, shader);
+		Draw(mesh.vao, mesh.ibo);
 	}
 }
 
+/**
+ * @brief Renders a model using the forward rendering pipeline.
+ *
+ * In this mode, the function binds the entity's own material and its shader, then
+ * issues draw calls for each mesh in the model. Lighting and material shading are
+ * evaluated directly during rasterization (per-fragment).
+ *
+ * @param model The model to render, containing mesh geometry and local transforms.
+ * @param material Pointer to the material to bind, providing textures and shader.
+ * @param view The view matrix representing the camera transform.
+ * @param projection The projection matrix (perspective or orthographic).
+ * @param rootTransform Root transform matrix for the entity (translation, rotation, scale).
+ */
+void Renderer::RenderModelForward(const Model& model, graphics::Material* material, const Mtx44& view, const Mtx44& projection, const glm::mat4& rootTransform)
+{
+	const auto& meshes = model.GetMeshes();
+	if (meshes.empty() || !material) return;
+
+	auto shader = material->GetShader();
+	if (!shader || !shader->IsValid()) return;
+
+
+	glm::mat4 glmView = ToGlm(view);
+	glm::mat4 glmProj = ToGlm(projection);
+
+	const auto& boneTransforms = model.GetBoneTransforms();
+	const bool hasBones = !boneTransforms.empty();
+	shader->SetUniform1i("u_UseSkinning", hasBones ? 1 : 0); // Enable skinning for model
+
+	// bind material (textures, shader)
+	material->Bind();
+	BindMaterialBlockIfPresent(shader);
+
+	// Upload bone matrices if present
+	if (hasBones)
+	{
+		GLsizei count = std::min((int)boneTransforms.size(), MAX_BONE_UNIFORMS);
+		GLint loc = glGetUniformLocation(shader->GetRendererID(), "u_BoneMatrices");
+		glUniformMatrix4fv(loc, count, GL_FALSE, glm::value_ptr(boneTransforms[0]));
+	}
+
+	for (const auto& mesh : meshes)
+	{
+		if (!mesh.vao || !mesh.ibo) continue;
+
+		glm::mat4 modelMat = rootTransform * mesh.localTransform;
+		shader->SetUniformMatrix4fv("model", modelMat);
+		shader->SetUniformMatrix4fv("view", glmView);
+		shader->SetUniformMatrix4fv("projection", glmProj);
+
+		glm::mat4 modelView = glmView * modelMat;
+		glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(modelView)));
+		shader->SetUniformMatrix3fv("NormalMatrix", normalMatrix);
+		Draw(mesh.vao, mesh.ibo);
+	}
+
+	material->Unbind();
+}
+
+/**
+ * @brief Checks if a material is transparent.
+ * @param material Material pointer.
+ * @return true if transparent, false otherwise.
+ */
 bool Renderer::IsTransparentMaterial(const Ermine::graphics::Material* material) const
 {
 	if (!material) return false;
 
-	// Check if material has dedicated transparency parameter
-	if (auto transparencyParam = material->GetParameter("materialTransparency")) {
-		if (transparencyParam->type == MaterialParamType::FLOAT &&
-			transparencyParam->floatValues.size() >= 1) {
-			float transparency = transparencyParam->floatValues[0];
-			return transparency > 0.01f; // Consider transparent if transparency > 1%
+	// Check if material has albedo with alpha for transparency
+	if (auto albedoParam = material->GetParameter("materialAlbedo")) {
+		if (albedoParam->type == MaterialParamType::VEC4 &&
+			albedoParam->floatValues.size() >= 4) {
+			float alpha = albedoParam->floatValues[3];
+			return alpha < 0.99f; // Consider transparent if alpha < 99%
 		}
-	}
-
-	// Fallback: Check if there's an albedo texture that might have alpha
-	if (auto albedoTexParam = material->GetParameter("materialAlbedoMap")) {
-		if (albedoTexParam->type == MaterialParamType::TEXTURE_2D && 
-			albedoTexParam->texture && albedoTexParam->texture->IsValid()) {
-			// For texture-based materials, we can't easily check alpha without loading the texture
-			// For now, assume opaque unless explicitly marked as transparent
-			return false;
+		// If albedo is Vec3, check if material has an albedo texture with alpha
+		else if (albedoParam->type == MaterialParamType::VEC3) {
+			// Check if there's an albedo texture that might have alpha
+			if (auto albedoTexParam = material->GetParameter("materialAlbedoMap")) {
+				if (albedoTexParam->type == MaterialParamType::TEXTURE_2D &&
+					albedoTexParam->texture && albedoTexParam->texture->IsValid()) {
+					// For texture-based materials, we can't easily check alpha without loading the texture
+					// For now, assume opaque unless explicitly marked as transparent
+					return false;
+				}
+			}
 		}
 	}
 
@@ -1830,24 +2962,66 @@ bool Renderer::IsTransparentMaterial(const Ermine::graphics::Material* material)
 	return false;
 }
 
-void Renderer::SortTransparentObjects(const Vec3& cameraPos)
+bool Renderer::HasCustomShader(const Ermine::graphics::Material* material) const
 {
-	// Calculate distances and sort transparent objects back-to-front
-	for (auto& obj : m_transparentObjects) {
-		// Extract position from model matrix
-		glm::vec3 objPos = glm::vec3(obj.modelMatrix[3]);
-		glm::vec3 camPos = glm::vec3(cameraPos.x, cameraPos.y, cameraPos.z);
+	if (!material) return false;
 
-		obj.distanceToCamera = glm::distance(objPos, camPos);
-	}
-
-	// Sort back-to-front for proper alpha blending
-	std::sort(m_transparentObjects.begin(), m_transparentObjects.end());
+	// Check if material has a custom shader (not using standard deferred pipeline)
+	auto shader = material->GetShader();
+	return shader && shader != m_GBufferShader;
 }
 
-void Renderer::RenderTransparentPass(const Mtx44& view, const Mtx44& projection)
+/**
+ * @brief Sorts transparent objects by distance to camera.
+ * @param cameraPos Camera position.
+ */
+void Renderer::SortTransparentObjects(const Vec3& cameraPos)
 {
-	if (m_transparentObjects.empty()) return;
+	if (m_ForwardPassDrawInfos.empty()) return;
+
+	glm::vec3 camPos = glm::vec3(cameraPos.x, cameraPos.y, cameraPos.z);
+
+	// Create indices for sorting
+	std::vector<size_t> indices(m_ForwardPassDrawInfos.size());
+	std::iota(indices.begin(), indices.end(), 0);
+
+	// Calculate distances and sort indices back-to-front
+	std::sort(indices.begin(), indices.end(), [&](size_t a, size_t b) {
+		// Extract position from model matrix
+		glm::vec3 posA = glm::vec3(m_ForwardPassDrawInfos[a].modelMatrix[3]);
+		glm::vec3 posB = glm::vec3(m_ForwardPassDrawInfos[b].modelMatrix[3]);
+
+		float distA = glm::distance(posA, camPos);
+		float distB = glm::distance(posB, camPos);
+
+		return distA > distB; // Back-to-front for alpha blending
+		});
+
+	// Reorder draw commands and draw infos based on sorted indices
+	std::vector<DrawElementsIndirectCommand> sortedCommands;
+	std::vector<DrawInfo> sortedInfos;
+	sortedCommands.reserve(m_ForwardPassDrawCommands.size());
+	sortedInfos.reserve(m_ForwardPassDrawInfos.size());
+
+	for (size_t idx : indices) {
+		sortedCommands.push_back(m_ForwardPassDrawCommands[idx]);
+		sortedInfos.push_back(m_ForwardPassDrawInfos[idx]);
+	}
+
+	m_ForwardPassDrawCommands = std::move(sortedCommands);
+	m_ForwardPassDrawInfos = std::move(sortedInfos);
+}
+
+/**
+ * @brief Renders all transparent objects using forward rendering.
+ * @param view View matrix.
+ * @param projection Projection matrix.
+ */
+void Renderer::RenderForwardPass(const Mtx44& view, const Mtx44& projection)
+{
+	if (m_ForwardPassDrawCommands.empty()) {
+		return;
+	}
 
 	// Bind the post-process buffer where the opaque scene was rendered
 	if (!m_PostProcessBuffer) {
@@ -1871,136 +3045,68 @@ void Renderer::RenderTransparentPass(const Mtx44& view, const Mtx44& projection)
 	// Disable face culling for transparent objects (they might be viewed from inside)
 	glDisable(GL_CULL_FACE);
 
-	// Get ECS reference
-	const auto& ecs = Ermine::ECS::GetInstance();
-
-	// Render all transparent objects in sorted order
-	for (const auto& transparentObj : m_transparentObjects) {
-		EntityID entity = transparentObj.entity;
-
-		if (!ecs.HasComponent<Ermine::Material>(entity)) continue;
-
-		auto& materialComponent = ecs.GetComponent<Ermine::Material>(entity);
-		Ermine::graphics::Material* material = materialComponent.GetMaterial();
-
-		if (!material || !IsTransparentMaterial(material)) continue;
-
-		// Use forward shader for transparent objects (enhanced fragment shader)
-		auto shader = m_ForwardShader ? m_ForwardShader : material->GetShader();
-		if (!shader || !shader->IsValid()) continue;
-
-		shader->Bind();
-
-		// Bind uniform blocks
-		BindLightsBlockIfPresent(shader);
-		BindMaterialBlockIfPresent(shader);
-
-		// Update material UBO
-		UpdateMaterialUBO(material->GetUBOData());
-
-		// Set transformation matrices
-		shader->SetUniformMatrix4fv("model", transparentObj.modelMatrix);
-		shader->SetUniformMatrix4fv("view", &view.m2[0][0]);
-		shader->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
-
-		// Calculate normal matrix
-		glm::mat4 glmView = glm::mat4(
-			view.m00, view.m01, view.m02, view.m03,
-			view.m10, view.m11, view.m12, view.m13,
-			view.m20, view.m21, view.m22, view.m23,
-			view.m30, view.m31, view.m32, view.m33
-		);
-		glm::mat4 modelView = glmView * transparentObj.modelMatrix;
-		glm::mat3 normalMatrix = transpose(inverse(glm::mat3(modelView)));
-		shader->SetUniformMatrix3fv("NormalMatrix", normalMatrix);
-
-		// Set shading mode
-		shader->SetUniform1i("isBlinnPhong", m_IsBlinnPhong ? 1 : 0);
-
-		// Bind textures
-		int texUnit = 0;
-		if (material->HasParameter("materialAlbedoMap")) {
-			std::shared_ptr<Texture> albedo = material->GetParameter("materialAlbedoMap")->texture;
-			if (albedo && albedo->IsValid()) {
-				albedo->Bind(texUnit);
-				shader->SetUniform1i("materialAlbedoMap", texUnit);
-			}
-		}
-		texUnit++;
-
-		if (material->HasParameter("materialNormalMap")) {
-			std::shared_ptr<Texture> normal = material->GetParameter("materialNormalMap")->texture;
-			if (normal && normal->IsValid()) {
-				normal->Bind(texUnit);
-				shader->SetUniform1i("materialNormalMap", texUnit);
-			}
-		}
-		texUnit++;
-
-		if (material->HasParameter("materialRoughnessMap")) {
-			std::shared_ptr<Texture> roughness = material->GetParameter("materialRoughnessMap")->texture;
-			if (roughness && roughness->IsValid()) {
-				roughness->Bind(texUnit);
-				shader->SetUniform1i("materialRoughnessMap", texUnit);
-			}
-		}
-		texUnit++;
-
-		if (material->HasParameter("materialMetallicMap")) {
-			std::shared_ptr<Texture> metallic = material->GetParameter("materialMetallicMap")->texture;
-			if (metallic && metallic->IsValid()) {
-				metallic->Bind(texUnit);
-				shader->SetUniform1i("materialMetallicMap", texUnit);
-			}
-		}
-		texUnit++;
-
-		if (material->HasParameter("materialEmissiveMap")) {
-			std::shared_ptr<Texture> emissive = material->GetParameter("materialEmissiveMap")->texture;
-			if (emissive && emissive->IsValid()) {
-				emissive->Bind(texUnit);
-				shader->SetUniform1i("materialEmissiveMap", texUnit);
-			}
-		}
-		texUnit++;
-
-		// Bind environment maps for refraction/reflection
-		if (material->HasParameter("materialEnvironmentMap")) {
-			std::shared_ptr<Cubemap> env = material->GetParameter("materialEnvironmentMap")->cubemap;
-			if (env && env->IsValid()) {
-				env->Bind(texUnit);
-				shader->SetUniform1i("materialEnvironmentMap", texUnit);
-			}
-		}
-		texUnit++;
-
-		if (material->HasParameter("materialIrradianceMap")) {
-			std::shared_ptr<Cubemap> irradiance = material->GetParameter("materialIrradianceMap")->cubemap;
-			if (irradiance && irradiance->IsValid()) {
-				irradiance->Bind(texUnit);
-				shader->SetUniform1i("materialIrradianceMap", texUnit);
-			}
-		}
-
-		// Render the mesh
-		if (ecs.HasComponent<ModelComponent>(entity)) {
-			// Handle model component
-			auto& modelComp = ecs.GetComponent<ModelComponent>(entity);
-			if (modelComp.m_model) {
-				RenderModel(*modelComp.m_model, view, projection, transparentObj.modelMatrix);
-			}
-		}
-		else if (ecs.HasComponent<Mesh>(entity)) {
-			// Handle regular mesh component
-			auto& mesh = ecs.GetComponent<Mesh>(entity);
-			if (mesh.vertex_array && mesh.index_buffer) {
-				Draw(mesh.vertex_array, mesh.index_buffer, shader);
-			}
-		}
-
-		// Unbind material
-		material->Unbind();
+	// Bind forward shader
+	if (!m_ForwardShader || !m_ForwardShader->IsValid()) {
+		EE_CORE_ERROR("Forward shader not initialized!");
+		glDepthMask(GL_TRUE);
+		glEnable(GL_CULL_FACE);
+		glDisable(GL_BLEND);
+		return;
 	}
+
+	m_ForwardShader->Bind();
+
+	// Set view and projection uniforms
+	m_ForwardShader->SetUniformMatrix4fv("view", &view.m2[0][0]);
+	m_ForwardShader->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
+
+	// Upload forward pass draw commands to GPU
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_MeshManager.m_DrawCommandsSSBO);
+	size_t commandsBufferSize = m_ForwardPassDrawCommands.size() * sizeof(DrawElementsIndirectCommand);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, commandsBufferSize, m_ForwardPassDrawCommands.data(), GL_DYNAMIC_DRAW);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+	// Upload forward pass draw infos to persistent mapped buffer after geometry pass data
+	size_t drawInfoOffset = m_StandardDrawCommands.size() + m_SkinnedDrawCommands.size();
+	m_MeshManager.m_PersistentDrawInfoBuffer.WriteDrawInfos(m_ForwardPassDrawInfos, drawInfoOffset);
+
+	// Set baseDrawID = offset so gl_DrawID in shader accesses correct DrawInfo indices
+	m_ForwardShader->SetUniform1ui("baseDrawID", static_cast<uint32_t>(drawInfoOffset));
+
+	// Determine which VAO to use (check if any meshes are skinned)
+	bool hasSkinned = false;
+	for (const auto& info : m_ForwardPassDrawInfos) {
+		if (info.flags & 1) {
+			hasSkinned = true;
+			break;
+		}
+	}
+
+	// For now, use StandardVAO for all (TODO: separate skinned/standard batches)
+	GLuint vaoToUse = hasSkinned ? m_MeshManager.GetSkinnedVAO() : m_MeshManager.GetStandardVAO();
+	if (vaoToUse == 0) {
+		EE_CORE_ERROR("VAO not initialized for forward pass!");
+		glDepthMask(GL_TRUE);
+		glEnable(GL_CULL_FACE);
+		glDisable(GL_BLEND);
+		return;
+	}
+
+	// Bind VAO and issue draw call
+	glBindVertexArray(vaoToUse);
+	glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_MeshManager.m_DrawCommandsSSBO);
+	glMultiDrawElementsIndirect(
+		GL_TRIANGLES,
+		GL_UNSIGNED_INT,
+		nullptr,
+		static_cast<GLsizei>(m_ForwardPassDrawCommands.size()),
+		0
+	);
+	GPUProfiler::TrackDrawCall(m_ForwardPassDrawCommandsVertexCount, m_ForwardPassDrawCommandsIndexCount);
+
+	// Unbind
+	glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
+	glBindVertexArray(0);
 
 	// Restore render state
 	glDepthMask(GL_TRUE);
@@ -2008,8 +3114,7 @@ void Renderer::RenderTransparentPass(const Mtx44& view, const Mtx44& projection)
 	glCullFace(GL_BACK);
 	glDisable(GL_BLEND);
 
-	// Clear transparent objects list for next frame
-	m_transparentObjects.clear();
+	GPUProfiler::EndEvent();
 }
 
 #pragma region Shadow Mapping
@@ -2021,6 +3126,12 @@ void Renderer::RenderTransparentPass(const Mtx44& view, const Mtx44& projection)
  */
 bool Renderer::InitializeShadowMap()
 {
+	if (m_ShadowMapFBO != 0)
+	{
+		glDeleteFramebuffers(1, &m_ShadowMapFBO);
+		m_ShadowMapFBO = 0;
+	}
+
 	glGenFramebuffers(1, &m_ShadowMapFBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, m_ShadowMapFBO);
 
@@ -2028,7 +3139,7 @@ bool Renderer::InitializeShadowMap()
 	// and defer attachment until CreateShadowMap is called.
 	if (m_ShadowMapArray != 0)
 	{
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_ShadowMapArray, 0);
+		glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_ShadowMapArray, 0);
 	}
 
 	// No color buffer is drawn
@@ -2070,6 +3181,10 @@ bool Renderer::CreateShadowMapArray()
 	// Clean up previous array if it exists
 	if (m_ShadowMapArray)
 	{
+		if (m_ShadowMapArrayHandle != 0) {
+			glMakeTextureHandleNonResidentARB(m_ShadowMapArrayHandle);
+			m_ShadowMapArrayHandle = 0;
+		}
 		glDeleteTextures(1, &m_ShadowMapArray);
 		m_ShadowMapArray = 0;
 	}
@@ -2256,7 +3371,7 @@ bool Renderer::testSpotlightFrustumIntersection(const glm::vec3& lightPos, const
 
 	// Test points around cone circumference
 	for (int i = 0; i < numSamples; ++i) {
-		float angle = (2.0f * M_PI * i) / numSamples;
+		float angle = (2.0f * static_cast<float>(M_PI) * static_cast<float>(i)) / static_cast<float>(numSamples);
 		glm::vec3 offset = right * (coneRadius * std::cos(angle)) + up * (coneRadius * std::sin(angle));
 		glm::vec3 conePoint = coneCenter + offset;
 
@@ -2271,74 +3386,32 @@ bool Renderer::testSpotlightFrustumIntersection(const glm::vec3& lightPos, const
 }
 
 /**
- * @brief Calculates the shadow matrix for a spotlight cascade.
+ * @brief Calculates the shadow matrix for a spotlight.
  * Computes a view and orthographic projection matrix that tightly fits the cascade frustum in light space.
  * Applies texel snapping and margin adjustments for stable shadows.
  * @param lightPos Position of the spotlight.
  * @param spotDir Direction vector of the spotlight.
  * @param outerAngleRad Outer angle of the spotlight cone in radians.
  * @param lightRadius Maximum range of the spotlight.
- * @param cascadeFrustum Array of eight frustum corners for the cascade.
- * @param shadowRes Shadow map resolution.
- * @return The spotlight's light-space matrix for the cascade.
- */
-glm::mat4 Renderer::calculateSpotlightCascadeMatrix(const glm::vec3& lightPos, const glm::vec3& spotDir,
-	float outerAngleRad, float lightRadius,
-	const std::array<glm::vec3, 8>& cascadeFrustum,
-	int shadowRes) {
+*/
+glm::mat4 Renderer::calculateSpotlightShadowMatrix(const glm::vec3& lightPos,
+	const glm::vec3& spotDir,
+	float outerAngleRad,
+	float lightRadius) {
 
-	// Create spotlight's base view matrix
+	// View matrix
 	glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
 	if (glm::abs(glm::dot(spotDir, up)) > 0.999f)
 		up = glm::vec3(1.0f, 0.0f, 0.0f);
-	glm::mat4 baseView = glm::lookAt(lightPos, lightPos + spotDir, up);
+	glm::mat4 view = glm::lookAt(lightPos, lightPos + spotDir, up);
 
-	// Transform cascade frustum to light space
-	std::vector<glm::vec3> frustumLS;
-	frustumLS.reserve(8);
-	for (const auto& corner : cascadeFrustum) {
-		glm::vec4 p = baseView * glm::vec4(corner, 1.0f);
-		frustumLS.emplace_back(glm::vec3(p));
-	}
+	// Perspective projection matching cone
+	float fov = 2.0f * outerAngleRad;
+	float nearPlane = 0.1f;
+	float farPlane = lightRadius;
+	glm::mat4 proj = glm::perspective(fov, 1.0f, nearPlane, farPlane);
 
-	// Find AABB in light space
-	glm::vec3 lsMin = frustumLS[0];
-	glm::vec3 lsMax = frustumLS[0];
-	for (const auto& p : frustumLS) {
-		lsMin = glm::min(lsMin, p);
-		lsMax = glm::max(lsMax, p);
-	}
-
-	// Apply margins to prevent clipping
-	const float xyMargin = 0.2f;
-	const float zMargin = 5.0f;
-	lsMin -= glm::vec3(xyMargin, xyMargin, zMargin);
-	lsMax += glm::vec3(xyMargin, xyMargin, zMargin);
-
-	// Ensure we don't go beyond the spotlight's natural cone
-	float maxConeRadius = lightRadius * std::tan(outerAngleRad);
-	float maxExtent = glm::max(glm::abs(lsMin.x), glm::abs(lsMax.x));
-	maxExtent = glm::max(maxExtent, glm::max(glm::abs(lsMin.y), glm::abs(lsMax.y)));
-
-	if (maxExtent > maxConeRadius) {
-		float scale = maxConeRadius / maxExtent;
-		lsMin.x *= scale;
-		lsMin.y *= scale;
-		lsMax.x *= scale;
-		lsMax.y *= scale;
-	}
-
-	// Create orthographic projection (tighter fit than perspective for cascaded shadows)
-	float nearPlane = -lsMax.z;
-	float farPlane = -lsMin.z;
-
-	// Ensure valid near/far planes
-	if (nearPlane <= 0.0f) nearPlane = 0.1f;
-	if (farPlane <= nearPlane) farPlane = nearPlane + lightRadius;
-
-	glm::mat4 lightProj = glm::ortho(lsMin.x, lsMax.x, lsMin.y, lsMax.y, nearPlane, farPlane);
-
-	return lightProj * baseView;
+	return proj * view;
 }
 
 /**
@@ -2395,7 +3468,7 @@ void Renderer::CalculateLightMatrix(const editor::EditorCamera& editorCamera)
 	glm::vec3 viewDir = glm::normalize(farPos - nearPos);
 
 	const auto& ecs = Ermine::ECS::GetInstance();
-	int currentLayer = 0;
+	unsigned int currentLayer = 0;
 
 	for (auto e : m_LightSystem->m_Entities) {
 		if (!ecs.HasComponent<Light>(e) || !ecs.HasComponent<Transform>(e)) continue;
@@ -2457,7 +3530,7 @@ void Renderer::CalculateLightMatrix(const editor::EditorCamera& editorCamera)
 				// Compute depth for depth buffer
 				glm::vec4 clipFar = glmProj * glmView * glm::vec4(splitFarWorld, 1.0f);
 				float ndcZ_splitFar = (clipFar.w == 0.0f) ? 1.0f : (clipFar.z / clipFar.w);
-				float depthBufferFar = ndcZ_splitFar * 0.5f + 0.5f;
+				//float depthBufferFar = ndcZ_splitFar * 0.5f + 0.5f;
 
 				// Build frustum corners
 				std::array<glm::vec3, 8> frustumCornersWorld;
@@ -2484,7 +3557,7 @@ void Renderer::CalculateLightMatrix(const editor::EditorCamera& editorCamera)
 
 				// Place light far enough away with safety margin
 				float diagonal = glm::length(maxCorner - minCorner);
-			 float lightDistance = glm::max(diagonal * 3.0f, (splitFarDist - splitNearDist) * 2.0f);
+				float lightDistance = glm::max(diagonal * 3.0f, (splitFarDist - splitNearDist) * 2.0f);
 				glm::vec3 lightPosCalc = worldCenter - lightDir * lightDistance;
 
 				// Create light view matrix
@@ -2544,8 +3617,8 @@ void Renderer::CalculateLightMatrix(const editor::EditorCamera& editorCamera)
 				}
 
 				// Add margins to prevent clipping
-				const float xyMargin = 0.5f;
-				const float zMargin = 10.0f;
+				const float xyMargin = 0.1f;
+				const float zMargin = 0.5f;
 				lsMin -= glm::vec3(xyMargin, xyMargin, zMargin);
 				lsMax += glm::vec3(xyMargin, xyMargin, zMargin);
 
@@ -2556,122 +3629,48 @@ void Renderer::CalculateLightMatrix(const editor::EditorCamera& editorCamera)
 
 				// Store final matrix and split depth
 				light.lightSpaceMatrices[split] = lightProj * rotatedLightView;
-				light.splitDepths[split] = depthBufferFar;
+				light.splitDepths[split] = splitFarDist;
 			}
 
 			currentLayer += NUM_CASCADES;
 		}
 		else if (light.type == LightType::SPOT) {
-			// CASCADED SPOTLIGHT PROCESSING
+			// Check if we have a shadow map layer available
+			if (currentLayer >= SHADOW_MAX_LAYERS) {
+				continue;
+			}
 
 			// Get spotlight direction and parameters
 			glm::vec3 spotDir = glm::normalize(rotQuat * glm::vec3(0.0f, 0.0f, 1.0f));
 			float outerAngleRad = glm::radians(light.outerAngle);
 
-			// Compute cascade splits (same as directional lights)
-			std::vector<float> splits(NUM_CASCADES + 1);
-			for (int i = 0; i <= NUM_CASCADES; ++i) {
-				float si = static_cast<float>(i) / static_cast<float>(NUM_CASCADES);
-				float logSplit = nearDist * std::pow(farDist / nearDist, si);
-				float linSplit = nearDist + (farDist - nearDist) * si;
-				splits[i] = SHADOW_MAP_ARRAY_LAMBDA * logSplit + (1.0f - SHADOW_MAP_ARRAY_LAMBDA) * linSplit;
-			}
+			// Calculate single shadow matrix for the spotlight
+			light.lightSpaceMatrices[0] = calculateSpotlightShadowMatrix(
+				lightPos, spotDir, outerAngleRad, light.radius);
 
-			// Get shadow map resolution
-			int shadowRes = 1024;
-			if (m_ShadowMapArray != 0) {
-				glBindTexture(GL_TEXTURE_2D_ARRAY, m_ShadowMapArray);
-				GLint w = 0;
-				glGetTexLevelParameteriv(GL_TEXTURE_2D_ARRAY, 0, GL_TEXTURE_WIDTH, &w);
-				if (w > 0) shadowRes = w;
-				glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
-				glCheckError();
-			}
-
-			// Test intersection with each cascade and build matrices
-			std::vector<bool> intersectingCascades(NUM_CASCADES, false);
-			std::vector<std::array<glm::vec3, 8>> cascadeFrustums(NUM_CASCADES);
-			int validCascades = 0;
-
-			for (int cascade = 0; cascade < NUM_CASCADES; ++cascade) {
-				float splitNearDist = splits[cascade];
-				float splitFarDist = splits[cascade + 1];
-
-				// Convert split distances to NDC Z values
-				glm::vec3 splitNearWorld = nearPos + viewDir * (splitNearDist - nearDist);
-				glm::vec3 splitFarWorld = nearPos + viewDir * (splitFarDist - nearDist);
-
-				glm::vec4 clipNear = glmProj * glmView * glm::vec4(splitNearWorld, 1.0f);
-				glm::vec4 clipFar = glmProj * glmView * glm::vec4(splitFarWorld, 1.0f);
-
-				float ndcZ_splitNear = (cascade == 0) ? -1.0f :
-					(clipNear.w == 0.0f) ? -1.0f : (clipNear.z / clipNear.w);
-				float ndcZ_splitFar = (clipFar.w == 0.0f) ? 1.0f : (clipFar.z / clipFar.w);
-
-				// Create frustum for this cascade
-				cascadeFrustums[cascade] = createCascadeFrustum(invPV, ndcZ_splitNear, ndcZ_splitFar);
-
-				// Test intersection with this cascade
-				bool intersectsThisCascade = testSpotlightFrustumIntersection(
-					lightPos, spotDir, outerAngleRad, light.radius, cascadeFrustums[cascade]);
-
-				if (intersectsThisCascade) {
-					intersectingCascades[cascade] = true;
-					validCascades++;
-				}
-			}
-
-			if (validCascades == 0) {
-				continue;
-			}
-
-			// Check if we have enough shadow map layers
-			if (currentLayer + validCascades > SHADOW_MAX_LAYERS) {
-				continue;
-			}
-
+			// Assign shadow map layer
 			light.startOffset = currentLayer;
-
-			// Generate shadow matrices for intersecting cascades
-			int cascadeLayerOffset = 0;
-			for (int cascade = 0; cascade < NUM_CASCADES; ++cascade) {
-				if (intersectingCascades[cascade]) {
-					// Calculate specialized matrix for this cascade
-					light.lightSpaceMatrices[cascade] = calculateSpotlightCascadeMatrix(
-						lightPos, spotDir, outerAngleRad, light.radius,
-						cascadeFrustums[cascade], shadowRes);
-
-					// Compute depth for depth buffer (same as directional lights)
-					float splitFarDist = splits[cascade + 1];
-					glm::vec3 splitFarWorld = nearPos + viewDir * (splitFarDist - nearDist);
-					glm::vec4 clipFar = glmProj * glmView * glm::vec4(splitFarWorld, 1.0f);
-					float ndcZ_splitFar = (clipFar.w == 0.0f) ? 1.0f : (clipFar.z / clipFar.w);
-					float depthBufferFar = ndcZ_splitFar * 0.5f + 0.5f;
-					light.splitDepths[cascade] = depthBufferFar;
-
-					cascadeLayerOffset++;
-				}
-				else {
-					// Mark unused cascades with zero matrix
-					light.lightSpaceMatrices[cascade] = glm::mat4(0.0f);
-					light.splitDepths[cascade] = 0.0f;
-				}
-			}
-
-			currentLayer += validCascades;
+			currentLayer += 1;
 		}
 	}
+
+	// Store total layers for instanced shadow rendering
+	m_TotalShadowLayers = currentLayer;
 }
 
 /**
- * @brief Renders the shadow map using instanced rendering for all shadow-casting lights and cascades.
- * Sets up the shadow map FBO, viewport, and render state, then draws all geometry using instanced draw calls.
- * Restores previous OpenGL state after rendering.
+ * @brief Renders shadow map using indirect rendering and instancing across all shadow layers.
+ *
+ * Uses indirect rendering (glMultiDrawElementsIndirect) to render all meshes with a single draw call.
+ * Reads pre-skinned positions from geometry pass (binding 8) to eliminate redundant bone calculations.
+ * Each mesh is instanced across all shadow-casting light cascades for optimal performance.
+ *
+ * @note Requires geometry pass to have completed and written pre-skinned positions to SSBO.
+ * @note Memory barrier is issued in RenderShadowPass() before calling this function.
  */
 void Renderer::RenderShadowMapInstanced()
 {
 	UpdateLightsUBO(editor::EditorCamera::GetInstance().GetViewMatrix());
-	BindLightsBlockIfPresent(m_ShadowMapInstancedShader);
 
 	// Validate resources
 	if (!m_ShadowMapFBO || !m_ShadowMapArray || !m_ShadowMapInstancedShader)
@@ -2703,10 +3702,6 @@ void Renderer::RenderShadowMapInstanced()
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
 
-	// Cull front faces to reduce shadow acne (common technique)
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_FRONT);
-
 	// Bind shadow shader
 	m_ShadowMapInstancedShader->Bind();
 
@@ -2727,74 +3722,68 @@ void Renderer::RenderShadowMapInstanced()
 	}
 
 	// Use only shadowcaster lights for instancing
-	int maxLights = std::min(static_cast<int>(activeShadowLights.size()), 16);
+	unsigned int maxLights = std::min(static_cast<unsigned int>(activeShadowLights.size()), static_cast<unsigned int>(MAX_LIGHTS));
 	int totalInstances = maxLights * NUM_CASCADES;
 
 	// Set up per-frame uniforms
-	m_ShadowMapInstancedShader->SetUniform1i("u_NumShadowLights", maxLights);
-	for (int i = 0; i < maxLights; ++i) {
+	for (unsigned int i = 0; i < maxLights; ++i) {
 		std::string uniformName = "u_ActiveShadowLights[" + std::to_string(i) + "]";
 		m_ShadowMapInstancedShader->SetUniform1i(uniformName, activeShadowLights[i]);
 	}
 
-	// Render all geometry using true instanced rendering
-	// First draw ModelComponent pipeline (models with multiple meshes)
-	for (EntityID renderEntity : m_Entities)
-	{
-		if (!ecs.HasComponent<ModelComponent>(renderEntity)) continue;
-		auto& modelComp = ecs.GetComponent<ModelComponent>(renderEntity);
-		if (!modelComp.m_model) continue;
+	// Prepare draw commands with instanceCount = total shadow layers
+	size_t totalDrawCount = m_StandardDrawCommands.size() + m_SkinnedDrawCommands.size();
+	std::vector<DrawElementsIndirectCommand> shadowCommands;
+	shadowCommands.reserve(totalDrawCount);
 
-		const auto& trans = ecs.GetComponent<Transform>(renderEntity);
-
-		// Build root transform
-		glm::mat4 root = glm::mat4(1.0f);
-		root = glm::translate(root, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
-		glm::quat rotQuat = glm::quat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
-		rotQuat = glm::normalize(rotQuat);
-		root *= glm::mat4_cast(rotQuat);
-		root = glm::scale(root, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
-
-		const auto& meshes = modelComp.m_model->GetMeshes();
-		for (const auto& mesh : meshes)
-		{
-			if (!mesh.vao || !mesh.ibo) continue;
-
-			glm::mat4 modelMat = root * mesh.localTransform;
-			m_ShadowMapInstancedShader->SetUniformMatrix4fv("model", modelMat);
-
-			// Use instanced draw call
-			DrawInstanced(mesh.vao, mesh.ibo, m_ShadowMapInstancedShader, totalInstances);
-		}
+	// Copy standard commands and set instanceCount
+	for (const auto& cmd : m_StandardDrawCommands) {
+		shadowCommands.push_back(cmd);
+		shadowCommands.back().instanceCount = totalInstances;
 	}
 
-	// Then draw simple mesh+material entities
-	for (EntityID renderEntity : m_Entities)
-	{
-		if (!(ecs.HasComponent<Mesh>(renderEntity) && ecs.HasComponent<Ermine::Material>(renderEntity)))
-			continue;
-
-		auto& mesh = ecs.GetComponent<Mesh>(renderEntity);
-		auto& trans = ecs.GetComponent<Transform>(renderEntity);
-
-		if (!mesh.vertex_array || !mesh.index_buffer) continue;
-
-		// Build model matrix
-		glm::mat4 modelMat = glm::mat4(1.0f);
-		modelMat = glm::translate(modelMat, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
-		glm::quat rotQuat = glm::quat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
-		rotQuat = glm::normalize(rotQuat);
-		modelMat *= glm::mat4_cast(rotQuat);
-		modelMat = glm::scale(modelMat, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
-
-		m_ShadowMapInstancedShader->SetUniformMatrix4fv("model", modelMat);
-
-		// Use instanced draw call
-		DrawInstanced(mesh.vertex_array, mesh.index_buffer, m_ShadowMapInstancedShader, totalInstances);
+	// Copy skinned commands and set instanceCount
+	for (const auto& cmd : m_SkinnedDrawCommands) {
+		shadowCommands.push_back(cmd);
+		shadowCommands.back().instanceCount = totalInstances;
 	}
 
-	// Restore culling state (back to normal)
-	glCullFace(GL_BACK);
+	// Upload combined commands to SSBO
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_MeshManager.m_DrawCommandsSSBO);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, totalDrawCount * sizeof(DrawElementsIndirectCommand),
+		shadowCommands.data(), GL_DYNAMIC_DRAW);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+	// Upload DrawInfo data (reuse from geometry pass - already contains both standard and skinned)
+	m_MeshManager.m_PersistentDrawInfoBuffer.WriteDrawInfos(m_StandardDrawInfos, 0);
+	m_MeshManager.m_PersistentDrawInfoBuffer.WriteDrawInfos(m_SkinnedDrawInfos, m_StandardDrawCommands.size());
+
+	// Render standard meshes using indirect rendering with shadow VAO
+	// Shadow VAO includes pre-skinned position attribute (location 6) for hardware vertex fetching
+	if (!m_StandardDrawCommands.empty() && m_MeshManager.GetStandardShadowVAO() != 0) {
+		m_ShadowMapInstancedShader->SetUniform1ui("baseDrawID", 0);
+		glBindVertexArray(m_MeshManager.GetStandardShadowVAO());
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_MeshManager.m_DrawCommandsSSBO);
+		glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_INT, nullptr,
+			static_cast<GLsizei>(m_StandardDrawCommands.size()), 0);
+		GPUProfiler::TrackDrawCall(m_StandardDrawCommandsVertexCount, m_StandardDrawCommandsIndexCount);
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
+		glBindVertexArray(0);
+	}
+
+	// Render skinned meshes using indirect rendering with shadow VAO
+	// Shadow VAO includes pre-skinned position attribute (location 6) for hardware vertex fetching
+	if (!m_SkinnedDrawCommands.empty() && m_MeshManager.GetSkinnedShadowVAO() != 0) {
+		m_ShadowMapInstancedShader->SetUniform1ui("baseDrawID", static_cast<uint32_t>(m_StandardDrawCommands.size()));
+		glBindVertexArray(m_MeshManager.GetSkinnedShadowVAO());
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_MeshManager.m_DrawCommandsSSBO);
+		size_t offset = m_StandardDrawCommands.size() * sizeof(DrawElementsIndirectCommand);
+		glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_INT, reinterpret_cast<const void*>(offset),
+			static_cast<GLsizei>(m_SkinnedDrawCommands.size()), 0);
+		GPUProfiler::TrackDrawCall(m_SkinnedDrawCommandsVertexCount, m_SkinnedDrawCommandsIndexCount);
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
+		glBindVertexArray(0);
+	}
 
 	// Unbind framebuffer and restore viewport
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -2813,8 +3802,601 @@ void Renderer::RenderShadowPass()
 	// Calculate directional light matrices
 	CalculateLightMatrix(editor::EditorCamera::GetInstance());
 
-	// Render shadows with optimized instanced approach
+	// Memory barrier to ensure pre-skinned positions from geometry pass are visible to shadow pass
+	// The geometry pass writes to preSkinnedPositions buffer (binding 8) which shadow pass can read
+	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
+	// Render shadows using instanced rendering
 	RenderShadowMapInstanced();
 }
 
 #pragma endregion
+
+/**
+ * @brief Creates the picking buffer for entity selection.
+ * @param width Buffer width.
+ * @param height Buffer height.
+ */
+void Renderer::CreatePickingBuffer(const int& width, const int& height)
+{
+	if (m_PickingBuffer)
+	{
+		glDeleteFramebuffers(1, &m_PickingBuffer->FBO);
+		glDeleteTextures(1, &m_PickingBuffer->ColorID);
+		glDeleteRenderbuffers(1, &m_PickingBuffer->Depth);
+		m_PickingBuffer.reset();
+	}
+
+	auto pb = std::make_shared<PickingBuffer>();
+	pb->width = width;
+	pb->height = height;
+
+	glGenFramebuffers(1, &pb->FBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, pb->FBO);
+
+	// Color: 32-bit unsigned int
+	glGenTextures(1, &pb->ColorID);
+	glBindTexture(GL_TEXTURE_2D, pb->ColorID);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_R32UI, width, height, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, nullptr);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pb->ColorID, 0);
+
+	// Depth
+	glGenRenderbuffers(1, &pb->Depth);
+	glBindRenderbuffer(GL_RENDERBUFFER, pb->Depth);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width, height);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, pb->Depth);
+
+	GLenum db[1] = { GL_COLOR_ATTACHMENT0 };
+	glDrawBuffers(1, db);
+
+	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if (status != GL_FRAMEBUFFER_COMPLETE)
+	{
+		EE_CORE_ERROR("Picking FBO incomplete: {0}", status);
+		assert(false && "Picking FBO failed");
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	m_PickingBuffer = pb;
+	glCheckError();
+}
+
+/**
+ * @brief Resizes the picking buffer.
+ * @param width New width.
+ * @param height New height.
+ */
+void Renderer::ResizePickingBuffer(const int& width, const int& height)
+{
+	if (!m_PickingBuffer)
+	{
+		CreatePickingBuffer(width, height);
+		return;
+	}
+	if (m_PickingBuffer->width == width && m_PickingBuffer->height == height)
+		return;
+
+	glBindTexture(GL_TEXTURE_2D, m_PickingBuffer->ColorID);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_R32UI, width, height, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, nullptr);
+
+	glBindRenderbuffer(GL_RENDERBUFFER, m_PickingBuffer->Depth);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width, height);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, m_PickingBuffer->FBO);
+	const GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if (status != GL_FRAMEBUFFER_COMPLETE)
+		EE_CORE_ERROR("Picking FBO not complete after resize! Status: {0}", status);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	m_PickingBuffer->width = width;
+	m_PickingBuffer->height = height;
+	glCheckError();
+}
+
+/**
+ * @brief Renders the picking pass for entity selection.
+ * @param view View matrix.
+ * @param projection Projection matrix.
+ */
+void Renderer::RenderPickingPass(const Mtx44& view, const Mtx44& projection)
+{
+#if defined(EE_EDITOR)
+	if (!m_PickingBuffer || !m_PickingShader)
+		return;
+
+	// 1) Prime depth: copy scene depth into picking FBO (source depends on path)
+	if (m_UseDeferredRendering && m_GBuffer)
+	{
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, m_GBuffer->FBO);
+	}
+	else if (m_OffscreenBuffer)
+	{
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, m_OffscreenBuffer->FBO);
+	}
+	else
+	{
+		return;
+	}
+
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_PickingBuffer->FBO);
+	glBlitFramebuffer(0, 0, m_PickingBuffer->width, m_PickingBuffer->height,
+		0, 0, m_PickingBuffer->width, m_PickingBuffer->height,
+		GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+
+	// 2) Render IDs
+	glBindFramebuffer(GL_FRAMEBUFFER, m_PickingBuffer->FBO);
+	glViewport(0, 0, m_PickingBuffer->width, m_PickingBuffer->height);
+
+	// Clear IDs to 0
+	GLuint clearVal[1] = { 0u };
+	glClearBufferuiv(GL_COLOR, 0, clearVal);
+
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LEQUAL);
+	glDepthMask(GL_FALSE);
+	glDisable(GL_BLEND);
+
+	m_PickingShader->Bind();
+
+	// Use same transforms as other passes
+	glm::mat4 glmView = glm::mat4(
+		view.m00, view.m01, view.m02, view.m03,
+		view.m10, view.m11, view.m12, view.m13,
+		view.m20, view.m21, view.m22, view.m23,
+		view.m30, view.m31, view.m32, view.m33
+	);
+	glm::mat4 glmProjection = glm::mat4(
+		projection.m00, projection.m01, projection.m02, projection.m03,
+		projection.m10, projection.m11, projection.m12, projection.m13,
+		projection.m20, projection.m21, projection.m22, projection.m23,
+		projection.m30, projection.m31, projection.m32, projection.m33
+	);
+
+	glm::mat4 vp = glmProjection * glmView;
+	// Shader uses u_LightViewProj + model, same as shadow/depth style
+	m_PickingShader->SetUniformMatrix4fv("u_LightViewProj", vp);
+
+	auto& ecs = ECS::GetInstance();
+
+	// Model pipeline
+	for (EntityID entity : m_Entities)
+	{
+		if (!ecs.HasComponent<ModelComponent>(entity))
+			continue;
+
+		auto& modelComp = ecs.GetComponent<ModelComponent>(entity);
+		if (!modelComp.m_model) continue;
+
+		auto& trans = ecs.GetComponent<Transform>(entity);
+		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
+		glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
+		rotQuat = glm::normalize(rotQuat);
+		model *= glm::mat4_cast(rotQuat);
+		model = glm::scale(model, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
+
+		// Encode as (EntityID + 1) so 0 stays as "no hit"
+		uint32_t encoded = static_cast<uint32_t>(entity) + 1u;
+		m_PickingShader->SetUniform1ui("u_EntityId", encoded);
+
+		const auto& meshes = modelComp.m_model->GetMeshes();
+		for (const auto& mesh : meshes)
+		{
+			if (!mesh.vao || !mesh.ibo) continue;
+			glm::mat4 modelMat = model * mesh.localTransform;
+			m_PickingShader->SetUniformMatrix4fv("model", modelMat);
+			Draw(mesh.vao, mesh.ibo);
+		}
+	}
+
+	// Mesh + material pipeline
+	for (EntityID entity : m_Entities)
+	{
+		if (!(ecs.HasComponent<Mesh>(entity) && ecs.HasComponent<Ermine::Material>(entity)))
+			continue;
+
+		auto& mesh = ecs.GetComponent<Mesh>(entity);
+		if (!mesh.vertex_array || !mesh.index_buffer) continue;
+
+		auto& trans = ecs.GetComponent<Transform>(entity);
+		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
+		glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
+		rotQuat = glm::normalize(rotQuat);
+		model *= glm::mat4_cast(rotQuat);
+		model = glm::scale(model, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
+
+		uint32_t encoded = static_cast<uint32_t>(entity) + 1u;
+		m_PickingShader->SetUniform1ui("u_EntityId", encoded);
+		m_PickingShader->SetUniformMatrix4fv("model", model);
+
+		Draw(mesh.vertex_array, mesh.index_buffer);
+	}
+
+	// Restore
+	m_PickingShader->Unbind();
+	glDepthMask(GL_TRUE);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	glCheckError();
+#endif
+}
+
+/**
+ * @brief Gets the world transform matrix for an entity using GlobalTransform component
+ * @param entity The entity to get the world matrix for
+ * @return glm::mat4 The world transform matrix
+ */
+glm::mat4 Renderer::GetEntityWorldMatrix(EntityID entity) const
+{
+	const auto& ecs = Ermine::ECS::GetInstance();
+
+	if (ecs.HasComponent<GlobalTransform>(entity)) {
+		auto& globalTransform = ecs.GetComponent<GlobalTransform>(entity);
+
+		// CONVERT your custom matrix to GLM format
+		Mtx44& m = globalTransform.worldMatrix;
+		return glm::mat4(
+			m.m00, m.m10, m.m20, m.m30,  // Column 0
+			m.m01, m.m11, m.m21, m.m31,  // Column 1  
+			m.m02, m.m12, m.m22, m.m32,  // Column 2
+			m.m03, m.m13, m.m23, m.m33   // Column 3
+		);
+	}
+
+	// Fallback to local transform using GLM
+	if (ecs.HasComponent<Transform>(entity)) {
+		auto& trans = ecs.GetComponent<Transform>(entity);
+		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
+		glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
+		rotQuat = glm::normalize(rotQuat);
+		model *= glm::mat4_cast(rotQuat);
+		model = glm::scale(model, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
+		return model;
+	}
+
+	return glm::mat4(1.0f);
+}
+
+/**
+ * @brief Picks the entity at the given screen coordinates.
+ * @param x X coordinate.
+ * @param y Y coordinate.
+ * @param view View matrix.
+ * @param projection Projection matrix.
+ * @return Pair of (success, entity ID).
+ */
+std::pair<bool, Ermine::EntityID> Renderer::PickEntityAt(const int& x, const int& y, const Mtx44& view, const Mtx44& projection)
+{
+
+#if defined(EE_EDITOR)
+	if (!m_PickingBuffer)
+		return { false, EntityID{} };
+
+	RenderPickingPass(view, projection);
+
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_PickingBuffer->FBO);
+	glReadBuffer(GL_COLOR_ATTACHMENT0); // color read buffer doesn't matter since we only read stencil
+	glPixelStorei(GL_PACK_ALIGNMENT, 1);
+
+	uint32_t id = 0u;
+	glReadPixels(x, y, 1, 1, GL_RED_INTEGER, GL_UNSIGNED_BYTE, &id);
+
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+
+	if (id == 0u) return { false, EntityID{} };
+
+	EntityID picked = id - 1u;
+	if (!ECS::GetInstance().IsEntityValid(picked))
+		return { false , EntityID{} };
+
+	return { true, picked };
+#else
+	return { false, EntityID{} };
+#endif
+}
+
+/**
+ * @brief Handle window resize events to adjust buffers and viewports
+ * @param width New window width
+ * @param height New window height
+ */
+void Renderer::OnWindowResize(const int& width, const int& height)
+{
+	if (m_UseDeferredRendering)
+		ResizeGBuffer(width, height);
+}
+
+/**
+ * @brief Compiles all materials from entities into a single SSBO.
+ * This collects material data, uploads to GPU, and assigns indices.
+ */
+void Renderer::CheckMaterialUpdates()
+{
+	// Check if any materials have been modified (e.g., via ImGui)
+	const auto& ecs = Ermine::ECS::GetInstance();
+
+	for (auto entity : m_MaterialSystem->m_Entities)
+	{
+		if (!ecs.HasComponent<Ermine::Material>(entity)) continue;
+
+		auto& materialComponent = ecs.GetComponent<Ermine::Material>(entity);
+		graphics::Material* material = materialComponent.GetMaterial();
+
+		if (material && material->IsDirty())
+		{
+			// Material has been modified, trigger recompilation
+			m_MaterialsDirty = true;
+			return;
+		}
+	}
+}
+
+void Renderer::CompileMaterials()
+{
+	if (!m_MaterialsDirty) return;
+
+	EE_CORE_INFO("Compiling materials for GPU upload...");
+
+	// Clear previous compiled data
+	m_CompiledMaterials.clear();
+	m_EntityMaterialIndices.clear();
+
+	// Map to track unique materials and avoid duplicates
+	std::map<const graphics::Material*, uint32_t> materialToIndex;
+
+	const auto& ecs = Ermine::ECS::GetInstance();
+
+	// First pass: Collect unique materials
+	for (auto entity : m_MaterialSystem->m_Entities)
+	{
+		if (!ecs.HasComponent<Ermine::Material>(entity)) continue;
+
+		auto& materialComponent = ecs.GetComponent<Ermine::Material>(entity);
+		graphics::Material* material = materialComponent.GetMaterial();
+
+		if (!material) {
+			EE_CORE_WARN("Entity {0} has null material", entity);
+			continue;
+		}
+
+		// Check if we've already seen this material
+		if (materialToIndex.find(material) != materialToIndex.end()) {
+			// Reuse existing index
+			m_EntityMaterialIndices[entity] = materialToIndex[material];
+			continue;
+		}
+
+		// New material - register textures and assign indices
+		uint32_t materialIndex = static_cast<uint32_t>(m_CompiledMaterials.size());
+
+		// Register all textures used by this material
+		const std::vector<std::string> textureTypes = {
+			"materialAlbedoMap",
+			"materialNormalMap",
+			"materialRoughnessMap",
+			"materialMetallicMap",
+			"materialAoMap",
+			"materialEmissiveMap"
+		};
+
+		for (const auto& texName : textureTypes)
+		{
+			if (auto texture = material->GetTexture(texName))
+			{
+				int textureIndex = RegisterTexture(texture);
+				if (textureIndex >= 0)
+				{
+					material->SetTextureArrayIndex(texName, textureIndex);
+				}
+			}
+		}
+
+		// Add material data to compiled list
+		m_CompiledMaterials.push_back(material->GetSSBOData());
+
+		// Store the mapping
+		materialToIndex[material] = materialIndex;
+		m_EntityMaterialIndices[entity] = materialIndex;
+
+		// Update the material with its index
+		material->SetMaterialIndex(static_cast<int>(materialIndex));
+	}
+
+	// Build the texture array
+	BuildTextureArray();
+
+	// Upload all materials to GPU
+	UploadMaterialsToGPU();
+
+	m_MaterialsDirty = false;
+
+	EE_CORE_INFO("Compiled {0} unique materials for {1} entities",
+		m_CompiledMaterials.size(), m_EntityMaterialIndices.size());
+}
+
+
+/**
+ * @brief Uploads all compiled materials to the GPU SSBO in one batch.
+ */
+void Renderer::UploadMaterialsToGPU()
+{
+	if (m_CompiledMaterials.empty()) {
+		EE_CORE_WARN("No materials to upload to GPU");
+		return;
+	}
+
+	// Create Material SSBO if it doesn't exist
+	if (!m_MaterialSSBO)
+	{
+		glGenBuffers(1, &m_MaterialSSBO);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_MaterialSSBO);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, MATERIAL_SSBO_BINDING, m_MaterialSSBO);
+		EE_CORE_INFO("Created MaterialSSBO");
+	}
+	else
+	{
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_MaterialSSBO);
+	}
+
+	// Calculate total size needed
+	const size_t materialSize = sizeof(graphics::MaterialSSBO);
+	const size_t totalSize = materialSize * m_CompiledMaterials.size();
+
+	// Reallocate buffer to fit all materials
+	glBufferData(GL_SHADER_STORAGE_BUFFER, totalSize, nullptr, GL_DYNAMIC_DRAW);
+
+	// Check for allocation errors
+	GLenum error = glGetError();
+	if (error != GL_NO_ERROR)
+	{
+		EE_CORE_ERROR("Failed to allocate MaterialSSBO: {0} bytes, error: {1}",
+			totalSize, error);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+		return;
+	}
+
+	// Upload all materials at once
+	glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, totalSize, m_CompiledMaterials.data());
+
+	error = glGetError();
+	if (error != GL_NO_ERROR)
+	{
+		EE_CORE_ERROR("Failed to upload materials to GPU, error: {0}", error);
+	}
+	else
+	{
+		EE_CORE_INFO("Uploaded {0} materials ({1} bytes) to GPU",
+			m_CompiledMaterials.size(), totalSize);
+	}
+
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+	glCheckError();
+}
+
+/**
+ * @brief Registers a texture in the global texture array.
+ * @param texture Shared pointer to the texture.
+ * @return The index of the texture in the array, or -1 if registration failed.
+ */
+int Renderer::RegisterTexture(std::shared_ptr<Texture> texture)
+{
+	if (!texture || !texture->IsValid())
+	{
+		return -1;
+	}
+
+	GLuint textureID = texture->GetRendererID();
+	std::string filePath = texture->GetFilePath();
+
+	// Check if texture is already registered by ID
+	auto idIt = m_TextureIDToIndex.find(textureID);
+	if (idIt != m_TextureIDToIndex.end())
+	{
+		return idIt->second;
+	}
+
+	// Check if texture is already registered by path
+	auto pathIt = m_TexturePathToIndex.find(filePath);
+	if (pathIt != m_TexturePathToIndex.end())
+	{
+		return pathIt->second;
+	}
+
+	// Register new texture
+	int index = static_cast<int>(m_TextureArray.size());
+	m_TextureArray.push_back(textureID);
+	m_TextureIDToIndex[textureID] = index;
+	if (!filePath.empty())
+	{
+		m_TexturePathToIndex[filePath] = index;
+	}
+
+	m_TextureArrayDirty = true;
+
+	EE_CORE_INFO("Registered texture '{0}' at index {1}", filePath, index);
+	return index;
+}
+
+/**
+ * @brief Gets the texture array index for a given texture ID.
+ * @param textureID The OpenGL texture ID.
+ * @return The array index, or -1 if not found.
+ */
+int Renderer::GetTextureArrayIndex(GLuint textureID) const
+{
+	auto it = m_TextureIDToIndex.find(textureID);
+	return it != m_TextureIDToIndex.end() ? it->second : -1;
+}
+
+/**
+ * @brief Builds the bindless texture array SSBO.
+ * This should be called after all textures are registered and before rendering.
+ */
+void Renderer::BuildTextureArray()
+{
+	if (!m_TextureArrayDirty || m_TextureArray.empty())
+	{
+		return;
+	}
+
+	EE_CORE_INFO("Building bindless texture array with {0} textures...", m_TextureArray.size());
+
+	// Create texture array SSBO if it doesn't exist
+	if (!m_TextureArraySSBO)
+	{
+		glGenBuffers(1, &m_TextureArraySSBO);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_TextureArraySSBO);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, TEXTURE_SSBO_BINDING, m_TextureArraySSBO);
+		EE_CORE_INFO("Created Texture Array SSBO at binding point {0}", TEXTURE_SSBO_BINDING);
+	}
+	else
+	{
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_TextureArraySSBO);
+	}
+
+	// Create bindless texture handles for all textures
+	std::vector<GLuint64> textureHandles;
+	textureHandles.reserve(m_TextureArray.size());
+
+	for (GLuint textureID : m_TextureArray)
+	{
+		// Get bindless handle for this texture
+		GLuint64 handle = glGetTextureHandleARB(textureID);
+		if (handle == 0)
+		{
+			EE_CORE_ERROR("Failed to get bindless texture handle for texture ID {0}", textureID);
+			textureHandles.push_back(0);
+			continue;
+		}
+
+		// Make the handle resident (accessible in shaders)
+		if (!glIsTextureHandleResidentARB(handle))
+		{
+			glMakeTextureHandleResidentARB(handle);
+		}
+
+		textureHandles.push_back(handle);
+	}
+
+	// Upload texture handles to SSBO
+	const size_t totalSize = textureHandles.size() * sizeof(GLuint64);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, totalSize, textureHandles.data(), GL_STATIC_DRAW);
+
+	GLenum error = glGetError();
+	if (error != GL_NO_ERROR)
+	{
+		EE_CORE_ERROR("Failed to upload texture array to GPU, error: {0}", error);
+	}
+	else
+	{
+		EE_CORE_INFO("Uploaded {0} texture handles ({1} bytes) to GPU",
+			textureHandles.size(), totalSize);
+	}
+
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+	m_TextureArrayDirty = false;
+}

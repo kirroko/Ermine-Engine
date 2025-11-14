@@ -21,7 +21,7 @@ namespace Ermine::graphics
 {
     class Texture
     {
-        GLuint m_RendererID;
+        GLuint m_RendererID = 0;
         std::string m_filePath;
         unsigned char* m_LocalBuffer;
         int m_Width, m_Height, m_BPP;
@@ -48,6 +48,8 @@ namespace Ermine::graphics
         Texture(Texture && other) noexcept;
         Texture& operator=(Texture&& other) noexcept;
 
+        bool LoadFromDDS(const std::string& ddsFilePath);
+
         /**
          * @brief check if the texture is valid
          * @return true if the texture is valid, false otherwise
@@ -59,17 +61,20 @@ namespace Ermine::graphics
          * @param slot the slot to bind the texture to
          */
         void Bind(unsigned int slot = 0) const;
+
         /**
          * @brief Unbind the texture
          */
         void Unbind() const;
 
-        /*!***********************************************************************
-        \brief
-         Getter for GLuint m_RendererID
-        \return
-         Returns GLuint m_RendererID
-        *************************************************************************/
+        /**
+         * @brief  Getter for GLuint m_RendererID
+         */
         GLuint GetRendererID() const;
+
+        /**
+         * @brief  Getter for file path
+         */
+        std::string GetFilePath();
     };
 }

@@ -13,6 +13,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 */
 /* End Header **************************************************************************/
 
+using System;
 using System.Runtime.CompilerServices;
 
 namespace ErmineEngine
@@ -43,63 +44,80 @@ namespace ErmineEngine
             set;
         }
 
-        const float Deg2Rad = (float)(System.Math.PI / 180.0);
+        //// Internal call to fetch global matrix; implement in native scripting bridge.
+        //[MethodImpl(MethodImplOptions.InternalCall)]
+        //private static extern bool Internal_GetGlobalMatrix(IntPtr nativeHandle, out Matrix4x4 matrix);
 
-        public Vector3 forward
-        {
-            get
-            {
-                Vector3 e = rotation.eulerAngles;
-                float cx = (float)System.Math.Cos(e.x * Deg2Rad);
-                float sx = (float)System.Math.Sin(e.x * Deg2Rad);
-                float cy = (float)System.Math.Cos(e.y * Deg2Rad);
-                float sy = (float)System.Math.Sin(e.y * Deg2Rad);
-                return new Vector3(sy * cx, -sx, cy * cx).Normalized;
-            }
-        }
+        //// Cache native pointer/handle if you already store it; placeholder:
+        //private IntPtr m_NativeHandle;
 
-        public Vector3 up
-        {
-            get
-            {
-                Vector3 f = forward;
-                Vector3 r = right;
-                return Vector3.Cross(r, f).Normalized;
-            }
-        }
+        //private bool TryGetGlobalMatrix(out Matrix4x4 m) => Internal_GetGlobalMatrix(m_NativeHandle, out m);
 
-        public Vector3 right
-        {
-            get
-            {
-                Vector3 e = rotation.eulerAngles;
-                float cx = (float)System.Math.Cos(e.x * Deg2Rad);
-                float sx = (float)System.Math.Sin(e.x * Deg2Rad);
-                float cy = (float)System.Math.Cos(e.y * Deg2Rad);
-                float sy = (float)System.Math.Sin(e.y * Deg2Rad);
-                Vector3 r = new Vector3(cy, 0f, -sy);
-                if (System.Math.Abs(sx) > 1e-6f)
-                    r = (r + new Vector3(0f, sx, 0f)).Normalized;
-                return r.Normalized;
-            }
-        }
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        private extern Vector3 Internal_GetWorldForward();
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        private extern Vector3 Internal_GetWorldRight();
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        private extern Vector3 Internal_GetWorldUp();
+
+        public Vector3 forward => Internal_GetWorldForward();
+        public Vector3 right => Internal_GetWorldRight();
+        public Vector3 up => Internal_GetWorldUp();
+
+        //public Vector3 forward
+        //{
+        //    get
+        //    {
+        //        Vector3 e = rotation.eulerAngles;
+        //        float cx = (float)System.Math.Cos(e.x * Mathf.Deg2Rad);
+        //        float sx = (float)System.Math.Sin(e.x * Mathf.Deg2Rad);
+        //        float cy = (float)System.Math.Cos(e.y * Mathf.Deg2Rad);
+        //        float sy = (float)System.Math.Sin(e.y * Mathf.Deg2Rad);
+        //        return new Vector3(sy * cx, -sx, cy * cx).normalized;
+        //    }
+        //}
+
+        //public Vector3 up
+        //{
+        //    get
+        //    {
+        //        Vector3 f = forward;
+        //        Vector3 r = right;
+        //        return Vector3.Cross(r, f).normalized;
+        //    }
+        //}
+
+        //public Vector3 right
+        //{
+        //    get
+        //    {
+        //        Vector3 e = rotation.eulerAngles;
+        //        float cx = (float)System.Math.Cos(e.x * Mathf.Deg2Rad);
+        //        float sx = (float)System.Math.Sin(e.x * Mathf.Deg2Rad);
+        //        float cy = (float)System.Math.Cos(e.y * Mathf.Deg2Rad);
+        //        float sy = (float)System.Math.Sin(e.y * Mathf.Deg2Rad);
+        //        Vector3 r = new Vector3(cy, 0f, -sy);
+        //        if (System.Math.Abs(sx) > 1e-6f)
+        //            r = (r + new Vector3(0f, sx, 0f)).normalized;
+        //        return r.normalized;
+        //    }
+        //}
 
         public void Translate(Vector3 delta) => position += delta;
 
         public void Rotate(Vector3 deltaEuler)
         {
-            Quaternion q = rotation;
-            q.eulerAngles = q.eulerAngles + (deltaEuler * Deg2Rad);
-            rotation = q.normalized;
+            Quaternion deltaRotation = Quaternion.Euler(deltaEuler.x, deltaEuler.y, deltaEuler.z);
+            rotation *= deltaRotation;
         }
 
         public void LookAt(Vector3 target)
         {
-            Vector3 dir = (target - position).Normalized;
+            Vector3 dir = (target - position).normalized;
             if (dir.SqrMagnitude < 1e-8f) return;
 
-            float yaw = (float)System.Math.Atan2(dir.x, dir.z) / Deg2Rad;
-            float pitch = (float)System.Math.Asin(-dir.y) / Deg2Rad;
+            float yaw = (float)System.Math.Atan2(dir.x, dir.z) / Mathf.Deg2Rad;
+            float pitch = (float)System.Math.Asin(-dir.y) / Mathf.Deg2Rad;
 
             // Persist the roll (z) component of the current rotation
             Quaternion q = rotation;

@@ -16,6 +16,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #include <GLFW/glfw3.h>
 
+#include <algorithm>
+
 using namespace Ermine;
 
 void FrameController::Init(float targetFPS, float fixedFPS)
@@ -35,20 +37,28 @@ void FrameController::Init(float targetFPS, float fixedFPS)
 void FrameController::BeginFrame()
 {
     auto currentTime = glfwGetTime();
-    s_deltaTime = static_cast<float>(currentTime - s_last_frame_time);
-    s_last_frame_time = currentTime;
-    
-    s_accumulator += s_deltaTime;
-    
-    if (s_framePacing && s_deltaTime < s_targetDeltaTime) // Sleep if we are too fast to save CPU
+    float dt = static_cast<float>(currentTime - s_last_frame_time);
+
+    if (s_framePacing && dt < s_targetDeltaTime) // Sleep if we are too fast to save CPU
     {
-        float sleepTime = s_targetDeltaTime - s_deltaTime;
-        std::this_thread::sleep_for(std::chrono::duration<float>(sleepTime));
+        const float sleepTime = s_targetDeltaTime - dt;
+        if (sleepTime > 0.0f)
+			std::this_thread::sleep_for(std::chrono::duration<float>(sleepTime));
+
+		currentTime = glfwGetTime();
+        dt = static_cast<float>(currentTime - s_last_frame_time);
     }
 
+    dt = std::max(dt, 0.0f); // Prevent negative delta time
+    dt = std::min(dt, 0.25f); // Clamp to avoid spiral of death
+
+    s_deltaTime = dt;
+    s_last_frame_time = currentTime;
+    s_accumulator += s_deltaTime;
+
     // Calculate FPS
-    s_fpsTimer += s_deltaTime;
-    ++s_frameCount;
+    //s_fpsTimer += s_deltaTime;
+    //++s_frameCount;
 
     //if (s_fpsTimer >= 1.0f)
     //{

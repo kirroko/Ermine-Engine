@@ -17,6 +17,13 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <mono/jit/jit.h>
 #include <mono/metadata/assembly.h>
 
+#include "Entity.h"
+
+namespace Ermine
+{
+	struct ScriptFieldValue;
+}
+
 namespace Ermine::scripting
 {
 	class ScriptEngine
@@ -192,7 +199,45 @@ namespace Ermine::scripting
 		 */
 		void ProcessHotReload(const std::function<void()>& pre, const std::function<void(bool success)>& post);
 
+		/**
+		 * @brief Pull the managed fields from a MonoObject into a cache.
+		 * @param obj The MonoObject to pull the fields from.
+		 * @param cache The cache to store the fields in.
+		 */
+		static void PullManagedFieldsToCache(MonoObject* obj, std::unordered_map<std::string, ScriptFieldValue>& cache);
+
+		/**
+		 * @brief Push the cached fields back to the MonoObject.
+		 * @param obj The MonoObject to push the fields to.
+		 * @param cache The cache to get the fields from.
+		 */
+		static void PushCacheToManagedFields(MonoObject* obj, const std::unordered_map<std::string, ScriptFieldValue>& cache);
+
+		/**
+		 * @brief Flush and destroy all entities that were queued for late destruction.
+		 * This should be called at a safe point in the game loop to avoid issues with dangling references.
+		 */
+		void FlushLateDestroy();
+
+		/**
+		 * @brief Queue an entity for late destruction.
+		 * The entity will be destroyed when FlushLateDestroy is called.
+		 * @param id The EntityID of the entity to destroy.
+		 */
+		void QueueLateDestroy(EntityID id);
+
+		/**
+		 * @brief Set a single field on a MonoObject.
+		 * @param obj the MonoObject to set the field on.
+		 * @param name the name of the field to set.
+		 * @param val the value to set the field to.
+		 */
+		void PushSingleField(MonoObject* obj,
+		                                   const std::string& name,
+		                                   const ScriptFieldValue& val);
+
 		MonoAssembly* GetGameAsm() const { return m_gameAsm; }
-		MonoDomain* GetGameDomain() const { return m_gameDomain; }
+		MonoDomain* GetGameDomain() const { assert(m_gameDomain != nullptr && "Game Domain missing?"); return m_gameDomain; }
+		MonoAssembly* GetAPIAsm() const { return m_apiAsm; }
 	};
 }

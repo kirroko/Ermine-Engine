@@ -263,6 +263,11 @@ void Shader::Unbind() const
     glUseProgram(0);
 }
 
+void Shader::SetUniform1ui(const std::string& name, unsigned int value)
+{
+	glUniform1ui(GetUniformLocation(name), value);
+}
+
 /**
  * @brief Set the uniform value of the shader
  * @param name The name of the uniform

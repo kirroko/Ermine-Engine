@@ -1,0 +1,46 @@
+{
+  "entities": [
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "4a8ea96d5e45a17e282e033a454437a6"
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Main Camera",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "GlobalTransform": {},
+        "CameraComponent": {
+          "fov": 75.02400207519531,
+          "aspect": 1.7777777910232544,
+          "near": 0.10000000149011612,
+          "far": 1000.0,
+          "primary": false,
+          "isGameCamera": false
+        }
+      }
+    }
+  ]
+}

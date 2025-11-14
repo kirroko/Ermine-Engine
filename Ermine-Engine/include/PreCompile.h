@@ -24,13 +24,21 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <sstream>
 #include <cassert>
 #include <algorithm>
+#include <numbers>
+#include <regex>
 
 #include <memory>
 #include <bitset>
 #include <set>
+#include <tuple>
 
 #include <filesystem>
 #include <typeindex>
+
+#include <shobjidl.h>
+#include <windows.h>
+#undef max
+#undef min
 
 // Threading and synchronization
 #include <functional>

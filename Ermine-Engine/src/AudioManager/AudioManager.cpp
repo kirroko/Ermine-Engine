@@ -1,3 +1,17 @@
+/* Start Header ************************************************************************/
+/*!
+\file       AudioManager.h
+\author     Hurng Kai Rui, h.kairui, 2301278, h.kairui\@digipen.edu
+\date       15/9/2025
+\brief      AudioManager is where the FMOD audio engine is wrapped.
+			Provides a simple interface for loading, playing, and managing sounds.
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents without the
+prior written consent of DigiPen Institute of Technology is prohibited.
+*/
+/* End Header **************************************************************************/
+
 #include "PreCompile.h"
 #include "AudioManager.h"
 
@@ -136,6 +150,15 @@ void CAudioEngine::SetChannelVolume(int nChannelId, float fVolumedB)
 		return;
 
 	CAudioEngine::ErrorCheck(tFoundIt->second->setVolume(dbToVolume(fVolumedB)));
+}
+
+void CAudioEngine::SetChannelPaused(int nChannelId, bool paused)
+{
+	auto tFoundIt = sgpImplementation->mChannels.find(nChannelId);
+	if (tFoundIt == sgpImplementation->mChannels.end())
+		return;
+
+	CAudioEngine::ErrorCheck(tFoundIt->second->setPaused(paused));
 }
 
 void CAudioEngine::LoadBank(const std::string& strBankName, FMOD_STUDIO_LOAD_BANK_FLAGS flags) {

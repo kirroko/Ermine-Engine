@@ -4,7 +4,8 @@
 \author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu
 \co-author  Jeremy Lim Ting Jie, jeremytingjie.lim, 2301370, jeremytingjie.lim\@digipen.edu
 \co-author  Ridhwan Afandi, mohamedridhwan.b, 2301367, mohamedridhwan.b\@digipen.edu
-\date       09/29/2025
+\co-author  Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu
+\date       27/09/2025
 \brief      This file contains the declaration of the Renderer system.
             This file is used to render the game objects to the screen.
 
@@ -24,6 +25,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Components.h"
 #include "EditorCamera.h"
 #include "shadow_config.h"
+#include "MeshManager.h"
+#include "HierarchySystem.h"
 
 namespace Ermine::graphics
 {
@@ -39,12 +42,118 @@ namespace Ermine::graphics
         }
     };
 
+    // Frustum culling support
+    struct Frustum {
+        glm::vec4 planes[6]; // Left, Right, Bottom, Top, Near, Far
+
+        /**
+         * @brief Extract frustum planes from view-projection matrix
+         * @param viewProj Combined view-projection matrix
+         */
+        void ExtractFromViewProjection(const glm::mat4& viewProj) {
+            // Extract using Gribb & Hartmann method
+            // Matrix is accessed as mat[col][row] in GLM (column-major)
+            // We want row vectors, so we transpose the access pattern
+
+            glm::vec4 row0(viewProj[0][0], viewProj[1][0], viewProj[2][0], viewProj[3][0]);
+            glm::vec4 row1(viewProj[0][1], viewProj[1][1], viewProj[2][1], viewProj[3][1]);
+            glm::vec4 row2(viewProj[0][2], viewProj[1][2], viewProj[2][2], viewProj[3][2]);
+            glm::vec4 row3(viewProj[0][3], viewProj[1][3], viewProj[2][3], viewProj[3][3]);
+
+            // Left plane
+            planes[0] = row3 + row0;
+            // Right plane
+            planes[1] = row3 - row0;
+            // Bottom plane
+            planes[2] = row3 + row1;
+            // Top plane
+            planes[3] = row3 - row1;
+            // Near plane
+            planes[4] = row3 + row2;
+            // Far plane
+            planes[5] = row3 - row2;
+
+            // Normalize planes
+            for (int i = 0; i < 6; i++) {
+                float length = glm::length(glm::vec3(planes[i]));
+                if (length > 0.0001f) {
+                    planes[i] /= length;
+                }
+            }
+        }
+
+
+        /**
+         * @brief Get the 8 frustum corners in world space
+         * @param invViewProj Inverse of the view-projection matrix
+         * @return Array of 8 corners [nearBL, nearBR, nearTR, nearTL, farBL, farBR, farTR, farTL]
+         */
+        std::array<glm::vec3, 8> GetCorners(const glm::mat4& invViewProj) const {
+            std::array<glm::vec3, 8> corners;
+
+            // NDC corners of the frustum (normalized device coordinates)
+            // Near plane: z = -1, Far plane: z = 1
+            glm::vec4 ndcCorners[8] = {
+                glm::vec4(-1, -1, -1, 1), // near bottom-left
+                glm::vec4( 1, -1, -1, 1), // near bottom-right
+                glm::vec4( 1,  1, -1, 1), // near top-right
+                glm::vec4(-1,  1, -1, 1), // near top-left
+                glm::vec4(-1, -1,  1, 1), // far bottom-left
+                glm::vec4( 1, -1,  1, 1), // far bottom-right
+                glm::vec4( 1,  1,  1, 1), // far top-right
+                glm::vec4(-1,  1,  1, 1)  // far top-left
+            };
+
+            for (int i = 0; i < 8; i++) {
+                glm::vec4 worldCorner = invViewProj * ndcCorners[i];
+                corners[i] = glm::vec3(worldCorner) / worldCorner.w; // Perspective divide
+            }
+
+            return corners;
+        }
+
+        /**
+         * @brief Test if AABB is inside or intersecting frustum
+         * @param aabbMin AABB minimum in world space
+         * @param aabbMax AABB maximum in world space
+         * @return true if visible (inside or intersecting), false if completely outside
+         */
+        bool TestAABB(const glm::vec3& aabbMin, const glm::vec3& aabbMax) const {
+            // Test AABB against all 6 frustum planes
+            for (int i = 0; i < 6; i++) {
+                // Get positive vertex (furthest point in plane normal direction)
+                glm::vec3 positiveVertex;
+                positiveVertex.x = (planes[i].x >= 0.0f) ? aabbMax.x : aabbMin.x;
+                positiveVertex.y = (planes[i].y >= 0.0f) ? aabbMax.y : aabbMin.y;
+                positiveVertex.z = (planes[i].z >= 0.0f) ? aabbMax.z : aabbMin.z;
+
+                // If positive vertex is outside, AABB is completely outside
+                if (glm::dot(glm::vec3(planes[i]), positiveVertex) + planes[i].w < 0.0f) {
+                    return false; // Outside this plane
+                }
+            }
+            return true; // Inside or intersecting
+        }
+    };
+
     // Lights
 
     /*!***********************************************************************
     \brief Light System. Contains all light entities in the scene.
     *************************************************************************/
     class LightSystem : public System {};
+
+    /*!***********************************************************************
+    \brief Light System. Contains all light entities in the scene.
+    *************************************************************************/
+    class ModelSystem : public System {};
+
+    /*!***********************************************************************
+    \brief Light System. Contains all light entities in the scene.
+    *************************************************************************/
+    class MaterialSystem : public System {};
+
+
 
     /*!***********************************************************************
     \brief Light GPU structure
@@ -61,8 +170,14 @@ namespace Ermine::graphics
 
 
     // Forward declarations
-    struct MaterialUBO;
+    struct MaterialSSBO;
     class Skybox;
+
+    //physic wireframe
+    struct DebugVertex {
+        glm::vec3 position;
+        glm::vec3 color;
+    };
 
     /**
      * @brief The Renderer class is responsible for rendering the game objects to the screen.
@@ -70,8 +185,24 @@ namespace Ermine::graphics
     class Renderer : public System
     {
     public:
+		// Mesh Manager
+		MeshManager m_MeshManager;
+
+        size_t culledMeshes = 0;
+
+        // Debug visualization toggles
+        bool m_DebugDrawAABBs = false;
+        bool m_DebugDrawFrustum = false;
+
         // Lighting Pass Parameters
+        // SSAO parameters
         bool m_SSAOEnabled = false;
+		int  m_SSAOSamples = 16;
+		float m_SSAORadius = 10.0f;
+		float m_SSAOBias = 0.01f;
+		float m_SSAOIntensity = 1.0f;
+		float m_SSAOFadeout = 0.1f;
+		float m_SSAOMaxDistance = 100.0f;
 
         // Post-processing uniforms - toggles
         bool m_VignetteEnabled = false;
@@ -98,15 +229,101 @@ namespace Ermine::graphics
         // Bloom pass parameters
         float m_BloomThreshold = 1.0f;
         float m_BloomIntensity = 2.0f;
-        float m_BloomRadius = 5.0f;
+        float m_BloomRadius = 1.0f;
 
+        // Maximum bone array size expected in shader
+        static constexpr int MAX_BONE_UNIFORMS = 128;
 
+        /**
+         * @brief To run the pass and read GL_STENCIL_INDEX at a pixel
+         * @param x The x coordinate from the framebuffer
+         * @param y The y coordinate from the framebuffer
+         * @param view camera view matrix
+         * @param projection camera projection matrix
+         * @return
+         */
+        std::pair<bool, EntityID> PickEntityAt(const int& x, const int& y, const Mtx44& view, const Mtx44& projection);
+
+        /**
+		 * @brief Update the shadow maps for all lights that cast shadows.
+		 */
+        void InitializeShadowMapResources();
         /**
          * @brief Initialize the renderer with the screen width and height.
          * @param screenWidth The width of the screen
          * @param screenHeight The height of the screen
          */
         void Init(const int& screenWidth, const int& screenHeight);
+
+        //PHYSICS
+        /**
+         * @brief Submits a debug line to be rendered in the scene.
+         * @param from Starting point of the line in world space.
+         * @param to Ending point of the line in world space.
+         * @param color RGB color of the line.
+         */
+        void SubmitDebugLine(const glm::vec3& from, const glm::vec3& to, const glm::vec3& color);
+
+        /**
+         * @brief Renders all submitted debug lines using the provided view and projection matrices.
+         * @param view View matrix for the camera.
+         * @param proj Projection matrix for the camera.
+         */
+        void RenderDebugLines(const glm::mat4& view, const glm::mat4& proj);
+
+        /**
+         * @brief Renders all submitted debug lines using the provided view and projection matrices.
+         * @param view View matrix for the camera (custom Mtx44 type).
+         * @param proj Projection matrix for the camera (custom Mtx44 type).
+         */
+        void RenderDebugLines(const Mtx44& view, const Mtx44& proj);
+
+        /*!***********************************************************************
+        \brief
+         Adds a filled debug triangle to the renderer’s internal vertex list for
+         visualization purposes. The triangle will be rendered during the next call
+         to RenderDebugTriangles().
+        \param[in] a
+         The first vertex position of the triangle in world space.
+        \param[in] b
+         The second vertex position of the triangle in world space.
+        \param[in] c
+         The third vertex position of the triangle in world space.
+        \param[in] color
+         The RGB color of the triangle to render.
+        \return
+         None.
+        *************************************************************************/
+        void SubmitDebugTriangle(const glm::vec3& a, const glm::vec3& b, const glm::vec3& c, const glm::vec3& color);
+        /*!***********************************************************************
+        \brief
+         Renders all submitted debug triangles in 3D space using the provided
+         view and projection matrices. This is typically used for visualizing
+         geometry such as collision shapes, navigation meshes, or debug overlays.
+        \param[in] view
+         The view matrix representing the current camera orientation and position.
+        \param[in] proj
+         The projection matrix defining the camera’s perspective or orthographic view.
+        \return
+         None.
+        *************************************************************************/
+        void RenderDebugTriangles(const Mtx44& view, const Mtx44& proj);
+
+        /**
+         * @brief Submit an AABB wireframe for debug visualization
+         * @param min AABB minimum corner in world space
+         * @param max AABB maximum corner in world space
+         * @param color Color of the wireframe
+         */
+        void SubmitDebugAABB(const glm::vec3& min, const glm::vec3& max, const glm::vec3& color);
+
+        /**
+         * @brief Submit frustum wireframe for debug visualization
+         * @param frustum The frustum to visualize
+         * @param invViewProj Inverse view-projection matrix for corner calculation
+         * @param color Color of the wireframe
+         */
+        void SubmitDebugFrustum(const Frustum& frustum, const glm::mat4& invViewProj, const glm::vec3& color);
 
         /**
          * @brief Offscreen buffer structure for rendering to texture
@@ -123,37 +340,37 @@ namespace Ermine::graphics
         };
 
 
-        struct InstanceData {
-            glm::mat4 model; // per-entity transform
-            glm::mat3 normalMat; // per-entity normal matrix
-            //glm::vec4 colour; // optional tint
-        };
+        //struct InstanceData {
+        //    glm::mat4 model; // per-entity transform
+        //    glm::mat3 normalMat; // per-entity normal matrix
+        //    //glm::vec4 colour; // optional tint
+        //};
 
-        // group by mesh pointer, shader, texture
-        struct BatchKey {
-            //Mesh* k_mesh;
-            const graphics::VertexArray* k_vao;
-            const graphics::IndexBuffer* k_ibo;
+        //// group by mesh pointer, shader, texture
+        //struct BatchKey {
+        //    //Mesh* k_mesh;
+        //    const graphics::VertexArray* k_vao;
+        //    const graphics::IndexBuffer* k_ibo;
 
-            std::shared_ptr<Shader> k_shader;
-            std::shared_ptr<Texture> k_texture;
+        //    std::shared_ptr<Shader> k_shader;
+        //    std::shared_ptr<Texture> k_texture;
 
-            bool operator<(const BatchKey& other) const {
-                if (k_vao != other.k_vao) return k_vao < other.k_vao;
-                if (k_ibo != other.k_ibo) return k_ibo < other.k_ibo;
-                if (k_shader != other.k_shader) return k_shader < other.k_shader;
-                return k_texture < other.k_texture;
-            }
-        };
-        
-         /**
-		 * @brief G buffer structure for rendering to Lighting pass
-		 */
+        //    bool operator<(const BatchKey& other) const {
+        //        if (k_vao != other.k_vao) return k_vao < other.k_vao;
+        //        if (k_ibo != other.k_ibo) return k_ibo < other.k_ibo;
+        //        if (k_shader != other.k_shader) return k_shader < other.k_shader;
+        //        return k_texture < other.k_texture;
+        //    }
+        //};
+
+        /**
+        * @brief G buffer structure for rendering to Lighting pass
+        */
         //~Renderer();
         struct GBuffer
         {
-            unsigned int FBO;
-            unsigned int DepthTexture;
+            unsigned int FBO = 0;
+            unsigned int DepthTexture = 0;
 
             // Multiple Render Targets (MRTs)
 
@@ -162,36 +379,36 @@ namespace Ermine::graphics
             uint64_t HandlePackedTexture2 = 0;
             uint64_t HandlePackedTexture3 = 0;
             uint64_t HandleDepthTexture = 0;
-            
-
-            unsigned int PackedTexture0;
-            unsigned int PackedTexture1;
-			unsigned int PackedTexture2;
-			unsigned int PackedTexture3;
-            
 
 
-            int width;
-            int height;
-        };
+            unsigned int PackedTexture0 = 0;
+            unsigned int PackedTexture1 = 0;
+            unsigned int PackedTexture2 = 0;
+            unsigned int PackedTexture3 = 0;
 
 
-         /**
-		 * @brief PostProcessing buffer structure for each post-processing effect
-		 */
-		struct PostProcessBuffer
-        {
-			unsigned int FBO;
-			unsigned int ColorTexture;
-			unsigned int DepthTexture = 0; // Optional depth texture for skybox rendering
 
-			int width;
-			int height;
+            int width = 0;
+            int height = 0;
         };
 
 
         /**
-		 * @brief Destructor - cleans up allocated resources
+        * @brief PostProcessing buffer structure for each post-processing effect
+        */
+        struct PostProcessBuffer
+        {
+			unsigned int FBO = 0;
+			unsigned int ColorTexture = 0;
+            unsigned int DepthTexture = 0;
+
+			int width = 0;
+			int height = 0;
+        };
+
+
+        /**
+         * @brief Destructor - cleans up allocated resources
          */
         ~Renderer();
 
@@ -208,7 +425,7 @@ namespace Ermine::graphics
          * @brief Resize the offscreen buffer to new dimensions without recreating the FBO
          * @param width New width
          * @param height New height
-		 */
+         */
         void ResizeOffscreenBuffer(const int& width, const int& height);
 
         /**
@@ -220,9 +437,9 @@ namespace Ermine::graphics
 
 
         /**
-		 * @brief Create post-processing buffer
-		 * @param width The width of the post-processing buffer
-		 * @param height The height of the post-processing buffer
+         * @brief Create post-processing buffer
+         * @param width The width of the post-processing buffer
+         * @param height The height of the post-processing buffer
          */
         void CreatePostProcessBuffer(const int& width, const int& height);
 
@@ -273,7 +490,7 @@ namespace Ermine::graphics
         void RenderLightingPass(const Mtx44& view, const Mtx44& projection);
 
         /**
-		 * @brief Render Post-processing effects using the lighting pass output
+         * @brief Render Post-processing effects using the lighting pass output
          */
         void RenderPostProcessPass();
 
@@ -293,9 +510,9 @@ namespace Ermine::graphics
         std::shared_ptr<OffscreenBuffer> GetOffscreenBuffer() const { return m_OffscreenBuffer; }
         std::shared_ptr<GBuffer> GetGBuffer() const { return m_GBuffer; }
 
-         /**
-         * @brief Cleanup g-buffer resources
-         */
+        /**
+        * @brief Cleanup g-buffer resources
+        */
         void CleanupGBuffer();
 
         /**
@@ -311,12 +528,12 @@ namespace Ermine::graphics
         /**
          * @brief Draw the game objects to the screen.
          */
-        void Draw(const std::shared_ptr<VertexArray>& vao, const std::shared_ptr<IndexBuffer>& ibo, const std::shared_ptr<Shader>& shader) const;
+        void Draw(const std::shared_ptr<VertexArray>& vao, const std::shared_ptr<IndexBuffer>& ibo) const;
 
         /**
          * @brief Draw the game objects to the screen using instanced rendering.
          */
-        void DrawInstanced(const std::shared_ptr<VertexArray>& vao, const std::shared_ptr<IndexBuffer>& ibo, const std::shared_ptr<Shader>& shader, int instanceCount) const;
+        void DrawInstanced(const std::shared_ptr<VertexArray>& vao, const std::shared_ptr<IndexBuffer>& ibo, int instanceCount) const;
 
         /**
          * @brief Clear the screen.
@@ -339,38 +556,183 @@ namespace Ermine::graphics
          */
         bool GetShadingMode() const { return m_IsBlinnPhong; }
         /**
-         * @brief Updates the lights' shader storage buffer object (SSBO) with the current light and transform data from all living entities.
+         * @brief Updates the lights' shader UBO with the current light and transform data from all living entities.
          * @param view The view matrix to transform the positions and directions of the lights into view space.
          */
         void UpdateLightsUBO(const Mtx44& view);
+        
         /**
-         * @brief Binds the Lights SSBO to the specified shader program if it has not been bound before.
-         * @param shader The shader program to which the lights SSBO should be bound.
+         * @brief Updates the material's shader storage buffer object (SSBO) at a specific index.
+         * Used for dynamic material updates after initial compilation.
+         * @param materialData The material data to be uploaded to the SSBO.
+         * @param materialIndex The index in the material array to update.
          */
-        void BindLightsBlockIfPresent(const std::shared_ptr<Shader>& shader);
+        void UpdateMaterialSSBO(const graphics::MaterialSSBO& materialData, uint32_t materialIndex);
+
         /**
-         * @brief Updates the material's uniform buffer object (UBO) with the specified material data.
-         * @param materialData The material data to be uploaded to the UBO, including properties like color, texture, etc.
+         * @brief Updates the material's SSBO with the specified material data (legacy version).
+         * Updates index 0 by default. Prefer using the indexed version.
+         * @param materialData The material data to be uploaded to the SSBO.
          */
-        void UpdateMaterialUBO(const MaterialUBO& materialData);
+        void UpdateMaterialSSBO(const graphics::MaterialSSBO& materialData);
+
         /**
-         * @brief Binds the MaterialBlock uniform block to the specified shader program if it has not been bound before.
+         * @brief Update multiple entities' material albedo color and upload to GPU.
+         * @param entities Vector of entity IDs whose materials will be updated.
+         * @param color The new albedo color to set for each material.
+		 */ 
+        void UpdateMultipleEntitiesMaterials(const std::vector<EntityID>& entities,
+            const Vec3& color)
+        {
+            auto& ecs = ECS::GetInstance();
+            auto renderer = ecs.GetSystem<Renderer>();
+
+            for (EntityID entity : entities) {
+                if (!ecs.HasComponent<Ermine::Material>(entity)) continue;
+
+                auto& materialComp = ecs.GetComponent<Ermine::Material>(entity);
+                auto* material = materialComp.GetMaterial();
+
+                if (!material) continue;
+
+                // Update material
+                material->SetVec3("materialAlbedo", color);
+
+                // Upload to GPU
+                auto ssboData = material->GetSSBOData();
+                uint32_t materialIndex = renderer->GetMaterialIndex(entity);
+                renderer->UpdateMaterialSSBO(ssboData, materialIndex);
+            }
+        }
+
+        /**
+         * @brief Update an entity's material properties and upload to GPU.
+         * @param entity The entity whose material will be updated.
+         * @param albedo The new albedo color.
+         * @param roughness The new roughness value.
+         * @param metallic The new metallic value.
+         * @param emissive The new emissive color.
+		 */
+        void UpdateMaterialColor(EntityID entity,
+            const Vec3& albedo,
+            float roughness,
+            float metallic,
+            const Vec3& emissive);
+
+        /**
+		* @brief Retrieves the material index for the specified entity.
+		* @param entity The entity whose material index to retrieve.
+        */
+        uint32_t GetMaterialIndex(EntityID entity) const;
+
+        /**
+         * @brief Sets the u_MaterialIndex uniform for the entity's material.
+         * Call this before each draw call to tell the shader which material to use.
+         * @param entity The entity whose material index to set.
+         * @param shader The shader program to set the uniform on.
+         */
+        void SetMaterialIndex(EntityID entity, const std::shared_ptr<Shader>& shader);
+
+        
+        /**
+         * @brief Compiles all materials from entities with Material and Model components into a single SSBO.
+         * This function collects material data from all entities, uploads it to GPU memory, and assigns
+         * material indices to each entity for shader access. Should be called once after scene load or
+         * when materials are added/removed.
+         */
+        void CompileMaterials();
+
+        /**
+         * @brief Checks if any materials have been modified and marks for recompilation.
+         * This is called every frame to detect ImGui or runtime material changes.
+         */
+        void CheckMaterialUpdates();
+
+        /**
+         * @brief Marks materials as dirty, triggering recompilation on next frame.
+         * Call this when materials are added, removed, or modified.
+         */
+        void MarkMaterialsDirty() { m_MaterialsDirty = true; }
+
+        /**
+         * @brief Registers a texture in the global texture array.
+         * @param texture Shared pointer to the texture.
+         * @return The index of the texture in the array, or -1 if registration failed.
+         */
+        int RegisterTexture(std::shared_ptr<Texture> texture);
+
+        /**
+         * @brief Gets the texture array index for a given texture ID.
+         * @param textureID The OpenGL texture ID.
+         * @return The array index, or -1 if not found.
+         */
+        int GetTextureArrayIndex(GLuint textureID) const;
+
+        /**
+         * @brief Builds the bindless texture array SSBO.
+         * This should be called after all textures are registered and before rendering.
+         */
+        void BuildTextureArray();
+
+        /**
+         * @brief Compiles draw commands and draw info for all passes.
+         * Routes opaque meshes to geometry/shadow passes, transparent/custom shader meshes to forward pass.
+         * Iterates through all entities once and builds DrawElementsIndirectCommand + DrawInfo for all rendering.
+         * Should be called every frame.
+         */
+        void CompileDrawData();
+
+        /**
+         * @brief Binds the MaterialBlock shader storage buffer to the specified shader program if it has not been bound before.
          * @param shader The shader program to which the material block should be bound.
          */
         void BindMaterialBlockIfPresent(const std::shared_ptr<Shader>& shader);
-
         /**
-		 * @brief Toggles the flag for using deferred rendering.
+         * @brief Toggles between forward and deferred rendering pipelines.
+         *
+         * This function flips the internal flag @c m_UseDeferredRendering. When enabled,
+         * all rendering will go through the deferred pipeline using a G-buffer and lighting pass.
+         * When disabled, rendering falls back to forward shading, where each object is drawn directly
+         * with its material and lighting applied in a single pass.
+         *
+         * It also logs a message indicating the current rendering mode.
          */
         void ToggleDeferredRendering();
+        /**
+         * @brief Renders a model using the deferred rendering pipeline.
+         *
+         * In this mode, the function uses the shared G-buffer shader (@c m_GBufferShader) to
+         * write geometry data (position, normals, material properties) into the G-buffer.
+         * Per-entity materials are not bound as shaders, but their UBO data (albedo, metallic,
+         * roughness, emissive, etc.) is uploaded to the GPU so the G-buffer can store them.
+         *
+         * @param model The model to render, containing mesh geometry and local transforms.
+         * @param material Pointer to the material providing UBO data (albedo, metallic, etc.).
+         * @param view The view matrix representing the camera transform.
+         * @param projection The projection matrix (perspective or orthographic).
+         * @param rootTransform Root transform matrix for the entity (translation, rotation, scale).
+         */
+        void RenderModelDeferred(const Model& model, graphics::Material* material, const Mtx44& view, const Mtx44& projection, const glm::mat4& rootTransform);
+        /**
+         * @brief Renders a model using the forward rendering pipeline.
+         *
+         * In this mode, the function binds the entity's own material and its shader, then
+         * issues draw calls for each mesh in the model. Lighting and material shading are
+         * evaluated directly during rasterization (per-fragment).
+         *
+         * @param model The model to render, containing mesh geometry and local transforms.
+         * @param material Pointer to the material to bind, providing textures and shader.
+         * @param view The view matrix representing the camera transform.
+         * @param projection The projection matrix (perspective or orthographic).
+         * @param rootTransform Root transform matrix for the entity (translation, rotation, scale).
+         */
+        void RenderModelForward(const Model& model, graphics::Material* material, const Mtx44& view, const Mtx44& projection, const glm::mat4& rootTransform);
 
         /**
          * @brief Set the skybox to be rendered
          * @param skybox Pointer to the skybox to render
          */
         void SetSkybox(graphics::Skybox* skybox) { m_skybox = skybox; }
-
-        void RenderModel(const Model& model, const Mtx44& view, const Mtx44& projection, const glm::mat4& rootTransform);
 
 
 #pragma region ShadowMapMemberFunctions
@@ -396,8 +758,8 @@ namespace Ermine::graphics
          */
         void CalculateLightMatrix(const editor::EditorCamera& editorCamera);
         /**
-         * @brief Renders the shadow map using instanced rendering for all shadow-casting lights and cascades.
-         * Sets up the shadow map FBO, viewport, and render state, then draws all geometry using instanced draw calls.
+         * @brief Renders the shadow map for all shadow-casting lights and cascades.
+         * Reuses pre-skinned positions from geometry pass to avoid redundant bone calculations.
          * Restores previous OpenGL state after rendering.
          */
 		void RenderShadowMapInstanced();
@@ -429,21 +791,18 @@ namespace Ermine::graphics
             float outerAngleRad, float lightRadius,
             const std::array<glm::vec3, 8>& frustumCorners);
         /**
-         * @brief Calculates the shadow matrix for a spotlight cascade.
+         * @brief Calculates the shadow matrix for a spotlight.
          * Computes a view and orthographic projection matrix that tightly fits the cascade frustum in light space.
          * Applies texel snapping and margin adjustments for stable shadows.
          * @param lightPos Position of the spotlight.
          * @param spotDir Direction vector of the spotlight.
          * @param outerAngleRad Outer angle of the spotlight cone in radians.
          * @param lightRadius Maximum range of the spotlight.
-         * @param cascadeFrustum Array of eight frustum corners for the cascade.
-         * @param shadowRes Shadow map resolution.
-         * @return The spotlight's light-space matrix for the cascade.
-         */
-        glm::mat4 calculateSpotlightCascadeMatrix(const glm::vec3& lightPos, const glm::vec3& spotDir,
-            float outerAngleRad, float lightRadius,
-            const std::array<glm::vec3, 8>& cascadeFrustum,
-            int shadowRes);
+        */
+        glm::mat4 calculateSpotlightShadowMatrix(const glm::vec3& lightPos,
+            const glm::vec3& spotDir,
+            float outerAngleRad,
+            float lightRadius);
 #pragma endregion
 
         /**
@@ -451,7 +810,7 @@ namespace Ermine::graphics
          * @param view The view matrix
          * @param projection The projection matrix
          */
-        void RenderTransparentPass(const Mtx44& view, const Mtx44& projection);
+        void RenderForwardPass(const Mtx44& view, const Mtx44& projection);
 
         /**
          * @brief Sort transparent objects by distance from camera
@@ -466,25 +825,93 @@ namespace Ermine::graphics
          */
         bool IsTransparentMaterial(const Ermine::graphics::Material* material) const;
 
+        /**
+         * @brief Check if material uses a custom shader (not standard deferred pipeline)
+         * @param material Material to check
+         * @return true if material has custom shader
+         */
+        bool HasCustomShader(const Ermine::graphics::Material* material) const;
+
+        /**
+         * @brief Handle window resize events to adjust buffers and viewports
+         * @param width New window width
+         * @param height New window height
+		 */
+		void OnWindowResize(const int& width, const int& height);
+
+    protected:
+		/**
+		 * @brief Called when an entity is added to this system
+		 * @param entity The entity that was added
+		 */
+		
 
     private:
-		// Renderer state
+        // Texture Array Management (Bindless Texture System)
+        struct TextureArrayEntry
+        {
+            GLuint textureID = 0;
+            std::string filePath;
+            int arrayIndex = -1;
+        };
+
+        std::vector<GLuint> m_TextureArray;                           // All textures in the array
+        std::unordered_map<std::string, int> m_TexturePathToIndex;    // Map file path to array index
+        std::unordered_map<GLuint, int> m_TextureIDToIndex;           // Map texture ID to array index
+        GLuint m_TextureArraySSBO = 0;                                // SSBO containing texture handles
+        bool m_TextureArrayDirty = true;                              // Flag to trigger texture array rebuild
+
+        // Renderer state
 		uint8_t frameCounter = 0;
 
 		// Light System
 		std::shared_ptr<LightSystem> m_LightSystem = nullptr;
+		// Model System
+		std::shared_ptr<ModelSystem> m_ModelSystem = nullptr;
+		// Material System
+		std::shared_ptr<MaterialSystem> m_MaterialSystem = nullptr;
         std::shared_ptr<OffscreenBuffer> m_OffscreenBuffer;
 
-        // Lighting SSBO
-        GLuint m_LightsSSBO = 0;
+        // Lighting UBO
+        GLuint m_LightsUBO = 0;
         static constexpr GLuint LightsBindingPoint = 1;
         std::unordered_set<GLuint> m_LightBlockBoundPrograms;
         bool m_IsBlinnPhong = false; // Default to PBR shading
 
-        // Material UBO
-        GLuint m_MaterialUBO = 0;
-        static constexpr GLuint MaterialBindingPoint = 2;
+        // Material SSBO
+        GLuint m_MaterialSSBO = 0;
         std::unordered_set<GLuint> m_MaterialBlockBoundPrograms;
+        std::unordered_map<EntityID, uint32_t> m_EntityMaterialIndices; // Maps entity to material index in SSBO
+        
+        // Material compilation system - upload all materials at load time
+        std::vector<MaterialSSBO> m_CompiledMaterials; // All materials compiled into a single vector
+        bool m_MaterialsDirty = true; // Flag to trigger recompilation when materials change
+
+        /**
+         * @brief Uploads all compiled materials to the GPU SSBO at once.
+         * This should be called once after CompileMaterials() during load time.
+         */
+        void UploadMaterialsToGPU();
+
+        // Draw data for geometry/shadow passes (opaque, non-custom shader meshes)
+        std::vector<DrawElementsIndirectCommand> m_StandardDrawCommands;
+        std::vector<DrawInfo> m_StandardDrawInfos;
+		GLuint m_StandardDrawCommandsVertexCount = 0;
+		GLuint m_StandardDrawCommandsIndexCount = 0;
+        std::vector<DrawElementsIndirectCommand> m_SkinnedDrawCommands;
+        std::vector<DrawInfo> m_SkinnedDrawInfos;
+		GLuint m_SkinnedDrawCommandsVertexCount = 0;
+		GLuint m_SkinnedDrawCommandsIndexCount = 0;
+
+        // Draw data for forward pass (transparent + custom shader meshes)
+        std::vector<DrawElementsIndirectCommand> m_ForwardPassDrawCommands;
+        std::vector<DrawInfo> m_ForwardPassDrawInfos;
+		GLuint m_ForwardPassDrawCommandsVertexCount = 0;
+		GLuint m_ForwardPassDrawCommandsIndexCount = 0;
+
+        // Cached shadow pass draw commands (reused to avoid per-frame allocation)
+        std::vector<DrawElementsIndirectCommand> m_ShadowStandardCommands;
+        std::vector<DrawElementsIndirectCommand> m_ShadowSkinnedCommands;
 
         // Deferred rendering buffers
         bool m_UseDeferredRendering = true;
@@ -494,16 +921,18 @@ namespace Ermine::graphics
         std::shared_ptr<Shader> m_LightPassShader = 0; // Shader for lighting pass
 
 
-		// Post-processing buffer
-		std::shared_ptr<PostProcessBuffer> m_PostProcessBuffer;
-		std::shared_ptr<PostProcessBuffer> m_BloomExtractBuffer;
+        // Post-processing buffer
+        std::shared_ptr<PostProcessBuffer> m_PostProcessBuffer;
+        std::shared_ptr<PostProcessBuffer> m_BloomExtractBuffer;
         std::shared_ptr<PostProcessBuffer> m_BloomBlurBuffer1;
         std::shared_ptr<PostProcessBuffer> m_BloomBlurBuffer2;
-		std::shared_ptr<Shader> m_BloomShader = 0; // Shader for bloom effect
-		std::shared_ptr<Shader> m_PostProcessShader = 0; // Shader for post-processing effects
+		std::shared_ptr<PostProcessBuffer> m_AntiAliasingBuffer;
+        std::shared_ptr<Shader> m_BloomShader = 0; // Shader for bloom effect
+        std::shared_ptr<Shader> m_PostProcessShader = 0; // Shader for post-processing effects
+		std::shared_ptr<Shader> m_AAShader = 0; // Shader for anti-aliasing
 
-		// Skybox
-		graphics::Skybox* m_skybox = nullptr;
+        // Skybox
+        Skybox* m_skybox = nullptr;
 
         // Shadow mapping
         std::shared_ptr<Shader> m_ShadowMapInstancedShader = nullptr;
@@ -512,12 +941,294 @@ namespace Ermine::graphics
         GLuint m_ShadowMapFBO = 0;
         GLuint m_ShadowMapArray = 0;
 
+        // Pre-skinned positions buffer (binding 8) - written by geometry pass, read by shadow pass
+        GLuint m_PreSkinnedPositionsSSBO = 0;
+        size_t m_PreSkinnedBufferSize = 0;
+        unsigned int m_TotalShadowLayers = 0; // Total layers used by all shadow-casting lights
+
         // Forward rendering shader for transparent objects
         std::shared_ptr<Shader> m_ForwardShader = nullptr;
         std::vector<TransparentObject> m_transparentObjects;
 
+        //Physics
+        std::vector<DebugVertex> m_DebugLines;
+        unsigned int m_DebugVAO = 0, m_DebugVBO = 0;
+        std::shared_ptr<Shader> debugShader = nullptr;
+
         void BindMaterialTextures(Ermine::graphics::Material* material);
 
+        // Picking (stencil) helpers
+        struct PickingBuffer
+        {
+            GLuint FBO = 0;
+            GLuint ColorID = 0; // GL_R32UI
+            GLuint Depth = 0; // GL_DEPTH24
+            int width = 0;
+            int height = 0;
+        };
 
+        std::shared_ptr<PickingBuffer> m_PickingBuffer;
+        std::shared_ptr<Shader> m_PickingShader = nullptr;
+
+        // NavMesh
+        std::vector<DebugVertex> m_DebugTriangleVertices;
+
+        /**
+         * @brief Create an offscreen buffer for entity picking using stencil buffer
+         * @param width The width of the picking buffer
+         * @param height The height of the picking buffer
+         */
+        void CreatePickingBuffer(const int& width, const int& height);
+        /**
+         * @brief Resize the picking buffer to new dimensions without recreating the FBO
+         * @param width New width
+         * @param height New height
+         */
+        void ResizePickingBuffer(const int& width, const int& height);
+        /**
+         * @brief Render entities into the offscreen FBO's stencil buffer using camera VP and G-Buffer depth.
+         * @param view the camera view matrix
+         * @param projection the camera projection matrix
+         */
+        void RenderPickingPass(const Mtx44& view, const Mtx44& projection);
+
+        /**
+         * @brief Converts an Ermine::Mtx44 matrix to a glm::mat4 matrix.
+         *
+         * This function takes a 4x4 matrix of type Ermine::Mtx44 and converts it into
+         * a glm::mat4 by directly mapping each element from row-major to the glm matrix.
+         *
+         * @param m The source 4x4 matrix in Ermine::Mtx44 format.
+         * @return glm::mat4 A glm 4x4 matrix containing the same values as @p m.
+         */
+        inline glm::mat4 ToGlm(const Ermine::Mtx44& m) {
+            return glm::mat4(
+                m.m00, m.m01, m.m02, m.m03,
+                m.m10, m.m11, m.m12, m.m13,
+                m.m20, m.m21, m.m22, m.m23,
+                m.m30, m.m31, m.m32, m.m33
+            );
+        }
+        /**
+         * @brief Gets the world transform matrix for an entity using GlobalTransform component
+         * @param entity The entity to get the world matrix for
+         * @return glm::mat4 The world transform matrix
+         */
+        glm::mat4 GetEntityWorldMatrix(EntityID entity) const;
     };
+
+
+
+    /*!***********************************************************************
+    \brief
+     Helper function to setup mesh child entities for a model.
+
+     Creates child entities for each mesh to track per-mesh materials.
+     Each child has: MaterialComponent, HierarchyComponent, Transform.
+     Children are named "Mesh_<meshID>" for reliable matching during reloads.
+
+     \param parentEntity The entity with the ModelComponent
+     \param model The loaded model whose meshes need child entities
+    *************************************************************************/
+    inline void SetupModelMeshChildren(EntityID parentEntity, std::shared_ptr<graphics::Model> model)
+    {
+        if (!model) return;
+
+        auto& ecs = ECS::GetInstance();
+        auto hierarchySystem = ecs.GetSystem<HierarchySystem>();
+        auto renderer = ecs.GetSystem<graphics::Renderer>();
+
+        if (!hierarchySystem || !renderer) return;
+
+        // Ensure parent has HierarchyComponent
+        if (!ecs.HasComponent<HierarchyComponent>(parentEntity)) {
+            ecs.AddComponent<HierarchyComponent>(parentEntity, HierarchyComponent());
+        }
+
+        auto& hierarchy = ecs.GetComponent<HierarchyComponent>(parentEntity);
+        const aiScene* scene = model->GetAssimpScene();
+
+        // Track which children we've matched to meshes
+        std::unordered_set<EntityID> matchedChildren;
+
+        // Process each mesh in the model
+        const auto& meshes = model->GetMeshes();
+        for (size_t meshIndex = 0; meshIndex < meshes.size(); ++meshIndex) {
+            const auto& meshData = meshes[meshIndex];
+            const std::string& meshID = meshData.meshID;
+            const std::string expectedChildName = "Mesh_" + meshID;
+
+            // Try to find existing child with matching name
+            EntityID childEntity = 0;
+            for (EntityID child : hierarchy.children) {
+                if (ecs.HasComponent<ObjectMetaData>(child)) {
+                    auto& metadata = ecs.GetComponent<ObjectMetaData>(child);
+                    if (metadata.name == expectedChildName) {
+                        childEntity = child;
+                        matchedChildren.insert(child);
+                        break;
+                    }
+                }
+            }
+
+            // If no matching child found, create one
+            if (childEntity == 0) {
+                childEntity = ecs.CreateEntity();
+
+                // Add required components
+                ecs.AddComponent<HierarchyComponent>(childEntity, HierarchyComponent());
+                ecs.AddComponent<Transform>(childEntity, Transform());
+                ecs.AddComponent<ObjectMetaData>(childEntity, ObjectMetaData(expectedChildName, "Mesh", true));
+
+                // Set parent-child relationship
+                hierarchySystem->SetParent(childEntity, parentEntity, true);
+            }
+
+            // Get material index from aiScene using mesh index
+            uint32_t materialIndex = UINT32_MAX;
+            if (scene && meshIndex < scene->mNumMeshes) {
+                aiMesh* aiMsh = scene->mMeshes[meshIndex];
+                if (aiMsh) {
+                    materialIndex = aiMsh->mMaterialIndex;
+                }
+            }
+
+            // Skip material creation if no valid material
+            if (materialIndex == UINT32_MAX || !scene || materialIndex >= scene->mNumMaterials) {
+                EE_CORE_WARN("Mesh '{}' has no valid material (index: {}), child created without material", meshID, materialIndex);
+                continue;
+            }
+
+            // Create or update material component
+            aiMaterial* aiMat = scene->mMaterials[materialIndex];
+            auto materialPtr = std::make_shared<graphics::Material>();
+            materialPtr->LoadTemplate(graphics::MaterialTemplates::PBR_WHITE());
+
+            // Load textures using AssetManager
+            aiString texPath;
+
+            // Albedo: Try BASE_COLOR first, fallback to DIFFUSE
+            if (aiMat->GetTexture(aiTextureType_BASE_COLOR, 0, &texPath) == AI_SUCCESS ||
+                aiMat->GetTexture(aiTextureType_DIFFUSE, 0, &texPath) == AI_SUCCESS) {
+                std::string texPathStr = std::string(texPath.C_Str());
+                std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
+                std::string fullTexPath = "../Resources/Textures/" + texPathStr;
+                auto albedoTex = AssetManager::GetInstance().LoadTexture(fullTexPath);
+                if (albedoTex && albedoTex->IsValid()) {
+                    materialPtr->SetTexture("materialAlbedoMap", albedoTex);
+                    materialPtr->SetTexture("material.albedoMap", albedoTex);
+                    materialPtr->SetBool("materialHasAlbedoMap", true);
+                }
+            }
+
+            // Normal map
+            if (aiMat->GetTexture(aiTextureType_NORMALS, 0, &texPath) == AI_SUCCESS) {
+                std::string texPathStr = std::string(texPath.C_Str());
+                std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
+                std::string fullTexPath = "../Resources/Textures/" + texPathStr;
+                auto normalTex = AssetManager::GetInstance().LoadTexture(fullTexPath);
+                if (normalTex && normalTex->IsValid()) {
+                    materialPtr->SetTexture("materialNormalMap", normalTex);
+                    materialPtr->SetTexture("material.normalMap", normalTex);
+                    materialPtr->SetBool("materialHasNormalMap", true);
+                    materialPtr->SetBool("material.hasNormalMap", true);
+                }
+            }
+
+            // Roughness map (SHININESS in Assimp)
+            if (aiMat->GetTexture(aiTextureType_SHININESS, 0, &texPath) == AI_SUCCESS) {
+                std::string texPathStr = std::string(texPath.C_Str());
+                std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
+                std::string fullTexPath = "../Resources/Textures/" + texPathStr;
+                auto roughnessTex = AssetManager::GetInstance().LoadTexture(fullTexPath);
+                if (roughnessTex && roughnessTex->IsValid()) {
+                    materialPtr->SetTexture("materialRoughnessMap", roughnessTex);
+                    materialPtr->SetBool("materialHasRoughnessMap", true);
+                }
+            }
+
+            // Metallic map
+            if (aiMat->GetTexture(aiTextureType_METALNESS, 0, &texPath) == AI_SUCCESS) {
+                std::string texPathStr = std::string(texPath.C_Str());
+                std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
+                std::string fullTexPath = "../Resources/Textures/" + texPathStr;
+                auto metallicTex = AssetManager::GetInstance().LoadTexture(fullTexPath);
+                if (metallicTex && metallicTex->IsValid()) {
+                    materialPtr->SetTexture("materialMetallicMap", metallicTex);
+                    materialPtr->SetTexture("material.metallicMap", metallicTex);
+                    materialPtr->SetBool("materialHasMetallicMap", true);
+                }
+            }
+
+            // AO map
+            if (aiMat->GetTexture(aiTextureType_LIGHTMAP, 0, &texPath) == AI_SUCCESS ||
+                aiMat->GetTexture(aiTextureType_AMBIENT_OCCLUSION, 0, &texPath) == AI_SUCCESS) {
+                std::string texPathStr = std::string(texPath.C_Str());
+                std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
+                std::string fullTexPath = "../Resources/Textures/" + texPathStr;
+                auto aoTex = AssetManager::GetInstance().LoadTexture(fullTexPath);
+                if (aoTex && aoTex->IsValid()) {
+                    materialPtr->SetTexture("materialAoMap", aoTex);
+                    materialPtr->SetBool("materialHasAoMap", true);
+                }
+            }
+
+            // Emissive map
+            if (aiMat->GetTexture(aiTextureType_EMISSIVE, 0, &texPath) == AI_SUCCESS) {
+                std::string texPathStr = std::string(texPath.C_Str());
+                std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
+                std::string fullTexPath = "../Resources/Textures/" + texPathStr;
+                auto emissiveTex = AssetManager::GetInstance().LoadTexture(fullTexPath);
+                if (emissiveTex && emissiveTex->IsValid()) {
+                    materialPtr->SetTexture("materialEmissiveMap", emissiveTex);
+                    materialPtr->SetBool("materialHasEmissiveMap", true);
+                }
+            }
+
+            // Fetch UV transform and apply V-flip
+            aiUVTransform uvTransform;
+            if (aiMat->Get(AI_MATKEY_UVTRANSFORM(aiTextureType_DIFFUSE, 0), uvTransform) == AI_SUCCESS) {
+                // Apply V-flip
+                materialPtr->SetUVScale(Vec2(uvTransform.mScaling.x, -uvTransform.mScaling.y));
+                materialPtr->SetUVOffset(Vec2(uvTransform.mTranslation.x, 1.0f - uvTransform.mTranslation.y));
+            }
+            else {
+                // Default V-flip for FBX compatibility
+                materialPtr->SetUVScale(Vec2(1.0f, -1.0f));
+                materialPtr->SetUVOffset(Vec2(0.0f, 1.0f));
+            }
+
+            // Add or update material component on child entity
+            if (ecs.HasComponent<Ermine::Material>(childEntity)) {
+                // Update existing material
+                auto& matComp = ecs.GetComponent<Ermine::Material>(childEntity);
+                matComp = Ermine::Material(materialPtr);
+            }
+            else {
+                // Add new material component
+                ecs.AddComponent<Ermine::Material>(childEntity, Ermine::Material(materialPtr));
+            }
+        }
+
+        // Delete orphaned children (children with "Mesh_" prefix that don't match any current mesh)
+        std::vector<EntityID> childrenToDelete;
+        for (EntityID child : hierarchy.children) {
+            if (matchedChildren.find(child) == matchedChildren.end()) {
+                // This child wasn't matched, check if it's a mesh child
+                if (ecs.HasComponent<ObjectMetaData>(child)) {
+                    auto& metadata = ecs.GetComponent<ObjectMetaData>(child);
+                    // Only delete if it follows the "Mesh_" naming convention
+                    if (metadata.name.rfind("Mesh_", 0) == 0) {
+                        childrenToDelete.push_back(child);
+                    }
+                }
+            }
+        }
+
+        // Delete orphaned mesh children
+        for (EntityID child : childrenToDelete) {
+            ecs.DestroyEntity(child);
+        }
+    }
+
 }
