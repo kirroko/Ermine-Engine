@@ -3901,15 +3901,6 @@
         "LightConeComponent": {
           "groundY": -5.0,
           "coneAngleDegrees": 45.0
-        },
-        "ScriptsComponent": {
-          "scripts": [
-            {
-              "class": "SimpleLightCone",
-              "enabled": true,
-              "fields": {}
-            }
-          ]
         }
       }
     },

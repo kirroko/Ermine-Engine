@@ -3887,7 +3887,11 @@
           "children": [ 58 ],
           "depth": 0
         },
-        "GlobalTransform": {}
+        "GlobalTransform": {},
+        "LightConeComponent": {
+          "groundY": -5.0,
+          "coneAngleDegrees": 45.0
+        }
       }
     },
     {
@@ -4057,9 +4061,9 @@
           ]
         },
         "HierarchyComponent": {
-          "parent": 0,
+          "parent": 55,
           "children": [],
-          "depth": 0
+          "depth": 1
         },
         "GlobalTransform": {}
       }
