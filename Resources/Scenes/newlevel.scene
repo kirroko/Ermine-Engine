@@ -3914,7 +3914,11 @@
         "HierarchyComponent": {
           "depth": 0
         },
-        "GlobalTransform": {}
+        "GlobalTransform": {},
+        "LightConeComponent": {
+          "groundY": -5.0,
+          "coneAngleDegrees": 45.0
+        }
       }
     },
     {
