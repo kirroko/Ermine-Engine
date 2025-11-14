@@ -3104,7 +3104,7 @@ namespace Ermine
 		{
 			for (auto& skill : skills)
 			{
-				skill.Update(dt);
+			skill.Update(dt);
 			}
 		}
 
@@ -3453,6 +3453,38 @@ namespace Ermine
 			xproperty::obj_member<"showCrosshair", &UIComponent::showCrosshair>,
 			xproperty::obj_member<"crosshairSize", &UIComponent::crosshairSize>,
 			xproperty::obj_member<"crosshairStyle", &UIComponent::crosshairStyle>
+		)
+	};
+
+	/*!***********************************************************************
+	\brief
+	 Light Cone component - automatically scales a child cone mesh to match
+	 the spotlight's projection onto the ground
+	*************************************************************************/
+	struct LightConeComponent
+	{
+		float groundY = -5.0f;              // Y position of the ground plane
+		float coneAngleDegrees = 45.0f;     // Spotlight cone angle in degrees
+		EntityID coneEntityID = 0;          // Cache the child cone entity ID
+
+		LightConeComponent() = default;
+		LightConeComponent(float ground, float angle) 
+			: groundY(ground), coneAngleDegrees(angle) {}
+
+		template<typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
+			xprop_utils::SerializeToJson(*this, out, alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in) {
+			xprop_utils::DeserializeFromJson(*this, in);
+			coneEntityID = 0; // Reset cached entity ID on load
+		}
+
+		XPROPERTY_DEF(
+			"LightConeComponent", LightConeComponent,
+			xproperty::obj_member<"groundY", &LightConeComponent::groundY>,
+			xproperty::obj_member<"coneAngleDegrees", &LightConeComponent::coneAngleDegrees>
 		)
 	};
 } // namespace Ermine

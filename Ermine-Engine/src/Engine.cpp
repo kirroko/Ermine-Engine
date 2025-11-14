@@ -44,6 +44,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "UIRenderSystem.h"
 #include "NavMesh.h"
 #include "NavMeshAgentSystem.h"
+#include "LightConeSystem.h"
 
 #if defined(EE_EDITOR)
 #include "GraphicsDebugGUI.h"
@@ -158,6 +159,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	EE_AUTO_REGISTER_COMPONENT(ParticleEmitter, "ParticleEmitter")
 	EE_AUTO_REGISTER_COMPONENT(CameraComponent, "CameraComponent");
 	EE_AUTO_REGISTER_COMPONENT(UIComponent, "UIComponent");
+	EE_AUTO_REGISTER_COMPONENT(LightConeComponent, "LightConeComponent");
 
 	// NOTE : THESE ARE SPECIAL CASES DUE TO THE FACT THAT THEIR COMPONENTS ARE UNIQUE AND WOULDN'T WORK BY SHALLOW COPIED OR DEEP COPIED
 	// THE CLONING FUNCTIONALITY HAVE BEEN CONSIDERED INTO ECS ITSELF. UNSURE, ASK.
@@ -211,6 +213,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	//ECS::GetInstance().RegisterSystem<graphics::GameCamera>();
 	ECS::GetInstance().RegisterSystem<graphics::CameraSystem>();
 	ECS::GetInstance().RegisterSystem<UIRenderSystem>();
+	ECS::GetInstance().RegisterSystem<LightConeSystem>();
 
 	//Register JPH::TempAllocatorImpl for Physcis
 	RegisterDefaultAllocator();
@@ -301,6 +304,13 @@ bool engine::Init(GLFWwindow* windowContext)
 	SignatureID uiSig;
 	uiSig.set(ECS::GetInstance().GetComponentType<UIComponent>());
 	ECS::GetInstance().SetSystemSignature<UIRenderSystem>(uiSig);
+
+	// For Light Cone System
+	SignatureID lightConeSig;
+	lightConeSig.set(ECS::GetInstance().GetComponentType<LightConeComponent>());
+	lightConeSig.set(ECS::GetInstance().GetComponentType<Transform>());
+	lightConeSig.set(ECS::GetInstance().GetComponentType<HierarchyComponent>());
+	ECS::GetInstance().SetSystemSignature<LightConeSystem>(lightConeSig);
 
 	glfwSetFramebufferSizeCallback(windowContext, []([[maybe_unused]] GLFWwindow* window, int width, int height)
 		{
@@ -566,6 +576,9 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 	// Other non-fixed logic
 	ECS::GetInstance().GetSystem<AudioSystem>()->Update();
 	ECS::GetInstance().GetSystem<HierarchySystem>()->UpdateHierarchy();
+
+	// Update light cone visualizations (must run after hierarchy updates)
+	ECS::GetInstance().GetSystem<LightConeSystem>()->Update();
 
 	ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->Update();
 	

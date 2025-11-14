@@ -333,6 +333,9 @@
     <ClInclude Include="include\NavMeshAgentSystem.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\LightConeSystem.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\ThirdParty\xresource_pipeline_v2-main\dependencies\xtextfile\source\xtextfile.cpp">

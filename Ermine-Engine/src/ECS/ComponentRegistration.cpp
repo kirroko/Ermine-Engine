@@ -41,6 +41,7 @@ namespace Ermine
 	XPROPERTY_REG(AABBComponent)
 	XPROPERTY_REG(HierarchyComponent)
 	XPROPERTY_REG(UIComponent)
+	XPROPERTY_REG(LightConeComponent)
 
 	//XPROPERTY_REG(ModelComponent)
 	//XPROPERTY_REG(AnimationComponent)

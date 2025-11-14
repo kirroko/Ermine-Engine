@@ -3914,7 +3914,11 @@
         "HierarchyComponent": {
           "depth": 0
         },
-        "GlobalTransform": {}
+        "GlobalTransform": {},
+        "LightConeComponent": {
+          "groundY": -5.0,
+          "coneAngleDegrees": 45.0
+        }
       }
     },
     {
@@ -4963,6 +4967,88 @@
         },
         "HierarchyComponent": {
           "parentGuid": "760aaa92121b0b41a4b5b5e17cbc49e6",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 70,
+      "components": {
+        "IDComponent": {
+          "guid": "206fd4c85b97f9409f562264fefa81ec"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            -2.5,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.3,
+            1.5,
+            1.3
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Light Cone",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cone",
+            "size": [
+              1.0,
+              2.0,
+              1.0
+            ]
+          }
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              1.0,
+              0.0,
+              0.0,
+              0.3
+            ],
+            "materialAlpha": 0.3,
+            "materialTransparency": 0.7,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.5,
+            "materialEmissive": [
+              1.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 0.5,
+            "materialHasAlbedoMap": false,
+            "materialHasNormalMap": false,
+            "materialHasRoughnessMap": false,
+            "materialHasMetallicMap": false,
+            "materialHasAoMap": false
+          },
+          "textures": [],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "604dcd01034c284c8162848153611c99",
           "depth": 1
         },
         "GlobalTransform": {}

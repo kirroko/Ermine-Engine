@@ -340,6 +340,7 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClInclude Include="include\Input.h" />
     <ClInclude Include="include\InspectorGUI.h" />
     <ClInclude Include="include\JobSystem.h" />
+    <ClInclude Include="include\LightConeSystem.h" />
     <ClInclude Include="include\Logger.h" />
     <ClInclude Include="include\Material.h" />
     <ClInclude Include="include\MathUtils.h" />
