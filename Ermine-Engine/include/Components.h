@@ -2210,94 +2210,69 @@ namespace Ermine
 		}
 
 		template <typename Alloc>
-		void Serialize(rapidjson::Value& out, Alloc& alloc) const
-		{
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
 			out.SetObject();
 
-			// parent
-			{
-				rapidjson::Value parentVal;
-				parentVal.SetUint64(static_cast<uint64_t>(parent));
-				out.AddMember(
-					rapidjson::Value("parent", alloc),
-					parentVal,
-					alloc
-				);
-			}
-
-			// children
-			{
-				rapidjson::Value arr(rapidjson::kArrayType);
-				arr.Reserve(static_cast<rapidjson::SizeType>(children.size()), alloc);
-
-				for (EntityID cid : children)
-				{
-					rapidjson::Value childVal;
-					childVal.SetUint64(static_cast<uint64_t>(cid));
-					arr.PushBack(childVal, alloc);
+			// Write parentGuid from runtime parent
+			if (parent != INVALID_PARENT) {
+				auto& ecs = ECS::GetInstance();
+				if (ecs.HasComponent<IDComponent>(parent)) {
+					const auto& pid = ecs.GetComponent<IDComponent>(parent);
+					const std::string g = pid.guid.ToString();
+					rapidjson::Value s;
+					s.SetString(g.c_str(), (rapidjson::SizeType)g.size(), alloc);
+					out.AddMember("parentGuid", s, alloc);
 				}
-
-				out.AddMember(
-					rapidjson::Value("children", alloc),
-					arr,
-					alloc
-				);
 			}
-
-			// depth
-			{
-				rapidjson::Value depthVal;
-				depthVal.SetInt(depth);
-				out.AddMember(
-					rapidjson::Value("depth", alloc),
-					depthVal,
-					alloc
-				);
-			}
+			// optional editor fields
+			rapidjson::Value dv; dv.SetInt(depth);
+			out.AddMember("depth", dv, alloc);
 		}
 
 		void Deserialize(const rapidjson::Value& in)
 		{
 			if (!in.IsObject()) return;
 
-			// parent
-			if (in.HasMember("parent") && in["parent"].IsUint64())
-			{
-				parent = static_cast<EntityID>(in["parent"].GetUint64());
-			}
-			else
-			{
-				parent = INVALID_PARENT;
+			// Reset runtime links; we rebuild them later in a resolve pass
+			parent = INVALID_PARENT;
+			children.clear();
+
+			// --- Read GUID-based form (authoritative on disk) ---
+			parentGuid = {};
+			childrenGuids.clear();
+
+			if (in.HasMember("parentGuid") && in["parentGuid"].IsString()) {
+				parentGuid = Guid::FromString(in["parentGuid"].GetString());
 			}
 
-			// children
-			children.clear();
-			if (in.HasMember("children") && in["children"].IsArray())
-			{
-				const auto& arr = in["children"].GetArray();
-				children.reserve(arr.Size());
-				for (rapidjson::SizeType i = 0; i < arr.Size(); ++i)
-				{
-					if (arr[i].IsUint64())
-					{
-						children.push_back(
-							static_cast<EntityID>(arr[i].GetUint64())
-						);
+			if (in.HasMember("childrenGuids") && in["childrenGuids"].IsArray()) {
+				for (const auto& v : in["childrenGuids"].GetArray()) {
+					if (v.IsString()) {
+						childrenGuids.push_back(Guid::FromString(v.GetString()));
 					}
 				}
 			}
 
-			// depth
-			if (in.HasMember("depth") && in["depth"].IsInt())
-			{
-				depth = in["depth"].GetInt();
-			}
-			else
-			{
-				depth = 0;
+			// --- Legacy numeric fallback ONLY if no GUID present ---
+			if (!parentGuid.IsValid()) {
+				if (in.HasMember("parent") && in["parent"].IsUint64())
+					parent = static_cast<EntityID>(in["parent"].GetUint64());
+
+				if (in.HasMember("children") && in["children"].IsArray()) {
+					const auto& arr = in["children"].GetArray();
+					children.reserve(arr.Size());
+					for (rapidjson::SizeType i = 0; i < arr.Size(); ++i) {
+						if (arr[i].IsUint64())
+							children.push_back(static_cast<EntityID>(arr[i].GetUint64()));
+					}
+				}
 			}
 
-			// housekeeping so world transforms get recomputed
+			// Depth (editor/UI)
+			depth = (in.HasMember("depth") && in["depth"].IsInt())
+				? in["depth"].GetInt() : 0;
+
+			// Housekeeping
 			isDirty = true;
 			worldTransform = Mtx44{ 1.0f };
 			worldTransformDirty = true;
