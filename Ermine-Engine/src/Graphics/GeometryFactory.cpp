@@ -421,3 +421,145 @@ Ermine::Mesh GeometryFactory::CreateSphere(float radius, unsigned int sectors, u
 
     return mesh;
 }
+
+/**
+ * @brief Create a cone mesh
+ * 
+ * @param radius The radius of the cone base
+ * @param height The height of the cone
+ * @param sectors The number of sectors around the cone (default 32 for smooth appearance)
+ * @return Mesh The cone mesh with smooth normals and proper UV mapping
+ */
+Ermine::Mesh GeometryFactory::CreateCone(float radius, float height, unsigned int sectors)
+{
+    std::vector<Vertex> vertices;
+    std::vector<unsigned int> indices;
+
+    // Apex vertex (tip of the cone at top) - shared by all side triangles
+    vertices.push_back({{0.0f, height, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.5f, 1.0f}});
+
+    // Base center vertex - for bottom cap
+    vertices.push_back({{0.0f, 0.0f, 0.0f}, {0.0f, -1.0f, 0.0f}, {0.5f, 0.0f}});
+
+    float sectorStep = 2 * PI<float> / sectors;
+    
+    // Calculate slant length for proper normal calculation
+    float slantLength = sqrtf(radius * radius + height * height);
+
+    // Generate vertices for cone sides (smooth normals pointing outward from surface)
+    // For smooth shading, we need unique normals per vertex
+    for (unsigned int i = 0; i <= sectors; ++i)
+    {
+        float sectorAngle = i * sectorStep;
+        float x = radius * cosf(sectorAngle);
+        float z = radius * sinf(sectorAngle);
+
+        // Calculate smooth surface normal (perpendicular to cone surface)
+        // The normal at the base points outward and slightly upward
+        float normalY = radius / slantLength;      // Vertical component
+        float normalXZ = height / slantLength;     // Horizontal component
+        
+        float nx = normalXZ * cosf(sectorAngle);
+        float nz = normalXZ * sinf(sectorAngle);
+        float ny = normalY;
+
+        // UV coordinates wrapping around the cone
+        float u = (float)i / sectors;
+        float v = 0.0f; // Base is at v=0, apex is at v=1
+
+        vertices.push_back({{x, 0.0f, z}, {nx, ny, nz}, {u, v}});
+    }
+
+    // Generate duplicate vertices for bottom cap (different normals pointing down)
+    for (unsigned int i = 0; i <= sectors; ++i)
+    {
+        float sectorAngle = i * sectorStep;
+        float x = radius * cosf(sectorAngle);
+        float z = radius * sinf(sectorAngle);
+        float u = (float)i / sectors;
+
+        // Bottom face normals point straight down
+        vertices.push_back({{x, 0.0f, z}, {0.0f, -1.0f, 0.0f}, {u, 0.0f}});
+    }
+
+    // Generate indices for cone sides
+    // Connect apex (index 0) to base circle vertices (starting at index 2)
+    unsigned int apexIndex = 0;
+    unsigned int baseStartIndex = 2;
+    
+    for (unsigned int i = 0; i < sectors; ++i)
+    {
+        // Triangle: apex -> current base vertex -> next base vertex
+        indices.push_back(apexIndex);
+        indices.push_back(baseStartIndex + i);
+        indices.push_back(baseStartIndex + i + 1);
+    }
+
+    // Generate indices for base (bottom cap)
+    // Connect center (index 1) to base circle vertices (starting after side vertices)
+    unsigned int baseCenterIndex = 1;
+    unsigned int baseCapStartIndex = baseStartIndex + sectors + 1;
+    
+    for (unsigned int i = 0; i < sectors; ++i)
+    {
+        // Triangle: center -> next vertex -> current vertex (winding for downward normal)
+        indices.push_back(baseCenterIndex);
+        indices.push_back(baseCapStartIndex + i + 1);
+        indices.push_back(baseCapStartIndex + i);
+    }
+
+    // Create VAO, VBO, IBO
+    auto vao = std::make_shared<VertexArray>();
+    vao->SetVertexCount(vertices.size());
+
+    auto vbo = std::make_shared<VertexBuffer>(vertices.data(), vertices.size() * sizeof(Vertex));
+
+    vao->LinkAttribute(0, 3, GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, pos));
+    vao->LinkAttribute(1, 3, GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, norms));
+    vao->LinkAttribute(2, 2, GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, tex));
+    vbo->Unbind();
+
+    auto ibo = std::make_shared<IndexBuffer>(indices.data(), indices.size() * sizeof(unsigned int));
+
+    auto mesh = Mesh(vao, vbo, ibo);
+    mesh.kind = MeshKind::Primitive;
+    mesh.primitive.type = "Cone";
+    mesh.primitive.size = Vec3{ radius * 2.0f, height, radius * 2.0f };
+
+    // Set AABB for frustum culling
+    mesh.aabbMin = Vec3{ -radius, 0.0f, -radius };
+    mesh.aabbMax = Vec3{  radius, height,  radius };
+
+    // Register mesh with MeshManager for indirect rendering
+    auto renderer = Ermine::ECS::GetInstance().GetSystem<Renderer>();
+    if (renderer) {
+        // Calculate tangents for normal mapping support
+        std::vector<glm::vec3> tangents = CalculateTangents(vertices, indices);
+
+        // Convert local Vertex to MeshTypes::Vertex
+        std::vector<graphics::Vertex> meshVertices;
+        meshVertices.reserve(vertices.size());
+        for (size_t i = 0; i < vertices.size(); ++i) {
+            const auto& v = vertices[i];
+            graphics::Vertex meshVert;
+            meshVert.position.x = v.pos.x;
+            meshVert.position.y = v.pos.y;
+            meshVert.position.z = v.pos.z;
+            meshVert.normal.x = v.norms.x;
+            meshVert.normal.y = v.norms.y;
+            meshVert.normal.z = v.norms.z;
+            meshVert.texCoord.x = v.tex.x;
+            meshVert.texCoord.y = v.tex.y;
+            meshVert.tangent = tangents[i];
+            meshVertices.push_back(meshVert);
+        }
+
+        std::string meshID = "Cone_" + std::to_string(radius) + "_" + std::to_string(height) + "_" + std::to_string(sectors);
+        renderer->m_MeshManager.RegisterMesh(meshVertices, indices, meshID);
+
+        // Store the registered mesh ID in the Mesh component
+        mesh.registeredMeshID = meshID;
+    }
+
+    return mesh;
+}
