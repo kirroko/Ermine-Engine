@@ -3876,29 +3876,12 @@
           "guid": "604dcd01034c284c8162848153611c99"
         },
         "Transform": {
-          "position": [
-            0.0,
-            3.0,
-            -7.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
+          "position": [ 0.0, 3.0, -7.0 ],
+          "rotation": [ 0.0, 0.0, 0.0, 1.0 ],
+          "scale": [ 1.0, 1.0, 1.0 ]
         },
         "Light": {
-          "color": [
-            1.0,
-            0.0,
-            0.0
-          ],
+          "color": [ 1.0, 0.0, 0.0 ],
           "intensity": 3.062000036239624,
           "type": "Spot",
           "castsShadows": false,
@@ -3918,6 +3901,15 @@
         "LightConeComponent": {
           "groundY": -5.0,
           "coneAngleDegrees": 45.0
+        },
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "class": "SimpleLightCone",
+              "enabled": true,
+              "fields": {}
+            }
+          ]
         }
       }
     },
@@ -4501,8 +4493,8 @@
         "Transform": {
           "position": [
             -500.0,
-            117.5,
-            300.0
+            313.33331298828127,
+            600.0
           ],
           "rotation": [
             0.0,
@@ -4512,7 +4504,7 @@
           ],
           "scale": [
             50.0,
-            25.0,
+            66.66667175292969,
             50.0
           ]
         },
