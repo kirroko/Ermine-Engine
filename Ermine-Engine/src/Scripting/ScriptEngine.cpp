@@ -1726,6 +1726,37 @@ namespace
 		}
 		return result ? 1 : 0;
 	}
+
+	using namespace Ermine;
+	static void icall_Physics_SetPosition(uint64_t entityID, Ermine::Vec3 pos)
+	{
+		auto physics = ECS::GetInstance().GetSystem<Physics>();
+		physics->SetPosition((EntityID)entityID, pos);
+	}
+
+	static void icall_Physics_SetRotationEuler(uint64_t entityID, Ermine::Vec3 euler)
+	{
+		auto physics = ECS::GetInstance().GetSystem<Physics>();
+		physics->SetRotation((EntityID)entityID, euler);
+	}
+
+	static void icall_Physics_SetRotationQuat(uint64_t entityID, Quaternion q)
+	{
+		auto physics = ECS::GetInstance().GetSystem<Physics>();
+		physics->SetRotation((EntityID)entityID, q);
+	}
+
+	static void icall_Physics_MoveEuler(uint64_t entityID, Ermine::Vec3 pos, Ermine::Vec3 euler)
+	{
+		auto physics = ECS::GetInstance().GetSystem<Physics>();
+		physics->Move((EntityID)entityID, pos, euler);
+	}
+
+	static void icall_Physics_MoveQuat(uint64_t entityID, Ermine::Vec3 pos, Quaternion q)
+	{
+		auto physics = ECS::GetInstance().GetSystem<Physics>();
+		physics->Move((EntityID)entityID, pos, q);
+	}
 #pragma endregion
 
 #pragma region Prefab ICalls
@@ -2153,5 +2184,12 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 			v.z = dest.z;
 			Ermine::RequestPathForAgent((Ermine::EntityID)entityID, v);
 		});
+#pragma endregion
+#pragma region Physics ICalls
+	mono_add_internal_call("ErmineEngine.Physics::SetPosition", (const void*)icall_Physics_SetPosition);
+	mono_add_internal_call("ErmineEngine.Physics::SetRotationEuler", (const void*)icall_Physics_SetRotationEuler);
+	mono_add_internal_call("ErmineEngine.Physics::SetRotationQuat", (const void*)icall_Physics_SetRotationQuat);
+	mono_add_internal_call("ErmineEngine.Physics::MoveEuler", (const void*)icall_Physics_MoveEuler);
+	mono_add_internal_call("ErmineEngine.Physics::MoveQuat", (const void*)icall_Physics_MoveQuat);
 #pragma endregion
 }
