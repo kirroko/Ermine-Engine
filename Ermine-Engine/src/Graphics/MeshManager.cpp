@@ -108,7 +108,7 @@ namespace Ermine::graphics {
         // Initialize separate buffers for each pass and VAO type
         // Each pass gets its own buffers to avoid overwrites (simpler, cleaner code)
 
-        // Depth prepass buffers (early-z rejection and picking - runs first)
+        // Depth prepass buffers (early-z rejection - opaque objects only)
         if (!m_DepthPrepassStandardDrawCommandBuffer.Initialize(bufferSize) ||
             !m_DepthPrepassStandardDrawInfoBuffer.Initialize(bufferSize)) {
             EE_CORE_ERROR("Failed to initialize depth prepass standard buffers");
@@ -116,6 +116,16 @@ namespace Ermine::graphics {
         if (!m_DepthPrepassSkinnedDrawCommandBuffer.Initialize(bufferSize) ||
             !m_DepthPrepassSkinnedDrawInfoBuffer.Initialize(bufferSize)) {
             EE_CORE_ERROR("Failed to initialize depth prepass skinned buffers");
+        }
+
+        // Picking pass buffers (object selection - all visible objects)
+        if (!m_PickingStandardDrawCommandBuffer.Initialize(bufferSize) ||
+            !m_PickingStandardDrawInfoBuffer.Initialize(bufferSize)) {
+            EE_CORE_ERROR("Failed to initialize picking standard buffers");
+        }
+        if (!m_PickingSkinnedDrawCommandBuffer.Initialize(bufferSize) ||
+            !m_PickingSkinnedDrawInfoBuffer.Initialize(bufferSize)) {
+            EE_CORE_ERROR("Failed to initialize picking skinned buffers");
         }
 
         // Geometry pass buffers

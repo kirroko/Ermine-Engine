@@ -1318,6 +1318,11 @@ void Renderer::RebuildDrawData()
 	m_DepthPrepassSkinnedCommands.clear();
 	m_DepthPrepassSkinnedInfos.clear();
 
+	m_PickingStandardCommands.clear();
+	m_PickingStandardInfos.clear();
+	m_PickingSkinnedCommands.clear();
+	m_PickingSkinnedInfos.clear();
+
 	m_GeometryStandardItems.clear();
 	m_GeometrySkinnedItems.clear();
 
@@ -1350,11 +1355,17 @@ void Renderer::RebuildDrawData()
 	m_ForwardPassDrawCommandsVertexCount = 0;
 	m_ForwardPassDrawCommandsIndexCount = 0;
 
-	// Reserve space for depth prepass (ALL visible geometry)
+	// Reserve space for depth prepass (opaque visible geometry only)
 	m_DepthPrepassStandardCommands.reserve(m_Entities.size());
 	m_DepthPrepassStandardInfos.reserve(m_Entities.size());
 	m_DepthPrepassSkinnedCommands.reserve(m_Entities.size() / 4);
 	m_DepthPrepassSkinnedInfos.reserve(m_Entities.size() / 4);
+
+	// Reserve space for picking pass (ALL visible geometry - opaque + transparent)
+	m_PickingStandardCommands.reserve(m_Entities.size());
+	m_PickingStandardInfos.reserve(m_Entities.size());
+	m_PickingSkinnedCommands.reserve(m_Entities.size() / 4);
+	m_PickingSkinnedInfos.reserve(m_Entities.size() / 4);
 
 	// Reserve space for geometry pass (opaque default shader only)
 	m_GeometryStandardItems.reserve(m_Entities.size());
@@ -1552,17 +1563,24 @@ void Renderer::RebuildDrawData()
 
 			// Route based on frustum culling
 			if (isCulled) {
-				// Culled meshes - skip all visible passes (depth, geometry, forward)
+				// Culled meshes - skip all visible passes (depth, picking, geometry, forward)
 				culledMeshes++;
 			}
 			else {
 				// ========== VISIBLE MESHES - Route to visible passes ==========
 
-				// PASS 1: DEPTH PREPASS - ALL visible geometry (for early-z and picking)
-				m_DepthPrepassStandardCommands.push_back(cmd);
-				m_DepthPrepassStandardInfos.push_back(info);
+				// PASS 1: PICKING PASS - ALL visible geometry (opaque + transparent, for object selection)
+				m_PickingStandardCommands.push_back(cmd);
+				m_PickingStandardInfos.push_back(info);
 
-				// PASS 2: GEOMETRY/FORWARD - Route by shader type and transparency
+				// PASS 2: DEPTH PREPASS - Opaque visible geometry only (for early-z rejection)
+				// Transparent objects excluded to prevent depth conflicts with objects behind them
+				if (!isTransparent) {
+					m_DepthPrepassStandardCommands.push_back(cmd);
+					m_DepthPrepassStandardInfos.push_back(info);
+				}
+
+				// PASS 3: GEOMETRY/FORWARD - Route by shader type and transparency
 				if (!isTransparent && !isCustomShader) {
 					// Opaque default shader → Geometry pass (deferred lighting)
 					DefaultShaderDrawItem item;
@@ -1599,7 +1617,7 @@ void Renderer::RebuildDrawData()
 				}
 			}
 
-			// PASS 3: SHADOW PASS - ALL geometry (visible OR culled) that casts shadows
+			// PASS 4: SHADOW PASS - ALL geometry (visible OR culled) that casts shadows
 			if (castsShadows) {
 				m_ShadowStandardCommands.push_back(cmd);
 				m_ShadowStandardInfos.push_back(info);
@@ -1772,17 +1790,24 @@ void Renderer::RebuildDrawData()
 
 				// Route based on frustum culling
 				if (isCulled) {
-					// Culled meshes - skip all visible passes (depth, geometry, forward)
+					// Culled meshes - skip all visible passes (depth, picking, geometry, forward)
 					culledMeshes++;
 				}
 				else {
 					// ========== VISIBLE MESHES - Route to visible passes ==========
 
-					// PASS 1: DEPTH PREPASS - ALL visible geometry (for early-z and picking)
-					m_DepthPrepassStandardCommands.push_back(cmd);
-					m_DepthPrepassStandardInfos.push_back(info);
+					// PASS 1: PICKING PASS - ALL visible geometry (opaque + transparent, for object selection)
+					m_PickingStandardCommands.push_back(cmd);
+					m_PickingStandardInfos.push_back(info);
 
-					// PASS 2: GEOMETRY/FORWARD - Route by shader type and transparency
+					// PASS 2: DEPTH PREPASS - Opaque visible geometry only (for early-z rejection)
+					// Transparent objects excluded to prevent depth conflicts with objects behind them
+					if (!isTransparent) {
+						m_DepthPrepassStandardCommands.push_back(cmd);
+						m_DepthPrepassStandardInfos.push_back(info);
+					}
+
+					// PASS 3: GEOMETRY/FORWARD - Route by shader type and transparency
 					if (!isTransparent && !isCustomShader) {
 						// Opaque default shader → Geometry pass (deferred lighting)
 						DefaultShaderDrawItem item;
@@ -1825,7 +1850,7 @@ void Renderer::RebuildDrawData()
 					}
 				}
 
-				// PASS 3: SHADOW PASS - ALL geometry (visible OR culled) that casts shadows
+				// PASS 4: SHADOW PASS - ALL geometry (visible OR culled) that casts shadows
 				if (castsShadows) {
 					m_ShadowStandardCommands.push_back(cmd);
 					m_ShadowStandardInfos.push_back(info);
@@ -2000,17 +2025,24 @@ void Renderer::RebuildDrawData()
 
 				// Route based on frustum culling
 				if (isCulled) {
-					// Culled meshes - skip all visible passes (depth, geometry, forward)
+					// Culled meshes - skip all visible passes (depth, picking, geometry, forward)
 					culledMeshes++;
 				}
 				else {
 					// ========== VISIBLE MESHES - Route to visible passes ==========
 
-					// PASS 1: DEPTH PREPASS - ALL visible geometry (for early-z and picking)
-					m_DepthPrepassSkinnedCommands.push_back(cmd);
-					m_DepthPrepassSkinnedInfos.push_back(info);
+					// PASS 1: PICKING PASS - ALL visible geometry (opaque + transparent, for object selection)
+					m_PickingSkinnedCommands.push_back(cmd);
+					m_PickingSkinnedInfos.push_back(info);
 
-					// PASS 2: GEOMETRY/FORWARD - Route by shader type and transparency
+					// PASS 2: DEPTH PREPASS - Opaque visible geometry only (for early-z rejection)
+					// Transparent objects excluded to prevent depth conflicts with objects behind them
+					if (!isTransparent) {
+						m_DepthPrepassSkinnedCommands.push_back(cmd);
+						m_DepthPrepassSkinnedInfos.push_back(info);
+					}
+
+					// PASS 3: GEOMETRY/FORWARD - Route by shader type and transparency
 					if (!isTransparent && !isCustomShader) {
 						// Opaque default shader → Geometry pass (deferred lighting)
 						DefaultShaderDrawItem item;
@@ -2053,7 +2085,7 @@ void Renderer::RebuildDrawData()
 					}
 				}
 
-				// PASS 3: SHADOW PASS - ALL geometry (visible OR culled) that casts shadows
+				// PASS 4: SHADOW PASS - ALL geometry (visible OR culled) that casts shadows
 				if (castsShadows) {
 					m_ShadowSkinnedCommands.push_back(cmd);
 					m_ShadowSkinnedInfos.push_back(info);
@@ -2066,13 +2098,19 @@ void Renderer::RebuildDrawData()
 
 	// ========== WRITE ALL DRAW DATA TO GPU BUFFERS ==========
 
-	// PASS 1: DEPTH PREPASS - ALL visible geometry (for early-z and picking)
+	// PASS 1: PICKING PASS - ALL visible geometry (opaque + transparent, for object selection)
+	m_MeshManager.m_PickingStandardDrawCommandBuffer.WriteCommands(m_PickingStandardCommands, 0);
+	m_MeshManager.m_PickingStandardDrawInfoBuffer.WriteDrawInfos(m_PickingStandardInfos, 0);
+	m_MeshManager.m_PickingSkinnedDrawCommandBuffer.WriteCommands(m_PickingSkinnedCommands, 0);
+	m_MeshManager.m_PickingSkinnedDrawInfoBuffer.WriteDrawInfos(m_PickingSkinnedInfos, 0);
+
+	// PASS 2: DEPTH PREPASS - Opaque visible geometry only (for early-z rejection)
 	m_MeshManager.m_DepthPrepassStandardDrawCommandBuffer.WriteCommands(m_DepthPrepassStandardCommands, 0);
 	m_MeshManager.m_DepthPrepassStandardDrawInfoBuffer.WriteDrawInfos(m_DepthPrepassStandardInfos, 0);
 	m_MeshManager.m_DepthPrepassSkinnedDrawCommandBuffer.WriteCommands(m_DepthPrepassSkinnedCommands, 0);
 	m_MeshManager.m_DepthPrepassSkinnedDrawInfoBuffer.WriteDrawInfos(m_DepthPrepassSkinnedInfos, 0);
 
-	// PASS 2: GEOMETRY PASS - Opaque default shader only (deferred lighting)
+	// PASS 3: GEOMETRY PASS - Opaque default shader only (deferred lighting)
 	// Extract commands and infos from Items
 	std::vector<DrawElementsIndirectCommand> geometryStandardCommands;
 	std::vector<DrawInfo> geometryStandardInfos;
@@ -2097,7 +2135,7 @@ void Renderer::RebuildDrawData()
 	m_MeshManager.m_GeometrySkinnedDrawCommandBuffer.WriteCommands(geometrySkinnedCommands, 0);
 	m_MeshManager.m_GeometrySkinnedDrawInfoBuffer.WriteDrawInfos(geometrySkinnedInfos, 0);
 
-	// PASS 3: FORWARD PASS - Transparent default shaders
+	// PASS 4: FORWARD PASS - Transparent default shaders
 	// Extract commands and infos from Items
 	std::vector<DrawElementsIndirectCommand> forwardTransparentDefaultStandardCommands;
 	std::vector<DrawInfo> forwardTransparentDefaultStandardInfos;
@@ -2301,7 +2339,7 @@ void Renderer::RebuildDrawData()
 	glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
-	// PASS 4: SHADOW PASS - ALL geometry with castsShadows=true (instanced for cascaded shadow maps)
+	// PASS 5: SHADOW PASS - ALL geometry with castsShadows=true (instanced for cascaded shadow maps)
 	//      No need to merge from geometry/forward passes - they're already included
 
 	std::vector<DrawElementsIndirectCommand> shadowStandardCommands;
@@ -2374,6 +2412,11 @@ void Renderer::UpdateDrawData()
 	m_DepthPrepassSkinnedCommands.clear();
 	m_DepthPrepassSkinnedInfos.clear();
 
+	m_PickingStandardCommands.clear();
+	m_PickingStandardInfos.clear();
+	m_PickingSkinnedCommands.clear();
+	m_PickingSkinnedInfos.clear();
+
 	m_GeometryStandardItems.clear();
 	m_GeometrySkinnedItems.clear();
 
@@ -2404,6 +2447,11 @@ void Renderer::UpdateDrawData()
 	m_DepthPrepassStandardInfos.reserve(m_Entities.size());
 	m_DepthPrepassSkinnedCommands.reserve(m_Entities.size() / 4);
 	m_DepthPrepassSkinnedInfos.reserve(m_Entities.size() / 4);
+
+	m_PickingStandardCommands.reserve(m_Entities.size());
+	m_PickingStandardInfos.reserve(m_Entities.size());
+	m_PickingSkinnedCommands.reserve(m_Entities.size() / 4);
+	m_PickingSkinnedInfos.reserve(m_Entities.size() / 4);
 
 	m_GeometryStandardItems.reserve(m_Entities.size());
 	m_GeometrySkinnedItems.reserve(m_Entities.size() / 4);
@@ -2552,23 +2600,36 @@ void Renderer::UpdateDrawData()
 
 		// Route to appropriate buffers based on culling and transparency
 		if (isCulled) {
-			// Culled meshes - skip all visible passes (depth, geometry, forward)
+			// Culled meshes - skip all visible passes (depth, picking, geometry, forward)
 			culledMeshes++;
 		}
 		else {
 			// ========== VISIBLE MESHES - Route to visible passes ==========
 
-			// PASS 1: DEPTH PREPASS - ALL visible geometry (for early-z and picking)
+			// PASS 1: PICKING PASS - ALL visible geometry (opaque + transparent, for object selection)
 			if (cachedItem.useSkinning) {
-				m_DepthPrepassSkinnedCommands.push_back(cmd);
-				m_DepthPrepassSkinnedInfos.push_back(info);
+				m_PickingSkinnedCommands.push_back(cmd);
+				m_PickingSkinnedInfos.push_back(info);
 			}
 			else {
-				m_DepthPrepassStandardCommands.push_back(cmd);
-				m_DepthPrepassStandardInfos.push_back(info);
+				m_PickingStandardCommands.push_back(cmd);
+				m_PickingStandardInfos.push_back(info);
 			}
 
-			// PASS 2: GEOMETRY/FORWARD - Route by shader type and transparency
+			// PASS 2: DEPTH PREPASS - Opaque visible geometry only (for early-z rejection)
+			// Transparent objects excluded to prevent depth conflicts with objects behind them
+			if (!cachedItem.isTransparent) {
+				if (cachedItem.useSkinning) {
+					m_DepthPrepassSkinnedCommands.push_back(cmd);
+					m_DepthPrepassSkinnedInfos.push_back(info);
+				}
+				else {
+					m_DepthPrepassStandardCommands.push_back(cmd);
+					m_DepthPrepassStandardInfos.push_back(info);
+				}
+			}
+
+			// PASS 3: GEOMETRY/FORWARD - Route by shader type and transparency
 			if (!cachedItem.isTransparent && !cachedItem.hasCustomShader) {
 				// Opaque default shader → Geometry pass (deferred lighting)
 				DefaultShaderDrawItem item;
@@ -2691,7 +2752,7 @@ void Renderer::UpdateDrawData()
 			}
 		}
 
-		// PASS 3: SHADOW PASS - ALL geometry (visible OR culled) that casts shadows
+		// PASS 4: SHADOW PASS - ALL geometry (visible OR culled) that casts shadows
 		if (cachedItem.castsShadows) {
 			if (cachedItem.useSkinning) {
 				m_ShadowSkinnedCommands.push_back(cmd);
@@ -2712,7 +2773,13 @@ void Renderer::UpdateDrawData()
 	// Fast path uses distance-only sorting within existing shader groups
 
 	// ========== WRITE ALL DRAW DATA TO GPU BUFFERS ==========
-	// PASS 1: DEPTH PREPASS - ALL visible geometry
+	// PASS 1: PICKING PASS - ALL visible geometry (opaque + transparent, for object selection)
+	m_MeshManager.m_PickingStandardDrawCommandBuffer.WriteCommands(m_PickingStandardCommands, 0);
+	m_MeshManager.m_PickingStandardDrawInfoBuffer.WriteDrawInfos(m_PickingStandardInfos, 0);
+	m_MeshManager.m_PickingSkinnedDrawCommandBuffer.WriteCommands(m_PickingSkinnedCommands, 0);
+	m_MeshManager.m_PickingSkinnedDrawInfoBuffer.WriteDrawInfos(m_PickingSkinnedInfos, 0);
+
+	// PASS 2: DEPTH PREPASS - Opaque visible geometry only (for early-z rejection)
 	m_MeshManager.m_DepthPrepassStandardDrawCommandBuffer.WriteCommands(m_DepthPrepassStandardCommands, 0);
 	m_MeshManager.m_DepthPrepassStandardDrawInfoBuffer.WriteDrawInfos(m_DepthPrepassStandardInfos, 0);
 	m_MeshManager.m_DepthPrepassSkinnedDrawCommandBuffer.WriteCommands(m_DepthPrepassSkinnedCommands, 0);
@@ -2766,7 +2833,7 @@ void Renderer::UpdateDrawData()
 	m_MeshManager.m_ForwardSkinnedDrawCommandBuffer.WriteCommands(forwardTransparentDefaultSkinnedCommands, 0);
 	m_MeshManager.m_ForwardSkinnedDrawInfoBuffer.WriteDrawInfos(forwardTransparentDefaultSkinnedInfos, 0);
 
-	// PASS 4: SHADOW PASS - ALL geometry with castsShadows=true (instanced for cascaded shadow maps)
+	// PASS 5: SHADOW PASS - ALL geometry with castsShadows=true (instanced for cascaded shadow maps)
 
 	std::vector<DrawElementsIndirectCommand> shadowStandardCommands;
 	shadowStandardCommands.reserve(m_ShadowStandardCommands.size());
@@ -5827,8 +5894,8 @@ void Renderer::RenderPickingPass(const Mtx44& view, const Mtx44& projection)
 	);
 	glm::mat4 vp = glmProjection * glmView;
 
-	// ========== RENDER STANDARD MESHES (geometry + forward pass) ==========
-	if (!m_GeometryStandardItems.empty() || !m_ForwardTransparentDefaultStandardItems.empty())
+	// ========== RENDER STANDARD MESHES (ALL visible geometry - opaque + transparent) ==========
+	if (!m_PickingStandardCommands.empty())
 	{
 		m_PickingIndirectShader->Bind();
 		m_PickingIndirectShader->SetUniformMatrix4fv("u_ViewProjection", vp);
@@ -5838,37 +5905,18 @@ void Renderer::RenderPickingPass(const Mtx44& view, const Mtx44& projection)
 		{
 			glBindVertexArray(standardVAO);
 
-			// Render geometry pass standard meshes (opaque)
-			if (!m_GeometryStandardItems.empty())
-			{
-				m_PickingIndirectShader->SetUniform1ui("baseDrawID", 0);
-				glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_MeshManager.m_GeometryStandardDrawInfoBuffer.GetBufferID());
-				glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_MeshManager.m_GeometryStandardDrawCommandBuffer.GetBufferID());
-				glMultiDrawElementsIndirect(
-					GL_TRIANGLES,
-					GL_UNSIGNED_INT,
-					nullptr,
-					static_cast<GLsizei>(m_GeometryStandardItems.size()),
-					0
-				);
-				glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
-			}
-
-			// Render forward pass standard meshes (transparent)
-			if (!m_ForwardTransparentDefaultStandardItems.empty())
-			{
-				m_PickingIndirectShader->SetUniform1ui("baseDrawID", 0);
-				glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_MeshManager.m_ForwardStandardDrawInfoBuffer.GetBufferID());
-				glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_MeshManager.m_ForwardStandardDrawCommandBuffer.GetBufferID());
-				glMultiDrawElementsIndirect(
-					GL_TRIANGLES,
-					GL_UNSIGNED_INT,
-					nullptr,
-					static_cast<GLsizei>(m_ForwardTransparentDefaultStandardItems.size()),
-					0
-				);
-				glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
-			}
+			// Render all standard meshes from picking buffer (opaque + transparent)
+			m_PickingIndirectShader->SetUniform1ui("baseDrawID", 0);
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_MeshManager.m_PickingStandardDrawInfoBuffer.GetBufferID());
+			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_MeshManager.m_PickingStandardDrawCommandBuffer.GetBufferID());
+			glMultiDrawElementsIndirect(
+				GL_TRIANGLES,
+				GL_UNSIGNED_INT,
+				nullptr,
+				static_cast<GLsizei>(m_PickingStandardCommands.size()),
+				0
+			);
+			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
 
 			glBindVertexArray(0);
 		}
@@ -5876,8 +5924,8 @@ void Renderer::RenderPickingPass(const Mtx44& view, const Mtx44& projection)
 		m_PickingIndirectShader->Unbind();
 	}
 
-	// ========== RENDER SKINNED MESHES (geometry + forward pass) ==========
-	if (!m_GeometrySkinnedItems.empty() || !m_ForwardTransparentDefaultSkinnedItems.empty())
+	// ========== RENDER SKINNED MESHES (ALL visible geometry - opaque + transparent) ==========
+	if (!m_PickingSkinnedCommands.empty())
 	{
 		m_PickingIndirectSkinnedShader->Bind();
 		m_PickingIndirectSkinnedShader->SetUniformMatrix4fv("u_ViewProjection", vp);
@@ -5887,37 +5935,18 @@ void Renderer::RenderPickingPass(const Mtx44& view, const Mtx44& projection)
 		{
 			glBindVertexArray(skinnedVAO);
 
-			// Render geometry pass skinned meshes (opaque)
-			if (!m_GeometrySkinnedItems.empty())
-			{
-				m_PickingIndirectSkinnedShader->SetUniform1ui("baseDrawID", 0);
-				glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_MeshManager.m_GeometrySkinnedDrawInfoBuffer.GetBufferID());
-				glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_MeshManager.m_GeometrySkinnedDrawCommandBuffer.GetBufferID());
-				glMultiDrawElementsIndirect(
-					GL_TRIANGLES,
-					GL_UNSIGNED_INT,
-					nullptr,
-					static_cast<GLsizei>(m_GeometrySkinnedItems.size()),
-					0
-				);
-				glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
-			}
-
-			// Render forward pass skinned meshes (transparent)
-			if (!m_ForwardTransparentDefaultSkinnedItems.empty())
-			{
-				m_PickingIndirectSkinnedShader->SetUniform1ui("baseDrawID", 0);
-				glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_MeshManager.m_ForwardSkinnedDrawInfoBuffer.GetBufferID());
-				glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_MeshManager.m_ForwardSkinnedDrawCommandBuffer.GetBufferID());
-				glMultiDrawElementsIndirect(
-					GL_TRIANGLES,
-					GL_UNSIGNED_INT,
-					nullptr,
-					static_cast<GLsizei>(m_ForwardTransparentDefaultSkinnedItems.size()),
-					0
-				);
-				glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
-			}
+			// Render all skinned meshes from picking buffer (opaque + transparent)
+			m_PickingIndirectSkinnedShader->SetUniform1ui("baseDrawID", 0);
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_MeshManager.m_PickingSkinnedDrawInfoBuffer.GetBufferID());
+			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_MeshManager.m_PickingSkinnedDrawCommandBuffer.GetBufferID());
+			glMultiDrawElementsIndirect(
+				GL_TRIANGLES,
+				GL_UNSIGNED_INT,
+				nullptr,
+				static_cast<GLsizei>(m_PickingSkinnedCommands.size()),
+				0
+			);
+			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
 
 			glBindVertexArray(0);
 		}

@@ -1013,11 +1013,18 @@ namespace Ermine::graphics
         // RENDER PASS CONTAINERS - Organized by pass, never cleared in fast path
         // ========================================================================
 
-        // DEPTH PREPASS - ALL geometry (for early-z rejection and picking)
+        // DEPTH PREPASS - Opaque geometry only (for early-z rejection)
+        // Transparent objects excluded to prevent depth conflicts with objects behind them
         std::vector<DrawElementsIndirectCommand> m_DepthPrepassStandardCommands;
         std::vector<DrawInfo> m_DepthPrepassStandardInfos;
         std::vector<DrawElementsIndirectCommand> m_DepthPrepassSkinnedCommands;
         std::vector<DrawInfo> m_DepthPrepassSkinnedInfos;
+
+        // PICKING PASS - ALL geometry (opaque + transparent, for object selection)
+        std::vector<DrawElementsIndirectCommand> m_PickingStandardCommands;
+        std::vector<DrawInfo> m_PickingStandardInfos;
+        std::vector<DrawElementsIndirectCommand> m_PickingSkinnedCommands;
+        std::vector<DrawInfo> m_PickingSkinnedInfos;
 
         // GEOMETRY PASS - Opaque default shader only (for deferred lighting)
         std::vector<DefaultShaderDrawItem> m_GeometryStandardItems;

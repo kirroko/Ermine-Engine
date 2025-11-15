@@ -97,11 +97,17 @@ namespace Ermine::graphics {
         GLuint m_IndexSSBO = 0;           // Binding 1 - All indices
 
         // Separate buffers for each pass and VAO type (no shared buffers = no overwrites)
-        // Depth prepass buffers (early-z rejection and picking)
+        // Depth prepass buffers (early-z rejection - opaque objects only)
         DrawCommandBuffer m_DepthPrepassStandardDrawCommandBuffer;
         DrawInfoBuffer m_DepthPrepassStandardDrawInfoBuffer;
         DrawCommandBuffer m_DepthPrepassSkinnedDrawCommandBuffer;
         DrawInfoBuffer m_DepthPrepassSkinnedDrawInfoBuffer;
+
+        // Picking pass buffers (object selection - all visible objects)
+        DrawCommandBuffer m_PickingStandardDrawCommandBuffer;
+        DrawInfoBuffer m_PickingStandardDrawInfoBuffer;
+        DrawCommandBuffer m_PickingSkinnedDrawCommandBuffer;
+        DrawInfoBuffer m_PickingSkinnedDrawInfoBuffer;
 
         // Geometry pass buffers
         DrawCommandBuffer m_GeometryStandardDrawCommandBuffer;
