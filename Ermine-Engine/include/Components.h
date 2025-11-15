@@ -1166,6 +1166,7 @@ namespace Ermine
 		bool hasEmiss = false;   Vec3  cacheEmissive{ 0,0,0 };
 		float cacheEmissiveIntensity = 1.0f;
 		std::string customFragmentShader = "";   // Custom fragment shader path (empty = use standard PBR)
+		bool cacheCastsShadows = true;           // Whether this material casts shadows
 
 		//// Cached texture paths (only what we set by path)
 		//bool hasAlbedoMapPath = false;   std::string albedoMapPath;

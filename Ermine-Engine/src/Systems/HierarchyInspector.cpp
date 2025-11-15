@@ -545,6 +545,12 @@ namespace Ermine::editor {
 			}
 		}
 
+		// --- Sync cacheCastsShadows to graphics::Material (for scene deserialization) ---
+		// Ensure the material's castsShadows parameter matches the serialized component value
+		if (auto param = gm->GetParameter("materialCastsShadows"); !param || param->boolValue != matComp.cacheCastsShadows) {
+			gm->SetBool("materialCastsShadows", matComp.cacheCastsShadows);
+		}
+
 		// --- Safe param accessors (no nullptrs, with fallbacks) ---
 		auto getFloat = [&](const char* a, const char* b, float fb) -> float {
 			if (auto p = gm->GetParameter(a); p && !p->floatValues.empty()) return p->floatValues[0];
@@ -702,9 +708,10 @@ namespace Ermine::editor {
 
 		// --- Casts Shadows ---
 		{
-			bool castsShadows = getBool("materialCastsShadows", nullptr, true);
+			bool castsShadows = getBool("materialCastsShadows", nullptr, matComp.cacheCastsShadows);
 			if (ImGui::Checkbox("Casts Shadows", &castsShadows)) {
 				gm->SetBool("materialCastsShadows", castsShadows);
+				matComp.cacheCastsShadows = castsShadows;  // Update component cache for serialization
 			}
 		}
 
@@ -826,6 +833,7 @@ namespace Ermine::editor {
 			gm->SetUVOffset(Vec2(0.0f, 0.0f));
 
 			gm->SetBool("materialCastsShadows", true);
+			matComp.cacheCastsShadows = true;
 
 			gm->SetBool("materialHasAlbedoMap", false);
 			setBoolBoth("materialHasNormalMap", "material.hasNormalMap", false);
