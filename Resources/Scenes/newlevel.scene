@@ -3,6 +3,9 @@
     {
       "id": 1,
       "components": {
+        "IDComponent": {
+          "guid": "7d9348882c70b74ab15cb12790391aff"
+        },
         "ObjectMetaData": {
           "name": "HUD",
           "tag": "Untagged",
@@ -199,6 +202,9 @@
     {
       "id": 2,
       "components": {
+        "IDComponent": {
+          "guid": "a2fe56e0852b844f9a210021d5607c46"
+        },
         "Transform": {
           "position": [
             0.0,
@@ -236,8 +242,6 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parent": 0,
-          "children": [],
           "depth": 0
         },
         "GlobalTransform": {}
@@ -246,6 +250,9 @@
     {
       "id": 3,
       "components": {
+        "IDComponent": {
+          "guid": "de4dec42a1069946a8e2a6eeb3feb6da"
+        },
         "Transform": {
           "position": [
             0.0,
@@ -325,8 +332,6 @@
           ]
         },
         "HierarchyComponent": {
-          "parent": 0,
-          "children": [],
           "depth": 0
         },
         "GlobalTransform": {}
@@ -335,6 +340,9 @@
     {
       "id": 4,
       "components": {
+        "IDComponent": {
+          "guid": "323ea92e9c8b2a4e81dcffe64b9e353f"
+        },
         "Transform": {
           "position": [
             -5.0,
@@ -410,8 +418,6 @@
           ]
         },
         "HierarchyComponent": {
-          "parent": 0,
-          "children": [],
           "depth": 0
         },
         "GlobalTransform": {}
@@ -420,6 +426,9 @@
     {
       "id": 5,
       "components": {
+        "IDComponent": {
+          "guid": "bbfb451590deb542a74a33ed9967b233"
+        },
         "Transform": {
           "position": [
             5.0,
@@ -495,8 +504,6 @@
           ]
         },
         "HierarchyComponent": {
-          "parent": 0,
-          "children": [],
           "depth": 0
         },
         "GlobalTransform": {}
@@ -505,6 +512,9 @@
     {
       "id": 6,
       "components": {
+        "IDComponent": {
+          "guid": "9eb07fe7235d7a44a7e9dedc7eccd6e6"
+        },
         "Transform": {
           "position": [
             13.0,
@@ -580,8 +590,6 @@
           ]
         },
         "HierarchyComponent": {
-          "parent": 0,
-          "children": [],
           "depth": 0
         },
         "GlobalTransform": {}
@@ -590,6 +598,9 @@
     {
       "id": 7,
       "components": {
+        "IDComponent": {
+          "guid": "ae6bca116381f44ca1f8bf470ee0d93b"
+        },
         "Transform": {
           "position": [
             0.0,
@@ -665,8 +676,6 @@
           ]
         },
         "HierarchyComponent": {
-          "parent": 0,
-          "children": [],
           "depth": 0
         },
         "GlobalTransform": {}
@@ -675,6 +684,9 @@
     {
       "id": 8,
       "components": {
+        "IDComponent": {
+          "guid": "4a253473583b6b4b84fda1bd04e2f92f"
+        },
         "Transform": {
           "position": [
             -5.0,
@@ -750,8 +762,6 @@
           ]
         },
         "HierarchyComponent": {
-          "parent": 0,
-          "children": [],
           "depth": 0
         },
         "GlobalTransform": {}
@@ -760,6 +770,9 @@
     {
       "id": 9,
       "components": {
+        "IDComponent": {
+          "guid": "929b4e557247094fa56bc3026afb0fee"
+        },
         "Transform": {
           "position": [
             -10.0,
@@ -835,8 +848,6 @@
           ]
         },
         "HierarchyComponent": {
-          "parent": 0,
-          "children": [],
           "depth": 0
         },
         "GlobalTransform": {}
@@ -845,6 +856,9 @@
     {
       "id": 10,
       "components": {
+        "IDComponent": {
+          "guid": "8dc1cde8c93ba2418abaece21332c2c3"
+        },
         "Transform": {
           "position": [
             12.0,
@@ -920,8 +934,6 @@
           ]
         },
         "HierarchyComponent": {
-          "parent": 0,
-          "children": [],
           "depth": 0
         },
         "GlobalTransform": {}
@@ -930,6 +942,9 @@
     {
       "id": 11,
       "components": {
+        "IDComponent": {
+          "guid": "961b1a542aec70459c1d316e57032d63"
+        },
         "Transform": {
           "position": [
             20.0,
@@ -1005,8 +1020,6 @@
           ]
         },
         "HierarchyComponent": {
-          "parent": 0,
-          "children": [],
           "depth": 0
         },
         "GlobalTransform": {}
@@ -1015,6 +1028,9 @@
     {
       "id": 12,
       "components": {
+        "IDComponent": {
+          "guid": "12ab5a8ea33b554d9bba5b8b060b188f"
+        },
         "Transform": {
           "position": [
             20.0,
@@ -1090,8 +1106,6 @@
           ]
         },
         "HierarchyComponent": {
-          "parent": 0,
-          "children": [],
           "depth": 0
         },
         "GlobalTransform": {}
@@ -1100,6 +1114,9 @@
     {
       "id": 13,
       "components": {
+        "IDComponent": {
+          "guid": "a0df2994ea342c4bb4c91b8e28d86481"
+        },
         "Transform": {
           "position": [
             -10.0,
@@ -1175,8 +1192,6 @@
           ]
         },
         "HierarchyComponent": {
-          "parent": 0,
-          "children": [],
           "depth": 0
         },
         "GlobalTransform": {}
@@ -1185,6 +1200,9 @@
     {
       "id": 14,
       "components": {
+        "IDComponent": {
+          "guid": "ae4c838f76eaac4eb8286114ae0af880"
+        },
         "Transform": {
           "position": [
             2.5,
@@ -1260,8 +1278,6 @@
           ]
         },
         "HierarchyComponent": {
-          "parent": 0,
-          "children": [],
           "depth": 0
         },
         "GlobalTransform": {}
@@ -1270,6 +1286,9 @@
     {
       "id": 15,
       "components": {
+        "IDComponent": {
+          "guid": "64569037c37e61418e1e284a02d9ae86"
+        },
         "Transform": {
           "position": [
             5.0,
@@ -1345,8 +1364,6 @@
           ]
         },
         "HierarchyComponent": {
-          "parent": 0,
-          "children": [],
           "depth": 0
         },
         "GlobalTransform": {}
@@ -1355,6 +1372,9 @@
     {
       "id": 16,
       "components": {
+        "IDComponent": {
+          "guid": "1439ab5eec03754d8dd022696000be21"
+        },
         "Transform": {
           "position": [
             12.0,
@@ -1430,8 +1450,6 @@
           ]
         },
         "HierarchyComponent": {
-          "parent": 0,
-          "children": [],
           "depth": 0
         },
         "GlobalTransform": {}
@@ -1440,6 +1458,9 @@
     {
       "id": 17,
       "components": {
+        "IDComponent": {
+          "guid": "b3b802254f3c2c48aa55fa4637665eb9"
+        },
         "Transform": {
           "position": [
             0.0,
@@ -1515,8 +1536,6 @@
           ]
         },
         "HierarchyComponent": {
-          "parent": 0,
-          "children": [],
           "depth": 0
         },
         "GlobalTransform": {}
@@ -1525,6 +1544,9 @@
     {
       "id": 18,
       "components": {
+        "IDComponent": {
+          "guid": "bb0d7beacdb1ce4491815856dfb36eb2"
+        },
         "Transform": {
           "position": [
             -2.5,
@@ -1600,8 +1622,6 @@
           ]
         },
         "HierarchyComponent": {
-          "parent": 0,
-          "children": [],
           "depth": 0
         },
         "GlobalTransform": {}
@@ -1610,6 +1630,9 @@
     {
       "id": 19,
       "components": {
+        "IDComponent": {
+          "guid": "fd4005e23be209409aeb700439367291"
+        },
         "Transform": {
           "position": [
             3.5,
@@ -1690,8 +1713,6 @@
           ]
         },
         "HierarchyComponent": {
-          "parent": 0,
-          "children": [],
           "depth": 0
         },
         "GlobalTransform": {}
@@ -1700,6 +1721,9 @@
     {
       "id": 20,
       "components": {
+        "IDComponent": {
+          "guid": "263fc77e4b0e9a408fc92dff7a74775a"
+        },
         "Transform": {
           "position": [
             -12.699999809265137,
@@ -1780,8 +1804,6 @@
           ]
         },
         "HierarchyComponent": {
-          "parent": 0,
-          "children": [],
           "depth": 0
         },
         "GlobalTransform": {}
@@ -1790,6 +1812,9 @@
     {
       "id": 21,
       "components": {
+        "IDComponent": {
+          "guid": "c23147b26292ab4ea55ef0a8348ec896"
+        },
         "Transform": {
           "position": [
             3.5,
@@ -1870,8 +1895,6 @@
           ]
         },
         "HierarchyComponent": {
-          "parent": 0,
-          "children": [],
           "depth": 0
         },
         "GlobalTransform": {}
@@ -1880,6 +1903,9 @@
     {
       "id": 22,
       "components": {
+        "IDComponent": {
+          "guid": "20fe772f854d0a4d8b9e0fd92863afd4"
+        },
         "Transform": {
           "position": [
             22.799999237060548,
@@ -1960,8 +1986,6 @@
           ]
         },
         "HierarchyComponent": {
-          "parent": 0,
-          "children": [],
           "depth": 0
         },
         "GlobalTransform": {}
@@ -1970,6 +1994,9 @@
     {
       "id": 23,
       "components": {
+        "IDComponent": {
+          "guid": "0d195041851a6f4fbeb557cf889ea2e3"
+        },
         "Transform": {
           "position": [
             3.5,
@@ -2050,8 +2077,6 @@
           ]
         },
         "HierarchyComponent": {
-          "parent": 0,
-          "children": [],
           "depth": 0
         },
         "GlobalTransform": {}
@@ -2060,6 +2085,9 @@
     {
       "id": 24,
       "components": {
+        "IDComponent": {
+          "guid": "2df6d914417a2f4baa8f23b19dc364cb"
+        },
         "Transform": {
           "position": [
             3.5,
@@ -2140,8 +2168,6 @@
           ]
         },
         "HierarchyComponent": {
-          "parent": 0,
-          "children": [],
           "depth": 0
         },
         "GlobalTransform": {}
@@ -2150,6 +2176,9 @@
     {
       "id": 25,
       "components": {
+        "IDComponent": {
+          "guid": "48ab75fc47e44644a348fadabc3cf38b"
+        },
         "GlobalAudioComponent": {
           "masterVolume": 1.0,
           "musicVolume": 0.3529999852180481,
@@ -2178,8 +2207,6 @@
           "selfActive": false
         },
         "HierarchyComponent": {
-          "parent": 0,
-          "children": [],
           "depth": 0
         },
         "GlobalTransform": {}
@@ -2188,6 +2215,9 @@
     {
       "id": 26,
       "components": {
+        "IDComponent": {
+          "guid": "94e3fa7448342940a7e1de1ee7f93423"
+        },
         "Transform": {
           "position": [
             0.0,
@@ -2216,10 +2246,6 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parent": 0,
-          "children": [
-            27
-          ],
           "depth": 0
         },
         "GlobalTransform": {}
@@ -2228,6 +2254,9 @@
     {
       "id": 27,
       "components": {
+        "IDComponent": {
+          "guid": "3d26d987123c9b4386f05fcd4fa1a4b0"
+        },
         "Transform": {
           "position": [
             0.0,
@@ -2296,8 +2325,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parent": 26,
-          "children": [],
+          "parentGuid": "94e3fa7448342940a7e1de1ee7f93423",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -2306,6 +2334,9 @@
     {
       "id": 28,
       "components": {
+        "IDComponent": {
+          "guid": "34c8fe480c2a124d99a362564e21125d"
+        },
         "Transform": {
           "position": [
             0.0,
@@ -2334,10 +2365,6 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parent": 0,
-          "children": [
-            29
-          ],
           "depth": 0
         },
         "GlobalTransform": {}
@@ -2346,6 +2373,9 @@
     {
       "id": 29,
       "components": {
+        "IDComponent": {
+          "guid": "70f01f28166f0741982fa482526f6e2b"
+        },
         "Transform": {
           "position": [
             0.0,
@@ -2414,8 +2444,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parent": 28,
-          "children": [],
+          "parentGuid": "34c8fe480c2a124d99a362564e21125d",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -2424,6 +2453,9 @@
     {
       "id": 30,
       "components": {
+        "IDComponent": {
+          "guid": "d39af71ae26b5c4597fd2f29d6deecb6"
+        },
         "Transform": {
           "position": [
             -5.0,
@@ -2452,10 +2484,6 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parent": 0,
-          "children": [
-            29
-          ],
           "depth": 0
         },
         "GlobalTransform": {}
@@ -2464,6 +2492,9 @@
     {
       "id": 31,
       "components": {
+        "IDComponent": {
+          "guid": "3833dc43e9600c4e81b9d3754efcfcbc"
+        },
         "Transform": {
           "position": [
             12.0,
@@ -2492,10 +2523,6 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parent": 0,
-          "children": [
-            29
-          ],
           "depth": 0
         },
         "GlobalTransform": {}
@@ -2504,6 +2531,9 @@
     {
       "id": 32,
       "components": {
+        "IDComponent": {
+          "guid": "3d80cb8530e2b641bfcc0e33599857f9"
+        },
         "Transform": {
           "position": [
             6.0,
@@ -2532,10 +2562,6 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parent": 0,
-          "children": [
-            29
-          ],
           "depth": 0
         },
         "GlobalTransform": {}
@@ -2544,6 +2570,9 @@
     {
       "id": 33,
       "components": {
+        "IDComponent": {
+          "guid": "d8e11439ce141149815a13ac4fc30141"
+        },
         "Transform": {
           "position": [
             -6.0,
@@ -2572,10 +2601,6 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parent": 0,
-          "children": [
-            29
-          ],
           "depth": 0
         },
         "GlobalTransform": {}
@@ -2584,6 +2609,9 @@
     {
       "id": 34,
       "components": {
+        "IDComponent": {
+          "guid": "e3cc25abd5eecf4e9154ac42cfb9d7ac"
+        },
         "Transform": {
           "position": [
             17.700000762939454,
@@ -2612,10 +2640,6 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parent": 0,
-          "children": [
-            35
-          ],
           "depth": 0
         },
         "GlobalTransform": {}
@@ -2624,6 +2648,9 @@
     {
       "id": 35,
       "components": {
+        "IDComponent": {
+          "guid": "88ea88accb5c7148862cf0a7fd636f17"
+        },
         "Transform": {
           "position": [
             0.0,
@@ -2687,8 +2714,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parent": 34,
-          "children": [],
+          "parentGuid": "e3cc25abd5eecf4e9154ac42cfb9d7ac",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -2697,6 +2723,9 @@
     {
       "id": 36,
       "components": {
+        "IDComponent": {
+          "guid": "341e50b58ad335449301da035da598a9"
+        },
         "Transform": {
           "position": [
             17.700000762939454,
@@ -2725,10 +2754,6 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parent": 0,
-          "children": [
-            35
-          ],
           "depth": 0
         },
         "GlobalTransform": {}
@@ -2737,6 +2762,9 @@
     {
       "id": 37,
       "components": {
+        "IDComponent": {
+          "guid": "ec7f4bdf28e3e14cab8d6b03e4e805d5"
+        },
         "Transform": {
           "position": [
             10.0,
@@ -2765,10 +2793,6 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parent": 0,
-          "children": [
-            29
-          ],
           "depth": 0
         },
         "GlobalTransform": {}
@@ -2777,6 +2801,9 @@
     {
       "id": 38,
       "components": {
+        "IDComponent": {
+          "guid": "70f38f9940cbc542be8c5180b6791dcb"
+        },
         "Transform": {
           "position": [
             0.0,
@@ -2805,10 +2832,6 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parent": 0,
-          "children": [
-            29
-          ],
           "depth": 0
         },
         "GlobalTransform": {}
@@ -2817,6 +2840,9 @@
     {
       "id": 39,
       "components": {
+        "IDComponent": {
+          "guid": "0776c97e9397694f97edfb7e01db999c"
+        },
         "Transform": {
           "position": [
             5.0,
@@ -2845,10 +2871,6 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parent": 0,
-          "children": [
-            29
-          ],
           "depth": 0
         },
         "GlobalTransform": {}
@@ -2857,6 +2879,9 @@
     {
       "id": 40,
       "components": {
+        "IDComponent": {
+          "guid": "4963f51ebaa61c498c84dcb8a3c5a27a"
+        },
         "Transform": {
           "position": [
             0.0,
@@ -2885,10 +2910,6 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parent": 0,
-          "children": [
-            29
-          ],
           "depth": 0
         },
         "GlobalTransform": {}
@@ -2897,6 +2918,9 @@
     {
       "id": 41,
       "components": {
+        "IDComponent": {
+          "guid": "fa7a81112c47d94c8adb9532b1964c62"
+        },
         "Transform": {
           "position": [
             13.0,
@@ -2925,10 +2949,6 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parent": 0,
-          "children": [
-            29
-          ],
           "depth": 0
         },
         "GlobalTransform": {}
@@ -2937,6 +2957,9 @@
     {
       "id": 42,
       "components": {
+        "IDComponent": {
+          "guid": "760aaa92121b0b41a4b5b5e17cbc49e6"
+        },
         "Transform": {
           "position": [
             12.0,
@@ -2965,10 +2988,6 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parent": 0,
-          "children": [
-            29
-          ],
           "depth": 0
         },
         "GlobalTransform": {}
@@ -2977,6 +2996,9 @@
     {
       "id": 43,
       "components": {
+        "IDComponent": {
+          "guid": "968f2dfe759b05478b525009219e679e"
+        },
         "Transform": {
           "position": [
             -10.0,
@@ -3057,8 +3079,6 @@
           ]
         },
         "HierarchyComponent": {
-          "parent": 0,
-          "children": [],
           "depth": 0
         },
         "GlobalTransform": {}
@@ -3067,6 +3087,9 @@
     {
       "id": 44,
       "components": {
+        "IDComponent": {
+          "guid": "85d5c166f2bc144bb024f39617a8923c"
+        },
         "Transform": {
           "position": [
             20.0,
@@ -3147,8 +3170,6 @@
           ]
         },
         "HierarchyComponent": {
-          "parent": 0,
-          "children": [],
           "depth": 0
         },
         "GlobalTransform": {}
@@ -3157,6 +3178,9 @@
     {
       "id": 45,
       "components": {
+        "IDComponent": {
+          "guid": "944bdf4467156d48ab5274e46b39919b"
+        },
         "Transform": {
           "position": [
             12.5,
@@ -3237,8 +3261,6 @@
           ]
         },
         "HierarchyComponent": {
-          "parent": 0,
-          "children": [],
           "depth": 0
         },
         "GlobalTransform": {}
@@ -3247,6 +3269,9 @@
     {
       "id": 46,
       "components": {
+        "IDComponent": {
+          "guid": "56f9b8e447961845ac94e8d2217f3f85"
+        },
         "Transform": {
           "position": [
             20.0,
@@ -3327,8 +3352,6 @@
           ]
         },
         "HierarchyComponent": {
-          "parent": 0,
-          "children": [],
           "depth": 0
         },
         "GlobalTransform": {}
@@ -3337,6 +3360,9 @@
     {
       "id": 47,
       "components": {
+        "IDComponent": {
+          "guid": "b67aa19b6299f144b56ff17269e14cf7"
+        },
         "Transform": {
           "position": [
             7.5,
@@ -3365,10 +3391,6 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parent": 0,
-          "children": [
-            48
-          ],
           "depth": 0
         },
         "GlobalTransform": {}
@@ -3377,6 +3399,9 @@
     {
       "id": 48,
       "components": {
+        "IDComponent": {
+          "guid": "c36972cb189ab8448f1b5d3b92b0db5f"
+        },
         "Transform": {
           "position": [
             0.0,
@@ -3445,8 +3470,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parent": 47,
-          "children": [],
+          "parentGuid": "b67aa19b6299f144b56ff17269e14cf7",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -3455,6 +3479,9 @@
     {
       "id": 49,
       "components": {
+        "IDComponent": {
+          "guid": "e485b38e08a33e4c82e0ce7f40d87c51"
+        },
         "Transform": {
           "position": [
             -7.5,
@@ -3483,10 +3510,6 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parent": 0,
-          "children": [
-            48
-          ],
           "depth": 0
         },
         "GlobalTransform": {}
@@ -3495,6 +3518,9 @@
     {
       "id": 50,
       "components": {
+        "IDComponent": {
+          "guid": "fe8090a7eff6a94d9fddf7990fd0b39f"
+        },
         "Transform": {
           "position": [
             22.399999618530275,
@@ -3523,11 +3549,6 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parent": 0,
-          "children": [
-            51,
-            52
-          ],
           "depth": 0
         },
         "GlobalTransform": {}
@@ -3536,6 +3557,9 @@
     {
       "id": 51,
       "components": {
+        "IDComponent": {
+          "guid": "6c869b8fe814194e90e78b5dfac2588a"
+        },
         "Transform": {
           "position": [
             0.0,
@@ -3604,8 +3628,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parent": 50,
-          "children": [],
+          "parentGuid": "fe8090a7eff6a94d9fddf7990fd0b39f",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -3614,6 +3637,9 @@
     {
       "id": 52,
       "components": {
+        "IDComponent": {
+          "guid": "0f0968a42944424bbe054ea15aeaf556"
+        },
         "Transform": {
           "position": [
             0.0,
@@ -3682,8 +3708,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parent": 50,
-          "children": [],
+          "parentGuid": "fe8090a7eff6a94d9fddf7990fd0b39f",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -3692,6 +3717,9 @@
     {
       "id": 53,
       "components": {
+        "IDComponent": {
+          "guid": "46220652afeadb43a00bb7731c80a576"
+        },
         "Transform": {
           "position": [
             0.0,
@@ -3782,10 +3810,6 @@
           }
         },
         "HierarchyComponent": {
-          "parent": 0,
-          "children": [
-            54
-          ],
           "depth": 0
         },
         "GlobalTransform": {},
@@ -3804,6 +3828,9 @@
     {
       "id": 54,
       "components": {
+        "IDComponent": {
+          "guid": "0c2371188f64d1409afe6b5a25464995"
+        },
         "Transform": {
           "position": [
             0.0,
@@ -3828,8 +3855,7 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parent": 53,
-          "children": [],
+          "parentGuid": "46220652afeadb43a00bb7731c80a576",
           "depth": 1
         },
         "GlobalTransform": {},
@@ -3846,11 +3872,14 @@
     {
       "id": 55,
       "components": {
+        "IDComponent": {
+          "guid": "604dcd01034c284c8162848153611c99"
+        },
         "Transform": {
           "position": [
             0.0,
             3.0,
-            -6.174
+            -7.0
           ],
           "rotation": [
             0.0,
@@ -3875,7 +3904,7 @@
           "castsShadows": false,
           "innerAngle": 1.0,
           "outerAngle": 0.0,
-          "radius": 3.13
+          "radius": 4.0
         },
         "ObjectMetaData": {
           "name": "Red Light",
@@ -3883,16 +3912,21 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parent": 0,
-          "children": [ 58 ],
           "depth": 0
         },
-        "GlobalTransform": {}
+        "GlobalTransform": {},
+        "LightConeComponent": {
+          "groundY": -5.0,
+          "coneAngleDegrees": 45.0
+        }
       }
     },
     {
       "id": 56,
       "components": {
+        "IDComponent": {
+          "guid": "451796caaf990c41ad5d3ae47e0e2fe4"
+        },
         "Transform": {
           "position": [
             22.399999618530275,
@@ -3930,8 +3964,6 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parent": 0,
-          "children": [],
           "depth": 0
         },
         "GlobalTransform": {}
@@ -3940,6 +3972,9 @@
     {
       "id": 57,
       "components": {
+        "IDComponent": {
+          "guid": "0b49e8111182894cb34901b7b93e670d"
+        },
         "Transform": {
           "position": [
             0.0,
@@ -3977,8 +4012,6 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parent": 0,
-          "children": [],
           "depth": 0
         },
         "GlobalTransform": {}
@@ -3987,11 +4020,169 @@
     {
       "id": 58,
       "components": {
+        "IDComponent": {
+          "guid": "206fd4c85b97f9409f562264fefa81ec"
+        },
         "Transform": {
           "position": [
-            0.007,
-            0.553,
-            -6.125
+            -500.0001220703125,
+            -15.000000953674317,
+            -885.0001220703125
+          ],
+          "rotation": [
+            0.0,
+            -0.7071067094802856,
+            0.0,
+            0.7071068286895752
+          ],
+          "scale": [
+            50.00000762939453,
+            50.0,
+            50.00000762939453
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Bars.fbx_Bars_mesh0 (1)",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
+            "materialHasMetallicMap": true,
+            "materialHasAoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources\\Textures\\Bars_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources\\Textures\\Bars_BaseColor.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "../Resources\\Textures\\Bars_Normal.png"
+            },
+            {
+              "slot": "material.metallicMap",
+              "path": "../Resources\\Textures\\Bars_MetallicSmoothness.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "../Resources\\Textures\\Bars_AO.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            -1.0
+          ],
+          "uvOffset": [
+            0.0,
+            1.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "341e50b58ad335449301da035da598a9",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 59,
+      "components": {
+        "IDComponent": {
+          "guid": "8fa184d876540d4d8dec02b47eb4088d"
+        },
+        "Transform": {
+          "position": [
+            750.0,
+            3400.032470703125,
+            400.00341796875
+          ],
+          "rotation": [
+            -0.7071068286895752,
+            0.0,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            100.0,
+            100.0009536743164,
+            100.0009536743164
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Gear2.fbx_Gear.001_mesh0 (1)",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
+            "materialHasRoughnessMap": true,
+            "materialHasMetallicMap": true,
+            "materialHasAoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources\\Textures\\Gear2_DefaultMaterial_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources\\Textures\\Gear2_DefaultMaterial_BaseColor.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "../Resources\\Textures\\Gear2_DefaultMaterial_Normal.png"
+            },
+            {
+              "slot": "materialRoughnessMap",
+              "path": "../Resources\\Textures\\Gear2_DefaultMaterial_Roughness.png"
+            },
+            {
+              "slot": "material.metallicMap",
+              "path": "../Resources\\Textures\\Gear2_DefaultMaterial_Metallic.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "../Resources\\Textures\\Gear2_DefaultMaterial_Height.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            -1.0
+          ],
+          "uvOffset": [
+            0.0,
+            1.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "e485b38e08a33e4c82e0ce7f40d87c51",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 60,
+      "components": {
+        "IDComponent": {
+          "guid": "150940e22d9a1f4b8df05b5402d1a82a"
+        },
+        "Transform": {
+          "position": [
+            250.0,
+            117.5,
+            650.0
           ],
           "rotation": [
             0.0,
@@ -4000,13 +4191,813 @@
             1.0
           ],
           "scale": [
-            2.5,
-            1.3,
-            2.5
+            50.0,
+            25.0,
+            50.0
           ]
         },
         "ObjectMetaData": {
-          "name": "Light Cone",
+          "name": "Mesh_Column.fbx_Column_mesh0 (1)",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
+            "materialHasRoughnessMap": true,
+            "materialHasMetallicMap": true,
+            "materialHasAoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources\\Textures\\Walls_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources\\Textures\\Walls_BaseColor.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "../Resources\\Textures\\Walls_Normal.png"
+            },
+            {
+              "slot": "materialRoughnessMap",
+              "path": "../Resources\\Textures\\Walls_Height.png"
+            },
+            {
+              "slot": "material.metallicMap",
+              "path": "../Resources\\Textures\\Walls_MetallicSmoothness.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "../Resources\\Textures\\Walls_AO.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            -1.0
+          ],
+          "uvOffset": [
+            0.0,
+            1.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "d39af71ae26b5c4597fd2f29d6deecb6",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 61,
+      "components": {
+        "IDComponent": {
+          "guid": "cab46228ca5a444dba79018ea746f92b"
+        },
+        "Transform": {
+          "position": [
+            -600.0,
+            117.5,
+            950.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            50.0,
+            25.0,
+            50.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Column.fbx_Column_mesh0 (2)",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
+            "materialHasRoughnessMap": true,
+            "materialHasMetallicMap": true,
+            "materialHasAoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources\\Textures\\Walls_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources\\Textures\\Walls_BaseColor.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "../Resources\\Textures\\Walls_Normal.png"
+            },
+            {
+              "slot": "materialRoughnessMap",
+              "path": "../Resources\\Textures\\Walls_Height.png"
+            },
+            {
+              "slot": "material.metallicMap",
+              "path": "../Resources\\Textures\\Walls_MetallicSmoothness.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "../Resources\\Textures\\Walls_AO.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            -1.0
+          ],
+          "uvOffset": [
+            0.0,
+            1.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "3833dc43e9600c4e81b9d3754efcfcbc",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 62,
+      "components": {
+        "IDComponent": {
+          "guid": "16c8ea610aa96946889c7aa6422556d1"
+        },
+        "Transform": {
+          "position": [
+            -30300.0,
+            3055.0,
+            48850.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            2500.0,
+            625.0,
+            2500.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Column.fbx_Column_mesh0 (3)",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
+            "materialHasRoughnessMap": true,
+            "materialHasMetallicMap": true,
+            "materialHasAoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources\\Textures\\Walls_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources\\Textures\\Walls_BaseColor.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "../Resources\\Textures\\Walls_Normal.png"
+            },
+            {
+              "slot": "materialRoughnessMap",
+              "path": "../Resources\\Textures\\Walls_Height.png"
+            },
+            {
+              "slot": "material.metallicMap",
+              "path": "../Resources\\Textures\\Walls_MetallicSmoothness.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "../Resources\\Textures\\Walls_AO.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            -1.0
+          ],
+          "uvOffset": [
+            0.0,
+            1.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "3d80cb8530e2b641bfcc0e33599857f9",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 63,
+      "components": {
+        "IDComponent": {
+          "guid": "6eb873be69b3d140a8b3613d69dbff41"
+        },
+        "Transform": {
+          "position": [
+            300.0,
+            117.5,
+            1350.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            50.0,
+            25.0,
+            50.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Column.fbx_Column_mesh0 (4)",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
+            "materialHasRoughnessMap": true,
+            "materialHasMetallicMap": true,
+            "materialHasAoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources\\Textures\\Walls_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources\\Textures\\Walls_BaseColor.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "../Resources\\Textures\\Walls_Normal.png"
+            },
+            {
+              "slot": "materialRoughnessMap",
+              "path": "../Resources\\Textures\\Walls_Height.png"
+            },
+            {
+              "slot": "material.metallicMap",
+              "path": "../Resources\\Textures\\Walls_MetallicSmoothness.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "../Resources\\Textures\\Walls_AO.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            -1.0
+          ],
+          "uvOffset": [
+            0.0,
+            1.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "d8e11439ce141149815a13ac4fc30141",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 64,
+      "components": {
+        "IDComponent": {
+          "guid": "66c4bc32b9800e458309e7b115b9bf02"
+        },
+        "Transform": {
+          "position": [
+            -500.0,
+            117.5,
+            300.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            50.0,
+            25.0,
+            50.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Column.fbx_Column_mesh0 (5)",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
+            "materialHasRoughnessMap": true,
+            "materialHasMetallicMap": true,
+            "materialHasAoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources\\Textures\\Walls_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources\\Textures\\Walls_BaseColor.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "../Resources\\Textures\\Walls_Normal.png"
+            },
+            {
+              "slot": "materialRoughnessMap",
+              "path": "../Resources\\Textures\\Walls_Height.png"
+            },
+            {
+              "slot": "material.metallicMap",
+              "path": "../Resources\\Textures\\Walls_MetallicSmoothness.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "../Resources\\Textures\\Walls_AO.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            -1.0
+          ],
+          "uvOffset": [
+            0.0,
+            1.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "ec7f4bdf28e3e14cab8d6b03e4e805d5",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 65,
+      "components": {
+        "IDComponent": {
+          "guid": "226faa4fba32e943b79a39fc3d042823"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            313.33331298828127,
+            300.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            50.0,
+            66.66667175292969,
+            50.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Column.fbx_Column_mesh0 (6)",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
+            "materialHasRoughnessMap": true,
+            "materialHasMetallicMap": true,
+            "materialHasAoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources\\Textures\\Walls_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources\\Textures\\Walls_BaseColor.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "../Resources\\Textures\\Walls_Normal.png"
+            },
+            {
+              "slot": "materialRoughnessMap",
+              "path": "../Resources\\Textures\\Walls_Height.png"
+            },
+            {
+              "slot": "material.metallicMap",
+              "path": "../Resources\\Textures\\Walls_MetallicSmoothness.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "../Resources\\Textures\\Walls_AO.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            -1.0
+          ],
+          "uvOffset": [
+            0.0,
+            1.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "70f38f9940cbc542be8c5180b6791dcb",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 66,
+      "components": {
+        "IDComponent": {
+          "guid": "8c7d7b545d7f614380f0e4127990ac43"
+        },
+        "Transform": {
+          "position": [
+            -250.0,
+            313.33331298828127,
+            600.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            50.0,
+            66.66667175292969,
+            50.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Column.fbx_Column_mesh0 (7)",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
+            "materialHasRoughnessMap": true,
+            "materialHasMetallicMap": true,
+            "materialHasAoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources\\Textures\\Walls_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources\\Textures\\Walls_BaseColor.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "../Resources\\Textures\\Walls_Normal.png"
+            },
+            {
+              "slot": "materialRoughnessMap",
+              "path": "../Resources\\Textures\\Walls_Height.png"
+            },
+            {
+              "slot": "material.metallicMap",
+              "path": "../Resources\\Textures\\Walls_MetallicSmoothness.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "../Resources\\Textures\\Walls_AO.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            -1.0
+          ],
+          "uvOffset": [
+            0.0,
+            1.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "0776c97e9397694f97edfb7e01db999c",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 67,
+      "components": {
+        "IDComponent": {
+          "guid": "40d5e6f89c65894cad06e1012924e5bf"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            313.33331298828127,
+            1000.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            50.0,
+            66.66667175292969,
+            50.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Column.fbx_Column_mesh0 (8)",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
+            "materialHasRoughnessMap": true,
+            "materialHasMetallicMap": true,
+            "materialHasAoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources\\Textures\\Walls_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources\\Textures\\Walls_BaseColor.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "../Resources\\Textures\\Walls_Normal.png"
+            },
+            {
+              "slot": "materialRoughnessMap",
+              "path": "../Resources\\Textures\\Walls_Height.png"
+            },
+            {
+              "slot": "material.metallicMap",
+              "path": "../Resources\\Textures\\Walls_MetallicSmoothness.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "../Resources\\Textures\\Walls_AO.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            -1.0
+          ],
+          "uvOffset": [
+            0.0,
+            1.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "4963f51ebaa61c498c84dcb8a3c5a27a",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 68,
+      "components": {
+        "IDComponent": {
+          "guid": "1a1cbc0dfa662543a56e2786b65fccc3"
+        },
+        "Transform": {
+          "position": [
+            -650.0,
+            313.33331298828127,
+            600.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            50.0,
+            66.66667175292969,
+            50.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Column.fbx_Column_mesh0 (9)",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
+            "materialHasRoughnessMap": true,
+            "materialHasMetallicMap": true,
+            "materialHasAoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources\\Textures\\Walls_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources\\Textures\\Walls_BaseColor.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "../Resources\\Textures\\Walls_Normal.png"
+            },
+            {
+              "slot": "materialRoughnessMap",
+              "path": "../Resources\\Textures\\Walls_Height.png"
+            },
+            {
+              "slot": "material.metallicMap",
+              "path": "../Resources\\Textures\\Walls_MetallicSmoothness.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "../Resources\\Textures\\Walls_AO.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            -1.0
+          ],
+          "uvOffset": [
+            0.0,
+            1.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "fa7a81112c47d94c8adb9532b1964c62",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 69,
+      "components": {
+        "IDComponent": {
+          "guid": "57a8af6a147a0c4d9c4362fb52e2a4e4"
+        },
+        "Transform": {
+          "position": [
+            -600.0,
+            313.33331298828127,
+            1300.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            50.0,
+            66.66667175292969,
+            50.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Column.fbx_Column_mesh0 (10)",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
+            "materialHasRoughnessMap": true,
+            "materialHasMetallicMap": true,
+            "materialHasAoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources\\Textures\\Walls_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources\\Textures\\Walls_BaseColor.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "../Resources\\Textures\\Walls_Normal.png"
+            },
+            {
+              "slot": "materialRoughnessMap",
+              "path": "../Resources\\Textures\\Walls_Height.png"
+            },
+            {
+              "slot": "material.metallicMap",
+              "path": "../Resources\\Textures\\Walls_MetallicSmoothness.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "../Resources\\Textures\\Walls_AO.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            -1.0
+          ],
+          "uvOffset": [
+            0.0,
+            1.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "760aaa92121b0b41a4b5b5e17cbc49e6",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 70,
+      "components": {
+        "IDComponent": {
+          "guid": "c8f84b73dedf7e4b9f3ef18551bcf6a0"
+        },
+        "Transform": {
+          "position": [
+            5.696854591369629,
+            -1.7963064908981324,
+            -12.32546615600586
+          ],
+          "rotation": [
+            0.025326933711767198,
+            -0.03898869827389717,
+            0.33133459091186526,
+            0.9423671364784241
+          ],
+          "scale": [
+            2.499997615814209,
+            1.3000004291534424,
+            2.5000033378601076
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Light Cone (1)",
           "tag": "Untagged",
           "selfActive": true
         },
@@ -4015,9 +5006,9 @@
           "primitive": {
             "type": "Cone",
             "size": [
-              1.0,
-              2.0,
-              1.0
+              3.799999952316284,
+              7.0,
+              3.799999952316284
             ]
           }
         },
@@ -4028,12 +5019,12 @@
               1.0,
               0.0,
               0.0,
-              0.3
+              0.06499999761581421
             ],
-            "materialAlpha": 0.3,
-            "materialTransparency": 0.7,
+            "materialAlpha": 0.06499999761581421,
+            "materialTransparency": 0.9350000023841858,
             "materialMetallic": 0.0,
-            "materialRoughness": 0.5,
+            "materialRoughness": 0.5370000004768372,
             "materialEmissive": [
               1.0,
               0.0,
@@ -4057,8 +5048,6 @@
           ]
         },
         "HierarchyComponent": {
-          "parent": 0,
-          "children": [],
           "depth": 0
         },
         "GlobalTransform": {}
