@@ -405,23 +405,51 @@ namespace Ermine::editor {
 
 		// Primitive controls
 		if (mesh.kind == MeshKind::Primitive) {
-			// Shape type dropdown
-			const char* types[] = { "Cube", "Sphere", "Quad" };
+			// Shape type dropdown - UPDATED TO INCLUDE CONE
+			const char* types[] = { "Cube", "Sphere", "Quad", "Cone" };
 			int currentType = 0;
 			if (mesh.primitive.type == "Sphere") currentType = 1;
 			else if (mesh.primitive.type == "Quad") currentType = 2;
+			else if (mesh.primitive.type == "Cone") currentType = 3;
 
 			if (ImGui::Combo("Primitive Type", &currentType, types, IM_ARRAYSIZE(types))) {
 				mesh.primitive.type = types[currentType];
 				mesh.RebuildPrimitive();
 			}
 
-			// Size control
-			float size[3] = { mesh.primitive.size.x, mesh.primitive.size.y, mesh.primitive.size.z };
-			if (ImGui::DragFloat3("Size", size, 0.1f, 0.01f, 100.f)) {
-				mesh.primitive.size = { size[0], size[1], size[2] };
-				ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
-				mesh.RebuildPrimitive();
+			// Size control - different for different primitives
+			if (mesh.primitive.type == "Cone") {
+				// For cone: size.x = diameter (radius * 2), size.y = height
+				float diameter = mesh.primitive.size.x;
+				float height = mesh.primitive.size.y;
+				
+				bool changed = false;
+				changed |= ImGui::DragFloat("Diameter", &diameter, 0.1f, 0.01f, 100.f);
+				changed |= ImGui::DragFloat("Height", &height, 0.1f, 0.01f, 100.f);
+				
+				if (changed) {
+					mesh.primitive.size = { diameter, height, diameter };
+					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
+					mesh.RebuildPrimitive();
+				}
+			}
+			else if (mesh.primitive.type == "Sphere") {
+				// For sphere: size.x = radius
+				float radius = mesh.primitive.size.x;
+				if (ImGui::DragFloat("Radius", &radius, 0.1f, 0.01f, 100.f)) {
+					mesh.primitive.size = { radius, radius, radius };
+					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
+					mesh.RebuildPrimitive();
+				}
+			}
+			else {
+				// For cube/quad: size = width, height, depth
+				float size[3] = { mesh.primitive.size.x, mesh.primitive.size.y, mesh.primitive.size.z };
+				if (ImGui::DragFloat3("Size", size, 0.1f, 0.01f, 100.f)) {
+					mesh.primitive.size = { size[0], size[1], size[2] };
+					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
+					mesh.RebuildPrimitive();
+				}
 			}
 		}
 
@@ -1178,70 +1206,70 @@ namespace Ermine::editor {
 		auto& audio = ECS::GetInstance().GetComponent<AudioComponent>(entity);
 
 		// Collect reflective properties
-		xproperty::settings::context ctx{};
-		xproperty::sprop::container  bag;
-		xproperty::sprop::collector  collect(audio, bag, ctx, true);
+	 xproperty::settings::context ctx{};
+	 xproperty::sprop::container  bag;
+	 xproperty::sprop::collector  collect(audio, bag, ctx, true);
 
-		std::string err;
+	 std::string err;
 
-		for (auto& p : bag.m_Properties)
-		{
-			const auto guid = p.m_Value.getTypeGuid();
-			const char* id = p.m_Path.c_str();
-			std::string label = PrettyLabelFromPath(p.m_Path);
+	 for (auto& p : bag.m_Properties)
+	 {
+		 const auto guid = p.m_Value.getTypeGuid();
+		 const char* id = p.m_Path.c_str();
+		 std::string label = PrettyLabelFromPath(p.m_Path);
 
-			ImGui::PushID(id);
+		 ImGui::PushID(id);
 
-			// string fields
-			if (guid == xproperty::settings::var_type<std::string>::guid_v) {
-				std::string s = p.m_Value.get<std::string>();
-				char buf[256]; std::snprintf(buf, sizeof(buf), "%s", s.c_str());
-				if (ImGui::InputText(label.c_str(), buf, IM_ARRAYSIZE(buf))) {
-					p.m_Value.set<std::string>(buf);
-					xproperty::sprop::setProperty(err, audio, p, ctx);
-				}
-			}
-			// bool fields
-			else if (guid == xproperty::settings::var_type<bool>::guid_v) {
-				bool v = p.m_Value.get<bool>();
-				if (ImGui::Checkbox(label.c_str(), &v)) {
-					p.m_Value.set<bool>(v);
-					xproperty::sprop::setProperty(err, audio, p, ctx);
-				}
-			}
-			// float fields
-			else if (guid == xproperty::settings::var_type<float>::guid_v) {
-				float v = p.m_Value.get<float>();
-				if (ImGui::DragFloat(label.c_str(), &v, 0.01f, 0.0f, 1.0f)) {
-					p.m_Value.set<float>(v);
-					xproperty::sprop::setProperty(err, audio, p, ctx);
-				}
-			}
-			// int fields
-			else if (guid == xproperty::settings::var_type<int>::guid_v) {
-				int v = p.m_Value.get<int>();
-				if (ImGui::DragInt(label.c_str(), &v)) {
-					p.m_Value.set<int>(v);
-					xproperty::sprop::setProperty(err, audio, p, ctx);
-				}
-			}
+		 // string fields
+		 if (guid == xproperty::settings::var_type<std::string>::guid_v) {
+			 std::string s = p.m_Value.get<std::string>();
+			 char buf[256]; std::snprintf(buf, sizeof(buf), "%s", s.c_str());
+			 if (ImGui::InputText(label.c_str(), buf, IM_ARRAYSIZE(buf))) {
+				 p.m_Value.set<std::string>(buf);
+				 xproperty::sprop::setProperty(err, audio, p, ctx);
+			 }
+		 }
+		 // bool fields
+		 else if (guid == xproperty::settings::var_type<bool>::guid_v) {
+			 bool v = p.m_Value.get<bool>();
+			 if (ImGui::Checkbox(label.c_str(), &v)) {
+				 p.m_Value.set<bool>(v);
+				 xproperty::sprop::setProperty(err, audio, p, ctx);
+			 }
+		 }
+		 // float fields
+		 else if (guid == xproperty::settings::var_type<float>::guid_v) {
+			 float v = p.m_Value.get<float>();
+			 if (ImGui::DragFloat(label.c_str(), &v, 0.01f, 0.0f, 1.0f)) {
+				 p.m_Value.set<float>(v);
+				 xproperty::sprop::setProperty(err, audio, p, ctx);
+			 }
+		 }
+		 // int fields
+		 else if (guid == xproperty::settings::var_type<int>::guid_v) {
+			 int v = p.m_Value.get<int>();
+			 if (ImGui::DragInt(label.c_str(), &v)) {
+				 p.m_Value.set<int>(v);
+				 xproperty::sprop::setProperty(err, audio, p, ctx);
+			 }
+		 }
 
-			ImGui::PopID();
-		}
+		 ImGui::PopID();
+	 }
 
-		ImGui::Separator();
+	 ImGui::Separator();
 
-		// Optional quick preview buttons
-		if (ImGui::Button("Play")) {
-			// TODO: AudioSystem::Get().Play(audio.soundName, entity);
-		}
-		ImGui::SameLine();
-		if (ImGui::Button("Stop")) {
-			// TODO: AudioSystem::Get().Stop(entity);
-		}
+	 // Optional quick preview buttons
+	 if (ImGui::Button("Play")) {
+		 // TODO: AudioSystem::Get().Play(audio.soundName, entity);
+	 }
+	 ImGui::SameLine();
+	 if (ImGui::Button("Stop")) {
+		 // TODO: AudioSystem::Get().Stop(entity);
+	 }
 
-		if (!err.empty())
-			ImGui::TextColored(ImVec4(1, 0.3f, 0.3f, 1), "Error: %s", err.c_str());
+	 if (!err.empty())
+		 ImGui::TextColored(ImVec4(1, 0.3f, 0.3f, 1), "Error: %s", err.c_str());
 	}
 
 	void HierarchyInspector::DrawScriptComponent(EntityID entity)
@@ -1515,6 +1543,7 @@ namespace Ermine::editor {
 									aiMat->GetTexture(aiTextureType_DIFFUSE, 0, &texPath) == AI_SUCCESS) {
 									std::string texPathStr = std::string(texPath.C_Str());
 									std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
+									// Extract just the filename without subdirectories
 									auto lastSlash = texPathStr.find_last_of('/');
 									std::string filename = (lastSlash != std::string::npos) ? texPathStr.substr(lastSlash + 1) : texPathStr;
 									auto albedoTex = AssetManager::GetInstance().LoadTexture("../Resources/Textures/" + filename);
@@ -1530,15 +1559,10 @@ namespace Ermine::editor {
 									std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
 									auto lastSlash = texPathStr.find_last_of('/');
 									std::string filename = (lastSlash != std::string::npos) ? texPathStr.substr(lastSlash + 1) : texPathStr;
-									EE_CORE_INFO("Loading normal texture: {}", texPathStr);
 									auto normalTex = AssetManager::GetInstance().LoadTexture("../Resources/Textures/" + filename);
 									if (normalTex->IsValid()) {
 										materialPtr->SetTexture("materialNormalMap", normalTex);
 										materialPtr->SetBool("materialHasNormalMap", true);
-										EE_CORE_INFO("Normal map loaded successfully");
-									}
-									else {
-										EE_CORE_WARN("Failed to load normal texture from: {}", "../Resources/Textures/" + filename);
 									}
 								}
 								else {
@@ -1564,19 +1588,11 @@ namespace Ermine::editor {
 									std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
 									auto lastSlash = texPathStr.find_last_of('/');
 									std::string filename = (lastSlash != std::string::npos) ? texPathStr.substr(lastSlash + 1) : texPathStr;
-									EE_CORE_INFO("Loading metallic texture: {}", texPathStr);
 									auto metallicTex = AssetManager::GetInstance().LoadTexture("../Resources/Textures/" + filename);
 									if (metallicTex->IsValid()) {
 										materialPtr->SetTexture("materialMetallicMap", metallicTex);
 										materialPtr->SetBool("materialHasMetallicMap", true);
-										EE_CORE_INFO("Metallic map loaded successfully");
 									}
-									else {
-										EE_CORE_WARN("Failed to load metallic texture from: {}", "../Resources/Textures/" + texPathStr);
-									}
-								}
-								else {
-									EE_CORE_INFO("No metallic map found in material");
 								}
 
 								// UV transform with V-flip
