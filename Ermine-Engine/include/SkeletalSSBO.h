@@ -3,7 +3,7 @@
 \file       SkeletalSSBO.h
 \author     Ridhwan Afandi, mohamedridhwan.b, 2301367, mohamedridhwan.b\@digipen.edu
 \date       27/10/2025
-\brief      Skeletal animation SSBO system with persistent mapping for bone updates
+\brief      Skeletal animation SSBO system
 
 Copyright (C) 2025 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents without the
@@ -22,7 +22,7 @@ namespace Ermine::graphics
     constexpr size_t MAX_BONES_PER_SKELETON = 128;
 
     /**
-     * @brief Persistent mapped buffer for skeletal animation bone transforms
+     * @brief Buffer for skeletal animation bone transforms using glBufferSubData
      *
      * This SSBO stores bone transforms for ALL animated entities in a single contiguous buffer.
      * Each entity gets its own offset (allocated via AllocateBoneSpace), allowing multiple
@@ -32,9 +32,6 @@ namespace Ermine::graphics
      * - Global buffer: [Entity1 bones][Entity2 bones][Entity3 bones]...
      * - Each entity allocated bone space: boneOffset = AllocateBoneSpace(boneCount)
      * - Shader accesses: boneTransforms[boneOffset + boneID]
-     *
-     * Currently supports:
-     * - Bone transform matrices (per-entity bone transforms)
      */
     class SkeletalSSBO
     {
@@ -47,7 +44,7 @@ namespace Ermine::graphics
         SkeletalSSBO& operator=(const SkeletalSSBO&) = delete;
 
         /**
-         * @brief Initialize the skeletal SSBO with persistent mapping
+         * @brief Initialize the skeletal SSBO with glBufferSubData
          * @param maxSkeletons Maximum number of concurrent skeletons
          * @return true if successful
          */
@@ -61,7 +58,7 @@ namespace Ermine::graphics
         int AllocateBoneSpace(size_t boneCount);
 
         /**
-         * @brief Update bone transforms for an entity
+         * @brief Update bone transforms for an entity using glBufferSubData
          * @param startBoneIndex Starting index from AllocateBoneSpace()
          * @param boneTransforms Vector of bone transform matrices
          */
@@ -77,7 +74,7 @@ namespace Ermine::graphics
          * @brief Check if the buffer is initialized
          * @return true if initialized
          */
-        bool IsValid() const { return m_BufferID != 0 && m_MappedPtr != nullptr; }
+        bool IsValid() const { return m_BufferID != 0; }
 
         /**
          * @brief Get total number of bones allocated
@@ -85,23 +82,11 @@ namespace Ermine::graphics
          */
         size_t GetTotalBoneCount() const { return m_CurrentBoneCount; }
 
-        /**
-         * @brief Wait for GPU to finish reading bone data (for VSync synchronization)
-         */
-        void WaitForGPU();
-
-        /**
-         * @brief Insert fence to track when GPU finishes reading (call after rendering)
-         */
-        void InsertFence();
-
     private:
         uint32_t m_BufferID = 0;            // OpenGL buffer object
-        void* m_MappedPtr = nullptr;        // Persistent mapped pointer
         size_t m_MaxBones = 0;              // Maximum total bones
         size_t m_CurrentBoneCount = 0;      // Current number of bones allocated
         size_t m_BufferSize = 0;            // Total buffer size in bytes
-        void* m_Fence = nullptr;            // GLsync fence for GPU synchronization (void* to avoid including GL headers)
     };
 
 } // namespace Ermine::graphics

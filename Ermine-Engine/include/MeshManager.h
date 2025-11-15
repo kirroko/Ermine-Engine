@@ -67,7 +67,7 @@ namespace Ermine::graphics {
         const MeshSubset* GetMeshData(MeshHandle handle) const;
 
         // GPU buffer management
-        void Initialize();
+        void Initialize(size_t estimatedDrawCount = 0);  // Initialize with optional scene-based sizing
         void UploadAndBuild();  // Upload staged data and build indirect commands (call once per scene)
         void Clear();           // Clear all data for new scene
 
@@ -87,19 +87,45 @@ namespace Ermine::graphics {
         bool IsDirty() const { return m_IndirectBuffer.isDirty; }
         bool HasStagedData() const { return !m_StagedVertices.empty() || !m_StagedSkinnedVertices.empty(); }
 
+        // Get buffer capacity and usage statistics
+        size_t GetBufferCapacity() const { return m_GeometryStandardDrawCommandBuffer.GetMaxCommands(); }
+        void LogBufferUtilization() const;
+
         // Public buffer handles for Renderer access
-        GLuint m_DrawCommandsSSBO = 0;    // Binding 2 - Draw commands
-        GLuint m_DrawInfoSSBO = 0;        // Binding 3 - Draw info (per-draw data) [DEPRECATED - use m_PersistentDrawInfoBuffer]
+        GLuint m_DrawCommandsSSBO = 0;    // Binding 2 - Draw commands [DEPRECATED]
+        GLuint m_DrawInfoSSBO = 0;        // Binding 3 - Draw info (per-draw data) [DEPRECATED]
         GLuint m_IndexSSBO = 0;           // Binding 1 - All indices
 
-        // Persistent mapped buffer for efficient DrawInfo updates
-        PersistentDrawInfoBuffer m_PersistentDrawInfoBuffer;
+        // Separate buffers for each pass and VAO type (no shared buffers = no overwrites)
+        // Depth prepass buffers (early-z rejection and picking)
+        DrawCommandBuffer m_DepthPrepassStandardDrawCommandBuffer;
+        DrawInfoBuffer m_DepthPrepassStandardDrawInfoBuffer;
+        DrawCommandBuffer m_DepthPrepassSkinnedDrawCommandBuffer;
+        DrawInfoBuffer m_DepthPrepassSkinnedDrawInfoBuffer;
+
+        // Geometry pass buffers
+        DrawCommandBuffer m_GeometryStandardDrawCommandBuffer;
+        DrawInfoBuffer m_GeometryStandardDrawInfoBuffer;
+        DrawCommandBuffer m_GeometrySkinnedDrawCommandBuffer;
+        DrawInfoBuffer m_GeometrySkinnedDrawInfoBuffer;
+
+        // Forward pass buffers
+        DrawCommandBuffer m_ForwardStandardDrawCommandBuffer;
+        DrawInfoBuffer m_ForwardStandardDrawInfoBuffer;
+        DrawCommandBuffer m_ForwardSkinnedDrawCommandBuffer;
+        DrawInfoBuffer m_ForwardSkinnedDrawInfoBuffer;
+
+        // Shadow pass buffers
+        DrawCommandBuffer m_ShadowStandardDrawCommandBuffer;
+        DrawInfoBuffer m_ShadowStandardDrawInfoBuffer;
+        DrawCommandBuffer m_ShadowSkinnedDrawCommandBuffer;
+        DrawInfoBuffer m_ShadowSkinnedDrawInfoBuffer;
 
         // Skeletal animation SSBO for bone transforms (Binding 7)
         SkeletalSSBO m_SkeletalSSBO;
 
 		// VBO/VAO system for hardware vertex fetch
-        void SetupShadowVAOs(GLuint preSkinnedBuffer);  // Configure shadow VAOs with pre-skinned position attribute
+        void SetupShadowVAOs();  // Configure shadow VAOs for shadow pass
 
 
     private:

@@ -169,7 +169,47 @@ void GraphicsDebugGUI::DrawRenderingModeControls()
             
             ImGui::TreePop();
         }
-        
+
+        ImGui::Separator();
+
+        // Fog Toggle
+        if (DrawToggleButton("Distance-Based Fog", &renderer->m_FogEnabled,
+                            "Enable/disable atmospheric fog based on distance from camera")) {
+            EE_CORE_INFO("Fog {}", renderer->m_FogEnabled ? "enabled" : "disabled");
+        }
+
+        // Fog Parameters (shown when Fog is enabled)
+        if (renderer->m_FogEnabled && ImGui::TreeNode("Fog Settings"))
+        {
+            const char* fogModes[] = { "Linear", "Exponential", "Exponential Squared" };
+            if (ImGui::Combo("Fog Mode", &renderer->m_FogMode, fogModes, 3)) {
+                EE_CORE_INFO("Fog mode changed to {}", fogModes[renderer->m_FogMode]);
+            }
+            DrawTooltip("Linear = smooth fade between start/end\nExponential = natural fog falloff\nExp² = most realistic atmospheric fog");
+
+            // Fog color picker
+            if (ImGui::ColorEdit3("Fog Color", &renderer->m_FogColor.r)) {
+                EE_CORE_INFO("Fog color changed to ({:.2f}, {:.2f}, {:.2f})",
+                           renderer->m_FogColor.r, renderer->m_FogColor.g, renderer->m_FogColor.b);
+            }
+            DrawTooltip("RGB color of the fog");
+
+            // Linear fog parameters
+            if (renderer->m_FogMode == 0) {
+                DrawFloatSlider("Fog Start", &renderer->m_FogStart, 0.0f, 500.0f,
+                               "Distance where fog begins to appear (linear mode)");
+                DrawFloatSlider("Fog End", &renderer->m_FogEnd, 1.0f, 1000.0f,
+                               "Distance where fog is fully opaque (linear mode)");
+            }
+            // Exponential fog parameters
+            else {
+                DrawFloatSlider("Fog Density", &renderer->m_FogDensity, 0.0f, 0.1f,
+                               "Fog density for exponential modes (lower = less dense)");
+            }
+
+            ImGui::TreePop();
+        }
+
         ImGui::Unindent(10.0f);
     }
 }
@@ -374,6 +414,15 @@ void GraphicsDebugGUI::DrawPerformanceMetrics()
                                 "Draw camera frustum planes (Cyan)")) {
                 EE_CORE_INFO("Frustum visualization {}", renderer->m_DebugDrawFrustum ? "enabled" : "disabled");
             }
+
+            ImGui::Separator();
+
+            // Draw Data Rebuild Control
+            if (ImGui::Button("Force Draw Data Rebuild")) {
+                renderer->ForceDrawDataRebuild();
+                EE_CORE_INFO("Draw data rebuild triggered manually");
+            }
+            DrawTooltip("Force a full rebuild of draw commands and shadow buffers on the next frame");
         }
 
         ImGui::Separator();
