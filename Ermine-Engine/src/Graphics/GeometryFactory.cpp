@@ -179,6 +179,8 @@ Ermine::Mesh GeometryFactory::CreateCube(float width, float height, float depth)
 
     auto ibo = std::make_shared<IndexBuffer>(indices.data(), indices.size() * sizeof(unsigned int));
 
+    vao->Unbind();
+
 	auto mesh = Mesh(vao, vbo, ibo);
 	mesh.kind = MeshKind::Primitive;
 	mesh.primitive.type = "Cube";
@@ -202,7 +204,7 @@ Ermine::Mesh GeometryFactory::CreateCube(float width, float height, float depth)
             graphics::Vertex meshVert;
 			meshVert.position.x = v.pos.x;
 			meshVert.position.y = v.pos.y;
-			meshVert.position.z = v.pos.z;  // Fixed: Was missing Z coordinate!
+			meshVert.position.z = v.pos.z;
 			meshVert.normal.x = v.norms.x;
 			meshVert.normal.y = v.norms.y;
 			meshVert.normal.z = v.norms.z;
@@ -258,6 +260,9 @@ Ermine::Mesh GeometryFactory::CreateQuad(float width, float height)
     vbo->Unbind();
 
     auto ibo = std::make_shared<IndexBuffer>(indices.data(), indices.size() * sizeof(unsigned int));
+
+    vao->Unbind();
+
 	auto mesh = Mesh(vao, vbo, ibo);
 	mesh.kind = MeshKind::Primitive;
 	mesh.primitive.type = "Quad";
@@ -281,7 +286,7 @@ Ermine::Mesh GeometryFactory::CreateQuad(float width, float height)
             graphics::Vertex meshVert;
             meshVert.position.x = v.pos.x;
             meshVert.position.y = v.pos.y;
-            meshVert.position.z = v.pos.z;  // Fixed: Was missing Z coordinate!
+            meshVert.position.z = v.pos.z;
             meshVert.normal.x = v.norms.x;
             meshVert.normal.y = v.norms.y;
             meshVert.normal.z = v.norms.z;
@@ -378,6 +383,8 @@ Ermine::Mesh GeometryFactory::CreateSphere(float radius, unsigned int sectors, u
 
     auto ibo = std::make_shared<IndexBuffer>(indices.data(), indices.size() * sizeof(unsigned int));
 
+    vao->Unbind();
+
 	auto mesh = Mesh(vao, vbo, ibo);
 	mesh.kind = MeshKind::Primitive;
 	mesh.primitive.type = "Sphere";
@@ -401,7 +408,7 @@ Ermine::Mesh GeometryFactory::CreateSphere(float radius, unsigned int sectors, u
             graphics::Vertex meshVert;
             meshVert.position.x = v.pos.x;
             meshVert.position.y = v.pos.y;
-            meshVert.position.z = v.pos.z;  // Fixed: Was missing Z coordinate!
+            meshVert.position.z = v.pos.z;
             meshVert.normal.x = v.norms.x;
             meshVert.normal.y = v.norms.y;
             meshVert.normal.z = v.norms.z;

@@ -9,31 +9,29 @@ in vec3 Bitangent;
 
 out vec4 FragColor;
 
-// Material uniform block
+// Material texture flag bits (must match C++ MaterialTextureFlags enum)
+const uint MAT_FLAG_ALBEDO_MAP    = 1u;  // bit 0
+const uint MAT_FLAG_NORMAL_MAP    = 2u;  // bit 1
+const uint MAT_FLAG_ROUGHNESS_MAP = 4u;  // bit 2
+const uint MAT_FLAG_METALLIC_MAP  = 8u;  // bit 3
+const uint MAT_FLAG_AO_MAP        = 16u; // bit 4
+const uint MAT_FLAG_EMISSIVE_MAP  = 32u; // bit 5
+
+// Material uniform block (updated for bitfield texture flags)
 layout (std140) uniform MaterialBlock {
     vec4 albedo;
     float metallic;
     float roughness;
     float ao;
     float normalStrength;
-    
+
     vec3 emissive;
     float emissiveIntensity;
-    
+
     int shadingModel; // 0 = PBR, 1 = Blinn-Phong
+    uint textureFlags; // Packed bitfield for all texture flags
     float _pad0;
     float _pad1;
-    float _pad2;
-    
-    int hasAlbedoMap;
-    int hasNormalMap;
-    int hasRoughnessMap;
-    int hasMetallicMap;
-    
-    int hasAoMap;
-    int hasEmissiveMap;
-    float _pad3;
-    float _pad4;
 } material;
 
 // Texture samplers
@@ -83,19 +81,19 @@ const int SPOT_LIGHT = 2;
 vec3 calculateNormal()
 {
     vec3 normal = normalize(Normal);
-    
-    if (material.hasNormalMap != 0) {
+
+    if ((material.textureFlags & MAT_FLAG_NORMAL_MAP) != 0u) {
         vec3 normalMap = texture(materialNormalMap, TexCoord).rgb * 2.0 - 1.0;
         normalMap.xy *= material.normalStrength;
-        
+
         vec3 T = normalize(Tangent);
         vec3 B = normalize(Bitangent);
         vec3 N = normal;
         mat3 TBN = mat3(T, B, N);
-        
+
         normal = normalize(TBN * normalMap);
     }
-    
+
     return normal;
 }
 
@@ -103,19 +101,19 @@ vec3 calculateNormal()
 vec3 getAlbedo()
 {
     vec3 albedo = material.albedo.rgb;
-    
-    if (material.hasAlbedoMap != 0) {
+
+    if ((material.textureFlags & MAT_FLAG_ALBEDO_MAP) != 0u) {
         vec4 texColor = texture(materialAlbedoMap, TexCoord);
         albedo *= texColor.rgb;
     }
-    
+
     return albedo;
 }
 
 float getRoughness()
 {
     float roughness = material.roughness;
-    if (material.hasRoughnessMap != 0) {
+    if ((material.textureFlags & MAT_FLAG_ROUGHNESS_MAP) != 0u) {
         roughness *= texture(materialRoughnessMap, TexCoord).r;
     }
     return clamp(roughness, 0.05, 1.0);
@@ -124,7 +122,7 @@ float getRoughness()
 float getMetallic()
 {
     float metallic = material.metallic;
-    if (material.hasMetallicMap != 0) {
+    if ((material.textureFlags & MAT_FLAG_METALLIC_MAP) != 0u) {
         metallic *= texture(materialMetallicMap, TexCoord).r;
     }
     return clamp(metallic, 0.0, 1.0);
@@ -133,7 +131,7 @@ float getMetallic()
 float getAO()
 {
     float ao = material.ao;
-    if (material.hasAoMap != 0) {
+    if ((material.textureFlags & MAT_FLAG_AO_MAP) != 0u) {
         ao *= texture(materialAoMap, TexCoord).r;
     }
     return ao;
@@ -142,7 +140,7 @@ float getAO()
 vec3 getEmissive()
 {
     vec3 emissive = material.emissive * material.emissiveIntensity;
-    if (material.hasEmissiveMap != 0) {
+    if ((material.textureFlags & MAT_FLAG_EMISSIVE_MAP) != 0u) {
         vec4 emissiveTexel = texture(materialEmissiveMap, TexCoord);
         emissive *= emissiveTexel.rgb;
     }
