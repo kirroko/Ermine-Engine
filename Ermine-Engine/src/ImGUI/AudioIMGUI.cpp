@@ -1123,7 +1123,7 @@ namespace Ermine
 
                 for (size_t i = 0; i < globalAudio.sfx.size(); ++i)
                 {
-                    const auto& sfx = globalAudio.sfx[i];
+                    auto& sfx = globalAudio.sfx[i];  // Changed to non-const so we can modify volume
                     ImGui::PushID(("sfx_" + std::to_string(i)).c_str());
 
                     // Track info with editing capability
@@ -1162,8 +1162,18 @@ namespace Ermine
                     {
                         // Display mode
                         ImGui::Text("SFX %zu: %s", i, sfx.audioName.c_str());
-                        ImGui::SameLine();
 
+                        // *** NEW: Individual SFX Volume Slider ***
+                        ImGui::PushItemWidth(150.0f);
+                        if (ImGui::SliderFloat(("Volume##SFX" + std::to_string(i)).c_str(),
+                            &sfx.volume, 0.0f, 1.0f, "%.2f"))
+                        {
+                            SetStatusMessage("Changed " + sfx.audioName + " volume to " +
+                                std::to_string(sfx.volume));
+                        }
+                        ImGui::PopItemWidth();
+
+                        ImGui::SameLine();
                         if (ImGui::Button("Play by Index"))
                         {
                             globalAudio.PlaySFX(static_cast<int>(i));
@@ -1182,8 +1192,10 @@ namespace Ermine
                         if (ImGui::Button("Edit"))
                         {
                             m_EditingSFXIndex = static_cast<int>(i);
-							strncpy_s(m_EditSFXName, sizeof(m_EditSFXName), sfx.audioName.c_str(), sizeof(m_EditSFXName) - 1);
-							strncpy_s(m_EditSFXPath, sizeof(m_EditSFXPath), sfx.audioPath.c_str(), sizeof(m_EditSFXPath) - 1);
+                            strncpy_s(m_EditSFXName, sizeof(m_EditSFXName),
+                                sfx.audioName.c_str(), sizeof(m_EditSFXName) - 1);
+                            strncpy_s(m_EditSFXPath, sizeof(m_EditSFXPath),
+                                sfx.audioPath.c_str(), sizeof(m_EditSFXPath) - 1);
                             m_EditSFXName[sizeof(m_EditSFXName) - 1] = '\0';
                             m_EditSFXPath[sizeof(m_EditSFXPath) - 1] = '\0';
                         }
@@ -1197,10 +1209,11 @@ namespace Ermine
                             m_DeletingMusic = false;
                         }
 
-                        // Show tooltip with full path
+                        // Show tooltip with full path and volume info
                         if (ImGui::IsItemHovered())
                         {
-                            ImGui::SetTooltip("Path: %s", sfx.audioPath.c_str());
+                            ImGui::SetTooltip("Path: %s\nVolume: %.2f",
+                                sfx.audioPath.c_str(), sfx.volume);
                         }
                     }
 
