@@ -1,7 +1,7 @@
 ﻿/* Start Header ************************************************************************/
 /*!
 \file       AudioComponent.cs
-\author     Your Name
+\author     Hurng Kai Rui, h.kairui, 2301278, h.kairui\@digipen.edu
 \date       11/11/2025
 \brief      Managed AudioComponent wrapper exposing audio playback control to C# scripts.
             Backed by native ECS AudioComponent.
