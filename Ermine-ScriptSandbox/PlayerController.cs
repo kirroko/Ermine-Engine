@@ -104,6 +104,8 @@ public class PlayerController : MonoBehaviour
 
         // Move the character in world space using the computed horizontal velocity
         transform.Translate(horizontalVelocity * Time.deltaTime);
+        Physics.SetPosition((ulong)gameObject.GetInstanceID(),transform.position);
+        
         //velocity.y += gravity * Time.deltaTime;
         //transform.Translate(velocity * Time.deltaTime);
     }
