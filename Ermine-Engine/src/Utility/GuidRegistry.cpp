@@ -16,18 +16,21 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 void Ermine::GuidRegistry::Register(EntityID e, Guid g)
 {
-	if (!g.IsValid() || e == 0) return;
-	m_GuidToEntity[g] = e;
+	if (auto it = m_EntityToGuid.find(e); it != m_EntityToGuid.end())
+		m_GuidToEntity.erase(it->second);
+	if (auto it = m_GuidToEntity.find(g); it != m_GuidToEntity.end())
+		m_EntityToGuid.erase(it->second);
+
 	m_EntityToGuid[e] = g;
+	m_GuidToEntity[g] = e;
 }
 
 void Ermine::GuidRegistry::Unregister(EntityID e)
 {
-	if (e == 0) return;
-	auto it = m_EntityToGuid.find(e);
-	if (it == m_EntityToGuid.end()) return;
-	m_GuidToEntity.erase(it->second);
-	m_EntityToGuid.erase(it);
+	if (auto it = m_EntityToGuid.find(e); it != m_EntityToGuid.end()) {
+		m_GuidToEntity.erase(it->second);
+		m_EntityToGuid.erase(it);
+	}
 }
 
 Ermine::EntityID Ermine::GuidRegistry::FindEntity(Guid g) const

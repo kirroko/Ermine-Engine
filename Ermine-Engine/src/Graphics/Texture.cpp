@@ -121,6 +121,14 @@ bool Texture::LoadFromDDS(const std::string& ddsFilePath)
         internalFormat = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
         isCompressed = true;
         break;
+    case DXGI_FORMAT_BC4_UNORM:
+        internalFormat = GL_COMPRESSED_RED_RGTC1;  // Single-channel compression (grayscale)
+        isCompressed = true;
+        break;
+    case DXGI_FORMAT_BC5_UNORM:
+        internalFormat = GL_COMPRESSED_RG_RGTC2;   // Two-channel compression (normal maps)
+        isCompressed = true;
+        break;
     case DXGI_FORMAT_BC7_UNORM:
         internalFormat = GL_COMPRESSED_RGBA_BPTC_UNORM;
         isCompressed = true;

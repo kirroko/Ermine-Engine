@@ -76,5 +76,15 @@ namespace Ermine::graphics
          * @return Mesh The sphere mesh
          */
         static Mesh CreateSphere(float radius = 1.0f, unsigned int sectors = 36, unsigned int stacks = 18);
+
+        /**
+         * @brief Create a cone
+         * 
+         * @param radius The radius of the cone base
+         * @param height The height of the cone
+         * @param sectors The number of sectors around the cone
+         * @return Mesh The cone mesh
+         */
+        static Mesh CreateCone(float radius = 1.0f, float height = 2.0f, unsigned int sectors = 32);
     };
 }

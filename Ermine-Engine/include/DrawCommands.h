@@ -58,8 +58,12 @@ namespace Ermine::graphics
         uint32_t entityID;          // 4 bytes (offset 92-95) - Entity ID for identification
         uint32_t flags;             // 4 bytes (offset 96-99) - Flags (bit 0: useSkinning, bits 1-31: reserved)
         uint32_t boneTransformOffset; // 4 bytes (offset 100-103) - Starting index in skeletal SSBO
-        uint32_t _pad[2];           // 8 bytes (offset 104-111) - Padding to maintain 16-byte alignment
-        // Total: 112 bytes (aligned to 16 bytes)
+        uint32_t _pad0;             // 4 bytes (offset 104-107) - Padding
+        uint32_t _pad1;             // 4 bytes (offset 108-111) - Padding to 16-byte boundary for vec3
+        glm::vec4 normalMatrixCol0; // 16 bytes (offset 112-127) - Normal matrix column 0 (xyz used)
+        glm::vec4 normalMatrixCol1; // 16 bytes (offset 128-143) - Normal matrix column 1 (xyz used)
+        glm::vec4 normalMatrixCol2; // 16 bytes (offset 144-159) - Normal matrix column 2 (xyz used)
+        // Total: 160 bytes
     };
 
     /**
@@ -131,15 +135,15 @@ namespace Ermine::graphics
      * @brief Persistent mapped buffer for DrawInfo data
      * Uses persistent mapping for efficient CPU writes without explicit buffer uploads
      */
-    class PersistentDrawInfoBuffer
+    class DrawInfoBuffer
     {
     public:
-        PersistentDrawInfoBuffer() = default;
-        ~PersistentDrawInfoBuffer();
+        DrawInfoBuffer() = default;
+        ~DrawInfoBuffer();
 
         // Disable copy
-        PersistentDrawInfoBuffer(const PersistentDrawInfoBuffer&) = delete;
-        PersistentDrawInfoBuffer& operator=(const PersistentDrawInfoBuffer&) = delete;
+        DrawInfoBuffer(const DrawInfoBuffer&) = delete;
+        DrawInfoBuffer& operator=(const DrawInfoBuffer&) = delete;
 
         /**
          * @brief Initialize the persistent mapped buffer
@@ -165,7 +169,7 @@ namespace Ermine::graphics
          * @brief Check if the buffer is initialized
          * @return true if initialized
          */
-        bool IsValid() const { return m_BufferID != 0 && m_MappedPtr != nullptr; }
+        bool IsValid() const { return m_BufferID != 0; }
 
         /**
          * @brief Get the current number of draw infos
@@ -173,11 +177,78 @@ namespace Ermine::graphics
          */
         size_t GetDrawCount() const { return m_DrawCount; }
 
+        /**
+         * @brief Get the maximum capacity of the buffer
+         * @return Maximum number of draw infos
+         */
+        size_t GetMaxDrawCalls() const { return m_MaxDrawCalls; }
+
     private:
         uint32_t m_BufferID = 0;        // OpenGL buffer object
         void* m_MappedPtr = nullptr;    // Persistent mapped pointer
         size_t m_MaxDrawCalls = 0;      // Maximum capacity
         size_t m_DrawCount = 0;         // Current number of draws
+        size_t m_BufferSize = 0;        // Total buffer size in bytes
+    };
+
+    /**
+     * @brief Persistent mapped buffer for DrawElementsIndirectCommand data
+     * Uses persistent mapping for efficient CPU writes without explicit buffer uploads
+     * Eliminates glBufferData/glBufferSubData stalls by using direct memory mapping
+     */
+    class DrawCommandBuffer
+    {
+    public:
+        DrawCommandBuffer() = default;
+        ~DrawCommandBuffer();
+
+        // Disable copy
+        DrawCommandBuffer(const DrawCommandBuffer&) = delete;
+        DrawCommandBuffer& operator=(const DrawCommandBuffer&) = delete;
+
+        /**
+         * @brief Initialize the persistent mapped buffer
+         * @param maxCommands Maximum number of draw commands to support
+         * @return true if successful
+         */
+        bool Initialize(size_t maxCommands);
+
+        /**
+         * @brief Write draw commands to the mapped buffer
+         * @param commands Vector of draw commands to write
+         * @param offset Offset in number of DrawElementsIndirectCommand elements (default 0)
+         */
+        void WriteCommands(const std::vector<DrawElementsIndirectCommand>& commands, size_t offset = 0);
+
+        /**
+         * @brief Get the OpenGL buffer ID
+         * @return Buffer ID
+         */
+        uint32_t GetBufferID() const { return m_BufferID; }
+
+        /**
+         * @brief Check if the buffer is initialized
+         * @return true if initialized
+         */
+        bool IsValid() const { return m_BufferID != 0; }
+
+        /**
+         * @brief Get the current number of draw commands
+         * @return Number of draw commands
+         */
+        size_t GetCommandCount() const { return m_CommandCount; }
+
+        /**
+         * @brief Get the maximum capacity of the buffer
+         * @return Maximum number of draw commands
+         */
+        size_t GetMaxCommands() const { return m_MaxCommands; }
+
+    private:
+        uint32_t m_BufferID = 0;        // OpenGL buffer object
+        void* m_MappedPtr = nullptr;    // Persistent mapped pointer
+        size_t m_MaxCommands = 0;       // Maximum capacity
+        size_t m_CommandCount = 0;      // Current number of commands
         size_t m_BufferSize = 0;        // Total buffer size in bytes
     };
 

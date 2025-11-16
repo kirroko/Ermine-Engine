@@ -19,6 +19,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "SSBO_Bindings.h"
 #include "CameraSystem.h"
 #include "EditorGUI.h"
+#include "FrameController.h"
 
 #include <numeric> // For std::iota
 
@@ -135,6 +136,7 @@ void Renderer::Init(const int& screenWidth, const int& screenHeight)
 
 	// Load deferred shading shaders
 	m_ShadowMapInstancedShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/shadowmap_instanced_vertex.glsl", "../Resources/Shaders/shadowmap_fragment.glsl");
+	m_DepthPrePassShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/depth_prepass_vertex.glsl", "../Resources/Shaders/depth_prepass_fragment.glsl");
 	m_GBufferShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/gBuffer_vertex.glsl", "../Resources/Shaders/gBuffer_fragment.glsl");
 	m_LightPassShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/lighting_vertex.glsl", "../Resources/Shaders/lighting_fragment.glsl");
 	m_BloomShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/bloom_vertex.glsl", "../Resources/Shaders/bloom_fragment.glsl");
@@ -154,23 +156,23 @@ void Renderer::Init(const int& screenWidth, const int& screenHeight)
 	// Create shadow map FBO and texture
 	InitializeShadowMapResources();
 
-	// Create pre-skinned positions SSBO for geometry pass to write and shadow pass to read
-	// Geometry pass writes skinned positions here, shadow pass reuses them (eliminates redundant bone calculations)
-	glGenBuffers(1, &m_PreSkinnedPositionsSSBO);
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_PreSkinnedPositionsSSBO);
-	// Allocate large enough buffer for all vertices (will resize if needed)
-	glBufferData(GL_SHADER_STORAGE_BUFFER, 50000 * sizeof(glm::vec4), nullptr, GL_DYNAMIC_COPY);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, PRESKINNED_POSITIONS_SSBO_BINDING, m_PreSkinnedPositionsSSBO); // Binding 8
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-	m_PreSkinnedBufferSize = 50000 * sizeof(glm::vec4);
-
-	// Setup shadow VAOs that include pre-skinned position attribute (location 6)
-	// These VAOs allow hardware vertex fetching instead of SSBO random access for better performance
-	m_MeshManager.SetupShadowVAOs(m_PreSkinnedPositionsSSBO);
+	// Setup shadow VAOs for shadow pass rendering
+	m_MeshManager.SetupShadowVAOs();
 
 	m_PickingShader = AssetManager::GetInstance().LoadShader(
 		"../Resources/Shaders/picking_vertex.glsl",
 		"../Resources/Shaders/picking_fragment_uint.glsl"
+	);
+
+	// Load indirect rendering picking shaders
+	m_PickingIndirectShader = AssetManager::GetInstance().LoadShader(
+		"../Resources/Shaders/picking_indirect_vertex.glsl",
+		"../Resources/Shaders/picking_indirect_fragment.glsl"
+	);
+
+	m_PickingIndirectSkinnedShader = AssetManager::GetInstance().LoadShader(
+		"../Resources/Shaders/picking_indirect_skinned_vertex.glsl",
+		"../Resources/Shaders/picking_indirect_fragment.glsl"
 	);
 
 	CreatePickingBuffer(screenWidth, screenHeight);
@@ -841,6 +843,85 @@ void Renderer::ResizeGBuffer(const int& width, const int& height)
 }
 
 /**
+ * @brief Render depth pre-pass to eliminate overdraw in geometry pass.
+ * Renders all geometry depth-only, so expensive G-buffer fragment shader only runs for visible pixels.
+ */
+void Renderer::RenderDepthPrePass(const Mtx44& view, const Mtx44& projection)
+{
+	if (!m_GBuffer || !m_DepthPrePassShader) {
+		EE_CORE_ERROR("G-Buffer or depth pre-pass shader not initialized!");
+		return;
+	}
+
+	// Bind G-buffer FBO (write depth to same depth buffer that geometry pass will use)
+	glBindFramebuffer(GL_FRAMEBUFFER, m_GBuffer->FBO);
+	glViewport(0, 0, m_GBuffer->width, m_GBuffer->height);
+
+	// Clear depth buffer only (color buffers will be written in geometry pass)
+	glClear(GL_DEPTH_BUFFER_BIT);
+	glClearDepth(1.0f);
+
+	// Disable color writes (depth-only pass)
+	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+
+	// Enable depth testing and writing
+	// Use GL_LEQUAL to match geometry pass depth
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LEQUAL);
+	glDepthMask(GL_TRUE);
+
+	// Bind depth pre-pass shader
+	m_DepthPrePassShader->Bind();
+
+	m_DepthPrePassShader->SetUniformMatrix4fv("view", &view.m2[0][0]);
+	m_DepthPrePassShader->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
+
+	// Render standard (non-skinned) meshes with StandardVAO
+	if (!m_DepthPrepassStandardCommands.empty() && m_MeshManager.GetStandardVAO() != 0) {
+		m_DepthPrePassShader->SetUniform1ui("baseDrawID", 0);
+		glBindVertexArray(m_MeshManager.GetStandardVAO());
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_MeshManager.m_DepthPrepassStandardDrawInfoBuffer.GetBufferID());
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_MeshManager.m_DepthPrepassStandardDrawCommandBuffer.GetBufferID());
+		glMultiDrawElementsIndirect(
+			GL_TRIANGLES,
+			GL_UNSIGNED_INT,
+			nullptr,
+			static_cast<GLsizei>(m_DepthPrepassStandardCommands.size()),
+			0
+		);
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
+		glBindVertexArray(0);
+	}
+
+	// Render skinned (animated) meshes with SkinnedVAO
+	if (!m_DepthPrepassSkinnedCommands.empty() && m_MeshManager.GetSkinnedVAO() != 0) {
+		m_DepthPrePassShader->SetUniform1ui("baseDrawID", 0);
+		glBindVertexArray(m_MeshManager.GetSkinnedVAO());
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_MeshManager.m_DepthPrepassSkinnedDrawInfoBuffer.GetBufferID());
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_MeshManager.m_DepthPrepassSkinnedDrawCommandBuffer.GetBufferID());
+		glMultiDrawElementsIndirect(
+			GL_TRIANGLES,
+			GL_UNSIGNED_INT,
+			nullptr,
+			static_cast<GLsizei>(m_DepthPrepassSkinnedCommands.size()),
+			0
+		);
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
+		glBindVertexArray(0);
+	}
+
+	// Re-enable color writes for subsequent passes
+	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+
+	m_DepthPrePassShader->Unbind();
+
+	// Note: G-buffer FBO remains bound for geometry pass
+	// Depth state (GL_LEQUAL, glDepthMask) will be set by geometry pass
+
+	glCheckError();
+}
+
+/**
  * @brief Begin geometry pass for deferred rendering
  */
 void Renderer::BeginGeometryPass()
@@ -855,14 +936,12 @@ void Renderer::BeginGeometryPass()
 	glBindFramebuffer(GL_FRAMEBUFFER, m_GBuffer->FBO);
 	glViewport(0, 0, m_GBuffer->width, m_GBuffer->height);
 
-	// Clear g-buffer
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glClearDepth(1.0f);
+	// Clear only color buffers (depth already cleared and written by depth pre-pass)
+	glClear(GL_COLOR_BUFFER_BIT);
 
-
-	// Set up depth testing for geometry pass
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
+	glDepthMask(GL_FALSE); 
 
 	// Disable blending for geometry pass
 	glDisable(GL_BLEND);
@@ -873,10 +952,6 @@ void Renderer::BeginGeometryPass()
  */
 void Renderer::EndGeometryPass()
 {
-	// Insert fence to track when GPU finishes reading bone data
-	// This allows AnimationManager to wait before overwriting data in the next frame
-	m_MeshManager.m_SkeletalSSBO.InsertFence();
-
 	// Check for errors
 	glCheckError();
 }
@@ -983,9 +1058,13 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 		return;
 	}
 
+	// Explicitly bind geometry shader BEFORE setting up framebuffer state
+	// This ensures clean shader state regardless of what was bound previously
+	m_GBufferShader->Bind();
+
 	BeginGeometryPass();
 
-	// Bind geometry shader that writes to g-buffer
+	// Re-bind to ensure it's still active after framebuffer setup
 	m_GBufferShader->Bind();
 	BindMaterialBlockIfPresent(m_GBufferShader);
 
@@ -1013,32 +1092,31 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 	// Set view and projection uniforms (model matrix comes from DrawInfo SSBO per draw)
 	m_GBufferShader->SetUniformMatrix4fv("view", &view.m2[0][0]);
 	m_GBufferShader->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
+
+	// Calculate and pass normal matrix for view (mat3 extracted from view matrix)
+	// Reuse glmView calculated above for camera position
+	// This avoids extracting mat3(view) per-vertex in the shader
+	glm::mat3 normalView = glm::mat3(glmView);
+	m_GBufferShader->SetUniformMatrix3fv("normalView", glm::value_ptr(normalView));
+
 	glGetError(); // Clear any existing errors
 	// Render standard (non-skinned) meshes with StandardVAO
-	if (!m_StandardDrawCommands.empty() && m_MeshManager.GetStandardVAO() != 0) {
-		// Upload standard draw commands to GPU
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_MeshManager.m_DrawCommandsSSBO);
-		size_t commandsBufferSize = m_StandardDrawCommands.size() * sizeof(DrawElementsIndirectCommand);
-		glBufferData(GL_SHADER_STORAGE_BUFFER, commandsBufferSize, m_StandardDrawCommands.data(), GL_DYNAMIC_DRAW);
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-
-		// Upload standard draw infos to persistent mapped buffer at offset 0
-		m_MeshManager.m_PersistentDrawInfoBuffer.WriteDrawInfos(m_StandardDrawInfos, 0);
-
+	if (!m_GeometryStandardItems.empty() && m_MeshManager.GetStandardVAO() != 0) {
 		// Set baseDrawID = 0 for standard batch
 		m_GBufferShader->SetUniform1ui("baseDrawID", 0);
 
-		// Bind StandardVAO and issue draw call
+		// Bind StandardVAO and DrawInfo SSBO
 		glBindVertexArray(m_MeshManager.GetStandardVAO());
-		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_MeshManager.m_DrawCommandsSSBO);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_MeshManager.m_GeometryStandardDrawInfoBuffer.GetBufferID());
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_MeshManager.m_GeometryStandardDrawCommandBuffer.GetBufferID());
 		glMultiDrawElementsIndirect(
 			GL_TRIANGLES,
 			GL_UNSIGNED_INT,
 			nullptr,
-			static_cast<GLsizei>(m_StandardDrawCommands.size()),
+			static_cast<GLsizei>(m_GeometryStandardItems.size()),
 			0
 		);
-		GPUProfiler::TrackDrawCall(m_StandardDrawCommandsVertexCount, m_StandardDrawCommandsIndexCount);
+		GPUProfiler::TrackDrawCall(m_GeometryStandardVertexCount, m_GeometryStandardIndexCount);
 
 		// Unbind
 		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
@@ -1046,77 +1124,266 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 	}
 
 	// Render skinned (animated) meshes with SkinnedVAO
-	if (!m_SkinnedDrawCommands.empty() && m_MeshManager.GetSkinnedVAO() != 0) {
-		// Upload skinned draw commands to GPU
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_MeshManager.m_DrawCommandsSSBO);
-		size_t skinnedCommandsBufferSize = m_SkinnedDrawCommands.size() * sizeof(DrawElementsIndirectCommand);
-		glBufferData(GL_SHADER_STORAGE_BUFFER, skinnedCommandsBufferSize, m_SkinnedDrawCommands.data(), GL_DYNAMIC_DRAW);
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+	if (!m_GeometrySkinnedItems.empty() && m_MeshManager.GetSkinnedVAO() != 0) {
+		// Set baseDrawID = 0 for skinned batch
+		m_GBufferShader->SetUniform1ui("baseDrawID", 0);
 
-		// Upload skinned draw infos to persistent mapped buffer at offset = number of standard draws
-		size_t drawInfoOffset = m_StandardDrawCommands.size();
-		m_MeshManager.m_PersistentDrawInfoBuffer.WriteDrawInfos(m_SkinnedDrawInfos, drawInfoOffset);
-
-		// Set baseDrawID = offset so gl_DrawID in shader accesses correct DrawInfo indices
-		m_GBufferShader->SetUniform1ui("baseDrawID", static_cast<uint32_t>(drawInfoOffset));
-
-		// Bind SkinnedVAO and issue draw call
+		// Bind SkinnedVAO and DrawInfo SSBO
 		glBindVertexArray(m_MeshManager.GetSkinnedVAO());
-		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_MeshManager.m_DrawCommandsSSBO);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_MeshManager.m_GeometrySkinnedDrawInfoBuffer.GetBufferID());
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_MeshManager.m_GeometrySkinnedDrawCommandBuffer.GetBufferID());
 		glMultiDrawElementsIndirect(
 			GL_TRIANGLES,
 			GL_UNSIGNED_INT,
 			nullptr,
-			static_cast<GLsizei>(m_SkinnedDrawCommands.size()),
+			static_cast<GLsizei>(m_GeometrySkinnedItems.size()),
 			0
 		);
-		GPUProfiler::TrackDrawCall(m_SkinnedDrawCommandsVertexCount, m_SkinnedDrawCommandsIndexCount);
+		GPUProfiler::TrackDrawCall(m_GeometrySkinnedVertexCount, m_GeometrySkinnedIndexCount);
 
 		// Unbind
 		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
 		glBindVertexArray(0);
 	}
 
-	// Sort transparent objects by distance from camera
-	SortTransparentObjects(cameraPos);
+	// Sort transparent objects EVERY frame (camera position changes)
+	// - Full rebuild: Sort by shader FIRST (creates stable batches), then distance
+	// - Fast update: Sort by distance ONLY within existing shader groups
+	SortTransparentObjects(cameraPos, m_NeedsTransparentSort);
+	m_NeedsTransparentSort = false;  // Reset flag after sorting
 
 	EndGeometryPass();
 }
 
 
 /**
- * @brief Compiles draw commands and draw info for all passes (geometry/shadow and forward).
- * Routes opaque meshes to geometry pass, transparent/custom shader meshes to forward pass.
+ * @brief Main entry point for draw data compilation. Chooses between full rebuild or fast update.
+ *
+ * Rendering pipeline routing:
+ * - Geometry pass: Opaque materials only
+ * - Forward pass: Transparent materials only
+ * - Shadow pass: All objects except those with castsShadows=false
  */
 void Renderer::CompileDrawData()
 {
+	#ifdef EE_DEBUG
+	// Debug mode: force full rebuild every frame if requested
+	if (m_ForceFullRebuildEveryFrame) {
+		m_DrawDataNeedsFullRebuild = true;
+	}
+	#endif
+
+	// Check if entity list changed (add/remove entities)
+	if (HasEntityListChanged()) {
+		m_DrawDataNeedsFullRebuild = true;
+	}
+
+	// Cache validation: Detect if cache is stale/incomplete
+	// This handles cases where entities were skipped during initial cache build
+	// (e.g., animated models with invalid boneTransformOffset on first frame)
+	if (!m_DrawDataNeedsFullRebuild) {
+		// Check 1: Cache is empty but entities exist
+		if (m_CachedDrawItems.empty() && (!m_Entities.empty() || !m_ModelSystem->m_Entities.empty())) {
+			m_DrawDataNeedsFullRebuild = true;
+		}
+		// Check 2: Verify all renderable entities are present in cache
+		// This detects when entities become renderable after initial cache build
+		else if (!m_CachedDrawItems.empty()) {
+			const auto& ecs = Ermine::ECS::GetInstance();
+
+			// Build a set of entity IDs present in cache for fast lookup
+			std::unordered_set<EntityID> cachedEntities;
+			cachedEntities.reserve(m_CachedDrawItems.size());
+			for (const auto& item : m_CachedDrawItems) {
+				cachedEntities.insert(item.entity);
+			}
+
+			// Check primitives - should all be cached (if they have valid mesh data)
+			for (auto entity : m_Entities) {
+				if (ecs.HasComponent<Mesh>(entity) && ecs.HasComponent<Ermine::Material>(entity)) {
+					const auto& mesh = ecs.GetComponent<Mesh>(entity);
+					// If entity has valid mesh data but is NOT in cache, rebuild
+					if (!mesh.registeredMeshID.empty() && cachedEntities.find(entity) == cachedEntities.end()) {
+						m_DrawDataNeedsFullRebuild = true;
+						break;
+					}
+				}
+			}
+
+			// Check models (static and animated)
+			if (!m_DrawDataNeedsFullRebuild) {
+				for (auto entity : m_ModelSystem->m_Entities) {
+					if (!ecs.HasComponent<ModelComponent>(entity)) continue;
+
+					const auto& modelComp = ecs.GetComponent<ModelComponent>(entity);
+					if (!modelComp.m_model) continue;
+
+					// For animated models, check if bone data is valid
+					bool isAnimated = ecs.HasComponent<AnimationComponent>(entity);
+					bool isRenderable = true;
+					if (isAnimated) {
+						const auto& animComp = ecs.GetComponent<AnimationComponent>(entity);
+						isRenderable = (animComp.boneTransformOffset >= 0);
+					}
+
+					// If entity is renderable but NOT in cache, rebuild
+					if (isRenderable && cachedEntities.find(entity) == cachedEntities.end()) {
+						m_DrawDataNeedsFullRebuild = true;
+						break;
+					}
+				}
+			}
+
+			// Check 3: Verify material routing state hasn't changed
+			// Uses complete cached material structure to detect ANY material hierarchy changes
+			if (!m_DrawDataNeedsFullRebuild) {
+				for (const auto& cachedItem : m_CachedDrawItems) {
+					// Check current parent material state
+					bool currentHasParentMat = false;
+					if (ecs.HasComponent<Ermine::Material>(cachedItem.entity)) {
+						auto& parentMatComp = ecs.GetComponent<Ermine::Material>(cachedItem.entity);
+						currentHasParentMat = (parentMatComp.GetMaterial() != nullptr);
+					}
+
+					// Check current child material state
+					bool currentHasChildMat = false;
+					if (cachedItem.childMaterialEntity != 0 &&
+					    ecs.HasComponent<Ermine::Material>(cachedItem.childMaterialEntity)) {
+						auto& childMatComp = ecs.GetComponent<Ermine::Material>(cachedItem.childMaterialEntity);
+						currentHasChildMat = (childMatComp.GetMaterial() != nullptr);
+					}
+
+					// Detect any material structure changes
+					if (currentHasParentMat != cachedItem.hadParentMaterial ||
+					    currentHasChildMat != cachedItem.hadChildMaterial) {
+						// Material was added or removed - rebuild required
+						m_DrawDataNeedsFullRebuild = true;
+						break;
+					}
+
+					// Check if the material properties changed (for whichever material is being used)
+					Ermine::graphics::Material* currentMaterial = nullptr;
+					if (ecs.HasComponent<Ermine::Material>(cachedItem.materialEntity)) {
+						auto& matComp = ecs.GetComponent<Ermine::Material>(cachedItem.materialEntity);
+						currentMaterial = matComp.GetMaterial();
+					}
+
+					if (currentMaterial) {
+						bool currentTransparent = IsTransparentMaterial(currentMaterial);
+						bool currentCastsShadows = CastsShadows(currentMaterial);
+						bool currentHasCustomShader = HasCustomShader(currentMaterial);
+
+						if (currentTransparent != cachedItem.isTransparent ||
+						    currentCastsShadows != cachedItem.castsShadows ||
+						    currentHasCustomShader != cachedItem.hasCustomShader) {
+							// Material properties changed - rebuild required
+							m_DrawDataNeedsFullRebuild = true;
+							break;
+						}
+					}
+					else {
+						// Material that was being used is now null - rebuild required
+						m_DrawDataNeedsFullRebuild = true;
+						break;
+					}
+				}
+			}
+		}
+	}
+
+	// Decide: full rebuild or fast update?
+	if (m_DrawDataNeedsFullRebuild) {
+		// Full rebuild path (entities changed, first frame, etc.)
+		RebuildDrawData();
+
+		// Trigger transparent object sorting after rebuild (sorts by shader, then Z)
+		m_NeedsTransparentSort = true;
+	}
+	else {
+		// Fast update path (only transforms/camera changed)
+		UpdateDrawData();
+	}
+}
+
+/**
+ * @brief Full rebuild of all draw data. Called when entities are added/removed or on first frame.
+ */
+void Renderer::RebuildDrawData()
+{
 	const auto& ecs = Ermine::ECS::GetInstance();
 
-	// Clear previous frame's commands for both passes
-	m_StandardDrawCommands.clear();
-	m_StandardDrawInfos.clear();
-	m_SkinnedDrawCommands.clear();
-	m_SkinnedDrawInfos.clear();
-	m_ForwardPassDrawCommands.clear();
-	m_ForwardPassDrawInfos.clear();
+	// Clear previous frame's commands for all passes
+	m_DepthPrepassStandardCommands.clear();
+	m_DepthPrepassStandardInfos.clear();
+	m_DepthPrepassSkinnedCommands.clear();
+	m_DepthPrepassSkinnedInfos.clear();
+
+	m_PickingStandardCommands.clear();
+	m_PickingStandardInfos.clear();
+	m_PickingSkinnedCommands.clear();
+	m_PickingSkinnedInfos.clear();
+
+	m_GeometryStandardItems.clear();
+	m_GeometrySkinnedItems.clear();
+
+	// Clear forward pass lists
+	m_ForwardTransparentDefaultStandardItems.clear();
+	m_ForwardTransparentDefaultSkinnedItems.clear();
+
+	// Clear opaque custom shader lists
+	m_ForwardOpaqueCustomStandardItems.clear();
+	m_ForwardOpaqueCustomSkinnedItems.clear();
+
+	// Clear transparent custom shader lists
+	m_ForwardTransparentCustomStandardItems.clear();
+	m_ForwardTransparentCustomSkinnedItems.clear();
+
+	// Clear shadow-only lists
+	m_ShadowStandardCommands.clear();
+	m_ShadowStandardInfos.clear();
+	m_ShadowSkinnedCommands.clear();
+	m_ShadowSkinnedInfos.clear();
+
+	// Clear cache for fast-path updates
+	m_CachedDrawItems.clear();
 
 	// Reset vertex/index counters
-	m_StandardDrawCommandsVertexCount = 0;
-	m_StandardDrawCommandsIndexCount = 0;
-	m_SkinnedDrawCommandsVertexCount = 0;
-	m_SkinnedDrawCommandsIndexCount = 0;
+	m_GeometryStandardVertexCount = 0;
+	m_GeometryStandardIndexCount = 0;
+	m_GeometrySkinnedVertexCount = 0;
+	m_GeometrySkinnedIndexCount = 0;
 	m_ForwardPassDrawCommandsVertexCount = 0;
 	m_ForwardPassDrawCommandsIndexCount = 0;
 
-	// Reserve space for geometry pass (opaque)
-	m_StandardDrawCommands.reserve(m_Entities.size());
-	m_StandardDrawInfos.reserve(m_Entities.size());
-	m_SkinnedDrawCommands.reserve(m_Entities.size() / 4);
-	m_SkinnedDrawInfos.reserve(m_Entities.size() / 4);
+	// Reserve space for depth prepass (opaque visible geometry only)
+	m_DepthPrepassStandardCommands.reserve(m_Entities.size());
+	m_DepthPrepassStandardInfos.reserve(m_Entities.size());
+	m_DepthPrepassSkinnedCommands.reserve(m_Entities.size() / 4);
+	m_DepthPrepassSkinnedInfos.reserve(m_Entities.size() / 4);
 
-	// Reserve space for forward pass (transparent/custom shader)
-	m_ForwardPassDrawCommands.reserve(m_Entities.size() / 4);
-	m_ForwardPassDrawInfos.reserve(m_Entities.size() / 4);
+	// Reserve space for picking pass (ALL visible geometry - opaque + transparent)
+	m_PickingStandardCommands.reserve(m_Entities.size());
+	m_PickingStandardInfos.reserve(m_Entities.size());
+	m_PickingSkinnedCommands.reserve(m_Entities.size() / 4);
+	m_PickingSkinnedInfos.reserve(m_Entities.size() / 4);
+
+	// Reserve space for geometry pass (opaque default shader only)
+	m_GeometryStandardItems.reserve(m_Entities.size());
+	m_GeometrySkinnedItems.reserve(m_Entities.size() / 4);
+
+	// Reserve space for forward pass lists
+	m_ForwardTransparentDefaultStandardItems.reserve(m_Entities.size() / 4);
+	m_ForwardTransparentDefaultSkinnedItems.reserve(m_Entities.size() / 8);
+
+	// Reserve space for shadow-only lists (culled meshes)
+	m_ShadowStandardCommands.reserve(m_Entities.size() / 4);
+	m_ShadowStandardInfos.reserve(m_Entities.size() / 4);
+	m_ShadowSkinnedCommands.reserve(m_Entities.size() / 8);
+	m_ShadowSkinnedInfos.reserve(m_Entities.size() / 8);
+
+	// Reserve space for draw item cache (estimate: primitives + avg 3 meshes per model)
+	size_t estimatedDrawItems = m_Entities.size() + (m_ModelSystem->m_Entities.size() * 3);
+	m_CachedDrawItems.reserve(estimatedDrawItems);
 
 	// ========== FRUSTUM CULLING SETUP ==========
 	// Get camera view and projection matrices
@@ -1183,17 +1450,42 @@ void Renderer::CompileDrawData()
 	// Culling statistics
 	culledMeshes = 0;
 
+	auto FindChildEntityForMesh = [&](Ermine::EntityID parent, const std::string& meshID) -> Ermine::EntityID
+		{
+			auto& ecsLocal = ECS::GetInstance();
+			if (!ecsLocal.HasComponent<Ermine::HierarchyComponent>(parent))
+				return 0;
+
+			const auto& h = ecsLocal.GetComponent<Ermine::HierarchyComponent>(parent);
+			const std::string expected = "Mesh_" + meshID;
+
+			// --- Prefer GUID-based children
+			for (const Ermine::Guid& cg : h.childrenGuids) {
+				Ermine::EntityID child = ecsLocal.GetGuidRegistry().FindEntity(cg); // 0 if not found
+				if (child == 0) continue;
+				if (!ecsLocal.HasComponent<Ermine::ObjectMetaData>(child)) continue;
+				const auto& meta = ecsLocal.GetComponent<Ermine::ObjectMetaData>(child);
+				if (meta.name == expected) return child;
+			}
+
+			// --- Fallback: legacy EntityID list (for old saves / transitional scenes)
+			for (Ermine::EntityID child : h.children) {
+				if (!ecsLocal.IsEntityValid(child)) continue;
+				if (!ecsLocal.HasComponent<Ermine::ObjectMetaData>(child)) continue;
+				const auto& meta = ecsLocal.GetComponent<Ermine::ObjectMetaData>(child);
+				if (meta.name == expected) return child;
+			}
+
+			return 0;
+		};
+
 
 	// ========== MESHES ==========
 	for (auto& entity : m_Entities) {
-		if (ecs.HasComponent<Ermine::Material>(entity)) {
+		if (ecs.HasComponent<Ermine::Material>(entity) && ecs.HasComponent<Ermine::Transform>(entity)) {
 			auto& trans = ecs.GetComponent<Transform>(entity);
 			auto& mesh = ecs.GetComponent<Mesh>(entity);
 			auto& materialComponent = ecs.GetComponent<Ermine::Material>(entity);
-
-			(void)trans;
-
-			if (!mesh.vertex_array || !mesh.index_buffer) continue;
 
 			// Skip if no registered mesh ID
 			if (mesh.registeredMeshID.empty()) continue;
@@ -1203,22 +1495,7 @@ void Renderer::CompileDrawData()
 				continue;
 			}
 
-			// Build model matrix
-			// glm::mat4 modelMatrix = glm::mat4(1.0f);
-			// modelMatrix = glm::translate(modelMatrix, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
-			// glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
-			// rotQuat = glm::normalize(rotQuat);
-			// modelMatrix *= glm::mat4_cast(rotQuat);
-			// modelMatrix = glm::scale(modelMatrix, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
-
 			glm::mat4 model = GetEntityWorldMatrix(entity);
-
-			//glm::mat4 model = glm::mat4(1.0f);
-			//model = glm::translate(model, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
-			//glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
-			//rotQuat = glm::normalize(rotQuat);
-			//model *= glm::mat4_cast(rotQuat);
-			//model = glm::scale(model, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
 
 			// Get mesh handle from MeshManager using the stored registered mesh ID
 			MeshHandle meshHandle = m_MeshManager.GetMeshHandle(mesh.registeredMeshID);
@@ -1227,14 +1504,12 @@ void Renderer::CompileDrawData()
 			const MeshSubset* meshData = m_MeshManager.GetMeshData(meshHandle);
 			if (!meshData) continue;
 
-			graphics::Material* meshMaterial = materialComponent.GetMaterial();
-			uint32_t materialIndex = meshMaterial->GetMaterialIndex();
+			uint32_t materialIndex = material->GetMaterialIndex();
 
 			// Determine which pass this mesh belongs to
-			bool isTransparent = meshMaterial && IsTransparentMaterial(meshMaterial);
-			// TODO: Uncomment when use of custom shaders is supported
-			//bool isCustomShader = HasCustomShader(meshMaterial);
-			bool isCustomShader = false;
+			bool isTransparent = IsTransparentMaterial(material);
+			bool castsShadows = CastsShadows(material);
+			bool isCustomShader = HasCustomShader(material);
 
 			// ========== FRUSTUM CULLING TEST ==========
 			// Transform AABB to world space by transforming all 8 corners
@@ -1261,10 +1536,6 @@ void Renderer::CompileDrawData()
 
 			// Test against frustum
 			bool isCulled = !frustum.TestAABB(actualMin, actualMax);
-			if (isCulled) {
-				culledMeshes++;
-				continue; // Skip - outside frustum
-			}
 
 			// Debug: Draw AABB if enabled (primitives)
 			if (m_DebugDrawAABBs) {
@@ -1284,44 +1555,117 @@ void Renderer::CompileDrawData()
 			// Build draw info
 			DrawInfo info;
 			info.modelMatrix = model;
+
+			// Pre-calculate normal matrix and store as 3 separate columns (std430 mat3 has 16-byte stride!)
+			glm::mat3 normalMat = glm::transpose(glm::inverse(glm::mat3(model)));
+			info.normalMatrixCol0 = glm::vec4(normalMat[0], 0.0f);
+			info.normalMatrixCol1 = glm::vec4(normalMat[1], 0.0f);
+			info.normalMatrixCol2 = glm::vec4(normalMat[2], 0.0f);
+
 			info.aabbMin = glm::vec3(mesh.aabbMin.x, mesh.aabbMin.y, mesh.aabbMin.z);
 			info.materialIndex = materialIndex;
 			info.aabbMax = glm::vec3(mesh.aabbMax.x, mesh.aabbMax.y, mesh.aabbMax.z);
 			info.entityID = static_cast<uint32_t>(entity);
 			info.flags = 0; // Primitives never use skinning
 			info.boneTransformOffset = 0;
-			info._pad[0] = 0;
-			info._pad[1] = 0;
+			info._pad0 = 0;
+			info._pad1 = 0;
 
-			// Route to appropriate pass
-			if (isTransparent || isCustomShader) {
-				// Forward pass (transparent/custom shader)
-				m_ForwardPassDrawCommands.push_back(cmd);
-				m_ForwardPassDrawInfos.push_back(info);
-				m_ForwardPassDrawCommandsVertexCount += meshData->vertexCount;
-				m_ForwardPassDrawCommandsIndexCount += cmd.count;
+			// Cache this draw item for fast path updates
+			CachedDrawItem cacheItem;
+			cacheItem.entity = entity;
+			cacheItem.childMaterialEntity = 0;  // Primitives don't have child materials
+			cacheItem.materialEntity = entity;  // Primitives always use their own material
+			cacheItem.hadParentMaterial = true; // Primitive's material is valid (required to render)
+			cacheItem.hadChildMaterial = false; // No child material
+			cacheItem.meshHandle = meshHandle;
+			cacheItem.meshData = meshData;
+			cacheItem.materialIndex = materialIndex;
+			cacheItem.aabbMin = glm::vec3(mesh.aabbMin.x, mesh.aabbMin.y, mesh.aabbMin.z);
+			cacheItem.aabbMax = glm::vec3(mesh.aabbMax.x, mesh.aabbMax.y, mesh.aabbMax.z);
+			cacheItem.isTransparent = isTransparent;
+			cacheItem.castsShadows = castsShadows;
+			cacheItem.hasCustomShader = isCustomShader;
+			cacheItem.useSkinning = false; // Primitives never use skinning
+			cacheItem.boneOffset = 0;
+			m_CachedDrawItems.push_back(cacheItem);
+
+			// Route based on frustum culling
+			if (isCulled) {
+				// Culled meshes - skip all visible passes (depth, picking, geometry, forward)
+				culledMeshes++;
 			}
 			else {
-				// Geometry pass (opaque, standard shader)
-				m_StandardDrawCommands.push_back(cmd);
-				m_StandardDrawInfos.push_back(info);
-				m_StandardDrawCommandsVertexCount += meshData->vertexCount;
-				m_StandardDrawCommandsIndexCount += cmd.count;
+				// ========== VISIBLE MESHES - Route to visible passes ==========
+
+				// PASS 1: PICKING PASS - ALL visible geometry (opaque + transparent, for object selection)
+				m_PickingStandardCommands.push_back(cmd);
+				m_PickingStandardInfos.push_back(info);
+
+				// PASS 2: DEPTH PREPASS - Opaque visible geometry only (for early-z rejection)
+				// Transparent objects excluded to prevent depth conflicts with objects behind them
+				if (!isTransparent) {
+					m_DepthPrepassStandardCommands.push_back(cmd);
+					m_DepthPrepassStandardInfos.push_back(info);
+				}
+
+				// PASS 3: GEOMETRY/FORWARD - Route by shader type and transparency
+				if (!isTransparent && !isCustomShader) {
+					// Opaque default shader → Geometry pass (deferred lighting)
+					DefaultShaderDrawItem item;
+					item.command = cmd;
+					item.info = info;
+					item.castsShadows = castsShadows;
+					m_GeometryStandardItems.push_back(item);
+				}
+				else if (!isTransparent && isCustomShader) {
+					// Opaque custom shader → Forward pass (rendered after geometry)
+					CustomShaderDrawItem item;
+					item.command = cmd;
+					item.info = info;
+					item.shader = material->GetShader();
+					item.castsShadows = castsShadows;
+					m_ForwardOpaqueCustomStandardItems.push_back(item);
+				}
+				else if (isTransparent && !isCustomShader) {
+					// Transparent default shader → Forward pass (sorted, back-to-front)
+					DefaultShaderDrawItem item;
+					item.command = cmd;
+					item.info = info;
+					item.castsShadows = castsShadows;
+					m_ForwardTransparentDefaultStandardItems.push_back(item);
+				}
+				else if (isTransparent && isCustomShader) {
+					// Transparent custom shader → Forward pass (sorted, back-to-front)
+					CustomShaderDrawItem item;
+					item.command = cmd;
+					item.info = info;
+					item.shader = material->GetShader();
+					item.castsShadows = castsShadows;
+					m_ForwardTransparentCustomStandardItems.push_back(item);
+				}
+			}
+
+			// PASS 4: SHADOW PASS - ALL geometry (visible OR culled) that casts shadows
+			if (castsShadows) {
+				m_ShadowStandardCommands.push_back(cmd);
+				m_ShadowStandardInfos.push_back(info);
 			}
 		}
 	}
 
 	// ========== STATIC MODELS ==========
 	for (auto& entity : m_ModelSystem->m_Entities) {
+		if (!ecs.HasComponent<Ermine::Transform>(entity))
+			continue;
+
+		auto& modelComp = ecs.GetComponent<ModelComponent>(entity);
+		auto& trans = ecs.GetComponent<Transform>(entity);
+
+		if (!modelComp.m_model)
+			continue;
+
 		if (!ecs.HasComponent<AnimationComponent>(entity)) {
-			// Process entities with Model component
-			auto& modelComp = ecs.GetComponent<ModelComponent>(entity);
-			auto& trans = ecs.GetComponent<Transform>(entity);
-
-			(void)trans;
-
-			if (!modelComp.m_model) continue;
-
 			// Build entity transform
 			glm::mat4 entityModel = GetEntityWorldMatrix(entity);
 
@@ -1335,44 +1679,51 @@ void Renderer::CompileDrawData()
 				const MeshSubset* meshData = m_MeshManager.GetMeshData(meshHandle);
 				if (!meshData) continue;
 
-
-					// Get material from the mesh's child entity (if it has one), otherwise use parent entity
+				// Get material from the mesh's child entity (if it has one), otherwise use parent entity
+				// Track complete material structure for proper cache validation
 				Ermine::graphics::Material* material = nullptr;
-
-				// Look for child entity with matching mesh name
+				Ermine::EntityID materialEntity = 0;
 				Ermine::EntityID childEntity = 0;
-				if (ecs.HasComponent<Ermine::HierarchyComponent>(entity)) {
-					const auto& hierarchy = ecs.GetComponent<Ermine::HierarchyComponent>(entity);
-					const std::string expectedChildName = "Mesh_" + meshData->meshID;
+				bool hadParentMaterial = false;
+				bool hadChildMaterial = false;
 
-					for (Ermine::EntityID child : hierarchy.children) {
-						if (ecs.HasComponent<Ermine::ObjectMetaData>(child)) {
-							const auto& metadata = ecs.GetComponent<Ermine::ObjectMetaData>(child);
-							if (metadata.name == expectedChildName) {
-								childEntity = child;
-								break;
-							}
-						}
+				// Find child entity using GUID-based lookup (with fallback to legacy EntityID)
+				childEntity = FindChildEntityForMesh(entity, meshData->meshID);
+
+				// Check child material
+				Ermine::graphics::Material* childMaterial = nullptr;
+				if (childEntity != 0 && ecs.HasComponent<Ermine::Material>(childEntity)) {
+					auto& materialComponent = ecs.GetComponent<Ermine::Material>(childEntity);
+					childMaterial = materialComponent.GetMaterial();
+					hadChildMaterial = (childMaterial != nullptr);
+					if (childMaterial) {
+						material = childMaterial;
+						materialEntity = childEntity;
 					}
 				}
 
-				if (childEntity != 0 && ecs.HasComponent<Ermine::Material>(childEntity)) {
-					// Use child entity's material
-					auto& materialComponent = ecs.GetComponent<Ermine::Material>(childEntity);
-					material = materialComponent.GetMaterial();
-				}
-				else if (ecs.HasComponent<Ermine::Material>(entity)) {
-					// Fallback to parent entity's material
+				// Check parent material
+				Ermine::graphics::Material* parentMaterial = nullptr;
+				if (ecs.HasComponent<Ermine::Material>(entity)) {
 					auto& materialComponent = ecs.GetComponent<Ermine::Material>(entity);
-					material = materialComponent.GetMaterial();
+					parentMaterial = materialComponent.GetMaterial();
+					hadParentMaterial = (parentMaterial != nullptr);
+					// Use parent if child didn't provide valid material
+					if (!material && parentMaterial) {
+						material = parentMaterial;
+						materialEntity = entity;
+					}
 				}
+
+				// Skip this mesh if no material found
+				if (!material) continue;
+
 				uint32_t materialIndex = material->GetMaterialIndex();
 
 				// Determine which pass this mesh belongs to
-				bool isTransparent = material && IsTransparentMaterial(material);
-				// TODO: Uncomment when use of custom shaders is supported
-				//bool isCustomShader = HasCustomShader(material);
-				bool isCustomShader = false;
+				bool isTransparent = IsTransparentMaterial(material);
+				bool castsShadows = CastsShadows(material);
+				bool isCustomShader = HasCustomShader(material);
 
 				// ========== FRUSTUM CULLING TEST ==========
 				// Transform AABB to world space by transforming all 8 corners
@@ -1399,10 +1750,6 @@ void Renderer::CompileDrawData()
 
 				// Test against frustum
 				bool isCulled = !frustum.TestAABB(actualMin, actualMax);
-				if (isCulled) {
-					culledMeshes++; // Count culled meshes
-					continue; // Skip this mesh - it's outside the frustum
-				}
 
 				// Debug: Draw AABB if enabled
 				if (m_DebugDrawAABBs) {
@@ -1422,107 +1769,183 @@ void Renderer::CompileDrawData()
 				// Build draw info with AABB and model matrix
 				DrawInfo info;
 				info.modelMatrix = entityModel;
+				
+
+				// Pre-calculate normal matrix and store as 3 separate columns (std430 mat3 has 16-byte stride!)
+				glm::mat3 normalMat = glm::transpose(glm::inverse(glm::mat3(entityModel)));
+				info.normalMatrixCol0 = glm::vec4(normalMat[0], 0.0f);
+				info.normalMatrixCol1 = glm::vec4(normalMat[1], 0.0f);
+				info.normalMatrixCol2 = glm::vec4(normalMat[2], 0.0f);
 				info.aabbMin = mesh.aabbMin;
 				info.materialIndex = materialIndex;
 				info.aabbMax = mesh.aabbMax;
 				info.entityID = static_cast<uint32_t>(entity);
 				info.flags = 0; // No skinning for standard meshes
 				info.boneTransformOffset = 0;
-				info._pad[0] = 0;
-				info._pad[1] = 0;
+				info._pad0 = 0;
+				info._pad1 = 0;
 
-				// Route to appropriate pass
-				if (isTransparent || isCustomShader) {
-					// Forward pass (transparent/custom shader)
-					m_ForwardPassDrawCommands.push_back(cmd);
-					m_ForwardPassDrawInfos.push_back(info);
-					m_ForwardPassDrawCommandsVertexCount += meshData->vertexCount;
-					m_ForwardPassDrawCommandsIndexCount += cmd.count;
+				// Cache this draw item for fast path updates - store complete material structure
+				CachedDrawItem cacheItem;
+				cacheItem.entity = entity;
+				cacheItem.childMaterialEntity = childEntity;  // Child entity that was checked (or 0)
+				cacheItem.materialEntity = materialEntity;    // Entity that actually provided the material
+				cacheItem.hadParentMaterial = hadParentMaterial;  // Whether parent had valid material
+				cacheItem.hadChildMaterial = hadChildMaterial;    // Whether child had valid material
+				cacheItem.meshHandle = meshHandle;
+				cacheItem.meshData = meshData;
+				cacheItem.materialIndex = materialIndex;
+				cacheItem.aabbMin = mesh.aabbMin;
+				cacheItem.aabbMax = mesh.aabbMax;
+				cacheItem.isTransparent = isTransparent;
+				cacheItem.castsShadows = castsShadows;
+				cacheItem.hasCustomShader = isCustomShader;
+				cacheItem.useSkinning = false; // Static models never use skinning
+				cacheItem.boneOffset = 0;
+				m_CachedDrawItems.push_back(cacheItem);
+
+				// Route based on frustum culling
+				if (isCulled) {
+					// Culled meshes - skip all visible passes (depth, picking, geometry, forward)
+					culledMeshes++;
 				}
 				else {
-					// Geometry pass (opaque, standard shader)
-					m_StandardDrawCommands.push_back(cmd);
-					m_StandardDrawInfos.push_back(info);
-					m_StandardDrawCommandsVertexCount += meshData->vertexCount;
-					m_StandardDrawCommandsIndexCount += cmd.count;
+					// ========== VISIBLE MESHES - Route to visible passes ==========
+
+					// PASS 1: PICKING PASS - ALL visible geometry (opaque + transparent, for object selection)
+					m_PickingStandardCommands.push_back(cmd);
+					m_PickingStandardInfos.push_back(info);
+
+					// PASS 2: DEPTH PREPASS - Opaque visible geometry only (for early-z rejection)
+					// Transparent objects excluded to prevent depth conflicts with objects behind them
+					if (!isTransparent) {
+						m_DepthPrepassStandardCommands.push_back(cmd);
+						m_DepthPrepassStandardInfos.push_back(info);
+					}
+
+					// PASS 3: GEOMETRY/FORWARD - Route by shader type and transparency
+					if (!isTransparent && !isCustomShader) {
+						// Opaque default shader → Geometry pass (deferred lighting)
+						DefaultShaderDrawItem item;
+						item.command = cmd;
+						item.info = info;
+						item.castsShadows = castsShadows;
+						m_GeometryStandardItems.push_back(item);
+						m_GeometryStandardVertexCount += meshData->vertexCount;
+						m_GeometryStandardIndexCount += cmd.count;
+					}
+					else if (!isTransparent && isCustomShader) {
+						// Opaque custom shader → Forward pass (rendered after geometry)
+						CustomShaderDrawItem item;
+						item.command = cmd;
+						item.info = info;
+						item.shader = material->GetShader();
+						item.castsShadows = castsShadows;
+						m_ForwardOpaqueCustomStandardItems.push_back(item);
+					}
+					else if (isTransparent && !isCustomShader) {
+						// Transparent default shader → Forward pass (sorted, back-to-front)
+						DefaultShaderDrawItem item;
+						item.command = cmd;
+						item.info = info;
+						item.castsShadows = castsShadows;
+						m_ForwardTransparentDefaultStandardItems.push_back(item);
+						m_ForwardPassDrawCommandsVertexCount += meshData->vertexCount;
+						m_ForwardPassDrawCommandsIndexCount += cmd.count;
+					}
+					else if (isTransparent && isCustomShader) {
+						// Transparent custom shader → Forward pass (sorted, back-to-front)
+						CustomShaderDrawItem item;
+						item.command = cmd;
+						item.info = info;
+						item.shader = material->GetShader();
+						item.castsShadows = castsShadows;
+						m_ForwardTransparentCustomStandardItems.push_back(item);
+						m_ForwardPassDrawCommandsVertexCount += meshData->vertexCount;
+						m_ForwardPassDrawCommandsIndexCount += cmd.count;
+					}
+				}
+
+				// PASS 4: SHADOW PASS - ALL geometry (visible OR culled) that casts shadows
+				if (castsShadows) {
+					m_ShadowStandardCommands.push_back(cmd);
+					m_ShadowStandardInfos.push_back(info);
 				}
 			}
 		}
 		else {
-			auto& modelComp = ecs.GetComponent<ModelComponent>(entity);
-			auto& trans = ecs.GetComponent<Transform>(entity);
 			auto& animComp = ecs.GetComponent<AnimationComponent>(entity);
 
-			if (!modelComp.m_model) continue;
 			if (animComp.boneTransformOffset < 0) continue; // Skip if no valid bone data
 
-			// Check if entity has material component for transparency/custom shader check
-			Ermine::graphics::Material* material = nullptr;
-			if (ecs.HasComponent<Ermine::Material>(entity)) {
-				auto& materialComponent = ecs.GetComponent<Ermine::Material>(entity);
-				material = materialComponent.GetMaterial();
-			}
-
 			// Build entity transform
-			glm::mat4 modelMatrix = glm::mat4(1.0f);
-			modelMatrix = glm::translate(modelMatrix, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
-			glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
-			rotQuat = glm::normalize(rotQuat);
-			modelMatrix *= glm::mat4_cast(rotQuat);
-			modelMatrix = glm::scale(modelMatrix, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
-
-			// Determine which pass this entity belongs to
-			bool isTransparent = material && IsTransparentMaterial(material);
-			// TODO: Uncomment when use of custom shaders is supported
-			//bool isCustomShader = HasCustomShader(material);
-			bool isCustomShader = false;
-
-			// Get material index
-			uint32_t materialIndex = 0;
-			auto it = m_EntityMaterialIndices.find(entity);
-			if (it != m_EntityMaterialIndices.end()) {
-				materialIndex = it->second;
-			}
+			glm::mat4 modelMatrix = GetEntityWorldMatrix(entity);
 
 			// Get bone transform offset
 			uint32_t boneOffset = static_cast<uint32_t>(animComp.boneTransformOffset);
 
 			// Process each mesh in the model
-			for (const auto& mesh : modelComp.m_model->GetMeshes()) {
+			const auto& meshes = modelComp.m_model->GetMeshes();
+
+			for (const auto& mesh : meshes) {
 
 				// Get mesh handle from MeshManager
 				MeshHandle meshHandle = m_MeshManager.GetMeshHandle(mesh.meshID);
-				if (!meshHandle.isValid()) continue;
+				if (!meshHandle.isValid()) {
+					EE_CORE_WARN("Skinned entity {0}: Invalid mesh handle for meshID '{1}'", entity, mesh.meshID);
+					continue;
+				}
 
 				const MeshSubset* meshData = m_MeshManager.GetMeshData(meshHandle);
-				if (!meshData) continue;
+				if (!meshData) {
+					EE_CORE_WARN("Skinned entity {0}: No mesh data for meshID '{1}'", entity, mesh.meshID);
+					continue;
+				}
 
-					// Get material from the mesh's child entity (if it has one)
+				// Get material from the mesh's child entity (if it has one), otherwise use parent
+				// Track complete material structure for proper cache validation
 				Ermine::graphics::Material* meshMaterial = nullptr;
-
-				// Look for child entity with matching mesh name
+				Ermine::EntityID materialEntity = 0;
 				Ermine::EntityID childEntity = 0;
-				if (ecs.HasComponent<Ermine::HierarchyComponent>(entity)) {
-					const auto& hierarchy = ecs.GetComponent<Ermine::HierarchyComponent>(entity);
-					const std::string expectedChildName = "Mesh_" + meshData->meshID;
+				bool hadParentMaterial = false;
+				bool hadChildMaterial = false;
 
-					for (Ermine::EntityID child : hierarchy.children) {
-						if (ecs.HasComponent<Ermine::ObjectMetaData>(child)) {
-							const auto& metadata = ecs.GetComponent<Ermine::ObjectMetaData>(child);
-							if (metadata.name == expectedChildName) {
-								childEntity = child;
-								break;
-							}
-						}
+				// Find child entity using GUID-based lookup (with fallback to legacy EntityID)
+				childEntity = FindChildEntityForMesh(entity, meshData->meshID);
+
+				// Check child material
+				Ermine::graphics::Material* childMaterial = nullptr;
+				if (childEntity != 0 && ecs.HasComponent<Ermine::Material>(childEntity)) {
+					auto& materialComponent = ecs.GetComponent<Ermine::Material>(childEntity);
+					childMaterial = materialComponent.GetMaterial();
+					hadChildMaterial = (childMaterial != nullptr);
+					if (childMaterial) {
+						meshMaterial = childMaterial;
+						materialEntity = childEntity;
 					}
 				}
 
-				if (childEntity != 0 && ecs.HasComponent<Ermine::Material>(childEntity)) {
-					// Use child entity's material
-					auto& materialComponent = ecs.GetComponent<Ermine::Material>(childEntity);
-					meshMaterial = materialComponent.GetMaterial();
-					materialIndex = meshMaterial->GetMaterialIndex();
+				// Check parent material
+				Ermine::graphics::Material* parentMaterial = nullptr;
+				if (ecs.HasComponent<Ermine::Material>(entity)) {
+					auto& materialComponent = ecs.GetComponent<Ermine::Material>(entity);
+					parentMaterial = materialComponent.GetMaterial();
+					hadParentMaterial = (parentMaterial != nullptr);
+					// Use parent if child didn't provide valid material
+					if (!meshMaterial && parentMaterial) {
+						meshMaterial = parentMaterial;
+						materialEntity = entity;
+					}
 				}
+
+				// Skip this mesh if no material found
+				if (!meshMaterial) continue;
+
+				// Determine material properties for this mesh
+				uint32_t materialIndex = meshMaterial->GetMaterialIndex();
+				bool isTransparent = IsTransparentMaterial(meshMaterial);
+				bool castsShadows = CastsShadows(meshMaterial);
+				bool isCustomShader = HasCustomShader(meshMaterial);
 
 				// ========== FRUSTUM CULLING TEST ==========
 				// Transform AABB to world space by transforming all 8 corners
@@ -1549,10 +1972,6 @@ void Renderer::CompileDrawData()
 
 				// Test against frustum
 				bool isCulled = !frustum.TestAABB(actualMin, actualMax);
-				if (isCulled) {
-					culledMeshes++;
-					continue; // Skip - outside frustum
-				}
 
 				// Debug: Draw AABB if enabled (skinned meshes)
 				if (m_DebugDrawAABBs) {
@@ -1572,29 +1991,107 @@ void Renderer::CompileDrawData()
 				// Build draw info with AABB and model matrix
 				DrawInfo info;
 				info.modelMatrix = modelMatrix;
+				
+
+				// Pre-calculate normal matrix and store as 3 separate columns (std430 mat3 has 16-byte stride!)
+				glm::mat3 normalMat = glm::transpose(glm::inverse(glm::mat3(modelMatrix)));
+				info.normalMatrixCol0 = glm::vec4(normalMat[0], 0.0f);
+				info.normalMatrixCol1 = glm::vec4(normalMat[1], 0.0f);
+				info.normalMatrixCol2 = glm::vec4(normalMat[2], 0.0f);
 				info.aabbMin = mesh.aabbMin;
 				info.materialIndex = materialIndex;
 				info.aabbMax = mesh.aabbMax;
 				info.entityID = static_cast<uint32_t>(entity);
 				info.flags = 1; // Skinning enabled
 				info.boneTransformOffset = boneOffset;
-				info._pad[0] = 0;
-				info._pad[1] = 0;
+				info._pad0 = 0;
+			info._pad1 = 0;
 
-				// Route to appropriate pass
-				if (isTransparent || isCustomShader) {
-					// Forward pass (transparent/custom shader)
-					m_ForwardPassDrawCommands.push_back(cmd);
-					m_ForwardPassDrawInfos.push_back(info);
-					m_ForwardPassDrawCommandsVertexCount += meshData->vertexCount;
-					m_ForwardPassDrawCommandsIndexCount += cmd.count;
+				// Cache this draw item for fast path updates - store complete material structure
+				CachedDrawItem cacheItem;
+				cacheItem.entity = entity;
+				cacheItem.childMaterialEntity = childEntity;  // Child entity that was checked (or 0)
+				cacheItem.materialEntity = materialEntity;    // Entity that actually provided the material
+				cacheItem.hadParentMaterial = hadParentMaterial;  // Whether parent had valid material
+				cacheItem.hadChildMaterial = hadChildMaterial;    // Whether child had valid material
+				cacheItem.meshHandle = meshHandle;
+				cacheItem.meshData = meshData;
+				cacheItem.materialIndex = materialIndex;
+				cacheItem.aabbMin = mesh.aabbMin;
+				cacheItem.aabbMax = mesh.aabbMax;
+				cacheItem.isTransparent = isTransparent;
+				cacheItem.castsShadows = castsShadows;
+				cacheItem.hasCustomShader = isCustomShader;
+				cacheItem.useSkinning = true; // Animated models use skinning
+				cacheItem.boneOffset = boneOffset;
+				m_CachedDrawItems.push_back(cacheItem);
+
+				// Route based on frustum culling
+				if (isCulled) {
+					// Culled meshes - skip all visible passes (depth, picking, geometry, forward)
+					culledMeshes++;
 				}
 				else {
-					// Geometry pass (opaque, standard shader)
-					m_SkinnedDrawCommands.push_back(cmd);
-					m_SkinnedDrawInfos.push_back(info);
-					m_SkinnedDrawCommandsVertexCount += meshData->vertexCount;
-					m_SkinnedDrawCommandsIndexCount += cmd.count;
+					// ========== VISIBLE MESHES - Route to visible passes ==========
+
+					// PASS 1: PICKING PASS - ALL visible geometry (opaque + transparent, for object selection)
+					m_PickingSkinnedCommands.push_back(cmd);
+					m_PickingSkinnedInfos.push_back(info);
+
+					// PASS 2: DEPTH PREPASS - Opaque visible geometry only (for early-z rejection)
+					// Transparent objects excluded to prevent depth conflicts with objects behind them
+					if (!isTransparent) {
+						m_DepthPrepassSkinnedCommands.push_back(cmd);
+						m_DepthPrepassSkinnedInfos.push_back(info);
+					}
+
+					// PASS 3: GEOMETRY/FORWARD - Route by shader type and transparency
+					if (!isTransparent && !isCustomShader) {
+						// Opaque default shader → Geometry pass (deferred lighting)
+						DefaultShaderDrawItem item;
+						item.command = cmd;
+						item.info = info;
+						item.castsShadows = castsShadows;
+						m_GeometrySkinnedItems.push_back(item);
+						m_GeometrySkinnedVertexCount += meshData->vertexCount;
+						m_GeometrySkinnedIndexCount += cmd.count;
+					}
+					else if (!isTransparent && isCustomShader) {
+						// Opaque custom shader → Forward pass (rendered after geometry)
+						CustomShaderDrawItem item;
+						item.command = cmd;
+						item.info = info;
+						item.shader = meshMaterial->GetShader();
+						item.castsShadows = castsShadows;
+						m_ForwardOpaqueCustomSkinnedItems.push_back(item);
+					}
+					else if (isTransparent && !isCustomShader) {
+						// Transparent default shader → Forward pass (sorted, back-to-front)
+						DefaultShaderDrawItem item;
+						item.command = cmd;
+						item.info = info;
+						item.castsShadows = castsShadows;
+						m_ForwardTransparentDefaultSkinnedItems.push_back(item);
+						m_ForwardPassDrawCommandsVertexCount += meshData->vertexCount;
+						m_ForwardPassDrawCommandsIndexCount += cmd.count;
+					}
+					else if (isTransparent && isCustomShader) {
+						// Transparent custom shader → Forward pass (sorted, back-to-front)
+						CustomShaderDrawItem item;
+						item.command = cmd;
+						item.info = info;
+						item.shader = meshMaterial->GetShader();
+						item.castsShadows = castsShadows;
+						m_ForwardTransparentCustomSkinnedItems.push_back(item);
+						m_ForwardPassDrawCommandsVertexCount += meshData->vertexCount;
+						m_ForwardPassDrawCommandsIndexCount += cmd.count;
+					}
+				}
+
+				// PASS 4: SHADOW PASS - ALL geometry (visible OR culled) that casts shadows
+				if (castsShadows) {
+					m_ShadowSkinnedCommands.push_back(cmd);
+					m_ShadowSkinnedInfos.push_back(info);
 				}
 			}
 		}
@@ -1602,6 +2099,981 @@ void Renderer::CompileDrawData()
 
 	GPUProfiler::SetCulledMeshesCount(culledMeshes);
 
+	// ========== WRITE ALL DRAW DATA TO GPU BUFFERS ==========
+
+	// PASS 1: PICKING PASS - ALL visible geometry (opaque + transparent, for object selection)
+	m_MeshManager.m_PickingStandardDrawCommandBuffer.WriteCommands(m_PickingStandardCommands, 0);
+	m_MeshManager.m_PickingStandardDrawInfoBuffer.WriteDrawInfos(m_PickingStandardInfos, 0);
+	m_MeshManager.m_PickingSkinnedDrawCommandBuffer.WriteCommands(m_PickingSkinnedCommands, 0);
+	m_MeshManager.m_PickingSkinnedDrawInfoBuffer.WriteDrawInfos(m_PickingSkinnedInfos, 0);
+
+	// PASS 2: DEPTH PREPASS - Opaque visible geometry only (for early-z rejection)
+	m_MeshManager.m_DepthPrepassStandardDrawCommandBuffer.WriteCommands(m_DepthPrepassStandardCommands, 0);
+	m_MeshManager.m_DepthPrepassStandardDrawInfoBuffer.WriteDrawInfos(m_DepthPrepassStandardInfos, 0);
+	m_MeshManager.m_DepthPrepassSkinnedDrawCommandBuffer.WriteCommands(m_DepthPrepassSkinnedCommands, 0);
+	m_MeshManager.m_DepthPrepassSkinnedDrawInfoBuffer.WriteDrawInfos(m_DepthPrepassSkinnedInfos, 0);
+
+	// PASS 3: GEOMETRY PASS - Opaque default shader only (deferred lighting)
+	// Extract commands and infos from Items
+	std::vector<DrawElementsIndirectCommand> geometryStandardCommands;
+	std::vector<DrawInfo> geometryStandardInfos;
+	geometryStandardCommands.reserve(m_GeometryStandardItems.size());
+	geometryStandardInfos.reserve(m_GeometryStandardItems.size());
+	for (const auto& item : m_GeometryStandardItems) {
+		geometryStandardCommands.push_back(item.command);
+		geometryStandardInfos.push_back(item.info);
+	}
+
+	std::vector<DrawElementsIndirectCommand> geometrySkinnedCommands;
+	std::vector<DrawInfo> geometrySkinnedInfos;
+	geometrySkinnedCommands.reserve(m_GeometrySkinnedItems.size());
+	geometrySkinnedInfos.reserve(m_GeometrySkinnedItems.size());
+	for (const auto& item : m_GeometrySkinnedItems) {
+		geometrySkinnedCommands.push_back(item.command);
+		geometrySkinnedInfos.push_back(item.info);
+	}
+
+	m_MeshManager.m_GeometryStandardDrawCommandBuffer.WriteCommands(geometryStandardCommands, 0);
+	m_MeshManager.m_GeometryStandardDrawInfoBuffer.WriteDrawInfos(geometryStandardInfos, 0);
+	m_MeshManager.m_GeometrySkinnedDrawCommandBuffer.WriteCommands(geometrySkinnedCommands, 0);
+	m_MeshManager.m_GeometrySkinnedDrawInfoBuffer.WriteDrawInfos(geometrySkinnedInfos, 0);
+
+	// PASS 4: FORWARD PASS - Transparent default shaders
+	// Extract commands and infos from Items
+	std::vector<DrawElementsIndirectCommand> forwardTransparentDefaultStandardCommands;
+	std::vector<DrawInfo> forwardTransparentDefaultStandardInfos;
+	forwardTransparentDefaultStandardCommands.reserve(m_ForwardTransparentDefaultStandardItems.size());
+	forwardTransparentDefaultStandardInfos.reserve(m_ForwardTransparentDefaultStandardItems.size());
+	for (const auto& item : m_ForwardTransparentDefaultStandardItems) {
+		forwardTransparentDefaultStandardCommands.push_back(item.command);
+		forwardTransparentDefaultStandardInfos.push_back(item.info);
+	}
+
+	std::vector<DrawElementsIndirectCommand> forwardTransparentDefaultSkinnedCommands;
+	std::vector<DrawInfo> forwardTransparentDefaultSkinnedInfos;
+	forwardTransparentDefaultSkinnedCommands.reserve(m_ForwardTransparentDefaultSkinnedItems.size());
+	forwardTransparentDefaultSkinnedInfos.reserve(m_ForwardTransparentDefaultSkinnedItems.size());
+	for (const auto& item : m_ForwardTransparentDefaultSkinnedItems) {
+		forwardTransparentDefaultSkinnedCommands.push_back(item.command);
+		forwardTransparentDefaultSkinnedInfos.push_back(item.info);
+	}
+
+	m_MeshManager.m_ForwardStandardDrawCommandBuffer.WriteCommands(forwardTransparentDefaultStandardCommands, 0);
+	m_MeshManager.m_ForwardStandardDrawInfoBuffer.WriteDrawInfos(forwardTransparentDefaultStandardInfos, 0);
+	m_MeshManager.m_ForwardSkinnedDrawCommandBuffer.WriteCommands(forwardTransparentDefaultSkinnedCommands, 0);
+	m_MeshManager.m_ForwardSkinnedDrawInfoBuffer.WriteDrawInfos(forwardTransparentDefaultSkinnedInfos, 0);
+
+	// Upload opaque custom shader buffers to GPU
+	// FULL REBUILD: Always use glBufferData (not per-frame, ensures clean state)
+	if (!m_ForwardOpaqueCustomStandardItems.empty()) {
+		// Extract commands and infos from items
+		std::vector<DrawElementsIndirectCommand> commands;
+		std::vector<DrawInfo> infos;
+		commands.reserve(m_ForwardOpaqueCustomStandardItems.size());
+		infos.reserve(m_ForwardOpaqueCustomStandardItems.size());
+
+		for (const auto& item : m_ForwardOpaqueCustomStandardItems) {
+			commands.push_back(item.command);
+			infos.push_back(item.info);
+		}
+
+		// Create buffers if needed
+		if (m_ForwardOpaqueCustomStandardCmdBuffer == 0) {
+			glGenBuffers(1, &m_ForwardOpaqueCustomStandardCmdBuffer);
+			glGenBuffers(1, &m_ForwardOpaqueCustomStandardInfoBuffer);
+		}
+
+		// Upload command buffer - always use glBufferData for full rebuild
+		size_t cmdSize = commands.size();
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardOpaqueCustomStandardCmdBuffer);
+		glBufferData(GL_DRAW_INDIRECT_BUFFER,
+			cmdSize * sizeof(DrawElementsIndirectCommand),
+			commands.data(),
+			GL_DYNAMIC_DRAW);
+		m_ForwardOpaqueCustomStandardCmdBufferCapacity = cmdSize;
+
+		// Upload draw info buffer - always use glBufferData for full rebuild
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_ForwardOpaqueCustomStandardInfoBuffer);
+		glBufferData(GL_SHADER_STORAGE_BUFFER,
+			cmdSize * sizeof(DrawInfo),
+			infos.data(),
+			GL_DYNAMIC_DRAW);
+		m_ForwardOpaqueCustomStandardInfoBufferCapacity = cmdSize;
+
+		// Track actual uploaded count (what's currently on GPU)
+		m_ForwardOpaqueCustomStandardUploadedCount = cmdSize;
+	}
+	else {
+		// No data to upload - reset uploaded count
+		m_ForwardOpaqueCustomStandardUploadedCount = 0;
+	}
+
+	if (!m_ForwardOpaqueCustomSkinnedItems.empty()) {
+		// Extract commands and infos from items
+		std::vector<DrawElementsIndirectCommand> commands;
+		std::vector<DrawInfo> infos;
+		commands.reserve(m_ForwardOpaqueCustomSkinnedItems.size());
+		infos.reserve(m_ForwardOpaqueCustomSkinnedItems.size());
+
+		for (const auto& item : m_ForwardOpaqueCustomSkinnedItems) {
+			commands.push_back(item.command);
+			infos.push_back(item.info);
+		}
+
+		// Create buffers if needed
+		if (m_ForwardOpaqueCustomSkinnedCmdBuffer == 0) {
+			glGenBuffers(1, &m_ForwardOpaqueCustomSkinnedCmdBuffer);
+			glGenBuffers(1, &m_ForwardOpaqueCustomSkinnedInfoBuffer);
+		}
+
+		// Upload command buffer - always use glBufferData for full rebuild
+		size_t cmdSize = commands.size();
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardOpaqueCustomSkinnedCmdBuffer);
+		glBufferData(GL_DRAW_INDIRECT_BUFFER,
+			cmdSize * sizeof(DrawElementsIndirectCommand),
+			commands.data(),
+			GL_DYNAMIC_DRAW);
+		m_ForwardOpaqueCustomSkinnedCmdBufferCapacity = cmdSize;
+
+		// Upload draw info buffer - always use glBufferData for full rebuild
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_ForwardOpaqueCustomSkinnedInfoBuffer);
+		glBufferData(GL_SHADER_STORAGE_BUFFER,
+			cmdSize * sizeof(DrawInfo),
+			infos.data(),
+			GL_DYNAMIC_DRAW);
+		m_ForwardOpaqueCustomSkinnedInfoBufferCapacity = cmdSize;
+
+		// Track actual uploaded count (what's currently on GPU)
+		m_ForwardOpaqueCustomSkinnedUploadedCount = cmdSize;
+	}
+	else {
+		// No data to upload - reset uploaded count
+		m_ForwardOpaqueCustomSkinnedUploadedCount = 0;
+	}
+
+	// Upload transparent custom shader buffers to GPU
+	if (!m_ForwardTransparentCustomStandardItems.empty()) {
+		// Extract commands and infos from items
+		std::vector<DrawElementsIndirectCommand> commands;
+		std::vector<DrawInfo> infos;
+		commands.reserve(m_ForwardTransparentCustomStandardItems.size());
+		infos.reserve(m_ForwardTransparentCustomStandardItems.size());
+
+		for (const auto& item : m_ForwardTransparentCustomStandardItems) {
+			commands.push_back(item.command);
+			infos.push_back(item.info);
+		}
+
+		// Create buffers if needed
+		if (m_ForwardTransparentCustomStandardCmdBuffer == 0) {
+			glGenBuffers(1, &m_ForwardTransparentCustomStandardCmdBuffer);
+			glGenBuffers(1, &m_ForwardTransparentCustomStandardInfoBuffer);
+		}
+
+		// Upload command buffer - always use glBufferData for full rebuild
+		size_t cmdSize = commands.size();
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardTransparentCustomStandardCmdBuffer);
+		glBufferData(GL_DRAW_INDIRECT_BUFFER,
+			cmdSize * sizeof(DrawElementsIndirectCommand),
+			commands.data(),
+			GL_DYNAMIC_DRAW);
+		m_ForwardTransparentCustomStandardCmdBufferCapacity = cmdSize;
+
+		// Upload draw info buffer - always use glBufferData for full rebuild
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_ForwardTransparentCustomStandardInfoBuffer);
+		glBufferData(GL_SHADER_STORAGE_BUFFER,
+			cmdSize * sizeof(DrawInfo),
+			infos.data(),
+			GL_DYNAMIC_DRAW);
+		m_ForwardTransparentCustomStandardInfoBufferCapacity = cmdSize;
+
+		// Track actual uploaded count (what's currently on GPU)
+		m_ForwardTransparentCustomStandardUploadedCount = cmdSize;
+	}
+	else {
+		// No data to upload - reset uploaded count
+		m_ForwardTransparentCustomStandardUploadedCount = 0;
+	}
+
+	if (!m_ForwardTransparentCustomSkinnedItems.empty()) {
+		// Extract commands and infos from items
+		std::vector<DrawElementsIndirectCommand> commands;
+		std::vector<DrawInfo> infos;
+		commands.reserve(m_ForwardTransparentCustomSkinnedItems.size());
+		infos.reserve(m_ForwardTransparentCustomSkinnedItems.size());
+
+		for (const auto& item : m_ForwardTransparentCustomSkinnedItems) {
+			commands.push_back(item.command);
+			infos.push_back(item.info);
+		}
+
+		// Create buffers if needed
+		if (m_ForwardTransparentCustomSkinnedCmdBuffer == 0) {
+			glGenBuffers(1, &m_ForwardTransparentCustomSkinnedCmdBuffer);
+			glGenBuffers(1, &m_ForwardTransparentCustomSkinnedInfoBuffer);
+		}
+
+		// Upload command buffer - always use glBufferData for full rebuild
+		size_t cmdSize = commands.size();
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardTransparentCustomSkinnedCmdBuffer);
+		glBufferData(GL_DRAW_INDIRECT_BUFFER,
+			cmdSize * sizeof(DrawElementsIndirectCommand),
+			commands.data(),
+			GL_DYNAMIC_DRAW);
+		m_ForwardTransparentCustomSkinnedCmdBufferCapacity = cmdSize;
+
+		// Upload draw info buffer - always use glBufferData for full rebuild
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_ForwardTransparentCustomSkinnedInfoBuffer);
+		glBufferData(GL_SHADER_STORAGE_BUFFER,
+			cmdSize * sizeof(DrawInfo),
+			infos.data(),
+			GL_DYNAMIC_DRAW);
+		m_ForwardTransparentCustomSkinnedInfoBufferCapacity = cmdSize;
+
+		// Track actual uploaded count (what's currently on GPU)
+		m_ForwardTransparentCustomSkinnedUploadedCount = cmdSize;
+	}
+	else {
+		// No data to upload - reset uploaded count
+		m_ForwardTransparentCustomSkinnedUploadedCount = 0;
+	}
+
+	// Unbind buffers
+	glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+	// PASS 5: SHADOW PASS - ALL geometry with castsShadows=true (instanced for cascaded shadow maps)
+	//      No need to merge from geometry/forward passes - they're already included
+
+	std::vector<DrawElementsIndirectCommand> shadowStandardCommands;
+	shadowStandardCommands.reserve(m_ShadowStandardCommands.size());
+
+	// Set instance count for cascaded shadow maps
+	for (const auto& cmd : m_ShadowStandardCommands) {
+		DrawElementsIndirectCommand shadowCmd = cmd;
+		shadowCmd.instanceCount = m_TotalShadowInstances;
+		shadowStandardCommands.push_back(shadowCmd);
+	}
+
+	std::vector<DrawElementsIndirectCommand> shadowSkinnedCommands;
+	shadowSkinnedCommands.reserve(m_ShadowSkinnedCommands.size());
+
+	// Set instance count for cascaded shadow maps
+	for (const auto& cmd : m_ShadowSkinnedCommands) {
+		DrawElementsIndirectCommand shadowCmd = cmd;
+		shadowCmd.instanceCount = m_TotalShadowInstances;
+		shadowSkinnedCommands.push_back(shadowCmd);
+	}
+
+	// Write shadow buffers (infos are already correct, just need instanced commands)
+	m_MeshManager.m_ShadowStandardDrawCommandBuffer.WriteCommands(shadowStandardCommands, 0);
+	m_MeshManager.m_ShadowStandardDrawInfoBuffer.WriteDrawInfos(m_ShadowStandardInfos, 0);
+	m_MeshManager.m_ShadowSkinnedDrawCommandBuffer.WriteCommands(shadowSkinnedCommands, 0);
+	m_MeshManager.m_ShadowSkinnedDrawInfoBuffer.WriteDrawInfos(m_ShadowSkinnedInfos, 0);
+
+	// ========== SORTING ==========
+	// Sort opaque custom shaders by shader pointer (for batching, minimize state changes)
+	// NOTE: This doesn't require camera position, only shader pointer comparison
+	SortOpaqueCustomShadersByShader();
+
+	// Transparent sorting happens later during RenderGeometryPass when view matrix is available
+	// (Transparent sorting requires camera position calculated from view matrix)
+
+	// ========== UPDATE DIRTY TRACKING HASHES ==========
+	// Update entity list hash for next frame's comparison
+	m_LastEntityListHash = CalculateEntityListHash();
+
+	// Update per-entity transform hashes for next frame's comparison
+	// Only store hashes for entities that were actually processed
+	m_EntityTransformHashes.clear();
+	m_EntityTransformHashes.reserve(m_Entities.size() + m_ModelSystem->m_Entities.size());
+
+	for (auto entity : m_Entities) {
+		m_EntityTransformHashes[entity] = CalculateEntityTransformHash(entity);
+	}
+	for (auto entity : m_ModelSystem->m_Entities) {
+		m_EntityTransformHashes[entity] = CalculateEntityTransformHash(entity);
+	}
+
+	// Clear full rebuild flag (will be set again if major change detected)
+	m_DrawDataNeedsFullRebuild = false;
+}
+
+/**
+ * @brief Fast incremental update of draw data. Only updates transforms/culling for existing entities.
+ *
+ * This is the optimized path that runs when only transforms/camera have changed.
+ * Uses cached mesh handles and material indices to avoid expensive lookups.
+ */
+void Renderer::UpdateDrawData()
+{
+	const auto& ecs = Ermine::ECS::GetInstance();
+
+	// Clear previous frame's commands (but NOT the cache!)
+	m_DepthPrepassStandardCommands.clear();
+	m_DepthPrepassStandardInfos.clear();
+	m_DepthPrepassSkinnedCommands.clear();
+	m_DepthPrepassSkinnedInfos.clear();
+
+	m_PickingStandardCommands.clear();
+	m_PickingStandardInfos.clear();
+	m_PickingSkinnedCommands.clear();
+	m_PickingSkinnedInfos.clear();
+
+	m_GeometryStandardItems.clear();
+	m_GeometrySkinnedItems.clear();
+
+	m_ForwardTransparentDefaultStandardItems.clear();
+	m_ForwardTransparentDefaultSkinnedItems.clear();
+
+	// Clear custom shader item lists (rebuilt every frame with updated transforms)
+	m_ForwardOpaqueCustomStandardItems.clear();
+	m_ForwardOpaqueCustomSkinnedItems.clear();
+	m_ForwardTransparentCustomStandardItems.clear();
+	m_ForwardTransparentCustomSkinnedItems.clear();
+
+	m_ShadowStandardCommands.clear();
+	m_ShadowStandardInfos.clear();
+	m_ShadowSkinnedCommands.clear();
+	m_ShadowSkinnedInfos.clear();
+
+	// Reset counters
+	m_GeometryStandardVertexCount = 0;
+	m_GeometryStandardIndexCount = 0;
+	m_GeometrySkinnedVertexCount = 0;
+	m_GeometrySkinnedIndexCount = 0;
+	m_ForwardPassDrawCommandsVertexCount = 0;
+	m_ForwardPassDrawCommandsIndexCount = 0;
+
+	// Reserve space (same as rebuild)
+	m_DepthPrepassStandardCommands.reserve(m_Entities.size());
+	m_DepthPrepassStandardInfos.reserve(m_Entities.size());
+	m_DepthPrepassSkinnedCommands.reserve(m_Entities.size() / 4);
+	m_DepthPrepassSkinnedInfos.reserve(m_Entities.size() / 4);
+
+	m_PickingStandardCommands.reserve(m_Entities.size());
+	m_PickingStandardInfos.reserve(m_Entities.size());
+	m_PickingSkinnedCommands.reserve(m_Entities.size() / 4);
+	m_PickingSkinnedInfos.reserve(m_Entities.size() / 4);
+
+	m_GeometryStandardItems.reserve(m_Entities.size());
+	m_GeometrySkinnedItems.reserve(m_Entities.size() / 4);
+
+	m_ForwardTransparentDefaultStandardItems.reserve(m_Entities.size() / 4);
+	m_ForwardTransparentDefaultSkinnedItems.reserve(m_Entities.size() / 8);
+
+	m_ShadowStandardCommands.reserve(m_Entities.size() / 4);
+	m_ShadowStandardInfos.reserve(m_Entities.size() / 4);
+	m_ShadowSkinnedCommands.reserve(m_Entities.size() / 8);
+	m_ShadowSkinnedInfos.reserve(m_Entities.size() / 8);
+
+	// ========== FRUSTUM CULLING SETUP ==========
+	Mtx44 viewMtx, projMtx;
+
+#if defined(EE_EDITOR)
+	if (editor::EditorGUI::isPlaying)
+	{
+		auto gameCamera = ecs.GetSystem<graphics::CameraSystem>();
+		if (gameCamera && gameCamera->HasValidCamera())
+		{
+			viewMtx = gameCamera->GetViewMatrix();
+			projMtx = gameCamera->GetProjectionMatrix();
+		}
+		else
+		{
+			const auto& editorCamera = editor::EditorCamera::GetInstance();
+			viewMtx = editorCamera.GetViewMatrix();
+			projMtx = editorCamera.GetProjectionMatrix();
+		}
+	}
+	else
+	{
+		const auto& editorCamera = editor::EditorCamera::GetInstance();
+		viewMtx = editorCamera.GetViewMatrix();
+		projMtx = editorCamera.GetProjectionMatrix();
+	}
+#else
+	auto gameCamera = ecs.GetSystem<graphics::CameraSystem>();
+	if (gameCamera && gameCamera->HasValidCamera())
+	{
+		viewMtx = gameCamera->GetViewMatrix();
+		projMtx = gameCamera->GetProjectionMatrix();
+	}
+	else
+	{
+		viewMtx = Mtx44();
+		projMtx = Mtx44();
+	}
+#endif
+
+	// Build frustum
+	glm::mat4 viewGlm = ToGlm(viewMtx);
+	glm::mat4 projGlm = ToGlm(projMtx);
+	Frustum frustum;
+	glm::mat4 viewProj = projGlm * viewGlm;
+	frustum.ExtractFromViewProjection(viewProj);
+
+	// Debug: Draw frustum if enabled
+	if (m_DebugDrawFrustum) {
+		glm::mat4 invViewProj = glm::inverse(viewProj);
+		SubmitDebugFrustum(frustum, invViewProj, glm::vec3(0.0f, 1.0f, 1.0f));
+	}
+
+	// Culling statistics
+	culledMeshes = 0;
+
+	// ========== FAST PATH: ITERATE CACHED DRAW ITEMS ==========
+	// This avoids expensive mesh handle lookups and material lookups
+	for (const auto& cachedItem : m_CachedDrawItems)
+	{
+		// Get current entity transform (this is what changed!)
+		// Note: Animated models manually build matrix (no hierarchy), static models use GetEntityWorldMatrix
+		glm::mat4 model;
+		if (cachedItem.useSkinning) {
+			// Animated models: manually build matrix (matches RebuildDrawData behavior)
+			const auto& trans = ecs.GetComponent<Transform>(cachedItem.entity);
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
+			glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
+			rotQuat = glm::normalize(rotQuat);
+			model *= glm::mat4_cast(rotQuat);
+			model = glm::scale(model, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
+		}
+		else {
+			// Static models and primitives: use world matrix (handles hierarchy)
+			model = GetEntityWorldMatrix(cachedItem.entity);
+		}
+
+		// Transform AABB to world space
+		glm::vec3 corners[8] = {
+			glm::vec3(cachedItem.aabbMin.x, cachedItem.aabbMin.y, cachedItem.aabbMin.z),
+			glm::vec3(cachedItem.aabbMax.x, cachedItem.aabbMin.y, cachedItem.aabbMin.z),
+			glm::vec3(cachedItem.aabbMin.x, cachedItem.aabbMax.y, cachedItem.aabbMin.z),
+			glm::vec3(cachedItem.aabbMax.x, cachedItem.aabbMax.y, cachedItem.aabbMin.z),
+			glm::vec3(cachedItem.aabbMin.x, cachedItem.aabbMin.y, cachedItem.aabbMax.z),
+			glm::vec3(cachedItem.aabbMax.x, cachedItem.aabbMin.y, cachedItem.aabbMax.z),
+			glm::vec3(cachedItem.aabbMin.x, cachedItem.aabbMax.y, cachedItem.aabbMax.z),
+			glm::vec3(cachedItem.aabbMax.x, cachedItem.aabbMax.y, cachedItem.aabbMax.z)
+		};
+
+		glm::vec3 actualMin = glm::vec3(FLT_MAX);
+		glm::vec3 actualMax = glm::vec3(-FLT_MAX);
+
+		for (int i = 0; i < 8; ++i) {
+			glm::vec3 worldCorner = glm::vec3(model * glm::vec4(corners[i], 1.0f));
+			actualMin = glm::min(actualMin, worldCorner);
+			actualMax = glm::max(actualMax, worldCorner);
+		}
+
+		// Test frustum culling
+		bool isCulled = !frustum.TestAABB(actualMin, actualMax);
+
+		// Debug: Draw AABB if enabled
+		if (m_DebugDrawAABBs) {
+			glm::vec3 aabbColor = isCulled ? glm::vec3(1.0f, 0.0f, 0.0f) : glm::vec3(0.0f, 1.0f, 0.0f);
+			SubmitDebugAABB(actualMin, actualMax, aabbColor);
+		}
+
+		// Build draw command (using cached mesh data - no lookups!)
+		DrawElementsIndirectCommand cmd;
+		cmd.count = cachedItem.meshData->indexCount;
+		cmd.instanceCount = 1;
+		cmd.firstIndex = cachedItem.meshData->indexOffset;
+		cmd.baseVertex = cachedItem.meshData->baseVertex;
+		cmd.baseInstance = 0;
+
+		// Build draw info (using cached data + new transform)
+		DrawInfo info;
+		info.modelMatrix = model;
+		
+
+				// Pre-calculate normal matrix and store as 3 separate columns (std430 mat3 has 16-byte stride!)
+				glm::mat3 normalMat = glm::transpose(glm::inverse(glm::mat3(model)));
+				info.normalMatrixCol0 = glm::vec4(normalMat[0], 0.0f);
+				info.normalMatrixCol1 = glm::vec4(normalMat[1], 0.0f);
+				info.normalMatrixCol2 = glm::vec4(normalMat[2], 0.0f);
+		info.aabbMin = cachedItem.aabbMin;
+		info.materialIndex = cachedItem.materialIndex;
+		info.aabbMax = cachedItem.aabbMax;
+		info.entityID = static_cast<uint32_t>(cachedItem.entity);
+		info.flags = cachedItem.useSkinning ? 1 : 0;
+		info.boneTransformOffset = cachedItem.boneOffset;
+		info._pad0 = 0;
+			info._pad1 = 0;
+
+		// Route to appropriate buffers based on culling and transparency
+		if (isCulled) {
+			// Culled meshes - skip all visible passes (depth, picking, geometry, forward)
+			culledMeshes++;
+		}
+		else {
+			// ========== VISIBLE MESHES - Route to visible passes ==========
+
+			// PASS 1: PICKING PASS - ALL visible geometry (opaque + transparent, for object selection)
+			if (cachedItem.useSkinning) {
+				m_PickingSkinnedCommands.push_back(cmd);
+				m_PickingSkinnedInfos.push_back(info);
+			}
+			else {
+				m_PickingStandardCommands.push_back(cmd);
+				m_PickingStandardInfos.push_back(info);
+			}
+
+			// PASS 2: DEPTH PREPASS - Opaque visible geometry only (for early-z rejection)
+			// Transparent objects excluded to prevent depth conflicts with objects behind them
+			if (!cachedItem.isTransparent) {
+				if (cachedItem.useSkinning) {
+					m_DepthPrepassSkinnedCommands.push_back(cmd);
+					m_DepthPrepassSkinnedInfos.push_back(info);
+				}
+				else {
+					m_DepthPrepassStandardCommands.push_back(cmd);
+					m_DepthPrepassStandardInfos.push_back(info);
+				}
+			}
+
+			// PASS 3: GEOMETRY/FORWARD - Route by shader type and transparency
+			if (!cachedItem.isTransparent && !cachedItem.hasCustomShader) {
+				// Opaque default shader → Geometry pass (deferred lighting)
+				DefaultShaderDrawItem item;
+				item.command = cmd;
+				item.info = info;
+				item.castsShadows = cachedItem.castsShadows;
+
+				if (cachedItem.useSkinning) {
+					m_GeometrySkinnedItems.push_back(item);
+					m_GeometrySkinnedVertexCount += cachedItem.meshData->vertexCount;
+					m_GeometrySkinnedIndexCount += cmd.count;
+				}
+				else {
+					m_GeometryStandardItems.push_back(item);
+					m_GeometryStandardVertexCount += cachedItem.meshData->vertexCount;
+					m_GeometryStandardIndexCount += cmd.count;
+				}
+			}
+			else if (!cachedItem.isTransparent && cachedItem.hasCustomShader) {
+				// Opaque custom shader → Forward pass (rendered after geometry)
+				// Verify it's truly a custom shader with updated logic
+				Ermine::graphics::Material* meshMaterial = nullptr;
+				if (ecs.HasComponent<Ermine::Material>(cachedItem.materialEntity)) {
+					auto& materialComponent = ecs.GetComponent<Ermine::Material>(cachedItem.materialEntity);
+					meshMaterial = materialComponent.GetMaterial();
+				}
+
+				// Double-check with updated HasCustomShader logic
+				if (meshMaterial && HasCustomShader(meshMaterial)) {
+					// Opaque custom shader pass
+					CustomShaderDrawItem item;
+					item.command = cmd;
+					item.info = info;
+					item.shader = meshMaterial->GetShader();
+					item.castsShadows = cachedItem.castsShadows;
+
+					if (cachedItem.useSkinning) {
+						m_ForwardOpaqueCustomSkinnedItems.push_back(item);
+					}
+					else {
+						m_ForwardOpaqueCustomStandardItems.push_back(item);
+					}
+				}
+				else {
+					// Was marked as custom but isn't anymore - treat as standard geometry pass
+					DefaultShaderDrawItem item;
+					item.command = cmd;
+					item.info = info;
+					item.castsShadows = cachedItem.castsShadows;
+
+					if (cachedItem.useSkinning) {
+						m_GeometrySkinnedItems.push_back(item);
+						m_GeometrySkinnedVertexCount += cachedItem.meshData->vertexCount;
+						m_GeometrySkinnedIndexCount += cmd.count;
+					}
+					else {
+						m_GeometryStandardItems.push_back(item);
+						m_GeometryStandardVertexCount += cachedItem.meshData->vertexCount;
+						m_GeometryStandardIndexCount += cmd.count;
+					}
+				}
+			}
+			else if (cachedItem.isTransparent && !cachedItem.hasCustomShader) {
+				// Transparent default shader → Forward pass (sorted, back-to-front)
+				DefaultShaderDrawItem item;
+				item.command = cmd;
+				item.info = info;
+				item.castsShadows = cachedItem.castsShadows;
+
+				if (cachedItem.useSkinning) {
+					m_ForwardTransparentDefaultSkinnedItems.push_back(item);
+				}
+				else {
+					m_ForwardTransparentDefaultStandardItems.push_back(item);
+				}
+				m_ForwardPassDrawCommandsVertexCount += cachedItem.meshData->vertexCount;
+				m_ForwardPassDrawCommandsIndexCount += cmd.count;
+			}
+			else if (cachedItem.isTransparent && cachedItem.hasCustomShader) {
+				// Transparent custom shader → Forward pass (sorted, back-to-front)
+				// Check if transparent has custom shader
+				Ermine::graphics::Material* meshMaterial = nullptr;
+				if (ecs.HasComponent<Ermine::Material>(cachedItem.materialEntity)) {
+					auto& materialComponent = ecs.GetComponent<Ermine::Material>(cachedItem.materialEntity);
+					meshMaterial = materialComponent.GetMaterial();
+				}
+
+				// Double-check with updated HasCustomShader logic
+				if (meshMaterial && HasCustomShader(meshMaterial)) {
+					// Transparent custom shader pass
+					CustomShaderDrawItem item;
+					item.command = cmd;
+					item.info = info;
+					item.shader = meshMaterial->GetShader();
+					item.castsShadows = cachedItem.castsShadows;
+
+					if (cachedItem.useSkinning) {
+						m_ForwardTransparentCustomSkinnedItems.push_back(item);
+					}
+					else {
+						m_ForwardTransparentCustomStandardItems.push_back(item);
+					}
+				}
+				else {
+					// Was marked as custom but isn't anymore - treat as standard transparent
+					DefaultShaderDrawItem item;
+					item.command = cmd;
+					item.info = info;
+					item.castsShadows = cachedItem.castsShadows;
+
+					if (cachedItem.useSkinning) {
+						m_ForwardTransparentDefaultSkinnedItems.push_back(item);
+					}
+					else {
+						m_ForwardTransparentDefaultStandardItems.push_back(item);
+					}
+				}
+				m_ForwardPassDrawCommandsVertexCount += cachedItem.meshData->vertexCount;
+				m_ForwardPassDrawCommandsIndexCount += cmd.count;
+			}
+		}
+
+		// PASS 4: SHADOW PASS - ALL geometry (visible OR culled) that casts shadows
+		if (cachedItem.castsShadows) {
+			if (cachedItem.useSkinning) {
+				m_ShadowSkinnedCommands.push_back(cmd);
+				m_ShadowSkinnedInfos.push_back(info);
+			}
+			else {
+				m_ShadowStandardCommands.push_back(cmd);
+				m_ShadowStandardInfos.push_back(info);
+			}
+		}
+	}
+
+	GPUProfiler::SetCulledMeshesCount(culledMeshes);
+
+	// ========== SORTING ==========
+	// Transparent sorting happens later during RenderGeometryPass when view matrix is available
+	// (Sorting requires camera position calculated from view matrix)
+	// Fast path uses distance-only sorting within existing shader groups
+
+	// ========== WRITE ALL DRAW DATA TO GPU BUFFERS ==========
+	// PASS 1: PICKING PASS - ALL visible geometry (opaque + transparent, for object selection)
+	m_MeshManager.m_PickingStandardDrawCommandBuffer.WriteCommands(m_PickingStandardCommands, 0);
+	m_MeshManager.m_PickingStandardDrawInfoBuffer.WriteDrawInfos(m_PickingStandardInfos, 0);
+	m_MeshManager.m_PickingSkinnedDrawCommandBuffer.WriteCommands(m_PickingSkinnedCommands, 0);
+	m_MeshManager.m_PickingSkinnedDrawInfoBuffer.WriteDrawInfos(m_PickingSkinnedInfos, 0);
+
+	// PASS 2: DEPTH PREPASS - Opaque visible geometry only (for early-z rejection)
+	m_MeshManager.m_DepthPrepassStandardDrawCommandBuffer.WriteCommands(m_DepthPrepassStandardCommands, 0);
+	m_MeshManager.m_DepthPrepassStandardDrawInfoBuffer.WriteDrawInfos(m_DepthPrepassStandardInfos, 0);
+	m_MeshManager.m_DepthPrepassSkinnedDrawCommandBuffer.WriteCommands(m_DepthPrepassSkinnedCommands, 0);
+	m_MeshManager.m_DepthPrepassSkinnedDrawInfoBuffer.WriteDrawInfos(m_DepthPrepassSkinnedInfos, 0);
+
+	// Extract commands and infos from Items for geometry pass
+	std::vector<DrawElementsIndirectCommand> geometryStandardCommands;
+	std::vector<DrawInfo> geometryStandardInfos;
+	geometryStandardCommands.reserve(m_GeometryStandardItems.size());
+	geometryStandardInfos.reserve(m_GeometryStandardItems.size());
+	for (const auto& item : m_GeometryStandardItems) {
+		geometryStandardCommands.push_back(item.command);
+		geometryStandardInfos.push_back(item.info);
+	}
+
+	std::vector<DrawElementsIndirectCommand> geometrySkinnedCommands;
+	std::vector<DrawInfo> geometrySkinnedInfos;
+	geometrySkinnedCommands.reserve(m_GeometrySkinnedItems.size());
+	geometrySkinnedInfos.reserve(m_GeometrySkinnedItems.size());
+	for (const auto& item : m_GeometrySkinnedItems) {
+		geometrySkinnedCommands.push_back(item.command);
+		geometrySkinnedInfos.push_back(item.info);
+	}
+
+	m_MeshManager.m_GeometryStandardDrawCommandBuffer.WriteCommands(geometryStandardCommands, 0);
+	m_MeshManager.m_GeometryStandardDrawInfoBuffer.WriteDrawInfos(geometryStandardInfos, 0);
+	m_MeshManager.m_GeometrySkinnedDrawCommandBuffer.WriteCommands(geometrySkinnedCommands, 0);
+	m_MeshManager.m_GeometrySkinnedDrawInfoBuffer.WriteDrawInfos(geometrySkinnedInfos, 0);
+
+	// Extract commands and infos from Items for forward transparent default pass
+	std::vector<DrawElementsIndirectCommand> forwardTransparentDefaultStandardCommands;
+	std::vector<DrawInfo> forwardTransparentDefaultStandardInfos;
+	forwardTransparentDefaultStandardCommands.reserve(m_ForwardTransparentDefaultStandardItems.size());
+	forwardTransparentDefaultStandardInfos.reserve(m_ForwardTransparentDefaultStandardItems.size());
+	for (const auto& item : m_ForwardTransparentDefaultStandardItems) {
+		forwardTransparentDefaultStandardCommands.push_back(item.command);
+		forwardTransparentDefaultStandardInfos.push_back(item.info);
+	}
+
+	std::vector<DrawElementsIndirectCommand> forwardTransparentDefaultSkinnedCommands;
+	std::vector<DrawInfo> forwardTransparentDefaultSkinnedInfos;
+	forwardTransparentDefaultSkinnedCommands.reserve(m_ForwardTransparentDefaultSkinnedItems.size());
+	forwardTransparentDefaultSkinnedInfos.reserve(m_ForwardTransparentDefaultSkinnedItems.size());
+	for (const auto& item : m_ForwardTransparentDefaultSkinnedItems) {
+		forwardTransparentDefaultSkinnedCommands.push_back(item.command);
+		forwardTransparentDefaultSkinnedInfos.push_back(item.info);
+	}
+
+	m_MeshManager.m_ForwardStandardDrawCommandBuffer.WriteCommands(forwardTransparentDefaultStandardCommands, 0);
+	m_MeshManager.m_ForwardStandardDrawInfoBuffer.WriteDrawInfos(forwardTransparentDefaultStandardInfos, 0);
+	m_MeshManager.m_ForwardSkinnedDrawCommandBuffer.WriteCommands(forwardTransparentDefaultSkinnedCommands, 0);
+	m_MeshManager.m_ForwardSkinnedDrawInfoBuffer.WriteDrawInfos(forwardTransparentDefaultSkinnedInfos, 0);
+
+	// PASS 5: SHADOW PASS - ALL geometry with castsShadows=true (instanced for cascaded shadow maps)
+
+	std::vector<DrawElementsIndirectCommand> shadowStandardCommands;
+	shadowStandardCommands.reserve(m_ShadowStandardCommands.size());
+
+	for (const auto& cmd : m_ShadowStandardCommands) {
+		DrawElementsIndirectCommand shadowCmd = cmd;
+		shadowCmd.instanceCount = m_TotalShadowInstances;
+		shadowStandardCommands.push_back(shadowCmd);
+	}
+
+	std::vector<DrawElementsIndirectCommand> shadowSkinnedCommands;
+	shadowSkinnedCommands.reserve(m_ShadowSkinnedCommands.size());
+
+	for (const auto& cmd : m_ShadowSkinnedCommands) {
+		DrawElementsIndirectCommand shadowCmd = cmd;
+		shadowCmd.instanceCount = m_TotalShadowInstances;
+		shadowSkinnedCommands.push_back(shadowCmd);
+	}
+
+	m_MeshManager.m_ShadowStandardDrawCommandBuffer.WriteCommands(shadowStandardCommands, 0);
+	m_MeshManager.m_ShadowStandardDrawInfoBuffer.WriteDrawInfos(m_ShadowStandardInfos, 0);
+	m_MeshManager.m_ShadowSkinnedDrawCommandBuffer.WriteCommands(shadowSkinnedCommands, 0);
+	m_MeshManager.m_ShadowSkinnedDrawInfoBuffer.WriteDrawInfos(m_ShadowSkinnedInfos, 0);
+
+	// ========== UPLOAD CUSTOM SHADER BUFFERS (FAST PATH - glBufferSubData) ==========
+	// Extract and upload opaque custom shader standard items
+	if (!m_ForwardOpaqueCustomStandardItems.empty()) {
+		std::vector<DrawElementsIndirectCommand> commands;
+		std::vector<DrawInfo> infos;
+		commands.reserve(m_ForwardOpaqueCustomStandardItems.size());
+		infos.reserve(m_ForwardOpaqueCustomStandardItems.size());
+
+		for (const auto& item : m_ForwardOpaqueCustomStandardItems) {
+			commands.push_back(item.command);
+			infos.push_back(item.info);
+		}
+
+		size_t cmdSize = commands.size();
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardOpaqueCustomStandardCmdBuffer);
+		glBufferSubData(GL_DRAW_INDIRECT_BUFFER, 0,
+			cmdSize * sizeof(DrawElementsIndirectCommand),
+			commands.data());
+
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_ForwardOpaqueCustomStandardInfoBuffer);
+		glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0,
+			cmdSize * sizeof(DrawInfo),
+			infos.data());
+
+		m_ForwardOpaqueCustomStandardUploadedCount = cmdSize;
+	}
+	else {
+		m_ForwardOpaqueCustomStandardUploadedCount = 0;
+	}
+
+	// Extract and upload opaque custom shader skinned items
+	if (!m_ForwardOpaqueCustomSkinnedItems.empty()) {
+		std::vector<DrawElementsIndirectCommand> commands;
+		std::vector<DrawInfo> infos;
+		commands.reserve(m_ForwardOpaqueCustomSkinnedItems.size());
+		infos.reserve(m_ForwardOpaqueCustomSkinnedItems.size());
+
+		for (const auto& item : m_ForwardOpaqueCustomSkinnedItems) {
+			commands.push_back(item.command);
+			infos.push_back(item.info);
+		}
+
+		size_t cmdSize = commands.size();
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardOpaqueCustomSkinnedCmdBuffer);
+		glBufferSubData(GL_DRAW_INDIRECT_BUFFER, 0,
+			cmdSize * sizeof(DrawElementsIndirectCommand),
+			commands.data());
+
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_ForwardOpaqueCustomSkinnedInfoBuffer);
+		glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0,
+			cmdSize * sizeof(DrawInfo),
+			infos.data());
+
+		m_ForwardOpaqueCustomSkinnedUploadedCount = cmdSize;
+	}
+	else {
+		m_ForwardOpaqueCustomSkinnedUploadedCount = 0;
+	}
+
+	// Extract and upload transparent custom shader standard items
+	if (!m_ForwardTransparentCustomStandardItems.empty()) {
+		std::vector<DrawElementsIndirectCommand> commands;
+		std::vector<DrawInfo> infos;
+		commands.reserve(m_ForwardTransparentCustomStandardItems.size());
+		infos.reserve(m_ForwardTransparentCustomStandardItems.size());
+
+		for (const auto& item : m_ForwardTransparentCustomStandardItems) {
+			commands.push_back(item.command);
+			infos.push_back(item.info);
+		}
+
+		size_t cmdSize = commands.size();
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardTransparentCustomStandardCmdBuffer);
+		glBufferSubData(GL_DRAW_INDIRECT_BUFFER, 0,
+			cmdSize * sizeof(DrawElementsIndirectCommand),
+			commands.data());
+
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_ForwardTransparentCustomStandardInfoBuffer);
+		glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0,
+			cmdSize * sizeof(DrawInfo),
+			infos.data());
+
+		m_ForwardTransparentCustomStandardUploadedCount = cmdSize;
+	}
+	else {
+		m_ForwardTransparentCustomStandardUploadedCount = 0;
+	}
+
+	// Extract and upload transparent custom shader skinned items
+	if (!m_ForwardTransparentCustomSkinnedItems.empty()) {
+		std::vector<DrawElementsIndirectCommand> commands;
+		std::vector<DrawInfo> infos;
+		commands.reserve(m_ForwardTransparentCustomSkinnedItems.size());
+		infos.reserve(m_ForwardTransparentCustomSkinnedItems.size());
+
+		for (const auto& item : m_ForwardTransparentCustomSkinnedItems) {
+			commands.push_back(item.command);
+			infos.push_back(item.info);
+		}
+
+		size_t cmdSize = commands.size();
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardTransparentCustomSkinnedCmdBuffer);
+		glBufferSubData(GL_DRAW_INDIRECT_BUFFER, 0,
+			cmdSize * sizeof(DrawElementsIndirectCommand),
+			commands.data());
+
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_ForwardTransparentCustomSkinnedInfoBuffer);
+		glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0,
+			cmdSize * sizeof(DrawInfo),
+			infos.data());
+
+		m_ForwardTransparentCustomSkinnedUploadedCount = cmdSize;
+	}
+	else {
+		m_ForwardTransparentCustomSkinnedUploadedCount = 0;
+	}
+
+	// Unbind buffers
+	glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+	// ========== UPDATE DIRTY TRACKING HASHES ==========
+	// Update per-entity transform hashes for next frame
+	m_EntityTransformHashes.clear();
+	m_EntityTransformHashes.reserve(m_Entities.size() + m_ModelSystem->m_Entities.size());
+
+	for (auto entity : m_Entities) {
+		m_EntityTransformHashes[entity] = CalculateEntityTransformHash(entity);
+	}
+	for (auto entity : m_ModelSystem->m_Entities) {
+		m_EntityTransformHashes[entity] = CalculateEntityTransformHash(entity);
+	}
+}
+
+/**
+ * @brief Calculate a hash of the entity list to detect add/remove operations.
+ * @return Hash value representing current entity list state.
+ */
+uint64_t Renderer::CalculateEntityListHash() const
+{
+	uint64_t hash = 0;
+
+	// Hash entity count from each source
+	hash ^= std::hash<size_t>{}(m_Entities.size()) << 1;
+	hash ^= std::hash<size_t>{}(m_ModelSystem->m_Entities.size()) << 2;
+
+	// Simple hash of entity IDs (order matters)
+	for (auto entity : m_Entities) {
+		hash = hash * 31 + std::hash<EntityID>{}(entity);
+	}
+	for (auto entity : m_ModelSystem->m_Entities) {
+		hash = hash * 31 + std::hash<EntityID>{}(entity);
+	}
+
+	return hash;
+}
+
+/**
+ * @brief Calculate a hash of an entity's transform to detect movement.
+ * @param entity The entity to hash.
+ * @return Hash value representing entity's current transform state.
+ */
+uint64_t Renderer::CalculateEntityTransformHash(EntityID entity) const
+{
+	const auto& ecs = Ermine::ECS::GetInstance();
+
+	if (!ecs.HasComponent<Transform>(entity)) {
+		return 0;
+	}
+
+	const auto& trans = ecs.GetComponent<Transform>(entity);
+
+	// Hash position, rotation, scale
+	uint64_t hash = 0;
+	hash ^= std::hash<float>{}(trans.position.x) << 1;
+	hash ^= std::hash<float>{}(trans.position.y) << 2;
+	hash ^= std::hash<float>{}(trans.position.z) << 3;
+	hash ^= std::hash<float>{}(trans.rotation.x) << 4;
+	hash ^= std::hash<float>{}(trans.rotation.y) << 5;
+	hash ^= std::hash<float>{}(trans.rotation.z) << 6;
+	hash ^= std::hash<float>{}(trans.rotation.w) << 7;
+	hash ^= std::hash<float>{}(trans.scale.x) << 8;
+	hash ^= std::hash<float>{}(trans.scale.y) << 9;
+	hash ^= std::hash<float>{}(trans.scale.z) << 10;
+
+	return hash;
+}
+
+/**
+ * @brief Check if the entity list has changed since last frame.
+ * @return True if entities were added/removed.
+ */
+bool Renderer::HasEntityListChanged() const
+{
+	uint64_t currentHash = CalculateEntityListHash();
+	return currentHash != m_LastEntityListHash;
+}
+
+/**
+ * @brief Check if an entity's transform has changed since last frame.
+ * @param entity The entity to check.
+ * @return True if transform changed.
+ */
+bool Renderer::HasEntityTransformChanged(EntityID entity) const
+{
+	uint64_t currentHash = CalculateEntityTransformHash(entity);
+	auto it = m_EntityTransformHashes.find(entity);
+
+	if (it == m_EntityTransformHashes.end()) {
+		return true; // New entity
+	}
+
+	return currentHash != it->second;
 }
 
 /**
@@ -1617,9 +3089,12 @@ void Renderer::RenderLightingPass(const Mtx44& view, const Mtx44& projection)
 		return;
 	}
 
+	// Explicitly bind lighting shader BEFORE setting up framebuffer state
+	m_LightPassShader->Bind();
+
 	BeginLightingPass();
 
-	// Bind lighting shader
+	// Re-bind to ensure it's still active after framebuffer setup
 	m_LightPassShader->Bind();
 
 	// Bind g-buffer textures for reading
@@ -1652,6 +3127,14 @@ void Renderer::RenderLightingPass(const Mtx44& view, const Mtx44& projection)
 	m_LightPassShader->SetUniform1f("u_SSAOIntensity", m_SSAOIntensity);
 	m_LightPassShader->SetUniform1f("u_SSAOFadeout", m_SSAOFadeout);
 	m_LightPassShader->SetUniform1f("u_SSAOMaxDistance", m_SSAOMaxDistance);
+
+	// Set fog parameters
+	m_LightPassShader->SetUniform1i("u_FogEnabled", m_FogEnabled ? 1 : 0);
+	m_LightPassShader->SetUniform1i("u_FogMode", m_FogMode);
+	m_LightPassShader->SetUniform3f("u_FogColor", m_FogColor);
+	m_LightPassShader->SetUniform1f("u_FogDensity", m_FogDensity);
+	m_LightPassShader->SetUniform1f("u_FogStart", m_FogStart);
+	m_LightPassShader->SetUniform1f("u_FogEnd", m_FogEnd);
 
 	// Set shading mode
 	m_LightPassShader->SetUniform1i("u_ShadingMode", m_IsBlinnPhong ? 1 : 0);
@@ -1773,9 +3256,6 @@ void Renderer::RenderPostProcessPass()
 	Draw(m_QuadMesh.vertex_array, m_QuadMesh.index_buffer);
 
 	glEnable(GL_DEPTH_TEST);
-
-	// NOTE: Don't unbind framebuffer here - UI needs to render to it!
-	// Framebuffer will be unbound in Engine.cpp after UI rendering
 }
 
 /**
@@ -1796,14 +3276,19 @@ void Renderer::RenderDebugLines(const Mtx44& view, const Mtx44& proj)
 void Renderer::RenderDeferredPipeline(const Mtx44& view, const Mtx44& projection)
 {
 	// Compile draw data for all passes (routes opaque to geometry, transparent to forward)
+	// MUST be called first - populates draw command buffers for all subsequent passes
 	CompileDrawData();
+
+	// Shadow pass - render scene from light's perspective (independent of G-buffer)
+	// Runs BEFORE depth pre-pass to avoid GL state pollution from depth pre-pass
+	if (frameCounter % SHADOW_MAP_REFRESH_INTERVAL_IN_FRAMES == 0)
+		RenderShadowPass();
+
+	// Depth pre-pass - render depth-only to eliminate fragment shader overdraw
+	RenderDepthPrePass(view, projection);
 
 	// Geometry pass - write opaque objects to g-buffer, collect transparent objects
 	RenderGeometryPass(view, projection);
-
-	// Shadow pass - render scene from light's perspective
-	if (frameCounter % SHADOW_MAP_REFRESH_INTERVAL_IN_FRAMES == 0)
-		RenderShadowPass();
 
 	// Lighting pass - read from g-buffer and perform lighting on opaque objects
 	RenderLightingPass(view, projection);
@@ -1834,8 +3319,26 @@ void Renderer::RenderDeferredPipeline(const Mtx44& view, const Mtx44& projection
 		glDepthMask(GL_TRUE);
 		glDepthFunc(GL_LESS);
 	}
+	else if (m_PostProcessBuffer && m_GBuffer) {
+		// No skybox, but still need to copy depth buffer for opaque custom shaders
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, m_GBuffer->FBO);
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_PostProcessBuffer->FBO);
+		glBlitFramebuffer(0, 0, m_GBuffer->width, m_GBuffer->height,
+			0, 0, m_PostProcessBuffer->width, m_PostProcessBuffer->height,
+			GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+		glBindFramebuffer(GL_FRAMEBUFFER, m_PostProcessBuffer->FBO);
 
-	// TRANSPARENCY PASS - render transparent objects using forward rendering
+		// Set up depth state for subsequent opaque custom shader pass
+		// (matches what skybox path does after rendering)
+		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_LEQUAL);
+		glDepthMask(GL_FALSE);
+
+		EE_CORE_INFO("Copied depth buffer from G-Buffer to PostProcess buffer (no skybox)");
+	}
+
+	// FORWARD PASS - render all custom shaders (opaque + transparent) and transparent standard
+	// This handles: opaque custom shaders, transparent custom shaders, and transparent standard
 	RenderForwardPass(view, projection);
 
 #if defined(EE_EDITOR)
@@ -2097,11 +3600,20 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
 	std::vector<LightGPU> lights;
 	lights.reserve(MAX_LIGHTS);
 
+	// Clear and prepare active shadow lights list
+	m_ActiveShadowLights.clear();
+	int lightIndex = 0;
+
 	const auto& ecs = Ermine::ECS::GetInstance();
 	for (EntityID e : m_LightSystem->m_Entities)
 	{
 		const auto& trans = ecs.GetComponent<Transform>(e);
 		const auto& light = ecs.GetComponent<Light>(e);
+
+		// Track shadow-casting lights for instanced shadow rendering
+		if ((light.type == LightType::DIRECTIONAL || light.type == LightType::SPOT) && light.castsShadows) {
+			m_ActiveShadowLights.push_back(lightIndex);
+		}
 
 		// Keep position in WORLD SPACE instead of view space
 		glm::vec4 posWorld(trans.position.x, trans.position.y, trans.position.z, 1.0f);
@@ -2135,7 +3647,12 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
 			gpu.splitDepths[i / 4][i % 4] = light.splitDepths[i];
 		}
 		lights.emplace_back(gpu);
+		lightIndex++;
 	}
+
+	// Calculate total shadow instances for cascade rendering
+	unsigned int maxShadowLights = std::min(static_cast<unsigned int>(m_ActiveShadowLights.size()), static_cast<unsigned int>(MAX_LIGHTS));
+	m_TotalShadowInstances = maxShadowLights * NUM_CASCADES;
 
 	// Upload to UBO
 	glBindBuffer(GL_UNIFORM_BUFFER, m_LightsUBO);
@@ -2296,6 +3813,9 @@ void Renderer::BindMaterialBlockIfPresent(const std::shared_ptr<Shader>& shader)
  */
 void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 {
+	// Accumulate elapsed time for shader effects
+	m_ElapsedTime += FrameController::GetDeltaTime();
+
 	// Update lights UBO
 	UpdateLightsUBO(editor::EditorCamera::GetInstance().GetViewMatrix());
 
@@ -2459,8 +3979,11 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 			}
 		}
 
-		// Sort transparent objects by distance from camera
-		SortTransparentObjects(cameraPos);
+		// Sort transparent objects EVERY frame (camera position changes)
+		// - Full rebuild: Sort by shader FIRST (creates stable batches), then distance
+		// - Fast update: Sort by distance ONLY within existing shader groups
+		SortTransparentObjects(cameraPos, m_NeedsTransparentSort);
+		m_NeedsTransparentSort = false;  // Reset flag after sorting
 
 		// Second pass: Render transparent objects in sorted order
 		if (!m_transparentObjects.empty()) {
@@ -2584,8 +4107,6 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 			glDisable(GL_BLEND);
 		}
 
-		// NOTE: Don't unbind framebuffer yet - UI needs to render to it!
-		// Framebuffer will be unbound after UI rendering in Engine.cpp
 	}
 
 	// Increment  frame counter at the end of the frame
@@ -2708,6 +4229,28 @@ Renderer::~Renderer()
 		{
 			glDeleteBuffers(1, &m_TextureArraySSBO);
 			m_TextureArraySSBO = 0;
+		}
+
+		// Clean up opaque custom shader buffers
+		if (m_ForwardOpaqueCustomStandardCmdBuffer != 0)
+		{
+			glDeleteBuffers(1, &m_ForwardOpaqueCustomStandardCmdBuffer);
+			m_ForwardOpaqueCustomStandardCmdBuffer = 0;
+		}
+		if (m_ForwardOpaqueCustomStandardInfoBuffer != 0)
+		{
+			glDeleteBuffers(1, &m_ForwardOpaqueCustomStandardInfoBuffer);
+			m_ForwardOpaqueCustomStandardInfoBuffer = 0;
+		}
+		if (m_ForwardOpaqueCustomSkinnedCmdBuffer != 0)
+		{
+			glDeleteBuffers(1, &m_ForwardOpaqueCustomSkinnedCmdBuffer);
+			m_ForwardOpaqueCustomSkinnedCmdBuffer = 0;
+		}
+		if (m_ForwardOpaqueCustomSkinnedInfoBuffer != 0)
+		{
+			glDeleteBuffers(1, &m_ForwardOpaqueCustomSkinnedInfoBuffer);
+			m_ForwardOpaqueCustomSkinnedInfoBuffer = 0;
 		}
 
 		// Delete shadow map resources
@@ -2950,54 +4493,473 @@ bool Renderer::IsTransparentMaterial(const Ermine::graphics::Material* material)
 	return false;
 }
 
+/**
+ * @brief Checks if a material casts shadows.
+ * @param material Material pointer.
+ * @return true if casts shadows, false otherwise.
+ */
+bool Renderer::CastsShadows(const Ermine::graphics::Material* material) const
+{
+	if (!material) return true; // Default to true for missing materials
+
+	// Check materialCastsShadows parameter
+	if (auto param = material->GetParameter("materialCastsShadows")) {
+		return param->boolValue;
+	}
+
+	// Default to true if parameter not set
+	return true;
+}
+
 bool Renderer::HasCustomShader(const Ermine::graphics::Material* material) const
 {
 	if (!material) return false;
 
-	// Check if material has a custom shader (not using standard deferred pipeline)
+	// Get the shader from the material
 	auto shader = material->GetShader();
-	return shader && shader != m_GBufferShader;
+
+	// If no shader is set, it's not a custom shader
+	if (!shader) return false;
+
+	// If standard shaders aren't initialized yet, we can't determine if this is custom
+	// Safest assumption is to treat it as standard (return false) to avoid routing issues
+	if (!m_GBufferShader || !m_ForwardShader) {
+		return false;
+	}
+
+	// Exclude standard shaders: geometry shader (deferred), forward shader, or nullptr
+	bool isStandardShader = (shader == m_GBufferShader) || (shader == m_ForwardShader) || (shader == nullptr);
+
+	return !isStandardShader;
 }
 
 /**
- * @brief Sorts transparent objects by distance to camera.
+ * @brief Sorts opaque custom shader objects by shader pointer to minimize state changes.
+ * Opaque objects don't need distance sorting (no blending), only shader batching.
+ */
+void Renderer::SortOpaqueCustomShadersByShader()
+{
+	// ========== SORT OPAQUE CUSTOM STANDARD MESHES ==========
+	// Sort by shader pointer only (no distance sorting needed for opaque)
+	// Direct sort on items - shader travels with its data, no alignment issues!
+	if (!m_ForwardOpaqueCustomStandardItems.empty()) {
+		std::sort(m_ForwardOpaqueCustomStandardItems.begin(),
+		          m_ForwardOpaqueCustomStandardItems.end(),
+		          [](const CustomShaderDrawItem& a, const CustomShaderDrawItem& b) {
+			          return a.shader.get() < b.shader.get(); // Group by shader
+		          });
+	}
+
+	// ========== SORT OPAQUE CUSTOM SKINNED MESHES ==========
+	// Sort by shader pointer only (no distance sorting needed for opaque)
+	if (!m_ForwardOpaqueCustomSkinnedItems.empty()) {
+		std::sort(m_ForwardOpaqueCustomSkinnedItems.begin(),
+		          m_ForwardOpaqueCustomSkinnedItems.end(),
+		          [](const CustomShaderDrawItem& a, const CustomShaderDrawItem& b) {
+			          return a.shader.get() < b.shader.get(); // Group by shader
+		          });
+	}
+}
+
+/**
+ * @brief Sorts transparent objects by shader first, then by distance to camera.
+ * This minimizes shader state changes and improves alpha blending correctness.
  * @param cameraPos Camera position.
  */
-void Renderer::SortTransparentObjects(const Vec3& cameraPos)
+void Renderer::SortTransparentObjects(const Vec3& cameraPos, bool fullRebuild)
 {
-	if (m_ForwardPassDrawInfos.empty()) return;
+	// Skip if no transparent objects at all
+	bool hasTransparentStandard = !m_ForwardTransparentDefaultStandardItems.empty() || !m_ForwardTransparentDefaultSkinnedItems.empty();
+	bool hasTransparentCustom = !m_ForwardTransparentCustomStandardItems.empty() || !m_ForwardTransparentCustomSkinnedItems.empty();
+
+	if (!hasTransparentStandard && !hasTransparentCustom) return;
 
 	glm::vec3 camPos = glm::vec3(cameraPos.x, cameraPos.y, cameraPos.z);
 
-	// Create indices for sorting
-	std::vector<size_t> indices(m_ForwardPassDrawInfos.size());
-	std::iota(indices.begin(), indices.end(), 0);
-
-	// Calculate distances and sort indices back-to-front
-	std::sort(indices.begin(), indices.end(), [&](size_t a, size_t b) {
-		// Extract position from model matrix
-		glm::vec3 posA = glm::vec3(m_ForwardPassDrawInfos[a].modelMatrix[3]);
-		glm::vec3 posB = glm::vec3(m_ForwardPassDrawInfos[b].modelMatrix[3]);
-
-		float distA = glm::distance(posA, camPos);
-		float distB = glm::distance(posB, camPos);
-
-		return distA > distB; // Back-to-front for alpha blending
-		});
-
-	// Reorder draw commands and draw infos based on sorted indices
-	std::vector<DrawElementsIndirectCommand> sortedCommands;
-	std::vector<DrawInfo> sortedInfos;
-	sortedCommands.reserve(m_ForwardPassDrawCommands.size());
-	sortedInfos.reserve(m_ForwardPassDrawInfos.size());
-
-	for (size_t idx : indices) {
-		sortedCommands.push_back(m_ForwardPassDrawCommands[idx]);
-		sortedInfos.push_back(m_ForwardPassDrawInfos[idx]);
+	// ========== SORT TRANSPARENT DEFAULT STANDARD MESHES (NON-SKINNED) ==========
+	// These all use the same shader, so just sort by distance for proper blending
+	if (!m_ForwardTransparentDefaultStandardItems.empty()) {
+		// Sort back-to-front by distance for correct alpha blending
+		std::sort(m_ForwardTransparentDefaultStandardItems.begin(),
+		          m_ForwardTransparentDefaultStandardItems.end(),
+		          [&camPos](const DefaultShaderDrawItem& a, const DefaultShaderDrawItem& b) {
+			          glm::vec3 posA = glm::vec3(a.info.modelMatrix[3]);
+			          glm::vec3 posB = glm::vec3(b.info.modelMatrix[3]);
+			          float distA = glm::distance(posA, camPos);
+			          float distB = glm::distance(posB, camPos);
+			          return distA > distB; // Back-to-front
+		          });
 	}
 
-	m_ForwardPassDrawCommands = std::move(sortedCommands);
-	m_ForwardPassDrawInfos = std::move(sortedInfos);
+	// ========== SORT TRANSPARENT DEFAULT SKINNED MESHES ==========
+	// These all use the same shader, so just sort by distance for proper blending
+	if (!m_ForwardTransparentDefaultSkinnedItems.empty()) {
+		// Sort back-to-front by distance for correct alpha blending
+		std::sort(m_ForwardTransparentDefaultSkinnedItems.begin(),
+		          m_ForwardTransparentDefaultSkinnedItems.end(),
+		          [&camPos](const DefaultShaderDrawItem& a, const DefaultShaderDrawItem& b) {
+			          glm::vec3 posA = glm::vec3(a.info.modelMatrix[3]);
+			          glm::vec3 posB = glm::vec3(b.info.modelMatrix[3]);
+			          float distA = glm::distance(posA, camPos);
+			          float distB = glm::distance(posB, camPos);
+			          return distA > distB; // Back-to-front
+		          });
+	}
+
+	// ========== SORT TRANSPARENT CUSTOM STANDARD MESHES (NON-SKINNED) ==========
+	if (!m_ForwardTransparentCustomStandardItems.empty()) {
+		if (fullRebuild) {
+			// FULL REBUILD: Sort by SHADER first (batching), then by DISTANCE within each shader group
+			std::sort(m_ForwardTransparentCustomStandardItems.begin(),
+			          m_ForwardTransparentCustomStandardItems.end(),
+			          [&camPos](const CustomShaderDrawItem& a, const CustomShaderDrawItem& b) {
+				          // Primary sort: Shader pointer (creates batches)
+				          if (a.shader.get() != b.shader.get()) {
+					          return a.shader.get() < b.shader.get();
+				          }
+
+				          // Secondary sort: Distance back-to-front within each shader group
+				          glm::vec3 posA = glm::vec3(a.info.modelMatrix[3]);
+				          glm::vec3 posB = glm::vec3(b.info.modelMatrix[3]);
+				          float distA = glm::distance(posA, camPos);
+				          float distB = glm::distance(posB, camPos);
+				          return distA > distB; // Back-to-front
+			          });
+		}
+		else {
+			// FAST REBUILD: Sort by DISTANCE only within each existing shader group
+			// Find shader group boundaries and sort each group independently
+			size_t groupStart = 0;
+			for (size_t i = 1; i <= m_ForwardTransparentCustomStandardItems.size(); ++i) {
+				// Check if we've reached a new shader or end of array
+				bool newGroup = (i == m_ForwardTransparentCustomStandardItems.size()) ||
+				                (m_ForwardTransparentCustomStandardItems[i].shader.get() !=
+				                 m_ForwardTransparentCustomStandardItems[groupStart].shader.get());
+
+				if (newGroup) {
+					// Sort this shader group by distance
+					std::sort(m_ForwardTransparentCustomStandardItems.begin() + groupStart,
+					          m_ForwardTransparentCustomStandardItems.begin() + i,
+					          [&camPos](const CustomShaderDrawItem& a, const CustomShaderDrawItem& b) {
+						          glm::vec3 posA = glm::vec3(a.info.modelMatrix[3]);
+						          glm::vec3 posB = glm::vec3(b.info.modelMatrix[3]);
+						          float distA = glm::distance(posA, camPos);
+						          float distB = glm::distance(posB, camPos);
+						          return distA > distB; // Back-to-front
+					          });
+					groupStart = i;
+				}
+			}
+		}
+	}
+
+	// ========== SORT TRANSPARENT CUSTOM SKINNED MESHES ==========
+	if (!m_ForwardTransparentCustomSkinnedItems.empty()) {
+		if (fullRebuild) {
+			// FULL REBUILD: Sort by SHADER first (batching), then by DISTANCE within each shader group
+			std::sort(m_ForwardTransparentCustomSkinnedItems.begin(),
+			          m_ForwardTransparentCustomSkinnedItems.end(),
+			          [&camPos](const CustomShaderDrawItem& a, const CustomShaderDrawItem& b) {
+				          // Primary sort: Shader pointer (creates batches)
+				          if (a.shader.get() != b.shader.get()) {
+					          return a.shader.get() < b.shader.get();
+				          }
+
+				          // Secondary sort: Distance back-to-front within each shader group
+				          glm::vec3 posA = glm::vec3(a.info.modelMatrix[3]);
+				          glm::vec3 posB = glm::vec3(b.info.modelMatrix[3]);
+				          float distA = glm::distance(posA, camPos);
+				          float distB = glm::distance(posB, camPos);
+				          return distA > distB; // Back-to-front
+			          });
+		}
+		else {
+			// FAST REBUILD: Sort by DISTANCE only within each existing shader group
+			// Find shader group boundaries and sort each group independently
+			size_t groupStart = 0;
+			for (size_t i = 1; i <= m_ForwardTransparentCustomSkinnedItems.size(); ++i) {
+				// Check if we've reached a new shader or end of array
+				bool newGroup = (i == m_ForwardTransparentCustomSkinnedItems.size()) ||
+				                (m_ForwardTransparentCustomSkinnedItems[i].shader.get() !=
+				                 m_ForwardTransparentCustomSkinnedItems[groupStart].shader.get());
+
+				if (newGroup) {
+					// Sort this shader group by distance
+					std::sort(m_ForwardTransparentCustomSkinnedItems.begin() + groupStart,
+					          m_ForwardTransparentCustomSkinnedItems.begin() + i,
+					          [&camPos](const CustomShaderDrawItem& a, const CustomShaderDrawItem& b) {
+						          glm::vec3 posA = glm::vec3(a.info.modelMatrix[3]);
+						          glm::vec3 posB = glm::vec3(b.info.modelMatrix[3]);
+						          float distA = glm::distance(posA, camPos);
+						          float distB = glm::distance(posB, camPos);
+						          return distA > distB; // Back-to-front
+					          });
+					groupStart = i;
+				}
+			}
+		}
+	}
+}
+
+/**
+ * @brief Renders opaque objects with custom shaders before the transparent pass.
+ * @param view View matrix.
+ * @param projection Projection matrix.
+ */
+void Renderer::RenderOpaqueCustomShaders(const Mtx44& view, const Mtx44& projection)
+{
+	// Skip if no opaque custom shader meshes uploaded to GPU
+	if (m_ForwardOpaqueCustomStandardUploadedCount == 0 && m_ForwardOpaqueCustomSkinnedUploadedCount == 0) {
+		return;
+	}
+
+	// Bind the post-process buffer where the opaque scene is being rendered
+	if (!m_PostProcessBuffer) {
+		EE_CORE_ERROR("Post-process buffer not initialized for opaque custom shader pass!");
+		return;
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, m_PostProcessBuffer->FBO);
+	glViewport(0, 0, m_PostProcessBuffer->width, m_PostProcessBuffer->height);
+
+	// Render states for opaque custom shaders
+	glDisable(GL_BLEND);              // NO alpha blending
+	glEnable(GL_DEPTH_TEST);          // Enable depth testing
+	glDepthFunc(GL_LEQUAL);           // Use LEQUAL to match geometry pass
+	glDepthMask(GL_FALSE);            // DON'T write depth (depth pre-pass already wrote it)
+	glEnable(GL_CULL_FACE);           // Enable face culling
+	glCullFace(GL_BACK);
+
+	// ========== RENDER OPAQUE CUSTOM STANDARD MESHES (NON-SKINNED) ==========
+	if (m_ForwardOpaqueCustomStandardUploadedCount > 0) {
+		GLuint standardVAO = m_MeshManager.GetStandardVAO();
+		// Check that VAO and GPU buffers are valid before binding
+		if (standardVAO != 0 && m_ForwardOpaqueCustomStandardInfoBuffer != 0 && m_ForwardOpaqueCustomStandardCmdBuffer != 0) {
+			glBindVertexArray(standardVAO);
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_ForwardOpaqueCustomStandardInfoBuffer);
+			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardOpaqueCustomStandardCmdBuffer);
+
+			// Batch draws by shader
+			size_t batchStart = 0;
+			std::shared_ptr<graphics::Shader> currentShader = m_ForwardOpaqueCustomStandardItems[0].shader;
+
+			for (size_t i = 0; i <= m_ForwardOpaqueCustomStandardUploadedCount; ++i) {
+				// Check if we've reached end or shader changed
+				bool shaderChanged = (i < m_ForwardOpaqueCustomStandardUploadedCount && m_ForwardOpaqueCustomStandardItems[i].shader != currentShader);
+				bool isEnd = (i == m_ForwardOpaqueCustomStandardUploadedCount);
+
+				if (shaderChanged || isEnd) {
+					// Bind shader
+					std::shared_ptr<graphics::Shader> shaderToBind = currentShader;
+					if (shaderToBind && shaderToBind->IsValid()) {
+						shaderToBind->Bind();
+						shaderToBind->SetUniformMatrix4fv("view", &view.m2[0][0]);
+						shaderToBind->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
+						shaderToBind->SetUniform1ui("baseDrawID", static_cast<uint32_t>(batchStart));
+						shaderToBind->SetUniform1f("u_Time", m_ElapsedTime);
+
+						// Execute multi-draw for this batch
+						size_t batchSize = i - batchStart;
+						size_t byteOffset = batchStart * sizeof(DrawElementsIndirectCommand);
+						glMultiDrawElementsIndirect(
+							GL_TRIANGLES,
+							GL_UNSIGNED_INT,
+							reinterpret_cast<const void*>(byteOffset),
+							static_cast<GLsizei>(batchSize),
+							0
+						);
+					}
+
+					// Start new batch
+					if (i < m_ForwardOpaqueCustomStandardUploadedCount) {
+						batchStart = i;
+						currentShader = m_ForwardOpaqueCustomStandardItems[i].shader;
+					}
+				}
+			}
+
+			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
+			glBindVertexArray(0);
+		}
+	}
+
+	// ========== RENDER OPAQUE CUSTOM SKINNED MESHES ==========
+	if (m_ForwardOpaqueCustomSkinnedUploadedCount > 0) {
+		GLuint skinnedVAO = m_MeshManager.GetSkinnedVAO();
+		// Check that VAO and GPU buffers are valid before binding
+		if (skinnedVAO != 0 && m_ForwardOpaqueCustomSkinnedInfoBuffer != 0 && m_ForwardOpaqueCustomSkinnedCmdBuffer != 0) {
+			glBindVertexArray(skinnedVAO);
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_ForwardOpaqueCustomSkinnedInfoBuffer);
+			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardOpaqueCustomSkinnedCmdBuffer);
+
+			// Batch draws by shader
+			size_t batchStart = 0;
+			std::shared_ptr<graphics::Shader> currentShader = m_ForwardOpaqueCustomSkinnedItems[0].shader;
+
+			for (size_t i = 0; i <= m_ForwardOpaqueCustomSkinnedUploadedCount; ++i) {
+				// Check if we've reached end or shader changed
+				bool shaderChanged = (i < m_ForwardOpaqueCustomSkinnedUploadedCount && m_ForwardOpaqueCustomSkinnedItems[i].shader != currentShader);
+				bool isEnd = (i == m_ForwardOpaqueCustomSkinnedUploadedCount);
+
+				if (shaderChanged || isEnd) {
+					// Bind shader
+					std::shared_ptr<graphics::Shader> shaderToBind = currentShader;
+					if (shaderToBind && shaderToBind->IsValid()) {
+						shaderToBind->Bind();
+						shaderToBind->SetUniformMatrix4fv("view", &view.m2[0][0]);
+						shaderToBind->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
+						shaderToBind->SetUniform1ui("baseDrawID", static_cast<uint32_t>(batchStart));
+						shaderToBind->SetUniform1f("u_Time", m_ElapsedTime);
+
+						// Execute multi-draw for this batch
+						size_t batchSize = i - batchStart;
+						size_t byteOffset = batchStart * sizeof(DrawElementsIndirectCommand);
+						glMultiDrawElementsIndirect(
+							GL_TRIANGLES,
+							GL_UNSIGNED_INT,
+							reinterpret_cast<const void*>(byteOffset),
+							static_cast<GLsizei>(batchSize),
+							0
+						);
+					}
+
+					// Start new batch
+					if (i < m_ForwardOpaqueCustomSkinnedUploadedCount) {
+						batchStart = i;
+						currentShader = m_ForwardOpaqueCustomSkinnedItems[i].shader;
+					}
+				}
+			}
+
+			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
+			glBindVertexArray(0);
+		}
+	}
+
+	// Unbind shader to prevent interference with subsequent passes
+	// NOTE: SSBOs and indirect buffer remain bound - they're managed by each render pass
+	glUseProgram(0);
+	glBindVertexArray(0);
+}
+
+/**
+ * @brief Renders transparent objects with custom shaders.
+ * @param view View matrix.
+ * @param projection Projection matrix.
+ */
+void Renderer::RenderTransparentCustomShaders(const Mtx44& view, const Mtx44& projection)
+{
+	// Skip if no transparent custom shader meshes uploaded to GPU
+	if (m_ForwardTransparentCustomStandardUploadedCount == 0 && m_ForwardTransparentCustomSkinnedUploadedCount == 0) {
+		return;
+	}
+
+	// GL state is already set up by RenderForwardPass (blending, depth, etc.)
+	// Buffers were already uploaded in CompileDrawData - just bind and draw
+
+	// ========== RENDER TRANSPARENT CUSTOM STANDARD MESHES (NON-SKINNED) ==========
+	if (m_ForwardTransparentCustomStandardUploadedCount > 0 && m_MeshManager.GetStandardVAO() != 0
+		&& m_ForwardTransparentCustomStandardInfoBuffer != 0 && m_ForwardTransparentCustomStandardCmdBuffer != 0) {
+		glBindVertexArray(m_MeshManager.GetStandardVAO());
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_ForwardTransparentCustomStandardInfoBuffer);
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardTransparentCustomStandardCmdBuffer);
+
+		// Batch draws by shader (each unique shader gets its own draw call)
+		size_t batchStart = 0;
+		std::shared_ptr<graphics::Shader> currentShader = m_ForwardTransparentCustomStandardItems[0].shader;
+
+		for (size_t i = 0; i <= m_ForwardTransparentCustomStandardUploadedCount; ++i) {
+			// Check if we've reached end or shader changed
+			bool shaderChanged = (i < m_ForwardTransparentCustomStandardUploadedCount && m_ForwardTransparentCustomStandardItems[i].shader != currentShader);
+			bool isEnd = (i == m_ForwardTransparentCustomStandardUploadedCount);
+
+			if (shaderChanged || isEnd) {
+				// Bind shader
+				std::shared_ptr<graphics::Shader> shaderToBind = currentShader;
+				if (shaderToBind && shaderToBind->IsValid()) {
+					shaderToBind->Bind();
+					shaderToBind->SetUniformMatrix4fv("view", &view.m2[0][0]);
+					shaderToBind->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
+					shaderToBind->SetUniform1ui("baseDrawID", static_cast<uint32_t>(batchStart));
+					shaderToBind->SetUniform1f("u_Time", m_ElapsedTime);
+
+					// Execute multi-draw for this batch
+					size_t batchSize = i - batchStart;
+					size_t byteOffset = batchStart * sizeof(DrawElementsIndirectCommand);
+					glMultiDrawElementsIndirect(
+						GL_TRIANGLES,
+						GL_UNSIGNED_INT,
+						reinterpret_cast<const void*>(byteOffset),
+						static_cast<GLsizei>(batchSize),
+						0
+					);
+				}
+
+				// Start new batch
+				if (i < m_ForwardTransparentCustomStandardUploadedCount) {
+					batchStart = i;
+					currentShader = m_ForwardTransparentCustomStandardItems[i].shader;
+				}
+			}
+		}
+
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
+		glBindVertexArray(0);
+	}
+
+	// ========== RENDER TRANSPARENT CUSTOM SKINNED MESHES ==========
+	if (m_ForwardTransparentCustomSkinnedUploadedCount > 0 && m_MeshManager.GetSkinnedVAO() != 0
+		&& m_ForwardTransparentCustomSkinnedInfoBuffer != 0 && m_ForwardTransparentCustomSkinnedCmdBuffer != 0) {
+		glBindVertexArray(m_MeshManager.GetSkinnedVAO());
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_ForwardTransparentCustomSkinnedInfoBuffer);
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardTransparentCustomSkinnedCmdBuffer);
+
+		// Batch draws by shader
+		size_t batchStart = 0;
+		std::shared_ptr<graphics::Shader> currentShader = m_ForwardTransparentCustomSkinnedItems[0].shader;
+
+		for (size_t i = 0; i <= m_ForwardTransparentCustomSkinnedUploadedCount; ++i) {
+			// Check if we've reached end or shader changed
+			bool shaderChanged = (i < m_ForwardTransparentCustomSkinnedUploadedCount && m_ForwardTransparentCustomSkinnedItems[i].shader != currentShader);
+			bool isEnd = (i == m_ForwardTransparentCustomSkinnedUploadedCount);
+
+			if (shaderChanged || isEnd) {
+				// Bind shader
+				std::shared_ptr<graphics::Shader> shaderToBind = currentShader;
+				if (shaderToBind && shaderToBind->IsValid()) {
+					shaderToBind->Bind();
+					shaderToBind->SetUniformMatrix4fv("view", &view.m2[0][0]);
+					shaderToBind->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
+					shaderToBind->SetUniform1ui("baseDrawID", static_cast<uint32_t>(batchStart));
+					shaderToBind->SetUniform1f("u_Time", m_ElapsedTime);
+
+					// Execute multi-draw for this batch
+					size_t batchSize = i - batchStart;
+					size_t byteOffset = batchStart * sizeof(DrawElementsIndirectCommand);
+					glMultiDrawElementsIndirect(
+						GL_TRIANGLES,
+						GL_UNSIGNED_INT,
+						reinterpret_cast<const void*>(byteOffset),
+						static_cast<GLsizei>(batchSize),
+						0
+					);
+				}
+
+				// Start new batch
+				if (i < m_ForwardTransparentCustomSkinnedUploadedCount) {
+					batchStart = i;
+					currentShader = m_ForwardTransparentCustomSkinnedItems[i].shader;
+				}
+			}
+		}
+
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
+		glBindVertexArray(0);
+	}
+
+	// Unbind shader to prevent interference with subsequent standard transparent rendering
+	glUseProgram(0);
+	glBindVertexArray(0);
 }
 
 /**
@@ -3007,94 +4969,137 @@ void Renderer::SortTransparentObjects(const Vec3& cameraPos)
  */
 void Renderer::RenderForwardPass(const Mtx44& view, const Mtx44& projection)
 {
-	if (m_ForwardPassDrawCommands.empty()) {
+	// This function handles the COMPLETE forward rendering pipeline:
+	// 1. Opaque custom shaders (with depth writing)
+	// 2. Transparent custom shaders (with blending, no depth write)
+	// 3. Transparent standard (with blending, no depth write, using m_ForwardShader)
+
+	bool hasOpaqueCustom = !m_ForwardOpaqueCustomStandardItems.empty() || !m_ForwardOpaqueCustomSkinnedItems.empty();
+	bool hasTransparentCustom = !m_ForwardTransparentCustomStandardItems.empty() || !m_ForwardTransparentCustomSkinnedItems.empty();
+	bool hasTransparentStandard = !m_ForwardTransparentDefaultStandardItems.empty() || !m_ForwardTransparentDefaultSkinnedItems.empty();
+
+	// Skip if nothing to render
+	if (!hasOpaqueCustom && !hasTransparentCustom && !hasTransparentStandard) {
 		return;
 	}
 
-	// Bind the post-process buffer where the opaque scene was rendered
+	// Validate post-process buffer
 	if (!m_PostProcessBuffer) {
-		EE_CORE_ERROR("Post-process buffer not initialized for transparent pass!");
+		EE_CORE_ERROR("Post-process buffer not initialized for forward pass!");
 		return;
 	}
 
-	glBindFramebuffer(GL_FRAMEBUFFER, m_PostProcessBuffer->FBO);
-	glViewport(0, 0, m_PostProcessBuffer->width, m_PostProcessBuffer->height);
-
-	// Enable alpha blending for transparency
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glBlendEquation(GL_FUNC_ADD);
-
-	// Enable depth testing but disable depth writing
-	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LEQUAL);
-	glDepthMask(GL_FALSE); // Don't write to depth buffer
-
-	// Disable face culling for transparent objects (they might be viewed from inside)
-	glDisable(GL_CULL_FACE);
-
-	// Bind forward shader
-	if (!m_ForwardShader || !m_ForwardShader->IsValid()) {
-		EE_CORE_ERROR("Forward shader not initialized!");
-		glDepthMask(GL_TRUE);
-		glEnable(GL_CULL_FACE);
-		glDisable(GL_BLEND);
-		return;
+	// ========== STEP 1: RENDER OPAQUE CUSTOM SHADERS ==========
+	// These render with depth writing ENABLED (before transparent objects)
+	if (hasOpaqueCustom) {
+		RenderOpaqueCustomShaders(view, projection);
 	}
 
-	m_ForwardShader->Bind();
+	// ========== STEP 2: RENDER TRANSPARENT CUSTOM SHADERS ==========
+	// These use their own custom fragment shaders (e.g., volumetric orbs) with blending
+	if (hasTransparentCustom) {
+		// Set up GL state for transparent rendering
+		glBindFramebuffer(GL_FRAMEBUFFER, m_PostProcessBuffer->FBO);
+		glViewport(0, 0, m_PostProcessBuffer->width, m_PostProcessBuffer->height);
 
-	// Set view and projection uniforms
-	m_ForwardShader->SetUniformMatrix4fv("view", &view.m2[0][0]);
-	m_ForwardShader->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glBlendEquation(GL_FUNC_ADD);
 
-	// Upload forward pass draw commands to GPU
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_MeshManager.m_DrawCommandsSSBO);
-	size_t commandsBufferSize = m_ForwardPassDrawCommands.size() * sizeof(DrawElementsIndirectCommand);
-	glBufferData(GL_SHADER_STORAGE_BUFFER, commandsBufferSize, m_ForwardPassDrawCommands.data(), GL_DYNAMIC_DRAW);
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_LEQUAL);
+		glDepthMask(GL_FALSE); // Don't write to depth buffer
 
-	// Upload forward pass draw infos to persistent mapped buffer after geometry pass data
-	size_t drawInfoOffset = m_StandardDrawCommands.size() + m_SkinnedDrawCommands.size();
-	m_MeshManager.m_PersistentDrawInfoBuffer.WriteDrawInfos(m_ForwardPassDrawInfos, drawInfoOffset);
+		glDisable(GL_CULL_FACE);
 
-	// Set baseDrawID = offset so gl_DrawID in shader accesses correct DrawInfo indices
-	m_ForwardShader->SetUniform1ui("baseDrawID", static_cast<uint32_t>(drawInfoOffset));
+		RenderTransparentCustomShaders(view, projection);
+	}
 
-	// Determine which VAO to use (check if any meshes are skinned)
-	bool hasSkinned = false;
-	for (const auto& info : m_ForwardPassDrawInfos) {
-		if (info.flags & 1) {
-			hasSkinned = true;
-			break;
+	// ========== STEP 3: RENDER TRANSPARENT STANDARD ==========
+	// These use the standard forward shader (m_ForwardShader) with blending
+	if (hasTransparentStandard) {
+		// Set up GL state for transparent rendering (in case we skipped custom)
+		glBindFramebuffer(GL_FRAMEBUFFER, m_PostProcessBuffer->FBO);
+		glViewport(0, 0, m_PostProcessBuffer->width, m_PostProcessBuffer->height);
+
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glBlendEquation(GL_FUNC_ADD);
+
+		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_LEQUAL);
+		glDepthMask(GL_FALSE);
+
+		glDisable(GL_CULL_FACE);
+		if (!m_ForwardShader || !m_ForwardShader->IsValid()) {
+			EE_CORE_ERROR("Forward shader not initialized!");
+			glDepthMask(GL_TRUE);
+			glEnable(GL_CULL_FACE);
+			glDisable(GL_BLEND);
+			return;
+		}
+
+		// Bind default forward shader
+		m_ForwardShader->Bind();
+
+		// ========== RENDER TRANSPARENT STANDARD MESHES (NON-SKINNED) ==========
+		if (!m_ForwardTransparentDefaultStandardItems.empty()) {
+			GLuint standardVAO = m_MeshManager.GetStandardVAO();
+			if (standardVAO != 0) {
+				glBindVertexArray(standardVAO);
+				glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_MeshManager.m_ForwardStandardDrawInfoBuffer.GetBufferID());
+				glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_MeshManager.m_ForwardStandardDrawCommandBuffer.GetBufferID());
+
+				// Set uniforms for standard forward shader
+				m_ForwardShader->SetUniformMatrix4fv("view", &view.m2[0][0]);
+				m_ForwardShader->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
+				m_ForwardShader->SetUniform1ui("baseDrawID", 0);
+				m_ForwardShader->SetUniform1f("u_Time", m_ElapsedTime);
+
+				// Execute multi-draw for all standard transparent commands
+				glMultiDrawElementsIndirect(
+					GL_TRIANGLES,
+					GL_UNSIGNED_INT,
+					nullptr,
+					static_cast<GLsizei>(m_ForwardTransparentDefaultStandardItems.size()),
+					0
+				);
+
+				GPUProfiler::TrackDrawCall(m_ForwardPassDrawCommandsVertexCount, m_ForwardPassDrawCommandsIndexCount);
+				glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
+				glBindVertexArray(0);
+			}
+		}
+
+		// ========== RENDER TRANSPARENT STANDARD SKINNED MESHES ==========
+		if (!m_ForwardTransparentDefaultSkinnedItems.empty()) {
+			GLuint skinnedVAO = m_MeshManager.GetSkinnedVAO();
+			if (skinnedVAO != 0) {
+				glBindVertexArray(skinnedVAO);
+				glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_MeshManager.m_ForwardSkinnedDrawInfoBuffer.GetBufferID());
+				glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_MeshManager.m_ForwardSkinnedDrawCommandBuffer.GetBufferID());
+
+				// Set uniforms for standard forward shader
+				m_ForwardShader->SetUniformMatrix4fv("view", &view.m2[0][0]);
+				m_ForwardShader->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
+				m_ForwardShader->SetUniform1ui("baseDrawID", 0);
+				m_ForwardShader->SetUniform1f("u_Time", m_ElapsedTime);
+
+				// Execute multi-draw for all standard transparent skinned commands
+				glMultiDrawElementsIndirect(
+					GL_TRIANGLES,
+					GL_UNSIGNED_INT,
+					nullptr,
+					static_cast<GLsizei>(m_ForwardTransparentDefaultSkinnedItems.size()),
+					0
+				);
+
+				GPUProfiler::TrackDrawCall(m_ForwardPassDrawCommandsVertexCount, m_ForwardPassDrawCommandsIndexCount);
+				glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
+				glBindVertexArray(0);
+			}
 		}
 	}
-
-	// For now, use StandardVAO for all (TODO: separate skinned/standard batches)
-	GLuint vaoToUse = hasSkinned ? m_MeshManager.GetSkinnedVAO() : m_MeshManager.GetStandardVAO();
-	if (vaoToUse == 0) {
-		EE_CORE_ERROR("VAO not initialized for forward pass!");
-		glDepthMask(GL_TRUE);
-		glEnable(GL_CULL_FACE);
-		glDisable(GL_BLEND);
-		return;
-	}
-
-	// Bind VAO and issue draw call
-	glBindVertexArray(vaoToUse);
-	glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_MeshManager.m_DrawCommandsSSBO);
-	glMultiDrawElementsIndirect(
-		GL_TRIANGLES,
-		GL_UNSIGNED_INT,
-		nullptr,
-		static_cast<GLsizei>(m_ForwardPassDrawCommands.size()),
-		0
-	);
-	GPUProfiler::TrackDrawCall(m_ForwardPassDrawCommandsVertexCount, m_ForwardPassDrawCommandsIndexCount);
-
-	// Unbind
-	glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
-	glBindVertexArray(0);
 
 	// Restore render state
 	glDepthMask(GL_TRUE);
@@ -3231,7 +5236,6 @@ bool Renderer::CreateShadowMapArray()
 	if (m_ShadowMapFBO == 0)
 		glGenFramebuffers(1, &m_ShadowMapFBO);
 
-	// FIXED: Attach entire texture array for layered rendering
 	glBindFramebuffer(GL_FRAMEBUFFER, m_ShadowMapFBO);
 	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_ShadowMapArray, 0);
 
@@ -3605,8 +5609,8 @@ void Renderer::CalculateLightMatrix(const editor::EditorCamera& editorCamera)
 				}
 
 				// Add margins to prevent clipping
-				const float xyMargin = 0.1f;
-				const float zMargin = 0.5f;
+				const float xyMargin = 0.01f;
+				const float zMargin = 0.01f;
 				lsMin -= glm::vec3(xyMargin, xyMargin, zMargin);
 				lsMax += glm::vec3(xyMargin, xyMargin, zMargin);
 
@@ -3689,86 +5693,42 @@ void Renderer::RenderShadowMapInstanced()
 	// Setup render state for depth-only pass
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
+	glDepthMask(GL_TRUE); // Ensure depth writes are enabled (may be disabled from geometry pass)
 
 	// Bind shadow shader
 	m_ShadowMapInstancedShader->Bind();
 
-	// Gather shadow casting lights (both directional and spotlight)
-	const auto& ecs = Ermine::ECS::GetInstance();
-	std::vector<int> activeShadowLights;
-	int lightIndex = 0;
-
-	for (EntityID entity : m_LightSystem->m_Entities)
-	{
-		if (!ecs.HasComponent<Light>(entity)) continue;
-		auto& light = ecs.GetComponent<Light>(entity);
-		// Include both directional and spotlight shadow casters
-		if ((light.type == LightType::DIRECTIONAL || light.type == LightType::SPOT) && light.castsShadows) {
-			activeShadowLights.push_back(lightIndex);
-		}
-		lightIndex++;
-	}
-
-	// Use only shadowcaster lights for instancing
-	unsigned int maxLights = std::min(static_cast<unsigned int>(activeShadowLights.size()), static_cast<unsigned int>(MAX_LIGHTS));
-	int totalInstances = maxLights * NUM_CASCADES;
-
+	// Use cached active shadow lights (calculated in UpdateLightsUBO)
 	// Set up per-frame uniforms
-	for (unsigned int i = 0; i < maxLights; ++i) {
+	for (unsigned int i = 0; i < m_ActiveShadowLights.size(); ++i) {
 		std::string uniformName = "u_ActiveShadowLights[" + std::to_string(i) + "]";
-		m_ShadowMapInstancedShader->SetUniform1i(uniformName, activeShadowLights[i]);
+		m_ShadowMapInstancedShader->SetUniform1i(uniformName, m_ActiveShadowLights[i]);
 	}
 
-	// Prepare draw commands with instanceCount = total shadow layers
-	size_t totalDrawCount = m_StandardDrawCommands.size() + m_SkinnedDrawCommands.size();
-	std::vector<DrawElementsIndirectCommand> shadowCommands;
-	shadowCommands.reserve(totalDrawCount);
-
-	// Copy standard commands and set instanceCount
-	for (const auto& cmd : m_StandardDrawCommands) {
-		shadowCommands.push_back(cmd);
-		shadowCommands.back().instanceCount = totalInstances;
-	}
-
-	// Copy skinned commands and set instanceCount
-	for (const auto& cmd : m_SkinnedDrawCommands) {
-		shadowCommands.push_back(cmd);
-		shadowCommands.back().instanceCount = totalInstances;
-	}
-
-	// Upload combined commands to SSBO
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_MeshManager.m_DrawCommandsSSBO);
-	glBufferData(GL_SHADER_STORAGE_BUFFER, totalDrawCount * sizeof(DrawElementsIndirectCommand),
-		shadowCommands.data(), GL_DYNAMIC_DRAW);
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-
-	// Upload DrawInfo data (reuse from geometry pass - already contains both standard and skinned)
-	m_MeshManager.m_PersistentDrawInfoBuffer.WriteDrawInfos(m_StandardDrawInfos, 0);
-	m_MeshManager.m_PersistentDrawInfoBuffer.WriteDrawInfos(m_SkinnedDrawInfos, m_StandardDrawCommands.size());
-
-	// Render standard meshes using indirect rendering with shadow VAO
-	// Shadow VAO includes pre-skinned position attribute (location 6) for hardware vertex fetching
-	if (!m_StandardDrawCommands.empty() && m_MeshManager.GetStandardShadowVAO() != 0) {
+	// ========== RENDER STANDARD SHADOW MESHES ==========
+	// Shadow buffers contain ALL geometry with castsShadows=true with correct instanceCount
+	// Written in CompileDrawData() - just bind and draw
+	if (!m_ShadowStandardCommands.empty() && m_MeshManager.GetStandardShadowVAO() != 0) {
 		m_ShadowMapInstancedShader->SetUniform1ui("baseDrawID", 0);
 		glBindVertexArray(m_MeshManager.GetStandardShadowVAO());
-		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_MeshManager.m_DrawCommandsSSBO);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_MeshManager.m_ShadowStandardDrawInfoBuffer.GetBufferID());
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_MeshManager.m_ShadowStandardDrawCommandBuffer.GetBufferID());
 		glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_INT, nullptr,
-			static_cast<GLsizei>(m_StandardDrawCommands.size()), 0);
-		GPUProfiler::TrackDrawCall(m_StandardDrawCommandsVertexCount, m_StandardDrawCommandsIndexCount);
+			static_cast<GLsizei>(m_ShadowStandardCommands.size()), 0);
+		GPUProfiler::TrackDrawCall(m_GeometryStandardVertexCount, m_GeometryStandardIndexCount);
 		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
 		glBindVertexArray(0);
 	}
 
-	// Render skinned meshes using indirect rendering with shadow VAO
-	// Shadow VAO includes pre-skinned position attribute (location 6) for hardware vertex fetching
-	if (!m_SkinnedDrawCommands.empty() && m_MeshManager.GetSkinnedShadowVAO() != 0) {
-		m_ShadowMapInstancedShader->SetUniform1ui("baseDrawID", static_cast<uint32_t>(m_StandardDrawCommands.size()));
+	// ========== RENDER SKINNED SHADOW MESHES ==========
+	if (!m_ShadowSkinnedCommands.empty() && m_MeshManager.GetSkinnedShadowVAO() != 0) {
+		m_ShadowMapInstancedShader->SetUniform1ui("baseDrawID", 0);
 		glBindVertexArray(m_MeshManager.GetSkinnedShadowVAO());
-		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_MeshManager.m_DrawCommandsSSBO);
-		size_t offset = m_StandardDrawCommands.size() * sizeof(DrawElementsIndirectCommand);
-		glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_INT, reinterpret_cast<const void*>(offset),
-			static_cast<GLsizei>(m_SkinnedDrawCommands.size()), 0);
-		GPUProfiler::TrackDrawCall(m_SkinnedDrawCommandsVertexCount, m_SkinnedDrawCommandsIndexCount);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_MeshManager.m_ShadowSkinnedDrawInfoBuffer.GetBufferID());
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_MeshManager.m_ShadowSkinnedDrawCommandBuffer.GetBufferID());
+		glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_INT, nullptr,
+			static_cast<GLsizei>(m_ShadowSkinnedCommands.size()), 0);
+		GPUProfiler::TrackDrawCall(m_GeometrySkinnedVertexCount, m_GeometrySkinnedIndexCount);
 		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
 		glBindVertexArray(0);
 	}
@@ -3789,10 +5749,6 @@ void Renderer::RenderShadowPass()
 {
 	// Calculate directional light matrices
 	CalculateLightMatrix(editor::EditorCamera::GetInstance());
-
-	// Memory barrier to ensure pre-skinned positions from geometry pass are visible to shadow pass
-	// The geometry pass writes to preSkinnedPositions buffer (binding 8) which shadow pass can read
-	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
 	// Render shadows using instanced rendering
 	RenderShadowMapInstanced();
@@ -3891,7 +5847,7 @@ void Renderer::ResizePickingBuffer(const int& width, const int& height)
 void Renderer::RenderPickingPass(const Mtx44& view, const Mtx44& projection)
 {
 #if defined(EE_EDITOR)
-	if (!m_PickingBuffer || !m_PickingShader)
+	if (!m_PickingBuffer || !m_PickingIndirectShader || !m_PickingIndirectSkinnedShader)
 		return;
 
 	// 1) Prime depth: copy scene depth into picking FBO (source depends on path)
@@ -3913,7 +5869,7 @@ void Renderer::RenderPickingPass(const Mtx44& view, const Mtx44& projection)
 		0, 0, m_PickingBuffer->width, m_PickingBuffer->height,
 		GL_DEPTH_BUFFER_BIT, GL_NEAREST);
 
-	// 2) Render IDs
+	// 2) Render IDs using indirect rendering
 	glBindFramebuffer(GL_FRAMEBUFFER, m_PickingBuffer->FBO);
 	glViewport(0, 0, m_PickingBuffer->width, m_PickingBuffer->height);
 
@@ -3923,12 +5879,10 @@ void Renderer::RenderPickingPass(const Mtx44& view, const Mtx44& projection)
 
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
-	glDepthMask(GL_FALSE);
+	glDepthMask(GL_TRUE); // Enable depth writes so first fragment wins (prevents double-picking)
 	glDisable(GL_BLEND);
 
-	m_PickingShader->Bind();
-
-	// Use same transforms as other passes
+	// Build view-projection matrix
 	glm::mat4 glmView = glm::mat4(
 		view.m00, view.m01, view.m02, view.m03,
 		view.m10, view.m11, view.m12, view.m13,
@@ -3941,71 +5895,175 @@ void Renderer::RenderPickingPass(const Mtx44& view, const Mtx44& projection)
 		projection.m20, projection.m21, projection.m22, projection.m23,
 		projection.m30, projection.m31, projection.m32, projection.m33
 	);
-
 	glm::mat4 vp = glmProjection * glmView;
-	// Shader uses u_LightViewProj + model, same as shadow/depth style
-	m_PickingShader->SetUniformMatrix4fv("u_LightViewProj", vp);
 
-	auto& ecs = ECS::GetInstance();
-
-	// Model pipeline
-	for (EntityID entity : m_Entities)
+	// ========== RENDER STANDARD MESHES (ALL visible geometry - opaque + transparent) ==========
+	if (!m_PickingStandardCommands.empty())
 	{
-		if (!ecs.HasComponent<ModelComponent>(entity))
-			continue;
+		m_PickingIndirectShader->Bind();
+		m_PickingIndirectShader->SetUniformMatrix4fv("u_ViewProjection", vp);
 
-		auto& modelComp = ecs.GetComponent<ModelComponent>(entity);
-		if (!modelComp.m_model) continue;
-
-		auto& trans = ecs.GetComponent<Transform>(entity);
-		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
-		glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
-		rotQuat = glm::normalize(rotQuat);
-		model *= glm::mat4_cast(rotQuat);
-		model = glm::scale(model, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
-
-		// Encode as (EntityID + 1) so 0 stays as "no hit"
-		uint32_t encoded = static_cast<uint32_t>(entity) + 1u;
-		m_PickingShader->SetUniform1ui("u_EntityId", encoded);
-
-		const auto& meshes = modelComp.m_model->GetMeshes();
-		for (const auto& mesh : meshes)
+		GLuint standardVAO = m_MeshManager.GetStandardVAO();
+		if (standardVAO != 0)
 		{
-			if (!mesh.vao || !mesh.ibo) continue;
-			glm::mat4 modelMat = model * mesh.localTransform;
-			m_PickingShader->SetUniformMatrix4fv("model", modelMat);
-			Draw(mesh.vao, mesh.ibo);
+			glBindVertexArray(standardVAO);
+
+			// Render all standard meshes from picking buffer (opaque + transparent)
+			m_PickingIndirectShader->SetUniform1ui("baseDrawID", 0);
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_MeshManager.m_PickingStandardDrawInfoBuffer.GetBufferID());
+			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_MeshManager.m_PickingStandardDrawCommandBuffer.GetBufferID());
+			glMultiDrawElementsIndirect(
+				GL_TRIANGLES,
+				GL_UNSIGNED_INT,
+				nullptr,
+				static_cast<GLsizei>(m_PickingStandardCommands.size()),
+				0
+			);
+			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
+
+			glBindVertexArray(0);
 		}
+
+		m_PickingIndirectShader->Unbind();
 	}
 
-	// Mesh + material pipeline
-	for (EntityID entity : m_Entities)
+	// ========== RENDER SKINNED MESHES (ALL visible geometry - opaque + transparent) ==========
+	if (!m_PickingSkinnedCommands.empty())
 	{
-		if (!(ecs.HasComponent<Mesh>(entity) && ecs.HasComponent<Ermine::Material>(entity)))
-			continue;
+		m_PickingIndirectSkinnedShader->Bind();
+		m_PickingIndirectSkinnedShader->SetUniformMatrix4fv("u_ViewProjection", vp);
 
-		auto& mesh = ecs.GetComponent<Mesh>(entity);
-		if (!mesh.vertex_array || !mesh.index_buffer) continue;
+		GLuint skinnedVAO = m_MeshManager.GetSkinnedVAO();
+		if (skinnedVAO != 0)
+		{
+			glBindVertexArray(skinnedVAO);
 
-		auto& trans = ecs.GetComponent<Transform>(entity);
-		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
-		glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
-		rotQuat = glm::normalize(rotQuat);
-		model *= glm::mat4_cast(rotQuat);
-		model = glm::scale(model, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
+			// Render all skinned meshes from picking buffer (opaque + transparent)
+			m_PickingIndirectSkinnedShader->SetUniform1ui("baseDrawID", 0);
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_MeshManager.m_PickingSkinnedDrawInfoBuffer.GetBufferID());
+			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_MeshManager.m_PickingSkinnedDrawCommandBuffer.GetBufferID());
+			glMultiDrawElementsIndirect(
+				GL_TRIANGLES,
+				GL_UNSIGNED_INT,
+				nullptr,
+				static_cast<GLsizei>(m_PickingSkinnedCommands.size()),
+				0
+			);
+			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
 
-		uint32_t encoded = static_cast<uint32_t>(entity) + 1u;
-		m_PickingShader->SetUniform1ui("u_EntityId", encoded);
-		m_PickingShader->SetUniformMatrix4fv("model", model);
+			glBindVertexArray(0);
+		}
 
-		Draw(mesh.vertex_array, mesh.index_buffer);
+		m_PickingIndirectSkinnedShader->Unbind();
+	}
+
+	// ========== RENDER OPAQUE CUSTOM SHADER MESHES ==========
+	if (m_ForwardOpaqueCustomStandardUploadedCount > 0)
+	{
+		m_PickingIndirectShader->Bind();
+		m_PickingIndirectShader->SetUniformMatrix4fv("u_ViewProjection", vp);
+
+		GLuint standardVAO = m_MeshManager.GetStandardVAO();
+		if (standardVAO != 0)
+		{
+			glBindVertexArray(standardVAO);
+			m_PickingIndirectShader->SetUniform1ui("baseDrawID", 0);
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_ForwardOpaqueCustomStandardInfoBuffer);
+			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardOpaqueCustomStandardCmdBuffer);
+			glMultiDrawElementsIndirect(
+				GL_TRIANGLES,
+				GL_UNSIGNED_INT,
+				nullptr,
+				static_cast<GLsizei>(m_ForwardOpaqueCustomStandardUploadedCount),
+				0
+			);
+			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
+			glBindVertexArray(0);
+		}
+
+		m_PickingIndirectShader->Unbind();
+	}
+
+	if (m_ForwardOpaqueCustomSkinnedUploadedCount > 0)
+	{
+		m_PickingIndirectSkinnedShader->Bind();
+		m_PickingIndirectSkinnedShader->SetUniformMatrix4fv("u_ViewProjection", vp);
+
+		GLuint skinnedVAO = m_MeshManager.GetSkinnedVAO();
+		if (skinnedVAO != 0)
+		{
+			glBindVertexArray(skinnedVAO);
+			m_PickingIndirectSkinnedShader->SetUniform1ui("baseDrawID", 0);
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_ForwardOpaqueCustomSkinnedInfoBuffer);
+			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardOpaqueCustomSkinnedCmdBuffer);
+			glMultiDrawElementsIndirect(
+				GL_TRIANGLES,
+				GL_UNSIGNED_INT,
+				nullptr,
+				static_cast<GLsizei>(m_ForwardOpaqueCustomSkinnedUploadedCount),
+				0
+			);
+			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
+			glBindVertexArray(0);
+		}
+
+		m_PickingIndirectSkinnedShader->Unbind();
+	}
+
+	// ========== RENDER TRANSPARENT CUSTOM SHADER MESHES ==========
+	if (m_ForwardTransparentCustomStandardUploadedCount > 0)
+	{
+		m_PickingIndirectShader->Bind();
+		m_PickingIndirectShader->SetUniformMatrix4fv("u_ViewProjection", vp);
+
+		GLuint standardVAO = m_MeshManager.GetStandardVAO();
+		if (standardVAO != 0)
+		{
+			glBindVertexArray(standardVAO);
+			m_PickingIndirectShader->SetUniform1ui("baseDrawID", 0);
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_ForwardTransparentCustomStandardInfoBuffer);
+			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardTransparentCustomStandardCmdBuffer);
+			glMultiDrawElementsIndirect(
+				GL_TRIANGLES,
+				GL_UNSIGNED_INT,
+				nullptr,
+				static_cast<GLsizei>(m_ForwardTransparentCustomStandardUploadedCount),
+				0
+			);
+			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
+			glBindVertexArray(0);
+		}
+
+		m_PickingIndirectShader->Unbind();
+	}
+
+	if (m_ForwardTransparentCustomSkinnedUploadedCount > 0)
+	{
+		m_PickingIndirectSkinnedShader->Bind();
+		m_PickingIndirectSkinnedShader->SetUniformMatrix4fv("u_ViewProjection", vp);
+
+		GLuint skinnedVAO = m_MeshManager.GetSkinnedVAO();
+		if (skinnedVAO != 0)
+		{
+			glBindVertexArray(skinnedVAO);
+			m_PickingIndirectSkinnedShader->SetUniform1ui("baseDrawID", 0);
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_ForwardTransparentCustomSkinnedInfoBuffer);
+			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardTransparentCustomSkinnedCmdBuffer);
+			glMultiDrawElementsIndirect(
+				GL_TRIANGLES,
+				GL_UNSIGNED_INT,
+				nullptr,
+				static_cast<GLsizei>(m_ForwardTransparentCustomSkinnedUploadedCount),
+				0
+			);
+			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
+			glBindVertexArray(0);
+		}
+
+		m_PickingIndirectSkinnedShader->Unbind();
 	}
 
 	// Restore
-	m_PickingShader->Unbind();
-	glDepthMask(GL_TRUE);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	glCheckError();
@@ -4118,6 +6176,9 @@ void Renderer::CheckMaterialUpdates()
 		{
 			// Material has been modified, trigger recompilation
 			m_MaterialsDirty = true;
+
+			// Invalidate draw data cache since material property changes affect routing
+			m_DrawDataNeedsFullRebuild = true;
 			return;
 		}
 	}
@@ -4232,25 +6293,33 @@ void Renderer::UploadMaterialsToGPU()
 
 	// Calculate total size needed
 	const size_t materialSize = sizeof(graphics::MaterialSSBO);
-	const size_t totalSize = materialSize * m_CompiledMaterials.size();
+	const size_t requiredSize = m_CompiledMaterials.size();
+	const size_t uploadBytes = requiredSize * materialSize;
 
-	// Reallocate buffer to fit all materials
-	glBufferData(GL_SHADER_STORAGE_BUFFER, totalSize, nullptr, GL_DYNAMIC_DRAW);
-
-	// Check for allocation errors
-	GLenum error = glGetError();
-	if (error != GL_NO_ERROR)
+	// Only reallocate if size changed (prevents both orphaning and stale data)
+	if (requiredSize != m_MaterialSSBOCapacity)
 	{
-		EE_CORE_ERROR("Failed to allocate MaterialSSBO: {0} bytes, error: {1}",
-			totalSize, error);
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-		return;
+		// Size changed - must reallocate to prevent stale data
+		glBufferData(GL_SHADER_STORAGE_BUFFER, uploadBytes, m_CompiledMaterials.data(), GL_DYNAMIC_DRAW);
+		m_MaterialSSBOCapacity = requiredSize;
+
+		// Check for allocation errors
+		GLenum error = glGetError();
+		if (error != GL_NO_ERROR)
+		{
+			EE_CORE_ERROR("Failed to allocate MaterialSSBO: {0} bytes, error: {1}",
+				uploadBytes, error);
+			glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+			return;
+		}
+	}
+	else
+	{
+		// Size unchanged - safe to use glBufferSubData (avoids orphaning)
+		glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, uploadBytes, m_CompiledMaterials.data());
 	}
 
-	// Upload all materials at once
-	glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, totalSize, m_CompiledMaterials.data());
-
-	error = glGetError();
+	GLenum error = glGetError();
 	if (error != GL_NO_ERROR)
 	{
 		EE_CORE_ERROR("Failed to upload materials to GPU, error: {0}", error);
@@ -4258,7 +6327,7 @@ void Renderer::UploadMaterialsToGPU()
 	else
 	{
 		EE_CORE_INFO("Uploaded {0} materials ({1} bytes) to GPU",
-			m_CompiledMaterials.size(), totalSize);
+			m_CompiledMaterials.size(), uploadBytes);
 	}
 
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
@@ -4370,9 +6439,32 @@ void Renderer::BuildTextureArray()
 		textureHandles.push_back(handle);
 	}
 
-	// Upload texture handles to SSBO
-	const size_t totalSize = textureHandles.size() * sizeof(GLuint64);
-	glBufferData(GL_SHADER_STORAGE_BUFFER, totalSize, textureHandles.data(), GL_STATIC_DRAW);
+	// Upload texture handles to SSBO - only reallocate if size changed
+	const size_t requiredSize = textureHandles.size();
+	const size_t uploadBytes = requiredSize * sizeof(GLuint64);
+
+	// Only reallocate if size changed (prevents both orphaning and stale data)
+	if (requiredSize != m_TextureArraySSBOCapacity)
+	{
+		// Size changed - must reallocate to prevent stale data
+		glBufferData(GL_SHADER_STORAGE_BUFFER, uploadBytes, textureHandles.data(), GL_DYNAMIC_DRAW);
+		m_TextureArraySSBOCapacity = requiredSize;
+
+		GLenum error = glGetError();
+		if (error != GL_NO_ERROR)
+		{
+			EE_CORE_ERROR("Failed to allocate texture array SSBO: {0} bytes, error: {1}",
+				uploadBytes, error);
+			glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+			m_TextureArrayDirty = false;
+			return;
+		}
+	}
+	else
+	{
+		// Size unchanged - safe to use glBufferSubData (avoids orphaning)
+		glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, uploadBytes, textureHandles.data());
+	}
 
 	GLenum error = glGetError();
 	if (error != GL_NO_ERROR)
@@ -4382,7 +6474,7 @@ void Renderer::BuildTextureArray()
 	else
 	{
 		EE_CORE_INFO("Uploaded {0} texture handles ({1} bytes) to GPU",
-			textureHandles.size(), totalSize);
+			textureHandles.size(), uploadBytes);
 	}
 
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
