@@ -25,6 +25,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <ostreamwrapper.h>
 #include <istreamwrapper.h>
 #include "GeometryFactory.h"
+#include "Physics.h"
 
 
 using namespace rapidjson;
@@ -520,6 +521,7 @@ void LoadScene(const std::string& sceneName)
     filesystem::path scenePath = filesystem::path("Resources") / "Scenes" / (sceneName + ".scene");
 
     LoadSceneFromFile(Ermine::ECS::GetInstance(), scenePath);
+    Ermine::ECS::GetInstance().GetSystem<Ermine::Physics>()->UpdatePhysicList();
 }
 
 Ermine::EntityID LoadPrefabFromFile(Ermine::ECS& ecs, const std::filesystem::path& path)
@@ -687,6 +689,8 @@ Ermine::EntityID LoadPrefabFromFile(Ermine::ECS& ecs, const std::filesystem::pat
     // finalize
     ecs.ResyncAllSignaturesFromStorage();
     Ermine::ResolveHierarchyGuids(ecs);
+
+    ecs.GetSystem<Ermine::Physics>()->UpdatePhysicList();
 
     // Return detected root; fallback to first created if none marked as root
     if (rootEntity != 0) return rootEntity;
