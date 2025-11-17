@@ -603,6 +603,11 @@ namespace Ermine
 
 			bodySettings.mAllowedDOFs = dofs;
 
+			if (p.posX && p.posY && p.posZ && p.motionType == JPH::EMotionType::Dynamic)
+			{
+				p.motionType = JPH::EMotionType::Static;
+			}
+
 			// Create body
 			JPH::Body* body = bodyInterface.CreateBody(bodySettings);
 			if (!body) continue;
