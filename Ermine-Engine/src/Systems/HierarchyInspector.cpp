@@ -71,6 +71,36 @@ namespace Ermine::editor {
 		// color, intensity, castsShadows, type are always shown
 		return true;
 	}
+
+	// Scan for available fragment shaders in the Resources/Shaders directory
+	static std::vector<std::string> ScanFragmentShaders() {
+		std::vector<std::string> shaders;
+		const std::string shaderDir = "../Resources/Shaders/";
+
+		try {
+			namespace fs = std::filesystem;
+			if (fs::exists(shaderDir) && fs::is_directory(shaderDir)) {
+				for (const auto& entry : fs::directory_iterator(shaderDir)) {
+					if (entry.is_regular_file()) {
+						std::string filename = entry.path().filename().string();
+						// Look for fragment shaders (contains "fragment" or ends with .frag)
+						if (filename.find("fragment") != std::string::npos ||
+						    filename.find(".frag") != std::string::npos) {
+							// Store the full path relative to Resources/Shaders/
+							shaders.push_back(shaderDir + filename);
+						}
+					}
+				}
+			}
+		}
+		catch (const std::exception& e) {
+			EE_CORE_WARN("Failed to scan fragment shaders: {0}", e.what());
+		}
+
+		// Sort alphabetically for consistent UI
+		std::sort(shaders.begin(), shaders.end());
+		return shaders;
+	}
 	template<typename T>
 	static bool ComponentHeaderWithRemove(const char* headerLabel, EntityID entity,
 		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_DefaultOpen)
@@ -349,14 +379,13 @@ namespace Ermine::editor {
 			if (guid == xproperty::settings::var_type<Ermine::Vec3>::guid_v) {
 				Ermine::Vec3 v = p.m_Value.get<Ermine::Vec3>();
 
-				// FIXED: Check if widget is being actively edited OR if value changed
 				if (DrawVec3XYZ(label.c_str(), &v.x) || ImGui::IsItemActive()) {
 					p.m_Value.set<Ermine::Vec3>({ v.x, v.y, v.z });
 					xproperty::sprop::setProperty(err, t, p, ctx);
 
 					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
-					// CRITICAL: Mark entity dirty so hierarchy system updates immediately
 					hierarchySystem->MarkDirty(entity);
+					ECS::GetInstance().GetSystem<graphics::Renderer>()->MarkDrawDataForRebuild();
 				}
 			}
 			// Quaternion (rotation) – shown/edited as Euler degrees
@@ -370,14 +399,13 @@ namespace Ermine::editor {
 				const bool isRotation = (label == "Rotation");
 				const char* rotLabel = isRotation ? "Rotation (Degrees)" : label.c_str();
 
-				// FIXED: Check if widget is being actively edited OR if value changed
 				if (DrawVec3XYZ(rotLabel, &eulerDeg.x, 1.0f, 0.0f, -360.0f, 360.0f) || ImGui::IsItemActive()) {
 					p.m_Value.set<Ermine::Quaternion>(FromEulerDegrees(eulerDeg));
 					xproperty::sprop::setProperty(err, t, p, ctx);
 
 					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
-					// CRITICAL: Mark entity dirty so hierarchy system updates immediately
 					hierarchySystem->MarkDirty(entity);
+					ECS::GetInstance().GetSystem<graphics::Renderer>()->MarkDrawDataForRebuild();
 				}
 			}
 
@@ -401,6 +429,8 @@ namespace Ermine::editor {
 			mesh.kind = static_cast<MeshKind>(currentKind);
 			if (mesh.kind == MeshKind::Primitive)
 				mesh.RebuildPrimitive();
+			// Mark renderer for full rebuild due to mesh kind change
+			ECS::GetInstance().GetSystem<graphics::Renderer>()->MarkDrawDataForRebuild();
 		}
 
 		// Primitive controls
@@ -415,6 +445,8 @@ namespace Ermine::editor {
 			if (ImGui::Combo("Primitive Type", &currentType, types, IM_ARRAYSIZE(types))) {
 				mesh.primitive.type = types[currentType];
 				mesh.RebuildPrimitive();
+				// Mark renderer for full rebuild due to primitive type change
+				ECS::GetInstance().GetSystem<graphics::Renderer>()->MarkDrawDataForRebuild();
 			}
 
 			// Size control - different for different primitives
@@ -431,6 +463,7 @@ namespace Ermine::editor {
 					mesh.primitive.size = { diameter, height, diameter };
 					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
 					mesh.RebuildPrimitive();
+					ECS::GetInstance().GetSystem<graphics::Renderer>()->MarkDrawDataForRebuild();
 				}
 			}
 			else if (mesh.primitive.type == "Sphere") {
@@ -440,6 +473,7 @@ namespace Ermine::editor {
 					mesh.primitive.size = { radius, radius, radius };
 					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
 					mesh.RebuildPrimitive();
+					ECS::GetInstance().GetSystem<graphics::Renderer>()->MarkDrawDataForRebuild();
 				}
 			}
 			else {
@@ -449,6 +483,7 @@ namespace Ermine::editor {
 					mesh.primitive.size = { size[0], size[1], size[2] };
 					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
 					mesh.RebuildPrimitive();
+					ECS::GetInstance().GetSystem<graphics::Renderer>()->MarkDrawDataForRebuild();
 				}
 			}
 		}
@@ -459,6 +494,8 @@ namespace Ermine::editor {
 			strcpy_s(buf, mesh.asset.meshName.c_str());
 			if (ImGui::InputText("Mesh Name", buf, sizeof(buf))) {
 				mesh.asset.meshName = buf;
+				// Mark renderer for full rebuild due to mesh asset change
+				ECS::GetInstance().GetSystem<graphics::Renderer>()->MarkDrawDataForRebuild();
 				// TODO: trigger asset reload here
 			}
 		}
@@ -486,9 +523,32 @@ namespace Ermine::editor {
 				gm->SetFloat("materialRoughness", 0.5f);          gm->SetFloat("material.roughness", 0.5f);
 				gm->SetVec3("materialEmissive", { 0.f,0.f,0.f });   gm->SetVec3("material.emissive", { 0.f,0.f,0.f });
 				gm->SetFloat("materialEmissiveIntensity", 1.0f);  gm->SetFloat("material.emissiveIntensity", 1.0f);
+				gm->SetBool("materialCastsShadows", true);
 			}
 
 			return;
+		}
+
+		// --- Load custom shader if path is set (for scene deserialization) ---
+		if (!matComp.customFragmentShader.empty() &&
+		    (!gm->GetShader() || gm->GetShader() == nullptr)) {
+			auto& assetManager = AssetManager::GetInstance();
+			auto customShader = assetManager.LoadShader(
+				"../Resources/Shaders/vertex.glsl",
+				matComp.customFragmentShader
+			);
+			if (customShader && customShader->IsValid()) {
+				gm->SetShader(customShader);
+				EE_CORE_INFO("Restored custom fragment shader from scene: {0}", matComp.customFragmentShader);
+			} else {
+				EE_CORE_WARN("Failed to restore custom fragment shader: {0}", matComp.customFragmentShader);
+			}
+		}
+
+		// --- Sync cacheCastsShadows to graphics::Material (for scene deserialization) ---
+		// Ensure the material's castsShadows parameter matches the serialized component value
+		if (auto param = gm->GetParameter("materialCastsShadows"); !param || param->boolValue != matComp.cacheCastsShadows) {
+			gm->SetBool("materialCastsShadows", matComp.cacheCastsShadows);
 		}
 
 		// --- Safe param accessors (no nullptrs, with fallbacks) ---
@@ -644,6 +704,90 @@ namespace Ermine::editor {
 			}
 		}
 
+		ImGui::SeparatorText("Rendering");
+
+		// --- Casts Shadows ---
+		{
+			bool castsShadows = getBool("materialCastsShadows", nullptr, matComp.cacheCastsShadows);
+			if (ImGui::Checkbox("Casts Shadows", &castsShadows)) {
+				gm->SetBool("materialCastsShadows", castsShadows);
+				matComp.cacheCastsShadows = castsShadows;  // Update component cache for serialization
+			}
+		}
+
+		// --- Custom Fragment Shader ---
+		{
+			static std::vector<std::string> fragmentShaders; // Cache the shader list
+			static bool shadersScanned = false;
+
+			// Scan shaders once per session
+			if (!shadersScanned) {
+				fragmentShaders = ScanFragmentShaders();
+				shadersScanned = true;
+			}
+
+			// Get current selection from component
+			std::string currentShader = matComp.customFragmentShader;
+
+			// Build display name for combo box
+			std::string displayName = currentShader.empty() ? "None (Standard PBR)" : currentShader;
+			if (!currentShader.empty()) {
+				// Show just the filename for cleaner UI
+				size_t lastSlash = currentShader.find_last_of('/');
+				if (lastSlash != std::string::npos) {
+					displayName = currentShader.substr(lastSlash + 1);
+				}
+			}
+
+			if (ImGui::BeginCombo("Fragment Shader", displayName.c_str())) {
+				// First option: None (use standard PBR)
+				bool isSelected = currentShader.empty();
+				if (ImGui::Selectable("None (Standard PBR)", isSelected)) {
+					matComp.customFragmentShader = "";
+					// Clear custom shader from material
+					gm->SetShader(nullptr); // Will revert to standard in renderer
+				}
+				if (isSelected) {
+					ImGui::SetItemDefaultFocus();
+				}
+
+				// List all available fragment shaders
+				for (const auto& shaderPath : fragmentShaders) {
+					// Extract filename for display
+					std::string filename = shaderPath;
+					size_t lastSlash = shaderPath.find_last_of('/');
+					if (lastSlash != std::string::npos) {
+						filename = shaderPath.substr(lastSlash + 1);
+					}
+
+					bool isShaderSelected = (currentShader == shaderPath);
+					if (ImGui::Selectable(filename.c_str(), isShaderSelected)) {
+						// Update component cache
+						matComp.customFragmentShader = shaderPath;
+
+						// Load and set the custom shader on the material
+						auto& assetManager = AssetManager::GetInstance();
+						// Use standard forward pass vertex shader with custom fragment
+						auto customShader = assetManager.LoadShader(
+							"../Resources/Shaders/vertex.glsl",
+							shaderPath
+						);
+						if (customShader && customShader->IsValid()) {
+							gm->SetShader(customShader);
+							EE_CORE_INFO("Loaded custom fragment shader: {0}", shaderPath);
+						} else {
+							EE_CORE_WARN("Failed to load custom fragment shader: {0}", shaderPath);
+						}
+					}
+					if (isShaderSelected) {
+						ImGui::SetItemDefaultFocus();
+					}
+				}
+
+				ImGui::EndCombo();
+			}
+		}
+
 		ImGui::SeparatorText("Maps");
 
 		// --- Presence flags (use same keys as (de)serialize) ---
@@ -688,6 +832,9 @@ namespace Ermine::editor {
 			gm->SetUVScale(Vec2(1.0f, 1.0f));
 			gm->SetUVOffset(Vec2(0.0f, 0.0f));
 
+			gm->SetBool("materialCastsShadows", true);
+			matComp.cacheCastsShadows = true;
+
 			gm->SetBool("materialHasAlbedoMap", false);
 			setBoolBoth("materialHasNormalMap", "material.hasNormalMap", false);
 			gm->SetBool("materialHasRoughnessMap", false);
@@ -714,9 +861,9 @@ namespace Ermine::editor {
 
 		SlotRow rows[] = {
 			{ "Albedo",    "materialAlbedoMap",   "material.albedoMap",   "materialHasAlbedoMap",    nullptr },
-			{ "Normal",    "material.normalMap",  nullptr,                 "materialHasNormalMap",   "material.hasNormalMap" },
+			{ "Normal",    "materialNormalMap",   "material.normalMap",    "materialHasNormalMap",   "material.hasNormalMap" },
 			{ "Roughness", "materialRoughnessMap",nullptr,                 "materialHasRoughnessMap",nullptr },
-			{ "Metallic",  "material.metallicMap",nullptr,                 "materialHasMetallicMap", nullptr },
+			{ "Metallic",  "materialMetallicMap", "material.metallicMap",  "materialHasMetallicMap", nullptr },
 			{ "AO",        "materialAoMap",       nullptr,                 "materialHasAoMap",       nullptr },
 			{ "Emissive",  "materialEmissiveMap", nullptr,                 "materialHasEmissiveMap", nullptr },
 		};
@@ -1682,6 +1829,9 @@ namespace Ermine::editor {
 							else
 								animComp.m_animator.reset();
 						}
+
+						// Mark renderer for full rebuild due to model load
+						ECS::GetInstance().GetSystem<graphics::Renderer>()->MarkDrawDataForRebuild();
 					}
 				}
 				if (isSelected) ImGui::SetItemDefaultFocus();
@@ -1888,6 +2038,9 @@ namespace Ermine::editor {
 						else
 							animComp.m_animator.reset();
 					}
+
+					// Mark renderer for full rebuild due to model reload
+					ecs.GetSystem<graphics::Renderer>()->MarkDrawDataForRebuild();
 
 					EE_CORE_INFO("Model reloaded successfully");
 				}

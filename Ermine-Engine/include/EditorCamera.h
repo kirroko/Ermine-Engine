@@ -38,7 +38,7 @@ namespace Ermine::editor
 		 * @param near The near plane
 		 * @param far The far plane
 		 */
-        EditorCamera(float fov = 45.0f, float aspectRatio = 16.0f/9.0f, float near = 0.1f, float far = 1000.0f);
+        EditorCamera(float fov = 45.0f, float aspectRatio = 16.0f/9.0f, float near = 0.1f, float far = 100.0f);
 
 		/**
 		 * @brief Update the camera
