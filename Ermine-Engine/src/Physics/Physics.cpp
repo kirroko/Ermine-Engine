@@ -526,7 +526,7 @@ namespace Ermine
 
 				JPH::RefConst<JPH::Shape> shapeRef;
 
-				if (p.motionType == JPH::EMotionType::Dynamic || p.motionType == JPH::EMotionType::Kinematic)
+				if (p.motionType == JPH::EMotionType::Dynamic || p.motionType == JPH::EMotionType::Kinematic || (!ecs.HasComponent<ModelComponent>(entity) && ecs.HasComponent<Mesh>(entity)))
 				{
 					// --- Dynamic mesh: convert to ConvexHullShape or CompoundShape ---
 					if (verts.size() < 4)
