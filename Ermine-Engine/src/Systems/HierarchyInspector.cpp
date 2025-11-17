@@ -220,6 +220,7 @@ namespace Ermine::editor {
 
 		if (ECS::GetInstance().HasComponent<PhysicComponent>(selected)) {
 			DrawPhysicsComponent(selected);
+			ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
 		}
 
 		if (ECS::GetInstance().HasComponent<AudioComponent>(selected)) {
