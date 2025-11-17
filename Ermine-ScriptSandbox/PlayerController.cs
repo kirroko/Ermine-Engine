@@ -1,5 +1,6 @@
-﻿using System;
-using ErmineEngine;
+﻿using ErmineEngine;
+using System;
+using System.Collections;
 
 public class PlayerController : MonoBehaviour
 {
@@ -56,6 +57,13 @@ public class PlayerController : MonoBehaviour
 
         lookInput = Input.mousePositionDelta;
 
+        // Jump
+        if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
+        {
+            velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+            isGrounded = false;
+        }
+
         HandleMovement();
         HandleLook();
         HandleCameraLerp();
@@ -105,9 +113,9 @@ public class PlayerController : MonoBehaviour
         // Move the character in world space using the computed horizontal velocity
         transform.Translate(horizontalVelocity * Time.deltaTime);
         Physics.SetPosition((ulong)gameObject.GetInstanceID(),transform.position);
-        
-        //velocity.y += gravity * Time.deltaTime;
-        //transform.Translate(velocity * Time.deltaTime);
+
+        velocity.y += gravity * Time.deltaTime;
+        transform.Translate(velocity * Time.deltaTime);
     }
 
     private void HandleLook()
@@ -128,5 +136,29 @@ public class PlayerController : MonoBehaviour
         Vector3 camPos = cam.position;
         camPos.y = Mathf.Lerp(camPos.y, targetY, Time.deltaTime * crouchLerpSpeed);
         cam.position = camPos;
+    }
+
+    void CheckGround(Collision col)
+    {
+        if (col.transform.position.y < transform.position.y - 0.1f)
+        {
+            isGrounded = true;
+        }
+    }
+
+    void OnCollisionEnter(Collision col)
+    {
+        CheckGround(col);
+    }
+
+    void OnCollisionStay(Collision col)
+    {
+        CheckGround(col);
+    }
+
+    void OnCollisionExit(Collision col)
+    {
+        // When losing contact, you are no longer grounded
+        isGrounded = false;
     }
 }
