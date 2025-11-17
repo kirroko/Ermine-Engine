@@ -50,6 +50,8 @@ out vec3 ViewPos;
 out vec3 Tangent;
 out vec3 Bitangent;
 flat out uint vMaterialIndex;
+flat out vec3 vModelCenter;  // Model center in world space (for volumetrics)
+flat out vec3 vCameraPos;    // Camera position in world space
 
 void main()
 {
@@ -142,4 +144,11 @@ void main()
 
     // Pass material index to fragment shader
     vMaterialIndex = drawInfo.materialIndex;
+
+    // Extract model center from model matrix (translation component) for volumetric shaders
+    vModelCenter = vec3(model[3][0], model[3][1], model[3][2]);
+
+    // Extract camera position from view matrix for volumetric shaders
+    mat3 viewRot = mat3(view);
+    vCameraPos = -transpose(viewRot) * view[3].xyz;
 }

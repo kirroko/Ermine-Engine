@@ -38,8 +38,8 @@ struct MaterialData {
 
     int shadingModel;               // 4 bytes (48-51)
     uint textureFlags;              // 4 bytes (52-55) - Packed bitfield for all texture flags
-    float _pad0;                    // 4 bytes (56-59)
-    float _pad1;                    // 4 bytes (60-63)
+    int castsShadows;               // 4 bytes (56-59) - Whether this material casts shadows
+    float _pad0;                    // 4 bytes (60-63)
 
     vec2 uvScale;                   // 8 bytes (64-71)
     vec2 uvOffset;                  // 8 bytes (72-79)
@@ -136,28 +136,28 @@ void main()
 
     // ========== BATCH TEXTURE SAMPLES (improves cache coherency) ==========
     // Sample all textures first to hide latency and improve texture cache usage
-    // Use bitwise AND to check flags
-    vec3 albedoSample = ((material.textureFlags & MAT_FLAG_ALBEDO_MAP) != 0u)
+    // Use bitwise AND to check flags AND validate texture indices
+    vec3 albedoSample = ((material.textureFlags & MAT_FLAG_ALBEDO_MAP) != 0u && material.albedoMapIndex >= 0)
         ? texture(sampler2D(textureHandles[material.albedoMapIndex]), transformedUV).rgb
         : vec3(1.0);
 
-    vec3 normalSample = ((material.textureFlags & MAT_FLAG_NORMAL_MAP) != 0u)
+    vec3 normalSample = ((material.textureFlags & MAT_FLAG_NORMAL_MAP) != 0u && material.normalMapIndex >= 0)
         ? texture(sampler2D(textureHandles[material.normalMapIndex]), transformedUV).rgb
         : vec3(0.5, 0.5, 1.0);
 
-    float roughnessSample = ((material.textureFlags & MAT_FLAG_ROUGHNESS_MAP) != 0u)
+    float roughnessSample = ((material.textureFlags & MAT_FLAG_ROUGHNESS_MAP) != 0u && material.roughnessMapIndex >= 0)
         ? texture(sampler2D(textureHandles[material.roughnessMapIndex]), transformedUV).r
         : 1.0;
 
-    float metallicSample = ((material.textureFlags & MAT_FLAG_METALLIC_MAP) != 0u)
+    float metallicSample = ((material.textureFlags & MAT_FLAG_METALLIC_MAP) != 0u && material.metallicMapIndex >= 0)
         ? texture(sampler2D(textureHandles[material.metallicMapIndex]), transformedUV).r
         : 1.0;
 
-    float aoSample = ((material.textureFlags & MAT_FLAG_AO_MAP) != 0u)
+    float aoSample = ((material.textureFlags & MAT_FLAG_AO_MAP) != 0u && material.aoMapIndex >= 0)
         ? texture(sampler2D(textureHandles[material.aoMapIndex]), transformedUV).r
         : 1.0;
 
-    vec3 emissiveSample = ((material.textureFlags & MAT_FLAG_EMISSIVE_MAP) != 0u)
+    vec3 emissiveSample = ((material.textureFlags & MAT_FLAG_EMISSIVE_MAP) != 0u && material.emissiveMapIndex >= 0)
         ? texture(sampler2D(textureHandles[material.emissiveMapIndex]), transformedUV).rgb
         : vec3(1.0);
 
@@ -167,7 +167,7 @@ void main()
 
     // Normal - optimized transformation
     vec3 finalNormal = ViewNormal;
-    if ((material.textureFlags & MAT_FLAG_NORMAL_MAP) != 0u) {
+    if ((material.textureFlags & MAT_FLAG_NORMAL_MAP) != 0u && material.normalMapIndex >= 0) {
         // Decode normal map using fma for efficiency
         vec3 tangentNormal = fma(normalSample, vec3(2.0), vec3(-1.0));
         tangentNormal.xy *= material.normalStrength;
