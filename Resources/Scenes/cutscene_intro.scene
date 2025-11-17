@@ -1,0 +1,148 @@
+{
+  "entities": [
+    {
+      "id": 1,
+      "components": {
+        "ObjectMetaData": {
+          "name": "CutsceneCamera",
+          "tag": "MainCamera",
+          "selfActive": true
+        },
+        "Transform": {
+          "position": [0.0, 0.0, 5.0],
+          "rotation": [0.0, 0.0, 0.0, 1.0],
+          "scale": [1.0, 1.0, 1.0]
+        },
+        "CameraComponent": {
+          "fov": 60.0,
+          "nearPlane": 0.1,
+          "farPlane": 1000.0,
+          "isActive": true
+        },
+        "HierarchyComponent": {},
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 2,
+      "components": {
+        "ObjectMetaData": {
+          "name": "CutsceneController",
+          "tag": "Controller",
+          "selfActive": true
+        },
+        "Transform": {
+          "position": [0.0, 0.0, 0.0],
+          "rotation": [0.0, 0.0, 0.0, 1.0],
+          "scale": [1.0, 1.0, 1.0]
+        },
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "className": "CutscenePlayer",
+              "enabled": true
+            }
+          ]
+        },
+        "HierarchyComponent": {},
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 3,
+      "components": {
+        "ObjectMetaData": {
+          "name": "Slide1",
+          "tag": "Cutscene",
+          "selfActive": true
+        },
+        "Transform": {
+          "position": [0.0, 0.0, 0.0],
+          "rotation": [0.0, 0.0, 0.0, 1.0],
+          "scale": [1.0, 1.0, 1.0]
+        },
+        "UIImageComponent": {
+          "imagePath": "../Resources/Textures/UI/cutscene1.png",
+          "fullscreen": true,
+          "position": [0.5, 0.5, 0.0],
+          "width": 1.0,
+          "height": 1.0,
+          "tintColor": [1.0, 1.0, 1.0],
+          "alpha": 1.0,
+          "maintainAspectRatio": true,
+          "caption": "Creation & Betrayal: Scientist invents glowing energy machine; shady boss takes over.",
+          "showCaption": true,
+          "captionColor": [1.0, 1.0, 1.0],
+          "captionFontSize": 24.0,
+          "captionPosition": [0.5, 0.1, 0.0]
+        },
+        "HierarchyComponent": {},
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 4,
+      "components": {
+        "ObjectMetaData": {
+          "name": "Slide2",
+          "tag": "Cutscene",
+          "selfActive": false
+        },
+        "Transform": {
+          "position": [0.0, 0.0, 0.0],
+          "rotation": [0.0, 0.0, 0.0, 1.0],
+          "scale": [1.0, 1.0, 1.0]
+        },
+        "UIImageComponent": {
+          "imagePath": "../Resources/Textures/UI/cutscene2.png",
+          "fullscreen": true,
+          "position": [0.5, 0.5, 0.0],
+          "width": 1.0,
+          "height": 1.0,
+          "tintColor": [1.0, 1.0, 1.0],
+          "alpha": 1.0,
+          "maintainAspectRatio": true,
+          "caption": "Horror Factory: Scientist, now a prisoner, sees his invention used to torture people in a vast, dark factory.",
+          "showCaption": true,
+          "captionColor": [1.0, 1.0, 1.0],
+          "captionFontSize": 24.0,
+          "captionPosition": [0.5, 0.1, 0.0]
+        },
+        "HierarchyComponent": {},
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 5,
+      "components": {
+        "ObjectMetaData": {
+          "name": "Slide3",
+          "tag": "Cutscene",
+          "selfActive": false
+        },
+        "Transform": {
+          "position": [0.0, 0.0, 0.0],
+          "rotation": [0.0, 0.0, 0.0, 1.0],
+          "scale": [1.0, 1.0, 1.0]
+        },
+        "UIImageComponent": {
+          "imagePath": "../Resources/Textures/UI/cutscene3.png",
+          "fullscreen": true,
+          "position": [0.5, 0.5, 0.0],
+          "width": 1.0,
+          "height": 1.0,
+          "tintColor": [1.0, 1.0, 1.0],
+          "alpha": 1.0,
+          "maintainAspectRatio": true,
+          "caption": "Revenge Awakens: Scientist grabs his old glowing syringe, eyes burning with determination, ready to fight back.",
+          "showCaption": true,
+          "captionColor": [1.0, 1.0, 1.0],
+          "captionFontSize": 24.0,
+          "captionPosition": [0.5, 0.1, 0.0]
+        },
+        "HierarchyComponent": {},
+        "GlobalTransform": {}
+      }
+    }
+  ]
+}

@@ -570,7 +570,7 @@ void Ermine::ViewPortGUI::Update()
 
 	EntityID selectedEntity{};
 	//selectedEntity = ref_Inspector->GetEntity();
-	selectedEntity = SceneManager::GetInstance().GetActiveScene()->GetSelectedEntity();
+	selectedEntity = SceneManager::GetInstance().EnsureActiveScene().GetSelectedEntity();
 
 	// Keyboard shortcuts for gizmo
 	static ImGuizmo::OPERATION gOperation = ImGuizmo::TRANSLATE;

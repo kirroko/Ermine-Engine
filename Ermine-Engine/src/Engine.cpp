@@ -260,6 +260,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	EE_AUTO_REGISTER_COMPONENT(ParticleEmitter, "ParticleEmitter")
 	EE_AUTO_REGISTER_COMPONENT(CameraComponent, "CameraComponent");
 	EE_AUTO_REGISTER_COMPONENT(UIComponent, "UIComponent");
+	EE_AUTO_REGISTER_COMPONENT(UIImageComponent, "UIImageComponent");
 
 	// NOTE : THESE ARE SPECIAL CASES DUE TO THE FACT THAT THEIR COMPONENTS ARE UNIQUE AND WOULDN'T WORK BY SHALLOW COPIED OR DEEP COPIED
 	// THE CLONING FUNCTIONALITY HAVE BEEN CONSIDERED INTO ECS ITSELF. UNSURE, ASK.
@@ -583,16 +584,10 @@ bool engine::Init(GLFWwindow* windowContext)
 		}
 	}
 
-	auto defaultScene = std::make_shared<Scene>("Main Scene");
-	editor::EditorGUI::SetActiveScene(defaultScene);
-	SceneManager::GetInstance().SetActiveScene(defaultScene);
-	EE_CORE_INFO("Created and set active scene: Main Scene");
-
-	// Create a test entity with UIComponent for HUD rendering
-	EntityID uiEntity = defaultScene->CreateEntity("HUD", false, false);  // No transform or hierarchy needed
-	UIComponent uiComp;  // Default values are already set in the struct
-	ECS::GetInstance().AddComponent<UIComponent>(uiEntity, uiComp);
-	EE_CORE_INFO("Created HUD entity with UIComponent");
+	// Load main menu scene on startup (scene-based approach)
+	EE_CORE_INFO("Loading main menu scene...");
+	SceneManager::GetInstance().OpenScene("../Resources/Scenes/mainmenu.scene");
+	EE_CORE_INFO("Main menu scene loaded");
 #else
 	// --- GAME BUILD: Create main menu scene dynamically ---
 	auto mainMenuScene = CreateMainMenuScene();

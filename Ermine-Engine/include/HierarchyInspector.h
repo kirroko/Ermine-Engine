@@ -160,6 +160,7 @@ namespace Ermine::editor {
         \param entity The entity to add components to
         */
         void DrawCameraComponent(EntityID entity);
+        void DrawUIImageComponent(EntityID entity);
 
         Scene* m_ActiveScene = nullptr;  ///< Pointer to the currently active scene
         bool m_IsVisible = true;         ///< Inspector panel visibility state

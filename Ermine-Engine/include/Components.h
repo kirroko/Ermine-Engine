@@ -3458,4 +3458,94 @@ namespace Ermine
 			xproperty::obj_member<"crosshairStyle", &UIComponent::crosshairStyle>
 		)
 	};
+
+	/*!***********************************************************************
+	\brief
+		UI Image Component for rendering fullscreen or positioned images.
+		Used for menus, cutscenes, splash screens, and UI backgrounds.
+	*************************************************************************/
+	struct UIImageComponent
+	{
+		std::string imagePath = "";           ///< Path to the image texture (PNG, JPG, DDS)
+		bool fullscreen = true;               ///< If true, renders fullscreen. If false, uses position/size
+		Ermine::Vec3 position = { 0.5f, 0.5f, 0.0f }; ///< Center position in normalized coordinates (0-1)
+		float width = 1.0f;                   ///< Width in normalized coordinates (0-1)
+		float height = 1.0f;                  ///< Height in normalized coordinates (0-1)
+		Ermine::Vec3 tintColor = { 1.0f, 1.0f, 1.0f }; ///< Color tint (1,1,1 = no tint)
+		float alpha = 1.0f;                   ///< Alpha transparency (0-1)
+		bool maintainAspectRatio = true;      ///< Preserve image aspect ratio
+
+		// Caption/Text overlay
+		std::string caption = "";             ///< Caption text to display
+		bool showCaption = false;             ///< If true, renders caption text
+		Ermine::Vec3 captionColor = { 1.0f, 1.0f, 1.0f }; ///< Caption text color
+		float captionFontSize = 24.0f;        ///< Caption font size
+		Ermine::Vec3 captionPosition = { 0.5f, 0.1f, 0.0f }; ///< Caption position (bottom center by default)
+
+		template<typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const
+		{
+			out.SetObject();
+			out.AddMember("imagePath", rapidjson::Value(imagePath.c_str(), alloc), alloc);
+			out.AddMember("fullscreen", fullscreen, alloc);
+			out.AddMember("position", Vec3ToJson(position, alloc), alloc);
+			out.AddMember("width", width, alloc);
+			out.AddMember("height", height, alloc);
+			out.AddMember("tintColor", Vec3ToJson(tintColor, alloc), alloc);
+			out.AddMember("alpha", alpha, alloc);
+			out.AddMember("maintainAspectRatio", maintainAspectRatio, alloc);
+			out.AddMember("caption", rapidjson::Value(caption.c_str(), alloc), alloc);
+			out.AddMember("showCaption", showCaption, alloc);
+			out.AddMember("captionColor", Vec3ToJson(captionColor, alloc), alloc);
+			out.AddMember("captionFontSize", captionFontSize, alloc);
+			out.AddMember("captionPosition", Vec3ToJson(captionPosition, alloc), alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in)
+		{
+			if (in.HasMember("imagePath") && in["imagePath"].IsString())
+				imagePath = in["imagePath"].GetString();
+			if (in.HasMember("fullscreen") && in["fullscreen"].IsBool())
+				fullscreen = in["fullscreen"].GetBool();
+			if (in.HasMember("position") && in["position"].IsArray())
+				position = JsonToVec3(in["position"]);
+			if (in.HasMember("width") && in["width"].IsNumber())
+				width = in["width"].GetFloat();
+			if (in.HasMember("height") && in["height"].IsNumber())
+				height = in["height"].GetFloat();
+			if (in.HasMember("tintColor") && in["tintColor"].IsArray())
+				tintColor = JsonToVec3(in["tintColor"]);
+			if (in.HasMember("alpha") && in["alpha"].IsNumber())
+				alpha = in["alpha"].GetFloat();
+			if (in.HasMember("maintainAspectRatio") && in["maintainAspectRatio"].IsBool())
+				maintainAspectRatio = in["maintainAspectRatio"].GetBool();
+			if (in.HasMember("caption") && in["caption"].IsString())
+				caption = in["caption"].GetString();
+			if (in.HasMember("showCaption") && in["showCaption"].IsBool())
+				showCaption = in["showCaption"].GetBool();
+			if (in.HasMember("captionColor") && in["captionColor"].IsArray())
+				captionColor = JsonToVec3(in["captionColor"]);
+			if (in.HasMember("captionFontSize") && in["captionFontSize"].IsNumber())
+				captionFontSize = in["captionFontSize"].GetFloat();
+			if (in.HasMember("captionPosition") && in["captionPosition"].IsArray())
+				captionPosition = JsonToVec3(in["captionPosition"]);
+		}
+
+		XPROPERTY_DEF(
+			"UIImageComponent", UIImageComponent,
+			xproperty::obj_member<"imagePath", &UIImageComponent::imagePath>,
+			xproperty::obj_member<"fullscreen", &UIImageComponent::fullscreen>,
+			xproperty::obj_member<"position", &UIImageComponent::position>,
+			xproperty::obj_member<"width", &UIImageComponent::width>,
+			xproperty::obj_member<"height", &UIImageComponent::height>,
+			xproperty::obj_member<"tintColor", &UIImageComponent::tintColor>,
+			xproperty::obj_member<"alpha", &UIImageComponent::alpha>,
+			xproperty::obj_member<"maintainAspectRatio", &UIImageComponent::maintainAspectRatio>,
+			xproperty::obj_member<"caption", &UIImageComponent::caption>,
+			xproperty::obj_member<"showCaption", &UIImageComponent::showCaption>,
+			xproperty::obj_member<"captionColor", &UIImageComponent::captionColor>,
+			xproperty::obj_member<"captionFontSize", &UIImageComponent::captionFontSize>,
+			xproperty::obj_member<"captionPosition", &UIImageComponent::captionPosition>
+		)
+	};
 } // namespace Ermine

@@ -1351,6 +1351,43 @@ namespace
 	}
 #pragma endregion
 
+#pragma region SceneManager ICalls
+	void icall_scenemanager_loadscene(MonoString* scenePath)
+	{
+		using namespace Ermine;
+		std::string path;
+		ToTempUTF8(scenePath, path);
+
+		if (!path.empty())
+		{
+			EE_CORE_INFO("SceneManager: Loading scene from script: {}", path);
+			SceneManager::GetInstance().OpenScene(path);
+		}
+		else
+		{
+			EE_CORE_ERROR("SceneManager: Scene path is empty!");
+		}
+	}
+#pragma endregion
+
+#pragma region Application ICalls
+	void icall_application_quit()
+	{
+		EE_CORE_INFO("Application: Quit requested from script");
+		// Note: In editor, this won't actually quit
+#if defined(EE_EDITOR)
+		EE_CORE_WARN("Application.Quit() called in editor - this only works in game builds");
+#else
+		// In game build, request window close
+		extern GLFWwindow* g_window; // Assume this is available globally
+		if (g_window)
+		{
+			glfwSetWindowShouldClose(g_window, GLFW_TRUE);
+		}
+#endif
+	}
+#pragma endregion
+
 #pragma region Object ICalls
 	MonoString* icall_object_get_name(MonoObject* thisObj)
 	{
@@ -2295,6 +2332,14 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	mono_add_internal_call("ErmineEngine.Debug::LogInternal", (const void*)icall_debug_log_info);
 	mono_add_internal_call("ErmineEngine.Debug::LogWarningInternal", (const void*)icall_debug_log_warning);
 	mono_add_internal_call("ErmineEngine.Debug::LogErrorInternal", (const void*)icall_debug_log_error);
+#pragma endregion
+
+#pragma region SceneManager ICalls
+	mono_add_internal_call("ErmineEngine.SceneManager::LoadSceneInternal", (const void*)icall_scenemanager_loadscene);
+#pragma endregion
+
+#pragma region Application ICalls
+	mono_add_internal_call("ErmineEngine.Application::QuitInternal", (const void*)icall_application_quit);
 #pragma endregion
 
 #pragma region Object ICalls

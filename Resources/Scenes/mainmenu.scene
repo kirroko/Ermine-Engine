@@ -1,0 +1,105 @@
+{
+  "entities": [
+    {
+      "id": 1,
+      "components": {
+        "ObjectMetaData": {
+          "name": "MainMenuCamera",
+          "tag": "MainCamera",
+          "selfActive": true
+        },
+        "Transform": {
+          "position": [0.0, 0.0, 5.0],
+          "rotation": [0.0, 0.0, 0.0, 1.0],
+          "scale": [1.0, 1.0, 1.0]
+        },
+        "CameraComponent": {
+          "fov": 60.0,
+          "nearPlane": 0.1,
+          "farPlane": 1000.0,
+          "isActive": true
+        },
+        "HierarchyComponent": {},
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 2,
+      "components": {
+        "ObjectMetaData": {
+          "name": "MenuController",
+          "tag": "Controller",
+          "selfActive": true
+        },
+        "Transform": {
+          "position": [0.0, 0.0, 0.0],
+          "rotation": [0.0, 0.0, 0.0, 1.0],
+          "scale": [1.0, 1.0, 1.0]
+        },
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "className": "MenuController",
+              "enabled": true
+            }
+          ]
+        },
+        "HierarchyComponent": {},
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 3,
+      "components": {
+        "ObjectMetaData": {
+          "name": "MenuInstructions",
+          "tag": "UI",
+          "selfActive": true
+        },
+        "Transform": {
+          "position": [0.0, 0.0, 0.0],
+          "rotation": [0.0, 0.0, 0.0, 1.0],
+          "scale": [1.0, 1.0, 1.0]
+        },
+        "UIComponent": {
+          "showHealthbar": false,
+          "showManaBar": false,
+          "showBookCounter": false,
+          "showSkills": true,
+          "showCrosshair": false,
+          "skillSlotSize": 0.12,
+          "skillSlotSpacing": 0.02,
+          "skillsPosition": [0.5, 0.5, 0.0],
+          "skills": [
+            {
+              "skillName": "PLAY",
+              "keyBinding": "SPACE / ENTER",
+              "description": "Start the game and watch intro cutscene",
+              "iconTexturePath": ""
+            },
+            {
+              "skillName": "QUIT",
+              "keyBinding": "Q / ESC",
+              "description": "Exit the application",
+              "iconTexturePath": ""
+            },
+            {
+              "skillName": "SKIP CUTSCENE",
+              "keyBinding": "L",
+              "description": "Jump directly to level (testing)",
+              "iconTexturePath": ""
+            },
+            {
+              "skillName": "",
+              "keyBinding": "",
+              "description": "",
+              "iconTexturePath": ""
+            }
+          ]
+        },
+        "HierarchyComponent": {},
+        "GlobalTransform": {}
+      }
+    }
+  ]
+}

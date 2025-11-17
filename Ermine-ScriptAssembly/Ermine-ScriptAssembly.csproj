@@ -71,6 +71,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Behaviour.cs" />
+    <Compile Include="CoreModule\Application.cs" />
     <Compile Include="CoreModule\AudioComponent.cs" />
     <Compile Include="CoreModule\GlobalAudio.cs" />
     <Compile Include="NavAgent.cs" />
@@ -83,6 +84,7 @@
     <Compile Include="CoreModule\Prefab.cs" />
     <Compile Include="CoreModule\Quaternion.cs" />
     <Compile Include="CoreModule\Rigidbody.cs" />
+    <Compile Include="CoreModule\SceneManager.cs" />
     <Compile Include="CoreModule\Time.cs" />
     <Compile Include="CoreModule\Transform.cs" />
     <Compile Include="CoreModule\UISystem.cs" />

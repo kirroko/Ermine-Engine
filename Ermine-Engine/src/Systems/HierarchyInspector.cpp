@@ -286,6 +286,9 @@ namespace Ermine::editor {
 		if (ECS::GetInstance().HasComponent<CameraComponent>(selected))
 			DrawCameraComponent(selected);
 
+		if (ECS::GetInstance().HasComponent<UIImageComponent>(selected))
+			DrawUIImageComponent(selected);
+
 		ImGui::PopID();
 
 		ImGui::Separator();
@@ -2199,6 +2202,64 @@ namespace Ermine::editor {
 		}
 	}
 
+	void HierarchyInspector::DrawUIImageComponent(EntityID entity)
+	{
+		if (!ComponentHeaderWithRemove<UIImageComponent>("UI Image Component", entity))
+			return;
+
+		auto& imageComp = ECS::GetInstance().GetComponent<UIImageComponent>(entity);
+
+		// Image Path
+		char pathBuffer[256];
+		strncpy_s(pathBuffer, imageComp.imagePath.c_str(), sizeof(pathBuffer) - 1);
+		pathBuffer[sizeof(pathBuffer) - 1] = '\0';
+		if (ImGui::InputText("Image Path", pathBuffer, sizeof(pathBuffer))) {
+			imageComp.imagePath = pathBuffer;
+		}
+
+		// Fullscreen toggle
+		ImGui::Checkbox("Fullscreen", &imageComp.fullscreen);
+
+		// Position (only relevant when not fullscreen)
+		if (!imageComp.fullscreen) {
+			ImGui::DragFloat3("Position", &imageComp.position.x, 0.01f, 0.0f, 1.0f);
+			ImGui::DragFloat("Width", &imageComp.width, 0.01f, 0.0f, 1.0f);
+			ImGui::DragFloat("Height", &imageComp.height, 0.01f, 0.0f, 1.0f);
+			ImGui::Checkbox("Maintain Aspect Ratio", &imageComp.maintainAspectRatio);
+		}
+
+		// Tint Color
+		ImGui::ColorEdit3("Tint Color", &imageComp.tintColor.x);
+
+		// Alpha
+		ImGui::SliderFloat("Alpha", &imageComp.alpha, 0.0f, 1.0f);
+
+		ImGui::Separator();
+		ImGui::Text("Caption Settings");
+
+		// Show Caption toggle
+		ImGui::Checkbox("Show Caption", &imageComp.showCaption);
+
+		if (imageComp.showCaption) {
+			// Caption text (multiline)
+			char captionBuffer[512];
+			strncpy_s(captionBuffer, imageComp.caption.c_str(), sizeof(captionBuffer) - 1);
+			captionBuffer[sizeof(captionBuffer) - 1] = '\0';
+			if (ImGui::InputTextMultiline("Caption Text", captionBuffer, sizeof(captionBuffer), ImVec2(-FLT_MIN, ImGui::GetTextLineHeight() * 3))) {
+				imageComp.caption = captionBuffer;
+			}
+
+			// Caption color
+			ImGui::ColorEdit3("Caption Color", &imageComp.captionColor.x);
+
+			// Font size
+			ImGui::DragFloat("Font Size", &imageComp.captionFontSize, 1.0f, 8.0f, 72.0f);
+
+			// Caption position
+			ImGui::DragFloat2("Caption Position", &imageComp.captionPosition.x, 0.01f, 0.0f, 1.0f);
+		}
+	}
+
 	void HierarchyInspector::DrawAddComponentMenu(EntityID entity) {
 		if (ImGui::MenuItem("Transform") && !ECS::GetInstance().HasComponent<Transform>(entity)) {
 			ECS::GetInstance().AddComponent(entity, Transform());
@@ -2279,6 +2340,10 @@ namespace Ermine::editor {
 			tempCam.fov = 45;
 			tempCam.nearPlane = 5.0f;
 			ECS::GetInstance().AddComponent(entity, tempCam);
+		}
+		if (ImGui::MenuItem("UI Image") && !ECS::GetInstance().HasComponent<UIImageComponent>(entity))
+		{
+			ECS::GetInstance().AddComponent(entity, UIImageComponent());
 		}
 		// Add more component types as needed
 

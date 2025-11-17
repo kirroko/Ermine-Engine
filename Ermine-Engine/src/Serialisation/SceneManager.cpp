@@ -19,6 +19,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Renderer.h"
 #include "Components.h"
 #include "Matrix4x4.h"
+#include "EditorGUI.h"
 
 namespace
 {
@@ -281,8 +282,17 @@ void SceneManager::NewScene()
     }
     Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>()->InitializeShadowMapResources();
     Ermine::ECS::GetInstance().GetSystem<Ermine::Physics>()->UpdatePhysicList();
-    if (auto scene = SceneManager::GetInstance().GetActiveScene())
-        scene->EnsureSyncedWithECS(/*force=*/true);
+
+    // Create a new Scene object and sync with ECS
+    auto newScene = std::make_shared<Ermine::Scene>("Untitled Scene");
+    newScene->EnsureSyncedWithECS(/*force=*/true);
+
+    // Set as active scene in SceneManager
+    SetActiveScene(newScene);
+
+    // Notify EditorGUI to update hierarchy panel and inspector
+    Ermine::editor::EditorGUI::SetActiveScene(newScene);
+
     m_CurrentScenePath.reset();
     m_Dirty = false;
 }
@@ -300,9 +310,16 @@ void SceneManager::ClearScene()
         renderer->MarkMaterialsDirty();
     }
 
-    if (auto scene = GetActiveScene()) {
-        scene->EnsureSyncedWithECS();
-    }
+    // Create an empty Scene object and sync with ECS
+    auto emptyScene = std::make_shared<Ermine::Scene>("Empty Scene");
+    emptyScene->EnsureSyncedWithECS(/*force=*/true);
+
+    // Set as active scene in SceneManager
+    SetActiveScene(emptyScene);
+
+    // Notify EditorGUI to update hierarchy panel and inspector
+    Ermine::editor::EditorGUI::SetActiveScene(emptyScene);
+
     Ermine::ECS::GetInstance().GetSystem<Ermine::Physics>()->UpdatePhysicList();
     m_CurrentScenePath.reset();
     m_Dirty = false;
@@ -331,8 +348,19 @@ void SceneManager::OpenScene(const std::string& path)
 
     //RebuildRuntimeHierarchyFromGuids(Ermine::ECS::GetInstance());
 
-    if (auto scene = SceneManager::GetInstance().GetActiveScene())
-        scene->EnsureSyncedWithECS(/*force=*/true);
+    // Create Scene object from loaded entities
+    std::filesystem::path scenePath(path);
+    std::string sceneName = scenePath.stem().string(); // Get filename without extension
+    auto newScene = std::make_shared<Ermine::Scene>(sceneName);
+
+    // Sync the Scene object with the loaded ECS entities
+    newScene->EnsureSyncedWithECS(/*force=*/true);
+
+    // Set as active scene in SceneManager
+    SetActiveScene(newScene);
+
+    // Notify EditorGUI to update hierarchy panel and inspector
+    Ermine::editor::EditorGUI::SetActiveScene(newScene);
 
     m_CurrentScenePath = path;
     m_Dirty = false;

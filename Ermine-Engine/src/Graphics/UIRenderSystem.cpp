@@ -186,6 +186,79 @@ namespace Ermine
             firstRender = false;
         }
 
+        // Render UIImageComponent entities first (fullscreen images, cutscenes, backgrounds)
+        auto& ecs = ECS::GetInstance();
+        constexpr EntityID MAX_ENTITIES = 10000; // Assume reasonable max entities
+
+        for (EntityID entity = 1; entity < MAX_ENTITIES; ++entity)
+        {
+            // Check if entity is valid and has UIImageComponent
+            if (!ecs.IsEntityValid(entity))
+                continue;
+
+            if (!ecs.HasComponent<UIImageComponent>(entity))
+                continue;
+
+            const auto& imageComp = ecs.GetComponent<UIImageComponent>(entity);
+
+            // Skip if no image path specified
+            if (imageComp.imagePath.empty())
+                continue;
+
+            // Load texture (with caching)
+            std::shared_ptr<graphics::Texture> texture;
+            auto it = m_textureCache.find(imageComp.imagePath);
+            if (it != m_textureCache.end())
+            {
+                texture = it->second;
+            }
+            else
+            {
+                texture = AssetManager::GetInstance().LoadTexture(imageComp.imagePath);
+                if (texture && texture->IsValid())
+                {
+                    m_textureCache[imageComp.imagePath] = texture;
+                }
+            }
+
+            // Render the image
+            if (texture && texture->IsValid())
+            {
+                if (imageComp.fullscreen)
+                {
+                    // Fullscreen image (for cutscenes, splash screens)
+                    RenderTexturedSquare(0.5f, 0.5f, 1.0f, texture, imageComp.tintColor, imageComp.alpha);
+                }
+                else
+                {
+                    // Positioned image
+                    RenderTexturedSquare(
+                        imageComp.position.x,
+                        imageComp.position.y,
+                        imageComp.height,  // Height determines size
+                        texture,
+                        imageComp.tintColor,
+                        imageComp.alpha
+                    );
+                }
+
+                // Render caption if enabled
+                if (imageComp.showCaption && !imageComp.caption.empty() && m_textRenderer)
+                {
+                    float textScale = imageComp.captionFontSize / 24.0f; // Normalize to default font size
+                    m_textRenderer->RenderText(
+                        m_uiShader,
+                        imageComp.caption,
+                        imageComp.captionPosition.x,
+                        imageComp.captionPosition.y,
+                        textScale,
+                        imageComp.captionColor,
+                        imageComp.alpha  // Use same alpha as image
+                    );
+                }
+            }
+        }
+
         // Render UI for all entities with UIComponent
         for (EntityID entity : m_Entities)
         {
