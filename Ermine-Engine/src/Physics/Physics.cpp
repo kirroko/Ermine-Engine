@@ -899,6 +899,7 @@ namespace Ermine
 	{
 		auto& bodyInterface = mPhysicsSystem.GetBodyInterface();
 		Ermine::Quaternion rot = ECS::GetInstance().GetComponent<Transform>(ID).rotation;
+		QuaternionNormalize(rot);
 		bodyInterface.SetPositionAndRotation(
 			GetBodyID(ID),
 			JPH::Vec3(position.x, position.y, position.z),
@@ -919,6 +920,7 @@ namespace Ermine
 		auto& bodyInterface = mPhysicsSystem.GetBodyInterface();
 		Ermine::Vec3 pos = ECS::GetInstance().GetComponent<Transform>(ID).position;
 		Ermine::Quaternion rot = FromEulerDegrees(rotation);
+		QuaternionNormalize(rot);
 		bodyInterface.SetPositionAndRotation(
 			GetBodyID(ID),
 			JPH::Vec3(pos.x, pos.y, pos.z),
@@ -938,10 +940,11 @@ namespace Ermine
 	{
 		auto& bodyInterface = mPhysicsSystem.GetBodyInterface();
 		Ermine::Vec3 pos = ECS::GetInstance().GetComponent<Transform>(ID).position;
+		Ermine::Quaternion rot = QuaternionNormalize(rotation);
 		bodyInterface.SetPositionAndRotation(
 			GetBodyID(ID),
 			JPH::Vec3(pos.x, pos.y, pos.z),
-			JPH::Quat(rotation.x, rotation.y, rotation.z, rotation.w),
+			JPH::Quat(rot.x, rot.y, rot.z, rot.w),
 			JPH::EActivation::Activate);
 	}
 
@@ -959,6 +962,7 @@ namespace Ermine
 	{
 		auto& bodyInterface = mPhysicsSystem.GetBodyInterface();
 		Ermine::Quaternion rot = FromEulerDegrees(rotation);
+		QuaternionNormalize(rot);
 		bodyInterface.SetPositionAndRotation(
 			GetBodyID(ID),
 			JPH::Vec3(position.x, position.y, position.z),
@@ -979,10 +983,11 @@ namespace Ermine
 	void Physics::Move(EntityID ID, Ermine::Vec3 position, Ermine::Quaternion rotation)
 	{
 		auto& bodyInterface = mPhysicsSystem.GetBodyInterface();
+		Ermine::Quaternion rot = QuaternionNormalize(rotation);
 		bodyInterface.SetPositionAndRotation(
 			GetBodyID(ID),
 			JPH::Vec3(position.x, position.y, position.z),
-			JPH::Quat(rotation.x, rotation.y, rotation.z, rotation.w),
+			JPH::Quat(rot.x, rot.y, rot.z, rot.w),
 			JPH::EActivation::Activate);
 	}
 
