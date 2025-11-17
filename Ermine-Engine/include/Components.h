@@ -973,7 +973,7 @@ namespace Ermine
 				if (!v.IsObject()) continue;
 				Script s;
 				s.Deserialize(v);
-				// Do not create ScriptInstance here (no EntityID yet) � ScriptSystem should call AttachAll
+				// Do not create ScriptInstance here (no EntityID yet) - ScriptSystem should call AttachAll
 				scripts.emplace_back(std::move(s));
 			}
 		}
@@ -1165,6 +1165,8 @@ namespace Ermine
 		bool hasMetal = false;   float cacheMetallic = 0.0f;
 		bool hasEmiss = false;   Vec3  cacheEmissive{ 0,0,0 };
 		float cacheEmissiveIntensity = 1.0f;
+		std::string customFragmentShader = "";   // Custom fragment shader path (empty = use standard PBR)
+		bool cacheCastsShadows = true;           // Whether this material casts shadows
 
 		//// Cached texture paths (only what we set by path)
 		//bool hasAlbedoMapPath = false;   std::string albedoMapPath;

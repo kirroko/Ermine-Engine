@@ -23,6 +23,7 @@ public class OrbTeleport : MonoBehaviour
         // Left Mouse Button - Shoot Orb (Skill Slot 0)
         if (Input.GetMouseButtonDown(0))
         {
+            GlobalAudio.PlaySFX("Shoot");
             var projectile = Prefab.Instantiate("../Resources/Prefabs/Sphere.prefab");
             if (projectile != null)
             {
@@ -36,6 +37,7 @@ public class OrbTeleport : MonoBehaviour
         if (Input.GetMouseButtonDown(1))
         {
             // Swap position with ball and destroy it
+            GlobalAudio.PlaySFX("Teleport");
             GameObject sphere = GameObject.Find("Sphere");
             if (sphere == null)
                 return;

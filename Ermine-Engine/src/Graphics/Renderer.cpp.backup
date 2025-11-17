@@ -865,7 +865,8 @@ void Renderer::RenderDepthPrePass(const Mtx44& view, const Mtx44& projection)
 	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 
 	// Enable depth testing and writing
-	// Use GL_LEQUAL to match geometry pass depth
+	// CRITICAL: Use GL_LEQUAL (not GL_LESS) to match geometry pass depth func
+	// This handles tiny FP precision differences between passes gracefully
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
 	glDepthMask(GL_TRUE);
@@ -877,33 +878,69 @@ void Renderer::RenderDepthPrePass(const Mtx44& view, const Mtx44& projection)
 	m_DepthPrePassShader->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
 
 	// Render standard (non-skinned) meshes with StandardVAO
-	if (!m_DepthPrepassStandardCommands.empty() && m_MeshManager.GetStandardVAO() != 0) {
+	if (!m_StandardDrawCommands.empty() && m_MeshManager.GetStandardVAO() != 0) {
 		m_DepthPrePassShader->SetUniform1ui("baseDrawID", 0);
 		glBindVertexArray(m_MeshManager.GetStandardVAO());
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_MeshManager.m_DepthPrepassStandardDrawInfoBuffer.GetBufferID());
-		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_MeshManager.m_DepthPrepassStandardDrawCommandBuffer.GetBufferID());
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_MeshManager.m_GeometryStandardDrawInfoBuffer.GetBufferID());
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_MeshManager.m_GeometryStandardDrawCommandBuffer.GetBufferID());
 		glMultiDrawElementsIndirect(
 			GL_TRIANGLES,
 			GL_UNSIGNED_INT,
 			nullptr,
-			static_cast<GLsizei>(m_DepthPrepassStandardCommands.size()),
+			static_cast<GLsizei>(m_StandardDrawCommands.size()),
+			0
+		);
+		GPUProfiler::TrackDrawCall(m_StandardDrawCommandsVertexCount, m_StandardDrawCommandsIndexCount);
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
+		glBindVertexArray(0);
+	}
+
+	// Render skinned (animated) meshes with SkinnedVAO
+	if (!m_SkinnedDrawCommands.empty() && m_MeshManager.GetSkinnedVAO() != 0) {
+		m_DepthPrePassShader->SetUniform1ui("baseDrawID", 0);
+		glBindVertexArray(m_MeshManager.GetSkinnedVAO());
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_MeshManager.m_GeometrySkinnedDrawInfoBuffer.GetBufferID());
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_MeshManager.m_GeometrySkinnedDrawCommandBuffer.GetBufferID());
+		glMultiDrawElementsIndirect(
+			GL_TRIANGLES,
+			GL_UNSIGNED_INT,
+			nullptr,
+			static_cast<GLsizei>(m_SkinnedDrawCommands.size()),
+			0
+		);
+		GPUProfiler::TrackDrawCall(m_SkinnedDrawCommandsVertexCount, m_SkinnedDrawCommandsIndexCount);
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
+		glBindVertexArray(0);
+	}
+
+	// Render opaque custom shader standard (non-skinned) meshes
+	if (!m_OpaqueCustomStandardDrawCommands.empty() && m_MeshManager.GetStandardVAO() != 0) {
+		m_DepthPrePassShader->SetUniform1ui("baseDrawID", 0);
+		glBindVertexArray(m_MeshManager.GetStandardVAO());
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_OpaqueCustomStandardInfoBuffer);
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_OpaqueCustomStandardCmdBuffer);
+		glMultiDrawElementsIndirect(
+			GL_TRIANGLES,
+			GL_UNSIGNED_INT,
+			nullptr,
+			static_cast<GLsizei>(m_OpaqueCustomStandardDrawCommands.size()),
 			0
 		);
 		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
 		glBindVertexArray(0);
 	}
 
-	// Render skinned (animated) meshes with SkinnedVAO
-	if (!m_DepthPrepassSkinnedCommands.empty() && m_MeshManager.GetSkinnedVAO() != 0) {
+	// Render opaque custom shader skinned (animated) meshes
+	if (!m_OpaqueCustomSkinnedDrawCommands.empty() && m_MeshManager.GetSkinnedVAO() != 0) {
 		m_DepthPrePassShader->SetUniform1ui("baseDrawID", 0);
 		glBindVertexArray(m_MeshManager.GetSkinnedVAO());
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_MeshManager.m_DepthPrepassSkinnedDrawInfoBuffer.GetBufferID());
-		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_MeshManager.m_DepthPrepassSkinnedDrawCommandBuffer.GetBufferID());
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_OpaqueCustomSkinnedInfoBuffer);
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_OpaqueCustomSkinnedCmdBuffer);
 		glMultiDrawElementsIndirect(
 			GL_TRIANGLES,
 			GL_UNSIGNED_INT,
 			nullptr,
-			static_cast<GLsizei>(m_DepthPrepassSkinnedCommands.size()),
+			static_cast<GLsizei>(m_OpaqueCustomSkinnedDrawCommands.size()),
 			0
 		);
 		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
@@ -1101,7 +1138,7 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 
 	glGetError(); // Clear any existing errors
 	// Render standard (non-skinned) meshes with StandardVAO
-	if (!m_GeometryStandardItems.empty() && m_MeshManager.GetStandardVAO() != 0) {
+	if (!m_StandardDrawCommands.empty() && m_MeshManager.GetStandardVAO() != 0) {
 		// Set baseDrawID = 0 for standard batch
 		m_GBufferShader->SetUniform1ui("baseDrawID", 0);
 
@@ -1113,10 +1150,10 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 			GL_TRIANGLES,
 			GL_UNSIGNED_INT,
 			nullptr,
-			static_cast<GLsizei>(m_GeometryStandardItems.size()),
+			static_cast<GLsizei>(m_StandardDrawCommands.size()),
 			0
 		);
-		GPUProfiler::TrackDrawCall(m_GeometryStandardVertexCount, m_GeometryStandardIndexCount);
+		GPUProfiler::TrackDrawCall(m_StandardDrawCommandsVertexCount, m_StandardDrawCommandsIndexCount);
 
 		// Unbind
 		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
@@ -1124,7 +1161,7 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 	}
 
 	// Render skinned (animated) meshes with SkinnedVAO
-	if (!m_GeometrySkinnedItems.empty() && m_MeshManager.GetSkinnedVAO() != 0) {
+	if (!m_SkinnedDrawCommands.empty() && m_MeshManager.GetSkinnedVAO() != 0) {
 		// Set baseDrawID = 0 for skinned batch
 		m_GBufferShader->SetUniform1ui("baseDrawID", 0);
 
@@ -1136,21 +1173,21 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 			GL_TRIANGLES,
 			GL_UNSIGNED_INT,
 			nullptr,
-			static_cast<GLsizei>(m_GeometrySkinnedItems.size()),
+			static_cast<GLsizei>(m_SkinnedDrawCommands.size()),
 			0
 		);
-		GPUProfiler::TrackDrawCall(m_GeometrySkinnedVertexCount, m_GeometrySkinnedIndexCount);
+		GPUProfiler::TrackDrawCall(m_SkinnedDrawCommandsVertexCount, m_SkinnedDrawCommandsIndexCount);
 
 		// Unbind
 		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
 		glBindVertexArray(0);
 	}
 
-	// Sort transparent objects EVERY frame (camera position changes)
-	// - Full rebuild: Sort by shader FIRST (creates stable batches), then distance
-	// - Fast update: Sort by distance ONLY within existing shader groups
-	SortTransparentObjects(cameraPos, m_NeedsTransparentSort);
-	m_NeedsTransparentSort = false;  // Reset flag after sorting
+	// Sort transparent objects by shader then distance (only during full rebuild, not every frame)
+	if (m_NeedsTransparentSort) {
+		SortTransparentObjects(cameraPos);
+		m_NeedsTransparentSort = false;
+	}
 
 	EndGeometryPass();
 }
@@ -1313,73 +1350,75 @@ void Renderer::RebuildDrawData()
 	const auto& ecs = Ermine::ECS::GetInstance();
 
 	// Clear previous frame's commands for all passes
-	m_DepthPrepassStandardCommands.clear();
-	m_DepthPrepassStandardInfos.clear();
-	m_DepthPrepassSkinnedCommands.clear();
-	m_DepthPrepassSkinnedInfos.clear();
+	m_StandardDrawCommands.clear();
+	m_StandardDrawInfos.clear();
+	m_SkinnedDrawCommands.clear();
+	m_SkinnedDrawInfos.clear();
 
-	m_PickingStandardCommands.clear();
-	m_PickingStandardInfos.clear();
-	m_PickingSkinnedCommands.clear();
-	m_PickingSkinnedInfos.clear();
-
-	m_GeometryStandardItems.clear();
-	m_GeometrySkinnedItems.clear();
-
-	// Clear forward pass lists
-	m_ForwardTransparentDefaultStandardItems.clear();
-	m_ForwardTransparentDefaultSkinnedItems.clear();
+	// Clear new separated forward pass lists
+	m_ForwardStandardDrawCommands.clear();
+	m_ForwardStandardDrawInfos.clear();
+	m_ForwardSkinnedDrawCommands.clear();
+	m_ForwardSkinnedDrawInfos.clear();
 
 	// Clear opaque custom shader lists
-	m_ForwardOpaqueCustomStandardItems.clear();
-	m_ForwardOpaqueCustomSkinnedItems.clear();
+	m_OpaqueCustomStandardDrawCommands.clear();
+	m_OpaqueCustomStandardDrawInfos.clear();
+	m_OpaqueCustomStandardShaders.clear();
+	m_OpaqueCustomSkinnedDrawCommands.clear();
+	m_OpaqueCustomSkinnedDrawInfos.clear();
+	m_OpaqueCustomSkinnedShaders.clear();
 
 	// Clear transparent custom shader lists
-	m_ForwardTransparentCustomStandardItems.clear();
-	m_ForwardTransparentCustomSkinnedItems.clear();
+	m_TransparentCustomStandardDrawCommands.clear();
+	m_TransparentCustomStandardDrawInfos.clear();
+	m_TransparentCustomStandardShaders.clear();
+	m_TransparentCustomSkinnedDrawCommands.clear();
+	m_TransparentCustomSkinnedDrawInfos.clear();
+	m_TransparentCustomSkinnedShaders.clear();
 
 	// Clear shadow-only lists
-	m_ShadowStandardCommands.clear();
-	m_ShadowStandardInfos.clear();
-	m_ShadowSkinnedCommands.clear();
-	m_ShadowSkinnedInfos.clear();
+	m_ShadowOnlyStandardDrawCommands.clear();
+	m_ShadowOnlyStandardDrawInfos.clear();
+	m_ShadowOnlySkinnedDrawCommands.clear();
+	m_ShadowOnlySkinnedDrawInfos.clear();
+
+	// Clear shadow casting flags
+	m_StandardCastsShadows.clear();
+	m_SkinnedCastsShadows.clear();
+	m_OpaqueCustomStandardCastsShadows.clear();
+	m_OpaqueCustomSkinnedCastsShadows.clear();
 
 	// Clear cache for fast-path updates
 	m_CachedDrawItems.clear();
 
 	// Reset vertex/index counters
-	m_GeometryStandardVertexCount = 0;
-	m_GeometryStandardIndexCount = 0;
-	m_GeometrySkinnedVertexCount = 0;
-	m_GeometrySkinnedIndexCount = 0;
+	m_StandardDrawCommandsVertexCount = 0;
+	m_StandardDrawCommandsIndexCount = 0;
+	m_SkinnedDrawCommandsVertexCount = 0;
+	m_SkinnedDrawCommandsIndexCount = 0;
 	m_ForwardPassDrawCommandsVertexCount = 0;
 	m_ForwardPassDrawCommandsIndexCount = 0;
 
-	// Reserve space for depth prepass (opaque visible geometry only)
-	m_DepthPrepassStandardCommands.reserve(m_Entities.size());
-	m_DepthPrepassStandardInfos.reserve(m_Entities.size());
-	m_DepthPrepassSkinnedCommands.reserve(m_Entities.size() / 4);
-	m_DepthPrepassSkinnedInfos.reserve(m_Entities.size() / 4);
+	// Reserve space for geometry pass (opaque)
+	m_StandardDrawCommands.reserve(m_Entities.size());
+	m_StandardDrawInfos.reserve(m_Entities.size());
+	m_StandardCastsShadows.reserve(m_Entities.size());
+	m_SkinnedDrawCommands.reserve(m_Entities.size() / 4);
+	m_SkinnedDrawInfos.reserve(m_Entities.size() / 4);
+	m_SkinnedCastsShadows.reserve(m_Entities.size() / 4);
 
-	// Reserve space for picking pass (ALL visible geometry - opaque + transparent)
-	m_PickingStandardCommands.reserve(m_Entities.size());
-	m_PickingStandardInfos.reserve(m_Entities.size());
-	m_PickingSkinnedCommands.reserve(m_Entities.size() / 4);
-	m_PickingSkinnedInfos.reserve(m_Entities.size() / 4);
-
-	// Reserve space for geometry pass (opaque default shader only)
-	m_GeometryStandardItems.reserve(m_Entities.size());
-	m_GeometrySkinnedItems.reserve(m_Entities.size() / 4);
-
-	// Reserve space for forward pass lists
-	m_ForwardTransparentDefaultStandardItems.reserve(m_Entities.size() / 4);
-	m_ForwardTransparentDefaultSkinnedItems.reserve(m_Entities.size() / 8);
+	// Reserve space for separated forward pass lists
+	m_ForwardStandardDrawCommands.reserve(m_Entities.size() / 4);
+	m_ForwardStandardDrawInfos.reserve(m_Entities.size() / 4);
+	m_ForwardSkinnedDrawCommands.reserve(m_Entities.size() / 8);
+	m_ForwardSkinnedDrawInfos.reserve(m_Entities.size() / 8);
 
 	// Reserve space for shadow-only lists (culled meshes)
-	m_ShadowStandardCommands.reserve(m_Entities.size() / 4);
-	m_ShadowStandardInfos.reserve(m_Entities.size() / 4);
-	m_ShadowSkinnedCommands.reserve(m_Entities.size() / 8);
-	m_ShadowSkinnedInfos.reserve(m_Entities.size() / 8);
+	m_ShadowOnlyStandardDrawCommands.reserve(m_Entities.size() / 4);
+	m_ShadowOnlyStandardDrawInfos.reserve(m_Entities.size() / 4);
+	m_ShadowOnlySkinnedDrawCommands.reserve(m_Entities.size() / 8);
+	m_ShadowOnlySkinnedDrawInfos.reserve(m_Entities.size() / 8);
 
 	// Reserve space for draw item cache (estimate: primitives + avg 3 meshes per model)
 	size_t estimatedDrawItems = m_Entities.size() + (m_ModelSystem->m_Entities.size() * 3);
@@ -1449,35 +1488,6 @@ void Renderer::RebuildDrawData()
 
 	// Culling statistics
 	culledMeshes = 0;
-
-	auto FindChildEntityForMesh = [&](Ermine::EntityID parent, const std::string& meshID) -> Ermine::EntityID
-		{
-			auto& ecsLocal = ECS::GetInstance();
-			if (!ecsLocal.HasComponent<Ermine::HierarchyComponent>(parent))
-				return 0;
-
-			const auto& h = ecsLocal.GetComponent<Ermine::HierarchyComponent>(parent);
-			const std::string expected = "Mesh_" + meshID;
-
-			// --- Prefer GUID-based children
-			for (const Ermine::Guid& cg : h.childrenGuids) {
-				Ermine::EntityID child = ecsLocal.GetGuidRegistry().FindEntity(cg); // 0 if not found
-				if (child == 0) continue;
-				if (!ecsLocal.HasComponent<Ermine::ObjectMetaData>(child)) continue;
-				const auto& meta = ecsLocal.GetComponent<Ermine::ObjectMetaData>(child);
-				if (meta.name == expected) return child;
-			}
-
-			// --- Fallback: legacy EntityID list (for old saves / transitional scenes)
-			for (Ermine::EntityID child : h.children) {
-				if (!ecsLocal.IsEntityValid(child)) continue;
-				if (!ecsLocal.HasComponent<Ermine::ObjectMetaData>(child)) continue;
-				const auto& meta = ecsLocal.GetComponent<Ermine::ObjectMetaData>(child);
-				if (meta.name == expected) return child;
-			}
-
-			return 0;
-		};
 
 
 	// ========== MESHES ==========
@@ -1592,64 +1602,67 @@ void Renderer::RebuildDrawData()
 
 			// Route based on frustum culling
 			if (isCulled) {
-				// Culled meshes - skip all visible passes (depth, picking, geometry, forward)
+				// Culled meshes go to shadow buffers only (if they cast shadows)
 				culledMeshes++;
+				// Skip if material doesn't cast shadows
+				if (!castsShadows) {
+					continue;
+				}
+				// Add to shadow-only standard buffers (primitives never use skinning)
+				// Now includes transparent objects that cast shadows!
+				m_ShadowOnlyStandardDrawCommands.push_back(cmd);
+				m_ShadowOnlyStandardDrawInfos.push_back(info);
+				continue;
+			}
+
+			// Visible meshes route to appropriate pass
+			if (isCustomShader && !isTransparent) {
+				// Opaque custom shader - render with depth writing before transparent pass
+				m_OpaqueCustomStandardDrawCommands.push_back(cmd);
+				m_OpaqueCustomStandardDrawInfos.push_back(info);
+				m_OpaqueCustomStandardShaders.push_back(material->GetShader());
+				m_OpaqueCustomStandardCastsShadows.push_back(castsShadows);
+
+				// Also add to shadow buffer if material casts shadows
+				if (castsShadows) {
+					m_ShadowOnlyStandardDrawCommands.push_back(cmd);
+					m_ShadowOnlyStandardDrawInfos.push_back(info);
+				}
+			}
+			else if (isTransparent && isCustomShader) {
+				// Transparent custom shader pass
+				m_TransparentCustomStandardDrawCommands.push_back(cmd);
+				m_TransparentCustomStandardDrawInfos.push_back(info);
+				m_TransparentCustomStandardShaders.push_back(material->GetShader());
+				m_ForwardPassDrawCommandsVertexCount += meshData->vertexCount;
+				m_ForwardPassDrawCommandsIndexCount += cmd.count;
+
+				// Also add to shadow buffer if material casts shadows
+				if (castsShadows) {
+					m_ShadowOnlyStandardDrawCommands.push_back(cmd);
+					m_ShadowOnlyStandardDrawInfos.push_back(info);
+				}
+			}
+			else if (isTransparent) {
+				// Transparent standard forward pass (no custom shader)
+				m_ForwardStandardDrawCommands.push_back(cmd);
+				m_ForwardStandardDrawInfos.push_back(info);
+				m_ForwardPassDrawCommandsVertexCount += meshData->vertexCount;
+				m_ForwardPassDrawCommandsIndexCount += cmd.count;
+
+				// Also add to shadow buffer if material casts shadows
+				if (castsShadows) {
+					m_ShadowOnlyStandardDrawCommands.push_back(cmd);
+					m_ShadowOnlyStandardDrawInfos.push_back(info);
+				}
 			}
 			else {
-				// ========== VISIBLE MESHES - Route to visible passes ==========
-
-				// PASS 1: PICKING PASS - ALL visible geometry (opaque + transparent, for object selection)
-				m_PickingStandardCommands.push_back(cmd);
-				m_PickingStandardInfos.push_back(info);
-
-				// PASS 2: DEPTH PREPASS - Opaque visible geometry only (for early-z rejection)
-				// Transparent objects excluded to prevent depth conflicts with objects behind them
-				if (!isTransparent) {
-					m_DepthPrepassStandardCommands.push_back(cmd);
-					m_DepthPrepassStandardInfos.push_back(info);
-				}
-
-				// PASS 3: GEOMETRY/FORWARD - Route by shader type and transparency
-				if (!isTransparent && !isCustomShader) {
-					// Opaque default shader → Geometry pass (deferred lighting)
-					DefaultShaderDrawItem item;
-					item.command = cmd;
-					item.info = info;
-					item.castsShadows = castsShadows;
-					m_GeometryStandardItems.push_back(item);
-				}
-				else if (!isTransparent && isCustomShader) {
-					// Opaque custom shader → Forward pass (rendered after geometry)
-					CustomShaderDrawItem item;
-					item.command = cmd;
-					item.info = info;
-					item.shader = material->GetShader();
-					item.castsShadows = castsShadows;
-					m_ForwardOpaqueCustomStandardItems.push_back(item);
-				}
-				else if (isTransparent && !isCustomShader) {
-					// Transparent default shader → Forward pass (sorted, back-to-front)
-					DefaultShaderDrawItem item;
-					item.command = cmd;
-					item.info = info;
-					item.castsShadows = castsShadows;
-					m_ForwardTransparentDefaultStandardItems.push_back(item);
-				}
-				else if (isTransparent && isCustomShader) {
-					// Transparent custom shader → Forward pass (sorted, back-to-front)
-					CustomShaderDrawItem item;
-					item.command = cmd;
-					item.info = info;
-					item.shader = material->GetShader();
-					item.castsShadows = castsShadows;
-					m_ForwardTransparentCustomStandardItems.push_back(item);
-				}
-			}
-
-			// PASS 4: SHADOW PASS - ALL geometry (visible OR culled) that casts shadows
-			if (castsShadows) {
-				m_ShadowStandardCommands.push_back(cmd);
-				m_ShadowStandardInfos.push_back(info);
+				// Geometry pass (opaque, standard shader)
+				m_StandardDrawCommands.push_back(cmd);
+				m_StandardDrawInfos.push_back(info);
+				m_StandardCastsShadows.push_back(castsShadows);  // Track shadow casting flag
+				m_StandardDrawCommandsVertexCount += meshData->vertexCount;
+				m_StandardDrawCommandsIndexCount += cmd.count;
 			}
 		}
 	}
@@ -1687,8 +1700,21 @@ void Renderer::RebuildDrawData()
 				bool hadParentMaterial = false;
 				bool hadChildMaterial = false;
 
-				// Find child entity using GUID-based lookup (with fallback to legacy EntityID)
-				childEntity = FindChildEntityForMesh(entity, meshData->meshID);
+				// Look for child entity with matching mesh name
+				if (ecs.HasComponent<Ermine::HierarchyComponent>(entity)) {
+					const auto& hierarchy = ecs.GetComponent<Ermine::HierarchyComponent>(entity);
+					const std::string expectedChildName = "Mesh_" + meshData->meshID;
+
+					for (Ermine::EntityID child : hierarchy.children) {
+						if (ecs.HasComponent<Ermine::ObjectMetaData>(child)) {
+							const auto& metadata = ecs.GetComponent<Ermine::ObjectMetaData>(child);
+							if (metadata.name == expectedChildName) {
+								childEntity = child;
+								break;
+							}
+						}
+					}
+				}
 
 				// Check child material
 				Ermine::graphics::Material* childMaterial = nullptr;
@@ -1806,70 +1832,67 @@ void Renderer::RebuildDrawData()
 
 				// Route based on frustum culling
 				if (isCulled) {
-					// Culled meshes - skip all visible passes (depth, picking, geometry, forward)
+					// Culled meshes go to shadow buffers only (if they cast shadows)
 					culledMeshes++;
+					// Skip if material doesn't cast shadows
+					if (!castsShadows) {
+						continue;
+					}
+					// Add to shadow-only standard buffers (static models never use skinning)
+					// Now includes transparent objects that cast shadows!
+					m_ShadowOnlyStandardDrawCommands.push_back(cmd);
+					m_ShadowOnlyStandardDrawInfos.push_back(info);
+					continue;
+				}
+
+				// Visible meshes route to appropriate pass
+				if (isCustomShader && !isTransparent) {
+					// Opaque custom shader - render with depth writing before transparent pass
+					m_OpaqueCustomStandardDrawCommands.push_back(cmd);
+					m_OpaqueCustomStandardDrawInfos.push_back(info);
+					m_OpaqueCustomStandardShaders.push_back(material->GetShader());
+					m_OpaqueCustomStandardCastsShadows.push_back(castsShadows);
+
+					// Also add to shadow buffer if material casts shadows
+					if (castsShadows) {
+						m_ShadowOnlyStandardDrawCommands.push_back(cmd);
+						m_ShadowOnlyStandardDrawInfos.push_back(info);
+					}
+				}
+				else if (isTransparent && isCustomShader) {
+					// Transparent custom shader pass
+					m_TransparentCustomStandardDrawCommands.push_back(cmd);
+					m_TransparentCustomStandardDrawInfos.push_back(info);
+					m_TransparentCustomStandardShaders.push_back(material->GetShader());
+					m_ForwardPassDrawCommandsVertexCount += meshData->vertexCount;
+					m_ForwardPassDrawCommandsIndexCount += cmd.count;
+
+					// Also add to shadow buffer if material casts shadows
+					if (castsShadows) {
+						m_ShadowOnlyStandardDrawCommands.push_back(cmd);
+						m_ShadowOnlyStandardDrawInfos.push_back(info);
+					}
+				}
+				else if (isTransparent) {
+					// Transparent standard forward pass (no custom shader)
+					m_ForwardStandardDrawCommands.push_back(cmd);
+					m_ForwardStandardDrawInfos.push_back(info);
+					m_ForwardPassDrawCommandsVertexCount += meshData->vertexCount;
+					m_ForwardPassDrawCommandsIndexCount += cmd.count;
+
+					// Also add to shadow buffer if material casts shadows
+					if (castsShadows) {
+						m_ShadowOnlyStandardDrawCommands.push_back(cmd);
+						m_ShadowOnlyStandardDrawInfos.push_back(info);
+					}
 				}
 				else {
-					// ========== VISIBLE MESHES - Route to visible passes ==========
-
-					// PASS 1: PICKING PASS - ALL visible geometry (opaque + transparent, for object selection)
-					m_PickingStandardCommands.push_back(cmd);
-					m_PickingStandardInfos.push_back(info);
-
-					// PASS 2: DEPTH PREPASS - Opaque visible geometry only (for early-z rejection)
-					// Transparent objects excluded to prevent depth conflicts with objects behind them
-					if (!isTransparent) {
-						m_DepthPrepassStandardCommands.push_back(cmd);
-						m_DepthPrepassStandardInfos.push_back(info);
-					}
-
-					// PASS 3: GEOMETRY/FORWARD - Route by shader type and transparency
-					if (!isTransparent && !isCustomShader) {
-						// Opaque default shader → Geometry pass (deferred lighting)
-						DefaultShaderDrawItem item;
-						item.command = cmd;
-						item.info = info;
-						item.castsShadows = castsShadows;
-						m_GeometryStandardItems.push_back(item);
-						m_GeometryStandardVertexCount += meshData->vertexCount;
-						m_GeometryStandardIndexCount += cmd.count;
-					}
-					else if (!isTransparent && isCustomShader) {
-						// Opaque custom shader → Forward pass (rendered after geometry)
-						CustomShaderDrawItem item;
-						item.command = cmd;
-						item.info = info;
-						item.shader = material->GetShader();
-						item.castsShadows = castsShadows;
-						m_ForwardOpaqueCustomStandardItems.push_back(item);
-					}
-					else if (isTransparent && !isCustomShader) {
-						// Transparent default shader → Forward pass (sorted, back-to-front)
-						DefaultShaderDrawItem item;
-						item.command = cmd;
-						item.info = info;
-						item.castsShadows = castsShadows;
-						m_ForwardTransparentDefaultStandardItems.push_back(item);
-						m_ForwardPassDrawCommandsVertexCount += meshData->vertexCount;
-						m_ForwardPassDrawCommandsIndexCount += cmd.count;
-					}
-					else if (isTransparent && isCustomShader) {
-						// Transparent custom shader → Forward pass (sorted, back-to-front)
-						CustomShaderDrawItem item;
-						item.command = cmd;
-						item.info = info;
-						item.shader = material->GetShader();
-						item.castsShadows = castsShadows;
-						m_ForwardTransparentCustomStandardItems.push_back(item);
-						m_ForwardPassDrawCommandsVertexCount += meshData->vertexCount;
-						m_ForwardPassDrawCommandsIndexCount += cmd.count;
-					}
-				}
-
-				// PASS 4: SHADOW PASS - ALL geometry (visible OR culled) that casts shadows
-				if (castsShadows) {
-					m_ShadowStandardCommands.push_back(cmd);
-					m_ShadowStandardInfos.push_back(info);
+					// Geometry pass (opaque, standard shader)
+					m_StandardDrawCommands.push_back(cmd);
+					m_StandardDrawInfos.push_back(info);
+					m_StandardCastsShadows.push_back(castsShadows);  // Track shadow casting flag
+					m_StandardDrawCommandsVertexCount += meshData->vertexCount;
+					m_StandardDrawCommandsIndexCount += cmd.count;
 				}
 			}
 		}
@@ -1910,8 +1933,21 @@ void Renderer::RebuildDrawData()
 				bool hadParentMaterial = false;
 				bool hadChildMaterial = false;
 
-				// Find child entity using GUID-based lookup (with fallback to legacy EntityID)
-				childEntity = FindChildEntityForMesh(entity, meshData->meshID);
+				// Look for child entity with matching mesh name
+				if (ecs.HasComponent<Ermine::HierarchyComponent>(entity)) {
+					const auto& hierarchy = ecs.GetComponent<Ermine::HierarchyComponent>(entity);
+					const std::string expectedChildName = "Mesh_" + meshData->meshID;
+
+					for (Ermine::EntityID child : hierarchy.children) {
+						if (ecs.HasComponent<Ermine::ObjectMetaData>(child)) {
+							const auto& metadata = ecs.GetComponent<Ermine::ObjectMetaData>(child);
+							if (metadata.name == expectedChildName) {
+								childEntity = child;
+								break;
+							}
+						}
+					}
+				}
 
 				// Check child material
 				Ermine::graphics::Material* childMaterial = nullptr;
@@ -2028,70 +2064,67 @@ void Renderer::RebuildDrawData()
 
 				// Route based on frustum culling
 				if (isCulled) {
-					// Culled meshes - skip all visible passes (depth, picking, geometry, forward)
+					// Culled meshes go to shadow buffers only (if they cast shadows)
 					culledMeshes++;
+					// Skip if material doesn't cast shadows
+					if (!castsShadows) {
+						continue;
+					}
+					// Add to shadow-only skinned buffers
+					// Now includes transparent objects that cast shadows!
+					m_ShadowOnlySkinnedDrawCommands.push_back(cmd);
+					m_ShadowOnlySkinnedDrawInfos.push_back(info);
+					continue;
+				}
+
+				// Visible meshes route to appropriate pass
+				if (isCustomShader && !isTransparent) {
+					// Opaque custom shader - render with depth writing before transparent pass
+					m_OpaqueCustomSkinnedDrawCommands.push_back(cmd);
+					m_OpaqueCustomSkinnedDrawInfos.push_back(info);
+					m_OpaqueCustomSkinnedShaders.push_back(meshMaterial->GetShader());
+					m_OpaqueCustomSkinnedCastsShadows.push_back(castsShadows);
+
+					// Also add to shadow buffer if material casts shadows
+					if (castsShadows) {
+						m_ShadowOnlySkinnedDrawCommands.push_back(cmd);
+						m_ShadowOnlySkinnedDrawInfos.push_back(info);
+					}
+				}
+				else if (isTransparent && isCustomShader) {
+					// Transparent custom shader pass
+					m_TransparentCustomSkinnedDrawCommands.push_back(cmd);
+					m_TransparentCustomSkinnedDrawInfos.push_back(info);
+					m_TransparentCustomSkinnedShaders.push_back(meshMaterial->GetShader());
+					m_ForwardPassDrawCommandsVertexCount += meshData->vertexCount;
+					m_ForwardPassDrawCommandsIndexCount += cmd.count;
+
+					// Also add to shadow buffer if material casts shadows
+					if (castsShadows) {
+						m_ShadowOnlySkinnedDrawCommands.push_back(cmd);
+						m_ShadowOnlySkinnedDrawInfos.push_back(info);
+					}
+				}
+				else if (isTransparent) {
+					// Transparent standard forward pass (no custom shader)
+					m_ForwardSkinnedDrawCommands.push_back(cmd);
+					m_ForwardSkinnedDrawInfos.push_back(info);
+					m_ForwardPassDrawCommandsVertexCount += meshData->vertexCount;
+					m_ForwardPassDrawCommandsIndexCount += cmd.count;
+
+					// Also add to shadow buffer if material casts shadows
+					if (castsShadows) {
+						m_ShadowOnlySkinnedDrawCommands.push_back(cmd);
+						m_ShadowOnlySkinnedDrawInfos.push_back(info);
+					}
 				}
 				else {
-					// ========== VISIBLE MESHES - Route to visible passes ==========
-
-					// PASS 1: PICKING PASS - ALL visible geometry (opaque + transparent, for object selection)
-					m_PickingSkinnedCommands.push_back(cmd);
-					m_PickingSkinnedInfos.push_back(info);
-
-					// PASS 2: DEPTH PREPASS - Opaque visible geometry only (for early-z rejection)
-					// Transparent objects excluded to prevent depth conflicts with objects behind them
-					if (!isTransparent) {
-						m_DepthPrepassSkinnedCommands.push_back(cmd);
-						m_DepthPrepassSkinnedInfos.push_back(info);
-					}
-
-					// PASS 3: GEOMETRY/FORWARD - Route by shader type and transparency
-					if (!isTransparent && !isCustomShader) {
-						// Opaque default shader → Geometry pass (deferred lighting)
-						DefaultShaderDrawItem item;
-						item.command = cmd;
-						item.info = info;
-						item.castsShadows = castsShadows;
-						m_GeometrySkinnedItems.push_back(item);
-						m_GeometrySkinnedVertexCount += meshData->vertexCount;
-						m_GeometrySkinnedIndexCount += cmd.count;
-					}
-					else if (!isTransparent && isCustomShader) {
-						// Opaque custom shader → Forward pass (rendered after geometry)
-						CustomShaderDrawItem item;
-						item.command = cmd;
-						item.info = info;
-						item.shader = meshMaterial->GetShader();
-						item.castsShadows = castsShadows;
-						m_ForwardOpaqueCustomSkinnedItems.push_back(item);
-					}
-					else if (isTransparent && !isCustomShader) {
-						// Transparent default shader → Forward pass (sorted, back-to-front)
-						DefaultShaderDrawItem item;
-						item.command = cmd;
-						item.info = info;
-						item.castsShadows = castsShadows;
-						m_ForwardTransparentDefaultSkinnedItems.push_back(item);
-						m_ForwardPassDrawCommandsVertexCount += meshData->vertexCount;
-						m_ForwardPassDrawCommandsIndexCount += cmd.count;
-					}
-					else if (isTransparent && isCustomShader) {
-						// Transparent custom shader → Forward pass (sorted, back-to-front)
-						CustomShaderDrawItem item;
-						item.command = cmd;
-						item.info = info;
-						item.shader = meshMaterial->GetShader();
-						item.castsShadows = castsShadows;
-						m_ForwardTransparentCustomSkinnedItems.push_back(item);
-						m_ForwardPassDrawCommandsVertexCount += meshData->vertexCount;
-						m_ForwardPassDrawCommandsIndexCount += cmd.count;
-					}
-				}
-
-				// PASS 4: SHADOW PASS - ALL geometry (visible OR culled) that casts shadows
-				if (castsShadows) {
-					m_ShadowSkinnedCommands.push_back(cmd);
-					m_ShadowSkinnedInfos.push_back(info);
+					// Geometry pass (opaque, standard shader)
+					m_SkinnedDrawCommands.push_back(cmd);
+					m_SkinnedDrawInfos.push_back(info);
+					m_SkinnedCastsShadows.push_back(castsShadows);  // Track shadow casting flag
+					m_SkinnedDrawCommandsVertexCount += meshData->vertexCount;
+					m_SkinnedDrawCommandsIndexCount += cmd.count;
 				}
 			}
 		}
@@ -2100,284 +2133,312 @@ void Renderer::RebuildDrawData()
 	GPUProfiler::SetCulledMeshesCount(culledMeshes);
 
 	// ========== WRITE ALL DRAW DATA TO GPU BUFFERS ==========
+	// Write geometry pass buffers
+	m_MeshManager.m_GeometryStandardDrawCommandBuffer.WriteCommands(m_StandardDrawCommands, 0);
+	m_MeshManager.m_GeometryStandardDrawInfoBuffer.WriteDrawInfos(m_StandardDrawInfos, 0);
+	m_MeshManager.m_GeometrySkinnedDrawCommandBuffer.WriteCommands(m_SkinnedDrawCommands, 0);
+	m_MeshManager.m_GeometrySkinnedDrawInfoBuffer.WriteDrawInfos(m_SkinnedDrawInfos, 0);
 
-	// PASS 1: PICKING PASS - ALL visible geometry (opaque + transparent, for object selection)
-	m_MeshManager.m_PickingStandardDrawCommandBuffer.WriteCommands(m_PickingStandardCommands, 0);
-	m_MeshManager.m_PickingStandardDrawInfoBuffer.WriteDrawInfos(m_PickingStandardInfos, 0);
-	m_MeshManager.m_PickingSkinnedDrawCommandBuffer.WriteCommands(m_PickingSkinnedCommands, 0);
-	m_MeshManager.m_PickingSkinnedDrawInfoBuffer.WriteDrawInfos(m_PickingSkinnedInfos, 0);
-
-	// PASS 2: DEPTH PREPASS - Opaque visible geometry only (for early-z rejection)
-	m_MeshManager.m_DepthPrepassStandardDrawCommandBuffer.WriteCommands(m_DepthPrepassStandardCommands, 0);
-	m_MeshManager.m_DepthPrepassStandardDrawInfoBuffer.WriteDrawInfos(m_DepthPrepassStandardInfos, 0);
-	m_MeshManager.m_DepthPrepassSkinnedDrawCommandBuffer.WriteCommands(m_DepthPrepassSkinnedCommands, 0);
-	m_MeshManager.m_DepthPrepassSkinnedDrawInfoBuffer.WriteDrawInfos(m_DepthPrepassSkinnedInfos, 0);
-
-	// PASS 3: GEOMETRY PASS - Opaque default shader only (deferred lighting)
-	// Extract commands and infos from Items
-	std::vector<DrawElementsIndirectCommand> geometryStandardCommands;
-	std::vector<DrawInfo> geometryStandardInfos;
-	geometryStandardCommands.reserve(m_GeometryStandardItems.size());
-	geometryStandardInfos.reserve(m_GeometryStandardItems.size());
-	for (const auto& item : m_GeometryStandardItems) {
-		geometryStandardCommands.push_back(item.command);
-		geometryStandardInfos.push_back(item.info);
-	}
-
-	std::vector<DrawElementsIndirectCommand> geometrySkinnedCommands;
-	std::vector<DrawInfo> geometrySkinnedInfos;
-	geometrySkinnedCommands.reserve(m_GeometrySkinnedItems.size());
-	geometrySkinnedInfos.reserve(m_GeometrySkinnedItems.size());
-	for (const auto& item : m_GeometrySkinnedItems) {
-		geometrySkinnedCommands.push_back(item.command);
-		geometrySkinnedInfos.push_back(item.info);
-	}
-
-	m_MeshManager.m_GeometryStandardDrawCommandBuffer.WriteCommands(geometryStandardCommands, 0);
-	m_MeshManager.m_GeometryStandardDrawInfoBuffer.WriteDrawInfos(geometryStandardInfos, 0);
-	m_MeshManager.m_GeometrySkinnedDrawCommandBuffer.WriteCommands(geometrySkinnedCommands, 0);
-	m_MeshManager.m_GeometrySkinnedDrawInfoBuffer.WriteDrawInfos(geometrySkinnedInfos, 0);
-
-	// PASS 4: FORWARD PASS - Transparent default shaders
-	// Extract commands and infos from Items
-	std::vector<DrawElementsIndirectCommand> forwardTransparentDefaultStandardCommands;
-	std::vector<DrawInfo> forwardTransparentDefaultStandardInfos;
-	forwardTransparentDefaultStandardCommands.reserve(m_ForwardTransparentDefaultStandardItems.size());
-	forwardTransparentDefaultStandardInfos.reserve(m_ForwardTransparentDefaultStandardItems.size());
-	for (const auto& item : m_ForwardTransparentDefaultStandardItems) {
-		forwardTransparentDefaultStandardCommands.push_back(item.command);
-		forwardTransparentDefaultStandardInfos.push_back(item.info);
-	}
-
-	std::vector<DrawElementsIndirectCommand> forwardTransparentDefaultSkinnedCommands;
-	std::vector<DrawInfo> forwardTransparentDefaultSkinnedInfos;
-	forwardTransparentDefaultSkinnedCommands.reserve(m_ForwardTransparentDefaultSkinnedItems.size());
-	forwardTransparentDefaultSkinnedInfos.reserve(m_ForwardTransparentDefaultSkinnedItems.size());
-	for (const auto& item : m_ForwardTransparentDefaultSkinnedItems) {
-		forwardTransparentDefaultSkinnedCommands.push_back(item.command);
-		forwardTransparentDefaultSkinnedInfos.push_back(item.info);
-	}
-
-	m_MeshManager.m_ForwardStandardDrawCommandBuffer.WriteCommands(forwardTransparentDefaultStandardCommands, 0);
-	m_MeshManager.m_ForwardStandardDrawInfoBuffer.WriteDrawInfos(forwardTransparentDefaultStandardInfos, 0);
-	m_MeshManager.m_ForwardSkinnedDrawCommandBuffer.WriteCommands(forwardTransparentDefaultSkinnedCommands, 0);
-	m_MeshManager.m_ForwardSkinnedDrawInfoBuffer.WriteDrawInfos(forwardTransparentDefaultSkinnedInfos, 0);
+	// Write forward pass buffers
+	m_MeshManager.m_ForwardStandardDrawCommandBuffer.WriteCommands(m_ForwardStandardDrawCommands, 0);
+	m_MeshManager.m_ForwardStandardDrawInfoBuffer.WriteDrawInfos(m_ForwardStandardDrawInfos, 0);
+	m_MeshManager.m_ForwardSkinnedDrawCommandBuffer.WriteCommands(m_ForwardSkinnedDrawCommands, 0);
+	m_MeshManager.m_ForwardSkinnedDrawInfoBuffer.WriteDrawInfos(m_ForwardSkinnedDrawInfos, 0);
 
 	// Upload opaque custom shader buffers to GPU
-	// FULL REBUILD: Always use glBufferData (not per-frame, ensures clean state)
-	if (!m_ForwardOpaqueCustomStandardItems.empty()) {
-		// Extract commands and infos from items
-		std::vector<DrawElementsIndirectCommand> commands;
-		std::vector<DrawInfo> infos;
-		commands.reserve(m_ForwardOpaqueCustomStandardItems.size());
-		infos.reserve(m_ForwardOpaqueCustomStandardItems.size());
-
-		for (const auto& item : m_ForwardOpaqueCustomStandardItems) {
-			commands.push_back(item.command);
-			infos.push_back(item.info);
-		}
-
+	if (!m_OpaqueCustomStandardDrawCommands.empty()) {
 		// Create buffers if needed
-		if (m_ForwardOpaqueCustomStandardCmdBuffer == 0) {
-			glGenBuffers(1, &m_ForwardOpaqueCustomStandardCmdBuffer);
-			glGenBuffers(1, &m_ForwardOpaqueCustomStandardInfoBuffer);
+		if (m_OpaqueCustomStandardCmdBuffer == 0) {
+			glGenBuffers(1, &m_OpaqueCustomStandardCmdBuffer);
+			glGenBuffers(1, &m_OpaqueCustomStandardInfoBuffer);
 		}
 
-		// Upload command buffer - always use glBufferData for full rebuild
-		size_t cmdSize = commands.size();
-		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardOpaqueCustomStandardCmdBuffer);
-		glBufferData(GL_DRAW_INDIRECT_BUFFER,
-			cmdSize * sizeof(DrawElementsIndirectCommand),
-			commands.data(),
-			GL_DYNAMIC_DRAW);
-		m_ForwardOpaqueCustomStandardCmdBufferCapacity = cmdSize;
+		// Upload command buffer - only reallocate if size changed
+		size_t cmdSize = m_OpaqueCustomStandardDrawCommands.size();
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_OpaqueCustomStandardCmdBuffer);
 
-		// Upload draw info buffer - always use glBufferData for full rebuild
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_ForwardOpaqueCustomStandardInfoBuffer);
-		glBufferData(GL_SHADER_STORAGE_BUFFER,
-			cmdSize * sizeof(DrawInfo),
-			infos.data(),
-			GL_DYNAMIC_DRAW);
-		m_ForwardOpaqueCustomStandardInfoBufferCapacity = cmdSize;
+		if (cmdSize != m_OpaqueCustomStandardCmdBufferCapacity) {
+			// Size changed - must reallocate to prevent stale data
+			glBufferData(GL_DRAW_INDIRECT_BUFFER,
+				cmdSize * sizeof(DrawElementsIndirectCommand),
+				m_OpaqueCustomStandardDrawCommands.data(),
+				GL_DYNAMIC_DRAW);
+			m_OpaqueCustomStandardCmdBufferCapacity = cmdSize;
+		}
+		else {
+			// Size unchanged - safe to use glBufferSubData (avoids orphaning)
+			glBufferSubData(GL_DRAW_INDIRECT_BUFFER, 0,
+				cmdSize * sizeof(DrawElementsIndirectCommand),
+				m_OpaqueCustomStandardDrawCommands.data());
+		}
+
+		// Upload draw info buffer - only reallocate if size changed
+		size_t infoSize = m_OpaqueCustomStandardDrawInfos.size();
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_OpaqueCustomStandardInfoBuffer);
+
+		if (infoSize != m_OpaqueCustomStandardInfoBufferCapacity) {
+			// Size changed - must reallocate to prevent stale data
+			glBufferData(GL_SHADER_STORAGE_BUFFER,
+				infoSize * sizeof(DrawInfo),
+				m_OpaqueCustomStandardDrawInfos.data(),
+				GL_DYNAMIC_DRAW);
+			m_OpaqueCustomStandardInfoBufferCapacity = infoSize;
+		}
+		else {
+			// Size unchanged - safe to use glBufferSubData (avoids orphaning)
+			glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0,
+				infoSize * sizeof(DrawInfo),
+				m_OpaqueCustomStandardDrawInfos.data());
+		}
 
 		// Track actual uploaded count (what's currently on GPU)
-		m_ForwardOpaqueCustomStandardUploadedCount = cmdSize;
+		m_OpaqueCustomStandardUploadedCount = cmdSize;
 	}
 	else {
 		// No data to upload - reset uploaded count
-		m_ForwardOpaqueCustomStandardUploadedCount = 0;
+		m_OpaqueCustomStandardUploadedCount = 0;
 	}
 
-	if (!m_ForwardOpaqueCustomSkinnedItems.empty()) {
-		// Extract commands and infos from items
-		std::vector<DrawElementsIndirectCommand> commands;
-		std::vector<DrawInfo> infos;
-		commands.reserve(m_ForwardOpaqueCustomSkinnedItems.size());
-		infos.reserve(m_ForwardOpaqueCustomSkinnedItems.size());
-
-		for (const auto& item : m_ForwardOpaqueCustomSkinnedItems) {
-			commands.push_back(item.command);
-			infos.push_back(item.info);
-		}
-
+	if (!m_OpaqueCustomSkinnedDrawCommands.empty()) {
 		// Create buffers if needed
-		if (m_ForwardOpaqueCustomSkinnedCmdBuffer == 0) {
-			glGenBuffers(1, &m_ForwardOpaqueCustomSkinnedCmdBuffer);
-			glGenBuffers(1, &m_ForwardOpaqueCustomSkinnedInfoBuffer);
+		if (m_OpaqueCustomSkinnedCmdBuffer == 0) {
+			glGenBuffers(1, &m_OpaqueCustomSkinnedCmdBuffer);
+			glGenBuffers(1, &m_OpaqueCustomSkinnedInfoBuffer);
 		}
 
-		// Upload command buffer - always use glBufferData for full rebuild
-		size_t cmdSize = commands.size();
-		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardOpaqueCustomSkinnedCmdBuffer);
-		glBufferData(GL_DRAW_INDIRECT_BUFFER,
-			cmdSize * sizeof(DrawElementsIndirectCommand),
-			commands.data(),
-			GL_DYNAMIC_DRAW);
-		m_ForwardOpaqueCustomSkinnedCmdBufferCapacity = cmdSize;
+		// Upload command buffer - only reallocate if size changed
+		size_t cmdSize = m_OpaqueCustomSkinnedDrawCommands.size();
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_OpaqueCustomSkinnedCmdBuffer);
 
-		// Upload draw info buffer - always use glBufferData for full rebuild
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_ForwardOpaqueCustomSkinnedInfoBuffer);
-		glBufferData(GL_SHADER_STORAGE_BUFFER,
-			cmdSize * sizeof(DrawInfo),
-			infos.data(),
-			GL_DYNAMIC_DRAW);
-		m_ForwardOpaqueCustomSkinnedInfoBufferCapacity = cmdSize;
+		if (cmdSize != m_OpaqueCustomSkinnedCmdBufferCapacity) {
+			// Size changed - must reallocate to prevent stale data
+			glBufferData(GL_DRAW_INDIRECT_BUFFER,
+				cmdSize * sizeof(DrawElementsIndirectCommand),
+				m_OpaqueCustomSkinnedDrawCommands.data(),
+				GL_DYNAMIC_DRAW);
+			m_OpaqueCustomSkinnedCmdBufferCapacity = cmdSize;
+		}
+		else {
+			// Size unchanged - safe to use glBufferSubData (avoids orphaning)
+			glBufferSubData(GL_DRAW_INDIRECT_BUFFER, 0,
+				cmdSize * sizeof(DrawElementsIndirectCommand),
+				m_OpaqueCustomSkinnedDrawCommands.data());
+		}
+
+		// Upload draw info buffer - only reallocate if size changed
+		size_t infoSize = m_OpaqueCustomSkinnedDrawInfos.size();
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_OpaqueCustomSkinnedInfoBuffer);
+
+		if (infoSize != m_OpaqueCustomSkinnedInfoBufferCapacity) {
+			// Size changed - must reallocate to prevent stale data
+			glBufferData(GL_SHADER_STORAGE_BUFFER,
+				infoSize * sizeof(DrawInfo),
+				m_OpaqueCustomSkinnedDrawInfos.data(),
+				GL_DYNAMIC_DRAW);
+			m_OpaqueCustomSkinnedInfoBufferCapacity = infoSize;
+		}
+		else {
+			// Size unchanged - safe to use glBufferSubData (avoids orphaning)
+			glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0,
+				infoSize * sizeof(DrawInfo),
+				m_OpaqueCustomSkinnedDrawInfos.data());
+		}
 
 		// Track actual uploaded count (what's currently on GPU)
-		m_ForwardOpaqueCustomSkinnedUploadedCount = cmdSize;
+		m_OpaqueCustomSkinnedUploadedCount = cmdSize;
 	}
 	else {
 		// No data to upload - reset uploaded count
-		m_ForwardOpaqueCustomSkinnedUploadedCount = 0;
+		m_OpaqueCustomSkinnedUploadedCount = 0;
 	}
 
 	// Upload transparent custom shader buffers to GPU
-	if (!m_ForwardTransparentCustomStandardItems.empty()) {
-		// Extract commands and infos from items
-		std::vector<DrawElementsIndirectCommand> commands;
-		std::vector<DrawInfo> infos;
-		commands.reserve(m_ForwardTransparentCustomStandardItems.size());
-		infos.reserve(m_ForwardTransparentCustomStandardItems.size());
-
-		for (const auto& item : m_ForwardTransparentCustomStandardItems) {
-			commands.push_back(item.command);
-			infos.push_back(item.info);
-		}
-
+	if (!m_TransparentCustomStandardDrawCommands.empty()) {
 		// Create buffers if needed
-		if (m_ForwardTransparentCustomStandardCmdBuffer == 0) {
-			glGenBuffers(1, &m_ForwardTransparentCustomStandardCmdBuffer);
-			glGenBuffers(1, &m_ForwardTransparentCustomStandardInfoBuffer);
+		if (m_TransparentCustomStandardCmdBuffer == 0) {
+			glGenBuffers(1, &m_TransparentCustomStandardCmdBuffer);
+			glGenBuffers(1, &m_TransparentCustomStandardInfoBuffer);
 		}
 
-		// Upload command buffer - always use glBufferData for full rebuild
-		size_t cmdSize = commands.size();
-		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardTransparentCustomStandardCmdBuffer);
-		glBufferData(GL_DRAW_INDIRECT_BUFFER,
-			cmdSize * sizeof(DrawElementsIndirectCommand),
-			commands.data(),
-			GL_DYNAMIC_DRAW);
-		m_ForwardTransparentCustomStandardCmdBufferCapacity = cmdSize;
+		// Upload command buffer - only reallocate if size changed
+		size_t cmdSize = m_TransparentCustomStandardDrawCommands.size();
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_TransparentCustomStandardCmdBuffer);
 
-		// Upload draw info buffer - always use glBufferData for full rebuild
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_ForwardTransparentCustomStandardInfoBuffer);
-		glBufferData(GL_SHADER_STORAGE_BUFFER,
-			cmdSize * sizeof(DrawInfo),
-			infos.data(),
-			GL_DYNAMIC_DRAW);
-		m_ForwardTransparentCustomStandardInfoBufferCapacity = cmdSize;
+		if (cmdSize != m_TransparentCustomStandardCmdBufferCapacity) {
+			// Size changed - must reallocate to prevent stale data
+			glBufferData(GL_DRAW_INDIRECT_BUFFER,
+				cmdSize * sizeof(DrawElementsIndirectCommand),
+				m_TransparentCustomStandardDrawCommands.data(),
+				GL_DYNAMIC_DRAW);
+			m_TransparentCustomStandardCmdBufferCapacity = cmdSize;
+		}
+		else {
+			// Size unchanged - safe to use glBufferSubData (avoids orphaning)
+			glBufferSubData(GL_DRAW_INDIRECT_BUFFER, 0,
+				cmdSize * sizeof(DrawElementsIndirectCommand),
+				m_TransparentCustomStandardDrawCommands.data());
+		}
+
+		// Upload draw info buffer - only reallocate if size changed
+		size_t infoSize = m_TransparentCustomStandardDrawInfos.size();
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_TransparentCustomStandardInfoBuffer);
+
+		if (infoSize != m_TransparentCustomStandardInfoBufferCapacity) {
+			// Size changed - must reallocate to prevent stale data
+			glBufferData(GL_SHADER_STORAGE_BUFFER,
+				infoSize * sizeof(DrawInfo),
+				m_TransparentCustomStandardDrawInfos.data(),
+				GL_DYNAMIC_DRAW);
+			m_TransparentCustomStandardInfoBufferCapacity = infoSize;
+		}
+		else {
+			// Size unchanged - safe to use glBufferSubData (avoids orphaning)
+			glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0,
+				infoSize * sizeof(DrawInfo),
+				m_TransparentCustomStandardDrawInfos.data());
+		}
 
 		// Track actual uploaded count (what's currently on GPU)
-		m_ForwardTransparentCustomStandardUploadedCount = cmdSize;
+		m_TransparentCustomStandardUploadedCount = cmdSize;
 	}
 	else {
 		// No data to upload - reset uploaded count
-		m_ForwardTransparentCustomStandardUploadedCount = 0;
+		m_TransparentCustomStandardUploadedCount = 0;
 	}
 
-	if (!m_ForwardTransparentCustomSkinnedItems.empty()) {
-		// Extract commands and infos from items
-		std::vector<DrawElementsIndirectCommand> commands;
-		std::vector<DrawInfo> infos;
-		commands.reserve(m_ForwardTransparentCustomSkinnedItems.size());
-		infos.reserve(m_ForwardTransparentCustomSkinnedItems.size());
-
-		for (const auto& item : m_ForwardTransparentCustomSkinnedItems) {
-			commands.push_back(item.command);
-			infos.push_back(item.info);
-		}
-
+	if (!m_TransparentCustomSkinnedDrawCommands.empty()) {
 		// Create buffers if needed
-		if (m_ForwardTransparentCustomSkinnedCmdBuffer == 0) {
-			glGenBuffers(1, &m_ForwardTransparentCustomSkinnedCmdBuffer);
-			glGenBuffers(1, &m_ForwardTransparentCustomSkinnedInfoBuffer);
+		if (m_TransparentCustomSkinnedCmdBuffer == 0) {
+			glGenBuffers(1, &m_TransparentCustomSkinnedCmdBuffer);
+			glGenBuffers(1, &m_TransparentCustomSkinnedInfoBuffer);
 		}
 
-		// Upload command buffer - always use glBufferData for full rebuild
-		size_t cmdSize = commands.size();
-		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardTransparentCustomSkinnedCmdBuffer);
-		glBufferData(GL_DRAW_INDIRECT_BUFFER,
-			cmdSize * sizeof(DrawElementsIndirectCommand),
-			commands.data(),
-			GL_DYNAMIC_DRAW);
-		m_ForwardTransparentCustomSkinnedCmdBufferCapacity = cmdSize;
+		// Upload command buffer - only reallocate if size changed
+		size_t cmdSize = m_TransparentCustomSkinnedDrawCommands.size();
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_TransparentCustomSkinnedCmdBuffer);
 
-		// Upload draw info buffer - always use glBufferData for full rebuild
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_ForwardTransparentCustomSkinnedInfoBuffer);
-		glBufferData(GL_SHADER_STORAGE_BUFFER,
-			cmdSize * sizeof(DrawInfo),
-			infos.data(),
-			GL_DYNAMIC_DRAW);
-		m_ForwardTransparentCustomSkinnedInfoBufferCapacity = cmdSize;
+		if (cmdSize != m_TransparentCustomSkinnedCmdBufferCapacity) {
+			// Size changed - must reallocate to prevent stale data
+			glBufferData(GL_DRAW_INDIRECT_BUFFER,
+				cmdSize * sizeof(DrawElementsIndirectCommand),
+				m_TransparentCustomSkinnedDrawCommands.data(),
+				GL_DYNAMIC_DRAW);
+			m_TransparentCustomSkinnedCmdBufferCapacity = cmdSize;
+		}
+		else {
+			// Size unchanged - safe to use glBufferSubData (avoids orphaning)
+			glBufferSubData(GL_DRAW_INDIRECT_BUFFER, 0,
+				cmdSize * sizeof(DrawElementsIndirectCommand),
+				m_TransparentCustomSkinnedDrawCommands.data());
+		}
+
+		// Upload draw info buffer - only reallocate if size changed
+		size_t infoSize = m_TransparentCustomSkinnedDrawInfos.size();
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_TransparentCustomSkinnedInfoBuffer);
+
+		if (infoSize != m_TransparentCustomSkinnedInfoBufferCapacity) {
+			// Size changed - must reallocate to prevent stale data
+			glBufferData(GL_SHADER_STORAGE_BUFFER,
+				infoSize * sizeof(DrawInfo),
+				m_TransparentCustomSkinnedDrawInfos.data(),
+				GL_DYNAMIC_DRAW);
+			m_TransparentCustomSkinnedInfoBufferCapacity = infoSize;
+		}
+		else {
+			// Size unchanged - safe to use glBufferSubData (avoids orphaning)
+			glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0,
+				infoSize * sizeof(DrawInfo),
+				m_TransparentCustomSkinnedDrawInfos.data());
+		}
 
 		// Track actual uploaded count (what's currently on GPU)
-		m_ForwardTransparentCustomSkinnedUploadedCount = cmdSize;
+		m_TransparentCustomSkinnedUploadedCount = cmdSize;
 	}
 	else {
 		// No data to upload - reset uploaded count
-		m_ForwardTransparentCustomSkinnedUploadedCount = 0;
+		m_TransparentCustomSkinnedUploadedCount = 0;
 	}
 
 	// Unbind buffers
 	glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
-	// PASS 5: SHADOW PASS - ALL geometry with castsShadows=true (instanced for cascaded shadow maps)
-	//      No need to merge from geometry/forward passes - they're already included
+	// Write shadow pass buffers with instanced commands
+	// Use cached total instances (calculated in UpdateLightsUBO)
 
+	// Build shadow standard commands: visible + shadow-only + opaque custom (all with instanced rendering)
 	std::vector<DrawElementsIndirectCommand> shadowStandardCommands;
-	shadowStandardCommands.reserve(m_ShadowStandardCommands.size());
+	std::vector<DrawInfo> shadowStandardInfos;
+	shadowStandardCommands.reserve(m_StandardDrawCommands.size() + m_OpaqueCustomStandardDrawCommands.size() + m_ShadowOnlyStandardDrawCommands.size());
+	shadowStandardInfos.reserve(m_StandardDrawInfos.size() + m_OpaqueCustomStandardDrawInfos.size() + m_ShadowOnlyStandardDrawInfos.size());
 
-	// Set instance count for cascaded shadow maps
-	for (const auto& cmd : m_ShadowStandardCommands) {
+	// Add visible standard meshes that cast shadows (using tracked flags)
+	for (size_t i = 0; i < m_StandardDrawCommands.size(); ++i) {
+		if (i < m_StandardCastsShadows.size() && m_StandardCastsShadows[i]) {
+			DrawElementsIndirectCommand shadowCmd = m_StandardDrawCommands[i];
+			shadowCmd.instanceCount = m_TotalShadowInstances;
+			shadowStandardCommands.push_back(shadowCmd);
+			shadowStandardInfos.push_back(m_StandardDrawInfos[i]);
+		}
+	}
+
+	// Add visible opaque custom standard meshes that cast shadows
+	for (size_t i = 0; i < m_OpaqueCustomStandardDrawCommands.size(); ++i) {
+		if (i < m_OpaqueCustomStandardCastsShadows.size() && m_OpaqueCustomStandardCastsShadows[i]) {
+			DrawElementsIndirectCommand shadowCmd = m_OpaqueCustomStandardDrawCommands[i];
+			shadowCmd.instanceCount = m_TotalShadowInstances;
+			shadowStandardCommands.push_back(shadowCmd);
+			shadowStandardInfos.push_back(m_OpaqueCustomStandardDrawInfos[i]);
+		}
+	}
+
+	// Add shadow-only standard meshes (instanced)
+	for (const auto& cmd : m_ShadowOnlyStandardDrawCommands) {
 		DrawElementsIndirectCommand shadowCmd = cmd;
 		shadowCmd.instanceCount = m_TotalShadowInstances;
 		shadowStandardCommands.push_back(shadowCmd);
 	}
+	shadowStandardInfos.insert(shadowStandardInfos.end(), m_ShadowOnlyStandardDrawInfos.begin(), m_ShadowOnlyStandardDrawInfos.end());
 
+	// Build shadow skinned commands: visible + shadow-only + opaque custom (all with instanced rendering)
 	std::vector<DrawElementsIndirectCommand> shadowSkinnedCommands;
-	shadowSkinnedCommands.reserve(m_ShadowSkinnedCommands.size());
+	std::vector<DrawInfo> shadowSkinnedInfos;
+	shadowSkinnedCommands.reserve(m_SkinnedDrawCommands.size() + m_OpaqueCustomSkinnedDrawCommands.size() + m_ShadowOnlySkinnedDrawCommands.size());
+	shadowSkinnedInfos.reserve(m_SkinnedDrawInfos.size() + m_OpaqueCustomSkinnedDrawInfos.size() + m_ShadowOnlySkinnedDrawInfos.size());
 
-	// Set instance count for cascaded shadow maps
-	for (const auto& cmd : m_ShadowSkinnedCommands) {
+	// Add visible skinned meshes that cast shadows (using tracked flags)
+	for (size_t i = 0; i < m_SkinnedDrawCommands.size(); ++i) {
+		if (i < m_SkinnedCastsShadows.size() && m_SkinnedCastsShadows[i]) {
+			DrawElementsIndirectCommand shadowCmd = m_SkinnedDrawCommands[i];
+			shadowCmd.instanceCount = m_TotalShadowInstances;
+			shadowSkinnedCommands.push_back(shadowCmd);
+			shadowSkinnedInfos.push_back(m_SkinnedDrawInfos[i]);
+		}
+	}
+
+	// Add visible opaque custom skinned meshes that cast shadows
+	for (size_t i = 0; i < m_OpaqueCustomSkinnedDrawCommands.size(); ++i) {
+		if (i < m_OpaqueCustomSkinnedCastsShadows.size() && m_OpaqueCustomSkinnedCastsShadows[i]) {
+			DrawElementsIndirectCommand shadowCmd = m_OpaqueCustomSkinnedDrawCommands[i];
+			shadowCmd.instanceCount = m_TotalShadowInstances;
+			shadowSkinnedCommands.push_back(shadowCmd);
+			shadowSkinnedInfos.push_back(m_OpaqueCustomSkinnedDrawInfos[i]);
+		}
+	}
+
+	// Add shadow-only skinned meshes (instanced)
+	for (const auto& cmd : m_ShadowOnlySkinnedDrawCommands) {
 		DrawElementsIndirectCommand shadowCmd = cmd;
 		shadowCmd.instanceCount = m_TotalShadowInstances;
 		shadowSkinnedCommands.push_back(shadowCmd);
 	}
+	shadowSkinnedInfos.insert(shadowSkinnedInfos.end(), m_ShadowOnlySkinnedDrawInfos.begin(), m_ShadowOnlySkinnedDrawInfos.end());
 
-	// Write shadow buffers (infos are already correct, just need instanced commands)
+	// Write combined shadow buffers
 	m_MeshManager.m_ShadowStandardDrawCommandBuffer.WriteCommands(shadowStandardCommands, 0);
-	m_MeshManager.m_ShadowStandardDrawInfoBuffer.WriteDrawInfos(m_ShadowStandardInfos, 0);
+	m_MeshManager.m_ShadowStandardDrawInfoBuffer.WriteDrawInfos(shadowStandardInfos, 0);
 	m_MeshManager.m_ShadowSkinnedDrawCommandBuffer.WriteCommands(shadowSkinnedCommands, 0);
-	m_MeshManager.m_ShadowSkinnedDrawInfoBuffer.WriteDrawInfos(m_ShadowSkinnedInfos, 0);
-
-	// ========== SORTING ==========
-	// Sort opaque custom shaders by shader pointer (for batching, minimize state changes)
-	// NOTE: This doesn't require camera position, only shader pointer comparison
-	SortOpaqueCustomShadersByShader();
-
-	// Transparent sorting happens later during RenderGeometryPass when view matrix is available
-	// (Transparent sorting requires camera position calculated from view matrix)
+	m_MeshManager.m_ShadowSkinnedDrawInfoBuffer.WriteDrawInfos(shadowSkinnedInfos, 0);
 
 	// ========== UPDATE DIRTY TRACKING HASHES ==========
 	// Update entity list hash for next frame's comparison
@@ -2410,62 +2471,56 @@ void Renderer::UpdateDrawData()
 	const auto& ecs = Ermine::ECS::GetInstance();
 
 	// Clear previous frame's commands (but NOT the cache!)
-	m_DepthPrepassStandardCommands.clear();
-	m_DepthPrepassStandardInfos.clear();
-	m_DepthPrepassSkinnedCommands.clear();
-	m_DepthPrepassSkinnedInfos.clear();
+	m_StandardDrawCommands.clear();
+	m_StandardDrawInfos.clear();
+	m_SkinnedDrawCommands.clear();
+	m_SkinnedDrawInfos.clear();
 
-	m_PickingStandardCommands.clear();
-	m_PickingStandardInfos.clear();
-	m_PickingSkinnedCommands.clear();
-	m_PickingSkinnedInfos.clear();
+	m_ForwardStandardDrawCommands.clear();
+	m_ForwardStandardDrawInfos.clear();
+	m_ForwardSkinnedDrawCommands.clear();
+	m_ForwardSkinnedDrawInfos.clear();
 
-	m_GeometryStandardItems.clear();
-	m_GeometrySkinnedItems.clear();
+	// NOTE: Do NOT clear custom shader lists here in the fast path
+	// They persist across frames and are only cleared during full rebuild in CompileDrawData()
+	// This allows rendering to use uploaded counts while accessing shader pointers
 
-	m_ForwardTransparentDefaultStandardItems.clear();
-	m_ForwardTransparentDefaultSkinnedItems.clear();
+	m_ShadowOnlyStandardDrawCommands.clear();
+	m_ShadowOnlyStandardDrawInfos.clear();
+	m_ShadowOnlySkinnedDrawCommands.clear();
+	m_ShadowOnlySkinnedDrawInfos.clear();
 
-	// Clear custom shader item lists (rebuilt every frame with updated transforms)
-	m_ForwardOpaqueCustomStandardItems.clear();
-	m_ForwardOpaqueCustomSkinnedItems.clear();
-	m_ForwardTransparentCustomStandardItems.clear();
-	m_ForwardTransparentCustomSkinnedItems.clear();
-
-	m_ShadowStandardCommands.clear();
-	m_ShadowStandardInfos.clear();
-	m_ShadowSkinnedCommands.clear();
-	m_ShadowSkinnedInfos.clear();
+	// Clear shadow casting flag tracking (except custom shader flags which persist)
+	m_StandardCastsShadows.clear();
+	m_SkinnedCastsShadows.clear();
 
 	// Reset counters
-	m_GeometryStandardVertexCount = 0;
-	m_GeometryStandardIndexCount = 0;
-	m_GeometrySkinnedVertexCount = 0;
-	m_GeometrySkinnedIndexCount = 0;
+	m_StandardDrawCommandsVertexCount = 0;
+	m_StandardDrawCommandsIndexCount = 0;
+	m_SkinnedDrawCommandsVertexCount = 0;
+	m_SkinnedDrawCommandsIndexCount = 0;
 	m_ForwardPassDrawCommandsVertexCount = 0;
 	m_ForwardPassDrawCommandsIndexCount = 0;
 
 	// Reserve space (same as rebuild)
-	m_DepthPrepassStandardCommands.reserve(m_Entities.size());
-	m_DepthPrepassStandardInfos.reserve(m_Entities.size());
-	m_DepthPrepassSkinnedCommands.reserve(m_Entities.size() / 4);
-	m_DepthPrepassSkinnedInfos.reserve(m_Entities.size() / 4);
+	m_StandardDrawCommands.reserve(m_Entities.size());
+	m_StandardDrawInfos.reserve(m_Entities.size());
+	m_SkinnedDrawCommands.reserve(m_Entities.size() / 4);
+	m_SkinnedDrawInfos.reserve(m_Entities.size() / 4);
 
-	m_PickingStandardCommands.reserve(m_Entities.size());
-	m_PickingStandardInfos.reserve(m_Entities.size());
-	m_PickingSkinnedCommands.reserve(m_Entities.size() / 4);
-	m_PickingSkinnedInfos.reserve(m_Entities.size() / 4);
+	m_ForwardStandardDrawCommands.reserve(m_Entities.size() / 4);
+	m_ForwardStandardDrawInfos.reserve(m_Entities.size() / 4);
+	m_ForwardSkinnedDrawCommands.reserve(m_Entities.size() / 8);
+	m_ForwardSkinnedDrawInfos.reserve(m_Entities.size() / 8);
 
-	m_GeometryStandardItems.reserve(m_Entities.size());
-	m_GeometrySkinnedItems.reserve(m_Entities.size() / 4);
+	m_ShadowOnlyStandardDrawCommands.reserve(m_Entities.size() / 4);
+	m_ShadowOnlyStandardDrawInfos.reserve(m_Entities.size() / 4);
+	m_ShadowOnlySkinnedDrawCommands.reserve(m_Entities.size() / 8);
+	m_ShadowOnlySkinnedDrawInfos.reserve(m_Entities.size() / 8);
 
-	m_ForwardTransparentDefaultStandardItems.reserve(m_Entities.size() / 4);
-	m_ForwardTransparentDefaultSkinnedItems.reserve(m_Entities.size() / 8);
-
-	m_ShadowStandardCommands.reserve(m_Entities.size() / 4);
-	m_ShadowStandardInfos.reserve(m_Entities.size() / 4);
-	m_ShadowSkinnedCommands.reserve(m_Entities.size() / 8);
-	m_ShadowSkinnedInfos.reserve(m_Entities.size() / 8);
+	// Reserve shadow casting flag tracking
+	m_StandardCastsShadows.reserve(m_Entities.size());
+	m_SkinnedCastsShadows.reserve(m_Entities.size() / 4);
 
 	// ========== FRUSTUM CULLING SETUP ==========
 	Mtx44 viewMtx, projMtx;
@@ -2603,57 +2658,85 @@ void Renderer::UpdateDrawData()
 
 		// Route to appropriate buffers based on culling and transparency
 		if (isCulled) {
-			// Culled meshes - skip all visible passes (depth, picking, geometry, forward)
+			// Culled meshes go to shadow-only buffers (if they cast shadows)
 			culledMeshes++;
-		}
-		else {
-			// ========== VISIBLE MESHES - Route to visible passes ==========
+			// Skip if material doesn't cast shadows
+			if (!cachedItem.castsShadows) {
+				continue;
+			}
 
-			// PASS 1: PICKING PASS - ALL visible geometry (opaque + transparent, for object selection)
+			// Add to shadow-only buffers
+			// Now includes transparent objects that cast shadows!
 			if (cachedItem.useSkinning) {
-				m_PickingSkinnedCommands.push_back(cmd);
-				m_PickingSkinnedInfos.push_back(info);
+				m_ShadowOnlySkinnedDrawCommands.push_back(cmd);
+				m_ShadowOnlySkinnedDrawInfos.push_back(info);
 			}
 			else {
-				m_PickingStandardCommands.push_back(cmd);
-				m_PickingStandardInfos.push_back(info);
+				m_ShadowOnlyStandardDrawCommands.push_back(cmd);
+				m_ShadowOnlyStandardDrawInfos.push_back(info);
+			}
+			continue;
+		}
+
+		// Visible meshes - route to transparent custom vs transparent standard
+		if (cachedItem.isTransparent) {
+			// Check if transparent has custom shader
+			bool hasCustom = false;
+			Ermine::graphics::Material* meshMaterial = nullptr;
+
+			if (ecs.HasComponent<Ermine::Material>(cachedItem.materialEntity)) {
+				auto& materialComponent = ecs.GetComponent<Ermine::Material>(cachedItem.materialEntity);
+				meshMaterial = materialComponent.GetMaterial();
 			}
 
-			// PASS 2: DEPTH PREPASS - Opaque visible geometry only (for early-z rejection)
-			// Transparent objects excluded to prevent depth conflicts with objects behind them
-			if (!cachedItem.isTransparent) {
+			if (meshMaterial && cachedItem.hasCustomShader) {
+				// Double-check with updated HasCustomShader logic
+				hasCustom = HasCustomShader(meshMaterial);
+			}
+
+			if (hasCustom) {
+				// Transparent custom shader pass
 				if (cachedItem.useSkinning) {
-					m_DepthPrepassSkinnedCommands.push_back(cmd);
-					m_DepthPrepassSkinnedInfos.push_back(info);
+					m_TransparentCustomSkinnedDrawCommands.push_back(cmd);
+					m_TransparentCustomSkinnedDrawInfos.push_back(info);
+					m_TransparentCustomSkinnedShaders.push_back(meshMaterial->GetShader());
 				}
 				else {
-					m_DepthPrepassStandardCommands.push_back(cmd);
-					m_DepthPrepassStandardInfos.push_back(info);
+					m_TransparentCustomStandardDrawCommands.push_back(cmd);
+					m_TransparentCustomStandardDrawInfos.push_back(info);
+					m_TransparentCustomStandardShaders.push_back(meshMaterial->GetShader());
 				}
 			}
-
-			// PASS 3: GEOMETRY/FORWARD - Route by shader type and transparency
-			if (!cachedItem.isTransparent && !cachedItem.hasCustomShader) {
-				// Opaque default shader → Geometry pass (deferred lighting)
-				DefaultShaderDrawItem item;
-				item.command = cmd;
-				item.info = info;
-				item.castsShadows = cachedItem.castsShadows;
-
+			else {
+				// Transparent standard forward pass
 				if (cachedItem.useSkinning) {
-					m_GeometrySkinnedItems.push_back(item);
-					m_GeometrySkinnedVertexCount += cachedItem.meshData->vertexCount;
-					m_GeometrySkinnedIndexCount += cmd.count;
+					m_ForwardSkinnedDrawCommands.push_back(cmd);
+					m_ForwardSkinnedDrawInfos.push_back(info);
 				}
 				else {
-					m_GeometryStandardItems.push_back(item);
-					m_GeometryStandardVertexCount += cachedItem.meshData->vertexCount;
-					m_GeometryStandardIndexCount += cmd.count;
+					m_ForwardStandardDrawCommands.push_back(cmd);
+					m_ForwardStandardDrawInfos.push_back(info);
 				}
 			}
-			else if (!cachedItem.isTransparent && cachedItem.hasCustomShader) {
-				// Opaque custom shader → Forward pass (rendered after geometry)
-				// Verify it's truly a custom shader with updated logic
+			m_ForwardPassDrawCommandsVertexCount += cachedItem.meshData->vertexCount;
+			m_ForwardPassDrawCommandsIndexCount += cmd.count;
+
+			// Also add to shadow buffer if material casts shadows
+			if (cachedItem.castsShadows) {
+				if (cachedItem.useSkinning) {
+					m_ShadowOnlySkinnedDrawCommands.push_back(cmd);
+					m_ShadowOnlySkinnedDrawInfos.push_back(info);
+				}
+				else {
+					m_ShadowOnlyStandardDrawCommands.push_back(cmd);
+					m_ShadowOnlyStandardDrawInfos.push_back(info);
+				}
+			}
+		}
+		else {
+			// Opaque objects - check if custom shader or standard geometry pass
+			if (cachedItem.hasCustomShader) {
+				// Get material to verify it's truly a custom shader with updated logic
 				Ermine::graphics::Material* meshMaterial = nullptr;
 				if (ecs.HasComponent<Ermine::Material>(cachedItem.materialEntity)) {
 					auto& materialComponent = ecs.GetComponent<Ermine::Material>(cachedItem.materialEntity);
@@ -2663,324 +2746,132 @@ void Renderer::UpdateDrawData()
 				// Double-check with updated HasCustomShader logic
 				if (meshMaterial && HasCustomShader(meshMaterial)) {
 					// Opaque custom shader pass
-					CustomShaderDrawItem item;
-					item.command = cmd;
-					item.info = info;
-					item.shader = meshMaterial->GetShader();
-					item.castsShadows = cachedItem.castsShadows;
-
 					if (cachedItem.useSkinning) {
-						m_ForwardOpaqueCustomSkinnedItems.push_back(item);
+						m_OpaqueCustomSkinnedDrawCommands.push_back(cmd);
+						m_OpaqueCustomSkinnedDrawInfos.push_back(info);
+						m_OpaqueCustomSkinnedShaders.push_back(meshMaterial->GetShader());
+						m_OpaqueCustomSkinnedCastsShadows.push_back(cachedItem.castsShadows);
 					}
 					else {
-						m_ForwardOpaqueCustomStandardItems.push_back(item);
+						m_OpaqueCustomStandardDrawCommands.push_back(cmd);
+						m_OpaqueCustomStandardDrawInfos.push_back(info);
+						m_OpaqueCustomStandardShaders.push_back(meshMaterial->GetShader());
+						m_OpaqueCustomStandardCastsShadows.push_back(cachedItem.castsShadows);
+					}
+
+					// Also add to shadow buffer if material casts shadows
+					if (cachedItem.castsShadows) {
+						if (cachedItem.useSkinning) {
+							m_ShadowOnlySkinnedDrawCommands.push_back(cmd);
+							m_ShadowOnlySkinnedDrawInfos.push_back(info);
+						}
+						else {
+							m_ShadowOnlyStandardDrawCommands.push_back(cmd);
+							m_ShadowOnlyStandardDrawInfos.push_back(info);
+						}
 					}
 				}
 				else {
 					// Was marked as custom but isn't anymore - treat as standard geometry pass
-					DefaultShaderDrawItem item;
-					item.command = cmd;
-					item.info = info;
-					item.castsShadows = cachedItem.castsShadows;
-
 					if (cachedItem.useSkinning) {
-						m_GeometrySkinnedItems.push_back(item);
-						m_GeometrySkinnedVertexCount += cachedItem.meshData->vertexCount;
-						m_GeometrySkinnedIndexCount += cmd.count;
+						m_SkinnedDrawCommands.push_back(cmd);
+						m_SkinnedDrawInfos.push_back(info);
+						m_SkinnedCastsShadows.push_back(cachedItem.castsShadows);
+						m_SkinnedDrawCommandsVertexCount += cachedItem.meshData->vertexCount;
+						m_SkinnedDrawCommandsIndexCount += cmd.count;
 					}
 					else {
-						m_GeometryStandardItems.push_back(item);
-						m_GeometryStandardVertexCount += cachedItem.meshData->vertexCount;
-						m_GeometryStandardIndexCount += cmd.count;
+						m_StandardDrawCommands.push_back(cmd);
+						m_StandardDrawInfos.push_back(info);
+						m_StandardCastsShadows.push_back(cachedItem.castsShadows);
+						m_StandardDrawCommandsVertexCount += cachedItem.meshData->vertexCount;
+						m_StandardDrawCommandsIndexCount += cmd.count;
 					}
 				}
-			}
-			else if (cachedItem.isTransparent && !cachedItem.hasCustomShader) {
-				// Transparent default shader → Forward pass (sorted, back-to-front)
-				DefaultShaderDrawItem item;
-				item.command = cmd;
-				item.info = info;
-				item.castsShadows = cachedItem.castsShadows;
-
-				if (cachedItem.useSkinning) {
-					m_ForwardTransparentDefaultSkinnedItems.push_back(item);
-				}
-				else {
-					m_ForwardTransparentDefaultStandardItems.push_back(item);
-				}
-				m_ForwardPassDrawCommandsVertexCount += cachedItem.meshData->vertexCount;
-				m_ForwardPassDrawCommandsIndexCount += cmd.count;
-			}
-			else if (cachedItem.isTransparent && cachedItem.hasCustomShader) {
-				// Transparent custom shader → Forward pass (sorted, back-to-front)
-				// Check if transparent has custom shader
-				Ermine::graphics::Material* meshMaterial = nullptr;
-				if (ecs.HasComponent<Ermine::Material>(cachedItem.materialEntity)) {
-					auto& materialComponent = ecs.GetComponent<Ermine::Material>(cachedItem.materialEntity);
-					meshMaterial = materialComponent.GetMaterial();
-				}
-
-				// Double-check with updated HasCustomShader logic
-				if (meshMaterial && HasCustomShader(meshMaterial)) {
-					// Transparent custom shader pass
-					CustomShaderDrawItem item;
-					item.command = cmd;
-					item.info = info;
-					item.shader = meshMaterial->GetShader();
-					item.castsShadows = cachedItem.castsShadows;
-
-					if (cachedItem.useSkinning) {
-						m_ForwardTransparentCustomSkinnedItems.push_back(item);
-					}
-					else {
-						m_ForwardTransparentCustomStandardItems.push_back(item);
-					}
-				}
-				else {
-					// Was marked as custom but isn't anymore - treat as standard transparent
-					DefaultShaderDrawItem item;
-					item.command = cmd;
-					item.info = info;
-					item.castsShadows = cachedItem.castsShadows;
-
-					if (cachedItem.useSkinning) {
-						m_ForwardTransparentDefaultSkinnedItems.push_back(item);
-					}
-					else {
-						m_ForwardTransparentDefaultStandardItems.push_back(item);
-					}
-				}
-				m_ForwardPassDrawCommandsVertexCount += cachedItem.meshData->vertexCount;
-				m_ForwardPassDrawCommandsIndexCount += cmd.count;
-			}
-		}
-
-		// PASS 4: SHADOW PASS - ALL geometry (visible OR culled) that casts shadows
-		if (cachedItem.castsShadows) {
-			if (cachedItem.useSkinning) {
-				m_ShadowSkinnedCommands.push_back(cmd);
-				m_ShadowSkinnedInfos.push_back(info);
 			}
 			else {
-				m_ShadowStandardCommands.push_back(cmd);
-				m_ShadowStandardInfos.push_back(info);
+				// Geometry pass (opaque, standard shader)
+				// These already cast shadows via the standard/skinned draw commands
+				if (cachedItem.useSkinning) {
+					m_SkinnedDrawCommands.push_back(cmd);
+					m_SkinnedDrawInfos.push_back(info);
+					m_SkinnedCastsShadows.push_back(cachedItem.castsShadows);
+					m_SkinnedDrawCommandsVertexCount += cachedItem.meshData->vertexCount;
+					m_SkinnedDrawCommandsIndexCount += cmd.count;
+				}
+				else {
+					m_StandardDrawCommands.push_back(cmd);
+					m_StandardDrawInfos.push_back(info);
+					m_StandardCastsShadows.push_back(cachedItem.castsShadows);
+					m_StandardDrawCommandsVertexCount += cachedItem.meshData->vertexCount;
+					m_StandardDrawCommandsIndexCount += cmd.count;
+				}
 			}
 		}
 	}
 
 	GPUProfiler::SetCulledMeshesCount(culledMeshes);
 
-	// ========== SORTING ==========
-	// Transparent sorting happens later during RenderGeometryPass when view matrix is available
-	// (Sorting requires camera position calculated from view matrix)
-	// Fast path uses distance-only sorting within existing shader groups
-
 	// ========== WRITE ALL DRAW DATA TO GPU BUFFERS ==========
-	// PASS 1: PICKING PASS - ALL visible geometry (opaque + transparent, for object selection)
-	m_MeshManager.m_PickingStandardDrawCommandBuffer.WriteCommands(m_PickingStandardCommands, 0);
-	m_MeshManager.m_PickingStandardDrawInfoBuffer.WriteDrawInfos(m_PickingStandardInfos, 0);
-	m_MeshManager.m_PickingSkinnedDrawCommandBuffer.WriteCommands(m_PickingSkinnedCommands, 0);
-	m_MeshManager.m_PickingSkinnedDrawInfoBuffer.WriteDrawInfos(m_PickingSkinnedInfos, 0);
+	m_MeshManager.m_GeometryStandardDrawCommandBuffer.WriteCommands(m_StandardDrawCommands, 0);
+	m_MeshManager.m_GeometryStandardDrawInfoBuffer.WriteDrawInfos(m_StandardDrawInfos, 0);
+	m_MeshManager.m_GeometrySkinnedDrawCommandBuffer.WriteCommands(m_SkinnedDrawCommands, 0);
+	m_MeshManager.m_GeometrySkinnedDrawInfoBuffer.WriteDrawInfos(m_SkinnedDrawInfos, 0);
 
-	// PASS 2: DEPTH PREPASS - Opaque visible geometry only (for early-z rejection)
-	m_MeshManager.m_DepthPrepassStandardDrawCommandBuffer.WriteCommands(m_DepthPrepassStandardCommands, 0);
-	m_MeshManager.m_DepthPrepassStandardDrawInfoBuffer.WriteDrawInfos(m_DepthPrepassStandardInfos, 0);
-	m_MeshManager.m_DepthPrepassSkinnedDrawCommandBuffer.WriteCommands(m_DepthPrepassSkinnedCommands, 0);
-	m_MeshManager.m_DepthPrepassSkinnedDrawInfoBuffer.WriteDrawInfos(m_DepthPrepassSkinnedInfos, 0);
+	m_MeshManager.m_ForwardStandardDrawCommandBuffer.WriteCommands(m_ForwardStandardDrawCommands, 0);
+	m_MeshManager.m_ForwardStandardDrawInfoBuffer.WriteDrawInfos(m_ForwardStandardDrawInfos, 0);
+	m_MeshManager.m_ForwardSkinnedDrawCommandBuffer.WriteCommands(m_ForwardSkinnedDrawCommands, 0);
+	m_MeshManager.m_ForwardSkinnedDrawInfoBuffer.WriteDrawInfos(m_ForwardSkinnedDrawInfos, 0);
 
-	// Extract commands and infos from Items for geometry pass
-	std::vector<DrawElementsIndirectCommand> geometryStandardCommands;
-	std::vector<DrawInfo> geometryStandardInfos;
-	geometryStandardCommands.reserve(m_GeometryStandardItems.size());
-	geometryStandardInfos.reserve(m_GeometryStandardItems.size());
-	for (const auto& item : m_GeometryStandardItems) {
-		geometryStandardCommands.push_back(item.command);
-		geometryStandardInfos.push_back(item.info);
-	}
-
-	std::vector<DrawElementsIndirectCommand> geometrySkinnedCommands;
-	std::vector<DrawInfo> geometrySkinnedInfos;
-	geometrySkinnedCommands.reserve(m_GeometrySkinnedItems.size());
-	geometrySkinnedInfos.reserve(m_GeometrySkinnedItems.size());
-	for (const auto& item : m_GeometrySkinnedItems) {
-		geometrySkinnedCommands.push_back(item.command);
-		geometrySkinnedInfos.push_back(item.info);
-	}
-
-	m_MeshManager.m_GeometryStandardDrawCommandBuffer.WriteCommands(geometryStandardCommands, 0);
-	m_MeshManager.m_GeometryStandardDrawInfoBuffer.WriteDrawInfos(geometryStandardInfos, 0);
-	m_MeshManager.m_GeometrySkinnedDrawCommandBuffer.WriteCommands(geometrySkinnedCommands, 0);
-	m_MeshManager.m_GeometrySkinnedDrawInfoBuffer.WriteDrawInfos(geometrySkinnedInfos, 0);
-
-	// Extract commands and infos from Items for forward transparent default pass
-	std::vector<DrawElementsIndirectCommand> forwardTransparentDefaultStandardCommands;
-	std::vector<DrawInfo> forwardTransparentDefaultStandardInfos;
-	forwardTransparentDefaultStandardCommands.reserve(m_ForwardTransparentDefaultStandardItems.size());
-	forwardTransparentDefaultStandardInfos.reserve(m_ForwardTransparentDefaultStandardItems.size());
-	for (const auto& item : m_ForwardTransparentDefaultStandardItems) {
-		forwardTransparentDefaultStandardCommands.push_back(item.command);
-		forwardTransparentDefaultStandardInfos.push_back(item.info);
-	}
-
-	std::vector<DrawElementsIndirectCommand> forwardTransparentDefaultSkinnedCommands;
-	std::vector<DrawInfo> forwardTransparentDefaultSkinnedInfos;
-	forwardTransparentDefaultSkinnedCommands.reserve(m_ForwardTransparentDefaultSkinnedItems.size());
-	forwardTransparentDefaultSkinnedInfos.reserve(m_ForwardTransparentDefaultSkinnedItems.size());
-	for (const auto& item : m_ForwardTransparentDefaultSkinnedItems) {
-		forwardTransparentDefaultSkinnedCommands.push_back(item.command);
-		forwardTransparentDefaultSkinnedInfos.push_back(item.info);
-	}
-
-	m_MeshManager.m_ForwardStandardDrawCommandBuffer.WriteCommands(forwardTransparentDefaultStandardCommands, 0);
-	m_MeshManager.m_ForwardStandardDrawInfoBuffer.WriteDrawInfos(forwardTransparentDefaultStandardInfos, 0);
-	m_MeshManager.m_ForwardSkinnedDrawCommandBuffer.WriteCommands(forwardTransparentDefaultSkinnedCommands, 0);
-	m_MeshManager.m_ForwardSkinnedDrawInfoBuffer.WriteDrawInfos(forwardTransparentDefaultSkinnedInfos, 0);
-
-	// PASS 5: SHADOW PASS - ALL geometry with castsShadows=true (instanced for cascaded shadow maps)
-
+	// Build shadow commands with instancing
 	std::vector<DrawElementsIndirectCommand> shadowStandardCommands;
-	shadowStandardCommands.reserve(m_ShadowStandardCommands.size());
+	std::vector<DrawInfo> shadowStandardInfos;
+	shadowStandardCommands.reserve(m_StandardDrawCommands.size() + m_ShadowOnlyStandardDrawCommands.size());
+	shadowStandardInfos.reserve(m_StandardDrawInfos.size() + m_ShadowOnlyStandardDrawInfos.size());
 
-	for (const auto& cmd : m_ShadowStandardCommands) {
+	// Add visible standard meshes that cast shadows (using tracked flags)
+	for (size_t i = 0; i < m_StandardDrawCommands.size(); ++i) {
+		if (i < m_StandardCastsShadows.size() && m_StandardCastsShadows[i]) {
+			DrawElementsIndirectCommand shadowCmd = m_StandardDrawCommands[i];
+			shadowCmd.instanceCount = m_TotalShadowInstances;
+			shadowStandardCommands.push_back(shadowCmd);
+			shadowStandardInfos.push_back(m_StandardDrawInfos[i]);
+		}
+	}
+
+	for (const auto& cmd : m_ShadowOnlyStandardDrawCommands) {
 		DrawElementsIndirectCommand shadowCmd = cmd;
 		shadowCmd.instanceCount = m_TotalShadowInstances;
 		shadowStandardCommands.push_back(shadowCmd);
 	}
+	shadowStandardInfos.insert(shadowStandardInfos.end(), m_ShadowOnlyStandardDrawInfos.begin(), m_ShadowOnlyStandardDrawInfos.end());
 
 	std::vector<DrawElementsIndirectCommand> shadowSkinnedCommands;
-	shadowSkinnedCommands.reserve(m_ShadowSkinnedCommands.size());
+	std::vector<DrawInfo> shadowSkinnedInfos;
+	shadowSkinnedCommands.reserve(m_SkinnedDrawCommands.size() + m_ShadowOnlySkinnedDrawCommands.size());
+	shadowSkinnedInfos.reserve(m_SkinnedDrawInfos.size() + m_ShadowOnlySkinnedDrawInfos.size());
 
-	for (const auto& cmd : m_ShadowSkinnedCommands) {
+	// Add visible skinned meshes that cast shadows (using tracked flags)
+	for (size_t i = 0; i < m_SkinnedDrawCommands.size(); ++i) {
+		if (i < m_SkinnedCastsShadows.size() && m_SkinnedCastsShadows[i]) {
+			DrawElementsIndirectCommand shadowCmd = m_SkinnedDrawCommands[i];
+			shadowCmd.instanceCount = m_TotalShadowInstances;
+			shadowSkinnedCommands.push_back(shadowCmd);
+			shadowSkinnedInfos.push_back(m_SkinnedDrawInfos[i]);
+		}
+	}
+
+	for (const auto& cmd : m_ShadowOnlySkinnedDrawCommands) {
 		DrawElementsIndirectCommand shadowCmd = cmd;
 		shadowCmd.instanceCount = m_TotalShadowInstances;
 		shadowSkinnedCommands.push_back(shadowCmd);
 	}
+	shadowSkinnedInfos.insert(shadowSkinnedInfos.end(), m_ShadowOnlySkinnedDrawInfos.begin(), m_ShadowOnlySkinnedDrawInfos.end());
 
 	m_MeshManager.m_ShadowStandardDrawCommandBuffer.WriteCommands(shadowStandardCommands, 0);
-	m_MeshManager.m_ShadowStandardDrawInfoBuffer.WriteDrawInfos(m_ShadowStandardInfos, 0);
+	m_MeshManager.m_ShadowStandardDrawInfoBuffer.WriteDrawInfos(shadowStandardInfos, 0);
 	m_MeshManager.m_ShadowSkinnedDrawCommandBuffer.WriteCommands(shadowSkinnedCommands, 0);
-	m_MeshManager.m_ShadowSkinnedDrawInfoBuffer.WriteDrawInfos(m_ShadowSkinnedInfos, 0);
-
-	// ========== UPLOAD CUSTOM SHADER BUFFERS (FAST PATH - glBufferSubData) ==========
-	// Extract and upload opaque custom shader standard items
-	if (!m_ForwardOpaqueCustomStandardItems.empty()) {
-		std::vector<DrawElementsIndirectCommand> commands;
-		std::vector<DrawInfo> infos;
-		commands.reserve(m_ForwardOpaqueCustomStandardItems.size());
-		infos.reserve(m_ForwardOpaqueCustomStandardItems.size());
-
-		for (const auto& item : m_ForwardOpaqueCustomStandardItems) {
-			commands.push_back(item.command);
-			infos.push_back(item.info);
-		}
-
-		size_t cmdSize = commands.size();
-		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardOpaqueCustomStandardCmdBuffer);
-		glBufferSubData(GL_DRAW_INDIRECT_BUFFER, 0,
-			cmdSize * sizeof(DrawElementsIndirectCommand),
-			commands.data());
-
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_ForwardOpaqueCustomStandardInfoBuffer);
-		glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0,
-			cmdSize * sizeof(DrawInfo),
-			infos.data());
-
-		m_ForwardOpaqueCustomStandardUploadedCount = cmdSize;
-	}
-	else {
-		m_ForwardOpaqueCustomStandardUploadedCount = 0;
-	}
-
-	// Extract and upload opaque custom shader skinned items
-	if (!m_ForwardOpaqueCustomSkinnedItems.empty()) {
-		std::vector<DrawElementsIndirectCommand> commands;
-		std::vector<DrawInfo> infos;
-		commands.reserve(m_ForwardOpaqueCustomSkinnedItems.size());
-		infos.reserve(m_ForwardOpaqueCustomSkinnedItems.size());
-
-		for (const auto& item : m_ForwardOpaqueCustomSkinnedItems) {
-			commands.push_back(item.command);
-			infos.push_back(item.info);
-		}
-
-		size_t cmdSize = commands.size();
-		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardOpaqueCustomSkinnedCmdBuffer);
-		glBufferSubData(GL_DRAW_INDIRECT_BUFFER, 0,
-			cmdSize * sizeof(DrawElementsIndirectCommand),
-			commands.data());
-
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_ForwardOpaqueCustomSkinnedInfoBuffer);
-		glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0,
-			cmdSize * sizeof(DrawInfo),
-			infos.data());
-
-		m_ForwardOpaqueCustomSkinnedUploadedCount = cmdSize;
-	}
-	else {
-		m_ForwardOpaqueCustomSkinnedUploadedCount = 0;
-	}
-
-	// Extract and upload transparent custom shader standard items
-	if (!m_ForwardTransparentCustomStandardItems.empty()) {
-		std::vector<DrawElementsIndirectCommand> commands;
-		std::vector<DrawInfo> infos;
-		commands.reserve(m_ForwardTransparentCustomStandardItems.size());
-		infos.reserve(m_ForwardTransparentCustomStandardItems.size());
-
-		for (const auto& item : m_ForwardTransparentCustomStandardItems) {
-			commands.push_back(item.command);
-			infos.push_back(item.info);
-		}
-
-		size_t cmdSize = commands.size();
-		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardTransparentCustomStandardCmdBuffer);
-		glBufferSubData(GL_DRAW_INDIRECT_BUFFER, 0,
-			cmdSize * sizeof(DrawElementsIndirectCommand),
-			commands.data());
-
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_ForwardTransparentCustomStandardInfoBuffer);
-		glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0,
-			cmdSize * sizeof(DrawInfo),
-			infos.data());
-
-		m_ForwardTransparentCustomStandardUploadedCount = cmdSize;
-	}
-	else {
-		m_ForwardTransparentCustomStandardUploadedCount = 0;
-	}
-
-	// Extract and upload transparent custom shader skinned items
-	if (!m_ForwardTransparentCustomSkinnedItems.empty()) {
-		std::vector<DrawElementsIndirectCommand> commands;
-		std::vector<DrawInfo> infos;
-		commands.reserve(m_ForwardTransparentCustomSkinnedItems.size());
-		infos.reserve(m_ForwardTransparentCustomSkinnedItems.size());
-
-		for (const auto& item : m_ForwardTransparentCustomSkinnedItems) {
-			commands.push_back(item.command);
-			infos.push_back(item.info);
-		}
-
-		size_t cmdSize = commands.size();
-		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardTransparentCustomSkinnedCmdBuffer);
-		glBufferSubData(GL_DRAW_INDIRECT_BUFFER, 0,
-			cmdSize * sizeof(DrawElementsIndirectCommand),
-			commands.data());
-
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_ForwardTransparentCustomSkinnedInfoBuffer);
-		glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0,
-			cmdSize * sizeof(DrawInfo),
-			infos.data());
-
-		m_ForwardTransparentCustomSkinnedUploadedCount = cmdSize;
-	}
-	else {
-		m_ForwardTransparentCustomSkinnedUploadedCount = 0;
-	}
-
-	// Unbind buffers
-	glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+	m_MeshManager.m_ShadowSkinnedDrawInfoBuffer.WriteDrawInfos(shadowSkinnedInfos, 0);
 
 	// ========== UPDATE DIRTY TRACKING HASHES ==========
 	// Update per-entity transform hashes for next frame
@@ -3979,11 +3870,11 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 			}
 		}
 
-		// Sort transparent objects EVERY frame (camera position changes)
-		// - Full rebuild: Sort by shader FIRST (creates stable batches), then distance
-		// - Fast update: Sort by distance ONLY within existing shader groups
-		SortTransparentObjects(cameraPos, m_NeedsTransparentSort);
-		m_NeedsTransparentSort = false;  // Reset flag after sorting
+		// Sort transparent objects by shader then distance (only during full rebuild, not every frame)
+		if (m_NeedsTransparentSort) {
+			SortTransparentObjects(cameraPos);
+			m_NeedsTransparentSort = false;
+		}
 
 		// Second pass: Render transparent objects in sorted order
 		if (!m_transparentObjects.empty()) {
@@ -4232,25 +4123,25 @@ Renderer::~Renderer()
 		}
 
 		// Clean up opaque custom shader buffers
-		if (m_ForwardOpaqueCustomStandardCmdBuffer != 0)
+		if (m_OpaqueCustomStandardCmdBuffer != 0)
 		{
-			glDeleteBuffers(1, &m_ForwardOpaqueCustomStandardCmdBuffer);
-			m_ForwardOpaqueCustomStandardCmdBuffer = 0;
+			glDeleteBuffers(1, &m_OpaqueCustomStandardCmdBuffer);
+			m_OpaqueCustomStandardCmdBuffer = 0;
 		}
-		if (m_ForwardOpaqueCustomStandardInfoBuffer != 0)
+		if (m_OpaqueCustomStandardInfoBuffer != 0)
 		{
-			glDeleteBuffers(1, &m_ForwardOpaqueCustomStandardInfoBuffer);
-			m_ForwardOpaqueCustomStandardInfoBuffer = 0;
+			glDeleteBuffers(1, &m_OpaqueCustomStandardInfoBuffer);
+			m_OpaqueCustomStandardInfoBuffer = 0;
 		}
-		if (m_ForwardOpaqueCustomSkinnedCmdBuffer != 0)
+		if (m_OpaqueCustomSkinnedCmdBuffer != 0)
 		{
-			glDeleteBuffers(1, &m_ForwardOpaqueCustomSkinnedCmdBuffer);
-			m_ForwardOpaqueCustomSkinnedCmdBuffer = 0;
+			glDeleteBuffers(1, &m_OpaqueCustomSkinnedCmdBuffer);
+			m_OpaqueCustomSkinnedCmdBuffer = 0;
 		}
-		if (m_ForwardOpaqueCustomSkinnedInfoBuffer != 0)
+		if (m_OpaqueCustomSkinnedInfoBuffer != 0)
 		{
-			glDeleteBuffers(1, &m_ForwardOpaqueCustomSkinnedInfoBuffer);
-			m_ForwardOpaqueCustomSkinnedInfoBuffer = 0;
+			glDeleteBuffers(1, &m_OpaqueCustomSkinnedInfoBuffer);
+			m_OpaqueCustomSkinnedInfoBuffer = 0;
 		}
 
 		// Delete shadow map resources
@@ -4534,170 +4425,176 @@ bool Renderer::HasCustomShader(const Ermine::graphics::Material* material) const
 }
 
 /**
- * @brief Sorts opaque custom shader objects by shader pointer to minimize state changes.
- * Opaque objects don't need distance sorting (no blending), only shader batching.
- */
-void Renderer::SortOpaqueCustomShadersByShader()
-{
-	// ========== SORT OPAQUE CUSTOM STANDARD MESHES ==========
-	// Sort by shader pointer only (no distance sorting needed for opaque)
-	// Direct sort on items - shader travels with its data, no alignment issues!
-	if (!m_ForwardOpaqueCustomStandardItems.empty()) {
-		std::sort(m_ForwardOpaqueCustomStandardItems.begin(),
-		          m_ForwardOpaqueCustomStandardItems.end(),
-		          [](const CustomShaderDrawItem& a, const CustomShaderDrawItem& b) {
-			          return a.shader.get() < b.shader.get(); // Group by shader
-		          });
-	}
-
-	// ========== SORT OPAQUE CUSTOM SKINNED MESHES ==========
-	// Sort by shader pointer only (no distance sorting needed for opaque)
-	if (!m_ForwardOpaqueCustomSkinnedItems.empty()) {
-		std::sort(m_ForwardOpaqueCustomSkinnedItems.begin(),
-		          m_ForwardOpaqueCustomSkinnedItems.end(),
-		          [](const CustomShaderDrawItem& a, const CustomShaderDrawItem& b) {
-			          return a.shader.get() < b.shader.get(); // Group by shader
-		          });
-	}
-}
-
-/**
  * @brief Sorts transparent objects by shader first, then by distance to camera.
  * This minimizes shader state changes and improves alpha blending correctness.
  * @param cameraPos Camera position.
  */
-void Renderer::SortTransparentObjects(const Vec3& cameraPos, bool fullRebuild)
+void Renderer::SortTransparentObjects(const Vec3& cameraPos)
 {
 	// Skip if no transparent objects at all
-	bool hasTransparentStandard = !m_ForwardTransparentDefaultStandardItems.empty() || !m_ForwardTransparentDefaultSkinnedItems.empty();
-	bool hasTransparentCustom = !m_ForwardTransparentCustomStandardItems.empty() || !m_ForwardTransparentCustomSkinnedItems.empty();
+	bool hasTransparentStandard = !m_ForwardStandardDrawInfos.empty() || !m_ForwardSkinnedDrawInfos.empty();
+	bool hasTransparentCustom = !m_TransparentCustomStandardDrawInfos.empty() || !m_TransparentCustomSkinnedDrawInfos.empty();
 
 	if (!hasTransparentStandard && !hasTransparentCustom) return;
 
 	glm::vec3 camPos = glm::vec3(cameraPos.x, cameraPos.y, cameraPos.z);
 
-	// ========== SORT TRANSPARENT DEFAULT STANDARD MESHES (NON-SKINNED) ==========
+	// ========== SORT TRANSPARENT STANDARD MESHES (NON-SKINNED) ==========
 	// These all use the same shader, so just sort by distance for proper blending
-	if (!m_ForwardTransparentDefaultStandardItems.empty()) {
+	if (!m_ForwardStandardDrawInfos.empty()) {
+		// Create indices for sorting
+		std::vector<size_t> indices(m_ForwardStandardDrawInfos.size());
+		std::iota(indices.begin(), indices.end(), 0);
+
 		// Sort back-to-front by distance for correct alpha blending
-		std::sort(m_ForwardTransparentDefaultStandardItems.begin(),
-		          m_ForwardTransparentDefaultStandardItems.end(),
-		          [&camPos](const DefaultShaderDrawItem& a, const DefaultShaderDrawItem& b) {
-			          glm::vec3 posA = glm::vec3(a.info.modelMatrix[3]);
-			          glm::vec3 posB = glm::vec3(b.info.modelMatrix[3]);
-			          float distA = glm::distance(posA, camPos);
-			          float distB = glm::distance(posB, camPos);
-			          return distA > distB; // Back-to-front
-		          });
+		std::sort(indices.begin(), indices.end(), [&](size_t a, size_t b) {
+			glm::vec3 posA = glm::vec3(m_ForwardStandardDrawInfos[a].modelMatrix[3]);
+			glm::vec3 posB = glm::vec3(m_ForwardStandardDrawInfos[b].modelMatrix[3]);
+
+			float distA = glm::distance(posA, camPos);
+			float distB = glm::distance(posB, camPos);
+
+			return distA > distB; // Back-to-front
+		});
+
+		// Reorder draw commands and draw infos based on sorted indices
+		std::vector<DrawElementsIndirectCommand> sortedCommands;
+		std::vector<DrawInfo> sortedInfos;
+		sortedCommands.reserve(m_ForwardStandardDrawCommands.size());
+		sortedInfos.reserve(m_ForwardStandardDrawInfos.size());
+
+		for (size_t idx : indices) {
+			sortedCommands.push_back(m_ForwardStandardDrawCommands[idx]);
+			sortedInfos.push_back(m_ForwardStandardDrawInfos[idx]);
+		}
+
+		m_ForwardStandardDrawCommands = std::move(sortedCommands);
+		m_ForwardStandardDrawInfos = std::move(sortedInfos);
 	}
 
-	// ========== SORT TRANSPARENT DEFAULT SKINNED MESHES ==========
+	// ========== SORT TRANSPARENT STANDARD SKINNED MESHES ==========
 	// These all use the same shader, so just sort by distance for proper blending
-	if (!m_ForwardTransparentDefaultSkinnedItems.empty()) {
+	if (!m_ForwardSkinnedDrawInfos.empty()) {
+		// Create indices for sorting
+		std::vector<size_t> indices(m_ForwardSkinnedDrawInfos.size());
+		std::iota(indices.begin(), indices.end(), 0);
+
 		// Sort back-to-front by distance for correct alpha blending
-		std::sort(m_ForwardTransparentDefaultSkinnedItems.begin(),
-		          m_ForwardTransparentDefaultSkinnedItems.end(),
-		          [&camPos](const DefaultShaderDrawItem& a, const DefaultShaderDrawItem& b) {
-			          glm::vec3 posA = glm::vec3(a.info.modelMatrix[3]);
-			          glm::vec3 posB = glm::vec3(b.info.modelMatrix[3]);
-			          float distA = glm::distance(posA, camPos);
-			          float distB = glm::distance(posB, camPos);
-			          return distA > distB; // Back-to-front
-		          });
+		std::sort(indices.begin(), indices.end(), [&](size_t a, size_t b) {
+			glm::vec3 posA = glm::vec3(m_ForwardSkinnedDrawInfos[a].modelMatrix[3]);
+			glm::vec3 posB = glm::vec3(m_ForwardSkinnedDrawInfos[b].modelMatrix[3]);
+
+			float distA = glm::distance(posA, camPos);
+			float distB = glm::distance(posB, camPos);
+
+			return distA > distB; // Back-to-front
+		});
+
+		// Reorder draw commands and draw infos based on sorted indices
+		std::vector<DrawElementsIndirectCommand> sortedCommands;
+		std::vector<DrawInfo> sortedInfos;
+		sortedCommands.reserve(m_ForwardSkinnedDrawCommands.size());
+		sortedInfos.reserve(m_ForwardSkinnedDrawInfos.size());
+
+		for (size_t idx : indices) {
+			sortedCommands.push_back(m_ForwardSkinnedDrawCommands[idx]);
+			sortedInfos.push_back(m_ForwardSkinnedDrawInfos[idx]);
+		}
+
+		m_ForwardSkinnedDrawCommands = std::move(sortedCommands);
+		m_ForwardSkinnedDrawInfos = std::move(sortedInfos);
 	}
 
 	// ========== SORT TRANSPARENT CUSTOM STANDARD MESHES (NON-SKINNED) ==========
-	if (!m_ForwardTransparentCustomStandardItems.empty()) {
-		if (fullRebuild) {
-			// FULL REBUILD: Sort by SHADER first (batching), then by DISTANCE within each shader group
-			std::sort(m_ForwardTransparentCustomStandardItems.begin(),
-			          m_ForwardTransparentCustomStandardItems.end(),
-			          [&camPos](const CustomShaderDrawItem& a, const CustomShaderDrawItem& b) {
-				          // Primary sort: Shader pointer (creates batches)
-				          if (a.shader.get() != b.shader.get()) {
-					          return a.shader.get() < b.shader.get();
-				          }
+	// Sort by shader first (minimize state changes), then by distance (correct blending)
+	if (!m_TransparentCustomStandardDrawInfos.empty()) {
+		// Create indices for sorting
+		std::vector<size_t> indices(m_TransparentCustomStandardDrawInfos.size());
+		std::iota(indices.begin(), indices.end(), 0);
 
-				          // Secondary sort: Distance back-to-front within each shader group
-				          glm::vec3 posA = glm::vec3(a.info.modelMatrix[3]);
-				          glm::vec3 posB = glm::vec3(b.info.modelMatrix[3]);
-				          float distA = glm::distance(posA, camPos);
-				          float distB = glm::distance(posB, camPos);
-				          return distA > distB; // Back-to-front
-			          });
-		}
-		else {
-			// FAST REBUILD: Sort by DISTANCE only within each existing shader group
-			// Find shader group boundaries and sort each group independently
-			size_t groupStart = 0;
-			for (size_t i = 1; i <= m_ForwardTransparentCustomStandardItems.size(); ++i) {
-				// Check if we've reached a new shader or end of array
-				bool newGroup = (i == m_ForwardTransparentCustomStandardItems.size()) ||
-				                (m_ForwardTransparentCustomStandardItems[i].shader.get() !=
-				                 m_ForwardTransparentCustomStandardItems[groupStart].shader.get());
+		// Sort by shader first, then by distance
+		std::sort(indices.begin(), indices.end(), [&](size_t a, size_t b) {
+			// Primary sort: Shader pointer (batch by shader)
+			auto shaderA = m_TransparentCustomStandardShaders[a].get();
+			auto shaderB = m_TransparentCustomStandardShaders[b].get();
 
-				if (newGroup) {
-					// Sort this shader group by distance
-					std::sort(m_ForwardTransparentCustomStandardItems.begin() + groupStart,
-					          m_ForwardTransparentCustomStandardItems.begin() + i,
-					          [&camPos](const CustomShaderDrawItem& a, const CustomShaderDrawItem& b) {
-						          glm::vec3 posA = glm::vec3(a.info.modelMatrix[3]);
-						          glm::vec3 posB = glm::vec3(b.info.modelMatrix[3]);
-						          float distA = glm::distance(posA, camPos);
-						          float distB = glm::distance(posB, camPos);
-						          return distA > distB; // Back-to-front
-					          });
-					groupStart = i;
-				}
+			if (shaderA != shaderB) {
+				return shaderA < shaderB; // Group by shader
 			}
+
+			// Secondary sort: Distance back-to-front for correct alpha blending
+			glm::vec3 posA = glm::vec3(m_TransparentCustomStandardDrawInfos[a].modelMatrix[3]);
+			glm::vec3 posB = glm::vec3(m_TransparentCustomStandardDrawInfos[b].modelMatrix[3]);
+
+			float distA = glm::distance(posA, camPos);
+			float distB = glm::distance(posB, camPos);
+
+			return distA > distB; // Back-to-front within same shader batch
+		});
+
+		// Reorder draw commands, draw infos, and shaders based on sorted indices
+		std::vector<DrawElementsIndirectCommand> sortedCommands;
+		std::vector<DrawInfo> sortedInfos;
+		std::vector<std::shared_ptr<graphics::Shader>> sortedShaders;
+		sortedCommands.reserve(m_TransparentCustomStandardDrawCommands.size());
+		sortedInfos.reserve(m_TransparentCustomStandardDrawInfos.size());
+		sortedShaders.reserve(m_TransparentCustomStandardShaders.size());
+
+		for (size_t idx : indices) {
+			sortedCommands.push_back(m_TransparentCustomStandardDrawCommands[idx]);
+			sortedInfos.push_back(m_TransparentCustomStandardDrawInfos[idx]);
+			sortedShaders.push_back(m_TransparentCustomStandardShaders[idx]);
 		}
+
+		m_TransparentCustomStandardDrawCommands = std::move(sortedCommands);
+		m_TransparentCustomStandardDrawInfos = std::move(sortedInfos);
+		m_TransparentCustomStandardShaders = std::move(sortedShaders);
 	}
 
 	// ========== SORT TRANSPARENT CUSTOM SKINNED MESHES ==========
-	if (!m_ForwardTransparentCustomSkinnedItems.empty()) {
-		if (fullRebuild) {
-			// FULL REBUILD: Sort by SHADER first (batching), then by DISTANCE within each shader group
-			std::sort(m_ForwardTransparentCustomSkinnedItems.begin(),
-			          m_ForwardTransparentCustomSkinnedItems.end(),
-			          [&camPos](const CustomShaderDrawItem& a, const CustomShaderDrawItem& b) {
-				          // Primary sort: Shader pointer (creates batches)
-				          if (a.shader.get() != b.shader.get()) {
-					          return a.shader.get() < b.shader.get();
-				          }
+	// Sort by shader first (minimize state changes), then by distance (correct blending)
+	if (!m_TransparentCustomSkinnedDrawInfos.empty()) {
+		// Create indices for sorting
+		std::vector<size_t> indices(m_TransparentCustomSkinnedDrawInfos.size());
+		std::iota(indices.begin(), indices.end(), 0);
 
-				          // Secondary sort: Distance back-to-front within each shader group
-				          glm::vec3 posA = glm::vec3(a.info.modelMatrix[3]);
-				          glm::vec3 posB = glm::vec3(b.info.modelMatrix[3]);
-				          float distA = glm::distance(posA, camPos);
-				          float distB = glm::distance(posB, camPos);
-				          return distA > distB; // Back-to-front
-			          });
-		}
-		else {
-			// FAST REBUILD: Sort by DISTANCE only within each existing shader group
-			// Find shader group boundaries and sort each group independently
-			size_t groupStart = 0;
-			for (size_t i = 1; i <= m_ForwardTransparentCustomSkinnedItems.size(); ++i) {
-				// Check if we've reached a new shader or end of array
-				bool newGroup = (i == m_ForwardTransparentCustomSkinnedItems.size()) ||
-				                (m_ForwardTransparentCustomSkinnedItems[i].shader.get() !=
-				                 m_ForwardTransparentCustomSkinnedItems[groupStart].shader.get());
+		// Sort by shader first, then by distance
+		std::sort(indices.begin(), indices.end(), [&](size_t a, size_t b) {
+			// Primary sort: Shader pointer (batch by shader)
+			auto shaderA = m_TransparentCustomSkinnedShaders[a].get();
+			auto shaderB = m_TransparentCustomSkinnedShaders[b].get();
 
-				if (newGroup) {
-					// Sort this shader group by distance
-					std::sort(m_ForwardTransparentCustomSkinnedItems.begin() + groupStart,
-					          m_ForwardTransparentCustomSkinnedItems.begin() + i,
-					          [&camPos](const CustomShaderDrawItem& a, const CustomShaderDrawItem& b) {
-						          glm::vec3 posA = glm::vec3(a.info.modelMatrix[3]);
-						          glm::vec3 posB = glm::vec3(b.info.modelMatrix[3]);
-						          float distA = glm::distance(posA, camPos);
-						          float distB = glm::distance(posB, camPos);
-						          return distA > distB; // Back-to-front
-					          });
-					groupStart = i;
-				}
+			if (shaderA != shaderB) {
+				return shaderA < shaderB; // Group by shader
 			}
+
+			// Secondary sort: Distance back-to-front for correct alpha blending
+			glm::vec3 posA = glm::vec3(m_TransparentCustomSkinnedDrawInfos[a].modelMatrix[3]);
+			glm::vec3 posB = glm::vec3(m_TransparentCustomSkinnedDrawInfos[b].modelMatrix[3]);
+
+			float distA = glm::distance(posA, camPos);
+			float distB = glm::distance(posB, camPos);
+
+			return distA > distB; // Back-to-front within same shader batch
+		});
+
+		// Reorder draw commands, draw infos, and shaders based on sorted indices
+		std::vector<DrawElementsIndirectCommand> sortedCommands;
+		std::vector<DrawInfo> sortedInfos;
+		std::vector<std::shared_ptr<graphics::Shader>> sortedShaders;
+		sortedCommands.reserve(m_TransparentCustomSkinnedDrawCommands.size());
+		sortedInfos.reserve(m_TransparentCustomSkinnedDrawInfos.size());
+		sortedShaders.reserve(m_TransparentCustomSkinnedShaders.size());
+
+		for (size_t idx : indices) {
+			sortedCommands.push_back(m_TransparentCustomSkinnedDrawCommands[idx]);
+			sortedInfos.push_back(m_TransparentCustomSkinnedDrawInfos[idx]);
+			sortedShaders.push_back(m_TransparentCustomSkinnedShaders[idx]);
 		}
+
+		m_TransparentCustomSkinnedDrawCommands = std::move(sortedCommands);
+		m_TransparentCustomSkinnedDrawInfos = std::move(sortedInfos);
+		m_TransparentCustomSkinnedShaders = std::move(sortedShaders);
 	}
 }
 
@@ -4709,7 +4606,7 @@ void Renderer::SortTransparentObjects(const Vec3& cameraPos, bool fullRebuild)
 void Renderer::RenderOpaqueCustomShaders(const Mtx44& view, const Mtx44& projection)
 {
 	// Skip if no opaque custom shader meshes uploaded to GPU
-	if (m_ForwardOpaqueCustomStandardUploadedCount == 0 && m_ForwardOpaqueCustomSkinnedUploadedCount == 0) {
+	if (m_OpaqueCustomStandardUploadedCount == 0 && m_OpaqueCustomSkinnedUploadedCount == 0) {
 		return;
 	}
 
@@ -4731,22 +4628,22 @@ void Renderer::RenderOpaqueCustomShaders(const Mtx44& view, const Mtx44& project
 	glCullFace(GL_BACK);
 
 	// ========== RENDER OPAQUE CUSTOM STANDARD MESHES (NON-SKINNED) ==========
-	if (m_ForwardOpaqueCustomStandardUploadedCount > 0) {
+	if (m_OpaqueCustomStandardUploadedCount > 0) {
 		GLuint standardVAO = m_MeshManager.GetStandardVAO();
 		// Check that VAO and GPU buffers are valid before binding
-		if (standardVAO != 0 && m_ForwardOpaqueCustomStandardInfoBuffer != 0 && m_ForwardOpaqueCustomStandardCmdBuffer != 0) {
+		if (standardVAO != 0 && m_OpaqueCustomStandardInfoBuffer != 0 && m_OpaqueCustomStandardCmdBuffer != 0) {
 			glBindVertexArray(standardVAO);
-			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_ForwardOpaqueCustomStandardInfoBuffer);
-			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardOpaqueCustomStandardCmdBuffer);
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_OpaqueCustomStandardInfoBuffer);
+			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_OpaqueCustomStandardCmdBuffer);
 
 			// Batch draws by shader
 			size_t batchStart = 0;
-			std::shared_ptr<graphics::Shader> currentShader = m_ForwardOpaqueCustomStandardItems[0].shader;
+			std::shared_ptr<graphics::Shader> currentShader = m_OpaqueCustomStandardShaders[0];
 
-			for (size_t i = 0; i <= m_ForwardOpaqueCustomStandardUploadedCount; ++i) {
+			for (size_t i = 0; i <= m_OpaqueCustomStandardUploadedCount; ++i) {
 				// Check if we've reached end or shader changed
-				bool shaderChanged = (i < m_ForwardOpaqueCustomStandardUploadedCount && m_ForwardOpaqueCustomStandardItems[i].shader != currentShader);
-				bool isEnd = (i == m_ForwardOpaqueCustomStandardUploadedCount);
+				bool shaderChanged = (i < m_OpaqueCustomStandardUploadedCount && m_OpaqueCustomStandardShaders[i] != currentShader);
+				bool isEnd = (i == m_OpaqueCustomStandardUploadedCount);
 
 				if (shaderChanged || isEnd) {
 					// Bind shader
@@ -4771,9 +4668,9 @@ void Renderer::RenderOpaqueCustomShaders(const Mtx44& view, const Mtx44& project
 					}
 
 					// Start new batch
-					if (i < m_ForwardOpaqueCustomStandardUploadedCount) {
+					if (i < m_OpaqueCustomStandardUploadedCount) {
 						batchStart = i;
-						currentShader = m_ForwardOpaqueCustomStandardItems[i].shader;
+						currentShader = m_OpaqueCustomStandardShaders[i];
 					}
 				}
 			}
@@ -4784,22 +4681,22 @@ void Renderer::RenderOpaqueCustomShaders(const Mtx44& view, const Mtx44& project
 	}
 
 	// ========== RENDER OPAQUE CUSTOM SKINNED MESHES ==========
-	if (m_ForwardOpaqueCustomSkinnedUploadedCount > 0) {
+	if (m_OpaqueCustomSkinnedUploadedCount > 0) {
 		GLuint skinnedVAO = m_MeshManager.GetSkinnedVAO();
 		// Check that VAO and GPU buffers are valid before binding
-		if (skinnedVAO != 0 && m_ForwardOpaqueCustomSkinnedInfoBuffer != 0 && m_ForwardOpaqueCustomSkinnedCmdBuffer != 0) {
+		if (skinnedVAO != 0 && m_OpaqueCustomSkinnedInfoBuffer != 0 && m_OpaqueCustomSkinnedCmdBuffer != 0) {
 			glBindVertexArray(skinnedVAO);
-			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_ForwardOpaqueCustomSkinnedInfoBuffer);
-			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardOpaqueCustomSkinnedCmdBuffer);
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_OpaqueCustomSkinnedInfoBuffer);
+			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_OpaqueCustomSkinnedCmdBuffer);
 
 			// Batch draws by shader
 			size_t batchStart = 0;
-			std::shared_ptr<graphics::Shader> currentShader = m_ForwardOpaqueCustomSkinnedItems[0].shader;
+			std::shared_ptr<graphics::Shader> currentShader = m_OpaqueCustomSkinnedShaders[0];
 
-			for (size_t i = 0; i <= m_ForwardOpaqueCustomSkinnedUploadedCount; ++i) {
+			for (size_t i = 0; i <= m_OpaqueCustomSkinnedUploadedCount; ++i) {
 				// Check if we've reached end or shader changed
-				bool shaderChanged = (i < m_ForwardOpaqueCustomSkinnedUploadedCount && m_ForwardOpaqueCustomSkinnedItems[i].shader != currentShader);
-				bool isEnd = (i == m_ForwardOpaqueCustomSkinnedUploadedCount);
+				bool shaderChanged = (i < m_OpaqueCustomSkinnedUploadedCount && m_OpaqueCustomSkinnedShaders[i] != currentShader);
+				bool isEnd = (i == m_OpaqueCustomSkinnedUploadedCount);
 
 				if (shaderChanged || isEnd) {
 					// Bind shader
@@ -4824,9 +4721,9 @@ void Renderer::RenderOpaqueCustomShaders(const Mtx44& view, const Mtx44& project
 					}
 
 					// Start new batch
-					if (i < m_ForwardOpaqueCustomSkinnedUploadedCount) {
+					if (i < m_OpaqueCustomSkinnedUploadedCount) {
 						batchStart = i;
-						currentShader = m_ForwardOpaqueCustomSkinnedItems[i].shader;
+						currentShader = m_OpaqueCustomSkinnedShaders[i];
 					}
 				}
 			}
@@ -4850,7 +4747,7 @@ void Renderer::RenderOpaqueCustomShaders(const Mtx44& view, const Mtx44& project
 void Renderer::RenderTransparentCustomShaders(const Mtx44& view, const Mtx44& projection)
 {
 	// Skip if no transparent custom shader meshes uploaded to GPU
-	if (m_ForwardTransparentCustomStandardUploadedCount == 0 && m_ForwardTransparentCustomSkinnedUploadedCount == 0) {
+	if (m_TransparentCustomStandardUploadedCount == 0 && m_TransparentCustomSkinnedUploadedCount == 0) {
 		return;
 	}
 
@@ -4858,20 +4755,20 @@ void Renderer::RenderTransparentCustomShaders(const Mtx44& view, const Mtx44& pr
 	// Buffers were already uploaded in CompileDrawData - just bind and draw
 
 	// ========== RENDER TRANSPARENT CUSTOM STANDARD MESHES (NON-SKINNED) ==========
-	if (m_ForwardTransparentCustomStandardUploadedCount > 0 && m_MeshManager.GetStandardVAO() != 0
-		&& m_ForwardTransparentCustomStandardInfoBuffer != 0 && m_ForwardTransparentCustomStandardCmdBuffer != 0) {
+	if (m_TransparentCustomStandardUploadedCount > 0 && m_MeshManager.GetStandardVAO() != 0
+		&& m_TransparentCustomStandardInfoBuffer != 0 && m_TransparentCustomStandardCmdBuffer != 0) {
 		glBindVertexArray(m_MeshManager.GetStandardVAO());
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_ForwardTransparentCustomStandardInfoBuffer);
-		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardTransparentCustomStandardCmdBuffer);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_TransparentCustomStandardInfoBuffer);
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_TransparentCustomStandardCmdBuffer);
 
 		// Batch draws by shader (each unique shader gets its own draw call)
 		size_t batchStart = 0;
-		std::shared_ptr<graphics::Shader> currentShader = m_ForwardTransparentCustomStandardItems[0].shader;
+		std::shared_ptr<graphics::Shader> currentShader = m_TransparentCustomStandardShaders[0];
 
-		for (size_t i = 0; i <= m_ForwardTransparentCustomStandardUploadedCount; ++i) {
+		for (size_t i = 0; i <= m_TransparentCustomStandardUploadedCount; ++i) {
 			// Check if we've reached end or shader changed
-			bool shaderChanged = (i < m_ForwardTransparentCustomStandardUploadedCount && m_ForwardTransparentCustomStandardItems[i].shader != currentShader);
-			bool isEnd = (i == m_ForwardTransparentCustomStandardUploadedCount);
+			bool shaderChanged = (i < m_TransparentCustomStandardUploadedCount && m_TransparentCustomStandardShaders[i] != currentShader);
+			bool isEnd = (i == m_TransparentCustomStandardUploadedCount);
 
 			if (shaderChanged || isEnd) {
 				// Bind shader
@@ -4896,9 +4793,9 @@ void Renderer::RenderTransparentCustomShaders(const Mtx44& view, const Mtx44& pr
 				}
 
 				// Start new batch
-				if (i < m_ForwardTransparentCustomStandardUploadedCount) {
+				if (i < m_TransparentCustomStandardUploadedCount) {
 					batchStart = i;
-					currentShader = m_ForwardTransparentCustomStandardItems[i].shader;
+					currentShader = m_TransparentCustomStandardShaders[i];
 				}
 			}
 		}
@@ -4908,20 +4805,20 @@ void Renderer::RenderTransparentCustomShaders(const Mtx44& view, const Mtx44& pr
 	}
 
 	// ========== RENDER TRANSPARENT CUSTOM SKINNED MESHES ==========
-	if (m_ForwardTransparentCustomSkinnedUploadedCount > 0 && m_MeshManager.GetSkinnedVAO() != 0
-		&& m_ForwardTransparentCustomSkinnedInfoBuffer != 0 && m_ForwardTransparentCustomSkinnedCmdBuffer != 0) {
+	if (m_TransparentCustomSkinnedUploadedCount > 0 && m_MeshManager.GetSkinnedVAO() != 0
+		&& m_TransparentCustomSkinnedInfoBuffer != 0 && m_TransparentCustomSkinnedCmdBuffer != 0) {
 		glBindVertexArray(m_MeshManager.GetSkinnedVAO());
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_ForwardTransparentCustomSkinnedInfoBuffer);
-		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardTransparentCustomSkinnedCmdBuffer);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_TransparentCustomSkinnedInfoBuffer);
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_TransparentCustomSkinnedCmdBuffer);
 
 		// Batch draws by shader
 		size_t batchStart = 0;
-		std::shared_ptr<graphics::Shader> currentShader = m_ForwardTransparentCustomSkinnedItems[0].shader;
+		std::shared_ptr<graphics::Shader> currentShader = m_TransparentCustomSkinnedShaders[0];
 
-		for (size_t i = 0; i <= m_ForwardTransparentCustomSkinnedUploadedCount; ++i) {
+		for (size_t i = 0; i <= m_TransparentCustomSkinnedUploadedCount; ++i) {
 			// Check if we've reached end or shader changed
-			bool shaderChanged = (i < m_ForwardTransparentCustomSkinnedUploadedCount && m_ForwardTransparentCustomSkinnedItems[i].shader != currentShader);
-			bool isEnd = (i == m_ForwardTransparentCustomSkinnedUploadedCount);
+			bool shaderChanged = (i < m_TransparentCustomSkinnedUploadedCount && m_TransparentCustomSkinnedShaders[i] != currentShader);
+			bool isEnd = (i == m_TransparentCustomSkinnedUploadedCount);
 
 			if (shaderChanged || isEnd) {
 				// Bind shader
@@ -4946,9 +4843,9 @@ void Renderer::RenderTransparentCustomShaders(const Mtx44& view, const Mtx44& pr
 				}
 
 				// Start new batch
-				if (i < m_ForwardTransparentCustomSkinnedUploadedCount) {
+				if (i < m_TransparentCustomSkinnedUploadedCount) {
 					batchStart = i;
-					currentShader = m_ForwardTransparentCustomSkinnedItems[i].shader;
+					currentShader = m_TransparentCustomSkinnedShaders[i];
 				}
 			}
 		}
@@ -4974,9 +4871,9 @@ void Renderer::RenderForwardPass(const Mtx44& view, const Mtx44& projection)
 	// 2. Transparent custom shaders (with blending, no depth write)
 	// 3. Transparent standard (with blending, no depth write, using m_ForwardShader)
 
-	bool hasOpaqueCustom = !m_ForwardOpaqueCustomStandardItems.empty() || !m_ForwardOpaqueCustomSkinnedItems.empty();
-	bool hasTransparentCustom = !m_ForwardTransparentCustomStandardItems.empty() || !m_ForwardTransparentCustomSkinnedItems.empty();
-	bool hasTransparentStandard = !m_ForwardTransparentDefaultStandardItems.empty() || !m_ForwardTransparentDefaultSkinnedItems.empty();
+	bool hasOpaqueCustom = !m_OpaqueCustomStandardDrawCommands.empty() || !m_OpaqueCustomSkinnedDrawCommands.empty();
+	bool hasTransparentCustom = !m_TransparentCustomStandardDrawCommands.empty() || !m_TransparentCustomSkinnedDrawCommands.empty();
+	bool hasTransparentStandard = !m_ForwardStandardDrawCommands.empty() || !m_ForwardSkinnedDrawCommands.empty();
 
 	// Skip if nothing to render
 	if (!hasOpaqueCustom && !hasTransparentCustom && !hasTransparentStandard) {
@@ -5043,7 +4940,7 @@ void Renderer::RenderForwardPass(const Mtx44& view, const Mtx44& projection)
 		m_ForwardShader->Bind();
 
 		// ========== RENDER TRANSPARENT STANDARD MESHES (NON-SKINNED) ==========
-		if (!m_ForwardTransparentDefaultStandardItems.empty()) {
+		if (!m_ForwardStandardDrawCommands.empty()) {
 			GLuint standardVAO = m_MeshManager.GetStandardVAO();
 			if (standardVAO != 0) {
 				glBindVertexArray(standardVAO);
@@ -5061,7 +4958,7 @@ void Renderer::RenderForwardPass(const Mtx44& view, const Mtx44& projection)
 					GL_TRIANGLES,
 					GL_UNSIGNED_INT,
 					nullptr,
-					static_cast<GLsizei>(m_ForwardTransparentDefaultStandardItems.size()),
+					static_cast<GLsizei>(m_ForwardStandardDrawCommands.size()),
 					0
 				);
 
@@ -5072,7 +4969,7 @@ void Renderer::RenderForwardPass(const Mtx44& view, const Mtx44& projection)
 		}
 
 		// ========== RENDER TRANSPARENT STANDARD SKINNED MESHES ==========
-		if (!m_ForwardTransparentDefaultSkinnedItems.empty()) {
+		if (!m_ForwardSkinnedDrawCommands.empty()) {
 			GLuint skinnedVAO = m_MeshManager.GetSkinnedVAO();
 			if (skinnedVAO != 0) {
 				glBindVertexArray(skinnedVAO);
@@ -5090,7 +4987,7 @@ void Renderer::RenderForwardPass(const Mtx44& view, const Mtx44& projection)
 					GL_TRIANGLES,
 					GL_UNSIGNED_INT,
 					nullptr,
-					static_cast<GLsizei>(m_ForwardTransparentDefaultSkinnedItems.size()),
+					static_cast<GLsizei>(m_ForwardSkinnedDrawCommands.size()),
 					0
 				);
 
@@ -5236,6 +5133,7 @@ bool Renderer::CreateShadowMapArray()
 	if (m_ShadowMapFBO == 0)
 		glGenFramebuffers(1, &m_ShadowMapFBO);
 
+	// FIXED: Attach entire texture array for layered rendering
 	glBindFramebuffer(GL_FRAMEBUFFER, m_ShadowMapFBO);
 	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_ShadowMapArray, 0);
 
@@ -5706,29 +5604,31 @@ void Renderer::RenderShadowMapInstanced()
 	}
 
 	// ========== RENDER STANDARD SHADOW MESHES ==========
-	// Shadow buffers contain ALL geometry with castsShadows=true with correct instanceCount
+	// Shadow buffers already contain combined visible + shadow-only meshes with correct instanceCount
 	// Written in CompileDrawData() - just bind and draw
-	if (!m_ShadowStandardCommands.empty() && m_MeshManager.GetStandardShadowVAO() != 0) {
+	size_t totalStandardCommands = m_StandardDrawCommands.size() + m_ShadowOnlyStandardDrawCommands.size();
+	if (totalStandardCommands > 0 && m_MeshManager.GetStandardShadowVAO() != 0) {
 		m_ShadowMapInstancedShader->SetUniform1ui("baseDrawID", 0);
 		glBindVertexArray(m_MeshManager.GetStandardShadowVAO());
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_MeshManager.m_ShadowStandardDrawInfoBuffer.GetBufferID());
 		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_MeshManager.m_ShadowStandardDrawCommandBuffer.GetBufferID());
 		glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_INT, nullptr,
-			static_cast<GLsizei>(m_ShadowStandardCommands.size()), 0);
-		GPUProfiler::TrackDrawCall(m_GeometryStandardVertexCount, m_GeometryStandardIndexCount);
+			static_cast<GLsizei>(totalStandardCommands), 0);
+		GPUProfiler::TrackDrawCall(m_StandardDrawCommandsVertexCount, m_StandardDrawCommandsIndexCount);
 		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
 		glBindVertexArray(0);
 	}
 
 	// ========== RENDER SKINNED SHADOW MESHES ==========
-	if (!m_ShadowSkinnedCommands.empty() && m_MeshManager.GetSkinnedShadowVAO() != 0) {
+	size_t totalSkinnedCommands = m_SkinnedDrawCommands.size() + m_ShadowOnlySkinnedDrawCommands.size();
+	if (totalSkinnedCommands > 0 && m_MeshManager.GetSkinnedShadowVAO() != 0) {
 		m_ShadowMapInstancedShader->SetUniform1ui("baseDrawID", 0);
 		glBindVertexArray(m_MeshManager.GetSkinnedShadowVAO());
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_MeshManager.m_ShadowSkinnedDrawInfoBuffer.GetBufferID());
 		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_MeshManager.m_ShadowSkinnedDrawCommandBuffer.GetBufferID());
 		glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_INT, nullptr,
-			static_cast<GLsizei>(m_ShadowSkinnedCommands.size()), 0);
-		GPUProfiler::TrackDrawCall(m_GeometrySkinnedVertexCount, m_GeometrySkinnedIndexCount);
+			static_cast<GLsizei>(totalSkinnedCommands), 0);
+		GPUProfiler::TrackDrawCall(m_SkinnedDrawCommandsVertexCount, m_SkinnedDrawCommandsIndexCount);
 		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
 		glBindVertexArray(0);
 	}
@@ -5897,8 +5797,8 @@ void Renderer::RenderPickingPass(const Mtx44& view, const Mtx44& projection)
 	);
 	glm::mat4 vp = glmProjection * glmView;
 
-	// ========== RENDER STANDARD MESHES (ALL visible geometry - opaque + transparent) ==========
-	if (!m_PickingStandardCommands.empty())
+	// ========== RENDER STANDARD MESHES (geometry + forward pass) ==========
+	if (!m_StandardDrawCommands.empty() || !m_ForwardStandardDrawCommands.empty())
 	{
 		m_PickingIndirectShader->Bind();
 		m_PickingIndirectShader->SetUniformMatrix4fv("u_ViewProjection", vp);
@@ -5908,18 +5808,37 @@ void Renderer::RenderPickingPass(const Mtx44& view, const Mtx44& projection)
 		{
 			glBindVertexArray(standardVAO);
 
-			// Render all standard meshes from picking buffer (opaque + transparent)
-			m_PickingIndirectShader->SetUniform1ui("baseDrawID", 0);
-			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_MeshManager.m_PickingStandardDrawInfoBuffer.GetBufferID());
-			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_MeshManager.m_PickingStandardDrawCommandBuffer.GetBufferID());
-			glMultiDrawElementsIndirect(
-				GL_TRIANGLES,
-				GL_UNSIGNED_INT,
-				nullptr,
-				static_cast<GLsizei>(m_PickingStandardCommands.size()),
-				0
-			);
-			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
+			// Render geometry pass standard meshes (opaque)
+			if (!m_StandardDrawCommands.empty())
+			{
+				m_PickingIndirectShader->SetUniform1ui("baseDrawID", 0);
+				glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_MeshManager.m_GeometryStandardDrawInfoBuffer.GetBufferID());
+				glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_MeshManager.m_GeometryStandardDrawCommandBuffer.GetBufferID());
+				glMultiDrawElementsIndirect(
+					GL_TRIANGLES,
+					GL_UNSIGNED_INT,
+					nullptr,
+					static_cast<GLsizei>(m_StandardDrawCommands.size()),
+					0
+				);
+				glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
+			}
+
+			// Render forward pass standard meshes (transparent)
+			if (!m_ForwardStandardDrawCommands.empty())
+			{
+				m_PickingIndirectShader->SetUniform1ui("baseDrawID", 0);
+				glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_MeshManager.m_ForwardStandardDrawInfoBuffer.GetBufferID());
+				glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_MeshManager.m_ForwardStandardDrawCommandBuffer.GetBufferID());
+				glMultiDrawElementsIndirect(
+					GL_TRIANGLES,
+					GL_UNSIGNED_INT,
+					nullptr,
+					static_cast<GLsizei>(m_ForwardStandardDrawCommands.size()),
+					0
+				);
+				glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
+			}
 
 			glBindVertexArray(0);
 		}
@@ -5927,8 +5846,8 @@ void Renderer::RenderPickingPass(const Mtx44& view, const Mtx44& projection)
 		m_PickingIndirectShader->Unbind();
 	}
 
-	// ========== RENDER SKINNED MESHES (ALL visible geometry - opaque + transparent) ==========
-	if (!m_PickingSkinnedCommands.empty())
+	// ========== RENDER SKINNED MESHES (geometry + forward pass) ==========
+	if (!m_SkinnedDrawCommands.empty() || !m_ForwardSkinnedDrawCommands.empty())
 	{
 		m_PickingIndirectSkinnedShader->Bind();
 		m_PickingIndirectSkinnedShader->SetUniformMatrix4fv("u_ViewProjection", vp);
@@ -5938,125 +5857,38 @@ void Renderer::RenderPickingPass(const Mtx44& view, const Mtx44& projection)
 		{
 			glBindVertexArray(skinnedVAO);
 
-			// Render all skinned meshes from picking buffer (opaque + transparent)
-			m_PickingIndirectSkinnedShader->SetUniform1ui("baseDrawID", 0);
-			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_MeshManager.m_PickingSkinnedDrawInfoBuffer.GetBufferID());
-			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_MeshManager.m_PickingSkinnedDrawCommandBuffer.GetBufferID());
-			glMultiDrawElementsIndirect(
-				GL_TRIANGLES,
-				GL_UNSIGNED_INT,
-				nullptr,
-				static_cast<GLsizei>(m_PickingSkinnedCommands.size()),
-				0
-			);
-			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
+			// Render geometry pass skinned meshes (opaque)
+			if (!m_SkinnedDrawCommands.empty())
+			{
+				m_PickingIndirectSkinnedShader->SetUniform1ui("baseDrawID", 0);
+				glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_MeshManager.m_GeometrySkinnedDrawInfoBuffer.GetBufferID());
+				glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_MeshManager.m_GeometrySkinnedDrawCommandBuffer.GetBufferID());
+				glMultiDrawElementsIndirect(
+					GL_TRIANGLES,
+					GL_UNSIGNED_INT,
+					nullptr,
+					static_cast<GLsizei>(m_SkinnedDrawCommands.size()),
+					0
+				);
+				glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
+			}
 
-			glBindVertexArray(0);
-		}
+			// Render forward pass skinned meshes (transparent)
+			if (!m_ForwardSkinnedDrawCommands.empty())
+			{
+				m_PickingIndirectSkinnedShader->SetUniform1ui("baseDrawID", 0);
+				glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_MeshManager.m_ForwardSkinnedDrawInfoBuffer.GetBufferID());
+				glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_MeshManager.m_ForwardSkinnedDrawCommandBuffer.GetBufferID());
+				glMultiDrawElementsIndirect(
+					GL_TRIANGLES,
+					GL_UNSIGNED_INT,
+					nullptr,
+					static_cast<GLsizei>(m_ForwardSkinnedDrawCommands.size()),
+					0
+				);
+				glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
+			}
 
-		m_PickingIndirectSkinnedShader->Unbind();
-	}
-
-	// ========== RENDER OPAQUE CUSTOM SHADER MESHES ==========
-	if (m_ForwardOpaqueCustomStandardUploadedCount > 0)
-	{
-		m_PickingIndirectShader->Bind();
-		m_PickingIndirectShader->SetUniformMatrix4fv("u_ViewProjection", vp);
-
-		GLuint standardVAO = m_MeshManager.GetStandardVAO();
-		if (standardVAO != 0)
-		{
-			glBindVertexArray(standardVAO);
-			m_PickingIndirectShader->SetUniform1ui("baseDrawID", 0);
-			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_ForwardOpaqueCustomStandardInfoBuffer);
-			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardOpaqueCustomStandardCmdBuffer);
-			glMultiDrawElementsIndirect(
-				GL_TRIANGLES,
-				GL_UNSIGNED_INT,
-				nullptr,
-				static_cast<GLsizei>(m_ForwardOpaqueCustomStandardUploadedCount),
-				0
-			);
-			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
-			glBindVertexArray(0);
-		}
-
-		m_PickingIndirectShader->Unbind();
-	}
-
-	if (m_ForwardOpaqueCustomSkinnedUploadedCount > 0)
-	{
-		m_PickingIndirectSkinnedShader->Bind();
-		m_PickingIndirectSkinnedShader->SetUniformMatrix4fv("u_ViewProjection", vp);
-
-		GLuint skinnedVAO = m_MeshManager.GetSkinnedVAO();
-		if (skinnedVAO != 0)
-		{
-			glBindVertexArray(skinnedVAO);
-			m_PickingIndirectSkinnedShader->SetUniform1ui("baseDrawID", 0);
-			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_ForwardOpaqueCustomSkinnedInfoBuffer);
-			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardOpaqueCustomSkinnedCmdBuffer);
-			glMultiDrawElementsIndirect(
-				GL_TRIANGLES,
-				GL_UNSIGNED_INT,
-				nullptr,
-				static_cast<GLsizei>(m_ForwardOpaqueCustomSkinnedUploadedCount),
-				0
-			);
-			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
-			glBindVertexArray(0);
-		}
-
-		m_PickingIndirectSkinnedShader->Unbind();
-	}
-
-	// ========== RENDER TRANSPARENT CUSTOM SHADER MESHES ==========
-	if (m_ForwardTransparentCustomStandardUploadedCount > 0)
-	{
-		m_PickingIndirectShader->Bind();
-		m_PickingIndirectShader->SetUniformMatrix4fv("u_ViewProjection", vp);
-
-		GLuint standardVAO = m_MeshManager.GetStandardVAO();
-		if (standardVAO != 0)
-		{
-			glBindVertexArray(standardVAO);
-			m_PickingIndirectShader->SetUniform1ui("baseDrawID", 0);
-			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_ForwardTransparentCustomStandardInfoBuffer);
-			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardTransparentCustomStandardCmdBuffer);
-			glMultiDrawElementsIndirect(
-				GL_TRIANGLES,
-				GL_UNSIGNED_INT,
-				nullptr,
-				static_cast<GLsizei>(m_ForwardTransparentCustomStandardUploadedCount),
-				0
-			);
-			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
-			glBindVertexArray(0);
-		}
-
-		m_PickingIndirectShader->Unbind();
-	}
-
-	if (m_ForwardTransparentCustomSkinnedUploadedCount > 0)
-	{
-		m_PickingIndirectSkinnedShader->Bind();
-		m_PickingIndirectSkinnedShader->SetUniformMatrix4fv("u_ViewProjection", vp);
-
-		GLuint skinnedVAO = m_MeshManager.GetSkinnedVAO();
-		if (skinnedVAO != 0)
-		{
-			glBindVertexArray(skinnedVAO);
-			m_PickingIndirectSkinnedShader->SetUniform1ui("baseDrawID", 0);
-			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_ForwardTransparentCustomSkinnedInfoBuffer);
-			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardTransparentCustomSkinnedCmdBuffer);
-			glMultiDrawElementsIndirect(
-				GL_TRIANGLES,
-				GL_UNSIGNED_INT,
-				nullptr,
-				static_cast<GLsizei>(m_ForwardTransparentCustomSkinnedUploadedCount),
-				0
-			);
-			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
 			glBindVertexArray(0);
 		}
 
@@ -6177,7 +6009,8 @@ void Renderer::CheckMaterialUpdates()
 			// Material has been modified, trigger recompilation
 			m_MaterialsDirty = true;
 
-			// Invalidate draw data cache since material property changes affect routing
+			// CRITICAL: Also invalidate draw data cache
+			// Material property changes (transparency, custom shader) affect routing
 			m_DrawDataNeedsFullRebuild = true;
 			return;
 		}
@@ -6294,13 +6127,14 @@ void Renderer::UploadMaterialsToGPU()
 	// Calculate total size needed
 	const size_t materialSize = sizeof(graphics::MaterialSSBO);
 	const size_t requiredSize = m_CompiledMaterials.size();
-	const size_t uploadBytes = requiredSize * materialSize;
 
 	// Only reallocate if size changed (prevents both orphaning and stale data)
 	if (requiredSize != m_MaterialSSBOCapacity)
 	{
 		// Size changed - must reallocate to prevent stale data
-		glBufferData(GL_SHADER_STORAGE_BUFFER, uploadBytes, m_CompiledMaterials.data(), GL_DYNAMIC_DRAW);
+		size_t totalBytes = requiredSize * materialSize;
+
+		glBufferData(GL_SHADER_STORAGE_BUFFER, totalBytes, m_CompiledMaterials.data(), GL_DYNAMIC_DRAW);
 		m_MaterialSSBOCapacity = requiredSize;
 
 		// Check for allocation errors
@@ -6308,7 +6142,7 @@ void Renderer::UploadMaterialsToGPU()
 		if (error != GL_NO_ERROR)
 		{
 			EE_CORE_ERROR("Failed to allocate MaterialSSBO: {0} bytes, error: {1}",
-				uploadBytes, error);
+				totalBytes, error);
 			glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 			return;
 		}
@@ -6316,6 +6150,7 @@ void Renderer::UploadMaterialsToGPU()
 	else
 	{
 		// Size unchanged - safe to use glBufferSubData (avoids orphaning)
+		size_t uploadBytes = requiredSize * materialSize;
 		glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, uploadBytes, m_CompiledMaterials.data());
 	}
 
@@ -6441,20 +6276,21 @@ void Renderer::BuildTextureArray()
 
 	// Upload texture handles to SSBO - only reallocate if size changed
 	const size_t requiredSize = textureHandles.size();
-	const size_t uploadBytes = requiredSize * sizeof(GLuint64);
 
 	// Only reallocate if size changed (prevents both orphaning and stale data)
 	if (requiredSize != m_TextureArraySSBOCapacity)
 	{
 		// Size changed - must reallocate to prevent stale data
-		glBufferData(GL_SHADER_STORAGE_BUFFER, uploadBytes, textureHandles.data(), GL_DYNAMIC_DRAW);
+		size_t totalBytes = requiredSize * sizeof(GLuint64);
+
+		glBufferData(GL_SHADER_STORAGE_BUFFER, totalBytes, textureHandles.data(), GL_DYNAMIC_DRAW);
 		m_TextureArraySSBOCapacity = requiredSize;
 
 		GLenum error = glGetError();
 		if (error != GL_NO_ERROR)
 		{
 			EE_CORE_ERROR("Failed to allocate texture array SSBO: {0} bytes, error: {1}",
-				uploadBytes, error);
+				totalBytes, error);
 			glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 			m_TextureArrayDirty = false;
 			return;
@@ -6463,6 +6299,7 @@ void Renderer::BuildTextureArray()
 	else
 	{
 		// Size unchanged - safe to use glBufferSubData (avoids orphaning)
+		size_t uploadBytes = requiredSize * sizeof(GLuint64);
 		glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, uploadBytes, textureHandles.data());
 	}
 

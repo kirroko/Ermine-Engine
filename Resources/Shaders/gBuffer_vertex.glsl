@@ -8,7 +8,7 @@ layout(location = 4) in ivec4 aBoneIDs;      // Only present in SkinnedVAO
 layout(location = 5) in vec4 aBoneWeights;    // Only present in SkinnedVAO
 
 // Draw info structure matching CPU-side DrawInfo (std430 layout)
-// Total size: 112 bytes (must match C++ DrawInfo in DrawCommands.h)
+// Total size: 160 bytes (must match C++ DrawInfo in DrawCommands.h)
 struct DrawInfo {
     mat4 modelMatrix;           // 64 bytes (offset 0-63) - Model transformation matrix
     vec3 aabbMin;               // 12 bytes (offset 64-75) - AABB minimum bounds
@@ -17,7 +17,11 @@ struct DrawInfo {
     uint entityID;              // 4 bytes (offset 92-95) - Entity ID for identification
     uint flags;                 // 4 bytes (offset 96-99) - Flags (bit 0: useSkinning)
     uint boneTransformOffset;   // 4 bytes (offset 100-103) - Starting index in skeletal SSBO
-    uint _pad[2];               // 8 bytes (offset 104-111) - Explicit padding to 16-byte alignment
+    uint _pad0;                 // 4 bytes (offset 104-107) - Padding
+    uint _pad1;                 // 4 bytes (offset 108-111) - Padding to 16-byte boundary
+    vec4 normalMatrixCol0;      // 16 bytes (offset 112-127) - Normal matrix column 0 (xyz used)
+    vec4 normalMatrixCol1;      // 16 bytes (offset 128-143) - Normal matrix column 1 (xyz used)
+    vec4 normalMatrixCol2;      // 16 bytes (offset 144-159) - Normal matrix column 2 (xyz used)
 };
 
 // SSBO bindings (still used for DrawInfo and bone transforms)
@@ -25,19 +29,15 @@ layout(std430, binding = 1) restrict readonly buffer DrawInfoBuffer {
     DrawInfo drawInfos[];
 };
 
-// Skeletal animation bone transforms SSBO (Binding 7)
+// Skeletal animation bone transforms SSBO (Binding 2)
 layout(std430, binding = 2) restrict readonly buffer BoneTransformBuffer {
     mat4 boneTransforms[]; // All bone transforms for all entities
-};
-
-// Pre-skinned positions output (Binding 8) - for shadow pass reuse
-layout(std430, binding = 4) restrict writeonly buffer PreSkinnedBuffer {
-    vec4 preSkinnedPositions[];  // xyz = skinned position, w = unused
 };
 
 // Transformation matrices
 uniform mat4 view;
 uniform mat4 projection;
+uniform mat3 normalView; // Normal matrix for view (mat3 of view matrix) - calculated once on CPU
 
 // Base draw ID offset for multi-batch rendering
 uniform uint baseDrawID;
@@ -58,6 +58,9 @@ void main()
     DrawInfo drawInfo = drawInfos[baseDrawID + gl_DrawID];
     mat4 model = drawInfo.modelMatrix;
 
+    // Reconstruct normal matrix from 3 separate columns (pre-calculated on CPU, eliminates expensive inverse() per vertex)
+    mat3 normalMatrix = mat3(drawInfo.normalMatrixCol0.xyz, drawInfo.normalMatrixCol1.xyz, drawInfo.normalMatrixCol2.xyz);
+
     // Extract useSkinning flag from bit 0 of flags
     bool useSkinning = (drawInfo.flags & 1u) != 0u;
 
@@ -71,56 +74,82 @@ void main()
         // Get bone offset for this entity from DrawInfo
         uint boneOffset = drawInfo.boneTransformOffset;
 
-        // Calculate final bone transform using weighted blend
-        mat4 boneTransform =
-            boneTransforms[boneOffset + aBoneIDs[0]] * aBoneWeights[0] +
-            boneTransforms[boneOffset + aBoneIDs[1]] * aBoneWeights[1] +
-            boneTransforms[boneOffset + aBoneIDs[2]] * aBoneWeights[2] +
-            boneTransforms[boneOffset + aBoneIDs[3]] * aBoneWeights[3];
+        // Optimized conditional bone skinning - skip zero-weight bones
+        // Processes positions, normals, and tangents
+        vec4 skinnedPosition = vec4(0.0);
+        vec3 skinnedNormalVec = vec3(0.0);
+        vec3 skinnedTangentVec = vec3(0.0);
 
-        skinnedPos     = boneTransform * vec4(aPos, 1.0);
-        skinnedNormal  = mat3(boneTransform) * aNormal;
-        skinnedTangent = mat3(boneTransform) * aTangent;
+        // Bone 0 - skip if zero weight
+        if (aBoneWeights[0] > 0.0) {
+            mat4 boneTransform = boneTransforms[boneOffset + aBoneIDs[0]];
+            skinnedPosition += boneTransform * vec4(aPos, 1.0) * aBoneWeights[0];
+            skinnedNormalVec += mat3(boneTransform) * aNormal * aBoneWeights[0];
+            skinnedTangentVec += mat3(boneTransform) * aTangent * aBoneWeights[0];
+        }
 
-        // Write skinned position to SSBO for shadow pass reuse (eliminates redundant calculations)
-        preSkinnedPositions[gl_VertexID] = skinnedPos;
+        // Bone 1
+        if (aBoneWeights[1] > 0.0) {
+            mat4 boneTransform = boneTransforms[boneOffset + aBoneIDs[1]];
+            skinnedPosition += boneTransform * vec4(aPos, 1.0) * aBoneWeights[1];
+            skinnedNormalVec += mat3(boneTransform) * aNormal * aBoneWeights[1];
+            skinnedTangentVec += mat3(boneTransform) * aTangent * aBoneWeights[1];
+        }
+
+        // Bone 2
+        if (aBoneWeights[2] > 0.0) {
+            mat4 boneTransform = boneTransforms[boneOffset + aBoneIDs[2]];
+            skinnedPosition += boneTransform * vec4(aPos, 1.0) * aBoneWeights[2];
+            skinnedNormalVec += mat3(boneTransform) * aNormal * aBoneWeights[2];
+            skinnedTangentVec += mat3(boneTransform) * aTangent * aBoneWeights[2];
+        }
+
+        // Bone 3
+        if (aBoneWeights[3] > 0.0) {
+            mat4 boneTransform = boneTransforms[boneOffset + aBoneIDs[3]];
+            skinnedPosition += boneTransform * vec4(aPos, 1.0) * aBoneWeights[3];
+            skinnedNormalVec += mat3(boneTransform) * aNormal * aBoneWeights[3];
+            skinnedTangentVec += mat3(boneTransform) * aTangent * aBoneWeights[3];
+        }
+
+        skinnedPos = skinnedPosition;
+        skinnedNormal = skinnedNormalVec;
+        skinnedTangent = skinnedTangentVec;
     }
 
-    // Calculate normal matrix from model matrix
-    mat3 NormalMatrix = transpose(inverse(mat3(model)));
-
-    // World & View
-    // Calculate world space position
+    // World space position (for lighting calculations)
     vec4 worldPos = model * skinnedPos;
-    WorldPos = worldPos.xyz;    
-    
-    // Calculate view space position
+    WorldPos = worldPos.xyz;
+
+    // View space position
     vec4 viewPos = view * worldPos;
     ViewPos = viewPos.xyz;
-    
+
     // Final vertex position
     gl_Position = projection * viewPos;
-    
+
     // Pass through texture coordinates
     TexCoord = aTexCoord;
 
-    // Transform normal to world space using normal matrix
-    WorldNormal = normalize(NormalMatrix * skinnedNormal);
-    
-    // Transform normal to view space
-    ViewNormal = normalize(mat3(view) * WorldNormal);
-    
-    // Transform tangent to world space first, then to view space
-    vec3 worldTangent = normalize(NormalMatrix * skinnedTangent);
-    ViewTangent = normalize(mat3(view) * worldTangent);
-    
-    // Calculate bitangent in world space first, then transform to view space
-    vec3 worldBitangent = normalize(cross(WorldNormal, worldTangent));
-    ViewBitangent = normalize(mat3(view) * worldBitangent);
-    
+    // Transform normal to world space using pre-calculated normal matrix (avoids expensive inverse())
+    WorldNormal = normalize(normalMatrix * skinnedNormal);
+
+    // Calculate combined model-view normal matrix for view-space TBN
+    // Still cheaper than calculating inverse() per vertex
+    mat3 modelViewNormalMatrix = normalView * normalMatrix;
+
+    // Transform TBN directly to view space
+    // This eliminates redundant intermediate normalizations
+    ViewNormal = normalize(modelViewNormalMatrix * skinnedNormal);
+    ViewTangent = normalize(modelViewNormalMatrix * skinnedTangent);
+
+    // Calculate bitangent in view space
+    ViewBitangent = cross(ViewNormal, ViewTangent);
+
     // Re-orthogonalize TBN vectors in view space using Gram-Schmidt process
+    // Only tangent needs correction; bitangent is recalculated from corrected tangent
     ViewTangent = normalize(ViewTangent - dot(ViewTangent, ViewNormal) * ViewNormal);
-    ViewBitangent = normalize(cross(ViewNormal, ViewTangent));
+    ViewBitangent = cross(ViewNormal, ViewTangent);
 
     // Pass material index to fragment shader
     vMaterialIndex = drawInfo.materialIndex;
