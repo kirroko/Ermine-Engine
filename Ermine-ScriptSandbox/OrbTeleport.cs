@@ -31,7 +31,8 @@ public class OrbTeleport : MonoBehaviour
             GameObject sphere = GameObject.Find("Sphere");
             if (sphere == null)
                 return;
-            transform.position = sphere.transform.position;
+            //transform.position = sphere.transform.position;
+            Physics.SetPosition((ulong)gameObject.GetInstanceID(), sphere.transform.position);
             GameObject.Destroy(sphere);
         }
     }

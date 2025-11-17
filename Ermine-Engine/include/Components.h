@@ -1075,6 +1075,9 @@ namespace Ermine
 		Vec3 aabbMin{ -1.0f, -1.0f, -1.0f };
 		Vec3 aabbMax{ 1.0f,  1.0f,  1.0f };
 
+		//Physic mesh collider
+		std::vector<glm::vec3> cpuVertices;
+
 		Mesh() = default;
 
 		Mesh(const std::shared_ptr<graphics::VertexArray>& vao, const std::shared_ptr<graphics::VertexBuffer>& vbo, const std::shared_ptr<graphics::IndexBuffer>& ibo) :
@@ -2295,12 +2298,19 @@ namespace Ermine
 	*************************************************************************/
 	struct PhysicComponent
 	{
+		//collision type
 		PhysicsBodyType bodyType{ PhysicsBodyType::Rigid };
+		//obj type
 		JPH::EMotionType motionType{ JPH::EMotionType::Static };
+		//obj weight
 		float mass{ 0.0f };
+		//collision shape
 		ShapeType shapeType{ ShapeType::Box };
+		//collision transform & constrains
 		Ermine::Vec3 colliderPivot{ 0,0,0 };
+		bool posX = false; bool posY = false; bool posZ = false;
 		Ermine::Vec3 colliderRot{ 0,0,0 };
+		bool rotX = false; bool rotY = false; bool rotZ = false;
 		Ermine::Vec3 colliderSize{ 1,1,1 };
 
 		JPH::BodyID bodyID{ JPH::BodyID::cInvalidBodyID };
@@ -2335,7 +2345,13 @@ namespace Ermine
 			xproperty::obj_member<"mass", &PhysicComponent::mass>,
 			xproperty::obj_member<"shapeType", &PhysicComponent::shapeType>,
 			xproperty::obj_member<"colliderpivot", &PhysicComponent::colliderPivot>,
+			xproperty::obj_member<"posx", &PhysicComponent::posX>,
+			xproperty::obj_member<"posy", &PhysicComponent::posY>,
+			xproperty::obj_member<"posz", &PhysicComponent::posZ>,
 			xproperty::obj_member<"colliderrot", &PhysicComponent::colliderRot>,
+			xproperty::obj_member<"rotx", &PhysicComponent::rotX>,
+			xproperty::obj_member<"roty", &PhysicComponent::rotY>,
+			xproperty::obj_member<"rotz", &PhysicComponent::rotZ>,
 			xproperty::obj_member<"collidersize", &PhysicComponent::colliderSize>
 		)
 	};

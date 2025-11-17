@@ -33,5 +33,20 @@ namespace ErmineEngine
             hitInfo = new RaycastHit();
             return Internal_Raycast(origin, direction, out hitInfo, maxDistance);
         }
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern void SetPosition(ulong entityID, Vector3 position);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern void SetRotationEuler(ulong entityID, Vector3 eulerDeg);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern void SetRotationQuat(ulong entityID, Quaternion rotation);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern void MoveEuler(ulong entityID, Vector3 position, Vector3 eulerDeg);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern void MoveQuat(ulong entityID, Vector3 position, Quaternion rotation);
     }
 }

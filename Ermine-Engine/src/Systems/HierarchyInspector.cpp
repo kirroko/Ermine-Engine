@@ -1335,6 +1335,59 @@ namespace Ermine::editor {
 					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
 				}
 			}
+			else if (guid == xproperty::settings::var_type<bool>::guid_v && label == "Posx") {
+				bool b = p.m_Value.get<bool>();
+				if (ImGui::Checkbox("Freeze Pos X", &b)) {
+					p.m_Value.set<bool>(b);
+					xproperty::sprop::setProperty(err, pc, p, ctx);
+					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
+				}
+				ImGui::SameLine();
+			}
+			else if (guid == xproperty::settings::var_type<bool>::guid_v && label == "Posy") {
+				bool b = p.m_Value.get<bool>();
+				if (ImGui::Checkbox("Y", &b)) {
+					p.m_Value.set<bool>(b);
+					xproperty::sprop::setProperty(err, pc, p, ctx);
+					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
+				}
+				ImGui::SameLine();
+			}
+			else if (guid == xproperty::settings::var_type<bool>::guid_v && label == "Posz") {
+				bool b = p.m_Value.get<bool>();
+				if (ImGui::Checkbox("Z", &b)) {
+					p.m_Value.set<bool>(b);
+					xproperty::sprop::setProperty(err, pc, p, ctx);
+					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
+				}
+			}
+			else if (guid == xproperty::settings::var_type<bool>::guid_v && label == "Rotx") {
+				bool b = p.m_Value.get<bool>();
+				if (ImGui::Checkbox("Freeze Rot X", &b)) {
+					p.m_Value.set<bool>(b);
+					xproperty::sprop::setProperty(err, pc, p, ctx);
+					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
+				}
+				ImGui::SameLine();
+			}
+			else if (guid == xproperty::settings::var_type<bool>::guid_v && label == "Roty") {
+				bool b = p.m_Value.get<bool>();
+				if (ImGui::Checkbox("Y", &b)) {
+					p.m_Value.set<bool>(b);
+					xproperty::sprop::setProperty(err, pc, p, ctx);
+					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
+				}
+				ImGui::SameLine();
+			}
+			else if (guid == xproperty::settings::var_type<bool>::guid_v && label == "Rotz") {
+				bool b = p.m_Value.get<bool>();
+				if (ImGui::Checkbox("Z", &b)) {
+					p.m_Value.set<bool>(b);
+					xproperty::sprop::setProperty(err, pc, p, ctx);
+					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
+				}
+
+			}
 
 			ImGui::PopID();
 		}

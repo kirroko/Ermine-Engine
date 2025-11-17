@@ -495,6 +495,13 @@ namespace Ermine
 					// Fill the custom mesh vertices for physics
 					p.customMeshVertices = model->GetSkinnedVertices();
 				}
+				else if (!ecs.HasComponent<ModelComponent>(entity) && ecs.HasComponent<Mesh>(entity))
+				{
+					auto& mesh = ecs.GetComponent<Mesh>(entity);
+
+					// Fill the custom mesh vertices for physics
+					p.customMeshVertices = mesh.cpuVertices;
+				}
 				else
 				{
 					continue;
@@ -519,7 +526,7 @@ namespace Ermine
 
 				JPH::RefConst<JPH::Shape> shapeRef;
 
-				if (p.motionType == JPH::EMotionType::Dynamic || p.motionType == JPH::EMotionType::Kinematic)
+				if (p.motionType == JPH::EMotionType::Dynamic || p.motionType == JPH::EMotionType::Kinematic || (!ecs.HasComponent<ModelComponent>(entity) && ecs.HasComponent<Mesh>(entity)))
 				{
 					// --- Dynamic mesh: convert to ConvexHullShape or CompoundShape ---
 					if (verts.size() < 4)
@@ -588,6 +595,26 @@ namespace Ermine
 			Ermine::Quaternion rot = QuaternionNormalize(FromEulerDegrees(p.colliderRot));
 			Ermine::Quaternion combined = QuaternionNormalize(t.rotation * rot);
 			bodySettings.mRotation = JPH::Quat(combined.x, combined.y, combined.z, combined.w);
+
+			JPH::EAllowedDOFs dofs = JPH::EAllowedDOFs::All;
+
+			// Position locks
+			if (p.posX) dofs &= ~JPH::EAllowedDOFs::TranslationX;
+			if (p.posY) dofs &= ~JPH::EAllowedDOFs::TranslationY;
+			if (p.posZ) dofs &= ~JPH::EAllowedDOFs::TranslationZ;
+
+			// Rotation locks
+			if (p.rotX) dofs &= ~JPH::EAllowedDOFs::RotationX;
+			if (p.rotY) dofs &= ~JPH::EAllowedDOFs::RotationY;
+			if (p.rotZ) dofs &= ~JPH::EAllowedDOFs::RotationZ;
+
+			bodySettings.mAllowedDOFs = dofs;
+
+			if (p.posX && p.posY && p.posZ && p.motionType == JPH::EMotionType::Dynamic)
+			{
+				p.motionType = JPH::EMotionType::Static;
+			}
+
 			// Create body
 			JPH::Body* body = bodyInterface.CreateBody(bodySettings);
 			if (!body) continue;
@@ -884,6 +911,7 @@ namespace Ermine
 	{
 		auto& bodyInterface = mPhysicsSystem.GetBodyInterface();
 		Ermine::Quaternion rot = ECS::GetInstance().GetComponent<Transform>(ID).rotation;
+		rot = QuaternionNormalize(rot);
 		bodyInterface.SetPositionAndRotation(
 			GetBodyID(ID),
 			JPH::Vec3(position.x, position.y, position.z),
@@ -904,6 +932,7 @@ namespace Ermine
 		auto& bodyInterface = mPhysicsSystem.GetBodyInterface();
 		Ermine::Vec3 pos = ECS::GetInstance().GetComponent<Transform>(ID).position;
 		Ermine::Quaternion rot = FromEulerDegrees(rotation);
+		rot = QuaternionNormalize(rot);
 		bodyInterface.SetPositionAndRotation(
 			GetBodyID(ID),
 			JPH::Vec3(pos.x, pos.y, pos.z),
@@ -923,10 +952,11 @@ namespace Ermine
 	{
 		auto& bodyInterface = mPhysicsSystem.GetBodyInterface();
 		Ermine::Vec3 pos = ECS::GetInstance().GetComponent<Transform>(ID).position;
+		Ermine::Quaternion rot = QuaternionNormalize(rotation);
 		bodyInterface.SetPositionAndRotation(
 			GetBodyID(ID),
 			JPH::Vec3(pos.x, pos.y, pos.z),
-			JPH::Quat(rotation.x, rotation.y, rotation.z, rotation.w),
+			JPH::Quat(rot.x, rot.y, rot.z, rot.w),
 			JPH::EActivation::Activate);
 	}
 
@@ -944,6 +974,7 @@ namespace Ermine
 	{
 		auto& bodyInterface = mPhysicsSystem.GetBodyInterface();
 		Ermine::Quaternion rot = FromEulerDegrees(rotation);
+		rot = QuaternionNormalize(rot);
 		bodyInterface.SetPositionAndRotation(
 			GetBodyID(ID),
 			JPH::Vec3(position.x, position.y, position.z),
@@ -964,10 +995,11 @@ namespace Ermine
 	void Physics::Move(EntityID ID, Ermine::Vec3 position, Ermine::Quaternion rotation)
 	{
 		auto& bodyInterface = mPhysicsSystem.GetBodyInterface();
+		Ermine::Quaternion rot = QuaternionNormalize(rotation);
 		bodyInterface.SetPositionAndRotation(
 			GetBodyID(ID),
 			JPH::Vec3(position.x, position.y, position.z),
-			JPH::Quat(rotation.x, rotation.y, rotation.z, rotation.w),
+			JPH::Quat(rot.x, rot.y, rot.z, rot.w),
 			JPH::EActivation::Activate);
 	}
 
