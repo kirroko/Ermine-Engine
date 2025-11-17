@@ -17,6 +17,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "AssetManager.h"
 #include "SceneManager.h"
 #include "EditorGUI.h"
+#include "CutsceneGUI.h"
 #include "Input.h"
 #include <imgui.h>
 #include <GLFW/glfw3.h>
@@ -102,13 +103,21 @@ namespace Ermine::editor
 
             if (ImGui::Button("PLAY", ImVec2(buttonWidth, buttonHeight)))
             {
+                // Hide main menu
                 m_IsActive = false;
+
+                // Start cutscene slideshow
+                auto* cutsceneGUI = EditorGUI::GetWindow<CutsceneGUI>();
+                if (cutsceneGUI)
+                {
+                    cutsceneGUI->StartSlideshow();
+                }
+
+                // Start play mode
                 EditorGUI::isPlaying = true;
                 EditorGUI::s_state = EditorGUI::SimState::playing;
                 SceneManager::GetInstance().SaveTemp();
-                glfwSetInputMode(glfwGetCurrentContext(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-                if (glfwRawMouseMotionSupported())
-                    glfwSetInputMode(glfwGetCurrentContext(), GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+                glfwSetInputMode(glfwGetCurrentContext(), GLFW_CURSOR, GLFW_CURSOR_NORMAL); // Keep cursor visible for cutscene
             }
 
             ImGui::PopStyleColor(3);

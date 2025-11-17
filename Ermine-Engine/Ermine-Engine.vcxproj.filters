@@ -333,6 +333,7 @@
     <ClInclude Include="include\NavMeshAgentSystem.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\CutsceneGUI.h" />
     <ClInclude Include="include\MainMenuGUI.h" />
   </ItemGroup>
   <ItemGroup>
@@ -552,6 +553,7 @@
     <ClCompile Include="src\Graphics\UITextRenderer.cpp">
       <Filter>src\Graphics</Filter>
     </ClCompile>
+    <ClCompile Include="src\ImGUI\CutsceneGUI.cpp" />
     <ClCompile Include="src\ImGUI\MainMenuGUI.cpp" />
   </ItemGroup>
   <ItemGroup>

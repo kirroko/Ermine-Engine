@@ -312,6 +312,7 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClInclude Include="include\Components.h" />
     <ClInclude Include="include\ConsoleGUI.h" />
     <ClInclude Include="include\Cubemap.h" />
+    <ClInclude Include="include\CutsceneGUI.h" />
     <ClInclude Include="include\DrawCommands.h" />
     <ClInclude Include="include\ECS.h" />
     <ClInclude Include="include\EditorCamera.h" />
@@ -416,6 +417,7 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClCompile Include="src\ImGUI\AnimationGUI.cpp" />
     <ClCompile Include="src\ImGUI\AudioIMGUI.cpp" />
     <ClCompile Include="src\ImGUI\ConsoleGUI.cpp" />
+    <ClCompile Include="src\ImGUI\CutsceneGUI.cpp" />
     <ClCompile Include="src\ImGUI\EditorGUI.cpp" />
     <ClCompile Include="src\ImGUI\GraphicsDebugGUI.cpp" />
     <ClCompile Include="src\ImGUI\InspectorGUI.cpp" />

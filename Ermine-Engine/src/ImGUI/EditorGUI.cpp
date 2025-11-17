@@ -42,6 +42,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "SceneManager.h"
 #include <imnodes.h>
 #include "MainMenuGUI.h"
+#include "CutsceneGUI.h"
 
 namespace Ermine
 {
@@ -405,6 +406,24 @@ void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
             if (ImGui::MenuItem("Main Menu Preview", nullptr, &isActive))
             {
                 mainMenuGUI->SetActive(isActive);
+            }
+        }
+
+        // Toggle Cutscene GUI
+        auto* cutsceneGUI = GetWindow<editor::CutsceneGUI>();
+        if (cutsceneGUI)
+        {
+            bool isActive = cutsceneGUI->IsActive();
+            if (ImGui::MenuItem("Cutscene Preview", nullptr, &isActive))
+            {
+                if (isActive)
+                {
+                    cutsceneGUI->StartSlideshow();
+                }
+                else
+                {
+                    cutsceneGUI->StopSlideshow();
+                }
             }
         }
 
