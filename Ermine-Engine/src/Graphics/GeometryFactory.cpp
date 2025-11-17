@@ -552,11 +552,12 @@ Ermine::Mesh GeometryFactory::CreateCone(float radius, float height, unsigned in
             meshVert.texCoord.y = v.tex.y;
             meshVert.tangent = tangents[i];
             meshVertices.push_back(meshVert);
+            mesh.cpuVertices.push_back(glm::vec3(v.pos.x, v.pos.y, v.pos.z));
         }
 
         std::string meshID = "Cone_" + std::to_string(radius) + "_" + std::to_string(height) + "_" + std::to_string(sectors);
         renderer->m_MeshManager.RegisterMesh(meshVertices, indices, meshID);
-
+        //store in comp for physic
         // Store the registered mesh ID in the Mesh component
         mesh.registeredMeshID = meshID;
     }

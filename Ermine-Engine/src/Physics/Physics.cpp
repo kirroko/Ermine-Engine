@@ -495,6 +495,13 @@ namespace Ermine
 					// Fill the custom mesh vertices for physics
 					p.customMeshVertices = model->GetSkinnedVertices();
 				}
+				else if (!ecs.HasComponent<ModelComponent>(entity) && ecs.HasComponent<Mesh>(entity))
+				{
+					auto& mesh = ecs.GetComponent<Mesh>(entity);
+
+					// Fill the custom mesh vertices for physics
+					p.customMeshVertices = mesh.cpuVertices;
+				}
 				else
 				{
 					continue;
@@ -904,7 +911,7 @@ namespace Ermine
 	{
 		auto& bodyInterface = mPhysicsSystem.GetBodyInterface();
 		Ermine::Quaternion rot = ECS::GetInstance().GetComponent<Transform>(ID).rotation;
-		QuaternionNormalize(rot);
+		rot = QuaternionNormalize(rot);
 		bodyInterface.SetPositionAndRotation(
 			GetBodyID(ID),
 			JPH::Vec3(position.x, position.y, position.z),

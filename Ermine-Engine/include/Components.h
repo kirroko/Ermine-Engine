@@ -1075,6 +1075,9 @@ namespace Ermine
 		Vec3 aabbMin{ -1.0f, -1.0f, -1.0f };
 		Vec3 aabbMax{ 1.0f,  1.0f,  1.0f };
 
+		//Physic mesh collider
+		std::vector<glm::vec3> cpuVertices;
+
 		Mesh() = default;
 
 		Mesh(const std::shared_ptr<graphics::VertexArray>& vao, const std::shared_ptr<graphics::VertexBuffer>& vbo, const std::shared_ptr<graphics::IndexBuffer>& ibo) :
