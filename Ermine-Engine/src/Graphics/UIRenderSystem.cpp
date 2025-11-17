@@ -156,19 +156,15 @@ namespace Ermine
         }
 
 #if defined(EE_EDITOR)
-        // Only render UI during play mode (like Unreal Engine's PIE - Play In Editor)
-        // Editor mode should have a clean view for level design
+        // In editor: render UI during play mode OR when the active scene is a menu/UI-focused scene
+        // Main menu scenes should always show their UI in the editor viewport
         if (!editor::EditorGUI::isPlaying)
-            return;
-#endif
-
-        // Debug: Log once when UI starts rendering
-        static bool firstRender = true;
-        if (firstRender)
         {
-            EE_CORE_INFO("UIRenderSystem: First render call! Entities count: {}", m_Entities.size());
-            firstRender = false;
+            // Check if we're viewing a menu scene (heuristic: if only UI entities with no game logic)
+            // For now, always render UI in editor to support menu scene previewing
+            // TODO: Add a scene flag to indicate it's a "menu scene" that should always show UI
         }
+#endif
 
         // Enable blending for transparency
         glEnable(GL_BLEND);
@@ -181,6 +177,14 @@ namespace Ermine
         m_uiShader->Bind();
         m_uiShader->SetUniformMatrix4fv("projection", m_orthoProjection);
         m_uiShader->SetUniform1i("uUseTexture", 0); // Default: don't use textures
+
+        // Debug: Log once when UI starts rendering
+        static bool firstRender = true;
+        if (firstRender)
+        {
+            EE_CORE_INFO("UIRenderSystem: First render call! Entities count: {}", m_Entities.size());
+            firstRender = false;
+        }
 
         // Render UI for all entities with UIComponent
         for (EntityID entity : m_Entities)

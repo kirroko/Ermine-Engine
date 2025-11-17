@@ -333,6 +333,7 @@
     <ClInclude Include="include\NavMeshAgentSystem.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\MainMenuGUI.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\ThirdParty\xresource_pipeline_v2-main\dependencies\xtextfile\source\xtextfile.cpp">
@@ -551,6 +552,7 @@
     <ClCompile Include="src\Graphics\UITextRenderer.cpp">
       <Filter>src\Graphics</Filter>
     </ClCompile>
+    <ClCompile Include="src\ImGUI\MainMenuGUI.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="include\Component.tpp">
@@ -568,5 +570,6 @@
     <None Include="include\Systems.tpp">
       <Filter>include</Filter>
     </None>
+    <None Include="MAIN_MENU_SETUP.md" />
   </ItemGroup>
 </Project>
