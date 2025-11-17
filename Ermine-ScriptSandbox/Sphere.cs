@@ -26,8 +26,11 @@ public class Sphere : MonoBehaviour
         Debug.Log("Yes me lord? : " + gameObject.name);
 
         Debug.Log("Jobs done : " + col.gameObject.name);
-        col.gameObject.transform.position = new Vector3(0, 3, 0);
+        if(col.gameObject.name != "Player")
+        {
+            col.gameObject.transform.position = new Vector3(0, 30, 0);
 
-        Physics.SetPosition((ulong)col.gameObject.GetInstanceID(), col.gameObject.transform.position);
+            Physics.SetPosition((ulong)col.gameObject.GetInstanceID(), col.gameObject.transform.position);
+        }
     }
 }
