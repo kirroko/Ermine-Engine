@@ -1,5 +1,24 @@
+/* Start Header ************************************************************************/
+/*!
+\file       ResourcePipe.h
+\author     HURNG Kai Rui, h.kairui, 2301278, h.kairui\@digipen.edu (100%)
+\date       01/11/2025
+\brief      This file contains the implementation of the ResourcePipeline system.
+            It handles importing, converting, and caching of various asset types
+            such as textures and meshes. The pipeline integrates with DirectXTex
+            for texture processing (format conversion, mipmap generation, compression)
+            and Assimp for mesh importing (static and skinned meshes). It also manages
+            an asset database that tracks asset metadata, cache locations, and
+            reimport status. The pipeline automates scanning project directories,
+            reimporting outdated resources, and generating binary cache files
+            (.dds, .mesh, .skin) used by the engine at runtime.
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents without the
+prior written consent of DigiPen Institute of Technology is prohibited.
+*/
+/* End Header **************************************************************************/
 #pragma once
-//#include "PreCompile.h"
 #include <string>
 #include <memory>
 #include <vector>
@@ -157,6 +176,9 @@ namespace Ermine {
         bool ConvertTextureToDDS(const std::string& inputPath,
             const std::string& outputPath,
             const TextureImportSettings& settings);
+
+        // Determine optimal compression format based on filename
+        DXGI_FORMAT DetermineOptimalFormat(const std::string& filename);
 
         // Assimp mesh conversion helpers
         bool LoadAssimpScene(const std::string& filePath,

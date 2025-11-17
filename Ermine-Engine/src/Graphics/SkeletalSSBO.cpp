@@ -3,7 +3,7 @@
 \file       SkeletalSSBO.cpp
 \author     Ridhwan Afandi, moahamedridhwan.b, 2301367, moahamedridhwan.b\@digipen.edu
 \date       27/10/2025
-\brief      Implementation of skeletal animation SSBO with persistent mapping
+\brief      Implementation of skeletal animation SSBO
 
 Copyright (C) 2025 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents without the
@@ -23,14 +23,6 @@ namespace Ermine::graphics
 {
     SkeletalSSBO::~SkeletalSSBO()
     {
-        if (m_MappedPtr)
-        {
-            glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_BufferID);
-            glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-            glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-            m_MappedPtr = nullptr;
-        }
-
         if (m_BufferID != 0)
         {
             glDeleteBuffers(1, &m_BufferID);
@@ -53,39 +45,24 @@ namespace Ermine::graphics
         // Create buffer
         glGenBuffers(1, &m_BufferID);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_BufferID);
-
-        // Allocate storage with persistent mapping flags
-        // GL_MAP_WRITE_BIT: Allow CPU writes
-        // GL_MAP_PERSISTENT_BIT: Keep mapping alive
-        // GL_MAP_COHERENT_BIT: Automatic synchronization
-        GLbitfield flags = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
-        glBufferStorage(GL_SHADER_STORAGE_BUFFER, m_BufferSize, nullptr, flags);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, m_BufferSize, nullptr, GL_DYNAMIC_DRAW);
 
         // Check for errors
         GLenum error = glGetError();
         if (error != GL_NO_ERROR)
         {
-            EE_CORE_ERROR("Failed to create persistent mapped buffer for skeletal data, error: {0}", error);
+            EE_CORE_ERROR("Failed to create buffer for skeletal data, error: {0}", error);
             glDeleteBuffers(1, &m_BufferID);
             m_BufferID = 0;
             return false;
         }
 
-        // Map the buffer persistently
-        m_MappedPtr = glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, m_BufferSize, flags);
-
-        if (!m_MappedPtr)
-        {
-            EE_CORE_ERROR("Failed to map skeletal buffer persistently");
-            glDeleteBuffers(1, &m_BufferID);
-            m_BufferID = 0;
-            return false;
-        }
+        // Bind to SSBO binding point
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SKELETAL_SSBO_BINDING, m_BufferID);
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
-        EE_CORE_INFO("Initialized skeletal SSBO: {0} max skeletons, {1} max bones, {2} bytes, binding {3}",
+        EE_CORE_INFO("Initialized skeletal SSBO (glBufferSubData): {0} max skeletons, {1} max bones, {2} bytes, binding {3}",
                      maxSkeletons, m_MaxBones, m_BufferSize, SKELETAL_SSBO_BINDING);
 
         return true;
@@ -148,46 +125,12 @@ namespace Ermine::graphics
             return;
         }
 
-        // Calculate offset in bytes
         size_t offsetBytes = startBoneIndex * sizeof(glm::mat4);
         size_t sizeBytes = boneTransforms.size() * sizeof(glm::mat4);
 
-        // Direct memory copy to persistent mapped buffer
-        std::memcpy(static_cast<char*>(m_MappedPtr) + offsetBytes,
-                    boneTransforms.data(),
-                    sizeBytes);
-    }
-
-    void SkeletalSSBO::WaitForGPU()
-    {
-        // Wait for GPU to finish reading bone data from previous frame
-        if (m_Fence != nullptr)
-        {
-            GLsync sync = static_cast<GLsync>(m_Fence);
-            GLenum result = glClientWaitSync(sync, GL_SYNC_FLUSH_COMMANDS_BIT, 1000000000); // 1 second timeout
-            if (result == GL_TIMEOUT_EXPIRED)
-            {
-                EE_CORE_WARN("SkeletalSSBO: GPU sync timeout - frame took over 1 second");
-            }
-            else if (result == GL_WAIT_FAILED)
-            {
-                EE_CORE_ERROR("SkeletalSSBO: GPU sync failed");
-            }
-            glDeleteSync(sync);
-            m_Fence = nullptr;
-        }
-    }
-
-    void SkeletalSSBO::InsertFence()
-    {
-        // Clean up previous fence if it exists
-        if (m_Fence != nullptr)
-        {
-            glDeleteSync(static_cast<GLsync>(m_Fence));
-        }
-
-        // Insert fence to track when GPU finishes reading bone data
-        m_Fence = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_BufferID);
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, offsetBytes, sizeBytes, boneTransforms.data());
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     }
 
 } // namespace Ermine::graphics

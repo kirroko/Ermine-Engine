@@ -24,24 +24,32 @@ layout(location = 3) in vec3 aTangent;     // Not used for shadows, but needed f
 layout(location = 4) in ivec4 aBoneIDs;
 layout(location = 5) in vec4 aWeights;
 
-// Pre-skinned position attribute (location 6) - hardware vertex fetch from pre-skinned buffer
-layout(location = 6) in vec4 aPreSkinnedPosition;
-
 // Draw info structure matching CPU-side DrawInfo (std430 layout)
+// Total size: 160 bytes (must match C++ DrawInfo in DrawCommands.h)
 struct DrawInfo {
-    mat4 modelMatrix;           // 64 bytes - Model transformation matrix
-    vec3 aabbMin;               // 12 bytes - AABB minimum bounds
-    uint materialIndex;         // 4 bytes - Index into material SSBO
-    vec3 aabbMax;               // 12 bytes - AABB maximum bounds
-    uint entityID;              // 4 bytes - Entity ID
-    uint flags;                 // 4 bytes - Flags (bit 0: useSkinning)
-    uint boneTransformOffset;   // 4 bytes - Starting index in skeletal SSBO
-    uint _pad[2];               // 8 bytes - Padding
+    mat4 modelMatrix;           // 64 bytes (offset 0-63) - Model transformation matrix
+    vec3 aabbMin;               // 12 bytes (offset 64-75) - AABB minimum bounds
+    uint materialIndex;         // 4 bytes (offset 76-79) - Index into material SSBO
+    vec3 aabbMax;               // 12 bytes (offset 80-91) - AABB maximum bounds
+    uint entityID;              // 4 bytes (offset 92-95) - Entity ID
+    uint flags;                 // 4 bytes (offset 96-99) - Flags (bit 0: useSkinning)
+    uint boneTransformOffset;   // 4 bytes (offset 100-103) - Starting index in skeletal SSBO
+    uint _pad0;                 // 4 bytes (offset 104-107) - Padding
+    uint _pad1;                 // 4 bytes (offset 108-111) - Padding to 16-byte boundary
+    vec4 normalMatrixCol0;      // 16 bytes (offset 112-127) - Normal matrix column 0 (xyz used)
+    vec4 normalMatrixCol1;      // 16 bytes (offset 128-143) - Normal matrix column 1 (xyz used)
+    vec4 normalMatrixCol2;      // 16 bytes (offset 144-159) - Normal matrix column 2 (xyz used)
+    
 };
 
 // SSBO binding for indirect rendering DrawInfo
 layout(std430, binding = 1) restrict readonly buffer DrawInfoBuffer {
     DrawInfo drawInfos[];
+};
+
+// Skeletal animation bone transforms SSBO (Binding 2)
+layout(std430, binding = 2) restrict readonly buffer BoneTransformBuffer {
+    mat4 boneTransforms[]; // All bone transforms for all entities
 };
 
 // Base draw ID offset for multi-batch indirect rendering
@@ -72,18 +80,21 @@ void main()
     mat4 modelMatrix = drawInfo.modelMatrix;
     bool useSkinning = (drawInfo.flags & 1u) != 0u;
 
-    // Apply skinning transformation if enabled
-    // OPTIMIZATION: Use hardware vertex fetch from pre-skinned attribute instead of SSBO random access
-    vec4 skinnedPos;
+    // Calculate skinned position
+    vec4 skinnedPos = vec4(aPosition, 1.0);
 
     if (useSkinning) {
-        // Read pre-skinned position from vertex attribute (location 6)
-        // Hardware vertex fetch is MUCH faster than SSBO random access!
-        // Geometry pass wrote these positions, shadow pass reads via vertex fetch units
-        skinnedPos = aPreSkinnedPosition;
-    } else {
-        // Non-skinned mesh: use vertex position directly
-        skinnedPos = vec4(aPosition, 1.0);
+        // Get bone offset for this entity from DrawInfo
+        uint boneOffset = drawInfo.boneTransformOffset;
+
+        // Calculate final bone transform using weighted blend
+        mat4 boneTransform =
+            boneTransforms[boneOffset + aBoneIDs[0]] * aWeights[0] +
+            boneTransforms[boneOffset + aBoneIDs[1]] * aWeights[1] +
+            boneTransforms[boneOffset + aBoneIDs[2]] * aWeights[2] +
+            boneTransforms[boneOffset + aBoneIDs[3]] * aWeights[3];
+
+        skinnedPos = boneTransform * vec4(aPosition, 1.0);
     }
 
     // Calculate light and cascade from gl_InstanceID

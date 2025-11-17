@@ -1,7 +1,7 @@
 /* Start Header ************************************************************************/
 /*!
 \file       UIRenderSystem.h
-\author     Claude Code Assistant
+\author     Edwin Lee Zirui, edwinzirui.lee, 2301299, edwinzirui.lee@digipen.edu
 \date       04/11/2025
 \brief      This file contains declarations for the UIRenderSystem which renders
             HUD elements including health bars, mana bars, skill slots, and crosshairs.
@@ -16,8 +16,11 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "PreCompile.h"
 #include "Systems.h"
 #include "Shader.h"
+#include "Texture.h"
 #include "Components.h"
+#include "UITextRenderer.h"
 #include <memory>
+#include <unordered_map>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -113,6 +116,14 @@ namespace Ermine
 
         /*!***********************************************************************
         \brief
+            Renders the book counter (e.g., "0/4", "1/4", etc.) at top-left.
+        \param[in] ui
+            Reference to UIComponent with book counter settings.
+        *************************************************************************/
+        void RenderBookCounter(const UIComponent& ui);
+
+        /*!***********************************************************************
+        \brief
             Renders a filled quad at the specified position with color.
         \param[in] posX
             X position in normalized screen coordinates (0-1).
@@ -179,20 +190,47 @@ namespace Ermine
         *************************************************************************/
         void RenderFilledCircle(float centerX, float centerY, float radius, const Vec3& color, float alpha = 1.0f);
 
+        /*!***********************************************************************
+        \brief
+            Renders a textured filled circle (for skill icons).
+        \param[in] centerX
+            Center X position in normalized screen coordinates (0-1).
+        \param[in] centerY
+            Center Y position in normalized screen coordinates (0-1).
+        \param[in] radius
+            Radius in normalized screen coordinates (0-1).
+        \param[in] texture
+            Shared pointer to texture to render.
+        \param[in] color
+            Tint color RGB values (0-1), default white.
+        \param[in] alpha
+            Alpha transparency (0-1, default 1.0).
+        *************************************************************************/
+        void RenderTexturedCircle(float centerX, float centerY, float radius,
+                                  std::shared_ptr<graphics::Texture> texture,
+                                  const Vec3& color = {1.0f, 1.0f, 1.0f},
+                                  float alpha = 1.0f);
+
         // OpenGL resources
         std::shared_ptr<graphics::Shader> m_uiShader;
-        GLuint m_VAO;
-        GLuint m_VBO;
+        GLuint m_VAO = 0;
+        GLuint m_VBO = 0;
 
         // Screen dimensions
-        int m_screenWidth;
-        int m_screenHeight;
+        int m_screenWidth = 0;
+        int m_screenHeight = 0;
 
         // Orthographic projection matrix for screen-space rendering
-        glm::mat4 m_orthoProjection;
+        glm::mat4 m_orthoProjection{};
 
         // Vertex data for dynamic rendering
         std::vector<float> m_vertexData;
+
+        // Texture cache for skill icons (path -> texture)
+        std::unordered_map<std::string, std::shared_ptr<graphics::Texture>> m_textureCache;
+
+        // Text renderer for keybind labels
+        std::shared_ptr<UITextRenderer> m_textRenderer;
     };
 
 } // namespace Ermine

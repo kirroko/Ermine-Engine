@@ -251,8 +251,8 @@ namespace Ermine {
                 EntityID droppedEntity = *(EntityID*)payload->Data;
 
                 if (droppedEntity != entity) {
-                    auto& parentMeta = ECS::GetInstance().GetComponent<ObjectMetaData>(entity);
-                    auto& childMeta = ECS::GetInstance().GetComponent<ObjectMetaData>(droppedEntity);
+                    //auto& parentMeta = ECS::GetInstance().GetComponent<ObjectMetaData>(entity);
+                    //auto& childMeta = ECS::GetInstance().GetComponent<ObjectMetaData>(droppedEntity);
 
                     // ONLY log if both entities are either Cube or Sphere
                     //bool isCubeOrSphere = (parentMeta.name.find("Cube") != std::string::npos ||
@@ -261,7 +261,6 @@ namespace Ermine {
                     //        childMeta.name.find("Sphere") != std::string::npos);
 
                     //if (isCubeOrSphere) {
-                    //    EE_CORE_INFO("=== Cube/Sphere Parenting ===");
                         if (auto hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>()) {
                             if (!hierarchySystem->WouldCreateCycle(droppedEntity, entity)) {
                                 // Log initial state
@@ -358,6 +357,30 @@ namespace Ermine {
 
                     // Log sphere creation
                     EE_CORE_INFO("=== Sphere Created ===");
+                    EE_CORE_INFO("Entity ID: {}", entity);
+                    if (ECS::GetInstance().HasComponent<Transform>(entity)) {
+                        const auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
+                        EE_CORE_INFO("Initial Position: {},{},{}",
+                            transform.position.x,
+                            transform.position.y,
+                            transform.position.z);
+                    }
+                    EE_CORE_INFO("==================");
+                    m_ActiveScene->SetSelectedEntity(entity);
+                    ImGui::SetWindowFocus("Inspector");
+                }
+                if (ImGui::MenuItem("Cone")) {
+                    EntityID entity = m_ActiveScene->CreateEntity("Cone");
+                    ECS::GetInstance().AddComponent(entity, graphics::GeometryFactory::CreateCone(1.0f, 2.0f, 32));
+
+                    auto shader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/vertex.glsl", "../Resources/Shaders/fragment.glsl");
+                    auto materialPtr = std::make_shared<graphics::Material>(shader);
+                    materialPtr->SetVec3("material.albedo", Vec3(0.9f, 0.7f, 0.5f)); // tan/beige color
+
+                    ECS::GetInstance().AddComponent(entity, Material(materialPtr));
+
+                    // Log cone creation
+                    EE_CORE_INFO("=== Cone Created ===");
                     EE_CORE_INFO("Entity ID: {}", entity);
                     if (ECS::GetInstance().HasComponent<Transform>(entity)) {
                         const auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);

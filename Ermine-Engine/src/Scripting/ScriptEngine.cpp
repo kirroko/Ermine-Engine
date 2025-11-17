@@ -24,6 +24,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "JobSystem.h"
 #include <HierarchySystem.h>
 #include "FiniteStateMachine.h"
+#include "NavMeshAgentSystem.h"
+#include "Physics.h"
 #include "SceneManager.h"
 #include "Serialisation.h"
 
@@ -75,24 +77,24 @@ namespace
 		return s.substr(b, e - b + 1);
 	}
 
-    std::string GetEnv(const char* name)
-    {
-    #if defined(_WIN32)
-        if (!name || !*name) return {};
-        char* buf = nullptr;
-        size_t len = 0;
-        errno_t err = _dupenv_s(&buf, &len, name);
-        if (err != 0 || !buf) return {};
-        std::string value;
-        if (len > 0)
-            value.assign(buf, buf + (buf[len - 1] == '\0' ? len - 1 : len));
-        free(buf);
-        return value;
-    #else
-        const char* v = std::getenv(name);
-        return v ? std::string(v) : std::string();
-    #endif
-    }
+	std::string GetEnv(const char* name)
+	{
+#if defined(_WIN32)
+		if (!name || !*name) return {};
+		char* buf = nullptr;
+		size_t len = 0;
+		errno_t err = _dupenv_s(&buf, &len, name);
+		if (err != 0 || !buf) return {};
+		std::string value;
+		if (len > 0)
+			value.assign(buf, buf + (buf[len - 1] == '\0' ? len - 1 : len));
+		free(buf);
+		return value;
+#else
+		const char* v = std::getenv(name);
+		return v ? std::string(v) : std::string();
+#endif
+	}
 
 #if defined(_WIN32)
 	std::wstring ToWide(const std::string& s)
@@ -267,7 +269,7 @@ namespace
 
 		std::istringstream iss(out);
 		std::string line;
-		while (std::getline(iss,line))
+		while (std::getline(iss, line))
 		{
 			line = Trim(line);
 			if (!line.empty() && fs::exists(line))
@@ -307,13 +309,13 @@ void Ermine::scripting::ScriptEngine::InitMono(const std::string& assembly_path)
 	EE_CORE_TRACE("Init Mono...");
 
 	fs::path base = fs::current_path() / "mono";
-	fs::path lib  = base / "lib";
-	fs::path etc  = base / "etc";
+	fs::path lib = base / "lib";
+	fs::path etc = base / "etc";
 	fs::path fx45 = lib / "4.5";
 
 	bool existsAll = true;
-	if (!fs::exists(lib))  { EE_CORE_ERROR("Mono lib directory missing: {0}", lib.string());   existsAll = false; }
-	if (!fs::exists(etc))  { EE_CORE_ERROR("Mono etc directory missing: {0}", etc.string());   existsAll = false; }
+	if (!fs::exists(lib)) { EE_CORE_ERROR("Mono lib directory missing: {0}", lib.string());   existsAll = false; }
+	if (!fs::exists(etc)) { EE_CORE_ERROR("Mono etc directory missing: {0}", etc.string());   existsAll = false; }
 	if (!fs::exists(fx45)) { EE_CORE_ERROR("Mono 4.5 profile missing: {0}", fx45.string());    existsAll = false; }
 	assert(existsAll && "Mono asset directories must exist (./mono/lib, ./mono/etc, ./mono/lib/4.5)");
 
@@ -745,8 +747,9 @@ void Ermine::scripting::ScriptEngine::SourceWatcherTick()
 		}
 		if (!m_csprojPath.empty() && fs::exists(m_csprojPath))
 			latest = std::max(latest, fs::last_write_time(m_csprojPath));
-	} catch (...) {}
-	
+	}
+	catch (...) {}
+
 	// Debounce and trigger build once
 	if (latest != std::filesystem::file_time_type{} && latest != m_lastSourcesStamp)
 	{
@@ -841,11 +844,11 @@ bool Ermine::scripting::ScriptEngine::BuildGameAssembly()
 	EE_CORE_ERROR("BuildGameAssembly only implemented for Windows.");
 	return false
 #endif
-	if (m_gameAssemblyPath.empty())
-	{
-		EE_CORE_WARN("Build succeeded, but game assembly path is empty; skip copy.");
-		return true;
-	}
+		if (m_gameAssemblyPath.empty())
+		{
+			EE_CORE_WARN("Build succeeded, but game assembly path is empty; skip copy.");
+			return true;
+		}
 
 	return true;
 }
@@ -860,6 +863,7 @@ namespace
 	MonoClass* s_TransformClass = nullptr;
 	MonoClass* s_MonoBehaviourClass = nullptr;
 	MonoClass* s_ComponentClass = nullptr;
+	MonoClass* s_AudioComponentClass = nullptr;
 	MonoClass* s_SerializeFieldAttr = nullptr;
 
 	// Discover field for a script instance
@@ -901,7 +905,7 @@ namespace
 		MonoClass* klass = mono_object_get_class(obj);
 		if (!klass) return 0;
 
-		if (MonoClassField* field = FindFieldInHierarchy(klass,"EntityID"))
+		if (MonoClassField* field = FindFieldInHierarchy(klass, "EntityID"))
 		{
 			Ermine::EntityID id = 0;
 			mono_field_get_value(obj, field, &id);
@@ -916,7 +920,7 @@ namespace
 		MonoClass* klass = mono_object_get_class(obj);
 		if (!klass) return;
 
-		if (MonoClassField* field = FindFieldInHierarchy(klass,"EntityID"))
+		if (MonoClassField* field = FindFieldInHierarchy(klass, "EntityID"))
 			mono_field_set_value(obj, field, &id);
 	}
 
@@ -935,7 +939,7 @@ namespace
 
 		if (!s_SerializeFieldAttr) return false;
 
-		if (MonoCustomAttrInfo* ca = mono_custom_attrs_from_field(owner,field))
+		if (MonoCustomAttrInfo* ca = mono_custom_attrs_from_field(owner, field))
 		{
 			const bool has = mono_custom_attrs_has_attr(ca, s_SerializeFieldAttr);
 			mono_custom_attrs_free(ca);
@@ -949,24 +953,24 @@ namespace
 	{
 		switch (mono_type_get_type(t))
 		{
-			case MONO_TYPE_R4: return ScriptFieldInfo::Kind::Float;
-			case MONO_TYPE_I4: return ScriptFieldInfo::Kind::Int;
-			case MONO_TYPE_BOOLEAN: return ScriptFieldInfo::Kind::Bool;
-			case MONO_TYPE_STRING: return ScriptFieldInfo::Kind::String;
-			case MONO_TYPE_VALUETYPE:
+		case MONO_TYPE_R4: return ScriptFieldInfo::Kind::Float;
+		case MONO_TYPE_I4: return ScriptFieldInfo::Kind::Int;
+		case MONO_TYPE_BOOLEAN: return ScriptFieldInfo::Kind::Bool;
+		case MONO_TYPE_STRING: return ScriptFieldInfo::Kind::String;
+		case MONO_TYPE_VALUETYPE:
+		{
+			MonoClass* c = mono_class_from_mono_type(t);
+			const char* ns = mono_class_get_namespace(c);
+			const char* nm = mono_class_get_name(c);
+			if (ns && nm && std::strcmp(ns, "ErmineEngine") == 0)
+				// TODO: This grows for unique types exposed field
 			{
-				MonoClass* c = mono_class_from_mono_type(t);
-				const char* ns = mono_class_get_namespace(c);
-				const char* nm = mono_class_get_name(c);
-				if (ns && nm && std::strcmp(ns, "ErmineEngine") == 0)
-					// TODO: This grows for unique types exposed field
-				{
-					if (std::strcmp(nm, "Vector3") == 0) return ScriptFieldInfo::Kind::Vector3;
-					if (std::strcmp(nm, "Quaternion") == 0) return ScriptFieldInfo::Kind::Quaternion;
-				}
-				break;
+				if (std::strcmp(nm, "Vector3") == 0) return ScriptFieldInfo::Kind::Vector3;
+				if (std::strcmp(nm, "Quaternion") == 0) return ScriptFieldInfo::Kind::Quaternion;
 			}
-			default: break;
+			break;
+		}
+		default: break;
 		}
 		return ScriptFieldInfo::Kind::Unsupported;
 	}
@@ -975,7 +979,7 @@ namespace
 	{
 		std::vector<ScriptFieldInfo> out;
 		void* iter = nullptr;
-		while (MonoClassField* f = mono_class_get_fields(klass,&iter))
+		while (MonoClassField* f = mono_class_get_fields(klass, &iter))
 		{
 			if (!IsExposedField(klass, f)) continue;
 
@@ -984,7 +988,7 @@ namespace
 			if (kind == ScriptFieldInfo::Kind::Unsupported) continue;
 
 			const char* fname = mono_field_get_name(f);
-			out.push_back(ScriptFieldInfo{ .name= fname ? fname : "", .field= f, .kind= kind});
+			out.push_back(ScriptFieldInfo{ .name = fname ? fname : "", .field = f, .kind = kind });
 		}
 
 		return out;
@@ -1023,7 +1027,6 @@ namespace
 		return obj;
 	}
 
-
 	void SetComponentGameObject(MonoObject* componentObj, Ermine::EntityID id)
 	{
 		if (!componentObj || !s_ComponentClass || !s_GameObjectClass)
@@ -1037,12 +1040,59 @@ namespace
 		mono_runtime_invoke(setGO, componentObj, args, nullptr);
 	}
 
+	Ermine::Vec3 NormalizeSafe(const Ermine::Vec3& v, const Ermine::Vec3& fallback)
+	{
+		const float lsq = v.x * v.x + v.y * v.y + v.z * v.z;
+		if (lsq > 1e-12f) {
+			const float inv = 1.0f / std::sqrt(lsq);
+			return { v.x * inv, v.y * inv, v.z * inv };
+		}
+		return fallback;
+	}
+
+	Ermine::Vec3 RotateByQuat(const Ermine::Vec3& v, Ermine::Quaternion q)
+	{
+		// Normalize quaternion
+		float qx = q.x, qy = q.y, qz = q.z, qw = q.w;
+		const float ql = std::sqrt(qx * qx + qy * qy + qz * qz + qw * qw);
+		if (ql > 1e-12f) { qx /= ql; qy /= ql; qz /= ql; qw /= ql; }
+		else return v;
+
+		// v' = v + q_w * t + cross(q_xyz, t), t = 2 * cross(q_xyz, v)
+		const float vx = v.x, vy = v.y, vz = v.z;
+		const float tx = 2.0f * (qy * vz - qz * vy);
+		const float ty = 2.0f * (qz * vx - qx * vz);
+		const float tz = 2.0f * (qx * vy - qy * vx);
+		const float cx = qy * tz - qz * ty;
+		const float cy = qz * tx - qx * tz;
+		const float cz = qx * ty - qy * tx;
+		return { vx + qw * tx + cx, vy + qw * ty + cy, vz + qw * tz + cz };
+	}
+
 	struct ManagedVector3 { float x, y, z; };
 	struct ManagedQuaternion { float x, y, z, w; };
+	struct ManagedMatrix4x4 {
+		float m00, m01, m02, m03,
+			m10, m11, m12, m13,
+			m20, m21, m22, m23,
+			m30, m31, m32, m33;
+	};
 	ManagedVector3 ToManagedVec(const Ermine::Vec3& v) { return { v.x, v.y, v.z }; }
 	ManagedQuaternion ToManagedQuat(const Ermine::Quaternion& q) { return { q.x, q.y, q.z, q.w }; }
+	ManagedMatrix4x4 ToManagedMatrix4x4(const Ermine::Matrix4x4& m4x4) {
+		return { m4x4.m00, m4x4.m01, m4x4.m02, m4x4.m03,
+					m4x4.m10, m4x4.m11, m4x4.m12, m4x4.m13,
+					m4x4.m20, m4x4.m21, m4x4.m22, m4x4.m23,
+					m4x4.m30, m4x4.m31, m4x4.m32, m4x4.m33 };
+	}
 	Ermine::Vec3 ToNativeVec(const ManagedVector3& v) { return { v.x, v.y, v.z }; }
 	Ermine::Quaternion ToNativeQuat(const ManagedQuaternion& q) { return { q.x, q.y, q.z, q.w }; }
+	Ermine::Matrix4x4 ToNativeMatrix4x4(const ManagedMatrix4x4& m4x4) {
+		return { m4x4.m00, m4x4.m01, m4x4.m02, m4x4.m03,
+					m4x4.m10, m4x4.m11, m4x4.m12, m4x4.m13,
+					m4x4.m20, m4x4.m21, m4x4.m22, m4x4.m23,
+					m4x4.m30, m4x4.m31, m4x4.m32, m4x4.m33 };
+	}
 
 	Ermine::Transform* GetTransformFromManaged(MonoObject* thisObj)
 	{
@@ -1070,7 +1120,7 @@ namespace
 		if (auto* t = GetTransformFromManaged(thisObj))
 			return ToManagedQuat(t->rotation);
 		EE_CORE_WARN("Transform for {0} failed to get unmanaged rotation", GetEntityIDFromManaged(thisObj));
-		return { .x= 0, .y= 0, .z= 0, .w = 1.0f };
+		return { .x = 0, .y = 0, .z = 0, .w = 1.0f };
 	}
 
 	ManagedVector3 icall_transform_get_scale(MonoObject* thisObj)
@@ -1081,23 +1131,85 @@ namespace
 		return { 1,1,1 };
 	}
 
-	//void icall_transform_set_position(MonoObject* thisObj, ManagedVector3 value)
-	//{
-	//	if (auto* t = GetTransformFromManaged(thisObj))
-	//		t->position = ToNativeVec(value);
-	//}
+	ManagedVector3 icall_transform_get_world_forward(MonoObject* thisObj)
+	{
+		using namespace Ermine;
+		EntityID id = GetEntityIDFromManaged(thisObj);
+		if (id == 0 || !ECS::GetInstance().IsEntityValid(id))
+			return { 0.f, 0.f, 1.f };
 
-	//void icall_transform_set_rotation(MonoObject* thisObj, ManagedQuaternion value)
-	//{
-	//	if (auto* t = GetTransformFromManaged(thisObj))
-	//		t->rotation = ToNativeQuat(value);
-	//}
+		// Prefer GlobalTransform basis column 2 (+Z forward)
+		if (ECS::GetInstance().HasComponent<GlobalTransform>(id)) {
+			const auto& gt = ECS::GetInstance().GetComponent<GlobalTransform>(id);
+			Ermine::Vec3 f{ gt.worldMatrix.m02, gt.worldMatrix.m12, gt.worldMatrix.m22 };
+			f = NormalizeSafe(f, Ermine::Vec3{ 0.f, 0.f, 1.f });
+			return ToManagedVec(f);
+		}
 
-	//void icall_transform_set_scale(MonoObject* thisObj, ManagedVector3 value)
-	//{
-	//	if (auto* t = GetTransformFromManaged(thisObj))
-	//		t->scale = ToNativeVec(value);
-	//}
+		// Try HierarchySystem's world rotation
+		Quaternion worldRot{};
+		if (auto hs = ECS::GetInstance().GetSystem<HierarchySystem>()) {
+			worldRot = hs->GetWorldRotation(id);
+		}
+		else {
+			worldRot = ECS::GetInstance().GetComponent<Transform>(id).rotation;
+		}
+		Ermine::Vec3 fwd = RotateByQuat(Ermine::Vec3{ 0.f, 0.f, 1.f }, worldRot);
+		fwd = NormalizeSafe(fwd, Ermine::Vec3{ 0.f, 0.f, 1.f });
+		return ToManagedVec(fwd);
+	}
+
+	ManagedVector3 icall_transform_get_world_right(MonoObject* thisObj)
+	{
+		using namespace Ermine;
+		EntityID id = GetEntityIDFromManaged(thisObj);
+		if (id == 0 || !ECS::GetInstance().IsEntityValid(id))
+			return { 1.f, 0.f, 0.f };
+
+		if (ECS::GetInstance().HasComponent<GlobalTransform>(id)) {
+			const auto& gt = ECS::GetInstance().GetComponent<GlobalTransform>(id);
+			Ermine::Vec3 r{ gt.worldMatrix.m00, gt.worldMatrix.m10, gt.worldMatrix.m20 };
+			r = NormalizeSafe(r, Ermine::Vec3{ 1.f, 0.f, 0.f });
+			return ToManagedVec(r);
+		}
+
+		Quaternion worldRot{};
+		if (auto hs = ECS::GetInstance().GetSystem<HierarchySystem>()) {
+			worldRot = hs->GetWorldRotation(id);
+		}
+		else {
+			worldRot = ECS::GetInstance().GetComponent<Transform>(id).rotation;
+		}
+		Ermine::Vec3 right = RotateByQuat(Ermine::Vec3{ 1.f, 0.f, 0.f }, worldRot);
+		right = NormalizeSafe(right, Ermine::Vec3{ 1.f, 0.f, 0.f });
+		return ToManagedVec(right);
+	}
+
+	ManagedVector3 icall_transform_get_world_up(MonoObject* thisObj)
+	{
+		using namespace Ermine;
+		EntityID id = GetEntityIDFromManaged(thisObj);
+		if (id == 0 || !ECS::GetInstance().IsEntityValid(id))
+			return { 0.f, 1.f, 0.f };
+
+		if (ECS::GetInstance().HasComponent<GlobalTransform>(id)) {
+			const auto& gt = ECS::GetInstance().GetComponent<GlobalTransform>(id);
+			Ermine::Vec3 u{ gt.worldMatrix.m01, gt.worldMatrix.m11, gt.worldMatrix.m21 };
+			u = NormalizeSafe(u, Ermine::Vec3{ 0.f, 1.f, 0.f });
+			return ToManagedVec(u);
+		}
+
+		Quaternion worldRot{};
+		if (auto hs = ECS::GetInstance().GetSystem<HierarchySystem>()) {
+			worldRot = hs->GetWorldRotation(id);
+		}
+		else {
+			worldRot = ECS::GetInstance().GetComponent<Transform>(id).rotation;
+		}
+		Ermine::Vec3 up = RotateByQuat(Ermine::Vec3{ 0.f, 1.f, 0.f }, worldRot);
+		up = NormalizeSafe(up, Ermine::Vec3{ 0.f, 1.f, 0.f });
+		return ToManagedVec(up);
+	}
 
 	void icall_transform_set_position(MonoObject* thisObj, ManagedVector3 value)
 	{
@@ -1115,6 +1227,15 @@ namespace
 			// Fallback if hierarchy system not available
 			auto& transform = ECS::GetInstance().GetComponent<Transform>(id);
 			transform.position = ToNativeVec(value);
+
+			if (!ECS::GetInstance().HasComponent<GlobalTransform>(id))
+				ECS::GetInstance().AddComponent<GlobalTransform>(id, GlobalTransform());
+
+			if (ECS::GetInstance().HasComponent<GlobalTransform>(id)) {
+				auto& gt = ECS::GetInstance().GetComponent<GlobalTransform>(id);
+				gt.worldMatrix = transform.GetLocalMatrix();
+				gt.isDirty = true;
+			}
 		}
 	}
 
@@ -1191,6 +1312,18 @@ namespace
 	bool icall_input_getmousebuttonrelease(int button)
 	{
 		return Ermine::Input::IsMouseButtonReleased(button);
+	}
+
+	ManagedVector3 icall_input_get_mouseposition()
+	{
+		auto [x, y] = Ermine::Input::GetMousePosition();
+		return ManagedVector3{ x, y, 0.0f };
+	}
+
+	ManagedVector3 icall_input_get_mousepositiondelta()
+	{
+		auto [dx, dy] = Ermine::Input::GetMouseDeltaGame();
+		return ManagedVector3{ dx, dy, 0.0f };
 	}
 #pragma endregion
 
@@ -1279,6 +1412,161 @@ namespace
 	}
 #pragma endregion
 
+#pragma region GlobalAudio ICalls
+	void icall_globalaudio_play_sfx(MonoString* name)
+	{
+		using namespace Ermine;
+		std::string sfxName;
+		ToTempUTF8(name, sfxName);
+
+		// Find GlobalAudioComponent entity
+		auto& ecs = ECS::GetInstance();
+		for (EntityID entity = 1; entity <= MAX_ENTITIES; ++entity)
+		{
+			if (ecs.IsEntityValid(entity) && ecs.HasComponent<GlobalAudioComponent>(entity))
+			{
+				auto& globalAudio = ecs.GetComponent<GlobalAudioComponent>(entity);
+				globalAudio.PlaySFX(sfxName);
+				return;
+			}
+		}
+		EE_CORE_WARN("GlobalAudio: No GlobalAudioComponent found in scene");
+	}
+
+	void icall_globalaudio_play_music(MonoString* name)
+	{
+		using namespace Ermine;
+		std::string musicName;
+		ToTempUTF8(name, musicName);
+
+		auto& ecs = ECS::GetInstance();
+		for (EntityID entity = 1; entity <= MAX_ENTITIES; ++entity)
+		{
+			if (ecs.IsEntityValid(entity) && ecs.HasComponent<GlobalAudioComponent>(entity))
+			{
+				auto& globalAudio = ecs.GetComponent<GlobalAudioComponent>(entity);
+				int index = globalAudio.GetMusicIndex(musicName);
+				if (index >= 0)
+					globalAudio.PlayMusic(index);
+				return;
+			}
+		}
+	}
+
+	void icall_globalaudio_set_music_volume(float volume)
+	{
+		using namespace Ermine;
+		auto& ecs = ECS::GetInstance();
+		for (EntityID entity = 1; entity <= MAX_ENTITIES; ++entity)
+		{
+			if (ecs.IsEntityValid(entity) && ecs.HasComponent<GlobalAudioComponent>(entity))
+			{
+				auto& globalAudio = ecs.GetComponent<GlobalAudioComponent>(entity);
+				globalAudio.SetMusicVolume(volume);
+				return;
+			}
+		}
+	}
+
+	void icall_globalaudio_set_sfx_volume(float volume)
+	{
+		using namespace Ermine;
+		auto& ecs = ECS::GetInstance();
+		for (EntityID entity = 1; entity <= MAX_ENTITIES; ++entity)
+		{
+			if (ecs.IsEntityValid(entity) && ecs.HasComponent<GlobalAudioComponent>(entity))
+			{
+				auto& globalAudio = ecs.GetComponent<GlobalAudioComponent>(entity);
+				globalAudio.SetSFXVolume(volume);
+				return;
+			}
+		}
+	}
+#pragma endregion
+
+#pragma region AudioComponent ICalls
+	Ermine::AudioComponent* GetAudioComponentFromManaged(MonoObject* thisObj)
+	{
+		using namespace Ermine;
+		EntityID id = GetEntityIDFromManaged(thisObj);
+		if (id == 0 || !ECS::GetInstance().IsEntityValid(id) || !ECS::GetInstance().HasComponent<AudioComponent>(id))
+		{
+			EE_CORE_WARN("Cannot get AudioComponent for {0}; either not valid or doesn't have AudioComponent!", id);
+			return nullptr;
+		}
+		return &ECS::GetInstance().GetComponent<AudioComponent>(id);
+	}
+
+	mono_bool icall_audiocomponent_get_shouldplay(MonoObject* thisObj)
+	{
+		if (auto* ac = GetAudioComponentFromManaged(thisObj))
+			return ac->shouldPlay ? 1 : 0;
+		return 0;
+	}
+
+	void icall_audiocomponent_set_shouldplay(MonoObject* thisObj, mono_bool value)
+	{
+		if (auto* ac = GetAudioComponentFromManaged(thisObj))
+			ac->shouldPlay = (value != 0);
+	}
+
+	mono_bool icall_audiocomponent_get_shouldstop(MonoObject* thisObj)
+	{
+		if (auto* ac = GetAudioComponentFromManaged(thisObj))
+			return ac->shouldStop ? 1 : 0;
+		return 0;
+	}
+
+	void icall_audiocomponent_set_shouldstop(MonoObject* thisObj, mono_bool value)
+	{
+		if (auto* ac = GetAudioComponentFromManaged(thisObj))
+			ac->shouldStop = (value != 0);
+	}
+
+	mono_bool icall_audiocomponent_get_isplaying(MonoObject* thisObj)
+	{
+		if (auto* ac = GetAudioComponentFromManaged(thisObj))
+			return ac->isPlaying ? 1 : 0;
+		return 0;
+	}
+
+	void icall_audiocomponent_set_isplaying(MonoObject* thisObj, mono_bool value)
+	{
+		if (auto* ac = GetAudioComponentFromManaged(thisObj))
+			ac->isPlaying = (value != 0);
+	}
+
+	float icall_audiocomponent_get_volume(MonoObject* thisObj)
+	{
+		if (auto* ac = GetAudioComponentFromManaged(thisObj))
+			return ac->volume;
+		return 1.0f;
+	}
+
+	void icall_audiocomponent_set_volume(MonoObject* thisObj, float value)
+	{
+		if (auto* ac = GetAudioComponentFromManaged(thisObj))
+			ac->volume = value;
+	}
+
+	MonoString* icall_audiocomponent_get_soundname(MonoObject* thisObj)
+	{
+		if (auto* ac = GetAudioComponentFromManaged(thisObj))
+			return mono_string_new(mono_domain_get(), ac->soundName.c_str());
+		return mono_string_new(mono_domain_get(), "");
+	}
+
+	void icall_audiocomponent_set_soundname(MonoObject* thisObj, MonoString* value)
+	{
+		if (auto* ac = GetAudioComponentFromManaged(thisObj))
+		{
+			std::string temp;
+			ToTempUTF8(value, temp);
+			ac->soundName = std::move(temp);
+		}
+	}
+#pragma endregion
+
 #pragma region GameObject ICalls
 	MonoObject* icall_gameobject_wrap_existing(uint64_t entityID)
 	{
@@ -1313,6 +1601,15 @@ namespace
 
 		EntityID id = ECS::GetInstance().CreateEntity();
 		ECS::GetInstance().AddComponent(id, Transform());
+
+		if (!ECS::GetInstance().HasComponent<HierarchyComponent>(id))
+			ECS::GetInstance().AddComponent(id, HierarchyComponent());
+		if (!ECS::GetInstance().HasComponent<GlobalTransform>(id))
+			ECS::GetInstance().AddComponent(id, GlobalTransform());
+
+		// Initialize in hierarchy so GlobalTransform is set from local immediately
+		if (auto hs = ECS::GetInstance().GetSystem<HierarchySystem>())
+			hs->InitializeEntity(id);
 
 		ObjectMetaData meta;
 		meta.name = name_;
@@ -1373,15 +1670,18 @@ namespace
 			SetComponentGameObject(obj, id);
 			return obj;
 		}
-
+		// TODO: PLEASE COME BACK AND FIX THIS LATER FOR MULTIPLE SCRIPTS PER GAMEOBJECT
 		// MonoBehaviour derived -> Script component
-		if (IsSubclassOf(klass,s_MonoBehaviourClass))
+		if (IsSubclassOf(klass, s_MonoBehaviourClass))
 		{
 			const char* cname = mono_class_get_name(klass);
 			EE_CORE_WARN("Is subclass of MonoBehaviour!");
-			if (!ECS::GetInstance().HasComponent<Script>(id))
+			if (!ECS::GetInstance().HasComponent<ScriptsComponent>(id))
 			{
-				ECS::GetInstance().AddComponent(id, Script(std::string(cname), id));
+				ECS::GetInstance().AddComponent(id, ScriptsComponent());
+				auto& scs = ECS::GetInstance().GetComponent<ScriptsComponent>(id);
+				scs.Add(std::string(cname), id);
+				//ECS::GetInstance().AddComponent(id, Script(std::string(cname), id));
 			}
 			else
 			{
@@ -1397,7 +1697,7 @@ namespace
 			}
 			return scriptComp.m_instance ? scriptComp.m_instance->object : nullptr;
 		}
-
+		// TODO: Adding other component like Rigidbody, Collider, etc.?
 		EE_CORE_WARN("AddComponent: Unsupported component type '{0}'", mono_class_get_name(klass));
 		return nullptr;
 	}
@@ -1415,6 +1715,7 @@ namespace
 		MonoClass* klass = mono_class_from_mono_type(mtype);
 		if (!klass) return nullptr;
 
+		// return back the obj when requesting Transform component
 		if (klass == s_TransformClass)
 		{
 			if (!ECS::GetInstance().HasComponent<Transform>(id))
@@ -1424,16 +1725,34 @@ namespace
 			return obj;
 		}
 
+		// ADD THIS: Handle AudioComponent
+		if (klass == s_AudioComponentClass)
+		{
+			if (!ECS::GetInstance().HasComponent<AudioComponent>(id))
+				return nullptr;
+
+			MonoObject* obj = mono_object_new(mono_domain_get(), s_AudioComponentClass);
+			mono_runtime_object_init(obj);
+			SetEntityIDOnManaged(obj, id);
+			SetComponentGameObject(obj, id);
+			return obj;
+		}
+
+		// return back the obj when requesting MonoBehaviour derived -> Script component
 		if (IsSubclassOf(klass, s_MonoBehaviourClass))
 		{
-			if (!ECS::GetInstance().HasComponent<Script>(id))
+			if (!ECS::GetInstance().HasComponent<ScriptsComponent>(id))
 				return nullptr;
-			auto& scriptComp = ECS::GetInstance().GetComponent<Script>(id);
+			auto& scs = ECS::GetInstance().GetComponent<ScriptsComponent>(id);
+			const char* cname = mono_class_get_name(klass);
+			auto& scriptComp = scs.GetByClass(cname);
+			//auto& scriptComp = ECS::GetInstance().GetComponent<Script>(id);
 			if (scriptComp.m_instance && scriptComp.m_instance->object)
 				SetComponentGameObject(scriptComp.m_instance->object, id);
 			return scriptComp.m_instance ? scriptComp.m_instance->object : nullptr;
 		}
 
+		EE_CORE_WARN("GetComponent: Unsupported component type '{}'", mono_class_get_name(klass));
 		return nullptr;
 	}
 
@@ -1451,10 +1770,11 @@ namespace
 
 		if (klass == s_TransformClass)
 			return ECS::GetInstance().HasComponent<Transform>(id);
-		
+
 		if (IsSubclassOf(klass, s_MonoBehaviourClass))
 			return ECS::GetInstance().HasComponent<Script>(id);
-		
+
+		EE_CORE_WARN("HasComponent: Unsupported component type '{}'", mono_class_get_name(klass));
 		return false;
 	}
 
@@ -1479,7 +1799,9 @@ namespace
 		{
 			if (ECS::GetInstance().HasComponent<Script>(id))
 				ECS::GetInstance().RemoveComponent<Script>(id);
+			return;
 		}
+		EE_CORE_WARN("RemoveComponent: Unsupported component type '{}'", mono_class_get_name(klass));
 	}
 
 	MonoObject* icall_gameobject_find_by_name(MonoString* name)
@@ -1499,15 +1821,6 @@ namespace
 			if (meta.name == name_)
 				return CreateManagedGameObjectWrapper(id);
 		}
-		//for (unsigned long int i = 0; i < ecs.GetLivingEntityCount(); i++) // TODO: Optimize this later
-		//{
-		//	Ermine::EntityID id = i + 1; // Entity IDs start from 1
-		//	if (!ecs.IsEntityValid(id) || !ecs.HasComponent<ObjectMetaData>(id))
-		//		continue;
-		//	auto& meta = ecs.GetComponent<ObjectMetaData>(id);
-		//	if (meta.name == name_)
-		//		return CreateManagedGameObjectWrapper(id);
-		//}
 		return nullptr;
 	}
 
@@ -1518,9 +1831,9 @@ namespace
 		ToTempUTF8(tag, tag_);
 		if (tag_.empty()) return nullptr;
 		auto& ecs = ECS::GetInstance();
-		for (unsigned long int i = 0; i < ecs.GetLivingEntityCount(); i++) // TODO: Optimize this later
+		std::vector<EntityID> FreshEntity = SceneManager::GetInstance().GetActiveScene()->GetAllEntities();
+		for (auto id : FreshEntity)
 		{
-			EntityID id = i + 1; // Entity IDs start from 1
 			if (!ecs.IsEntityValid(id) || !ecs.HasComponent<ObjectMetaData>(id))
 				continue;
 			auto& meta = ecs.GetComponent<ObjectMetaData>(id);
@@ -1560,6 +1873,27 @@ namespace
 			return;
 		//ECS::GetInstance().DestroyEntity(id);
 		EnqueueLateDestory(id);
+	}
+#pragma endregion
+
+#pragma region Physics ICalls
+	mono_bool icall_physics_raycast(ManagedVector3 mOrigin, ManagedVector3 mDirection, Ermine::RaycastHit* hitInfo, float maxDistance)
+	{
+		using namespace Ermine;
+		if (!ECS::GetInstance().GetSystem<Physics>())
+			return 0;
+
+		const RVec3 rOrigin = RVec3{ mOrigin.x, mOrigin.y, mOrigin.z };
+		const RVec3 rDirection = RVec3{ mDirection.x, mDirection.y, mDirection.z };
+		RayCastResult hit{};
+
+		bool result = ECS::GetInstance().GetSystem<Physics>()->Raycast(rOrigin, rDirection, maxDistance, hit);
+
+		if (result && hitInfo)
+		{
+			EE_CORE_WARN("Not ready yet!");
+		}
+		return result ? 1 : 0;
 	}
 #pragma endregion
 
@@ -1708,6 +2042,62 @@ namespace Ermine::scripting
 		}
 	}
 
+	void ScriptEngine::PushSingleField(MonoObject* obj,
+		const std::string& name,
+		const ScriptFieldValue& val)
+	{
+		if (!obj) return;
+		MonoClass* klass = mono_object_get_class(obj);
+		auto fields = DiscoverScriptFields(klass);
+		for (auto& f : fields)
+		{
+			if (f.name != name) continue;
+
+			switch (f.kind)
+			{
+			case ScriptFieldInfo::Kind::Float:
+				if (val.kind == ScriptFieldValue::Kind::Float)
+					mono_field_set_value(obj, f.field, const_cast<float*>(&std::get<float>(val.value)));
+				break;
+			case ScriptFieldInfo::Kind::Int:
+				if (val.kind == ScriptFieldValue::Kind::Int)
+					mono_field_set_value(obj, f.field, const_cast<int*>(&std::get<int>(val.value)));
+				break;
+			case ScriptFieldInfo::Kind::Bool:
+				if (val.kind == ScriptFieldValue::Kind::Bool)
+				{
+					mono_bool mb = std::get<bool>(val.value) ? 1 : 0;
+					mono_field_set_value(obj, f.field, &mb);
+				}
+				break;
+			case ScriptFieldInfo::Kind::String:
+				if (val.kind == ScriptFieldValue::Kind::String)
+				{
+					MonoString* ms = mono_string_new(mono_domain_get(), std::get<std::string>(val.value).c_str());
+					mono_field_set_value(obj, f.field, ms);
+				}
+				break;
+			case ScriptFieldInfo::Kind::Vector3:
+				if (val.kind == ScriptFieldValue::Kind::Vector3)
+				{
+					auto& v = std::get<Ermine::Vec3>(val.value);
+					struct ManagedVector3 { float x, y, z; } mv{ v.x, v.y, v.z };
+					mono_field_set_value(obj, f.field, &mv);
+				}
+				break;
+			case ScriptFieldInfo::Kind::Quaternion:
+				if (val.kind == ScriptFieldValue::Kind::Quaternion)
+				{
+					auto& v = std::get<Ermine::Quaternion>(val.value);
+					struct ManagedQuaternion { float x, y, z, w; } mq{ v.x, v.y, v.z, v.w };
+					mono_field_set_value(obj, f.field, &mq);
+				}
+				break;
+			default: break;
+			}
+			return; // done
+		}
+	}
 }
 
 void Ermine::scripting::ScriptEngine::PullManagedFieldsToCache(MonoObject* obj,
@@ -1818,7 +2208,7 @@ void Ermine::scripting::ScriptEngine::PushCacheToManagedFields(MonoObject* obj, 
 		{
 			if (val.kind == Ermine::ScriptFieldValue::Kind::Vector3)
 			{
-				ManagedVector3 mv{ .x= std::get<Vec3>(val.value).x, .y= std::get<Vec3>(val.value).y, .z= std::get<Vec3>(val.value).z};
+				ManagedVector3 mv{ .x = std::get<Vec3>(val.value).x, .y = std::get<Vec3>(val.value).y, .z = std::get<Vec3>(val.value).z };
 				mono_field_set_value(obj, fld, &mv);
 			}
 			break;
@@ -1827,8 +2217,8 @@ void Ermine::scripting::ScriptEngine::PushCacheToManagedFields(MonoObject* obj, 
 		{
 			if (val.kind == Ermine::ScriptFieldValue::Kind::Quaternion)
 			{
-				ManagedQuaternion mq{ .x= std::get<Quaternion>(val.value).x, .y= std::get<Quaternion>(val.value).y, .z=
-					std::get<Quaternion>(val.value).z, .w= std::get<Quaternion>(val.value).w };
+				ManagedQuaternion mq{ .x = std::get<Quaternion>(val.value).x, .y = std::get<Quaternion>(val.value).y, .z =
+					std::get<Quaternion>(val.value).z, .w = std::get<Quaternion>(val.value).w };
 				mono_field_set_value(obj, fld, &mq);
 			}
 			break;
@@ -1845,6 +2235,7 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	s_TransformClass = GetAPIClass("ErmineEngine", "Transform");
 	s_ComponentClass = GetAPIClass("ErmineEngine", "Component");
 	s_MonoBehaviourClass = GetAPIClass("ErmineEngine", "MonoBehaviour");
+	s_AudioComponentClass = GetAPIClass("ErmineEngine", "AudioComponent");
 	s_SerializeFieldAttr = mono_class_from_name(s_APIImage, "ErmineEngine", "SerializeFieldAttribute");
 	if (!s_SerializeFieldAttr)
 		s_SerializeFieldAttr = mono_class_from_name(s_APIImage, "ErmineEngine", "SerializeField");
@@ -1856,10 +2247,14 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	mono_add_internal_call("ErmineEngine.Transform::set_position", (const void*)icall_transform_set_position);
 	mono_add_internal_call("ErmineEngine.Transform::set_rotation", (const void*)icall_transform_set_rotation);
 	mono_add_internal_call("ErmineEngine.Transform::set_scale", (const void*)icall_transform_set_scale);
+
+	mono_add_internal_call("ErmineEngine.Transform::Internal_GetWorldForward", (const void*)icall_transform_get_world_forward);
+	mono_add_internal_call("ErmineEngine.Transform::Internal_GetWorldRight", (const void*)icall_transform_get_world_right);
+	mono_add_internal_call("ErmineEngine.Transform::Internal_GetWorldUp", (const void*)icall_transform_get_world_up);
 #pragma endregion
-	
+
 #pragma region Time ICalls
-	mono_add_internal_call("ErmineEngine.Time::get_deltaTime",	(const void*)icall_time_get_deltatime);
+	mono_add_internal_call("ErmineEngine.Time::get_deltaTime", (const void*)icall_time_get_deltatime);
 	mono_add_internal_call("ErmineEngine.Time::get_fixedDeltaTime", (const void*)icall_time_get_fixeddeltatime);
 #pragma endregion
 
@@ -1870,12 +2265,35 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	mono_add_internal_call("ErmineEngine.Input::InternalGetMouseButton", (const void*)icall_input_getmousebutton);
 	mono_add_internal_call("ErmineEngine.Input::InternalGetMouseButtonDown", (const void*)icall_input_getmousebuttondown);
 	mono_add_internal_call("ErmineEngine.Input::InternalGetMouseButtonUp", (const void*)icall_input_getmousebuttonrelease);
+
+	mono_add_internal_call("ErmineEngine.Input::get_mousePosition", (const void*)icall_input_get_mouseposition);
+	mono_add_internal_call("ErmineEngine.Input::get_mousePositionDelta", (const void*)icall_input_get_mousepositiondelta);
+#pragma endregion
+
+#pragma region GlobalAudio ICalls
+	mono_add_internal_call("ErmineEngine.GlobalAudio::PlaySFX", (const void*)icall_globalaudio_play_sfx);
+	mono_add_internal_call("ErmineEngine.GlobalAudio::PlayMusic", (const void*)icall_globalaudio_play_music);
+	mono_add_internal_call("ErmineEngine.GlobalAudio::SetMusicVolume", (const void*)icall_globalaudio_set_music_volume);
+	mono_add_internal_call("ErmineEngine.GlobalAudio::SetSFXVolume", (const void*)icall_globalaudio_set_sfx_volume);
+#pragma endregion
+
+#pragma region AudioComponent ICalls
+	mono_add_internal_call("ErmineEngine.AudioComponent::get_shouldPlay", (const void*)icall_audiocomponent_get_shouldplay);
+	mono_add_internal_call("ErmineEngine.AudioComponent::set_shouldPlay", (const void*)icall_audiocomponent_set_shouldplay);
+	mono_add_internal_call("ErmineEngine.AudioComponent::get_shouldStop", (const void*)icall_audiocomponent_get_shouldstop);
+	mono_add_internal_call("ErmineEngine.AudioComponent::set_shouldStop", (const void*)icall_audiocomponent_set_shouldstop);
+	mono_add_internal_call("ErmineEngine.AudioComponent::get_isPlaying", (const void*)icall_audiocomponent_get_isplaying);
+	mono_add_internal_call("ErmineEngine.AudioComponent::set_isPlaying", (const void*)icall_audiocomponent_set_isplaying);
+	mono_add_internal_call("ErmineEngine.AudioComponent::get_volume", (const void*)icall_audiocomponent_get_volume);
+	mono_add_internal_call("ErmineEngine.AudioComponent::set_volume", (const void*)icall_audiocomponent_set_volume);
+	mono_add_internal_call("ErmineEngine.AudioComponent::get_soundName", (const void*)icall_audiocomponent_get_soundname);
+	mono_add_internal_call("ErmineEngine.AudioComponent::set_soundName", (const void*)icall_audiocomponent_set_soundname);
 #pragma endregion
 
 #pragma region Debug ICalls
-	mono_add_internal_call("ErmineEngine.Debug::LogInternal",			(const void*)icall_debug_log_info);
-	mono_add_internal_call("ErmineEngine.Debug::LogWarningInternal",	(const void*)icall_debug_log_warning);
-	mono_add_internal_call("ErmineEngine.Debug::LogErrorInternal",		(const void*)icall_debug_log_error);
+	mono_add_internal_call("ErmineEngine.Debug::LogInternal", (const void*)icall_debug_log_info);
+	mono_add_internal_call("ErmineEngine.Debug::LogWarningInternal", (const void*)icall_debug_log_warning);
+	mono_add_internal_call("ErmineEngine.Debug::LogErrorInternal", (const void*)icall_debug_log_error);
 #pragma endregion
 
 #pragma region Object ICalls
@@ -1915,5 +2333,15 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	mono_add_internal_call("ErmineEngine.StateMachine::RequestNextState", (const void*)icall_statemachine_request_next_state);
 	mono_add_internal_call("ErmineEngine.StateMachine::RequestPreviousState", (const void*)icall_statemachine_request_previous_state);
 #pragma endregion
-
+#pragma region NavAgent ICalls
+	mono_add_internal_call("ErmineEngine.NavAgent::SetDestination",
+		(const void*)+[](uint64_t entityID, glm::vec3 dest)
+		{
+			Ermine::Vec3 v;
+			v.x = dest.x;
+			v.y = dest.y;
+			v.z = dest.z;
+			Ermine::RequestPathForAgent((Ermine::EntityID)entityID, v);
+		});
+#pragma endregion
 }

@@ -23,6 +23,20 @@ namespace Ermine::graphics
 {
     /*!***********************************************************************
     \brief
+        Material texture flag bits for packed bitfield
+    *************************************************************************/
+    enum MaterialTextureFlags : uint32_t
+    {
+        MAT_FLAG_ALBEDO_MAP    = 1 << 0,  // bit 0: hasAlbedoMap
+        MAT_FLAG_NORMAL_MAP    = 1 << 1,  // bit 1: hasNormalMap
+        MAT_FLAG_ROUGHNESS_MAP = 1 << 2,  // bit 2: hasRoughnessMap
+        MAT_FLAG_METALLIC_MAP  = 1 << 3,  // bit 3: hasMetallicMap
+        MAT_FLAG_AO_MAP        = 1 << 4,  // bit 4: hasAoMap
+        MAT_FLAG_EMISSIVE_MAP  = 1 << 5   // bit 5: hasEmissiveMap
+    };
+
+    /*!***********************************************************************
+    \brief
         Material parameter types for type safety
     *************************************************************************/
     enum class MaterialParamType
@@ -80,29 +94,25 @@ namespace Ermine::graphics
         float emissiveIntensity{ 0.0f };         // 4 bytes (44-47)
 
         int shadingModel{ 0 };                   // 4 bytes (48-51)
-        int hasAlbedoMap{ 0 };                   // 4 bytes (52-55)
-        int hasNormalMap{ 0 };                   // 4 bytes (56-59)
-        int hasRoughnessMap{ 0 };                // 4 bytes (60-63)
-
-        int hasMetallicMap{ 0 };                 // 4 bytes (64-67)
-        int hasAoMap{ 0 };                       // 4 bytes (68-71)
-        int hasEmissiveMap{ 0 };                 // 4 bytes (72-75)
-        float _pad0{};                           // 4 bytes (76-79) - padding for alignment
+        uint32_t textureFlags{ 0 };              // 4 bytes (52-55) - Packed bitfield for all texture flags
+        int castsShadows{ 1 };                   // 4 bytes (56-59) - Whether this material casts shadows (1=true, 0=false)
+        float _pad0{};                           // 4 bytes (60-63) - padding for alignment
 
         // UV Scale and Offset
-        Vec2 uvScale{ 1.0f, 1.0f };             // 8 bytes (80-87)
-        Vec2 uvOffset{ 0.0f, 0.0f };            // 8 bytes (88-95)
+        Vec2 uvScale{ 1.0f, 1.0f };             // 8 bytes (64-71)
+        Vec2 uvOffset{ 0.0f, 0.0f };            // 8 bytes (72-79)
 
         // Texture Array Indices (indices into bindless texture array)
-        int albedoMapIndex{ -1 };               // 4 bytes (96-99)
-        int normalMapIndex{ -1 };               // 4 bytes (100-103)
-        int roughnessMapIndex{ -1 };            // 4 bytes (104-107)
-        int metallicMapIndex{ -1 };             // 4 bytes (108-111)
+        int albedoMapIndex{ -1 };               // 4 bytes (80-83)
+        int normalMapIndex{ -1 };               // 4 bytes (84-87)
+        int roughnessMapIndex{ -1 };            // 4 bytes (88-91)
+        int metallicMapIndex{ -1 };             // 4 bytes (92-95)
 
-        int aoMapIndex{ -1 };                   // 4 bytes (112-115)
-        int emissiveMapIndex{ -1 };             // 4 bytes (116-119)
-        int _pad1{};                            // 4 bytes (120-123) - padding
-        int _pad2{};                            // 4 bytes (124-127) - padding for vec4 alignment
+        int aoMapIndex{ -1 };                   // 4 bytes (96-99)
+        int emissiveMapIndex{ -1 };             // 4 bytes (100-103)
+        int _pad1{};                            // 4 bytes (104-107) - padding
+        int _pad2{};                            // 4 bytes (108-111) - padding for vec4 alignment
+        // Total: 112 bytes (down from 128 bytes) - 12.5% reduction
     };
 
     // Forward declaration
@@ -129,7 +139,8 @@ namespace Ermine::graphics
                 {"materialHasRoughnessMap", false},
                 {"materialHasMetallicMap", false},
                 {"materialHasAoMap", false},
-                {"materialHasEmissiveMap", false}
+                {"materialHasEmissiveMap", false},
+                {"materialCastsShadows", true}
             };
         }
         // Returns a parameter map for a metallic PBR material.
@@ -149,7 +160,8 @@ namespace Ermine::graphics
                 {"materialHasRoughnessMap", false},
                 {"materialHasMetallicMap", false},
                 {"materialHasAoMap", false},
-                {"materialHasEmissiveMap", false}
+                {"materialHasEmissiveMap", false},
+                {"materialCastsShadows", true}
             };
         }
 
@@ -170,7 +182,8 @@ namespace Ermine::graphics
                 {"materialHasRoughnessMap", false},
                 {"materialHasMetallicMap", false},
                 {"materialHasAoMap", false},
-                {"materialHasEmissiveMap", false}
+                {"materialHasEmissiveMap", false},
+                {"materialCastsShadows", true}
             };
         }
 		// Emissive material
@@ -190,7 +203,8 @@ namespace Ermine::graphics
                 {"materialHasRoughnessMap", false},
                 {"materialHasMetallicMap", false},
                 {"materialHasAoMap", false},
-                {"materialHasEmissiveMap", false}
+                {"materialHasEmissiveMap", false},
+                {"materialCastsShadows", true}
             };
         }
 
@@ -211,7 +225,8 @@ namespace Ermine::graphics
                 {"materialHasRoughnessMap", false},
                 {"materialHasMetallicMap", false},
                 {"materialHasAoMap", false},
-                {"materialHasEmissiveMap", false}
+                {"materialHasEmissiveMap", false},
+                {"materialCastsShadows", true}
             };
         }
 
@@ -232,7 +247,8 @@ namespace Ermine::graphics
                 {"materialHasRoughnessMap", false},
                 {"materialHasMetallicMap", false},
                 {"materialHasAoMap", false},
-                {"materialHasEmissiveMap", false}
+                {"materialHasEmissiveMap", false},
+                {"materialCastsShadows", true}
             };
         }
 
@@ -318,19 +334,23 @@ namespace Ermine::graphics
             if (auto param = GetParameter("materialShadingModel"))
                 m_materialData.shadingModel = param->intValue;
 
-            // Update texture flags
-            m_materialData.hasAlbedoMap = GetParameter("materialHasAlbedoMap") &&
-                GetParameter("materialHasAlbedoMap")->boolValue ? 1 : 0;
-            m_materialData.hasNormalMap = GetParameter("materialHasNormalMap") &&
-                GetParameter("materialHasNormalMap")->boolValue ? 1 : 0;
-            m_materialData.hasRoughnessMap = GetParameter("materialHasRoughnessMap") &&
-                GetParameter("materialHasRoughnessMap")->boolValue ? 1 : 0;
-            m_materialData.hasMetallicMap = GetParameter("materialHasMetallicMap") &&
-                GetParameter("materialHasMetallicMap")->boolValue ? 1 : 0;
-            m_materialData.hasAoMap = GetParameter("materialHasAoMap") &&
-                GetParameter("materialHasAoMap")->boolValue ? 1 : 0;
-            m_materialData.hasEmissiveMap = GetParameter("materialHasEmissiveMap") &&
-                GetParameter("materialHasEmissiveMap")->boolValue ? 1 : 0;
+            if (auto param = GetParameter("materialCastsShadows"))
+                m_materialData.castsShadows = param->boolValue ? 1 : 0;
+
+            // Update texture flags (packed into bitfield for efficiency)
+            m_materialData.textureFlags = 0;
+            if (GetParameter("materialHasAlbedoMap") && GetParameter("materialHasAlbedoMap")->boolValue)
+                m_materialData.textureFlags |= MAT_FLAG_ALBEDO_MAP;
+            if (GetParameter("materialHasNormalMap") && GetParameter("materialHasNormalMap")->boolValue)
+                m_materialData.textureFlags |= MAT_FLAG_NORMAL_MAP;
+            if (GetParameter("materialHasRoughnessMap") && GetParameter("materialHasRoughnessMap")->boolValue)
+                m_materialData.textureFlags |= MAT_FLAG_ROUGHNESS_MAP;
+            if (GetParameter("materialHasMetallicMap") && GetParameter("materialHasMetallicMap")->boolValue)
+                m_materialData.textureFlags |= MAT_FLAG_METALLIC_MAP;
+            if (GetParameter("materialHasAoMap") && GetParameter("materialHasAoMap")->boolValue)
+                m_materialData.textureFlags |= MAT_FLAG_AO_MAP;
+            if (GetParameter("materialHasEmissiveMap") && GetParameter("materialHasEmissiveMap")->boolValue)
+                m_materialData.textureFlags |= MAT_FLAG_EMISSIVE_MAP;
 
             // Update texture array indices
             m_materialData.albedoMapIndex = GetTextureArrayIndex("materialAlbedoMap");

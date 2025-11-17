@@ -24,9 +24,9 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "FiniteStateMachine.h"
 #include "FSMEditor.h"
 #include <EditorGUI.h>
+#include "NavMesh.h"
 #include "Particles.h"
 #include "AnimationGUI.h"
-
 
 #include "xcore/my_properties.h"
 #include "xproperty.h"
@@ -71,6 +71,36 @@ namespace Ermine::editor {
 		// color, intensity, castsShadows, type are always shown
 		return true;
 	}
+
+	// Scan for available fragment shaders in the Resources/Shaders directory
+	static std::vector<std::string> ScanFragmentShaders() {
+		std::vector<std::string> shaders;
+		const std::string shaderDir = "../Resources/Shaders/";
+
+		try {
+			namespace fs = std::filesystem;
+			if (fs::exists(shaderDir) && fs::is_directory(shaderDir)) {
+				for (const auto& entry : fs::directory_iterator(shaderDir)) {
+					if (entry.is_regular_file()) {
+						std::string filename = entry.path().filename().string();
+						// Look for fragment shaders (contains "fragment" or ends with .frag)
+						if (filename.find("fragment") != std::string::npos ||
+						    filename.find(".frag") != std::string::npos) {
+							// Store the full path relative to Resources/Shaders/
+							shaders.push_back(shaderDir + filename);
+						}
+					}
+				}
+			}
+		}
+		catch (const std::exception& e) {
+			EE_CORE_WARN("Failed to scan fragment shaders: {0}", e.what());
+		}
+
+		// Sort alphabetically for consistent UI
+		std::sort(shaders.begin(), shaders.end());
+		return shaders;
+	}
 	template<typename T>
 	static bool ComponentHeaderWithRemove(const char* headerLabel, EntityID entity,
 		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_DefaultOpen)
@@ -82,6 +112,27 @@ namespace Ermine::editor {
 			if (ImGui::MenuItem("Remove Component")) {
 				auto& ecs = Ermine::ECS::GetInstance();
 				ecs.RemoveComponent<T>(entity);
+				ImGui::EndPopup();
+				return false;
+			}
+			ImGui::EndPopup();
+		}
+
+		if (!open) return false;
+		return true;
+	}
+
+	static bool ComponentHeaderWithRemoveForScriptsComponent(const char* headerLabel, EntityID entity, const std::string& className,
+		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_DefaultOpen)
+	{
+		bool open = ImGui::CollapsingHeader(headerLabel, flags);
+
+		if (ImGui::BeginPopupContextItem())
+		{
+			if (ImGui::MenuItem("Remove Component"))
+			{
+				auto& scs = ECS::GetInstance().GetComponent<ScriptsComponent>(entity);
+				scs.RemoveByClass(className);
 				ImGui::EndPopup();
 				return false;
 			}
@@ -205,7 +256,7 @@ namespace Ermine::editor {
 			DrawAudioComponent(selected);
 		}
 
-		if (ECS::GetInstance().HasComponent<Script>(selected)) {
+		if (ECS::GetInstance().HasComponent<ScriptsComponent>(selected)) {
 			DrawScriptComponent(selected);
 		}
 
@@ -220,6 +271,13 @@ namespace Ermine::editor {
 		if (ECS::GetInstance().HasComponent<StateMachine>(selected)) {
 			DrawStateMachineComponent(selected);
 		}
+
+		if (ECS::GetInstance().HasComponent<NavMeshComponent>(selected)) {
+			DrawNavMeshComponent(selected);
+		}
+
+		if (ECS::GetInstance().HasComponent<NavMeshAgent>(selected))
+			DrawNavMeshAgentComponent(selected);
 
 		if (ECS::GetInstance().HasComponent<ParticleEmitter>(selected)) {
 			DrawParticleEmitterComponent(selected);
@@ -320,15 +378,14 @@ namespace Ermine::editor {
 			// Vec3 (position / scale)
 			if (guid == xproperty::settings::var_type<Ermine::Vec3>::guid_v) {
 				Ermine::Vec3 v = p.m_Value.get<Ermine::Vec3>();
-				
-				// FIXED: Check if widget is being actively edited OR if value changed
+
 				if (DrawVec3XYZ(label.c_str(), &v.x) || ImGui::IsItemActive()) {
 					p.m_Value.set<Ermine::Vec3>({ v.x, v.y, v.z });
 					xproperty::sprop::setProperty(err, t, p, ctx);
-					
+
 					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
-					// CRITICAL: Mark entity dirty so hierarchy system updates immediately
 					hierarchySystem->MarkDirty(entity);
+					ECS::GetInstance().GetSystem<graphics::Renderer>()->MarkDrawDataForRebuild();
 				}
 			}
 			// Quaternion (rotation) – shown/edited as Euler degrees
@@ -342,14 +399,13 @@ namespace Ermine::editor {
 				const bool isRotation = (label == "Rotation");
 				const char* rotLabel = isRotation ? "Rotation (Degrees)" : label.c_str();
 
-				// FIXED: Check if widget is being actively edited OR if value changed
 				if (DrawVec3XYZ(rotLabel, &eulerDeg.x, 1.0f, 0.0f, -360.0f, 360.0f) || ImGui::IsItemActive()) {
 					p.m_Value.set<Ermine::Quaternion>(FromEulerDegrees(eulerDeg));
 					xproperty::sprop::setProperty(err, t, p, ctx);
-					
+
 					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
-					// CRITICAL: Mark entity dirty so hierarchy system updates immediately
 					hierarchySystem->MarkDirty(entity);
+					ECS::GetInstance().GetSystem<graphics::Renderer>()->MarkDrawDataForRebuild();
 				}
 			}
 
@@ -373,27 +429,62 @@ namespace Ermine::editor {
 			mesh.kind = static_cast<MeshKind>(currentKind);
 			if (mesh.kind == MeshKind::Primitive)
 				mesh.RebuildPrimitive();
+			// Mark renderer for full rebuild due to mesh kind change
+			ECS::GetInstance().GetSystem<graphics::Renderer>()->MarkDrawDataForRebuild();
 		}
 
 		// Primitive controls
 		if (mesh.kind == MeshKind::Primitive) {
-			// Shape type dropdown
-			const char* types[] = { "Cube", "Sphere", "Quad" };
+			// Shape type dropdown - UPDATED TO INCLUDE CONE
+			const char* types[] = { "Cube", "Sphere", "Quad", "Cone" };
 			int currentType = 0;
 			if (mesh.primitive.type == "Sphere") currentType = 1;
 			else if (mesh.primitive.type == "Quad") currentType = 2;
+			else if (mesh.primitive.type == "Cone") currentType = 3;
 
 			if (ImGui::Combo("Primitive Type", &currentType, types, IM_ARRAYSIZE(types))) {
 				mesh.primitive.type = types[currentType];
 				mesh.RebuildPrimitive();
+				// Mark renderer for full rebuild due to primitive type change
+				ECS::GetInstance().GetSystem<graphics::Renderer>()->MarkDrawDataForRebuild();
 			}
 
-			// Size control
-			float size[3] = { mesh.primitive.size.x, mesh.primitive.size.y, mesh.primitive.size.z };
-			if (ImGui::DragFloat3("Size", size, 0.1f, 0.01f, 100.f)) {
-				mesh.primitive.size = { size[0], size[1], size[2] };
-				ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
-				mesh.RebuildPrimitive();
+			// Size control - different for different primitives
+			if (mesh.primitive.type == "Cone") {
+				// For cone: size.x = diameter (radius * 2), size.y = height
+				float diameter = mesh.primitive.size.x;
+				float height = mesh.primitive.size.y;
+				
+				bool changed = false;
+				changed |= ImGui::DragFloat("Diameter", &diameter, 0.1f, 0.01f, 100.f);
+				changed |= ImGui::DragFloat("Height", &height, 0.1f, 0.01f, 100.f);
+				
+				if (changed) {
+					mesh.primitive.size = { diameter, height, diameter };
+					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
+					mesh.RebuildPrimitive();
+					ECS::GetInstance().GetSystem<graphics::Renderer>()->MarkDrawDataForRebuild();
+				}
+			}
+			else if (mesh.primitive.type == "Sphere") {
+				// For sphere: size.x = radius
+				float radius = mesh.primitive.size.x;
+				if (ImGui::DragFloat("Radius", &radius, 0.1f, 0.01f, 100.f)) {
+					mesh.primitive.size = { radius, radius, radius };
+					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
+					mesh.RebuildPrimitive();
+					ECS::GetInstance().GetSystem<graphics::Renderer>()->MarkDrawDataForRebuild();
+				}
+			}
+			else {
+				// For cube/quad: size = width, height, depth
+				float size[3] = { mesh.primitive.size.x, mesh.primitive.size.y, mesh.primitive.size.z };
+				if (ImGui::DragFloat3("Size", size, 0.1f, 0.01f, 100.f)) {
+					mesh.primitive.size = { size[0], size[1], size[2] };
+					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
+					mesh.RebuildPrimitive();
+					ECS::GetInstance().GetSystem<graphics::Renderer>()->MarkDrawDataForRebuild();
+				}
 			}
 		}
 
@@ -403,6 +494,8 @@ namespace Ermine::editor {
 			strcpy_s(buf, mesh.asset.meshName.c_str());
 			if (ImGui::InputText("Mesh Name", buf, sizeof(buf))) {
 				mesh.asset.meshName = buf;
+				// Mark renderer for full rebuild due to mesh asset change
+				ECS::GetInstance().GetSystem<graphics::Renderer>()->MarkDrawDataForRebuild();
 				// TODO: trigger asset reload here
 			}
 		}
@@ -430,9 +523,32 @@ namespace Ermine::editor {
 				gm->SetFloat("materialRoughness", 0.5f);          gm->SetFloat("material.roughness", 0.5f);
 				gm->SetVec3("materialEmissive", { 0.f,0.f,0.f });   gm->SetVec3("material.emissive", { 0.f,0.f,0.f });
 				gm->SetFloat("materialEmissiveIntensity", 1.0f);  gm->SetFloat("material.emissiveIntensity", 1.0f);
+				gm->SetBool("materialCastsShadows", true);
 			}
 
 			return;
+		}
+
+		// --- Load custom shader if path is set (for scene deserialization) ---
+		if (!matComp.customFragmentShader.empty() &&
+		    (!gm->GetShader() || gm->GetShader() == nullptr)) {
+			auto& assetManager = AssetManager::GetInstance();
+			auto customShader = assetManager.LoadShader(
+				"../Resources/Shaders/vertex.glsl",
+				matComp.customFragmentShader
+			);
+			if (customShader && customShader->IsValid()) {
+				gm->SetShader(customShader);
+				EE_CORE_INFO("Restored custom fragment shader from scene: {0}", matComp.customFragmentShader);
+			} else {
+				EE_CORE_WARN("Failed to restore custom fragment shader: {0}", matComp.customFragmentShader);
+			}
+		}
+
+		// --- Sync cacheCastsShadows to graphics::Material (for scene deserialization) ---
+		// Ensure the material's castsShadows parameter matches the serialized component value
+		if (auto param = gm->GetParameter("materialCastsShadows"); !param || param->boolValue != matComp.cacheCastsShadows) {
+			gm->SetBool("materialCastsShadows", matComp.cacheCastsShadows);
 		}
 
 		// --- Safe param accessors (no nullptrs, with fallbacks) ---
@@ -588,6 +704,90 @@ namespace Ermine::editor {
 			}
 		}
 
+		ImGui::SeparatorText("Rendering");
+
+		// --- Casts Shadows ---
+		{
+			bool castsShadows = getBool("materialCastsShadows", nullptr, matComp.cacheCastsShadows);
+			if (ImGui::Checkbox("Casts Shadows", &castsShadows)) {
+				gm->SetBool("materialCastsShadows", castsShadows);
+				matComp.cacheCastsShadows = castsShadows;  // Update component cache for serialization
+			}
+		}
+
+		// --- Custom Fragment Shader ---
+		{
+			static std::vector<std::string> fragmentShaders; // Cache the shader list
+			static bool shadersScanned = false;
+
+			// Scan shaders once per session
+			if (!shadersScanned) {
+				fragmentShaders = ScanFragmentShaders();
+				shadersScanned = true;
+			}
+
+			// Get current selection from component
+			std::string currentShader = matComp.customFragmentShader;
+
+			// Build display name for combo box
+			std::string displayName = currentShader.empty() ? "None (Standard PBR)" : currentShader;
+			if (!currentShader.empty()) {
+				// Show just the filename for cleaner UI
+				size_t lastSlash = currentShader.find_last_of('/');
+				if (lastSlash != std::string::npos) {
+					displayName = currentShader.substr(lastSlash + 1);
+				}
+			}
+
+			if (ImGui::BeginCombo("Fragment Shader", displayName.c_str())) {
+				// First option: None (use standard PBR)
+				bool isSelected = currentShader.empty();
+				if (ImGui::Selectable("None (Standard PBR)", isSelected)) {
+					matComp.customFragmentShader = "";
+					// Clear custom shader from material
+					gm->SetShader(nullptr); // Will revert to standard in renderer
+				}
+				if (isSelected) {
+					ImGui::SetItemDefaultFocus();
+				}
+
+				// List all available fragment shaders
+				for (const auto& shaderPath : fragmentShaders) {
+					// Extract filename for display
+					std::string filename = shaderPath;
+					size_t lastSlash = shaderPath.find_last_of('/');
+					if (lastSlash != std::string::npos) {
+						filename = shaderPath.substr(lastSlash + 1);
+					}
+
+					bool isShaderSelected = (currentShader == shaderPath);
+					if (ImGui::Selectable(filename.c_str(), isShaderSelected)) {
+						// Update component cache
+						matComp.customFragmentShader = shaderPath;
+
+						// Load and set the custom shader on the material
+						auto& assetManager = AssetManager::GetInstance();
+						// Use standard forward pass vertex shader with custom fragment
+						auto customShader = assetManager.LoadShader(
+							"../Resources/Shaders/vertex.glsl",
+							shaderPath
+						);
+						if (customShader && customShader->IsValid()) {
+							gm->SetShader(customShader);
+							EE_CORE_INFO("Loaded custom fragment shader: {0}", shaderPath);
+						} else {
+							EE_CORE_WARN("Failed to load custom fragment shader: {0}", shaderPath);
+						}
+					}
+					if (isShaderSelected) {
+						ImGui::SetItemDefaultFocus();
+					}
+				}
+
+				ImGui::EndCombo();
+			}
+		}
+
 		ImGui::SeparatorText("Maps");
 
 		// --- Presence flags (use same keys as (de)serialize) ---
@@ -632,6 +832,9 @@ namespace Ermine::editor {
 			gm->SetUVScale(Vec2(1.0f, 1.0f));
 			gm->SetUVOffset(Vec2(0.0f, 0.0f));
 
+			gm->SetBool("materialCastsShadows", true);
+			matComp.cacheCastsShadows = true;
+
 			gm->SetBool("materialHasAlbedoMap", false);
 			setBoolBoth("materialHasNormalMap", "material.hasNormalMap", false);
 			gm->SetBool("materialHasRoughnessMap", false);
@@ -658,9 +861,9 @@ namespace Ermine::editor {
 
 		SlotRow rows[] = {
 			{ "Albedo",    "materialAlbedoMap",   "material.albedoMap",   "materialHasAlbedoMap",    nullptr },
-			{ "Normal",    "material.normalMap",  nullptr,                 "materialHasNormalMap",   "material.hasNormalMap" },
+			{ "Normal",    "materialNormalMap",   "material.normalMap",    "materialHasNormalMap",   "material.hasNormalMap" },
 			{ "Roughness", "materialRoughnessMap",nullptr,                 "materialHasRoughnessMap",nullptr },
-			{ "Metallic",  "material.metallicMap",nullptr,                 "materialHasMetallicMap", nullptr },
+			{ "Metallic",  "materialMetallicMap", "material.metallicMap",  "materialHasMetallicMap", nullptr },
 			{ "AO",        "materialAoMap",       nullptr,                 "materialHasAoMap",       nullptr },
 			{ "Emissive",  "materialEmissiveMap", nullptr,                 "materialHasEmissiveMap", nullptr },
 		};
@@ -719,10 +922,11 @@ namespace Ermine::editor {
 						if (i == 0) {
 							// "<None>" is selected if current texture is null
 							isSelected = (curTex == nullptr || !curTex->IsValid());
-						} else {
+						}
+						else {
 							// Match by texture pointer or filepath
 							isSelected = (curTex == tex) ||
-										 (curTex && tex && curTex->GetFilePath() == tex->GetFilePath());
+								(curTex && tex && curTex->GetFilePath() == tex->GetFilePath());
 						}
 
 						if (ImGui::Selectable(name.c_str(), isSelected)) {
@@ -744,7 +948,8 @@ namespace Ermine::editor {
 								// Mark for GPU update
 								renderer->BuildTextureArray();
 								materialChanged = true;
-							} else {
+							}
+							else {
 								// Clear texture ("<None>" selected)
 								gm->SetTexture(r.slot, nullptr);
 								if (r.altSlot) gm->SetTexture(r.altSlot, nullptr);
@@ -946,8 +1151,7 @@ namespace Ermine::editor {
 				}
 			}
 			// --- Vec3 (color) ---
-			else if (guid == xproperty::settings::var_type<Ermine::Vec3>::guid_v
-				|| guid == xproperty::settings::var_type<Vec3>::guid_v) {
+			else if (guid == xproperty::settings::var_type<Ermine::Vec3>::guid_v/* || guid == xproperty::settings::var_type<Vec3>::guid_v*/) {
 				auto v = (guid == xproperty::settings::var_type<Ermine::Vec3>::guid_v)
 					? p.m_Value.get<Ermine::Vec3>()
 					: Ermine::Vec3{ p.m_Value.get<Vec3>().x, p.m_Value.get<Vec3>().y, p.m_Value.get<Vec3>().z };
@@ -1080,6 +1284,40 @@ namespace Ermine::editor {
 					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
 				}
 			}
+			else if (guid == xproperty::settings::var_type<Ermine::Vec3>::guid_v && label == "Colliderpivot")
+			{
+				Ermine::Vec3 v = p.m_Value.get<Ermine::Vec3>();
+				float arr[3] = { v.x, v.y, v.z };
+
+				if (ImGui::DragFloat3("Collider Pos", arr, 0.05f, -FLT_MAX, FLT_MAX))
+				{
+					v.x = arr[0];
+					v.y = arr[1];
+					v.z = arr[2];
+					p.m_Value.set<Ermine::Vec3>(v);
+					xproperty::sprop::setProperty(err, pc, p, ctx);
+
+					// Rebuild physics body with updated size
+					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
+				}
+			}
+			else if (guid == xproperty::settings::var_type<Ermine::Vec3>::guid_v && label == "Colliderrot")
+			{
+				Ermine::Vec3 v = p.m_Value.get<Ermine::Vec3>();
+				float arr[3] = { v.x, v.y, v.z };
+
+				if (ImGui::DragFloat3("Collider Rot", arr, 0.05f, -FLT_MAX, FLT_MAX))
+				{
+					v.x = arr[0];
+					v.y = arr[1];
+					v.z = arr[2];
+					p.m_Value.set<Ermine::Vec3>(v);
+					xproperty::sprop::setProperty(err, pc, p, ctx);
+
+					// Rebuild physics body with updated size
+					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
+				}
+			}
 			else if (guid == xproperty::settings::var_type<Ermine::Vec3>::guid_v && label == "Collidersize")
 			{
 				Ermine::Vec3 v = p.m_Value.get<Ermine::Vec3>();
@@ -1183,10 +1421,8 @@ namespace Ermine::editor {
 
 	void HierarchyInspector::DrawScriptComponent(EntityID entity)
 	{
-		if (!ComponentHeaderWithRemove<Script>("Script", entity))
-			return;
-
-		auto& script = ECS::GetInstance().GetComponent<Script>(entity);
+		/*auto& script = ECS::GetInstance().GetComponent<Script>(entity);*/
+		auto& scs = ECS::GetInstance().GetComponent<ScriptsComponent>(entity);
 
 		// Helper: property row with label on the left and widget on the right
 		auto PropertyRow = [&](const char* label, auto&& widgetFn)
@@ -1199,89 +1435,129 @@ namespace Ermine::editor {
 				ImGui::Columns(1);
 			};
 
-		// Editable class name (label left)
+		if (scs.scripts.empty())
+			return;
+
+		for (size_t i = 0; i < scs.scripts.size(); ++i)
 		{
-			char buf[256];
-			strcpy_s(buf, script.m_className.c_str());
-			PropertyRow("Class", [&] {
-				if (ImGui::InputText("##Class", buf, sizeof(buf), ImGuiInputTextFlags_EnterReturnsTrue)) { // TODO: validate classname?
-					script = Script{ std::string(buf), entity }; // Reconstruct a new state to initialize the Script
-				}
-				});
-		}
+			auto& script = scs.scripts[i];
 
-		// Display fields
-		std::unordered_map<std::string, ScriptFieldValue> fields;
-		if (script.m_instance)
-			scripting::ScriptEngine::PullManagedFieldsToCache(script.m_instance->object, fields);
+			ImGui::PushID(static_cast<int>(i));
 
-		for (auto& [name, val] : fields)
-		{
-			ImGui::PushID(name.c_str());
+			// Unique header label per script (also doubles as unique ImGui ID)
+			std::string visibleName = script.m_className.empty() ? std::string("<Unset>") : script.m_className;
+			std::string headerLabel = "Script: " + visibleName + "##ScriptHeader_" + std::to_string(i);
 
-			switch (val.kind)
+			// Collapsing header with context popup that removes THIS script by class name
+			if (!ComponentHeaderWithRemoveForScriptsComponent(headerLabel.c_str(), entity, script.m_className))
 			{
-			case ScriptFieldValue::Kind::Float:
-			{
-				PropertyRow(name.c_str(), [&] {
-					ImGui::InputFloat("##v", &std::get<float>(val.value));
-					});
-				break;
+				ImGui::PopID();
+				continue; // removed or closed
 			}
-			case ScriptFieldValue::Kind::Int:
+
+			ImGui::Checkbox("Enabled", &script.m_enabled);
+
+			// Editable class name (label left)
+			// TODO: Change to a drop-down of available scripts in project
 			{
-				PropertyRow(name.c_str(), [&] {
-					ImGui::InputInt("##v", &std::get<int>(val.value));
-					});
-				break;
-			}
-			case ScriptFieldValue::Kind::Bool:
-			{
-				PropertyRow(name.c_str(), [&] {
-					ImGui::Checkbox("##v", &std::get<bool>(val.value));
-					});
-				break;
-			}
-			case ScriptFieldValue::Kind::Vector3:
-			{
-				// Uses internal two-column layout with label left
-				if (DrawVec3XYZ(name.c_str(), &std::get<Vec3>(val.value).x))
-				{
-				}
-				break;
-			}
-			case ScriptFieldValue::Kind::Quaternion:
-			{
-				// Uses internal two-column layout with label left
-				Vec3 euler = QuaternionToEuler(std::get<Quaternion>(val.value), true);
-				if (DrawVec3XYZ(name.c_str(), &euler.x))
-				{
-				}
-				val.value = FromEulerDegrees(euler);
-				break;
-			}
-			case ScriptFieldValue::Kind::String:
-			{
-				char innerBuff[256];
-				strcpy_s(innerBuff, std::get<std::string>(val.value).c_str());
-				PropertyRow(name.c_str(), [&] {
-					if (ImGui::InputText("##v", innerBuff, sizeof(innerBuff), ImGuiInputTextFlags_EnterReturnsTrue))
-					{
-						// nothing else to do here; value is set when pushing back to managed fields
+				char buf[256];
+				strcpy_s(buf, script.m_className.c_str());
+				PropertyRow("Class", [&] {
+					if (ImGui::InputText("##Class", buf, sizeof(buf), ImGuiInputTextFlags_EnterReturnsTrue)) { // TODO: validate classname?
+						script = Script{ std::string(buf), entity }; // Reconstruct a new state to initialize the Script
+						scs.AttachAll(entity);
 					}
-					});
-				val.value = innerBuff;
-				break;
+				});
 			}
-			default: break;
+
+			// Display fields
+			std::unordered_map<std::string, ScriptFieldValue> fields;
+			if (script.m_instance && script.m_instance->object)
+				scripting::ScriptEngine::PullManagedFieldsToCache(script.m_instance->object, fields);
+
+			// Draw each exposed field
+			for (auto& [name, val] : fields)
+			{
+				ImGui::PushID(name.c_str());
+				bool changed = false;
+
+				switch (val.kind)
+				{
+				case ScriptFieldValue::Kind::Float:
+				{
+					PropertyRow(name.c_str(), [&] {
+						ImGui::InputFloat("##v", &std::get<float>(val.value));
+						changed = true;
+						});
+					break;
+				}
+				case ScriptFieldValue::Kind::Int:
+				{
+					PropertyRow(name.c_str(), [&] {
+						ImGui::InputInt("##v", &std::get<int>(val.value));
+						changed = true;
+						});
+					break;
+				}
+				case ScriptFieldValue::Kind::Bool:
+				{
+					PropertyRow(name.c_str(), [&] {
+						ImGui::Checkbox("##v", &std::get<bool>(val.value));
+						changed = true;
+						});
+					break;
+				}
+				case ScriptFieldValue::Kind::Vector3:
+				{
+					// Uses internal two-column layout with label left
+					if (changed == DrawVec3XYZ(name.c_str(), &std::get<Vec3>(val.value).x))
+					{
+					}
+					break;
+				}
+				case ScriptFieldValue::Kind::Quaternion:
+				{
+					// Uses internal two-column layout with label left
+					Vec3 euler = QuaternionToEuler(std::get<Quaternion>(val.value), true);
+					if (changed == DrawVec3XYZ(name.c_str(), &euler.x))
+					{
+					}
+					val.value = FromEulerDegrees(euler);
+					break;
+				}
+				case ScriptFieldValue::Kind::String:
+				{
+					char innerBuff[256];
+					strcpy_s(innerBuff, std::get<std::string>(val.value).c_str());
+					PropertyRow(name.c_str(), [&] {
+						if (ImGui::InputText("##v", innerBuff, sizeof(innerBuff), ImGuiInputTextFlags_EnterReturnsTrue))
+						{
+							// nothing else to do here; value is set when pushing back to managed fields
+							changed = true;
+						}
+						});
+					val.value = innerBuff;
+					break;
+				}
+				default:
+					EE_CORE_WARN("CURTIS SAYS WHY WASTE TIME SAY LOT WORD WHEN FEW WORD DO TRICKS {}.", name);
+					break;
+				}
+
+				ImGui::PopID();
+
+				if (changed && script.m_instance && script.m_instance->object)
+				{
+					ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->m_ScriptEngine->PushSingleField(script.m_instance->object, name, val);
+					// Mark dirty for scene save?
+				}
 			}
+			// Push change to managed object
+			if (script.m_instance && script.m_instance->object)
+				scripting::ScriptEngine::PushCacheToManagedFields(script.m_instance->object, fields);
 
 			ImGui::PopID();
 		}
-
-		// Push change to managed object
-		if (script.m_instance)
-			scripting::ScriptEngine::PushCacheToManagedFields(script.m_instance->object, fields);
 	}
 
 	void HierarchyInspector::DrawModelComponent(EntityID entity)
@@ -1414,6 +1690,7 @@ namespace Ermine::editor {
 									aiMat->GetTexture(aiTextureType_DIFFUSE, 0, &texPath) == AI_SUCCESS) {
 									std::string texPathStr = std::string(texPath.C_Str());
 									std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
+									// Extract just the filename without subdirectories
 									auto lastSlash = texPathStr.find_last_of('/');
 									std::string filename = (lastSlash != std::string::npos) ? texPathStr.substr(lastSlash + 1) : texPathStr;
 									auto albedoTex = AssetManager::GetInstance().LoadTexture("../Resources/Textures/" + filename);
@@ -1429,15 +1706,10 @@ namespace Ermine::editor {
 									std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
 									auto lastSlash = texPathStr.find_last_of('/');
 									std::string filename = (lastSlash != std::string::npos) ? texPathStr.substr(lastSlash + 1) : texPathStr;
-									EE_CORE_INFO("Loading normal texture: {}", texPathStr);
 									auto normalTex = AssetManager::GetInstance().LoadTexture("../Resources/Textures/" + filename);
 									if (normalTex->IsValid()) {
 										materialPtr->SetTexture("materialNormalMap", normalTex);
 										materialPtr->SetBool("materialHasNormalMap", true);
-										EE_CORE_INFO("Normal map loaded successfully");
-									}
-									else {
-										EE_CORE_WARN("Failed to load normal texture from: {}", "../Resources/Textures/" + filename);
 									}
 								}
 								else {
@@ -1463,19 +1735,11 @@ namespace Ermine::editor {
 									std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
 									auto lastSlash = texPathStr.find_last_of('/');
 									std::string filename = (lastSlash != std::string::npos) ? texPathStr.substr(lastSlash + 1) : texPathStr;
-									EE_CORE_INFO("Loading metallic texture: {}", texPathStr);
 									auto metallicTex = AssetManager::GetInstance().LoadTexture("../Resources/Textures/" + filename);
 									if (metallicTex->IsValid()) {
 										materialPtr->SetTexture("materialMetallicMap", metallicTex);
 										materialPtr->SetBool("materialHasMetallicMap", true);
-										EE_CORE_INFO("Metallic map loaded successfully");
 									}
-									else {
-										EE_CORE_WARN("Failed to load metallic texture from: {}", "../Resources/Textures/" + texPathStr);
-									}
-								}
-								else {
-									EE_CORE_INFO("No metallic map found in material");
 								}
 
 								// UV transform with V-flip
@@ -1506,12 +1770,15 @@ namespace Ermine::editor {
 						// Auto-attach animator if entity has AnimationComponent
 						if (ECS::GetInstance().HasComponent<AnimationComponent>(entity)) {
 							auto& animComp = ECS::GetInstance().GetComponent<AnimationComponent>(entity);
-							const aiScene* scene = model->GetAssimpScene();
+							scene = model->GetAssimpScene();
 							if (scene && scene->mNumAnimations > 0)
 								animComp.m_animator = std::make_shared<graphics::Animator>(model);
 							else
 								animComp.m_animator.reset();
 						}
+
+						// Mark renderer for full rebuild due to model load
+						ECS::GetInstance().GetSystem<graphics::Renderer>()->MarkDrawDataForRebuild();
 					}
 				}
 				if (isSelected) ImGui::SetItemDefaultFocus();
@@ -1712,12 +1979,15 @@ namespace Ermine::editor {
 					// Refresh animator
 					if (ecs.HasComponent<AnimationComponent>(entity)) {
 						auto& animComp = ecs.GetComponent<AnimationComponent>(entity);
-						const aiScene* scene = reloaded->GetAssimpScene();
+						scene = reloaded->GetAssimpScene();
 						if (scene && scene->mNumAnimations > 0)
 							animComp.m_animator = std::make_shared<graphics::Animator>(reloaded);
 						else
 							animComp.m_animator.reset();
 					}
+
+					// Mark renderer for full rebuild due to model reload
+					ecs.GetSystem<graphics::Renderer>()->MarkDrawDataForRebuild();
 
 					EE_CORE_INFO("Model reloaded successfully");
 				}
@@ -1824,6 +2094,53 @@ namespace Ermine::editor {
 		}
 	}
 
+	void HierarchyInspector::DrawNavMeshComponent(EntityID entity)
+	{
+		if (!ImGui::CollapsingHeader("NavMesh", ImGuiTreeNodeFlags_DefaultOpen))
+			return;
+
+		auto& nav = ECS::GetInstance().GetComponent<NavMeshComponent>(entity);
+
+		ImGui::TextUnformatted("Recast Build Settings");
+		ImGui::DragFloat("Cell Size", &nav.cellSize, 0.01f, 0.01f, 2.0f);
+		ImGui::DragFloat("Cell Height", &nav.cellHeight, 0.01f, 0.01f, 2.0f);
+		ImGui::DragFloat("Agent Height", &nav.agentHeight, 0.01f, 0.1f, 5.0f);
+		ImGui::DragFloat("Agent Radius", &nav.agentRadius, 0.01f, 0.05f, 2.0f);
+		ImGui::DragFloat("Max Climb", &nav.agentMaxClimb, 0.01f, 0.0f, 2.0f);
+		ImGui::DragFloat("Max Slope", &nav.agentMaxSlope, 0.1f, 0.0f, 89.0f);
+
+		ImGui::Separator();
+
+		if (ImGui::Button("Bake Nav Mesh"))
+		{
+			if (auto sys = ECS::GetInstance().GetSystem<NavMeshSystem>())
+				sys->BakeNavMesh(entity);
+		}
+
+		ImGui::Separator();
+		ImGui::Checkbox("Draw Walkable", &nav.drawWalkable);
+		ImGui::Checkbox("Draw NavMesh", &nav.drawNavMesh);
+	}
+
+	void HierarchyInspector::DrawNavMeshAgentComponent(EntityID entity)
+	{
+		if (!ComponentHeaderWithRemove<NavMeshAgent>("NavMesh Agent", entity))
+			return;
+
+		auto& agent = ECS::GetInstance().GetComponent<NavMeshAgent>(entity);
+
+		// Editable fields
+		ImGui::DragFloat("Speed", &agent.speed, 0.1f, 0.0f, 100.0f);
+		ImGui::DragFloat("Acceleration", &agent.acceleration, 0.1f, 0.0f, 100.0f);
+		ImGui::DragFloat("Stopping Distance", &agent.stoppingDistance, 0.01f, 0.0f, 10.0f);
+		ImGui::Checkbox("Auto Rotate", &agent.autoRotate);
+
+#if defined(EE_EDITOR)
+		ImGui::SeparatorText("Debug");
+		ImGui::Checkbox("Show Path", &agent.debugDrawPath);
+#endif
+	}
+
 	void HierarchyInspector::DrawParticleEmitterComponent(EntityID entity)
 	{
 		//if (!ImGui::CollapsingHeader("Particle Emitter", ImGuiTreeNodeFlags_DefaultOpen))
@@ -1859,7 +2176,7 @@ namespace Ermine::editor {
 		ImGui::SliderFloat("Field of View", &cameraComp.fov, 40, 120);
 
 		ImGui::Text("Clipping Planes");
-		if (ImGui::BeginTable("clipPlanesTable",2))
+		if (ImGui::BeginTable("clipPlanesTable", 2))
 		{
 			ImGui::TableNextRow();
 			ImGui::TableNextColumn();
@@ -1903,12 +2220,20 @@ namespace Ermine::editor {
 		if (ImGui::MenuItem("Audio") && !ECS::GetInstance().HasComponent<AudioComponent>(entity)) {
 			ECS::GetInstance().AddComponent(entity, AudioComponent());
 		}
-		//if (ImGui::MenuItem("Particle") && !ECS::GetInstance().HasComponent<Particle>(entity)) {
-		//    ECS::GetInstance().AddComponent(entity, Particle());
-		//}
-		if (ImGui::MenuItem("Script") && !ECS::GetInstance().HasComponent<Script>(entity)) {
-			ECS::GetInstance().AddComponent(entity, Script());
+		if (ImGui::MenuItem("Script"))
+		{
+			if (!ECS::GetInstance().HasComponent<ScriptsComponent>(entity))
+				ECS::GetInstance().AddComponent(entity, ScriptsComponent{});
+			auto& scs = ECS::GetInstance().GetComponent<ScriptsComponent>(entity);
+			scs.AddEmpty();
 		}
+		//if (ImGui::MenuItem("Script") && !ECS::GetInstance().HasComponent<ScriptsComponent>(entity)) {
+		//	//ECS::GetInstance().AddComponent(entity, Script());
+		//	ECS::GetInstance().AddComponent(entity, ScriptsComponent{});
+		//	//auto& scs = ECS::GetInstance().GetComponent<ScriptsComponent>(entity);
+		//	//scs.Add()
+		//	//scs.AttachAll()
+		//}
 		if (ImGui::MenuItem("Model") && !ECS::GetInstance().HasComponent<ModelComponent>(entity)) {
 			ECS::GetInstance().AddComponent(entity, ModelComponent());
 		}
@@ -1939,8 +2264,21 @@ namespace Ermine::editor {
 
 			//EE_CORE_INFO("StateMachine component added and initialized for entity {0}", entity);
 		}
+		if (ImGui::MenuItem("NavMesh") && !ECS::GetInstance().HasComponent<NavMeshComponent>(entity)) {
+			ECS::GetInstance().AddComponent(entity, NavMeshComponent());
+		}
+		if (ImGui::MenuItem("NavMeshAgent") && !ECS::GetInstance().HasComponent<NavMeshAgent>(entity)) {
+			ECS::GetInstance().AddComponent(entity, NavMeshAgent());
+		}
 		if (ImGui::MenuItem("ParticleEmitter") && !ECS::GetInstance().HasComponent<ParticleEmitter>(entity)) {
 			ECS::GetInstance().AddComponent(entity, ParticleEmitter());
+		}
+		if (ImGui::MenuItem("Camera") && !ECS::GetInstance().HasComponent<CameraComponent>(entity))
+		{
+			auto tempCam = CameraComponent{};
+			tempCam.fov = 45;
+			tempCam.nearPlane = 5.0f;
+			ECS::GetInstance().AddComponent(entity, tempCam);
 		}
 		// Add more component types as needed
 

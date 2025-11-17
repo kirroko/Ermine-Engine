@@ -46,10 +46,19 @@ public:
     */
     void SaveScene();
 
+    /*!
+    \brief Save temp scene on play
+    */
     void SaveTemp();
 
+    /*!
+    \brief Load temp scene on stop
+    */
     void LoadTemp();
 
+    /*!
+    \brief Removes temp scene
+    */
     void RemoveTemp();
 
     /*!
@@ -113,6 +122,11 @@ public:
         if (!m_ActiveScene) m_ActiveScene = std::make_shared<Ermine::Scene>("Untitled Scene");
         return *m_ActiveScene;
     }
+
+    /*!
+    \brief Creates the persistent HUD entity with UIComponent
+    */
+    void CreateHUDEntity();
 
 private:
     SceneManager() = default;

@@ -1,4 +1,25 @@
-﻿#include <PreCompile.h>
+﻿/* Start Header ************************************************************************/
+/*!
+\file       ResourcePipe.cpp
+\author     HURNG Kai Rui, h.kairui, 2301278, h.kairui\@digipen.edu (100%)
+\date       01/11/2025
+\brief      This file contains the implementation of the ResourcePipeline system.
+            It handles importing, converting, and caching of various asset types
+            such as textures and meshes. The pipeline integrates with DirectXTex
+            for texture processing (format conversion, mipmap generation, compression)
+            and Assimp for mesh importing (static and skinned meshes). It also manages
+            an asset database that tracks asset metadata, cache locations, and
+            reimport status. The pipeline automates scanning project directories,
+            reimporting outdated resources, and generating binary cache files
+            (.dds, .mesh, .skin) used by the engine at runtime.
+
+Copyright (C) 2025 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents without the
+prior written consent of DigiPen Institute of Technology is prohibited.
+*/
+/* End Header **************************************************************************/
+
+#include <PreCompile.h>
 #include "ResourcePipe.h"
 #include <iostream>
 #include <filesystem>
@@ -373,6 +394,58 @@ namespace Ermine {
     //=============================================================================
     // Texture Import Implementation
     //=============================================================================
+
+    // Determine optimal compression format based on texture filename
+    DXGI_FORMAT ResourcePipeline::DetermineOptimalFormat(const std::string& filename) {
+        // Convert filename to lowercase for case-insensitive matching
+        std::string lowerFilename = filename;
+        std::transform(lowerFilename.begin(), lowerFilename.end(), lowerFilename.begin(), ::tolower);
+
+        // Normal maps: BC5 (two-channel)
+        if (lowerFilename.find("normal") != std::string::npos ||
+            lowerFilename.find("norm") != std::string::npos ||
+            lowerFilename.find("_n.") != std::string::npos ||
+            lowerFilename.find("_nrm") != std::string::npos) {
+            return DXGI_FORMAT_BC5_UNORM;
+        }
+
+        // Single-channel textures: BC4 
+        if (lowerFilename.find("roughness") != std::string::npos ||
+            lowerFilename.find("metallic") != std::string::npos ||
+            lowerFilename.find("metalness") != std::string::npos ||
+            lowerFilename.find("ao") != std::string::npos ||
+            lowerFilename.find("ambient") != std::string::npos ||
+            lowerFilename.find("occlusion") != std::string::npos ||
+            lowerFilename.find("height") != std::string::npos ||
+            lowerFilename.find("displacement") != std::string::npos ||
+            lowerFilename.find("_r.") != std::string::npos ||
+            lowerFilename.find("_m.") != std::string::npos) {
+            return DXGI_FORMAT_BC1_UNORM;
+        }
+
+        // Albedo/Color with alpha: BC3 (DXT5 - smooth alpha)
+        if (lowerFilename.find("albedo") != std::string::npos ||
+            lowerFilename.find("diffuse") != std::string::npos ||
+            lowerFilename.find("color") != std::string::npos ||
+            lowerFilename.find("basecolor") != std::string::npos ||
+            lowerFilename.find("emissive") != std::string::npos ||
+            lowerFilename.find("emission") != std::string::npos ||
+            lowerFilename.find("_a.") != std::string::npos ||
+            lowerFilename.find("_d.") != std::string::npos) {
+            return DXGI_FORMAT_BC3_UNORM; // Assume alpha channel might be needed
+        }
+
+        // Opaque textures without alpha: BC1 (DXT1 - best compression 6:1)
+        if (lowerFilename.find("opaque") != std::string::npos ||
+            lowerFilename.find("noalpha") != std::string::npos) {
+            return DXGI_FORMAT_BC1_UNORM;
+        }
+
+        // Default: BC3 for color textures (safe choice with alpha support)
+        // Conservative default - better quality than BC1, handles alpha
+        return DXGI_FORMAT_BC3_UNORM;
+    }
+
     ImportResult ResourcePipeline::ImportTextureInternal(const std::string& sourcePath,
         const std::string& outputPath,
         const TextureImportSettings& settings) {

@@ -55,6 +55,7 @@ namespace Ermine {
         static int PlaySounds(const string& strSoundName, const Vector3D& vPos = Vector3D{ 0, 0, 0 }, float fVolumedB = 0.0f);
         static void SetChannel3dPosition(int nChannelId, const Vector3D& vPosition);
         static void SetChannelVolume(int nChannelId, float fVolumedB);
+        static void SetChannelPaused(int nChannelId, bool paused);
         static bool IsPlaying(int nChannelId);
         static void StopChannel(int nChannelId);
         static void StopAllChannels();

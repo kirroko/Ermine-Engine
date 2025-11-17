@@ -2,8 +2,8 @@
 
 public class Sphere : MonoBehaviour
 {
-    public Vector3 direction = Vector3.forward;
-    public float speed = 2.0f;
+    public Vector3 direction;
+    public float speed = 7.0f;
 
     private float timeAlive = 3.0f;
 

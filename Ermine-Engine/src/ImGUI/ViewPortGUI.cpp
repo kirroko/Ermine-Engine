@@ -87,6 +87,9 @@ void Ermine::ViewPortGUI::Render()
 
 void Ermine::ViewPortGUI::TopBarSimulationControl(const ImVec2 iconSize)
 {
+	// Find primary camera entity
+	//auto& ecs = ECS::GetInstance();
+
 	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6.f, 6.f));
 	ImGui::BeginGroup();
 	{
@@ -95,12 +98,18 @@ void Ermine::ViewPortGUI::TopBarSimulationControl(const ImVec2 iconSize)
 		const bool stopped = (EditorGUI::s_state == EditorGUI::SimState::stopped);
 
 		// Play
+		// TODO: We need to handle the cursor mode properly instead of directly setting it here. It is also for scripting purposes.
 		ImGui::BeginDisabled(playing);
 		if (DrawIconOrTextButton(gIconPlay, "Play", iconSize))
 		{
 			EditorGUI::s_state = EditorGUI::SimState::playing;
 			SceneManager::GetInstance().SaveTemp();
 			EE_CORE_INFO("Simulation: Play");
+
+			glfwSetInputMode(glfwGetCurrentContext(), GLFW_CURSOR,GLFW_CURSOR_DISABLED);
+			if (glfwRawMouseMotionSupported())
+				glfwSetInputMode(glfwGetCurrentContext(), GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+			EE_CORE_INFO("Cursor locked (FPS), raw mouse motion {}", glfwRawMouseMotionSupported() ? "enabled" : "not supported");
 		}
 		if (ImGui::IsItemHovered())
 			ImGui::SetTooltip("Play (Ctrl+P)");
@@ -130,6 +139,10 @@ void Ermine::ViewPortGUI::TopBarSimulationControl(const ImVec2 iconSize)
 			EditorGUI::s_state = EditorGUI::SimState::stopped;
 			SceneManager::GetInstance().LoadTemp();
 			EE_CORE_INFO("Simulation: Stop");
+
+			if (glfwRawMouseMotionSupported())
+				glfwSetInputMode(glfwGetCurrentContext(), GLFW_RAW_MOUSE_MOTION, GLFW_FALSE);
+			glfwSetInputMode(glfwGetCurrentContext(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 		}
 		if (ImGui::IsItemHovered())
 			ImGui::SetTooltip("Stop (Ctrl+Shift+P)");
@@ -587,12 +600,13 @@ void Ermine::ViewPortGUI::Update()
 	static bool s_orbiting = false;
 	CameraControls(overViewCube, selectedEntity, viewportHovered, s_orbiting);
 
-	ObjectPicking(offscreen_buffer, imgMin, imgSize, overViewCube, s_orbiting);
-
 	GizmoOverlay(imgMin, imgSize, vmSize, vmPos, selectedEntity, gOperation, gMode);
+
+	ObjectPicking(offscreen_buffer, imgMin, imgSize, overViewCube, s_orbiting);
 
 	ImGui::EndChild();
 
+	// Dropping assets into viewport to load prefabs
 	if (ImGui::BeginDragDropTarget()) { // Begin drag & drop target
 		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_FILE")) {
 			const char* cpath = static_cast<const char*>(payload->Data);
@@ -619,6 +633,16 @@ void Ermine::ViewPortGUI::Update()
 	EditorGUI::isPlaying = EditorGUI::s_state == EditorGUI::SimState::playing;
 
 	Input::SetGameInputActive(EditorGUI::isPlaying && viewportFocused && viewportHovered);
+
+	if (EditorGUI::isPlaying && Input::IsKeyPressed(GLFW_KEY_ESCAPE))
+	{
+		EditorGUI::s_state = EditorGUI::SimState::stopped;
+		SceneManager::GetInstance().LoadTemp();
+
+		if (glfwRawMouseMotionSupported())
+			glfwSetInputMode(glfwGetCurrentContext(), GLFW_RAW_MOUSE_MOTION, GLFW_FALSE);
+		glfwSetInputMode(glfwGetCurrentContext(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+	}
 
 	ImGui::End();
 }

@@ -32,12 +32,6 @@ namespace Ermine::graphics
 	{
 		auto& ecs = ECS::GetInstance();
 
-		// Wait for GPU to finish reading bone data from previous frame before overwriting
-		if (m_SkeletalSSBO && m_SkeletalSSBO->IsValid())
-		{
-			m_SkeletalSSBO->WaitForGPU();
-		}
-
 		for (auto& entity : m_Entities)
 		{
 			// Check if animation and model components exist

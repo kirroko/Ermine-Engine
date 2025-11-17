@@ -30,7 +30,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "HierarchyPanel.h"
 #include "HierarchyInspector.h"
 
-#include "GameCamera.h"
+#include "CameraSystem.h"
 #include "Components.h"
 #include "Entity.h"
 
@@ -134,6 +134,7 @@ namespace
     }
 }
 
+[[deprecated("viewportgui handles toolbar")]]
 void EditorGUI::StartPlayMode()
 {
     EE_CORE_INFO("Starting Play Mode...");
@@ -164,11 +165,11 @@ void EditorGUI::StartPlayMode()
         return;
     }
 
-    // Get or create GameCamera system
-    auto gameCamera = ecs.GetSystem<graphics::GameCamera>();
+    // Get or create CameraSystem system
+    auto gameCamera = ecs.GetSystem<graphics::CameraSystem>();
     if (!gameCamera)
     {
-        EE_CORE_ERROR("GameCamera system not found!");
+        EE_CORE_ERROR("CameraSystem system not found!");
         return;
     }
 
@@ -202,6 +203,7 @@ void EditorGUI::StartPlayMode()
     EE_CORE_INFO("Play mode started with camera entity {}", s_PrimaryCameraEntity);
 }
 
+[[deprecated("viewportgui handles toolbar")]]
 void EditorGUI::StopPlayMode()
 {
     EE_CORE_INFO("Stopping Play Mode...");
@@ -215,7 +217,7 @@ void EditorGUI::StopPlayMode()
 
     // Reset game camera
     auto& ecs = ECS::GetInstance();
-    auto gameCamera = ecs.GetSystem<graphics::GameCamera>();
+    auto gameCamera = ecs.GetSystem<graphics::CameraSystem>();
     if (gameCamera)
     {
         gameCamera->SetCameraEntity(0);
@@ -400,6 +402,7 @@ void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
     ImGui::EndMainMenuBar();
 }
 
+[[deprecated("viewportgui handles toolbar")]]
 void EditorGUI::Toolbar()
 {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 2));
