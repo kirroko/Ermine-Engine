@@ -588,6 +588,21 @@ namespace Ermine
 			Ermine::Quaternion rot = QuaternionNormalize(FromEulerDegrees(p.colliderRot));
 			Ermine::Quaternion combined = QuaternionNormalize(t.rotation * rot);
 			bodySettings.mRotation = JPH::Quat(combined.x, combined.y, combined.z, combined.w);
+
+			JPH::EAllowedDOFs dofs = JPH::EAllowedDOFs::All;
+
+			// Position locks
+			if (p.posX) dofs &= ~JPH::EAllowedDOFs::TranslationX;
+			if (p.posY) dofs &= ~JPH::EAllowedDOFs::TranslationY;
+			if (p.posZ) dofs &= ~JPH::EAllowedDOFs::TranslationZ;
+
+			// Rotation locks
+			if (p.rotX) dofs &= ~JPH::EAllowedDOFs::RotationX;
+			if (p.rotY) dofs &= ~JPH::EAllowedDOFs::RotationY;
+			if (p.rotZ) dofs &= ~JPH::EAllowedDOFs::RotationZ;
+
+			bodySettings.mAllowedDOFs = dofs;
+
 			// Create body
 			JPH::Body* body = bodyInterface.CreateBody(bodySettings);
 			if (!body) continue;
