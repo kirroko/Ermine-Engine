@@ -25,6 +25,8 @@ namespace Ermine::editor
 {
     MainMenuGUI::MainMenuGUI() : ImGUIWindow("Main Menu")
     {
+        // Load the background texture
+        m_BackgroundTexture = AssetManager::GetInstance().LoadTexture("../Resources/Textures/UI/image.png");
     }
 
     void MainMenuGUI::Render()
@@ -53,34 +55,52 @@ namespace Ermine::editor
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
         ImGui::Begin("Main Menu", nullptr, flags);
 
-        // Draw semi-transparent background
-        ImDrawList* drawList = ImGui::GetWindowDrawList();
-        drawList->AddRectFilled(ImVec2(0, 0), viewport, IM_COL32(0, 0, 0, 180));
+        // Draw background image if texture is loaded
+        if (m_BackgroundTexture && m_BackgroundTexture->IsValid())
+        {
+            ImGui::SetCursorPos(ImVec2(0, 0));
+            ImGui::Image(
+#if defined(IMGUI_IMPL_OPENGL_LOADER_GL3W) || defined(IMGUI_IMPL_OPENGL_ES2) || defined(IMGUI_IMPL_OPENGL_ES3) || defined(IMGUI_IMPL_OPENGL_LOADER_GLEW) || defined(IMGUI_IMPL_OPENGL_LOADER_GLAD)
+                (ImTextureID)(intptr_t)m_BackgroundTexture->GetRendererID(),
+#else
+                m_BackgroundTexture->GetRendererID(),
+#endif
+                viewport,
+                ImVec2(0, 1), ImVec2(1, 0)  // UV coordinates (flipped vertically)
+            );
+        }
+        else
+        {
+            // Fallback: Draw semi-transparent background if texture fails to load
+            ImDrawList* drawList = ImGui::GetWindowDrawList();
+            drawList->AddRectFilled(ImVec2(0, 0), viewport, IM_COL32(0, 0, 0, 180));
+        }
 
         // Center content
         float centerX = viewport.x / 2.0f;
         float centerY = viewport.y / 2.0f;
 
-        // Title
+        // Calculate button dimensions based on image size
+        float buttonWidth = 150.0f;
+        float buttonHeight = 50.0f;
+
+        // If texture is loaded, scale buttons relative to image dimensions
+        if (m_BackgroundTexture && m_BackgroundTexture->IsValid())
         {
-            ImGui::SetCursorPos(ImVec2(centerX - 100, centerY - 150));
-            ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 20));
-            ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[0]);
-
-            ImGui::TextColored(ImVec4(1, 1, 1, 1), "MAIN MENU");
-
-            ImGui::PopFont();
-            ImGui::PopStyleVar();
+            // Scale buttons to be proportional to the viewport/image
+            // Buttons will be 15% of viewport width and 5% of viewport height
+            buttonWidth = viewport.x * 0.20f;
+            buttonHeight = viewport.y * 0.07f;
         }
 
         // Play Button
         {
-            ImGui::SetCursorPos(ImVec2(centerX - 75, centerY - 50));
+            ImGui::SetCursorPos(ImVec2(centerX - buttonWidth / 2.0f, centerY - buttonHeight + 375));
             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.5f, 0.8f, 1.0f));
             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.6f, 0.9f, 1.0f));
             ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.1f, 0.4f, 0.7f, 1.0f));
 
-            if (ImGui::Button("PLAY", ImVec2(150, 50)))
+            if (ImGui::Button("PLAY", ImVec2(buttonWidth, buttonHeight)))
             {
                 m_IsActive = false;
                 EditorGUI::isPlaying = true;
@@ -96,12 +116,12 @@ namespace Ermine::editor
 
         // Quit Button
         {
-            ImGui::SetCursorPos(ImVec2(centerX - 75, centerY + 50));
+            ImGui::SetCursorPos(ImVec2(centerX - buttonWidth / 2.0f, centerY + 525));
             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.8f, 0.2f, 0.2f, 1.0f));
             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.9f, 0.3f, 0.3f, 1.0f));
             ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.7f, 0.1f, 0.1f, 1.0f));
 
-            if (ImGui::Button("QUIT", ImVec2(150, 50)))
+            if (ImGui::Button("QUIT", ImVec2(buttonWidth, buttonHeight)))
             {
                 glfwSetWindowShouldClose(glfwGetCurrentContext(), GLFW_TRUE);
             }

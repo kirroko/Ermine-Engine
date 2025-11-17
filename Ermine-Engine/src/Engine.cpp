@@ -56,6 +56,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "FSMEditor.h"
 #include "AnimationGUI.h"
 #include "ResourcePipe.h"
+#include "MainMenuGUI.h"
 #endif
 
 using namespace Ermine;
@@ -545,6 +546,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	editor::EditorGUI::CreateImGUIWindow<AnimationEditorImGUI>();
 	editor::EditorGUI::CreateImGUIWindow<ConsoleGUI>();
 	editor::EditorGUI::CreateImGUIWindow<ImguiUI::AssetBrowser>(); //TODO: Standardize please, do we want namespace ImGui for all window or not
+	editor::EditorGUI::CreateImGUIWindow<editor::MainMenuGUI>(); // Hidden by default - toggle via Windows > Main Menu Preview
 
 	{
 		static Ermine::ResourcePipeline pipeline; // TODO: Is this also needed in game build?

@@ -41,6 +41,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <optional>
 #include "SceneManager.h"
 #include <imnodes.h>
+#include "MainMenuGUI.h"
 
 namespace Ermine
 {
@@ -394,6 +395,17 @@ void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
         if (ImGui::MenuItem("Console"))
         {
             EE_CORE_INFO("Console open");
+        }
+
+        // Toggle Main Menu GUI
+        auto* mainMenuGUI = GetWindow<editor::MainMenuGUI>();
+        if (mainMenuGUI)
+        {
+            bool isActive = mainMenuGUI->IsActive();
+            if (ImGui::MenuItem("Main Menu Preview", nullptr, &isActive))
+            {
+                mainMenuGUI->SetActive(isActive);
+            }
         }
 
         ImGui::EndMenu();
