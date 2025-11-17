@@ -398,10 +398,12 @@ namespace Ermine
 
 			auto& t = ecs.GetComponent<Transform>(entity);
 			auto& p = ecs.GetComponent<PhysicComponent>(entity);
+
 			JPH::Vec3 meshsize = JPH::Vec3(1, 1, 1);
 			if (ecs.HasComponent<Mesh>(entity))
 			{
-				meshsize = JPH::Vec3(ecs.GetComponent<Mesh>(entity).primitive.size.x, ecs.GetComponent<Mesh>(entity).primitive.size.y, ecs.GetComponent<Mesh>(entity).primitive.size.z);
+				const auto& mesh = ecs.GetComponent<Mesh>(entity);
+				meshsize = JPH::Vec3(mesh.primitive.size.x, mesh.primitive.size.y, mesh.primitive.size.z);
 			}
 
 
@@ -575,6 +577,7 @@ namespace Ermine
 			if (!shape) continue; // Skip invalid shapes
 
 			// Create body settings
+			t.rotation = QuaternionNormalize(t.rotation);
 			JPH::BodyCreationSettings bodySettings(
 				shape,
 				JPH::Vec3(t.position.x, t.position.y, t.position.z),
