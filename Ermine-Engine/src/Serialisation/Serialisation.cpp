@@ -265,7 +265,6 @@ Config LoadConfigFromFile(const std::filesystem::path& path) {
     return config;
 }
 
-
 void SaveSceneToFile(const Ermine::ECS& ecs, const std::filesystem::path& path, bool pretty) {
 
     if (path.has_parent_path()) {
@@ -285,6 +284,7 @@ void SaveSceneToFile(const Ermine::ECS& ecs, const std::filesystem::path& path, 
 
     Value entities(kArrayType);
 
+    // TODO: For good old curtis the bear, here we can optimize by getting the list from SceneManager
     for (Ermine::EntityID id = 0; id < Ermine::MAX_ENTITIES; ++id) {
         if (!ecs.IsEntityValid(id)) continue;
 
@@ -341,10 +341,7 @@ void SaveSceneToFile(const Ermine::ECS& ecs, const std::filesystem::path& path, 
                         arr.PushBack(obj, a);
                     }
                     payload.AddMember(rapidjson::Value("scripts", a), arr, a);
-                    /*const auto& s = ecs.GetComponent<Ermine::Script>(id);
-                    payload.AddMember(rapidjson::Value("class", a),
-                        rapidjson::Value(s.m_className.c_str(), a), a);*/
-                    // TODO: add more script state here if you later expose it
+
                     wrote = true;
                 }
             }

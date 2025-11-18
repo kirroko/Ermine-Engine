@@ -25,7 +25,13 @@ namespace ErmineEngine
             public Vector3 point;      // The impact point in world space where the ray hit the collider.
             public Vector3 normal;     // The normal of the surface the ray hit.
             public float distance;     // The distance from the ray's origin to the impact point.
-            public Collider collider;  // The collider that was hit.
+            //public Collider collider;  // The collider that was hit.
+            public Transform transform
+            {
+                [MethodImpl(MethodImplOptions.InternalCall)]
+                get;
+            }
+            private ulong EntityID;
         }
 
         public static bool Raycast(Vector3 origin, Vector3 direction, out RaycastHit hitInfo, float maxDistance)
@@ -48,5 +54,8 @@ namespace ErmineEngine
 
         [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern void MoveQuat(ulong entityID, Vector3 position, Quaternion rotation);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        private static extern Transform Internal_GetTransform();
     }
 }

@@ -1077,6 +1077,13 @@ namespace
 			m20, m21, m22, m23,
 			m30, m31, m32, m33;
 	};
+	struct ManagedRaycastHit
+	{
+		ManagedVector3 point; // impact point in world space where the ray hit the collider
+		ManagedVector3 normal; // the normal of the surface the ray hit
+		float distance; // the distance from the ray's origin to the impact point
+		uint64_t entityID; // the EntityID of the collider that was hit
+	};
 	ManagedVector3 ToManagedVec(const Ermine::Vec3& v) { return { v.x, v.y, v.z }; }
 	ManagedQuaternion ToManagedQuat(const Ermine::Quaternion& q) { return { q.x, q.y, q.z, q.w }; }
 	ManagedMatrix4x4 ToManagedMatrix4x4(const Ermine::Matrix4x4& m4x4) {
@@ -1085,6 +1092,7 @@ namespace
 					m4x4.m20, m4x4.m21, m4x4.m22, m4x4.m23,
 					m4x4.m30, m4x4.m31, m4x4.m32, m4x4.m33 };
 	}
+
 	Ermine::Vec3 ToNativeVec(const ManagedVector3& v) { return { v.x, v.y, v.z }; }
 	Ermine::Quaternion ToNativeQuat(const ManagedQuaternion& q) { return { q.x, q.y, q.z, q.w }; }
 	Ermine::Matrix4x4 ToNativeMatrix4x4(const ManagedMatrix4x4& m4x4) {
@@ -1877,26 +1885,79 @@ namespace
 #pragma endregion
 
 #pragma region Physics ICalls
-	mono_bool icall_physics_raycast(ManagedVector3 mOrigin, ManagedVector3 mDirection, Ermine::RaycastHit* hitInfo, float maxDistance)
+	using namespace Ermine;
+	mono_bool icall_physics_raycast(ManagedVector3 mOrigin, ManagedVector3 mDirection, ManagedRaycastHit* outHit, float maxDistance)
 	{
-		using namespace Ermine;
-		if (!ECS::GetInstance().GetSystem<Physics>())
-			return 0;
+		auto physicsSys = ECS::GetInstance().GetSystem<Physics>();
+		if (!physicsSys || !outHit)
+			return false;
 
 		const RVec3 rOrigin = RVec3{ mOrigin.x, mOrigin.y, mOrigin.z };
 		const RVec3 rDirection = RVec3{ mDirection.x, mDirection.y, mDirection.z };
-		RayCastResult hit{};
 
-		bool result = ECS::GetInstance().GetSystem<Physics>()->Raycast(rOrigin, rDirection, maxDistance, hit);
+		double lenSq = rDirection.GetX() * rDirection.GetX() + rDirection.GetY() * rDirection.GetY() + rDirection.GetZ() * rDirection.GetZ();
+		if (lenSq < 1e-12) return 0;
+		RVec3 dirNorm = rDirection / std::sqrt(lenSq);
 
-		if (result && hitInfo)
+		RayCastResult native_hit{};
+		if (!physicsSys->Raycast(rOrigin, rDirection, maxDistance, native_hit))
+			return false;
+
+		float distance = native_hit.mFraction * maxDistance;
+
+		RVec3 hitPoint = rOrigin + dirNorm * distance;
+
+		RVec3 normalWorld(0.0f, 1.0f, 0.0f);
 		{
-			EE_CORE_WARN("Not ready yet!");
+			JPH::BodyID bodyID = native_hit.mBodyID;
+			// Acquire read lock
+			auto& ps = physicsSys->GetBodyLockInterface(); // Ensure Physics exposes this
+			JPH::BodyLockRead lock(ps, bodyID);
+			if (lock.Succeeded())
+			{
+				const JPH::Body& body = lock.GetBody();
+				const JPH::Shape* shape = body.GetShape();
+				if (shape)
+				{
+					// World transform
+					JPH::RMat44 worldM = body.GetWorldTransform();
+
+					// Local point (COM based)
+					JPH::RVec3 worldTranslation = worldM.GetTranslation();
+					JPH::Vec3 localPos = JPH::Vec3(worldM.Inversed().Multiply3x3(hitPoint - worldTranslation));
+
+					// Query surface normal in local space using sub-shape ID hierarchy
+					JPH::Vec3 localNormal = shape->GetSurfaceNormal(native_hit.mSubShapeID2, localPos);
+					// Transform to world (rotation only)
+					normalWorld = worldM.Multiply3x3(localNormal);
+					Vector3D tempVec3Holder{};
+					Vec3Normalize(tempVec3Holder, { normalWorld.GetX(),normalWorld.GetY(),normalWorld.GetZ() });
+					/*normalWorld.Normalize();*/
+					normalWorld = {tempVec3Holder.x,tempVec3Holder.y,tempVec3Holder.z};
+				}
+			}
 		}
-		return result ? 1 : 0;
+
+		uint64_t entityID = physicsSys->GetEntityID(native_hit.mBodyID);
+
+		outHit->point = {.x = (hitPoint.GetX()), .y = (hitPoint.GetY()), .z = (hitPoint.GetZ()) };
+		outHit->normal = {.x = normalWorld.GetX(), .y = normalWorld.GetY(), .z = normalWorld.GetZ() };
+		outHit->distance = distance;
+		outHit->entityID = entityID;
+
+		return true;
 	}
 
-	using namespace Ermine;
+	MonoObject* icall_physics_gettransform(MonoObject* self)
+	{
+		EntityID id = GetEntityIDFromManaged(self);
+		if (id == 0 || !ECS::GetInstance().IsEntityValid(id) || !ECS::GetInstance().HasComponent<Transform>(id))
+			return nullptr;
+		MonoObject* obj = CreateManagedTransformWrapper(id);
+		SetComponentGameObject(obj, id);
+		return obj;
+	}
+
 	static void icall_Physics_SetPosition(uint64_t entityID, Ermine::Vec3 pos)
 	{
 		auto physics = ECS::GetInstance().GetSystem<Physics>();
@@ -2381,5 +2442,7 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	mono_add_internal_call("ErmineEngine.Physics::SetRotationQuat", (const void*)icall_Physics_SetRotationQuat);
 	mono_add_internal_call("ErmineEngine.Physics::MoveEuler", (const void*)icall_Physics_MoveEuler);
 	mono_add_internal_call("ErmineEngine.Physics::MoveQuat", (const void*)icall_Physics_MoveQuat);
+	mono_add_internal_call("ErmineEngine.Physics::Internal_Raycast", (const void*)icall_physics_raycast);
+	mono_add_internal_call("ErmineEngine.Phyiscs.RaycastHit::get_transform", (const void*)icall_gameobject_get_transform);
 #pragma endregion
 }

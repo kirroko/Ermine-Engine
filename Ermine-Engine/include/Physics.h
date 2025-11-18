@@ -143,6 +143,14 @@ namespace Ermine
 
 		/*!***********************************************************************
 		  \brief
+			Provides access to the Jolt BodyLockInterface for safe body access.
+		  \return
+			Reference to the const BodyLockInterface instance.
+		*************************************************************************/
+		const BodyLockInterface& GetBodyLockInterface() { return mPhysicsSystem.GetBodyLockInterface(); }
+
+		/*!***********************************************************************
+		  \brief
 			BodyManager DrawSettings setup for draw debug
 		*************************************************************************/
 		void DrawDebug();

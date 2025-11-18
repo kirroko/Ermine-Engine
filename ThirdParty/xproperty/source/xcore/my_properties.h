@@ -24,6 +24,8 @@
 #include "MathVector.h"     // Vec3
 #include "MathUtils.h"      // Quaternion (or your actual headers)
 
+#pragma warning(disable:4324) // disable padding warning
+
 //namespace Ermine { enum class MeshKind : int; }   // forward declare the enum
 
 // ------------------------------------------------------------------------------
