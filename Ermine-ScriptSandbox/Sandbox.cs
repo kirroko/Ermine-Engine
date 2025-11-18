@@ -22,7 +22,7 @@ public class Sandbox : MonoBehaviour
 
     void Update()
     {
-        //transform.Rotate(Vector3.up * (Time.deltaTime * speed));
+        transform.Rotate(MoveAxis * (Time.deltaTime * speed));
         //Debug.Log("Internal Quaternion: " + transform.rotation.ToString());
         //if (Input.GetKeyDown(KeyCode.A))
         //    transform.Translate(new Vector3(-1f,0,0) * Time.deltaTime);
