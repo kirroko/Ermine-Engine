@@ -415,7 +415,6 @@ namespace Ermine::graphics
         {
 			unsigned int FBO = 0;
 			unsigned int ColorTexture = 0;
-            unsigned int DepthTexture = 0;
 
 			int width = 0;
 			int height = 0;

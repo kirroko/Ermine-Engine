@@ -650,6 +650,7 @@ void Renderer::CreateGBuffer(const int& width, const int& height)
 	glMakeTextureHandleResidentARB(gBuffer.HandleDepthTexture);
 
 	m_GBuffer = std::make_shared<GBuffer>(gBuffer);
+
 	EE_CORE_INFO("Created G-Buffer: {0}x{1}, 176 bits per pixel", width, height);
 }
 
@@ -669,9 +670,6 @@ void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 	{
 		glDeleteFramebuffers(1, &m_PostProcessBuffer->FBO);
 		glDeleteTextures(1, &m_PostProcessBuffer->ColorTexture);
-		if (m_PostProcessBuffer->DepthTexture != 0) {
-			glDeleteTextures(1, &m_PostProcessBuffer->DepthTexture);
-		}
 		glDeleteFramebuffers(1, &m_BloomExtractBuffer->FBO);
 		glDeleteTextures(1, &m_BloomExtractBuffer->ColorTexture);
 		glDeleteFramebuffers(1, &m_BloomBlurBuffer1->FBO);
@@ -694,16 +692,9 @@ void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pPBuffer.ColorTexture, 0);
 
-	// Depth texture for skybox rendering
-	glGenTextures(1, &pPBuffer.DepthTexture);
-	glBindTexture(GL_TEXTURE_2D, pPBuffer.DepthTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_NONE);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, pPBuffer.DepthTexture, 0);
+	// Share G-Buffer's depth texture instead of creating a separate one
+	// The depth attachment will be added after G-Buffer creation
+	// Note: We don't create a depth texture here - we'll attach the G-Buffer's depth texture later
 
 	glCheckError();
 
@@ -718,7 +709,6 @@ void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, bEBuffer.ColorTexture, 0);
-	bEBuffer.DepthTexture = 0; // No depth for bloom buffers
 	glCheckError();
 
 	glGenFramebuffers(1, &bBBuffer1.FBO);
@@ -731,7 +721,6 @@ void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, bBBuffer1.ColorTexture, 0);
-	bBBuffer1.DepthTexture = 0;
 	glCheckError();
 
 	glGenFramebuffers(1, &bBBuffer2.FBO);
@@ -744,7 +733,6 @@ void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, bBBuffer2.ColorTexture, 0);
-	bBBuffer2.DepthTexture = 0;
 	glCheckError();
 
 	glGenFramebuffers(1, &AABuffer.FBO);
@@ -757,7 +745,6 @@ void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, AABuffer.ColorTexture, 0);
-	AABuffer.DepthTexture = 0;
 	glCheckError();
 
 	// Making sure dimensions are non-zero
@@ -823,6 +810,27 @@ void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 	AABuffer.width = width;
 	AABuffer.height = height;
 	m_AntiAliasingBuffer = std::make_shared<PostProcessBuffer>(AABuffer);
+
+	// Attach G-Buffer's depth texture to PostProcess FBO for shared depth testing
+	// This must happen AFTER PostProcess buffer is created and AFTER G-Buffer exists
+	if (m_PostProcessBuffer && m_GBuffer)
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, m_PostProcessBuffer->FBO);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_GBuffer->DepthTexture, 0);
+
+		GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+		if (status != GL_FRAMEBUFFER_COMPLETE)
+		{
+			EE_CORE_ERROR("ERROR: PostProcess framebuffer not complete after depth attachment!");
+			EE_CORE_ERROR("Status: {0}, G-Buffer DepthTexture: {1}, PostProcess FBO: {2}",
+				status, m_GBuffer->DepthTexture, m_PostProcessBuffer->FBO);
+		}
+		else
+		{
+			EE_CORE_INFO("Successfully attached G-Buffer depth texture to PostProcess FBO");
+		}
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	}
 }
 
 /**
@@ -3209,9 +3217,13 @@ void Renderer::RenderPostProcessPass()
 	glBindTexture(GL_TEXTURE_2D, m_BloomBlurBuffer2->ColorTexture);
 	m_PostProcessShader->SetUniform1i("u_BloomTexture", 1);
 
-	glActiveTexture(GL_TEXTURE2);
-	glBindTexture(GL_TEXTURE_2D, m_PostProcessBuffer->DepthTexture);
-	m_PostProcessShader->SetUniform1i("u_SceneDepth", 2);
+	// Pass bindless depth texture handle
+	GLint locDepth = glGetUniformLocation(m_PostProcessShader->GetRendererID(), "u_GBufferDepthHandle");
+	if (locDepth != -1 && m_GBuffer)
+	{
+		glUniform2ui(locDepth, static_cast<GLuint>(m_GBuffer->HandleDepthTexture),
+			static_cast<GLuint>(m_GBuffer->HandleDepthTexture >> 32));
+	}
 
 	// Set post-processing toggle parameters
 	m_PostProcessShader->SetUniform1i("u_Vignette", m_VignetteEnabled ? 1 : 0);
@@ -3294,18 +3306,10 @@ void Renderer::RenderDeferredPipeline(const Mtx44& view, const Mtx44& projection
 	RenderLightingPass(view, projection);
 
 	// Render skybox after lighting but before transparent objects
+	// No depth blit needed - PostProcess FBO shares G-Buffer's depth texture
 	if (m_skybox && m_skybox->IsValid() && m_PostProcessBuffer && m_GBuffer) {
 		glBindFramebuffer(GL_FRAMEBUFFER, m_PostProcessBuffer->FBO);
 		glViewport(0, 0, m_PostProcessBuffer->width, m_PostProcessBuffer->height);
-
-		// Copy depth buffer from g-buffer to post-process buffer
-		glBindFramebuffer(GL_READ_FRAMEBUFFER, m_GBuffer->FBO);
-		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_PostProcessBuffer->FBO);
-		glBlitFramebuffer(0, 0, m_GBuffer->width, m_GBuffer->height,
-			0, 0, m_PostProcessBuffer->width, m_PostProcessBuffer->height,
-			GL_DEPTH_BUFFER_BIT, GL_NEAREST);
-
-		glBindFramebuffer(GL_FRAMEBUFFER, m_PostProcessBuffer->FBO);
 
 		// Enable depth testing but render only where depth = 1.0 (background)
 		glEnable(GL_DEPTH_TEST);
@@ -3320,21 +3324,13 @@ void Renderer::RenderDeferredPipeline(const Mtx44& view, const Mtx44& projection
 		glDepthFunc(GL_LESS);
 	}
 	else if (m_PostProcessBuffer && m_GBuffer) {
-		// No skybox, but still need to copy depth buffer for opaque custom shaders
-		glBindFramebuffer(GL_READ_FRAMEBUFFER, m_GBuffer->FBO);
-		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_PostProcessBuffer->FBO);
-		glBlitFramebuffer(0, 0, m_GBuffer->width, m_GBuffer->height,
-			0, 0, m_PostProcessBuffer->width, m_PostProcessBuffer->height,
-			GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+		// No skybox, but set up framebuffer and depth state for forward pass
 		glBindFramebuffer(GL_FRAMEBUFFER, m_PostProcessBuffer->FBO);
 
 		// Set up depth state for subsequent opaque custom shader pass
-		// (matches what skybox path does after rendering)
 		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_LEQUAL);
 		glDepthMask(GL_FALSE);
-
-		EE_CORE_INFO("Copied depth buffer from G-Buffer to PostProcess buffer (no skybox)");
 	}
 
 	// FORWARD PASS - render all custom shaders (opaque + transparent) and transparent standard
@@ -3511,11 +3507,7 @@ void Renderer::CleanupPostProcessBuffer()
 			glDeleteTextures(1, &m_PostProcessBuffer->ColorTexture);
 			m_PostProcessBuffer->ColorTexture = 0;
 		}
-		if (m_PostProcessBuffer->DepthTexture != 0)
-		{
-			glDeleteTextures(1, &m_PostProcessBuffer->DepthTexture);
-			m_PostProcessBuffer->DepthTexture = 0;
-		}
+		// Note: Depth texture is shared with G-Buffer, don't delete it here
 		m_PostProcessBuffer.reset();
 	}
 
@@ -3578,11 +3570,6 @@ void Renderer::CleanupPostProcessBuffer()
 		{
 			glDeleteTextures(1, &m_AntiAliasingBuffer->ColorTexture);
 			m_AntiAliasingBuffer->ColorTexture = 0;
-		}
-		if (m_AntiAliasingBuffer->DepthTexture != 0)
-		{
-			glDeleteTextures(1, &m_AntiAliasingBuffer->DepthTexture);
-			m_AntiAliasingBuffer->DepthTexture = 0;
 		}
 		m_AntiAliasingBuffer.reset();
 	}
