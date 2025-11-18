@@ -59,6 +59,7 @@ namespace Ermine
         void RenderAudioTester();
         void SetStatusMessage(const std::string& message, float duration = 3.0f);
         void UpdateStatus();
+        void ScanForExistingGlobalAudio();
 
         // Helper functions
         std::vector<EntityID> GetEntitiesWithAudioComponent();

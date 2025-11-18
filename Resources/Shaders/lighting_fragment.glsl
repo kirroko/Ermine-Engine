@@ -33,6 +33,14 @@ uniform float u_SSAOIntensity = 1.0;
 uniform float u_SSAOFadeout = 0.1;
 uniform float u_SSAOMaxDistance = 100.0;
 
+// Fog Parameters
+uniform int u_FogEnabled = 0;           // 0 = disabled, 1 = enabled
+uniform int u_FogMode = 0;              // 0 = linear, 1 = exponential, 2 = exponential squared
+uniform vec3 u_FogColor = vec3(0.5, 0.6, 0.7);
+uniform float u_FogDensity = 0.02;      // For exponential fog
+uniform float u_FogStart = 50.0;        // For linear fog
+uniform float u_FogEnd = 200.0;         // For linear fog
+
 // Light structure
 struct Light {
     vec4 position_type;    // xyz = position (view space), w = light type
@@ -458,6 +466,31 @@ float calculateShadowFactor(mat4 lightSpaceMatrix, int lightIndex, vec3 fragPosW
     return 1.0 - shadow;
 }
 
+// Calculate fog factor based on distance (0.0 = full fog, 1.0 = no fog)
+float calculateFogFactor(float distance) {
+    if (u_FogEnabled == 0) {
+        return 1.0; // No fog
+    }
+
+    float fogFactor = 1.0;
+
+    if (u_FogMode == 0) {
+        // Linear fog
+        fogFactor = (u_FogEnd - distance) / (u_FogEnd - u_FogStart);
+    }
+    else if (u_FogMode == 1) {
+        // Exponential fog
+        fogFactor = exp(-u_FogDensity * distance);
+    }
+    else if (u_FogMode == 2) {
+        // Exponential squared fog (more realistic)
+        float exponent = u_FogDensity * distance;
+        fogFactor = exp(-exponent * exponent);
+    }
+
+    return clamp(fogFactor, 0.0, 1.0);
+}
+
 void main()
 {    
     // Sample depth
@@ -648,6 +681,13 @@ void main()
 
         // Emissive
         result += emissive * emissiveIntensity;
+    }
+
+    // Apply distance-based fog
+    if (u_FogEnabled != 0) {
+        float fogDistance = length(fragPosView);
+        float fogFactor = calculateFogFactor(fogDistance);
+        result = mix(u_FogColor, result, fogFactor);
     }
 
     FragColor = vec4(result, 1.0);

@@ -863,6 +863,7 @@ namespace
 	MonoClass* s_TransformClass = nullptr;
 	MonoClass* s_MonoBehaviourClass = nullptr;
 	MonoClass* s_ComponentClass = nullptr;
+	MonoClass* s_AudioComponentClass = nullptr;
 	MonoClass* s_SerializeFieldAttr = nullptr;
 
 	// Discover field for a script instance
@@ -1411,6 +1412,161 @@ namespace
 	}
 #pragma endregion
 
+#pragma region GlobalAudio ICalls
+	void icall_globalaudio_play_sfx(MonoString* name)
+	{
+		using namespace Ermine;
+		std::string sfxName;
+		ToTempUTF8(name, sfxName);
+
+		// Find GlobalAudioComponent entity
+		auto& ecs = ECS::GetInstance();
+		for (EntityID entity = 1; entity <= MAX_ENTITIES; ++entity)
+		{
+			if (ecs.IsEntityValid(entity) && ecs.HasComponent<GlobalAudioComponent>(entity))
+			{
+				auto& globalAudio = ecs.GetComponent<GlobalAudioComponent>(entity);
+				globalAudio.PlaySFX(sfxName);
+				return;
+			}
+		}
+		EE_CORE_WARN("GlobalAudio: No GlobalAudioComponent found in scene");
+	}
+
+	void icall_globalaudio_play_music(MonoString* name)
+	{
+		using namespace Ermine;
+		std::string musicName;
+		ToTempUTF8(name, musicName);
+
+		auto& ecs = ECS::GetInstance();
+		for (EntityID entity = 1; entity <= MAX_ENTITIES; ++entity)
+		{
+			if (ecs.IsEntityValid(entity) && ecs.HasComponent<GlobalAudioComponent>(entity))
+			{
+				auto& globalAudio = ecs.GetComponent<GlobalAudioComponent>(entity);
+				int index = globalAudio.GetMusicIndex(musicName);
+				if (index >= 0)
+					globalAudio.PlayMusic(index);
+				return;
+			}
+		}
+	}
+
+	void icall_globalaudio_set_music_volume(float volume)
+	{
+		using namespace Ermine;
+		auto& ecs = ECS::GetInstance();
+		for (EntityID entity = 1; entity <= MAX_ENTITIES; ++entity)
+		{
+			if (ecs.IsEntityValid(entity) && ecs.HasComponent<GlobalAudioComponent>(entity))
+			{
+				auto& globalAudio = ecs.GetComponent<GlobalAudioComponent>(entity);
+				globalAudio.SetMusicVolume(volume);
+				return;
+			}
+		}
+	}
+
+	void icall_globalaudio_set_sfx_volume(float volume)
+	{
+		using namespace Ermine;
+		auto& ecs = ECS::GetInstance();
+		for (EntityID entity = 1; entity <= MAX_ENTITIES; ++entity)
+		{
+			if (ecs.IsEntityValid(entity) && ecs.HasComponent<GlobalAudioComponent>(entity))
+			{
+				auto& globalAudio = ecs.GetComponent<GlobalAudioComponent>(entity);
+				globalAudio.SetSFXVolume(volume);
+				return;
+			}
+		}
+	}
+#pragma endregion
+
+#pragma region AudioComponent ICalls
+	Ermine::AudioComponent* GetAudioComponentFromManaged(MonoObject* thisObj)
+	{
+		using namespace Ermine;
+		EntityID id = GetEntityIDFromManaged(thisObj);
+		if (id == 0 || !ECS::GetInstance().IsEntityValid(id) || !ECS::GetInstance().HasComponent<AudioComponent>(id))
+		{
+			EE_CORE_WARN("Cannot get AudioComponent for {0}; either not valid or doesn't have AudioComponent!", id);
+			return nullptr;
+		}
+		return &ECS::GetInstance().GetComponent<AudioComponent>(id);
+	}
+
+	mono_bool icall_audiocomponent_get_shouldplay(MonoObject* thisObj)
+	{
+		if (auto* ac = GetAudioComponentFromManaged(thisObj))
+			return ac->shouldPlay ? 1 : 0;
+		return 0;
+	}
+
+	void icall_audiocomponent_set_shouldplay(MonoObject* thisObj, mono_bool value)
+	{
+		if (auto* ac = GetAudioComponentFromManaged(thisObj))
+			ac->shouldPlay = (value != 0);
+	}
+
+	mono_bool icall_audiocomponent_get_shouldstop(MonoObject* thisObj)
+	{
+		if (auto* ac = GetAudioComponentFromManaged(thisObj))
+			return ac->shouldStop ? 1 : 0;
+		return 0;
+	}
+
+	void icall_audiocomponent_set_shouldstop(MonoObject* thisObj, mono_bool value)
+	{
+		if (auto* ac = GetAudioComponentFromManaged(thisObj))
+			ac->shouldStop = (value != 0);
+	}
+
+	mono_bool icall_audiocomponent_get_isplaying(MonoObject* thisObj)
+	{
+		if (auto* ac = GetAudioComponentFromManaged(thisObj))
+			return ac->isPlaying ? 1 : 0;
+		return 0;
+	}
+
+	void icall_audiocomponent_set_isplaying(MonoObject* thisObj, mono_bool value)
+	{
+		if (auto* ac = GetAudioComponentFromManaged(thisObj))
+			ac->isPlaying = (value != 0);
+	}
+
+	float icall_audiocomponent_get_volume(MonoObject* thisObj)
+	{
+		if (auto* ac = GetAudioComponentFromManaged(thisObj))
+			return ac->volume;
+		return 1.0f;
+	}
+
+	void icall_audiocomponent_set_volume(MonoObject* thisObj, float value)
+	{
+		if (auto* ac = GetAudioComponentFromManaged(thisObj))
+			ac->volume = value;
+	}
+
+	MonoString* icall_audiocomponent_get_soundname(MonoObject* thisObj)
+	{
+		if (auto* ac = GetAudioComponentFromManaged(thisObj))
+			return mono_string_new(mono_domain_get(), ac->soundName.c_str());
+		return mono_string_new(mono_domain_get(), "");
+	}
+
+	void icall_audiocomponent_set_soundname(MonoObject* thisObj, MonoString* value)
+	{
+		if (auto* ac = GetAudioComponentFromManaged(thisObj))
+		{
+			std::string temp;
+			ToTempUTF8(value, temp);
+			ac->soundName = std::move(temp);
+		}
+	}
+#pragma endregion
+
 #pragma region GameObject ICalls
 	MonoObject* icall_gameobject_wrap_existing(uint64_t entityID)
 	{
@@ -1565,6 +1721,19 @@ namespace
 			if (!ECS::GetInstance().HasComponent<Transform>(id))
 				return nullptr;
 			MonoObject* obj = CreateManagedTransformWrapper(id);
+			SetComponentGameObject(obj, id);
+			return obj;
+		}
+
+		// ADD THIS: Handle AudioComponent
+		if (klass == s_AudioComponentClass)
+		{
+			if (!ECS::GetInstance().HasComponent<AudioComponent>(id))
+				return nullptr;
+
+			MonoObject* obj = mono_object_new(mono_domain_get(), s_AudioComponentClass);
+			mono_runtime_object_init(obj);
+			SetEntityIDOnManaged(obj, id);
 			SetComponentGameObject(obj, id);
 			return obj;
 		}
@@ -2066,6 +2235,7 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	s_TransformClass = GetAPIClass("ErmineEngine", "Transform");
 	s_ComponentClass = GetAPIClass("ErmineEngine", "Component");
 	s_MonoBehaviourClass = GetAPIClass("ErmineEngine", "MonoBehaviour");
+	s_AudioComponentClass = GetAPIClass("ErmineEngine", "AudioComponent");
 	s_SerializeFieldAttr = mono_class_from_name(s_APIImage, "ErmineEngine", "SerializeFieldAttribute");
 	if (!s_SerializeFieldAttr)
 		s_SerializeFieldAttr = mono_class_from_name(s_APIImage, "ErmineEngine", "SerializeField");
@@ -2098,6 +2268,26 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 
 	mono_add_internal_call("ErmineEngine.Input::get_mousePosition", (const void*)icall_input_get_mouseposition);
 	mono_add_internal_call("ErmineEngine.Input::get_mousePositionDelta", (const void*)icall_input_get_mousepositiondelta);
+#pragma endregion
+
+#pragma region GlobalAudio ICalls
+	mono_add_internal_call("ErmineEngine.GlobalAudio::PlaySFX", (const void*)icall_globalaudio_play_sfx);
+	mono_add_internal_call("ErmineEngine.GlobalAudio::PlayMusic", (const void*)icall_globalaudio_play_music);
+	mono_add_internal_call("ErmineEngine.GlobalAudio::SetMusicVolume", (const void*)icall_globalaudio_set_music_volume);
+	mono_add_internal_call("ErmineEngine.GlobalAudio::SetSFXVolume", (const void*)icall_globalaudio_set_sfx_volume);
+#pragma endregion
+
+#pragma region AudioComponent ICalls
+	mono_add_internal_call("ErmineEngine.AudioComponent::get_shouldPlay", (const void*)icall_audiocomponent_get_shouldplay);
+	mono_add_internal_call("ErmineEngine.AudioComponent::set_shouldPlay", (const void*)icall_audiocomponent_set_shouldplay);
+	mono_add_internal_call("ErmineEngine.AudioComponent::get_shouldStop", (const void*)icall_audiocomponent_get_shouldstop);
+	mono_add_internal_call("ErmineEngine.AudioComponent::set_shouldStop", (const void*)icall_audiocomponent_set_shouldstop);
+	mono_add_internal_call("ErmineEngine.AudioComponent::get_isPlaying", (const void*)icall_audiocomponent_get_isplaying);
+	mono_add_internal_call("ErmineEngine.AudioComponent::set_isPlaying", (const void*)icall_audiocomponent_set_isplaying);
+	mono_add_internal_call("ErmineEngine.AudioComponent::get_volume", (const void*)icall_audiocomponent_get_volume);
+	mono_add_internal_call("ErmineEngine.AudioComponent::set_volume", (const void*)icall_audiocomponent_set_volume);
+	mono_add_internal_call("ErmineEngine.AudioComponent::get_soundName", (const void*)icall_audiocomponent_get_soundname);
+	mono_add_internal_call("ErmineEngine.AudioComponent::set_soundName", (const void*)icall_audiocomponent_set_soundname);
 #pragma endregion
 
 #pragma region Debug ICalls

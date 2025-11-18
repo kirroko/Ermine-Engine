@@ -177,6 +177,9 @@ namespace Ermine {
             const std::string& outputPath,
             const TextureImportSettings& settings);
 
+        // Determine optimal compression format based on filename
+        DXGI_FORMAT DetermineOptimalFormat(const std::string& filename);
+
         // Assimp mesh conversion helpers
         bool LoadAssimpScene(const std::string& filePath,
             const aiScene*& outScene,

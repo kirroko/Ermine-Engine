@@ -2181,9 +2181,9 @@
         },
         "GlobalAudioComponent": {
           "masterVolume": 1.0,
-          "musicVolume": 0.3529999852180481,
-          "sfxVolume": 0.800000011920929,
-          "ambienceVolume": 0.20399999618530274,
+          "musicVolume": 0.0860000029206276,
+          "sfxVolume": 0.14800000190734864,
+          "ambienceVolume": 0.052000001072883609,
           "autoPlay": true,
           "music": [
             {
@@ -2192,7 +2192,18 @@
               "volume": 1.0
             }
           ],
-          "sfx": [],
+          "sfx": [
+            {
+              "name": "Shoot",
+              "path": "../Resources/Audio/Shoot_Orb.wav",
+              "volume": 1.0
+            },
+            {
+              "name": "Teleport",
+              "path": "../Resources/Audio/Teleport.wav",
+              "volume": 1.0
+            }
+          ],
           "ambience": [
             {
               "name": "Steampunk",
@@ -3743,6 +3754,26 @@
           "tag": "Model",
           "selfActive": true
         },
+        "AudioComponent": {
+          "soundName": "",
+          "eventName": "",
+          "useRandomVariation": true,
+          "is3D": false,
+          "isLooping": false,
+          "isStreaming": false,
+          "volume": 1.0,
+          "followTransform": false,
+          "minDistance": 1.0,
+          "maxDistance": 100.0,
+          "soundVariations": [
+            "../Resources/Audio/1.wav",
+            "../Resources/Audio/2.wav",
+            "../Resources/Audio/3.wav",
+            "../Resources/Audio/4.wav",
+            "../Resources/Audio/5.wav",
+            "../Resources/Audio/6.wav"
+          ]
+        },
         "Mesh": {
           "kind": "None"
         },
@@ -3914,11 +3945,7 @@
         "HierarchyComponent": {
           "depth": 0
         },
-        "GlobalTransform": {},
-        "LightConeComponent": {
-          "groundY": -5.0,
-          "coneAngleDegrees": 45.0
-        }
+        "GlobalTransform": {}
       }
     },
     {

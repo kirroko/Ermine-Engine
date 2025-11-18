@@ -903,9 +903,27 @@ namespace Ermine
 					// Match enabled state so OnEnable is invoked appropriately
 					s.m_instance->SetEnabled(s.m_enabled);
 					s.m_started = false;
+					if(s.m_fields.size() > 0)
+						scripting::ScriptEngine::PushCacheToManagedFields(s.m_instance->object, s.m_fields);
 				}
 			}
 		}
+		
+		//void AttachAll(EntityID id, const std::unordered_map<std::string, ScriptFieldValue>& cache)
+		//{
+		//	for (auto& s : scripts)
+		//	{
+		//		if (!s.m_instance)
+		//		{
+		//			auto sc = std::make_unique<scripting::ScriptClass>(scripting::ScriptClass("", s.m_className));
+		//			s.m_instance = std::make_unique<scripting::ScriptInstance>(std::move(sc), id);
+		//			// Match enabled state so OnEnable is invoked appropriately
+		//			s.m_instance->SetEnabled(s.m_enabled);
+		//			s.m_started = false;
+		//			scripting::ScriptEngine::PushCacheToManagedFields(s.m_instance->object, cache);
+		//		}
+		//	}
+		//}
 
 		// Add a new script by class name (instantiates immediately for the given entity)
 		void Add(const std::string& className, EntityID id, bool enabled = true)
@@ -973,7 +991,7 @@ namespace Ermine
 				if (!v.IsObject()) continue;
 				Script s;
 				s.Deserialize(v);
-				// Do not create ScriptInstance here (no EntityID yet) — ScriptSystem should call AttachAll
+				// Do not create ScriptInstance here (no EntityID yet) - ScriptSystem should call AttachAll
 				scripts.emplace_back(std::move(s));
 			}
 		}
@@ -1165,6 +1183,8 @@ namespace Ermine
 		bool hasMetal = false;   float cacheMetallic = 0.0f;
 		bool hasEmiss = false;   Vec3  cacheEmissive{ 0,0,0 };
 		float cacheEmissiveIntensity = 1.0f;
+		std::string customFragmentShader = "";   // Custom fragment shader path (empty = use standard PBR)
+		bool cacheCastsShadows = true;           // Whether this material casts shadows
 
 		//// Cached texture paths (only what we set by path)
 		//bool hasAlbedoMapPath = false;   std::string albedoMapPath;

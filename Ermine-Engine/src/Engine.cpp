@@ -320,7 +320,7 @@ bool engine::Init(GLFWwindow* windowContext)
 		});
 
 	// Create graphics resources
-	auto shader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/vertex.glsl", "../Resources/Shaders/fragment.glsl");
+	auto shader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/gBuffer_vertex.glsl", "../Resources/Shaders/gBuffer_fragment.glsl");
 	auto texture = AssetManager::GetInstance().LoadTexture("../Resources/Textures/greybox_light_grid.png");
 
 	// Load skybox shader and create a simple test cubemap
