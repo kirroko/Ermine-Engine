@@ -1,7 +1,7 @@
 /* Start Header ************************************************************************/
 /*!
 \file       MenuController.cs
-\author     Claude Code
+\author     Edwin Lee Zirui, edwinzirui.lee, 2301299, edwinzirui.lee@digipen.edu
 \date       11/2025
 \brief      Scene-based main menu controller that handles menu input and transitions.
             This replaces the ImGui-based MainMenuGUI with a proper scene approach.

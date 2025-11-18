@@ -572,6 +572,5 @@
     <None Include="include\Systems.tpp">
       <Filter>include</Filter>
     </None>
-    <None Include="MAIN_MENU_SETUP.md" />
   </ItemGroup>
 </Project>

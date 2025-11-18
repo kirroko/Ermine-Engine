@@ -41,8 +41,9 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <optional>
 #include "SceneManager.h"
 #include <imnodes.h>
-#include "MainMenuGUI.h"
-#include "CutsceneGUI.h"
+// Legacy ImGui menu windows removed - replaced with scene-based UI:
+// #include "MainMenuGUI.h"
+// #include "CutsceneGUI.h"
 
 namespace Ermine
 {
@@ -398,34 +399,10 @@ void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
             EE_CORE_INFO("Console open");
         }
 
-        // Toggle Main Menu GUI
-        auto* mainMenuGUI = GetWindow<editor::MainMenuGUI>();
-        if (mainMenuGUI)
-        {
-            bool isActive = mainMenuGUI->IsActive();
-            if (ImGui::MenuItem("Main Menu Preview", nullptr, &isActive))
-            {
-                mainMenuGUI->SetActive(isActive);
-            }
-        }
-
-        // Toggle Cutscene GUI
-        auto* cutsceneGUI = GetWindow<editor::CutsceneGUI>();
-        if (cutsceneGUI)
-        {
-            bool isActive = cutsceneGUI->IsActive();
-            if (ImGui::MenuItem("Cutscene Preview", nullptr, &isActive))
-            {
-                if (isActive)
-                {
-                    cutsceneGUI->StartSlideshow();
-                }
-                else
-                {
-                    cutsceneGUI->StopSlideshow();
-                }
-            }
-        }
+        // Legacy ImGui menu previews removed - use scene-based approach instead:
+        // - Open mainmenu.scene or cutscene_intro.scene in viewport
+        // - Edit UI entities (MenuBackground, GameTitle, Slide1/2/3) with Inspector
+        // - MenuController and CutscenePlayer scripts handle logic
 
         ImGui::EndMenu();
     }

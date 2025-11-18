@@ -52,6 +52,70 @@
       "id": 3,
       "components": {
         "ObjectMetaData": {
+          "name": "MenuBackground",
+          "tag": "UI",
+          "selfActive": true
+        },
+        "Transform": {
+          "position": [0.0, 0.0, 0.0],
+          "rotation": [0.0, 0.0, 0.0, 1.0],
+          "scale": [1.0, 1.0, 1.0]
+        },
+        "UIImageComponent": {
+          "imagePath": "../Resources/Textures/UI/image.png",
+          "fullscreen": true,
+          "position": [0.5, 0.5, 0.0],
+          "width": 1.0,
+          "height": 1.0,
+          "tintColor": [1.0, 1.0, 1.0],
+          "alpha": 1.0,
+          "maintainAspectRatio": true,
+          "caption": "",
+          "showCaption": false,
+          "captionColor": [1.0, 1.0, 1.0],
+          "captionFontSize": 24.0,
+          "captionPosition": [0.5, 0.1, 0.0]
+        },
+        "HierarchyComponent": {},
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 4,
+      "components": {
+        "ObjectMetaData": {
+          "name": "GameTitle",
+          "tag": "UI",
+          "selfActive": true
+        },
+        "Transform": {
+          "position": [0.0, 0.0, 0.0],
+          "rotation": [0.0, 0.0, 0.0, 1.0],
+          "scale": [1.0, 1.0, 1.0]
+        },
+        "UIImageComponent": {
+          "imagePath": "",
+          "fullscreen": false,
+          "position": [0.5, 0.2, 0.0],
+          "width": 0.8,
+          "height": 0.15,
+          "tintColor": [1.0, 1.0, 1.0],
+          "alpha": 1.0,
+          "maintainAspectRatio": false,
+          "caption": "ERMINE ENGINE",
+          "showCaption": true,
+          "captionColor": [1.0, 0.8, 0.2],
+          "captionFontSize": 72.0,
+          "captionPosition": [0.5, 0.2, 0.0]
+        },
+        "HierarchyComponent": {},
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 5,
+      "components": {
+        "ObjectMetaData": {
           "name": "MenuInstructions",
           "tag": "UI",
           "selfActive": true

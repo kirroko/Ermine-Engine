@@ -201,27 +201,26 @@ namespace Ermine
 
             const auto& imageComp = ecs.GetComponent<UIImageComponent>(entity);
 
-            // Skip if no image path specified
-            if (imageComp.imagePath.empty())
-                continue;
-
-            // Load texture (with caching)
+            // Load texture if image path is specified
             std::shared_ptr<graphics::Texture> texture;
-            auto it = m_textureCache.find(imageComp.imagePath);
-            if (it != m_textureCache.end())
+            if (!imageComp.imagePath.empty())
             {
-                texture = it->second;
-            }
-            else
-            {
-                texture = AssetManager::GetInstance().LoadTexture(imageComp.imagePath);
-                if (texture && texture->IsValid())
+                auto it = m_textureCache.find(imageComp.imagePath);
+                if (it != m_textureCache.end())
                 {
-                    m_textureCache[imageComp.imagePath] = texture;
+                    texture = it->second;
+                }
+                else
+                {
+                    texture = AssetManager::GetInstance().LoadTexture(imageComp.imagePath);
+                    if (texture && texture->IsValid())
+                    {
+                        m_textureCache[imageComp.imagePath] = texture;
+                    }
                 }
             }
 
-            // Render the image
+            // Render the image (if texture exists)
             if (texture && texture->IsValid())
             {
                 if (imageComp.fullscreen)
@@ -241,21 +240,29 @@ namespace Ermine
                         imageComp.alpha
                     );
                 }
+            }
 
-                // Render caption if enabled
-                if (imageComp.showCaption && !imageComp.caption.empty() && m_textRenderer)
+            // Render caption (even if no image - supports text-only UI elements)
+            if (imageComp.showCaption && !imageComp.caption.empty() && m_textRenderer)
+            {
+                float textScale = imageComp.captionFontSize / 24.0f; // Normalize to default font size
+
+                // Use component alpha, or full opacity if no image and alpha is 0
+                float textAlpha = imageComp.alpha;
+                if (imageComp.imagePath.empty() && imageComp.alpha == 0.0f)
                 {
-                    float textScale = imageComp.captionFontSize / 24.0f; // Normalize to default font size
-                    m_textRenderer->RenderText(
-                        m_uiShader,
-                        imageComp.caption,
-                        imageComp.captionPosition.x,
-                        imageComp.captionPosition.y,
-                        textScale,
-                        imageComp.captionColor,
-                        imageComp.alpha  // Use same alpha as image
-                    );
+                    textAlpha = 1.0f; // Text-only elements should be visible by default
                 }
+
+                m_textRenderer->RenderText(
+                    m_uiShader,
+                    imageComp.caption,
+                    imageComp.captionPosition.x,
+                    imageComp.captionPosition.y,
+                    textScale,
+                    imageComp.captionColor,
+                    textAlpha
+                );
             }
         }
 

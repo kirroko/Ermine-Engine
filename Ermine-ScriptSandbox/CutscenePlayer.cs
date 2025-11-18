@@ -1,7 +1,7 @@
 /* Start Header ************************************************************************/
 /*!
 \file       CutscenePlayer.cs
-\author     Claude Code
+\author     Edwin Lee Zirui, edwinzirui.lee, 2301299, edwinzirui.lee@digipen.edu
 \date       11/2025
 \brief      Scene-based cutscene player that manages slideshow playback and transitions.
             This replaces the ImGui-based CutsceneGUI with a proper scene approach.
@@ -83,12 +83,19 @@ public class CutscenePlayer : MonoBehaviour
 
     void ShowSlide(int index)
     {
-        // Hide all slides
+        // Hide all slides by deactivating their GameObjects
         for (int i = 0; i < slideEntityNames.Length; i++)
         {
-            // TODO: Find entity by name and enable/disable it
-            // Entity slideEntity = FindEntityByName(slideEntityNames[i]);
-            // slideEntity.SetActive(i == index);
+            // Find GameObject by name and enable/disable it
+            GameObject slideObject = GameObject.Find(slideEntityNames[i]);
+            if (slideObject != null)
+            {
+                slideObject.SetActive(i == index);
+            }
+            else
+            {
+                Debug.Log($"Warning: Could not find slide entity '{slideEntityNames[i]}'");
+            }
         }
 
         Debug.Log($"Showing slide {index + 1}/{slideEntityNames.Length}");

@@ -56,8 +56,9 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "FSMEditor.h"
 #include "AnimationGUI.h"
 #include "ResourcePipe.h"
-#include "MainMenuGUI.h"
-#include "CutsceneGUI.h"
+// Legacy ImGui menu windows removed - replaced with scene-based UI:
+// #include "MainMenuGUI.h"
+// #include "CutsceneGUI.h"
 #endif
 
 using namespace Ermine;
@@ -548,22 +549,15 @@ bool engine::Init(GLFWwindow* windowContext)
 	editor::EditorGUI::CreateImGUIWindow<AnimationEditorImGUI>();
 	editor::EditorGUI::CreateImGUIWindow<ConsoleGUI>();
 	editor::EditorGUI::CreateImGUIWindow<ImguiUI::AssetBrowser>(); //TODO: Standardize please, do we want namespace ImGui for all window or not
-	editor::EditorGUI::CreateImGUIWindow<editor::MainMenuGUI>(); // Hidden by default - toggle via Windows > Main Menu Preview
 
-	// Create and configure cutscene with story captions
-	auto* cutsceneGUI = editor::EditorGUI::CreateImGUIWindow<editor::CutsceneGUI>();
-	std::vector<std::string> cutsceneImages = {
-		"../Resources/Textures/UI/cutscene1.png",
-		"../Resources/Textures/UI/cutscene2.png",
-		"../Resources/Textures/UI/cutscene3.png"
-	};
-	std::vector<std::string> cutsceneCaptions = {
-		"Creation & Betrayal: Scientist invents glowing energy machine; shady boss takes over.",
-		"Horror Factory: Scientist, now a prisoner, sees his invention used to torture people in a vast, dark factory.",
-		"Revenge Awakens: Scientist grabs his old glowing syringe, eyes burning with determination, ready to fight back."
-	};
-	cutsceneGUI->LoadSlideshow(cutsceneImages, cutsceneCaptions, 5.0f); // 5 seconds per slide
-	cutsceneGUI->SetNextScene("../Resources/Scenes/level.scene"); // Load game level after cutscene
+	// Legacy ImGui menu windows removed - replaced with scene-based UI:
+	// - Main menu: Open Resources/Scenes/mainmenu.scene, edit MenuBackground/GameTitle entities
+	// - Cutscene: Open Resources/Scenes/cutscene_intro.scene, edit Slide1/2/3 entities
+	// - Scripts MenuController.cs and CutscenePlayer.cs handle the logic
+	// editor::EditorGUI::CreateImGUIWindow<editor::MainMenuGUI>();
+	// auto* cutsceneGUI = editor::EditorGUI::CreateImGUIWindow<editor::CutsceneGUI>();
+	// cutsceneGUI->LoadSlideshow(...);
+	// cutsceneGUI->SetNextScene(...);
 
 	{
 		static Ermine::ResourcePipeline pipeline; // TODO: Is this also needed in game build?

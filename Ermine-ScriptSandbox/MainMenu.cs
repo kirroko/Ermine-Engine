@@ -1,7 +1,7 @@
 /* Start Header ************************************************************************/
 /*!
 \file       MainMenu.cs
-\author     GitHub Copilot
+\author     Edwin Lee Zirui, edwinzirui.lee, 2301299, edwinzirui.lee@digipen.edu
 \date       11/2025
 \brief      This file contains the MainMenu script that handles the main menu scene
             logic including play and quit button interactions.
