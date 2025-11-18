@@ -44,6 +44,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #include "FSMNode.h"
 #include "AABB.h"
+#include "Renderer.h"
 
 namespace Ermine {
 	// NOTE: ALL ENUMS TO BE ADDED UP HERE
@@ -1701,10 +1702,16 @@ namespace Ermine
 			xproperty::obj_member<"emissiveIntensity", &Material::cacheEmissiveIntensity>
 		)
 	};
-}
 
-namespace Ermine
-{
+	struct GlobalGraphics
+	{
+		//Renderer::
+		//XPROPERTY_DEF(
+		//	"GlobalGraphics", GlobalGraphics,
+		//	xproperty::obj_member<"template", &Renderer::>,
+		//)
+	};
+
 	/*!***********************************************************************
 	\brief
 	 Light structure
