@@ -265,6 +265,7 @@ Config LoadConfigFromFile(const std::filesystem::path& path) {
     return config;
 }
 
+
 void SaveSceneToFile(const Ermine::ECS& ecs, const std::filesystem::path& path, bool pretty) {
 
     if (path.has_parent_path()) {
@@ -284,7 +285,6 @@ void SaveSceneToFile(const Ermine::ECS& ecs, const std::filesystem::path& path, 
 
     Value entities(kArrayType);
 
-    // TODO: For good old curtis the bear, here we can optimize by getting the list from SceneManager
     for (Ermine::EntityID id = 0; id < Ermine::MAX_ENTITIES; ++id) {
         if (!ecs.IsEntityValid(id)) continue;
 
@@ -307,7 +307,7 @@ void SaveSceneToFile(const Ermine::ECS& ecs, const std::filesystem::path& path, 
             comps.AddMember(rapidjson::Value("IDComponent", a), idPayload, a);
         }
 
-        for (const std::string& name : ecs.GetComponentNames(id)) {                 // :contentReference[oaicite:1]{index=1}
+        for (const std::string& name : ecs.GetComponentNames(id)) {
             const auto* desc = ecs.GetDescriptor(name);
 
             rapidjson::Value payload(rapidjson::kObjectType);
@@ -321,38 +321,17 @@ void SaveSceneToFile(const Ermine::ECS& ecs, const std::filesystem::path& path, 
             }
             else
             {
-                // --- Custom fallbacks ---
-                //if (name == "IDComponent" && ecs.HasComponent<Ermine::IDComponent>(id))
-                //{
-                //    const auto& c = ecs.GetComponent<Ermine::IDComponent>(id);
-                //    const std::string guid_str = c.guid.ToString();
-                //    payload.AddMember(rapidjson::Value("guid", a),
-                //        rapidjson::Value(guid_str.c_str(), a), a);
-                //    wrote = true;
-                //}
                 if (name == "ScriptsComponent" && ecs.HasComponent<Ermine::ScriptsComponent>(id))
                 {
                     auto& scs = ecs.GetComponent<Ermine::ScriptsComponent>(id);
-                    rapidjson::Value arr(rapidjson::kArrayType);
-                    for (const auto& sc : scs.scripts)
-                    {
-                        rapidjson::Value obj(rapidjson::kObjectType);
-                        obj.AddMember(rapidjson::Value("class", a), rapidjson::Value(sc.m_className.c_str(), a), a);
-                        arr.PushBack(obj, a);
-                    }
-                    payload.AddMember(rapidjson::Value("scripts", a), arr, a);
-
+                    scs.Serialize(payload, a);   // <-- this already writes fields
                     wrote = true;
                 }
             }
 
-            // Only write if we actually produced a payload
             if (wrote)
-            {
                 comps.AddMember(rapidjson::Value(name.c_str(), a), payload, a);
-            }
         }
-
 
         e.AddMember("components", comps, a);
         entities.PushBack(e, a);
@@ -433,57 +412,37 @@ void LoadSceneFromFile(Ermine::ECS& ecs, const std::filesystem::path& path) {
             else
             {
                 // --- Custom fallbacks ---
-                //if (compName == "IDComponent")
-                //{
-                //    Ermine::Guid g =
-                //        (payload.HasMember("guid") && payload["guid"].IsString())
-                //        ? Ermine::Guid::FromString(payload["guid"].GetString())
-                //        : Ermine::Guid::New(); // backward-compatible
-
-                //    ecs.AddComponent<Ermine::IDComponent>(id, Ermine::IDComponent{ g });
-                //    ecs.GetGuidRegistry().Register(id, g);
-                //    handled = true;
-                //}
                 if (compName == "ScriptsComponent")
                 {
-                    std::vector<std::string> classNames;
-                    if (payload.HasMember("scripts") && payload["scripts"].IsArray())
+                    // Ensure component exists
+                    if (!ecs.HasComponent<Ermine::ScriptsComponent>(id))
+                        ecs.AddComponent<Ermine::ScriptsComponent>(id, Ermine::ScriptsComponent{});
+
+                    auto& scs = ecs.GetComponent<Ermine::ScriptsComponent>(id);
+
+                    // Let the component handle scripts + fields
+                    scs.Deserialize(payload);
+
+                    // NOTE: Do NOT call AttachAll here if you have a ScriptSystem that does it later.
+                    // If you prefer immediate instances after load, you *can* do:
+                    scs.AttachAll(id);
+					
+                    handled = true;
+                }
+                else if (compName == "Script")
+                {
+                    // Optional legacy single-Script -> ScriptsComponent upgrade
+                    if (payload.HasMember("class") && payload["class"].IsString())
                     {
-      //                  const std::string cls = payload["class"].GetString();
-						//ecs.AddComponent<Ermine::ScriptsComponent>(id, Ermine::ScriptsComponent{});
-      //                  scs.Add(cls, id);
-      //                  //ecs.AddComponent<Ermine::Script>(id, Ermine::Script(cls, id));
-      //                  // TODO: post-load hook if you have one, e.g. ScriptSystem::OnAdded(id);
-      //                  handled = true;
-                        const auto arr = payload["scripts"].GetArray();
-                        classNames.reserve(arr.Size());
-
-                        for (const auto& v : arr)
-                        {
-                            if (!v.IsObject()) continue;
-
-                            const auto it = v.FindMember("class");
-                            if (it != v.MemberEnd() && it->value.IsString())
-                                classNames.emplace_back(it->value.GetString());
-                        }
-                    }
-                    else if (payload.HasMember("class") && payload["class"].IsString())
-                    {
-                        classNames.emplace_back(payload["class"].GetString());
-                    }
-
-					ecs.AddComponent<Ermine::ScriptsComponent>(id, Ermine::ScriptsComponent{});
-					auto& scs = ecs.GetComponent<Ermine::ScriptsComponent>(id);
-                    
-                    for (const auto& cls : classNames)
-                    {
-                        scs.Add(cls, id);
-                    }
-
-                    if (!classNames.empty())
+                        const std::string cls = payload["class"].GetString();
+                        if (!ecs.HasComponent<Ermine::ScriptsComponent>(id))
+                            ecs.AddComponent<Ermine::ScriptsComponent>(id, Ermine::ScriptsComponent{});
+                        ecs.GetComponent<Ermine::ScriptsComponent>(id).Add(cls, id);
                         handled = true;
+                    }
                 }
             }
+
 
             if (!handled)
             {

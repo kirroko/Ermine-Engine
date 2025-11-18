@@ -442,19 +442,45 @@ Ermine::Mesh GeometryFactory::CreateCone(float radius, float height, unsigned in
     std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;
 
-    // Apex vertex (tip of the cone at top) - shared by all side triangles
-    vertices.push_back({{0.0f, height, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.5f, 1.0f}});
-
-    // Base center vertex - for bottom cap
-    vertices.push_back({{0.0f, 0.0f, 0.0f}, {0.0f, -1.0f, 0.0f}, {0.5f, 0.0f}});
+    // Reserve space to avoid reallocations
+    vertices.reserve(sectors * 3 + 2);
+    indices.reserve(sectors * 6);
 
     float sectorStep = 2 * PI<float> / sectors;
     
     // Calculate slant length for proper normal calculation
     float slantLength = sqrtf(radius * radius + height * height);
 
-    // Generate vertices for cone sides (smooth normals pointing outward from surface)
-    // For smooth shading, we need unique normals per vertex
+    // --- APEX VERTEX (Tip of the cone) ---
+    // The apex will share multiple vertex entries (one per side triangle) for smooth normals
+    unsigned int apexStartIndex = 0;
+    
+    // Create one apex vertex per sector for smooth normals along the sides
+    for (unsigned int i = 0; i <= sectors; ++i)
+    {
+        float sectorAngle = i * sectorStep;
+        
+        // Calculate smooth surface normal at the apex for this sector
+        // The normal points outward from the cone surface
+        float normalY = radius / slantLength;      // Vertical component
+        float normalXZ = height / slantLength;     // Horizontal component magnitude
+        
+        float nx = normalXZ * cosf(sectorAngle);
+        float nz = normalXZ * sinf(sectorAngle);
+        
+        // UV for the apex (top center of the unwrapped cone)
+        float u = (float)i / sectors;
+        float v = 1.0f; // Top of the texture
+        
+        vertices.push_back({{0.0f, height, 0.0f}, {nx, normalY, nz}, {u, v}});
+    }
+
+    // --- BASE CENTER VERTEX (for bottom cap) ---
+    unsigned int baseCenterIndex = vertices.size();
+    vertices.push_back({{0.0f, 0.0f, 0.0f}, {0.0f, -1.0f, 0.0f}, {0.5f, 0.5f}});
+
+    // --- SIDE VERTICES (Base circle for cone sides) ---
+    unsigned int sideBaseStartIndex = vertices.size();
     for (unsigned int i = 0; i <= sectors; ++i)
     {
         float sectorAngle = i * sectorStep;
@@ -462,57 +488,60 @@ Ermine::Mesh GeometryFactory::CreateCone(float radius, float height, unsigned in
         float z = radius * sinf(sectorAngle);
 
         // Calculate smooth surface normal (perpendicular to cone surface)
-        // The normal at the base points outward and slightly upward
-        float normalY = radius / slantLength;      // Vertical component
-        float normalXZ = height / slantLength;     // Horizontal component
+        float normalY = radius / slantLength;
+        float normalXZ = height / slantLength;
         
         float nx = normalXZ * cosf(sectorAngle);
         float nz = normalXZ * sinf(sectorAngle);
-        float ny = normalY;
 
         // UV coordinates wrapping around the cone
         float u = (float)i / sectors;
-        float v = 0.0f; // Base is at v=0, apex is at v=1
+        float v = 0.0f; // Base is at bottom of texture
 
-        vertices.push_back({{x, 0.0f, z}, {nx, ny, nz}, {u, v}});
+        vertices.push_back({{x, 0.0f, z}, {nx, normalY, nz}, {u, v}});
     }
 
-    // Generate duplicate vertices for bottom cap (different normals pointing down)
+    // --- BOTTOM CAP VERTICES ---
+    unsigned int bottomCapStartIndex = vertices.size();
     for (unsigned int i = 0; i <= sectors; ++i)
     {
         float sectorAngle = i * sectorStep;
         float x = radius * cosf(sectorAngle);
         float z = radius * sinf(sectorAngle);
-        float u = (float)i / sectors;
 
         // Bottom face normals point straight down
-        vertices.push_back({{x, 0.0f, z}, {0.0f, -1.0f, 0.0f}, {u, 0.0f}});
+        // Radial UV mapping for the bottom disc
+        float u = 0.5f + 0.5f * cosf(sectorAngle);
+        float v = 0.5f + 0.5f * sinf(sectorAngle);
+
+        vertices.push_back({{x, 0.0f, z}, {0.0f, -1.0f, 0.0f}, {u, v}});
     }
 
-    // Generate indices for cone sides
-    // Connect apex (index 0) to base circle vertices (starting at index 2)
-    unsigned int apexIndex = 0;
-    unsigned int baseStartIndex = 2;
-    
+    // --- GENERATE INDICES FOR CONE SIDES ---
+    // Connect apex vertices to base circle vertices
     for (unsigned int i = 0; i < sectors; ++i)
     {
-        // Triangle: apex -> current base vertex -> next base vertex
-        indices.push_back(apexIndex);
-        indices.push_back(baseStartIndex + i);
-        indices.push_back(baseStartIndex + i + 1);
+        unsigned int apex = apexStartIndex + i;
+        unsigned int baseVertex = sideBaseStartIndex + i;
+        unsigned int nextBaseVertex = sideBaseStartIndex + i + 1;
+        
+        // Triangle: apex -> current base -> next base (counter-clockwise winding)
+        indices.push_back(apex);
+        indices.push_back(baseVertex);
+        indices.push_back(nextBaseVertex);
     }
 
-    // Generate indices for base (bottom cap)
-    // Connect center (index 1) to base circle vertices (starting after side vertices)
-    unsigned int baseCenterIndex = 1;
-    unsigned int baseCapStartIndex = baseStartIndex + sectors + 1;
-    
+    // --- GENERATE INDICES FOR BASE (Bottom cap) ---
+    // Connect center to base circle vertices (clockwise for downward normal)
     for (unsigned int i = 0; i < sectors; ++i)
     {
-        // Triangle: center -> next vertex -> current vertex (winding for downward normal)
+        unsigned int current = bottomCapStartIndex + i;
+        unsigned int next = bottomCapStartIndex + i + 1;
+        
+        // Triangle: center -> next -> current (clockwise winding for bottom face)
         indices.push_back(baseCenterIndex);
-        indices.push_back(baseCapStartIndex + i + 1);
-        indices.push_back(baseCapStartIndex + i);
+        indices.push_back(next);
+        indices.push_back(current);
     }
 
     // Create VAO, VBO, IBO
