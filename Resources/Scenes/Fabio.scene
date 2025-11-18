@@ -1472,97 +1472,6 @@
       }
     },
     {
-      "id": 17,
-      "components": {
-        "IDComponent": {
-          "guid": "0d195041851a6f4fbeb557cf889ea2e3"
-        },
-        "Transform": {
-          "position": [
-            3.5,
-            0.0,
-            -43.34170150756836
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            47.98847961425781,
-            29.60460090637207,
-            0.5
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Wall (3)",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "Mesh": {
-          "kind": "Primitive",
-          "primitive": {
-            "type": "Cube",
-            "size": [
-              1.0,
-              1.0,
-              1.0
-            ]
-          }
-        },
-        "Material": {
-          "hasMaterial": true,
-          "params": {
-            "materialAlbedo": [
-              1.0,
-              1.0,
-              1.0,
-              1.0
-            ],
-            "materialAlpha": 1.0,
-            "materialTransparency": 0.0,
-            "materialMetallic": 0.0,
-            "materialRoughness": 0.5,
-            "materialEmissive": [
-              0.0,
-              0.0,
-              0.0
-            ],
-            "materialEmissiveIntensity": 1.0,
-            "materialHasAlbedoMap": true,
-            "materialHasAoMap": true
-          },
-          "textures": [
-            {
-              "slot": "materialAlbedoMap",
-              "path": "../Resources\\Textures\\Floor_BaseColor.png"
-            },
-            {
-              "slot": "material.albedoMap",
-              "path": "../Resources\\Textures\\Floor_BaseColor.png"
-            },
-            {
-              "slot": "materialAoMap",
-              "path": "../Resources\\Textures\\Floor_AO.png"
-            }
-          ],
-          "uvScale": [
-            2.0,
-            2.0
-          ],
-          "uvOffset": [
-            0.0,
-            0.0
-          ]
-        },
-        "HierarchyComponent": {
-          "depth": 0
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
       "id": 18,
       "components": {
         "IDComponent": {
@@ -3478,6 +3387,370 @@
         "HierarchyComponent": {
           "parentGuid": "d2570cd9d4bd124a804295d851adae08",
           "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 49,
+      "components": {
+        "IDComponent": {
+          "guid": "0dc3e6039067b741ae848842daf2a47a"
+        },
+        "Transform": {
+          "position": [
+            -19.17322540283203,
+            0.0,
+            -51.73969650268555
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            21.453731536865236,
+            29.60460090637207,
+            21.354867935180665
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Wall (4)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cube",
+            "size": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "materialAlpha": 1.0,
+            "materialTransparency": 0.0,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.5,
+            "materialEmissive": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 1.0,
+            "materialHasAlbedoMap": true,
+            "materialHasAoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources\\Textures\\Floor_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources\\Textures\\Floor_BaseColor.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "../Resources\\Textures\\Floor_AO.png"
+            }
+          ],
+          "uvScale": [
+            2.0,
+            2.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ]
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 50,
+      "components": {
+        "IDComponent": {
+          "guid": "6718c28e27ebcd4f9a3ed6cccd750e9d"
+        },
+        "Transform": {
+          "position": [
+            -9.383869171142579,
+            0.0,
+            -41.24809265136719
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            16.30167007446289,
+            29.60460090637207,
+            1.0632493495941163
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Wall (5)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cube",
+            "size": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "materialAlpha": 1.0,
+            "materialTransparency": 0.0,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.5,
+            "materialEmissive": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 1.0,
+            "materialHasAlbedoMap": true,
+            "materialHasAoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources\\Textures\\Floor_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources\\Textures\\Floor_BaseColor.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "../Resources\\Textures\\Floor_AO.png"
+            }
+          ],
+          "uvScale": [
+            2.0,
+            2.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ]
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 51,
+      "components": {
+        "IDComponent": {
+          "guid": "56548f73b9cdd042a4345fec32648391"
+        },
+        "Transform": {
+          "position": [
+            16.839990615844728,
+            0.0,
+            -51.73969650268555
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            16.30167007446289,
+            29.60460090637207,
+            21.354867935180665
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Wall (3)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cube",
+            "size": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "materialAlpha": 1.0,
+            "materialTransparency": 0.0,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.5,
+            "materialEmissive": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 1.0,
+            "materialHasAlbedoMap": true,
+            "materialHasAoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources\\Textures\\Floor_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources\\Textures\\Floor_BaseColor.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "../Resources\\Textures\\Floor_AO.png"
+            }
+          ],
+          "uvScale": [
+            2.0,
+            2.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ]
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 52,
+      "components": {
+        "IDComponent": {
+          "guid": "3326b76cce785d42b9b5fc961a17a582"
+        },
+        "Transform": {
+          "position": [
+            9.795665740966797,
+            0.0,
+            -41.24809265136719
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            16.30167007446289,
+            29.60460090637207,
+            1.0632493495941163
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Wall (6)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cube",
+            "size": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "materialAlpha": 1.0,
+            "materialTransparency": 0.0,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.5,
+            "materialEmissive": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 1.0,
+            "materialHasAlbedoMap": true,
+            "materialHasAoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources\\Textures\\Floor_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources\\Textures\\Floor_BaseColor.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "../Resources\\Textures\\Floor_AO.png"
+            }
+          ],
+          "uvScale": [
+            2.0,
+            2.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ]
+        },
+        "HierarchyComponent": {
+          "depth": 0
         },
         "GlobalTransform": {}
       }
