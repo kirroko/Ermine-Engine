@@ -23,6 +23,7 @@ public class Sphere : MonoBehaviour
 
     void OnCollisionEnter(Collision col)
     {
+        /*
         Debug.Log("Yes me lord? : " + gameObject.name);
 
         Debug.Log("Jobs done : " + col.gameObject.name);
@@ -32,5 +33,6 @@ public class Sphere : MonoBehaviour
 
             Physics.SetPosition((ulong)col.gameObject.GetInstanceID(), col.gameObject.transform.position);
         }
+        */
     }
 }

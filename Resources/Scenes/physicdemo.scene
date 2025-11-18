@@ -5127,7 +5127,14 @@
         "HierarchyComponent": {
           "depth": 0
         },
-        "GlobalTransform": {}
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "class": "DisableLightCone"
+            }
+          ]
+        }
       }
     }
   ]
