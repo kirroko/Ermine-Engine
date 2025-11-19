@@ -3584,6 +3584,64 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
 {
 	(void)view;
 
+	const auto& ecs = Ermine::ECS::GetInstance();
+
+	// ========== FRUSTUM CULLING SETUP ==========
+	// Get camera view and projection matrices
+	// Use GameCamera if active (playing), otherwise use EditorCamera
+	Mtx44 viewMtx, projMtx;
+
+#if defined(EE_EDITOR)
+	// In editor build, check if playing
+	if (editor::EditorGUI::isPlaying)
+	{
+		auto gameCamera = ecs.GetSystem<graphics::CameraSystem>();
+		if (gameCamera && gameCamera->HasValidCamera())
+		{
+			// Use player camera when in play mode
+			viewMtx = gameCamera->GetViewMatrix();
+			projMtx = gameCamera->GetProjectionMatrix();
+		}
+		else
+		{
+			// Fallback to editor camera if no valid game camera
+			const auto& editorCamera = editor::EditorCamera::GetInstance();
+			viewMtx = editorCamera.GetViewMatrix();
+			projMtx = editorCamera.GetProjectionMatrix();
+		}
+	}
+	else
+	{
+		// Use editor camera when not playing
+		const auto& editorCamera = editor::EditorCamera::GetInstance();
+		viewMtx = editorCamera.GetViewMatrix();
+		projMtx = editorCamera.GetProjectionMatrix();
+	}
+#else
+	// Standalone build - use game camera
+	auto gameCamera = ecs.GetSystem<graphics::CameraSystem>();
+	if (gameCamera && gameCamera->HasValidCamera())
+	{
+		viewMtx = gameCamera->GetViewMatrix();
+		projMtx = gameCamera->GetProjectionMatrix();
+	}
+	else
+	{
+		// Fallback if no camera is available
+		viewMtx = Mtx44(); // Identity matrix
+		projMtx = Mtx44(); // Identity matrix
+	}
+#endif
+
+	// Convert to glm for frustum extraction
+	glm::mat4 viewGlm = ToGlm(viewMtx);
+	glm::mat4 projGlm = ToGlm(projMtx);
+
+	// Build frustum from view-projection matrix
+	Frustum frustum;
+	glm::mat4 viewProj = projGlm * viewGlm;
+	frustum.ExtractFromViewProjection(viewProj);
+
 	std::vector<LightGPU> lights;
 	lights.reserve(MAX_LIGHTS);
 
@@ -3591,23 +3649,62 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
 	m_ActiveShadowLights.clear();
 	int lightIndex = 0;
 
-	const auto& ecs = Ermine::ECS::GetInstance();
 	for (EntityID e : m_LightSystem->m_Entities)
 	{
 		const auto& trans = ecs.GetComponent<Transform>(e);
 		const auto& light = ecs.GetComponent<Light>(e);
 
+		// Get light position in world space
+		glm::vec3 lightPos(trans.position.x, trans.position.y, trans.position.z);
+
+		// Build rotation from quaternion for directional/spot lights
+		glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
+		rotQuat = glm::normalize(rotQuat);
+
+		// ========== FRUSTUM CULLING TEST ==========
+		bool isCulled = false;
+
+		if (light.type == LightType::POINT)
+		{
+			// Point light: test sphere against frustum
+			// Create AABB from sphere bounds
+			float radius = light.radius;
+			glm::vec3 aabbMin = lightPos - glm::vec3(radius);
+			glm::vec3 aabbMax = lightPos + glm::vec3(radius);
+
+			isCulled = !frustum.TestAABB(aabbMin, aabbMax);
+		}
+		else if (light.type == LightType::SPOT)
+		{
+			// Spot light: test cone against frustum
+			glm::vec3 spotDir = glm::normalize(rotQuat * glm::vec3(0.0f, 0.0f, 1.0f));
+			float outerAngleRad = glm::radians(light.outerAngle);
+
+			// Create AABB that encompasses the spot light cone
+			float coneRadius = light.radius * std::tan(outerAngleRad);
+			glm::vec3 coneEnd = lightPos + spotDir * light.radius;
+
+			// Find AABB that contains apex and base circle
+			glm::vec3 aabbMin = glm::min(lightPos, coneEnd - glm::vec3(coneRadius));
+			glm::vec3 aabbMax = glm::max(lightPos, coneEnd + glm::vec3(coneRadius));
+
+			isCulled = !frustum.TestAABB(aabbMin, aabbMax);
+		}
+		else if (light.type == LightType::DIRECTIONAL)
+		{
+			// Directional lights affect entire scene - never cull
+			isCulled = false;
+		}
+
+		// Skip culled lights
+		if (isCulled)
+		{
+			continue;
+		}
 		// Track shadow-casting lights for instanced shadow rendering
 		if ((light.type == LightType::DIRECTIONAL || light.type == LightType::SPOT) && light.castsShadows) {
 			m_ActiveShadowLights.push_back(lightIndex);
 		}
-
-		// Keep position in WORLD SPACE instead of view space
-		glm::vec4 posWorld(trans.position.x, trans.position.y, trans.position.z, 1.0f);
-
-		// Build rotation from quaternion
-		glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
-		rotQuat = glm::normalize(rotQuat);
 
 		// Keep direction in WORLD SPACE
 		glm::vec3 fwd(0.0f, 0.0f, 1.0f);
@@ -3624,7 +3721,7 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
 
 		// Convert to LightGPU structure - NOW IN WORLD SPACE
 		LightGPU gpu{};
-		gpu.position_type = glm::vec4(posWorld.x, posWorld.y, posWorld.z, static_cast<float>(light.type));
+		gpu.position_type = glm::vec4(lightPos.x, lightPos.y, lightPos.z, static_cast<float>(light.type));
 		gpu.color_intensity = glm::vec4(light.color.x, light.color.y, light.color.z, light.intensity);
 		gpu.direction_range = glm::vec4(dirWorld.x, dirWorld.y, dirWorld.z, light.radius);
 		gpu.spot_angles_castshadows_startOffset = glm::vec4(innerCos, outerCos, light.castsShadows, light.startOffset);
@@ -5649,8 +5746,6 @@ void Renderer::CalculateLightMatrix(const editor::EditorCamera& editorCamera)
  */
 void Renderer::RenderShadowMapInstanced()
 {
-	UpdateLightsUBO(editor::EditorCamera::GetInstance().GetViewMatrix());
-
 	// Validate resources
 	if (!m_ShadowMapFBO || !m_ShadowMapArray || !m_ShadowMapInstancedShader)
 	{

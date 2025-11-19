@@ -40,6 +40,9 @@ uniform vec3 u_FogColor = vec3(0.5, 0.6, 0.7);
 uniform float u_FogDensity = 0.02;      // For exponential fog
 uniform float u_FogStart = 50.0;        // For linear fog
 uniform float u_FogEnd = 200.0;         // For linear fog
+uniform float u_FogHeightCoefficient = 0.0;  // Height influence on fog density
+uniform float u_FogHeightFalloff = 10.0;     // Rate of fog density falloff with height
+
 
 // Light structure
 struct Light {
@@ -469,15 +472,14 @@ float calculateShadowFactor(mat4 lightSpaceMatrix, int lightIndex, vec3 fragPosW
     // Return lighting factor
     return 1.0 - shadow;
 }
-
-// Calculate fog factor based on distance (0.0 = full fog, 1.0 = no fog)
-float calculateFogFactor(float distance) {
+float calculateFogFactor(float distance, float height) {
     if (u_FogEnabled == 0) {
         return 1.0; // No fog
     }
 
     float fogFactor = 1.0;
 
+    // Calculate base distance fog
     if (u_FogMode == 0) {
         // Linear fog
         fogFactor = (u_FogEnd - distance) / (u_FogEnd - u_FogStart);
@@ -492,9 +494,22 @@ float calculateFogFactor(float distance) {
         fogFactor = exp(-exponent * exponent);
     }
 
+    // Apply height-based fog modifier
+    // Lower heights = more fog (lower fogFactor)
+    // Higher heights = less fog (higher fogFactor)
+    if (u_FogHeightCoefficient > 0.001) {
+        // Calculate how much height affects fog
+        // Negative exponent means fog decreases with height
+        float heightFactor = exp(-max(0.0, height) / u_FogHeightFalloff);
+        
+        // Blend between full fog (0) and current fog factor based on height
+        // heightFactor = 1.0 at ground level (max fog influence)
+        // heightFactor approaches 0.0 at high altitudes (min fog influence)
+        fogFactor = mix(fogFactor, 1.0, (1.0 - heightFactor) * u_FogHeightCoefficient);
+    }
+
     return clamp(fogFactor, 0.0, 1.0);
 }
-
 void main()
 {    
     // Sample depth
@@ -690,9 +705,11 @@ void main()
     // Apply distance-based fog
     if (u_FogEnabled != 0) {
         float fogDistance = length(fragPosView);
-        float fogFactor = calculateFogFactor(fogDistance);
+        float fogHeight = worldPos.y; // Assuming Y is up axis
+        float fogFactor = calculateFogFactor(fogDistance, fogHeight);
         result = mix(u_FogColor, result, fogFactor);
     }
+
 
     FragColor = vec4(result, 1.0);
 }

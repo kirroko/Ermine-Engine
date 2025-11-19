@@ -207,6 +207,15 @@ void GraphicsDebugGUI::DrawRenderingModeControls()
                                "Fog density for exponential modes (lower = less dense)");
             }
 
+            ImGui::Separator();
+
+            // Height-based fog parameters
+            ImGui::Text("Height-Based Fog");
+            DrawFloatSlider("Height Influence", &renderer->m_FogHeightCoefficient, 0.0f, 1.0f,
+                "How much height affects fog density (0=disabled, 1=maximum effect)");
+            DrawFloatSlider("Height Falloff", &renderer->m_FogHeightFalloff, 1.0f, 100.0f,
+                "Height at which fog starts to thin out (lower=fog stays near ground)");
+
             ImGui::TreePop();
         }
 
