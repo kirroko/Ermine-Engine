@@ -1607,7 +1607,10 @@ namespace Ermine::editor {
 			}
 			// Push change to managed object
 			if (script.m_instance && script.m_instance->object)
+			{
 				scripting::ScriptEngine::PushCacheToManagedFields(script.m_instance->object, fields);
+				scripting::ScriptEngine::PullManagedFieldsToCache(script.m_instance->object, script.m_fields);
+			}
 
 			ImGui::PopID();
 		}
