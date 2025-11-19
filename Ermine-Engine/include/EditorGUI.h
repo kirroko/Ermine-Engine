@@ -81,6 +81,7 @@ namespace Ermine::editor
         enum class SimState : uint8_t { stopped, playing, paused };
         static SimState s_state;
         static bool isPlaying;
+        static bool isPreviewingUI; // Enable UI preview in editor viewport
 
         /**
          * @brief Initialize the ImGUI context

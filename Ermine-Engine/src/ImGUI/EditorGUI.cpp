@@ -59,6 +59,7 @@ using namespace Ermine::editor;
 // Definition for static member m_Windows, for ImGUI Windows
 std::vector<std::unique_ptr<Ermine::ImGUIWindow>>EditorGUI::m_Windows;
 bool EditorGUI::isPlaying = false; // tied to Play/Stop toolbar state.
+bool EditorGUI::isPreviewingUI = false; // Enable UI preview in editor viewport
 GLFWwindow* EditorGUI::s_WindowContext = nullptr;
 Ermine::EntityID EditorGUI::s_PrimaryCameraEntity = 0;
 

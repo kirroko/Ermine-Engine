@@ -287,6 +287,19 @@ namespace Ermine
                 RenderCrosshair(ui);
         }
 
+        // Render UIButtonComponent entities
+        for (EntityID entity = 1; entity < MAX_ENTITIES; ++entity)
+        {
+            if (!ecs.IsEntityValid(entity))
+                continue;
+
+            if (!ecs.HasComponent<UIButtonComponent>(entity))
+                continue;
+
+            const auto& button = ecs.GetComponent<UIButtonComponent>(entity);
+            RenderButton(button);
+        }
+
         // Re-enable depth test
         glEnable(GL_DEPTH_TEST);
         glDisable(GL_BLEND);
@@ -866,6 +879,44 @@ namespace Ermine
         // Disable texture mode
         texture->Unbind();
         m_uiShader->SetUniform1i("uUseTexture", 0);
+    }
+
+    void UIRenderSystem::RenderButton(const UIButtonComponent& button)
+    {
+        // Choose color based on button state
+        Vec3 currentColor = button.normalColor;
+        if (button.isPressed)
+            currentColor = button.pressedColor;
+        else if (button.isHovered)
+            currentColor = button.hoverColor;
+
+        // Calculate button bounds (centered position)
+        float left = button.position.x - (button.size.x * 0.5f);
+        float bottom = button.position.y - (button.size.y * 0.5f);
+
+        // Render button background
+        RenderQuad(left, bottom, button.size.x, button.size.y, currentColor, button.backgroundAlpha);
+
+        // Render button text if present
+        if (m_textRenderer && !button.text.empty())
+        {
+            // Calculate text position (centered)
+            float textWidth = m_textRenderer->GetTextWidth(button.text, button.textScale);
+            float textHeight = button.textScale * 0.04f; // Approximate text height
+
+            float textX = button.position.x - (textWidth * 0.5f);
+            float textY = button.position.y - (textHeight * 0.5f);
+
+            m_textRenderer->RenderText(
+                m_uiShader,
+                button.text,
+                textX,
+                textY,
+                button.textScale,
+                button.textColor,
+                1.0f // Text is always fully opaque
+            );
+        }
     }
 
 } // namespace Ermine

@@ -123,6 +123,9 @@
     <ClInclude Include="include\Camera.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\CameraSystem.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\Component.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -169,12 +172,6 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\GPUProfiler.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\GameCamera.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\CameraSystem.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\GameObject.h">
@@ -249,6 +246,9 @@
     <ClInclude Include="include\NavMesh.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\NavMeshAgentSystem.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\Particles.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -315,6 +315,15 @@
     <ClInclude Include="include\TransformMode.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\UIButtonSystem.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\UIRenderSystem.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\UITextRenderer.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\VertexArray.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -330,11 +339,6 @@
     <ClInclude Include="include\shadow_config.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="include\NavMeshAgentSystem.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\CutsceneGUI.h" />
-    <ClInclude Include="include\MainMenuGUI.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\ThirdParty\xresource_pipeline_v2-main\dependencies\xtextfile\source\xtextfile.cpp">
@@ -385,13 +389,13 @@
     <ClCompile Include="src\Graphics\Camera.cpp">
       <Filter>src\Graphics</Filter>
     </ClCompile>
+    <ClCompile Include="src\Graphics\CameraSystem.cpp">
+      <Filter>src\Graphics</Filter>
+    </ClCompile>
     <ClCompile Include="src\Graphics\Cubemap.cpp">
       <Filter>src\Graphics</Filter>
     </ClCompile>
     <ClCompile Include="src\Graphics\DrawCommands.cpp">
-      <Filter>src\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Graphics\CameraSystem.cpp">
       <Filter>src\Graphics</Filter>
     </ClCompile>
     <ClCompile Include="src\Graphics\GeometryFactory.cpp">
@@ -419,6 +423,12 @@
       <Filter>src\Graphics</Filter>
     </ClCompile>
     <ClCompile Include="src\Graphics\Texture.cpp">
+      <Filter>src\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Graphics\UIRenderSystem.cpp">
+      <Filter>src\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Graphics\UITextRenderer.cpp">
       <Filter>src\Graphics</Filter>
     </ClCompile>
     <ClCompile Include="src\Graphics\VertexArray.cpp">
@@ -461,6 +471,9 @@
       <Filter>src\Math</Filter>
     </ClCompile>
     <ClCompile Include="src\NavMesh\NavMesh.cpp">
+      <Filter>src\NavMesh</Filter>
+    </ClCompile>
+    <ClCompile Include="src\NavMesh\NavMeshAgentSystem.cpp">
       <Filter>src\NavMesh</Filter>
     </ClCompile>
     <ClCompile Include="src\Object\GameObject.cpp">
@@ -517,6 +530,9 @@
     <ClCompile Include="src\Systems\TransformMode.cpp">
       <Filter>src\Systems</Filter>
     </ClCompile>
+    <ClCompile Include="src\Systems\UIButtonSystem.cpp">
+      <Filter>src\Systems</Filter>
+    </ClCompile>
     <ClCompile Include="src\Utility\EditorCamera.cpp">
       <Filter>src\Utility</Filter>
     </ClCompile>
@@ -544,17 +560,6 @@
     <ClCompile Include="src\dllmain.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\NavMesh\NavMeshAgentSystem.cpp">
-      <Filter>src\NavMesh</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Graphics\UIRenderSystem.cpp">
-      <Filter>src\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Graphics\UITextRenderer.cpp">
-      <Filter>src\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ImGUI\CutsceneGUI.cpp" />
-    <ClCompile Include="src\ImGUI\MainMenuGUI.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="include\Component.tpp">

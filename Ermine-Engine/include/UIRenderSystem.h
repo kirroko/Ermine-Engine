@@ -124,6 +124,14 @@ namespace Ermine
 
         /*!***********************************************************************
         \brief
+            Renders a UI button with text.
+        \param[in] button
+            Reference to UIButtonComponent with button settings.
+        *************************************************************************/
+        void RenderButton(const UIButtonComponent& button);
+
+        /*!***********************************************************************
+        \brief
             Renders a filled quad at the specified position with color.
         \param[in] posX
             X position in normalized screen coordinates (0-1).

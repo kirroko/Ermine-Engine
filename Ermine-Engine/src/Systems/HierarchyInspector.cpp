@@ -289,6 +289,9 @@ namespace Ermine::editor {
 		if (ECS::GetInstance().HasComponent<UIImageComponent>(selected))
 			DrawUIImageComponent(selected);
 
+		if (ECS::GetInstance().HasComponent<UIButtonComponent>(selected))
+			DrawUIButtonComponent(selected);
+
 		ImGui::PopID();
 
 		ImGui::Separator();
@@ -2345,8 +2348,82 @@ namespace Ermine::editor {
 		{
 			ECS::GetInstance().AddComponent(entity, UIImageComponent());
 		}
+		if (ImGui::MenuItem("UI Button") && !ECS::GetInstance().HasComponent<UIButtonComponent>(entity))
+		{
+			ECS::GetInstance().AddComponent(entity, UIButtonComponent());
+		}
 		// Add more component types as needed
 
 		ECS::GetInstance().ResyncAllSignaturesFromStorage();
 	}
+
+	void HierarchyInspector::DrawUIButtonComponent(EntityID entity)
+{
+	if (!ComponentHeaderWithRemove<UIButtonComponent>("UI Button Component", entity))
+		return;
+
+	auto& button = ECS::GetInstance().GetComponent<UIButtonComponent>(entity);
+
+	// Button text
+	char textBuffer[256];
+	strncpy_s(textBuffer, button.text.c_str(), sizeof(textBuffer) - 1);
+	textBuffer[sizeof(textBuffer) - 1] = '\0';
+	if (ImGui::InputText("Button Text", textBuffer, sizeof(textBuffer))) {
+		button.text = textBuffer;
+	}
+
+	// Position and size (UI is 2D, only X and Y needed)
+	ImGui::DragFloat2("Position (X, Y)", &button.position.x, 0.01f, 0.0f, 1.0f);
+	ImGui::DragFloat2("Size (Width, Height)", &button.size.x, 0.01f, 0.01f, 1.0f);
+
+	ImGui::Separator();
+	ImGui::Text("Colors");
+
+	// Colors
+	ImGui::ColorEdit3("Normal Color", &button.normalColor.x);
+	ImGui::ColorEdit3("Hover Color", &button.hoverColor.x);
+	ImGui::ColorEdit3("Pressed Color", &button.pressedColor.x);
+	ImGui::ColorEdit3("Text Color", &button.textColor.x);
+	ImGui::DragFloat("Text Scale", &button.textScale, 0.1f, 0.1f, 5.0f);
+	ImGui::SliderFloat("Background Alpha", &button.backgroundAlpha, 0.0f, 1.0f);
+
+	ImGui::Separator();
+	ImGui::Text("Action");
+
+	// Button action dropdown
+	const char* actionNames[] = { "None", "Load Scene", "Quit", "Custom" };
+	int currentAction = static_cast<int>(button.action);
+	if (ImGui::Combo("Action", &currentAction, actionNames, IM_ARRAYSIZE(actionNames))) {
+		button.action = static_cast<UIButtonComponent::ButtonAction>(currentAction);
+	}
+
+	// Action data (scene path or custom event)
+	if (button.action != UIButtonComponent::ButtonAction::None && button.action != UIButtonComponent::ButtonAction::Quit)
+	{
+		char actionDataBuffer[256];
+		strncpy_s(actionDataBuffer, button.actionData.c_str(), sizeof(actionDataBuffer) - 1);
+		actionDataBuffer[sizeof(actionDataBuffer) - 1] = '\0';
+
+		const char* label = (button.action == UIButtonComponent::ButtonAction::LoadScene)
+			? "Scene Path"
+			: "Event Name";
+
+		if (ImGui::InputText(label, actionDataBuffer, sizeof(actionDataBuffer))) {
+			button.actionData = actionDataBuffer;
+		}
+
+		// Helper text
+		if (button.action == UIButtonComponent::ButtonAction::LoadScene) {
+			ImGui::TextDisabled("Example: ../Resources/Scenes/level.scene");
+		}
+	}
+
+	// Show button state (read-only)
+	ImGui::Separator();
+	ImGui::Text("State (Read-Only)");
+	ImGui::Checkbox("Is Hovered", &button.isHovered);
+	ImGui::SameLine();
+	ImGui::Checkbox("Is Pressed", &button.isPressed);
+}
+
 } // namespace Ermine::editor

@@ -3380,6 +3380,8 @@ void Renderer::RenderDeferredPipeline(const Mtx44& view, const Mtx44& projection
 
 	// Post-processing pass - read from lighting + transparency pass output
 	RenderPostProcessPass();
+
+	// render the ui here
 }
 
 /**

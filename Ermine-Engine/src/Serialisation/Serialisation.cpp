@@ -465,10 +465,18 @@ void LoadSceneFromFile(Ermine::ECS& ecs, const std::filesystem::path& path) {
                         {
                             if (!v.IsObject()) continue;
 
-                            const auto it = v.FindMember("class");
+                            // Try both "className" (new format) and "class" (legacy format)
+                            auto it = v.FindMember("className");
+                            if (it == v.MemberEnd())
+                                it = v.FindMember("class");
+
                             if (it != v.MemberEnd() && it->value.IsString())
                                 classNames.emplace_back(it->value.GetString());
                         }
+                    }
+                    else if (payload.HasMember("className") && payload["className"].IsString())
+                    {
+                        classNames.emplace_back(payload["className"].GetString());
                     }
                     else if (payload.HasMember("class") && payload["class"].IsString())
                     {

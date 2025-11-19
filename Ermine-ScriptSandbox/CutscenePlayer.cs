@@ -4,7 +4,6 @@
 \author     Edwin Lee Zirui, edwinzirui.lee, 2301299, edwinzirui.lee@digipen.edu
 \date       11/2025
 \brief      Scene-based cutscene player that manages slideshow playback and transitions.
-            This replaces the ImGui-based CutsceneGUI with a proper scene approach.
 
 Copyright (C) 2025 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents without the

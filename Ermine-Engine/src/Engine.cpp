@@ -42,6 +42,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "HierarchySystem.h"
 #include "CameraSystem.h"
 #include "UIRenderSystem.h"
+#include "UIButtonSystem.h"
 #include "NavMesh.h"
 #include "NavMeshAgentSystem.h"
 
@@ -56,9 +57,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "FSMEditor.h"
 #include "AnimationGUI.h"
 #include "ResourcePipe.h"
-// Legacy ImGui menu windows removed - replaced with scene-based UI:
-// #include "MainMenuGUI.h"
-// #include "CutsceneGUI.h"
+
 #endif
 
 using namespace Ermine;
@@ -261,6 +260,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	EE_AUTO_REGISTER_COMPONENT(ParticleEmitter, "ParticleEmitter")
 	EE_AUTO_REGISTER_COMPONENT(CameraComponent, "CameraComponent");
 	EE_AUTO_REGISTER_COMPONENT(UIComponent, "UIComponent");
+	EE_AUTO_REGISTER_COMPONENT(UIButtonComponent, "UIButtonComponent");
 	EE_AUTO_REGISTER_COMPONENT(UIImageComponent, "UIImageComponent");
 
 	// NOTE : THESE ARE SPECIAL CASES DUE TO THE FACT THAT THEIR COMPONENTS ARE UNIQUE AND WOULDN'T WORK BY SHALLOW COPIED OR DEEP COPIED
@@ -315,6 +315,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	//ECS::GetInstance().RegisterSystem<graphics::GameCamera>();
 	ECS::GetInstance().RegisterSystem<graphics::CameraSystem>();
 	ECS::GetInstance().RegisterSystem<UIRenderSystem>();
+	ECS::GetInstance().RegisterSystem<UIButtonSystem>();
 
 	//Register JPH::TempAllocatorImpl for Physcis
 	RegisterDefaultAllocator();
@@ -534,6 +535,9 @@ bool engine::Init(GLFWwindow* windowContext)
 	else
 		ECS::GetInstance().GetSystem<UIRenderSystem>()->Init(1920, 1080);
 
+	// Initialize UI Button System
+	ECS::GetInstance().GetSystem<UIButtonSystem>()->Init();
+
 	// Editor windows
 #if defined(EE_EDITOR)
 	SceneManager::GetInstance().NewScene();
@@ -705,7 +709,8 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 	ECS::GetInstance().GetSystem<StateManager>()->Update(FrameController::GetFixedDeltaTime());
 
 	ECS::GetInstance().GetSystem<NavMeshAgentSystem>()->Update(FrameController::GetFixedDeltaTime());
-	// UI update (mana regen, cooldowns)
+	// UI update (button interactions, mana regen, cooldowns)
+	ECS::GetInstance().GetSystem<UIButtonSystem>()->Update(FrameController::GetDeltaTime());
 	ECS::GetInstance().GetSystem<UIRenderSystem>()->Update(FrameController::GetDeltaTime());
 }
 

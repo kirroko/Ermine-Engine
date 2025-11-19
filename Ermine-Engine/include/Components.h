@@ -3177,6 +3177,102 @@ namespace Ermine
 
 	/*!***********************************************************************
 	\brief
+	  UI Button component for clickable menu buttons
+	*************************************************************************/
+	struct UIButtonComponent
+	{
+		enum class ButtonAction
+		{
+			None,
+			LoadScene,
+			Quit,
+			Custom
+		};
+
+		// Button visual properties
+		std::string text = "";
+		Vec3 position = { 0.5f, 0.5f, 0.0f };  // Normalized screen position
+		Vec2 size = { 0.12f, 0.12f };           // Normalized screen size
+
+		// Button state colors
+		Vec3 normalColor = { 0.3f, 0.3f, 0.3f };
+		Vec3 hoverColor = { 0.5f, 0.5f, 0.5f };
+		Vec3 pressedColor = { 0.7f, 0.7f, 0.7f };
+		Vec3 textColor = { 1.0f, 1.0f, 1.0f };
+		float textScale = 1.0f;
+		float backgroundAlpha = 1.0f;  // Button background transparency (0.0 = invisible, 1.0 = opaque)
+
+		// Button action
+		ButtonAction action = ButtonAction::None;
+		std::string actionData = "";  // Scene path for LoadScene, custom event name, etc.
+
+		// Button state (runtime - don't serialize)
+		bool isHovered = false;
+		bool isPressed = false;
+
+		template<typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const
+		{
+			out.SetObject();
+			rapidjson::Value textVal(text.c_str(), alloc);
+			out.AddMember("text", textVal, alloc);
+			out.AddMember("position", Vec3ToJson(position, alloc), alloc);
+
+			rapidjson::Value sizeVal(rapidjson::kArrayType);
+			sizeVal.PushBack(size.x, alloc);
+			sizeVal.PushBack(size.y, alloc);
+			out.AddMember("size", sizeVal, alloc);
+
+			out.AddMember("normalColor", Vec3ToJson(normalColor, alloc), alloc);
+			out.AddMember("hoverColor", Vec3ToJson(hoverColor, alloc), alloc);
+			out.AddMember("pressedColor", Vec3ToJson(pressedColor, alloc), alloc);
+			out.AddMember("textColor", Vec3ToJson(textColor, alloc), alloc);
+			out.AddMember("textScale", textScale, alloc);
+			out.AddMember("backgroundAlpha", backgroundAlpha, alloc);
+
+			out.AddMember("action", static_cast<int>(action), alloc);
+			rapidjson::Value actionDataVal(actionData.c_str(), alloc);
+			out.AddMember("actionData", actionDataVal, alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in)
+		{
+			if (in.HasMember("text") && in["text"].IsString())
+				text = in["text"].GetString();
+			if (in.HasMember("position") && in["position"].IsArray())
+				position = JsonToVec3(in["position"]);
+			if (in.HasMember("size") && in["size"].IsArray())
+			{
+				const auto& arr = in["size"].GetArray();
+				if (arr.Size() >= 2)
+				{
+					size.x = arr[0].GetFloat();
+					size.y = arr[1].GetFloat();
+				}
+			}
+			if (in.HasMember("normalColor") && in["normalColor"].IsArray())
+				normalColor = JsonToVec3(in["normalColor"]);
+			if (in.HasMember("hoverColor") && in["hoverColor"].IsArray())
+				hoverColor = JsonToVec3(in["hoverColor"]);
+			if (in.HasMember("pressedColor") && in["pressedColor"].IsArray())
+				pressedColor = JsonToVec3(in["pressedColor"]);
+			if (in.HasMember("textColor") && in["textColor"].IsArray())
+				textColor = JsonToVec3(in["textColor"]);
+			if (in.HasMember("textScale") && in["textScale"].IsNumber())
+				textScale = in["textScale"].GetFloat();
+			if (in.HasMember("backgroundAlpha") && in["backgroundAlpha"].IsNumber())
+				backgroundAlpha = in["backgroundAlpha"].GetFloat();
+			if (in.HasMember("action") && in["action"].IsInt())
+				action = static_cast<ButtonAction>(in["action"].GetInt());
+			if (in.HasMember("actionData") && in["actionData"].IsString())
+				actionData = in["actionData"].GetString();
+		}
+
+		XPROPERTY_DEF("UIButtonComponent", UIButtonComponent)
+	};
+
+	/*!***********************************************************************
+	\brief
 	  UI configuration component for HUD elements
 	*************************************************************************/
 	struct UIComponent
@@ -3210,8 +3306,8 @@ namespace Ermine
 		float crosshairGap = 0.004f;   // Small center gap for precise aiming
 
 		// Health system (Life Essence)
-		float currentHealth = 100.0f;
-		float maxHealth = 100.0f;
+		float currentHealth = 50.0f;
+		float maxHealth = 50.0f;
 		float healthRegenRate = 5.0f;          // Health per second when regenerating
 		float healthRegenDelay = 3.0f;         // Delay after skill use before regen starts
 		float healthRegenTimer = 0.0f;         // Internal timer (don't serialize)

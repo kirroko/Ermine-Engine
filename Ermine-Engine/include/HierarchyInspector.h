@@ -161,6 +161,7 @@ namespace Ermine::editor {
         */
         void DrawCameraComponent(EntityID entity);
         void DrawUIImageComponent(EntityID entity);
+        void DrawUIButtonComponent(EntityID entity);
 
         Scene* m_ActiveScene = nullptr;  ///< Pointer to the currently active scene
         bool m_IsVisible = true;         ///< Inspector panel visibility state

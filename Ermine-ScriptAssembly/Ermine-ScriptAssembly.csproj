@@ -71,13 +71,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Behaviour.cs" />
+    <Compile Include="Component.cs" />
     <Compile Include="CoreModule\Application.cs" />
     <Compile Include="CoreModule\AudioComponent.cs" />
-    <Compile Include="CoreModule\GlobalAudio.cs" />
-    <Compile Include="NavAgent.cs" />
-    <Compile Include="Component.cs" />
     <Compile Include="CoreModule\Debug.cs" />
     <Compile Include="CoreModule\GameObject.cs" />
+    <Compile Include="CoreModule\GlobalAudio.cs" />
     <Compile Include="CoreModule\Input.cs" />
     <Compile Include="CoreModule\Mathf.cs" />
     <Compile Include="CoreModule\Matrix4x4.cs" />
@@ -91,6 +90,7 @@
     <Compile Include="CoreModule\Vector2.cs" />
     <Compile Include="CoreModule\Vector3.cs" />
     <Compile Include="MonoBehaviour.cs" />
+    <Compile Include="NavAgent.cs" />
     <Compile Include="Object.cs" />
     <Compile Include="PhysicsModule\Collider.cs" />
     <Compile Include="PhysicsModule\Physics.cs" />

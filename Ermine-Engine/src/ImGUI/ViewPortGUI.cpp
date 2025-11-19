@@ -14,6 +14,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "ViewPortGUI.h"
 
 #include "ECS.h"
+#include "Components.h"
 #include "FrameController.h"
 #include "Input.h"
 #include "Renderer.h"
@@ -106,10 +107,33 @@ void Ermine::ViewPortGUI::TopBarSimulationControl(const ImVec2 iconSize)
 			SceneManager::GetInstance().SaveTemp();
 			EE_CORE_INFO("Simulation: Play");
 
-			glfwSetInputMode(glfwGetCurrentContext(), GLFW_CURSOR,GLFW_CURSOR_DISABLED);
-			if (glfwRawMouseMotionSupported())
-				glfwSetInputMode(glfwGetCurrentContext(), GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
-			EE_CORE_INFO("Cursor locked (FPS), raw mouse motion {}", glfwRawMouseMotionSupported() ? "enabled" : "not supported");
+			// Check if scene has UI buttons (menu scene) - if so, keep cursor visible
+			bool isMenuScene = false;
+			auto& ecs = ECS::GetInstance();
+			constexpr EntityID MAX_ENTITIES = 10000;
+			for (EntityID entity = 1; entity < MAX_ENTITIES; ++entity)
+			{
+				if (ecs.IsEntityValid(entity) && ecs.HasComponent<UIButtonComponent>(entity))
+				{
+					isMenuScene = true;
+					break;
+				}
+			}
+
+			if (isMenuScene)
+			{
+				// Menu scene: keep cursor visible and normal
+				glfwSetInputMode(glfwGetCurrentContext(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+				EE_CORE_INFO("Menu scene detected - cursor visible");
+			}
+			else
+			{
+				// Gameplay scene: disable cursor for FPS controls
+				glfwSetInputMode(glfwGetCurrentContext(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+				if (glfwRawMouseMotionSupported())
+					glfwSetInputMode(glfwGetCurrentContext(), GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+				EE_CORE_INFO("Cursor locked (FPS), raw mouse motion {}", glfwRawMouseMotionSupported() ? "enabled" : "not supported");
+			}
 		}
 		if (ImGui::IsItemHovered())
 			ImGui::SetTooltip("Play (Ctrl+P)");
@@ -146,6 +170,20 @@ void Ermine::ViewPortGUI::TopBarSimulationControl(const ImVec2 iconSize)
 		}
 		if (ImGui::IsItemHovered())
 			ImGui::SetTooltip("Stop (Ctrl+Shift+P)");
+		ImGui::EndDisabled();
+
+		ImGui::SameLine();
+		ImGui::Spacing();
+		ImGui::SameLine();
+
+		// Preview UI toggle button
+		ImGui::BeginDisabled(playing);
+		if (ImGui::Checkbox("Preview UI", &EditorGUI::isPreviewingUI))
+		{
+			EE_CORE_INFO("UI Preview: {}", EditorGUI::isPreviewingUI ? "Enabled" : "Disabled");
+		}
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip("Toggle UI preview in viewport (for Main Menu & Cutscenes)");
 		ImGui::EndDisabled();
 	}
 	ImGui::EndGroup();

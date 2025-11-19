@@ -72,7 +72,6 @@
   <ItemGroup>
     <Compile Include="CutscenePlayer.cs" />
     <Compile Include="MainMenu.cs" />
-    <Compile Include="MenuController.cs" />
     <Compile Include="OrbTeleport.cs" />
     <Compile Include="PlayerController.cs" />
     <Compile Include="Sandbox.cs" />
