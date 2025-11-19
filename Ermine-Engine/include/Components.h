@@ -3245,6 +3245,16 @@ namespace Ermine
 		float manaBarHeight = 0.03f;          // Percentage of screen height
 		Ermine::Vec3 manaBarPosition = { 0.1f, 0.85f, 0.0f };   // Below health bar
 
+		float GetHealth() const
+		{
+			return currentHealth;
+		}
+
+		void SetHealth(float value)
+		{
+			currentHealth = std::clamp(value, 0.0f, maxHealth);
+		}
+
 		// Skill slot data
 		struct SkillSlot
 		{
