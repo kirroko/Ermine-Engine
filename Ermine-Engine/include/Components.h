@@ -903,9 +903,27 @@ namespace Ermine
 					// Match enabled state so OnEnable is invoked appropriately
 					s.m_instance->SetEnabled(s.m_enabled);
 					s.m_started = false;
+					if(s.m_fields.size() > 0)
+						scripting::ScriptEngine::PushCacheToManagedFields(s.m_instance->object, s.m_fields);
 				}
 			}
 		}
+		
+		//void AttachAll(EntityID id, const std::unordered_map<std::string, ScriptFieldValue>& cache)
+		//{
+		//	for (auto& s : scripts)
+		//	{
+		//		if (!s.m_instance)
+		//		{
+		//			auto sc = std::make_unique<scripting::ScriptClass>(scripting::ScriptClass("", s.m_className));
+		//			s.m_instance = std::make_unique<scripting::ScriptInstance>(std::move(sc), id);
+		//			// Match enabled state so OnEnable is invoked appropriately
+		//			s.m_instance->SetEnabled(s.m_enabled);
+		//			s.m_started = false;
+		//			scripting::ScriptEngine::PushCacheToManagedFields(s.m_instance->object, cache);
+		//		}
+		//	}
+		//}
 
 		// Add a new script by class name (instantiates immediately for the given entity)
 		void Add(const std::string& className, EntityID id, bool enabled = true)
@@ -3244,6 +3262,16 @@ namespace Ermine
 		float manaBarWidth = 0.3f;            // Percentage of screen width
 		float manaBarHeight = 0.03f;          // Percentage of screen height
 		Ermine::Vec3 manaBarPosition = { 0.1f, 0.85f, 0.0f };   // Below health bar
+
+		float GetHealth() const
+		{
+			return currentHealth;
+		}
+
+		void SetHealth(float value)
+		{
+			currentHealth = std::clamp(value, 0.0f, maxHealth);
+		}
 
 		// Skill slot data
 		struct SkillSlot

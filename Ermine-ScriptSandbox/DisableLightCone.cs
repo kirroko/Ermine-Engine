@@ -13,6 +13,7 @@ public class DisableLightCone : MonoBehaviour
 
     private void Update()
     {
+        // if u want the lightcone to come back after disabling
         if (hit)
         {
             timer -= Time.deltaTime;
@@ -20,6 +21,7 @@ public class DisableLightCone : MonoBehaviour
             if (timer <= 0.0f)
             {
                 gameObject.transform.position = oldPos;
+                Physics.SetPosition((ulong)gameObject.GetInstanceID(), gameObject.transform.position);
                 timer = 3.0f;
                 hit = false;
             }
@@ -32,7 +34,9 @@ public class DisableLightCone : MonoBehaviour
         {
             hit = true;
             //gameObject.SetActive(false);
-            gameObject.transform.position = new Vector3(0, 30, 0);
+
+            // we move the lightcone out of view for now until SetActive() is implemented
+            gameObject.transform.position = new Vector3(0, oldPos.y + 100, 0);
             Physics.SetPosition((ulong)gameObject.GetInstanceID(), gameObject.transform.position);
         }
     }

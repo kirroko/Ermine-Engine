@@ -2021,6 +2021,34 @@ namespace
 			fsm.manager->RequestPreviousState(entityID);
 	}
 #pragma endregion
+
+#pragma region UI ICalls
+	static float Internal_GetHealth(uint64_t entityID)
+	{
+		auto& ecs = ECS::GetInstance();
+		if (!ecs.HasComponent<UIComponent>(entityID))
+			return 0.0f;
+
+		auto& ui = ecs.GetComponent<UIComponent>(entityID);
+		return ui.GetHealth();
+	}
+
+	static void Internal_SetHealth(uint64_t entityID, float value)
+	{
+		auto& ecs = ECS::GetInstance();
+		if (!ecs.HasComponent<UIComponent>(entityID))
+			return;
+
+		auto& ui = ecs.GetComponent<UIComponent>(entityID);
+		ui.SetHealth(value);
+	}
+
+	// temporary reference to health bar, to be removed
+	static uint64_t Internal_GetHealthBar()
+	{
+		return (uint64_t)SceneManager::GetHealthBar();
+	}
+#pragma endregion
 }
 
 namespace Ermine::scripting
@@ -2381,5 +2409,11 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	mono_add_internal_call("ErmineEngine.Physics::SetRotationQuat", (const void*)icall_Physics_SetRotationQuat);
 	mono_add_internal_call("ErmineEngine.Physics::MoveEuler", (const void*)icall_Physics_MoveEuler);
 	mono_add_internal_call("ErmineEngine.Physics::MoveQuat", (const void*)icall_Physics_MoveQuat);
+#pragma endregion
+#pragma region UI ICalls
+	mono_add_internal_call("ErmineEngine.GameplayHUD::Internal_GetHealth", (const void*)Internal_GetHealth);
+	mono_add_internal_call("ErmineEngine.GameplayHUD::Internal_SetHealth", (const void*)Internal_SetHealth);
+	// temporary reference to health bar, to be removed
+	mono_add_internal_call("ErmineEngine.GameplayHUD::Internal_GetHealthBar", Internal_GetHealthBar);
 #pragma endregion
 }
