@@ -1,6 +1,5 @@
 ﻿using ErmineEngine;
 using System;
-using System.Collections;
 
 public class PlayerController2 : MonoBehaviour
 {
@@ -8,169 +7,102 @@ public class PlayerController2 : MonoBehaviour
     private AudioComponent audioComp;
 
     public float moveSpeed = 5f;
-    public float jumpspeed = 2f;
-    private Vector3 jumpvec = new Vector3(0, 1, 0);
+    public float jumpspeed = 5f;
 
     public float mouseSensitivity = 0.01f;
-
     public float crouchLerpSpeed = 6f;
 
     private bool isGrounded = true;
-    private Vector3 groundNormal = Vector3.up;
-
-    private Vector3 connectionVelocity;
+    private bool isCrouching;
 
     private float xRotation = 0f;
-    private bool isCrouching;
     private float camDefaultY = 200f;
     private float camCrouchY = 50f;
 
     private bool movementKeyPressed = false;
-
-    private Vector2 moveInput;
-    private Vector2 lookInput;
     private Vector3 move;
+    private Vector2 lookInput;
 
-    // Footstep timing
     private float footstepTimer = 0f;
-    private float footstepInterval = 0.5f; // Time between footsteps (adjust this!)
+    private float footstepInterval = 0.5f;
+
+    private float minPitch = -80f;
+    private float maxPitch = 80f;
+
+    private bool jumpRequested = false;
+    public float jumpHeight = 2f;
+    private float startheight = 0;
 
     void Start()
     {
         cam = GameObject.Find("Main Camera").GetComponent<Transform>();
-
         audioComp = GetComponent<AudioComponent>();
         if (audioComp == null)
-        {
             Console.WriteLine("Warning: No AudioComponent found on player!");
-        }
-        else
-        {
-            Console.WriteLine("AudioComponent found successfully!");
-        }
     }
 
     void Update()
     {
-        moveInput = Vector2.zero;
-        movementKeyPressed = false;
-        move = Vector3.zero;
-
-        if (Input.GetKeyDown(KeyCode.A))
-        {
-            //moveInput.x = Vector2.left.x;
-            move += transform.right;
-            //transform.Translate(new Vector3(1, 0, 0) * Time.deltaTime);
-            movementKeyPressed = true;
-        }
-        if (Input.GetKeyDown(KeyCode.D))
-        {
-            //moveInput.x = Vector2.right.x;
-            move += -transform.right;
-            //transform.Translate(new Vector3(-1, 0, 0) * Time.deltaTime);
-
-            movementKeyPressed = true;
-        }
-        if (Input.GetKeyDown(KeyCode.W))
-        {
-            //transform.Translate(new Vector3(0, 0, 1) * Time.deltaTime);
-            //moveInput.y = Vector2.up.y;
-            move += transform.forward;
-            movementKeyPressed = true;
-        }
-        if (Input.GetKeyDown(KeyCode.S))
-        {
-            //moveInput.y = Vector2.down.y;
-            //transform.Translate(new Vector3(0, 0, -1) * Time.deltaTime);
-            move += -transform.forward;
-            movementKeyPressed = true;
-        }
-
-        if (move.SqrMagnitude > 0)
-            move = move.normalized * moveSpeed * Time.fixedDeltaTime;
-
-        move = new Vector3(move.x, 0, move.z);
-
-        Vector3 newPos = transform.position + move;
-
-        if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
-        {
-            isGrounded = false;
-            newPos += new Vector3(0, jumpspeed, 0);
-            //jumpvec = new Vector3(0, jumpspeed, 0);
-        }
-        //if(!isGrounded)
-        //{
-        //    jumpvec += new Vector3(0, -0.981f, 0);
-        //    transform.Translate(jumpvec * Time.deltaTime);
-        //}
-
-        Physics.SetPosition((ulong)gameObject.GetInstanceID(), transform.position);
-        transform.position = newPos;
-        //HandleMovement();
+        HandleInput();
         HandleLook();
         HandleCameraLerp();
         HandleFootstepAudio();
-
-        lookInput = Input.mousePositionDelta;
     }
 
-    private void HandleMovement()
+    private void HandleInput()
     {
-        float speed = moveSpeed;
-        //if (isSprinting && !isCrouching) speed = sprintSpeed;
-        //if (isCrouching) speed = crouchSpeed;
+        move = Vector3.zero;
+        movementKeyPressed = false;
 
-        Vector3 inputWorld = transform.right * -moveInput.x + transform.forward * moveInput.y;
+        if (Input.GetKeyDown(KeyCode.W)) { move += transform.forward; movementKeyPressed = true; }
+        if (Input.GetKeyDown(KeyCode.S)) { move += -transform.forward; movementKeyPressed = true; }
+        if (Input.GetKeyDown(KeyCode.A)) { move += transform.right; movementKeyPressed = true; }
+        if (Input.GetKeyDown(KeyCode.D)) { move += -transform.right; movementKeyPressed = true; }
 
-        Vector3 xAxis = Vector3.ProjectOnPlane(transform.right, groundNormal).normalized;
-        Vector3 zAxis = Vector3.ProjectOnPlane(transform.forward, groundNormal).normalized;
-        Vector3 desiredRelative =
-            (xAxis * Vector3.Dot(inputWorld, xAxis) + zAxis * Vector3.Dot(inputWorld, zAxis)).normalized * speed;
+        if (move.SqrMagnitude > 0f)
+            move = move.normalized * moveSpeed * Time.deltaTime;
 
-        Vector3 horizontalVelocity = connectionVelocity;
-        if (desiredRelative.SqrMagnitude > 0f)
-            horizontalVelocity += desiredRelative;
+        Vector3 newPos = transform.position + new Vector3(move.x, 0, move.z);
 
-        // Move the character in world space using the computed horizontal velocity
-        transform.Translate(horizontalVelocity * Time.deltaTime);
-        transform.Translate(jumpvec * Time.deltaTime);
+        // Request jump
+        if (Input.GetKey(KeyCode.Space) && isGrounded)
+        {
+            jumpRequested = true;
+            isGrounded = false; // prevent double jump
+            startheight = transform.position.y;
+        }
+
+        // Apply jump once
+        if (jumpRequested)
+        {
+            if (newPos.y < startheight+jumpHeight)
+                newPos.y += jumpspeed * Time.fixedDeltaTime; // teleport player slightly up
+            else
+                jumpRequested = false;
+        }
+
+        transform.position = newPos;
+
+        // Sync physics collider
         Physics.SetPosition((ulong)gameObject.GetInstanceID(), transform.position);
-    }
 
-    private void HandleFootstepAudio()
-    {
-        if (audioComp == null) return;
 
-        footstepTimer += Time.deltaTime;
-
-        // Play footstep when a movement key is pressed and player is grounded
-        if (movementKeyPressed && footstepTimer >= footstepInterval && !audioComp.isPlaying)
-        {
-            Console.WriteLine("Playing footstep sound - Key pressed and grounded");
-            audioComp.shouldPlay = true;
-            footstepTimer = 0f;
-        }
-        else if (movementKeyPressed && !isGrounded)
-        {
-            Console.WriteLine("Key pressed but NOT grounded - no footstep");
-        }
-        else if (!movementKeyPressed)
-        {
-            // This will spam the console, but helps debug
-            // Console.WriteLine("No movement key pressed this frame");
-        }
+        // Sync physics collider with the transform
+        Physics.SetPosition((ulong)gameObject.GetInstanceID(), transform.position);
     }
 
     private void HandleLook()
     {
+        lookInput = Input.mousePositionDelta;
+
         float mouseX = -lookInput.x * mouseSensitivity;
         float mouseY = lookInput.y * mouseSensitivity;
 
-        xRotation = Mathf.Clamp(xRotation - mouseY, -80f, 80f);
+        xRotation -= mouseY;
+        xRotation = Mathf.Clamp(xRotation, minPitch, maxPitch);
 
-        cam.rotation = Quaternion.Euler(xRotation, 0f, 0f); // camera child handles pitch
-        transform.Rotate(Vector3.up * mouseX); // player object handles yaw
+        cam.rotation = Quaternion.Euler(xRotation, 0f, 0f);
+        transform.Rotate(Vector3.up * mouseX);
     }
 
     private void HandleCameraLerp()
@@ -181,17 +113,25 @@ public class PlayerController2 : MonoBehaviour
         cam.position = camPos;
     }
 
+    private void HandleFootstepAudio()
+    {
+        if (audioComp == null) return;
+
+        footstepTimer += Time.deltaTime;
+
+        if (movementKeyPressed && footstepTimer >= footstepInterval)
+        {
+            if (!audioComp.isPlaying)
+            {
+                audioComp.shouldPlay = true;
+                footstepTimer = 0f;
+            }
+        }
+    }
+
     void OnCollisionEnter(Collision col)
     {
         if (col.gameObject.name == "floor")
             isGrounded = true;
-    }
-
-    void OnCollisionStay(Collision col)
-    {
-    }
-
-    void OnCollisionExit(Collision col)
-    {
     }
 }

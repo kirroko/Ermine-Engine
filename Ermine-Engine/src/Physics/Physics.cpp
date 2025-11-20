@@ -366,7 +366,7 @@ namespace Ermine
 			if (!ecs.IsEntityValid(recipientEntity) || !ecs.IsEntityValid(otherEntity))
 				continue;
 
-			if (!ecs.HasComponent<ScriptsComponent>(recipientEntity) || !ecs.HasComponent<ScriptsComponent>(otherEntity))
+			if (!ecs.HasComponent<ScriptsComponent>(recipientEntity))
 				continue;
 
 			auto& scs = ecs.GetComponent<ScriptsComponent>(recipientEntity);
