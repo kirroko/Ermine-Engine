@@ -12,8 +12,10 @@ uniform uvec2 u_GBuffer0Handle;
 uniform uvec2 u_GBuffer1Handle;
 uniform uvec2 u_GBuffer2Handle;
 uniform uvec2 u_GBuffer3Handle;
-uniform uvec2 u_GBufferDepthHandle; 
-uniform uvec2 u_ShadowMapArrayHandle; 
+uniform uvec2 u_GBufferDepthHandle;
+uniform uvec2 u_ShadowMapArrayHandle;
+uniform uvec2 u_IGNHandle;
+uniform vec2 u_IGNResolution;
 
 // Matrices for position reconstruction
 uniform mat4 view;
@@ -95,6 +97,12 @@ vec3 reconstructViewPosition(vec2 texCoord, float depth) {
     return viewPos.xyz / viewPos.w;
 }
 
+// IGN sampling
+float getIGN(vec2 fragCoord) {
+    sampler2D ignTexture = sampler2D(u_IGNHandle);
+    vec2 uv = mod(fragCoord, u_IGNResolution) / u_IGNResolution;
+    return texture(ignTexture, uv).r;
+}
 
 float calculateSSAO(vec2 texCoord, vec3 fragPosView, vec3 normalView, float depth) {
     // Early exit if SSAO is disabled
@@ -113,9 +121,10 @@ float calculateSSAO(vec2 texCoord, vec3 fragPosView, vec3 normalView, float dept
     if (fadeoutFactor >= 0.99) {
         return 1.0;
     }
-    
-    // Generate random rotation
-    float randomAngle = fract(sin(dot(texCoord * 1000.0, vec2(12.9898, 78.233))) * 43758.5453) * 2.0 * PI;
+
+    // Generate random rotation using IGN
+    float noise = getIGN(gl_FragCoord.xy);
+    float randomAngle = noise * 2.0 * PI;
     
     // Create tangent space basis
     vec3 randomVec = vec3(cos(randomAngle), sin(randomAngle), 0.0);
