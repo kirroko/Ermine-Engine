@@ -325,6 +325,8 @@ namespace Ermine
 
 			auto& p = ecs.GetComponent<PhysicComponent>(entity);
 			auto& t = ecs.GetComponent<Transform>(entity);
+			if (p.isDead)
+				continue;
 
 			if (p.motionType == JPH::EMotionType::Kinematic)
 			{
@@ -353,10 +355,18 @@ namespace Ermine
 
 			auto const& [type, recipientEntity, otherEntity, sensor] = ev;
 
-			if (!ecs.IsEntityValid(recipientEntity))
+			if (ecs.HasComponent<PhysicComponent>(recipientEntity) && ecs.HasComponent<PhysicComponent>(otherEntity))
+			{
+				if (ecs.GetComponent<PhysicComponent>(recipientEntity).isDead || ecs.GetComponent<PhysicComponent>(otherEntity).isDead)
+				{
+					continue;
+				}
+			}
+
+			if (!ecs.IsEntityValid(recipientEntity) || !ecs.IsEntityValid(otherEntity))
 				continue;
 
-			if (!ecs.HasComponent<ScriptsComponent>(recipientEntity))
+			if (!ecs.HasComponent<ScriptsComponent>(recipientEntity) || !ecs.HasComponent<ScriptsComponent>(otherEntity))
 				continue;
 
 			auto& scs = ecs.GetComponent<ScriptsComponent>(recipientEntity);
@@ -400,7 +410,7 @@ namespace Ermine
 			}
 
 			auto& p = ecs.GetComponent<PhysicComponent>(entity);
-			if (p.motionType == JPH::EMotionType::Static)
+			if (p.motionType == JPH::EMotionType::Static || p.isDead)
 				continue;
 
 			auto& t = ecs.GetComponent<Transform>(entity);
@@ -973,16 +983,41 @@ namespace Ermine
 	***************************************************************************/
 	void Physics::ClearPhysicBody()
 	{
-		JPH::BodyInterface& bi = mPhysicsSystem.GetBodyInterfaceNoLock();
-		JPH::BodyIDVector bodyIDs;
-		mPhysicsSystem.GetBodies(bodyIDs);
+		auto& ecs = ECS::GetInstance();
+		JPH::BodyInterface& bi = mPhysicsSystem.GetBodyInterface();
 
+		// Copy the list first — do NOT iterate live list
+		JPH::BodyIDVector bodyIDs;
+		mPhysicsSystem.GetBodies(bodyIDs);   // safe snapshot
+
+		// First: Remove all bodies from world
 		for (JPH::BodyID id : bodyIDs)
 		{
-			bi.RemoveBody(id);
+			if (bi.IsAdded(id))
+				bi.RemoveBody(id);
+		}
+
+		// Second: Destroy all bodies safely
+		for (JPH::BodyID id : bodyIDs)
+		{
 			bi.DestroyBody(id);
 		}
+
+		// Clear internal ECS → Physics mappings
+		for (auto& [entity, bodyID] : mEntityToBody)
+		{
+			if (ecs.IsEntityValid(entity) &&
+				ecs.HasComponent<PhysicComponent>(entity))
+			{
+				auto& p = ecs.GetComponent<PhysicComponent>(entity);
+				p.body = nullptr;
+				p.bodyID = JPH::BodyID(JPH::BodyID::cInvalidBodyID);
+			}
+		}
+
+		mEntityToBody.clear();
 	}
+
 
 	/*!*************************************************************************
 	  \brief
@@ -1143,6 +1178,12 @@ namespace Ermine
 
 			if (!ecs.IsEntityValid(entA) && !ecs.IsEntityValid(entB))
 				continue;
+
+			if (ecs.HasComponent<PhysicComponent>(entA) && ecs.HasComponent<PhysicComponent>(entB))
+			{
+				if (ecs.GetComponent<PhysicComponent>(entA).isDead || ecs.GetComponent<PhysicComponent>(entB).isDead)
+					continue;
+			}
 
 			if (ecs.IsEntityValid(entA) && ecs.HasComponent<ScriptsComponent>(entA))
 				mCollisionEvent.emplace(pp.type, entA, entB, bIsSensor);

@@ -1871,6 +1871,9 @@ namespace
 		EntityID id = GetEntityIDFromManaged(target);
 		if (id == 0 || !ECS::GetInstance().IsEntityValid(id))
 			return;
+		if (ECS::GetInstance().HasComponent<PhysicComponent>(id))
+			ECS::GetInstance().GetComponent<PhysicComponent>(id).isDead = true;
+		
 		//ECS::GetInstance().DestroyEntity(id);
 		EnqueueLateDestory(id);
 	}
@@ -2094,11 +2097,25 @@ namespace Ermine::scripting
 		}
 
 		auto& ecs = ECS::GetInstance();
+		static bool physchange = false;
 		for (EntityID id : toDestroy)
 		{
+			if (ECS::GetInstance().HasComponent<PhysicComponent>(id))
+			{
+				physchange = true;
+				ECS::GetInstance().GetComponent<PhysicComponent>(id).isDead = true;
+			}
+
+
 			if (id != 0 && ecs.IsEntityValid(id))
 				ecs.DestroyEntity(id);
 		}
+		if (physchange)
+		{
+			ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
+			physchange = false;
+		}
+
 	}
 
 	void ScriptEngine::PushSingleField(MonoObject* obj,

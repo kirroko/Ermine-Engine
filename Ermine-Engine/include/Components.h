@@ -2335,6 +2335,7 @@ namespace Ermine
 		JPH::Body* body{ nullptr };
 		std::vector<glm::vec3> customMeshVertices;   // For custom mesh
 		JPH::RefConst<JPH::Shape> shapeRef;
+		bool isDead = false;
 
 		PhysicComponent() = default;
 
