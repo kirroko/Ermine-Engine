@@ -60,7 +60,7 @@ public class PlayerController2 : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.D)) { move += -transform.right; movementKeyPressed = true; }
 
         if (move.SqrMagnitude > 0f)
-            move = move.normalized * moveSpeed * Time.deltaTime;
+            move = move.normalized * moveSpeed * Time.fixedDeltaTime;
 
         Vector3 newPos = transform.position + new Vector3(move.x, 0, move.z);
 
