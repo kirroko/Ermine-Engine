@@ -67,6 +67,7 @@ namespace Ermine::editor {
 
 	static bool FieldAppliesToType(const std::string& key, LightType t) {
 		if (key == "innerAngle" || key == "outerAngle") return t == LightType::SPOT;
+		if (key == "castsRays") return t == LightType::SPOT; // Only show for spotlights
 		if (key == "radius") return t == LightType::SPOT || t == LightType::POINT;
 		// color, intensity, castsShadows, type are always shown
 		return true;

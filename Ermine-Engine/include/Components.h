@@ -1714,6 +1714,7 @@ namespace Ermine
 		float intensity{};
 		LightType type{};
 		bool castsShadows{ false };
+		bool castsRays{ false }; // For volumetric light shafts/god rays
 		glm::mat4 lightSpaceMatrices[NUM_CASCADES]{}; // For shadow mapping
 		int startOffset{ 0 }; // For UBO indexing
 		float innerAngle{ -1.0f }; // For spotlights
@@ -1765,6 +1766,7 @@ namespace Ermine
 			xproperty::obj_member<"intensity", &Light::intensity>,
 			xproperty::obj_member<"type", &Light::type>,
 			xproperty::obj_member<"castsShadows", &Light::castsShadows>,
+			xproperty::obj_member<"castsRays", &Light::castsRays>,
 			xproperty::obj_member<"innerAngle", &Light::innerAngle>,  // used for spot
 			xproperty::obj_member<"outerAngle", &Light::outerAngle>,  // used for spot
 			xproperty::obj_member<"radius", &Light::radius>       // used for point/spot

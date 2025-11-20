@@ -3847,7 +3847,13 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
 		gpu.position_type = glm::vec4(lightPos.x, lightPos.y, lightPos.z, static_cast<float>(light.type));
 		gpu.color_intensity = glm::vec4(light.color.x, light.color.y, light.color.z, light.intensity);
 		gpu.direction_range = glm::vec4(dirWorld.x, dirWorld.y, dirWorld.z, light.radius);
-		gpu.spot_angles_castshadows_startOffset = glm::vec4(innerCos, outerCos, light.castsShadows, light.startOffset);
+
+		// Pack flags into bitfield: bit 0 = castsShadows, bit 1 = castsRays
+		float flags = 0.0f;
+		if (light.castsShadows) flags += 1.0f;  // bit 0
+		if (light.castsRays) flags += 2.0f;     // bit 1
+
+		gpu.spot_angles_castshadows_startOffset = glm::vec4(innerCos, outerCos, flags, light.startOffset);
 
 		for (int i = 0; i < NUM_CASCADES; ++i) {
 			gpu.lightSpaceMatrix[i] = light.lightSpaceMatrices[i];

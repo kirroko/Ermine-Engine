@@ -51,7 +51,7 @@ struct Light {
     vec4 position_type;    // xyz = position (world space), w = light type
     vec4 color_intensity;  // xyz = color, w = intensity
     vec4 direction_range;  // xyz = direction (world space), w = range
-    vec4 spot_angles_castshadows_startOffset; // x = inner angle (cos), y = outer angle (cos), z = cast shadows (bool), w = shadow map index or 0 if no shadows
+    vec4 spot_angles_castshadows_startOffset; // x = inner angle (cos), y = outer angle (cos), z = flags bitfield (bit 0: castsShadows, bit 1: castsRays), w = shadow map index or 0 if no shadows
     mat4 lightSpaceMatrix[NUM_CASCADES]; // Light view-projection matrices for cascaded shadow maps
     vec4 splitDepths[(NUM_CASCADES + 3) / 4]; // Split depths for cascaded shadow maps
 };
@@ -68,6 +68,19 @@ const uint SECTOR_COUNT = 32u;
 const int POINT_LIGHT = 0;
 const int DIRECTIONAL_LIGHT = 1;
 const int SPOT_LIGHT = 2;
+
+// Light flag bit positions
+const int LIGHT_FLAG_CASTS_SHADOWS = 1;  // bit 0
+const int LIGHT_FLAG_CASTS_RAYS = 2;     // bit 1
+
+// Helper functions to extract light flags
+bool lightCastsShadows(Light light) {
+    return (int(light.spot_angles_castshadows_startOffset.z) & LIGHT_FLAG_CASTS_SHADOWS) != 0;
+}
+
+bool lightCastsRays(Light light) {
+    return (int(light.spot_angles_castshadows_startOffset.z) & LIGHT_FLAG_CASTS_RAYS) != 0;
+}
 
 vec3 getViewPosition(vec2 texCoord, float depth) {
     vec4 ndc = vec4(texCoord * 2.0 - 1.0, depth * 2.0 - 1.0, 1.0);
@@ -580,9 +593,8 @@ void main()
             // Shadow factor (1.0 = lit, 0.0 = shadowed)
             float shadowFactor = 1.0;
             int lightType = int(lights[i].position_type.w);
-            bool castsShadows = (lights[i].spot_angles_castshadows_startOffset.z > 0.5);
 
-            if (castsShadows && lightType == DIRECTIONAL_LIGHT) {
+            if (lightCastsShadows(lights[i]) && lightType == DIRECTIONAL_LIGHT) {
                 int cascadeIndex = NUM_CASCADES - 1; // Default to last cascade
 
                 // Select cascade based on view-space distance
@@ -607,7 +619,7 @@ void main()
                 );
 
             }
-            else if (castsShadows && (lightType == SPOT_LIGHT)) {
+            else if (lightCastsShadows(lights[i]) && (lightType == SPOT_LIGHT)) {
                 // Check if this cascade has a valid matrix (non-zero)
                 mat4 cascadeMatrix = lights[i].lightSpaceMatrix[0];
                 bool hasValidMatrix = (cascadeMatrix[0][0] != 0.0 || cascadeMatrix[0][1] != 0.0 || 
@@ -648,9 +660,8 @@ void main()
 
             float shadowFactor = 1.0;
             int lightType = int(lights[i].position_type.w);
-            bool castsShadows = (lights[i].spot_angles_castshadows_startOffset.z > 0.5);
 
-            if (castsShadows && lightType == DIRECTIONAL_LIGHT) {
+            if (lightCastsShadows(lights[i]) && lightType == DIRECTIONAL_LIGHT) {
                 int cascadeIndex = NUM_CASCADES - 1;
 
                 // Select cascade based on view-space distance
@@ -673,8 +684,8 @@ void main()
                     layerIndex
                 );
 
-            } 
-            else if (castsShadows && (lightType == SPOT_LIGHT)) {
+            }
+            else if (lightCastsShadows(lights[i]) && (lightType == SPOT_LIGHT)) {
                 // Check if this cascade has a valid matrix (non-zero)
                 mat4 cascadeMatrix = lights[i].lightSpaceMatrix[0];
                 bool hasValidMatrix = (cascadeMatrix[0][0] != 0.0 || cascadeMatrix[0][1] != 0.0 || 
