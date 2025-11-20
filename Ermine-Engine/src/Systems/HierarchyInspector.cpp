@@ -863,9 +863,9 @@ namespace Ermine::editor {
 
 		SlotRow rows[] = {
 			{ "Albedo",    "materialAlbedoMap",   "material.albedoMap",   "materialHasAlbedoMap",    nullptr },
-			{ "Normal",    "material.normalMap",  nullptr,                 "materialHasNormalMap",   "material.hasNormalMap" },
+			{ "Normal",    "materialNormalMap",   "material.normalMap",    "materialHasNormalMap",   "material.hasNormalMap" },
 			{ "Roughness", "materialRoughnessMap",nullptr,                 "materialHasRoughnessMap",nullptr },
-			{ "Metallic",  "material.metallicMap",nullptr,                 "materialHasMetallicMap", nullptr },
+			{ "Metallic",  "materialMetallicMap", "material.metallicMap",  "materialHasMetallicMap", nullptr },
 			{ "AO",        "materialAoMap",       nullptr,                 "materialHasAoMap",       nullptr },
 			{ "Emissive",  "materialEmissiveMap", nullptr,                 "materialHasEmissiveMap", nullptr },
 		};
@@ -1556,7 +1556,10 @@ namespace Ermine::editor {
 			}
 			// Push change to managed object
 			if (script.m_instance && script.m_instance->object)
+			{
 				scripting::ScriptEngine::PushCacheToManagedFields(script.m_instance->object, fields);
+				scripting::ScriptEngine::PullManagedFieldsToCache(script.m_instance->object, script.m_fields);
+			}
 
 			ImGui::PopID();
 		}

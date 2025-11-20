@@ -1,0 +1,337 @@
+#version 460 core
+#extension GL_ARB_bindless_texture : require
+
+// Inputs from vertex shader
+in vec2 TexCoord;
+in vec3 Normal;
+in vec3 FragPos;
+in vec3 ViewPos;
+in vec3 Tangent;
+in vec3 Bitangent;
+flat in uint vMaterialIndex;
+flat in vec3 vCameraPos;    // Camera position in world space
+flat in vec3 vModelCenter;  // Model center in world space
+
+// Output
+out vec4 FragColor;
+
+// Material structure
+struct MaterialData {
+    vec4 albedo;
+    float metallic;
+    float roughness;
+    float ao;
+    float normalStrength;
+    vec3 emissive;
+    float emissiveIntensity;
+    int shadingModel;
+    uint textureFlags;
+    float _pad0;
+    float _pad1;
+    vec2 uvScale;
+    vec2 uvOffset;
+    int albedoMapIndex;
+    int normalMapIndex;
+    int roughnessMapIndex;
+    int metallicMapIndex;
+    int aoMapIndex;
+    int emissiveMapIndex;
+    int _pad2;
+    int _pad3;
+};
+
+layout(std430, binding = 3) restrict readonly buffer MaterialBlock {
+    MaterialData materials[];
+};
+
+layout(std430, binding = 5) restrict readonly buffer TextureArrayBlock {
+    uvec2 textureHandles[];
+};
+
+// Uniforms
+uniform float u_Time;
+
+// Volumetric parameters
+uniform float orbRadius = 0.15;          // Central sphere size
+uniform float textureRadius = 0.15;       // Texture layer radius
+uniform float textureRadius2 = 0.15;     // Second texture layer radius
+uniform float volumeRadius = 0.6;        // Outer boundary for raymarching
+uniform vec3 orbColor = vec3(1.0, 0.5, 0.1);  // Super bright orange
+uniform float orbIntensity = 8.0;        // HDR brightness
+uniform int numSteps = 48;
+
+// Spark parameters
+uniform int sparkCount = 10;             // Fewer sparks
+uniform float sparkSize = 0.015;         // Super small but visible
+uniform float sparkSpeed = 3.0;          // Slower
+uniform float sparkIntensity = 15.0;     // Super bright
+
+const uint MAT_FLAG_ALBEDO_MAP = 1u << 0u;
+const uint MAT_FLAG_NORMAL_MAP = 1u << 1u;
+
+// 3D noise for warping
+float hash(vec3 p) {
+    p = fract(p * 0.3183099 + 0.1);
+    p *= 17.0;
+    return fract(p.x * p.y * p.z * (p.x + p.y + p.z));
+}
+
+float noise(vec3 x) {
+    vec3 p = floor(x);
+    vec3 f = fract(x);
+    f = f * f * (3.0 - 2.0 * f);
+    return mix(
+        mix(mix(hash(p + vec3(0,0,0)), hash(p + vec3(1,0,0)), f.x),
+            mix(hash(p + vec3(0,1,0)), hash(p + vec3(1,1,0)), f.x), f.y),
+        mix(mix(hash(p + vec3(0,0,1)), hash(p + vec3(1,0,1)), f.x),
+            mix(hash(p + vec3(0,1,1)), hash(p + vec3(1,1,1)), f.x), f.y),
+        f.z);
+}
+
+// Ray-sphere intersection
+bool intersectSphere(vec3 ro, vec3 rd, vec3 center, float radius, out float t0, out float t1) {
+    vec3 oc = ro - center;
+    float b = dot(oc, rd);
+    float c = dot(oc, oc) - radius * radius;
+    float h = b * b - c;
+    if (h < 0.0) return false;
+    h = sqrt(h);
+    t0 = -b - h;
+    t1 = -b + h;
+    return true;
+}
+
+// Sample density - simple uniform sphere
+float sampleOrbDensity(vec3 pos, vec3 center) {
+    float dist = length(pos - center);
+
+    // Simple sphere - uniform density inside, nothing outside
+    if (dist <= orbRadius) {
+        return 1.0;  // Constant density
+    }
+
+    return 0.0;
+}
+
+// Sample sparks - super small bright particles
+float sampleSparks(vec3 pos, vec3 center) {
+    float sparkContribution = 0.0;
+
+    for (int i = 0; i < sparkCount; i++) {
+        // More random seed variation
+        float sparkSeed = float(i) * 7.123 + float(i * i) * 0.314;
+
+        // Sporadic emission - each spark has random intervals of activity
+        float emissionCycle = hash(vec3(sparkSeed * 8.1, sparkSeed * 9.3, sparkSeed * 10.7));
+        float emissionFrequency = 0.2 + emissionCycle * 0.3;  // Random frequency between 0.2-0.5
+        float emissionPhase = fract(u_Time * emissionFrequency + emissionCycle);
+
+        // Spark only active during certain windows (creates gaps)
+        float activeWindow = hash(vec3(sparkSeed * 11.2, sparkSeed * 12.4, sparkSeed * 13.8));
+        float windowSize = 0.3 + activeWindow * 0.3;  // Active for 30-60% of the cycle
+
+        // Check if spark is in active window
+        if (emissionPhase > windowSize) {
+            continue;  // Skip this spark, it's not emitting right now
+        }
+
+        // Normalize phase within the active window
+        float normalizedPhase = emissionPhase / windowSize;
+
+        // Random direction for this spark - vary all 3 components for proper randomness
+        vec3 sparkDir = normalize(vec3(
+            hash(vec3(sparkSeed, sparkSeed * 1.3, sparkSeed * 1.7)) * 2.0 - 1.0,
+            hash(vec3(sparkSeed * 2.1, sparkSeed, sparkSeed * 2.9)) * 2.0 - 1.0,
+            hash(vec3(sparkSeed * 3.3, sparkSeed * 3.7, sparkSeed)) * 2.0 - 1.0
+        ));
+
+        // Variable speed per spark for organic feel
+        float speedVariation = 0.5 + hash(vec3(sparkSeed * 4.3, sparkSeed * 5.1, sparkSeed * 6.7)) * 1.0;
+
+        // Add organic wobble using noise
+        vec3 wobbleOffset = vec3(
+            noise(vec3(sparkSeed * 2.0, u_Time * 0.8, sparkSeed * 3.0)) - 0.5,
+            noise(vec3(sparkSeed * 3.0, u_Time * 0.8, sparkSeed * 4.0)) - 0.5,
+            noise(vec3(sparkSeed * 4.0, u_Time * 0.8, sparkSeed * 5.0)) - 0.5
+        ) * 0.15;  // Wobble amount
+
+        // Outward motion with organic curve
+        float sparkDist = mix(orbRadius * 1.05, volumeRadius * 1.5, smoothstep(0.0, 1.0, normalizedPhase));
+
+        // Current spark position with wobble
+        vec3 sparkPos = center + sparkDir * sparkDist + wobbleOffset;
+
+        // Distance to spark
+        float distToSpark = length(pos - sparkPos);
+
+        // Super small, super bright point
+        if (distToSpark < sparkSize) {
+            float falloff = 1.0 - (distToSpark / sparkSize);
+            falloff = falloff * falloff;
+
+            // Fade in at start and fade out at end
+            float lifeFade = smoothstep(0.0, 0.1, normalizedPhase) * (1.0 - smoothstep(0.7, 1.0, normalizedPhase));
+
+            // Add flicker using noise
+            float flicker = 0.8 + 0.2 * noise(vec3(sparkSeed * 15.0, u_Time * 10.0, sparkSeed * 16.0));
+
+            sparkContribution += falloff * lifeFade * flicker;
+        }
+    }
+
+    return sparkContribution;
+}
+
+void main()
+{
+    MaterialData material = materials[vMaterialIndex];
+
+    // Setup ray
+    vec3 rayOrigin = vCameraPos;
+    vec3 rayDir = normalize(FragPos - vCameraPos);
+
+    // Intersect with bounding volume
+    float tNear, tFar;
+    if (!intersectSphere(rayOrigin, rayDir, vModelCenter, volumeRadius, tNear, tFar)) {
+        discard;
+    }
+
+    tNear = max(tNear, 0.0);
+    if (tNear >= tFar) discard;
+
+    // Raymarch through volume
+    float stepSize = (tFar - tNear) / float(numSteps);
+    vec3 accumulatedColor = vec3(0.0);
+    float accumulatedAlpha = 0.0;
+
+    for (int i = 0; i < numSteps; i++) {
+        if (accumulatedAlpha > 0.98) break;
+
+        float t = tNear + (float(i) + 0.5) * stepSize;
+        vec3 samplePos = rayOrigin + rayDir * t;
+
+        // --- 1. SUPER BRIGHT ORANGE ORB WITH WARPING ---
+        float orbDensity = sampleOrbDensity(samplePos, vModelCenter);
+        if (orbDensity > 0.01) {
+            vec3 orbEmission = orbColor * orbIntensity * orbDensity;
+
+            float stepDensity = orbDensity * stepSize * 3.0;
+            float stepAlpha = 1.0 - exp(-stepDensity);
+
+            accumulatedColor += orbEmission * stepAlpha * (1.0 - accumulatedAlpha);
+            accumulatedAlpha += stepAlpha * (1.0 - accumulatedAlpha);
+        }
+
+        // --- 2. SUPER SMALL BRIGHT SPARKS ---
+        float sparkDensity = sampleSparks(samplePos, vModelCenter);
+        if (sparkDensity > 0.01) {
+            vec3 sparkEmission = vec3(1.0, 0.9, 0.6) * sparkIntensity * sparkDensity;
+
+            float sparkAlpha = sparkDensity * 0.5;
+
+            accumulatedColor += sparkEmission * sparkAlpha * (1.0 - accumulatedAlpha);
+            accumulatedAlpha += sparkAlpha * (1.0 - accumulatedAlpha);
+        }
+    }
+
+    // --- 3. FLAT TEXTURE LAYER (NON-VOLUMETRIC, MOVING AROUND) ---
+    // Check if ray intersects texture sphere
+    float tTexNear, tTexFar;
+    if (intersectSphere(rayOrigin, rayDir, vModelCenter, textureRadius, tTexNear, tTexFar)) {
+        // Use the near intersection point (front face of texture sphere)
+        float tTex = max(tTexNear, 0.0);
+
+        if (tTex < tFar && tTex >= tNear) {
+            vec3 texPos = rayOrigin + rayDir * tTex;
+            vec3 texNormal = normalize(texPos - vModelCenter);
+
+            // Add animated rotation/movement to texture UVs
+            float rotationAngle = u_Time * 2;
+            float cosA = cos(rotationAngle);
+            float sinA = sin(rotationAngle);
+
+            // Rotate around Y axis
+            vec3 rotatedNormal = vec3(
+                texNormal.x * cosA - texNormal.z * sinA,
+                texNormal.y,
+                texNormal.x * sinA + texNormal.z * cosA
+            );
+
+            // Calculate spherical UVs
+            float phi = atan(rotatedNormal.z, rotatedNormal.x);
+            float theta = acos(clamp(rotatedNormal.y, -1.0, 1.0));
+            vec2 sphericalUV = vec2(
+                phi / (2.0 * 3.14159265359) + 0.5,
+                theta / 3.14159265359
+            );
+
+            // Apply material UV transformations
+            vec2 transformedUV = sphericalUV * material.uvScale + material.uvOffset;
+
+            // Sample texture
+            if ((material.textureFlags & MAT_FLAG_ALBEDO_MAP) != 0u && material.albedoMapIndex >= 0) {
+                vec4 texColor = texture(sampler2D(textureHandles[material.albedoMapIndex]), transformedUV);
+
+                // Only render where texture has alpha
+                if (texColor.a > 0.01) {
+                    // Blend texture on top
+                    vec3 textureLayer = texColor.rgb * texColor.a;
+                    accumulatedColor = mix(accumulatedColor, textureLayer, texColor.a * 0.7);
+                    accumulatedAlpha = mix(accumulatedAlpha, 1.0, texColor.a * 0.5);
+                }
+            }
+        }
+    }
+
+    // --- 4. SECOND TEXTURE LAYER (OPPOSITE ROTATION) ---
+    // Check if ray intersects second texture sphere
+    float tTex2Near, tTex2Far;
+    if (intersectSphere(rayOrigin, rayDir, vModelCenter, textureRadius2, tTex2Near, tTex2Far)) {
+        // Use the near intersection point (front face of texture sphere)
+        float tTex2 = max(tTex2Near, 0.0);
+
+        if (tTex2 < tFar && tTex2 >= tNear) {
+            vec3 texPos2 = rayOrigin + rayDir * tTex2;
+            vec3 texNormal2 = normalize(texPos2 - vModelCenter);
+
+            // Add animated rotation in OPPOSITE direction
+            float rotationAngle2 = -u_Time * 10;  // Negative for opposite rotation and faster
+            float cosA2 = cos(rotationAngle2);
+            float sinA2 = sin(rotationAngle2);
+
+            // Rotate around Y axis
+            vec3 rotatedNormal2 = vec3(
+                texNormal2.x * cosA2 - texNormal2.z * sinA2,
+                texNormal2.y,
+                texNormal2.x * sinA2 + texNormal2.z * cosA2
+            );
+
+            // Calculate spherical UVs
+            float phi2 = atan(rotatedNormal2.z, rotatedNormal2.x);
+            float theta2 = acos(clamp(rotatedNormal2.y, -1.0, 1.0));
+            vec2 sphericalUV2 = vec2(
+                phi2 / (2.0 * 3.14159265359) + 0.5,
+                theta2 / 3.14159265359
+            );
+
+            // Apply material UV transformations with additional offset
+            vec2 transformedUV2 = sphericalUV2 * material.uvScale + material.uvOffset;
+            transformedUV2 += vec2(0.5, 0.5);  // Add offset to shift the texture
+
+            // Sample same albedo texture as first layer
+            if ((material.textureFlags & MAT_FLAG_ALBEDO_MAP) != 0u && material.albedoMapIndex >= 0) {
+                vec4 texColor2 = texture(sampler2D(textureHandles[material.albedoMapIndex]), transformedUV2);
+
+                // Only render where texture has alpha
+                if (texColor2.a > 0.01) {
+                    // Blend texture on top with slight transparency
+                    vec3 textureLayer2 = texColor2.rgb * texColor2.a;
+                    accumulatedColor = mix(accumulatedColor, textureLayer2, texColor2.a * 0.6);
+                    accumulatedAlpha = mix(accumulatedAlpha, 1.0, texColor2.a * 0.4);
+                }
+            }
+        }
+    }
+
+    FragColor = vec4(accumulatedColor, accumulatedAlpha);
+}

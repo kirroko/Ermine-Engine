@@ -43,9 +43,9 @@ uniform float u_FogEnd = 200.0;         // For linear fog
 
 // Light structure
 struct Light {
-    vec4 position_type;    // xyz = position (view space), w = light type
+    vec4 position_type;    // xyz = position (world space), w = light type
     vec4 color_intensity;  // xyz = color, w = intensity
-    vec4 direction_range;  // xyz = direction (view space), w = range
+    vec4 direction_range;  // xyz = direction (world space), w = range
     vec4 spot_angles_castshadows_startOffset; // x = inner angle (cos), y = outer angle (cos), z = cast shadows (bool), w = shadow map index or 0 if no shadows
     mat4 lightSpaceMatrix[NUM_CASCADES]; // Light view-projection matrices for cascaded shadow maps
     vec4 splitDepths[(NUM_CASCADES + 3) / 4]; // Split depths for cascaded shadow maps
@@ -271,7 +271,11 @@ float calculateAttenuation(int lightIndex, vec3 fragPosView, out vec3 lightDir)
 
         // Spot cone
         if (lightType == SPOT_LIGHT) {
-            vec3 spotDir = normalize(lights[lightIndex].direction_range.xyz);
+            // Transform spotlight direction from world space to view space
+            vec3 spotDirWorld = lights[lightIndex].direction_range.xyz;
+            vec4 spotDirView4 = view * vec4(spotDirWorld, 0.0);
+            vec3 spotDir = normalize(spotDirView4.xyz);
+
             float cosAngle = dot(-lightDir, spotDir);
             float innerCos = lights[lightIndex].spot_angles_castshadows_startOffset.x;
             float outerCos = lights[lightIndex].spot_angles_castshadows_startOffset.y;
@@ -433,11 +437,11 @@ float calculateShadowFactor(mat4 lightSpaceMatrix, int lightIndex, vec3 fragPosW
     int lightType = int(lights[lightIndex].position_type.w);
     vec3 lightDirWorld;
     if (lightType == DIRECTIONAL_LIGHT) {
-        vec3 dirView = lights[lightIndex].direction_range.xyz;
-        lightDirWorld = normalize((invView * vec4(dirView, 0.0)).xyz);
+        // Light direction is already in world space
+        lightDirWorld = normalize(lights[lightIndex].direction_range.xyz);
     } else {
-        vec3 lightPosView = lights[lightIndex].position_type.xyz;
-        vec3 lightPosWorld = (invView * vec4(lightPosView, 1.0)).xyz;
+        // Light position is already in world space
+        vec3 lightPosWorld = lights[lightIndex].position_type.xyz;
         lightDirWorld = normalize(lightPosWorld - fragPosWorld);
     }
 
