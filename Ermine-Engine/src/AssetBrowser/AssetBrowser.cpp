@@ -180,26 +180,118 @@ namespace Ermine::ImguiUI
             {
                 static Ermine::MeshImportSettings settings;
 
-                ImGui::Checkbox("Generate Normals", &settings.generateNormals);
-                ImGui::Checkbox("Generate Tangents", &settings.generateTangents);
-                ImGui::Checkbox("Flip UVs", &settings.flipUVs);
-                ImGui::Checkbox("Optimize", &settings.optimizeVertices);
-
+                // Processing Options Section
+                ImGui::TextDisabled("Processing Options:");
                 ImGui::Separator();
-                if (ImGui::MenuItem("Import Now"))
+
+                ImGui::Checkbox("Generate Normals", &settings.generateNormals);
+                if (ImGui::IsItemHovered()) {
+                    ImGui::SetTooltip("Compute normals if missing or replace existing ones");
+                }
+
+                ImGui::Checkbox("Generate Tangents", &settings.generateTangents);
+                if (ImGui::IsItemHovered()) {
+                    ImGui::SetTooltip("Required for normal mapping");
+                }
+
+                ImGui::Checkbox("Flip UVs", &settings.flipUVs);
+                if (ImGui::IsItemHovered()) {
+                    ImGui::SetTooltip("Flip texture coordinates vertically (useful for DirectX assets)");
+                }
+
+                ImGui::Checkbox("Optimize Vertices", &settings.optimizeVertices);
+                if (ImGui::IsItemHovered()) {
+                    ImGui::SetTooltip("Improve GPU cache performance");
+                }
+
+                ImGui::Spacing();
+
+                // Pre-Transform Section
+                ImGui::TextDisabled("Pre-Transform:");
+                ImGui::Separator();
+
+                ImGui::Checkbox("Apply Pre-Transform", &settings.applyPreTransform);
+                if (ImGui::IsItemHovered()) {
+                    ImGui::SetTooltip("Bake transformations into the mesh data");
+                }
+
+                if (settings.applyPreTransform)
+                {
+                    ImGui::Indent();
+
+                    // Scale
+                    ImGui::TextDisabled("Scale:");
+                    ImGui::SetNextItemWidth(200);
+                    ImGui::DragFloat3("##Scale", settings.scale, 0.01f, 0.001f, 100.0f, "%.3f");
+                    if (ImGui::IsItemHovered()) {
+                        ImGui::SetTooltip("Uniform or non-uniform scaling");
+                    }
+
+                    ImGui::SameLine();
+                    if (ImGui::SmallButton("Reset##ScaleReset")) {
+                        settings.scale[0] = settings.scale[1] = settings.scale[2] = 1.0f;
+                    }
+
+                    // Rotation
+                    ImGui::TextDisabled("Rotation (Degrees):");
+                    ImGui::SetNextItemWidth(200);
+                    ImGui::DragFloat3("##Rotation", settings.rotation, 1.0f, -360.0f, 360.0f, "%.1f°");
+                    if (ImGui::IsItemHovered()) {
+                        ImGui::SetTooltip("Euler angles: X (Pitch), Y (Yaw), Z (Roll)");
+                    }
+
+                    ImGui::SameLine();
+                    if (ImGui::SmallButton("Reset##RotReset")) {
+                        settings.rotation[0] = settings.rotation[1] = settings.rotation[2] = 0.0f;
+                    }
+
+                    // Translation
+                    ImGui::TextDisabled("Translation:");
+                    ImGui::SetNextItemWidth(200);
+                    ImGui::DragFloat3("##Translation", settings.translation, 0.1f, -1000.0f, 1000.0f, "%.2f");
+                    if (ImGui::IsItemHovered()) {
+                        ImGui::SetTooltip("Offset the mesh position");
+                    }
+
+                    ImGui::SameLine();
+                    if (ImGui::SmallButton("Reset##TransReset")) {
+                        settings.translation[0] = settings.translation[1] = settings.translation[2] = 0.0f;
+                    }
+
+                    ImGui::Unindent();
+                }
+
+                ImGui::Spacing();
+                ImGui::Separator();
+
+                // Import button
+                if (ImGui::Button("Import Now", ImVec2(120, 0)))
                 {
                     EE_CORE_INFO("Importing mesh: {}", filePath.string());
+
+                    if (settings.applyPreTransform) {
+                        EE_CORE_INFO("  Pre-transform enabled:");
+                        EE_CORE_INFO("    Scale: ({:.3f}, {:.3f}, {:.3f})",
+                            settings.scale[0], settings.scale[1], settings.scale[2]);
+                        EE_CORE_INFO("    Rotation: ({:.1f}°, {:.1f}°, {:.1f}°)",
+                            settings.rotation[0], settings.rotation[1], settings.rotation[2]);
+                        EE_CORE_INFO("    Translation: ({:.2f}, {:.2f}, {:.2f})",
+                            settings.translation[0], settings.translation[1], settings.translation[2]);
+                    }
+
                     auto result = m_Pipeline->ImportMesh(filePath.string(), settings);
 
                     if (result.success) {
-                        EE_CORE_INFO("Import successful: {} ({}ms)",
+                        EE_CORE_INFO("✓ Import successful: {} ({}ms)",
                             result.outputPath, result.importTimeMs);
                         m_Pipeline->GetDatabase().Save();
                         Refresh();
                     }
                     else {
-                        EE_CORE_ERROR("Import failed: {}", result.errorMessage);
+                        EE_CORE_ERROR("✗ Import failed: {}", result.errorMessage);
                     }
+
+                    ImGui::CloseCurrentPopup();
                 }
 
                 ImGui::EndMenu();

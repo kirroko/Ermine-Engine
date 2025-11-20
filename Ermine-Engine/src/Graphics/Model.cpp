@@ -1,4 +1,4 @@
-/* Start Header ************************************************************************/
+﻿/* Start Header ************************************************************************/
 /*!
 \file       Model.cpp
 \author     Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu
@@ -46,30 +46,182 @@ Model::Model(const std::string& path)
     LoadModel(path);
 }
 
-Model::Model(const std::string& path, bool isSkinFile)
+Model::Model(const std::string& path, bool isCacheFile)
 {
     // Get or create counter for this file path
     {
         std::lock_guard<std::mutex> lock(s_counterMutex);
-        // If this is the first time loading this file, create counter starting at 0
         if (s_fileInstanceCounters.find(path) == s_fileInstanceCounters.end()) {
             s_fileInstanceCounters[path].store(0);
         }
-        // Assign instance ID and increment counter for this file
         m_instanceID = s_fileInstanceCounters[path].fetch_add(1);
     }
 
-    if (isSkinFile) {
+    if (isCacheFile) {
+        // Set directory and name for cache files
         m_directory = path.substr(0, path.find_last_of('/'));
         m_name = path.substr(path.find_last_of('/') + 1);
 
-        if (!LoadSkinFile(path)) {
-            EE_CORE_ERROR("Failed to load .skin file: " + path);
+        // Determine file type by extension
+        std::string extension = path.substr(path.find_last_of('.'));
+
+        if (extension == ".skin") {
+            if (!LoadSkinFile(path)) {
+                EE_CORE_ERROR("Failed to load .skin file: " + path);
+            }
+        }
+        else if (extension == ".mesh") {
+            if (!LoadMeshFile(path)) {
+                EE_CORE_ERROR("Failed to load .mesh file: " + path);
+            }
+        }
+        else {
+            EE_CORE_ERROR("Unknown cache file extension: " + extension);
         }
     }
     else {
+        // Load with Assimp for source files (FBX, OBJ, etc.)
         LoadModel(path);
     }
+}
+
+bool Model::LoadMeshFile(const std::string& path)
+{
+    std::ifstream file(path, std::ios::binary);
+    if (!file.is_open()) {
+        EE_CORE_ERROR("Failed to open .mesh file: " + path);
+        return false;
+    }
+
+    // Read and verify magic number
+    char magic[4];
+    file.read(magic, 4);
+    if (std::string(magic, 4) != "MESH") {
+        EE_CORE_ERROR("Invalid .mesh file format (bad magic): " + path);
+        return false;
+    }
+
+    // Read version
+    uint32_t version;
+    file.read((char*)&version, sizeof(version));
+    if (version != 1) {
+        EE_CORE_WARN("Unexpected .mesh version: " + std::to_string(version));
+    }
+
+    // Read vertex count
+    uint32_t vertexCount;
+    file.read((char*)&vertexCount, sizeof(vertexCount));
+
+    // Define the pipeline's Vertex structure (must match ResourcePipeline.cpp)
+    struct PipelineVertex {
+        float position[3];
+        float normal[3];
+        float texCoord[2];
+        float tangent[3];
+    };
+
+    // Read all vertices from file
+    std::vector<PipelineVertex> meshVertices(vertexCount);
+    file.read((char*)meshVertices.data(), vertexCount * sizeof(PipelineVertex));
+
+    // Convert to engine's VertexData format
+    std::vector<VertexData> vertices(vertexCount);
+    for (uint32_t i = 0; i < vertexCount; ++i) {
+        const auto& src = meshVertices[i];
+        auto& dst = vertices[i];
+
+        // Copy position, normal, texcoords, tangent
+        memcpy(dst.position, src.position, sizeof(float) * 3);
+        memcpy(dst.normal, src.normal, sizeof(float) * 3);
+        memcpy(dst.texCoords, src.texCoord, sizeof(float) * 2);
+        memcpy(dst.tangent, src.tangent, sizeof(float) * 3);
+
+        // Initialize bone data to zero (not used for static meshes)
+        for (int j = 0; j < MAX_BONE_INFLUENCE; ++j) {
+            dst.IDs[j] = 0;
+            dst.Weights[j] = 0.0f;
+        }
+    }
+
+    // Read index count
+    uint32_t indexCount;
+    file.read((char*)&indexCount, sizeof(indexCount));
+
+    // Read indices
+    std::vector<uint32_t> indices(indexCount);
+    file.read((char*)indices.data(), indexCount * sizeof(uint32_t));
+
+    if (!file) {
+        EE_CORE_ERROR("Error reading .mesh file (corrupted?): " + path);
+        return false;
+    }
+
+    // Create GPU buffers
+    auto vao = std::make_shared<VertexArray>();
+    auto vbo = std::make_shared<VertexBuffer>(vertices.data(), vertices.size() * sizeof(VertexData));
+    auto ibo = std::make_shared<IndexBuffer>(indices.data(), indices.size() * sizeof(unsigned int));
+
+    vao->Bind();
+    vbo->Bind();
+    ibo->Bind();
+
+    // Setup vertex attributes (same as ProcessMesh for static meshes)
+    vao->LinkAttribute(0, 3, GL_FLOAT, sizeof(VertexData), (void*)offsetof(VertexData, position));
+    vao->LinkAttribute(1, 3, GL_FLOAT, sizeof(VertexData), (void*)offsetof(VertexData, normal));
+    vao->LinkAttribute(2, 2, GL_FLOAT, sizeof(VertexData), (void*)offsetof(VertexData, texCoords));
+    vao->LinkAttribute(3, 3, GL_FLOAT, sizeof(VertexData), (void*)offsetof(VertexData, tangent));
+
+    vao->Unbind();
+    vbo->Unbind();
+    ibo->Unbind();
+
+    // Calculate AABB
+    glm::vec3 aabbMin(FLT_MAX);
+    glm::vec3 aabbMax(-FLT_MAX);
+    for (const auto& v : vertices) {
+        glm::vec3 pos(v.position[0], v.position[1], v.position[2]);
+        aabbMin = glm::min(aabbMin, pos);
+        aabbMax = glm::max(aabbMax, pos);
+    }
+
+    // Create mesh ID
+    std::string meshID = m_name + "_mesh0";
+
+    // ✅ Register with MeshManager (for static meshes)
+    auto renderer = Ermine::ECS::GetInstance().GetSystem<Renderer>();
+    if (renderer) {
+        // Convert to MeshManager's Vertex format (not SkinnedVertex)
+        std::vector<Vertex> meshVerts;
+        meshVerts.reserve(vertices.size());
+
+        for (const auto& v : vertices) {
+            Vertex mv;
+            mv.position = glm::vec3(v.position[0], v.position[1], v.position[2]);
+            mv.normal = glm::vec3(v.normal[0], v.normal[1], v.normal[2]);
+            mv.texCoord = glm::vec2(v.texCoords[0], v.texCoords[1]);
+            mv.tangent = glm::vec3(v.tangent[0], v.tangent[1], v.tangent[2]);
+            meshVerts.push_back(mv);
+        }
+
+        // Use RegisterMesh (not RegisterSkinnedMesh) for static meshes
+        renderer->m_MeshManager.RegisterMesh(meshVerts, indices, meshID);
+
+        EE_CORE_INFO("LoadMeshFile: Registered static mesh '{}' with MeshManager", meshID);
+    }
+    else {
+        EE_CORE_ERROR("LoadMeshFile: Failed to get Renderer system - mesh will not render!");
+    }
+
+    // Add mesh to model with all metadata
+    MeshData meshData{ vao, vbo, ibo, glm::mat4(1.0f), meshID, aabbMin, aabbMax };
+    m_meshes.push_back(meshData);
+
+    // Success! Log the results
+    EE_CORE_INFO("Loaded .mesh file: " + path);
+    EE_CORE_INFO("  Vertices: " + std::to_string(vertexCount));
+    EE_CORE_INFO("  Indices: " + std::to_string(indexCount));
+
+    return true;
 }
 
 bool Model::LoadSkinFile(const std::string& path)
@@ -121,14 +273,8 @@ bool Model::LoadSkinFile(const std::string& path)
 
         // Copy position
         memcpy(dst.position, src.position, sizeof(float) * 3);
-
-        // Copy normal
         memcpy(dst.normal, src.normal, sizeof(float) * 3);
-
-        // Copy texture coordinates
         memcpy(dst.texCoords, src.texCoord, sizeof(float) * 2);
-
-        // Copy bone data
         memcpy(dst.IDs, src.boneIndices, sizeof(int) * MAX_BONE_INFLUENCE);
         memcpy(dst.Weights, src.boneWeights, sizeof(float) * MAX_BONE_INFLUENCE);
     }
@@ -150,36 +296,29 @@ bool Model::LoadSkinFile(const std::string& path)
     m_BoneMapping.reserve(boneCount);
 
     for (uint32_t i = 0; i < boneCount; ++i) {
-        // Read bone name length and name
         uint32_t nameLen;
         file.read((char*)&nameLen, sizeof(nameLen));
 
-        // Validate name length (sanity check)
-        if (nameLen > 256) {  // Reasonable max bone name length
+        if (nameLen > 256) {
             EE_CORE_ERROR("Invalid bone name length in .skin file: " + std::to_string(nameLen));
             return false;
         }
 
-        // Read bone name into a vector first, then construct string
         std::vector<char> nameBuffer(nameLen);
         file.read(nameBuffer.data(), nameLen);
         std::string boneName(nameBuffer.begin(), nameBuffer.end());
 
-        // Read bone index
         uint32_t boneIndex;
         file.read((char*)&boneIndex, sizeof(boneIndex));
 
-        // Read offset matrix (stored as row-major 4x4)
         float matrix[16];
         file.read((char*)matrix, sizeof(matrix));
 
-        // Verify read succeeded
         if (!file.good()) {
             EE_CORE_ERROR("Failed to read bone " + std::to_string(i) + " from .skin file");
             return false;
         }
 
-        // Convert row-major to column-major glm::mat4
         glm::mat4 offsetMatrix;
         for (int row = 0; row < 4; ++row) {
             for (int col = 0; col < 4; ++col) {
@@ -187,7 +326,6 @@ bool Model::LoadSkinFile(const std::string& path)
             }
         }
 
-        // Store bone mapping and offset
         m_BoneMapping[boneName] = static_cast<int>(i);
         m_BoneOffsets.push_back(offsetMatrix);
     }
@@ -206,10 +344,11 @@ bool Model::LoadSkinFile(const std::string& path)
     vbo->Bind();
     ibo->Bind();
 
-    // Setup vertex attributes (same as ProcessMesh)
+    // Setup vertex attributes
     vao->LinkAttribute(0, 3, GL_FLOAT, sizeof(VertexData), (void*)offsetof(VertexData, position));
     vao->LinkAttribute(1, 3, GL_FLOAT, sizeof(VertexData), (void*)offsetof(VertexData, normal));
     vao->LinkAttribute(2, 2, GL_FLOAT, sizeof(VertexData), (void*)offsetof(VertexData, texCoords));
+    vao->LinkAttribute(3, 3, GL_FLOAT, sizeof(VertexData), (void*)offsetof(VertexData, tangent)); // ✅ Added tangent
 
     // Bone IDs (integer attribute)
     glEnableVertexAttribArray(4);
@@ -223,8 +362,46 @@ bool Model::LoadSkinFile(const std::string& path)
     vbo->Unbind();
     ibo->Unbind();
 
-    // Add mesh to model
-    MeshData meshData{ vao, vbo, ibo, glm::mat4(1.0f) };
+    // Calculate AABB
+    glm::vec3 aabbMin(FLT_MAX);
+    glm::vec3 aabbMax(-FLT_MAX);
+    for (const auto& v : vertices) {
+        glm::vec3 pos(v.position[0], v.position[1], v.position[2]);
+        aabbMin = glm::min(aabbMin, pos);
+        aabbMax = glm::max(aabbMax, pos);
+    }
+
+    // Create mesh ID
+    std::string meshID = m_name + "_mesh0";
+
+    // ✅ CRITICAL FIX: Register with MeshManager
+    auto renderer = Ermine::ECS::GetInstance().GetSystem<Renderer>();
+    if (renderer) {
+        // Convert to MeshManager's SkinnedVertex format
+        std::vector<graphics::SkinnedVertex> skinnedVertices;
+        skinnedVertices.reserve(vertices.size());
+
+        for (const auto& v : vertices) {
+            graphics::SkinnedVertex sv;
+            sv.position = glm::vec3(v.position[0], v.position[1], v.position[2]);
+            sv.normal = glm::vec3(v.normal[0], v.normal[1], v.normal[2]);
+            sv.texCoord = glm::vec2(v.texCoords[0], v.texCoords[1]);
+            sv.tangent = glm::vec3(v.tangent[0], v.tangent[1], v.tangent[2]);
+            sv.boneIDs = glm::ivec4(v.IDs[0], v.IDs[1], v.IDs[2], v.IDs[3]);
+            sv.boneWeights = glm::vec4(v.Weights[0], v.Weights[1], v.Weights[2], v.Weights[3]);
+            skinnedVertices.push_back(sv);
+        }
+
+        renderer->m_MeshManager.RegisterSkinnedMesh(skinnedVertices, indices, meshID);
+
+        EE_CORE_INFO("LoadSkinFile: Registered skinned mesh '{}' with MeshManager", meshID);
+    }
+    else {
+        EE_CORE_ERROR("LoadSkinFile: Failed to get Renderer system - mesh will not render!");
+    }
+
+    // Add mesh to model with all metadata
+    MeshData meshData{ vao, vbo, ibo, glm::mat4(1.0f), meshID, aabbMin, aabbMax };
     m_meshes.push_back(meshData);
 
     // Initialize bone transforms to identity
