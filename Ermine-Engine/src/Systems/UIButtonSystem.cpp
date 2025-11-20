@@ -20,6 +20,10 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Window.h"
 #include <GLFW/glfw3.h>
 
+#if defined(EE_EDITOR)
+#include "EditorGUI.h"
+#endif
+
 namespace Ermine
 {
     void UIButtonSystem::Init()
@@ -43,32 +47,10 @@ namespace Ermine
         // Get current mouse button state
         bool isMousePressed = Input::IsMouseButtonDown(0); // Left mouse button
 
-        // Debug: Log mouse position and entity count
-        static int frameCount = 0;
-        if (frameCount % 60 == 0) // Log every 60 frames
-        {
-            EE_CORE_INFO("UIButtonSystem: Mouse pos ({:.3f}, {:.3f}), Entities: {}", mouseX, mouseY, m_Entities.size());
-        }
-        frameCount++;
-
         // Process all button entities
         for (EntityID entity : m_Entities)
         {
             auto& button = ECS::GetInstance().GetComponent<UIButtonComponent>(entity);
-
-            // Debug: Log button bounds
-            float halfWidth = button.size.x * 0.5f;
-            float halfHeight = button.size.y * 0.5f;
-            float minX = button.position.x - halfWidth;
-            float maxX = button.position.x + halfWidth;
-            float minY = button.position.y - halfHeight;
-            float maxY = button.position.y + halfHeight;
-
-            if (frameCount % 60 == 0)
-            {
-                EE_CORE_INFO("  Button '{}' bounds: X[{:.3f}-{:.3f}] Y[{:.3f}-{:.3f}]",
-                    button.text.empty() ? "unnamed" : button.text, minX, maxX, minY, maxY);
-            }
 
             // Check if mouse is over button
             bool wasHovered = button.isHovered;
@@ -160,10 +142,8 @@ namespace Ermine
 
     void UIButtonSystem::GetNormalizedMousePosition(float& outX, float& outY)
     {
-        // Get mouse position in pixels
         auto [mousePixelX, mousePixelY] = Input::GetMousePosition();
 
-        // Get window size
         auto* window = glfwGetCurrentContext();
         if (!window)
         {
