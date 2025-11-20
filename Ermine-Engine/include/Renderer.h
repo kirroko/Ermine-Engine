@@ -211,7 +211,9 @@ namespace Ermine::graphics
         float m_FogDensity = 0.02f;   // For exponential fog modes
         float m_FogStart = 50.0f;     // For linear fog
         float m_FogEnd = 200.0f;      // For linear fog
-
+		float m_FogHeightCoefficient = 0.1f; // For height-based fog
+		float m_FogHeightFalloff = 10.0f;      // For height-based fog
+        
         // Post-processing uniforms - toggles
         bool m_VignetteEnabled = false;
         bool m_FXAAEnabled = true;
@@ -415,7 +417,6 @@ namespace Ermine::graphics
         {
 			unsigned int FBO = 0;
 			unsigned int ColorTexture = 0;
-            unsigned int DepthTexture = 0;
 
 			int width = 0;
 			int height = 0;
