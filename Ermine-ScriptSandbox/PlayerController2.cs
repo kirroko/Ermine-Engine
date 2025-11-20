@@ -109,7 +109,7 @@ public class PlayerController2 : MonoBehaviour
     {
         float targetY = isCrouching ? camCrouchY : camDefaultY;
         Vector3 camPos = cam.position;
-        camPos.y = Mathf.Lerp(camPos.y, targetY, Time.deltaTime * crouchLerpSpeed);
+        camPos.y = Mathf.Lerp(camPos.y, targetY, Time.fixedDeltaTime * crouchLerpSpeed);
         cam.position = camPos;
     }
 
@@ -117,7 +117,7 @@ public class PlayerController2 : MonoBehaviour
     {
         if (audioComp == null) return;
 
-        footstepTimer += Time.deltaTime;
+        footstepTimer += Time.fixedDeltaTime;
 
         if (movementKeyPressed && footstepTimer >= footstepInterval)
         {
