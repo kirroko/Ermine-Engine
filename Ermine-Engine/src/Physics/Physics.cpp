@@ -357,7 +357,7 @@ namespace Ermine
 			);
 
 			// Rotation too
-			JPH::Quat rot = transform.GetRotation().GetQuaternion();
+			JPH::Quat rot = transform.GetRotation().GetQuaternion().Normalized();
 			t.rotation.w = rot.GetW();
 			t.rotation.x = rot.GetX();
 			t.rotation.y = rot.GetY();
