@@ -619,9 +619,9 @@
         },
         "Transform": {
           "position": [
-            3.5,
-            44.81999969482422,
-            -30.0
+            0.0,
+            19.0,
+            -20.0
           ],
           "rotation": [
             0.0,
@@ -632,7 +632,7 @@
           "scale": [
             40.0,
             0.5,
-            70.0
+            50.0
           ]
         },
         "ObjectMetaData": {
@@ -2712,10 +2712,10 @@
             -34.0
           ],
           "rotation": [
+            0.7071067690849304,
             0.0,
             0.0,
-            0.0,
-            1.0
+            0.7071067690849304
           ],
           "scale": [
             0.029999999329447748,
@@ -2729,7 +2729,7 @@
           "selfActive": true
         },
         "ModelComponent": {
-          "model": "Table.fbx",
+          "model": "C_Table.fbx",
           "isSkinFile": false
         },
         "HierarchyComponent": {
@@ -2742,58 +2742,37 @@
       "id": 40,
       "components": {
         "IDComponent": {
-          "guid": "88b25c7b5569f74caefa94f550cca9e1"
+          "guid": "48b21e61bb8e0047a77ea409254589c0"
         },
         "Transform": {
           "position": [
-            0.0,
-            0.0,
-            0.0
+            6.5,
+            3.4000000953674318,
+            -33.0
           ],
           "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
+            -0.6903457045555115,
+            0.15304520726203919,
+            0.15304550528526307,
+            0.6903455853462219
           ],
           "scale": [
-            1.0,
-            1.0,
-            1.0
+            0.9999999403953552,
+            1.0000001192092896,
+            1.0000001192092896
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_Table.fbx_pCube1_mesh0",
-          "tag": "Mesh",
+          "name": "Book",
+          "tag": "Untagged",
           "selfActive": true
         },
-        "Material": {
-          "hasMaterial": true,
-          "params": {
-            "materialHasAlbedoMap": true
-          },
-          "textures": [
-            {
-              "slot": "materialAlbedoMap",
-              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\Table_openPBR_shader1_BaseColor.png"
-            },
-            {
-              "slot": "material.albedoMap",
-              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\Table_openPBR_shader1_BaseColor.png"
-            }
-          ],
-          "uvScale": [
-            1.0,
-            -1.0
-          ],
-          "uvOffset": [
-            0.0,
-            1.0
-          ]
+        "ModelComponent": {
+          "model": "C_Book.fbx",
+          "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "92cd2b7e0361d54d8f5a01ac6fa50940",
-          "depth": 1
+          "depth": 0
         },
         "GlobalTransform": {}
       }
@@ -2802,58 +2781,37 @@
       "id": 41,
       "components": {
         "IDComponent": {
-          "guid": "e429da0e38455c46aaee35b64a681244"
+          "guid": "46a587236a6e5144a4a387670a697f0e"
         },
         "Transform": {
           "position": [
-            0.0,
-            0.0,
-            0.0
+            8.75,
+            3.0,
+            -32.5
           ],
           "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
+            8.064451328948508e-9,
+            0.3826834559440613,
+            -1.9469306167252399e-8,
+            0.9238795042037964
           ],
           "scale": [
-            1.0,
-            1.0,
-            1.0
+            0.07500000298023224,
+            0.07500000298023224,
+            0.07500000298023224
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_Table.fbx_pCylinder1_mesh1",
-          "tag": "Mesh",
+          "name": "Key",
+          "tag": "Untagged",
           "selfActive": true
         },
-        "Material": {
-          "hasMaterial": true,
-          "params": {
-            "materialHasAlbedoMap": true
-          },
-          "textures": [
-            {
-              "slot": "materialAlbedoMap",
-              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\Table_openPBR_shader1_BaseColor.png"
-            },
-            {
-              "slot": "material.albedoMap",
-              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\Table_openPBR_shader1_BaseColor.png"
-            }
-          ],
-          "uvScale": [
-            1.0,
-            -1.0
-          ],
-          "uvOffset": [
-            0.0,
-            1.0
-          ]
+        "ModelComponent": {
+          "model": "C_KeyV2.fbx",
+          "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "92cd2b7e0361d54d8f5a01ac6fa50940",
-          "depth": 1
+          "depth": 0
         },
         "GlobalTransform": {}
       }
@@ -2862,13 +2820,13 @@
       "id": 42,
       "components": {
         "IDComponent": {
-          "guid": "233a1548b099624fbe4aa80f753408ce"
+          "guid": "f7e2723780c6a545850db1e686dfb1ac"
         },
         "Transform": {
           "position": [
-            0.0,
-            0.0,
-            0.0
+            -283.3333435058594,
+            6.6666669845581059,
+            1133.3333740234376
           ],
           "rotation": [
             0.0,
@@ -2877,29 +2835,49 @@
             1.0
           ],
           "scale": [
-            1.0,
-            1.0,
-            1.0
+            33.333335876464847,
+            33.333335876464847,
+            33.333335876464847
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_Table.fbx_pCylinder4_mesh2",
+          "name": "Mesh_C_Table.fbx_Mesh.004_mesh0",
           "tag": "Mesh",
           "selfActive": true
         },
         "Material": {
           "hasMaterial": true,
           "params": {
-            "materialHasAlbedoMap": true
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
+            "materialHasRoughnessMap": true,
+            "materialHasMetallicMap": true,
+            "materialHasAoMap": true
           },
           "textures": [
             {
               "slot": "materialAlbedoMap",
-              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\Table_openPBR_shader1_BaseColor.png"
+              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_Table_BaseColor.png"
             },
             {
               "slot": "material.albedoMap",
-              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\Table_openPBR_shader1_BaseColor.png"
+              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_Table_BaseColor.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_Table_Normal.png"
+            },
+            {
+              "slot": "materialRoughnessMap",
+              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_Table_Roughness.png"
+            },
+            {
+              "slot": "material.metallicMap",
+              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_Table_Metallic.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_Table_Height.png"
             }
           ],
           "uvScale": [
@@ -2922,13 +2900,13 @@
       "id": 43,
       "components": {
         "IDComponent": {
-          "guid": "bc9d32da460de74f9665e09acc20c125"
+          "guid": "3e265cbaacbe9241a64c53ea3f684528"
         },
         "Transform": {
           "position": [
-            0.0,
-            0.0,
-            0.0
+            -283.3333435058594,
+            6.6666669845581059,
+            1133.3333740234376
           ],
           "rotation": [
             0.0,
@@ -2937,29 +2915,49 @@
             1.0
           ],
           "scale": [
-            1.0,
-            1.0,
-            1.0
+            33.333335876464847,
+            33.333335876464847,
+            33.333335876464847
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_Table.fbx_pCylinder5_mesh3",
+          "name": "Mesh_C_Table.fbx_Mesh.005_mesh1",
           "tag": "Mesh",
           "selfActive": true
         },
         "Material": {
           "hasMaterial": true,
           "params": {
-            "materialHasAlbedoMap": true
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
+            "materialHasRoughnessMap": true,
+            "materialHasMetallicMap": true,
+            "materialHasAoMap": true
           },
           "textures": [
             {
               "slot": "materialAlbedoMap",
-              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\Table_openPBR_shader1_BaseColor.png"
+              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_Table_BaseColor.png"
             },
             {
               "slot": "material.albedoMap",
-              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\Table_openPBR_shader1_BaseColor.png"
+              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_Table_BaseColor.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_Table_Normal.png"
+            },
+            {
+              "slot": "materialRoughnessMap",
+              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_Table_Roughness.png"
+            },
+            {
+              "slot": "material.metallicMap",
+              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_Table_Metallic.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_Table_Height.png"
             }
           ],
           "uvScale": [
@@ -2982,13 +2980,13 @@
       "id": 44,
       "components": {
         "IDComponent": {
-          "guid": "63fa0e7e24d93c49af1be4b309d9308f"
+          "guid": "2d695c25bb2c5c48ab19ea0236941dce"
         },
         "Transform": {
           "position": [
-            0.0,
-            0.0,
-            0.0
+            -283.3333435058594,
+            6.6666669845581059,
+            1133.3333740234376
           ],
           "rotation": [
             0.0,
@@ -2997,29 +2995,49 @@
             1.0
           ],
           "scale": [
-            1.0,
-            1.0,
-            1.0
+            33.333335876464847,
+            33.333335876464847,
+            33.333335876464847
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_Table.fbx_pCylinder6_mesh4",
+          "name": "Mesh_C_Table.fbx_Mesh.006_mesh2",
           "tag": "Mesh",
           "selfActive": true
         },
         "Material": {
           "hasMaterial": true,
           "params": {
-            "materialHasAlbedoMap": true
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
+            "materialHasRoughnessMap": true,
+            "materialHasMetallicMap": true,
+            "materialHasAoMap": true
           },
           "textures": [
             {
               "slot": "materialAlbedoMap",
-              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\Table_openPBR_shader1_BaseColor.png"
+              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_Table_BaseColor.png"
             },
             {
               "slot": "material.albedoMap",
-              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\Table_openPBR_shader1_BaseColor.png"
+              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_Table_BaseColor.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_Table_Normal.png"
+            },
+            {
+              "slot": "materialRoughnessMap",
+              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_Table_Roughness.png"
+            },
+            {
+              "slot": "material.metallicMap",
+              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_Table_Metallic.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_Table_Height.png"
             }
           ],
           "uvScale": [
@@ -3042,52 +3060,13 @@
       "id": 45,
       "components": {
         "IDComponent": {
-          "guid": "48b21e61bb8e0047a77ea409254589c0"
+          "guid": "14dbc43c2f104045ad6b0b38150ac659"
         },
         "Transform": {
           "position": [
-            6.5,
-            2.700000047683716,
-            -33.0
-          ],
-          "rotation": [
-            0.0,
-            0.2164396196603775,
-            0.0,
-            0.9762960076332092
-          ],
-          "scale": [
-            0.029999999329447748,
-            0.029999999329447748,
-            0.029999999329447748
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Book",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "ModelComponent": {
-          "model": "BOOK.fbx",
-          "isSkinFile": false
-        },
-        "HierarchyComponent": {
-          "depth": 0
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "id": 46,
-      "components": {
-        "IDComponent": {
-          "guid": "d1c6151ff4ee3c42b6347cbc4f636982"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            0.0
+            -283.3333435058594,
+            6.6666669845581059,
+            1133.3333740234376
           ],
           "rotation": [
             0.0,
@@ -3096,29 +3075,49 @@
             1.0
           ],
           "scale": [
-            1.0,
-            1.0,
-            1.0
+            33.333335876464847,
+            33.333335876464847,
+            33.333335876464847
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_BOOK.fbx_Book_mesh0",
+          "name": "Mesh_C_Table.fbx_Mesh.007_mesh3",
           "tag": "Mesh",
           "selfActive": true
         },
         "Material": {
           "hasMaterial": true,
           "params": {
-            "materialHasAlbedoMap": true
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
+            "materialHasRoughnessMap": true,
+            "materialHasMetallicMap": true,
+            "materialHasAoMap": true
           },
           "textures": [
             {
               "slot": "materialAlbedoMap",
-              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\BOOK_openPBR_shader1_BaseColor.png"
+              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_Table_BaseColor.png"
             },
             {
               "slot": "material.albedoMap",
-              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\BOOK_openPBR_shader1_BaseColor.png"
+              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_Table_BaseColor.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_Table_Normal.png"
+            },
+            {
+              "slot": "materialRoughnessMap",
+              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_Table_Roughness.png"
+            },
+            {
+              "slot": "material.metallicMap",
+              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_Table_Metallic.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_Table_Height.png"
             }
           ],
           "uvScale": [
@@ -3131,7 +3130,87 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "48b21e61bb8e0047a77ea409254589c0",
+          "parentGuid": "92cd2b7e0361d54d8f5a01ac6fa50940",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 46,
+      "components": {
+        "IDComponent": {
+          "guid": "d2fe01cfbbb28748beb495f0a2ec7f73"
+        },
+        "Transform": {
+          "position": [
+            -283.3333435058594,
+            6.6666669845581059,
+            1133.3333740234376
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            33.333335876464847,
+            33.333335876464847,
+            33.333335876464847
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_C_Table.fbx_Mesh.008_mesh4",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
+            "materialHasRoughnessMap": true,
+            "materialHasMetallicMap": true,
+            "materialHasAoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_Table_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_Table_BaseColor.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_Table_Normal.png"
+            },
+            {
+              "slot": "materialRoughnessMap",
+              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_Table_Normal.png"
+            },
+            {
+              "slot": "material.metallicMap",
+              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_Table_Metallic.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_Table_Height.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            -1.0
+          ],
+          "uvOffset": [
+            0.0,
+            1.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "92cd2b7e0361d54d8f5a01ac6fa50940",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -3141,44 +3220,64 @@
       "id": 47,
       "components": {
         "IDComponent": {
-          "guid": "facac181a9a9f94683f5adbb4b00db23"
+          "guid": "c74088af3be4d54a82c2fcee507476ee"
         },
         "Transform": {
           "position": [
-            0.0,
-            0.0,
-            0.0
+            -661.246826171875,
+            -90.0,
+            905.371337890625
           ],
           "rotation": [
             0.0,
+            -0.2164396196603775,
             0.0,
-            0.0,
-            1.0
+            0.976296067237854
           ],
           "scale": [
-            1.0,
-            1.0,
-            1.0
+            33.333335876464847,
+            33.333335876464847,
+            33.333335876464847
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_BOOK.fbx_typeMesh1_mesh1",
+          "name": "Mesh_C_Book.fbx_Mesh_mesh0",
           "tag": "Mesh",
           "selfActive": true
         },
         "Material": {
           "hasMaterial": true,
           "params": {
-            "materialHasAlbedoMap": true
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
+            "materialHasRoughnessMap": true,
+            "materialHasMetallicMap": true,
+            "materialHasAoMap": true
           },
           "textures": [
             {
               "slot": "materialAlbedoMap",
-              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\BOOK_openPBR_shader1_BaseColor.png"
+              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_BOOK_BaseColor.png"
             },
             {
               "slot": "material.albedoMap",
-              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\BOOK_openPBR_shader1_BaseColor.png"
+              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_BOOK_BaseColor.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_BOOK_Normal.png"
+            },
+            {
+              "slot": "materialRoughnessMap",
+              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_BOOK_Roughness.png"
+            },
+            {
+              "slot": "material.metallicMap",
+              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_BOOK_Metallic.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_BOOK_Height.png"
             }
           ],
           "uvScale": [
@@ -3201,83 +3300,64 @@
       "id": 48,
       "components": {
         "IDComponent": {
-          "guid": "46a587236a6e5144a4a387670a697f0e"
+          "guid": "624b0846d960254588e807ca3796f5df"
         },
         "Transform": {
           "position": [
-            8.5,
-            2.700000047683716,
-            -33.0
+            -586.898681640625,
+            346.4820556640625,
+            54.00156784057617
           ],
           "rotation": [
-            0.6532800197601318,
-            0.2705986797809601,
-            -0.2705974876880646,
+            -0.6532800197601318,
+            -0.2705986797809601,
+            0.2705974876880646,
             0.6532829403877258
           ],
           "scale": [
-            0.05000000074505806,
-            0.05000000074505806,
-            0.05000000074505806
+            20.0,
+            20.0,
+            20.0
           ]
         },
         "ObjectMetaData": {
-          "name": "Key",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "ModelComponent": {
-          "model": "KEY.fbx",
-          "isSkinFile": false
-        },
-        "HierarchyComponent": {
-          "depth": 0
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "id": 49,
-      "components": {
-        "IDComponent": {
-          "guid": "2a73852f7fe5c84984b47a733178cf3f"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Mesh_KEY.fbx_pTorus1_mesh0",
+          "name": "Mesh_C_KeyV2.fbx_Mesh.003_mesh0",
           "tag": "Mesh",
           "selfActive": true
         },
         "Material": {
           "hasMaterial": true,
           "params": {
-            "materialHasAlbedoMap": true
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
+            "materialHasRoughnessMap": true,
+            "materialHasMetallicMap": true,
+            "materialHasAoMap": true
           },
           "textures": [
             {
               "slot": "materialAlbedoMap",
-              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\KEY_openPBR_shader1_BaseColor.png"
+              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_Key_BaseColor.png"
             },
             {
               "slot": "material.albedoMap",
-              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\KEY_openPBR_shader1_BaseColor.png"
+              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_Key_BaseColor.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_Key_Normal.png"
+            },
+            {
+              "slot": "materialRoughnessMap",
+              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_Key_Roughness.png"
+            },
+            {
+              "slot": "material.metallicMap",
+              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_Key_Metallic.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_Key_Height.png"
             }
           ],
           "uvScale": [
@@ -3297,47 +3377,67 @@
       }
     },
     {
-      "id": 50,
+      "id": 49,
       "components": {
         "IDComponent": {
-          "guid": "94ddd4f6cc016e48931885de34c946cb"
+          "guid": "44c3dc6ca82f5148a4a1e0c1bb72ae14"
         },
         "Transform": {
           "position": [
-            0.0,
-            0.0,
-            0.0
+            -586.898681640625,
+            346.4820556640625,
+            54.00156784057617
           ],
           "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
+            -0.6532800197601318,
+            -0.2705986797809601,
+            0.2705974876880646,
+            0.6532829403877258
           ],
           "scale": [
-            1.0,
-            1.0,
-            1.0
+            20.0,
+            20.0,
+            20.0
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_KEY.fbx_pCylinder1_mesh1",
+          "name": "Mesh_C_KeyV2.fbx_Mesh.002_mesh1",
           "tag": "Mesh",
           "selfActive": true
         },
         "Material": {
           "hasMaterial": true,
           "params": {
-            "materialHasAlbedoMap": true
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
+            "materialHasRoughnessMap": true,
+            "materialHasMetallicMap": true,
+            "materialHasAoMap": true
           },
           "textures": [
             {
               "slot": "materialAlbedoMap",
-              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\KEY_openPBR_shader1_BaseColor.png"
+              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_Key_BaseColor.png"
             },
             {
               "slot": "material.albedoMap",
-              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\KEY_openPBR_shader1_BaseColor.png"
+              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_Key_BaseColor.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_Key_Normal.png"
+            },
+            {
+              "slot": "materialRoughnessMap",
+              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_Key_Roughness.png"
+            },
+            {
+              "slot": "material.metallicMap",
+              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_Key_Metallic.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_Key_Height.png"
             }
           ],
           "uvScale": [
