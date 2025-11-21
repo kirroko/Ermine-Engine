@@ -70,6 +70,11 @@ layout (std140, binding = 1) uniform LightsUBO {
     Light lights[MAX_LIGHTS]; // Fixed-size array required for UBO
 };
 
+// Light type constants
+const int POINT_LIGHT = 0;
+const int DIRECTIONAL_LIGHT = 1;
+const int SPOT_LIGHT = 2;
+
 // Light flag bit positions
 const int LIGHT_FLAG_CASTS_SHADOWS = 1;  // bit 0
 const int LIGHT_FLAG_CASTS_RAYS = 2;     // bit 1
@@ -120,6 +125,17 @@ void main()
 
     // Get the light data
     Light light = lights[lightIndex];
+
+    // Get light type
+    int lightType = int(light.position_type.w);
+
+    // Spotlights only use cascade 0 - skip invalid instances
+    if (lightType == SPOT_LIGHT && cascadeIndex > 0) {
+        // Discard this instance by moving vertex off-screen
+        gl_Position = vec4(0.0, 0.0, -10.0, 1.0);
+        gl_Layer = 0;
+        return;
+    }
 
     // Calculate target layer: startOffset + cascadeIndex
     int startOffset = int(light.spot_angles_castshadows_startOffset.w);
