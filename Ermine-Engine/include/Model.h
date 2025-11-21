@@ -121,7 +121,7 @@ namespace Ermine::graphics
         Model(const std::string& path);
 
         // In Model class, add a new constructor:
-        Model(const std::string& skinPath, bool isSkinFile);
+        Model(const std::string& path, bool isCacheFile);
 
         /**
          * @brief Get the directory of the model file.
@@ -235,6 +235,7 @@ namespace Ermine::graphics
         MeshData ProcessMesh(aiMesh* mesh);
 
         bool LoadSkinFile(const std::string& path);
+        bool LoadMeshFile(const std::string& path);
 
     };
 }
