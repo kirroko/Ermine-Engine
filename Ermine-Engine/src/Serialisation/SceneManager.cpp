@@ -350,11 +350,14 @@ void SceneManager::OpenScene(const std::string& path)
 
 void SceneManager::SaveScene()
 {
+    EE_CORE_INFO("SaveScene() pressed. hasPath = {}", m_CurrentScenePath.has_value());
+
     if (!m_CurrentScenePath)
     {
         SaveSceneAsDialog(); // fallback if never saved
         return;
     }
+    EE_CORE_INFO("SaveScene(): saving to '{}'", *m_CurrentScenePath);
     SaveSceneTo(*m_CurrentScenePath);
 }
 
@@ -381,12 +384,14 @@ void SceneManager::RemoveTemp()
 
 void SceneManager::SaveSceneAsDialog()
 {
+    EE_CORE_INFO("SaveSceneAsDialog() opened");
     auto path = ShowSaveDialog(L"untitled.scene", GetActiveWindow());
     if (path) SaveSceneTo(*path);
 }
 
 void SceneManager::SaveSceneTo(const std::string& path)
 {
+    EE_CORE_INFO("SaveSceneTo('{}')", path);
     //SyncHierarchyGuidsFromRuntime(Ermine::ECS::GetInstance());
     SaveSceneToFile(Ermine::ECS::GetInstance(), path, true);
     m_CurrentScenePath = path;
