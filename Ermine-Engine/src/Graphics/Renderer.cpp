@@ -178,6 +178,8 @@ void Renderer::Init(const int& screenWidth, const int& screenHeight)
 	CreatePickingBuffer(screenWidth, screenHeight);
 
 	m_MaterialsDirty = true;
+
+	GenerateIGNTexture();
 }
 
 /**
@@ -650,6 +652,7 @@ void Renderer::CreateGBuffer(const int& width, const int& height)
 	glMakeTextureHandleResidentARB(gBuffer.HandleDepthTexture);
 
 	m_GBuffer = std::make_shared<GBuffer>(gBuffer);
+
 	EE_CORE_INFO("Created G-Buffer: {0}x{1}, 176 bits per pixel", width, height);
 }
 
@@ -669,9 +672,6 @@ void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 	{
 		glDeleteFramebuffers(1, &m_PostProcessBuffer->FBO);
 		glDeleteTextures(1, &m_PostProcessBuffer->ColorTexture);
-		if (m_PostProcessBuffer->DepthTexture != 0) {
-			glDeleteTextures(1, &m_PostProcessBuffer->DepthTexture);
-		}
 		glDeleteFramebuffers(1, &m_BloomExtractBuffer->FBO);
 		glDeleteTextures(1, &m_BloomExtractBuffer->ColorTexture);
 		glDeleteFramebuffers(1, &m_BloomBlurBuffer1->FBO);
@@ -694,57 +694,53 @@ void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pPBuffer.ColorTexture, 0);
 
-	// Depth texture for skybox rendering
-	glGenTextures(1, &pPBuffer.DepthTexture);
-	glBindTexture(GL_TEXTURE_2D, pPBuffer.DepthTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_NONE);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, pPBuffer.DepthTexture, 0);
+	// Share G-Buffer's depth texture instead of creating a separate one
+	// The depth attachment will be added after G-Buffer creation
+	// Note: We don't create a depth texture here - we'll attach the G-Buffer's depth texture later
 
 	glCheckError();
 
-	// Create other buffers without depth (they don't need it)
+	// Calculate half resolution for bloom buffers (god rays + bloom)
+	int halfWidth = width / 2;
+	int halfHeight = height / 2;
+
+	// Create bloom extract buffer at half resolution
 	glGenFramebuffers(1, &bEBuffer.FBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, bEBuffer.FBO);
 	glGenTextures(1, &bEBuffer.ColorTexture);
 	glBindTexture(GL_TEXTURE_2D, bEBuffer.ColorTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_HALF_FLOAT, nullptr);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, halfWidth, halfHeight, 0, GL_RGB, GL_HALF_FLOAT, nullptr);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, bEBuffer.ColorTexture, 0);
-	bEBuffer.DepthTexture = 0; // No depth for bloom buffers
 	glCheckError();
 
+	// Create bloom blur buffer 1 at half resolution
 	glGenFramebuffers(1, &bBBuffer1.FBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, bBBuffer1.FBO);
 	glGenTextures(1, &bBBuffer1.ColorTexture);
 	glBindTexture(GL_TEXTURE_2D, bBBuffer1.ColorTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_HALF_FLOAT, nullptr);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, halfWidth, halfHeight, 0, GL_RGB, GL_HALF_FLOAT, nullptr);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, bBBuffer1.ColorTexture, 0);
-	bBBuffer1.DepthTexture = 0;
 	glCheckError();
 
+	// Create bloom blur buffer 2 at half resolution
 	glGenFramebuffers(1, &bBBuffer2.FBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, bBBuffer2.FBO);
 	glGenTextures(1, &bBBuffer2.ColorTexture);
 	glBindTexture(GL_TEXTURE_2D, bBBuffer2.ColorTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_HALF_FLOAT, nullptr);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, halfWidth, halfHeight, 0, GL_RGB, GL_HALF_FLOAT, nullptr);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, bBBuffer2.ColorTexture, 0);
-	bBBuffer2.DepthTexture = 0;
 	glCheckError();
 
 	glGenFramebuffers(1, &AABuffer.FBO);
@@ -757,7 +753,6 @@ void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, AABuffer.ColorTexture, 0);
-	AABuffer.DepthTexture = 0;
 	glCheckError();
 
 	// Making sure dimensions are non-zero
@@ -811,18 +806,39 @@ void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 	pPBuffer.width = width;
 	pPBuffer.height = height;
 	m_PostProcessBuffer = std::make_shared<PostProcessBuffer>(pPBuffer);
-	bEBuffer.width = width;
-	bEBuffer.height = height;
+	bEBuffer.width = halfWidth;
+	bEBuffer.height = halfHeight;
 	m_BloomExtractBuffer = std::make_shared<PostProcessBuffer>(bEBuffer);
-	bBBuffer1.width = width;
-	bBBuffer1.height = height;
+	bBBuffer1.width = halfWidth;
+	bBBuffer1.height = halfHeight;
 	m_BloomBlurBuffer1 = std::make_shared<PostProcessBuffer>(bBBuffer1);
-	bBBuffer2.width = width;
-	bBBuffer2.height = height;
+	bBBuffer2.width = halfWidth;
+	bBBuffer2.height = halfHeight;
 	m_BloomBlurBuffer2 = std::make_shared<PostProcessBuffer>(bBBuffer2);
 	AABuffer.width = width;
 	AABuffer.height = height;
 	m_AntiAliasingBuffer = std::make_shared<PostProcessBuffer>(AABuffer);
+
+	// Attach G-Buffer's depth texture to PostProcess FBO for shared depth testing
+	// This must happen AFTER PostProcess buffer is created and AFTER G-Buffer exists
+	if (m_PostProcessBuffer && m_GBuffer)
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, m_PostProcessBuffer->FBO);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_GBuffer->DepthTexture, 0);
+
+		GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+		if (status != GL_FRAMEBUFFER_COMPLETE)
+		{
+			EE_CORE_ERROR("ERROR: PostProcess framebuffer not complete after depth attachment!");
+			EE_CORE_ERROR("Status: {0}, G-Buffer DepthTexture: {1}, PostProcess FBO: {2}",
+				status, m_GBuffer->DepthTexture, m_PostProcessBuffer->FBO);
+		}
+		else
+		{
+			EE_CORE_INFO("Successfully attached G-Buffer depth texture to PostProcess FBO");
+		}
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	}
 }
 
 /**
@@ -3128,6 +3144,21 @@ void Renderer::RenderLightingPass(const Mtx44& view, const Mtx44& projection)
 	m_LightPassShader->SetUniform1f("u_SSAOFadeout", m_SSAOFadeout);
 	m_LightPassShader->SetUniform1f("u_SSAOMaxDistance", m_SSAOMaxDistance);
 
+	// Bind IGN texture handle for jittering
+	if (m_IGNTextureHandle != 0)
+	{
+		GLint locIGN = glGetUniformLocation(m_LightPassShader->GetRendererID(), "u_IGNHandle");
+		if (locIGN != -1)
+		{
+			glUniform2ui(locIGN,
+				static_cast<GLuint>(m_IGNTextureHandle),
+				static_cast<GLuint>(m_IGNTextureHandle >> 32));
+		}
+	}
+
+	// Send IGN texture resolution for proper UV scaling
+	m_LightPassShader->SetUniform2f("u_IGNResolution", m_IGNTextureSize);
+
 	// Set fog parameters
 	m_LightPassShader->SetUniform1i("u_FogEnabled", m_FogEnabled ? 1 : 0);
 	m_LightPassShader->SetUniform1i("u_FogMode", m_FogMode);
@@ -3135,6 +3166,8 @@ void Renderer::RenderLightingPass(const Mtx44& view, const Mtx44& projection)
 	m_LightPassShader->SetUniform1f("u_FogDensity", m_FogDensity);
 	m_LightPassShader->SetUniform1f("u_FogStart", m_FogStart);
 	m_LightPassShader->SetUniform1f("u_FogEnd", m_FogEnd);
+	m_LightPassShader->SetUniform1f("u_FogHeightCoefficient", m_FogHeightCoefficient);
+	m_LightPassShader->SetUniform1f("u_FogHeightFalloff", m_FogHeightFalloff);
 
 	// Set shading mode
 	m_LightPassShader->SetUniform1i("u_ShadingMode", m_IsBlinnPhong ? 1 : 0);
@@ -3151,8 +3184,10 @@ void Renderer::RenderLightingPass(const Mtx44& view, const Mtx44& projection)
 
 /**
  * @brief Render post-processing effects using the lighting pass output
+ * @param view The view matrix
+ * @param projection The projection matrix
  */
-void Renderer::RenderPostProcessPass()
+void Renderer::RenderPostProcessPass(const Mtx44& view, const Mtx44& projection)
 {
 	if (!m_PostProcessBuffer || !m_BloomShader || !m_PostProcessShader || !m_AAShader)
 	{
@@ -3162,8 +3197,10 @@ void Renderer::RenderPostProcessPass()
 
 	glDisable(GL_DEPTH_TEST);
 
-	// Pass 1: Extract bright areas
+	// Pass 1: Extract bright areas + volumetric god rays (at half resolution)
 	glBindFramebuffer(GL_FRAMEBUFFER, m_BloomExtractBuffer->FBO);
+	glViewport(0, 0, m_BloomExtractBuffer->width, m_BloomExtractBuffer->height);
+
 	m_BloomShader->Bind();
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, m_PostProcessBuffer->ColorTexture);
@@ -3174,18 +3211,89 @@ void Renderer::RenderPostProcessPass()
 	m_BloomShader->SetUniform1f("u_BloomThreshold", m_BloomThreshold);
 	m_BloomShader->SetUniform1f("u_BloomRadius", m_BloomRadius);
 
+	// Bind Lights UBO for god rays
+	glBindBufferBase(GL_UNIFORM_BUFFER, 1, m_LightsUBO);
+
+	// Bind bindless textures for god rays
+	if (m_GBuffer)
+	{
+		// Depth texture handle
+		GLint locDepth = glGetUniformLocation(m_BloomShader->GetRendererID(), "u_GBufferDepthHandle");
+		if (locDepth != -1)
+		{
+			glUniform2ui(locDepth,
+				static_cast<GLuint>(m_GBuffer->HandleDepthTexture),
+				static_cast<GLuint>(m_GBuffer->HandleDepthTexture >> 32));
+		}
+	}
+
+	// Shadow map array handle
+	GLint locShadow = glGetUniformLocation(m_BloomShader->GetRendererID(), "u_ShadowMapArrayHandle");
+	if (locShadow != -1 && m_ShadowMapArrayHandle != 0)
+	{
+		glUniform2ui(locShadow,
+			static_cast<GLuint>(m_ShadowMapArrayHandle),
+			static_cast<GLuint>(m_ShadowMapArrayHandle >> 32));
+	}
+
+	// IGN texture handle
+	if (m_IGNTextureHandle != 0)
+	{
+		GLint locIGN = glGetUniformLocation(m_BloomShader->GetRendererID(), "u_IGNHandle");
+		if (locIGN != -1)
+		{
+			glUniform2ui(locIGN,
+				static_cast<GLuint>(m_IGNTextureHandle),
+				static_cast<GLuint>(m_IGNTextureHandle >> 32));
+		}
+	}
+
+	// IGN resolution
+	m_BloomShader->SetUniform2f("u_IGNResolution", m_IGNTextureSize);
+
+	// Camera position and matrices - convert from custom Mtx44 to glm::mat4
+	glm::mat4 glmView = glm::mat4(
+		view.m00, view.m01, view.m02, view.m03,
+		view.m10, view.m11, view.m12, view.m13,
+		view.m20, view.m21, view.m22, view.m23,
+		view.m30, view.m31, view.m32, view.m33
+	);
+	glm::mat4 glmProjection = glm::mat4(
+		projection.m00, projection.m01, projection.m02, projection.m03,
+		projection.m10, projection.m11, projection.m12, projection.m13,
+		projection.m20, projection.m21, projection.m22, projection.m23,
+		projection.m30, projection.m31, projection.m32, projection.m33
+	);
+
+	glm::mat4 invView = glm::inverse(glmView);
+	glm::mat4 invProjection = glm::inverse(glmProjection);
+	glm::vec3 cameraPos = glm::vec3(invView[3]); // Extract camera position from inverse view matrix
+
+	m_BloomShader->SetUniform3f("u_CameraPosition", cameraPos);
+	m_BloomShader->SetUniformMatrix4fv("u_InvProjection", invProjection);
+	m_BloomShader->SetUniformMatrix4fv("u_InvView", invView);
+
+	// Spotlight ray parameters
+	m_BloomShader->SetUniform1i("u_SpotlightRays", m_SpotlightRaysEnabled ? 1 : 0);
+	m_BloomShader->SetUniform1f("u_SpotlightRayIntensity", m_SpotlightRayIntensity);
+
 	Draw(m_QuadMesh.vertex_array, m_QuadMesh.index_buffer);
 
-	// Pass 2: Horizontal blur
+	// Pass 2: Horizontal blur (half resolution)
 	glBindFramebuffer(GL_FRAMEBUFFER, m_BloomBlurBuffer1->FBO);
+	glViewport(0, 0, m_BloomBlurBuffer1->width, m_BloomBlurBuffer1->height);
+
 	m_BloomShader->Bind();
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, m_BloomExtractBuffer->ColorTexture);
+	m_BloomShader->SetUniform1i("u_LightingTexture", 0);
 	m_BloomShader->SetUniform1i("u_Pass", 2);
 	Draw(m_QuadMesh.vertex_array, m_QuadMesh.index_buffer);
 
-	// Pass 3: Vertical blur
+	// Pass 3: Vertical blur (half resolution)
 	glBindFramebuffer(GL_FRAMEBUFFER, m_BloomBlurBuffer2->FBO);
+	glViewport(0, 0, m_BloomBlurBuffer2->width, m_BloomBlurBuffer2->height);
+
 	m_BloomShader->Bind();
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, m_BloomBlurBuffer1->ColorTexture);
@@ -3193,7 +3301,30 @@ void Renderer::RenderPostProcessPass()
 	m_BloomShader->SetUniform1i("u_Pass", 3);
 	Draw(m_QuadMesh.vertex_array, m_QuadMesh.index_buffer);
 
-	// Pass 4: Post-processing (tone mapping, bloom combine, etc.)
+	// Pass 4: Second horizontal blur for creamy smooth result (half resolution, ping-pong back)
+	glBindFramebuffer(GL_FRAMEBUFFER, m_BloomBlurBuffer1->FBO);
+	glViewport(0, 0, m_BloomBlurBuffer1->width, m_BloomBlurBuffer1->height);
+
+	m_BloomShader->Bind();
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, m_BloomBlurBuffer2->ColorTexture);
+	m_BloomShader->SetUniform1i("u_LightingTexture", 0);
+	m_BloomShader->SetUniform1i("u_Pass", 2);
+	Draw(m_QuadMesh.vertex_array, m_QuadMesh.index_buffer);
+
+	// Pass 5: Second vertical blur for creamy smooth result (half resolution, ping-pong forward)
+	glBindFramebuffer(GL_FRAMEBUFFER, m_BloomBlurBuffer2->FBO);
+	glViewport(0, 0, m_BloomBlurBuffer2->width, m_BloomBlurBuffer2->height);
+
+	m_BloomShader->Bind();
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, m_BloomBlurBuffer1->ColorTexture);
+	m_BloomShader->SetUniform1i("u_LightingTexture", 0);
+	m_BloomShader->SetUniform1i("u_Pass", 3);
+	Draw(m_QuadMesh.vertex_array, m_QuadMesh.index_buffer);
+
+	// Pass 6: Post-processing (tone mapping, bloom combine, etc.) - restore full resolution
+	glViewport(0, 0, m_AntiAliasingBuffer->width, m_AntiAliasingBuffer->height);
 	glBindFramebuffer(GL_FRAMEBUFFER, m_AntiAliasingBuffer->FBO);
 	glClear(GL_COLOR_BUFFER_BIT);
 
@@ -3209,9 +3340,13 @@ void Renderer::RenderPostProcessPass()
 	glBindTexture(GL_TEXTURE_2D, m_BloomBlurBuffer2->ColorTexture);
 	m_PostProcessShader->SetUniform1i("u_BloomTexture", 1);
 
-	glActiveTexture(GL_TEXTURE2);
-	glBindTexture(GL_TEXTURE_2D, m_PostProcessBuffer->DepthTexture);
-	m_PostProcessShader->SetUniform1i("u_SceneDepth", 2);
+	// Pass bindless depth texture handle
+	GLint locDepth = glGetUniformLocation(m_PostProcessShader->GetRendererID(), "u_GBufferDepthHandle");
+	if (locDepth != -1 && m_GBuffer)
+	{
+		glUniform2ui(locDepth, static_cast<GLuint>(m_GBuffer->HandleDepthTexture),
+			static_cast<GLuint>(m_GBuffer->HandleDepthTexture >> 32));
+	}
 
 	// Set post-processing toggle parameters
 	m_PostProcessShader->SetUniform1i("u_Vignette", m_VignetteEnabled ? 1 : 0);
@@ -3294,18 +3429,10 @@ void Renderer::RenderDeferredPipeline(const Mtx44& view, const Mtx44& projection
 	RenderLightingPass(view, projection);
 
 	// Render skybox after lighting but before transparent objects
+	// No depth blit needed - PostProcess FBO shares G-Buffer's depth texture
 	if (m_skybox && m_skybox->IsValid() && m_PostProcessBuffer && m_GBuffer) {
 		glBindFramebuffer(GL_FRAMEBUFFER, m_PostProcessBuffer->FBO);
 		glViewport(0, 0, m_PostProcessBuffer->width, m_PostProcessBuffer->height);
-
-		// Copy depth buffer from g-buffer to post-process buffer
-		glBindFramebuffer(GL_READ_FRAMEBUFFER, m_GBuffer->FBO);
-		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_PostProcessBuffer->FBO);
-		glBlitFramebuffer(0, 0, m_GBuffer->width, m_GBuffer->height,
-			0, 0, m_PostProcessBuffer->width, m_PostProcessBuffer->height,
-			GL_DEPTH_BUFFER_BIT, GL_NEAREST);
-
-		glBindFramebuffer(GL_FRAMEBUFFER, m_PostProcessBuffer->FBO);
 
 		// Enable depth testing but render only where depth = 1.0 (background)
 		glEnable(GL_DEPTH_TEST);
@@ -3320,21 +3447,13 @@ void Renderer::RenderDeferredPipeline(const Mtx44& view, const Mtx44& projection
 		glDepthFunc(GL_LESS);
 	}
 	else if (m_PostProcessBuffer && m_GBuffer) {
-		// No skybox, but still need to copy depth buffer for opaque custom shaders
-		glBindFramebuffer(GL_READ_FRAMEBUFFER, m_GBuffer->FBO);
-		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_PostProcessBuffer->FBO);
-		glBlitFramebuffer(0, 0, m_GBuffer->width, m_GBuffer->height,
-			0, 0, m_PostProcessBuffer->width, m_PostProcessBuffer->height,
-			GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+		// No skybox, but set up framebuffer and depth state for forward pass
 		glBindFramebuffer(GL_FRAMEBUFFER, m_PostProcessBuffer->FBO);
 
 		// Set up depth state for subsequent opaque custom shader pass
-		// (matches what skybox path does after rendering)
 		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_LEQUAL);
 		glDepthMask(GL_FALSE);
-
-		EE_CORE_INFO("Copied depth buffer from G-Buffer to PostProcess buffer (no skybox)");
 	}
 
 	// FORWARD PASS - render all custom shaders (opaque + transparent) and transparent standard
@@ -3375,11 +3494,11 @@ void Renderer::RenderDeferredPipeline(const Mtx44& view, const Mtx44& projection
 		// Flush the navmesh debug lines to screen
 		RenderDebugLines(view, projection);
 	}
-	
+
 #endif
 
 	// Post-processing pass - read from lighting + transparency pass output
-	RenderPostProcessPass();
+	RenderPostProcessPass(view, projection);
 }
 
 /**
@@ -3511,11 +3630,7 @@ void Renderer::CleanupPostProcessBuffer()
 			glDeleteTextures(1, &m_PostProcessBuffer->ColorTexture);
 			m_PostProcessBuffer->ColorTexture = 0;
 		}
-		if (m_PostProcessBuffer->DepthTexture != 0)
-		{
-			glDeleteTextures(1, &m_PostProcessBuffer->DepthTexture);
-			m_PostProcessBuffer->DepthTexture = 0;
-		}
+		// Note: Depth texture is shared with G-Buffer, don't delete it here
 		m_PostProcessBuffer.reset();
 	}
 
@@ -3579,11 +3694,6 @@ void Renderer::CleanupPostProcessBuffer()
 			glDeleteTextures(1, &m_AntiAliasingBuffer->ColorTexture);
 			m_AntiAliasingBuffer->ColorTexture = 0;
 		}
-		if (m_AntiAliasingBuffer->DepthTexture != 0)
-		{
-			glDeleteTextures(1, &m_AntiAliasingBuffer->DepthTexture);
-			m_AntiAliasingBuffer->DepthTexture = 0;
-		}
 		m_AntiAliasingBuffer.reset();
 	}
 
@@ -3597,6 +3707,64 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
 {
 	(void)view;
 
+	const auto& ecs = Ermine::ECS::GetInstance();
+
+	// ========== FRUSTUM CULLING SETUP ==========
+	// Get camera view and projection matrices
+	// Use GameCamera if active (playing), otherwise use EditorCamera
+	Mtx44 viewMtx, projMtx;
+
+#if defined(EE_EDITOR)
+	// In editor build, check if playing
+	if (editor::EditorGUI::isPlaying)
+	{
+		auto gameCamera = ecs.GetSystem<graphics::CameraSystem>();
+		if (gameCamera && gameCamera->HasValidCamera())
+		{
+			// Use player camera when in play mode
+			viewMtx = gameCamera->GetViewMatrix();
+			projMtx = gameCamera->GetProjectionMatrix();
+		}
+		else
+		{
+			// Fallback to editor camera if no valid game camera
+			const auto& editorCamera = editor::EditorCamera::GetInstance();
+			viewMtx = editorCamera.GetViewMatrix();
+			projMtx = editorCamera.GetProjectionMatrix();
+		}
+	}
+	else
+	{
+		// Use editor camera when not playing
+		const auto& editorCamera = editor::EditorCamera::GetInstance();
+		viewMtx = editorCamera.GetViewMatrix();
+		projMtx = editorCamera.GetProjectionMatrix();
+	}
+#else
+	// Standalone build - use game camera
+	auto gameCamera = ecs.GetSystem<graphics::CameraSystem>();
+	if (gameCamera && gameCamera->HasValidCamera())
+	{
+		viewMtx = gameCamera->GetViewMatrix();
+		projMtx = gameCamera->GetProjectionMatrix();
+	}
+	else
+	{
+		// Fallback if no camera is available
+		viewMtx = Mtx44(); // Identity matrix
+		projMtx = Mtx44(); // Identity matrix
+	}
+#endif
+
+	// Convert to glm for frustum extraction
+	glm::mat4 viewGlm = ToGlm(viewMtx);
+	glm::mat4 projGlm = ToGlm(projMtx);
+
+	// Build frustum from view-projection matrix
+	Frustum frustum;
+	glm::mat4 viewProj = projGlm * viewGlm;
+	frustum.ExtractFromViewProjection(viewProj);
+
 	std::vector<LightGPU> lights;
 	lights.reserve(MAX_LIGHTS);
 
@@ -3604,23 +3772,62 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
 	m_ActiveShadowLights.clear();
 	int lightIndex = 0;
 
-	const auto& ecs = Ermine::ECS::GetInstance();
 	for (EntityID e : m_LightSystem->m_Entities)
 	{
 		const auto& trans = ecs.GetComponent<Transform>(e);
 		const auto& light = ecs.GetComponent<Light>(e);
 
+		// Get light position in world space
+		glm::vec3 lightPos(trans.position.x, trans.position.y, trans.position.z);
+
+		// Build rotation from quaternion for directional/spot lights
+		glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
+		rotQuat = glm::normalize(rotQuat);
+
+		// ========== FRUSTUM CULLING TEST ==========
+		bool isCulled = false;
+
+		if (light.type == LightType::POINT)
+		{
+			// Point light: test sphere against frustum
+			// Create AABB from sphere bounds
+			float radius = light.radius;
+			glm::vec3 aabbMin = lightPos - glm::vec3(radius);
+			glm::vec3 aabbMax = lightPos + glm::vec3(radius);
+
+			isCulled = !frustum.TestAABB(aabbMin, aabbMax);
+		}
+		else if (light.type == LightType::SPOT)
+		{
+			// Spot light: test cone against frustum
+			glm::vec3 spotDir = glm::normalize(rotQuat * glm::vec3(0.0f, 0.0f, 1.0f));
+			float outerAngleRad = glm::radians(light.outerAngle);
+
+			// Create AABB that encompasses the spot light cone
+			float coneRadius = light.radius * std::tan(outerAngleRad);
+			glm::vec3 coneEnd = lightPos + spotDir * light.radius;
+
+			// Find AABB that contains apex and base circle
+			glm::vec3 aabbMin = glm::min(lightPos, coneEnd - glm::vec3(coneRadius));
+			glm::vec3 aabbMax = glm::max(lightPos, coneEnd + glm::vec3(coneRadius));
+
+			isCulled = !frustum.TestAABB(aabbMin, aabbMax);
+		}
+		else if (light.type == LightType::DIRECTIONAL)
+		{
+			// Directional lights affect entire scene - never cull
+			isCulled = false;
+		}
+
+		// Skip culled lights
+		if (isCulled)
+		{
+			continue;
+		}
 		// Track shadow-casting lights for instanced shadow rendering
 		if ((light.type == LightType::DIRECTIONAL || light.type == LightType::SPOT) && light.castsShadows) {
 			m_ActiveShadowLights.push_back(lightIndex);
 		}
-
-		// Keep position in WORLD SPACE instead of view space
-		glm::vec4 posWorld(trans.position.x, trans.position.y, trans.position.z, 1.0f);
-
-		// Build rotation from quaternion
-		glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
-		rotQuat = glm::normalize(rotQuat);
 
 		// Keep direction in WORLD SPACE
 		glm::vec3 fwd(0.0f, 0.0f, 1.0f);
@@ -3637,10 +3844,16 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
 
 		// Convert to LightGPU structure - NOW IN WORLD SPACE
 		LightGPU gpu{};
-		gpu.position_type = glm::vec4(posWorld.x, posWorld.y, posWorld.z, static_cast<float>(light.type));
+		gpu.position_type = glm::vec4(lightPos.x, lightPos.y, lightPos.z, static_cast<float>(light.type));
 		gpu.color_intensity = glm::vec4(light.color.x, light.color.y, light.color.z, light.intensity);
 		gpu.direction_range = glm::vec4(dirWorld.x, dirWorld.y, dirWorld.z, light.radius);
-		gpu.spot_angles_castshadows_startOffset = glm::vec4(innerCos, outerCos, light.castsShadows, light.startOffset);
+
+		// Pack flags into bitfield: bit 0 = castsShadows, bit 1 = castsRays
+		float flags = 0.0f;
+		if (light.castsShadows) flags += 1.0f;  // bit 0
+		if (light.castsRays) flags += 2.0f;     // bit 1
+
+		gpu.spot_angles_castshadows_startOffset = glm::vec4(innerCos, outerCos, flags, light.startOffset);
 
 		for (int i = 0; i < NUM_CASCADES; ++i) {
 			gpu.lightSpaceMatrix[i] = light.lightSpaceMatrices[i];
@@ -3906,8 +4119,8 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 					continue; // Skip opaque rendering
 				}
 
-
-				RenderModelDeferred(*modelComp.m_model, materialComp.GetMaterial(), view, projection, entityModel);
+				// TODO: Implement indirect model rendering
+				//RenderModelDeferred(*modelComp.m_model, materialComp.GetMaterial(), view, projection, entityModel);
 			}
 			// Mesh + material pipeline
 			else if (ecs.HasComponent<Mesh>(entity) && ecs.HasComponent<Ermine::Material>(entity))
@@ -4204,6 +4417,18 @@ Renderer::~Renderer()
 				glMakeTextureHandleNonResidentARB(m_ShadowMapArrayHandle);
 			}
 			m_ShadowMapArrayHandle = 0;
+		}
+
+		// Clean up IGN texture
+		if (m_IGNTexture != 0)
+		{
+			if (m_IGNTextureHandle != 0 && glIsTextureHandleResidentARB(m_IGNTextureHandle))
+			{
+				glMakeTextureHandleNonResidentARB(m_IGNTextureHandle);
+				m_IGNTextureHandle = 0;
+			}
+			glDeleteTextures(1, &m_IGNTexture);
+			m_IGNTexture = 0;
 		}
 
 		// Clean up g-buffer handles
@@ -4758,6 +4983,17 @@ void Renderer::RenderOpaqueCustomShaders(const Mtx44& view, const Mtx44& project
 						shaderToBind->SetUniform1ui("baseDrawID", static_cast<uint32_t>(batchStart));
 						shaderToBind->SetUniform1f("u_Time", m_ElapsedTime);
 
+						// Bind IGN texture for volumetric effects
+						if (m_IGNTextureHandle != 0) {
+							GLint locIGN = glGetUniformLocation(shaderToBind->GetRendererID(), "u_IGNHandle");
+							if (locIGN != -1) {
+								glUniform2ui(locIGN,
+									static_cast<GLuint>(m_IGNTextureHandle),
+									static_cast<GLuint>(m_IGNTextureHandle >> 32));
+							}
+						}
+						shaderToBind->SetUniform2f("u_IGNResolution", m_IGNTextureSize);
+
 						// Execute multi-draw for this batch
 						size_t batchSize = i - batchStart;
 						size_t byteOffset = batchStart * sizeof(DrawElementsIndirectCommand);
@@ -4810,6 +5046,17 @@ void Renderer::RenderOpaqueCustomShaders(const Mtx44& view, const Mtx44& project
 						shaderToBind->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
 						shaderToBind->SetUniform1ui("baseDrawID", static_cast<uint32_t>(batchStart));
 						shaderToBind->SetUniform1f("u_Time", m_ElapsedTime);
+
+						// Bind IGN texture for volumetric effects
+						if (m_IGNTextureHandle != 0) {
+							GLint locIGN = glGetUniformLocation(shaderToBind->GetRendererID(), "u_IGNHandle");
+							if (locIGN != -1) {
+								glUniform2ui(locIGN,
+									static_cast<GLuint>(m_IGNTextureHandle),
+									static_cast<GLuint>(m_IGNTextureHandle >> 32));
+							}
+						}
+						shaderToBind->SetUniform2f("u_IGNResolution", m_IGNTextureSize);
 
 						// Execute multi-draw for this batch
 						size_t batchSize = i - batchStart;
@@ -4883,6 +5130,17 @@ void Renderer::RenderTransparentCustomShaders(const Mtx44& view, const Mtx44& pr
 					shaderToBind->SetUniform1ui("baseDrawID", static_cast<uint32_t>(batchStart));
 					shaderToBind->SetUniform1f("u_Time", m_ElapsedTime);
 
+					// Bind IGN texture for volumetric effects
+					if (m_IGNTextureHandle != 0) {
+						GLint locIGN = glGetUniformLocation(shaderToBind->GetRendererID(), "u_IGNHandle");
+						if (locIGN != -1) {
+							glUniform2ui(locIGN,
+								static_cast<GLuint>(m_IGNTextureHandle),
+								static_cast<GLuint>(m_IGNTextureHandle >> 32));
+						}
+					}
+					shaderToBind->SetUniform2f("u_IGNResolution", m_IGNTextureSize);
+
 					// Execute multi-draw for this batch
 					size_t batchSize = i - batchStart;
 					size_t byteOffset = batchStart * sizeof(DrawElementsIndirectCommand);
@@ -4932,6 +5190,17 @@ void Renderer::RenderTransparentCustomShaders(const Mtx44& view, const Mtx44& pr
 					shaderToBind->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
 					shaderToBind->SetUniform1ui("baseDrawID", static_cast<uint32_t>(batchStart));
 					shaderToBind->SetUniform1f("u_Time", m_ElapsedTime);
+
+					// Bind IGN texture for volumetric effects
+					if (m_IGNTextureHandle != 0) {
+						GLint locIGN = glGetUniformLocation(shaderToBind->GetRendererID(), "u_IGNHandle");
+						if (locIGN != -1) {
+							glUniform2ui(locIGN,
+								static_cast<GLuint>(m_IGNTextureHandle),
+								static_cast<GLuint>(m_IGNTextureHandle >> 32));
+						}
+					}
+					shaderToBind->SetUniform2f("u_IGNResolution", m_IGNTextureSize);
 
 					// Execute multi-draw for this batch
 					size_t batchSize = i - batchStart;
@@ -5662,8 +5931,6 @@ void Renderer::CalculateLightMatrix(const editor::EditorCamera& editorCamera)
  */
 void Renderer::RenderShadowMapInstanced()
 {
-	UpdateLightsUBO(editor::EditorCamera::GetInstance().GetViewMatrix());
-
 	// Validate resources
 	if (!m_ShadowMapFBO || !m_ShadowMapArray || !m_ShadowMapInstancedShader)
 	{
@@ -6565,4 +6832,83 @@ void Renderer::BuildTextureArray()
 
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 	m_TextureArrayDirty = false;
+}
+
+
+
+
+
+
+/**
+ * @brief Generates an Interleaved Gradient Noise (IGN) texture for jittering and dithering effects.
+ * IGN produces spatially smooth but temporally stable noise patterns ideal for ray marching.
+ */
+void Renderer::GenerateIGNTexture()
+{
+	int width = static_cast<int>(m_IGNTextureSize.x);
+	int height = static_cast<int>(m_IGNTextureSize.y);
+
+	// Clean up existing texture if present
+	if (m_IGNTexture != 0)
+	{
+		if (m_IGNTextureHandle != 0 && glIsTextureHandleResidentARB(m_IGNTextureHandle))
+		{
+			glMakeTextureHandleNonResidentARB(m_IGNTextureHandle);
+		}
+		glDeleteTextures(1, &m_IGNTexture);
+		m_IGNTexture = 0;
+		m_IGNTextureHandle = 0;
+	}
+
+	// Generate Interleaved Gradient Noise
+	std::vector<float> noiseData(width * height);
+
+	// IGN formula: fract(52.9829189 * fract(x * 0.06711056 + y * 0.00583715))
+	const float magic1 = 0.06711056f;
+	const float magic2 = 0.00583715f;
+	const float magic3 = 52.9829189f;
+
+	for (int y = 0; y < height; ++y)
+	{
+		for (int x = 0; x < width; ++x)
+		{
+			// Use pixel center coordinates
+			float fx = static_cast<float>(x) + 0.5f;
+			float fy = static_cast<float>(y) + 0.5f;
+
+			// Apply IGN formula
+			float value = glm::fract(magic3 * glm::fract(fx * magic1 + fy * magic2));
+
+			int idx = y * width + x;
+			noiseData[idx] = value;
+		}
+	}
+
+	// Create OpenGL texture
+	glGenTextures(1, &m_IGNTexture);
+	glBindTexture(GL_TEXTURE_2D, m_IGNTexture);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, width, height, 0, GL_RED, GL_FLOAT, noiseData.data());
+
+	// Texture parameters for tiling and filtering
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	// Create bindless texture handle
+	m_IGNTextureHandle = glGetTextureHandleARB(m_IGNTexture);
+	if (m_IGNTextureHandle == 0)
+	{
+		EE_CORE_ERROR("Failed to create bindless texture handle for IGN texture");
+		return;
+	}
+
+	// Make handle resident (accessible in shaders)
+	glMakeTextureHandleResidentARB(m_IGNTextureHandle);
+
+	EE_CORE_INFO("Generated IGN texture: {0}x{1}, Handle: {2}", width, height, m_IGNTextureHandle);
+	glCheckError();
 }

@@ -211,7 +211,9 @@ namespace Ermine::graphics
         float m_FogDensity = 0.02f;   // For exponential fog modes
         float m_FogStart = 50.0f;     // For linear fog
         float m_FogEnd = 200.0f;      // For linear fog
-
+		float m_FogHeightCoefficient = 0.1f; // For height-based fog
+		float m_FogHeightFalloff = 10.0f;      // For height-based fog
+        
         // Post-processing uniforms - toggles
         bool m_VignetteEnabled = false;
         bool m_FXAAEnabled = true;
@@ -238,6 +240,11 @@ namespace Ermine::graphics
         float m_BloomThreshold = 1.0f;
         float m_BloomIntensity = 2.0f;
         float m_BloomRadius = 1.0f;
+
+		// Spotlight ray parameters
+        bool m_SpotlightRaysEnabled = true;
+        float m_SpotlightRayIntensity = 0.3f;
+        float m_SpotlightRayFalloff = 2.0f;
 
         // Maximum bone array size expected in shader
         static constexpr int MAX_BONE_UNIFORMS = 128;
@@ -421,7 +428,6 @@ namespace Ermine::graphics
         {
 			unsigned int FBO = 0;
 			unsigned int ColorTexture = 0;
-            unsigned int DepthTexture = 0;
 
 			int width = 0;
 			int height = 0;
@@ -520,8 +526,10 @@ namespace Ermine::graphics
 
         /**
          * @brief Render Post-processing effects using the lighting pass output
+         * @param view The view matrix
+         * @param projection The projection matrix
          */
-        void RenderPostProcessPass();
+        void RenderPostProcessPass(const Mtx44& view, const Mtx44& projection);
 
         /**
          * @brief Complete deferred rendering pipeline
@@ -1153,6 +1161,16 @@ namespace Ermine::graphics
         uint64_t m_ShadowMapArrayHandle = 0;
         GLuint m_ShadowMapFBO = 0;
         GLuint m_ShadowMapArray = 0;
+
+        // Noise textures
+        GLuint m_IGNTexture = 0;
+        GLuint64 m_IGNTextureHandle = 0;
+		glm::vec2 m_IGNTextureSize = glm::vec2(128.0f, 128.0f);
+
+        /**
+         * @brief Generates an Interleaved Gradient Noise texture for dithering and sampling.
+		 */
+		void GenerateIGNTexture();
 
         unsigned int m_TotalShadowLayers = 0; // Total layers used by all shadow-casting lights
         std::vector<int> m_ActiveShadowLights; // Indices of shadow-casting lights (updated in UpdateLightsUBO)

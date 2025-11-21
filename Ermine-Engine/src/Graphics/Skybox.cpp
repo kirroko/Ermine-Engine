@@ -100,8 +100,6 @@ void Skybox::Render(const Mtx44& view, const Mtx44& projection, float exposure, 
     }
 
     // Save current depth function and change to LEQUAL for skybox
-    GLint depthFunc;
-    glGetIntegerv(GL_DEPTH_FUNC, &depthFunc);
     glDepthFunc(GL_LEQUAL);
 
     // Bind shader and set uniforms
@@ -130,9 +128,6 @@ void Skybox::Render(const Mtx44& view, const Mtx44& projection, float exposure, 
     // Cleanup
     m_cubemap->Unbind();
     m_shader->Unbind();
-
-    // Restore original depth function
-    glDepthFunc(depthFunc);
 }
 
 bool Skybox::IsValid() const
