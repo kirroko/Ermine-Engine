@@ -339,6 +339,15 @@ void SaveSceneToFile(const Ermine::ECS& ecs, const std::filesystem::path& path, 
 
     d.AddMember("entities", entities, a);
 
+
+    if (auto renderer = ecs.GetSystem<Ermine::graphics::Renderer>()) {
+        renderer->SyncToGlobalGraphics();
+
+        rapidjson::Value ggJson(rapidjson::kObjectType);
+        renderer->m_GlobalGraphics.Serialize(ggJson, a);
+        d.AddMember("globalGraphics", ggJson, a);
+    }
+
     if (pretty) { PrettyWriter<OStreamWrapper> w(osw); w.SetIndent(' ', 2); d.Accept(w); }
     else { Writer<OStreamWrapper> w(osw); d.Accept(w); }
 }
@@ -460,6 +469,11 @@ void LoadSceneFromFile(Ermine::ECS& ecs, const std::filesystem::path& path) {
         renderer->m_MeshManager.UploadAndBuild();
         EE_CORE_INFO("Scene loaded: MeshManager populated with {} meshes",
                      renderer->m_MeshManager.GetMeshCount());
+
+        if (d.HasMember("globalGraphics") && d["globalGraphics"].IsObject()) {
+            renderer->m_GlobalGraphics.Deserialize(d["globalGraphics"]);
+            renderer->ApplyFromGlobalGraphics();
+        }
     }
 }
 

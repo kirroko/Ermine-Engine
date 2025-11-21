@@ -242,6 +242,12 @@ namespace Ermine::graphics
         // Maximum bone array size expected in shader
         static constexpr int MAX_BONE_UNIFORMS = 128;
 
+        GlobalGraphics m_GlobalGraphics;
+
+        // Sync helpers
+        void SyncToGlobalGraphics();    // copy class -> m_GlobalGraphics
+        void ApplyFromGlobalGraphics(); // copy m_GlobalGraphics -> class
+
         /**
          * @brief To run the pass and read GL_STENCIL_INDEX at a pixel
          * @param x The x coordinate from the framebuffer
