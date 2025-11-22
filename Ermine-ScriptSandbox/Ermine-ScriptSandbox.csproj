@@ -73,8 +73,12 @@
     <Compile Include="LifeEssenceSkillController.cs" />
     <Compile Include="OrbTeleport.cs" />
     <Compile Include="PlayerController.cs" />
+    <Compile Include="RotatingPlatform.cs" />
     <Compile Include="Sandbox.cs" />
     <Compile Include="Sphere.cs" />
+    <Compile Include="FakePlayer.cs" />
+    <Compile Include="TemplateScript.cs" />
+    <Compile Include="Switch.cs" />
     <Compile Include="Test1.cs" />
     <Compile Include="Test2.cs" />
   </ItemGroup>
