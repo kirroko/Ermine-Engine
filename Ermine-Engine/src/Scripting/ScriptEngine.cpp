@@ -2488,7 +2488,7 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	mono_add_internal_call("ErmineEngine.Physics::MoveEuler", (const void*)icall_Physics_MoveEuler);
 	mono_add_internal_call("ErmineEngine.Physics::MoveQuat", (const void*)icall_Physics_MoveQuat);
 	mono_add_internal_call("ErmineEngine.Physics::Internal_Raycast", (const void*)icall_physics_raycast);
-	mono_add_internal_call("ErmineEngine.Phyiscs.RaycastHit::get_transform", (const void*)icall_gameobject_get_transform);
+	mono_add_internal_call("ErmineEngine.Physics.RaycastHit::get_transform", (const void*)icall_gameobject_get_transform);
 #pragma endregion
 #pragma region UI ICalls
 	mono_add_internal_call("ErmineEngine.GameplayHUD::Internal_GetHealth", (const void*)Internal_GetHealth);

@@ -33,6 +33,8 @@ public class PlayerController2 : MonoBehaviour
     public float jumpHeight = 2f;
     private float startheight = 0;
 
+    private float interactRange = 50f;
+
     void Start()
     {
         cam = GameObject.Find("Main Camera").GetComponent<Transform>();
@@ -47,6 +49,7 @@ public class PlayerController2 : MonoBehaviour
         HandleLook();
         HandleCameraLerp();
         HandleFootstepAudio();
+        HandleInteract();
     }
 
     private void HandleInput()
@@ -127,6 +130,49 @@ public class PlayerController2 : MonoBehaviour
                 footstepTimer = 0f;
             }
         }
+    }
+
+    private void HandleInteract()
+    {
+        if (Input.GetKeyDown(KeyCode.E))
+        {
+            Physics.RaycastHit hit;
+
+            bool hitSomething = Physics.Raycast(
+                cam.position,
+                cam.forward,
+                out hit,
+                interactRange
+            );
+
+            if (!hitSomething)
+            {
+                Debug.Log("Nothing in front of you.");
+                return;
+            }
+
+            ulong id = GetEntityID(hit);
+
+            if (id != 0)
+            {
+                GameObject obj = GameObject.FromEntityID(id);
+                Debug.Log("You are looking at: " + obj.name);
+            }
+            else
+            {
+                Debug.Log("No valid entity hit.");
+            }
+        }
+    }
+
+    private ulong GetEntityID(Physics.RaycastHit hit)
+    {
+        var field = typeof(Physics.RaycastHit).GetField(
+            "EntityID",
+            System.Reflection.BindingFlags.NonPublic |
+            System.Reflection.BindingFlags.Instance);
+
+        return (ulong)field.GetValue(hit);
     }
 
     void OnCollisionEnter(Collision col)

@@ -1174,6 +1174,33 @@
             ]
           }
         },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            -2.5
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            1.0,
+            1.0,
+            2.0
+          ]
+        },
         "Material": {
           "hasMaterial": true,
           "params": {
@@ -3733,6 +3760,33 @@
           "name": "Switch",
           "tag": "Untagged",
           "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.6000000238418579,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            30.0,
+            30.0,
+            50.0
+          ]
         },
         "ModelComponent": {
           "model": "Switch.fbx",
