@@ -57,5 +57,8 @@ namespace ErmineEngine
 
         [MethodImpl(MethodImplOptions.InternalCall)]
         private static extern Transform Internal_GetTransform();
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern void RemovePhysic(ulong entityID);
     }
 }

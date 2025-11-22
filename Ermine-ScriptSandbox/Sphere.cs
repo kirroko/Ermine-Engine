@@ -18,7 +18,12 @@ public class Sphere : MonoBehaviour
 
         Physics.SetPosition((ulong)gameObject.GetInstanceID(), transform.position);
         if (timeAlive < 0.0f)
+        {
+            Debug.Log("die");
+            Physics.RemovePhysic((ulong)gameObject.GetInstanceID());
             GameObject.Destroy(gameObject);
+        }
+
     }
 
     void OnCollisionEnter(Collision col)

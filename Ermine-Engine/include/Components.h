@@ -2437,6 +2437,8 @@ namespace Ermine
 		bool rotX = false; bool rotY = false; bool rotZ = false;
 		Ermine::Vec3 colliderSize{ 1,1,1 };
 
+		bool update = false;
+
 		JPH::BodyID bodyID{ JPH::BodyID::cInvalidBodyID };
 		JPH::Body* body{ nullptr };
 		std::vector<glm::vec3> customMeshVertices;   // For custom mesh

@@ -258,6 +258,8 @@ namespace Ermine
 			Moves the body using (position + rotation in Quaternion).
 		*************************************************************************/
 		void Move(EntityID ID, Ermine::Vec3 position, Ermine::Quaternion rotation);
+
+		void RemovePhysic(EntityID ID);
 		
 		// Shared pointer to the debug renderer used for visualizing physics.
 		std::shared_ptr<MyDebugRenderer> mDebugRenderer;

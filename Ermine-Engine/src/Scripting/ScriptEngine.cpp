@@ -1990,6 +1990,12 @@ namespace
 		auto physics = ECS::GetInstance().GetSystem<Physics>();
 		physics->Move((EntityID)entityID, pos, q);
 	}
+	static void icall_Physics_RemovePhysic(uint64_t entityID)
+	{
+		auto physics = ECS::GetInstance().GetSystem<Physics>();
+		physics->RemovePhysic((EntityID)entityID);
+	}
+
 #pragma endregion
 
 #pragma region Prefab ICalls
@@ -2489,6 +2495,7 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	mono_add_internal_call("ErmineEngine.Physics::MoveQuat", (const void*)icall_Physics_MoveQuat);
 	mono_add_internal_call("ErmineEngine.Physics::Internal_Raycast", (const void*)icall_physics_raycast);
 	mono_add_internal_call("ErmineEngine.Physics.RaycastHit::get_transform", (const void*)icall_gameobject_get_transform);
+	mono_add_internal_call("ErmineEngine.Physics::RemovePhysic", (const void*)&icall_Physics_RemovePhysic);
 #pragma endregion
 #pragma region UI ICalls
 	mono_add_internal_call("ErmineEngine.GameplayHUD::Internal_GetHealth", (const void*)Internal_GetHealth);

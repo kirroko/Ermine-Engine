@@ -8,6 +8,8 @@ public class DisableLightCone : MonoBehaviour
     private bool disabled = false;
     private bool orbInside = false;
 
+    private bool currentlyColliding = false;
+
     private GameObject lightCone = null;
 
     private void Start()
@@ -22,6 +24,7 @@ public class DisableLightCone : MonoBehaviour
 
     private void Update()
     {
+        currentlyColliding = false;
         // orb burst
         if (!disabled && orbInside && Input.GetMouseButtonDown(0))
         {
@@ -38,6 +41,9 @@ public class DisableLightCone : MonoBehaviour
                 RespawnLight();
             }
         }
+
+        if (!currentlyColliding)
+            orbInside = false;
     }
 
     private void DisableLight()
@@ -79,6 +85,15 @@ public class DisableLightCone : MonoBehaviour
         if (col.gameObject.name == "Sphere")
         {
             orbInside = true;
+        }
+    }
+
+    void OnCollisionStay(Collision col)
+    {
+        if (col.gameObject.name == "Sphere")
+        {
+            orbInside = true;
+            currentlyColliding = true;
         }
     }
 
