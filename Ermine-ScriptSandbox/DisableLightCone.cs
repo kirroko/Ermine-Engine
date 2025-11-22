@@ -4,7 +4,8 @@ public class DisableLightCone : MonoBehaviour
 {
     public float timer = 3.0f;
     private Vector3 oldPos;
-    private bool hit = false;
+    private bool disabled = false;
+    private bool orbInside = false;
 
     private void Start()
     {
@@ -13,8 +14,14 @@ public class DisableLightCone : MonoBehaviour
 
     private void Update()
     {
+        // orb burst
+        if (!disabled && orbInside && Input.GetMouseButtonDown(0))
+        {
+            DisableCone();
+        }
+
         // if u want the lightcone to come back after disabling
-        if (hit)
+        if (disabled)
         {
             timer -= Time.deltaTime;
 
@@ -23,21 +30,34 @@ public class DisableLightCone : MonoBehaviour
                 gameObject.transform.position = oldPos;
                 Physics.SetPosition((ulong)gameObject.GetInstanceID(), gameObject.transform.position);
                 timer = 3.0f;
-                hit = false;
+                disabled = false;
             }
         }
+    }
+
+    private void DisableCone()
+    {
+        disabled = true;
+        //gameObject.SetActive(false);
+
+        // we move the lightcone out of view for now until SetActive() is implemented
+        gameObject.transform.position = new Vector3(0, oldPos.y + 100, 0);
+        Physics.SetPosition((ulong)gameObject.GetInstanceID(), gameObject.transform.position);
     }
 
     void OnCollisionEnter(Collision col)
     {
         if (col.gameObject.name == "Sphere")
         {
-            hit = true;
-            //gameObject.SetActive(false);
+            orbInside = true;
+        }
+    }
 
-            // we move the lightcone out of view for now until SetActive() is implemented
-            gameObject.transform.position = new Vector3(0, oldPos.y + 100, 0);
-            Physics.SetPosition((ulong)gameObject.GetInstanceID(), gameObject.transform.position);
+    void OnCollisionExit(Collision col)
+    {
+        if (col.gameObject.name == "Sphere")
+        {
+            orbInside = false;
         }
     }
 }
