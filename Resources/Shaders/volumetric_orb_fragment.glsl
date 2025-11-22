@@ -50,6 +50,8 @@ layout(std430, binding = 5) restrict readonly buffer TextureArrayBlock {
 
 // Uniforms
 uniform float u_Time;
+uniform uvec2 u_IGNHandle;
+uniform vec2 u_IGNResolution;
 
 // Volumetric parameters
 uniform float orbRadius = 0.15;          // Central sphere size
@@ -69,7 +71,22 @@ uniform float sparkIntensity = 15.0;     // Super bright
 const uint MAT_FLAG_ALBEDO_MAP = 1u << 0u;
 const uint MAT_FLAG_NORMAL_MAP = 1u << 1u;
 
-// 3D noise for warping
+// IGN sampling
+float getIGN(vec2 fragCoord) {
+    sampler2D ignTexture = sampler2D(u_IGNHandle);
+    vec2 uv = mod(fragCoord, u_IGNResolution) / u_IGNResolution;
+    return texture(ignTexture, uv).r;
+}
+
+// Helper function to get IGN for per-spark properties (coherent across all pixels)
+float getIGNForSpark(float seed) {
+    // Use seed to create a fixed coordinate in IGN texture
+    // All pixels sampling the same spark will get the same value
+    vec2 fixedCoord = vec2(seed * 127.1, seed * 311.7);
+    return getIGN(fixedCoord);
+}
+
+// 3D noise for warping (kept for animation)
 float hash(vec3 p) {
     p = fract(p * 0.3183099 + 0.1);
     p *= 17.0;
@@ -121,13 +138,13 @@ float sampleSparks(vec3 pos, vec3 center) {
         // More random seed variation
         float sparkSeed = float(i) * 7.123 + float(i * i) * 0.314;
 
-        // Sporadic emission - each spark has random intervals of activity
-        float emissionCycle = hash(vec3(sparkSeed * 8.1, sparkSeed * 9.3, sparkSeed * 10.7));
+        // Sporadic emission - each spark has random intervals of activity using IGN (per-spark, coherent)
+        float emissionCycle = getIGNForSpark(sparkSeed * 8.1);
         float emissionFrequency = 0.2 + emissionCycle * 0.3;  // Random frequency between 0.2-0.5
         float emissionPhase = fract(u_Time * emissionFrequency + emissionCycle);
 
         // Spark only active during certain windows (creates gaps)
-        float activeWindow = hash(vec3(sparkSeed * 11.2, sparkSeed * 12.4, sparkSeed * 13.8));
+        float activeWindow = getIGNForSpark(sparkSeed * 11.2);
         float windowSize = 0.3 + activeWindow * 0.3;  // Active for 30-60% of the cycle
 
         // Check if spark is in active window
@@ -138,15 +155,15 @@ float sampleSparks(vec3 pos, vec3 center) {
         // Normalize phase within the active window
         float normalizedPhase = emissionPhase / windowSize;
 
-        // Random direction for this spark - vary all 3 components for proper randomness
+        // Random direction for this spark using IGN (per-spark, coherent across all pixels)
         vec3 sparkDir = normalize(vec3(
-            hash(vec3(sparkSeed, sparkSeed * 1.3, sparkSeed * 1.7)) * 2.0 - 1.0,
-            hash(vec3(sparkSeed * 2.1, sparkSeed, sparkSeed * 2.9)) * 2.0 - 1.0,
-            hash(vec3(sparkSeed * 3.3, sparkSeed * 3.7, sparkSeed)) * 2.0 - 1.0
+            getIGNForSpark(sparkSeed * 1.0) * 2.0 - 1.0,
+            getIGNForSpark(sparkSeed * 2.1) * 2.0 - 1.0,
+            getIGNForSpark(sparkSeed * 3.3) * 2.0 - 1.0
         ));
 
-        // Variable speed per spark for organic feel
-        float speedVariation = 0.5 + hash(vec3(sparkSeed * 4.3, sparkSeed * 5.1, sparkSeed * 6.7)) * 1.0;
+        // Variable speed per spark for organic feel (per-spark, coherent)
+        float speedVariation = 0.5 + getIGNForSpark(sparkSeed * 4.3) * 1.0;
 
         // Add organic wobble using noise
         vec3 wobbleOffset = vec3(
@@ -199,15 +216,16 @@ void main()
     tNear = max(tNear, 0.0);
     if (tNear >= tFar) discard;
 
-    // Raymarch through volume
+    // Raymarch through volume with IGN jitter
     float stepSize = (tFar - tNear) / float(numSteps);
+    float noise = getIGN(gl_FragCoord.xy);
     vec3 accumulatedColor = vec3(0.0);
     float accumulatedAlpha = 0.0;
 
     for (int i = 0; i < numSteps; i++) {
         if (accumulatedAlpha > 0.98) break;
 
-        float t = tNear + (float(i) + 0.5) * stepSize;
+        float t = tNear + (float(i) + noise) * stepSize;
         vec3 samplePos = rayOrigin + rayDir * t;
 
         // --- 1. SUPER BRIGHT ORANGE ORB WITH WARPING ---

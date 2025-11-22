@@ -207,6 +207,15 @@ void GraphicsDebugGUI::DrawRenderingModeControls()
                                "Fog density for exponential modes (lower = less dense)");
             }
 
+            ImGui::Separator();
+
+            // Height-based fog parameters
+            ImGui::Text("Height-Based Fog");
+            DrawFloatSlider("Height Influence", &renderer->m_FogHeightCoefficient, 0.0f, 1.0f,
+                "How much height affects fog density (0=disabled, 1=maximum effect)");
+            DrawFloatSlider("Height Falloff", &renderer->m_FogHeightFalloff, 1.0f, 100.0f,
+                "Height at which fog starts to thin out (lower=fog stays near ground)");
+
             ImGui::TreePop();
         }
 
@@ -366,7 +375,29 @@ void GraphicsDebugGUI::DrawLightingControls()
             ImGui::Text("  Spot: %d", spotLights);
             ImGui::Text("  Shadow Casters: %d", shadowCasters);
         }
-        
+
+        ImGui::Separator();
+
+        // Volumetric Spotlight Rays
+        auto renderer = ECS::GetInstance().GetSystem<Renderer>();
+        if (renderer) {
+            if (DrawToggleButton("Volumetric Spotlight Rays", &renderer->m_SpotlightRaysEnabled,
+                                "Enable volumetric god rays for spotlights")) {
+                EE_CORE_INFO("Spotlight rays {}", renderer->m_SpotlightRaysEnabled ? "enabled" : "disabled");
+            }
+
+            // Spotlight ray parameters (shown when enabled)
+            if (renderer->m_SpotlightRaysEnabled && ImGui::TreeNode("Spotlight Ray Settings"))
+            {
+                DrawFloatSlider("Ray Intensity", &renderer->m_SpotlightRayIntensity, 0.0f, 2.0f,
+                               "Brightness of volumetric god rays from spotlights");
+                DrawFloatSlider("Ray Falloff", &renderer->m_SpotlightRayFalloff, 0.5f, 5.0f,
+                               "How quickly rays fade with distance");
+
+                ImGui::TreePop();
+            }
+        }
+
         ImGui::Unindent(10.0f);
     }
 }
