@@ -6,6 +6,7 @@ public class DamagePlayer : MonoBehaviour
     private float health = 0f;
     public float timer = 1f;
     public float damage = 10f;
+    private bool playerInside = false;
 
     private void Start()
     {
@@ -14,6 +15,16 @@ public class DamagePlayer : MonoBehaviour
 
     private void Update()
     {
+        if (playerInside)
+        {
+            timer -= Time.deltaTime;
+
+            if (timer <= 0f)
+            {
+                TakeDamage(damage);
+                timer = 1f;
+            }
+        }
     }
 
     void TakeDamage(float dmg)
@@ -22,28 +33,20 @@ public class DamagePlayer : MonoBehaviour
 
         GameObject bar = GameplayHUD.GetHealthBar();
         GameplayHUD.SetHealth(bar, health);
-
-        if (timer <= 0f)
-            timer = 1f;
     }
 
     void OnCollisionEnter(Collision col)
     {
-        //if (col.gameObject.name == "Player")
-        //{
-        //    Debug.Log("Ouch, Im working");
-        //    TakeDamage(damage);
-        //}
+        if (col.gameObject.name == "Player")
+            playerInside = true;
     }
 
-    void OnCollisionStay(Collision col)
+    void OnCollisionExit(Collision col)
     {
-        timer -= Time.deltaTime;
-
-        if (timer <= 0f && col.gameObject.name == "Player")
+        if (col.gameObject.name == "Player")
         {
-            Debug.Log("Ouch, Im working");
-            TakeDamage(damage);
+            playerInside = false;
+            timer = 1f; // Reset timer when leaving
         }
     }
 }
