@@ -40,6 +40,11 @@ public class DamagePlayer : MonoBehaviour
         if (col.gameObject.name == "Player")
             playerInside = true;
     }
+    void OnCollisionStay(Collision col)
+    {
+        if (col.gameObject.name == "Player")
+            playerInside = true;
+    }
 
     void OnCollisionExit(Collision col)
     {

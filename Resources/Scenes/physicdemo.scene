@@ -232,6 +232,7 @@
           "intensity": 1.0,
           "type": "Directional",
           "castsShadows": true,
+          "castsRays": false,
           "innerAngle": -1.0,
           "outerAngle": -1.0,
           "radius": 3.0
@@ -3954,8 +3955,8 @@
             0.0
           ],
           "rotx": false,
-          "roty": false,
-          "rotz": false,
+          "roty": true,
+          "rotz": true,
           "collidersize": [
             50.0,
             200.0,
@@ -4032,14 +4033,40 @@
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "PlayerController",
+              "class": "PlayerController2",
               "enabled": true,
-              "fields": {}
+              "fields": {
+                "moveSpeed": {
+                  "t": 0,
+                  "v": 5.0
+                },
+                "mouseSensitivity": {
+                  "t": 0,
+                  "v": 0.009999999776482582
+                },
+                "jumpspeed": {
+                  "t": 0,
+                  "v": 5.0
+                },
+                "crouchLerpSpeed": {
+                  "t": 0,
+                  "v": 6.0
+                },
+                "jumpHeight": {
+                  "t": 0,
+                  "v": 2.0
+                }
+              }
             },
             {
               "class": "OrbTeleport",
               "enabled": true,
-              "fields": {}
+              "fields": {
+                "damage": {
+                  "t": 0,
+                  "v": 10.0
+                }
+              }
             }
           ]
         }
@@ -4122,6 +4149,7 @@
           "intensity": 3.062000036239624,
           "type": "Spot",
           "castsShadows": false,
+          "castsRays": false,
           "innerAngle": 1.0,
           "outerAngle": 0.0,
           "radius": 4.0
@@ -4170,6 +4198,7 @@
           "intensity": 3.062000036239624,
           "type": "Point",
           "castsShadows": false,
+          "castsRays": false,
           "innerAngle": 1.0,
           "outerAngle": 0.0,
           "radius": 4.0
@@ -4218,6 +4247,7 @@
           "intensity": 3.0139999389648439,
           "type": "Point",
           "castsShadows": false,
+          "castsRays": false,
           "innerAngle": 1.0,
           "outerAngle": 0.0,
           "radius": 4.0
@@ -5230,8 +5260,8 @@
         },
         "PhysicComponent": {
           "bodyType": "Trigger",
-          "motionType": "Static",
-          "mass": 0.0,
+          "motionType": "Kinematic",
+          "mass": 1.0,
           "shapeType": "CustomMesh",
           "colliderpivot": [
             0.0,
@@ -5432,8 +5462,8 @@
         },
         "PhysicComponent": {
           "bodyType": "Trigger",
-          "motionType": "Static",
-          "mass": 0.0,
+          "motionType": "Kinematic",
+          "mass": 1.0,
           "shapeType": "CustomMesh",
           "colliderpivot": [
             0.0,
@@ -5634,8 +5664,8 @@
         },
         "PhysicComponent": {
           "bodyType": "Trigger",
-          "motionType": "Static",
-          "mass": 0.0,
+          "motionType": "Kinematic",
+          "mass": 1.0,
           "shapeType": "CustomMesh",
           "colliderpivot": [
             0.0,
@@ -5794,5 +5824,43 @@
         }
       }
     }
-  ]
+  ],
+  "globalGraphics": {
+    "ssaoEnabled": false,
+    "ssaoSamples": 16,
+    "ssaoRadius": 10.0,
+    "ssaoBias": 0.009999999776482582,
+    "ssaoIntensity": 1.0,
+    "ssaoFadeout": 0.10000000149011612,
+    "ssaoMaxDistance": 100.0,
+    "fogEnabled": false,
+    "fogMode": 0,
+    "fogColor": [
+      0.5,
+      0.6000000238418579,
+      0.699999988079071
+    ],
+    "fogDensity": 0.019999999552965165,
+    "fogStart": 50.0,
+    "fogEnd": 200.0,
+    "vignetteEnabled": false,
+    "fxaaEnabled": true,
+    "toneMappingEnabled": true,
+    "gammaCorrectionEnabled": true,
+    "bloomEnabled": true,
+    "skyboxIsHDR": false,
+    "exposure": 1.0,
+    "contrast": 1.0,
+    "saturation": 1.0,
+    "gamma": 2.200000047683716,
+    "vignetteIntensity": 0.30000001192092898,
+    "vignetteRadius": 0.800000011920929,
+    "bloomStrength": 0.03999999910593033,
+    "fxaaSpanMax": 8.0,
+    "fxaaReduceMin": 0.0078125,
+    "fxaaReduceMul": 0.125,
+    "bloomThreshold": 1.0,
+    "bloomIntensity": 2.0,
+    "bloomRadius": 1.0
+  }
 }

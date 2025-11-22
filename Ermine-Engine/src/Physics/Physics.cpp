@@ -622,9 +622,20 @@ namespace Ermine
 
 					// Build triangles (ensure your vertex order actually represents triangles)
 					JPH::Array<JPH::IndexedTriangle> triangles;
-					triangles.reserve(verts.size() / 3);
+					triangles.reserve((verts.size() / 3) * 2);
+
 					for (uint32_t i = 0; i + 2 < verts.size(); i += 3)
-						triangles.push_back(JPH::IndexedTriangle(i, i + 1, i + 2));
+					{
+						uint32_t a = i;
+						uint32_t b = i + 1;
+						uint32_t c = i + 2;
+
+						// front face
+						triangles.push_back(JPH::IndexedTriangle(a, b, c));
+						// back face
+						triangles.push_back(JPH::IndexedTriangle(c, b, a));
+					}
+
 
 					JPH::MeshShapeSettings meshSettings(verts, triangles);
 					meshSettings.mActiveEdgeCosThresholdAngle = 0.999f;
@@ -661,6 +672,7 @@ namespace Ermine
 				p.motionType,
 				layer
 			);
+			bodySettings.mEnhancedInternalEdgeRemoval = true;
 
 			if (p.motionType == JPH::EMotionType::Dynamic || p.motionType == JPH::EMotionType::Kinematic)
 			{
