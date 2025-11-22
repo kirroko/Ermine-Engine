@@ -576,6 +576,33 @@
             ]
           }
         },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
         "Material": {
           "hasMaterial": true,
           "params": {
@@ -661,6 +688,33 @@
               1.0
             ]
           }
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            1.0,
+            1.0,
+            1.0
+          ]
         },
         "Material": {
           "hasMaterial": true,
@@ -919,6 +973,33 @@
               1.0
             ]
           }
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            1.0,
+            1.0,
+            1.0
+          ]
         },
         "Material": {
           "hasMaterial": true,
@@ -1350,6 +1431,33 @@
             ]
           }
         },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
         "Material": {
           "hasMaterial": true,
           "params": {
@@ -1435,6 +1543,33 @@
               1.0
             ]
           }
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            1.0,
+            1.0,
+            1.0
+          ]
         },
         "Material": {
           "hasMaterial": true,
@@ -3870,10 +4005,14 @@
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "PlayerController"
+              "class": "PlayerController",
+              "enabled": true,
+              "fields": {}
             },
             {
-              "class": "OrbTeleport"
+              "class": "OrbTeleport",
+              "enabled": true,
+              "fields": {}
             }
           ]
         }
@@ -5047,7 +5186,7 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Light Cone (1)",
+          "name": "LightCone1",
           "tag": "Untagged",
           "selfActive": true
         },
@@ -5131,7 +5270,498 @@
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "DisableLightCone"
+              "class": "DamagePlayer",
+              "enabled": true,
+              "fields": {
+                "timer": {
+                  "t": 0,
+                  "v": 1.0
+                },
+                "damage": {
+                  "t": 0,
+                  "v": 10.0
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": 71,
+      "components": {
+        "IDComponent": {
+          "guid": "b81a2e5cd9ae5f43b36b89cb0df1d262"
+        },
+        "Transform": {
+          "position": [
+            1.5,
+            4.0,
+            -12.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "LightSource1",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Trigger",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            2.0,
+            2.0,
+            2.0
+          ]
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "class": "DisableLightCone",
+              "enabled": true,
+              "fields": {
+                "timer": {
+                  "t": 0,
+                  "v": 3.0
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": 72,
+      "components": {
+        "IDComponent": {
+          "guid": "61517a94a9707d429c1df52235f0a6c5"
+        },
+        "Transform": {
+          "position": [
+            -2.070364236831665,
+            -0.8248328566551209,
+            -6.440337657928467
+          ],
+          "rotation": [
+            0.025326933711767198,
+            -0.03898869827389717,
+            0.33133459091186526,
+            0.9423671364784241
+          ],
+          "scale": [
+            2.499997615814209,
+            1.3000004291534424,
+            2.5000033378601076
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "LightCone2",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cone",
+            "size": [
+              3.799999952316284,
+              7.0,
+              3.799999952316284
+            ]
+          }
+        },
+        "PhysicComponent": {
+          "bodyType": "Trigger",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "CustomMesh",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              1.0,
+              0.0,
+              0.0,
+              0.06499999761581421
+            ],
+            "materialAlpha": 0.06499999761581421,
+            "materialTransparency": 0.9350000023841858,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.5370000004768372,
+            "materialEmissive": [
+              1.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 0.5,
+            "materialHasAlbedoMap": false,
+            "materialHasNormalMap": false,
+            "materialHasRoughnessMap": false,
+            "materialHasMetallicMap": false,
+            "materialHasAoMap": false
+          },
+          "textures": [],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ]
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "class": "DamagePlayer",
+              "enabled": true,
+              "fields": {
+                "timer": {
+                  "t": 0,
+                  "v": 1.0
+                },
+                "damage": {
+                  "t": 0,
+                  "v": 10.0
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": 73,
+      "components": {
+        "IDComponent": {
+          "guid": "6ec24b2765394e478aaf9fa3e994101f"
+        },
+        "Transform": {
+          "position": [
+            -6.548372268676758,
+            5.843401908874512,
+            -6.251064777374268
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "LightSource2",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Trigger",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            2.0,
+            2.0,
+            2.0
+          ]
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "class": "DisableLightCone",
+              "enabled": true,
+              "fields": {
+                "timer": {
+                  "t": 0,
+                  "v": 3.0
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": 74,
+      "components": {
+        "IDComponent": {
+          "guid": "d5e103f56fdd9449a06781116d69409e"
+        },
+        "Transform": {
+          "position": [
+            12.657331466674805,
+            -0.24836716055870057,
+            -26.22780418395996
+          ],
+          "rotation": [
+            0.26918014883995058,
+            0.962680459022522,
+            -0.007373287342488766,
+            0.027093475684523584
+          ],
+          "scale": [
+            2.500002384185791,
+            1.3000003099441529,
+            2.5001134872436525
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "LightCone287",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cone",
+            "size": [
+              3.799999952316284,
+              7.0,
+              3.799999952316284
+            ]
+          }
+        },
+        "PhysicComponent": {
+          "bodyType": "Trigger",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "CustomMesh",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              1.0,
+              0.0,
+              0.0,
+              0.06499999761581421
+            ],
+            "materialAlpha": 0.06499999761581421,
+            "materialTransparency": 0.9350000023841858,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.5370000004768372,
+            "materialEmissive": [
+              1.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 0.5,
+            "materialHasAlbedoMap": false,
+            "materialHasNormalMap": false,
+            "materialHasRoughnessMap": false,
+            "materialHasMetallicMap": false,
+            "materialHasAoMap": false
+          },
+          "textures": [],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ]
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "class": "DamagePlayer",
+              "enabled": true,
+              "fields": {
+                "timer": {
+                  "t": 0,
+                  "v": 1.0
+                },
+                "damage": {
+                  "t": 0,
+                  "v": 10.0
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": 75,
+      "components": {
+        "IDComponent": {
+          "guid": "e2c3b811c04ba648b9126413de09945d"
+        },
+        "Transform": {
+          "position": [
+            16.170135498046876,
+            6.284262180328369,
+            -26.238954544067384
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "LightSource287",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Trigger",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            2.0,
+            2.0,
+            2.0
+          ]
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "class": "DisableLightCone",
+              "enabled": true,
+              "fields": {
+                "timer": {
+                  "t": 0,
+                  "v": 3.0
+                }
+              }
             }
           ]
         }
