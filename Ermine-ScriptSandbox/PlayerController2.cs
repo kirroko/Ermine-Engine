@@ -131,7 +131,7 @@ public class PlayerController2 : MonoBehaviour
 
     void OnCollisionEnter(Collision col)
     {
-        if (col.gameObject.name == "floor")
+        if (col.gameObject.name.Contains("Platform"))
             isGrounded = true;
     }
 }
