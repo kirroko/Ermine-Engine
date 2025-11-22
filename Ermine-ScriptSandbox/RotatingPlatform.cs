@@ -4,16 +4,13 @@ using ErmineEngine;
 public class RotatingPlatform : MonoBehaviour
 {
     public float speed = 2.0f;
-    public bool active = false;
+    public bool active = true;
 
     private Rigidbody rb;
 
     void Start()
     {
         rb = GetComponent<Rigidbody>();
-        
-
-        
     }
 
     void Update()
@@ -24,7 +21,7 @@ public class RotatingPlatform : MonoBehaviour
         Quaternion delta = Quaternion.Euler(0f, speed * Time.deltaTime, 0f);
 
         // Apply rotation manually (like MoveRotation)
-        rb.rotation = rb.rotation * delta;
+        Debug.Log(rb.rotation);
     }
 
     public void IsActive(bool state)

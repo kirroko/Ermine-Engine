@@ -4,6 +4,9 @@ using static ErmineEngine.Physics;
 
 public class FakePlayer : MonoBehaviour
 {
+    private float verticalVelocity = 0f;
+    public float gravity = -9.81f;
+
     public float groundCheckDistance = 0.5f;
 
     // Ground state
@@ -21,6 +24,14 @@ public class FakePlayer : MonoBehaviour
         BeginPlatformStep();
         GroundCheck();
         UpdatePlatformMotion();
+        HandleGravity();
+        ApplyVerticalMovement();
+    }
+
+    void HandleGravity()
+    {
+        if (!isGrounded)
+            verticalVelocity += gravity * Time.deltaTime;
     }
 
     // Reset platform tracking at the start of the frame
@@ -38,7 +49,12 @@ public class FakePlayer : MonoBehaviour
 
         if (Physics.Raycast(origin, Vector3.down, out RaycastHit hit, groundCheckDistance))
         {
+            
             isGrounded = true;
+
+            // Reset velocity only when moving downward
+            if (verticalVelocity < 0f)
+                verticalVelocity = 0f;
 
             // If standing on a rigidbody, treat it as a moving platform
             connectedBody = hit.collider.GetComponent<Rigidbody>();
@@ -49,6 +65,11 @@ public class FakePlayer : MonoBehaviour
         }
     }
 
+    void ApplyVerticalMovement()
+    {
+        // Move object according to vertical velocity
+        transform.position += new Vector3(0f, verticalVelocity, 0f) * Time.deltaTime;
+    }
     private void UpdatePlatformMotion()
     {
         Rigidbody rb = connectedBody;
