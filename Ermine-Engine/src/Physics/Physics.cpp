@@ -214,7 +214,7 @@ namespace Ermine
 			*mObjectLayerPairFilter
 		);
 
-		mPhysicsSystem.SetGravity(JPH::Vec3(0.0f, -0.981f, 0.0f));
+		mPhysicsSystem.SetGravity(JPH::Vec3(0.0f, -9.81f, 0.0f));
 		mPhysicsSystem.SetBodyActivationListener(mBodyActivationListener);
 		mPhysicsSystem.SetContactListener(mContactListener);
 		mPhysicsSystem.OptimizeBroadPhase();
