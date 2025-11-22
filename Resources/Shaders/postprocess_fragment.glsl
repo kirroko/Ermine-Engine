@@ -1,4 +1,5 @@
 #version 450 core
+#extension GL_ARB_bindless_texture : require
 
 in vec2 TexCoord;
 out vec4 FragColor;
@@ -6,7 +7,7 @@ out vec4 FragColor;
 // Input textures
 uniform sampler2D u_LightingTexture;
 uniform sampler2D u_BloomTexture;
-uniform sampler2D u_SceneDepth;  
+uniform uvec2 u_GBufferDepthHandle;  // Bindless depth texture handle  
 
 // Post-processing toggles
 uniform int u_Vignette = 1;
@@ -75,7 +76,8 @@ vec3 adjustSaturation(vec3 color, float saturation)
 void main()
 {
     vec3 color = texture(u_LightingTexture, TexCoord).rgb;
-    float sceneDepth = texture(u_SceneDepth, TexCoord).r;
+    sampler2D depthSampler = sampler2D(u_GBufferDepthHandle);
+    float sceneDepth = texture(depthSampler, TexCoord).r;
     bool isSky = sceneDepth >= 1.0;
 
     if(u_Bloom == 1)
