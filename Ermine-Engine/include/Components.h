@@ -1701,10 +1701,114 @@ namespace Ermine
 			xproperty::obj_member<"emissiveIntensity", &Material::cacheEmissiveIntensity>
 		)
 	};
-}
 
-namespace Ermine
-{
+	struct GlobalGraphics
+	{
+		// === SSAO parameters ===
+		bool  ssaoEnabled = false;
+		int   ssaoSamples = 16;
+		float ssaoRadius = 10.0f;
+		float ssaoBias = 0.01f;
+		float ssaoIntensity = 1.0f;
+		float ssaoFadeout = 0.1f;
+		float ssaoMaxDistance = 100.0f;
+
+		// === Fog parameters ===
+		bool  fogEnabled = false;
+		int   fogMode = 0;                     // 0 = linear, 1 = exp, 2 = exp^2
+		Vec3  fogColor = Vec3{ 0.5f, 0.6f, 0.7f };
+		float fogDensity = 0.02f;                 // exp modes
+		float fogStart = 50.0f;                 // linear
+		float fogEnd = 200.0f;                // linear
+
+		// === Post-processing toggles ===
+		bool vignetteEnabled = false;
+		bool fxaaEnabled = true;
+		bool toneMappingEnabled = true;
+		bool gammaCorrectionEnabled = true;
+		bool bloomEnabled = true;
+		bool skyboxIsHDR = false;
+
+		// === Post-processing parameters ===
+		float exposure = 1.0f;
+		float contrast = 1.0f;
+		float saturation = 1.0f;
+		float gamma = 2.2f;
+		float vignetteIntensity = 0.3f;
+		float vignetteRadius = 0.8f;
+		float bloomStrength = 0.04f;
+
+		// === FXAA parameters ===
+		float fxaaSpanMax = 8.0f;
+		float fxaaReduceMin = 1.0f / 128.0f;
+		float fxaaReduceMul = 1.0f / 8.0f;
+
+		// === Bloom pass parameters ===
+		float bloomThreshold = 1.0f;
+		float bloomIntensity = 2.0f;
+		float bloomRadius = 1.0f;
+
+		// --- generic xproperty-based serialization ---
+		template<typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const
+		{
+			xprop_utils::SerializeToJson(*this, out, alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in)
+		{
+			xprop_utils::DeserializeFromJson(*this, in);
+		}
+
+		XPROPERTY_DEF(
+			"GlobalGraphics", GlobalGraphics,
+
+			// SSAO
+			xproperty::obj_member<"ssaoEnabled", &GlobalGraphics::ssaoEnabled>,
+			xproperty::obj_member<"ssaoSamples", &GlobalGraphics::ssaoSamples>,
+			xproperty::obj_member<"ssaoRadius", &GlobalGraphics::ssaoRadius>,
+			xproperty::obj_member<"ssaoBias", &GlobalGraphics::ssaoBias>,
+			xproperty::obj_member<"ssaoIntensity", &GlobalGraphics::ssaoIntensity>,
+			xproperty::obj_member<"ssaoFadeout", &GlobalGraphics::ssaoFadeout>,
+			xproperty::obj_member<"ssaoMaxDistance", &GlobalGraphics::ssaoMaxDistance>,
+
+			// Fog
+			xproperty::obj_member<"fogEnabled", &GlobalGraphics::fogEnabled>,
+			xproperty::obj_member<"fogMode", &GlobalGraphics::fogMode>,
+			xproperty::obj_member<"fogColor", &GlobalGraphics::fogColor>,
+			xproperty::obj_member<"fogDensity", &GlobalGraphics::fogDensity>,
+			xproperty::obj_member<"fogStart", &GlobalGraphics::fogStart>,
+			xproperty::obj_member<"fogEnd", &GlobalGraphics::fogEnd>,
+
+			// Post-process toggles
+			xproperty::obj_member<"vignetteEnabled", &GlobalGraphics::vignetteEnabled>,
+			xproperty::obj_member<"fxaaEnabled", &GlobalGraphics::fxaaEnabled>,
+			xproperty::obj_member<"toneMappingEnabled", &GlobalGraphics::toneMappingEnabled>,
+			xproperty::obj_member<"gammaCorrectionEnabled", &GlobalGraphics::gammaCorrectionEnabled>,
+			xproperty::obj_member<"bloomEnabled", &GlobalGraphics::bloomEnabled>,
+			xproperty::obj_member<"skyboxIsHDR", &GlobalGraphics::skyboxIsHDR>,
+
+			// Post-process params
+			xproperty::obj_member<"exposure", &GlobalGraphics::exposure>,
+			xproperty::obj_member<"contrast", &GlobalGraphics::contrast>,
+			xproperty::obj_member<"saturation", &GlobalGraphics::saturation>,
+			xproperty::obj_member<"gamma", &GlobalGraphics::gamma>,
+			xproperty::obj_member<"vignetteIntensity", &GlobalGraphics::vignetteIntensity>,
+			xproperty::obj_member<"vignetteRadius", &GlobalGraphics::vignetteRadius>,
+			xproperty::obj_member<"bloomStrength", &GlobalGraphics::bloomStrength>,
+
+			// FXAA
+			xproperty::obj_member<"fxaaSpanMax", &GlobalGraphics::fxaaSpanMax>,
+			xproperty::obj_member<"fxaaReduceMin", &GlobalGraphics::fxaaReduceMin>,
+			xproperty::obj_member<"fxaaReduceMul", &GlobalGraphics::fxaaReduceMul>,
+
+			// Bloom pass
+			xproperty::obj_member<"bloomThreshold", &GlobalGraphics::bloomThreshold>,
+			xproperty::obj_member<"bloomIntensity", &GlobalGraphics::bloomIntensity>,
+			xproperty::obj_member<"bloomRadius", &GlobalGraphics::bloomRadius>
+		)
+	};
+
 	/*!***********************************************************************
 	\brief
 	 Light structure
@@ -1714,6 +1818,7 @@ namespace Ermine
 		float intensity{};
 		LightType type{};
 		bool castsShadows{ false };
+		bool castsRays{ false }; // For volumetric light shafts/god rays
 		glm::mat4 lightSpaceMatrices[NUM_CASCADES]{}; // For shadow mapping
 		int startOffset{ 0 }; // For UBO indexing
 		float innerAngle{ -1.0f }; // For spotlights
@@ -1765,6 +1870,7 @@ namespace Ermine
 			xproperty::obj_member<"intensity", &Light::intensity>,
 			xproperty::obj_member<"type", &Light::type>,
 			xproperty::obj_member<"castsShadows", &Light::castsShadows>,
+			xproperty::obj_member<"castsRays", &Light::castsRays>,
 			xproperty::obj_member<"innerAngle", &Light::innerAngle>,  // used for spot
 			xproperty::obj_member<"outerAngle", &Light::outerAngle>,  // used for spot
 			xproperty::obj_member<"radius", &Light::radius>       // used for point/spot

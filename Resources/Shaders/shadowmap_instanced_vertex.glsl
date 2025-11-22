@@ -60,7 +60,7 @@ struct Light {
     vec4 position_type;    // xyz = position (view space), w = light type
     vec4 color_intensity;  // xyz = color, w = intensity
     vec4 direction_range;  // xyz = direction (view space), w = range
-    vec4 spot_angles_castshadows_startOffset; // x = inner angle (cos), y = outer angle (cos), z = cast shadows (bool), w = shadow map index or 0 if no shadows
+    vec4 spot_angles_castshadows_startOffset; // x = inner angle (cos), y = outer angle (cos), z = flags bitfield (bit 0: castsShadows, bit 1: castsRays), w = shadow map index or 0 if no shadows
     mat4 lightSpaceMatrix[NUM_CASCADES]; // Light view-projection matrices for cascaded shadow maps
     vec4 splitDepths[(NUM_CASCADES + 3) / 4]; // Split depths for cascaded shadow maps
 };
@@ -69,6 +69,24 @@ layout (std140, binding = 1) uniform LightsUBO {
     vec4 lightCount;
     Light lights[MAX_LIGHTS]; // Fixed-size array required for UBO
 };
+
+// Light type constants
+const int POINT_LIGHT = 0;
+const int DIRECTIONAL_LIGHT = 1;
+const int SPOT_LIGHT = 2;
+
+// Light flag bit positions
+const int LIGHT_FLAG_CASTS_SHADOWS = 1;  // bit 0
+const int LIGHT_FLAG_CASTS_RAYS = 2;     // bit 1
+
+// Helper functions to extract light flags
+bool lightCastsShadows(Light light) {
+    return (int(light.spot_angles_castshadows_startOffset.z) & LIGHT_FLAG_CASTS_SHADOWS) != 0;
+}
+
+bool lightCastsRays(Light light) {
+    return (int(light.spot_angles_castshadows_startOffset.z) & LIGHT_FLAG_CASTS_RAYS) != 0;
+}
 
 // Per-frame uniforms - avoid additional SSBOs
 uniform int u_ActiveShadowLights[16];    // Indices of shadow-casting directional lights
@@ -107,6 +125,17 @@ void main()
 
     // Get the light data
     Light light = lights[lightIndex];
+
+    // Get light type
+    int lightType = int(light.position_type.w);
+
+    // Spotlights only use cascade 0 - skip invalid instances
+    if (lightType == SPOT_LIGHT && cascadeIndex > 0) {
+        // Discard this instance by moving vertex off-screen
+        gl_Position = vec4(0.0, 0.0, -10.0, 1.0);
+        gl_Layer = 0;
+        return;
+    }
 
     // Calculate target layer: startOffset + cascadeIndex
     int startOffset = int(light.spot_angles_castshadows_startOffset.w);
