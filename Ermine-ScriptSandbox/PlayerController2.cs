@@ -139,7 +139,7 @@ public class PlayerController2 : MonoBehaviour
             Physics.RaycastHit hit;
 
             bool hitSomething = Physics.Raycast(
-                cam.position,
+                gameObject.transform.position + new Vector3(0, cam.position.y * 0.01f, 0),
                 cam.forward,
                 out hit,
                 interactRange
@@ -151,7 +151,7 @@ public class PlayerController2 : MonoBehaviour
                 return;
             }
 
-            ulong id = GetEntityID(hit);
+            ulong id = hit.entityID;//GetEntityID(hit);
 
             if (id != 0)
             {
@@ -168,8 +168,8 @@ public class PlayerController2 : MonoBehaviour
     private ulong GetEntityID(Physics.RaycastHit hit)
     {
         var field = typeof(Physics.RaycastHit).GetField(
-            "EntityID",
-            System.Reflection.BindingFlags.NonPublic |
+            "entityID",
+            System.Reflection.BindingFlags.Public |
             System.Reflection.BindingFlags.Instance);
 
         return (ulong)field.GetValue(hit);

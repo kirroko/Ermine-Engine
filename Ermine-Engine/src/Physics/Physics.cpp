@@ -1233,9 +1233,10 @@ namespace Ermine
 	  \return
 		True if a collision was detected, false otherwise.
 	***************************************************************************/
-	bool Physics::Raycast(const JPH::RVec3& origin, const JPH::RVec3& direction, float maxDistance, JPH::RayCastResult& outResult)
+	bool Physics::Raycast(const JPH::Vec3& origin, const JPH::Vec3& direction, float maxDistance, JPH::RayCastResult& outResult)
 	{
 		JPH::Vec3 dirNormalized = direction.Normalized();
+
 		JPH::RRayCast ray(origin, dirNormalized * maxDistance);
 
 		const JPH::NarrowPhaseQuery& query = mPhysicsSystem.GetNarrowPhaseQuery();
@@ -1258,7 +1259,7 @@ namespace Ermine
 	  \return
 		A vector of RayCastResults, sorted nearest to farthest.
 	***************************************************************************/
-	std::vector<JPH::RayCastResult> Physics::RaycastAll(const JPH::RVec3& origin, const JPH::RVec3& direction, float maxDistance)
+	std::vector<JPH::RayCastResult> Physics::RaycastAll(const JPH::Vec3& origin, const JPH::Vec3& direction, float maxDistance)
 	{
 		std::vector<JPH::RayCastResult> results;
 

@@ -12,6 +12,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 /* End Header **************************************************************************/
 
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace ErmineEngine
 {
@@ -19,19 +20,20 @@ namespace ErmineEngine
     {
         [MethodImpl(MethodImplOptions.InternalCall)]
         private static extern bool Internal_Raycast(Vector3 origin, Vector3 direction, out RaycastHit hitInfo, float maxDistance);
-
+        
+        [StructLayout(LayoutKind.Sequential)]
         public struct RaycastHit
         {
             public Vector3 point;      // The impact point in world space where the ray hit the collider.
             public Vector3 normal;     // The normal of the surface the ray hit.
             public float distance;     // The distance from the ray's origin to the impact point.
             //public Collider collider;  // The collider that was hit.
-            public Transform transform
-            {
-                [MethodImpl(MethodImplOptions.InternalCall)]
-                get;
-            }
-            private ulong EntityID;
+            public ulong entityID;
+            //public Transform transform
+            //{
+            //    [MethodImpl(MethodImplOptions.InternalCall)]
+            //    get;
+            //}
         }
 
         public static bool Raycast(Vector3 origin, Vector3 direction, out RaycastHit hitInfo, float maxDistance)

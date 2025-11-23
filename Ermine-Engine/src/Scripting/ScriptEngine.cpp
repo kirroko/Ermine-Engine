@@ -1900,10 +1900,10 @@ namespace
 
 		double lenSq = rDirection.GetX() * rDirection.GetX() + rDirection.GetY() * rDirection.GetY() + rDirection.GetZ() * rDirection.GetZ();
 		if (lenSq < 1e-12) return 0;
-		RVec3 dirNorm = rDirection / std::sqrt(lenSq);
+		RVec3 dirNorm = rDirection.Normalized();
 
 		RayCastResult native_hit{};
-		if (!physicsSys->Raycast(rOrigin, rDirection, maxDistance, native_hit))
+		if (!physicsSys->Raycast(rOrigin, dirNorm, maxDistance, native_hit))
 			return false;
 
 		float distance = native_hit.mFraction * maxDistance;
@@ -1943,8 +1943,8 @@ namespace
 
 		uint64_t entityID = physicsSys->GetEntityID(native_hit.mBodyID);
 
-		outHit->point = {.x = (hitPoint.GetX()), .y = (hitPoint.GetY()), .z = (hitPoint.GetZ()) };
-		outHit->normal = {.x = normalWorld.GetX(), .y = normalWorld.GetY(), .z = normalWorld.GetZ() };
+		outHit->point = { hitPoint.GetX(), hitPoint.GetY(), hitPoint.GetZ() };
+		outHit->normal = { normalWorld.GetX(), normalWorld.GetY(), normalWorld.GetZ() };
 		outHit->distance = distance;
 		outHit->entityID = entityID;
 
