@@ -2,6 +2,8 @@
 #define MY_PROPERTIES_UI_H
 #pragma once
 
+#pragma warning(disable:4201) // nonstandard extension used : nameless struct/union
+
 namespace xproperty::flags
 {
     union type

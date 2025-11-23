@@ -9,6 +9,8 @@
 #include <chrono>   // std::chrono::system_clock, std::chrono::duration_cast, std::chrono::seconds
 #include <map>      // std::hash
 
+#pragma warning(disable:4201) // nonstandard extension used : nameless struct/union
+
 // This header is meant to solve the problem for unique identifiers for resources
 // The main concept here is that we define one GUID (Global Unique Identifier) as two elements...
 // The type which specifies what type of resource it is with a unique identifier

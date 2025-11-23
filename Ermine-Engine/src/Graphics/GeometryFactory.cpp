@@ -590,9 +590,28 @@ Ermine::Mesh GeometryFactory::CreateCone(float radius, float height, unsigned in
             meshVertices.push_back(meshVert);
         }
 
+        //physic
+        mesh.cpuVertices.clear();
+        mesh.cpuVertices.reserve(indices.size());
+
+        for (size_t i = 0; i < indices.size(); i += 3)
+        {
+            unsigned int i0 = indices[i + 0];
+            unsigned int i1 = indices[i + 1];
+            unsigned int i2 = indices[i + 2];
+
+            const auto& v0 = vertices[i0].pos;
+            const auto& v1 = vertices[i1].pos;
+            const auto& v2 = vertices[i2].pos;
+
+            mesh.cpuVertices.push_back(glm::vec3(v0.x, v0.y, v0.z));
+            mesh.cpuVertices.push_back(glm::vec3(v1.x, v1.y, v1.z));
+            mesh.cpuVertices.push_back(glm::vec3(v2.x, v2.y, v2.z));
+        }
+
         std::string meshID = "Cone_" + std::to_string(radius) + "_" + std::to_string(height) + "_" + std::to_string(sectors);
         renderer->m_MeshManager.RegisterMesh(meshVertices, indices, meshID);
-
+        //store in comp for physic
         // Store the registered mesh ID in the Mesh component
         mesh.registeredMeshID = meshID;
     }

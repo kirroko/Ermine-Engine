@@ -123,6 +123,9 @@
     <ClInclude Include="include\Camera.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\CameraSystem.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\Component.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -169,12 +172,6 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\GPUProfiler.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\GameCamera.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\CameraSystem.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\GameObject.h">
@@ -249,6 +246,9 @@
     <ClInclude Include="include\NavMesh.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\NavMeshAgentSystem.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\Particles.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -294,6 +294,9 @@
     <ClInclude Include="include\ScriptSystem.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\Selection.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\Serialisation.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -318,6 +321,9 @@
     <ClInclude Include="include\UIRenderSystem.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\UITextRenderer.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\VertexArray.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -333,7 +339,7 @@
     <ClInclude Include="include\shadow_config.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="include\NavMeshAgentSystem.h">
+    <ClInclude Include="include\MultiSelectionManipulator.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
@@ -386,13 +392,13 @@
     <ClCompile Include="src\Graphics\Camera.cpp">
       <Filter>src\Graphics</Filter>
     </ClCompile>
+    <ClCompile Include="src\Graphics\CameraSystem.cpp">
+      <Filter>src\Graphics</Filter>
+    </ClCompile>
     <ClCompile Include="src\Graphics\Cubemap.cpp">
       <Filter>src\Graphics</Filter>
     </ClCompile>
     <ClCompile Include="src\Graphics\DrawCommands.cpp">
-      <Filter>src\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Graphics\CameraSystem.cpp">
       <Filter>src\Graphics</Filter>
     </ClCompile>
     <ClCompile Include="src\Graphics\GeometryFactory.cpp">
@@ -423,6 +429,9 @@
       <Filter>src\Graphics</Filter>
     </ClCompile>
     <ClCompile Include="src\Graphics\UIRenderSystem.cpp">
+      <Filter>src\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Graphics\UITextRenderer.cpp">
       <Filter>src\Graphics</Filter>
     </ClCompile>
     <ClCompile Include="src\Graphics\VertexArray.cpp">
@@ -465,6 +474,9 @@
       <Filter>src\Math</Filter>
     </ClCompile>
     <ClCompile Include="src\NavMesh\NavMesh.cpp">
+      <Filter>src\NavMesh</Filter>
+    </ClCompile>
+    <ClCompile Include="src\NavMesh\NavMeshAgentSystem.cpp">
       <Filter>src\NavMesh</Filter>
     </ClCompile>
     <ClCompile Include="src\Object\GameObject.cpp">
@@ -547,15 +559,6 @@
     </ClCompile>
     <ClCompile Include="src\dllmain.cpp">
       <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\NavMesh\NavMeshAgentSystem.cpp">
-      <Filter>src\NavMesh</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Graphics\UIRenderSystem.cpp">
-      <Filter>src\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Graphics\UITextRenderer.cpp">
-      <Filter>src\Graphics</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

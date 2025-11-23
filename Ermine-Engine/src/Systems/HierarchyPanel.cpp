@@ -58,7 +58,9 @@ namespace Ermine {
         EntityID selected = m_ActiveScene->GetSelectedEntity();
         if (selected != 0) {
             if (ImGui::Button("Delete Selected")) {
+                ECS::GetInstance().GetSystem<Physics>()->RemovePhysic(selected);
                 m_ActiveScene->DestroyEntity(selected);
+                ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
             }
         }
 
@@ -212,6 +214,7 @@ namespace Ermine {
 
         if (ImGui::BeginPopupContextItem(("ctx##" + std::to_string((uint64_t)entity)).c_str())) { // unique popup
             if (ImGui::MenuItem("Delete")) {
+                ECS::GetInstance().GetSystem<Physics>()->RemovePhysic(entity);
                 m_ActiveScene->DestroyEntity(entity);
                 ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
                 ImGui::CloseCurrentPopup();
