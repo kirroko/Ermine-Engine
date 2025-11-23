@@ -26,8 +26,8 @@ public class PlayerController2 : MonoBehaviour
     private float footstepTimer = 0f;
     private float footstepInterval = 0.5f;
 
-    private float minPitch = -80f;
-    private float maxPitch = 80f;
+    private float minPitch = -1.5f;
+    private float maxPitch = 1.5f;
 
     private bool jumpRequested = false;
     public float jumpHeight = 2f;
