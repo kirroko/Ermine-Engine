@@ -33,7 +33,7 @@ public class PlayerController2 : MonoBehaviour
     public float jumpHeight = 2f;
     private float startheight = 0;
 
-    private float interactRange = 50f;
+    private float interactRange = 5f;
 
     void Start()
     {
@@ -145,23 +145,28 @@ public class PlayerController2 : MonoBehaviour
                 interactRange
             );
 
-            if (!hitSomething)
-            {
-                Debug.Log("Nothing in front of you.");
-                return;
-            }
+            if (!hitSomething) return;
 
-            ulong id = hit.entityID;//GetEntityID(hit);
+            ulong id = hit.entityID;
 
             if (id != 0)
             {
                 GameObject obj = GameObject.FromEntityID(id);
-                Debug.Log("You are looking at: " + obj.name);
+                //Debug.Log("You are looking at: " + obj.name);
+
+                if (obj.name == "Switch")
+                {
+                    // Play switch audio here Kai
+                }
+                if (obj.name == "Book")
+                {
+                    // Collect book
+                }
             }
-            else
+            /*else
             {
                 Debug.Log("No valid entity hit.");
-            }
+            }*/
         }
     }
 
