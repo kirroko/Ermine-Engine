@@ -798,9 +798,6 @@ void Ermine::ViewPortGUI::Update()
 		s_dragSelecting = false;
 	}
 
-	if (auto renderer = ECS::GetInstance().GetSystem<graphics::Renderer>())
-		renderer->SyncSelectionForOutline(Selection::All());
-
 	//ObjectPicking(offscreen_buffer, imgMin, imgSize, overViewCube, s_orbiting);
 	if (!(s_dragSelecting || (ImGui::IsMouseReleased(ImGuiMouseButton_Left) &&
 		(fabsf(s_dragEnd.x - s_dragStart.x) > dragThreshold || fabsf(s_dragEnd.y - s_dragStart.y) > dragThreshold))))
