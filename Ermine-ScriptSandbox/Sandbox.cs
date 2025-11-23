@@ -18,11 +18,13 @@ public class Sandbox : MonoBehaviour
         //Debug.Log("Transform rotation: " + transform.rotation.ToString());
 
         //Debug.Log("Changes");
+        //GetComponent<PlayerController>().TestFunction();
+        GetComponent<Sandbox2>().TestFunction();
     }
 
     void Update()
     {
-        transform.Rotate(MoveAxis * (Time.deltaTime * speed));
+        //transform.Rotate(MoveAxis * (Time.deltaTime * speed));
         //Debug.Log("Internal Quaternion: " + transform.rotation.ToString());
         //if (Input.GetKeyDown(KeyCode.A))
         //    transform.Translate(new Vector3(-1f,0,0) * Time.deltaTime);
