@@ -12,6 +12,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 /* End Header **************************************************************************/
 
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace ErmineEngine
 {
@@ -19,13 +20,20 @@ namespace ErmineEngine
     {
         [MethodImpl(MethodImplOptions.InternalCall)]
         private static extern bool Internal_Raycast(Vector3 origin, Vector3 direction, out RaycastHit hitInfo, float maxDistance);
-
+        
+        [StructLayout(LayoutKind.Sequential)]
         public struct RaycastHit
         {
             public Vector3 point;      // The impact point in world space where the ray hit the collider.
             public Vector3 normal;     // The normal of the surface the ray hit.
             public float distance;     // The distance from the ray's origin to the impact point.
-            public Collider collider;  // The collider that was hit.
+            //public Collider collider;  // The collider that was hit.
+            public ulong entityID;
+            //public Transform transform
+            //{
+            //    [MethodImpl(MethodImplOptions.InternalCall)]
+            //    get;
+            //}
         }
 
         public static bool Raycast(Vector3 origin, Vector3 direction, out RaycastHit hitInfo, float maxDistance)
@@ -33,5 +41,26 @@ namespace ErmineEngine
             hitInfo = new RaycastHit();
             return Internal_Raycast(origin, direction, out hitInfo, maxDistance);
         }
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern void SetPosition(ulong entityID, Vector3 position);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern void SetRotationEuler(ulong entityID, Vector3 eulerDeg);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern void SetRotationQuat(ulong entityID, Quaternion rotation);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern void MoveEuler(ulong entityID, Vector3 position, Vector3 eulerDeg);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern void MoveQuat(ulong entityID, Vector3 position, Quaternion rotation);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        private static extern Transform Internal_GetTransform();
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern void RemovePhysic(ulong entityID);
     }
 }

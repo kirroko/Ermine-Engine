@@ -232,7 +232,6 @@ void SetCutesyPinkTheme();
 void SetCyberpunk2077Theme();
 void SetOverwatchTheme(bool dark_variant = true);
 
-// Replace the existing EditorGUI::TopMenuBar implementation with this updated version
 void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
 {
     ImGui::BeginMainMenuBar();
@@ -265,54 +264,56 @@ void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
 
     ImGuiIO& io = ImGui::GetIO();
 
-    if (!io.WantTextInput)  // don't trigger if user is typing in text fields
+    //if (!io.WantTextInput)  // don't trigger if user is typing in text fields
+    //{
+
+    bool ctrl = io.KeyCtrl;
+    bool shift = io.KeyShift;
+
+    if (ImGui::IsKeyPressed(ImGuiKey_S, false))
     {
-        bool ctrl = io.KeyCtrl;
-        bool shift = io.KeyShift;
-
-        if (ImGui::IsKeyPressed(ImGuiKey_S, false))
+        if (ctrl && shift)
         {
-            if (ctrl && shift)
-            {
-                if (auto path = SceneManager::ShowSaveDialog(L"untitled.scene", GetActiveWindow()))
-                    SceneManager::GetInstance().SaveSceneTo(*path);
-            }
-            else if (ctrl)
-            {
-                SceneManager::GetInstance().SaveScene();
-            }
+            if (auto path = SceneManager::ShowSaveDialog(L"untitled.scene", GetActiveWindow()))
+                SceneManager::GetInstance().SaveSceneTo(*path);
         }
-
-        if (ImGui::IsKeyPressed(ImGuiKey_O, false))
+        else if (ctrl)
         {
-            if (ctrl)
-            {
-                if (auto path = SceneManager::ShowOpenDialog(GetActiveWindow()))
-                {
-                    SceneManager::GetInstance().ClearScene();
-                    SceneManager::GetInstance().OpenScene(*path);
-                }
-            }
+            SceneManager::GetInstance().SaveScene();
         }
+    }
 
-        if (ImGui::IsKeyPressed(ImGuiKey_Z, false))
+    if (ImGui::IsKeyPressed(ImGuiKey_O, false))
+    {
+        if (ctrl)
         {
-            if (ctrl)
+            if (auto path = SceneManager::ShowOpenDialog(GetActiveWindow()))
             {
-                EE_CORE_INFO("Ctrl + Z = UNDO");
-                // code to undo
-            }
-        }
-
-        if (ImGui::IsKeyPressed(ImGuiKey_Y, false))
-        {
-            if (ctrl)
-            {
-                EE_CORE_INFO("Ctrl + Y = REDO");
-                // code to redo
+                SceneManager::GetInstance().ClearScene();
+                SceneManager::GetInstance().OpenScene(*path);
             }
         }
     }
+
+    if (ImGui::IsKeyPressed(ImGuiKey_Z, false))
+    {
+        if (ctrl)
+        {
+            EE_CORE_INFO("Ctrl + Z = UNDO");
+            // code to undo
+        }
+    }
+
+    if (ImGui::IsKeyPressed(ImGuiKey_Y, false))
+    {
+        if (ctrl)
+        {
+            EE_CORE_INFO("Ctrl + Y = REDO");
+            // code to redo
+        }
+    }
+
+    //}
 
     if (ImGui::BeginMenu("Edit"))
     {
@@ -645,7 +646,7 @@ void EditorGUI::ViewPortWindow(bool& show)
     if (viewportHovered && !isPlaying)
     {
         EditorCamera::GetInstance().ProcessMouseMovement();
-        EditorCamera::GetInstance().ProcessKeyboardInput(FrameController::GetDeltaTime());
+        EditorCamera::GetInstance().ProcessKeyboardInput(FrameController::GetFixedDeltaTime());
         EditorCamera::GetInstance().ProcessScrollWheel(Input::GetMouseScrollOffsetEditor());
     }
 

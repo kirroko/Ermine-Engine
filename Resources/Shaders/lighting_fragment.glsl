@@ -12,8 +12,10 @@ uniform uvec2 u_GBuffer0Handle;
 uniform uvec2 u_GBuffer1Handle;
 uniform uvec2 u_GBuffer2Handle;
 uniform uvec2 u_GBuffer3Handle;
-uniform uvec2 u_GBufferDepthHandle; 
-uniform uvec2 u_ShadowMapArrayHandle; 
+uniform uvec2 u_GBufferDepthHandle;
+uniform uvec2 u_ShadowMapArrayHandle;
+uniform uvec2 u_IGNHandle;
+uniform vec2 u_IGNResolution;
 
 // Matrices for position reconstruction
 uniform mat4 view;
@@ -40,13 +42,16 @@ uniform vec3 u_FogColor = vec3(0.5, 0.6, 0.7);
 uniform float u_FogDensity = 0.02;      // For exponential fog
 uniform float u_FogStart = 50.0;        // For linear fog
 uniform float u_FogEnd = 200.0;         // For linear fog
+uniform float u_FogHeightCoefficient = 0.0;  // Height influence on fog density
+uniform float u_FogHeightFalloff = 10.0;     // Rate of fog density falloff with height
+
 
 // Light structure
 struct Light {
     vec4 position_type;    // xyz = position (world space), w = light type
     vec4 color_intensity;  // xyz = color, w = intensity
     vec4 direction_range;  // xyz = direction (world space), w = range
-    vec4 spot_angles_castshadows_startOffset; // x = inner angle (cos), y = outer angle (cos), z = cast shadows (bool), w = shadow map index or 0 if no shadows
+    vec4 spot_angles_castshadows_startOffset; // x = inner angle (cos), y = outer angle (cos), z = flags bitfield (bit 0: castsShadows, bit 1: castsRays), w = shadow map index or 0 if no shadows
     mat4 lightSpaceMatrix[NUM_CASCADES]; // Light view-projection matrices for cascaded shadow maps
     vec4 splitDepths[(NUM_CASCADES + 3) / 4]; // Split depths for cascaded shadow maps
 };
@@ -63,6 +68,19 @@ const uint SECTOR_COUNT = 32u;
 const int POINT_LIGHT = 0;
 const int DIRECTIONAL_LIGHT = 1;
 const int SPOT_LIGHT = 2;
+
+// Light flag bit positions
+const int LIGHT_FLAG_CASTS_SHADOWS = 1;  // bit 0
+const int LIGHT_FLAG_CASTS_RAYS = 2;     // bit 1
+
+// Helper functions to extract light flags
+bool lightCastsShadows(Light light) {
+    return (int(light.spot_angles_castshadows_startOffset.z) & LIGHT_FLAG_CASTS_SHADOWS) != 0;
+}
+
+bool lightCastsRays(Light light) {
+    return (int(light.spot_angles_castshadows_startOffset.z) & LIGHT_FLAG_CASTS_RAYS) != 0;
+}
 
 vec3 getViewPosition(vec2 texCoord, float depth) {
     vec4 ndc = vec4(texCoord * 2.0 - 1.0, depth * 2.0 - 1.0, 1.0);
@@ -92,6 +110,12 @@ vec3 reconstructViewPosition(vec2 texCoord, float depth) {
     return viewPos.xyz / viewPos.w;
 }
 
+// IGN sampling
+float getIGN(vec2 fragCoord) {
+    sampler2D ignTexture = sampler2D(u_IGNHandle);
+    vec2 uv = mod(fragCoord, u_IGNResolution) / u_IGNResolution;
+    return texture(ignTexture, uv).r;
+}
 
 float calculateSSAO(vec2 texCoord, vec3 fragPosView, vec3 normalView, float depth) {
     // Early exit if SSAO is disabled
@@ -110,9 +134,10 @@ float calculateSSAO(vec2 texCoord, vec3 fragPosView, vec3 normalView, float dept
     if (fadeoutFactor >= 0.99) {
         return 1.0;
     }
-    
-    // Generate random rotation
-    float randomAngle = fract(sin(dot(texCoord * 1000.0, vec2(12.9898, 78.233))) * 43758.5453) * 2.0 * PI;
+
+    // Generate random rotation using IGN
+    float noise = getIGN(gl_FragCoord.xy);
+    float randomAngle = noise * 2.0 * PI;
     
     // Create tangent space basis
     vec3 randomVec = vec3(cos(randomAngle), sin(randomAngle), 0.0);
@@ -469,15 +494,14 @@ float calculateShadowFactor(mat4 lightSpaceMatrix, int lightIndex, vec3 fragPosW
     // Return lighting factor
     return 1.0 - shadow;
 }
-
-// Calculate fog factor based on distance (0.0 = full fog, 1.0 = no fog)
-float calculateFogFactor(float distance) {
+float calculateFogFactor(float distance, float height) {
     if (u_FogEnabled == 0) {
         return 1.0; // No fog
     }
 
     float fogFactor = 1.0;
 
+    // Calculate base distance fog
     if (u_FogMode == 0) {
         // Linear fog
         fogFactor = (u_FogEnd - distance) / (u_FogEnd - u_FogStart);
@@ -492,9 +516,22 @@ float calculateFogFactor(float distance) {
         fogFactor = exp(-exponent * exponent);
     }
 
+    // Apply height-based fog modifier
+    // Lower heights = more fog (lower fogFactor)
+    // Higher heights = less fog (higher fogFactor)
+    if (u_FogHeightCoefficient > 0.001) {
+        // Calculate how much height affects fog
+        // Negative exponent means fog decreases with height
+        float heightFactor = exp(-max(0.0, height) / u_FogHeightFalloff);
+        
+        // Blend between full fog (0) and current fog factor based on height
+        // heightFactor = 1.0 at ground level (max fog influence)
+        // heightFactor approaches 0.0 at high altitudes (min fog influence)
+        fogFactor = mix(fogFactor, 1.0, (1.0 - heightFactor) * u_FogHeightCoefficient);
+    }
+
     return clamp(fogFactor, 0.0, 1.0);
 }
-
 void main()
 {    
     // Sample depth
@@ -556,9 +593,8 @@ void main()
             // Shadow factor (1.0 = lit, 0.0 = shadowed)
             float shadowFactor = 1.0;
             int lightType = int(lights[i].position_type.w);
-            bool castsShadows = (lights[i].spot_angles_castshadows_startOffset.z > 0.5);
 
-            if (castsShadows && lightType == DIRECTIONAL_LIGHT) {
+            if (lightCastsShadows(lights[i]) && lightType == DIRECTIONAL_LIGHT) {
                 int cascadeIndex = NUM_CASCADES - 1; // Default to last cascade
 
                 // Select cascade based on view-space distance
@@ -583,7 +619,7 @@ void main()
                 );
 
             }
-            else if (castsShadows && (lightType == SPOT_LIGHT)) {
+            else if (lightCastsShadows(lights[i]) && (lightType == SPOT_LIGHT)) {
                 // Check if this cascade has a valid matrix (non-zero)
                 mat4 cascadeMatrix = lights[i].lightSpaceMatrix[0];
                 bool hasValidMatrix = (cascadeMatrix[0][0] != 0.0 || cascadeMatrix[0][1] != 0.0 || 
@@ -624,9 +660,8 @@ void main()
 
             float shadowFactor = 1.0;
             int lightType = int(lights[i].position_type.w);
-            bool castsShadows = (lights[i].spot_angles_castshadows_startOffset.z > 0.5);
 
-            if (castsShadows && lightType == DIRECTIONAL_LIGHT) {
+            if (lightCastsShadows(lights[i]) && lightType == DIRECTIONAL_LIGHT) {
                 int cascadeIndex = NUM_CASCADES - 1;
 
                 // Select cascade based on view-space distance
@@ -649,8 +684,8 @@ void main()
                     layerIndex
                 );
 
-            } 
-            else if (castsShadows && (lightType == SPOT_LIGHT)) {
+            }
+            else if (lightCastsShadows(lights[i]) && (lightType == SPOT_LIGHT)) {
                 // Check if this cascade has a valid matrix (non-zero)
                 mat4 cascadeMatrix = lights[i].lightSpaceMatrix[0];
                 bool hasValidMatrix = (cascadeMatrix[0][0] != 0.0 || cascadeMatrix[0][1] != 0.0 || 
@@ -690,9 +725,11 @@ void main()
     // Apply distance-based fog
     if (u_FogEnabled != 0) {
         float fogDistance = length(fragPosView);
-        float fogFactor = calculateFogFactor(fogDistance);
+        float fogHeight = worldPos.y; // Assuming Y is up axis
+        float fogFactor = calculateFogFactor(fogDistance, fogHeight);
         result = mix(u_FogColor, result, fogFactor);
     }
+
 
     FragColor = vec4(result, 1.0);
 }

@@ -25,6 +25,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <ostreamwrapper.h>
 #include <istreamwrapper.h>
 #include "GeometryFactory.h"
+#include "Physics.h"
 
 
 using namespace rapidjson;
@@ -339,6 +340,15 @@ void SaveSceneToFile(const Ermine::ECS& ecs, const std::filesystem::path& path, 
 
     d.AddMember("entities", entities, a);
 
+
+    if (auto renderer = ecs.GetSystem<Ermine::graphics::Renderer>()) {
+        renderer->SyncToGlobalGraphics();
+
+        rapidjson::Value ggJson(rapidjson::kObjectType);
+        renderer->m_GlobalGraphics.Serialize(ggJson, a);
+        d.AddMember("globalGraphics", ggJson, a);
+    }
+
     if (pretty) { PrettyWriter<OStreamWrapper> w(osw); w.SetIndent(' ', 2); d.Accept(w); }
     else { Writer<OStreamWrapper> w(osw); d.Accept(w); }
 }
@@ -460,6 +470,11 @@ void LoadSceneFromFile(Ermine::ECS& ecs, const std::filesystem::path& path) {
         renderer->m_MeshManager.UploadAndBuild();
         EE_CORE_INFO("Scene loaded: MeshManager populated with {} meshes",
                      renderer->m_MeshManager.GetMeshCount());
+
+        if (d.HasMember("globalGraphics") && d["globalGraphics"].IsObject()) {
+            renderer->m_GlobalGraphics.Deserialize(d["globalGraphics"]);
+            renderer->ApplyFromGlobalGraphics();
+        }
     }
 }
 
@@ -476,6 +491,7 @@ void LoadScene(const std::string& sceneName)
     filesystem::path scenePath = filesystem::path("Resources") / "Scenes" / (sceneName + ".scene");
 
     LoadSceneFromFile(Ermine::ECS::GetInstance(), scenePath);
+    Ermine::ECS::GetInstance().GetSystem<Ermine::Physics>()->UpdatePhysicList();
 }
 
 Ermine::EntityID LoadPrefabFromFile(Ermine::ECS& ecs, const std::filesystem::path& path)
@@ -643,6 +659,8 @@ Ermine::EntityID LoadPrefabFromFile(Ermine::ECS& ecs, const std::filesystem::pat
     // finalize
     ecs.ResyncAllSignaturesFromStorage();
     Ermine::ResolveHierarchyGuids(ecs);
+
+    ecs.GetSystem<Ermine::Physics>()->UpdatePhysicList();
 
     // Return detected root; fallback to first created if none marked as root
     if (rootEntity != 0) return rootEntity;
