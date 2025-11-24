@@ -52,7 +52,6 @@ namespace Ermine {
         // Toolbar
         if (ImGui::Button("Create Entity")) {
             EntityID newEntity = m_ActiveScene->CreateEntity("New Entity");
-            //m_ActiveScene->SetSelectedEntity(newEntity);
 			editor::Selection::SelectSingle(m_ActiveScene, newEntity);
             ImGui::SetWindowFocus("Inspector");
         }
@@ -63,8 +62,11 @@ namespace Ermine {
             // Delete all currently selected entities
             auto sel = editor::Selection::All();
             std::vector<EntityID> toDelete(sel.begin(), sel.end());
-            for (auto id : toDelete) {
+            for (auto id : toDelete) 
+            {
+                ECS::GetInstance().GetSystem<Physics>()->RemovePhysic(selected);
                 m_ActiveScene->DestroyEntity(id);
+                ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
             }
             editor::Selection::Clear(m_ActiveScene);
         }
@@ -224,6 +226,7 @@ namespace Ermine {
 
         if (ImGui::BeginPopupContextItem(("ctx##" + std::to_string((uint64_t)entity)).c_str())) { // unique popup
             if (ImGui::MenuItem("Delete")) {
+                ECS::GetInstance().GetSystem<Physics>()->RemovePhysic(entity);
                 m_ActiveScene->DestroyEntity(entity);
                 ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
                 ImGui::CloseCurrentPopup();

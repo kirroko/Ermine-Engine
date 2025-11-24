@@ -214,7 +214,7 @@ namespace Ermine
 			*mObjectLayerPairFilter
 		);
 
-		mPhysicsSystem.SetGravity(JPH::Vec3(0.0f, -0.981f, 0.0f));
+		mPhysicsSystem.SetGravity(JPH::Vec3(0.0f, -9.81f, 0.0f));
 		mPhysicsSystem.SetBodyActivationListener(mBodyActivationListener);
 		mPhysicsSystem.SetContactListener(mContactListener);
 		mPhysicsSystem.OptimizeBroadPhase();
@@ -247,18 +247,35 @@ namespace Ermine
 	***************************************************************************/
 	void Physics::Update(float deltaTime)
 	{
-
 		auto& ecs = ECS::GetInstance();
 		auto& bodyInterface = mPhysicsSystem.GetBodyInterface();
 
+		// Make a snapshot of the map to avoid concurrent modification / iterator invalidation
+		std::vector<std::pair<EntityID, JPH::BodyID>> entries;
+		entries.reserve(mEntityToBody.size());
+		for (auto const& kv : mEntityToBody)
+			entries.emplace_back(kv.first, kv.second);
+
+		// Helper lambda to remove stale mapping
+		auto removeMapping = [&](EntityID e) {
+			auto it = mEntityToBody.find(e);
+			if (it != mEntityToBody.end())
+				mEntityToBody.erase(it);
+			};
+
 		if (editor::EditorGUI::s_state == editor::EditorGUI::SimState::stopped)
 		{
-			for (auto& [entity, rigidBody] : mEntityToBody)
+			for (auto const& [entity, rigidBody] : entries)
 			{
+				// validate entity & components
 				if (!ecs.IsEntityValid(entity) ||
 					!ecs.HasComponent<PhysicComponent>(entity) ||
 					!ecs.HasComponent<Transform>(entity))
+				{
+					// Remove stale mapping
+					removeMapping(entity);
 					continue;
+				}
 
 				auto& p = ecs.GetComponent<PhysicComponent>(entity);
 				auto& t = ecs.GetComponent<Transform>(entity);
@@ -266,14 +283,28 @@ namespace Ermine
 				Ermine::Quaternion rot = QuaternionNormalize(FromEulerDegrees(p.colliderRot));
 				Ermine::Quaternion combined = QuaternionNormalize(t.rotation * rot);
 
-				bodyInterface.SetPositionAndRotationWhenChanged(
-					rigidBody,
-					JPH::Vec3(t.position.x + p.colliderPivot.x, t.position.y + p.colliderPivot.y, t.position.z + p.colliderPivot.z),
-					JPH::Quat(combined.x, combined.y, combined.z, combined.w),
-					JPH::EActivation::DontActivate);
+				JPH::Vec3 pos(t.position.x + p.colliderPivot.x,
+					t.position.y + p.colliderPivot.y,
+					t.position.z + p.colliderPivot.z);
+
+				JPH::Quat quat(combined.x, combined.y, combined.z, combined.w);
+
+				//wrap potentially dangerous calls with checks/logging
+				try
+				{
+					bodyInterface.SetPositionAndRotationWhenChanged(
+						rigidBody, pos, quat, JPH::EActivation::DontActivate);
+				}
+				catch (...)
+				{
+					std::cerr << "Physics::Update: SetPositionAndRotationWhenChanged failed for entity " << entity << "\n";
+					removeMapping(entity);
+					continue;
+				}
 
 				if (p.motionType == JPH::EMotionType::Dynamic)
 				{
+					// Zero velocities while editor stopped
 					bodyInterface.SetLinearVelocity(rigidBody, JPH::Vec3::sZero());
 					bodyInterface.SetAngularVelocity(rigidBody, JPH::Vec3::sZero());
 				}
@@ -281,74 +312,120 @@ namespace Ermine
 			return;
 		}
 
-		// ECS -> Physics: Update body transforms from ECS for Kinematic bodies
-		for (auto& [entity, rigidBody] : mEntityToBody)
+		//Kinematic ECS
+		for (auto const& [entity, rigidBody] : entries)
 		{
 			if (!ecs.IsEntityValid(entity) ||
 				!ecs.HasComponent<PhysicComponent>(entity) ||
 				!ecs.HasComponent<Transform>(entity))
+			{
+				removeMapping(entity);
 				continue;
+			}
 
 			auto& p = ecs.GetComponent<PhysicComponent>(entity);
 			auto& t = ecs.GetComponent<Transform>(entity);
+			if (p.isDead)
+				continue;
 
 			if (p.motionType == JPH::EMotionType::Kinematic)
 			{
 				Ermine::Quaternion rot = QuaternionNormalize(FromEulerDegrees(p.colliderRot));
 				Ermine::Quaternion combined = QuaternionNormalize(t.rotation * rot);
 
-				bodyInterface.SetPositionAndRotation(
-					rigidBody,
-					JPH::Vec3(t.position.x + p.colliderPivot.x, t.position.y + p.colliderPivot.y, t.position.z + p.colliderPivot.z),
-					JPH::Quat(combined.x, combined.y, combined.z, combined.w),
-					JPH::EActivation::Activate);
+				JPH::Vec3 pos(t.position.x + p.colliderPivot.x,
+					t.position.y + p.colliderPivot.y,
+					t.position.z + p.colliderPivot.z);
+
+				JPH::Quat quat(combined.x, combined.y, combined.z, combined.w);
+
+				bodyInterface.SetPositionAndRotationWhenChanged(
+					rigidBody, pos, quat, JPH::EActivation::DontActivate);
 			}
 		}
 
+		//Flush pending pairs first
 		FlushPendingPairsToEntityEvents();
 
-		for (; !mCollisionEvent.empty(); mCollisionEvent.pop())
+		//Safe collision event processing: copy event before popping
+		while (!mCollisionEvent.empty())
 		{
-			auto& [type, recipientEntity, otherEntity, sensor] = mCollisionEvent.front();
-			if (ecs.IsEntityValid(recipientEntity) && ecs.HasComponent<ScriptsComponent>(recipientEntity))
-			{
-				auto& scs = ecs.GetComponent<ScriptsComponent>(recipientEntity);
-				for (auto& scriptComp : scs.scripts)
-				{
-					if (!scriptComp.m_instance)
-						continue;
+			auto ev = mCollisionEvent.front();
+			mCollisionEvent.pop();
 
-					switch (type)
-					{
-					case CollisionEventType::Begin:
-						scriptComp.m_instance->OnCollisionEnter(otherEntity, sensor);
-						break;
-					case CollisionEventType::Stay:
-						scriptComp.m_instance->OnCollisionStay(otherEntity, sensor);
-						break;
-					case CollisionEventType::End:
-						scriptComp.m_instance->OnCollisionExit(otherEntity, sensor);
-						break;
-					}
+			auto const& [type, recipientEntity, otherEntity, sensor] = ev;
+
+			if (ecs.HasComponent<PhysicComponent>(recipientEntity) && ecs.HasComponent<PhysicComponent>(otherEntity))
+			{
+				if (ecs.GetComponent<PhysicComponent>(recipientEntity).isDead || ecs.GetComponent<PhysicComponent>(otherEntity).isDead)
+				{
+					continue;
+				}
+			}
+
+			if (!ecs.IsEntityValid(recipientEntity) || !ecs.IsEntityValid(otherEntity))
+				continue;
+
+			if (!ecs.HasComponent<ScriptsComponent>(recipientEntity))
+				continue;
+
+			auto& scs = ecs.GetComponent<ScriptsComponent>(recipientEntity);
+			for (auto& scriptComp : scs.scripts)
+			{
+				if (!scriptComp.m_instance)
+					continue;
+
+				switch (type)
+				{
+				case CollisionEventType::Begin:
+					scriptComp.m_instance->OnCollisionEnter(otherEntity, sensor);
+					break;
+				case CollisionEventType::Stay:
+					scriptComp.m_instance->OnCollisionStay(otherEntity, sensor);
+					break;
+				case CollisionEventType::End:
+					scriptComp.m_instance->OnCollisionExit(otherEntity, sensor);
+					break;
 				}
 			}
 		}
 
+		//Run physics step
 		mPhysicsSystem.Update(deltaTime, 1, &mTempAllocator, &mJobSystem);
 
-		for (auto& [entity, rigidBody] : mEntityToBody)
+		//Physics to ECS
+		entries.clear();
+		entries.reserve(mEntityToBody.size());
+		for (auto const& kv : mEntityToBody)
+			entries.emplace_back(kv.first, kv.second);
+
+		for (auto const& [entity, rigidBody] : entries)
 		{
 			if (!ecs.IsEntityValid(entity) ||
 				!ecs.HasComponent<PhysicComponent>(entity) ||
 				!ecs.HasComponent<Transform>(entity))
+			{
+				removeMapping(entity);
 				continue;
+			}
 
 			auto& p = ecs.GetComponent<PhysicComponent>(entity);
-			if (p.motionType == JPH::EMotionType::Static)
+			if (p.motionType == JPH::EMotionType::Static || p.isDead)
 				continue;
 
 			auto& t = ecs.GetComponent<Transform>(entity);
-			JPH::RMat44 transform = bodyInterface.GetWorldTransform(rigidBody);
+
+			JPH::RMat44 transform;
+			try
+			{
+				transform = bodyInterface.GetWorldTransform(rigidBody);
+			}
+			catch (...)
+			{
+				std::cerr << "Physics::Update: GetWorldTransform failed for entity " << entity << "\n";
+				removeMapping(entity);
+				continue;
+			}
 
 			t.position = Vec3(
 				transform.GetTranslation().GetX(),
@@ -357,7 +434,7 @@ namespace Ermine
 			);
 
 			// Rotation too
-			JPH::Quat rot = transform.GetRotation().GetQuaternion();
+			JPH::Quat rot = transform.GetRotation().GetQuaternion().Normalized();
 			t.rotation.w = rot.GetW();
 			t.rotation.x = rot.GetX();
 			t.rotation.y = rot.GetY();
@@ -366,12 +443,8 @@ namespace Ermine
 			auto hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>();
 			hierarchySystem->MarkDirty(entity);
 		}
-
-		//if (Input::IsKeyDown(GLFW_KEY_1))
-		//{
-		//	auto hits = RaycastAll({ 0, 5, 0 }, { 0, -1, 0 }, 100.0f);
-		//}
 	}
+
 
 	/*!*************************************************************************
 	  \brief
@@ -382,124 +455,142 @@ namespace Ermine
 	void Physics::UpdatePhysicList()
 	{
 		auto& ecs = ECS::GetInstance();
-		mEntityToBody.clear();
-
 		auto& bodyInterface = mPhysicsSystem.GetBodyInterface();
+
+		auto safeDestroyBody = [&](PhysicComponent& p)
+			{
+				if (p.body)
+				{
+					try
+					{
+						bodyInterface.RemoveBody(p.bodyID);
+					}
+					catch (...)
+					{
+						std::cerr << "[Physics] RemoveBody failed or body not added for entity " << (uint32_t)p.body->GetUserData() << "\n";
+					}
+
+					try
+					{
+						bodyInterface.DestroyBody(p.bodyID);
+					}
+					catch (...)
+					{
+						std::cerr << "[Physics] DestroyBody failed for entity " << (uint32_t)p.body->GetUserData() << "\n";
+					}
+
+					p.body = nullptr;
+					p.bodyID = JPH::BodyID(JPH::BodyID::cInvalidBodyID);
+				}
+			};
 
 		if (m_Entities.empty())
 		{
 			ClearPhysicBody();
+			return;
 		}
 
 		for (auto entity : m_Entities)
 		{
-			if (!ecs.HasComponent<Transform>(entity) || !ecs.HasComponent<PhysicComponent>(entity))
+			if (!ecs.HasComponent<Transform>(entity))
 				continue;
+
+			if (!ecs.HasComponent<PhysicComponent>(entity))
+			{
+				auto bodyID = GetBodyID(entity);
+
+				if (!bodyID.IsInvalid())
+				{
+					bodyInterface.RemoveBody(bodyID);
+					bodyInterface.DestroyBody(bodyID);
+					mEntityToBody.erase(entity);
+				}
+				continue;
+			}
 
 			auto& t = ecs.GetComponent<Transform>(entity);
 			auto& p = ecs.GetComponent<PhysicComponent>(entity);
-			JPH::Vec3 meshsize = JPH::Vec3(1, 1, 1);
-			if (ecs.HasComponent<Mesh>(entity))
-			{
-				meshsize = JPH::Vec3(ecs.GetComponent<Mesh>(entity).primitive.size.x, ecs.GetComponent<Mesh>(entity).primitive.size.y, ecs.GetComponent<Mesh>(entity).primitive.size.z);
-			}
 
+			if (!p.update && p.body != nullptr)
+				continue;
 
-			// Remove old body if exists
 			if (p.body)
-			{
-				bodyInterface.RemoveBody(p.bodyID);
-				bodyInterface.DestroyBody(p.bodyID);
-				p.body = nullptr;
-				p.bodyID = JPH::BodyID(JPH::BodyID::cInvalidBodyID);
-			}
+				safeDestroyBody(p);
 
-			// Skip zero-scale transforms
 			if (t.scale.x <= 0 || t.scale.y <= 0 || t.scale.z <= 0)
 				continue;
 
-			// Determine layer
 			ObjectLayer layer = (p.motionType == JPH::EMotionType::Dynamic) ? Layers::MOVING : Layers::NON_MOVING;
+
 			if ((p.motionType == JPH::EMotionType::Dynamic || p.motionType == JPH::EMotionType::Kinematic) && p.mass <= 0.0f)
 				p.mass = 1.0f;
 
-			// Create shape
-			JPH::Shape* shape = nullptr;
+			JPH::Ref<JPH::Shape> shapeRef;
+
 			switch (p.shapeType)
 			{
 			case ShapeType::Box:
 			{
-				Vec3 halfExtent = { t.scale.x * 0.5f * meshsize.GetX() * p.colliderSize.x, t.scale.y * 0.5f * meshsize.GetY() * p.colliderSize.y, t.scale.z * 0.5f * meshsize.GetZ() * p.colliderSize.z };
+				Vec3 halfExtent = {
+					t.scale.x * 0.5f * (ecs.HasComponent<Mesh>(entity) ? ecs.GetComponent<Mesh>(entity).primitive.size.x : 1.0f) * p.colliderSize.x,
+					t.scale.y * 0.5f * (ecs.HasComponent<Mesh>(entity) ? ecs.GetComponent<Mesh>(entity).primitive.size.y : 1.0f) * p.colliderSize.y,
+					t.scale.z * 0.5f * (ecs.HasComponent<Mesh>(entity) ? ecs.GetComponent<Mesh>(entity).primitive.size.z : 1.0f) * p.colliderSize.z
+				};
+
 				constexpr float minSize = 0.01f;
 				halfExtent.x = std::max(halfExtent.x, minSize);
 				halfExtent.y = std::max(halfExtent.y, minSize);
 				halfExtent.z = std::max(halfExtent.z, minSize);
 
-				// Convex radius must be smaller than all half extents
 				float convexRadius = 0.05f;
 				convexRadius = std::min(convexRadius,
 					std::min({ halfExtent.x, halfExtent.y, halfExtent.z }) * 0.5f);
 
-				shape = new JPH::BoxShape(JPH::Vec3(halfExtent.x, halfExtent.y, halfExtent.z), convexRadius);
+				shapeRef = new JPH::BoxShape(JPH::Vec3(halfExtent.x, halfExtent.y, halfExtent.z), convexRadius);
 				break;
 			}
+
 			case ShapeType::Sphere:
 			{
-				float radius = t.scale.x * meshsize.GetX() * p.colliderSize.x;
-
+				float radius = t.scale.x * (ecs.HasComponent<Mesh>(entity) ? ecs.GetComponent<Mesh>(entity).primitive.size.x : 1.0f) * p.colliderSize.x;
 				if (radius <= 0.0f || !std::isfinite(radius))
-				{
 					radius = 0.01f;
-				}
 
 				p.colliderSize.y = p.colliderSize.z = std::max(p.colliderSize.x, 0.01f);
-
-				shape = new JPH::SphereShape(radius); //for our current sphere
+				shapeRef = new JPH::SphereShape(radius);
 				break;
 			}
+
 			case ShapeType::Capsule:
 			{
-				// Compute half-height (excluding the hemispherical caps)
-				float halfHeight = t.scale.y * 0.5f * meshsize.GetY() * p.colliderSize.y;
-				float capradius = t.scale.x * 0.5f * meshsize.GetX() * p.colliderSize.x;
+				float halfHeight = t.scale.y * 0.5f * (ecs.HasComponent<Mesh>(entity) ? ecs.GetComponent<Mesh>(entity).primitive.size.y : 1.0f) * p.colliderSize.y;
+				float capradius = t.scale.x * 0.5f * (ecs.HasComponent<Mesh>(entity) ? ecs.GetComponent<Mesh>(entity).primitive.size.x : 1.0f) * p.colliderSize.x;
 
-				// --- Safety checks ---
 				if (halfHeight <= 0.0f || !std::isfinite(halfHeight))
-				{
-					halfHeight = 0.01f; // fallback
-				}
-
+					halfHeight = 0.01f;
 				if (capradius <= 0.0f || !std::isfinite(capradius))
-				{
-					capradius = 0.01f; // fallback
-				}
+					capradius = 0.01f;
 
-				// Ensure capsule collider size stays valid
 				p.colliderSize.x = std::max(p.colliderSize.x, 0.01f);
 				p.colliderSize.y = std::max(p.colliderSize.y, 0.01f);
-				p.colliderSize.z = p.colliderSize.x; // capsule is symmetric around Y
+				p.colliderSize.z = p.colliderSize.x;
 
-				// Create shape safely
-				shape = new JPH::CapsuleShape(halfHeight, capradius);
+				shapeRef = new JPH::CapsuleShape(halfHeight, capradius);
 				break;
 			}
-			case ShapeType::CustomMesh:
 
-				//check the parent object if got model
+			case ShapeType::CustomMesh:
+			{
 				if (ecs.HasComponent<ModelComponent>(entity))
 				{
 					auto& modelComp = ecs.GetComponent<ModelComponent>(entity);
 					auto model = modelComp.m_model;
-					if (!model) break;
-
-					// Fill the custom mesh vertices for physics
+					if (!model) continue;
 					p.customMeshVertices = model->GetSkinnedVertices();
 				}
-				else if (!ecs.HasComponent<ModelComponent>(entity) && ecs.HasComponent<Mesh>(entity))
+				else if (ecs.HasComponent<Mesh>(entity))
 				{
 					auto& mesh = ecs.GetComponent<Mesh>(entity);
-
-					// Fill the custom mesh vertices for physics
 					p.customMeshVertices = mesh.cpuVertices;
 				}
 				else
@@ -510,78 +601,94 @@ namespace Ermine
 				if (p.customMeshVertices.empty())
 					continue;
 
-				const size_t vertexSkip = 12;
-				JPH::Array<JPH::Vec3> vertd;
-				JPH::Array<JPH::Float3> verts;
-				verts.reserve(p.customMeshVertices.size());
-				for (size_t i = 0; i < p.customMeshVertices.size(); i++)
+				if (p.motionType == JPH::EMotionType::Dynamic || p.motionType == JPH::EMotionType::Kinematic)
 				{
-					const auto& v = p.customMeshVertices[i];
-					if (i % vertexSkip == 0)
-					{
-						verts.push_back(JPH::Float3(v.x * t.scale.x, v.y * t.scale.y, v.z * t.scale.z));
-					}
-					vertd.push_back(JPH::Vec3(v.x * t.scale.x, v.y * t.scale.y, v.z * t.scale.z));
-				}
+					JPH::Array<JPH::Vec3> verts;
+					verts.reserve(p.customMeshVertices.size());
+					for (const auto& v : p.customMeshVertices)
+						verts.push_back(JPH::Vec3(v.x * t.scale.x, v.y * t.scale.y, v.z * t.scale.z));
 
-				JPH::RefConst<JPH::Shape> shapeRef;
-
-				if (p.motionType == JPH::EMotionType::Dynamic || p.motionType == JPH::EMotionType::Kinematic || (!ecs.HasComponent<ModelComponent>(entity) && ecs.HasComponent<Mesh>(entity)))
-				{
-					// --- Dynamic mesh: convert to ConvexHullShape or CompoundShape ---
 					if (verts.size() < 4)
 					{
-						std::cerr << "[Physics] Not enough vertices for ConvexHullShape.\n";
+						std::cerr << "[Physics] Not enough vertices for convex hull for entity " << (uint32_t)entity << "\n";
 						continue;
 					}
 
-					// Option 1: Single convex hull
-					JPH::ConvexHullShapeSettings hullSettings(vertd);
-					ShapeSettings::ShapeResult result = hullSettings.Create();
-					if (result.HasError())
+					JPH::ConvexHullShapeSettings hullSettings(verts);
+					auto hullRes = hullSettings.Create();
+					if (hullRes.HasError())
 					{
-						std::cerr << "[Physics] ConvexHullShape creation failed: "
-							<< result.GetError().c_str() << std::endl;
+						std::cerr << "[Physics] ConvexHullShape creation failed: " << hullRes.GetError().c_str() << "\n";
 						continue;
 					}
-					shapeRef = result.Get();
+					shapeRef = hullRes.Get();
 				}
 				else
 				{
-					// --- Static mesh: MeshShape ---
+					JPH::Array<JPH::Float3> verts;
+					verts.reserve(p.customMeshVertices.size());
+					for (const auto& v : p.customMeshVertices)
+						verts.push_back(JPH::Float3(v.x * t.scale.x, v.y * t.scale.y, v.z * t.scale.z));
+
+					if (verts.size() < 3)
+					{
+						std::cerr << "[Physics] Not enough verts for mesh shape for entity " << (uint32_t)entity << "\n";
+						continue;
+					}
+
+					// Build triangles (ensure your vertex order actually represents triangles)
 					JPH::Array<JPH::IndexedTriangle> triangles;
+					triangles.reserve((verts.size() / 3) * 2);
+
 					for (uint32_t i = 0; i + 2 < verts.size(); i += 3)
-						triangles.push_back(JPH::IndexedTriangle(i, i + 1, i + 2));
+					{
+						uint32_t a = i;
+						uint32_t b = i + 1;
+						uint32_t c = i + 2;
+
+						// front face
+						triangles.push_back(JPH::IndexedTriangle(a, b, c));
+						// back face
+						triangles.push_back(JPH::IndexedTriangle(c, b, a));
+					}
+
 
 					JPH::MeshShapeSettings meshSettings(verts, triangles);
 					meshSettings.mActiveEdgeCosThresholdAngle = 0.999f;
 
-					ShapeSettings::ShapeResult result = meshSettings.Create();
-					if (result.HasError())
+					auto meshRes = meshSettings.Create();
+					if (meshRes.HasError())
 					{
-						std::cerr << "[Physics] MeshShape creation failed: "
-							<< result.GetError().c_str() << std::endl;
+						std::cerr << "[Physics] MeshShape creation failed: " << meshRes.GetError().c_str() << "\n";
 						continue;
 					}
-
-					shapeRef = result.Get();
+					shapeRef = meshRes.Get();
 				}
-
-				p.shapeRef = shapeRef;
-				shape = const_cast<JPH::Shape*>(shapeRef.GetPtr());
 				break;
 			}
 
-			if (!shape) continue; // Skip invalid shapes
+			default:
+				std::cerr << "[Physics] Unknown shape type for entity " << (uint32_t)entity << "\n";
+				continue;
+			}
 
-			// Create body settings
+			if (!shapeRef)
+			{
+				std::cerr << "[Physics] shapeRef is null for entity " << (uint32_t)entity << "\n";
+				continue;
+			}
+
+			p.shapeRef = shapeRef;
+
+			t.rotation = QuaternionNormalize(t.rotation);
 			JPH::BodyCreationSettings bodySettings(
-				shape,
+				shapeRef,
 				JPH::Vec3(t.position.x, t.position.y, t.position.z),
 				JPH::Quat(t.rotation.x, t.rotation.y, t.rotation.z, t.rotation.w),
 				p.motionType,
 				layer
 			);
+			bodySettings.mEnhancedInternalEdgeRemoval = true;
 
 			if (p.motionType == JPH::EMotionType::Dynamic || p.motionType == JPH::EMotionType::Kinematic)
 			{
@@ -590,44 +697,346 @@ namespace Ermine
 			}
 
 			bodySettings.mIsSensor = (p.bodyType == PhysicsBodyType::Trigger);
-
 			bodySettings.mPosition = JPH::Vec3(t.position.x + p.colliderPivot.x, t.position.y + p.colliderPivot.y, t.position.z + p.colliderPivot.z);
 			Ermine::Quaternion rot = QuaternionNormalize(FromEulerDegrees(p.colliderRot));
 			Ermine::Quaternion combined = QuaternionNormalize(t.rotation * rot);
 			bodySettings.mRotation = JPH::Quat(combined.x, combined.y, combined.z, combined.w);
 
 			JPH::EAllowedDOFs dofs = JPH::EAllowedDOFs::All;
-
-			// Position locks
 			if (p.posX) dofs &= ~JPH::EAllowedDOFs::TranslationX;
 			if (p.posY) dofs &= ~JPH::EAllowedDOFs::TranslationY;
 			if (p.posZ) dofs &= ~JPH::EAllowedDOFs::TranslationZ;
-
-			// Rotation locks
 			if (p.rotX) dofs &= ~JPH::EAllowedDOFs::RotationX;
 			if (p.rotY) dofs &= ~JPH::EAllowedDOFs::RotationY;
 			if (p.rotZ) dofs &= ~JPH::EAllowedDOFs::RotationZ;
-
 			bodySettings.mAllowedDOFs = dofs;
 
 			if (p.posX && p.posY && p.posZ && p.motionType == JPH::EMotionType::Dynamic)
-			{
 				p.motionType = JPH::EMotionType::Static;
+
+			JPH::Body* body = nullptr;
+			try
+			{
+				body = bodyInterface.CreateBody(bodySettings);
+			}
+			catch (...)
+			{
+				std::cerr << "[Physics] CreateBody threw/failed for entity " << (uint32_t)entity << "\n";
+				continue;
 			}
 
-			// Create body
-			JPH::Body* body = bodyInterface.CreateBody(bodySettings);
-			if (!body) continue;
+			if (!body)
+			{
+				std::cerr << "[Physics] CreateBody returned null for entity " << (uint32_t)entity << "\n";
+				continue;
+			}
 
-			body->SetUserData(entity);
-			bodyInterface.AddBody(body->GetID(), JPH::EActivation::Activate);
+			body->SetUserData(static_cast<uint32_t>(entity)); // ensure user-data type matches your expectations
 
-			// Store in component
+			try
+			{
+				bodyInterface.AddBody(body->GetID(), JPH::EActivation::Activate);
+			}
+			catch (...)
+			{
+				std::cerr << "[Physics] AddBody failed for entity " << (uint32_t)entity << "\n";
+				try { bodyInterface.DestroyBody(body->GetID()); }
+				catch (...) {}
+				continue;
+			}
+
 			p.body = body;
 			p.bodyID = body->GetID();
 			mEntityToBody[entity] = p.bodyID;
+			p.update = false;
 		}
 	}
+
+	/*
+	//void Physics::UpdatePhysicList()
+	//{
+	//	auto& ecs = ECS::GetInstance();
+	//	auto& bodyInterface = mPhysicsSystem.GetBodyInterface();
+
+	//	auto safeDestroyBody = [&](PhysicComponent& p)
+	//		{
+	//			if (p.body)
+	//			{
+	//				try
+	//				{
+	//					bodyInterface.RemoveBody(p.bodyID);
+	//				}
+	//				catch (...)
+	//				{
+	//					std::cerr << "[Physics] RemoveBody failed or body not added for entity " << (uint32_t)p.body->GetUserData() << "\n";
+	//				}
+
+	//				try
+	//				{
+	//					bodyInterface.DestroyBody(p.bodyID);
+	//				}
+	//				catch (...)
+	//				{
+	//					std::cerr << "[Physics] DestroyBody failed for entity " << (uint32_t)p.body->GetUserData() << "\n";
+	//				}
+
+	//				p.body = nullptr;
+	//				p.bodyID = JPH::BodyID(JPH::BodyID::cInvalidBodyID);
+	//			}
+	//		};
+
+	//	if (m_Entities.empty())
+	//	{
+	//		ClearPhysicBody();
+	//		return;
+	//	}
+
+	//	for (auto entity : m_Entities)
+	//	{
+	//		if (!ecs.HasComponent<Transform>(entity) || !ecs.HasComponent<PhysicComponent>(entity))
+	//			continue;
+
+	//		auto& t = ecs.GetComponent<Transform>(entity);
+	//		auto& p = ecs.GetComponent<PhysicComponent>(entity);
+
+	//		if (p.body)
+	//			safeDestroyBody(p);
+
+	//		if (t.scale.x <= 0 || t.scale.y <= 0 || t.scale.z <= 0)
+	//			continue;
+
+	//		ObjectLayer layer = (p.motionType == JPH::EMotionType::Dynamic) ? Layers::MOVING : Layers::NON_MOVING;
+
+	//		if ((p.motionType == JPH::EMotionType::Dynamic || p.motionType == JPH::EMotionType::Kinematic) && p.mass <= 0.0f)
+	//			p.mass = 1.0f;
+
+	//		JPH::Ref<JPH::Shape> shapeRef;
+
+	//		switch (p.shapeType)
+	//		{
+	//		case ShapeType::Box:
+	//		{
+	//			Vec3 halfExtent = {
+	//				t.scale.x * 0.5f * (ecs.HasComponent<Mesh>(entity) ? ecs.GetComponent<Mesh>(entity).primitive.size.x : 1.0f) * p.colliderSize.x,
+	//				t.scale.y * 0.5f * (ecs.HasComponent<Mesh>(entity) ? ecs.GetComponent<Mesh>(entity).primitive.size.y : 1.0f) * p.colliderSize.y,
+	//				t.scale.z * 0.5f * (ecs.HasComponent<Mesh>(entity) ? ecs.GetComponent<Mesh>(entity).primitive.size.z : 1.0f) * p.colliderSize.z
+	//			};
+
+	//			constexpr float minSize = 0.01f;
+	//			halfExtent.x = std::max(halfExtent.x, minSize);
+	//			halfExtent.y = std::max(halfExtent.y, minSize);
+	//			halfExtent.z = std::max(halfExtent.z, minSize);
+
+	//			float convexRadius = 0.05f;
+	//			convexRadius = std::min(convexRadius,
+	//				std::min({ halfExtent.x, halfExtent.y, halfExtent.z }) * 0.5f);
+
+	//			shapeRef = new JPH::BoxShape(JPH::Vec3(halfExtent.x, halfExtent.y, halfExtent.z), convexRadius);
+	//			break;
+	//		}
+
+	//		case ShapeType::Sphere:
+	//		{
+	//			float radius = t.scale.x * (ecs.HasComponent<Mesh>(entity) ? ecs.GetComponent<Mesh>(entity).primitive.size.x : 1.0f) * p.colliderSize.x;
+	//			if (radius <= 0.0f || !std::isfinite(radius))
+	//				radius = 0.01f;
+
+	//			p.colliderSize.y = p.colliderSize.z = std::max(p.colliderSize.x, 0.01f);
+	//			shapeRef = new JPH::SphereShape(radius);
+	//			break;
+	//		}
+
+	//		case ShapeType::Capsule:
+	//		{
+	//			float halfHeight = t.scale.y * 0.5f * (ecs.HasComponent<Mesh>(entity) ? ecs.GetComponent<Mesh>(entity).primitive.size.y : 1.0f) * p.colliderSize.y;
+	//			float capradius = t.scale.x * 0.5f * (ecs.HasComponent<Mesh>(entity) ? ecs.GetComponent<Mesh>(entity).primitive.size.x : 1.0f) * p.colliderSize.x;
+
+	//			if (halfHeight <= 0.0f || !std::isfinite(halfHeight))
+	//				halfHeight = 0.01f;
+	//			if (capradius <= 0.0f || !std::isfinite(capradius))
+	//				capradius = 0.01f;
+
+	//			p.colliderSize.x = std::max(p.colliderSize.x, 0.01f);
+	//			p.colliderSize.y = std::max(p.colliderSize.y, 0.01f);
+	//			p.colliderSize.z = p.colliderSize.x;
+
+	//			shapeRef = new JPH::CapsuleShape(halfHeight, capradius);
+	//			break;
+	//		}
+
+	//		case ShapeType::CustomMesh:
+	//		{
+	//			if (ecs.HasComponent<ModelComponent>(entity))
+	//			{
+	//				auto& modelComp = ecs.GetComponent<ModelComponent>(entity);
+	//				auto model = modelComp.m_model;
+	//				if (!model) continue;
+	//				p.customMeshVertices = model->GetSkinnedVertices();
+	//			}
+	//			else if (ecs.HasComponent<Mesh>(entity))
+	//			{
+	//				auto& mesh = ecs.GetComponent<Mesh>(entity);
+	//				p.customMeshVertices = mesh.cpuVertices;
+	//			}
+	//			else
+	//			{
+	//				continue;
+	//			}
+
+	//			if (p.customMeshVertices.empty())
+	//				continue;
+
+	//			if (p.motionType == JPH::EMotionType::Dynamic || p.motionType == JPH::EMotionType::Kinematic)
+	//			{
+	//				JPH::Array<JPH::Vec3> verts;
+	//				verts.reserve(p.customMeshVertices.size());
+	//				for (const auto& v : p.customMeshVertices)
+	//					verts.push_back(JPH::Vec3(v.x * t.scale.x, v.y * t.scale.y, v.z * t.scale.z));
+
+	//				if (verts.size() < 4)
+	//				{
+	//					std::cerr << "[Physics] Not enough vertices for convex hull for entity " << (uint32_t)entity << "\n";
+	//					continue;
+	//				}
+
+	//				JPH::ConvexHullShapeSettings hullSettings(verts);
+	//				auto hullRes = hullSettings.Create();
+	//				if (hullRes.HasError())
+	//				{
+	//					std::cerr << "[Physics] ConvexHullShape creation failed: " << hullRes.GetError().c_str() << "\n";
+	//					continue;
+	//				}
+	//				shapeRef = hullRes.Get();
+	//			}
+	//			else
+	//			{
+	//				JPH::Array<JPH::Float3> verts;
+	//				verts.reserve(p.customMeshVertices.size());
+	//				for (const auto& v : p.customMeshVertices)
+	//					verts.push_back(JPH::Float3(v.x * t.scale.x, v.y * t.scale.y, v.z * t.scale.z));
+
+	//				if (verts.size() < 3)
+	//				{
+	//					std::cerr << "[Physics] Not enough verts for mesh shape for entity " << (uint32_t)entity << "\n";
+	//					continue;
+	//				}
+
+	//				// Build triangles (ensure your vertex order actually represents triangles)
+	//				JPH::Array<JPH::IndexedTriangle> triangles;
+	//				triangles.reserve((verts.size() / 3) * 2);
+
+	//				for (uint32_t i = 0; i + 2 < verts.size(); i += 3)
+	//				{
+	//					uint32_t a = i;
+	//					uint32_t b = i + 1;
+	//					uint32_t c = i + 2;
+
+	//					// front face
+	//					triangles.push_back(JPH::IndexedTriangle(a, b, c));
+	//					// back face
+	//					triangles.push_back(JPH::IndexedTriangle(c, b, a));
+	//				}
+
+
+	//				JPH::MeshShapeSettings meshSettings(verts, triangles);
+	//				meshSettings.mActiveEdgeCosThresholdAngle = 0.999f;
+
+	//				auto meshRes = meshSettings.Create();
+	//				if (meshRes.HasError())
+	//				{
+	//					std::cerr << "[Physics] MeshShape creation failed: " << meshRes.GetError().c_str() << "\n";
+	//					continue;
+	//				}
+	//				shapeRef = meshRes.Get();
+	//			}
+	//			break;
+	//		}
+
+	//		default:
+	//			std::cerr << "[Physics] Unknown shape type for entity " << (uint32_t)entity << "\n";
+	//			continue;
+	//		}
+
+	//		if (!shapeRef)
+	//		{
+	//			std::cerr << "[Physics] shapeRef is null for entity " << (uint32_t)entity << "\n";
+	//			continue;
+	//		}
+
+	//		p.shapeRef = shapeRef;
+
+	//		t.rotation = QuaternionNormalize(t.rotation);
+	//		JPH::BodyCreationSettings bodySettings(
+	//			shapeRef,
+	//			JPH::Vec3(t.position.x, t.position.y, t.position.z),
+	//			JPH::Quat(t.rotation.x, t.rotation.y, t.rotation.z, t.rotation.w),
+	//			p.motionType,
+	//			layer
+	//		);
+	//		bodySettings.mEnhancedInternalEdgeRemoval = true;
+
+	//		if (p.motionType == JPH::EMotionType::Dynamic || p.motionType == JPH::EMotionType::Kinematic)
+	//		{
+	//			bodySettings.mOverrideMassProperties = JPH::EOverrideMassProperties::CalculateInertia;
+	//			bodySettings.mMassPropertiesOverride.mMass = p.mass;
+	//		}
+
+	//		bodySettings.mIsSensor = (p.bodyType == PhysicsBodyType::Trigger);
+	//		bodySettings.mPosition = JPH::Vec3(t.position.x + p.colliderPivot.x, t.position.y + p.colliderPivot.y, t.position.z + p.colliderPivot.z);
+	//		Ermine::Quaternion rot = QuaternionNormalize(FromEulerDegrees(p.colliderRot));
+	//		Ermine::Quaternion combined = QuaternionNormalize(t.rotation * rot);
+	//		bodySettings.mRotation = JPH::Quat(combined.x, combined.y, combined.z, combined.w);
+
+	//		JPH::EAllowedDOFs dofs = JPH::EAllowedDOFs::All;
+	//		if (p.posX) dofs &= ~JPH::EAllowedDOFs::TranslationX;
+	//		if (p.posY) dofs &= ~JPH::EAllowedDOFs::TranslationY;
+	//		if (p.posZ) dofs &= ~JPH::EAllowedDOFs::TranslationZ;
+	//		if (p.rotX) dofs &= ~JPH::EAllowedDOFs::RotationX;
+	//		if (p.rotY) dofs &= ~JPH::EAllowedDOFs::RotationY;
+	//		if (p.rotZ) dofs &= ~JPH::EAllowedDOFs::RotationZ;
+	//		bodySettings.mAllowedDOFs = dofs;
+
+	//		if (p.posX && p.posY && p.posZ && p.motionType == JPH::EMotionType::Dynamic)
+	//			p.motionType = JPH::EMotionType::Static;
+
+	//		JPH::Body* body = nullptr;
+	//		try
+	//		{
+	//			body = bodyInterface.CreateBody(bodySettings);
+	//		}
+	//		catch (...)
+	//		{
+	//			std::cerr << "[Physics] CreateBody threw/failed for entity " << (uint32_t)entity << "\n";
+	//			continue;
+	//		}
+
+	//		if (!body)
+	//		{
+	//			std::cerr << "[Physics] CreateBody returned null for entity " << (uint32_t)entity << "\n";
+	//			continue;
+	//		}
+
+	//		body->SetUserData(static_cast<uint32_t>(entity)); // ensure user-data type matches your expectations
+
+	//		try
+	//		{
+	//			bodyInterface.AddBody(body->GetID(), JPH::EActivation::Activate);
+	//		}
+	//		catch (...)
+	//		{
+	//			std::cerr << "[Physics] AddBody failed for entity " << (uint32_t)entity << "\n";
+	//			try { bodyInterface.DestroyBody(body->GetID()); }
+	//			catch (...) {}
+	//			continue;
+	//		}
+
+	//		p.body = body;
+	//		p.bodyID = body->GetID();
+	//		mEntityToBody[entity] = p.bodyID;
+	//	}
+	//}
+	*/
+
 
 	/*!*************************************************************************
 	  \brief
@@ -824,9 +1233,10 @@ namespace Ermine
 	  \return
 		True if a collision was detected, false otherwise.
 	***************************************************************************/
-	bool Physics::Raycast(const JPH::RVec3& origin, const JPH::RVec3& direction, float maxDistance, JPH::RayCastResult& outResult)
+	bool Physics::Raycast(const JPH::Vec3& origin, const JPH::Vec3& direction, float maxDistance, JPH::RayCastResult& outResult)
 	{
 		JPH::Vec3 dirNormalized = direction.Normalized();
+
 		JPH::RRayCast ray(origin, dirNormalized * maxDistance);
 
 		const JPH::NarrowPhaseQuery& query = mPhysicsSystem.GetNarrowPhaseQuery();
@@ -849,7 +1259,7 @@ namespace Ermine
 	  \return
 		A vector of RayCastResults, sorted nearest to farthest.
 	***************************************************************************/
-	std::vector<JPH::RayCastResult> Physics::RaycastAll(const JPH::RVec3& origin, const JPH::RVec3& direction, float maxDistance)
+	std::vector<JPH::RayCastResult> Physics::RaycastAll(const JPH::Vec3& origin, const JPH::Vec3& direction, float maxDistance)
 	{
 		std::vector<JPH::RayCastResult> results;
 
@@ -888,16 +1298,41 @@ namespace Ermine
 	***************************************************************************/
 	void Physics::ClearPhysicBody()
 	{
-		JPH::BodyInterface& bi = mPhysicsSystem.GetBodyInterfaceNoLock();
-		JPH::BodyIDVector bodyIDs;
-		mPhysicsSystem.GetBodies(bodyIDs);
+		auto& ecs = ECS::GetInstance();
+		JPH::BodyInterface& bi = mPhysicsSystem.GetBodyInterface();
 
+		// Copy the list first — do NOT iterate live list
+		JPH::BodyIDVector bodyIDs;
+		mPhysicsSystem.GetBodies(bodyIDs);   // safe snapshot
+
+		// First: Remove all bodies from world
 		for (JPH::BodyID id : bodyIDs)
 		{
-			bi.RemoveBody(id);
+			if (bi.IsAdded(id))
+				bi.RemoveBody(id);
+		}
+
+		// Second: Destroy all bodies safely
+		for (JPH::BodyID id : bodyIDs)
+		{
 			bi.DestroyBody(id);
 		}
+
+		// Clear internal ECS → Physics mappings
+		for (auto& [entity, bodyID] : mEntityToBody)
+		{
+			if (ecs.IsEntityValid(entity) &&
+				ecs.HasComponent<PhysicComponent>(entity))
+			{
+				auto& p = ecs.GetComponent<PhysicComponent>(entity);
+				p.body = nullptr;
+				p.bodyID = JPH::BodyID(JPH::BodyID::cInvalidBodyID);
+			}
+		}
+
+		mEntityToBody.clear();
 	}
+
 
 	/*!*************************************************************************
 	  \brief
@@ -1003,6 +1438,41 @@ namespace Ermine
 			JPH::EActivation::Activate);
 	}
 
+	void Physics::RemovePhysic(EntityID ID)
+	{
+		auto& bodyInterface = mPhysicsSystem.GetBodyInterface();
+
+		if (ECS::GetInstance().HasComponent<PhysicComponent>(ID))
+		{
+			auto& p = ECS::GetInstance().GetComponent<PhysicComponent>(ID);
+
+			if (p.body)
+			{
+				try
+				{
+					bodyInterface.RemoveBody(p.bodyID);
+				}
+				catch (...)
+				{
+					std::cerr << "[Physics] RemoveBody failed or body not added for entity " << (uint32_t)p.body->GetUserData() << "\n";
+				}
+
+				try
+				{
+					bodyInterface.DestroyBody(p.bodyID);
+				}
+				catch (...)
+				{
+					std::cerr << "[Physics] DestroyBody failed for entity " << (uint32_t)p.body->GetUserData() << "\n";
+				}
+
+				p.body = nullptr;
+				p.bodyID = JPH::BodyID(JPH::BodyID::cInvalidBodyID);
+				mEntityToBody.erase(ID);
+			}
+		}
+	}
+
 	/*!*************************************************************************
 	  \brief
 		Converts pending physics collision pairs into ECS collision events.
@@ -1058,6 +1528,12 @@ namespace Ermine
 
 			if (!ecs.IsEntityValid(entA) && !ecs.IsEntityValid(entB))
 				continue;
+
+			if (ecs.HasComponent<PhysicComponent>(entA) && ecs.HasComponent<PhysicComponent>(entB))
+			{
+				if (ecs.GetComponent<PhysicComponent>(entA).isDead || ecs.GetComponent<PhysicComponent>(entB).isDead)
+					continue;
+			}
 
 			if (ecs.IsEntityValid(entA) && ecs.HasComponent<ScriptsComponent>(entA))
 				mCollisionEvent.emplace(pp.type, entA, entB, bIsSensor);

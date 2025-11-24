@@ -39,6 +39,9 @@ public class Sandbox : MonoBehaviour
     void OnCollisionEnter(Collision col)
     {
         Debug.Log("Yes me lord? : " + gameObject.name);
+
         Debug.Log("Jobs done : " + col.gameObject.name);
+        //col.gameObject.transform.position = new Vector3(0,3,0);
+        Physics.SetPosition((ulong)col.gameObject.GetInstanceID(), new Vector3(0, 3, 0));
     }
 }

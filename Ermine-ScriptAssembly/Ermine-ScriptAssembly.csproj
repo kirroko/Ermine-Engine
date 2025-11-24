@@ -71,6 +71,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Behaviour.cs" />
+    <Compile Include="GameplayHUD.cs" />
     <Compile Include="Component.cs" />
     <Compile Include="CoreModule\AudioComponent.cs" />
     <Compile Include="CoreModule\Debug.cs" />
