@@ -57,7 +57,7 @@ public class FakePlayer : MonoBehaviour
                 verticalVelocity = 0f;
 
             // If standing on a rigidbody, treat it as a moving platform
-            connectedBody = hit.collider.GetComponent<Rigidbody>();
+            //connectedBody = hit.;
         }
         else
         {
