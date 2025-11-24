@@ -44,6 +44,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "UIRenderSystem.h"
 #include "NavMesh.h"
 #include "NavMeshAgentSystem.h"
+#include "EditorGUI.h"
 
 #if defined(EE_EDITOR)
 #include "GraphicsDebugGUI.h"
@@ -480,7 +481,10 @@ bool engine::Init(GLFWwindow* windowContext)
 	SceneManager::GetInstance().SetActiveScene(defaultScene);
 
 	// TEMP - load level scene manually
-	SceneManager::GetInstance().OpenScene("../Resources/Scenes/level.scene");
+	SceneManager::GetInstance().OpenScene("../Resources/Scenes/physicdemo.scene");
+	editor::EditorGUI::s_state = editor::EditorGUI::SimState::playing;
+	glfwSetInputMode(windowContext, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	
 #endif
 
 	s_isInitialized = true;
