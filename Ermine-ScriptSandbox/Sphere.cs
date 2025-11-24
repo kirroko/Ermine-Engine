@@ -13,8 +13,8 @@ public class Sphere : MonoBehaviour
 
     private void Update()
     {
-        timeAlive -= Time.deltaTime;
-        transform.position -= direction * speed * Time.deltaTime;
+        timeAlive -= Time.fixedDeltaTime;
+        transform.position -= direction * speed * Time.fixedDeltaTime;
 
         Physics.SetPosition((ulong)gameObject.GetInstanceID(), transform.position);
         if (timeAlive < 0.0f)

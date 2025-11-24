@@ -17,7 +17,7 @@ public class DamagePlayer : MonoBehaviour
     {
         if (playerInside)
         {
-            timer -= Time.deltaTime;
+            timer -= Time.fixedDeltaTime;
 
             if (timer <= 0f)
             {
