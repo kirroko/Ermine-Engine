@@ -64,7 +64,7 @@ namespace Ermine {
             std::vector<EntityID> toDelete(sel.begin(), sel.end());
             for (auto id : toDelete) 
             {
-                ECS::GetInstance().GetSystem<Physics>()->RemovePhysic(selected);
+                ECS::GetInstance().GetSystem<Physics>()->RemovePhysic(id);
                 m_ActiveScene->DestroyEntity(id);
                 ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
             }
