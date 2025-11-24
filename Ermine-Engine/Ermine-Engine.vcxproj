@@ -308,6 +308,7 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClInclude Include="include\AudioManager.h" />
     <ClInclude Include="include\AudioSystem.h" />
     <ClInclude Include="include\Camera.h" />
+    <ClInclude Include="include\CameraSystem.h" />
     <ClInclude Include="include\Component.h" />
     <ClInclude Include="include\Components.h" />
     <ClInclude Include="include\ConsoleGUI.h" />
@@ -324,8 +325,6 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClInclude Include="include\FiniteStateMachine.h" />
     <ClInclude Include="include\FrameController.h" />
     <ClInclude Include="include\GPUProfiler.h" />
-    <ClInclude Include="include\GameCamera.h" />
-    <ClInclude Include="include\CameraSystem.h" />
     <ClInclude Include="include\GameObject.h" />
     <ClInclude Include="include\GameObjectFactory.h" />
     <ClInclude Include="include\GeometryFactory.h" />
@@ -349,6 +348,7 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClInclude Include="include\MeshManager.h" />
     <ClInclude Include="include\MeshTypes.h" />
     <ClInclude Include="include\Model.h" />
+    <ClInclude Include="include\MultiSelectionManipulator.h" />
     <ClInclude Include="include\NavMesh.h" />
     <ClInclude Include="include\NavMeshAgentSystem.h" />
     <ClInclude Include="include\Particles.h" />
@@ -366,6 +366,7 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClInclude Include="include\ScriptEngine.h" />
     <ClInclude Include="include\ScriptInstance.h" />
     <ClInclude Include="include\ScriptSystem.h" />
+    <ClInclude Include="include\Selection.h" />
     <ClInclude Include="include\Serialisation.h" />
     <ClInclude Include="include\Shader.h" />
     <ClInclude Include="include\SkeletalSSBO.h" />
@@ -373,6 +374,8 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClInclude Include="include\Systems.h" />
     <ClInclude Include="include\Texture.h" />
     <ClInclude Include="include\TransformMode.h" />
+    <ClInclude Include="include\UIRenderSystem.h" />
+    <ClInclude Include="include\UITextRenderer.h" />
     <ClInclude Include="include\VertexArray.h" />
     <ClInclude Include="include\VertexBuffer.h" />
     <ClInclude Include="include\ViewPortGUI.h" />
@@ -396,9 +399,9 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClCompile Include="src\Graphics\AnimationManager.cpp" />
     <ClCompile Include="src\Graphics\Animator.cpp" />
     <ClCompile Include="src\Graphics\Camera.cpp" />
+    <ClCompile Include="src\Graphics\CameraSystem.cpp" />
     <ClCompile Include="src\Graphics\Cubemap.cpp" />
     <ClCompile Include="src\Graphics\DrawCommands.cpp" />
-    <ClCompile Include="src\Graphics\CameraSystem.cpp" />
     <ClCompile Include="src\Graphics\GeometryFactory.cpp" />
     <ClCompile Include="src\Graphics\IndexBuffer.cpp" />
     <ClCompile Include="src\Graphics\MeshManager.cpp" />

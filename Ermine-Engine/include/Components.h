@@ -2437,10 +2437,13 @@ namespace Ermine
 		bool rotX = false; bool rotY = false; bool rotZ = false;
 		Ermine::Vec3 colliderSize{ 1,1,1 };
 
+		bool update = false;
+
 		JPH::BodyID bodyID{ JPH::BodyID::cInvalidBodyID };
 		JPH::Body* body{ nullptr };
 		std::vector<glm::vec3> customMeshVertices;   // For custom mesh
 		JPH::RefConst<JPH::Shape> shapeRef;
+		bool isDead = false;
 
 		PhysicComponent() = default;
 
@@ -3368,6 +3371,16 @@ namespace Ermine
 		float manaBarWidth = 0.3f;            // Percentage of screen width
 		float manaBarHeight = 0.03f;          // Percentage of screen height
 		Ermine::Vec3 manaBarPosition = { 0.1f, 0.85f, 0.0f };   // Below health bar
+
+		float GetHealth() const
+		{
+			return currentHealth;
+		}
+
+		void SetHealth(float value)
+		{
+			currentHealth = std::clamp(value, 0.0f, maxHealth);
+		}
 
 		// Skill slot data
 		struct SkillSlot

@@ -1879,6 +1879,9 @@ namespace
 		EntityID id = GetEntityIDFromManaged(target);
 		if (id == 0 || !ECS::GetInstance().IsEntityValid(id))
 			return;
+		if (ECS::GetInstance().HasComponent<PhysicComponent>(id))
+			ECS::GetInstance().GetComponent<PhysicComponent>(id).isDead = true;
+		
 		//ECS::GetInstance().DestroyEntity(id);
 		EnqueueLateDestory(id);
 	}
@@ -1897,10 +1900,10 @@ namespace
 
 		double lenSq = rDirection.GetX() * rDirection.GetX() + rDirection.GetY() * rDirection.GetY() + rDirection.GetZ() * rDirection.GetZ();
 		if (lenSq < 1e-12) return 0;
-		RVec3 dirNorm = rDirection / std::sqrt(lenSq);
+		RVec3 dirNorm = rDirection.Normalized();
 
 		RayCastResult native_hit{};
-		if (!physicsSys->Raycast(rOrigin, rDirection, maxDistance, native_hit))
+		if (!physicsSys->Raycast(rOrigin, dirNorm, maxDistance, native_hit))
 			return false;
 
 		float distance = native_hit.mFraction * maxDistance;
@@ -1940,8 +1943,8 @@ namespace
 
 		uint64_t entityID = physicsSys->GetEntityID(native_hit.mBodyID);
 
-		outHit->point = {.x = (hitPoint.GetX()), .y = (hitPoint.GetY()), .z = (hitPoint.GetZ()) };
-		outHit->normal = {.x = normalWorld.GetX(), .y = normalWorld.GetY(), .z = normalWorld.GetZ() };
+		outHit->point = { hitPoint.GetX(), hitPoint.GetY(), hitPoint.GetZ() };
+		outHit->normal = { normalWorld.GetX(), normalWorld.GetY(), normalWorld.GetZ() };
 		outHit->distance = distance;
 		outHit->entityID = entityID;
 
@@ -1987,6 +1990,12 @@ namespace
 		auto physics = ECS::GetInstance().GetSystem<Physics>();
 		physics->Move((EntityID)entityID, pos, q);
 	}
+	static void icall_Physics_RemovePhysic(uint64_t entityID)
+	{
+		auto physics = ECS::GetInstance().GetSystem<Physics>();
+		physics->RemovePhysic((EntityID)entityID);
+	}
+
 #pragma endregion
 
 #pragma region Prefab ICalls
@@ -2082,6 +2091,34 @@ namespace
 			fsm.manager->RequestPreviousState(entityID);
 	}
 #pragma endregion
+
+#pragma region UI ICalls
+	static float Internal_GetHealth(uint64_t entityID)
+	{
+		auto& ecs = ECS::GetInstance();
+		if (!ecs.HasComponent<UIComponent>(entityID))
+			return 0.0f;
+
+		auto& ui = ecs.GetComponent<UIComponent>(entityID);
+		return ui.GetHealth();
+	}
+
+	static void Internal_SetHealth(uint64_t entityID, float value)
+	{
+		auto& ecs = ECS::GetInstance();
+		if (!ecs.HasComponent<UIComponent>(entityID))
+			return;
+
+		auto& ui = ecs.GetComponent<UIComponent>(entityID);
+		ui.SetHealth(value);
+	}
+
+	// temporary reference to health bar, to be removed
+	static uint64_t Internal_GetHealthBar()
+	{
+		return (uint64_t)SceneManager::GetHealthBar();
+	}
+#pragma endregion
 }
 
 namespace Ermine::scripting
@@ -2127,11 +2164,25 @@ namespace Ermine::scripting
 		}
 
 		auto& ecs = ECS::GetInstance();
+		static bool physchange = false;
 		for (EntityID id : toDestroy)
 		{
+			if (ECS::GetInstance().HasComponent<PhysicComponent>(id))
+			{
+				physchange = true;
+				ECS::GetInstance().GetComponent<PhysicComponent>(id).isDead = true;
+			}
+
+
 			if (id != 0 && ecs.IsEntityValid(id))
 				ecs.DestroyEntity(id);
 		}
+		if (physchange)
+		{
+			ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
+			physchange = false;
+		}
+
 	}
 
 	void ScriptEngine::PushSingleField(MonoObject* obj,
@@ -2443,6 +2494,13 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	mono_add_internal_call("ErmineEngine.Physics::MoveEuler", (const void*)icall_Physics_MoveEuler);
 	mono_add_internal_call("ErmineEngine.Physics::MoveQuat", (const void*)icall_Physics_MoveQuat);
 	mono_add_internal_call("ErmineEngine.Physics::Internal_Raycast", (const void*)icall_physics_raycast);
-	mono_add_internal_call("ErmineEngine.Phyiscs.RaycastHit::get_transform", (const void*)icall_gameobject_get_transform);
+	mono_add_internal_call("ErmineEngine.Physics.RaycastHit::get_transform", (const void*)icall_gameobject_get_transform);
+	mono_add_internal_call("ErmineEngine.Physics::RemovePhysic", (const void*)&icall_Physics_RemovePhysic);
+#pragma endregion
+#pragma region UI ICalls
+	mono_add_internal_call("ErmineEngine.GameplayHUD::Internal_GetHealth", (const void*)Internal_GetHealth);
+	mono_add_internal_call("ErmineEngine.GameplayHUD::Internal_SetHealth", (const void*)Internal_SetHealth);
+	// temporary reference to health bar, to be removed
+	mono_add_internal_call("ErmineEngine.GameplayHUD::Internal_GetHealthBar", Internal_GetHealthBar);
 #pragma endregion
 }
