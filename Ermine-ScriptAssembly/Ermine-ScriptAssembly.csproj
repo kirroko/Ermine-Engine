@@ -73,6 +73,7 @@
     <Compile Include="Behaviour.cs" />
     <Compile Include="GameplayHUD.cs" />
     <Compile Include="Component.cs" />
+    <Compile Include="CoreModule\Application.cs" />
     <Compile Include="CoreModule\AudioComponent.cs" />
     <Compile Include="CoreModule\Debug.cs" />
     <Compile Include="CoreModule\GameObject.cs" />
@@ -83,8 +84,10 @@
     <Compile Include="CoreModule\Prefab.cs" />
     <Compile Include="CoreModule\Quaternion.cs" />
     <Compile Include="CoreModule\Rigidbody.cs" />
+    <Compile Include="CoreModule\SceneManager.cs" />
     <Compile Include="CoreModule\Time.cs" />
     <Compile Include="CoreModule\Transform.cs" />
+    <Compile Include="CoreModule\UISystem.cs" />
     <Compile Include="CoreModule\Vector2.cs" />
     <Compile Include="CoreModule\Vector3.cs" />
     <Compile Include="MonoBehaviour.cs" />

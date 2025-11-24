@@ -124,6 +124,14 @@ namespace Ermine
 
         /*!***********************************************************************
         \brief
+            Renders a UI button with text.
+        \param[in] button
+            Reference to UIButtonComponent with button settings.
+        *************************************************************************/
+        void RenderButton(const UIButtonComponent& button);
+
+        /*!***********************************************************************
+        \brief
             Renders a filled quad at the specified position with color.
         \param[in] posX
             X position in normalized screen coordinates (0-1).
@@ -211,6 +219,30 @@ namespace Ermine
                                   const Vec3& color = {1.0f, 1.0f, 1.0f},
                                   float alpha = 1.0f);
 
+        /*!***********************************************************************
+        \brief
+            Renders a textured icon with correct aspect ratio (for skill icons).
+            Maintains the texture's original proportions and accounts for screen
+            aspect ratio to prevent any stretching or distortion during window resize.
+        \param[in] centerX
+            Center X position in normalized screen coordinates (0-1).
+        \param[in] centerY
+            Center Y position in normalized screen coordinates (0-1).
+        \param[in] size
+            Height size in normalized screen coordinates (0-1).
+            Width is automatically calculated based on texture aspect ratio.
+        \param[in] texture
+            Shared pointer to texture to render.
+        \param[in] color
+            Tint color RGB values (0-1), default white.
+        \param[in] alpha
+            Alpha transparency (0-1, default 1.0).
+        *************************************************************************/
+        void RenderTexturedSquare(float centerX, float centerY, float size,
+                                  std::shared_ptr<graphics::Texture> texture,
+                                  const Vec3& color = {1.0f, 1.0f, 1.0f},
+                                  float alpha = 1.0f);
+
         // OpenGL resources
         std::shared_ptr<graphics::Shader> m_uiShader;
         GLuint m_VAO = 0;
@@ -219,6 +251,7 @@ namespace Ermine
         // Screen dimensions
         int m_screenWidth = 0;
         int m_screenHeight = 0;
+        float m_aspectRatio = 1.0f; // width / height
 
         // Orthographic projection matrix for screen-space rendering
         glm::mat4 m_orthoProjection{};

@@ -41,6 +41,9 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <optional>
 #include "SceneManager.h"
 #include <imnodes.h>
+// Legacy ImGui menu windows removed - replaced with scene-based UI:
+// #include "MainMenuGUI.h"
+// #include "CutsceneGUI.h"
 
 namespace Ermine
 {
@@ -56,6 +59,7 @@ using namespace Ermine::editor;
 // Definition for static member m_Windows, for ImGUI Windows
 std::vector<std::unique_ptr<Ermine::ImGUIWindow>>EditorGUI::m_Windows;
 bool EditorGUI::isPlaying = false; // tied to Play/Stop toolbar state.
+bool EditorGUI::isPreviewingUI = false; // Enable UI preview in editor viewport
 GLFWwindow* EditorGUI::s_WindowContext = nullptr;
 Ermine::EntityID EditorGUI::s_PrimaryCameraEntity = 0;
 
@@ -396,6 +400,11 @@ void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
         {
             EE_CORE_INFO("Console open");
         }
+
+        // Legacy ImGui menu previews removed - use scene-based approach instead:
+        // - Open mainmenu.scene or cutscene_intro.scene in viewport
+        // - Edit UI entities (MenuBackground, GameTitle, Slide1/2/3) with Inspector
+        // - MenuController and CutscenePlayer scripts handle logic
 
         ImGui::EndMenu();
     }

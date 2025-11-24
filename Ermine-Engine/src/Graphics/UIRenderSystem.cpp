@@ -33,6 +33,7 @@ namespace Ermine
     {
         m_screenWidth = screenWidth;
         m_screenHeight = screenHeight;
+        m_aspectRatio = (screenHeight > 0) ? static_cast<float>(screenWidth) / static_cast<float>(screenHeight) : 1.0f;
 
         // Load UI shader
         m_uiShader = AssetManager::GetInstance().LoadShader(
@@ -109,6 +110,14 @@ namespace Ermine
                         anySkillOnCooldown = true;
                     }
                 }
+
+                // Update activation flash timer
+                if (skill.activationFlashTimer > 0.0f)
+                {
+                    skill.activationFlashTimer -= deltaTime;
+                    if (skill.activationFlashTimer < 0.0f)
+                        skill.activationFlashTimer = 0.0f;
+                }
             }
 
             // Life Essence (Health) Regeneration System
@@ -147,19 +156,15 @@ namespace Ermine
         }
 
 #if defined(EE_EDITOR)
-        // Only render UI during play mode (like Unreal Engine's PIE - Play In Editor)
-        // Editor mode should have a clean view for level design
+        // In editor: render UI during play mode OR when the active scene is a menu/UI-focused scene
+        // Main menu scenes should always show their UI in the editor viewport
         if (!editor::EditorGUI::isPlaying)
-            return;
-#endif
-
-        // Debug: Log once when UI starts rendering
-        static bool firstRender = true;
-        if (firstRender)
         {
-            EE_CORE_INFO("UIRenderSystem: First render call! Entities count: {}", m_Entities.size());
-            firstRender = false;
+            // Check if we're viewing a menu scene (heuristic: if only UI entities with no game logic)
+            // For now, always render UI in editor to support menu scene previewing
+            // TODO: Add a scene flag to indicate it's a "menu scene" that should always show UI
         }
+#endif
 
         // Enable blending for transparency
         glEnable(GL_BLEND);
@@ -172,6 +177,94 @@ namespace Ermine
         m_uiShader->Bind();
         m_uiShader->SetUniformMatrix4fv("projection", m_orthoProjection);
         m_uiShader->SetUniform1i("uUseTexture", 0); // Default: don't use textures
+
+        // Debug: Log once when UI starts rendering
+        static bool firstRender = true;
+        if (firstRender)
+        {
+            EE_CORE_INFO("UIRenderSystem: First render call! Entities count: {}", m_Entities.size());
+            firstRender = false;
+        }
+
+        // Render UIImageComponent entities first (fullscreen images, cutscenes, backgrounds)
+        auto& ecs = ECS::GetInstance();
+        constexpr EntityID MAX_ENTITIES = 10000; // Assume reasonable max entities
+
+        for (EntityID entity = 1; entity < MAX_ENTITIES; ++entity)
+        {
+            // Check if entity is valid and has UIImageComponent
+            if (!ecs.IsEntityValid(entity))
+                continue;
+
+            if (!ecs.HasComponent<UIImageComponent>(entity))
+                continue;
+
+            const auto& imageComp = ecs.GetComponent<UIImageComponent>(entity);
+
+            // Load texture if image path is specified
+            std::shared_ptr<graphics::Texture> texture;
+            if (!imageComp.imagePath.empty())
+            {
+                auto it = m_textureCache.find(imageComp.imagePath);
+                if (it != m_textureCache.end())
+                {
+                    texture = it->second;
+                }
+                else
+                {
+                    texture = AssetManager::GetInstance().LoadTexture(imageComp.imagePath);
+                    if (texture && texture->IsValid())
+                    {
+                        m_textureCache[imageComp.imagePath] = texture;
+                    }
+                }
+            }
+
+            // Render the image (if texture exists)
+            if (texture && texture->IsValid())
+            {
+                if (imageComp.fullscreen)
+                {
+                    // Fullscreen image (for cutscenes, splash screens)
+                    RenderTexturedSquare(0.5f, 0.5f, 1.0f, texture, imageComp.tintColor, imageComp.alpha);
+                }
+                else
+                {
+                    // Positioned image
+                    RenderTexturedSquare(
+                        imageComp.position.x,
+                        imageComp.position.y,
+                        imageComp.height,  // Height determines size
+                        texture,
+                        imageComp.tintColor,
+                        imageComp.alpha
+                    );
+                }
+            }
+
+            // Render caption (even if no image - supports text-only UI elements)
+            if (imageComp.showCaption && !imageComp.caption.empty() && m_textRenderer)
+            {
+                float textScale = imageComp.captionFontSize / 24.0f; // Normalize to default font size
+
+                // Use component alpha, or full opacity if no image and alpha is 0
+                float textAlpha = imageComp.alpha;
+                if (imageComp.imagePath.empty() && imageComp.alpha == 0.0f)
+                {
+                    textAlpha = 1.0f; // Text-only elements should be visible by default
+                }
+
+                m_textRenderer->RenderText(
+                    m_uiShader,
+                    imageComp.caption,
+                    imageComp.captionPosition.x,
+                    imageComp.captionPosition.y,
+                    textScale,
+                    imageComp.captionColor,
+                    textAlpha
+                );
+            }
+        }
 
         // Render UI for all entities with UIComponent
         for (EntityID entity : m_Entities)
@@ -194,6 +287,19 @@ namespace Ermine
                 RenderCrosshair(ui);
         }
 
+        // Render UIButtonComponent entities
+        for (EntityID entity = 1; entity < MAX_ENTITIES; ++entity)
+        {
+            if (!ecs.IsEntityValid(entity))
+                continue;
+
+            if (!ecs.HasComponent<UIButtonComponent>(entity))
+                continue;
+
+            const auto& button = ecs.GetComponent<UIButtonComponent>(entity);
+            RenderButton(button);
+        }
+
         // Re-enable depth test
         glEnable(GL_DEPTH_TEST);
         glDisable(GL_BLEND);
@@ -203,6 +309,7 @@ namespace Ermine
     {
         m_screenWidth = width;
         m_screenHeight = height;
+        m_aspectRatio = (height > 0) ? static_cast<float>(width) / static_cast<float>(height) : 1.0f;
     }
 
     bool UIRenderSystem::CastSkill(EntityID entity, int skillIndex)
@@ -229,6 +336,9 @@ namespace Ermine
         ui.currentHealth -= skill.manaCost;
         skill.currentCooldown = skill.maxCooldown;
         skill.isOnCooldown = true;
+
+        // Trigger activation flash effect (0.2 seconds)
+        skill.activationFlashTimer = 0.2f;
 
         // Reset health regeneration timer when skill is cast
         ui.healthRegenTimer = 0.0f;
@@ -330,21 +440,26 @@ namespace Ermine
         float spacing = ui.skillSlotSpacing;
         float radius = slotSize * 0.5f;
 
-        // Only render 3 visual slots (indices 0, 2, 3)
-        // Skills[0] = LMB (Shoot Orb / Teleport) - combined visual
-        // Skills[1] = (skipped, part of LMB sequence)
-        // Skills[2] = RMB (Blind Burst)
-        // Skills[3] = R (Recall Orb)
-        const int visualSlotIndices[] = {0, 2, 3};
-        const int numVisualSlots = 3;
+        // Collect non-empty skill slots to render
+        std::vector<int> activeSlots;
+        for (int i = 0; i < 4; ++i)
+        {
+            if (!ui.skills[i].skillName.empty())
+            {
+                activeSlots.push_back(i);
+            }
+        }
 
-        // Calculate total width of visual slots to center them
-        float totalWidth = (slotSize * numVisualSlots) + (spacing * (numVisualSlots - 1));
+        if (activeSlots.empty())
+            return;
+
+        // Calculate total width of active slots to center them
+        float totalWidth = (slotSize * activeSlots.size()) + (spacing * (activeSlots.size() - 1));
         float currentX = startX - (totalWidth * 0.5f);
 
-        for (int slotIdx = 0; slotIdx < numVisualSlots; ++slotIdx)
+        for (size_t slotIdx = 0; slotIdx < activeSlots.size(); ++slotIdx)
         {
-            size_t i = visualSlotIndices[slotIdx];
+            size_t i = activeSlots[slotIdx];
             const auto& skill = ui.skills[i];
 
             // Calculate center position
@@ -373,7 +488,7 @@ namespace Ermine
             }
 
             // ========================================================================
-            // RENDER SKILL ICON (Clean PNG texture, no borders or backgrounds)
+            // RENDER SKILL ICON (Square with correct aspect ratio)
             // ========================================================================
             if (skillTexture && skillTexture->IsValid())
             {
@@ -394,13 +509,17 @@ namespace Ermine
                     alpha = 0.7f;
                 }
 
-                RenderTexturedCircle(centerX, centerY, radius, skillTexture, tintColor, alpha);
+                // Use square rendering to maintain aspect ratio (size = diameter of old circle)
+                RenderTexturedSquare(centerX, centerY, slotSize, skillTexture, tintColor, alpha);
             }
             else
             {
-                // Fallback: render simple circle if no texture
+                // Fallback: render simple square if no texture
                 Vec3 fallbackColor = { 0.3f, 0.3f, 0.3f };
-                RenderFilledCircle(centerX, centerY, radius, fallbackColor, 0.5f);
+                float halfSize = slotSize * 0.5f;
+                float adjustedHalfWidth = halfSize / m_aspectRatio;
+                RenderQuad(centerX - adjustedHalfWidth, centerY - halfSize,
+                          adjustedHalfWidth * 2.0f, slotSize, fallbackColor, 0.5f);
             }
 
             // ========================================================================
@@ -410,23 +529,27 @@ namespace Ermine
             {
                 float progress = skill.currentCooldown / skill.maxCooldown;
                 Vec3 cooldownColor = { 0.0f, 0.0f, 0.0f }; // Black overlay
-                RenderRadialCooldown(centerX, centerY, radius, progress, cooldownColor, 0.7f);
+                // Use radius for cooldown overlay (centered on square icon)
+                RenderRadialCooldown(centerX, centerY, slotSize * 0.5f, progress, cooldownColor, 0.7f);
             }
 
             // ========================================================================
-            // SUBTLE ANIMATION AROUND ICON (Glow when ready)
+            // ACTIVATION FLASH EFFECT (Flash when skill is activated)
             // ========================================================================
-            static float animTime = 0.0f;
-            animTime += 0.016f;
-
-            bool isReady = !skill.isOnCooldown && ui.currentHealth >= skill.manaCost;
-            if (isReady)
+            if (skill.activationFlashTimer > 0.0f)
             {
-                // Subtle pulsing glow when skill is ready
-                float pulse = 0.3f + 0.2f * sinf(animTime * 2.0f + slotIdx * 0.5f); // Gentle pulse
-                float glowRadius = radius + 0.005f;
-                Vec3 glowColor = { 1.0f, 0.85f, 0.50f }; // Soft brass/gold glow
-                RenderFilledCircle(centerX, centerY, glowRadius, glowColor, pulse * 0.3f);
+                // Calculate flash intensity (fades from 1.0 to 0.0 over 0.2 seconds)
+                float flashIntensity = skill.activationFlashTimer / 0.2f;
+
+                // Bright white/yellow flash
+                float glowSize = slotSize + 0.02f; // Slightly larger than icon
+                Vec3 flashColor = { 1.0f, 1.0f, 0.8f }; // Bright white-yellow
+
+                // Render flash as a square border
+                float halfSize = glowSize * 0.5f;
+                float adjustedHalfWidth = halfSize / m_aspectRatio;
+                RenderQuad(centerX - adjustedHalfWidth, centerY - halfSize,
+                          adjustedHalfWidth * 2.0f, glowSize, flashColor, flashIntensity * 0.8f);
             }
 
             // ========================================================================
@@ -438,7 +561,10 @@ namespace Ermine
                 float textScale = 0.6f; // Slightly larger text for better readability
                 float textWidth = m_textRenderer->GetTextWidth(skill.keyBinding, textScale);
                 float labelX = centerX - (textWidth * 0.5f); // Center horizontally
-                float labelY = centerY - radius - 0.02f; // Position below the slot
+                float labelY = centerY - (slotSize * 0.5f) - 0.02f; // Position below the square slot
+
+                // Check if skill is ready to use
+                bool isReady = !skill.isOnCooldown && ui.currentHealth >= skill.manaCost;
 
                 // Professional white text with slight transparency
                 Vec3 labelColor = { 1.0f, 1.0f, 1.0f };
@@ -457,124 +583,36 @@ namespace Ermine
         float centerX = 0.5f;
         float centerY = 0.5f;
         float size = ui.crosshairSize;
-        float thickness = ui.crosshairThickness;
-        float gap = ui.crosshairGap;
 
-        switch (ui.crosshairStyle)
+        // Check if crosshair has a texture icon
+        std::shared_ptr<graphics::Texture> crosshairTexture = nullptr;
+        std::string crosshairPath = "../Resources/Textures/UI/crosshair.png";
+
+        // Check if texture is already cached
+        auto it = m_textureCache.find(crosshairPath);
+        if (it != m_textureCache.end())
         {
-        case 0: // Sniper scope style crosshair
-        {
-            // Center dot for precision
-            float dotSize = thickness * 1.5f;
-            RenderQuad(centerX - dotSize * 0.5f, centerY - dotSize * 0.5f, dotSize, dotSize, ui.crosshairColor, 1.0f);
-
-            // Inner circle
-            float innerRadius = size * 0.6f;
-            RenderCircle(centerX, centerY, innerRadius, thickness * 0.8f, ui.crosshairColor);
-
-            // Outer crosshair lines extending from circle
-            float outerGap = innerRadius + gap * 2.0f;
-            float lineLength = size * 1.2f;
-
-            // Horizontal lines (left and right)
-            RenderQuad(centerX - lineLength - outerGap, centerY - thickness * 0.5f, lineLength, thickness, ui.crosshairColor, 0.9f);  // Left
-            RenderQuad(centerX + outerGap, centerY - thickness * 0.5f, lineLength, thickness, ui.crosshairColor, 0.9f);               // Right
-
-            // Vertical lines (top and bottom)
-            RenderQuad(centerX - thickness * 0.5f, centerY + outerGap, thickness, lineLength, ui.crosshairColor, 0.9f);               // Top
-            RenderQuad(centerX - thickness * 0.5f, centerY - lineLength - outerGap, thickness, lineLength, ui.crosshairColor, 0.9f);  // Bottom
-
-            // Tick marks on the lines for range estimation
-            float tickSize = thickness * 2.0f;
-            float tickSpacing = size * 0.4f;
-
-            // Left tick marks
-            for (int i = 1; i <= 2; ++i)
-            {
-                float tickX = centerX - outerGap - (tickSpacing * i);
-                RenderQuad(tickX - thickness * 0.25f, centerY - tickSize * 0.5f, thickness * 0.5f, tickSize, ui.crosshairColor, 0.7f);
-            }
-            // Right tick marks
-            for (int i = 1; i <= 2; ++i)
-            {
-                float tickX = centerX + outerGap + (tickSpacing * i);
-                RenderQuad(tickX - thickness * 0.25f, centerY - tickSize * 0.5f, thickness * 0.5f, tickSize, ui.crosshairColor, 0.7f);
-            }
-            // Top tick marks
-            for (int i = 1; i <= 2; ++i)
-            {
-                float tickY = centerY + outerGap + (tickSpacing * i);
-                RenderQuad(centerX - tickSize * 0.5f, tickY - thickness * 0.25f, tickSize, thickness * 0.5f, ui.crosshairColor, 0.7f);
-            }
-            // Bottom tick marks
-            for (int i = 1; i <= 2; ++i)
-            {
-                float tickY = centerY - outerGap - (tickSpacing * i);
-                RenderQuad(centerX - tickSize * 0.5f, tickY - thickness * 0.25f, tickSize, thickness * 0.5f, ui.crosshairColor, 0.7f);
-            }
-
-            break;
+            crosshairTexture = it->second;
         }
-        case 1: // Precise center dot
+        else
         {
-            float dotSize = thickness * 2.0f;
-            RenderQuad(centerX - dotSize * 0.5f, centerY - dotSize * 0.5f, dotSize, dotSize, ui.crosshairColor, 1.0f);
-            break;
+            // Load texture via AssetManager
+            crosshairTexture = AssetManager::GetInstance().LoadTexture(crosshairPath);
+            if (crosshairTexture && crosshairTexture->IsValid())
+            {
+                m_textureCache[crosshairPath] = crosshairTexture; // Cache it
+            }
         }
-        case 2: // Circle outline
+
+        // Render crosshair icon if texture loaded successfully
+        if (crosshairTexture && crosshairTexture->IsValid())
         {
-            RenderCircle(centerX, centerY, size, thickness, ui.crosshairColor);
-            break;
-        }
-        case 3: // Steampunk ornate crosshair
-        {
-            // Center dot
-            float dotSize = thickness * 1.5f;
-            RenderQuad(centerX - dotSize * 0.5f, centerY - dotSize * 0.5f, dotSize, dotSize, ui.crosshairColor, 1.0f);
+            // Render clean icon texture with full brightness (no tinting)
+            Vec3 tintColor = { 1.0f, 1.0f, 1.0f }; // No tinting - show texture as-is
+            float alpha = 1.0f;
 
-            // Inner circle (brass ring)
-            float innerRadius = size * 0.4f;
-            RenderCircle(centerX, centerY, innerRadius, thickness * 1.2f, ui.crosshairColor);
-
-            // Outer decorative ring
-            float outerRadius = size * 0.8f;
-            RenderCircle(centerX, centerY, outerRadius, thickness * 0.6f, ui.crosshairColor);
-
-            // Ornate corner brackets (4 corners)
-            float bracketLength = size * 0.6f;
-            float bracketThickness = thickness * 1.5f;
-            float cornerOffset = outerRadius + gap;
-
-            // Top-right bracket
-            RenderQuad(centerX + cornerOffset, centerY + cornerOffset, bracketLength, bracketThickness, ui.crosshairColor, 0.8f);
-            RenderQuad(centerX + cornerOffset, centerY + cornerOffset, bracketThickness, bracketLength, ui.crosshairColor, 0.8f);
-
-            // Top-left bracket
-            RenderQuad(centerX - cornerOffset - bracketLength, centerY + cornerOffset, bracketLength, bracketThickness, ui.crosshairColor, 0.8f);
-            RenderQuad(centerX - cornerOffset, centerY + cornerOffset, bracketThickness, bracketLength, ui.crosshairColor, 0.8f);
-
-            // Bottom-right bracket
-            RenderQuad(centerX + cornerOffset, centerY - cornerOffset, bracketLength, bracketThickness, ui.crosshairColor, 0.8f);
-            RenderQuad(centerX + cornerOffset, centerY - cornerOffset - bracketLength, bracketThickness, bracketLength, ui.crosshairColor, 0.8f);
-
-            // Bottom-left bracket
-            RenderQuad(centerX - cornerOffset - bracketLength, centerY - cornerOffset, bracketLength, bracketThickness, ui.crosshairColor, 0.8f);
-            RenderQuad(centerX - cornerOffset, centerY - cornerOffset - bracketLength, bracketThickness, bracketLength, ui.crosshairColor, 0.8f);
-
-            // Small decorative gears (circles at cardinal points)
-            float gearRadius = thickness * 2.0f;
-            float gearDistance = outerRadius + gap + size * 0.2f;
-            Vec3 dimColor = { ui.crosshairColor.x * 0.7f, ui.crosshairColor.y * 0.7f, ui.crosshairColor.z * 0.7f };
-
-            RenderFilledCircle(centerX + gearDistance, centerY, gearRadius, dimColor, 0.6f);
-            RenderFilledCircle(centerX - gearDistance, centerY, gearRadius, dimColor, 0.6f);
-            RenderFilledCircle(centerX, centerY + gearDistance, gearRadius, dimColor, 0.6f);
-            RenderFilledCircle(centerX, centerY - gearDistance, gearRadius, dimColor, 0.6f);
-
-            break;
-        }
-        default:
-            break;
+            // Use square rendering to maintain aspect ratio
+            RenderTexturedSquare(centerX, centerY, size, crosshairTexture, tintColor, alpha);
         }
     }
 
@@ -784,6 +822,101 @@ namespace Ermine
         // Disable texture mode
         texture->Unbind();
         m_uiShader->SetUniform1i("uUseTexture", 0);
+    }
+
+    void UIRenderSystem::RenderTexturedSquare(float centerX, float centerY, float size,
+                                              std::shared_ptr<graphics::Texture> texture,
+                                              const Vec3& color, float alpha)
+    {
+        if (!texture || !texture->IsValid())
+            return;
+
+        // Get texture dimensions to calculate its aspect ratio
+        int texWidth = texture->GetWidth();
+        int texHeight = texture->GetHeight();
+
+        // Calculate texture aspect ratio (width / height)
+        float textureAspectRatio = (texHeight > 0) ? static_cast<float>(texWidth) / static_cast<float>(texHeight) : 1.0f;
+
+        // Calculate base dimensions accounting for screen aspect ratio
+        float halfSize = size * 0.5f;
+
+        // Adjust dimensions to maintain BOTH screen aspect ratio and texture aspect ratio
+        // This prevents stretching of non-square textures
+        float adjustedHalfWidth = (halfSize * textureAspectRatio) / m_aspectRatio;
+        float adjustedHalfHeight = halfSize;
+
+        // Calculate corner positions
+        float left = centerX - adjustedHalfWidth;
+        float right = centerX + adjustedHalfWidth;
+        float bottom = centerY - adjustedHalfHeight;
+        float top = centerY + adjustedHalfHeight;
+
+        // Define quad vertices (2 triangles) with texture coordinates
+        float vertices[] = {
+            // Position (x, y)    // Color (r, g, b, a)                  // TexCoord (u, v)
+            left,  bottom,        color.x, color.y, color.z, alpha,     0.0f, 0.0f,  // Bottom-left
+            right, bottom,        color.x, color.y, color.z, alpha,     1.0f, 0.0f,  // Bottom-right
+            right, top,           color.x, color.y, color.z, alpha,     1.0f, 1.0f,  // Top-right
+
+            left,  bottom,        color.x, color.y, color.z, alpha,     0.0f, 0.0f,  // Bottom-left
+            right, top,           color.x, color.y, color.z, alpha,     1.0f, 1.0f,  // Top-right
+            left,  top,           color.x, color.y, color.z, alpha,     0.0f, 1.0f   // Top-left
+        };
+
+        // Enable texture mode in shader
+        m_uiShader->SetUniform1i("uUseTexture", 1);
+        texture->Bind(0); // Bind to texture unit 0
+        m_uiShader->SetUniform1i("uTexture", 0);
+
+        // Render the square
+        glBindVertexArray(m_VAO);
+        glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glBindVertexArray(0);
+
+        // Disable texture mode
+        texture->Unbind();
+        m_uiShader->SetUniform1i("uUseTexture", 0);
+    }
+
+    void UIRenderSystem::RenderButton(const UIButtonComponent& button)
+    {
+        // Choose color based on button state
+        Vec3 currentColor = button.normalColor;
+        if (button.isPressed)
+            currentColor = button.pressedColor;
+        else if (button.isHovered)
+            currentColor = button.hoverColor;
+
+        // Calculate button bounds (centered position)
+        float left = button.position.x - (button.size.x * 0.5f);
+        float bottom = button.position.y - (button.size.y * 0.5f);
+
+        // Render button background
+        RenderQuad(left, bottom, button.size.x, button.size.y, currentColor, button.backgroundAlpha);
+
+        // Render button text if present
+        if (m_textRenderer && !button.text.empty())
+        {
+            // Calculate text position (centered)
+            float textWidth = m_textRenderer->GetTextWidth(button.text, button.textScale);
+            float textHeight = button.textScale * 0.04f; // Approximate text height
+
+            float textX = button.position.x - (textWidth * 0.5f);
+            float textY = button.position.y - (textHeight * 0.5f);
+
+            m_textRenderer->RenderText(
+                m_uiShader,
+                button.text,
+                textX,
+                textY,
+                button.textScale,
+                button.textColor,
+                1.0f // Text is always fully opaque
+            );
+        }
     }
 
 } // namespace Ermine

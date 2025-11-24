@@ -3320,6 +3320,102 @@ namespace Ermine
 
 	/*!***********************************************************************
 	\brief
+	  UI Button component for clickable menu buttons
+	*************************************************************************/
+	struct UIButtonComponent
+	{
+		enum class ButtonAction
+		{
+			None,
+			LoadScene,
+			Quit,
+			Custom
+		};
+
+		// Button visual properties
+		std::string text = "";
+		Vec3 position = { 0.5f, 0.5f, 0.0f };  // Normalized screen position
+		Vec2 size = { 0.12f, 0.12f };           // Normalized screen size
+
+		// Button state colors
+		Vec3 normalColor = { 0.3f, 0.3f, 0.3f };
+		Vec3 hoverColor = { 0.5f, 0.5f, 0.5f };
+		Vec3 pressedColor = { 0.7f, 0.7f, 0.7f };
+		Vec3 textColor = { 1.0f, 1.0f, 1.0f };
+		float textScale = 1.0f;
+		float backgroundAlpha = 1.0f;  // Button background transparency (0.0 = invisible, 1.0 = opaque)
+
+		// Button action
+		ButtonAction action = ButtonAction::None;
+		std::string actionData = "";  // Scene path for LoadScene, custom event name, etc.
+
+		// Button state (runtime - don't serialize)
+		bool isHovered = false;
+		bool isPressed = false;
+
+		template<typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const
+		{
+			out.SetObject();
+			rapidjson::Value textVal(text.c_str(), alloc);
+			out.AddMember("text", textVal, alloc);
+			out.AddMember("position", Vec3ToJson(position, alloc), alloc);
+
+			rapidjson::Value sizeVal(rapidjson::kArrayType);
+			sizeVal.PushBack(size.x, alloc);
+			sizeVal.PushBack(size.y, alloc);
+			out.AddMember("size", sizeVal, alloc);
+
+			out.AddMember("normalColor", Vec3ToJson(normalColor, alloc), alloc);
+			out.AddMember("hoverColor", Vec3ToJson(hoverColor, alloc), alloc);
+			out.AddMember("pressedColor", Vec3ToJson(pressedColor, alloc), alloc);
+			out.AddMember("textColor", Vec3ToJson(textColor, alloc), alloc);
+			out.AddMember("textScale", textScale, alloc);
+			out.AddMember("backgroundAlpha", backgroundAlpha, alloc);
+
+			out.AddMember("action", static_cast<int>(action), alloc);
+			rapidjson::Value actionDataVal(actionData.c_str(), alloc);
+			out.AddMember("actionData", actionDataVal, alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in)
+		{
+			if (in.HasMember("text") && in["text"].IsString())
+				text = in["text"].GetString();
+			if (in.HasMember("position") && in["position"].IsArray())
+				position = JsonToVec3(in["position"]);
+			if (in.HasMember("size") && in["size"].IsArray())
+			{
+				const auto& arr = in["size"].GetArray();
+				if (arr.Size() >= 2)
+				{
+					size.x = arr[0].GetFloat();
+					size.y = arr[1].GetFloat();
+				}
+			}
+			if (in.HasMember("normalColor") && in["normalColor"].IsArray())
+				normalColor = JsonToVec3(in["normalColor"]);
+			if (in.HasMember("hoverColor") && in["hoverColor"].IsArray())
+				hoverColor = JsonToVec3(in["hoverColor"]);
+			if (in.HasMember("pressedColor") && in["pressedColor"].IsArray())
+				pressedColor = JsonToVec3(in["pressedColor"]);
+			if (in.HasMember("textColor") && in["textColor"].IsArray())
+				textColor = JsonToVec3(in["textColor"]);
+			if (in.HasMember("textScale") && in["textScale"].IsNumber())
+				textScale = in["textScale"].GetFloat();
+			if (in.HasMember("backgroundAlpha") && in["backgroundAlpha"].IsNumber())
+				backgroundAlpha = in["backgroundAlpha"].GetFloat();
+			if (in.HasMember("action") && in["action"].IsInt())
+				action = static_cast<ButtonAction>(in["action"].GetInt());
+			if (in.HasMember("actionData") && in["actionData"].IsString())
+				actionData = in["actionData"].GetString();
+		}
+
+		XPROPERTY_DEF("UIButtonComponent", UIButtonComponent)
+	};
+
+	/*!***********************************************************************
+	\brief
 	  UI configuration component for HUD elements
 	*************************************************************************/
 	struct UIComponent
@@ -3353,8 +3449,8 @@ namespace Ermine
 		float crosshairGap = 0.004f;   // Small center gap for precise aiming
 
 		// Health system (Life Essence)
-		float currentHealth = 100.0f;
-		float maxHealth = 100.0f;
+		float currentHealth = 50.0f;
+		float maxHealth = 50.0f;
 		float healthRegenRate = 5.0f;          // Health per second when regenerating
 		float healthRegenDelay = 3.0f;         // Delay after skill use before regen starts
 		float healthRegenTimer = 0.0f;         // Internal timer (don't serialize)
@@ -3389,6 +3485,7 @@ namespace Ermine
 			float maxCooldown = 5.0f;         // Total cooldown duration
 			float manaCost = 20.0f;           // Life essence cost to cast
 			bool isOnCooldown = false;        // Is skill currently on cooldown?
+			float activationFlashTimer = 0.0f; // Flash effect duration when skill is activated
 			Ermine::Vec3 slotColor = { 0.25f, 0.25f, 0.25f };        // Dark gray background
 			Ermine::Vec3 readyColor = { 0.85f, 0.85f, 0.85f };       // Light gray when ready
 			Ermine::Vec3 cooldownColor = { 0.45f, 0.45f, 0.45f };    // Medium gray during cooldown
@@ -3608,6 +3705,96 @@ namespace Ermine
 			xproperty::obj_member<"showCrosshair", &UIComponent::showCrosshair>,
 			xproperty::obj_member<"crosshairSize", &UIComponent::crosshairSize>,
 			xproperty::obj_member<"crosshairStyle", &UIComponent::crosshairStyle>
+		)
+	};
+
+	/*!***********************************************************************
+	\brief
+		UI Image Component for rendering fullscreen or positioned images.
+		Used for menus, cutscenes, splash screens, and UI backgrounds.
+	*************************************************************************/
+	struct UIImageComponent
+	{
+		std::string imagePath = "";           ///< Path to the image texture (PNG, JPG, DDS)
+		bool fullscreen = true;               ///< If true, renders fullscreen. If false, uses position/size
+		Ermine::Vec3 position = { 0.5f, 0.5f, 0.0f }; ///< Center position in normalized coordinates (0-1)
+		float width = 1.0f;                   ///< Width in normalized coordinates (0-1)
+		float height = 1.0f;                  ///< Height in normalized coordinates (0-1)
+		Ermine::Vec3 tintColor = { 1.0f, 1.0f, 1.0f }; ///< Color tint (1,1,1 = no tint)
+		float alpha = 1.0f;                   ///< Alpha transparency (0-1)
+		bool maintainAspectRatio = true;      ///< Preserve image aspect ratio
+
+		// Caption/Text overlay
+		std::string caption = "";             ///< Caption text to display
+		bool showCaption = false;             ///< If true, renders caption text
+		Ermine::Vec3 captionColor = { 1.0f, 1.0f, 1.0f }; ///< Caption text color
+		float captionFontSize = 24.0f;        ///< Caption font size
+		Ermine::Vec3 captionPosition = { 0.5f, 0.1f, 0.0f }; ///< Caption position (bottom center by default)
+
+		template<typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const
+		{
+			out.SetObject();
+			out.AddMember("imagePath", rapidjson::Value(imagePath.c_str(), alloc), alloc);
+			out.AddMember("fullscreen", fullscreen, alloc);
+			out.AddMember("position", Vec3ToJson(position, alloc), alloc);
+			out.AddMember("width", width, alloc);
+			out.AddMember("height", height, alloc);
+			out.AddMember("tintColor", Vec3ToJson(tintColor, alloc), alloc);
+			out.AddMember("alpha", alpha, alloc);
+			out.AddMember("maintainAspectRatio", maintainAspectRatio, alloc);
+			out.AddMember("caption", rapidjson::Value(caption.c_str(), alloc), alloc);
+			out.AddMember("showCaption", showCaption, alloc);
+			out.AddMember("captionColor", Vec3ToJson(captionColor, alloc), alloc);
+			out.AddMember("captionFontSize", captionFontSize, alloc);
+			out.AddMember("captionPosition", Vec3ToJson(captionPosition, alloc), alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in)
+		{
+			if (in.HasMember("imagePath") && in["imagePath"].IsString())
+				imagePath = in["imagePath"].GetString();
+			if (in.HasMember("fullscreen") && in["fullscreen"].IsBool())
+				fullscreen = in["fullscreen"].GetBool();
+			if (in.HasMember("position") && in["position"].IsArray())
+				position = JsonToVec3(in["position"]);
+			if (in.HasMember("width") && in["width"].IsNumber())
+				width = in["width"].GetFloat();
+			if (in.HasMember("height") && in["height"].IsNumber())
+				height = in["height"].GetFloat();
+			if (in.HasMember("tintColor") && in["tintColor"].IsArray())
+				tintColor = JsonToVec3(in["tintColor"]);
+			if (in.HasMember("alpha") && in["alpha"].IsNumber())
+				alpha = in["alpha"].GetFloat();
+			if (in.HasMember("maintainAspectRatio") && in["maintainAspectRatio"].IsBool())
+				maintainAspectRatio = in["maintainAspectRatio"].GetBool();
+			if (in.HasMember("caption") && in["caption"].IsString())
+				caption = in["caption"].GetString();
+			if (in.HasMember("showCaption") && in["showCaption"].IsBool())
+				showCaption = in["showCaption"].GetBool();
+			if (in.HasMember("captionColor") && in["captionColor"].IsArray())
+				captionColor = JsonToVec3(in["captionColor"]);
+			if (in.HasMember("captionFontSize") && in["captionFontSize"].IsNumber())
+				captionFontSize = in["captionFontSize"].GetFloat();
+			if (in.HasMember("captionPosition") && in["captionPosition"].IsArray())
+				captionPosition = JsonToVec3(in["captionPosition"]);
+		}
+
+		XPROPERTY_DEF(
+			"UIImageComponent", UIImageComponent,
+			xproperty::obj_member<"imagePath", &UIImageComponent::imagePath>,
+			xproperty::obj_member<"fullscreen", &UIImageComponent::fullscreen>,
+			xproperty::obj_member<"position", &UIImageComponent::position>,
+			xproperty::obj_member<"width", &UIImageComponent::width>,
+			xproperty::obj_member<"height", &UIImageComponent::height>,
+			xproperty::obj_member<"tintColor", &UIImageComponent::tintColor>,
+			xproperty::obj_member<"alpha", &UIImageComponent::alpha>,
+			xproperty::obj_member<"maintainAspectRatio", &UIImageComponent::maintainAspectRatio>,
+			xproperty::obj_member<"caption", &UIImageComponent::caption>,
+			xproperty::obj_member<"showCaption", &UIImageComponent::showCaption>,
+			xproperty::obj_member<"captionColor", &UIImageComponent::captionColor>,
+			xproperty::obj_member<"captionFontSize", &UIImageComponent::captionFontSize>,
+			xproperty::obj_member<"captionPosition", &UIImageComponent::captionPosition>
 		)
 	};
 } // namespace Ermine

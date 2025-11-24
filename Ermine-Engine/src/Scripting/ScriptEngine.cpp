@@ -28,6 +28,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Physics.h"
 #include "SceneManager.h"
 #include "Serialisation.h"
+#include "UIRenderSystem.h"
 
 namespace fs = std::filesystem;
 
@@ -1358,6 +1359,43 @@ namespace
 	}
 #pragma endregion
 
+#pragma region SceneManager ICalls
+	void icall_scenemanager_loadscene(MonoString* scenePath)
+	{
+		using namespace Ermine;
+		std::string path;
+		ToTempUTF8(scenePath, path);
+
+		if (!path.empty())
+		{
+			EE_CORE_INFO("SceneManager: Loading scene from script: {}", path);
+			SceneManager::GetInstance().OpenScene(path);
+		}
+		else
+		{
+			EE_CORE_ERROR("SceneManager: Scene path is empty!");
+		}
+	}
+#pragma endregion
+
+#pragma region Application ICalls
+	void icall_application_quit()
+	{
+		EE_CORE_INFO("Application: Quit requested from script");
+		// Note: In editor, this won't actually quit
+#if defined(EE_EDITOR)
+		EE_CORE_WARN("Application.Quit() called in editor - this only works in game builds");
+#else
+		// In game build, request window close
+		extern GLFWwindow* g_window; // Assume this is available globally
+		if (g_window)
+		{
+			glfwSetWindowShouldClose(g_window, GLFW_TRUE);
+		}
+#endif
+	}
+#pragma endregion
+
 #pragma region Object ICalls
 	MonoString* icall_object_get_name(MonoObject* thisObj)
 	{
@@ -2439,6 +2477,14 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	mono_add_internal_call("ErmineEngine.Debug::LogErrorInternal", (const void*)icall_debug_log_error);
 #pragma endregion
 
+#pragma region SceneManager ICalls
+	mono_add_internal_call("ErmineEngine.SceneManager::LoadSceneInternal", (const void*)icall_scenemanager_loadscene);
+#pragma endregion
+
+#pragma region Application ICalls
+	mono_add_internal_call("ErmineEngine.Application::QuitInternal", (const void*)icall_application_quit);
+#pragma endregion
+
 #pragma region Object ICalls
 	mono_add_internal_call("ErmineEngine.Object::get_name", (const void*)icall_object_get_name);
 	mono_add_internal_call("ErmineEngine.Object::set_name", (const void*)icall_object_set_name);
@@ -2502,5 +2548,15 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	mono_add_internal_call("ErmineEngine.GameplayHUD::Internal_SetHealth", (const void*)Internal_SetHealth);
 	// temporary reference to health bar, to be removed
 	mono_add_internal_call("ErmineEngine.GameplayHUD::Internal_GetHealthBar", Internal_GetHealthBar);
+
+#pragma region UISystem ICalls
+	mono_add_internal_call("ErmineEngine.UISystem::Internal_CastSkill",
+		(const void*)+[](uint64_t entityID, int skillIndex) -> bool
+		{
+			auto uiSystem = Ermine::ECS::GetInstance().GetSystem<Ermine::UIRenderSystem>();
+			if (!uiSystem)
+				return false;
+			return uiSystem->CastSkill((Ermine::EntityID)entityID, skillIndex);
+		});
 #pragma endregion
 }

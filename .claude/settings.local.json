@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir \"C:\\Github\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-ScriptAssembly\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
