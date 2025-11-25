@@ -72,19 +72,20 @@
   <ItemGroup>
     <Compile Include="DamagePlayer.cs" />
     <Compile Include="DisableLightCone.cs" />
+    <Compile Include="FakePlayer.cs" />
     <Compile Include="LifeEssenceSkillController.cs" />
     <Compile Include="OrbTeleport.cs" />
     <Compile Include="PlayerController.cs" />
+    <Compile Include="PlayerController2.cs" />
     <Compile Include="RotatingPlatform.cs" />
     <Compile Include="Sandbox.cs" />
     <Compile Include="Sandbox2.cs" />
     <Compile Include="Sphere.cs" />
-    <Compile Include="FakePlayer.cs" />
-    <Compile Include="VerticalPlatform.cs" />
-    <Compile Include="TemplateScript.cs" />
     <Compile Include="Switch.cs" />
+    <Compile Include="TemplateScript.cs" />
     <Compile Include="Test1.cs" />
     <Compile Include="Test2.cs" />
+    <Compile Include="VerticalPlatform.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Ermine-ScriptAssembly\Ermine-ScriptAssembly.csproj">

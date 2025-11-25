@@ -18,10 +18,10 @@ public class RotatingPlatform : MonoBehaviour
         if (!active) return;
 
         // Create a rotation for this frame
-        Quaternion delta = Quaternion.Euler(0f, speed * Time.deltaTime, 0f);
+        //Quaternion delta = Quaternion.Euler(0f, speed * Time.deltaTime, 0f);
 
         // Apply rotation manually (like MoveRotation)
-        Debug.Log(rb.rotation);
+        transform.Rotate(new Vector3(0f, speed * Time.deltaTime, 0f));
     }
 
     public void IsActive(bool state)
