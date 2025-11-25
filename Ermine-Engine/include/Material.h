@@ -4,7 +4,7 @@
 \author     Jeremy Lim Ting Jie, jeremytingjie.lim, 2301370, jeremytingjie.lim\@digipen.edu
 \co-author  Ridhwan Afandi, moahamedridhwan.b, 2301367, moahamedridhwan.b\@digipen.edu
 \date       Sep 9, 2025
-\brief      Material system for graphics rendering with SSBO support
+\brief      Material system for graphics rendering with SSBO support.
 
 Copyright (C) 2025 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents without the
@@ -27,17 +27,17 @@ namespace Ermine::graphics
     *************************************************************************/
     enum MaterialTextureFlags : uint32_t
     {
-        MAT_FLAG_ALBEDO_MAP    = 1 << 0,  // bit 0: hasAlbedoMap
-        MAT_FLAG_NORMAL_MAP    = 1 << 1,  // bit 1: hasNormalMap
+        MAT_FLAG_ALBEDO_MAP = 1 << 0,  // bit 0: hasAlbedoMap
+        MAT_FLAG_NORMAL_MAP = 1 << 1,  // bit 1: hasNormalMap
         MAT_FLAG_ROUGHNESS_MAP = 1 << 2,  // bit 2: hasRoughnessMap
-        MAT_FLAG_METALLIC_MAP  = 1 << 3,  // bit 3: hasMetallicMap
-        MAT_FLAG_AO_MAP        = 1 << 4,  // bit 4: hasAoMap
-        MAT_FLAG_EMISSIVE_MAP  = 1 << 5   // bit 5: hasEmissiveMap
+        MAT_FLAG_METALLIC_MAP = 1 << 3,  // bit 3: hasMetallicMap
+        MAT_FLAG_AO_MAP = 1 << 4,  // bit 4: hasAoMap
+        MAT_FLAG_EMISSIVE_MAP = 1 << 5   // bit 5: hasEmissiveMap
     };
 
     /*!***********************************************************************
     \brief
-        Material parameter types for type safety
+        Material parameter types for type safety (Used for Templates/Legacy)
     *************************************************************************/
     enum class MaterialParamType
     {
@@ -52,7 +52,7 @@ namespace Ermine::graphics
 
     /*!***********************************************************************
     \brief
-        Material parameter wrapper
+        Material parameter wrapper (Used for Templates/Legacy/Serialization)
     *************************************************************************/
     struct MaterialParam
     {
@@ -63,10 +63,7 @@ namespace Ermine::graphics
         std::shared_ptr<Texture> texture = nullptr;
         std::shared_ptr<Cubemap> cubemap = nullptr;
 
-        // Default constructor
         MaterialParam() : type(MaterialParamType::FLOAT), intValue(0), boolValue(false) {}
-
-        // Constructors for different types
         MaterialParam(float value) : type(MaterialParamType::FLOAT), floatValues{ value } {}
         MaterialParam(const Vec2& value) : type(MaterialParamType::VEC2), floatValues{ value.x, value.y } {}
         MaterialParam(const Vec3& value) : type(MaterialParamType::VEC3), floatValues{ value.x, value.y, value.z } {}
@@ -79,7 +76,7 @@ namespace Ermine::graphics
     /*!***********************************************************************
     \brief
         GPU-compatible material structure for SSBO
-        Uses std430 layout rules (no padding required)
+        Uses std430 layout rules
     *************************************************************************/
     struct MaterialSSBO
     {
@@ -94,9 +91,9 @@ namespace Ermine::graphics
         float emissiveIntensity{ 0.0f };         // 4 bytes (44-47)
 
         int shadingModel{ 0 };                   // 4 bytes (48-51)
-        uint32_t textureFlags{ 0 };              // 4 bytes (52-55) - Packed bitfield for all texture flags
-        int castsShadows{ 1 };                   // 4 bytes (56-59) - Whether this material casts shadows (1=true, 0=false)
-        float _pad0{};                           // 4 bytes (60-63) - padding for alignment
+        uint32_t textureFlags{ 0 };              // 4 bytes (52-55)
+        int castsShadows{ 1 };                   // 4 bytes (56-59)
+        float _pad0{};                           // 4 bytes (60-63)
 
         // UV Scale and Offset
         Vec2 uvScale{ 1.0f, 1.0f };             // 8 bytes (64-71)
@@ -110,464 +107,310 @@ namespace Ermine::graphics
 
         int aoMapIndex{ -1 };                   // 4 bytes (96-99)
         int emissiveMapIndex{ -1 };             // 4 bytes (100-103)
-        int _pad1{};                            // 4 bytes (104-107) - padding
-        int _pad2{};                            // 4 bytes (108-111) - padding for vec4 alignment
-        // Total: 112 bytes (down from 128 bytes) - 12.5% reduction
+        int _pad1{};                            // 4 bytes (104-107)
+        int _pad2{};                            // 4 bytes (108-111)
     };
-
-    // Forward declaration
-    class Material;
 
     // Predefined material templates
     class MaterialTemplates
     {
     public:
-		// Returns a parameter map for a red PBR material.
-        static std::map<std::string, MaterialParam> PBR_RED()
-        {
-            return {
-                {"materialAlbedo", Vec4(1.0f, 0.0f, 0.0f, 1.0f)},
-                {"materialMetallic", 0.0f},
-                {"materialRoughness", 0.3f},
-                {"materialAo", 1.0f},
-                {"materialEmissive", Vec3(0.0f, 0.0f, 0.0f)},
-                {"materialEmissiveIntensity", 0.0f},
-                {"materialNormalStrength", 1.0f},
-                {"materialShadingModel", 0},
-                {"materialHasAlbedoMap", false},
-                {"materialHasNormalMap", false},
-                {"materialHasRoughnessMap", false},
-                {"materialHasMetallicMap", false},
-                {"materialHasAoMap", false},
-                {"materialHasEmissiveMap", false},
-                {"materialCastsShadows", true}
-            };
+        static std::map<std::string, MaterialParam> PBR_RED() {
+            return { {"materialAlbedo", Vec4(1.0f, 0.0f, 0.0f, 1.0f)}, {"materialRoughness", 0.3f}, {"materialMetallic", 0.0f} };
         }
-        // Returns a parameter map for a metallic PBR material.
-        static std::map<std::string, MaterialParam> PBR_METAL()
-        {
-            return {
-                {"materialAlbedo", Vec4(0.7f, 0.7f, 0.8f, 1.0f)},
-                {"materialMetallic", 1.0f},  // Full metallic
-                {"materialRoughness", 0.15f}, // Slightly rough for visible reflections
-                {"materialAo", 1.0f},
-                {"materialEmissive", Vec3(0.0f, 0.0f, 0.0f)},
-                {"materialEmissiveIntensity", 0.0f},
-                {"materialNormalStrength", 1.0f},
-                {"materialShadingModel", 0},
-                {"materialHasAlbedoMap", false},
-                {"materialHasNormalMap", false},
-                {"materialHasRoughnessMap", false},
-                {"materialHasMetallicMap", false},
-                {"materialHasAoMap", false},
-                {"materialHasEmissiveMap", false},
-                {"materialCastsShadows", true}
-            };
+        static std::map<std::string, MaterialParam> PBR_METAL() {
+            return { {"materialAlbedo", Vec4(0.7f, 0.7f, 0.8f, 1.0f)}, {"materialMetallic", 1.0f}, {"materialRoughness", 0.15f} };
         }
-
-         // Returns a parameter map for a white PBR material.
-        static std::map<std::string, MaterialParam> PBR_WHITE()
-        {
-            return {
-                {"materialAlbedo", Vec4(0.8f, 0.8f, 0.8f, 1.0f)},
-                {"materialMetallic", 0.0f},
-                {"materialRoughness", 0.3f},
-                {"materialAo", 1.0f},
-                {"materialEmissive", Vec3(0.0f, 0.0f, 0.0f)},
-                {"materialEmissiveIntensity", 0.0f},
-                {"materialNormalStrength", 1.0f},
-                {"materialShadingModel", 0},
-                {"materialHasAlbedoMap", false},
-                {"materialHasNormalMap", false},
-                {"materialHasRoughnessMap", false},
-                {"materialHasMetallicMap", false},
-                {"materialHasAoMap", false},
-                {"materialHasEmissiveMap", false},
-                {"materialCastsShadows", true}
-            };
+        static std::map<std::string, MaterialParam> PBR_WHITE() {
+            return { {"materialAlbedo", Vec4(0.8f, 0.8f, 0.8f, 1.0f)}, {"materialMetallic", 0.0f}, {"materialRoughness", 0.3f} };
         }
-		// Emissive material
-        static std::map<std::string, MaterialParam> EMISSIVE(const Vec3& color, float intensity)
-        {
-            return {
-                {"materialAlbedo", Vec4(0.0f, 0.0f, 0.0f, 1.0f)},
-                {"materialMetallic", 0.0f},
-                {"materialRoughness", 1.0f},
-                {"materialAo", 1.0f},
-                {"materialEmissive", color},
-                {"materialEmissiveIntensity", intensity},
-                {"materialNormalStrength", 1.0f},
-                {"materialShadingModel", 0},
-                {"materialHasAlbedoMap", false},
-                {"materialHasNormalMap", false},
-                {"materialHasRoughnessMap", false},
-                {"materialHasMetallicMap", false},
-                {"materialHasAoMap", false},
-                {"materialHasEmissiveMap", false},
-                {"materialCastsShadows", true}
-            };
+        static std::map<std::string, MaterialParam> EMISSIVE(const Vec3& color, float intensity) {
+            return { {"materialAlbedo", Vec4(0,0,0,1)}, {"materialEmissive", color}, {"materialEmissiveIntensity", intensity} };
         }
-
-        // Glass material (transparent)
-        static std::map<std::string, MaterialParam> PBR_GLASS(float transparency = 0.9f)
-        {
-            return {
-                {"materialAlbedo", Vec4(0.95f, 0.95f, 0.95f, 1.0f - transparency)},
-                {"materialMetallic", 0.0f},
-                {"materialRoughness", 0.05f},
-                {"materialAo", 1.0f},
-                {"materialEmissive", Vec3(0.0f, 0.0f, 0.0f)},
-                {"materialEmissiveIntensity", 0.0f},
-                {"materialNormalStrength", 1.0f},
-                {"materialShadingModel", 0},
-                {"materialHasAlbedoMap", false},
-                {"materialHasNormalMap", false},
-                {"materialHasRoughnessMap", false},
-                {"materialHasMetallicMap", false},
-                {"materialHasAoMap", false},
-                {"materialHasEmissiveMap", false},
-                {"materialCastsShadows", true}
-            };
+        static std::map<std::string, MaterialParam> PBR_GLASS(float transparency = 0.9f) {
+            return { {"materialAlbedo", Vec4(0.95f, 0.95f, 0.95f, 1.0f - transparency)}, {"materialRoughness", 0.05f} };
         }
-
-        // Water material (transparent)
-        static std::map<std::string, MaterialParam> PBR_WATER(float transparency = 0.7f)
-        {
-            return {
-                {"materialAlbedo", Vec4(0.1f, 0.3f, 0.6f, 1.0f - transparency)},
-                {"materialMetallic", 0.0f},
-                {"materialRoughness", 0.1f},
-                {"materialAo", 1.0f},
-                {"materialEmissive", Vec3(0.0f, 0.0f, 0.0f)},
-                {"materialEmissiveIntensity", 0.0f},
-                {"materialNormalStrength", 1.0f},
-                {"materialShadingModel", 0},
-                {"materialHasAlbedoMap", false},
-                {"materialHasNormalMap", false},
-                {"materialHasRoughnessMap", false},
-                {"materialHasMetallicMap", false},
-                {"materialHasAoMap", false},
-                {"materialHasEmissiveMap", false},
-                {"materialCastsShadows", true}
-            };
+        static std::map<std::string, MaterialParam> PBR_WATER(float transparency = 0.7f) {
+            return { {"materialAlbedo", Vec4(0.1f, 0.3f, 0.6f, 1.0f - transparency)}, {"materialRoughness", 0.1f} };
         }
-
     };
 
     /*!***********************************************************************
     \brief
-        Main Material class with SSBO support
+        Main Material class.
+        OPTIMIZED: Stores MaterialSSBO directly to avoid map lookups during rendering.
     *************************************************************************/
     class Material
     {
     private:
-        std::map<std::string, MaterialParam> m_parameters;
+        // Direct data storage (Shadow Copy)
+        MaterialSSBO m_data;
+
+        // Shader reference
         std::shared_ptr<Shader> m_shader;
 
-        // Texture slots management
-        std::map<std::string, int> m_textureSlots;
-        int m_nextTextureSlot = 0;
+        // Texture references (kept for RefCounting and Binding)
+        std::shared_ptr<Texture> m_albedoMap;
+        std::shared_ptr<Texture> m_normalMap;
+        std::shared_ptr<Texture> m_roughnessMap;
+        std::shared_ptr<Texture> m_metallicMap;
+        std::shared_ptr<Texture> m_aoMap;
+        std::shared_ptr<Texture> m_emissiveMap;
+
         std::unordered_map<std::string, std::shared_ptr<Cubemap>> cubemaps;
 
-        // SSBO management
-        mutable MaterialSSBO m_materialData;
-        mutable bool m_ssboDirty = true;
-
-        // Material indexing for SSBO upload
-        int m_materialIndex = -1;  // Index in the global material buffer
-
-        // Texture array indices (for bindless texture array)
-        std::map<std::string, int> m_textureArrayIndices;
-
-        /**
-         * @brief Gets the SSBO data for this material.
-         * @return Reference to MaterialSSBO.
-         */
-        void UpdateSSBOData() const
-        {
-            if (!m_ssboDirty) return;
-
-            // Update material data from parameters
-            if (auto param = GetParameter("materialAlbedo"))
-            {
-                if (param->type == MaterialParamType::VEC4 && param->floatValues.size() >= 4)
-                {
-                    m_materialData.albedo = Vec4(param->floatValues[0],
-                        param->floatValues[1],
-                        param->floatValues[2],
-                        param->floatValues[3]);
-                }
-                else if (param->type == MaterialParamType::VEC3 && param->floatValues.size() >= 3)
-                {
-                    m_materialData.albedo = Vec4(param->floatValues[0],
-                        param->floatValues[1],
-                        param->floatValues[2],
-                        1.0f);
-                }
-            }
-
-            if (auto param = GetParameter("materialMetallic"))
-                m_materialData.metallic = param->floatValues[0];
-
-            if (auto param = GetParameter("materialRoughness"))
-                m_materialData.roughness = param->floatValues[0];
-
-            if (auto param = GetParameter("materialAo"))
-                m_materialData.ao = param->floatValues[0];
-
-            if (auto param = GetParameter("materialNormalStrength"))
-                m_materialData.normalStrength = param->floatValues[0];
-
-            if (auto param = GetParameter("materialEmissive"))
-            {
-                if (param->floatValues.size() >= 3)
-                {
-                    m_materialData.emissive = Vec3(param->floatValues[0],
-                        param->floatValues[1],
-                        param->floatValues[2]);
-                }
-            }
-
-            if (auto param = GetParameter("materialEmissiveIntensity"))
-                m_materialData.emissiveIntensity = param->floatValues[0];
-
-            if (auto param = GetParameter("materialShadingModel"))
-                m_materialData.shadingModel = param->intValue;
-
-            if (auto param = GetParameter("materialCastsShadows"))
-                m_materialData.castsShadows = param->boolValue ? 1 : 0;
-
-            // Update texture flags (packed into bitfield for efficiency)
-            m_materialData.textureFlags = 0;
-            if (GetParameter("materialHasAlbedoMap") && GetParameter("materialHasAlbedoMap")->boolValue)
-                m_materialData.textureFlags |= MAT_FLAG_ALBEDO_MAP;
-            if (GetParameter("materialHasNormalMap") && GetParameter("materialHasNormalMap")->boolValue)
-                m_materialData.textureFlags |= MAT_FLAG_NORMAL_MAP;
-            if (GetParameter("materialHasRoughnessMap") && GetParameter("materialHasRoughnessMap")->boolValue)
-                m_materialData.textureFlags |= MAT_FLAG_ROUGHNESS_MAP;
-            if (GetParameter("materialHasMetallicMap") && GetParameter("materialHasMetallicMap")->boolValue)
-                m_materialData.textureFlags |= MAT_FLAG_METALLIC_MAP;
-            if (GetParameter("materialHasAoMap") && GetParameter("materialHasAoMap")->boolValue)
-                m_materialData.textureFlags |= MAT_FLAG_AO_MAP;
-            if (GetParameter("materialHasEmissiveMap") && GetParameter("materialHasEmissiveMap")->boolValue)
-                m_materialData.textureFlags |= MAT_FLAG_EMISSIVE_MAP;
-
-            // Update texture array indices
-            m_materialData.albedoMapIndex = GetTextureArrayIndex("materialAlbedoMap");
-            m_materialData.normalMapIndex = GetTextureArrayIndex("materialNormalMap");
-            m_materialData.roughnessMapIndex = GetTextureArrayIndex("materialRoughnessMap");
-            m_materialData.metallicMapIndex = GetTextureArrayIndex("materialMetallicMap");
-            m_materialData.aoMapIndex = GetTextureArrayIndex("materialAoMap");
-            m_materialData.emissiveMapIndex = GetTextureArrayIndex("materialEmissiveMap");
-
-            m_ssboDirty = false;
-        }
+        // State
+        bool m_dirty = true;
+        int m_materialIndex = -1;
 
     public:
-        /**
-         * @brief Default constructor.
-         */
         Material() = default;
-        /**
-         * @brief Constructs a material with a shader and optional parameters.
-         * @param shader Shared pointer to Shader.
-         * @param params Map of parameter names to MaterialParam.
-         */
+
         Material(std::shared_ptr<Shader> shader, const std::map<std::string, MaterialParam>& params = {})
-            : m_shader(std::move(shader)), m_parameters(params) {
-        }
-
-        /**
-         * @brief Sets the shader for this material.
-         * @param shader Shared pointer to Shader.
-         */
-        void SetShader(std::shared_ptr<Shader> shader) { m_shader = std::move(shader); }
-
-        /**
-         * @brief Gets the shader associated with this material.
-         * @return Shared pointer to Shader.
-         */
-        std::shared_ptr<Shader> GetShader() const { return m_shader; }
-
-        /**
-         * @brief Sets a material parameter.
-         * @param name Parameter name.
-         * @param param MaterialParam value.
-         */
-        void SetParameter(const std::string& name, const MaterialParam& param)
+            : m_shader(std::move(shader))
         {
-            m_parameters[name] = param;
-            m_ssboDirty = true;
+            LoadTemplate(params);
+        }
 
-            if (param.type == MaterialParamType::TEXTURE_2D)
-            {
-                if (m_textureSlots.find(name) == m_textureSlots.end())
-                {
-                    m_textureSlots[name] = m_nextTextureSlot++;
-                }
-            }
+        // --- Direct Setters (Fast Path) ---
+
+        void SetAlbedo(const Vec4& color) {
+            if (m_data.albedo != color) { m_data.albedo = color; m_dirty = true; }
         }
-        /**
-         * @brief Sets a float parameter.
-         * @param name Parameter name.
-         * @param value Float value.
-         */
-        void SetFloat(const std::string& name, float value) {
-            SetParameter(name, MaterialParam(value));
+        void SetAlbedo(const Vec3& color) {
+            Vec4 c(color.x, color.y, color.z, 1.0f);
+            if (m_data.albedo != c) { m_data.albedo = c; m_dirty = true; }
         }
-        /**
-         * @brief Sets a Vec2 parameter.
-         * @param name Parameter name.
-         * @param value Vec2 value.
-         */
-        void SetVec2(const std::string& name, const Vec2& value) {
-            SetParameter(name, MaterialParam(value));
+        void SetMetallic(float val) {
+            if (m_data.metallic != val) { m_data.metallic = val; m_dirty = true; }
         }
-        /**
-         * @brief Sets a Vec3 parameter.
-         * @param name Parameter name.
-         * @param value Vec3 value.
-         */
-        void SetVec3(const std::string& name, const Vec3& value) {
-            SetParameter(name, MaterialParam(value));
+        void SetRoughness(float val) {
+            if (m_data.roughness != val) { m_data.roughness = val; m_dirty = true; }
         }
-        /**
-         * @brief Sets a Vec4 parameter.
-         * @param name Parameter name.
-         * @param value Vec4 value.
-         */
-        void SetVec4(const std::string& name, const Vec4& value) {
-            SetParameter(name, MaterialParam(value));
+        void SetAO(float val) {
+            if (m_data.ao != val) { m_data.ao = val; m_dirty = true; }
         }
-        /**
-         * @brief Sets an int parameter.
-         * @param name Parameter name.
-         * @param value Integer value.
-         */
-        void SetInt(const std::string& name, int value) {
-            SetParameter(name, MaterialParam(value));
+        void SetEmissive(const Vec3& color) {
+            if (m_data.emissive != color) { m_data.emissive = color; m_dirty = true; }
         }
-        /**
-         * @brief Sets a bool parameter.
-         * @param name Parameter name.
-         * @param value Boolean value.
-         */
-        void SetBool(const std::string& name, bool value) {
-            SetParameter(name, MaterialParam(value));
+        void SetEmissiveIntensity(float val) {
+            if (m_data.emissiveIntensity != val) { m_data.emissiveIntensity = val; m_dirty = true; }
         }
-        /**
-         * @brief Sets a texture parameter.
-         * @param name Parameter name.
-         * @param texture Shared pointer to Texture.
-         */
+        void SetNormalStrength(float val) {
+            if (m_data.normalStrength != val) { m_data.normalStrength = val; m_dirty = true; }
+        }
+        void SetCastsShadows(bool val) {
+            int v = val ? 1 : 0;
+            if (m_data.castsShadows != v) { m_data.castsShadows = v; m_dirty = true; }
+        }
+        void SetShadingModel(int val) {
+            if (m_data.shadingModel != val) { m_data.shadingModel = val; m_dirty = true; }
+        }
+        void SetUVScale(const Vec2& scale) {
+            if (m_data.uvScale != scale) { m_data.uvScale = scale; m_dirty = true; }
+        }
+        void SetUVOffset(const Vec2& offset) {
+            if (m_data.uvOffset != offset) { m_data.uvOffset = offset; m_dirty = true; }
+        }
+
+        // --- Texture Setters (Fast Path) ---
+
         void SetTexture(const std::string& name, std::shared_ptr<Texture> texture)
         {
-            SetParameter(name, MaterialParam(std::move(texture)));
+            if (name == "materialAlbedoMap" || name == "material.albedoMap") {
+                m_albedoMap = texture;
+                if (texture && texture->IsValid()) m_data.textureFlags |= MAT_FLAG_ALBEDO_MAP;
+                else m_data.textureFlags &= ~MAT_FLAG_ALBEDO_MAP;
+            }
+            else if (name == "materialNormalMap" || name == "material.normalMap") {
+                m_normalMap = texture;
+                if (texture && texture->IsValid()) m_data.textureFlags |= MAT_FLAG_NORMAL_MAP;
+                else m_data.textureFlags &= ~MAT_FLAG_NORMAL_MAP;
+            }
+            else if (name == "materialRoughnessMap" || name == "material.roughnessMap") {
+                m_roughnessMap = texture;
+                if (texture && texture->IsValid()) m_data.textureFlags |= MAT_FLAG_ROUGHNESS_MAP;
+                else m_data.textureFlags &= ~MAT_FLAG_ROUGHNESS_MAP;
+            }
+            else if (name == "materialMetallicMap" || name == "material.metallicMap") {
+                m_metallicMap = texture;
+                if (texture && texture->IsValid()) m_data.textureFlags |= MAT_FLAG_METALLIC_MAP;
+                else m_data.textureFlags &= ~MAT_FLAG_METALLIC_MAP;
+            }
+            else if (name == "materialAoMap" || name == "material.aoMap") {
+                m_aoMap = texture;
+                if (texture && texture->IsValid()) m_data.textureFlags |= MAT_FLAG_AO_MAP;
+                else m_data.textureFlags &= ~MAT_FLAG_AO_MAP;
+            }
+            else if (name == "materialEmissiveMap" || name == "material.emissiveMap") {
+                m_emissiveMap = texture;
+                if (texture && texture->IsValid()) m_data.textureFlags |= MAT_FLAG_EMISSIVE_MAP;
+                else m_data.textureFlags &= ~MAT_FLAG_EMISSIVE_MAP;
+            }
+            m_dirty = true;
         }
 
-        /**
-         * @brief Gets a texture parameter.
-         * @param name Parameter name.
-         * @return Shared pointer to Texture, or nullptr if not found.
-         */
-        std::shared_ptr<Texture> GetTexture(const std::string& name)
+        // --- Generic Parameter Setters (String-based, slightly slower, for serialization) ---
+
+        void SetParameter(const std::string& name, const MaterialParam& param)
         {
-            if (auto param = GetParameter(name))
-            {
-                if (param->type == MaterialParamType::TEXTURE_2D)
-                {
-                    return param->texture;
-                }
+            if (param.type == MaterialParamType::TEXTURE_2D) {
+                SetTexture(name, param.texture);
+                return;
             }
+
+            if (name == "materialAlbedo" || name == "material.albedo") {
+                if (param.type == MaterialParamType::VEC4) SetAlbedo(Vec4(param.floatValues[0], param.floatValues[1], param.floatValues[2], param.floatValues[3]));
+                else if (param.type == MaterialParamType::VEC3) SetAlbedo(Vec3(param.floatValues[0], param.floatValues[1], param.floatValues[2]));
+            }
+            else if (name == "materialMetallic" || name == "material.metallic") SetMetallic(param.floatValues[0]);
+            else if (name == "materialRoughness" || name == "material.roughness") SetRoughness(param.floatValues[0]);
+            else if (name == "materialAo" || name == "material.ao") SetAO(param.floatValues[0]);
+            else if (name == "materialNormalStrength" || name == "material.normalStrength") SetNormalStrength(param.floatValues[0]);
+            else if (name == "materialEmissive" || name == "material.emissive") {
+                if (param.floatValues.size() >= 3) SetEmissive(Vec3(param.floatValues[0], param.floatValues[1], param.floatValues[2]));
+            }
+            else if (name == "materialEmissiveIntensity" || name == "material.emissiveIntensity") SetEmissiveIntensity(param.floatValues[0]);
+            else if (name == "materialShadingModel") SetShadingModel(param.intValue);
+            else if (name == "materialCastsShadows") SetCastsShadows(param.boolValue);
+
+            // Manual Flag Overrides (if loaded from file)
+            else if (name.find("HasAlbedoMap") != std::string::npos) {
+                if (param.boolValue) m_data.textureFlags |= MAT_FLAG_ALBEDO_MAP; else m_data.textureFlags &= ~MAT_FLAG_ALBEDO_MAP; m_dirty = true;
+            }
+            else if (name.find("HasNormalMap") != std::string::npos) {
+                if (param.boolValue) m_data.textureFlags |= MAT_FLAG_NORMAL_MAP; else m_data.textureFlags &= ~MAT_FLAG_NORMAL_MAP; m_dirty = true;
+            }
+            // ... other flags mapped similarly if strictly needed
+        }
+
+        // Convenience Wrappers
+        void SetFloat(const std::string& name, float value) { SetParameter(name, MaterialParam(value)); }
+        void SetVec2(const std::string& name, const Vec2& value) {
+            if (name == "uvScale") SetUVScale(value);
+            else if (name == "uvOffset") SetUVOffset(value);
+            else SetParameter(name, MaterialParam(value));
+        }
+        void SetVec3(const std::string& name, const Vec3& value) { SetParameter(name, MaterialParam(value)); }
+        void SetVec4(const std::string& name, const Vec4& value) { SetParameter(name, MaterialParam(value)); }
+        void SetInt(const std::string& name, int value) { SetParameter(name, MaterialParam(value)); }
+        void SetBool(const std::string& name, bool value) { SetParameter(name, MaterialParam(value)); }
+
+        // --- Getters (Constructs temp param for serialization support) ---
+        // Note: This creates overhead but is only used during serialization/debugging.
+        std::unique_ptr<MaterialParam> GetParameter(const std::string& name) const
+        {
+            if (name == "materialAlbedo") return std::make_unique<MaterialParam>(m_data.albedo);
+            if (name == "materialMetallic") return std::make_unique<MaterialParam>(m_data.metallic);
+            if (name == "materialRoughness") return std::make_unique<MaterialParam>(m_data.roughness);
+            if (name == "materialAo") return std::make_unique<MaterialParam>(m_data.ao);
+            if (name == "materialEmissive") return std::make_unique<MaterialParam>(m_data.emissive);
+            if (name == "materialEmissiveIntensity") return std::make_unique<MaterialParam>(m_data.emissiveIntensity);
+            if (name == "materialNormalStrength") return std::make_unique<MaterialParam>(m_data.normalStrength);
+            if (name == "materialShadingModel") return std::make_unique<MaterialParam>(m_data.shadingModel);
+            if (name == "materialCastsShadows") return std::make_unique<MaterialParam>(m_data.castsShadows != 0);
+
+            // Boolean flags
+            if (name == "materialHasAlbedoMap") return std::make_unique<MaterialParam>((m_data.textureFlags & MAT_FLAG_ALBEDO_MAP) != 0);
+            if (name == "materialHasNormalMap") return std::make_unique<MaterialParam>((m_data.textureFlags & MAT_FLAG_NORMAL_MAP) != 0);
+            if (name == "materialHasRoughnessMap") return std::make_unique<MaterialParam>((m_data.textureFlags & MAT_FLAG_ROUGHNESS_MAP) != 0);
+            if (name == "materialHasMetallicMap") return std::make_unique<MaterialParam>((m_data.textureFlags & MAT_FLAG_METALLIC_MAP) != 0);
+            if (name == "materialHasAoMap") return std::make_unique<MaterialParam>((m_data.textureFlags & MAT_FLAG_AO_MAP) != 0);
+            if (name == "materialHasEmissiveMap") return std::make_unique<MaterialParam>((m_data.textureFlags & MAT_FLAG_EMISSIVE_MAP) != 0);
+
+            // Texture getters
+            if (name.find("AlbedoMap") != std::string::npos) return std::make_unique<MaterialParam>(m_albedoMap);
+            if (name.find("NormalMap") != std::string::npos) return std::make_unique<MaterialParam>(m_normalMap);
+            if (name.find("RoughnessMap") != std::string::npos) return std::make_unique<MaterialParam>(m_roughnessMap);
+            if (name.find("MetallicMap") != std::string::npos) return std::make_unique<MaterialParam>(m_metallicMap);
+            if (name.find("AoMap") != std::string::npos) return std::make_unique<MaterialParam>(m_aoMap);
+            if (name.find("EmissiveMap") != std::string::npos) return std::make_unique<MaterialParam>(m_emissiveMap);
+
             return nullptr;
         }
-        /**
-         * @brief Checks if a parameter exists.
-         * @param name Parameter name.
-         * @return true if parameter exists, false otherwise.
-         */
+
+        // Check if parameter exists (Helper wrapper)
         bool HasParameter(const std::string& name) const
         {
-            return m_parameters.find(name) != m_parameters.end();
-        }
-        /**
-         * @brief Gets a parameter by name.
-         * @param name Parameter name.
-         * @return Pointer to MaterialParam, or nullptr if not found.
-         */
-        const MaterialParam* GetParameter(const std::string& name) const
-        {
-            auto it = m_parameters.find(name);
-            return it != m_parameters.end() ? &it->second : nullptr;
-        }
-        /**
-         * @brief Gets the SSBO data for this material.
-         * @return Reference to MaterialSSBO.
-         */
-        const MaterialSSBO& GetSSBOData() const
-        {
-            UpdateSSBOData();
-            return m_materialData;
+            return GetParameter(name) != nullptr;
         }
 
-        /**
-         * @brief Checks if the material SSBO data is dirty and needs GPU update.
-         * @return True if material has been modified since last GPU upload.
-         */
-        bool IsDirty() const
-        {
-            return m_ssboDirty;
-        }
-        /**
-         * @brief Binds all textures associated with this material.
-         */
-        void BindTextures() const
-        {
-            if (!m_shader || !m_shader->IsValid()) return;
+        // --- Core Systems ---
 
-            for (const auto& [name, param] : m_parameters)
-            {
-                if (param.type == MaterialParamType::TEXTURE_2D &&
-                    param.texture && param.texture->IsValid())
-                {
-                    auto slotIt = m_textureSlots.find(name);
-                    if (slotIt != m_textureSlots.end())
-                    {
-                        param.texture->Bind(slotIt->second);
-                        m_shader->SetUniform1i(name, slotIt->second);
-                    }
-                }
-            }
+        void SetShader(std::shared_ptr<Shader> shader) { m_shader = std::move(shader); }
+        std::shared_ptr<Shader> GetShader() const { return m_shader; }
+
+        // Optimized: Returns const ref to member, zero cost
+        const MaterialSSBO& GetSSBOData() const { return m_data; }
+
+        bool IsDirty() const { return m_dirty; }
+        void ClearDirty() { m_dirty = false; }
+
+        void SetMaterialIndex(int index) { m_materialIndex = index; }
+        int GetMaterialIndex() const { return m_materialIndex; }
+
+        std::shared_ptr<Texture> GetTexture(const std::string& name)
+        {
+            if (name.find("Albedo") != std::string::npos) return m_albedoMap;
+            if (name.find("Normal") != std::string::npos) return m_normalMap;
+            if (name.find("Roughness") != std::string::npos) return m_roughnessMap;
+            if (name.find("Metallic") != std::string::npos) return m_metallicMap;
+            if (name.find("Ao") != std::string::npos) return m_aoMap;
+            if (name.find("Emissive") != std::string::npos) return m_emissiveMap;
+            return nullptr;
         }
-        /**
-         * @brief Binds the material's shader and textures.
-         */
+
+        void SetTextureArrayIndex(const std::string& textureName, int index)
+        {
+            if (textureName == "materialAlbedoMap") m_data.albedoMapIndex = index;
+            else if (textureName == "materialNormalMap") m_data.normalMapIndex = index;
+            else if (textureName == "materialRoughnessMap") m_data.roughnessMapIndex = index;
+            else if (textureName == "materialMetallicMap") m_data.metallicMapIndex = index;
+            else if (textureName == "materialAoMap") m_data.aoMapIndex = index;
+            else if (textureName == "materialEmissiveMap") m_data.emissiveMapIndex = index;
+            m_dirty = true;
+        }
+
+        int GetTextureArrayIndex(const std::string& textureName) const
+        {
+            if (textureName == "materialAlbedoMap") return m_data.albedoMapIndex;
+            if (textureName == "materialNormalMap") return m_data.normalMapIndex;
+            if (textureName == "materialRoughnessMap") return m_data.roughnessMapIndex;
+            if (textureName == "materialMetallicMap") return m_data.metallicMapIndex;
+            if (textureName == "materialAoMap") return m_data.aoMapIndex;
+            if (textureName == "materialEmissiveMap") return m_data.emissiveMapIndex;
+            return -1;
+        }
+
         void Bind() const
         {
             if (!m_shader || !m_shader->IsValid()) return;
             m_shader->Bind();
             BindTextures();
         }
-        /**
-         * @brief Unbinds all textures and the shader.
-         */
+
+        void BindTextures() const
+        {
+            // Bind textures to fixed slots expected by standard shaders
+            if (m_albedoMap && m_albedoMap->IsValid()) { m_albedoMap->Bind(0); m_shader->SetUniform1i("materialAlbedoMap", 0); }
+            if (m_normalMap && m_normalMap->IsValid()) { m_normalMap->Bind(1); m_shader->SetUniform1i("materialNormalMap", 1); }
+            if (m_roughnessMap && m_roughnessMap->IsValid()) { m_roughnessMap->Bind(2); m_shader->SetUniform1i("materialRoughnessMap", 2); }
+            if (m_metallicMap && m_metallicMap->IsValid()) { m_metallicMap->Bind(3); m_shader->SetUniform1i("materialMetallicMap", 3); }
+            if (m_aoMap && m_aoMap->IsValid()) { m_aoMap->Bind(4); m_shader->SetUniform1i("materialAoMap", 4); }
+            if (m_emissiveMap && m_emissiveMap->IsValid()) { m_emissiveMap->Bind(5); m_shader->SetUniform1i("materialEmissiveMap", 5); }
+        }
+
         void Unbind() const
         {
-            for (const auto& [name, param] : m_parameters)
-            {
-                if (param.type == MaterialParamType::TEXTURE_2D &&
-                    param.texture && param.texture->IsValid())
-                {
-                    param.texture->Unbind();
-                }
-            }
-
+            if (m_albedoMap) m_albedoMap->Unbind();
+            if (m_normalMap) m_normalMap->Unbind();
+            if (m_roughnessMap) m_roughnessMap->Unbind();
+            if (m_metallicMap) m_metallicMap->Unbind();
+            if (m_aoMap) m_aoMap->Unbind();
+            if (m_emissiveMap) m_emissiveMap->Unbind();
             if (m_shader) m_shader->Unbind();
         }
-        /**
-         * @brief Loads a material template into this material.
-         * @param templateParams Map of parameter names to MaterialParam.
-         */
+
         void LoadTemplate(const std::map<std::string, MaterialParam>& templateParams)
         {
             for (const auto& [name, param] : templateParams)
@@ -575,119 +418,37 @@ namespace Ermine::graphics
                 SetParameter(name, param);
             }
         }
-        /**
-         * @brief Copy constructor.
-         * @param other Material to copy from.
-         */
-        Material(const Material& other)
-            : m_parameters(other.m_parameters)
-            , m_shader(other.m_shader)
-            , m_textureSlots(other.m_textureSlots)
-            , m_nextTextureSlot(other.m_nextTextureSlot)
-            , m_materialData(other.m_materialData)
-            , m_ssboDirty(true)
-        {
-        }
-        /**
-         * @brief Copy assignment operator.
-         * @param other Material to copy from.
-         * @return Reference to this material.
-         */
-        Material& operator=(const Material& other)
-        {
-            if (this != &other)
-            {
-                m_parameters = other.m_parameters;
-                m_shader = other.m_shader;
-                m_textureSlots = other.m_textureSlots;
-                m_nextTextureSlot = other.m_nextTextureSlot;
-                m_materialData = other.m_materialData;
-                m_ssboDirty = true;
-            }
-            return *this;
-        }
-        /**
-         * @brief Sets the UV scale for texture sampling.
-         * @param scale Vec2 representing the UV scale factor.
-         */
-        void SetUVScale(const Vec2& scale)
-        {
-            m_materialData.uvScale = scale;
-            m_ssboDirty = true;
-        }
-        
-        /**
-         * @brief Sets the UV offset for texture sampling.
-         * @param offset Vec2 representing the UV offset.
-         */
-        void SetUVOffset(const Vec2& offset)
-        {
-            m_materialData.uvOffset = offset;
-            m_ssboDirty = true;
-        }
-        
-        /**
-         * @brief Gets the UV scale.
-         * @return Vec2 UV scale.
-         */
-        Vec2 GetUVScale() const { return m_materialData.uvScale; }
-        
-        /**
-         * @brief Gets the UV offset.
-         * @return Vec2 UV offset.
-         */
-        Vec2 GetUVOffset() const { return m_materialData.uvOffset; }
-        
-        /**
-         * @brief Sets the material index in the global buffer.
-         * @param index The material index.
-         */
-        void SetMaterialIndex(int index) { m_materialIndex = index; }
-        
-        /**
-         * @brief Gets the material index in the global buffer.
-         * @return The material index, or -1 if not assigned.
-         */
-        int GetMaterialIndex() const { return m_materialIndex; }
 
-        /**
-         * @brief Sets a texture array index for a specific texture type.
-         * @param textureName The name of the texture parameter (e.g., "materialAlbedoMap").
-         * @param index The index in the global texture array.
-         */
-        void SetTextureArrayIndex(const std::string& textureName, int index)
-        {
-            m_textureArrayIndices[textureName] = index;
-            m_ssboDirty = true;
-        }
-
-        /**
-         * @brief Gets the texture array index for a specific texture type.
-         * @param textureName The name of the texture parameter.
-         * @return The texture array index, or -1 if not found.
-         */
-        int GetTextureArrayIndex(const std::string& textureName) const
-        {
-            auto it = m_textureArrayIndices.find(textureName);
-            return it != m_textureArrayIndices.end() ? it->second : -1;
-        }
-
-        /**
-         * @brief Gets all texture array indices.
-         * @return Map of texture names to array indices.
-         */
-        const std::map<std::string, int>& GetTextureArrayIndices() const
-        {
-            return m_textureArrayIndices;
-        }
-
-        /**
-         * @brief Gets the cubemap textures associated with this material.
-         * @return Unordered map of cubemap names to shared pointers.
-         */
+        // --- Cubemap support ---
         const std::unordered_map<std::string, std::shared_ptr<Cubemap>>& GetCubemaps() const {
             return cubemaps;
         }
+
+        // Copy/Move Semantics
+        Material(const Material& other)
+            : m_data(other.m_data), m_shader(other.m_shader),
+            m_albedoMap(other.m_albedoMap), m_normalMap(other.m_normalMap),
+            m_roughnessMap(other.m_roughnessMap), m_metallicMap(other.m_metallicMap),
+            m_aoMap(other.m_aoMap), m_emissiveMap(other.m_emissiveMap),
+            m_dirty(true) {
+        }
+
+        Material& operator=(const Material& other)
+        {
+            if (this != &other) {
+                m_data = other.m_data;
+                m_shader = other.m_shader;
+                m_albedoMap = other.m_albedoMap; m_normalMap = other.m_normalMap;
+                m_roughnessMap = other.m_roughnessMap; m_metallicMap = other.m_metallicMap;
+                m_aoMap = other.m_aoMap; m_emissiveMap = other.m_emissiveMap;
+                m_dirty = true;
+            }
+            return *this;
+        }
+
+        // Getters for individual properties (used by GUI/Editor)
+        Vec2 GetUVScale() const { return m_data.uvScale; }
+        Vec2 GetUVOffset() const { return m_data.uvOffset; }
     };
 
     /*!***********************************************************************
@@ -697,37 +458,20 @@ namespace Ermine::graphics
     class MaterialFactory
     {
     public:
-        /**
-         * @brief Creates a PBR material with specified properties.
-         * @param shader Shared pointer to Shader.
-         * @param albedo Albedo color.
-         * @param metallic Metallic value.
-         * @param roughness Roughness value.
-         * @return Unique pointer to Material.
-         */
-        static std::unique_ptr<Material> CreatePBRMaterial(std::shared_ptr<Shader> shader, const Vec3& albedo,
-            float metallic, float roughness)
+        static std::unique_ptr<Material> CreatePBRMaterial(std::shared_ptr<Shader> shader, const Vec3& albedo, float metallic, float roughness)
         {
             auto material = std::make_unique<Material>(shader);
-            material->SetVec3("materialAlbedo", albedo);
-            material->SetFloat("materialMetallic", metallic);
-            material->SetFloat("materialRoughness", roughness);
-            material->SetFloat("materialAo", 1.0f);
-            material->SetVec3("materialEmissive", Vec3(0.0f, 0.0f, 0.0f));
-            material->SetFloat("materialEmissiveIntensity", 0.0f);
-            material->SetInt("materialShadingModel", 0);
+            material->SetAlbedo(albedo);
+            material->SetMetallic(metallic);
+            material->SetRoughness(roughness);
+            material->SetAO(1.0f);
+            material->SetEmissive(Vec3(0.0f, 0.0f, 0.0f));
+            material->SetEmissiveIntensity(0.0f);
+            material->SetShadingModel(0);
             return material;
         }
 
-        /**
-         * @brief Creates an emissive material.
-         * @param shader Shared pointer to Shader.
-         * @param color Emissive color.
-         * @param intensity Emissive intensity.
-         * @return Unique pointer to Material.
-         */
-        static std::unique_ptr<Material> CreateEmissiveMaterial(std::shared_ptr<Shader> shader,
-            const Vec3& color, float intensity)
+        static std::unique_ptr<Material> CreateEmissiveMaterial(std::shared_ptr<Shader> shader, const Vec3& color, float intensity)
         {
             auto material = std::make_unique<Material>(shader);
             material->LoadTemplate(MaterialTemplates::EMISSIVE(color, intensity));

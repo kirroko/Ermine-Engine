@@ -1084,13 +1084,9 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 	m_GBufferShader->Bind();
 	BindMaterialBlockIfPresent(m_GBufferShader);
 
-	// Check if any materials have been modified via ImGui or code
-	CheckMaterialUpdates();
-
-	// Recompile materials if dirty
-	if (m_MaterialsDirty) {
-		CompileMaterials();
-	}
+	// OPTIMIZATION: Fast path update for material properties (Colors, Roughness, etc.)
+		// This replaces the old CheckMaterialUpdates() scan
+	UpdateDirtyMaterials();
 
 	// Clear transparent objects from previous frame
 	m_transparentObjects.clear();
@@ -1192,6 +1188,10 @@ void Renderer::CompileDrawData()
 	// Check if entity list changed (add/remove entities)
 	if (HasEntityListChanged()) {
 		m_DrawDataNeedsFullRebuild = true;
+		// OPTIMIZATION: Only trigger heavy material compilation on structural changes
+		// This rebuilds the index map and uploads the full buffer
+		m_MaterialsDirty = true;
+		CompileMaterials();
 	}
 
 	// Cache validation: Detect if cache is stale/incomplete
@@ -6537,17 +6537,19 @@ void Renderer::CheckMaterialUpdates()
 	}
 }
 
+/**
+ * @brief Heavy path: Rebuilds the entire material library indices and uploads full SSBO.
+ * Called ONLY when entities are added/removed or material assignment changes.
+ */
 void Renderer::CompileMaterials()
 {
-	if (!m_MaterialsDirty) return;
-
-	EE_CORE_INFO("Compiling materials for GPU upload...");
+	EE_CORE_INFO("Compiling materials (Full Rebuild)...");
 
 	// Clear previous compiled data
 	m_CompiledMaterials.clear();
 	m_EntityMaterialIndices.clear();
 
-	// Map to track unique materials and avoid duplicates
+	// Map to track unique materials and avoid duplicates (Batching)
 	std::map<const graphics::Material*, uint32_t> materialToIndex;
 
 	const auto& ecs = Ermine::ECS::GetInstance();
@@ -6561,28 +6563,26 @@ void Renderer::CompileMaterials()
 		graphics::Material* material = materialComponent.GetMaterial();
 
 		if (!material) {
-			EE_CORE_WARN("Entity {0} has null material", entity);
 			continue;
 		}
 
-		// Check if we've already seen this material
+		// Check if we've already seen this material pointer
 		if (materialToIndex.find(material) != materialToIndex.end()) {
 			// Reuse existing index
 			m_EntityMaterialIndices[entity] = materialToIndex[material];
 			continue;
 		}
 
-		// New material - register textures and assign indices
+		// New unique material found
 		uint32_t materialIndex = static_cast<uint32_t>(m_CompiledMaterials.size());
 
-		// Register all textures used by this material
+		// -- Texture Registration Logic --
+		// We need to ensure texture array indices in the material are up to date
+		// This logic stays, but relies on the optimized GetTexture/SetTexture
+
 		const std::vector<std::string> textureTypes = {
-			"materialAlbedoMap",
-			"materialNormalMap",
-			"materialRoughnessMap",
-			"materialMetallicMap",
-			"materialAoMap",
-			"materialEmissiveMap"
+			"materialAlbedoMap", "materialNormalMap", "materialRoughnessMap",
+			"materialMetallicMap", "materialAoMap", "materialEmissiveMap"
 		};
 
 		for (const auto& texName : textureTypes)
@@ -6592,28 +6592,33 @@ void Renderer::CompileMaterials()
 				int textureIndex = RegisterTexture(texture);
 				if (textureIndex >= 0)
 				{
+					// This updates the internal struct's index directly
 					material->SetTextureArrayIndex(texName, textureIndex);
 				}
 			}
 		}
 
-		// Add material data to compiled list
+		// Add raw data struct to compiled list
 		m_CompiledMaterials.push_back(material->GetSSBOData());
 
 		// Store the mapping
 		materialToIndex[material] = materialIndex;
 		m_EntityMaterialIndices[entity] = materialIndex;
 
-		// Update the material with its index
+		// IMPORTANT: Inform the material of its new index so UpdateDirtyMaterials works
 		material->SetMaterialIndex(static_cast<int>(materialIndex));
+
+		// Clear dirty flag since we are about to do a full upload
+		material->ClearDirty();
 	}
 
-	// Build the texture array
+	// Build the texture array (bindless handles)
 	BuildTextureArray();
 
-	// Upload all materials to GPU
+	// Upload all materials to GPU (Full Re-allocation)
 	UploadMaterialsToGPU();
 
+	// Reset dirty state
 	m_MaterialsDirty = false;
 
 	EE_CORE_INFO("Compiled {0} unique materials for {1} entities",
@@ -6911,4 +6916,60 @@ void Renderer::GenerateIGNTexture()
 
 	EE_CORE_INFO("Generated IGN texture: {0}x{1}, Handle: {2}", width, height, m_IGNTextureHandle);
 	glCheckError();
+}
+
+/**
+ * @brief Fast path: Iterates existing materials and updates only changed data in the SSBO.
+ * Uses glBufferSubData for minimal bandwidth usage. O(K) where K is modified materials.
+ */
+void Renderer::UpdateDirtyMaterials()
+{
+	// Cannot update if buffer doesn't exist
+	if (!m_MaterialSSBO) return;
+
+	const auto& ecs = Ermine::ECS::GetInstance();
+	bool bufferBound = false;
+
+	// Iterate over entities that have materials
+	for (auto entity : m_MaterialSystem->m_Entities)
+	{
+		// Fast component lookup
+		if (!ecs.HasComponent<Ermine::Material>(entity)) continue;
+
+		auto& materialComponent = ecs.GetComponent<Ermine::Material>(entity);
+		graphics::Material* material = materialComponent.GetMaterial();
+
+		// Check dirty flag (cheap boolean check)
+		if (material && material->IsDirty())
+		{
+			int index = material->GetMaterialIndex();
+
+			// Only update if the material has been compiled/assigned an index previously
+			if (index >= 0)
+			{
+				// Lazy bind: only bind the SSBO if we actually found something to update
+				if (!bufferBound) {
+					glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_MaterialSSBO);
+					bufferBound = true;
+				}
+
+				// Get the raw struct directly (no map lookups)
+				const auto& data = material->GetSSBOData();
+
+				// Calculate offset based on index
+				GLintptr offset = index * sizeof(graphics::MaterialSSBO);
+				GLsizeiptr size = sizeof(graphics::MaterialSSBO);
+
+				// Upload ONLY this material's data
+				glBufferSubData(GL_SHADER_STORAGE_BUFFER, offset, size, &data);
+
+				// Clear the CPU-side dirty flag
+				material->ClearDirty();
+			}
+		}
+	}
+
+	if (bufferBound) {
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+	}
 }

@@ -998,6 +998,7 @@ namespace Ermine::graphics
          */
         void UploadMaterialsToGPU();
 
+        void UpdateDirtyMaterials();
         // ========================================================================
         // CUSTOM SHADER DRAW ITEM - Bundles GPU data with CPU metadata
         // ========================================================================

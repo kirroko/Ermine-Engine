@@ -903,12 +903,12 @@ namespace Ermine
 					// Match enabled state so OnEnable is invoked appropriately
 					s.m_instance->SetEnabled(s.m_enabled);
 					s.m_started = false;
-					if(s.m_fields.size() > 0)
+					if (s.m_fields.size() > 0)
 						scripting::ScriptEngine::PushCacheToManagedFields(s.m_instance->object, s.m_fields);
 				}
 			}
 		}
-		
+
 		//void AttachAll(EntityID id, const std::unordered_map<std::string, ScriptFieldValue>& cache)
 		//{
 		//	for (auto& s : scripts)
@@ -956,7 +956,7 @@ namespace Ermine
 		Script& GetByClass(const std::string& className)
 		{
 			auto it = ranges::find_if(scripts,
-			                          [&](const Script& s) { return s.m_className == className; });
+				[&](const Script& s) { return s.m_className == className; });
 			if (it == scripts.end())
 			{
 				throw std::runtime_error("Script class not found: " + className);
@@ -1567,7 +1567,8 @@ namespace Ermine
 					if (auto alphaOpt = readAlphaOrTransparency()) {
 						// Build a Vec4 from the currently set RGB (or defaults if absent)
 						Vec3 rgb{ 0.8f, 0.8f, 0.8f };
-						if (const auto* cur = m_material->GetParameter("materialAlbedo")) {
+						// FIX: Use unique_ptr compatible check instead of const auto*
+						if (auto cur = m_material->GetParameter("materialAlbedo")) {
 							if (cur->floatValues.size() >= 3) {
 								rgb = Vec3(cur->floatValues[0], cur->floatValues[1], cur->floatValues[2]);
 							}
@@ -1933,7 +1934,7 @@ namespace Ermine
 		float sfxVolume{ 1.0f };
 		float ambienceVolume{ 1.0f };  // *** NEW ***
 
-		bool autoPlay{true};
+		bool autoPlay{ true };
 
 		// Currently playing tracks
 		int currentMusicIndex{ -1 };
@@ -2246,7 +2247,7 @@ namespace Ermine
 		XPROPERTY_DEF(
 			"AudioComponent", AudioComponent,
 			xproperty::obj_member<"soundName", &AudioComponent::soundName>,
-			xproperty::obj_member<"eventName", &AudioComponent::eventName>,   
+			xproperty::obj_member<"eventName", &AudioComponent::eventName>,
 			xproperty::obj_member<"useRandomVariation", &AudioComponent::useRandomVariation>,
 			xproperty::obj_member<"is3D", &AudioComponent::is3D>,
 			xproperty::obj_member<"isLooping", &AudioComponent::isLooping>,
