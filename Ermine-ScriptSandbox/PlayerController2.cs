@@ -188,4 +188,9 @@ public class PlayerController2 : MonoBehaviour
         if (col.gameObject.name.Contains("Platform"))
             isGrounded = true;
     }
+    void OnCollisionStay(Collision col)
+    {
+        if (col.gameObject.name.Contains("Platform"))
+            isGrounded = true;
+    }
 }
