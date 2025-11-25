@@ -74,7 +74,6 @@
     <Compile Include="DisableLightCone.cs" />
     <Compile Include="LifeEssenceSkillController.cs" />
     <Compile Include="OrbTeleport.cs" />
-    <Compile Include="PlayerController2.cs" />
     <Compile Include="PlayerController.cs" />
     <Compile Include="RotatingPlatform.cs" />
     <Compile Include="Sandbox.cs" />

@@ -16,7 +16,4 @@
     <LocalDebuggerWorkingDirectory>..\Build\bin\Game-Release-windows-x86_64\$(ProjectName)</LocalDebuggerWorkingDirectory>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
-  <PropertyGroup>
-    <ShowAllFiles>false</ShowAllFiles>
-  </PropertyGroup>
 </Project>

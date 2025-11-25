@@ -6,8 +6,8 @@ public class PlayerController2 : MonoBehaviour
     private Transform cam;
     private AudioComponent audioComp;
 
-    public float mouseHorSens = 0.01f;
-    public float mouseVertSens = 0.01f;
+    public float mouseHorSens = 1f;
+    public float mouseVertSens = 1f;
 
     public float moveSpeed = 5f;
     public float jumpspeed = 5f;
@@ -15,7 +15,7 @@ public class PlayerController2 : MonoBehaviour
     public float crouchLerpSpeed = 6f;
 
     private bool isGrounded = true;
-    private bool isCrouching;
+    private bool isCrouching = false;
 
     private float xRotation = 0f;
     private float camDefaultY = 200f;
@@ -40,6 +40,7 @@ public class PlayerController2 : MonoBehaviour
     void Start()
     {
         cam = GameObject.Find("Main Camera").GetComponent<Transform>();
+        HandleCameraLerp();
         audioComp = GetComponent<AudioComponent>();
         if (audioComp == null)
             Console.WriteLine("Warning: No AudioComponent found on player!");
@@ -65,7 +66,7 @@ public class PlayerController2 : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.D)) { move += -transform.right; movementKeyPressed = true; }
 
         if (move.SqrMagnitude > 0f)
-            move = move.normalized * moveSpeed * Time.fixedDeltaTime;
+            move = move.normalized * moveSpeed * Time.deltaTime;
 
         Vector3 newPos = transform.position + new Vector3(move.x, 0, move.z);
 
@@ -80,7 +81,7 @@ public class PlayerController2 : MonoBehaviour
         // Apply jump once
         if (jumpRequested)
         {
-            if (newPos.y < startheight+jumpHeight)
+            if (newPos.y < startheight + jumpHeight)
                 newPos.y += jumpspeed * Time.fixedDeltaTime; // teleport player slightly up
             else
                 jumpRequested = false;
@@ -90,31 +91,31 @@ public class PlayerController2 : MonoBehaviour
 
         // Sync physics collider
         Physics.SetPosition((ulong)gameObject.GetInstanceID(), transform.position);
-
-
-        // Sync physics collider with the transform
-        Physics.SetPosition((ulong)gameObject.GetInstanceID(), transform.position);
     }
 
     private void HandleLook()
     {
         lookInput = Input.mousePositionDelta;
 
-        float mouseX = -lookInput.x * mouseHorSens;
-        float mouseY = lookInput.y * mouseVertSens;
+        float mouseX = -lookInput.x * mouseHorSens * Time.deltaTime;
+        float mouseY = lookInput.y * mouseVertSens * Time.deltaTime;
 
+        // rotate player horizontally
+        transform.Rotate(Vector3.up * mouseX);
+        Physics.SetRotationQuat((ulong)gameObject.GetInstanceID(), transform.rotation);
+
+        // clamp vertical look
         xRotation -= mouseY;
         xRotation = Mathf.Clamp(xRotation, minPitch, maxPitch);
 
         cam.rotation = Quaternion.Euler(xRotation, 0f, 0f);
-        transform.Rotate(Vector3.up * mouseX);
     }
 
     private void HandleCameraLerp()
     {
         float targetY = isCrouching ? camCrouchY : camDefaultY;
         Vector3 camPos = cam.position;
-        camPos.y = Mathf.Lerp(camPos.y, targetY, Time.fixedDeltaTime * crouchLerpSpeed);
+        camPos.y = Mathf.Lerp(camPos.y, targetY, Time.deltaTime * crouchLerpSpeed);
         cam.position = camPos;
     }
 
@@ -122,7 +123,7 @@ public class PlayerController2 : MonoBehaviour
     {
         if (audioComp == null) return;
 
-        footstepTimer += Time.fixedDeltaTime;
+        footstepTimer += Time.deltaTime;
 
         if (movementKeyPressed && footstepTimer >= footstepInterval)
         {
