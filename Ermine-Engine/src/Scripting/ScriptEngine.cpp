@@ -1255,8 +1255,7 @@ namespace
 			return;
 
 		// Use HierarchySystem to properly propagate transform changes
-		std::shared_ptr<HierarchySystem> hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>();
-		if (hierarchySystem) {
+		if (std::shared_ptr<HierarchySystem> hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>()) {
 			hierarchySystem->SetLocalRotation(id, ToNativeQuat(value));
 		}
 		else {
@@ -1995,6 +1994,11 @@ namespace
 		auto physics = ECS::GetInstance().GetSystem<Physics>();
 		physics->RemovePhysic((EntityID)entityID);
 	}
+	static void icall_Physics_Jump(uint64_t entityID,float jump)
+	{
+		auto physics = ECS::GetInstance().GetSystem<Physics>();
+		physics->Jump((EntityID)entityID,jump);
+	}
 
 #pragma endregion
 
@@ -2496,6 +2500,7 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	mono_add_internal_call("ErmineEngine.Physics::Internal_Raycast", (const void*)icall_physics_raycast);
 	mono_add_internal_call("ErmineEngine.Physics.RaycastHit::get_transform", (const void*)icall_gameobject_get_transform);
 	mono_add_internal_call("ErmineEngine.Physics::RemovePhysic", (const void*)&icall_Physics_RemovePhysic);
+	mono_add_internal_call("ErmineEngine.Physics::Jump", (const void*)icall_Physics_Jump);
 #pragma endregion
 #pragma region UI ICalls
 	mono_add_internal_call("ErmineEngine.GameplayHUD::Internal_GetHealth", (const void*)Internal_GetHealth);

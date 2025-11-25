@@ -1759,6 +1759,12 @@ namespace Ermine
 		float spotlightRayIntensity = 0.3f;
 		float spotlightRayFalloff = 2.0f;
 
+		// === Motion blur parameters ===
+		bool motionBlurEnabled = true;
+		float motionBlurStrength = 1.0f;
+		int motionBlurSamples = 8;
+
+		// --- generic xproperty-based serialization ---
 		template<typename Alloc>
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const
 		{
@@ -1822,7 +1828,12 @@ namespace Ermine
 			// Spotlight ray parameters
 			xproperty::obj_member<"spotlightRaysEnabled", &GlobalGraphics::spotlightRaysEnabled>,
 			xproperty::obj_member<"spotlightRayIntensity", &GlobalGraphics::spotlightRayIntensity>,
-			xproperty::obj_member<"spotlightRayFalloff", &GlobalGraphics::spotlightRayFalloff>
+			xproperty::obj_member<"spotlightRayFalloff", &GlobalGraphics::spotlightRayFalloff>,
+			
+			// Motion blur
+			xproperty::obj_member<"motionBlurEnabled", &GlobalGraphics::motionBlurEnabled>,
+			xproperty::obj_member<"motionBlurStrength", &GlobalGraphics::motionBlurStrength>,
+			xproperty::obj_member<"motionBlurSamples", &GlobalGraphics::motionBlurSamples>
 		)
 	};
 

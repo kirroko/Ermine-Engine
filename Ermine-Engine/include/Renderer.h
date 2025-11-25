@@ -246,6 +246,11 @@ namespace Ermine::graphics
         float m_SpotlightRayIntensity = 0.3f;
         float m_SpotlightRayFalloff = 2.0f;
 
+        // Motion blur parameters
+        bool m_MotionBlurEnabled = true;
+        float m_MotionBlurStrength = 1.0f;
+        int m_MotionBlurSamples = 8;
+
         // Maximum bone array size expected in shader
         static constexpr int MAX_BONE_UNIFORMS = 128;
 
@@ -968,6 +973,10 @@ namespace Ermine::graphics
 		uint8_t frameCounter = 0;
 		float m_ElapsedTime = 0.0f;  // Accumulated time for shader effects
 
+        // Motion blur - previous frame matrices
+        glm::mat4 m_PreviousViewProjectionMatrix = glm::mat4(1.0f);
+        bool m_FirstFrame = true; // Skip motion blur on first frame
+
 		// Light System
 		std::shared_ptr<LightSystem> m_LightSystem = nullptr;
 		// Model System
@@ -1149,9 +1158,11 @@ namespace Ermine::graphics
         std::shared_ptr<PostProcessBuffer> m_BloomBlurBuffer1;
         std::shared_ptr<PostProcessBuffer> m_BloomBlurBuffer2;
 		std::shared_ptr<PostProcessBuffer> m_AntiAliasingBuffer;
+        std::shared_ptr<PostProcessBuffer> m_MotionBlurBuffer;
         std::shared_ptr<Shader> m_BloomShader = 0; // Shader for bloom effect
         std::shared_ptr<Shader> m_PostProcessShader = 0; // Shader for post-processing effects
 		std::shared_ptr<Shader> m_AAShader = 0; // Shader for anti-aliasing
+        std::shared_ptr<Shader> m_MotionBlurShader = 0; // Shader for motion blur effect
 
         // Skybox
         Skybox* m_skybox = nullptr;

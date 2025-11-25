@@ -142,6 +142,7 @@ void Renderer::Init(const int& screenWidth, const int& screenHeight)
 	m_BloomShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/bloom_vertex.glsl", "../Resources/Shaders/bloom_fragment.glsl");
 	m_PostProcessShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/postprocess_vertex.glsl", "../Resources/Shaders/postprocess_fragment.glsl");
 	m_AAShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/FXAA_vertex.glsl", "../Resources/Shaders/FXAA_fragment.glsl");
+	m_MotionBlurShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/motionblur_vertex.glsl", "../Resources/Shaders/motionblur_fragment.glsl");
 	// Load forward rendering shader for transparent objects
 	m_ForwardShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/vertex.glsl", "../Resources/Shaders/fragment_enhanced.glsl");
 	if (!m_ForwardShader || !m_ForwardShader->IsValid()) {
@@ -664,7 +665,7 @@ void Renderer::CreateGBuffer(const int& width, const int& height)
  */
 void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 {
-	PostProcessBuffer pPBuffer, bEBuffer, bBBuffer1, bBBuffer2, AABuffer;
+	PostProcessBuffer pPBuffer, bEBuffer, bBBuffer1, bBBuffer2, AABuffer, MBBuffer;
 
 
 	// If an  buffer already exists, delete its OpenGL resources before creating a new one.
@@ -678,6 +679,8 @@ void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 		glDeleteTextures(1, &m_BloomBlurBuffer1->ColorTexture);
 		glDeleteFramebuffers(1, &m_BloomBlurBuffer2->FBO);
 		glDeleteTextures(1, &m_BloomBlurBuffer2->ColorTexture);
+		glDeleteFramebuffers(1, &m_MotionBlurBuffer->FBO);
+		glDeleteTextures(1, &m_MotionBlurBuffer->ColorTexture);
 	}
 
 	// Create main post-process buffer with depth attachment for skybox rendering
@@ -755,6 +758,19 @@ void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, AABuffer.ColorTexture, 0);
 	glCheckError();
 
+	// Create motion blur buffer at full resolution
+	glGenFramebuffers(1, &MBBuffer.FBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, MBBuffer.FBO);
+	glGenTextures(1, &MBBuffer.ColorTexture);
+	glBindTexture(GL_TEXTURE_2D, MBBuffer.ColorTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_HALF_FLOAT, nullptr);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, MBBuffer.ColorTexture, 0);
+	glCheckError();
+
 	// Making sure dimensions are non-zero
 	if (width <= 0 || height <= 0)
 	{
@@ -818,6 +834,9 @@ void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 	AABuffer.width = width;
 	AABuffer.height = height;
 	m_AntiAliasingBuffer = std::make_shared<PostProcessBuffer>(AABuffer);
+	MBBuffer.width = width;
+	MBBuffer.height = height;
+	m_MotionBlurBuffer = std::make_shared<PostProcessBuffer>(MBBuffer);
 
 	// Attach G-Buffer's depth texture to PostProcess FBO for shared depth testing
 	// This must happen AFTER PostProcess buffer is created and AFTER G-Buffer exists
@@ -1178,14 +1197,14 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
  */
 void Renderer::CompileDrawData()
 {
-	#ifdef EE_DEBUG
+#ifdef EE_DEBUG
 	// Debug mode: force full rebuild every frame if requested
 	if (m_ForceFullRebuildEveryFrame) {
 		m_DrawDataNeedsFullRebuild = true;
 	}
-	#endif
+#endif
 
-	// Check if entity list changed (add/remove entities)
+	// Entity list size changed (entities added/removed)
 	if (HasEntityListChanged()) {
 		m_DrawDataNeedsFullRebuild = true;
 		// OPTIMIZATION: Only trigger heavy material compilation on structural changes
@@ -1194,169 +1213,10 @@ void Renderer::CompileDrawData()
 		CompileMaterials();
 	}
 
-	// Cache validation: Detect if cache is stale/incomplete
-	// This handles cases where entities were skipped during initial cache build
-	// (e.g., animated models with invalid boneTransformOffset on first frame)
-	if (!m_DrawDataNeedsFullRebuild) {
-		// Check 1: Cache is empty but entities exist
-		if (m_CachedDrawItems.empty() && (!m_Entities.empty() || !m_ModelSystem->m_Entities.empty())) {
+	// Cache is empty but entities exist (initial build needed)
+	if (!m_DrawDataNeedsFullRebuild && m_CachedDrawItems.empty()) {
+		if (!m_Entities.empty() || !m_ModelSystem->m_Entities.empty()) {
 			m_DrawDataNeedsFullRebuild = true;
-		}
-		// Check 2: Verify all renderable entities are present in cache
-		// This detects when entities become renderable after initial cache build
-		else if (!m_CachedDrawItems.empty()) {
-			const auto& ecs = Ermine::ECS::GetInstance();
-
-			// Build a set of entity IDs present in cache for fast lookup
-			std::unordered_set<EntityID> cachedEntities;
-			cachedEntities.reserve(m_CachedDrawItems.size());
-			for (const auto& item : m_CachedDrawItems) {
-				cachedEntities.insert(item.entity);
-			}
-
-			// Check primitives - should all be cached (if they have valid mesh data)
-			for (auto entity : m_Entities) {
-				if (ecs.HasComponent<Mesh>(entity) && ecs.HasComponent<Ermine::Material>(entity)) {
-					const auto& mesh = ecs.GetComponent<Mesh>(entity);
-					// If entity has valid mesh data but is NOT in cache, rebuild
-					if (!mesh.registeredMeshID.empty() && cachedEntities.find(entity) == cachedEntities.end()) {
-						m_DrawDataNeedsFullRebuild = true;
-						break;
-					}
-				}
-			}
-
-			// Check models (static and animated)
-			if (!m_DrawDataNeedsFullRebuild) {
-				// Check 1: Cache is empty but entities exist
-				if (m_CachedDrawItems.empty() && (!m_Entities.empty() || !m_ModelSystem->m_Entities.empty())) {
-					m_DrawDataNeedsFullRebuild = true;
-				}
-				// Check 2: Verify all CACHED entities still exist and are valid
-				else if (!m_CachedDrawItems.empty()) {
-					const auto& ecs = Ermine::ECS::GetInstance();
-
-					for (const auto& cachedItem : m_CachedDrawItems) {
-						// Check if cached entity still exists
-						if (!ecs.IsEntityValid(cachedItem.entity)) {
-							m_DrawDataNeedsFullRebuild = true;
-							break;
-						}
-
-						// Check if entity still has required components
-						bool hasPrimitiveComponents = ecs.HasComponent<Mesh>(cachedItem.entity) &&
-							ecs.HasComponent<Ermine::Material>(cachedItem.entity);
-						bool hasModelComponent = ecs.HasComponent<ModelComponent>(cachedItem.entity);
-
-						if (!hasPrimitiveComponents && !hasModelComponent) {
-							// Entity lost required components - rebuild
-							m_DrawDataNeedsFullRebuild = true;
-							break;
-						}
-
-						// Check material routing state changes
-						bool currentHasParentMat = false;
-						if (ecs.HasComponent<Ermine::Material>(cachedItem.entity)) {
-							auto& parentMatComp = ecs.GetComponent<Ermine::Material>(cachedItem.entity);
-							currentHasParentMat = (parentMatComp.GetMaterial() != nullptr);
-						}
-
-						bool currentHasChildMat = false;
-						if (cachedItem.childMaterialEntity != 0 &&
-							ecs.HasComponent<Ermine::Material>(cachedItem.childMaterialEntity)) {
-							auto& childMatComp = ecs.GetComponent<Ermine::Material>(cachedItem.childMaterialEntity);
-							currentHasChildMat = (childMatComp.GetMaterial() != nullptr);
-						}
-
-						// Material structure changed - rebuild
-						if (currentHasParentMat != cachedItem.hadParentMaterial ||
-							currentHasChildMat != cachedItem.hadChildMaterial) {
-							m_DrawDataNeedsFullRebuild = true;
-							break;
-						}
-
-						// Check if material properties changed (transparency/shadows/custom shader)
-						Ermine::graphics::Material* currentMaterial = nullptr;
-						if (ecs.HasComponent<Ermine::Material>(cachedItem.materialEntity)) {
-							auto& matComp = ecs.GetComponent<Ermine::Material>(cachedItem.materialEntity);
-							currentMaterial = matComp.GetMaterial();
-						}
-
-						if (currentMaterial) {
-							bool currentTransparent = IsTransparentMaterial(currentMaterial);
-							bool currentCastsShadows = CastsShadows(currentMaterial);
-							bool currentHasCustomShader = HasCustomShader(currentMaterial);
-
-							if (currentTransparent != cachedItem.isTransparent ||
-								currentCastsShadows != cachedItem.castsShadows ||
-								currentHasCustomShader != cachedItem.hasCustomShader) {
-								// Material properties changed - rebuild
-								m_DrawDataNeedsFullRebuild = true;
-								break;
-							}
-						}
-						else {
-							// Material that was being used is now null - rebuild
-							m_DrawDataNeedsFullRebuild = true;
-							break;
-						}
-					}
-				}
-			}
-			// Check 3: Verify material routing state hasn't changed
-			// Uses complete cached material structure to detect ANY material hierarchy changes
-			if (!m_DrawDataNeedsFullRebuild) {
-				for (const auto& cachedItem : m_CachedDrawItems) {
-					// Check current parent material state
-					bool currentHasParentMat = false;
-					if (ecs.HasComponent<Ermine::Material>(cachedItem.entity)) {
-						auto& parentMatComp = ecs.GetComponent<Ermine::Material>(cachedItem.entity);
-						currentHasParentMat = (parentMatComp.GetMaterial() != nullptr);
-					}
-
-					// Check current child material state
-					bool currentHasChildMat = false;
-					if (cachedItem.childMaterialEntity != 0 &&
-					    ecs.HasComponent<Ermine::Material>(cachedItem.childMaterialEntity)) {
-						auto& childMatComp = ecs.GetComponent<Ermine::Material>(cachedItem.childMaterialEntity);
-						currentHasChildMat = (childMatComp.GetMaterial() != nullptr);
-					}
-
-					// Detect any material structure changes
-					if (currentHasParentMat != cachedItem.hadParentMaterial ||
-					    currentHasChildMat != cachedItem.hadChildMaterial) {
-						// Material was added or removed - rebuild required
-						m_DrawDataNeedsFullRebuild = true;
-						break;
-					}
-
-					// Check if the material properties changed (for whichever material is being used)
-					Ermine::graphics::Material* currentMaterial = nullptr;
-					if (ecs.HasComponent<Ermine::Material>(cachedItem.materialEntity)) {
-						auto& matComp = ecs.GetComponent<Ermine::Material>(cachedItem.materialEntity);
-						currentMaterial = matComp.GetMaterial();
-					}
-
-					if (currentMaterial) {
-						bool currentTransparent = IsTransparentMaterial(currentMaterial);
-						bool currentCastsShadows = CastsShadows(currentMaterial);
-						bool currentHasCustomShader = HasCustomShader(currentMaterial);
-
-						if (currentTransparent != cachedItem.isTransparent ||
-						    currentCastsShadows != cachedItem.castsShadows ||
-						    currentHasCustomShader != cachedItem.hasCustomShader) {
-							// Material properties changed - rebuild required
-							m_DrawDataNeedsFullRebuild = true;
-							break;
-						}
-					}
-					else {
-						// Material that was being used is now null - rebuild required
-						m_DrawDataNeedsFullRebuild = true;
-						break;
-					}
-				}
-			}
 		}
 	}
 
@@ -2468,21 +2328,17 @@ void Renderer::RebuildDrawData()
 	m_DrawDataNeedsFullRebuild = false;
 }
 
-
 /**
- * @brief MULTI-THREADED fast path with job-based parallelism.
+ * @brief Fast incremental update of draw data. Only updates transforms/culling for existing entities.
  *
- * 1. Partition entity processing across worker threads
- * 2. Lock-free per-thread buffers 
- * 3. Single merge pass at the end
- * 4. Use emplace_back for all vector operations
- *
+ * This is the optimized path that runs when only transforms/camera have changed.
+ * Uses cached mesh handles and material indices to avoid expensive lookups.
  */
 void Renderer::UpdateDrawData()
 {
 	const auto& ecs = Ermine::ECS::GetInstance();
 
-	// ========== STEP 1: CLEAR PREVIOUS FRAME DATA ==========
+	// Clear previous frame's commands (but NOT the cache!)
 	m_DepthPrepassStandardCommands.clear();
 	m_DepthPrepassStandardInfos.clear();
 	m_DepthPrepassSkinnedCommands.clear();
@@ -2499,6 +2355,7 @@ void Renderer::UpdateDrawData()
 	m_ForwardTransparentDefaultStandardItems.clear();
 	m_ForwardTransparentDefaultSkinnedItems.clear();
 
+	// Clear custom shader item lists (rebuilt every frame with updated transforms)
 	m_ForwardOpaqueCustomStandardItems.clear();
 	m_ForwardOpaqueCustomSkinnedItems.clear();
 	m_ForwardTransparentCustomStandardItems.clear();
@@ -2517,7 +2374,29 @@ void Renderer::UpdateDrawData()
 	m_ForwardPassDrawCommandsVertexCount = 0;
 	m_ForwardPassDrawCommandsIndexCount = 0;
 
-	// ========== STEP 2: FRUSTUM SETUP (HOIST INVARIANTS) ==========
+	// Reserve space (same as rebuild)
+	m_DepthPrepassStandardCommands.reserve(m_Entities.size());
+	m_DepthPrepassStandardInfos.reserve(m_Entities.size());
+	m_DepthPrepassSkinnedCommands.reserve(m_Entities.size() / 4);
+	m_DepthPrepassSkinnedInfos.reserve(m_Entities.size() / 4);
+
+	m_PickingStandardCommands.reserve(m_Entities.size());
+	m_PickingStandardInfos.reserve(m_Entities.size());
+	m_PickingSkinnedCommands.reserve(m_Entities.size() / 4);
+	m_PickingSkinnedInfos.reserve(m_Entities.size() / 4);
+
+	m_GeometryStandardItems.reserve(m_Entities.size());
+	m_GeometrySkinnedItems.reserve(m_Entities.size() / 4);
+
+	m_ForwardTransparentDefaultStandardItems.reserve(m_Entities.size() / 4);
+	m_ForwardTransparentDefaultSkinnedItems.reserve(m_Entities.size() / 8);
+
+	m_ShadowStandardCommands.reserve(m_Entities.size() / 4);
+	m_ShadowStandardInfos.reserve(m_Entities.size() / 4);
+	m_ShadowSkinnedCommands.reserve(m_Entities.size() / 8);
+	m_ShadowSkinnedInfos.reserve(m_Entities.size() / 8);
+
+	// ========== FRUSTUM CULLING SETUP ==========
 	Mtx44 viewMtx, projMtx;
 
 #if defined(EE_EDITOR)
@@ -2556,528 +2435,290 @@ void Renderer::UpdateDrawData()
 	}
 #endif
 
-	// Convert to glm ONCE (cache-friendly)
+	// Build frustum
 	glm::mat4 viewGlm = ToGlm(viewMtx);
 	glm::mat4 projGlm = ToGlm(projMtx);
-
-	// Build frustum ONCE
 	Frustum frustum;
 	glm::mat4 viewProj = projGlm * viewGlm;
 	frustum.ExtractFromViewProjection(viewProj);
 
-	// Extract camera position ONCE
-	glm::mat4 invViewProj = glm::inverse(viewProj);
-	glm::vec3 camPos = glm::vec3(invViewProj[3]);
-
 	// Debug: Draw frustum if enabled
 	if (m_DebugDrawFrustum) {
+		glm::mat4 invViewProj = glm::inverse(viewProj);
 		SubmitDebugFrustum(frustum, invViewProj, glm::vec3(0.0f, 1.0f, 1.0f));
 	}
 
+	// Culling statistics
 	culledMeshes = 0;
 
-	// ========== STEP 3: PARALLEL TRANSFORM PREFETCH ==========
-	const size_t numItems = m_CachedDrawItems.size();
-
-	// Pre-allocate transform cache (avoids reallocation during parallel writes)
-	std::vector<glm::mat4> transformCache(numItems);
-
-	// Determine optimal thread count (avoid over-subscription)
-	const size_t numThreads = std::min<size_t>(4, std::thread::hardware_concurrency());
-	const size_t itemsPerThread = (numItems + numThreads - 1) / numThreads;
-
-	// ========== PARALLEL PHASE 1: TRANSFORM COMPUTATION ==========
-	// Each thread computes transforms for its partition independently (no locks)
-	std::vector<std::future<void>> transformJobs;
-	transformJobs.reserve(numThreads);
-
-	for (size_t threadIdx = 0; threadIdx < numThreads; ++threadIdx)
+	// ========== FAST PATH: ITERATE CACHED DRAW ITEMS ==========
+	// This avoids expensive mesh handle lookups and material lookups
+	for (const auto& cachedItem : m_CachedDrawItems)
 	{
-		size_t startIdx = threadIdx * itemsPerThread;
-		size_t endIdx = std::min(startIdx + itemsPerThread, numItems);
+		// EARLY OUT: Skip inactive entities (check selfActive flag)
+		if (ecs.HasComponent<ObjectMetaData>(cachedItem.entity)) {
+			const auto& meta = ecs.GetComponent<ObjectMetaData>(cachedItem.entity);
+			if (!meta.selfActive) {
+				continue;
+			}
+		}
 
-		if (startIdx >= numItems) break; // No work for this thread
+		// Get current entity transform (this is what changed!)
+		// Note: Animated models manually build matrix (no hierarchy), static models use GetEntityWorldMatrix
+		glm::mat4 model;
+		if (cachedItem.useSkinning) {
+			// Animated models: manually build matrix (matches RebuildDrawData behavior)
+			const auto& trans = ecs.GetComponent<Transform>(cachedItem.entity);
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
+			glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
+			rotQuat = glm::normalize(rotQuat);
+			model *= glm::mat4_cast(rotQuat);
+			model = glm::scale(model, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
+		}
+		else {
+			// Static models and primitives: use world matrix (handles hierarchy)
+			model = GetEntityWorldMatrix(cachedItem.entity);
+		}
 
-		// Launch async job for this partition
-		transformJobs.emplace_back(std::async(std::launch::async, [&, startIdx, endIdx]() {
-			// Process this thread's partition (lock-free)
-			for (size_t idx = startIdx; idx < endIdx; ++idx)
-			{
-				const auto& cachedItem = m_CachedDrawItems[idx];
-				glm::mat4 model;
+		// Transform AABB to world space
+		glm::vec3 corners[8];
+		corners[0] = glm::vec3(cachedItem.aabbMin.x, cachedItem.aabbMin.y, cachedItem.aabbMin.z);
+		corners[1] = glm::vec3(cachedItem.aabbMax.x, cachedItem.aabbMin.y, cachedItem.aabbMin.z);
+		corners[2] = glm::vec3(cachedItem.aabbMin.x, cachedItem.aabbMax.y, cachedItem.aabbMin.z);
+		corners[3] = glm::vec3(cachedItem.aabbMax.x, cachedItem.aabbMax.y, cachedItem.aabbMin.z);
+		corners[4] = glm::vec3(cachedItem.aabbMin.x, cachedItem.aabbMin.y, cachedItem.aabbMax.z);
+		corners[5] = glm::vec3(cachedItem.aabbMax.x, cachedItem.aabbMin.y, cachedItem.aabbMax.z);
+		corners[6] = glm::vec3(cachedItem.aabbMin.x, cachedItem.aabbMax.y, cachedItem.aabbMax.z);
+		corners[7] = glm::vec3(cachedItem.aabbMax.x, cachedItem.aabbMax.y, cachedItem.aabbMax.z);
+
+		glm::vec3 actualMin = glm::vec3(FLT_MAX);
+		glm::vec3 actualMax = glm::vec3(-FLT_MAX);
+
+		// Unrolled loop for better instruction-level parallelism
+		for (int i = 0; i < 8; ++i) {
+			glm::vec3 worldCorner = glm::vec3(model * glm::vec4(corners[i], 1.0f));
+			actualMin = glm::min(actualMin, worldCorner);
+			actualMax = glm::max(actualMax, worldCorner);
+		}
+
+		// Test frustum culling
+		bool isCulled = !frustum.TestAABB(actualMin, actualMax);
+
+		// Debug: Draw AABB if enabled
+		if (m_DebugDrawAABBs) {
+			glm::vec3 aabbColor = isCulled ? glm::vec3(1.0f, 0.0f, 0.0f) : glm::vec3(0.0f, 1.0f, 0.0f);
+			SubmitDebugAABB(actualMin, actualMax, aabbColor);
+		}
+
+		// Build draw command (using cached mesh data - no lookups!)
+		DrawElementsIndirectCommand cmd;
+		cmd.count = cachedItem.meshData->indexCount;
+		cmd.instanceCount = 1;
+		cmd.firstIndex = cachedItem.meshData->indexOffset;
+		cmd.baseVertex = cachedItem.meshData->baseVertex;
+		cmd.baseInstance = 0;
+
+		// Build draw info (using cached data + new transform)
+		DrawInfo info;
+		info.modelMatrix = model;
+
+		// Pre-calculate normal matrix and store as 3 separate columns (std430 mat3 has 16-byte stride!)
+		glm::mat3 normalMat = glm::transpose(glm::inverse(glm::mat3(model)));
+		info.normalMatrixCol0 = glm::vec4(normalMat[0], 0.0f);
+		info.normalMatrixCol1 = glm::vec4(normalMat[1], 0.0f);
+		info.normalMatrixCol2 = glm::vec4(normalMat[2], 0.0f);
+		info.aabbMin = cachedItem.aabbMin;
+		info.materialIndex = cachedItem.materialIndex;
+		info.aabbMax = cachedItem.aabbMax;
+		info.entityID = static_cast<uint32_t>(cachedItem.entity);
+		info.flags = cachedItem.useSkinning ? 1 : 0;
+		info.boneTransformOffset = cachedItem.boneOffset;
+		info._pad0 = 0;
+		info._pad1 = 0;
+
+		// Route to appropriate buffers based on culling and transparency
+		if (isCulled) {
+			// Culled meshes - skip all visible passes (depth, picking, geometry, forward)
+			culledMeshes++;
+		}
+		else {
+			// ========== VISIBLE MESHES - Route to visible passes ==========
+
+			// PASS 1: PICKING PASS - ALL visible geometry (opaque + transparent, for object selection)
+			if (cachedItem.useSkinning) {
+				m_PickingSkinnedCommands.push_back(cmd);
+				m_PickingSkinnedInfos.push_back(info);
+			}
+			else {
+				m_PickingStandardCommands.push_back(cmd);
+				m_PickingStandardInfos.push_back(info);
+			}
+
+			// PASS 2: DEPTH PREPASS - Opaque visible geometry only (for early-z rejection)
+			// Transparent objects excluded to prevent depth conflicts with objects behind them
+			if (!cachedItem.isTransparent) {
+				if (cachedItem.useSkinning) {
+					m_DepthPrepassSkinnedCommands.push_back(cmd);
+					m_DepthPrepassSkinnedInfos.push_back(info);
+				}
+				else {
+					m_DepthPrepassStandardCommands.push_back(cmd);
+					m_DepthPrepassStandardInfos.push_back(info);
+				}
+			}
+
+			// PASS 3: GEOMETRY/FORWARD - Route by shader type and transparency
+			if (!cachedItem.isTransparent && !cachedItem.hasCustomShader) {
+				// Opaque default shader → Geometry pass (deferred lighting)
+				DefaultShaderDrawItem item;
+				item.command = cmd;
+				item.info = info;
+				item.castsShadows = cachedItem.castsShadows;
 
 				if (cachedItem.useSkinning) {
-					// Animated models: manually build matrix (no hierarchy)
-					const auto& trans = ecs.GetComponent<Transform>(cachedItem.entity);
-					model = glm::mat4(1.0f);
-					model = glm::translate(model, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
-					glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
-					rotQuat = glm::normalize(rotQuat);
-					model *= glm::mat4_cast(rotQuat);
-					model = glm::scale(model, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
+					m_GeometrySkinnedItems.push_back(item);
+					m_GeometrySkinnedVertexCount += cachedItem.meshData->vertexCount;
+					m_GeometrySkinnedIndexCount += cmd.count;
 				}
 				else {
-					// Static models and primitives: use world matrix (handles hierarchy)
-					model = GetEntityWorldMatrix(cachedItem.entity);
+					m_GeometryStandardItems.push_back(item);
+					m_GeometryStandardVertexCount += cachedItem.meshData->vertexCount;
+					m_GeometryStandardIndexCount += cmd.count;
+				}
+			}
+			else if (!cachedItem.isTransparent && cachedItem.hasCustomShader) {
+				// Opaque custom shader → Forward pass (rendered after geometry)
+				// Verify it's truly a custom shader with updated logic
+				Ermine::graphics::Material* meshMaterial = nullptr;
+				if (ecs.HasComponent<Ermine::Material>(cachedItem.materialEntity)) {
+					auto& materialComponent = ecs.GetComponent<Ermine::Material>(cachedItem.materialEntity);
+					meshMaterial = materialComponent.GetMaterial();
 				}
 
-				transformCache[idx] = model; // Write to pre-allocated slot (no reallocation)
+				// Double-check with updated HasCustomShader logic
+				if (meshMaterial && HasCustomShader(meshMaterial)) {
+					// Opaque custom shader pass
+					CustomShaderDrawItem item;
+					item.command = cmd;
+					item.info = info;
+					item.shader = meshMaterial->GetShader();
+					item.castsShadows = cachedItem.castsShadows;
+
+					if (cachedItem.useSkinning) {
+						m_ForwardOpaqueCustomSkinnedItems.push_back(item);
+					}
+					else {
+						m_ForwardOpaqueCustomStandardItems.push_back(item);
+					}
+				}
+				else {
+					// Was marked as custom but isn't anymore - treat as standard geometry pass
+					DefaultShaderDrawItem item;
+					item.command = cmd;
+					item.info = info;
+					item.castsShadows = cachedItem.castsShadows;
+
+					if (cachedItem.useSkinning) {
+						m_GeometrySkinnedItems.push_back(item);
+						m_GeometrySkinnedVertexCount += cachedItem.meshData->vertexCount;
+						m_GeometrySkinnedIndexCount += cmd.count;
+					}
+					else {
+						m_GeometryStandardItems.push_back(item);
+						m_GeometryStandardVertexCount += cachedItem.meshData->vertexCount;
+						m_GeometryStandardIndexCount += cmd.count;
+					}
+				}
 			}
-			}));
-	}
+			else if (cachedItem.isTransparent && !cachedItem.hasCustomShader) {
+				// Transparent default shader → Forward pass (sorted, back-to-front)
+				DefaultShaderDrawItem item;
+				item.command = cmd;
+				item.info = info;
+				item.castsShadows = cachedItem.castsShadows;
 
-	// Wait for all transform jobs to complete
-	for (auto& job : transformJobs) {
-		job.get();
-	}
+				if (cachedItem.useSkinning) {
+					m_ForwardTransparentDefaultSkinnedItems.push_back(item);
+				}
+				else {
+					m_ForwardTransparentDefaultStandardItems.push_back(item);
+				}
+				m_ForwardPassDrawCommandsVertexCount += cachedItem.meshData->vertexCount;
+				m_ForwardPassDrawCommandsIndexCount += cmd.count;
+			}
+			else if (cachedItem.isTransparent && cachedItem.hasCustomShader) {
+				// Transparent custom shader → Forward pass (sorted, back-to-front)
+				// Check if transparent has custom shader
+				Ermine::graphics::Material* meshMaterial = nullptr;
+				if (ecs.HasComponent<Ermine::Material>(cachedItem.materialEntity)) {
+					auto& materialComponent = ecs.GetComponent<Ermine::Material>(cachedItem.materialEntity);
+					meshMaterial = materialComponent.GetMaterial();
+				}
 
-	// ========== PARALLEL PHASE 2: FRUSTUM CULLING + COMMAND BUILDING ==========
-	// Per-thread output buffers (lock-free, no contention)
-	struct alignas(64) ThreadLocalBuffers { // Cache line aligned to prevent false sharing
-		// Depth prepass buffers
-		std::vector<DrawElementsIndirectCommand> depthStandardCmds;
-		std::vector<DrawInfo> depthStandardInfos;
-		std::vector<DrawElementsIndirectCommand> depthSkinnedCmds;
-		std::vector<DrawInfo> depthSkinnedInfos;
+				// Double-check with updated HasCustomShader logic
+				if (meshMaterial && HasCustomShader(meshMaterial)) {
+					// Transparent custom shader pass
+					CustomShaderDrawItem item;
+					item.command = cmd;
+					item.info = info;
+					item.shader = meshMaterial->GetShader();
+					item.castsShadows = cachedItem.castsShadows;
 
-		// Picking buffers
-		std::vector<DrawElementsIndirectCommand> pickingStandardCmds;
-		std::vector<DrawInfo> pickingStandardInfos;
-		std::vector<DrawElementsIndirectCommand> pickingSkinnedCmds;
-		std::vector<DrawInfo> pickingSkinnedInfos;
+					if (cachedItem.useSkinning) {
+						m_ForwardTransparentCustomSkinnedItems.push_back(item);
+					}
+					else {
+						m_ForwardTransparentCustomStandardItems.push_back(item);
+					}
+				}
+				else {
+					// Was marked as custom but isn't anymore - treat as standard transparent
+					DefaultShaderDrawItem item;
+					item.command = cmd;
+					item.info = info;
+					item.castsShadows = cachedItem.castsShadows;
 
-		// Geometry buffers
-		std::vector<DefaultShaderDrawItem> geometryStandardItems;
-		std::vector<DefaultShaderDrawItem> geometrySkinnedItems;
-
-		// Forward transparent default buffers
-		std::vector<DefaultShaderDrawItem> forwardTransparentStandardItems;
-		std::vector<DefaultShaderDrawItem> forwardTransparentSkinnedItems;
-
-		// Forward opaque custom buffers
-		std::vector<CustomShaderDrawItem> forwardOpaqueCustomStandardItems;
-		std::vector<CustomShaderDrawItem> forwardOpaqueCustomSkinnedItems;
-
-		// Forward transparent custom buffers
-		std::vector<CustomShaderDrawItem> forwardTransparentCustomStandardItems;
-		std::vector<CustomShaderDrawItem> forwardTransparentCustomSkinnedItems;
-
-		// Shadow buffers
-		std::vector<DrawElementsIndirectCommand> shadowStandardCmds;
-		std::vector<DrawInfo> shadowStandardInfos;
-		std::vector<DrawElementsIndirectCommand> shadowSkinnedCmds;
-		std::vector<DrawInfo> shadowSkinnedInfos;
-
-		// Culling counter (atomic not needed - thread-local)
-		size_t localCulledMeshes = 0;
-
-		// Pre-reserve space based on estimated load per thread
-		void Reserve(size_t estimatedItems) {
-			depthStandardCmds.reserve(estimatedItems);
-			depthStandardInfos.reserve(estimatedItems);
-			depthSkinnedCmds.reserve(estimatedItems / 4);
-			depthSkinnedInfos.reserve(estimatedItems / 4);
-
-			pickingStandardCmds.reserve(estimatedItems);
-			pickingStandardInfos.reserve(estimatedItems);
-			pickingSkinnedCmds.reserve(estimatedItems / 4);
-			pickingSkinnedInfos.reserve(estimatedItems / 4);
-
-			geometryStandardItems.reserve(estimatedItems);
-			geometrySkinnedItems.reserve(estimatedItems / 4);
-
-			forwardTransparentStandardItems.reserve(estimatedItems / 4);
-			forwardTransparentSkinnedItems.reserve(estimatedItems / 8);
-
-			forwardOpaqueCustomStandardItems.reserve(estimatedItems / 8);
-			forwardOpaqueCustomSkinnedItems.reserve(estimatedItems / 16);
-
-			forwardTransparentCustomStandardItems.reserve(estimatedItems / 8);
-			forwardTransparentCustomSkinnedItems.reserve(estimatedItems / 16);
-
-			shadowStandardCmds.reserve(estimatedItems / 4);
-			shadowStandardInfos.reserve(estimatedItems / 4);
-			shadowSkinnedCmds.reserve(estimatedItems / 8);
-			shadowSkinnedInfos.reserve(estimatedItems / 8);
+					if (cachedItem.useSkinning) {
+						m_ForwardTransparentDefaultSkinnedItems.push_back(item);
+					}
+					else {
+						m_ForwardTransparentDefaultStandardItems.push_back(item);
+					}
+				}
+				m_ForwardPassDrawCommandsVertexCount += cachedItem.meshData->vertexCount;
+				m_ForwardPassDrawCommandsIndexCount += cmd.count;
+			}
 		}
-	};
 
-	std::vector<ThreadLocalBuffers> threadBuffers(numThreads);
-
-	// Pre-reserve space in thread-local buffers
-	for (size_t i = 0; i < numThreads; ++i) {
-		threadBuffers[i].Reserve(itemsPerThread);
-	}
-
-	// Launch parallel culling + command building jobs
-	std::vector<std::future<void>> cullingJobs;
-	cullingJobs.reserve(numThreads);
-
-	for (size_t threadIdx = 0; threadIdx < numThreads; ++threadIdx)
-	{
-		size_t startIdx = threadIdx * itemsPerThread;
-		size_t endIdx = std::min(startIdx + itemsPerThread, numItems);
-
-		if (startIdx >= numItems) break;
-
-		// Launch async job for this partition
-		cullingJobs.emplace_back(std::async(std::launch::async, [&, threadIdx, startIdx, endIdx]() {
-			auto& localBuffers = threadBuffers[threadIdx]; // Thread-local storage (no locks!)
-
-			// Align AABB corner buffer for SIMD operations
-			alignas(16) glm::vec3 corners[8];
-
-			// Process this thread's partition
-			for (size_t idx = startIdx; idx < endIdx; ++idx)
-			{
-				const auto& cachedItem = m_CachedDrawItems[idx];
-				const glm::mat4& model = transformCache[idx]; // Read pre-computed transform
-
-				// ========== AABB TRANSFORMATION (VECTORIZED) ==========
-				corners[0] = glm::vec3(cachedItem.aabbMin.x, cachedItem.aabbMin.y, cachedItem.aabbMin.z);
-				corners[1] = glm::vec3(cachedItem.aabbMax.x, cachedItem.aabbMin.y, cachedItem.aabbMin.z);
-				corners[2] = glm::vec3(cachedItem.aabbMin.x, cachedItem.aabbMax.y, cachedItem.aabbMin.z);
-				corners[3] = glm::vec3(cachedItem.aabbMax.x, cachedItem.aabbMax.y, cachedItem.aabbMin.z);
-				corners[4] = glm::vec3(cachedItem.aabbMin.x, cachedItem.aabbMin.y, cachedItem.aabbMax.z);
-				corners[5] = glm::vec3(cachedItem.aabbMax.x, cachedItem.aabbMin.y, cachedItem.aabbMax.z);
-				corners[6] = glm::vec3(cachedItem.aabbMin.x, cachedItem.aabbMax.y, cachedItem.aabbMax.z);
-				corners[7] = glm::vec3(cachedItem.aabbMax.x, cachedItem.aabbMax.y, cachedItem.aabbMax.z);
-
-				glm::vec3 actualMin = glm::vec3(FLT_MAX);
-				glm::vec3 actualMax = glm::vec3(-FLT_MAX);
-
-#pragma unroll
-				for (int i = 0; i < 8; ++i) {
-					glm::vec3 worldCorner = glm::vec3(model * glm::vec4(corners[i], 1.0f));
-					actualMin = glm::min(actualMin, worldCorner);
-					actualMax = glm::max(actualMax, worldCorner);
-				}
-
-				// ========== FRUSTUM CULLING TEST ==========
-				bool isCulled = !frustum.TestAABB(actualMin, actualMax);
-
-				// ========== BUILD DRAW COMMAND (CACHE-FRIENDLY) ==========
-				const MeshSubset* meshData = cachedItem.meshData;
-
-				DrawElementsIndirectCommand cmd;
-				cmd.count = meshData->indexCount;
-				cmd.instanceCount = 1;
-				cmd.firstIndex = meshData->indexOffset;
-				cmd.baseVertex = meshData->baseVertex;
-				cmd.baseInstance = 0;
-
-				// ========== BUILD DRAW INFO (PRE-COMPUTED NORMAL MATRIX) ==========
-				DrawInfo info;
-				info.modelMatrix = model;
-
-				glm::mat3 normalMat = glm::transpose(glm::inverse(glm::mat3(model)));
-				info.normalMatrixCol0 = glm::vec4(normalMat[0], 0.0f);
-				info.normalMatrixCol1 = glm::vec4(normalMat[1], 0.0f);
-				info.normalMatrixCol2 = glm::vec4(normalMat[2], 0.0f);
-
-				info.aabbMin = cachedItem.aabbMin;
-				info.materialIndex = cachedItem.materialIndex;
-				info.aabbMax = cachedItem.aabbMax;
-				info.entityID = static_cast<uint32_t>(cachedItem.entity);
-				info.flags = cachedItem.useSkinning ? 1 : 0;
-				info.boneTransformOffset = cachedItem.boneOffset;
-				info._pad0 = 0;
-				info._pad1 = 0;
-
-				// ========== ROUTE TO PASSES (BRANCH-PREDICTOR FRIENDLY) ==========
-				if (isCulled) {
-					localBuffers.localCulledMeshes++;
-				}
-				else {
-					// ========== VISIBLE MESHES - Route to visible passes ==========
-
-					// PASS 1: PICKING PASS - ALL visible geometry
-					if (cachedItem.useSkinning) {
-						localBuffers.pickingSkinnedCmds.emplace_back(cmd);
-						localBuffers.pickingSkinnedInfos.emplace_back(info);
-					}
-					else {
-						localBuffers.pickingStandardCmds.emplace_back(cmd);
-						localBuffers.pickingStandardInfos.emplace_back(info);
-					}
-
-					// PASS 2: DEPTH PREPASS - Opaque visible geometry only
-					if (!cachedItem.isTransparent) {
-						if (cachedItem.useSkinning) {
-							localBuffers.depthSkinnedCmds.emplace_back(cmd);
-							localBuffers.depthSkinnedInfos.emplace_back(info);
-						}
-						else {
-							localBuffers.depthStandardCmds.emplace_back(cmd);
-							localBuffers.depthStandardInfos.emplace_back(info);
-						}
-					}
-
-					// PASS 3: GEOMETRY/FORWARD - Route by shader type and transparency
-					if (!cachedItem.isTransparent && !cachedItem.hasCustomShader) {
-						DefaultShaderDrawItem item;
-						item.command = cmd;
-						item.info = info;
-						item.castsShadows = cachedItem.castsShadows;
-
-						if (cachedItem.useSkinning) {
-							localBuffers.geometrySkinnedItems.emplace_back(item);
-						}
-						else {
-							localBuffers.geometryStandardItems.emplace_back(item);
-						}
-					}
-					else if (!cachedItem.isTransparent && cachedItem.hasCustomShader) {
-						// Opaque custom shader → Forward pass
-						Ermine::graphics::Material* meshMaterial = nullptr;
-						if (ecs.HasComponent<Ermine::Material>(cachedItem.materialEntity)) {
-							auto& materialComponent = ecs.GetComponent<Ermine::Material>(cachedItem.materialEntity);
-							meshMaterial = materialComponent.GetMaterial();
-						}
-
-						if (meshMaterial && HasCustomShader(meshMaterial)) {
-							CustomShaderDrawItem item;
-							item.command = cmd;
-							item.info = info;
-							item.shader = meshMaterial->GetShader();
-							item.castsShadows = cachedItem.castsShadows;
-
-							if (cachedItem.useSkinning) {
-								localBuffers.forwardOpaqueCustomSkinnedItems.emplace_back(item);
-							}
-							else {
-								localBuffers.forwardOpaqueCustomStandardItems.emplace_back(item);
-							}
-						}
-						else {
-							// Fallback to geometry pass
-							DefaultShaderDrawItem item;
-							item.command = cmd;
-							item.info = info;
-							item.castsShadows = cachedItem.castsShadows;
-
-							if (cachedItem.useSkinning) {
-								localBuffers.geometrySkinnedItems.emplace_back(item);
-							}
-							else {
-								localBuffers.geometryStandardItems.emplace_back(item);
-							}
-						}
-					}
-					else if (cachedItem.isTransparent && !cachedItem.hasCustomShader) {
-						DefaultShaderDrawItem item;
-						item.command = cmd;
-						item.info = info;
-						item.castsShadows = cachedItem.castsShadows;
-
-						if (cachedItem.useSkinning) {
-							localBuffers.forwardTransparentSkinnedItems.emplace_back(item);
-						}
-						else {
-							localBuffers.forwardTransparentStandardItems.emplace_back(item);
-						}
-					}
-					else if (cachedItem.isTransparent && cachedItem.hasCustomShader) {
-						Ermine::graphics::Material* meshMaterial = nullptr;
-						if (ecs.HasComponent<Ermine::Material>(cachedItem.materialEntity)) {
-							auto& materialComponent = ecs.GetComponent<Ermine::Material>(cachedItem.materialEntity);
-							meshMaterial = materialComponent.GetMaterial();
-						}
-
-						if (meshMaterial && HasCustomShader(meshMaterial)) {
-							CustomShaderDrawItem item;
-							item.command = cmd;
-							item.info = info;
-							item.shader = meshMaterial->GetShader();
-							item.castsShadows = cachedItem.castsShadows;
-
-							if (cachedItem.useSkinning) {
-								localBuffers.forwardTransparentCustomSkinnedItems.emplace_back(item);
-							}
-							else {
-								localBuffers.forwardTransparentCustomStandardItems.emplace_back(item);
-							}
-						}
-						else {
-							DefaultShaderDrawItem item;
-							item.command = cmd;
-							item.info = info;
-							item.castsShadows = cachedItem.castsShadows;
-
-							if (cachedItem.useSkinning) {
-								localBuffers.forwardTransparentSkinnedItems.emplace_back(item);
-							}
-							else {
-								localBuffers.forwardTransparentStandardItems.emplace_back(item);
-							}
-						}
-					}
-				}
-
-				// PASS 4: SHADOW PASS - ALL geometry with castsShadows=true
-				if (cachedItem.castsShadows) {
-					if (cachedItem.useSkinning) {
-						localBuffers.shadowSkinnedCmds.emplace_back(cmd);
-						localBuffers.shadowSkinnedInfos.emplace_back(info);
-					}
-					else {
-						localBuffers.shadowStandardCmds.emplace_back(cmd);
-						localBuffers.shadowStandardInfos.emplace_back(info);
-					}
-				}
+		// PASS 4: SHADOW PASS - ALL geometry (visible OR culled) that casts shadows
+		if (cachedItem.castsShadows) {
+			if (cachedItem.useSkinning) {
+				m_ShadowSkinnedCommands.push_back(cmd);
+				m_ShadowSkinnedInfos.push_back(info);
 			}
-			}));
+			else {
+				m_ShadowStandardCommands.push_back(cmd);
+				m_ShadowStandardInfos.push_back(info);
+			}
+		}
 	}
 
-	// Wait for all culling jobs to complete
-	for (auto& job : cullingJobs) {
-		job.get();
-	}
-
-	// ========== STEP 4: MERGE PHASE (SEQUENTIAL, CACHE-FRIENDLY) ==========
-	// Merge thread-local buffers into final output buffers
-	// Pre-calculate total sizes to avoid reallocation during merge
-	size_t totalDepthStandardCmds = 0, totalDepthStandardInfos = 0;
-	size_t totalDepthSkinnedCmds = 0, totalDepthSkinnedInfos = 0;
-	size_t totalPickingStandardCmds = 0, totalPickingStandardInfos = 0;
-	size_t totalPickingSkinnedCmds = 0, totalPickingSkinnedInfos = 0;
-	size_t totalGeometryStandard = 0, totalGeometrySkinned = 0;
-	size_t totalForwardTransparentStandard = 0, totalForwardTransparentSkinned = 0;
-	size_t totalForwardOpaqueCustomStandard = 0, totalForwardOpaqueCustomSkinned = 0;
-	size_t totalForwardTransparentCustomStandard = 0, totalForwardTransparentCustomSkinned = 0;
-	size_t totalShadowStandardCmds = 0, totalShadowStandardInfos = 0;
-	size_t totalShadowSkinnedCmds = 0, totalShadowSkinnedInfos = 0;
-	size_t totalCulledMeshes = 0;
-
-	for (const auto& buf : threadBuffers) {
-		totalDepthStandardCmds += buf.depthStandardCmds.size();
-		totalDepthStandardInfos += buf.depthStandardInfos.size();
-		totalDepthSkinnedCmds += buf.depthSkinnedCmds.size();
-		totalDepthSkinnedInfos += buf.depthSkinnedInfos.size();
-
-		totalPickingStandardCmds += buf.pickingStandardCmds.size();
-		totalPickingStandardInfos += buf.pickingStandardInfos.size();
-		totalPickingSkinnedCmds += buf.pickingSkinnedCmds.size();
-		totalPickingSkinnedInfos += buf.pickingSkinnedInfos.size();
-
-		totalGeometryStandard += buf.geometryStandardItems.size();
-		totalGeometrySkinned += buf.geometrySkinnedItems.size();
-
-		totalForwardTransparentStandard += buf.forwardTransparentStandardItems.size();
-		totalForwardTransparentSkinned += buf.forwardTransparentSkinnedItems.size();
-
-		totalForwardOpaqueCustomStandard += buf.forwardOpaqueCustomStandardItems.size();
-		totalForwardOpaqueCustomSkinned += buf.forwardOpaqueCustomSkinnedItems.size();
-
-		totalForwardTransparentCustomStandard += buf.forwardTransparentCustomStandardItems.size();
-		totalForwardTransparentCustomSkinned += buf.forwardTransparentCustomSkinnedItems.size();
-
-		totalShadowStandardCmds += buf.shadowStandardCmds.size();
-		totalShadowStandardInfos += buf.shadowStandardInfos.size();
-		totalShadowSkinnedCmds += buf.shadowSkinnedCmds.size();
-		totalShadowSkinnedInfos += buf.shadowSkinnedInfos.size();
-
-		totalCulledMeshes += buf.localCulledMeshes;
-	}
-
-	// Reserve final output buffers (single allocation)
-	m_DepthPrepassStandardCommands.reserve(totalDepthStandardCmds);
-	m_DepthPrepassStandardInfos.reserve(totalDepthStandardInfos);
-	m_DepthPrepassSkinnedCommands.reserve(totalDepthSkinnedCmds);
-	m_DepthPrepassSkinnedInfos.reserve(totalDepthSkinnedInfos);
-
-	m_PickingStandardCommands.reserve(totalPickingStandardCmds);
-	m_PickingStandardInfos.reserve(totalPickingStandardInfos);
-	m_PickingSkinnedCommands.reserve(totalPickingSkinnedCmds);
-	m_PickingSkinnedInfos.reserve(totalPickingSkinnedInfos);
-
-	m_GeometryStandardItems.reserve(totalGeometryStandard);
-	m_GeometrySkinnedItems.reserve(totalGeometrySkinned);
-
-	m_ForwardTransparentDefaultStandardItems.reserve(totalForwardTransparentStandard);
-	m_ForwardTransparentDefaultSkinnedItems.reserve(totalForwardTransparentSkinned);
-
-	m_ForwardOpaqueCustomStandardItems.reserve(totalForwardOpaqueCustomStandard);
-	m_ForwardOpaqueCustomSkinnedItems.reserve(totalForwardOpaqueCustomSkinned);
-
-	m_ForwardTransparentCustomStandardItems.reserve(totalForwardTransparentCustomStandard);
-	m_ForwardTransparentCustomSkinnedItems.reserve(totalForwardTransparentCustomSkinned);
-
-	m_ShadowStandardCommands.reserve(totalShadowStandardCmds);
-	m_ShadowStandardInfos.reserve(totalShadowStandardInfos);
-	m_ShadowSkinnedCommands.reserve(totalShadowSkinnedCmds);
-	m_ShadowSkinnedInfos.reserve(totalShadowSkinnedInfos);
-
-	// Merge thread-local buffers into final output (sequential writes, optimal cache usage)
-	for (const auto& buf : threadBuffers) {
-		// Depth prepass
-		m_DepthPrepassStandardCommands.insert(m_DepthPrepassStandardCommands.end(),
-			buf.depthStandardCmds.begin(), buf.depthStandardCmds.end());
-		m_DepthPrepassStandardInfos.insert(m_DepthPrepassStandardInfos.end(),
-			buf.depthStandardInfos.begin(), buf.depthStandardInfos.end());
-		m_DepthPrepassSkinnedCommands.insert(m_DepthPrepassSkinnedCommands.end(),
-			buf.depthSkinnedCmds.begin(), buf.depthSkinnedCmds.end());
-		m_DepthPrepassSkinnedInfos.insert(m_DepthPrepassSkinnedInfos.end(),
-			buf.depthSkinnedInfos.begin(), buf.depthSkinnedInfos.end());
-
-		// Picking
-		m_PickingStandardCommands.insert(m_PickingStandardCommands.end(),
-			buf.pickingStandardCmds.begin(), buf.pickingStandardCmds.end());
-		m_PickingStandardInfos.insert(m_PickingStandardInfos.end(),
-			buf.pickingStandardInfos.begin(), buf.pickingStandardInfos.end());
-		m_PickingSkinnedCommands.insert(m_PickingSkinnedCommands.end(),
-			buf.pickingSkinnedCmds.begin(), buf.pickingSkinnedCmds.end());
-		m_PickingSkinnedInfos.insert(m_PickingSkinnedInfos.end(),
-			buf.pickingSkinnedInfos.begin(), buf.pickingSkinnedInfos.end());
-
-		// Geometry
-		m_GeometryStandardItems.insert(m_GeometryStandardItems.end(),
-			buf.geometryStandardItems.begin(), buf.geometryStandardItems.end());
-		m_GeometrySkinnedItems.insert(m_GeometrySkinnedItems.end(),
-			buf.geometrySkinnedItems.begin(), buf.geometrySkinnedItems.end());
-
-		// Forward transparent default
-		m_ForwardTransparentDefaultStandardItems.insert(m_ForwardTransparentDefaultStandardItems.end(),
-			buf.forwardTransparentStandardItems.begin(), buf.forwardTransparentStandardItems.end());
-		m_ForwardTransparentDefaultSkinnedItems.insert(m_ForwardTransparentDefaultSkinnedItems.end(),
-			buf.forwardTransparentSkinnedItems.begin(), buf.forwardTransparentSkinnedItems.end());
-
-		// Forward opaque custom
-		m_ForwardOpaqueCustomStandardItems.insert(m_ForwardOpaqueCustomStandardItems.end(),
-			buf.forwardOpaqueCustomStandardItems.begin(), buf.forwardOpaqueCustomStandardItems.end());
-		m_ForwardOpaqueCustomSkinnedItems.insert(m_ForwardOpaqueCustomSkinnedItems.end(),
-			buf.forwardOpaqueCustomSkinnedItems.begin(), buf.forwardOpaqueCustomSkinnedItems.end());
-
-		// Forward transparent custom
-		m_ForwardTransparentCustomStandardItems.insert(m_ForwardTransparentCustomStandardItems.end(),
-			buf.forwardTransparentCustomStandardItems.begin(), buf.forwardTransparentCustomStandardItems.end());
-		m_ForwardTransparentCustomSkinnedItems.insert(m_ForwardTransparentCustomSkinnedItems.end(),
-			buf.forwardTransparentCustomSkinnedItems.begin(), buf.forwardTransparentCustomSkinnedItems.end());
-
-		// Shadow
-		m_ShadowStandardCommands.insert(m_ShadowStandardCommands.end(),
-			buf.shadowStandardCmds.begin(), buf.shadowStandardCmds.end());
-		m_ShadowStandardInfos.insert(m_ShadowStandardInfos.end(),
-			buf.shadowStandardInfos.begin(), buf.shadowStandardInfos.end());
-		m_ShadowSkinnedCommands.insert(m_ShadowSkinnedCommands.end(),
-			buf.shadowSkinnedCmds.begin(), buf.shadowSkinnedCmds.end());
-		m_ShadowSkinnedInfos.insert(m_ShadowSkinnedInfos.end(),
-			buf.shadowSkinnedInfos.begin(), buf.shadowSkinnedInfos.end());
-	}
-
-	culledMeshes = totalCulledMeshes;
 	GPUProfiler::SetCulledMeshesCount(culledMeshes);
 
-	// ========== REST OF FUNCTION UNCHANGED (GPU UPLOADS, SORTING, ETC.) ==========
-	// [Existing upload and sorting code remains identical...]
+	// ========== SORTING ==========
+	// Transparent sorting happens later during RenderGeometryPass when view matrix is available
+	// (Sorting requires camera position calculated from view matrix)
+	// Fast path uses distance-only sorting within existing shader groups
 
-	// PASS 1: PICKING PASS uploads
+	// ========== WRITE ALL DRAW DATA TO GPU BUFFERS ==========
+	// PASS 1: PICKING PASS - ALL visible geometry (opaque + transparent, for object selection)
 	m_MeshManager.m_PickingStandardDrawCommandBuffer.WriteCommands(m_PickingStandardCommands, 0);
 	m_MeshManager.m_PickingStandardDrawInfoBuffer.WriteDrawInfos(m_PickingStandardInfos, 0);
 	m_MeshManager.m_PickingSkinnedDrawCommandBuffer.WriteCommands(m_PickingSkinnedCommands, 0);
 	m_MeshManager.m_PickingSkinnedDrawInfoBuffer.WriteDrawInfos(m_PickingSkinnedInfos, 0);
 
-	// PASS 2: DEPTH PREPASS uploads
+	// PASS 2: DEPTH PREPASS - Opaque visible geometry only (for early-z rejection)
 	m_MeshManager.m_DepthPrepassStandardDrawCommandBuffer.WriteCommands(m_DepthPrepassStandardCommands, 0);
 	m_MeshManager.m_DepthPrepassStandardDrawInfoBuffer.WriteDrawInfos(m_DepthPrepassStandardInfos, 0);
 	m_MeshManager.m_DepthPrepassSkinnedDrawCommandBuffer.WriteCommands(m_DepthPrepassSkinnedCommands, 0);
@@ -3089,8 +2730,8 @@ void Renderer::UpdateDrawData()
 	geometryStandardCommands.reserve(m_GeometryStandardItems.size());
 	geometryStandardInfos.reserve(m_GeometryStandardItems.size());
 	for (const auto& item : m_GeometryStandardItems) {
-		geometryStandardCommands.emplace_back(item.command);
-		geometryStandardInfos.emplace_back(item.info);
+		geometryStandardCommands.push_back(item.command);
+		geometryStandardInfos.push_back(item.info);
 	}
 
 	std::vector<DrawElementsIndirectCommand> geometrySkinnedCommands;
@@ -3098,8 +2739,8 @@ void Renderer::UpdateDrawData()
 	geometrySkinnedCommands.reserve(m_GeometrySkinnedItems.size());
 	geometrySkinnedInfos.reserve(m_GeometrySkinnedItems.size());
 	for (const auto& item : m_GeometrySkinnedItems) {
-		geometrySkinnedCommands.emplace_back(item.command);
-		geometrySkinnedInfos.emplace_back(item.info);
+		geometrySkinnedCommands.push_back(item.command);
+		geometrySkinnedInfos.push_back(item.info);
 	}
 
 	m_MeshManager.m_GeometryStandardDrawCommandBuffer.WriteCommands(geometryStandardCommands, 0);
@@ -3113,8 +2754,8 @@ void Renderer::UpdateDrawData()
 	forwardTransparentDefaultStandardCommands.reserve(m_ForwardTransparentDefaultStandardItems.size());
 	forwardTransparentDefaultStandardInfos.reserve(m_ForwardTransparentDefaultStandardItems.size());
 	for (const auto& item : m_ForwardTransparentDefaultStandardItems) {
-		forwardTransparentDefaultStandardCommands.emplace_back(item.command);
-		forwardTransparentDefaultStandardInfos.emplace_back(item.info);
+		forwardTransparentDefaultStandardCommands.push_back(item.command);
+		forwardTransparentDefaultStandardInfos.push_back(item.info);
 	}
 
 	std::vector<DrawElementsIndirectCommand> forwardTransparentDefaultSkinnedCommands;
@@ -3122,8 +2763,8 @@ void Renderer::UpdateDrawData()
 	forwardTransparentDefaultSkinnedCommands.reserve(m_ForwardTransparentDefaultSkinnedItems.size());
 	forwardTransparentDefaultSkinnedInfos.reserve(m_ForwardTransparentDefaultSkinnedItems.size());
 	for (const auto& item : m_ForwardTransparentDefaultSkinnedItems) {
-		forwardTransparentDefaultSkinnedCommands.emplace_back(item.command);
-		forwardTransparentDefaultSkinnedInfos.emplace_back(item.info);
+		forwardTransparentDefaultSkinnedCommands.push_back(item.command);
+		forwardTransparentDefaultSkinnedInfos.push_back(item.info);
 	}
 
 	m_MeshManager.m_ForwardStandardDrawCommandBuffer.WriteCommands(forwardTransparentDefaultStandardCommands, 0);
@@ -3131,14 +2772,15 @@ void Renderer::UpdateDrawData()
 	m_MeshManager.m_ForwardSkinnedDrawCommandBuffer.WriteCommands(forwardTransparentDefaultSkinnedCommands, 0);
 	m_MeshManager.m_ForwardSkinnedDrawInfoBuffer.WriteDrawInfos(forwardTransparentDefaultSkinnedInfos, 0);
 
-	// PASS 5: SHADOW PASS uploads
+	// PASS 5: SHADOW PASS - ALL geometry with castsShadows=true (instanced for cascaded shadow maps)
+
 	std::vector<DrawElementsIndirectCommand> shadowStandardCommands;
 	shadowStandardCommands.reserve(m_ShadowStandardCommands.size());
 
 	for (const auto& cmd : m_ShadowStandardCommands) {
 		DrawElementsIndirectCommand shadowCmd = cmd;
 		shadowCmd.instanceCount = m_TotalShadowInstances;
-		shadowStandardCommands.emplace_back(shadowCmd);
+		shadowStandardCommands.push_back(shadowCmd);
 	}
 
 	std::vector<DrawElementsIndirectCommand> shadowSkinnedCommands;
@@ -3147,7 +2789,7 @@ void Renderer::UpdateDrawData()
 	for (const auto& cmd : m_ShadowSkinnedCommands) {
 		DrawElementsIndirectCommand shadowCmd = cmd;
 		shadowCmd.instanceCount = m_TotalShadowInstances;
-		shadowSkinnedCommands.emplace_back(shadowCmd);
+		shadowSkinnedCommands.push_back(shadowCmd);
 	}
 
 	m_MeshManager.m_ShadowStandardDrawCommandBuffer.WriteCommands(shadowStandardCommands, 0);
@@ -3164,8 +2806,8 @@ void Renderer::UpdateDrawData()
 		infos.reserve(m_ForwardOpaqueCustomStandardItems.size());
 
 		for (const auto& item : m_ForwardOpaqueCustomStandardItems) {
-			commands.emplace_back(item.command);
-			infos.emplace_back(item.info);
+			commands.push_back(item.command);
+			infos.push_back(item.info);
 		}
 
 		size_t cmdSize = commands.size();
@@ -3193,8 +2835,8 @@ void Renderer::UpdateDrawData()
 		infos.reserve(m_ForwardOpaqueCustomSkinnedItems.size());
 
 		for (const auto& item : m_ForwardOpaqueCustomSkinnedItems) {
-			commands.emplace_back(item.command);
-			infos.emplace_back(item.info);
+			commands.push_back(item.command);
+			infos.push_back(item.info);
 		}
 
 		size_t cmdSize = commands.size();
@@ -3222,8 +2864,8 @@ void Renderer::UpdateDrawData()
 		infos.reserve(m_ForwardTransparentCustomStandardItems.size());
 
 		for (const auto& item : m_ForwardTransparentCustomStandardItems) {
-			commands.emplace_back(item.command);
-			infos.emplace_back(item.info);
+			commands.push_back(item.command);
+			infos.push_back(item.info);
 		}
 
 		size_t cmdSize = commands.size();
@@ -3251,8 +2893,8 @@ void Renderer::UpdateDrawData()
 		infos.reserve(m_ForwardTransparentCustomSkinnedItems.size());
 
 		for (const auto& item : m_ForwardTransparentCustomSkinnedItems) {
-			commands.emplace_back(item.command);
-			infos.emplace_back(item.info);
+			commands.push_back(item.command);
+			infos.push_back(item.info);
 		}
 
 		size_t cmdSize = commands.size();
@@ -3277,6 +2919,7 @@ void Renderer::UpdateDrawData()
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
 	// ========== UPDATE DIRTY TRACKING HASHES ==========
+	// Update per-entity transform hashes for next frame
 	m_EntityTransformHashes.clear();
 	m_EntityTransformHashes.reserve(m_Entities.size() + m_ModelSystem->m_Entities.size());
 
@@ -3287,7 +2930,6 @@ void Renderer::UpdateDrawData()
 		m_EntityTransformHashes[entity] = CalculateEntityTransformHash(entity);
 	}
 }
-
 
 /**
  * @brief Calculate a hash of the entity list to detect add/remove operations.
@@ -3645,6 +3287,61 @@ void Renderer::RenderPostProcessPass(const Mtx44& view, const Mtx44& projection)
 
 	Draw(m_QuadMesh.vertex_array, m_QuadMesh.index_buffer);
 
+	// Motion blur pass: Apply motion blur between post-processing and FXAA
+	if (m_MotionBlurEnabled && m_MotionBlurShader && m_MotionBlurBuffer)
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, m_MotionBlurBuffer->FBO);
+		glViewport(0, 0, m_MotionBlurBuffer->width, m_MotionBlurBuffer->height);
+		glClear(GL_COLOR_BUFFER_BIT);
+
+		m_MotionBlurShader->Bind();
+
+		// Bind the post-processed color texture as input
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, m_AntiAliasingBuffer->ColorTexture);
+		m_MotionBlurShader->SetUniform1i("u_ColorTexture", 0);
+
+		// Pass bindless depth texture handle
+		GLint locDepthMB = glGetUniformLocation(m_MotionBlurShader->GetRendererID(), "u_DepthHandle");
+		if (locDepthMB != -1 && m_GBuffer)
+		{
+			glUniform2ui(locDepthMB, static_cast<GLuint>(m_GBuffer->HandleDepthTexture),
+				static_cast<GLuint>(m_GBuffer->HandleDepthTexture >> 32));
+		}
+
+		// Convert view and projection matrices to glm
+		glm::mat4 glmView = glm::mat4(
+			view.m00, view.m01, view.m02, view.m03,
+			view.m10, view.m11, view.m12, view.m13,
+			view.m20, view.m21, view.m22, view.m23,
+			view.m30, view.m31, view.m32, view.m33
+		);
+		glm::mat4 glmProjection = glm::mat4(
+			projection.m00, projection.m01, projection.m02, projection.m03,
+			projection.m10, projection.m11, projection.m12, projection.m13,
+			projection.m20, projection.m21, projection.m22, projection.m23,
+			projection.m30, projection.m31, projection.m32, projection.m33
+		);
+
+		// Calculate current view-projection matrix
+		glm::mat4 currentViewProjection = glmProjection * glmView;
+		glm::mat4 invViewProjection = glm::inverse(currentViewProjection);
+
+		// Set motion blur uniforms
+		m_MotionBlurShader->SetUniformMatrix4fv("u_CurrentViewProjection", currentViewProjection);
+		m_MotionBlurShader->SetUniformMatrix4fv("u_PreviousViewProjection", m_PreviousViewProjectionMatrix);
+		m_MotionBlurShader->SetUniformMatrix4fv("u_InvViewProjection", invViewProjection);
+		m_MotionBlurShader->SetUniform1f("u_MotionBlurStrength", m_MotionBlurStrength);
+		m_MotionBlurShader->SetUniform1i("u_NumSamples", m_MotionBlurSamples);
+		m_MotionBlurShader->SetUniform1i("u_FirstFrame", m_FirstFrame ? 1 : 0);
+
+		Draw(m_QuadMesh.vertex_array, m_QuadMesh.index_buffer);
+
+		// Update previous frame view-projection matrix for next frame
+		m_PreviousViewProjectionMatrix = currentViewProjection;
+		m_FirstFrame = false;
+	}
+
 	// Final pass: FXAA
 #if defined(EE_EDITOR)
 	glBindFramebuffer(GL_FRAMEBUFFER, m_OffscreenBuffer->FBO);
@@ -3657,7 +3354,15 @@ void Renderer::RenderPostProcessPass(const Mtx44& view, const Mtx44& projection)
 
 	m_AAShader->Bind();
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, m_AntiAliasingBuffer->ColorTexture);
+	// Use motion blur output if enabled, otherwise use anti-aliasing buffer
+	if (m_MotionBlurEnabled && m_MotionBlurBuffer)
+	{
+		glBindTexture(GL_TEXTURE_2D, m_MotionBlurBuffer->ColorTexture);
+	}
+	else
+	{
+		glBindTexture(GL_TEXTURE_2D, m_AntiAliasingBuffer->ColorTexture);
+	}
 	m_AAShader->SetUniform1i("u_LightingTexture", 0);
 
 	// Set FXAA parameters
@@ -4360,9 +4065,15 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 		auto& ecs = ECS::GetInstance();
 
 		// First pass: Render opaque objects and collect transparent objects
-		for (auto& entity : m_Entities
-			)
+		for (auto& entity : m_Entities)
 		{
+			if (ecs.HasComponent<ObjectMetaData>(entity))
+			{
+				const auto& meta = ecs.GetComponent<ObjectMetaData>(entity);
+				if (!meta.selfActive)
+					continue;
+			}
+
 			// Model pipeline
 			if (ecs.HasComponent<ModelComponent>(entity) && ecs.HasComponent<Ermine::Material>(entity))
 			{
@@ -6691,6 +6402,10 @@ void Renderer::SyncToGlobalGraphics()
 	m_GlobalGraphics.bloomThreshold = m_BloomThreshold;
 	m_GlobalGraphics.bloomIntensity = m_BloomIntensity;
 	m_GlobalGraphics.bloomRadius = m_BloomRadius;
+
+	m_GlobalGraphics.motionBlurEnabled = m_MotionBlurEnabled;
+	m_GlobalGraphics.motionBlurStrength = m_MotionBlurStrength;
+	m_GlobalGraphics.motionBlurSamples = m_MotionBlurSamples;
 }
 
 void Renderer::ApplyFromGlobalGraphics()
@@ -6736,6 +6451,10 @@ void Renderer::ApplyFromGlobalGraphics()
 	m_BloomThreshold = m_GlobalGraphics.bloomThreshold;
 	m_BloomIntensity = m_GlobalGraphics.bloomIntensity;
 	m_BloomRadius = m_GlobalGraphics.bloomRadius;
+
+	m_MotionBlurEnabled = m_GlobalGraphics.motionBlurEnabled;
+	m_MotionBlurStrength = m_GlobalGraphics.motionBlurStrength;
+	m_MotionBlurSamples = m_GlobalGraphics.motionBlurSamples;
 }
 
 /**
