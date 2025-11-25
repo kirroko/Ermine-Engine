@@ -72,6 +72,7 @@ public class PlayerController2 : MonoBehaviour
         if (isGrounded == true && Input.GetKey(KeyCode.Space))
         {
             isGrounded = false; // prevent double jump
+            GlobalAudio.PlaySFX("Jump");
             Physics.Jump((ulong)gameObject.GetInstanceID(), jumpspeed);
         }
 
@@ -148,10 +149,12 @@ public class PlayerController2 : MonoBehaviour
                 if (obj.name == "Switch")
                 {
                     // Play switch audio here Kai
+                    GlobalAudio.PlaySFX("SwitchOn");
                 }
                 if (obj.name == "Book")
                 {
                     // Collect book
+                    GlobalAudio.PlaySFX("BookPickUp");
                 }
             }
             /*else

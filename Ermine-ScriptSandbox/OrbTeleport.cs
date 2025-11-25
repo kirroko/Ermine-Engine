@@ -35,10 +35,10 @@ public class OrbTeleport : MonoBehaviour
         if (Input.GetMouseButton(1))
         {
             // Swap position with ball and destroy it
-            GlobalAudio.PlaySFX("Teleport");
             GameObject sphere = GameObject.Find("Sphere");
             if (sphere == null)
                 return;
+            GlobalAudio.PlaySFX("Teleport");
             gameObject.transform.position = sphere.transform.position;
             Physics.SetPosition((ulong)gameObject.GetInstanceID(), sphere.transform.position);
             Physics.RemovePhysic((ulong)sphere.GetInstanceID());
