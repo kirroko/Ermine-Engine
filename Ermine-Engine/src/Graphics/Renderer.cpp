@@ -1201,181 +1201,22 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
  */
 void Renderer::CompileDrawData()
 {
-	#ifdef EE_DEBUG
+#ifdef EE_DEBUG
 	// Debug mode: force full rebuild every frame if requested
 	if (m_ForceFullRebuildEveryFrame) {
 		m_DrawDataNeedsFullRebuild = true;
 	}
-	#endif
+#endif
 
-	// Check if entity list changed (add/remove entities)
+	// Entity list size changed (entities added/removed)
 	if (HasEntityListChanged()) {
 		m_DrawDataNeedsFullRebuild = true;
 	}
 
-	// Cache validation: Detect if cache is stale/incomplete
-	// This handles cases where entities were skipped during initial cache build
-	// (e.g., animated models with invalid boneTransformOffset on first frame)
-	if (!m_DrawDataNeedsFullRebuild) {
-		// Check 1: Cache is empty but entities exist
-		if (m_CachedDrawItems.empty() && (!m_Entities.empty() || !m_ModelSystem->m_Entities.empty())) {
+	// Cache is empty but entities exist (initial build needed)
+	if (!m_DrawDataNeedsFullRebuild && m_CachedDrawItems.empty()) {
+		if (!m_Entities.empty() || !m_ModelSystem->m_Entities.empty()) {
 			m_DrawDataNeedsFullRebuild = true;
-		}
-		// Check 2: Verify all renderable entities are present in cache
-		// This detects when entities become renderable after initial cache build
-		else if (!m_CachedDrawItems.empty()) {
-			const auto& ecs = Ermine::ECS::GetInstance();
-
-			// Build a set of entity IDs present in cache for fast lookup
-			std::unordered_set<EntityID> cachedEntities;
-			cachedEntities.reserve(m_CachedDrawItems.size());
-			for (const auto& item : m_CachedDrawItems) {
-				cachedEntities.insert(item.entity);
-			}
-
-			// Check primitives - should all be cached (if they have valid mesh data)
-			for (auto entity : m_Entities) {
-				if (ecs.HasComponent<Mesh>(entity) && ecs.HasComponent<Ermine::Material>(entity)) {
-					const auto& mesh = ecs.GetComponent<Mesh>(entity);
-					// If entity has valid mesh data but is NOT in cache, rebuild
-					if (!mesh.registeredMeshID.empty() && cachedEntities.find(entity) == cachedEntities.end()) {
-						m_DrawDataNeedsFullRebuild = true;
-						break;
-					}
-				}
-			}
-
-			// Check models (static and animated)
-			if (!m_DrawDataNeedsFullRebuild) {
-				// Check 1: Cache is empty but entities exist
-				if (m_CachedDrawItems.empty() && (!m_Entities.empty() || !m_ModelSystem->m_Entities.empty())) {
-					m_DrawDataNeedsFullRebuild = true;
-				}
-				// Check 2: Verify all CACHED entities still exist and are valid
-				else if (!m_CachedDrawItems.empty()) {
-					const auto& ecs = Ermine::ECS::GetInstance();
-
-					for (const auto& cachedItem : m_CachedDrawItems) {
-						// Check if cached entity still exists
-						if (!ecs.IsEntityValid(cachedItem.entity)) {
-							m_DrawDataNeedsFullRebuild = true;
-							break;
-						}
-
-						// Check if entity still has required components
-						bool hasPrimitiveComponents = ecs.HasComponent<Mesh>(cachedItem.entity) &&
-							ecs.HasComponent<Ermine::Material>(cachedItem.entity);
-						bool hasModelComponent = ecs.HasComponent<ModelComponent>(cachedItem.entity);
-
-						if (!hasPrimitiveComponents && !hasModelComponent) {
-							// Entity lost required components - rebuild
-							m_DrawDataNeedsFullRebuild = true;
-							break;
-						}
-
-						// Check material routing state changes
-						bool currentHasParentMat = false;
-						if (ecs.HasComponent<Ermine::Material>(cachedItem.entity)) {
-							auto& parentMatComp = ecs.GetComponent<Ermine::Material>(cachedItem.entity);
-							currentHasParentMat = (parentMatComp.GetMaterial() != nullptr);
-						}
-
-						bool currentHasChildMat = false;
-						if (cachedItem.childMaterialEntity != 0 &&
-							ecs.HasComponent<Ermine::Material>(cachedItem.childMaterialEntity)) {
-							auto& childMatComp = ecs.GetComponent<Ermine::Material>(cachedItem.childMaterialEntity);
-							currentHasChildMat = (childMatComp.GetMaterial() != nullptr);
-						}
-
-						// Material structure changed - rebuild
-						if (currentHasParentMat != cachedItem.hadParentMaterial ||
-							currentHasChildMat != cachedItem.hadChildMaterial) {
-							m_DrawDataNeedsFullRebuild = true;
-							break;
-						}
-
-						// Check if material properties changed (transparency/shadows/custom shader)
-						Ermine::graphics::Material* currentMaterial = nullptr;
-						if (ecs.HasComponent<Ermine::Material>(cachedItem.materialEntity)) {
-							auto& matComp = ecs.GetComponent<Ermine::Material>(cachedItem.materialEntity);
-							currentMaterial = matComp.GetMaterial();
-						}
-
-						if (currentMaterial) {
-							bool currentTransparent = IsTransparentMaterial(currentMaterial);
-							bool currentCastsShadows = CastsShadows(currentMaterial);
-							bool currentHasCustomShader = HasCustomShader(currentMaterial);
-
-							if (currentTransparent != cachedItem.isTransparent ||
-								currentCastsShadows != cachedItem.castsShadows ||
-								currentHasCustomShader != cachedItem.hasCustomShader) {
-								// Material properties changed - rebuild
-								m_DrawDataNeedsFullRebuild = true;
-								break;
-							}
-						}
-						else {
-							// Material that was being used is now null - rebuild
-							m_DrawDataNeedsFullRebuild = true;
-							break;
-						}
-					}
-				}
-			}
-			// Check 3: Verify material routing state hasn't changed
-			// Uses complete cached material structure to detect ANY material hierarchy changes
-			if (!m_DrawDataNeedsFullRebuild) {
-				for (const auto& cachedItem : m_CachedDrawItems) {
-					// Check current parent material state
-					bool currentHasParentMat = false;
-					if (ecs.HasComponent<Ermine::Material>(cachedItem.entity)) {
-						auto& parentMatComp = ecs.GetComponent<Ermine::Material>(cachedItem.entity);
-						currentHasParentMat = (parentMatComp.GetMaterial() != nullptr);
-					}
-
-					// Check current child material state
-					bool currentHasChildMat = false;
-					if (cachedItem.childMaterialEntity != 0 &&
-					    ecs.HasComponent<Ermine::Material>(cachedItem.childMaterialEntity)) {
-						auto& childMatComp = ecs.GetComponent<Ermine::Material>(cachedItem.childMaterialEntity);
-						currentHasChildMat = (childMatComp.GetMaterial() != nullptr);
-					}
-
-					// Detect any material structure changes
-					if (currentHasParentMat != cachedItem.hadParentMaterial ||
-					    currentHasChildMat != cachedItem.hadChildMaterial) {
-						// Material was added or removed - rebuild required
-						m_DrawDataNeedsFullRebuild = true;
-						break;
-					}
-
-					// Check if the material properties changed (for whichever material is being used)
-					Ermine::graphics::Material* currentMaterial = nullptr;
-					if (ecs.HasComponent<Ermine::Material>(cachedItem.materialEntity)) {
-						auto& matComp = ecs.GetComponent<Ermine::Material>(cachedItem.materialEntity);
-						currentMaterial = matComp.GetMaterial();
-					}
-
-					if (currentMaterial) {
-						bool currentTransparent = IsTransparentMaterial(currentMaterial);
-						bool currentCastsShadows = CastsShadows(currentMaterial);
-						bool currentHasCustomShader = HasCustomShader(currentMaterial);
-
-						if (currentTransparent != cachedItem.isTransparent ||
-						    currentCastsShadows != cachedItem.castsShadows ||
-						    currentHasCustomShader != cachedItem.hasCustomShader) {
-							// Material properties changed - rebuild required
-							m_DrawDataNeedsFullRebuild = true;
-							break;
-						}
-					}
-					else {
-						// Material that was being used is now null - rebuild required
-						m_DrawDataNeedsFullRebuild = true;
-						break;
-					}
-				}
-			}
 		}
 	}
 
