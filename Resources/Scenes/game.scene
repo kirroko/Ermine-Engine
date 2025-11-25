@@ -23001,527 +23001,6 @@
       "id": 331,
       "components": {
         "IDComponent": {
-          "guid": "a60475eb46d4674badfdf1f16bec278e"
-        },
-        "Transform": {
-          "position": [
-            17.5,
-            0.25,
-            36.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            0.009999999776482582,
-            0.009999999776482582,
-            0.009999999776482582
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Player",
-          "tag": "Model",
-          "selfActive": true
-        },
-        "Mesh": {
-          "kind": "None"
-        },
-        "PhysicComponent": {
-          "bodyType": "Rigid",
-          "motionType": "Dynamic",
-          "mass": 1.0,
-          "shapeType": "Box",
-          "colliderpivot": [
-            0.0,
-            1.0,
-            0.0
-          ],
-          "posx": false,
-          "posy": false,
-          "posz": false,
-          "colliderrot": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotx": true,
-          "roty": true,
-          "rotz": true,
-          "collidersize": [
-            50.0,
-            200.0,
-            50.0
-          ]
-        },
-        "Material": {
-          "hasMaterial": true,
-          "params": {
-            "materialAlbedo": [
-              0.800000011920929,
-              0.800000011920929,
-              0.800000011920929,
-              1.0
-            ],
-            "materialAlpha": 1.0,
-            "materialTransparency": 0.0,
-            "materialMetallic": 0.0,
-            "materialRoughness": 0.30000001192092898,
-            "materialAo": 1.0,
-            "materialEmissive": [
-              0.0,
-              0.0,
-              0.0
-            ],
-            "materialEmissiveIntensity": 0.0,
-            "materialNormalStrength": 1.0,
-            "materialShadingModel": 0,
-            "materialHasAlbedoMap": true,
-            "materialHasNormalMap": false,
-            "materialHasRoughnessMap": false,
-            "materialHasMetallicMap": false,
-            "materialHasAoMap": false,
-            "materialHasEmissiveMap": false
-          },
-          "textures": [
-            {
-              "slot": "materialAlbedoMap",
-              "path": "../Resources/Textures/Pants_Base_color.png"
-            },
-            {
-              "slot": "material.albedoMap",
-              "path": "../Resources/Textures/Pants_Base_color.png"
-            }
-          ],
-          "uvScale": [
-            1.0,
-            1.0
-          ],
-          "uvOffset": [
-            0.0,
-            0.0
-          ]
-        },
-        "HierarchyComponent": {
-          "depth": 0
-        },
-        "GlobalTransform": {},
-        "ScriptsComponent": {
-          "scripts": [
-            {
-              "class": "PlayerController2",
-              "enabled": true,
-              "fields": {
-                "jumpHeight": {
-                  "t": 0,
-                  "v": 2.0
-                },
-                "mouseHorSens": {
-                  "t": 0,
-                  "v": 1.0
-                },
-                "mouseVertSens": {
-                  "t": 0,
-                  "v": 1.0
-                },
-                "moveSpeed": {
-                  "t": 0,
-                  "v": 5.0
-                },
-                "jumpspeed": {
-                  "t": 0,
-                  "v": 5.0
-                },
-                "crouchLerpSpeed": {
-                  "t": 0,
-                  "v": 6.0
-                }
-              }
-            },
-            {
-              "class": "OrbTeleport",
-              "enabled": true,
-              "fields": {
-                "damage": {
-                  "t": 0,
-                  "v": 10.0
-                }
-              }
-            }
-          ]
-        }
-      }
-    },
-    {
-      "id": 332,
-      "components": {
-        "IDComponent": {
-          "guid": "18749c3aa3290f41a5bd45da2a2532e7"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            35.0,
-            20.0
-          ],
-          "rotation": [
-            -0.7071067094802856,
-            0.0,
-            0.0,
-            0.7071068286895752
-          ],
-          "scale": [
-            100.0,
-            99.99999237060547,
-            99.99999237060547
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Player Arms",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "ModelComponent": {
-          "model": "ArmsOnly.fbx",
-          "isSkinFile": false
-        },
-        "HierarchyComponent": {
-          "parentGuid": "a60475eb46d4674badfdf1f16bec278e",
-          "depth": 1
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "id": 333,
-      "components": {
-        "IDComponent": {
-          "guid": "9723fcb49abc434f98e05f6e9d205de0"
-        },
-        "Transform": {
-          "position": [
-            -0.1599999964237213,
-            -0.2999999523162842,
-            1.2500001192092896
-          ],
-          "rotation": [
-            -0.7071061730384827,
-            0.0,
-            0.0,
-            0.7071074843406677
-          ],
-          "scale": [
-            0.00009999999747378752,
-            0.00010000001202570274,
-            0.00010000001202570274
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Syringe",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "ModelComponent": {
-          "model": "C_Syringe.fbx",
-          "isSkinFile": false
-        },
-        "HierarchyComponent": {
-          "parentGuid": "18749c3aa3290f41a5bd45da2a2532e7",
-          "depth": 2
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "id": 334,
-      "components": {
-        "IDComponent": {
-          "guid": "39136f3c2a1b7e4fae062e5ff837f4d5"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Mesh_C_Syringe.fbx_Mesh.015_mesh2",
-          "tag": "Mesh",
-          "selfActive": true
-        },
-        "Material": {
-          "hasMaterial": true,
-          "params": {
-            "materialHasAlbedoMap": true
-          },
-          "textures": [
-            {
-              "slot": "materialAlbedoMap",
-              "path": "../Resources\\Textures\\C_Syringe_BaseColor.png"
-            },
-            {
-              "slot": "material.albedoMap",
-              "path": "../Resources\\Textures\\C_Syringe_BaseColor.png"
-            }
-          ],
-          "uvScale": [
-            1.0,
-            -1.0
-          ],
-          "uvOffset": [
-            0.0,
-            1.0
-          ]
-        },
-        "HierarchyComponent": {
-          "parentGuid": "9723fcb49abc434f98e05f6e9d205de0",
-          "depth": 3
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "id": 335,
-      "components": {
-        "IDComponent": {
-          "guid": "c267820ab240fa40a461a3b0fd708be1"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Mesh_C_Syringe.fbx_Mesh.016_mesh1",
-          "tag": "Mesh",
-          "selfActive": true
-        },
-        "Material": {
-          "hasMaterial": true,
-          "params": {
-            "materialHasAlbedoMap": true
-          },
-          "textures": [
-            {
-              "slot": "materialAlbedoMap",
-              "path": "../Resources\\Textures\\C_Syringe_BaseColor.png"
-            },
-            {
-              "slot": "material.albedoMap",
-              "path": "../Resources\\Textures\\C_Syringe_BaseColor.png"
-            }
-          ],
-          "uvScale": [
-            1.0,
-            -1.0
-          ],
-          "uvOffset": [
-            0.0,
-            1.0
-          ]
-        },
-        "HierarchyComponent": {
-          "parentGuid": "9723fcb49abc434f98e05f6e9d205de0",
-          "depth": 3
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "id": 336,
-      "components": {
-        "IDComponent": {
-          "guid": "00faa6b84506bb4894667dfb30ad191e"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Mesh_C_Syringe.fbx_Mesh.014_mesh0",
-          "tag": "Mesh",
-          "selfActive": true
-        },
-        "Material": {
-          "hasMaterial": true,
-          "params": {
-            "materialHasAlbedoMap": true
-          },
-          "textures": [
-            {
-              "slot": "materialAlbedoMap",
-              "path": "../Resources\\Textures\\C_Syringe_BaseColor.png"
-            },
-            {
-              "slot": "material.albedoMap",
-              "path": "../Resources\\Textures\\C_Syringe_BaseColor.png"
-            }
-          ],
-          "uvScale": [
-            1.0,
-            -1.0
-          ],
-          "uvOffset": [
-            0.0,
-            1.0
-          ]
-        },
-        "HierarchyComponent": {
-          "parentGuid": "9723fcb49abc434f98e05f6e9d205de0",
-          "depth": 3
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "id": 337,
-      "components": {
-        "IDComponent": {
-          "guid": "b025c4ddffa265479339677f5a44202a"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Mesh_ArmsOnly.fbx_base.002_mesh0",
-          "tag": "Mesh",
-          "selfActive": true
-        },
-        "Material": {
-          "hasMaterial": true,
-          "params": {
-            "materialHasAlbedoMap": true
-          },
-          "textures": [
-            {
-              "slot": "materialAlbedoMap",
-              "path": "../Resources\\Textures\\Arms_BaseColor.png"
-            },
-            {
-              "slot": "material.albedoMap",
-              "path": "../Resources\\Textures\\Arms_BaseColor.png"
-            }
-          ],
-          "uvScale": [
-            1.0,
-            -1.0
-          ],
-          "uvOffset": [
-            0.0,
-            1.0
-          ]
-        },
-        "HierarchyComponent": {
-          "parentGuid": "18749c3aa3290f41a5bd45da2a2532e7",
-          "depth": 2
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "id": 338,
-      "components": {
-        "IDComponent": {
-          "guid": "dd8fbc58b7c8c34e98dda8748271dc94"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            100.0,
-            100.0,
-            100.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Main Camera",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "HierarchyComponent": {
-          "parentGuid": "a60475eb46d4674badfdf1f16bec278e",
-          "depth": 1
-        },
-        "GlobalTransform": {},
-        "CameraComponent": {
-          "fov": 70.0,
-          "aspect": 1.7777777910232545,
-          "near": 0.10000000149011612,
-          "far": 1000.0,
-          "primary": false,
-          "isGameCamera": false
-        }
-      }
-    },
-    {
-      "id": 339,
-      "components": {
-        "IDComponent": {
           "guid": "b943f1f52463cb4184ca78d12d2511aa"
         },
         "Transform": {
@@ -23579,7 +23058,7 @@
       }
     },
     {
-      "id": 340,
+      "id": 332,
       "components": {
         "IDComponent": {
           "guid": "d3f5ba6aef89ec4a9aa9420c0e65c98f"
@@ -23614,7 +23093,7 @@
       }
     },
     {
-      "id": 341,
+      "id": 333,
       "components": {
         "IDComponent": {
           "guid": "272181ce3309cf4f9aa50d7b8d6bb2a5"
@@ -23649,7 +23128,7 @@
       }
     },
     {
-      "id": 342,
+      "id": 334,
       "components": {
         "IDComponent": {
           "guid": "8903c0047bebd049a656aeb18860130d"
@@ -23684,7 +23163,7 @@
       }
     },
     {
-      "id": 343,
+      "id": 335,
       "components": {
         "IDComponent": {
           "guid": "e7c0c3a2ffab8c4284c57e70e06d44de"
@@ -23719,7 +23198,7 @@
       }
     },
     {
-      "id": 344,
+      "id": 336,
       "components": {
         "IDComponent": {
           "guid": "08c3910415cdf64fb97e899eab5b0cd8"
@@ -23806,7 +23285,7 @@
       }
     },
     {
-      "id": 345,
+      "id": 337,
       "components": {
         "IDComponent": {
           "guid": "c8609ec6a729c249aa4add33f777b8dc"
@@ -23898,7 +23377,7 @@
       }
     },
     {
-      "id": 346,
+      "id": 338,
       "components": {
         "IDComponent": {
           "guid": "76775c4d69cd1348b28a6798b1cf939a"
@@ -23990,7 +23469,7 @@
       }
     },
     {
-      "id": 347,
+      "id": 339,
       "components": {
         "IDComponent": {
           "guid": "088d317a3edb4e46a2589863019b73fb"
@@ -24082,7 +23561,7 @@
       }
     },
     {
-      "id": 348,
+      "id": 340,
       "components": {
         "IDComponent": {
           "guid": "a8bd6b054cc09b47b0a292e752825848"
@@ -24122,7 +23601,7 @@
       }
     },
     {
-      "id": 349,
+      "id": 341,
       "components": {
         "IDComponent": {
           "guid": "d969159fa9849a45bb43eea167569802"
@@ -24202,7 +23681,7 @@
       }
     },
     {
-      "id": 350,
+      "id": 342,
       "components": {
         "IDComponent": {
           "guid": "80ffedeafba56545a8cc50cec576651c"
@@ -24289,7 +23768,7 @@
       }
     },
     {
-      "id": 351,
+      "id": 343,
       "components": {
         "IDComponent": {
           "guid": "38684b3f199ee2439989f2e7e2bf8411"
@@ -24376,7 +23855,7 @@
       }
     },
     {
-      "id": 352,
+      "id": 344,
       "components": {
         "IDComponent": {
           "guid": "c2c9b0518a1ee84bb4596fe5e316bcb6"
@@ -24456,7 +23935,7 @@
       }
     },
     {
-      "id": 353,
+      "id": 345,
       "components": {
         "IDComponent": {
           "guid": "6a37294f4cd12545bf96343324653c18"
@@ -24536,7 +24015,7 @@
       }
     },
     {
-      "id": 354,
+      "id": 346,
       "components": {
         "IDComponent": {
           "guid": "2d6f67b35bae4b4cadbb713a39a72ea8"
@@ -24596,7 +24075,7 @@
       }
     },
     {
-      "id": 355,
+      "id": 347,
       "components": {
         "IDComponent": {
           "guid": "2b4ec0d9273a034190491f8b7ef5d233"
@@ -24676,7 +24155,7 @@
       }
     },
     {
-      "id": 356,
+      "id": 348,
       "components": {
         "IDComponent": {
           "guid": "6189edd55a800746945ba633ba183bb0"
@@ -24736,7 +24215,7 @@
       }
     },
     {
-      "id": 357,
+      "id": 349,
       "components": {
         "IDComponent": {
           "guid": "59855095a8e3ce4592c8730d2dbb4a4e"
@@ -24816,7 +24295,7 @@
       }
     },
     {
-      "id": 358,
+      "id": 350,
       "components": {
         "IDComponent": {
           "guid": "dab870d81937f244b874ef31c191ad43"
@@ -24876,7 +24355,7 @@
       }
     },
     {
-      "id": 359,
+      "id": 351,
       "components": {
         "IDComponent": {
           "guid": "335eb652c6219040995b0093767e1717"
@@ -24963,7 +24442,7 @@
       }
     },
     {
-      "id": 360,
+      "id": 352,
       "components": {
         "IDComponent": {
           "guid": "e9904c2dedc5f942a3f34d592f1a1f64"
@@ -25055,7 +24534,7 @@
       }
     },
     {
-      "id": 361,
+      "id": 353,
       "components": {
         "IDComponent": {
           "guid": "24f01998c3d96e43b47b06c2437db341"
@@ -25142,7 +24621,7 @@
       }
     },
     {
-      "id": 362,
+      "id": 354,
       "components": {
         "IDComponent": {
           "guid": "7f862f35e3981a4d9d48085d6df041ea"
@@ -25222,7 +24701,7 @@
       }
     },
     {
-      "id": 363,
+      "id": 355,
       "components": {
         "IDComponent": {
           "guid": "f10a4126c6c043449de1b2db383e0c10"
@@ -25282,7 +24761,7 @@
       }
     },
     {
-      "id": 364,
+      "id": 356,
       "components": {
         "IDComponent": {
           "guid": "030013c3c93d5e418ec69978e0f8a06e"
@@ -25362,7 +24841,7 @@
       }
     },
     {
-      "id": 365,
+      "id": 357,
       "components": {
         "IDComponent": {
           "guid": "4eebda5c1b970347af0306a20f81205e"
@@ -25422,7 +24901,7 @@
       }
     },
     {
-      "id": 366,
+      "id": 358,
       "components": {
         "IDComponent": {
           "guid": "c3cbf42d56130646ada7439c4aa6f3d5"
@@ -25502,7 +24981,7 @@
       }
     },
     {
-      "id": 367,
+      "id": 359,
       "components": {
         "IDComponent": {
           "guid": "2061a5a77f6eef45a9cd10fc77979abf"
@@ -25562,7 +25041,7 @@
       }
     },
     {
-      "id": 368,
+      "id": 360,
       "components": {
         "IDComponent": {
           "guid": "4b08432892470a4abb5eb6563eb902bb"
@@ -25642,7 +25121,7 @@
       }
     },
     {
-      "id": 369,
+      "id": 361,
       "components": {
         "IDComponent": {
           "guid": "090763a2f2a54149a2ef076e215cc83b"
@@ -25729,7 +25208,7 @@
       }
     },
     {
-      "id": 370,
+      "id": 362,
       "components": {
         "IDComponent": {
           "guid": "74c9c73f69bfb34f8d7782c2cafde4bd"
@@ -25816,7 +25295,7 @@
       }
     },
     {
-      "id": 371,
+      "id": 363,
       "components": {
         "IDComponent": {
           "guid": "6aa5f2e7dca03d45b1304b53ec063fbf"
@@ -25903,7 +25382,7 @@
       }
     },
     {
-      "id": 372,
+      "id": 364,
       "components": {
         "IDComponent": {
           "guid": "74935af384a3cc4293e8fdd6c9347fef"
@@ -25983,7 +25462,7 @@
       }
     },
     {
-      "id": 373,
+      "id": 365,
       "components": {
         "IDComponent": {
           "guid": "30cdd415d5c14f4f9048da7f3f19413a"
@@ -26063,7 +25542,7 @@
       }
     },
     {
-      "id": 374,
+      "id": 366,
       "components": {
         "IDComponent": {
           "guid": "274fa65bd9a5d543bdcabd1e976f359e"
@@ -26123,7 +25602,7 @@
       }
     },
     {
-      "id": 375,
+      "id": 367,
       "components": {
         "IDComponent": {
           "guid": "8b503b66837e8540ae785f79dfb1f511"
@@ -26203,7 +25682,7 @@
       }
     },
     {
-      "id": 376,
+      "id": 368,
       "components": {
         "IDComponent": {
           "guid": "0f5afd2a7a88864299fc164e2a9e3d9d"
@@ -26263,7 +25742,7 @@
       }
     },
     {
-      "id": 377,
+      "id": 369,
       "components": {
         "IDComponent": {
           "guid": "ce66e3ea067c8e479acd45d91e0357c5"
@@ -26343,7 +25822,7 @@
       }
     },
     {
-      "id": 378,
+      "id": 370,
       "components": {
         "IDComponent": {
           "guid": "e7ae2224cc095c43aef966b9f0e81d0e"
@@ -26403,7 +25882,7 @@
       }
     },
     {
-      "id": 379,
+      "id": 371,
       "components": {
         "IDComponent": {
           "guid": "61a9528b21ccf741adcb6316e577e5cc"
@@ -26490,7 +25969,7 @@
       }
     },
     {
-      "id": 380,
+      "id": 372,
       "components": {
         "IDComponent": {
           "guid": "21f3b3969dab004c9a905395a3a404a9"
@@ -26577,7 +26056,7 @@
       }
     },
     {
-      "id": 381,
+      "id": 373,
       "components": {
         "IDComponent": {
           "guid": "c9dea94359ff0948ace0f025bcc120d5"
@@ -26657,7 +26136,7 @@
       }
     },
     {
-      "id": 382,
+      "id": 374,
       "components": {
         "IDComponent": {
           "guid": "8e626f672b8c2b4fb77ab5cbd523df54"
@@ -26737,7 +26216,7 @@
       }
     },
     {
-      "id": 383,
+      "id": 375,
       "components": {
         "IDComponent": {
           "guid": "a1f77e856936304ba08d0aff288c884b"
@@ -26797,7 +26276,7 @@
       }
     },
     {
-      "id": 384,
+      "id": 376,
       "components": {
         "IDComponent": {
           "guid": "113e816f386f75498dd32e6b72db2b79"
@@ -26877,7 +26356,7 @@
       }
     },
     {
-      "id": 385,
+      "id": 377,
       "components": {
         "IDComponent": {
           "guid": "b62883ae04eaae489bfc45c448aa929b"
@@ -26937,7 +26416,7 @@
       }
     },
     {
-      "id": 386,
+      "id": 378,
       "components": {
         "IDComponent": {
           "guid": "7e4d944cef1b03489576e5a436738e1f"
@@ -27017,7 +26496,7 @@
       }
     },
     {
-      "id": 387,
+      "id": 379,
       "components": {
         "IDComponent": {
           "guid": "e9e96695004a844887c4dfec58701fc8"
@@ -27077,7 +26556,7 @@
       }
     },
     {
-      "id": 388,
+      "id": 380,
       "components": {
         "IDComponent": {
           "guid": "a840e8ab34e8e741b5d7cf6738792074"
@@ -27164,7 +26643,7 @@
       }
     },
     {
-      "id": 389,
+      "id": 381,
       "components": {
         "IDComponent": {
           "guid": "83f47e1e454b514e94e0351b638542a0"
@@ -27244,7 +26723,7 @@
       }
     },
     {
-      "id": 390,
+      "id": 382,
       "components": {
         "IDComponent": {
           "guid": "eb87baa014f956469871e2f123fdedd8"
@@ -27304,7 +26783,7 @@
       }
     },
     {
-      "id": 391,
+      "id": 383,
       "components": {
         "IDComponent": {
           "guid": "966d1dd7025c5446a27c1ebd374b18b1"
@@ -27384,7 +26863,7 @@
       }
     },
     {
-      "id": 392,
+      "id": 384,
       "components": {
         "IDComponent": {
           "guid": "c95dd186ce7d1a46ac9db91f55429b00"
@@ -27444,7 +26923,7 @@
       }
     },
     {
-      "id": 393,
+      "id": 385,
       "components": {
         "IDComponent": {
           "guid": "622ab35266bae7439ad8910b7e3b02bd"
@@ -27524,7 +27003,7 @@
       }
     },
     {
-      "id": 394,
+      "id": 386,
       "components": {
         "IDComponent": {
           "guid": "e083e8c71559cd4dbf5181860585e91f"
@@ -27584,7 +27063,7 @@
       }
     },
     {
-      "id": 395,
+      "id": 387,
       "components": {
         "IDComponent": {
           "guid": "cb2e93df279dee4c8892ae9580e5a7b7"
@@ -27664,7 +27143,7 @@
       }
     },
     {
-      "id": 396,
+      "id": 388,
       "components": {
         "IDComponent": {
           "guid": "617053c05f35d043a9bc2db87838d6bb"
@@ -27751,7 +27230,7 @@
       }
     },
     {
-      "id": 397,
+      "id": 389,
       "components": {
         "IDComponent": {
           "guid": "a6787b57f9c9924582e828d2943ad892"
@@ -27838,7 +27317,7 @@
       }
     },
     {
-      "id": 398,
+      "id": 390,
       "components": {
         "IDComponent": {
           "guid": "f186bd05efe1fb499b37c852049fc73a"
@@ -27925,7 +27404,7 @@
       }
     },
     {
-      "id": 399,
+      "id": 391,
       "components": {
         "IDComponent": {
           "guid": "90fe5b74fcb8f740a93aed034f2967a9"
@@ -28005,7 +27484,7 @@
       }
     },
     {
-      "id": 400,
+      "id": 392,
       "components": {
         "IDComponent": {
           "guid": "bab84e6f1a495543af52bf24f471fe05"
@@ -28085,7 +27564,7 @@
       }
     },
     {
-      "id": 401,
+      "id": 393,
       "components": {
         "IDComponent": {
           "guid": "eebe8fd282196e479c6758dd8f28576d"
@@ -28145,7 +27624,7 @@
       }
     },
     {
-      "id": 402,
+      "id": 394,
       "components": {
         "IDComponent": {
           "guid": "c6e41ee8b1fc014f91439f2b51b03310"
@@ -28225,7 +27704,7 @@
       }
     },
     {
-      "id": 403,
+      "id": 395,
       "components": {
         "IDComponent": {
           "guid": "791c8881035ec3479275168ce277c6e6"
@@ -28285,7 +27764,7 @@
       }
     },
     {
-      "id": 404,
+      "id": 396,
       "components": {
         "IDComponent": {
           "guid": "fea623e1ae9d124a8038427efd37becc"
@@ -28365,7 +27844,7 @@
       }
     },
     {
-      "id": 405,
+      "id": 397,
       "components": {
         "IDComponent": {
           "guid": "5ebb4923ba694e46b09c76d0b4a3c3c0"
@@ -28425,7 +27904,7 @@
       }
     },
     {
-      "id": 406,
+      "id": 398,
       "components": {
         "IDComponent": {
           "guid": "ccc708a4e5e01a47b3ef1e4db76f1fdd"
@@ -28512,7 +27991,7 @@
       }
     },
     {
-      "id": 407,
+      "id": 399,
       "components": {
         "IDComponent": {
           "guid": "06ff8b1a11290442b68fb38be738f068"
@@ -28592,7 +28071,7 @@
       }
     },
     {
-      "id": 408,
+      "id": 400,
       "components": {
         "IDComponent": {
           "guid": "602a16f583fdf340adc8986e74012f20"
@@ -28652,7 +28131,7 @@
       }
     },
     {
-      "id": 409,
+      "id": 401,
       "components": {
         "IDComponent": {
           "guid": "d9dfcfc56a58ad4396b75d9bda603e97"
@@ -28732,7 +28211,7 @@
       }
     },
     {
-      "id": 410,
+      "id": 402,
       "components": {
         "IDComponent": {
           "guid": "ab31c7cbf9cb924e89fd9cf09c2e5dd9"
@@ -28792,7 +28271,7 @@
       }
     },
     {
-      "id": 411,
+      "id": 403,
       "components": {
         "IDComponent": {
           "guid": "9eb34c90408f284cb6d56718a3d9bad0"
@@ -28872,7 +28351,7 @@
       }
     },
     {
-      "id": 412,
+      "id": 404,
       "components": {
         "IDComponent": {
           "guid": "5ea93c3a2cf63c4ea9c93ed17c9fae8f"
@@ -28932,7 +28411,7 @@
       }
     },
     {
-      "id": 413,
+      "id": 405,
       "components": {
         "IDComponent": {
           "guid": "ae5f9b3d52a637488a6de87f307ce01c"
@@ -29012,7 +28491,7 @@
       }
     },
     {
-      "id": 414,
+      "id": 406,
       "components": {
         "IDComponent": {
           "guid": "9c34b190df6f7e4190b2f8d9c9023319"
@@ -29099,7 +28578,7 @@
       }
     },
     {
-      "id": 415,
+      "id": 407,
       "components": {
         "IDComponent": {
           "guid": "1c1f374c37fc9e43ba145290e8acfcf6"
@@ -29191,7 +28670,7 @@
       }
     },
     {
-      "id": 416,
+      "id": 408,
       "components": {
         "IDComponent": {
           "guid": "47e4df6b6eaa31429d4ac51fb7a6d44f"
@@ -29283,7 +28762,7 @@
       }
     },
     {
-      "id": 417,
+      "id": 409,
       "components": {
         "IDComponent": {
           "guid": "236e22998195cc409de913d296b413c1"
@@ -29370,7 +28849,7 @@
       }
     },
     {
-      "id": 418,
+      "id": 410,
       "components": {
         "IDComponent": {
           "guid": "0e959a77d7568f4da5a2cd7776c95eb3"
@@ -29457,7 +28936,7 @@
       }
     },
     {
-      "id": 419,
+      "id": 411,
       "components": {
         "IDComponent": {
           "guid": "91ce1e458613ff49bfdb44a520fcb9d2"
@@ -29537,7 +29016,7 @@
       }
     },
     {
-      "id": 420,
+      "id": 412,
       "components": {
         "IDComponent": {
           "guid": "c72d252e392f4449a19f621b79fabd0f"
@@ -29617,7 +29096,7 @@
       }
     },
     {
-      "id": 421,
+      "id": 413,
       "components": {
         "IDComponent": {
           "guid": "e1a6d9d4395cb74687a7b41d271039b9"
@@ -29677,7 +29156,7 @@
       }
     },
     {
-      "id": 422,
+      "id": 414,
       "components": {
         "IDComponent": {
           "guid": "fc840a4742fab74a882387209555f4ae"
@@ -29757,7 +29236,7 @@
       }
     },
     {
-      "id": 423,
+      "id": 415,
       "components": {
         "IDComponent": {
           "guid": "8432949df060d2438c2256abf69fab28"
@@ -29817,7 +29296,7 @@
       }
     },
     {
-      "id": 424,
+      "id": 416,
       "components": {
         "IDComponent": {
           "guid": "6fb7ba9a9c0c2f47948e90c3ad25727a"
@@ -29897,7 +29376,7 @@
       }
     },
     {
-      "id": 425,
+      "id": 417,
       "components": {
         "IDComponent": {
           "guid": "e8e4dea24576264781017bd79a792680"
@@ -29957,7 +29436,7 @@
       }
     },
     {
-      "id": 426,
+      "id": 418,
       "components": {
         "IDComponent": {
           "guid": "66a2f81e4511eb44af486a232b3fe4c2"
@@ -30049,7 +29528,7 @@
       }
     },
     {
-      "id": 427,
+      "id": 419,
       "components": {
         "IDComponent": {
           "guid": "bb58e7e7b671454fa1870f1d1deaca54"
@@ -30141,7 +29620,7 @@
       }
     },
     {
-      "id": 428,
+      "id": 420,
       "components": {
         "IDComponent": {
           "guid": "9c67bb44dbb1f94c99f8e6e3c727f77c"
@@ -30228,7 +29707,7 @@
       }
     },
     {
-      "id": 429,
+      "id": 421,
       "components": {
         "IDComponent": {
           "guid": "03a72a71f6572842a10e0831f6efc6e0"
@@ -30308,7 +29787,7 @@
       }
     },
     {
-      "id": 430,
+      "id": 422,
       "components": {
         "IDComponent": {
           "guid": "28772c112a5acd45994eee8ca776bfb2"
@@ -30368,7 +29847,7 @@
       }
     },
     {
-      "id": 431,
+      "id": 423,
       "components": {
         "IDComponent": {
           "guid": "a56fe970d13991459b8293d516c423a4"
@@ -30448,7 +29927,7 @@
       }
     },
     {
-      "id": 432,
+      "id": 424,
       "components": {
         "IDComponent": {
           "guid": "7dcd51607f7976469221bddd920955cd"
@@ -30508,7 +29987,7 @@
       }
     },
     {
-      "id": 433,
+      "id": 425,
       "components": {
         "IDComponent": {
           "guid": "a50faae2ed12f44a9d2642027cd704d8"
@@ -30588,7 +30067,7 @@
       }
     },
     {
-      "id": 434,
+      "id": 426,
       "components": {
         "IDComponent": {
           "guid": "5ffda4eb3fe8d9499293a39d461be587"
@@ -30648,7 +30127,7 @@
       }
     },
     {
-      "id": 435,
+      "id": 427,
       "components": {
         "IDComponent": {
           "guid": "91be8d4a805b2f4583a9ab0853afe81d"
@@ -30728,7 +30207,7 @@
       }
     },
     {
-      "id": 436,
+      "id": 428,
       "components": {
         "IDComponent": {
           "guid": "a7a38ebe5031a84398c510effd17b86a"
@@ -30815,7 +30294,7 @@
       }
     },
     {
-      "id": 437,
+      "id": 429,
       "components": {
         "IDComponent": {
           "guid": "a33b1ad8f5ba7a448d8d36500dc5cce3"
@@ -30907,7 +30386,7 @@
       }
     },
     {
-      "id": 438,
+      "id": 430,
       "components": {
         "IDComponent": {
           "guid": "9ddc150376191d449346f756eabda965"
@@ -30999,7 +30478,7 @@
       }
     },
     {
-      "id": 439,
+      "id": 431,
       "components": {
         "IDComponent": {
           "guid": "92feffa0ca9cbe49af4850489037725e"
@@ -31069,7 +30548,7 @@
       }
     },
     {
-      "id": 440,
+      "id": 432,
       "components": {
         "IDComponent": {
           "guid": "98d7417c2f6ec34aa4e452b8bdbf076a"
@@ -31129,7 +30608,7 @@
       }
     },
     {
-      "id": 441,
+      "id": 433,
       "components": {
         "IDComponent": {
           "guid": "3ed13b5ed5a3cb4dad08f075075b94c7"
@@ -31199,7 +30678,7 @@
       }
     },
     {
-      "id": 442,
+      "id": 434,
       "components": {
         "IDComponent": {
           "guid": "9ac10f97c806d14a8fabe124b167039c"
@@ -31259,7 +30738,7 @@
       }
     },
     {
-      "id": 443,
+      "id": 435,
       "components": {
         "IDComponent": {
           "guid": "45652cd731965b45be917aef22d43029"
@@ -31329,7 +30808,7 @@
       }
     },
     {
-      "id": 444,
+      "id": 436,
       "components": {
         "IDComponent": {
           "guid": "442a0ea1a147b64aa7635d285f129ab6"
@@ -31389,7 +30868,7 @@
       }
     },
     {
-      "id": 445,
+      "id": 437,
       "components": {
         "IDComponent": {
           "guid": "745edab9714c2347920b15cb17288bde"
@@ -31459,7 +30938,7 @@
       }
     },
     {
-      "id": 446,
+      "id": 438,
       "components": {
         "IDComponent": {
           "guid": "a81bcfe41870274cb13fab883bf201c3"
@@ -31519,7 +30998,7 @@
       }
     },
     {
-      "id": 447,
+      "id": 439,
       "components": {
         "IDComponent": {
           "guid": "a0c27f4f141e9d438fe8157a98e166c5"
@@ -31589,7 +31068,7 @@
       }
     },
     {
-      "id": 448,
+      "id": 440,
       "components": {
         "IDComponent": {
           "guid": "3126894b749eac468af21783c7863d25"
@@ -31649,7 +31128,7 @@
       }
     },
     {
-      "id": 449,
+      "id": 441,
       "components": {
         "IDComponent": {
           "guid": "fe52688dc674134ca469e0fd92f0784c"
@@ -31719,7 +31198,7 @@
       }
     },
     {
-      "id": 450,
+      "id": 442,
       "components": {
         "IDComponent": {
           "guid": "0f274f1ac325f94eb4f15c10f8242334"
@@ -31779,7 +31258,7 @@
       }
     },
     {
-      "id": 451,
+      "id": 443,
       "components": {
         "IDComponent": {
           "guid": "5c4ead53bb4686479d4efd61c3166e1c"
@@ -31849,7 +31328,7 @@
       }
     },
     {
-      "id": 452,
+      "id": 444,
       "components": {
         "IDComponent": {
           "guid": "b2a127544a7bff4597a6007caef00644"
@@ -31909,7 +31388,7 @@
       }
     },
     {
-      "id": 453,
+      "id": 445,
       "components": {
         "IDComponent": {
           "guid": "f6d1308cfdf68a48af6374007a43609b"
@@ -31979,7 +31458,7 @@
       }
     },
     {
-      "id": 454,
+      "id": 446,
       "components": {
         "IDComponent": {
           "guid": "418970d46678ae4c80fecb638023310d"
@@ -32039,7 +31518,7 @@
       }
     },
     {
-      "id": 455,
+      "id": 447,
       "components": {
         "IDComponent": {
           "guid": "d724a8852061a04a91229ccbd0e9cc2e"
@@ -32109,7 +31588,7 @@
       }
     },
     {
-      "id": 456,
+      "id": 448,
       "components": {
         "IDComponent": {
           "guid": "666f62f8336b694cab4ed645491e0442"
@@ -32169,7 +31648,7 @@
       }
     },
     {
-      "id": 457,
+      "id": 449,
       "components": {
         "IDComponent": {
           "guid": "229e4b95fe200f4f82e21dd93a9d0be3"
@@ -32239,7 +31718,7 @@
       }
     },
     {
-      "id": 458,
+      "id": 450,
       "components": {
         "IDComponent": {
           "guid": "07e8939d92d54f4c8054a1bdaecaec85"
@@ -32299,7 +31778,7 @@
       }
     },
     {
-      "id": 459,
+      "id": 451,
       "components": {
         "IDComponent": {
           "guid": "8526a13458ce754daf6c87c432eb5248"
@@ -32369,7 +31848,7 @@
       }
     },
     {
-      "id": 460,
+      "id": 452,
       "components": {
         "IDComponent": {
           "guid": "9e586daedd85f445bd30dbfe3e927d52"
@@ -32429,7 +31908,7 @@
       }
     },
     {
-      "id": 461,
+      "id": 453,
       "components": {
         "IDComponent": {
           "guid": "c883cc800e86ca4dbec18f49ed772c1c"
@@ -32499,7 +31978,7 @@
       }
     },
     {
-      "id": 462,
+      "id": 454,
       "components": {
         "IDComponent": {
           "guid": "04b20d95ee4c964a91aacd7337e27f72"
@@ -32559,7 +32038,7 @@
       }
     },
     {
-      "id": 463,
+      "id": 455,
       "components": {
         "IDComponent": {
           "guid": "eb245f4682205c478951cea752bd5661"
@@ -32629,7 +32108,7 @@
       }
     },
     {
-      "id": 464,
+      "id": 456,
       "components": {
         "IDComponent": {
           "guid": "72e281aeae613d44aa425c9ca23240fa"
@@ -32689,7 +32168,7 @@
       }
     },
     {
-      "id": 465,
+      "id": 457,
       "components": {
         "IDComponent": {
           "guid": "9280b8d056133344800b5051b7464ded"
@@ -32759,7 +32238,7 @@
       }
     },
     {
-      "id": 466,
+      "id": 458,
       "components": {
         "IDComponent": {
           "guid": "bc636bc159b246409caeb68f8c50bf4f"
@@ -32819,7 +32298,7 @@
       }
     },
     {
-      "id": 467,
+      "id": 459,
       "components": {
         "IDComponent": {
           "guid": "0696f87ea98be649a9c95a56a1d509a1"
@@ -32906,7 +32385,7 @@
       }
     },
     {
-      "id": 468,
+      "id": 460,
       "components": {
         "IDComponent": {
           "guid": "4c6577f14107a446ab3cf0031f3ef4e2"
@@ -32966,7 +32445,7 @@
       }
     },
     {
-      "id": 469,
+      "id": 461,
       "components": {
         "IDComponent": {
           "guid": "907c2ea1e05d7946b1e2eb359facf20a"
@@ -33026,7 +32505,7 @@
       }
     },
     {
-      "id": 470,
+      "id": 462,
       "components": {
         "IDComponent": {
           "guid": "01af684b434c4d49afe658d440598648"
@@ -33145,7 +32624,7 @@
       }
     },
     {
-      "id": 471,
+      "id": 463,
       "components": {
         "IDComponent": {
           "guid": "618b3fbaca931742b5b675ff1871c7e6"
@@ -33222,6 +32701,547 @@
           "depth": 0
         },
         "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 464,
+      "components": {
+        "IDComponent": {
+          "guid": "a11b86cd044cba44be3499a6e37a9ecb"
+        },
+        "Transform": {
+          "position": [
+            17.5,
+            0.25,
+            36.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.009999999776482582,
+            0.009999999776482582,
+            0.009999999776482582
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Player",
+          "tag": "Model",
+          "selfActive": true
+        },
+        "AudioComponent": {
+          "soundName": "",
+          "eventName": "",
+          "useRandomVariation": true,
+          "is3D": false,
+          "isLooping": false,
+          "isStreaming": false,
+          "volume": 1.0,
+          "followTransform": false,
+          "minDistance": 1.0,
+          "maxDistance": 100.0,
+          "soundVariations": [
+            "../Resources/Audio/1.wav",
+            "../Resources/Audio/2.wav",
+            "../Resources/Audio/3.wav",
+            "../Resources/Audio/4.wav",
+            "../Resources/Audio/5.wav",
+            "../Resources/Audio/6.wav"
+          ]
+        },
+        "Mesh": {
+          "kind": "None"
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Dynamic",
+          "mass": 1.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": true,
+          "roty": true,
+          "rotz": true,
+          "collidersize": [
+            50.0,
+            200.0,
+            50.0
+          ]
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              1.0
+            ],
+            "materialAlpha": 1.0,
+            "materialTransparency": 0.0,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.30000001192092898,
+            "materialAo": 1.0,
+            "materialEmissive": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 0.0,
+            "materialNormalStrength": 1.0,
+            "materialShadingModel": 0,
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": false,
+            "materialHasRoughnessMap": false,
+            "materialHasMetallicMap": false,
+            "materialHasAoMap": false,
+            "materialHasEmissiveMap": false
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources/Textures/Pants_Base_color.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources/Textures/Pants_Base_color.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ]
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "class": "PlayerController2",
+              "enabled": true,
+              "fields": {
+                "mouseHorSens": {
+                  "t": 0,
+                  "v": 1.0
+                },
+                "jumpHeight": {
+                  "t": 0,
+                  "v": 2.0
+                },
+                "mouseVertSens": {
+                  "t": 0,
+                  "v": 1.0
+                },
+                "moveSpeed": {
+                  "t": 0,
+                  "v": 5.0
+                },
+                "jumpspeed": {
+                  "t": 0,
+                  "v": 5.0
+                },
+                "crouchLerpSpeed": {
+                  "t": 0,
+                  "v": 6.0
+                }
+              }
+            },
+            {
+              "class": "OrbTeleport",
+              "enabled": true,
+              "fields": {
+                "damage": {
+                  "t": 0,
+                  "v": 10.0
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": 465,
+      "components": {
+        "IDComponent": {
+          "guid": "c970557c7c19c447a08ca5c2b0201e17"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            35.0,
+            20.0
+          ],
+          "rotation": [
+            -0.7071067094802856,
+            0.0,
+            0.0,
+            0.7071068286895752
+          ],
+          "scale": [
+            100.0,
+            99.99999237060547,
+            99.99999237060547
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Player Arms",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ArmsOnly.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "a11b86cd044cba44be3499a6e37a9ecb",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 466,
+      "components": {
+        "IDComponent": {
+          "guid": "db3b621b34a88c4595a9bb757f31d634"
+        },
+        "Transform": {
+          "position": [
+            -0.1599999964237213,
+            -0.2999999523162842,
+            1.2500001192092896
+          ],
+          "rotation": [
+            -0.7071061730384827,
+            0.0,
+            0.0,
+            0.7071074843406677
+          ],
+          "scale": [
+            0.00009999999747378752,
+            0.00010000001202570274,
+            0.00010000001202570274
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Syringe",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "C_Syringe.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "c970557c7c19c447a08ca5c2b0201e17",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 467,
+      "components": {
+        "IDComponent": {
+          "guid": "0ad23be1fe87e74387be8caa7c42a5db"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_C_Syringe.fbx_Mesh.015_mesh2",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources\\Textures\\C_Syringe_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources\\Textures\\C_Syringe_BaseColor.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            -1.0
+          ],
+          "uvOffset": [
+            0.0,
+            1.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "db3b621b34a88c4595a9bb757f31d634",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 468,
+      "components": {
+        "IDComponent": {
+          "guid": "4c24cf673d8e624ea199bbc3f132bb82"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_C_Syringe.fbx_Mesh.016_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources\\Textures\\C_Syringe_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources\\Textures\\C_Syringe_BaseColor.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            -1.0
+          ],
+          "uvOffset": [
+            0.0,
+            1.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "db3b621b34a88c4595a9bb757f31d634",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 469,
+      "components": {
+        "IDComponent": {
+          "guid": "7177ddff3d380e42a4c311f6b1ca18ec"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_C_Syringe.fbx_Mesh.014_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources\\Textures\\C_Syringe_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources\\Textures\\C_Syringe_BaseColor.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            -1.0
+          ],
+          "uvOffset": [
+            0.0,
+            1.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "db3b621b34a88c4595a9bb757f31d634",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 470,
+      "components": {
+        "IDComponent": {
+          "guid": "3f49a307ace5d6439c0e3a9ed10397ab"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ArmsOnly.fbx_base.002_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources\\Textures\\Arms_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources\\Textures\\Arms_BaseColor.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            -1.0
+          ],
+          "uvOffset": [
+            0.0,
+            1.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "c970557c7c19c447a08ca5c2b0201e17",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 471,
+      "components": {
+        "IDComponent": {
+          "guid": "8755766cb8da1c4db2d1c1bd8eb6f47d"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            100.0,
+            100.0,
+            100.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Main Camera",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "a11b86cd044cba44be3499a6e37a9ecb",
+          "depth": 1
+        },
+        "GlobalTransform": {},
+        "CameraComponent": {
+          "fov": 70.0,
+          "aspect": 1.7777777910232545,
+          "near": 0.10000000149011612,
+          "far": 1000.0,
+          "primary": false,
+          "isGameCamera": false
+        }
       }
     }
   ],
