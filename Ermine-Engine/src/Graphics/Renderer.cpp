@@ -6379,6 +6379,8 @@ void Renderer::SyncToGlobalGraphics()
 	m_GlobalGraphics.fogDensity = m_FogDensity;
 	m_GlobalGraphics.fogStart = m_FogStart;
 	m_GlobalGraphics.fogEnd = m_FogEnd;
+	m_GlobalGraphics.fogHeightCoefficient = m_FogHeightCoefficient;
+	m_GlobalGraphics.fogHeightFalloff = m_FogHeightFalloff;
 
 	m_GlobalGraphics.vignetteEnabled = m_VignetteEnabled;
 	m_GlobalGraphics.fxaaEnabled = m_FXAAEnabled;
@@ -6406,6 +6408,10 @@ void Renderer::SyncToGlobalGraphics()
 	m_GlobalGraphics.motionBlurEnabled = m_MotionBlurEnabled;
 	m_GlobalGraphics.motionBlurStrength = m_MotionBlurStrength;
 	m_GlobalGraphics.motionBlurSamples = m_MotionBlurSamples;
+
+	m_GlobalGraphics.spotlightRaysEnabled = m_SpotlightRaysEnabled;
+	m_GlobalGraphics.spotlightRayIntensity = m_SpotlightRayIntensity;
+	m_GlobalGraphics.spotlightRayFalloff = m_SpotlightRayFalloff;
 }
 
 void Renderer::ApplyFromGlobalGraphics()
@@ -6428,6 +6434,8 @@ void Renderer::ApplyFromGlobalGraphics()
 	m_FogDensity = m_GlobalGraphics.fogDensity;
 	m_FogStart = m_GlobalGraphics.fogStart;
 	m_FogEnd = m_GlobalGraphics.fogEnd;
+	m_FogHeightCoefficient = m_GlobalGraphics.fogHeightCoefficient;
+	m_FogHeightFalloff = m_GlobalGraphics.fogHeightFalloff;
 
 	m_VignetteEnabled = m_GlobalGraphics.vignetteEnabled;
 	m_FXAAEnabled = m_GlobalGraphics.fxaaEnabled;
@@ -6455,6 +6463,10 @@ void Renderer::ApplyFromGlobalGraphics()
 	m_MotionBlurEnabled = m_GlobalGraphics.motionBlurEnabled;
 	m_MotionBlurStrength = m_GlobalGraphics.motionBlurStrength;
 	m_MotionBlurSamples = m_GlobalGraphics.motionBlurSamples;
+
+	m_SpotlightRaysEnabled = m_GlobalGraphics.spotlightRaysEnabled;
+	m_SpotlightRayIntensity = m_GlobalGraphics.spotlightRayIntensity;
+	m_SpotlightRayFalloff = m_GlobalGraphics.spotlightRayFalloff;
 }
 
 /**
