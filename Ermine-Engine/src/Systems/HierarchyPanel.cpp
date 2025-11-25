@@ -21,6 +21,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "AssetManager.h"
 #include "Physics.h"
 #include "Serialisation.h" // Added for prefab support
+#include "Selection.h"
 
 namespace Ermine {
     void HierarchyPanel::SetScene(Scene* scene) {
@@ -45,21 +46,29 @@ namespace Ermine {
         // Scene header
         ImGui::Text("Scene: %s", m_ActiveScene->GetName().c_str());
         ImGui::Text("Entities: %zu", m_ActiveScene->GetEntityCount());
+        ImGui::Text("Selected: %zu", editor::Selection::All().size());
         ImGui::Separator();
 
         // Toolbar
         if (ImGui::Button("Create Entity")) {
             EntityID newEntity = m_ActiveScene->CreateEntity("New Entity");
-            m_ActiveScene->SetSelectedEntity(newEntity);
+			editor::Selection::SelectSingle(m_ActiveScene, newEntity);
             ImGui::SetWindowFocus("Inspector");
         }
         ImGui::SameLine();
 
-        EntityID selected = m_ActiveScene->GetSelectedEntity();
-        if (selected != 0) {
-            if (ImGui::Button("Delete Selected")) {
-                m_ActiveScene->DestroyEntity(selected);
+        EntityID primary = editor::Selection::Primary();
+        if (primary != 0 && ImGui::Button("Delete Selected")) {
+            // Delete all currently selected entities
+            auto sel = editor::Selection::All();
+            std::vector<EntityID> toDelete(sel.begin(), sel.end());
+            for (auto id : toDelete) 
+            {
+                ECS::GetInstance().GetSystem<Physics>()->RemovePhysic(id);
+                m_ActiveScene->DestroyEntity(id);
+                ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
             }
+            editor::Selection::Clear(m_ActiveScene);
         }
 
         ImGui::Separator();
@@ -158,7 +167,8 @@ namespace Ermine {
             }
 
             // Make sure the new entity is added to the scene and selected
-            m_ActiveScene->SetSelectedEntity(newEntity);
+            //m_ActiveScene->SetSelectedEntity(newEntity);
+			editor::Selection::SelectSingle(m_ActiveScene, newEntity);
             ImGui::SetWindowFocus("Inspector");
 
             // Clean up the temporary prefab file
@@ -176,7 +186,7 @@ namespace Ermine {
 
         auto& ecs = ECS::GetInstance();
         auto& metadata = ecs.GetComponent<ObjectMetaData>(entity);
-        bool isSelected = m_ActiveScene->IsEntitySelected(entity);
+        bool isSelected = editor::Selection::IsSelected(entity);
 
         ImGui::PushID((int)entity); // keep this
 
@@ -206,12 +216,17 @@ namespace Ermine {
         HandleDragDrop(entity);
 
         if (ImGui::IsItemClicked()) {
-            m_ActiveScene->SetSelectedEntity(entity);
-            m_PendingFocusEntity = entity;
+            if (ImGui::GetIO().KeyCtrl)
+				editor::Selection::Toggle(m_ActiveScene, entity); // Multi-select
+            else
+				editor::Selection::SelectSingle(m_ActiveScene, entity); // Single select
+            //m_ActiveScene->SetSelectedEntity(entity);
+            m_PendingFocusEntity = editor::Selection::Primary();
         }
 
         if (ImGui::BeginPopupContextItem(("ctx##" + std::to_string((uint64_t)entity)).c_str())) { // unique popup
             if (ImGui::MenuItem("Delete")) {
+                ECS::GetInstance().GetSystem<Physics>()->RemovePhysic(entity);
                 m_ActiveScene->DestroyEntity(entity);
                 ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
                 ImGui::CloseCurrentPopup();
@@ -315,8 +330,9 @@ namespace Ermine {
         if (ImGui::BeginPopupContextWindow("HierarchyContext", ImGuiPopupFlags_NoOpenOverItems | ImGuiPopupFlags_MouseButtonRight)) {
             if (ImGui::MenuItem("Create Empty Entity")) {
                 EntityID newEntity = m_ActiveScene->CreateEntity("Empty Entity");
-                m_ActiveScene->SetSelectedEntity(newEntity); // Auto-select the new entity
-                ImGui::SetWindowFocus("Inspector"); // ADD THIS LINE
+                //m_ActiveScene->SetSelectedEntity(newEntity); // Auto-select the new entity
+				editor::Selection::SelectSingle(m_ActiveScene, newEntity);
+                ImGui::SetWindowFocus("Inspector");
             }
 
             if (ImGui::BeginMenu("Create Primitive")) {
@@ -342,7 +358,8 @@ namespace Ermine {
                     }
                     EE_CORE_INFO("==================");
 
-                    m_ActiveScene->SetSelectedEntity(entity);
+                    //m_ActiveScene->SetSelectedEntity(entity);
+					editor::Selection::SelectSingle(m_ActiveScene, entity);
                     ImGui::SetWindowFocus("Inspector");
                 }
                 if (ImGui::MenuItem("Sphere")) {
@@ -366,7 +383,8 @@ namespace Ermine {
                             transform.position.z);
                     }
                     EE_CORE_INFO("==================");
-                    m_ActiveScene->SetSelectedEntity(entity);
+                    //m_ActiveScene->SetSelectedEntity(entity);
+					editor::Selection::SelectSingle(m_ActiveScene, entity);
                     ImGui::SetWindowFocus("Inspector");
                 }
                 if (ImGui::MenuItem("Cone")) {
@@ -390,7 +408,8 @@ namespace Ermine {
                             transform.position.z);
                     }
                     EE_CORE_INFO("==================");
-                    m_ActiveScene->SetSelectedEntity(entity);
+                    //m_ActiveScene->SetSelectedEntity(entity);
+					editor::Selection::SelectSingle(m_ActiveScene, entity);
                     ImGui::SetWindowFocus("Inspector");
                 }
                 ImGui::EndMenu();
@@ -399,29 +418,55 @@ namespace Ermine {
             if (ImGui::MenuItem("Create Light")) {
                 EntityID entity = m_ActiveScene->CreateEntity("Light");
                 ECS::GetInstance().AddComponent(entity, Light());
-                m_ActiveScene->SetSelectedEntity(entity); 
+                /*m_ActiveScene->SetSelectedEntity(entity); */
+                editor::Selection::SelectSingle(m_ActiveScene, entity);
                 ImGui::SetWindowFocus("Inspector"); 
             }
 
 
             ImGui::Separator();
 
-            EntityID selected = m_ActiveScene->GetSelectedEntity();
-            if (selected != 0) {
-                // Check if selected entity has a parent
-                auto hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>();
-                if (hierarchySystem->GetParent(selected) != 0) {
-                    if (ImGui::MenuItem("Unparent Selected")) {
-                        hierarchySystem->UnsetParent(selected);
-                        EE_CORE_INFO("Unparented entity {}", selected);
-                    }
+			EntityID primary = editor::Selection::Primary();
+            if (primary != 0)
+            {
+				auto hs = ECS::GetInstance().GetSystem<HierarchySystem>();
+                if (hs->GetParent(primary) != 0)
+                {
+	                if (ImGui::MenuItem("Unparent Selected"))
+                        for (auto id : editor::Selection::All())
+                        {
+                            hs->UnsetParent(id);
+                            EE_CORE_INFO("Unparented entity {}", id);
+                        }
                 }
 
-                if (ImGui::MenuItem("Delete Selected")) {
-                    m_ActiveScene->DestroyEntity(selected);
-                    ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
+                if (ImGui::MenuItem("Delete Selected"))
+                {
+	                auto sel = editor::Selection::All();
+                    for (auto id : sel)
+                    {
+                        m_ActiveScene->DestroyEntity(id);
+                    }
+					editor::Selection::Clear(m_ActiveScene);
+					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
                 }
             }
+            //EntityID selected = m_ActiveScene->GetSelectedEntity();
+            //if (selected != 0) {
+            //    // Check if selected entity has a parent
+            //    auto hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>();
+            //    if (hierarchySystem->GetParent(selected) != 0) {
+            //        if (ImGui::MenuItem("Unparent Selected")) {
+            //            hierarchySystem->UnsetParent(selected);
+            //            EE_CORE_INFO("Unparented entity {}", selected);
+            //        }
+            //    }
+
+            //    if (ImGui::MenuItem("Delete Selected")) {
+            //        m_ActiveScene->DestroyEntity(selected);
+            //        ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
+            //    }
+            //}
 
             ImGui::EndPopup();
         }

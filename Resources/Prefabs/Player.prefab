@@ -3,10 +3,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "b312821838e0dd74c01dcac868254cb7"
-        },
-        "HierarchyComponent": {
-          "depth": 0
+          "guid": "eece3789fb9fbb46ae6a9011bf965e1a"
         },
         "Transform": {
           "position": [
@@ -34,6 +31,33 @@
         "Mesh": {
           "kind": "None"
         },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Dynamic",
+          "mass": 1.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": true,
+          "roty": true,
+          "rotz": true,
+          "collidersize": [
+            50.0,
+            200.0,
+            50.0
+          ]
+        },
         "Material": {
           "hasMaterial": true,
           "params": {
@@ -46,7 +70,7 @@
             "materialAlpha": 1.0,
             "materialTransparency": 0.0,
             "materialMetallic": 0.0,
-            "materialRoughness": 0.30000001192092896,
+            "materialRoughness": 0.30000001192092898,
             "materialAo": 1.0,
             "materialEmissive": [
               0.0,
@@ -92,86 +116,67 @@
             "playbackSpeed": 1.0,
             "playing": false,
             "currentTime": 0.0,
-            "states": [
-              {
-                "id": 1,
-                "name": "Idle",
-                "clipName": "mixamo.com",
-                "isStartState": true,
-                "isAttached": true,
-                "speed": 1.0,
-                "blendWeight": 1.0,
-                "editorPos": [
-                  108.0,
-                  75.0
-                ]
-              },
-              {
-                "id": 2,
-                "name": "Move",
-                "clipName": "mixamo.com",
-                "isStartState": false,
-                "isAttached": true,
-                "speed": 1.0,
-                "blendWeight": 1.0,
-                "editorPos": [
-                  516.0,
-                  85.0
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "fromNodeId": 1,
-                "toNodeId": 2,
-                "exitTime": 0.0,
-                "duration": 0.25,
-                "conditions": [
-                  {
-                    "parameterName": "isMoving",
-                    "comparison": "==",
-                    "threshold": 0.0,
-                    "boolValue": true
-                  }
-                ]
-              },
-              {
-                "fromNodeId": 2,
-                "toNodeId": 1,
-                "exitTime": 0.0,
-                "duration": 0.25,
-                "conditions": [
-                  {
-                    "parameterName": "isMoving",
-                    "comparison": "==",
-                    "threshold": 0.0,
-                    "boolValue": false
-                  }
-                ]
-              }
-            ],
-            "parameters": [
-              {
-                "name": "isMoving",
-                "type": 0,
-                "boolValue": false,
-                "floatValue": 0.0,
-                "intValue": 0,
-                "triggerValue": false
-              }
-            ]
+            "states": [],
+            "transitions": [],
+            "parameters": []
           }
+        },
+        "HierarchyComponent": {
+          "depth": 0
         },
         "GlobalTransform": {},
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "PlayerController"
+              "class": "PlayerController2"
             },
             {
               "class": "OrbTeleport"
             }
           ]
+        }
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "eca128df0c122b4d8c69d136408b94be"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            -25.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            100.0,
+            100.0,
+            100.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Main Camera",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "eece3789fb9fbb46ae6a9011bf965e1a",
+          "depth": 1
+        },
+        "GlobalTransform": {},
+        "CameraComponent": {
+          "fov": 75.02400207519531,
+          "aspect": 1.7777777910232545,
+          "near": 0.10000000149011612,
+          "far": 1000.0,
+          "primary": false,
+          "isGameCamera": false
         }
       }
     }

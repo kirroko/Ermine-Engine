@@ -1093,6 +1093,9 @@ namespace Ermine
 		Vec3 aabbMin{ -1.0f, -1.0f, -1.0f };
 		Vec3 aabbMax{ 1.0f,  1.0f,  1.0f };
 
+		//Physic mesh collider
+		std::vector<glm::vec3> cpuVertices;
+
 		Mesh() = default;
 
 		Mesh(const std::shared_ptr<graphics::VertexArray>& vao, const std::shared_ptr<graphics::VertexBuffer>& vbo, const std::shared_ptr<graphics::IndexBuffer>& ibo) :
@@ -1701,10 +1704,127 @@ namespace Ermine
 			xproperty::obj_member<"emissiveIntensity", &Material::cacheEmissiveIntensity>
 		)
 	};
-}
 
-namespace Ermine
-{
+	struct GlobalGraphics
+	{
+		// SSAO parameters
+		bool  ssaoEnabled = false;
+		int   ssaoSamples = 16;
+		float ssaoRadius = 10.0f;
+		float ssaoBias = 0.01f;
+		float ssaoIntensity = 1.0f;
+		float ssaoFadeout = 0.1f;
+		float ssaoMaxDistance = 100.0f;
+
+		// Fog parameters
+		bool  fogEnabled = false;
+		int   fogMode = 0;                     // 0 = linear, 1 = exp, 2 = exp^2
+		Vec3  fogColor = Vec3{ 0.5f, 0.6f, 0.7f };
+		float fogDensity = 0.02f;                 // exp modes
+		float fogStart = 50.0f;                 // linear
+		float fogEnd = 200.0f;                // linear
+		float fogHeightCoefficient = 0.1f; // For height-based fog
+		float fogHeightFalloff = 10.0f;      // For height-based fog
+
+		// Post-processing toggles
+		bool vignetteEnabled = false;
+		bool fxaaEnabled = true;
+		bool toneMappingEnabled = true;
+		bool gammaCorrectionEnabled = true;
+		bool bloomEnabled = true;
+		bool skyboxIsHDR = false;
+
+		// Post-processing parameters
+		float exposure = 1.0f;
+		float contrast = 1.0f;
+		float saturation = 1.0f;
+		float gamma = 2.2f;
+		float vignetteIntensity = 0.3f;
+		float vignetteRadius = 0.8f;
+		float bloomStrength = 0.04f;
+
+		// FXAA parameters
+		float fxaaSpanMax = 8.0f;
+		float fxaaReduceMin = 1.0f / 128.0f;
+		float fxaaReduceMul = 1.0f / 8.0f;
+
+		// Bloom pass parameters
+		float bloomThreshold = 1.0f;
+		float bloomIntensity = 2.0f;
+		float bloomRadius = 1.0f;
+
+		// Spotlight ray parameters
+		bool spotlightRaysEnabled = true;
+		float spotlightRayIntensity = 0.3f;
+		float spotlightRayFalloff = 2.0f;
+
+		template<typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const
+		{
+			xprop_utils::SerializeToJson(*this, out, alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in)
+		{
+			xprop_utils::DeserializeFromJson(*this, in);
+		}
+
+		XPROPERTY_DEF(
+			"GlobalGraphics", GlobalGraphics,
+
+			// SSAO
+			xproperty::obj_member<"ssaoEnabled", &GlobalGraphics::ssaoEnabled>,
+			xproperty::obj_member<"ssaoSamples", &GlobalGraphics::ssaoSamples>,
+			xproperty::obj_member<"ssaoRadius", &GlobalGraphics::ssaoRadius>,
+			xproperty::obj_member<"ssaoBias", &GlobalGraphics::ssaoBias>,
+			xproperty::obj_member<"ssaoIntensity", &GlobalGraphics::ssaoIntensity>,
+			xproperty::obj_member<"ssaoFadeout", &GlobalGraphics::ssaoFadeout>,
+			xproperty::obj_member<"ssaoMaxDistance", &GlobalGraphics::ssaoMaxDistance>,
+
+			// Fog
+			xproperty::obj_member<"fogEnabled", &GlobalGraphics::fogEnabled>,
+			xproperty::obj_member<"fogMode", &GlobalGraphics::fogMode>,
+			xproperty::obj_member<"fogColor", &GlobalGraphics::fogColor>,
+			xproperty::obj_member<"fogDensity", &GlobalGraphics::fogDensity>,
+			xproperty::obj_member<"fogStart", &GlobalGraphics::fogStart>,
+			xproperty::obj_member<"fogEnd", &GlobalGraphics::fogEnd>,
+			xproperty::obj_member<"fogHeightCoefficient", &GlobalGraphics::fogHeightCoefficient>,
+			xproperty::obj_member<"fogHeightFalloff", &GlobalGraphics::fogHeightFalloff>,
+
+			// Post-process toggles
+			xproperty::obj_member<"vignetteEnabled", &GlobalGraphics::vignetteEnabled>,
+			xproperty::obj_member<"fxaaEnabled", &GlobalGraphics::fxaaEnabled>,
+			xproperty::obj_member<"toneMappingEnabled", &GlobalGraphics::toneMappingEnabled>,
+			xproperty::obj_member<"gammaCorrectionEnabled", &GlobalGraphics::gammaCorrectionEnabled>,
+			xproperty::obj_member<"bloomEnabled", &GlobalGraphics::bloomEnabled>,
+			xproperty::obj_member<"skyboxIsHDR", &GlobalGraphics::skyboxIsHDR>,
+
+			// Post-process params
+			xproperty::obj_member<"exposure", &GlobalGraphics::exposure>,
+			xproperty::obj_member<"contrast", &GlobalGraphics::contrast>,
+			xproperty::obj_member<"saturation", &GlobalGraphics::saturation>,
+			xproperty::obj_member<"gamma", &GlobalGraphics::gamma>,
+			xproperty::obj_member<"vignetteIntensity", &GlobalGraphics::vignetteIntensity>,
+			xproperty::obj_member<"vignetteRadius", &GlobalGraphics::vignetteRadius>,
+			xproperty::obj_member<"bloomStrength", &GlobalGraphics::bloomStrength>,
+
+			// FXAA
+			xproperty::obj_member<"fxaaSpanMax", &GlobalGraphics::fxaaSpanMax>,
+			xproperty::obj_member<"fxaaReduceMin", &GlobalGraphics::fxaaReduceMin>,
+			xproperty::obj_member<"fxaaReduceMul", &GlobalGraphics::fxaaReduceMul>,
+
+			// Bloom pass
+			xproperty::obj_member<"bloomThreshold", &GlobalGraphics::bloomThreshold>,
+			xproperty::obj_member<"bloomIntensity", &GlobalGraphics::bloomIntensity>,
+			xproperty::obj_member<"bloomRadius", &GlobalGraphics::bloomRadius>,
+
+			// Spotlight ray parameters
+			xproperty::obj_member<"spotlightRaysEnabled", &GlobalGraphics::spotlightRaysEnabled>,
+			xproperty::obj_member<"spotlightRayIntensity", &GlobalGraphics::spotlightRayIntensity>,
+			xproperty::obj_member<"spotlightRayFalloff", &GlobalGraphics::spotlightRayFalloff>
+		)
+	};
+
 	/*!***********************************************************************
 	\brief
 	 Light structure
@@ -2315,18 +2435,28 @@ namespace Ermine
 	*************************************************************************/
 	struct PhysicComponent
 	{
+		//collision type
 		PhysicsBodyType bodyType{ PhysicsBodyType::Rigid };
+		//obj type
 		JPH::EMotionType motionType{ JPH::EMotionType::Static };
+		//obj weight
 		float mass{ 0.0f };
+		//collision shape
 		ShapeType shapeType{ ShapeType::Box };
+		//collision transform & constrains
 		Ermine::Vec3 colliderPivot{ 0,0,0 };
+		bool posX = false; bool posY = false; bool posZ = false;
 		Ermine::Vec3 colliderRot{ 0,0,0 };
+		bool rotX = false; bool rotY = false; bool rotZ = false;
 		Ermine::Vec3 colliderSize{ 1,1,1 };
+
+		bool update = false;
 
 		JPH::BodyID bodyID{ JPH::BodyID::cInvalidBodyID };
 		JPH::Body* body{ nullptr };
 		std::vector<glm::vec3> customMeshVertices;   // For custom mesh
 		JPH::RefConst<JPH::Shape> shapeRef;
+		bool isDead = false;
 
 		PhysicComponent() = default;
 
@@ -2355,7 +2485,13 @@ namespace Ermine
 			xproperty::obj_member<"mass", &PhysicComponent::mass>,
 			xproperty::obj_member<"shapeType", &PhysicComponent::shapeType>,
 			xproperty::obj_member<"colliderpivot", &PhysicComponent::colliderPivot>,
+			xproperty::obj_member<"posx", &PhysicComponent::posX>,
+			xproperty::obj_member<"posy", &PhysicComponent::posY>,
+			xproperty::obj_member<"posz", &PhysicComponent::posZ>,
 			xproperty::obj_member<"colliderrot", &PhysicComponent::colliderRot>,
+			xproperty::obj_member<"rotx", &PhysicComponent::rotX>,
+			xproperty::obj_member<"roty", &PhysicComponent::rotY>,
+			xproperty::obj_member<"rotz", &PhysicComponent::rotZ>,
 			xproperty::obj_member<"collidersize", &PhysicComponent::colliderSize>
 		)
 	};
@@ -3248,6 +3384,16 @@ namespace Ermine
 		float manaBarWidth = 0.3f;            // Percentage of screen width
 		float manaBarHeight = 0.03f;          // Percentage of screen height
 		Ermine::Vec3 manaBarPosition = { 0.1f, 0.85f, 0.0f };   // Below health bar
+
+		float GetHealth() const
+		{
+			return currentHealth;
+		}
+
+		void SetHealth(float value)
+		{
+			currentHealth = std::clamp(value, 0.0f, maxHealth);
+		}
 
 		// Skill slot data
 		struct SkillSlot

@@ -26,6 +26,11 @@ namespace ErmineEngine
                 return min;
             return val > max ? max : val;
         }
+
+        public static float Sqrt(float f)
+        {
+            return (float)Math.Sqrt(f);
+        }
         #endregion
     }
 }
