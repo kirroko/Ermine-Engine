@@ -25,6 +25,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "GeometryFactory.h"
 #include "JobSystem.h"
 #include "Serialisation.h"
+#include "Window.h"
 // Engine Systems
 #include "Renderer.h"
 #include "ScriptEngine.h"
@@ -478,10 +479,9 @@ bool engine::Init(GLFWwindow* windowContext)
 	auto defaultScene = std::make_shared<Scene>("Main Scene");
 	SceneManager::GetInstance().SetActiveScene(defaultScene);
 
-	// TEMP - load level scene manually
-	SceneManager::GetInstance().OpenScene("../Resources/Scenes/physicdemo.scene");
-	editor::EditorGUI::s_state = editor::EditorGUI::SimState::playing;
-	glfwSetInputMode(windowContext, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	SceneManager::GetInstance().OpenScene("../Resources/Scenes/game.scene"); // Load game scene
+	editor::EditorGUI::s_state = editor::EditorGUI::SimState::playing;		 // Set to playing state
+	glfwSetInputMode(windowContext, GLFW_CURSOR, GLFW_CURSOR_DISABLED);		 // Hide and capture cursor
 
 #endif
 
@@ -553,6 +553,9 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 	// Handle shading mode toggle
 	//HandleShadingToggle(windowContext);
 
+	// Handle fullscreen toggle
+	HandleFullscreenToggle(windowContext);
+
 	// Update input states
 	Input::Update();
 
@@ -567,8 +570,8 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 
 	// Other non-fixed logic
 	// NOTE: Order of updates is important! Don't move things around without considering dependencies
-	ECS::GetInstance().GetSystem<HierarchySystem>()->UpdateHierarchy();									// Update hierarchy transforms first
 	ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->Update();									// Game logic updates transforms, forces, etc
+	ECS::GetInstance().GetSystem<HierarchySystem>()->UpdateHierarchy();									// Update hierarchy transforms first
 	ECS::GetInstance().GetSystem<StateManager>()->Update(FrameController::GetFixedDeltaTime());		// FSM update
 	ECS::GetInstance().GetSystem<NavMeshAgentSystem>()->Update(FrameController::GetFixedDeltaTime());	// AI NavMesh Agent update
 	ECS::GetInstance().GetSystem<graphics::AnimationManager>()->Update(FrameController::GetDeltaTime());// Animation Update
@@ -683,6 +686,10 @@ void engine::Render(GLFWwindow* window)
 	graphics::GPUProfiler::EndFrame();
 }
 
+/**
+ * @brief Handle shading mode toggle (keys 1-4)
+ * @param windowContext The GLFW window context
+ */
 void engine::HandleShadingToggle(GLFWwindow* windowContext)
 {
 	static bool key1WasPressed = false;
@@ -725,4 +732,16 @@ void engine::HandleShadingToggle(GLFWwindow* windowContext)
 	key2WasPressed = key2IsPressed;
 	key3WasPressed = key3IsPressed;
 	key4WasPressed = key4IsPressed;
+}
+
+/**
+ * @brief Handle fullscreen toggle (F11 key)
+ * @param windowContext The GLFW window context
+ */
+void Ermine::engine::HandleFullscreenToggle(GLFWwindow* windowContext)
+{
+	static bool f11WasPressed = false;
+	bool f11IsPressed = glfwGetKey(windowContext, GLFW_KEY_F11) == GLFW_PRESS;
+	if (f11IsPressed && !f11WasPressed) Ermine::Window::ToggleFullscreenWindow(windowContext);
+	f11WasPressed = f11IsPressed;
 }

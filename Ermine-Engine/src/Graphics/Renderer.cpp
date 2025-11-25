@@ -4217,9 +4217,15 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 		auto& ecs = ECS::GetInstance();
 
 		// First pass: Render opaque objects and collect transparent objects
-		for (auto& entity : m_Entities
-			)
+		for (auto& entity : m_Entities)
 		{
+			if (ecs.HasComponent<ObjectMetaData>(entity))
+			{
+				const auto& meta = ecs.GetComponent<ObjectMetaData>(entity);
+				if (!meta.selfActive)
+					continue;
+			}
+
 			// Model pipeline
 			if (ecs.HasComponent<ModelComponent>(entity) && ecs.HasComponent<Ermine::Material>(entity))
 			{

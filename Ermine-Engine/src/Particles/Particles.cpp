@@ -32,6 +32,13 @@ namespace Ermine {
             if (!ecs.HasComponent<ParticleEmitter>(entity))
                 continue;
 
+            if (ECS::GetInstance().HasComponent<ObjectMetaData>(entity))
+            {
+                const auto& meta = ECS::GetInstance().GetComponent<ObjectMetaData>(entity);
+                if (!meta.selfActive)
+                    continue;
+            }
+
             auto& emitter = ecs.GetComponent<ParticleEmitter>(entity);
             if (!emitter.active)
                 continue;
