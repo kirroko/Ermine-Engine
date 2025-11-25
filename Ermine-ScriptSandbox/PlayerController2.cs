@@ -6,8 +6,8 @@ public class PlayerController2 : MonoBehaviour
     private Transform cam;
     private AudioComponent audioComp;
 
-    public float mouseHorSens = 0.01f;
-    public float mouseVertSens = 0.01f;
+    public float mouseHorSens = 1f;
+    public float mouseVertSens = 1f;
 
     public float moveSpeed = 5f;
     public float jumpspeed = 5f;
@@ -65,7 +65,7 @@ public class PlayerController2 : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.D)) { move += -transform.right; movementKeyPressed = true; }
 
         if (move.SqrMagnitude > 0f)
-            move = move.normalized * moveSpeed * Time.fixedDeltaTime;
+            move = move.normalized * moveSpeed * Time.deltaTime;
 
         Vector3 newPos = transform.position + new Vector3(move.x, 0, move.z);
 
@@ -80,8 +80,8 @@ public class PlayerController2 : MonoBehaviour
         // Apply jump once
         if (jumpRequested)
         {
-            if (newPos.y < startheight+jumpHeight)
-                newPos.y += jumpspeed * Time.fixedDeltaTime; // teleport player slightly up
+            if (newPos.y < startheight + jumpHeight)
+                newPos.y += jumpspeed * Time.deltaTime; // teleport player slightly up
             else
                 jumpRequested = false;
         }
@@ -100,8 +100,8 @@ public class PlayerController2 : MonoBehaviour
     {
         lookInput = Input.mousePositionDelta;
 
-        float mouseX = -lookInput.x * mouseHorSens;
-        float mouseY = lookInput.y * mouseVertSens;
+        float mouseX = -lookInput.x * mouseHorSens * Time.deltaTime;
+        float mouseY = lookInput.y * mouseVertSens * Time.deltaTime;
 
         xRotation -= mouseY;
         xRotation = Mathf.Clamp(xRotation, minPitch, maxPitch);
@@ -114,7 +114,7 @@ public class PlayerController2 : MonoBehaviour
     {
         float targetY = isCrouching ? camCrouchY : camDefaultY;
         Vector3 camPos = cam.position;
-        camPos.y = Mathf.Lerp(camPos.y, targetY, Time.fixedDeltaTime * crouchLerpSpeed);
+        camPos.y = Mathf.Lerp(camPos.y, targetY, Time.deltaTime * crouchLerpSpeed);
         cam.position = camPos;
     }
 
@@ -122,7 +122,7 @@ public class PlayerController2 : MonoBehaviour
     {
         if (audioComp == null) return;
 
-        footstepTimer += Time.fixedDeltaTime;
+        footstepTimer += Time.deltaTime;
 
         if (movementKeyPressed && footstepTimer >= footstepInterval)
         {
