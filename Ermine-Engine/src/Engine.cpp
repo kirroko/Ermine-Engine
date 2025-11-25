@@ -408,6 +408,11 @@ bool engine::Init(GLFWwindow* windowContext)
 	uiSig.set(ECS::GetInstance().GetComponentType<UIComponent>());
 	ECS::GetInstance().SetSystemSignature<UIRenderSystem>(uiSig);
 
+	// For UI Button System (only requires UIButtonComponent)
+	SignatureID buttonSig;
+	buttonSig.set(ECS::GetInstance().GetComponentType<UIButtonComponent>());
+	ECS::GetInstance().SetSystemSignature<UIButtonSystem>(buttonSig);
+
 	glfwSetFramebufferSizeCallback(windowContext, []([[maybe_unused]] GLFWwindow* window, int width, int height)
 		{
 #if defined(EE_EDITOR)
@@ -603,7 +608,6 @@ bool engine::Init(GLFWwindow* windowContext)
 #endif
 
 	s_isInitialized = true;
-	return true;
 }
 
 void engine::Shutdown()

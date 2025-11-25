@@ -560,6 +560,7 @@
     <ClCompile Include="src\dllmain.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\Graphics\UIButtonSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="include\Component.tpp">

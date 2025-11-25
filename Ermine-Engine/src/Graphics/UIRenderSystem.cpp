@@ -685,145 +685,6 @@ namespace Ermine
         glBindVertexArray(0);
     }
 
-    void UIRenderSystem::RenderCircle(float centerX, float centerY, float radius, float thickness, const Vec3& color)
-    {
-        const int segments = 64;
-        float angleStep = (2.0f * static_cast<float>(M_PI)) / segments;
-
-        m_vertexData.clear();
-        m_vertexData.reserve(segments * 2 * 8); // 8 floats per vertex
-
-        for (int i = 0; i <= segments; ++i)
-        {
-            float angle = i * angleStep;
-            float x = centerX + radius * cosf(angle);
-            float y = centerY + radius * sinf(angle);
-
-            m_vertexData.push_back(x);
-            m_vertexData.push_back(y);
-            m_vertexData.push_back(color.x);
-            m_vertexData.push_back(color.y);
-            m_vertexData.push_back(color.z);
-            m_vertexData.push_back(1.0f);
-            m_vertexData.push_back(0.0f); // texCoord u
-            m_vertexData.push_back(0.0f); // texCoord v
-        }
-
-        glLineWidth(thickness * static_cast<float>(m_screenHeight));
-        glBindVertexArray(m_VAO);
-        glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, m_vertexData.size() * sizeof(float), m_vertexData.data());
-        glDrawArrays(GL_LINE_LOOP, 0, segments + 1);
-        glLineWidth(1.0f);
-        glBindVertexArray(0);
-    }
-
-    void UIRenderSystem::RenderFilledCircle(float centerX, float centerY, float radius, const Vec3& color, float alpha)
-    {
-        const int segments = 64;
-        m_vertexData.clear();
-        m_vertexData.reserve((segments + 2) * 8); // Center + perimeter vertices (8 floats per vertex)
-
-        // Center vertex
-        m_vertexData.push_back(centerX);
-        m_vertexData.push_back(centerY);
-        m_vertexData.push_back(color.x);
-        m_vertexData.push_back(color.y);
-        m_vertexData.push_back(color.z);
-        m_vertexData.push_back(alpha);
-        m_vertexData.push_back(0.5f); // texCoord u (center of texture)
-        m_vertexData.push_back(0.5f); // texCoord v (center of texture)
-
-        // Perimeter vertices
-        float angleStep = (2.0f * static_cast<float>(M_PI)) / segments;
-        for (int i = 0; i <= segments; ++i)
-        {
-            float angle = i * angleStep;
-            float x = centerX + radius * cosf(angle);
-            float y = centerY + radius * sinf(angle);
-
-            // Calculate texture coordinates (circular mapping)
-            float u = 0.5f + 0.5f * cosf(angle);
-            float v = 0.5f + 0.5f * sinf(angle);
-
-            m_vertexData.push_back(x);
-            m_vertexData.push_back(y);
-            m_vertexData.push_back(color.x);
-            m_vertexData.push_back(color.y);
-            m_vertexData.push_back(color.z);
-            m_vertexData.push_back(alpha);
-            m_vertexData.push_back(u);
-            m_vertexData.push_back(v);
-        }
-
-        // Render as triangle fan
-        glBindVertexArray(m_VAO);
-        glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, m_vertexData.size() * sizeof(float), m_vertexData.data());
-        glDrawArrays(GL_TRIANGLE_FAN, 0, static_cast<GLsizei>(m_vertexData.size() / 8));
-        glBindVertexArray(0);
-    }
-
-    void UIRenderSystem::RenderTexturedCircle(float centerX, float centerY, float radius,
-                                              std::shared_ptr<graphics::Texture> texture,
-                                              const Vec3& color, float alpha)
-    {
-        if (!texture || !texture->IsValid())
-            return;
-
-        const int segments = 64;
-        m_vertexData.clear();
-        m_vertexData.reserve((segments + 2) * 8); // Center + perimeter vertices (8 floats per vertex)
-
-        // Center vertex
-        m_vertexData.push_back(centerX);
-        m_vertexData.push_back(centerY);
-        m_vertexData.push_back(color.x);
-        m_vertexData.push_back(color.y);
-        m_vertexData.push_back(color.z);
-        m_vertexData.push_back(alpha);
-        m_vertexData.push_back(0.5f); // texCoord u (center of texture)
-        m_vertexData.push_back(0.5f); // texCoord v (center of texture)
-
-        // Perimeter vertices
-        float angleStep = (2.0f * static_cast<float>(M_PI)) / segments;
-        for (int i = 0; i <= segments; ++i)
-        {
-            float angle = i * angleStep;
-            float x = centerX + radius * cosf(angle);
-            float y = centerY + radius * sinf(angle);
-
-            // Calculate texture coordinates (circular mapping)
-            float u = 0.5f + 0.5f * cosf(angle);
-            float v = 0.5f + 0.5f * sinf(angle);
-
-            m_vertexData.push_back(x);
-            m_vertexData.push_back(y);
-            m_vertexData.push_back(color.x);
-            m_vertexData.push_back(color.y);
-            m_vertexData.push_back(color.z);
-            m_vertexData.push_back(alpha);
-            m_vertexData.push_back(u);
-            m_vertexData.push_back(v);
-        }
-
-        // Enable texture mode in shader
-        m_uiShader->SetUniform1i("uUseTexture", 1);
-        texture->Bind(0); // Bind to texture unit 0
-        m_uiShader->SetUniform1i("uTexture", 0);
-
-        // Render as triangle fan
-        glBindVertexArray(m_VAO);
-        glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, m_vertexData.size() * sizeof(float), m_vertexData.data());
-        glDrawArrays(GL_TRIANGLE_FAN, 0, static_cast<GLsizei>(m_vertexData.size() / 8));
-        glBindVertexArray(0);
-
-        // Disable texture mode
-        texture->Unbind();
-        m_uiShader->SetUniform1i("uUseTexture", 0);
-    }
-
     void UIRenderSystem::RenderTexturedSquare(float centerX, float centerY, float size,
                                               std::shared_ptr<graphics::Texture> texture,
                                               const Vec3& color, float alpha)
@@ -890,19 +751,40 @@ namespace Ermine
         else if (button.isHovered)
             currentColor = button.hoverColor;
 
-        // Calculate button bounds (centered position)
-        float left = button.position.x - (button.size.x * 0.5f);
-        float bottom = button.position.y - (button.size.y * 0.5f);
+        // Calculate button bounds (centered position) WITH ASPECT RATIO CORRECTION
+        float halfWidth = button.size.x * 0.5f;
+        float halfHeight = button.size.y * 0.5f;
+
+        // Apply aspect ratio correction to width (same as other UI elements)
+        float adjustedHalfWidth = halfWidth / m_aspectRatio;
+
+        float left = button.position.x - adjustedHalfWidth;
+        float bottom = button.position.y - halfHeight;
+        float width = adjustedHalfWidth * 2.0f;
+        float height = button.size.y;
+        
+        #ifdef EE_EDITOR
+        // Debug: Log rendering bounds when previewing UI
+        if (editor::EditorGUI::isPreviewingUI)
+        {
+            EE_CORE_TRACE("RENDER Button '{}': AspectRatio={}, AdjustedHalfWidth={}", 
+                button.text, m_aspectRatio, adjustedHalfWidth);
+            EE_CORE_TRACE("  Render Bounds: Left={}, Bottom={}, Width={}, Height={}", 
+                left, bottom, width, height);
+            EE_CORE_TRACE("  Visual corners: BL=({},{}), TR=({},{})", 
+                left, bottom, left + width, bottom + height);
+        }
+        #endif
 
         // Render button background
-        RenderQuad(left, bottom, button.size.x, button.size.y, currentColor, button.backgroundAlpha);
+        RenderQuad(left, bottom, width, height, currentColor, button.backgroundAlpha);
 
         // Render button text if present
         if (m_textRenderer && !button.text.empty())
         {
             // Calculate text position (centered)
             float textWidth = m_textRenderer->GetTextWidth(button.text, button.textScale);
-            float textHeight = button.textScale * 0.04f; // Approximate text height
+            float textHeight = button.textScale * 0.04f;
 
             float textX = button.position.x - (textWidth * 0.5f);
             float textY = button.position.y - (textHeight * 0.5f);
@@ -914,7 +796,7 @@ namespace Ermine
                 textY,
                 button.textScale,
                 button.textColor,
-                1.0f // Text is always fully opaque
+                1.0f
             );
         }
     }

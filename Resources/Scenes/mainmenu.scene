@@ -33,6 +33,7 @@
           "intensity": 1.0,
           "type": "Directional",
           "castsShadows": true,
+          "castsRays": false,
           "innerAngle": -1.0,
           "outerAngle": -1.0,
           "radius": 3.0
@@ -182,7 +183,7 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "New Entity",
+          "name": "Play Button",
           "tag": "Untagged",
           "selfActive": true
         },
@@ -193,12 +194,12 @@
         "UIButtonComponent": {
           "text": "",
           "position": [
-            0.5,
+            0.5019999742507935,
             0.3199999928474426,
             0.0
           ],
           "size": [
-            0.1899999976158142,
+            0.33000001311302187,
             0.07999999821186066
           ],
           "normalColor": [
@@ -207,14 +208,14 @@
             0.30000001192092898
           ],
           "hoverColor": [
-            0.5,
-            0.5,
-            0.5
+            0.3500319719314575,
+            0.5446685552597046,
+            0.49586915969848635
           ],
           "pressedColor": [
-            0.699999988079071,
-            0.699999988079071,
-            0.699999988079071
+            0.2820281386375427,
+            0.7175792455673218,
+            0.07444627583026886
           ],
           "textColor": [
             1.0,
@@ -222,9 +223,80 @@
             1.0
           ],
           "textScale": 1.0,
-          "backgroundAlpha": 1.0,
+          "backgroundAlpha": 0.6650000214576721,
           "action": 1,
           "actionData": "../Resources/Scenes/cutscene_intro.scene"
+        }
+      }
+    },
+    {
+      "id": 5,
+      "components": {
+        "IDComponent": {
+          "guid": "5776777148716e4986537dbb3cd416ec"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Quit Button",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {},
+        "UIButtonComponent": {
+          "text": "",
+          "position": [
+            0.5019999742507935,
+            0.17000000178813935,
+            0.0
+          ],
+          "size": [
+            0.33000001311302187,
+            0.07999999821186066
+          ],
+          "normalColor": [
+            0.30000001192092898,
+            0.30000001192092898,
+            0.30000001192092898
+          ],
+          "hoverColor": [
+            0.6477739810943604,
+            0.28602510690689089,
+            0.8270893096923828
+          ],
+          "pressedColor": [
+            0.910662829875946,
+            0.10235117375850678,
+            0.10235117375850678
+          ],
+          "textColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "textScale": 1.0,
+          "backgroundAlpha": 0.6169999837875366,
+          "action": 0,
+          "actionData": ""
         }
       }
     }

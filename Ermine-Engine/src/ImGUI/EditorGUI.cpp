@@ -29,6 +29,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Scene.h"
 #include "HierarchyPanel.h"
 #include "HierarchyInspector.h"
+#include "UIButtonSystem.h"
 
 #include "CameraSystem.h"
 #include "Components.h"
@@ -41,9 +42,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <optional>
 #include "SceneManager.h"
 #include <imnodes.h>
-// Legacy ImGui menu windows removed - replaced with scene-based UI:
-// #include "MainMenuGUI.h"
-// #include "CutsceneGUI.h"
+
 
 namespace Ermine
 {
@@ -593,6 +592,13 @@ void EditorGUI::ViewPortWindow(bool& show)
     const ImVec2 imgMin = ImGui::GetItemRectMin();
     const ImVec2 imgMax = ImGui::GetItemRectMax();
     const ImVec2 imgSize = ImGui::GetItemRectSize();
+
+    // UPDATE UI BUTTON SYSTEM WITH VIEWPORT INFO
+    auto uiButtonSystem = ECS::GetInstance().GetSystem<UIButtonSystem>();
+    if (uiButtonSystem)
+    {
+        uiButtonSystem->SetViewportInfo(imgMin, imgSize);
+    }
 
     // Left-click within the image, perform picking
     if (!isPlaying && ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left))

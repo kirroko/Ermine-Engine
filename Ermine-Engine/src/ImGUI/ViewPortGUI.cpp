@@ -670,7 +670,9 @@ void Ermine::ViewPortGUI::Update()
 
 	EditorGUI::isPlaying = EditorGUI::s_state == EditorGUI::SimState::playing;
 
-	Input::SetGameInputActive(EditorGUI::isPlaying && viewportFocused && viewportHovered);
+	// FIXED: Enable game input when playing OR previewing UI (not just playing)
+	// UI buttons need game input active to work correctly
+	Input::SetGameInputActive(EditorGUI::isPlaying || EditorGUI::isPreviewingUI);
 
 	if (EditorGUI::isPlaying && Input::IsKeyPressed(GLFW_KEY_ESCAPE))
 	{
