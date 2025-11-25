@@ -29,6 +29,8 @@ public class DisableLightCone : MonoBehaviour
         if (!disabled && orbInside && Input.GetMouseButtonDown(0))
         {
             DisableLight();
+            GameObject sphere = GameObject.Find("Sphere");
+            GameObject.Destroy(sphere);
         }
 
         // if u want the lightcone to come back after disabling
