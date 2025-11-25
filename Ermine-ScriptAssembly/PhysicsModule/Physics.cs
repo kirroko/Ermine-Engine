@@ -62,5 +62,8 @@ namespace ErmineEngine
 
         [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern void RemovePhysic(ulong entityID);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern void Jump(ulong entityID,float jump);
     }
 }

@@ -31,9 +31,7 @@ public class PlayerController2 : MonoBehaviour
     private float minPitch = -1.5f;
     private float maxPitch = 1.5f;
 
-    private bool jumpRequested = false;
     public float jumpHeight = 2f;
-    private float startheight = 0;
 
     private float interactRange = 5f;
 
@@ -54,7 +52,7 @@ public class PlayerController2 : MonoBehaviour
         HandleFootstepAudio();
         HandleInteract();
     }
-
+    float verticalVelocity;
     private void HandleInput()
     {
         move = Vector3.zero;
@@ -71,20 +69,10 @@ public class PlayerController2 : MonoBehaviour
         Vector3 newPos = transform.position + new Vector3(move.x, 0, move.z);
 
         // Request jump
-        if (Input.GetKey(KeyCode.Space) && isGrounded)
+        if (isGrounded == true && Input.GetKey(KeyCode.Space))
         {
-            jumpRequested = true;
             isGrounded = false; // prevent double jump
-            startheight = transform.position.y;
-        }
-
-        // Apply jump once
-        if (jumpRequested)
-        {
-            if (newPos.y < startheight + jumpHeight)
-                newPos.y += jumpspeed * Time.fixedDeltaTime; // teleport player slightly up
-            else
-                jumpRequested = false;
+            Physics.Jump((ulong)gameObject.GetInstanceID(), jumpspeed);
         }
 
         transform.position = newPos;
@@ -187,5 +175,15 @@ public class PlayerController2 : MonoBehaviour
     {
         if (col.gameObject.name.Contains("Platform"))
             isGrounded = true;
+    }
+    void OnCollisionStay(Collision col)
+    {
+        if (col.gameObject.name.Contains("Platform"))
+            isGrounded = true;
+    }
+    void OnCollisionExit(Collision col)
+    {
+        if (col.gameObject.name.Contains("Platform"))
+            isGrounded = false;
     }
 }

@@ -1438,6 +1438,26 @@ namespace Ermine
 			JPH::EActivation::Activate);
 	}
 
+	void Physics::Jump(EntityID ID, float jumpStrength)
+	{
+		auto& bodyInterface = mPhysicsSystem.GetBodyInterface();
+		auto bodyID = GetBodyID(ID);
+
+		// Get current velocity so we can preserve horizontal motion
+		JPH::BodyID jphBodyID = bodyID;
+		JPH::Body* body = ECS::GetInstance().GetComponent<PhysicComponent>(ID).body;
+		if (!body) return;
+
+		JPH::Vec3 currentVel = body->GetLinearVelocity();
+
+		// Set new velocity: keep horizontal velocity, add upward jump
+		JPH::Vec3 jumpVel = currentVel;
+		jumpVel.SetY(jumpStrength);  // assuming Y is up
+
+		bodyInterface.SetLinearVelocity(jphBodyID, jumpVel);
+	}
+
+
 	void Physics::RemovePhysic(EntityID ID)
 	{
 		auto& bodyInterface = mPhysicsSystem.GetBodyInterface();
