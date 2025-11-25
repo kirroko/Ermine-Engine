@@ -55,17 +55,14 @@ void Ermine::scripting::ScriptSystem::Update() const
 		if (s_wasStopped)
 			return;
 
-		// Copy entities to avoid iterator invalidation
-		std::vector<EntityID> entitiesToProcess(m_Entities.begin(), m_Entities.end());
-		for (auto entity : entitiesToProcess)
+		for (auto& entity : m_Entities)
 		{
-			// Verify entity still exists before accessing it
-			if (!ECS::GetInstance().IsEntityValid(entity))
-				continue;
-
-			if (!ECS::GetInstance().HasComponent<ScriptsComponent>(entity))
-				continue;
-
+			if (ECS::GetInstance().HasComponent<ObjectMetaData>(entity))
+			{
+				const auto& meta = ECS::GetInstance().GetComponent<ObjectMetaData>(entity);
+				if (!meta.selfActive)
+					continue;
+			}
 			auto& scs = ECS::GetInstance().GetComponent<ScriptsComponent>(entity);
 			for (auto& sc : scs.scripts)
 				sc.m_started = false;
@@ -83,26 +80,14 @@ void Ermine::scripting::ScriptSystem::Update() const
 	);
 #endif
 
-	// Copy entities to avoid iterator invalidation during script execution
-	std::vector<EntityID> entitiesToProcess(m_Entities.begin(), m_Entities.end());
-
-	for (auto entity : entitiesToProcess)
+	for (auto& entity : m_Entities)
 	{
-		// Verify entity still exists before accessing it
-		if (!ECS::GetInstance().IsEntityValid(entity))
-			continue;
-
 		if (ECS::GetInstance().HasComponent<ObjectMetaData>(entity))
 		{
 			const auto& meta = ECS::GetInstance().GetComponent<ObjectMetaData>(entity);
 			if (!meta.selfActive)
 				continue;
 		}
-
-		if (!ECS::GetInstance().HasComponent<ScriptsComponent>(entity))
-			continue;
-
-		//auto& sc = ECS::GetInstance().GetComponent<Script>(entity);
 		auto& scs = ECS::GetInstance().GetComponent<ScriptsComponent>(entity);
 		for (auto& sc : scs.scripts)
 		{
@@ -126,17 +111,14 @@ void Ermine::scripting::ScriptSystem::FixedUpdate() const
 		if (s_wasStopped)
 			return;
 
-		// Copy entities to avoid iterator invalidation
-		std::vector<EntityID> entitiesToProcess(m_Entities.begin(), m_Entities.end());
-		for (auto entity : entitiesToProcess)
+		for (auto& entity : m_Entities)
 		{
-			// Verify entity still exists before accessing it
-			if (!ECS::GetInstance().IsEntityValid(entity))
-				continue;
-
-			if (!ECS::GetInstance().HasComponent<ScriptsComponent>(entity))
-				continue;
-
+			if (ECS::GetInstance().HasComponent<ObjectMetaData>(entity))
+			{
+				const auto& meta = ECS::GetInstance().GetComponent<ObjectMetaData>(entity);
+				if (!meta.selfActive)
+					continue;
+			}
 			auto& scs = ECS::GetInstance().GetComponent<ScriptsComponent>(entity);
 			for (auto& sc : scs.scripts)
 				sc.m_started = false;
@@ -154,25 +136,14 @@ void Ermine::scripting::ScriptSystem::FixedUpdate() const
 	);
 #endif
 
-	// Copy entities to avoid iterator invalidation during script execution
-	std::vector<EntityID> entitiesToProcess(m_Entities.begin(), m_Entities.end());
-
-	for (auto entity : entitiesToProcess)
+	for (auto& entity : m_Entities)
 	{
-		// Verify entity still exists before accessing it
-		if (!ECS::GetInstance().IsEntityValid(entity))
-			continue;
-
 		if (ECS::GetInstance().HasComponent<ObjectMetaData>(entity))
 		{
 			const auto& meta = ECS::GetInstance().GetComponent<ObjectMetaData>(entity);
 			if (!meta.selfActive)
 				continue;
 		}
-
-		if (!ECS::GetInstance().HasComponent<ScriptsComponent>(entity))
-			continue;
-
 		//auto& sc = ECS::GetInstance().GetComponent<Script>(entity);
 		auto& scs = ECS::GetInstance().GetComponent<ScriptsComponent>(entity);
 		for (auto& sc : scs.scripts)
@@ -191,10 +162,7 @@ void Ermine::scripting::ScriptSystem::PrepareForHotReload() const
 	m_RestoreList.clear();
 	auto& ecs = ECS::GetInstance();
 
-	// Copy entities to avoid iterator invalidation
-	std::vector<EntityID> entitiesToProcess(m_Entities.begin(), m_Entities.end());
-
-	for (auto entity : entitiesToProcess)
+	for (auto& entity : m_Entities)
 	{
 		if (!ecs.IsEntityValid(entity) || !ecs.HasComponent<ScriptsComponent>(entity))
 			continue;
