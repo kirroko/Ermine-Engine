@@ -3024,6 +3024,171 @@ namespace Ermine
 			if (m_CurrentScript && m_CurrentScript->instance)
 				m_CurrentScript->OnUpdate();
 		}
+
+		template <typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const
+		{
+			using namespace rapidjson;
+
+			out.SetObject();
+
+			// =======================
+			// 1) Serialize nodes
+			// =======================
+			Value nodes(kArrayType);
+
+			for (const auto& nodePtr : m_Nodes)
+			{
+				if (!nodePtr)
+					continue;
+
+				Value n(kObjectType);
+
+				// id
+				n.AddMember("id", nodePtr->id, alloc);
+
+				// name
+				{
+					Value nameVal;
+					nameVal.SetString(nodePtr->name.c_str(),
+						static_cast<SizeType>(nodePtr->name.size()),
+						alloc);
+					n.AddMember("name", nameVal, alloc);
+				}
+
+				// scriptClassName
+				{
+					Value scriptVal;
+					scriptVal.SetString(nodePtr->scriptClassName.c_str(),
+						static_cast<SizeType>(nodePtr->scriptClassName.size()),
+						alloc);
+					n.AddMember("scriptClassName", scriptVal, alloc);
+				}
+
+				// flags
+				n.AddMember("isAttached", nodePtr->isAttached, alloc);
+				n.AddMember("isStartNode", nodePtr->isStartNode, alloc);
+
+				// NOTE: instance is runtime-only and NOT serialized.
+
+				nodes.PushBack(n, alloc);
+			}
+
+			out.AddMember("nodes", nodes, alloc);
+
+			// =======================
+			// 2) Serialize links
+			// =======================
+			Value links(kArrayType);
+
+			for (const auto& link : m_Links)
+			{
+				Value l(kObjectType);
+				l.AddMember("fromId", link.first, alloc);
+				l.AddMember("toId", link.second, alloc);
+				links.PushBack(l, alloc);
+			}
+
+			out.AddMember("links", links, alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in)
+		{
+			using namespace rapidjson;
+
+			// Clear old state
+			m_Nodes.clear();
+			m_Links.clear();
+			scriptTransitions.clear();
+			m_CurrentScript = nullptr;
+			m_PreviousScript = nullptr;
+
+			if (!in.IsObject())
+				return;
+
+			// =======================
+			// 1) Recreate nodes
+			// =======================
+			std::unordered_map<int, ScriptNode*> idToNode;
+
+			if (in.HasMember("nodes") && in["nodes"].IsArray())
+			{
+				const auto& nodes = in["nodes"];
+				for (auto& nVal : nodes.GetArray())
+				{
+					if (!nVal.IsObject())
+						continue;
+
+					auto node = std::make_shared<ScriptNode>();
+
+					// id
+					if (nVal.HasMember("id") && nVal["id"].IsInt())
+						node->id = nVal["id"].GetInt();
+
+					// name
+					if (nVal.HasMember("name") && nVal["name"].IsString())
+						node->name = nVal["name"].GetString();
+
+					// scriptClassName
+					if (nVal.HasMember("scriptClassName") && nVal["scriptClassName"].IsString())
+						node->scriptClassName = nVal["scriptClassName"].GetString();
+
+					// isAttached
+					if (nVal.HasMember("isAttached") && nVal["isAttached"].IsBool())
+						node->isAttached = nVal["isAttached"].GetBool();
+
+					// isStartNode
+					if (nVal.HasMember("isStartNode") && nVal["isStartNode"].IsBool())
+						node->isStartNode = nVal["isStartNode"].GetBool();
+
+					// instance is runtime-only; will be created via CreateInstance(entity)
+					// when Init(entity) is called.
+
+					idToNode[node->id] = node.get();
+					m_Nodes.emplace_back(std::move(node));
+				}
+			}
+
+			// =======================
+			// 2) Recreate links + scriptTransitions
+			// =======================
+			if (in.HasMember("links") && in["links"].IsArray())
+			{
+				const auto& links = in["links"];
+				for (auto& lVal : links.GetArray())
+				{
+					if (!lVal.IsObject())
+						continue;
+
+					if (!lVal.HasMember("fromId") || !lVal.HasMember("toId"))
+						continue;
+
+					if (!lVal["fromId"].IsInt() || !lVal["toId"].IsInt())
+						continue;
+
+					int fromId = lVal["fromId"].GetInt();
+					int toId = lVal["toId"].GetInt();
+
+					m_Links.emplace_back(fromId, toId);
+
+					// Build scriptTransitions if both nodes exist
+					auto fromIt = idToNode.find(fromId);
+					auto toIt = idToNode.find(toId);
+
+					if (fromIt != idToNode.end() && toIt != idToNode.end())
+					{
+						// If you only expect one outgoing transition per node,
+						// this is fine. If multiple, you may want a multimap / vector instead.
+						scriptTransitions[fromIt->second] = toIt->second;
+					}
+				}
+			}
+
+			// manager pointer is not restored here; set it externally if needed.
+			// Actual script instances will be created when you call Init(entity),
+			// which finds the start node and calls CreateInstance + OnEnter().
+		}
+
 	};
 
 	/*!***********************************************************************
