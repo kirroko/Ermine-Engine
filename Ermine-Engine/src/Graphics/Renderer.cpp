@@ -2455,6 +2455,14 @@ void Renderer::UpdateDrawData()
 	// This avoids expensive mesh handle lookups and material lookups
 	for (const auto& cachedItem : m_CachedDrawItems)
 	{
+		// EARLY OUT: Skip inactive entities (check selfActive flag)
+		if (ecs.HasComponent<ObjectMetaData>(cachedItem.entity)) {
+			const auto& meta = ecs.GetComponent<ObjectMetaData>(cachedItem.entity);
+			if (!meta.selfActive) {
+				continue;
+			}
+		}
+
 		// Get current entity transform (this is what changed!)
 		// Note: Animated models manually build matrix (no hierarchy), static models use GetEntityWorldMatrix
 		glm::mat4 model;
@@ -2474,20 +2482,20 @@ void Renderer::UpdateDrawData()
 		}
 
 		// Transform AABB to world space
-		glm::vec3 corners[8] = {
-			glm::vec3(cachedItem.aabbMin.x, cachedItem.aabbMin.y, cachedItem.aabbMin.z),
-			glm::vec3(cachedItem.aabbMax.x, cachedItem.aabbMin.y, cachedItem.aabbMin.z),
-			glm::vec3(cachedItem.aabbMin.x, cachedItem.aabbMax.y, cachedItem.aabbMin.z),
-			glm::vec3(cachedItem.aabbMax.x, cachedItem.aabbMax.y, cachedItem.aabbMin.z),
-			glm::vec3(cachedItem.aabbMin.x, cachedItem.aabbMin.y, cachedItem.aabbMax.z),
-			glm::vec3(cachedItem.aabbMax.x, cachedItem.aabbMin.y, cachedItem.aabbMax.z),
-			glm::vec3(cachedItem.aabbMin.x, cachedItem.aabbMax.y, cachedItem.aabbMax.z),
-			glm::vec3(cachedItem.aabbMax.x, cachedItem.aabbMax.y, cachedItem.aabbMax.z)
-		};
+		glm::vec3 corners[8];
+		corners[0] = glm::vec3(cachedItem.aabbMin.x, cachedItem.aabbMin.y, cachedItem.aabbMin.z);
+		corners[1] = glm::vec3(cachedItem.aabbMax.x, cachedItem.aabbMin.y, cachedItem.aabbMin.z);
+		corners[2] = glm::vec3(cachedItem.aabbMin.x, cachedItem.aabbMax.y, cachedItem.aabbMin.z);
+		corners[3] = glm::vec3(cachedItem.aabbMax.x, cachedItem.aabbMax.y, cachedItem.aabbMin.z);
+		corners[4] = glm::vec3(cachedItem.aabbMin.x, cachedItem.aabbMin.y, cachedItem.aabbMax.z);
+		corners[5] = glm::vec3(cachedItem.aabbMax.x, cachedItem.aabbMin.y, cachedItem.aabbMax.z);
+		corners[6] = glm::vec3(cachedItem.aabbMin.x, cachedItem.aabbMax.y, cachedItem.aabbMax.z);
+		corners[7] = glm::vec3(cachedItem.aabbMax.x, cachedItem.aabbMax.y, cachedItem.aabbMax.z);
 
 		glm::vec3 actualMin = glm::vec3(FLT_MAX);
 		glm::vec3 actualMax = glm::vec3(-FLT_MAX);
 
+		// Unrolled loop for better instruction-level parallelism
 		for (int i = 0; i < 8; ++i) {
 			glm::vec3 worldCorner = glm::vec3(model * glm::vec4(corners[i], 1.0f));
 			actualMin = glm::min(actualMin, worldCorner);
@@ -2514,13 +2522,12 @@ void Renderer::UpdateDrawData()
 		// Build draw info (using cached data + new transform)
 		DrawInfo info;
 		info.modelMatrix = model;
-		
 
-				// Pre-calculate normal matrix and store as 3 separate columns (std430 mat3 has 16-byte stride!)
-				glm::mat3 normalMat = glm::transpose(glm::inverse(glm::mat3(model)));
-				info.normalMatrixCol0 = glm::vec4(normalMat[0], 0.0f);
-				info.normalMatrixCol1 = glm::vec4(normalMat[1], 0.0f);
-				info.normalMatrixCol2 = glm::vec4(normalMat[2], 0.0f);
+		// Pre-calculate normal matrix and store as 3 separate columns (std430 mat3 has 16-byte stride!)
+		glm::mat3 normalMat = glm::transpose(glm::inverse(glm::mat3(model)));
+		info.normalMatrixCol0 = glm::vec4(normalMat[0], 0.0f);
+		info.normalMatrixCol1 = glm::vec4(normalMat[1], 0.0f);
+		info.normalMatrixCol2 = glm::vec4(normalMat[2], 0.0f);
 		info.aabbMin = cachedItem.aabbMin;
 		info.materialIndex = cachedItem.materialIndex;
 		info.aabbMax = cachedItem.aabbMax;
@@ -2528,7 +2535,7 @@ void Renderer::UpdateDrawData()
 		info.flags = cachedItem.useSkinning ? 1 : 0;
 		info.boneTransformOffset = cachedItem.boneOffset;
 		info._pad0 = 0;
-			info._pad1 = 0;
+		info._pad1 = 0;
 
 		// Route to appropriate buffers based on culling and transparency
 		if (isCulled) {
