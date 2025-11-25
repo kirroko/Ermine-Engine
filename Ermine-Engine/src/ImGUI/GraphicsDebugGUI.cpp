@@ -287,12 +287,34 @@ void GraphicsDebugGUI::DrawPostProcessingControls()
         // FXAA Controls
         if (ImGui::TreeNode("FXAA Settings"))
         {
-            DrawFloatSlider("FXAA Span Max", &renderer->m_FXAASpanMax, 2.0f, 16.0f, 
+            DrawFloatSlider("FXAA Span Max", &renderer->m_FXAASpanMax, 2.0f, 16.0f,
                            "Maximum search span for edge detection");
-            DrawFloatSlider("FXAA Reduce Min", &renderer->m_FXAAReduceMin, 1.0f/256.0f, 1.0f/32.0f, 
+            DrawFloatSlider("FXAA Reduce Min", &renderer->m_FXAAReduceMin, 1.0f/256.0f, 1.0f/32.0f,
                            "Minimum luminance reduction threshold");
-            DrawFloatSlider("FXAA Reduce Mul", &renderer->m_FXAAReduceMul, 1.0f/16.0f, 1.0f/4.0f, 
+            DrawFloatSlider("FXAA Reduce Mul", &renderer->m_FXAAReduceMul, 1.0f/16.0f, 1.0f/4.0f,
                            "Luminance reduction multiplier");
+            ImGui::TreePop();
+        }
+
+        ImGui::Separator();
+
+        // Motion Blur Toggle
+        if (DrawToggleButton("Motion Blur", &renderer->m_MotionBlurEnabled,
+                            "Enable motion blur based on camera and object movement")) {
+            EE_CORE_INFO("Motion blur {}", renderer->m_MotionBlurEnabled ? "enabled" : "disabled");
+        }
+
+        // Motion Blur Controls
+        if (renderer->m_MotionBlurEnabled && ImGui::TreeNode("Motion Blur Settings"))
+        {
+            DrawFloatSlider("Blur Strength", &renderer->m_MotionBlurStrength, 0.0f, 3.0f,
+                           "Intensity of motion blur effect");
+
+            if (ImGui::SliderInt("Sample Count", &renderer->m_MotionBlurSamples, 2, 32)) {
+                EE_CORE_INFO("Motion blur samples changed to {}", renderer->m_MotionBlurSamples);
+            }
+            DrawTooltip("Number of samples for motion blur (higher = smoother blur but slower)");
+
             ImGui::TreePop();
         }
 
