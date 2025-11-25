@@ -1228,28 +1228,81 @@ void Renderer::CompileDrawData()
 
 			// Check models (static and animated)
 			if (!m_DrawDataNeedsFullRebuild) {
-				for (auto entity : m_ModelSystem->m_Entities) {
-					if (!ecs.HasComponent<ModelComponent>(entity)) continue;
+				// Check 1: Cache is empty but entities exist
+				if (m_CachedDrawItems.empty() && (!m_Entities.empty() || !m_ModelSystem->m_Entities.empty())) {
+					m_DrawDataNeedsFullRebuild = true;
+				}
+				// Check 2: Verify all CACHED entities still exist and are valid
+				else if (!m_CachedDrawItems.empty()) {
+					const auto& ecs = Ermine::ECS::GetInstance();
 
-					const auto& modelComp = ecs.GetComponent<ModelComponent>(entity);
-					if (!modelComp.m_model) continue;
+					for (const auto& cachedItem : m_CachedDrawItems) {
+						// Check if cached entity still exists
+						if (!ecs.IsEntityValid(cachedItem.entity)) {
+							m_DrawDataNeedsFullRebuild = true;
+							break;
+						}
 
-					// For animated models, check if bone data is valid
-					bool isAnimated = ecs.HasComponent<AnimationComponent>(entity);
-					bool isRenderable = true;
-					if (isAnimated) {
-						const auto& animComp = ecs.GetComponent<AnimationComponent>(entity);
-						isRenderable = (animComp.boneTransformOffset >= 0);
-					}
+						// Check if entity still has required components
+						bool hasPrimitiveComponents = ecs.HasComponent<Mesh>(cachedItem.entity) &&
+							ecs.HasComponent<Ermine::Material>(cachedItem.entity);
+						bool hasModelComponent = ecs.HasComponent<ModelComponent>(cachedItem.entity);
 
-					// If entity is renderable but NOT in cache, rebuild
-					if (isRenderable && cachedEntities.find(entity) == cachedEntities.end()) {
-						m_DrawDataNeedsFullRebuild = true;
-						break;
+						if (!hasPrimitiveComponents && !hasModelComponent) {
+							// Entity lost required components - rebuild
+							m_DrawDataNeedsFullRebuild = true;
+							break;
+						}
+
+						// Check material routing state changes
+						bool currentHasParentMat = false;
+						if (ecs.HasComponent<Ermine::Material>(cachedItem.entity)) {
+							auto& parentMatComp = ecs.GetComponent<Ermine::Material>(cachedItem.entity);
+							currentHasParentMat = (parentMatComp.GetMaterial() != nullptr);
+						}
+
+						bool currentHasChildMat = false;
+						if (cachedItem.childMaterialEntity != 0 &&
+							ecs.HasComponent<Ermine::Material>(cachedItem.childMaterialEntity)) {
+							auto& childMatComp = ecs.GetComponent<Ermine::Material>(cachedItem.childMaterialEntity);
+							currentHasChildMat = (childMatComp.GetMaterial() != nullptr);
+						}
+
+						// Material structure changed - rebuild
+						if (currentHasParentMat != cachedItem.hadParentMaterial ||
+							currentHasChildMat != cachedItem.hadChildMaterial) {
+							m_DrawDataNeedsFullRebuild = true;
+							break;
+						}
+
+						// Check if material properties changed (transparency/shadows/custom shader)
+						Ermine::graphics::Material* currentMaterial = nullptr;
+						if (ecs.HasComponent<Ermine::Material>(cachedItem.materialEntity)) {
+							auto& matComp = ecs.GetComponent<Ermine::Material>(cachedItem.materialEntity);
+							currentMaterial = matComp.GetMaterial();
+						}
+
+						if (currentMaterial) {
+							bool currentTransparent = IsTransparentMaterial(currentMaterial);
+							bool currentCastsShadows = CastsShadows(currentMaterial);
+							bool currentHasCustomShader = HasCustomShader(currentMaterial);
+
+							if (currentTransparent != cachedItem.isTransparent ||
+								currentCastsShadows != cachedItem.castsShadows ||
+								currentHasCustomShader != cachedItem.hasCustomShader) {
+								// Material properties changed - rebuild
+								m_DrawDataNeedsFullRebuild = true;
+								break;
+							}
+						}
+						else {
+							// Material that was being used is now null - rebuild
+							m_DrawDataNeedsFullRebuild = true;
+							break;
+						}
 					}
 				}
 			}
-
 			// Check 3: Verify material routing state hasn't changed
 			// Uses complete cached material structure to detect ANY material hierarchy changes
 			if (!m_DrawDataNeedsFullRebuild) {
