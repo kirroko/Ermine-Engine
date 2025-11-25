@@ -1707,7 +1707,7 @@ namespace Ermine
 
 	struct GlobalGraphics
 	{
-		// === SSAO parameters ===
+		// SSAO parameters
 		bool  ssaoEnabled = false;
 		int   ssaoSamples = 16;
 		float ssaoRadius = 10.0f;
@@ -1716,15 +1716,17 @@ namespace Ermine
 		float ssaoFadeout = 0.1f;
 		float ssaoMaxDistance = 100.0f;
 
-		// === Fog parameters ===
+		// Fog parameters
 		bool  fogEnabled = false;
 		int   fogMode = 0;                     // 0 = linear, 1 = exp, 2 = exp^2
 		Vec3  fogColor = Vec3{ 0.5f, 0.6f, 0.7f };
 		float fogDensity = 0.02f;                 // exp modes
 		float fogStart = 50.0f;                 // linear
 		float fogEnd = 200.0f;                // linear
+		float fogHeightCoefficient = 0.1f; // For height-based fog
+		float fogHeightFalloff = 10.0f;      // For height-based fog
 
-		// === Post-processing toggles ===
+		// Post-processing toggles
 		bool vignetteEnabled = false;
 		bool fxaaEnabled = true;
 		bool toneMappingEnabled = true;
@@ -1732,7 +1734,7 @@ namespace Ermine
 		bool bloomEnabled = true;
 		bool skyboxIsHDR = false;
 
-		// === Post-processing parameters ===
+		// Post-processing parameters
 		float exposure = 1.0f;
 		float contrast = 1.0f;
 		float saturation = 1.0f;
@@ -1741,17 +1743,21 @@ namespace Ermine
 		float vignetteRadius = 0.8f;
 		float bloomStrength = 0.04f;
 
-		// === FXAA parameters ===
+		// FXAA parameters
 		float fxaaSpanMax = 8.0f;
 		float fxaaReduceMin = 1.0f / 128.0f;
 		float fxaaReduceMul = 1.0f / 8.0f;
 
-		// === Bloom pass parameters ===
+		// Bloom pass parameters
 		float bloomThreshold = 1.0f;
 		float bloomIntensity = 2.0f;
 		float bloomRadius = 1.0f;
 
-		// --- generic xproperty-based serialization ---
+		// Spotlight ray parameters
+		bool spotlightRaysEnabled = true;
+		float spotlightRayIntensity = 0.3f;
+		float spotlightRayFalloff = 2.0f;
+
 		template<typename Alloc>
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const
 		{
@@ -1782,6 +1788,8 @@ namespace Ermine
 			xproperty::obj_member<"fogDensity", &GlobalGraphics::fogDensity>,
 			xproperty::obj_member<"fogStart", &GlobalGraphics::fogStart>,
 			xproperty::obj_member<"fogEnd", &GlobalGraphics::fogEnd>,
+			xproperty::obj_member<"fogHeightCoefficient", &GlobalGraphics::fogHeightCoefficient>,
+			xproperty::obj_member<"fogHeightFalloff", &GlobalGraphics::fogHeightFalloff>,
 
 			// Post-process toggles
 			xproperty::obj_member<"vignetteEnabled", &GlobalGraphics::vignetteEnabled>,
@@ -1808,7 +1816,12 @@ namespace Ermine
 			// Bloom pass
 			xproperty::obj_member<"bloomThreshold", &GlobalGraphics::bloomThreshold>,
 			xproperty::obj_member<"bloomIntensity", &GlobalGraphics::bloomIntensity>,
-			xproperty::obj_member<"bloomRadius", &GlobalGraphics::bloomRadius>
+			xproperty::obj_member<"bloomRadius", &GlobalGraphics::bloomRadius>,
+
+			// Spotlight ray parameters
+			xproperty::obj_member<"spotlightRaysEnabled", &GlobalGraphics::spotlightRaysEnabled>,
+			xproperty::obj_member<"spotlightRayIntensity", &GlobalGraphics::spotlightRayIntensity>,
+			xproperty::obj_member<"spotlightRayFalloff", &GlobalGraphics::spotlightRayFalloff>
 		)
 	};
 

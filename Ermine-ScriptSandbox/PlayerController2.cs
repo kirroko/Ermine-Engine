@@ -6,10 +6,12 @@ public class PlayerController2 : MonoBehaviour
     private Transform cam;
     private AudioComponent audioComp;
 
+    public float mouseHorSens = 0.01f;
+    public float mouseVertSens = 0.01f;
+
     public float moveSpeed = 5f;
     public float jumpspeed = 5f;
 
-    public float mouseSensitivity = 0.01f;
     public float crouchLerpSpeed = 6f;
 
     private bool isGrounded = true;
@@ -98,8 +100,8 @@ public class PlayerController2 : MonoBehaviour
     {
         lookInput = Input.mousePositionDelta;
 
-        float mouseX = -lookInput.x * mouseSensitivity;
-        float mouseY = lookInput.y * mouseSensitivity;
+        float mouseX = -lookInput.x * mouseHorSens;
+        float mouseY = lookInput.y * mouseVertSens;
 
         xRotation -= mouseY;
         xRotation = Mathf.Clamp(xRotation, minPitch, maxPitch);
