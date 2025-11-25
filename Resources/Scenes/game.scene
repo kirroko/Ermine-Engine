@@ -827,7 +827,7 @@
         "Transform": {
           "position": [
             -15.017431259155274,
-            -2.25,
+            -2.2117908000946047,
             -27.721033096313478
           ],
           "rotation": [
@@ -1385,7 +1385,25 @@
           "parentGuid": "d3f5ba6aef89ec4a9aa9420c0e65c98f",
           "depth": 1
         },
-        "GlobalTransform": {}
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "class": "RotatingPlatform",
+              "enabled": true,
+              "fields": {
+                "speed": {
+                  "t": 0,
+                  "v": 2.0
+                },
+                "active": {
+                  "t": 2,
+                  "v": true
+                }
+              }
+            }
+          ]
+        }
       }
     },
     {
@@ -3458,7 +3476,25 @@
           "parentGuid": "272181ce3309cf4f9aa50d7b8d6bb2a5",
           "depth": 1
         },
-        "GlobalTransform": {}
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "class": "RotatingPlatform",
+              "enabled": true,
+              "fields": {
+                "speed": {
+                  "t": 0,
+                  "v": 2.0
+                },
+                "active": {
+                  "t": 2,
+                  "v": true
+                }
+              }
+            }
+          ]
+        }
       }
     },
     {
@@ -3889,7 +3925,25 @@
           "parentGuid": "272181ce3309cf4f9aa50d7b8d6bb2a5",
           "depth": 1
         },
-        "GlobalTransform": {}
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "class": "RotatingPlatform",
+              "enabled": true,
+              "fields": {
+                "speed": {
+                  "t": 0,
+                  "v": 2.0
+                },
+                "active": {
+                  "t": 2,
+                  "v": true
+                }
+              }
+            }
+          ]
+        }
       }
     },
     {
@@ -6406,7 +6460,25 @@
           "parentGuid": "4b14f01e9efcd0479f51d0919c155e09",
           "depth": 1
         },
-        "GlobalTransform": {}
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "class": "RotatingPlatform",
+              "enabled": true,
+              "fields": {
+                "speed": {
+                  "t": 0,
+                  "v": 2.0
+                },
+                "active": {
+                  "t": 2,
+                  "v": true
+                }
+              }
+            }
+          ]
+        }
       }
     },
     {
@@ -9711,7 +9783,7 @@
           "position": [
             4.710573196411133,
             -0.35194775462150576,
-            -13.06718921661377
+            -13.073480606079102
           ],
           "rotation": [
             0.0,
@@ -10980,7 +11052,25 @@
           "parentGuid": "d3f5ba6aef89ec4a9aa9420c0e65c98f",
           "depth": 1
         },
-        "GlobalTransform": {}
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "class": "RotatingPlatform",
+              "enabled": true,
+              "fields": {
+                "speed": {
+                  "t": 0,
+                  "v": 2.0
+                },
+                "active": {
+                  "t": 2,
+                  "v": true
+                }
+              }
+            }
+          ]
+        }
       }
     },
     {
@@ -23024,13 +23114,13 @@
               "class": "PlayerController2",
               "enabled": true,
               "fields": {
-                "mouseHorSens": {
-                  "t": 0,
-                  "v": 1.0
-                },
                 "jumpHeight": {
                   "t": 0,
                   "v": 2.0
+                },
+                "mouseHorSens": {
+                  "t": 0,
+                  "v": 1.0
                 },
                 "mouseVertSens": {
                   "t": 0,
