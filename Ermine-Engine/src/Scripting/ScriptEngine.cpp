@@ -1255,8 +1255,7 @@ namespace
 			return;
 
 		// Use HierarchySystem to properly propagate transform changes
-		std::shared_ptr<HierarchySystem> hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>();
-		if (hierarchySystem) {
+		if (std::shared_ptr<HierarchySystem> hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>()) {
 			hierarchySystem->SetLocalRotation(id, ToNativeQuat(value));
 		}
 		else {

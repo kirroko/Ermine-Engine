@@ -76,6 +76,12 @@ void Ermine::scripting::ScriptSystem::Update() const
 
 	for (auto& entity : m_Entities)
 	{
+		if (ECS::GetInstance().HasComponent<ObjectMetaData>(entity))
+		{
+			const auto& meta = ECS::GetInstance().GetComponent<ObjectMetaData>(entity);
+			if (!meta.selfActive)
+				continue;
+		}
 		//auto& sc = ECS::GetInstance().GetComponent<Script>(entity);
 		auto& scs = ECS::GetInstance().GetComponent<ScriptsComponent>(entity);
 		for (auto& sc : scs.scripts)
@@ -121,6 +127,12 @@ void Ermine::scripting::ScriptSystem::FixedUpdate() const
 
 	for (auto& entity : m_Entities)
 	{
+		if (ECS::GetInstance().HasComponent<ObjectMetaData>(entity))
+		{
+			const auto& meta = ECS::GetInstance().GetComponent<ObjectMetaData>(entity);
+			if (!meta.selfActive)
+				continue;
+		}
 		//auto& sc = ECS::GetInstance().GetComponent<Script>(entity);
 		auto& scs = ECS::GetInstance().GetComponent<ScriptsComponent>(entity);
 		for (auto& sc : scs.scripts)

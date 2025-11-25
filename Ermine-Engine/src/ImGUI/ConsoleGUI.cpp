@@ -316,7 +316,7 @@ void ConsoleGUI::buildDisplayList(std::vector<int>& outDisplayIndices,
 
 void ConsoleGUI::Update()
 {
-    if (!show)
+    if (show)
         return;
 
     if (ImGui::Begin("Console", &show))
