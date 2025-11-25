@@ -3,7 +3,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "e24a13ca16999846b0f688df202db287"
+          "guid": "a60475eb46d4674badfdf1f16bec278e"
         },
         "Transform": {
           "position": [
@@ -125,7 +125,50 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "725a4cee9ab52842a5b233825229d4e8"
+          "guid": "dd8fbc58b7c8c34e98dda8748271dc94"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            100.0,
+            100.0,
+            100.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Main Camera",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "a60475eb46d4674badfdf1f16bec278e",
+          "depth": 1
+        },
+        "GlobalTransform": {},
+        "CameraComponent": {
+          "fov": 70.0,
+          "aspect": 1.7777777910232545,
+          "near": 0.10000000149011612,
+          "far": 1000.0,
+          "primary": false,
+          "isGameCamera": false
+        }
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "18749c3aa3290f41a5bd45da2a2532e7"
         },
         "Transform": {
           "position": [
@@ -155,7 +198,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "e24a13ca16999846b0f688df202db287",
+          "parentGuid": "a60475eb46d4674badfdf1f16bec278e",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -164,223 +207,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "8a6ca923d70a0146b28465d0fdc0f723"
-        },
-        "Transform": {
-          "position": [
-            -0.1599999964237213,
-            -0.2999999523162842,
-            1.2500001192092896
-          ],
-          "rotation": [
-            -0.7071061730384827,
-            0.0,
-            0.0,
-            0.7071074843406677
-          ],
-          "scale": [
-            0.00009999999747378752,
-            0.00010000001202570274,
-            0.00010000001202570274
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Syringe",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "ModelComponent": {
-          "model": "C_Syringe.fbx",
-          "isSkinFile": false
-        },
-        "HierarchyComponent": {
-          "parentGuid": "725a4cee9ab52842a5b233825229d4e8",
-          "depth": 2
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "components": {
-        "IDComponent": {
-          "guid": "3c951c2b4be5c04d9cf0e0cc738cd1bc"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Mesh_C_Syringe.fbx_Mesh.015_mesh2",
-          "tag": "Mesh",
-          "selfActive": true
-        },
-        "Material": {
-          "hasMaterial": true,
-          "params": {
-            "materialHasAlbedoMap": true
-          },
-          "textures": [
-            {
-              "slot": "materialAlbedoMap",
-              "path": "../Resources\\Textures\\C_Syringe_BaseColor.png"
-            },
-            {
-              "slot": "material.albedoMap",
-              "path": "../Resources\\Textures\\C_Syringe_BaseColor.png"
-            }
-          ],
-          "uvScale": [
-            1.0,
-            -1.0
-          ],
-          "uvOffset": [
-            0.0,
-            1.0
-          ]
-        },
-        "HierarchyComponent": {
-          "parentGuid": "8a6ca923d70a0146b28465d0fdc0f723",
-          "depth": 3
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "components": {
-        "IDComponent": {
-          "guid": "c0cd62f572cf564d8438dc8d5f30d21d"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Mesh_C_Syringe.fbx_Mesh.016_mesh1",
-          "tag": "Mesh",
-          "selfActive": true
-        },
-        "Material": {
-          "hasMaterial": true,
-          "params": {
-            "materialHasAlbedoMap": true
-          },
-          "textures": [
-            {
-              "slot": "materialAlbedoMap",
-              "path": "../Resources\\Textures\\C_Syringe_BaseColor.png"
-            },
-            {
-              "slot": "material.albedoMap",
-              "path": "../Resources\\Textures\\C_Syringe_BaseColor.png"
-            }
-          ],
-          "uvScale": [
-            1.0,
-            -1.0
-          ],
-          "uvOffset": [
-            0.0,
-            1.0
-          ]
-        },
-        "HierarchyComponent": {
-          "parentGuid": "8a6ca923d70a0146b28465d0fdc0f723",
-          "depth": 3
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "components": {
-        "IDComponent": {
-          "guid": "f80ebe378a9f14478f003c60db60e479"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Mesh_C_Syringe.fbx_Mesh.014_mesh0",
-          "tag": "Mesh",
-          "selfActive": true
-        },
-        "Material": {
-          "hasMaterial": true,
-          "params": {
-            "materialHasAlbedoMap": true
-          },
-          "textures": [
-            {
-              "slot": "materialAlbedoMap",
-              "path": "../Resources\\Textures\\C_Syringe_BaseColor.png"
-            },
-            {
-              "slot": "material.albedoMap",
-              "path": "../Resources\\Textures\\C_Syringe_BaseColor.png"
-            }
-          ],
-          "uvScale": [
-            1.0,
-            -1.0
-          ],
-          "uvOffset": [
-            0.0,
-            1.0
-          ]
-        },
-        "HierarchyComponent": {
-          "parentGuid": "8a6ca923d70a0146b28465d0fdc0f723",
-          "depth": 3
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "components": {
-        "IDComponent": {
-          "guid": "3acaa4b80d9b544ba97f890791248171"
+          "guid": "b025c4ddffa265479339677f5a44202a"
         },
         "Transform": {
           "position": [
@@ -430,7 +257,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "725a4cee9ab52842a5b233825229d4e8",
+          "parentGuid": "18749c3aa3290f41a5bd45da2a2532e7",
           "depth": 2
         },
         "GlobalTransform": {}
@@ -439,7 +266,46 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "fa599433468ce54980b9bf36c9e1bb0a"
+          "guid": "9723fcb49abc434f98e05f6e9d205de0"
+        },
+        "Transform": {
+          "position": [
+            -0.1599999964237213,
+            -0.2999999523162842,
+            1.2500001192092896
+          ],
+          "rotation": [
+            -0.7071061730384827,
+            0.0,
+            0.0,
+            0.7071074843406677
+          ],
+          "scale": [
+            0.00009999999747378752,
+            0.00010000001202570274,
+            0.00010000001202570274
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Syringe",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "C_Syringe.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "18749c3aa3290f41a5bd45da2a2532e7",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "00faa6b84506bb4894667dfb30ad191e"
         },
         "Transform": {
           "position": [
@@ -454,29 +320,163 @@
             1.0
           ],
           "scale": [
-            100.0,
-            100.0,
-            100.0
+            1.0,
+            1.0,
+            1.0
           ]
         },
         "ObjectMetaData": {
-          "name": "Main Camera",
-          "tag": "Untagged",
+          "name": "Mesh_C_Syringe.fbx_Mesh.014_mesh0",
+          "tag": "Mesh",
           "selfActive": true
         },
-        "HierarchyComponent": {
-          "parentGuid": "e24a13ca16999846b0f688df202db287",
-          "depth": 1
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources\\Textures\\C_Syringe_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources\\Textures\\C_Syringe_BaseColor.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            -1.0
+          ],
+          "uvOffset": [
+            0.0,
+            1.0
+          ]
         },
-        "GlobalTransform": {},
-        "CameraComponent": {
-          "fov": 70,
-          "aspect": 1.7777777910232545,
-          "near": 0.1,
-          "far": 1000.0,
-          "primary": false,
-          "isGameCamera": false
-        }
+        "HierarchyComponent": {
+          "parentGuid": "9723fcb49abc434f98e05f6e9d205de0",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "c267820ab240fa40a461a3b0fd708be1"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_C_Syringe.fbx_Mesh.016_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources\\Textures\\C_Syringe_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources\\Textures\\C_Syringe_BaseColor.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            -1.0
+          ],
+          "uvOffset": [
+            0.0,
+            1.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "9723fcb49abc434f98e05f6e9d205de0",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "39136f3c2a1b7e4fae062e5ff837f4d5"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_C_Syringe.fbx_Mesh.015_mesh2",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources\\Textures\\C_Syringe_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources\\Textures\\C_Syringe_BaseColor.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            -1.0
+          ],
+          "uvOffset": [
+            0.0,
+            1.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "9723fcb49abc434f98e05f6e9d205de0",
+          "depth": 3
+        },
+        "GlobalTransform": {}
       }
     }
   ]
