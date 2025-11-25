@@ -81,7 +81,7 @@ public class PlayerController2 : MonoBehaviour
         if (jumpRequested)
         {
             if (newPos.y < startheight + jumpHeight)
-                newPos.y += jumpspeed * Time.deltaTime; // teleport player slightly up
+                newPos.y += jumpspeed * Time.fixedDeltaTime; // teleport player slightly up
             else
                 jumpRequested = false;
         }
