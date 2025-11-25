@@ -128,6 +128,10 @@ public:
     */
     void CreateHUDEntity();
 
+    // temporary reference to health bar, to be removed
+    static Ermine::EntityID healthBar;
+    static Ermine::EntityID GetHealthBar();
+
 private:
     SceneManager() = default;
 

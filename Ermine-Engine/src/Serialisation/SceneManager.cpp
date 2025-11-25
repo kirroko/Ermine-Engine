@@ -350,11 +350,14 @@ void SceneManager::OpenScene(const std::string& path)
 
 void SceneManager::SaveScene()
 {
+    EE_CORE_INFO("SaveScene() pressed. hasPath = {}", m_CurrentScenePath.has_value());
+
     if (!m_CurrentScenePath)
     {
         SaveSceneAsDialog(); // fallback if never saved
         return;
     }
+    EE_CORE_INFO("SaveScene(): saving to '{}'", *m_CurrentScenePath);
     SaveSceneTo(*m_CurrentScenePath);
 }
 
@@ -381,17 +384,22 @@ void SceneManager::RemoveTemp()
 
 void SceneManager::SaveSceneAsDialog()
 {
+    EE_CORE_INFO("SaveSceneAsDialog() opened");
     auto path = ShowSaveDialog(L"untitled.scene", GetActiveWindow());
     if (path) SaveSceneTo(*path);
 }
 
 void SceneManager::SaveSceneTo(const std::string& path)
 {
+    EE_CORE_INFO("SaveSceneTo('{}')", path);
     //SyncHierarchyGuidsFromRuntime(Ermine::ECS::GetInstance());
     SaveSceneToFile(Ermine::ECS::GetInstance(), path, true);
     m_CurrentScenePath = path;
     m_Dirty = false;
 }
+
+// temporary reference to health bar, to be removed
+Ermine::EntityID SceneManager::healthBar = 1;
 
 void SceneManager::CreateHUDEntity()
 {
@@ -404,6 +412,7 @@ void SceneManager::CreateHUDEntity()
     }
 
     Ermine::EntityID uiEntity = scene->CreateEntity("HUD", false, false);  // No transform or hierarchy needed
+    healthBar = uiEntity; // temporary reference to health bar, to be removed
     Ermine::UIComponent uiComp;  // Default values are already set in the struct
 
     // ============================================================================
@@ -453,4 +462,10 @@ void SceneManager::CreateHUDEntity()
     Ermine::ECS::GetInstance().AddComponent<Ermine::UIComponent>(uiEntity, uiComp);
     EE_CORE_INFO("Created HUD entity with UIComponent and skill icons configured");
 #endif
+}
+
+// temporary reference to health bar, to be removed
+Ermine::EntityID SceneManager::GetHealthBar()
+{
+    return healthBar;
 }

@@ -502,7 +502,7 @@ std::shared_ptr<graphics::Model> AssetManager::LoadModel(const std::string& file
         // Determine file type by extension
         std::string ext = std::filesystem::path(filePath).extension().string();
 
-        if (ext == ".skin") {
+        if (ext == ".skin" || ext == ".mesh") {
             // Load binary .skin file from resource pipeline
             EE_CORE_INFO("Loading .skin file: {0}", filePath);
             model = std::make_shared<graphics::Model>(filePath, true);

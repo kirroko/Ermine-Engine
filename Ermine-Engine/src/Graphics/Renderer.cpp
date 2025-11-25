@@ -6599,6 +6599,92 @@ glm::mat4 Renderer::GetEntityWorldMatrix(EntityID entity) const
 	return glm::mat4(1.0f);
 }
 
+void Renderer::SyncToGlobalGraphics()
+{
+	m_GlobalGraphics.ssaoEnabled = m_SSAOEnabled;
+	m_GlobalGraphics.ssaoSamples = m_SSAOSamples;
+	m_GlobalGraphics.ssaoRadius = m_SSAORadius;
+	m_GlobalGraphics.ssaoBias = m_SSAOBias;
+	m_GlobalGraphics.ssaoIntensity = m_SSAOIntensity;
+	m_GlobalGraphics.ssaoFadeout = m_SSAOFadeout;
+	m_GlobalGraphics.ssaoMaxDistance = m_SSAOMaxDistance;
+
+	m_GlobalGraphics.fogEnabled = m_FogEnabled;
+	m_GlobalGraphics.fogMode = m_FogMode;
+	m_GlobalGraphics.fogColor = Ermine::Vec3(m_FogColor.x, m_FogColor.y, m_FogColor.z);
+	m_GlobalGraphics.fogDensity = m_FogDensity;
+	m_GlobalGraphics.fogStart = m_FogStart;
+	m_GlobalGraphics.fogEnd = m_FogEnd;
+
+	m_GlobalGraphics.vignetteEnabled = m_VignetteEnabled;
+	m_GlobalGraphics.fxaaEnabled = m_FXAAEnabled;
+	m_GlobalGraphics.toneMappingEnabled = m_ToneMappingEnabled;
+	m_GlobalGraphics.gammaCorrectionEnabled = m_GammaCorrectionEnabled;
+	m_GlobalGraphics.bloomEnabled = m_BloomEnabled;
+	m_GlobalGraphics.skyboxIsHDR = m_SkyBoxisHDR;
+
+	m_GlobalGraphics.exposure = m_Exposure;
+	m_GlobalGraphics.contrast = m_Contrast;
+	m_GlobalGraphics.saturation = m_Saturation;
+	m_GlobalGraphics.gamma = m_Gamma;
+	m_GlobalGraphics.vignetteIntensity = m_VignetteIntensity;
+	m_GlobalGraphics.vignetteRadius = m_VignetteRadius;
+	m_GlobalGraphics.bloomStrength = m_BloomStrength;
+
+	m_GlobalGraphics.fxaaSpanMax = m_FXAASpanMax;
+	m_GlobalGraphics.fxaaReduceMin = m_FXAAReduceMin;
+	m_GlobalGraphics.fxaaReduceMul = m_FXAAReduceMul;
+
+	m_GlobalGraphics.bloomThreshold = m_BloomThreshold;
+	m_GlobalGraphics.bloomIntensity = m_BloomIntensity;
+	m_GlobalGraphics.bloomRadius = m_BloomRadius;
+}
+
+void Renderer::ApplyFromGlobalGraphics()
+{
+	m_SSAOEnabled = m_GlobalGraphics.ssaoEnabled;
+	m_SSAOSamples = m_GlobalGraphics.ssaoSamples;
+	m_SSAORadius = m_GlobalGraphics.ssaoRadius;
+	m_SSAOBias = m_GlobalGraphics.ssaoBias;
+	m_SSAOIntensity = m_GlobalGraphics.ssaoIntensity;
+	m_SSAOFadeout = m_GlobalGraphics.ssaoFadeout;
+	m_SSAOMaxDistance = m_GlobalGraphics.ssaoMaxDistance;
+
+	m_FogEnabled = m_GlobalGraphics.fogEnabled;
+	m_FogMode = m_GlobalGraphics.fogMode;
+	m_FogColor = glm::vec3(
+		m_GlobalGraphics.fogColor.x,
+		m_GlobalGraphics.fogColor.y,
+		m_GlobalGraphics.fogColor.z
+	);
+	m_FogDensity = m_GlobalGraphics.fogDensity;
+	m_FogStart = m_GlobalGraphics.fogStart;
+	m_FogEnd = m_GlobalGraphics.fogEnd;
+
+	m_VignetteEnabled = m_GlobalGraphics.vignetteEnabled;
+	m_FXAAEnabled = m_GlobalGraphics.fxaaEnabled;
+	m_ToneMappingEnabled = m_GlobalGraphics.toneMappingEnabled;
+	m_GammaCorrectionEnabled = m_GlobalGraphics.gammaCorrectionEnabled;
+	m_BloomEnabled = m_GlobalGraphics.bloomEnabled;
+	m_SkyBoxisHDR = m_GlobalGraphics.skyboxIsHDR;
+
+	m_Exposure = m_GlobalGraphics.exposure;
+	m_Contrast = m_GlobalGraphics.contrast;
+	m_Saturation = m_GlobalGraphics.saturation;
+	m_Gamma = m_GlobalGraphics.gamma;
+	m_VignetteIntensity = m_GlobalGraphics.vignetteIntensity;
+	m_VignetteRadius = m_GlobalGraphics.vignetteRadius;
+	m_BloomStrength = m_GlobalGraphics.bloomStrength;
+
+	m_FXAASpanMax = m_GlobalGraphics.fxaaSpanMax;
+	m_FXAAReduceMin = m_GlobalGraphics.fxaaReduceMin;
+	m_FXAAReduceMul = m_GlobalGraphics.fxaaReduceMul;
+
+	m_BloomThreshold = m_GlobalGraphics.bloomThreshold;
+	m_BloomIntensity = m_GlobalGraphics.bloomIntensity;
+	m_BloomRadius = m_GlobalGraphics.bloomRadius;
+}
+
 /**
  * @brief Picks the entity at the given screen coordinates.
  * @param x X coordinate.

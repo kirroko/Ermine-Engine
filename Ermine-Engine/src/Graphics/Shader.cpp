@@ -336,6 +336,31 @@ void Shader::SetUniform2f(const std::string& name, float x, float y)
 }
 
 /**
+ * @brief Set float vec3 uniform
+ * @param name The name of the uniform
+ * @param x First component
+ * @param y Second component
+ * @param z Third component
+ */
+void Shader::SetUniform3f(const std::string& name, float x, float y, float z)
+{
+	glUniform3f(GetUniformLocation(name), x, y, z);
+}
+
+/**
+ * @brief Set float vec4 uniform
+ * @param name The name of the uniform
+ * @param x First component
+ * @param y Second component
+ * @param z Third component
+ * @param w Fourth component
+ */
+void Shader::SetUniform4f(const std::string& name, float x, float y, float z, float w)
+{
+    glUniform4f(GetUniformLocation(name), x, y, z, w);
+}
+
+/**
  * @brief Sets a 2-component float uniform in the shader.
  * @param name The uniform name.
  * @param value The `glm::vec2` containing the float components.
