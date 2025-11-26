@@ -17,7 +17,13 @@ public class DisableLightCone : MonoBehaviour
         oldPos = transform.position;
 
         // Find matching LightConeX
-        lightCone = FindMatchingCone();
+        //lightCone = FindMatchingCone();
+        //if (lightCone != null)
+        //    oldConePos = lightCone.transform.position;
+
+        if (transform.childCount > 0)
+            lightCone = gameObject.transform.GetChild(0).gameObject;
+
         if (lightCone != null)
             oldConePos = lightCone.transform.position;
     }
@@ -107,6 +113,7 @@ public class DisableLightCone : MonoBehaviour
         }
     }
 
+    /*
     private GameObject FindMatchingCone()
     {
         string name = gameObject.name;
@@ -131,5 +138,5 @@ public class DisableLightCone : MonoBehaviour
 
         string coneName = "LightCone" + number;
         return GameObject.Find(coneName);
-    }
+    }*/
 }
