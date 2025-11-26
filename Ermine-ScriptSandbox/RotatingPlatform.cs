@@ -48,6 +48,7 @@ public class RotatingPlatform : MonoBehaviour
 
         // Apply rotation
         transform.Rotate(new Vector3(0f, speed * Time.deltaTime, 0f));
+        Physics.SetRotationQuat((ulong)gameObject.GetInstanceID(), transform.rotation);
     }
 
     public void IsActive(bool state)

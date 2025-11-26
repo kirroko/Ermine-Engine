@@ -28,6 +28,7 @@ public class VerticalPlatform : MonoBehaviour
         float offset = t - (moveDistance * 0.5f);
 
         transform.position = startPosition + new Vector3(0f, offset, 0f);
+        Physics.SetPosition((ulong)gameObject.GetInstanceID(), startPosition + new Vector3(0f, offset, 0f));
     }
     
     
