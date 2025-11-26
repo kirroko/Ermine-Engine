@@ -16,6 +16,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "ECS.h"
 #include "Input.h"
 #include "Components.h"
+#include "SceneManager.h"
+#include "Logger.h"
 #include "GLFW/glfw3.h"
 
 #ifdef EE_EDITOR
@@ -141,12 +143,46 @@ namespace Ermine
 
     void UIButtonSystem::ExecuteButtonAction(const UIButtonComponent& button)
     {
-        // Execute button action based on button type
-        // For now, just log that the button was clicked
-        EE_CORE_TRACE("Button '{}' clicked with action: {}", button.text, static_cast<int>(button.action));
+        EE_CORE_INFO("Button '{}' clicked with action: {}", button.text, static_cast<int>(button.action));
 
-        // Action execution would go here (e.g., load scene, quit game, etc.)
-        // This is a placeholder for future implementation
+        switch (button.action)
+        {
+        case UIButtonComponent::ButtonAction::LoadScene:
+            if (!button.actionData.empty())
+            {
+                EE_CORE_INFO("Loading scene: {}", button.actionData);
+                #ifdef EE_EDITOR
+                auto& sceneManager = SceneManager::GetInstance();
+                sceneManager.OpenScene(button.actionData);
+                #else
+                SceneManager::GetInstance().OpenScene(button.actionData);
+                #endif
+            }
+            else
+            {
+                EE_CORE_WARN("LoadScene action has no scene path!");
+            }
+            break;
+
+        case UIButtonComponent::ButtonAction::Quit:
+            EE_CORE_INFO("Quit action triggered");
+            // Get GLFW window and request close
+            if (auto* window = glfwGetCurrentContext())
+            {
+                glfwSetWindowShouldClose(window, GLFW_TRUE);
+            }
+            break;
+
+        case UIButtonComponent::ButtonAction::Custom:
+            EE_CORE_INFO("Custom action triggered: {}", button.actionData);
+            // Custom actions could be handled by scripts or events
+            break;
+
+        case UIButtonComponent::ButtonAction::None:
+        default:
+            EE_CORE_WARN("Button '{}' has no action assigned", button.text);
+            break;
+        }
     }
 
     void UIButtonSystem::GetNormalizedMousePosition(float& outX, float& outY)

@@ -333,8 +333,8 @@ void SceneManager::OpenSceneDialog()
 
 void SceneManager::OpenScene(const std::string& path)
 {
-    //auto& ecs = Ermine::ECS::GetInstance();
-    //EnsureActiveScene().Clear();
+    // Clear all existing entities before loading the new scene
+    //Ermine::ECS::GetInstance().ClearAllEntities();
 
     LoadSceneFromFile(Ermine::ECS::GetInstance(), path);
 
