@@ -3,7 +3,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "dd55728fbd27fb41ba26ede4e7048a41"
+          "guid": "272181ce3309cf4f9aa50d7b8d6bb2a5"
         },
         "Transform": {
           "position": [
@@ -37,13 +37,13 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "a08f7f4db5c6de4d8e25a5904cbcaa17"
+          "guid": "d7d7c9ead2c4c1489f45699a53bc4a10"
         },
         "Transform": {
           "position": [
-            12.0,
-            3.5,
-            -64.0
+            7.815896034240723,
+            -4.300316333770752,
+            -107.32331848144531
           ],
           "rotation": [
             0.0,
@@ -52,13 +52,13 @@
             1.0
           ],
           "scale": [
-            0.009999999776482582,
-            0.009999999776482582,
+            0.019999999552965165,
+            0.029999999329447748,
             0.009999999776482582
           ]
         },
         "ObjectMetaData": {
-          "name": "Bars",
+          "name": "Bars (12)",
           "tag": "Untagged",
           "selfActive": true
         },
@@ -67,7 +67,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "dd55728fbd27fb41ba26ede4e7048a41",
+          "parentGuid": "272181ce3309cf4f9aa50d7b8d6bb2a5",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -76,7 +76,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "93dbe4af282cd4499a62fcc03aadaf1e"
+          "guid": "4d2c0229e1f08c479f8f83a0a15ba80c"
         },
         "Transform": {
           "position": [
@@ -103,8 +103,19 @@
         },
         "Material": {
           "hasMaterial": true,
-          "params": {},
-          "textures": [],
+          "params": {
+            "materialHasAlbedoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "C:\\Users\\curti\\OneDrive\\Documents\\GitHub\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\Bars_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "C:\\Users\\curti\\OneDrive\\Documents\\GitHub\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\Bars_BaseColor.png"
+            }
+          ],
           "uvScale": [
             1.0,
             -1.0
@@ -115,7 +126,46 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "a08f7f4db5c6de4d8e25a5904cbcaa17",
+          "parentGuid": "d7d7c9ead2c4c1489f45699a53bc4a10",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "df74b7b35b94fe49afdce094b348788b"
+        },
+        "Transform": {
+          "position": [
+            17.723163604736329,
+            -4.300316333770752,
+            -107.32331848144531
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.019999999552965165,
+            0.029999999329447748,
+            0.009999999776482582
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Bars (11)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "Bars.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "272181ce3309cf4f9aa50d7b8d6bb2a5",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -124,13 +174,1225 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "68f4c8b55f5b0746a70abb3a638ab9ec"
+          "guid": "f8e7563262f74c4e9282ed0c33bec5fa"
         },
         "Transform": {
           "position": [
-            12.0,
-            -2.25,
-            -50.0
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Bars.fbx_Bars_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "C:\\Users\\curti\\OneDrive\\Documents\\GitHub\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\Bars_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "C:\\Users\\curti\\OneDrive\\Documents\\GitHub\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\Bars_BaseColor.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            -1.0
+          ],
+          "uvOffset": [
+            0.0,
+            1.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "df74b7b35b94fe49afdce094b348788b",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "9ce793d680f3ad44ac8c7e1bdfcd4480"
+        },
+        "Transform": {
+          "position": [
+            12.750629425048829,
+            -4.300316333770752,
+            -107.32331848144531
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.019999999552965165,
+            0.029999999329447748,
+            0.009999999776482582
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Bars (10)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "Bars.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "272181ce3309cf4f9aa50d7b8d6bb2a5",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "017676b7af7225478a77b31af38bb607"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Bars.fbx_Bars_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "C:\\Users\\curti\\OneDrive\\Documents\\GitHub\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\Bars_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "C:\\Users\\curti\\OneDrive\\Documents\\GitHub\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\Bars_BaseColor.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            -1.0
+          ],
+          "uvOffset": [
+            0.0,
+            1.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "9ce793d680f3ad44ac8c7e1bdfcd4480",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "23bba0d3775c3c43b6f5ca313d8b29f2"
+        },
+        "Transform": {
+          "position": [
+            17.892763137817384,
+            14.825165748596192,
+            -92.30106353759766
+          ],
+          "rotation": [
+            0.5001792311668396,
+            0.4998167157173157,
+            -0.49983131885528567,
+            0.5001726150512695
+          ],
+          "scale": [
+            0.06911204010248184,
+            0.0500003956258297,
+            0.05881807208061218
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "wall (16)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "C_LongWall.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "272181ce3309cf4f9aa50d7b8d6bb2a5",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "d451193728d2de4588c3b01ead45bd23"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_C_LongWall.fbx_Inner Wall.004_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
+            "materialHasRoughnessMap": true,
+            "materialHasMetallicMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_LongWall_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_LongWall_BaseColor.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_LongWall_Normal.png"
+            },
+            {
+              "slot": "materialRoughnessMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_LongWall_Roughness.png"
+            },
+            {
+              "slot": "material.metallicMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_LongWall_Metallic.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            -1.0
+          ],
+          "uvOffset": [
+            0.0,
+            1.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "23bba0d3775c3c43b6f5ca313d8b29f2",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "4b50d9a460890b46b41f3b6ef3b88bb8"
+        },
+        "Transform": {
+          "position": [
+            12.617805480957032,
+            14.825165748596192,
+            -57.855377197265628
+          ],
+          "rotation": [
+            0.5001792311668396,
+            0.4998167157173157,
+            -0.49983131885528567,
+            0.5001726150512695
+          ],
+          "scale": [
+            0.06535445153713227,
+            0.0500003956258297,
+            0.05881807208061218
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "wall (15)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "C_LongWall.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "272181ce3309cf4f9aa50d7b8d6bb2a5",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "bf3e69cac62fb6408093b7af550b18ab"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_C_LongWall.fbx_Inner Wall.004_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
+            "materialHasRoughnessMap": true,
+            "materialHasMetallicMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_LongWall_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_LongWall_BaseColor.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_LongWall_Normal.png"
+            },
+            {
+              "slot": "materialRoughnessMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_LongWall_Roughness.png"
+            },
+            {
+              "slot": "material.metallicMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_LongWall_Metallic.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            -1.0
+          ],
+          "uvOffset": [
+            0.0,
+            1.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "4b50d9a460890b46b41f3b6ef3b88bb8",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "c0171ce3be768c4bbfe0bd8f1f686bd7"
+        },
+        "Transform": {
+          "position": [
+            -7.823817253112793,
+            14.825165748596192,
+            -57.855377197265628
+          ],
+          "rotation": [
+            0.5001783967018127,
+            0.4998183250427246,
+            -0.4998306632041931,
+            0.5001725554466248
+          ],
+          "scale": [
+            0.01885007880628109,
+            0.0500003956258297,
+            0.05881807208061218
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "wall (14)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "C_LongWall.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "272181ce3309cf4f9aa50d7b8d6bb2a5",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "f75631c41fa47b4fab19c49f97d945f6"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_C_LongWall.fbx_Inner Wall.004_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
+            "materialHasRoughnessMap": true,
+            "materialHasMetallicMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_LongWall_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_LongWall_BaseColor.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_LongWall_Normal.png"
+            },
+            {
+              "slot": "materialRoughnessMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_LongWall_Roughness.png"
+            },
+            {
+              "slot": "material.metallicMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_LongWall_Metallic.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            -1.0
+          ],
+          "uvOffset": [
+            0.0,
+            1.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "c0171ce3be768c4bbfe0bd8f1f686bd7",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "f0076a702b49484d9f67f1aa62751651"
+        },
+        "Transform": {
+          "position": [
+            -7.823817253112793,
+            14.825165748596192,
+            -48.06385040283203
+          ],
+          "rotation": [
+            0.5001783967018127,
+            0.4998183250427246,
+            -0.4998306632041931,
+            0.5001725554466248
+          ],
+          "scale": [
+            0.01885007880628109,
+            0.0500003956258297,
+            0.05881807208061218
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "wall (13)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "C_LongWall.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "272181ce3309cf4f9aa50d7b8d6bb2a5",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "81df3388f3df6c4c844f91b362d8ffac"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_C_LongWall.fbx_Inner Wall.004_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
+            "materialHasRoughnessMap": true,
+            "materialHasMetallicMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_LongWall_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_LongWall_BaseColor.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_LongWall_Normal.png"
+            },
+            {
+              "slot": "materialRoughnessMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_LongWall_Roughness.png"
+            },
+            {
+              "slot": "material.metallicMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_LongWall_Metallic.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            -1.0
+          ],
+          "uvOffset": [
+            0.0,
+            1.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "f0076a702b49484d9f67f1aa62751651",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "4317bc62e714c245bc4de6af6f9ab41a"
+        },
+        "Transform": {
+          "position": [
+            -11.678999900817871,
+            12.355218887329102,
+            -35.802188873291019
+          ],
+          "rotation": [
+            0.500178337097168,
+            0.499818354845047,
+            -0.4998311400413513,
+            0.5001721978187561
+          ],
+          "scale": [
+            0.018850067630410196,
+            0.050000376999378207,
+            0.05300057679414749
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "wall (12)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "C_LongWall.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "272181ce3309cf4f9aa50d7b8d6bb2a5",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "9a7721d8c86bd94fa68dfaab29d6d1d9"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_C_LongWall.fbx_Inner Wall.004_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
+            "materialHasRoughnessMap": true,
+            "materialHasMetallicMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_LongWall_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_LongWall_BaseColor.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_LongWall_Normal.png"
+            },
+            {
+              "slot": "materialRoughnessMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_LongWall_Roughness.png"
+            },
+            {
+              "slot": "material.metallicMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_LongWall_Metallic.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            -1.0
+          ],
+          "uvOffset": [
+            0.0,
+            1.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "4317bc62e714c245bc4de6af6f9ab41a",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "380d4ee03f949045b4cbe893efc3616f"
+        },
+        "Transform": {
+          "position": [
+            12.24858283996582,
+            -5.734702110290527,
+            -37.29650115966797
+          ],
+          "rotation": [
+            0.0,
+            0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.034017257392406467,
+            0.058113403618335727,
+            0.010299642570316792
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "window (21)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "C_WindowWall.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "272181ce3309cf4f9aa50d7b8d6bb2a5",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "3847bcfd54223043b31e529e8b277ab8"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_C_WindowWall.fbx_Inner Wall.005_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_WindowWall_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_WindowWall_BaseColor.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            -1.0
+          ],
+          "uvOffset": [
+            0.0,
+            1.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "380d4ee03f949045b4cbe893efc3616f",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "c4249bc28857364ba371d27c69fd4411"
+        },
+        "Transform": {
+          "position": [
+            -0.1257154941558838,
+            -5.706825256347656,
+            -85.54823303222656
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.18212321400642396,
+            0.06732925772666931,
+            0.1405331790447235
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "long platform (7)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "C_TallPillar.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "272181ce3309cf4f9aa50d7b8d6bb2a5",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "64ad9c75a01d0940bef53ce65873a156"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_C_TallPillar.fbx_Column.001_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_TallPillar_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_TallPillar_BaseColor.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            -1.0
+          ],
+          "uvOffset": [
+            0.0,
+            1.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "c4249bc28857364ba371d27c69fd4411",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "b71d6fdb16a3d542a15d58866013865c"
+        },
+        "Transform": {
+          "position": [
+            -0.1257154941558838,
+            -5.706825256347656,
+            -57.88053894042969
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.18212321400642396,
+            0.06732925772666931,
+            0.1405331790447235
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "long platform (6)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "C_TallPillar.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "272181ce3309cf4f9aa50d7b8d6bb2a5",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "959fe5cf77d1094cae0248d1ffac2381"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_C_TallPillar.fbx_Column.001_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_TallPillar_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_TallPillar_BaseColor.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            -1.0
+          ],
+          "uvOffset": [
+            0.0,
+            1.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "b71d6fdb16a3d542a15d58866013865c",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "c646baf0f18b1846bef83cb0cb8f3177"
+        },
+        "Transform": {
+          "position": [
+            -0.1257154941558838,
+            -5.706825256347656,
+            -99.55021667480469
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.18212321400642396,
+            0.06732925772666931,
+            0.1405331790447235
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "long platform (5)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "C_TallPillar.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "272181ce3309cf4f9aa50d7b8d6bb2a5",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "c264bb735dc98e4e821b31e7f4147635"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_C_TallPillar.fbx_Column.001_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_TallPillar_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_TallPillar_BaseColor.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            -1.0
+          ],
+          "uvOffset": [
+            0.0,
+            1.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "c646baf0f18b1846bef83cb0cb8f3177",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "a441911bac3ac041a14f3610c6664b22"
+        },
+        "Transform": {
+          "position": [
+            -0.12600000202655793,
+            -5.706825256347656,
+            -70.8924789428711
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.18212321400642396,
+            0.06732925772666931,
+            0.1405331790447235
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "long platform (1)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "C_TallPillar.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "272181ce3309cf4f9aa50d7b8d6bb2a5",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "3aad80098c4a6c42ba10c0fc78df0349"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_C_TallPillar.fbx_Column.001_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_TallPillar_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_TallPillar_BaseColor.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            -1.0
+          ],
+          "uvOffset": [
+            0.0,
+            1.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "a441911bac3ac041a14f3610c6664b22",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "66e0e8e87ba3cb429922788be2873d0e"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            -0.19402170181274415,
+            -45.05043411254883
           ],
           "rotation": [
             0.0,
@@ -140,12 +1402,12 @@
           ],
           "scale": [
             5.0,
-            7.0,
-            20.0
+            5.0,
+            5.0028076171875
           ]
         },
         "ObjectMetaData": {
-          "name": "Platform (2)",
+          "name": "Start Platform",
           "tag": "Untagged",
           "selfActive": true
         },
@@ -159,6 +1421,33 @@
               1.0
             ]
           }
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            1.0,
+            1.0,
+            1.0
+          ]
         },
         "Material": {
           "hasMaterial": true,
@@ -179,7 +1468,11 @@
               0.0
             ],
             "materialEmissiveIntensity": 1.0,
-            "materialHasAlbedoMap": true
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": false,
+            "materialHasRoughnessMap": false,
+            "materialHasMetallicMap": false,
+            "materialHasAoMap": false
           },
           "textures": [
             {
@@ -201,7 +1494,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "dd55728fbd27fb41ba26ede4e7048a41",
+          "parentGuid": "272181ce3309cf4f9aa50d7b8d6bb2a5",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -210,131 +1503,13 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "9b77529bdcd7df4c8495a2b54a830ac5"
+          "guid": "82f847fb7ef2584fbdb4d5e44bbe9f09"
         },
         "Transform": {
           "position": [
-            5.0,
-            -4.599999904632568,
-            -52.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            0.03999999910593033,
-            0.04500000178813934,
-            0.03999999910593033
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Column (3)",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "ModelComponent": {
-          "model": "Column.fbx",
-          "isSkinFile": false
-        },
-        "HierarchyComponent": {
-          "parentGuid": "dd55728fbd27fb41ba26ede4e7048a41",
-          "depth": 1
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "components": {
-        "IDComponent": {
-          "guid": "3b4884a387a85641bef5c84730b0e674"
-        },
-        "Transform": {
-          "position": [
-            -600.0,
-            117.5,
-            950.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            50.0,
-            25.0,
-            50.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Mesh_Column.fbx_Column_mesh0 (2)",
-          "tag": "Mesh",
-          "selfActive": true
-        },
-        "Material": {
-          "hasMaterial": true,
-          "params": {
-            "materialHasAlbedoMap": true,
-            "materialHasNormalMap": true,
-            "materialHasRoughnessMap": true,
-            "materialHasMetallicMap": true,
-            "materialHasAoMap": true
-          },
-          "textures": [
-            {
-              "slot": "materialAlbedoMap",
-              "path": "../Resources\\Textures\\Walls_BaseColor.png"
-            },
-            {
-              "slot": "material.albedoMap",
-              "path": "../Resources\\Textures\\Walls_BaseColor.png"
-            },
-            {
-              "slot": "material.normalMap",
-              "path": "../Resources\\Textures\\Walls_Normal.png"
-            },
-            {
-              "slot": "materialRoughnessMap",
-              "path": "../Resources\\Textures\\Walls_Height.png"
-            },
-            {
-              "slot": "material.metallicMap",
-              "path": "../Resources\\Textures\\Walls_MetallicSmoothness.png"
-            },
-            {
-              "slot": "materialAoMap",
-              "path": "../Resources\\Textures\\Walls_AO.png"
-            }
-          ],
-          "uvScale": [
-            1.0,
-            -1.0
-          ],
-          "uvOffset": [
-            0.0,
-            1.0
-          ]
-        },
-        "HierarchyComponent": {
-          "parentGuid": "9b77529bdcd7df4c8495a2b54a830ac5",
-          "depth": 1
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "components": {
-        "IDComponent": {
-          "guid": "f221c552d5eaf54a95574f229ef9a7f6"
-        },
-        "Transform": {
-          "position": [
-            5.0,
-            0.0,
-            -52.0
+            -5.0,
+            -0.12477302551269531,
+            -44.96257400512695
           ],
           "rotation": [
             0.0,
@@ -344,12 +1519,12 @@
           ],
           "scale": [
             5.0,
-            0.5,
+            5.0,
             5.0
           ]
         },
         "ObjectMetaData": {
-          "name": "Platform (1)",
+          "name": "Start Platform (1)",
           "tag": "Untagged",
           "selfActive": true
         },
@@ -363,6 +1538,33 @@
               1.0
             ]
           }
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            1.0,
+            1.0,
+            1.0
+          ]
         },
         "Material": {
           "hasMaterial": true,
@@ -405,7 +1607,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "dd55728fbd27fb41ba26ede4e7048a41",
+          "parentGuid": "272181ce3309cf4f9aa50d7b8d6bb2a5",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -414,13 +1616,13 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "f35cd593ccab1a4c94f18c7f1797e3da"
+          "guid": "96f09263a5345649b854e4b419179914"
         },
         "Transform": {
           "position": [
-            0.0,
-            -4.599999904632568,
-            -35.0
+            6.999444484710693,
+            -0.12477302551269531,
+            -45.05241394042969
           ],
           "rotation": [
             0.0,
@@ -429,101 +1631,96 @@
             1.0
           ],
           "scale": [
-            0.03999999910593033,
-            0.04500000178813934,
-            0.03999999910593033
+            9.00571346282959,
+            5.0,
+            5.0
           ]
         },
         "ObjectMetaData": {
-          "name": "Column (1)",
+          "name": "Start Platform (2)",
           "tag": "Untagged",
           "selfActive": true
         },
-        "ModelComponent": {
-          "model": "Column.fbx",
-          "isSkinFile": false
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cube",
+            "size": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
         },
-        "HierarchyComponent": {
-          "parentGuid": "dd55728fbd27fb41ba26ede4e7048a41",
-          "depth": 1
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "components": {
-        "IDComponent": {
-          "guid": "28efcd7c173bb242ac5d977d016a9017"
-        },
-        "Transform": {
-          "position": [
-            -600.0,
-            117.5,
-            950.0
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
           ],
-          "rotation": [
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
             0.0,
             0.0,
-            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            1.0,
+            1.0,
             1.0
-          ],
-          "scale": [
-            50.0,
-            25.0,
-            50.0
           ]
-        },
-        "ObjectMetaData": {
-          "name": "Mesh_Column.fbx_Column_mesh0 (2)",
-          "tag": "Mesh",
-          "selfActive": true
         },
         "Material": {
           "hasMaterial": true,
           "params": {
-            "materialHasAlbedoMap": true,
-            "materialHasNormalMap": true,
-            "materialHasRoughnessMap": true,
-            "materialHasMetallicMap": true,
-            "materialHasAoMap": true
+            "materialAlbedo": [
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "materialAlpha": 1.0,
+            "materialTransparency": 0.0,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.5,
+            "materialEmissive": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 1.0,
+            "materialHasAlbedoMap": true
           },
           "textures": [
             {
               "slot": "materialAlbedoMap",
-              "path": "../Resources\\Textures\\Walls_BaseColor.png"
+              "path": "../Resources\\Textures\\floor.png"
             },
             {
               "slot": "material.albedoMap",
-              "path": "../Resources\\Textures\\Walls_BaseColor.png"
-            },
-            {
-              "slot": "material.normalMap",
-              "path": "../Resources\\Textures\\Walls_Normal.png"
-            },
-            {
-              "slot": "materialRoughnessMap",
-              "path": "../Resources\\Textures\\Walls_Height.png"
-            },
-            {
-              "slot": "material.metallicMap",
-              "path": "../Resources\\Textures\\Walls_MetallicSmoothness.png"
-            },
-            {
-              "slot": "materialAoMap",
-              "path": "../Resources\\Textures\\Walls_AO.png"
+              "path": "../Resources\\Textures\\floor.png"
             }
           ],
           "uvScale": [
             1.0,
-            -1.0
+            1.0
           ],
           "uvOffset": [
             0.0,
-            1.0
+            0.0
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "f35cd593ccab1a4c94f18c7f1797e3da",
+          "parentGuid": "272181ce3309cf4f9aa50d7b8d6bb2a5",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -532,13 +1729,13 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "2b7b7b343c5d57449e9aa997f23f10ec"
+          "guid": "95a9e2782c481147a8fb9e20b96b6e62"
         },
         "Transform": {
           "position": [
-            0.0,
-            0.0,
-            -35.0
+            -0.07322931289672852,
+            1.2942723035812379,
+            -58.213233947753909
           ],
           "rotation": [
             0.0,
@@ -547,13 +1744,13 @@
             1.0
           ],
           "scale": [
-            4.0,
+            3.576988697052002,
             0.5,
             10.0
           ]
         },
         "ObjectMetaData": {
-          "name": "Rotate Platform (1)",
+          "name": "Rotate Platform",
           "tag": "Untagged",
           "selfActive": true
         },
@@ -567,6 +1764,33 @@
               1.0
             ]
           }
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            1.0,
+            1.0,
+            1.0
+          ]
         },
         "Material": {
           "hasMaterial": true,
@@ -609,265 +1833,143 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "dd55728fbd27fb41ba26ede4e7048a41",
+          "parentGuid": "272181ce3309cf4f9aa50d7b8d6bb2a5",
           "depth": 1
         },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "components": {
-        "IDComponent": {
-          "guid": "3ffac83daaf0a142bd9bf05272b74dc2"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            -22.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            5.0,
-            0.5,
-            5.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Platform",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "Mesh": {
-          "kind": "Primitive",
-          "primitive": {
-            "type": "Cube",
-            "size": [
-              1.0,
-              1.0,
-              1.0
-            ]
-          }
-        },
-        "Material": {
-          "hasMaterial": true,
-          "params": {
-            "materialAlbedo": [
-              1.0,
-              1.0,
-              1.0,
-              1.0
-            ],
-            "materialAlpha": 1.0,
-            "materialTransparency": 0.0,
-            "materialMetallic": 0.0,
-            "materialRoughness": 0.5,
-            "materialEmissive": [
-              0.0,
-              0.0,
-              0.0
-            ],
-            "materialEmissiveIntensity": 1.0,
-            "materialHasAlbedoMap": true
-          },
-          "textures": [
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
             {
-              "slot": "materialAlbedoMap",
-              "path": "../Resources\\Textures\\floor.png"
-            },
-            {
-              "slot": "material.albedoMap",
-              "path": "../Resources\\Textures\\floor.png"
+              "class": "RotatingPlatform"
             }
-          ],
-          "uvScale": [
-            1.0,
-            1.0
-          ],
-          "uvOffset": [
-            0.0,
-            0.0
           ]
-        },
-        "HierarchyComponent": {
-          "parentGuid": "dd55728fbd27fb41ba26ede4e7048a41",
-          "depth": 1
-        },
-        "GlobalTransform": {}
+        }
       }
     },
     {
       "components": {
         "IDComponent": {
-          "guid": "3833dc43e9600c4e81b9d3754efcfcbc"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            -4.599999904632568,
-            -22.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            0.03999999910593033,
-            0.04500000178813934,
-            0.03999999910593033
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Column (2)",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "ModelComponent": {
-          "model": "Column.fbx",
-          "isSkinFile": false
-        },
-        "HierarchyComponent": {
-          "parentGuid": "dd55728fbd27fb41ba26ede4e7048a41",
-          "depth": 1
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "components": {
-        "IDComponent": {
-          "guid": "cab46228ca5a444dba79018ea746f92b"
-        },
-        "Transform": {
-          "position": [
-            -600.0,
-            117.5,
-            950.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            50.0,
-            25.0,
-            50.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Mesh_Column.fbx_Column_mesh0 (2)",
-          "tag": "Mesh",
-          "selfActive": true
-        },
-        "Material": {
-          "hasMaterial": true,
-          "params": {
-            "materialHasAlbedoMap": true,
-            "materialHasNormalMap": true,
-            "materialHasRoughnessMap": true,
-            "materialHasMetallicMap": true,
-            "materialHasAoMap": true
-          },
-          "textures": [
-            {
-              "slot": "materialAlbedoMap",
-              "path": "../Resources\\Textures\\Walls_BaseColor.png"
-            },
-            {
-              "slot": "material.albedoMap",
-              "path": "../Resources\\Textures\\Walls_BaseColor.png"
-            },
-            {
-              "slot": "material.normalMap",
-              "path": "../Resources\\Textures\\Walls_Normal.png"
-            },
-            {
-              "slot": "materialRoughnessMap",
-              "path": "../Resources\\Textures\\Walls_Height.png"
-            },
-            {
-              "slot": "material.metallicMap",
-              "path": "../Resources\\Textures\\Walls_MetallicSmoothness.png"
-            },
-            {
-              "slot": "materialAoMap",
-              "path": "../Resources\\Textures\\Walls_AO.png"
-            }
-          ],
-          "uvScale": [
-            1.0,
-            -1.0
-          ],
-          "uvOffset": [
-            0.0,
-            1.0
-          ]
-        },
-        "HierarchyComponent": {
-          "parentGuid": "3833dc43e9600c4e81b9d3754efcfcbc",
-          "depth": 1
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "components": {
-        "IDComponent": {
-          "guid": "34c8fe480c2a124d99a362564e21125d"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            -4.599999904632568,
-            -9.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            0.03999999910593033,
-            0.04500000178813934,
-            0.03999999910593033
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Column",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "ModelComponent": {
-          "model": "Column.fbx",
-          "isSkinFile": false
-        },
-        "HierarchyComponent": {
-          "parentGuid": "dd55728fbd27fb41ba26ede4e7048a41",
-          "depth": 1
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "components": {
-        "IDComponent": {
-          "guid": "2df6d914417a2f4baa8f23b19dc364cb"
+          "guid": "2136429bc9365c4f83ebf28e3803a675"
         },
         "Transform": {
           "position": [
             3.5,
-            10.0,
-            -30.0
+            -4.443625450134277,
+            -74.07160949707031
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            40.0,
+            0.5,
+            70.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Floor Platform",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cube",
+            "size": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "materialAlpha": 1.0,
+            "materialTransparency": 0.0,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.5,
+            "materialEmissive": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 1.0,
+            "materialHasAlbedoMap": true,
+            "materialHasAoMap": false
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_Plane_DefaultMaterial_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_Plane_DefaultMaterial_BaseColor.png"
+            }
+          ],
+          "uvScale": [
+            2.0,
+            2.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "272181ce3309cf4f9aa50d7b8d6bb2a5",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "06d201c67872e44d87cfb2d362124cea"
+        },
+        "Transform": {
+          "position": [
+            3.5,
+            15.285871505737305,
+            -74.07160949707031
           ],
           "rotation": [
             0.0,
@@ -917,818 +2019,124 @@
             ],
             "materialEmissiveIntensity": 1.0,
             "materialHasAlbedoMap": true,
-            "materialHasAoMap": true
-          },
-          "textures": [
-            {
-              "slot": "materialAlbedoMap",
-              "path": "../Resources\\Textures\\Floor_BaseColor.png"
-            },
-            {
-              "slot": "material.albedoMap",
-              "path": "../Resources\\Textures\\Floor_BaseColor.png"
-            },
-            {
-              "slot": "materialAoMap",
-              "path": "../Resources\\Textures\\Floor_AO.png"
-            }
-          ],
-          "uvScale": [
-            2.0,
-            2.0
-          ],
-          "uvOffset": [
-            0.0,
-            0.0
-          ]
-        },
-        "HierarchyComponent": {
-          "parentGuid": "dd55728fbd27fb41ba26ede4e7048a41",
-          "depth": 1
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "components": {
-        "IDComponent": {
-          "guid": "0d195041851a6f4fbeb557cf889ea2e3"
-        },
-        "Transform": {
-          "position": [
-            3.5,
-            2.5,
-            -65.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            40.0,
-            15.0,
-            0.5
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Wall (3)",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "Mesh": {
-          "kind": "Primitive",
-          "primitive": {
-            "type": "Cube",
-            "size": [
-              1.0,
-              1.0,
-              1.0
-            ]
-          }
-        },
-        "Material": {
-          "hasMaterial": true,
-          "params": {
-            "materialAlbedo": [
-              1.0,
-              1.0,
-              1.0,
-              1.0
-            ],
-            "materialAlpha": 1.0,
-            "materialTransparency": 0.0,
-            "materialMetallic": 0.0,
-            "materialRoughness": 0.5,
-            "materialEmissive": [
-              0.0,
-              0.0,
-              0.0
-            ],
-            "materialEmissiveIntensity": 1.0,
-            "materialHasAlbedoMap": true,
-            "materialHasAoMap": true
-          },
-          "textures": [
-            {
-              "slot": "materialAlbedoMap",
-              "path": "../Resources\\Textures\\Floor_BaseColor.png"
-            },
-            {
-              "slot": "material.albedoMap",
-              "path": "../Resources\\Textures\\Floor_BaseColor.png"
-            },
-            {
-              "slot": "materialAoMap",
-              "path": "../Resources\\Textures\\Floor_AO.png"
-            }
-          ],
-          "uvScale": [
-            2.0,
-            2.0
-          ],
-          "uvOffset": [
-            0.0,
-            0.0
-          ]
-        },
-        "HierarchyComponent": {
-          "parentGuid": "dd55728fbd27fb41ba26ede4e7048a41",
-          "depth": 1
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "components": {
-        "IDComponent": {
-          "guid": "20fe772f854d0a4d8b9e0fd92863afd4"
-        },
-        "Transform": {
-          "position": [
-            18.0,
-            2.5,
-            -30.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            0.5,
-            15.0,
-            70.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Wall (2)",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "Mesh": {
-          "kind": "Primitive",
-          "primitive": {
-            "type": "Cube",
-            "size": [
-              1.0,
-              1.0,
-              1.0
-            ]
-          }
-        },
-        "Material": {
-          "hasMaterial": true,
-          "params": {
-            "materialAlbedo": [
-              1.0,
-              1.0,
-              1.0,
-              1.0
-            ],
-            "materialAlpha": 1.0,
-            "materialTransparency": 0.0,
-            "materialMetallic": 0.0,
-            "materialRoughness": 0.5,
-            "materialEmissive": [
-              0.0,
-              0.0,
-              0.0
-            ],
-            "materialEmissiveIntensity": 1.0,
-            "materialHasAlbedoMap": true,
-            "materialHasAoMap": true
-          },
-          "textures": [
-            {
-              "slot": "materialAlbedoMap",
-              "path": "../Resources\\Textures\\Floor_BaseColor.png"
-            },
-            {
-              "slot": "material.albedoMap",
-              "path": "../Resources\\Textures\\Floor_BaseColor.png"
-            },
-            {
-              "slot": "materialAoMap",
-              "path": "../Resources\\Textures\\Floor_AO.png"
-            }
-          ],
-          "uvScale": [
-            2.0,
-            2.0
-          ],
-          "uvOffset": [
-            0.0,
-            0.0
-          ]
-        },
-        "HierarchyComponent": {
-          "parentGuid": "dd55728fbd27fb41ba26ede4e7048a41",
-          "depth": 1
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "components": {
-        "IDComponent": {
-          "guid": "c23147b26292ab4ea55ef0a8348ec896"
-        },
-        "Transform": {
-          "position": [
-            3.5,
-            2.5,
-            2.799999952316284
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            40.0,
-            15.0,
-            0.5
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Wall (1)",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "Mesh": {
-          "kind": "Primitive",
-          "primitive": {
-            "type": "Cube",
-            "size": [
-              1.0,
-              1.0,
-              1.0
-            ]
-          }
-        },
-        "Material": {
-          "hasMaterial": true,
-          "params": {
-            "materialAlbedo": [
-              1.0,
-              1.0,
-              1.0,
-              1.0
-            ],
-            "materialAlpha": 1.0,
-            "materialTransparency": 0.0,
-            "materialMetallic": 0.0,
-            "materialRoughness": 0.5,
-            "materialEmissive": [
-              0.0,
-              0.0,
-              0.0
-            ],
-            "materialEmissiveIntensity": 1.0,
-            "materialHasAlbedoMap": true,
-            "materialHasAoMap": true
-          },
-          "textures": [
-            {
-              "slot": "materialAlbedoMap",
-              "path": "../Resources\\Textures\\Floor_BaseColor.png"
-            },
-            {
-              "slot": "material.albedoMap",
-              "path": "../Resources\\Textures\\Floor_BaseColor.png"
-            },
-            {
-              "slot": "materialAoMap",
-              "path": "../Resources\\Textures\\Floor_AO.png"
-            }
-          ],
-          "uvScale": [
-            2.0,
-            2.0
-          ],
-          "uvOffset": [
-            0.0,
-            0.0
-          ]
-        },
-        "HierarchyComponent": {
-          "parentGuid": "dd55728fbd27fb41ba26ede4e7048a41",
-          "depth": 1
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "components": {
-        "IDComponent": {
-          "guid": "263fc77e4b0e9a408fc92dff7a74775a"
-        },
-        "Transform": {
-          "position": [
-            -10.0,
-            2.5,
-            -30.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            0.5,
-            15.0,
-            70.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Wall",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "Mesh": {
-          "kind": "Primitive",
-          "primitive": {
-            "type": "Cube",
-            "size": [
-              1.0,
-              1.0,
-              1.0
-            ]
-          }
-        },
-        "Material": {
-          "hasMaterial": true,
-          "params": {
-            "materialAlbedo": [
-              1.0,
-              1.0,
-              1.0,
-              1.0
-            ],
-            "materialAlpha": 1.0,
-            "materialTransparency": 0.0,
-            "materialMetallic": 0.0,
-            "materialRoughness": 0.5,
-            "materialEmissive": [
-              0.0,
-              0.0,
-              0.0
-            ],
-            "materialEmissiveIntensity": 1.0,
-            "materialHasAlbedoMap": true,
-            "materialHasAoMap": true
-          },
-          "textures": [
-            {
-              "slot": "materialAlbedoMap",
-              "path": "../Resources\\Textures\\Floor_BaseColor.png"
-            },
-            {
-              "slot": "material.albedoMap",
-              "path": "../Resources\\Textures\\Floor_BaseColor.png"
-            },
-            {
-              "slot": "materialAoMap",
-              "path": "../Resources\\Textures\\Floor_AO.png"
-            }
-          ],
-          "uvScale": [
-            2.0,
-            2.0
-          ],
-          "uvOffset": [
-            0.0,
-            0.0
-          ]
-        },
-        "HierarchyComponent": {
-          "parentGuid": "dd55728fbd27fb41ba26ede4e7048a41",
-          "depth": 1
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "components": {
-        "IDComponent": {
-          "guid": "fd4005e23be209409aeb700439367291"
-        },
-        "Transform": {
-          "position": [
-            3.5,
-            -5.0,
-            -30.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            40.0,
-            0.5,
-            70.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Floor",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "Mesh": {
-          "kind": "Primitive",
-          "primitive": {
-            "type": "Cube",
-            "size": [
-              1.0,
-              1.0,
-              1.0
-            ]
-          }
-        },
-        "Material": {
-          "hasMaterial": true,
-          "params": {
-            "materialAlbedo": [
-              1.0,
-              1.0,
-              1.0,
-              1.0
-            ],
-            "materialAlpha": 1.0,
-            "materialTransparency": 0.0,
-            "materialMetallic": 0.0,
-            "materialRoughness": 0.5,
-            "materialEmissive": [
-              0.0,
-              0.0,
-              0.0
-            ],
-            "materialEmissiveIntensity": 1.0,
-            "materialHasAlbedoMap": true,
-            "materialHasAoMap": true
-          },
-          "textures": [
-            {
-              "slot": "materialAlbedoMap",
-              "path": "../Resources\\Textures\\Floor_BaseColor.png"
-            },
-            {
-              "slot": "material.albedoMap",
-              "path": "../Resources\\Textures\\Floor_BaseColor.png"
-            },
-            {
-              "slot": "materialAoMap",
-              "path": "../Resources\\Textures\\Floor_AO.png"
-            }
-          ],
-          "uvScale": [
-            2.0,
-            2.0
-          ],
-          "uvOffset": [
-            0.0,
-            0.0
-          ]
-        },
-        "HierarchyComponent": {
-          "parentGuid": "dd55728fbd27fb41ba26ede4e7048a41",
-          "depth": 1
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "components": {
-        "IDComponent": {
-          "guid": "4a253473583b6b4b84fda1bd04e2f92f"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            -9.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            4.0,
-            0.5,
-            10.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Rotate Platform",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "Mesh": {
-          "kind": "Primitive",
-          "primitive": {
-            "type": "Cube",
-            "size": [
-              1.0,
-              1.0,
-              1.0
-            ]
-          }
-        },
-        "Material": {
-          "hasMaterial": true,
-          "params": {
-            "materialAlbedo": [
-              1.0,
-              1.0,
-              1.0,
-              1.0
-            ],
-            "materialAlpha": 1.0,
-            "materialTransparency": 0.0,
-            "materialMetallic": 0.0,
-            "materialRoughness": 0.5,
-            "materialEmissive": [
-              0.0,
-              0.0,
-              0.0
-            ],
-            "materialEmissiveIntensity": 1.0,
-            "materialHasAlbedoMap": true
-          },
-          "textures": [
-            {
-              "slot": "materialAlbedoMap",
-              "path": "../Resources\\Textures\\floor.png"
-            },
-            {
-              "slot": "material.albedoMap",
-              "path": "../Resources\\Textures\\floor.png"
-            }
-          ],
-          "uvScale": [
-            1.0,
-            1.0
-          ],
-          "uvOffset": [
-            0.0,
-            0.0
-          ]
-        },
-        "HierarchyComponent": {
-          "parentGuid": "dd55728fbd27fb41ba26ede4e7048a41",
-          "depth": 1
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "components": {
-        "IDComponent": {
-          "guid": "bbfb451590deb542a74a33ed9967b233"
-        },
-        "Transform": {
-          "position": [
-            5.0,
-            -2.25,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            5.0,
-            5.0,
-            5.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Start Platform (2)",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "Mesh": {
-          "kind": "Primitive",
-          "primitive": {
-            "type": "Cube",
-            "size": [
-              1.0,
-              1.0,
-              1.0
-            ]
-          }
-        },
-        "Material": {
-          "hasMaterial": true,
-          "params": {
-            "materialAlbedo": [
-              1.0,
-              1.0,
-              1.0,
-              1.0
-            ],
-            "materialAlpha": 1.0,
-            "materialTransparency": 0.0,
-            "materialMetallic": 0.0,
-            "materialRoughness": 0.5,
-            "materialEmissive": [
-              0.0,
-              0.0,
-              0.0
-            ],
-            "materialEmissiveIntensity": 1.0,
-            "materialHasAlbedoMap": true
-          },
-          "textures": [
-            {
-              "slot": "materialAlbedoMap",
-              "path": "../Resources\\Textures\\floor.png"
-            },
-            {
-              "slot": "material.albedoMap",
-              "path": "../Resources\\Textures\\floor.png"
-            }
-          ],
-          "uvScale": [
-            1.0,
-            1.0
-          ],
-          "uvOffset": [
-            0.0,
-            0.0
-          ]
-        },
-        "HierarchyComponent": {
-          "parentGuid": "dd55728fbd27fb41ba26ede4e7048a41",
-          "depth": 1
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "components": {
-        "IDComponent": {
-          "guid": "323ea92e9c8b2a4e81dcffe64b9e353f"
-        },
-        "Transform": {
-          "position": [
-            -5.0,
-            -2.25,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            5.0,
-            5.0,
-            5.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Start Platform (1)",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "Mesh": {
-          "kind": "Primitive",
-          "primitive": {
-            "type": "Cube",
-            "size": [
-              1.0,
-              1.0,
-              1.0
-            ]
-          }
-        },
-        "Material": {
-          "hasMaterial": true,
-          "params": {
-            "materialAlbedo": [
-              1.0,
-              1.0,
-              1.0,
-              1.0
-            ],
-            "materialAlpha": 1.0,
-            "materialTransparency": 0.0,
-            "materialMetallic": 0.0,
-            "materialRoughness": 0.5,
-            "materialEmissive": [
-              0.0,
-              0.0,
-              0.0
-            ],
-            "materialEmissiveIntensity": 1.0,
-            "materialHasAlbedoMap": true
-          },
-          "textures": [
-            {
-              "slot": "materialAlbedoMap",
-              "path": "../Resources\\Textures\\floor.png"
-            },
-            {
-              "slot": "material.albedoMap",
-              "path": "../Resources\\Textures\\floor.png"
-            }
-          ],
-          "uvScale": [
-            1.0,
-            1.0
-          ],
-          "uvOffset": [
-            0.0,
-            0.0
-          ]
-        },
-        "HierarchyComponent": {
-          "parentGuid": "dd55728fbd27fb41ba26ede4e7048a41",
-          "depth": 1
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "components": {
-        "IDComponent": {
-          "guid": "de4dec42a1069946a8e2a6eeb3feb6da"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            -2.25,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            5.0,
-            5.0,
-            5.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Start Platform",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "Mesh": {
-          "kind": "Primitive",
-          "primitive": {
-            "type": "Cube",
-            "size": [
-              1.0,
-              1.0,
-              1.0
-            ]
-          }
-        },
-        "Material": {
-          "hasMaterial": true,
-          "params": {
-            "materialAlbedo": [
-              1.0,
-              1.0,
-              1.0,
-              1.0
-            ],
-            "materialAlpha": 1.0,
-            "materialTransparency": 0.0,
-            "materialMetallic": 0.0,
-            "materialRoughness": 0.5,
-            "materialEmissive": [
-              0.0,
-              0.0,
-              0.0
-            ],
-            "materialEmissiveIntensity": 1.0,
-            "materialHasAlbedoMap": true,
-            "materialHasNormalMap": false,
-            "materialHasRoughnessMap": false,
-            "materialHasMetallicMap": false,
             "materialHasAoMap": false
           },
           "textures": [
             {
               "slot": "materialAlbedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_Plane_DefaultMaterial_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_Plane_DefaultMaterial_BaseColor.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "272181ce3309cf4f9aa50d7b8d6bb2a5",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "59278c8b4ea3934f8bee625a1b8167cd"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            3.5505707263946535,
+            -71.02733612060547
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            7.217731952667236,
+            0.5,
+            6.9979329109191898
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Platform",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cube",
+            "size": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "materialAlpha": 1.0,
+            "materialTransparency": 0.0,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.5,
+            "materialEmissive": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 1.0,
+            "materialHasAlbedoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
               "path": "../Resources\\Textures\\floor.png"
             },
             {
@@ -1746,8 +2154,479 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "dd55728fbd27fb41ba26ede4e7048a41",
+          "parentGuid": "272181ce3309cf4f9aa50d7b8d6bb2a5",
           "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "d017532aa1579845b1d797f13826456c"
+        },
+        "Transform": {
+          "position": [
+            -0.2904491424560547,
+            4.500915050506592,
+            -85.56330871582031
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            4.457401275634766,
+            0.5,
+            10.601070404052735
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Rotate Platform (1)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cube",
+            "size": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "materialAlpha": 1.0,
+            "materialTransparency": 0.0,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.5,
+            "materialEmissive": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 1.0,
+            "materialHasAlbedoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources\\Textures\\floor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources\\Textures\\floor.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "272181ce3309cf4f9aa50d7b8d6bb2a5",
+          "depth": 1
+        },
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "class": "RotatingPlatform"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "0f48ca001d136a488f9f65b6d4a8fd20"
+        },
+        "Transform": {
+          "position": [
+            0.17314553260803224,
+            2.1252269744873049,
+            -99.4903793334961
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            6.4873046875,
+            0.5,
+            7.503065586090088
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Platform (1)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cube",
+            "size": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "materialAlpha": 1.0,
+            "materialTransparency": 0.0,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.5,
+            "materialEmissive": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 1.0,
+            "materialHasAlbedoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources\\Textures\\floor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources\\Textures\\floor.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "272181ce3309cf4f9aa50d7b8d6bb2a5",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "f9ae23f62de3aa46aed814b41f0301da"
+        },
+        "Transform": {
+          "position": [
+            15.524524688720704,
+            -0.12477302551269531,
+            -96.42830657958985
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            5.0,
+            7.0,
+            13.90617561340332
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Platform (2)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cube",
+            "size": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "materialAlpha": 1.0,
+            "materialTransparency": 0.0,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.5,
+            "materialEmissive": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 1.0,
+            "materialHasAlbedoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources\\Textures\\floor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources\\Textures\\floor.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "272181ce3309cf4f9aa50d7b8d6bb2a5",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "415add05bf07414793880cb648583e2c"
+        },
+        "Transform": {
+          "position": [
+            13.0,
+            5.699999809265137,
+            -108.0999984741211
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.019999999552965165,
+            0.014999999664723874,
+            0.019999999552965165
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Bars",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            1.600000023841858,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            250.0,
+            325.0,
+            1.0
+          ]
+        },
+        "ModelComponent": {
+          "model": "Bars.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "272181ce3309cf4f9aa50d7b8d6bb2a5",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "8565213182a945478ac4eecae46853fc"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Bars.fbx_Bars_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "C:\\Users\\curti\\OneDrive\\Documents\\GitHub\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\Bars_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "C:\\Users\\curti\\OneDrive\\Documents\\GitHub\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\Bars_BaseColor.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            -1.0
+          ],
+          "uvOffset": [
+            0.0,
+            1.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "415add05bf07414793880cb648583e2c",
+          "depth": 2
         },
         "GlobalTransform": {}
       }
