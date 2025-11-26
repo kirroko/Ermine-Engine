@@ -25,6 +25,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "GeometryFactory.h"
 #include "JobSystem.h"
 #include "Serialisation.h"
+#include "Window.h"
 // Engine Systems
 #include "Renderer.h"
 #include "ScriptEngine.h"
@@ -44,6 +45,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "UIRenderSystem.h"
 #include "NavMesh.h"
 #include "NavMeshAgentSystem.h"
+#include "EditorGUI.h"
 
 #if defined(EE_EDITOR)
 #include "GraphicsDebugGUI.h"
@@ -81,7 +83,6 @@ namespace
 	}
 
 	EntityID fbxEntity = 0;
-
 }
 
 bool engine::Init(GLFWwindow* windowContext)
@@ -140,23 +141,23 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	// TODO: Register all components here, limit of 255 components
 	EE_AUTO_REGISTER_COMPONENT(Transform, "Transform")
-	EE_AUTO_REGISTER_COMPONENT(Rigidbody3D, "Rigidbody3D")
-	EE_AUTO_REGISTER_COMPONENT(Mesh, "Mesh")
-	EE_AUTO_REGISTER_COMPONENT(Material, "Material")
-	EE_AUTO_REGISTER_COMPONENT(ObjectMetaData, "ObjectMetaData")
-	EE_AUTO_REGISTER_COMPONENT(Light, "Light")
-	EE_AUTO_REGISTER_COMPONENT(AudioComponent, "AudioComponent") 
-	EE_AUTO_REGISTER_COMPONENT(GlobalAudioComponent, "GlobalAudioComponent")
-	EE_AUTO_REGISTER_COMPONENT(PhysicComponent, "PhysicComponent")
-	EE_AUTO_REGISTER_COMPONENT(ModelComponent, "ModelComponent")
-	EE_AUTO_REGISTER_COMPONENT(AnimationComponent, "AnimationComponent")
-	EE_AUTO_REGISTER_COMPONENT(HierarchyComponent, "HierarchyComponent"); 
+		EE_AUTO_REGISTER_COMPONENT(Rigidbody3D, "Rigidbody3D")
+		EE_AUTO_REGISTER_COMPONENT(Mesh, "Mesh")
+		EE_AUTO_REGISTER_COMPONENT(Material, "Material")
+		EE_AUTO_REGISTER_COMPONENT(ObjectMetaData, "ObjectMetaData")
+		EE_AUTO_REGISTER_COMPONENT(Light, "Light")
+		EE_AUTO_REGISTER_COMPONENT(AudioComponent, "AudioComponent")
+		EE_AUTO_REGISTER_COMPONENT(GlobalAudioComponent, "GlobalAudioComponent")
+		EE_AUTO_REGISTER_COMPONENT(PhysicComponent, "PhysicComponent")
+		EE_AUTO_REGISTER_COMPONENT(ModelComponent, "ModelComponent")
+		EE_AUTO_REGISTER_COMPONENT(AnimationComponent, "AnimationComponent")
+		EE_AUTO_REGISTER_COMPONENT(HierarchyComponent, "HierarchyComponent");
 	EE_AUTO_REGISTER_COMPONENT(StateMachine, "StateMachine")
-	EE_AUTO_REGISTER_COMPONENT(NavMeshComponent, "NavMesh")
-	EE_AUTO_REGISTER_COMPONENT(NavMeshAgent, "NavMeshAgent")
-	EE_AUTO_REGISTER_COMPONENT(GlobalTransform, "GlobalTransform")
-	EE_AUTO_REGISTER_COMPONENT(ParticleEmitter, "ParticleEmitter")
-	EE_AUTO_REGISTER_COMPONENT(CameraComponent, "CameraComponent");
+		EE_AUTO_REGISTER_COMPONENT(NavMeshComponent, "NavMesh")
+		EE_AUTO_REGISTER_COMPONENT(NavMeshAgent, "NavMeshAgent")
+		EE_AUTO_REGISTER_COMPONENT(GlobalTransform, "GlobalTransform")
+		EE_AUTO_REGISTER_COMPONENT(ParticleEmitter, "ParticleEmitter")
+		EE_AUTO_REGISTER_COMPONENT(CameraComponent, "CameraComponent");
 	EE_AUTO_REGISTER_COMPONENT(UIComponent, "UIComponent");
 
 	// NOTE : THESE ARE SPECIAL CASES DUE TO THE FACT THAT THEIR COMPONENTS ARE UNIQUE AND WOULDN'T WORK BY SHALLOW COPIED OR DEEP COPIED
@@ -328,9 +329,9 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	std::array<std::string, 6> cubemapFaces = {
 		"../Resources/Textures/Skybox/right.jpg",   // +X (right)
-		"../Resources/Textures/Skybox/left.jpg",    // -X (left)  
-		"../Resources/Textures/Skybox/bottom.jpg",  // +Y (top) 
-		"../Resources/Textures/Skybox/top.jpg",     // -Y (bottom) 
+		"../Resources/Textures/Skybox/left.jpg",    // -X (left)
+		"../Resources/Textures/Skybox/bottom.jpg",  // +Y (top)
+		"../Resources/Textures/Skybox/top.jpg",     // -Y (bottom)
 		"../Resources/Textures/Skybox/front.jpg",   // +Z (front)
 		"../Resources/Textures/Skybox/back.jpg"     // -Z (back)
 	};
@@ -348,7 +349,6 @@ bool engine::Init(GLFWwindow* windowContext)
 	else {
 		EE_CORE_WARN("Failed to create skybox - cubemap or shader invalid");
 	}
-
 
 	// Create shared materials for common use cases
 	std::shared_ptr<graphics::Material> basicWhiteMaterial = AssetManager::GetInstance().CreateMaterial("basic_white", shader, "PBR_WHITE");
@@ -448,7 +448,7 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	{
 		static Ermine::ResourcePipeline pipeline; // TODO: Is this also needed in game build?
-		if (pipeline.Initialize("../Resources")) { 
+		if (pipeline.Initialize("../Resources")) {
 			EE_CORE_INFO("ResourcePipeline initialized successfully");
 
 			auto* assetBrowser = editor::EditorGUI::GetWindow<ImguiUI::AssetBrowser>();
@@ -479,8 +479,10 @@ bool engine::Init(GLFWwindow* windowContext)
 	auto defaultScene = std::make_shared<Scene>("Main Scene");
 	SceneManager::GetInstance().SetActiveScene(defaultScene);
 
-	// TEMP - load level scene manually
-	SceneManager::GetInstance().OpenScene("../Resources/Scenes/level.scene");
+	SceneManager::GetInstance().OpenScene("../Resources/Scenes/game.scene"); // Load game scene
+	editor::EditorGUI::s_state = editor::EditorGUI::SimState::playing;		 // Set to playing state
+	glfwSetInputMode(windowContext, GLFW_CURSOR, GLFW_CURSOR_DISABLED);		 // Hide and capture cursor
+
 #endif
 
 	s_isInitialized = true;
@@ -551,6 +553,9 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 	// Handle shading mode toggle
 	//HandleShadingToggle(windowContext);
 
+	// Handle fullscreen toggle
+	HandleFullscreenToggle(windowContext);
+
 	// Update input states
 	Input::Update();
 
@@ -559,16 +564,17 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 	// Game state update
 	while (FrameController::ShouldUpdateFixed())
 	{
-		ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->FixedUpdate();
-		ECS::GetInstance().GetSystem<Physics>()->Update(FrameController::GetFixedDeltaTime());
+		ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->FixedUpdate();					// Scripts modify physics before sim
+		ECS::GetInstance().GetSystem<Physics>()->Update(FrameController::GetFixedDeltaTime());	// Physics simulation runs
 	}
 
 	// Other non-fixed logic
-	ECS::GetInstance().GetSystem<AudioSystem>()->Update();
-	ECS::GetInstance().GetSystem<HierarchySystem>()->UpdateHierarchy();
-
-	ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->Update();
-	
+	// NOTE: Order of updates is important! Don't move things around without considering dependencies
+	ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->Update();									// Game logic updates transforms, forces, etc
+	ECS::GetInstance().GetSystem<HierarchySystem>()->UpdateHierarchy();									// Update hierarchy transforms first
+	ECS::GetInstance().GetSystem<StateManager>()->Update(FrameController::GetFixedDeltaTime());		// FSM update
+	ECS::GetInstance().GetSystem<NavMeshAgentSystem>()->Update(FrameController::GetFixedDeltaTime());	// AI NavMesh Agent update
+	ECS::GetInstance().GetSystem<graphics::AnimationManager>()->Update(FrameController::GetDeltaTime());// Animation Update
 	// Update editor camera
 #if defined(EE_EDITOR)
 	// Update appropriate camera based on play state
@@ -588,19 +594,9 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 	auto gameCamera = ECS::GetInstance().GetSystem<graphics::CameraSystem>();
 	gameCamera->Update();
 #endif
-
-	// Update for Particles
-	ECS::GetInstance().GetSystem<ParticleSystem>()->Update(FrameController::GetDeltaTime());
-
-	// Animation Update
-	ECS::GetInstance().GetSystem<graphics::AnimationManager>()->Update(FrameController::GetDeltaTime());
-
-	// FSM update
-	ECS::GetInstance().GetSystem<StateManager>()->Update(FrameController::GetFixedDeltaTime());
-
-	ECS::GetInstance().GetSystem<NavMeshAgentSystem>()->Update(FrameController::GetFixedDeltaTime());
-	// UI update (mana regen, cooldowns)
-	ECS::GetInstance().GetSystem<UIRenderSystem>()->Update(FrameController::GetDeltaTime());
+	ECS::GetInstance().GetSystem<ParticleSystem>()->Update(FrameController::GetDeltaTime());	// Update for Particles
+	ECS::GetInstance().GetSystem<AudioSystem>()->Update();
+	ECS::GetInstance().GetSystem<UIRenderSystem>()->Update(FrameController::GetDeltaTime());	// UI update (mana regen, cooldowns)
 }
 
 void engine::Render(GLFWwindow* window)
@@ -690,6 +686,10 @@ void engine::Render(GLFWwindow* window)
 	graphics::GPUProfiler::EndFrame();
 }
 
+/**
+ * @brief Handle shading mode toggle (keys 1-4)
+ * @param windowContext The GLFW window context
+ */
 void engine::HandleShadingToggle(GLFWwindow* windowContext)
 {
 	static bool key1WasPressed = false;
@@ -709,7 +709,7 @@ void engine::HandleShadingToggle(GLFWwindow* windowContext)
 		EE_CORE_INFO("Switched to PBR shading");
 	}
 
-	// Toggle to Blinn-Phong (key 2)  
+	// Toggle to Blinn-Phong (key 2)
 	if (key2IsPressed && !key2WasPressed) {
 		auto renderer = ECS::GetInstance().GetSystem<graphics::Renderer>();
 		renderer->SetShadingMode(true);
@@ -732,4 +732,16 @@ void engine::HandleShadingToggle(GLFWwindow* windowContext)
 	key2WasPressed = key2IsPressed;
 	key3WasPressed = key3IsPressed;
 	key4WasPressed = key4IsPressed;
+}
+
+/**
+ * @brief Handle fullscreen toggle (F11 key)
+ * @param windowContext The GLFW window context
+ */
+void Ermine::engine::HandleFullscreenToggle(GLFWwindow* windowContext)
+{
+	static bool f11WasPressed = false;
+	bool f11IsPressed = glfwGetKey(windowContext, GLFW_KEY_F11) == GLFW_PRESS;
+	if (f11IsPressed && !f11WasPressed) Ermine::Window::ToggleFullscreenWindow(windowContext);
+	f11WasPressed = f11IsPressed;
 }

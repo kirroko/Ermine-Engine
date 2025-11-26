@@ -646,7 +646,7 @@ void EditorGUI::ViewPortWindow(bool& show)
     if (viewportHovered && !isPlaying)
     {
         EditorCamera::GetInstance().ProcessMouseMovement();
-        EditorCamera::GetInstance().ProcessKeyboardInput(FrameController::GetDeltaTime());
+        EditorCamera::GetInstance().ProcessKeyboardInput(FrameController::GetFixedDeltaTime());
         EditorCamera::GetInstance().ProcessScrollWheel(Input::GetMouseScrollOffsetEditor());
     }
 

@@ -328,6 +328,14 @@ namespace Ermine
 
         for (auto entity : m_Entities)
         {
+            // Check for active
+            if (ECS::GetInstance().HasComponent<ObjectMetaData>(entity))
+            {
+                const auto& meta = ECS::GetInstance().GetComponent<ObjectMetaData>(entity);
+                if (!meta.selfActive)
+                    continue;
+            }
+
             // Verify entity still exists
             if (!ECS::GetInstance().IsEntityValid(entity))
                 continue;

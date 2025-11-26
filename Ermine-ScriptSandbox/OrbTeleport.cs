@@ -1,26 +1,34 @@
 ﻿using ErmineEngine;
+using System;
+using System.Threading;
 
 public class OrbTeleport : MonoBehaviour
 {
     private Transform origin;
+    private Transform cam;
+    private float health = 0f;
+    public float damage = 10f;
 
     void Start()
     {
         //origin = GameObject.Find("Origin").GetComponent<Transform>();
         origin = GameObject.Find("Player").GetComponent<Transform>();
+        cam = GameObject.Find("Main Camera").transform;
+        health = GameplayHUD.GetHealth(GameplayHUD.GetHealthBar());
     }
 
     void Update()
     {
-        if (Input.GetMouseButton(0))
+        if (Input.GetMouseButton(0) && GameObject.Find("Sphere") == null)
         {
+            TakeDamage(damage);
             GlobalAudio.PlaySFX("Shoot");
             var projectile = Prefab.Instantiate("../Resources/Prefabs/Sphere.prefab");
             if (projectile != null)
             {
-                projectile.transform.position = new Vector3(origin.transform.position.x, 1.5f, origin.transform.position.z);
+                projectile.transform.position = new Vector3(origin.transform.position.x, origin.transform.position.y + 1.5f, origin.transform.position.z);
                 projectile.transform.rotation = transform.rotation;
-                projectile.GetComponent<Sphere>().direction = -transform.forward;
+                projectile.GetComponent<Sphere>().direction = -cam.forward;
             }
         }
 
@@ -31,9 +39,18 @@ public class OrbTeleport : MonoBehaviour
             GameObject sphere = GameObject.Find("Sphere");
             if (sphere == null)
                 return;
-            //transform.position = sphere.transform.position;
+            gameObject.transform.position = sphere.transform.position;
             Physics.SetPosition((ulong)gameObject.GetInstanceID(), sphere.transform.position);
+            Physics.RemovePhysic((ulong)sphere.GetInstanceID());
             GameObject.Destroy(sphere);
         }
+    }
+
+    void TakeDamage(float dmg)
+    {
+        health = Math.Max(0, health - dmg);
+
+        GameObject bar = GameplayHUD.GetHealthBar();
+        GameplayHUD.SetHealth(bar, health);
     }
 }

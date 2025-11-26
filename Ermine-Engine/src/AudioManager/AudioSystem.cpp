@@ -306,6 +306,12 @@ void AudioSystem::Update()
             for (EntityID entity : m_Entities)
             {
                 if (!ecs.IsEntityValid(entity)) continue;
+                if (ECS::GetInstance().HasComponent<ObjectMetaData>(entity))
+                {
+                    const auto& meta = ECS::GetInstance().GetComponent<ObjectMetaData>(entity);
+                    if (!meta.selfActive)
+                        continue;
+                }
                 if (ecs.HasComponent<AudioComponent>(entity))
                 {
                     auto& audioComp = ecs.GetComponent<AudioComponent>(entity);

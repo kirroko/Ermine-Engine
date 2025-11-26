@@ -1707,7 +1707,7 @@ namespace Ermine
 
 	struct GlobalGraphics
 	{
-		// === SSAO parameters ===
+		// SSAO parameters
 		bool  ssaoEnabled = false;
 		int   ssaoSamples = 16;
 		float ssaoRadius = 10.0f;
@@ -1716,15 +1716,17 @@ namespace Ermine
 		float ssaoFadeout = 0.1f;
 		float ssaoMaxDistance = 100.0f;
 
-		// === Fog parameters ===
+		// Fog parameters
 		bool  fogEnabled = false;
 		int   fogMode = 0;                     // 0 = linear, 1 = exp, 2 = exp^2
 		Vec3  fogColor = Vec3{ 0.5f, 0.6f, 0.7f };
 		float fogDensity = 0.02f;                 // exp modes
 		float fogStart = 50.0f;                 // linear
 		float fogEnd = 200.0f;                // linear
+		float fogHeightCoefficient = 0.1f; // For height-based fog
+		float fogHeightFalloff = 10.0f;      // For height-based fog
 
-		// === Post-processing toggles ===
+		// Post-processing toggles
 		bool vignetteEnabled = false;
 		bool fxaaEnabled = true;
 		bool toneMappingEnabled = true;
@@ -1732,7 +1734,7 @@ namespace Ermine
 		bool bloomEnabled = true;
 		bool skyboxIsHDR = false;
 
-		// === Post-processing parameters ===
+		// Post-processing parameters
 		float exposure = 1.0f;
 		float contrast = 1.0f;
 		float saturation = 1.0f;
@@ -1741,15 +1743,25 @@ namespace Ermine
 		float vignetteRadius = 0.8f;
 		float bloomStrength = 0.04f;
 
-		// === FXAA parameters ===
+		// FXAA parameters
 		float fxaaSpanMax = 8.0f;
 		float fxaaReduceMin = 1.0f / 128.0f;
 		float fxaaReduceMul = 1.0f / 8.0f;
 
-		// === Bloom pass parameters ===
+		// Bloom pass parameters
 		float bloomThreshold = 1.0f;
 		float bloomIntensity = 2.0f;
 		float bloomRadius = 1.0f;
+
+		// Spotlight ray parameters
+		bool spotlightRaysEnabled = true;
+		float spotlightRayIntensity = 0.3f;
+		float spotlightRayFalloff = 2.0f;
+
+		// === Motion blur parameters ===
+		bool motionBlurEnabled = true;
+		float motionBlurStrength = 1.0f;
+		int motionBlurSamples = 8;
 
 		// --- generic xproperty-based serialization ---
 		template<typename Alloc>
@@ -1782,6 +1794,8 @@ namespace Ermine
 			xproperty::obj_member<"fogDensity", &GlobalGraphics::fogDensity>,
 			xproperty::obj_member<"fogStart", &GlobalGraphics::fogStart>,
 			xproperty::obj_member<"fogEnd", &GlobalGraphics::fogEnd>,
+			xproperty::obj_member<"fogHeightCoefficient", &GlobalGraphics::fogHeightCoefficient>,
+			xproperty::obj_member<"fogHeightFalloff", &GlobalGraphics::fogHeightFalloff>,
 
 			// Post-process toggles
 			xproperty::obj_member<"vignetteEnabled", &GlobalGraphics::vignetteEnabled>,
@@ -1808,7 +1822,17 @@ namespace Ermine
 			// Bloom pass
 			xproperty::obj_member<"bloomThreshold", &GlobalGraphics::bloomThreshold>,
 			xproperty::obj_member<"bloomIntensity", &GlobalGraphics::bloomIntensity>,
-			xproperty::obj_member<"bloomRadius", &GlobalGraphics::bloomRadius>
+			xproperty::obj_member<"bloomRadius", &GlobalGraphics::bloomRadius>,
+
+			// Spotlight ray parameters
+			xproperty::obj_member<"spotlightRaysEnabled", &GlobalGraphics::spotlightRaysEnabled>,
+			xproperty::obj_member<"spotlightRayIntensity", &GlobalGraphics::spotlightRayIntensity>,
+			xproperty::obj_member<"spotlightRayFalloff", &GlobalGraphics::spotlightRayFalloff>,
+			
+			// Motion blur
+			xproperty::obj_member<"motionBlurEnabled", &GlobalGraphics::motionBlurEnabled>,
+			xproperty::obj_member<"motionBlurStrength", &GlobalGraphics::motionBlurStrength>,
+			xproperty::obj_member<"motionBlurSamples", &GlobalGraphics::motionBlurSamples>
 		)
 	};
 
@@ -2437,10 +2461,13 @@ namespace Ermine
 		bool rotX = false; bool rotY = false; bool rotZ = false;
 		Ermine::Vec3 colliderSize{ 1,1,1 };
 
+		bool update = false;
+
 		JPH::BodyID bodyID{ JPH::BodyID::cInvalidBodyID };
 		JPH::Body* body{ nullptr };
 		std::vector<glm::vec3> customMeshVertices;   // For custom mesh
 		JPH::RefConst<JPH::Shape> shapeRef;
+		bool isDead = false;
 
 		PhysicComponent() = default;
 
@@ -3008,6 +3035,171 @@ namespace Ermine
 			if (m_CurrentScript && m_CurrentScript->instance)
 				m_CurrentScript->OnUpdate();
 		}
+
+		template <typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const
+		{
+			using namespace rapidjson;
+
+			out.SetObject();
+
+			// =======================
+			// 1) Serialize nodes
+			// =======================
+			Value nodes(kArrayType);
+
+			for (const auto& nodePtr : m_Nodes)
+			{
+				if (!nodePtr)
+					continue;
+
+				Value n(kObjectType);
+
+				// id
+				n.AddMember("id", nodePtr->id, alloc);
+
+				// name
+				{
+					Value nameVal;
+					nameVal.SetString(nodePtr->name.c_str(),
+						static_cast<SizeType>(nodePtr->name.size()),
+						alloc);
+					n.AddMember("name", nameVal, alloc);
+				}
+
+				// scriptClassName
+				{
+					Value scriptVal;
+					scriptVal.SetString(nodePtr->scriptClassName.c_str(),
+						static_cast<SizeType>(nodePtr->scriptClassName.size()),
+						alloc);
+					n.AddMember("scriptClassName", scriptVal, alloc);
+				}
+
+				// flags
+				n.AddMember("isAttached", nodePtr->isAttached, alloc);
+				n.AddMember("isStartNode", nodePtr->isStartNode, alloc);
+
+				// NOTE: instance is runtime-only and NOT serialized.
+
+				nodes.PushBack(n, alloc);
+			}
+
+			out.AddMember("nodes", nodes, alloc);
+
+			// =======================
+			// 2) Serialize links
+			// =======================
+			Value links(kArrayType);
+
+			for (const auto& link : m_Links)
+			{
+				Value l(kObjectType);
+				l.AddMember("fromId", link.first, alloc);
+				l.AddMember("toId", link.second, alloc);
+				links.PushBack(l, alloc);
+			}
+
+			out.AddMember("links", links, alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in)
+		{
+			using namespace rapidjson;
+
+			// Clear old state
+			m_Nodes.clear();
+			m_Links.clear();
+			scriptTransitions.clear();
+			m_CurrentScript = nullptr;
+			m_PreviousScript = nullptr;
+
+			if (!in.IsObject())
+				return;
+
+			// =======================
+			// 1) Recreate nodes
+			// =======================
+			std::unordered_map<int, ScriptNode*> idToNode;
+
+			if (in.HasMember("nodes") && in["nodes"].IsArray())
+			{
+				const auto& nodes = in["nodes"];
+				for (auto& nVal : nodes.GetArray())
+				{
+					if (!nVal.IsObject())
+						continue;
+
+					auto node = std::make_shared<ScriptNode>();
+
+					// id
+					if (nVal.HasMember("id") && nVal["id"].IsInt())
+						node->id = nVal["id"].GetInt();
+
+					// name
+					if (nVal.HasMember("name") && nVal["name"].IsString())
+						node->name = nVal["name"].GetString();
+
+					// scriptClassName
+					if (nVal.HasMember("scriptClassName") && nVal["scriptClassName"].IsString())
+						node->scriptClassName = nVal["scriptClassName"].GetString();
+
+					// isAttached
+					if (nVal.HasMember("isAttached") && nVal["isAttached"].IsBool())
+						node->isAttached = nVal["isAttached"].GetBool();
+
+					// isStartNode
+					if (nVal.HasMember("isStartNode") && nVal["isStartNode"].IsBool())
+						node->isStartNode = nVal["isStartNode"].GetBool();
+
+					// instance is runtime-only; will be created via CreateInstance(entity)
+					// when Init(entity) is called.
+
+					idToNode[node->id] = node.get();
+					m_Nodes.emplace_back(std::move(node));
+				}
+			}
+
+			// =======================
+			// 2) Recreate links + scriptTransitions
+			// =======================
+			if (in.HasMember("links") && in["links"].IsArray())
+			{
+				const auto& links = in["links"];
+				for (auto& lVal : links.GetArray())
+				{
+					if (!lVal.IsObject())
+						continue;
+
+					if (!lVal.HasMember("fromId") || !lVal.HasMember("toId"))
+						continue;
+
+					if (!lVal["fromId"].IsInt() || !lVal["toId"].IsInt())
+						continue;
+
+					int fromId = lVal["fromId"].GetInt();
+					int toId = lVal["toId"].GetInt();
+
+					m_Links.emplace_back(fromId, toId);
+
+					// Build scriptTransitions if both nodes exist
+					auto fromIt = idToNode.find(fromId);
+					auto toIt = idToNode.find(toId);
+
+					if (fromIt != idToNode.end() && toIt != idToNode.end())
+					{
+						// If you only expect one outgoing transition per node,
+						// this is fine. If multiple, you may want a multimap / vector instead.
+						scriptTransitions[fromIt->second] = toIt->second;
+					}
+				}
+			}
+
+			// manager pointer is not restored here; set it externally if needed.
+			// Actual script instances will be created when you call Init(entity),
+			// which finds the start node and calls CreateInstance + OnEnter().
+		}
+
 	};
 
 	/*!***********************************************************************
@@ -3368,6 +3560,16 @@ namespace Ermine
 		float manaBarWidth = 0.3f;            // Percentage of screen width
 		float manaBarHeight = 0.03f;          // Percentage of screen height
 		Ermine::Vec3 manaBarPosition = { 0.1f, 0.85f, 0.0f };   // Below health bar
+
+		float GetHealth() const
+		{
+			return currentHealth;
+		}
+
+		void SetHealth(float value)
+		{
+			currentHealth = std::clamp(value, 0.0f, maxHealth);
+		}
 
 		// Skill slot data
 		struct SkillSlot

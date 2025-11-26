@@ -86,6 +86,7 @@
     <Compile Include="CoreModule\Transform.cs" />
     <Compile Include="CoreModule\Vector2.cs" />
     <Compile Include="CoreModule\Vector3.cs" />
+    <Compile Include="GameplayHUD.cs" />
     <Compile Include="MonoBehaviour.cs" />
     <Compile Include="NavAgent.cs" />
     <Compile Include="Object.cs" />
