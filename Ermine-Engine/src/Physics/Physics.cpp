@@ -723,6 +723,20 @@ namespace Ermine
 			}
 
 			bodySettings.mIsSensor = (p.bodyType == PhysicsBodyType::Trigger);
+
+			if (ECS::GetInstance().GetComponent<HierarchyComponent>(entity).parent != 0)
+			{
+				//save the pivot as parent transform
+				p.colliderPivot = p.colliderPivot + p.prevTranPos;
+			}
+			else
+			{
+				p.colliderPivot = p.colliderPivot - p.prevTranPos;
+
+				// Reset previous parent transform
+				p.prevTranPos = Vec3();
+			}
+
 			bodySettings.mPosition = JPH::Vec3(t.position.x + p.colliderPivot.x, t.position.y + p.colliderPivot.y, t.position.z + p.colliderPivot.z);
 			Ermine::Quaternion rot = QuaternionNormalize(FromEulerDegrees(p.colliderRot));
 			Ermine::Quaternion combined = QuaternionNormalize(t.rotation * rot);
