@@ -19,6 +19,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Renderer.h"
 #include "Components.h"
 #include "Matrix4x4.h"
+#include "../../../Ermine-ResourcePipeline/xresource_pipeline_v2-main/dependencies/xstrtool/source/xstrtool.h"
 
 namespace
 {
@@ -341,7 +342,11 @@ void SceneManager::OpenScene(const std::string& path)
     //RebuildRuntimeHierarchyFromGuids(Ermine::ECS::GetInstance());
 
     if (auto scene = SceneManager::GetInstance().GetActiveScene())
+    {
+        auto baseName = xstrtool::PathBaseName(xstrtool::PathWithoutExtension(path));
+        scene->SetName(baseName);
         scene->EnsureSyncedWithECS(/*force=*/true);
+    }
 
     m_CurrentScenePath = path;
     m_Dirty = false;
