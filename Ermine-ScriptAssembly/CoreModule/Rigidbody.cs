@@ -19,6 +19,32 @@ namespace ErmineEngine
 {
     public class Rigidbody : Component
     {
+        #region Internal Calls Registration
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern void SetPosition(ulong entityID, Vector3 position);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern void SetRotationEuler(ulong entityID, Vector3 eulerDeg);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern void SetRotationQuat(ulong entityID, Quaternion rotation);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern void MoveEuler(ulong entityID, Vector3 position, Vector3 eulerDeg);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern void MoveQuat(ulong entityID, Vector3 position, Quaternion rotation);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        private static extern Transform Internal_GetTransform();
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern void Jump(ulong entityID, float jump);
+        #endregion
+
+        /// <summary>
+        /// The position of the rigidbody
+        /// </summary>
         public Vector3 position
         {
             [MethodImpl(MethodImplOptions.InternalCall)]
@@ -27,7 +53,21 @@ namespace ErmineEngine
             set;
         }
 
+        /// <summary>
+        /// The rotation of the rigidbody
+        /// </summary>
         public Quaternion rotation
+        {
+            [MethodImpl(MethodImplOptions.InternalCall)]
+            get;
+            [MethodImpl(MethodImplOptions.InternalCall)]
+            set;
+        }
+
+        /// <summary>
+        /// The linear velocity vector of the rigidbody. It represents the rate of change of Rigidbody position.
+        /// </summary>
+        public Vector3 linearVelocity
         {
             [MethodImpl(MethodImplOptions.InternalCall)]
             get;

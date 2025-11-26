@@ -1395,6 +1395,34 @@ namespace Ermine
 			JPH::EActivation::Activate);
 	}
 
+	/*!***********************************************************************
+	  \brief
+		Gets the world position of a physics body by entity ID
+	*************************************************************************/
+	Ermine::Vec3 Physics::GetPosition(EntityID id)
+	{
+		auto& bodyInterface = mPhysicsSystem.GetBodyInterface();
+		JPH::BodyID bodyID = GetBodyID(id);
+		JPH::Body* body = ECS::GetInstance().GetComponent<PhysicComponent>(id).body;
+		if (!body) return Ermine::Vec3{ 0.0f, 0.0f, 0.0f };
+		JPH::RVec3 pos = body->GetPosition();
+		return Ermine::Vec3{ static_cast<float>(pos.GetX()), static_cast<float>(pos.GetY()), static_cast<float>(pos.GetZ()) };
+	}
+
+	/*!***********************************************************************
+	  \brief
+		Gets the world rotation of a physics body by entity ID
+	*************************************************************************/
+	Ermine::Quaternion Physics::GetRotation(EntityID id)
+	{
+		auto& bodyInterface = mPhysicsSystem.GetBodyInterface();
+		JPH::BodyID bodyID = GetBodyID(id);
+		JPH::Body* body = ECS::GetInstance().GetComponent<PhysicComponent>(id).body;
+		if (!body) return Ermine::Quaternion{ 0.0f, 0.0f, 0.0f, 1.0f };
+		JPH::Quat rot = body->GetRotation();
+		return Ermine::Quaternion{ static_cast<float>(rot.GetX()), static_cast<float>(rot.GetY()), static_cast<float>(rot.GetZ()), static_cast<float>(rot.GetW()) };
+	}
+
 	/*!*************************************************************************
 	  \brief
 		Moves a physics body to a new position and rotation (Euler angles).
@@ -1456,7 +1484,6 @@ namespace Ermine
 
 		bodyInterface.SetLinearVelocity(jphBodyID, jumpVel);
 	}
-
 
 	void Physics::RemovePhysic(EntityID ID)
 	{
