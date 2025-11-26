@@ -199,6 +199,15 @@ namespace Ermine
             if (!ecs.HasComponent<UIImageComponent>(entity))
                 continue;
 
+            // FIXED: Skip rendering if entity has ObjectMetaData and is marked inactive
+            if (ecs.HasComponent<ObjectMetaData>(entity))
+            {
+                const auto& metadata = ecs.GetComponent<ObjectMetaData>(entity);
+                // Check if selfActive is false (entity is disabled via GameObject.SetActive(false))
+                if (!metadata.selfActive)
+                    continue; // Skip rendering this inactive entity
+            }
+
             const auto& imageComp = ecs.GetComponent<UIImageComponent>(entity);
 
             // Load texture if image path is specified

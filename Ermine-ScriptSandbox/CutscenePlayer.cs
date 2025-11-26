@@ -1,122 +1,152 @@
-/* Start Header ************************************************************************/
-/*!
-\file       CutscenePlayer.cs
-\author     Edwin Lee Zirui, edwinzirui.lee, 2301299, edwinzirui.lee@digipen.edu
-\date       11/2025
-\brief      Scene-based cutscene player that manages slideshow playback and transitions.
-
-Copyright (C) 2025 DigiPen Institute of Technology.
-Reproduction or disclosure of this file or its contents without the
-prior written consent of DigiPen Institute of Technology is prohibited.
-*/
-/* End Header **************************************************************************/
-
 using ErmineEngine;
 using System;
 
 public class CutscenePlayer : MonoBehaviour
 {
-    // Configuration (can be set from scene or inspector)
-    private float slideDuration = 5.0f;  // Seconds per slide
+    // Configuration
+    private float imageDisplayTime = 5.0f;  // Duration each slide is shown (seconds)
     private string nextScenePath = "../Resources/Scenes/level.scene";
 
-    // Slide data - corresponds to entities in the scene
-    private string[] slideEntityNames = { "Slide1", "Slide2", "Slide3" };
-    private string[] captions = {
-        "Creation & Betrayal: Scientist invents glowing energy machine; shady boss takes over.",
-        "Horror Factory: Scientist, now a prisoner, sees his invention used to torture people in a vast, dark factory.",
-        "Revenge Awakens: Scientist grabs his old glowing syringe, eyes burning with determination, ready to fight back."
-    };
-
-    // State
-    private int currentSlideIndex = 0;
-    private float slideTimer = 0.0f;
-    private bool cutscenePlaying = true;
+    // Slide tracking
+    private int currentSlideIndex = 0;  // Which slide we're currently showing (0-based)
+    private int totalSlides = 3;        // Total number of cutscene slides
+    private float elapsedTime = 0.0f;   // Timer for current slide
+    private bool isPlaying = true;      // Is cutscene active?
+    
+    // References to slide GameObjects (cached for performance)
+    private GameObject cutscene1;
+    private GameObject cutscene2;
+    private GameObject cutscene3;
 
     void Start()
     {
-        Debug.Log("Cutscene Player started");
+        Debug.Log("[CutscenePlayer] Starting cutscene sequence");
 
-        // Hide all slides except the first one
+        // Find all cutscene slide entities
+        cutscene1 = GameObject.Find("Slide1");
+        cutscene2 = GameObject.Find("Slide2");
+        cutscene3 = GameObject.Find("Slide3");
+
+        // Verify all slides exist
+        if (cutscene1 == null) Debug.LogError("[CutscenePlayer] ERROR: Could not find 'Slide1' entity!");
+        if (cutscene2 == null) Debug.LogError("[CutscenePlayer] ERROR: Could not find 'Slide2' entity!");
+        if (cutscene3 == null) Debug.LogError("[CutscenePlayer] ERROR: Could not find 'Slide3' entity!");
+
+        // Start with slide 1 visible, others hidden
         ShowSlide(0);
 
-        // TODO: Display first caption
-        Debug.Log($"Caption 1: {captions[0]}");
+        Debug.Log("[CutscenePlayer] Press SPACE or ENTER to skip cutscene");
     }
 
     void Update()
     {
-        if (!cutscenePlaying)
-            return;
+        if (!isPlaying) return;
 
-        // Update timer
-        slideTimer += Time.deltaTime;
+        // Accumulate time
+        elapsedTime += Time.deltaTime;
 
-        // Skip cutscene if player presses Space or Enter
+        // Check for skip input (SPACE or ENTER)
         if (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Enter))
         {
-            Debug.Log("Cutscene skipped by player");
-            FinishCutscene();
+            Debug.Log("[CutscenePlayer] Cutscene skipped by player");
+            EndCutscene();
             return;
         }
 
-        // Auto-advance to next slide
-        if (slideTimer >= slideDuration)
+        // Check if current slide duration has elapsed
+        if (elapsedTime >= imageDisplayTime)
         {
-            slideTimer = 0.0f;
+            // Move to next slide
             currentSlideIndex++;
+            elapsedTime = 0.0f;  // Reset timer for next slide
 
-            if (currentSlideIndex >= slideEntityNames.Length)
+            if (currentSlideIndex >= totalSlides)
             {
-                // Cutscene finished
-                FinishCutscene();
+                // All slides shown - end cutscene
+                Debug.Log("[CutscenePlayer] All slides shown, ending cutscene");
+                EndCutscene();
             }
             else
             {
                 // Show next slide
+                Debug.Log($"[CutscenePlayer] Advancing to slide {currentSlideIndex + 1}/{totalSlides}");
                 ShowSlide(currentSlideIndex);
-                Debug.Log($"Caption {currentSlideIndex + 1}: {captions[currentSlideIndex]}");
             }
         }
     }
 
-    void ShowSlide(int index)
+    /// <summary>
+    /// Shows only the specified slide, hiding all others.
+    /// </summary>
+    /// <param name="slideIndex">Zero-based index of the slide to show (0, 1, or 2)</param>
+    void ShowSlide(int slideIndex)
     {
-        // Hide all slides by deactivating their GameObjects
-        for (int i = 0; i < slideEntityNames.Length; i++)
+        // Hide all slides first
+        if (cutscene1 != null) cutscene1.SetActive(false);
+        if (cutscene2 != null) cutscene2.SetActive(false);
+        if (cutscene3 != null) cutscene3.SetActive(false);
+
+        // Show only the requested slide
+        switch (slideIndex)
         {
-            // Find GameObject by name and enable/disable it
-            GameObject slideObject = GameObject.Find(slideEntityNames[i]);
-            if (slideObject != null)
-            {
-                slideObject.SetActive(i == index);
-            }
-            else
-            {
-                Debug.Log($"Warning: Could not find slide entity '{slideEntityNames[i]}'");
-            }
-        }
+            case 0:
+                if (cutscene1 != null)
+                {
+                    cutscene1.SetActive(true);
+                    Debug.Log("[CutscenePlayer] Showing Slide 1 (Creation & Betrayal)");
+                }
+                break;
 
-        Debug.Log($"Showing slide {index + 1}/{slideEntityNames.Length}");
+            case 1:
+                if (cutscene2 != null)
+                {
+                    cutscene2.SetActive(true);
+                    Debug.Log("[CutscenePlayer] Showing Slide 2 (Horror Factory)");
+                }
+                break;
+
+            case 2:
+                if (cutscene3 != null)
+                {
+                    cutscene3.SetActive(true);
+                    Debug.Log("[CutscenePlayer] Showing Slide 3 (Revenge Awakens)");
+                }
+                break;
+
+            default:
+                Debug.LogWarning($"[CutscenePlayer] Invalid slide index: {slideIndex}");
+                break;
+        }
     }
 
-    void FinishCutscene()
+    /// <summary>
+    /// Ends the cutscene and loads the next scene.
+    /// </summary>
+    void EndCutscene()
     {
-        Debug.Log($"Cutscene finished - Loading next scene: {nextScenePath}");
-        cutscenePlaying = false;
+        isPlaying = false;
 
-        // Load the next scene (gameplay level)
+        // Hide all cutscene slides
+        if (cutscene1 != null) cutscene1.SetActive(false);
+        if (cutscene2 != null) cutscene2.SetActive(false);
+        if (cutscene3 != null) cutscene3.SetActive(false);
+
+        Debug.Log($"[CutscenePlayer] Loading next scene: {nextScenePath}");
+        
+        // Load the gameplay scene
         SceneManager.LoadScene(nextScenePath);
     }
 
-    // Public methods for configuration
+    // Public configuration methods (optional - for runtime changes)
     public void SetSlideDuration(float duration)
     {
-        slideDuration = duration;
+        imageDisplayTime = duration;
+        Debug.Log($"[CutscenePlayer] Slide duration set to {duration} seconds");
     }
 
     public void SetNextScene(string scenePath)
     {
         nextScenePath = scenePath;
+        Debug.Log($"[CutscenePlayer] Next scene path set to: {scenePath}");
     }
 }

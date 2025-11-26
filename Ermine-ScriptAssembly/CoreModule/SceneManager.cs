@@ -1,15 +1,3 @@
-/* Start Header ************************************************************************/
-/*!
-\file       SceneManager.cs
-\author     Claude Code
-\date       11/2025
-\brief      SceneManager class for loading scenes from C# scripts.
-
-Copyright (C) 2025 DigiPen Institute of Technology.
-Reproduction or disclosure of this file or its contents without the
-prior written consent of DigiPen Institute of Technology is prohibited.
-*/
-/* End Header **************************************************************************/
 using System.Runtime.CompilerServices;
 
 namespace ErmineEngine
