@@ -51,6 +51,7 @@ public class PlayerController2 : MonoBehaviour
         HandleCameraLerp();
         HandleFootstepAudio();
         HandleInteract();
+        UpdateAudioListener();
     }
     float verticalVelocity;
     private void HandleInput()
@@ -108,6 +109,23 @@ public class PlayerController2 : MonoBehaviour
         cam.position = camPos;
     }
 
+    private void UpdateAudioListener()
+    {
+        // Update listener position to camera/player position
+        Vector3 listenerPos = new Vector3(
+            transform.position.x,
+            cam.position.y,  // Use camera height for better vertical audio
+            transform.position.z
+        );
+        
+        // Update listener orientation to match camera direction
+        AudioListener.SetAttributes(
+            transform.position,  // Player's actual position
+            Vector3.zero,
+            cam.forward,
+            cam.up
+        );
+    }
     private void HandleFootstepAudio()
     {
         if (audioComp == null) return;

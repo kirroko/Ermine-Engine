@@ -7,26 +7,64 @@ public class RotatingPlatform : MonoBehaviour
     public bool active = true;
 
     private Rigidbody rb;
+    private AudioComponent audioComp;
 
     void Start()
     {
         rb = GetComponent<Rigidbody>();
+        audioComp = GetComponent<AudioComponent>();
+        
+        if (audioComp == null)
+        {
+            Console.WriteLine("Warning: No AudioComponent found on rotating platform!");
+        }
+        else
+        {
+            // Start playing the rotation sound when platform starts
+            if (active)
+            {
+                audioComp.shouldPlay = true;
+            }
+        }
     }
 
     void Update()
     {
-        if (!active) return;
+        if (!active)
+        {
+            // Stop audio when platform stops
+            if (audioComp != null && audioComp.isPlaying)
+            {
+                audioComp.shouldStop = true;
+            }
+            return;
+        }
 
-        // Create a rotation for this frame
-        //Quaternion delta = Quaternion.Euler(0f, speed * Time.deltaTime, 0f);
+        // Ensure audio is playing while platform rotates
+        if (audioComp != null && !audioComp.isPlaying)
+        {
+            audioComp.shouldPlay = true;
+        }
 
-        // Apply rotation manually (like MoveRotation)
+        // Apply rotation
         transform.Rotate(new Vector3(0f, speed * Time.deltaTime, 0f));
     }
 
     public void IsActive(bool state)
     {
         active = state;
+        
+        // Control audio based on active state
+        if (audioComp != null)
+        {
+            if (state)
+            {
+                audioComp.shouldPlay = true;
+            }
+            else
+            {
+                audioComp.shouldStop = true;
+            }
+        }
     }
 }
-

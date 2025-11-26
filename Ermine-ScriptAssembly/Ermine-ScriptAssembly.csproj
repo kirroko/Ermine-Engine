@@ -73,6 +73,7 @@
     <Compile Include="Behaviour.cs" />
     <Compile Include="Component.cs" />
     <Compile Include="CoreModule\AudioComponent.cs" />
+    <Compile Include="CoreModule\AudioListener.cs" />
     <Compile Include="CoreModule\Debug.cs" />
     <Compile Include="CoreModule\GameObject.cs" />
     <Compile Include="CoreModule\GlobalAudio.cs" />

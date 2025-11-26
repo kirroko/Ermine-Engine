@@ -2185,9 +2185,9 @@ namespace Ermine
 		// Playback control
 		int channelId{ -1 }; // Managed by CAudioEngine
 		bool isPlaying{ false };
-		bool shouldPlay{ true }; // Trigger flag for AudioSystem
+		bool shouldPlay{ false }; // Trigger flag for AudioSystem
 		bool shouldStop{ false }; // Trigger flag for AudioSystem
-		//bool playOnStart = false;
+		bool playOnStart{ false };
 
 		// Audio settings
 		bool is3D{ true };
@@ -2254,7 +2254,8 @@ namespace Ermine
 			xproperty::obj_member<"volume", &AudioComponent::volume>,
 			xproperty::obj_member<"followTransform", &AudioComponent::followTransform>,
 			xproperty::obj_member<"minDistance", &AudioComponent::minDistance>,
-			xproperty::obj_member<"maxDistance", &AudioComponent::maxDistance>
+			xproperty::obj_member<"maxDistance", &AudioComponent::maxDistance>,
+			xproperty::obj_member<"playOnStart", &AudioComponent::playOnStart>
 		)
 	};
 
