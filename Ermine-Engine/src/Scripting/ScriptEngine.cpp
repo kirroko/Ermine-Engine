@@ -1284,6 +1284,88 @@ namespace
 			transform.scale = ToNativeVec(value);
 		}
 	}
+
+	int icall_transform_get_childcount(MonoObject* thisObj)
+	{
+		using namespace Ermine;
+		EntityID id = GetEntityIDFromManaged(thisObj);
+		auto& ecs = ECS::GetInstance();
+		if (id == 0 || !ecs.IsEntityValid(id) || !ecs.HasComponent<Transform>(id))
+			return -1;
+
+		auto hs = ecs.GetSystem<HierarchySystem>();
+		return hs->GetChildCount(id);
+	}
+
+	MonoObject* icall_transform_get_transform_parent(uint64_t id)
+	{
+		using namespace Ermine;
+		auto& ecs = ECS::GetInstance();
+		if (id == 0 || !ecs.IsEntityValid(id) || !ecs.HasComponent<Transform>(id))
+		{
+			assert(false && "Miss Component here!");
+			return nullptr;
+		}
+
+		auto hs = ecs.GetSystem<HierarchySystem>();
+		auto parentID = hs->GetParent(id);
+		MonoObject* obj = CreateManagedTransformWrapper(parentID);
+		SetComponentGameObject(obj, parentID);
+		return obj;
+	}
+
+	MonoObject* icall_transform_get_transform_by_name(MonoObject* thisObj, MonoString* name)
+	{
+		using namespace Ermine;
+		if (!name)
+		{
+			EE_CORE_WARN("icall_transform_get_transform_by_name: name parameter is empty");
+			assert(false && "Issue here!");
+			return nullptr;
+		}
+		std::string fromMonoName;
+		ToTempUTF8(name, fromMonoName);
+		ToTempUTF8(name, fromMonoName); // Maybe busy thread
+		const auto& eList = SceneManager::GetInstance().GetActiveScene()->GetAllEntities();
+		for (const auto& entity : eList)
+		{
+			auto& o = ECS::GetInstance().GetComponent<ObjectMetaData>(entity);
+			if (o.name != fromMonoName)
+				continue;
+			MonoObject* obj = CreateManagedTransformWrapper(entity);
+			SetComponentGameObject(obj, entity);
+			return obj;
+		}
+		EE_CORE_WARN("No entity with {} found!", fromMonoName);
+		assert(false && "Miss Component here!");
+		return nullptr;
+	}
+
+	MonoObject* icall_transform_get_transform_by_index(MonoObject* thisObj,int index)
+	{
+		using namespace Ermine;
+		auto& ecs = ECS::GetInstance();
+		auto id = GetEntityIDFromManaged(thisObj);
+		if (id == 0 || !ecs.IsEntityValid(id) || !ecs.HasComponent<Transform>(id))
+		{
+			assert(false && "Miss Component here!");
+			return nullptr;
+		}
+
+		auto hs = ecs.GetSystem<HierarchySystem>();
+		if (hs->GetChildCount(id) <= 0)
+		{
+			std::string name = ecs.GetComponent<ObjectMetaData>(id).name;
+			EE_CORE_WARN("Object {} has no children!", name);
+			assert(false && "Miss Component here!");
+			return nullptr;
+		}
+
+		auto& children = hs->GetChildren(id);
+		MonoObject* obj = CreateManagedTransformWrapper(children[index]);
+		SetComponentGameObject(obj, children[index]);
+		return obj;
+	}
 #pragma endregion
 
 #pragma region Time ICalls
@@ -2340,9 +2422,14 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	mono_add_internal_call("ErmineEngine.Transform::set_rotation", (const void*)icall_transform_set_rotation);
 	mono_add_internal_call("ErmineEngine.Transform::set_scale", (const void*)icall_transform_set_scale);
 
+	mono_add_internal_call("ErmineEngine.Transform::get_childCount", (const void*)icall_transform_get_childcount);
+
 	mono_add_internal_call("ErmineEngine.Transform::Internal_GetWorldForward", (const void*)icall_transform_get_world_forward);
 	mono_add_internal_call("ErmineEngine.Transform::Internal_GetWorldRight", (const void*)icall_transform_get_world_right);
 	mono_add_internal_call("ErmineEngine.Transform::Internal_GetWorldUp", (const void*)icall_transform_get_world_up);
+	mono_add_internal_call("ErmineEngine.Transform::Internal_GetParentTransform", (const void*)icall_transform_get_transform_parent);
+	mono_add_internal_call("ErmineEngine.Transform::Internal_GetChildTransformByName", (const void*)icall_transform_get_transform_by_name);
+	mono_add_internal_call("ErmineEngine.Transform::Internal_GetChildTransformByIndex", (const void*)icall_transform_get_transform_by_index);
 #pragma endregion
 
 #pragma region Time ICalls

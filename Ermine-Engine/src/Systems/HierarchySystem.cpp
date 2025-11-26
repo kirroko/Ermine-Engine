@@ -447,6 +447,13 @@ namespace Ermine
         return ECS::GetInstance().GetComponent<HierarchyComponent>(entity).children;
     }
 
+    const int HierarchySystem::GetChildCount(EntityID entity) const
+    {
+        if (!ECS::GetInstance().IsEntityValid(entity))
+            return 0;
+        return ECS::GetInstance().GetComponent<HierarchyComponent>(entity).children.size();
+    }
+
     /**
      * @brief Gets the world position of an entity.
      * @param[in] entity The entity to query.
