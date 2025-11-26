@@ -18,7 +18,7 @@ public class PlayerController2 : MonoBehaviour
     private bool isCrouching = false;
 
     private float xRotation = 0f;
-    private float camDefaultY = 200f;
+    public float camDefaultY = 2f;
     private float camCrouchY = 50f;
 
     private bool movementKeyPressed = false;
@@ -38,7 +38,7 @@ public class PlayerController2 : MonoBehaviour
     void Start()
     {
         cam = GameObject.Find("Main Camera").GetComponent<Transform>();
-        HandleCameraLerp();
+        //HandleCameraLerp();
         audioComp = GetComponent<AudioComponent>();
         if (audioComp == null)
             Console.WriteLine("Warning: No AudioComponent found on player!");
@@ -51,6 +51,7 @@ public class PlayerController2 : MonoBehaviour
         HandleCameraLerp();
         HandleFootstepAudio();
         HandleInteract();
+        UpdateAudioListener();
     }
     float verticalVelocity;
     private void HandleInput()
@@ -72,13 +73,14 @@ public class PlayerController2 : MonoBehaviour
         if (isGrounded == true && Input.GetKey(KeyCode.Space))
         {
             isGrounded = false; // prevent double jump
+            GlobalAudio.PlaySFX("Jump");
             Physics.Jump((ulong)gameObject.GetInstanceID(), jumpspeed);
         }
 
         transform.position = newPos;
 
         // Sync physics collider
-        Physics.SetPosition((ulong)gameObject.GetInstanceID(), transform.position);
+        Physics.SetPosition((ulong)gameObject.GetInstanceID(), newPos);
     }
 
     private void HandleLook()
@@ -101,12 +103,29 @@ public class PlayerController2 : MonoBehaviour
 
     private void HandleCameraLerp()
     {
-        float targetY = isCrouching ? camCrouchY : camDefaultY;
+        float targetY = isCrouching ? camCrouchY : camDefaultY*100f;
         Vector3 camPos = cam.position;
         camPos.y = Mathf.Lerp(camPos.y, targetY, Time.deltaTime * crouchLerpSpeed);
         cam.position = camPos;
     }
 
+    private void UpdateAudioListener()
+    {
+        // Update listener position to camera/player position
+        Vector3 listenerPos = new Vector3(
+            transform.position.x,
+            cam.position.y,  // Use camera height for better vertical audio
+            transform.position.z
+        );
+        
+        // Update listener orientation to match camera direction
+        AudioListener.SetAttributes(
+            transform.position,  // Player's actual position
+            Vector3.zero,
+            cam.forward,
+            cam.up
+        );
+    }
     private void HandleFootstepAudio()
     {
         if (audioComp == null) return;
@@ -148,10 +167,12 @@ public class PlayerController2 : MonoBehaviour
                 if (obj.name == "Switch")
                 {
                     // Play switch audio here Kai
+                    GlobalAudio.PlaySFX("SwitchOn");
                 }
                 if (obj.name == "Book")
                 {
                     // Collect book
+                    GlobalAudio.PlaySFX("BookPickUp");
                 }
             }
             /*else

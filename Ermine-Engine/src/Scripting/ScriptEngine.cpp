@@ -25,6 +25,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <HierarchySystem.h>
 #include "FiniteStateMachine.h"
 #include "NavMeshAgentSystem.h"
+#include "AudioManager.h"
 #include "Physics.h"
 #include "SceneManager.h"
 #include "Serialisation.h"
@@ -1698,6 +1699,35 @@ namespace
 	}
 #pragma endregion
 
+#pragma region AudioListener ICalls
+	void icall_audiolistener_set_position(ManagedVector3 pos)
+	{
+		// Convert ManagedVector3 -> Vector3D
+		Ermine::Vector3D position{ pos.x, pos.y, pos.z };
+		Ermine::CAudioEngine::SetListenerPosition(position);
+	}
+
+	void icall_audiolistener_set_orientation(ManagedVector3 forward, ManagedVector3 up)
+	{
+		// Convert ManagedVector3 -> Vector3D
+		Ermine::Vector3D fwd{ forward.x, forward.y, forward.z };
+		Ermine::Vector3D upVec{ up.x, up.y, up.z };
+		Ermine::CAudioEngine::SetListenerOrientation(fwd, upVec);
+	}
+
+	void icall_audiolistener_set_attributes(ManagedVector3 pos, ManagedVector3 velocity,
+		ManagedVector3 forward, ManagedVector3 up)
+	{
+		// Convert all ManagedVector3 -> Vector3D
+		Ermine::Vector3D position{ pos.x, pos.y, pos.z };
+		Ermine::Vector3D vel{ velocity.x, velocity.y, velocity.z };
+		Ermine::Vector3D fwd{ forward.x, forward.y, forward.z };
+		Ermine::Vector3D upVec{ up.x, up.y, up.z };
+
+		Ermine::CAudioEngine::SetListenerAttributes(position, vel, fwd, upVec);
+	}
+#pragma endregion
+
 #pragma region AudioComponent ICalls
 	Ermine::AudioComponent* GetAudioComponentFromManaged(MonoObject* thisObj)
 	{
@@ -1778,6 +1808,71 @@ namespace
 			ToTempUTF8(value, temp);
 			ac->soundName = std::move(temp);
 		}
+	}
+
+	mono_bool icall_audiocomponent_get_playonstart(MonoObject* thisObj)
+	{
+		if (auto* ac = GetAudioComponentFromManaged(thisObj))
+			return ac->playOnStart ? 1 : 0;
+		return 0;
+	}
+
+	void icall_audiocomponent_set_playonstart(MonoObject* thisObj, mono_bool value)
+	{
+		if (auto* ac = GetAudioComponentFromManaged(thisObj))
+			ac->playOnStart = (value != 0);
+	}
+
+	mono_bool icall_audiocomponent_get_is3d(MonoObject* thisObj)
+	{
+		if (auto* ac = GetAudioComponentFromManaged(thisObj))
+			return ac->is3D ? 1 : 0;
+		return 1; // Default to true
+	}
+
+	void icall_audiocomponent_set_is3d(MonoObject* thisObj, mono_bool value)
+	{
+		if (auto* ac = GetAudioComponentFromManaged(thisObj))
+			ac->is3D = (value != 0);
+	}
+
+	float icall_audiocomponent_get_mindistance(MonoObject* thisObj)
+	{
+		if (auto* ac = GetAudioComponentFromManaged(thisObj))
+			return ac->minDistance;
+		return 1.0f;
+	}
+
+	void icall_audiocomponent_set_mindistance(MonoObject* thisObj, float value)
+	{
+		if (auto* ac = GetAudioComponentFromManaged(thisObj))
+			ac->minDistance = value;
+	}
+
+	float icall_audiocomponent_get_maxdistance(MonoObject* thisObj)
+	{
+		if (auto* ac = GetAudioComponentFromManaged(thisObj))
+			return ac->maxDistance;
+		return 100.0f;
+	}
+
+	void icall_audiocomponent_set_maxdistance(MonoObject* thisObj, float value)
+	{
+		if (auto* ac = GetAudioComponentFromManaged(thisObj))
+			ac->maxDistance = value;
+	}
+
+	mono_bool icall_audiocomponent_get_followtransform(MonoObject* thisObj)
+	{
+		if (auto* ac = GetAudioComponentFromManaged(thisObj))
+			return ac->followTransform ? 1 : 0;
+		return 1;
+	}
+
+	void icall_audiocomponent_set_followtransform(MonoObject* thisObj, mono_bool value)
+	{
+		if (auto* ac = GetAudioComponentFromManaged(thisObj))
+			ac->followTransform = (value != 0);
 	}
 #pragma endregion
 
@@ -2667,6 +2762,12 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	mono_add_internal_call("ErmineEngine.GlobalAudio::SetSFXVolume", (const void*)icall_globalaudio_set_sfx_volume);
 #pragma endregion
 
+#pragma region AudioListener ICalls
+	mono_add_internal_call("ErmineEngine.AudioListener::SetPosition", (const void*)icall_audiolistener_set_position);
+	mono_add_internal_call("ErmineEngine.AudioListener::SetOrientation", (const void*)icall_audiolistener_set_orientation);
+	mono_add_internal_call("ErmineEngine.AudioListener::SetAttributes", (const void*)icall_audiolistener_set_attributes);
+#pragma endregion
+
 #pragma region AudioComponent ICalls
 	mono_add_internal_call("ErmineEngine.AudioComponent::get_shouldPlay", (const void*)icall_audiocomponent_get_shouldplay);
 	mono_add_internal_call("ErmineEngine.AudioComponent::set_shouldPlay", (const void*)icall_audiocomponent_set_shouldplay);
@@ -2678,6 +2779,16 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	mono_add_internal_call("ErmineEngine.AudioComponent::set_volume", (const void*)icall_audiocomponent_set_volume);
 	mono_add_internal_call("ErmineEngine.AudioComponent::get_soundName", (const void*)icall_audiocomponent_get_soundname);
 	mono_add_internal_call("ErmineEngine.AudioComponent::set_soundName", (const void*)icall_audiocomponent_set_soundname);
+	mono_add_internal_call("ErmineEngine.AudioComponent::get_playOnStart", (const void*)icall_audiocomponent_get_playonstart);
+	mono_add_internal_call("ErmineEngine.AudioComponent::set_playOnStart", (const void*)icall_audiocomponent_set_playonstart);
+	mono_add_internal_call("ErmineEngine.AudioComponent::get_is3D", (const void*)icall_audiocomponent_get_is3d);
+	mono_add_internal_call("ErmineEngine.AudioComponent::set_is3D", (const void*)icall_audiocomponent_set_is3d);
+	mono_add_internal_call("ErmineEngine.AudioComponent::get_minDistance", (const void*)icall_audiocomponent_get_mindistance);
+	mono_add_internal_call("ErmineEngine.AudioComponent::set_minDistance", (const void*)icall_audiocomponent_set_mindistance);
+	mono_add_internal_call("ErmineEngine.AudioComponent::get_maxDistance", (const void*)icall_audiocomponent_get_maxdistance);
+	mono_add_internal_call("ErmineEngine.AudioComponent::set_maxDistance", (const void*)icall_audiocomponent_set_maxdistance);
+	mono_add_internal_call("ErmineEngine.AudioComponent::get_followTransform", (const void*)icall_audiocomponent_get_followtransform);
+	mono_add_internal_call("ErmineEngine.AudioComponent::set_followTransform", (const void*)icall_audiocomponent_set_followtransform);
 #pragma endregion
 
 #pragma region Debug ICalls

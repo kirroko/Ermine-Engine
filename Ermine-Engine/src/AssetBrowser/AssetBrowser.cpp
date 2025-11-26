@@ -647,7 +647,7 @@ namespace Ermine::ImguiUI
             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0, 0, 0, 0));
             ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0, 0, 0, 0));
-            bool clicked = ImGui::ImageButton(("##icon" + asset->Name).c_str(), asset->Icon, ImVec2(iconSize, iconSize), ImVec2(0, 1), ImVec2(1, 0));
+            bool clicked = ImGui::ImageButton(("##icon" + asset->Name).c_str(), asset->Icon, ImVec2(iconSize, iconSize), ImVec2(0, 0), ImVec2(1, 1));
             ImGui::PopStyleColor(3);
 
             if (asset->needsReimport) {
