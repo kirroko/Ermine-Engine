@@ -322,6 +322,12 @@ namespace Ermine
 				removeMapping(entity);
 				continue;
 			}
+			if (ECS::GetInstance().HasComponent<ObjectMetaData>(entity))
+			{
+				const auto& meta = ECS::GetInstance().GetComponent<ObjectMetaData>(entity);
+				if (!meta.selfActive)
+					continue;
+			}
 
 			auto& p = ecs.GetComponent<PhysicComponent>(entity);
 			auto& t = ecs.GetComponent<Transform>(entity);
@@ -333,9 +339,9 @@ namespace Ermine
 				Ermine::Quaternion rot = QuaternionNormalize(FromEulerDegrees(p.colliderRot));
 				Ermine::Quaternion combined = QuaternionNormalize(t.rotation * rot);
 
-				JPH::Vec3 pos(t.position.x + p.colliderPivot.x,
-					t.position.y + p.colliderPivot.y,
-					t.position.z + p.colliderPivot.z);
+				JPH::Vec3 pos(t.position.x,
+					t.position.y,
+					t.position.z);
 
 				JPH::Quat quat(combined.x, combined.y, combined.z, combined.w);
 
@@ -368,6 +374,19 @@ namespace Ermine
 
 			if (!ecs.HasComponent<ScriptsComponent>(recipientEntity))
 				continue;
+
+			if (ECS::GetInstance().HasComponent<ObjectMetaData>(recipientEntity))
+			{
+				const auto& meta = ECS::GetInstance().GetComponent<ObjectMetaData>(recipientEntity);
+				if (!meta.selfActive)
+					continue;
+			}
+			if (ECS::GetInstance().HasComponent<ObjectMetaData>(otherEntity))
+			{
+				const auto& meta = ECS::GetInstance().GetComponent<ObjectMetaData>(otherEntity);
+				if (!meta.selfActive)
+					continue;
+			}
 
 			auto& scs = ecs.GetComponent<ScriptsComponent>(recipientEntity);
 			for (auto& scriptComp : scs.scripts)
@@ -408,6 +427,12 @@ namespace Ermine
 				removeMapping(entity);
 				continue;
 			}
+			if (ECS::GetInstance().HasComponent<ObjectMetaData>(entity))
+			{
+				const auto& meta = ECS::GetInstance().GetComponent<ObjectMetaData>(entity);
+				if (!meta.selfActive)
+					continue;
+			}
 
 			auto& p = ecs.GetComponent<PhysicComponent>(entity);
 			if (p.motionType == JPH::EMotionType::Static || p.isDead)
@@ -432,7 +457,6 @@ namespace Ermine
 				transform.GetTranslation().GetY(),
 				transform.GetTranslation().GetZ()
 			);
-
 			// Rotation too
 			JPH::Quat rot = transform.GetRotation().GetQuaternion().Normalized();
 			t.rotation.w = rot.GetW();

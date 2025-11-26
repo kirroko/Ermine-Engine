@@ -36,6 +36,7 @@ public class DisableLightCone : MonoBehaviour
         {
             DisableLight();
             GameObject sphere = GameObject.Find("Sphere");
+            Physics.RemovePhysic((ulong)sphere.GetInstanceID());
             GameObject.Destroy(sphere);
         }
 
@@ -58,17 +59,18 @@ public class DisableLightCone : MonoBehaviour
     {
         disabled = true;
         //gameObject.SetActive(false);
-
+        //gameObject.SetActive(false);
+        lightCone.SetActive(false);
         // we move the lightcone out of view for now until SetActive() is implemented
-        gameObject.transform.position = new Vector3(0, oldPos.y + 100, 0);
-        Physics.SetPosition((ulong)gameObject.GetInstanceID(), gameObject.transform.position);
+        //gameObject.transform.position = new Vector3(0, oldPos.y + 100, 0);
+        //Physics.SetPosition((ulong)gameObject.GetInstanceID(), gameObject.transform.position);
 
-        // Disable linked cone too
-        if (lightCone != null)
-        {
-            lightCone.transform.position = new Vector3(0, oldPos.y + 100, 0);
-            Physics.SetPosition((ulong)lightCone.GetInstanceID(), lightCone.transform.position);
-        }
+        //// Disable linked cone too
+        //if (lightCone != null)
+        //{
+        //    lightCone.transform.position = new Vector3(0, oldPos.y + 100, 0);
+        //    Physics.SetPosition((ulong)lightCone.GetInstanceID(), lightCone.transform.position);
+        //}
     }
 
     void RespawnLight()
@@ -76,16 +78,19 @@ public class DisableLightCone : MonoBehaviour
         disabled = false;
         timer = 3.0f;
 
-        // Respawn original light
-        gameObject.transform.position = oldPos;
-        Physics.SetPosition((ulong)gameObject.GetInstanceID(), gameObject.transform.position);
+        //gameObject.SetActive(true);
+        lightCone.SetActive(true);
 
-        // Respawn cone in original place
-        if (lightCone != null)
-        {
-            lightCone.transform.position = oldConePos;
-            Physics.SetPosition((ulong)lightCone.GetInstanceID(), lightCone.transform.position);
-        }
+        //// Respawn original light
+        //gameObject.transform.position = oldPos;
+        //Physics.SetPosition((ulong)gameObject.GetInstanceID(), gameObject.transform.position);
+
+        //// Respawn cone in original place
+        //if (lightCone != null)
+        //{
+        //    lightCone.transform.position = oldConePos;
+        //    Physics.SetPosition((ulong)lightCone.GetInstanceID(), lightCone.transform.position);
+        //}
     }
 
     void OnCollisionEnter(Collision col)
