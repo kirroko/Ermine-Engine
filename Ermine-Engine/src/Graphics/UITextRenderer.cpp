@@ -373,15 +373,16 @@ namespace Ermine
             float y1 = y0 + glyph.height * scale;
 
             // Build vertex data (2D position, RGBA color, UV)
+            // Note: V coordinates are swapped because stb_truetype has v0 at top, OpenGL has v=0 at bottom
             float vertices[] = {
-                // Position       // Color                        // UV
-                x0, y0,          color.x, color.y, color.z, alpha,  glyph.u0, glyph.v0,
-                x1, y0,          color.x, color.y, color.z, alpha,  glyph.u1, glyph.v0,
-                x1, y1,          color.x, color.y, color.z, alpha,  glyph.u1, glyph.v1,
+                // Position       // Color                        // UV (V flipped)
+                x0, y0,          color.x, color.y, color.z, alpha,  glyph.u0, glyph.v1,  // bottom-left uses v1
+                x1, y0,          color.x, color.y, color.z, alpha,  glyph.u1, glyph.v1,  // bottom-right uses v1
+                x1, y1,          color.x, color.y, color.z, alpha,  glyph.u1, glyph.v0,  // top-right uses v0
 
-                x0, y0,          color.x, color.y, color.z, alpha,  glyph.u0, glyph.v0,
-                x1, y1,          color.x, color.y, color.z, alpha,  glyph.u1, glyph.v1,
-                x0, y1,          color.x, color.y, color.z, alpha,  glyph.u0, glyph.v1
+                x0, y0,          color.x, color.y, color.z, alpha,  glyph.u0, glyph.v1,  // bottom-left uses v1
+                x1, y1,          color.x, color.y, color.z, alpha,  glyph.u1, glyph.v0,  // top-right uses v0
+                x0, y1,          color.x, color.y, color.z, alpha,  glyph.u0, glyph.v0   // top-left uses v0
             };
 
             // Submit to GPU
