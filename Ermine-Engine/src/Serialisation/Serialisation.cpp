@@ -528,9 +528,6 @@ void LoadScene(const std::string& sceneName)
     filesystem::path scenePath = filesystem::path("Resources") / "Scenes" / (sceneName + ".scene");
 
     LoadSceneFromFile(Ermine::ECS::GetInstance(), scenePath);
-    Ermine::ECS::GetInstance().GetSystem<Ermine::Physics>()->UpdatePhysicList();
-
-    Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>()->MarkDrawDataForRebuild();
 }
 
 Ermine::EntityID LoadPrefabFromFile(Ermine::ECS& ecs, const std::filesystem::path& path)

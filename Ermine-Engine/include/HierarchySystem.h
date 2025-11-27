@@ -84,13 +84,6 @@ namespace Ermine
         const std::vector<EntityID>& GetChildren(EntityID entity) const;
 
         /**
-         * @brief Gets the number of children an entity has.
-         * @param[in] entity The entity to query.
-         * @return The number of child entities.
-		 */
-        const int GetChildCount(EntityID entity) const;
-
-        /**
          * @brief Gets the world position of an entity.
          * @param[in] entity The entity to query.
          * @return The world position vector.

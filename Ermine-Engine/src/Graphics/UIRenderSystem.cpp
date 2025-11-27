@@ -90,12 +90,6 @@ namespace Ermine
         // Iterate through all entities with UIComponent
         for (EntityID entity : m_Entities)
         {
-            if (ECS::GetInstance().HasComponent<ObjectMetaData>(entity))
-            {
-                const auto& meta = ECS::GetInstance().GetComponent<ObjectMetaData>(entity);
-                if (!meta.selfActive)
-                    continue;
-            }
             auto& ui = ECS::GetInstance().GetComponent<UIComponent>(entity);
 
             // Update skill cooldowns and activation animations

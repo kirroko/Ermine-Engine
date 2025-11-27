@@ -60,46 +60,6 @@ namespace ErmineEngine
             set;
         }
 
-        public bool playOnStart
-        {
-            [MethodImpl(MethodImplOptions.InternalCall)]
-            get;
-            [MethodImpl(MethodImplOptions.InternalCall)]
-            set;
-        }
-
-        public bool is3D
-        {
-            [MethodImpl(MethodImplOptions.InternalCall)]
-            get;
-            [MethodImpl(MethodImplOptions.InternalCall)]
-            set;
-        }
-
-        public float minDistance
-        {
-            [MethodImpl(MethodImplOptions.InternalCall)]
-            get;
-            [MethodImpl(MethodImplOptions.InternalCall)]
-            set;
-        }
-
-        public float maxDistance
-        {
-            [MethodImpl(MethodImplOptions.InternalCall)]
-            get;
-            [MethodImpl(MethodImplOptions.InternalCall)]
-            set;
-        }
-
-        public bool followTransform
-        {
-            [MethodImpl(MethodImplOptions.InternalCall)]
-            get;
-            [MethodImpl(MethodImplOptions.InternalCall)]
-            set;
-        }
-
         // Convenience methods
         public void Play()
         {

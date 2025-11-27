@@ -46,11 +46,5 @@ namespace Ermine
          * @param window The window to swap the buffers
          */
         static void ShutDownWindow(GLFWwindow* window);
-
-        /**
-         * @brief Toggle fullscreen mode for the window
-         * @param window The window to toggle fullscreen mode
-         */
-        static void ToggleFullscreenWindow(GLFWwindow* window);
     };
 }

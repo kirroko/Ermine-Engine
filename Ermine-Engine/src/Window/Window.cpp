@@ -66,13 +66,7 @@ GLFWwindow* Ermine::Window::InitWindow(int width, int height, const char* title)
     }
     catch (const std::exception& e) {
         EE_CORE_WARN("Config not found/invalid ({}). Using defaults.", e.what());
-        cfg = { .windowWidth = width, .windowHeight = height, .fullscreen = false, .maximized = false, .title = title };
-
-#ifdef EE_RELEASE
-        cfg.fullscreen = true; // Force fullscreen on release build
-        cfg.maximized = false; // Prevent maximize instead of fullscreen
-#endif
-
+        cfg = { .windowWidth= width, .windowHeight= height, .fullscreen= false, .maximized= false, .title= title};
         try { SaveConfigToFile(cfg, cfgPath, /*pretty=*/true); }
         catch (const std::exception& w) { EE_CORE_WARN("Could not write default config: {}", w.what()); }
     }
@@ -185,30 +179,4 @@ void Ermine::Window::ShutDownWindow(GLFWwindow* window)
     glfwDestroyWindow(window);
     glfwTerminate();
     EE_CORE_INFO("Window terminated successfully!");
-}
-
-/**
- * @brief Toggle fullscreen mode for the window
- * @param window The window to toggle fullscreen mode
- */
-void Ermine::Window::ToggleFullscreenWindow(GLFWwindow* window)
-{
-    static bool isFullscreen = false;
-
-    if (!isFullscreen)
-    {
-        GLFWmonitor* mon = glfwGetPrimaryMonitor();
-        const GLFWvidmode* mode = glfwGetVideoMode(mon);
-
-        glfwSetWindowMonitor(window, mon, 0, 0,
-            mode->width, mode->height, mode->refreshRate);
-    }
-    else
-    {
-        // Restore to windowed mode
-        glfwSetWindowMonitor(window, nullptr,
-            100, 100, window_width, window_height, 0);
-    }
-
-    isFullscreen = !isFullscreen;
 }

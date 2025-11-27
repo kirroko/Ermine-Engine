@@ -39,15 +39,5 @@ namespace Ermine::engine
      */
     EE_API void Render(GLFWwindow* window);
 
-    /**
-     * @brief Handle shading mode toggle (keys 1-4)
-     * @param windowContext The GLFW window context
-     */
     void HandleShadingToggle(GLFWwindow* windowContext);
-
-    /**
-     * @brief Handle fullscreen toggle (F11 key)
-     * @param windowContext The GLFW window context
-     */
-    void HandleFullscreenToggle(GLFWwindow* windowContext);
 }

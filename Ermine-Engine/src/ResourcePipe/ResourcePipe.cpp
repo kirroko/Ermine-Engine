@@ -41,7 +41,7 @@ namespace Ermine {
     // TextureImportSettings
     //=============================================================================
     TextureImportSettings::TextureImportSettings()
-        : targetFormat(DXGI_FORMAT_B8G8R8A8_UNORM_SRGB) {
+        : targetFormat(DXGI_FORMAT_B8G8R8A8_UNORM) {
     }
 
     //=============================================================================
@@ -143,8 +143,7 @@ namespace Ermine {
             DXGI_FORMAT_BC1_UNORM,       // Best compression, no alpha
             DXGI_FORMAT_BC3_UNORM,       // Good compression with alpha
             //DXGI_FORMAT_BC7_UNORM,       // Best quality compression
-            DXGI_FORMAT_BC5_UNORM,        // For normal maps
-            DXGI_FORMAT_BC4_UNORM
+            DXGI_FORMAT_BC5_UNORM        // For normal maps
         };
     }
 
@@ -402,15 +401,15 @@ namespace Ermine {
         std::string lowerFilename = filename;
         std::transform(lowerFilename.begin(), lowerFilename.end(), lowerFilename.begin(), ::tolower);
 
-        // ✅ NORMAL MAPS: BC5 (always linear - stores XY direction vectors)
+        // Normal maps: BC5 (two-channel)
         if (lowerFilename.find("normal") != std::string::npos ||
             lowerFilename.find("norm") != std::string::npos ||
             lowerFilename.find("_n.") != std::string::npos ||
             lowerFilename.find("_nrm") != std::string::npos) {
-            return DXGI_FORMAT_BC5_UNORM;  // Linear - critical!
+            return DXGI_FORMAT_BC5_UNORM;
         }
 
-        // ✅ DATA TEXTURES: BC4 Linear (grayscale data, not for display)
+        // Single-channel textures: BC4 
         if (lowerFilename.find("roughness") != std::string::npos ||
             lowerFilename.find("metallic") != std::string::npos ||
             lowerFilename.find("metalness") != std::string::npos ||
@@ -421,33 +420,30 @@ namespace Ermine {
             lowerFilename.find("displacement") != std::string::npos ||
             lowerFilename.find("_r.") != std::string::npos ||
             lowerFilename.find("_m.") != std::string::npos) {
-            return DXGI_FORMAT_BC4_UNORM;  // Linear - stores data values
+            return DXGI_FORMAT_BC1_UNORM;
         }
 
-        // ✅ COLOR TEXTURES: BC3 sRGB (gamma-corrected colors for display)
+        // Albedo/Color with alpha: BC3 (DXT5 - smooth alpha)
         if (lowerFilename.find("albedo") != std::string::npos ||
             lowerFilename.find("diffuse") != std::string::npos ||
             lowerFilename.find("color") != std::string::npos ||
             lowerFilename.find("basecolor") != std::string::npos ||
-            lowerFilename.find("_d.") != std::string::npos ||
-            lowerFilename.find("_a.") != std::string::npos) {
-            return DXGI_FORMAT_BC3_UNORM_SRGB;  // sRGB - for display colors!
+            lowerFilename.find("emissive") != std::string::npos ||
+            lowerFilename.find("emission") != std::string::npos ||
+            lowerFilename.find("_a.") != std::string::npos ||
+            lowerFilename.find("_d.") != std::string::npos) {
+            return DXGI_FORMAT_BC3_UNORM; // Assume alpha channel might be needed
         }
 
-        // ✅ EMISSIVE: BC3 sRGB (emissive colors)
-        if (lowerFilename.find("emissive") != std::string::npos ||
-            lowerFilename.find("emission") != std::string::npos) {
-            return DXGI_FORMAT_BC3_UNORM_SRGB;  // sRGB
-        }
-
-        // ✅ OPAQUE TEXTURES: BC1 sRGB (no alpha, gamma-corrected)
+        // Opaque textures without alpha: BC1 (DXT1 - best compression 6:1)
         if (lowerFilename.find("opaque") != std::string::npos ||
             lowerFilename.find("noalpha") != std::string::npos) {
-            return DXGI_FORMAT_BC1_UNORM_SRGB;  // sRGB
+            return DXGI_FORMAT_BC1_UNORM;
         }
 
-        // ✅ DEFAULT: BC3 sRGB (safe for most color textures with alpha)
-        return DXGI_FORMAT_BC3_UNORM_SRGB;
+        // Default: BC3 for color textures (safe choice with alpha support)
+        // Conservative default - better quality than BC1, handles alpha
+        return DXGI_FORMAT_BC3_UNORM;
     }
 
     ImportResult ResourcePipeline::ImportTextureInternal(const std::string& sourcePath,

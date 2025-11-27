@@ -388,14 +388,12 @@ namespace Ermine
                 if (ImGui::Button("Play Audio"))
                 {
                     audioComp.shouldPlay = true;
-                    audioComp.playOnStart = true;
                     SetStatusMessage("Playing audio for Entity " + std::to_string(m_SelectedEntity));
                 }
                 ImGui::SameLine();
                 if (ImGui::Button("Stop Audio"))
                 {
                     audioComp.shouldStop = true;
-                    audioComp.playOnStart = false;
                     SetStatusMessage("Stopping audio for Entity " + std::to_string(m_SelectedEntity));
                 }
 

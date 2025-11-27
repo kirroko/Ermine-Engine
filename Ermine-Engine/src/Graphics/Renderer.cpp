@@ -142,7 +142,6 @@ void Renderer::Init(const int& screenWidth, const int& screenHeight)
 	m_BloomShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/bloom_vertex.glsl", "../Resources/Shaders/bloom_fragment.glsl");
 	m_PostProcessShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/postprocess_vertex.glsl", "../Resources/Shaders/postprocess_fragment.glsl");
 	m_AAShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/FXAA_vertex.glsl", "../Resources/Shaders/FXAA_fragment.glsl");
-	m_MotionBlurShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/motionblur_vertex.glsl", "../Resources/Shaders/motionblur_fragment.glsl");
 	// Load forward rendering shader for transparent objects
 	m_ForwardShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/vertex.glsl", "../Resources/Shaders/fragment_enhanced.glsl");
 	if (!m_ForwardShader || !m_ForwardShader->IsValid()) {
@@ -665,7 +664,7 @@ void Renderer::CreateGBuffer(const int& width, const int& height)
  */
 void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 {
-	PostProcessBuffer pPBuffer, bEBuffer, bBBuffer1, bBBuffer2, AABuffer, MBBuffer;
+	PostProcessBuffer pPBuffer, bEBuffer, bBBuffer1, bBBuffer2, AABuffer;
 
 
 	// If an  buffer already exists, delete its OpenGL resources before creating a new one.
@@ -679,8 +678,6 @@ void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 		glDeleteTextures(1, &m_BloomBlurBuffer1->ColorTexture);
 		glDeleteFramebuffers(1, &m_BloomBlurBuffer2->FBO);
 		glDeleteTextures(1, &m_BloomBlurBuffer2->ColorTexture);
-		glDeleteFramebuffers(1, &m_MotionBlurBuffer->FBO);
-		glDeleteTextures(1, &m_MotionBlurBuffer->ColorTexture);
 	}
 
 	// Create main post-process buffer with depth attachment for skybox rendering
@@ -758,19 +755,6 @@ void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, AABuffer.ColorTexture, 0);
 	glCheckError();
 
-	// Create motion blur buffer at full resolution
-	glGenFramebuffers(1, &MBBuffer.FBO);
-	glBindFramebuffer(GL_FRAMEBUFFER, MBBuffer.FBO);
-	glGenTextures(1, &MBBuffer.ColorTexture);
-	glBindTexture(GL_TEXTURE_2D, MBBuffer.ColorTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_HALF_FLOAT, nullptr);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, MBBuffer.ColorTexture, 0);
-	glCheckError();
-
 	// Making sure dimensions are non-zero
 	if (width <= 0 || height <= 0)
 	{
@@ -834,9 +818,6 @@ void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 	AABuffer.width = width;
 	AABuffer.height = height;
 	m_AntiAliasingBuffer = std::make_shared<PostProcessBuffer>(AABuffer);
-	MBBuffer.width = width;
-	MBBuffer.height = height;
-	m_MotionBlurBuffer = std::make_shared<PostProcessBuffer>(MBBuffer);
 
 	// Attach G-Buffer's depth texture to PostProcess FBO for shared depth testing
 	// This must happen AFTER PostProcess buffer is created and AFTER G-Buffer exists
@@ -1201,22 +1182,128 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
  */
 void Renderer::CompileDrawData()
 {
-#ifdef EE_DEBUG
+	#ifdef EE_DEBUG
 	// Debug mode: force full rebuild every frame if requested
 	if (m_ForceFullRebuildEveryFrame) {
 		m_DrawDataNeedsFullRebuild = true;
 	}
-#endif
+	#endif
 
-	// Entity list size changed (entities added/removed)
+	// Check if entity list changed (add/remove entities)
 	if (HasEntityListChanged()) {
 		m_DrawDataNeedsFullRebuild = true;
 	}
 
-	// Cache is empty but entities exist (initial build needed)
-	if (!m_DrawDataNeedsFullRebuild && m_CachedDrawItems.empty()) {
-		if (!m_Entities.empty() || !m_ModelSystem->m_Entities.empty()) {
+	// Cache validation: Detect if cache is stale/incomplete
+	// This handles cases where entities were skipped during initial cache build
+	// (e.g., animated models with invalid boneTransformOffset on first frame)
+	if (!m_DrawDataNeedsFullRebuild) {
+		// Check 1: Cache is empty but entities exist
+		if (m_CachedDrawItems.empty() && (!m_Entities.empty() || !m_ModelSystem->m_Entities.empty())) {
 			m_DrawDataNeedsFullRebuild = true;
+		}
+		// Check 2: Verify all renderable entities are present in cache
+		// This detects when entities become renderable after initial cache build
+		else if (!m_CachedDrawItems.empty()) {
+			const auto& ecs = Ermine::ECS::GetInstance();
+
+			// Build a set of entity IDs present in cache for fast lookup
+			std::unordered_set<EntityID> cachedEntities;
+			cachedEntities.reserve(m_CachedDrawItems.size());
+			for (const auto& item : m_CachedDrawItems) {
+				cachedEntities.insert(item.entity);
+			}
+
+			// Check primitives - should all be cached (if they have valid mesh data)
+			for (auto entity : m_Entities) {
+				if (ecs.HasComponent<Mesh>(entity) && ecs.HasComponent<Ermine::Material>(entity)) {
+					const auto& mesh = ecs.GetComponent<Mesh>(entity);
+					// If entity has valid mesh data but is NOT in cache, rebuild
+					if (!mesh.registeredMeshID.empty() && cachedEntities.find(entity) == cachedEntities.end()) {
+						m_DrawDataNeedsFullRebuild = true;
+						break;
+					}
+				}
+			}
+
+			// Check models (static and animated)
+			if (!m_DrawDataNeedsFullRebuild) {
+				for (auto entity : m_ModelSystem->m_Entities) {
+					if (!ecs.HasComponent<ModelComponent>(entity)) continue;
+
+					const auto& modelComp = ecs.GetComponent<ModelComponent>(entity);
+					if (!modelComp.m_model) continue;
+
+					// For animated models, check if bone data is valid
+					bool isAnimated = ecs.HasComponent<AnimationComponent>(entity);
+					bool isRenderable = true;
+					if (isAnimated) {
+						const auto& animComp = ecs.GetComponent<AnimationComponent>(entity);
+						isRenderable = (animComp.boneTransformOffset >= 0);
+					}
+
+					// If entity is renderable but NOT in cache, rebuild
+					if (isRenderable && cachedEntities.find(entity) == cachedEntities.end()) {
+						m_DrawDataNeedsFullRebuild = true;
+						break;
+					}
+				}
+			}
+
+			// Check 3: Verify material routing state hasn't changed
+			// Uses complete cached material structure to detect ANY material hierarchy changes
+			if (!m_DrawDataNeedsFullRebuild) {
+				for (const auto& cachedItem : m_CachedDrawItems) {
+					// Check current parent material state
+					bool currentHasParentMat = false;
+					if (ecs.HasComponent<Ermine::Material>(cachedItem.entity)) {
+						auto& parentMatComp = ecs.GetComponent<Ermine::Material>(cachedItem.entity);
+						currentHasParentMat = (parentMatComp.GetMaterial() != nullptr);
+					}
+
+					// Check current child material state
+					bool currentHasChildMat = false;
+					if (cachedItem.childMaterialEntity != 0 &&
+					    ecs.HasComponent<Ermine::Material>(cachedItem.childMaterialEntity)) {
+						auto& childMatComp = ecs.GetComponent<Ermine::Material>(cachedItem.childMaterialEntity);
+						currentHasChildMat = (childMatComp.GetMaterial() != nullptr);
+					}
+
+					// Detect any material structure changes
+					if (currentHasParentMat != cachedItem.hadParentMaterial ||
+					    currentHasChildMat != cachedItem.hadChildMaterial) {
+						// Material was added or removed - rebuild required
+						m_DrawDataNeedsFullRebuild = true;
+						break;
+					}
+
+					// Check if the material properties changed (for whichever material is being used)
+					Ermine::graphics::Material* currentMaterial = nullptr;
+					if (ecs.HasComponent<Ermine::Material>(cachedItem.materialEntity)) {
+						auto& matComp = ecs.GetComponent<Ermine::Material>(cachedItem.materialEntity);
+						currentMaterial = matComp.GetMaterial();
+					}
+
+					if (currentMaterial) {
+						bool currentTransparent = IsTransparentMaterial(currentMaterial);
+						bool currentCastsShadows = CastsShadows(currentMaterial);
+						bool currentHasCustomShader = HasCustomShader(currentMaterial);
+
+						if (currentTransparent != cachedItem.isTransparent ||
+						    currentCastsShadows != cachedItem.castsShadows ||
+						    currentHasCustomShader != cachedItem.hasCustomShader) {
+							// Material properties changed - rebuild required
+							m_DrawDataNeedsFullRebuild = true;
+							break;
+						}
+					}
+					else {
+						// Material that was being used is now null - rebuild required
+						m_DrawDataNeedsFullRebuild = true;
+						break;
+					}
+				}
+			}
 		}
 	}
 
@@ -2455,14 +2542,6 @@ void Renderer::UpdateDrawData()
 	// This avoids expensive mesh handle lookups and material lookups
 	for (const auto& cachedItem : m_CachedDrawItems)
 	{
-		// EARLY OUT: Skip inactive entities (check selfActive flag)
-		if (ecs.HasComponent<ObjectMetaData>(cachedItem.entity)) {
-			const auto& meta = ecs.GetComponent<ObjectMetaData>(cachedItem.entity);
-			if (!meta.selfActive) {
-				continue;
-			}
-		}
-
 		// Get current entity transform (this is what changed!)
 		// Note: Animated models manually build matrix (no hierarchy), static models use GetEntityWorldMatrix
 		glm::mat4 model;
@@ -2482,20 +2561,20 @@ void Renderer::UpdateDrawData()
 		}
 
 		// Transform AABB to world space
-		glm::vec3 corners[8];
-		corners[0] = glm::vec3(cachedItem.aabbMin.x, cachedItem.aabbMin.y, cachedItem.aabbMin.z);
-		corners[1] = glm::vec3(cachedItem.aabbMax.x, cachedItem.aabbMin.y, cachedItem.aabbMin.z);
-		corners[2] = glm::vec3(cachedItem.aabbMin.x, cachedItem.aabbMax.y, cachedItem.aabbMin.z);
-		corners[3] = glm::vec3(cachedItem.aabbMax.x, cachedItem.aabbMax.y, cachedItem.aabbMin.z);
-		corners[4] = glm::vec3(cachedItem.aabbMin.x, cachedItem.aabbMin.y, cachedItem.aabbMax.z);
-		corners[5] = glm::vec3(cachedItem.aabbMax.x, cachedItem.aabbMin.y, cachedItem.aabbMax.z);
-		corners[6] = glm::vec3(cachedItem.aabbMin.x, cachedItem.aabbMax.y, cachedItem.aabbMax.z);
-		corners[7] = glm::vec3(cachedItem.aabbMax.x, cachedItem.aabbMax.y, cachedItem.aabbMax.z);
+		glm::vec3 corners[8] = {
+			glm::vec3(cachedItem.aabbMin.x, cachedItem.aabbMin.y, cachedItem.aabbMin.z),
+			glm::vec3(cachedItem.aabbMax.x, cachedItem.aabbMin.y, cachedItem.aabbMin.z),
+			glm::vec3(cachedItem.aabbMin.x, cachedItem.aabbMax.y, cachedItem.aabbMin.z),
+			glm::vec3(cachedItem.aabbMax.x, cachedItem.aabbMax.y, cachedItem.aabbMin.z),
+			glm::vec3(cachedItem.aabbMin.x, cachedItem.aabbMin.y, cachedItem.aabbMax.z),
+			glm::vec3(cachedItem.aabbMax.x, cachedItem.aabbMin.y, cachedItem.aabbMax.z),
+			glm::vec3(cachedItem.aabbMin.x, cachedItem.aabbMax.y, cachedItem.aabbMax.z),
+			glm::vec3(cachedItem.aabbMax.x, cachedItem.aabbMax.y, cachedItem.aabbMax.z)
+		};
 
 		glm::vec3 actualMin = glm::vec3(FLT_MAX);
 		glm::vec3 actualMax = glm::vec3(-FLT_MAX);
 
-		// Unrolled loop for better instruction-level parallelism
 		for (int i = 0; i < 8; ++i) {
 			glm::vec3 worldCorner = glm::vec3(model * glm::vec4(corners[i], 1.0f));
 			actualMin = glm::min(actualMin, worldCorner);
@@ -2522,12 +2601,13 @@ void Renderer::UpdateDrawData()
 		// Build draw info (using cached data + new transform)
 		DrawInfo info;
 		info.modelMatrix = model;
+		
 
-		// Pre-calculate normal matrix and store as 3 separate columns (std430 mat3 has 16-byte stride!)
-		glm::mat3 normalMat = glm::transpose(glm::inverse(glm::mat3(model)));
-		info.normalMatrixCol0 = glm::vec4(normalMat[0], 0.0f);
-		info.normalMatrixCol1 = glm::vec4(normalMat[1], 0.0f);
-		info.normalMatrixCol2 = glm::vec4(normalMat[2], 0.0f);
+				// Pre-calculate normal matrix and store as 3 separate columns (std430 mat3 has 16-byte stride!)
+				glm::mat3 normalMat = glm::transpose(glm::inverse(glm::mat3(model)));
+				info.normalMatrixCol0 = glm::vec4(normalMat[0], 0.0f);
+				info.normalMatrixCol1 = glm::vec4(normalMat[1], 0.0f);
+				info.normalMatrixCol2 = glm::vec4(normalMat[2], 0.0f);
 		info.aabbMin = cachedItem.aabbMin;
 		info.materialIndex = cachedItem.materialIndex;
 		info.aabbMax = cachedItem.aabbMax;
@@ -2535,7 +2615,7 @@ void Renderer::UpdateDrawData()
 		info.flags = cachedItem.useSkinning ? 1 : 0;
 		info.boneTransformOffset = cachedItem.boneOffset;
 		info._pad0 = 0;
-		info._pad1 = 0;
+			info._pad1 = 0;
 
 		// Route to appropriate buffers based on culling and transparency
 		if (isCulled) {
@@ -3287,61 +3367,6 @@ void Renderer::RenderPostProcessPass(const Mtx44& view, const Mtx44& projection)
 
 	Draw(m_QuadMesh.vertex_array, m_QuadMesh.index_buffer);
 
-	// Motion blur pass: Apply motion blur between post-processing and FXAA
-	if (m_MotionBlurEnabled && m_MotionBlurShader && m_MotionBlurBuffer)
-	{
-		glBindFramebuffer(GL_FRAMEBUFFER, m_MotionBlurBuffer->FBO);
-		glViewport(0, 0, m_MotionBlurBuffer->width, m_MotionBlurBuffer->height);
-		glClear(GL_COLOR_BUFFER_BIT);
-
-		m_MotionBlurShader->Bind();
-
-		// Bind the post-processed color texture as input
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, m_AntiAliasingBuffer->ColorTexture);
-		m_MotionBlurShader->SetUniform1i("u_ColorTexture", 0);
-
-		// Pass bindless depth texture handle
-		GLint locDepthMB = glGetUniformLocation(m_MotionBlurShader->GetRendererID(), "u_DepthHandle");
-		if (locDepthMB != -1 && m_GBuffer)
-		{
-			glUniform2ui(locDepthMB, static_cast<GLuint>(m_GBuffer->HandleDepthTexture),
-				static_cast<GLuint>(m_GBuffer->HandleDepthTexture >> 32));
-		}
-
-		// Convert view and projection matrices to glm
-		glm::mat4 glmView = glm::mat4(
-			view.m00, view.m01, view.m02, view.m03,
-			view.m10, view.m11, view.m12, view.m13,
-			view.m20, view.m21, view.m22, view.m23,
-			view.m30, view.m31, view.m32, view.m33
-		);
-		glm::mat4 glmProjection = glm::mat4(
-			projection.m00, projection.m01, projection.m02, projection.m03,
-			projection.m10, projection.m11, projection.m12, projection.m13,
-			projection.m20, projection.m21, projection.m22, projection.m23,
-			projection.m30, projection.m31, projection.m32, projection.m33
-		);
-
-		// Calculate current view-projection matrix
-		glm::mat4 currentViewProjection = glmProjection * glmView;
-		glm::mat4 invViewProjection = glm::inverse(currentViewProjection);
-
-		// Set motion blur uniforms
-		m_MotionBlurShader->SetUniformMatrix4fv("u_CurrentViewProjection", currentViewProjection);
-		m_MotionBlurShader->SetUniformMatrix4fv("u_PreviousViewProjection", m_PreviousViewProjectionMatrix);
-		m_MotionBlurShader->SetUniformMatrix4fv("u_InvViewProjection", invViewProjection);
-		m_MotionBlurShader->SetUniform1f("u_MotionBlurStrength", m_MotionBlurStrength);
-		m_MotionBlurShader->SetUniform1i("u_NumSamples", m_MotionBlurSamples);
-		m_MotionBlurShader->SetUniform1i("u_FirstFrame", m_FirstFrame ? 1 : 0);
-
-		Draw(m_QuadMesh.vertex_array, m_QuadMesh.index_buffer);
-
-		// Update previous frame view-projection matrix for next frame
-		m_PreviousViewProjectionMatrix = currentViewProjection;
-		m_FirstFrame = false;
-	}
-
 	// Final pass: FXAA
 #if defined(EE_EDITOR)
 	glBindFramebuffer(GL_FRAMEBUFFER, m_OffscreenBuffer->FBO);
@@ -3354,15 +3379,7 @@ void Renderer::RenderPostProcessPass(const Mtx44& view, const Mtx44& projection)
 
 	m_AAShader->Bind();
 	glActiveTexture(GL_TEXTURE0);
-	// Use motion blur output if enabled, otherwise use anti-aliasing buffer
-	if (m_MotionBlurEnabled && m_MotionBlurBuffer)
-	{
-		glBindTexture(GL_TEXTURE_2D, m_MotionBlurBuffer->ColorTexture);
-	}
-	else
-	{
-		glBindTexture(GL_TEXTURE_2D, m_AntiAliasingBuffer->ColorTexture);
-	}
+	glBindTexture(GL_TEXTURE_2D, m_AntiAliasingBuffer->ColorTexture);
 	m_AAShader->SetUniform1i("u_LightingTexture", 0);
 
 	// Set FXAA parameters
@@ -4065,15 +4082,9 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 		auto& ecs = ECS::GetInstance();
 
 		// First pass: Render opaque objects and collect transparent objects
-		for (auto& entity : m_Entities)
+		for (auto& entity : m_Entities
+			)
 		{
-			if (ecs.HasComponent<ObjectMetaData>(entity))
-			{
-				const auto& meta = ecs.GetComponent<ObjectMetaData>(entity);
-				if (!meta.selfActive)
-					continue;
-			}
-
 			// Model pipeline
 			if (ecs.HasComponent<ModelComponent>(entity) && ecs.HasComponent<Ermine::Material>(entity))
 			{
@@ -6379,8 +6390,6 @@ void Renderer::SyncToGlobalGraphics()
 	m_GlobalGraphics.fogDensity = m_FogDensity;
 	m_GlobalGraphics.fogStart = m_FogStart;
 	m_GlobalGraphics.fogEnd = m_FogEnd;
-	m_GlobalGraphics.fogHeightCoefficient = m_FogHeightCoefficient;
-	m_GlobalGraphics.fogHeightFalloff = m_FogHeightFalloff;
 
 	m_GlobalGraphics.vignetteEnabled = m_VignetteEnabled;
 	m_GlobalGraphics.fxaaEnabled = m_FXAAEnabled;
@@ -6404,14 +6413,6 @@ void Renderer::SyncToGlobalGraphics()
 	m_GlobalGraphics.bloomThreshold = m_BloomThreshold;
 	m_GlobalGraphics.bloomIntensity = m_BloomIntensity;
 	m_GlobalGraphics.bloomRadius = m_BloomRadius;
-
-	m_GlobalGraphics.motionBlurEnabled = m_MotionBlurEnabled;
-	m_GlobalGraphics.motionBlurStrength = m_MotionBlurStrength;
-	m_GlobalGraphics.motionBlurSamples = m_MotionBlurSamples;
-
-	m_GlobalGraphics.spotlightRaysEnabled = m_SpotlightRaysEnabled;
-	m_GlobalGraphics.spotlightRayIntensity = m_SpotlightRayIntensity;
-	m_GlobalGraphics.spotlightRayFalloff = m_SpotlightRayFalloff;
 }
 
 void Renderer::ApplyFromGlobalGraphics()
@@ -6434,8 +6435,6 @@ void Renderer::ApplyFromGlobalGraphics()
 	m_FogDensity = m_GlobalGraphics.fogDensity;
 	m_FogStart = m_GlobalGraphics.fogStart;
 	m_FogEnd = m_GlobalGraphics.fogEnd;
-	m_FogHeightCoefficient = m_GlobalGraphics.fogHeightCoefficient;
-	m_FogHeightFalloff = m_GlobalGraphics.fogHeightFalloff;
 
 	m_VignetteEnabled = m_GlobalGraphics.vignetteEnabled;
 	m_FXAAEnabled = m_GlobalGraphics.fxaaEnabled;
@@ -6459,14 +6458,6 @@ void Renderer::ApplyFromGlobalGraphics()
 	m_BloomThreshold = m_GlobalGraphics.bloomThreshold;
 	m_BloomIntensity = m_GlobalGraphics.bloomIntensity;
 	m_BloomRadius = m_GlobalGraphics.bloomRadius;
-
-	m_MotionBlurEnabled = m_GlobalGraphics.motionBlurEnabled;
-	m_MotionBlurStrength = m_GlobalGraphics.motionBlurStrength;
-	m_MotionBlurSamples = m_GlobalGraphics.motionBlurSamples;
-
-	m_SpotlightRaysEnabled = m_GlobalGraphics.spotlightRaysEnabled;
-	m_SpotlightRayIntensity = m_GlobalGraphics.spotlightRayIntensity;
-	m_SpotlightRayFalloff = m_GlobalGraphics.spotlightRayFalloff;
 }
 
 /**

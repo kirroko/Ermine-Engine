@@ -20,22 +20,6 @@ namespace ErmineEngine
 {
     public class Transform : Component
     {
-        #region InternalCalls
-        [MethodImpl(MethodImplOptions.InternalCall)]
-        private extern Vector3 Internal_GetWorldForward();
-        [MethodImpl(MethodImplOptions.InternalCall)]
-        private extern Vector3 Internal_GetWorldRight();
-        [MethodImpl(MethodImplOptions.InternalCall)]
-        private extern Vector3 Internal_GetWorldUp();
-        [MethodImpl(MethodImplOptions.InternalCall)]
-        private extern Transform Internal_GetParentTransform();
-        [MethodImpl(MethodImplOptions.InternalCall)]
-        private extern Transform Internal_GetChildTransformByName(string n);
-        [MethodImpl(MethodImplOptions.InternalCall)]
-        private extern Transform Internal_GetChildTransformByIndex(int index);
-        #endregion 
-
-        // World position in Vector3
         public Vector3 position
         {
             [MethodImpl(MethodImplOptions.InternalCall)]
@@ -44,7 +28,6 @@ namespace ErmineEngine
             set;
         }
 
-        // World rotation in Quaternion
         public Quaternion rotation
         {
             [MethodImpl(MethodImplOptions.InternalCall)]
@@ -53,7 +36,6 @@ namespace ErmineEngine
             set;
         }
 
-        // World scale in Vector3
         public Vector3 scale
         {
             [MethodImpl(MethodImplOptions.InternalCall)]
@@ -62,25 +44,21 @@ namespace ErmineEngine
             set;
         }
 
-        public int childCount
-        {
-            [MethodImpl(MethodImplOptions.InternalCall)]
-            get;
-        }
+        //// Internal call to fetch global matrix; implement in native scripting bridge.
+        //[MethodImpl(MethodImplOptions.InternalCall)]
+        //private static extern bool Internal_GetGlobalMatrix(IntPtr nativeHandle, out Matrix4x4 matrix);
 
-        public Vector3 eulerAngles => rotation.eulerAngles;
+        //// Cache native pointer/handle if you already store it; placeholder:
+        //private IntPtr m_NativeHandle;
 
-        public Transform parent
-        {
-            get
-            {
-                Transform result = Internal_GetParentTransform();
-                if(result == null)
-                    Debug.LogWarning($"Transform.parent returned null for entity {gameObject?.name ?? "unknown"}");
-                return result;
-            }
+        //private bool TryGetGlobalMatrix(out Matrix4x4 m) => Internal_GetGlobalMatrix(m_NativeHandle, out m);
 
-        }
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        private extern Vector3 Internal_GetWorldForward();
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        private extern Vector3 Internal_GetWorldRight();
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        private extern Vector3 Internal_GetWorldUp();
 
         public Vector3 forward => Internal_GetWorldForward();
         public Vector3 right => Internal_GetWorldRight();
@@ -107,34 +85,6 @@ namespace ErmineEngine
             Vector3 currentEuler = q.eulerAngles;
             q.eulerAngles = new Vector3(pitch, yaw, currentEuler.z);
             rotation = q.normalized;
-        }
-
-        public Transform Find(string n)
-        {
-            if (string.IsNullOrEmpty(n))
-            {
-                Debug.LogWarning("Transform.Find called with null or empty name");
-                return null;
-            }
-
-            Transform result = Internal_GetChildTransformByName(n);
-            if(result == null)
-                Debug.LogWarning($"Transform.Find: Child '{n}' not found!");
-            return result;
-        }
-
-        public Transform GetChild(int index)
-        {
-            if (index < 0 || index >= childCount)
-            {
-                Debug.LogError($"Transform.GetChild: Index {index} out of range [0, {childCount})");
-                return null;
-            }
-
-            Transform result = Internal_GetChildTransformByIndex(index);
-            if(result == null)
-                Debug.LogError($"Transform.GetChild: Native call returned null!");
-            return result;
         }
     }
 }

@@ -328,14 +328,6 @@ namespace Ermine
 
         for (auto entity : m_Entities)
         {
-            // Check for active
-            if (ECS::GetInstance().HasComponent<ObjectMetaData>(entity))
-            {
-                const auto& meta = ECS::GetInstance().GetComponent<ObjectMetaData>(entity);
-                if (!meta.selfActive)
-                    continue;
-            }
-
             // Verify entity still exists
             if (!ECS::GetInstance().IsEntityValid(entity))
                 continue;
@@ -453,13 +445,6 @@ namespace Ermine
         if (!ECS::GetInstance().IsEntityValid(entity))
             return empty;
         return ECS::GetInstance().GetComponent<HierarchyComponent>(entity).children;
-    }
-
-    const int HierarchySystem::GetChildCount(EntityID entity) const
-    {
-        if (!ECS::GetInstance().IsEntityValid(entity))
-            return 0;
-        return ECS::GetInstance().GetComponent<HierarchyComponent>(entity).children.size();
     }
 
     /**

@@ -59,13 +59,6 @@ namespace Ermine
             if (!ecs.HasComponent<NavMeshAgent>(e) || !ecs.HasComponent<Transform>(e))
                 continue;
 
-            if (ECS::GetInstance().HasComponent<ObjectMetaData>(e))
-            {
-                const auto& meta = ECS::GetInstance().GetComponent<ObjectMetaData>(e);
-                if (!meta.selfActive)
-                    continue;
-            }
-
             auto& agent = ecs.GetComponent<NavMeshAgent>(e);
             auto& trans = ecs.GetComponent<Transform>(e);
 
