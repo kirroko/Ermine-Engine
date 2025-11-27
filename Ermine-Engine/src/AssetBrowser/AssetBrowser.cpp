@@ -123,17 +123,40 @@ namespace Ermine::ImguiUI
                         // ✅ Add helpful tooltips
                         if (ImGui::IsItemHovered()) {
                             switch (formats[i]) {
+                            case DXGI_FORMAT_BC1_UNORM_SRGB:
+                                ImGui::SetTooltip("BC1 sRGB (6:1 compression, no alpha)\nFor color/albedo textures without transparency");
+                                break;
+                            case DXGI_FORMAT_BC3_UNORM_SRGB:
+                                ImGui::SetTooltip("BC3 sRGB (4:1 compression with alpha)\nFor color/albedo textures with transparency");
+                                break;
+                            case DXGI_FORMAT_BC7_UNORM_SRGB:
+                                ImGui::SetTooltip("BC7 sRGB (High quality compression)\nBest quality for color textures, slower compression");
+                                break;
+                            case DXGI_FORMAT_R8G8B8A8_UNORM_SRGB:
+                                ImGui::SetTooltip("RGBA8 sRGB (Uncompressed)\nFor UI or textures requiring exact colors");
+                                break;
+                            case DXGI_FORMAT_B8G8R8A8_UNORM_SRGB:
+                                ImGui::SetTooltip("BGRA8 sRGB (Uncompressed)\nDefault uncompressed format for color textures");
+                                break;
+
+                                // Linear formats (for data textures)
+                            case DXGI_FORMAT_BC5_UNORM:
+                                ImGui::SetTooltip("BC5 Linear (2-channel compression)\n ONLY for normal maps! Stores XY direction vectors");
+                                break;
+                            case DXGI_FORMAT_BC4_UNORM:
+                                ImGui::SetTooltip("BC4 Linear (Grayscale compression)\nFor roughness, metallic, AO, or height maps");
+                                break;
                             case DXGI_FORMAT_BC1_UNORM:
-                                ImGui::SetTooltip("6:1 compression, no alpha. Best for diffuse textures.");
+                                ImGui::SetTooltip("BC1 Linear (6:1 compression, no alpha)\n For data textures only, NOT for colors!");
                                 break;
                             case DXGI_FORMAT_BC3_UNORM:
-                                ImGui::SetTooltip("4:1 compression with alpha. Good for most textures.");
+                                ImGui::SetTooltip("BC3 Linear (4:1 compression with alpha)\n For data textures only, NOT for colors!");
                                 break;
-                            case DXGI_FORMAT_BC7_UNORM:
-                                ImGui::SetTooltip("High quality compression. Slower but better quality.");
+                            case DXGI_FORMAT_R8G8B8A8_UNORM:
+                                ImGui::SetTooltip("RGBA8 Linear (Uncompressed)\nFor data that needs exact values (not display colors)");
                                 break;
-                            case DXGI_FORMAT_BC5_UNORM:
-                                ImGui::SetTooltip("Specialized for normal maps (2-channel).");
+                            case DXGI_FORMAT_B8G8R8A8_UNORM:
+                                ImGui::SetTooltip("BGRA8 Linear (Uncompressed)\n For data textures only, NOT for colors!");
                                 break;
                             }
                         }
@@ -624,7 +647,7 @@ namespace Ermine::ImguiUI
             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0, 0, 0, 0));
             ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0, 0, 0, 0));
-            bool clicked = ImGui::ImageButton(("##icon" + asset->Name).c_str(), asset->Icon, ImVec2(iconSize, iconSize), ImVec2(0, 1), ImVec2(1, 0));
+            bool clicked = ImGui::ImageButton(("##icon" + asset->Name).c_str(), asset->Icon, ImVec2(iconSize, iconSize), ImVec2(0, 0), ImVec2(1, 1));
             ImGui::PopStyleColor(3);
 
             if (asset->needsReimport) {

@@ -30,6 +30,13 @@ namespace Ermine
             if (!ECS::GetInstance().HasComponent<StateMachine>(entity))
                 continue;
 
+            if (ECS::GetInstance().HasComponent<ObjectMetaData>(entity))
+            {
+                const auto& meta = ECS::GetInstance().GetComponent<ObjectMetaData>(entity);
+                if (!meta.selfActive)
+                    continue;
+            }
+
             auto& fsm = ECS::GetInstance().GetComponent<StateMachine>(entity);
             fsm.Update(entity, dt);
         }

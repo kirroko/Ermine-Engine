@@ -34,6 +34,12 @@ namespace Ermine::graphics
 
 		for (auto& entity : m_Entities)
 		{
+			if (ECS::GetInstance().HasComponent<ObjectMetaData>(entity))
+			{
+				const auto& meta = ECS::GetInstance().GetComponent<ObjectMetaData>(entity);
+				if (!meta.selfActive)
+					continue;
+			}
 			// Check if animation and model components exist
 			if (!ecs.HasComponent<AnimationComponent>(entity)
 				|| !ecs.HasComponent<ModelComponent>(entity))

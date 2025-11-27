@@ -259,6 +259,8 @@ namespace Ermine
 		*************************************************************************/
 		void Move(EntityID ID, Ermine::Vec3 position, Ermine::Quaternion rotation);
 
+		void Jump(EntityID ID, float jumpStrength);
+
 		void RemovePhysic(EntityID ID);
 		
 		// Shared pointer to the debug renderer used for visualizing physics.
