@@ -16,6 +16,7 @@ public class PlayerController2 : MonoBehaviour
 
     private bool isGrounded = true;
     private bool isCrouching = false;
+    private bool isKeyJump = false;
 
     private float xRotation = 0f;
     public float camDefaultY = 2f;
@@ -34,6 +35,9 @@ public class PlayerController2 : MonoBehaviour
     public float jumpHeight = 2f;
 
     private float interactRange = 5f;
+
+    private bool flipSwitch = false;
+    private float interactTimer = 0f;
 
     void Start()
     {
@@ -70,8 +74,9 @@ public class PlayerController2 : MonoBehaviour
         Vector3 newPos = transform.position + new Vector3(move.x, 0, move.z);
 
         // Request jump
-        if (isGrounded == true && Input.GetKey(KeyCode.Space))
+        if (isGrounded == true && Input.GetKeyDown(KeyCode.Space) && !isKeyJump)
         {
+            isKeyJump = true;
             isGrounded = false; // prevent double jump
             GlobalAudio.PlaySFX("Jump");
             Physics.Jump((ulong)gameObject.GetInstanceID(), jumpspeed);
@@ -144,6 +149,8 @@ public class PlayerController2 : MonoBehaviour
 
     private void HandleInteract()
     {
+        interactTimer += Time.deltaTime;
+
         if (Input.GetKeyDown(KeyCode.E))
         {
             Physics.RaycastHit hit;
@@ -164,15 +171,41 @@ public class PlayerController2 : MonoBehaviour
                 GameObject obj = GameObject.FromEntityID(id);
                 //Debug.Log("You are looking at: " + obj.name);
 
-                if (obj.name == "Switch")
+                if (obj.name == "Switch" && interactTimer >= 1f)
                 {
                     // Play switch audio here Kai
                     GlobalAudio.PlaySFX("SwitchOn");
+                    Debug.Log("WORKINGGGGGGGGGGG");
+
+                    if (!flipSwitch)
+                    {
+                        obj.transform.scale = new Vector3(obj.transform.scale.x, obj.transform.scale.y, obj.transform.scale.z * -1f);
+                        obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y + 1.51f, obj.transform.position.z);
+                        flipSwitch = true;
+                    }
+                    else
+                    {
+                        obj.transform.scale = new Vector3(obj.transform.scale.x, obj.transform.scale.y, obj.transform.scale.z * -1f);
+                        obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y - 1.51f, obj.transform.position.z);
+                        flipSwitch = false;
+                    }
+                    interactTimer = 0f;
                 }
-                if (obj.name == "Book")
+                if (obj.name == "Book" && interactTimer > 1f)
                 {
                     // Collect book
                     GlobalAudio.PlaySFX("BookPickUp");
+                    GameObject msg = GameObject.Find("BookCollected");
+
+                    if (msg != null)
+                    {
+                        msg.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y + 2f, obj.transform.position.z);
+                        msg.transform.rotation = Quaternion.RotateTowards(transform.rotation, msg.transform.rotation, 0f);
+                        msg.transform.rotation *= Quaternion.Euler(0f, 135f, 0f);
+                    }
+
+                    obj.SetActive(false);
+                    interactTimer = 0f;
                 }
             }
             /*else
@@ -195,16 +228,23 @@ public class PlayerController2 : MonoBehaviour
     void OnCollisionEnter(Collision col)
     {
         if (col.gameObject.name.Contains("Platform"))
+        {
             isGrounded = true;
+            isKeyJump = false;
+        }
     }
     void OnCollisionStay(Collision col)
     {
         if (col.gameObject.name.Contains("Platform"))
+        {
             isGrounded = true;
+        }
     }
     void OnCollisionExit(Collision col)
     {
         if (col.gameObject.name.Contains("Platform"))
+        {
             isGrounded = false;
+        }
     }
 }

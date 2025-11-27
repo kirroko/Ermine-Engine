@@ -180,7 +180,7 @@ void Ermine::scripting::ScriptSystem::FixedUpdate() const
 			sc.m_instance->SetEnabled(sc.m_enabled); // Reconcile enable state every frame
 
 			if (!sc.m_enabled) continue;
-
+			if (!sc.m_started) { sc.m_instance->Start(); sc.m_started = true; }
 			sc.m_instance->FixedUpdate();
 		}
 	}

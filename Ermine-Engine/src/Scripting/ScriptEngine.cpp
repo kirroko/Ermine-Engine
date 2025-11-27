@@ -863,6 +863,7 @@ namespace
 	MonoImage* s_APIImage = nullptr;
 	MonoClass* s_GameObjectClass = nullptr;
 	MonoClass* s_TransformClass = nullptr;
+	MonoClass* s_RigidbodyClass = nullptr;
 	MonoClass* s_MonoBehaviourClass = nullptr;
 	MonoClass* s_ComponentClass = nullptr;
 	MonoClass* s_AudioComponentClass = nullptr;
@@ -1024,6 +1025,19 @@ namespace
 		if (!s_TransformClass)
 			return nullptr;
 		MonoObject* obj = mono_object_new(mono_domain_get(), s_TransformClass);
+		mono_runtime_object_init(obj);
+		SetEntityIDOnManaged(obj, id);
+		return obj;
+	}
+
+	MonoObject* CreateManagedRigidbodyWrapper(Ermine::EntityID id)
+	{
+		if (!s_RigidbodyClass)
+		{
+			assert(false && "Missing RigidbodyClass");
+			return nullptr;
+		}
+		MonoObject* obj = mono_object_new(mono_domain_get(), s_RigidbodyClass);
 		mono_runtime_object_init(obj);
 		SetEntityIDOnManaged(obj, id);
 		return obj;
@@ -1366,6 +1380,117 @@ namespace
 		MonoObject* obj = CreateManagedTransformWrapper(children[index]);
 		SetComponentGameObject(obj, children[index]);
 		return obj;
+	}
+#pragma endregion
+
+#pragma region Rigidbody ICalls
+	void icall_rigidbody_set_position(MonoObject* thisObj, ManagedVector3 value)
+	{
+		using namespace Ermine;
+		EntityID id = GetEntityIDFromManaged(thisObj);
+
+		auto& ecs = ECS::GetInstance();
+		if (!ecs.HasComponent<PhysicComponent>(id))
+		{
+			assert(false && "Missing PhysicsComponent!");
+			EE_CORE_WARN("Missing PhysicsComponent!");
+			return;
+		}
+
+		auto physics = ecs.GetSystem<Physics>();
+		physics->SetPosition(id, ToNativeVec(value));
+	}
+
+	ManagedVector3 icall_rigidbody_get_position(MonoObject* thisObj)
+	{
+		using namespace Ermine;
+		EntityID id = GetEntityIDFromManaged(thisObj);
+
+		auto& ecs = ECS::GetInstance();
+		if (!ecs.HasComponent<PhysicComponent>(id))
+		{
+			assert(false && "Missing PhysicsComponent!");
+			EE_CORE_WARN("Missing PhysicsComponent!");
+			return {0,0,0};
+		}
+		
+		auto physics = ecs.GetSystem<Physics>();
+		return ToManagedVec(physics->GetPosition(id));
+	}
+
+	ManagedQuaternion icall_rigidbody_get_rotation(MonoObject* thisObj)
+	{
+		using namespace Ermine;
+		EntityID id = GetEntityIDFromManaged(thisObj);
+
+		auto& ecs = ECS::GetInstance();
+		if (!ecs.HasComponent<PhysicComponent>(id))
+		{
+			assert(false && "Missing PhysicsComponent!");
+			EE_CORE_WARN("Missing PhysicsComponent!");
+			return { 0,0,0 };
+		}
+
+		auto physics = ecs.GetSystem<Physics>();
+		return ToManagedQuat(physics->GetRotation(id));
+	}
+
+	void icall_rigidbody_set_rotation(MonoObject* thisObj, ManagedQuaternion value)
+	{
+		using namespace Ermine;
+		EntityID id = GetEntityIDFromManaged(thisObj);
+
+		auto& ecs = ECS::GetInstance();
+		if (!ecs.HasComponent<PhysicComponent>(id))
+		{
+			assert(false && "Missing PhysicComponent!");
+			EE_CORE_WARN("Missing PhysicComponent!");
+			return;
+		}
+
+		auto physics = ecs.GetSystem<Physics>();
+		physics->SetRotation(id, ToNativeQuat(value));
+	}
+
+	void icall_rigidbody_set_linear_velocity(MonoObject* thisObj, ManagedVector3 value)
+	{
+		using namespace Ermine;
+		EntityID id = GetEntityIDFromManaged(thisObj);
+
+		auto& ecs = ECS::GetInstance();
+		if (!ecs.HasComponent<PhysicComponent>(id))
+		{
+			assert(false && "Missing PhysicComponent!");
+			EE_CORE_WARN("Missing PhysicComponent!");
+			return;
+		}
+
+		JPH::Body* body = ECS::GetInstance().GetComponent<PhysicComponent>(id).body;
+		if (!body) return;
+
+
+		auto nativeVec = ToNativeVec(value);
+		body->SetLinearVelocity({nativeVec.x,nativeVec.y,nativeVec.z});
+	}
+
+	ManagedVector3 icall_rigidbody_get_linear_velocity(MonoObject* thisObj)
+	{
+		using namespace Ermine;
+		EntityID id = GetEntityIDFromManaged(thisObj);
+
+		auto& ecs = ECS::GetInstance();
+		if (!ecs.HasComponent<PhysicComponent>(id))
+		{
+			assert(false && "Missing PhysicComponent!");
+			EE_CORE_WARN("Missing PhysicComponent!");
+			return {0,0,0};
+		}
+
+		JPH::Body* body = ECS::GetInstance().GetComponent<PhysicComponent>(id).body;
+		if (!body) return {0,0,0};
+
+		JPH::Vec3 currentVel = body->GetLinearVelocity();
+		return ToManagedVec(Ermine::Vec3{ currentVel.GetX(),currentVel.GetY(),currentVel.GetZ() });
 	}
 #pragma endregion
 
@@ -1931,11 +2056,18 @@ namespace
 
 		EntityID id = GetEntityIDFromManaged(self);
 		if (id == 0 || !ECS::GetInstance().IsEntityValid(id))
+		{
+			assert(false && "id not valid!");
 			return nullptr;
+		}
 
 		MonoType* mtype = mono_reflection_type_get_type(relfType);
 		MonoClass* klass = mono_class_from_mono_type(mtype);
-		if (!klass) return nullptr;
+		if (!klass)
+		{
+			assert(false && "Class invalid!");
+			return nullptr;
+		}
 
 		// return back the obj when requesting Transform component
 		if (klass == s_TransformClass)
@@ -1947,7 +2079,7 @@ namespace
 			return obj;
 		}
 
-		// ADD THIS: Handle AudioComponent
+		// Handle AudioComponent
 		if (klass == s_AudioComponentClass)
 		{
 			if (!ECS::GetInstance().HasComponent<AudioComponent>(id))
@@ -1956,6 +2088,18 @@ namespace
 			MonoObject* obj = mono_object_new(mono_domain_get(), s_AudioComponentClass);
 			mono_runtime_object_init(obj);
 			SetEntityIDOnManaged(obj, id);
+			SetComponentGameObject(obj, id);
+			return obj;
+		}
+
+		if (klass == s_RigidbodyClass)
+		{
+			if (!ECS::GetInstance().HasComponent<PhysicComponent>(id))
+			{
+				assert(false && "No physicComponent on entity!");
+				return nullptr;
+			}
+			MonoObject* obj = CreateManagedRigidbodyWrapper(id);
 			SetComponentGameObject(obj, id);
 			return obj;
 		}
@@ -1975,6 +2119,7 @@ namespace
 		}
 
 		EE_CORE_WARN("GetComponent: Unsupported component type '{}'", mono_class_get_name(klass));
+		assert(false && "GetComponent: Unsupported component type");
 		return nullptr;
 	}
 
@@ -2598,6 +2743,7 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	s_APIImage = mono_assembly_get_image(m_apiAsm);
 	s_GameObjectClass = GetAPIClass("ErmineEngine", "GameObject");
 	s_TransformClass = GetAPIClass("ErmineEngine", "Transform");
+	s_RigidbodyClass = GetAPIClass("ErmineEngine", "Rigidbody");
 	s_ComponentClass = GetAPIClass("ErmineEngine", "Component");
 	s_MonoBehaviourClass = GetAPIClass("ErmineEngine", "MonoBehaviour");
 	s_AudioComponentClass = GetAPIClass("ErmineEngine", "AudioComponent");
@@ -2621,6 +2767,16 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	mono_add_internal_call("ErmineEngine.Transform::Internal_GetParentTransform", (const void*)icall_transform_get_transform_parent);
 	mono_add_internal_call("ErmineEngine.Transform::Internal_GetChildTransformByName", (const void*)icall_transform_get_transform_by_name);
 	mono_add_internal_call("ErmineEngine.Transform::Internal_GetChildTransformByIndex", (const void*)icall_transform_get_transform_by_index);
+#pragma endregion
+
+#pragma region Rigidbody ICalls
+	mono_add_internal_call("ErmineEngine.Rigidbody::set_position", (const void*)icall_rigidbody_set_position);
+	mono_add_internal_call("ErmineEngine.Rigidbody::set_rotation", (const void*)icall_rigidbody_set_rotation);
+	mono_add_internal_call("ErmineEngine.Rigidbody::get_position", (const void*)icall_rigidbody_get_position);
+	mono_add_internal_call("ErmineEngine.Rigidbody::get_rotation", (const void*)icall_rigidbody_get_rotation);
+
+	mono_add_internal_call("ErmineEngine.Rigidbody::set_linearVelocity", (const void*)icall_rigidbody_set_linear_velocity);
+	mono_add_internal_call("ErmineEngine.Rigidbody::get_linearVelocity", (const void*)icall_rigidbody_get_linear_velocity);
 #pragma endregion
 
 #pragma region Time ICalls
@@ -2727,6 +2883,7 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	mono_add_internal_call("ErmineEngine.StateMachine::RequestNextState", (const void*)icall_statemachine_request_next_state);
 	mono_add_internal_call("ErmineEngine.StateMachine::RequestPreviousState", (const void*)icall_statemachine_request_previous_state);
 #pragma endregion
+
 #pragma region NavAgent ICalls
 	mono_add_internal_call("ErmineEngine.NavAgent::SetDestination",
 		(const void*)+[](uint64_t entityID, glm::vec3 dest)
@@ -2738,6 +2895,7 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 			Ermine::RequestPathForAgent((Ermine::EntityID)entityID, v);
 		});
 #pragma endregion
+
 #pragma region Physics ICalls
 	mono_add_internal_call("ErmineEngine.Physics::SetPosition", (const void*)icall_Physics_SetPosition);
 	mono_add_internal_call("ErmineEngine.Physics::SetRotationEuler", (const void*)icall_Physics_SetRotationEuler);
@@ -2749,6 +2907,7 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	mono_add_internal_call("ErmineEngine.Physics::RemovePhysic", (const void*)&icall_Physics_RemovePhysic);
 	mono_add_internal_call("ErmineEngine.Physics::Jump", (const void*)icall_Physics_Jump);
 #pragma endregion
+
 #pragma region UI ICalls
 	mono_add_internal_call("ErmineEngine.GameplayHUD::Internal_GetHealth", (const void*)Internal_GetHealth);
 	mono_add_internal_call("ErmineEngine.GameplayHUD::Internal_SetHealth", (const void*)Internal_SetHealth);

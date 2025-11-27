@@ -249,6 +249,18 @@ namespace Ermine
 
 		/*!***********************************************************************
 		  \brief
+			Gets the world position of a physics body by entity ID
+		*************************************************************************/
+		Ermine::Vec3 GetPosition(EntityID id);
+
+		/*!***********************************************************************
+		  \brief
+			Gets the world rotation of a physics body by entity ID
+		*************************************************************************/
+		Ermine::Quaternion GetRotation(EntityID id);
+
+		/*!***********************************************************************
+		  \brief
 			Moves the body using (position + rotation in Euler).
 		*************************************************************************/
 		void Move(EntityID ID, Ermine::Vec3 position, Ermine::Vec3 rotation);

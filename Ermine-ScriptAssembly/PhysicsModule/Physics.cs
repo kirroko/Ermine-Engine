@@ -4,6 +4,7 @@
 \author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu
 \date       04/11/2025
 \brief      This file contains the Physics class which serves as a container for physics-related functionalities.
+            Global physics properties and helper functions are defined here.
 
 Copyright (C) 2025 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents without the
@@ -20,7 +21,31 @@ namespace ErmineEngine
     {
         [MethodImpl(MethodImplOptions.InternalCall)]
         private static extern bool Internal_Raycast(Vector3 origin, Vector3 direction, out RaycastHit hitInfo, float maxDistance);
-        
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern void RemovePhysic(ulong entityID);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern void SetPosition(ulong entityID, Vector3 position);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern void SetRotationEuler(ulong entityID, Vector3 eulerDeg);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern void SetRotationQuat(ulong entityID, Quaternion rotation);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern void MoveEuler(ulong entityID, Vector3 position, Vector3 eulerDeg);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern void MoveQuat(ulong entityID, Vector3 position, Quaternion rotation);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern void Jump(ulong entityID, float jump);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        private static extern Transform Internal_GetTransform();
+
         [StructLayout(LayoutKind.Sequential)]
         public struct RaycastHit
         {
@@ -42,28 +67,6 @@ namespace ErmineEngine
             return Internal_Raycast(origin, direction, out hitInfo, maxDistance);
         }
 
-        [MethodImpl(MethodImplOptions.InternalCall)]
-        public static extern void SetPosition(ulong entityID, Vector3 position);
-
-        [MethodImpl(MethodImplOptions.InternalCall)]
-        public static extern void SetRotationEuler(ulong entityID, Vector3 eulerDeg);
-
-        [MethodImpl(MethodImplOptions.InternalCall)]
-        public static extern void SetRotationQuat(ulong entityID, Quaternion rotation);
-
-        [MethodImpl(MethodImplOptions.InternalCall)]
-        public static extern void MoveEuler(ulong entityID, Vector3 position, Vector3 eulerDeg);
-
-        [MethodImpl(MethodImplOptions.InternalCall)]
-        public static extern void MoveQuat(ulong entityID, Vector3 position, Quaternion rotation);
-
-        [MethodImpl(MethodImplOptions.InternalCall)]
-        private static extern Transform Internal_GetTransform();
-
-        [MethodImpl(MethodImplOptions.InternalCall)]
-        public static extern void RemovePhysic(ulong entityID);
-
-        [MethodImpl(MethodImplOptions.InternalCall)]
-        public static extern void Jump(ulong entityID,float jump);
+       
     }
 }
