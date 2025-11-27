@@ -9,6 +9,10 @@ public class OrbTeleport : MonoBehaviour
     private float health = 0f;
     public float damage = 10f;
 
+    private float forwardOffset = 2.0f; // Distance in front of the player
+    private float rightOffset = -0.3f;  // Slightly to the right
+    private float upOffset = 3.7f;      // Above the player
+
     void Start()
     {
         //origin = GameObject.Find("Origin").GetComponent<Transform>();
@@ -26,7 +30,7 @@ public class OrbTeleport : MonoBehaviour
             var projectile = Prefab.Instantiate("../Resources/Prefabs/Sphere.prefab");
             if (projectile != null)
             {
-                projectile.transform.position = new Vector3(origin.transform.position.x, origin.transform.position.y + 1.5f, origin.transform.position.z);
+                projectile.transform.position = origin.transform.position + cam.forward * forwardOffset + cam.right * rightOffset + Vector3.up * upOffset;
                 projectile.transform.rotation = transform.rotation;
                 projectile.GetComponent<Sphere>().direction = -cam.forward;
             }
@@ -35,10 +39,10 @@ public class OrbTeleport : MonoBehaviour
         if (Input.GetMouseButton(1))
         {
             // Swap position with ball and destroy it
-            GlobalAudio.PlaySFX("Teleport");
             GameObject sphere = GameObject.Find("Sphere");
             if (sphere == null)
                 return;
+            GlobalAudio.PlaySFX("Teleport");
             gameObject.transform.position = sphere.transform.position;
             Physics.SetPosition((ulong)gameObject.GetInstanceID(), sphere.transform.position);
             Physics.RemovePhysic((ulong)sphere.GetInstanceID());

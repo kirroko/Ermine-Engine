@@ -182,7 +182,7 @@ namespace Ermine::scripting
 			// Collider
 			if (MonoClassField* field = mono_class_get_field_from_name(colliderClass, "EntityID")) 
 				mono_field_set_value(colliderObj, field, &other);
-			else EE_CORE_WARN("ScriptInstance: Failed to set field ColliderClass");
+			//else EE_CORE_WARN("ScriptInstance: Failed to set field ColliderClass");
 			// GameObject
 			if (MonoClassField* field = mono_class_get_field_from_name(goClass, "EntityID"))
 				mono_field_set_value(goObj, field, &other);
@@ -198,7 +198,7 @@ namespace Ermine::scripting
 
 			// Set fields of Collision
 			if (MonoClassField* f = mono_class_get_field_from_name(colliderClass, "isTrigger")) mono_field_set_value(colliderObj, f, &isTrigger);
-			else EE_CORE_WARN("ScriptInstance: Failed to set field to colliderClass");
+			//else EE_CORE_WARN("ScriptInstance: Failed to set field to colliderClass");
 			if (MonoClassField* f = mono_class_get_field_from_name(collisionClass, "collider"))   mono_field_set_value(colObj, f, colliderObj);
 			else EE_CORE_WARN("ScriptInstance: Failed to set field to collider");
 			if (MonoClassField* f = mono_class_get_field_from_name(collisionClass, "gameObject")) mono_field_set_value(colObj, f, goObj);

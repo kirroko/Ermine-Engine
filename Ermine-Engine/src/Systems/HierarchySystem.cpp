@@ -14,6 +14,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "PreCompile.h"
 #include "HierarchySystem.h"
 #include "Matrix4x4.h"
+#include "Physics.h"
 
 namespace Ermine
 {
@@ -102,6 +103,15 @@ namespace Ermine
         auto& parentHierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(parent);
         auto& childTransform = ECS::GetInstance().GetComponent<Transform>(child);
 
+        if (ECS::GetInstance().HasComponent<PhysicComponent>(child))
+        {
+            auto& p = ECS::GetInstance().GetComponent<PhysicComponent>(child);
+            p.prevTranPos = ECS::GetInstance().GetComponent<Transform>(parent).position;
+            p.prevTranRot = ECS::GetInstance().GetComponent<Transform>(parent).rotation;
+            p.prevTranScale = ECS::GetInstance().GetComponent<Transform>(parent).scale;
+            p.update = true;
+        }
+
         Mtx44 childWorldMatrix;
         if (preserveWorldTransform) {
             // Get current world matrix before changing parent
@@ -151,7 +161,7 @@ namespace Ermine
                 //EE_CORE_WARN("Failed to invert parent matrix during reparenting");
             }
         }
-
+        ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
         MarkDirty(child);
     }
 
@@ -198,7 +208,13 @@ namespace Ermine
             //EE_CORE_INFO("Set new local position: ({:.3f}, {:.3f}, {:.3f})", 
             //             childTransform.position.x, childTransform.position.y, childTransform.position.z);
             //EE_CORE_INFO("Entity {} is now a root entity", child);
+            if (ECS::GetInstance().HasComponent<PhysicComponent>(child))
+            {
+                auto& p = ECS::GetInstance().GetComponent<PhysicComponent>(child);
+                p.update = true;
+            }
 
+            ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
             // Update transforms
             MarkDirty(child);
         }
@@ -328,6 +344,14 @@ namespace Ermine
 
         for (auto entity : m_Entities)
         {
+            // Check for active
+            if (ECS::GetInstance().HasComponent<ObjectMetaData>(entity))
+            {
+                const auto& meta = ECS::GetInstance().GetComponent<ObjectMetaData>(entity);
+                if (!meta.selfActive)
+                    continue;
+            }
+
             // Verify entity still exists
             if (!ECS::GetInstance().IsEntityValid(entity))
                 continue;
@@ -445,6 +469,13 @@ namespace Ermine
         if (!ECS::GetInstance().IsEntityValid(entity))
             return empty;
         return ECS::GetInstance().GetComponent<HierarchyComponent>(entity).children;
+    }
+
+    const int HierarchySystem::GetChildCount(EntityID entity) const
+    {
+        if (!ECS::GetInstance().IsEntityValid(entity))
+            return 0;
+        return ECS::GetInstance().GetComponent<HierarchyComponent>(entity).children.size();
     }
 
     /**

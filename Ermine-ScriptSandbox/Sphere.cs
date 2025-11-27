@@ -3,7 +3,7 @@
 public class Sphere : MonoBehaviour
 {
     public Vector3 direction;
-    public float speed = 7.0f;
+    public float speed = 10.0f;
 
     private float timeAlive = 3.0f;
 
@@ -13,8 +13,8 @@ public class Sphere : MonoBehaviour
 
     private void Update()
     {
-        timeAlive -= Time.fixedDeltaTime;
-        transform.position -= direction * speed * Time.fixedDeltaTime;
+        timeAlive -= Time.deltaTime;
+        transform.position -= direction * speed * Time.deltaTime;
 
         Physics.SetPosition((ulong)gameObject.GetInstanceID(), transform.position);
         if (timeAlive < 0.0f)
