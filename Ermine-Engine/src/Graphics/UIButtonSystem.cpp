@@ -100,10 +100,20 @@ namespace Ermine
                 // Play hover sound if specified
                 if (!button.hoverSoundName.empty())
                 {
-                    EE_CORE_INFO("Playing hover sound: '{}' at volume {}", button.hoverSoundName, button.soundVolume);
+                    EE_CORE_WARN("========== HOVER SOUND DEBUG ==========");
+                    EE_CORE_WARN("Sound File: '{}'", button.hoverSoundName);
+                    EE_CORE_WARN("Volume (linear 0-1): {}", button.soundVolume);
                     float volumeDB = AudioSystem::ConvertVolumeToFMOD(button.soundVolume);
+                    EE_CORE_WARN("Volume (FMOD dB): {}", volumeDB);
+
                     int channelId = CAudioEngine::PlaySounds(button.hoverSoundName, Vector3D{0, 0, 0}, volumeDB);
-                    EE_CORE_INFO("Hover sound channel ID: {}", channelId);
+
+                    if (channelId >= 0) {
+                        EE_CORE_WARN("✓ Sound playing on channel: {}", channelId);
+                    } else {
+                        EE_CORE_ERROR("✗ Failed to play sound! Channel ID: {} (negative = error)", channelId);
+                    }
+                    EE_CORE_WARN("======================================");
                 }
             }
             else if (!inside && button.isHovered)
@@ -121,10 +131,20 @@ namespace Ermine
                 // Play click sound if specified
                 if (!button.clickSoundName.empty())
                 {
-                    EE_CORE_INFO("Playing click sound: '{}' at volume {}", button.clickSoundName, button.soundVolume);
+                    EE_CORE_WARN("========== CLICK SOUND DEBUG ==========");
+                    EE_CORE_WARN("Sound File: '{}'", button.clickSoundName);
+                    EE_CORE_WARN("Volume (linear 0-1): {}", button.soundVolume);
                     float volumeDB = AudioSystem::ConvertVolumeToFMOD(button.soundVolume);
+                    EE_CORE_WARN("Volume (FMOD dB): {}", volumeDB);
+
                     int channelId = CAudioEngine::PlaySounds(button.clickSoundName, Vector3D{0, 0, 0}, volumeDB);
-                    EE_CORE_INFO("Click sound channel ID: {}", channelId);
+
+                    if (channelId >= 0) {
+                        EE_CORE_WARN("✓ Sound playing on channel: {}", channelId);
+                    } else {
+                        EE_CORE_ERROR("✗ Failed to play sound! Channel ID: {} (negative = error)", channelId);
+                    }
+                    EE_CORE_WARN("======================================");
                 }
 
                 ExecuteButtonAction(button);

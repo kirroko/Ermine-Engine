@@ -226,8 +226,8 @@
           "backgroundAlpha": 0.6650000214576721,
           "action": 1,
           "actionData": "../Resources/Scenes/cutscene_intro.scene",
-          "hoverSoundName": "UI_Hover 5.wav",
-          "clickSoundName": "UI_Confirm.wav",
+          "hoverSoundName": "../Resources/Audio/UI_Hover 5.wav",
+          "clickSoundName": "../Resources/Audio/UI_Confirm.wav",
           "soundVolume": 0.8
         }
       }
@@ -300,8 +300,8 @@
           "backgroundAlpha": 0.6169999837875366,
           "action": 2,
           "actionData": "",
-          "hoverSoundName": "UI_Hover 5.wav",
-          "clickSoundName": "UI_Confirm.wav",
+          "hoverSoundName": "../Resources/Audio/UI_Hover 5.wav",
+          "clickSoundName": "../Resources/Audio/UI_Confirm.wav",
           "soundVolume": 0.8
         }
       }
