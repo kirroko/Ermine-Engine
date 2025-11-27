@@ -241,7 +241,7 @@ namespace Ermine
                 if (imageComp.fullscreen)
                 {
                     // Fullscreen image (for cutscenes, splash screens)
-                    RenderTexturedSquare(0.5f, 0.5f, 1.0f, texture, imageComp.tintColor, imageComp.alpha);
+                    RenderTexturedSquare(0.5f, 0.5f, imageComp.height, texture, imageComp.tintColor, imageComp.alpha);
                 }
                 else
                 {
