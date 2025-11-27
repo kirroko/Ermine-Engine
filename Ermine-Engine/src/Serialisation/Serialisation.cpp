@@ -25,6 +25,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <ostreamwrapper.h>
 #include <istreamwrapper.h>
 #include "GeometryFactory.h"
+#include <Physics.h>
 
 
 using namespace rapidjson;
