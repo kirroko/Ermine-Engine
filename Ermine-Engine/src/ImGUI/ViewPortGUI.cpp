@@ -165,9 +165,15 @@ void Ermine::ViewPortGUI::TopBarSimulationControl(const ImVec2 iconSize)
 			SceneManager::GetInstance().LoadTemp();
 			EE_CORE_INFO("Simulation: Stop");
 
-			if (glfwRawMouseMotionSupported())
-				glfwSetInputMode(glfwGetCurrentContext(), GLFW_RAW_MOUSE_MOTION, GLFW_FALSE);
-			glfwSetInputMode(glfwGetCurrentContext(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+			// *** ALWAYS reset cursor state when stopping play mode ***
+			GLFWwindow* window = glfwGetCurrentContext();
+			if (window)
+			{
+				if (glfwRawMouseMotionSupported())
+					glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_FALSE);
+				glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+				EE_CORE_INFO("Cursor unlocked - play mode stopped");
+			}
 		}
 		if (ImGui::IsItemHovered())
 			ImGui::SetTooltip("Stop (Ctrl+Shift+P)");
@@ -687,9 +693,15 @@ void Ermine::ViewPortGUI::Update()
 		EditorGUI::s_state = EditorGUI::SimState::stopped;
 		SceneManager::GetInstance().LoadTemp();
 
-		if (glfwRawMouseMotionSupported())
-			glfwSetInputMode(glfwGetCurrentContext(), GLFW_RAW_MOUSE_MOTION, GLFW_FALSE);
-		glfwSetInputMode(glfwGetCurrentContext(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+		// *** ALWAYS reset cursor state when ESC stops play mode ***
+		GLFWwindow* window = glfwGetCurrentContext();
+		if (window)
+		{
+			if (glfwRawMouseMotionSupported())
+				glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_FALSE);
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+			EE_CORE_INFO("Cursor unlocked - ESC pressed");
+		}
 	}
 
 	ImGui::End();

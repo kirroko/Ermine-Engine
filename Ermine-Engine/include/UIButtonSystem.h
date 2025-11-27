@@ -79,5 +79,9 @@ namespace Ermine
         ImVec2 m_viewportMin = { 0, 0 };      // Top-left corner of viewport in screen space
         ImVec2 m_viewportSize = { 1920, 1080 }; // Size of viewport
 #endif
+
+        // NEW: Deferred scene loading to prevent iterator invalidation
+        bool m_HasPendingSceneLoad = false;
+        std::string m_PendingSceneToLoad;
     };
 }

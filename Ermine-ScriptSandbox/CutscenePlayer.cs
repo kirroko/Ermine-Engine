@@ -127,9 +127,9 @@ public class CutscenePlayer : MonoBehaviour
         isPlaying = false;
 
         // Hide all cutscene slides
-        if (cutscene1 != null) cutscene1.SetActive(false);
-        if (cutscene2 != null) cutscene2.SetActive(false);
-        if (cutscene3 != null) cutscene3.SetActive(false);
+        //if (cutscene1 != null) cutscene1.SetActive(false);
+        //if (cutscene2 != null) cutscene2.SetActive(false);
+        //if (cutscene3 != null) cutscene3.SetActive(false);
 
         Debug.Log($"[CutscenePlayer] Loading next scene: {nextScenePath}");
         

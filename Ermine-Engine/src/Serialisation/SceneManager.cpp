@@ -333,20 +333,32 @@ void SceneManager::OpenSceneDialog()
 
 void SceneManager::OpenScene(const std::string& path)
 {
-    // Clear all existing entities before loading the new scene
-    //Ermine::ECS::GetInstance().ClearAllEntities();
+    // CRITICAL FIX: Clear all existing entities BEFORE loading the new scene
+    // This prevents entities from previous scenes (e.g., main menu) from persisting
+    // when transitioning to a new scene (e.g., cutscene)
+    EE_CORE_INFO("Loading scene from: {}", path);
+    EE_CORE_INFO("Clearing all existing entities before loading new scene...");
+    
+    // STEP 1: Stop all systems that hold entity references
+    auto& ecs = Ermine::ECS::GetInstance();
+    
+    // Stop physics system and clear ALL physics bodies FIRST
+    if (auto physics = ecs.GetSystem<Ermine::Physics>()) {
+        EE_CORE_INFO("Clearing all physics bodies before entity destruction");
+        physics->ClearPhysicBody();  // Remove all physics bodies from simulation
+    }
+    
+    // STEP 2: Now it's safe to clear entities (no more physics references)
+    ecs.ClearAllEntities();
 
-    LoadSceneFromFile(Ermine::ECS::GetInstance(), path);
+    // STEP 3: Load the new scene
+    LoadSceneFromFile(ecs, path);
 
-    Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>()->InitializeShadowMapResources();
-
-    // Mark materials dirty to trigger recompilation after scene load
-    auto renderer = Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>();
-    if (renderer) {
+    // STEP 4: Re-initialize systems with new entities
+    if (auto renderer = ecs.GetSystem<Ermine::graphics::Renderer>()) {
+        renderer->InitializeShadowMapResources();
         renderer->MarkMaterialsDirty();
     }
-
-    //RebuildRuntimeHierarchyFromGuids(Ermine::ECS::GetInstance());
 
     // Create Scene object from loaded entities
     std::filesystem::path scenePath(path);
@@ -364,7 +376,36 @@ void SceneManager::OpenScene(const std::string& path)
 
     m_CurrentScenePath = path;
     m_Dirty = false;
-    Ermine::ECS::GetInstance().GetSystem<Ermine::Physics>()->UpdatePhysicList();
+    
+    // STEP 5: REBUILD physics list after everything is loaded
+    // This creates new physics bodies for entities with PhysicComponents
+    if (auto physics = ecs.GetSystem<Ermine::Physics>()) {
+        EE_CORE_INFO("Rebuilding physics bodies for new scene");
+        physics->UpdatePhysicList();
+    }
+    
+    // STEP 6: *** NEW FIX *** Reset cursor state when loading a new scene
+    // This ensures cursor is properly reset when transitioning between scenes
+#if defined(EE_EDITOR)
+    GLFWwindow* window = glfwGetCurrentContext();
+    if (!window) {
+        EE_CORE_WARN("Cannot reset cursor - no GLFW context available");
+    } else if (Ermine::editor::EditorGUI::s_state == Ermine::editor::EditorGUI::SimState::playing) {
+        // Runtime scene load: unlock cursor by default
+        // Scripts will re-lock it if needed (e.g., FPS controller)
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        if (glfwRawMouseMotionSupported())
+            glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_FALSE);
+        EE_CORE_INFO("Scene loaded at runtime - cursor unlocked (scripts can re-lock if needed)");
+    } else {
+        // Editor mode: ensure cursor is visible
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        if (glfwRawMouseMotionSupported())
+            glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_FALSE);
+    }
+#endif
+    
+    EE_CORE_INFO("Scene '{}' loaded successfully with {} entities", sceneName, newScene->GetEntityCount());
 }
 
 void SceneManager::SaveScene()

@@ -99,13 +99,34 @@ namespace Ermine
             if (inside && Input::IsMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT))
             {
                 button.isPressed = true;
-                EE_CORE_WARN("✓ Button '{}' CLICKED!", button.text);
+                EE_CORE_WARN("Button '{}' CLICKED!", button.text);
                 ExecuteButtonAction(button);
             }
             else if (!Input::IsMouseButtonDown(GLFW_MOUSE_BUTTON_LEFT))
             {
                 button.isPressed = false;
             }
+        }
+        // CRITICAL: Process pending scene load AFTER iteration completes
+        if (m_HasPendingSceneLoad)
+        {
+            EE_CORE_INFO("Executing deferred scene load: {}", m_PendingSceneToLoad);
+            try
+            {
+                #ifdef EE_EDITOR
+                auto& sceneManager = SceneManager::GetInstance();
+                sceneManager.OpenScene(m_PendingSceneToLoad);
+                #else
+                SceneManager::GetInstance().OpenScene(m_PendingSceneToLoad);
+                #endif
+            }
+            catch (const std::exception& e)
+            {
+                EE_CORE_ERROR("Failed to load scene '{}': {}", m_PendingSceneToLoad, e.what());
+            }
+
+            m_HasPendingSceneLoad = false;
+            m_PendingSceneToLoad.clear();
         }
     }
 
@@ -118,13 +139,12 @@ namespace Ermine
         case UIButtonComponent::ButtonAction::LoadScene:
             if (!button.actionData.empty())
             {
-                EE_CORE_INFO("Loading scene: {}", button.actionData);
-                #ifdef EE_EDITOR
-                auto& sceneManager = SceneManager::GetInstance();
-                sceneManager.OpenScene(button.actionData);
-                #else
-                SceneManager::GetInstance().OpenScene(button.actionData);
-                #endif
+                EE_CORE_INFO("Queueing scene load: {}", button.actionData);
+
+                // CRITICAL FIX: Don't load immediately - defer until after Update() completes
+                // Store the scene path to load at the end of the frame
+                m_PendingSceneToLoad = button.actionData;
+                m_HasPendingSceneLoad = true;
             }
             else
             {
