@@ -16,6 +16,7 @@ public class PlayerController2 : MonoBehaviour
 
     private bool isGrounded = true;
     private bool isCrouching = false;
+    private bool isKeyJump = false;
 
     private float xRotation = 0f;
     public float camDefaultY = 2f;
@@ -73,8 +74,9 @@ public class PlayerController2 : MonoBehaviour
         Vector3 newPos = transform.position + new Vector3(move.x, 0, move.z);
 
         // Request jump
-        if (isGrounded == true && Input.GetKey(KeyCode.Space))
+        if (isGrounded == true && Input.GetKeyDown(KeyCode.Space) && !isKeyJump)
         {
+            isKeyJump = true;
             isGrounded = false; // prevent double jump
             GlobalAudio.PlaySFX("Jump");
             Physics.Jump((ulong)gameObject.GetInstanceID(), jumpspeed);
@@ -225,16 +227,23 @@ public class PlayerController2 : MonoBehaviour
     void OnCollisionEnter(Collision col)
     {
         if (col.gameObject.name.Contains("Platform"))
+        {
             isGrounded = true;
+            isKeyJump = false;
+        }
     }
     void OnCollisionStay(Collision col)
     {
         if (col.gameObject.name.Contains("Platform"))
+        {
             isGrounded = true;
+        }
     }
     void OnCollisionExit(Collision col)
     {
         if (col.gameObject.name.Contains("Platform"))
+        {
             isGrounded = false;
+        }
     }
 }
