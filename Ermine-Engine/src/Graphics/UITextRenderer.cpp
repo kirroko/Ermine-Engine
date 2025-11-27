@@ -175,7 +175,7 @@ namespace Ermine
             glyph.width = (baked.x1 - baked.x0) / 1280.0f;
             glyph.height = (baked.y1 - baked.y0) / 720.0f;
             glyph.xOffset = baked.xoff / 1280.0f;
-            glyph.yOffset = baked.yoff / 720.0f;
+            glyph.yOffset = -baked.yoff / 720.0f;  // Negate because stb uses Y-down, OpenGL uses Y-up
             glyph.xAdvance = baked.xadvance / 1280.0f;
 
             m_glyphs[c] = glyph;
@@ -367,10 +367,11 @@ namespace Ermine
             const CharGlyph& glyph = it->second;
 
             // Calculate quad position
+            // yOffset points to TOP of glyph, so we calculate top first, then subtract height for bottom
             float x0 = cursorX + glyph.xOffset * scale;
-            float y0 = cursorY + glyph.yOffset * scale;
             float x1 = x0 + glyph.width * scale;
-            float y1 = y0 + glyph.height * scale;
+            float y1 = cursorY + glyph.yOffset * scale;           // Top = baseline + offset to top
+            float y0 = y1 - glyph.height * scale;                 // Bottom = top - height
 
             // Build vertex data (2D position, RGBA color, UV)
             // Note: V coordinates are swapped because stb_truetype has v0 at top, OpenGL has v=0 at bottom
