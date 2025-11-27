@@ -559,6 +559,10 @@ void AudioSystem::UpdateAudioComponents()
         if (!ecs.IsEntityValid(entity))
             continue;
 
+        // Defensive check: ensure components still exist (in case of timing issues during scene transitions)
+        if (!ecs.HasComponent<AudioComponent>(entity) || !ecs.HasComponent<Transform>(entity))
+            continue;
+
         auto& audioComp = ecs.GetComponent<AudioComponent>(entity);
         auto& transform = ecs.GetComponent<Transform>(entity);
 

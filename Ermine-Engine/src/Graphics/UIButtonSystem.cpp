@@ -18,6 +18,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Components.h"
 #include "SceneManager.h"
 #include "Logger.h"
+#include "AudioManager.h"
+#include "AudioSystem.h"
 #include "GLFW/glfw3.h"
 
 #ifdef EE_EDITOR
@@ -38,7 +40,13 @@ namespace Ermine
     void UIButtonSystem::Update(float deltaTime)
     {
         auto& ecs = ECS::GetInstance();
-        
+
+#ifdef EE_EDITOR
+        // Only allow button interactions in play mode or UI preview mode when in editor
+        if (!editor::EditorGUI::isPlaying && !editor::EditorGUI::isPreviewingUI)
+            return;
+#endif
+
         // Debug: Log first update call
         static bool firstUpdate = true;
         if (firstUpdate)
@@ -46,7 +54,7 @@ namespace Ermine
             EE_CORE_INFO("UIButtonSystem::Update - First update call");
             EE_CORE_INFO("  Screen: {}x{}, Aspect: {}", m_screenWidth, m_screenHeight, m_aspectRatio);
 #ifdef EE_EDITOR
-            EE_CORE_INFO("  Viewport: ({}, {}) size: {}x{}", 
+            EE_CORE_INFO("  Viewport: ({}, {}) size: {}x{}",
                          m_viewportMin.x, m_viewportMin.y, m_viewportSize.x, m_viewportSize.y);
 #endif
             firstUpdate = false;
@@ -57,7 +65,7 @@ namespace Ermine
         GetNormalizedMousePosition(mouseX, mouseY);
 
         // Debug: Log mouse position
-        EE_CORE_INFO("Mouse Position - X: {}, Y: {}", mouseX, mouseY);
+        //EE_CORE_INFO("Mouse Position - X: {}, Y: {}", mouseX, mouseY);
 
         // Iterate through all entities that have UIButtonComponent
         for (EntityID entity : m_Entities)
@@ -76,9 +84,9 @@ namespace Ermine
             float top = button.position.y + halfH;
 
             // Debug: Log button bounds and state
-            EE_CORE_INFO("Button: '{}' Bounds - L: {}, R: {}, B: {}, T: {}", 
-                         button.text, left, right, bottom, top);
-            EE_CORE_INFO("  Hovered: {}, Pressed: {}", button.isHovered, button.isPressed);
+            //EE_CORE_INFO("Button: '{}' Bounds - L: {}, R: {}, B: {}, T: {}",
+            //             button.text, left, right, bottom, top);
+            //EE_CORE_INFO("  Hovered: {}, Pressed: {}", button.isHovered, button.isPressed);
 
             // Check if mouse is inside button bounds
             bool inside = (mouseX >= left && mouseX <= right && mouseY >= bottom && mouseY <= top);
@@ -88,6 +96,13 @@ namespace Ermine
             {
                 button.isHovered = true;
                 EE_CORE_INFO("✓ Button '{}' HOVER START", button.text);
+
+                // Play hover sound if specified
+                if (!button.hoverSoundName.empty())
+                {
+                    float volumeDB = AudioSystem::ConvertVolumeToFMOD(button.soundVolume);
+                    CAudioEngine::PlaySounds(button.hoverSoundName, Vector3D{0, 0, 0}, volumeDB);
+                }
             }
             else if (!inside && button.isHovered)
             {
@@ -100,6 +115,14 @@ namespace Ermine
             {
                 button.isPressed = true;
                 EE_CORE_WARN("Button '{}' CLICKED!", button.text);
+
+                // Play click sound if specified
+                if (!button.clickSoundName.empty())
+                {
+                    float volumeDB = AudioSystem::ConvertVolumeToFMOD(button.soundVolume);
+                    CAudioEngine::PlaySounds(button.clickSoundName, Vector3D{0, 0, 0}, volumeDB);
+                }
+
                 ExecuteButtonAction(button);
             }
             else if (!Input::IsMouseButtonDown(GLFW_MOUSE_BUTTON_LEFT))

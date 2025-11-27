@@ -1993,6 +1993,9 @@ namespace
 		if (klass == s_TransformClass)
 			return ECS::GetInstance().HasComponent<Transform>(id);
 
+		if (klass == s_AudioComponentClass)
+			return ECS::GetInstance().HasComponent<AudioComponent>(id);
+
 		if (IsSubclassOf(klass, s_MonoBehaviourClass))
 			return ECS::GetInstance().HasComponent<Script>(id);
 

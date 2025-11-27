@@ -20,6 +20,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Components.h"
 #include "Matrix4x4.h"
 #include "EditorGUI.h"
+#include "ScriptSystem.h"  // Added for script cleanup during scene transitions
 
 namespace
 {
@@ -259,29 +260,43 @@ SceneManager& SceneManager::GetInstance()
 
 void SceneManager::NewScene()
 {
-    // Clear ECS
-    Ermine::ECS::GetInstance().ClearAllEntities();
+    auto& ecs = Ermine::ECS::GetInstance();
+    
+    // STEP 1: Clean up scripts before clearing entities
+    if (auto scriptSystem = ecs.GetSystem<Ermine::scripting::ScriptSystem>()) {
+        EE_CORE_INFO("NewScene: Cleaning up all script instances before entity destruction");
+        scriptSystem->CleanupAllScripts();
+    }
+    
+    // STEP 2: Clear physics
+    if (auto physics = ecs.GetSystem<Ermine::Physics>()) {
+        physics->ClearPhysicBody();
+    }
+    
+    // STEP 3: Clear ECS
+    ecs.ClearAllEntities();
 
-    auto mainLight = Ermine::ECS::GetInstance().CreateEntity();
+    auto mainLight = ecs.CreateEntity();
 
     // Tilted down and slightly to the side, similar to Unity's default
-    Ermine::ECS::GetInstance().AddComponent(
+    ecs.AddComponent(
         mainLight,
         Ermine::Transform(
             Ermine::Vec3(0, 5, 0),
             Ermine::FromEulerDegrees(50.0f, -30.0f, 0.0f),
             Ermine::Vec3(1, 1, 1)));
 
-    Ermine::ECS::GetInstance().AddComponent(mainLight, Ermine::ObjectMetaData("Main Light", "Light", true));
-    Ermine::ECS::GetInstance().AddComponent(mainLight, Ermine::Light(Ermine::Vec3(1, 1, 1), 1.0f, Ermine::LightType::DIRECTIONAL, true));
-    Ermine::ECS::GetInstance().AddComponent<Ermine::HierarchyComponent>(mainLight, Ermine::HierarchyComponent{});
+    ecs.AddComponent(mainLight, Ermine::ObjectMetaData("Main Light", "Light", true));
+    ecs.AddComponent(mainLight, Ermine::Light(Ermine::Vec3(1, 1, 1), 1.0f, Ermine::LightType::DIRECTIONAL, true));
+    ecs.AddComponent<Ermine::HierarchyComponent>(mainLight, Ermine::HierarchyComponent{});
+    
     // Mark materials dirty to trigger recompilation
-    auto renderer = Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>();
+    auto renderer = ecs.GetSystem<Ermine::graphics::Renderer>();
     if (renderer) {
         renderer->MarkMaterialsDirty();
     }
-    Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>()->InitializeShadowMapResources();
-    Ermine::ECS::GetInstance().GetSystem<Ermine::Physics>()->UpdatePhysicList();
+    ecs.GetSystem<Ermine::graphics::Renderer>()->InitializeShadowMapResources();
+    ecs.GetSystem<Ermine::Physics>()->UpdatePhysicList();
 
     // Create a new Scene object and sync with ECS
     auto newScene = std::make_shared<Ermine::Scene>("Untitled Scene");
@@ -299,13 +314,26 @@ void SceneManager::NewScene()
 
 void SceneManager::ClearScene()
 {
-    // Clear ECS
-    Ermine::ECS::GetInstance().ClearAllEntities();
+    auto& ecs = Ermine::ECS::GetInstance();
+    
+    // STEP 1: Clean up scripts before clearing entities
+    if (auto scriptSystem = ecs.GetSystem<Ermine::scripting::ScriptSystem>()) {
+        EE_CORE_INFO("ClearScene: Cleaning up all script instances before entity destruction");
+        scriptSystem->CleanupAllScripts();
+    }
+    
+    // STEP 2: Clear physics
+    if (auto physics = ecs.GetSystem<Ermine::Physics>()) {
+        physics->ClearPhysicBody();
+    }
+    
+    // STEP 3: Clear ECS
+    ecs.ClearAllEntities();
 
-    //Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>()->UpdateShadowMap();
+    //ecs.GetSystem<Ermine::graphics::Renderer>()->UpdateShadowMap();
 
     // Mark materials dirty to trigger recompilation
-    auto renderer = Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>();
+    auto renderer = ecs.GetSystem<Ermine::graphics::Renderer>();
     if (renderer) {
         renderer->MarkMaterialsDirty();
     }
@@ -320,7 +348,7 @@ void SceneManager::ClearScene()
     // Notify EditorGUI to update hierarchy panel and inspector
     Ermine::editor::EditorGUI::SetActiveScene(emptyScene);
 
-    Ermine::ECS::GetInstance().GetSystem<Ermine::Physics>()->UpdatePhysicList();
+    ecs.GetSystem<Ermine::Physics>()->UpdatePhysicList();
     m_CurrentScenePath.reset();
     m_Dirty = false;
 }
@@ -342,13 +370,20 @@ void SceneManager::OpenScene(const std::string& path)
     // STEP 1: Stop all systems that hold entity references
     auto& ecs = Ermine::ECS::GetInstance();
     
-    // Stop physics system and clear ALL physics bodies FIRST
+    // STEP 1a: Clean up script instances FIRST (before any entity destruction)
+    // This ensures scripts properly call OnDisable/OnDestroy without accessing invalid entities
+    if (auto scriptSystem = ecs.GetSystem<Ermine::scripting::ScriptSystem>()) {
+        EE_CORE_INFO("Cleaning up all script instances before entity destruction");
+        scriptSystem->CleanupAllScripts();
+    }
+    
+    // STEP 1b: Stop physics system and clear ALL physics bodies
     if (auto physics = ecs.GetSystem<Ermine::Physics>()) {
         EE_CORE_INFO("Clearing all physics bodies before entity destruction");
         physics->ClearPhysicBody();  // Remove all physics bodies from simulation
     }
     
-    // STEP 2: Now it's safe to clear entities (no more physics references)
+    // STEP 2: Now it's safe to clear entities (no more script or physics references)
     ecs.ClearAllEntities();
 
     // STEP 3: Load the new scene

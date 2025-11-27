@@ -2492,6 +2492,28 @@ namespace Ermine::editor {
 		}
 	}
 
+	// Audio settings
+	ImGui::Separator();
+	ImGui::Text("Audio");
+
+	char hoverSoundBuffer[256];
+	strncpy_s(hoverSoundBuffer, button.hoverSoundName.c_str(), sizeof(hoverSoundBuffer) - 1);
+	hoverSoundBuffer[sizeof(hoverSoundBuffer) - 1] = '\0';
+	if (ImGui::InputText("Hover Sound", hoverSoundBuffer, sizeof(hoverSoundBuffer))) {
+		button.hoverSoundName = hoverSoundBuffer;
+	}
+	ImGui::TextDisabled("Example: click.wav");
+
+	char clickSoundBuffer[256];
+	strncpy_s(clickSoundBuffer, button.clickSoundName.c_str(), sizeof(clickSoundBuffer) - 1);
+	clickSoundBuffer[sizeof(clickSoundBuffer) - 1] = '\0';
+	if (ImGui::InputText("Click Sound", clickSoundBuffer, sizeof(clickSoundBuffer))) {
+		button.clickSoundName = clickSoundBuffer;
+	}
+	ImGui::TextDisabled("Example: button_click.wav");
+
+	ImGui::SliderFloat("Sound Volume", &button.soundVolume, 0.0f, 1.0f);
+
 	// Show button state (read-only)
 	ImGui::Separator();
 	ImGui::Text("State (Read-Only)");

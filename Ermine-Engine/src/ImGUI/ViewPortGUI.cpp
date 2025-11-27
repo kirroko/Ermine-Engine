@@ -688,19 +688,43 @@ void Ermine::ViewPortGUI::Update()
 	// UI buttons need game input active to work correctly
 	Input::SetGameInputActive(EditorGUI::isPlaying || EditorGUI::isPreviewingUI);
 
-	if (EditorGUI::isPlaying && Input::IsKeyPressed(GLFW_KEY_ESCAPE))
+	// Check ESC key with debug logging
+	if (EditorGUI::isPlaying)
 	{
-		EditorGUI::s_state = EditorGUI::SimState::stopped;
-		SceneManager::GetInstance().LoadTemp();
-
-		// *** ALWAYS reset cursor state when ESC stops play mode ***
-		GLFWwindow* window = glfwGetCurrentContext();
-		if (window)
+		// Debug: Check if we're even getting here
+		static bool loggedOnce = false;
+		if (!loggedOnce)
 		{
-			if (glfwRawMouseMotionSupported())
-				glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_FALSE);
-			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-			EE_CORE_INFO("Cursor unlocked - ESC pressed");
+			EE_CORE_INFO("ViewPortGUI: Play mode active, checking for ESC key...");
+			loggedOnce = true;
+		}
+
+		// Use GLFW directly - bypass Input system
+		GLFWwindow* window = glfwGetCurrentContext();
+		bool escPressed = (window && glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS);
+
+		// Log when ESC is detected
+		if (escPressed)
+		{
+			EE_CORE_WARN("ESC DETECTED via GLFW!");
+		}
+
+		if (escPressed)
+		{
+			EE_CORE_INFO("ESC key detected! Stopping play mode...");
+			EditorGUI::isPlaying = false;
+			EditorGUI::s_state = EditorGUI::SimState::stopped;
+			SceneManager::GetInstance().LoadTemp();
+
+			// *** ALWAYS reset cursor state when ESC stops play mode ***
+			GLFWwindow* window = glfwGetCurrentContext();
+			if (window)
+			{
+				if (glfwRawMouseMotionSupported())
+					glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_FALSE);
+				glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+				EE_CORE_INFO("Cursor unlocked - ESC pressed");
+			}
 		}
 	}
 

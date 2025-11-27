@@ -3542,6 +3542,11 @@ namespace Ermine
 		ButtonAction action = ButtonAction::None;
 		std::string actionData = "";  // Scene path for LoadScene, custom event name, etc.
 
+		// Audio settings
+		std::string hoverSoundName = "";  // Sound to play on hover
+		std::string clickSoundName = "";  // Sound to play on click
+		float soundVolume = 1.0f;         // Volume for button sounds (0.0 - 1.0)
+
 		// Button state (runtime - don't serialize)
 		bool isHovered = false;
 		bool isPressed = false;
@@ -3569,6 +3574,13 @@ namespace Ermine
 			out.AddMember("action", static_cast<int>(action), alloc);
 			rapidjson::Value actionDataVal(actionData.c_str(), alloc);
 			out.AddMember("actionData", actionDataVal, alloc);
+
+			// Audio settings
+			rapidjson::Value hoverSoundVal(hoverSoundName.c_str(), alloc);
+			out.AddMember("hoverSoundName", hoverSoundVal, alloc);
+			rapidjson::Value clickSoundVal(clickSoundName.c_str(), alloc);
+			out.AddMember("clickSoundName", clickSoundVal, alloc);
+			out.AddMember("soundVolume", soundVolume, alloc);
 		}
 
 		void Deserialize(const rapidjson::Value& in)
@@ -3602,6 +3614,14 @@ namespace Ermine
 				action = static_cast<ButtonAction>(in["action"].GetInt());
 			if (in.HasMember("actionData") && in["actionData"].IsString())
 				actionData = in["actionData"].GetString();
+
+			// Audio settings
+			if (in.HasMember("hoverSoundName") && in["hoverSoundName"].IsString())
+				hoverSoundName = in["hoverSoundName"].GetString();
+			if (in.HasMember("clickSoundName") && in["clickSoundName"].IsString())
+				clickSoundName = in["clickSoundName"].GetString();
+			if (in.HasMember("soundVolume") && in["soundVolume"].IsNumber())
+				soundVolume = in["soundVolume"].GetFloat();
 		}
 
 		XPROPERTY_DEF("UIButtonComponent", UIButtonComponent)

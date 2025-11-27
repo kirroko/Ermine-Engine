@@ -225,7 +225,10 @@
           "textScale": 1.0,
           "backgroundAlpha": 0.6650000214576721,
           "action": 1,
-          "actionData": "../Resources/Scenes/cutscene_intro.scene"
+          "actionData": "../Resources/Scenes/cutscene_intro.scene",
+          "hoverSoundName": "UI_Hover 5.wav",
+          "clickSoundName": "UI_Confirm.wav",
+          "soundVolume": 0.8
         }
       }
     },
@@ -295,8 +298,11 @@
           ],
           "textScale": 1.0,
           "backgroundAlpha": 0.6169999837875366,
-          "action": 0,
-          "actionData": ""
+          "action": 2,
+          "actionData": "",
+          "hoverSoundName": "UI_Hover 5.wav",
+          "clickSoundName": "UI_Confirm.wav",
+          "soundVolume": 0.8
         }
       }
     }
