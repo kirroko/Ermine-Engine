@@ -21,6 +21,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "GLFW/glfw3.h"
 #include "EditorGUI.h"
 #include "HierarchySystem.h"
+#include "UIButtonSystem.h"
 
 #include <ImGuizmo.h>
 #include <glm/gtx/matrix_decompose.hpp>
@@ -597,6 +598,13 @@ void Ermine::ViewPortGUI::Update()
 	const ImVec2 imgMin = ImGui::GetItemRectMin();
 	const ImVec2 imgMax = ImGui::GetItemRectMax();
 	const ImVec2 imgSize = ImGui::GetItemRectSize();
+
+	// UPDATE UI BUTTON SYSTEM WITH VIEWPORT INFO FOR EDITOR MODE
+	auto uiButtonSystem = ECS::GetInstance().GetSystem<UIButtonSystem>();
+	if (uiButtonSystem)
+	{
+		uiButtonSystem->SetViewportInfo(imgMin, imgSize);
+	}
 
 	// View cube (top-right corner)
 	const float pad = 10.f;

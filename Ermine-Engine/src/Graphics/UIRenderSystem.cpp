@@ -774,19 +774,6 @@ namespace Ermine
         float width = adjustedHalfWidth * 2.0f;
         float height = button.size.y;
         
-        #ifdef EE_EDITOR
-        // Debug: Log rendering bounds when previewing UI
-        if (editor::EditorGUI::isPreviewingUI)
-        {
-            EE_CORE_TRACE("RENDER Button '{}': AspectRatio={}, AdjustedHalfWidth={}", 
-                button.text, m_aspectRatio, adjustedHalfWidth);
-            EE_CORE_TRACE("  Render Bounds: Left={}, Bottom={}, Width={}, Height={}", 
-                left, bottom, width, height);
-            EE_CORE_TRACE("  Visual corners: BL=({},{}), TR=({},{})", 
-                left, bottom, left + width, bottom + height);
-        }
-        #endif
-
         // Render button background
         RenderQuad(left, bottom, width, height, currentColor, button.backgroundAlpha);
 

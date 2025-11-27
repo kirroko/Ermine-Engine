@@ -27,118 +27,86 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 namespace Ermine
 {
-    void UIButtonSystem::Init()
+    void UIButtonSystem::Init(int screenWidth, int screenHeight)
     {
-        EE_CORE_INFO("UIButtonSystem initialized");
+        m_screenWidth = screenWidth;
+        m_screenHeight = screenHeight;
+        m_aspectRatio = (screenHeight > 0) ? static_cast<float>(screenWidth) / static_cast<float>(screenHeight) : 1.0f;
+        EE_CORE_INFO("UIButtonSystem initialized ({}x{}, aspect ratio: {})", screenWidth, screenHeight, m_aspectRatio);
     }
 
     void UIButtonSystem::Update(float deltaTime)
     {
         auto& ecs = ECS::GetInstance();
         
+        // Debug: Log first update call
+        static bool firstUpdate = true;
+        if (firstUpdate)
+        {
+            EE_CORE_INFO("UIButtonSystem::Update - First update call");
+            EE_CORE_INFO("  Screen: {}x{}, Aspect: {}", m_screenWidth, m_screenHeight, m_aspectRatio);
+#ifdef EE_EDITOR
+            EE_CORE_INFO("  Viewport: ({}, {}) size: {}x{}", 
+                         m_viewportMin.x, m_viewportMin.y, m_viewportSize.x, m_viewportSize.y);
+#endif
+            firstUpdate = false;
+        }
+
         // Get normalized mouse position once per frame
         float mouseX, mouseY;
         GetNormalizedMousePosition(mouseX, mouseY);
-        
-        #ifdef EE_EDITOR
-        // Debug: Log viewport info and mouse position every frame when preview is active
-        if (editor::EditorGUI::isPreviewingUI)
-        {
-            EE_CORE_TRACE("=== FRAME DEBUG ===");
-            EE_CORE_TRACE("Viewport Min: ({}, {})", m_viewportMin.x, m_viewportMin.y);
-            EE_CORE_TRACE("Viewport Size: ({}, {})", m_viewportSize.x, m_viewportSize.y);
-            EE_CORE_TRACE("Normalized Mouse: ({}, {})", mouseX, mouseY);
-        }
-        #endif
-        
+
+        // Debug: Log mouse position
+        EE_CORE_INFO("Mouse Position - X: {}, Y: {}", mouseX, mouseY);
+
         // Iterate through all entities that have UIButtonComponent
         for (EntityID entity : m_Entities)
         {
-            // Safety check: ensure entity exists and has UIButtonComponent
             if (!ecs.IsEntityValid(entity) || !ecs.HasComponent<UIButtonComponent>(entity))
-            {
                 continue;
-            }
 
-            auto& buttonComp = ecs.GetComponent<UIButtonComponent>(entity);
+            auto& button = ecs.GetComponent<UIButtonComponent>(entity);
 
-            // Check if mouse is over button using button's own position and size
-            bool isHovered = IsMouseOverButton(buttonComp, mouseX, mouseY);
-            
-            #ifdef EE_EDITOR
-            // Debug: Log button info when preview is active
-            if (editor::EditorGUI::isPreviewingUI)
-            {
-                EE_CORE_TRACE("Button '{}': Pos=({}, {}), Size=({}, {}), Hovered={}", 
-                    buttonComp.text, 
-                    buttonComp.position.x, buttonComp.position.y,
-                    buttonComp.size.x, buttonComp.size.y,
-                    isHovered);
-            }
-            #endif
-            
+            // Calculate button bounds in normalized space
+            float halfW = (button.size.x * 0.5f) / m_aspectRatio;
+            float halfH = button.size.y * 0.5f;
+            float left = button.position.x - halfW;
+            float right = button.position.x + halfW;
+            float bottom = button.position.y - halfH;
+            float top = button.position.y + halfH;
+
+            // Debug: Log button bounds and state
+            EE_CORE_INFO("Button: '{}' Bounds - L: {}, R: {}, B: {}, T: {}", 
+                         button.text, left, right, bottom, top);
+            EE_CORE_INFO("  Hovered: {}, Pressed: {}", button.isHovered, button.isPressed);
+
+            // Check if mouse is inside button bounds
+            bool inside = (mouseX >= left && mouseX <= right && mouseY >= bottom && mouseY <= top);
+
             // Update hover state
-            if (isHovered && !buttonComp.isHovered)
+            if (inside && !button.isHovered)
             {
-                buttonComp.isHovered = true;
-                EE_CORE_INFO("Button '{}' HOVER START", buttonComp.text);
+                button.isHovered = true;
+                EE_CORE_INFO("✓ Button '{}' HOVER START", button.text);
             }
-            else if (!isHovered && buttonComp.isHovered)
+            else if (!inside && button.isHovered)
             {
-                buttonComp.isHovered = false;
-                buttonComp.isPressed = false;
+                button.isHovered = false;
+                button.isPressed = false;
             }
 
-            // Check for mouse click
-            if (isHovered && Input::IsMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT))
+            // Handle click
+            if (inside && Input::IsMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT))
             {
-                buttonComp.isPressed = true;
-                EE_CORE_WARN("Button '{}' CLICKED!", buttonComp.text);
-                ExecuteButtonAction(buttonComp);
+                button.isPressed = true;
+                EE_CORE_WARN("✓ Button '{}' CLICKED!", button.text);
+                ExecuteButtonAction(button);
             }
             else if (!Input::IsMouseButtonDown(GLFW_MOUSE_BUTTON_LEFT))
             {
-                buttonComp.isPressed = false;
+                button.isPressed = false;
             }
         }
-    }
-
-    bool UIButtonSystem::IsMouseOverButton(const UIButtonComponent& button, float mouseX, float mouseY)
-    {
-        // Get window aspect ratio (same as used in rendering)
-        auto window = glfwGetCurrentContext();
-        if (!window) return false;
-
-        int windowWidth, windowHeight;
-        glfwGetWindowSize(window, &windowWidth, &windowHeight);
-        float aspectRatio = (windowHeight > 0) ? static_cast<float>(windowWidth) / static_cast<float>(windowHeight) : 1.0f;
-
-        // Apply same aspect ratio correction as rendering
-        float halfWidth = button.size.x * 0.5f;
-        float halfHeight = button.size.y * 0.5f;
-
-        // Adjust width for aspect ratio (same as RenderButton does)
-        float adjustedHalfWidth = halfWidth / aspectRatio;
-
-        // Calculate bounds with aspect ratio correction
-        float left = button.position.x - adjustedHalfWidth;
-        float right = button.position.x + adjustedHalfWidth;
-        float top = button.position.y + halfHeight;
-        float bottom = button.position.y - halfHeight;
-
-        #ifdef EE_EDITOR
-        // Debug: Log detailed button bounds calculation
-        if (editor::EditorGUI::isPreviewingUI)
-        {
-            EE_CORE_TRACE("  Window: {}x{}, Aspect: {}", windowWidth, windowHeight, aspectRatio);
-            EE_CORE_TRACE("  Half Size: ({}, {}), Adjusted HalfWidth: {}", halfWidth, halfHeight, adjustedHalfWidth);
-            EE_CORE_TRACE("  Bounds: Left={}, Right={}, Top={}, Bottom={}", left, right, top, bottom);
-            EE_CORE_TRACE("  Mouse: ({}, {}), InBounds: {}", mouseX, mouseY, 
-                (mouseX >= left && mouseX <= right && mouseY >= bottom && mouseY <= top));
-        }
-        #endif
-
-        return (mouseX >= left && mouseX <= right && mouseY >= bottom && mouseY <= top);
     }
 
     void UIButtonSystem::ExecuteButtonAction(const UIButtonComponent& button)
@@ -166,7 +134,6 @@ namespace Ermine
 
         case UIButtonComponent::ButtonAction::Quit:
             EE_CORE_INFO("Quit action triggered");
-            // Get GLFW window and request close
             if (auto* window = glfwGetCurrentContext())
             {
                 glfwSetWindowShouldClose(window, GLFW_TRUE);
@@ -175,7 +142,6 @@ namespace Ermine
 
         case UIButtonComponent::ButtonAction::Custom:
             EE_CORE_INFO("Custom action triggered: {}", button.actionData);
-            // Custom actions could be handled by scripts or events
             break;
 
         case UIButtonComponent::ButtonAction::None:
@@ -188,53 +154,37 @@ namespace Ermine
     void UIButtonSystem::GetNormalizedMousePosition(float& outX, float& outY)
     {
         #ifdef EE_EDITOR
-        // In editor: use viewport-relative mouse position
+        // EDITOR MODE: Get mouse position from ImGui
         ImGuiIO& io = ImGui::GetIO();
-        
-        // Debug: Log raw ImGui mouse position
-        if (editor::EditorGUI::isPreviewingUI)
-        {
-            EE_CORE_TRACE("  Raw ImGui MousePos: ({}, {})", io.MousePos.x, io.MousePos.y);
-        }
-        
-        // Get mouse position relative to viewport
-        float localX = io.MousePos.x - m_viewportMin.x;
-        float localY = io.MousePos.y - m_viewportMin.y;
-        
-        // Debug: Log local position calculation
-        if (editor::EditorGUI::isPreviewingUI)
-        {
-            EE_CORE_TRACE("  Local (relative to viewport): ({}, {})", localX, localY);
-        }
-        
-        // Check if mouse is within viewport bounds
-        if (localX < 0.0f || localY < 0.0f || 
-            localX > m_viewportSize.x || localY > m_viewportSize.y)
+
+        // Get mouse position in screen space
+        float screenX = io.MousePos.x;
+        float screenY = io.MousePos.y;
+
+        // Convert to viewport-relative coordinates
+        float viewportX = screenX - m_viewportMin.x;
+        float viewportY = screenY - m_viewportMin.y;
+
+        // Check if mouse is outside viewport
+        if (viewportX < 0.0f || viewportY < 0.0f ||
+            viewportX > m_viewportSize.x || viewportY > m_viewportSize.y)
         {
             outX = -1.0f;
             outY = -1.0f;
-            
-            if (editor::EditorGUI::isPreviewingUI)
-            {
-                EE_CORE_TRACE("  Mouse OUTSIDE viewport bounds -> (-1, -1)");
-            }
             return;
         }
-        
+
         // Normalize to 0-1 range
-        outX = localX / m_viewportSize.x;
-        outY = 1.0f - (localY / m_viewportSize.y); // Flip Y axis
-        
-        if (editor::EditorGUI::isPreviewingUI)
-        {
-            EE_CORE_TRACE("  Normalized result: ({}, {}) [Y flipped]", outX, outY);
-        }
-        
+        // ImGui Y goes down (0 at top), OpenGL Y goes up (0 at bottom)
+        outX = viewportX / m_viewportSize.x;
+        outY = 1.0f - (viewportY / m_viewportSize.y);  // Flip Y
+
         #else
-        // In game: use full window mouse position
+        // GAME MODE: Get mouse position from GLFW
         auto [mouseX, mouseY] = Input::GetMousePosition();
         auto window = glfwGetCurrentContext();
-        if (!window) {
+        if (!window)
+        {
             outX = -1.0f;
             outY = -1.0f;
             return;
@@ -242,20 +192,14 @@ namespace Ermine
 
         int windowWidth, windowHeight;
         glfwGetWindowSize(window, &windowWidth, &windowHeight);
-        
-        // Normalize to 0-1 range where (0,0) = bottom-left of WINDOW
+
+        // Normalize to 0-1 range
         outX = mouseX / static_cast<float>(windowWidth);
-        outY = 1.0f - (mouseY / static_cast<float>(windowHeight)); // Flip Y axis
-        
-        // Clamp to valid range
-        const float TOLERANCE = 0.001f;
-        if (outX < -TOLERANCE || outX > 1.0f + TOLERANCE || outY < -TOLERANCE || outY > 1.0f + TOLERANCE) {
-            outX = -1.0f;
-            outY = -1.0f;
-        } else {
-            outX = (outX < 0.0f) ? 0.0f : (outX > 1.0f) ? 1.0f : outX;
-            outY = (outY < 0.0f) ? 0.0f : (outY > 1.0f) ? 1.0f : outY;
-        }
+        outY = 1.0f - (mouseY / static_cast<float>(windowHeight));  // Flip Y
+
+        // Clamp
+        outX = std::max(0.0f, std::min(1.0f, outX));
+        outY = std::max(0.0f, std::min(1.0f, outY));
         #endif
     }
 }

@@ -427,6 +427,10 @@ bool engine::Init(GLFWwindow* windowContext)
 			auto uiSystem = ECS::GetInstance().GetSystem<UIRenderSystem>();
 			if (uiSystem && width > 0 && height > 0)
 				uiSystem->OnScreenResize(width, height);
+
+		auto buttonSystem = ECS::GetInstance().GetSystem<UIButtonSystem>();
+		if (buttonSystem && width > 0 && height > 0)
+			buttonSystem->OnScreenResize(width, height);
 #endif
 		});
 
@@ -541,8 +545,11 @@ bool engine::Init(GLFWwindow* windowContext)
 	else
 		ECS::GetInstance().GetSystem<UIRenderSystem>()->Init(1920, 1080);
 
-	// Initialize UI Button System
-	ECS::GetInstance().GetSystem<UIButtonSystem>()->Init();
+	// Initialize UI Button System with same dimensions
+	if (windowWidth > 0 && windowHeight > 0)
+		ECS::GetInstance().GetSystem<UIButtonSystem>()->Init(windowWidth, windowHeight);
+	else
+		ECS::GetInstance().GetSystem<UIButtonSystem>()->Init(1920, 1080);
 
 	// Editor windows
 #if defined(EE_EDITOR)
