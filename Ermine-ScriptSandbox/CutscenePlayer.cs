@@ -4,8 +4,8 @@ using System;
 public class CutscenePlayer : MonoBehaviour
 {
     // Configuration
-    private float imageDisplayTime = 5.0f;  // Duration each slide is shown (seconds)
-    private string nextScenePath = "../Resources/Scenes/level.scene";
+    private float imageDisplayTime = 3.0f;  // Duration each slide is shown (seconds)
+    private string nextScenePath = "../Resources/Scenes/physicdemo.scene";
 
     // Slide tracking
     private int currentSlideIndex = 0;  // Which slide we're currently showing (0-based)

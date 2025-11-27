@@ -270,7 +270,9 @@ namespace Ermine
                     imageComp.captionPosition.y,
                     textScale,
                     imageComp.captionColor,
-                    textAlpha
+                    textAlpha,
+                    m_VAO,
+                    m_VBO
                 );
             }
         }
@@ -438,7 +440,7 @@ namespace Ermine
         Vec3 textColor = { 0.95f, 0.85f, 0.55f };  // Bright brass/gold color
 
         // Render the counter text
-        m_textRenderer->RenderText(m_uiShader, counterText, x, y, textScale, textColor, 1.0f);
+        m_textRenderer->RenderText(m_uiShader, counterText, x, y, textScale, textColor, 1.0f, m_VAO, m_VBO);
     }
 
     void UIRenderSystem::RenderSkillSlots(const UIComponent& ui)
@@ -580,7 +582,7 @@ namespace Ermine
                 float labelAlpha = isReady ? 1.0f : 0.6f;
 
                 // Render the keybind text (e.g., "LMB", "RMB", "R")
-                m_textRenderer->RenderText(m_uiShader, skill.keyBinding, labelX, labelY, textScale, labelColor, labelAlpha);
+                m_textRenderer->RenderText(m_uiShader, skill.keyBinding, labelX, labelY, textScale, labelColor, labelAlpha, m_VAO, m_VBO);
             }
 
             currentX += slotSize + spacing;
@@ -805,7 +807,9 @@ namespace Ermine
                 textY,
                 button.textScale,
                 button.textColor,
-                1.0f
+                1.0f,
+                m_VAO,
+                m_VBO
             );
         }
     }
