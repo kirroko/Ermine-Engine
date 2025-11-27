@@ -278,14 +278,18 @@ namespace Ermine
 				}
 
 				auto& p = ecs.GetComponent<PhysicComponent>(entity);
-				auto& t = ecs.GetComponent<Transform>(entity);
 
-				Ermine::Quaternion rot = QuaternionNormalize(FromEulerDegrees(p.colliderRot));
-				Ermine::Quaternion combined = QuaternionNormalize(t.rotation * rot);
+				// Get world transform from hierarchy (Transform may be local!)
+				auto hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>();
+				Vec3       worldPos = hierarchySystem->GetWorldPosition(entity);
+				Quaternion worldRot = hierarchySystem->GetWorldRotation(entity);
 
-				JPH::Vec3 pos(t.position.x + p.colliderPivot.x,
-					t.position.y + p.colliderPivot.y,
-					t.position.z + p.colliderPivot.z);
+				Quaternion colliderOffset = QuaternionNormalize(FromEulerDegrees(p.colliderRot));
+				Quaternion combined = QuaternionNormalize(worldRot * colliderOffset);
+
+				JPH::Vec3 pos(worldPos.x + p.colliderPivot.x,
+					worldPos.y + p.colliderPivot.y,
+					worldPos.z + p.colliderPivot.z);
 
 				JPH::Quat quat(combined.x, combined.y, combined.z, combined.w);
 
@@ -452,22 +456,29 @@ namespace Ermine
 				continue;
 			}
 
-			t.position = Vec3(
+			auto hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>();
+
+			// World position of the *object* (rigidbody center minus collider pivot)
+			Vec3 worldPos(
 				transform.GetTranslation().GetX() - p.colliderPivot.x,
 				transform.GetTranslation().GetY() - p.colliderPivot.y,
 				transform.GetTranslation().GetZ() - p.colliderPivot.z
 			);
-			// Rotation too
+
+			// World rotation of the rigidbody
 			JPH::Quat rot = transform.GetRotation().GetQuaternion().Normalized();
-			Ermine::Quaternion bodyRot(rot.GetX(), rot.GetY(), rot.GetZ(), rot.GetW());
-			Ermine::Quaternion offset = QuaternionNormalize(FromEulerDegrees(p.colliderRot));
+			Quaternion bodyRot(rot.GetX(), rot.GetY(), rot.GetZ(), rot.GetW());
 
-			// Apply offset
-			t.rotation = bodyRot * offset;
+			// Remove colliderRot offset to recover the object's world rotation
+			Quaternion colliderOffset = QuaternionNormalize(FromEulerDegrees(p.colliderRot));
+			// If your quaternions are unit length, inverse is just the conjugate:
+			Quaternion invOffset(-colliderOffset.x, -colliderOffset.y, -colliderOffset.z, colliderOffset.w);
 
+			Quaternion worldRot = bodyRot * invOffset;
 
-			auto hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>();
-			hierarchySystem->MarkDirty(entity);
+			// Now write back as *world* transform
+			hierarchySystem->SetWorldPosition(entity, worldPos);
+			hierarchySystem->SetWorldRotation(entity, worldRot);
 		}
 	}
 
@@ -723,10 +734,23 @@ namespace Ermine
 			}
 
 			bodySettings.mIsSensor = (p.bodyType == PhysicsBodyType::Trigger);
-			bodySettings.mPosition = JPH::Vec3(t.position.x + p.colliderPivot.x, t.position.y + p.colliderPivot.y, t.position.z + p.colliderPivot.z);
-			Ermine::Quaternion rot = QuaternionNormalize(FromEulerDegrees(p.colliderRot));
-			Ermine::Quaternion combined = QuaternionNormalize(t.rotation * rot);
-			bodySettings.mRotation = JPH::Quat(combined.x, combined.y, combined.z, combined.w);
+
+			// Get world-space transform from hierarchy
+			auto hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>();
+			Vec3 worldPos = hierarchySystem->GetWorldPosition(entity);
+			Quaternion worldRot = hierarchySystem->GetWorldRotation(entity);
+
+			// colliderPivot stays as-is (same semantics as before for root entities)
+			bodySettings.mPosition = JPH::Vec3(
+				worldPos.x + p.colliderPivot.x,
+				worldPos.y + p.colliderPivot.y,
+				worldPos.z + p.colliderPivot.z
+			);
+
+			// colliderRot is an extra offset on top of world rotation
+			Quaternion colliderOffset = QuaternionNormalize(FromEulerDegrees(p.colliderRot));
+			Quaternion finalRot = QuaternionNormalize(worldRot * colliderOffset);
+			bodySettings.mRotation = JPH::Quat(finalRot.x, finalRot.y, finalRot.z, finalRot.w);
 
 			JPH::EAllowedDOFs dofs = JPH::EAllowedDOFs::All;
 			if (p.posX) dofs &= ~JPH::EAllowedDOFs::TranslationX;
