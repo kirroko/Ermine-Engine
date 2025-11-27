@@ -100,8 +100,10 @@ namespace Ermine
                 // Play hover sound if specified
                 if (!button.hoverSoundName.empty())
                 {
+                    EE_CORE_INFO("Playing hover sound: '{}' at volume {}", button.hoverSoundName, button.soundVolume);
                     float volumeDB = AudioSystem::ConvertVolumeToFMOD(button.soundVolume);
-                    CAudioEngine::PlaySounds(button.hoverSoundName, Vector3D{0, 0, 0}, volumeDB);
+                    int channelId = CAudioEngine::PlaySounds(button.hoverSoundName, Vector3D{0, 0, 0}, volumeDB);
+                    EE_CORE_INFO("Hover sound channel ID: {}", channelId);
                 }
             }
             else if (!inside && button.isHovered)
@@ -119,8 +121,10 @@ namespace Ermine
                 // Play click sound if specified
                 if (!button.clickSoundName.empty())
                 {
+                    EE_CORE_INFO("Playing click sound: '{}' at volume {}", button.clickSoundName, button.soundVolume);
                     float volumeDB = AudioSystem::ConvertVolumeToFMOD(button.soundVolume);
-                    CAudioEngine::PlaySounds(button.clickSoundName, Vector3D{0, 0, 0}, volumeDB);
+                    int channelId = CAudioEngine::PlaySounds(button.clickSoundName, Vector3D{0, 0, 0}, volumeDB);
+                    EE_CORE_INFO("Click sound channel ID: {}", channelId);
                 }
 
                 ExecuteButtonAction(button);

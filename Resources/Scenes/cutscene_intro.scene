@@ -86,7 +86,7 @@
         "ObjectMetaData": {
           "name": "Slide2",
           "tag": "Cutscene",
-          "selfActive": false
+          "selfActive": true
         },
         "Transform": {
           "position": [0.0, 0.0, 0.0],
@@ -118,7 +118,7 @@
         "ObjectMetaData": {
           "name": "Slide3",
           "tag": "Cutscene",
-          "selfActive": false
+          "selfActive": true
         },
         "Transform": {
           "position": [0.0, 0.0, 0.0],

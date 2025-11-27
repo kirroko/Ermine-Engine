@@ -62,13 +62,19 @@ namespace Ermine {
             // Delete all currently selected entities
             auto sel = editor::Selection::All();
             std::vector<EntityID> toDelete(sel.begin(), sel.end());
-            for (auto id : toDelete) 
+            for (auto id : toDelete)
             {
                 ECS::GetInstance().GetSystem<Physics>()->RemovePhysic(id);
                 m_ActiveScene->DestroyEntity(id);
                 ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
             }
             editor::Selection::Clear(m_ActiveScene);
+        }
+
+        ImGui::SameLine();
+        ImGui::Checkbox("Show Inactive", &m_ShowInactive);
+        if (ImGui::IsItemHovered()) {
+            ImGui::SetTooltip("Show inactive entities (grayed out)");
         }
 
         ImGui::Separator();
@@ -188,6 +194,21 @@ namespace Ermine {
         auto& metadata = ecs.GetComponent<ObjectMetaData>(entity);
         bool isSelected = editor::Selection::IsSelected(entity);
 
+        // Check if entity is inactive
+        bool isInactive = !metadata.selfActive;
+
+        // If inactive and we're not showing inactive entities, skip rendering
+        if (isInactive && !m_ShowInactive) {
+            return;
+        }
+
+        // Push gray color for inactive entities
+        bool pushedColor = false;
+        if (isInactive) {
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
+            pushedColor = true;
+        }
+
         ImGui::PushID((int)entity); // keep this
 
         // children
@@ -247,6 +268,12 @@ namespace Ermine {
         }
 
         if (indent > 0) ImGui::Unindent(indent);
+
+        // Pop the color style if we pushed it
+        if (pushedColor) {
+            ImGui::PopStyleColor();
+        }
+
         ImGui::PopID();
     }
 
