@@ -173,7 +173,6 @@ public class PlayerController2 : MonoBehaviour
                 {
                     // Play switch audio here Kai
                     GlobalAudio.PlaySFX("SwitchOn");
-                    Debug.Log("WORKINGGGGGGGGGGG");
 
                     if (!flipSwitch)
                     {
