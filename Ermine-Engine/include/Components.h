@@ -2462,6 +2462,9 @@ namespace Ermine
 		bool rotX = false; bool rotY = false; bool rotZ = false;
 		Ermine::Vec3 colliderSize{ 1,1,1 };
 
+		Vec3 prevTranPos{};
+		Quaternion prevTranRot{};
+		Vec3 prevTranScale{};
 		bool update = false;
 
 		JPH::BodyID bodyID{ JPH::BodyID::cInvalidBodyID };
