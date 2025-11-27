@@ -1299,9 +1299,22 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Platform (5)",
+          "name": "Rotate Platform (5)",
           "tag": "Untagged",
           "selfActive": true
+        },
+        "AudioComponent": {
+          "soundName": "../Resources/Audio/RotatingPlatform_Loop.wav",
+          "eventName": "",
+          "useRandomVariation": false,
+          "is3D": true,
+          "isLooping": true,
+          "isStreaming": false,
+          "volume": 1.0,
+          "followTransform": true,
+          "minDistance": 5.0,
+          "maxDistance": 100.0,
+          "playOnStart": false
         },
         "Mesh": {
           "kind": "Primitive",
@@ -1399,6 +1412,10 @@
                 "active": {
                   "t": 2,
                   "v": true
+                },
+                "audioActivationRange": {
+                  "t": 0,
+                  "v": 120.0
                 }
               }
             }
@@ -3421,6 +3438,19 @@
           "tag": "Untagged",
           "selfActive": true
         },
+        "AudioComponent": {
+          "soundName": "../Resources/Audio/RotatingPlatform_Loop.wav",
+          "eventName": "",
+          "useRandomVariation": false,
+          "is3D": true,
+          "isLooping": true,
+          "isStreaming": false,
+          "volume": 1.0,
+          "followTransform": true,
+          "minDistance": 5.0,
+          "maxDistance": 100.0,
+          "playOnStart": false
+        },
         "Mesh": {
           "kind": "Primitive",
           "primitive": {
@@ -3517,6 +3547,10 @@
                 "active": {
                   "t": 2,
                   "v": true
+                },
+                "audioActivationRange": {
+                  "t": 0,
+                  "v": 120.0
                 }
               }
             }
@@ -3870,6 +3904,19 @@
           "tag": "Untagged",
           "selfActive": true
         },
+        "AudioComponent": {
+          "soundName": "../Resources/Audio/RotatingPlatform_Loop.wav",
+          "eventName": "",
+          "useRandomVariation": false,
+          "is3D": true,
+          "isLooping": true,
+          "isStreaming": false,
+          "volume": 1.0,
+          "followTransform": true,
+          "minDistance": 5.0,
+          "maxDistance": 100.0,
+          "playOnStart": false
+        },
         "Mesh": {
           "kind": "Primitive",
           "primitive": {
@@ -3966,6 +4013,10 @@
                 "active": {
                   "t": 2,
                   "v": true
+                },
+                "audioActivationRange": {
+                  "t": 0,
+                  "v": 120.0
                 }
               }
             }
@@ -6432,6 +6483,19 @@
           "tag": "Untagged",
           "selfActive": true
         },
+        "AudioComponent": {
+          "soundName": "../Resources/Audio/RotatingPlatform_Loop.wav",
+          "eventName": "",
+          "useRandomVariation": false,
+          "is3D": true,
+          "isLooping": true,
+          "isStreaming": false,
+          "volume": 1.0,
+          "followTransform": true,
+          "minDistance": 5.0,
+          "maxDistance": 100.0,
+          "playOnStart": false
+        },
         "Mesh": {
           "kind": "Primitive",
           "primitive": {
@@ -6528,6 +6592,10 @@
                 "active": {
                   "t": 2,
                   "v": true
+                },
+                "audioActivationRange": {
+                  "t": 0,
+                  "v": 120.0
                 }
               }
             }
@@ -11020,9 +11088,22 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Platform (8)",
+          "name": "Rotate Platform (8)",
           "tag": "Untagged",
           "selfActive": true
+        },
+        "AudioComponent": {
+          "soundName": "../Resources/Audio/RotatingPlatform_Loop.wav",
+          "eventName": "",
+          "useRandomVariation": false,
+          "is3D": true,
+          "isLooping": true,
+          "isStreaming": false,
+          "volume": 1.0,
+          "followTransform": true,
+          "minDistance": 5.0,
+          "maxDistance": 100.0,
+          "playOnStart": false
         },
         "Mesh": {
           "kind": "Primitive",
@@ -11120,6 +11201,10 @@
                 "active": {
                   "t": 2,
                   "v": true
+                },
+                "audioActivationRange": {
+                  "t": 0,
+                  "v": 120.0
                 }
               }
             }
@@ -26092,7 +26177,7 @@
               "fields": {
                 "mouseHorSens": {
                   "t": 0,
-                  "v": 1.0
+                  "v": 0.30000001192092898
                 },
                 "jumpHeight": {
                   "t": 0,
@@ -26100,7 +26185,7 @@
                 },
                 "mouseVertSens": {
                   "t": 0,
-                  "v": 1.0
+                  "v": 0.30000001192092898
                 },
                 "moveSpeed": {
                   "t": 0,
@@ -33672,7 +33757,7 @@
     "ssaoIntensity": 1.0,
     "ssaoFadeout": 0.10000000149011612,
     "ssaoMaxDistance": 100.0,
-    "fogEnabled": false,
+    "fogEnabled": true,
     "fogMode": 0,
     "fogColor": [
       0.5,
@@ -33680,8 +33765,8 @@
       0.699999988079071
     ],
     "fogDensity": 0.019999999552965165,
-    "fogStart": 50.0,
-    "fogEnd": 200.0,
+    "fogStart": 10.0,
+    "fogEnd": 300.0,
     "fogHeightCoefficient": 0.10000000149011612,
     "fogHeightFalloff": 10.0,
     "vignetteEnabled": false,
@@ -33707,7 +33792,7 @@
     "spotlightRayIntensity": 0.30000001192092898,
     "spotlightRayFalloff": 2.0,
     "motionBlurEnabled": true,
-    "motionBlurStrength": 1.0,
+    "motionBlurStrength": 0.10000000149011612,
     "motionBlurSamples": 8
   }
 }
