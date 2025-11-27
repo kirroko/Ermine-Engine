@@ -731,15 +731,17 @@ namespace Ermine
         float top = centerY + adjustedHalfHeight;
 
         // Define quad vertices (2 triangles) with texture coordinates
+        // FIXED: Flipped V-axis from (0,0) to (1,1) to (0,1) to (1,0) to correct upside-down UI images
+        // This matches the fact that textures are loaded with stbi_set_flip_vertically_on_load(1)
         float vertices[] = {
             // Position (x, y)    // Color (r, g, b, a)                  // TexCoord (u, v)
-            left,  bottom,        color.x, color.y, color.z, alpha,     0.0f, 0.0f,  // Bottom-left
-            right, bottom,        color.x, color.y, color.z, alpha,     1.0f, 0.0f,  // Bottom-right
-            right, top,           color.x, color.y, color.z, alpha,     1.0f, 1.0f,  // Top-right
+            left,  bottom,        color.x, color.y, color.z, alpha,     0.0f, 1.0f,  // Bottom-left  (V flipped from 0.0 to 1.0)
+            right, bottom,        color.x, color.y, color.z, alpha,     1.0f, 1.0f,  // Bottom-right (V flipped from 0.0 to 1.0)
+            right, top,           color.x, color.y, color.z, alpha,     1.0f, 0.0f,  // Top-right    (V flipped from 1.0 to 0.0)
 
-            left,  bottom,        color.x, color.y, color.z, alpha,     0.0f, 0.0f,  // Bottom-left
-            right, top,           color.x, color.y, color.z, alpha,     1.0f, 1.0f,  // Top-right
-            left,  top,           color.x, color.y, color.z, alpha,     0.0f, 1.0f   // Top-left
+            left,  bottom,        color.x, color.y, color.z, alpha,     0.0f, 1.0f,  // Bottom-left  (V flipped from 0.0 to 1.0)
+            right, top,           color.x, color.y, color.z, alpha,     1.0f, 0.0f,  // Top-right    (V flipped from 1.0 to 0.0)
+            left,  top,           color.x, color.y, color.z, alpha,     0.0f, 0.0f   // Top-left     (V flipped from 1.0 to 0.0)
         };
 
         // Enable texture mode in shader
