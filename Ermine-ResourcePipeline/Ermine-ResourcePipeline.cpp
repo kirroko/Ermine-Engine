@@ -739,6 +739,58 @@ public:
         return true;
     }
 
+    void CleanupUnusedResources() {
+        std::cout << "\n=== Cleaning Up Unused Resources ===" << std::endl;
+
+        std::string projectFolder = databasePath + "/" + projectGuid;
+        std::string dataFolder = projectFolder + "/Windows.platform/Data";
+        std::string browserFolder = projectFolder + "/Browser.dbase";
+
+        size_t removedCount = 0;
+
+        for (auto it = existingResources.begin(); it != existingResources.end();) {
+
+            const ResourceEntry& entry = *it;
+
+            // If source file does NOT exist anymore → it's unused
+            if (!std::filesystem::exists(entry.sourcePath)) {
+                std::cout << "  🗑 Removing unused resource: "
+                    << entry.outputPath << std::endl;
+
+                // Delete generated binary (.dds / .mesh / .skin)
+                std::filesystem::path outputPath = dataFolder + "/" +
+                    std::filesystem::path(entry.outputPath).filename().string();
+
+                if (std::filesystem::exists(outputPath)) {
+                    std::filesystem::remove(outputPath);
+                    std::cout << "    Deleted: " << outputPath.filename().string() << std::endl;
+                }
+
+                // Delete Browser.dbase metadata
+                std::string typeFolder = browserFolder + "/" +
+                    std::to_string(entry.guid.m_Type.m_Value);
+
+                std::string infoFile = typeFolder + "/" +
+                    std::to_string(entry.guid.m_Instance.m_Value) + "_info.txt";
+
+                if (std::filesystem::exists(infoFile)) {
+                    std::filesystem::remove(infoFile);
+                    std::cout << "    Deleted metadata: "
+                        << std::filesystem::path(infoFile).filename().string() << std::endl;
+                }
+
+                // Erase from DB entry list
+                it = existingResources.erase(it);
+                removedCount++;
+            }
+            else {
+                ++it;
+            }
+        }
+
+        std::cout << "✓ Cleanup complete. Removed " << removedCount << " unused assets.\n";
+    }
+
     void SaveResourceDatabase() {
         std::string projectFolder = databasePath + "/" + projectGuid;
         std::string resourceDbPath = projectFolder + "/Browser.dbase/resource_database.txt";
@@ -841,6 +893,7 @@ public:
         ProcessTextures(pngFiles);
         ProcessMeshFiles(meshFiles);
 
+        CleanupUnusedResources();
         SaveResourceDatabase();
     }
 
