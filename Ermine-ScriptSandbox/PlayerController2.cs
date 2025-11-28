@@ -6,8 +6,8 @@ public class PlayerController2 : MonoBehaviour
     private Transform cam;
     private AudioComponent audioComp;
 
-    public float mouseHorSens = 1f;
-    public float mouseVertSens = 1f;
+    public float mouseHorSens = 0.3f;
+    public float mouseVertSens = 0.3f;
 
     public float moveSpeed = 5f;
     public float jumpspeed = 5f;
@@ -19,7 +19,7 @@ public class PlayerController2 : MonoBehaviour
     private bool isKeyJump = false;
 
     private float xRotation = 0f;
-    public float camDefaultY = 2f;
+    public float camDefaultY = 4.5f;
     private float camCrouchY = 50f;
 
     private bool movementKeyPressed = false;
@@ -175,7 +175,6 @@ public class PlayerController2 : MonoBehaviour
                 {
                     // Play switch audio here Kai
                     GlobalAudio.PlaySFX("SwitchOn");
-                    Debug.Log("WORKINGGGGGGGGGGG");
 
                     if (!flipSwitch)
                     {

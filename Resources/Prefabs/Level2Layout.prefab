@@ -3,7 +3,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "272181ce3309cf4f9aa50d7b8d6bb2a5"
+          "guid": "e03796885632004798d034717f0ea797"
         },
         "Transform": {
           "position": [
@@ -37,7 +37,346 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "d7d7c9ead2c4c1489f45699a53bc4a10"
+          "guid": "24ba756d0122bf4d95af37e2ef66c881"
+        },
+        "Transform": {
+          "position": [
+            18.100000381469728,
+            11.0,
+            -107.19999694824219
+          ],
+          "rotation": [
+            0.7071068286895752,
+            1.6463569396663048e-10,
+            -1.6463572172220609e-10,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.010999999940395356,
+            0.04999999701976776,
+            0.018999997526407243
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "wall (19)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "C_LongWall.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "e03796885632004798d034717f0ea797",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "adb21cfa6738f44497ff232a59b4c404"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_C_LongWall.fbx_Inner Wall.004_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
+            "materialHasRoughnessMap": true,
+            "materialHasMetallicMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_LongWall_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_LongWall_BaseColor.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_LongWall_Normal.png"
+            },
+            {
+              "slot": "materialRoughnessMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_LongWall_Roughness.png"
+            },
+            {
+              "slot": "material.metallicMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_LongWall_Metallic.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            -1.0
+          ],
+          "uvOffset": [
+            0.0,
+            1.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "24ba756d0122bf4d95af37e2ef66c881",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "bb1c926dede81a43a2c1b1f66ad81c97"
+        },
+        "Transform": {
+          "position": [
+            7.599999904632568,
+            11.0,
+            -107.19999694824219
+          ],
+          "rotation": [
+            0.7071068286895752,
+            1.6463569396663048e-10,
+            -1.6463572172220609e-10,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.010999999940395356,
+            0.04999999701976776,
+            0.018999997526407243
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "wall (18)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "C_LongWall.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "e03796885632004798d034717f0ea797",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "e6af4854c5f303469da5c3c17fbe4b92"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_C_LongWall.fbx_Inner Wall.004_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
+            "materialHasRoughnessMap": true,
+            "materialHasMetallicMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_LongWall_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_LongWall_BaseColor.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_LongWall_Normal.png"
+            },
+            {
+              "slot": "materialRoughnessMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_LongWall_Roughness.png"
+            },
+            {
+              "slot": "material.metallicMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_LongWall_Metallic.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            -1.0
+          ],
+          "uvOffset": [
+            0.0,
+            1.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "bb1c926dede81a43a2c1b1f66ad81c97",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "9c845be9106cd04bb6e81e927442d541"
+        },
+        "Transform": {
+          "position": [
+            12.0,
+            16.799999237060548,
+            -106.80000305175781
+          ],
+          "rotation": [
+            0.7071068286895752,
+            1.6463572172220609e-10,
+            -1.6463570784441829e-10,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.02500000037252903,
+            0.05000000074505806,
+            0.019999999552965165
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "wall (17)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "C_LongWall.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "e03796885632004798d034717f0ea797",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "6d2f1e35d8d9764aa2cdb79ce487e10f"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_C_LongWall.fbx_Inner Wall.004_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
+            "materialHasRoughnessMap": true,
+            "materialHasMetallicMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_LongWall_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_LongWall_BaseColor.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_LongWall_Normal.png"
+            },
+            {
+              "slot": "materialRoughnessMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_LongWall_Roughness.png"
+            },
+            {
+              "slot": "material.metallicMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_LongWall_Metallic.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            -1.0
+          ],
+          "uvOffset": [
+            0.0,
+            1.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "9c845be9106cd04bb6e81e927442d541",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "1faa738e3ef63e43a41a74a13a0bad5f"
         },
         "Transform": {
           "position": [
@@ -67,7 +406,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "272181ce3309cf4f9aa50d7b8d6bb2a5",
+          "parentGuid": "e03796885632004798d034717f0ea797",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -76,7 +415,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "4d2c0229e1f08c479f8f83a0a15ba80c"
+          "guid": "140e508f65f29e43bd0b99d7a401f135"
         },
         "Transform": {
           "position": [
@@ -126,7 +465,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "d7d7c9ead2c4c1489f45699a53bc4a10",
+          "parentGuid": "1faa738e3ef63e43a41a74a13a0bad5f",
           "depth": 2
         },
         "GlobalTransform": {}
@@ -135,7 +474,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "df74b7b35b94fe49afdce094b348788b"
+          "guid": "69c2be73b90f3b4985e26935975f5b78"
         },
         "Transform": {
           "position": [
@@ -165,7 +504,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "272181ce3309cf4f9aa50d7b8d6bb2a5",
+          "parentGuid": "e03796885632004798d034717f0ea797",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -174,7 +513,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "f8e7563262f74c4e9282ed0c33bec5fa"
+          "guid": "eb6358f394427e4aabaab4d3f53202dd"
         },
         "Transform": {
           "position": [
@@ -224,7 +563,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "df74b7b35b94fe49afdce094b348788b",
+          "parentGuid": "69c2be73b90f3b4985e26935975f5b78",
           "depth": 2
         },
         "GlobalTransform": {}
@@ -233,7 +572,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "9ce793d680f3ad44ac8c7e1bdfcd4480"
+          "guid": "990df1a4e9315d409ca660e9954d5170"
         },
         "Transform": {
           "position": [
@@ -263,7 +602,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "272181ce3309cf4f9aa50d7b8d6bb2a5",
+          "parentGuid": "e03796885632004798d034717f0ea797",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -272,7 +611,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "017676b7af7225478a77b31af38bb607"
+          "guid": "74c21f4843860d4095c5cddd68d125b7"
         },
         "Transform": {
           "position": [
@@ -322,7 +661,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "9ce793d680f3ad44ac8c7e1bdfcd4480",
+          "parentGuid": "990df1a4e9315d409ca660e9954d5170",
           "depth": 2
         },
         "GlobalTransform": {}
@@ -331,24 +670,24 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "23bba0d3775c3c43b6f5ca313d8b29f2"
+          "guid": "19a71f0a19241440b571e4ed889f535e"
         },
         "Transform": {
           "position": [
-            17.892763137817384,
+            -6.01200008392334,
             14.825165748596192,
-            -92.30106353759766
+            -106.80000305175781
           ],
           "rotation": [
-            0.5001792311668396,
-            0.4998167157173157,
-            -0.49983131885528567,
-            0.5001726150512695
+            0.7071068286895752,
+            1.6463572172220609e-10,
+            -1.6463569396663048e-10,
+            0.7071067094802856
           ],
           "scale": [
-            0.06911204010248184,
-            0.0500003956258297,
-            0.05881807208061218
+            0.04500000178813934,
+            0.04999345541000366,
+            0.05881113186478615
           ]
         },
         "ObjectMetaData": {
@@ -361,7 +700,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "272181ce3309cf4f9aa50d7b8d6bb2a5",
+          "parentGuid": "e03796885632004798d034717f0ea797",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -370,7 +709,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "d451193728d2de4588c3b01ead45bd23"
+          "guid": "4132c7943274b94691d50006a78e3a31"
         },
         "Transform": {
           "position": [
@@ -435,7 +774,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "23bba0d3775c3c43b6f5ca313d8b29f2",
+          "parentGuid": "19a71f0a19241440b571e4ed889f535e",
           "depth": 2
         },
         "GlobalTransform": {}
@@ -444,7 +783,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "4b50d9a460890b46b41f3b6ef3b88bb8"
+          "guid": "51e086915a41834681ba0968483905aa"
         },
         "Transform": {
           "position": [
@@ -474,7 +813,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "272181ce3309cf4f9aa50d7b8d6bb2a5",
+          "parentGuid": "e03796885632004798d034717f0ea797",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -483,7 +822,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "bf3e69cac62fb6408093b7af550b18ab"
+          "guid": "5515f70e70a7f448830bd5964a039e7e"
         },
         "Transform": {
           "position": [
@@ -548,7 +887,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "4b50d9a460890b46b41f3b6ef3b88bb8",
+          "parentGuid": "51e086915a41834681ba0968483905aa",
           "depth": 2
         },
         "GlobalTransform": {}
@@ -557,13 +896,13 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "c0171ce3be768c4bbfe0bd8f1f686bd7"
+          "guid": "d03a2b0c5c98634d9e45c7b8560dfd4c"
         },
         "Transform": {
           "position": [
-            -7.823817253112793,
+            -11.699999809265137,
             14.825165748596192,
-            -57.855377197265628
+            -57.599998474121097
           ],
           "rotation": [
             0.5001783967018127,
@@ -587,7 +926,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "272181ce3309cf4f9aa50d7b8d6bb2a5",
+          "parentGuid": "e03796885632004798d034717f0ea797",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -596,7 +935,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "f75631c41fa47b4fab19c49f97d945f6"
+          "guid": "dfb82d18df17c249a2be65220055fad5"
         },
         "Transform": {
           "position": [
@@ -661,7 +1000,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "c0171ce3be768c4bbfe0bd8f1f686bd7",
+          "parentGuid": "d03a2b0c5c98634d9e45c7b8560dfd4c",
           "depth": 2
         },
         "GlobalTransform": {}
@@ -670,13 +1009,13 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "f0076a702b49484d9f67f1aa62751651"
+          "guid": "0f51b6019067d345b56d829a28375a33"
         },
         "Transform": {
           "position": [
-            -7.823817253112793,
+            -11.699999809265137,
             14.825165748596192,
-            -48.06385040283203
+            -47.79999923706055
           ],
           "rotation": [
             0.5001783967018127,
@@ -700,7 +1039,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "272181ce3309cf4f9aa50d7b8d6bb2a5",
+          "parentGuid": "e03796885632004798d034717f0ea797",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -709,7 +1048,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "81df3388f3df6c4c844f91b362d8ffac"
+          "guid": "fa53223aa7133c4b89beaa3cd5e50dd1"
         },
         "Transform": {
           "position": [
@@ -774,7 +1113,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "f0076a702b49484d9f67f1aa62751651",
+          "parentGuid": "0f51b6019067d345b56d829a28375a33",
           "depth": 2
         },
         "GlobalTransform": {}
@@ -783,11 +1122,11 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "4317bc62e714c245bc4de6af6f9ab41a"
+          "guid": "1b360d9605f62e4e9e3df5e274166080"
         },
         "Transform": {
           "position": [
-            -11.678999900817871,
+            -11.5,
             12.355218887329102,
             -35.802188873291019
           ],
@@ -813,7 +1152,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "272181ce3309cf4f9aa50d7b8d6bb2a5",
+          "parentGuid": "e03796885632004798d034717f0ea797",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -822,7 +1161,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "9a7721d8c86bd94fa68dfaab29d6d1d9"
+          "guid": "a450ee125fa173449dae71ac4fd93c08"
         },
         "Transform": {
           "position": [
@@ -887,7 +1226,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "4317bc62e714c245bc4de6af6f9ab41a",
+          "parentGuid": "1b360d9605f62e4e9e3df5e274166080",
           "depth": 2
         },
         "GlobalTransform": {}
@@ -896,7 +1235,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "380d4ee03f949045b4cbe893efc3616f"
+          "guid": "91197b46b4948046885d2a81d16a9f9d"
         },
         "Transform": {
           "position": [
@@ -926,7 +1265,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "272181ce3309cf4f9aa50d7b8d6bb2a5",
+          "parentGuid": "e03796885632004798d034717f0ea797",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -935,7 +1274,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "3847bcfd54223043b31e529e8b277ab8"
+          "guid": "989194528cd1954b813ce8e962ada0e4"
         },
         "Transform": {
           "position": [
@@ -985,7 +1324,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "380d4ee03f949045b4cbe893efc3616f",
+          "parentGuid": "91197b46b4948046885d2a81d16a9f9d",
           "depth": 2
         },
         "GlobalTransform": {}
@@ -994,7 +1333,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "c4249bc28857364ba371d27c69fd4411"
+          "guid": "a7488a60ba7fbd49a163aa05b59df103"
         },
         "Transform": {
           "position": [
@@ -1024,7 +1363,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "272181ce3309cf4f9aa50d7b8d6bb2a5",
+          "parentGuid": "e03796885632004798d034717f0ea797",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -1033,7 +1372,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "64ad9c75a01d0940bef53ce65873a156"
+          "guid": "3bb56833eb304640a3004be7c574fe6a"
         },
         "Transform": {
           "position": [
@@ -1083,7 +1422,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "c4249bc28857364ba371d27c69fd4411",
+          "parentGuid": "a7488a60ba7fbd49a163aa05b59df103",
           "depth": 2
         },
         "GlobalTransform": {}
@@ -1092,7 +1431,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "b71d6fdb16a3d542a15d58866013865c"
+          "guid": "5b4419958be4f74ea86688b49a924a28"
         },
         "Transform": {
           "position": [
@@ -1122,7 +1461,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "272181ce3309cf4f9aa50d7b8d6bb2a5",
+          "parentGuid": "e03796885632004798d034717f0ea797",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -1131,7 +1470,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "959fe5cf77d1094cae0248d1ffac2381"
+          "guid": "3dba2b888c653649a1792223d466a52f"
         },
         "Transform": {
           "position": [
@@ -1181,7 +1520,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "b71d6fdb16a3d542a15d58866013865c",
+          "parentGuid": "5b4419958be4f74ea86688b49a924a28",
           "depth": 2
         },
         "GlobalTransform": {}
@@ -1190,7 +1529,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "c646baf0f18b1846bef83cb0cb8f3177"
+          "guid": "680cb7250f94114da2a649bc844dcb81"
         },
         "Transform": {
           "position": [
@@ -1220,7 +1559,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "272181ce3309cf4f9aa50d7b8d6bb2a5",
+          "parentGuid": "e03796885632004798d034717f0ea797",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -1229,7 +1568,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "c264bb735dc98e4e821b31e7f4147635"
+          "guid": "bb1b2a166a3ec34b9e4a14c46b11b3c7"
         },
         "Transform": {
           "position": [
@@ -1279,7 +1618,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "c646baf0f18b1846bef83cb0cb8f3177",
+          "parentGuid": "680cb7250f94114da2a649bc844dcb81",
           "depth": 2
         },
         "GlobalTransform": {}
@@ -1288,7 +1627,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "a441911bac3ac041a14f3610c6664b22"
+          "guid": "f4e6cb5d13ba8d46901818022e81a4fe"
         },
         "Transform": {
           "position": [
@@ -1318,7 +1657,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "272181ce3309cf4f9aa50d7b8d6bb2a5",
+          "parentGuid": "e03796885632004798d034717f0ea797",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -1327,7 +1666,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "3aad80098c4a6c42ba10c0fc78df0349"
+          "guid": "dec1ae63e9b8ee4380f34be6d86465e3"
         },
         "Transform": {
           "position": [
@@ -1377,7 +1716,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "a441911bac3ac041a14f3610c6664b22",
+          "parentGuid": "f4e6cb5d13ba8d46901818022e81a4fe",
           "depth": 2
         },
         "GlobalTransform": {}
@@ -1386,13 +1725,13 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "66e0e8e87ba3cb429922788be2873d0e"
+          "guid": "7a67bdd23650174c9919552894cd7d7a"
         },
         "Transform": {
           "position": [
             0.0,
-            -0.19402170181274415,
-            -45.05043411254883
+            -0.20000000298023225,
+            -45.0
           ],
           "rotation": [
             0.0,
@@ -1494,7 +1833,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "272181ce3309cf4f9aa50d7b8d6bb2a5",
+          "parentGuid": "e03796885632004798d034717f0ea797",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -1503,13 +1842,13 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "82f847fb7ef2584fbdb4d5e44bbe9f09"
+          "guid": "5e14e69c30b9b8429e28f481cdc4f2f6"
         },
         "Transform": {
           "position": [
             -5.0,
-            -0.12477302551269531,
-            -44.96257400512695
+            -0.20000000298023225,
+            -45.0
           ],
           "rotation": [
             0.0,
@@ -1607,7 +1946,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "272181ce3309cf4f9aa50d7b8d6bb2a5",
+          "parentGuid": "e03796885632004798d034717f0ea797",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -1616,13 +1955,13 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "96f09263a5345649b854e4b419179914"
+          "guid": "528e6e19d60b294bb2b5da2cc773a10d"
         },
         "Transform": {
           "position": [
             6.999444484710693,
-            -0.12477302551269531,
-            -45.05241394042969
+            -0.20000000298023225,
+            -45.0
           ],
           "rotation": [
             0.0,
@@ -1720,7 +2059,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "272181ce3309cf4f9aa50d7b8d6bb2a5",
+          "parentGuid": "e03796885632004798d034717f0ea797",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -1729,7 +2068,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "95a9e2782c481147a8fb9e20b96b6e62"
+          "guid": "5fd9dbd5c62e23429078c40eb942128f"
         },
         "Transform": {
           "position": [
@@ -1753,6 +2092,19 @@
           "name": "Rotate Platform",
           "tag": "Untagged",
           "selfActive": true
+        },
+        "AudioComponent": {
+          "soundName": "../Resources/Audio/RotatingPlatform_Loop.wav",
+          "eventName": "",
+          "useRandomVariation": false,
+          "is3D": true,
+          "isLooping": true,
+          "isStreaming": false,
+          "volume": 1.0,
+          "followTransform": true,
+          "minDistance": 5.0,
+          "maxDistance": 100.0,
+          "playOnStart": false
         },
         "Mesh": {
           "kind": "Primitive",
@@ -1833,7 +2185,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "272181ce3309cf4f9aa50d7b8d6bb2a5",
+          "parentGuid": "e03796885632004798d034717f0ea797",
           "depth": 1
         },
         "GlobalTransform": {},
@@ -1849,7 +2201,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "2136429bc9365c4f83ebf28e3803a675"
+          "guid": "7ba05f5477732941be1781adc382fc9f"
         },
         "Transform": {
           "position": [
@@ -1954,7 +2306,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "272181ce3309cf4f9aa50d7b8d6bb2a5",
+          "parentGuid": "e03796885632004798d034717f0ea797",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -1963,7 +2315,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "06d201c67872e44d87cfb2d362124cea"
+          "guid": "faae584b41281349ae8c887b99234ddd"
         },
         "Transform": {
           "position": [
@@ -2041,7 +2393,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "272181ce3309cf4f9aa50d7b8d6bb2a5",
+          "parentGuid": "e03796885632004798d034717f0ea797",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -2050,7 +2402,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "59278c8b4ea3934f8bee625a1b8167cd"
+          "guid": "6d9b8ebc05e9464f9c3c211af048d0ce"
         },
         "Transform": {
           "position": [
@@ -2154,7 +2506,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "272181ce3309cf4f9aa50d7b8d6bb2a5",
+          "parentGuid": "e03796885632004798d034717f0ea797",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -2163,7 +2515,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "d017532aa1579845b1d797f13826456c"
+          "guid": "e7063a189e729c4bbf82855b8cf4ca98"
         },
         "Transform": {
           "position": [
@@ -2187,6 +2539,19 @@
           "name": "Rotate Platform (1)",
           "tag": "Untagged",
           "selfActive": true
+        },
+        "AudioComponent": {
+          "soundName": "../Resources/Audio/RotatingPlatform_Loop.wav",
+          "eventName": "",
+          "useRandomVariation": false,
+          "is3D": true,
+          "isLooping": true,
+          "isStreaming": false,
+          "volume": 1.0,
+          "followTransform": true,
+          "minDistance": 5.0,
+          "maxDistance": 100.0,
+          "playOnStart": false
         },
         "Mesh": {
           "kind": "Primitive",
@@ -2267,7 +2632,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "272181ce3309cf4f9aa50d7b8d6bb2a5",
+          "parentGuid": "e03796885632004798d034717f0ea797",
           "depth": 1
         },
         "GlobalTransform": {},
@@ -2283,7 +2648,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "0f48ca001d136a488f9f65b6d4a8fd20"
+          "guid": "1bbe99a1528bc242803aea8d5a12dc78"
         },
         "Transform": {
           "position": [
@@ -2387,7 +2752,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "272181ce3309cf4f9aa50d7b8d6bb2a5",
+          "parentGuid": "e03796885632004798d034717f0ea797",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -2396,7 +2761,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "f9ae23f62de3aa46aed814b41f0301da"
+          "guid": "8cf56f6f44996b4994648d0aa9adb808"
         },
         "Transform": {
           "position": [
@@ -2500,7 +2865,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "272181ce3309cf4f9aa50d7b8d6bb2a5",
+          "parentGuid": "e03796885632004798d034717f0ea797",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -2509,7 +2874,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "415add05bf07414793880cb648583e2c"
+          "guid": "03371d13c2a8fa4e9ac1956aa14f9564"
         },
         "Transform": {
           "position": [
@@ -2541,7 +2906,7 @@
           "shapeType": "Box",
           "colliderpivot": [
             0.0,
-            1.600000023841858,
+            2.4000000953674318,
             0.0
           ],
           "posx": false,
@@ -2566,7 +2931,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "272181ce3309cf4f9aa50d7b8d6bb2a5",
+          "parentGuid": "e03796885632004798d034717f0ea797",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -2575,7 +2940,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "8565213182a945478ac4eecae46853fc"
+          "guid": "36e2c4d7d570e74ea2f96b93df6b2fff"
         },
         "Transform": {
           "position": [
@@ -2625,10 +2990,2155 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "415add05bf07414793880cb648583e2c",
+          "parentGuid": "03371d13c2a8fa4e9ac1956aa14f9564",
           "depth": 2
         },
         "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "b45cd66dfca56a42aab343ed0e52230f"
+        },
+        "Transform": {
+          "position": [
+            17.892763137817384,
+            14.825165748596192,
+            -92.30106353759766
+          ],
+          "rotation": [
+            0.5001792311668396,
+            0.4998167157173157,
+            -0.49983131885528567,
+            0.5001726150512695
+          ],
+          "scale": [
+            0.06911204010248184,
+            0.0500003956258297,
+            0.05881807208061218
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "wall (1)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "C_LongWall.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "e03796885632004798d034717f0ea797",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "6ee4dee112474943b26c14ecf62f6176"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_C_LongWall.fbx_Inner Wall.004_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
+            "materialHasRoughnessMap": true,
+            "materialHasMetallicMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_LongWall_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_LongWall_BaseColor.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_LongWall_Normal.png"
+            },
+            {
+              "slot": "materialRoughnessMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_LongWall_Roughness.png"
+            },
+            {
+              "slot": "material.metallicMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_LongWall_Metallic.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            -1.0
+          ],
+          "uvOffset": [
+            0.0,
+            1.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "b45cd66dfca56a42aab343ed0e52230f",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "20436d30e8d97846bce67c6ec89cfda9"
+        },
+        "Transform": {
+          "position": [
+            -0.09741652011871338,
+            5.0,
+            -70.8799057006836
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Collider",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cube",
+            "size": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            2.5999999046325685,
+            17.350000381469728,
+            2.049999952316284
+          ]
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              1.0,
+              1.0,
+              1.0,
+              0.0
+            ],
+            "materialAlpha": 0.0,
+            "materialTransparency": 1.0,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.5,
+            "materialEmissive": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 1.0,
+            "materialHasAlbedoMap": false,
+            "materialHasNormalMap": false,
+            "materialHasRoughnessMap": false,
+            "materialHasMetallicMap": false,
+            "materialHasAoMap": false
+          },
+          "textures": [],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "e03796885632004798d034717f0ea797",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "97a000427a90ef4e8774611f358daab8"
+        },
+        "Transform": {
+          "position": [
+            -0.09741652011871338,
+            5.0,
+            -57.890953063964847
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Collider (1)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cube",
+            "size": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            2.5999999046325685,
+            17.350000381469728,
+            2.049999952316284
+          ]
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              1.0,
+              1.0,
+              1.0,
+              0.0
+            ],
+            "materialAlpha": 0.0,
+            "materialTransparency": 1.0,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.5,
+            "materialEmissive": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 1.0,
+            "materialHasAlbedoMap": false,
+            "materialHasNormalMap": false,
+            "materialHasRoughnessMap": false,
+            "materialHasMetallicMap": false,
+            "materialHasAoMap": false
+          },
+          "textures": [],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "e03796885632004798d034717f0ea797",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "46743a6683f4dd4fadca453bafa44477"
+        },
+        "Transform": {
+          "position": [
+            -0.09741652011871338,
+            5.0,
+            -85.55811309814453
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Collider (2)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cube",
+            "size": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            2.5999999046325685,
+            17.350000381469728,
+            2.049999952316284
+          ]
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              1.0,
+              1.0,
+              1.0,
+              0.0
+            ],
+            "materialAlpha": 0.0,
+            "materialTransparency": 1.0,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.5,
+            "materialEmissive": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 1.0,
+            "materialHasAlbedoMap": false,
+            "materialHasNormalMap": false,
+            "materialHasRoughnessMap": false,
+            "materialHasMetallicMap": false,
+            "materialHasAoMap": false
+          },
+          "textures": [],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "e03796885632004798d034717f0ea797",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "11abccb9074f4542bf76f5ff0ea741de"
+        },
+        "Transform": {
+          "position": [
+            -0.09741652011871338,
+            5.0,
+            -99.54910278320313
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Collider (3)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cube",
+            "size": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            2.5999999046325685,
+            17.350000381469728,
+            2.049999952316284
+          ]
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              1.0,
+              1.0,
+              1.0,
+              0.0
+            ],
+            "materialAlpha": 0.0,
+            "materialTransparency": 1.0,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.5,
+            "materialEmissive": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 1.0,
+            "materialHasAlbedoMap": false,
+            "materialHasNormalMap": false,
+            "materialHasRoughnessMap": false,
+            "materialHasMetallicMap": false,
+            "materialHasAoMap": false
+          },
+          "textures": [],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "e03796885632004798d034717f0ea797",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "68dce797c57ecd499491609e3492921f"
+        },
+        "Transform": {
+          "position": [
+            -0.09741652011871338,
+            5.0,
+            -99.54910278320313
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Collider (4)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cube",
+            "size": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            2.5999999046325685,
+            17.350000381469728,
+            2.049999952316284
+          ]
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              1.0,
+              1.0,
+              1.0,
+              0.0
+            ],
+            "materialAlpha": 0.0,
+            "materialTransparency": 1.0,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.5,
+            "materialEmissive": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 1.0,
+            "materialHasAlbedoMap": false,
+            "materialHasNormalMap": false,
+            "materialHasRoughnessMap": false,
+            "materialHasMetallicMap": false,
+            "materialHasAoMap": false
+          },
+          "textures": [],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "e03796885632004798d034717f0ea797",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "7191ee33f23f7b4cb55dbc1d961224d3"
+        },
+        "Transform": {
+          "position": [
+            -6.399161338806152,
+            5.0,
+            -107.19999694824219
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Collider (5)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cube",
+            "size": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            23.299999237060548,
+            20.149999618530275,
+            0.550000011920929
+          ]
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              1.0,
+              1.0,
+              1.0,
+              0.0
+            ],
+            "materialAlpha": 0.0,
+            "materialTransparency": 1.0,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.5,
+            "materialEmissive": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 1.0,
+            "materialHasAlbedoMap": false,
+            "materialHasNormalMap": false,
+            "materialHasRoughnessMap": false,
+            "materialHasMetallicMap": false,
+            "materialHasAoMap": false
+          },
+          "textures": [],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "e03796885632004798d034717f0ea797",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "11ead1a53745ec4084e37de11102bb08"
+        },
+        "Transform": {
+          "position": [
+            -12.199999809265137,
+            5.0,
+            -52.819217681884769
+          ],
+          "rotation": [
+            0.0,
+            0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.9999045729637146,
+            1.0,
+            0.999903678894043
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Collider (6)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cube",
+            "size": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            19.5,
+            20.149999618530275,
+            0.699999988079071
+          ]
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              1.0,
+              1.0,
+              1.0,
+              0.0
+            ],
+            "materialAlpha": 0.0,
+            "materialTransparency": 1.0,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.5,
+            "materialEmissive": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 1.0,
+            "materialHasAlbedoMap": false,
+            "materialHasNormalMap": false,
+            "materialHasRoughnessMap": false,
+            "materialHasMetallicMap": false,
+            "materialHasAoMap": false
+          },
+          "textures": [],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "e03796885632004798d034717f0ea797",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "b43547c1d61fad4891869bd1fb7f51f8"
+        },
+        "Transform": {
+          "position": [
+            12.512910842895508,
+            3.3812057971954347,
+            -37.317440032958987
+          ],
+          "rotation": [
+            0.0,
+            0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.9998319149017334,
+            1.0,
+            0.9998310208320618
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Collider (7)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cube",
+            "size": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            5.900000095367432,
+            18.649999618530275,
+            0.44999998807907107
+          ]
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              1.0,
+              1.0,
+              1.0,
+              0.0
+            ],
+            "materialAlpha": 0.0,
+            "materialTransparency": 1.0,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.5,
+            "materialEmissive": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 1.0,
+            "materialHasAlbedoMap": false,
+            "materialHasNormalMap": false,
+            "materialHasRoughnessMap": false,
+            "materialHasMetallicMap": false,
+            "materialHasAoMap": false
+          },
+          "textures": [],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "e03796885632004798d034717f0ea797",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "ffdb55c49fb0ee478d1b82fa3a70bddb"
+        },
+        "Transform": {
+          "position": [
+            17.74294090270996,
+            5.0,
+            -91.91188049316406
+          ],
+          "rotation": [
+            0.0,
+            0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.9998399019241333,
+            1.0,
+            0.9998390078544617
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Collider (8)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cube",
+            "size": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            36.650001525878909,
+            20.149999618530275,
+            0.699999988079071
+          ]
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              1.0,
+              1.0,
+              1.0,
+              0.0
+            ],
+            "materialAlpha": 0.0,
+            "materialTransparency": 1.0,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.5,
+            "materialEmissive": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 1.0,
+            "materialHasAlbedoMap": false,
+            "materialHasNormalMap": false,
+            "materialHasRoughnessMap": false,
+            "materialHasMetallicMap": false,
+            "materialHasAoMap": false
+          },
+          "textures": [],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "e03796885632004798d034717f0ea797",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "8b4df5ac213d5c49aee2ce455df692f8"
+        },
+        "Transform": {
+          "position": [
+            12.512910842895508,
+            5.0,
+            -57.43340301513672
+          ],
+          "rotation": [
+            0.0,
+            0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.9999242424964905,
+            1.0,
+            0.9999233484268189
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Collider (9)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cube",
+            "size": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            34.29999923706055,
+            20.149999618530275,
+            0.699999988079071
+          ]
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              1.0,
+              1.0,
+              1.0,
+              0.0
+            ],
+            "materialAlpha": 0.0,
+            "materialTransparency": 1.0,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.5,
+            "materialEmissive": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 1.0,
+            "materialHasAlbedoMap": false,
+            "materialHasNormalMap": false,
+            "materialHasRoughnessMap": false,
+            "materialHasMetallicMap": false,
+            "materialHasAoMap": false
+          },
+          "textures": [],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "e03796885632004798d034717f0ea797",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "1dabf714d7f1d54a9ce99c8844dccf29"
+        },
+        "Transform": {
+          "position": [
+            -12.0,
+            3.9940807819366457,
+            -35.60296630859375
+          ],
+          "rotation": [
+            0.0,
+            0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.9997406601905823,
+            1.0,
+            0.9997397661209106
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Collider (10)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cube",
+            "size": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            9.899999618530274,
+            16.899999618530275,
+            0.44999998807907107
+          ]
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              1.0,
+              1.0,
+              1.0,
+              0.0
+            ],
+            "materialAlpha": 0.0,
+            "materialTransparency": 1.0,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.5,
+            "materialEmissive": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 1.0,
+            "materialHasAlbedoMap": false,
+            "materialHasNormalMap": false,
+            "materialHasRoughnessMap": false,
+            "materialHasMetallicMap": false,
+            "materialHasAoMap": false
+          },
+          "textures": [],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "e03796885632004798d034717f0ea797",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "9f8390edb5888445a29622d347ea2c25"
+        },
+        "Transform": {
+          "position": [
+            -0.0844082310795784,
+            10.350000381469727,
+            -84.587890625
+          ],
+          "rotation": [
+            0.0,
+            -0.7071068286895752,
+            0.0,
+            0.7071068286895752
+          ],
+          "scale": [
+            0.9996005892753601,
+            1.0,
+            0.9996005892753601
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "LightSource",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Trigger",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            2.0,
+            2.0,
+            2.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "e03796885632004798d034717f0ea797",
+          "depth": 1
+        },
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "class": "DisableLightCone"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "eb0df52d65429649a3c4cdcc7944c744"
+        },
+        "Transform": {
+          "position": [
+            1.899999976158142,
+            -5.300000190734863,
+            0.0
+          ],
+          "rotation": [
+            1.1944297773069935e-9,
+            -5.4587068198941328e-9,
+            0.21375498175621034,
+            0.9768874049186707
+          ],
+          "scale": [
+            2.5,
+            0.699999988079071,
+            2.5
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "LightCone10",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cone",
+            "size": [
+              1.5,
+              7.0,
+              1.5
+            ]
+          }
+        },
+        "PhysicComponent": {
+          "bodyType": "Trigger",
+          "motionType": "Kinematic",
+          "mass": 1.0,
+          "shapeType": "CustomMesh",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              1.0,
+              0.0,
+              0.0,
+              0.06499999761581421
+            ],
+            "materialAlpha": 0.06499999761581421,
+            "materialTransparency": 0.9350000023841858,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.5370000004768372,
+            "materialEmissive": [
+              1.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 0.5,
+            "materialHasAlbedoMap": false,
+            "materialHasNormalMap": false,
+            "materialHasRoughnessMap": false,
+            "materialHasMetallicMap": false,
+            "materialHasAoMap": false
+          },
+          "textures": [],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "9f8390edb5888445a29622d347ea2c25",
+          "depth": 2
+        },
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "class": "DamagePlayer"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "6a2ef6b28ba7e14487474ea921877210"
+        },
+        "Transform": {
+          "position": [
+            11.450125694274903,
+            0.50522780418396,
+            -107.30744171142578
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Collider (11)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cube",
+            "size": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            12.5,
+            9.699999809265137,
+            0.4000000059604645
+          ]
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              1.0,
+              1.0,
+              1.0,
+              0.0
+            ],
+            "materialAlpha": 0.0,
+            "materialTransparency": 1.0,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.5,
+            "materialEmissive": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 1.0,
+            "materialHasAlbedoMap": false,
+            "materialHasNormalMap": false,
+            "materialHasRoughnessMap": false,
+            "materialHasMetallicMap": false,
+            "materialHasAoMap": false
+          },
+          "textures": [],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "e03796885632004798d034717f0ea797",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "f10f818b80a59047a98e67f3334af072"
+        },
+        "Transform": {
+          "position": [
+            -0.08441025763750076,
+            10.424683570861817,
+            -58.65288543701172
+          ],
+          "rotation": [
+            0.0,
+            0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.999626636505127,
+            1.0,
+            0.999626636505127
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "LightSourceCurt",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Trigger",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            2.0,
+            2.0,
+            2.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "e03796885632004798d034717f0ea797",
+          "depth": 1
+        },
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "class": "DisableLightCone"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "44268e83d4166d4e910e90c8db482dc5"
+        },
+        "Transform": {
+          "position": [
+            2.5999999046325685,
+            -8.899999618530274,
+            0.0
+          ],
+          "rotation": [
+            8.10741918044755e-10,
+            -5.528749458250104e-9,
+            0.14508989453315736,
+            0.9894185066223145
+          ],
+          "scale": [
+            2.499997615814209,
+            1.3000004291534424,
+            2.5000033378601076
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "LightCone10",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cone",
+            "size": [
+              1.399999976158142,
+              7.0,
+              1.399999976158142
+            ]
+          }
+        },
+        "PhysicComponent": {
+          "bodyType": "Trigger",
+          "motionType": "Kinematic",
+          "mass": 1.0,
+          "shapeType": "CustomMesh",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              1.0,
+              0.0,
+              0.0,
+              0.06499999761581421
+            ],
+            "materialAlpha": 0.06499999761581421,
+            "materialTransparency": 0.9350000023841858,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.5370000004768372,
+            "materialEmissive": [
+              1.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 0.5,
+            "materialHasAlbedoMap": false,
+            "materialHasNormalMap": false,
+            "materialHasRoughnessMap": false,
+            "materialHasMetallicMap": false,
+            "materialHasAoMap": false
+          },
+          "textures": [],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "f10f818b80a59047a98e67f3334af072",
+          "depth": 2
+        },
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "class": "DamagePlayer"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "0267093c197d494ebe0b4d4a900fc0ce"
+        },
+        "Transform": {
+          "position": [
+            -0.08441150188446045,
+            10.425000190734864,
+            -57.067474365234378
+          ],
+          "rotation": [
+            0.0,
+            -0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.999596893787384,
+            1.0,
+            0.999596893787384
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "LightSource (1)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Trigger",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            2.0,
+            2.0,
+            2.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "e03796885632004798d034717f0ea797",
+          "depth": 1
+        },
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "class": "DisableLightCone"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "2dc5ddaed79cb940b879faff2e6683f4"
+        },
+        "Transform": {
+          "position": [
+            2.5999999046325685,
+            -8.899999618530274,
+            0.0
+          ],
+          "rotation": [
+            8.10741918044755e-10,
+            -5.528749458250104e-9,
+            0.14508989453315736,
+            0.9894185066223145
+          ],
+          "scale": [
+            2.499997615814209,
+            1.3000004291534424,
+            2.5
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "LightCone10",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cone",
+            "size": [
+              1.399999976158142,
+              7.0,
+              1.399999976158142
+            ]
+          }
+        },
+        "PhysicComponent": {
+          "bodyType": "Trigger",
+          "motionType": "Kinematic",
+          "mass": 1.0,
+          "shapeType": "CustomMesh",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              1.0,
+              0.0,
+              0.0,
+              0.06499999761581421
+            ],
+            "materialAlpha": 0.06499999761581421,
+            "materialTransparency": 0.9350000023841858,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.5370000004768372,
+            "materialEmissive": [
+              1.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 0.5,
+            "materialHasAlbedoMap": false,
+            "materialHasNormalMap": false,
+            "materialHasRoughnessMap": false,
+            "materialHasMetallicMap": false,
+            "materialHasAoMap": false
+          },
+          "textures": [],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "0267093c197d494ebe0b4d4a900fc0ce",
+          "depth": 2
+        },
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "class": "DamagePlayer"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "1e25ec6f90fbbe41957f907872aebcd3"
+        },
+        "Transform": {
+          "position": [
+            -0.0844079777598381,
+            10.350000381469727,
+            -86.41355895996094
+          ],
+          "rotation": [
+            0.0,
+            0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.9995840191841126,
+            1.0,
+            0.9995840191841126
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "LightSource (2)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Trigger",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            2.0,
+            2.0,
+            2.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "e03796885632004798d034717f0ea797",
+          "depth": 1
+        },
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "class": "DisableLightCone"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "ee984e1966023244a179f5894cf71f60"
+        },
+        "Transform": {
+          "position": [
+            1.899999976158142,
+            -5.300000190734863,
+            0.0
+          ],
+          "rotation": [
+            1.194429666284691e-9,
+            -5.4587063758049229e-9,
+            0.21375495195388795,
+            0.9768872857093811
+          ],
+          "scale": [
+            2.5,
+            0.699999988079071,
+            2.5
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "LightCone10",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cone",
+            "size": [
+              1.5,
+              7.0,
+              1.5
+            ]
+          }
+        },
+        "PhysicComponent": {
+          "bodyType": "Trigger",
+          "motionType": "Kinematic",
+          "mass": 1.0,
+          "shapeType": "CustomMesh",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              1.0,
+              0.0,
+              0.0,
+              0.06499999761581421
+            ],
+            "materialAlpha": 0.06499999761581421,
+            "materialTransparency": 0.9350000023841858,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.5370000004768372,
+            "materialEmissive": [
+              1.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 0.5,
+            "materialHasAlbedoMap": false,
+            "materialHasNormalMap": false,
+            "materialHasRoughnessMap": false,
+            "materialHasMetallicMap": false,
+            "materialHasAoMap": false
+          },
+          "textures": [],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "1e25ec6f90fbbe41957f907872aebcd3",
+          "depth": 2
+        },
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "class": "DamagePlayer"
+            }
+          ]
+        }
       }
     }
   ]
