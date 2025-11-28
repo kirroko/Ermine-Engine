@@ -406,26 +406,8 @@ void SceneManager::OpenScene(const std::string& path)
     ecs.GetSystem<Ermine::HierarchySystem>()->ForceUpdateAllTransforms();
     ecs.GetSystem<Ermine::Physics>()->UpdatePhysicList();
     
-    // STEP 6: *** NEW FIX *** Reset cursor state when loading a new scene
-    // This ensures cursor is properly reset when transitioning between scenes
-#if defined(EE_EDITOR)
-    GLFWwindow* window = glfwGetCurrentContext();
-    if (!window) {
-        EE_CORE_WARN("Cannot reset cursor - no GLFW context available");
-    } else if (Ermine::editor::EditorGUI::s_state == Ermine::editor::EditorGUI::SimState::playing) {
-        // Runtime scene load: unlock cursor by default
-        // Scripts will re-lock it if needed (e.g., FPS controller)
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-        if (glfwRawMouseMotionSupported())
-            glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_FALSE);
-        EE_CORE_INFO("Scene loaded at runtime - cursor unlocked (scripts can re-lock if needed)");
-    } else {
-        // Editor mode: ensure cursor is visible
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-        if (glfwRawMouseMotionSupported())
-            glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_FALSE);
-    }
-#endif
+    // Apply cursor rules based on scene type
+    ApplySceneCursorState(path);
     
     EE_CORE_INFO("Scene '{}' loaded successfully with {} entities", sceneName, newScene->GetEntityCount());
 }
@@ -568,4 +550,52 @@ void SceneManager::FlushPendingSceneRequest()
 
     // Perform the actual load now (safe point)
     OpenScene(path);
+}
+
+void SceneManager::ApplySceneCursorState(const std::string& scenePath)
+{
+    GLFWwindow* window = glfwGetCurrentContext();
+    if (!window)
+    {
+        EE_CORE_WARN("Cannot apply cursor rules � no GLFW window context");
+        return;
+    }
+
+    // Extract scene name (without extension)
+    std::filesystem::path p(scenePath);
+    std::string name = p.stem().string();
+
+#if defined(EE_EDITOR)
+    // If in editor mode (not playing), always show cursor
+    if (Ermine::editor::EditorGUI::s_state == Ermine::editor::EditorGUI::SimState::stopped)
+    {
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        if (glfwRawMouseMotionSupported())
+            glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_FALSE);
+        return;
+    }
+#endif
+
+    // --- Cursor Rules ---
+    if (name == "mainmenu") // main menu scene
+    {
+        // Show cursor
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        if (glfwRawMouseMotionSupported())
+            glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_FALSE);
+    }
+    else if (name == "game" || name == "cutscene_intro") // game or cutscene scene
+    {
+        // Hide and lock cursor
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        if (glfwRawMouseMotionSupported())
+            glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+    }
+    else
+    {
+        // Default behaviour � show cursor
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        if (glfwRawMouseMotionSupported())
+            glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_FALSE);
+    }
 }

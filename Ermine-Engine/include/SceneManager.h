@@ -154,6 +154,14 @@ public:
     void RequestOpenScene(const std::string& path);
     bool HasPendingSceneRequest() const { return m_PendingSceneRequest.has_value(); }
     void FlushPendingSceneRequest();
+
+    /*!
+    \brief Apply cursor state based on scene type
+    \details E.g., game scenes may hide the cursor, while editor scenes show it
+    \param scenePath The path of the scene to determine cursor state
+    */
+    void ApplySceneCursorState(const std::string& scenePath);
+
 private:
     SceneManager() = default;
 

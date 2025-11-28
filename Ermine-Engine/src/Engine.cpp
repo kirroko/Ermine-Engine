@@ -600,23 +600,8 @@ bool engine::Init(GLFWwindow* windowContext)
 	SceneManager::GetInstance().OpenScene("../Resources/Scenes/mainmenu.scene");
 	EE_CORE_INFO("Main menu scene loaded");
 #else
-	//auto defaultScene = std::make_shared<Scene>("Main Scene");
-	//SceneManager::GetInstance().SetActiveScene(defaultScene);
-
-	// TEMP - load level scene manually
-	//SceneManager::GetInstance().OpenScene("../Resources/Scenes/physicdemo.scene");
-	//editor::EditorGUI::s_state = editor::EditorGUI::SimState::playing;
-	//glfwSetInputMode(windowContext, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-	
-	// --- GAME BUILD: Create main menu scene dynamically ---
-	// auto mainMenuScene = CreateMainMenuScene();
-	// SceneManager::GetInstance().SetActiveScene(mainMenuScene);
-	// EE_CORE_INFO("Game build initialized with Main Menu scene");
-
 	SceneManager::GetInstance().OpenScene("../Resources/Scenes/mainmenu.scene"); // Load mainmenu scene
 	editor::EditorGUI::s_state = editor::EditorGUI::SimState::playing;			 // Set to playing state
-	glfwSetInputMode(windowContext, GLFW_CURSOR, GLFW_CURSOR_DISABLED);			 // Hide and capture cursor
-
 #endif
 
 	s_isInitialized = true;
