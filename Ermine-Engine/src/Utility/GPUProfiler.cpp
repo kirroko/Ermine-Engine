@@ -19,15 +19,15 @@ using namespace Ermine::graphics;
 
 void GPUProfiler::Init(size_t historyLength)
 {
-	if (s_Initialized)
-		return;
+    if (s_Initialized)
+        return;
 
-	s_MaxHistoryLength = historyLength;
-	s_FrameTimeHistory.clear();
-	s_TimerQueries.clear();
-	s_EventNames.clear();
-	s_EventQueryActive.clear();
-	s_MemoryByType.clear();
+    s_MaxHistoryLength = historyLength;
+    s_FrameTimeHistory.clear();
+    s_TimerQueries.clear();
+    s_EventNames.clear();
+    s_EventQueryActive.clear();
+    s_MemoryByType.clear();
 
     // Reset metrics
     s_CurrentMetrics = PerformanceMetrics{};
@@ -105,7 +105,7 @@ void GPUProfiler::EndFrame()
     float processTimeMs = std::chrono::duration<float, std::milli>(frameEndTime - s_FrameStartTime).count();
 
     // Includes v-sync and any pacing (present-to-present time)
-	const float effectiveTimeMs = FrameController::GetDeltaTime() * 1000.0f;
+    const float effectiveTimeMs = FrameController::GetDeltaTime() * 1000.0f;
 
     // Update metrics with this frame's data
     UpdateMetrics(effectiveTimeMs);
@@ -198,14 +198,14 @@ void GPUProfiler::TrackDrawCall(uint32_t vertexCount, uint32_t indexCount)
     if (indexCount > 0)
     {
         s_CurrentMetrics.vertexCount += indexCount / 4; // vertices processed ~= indices submitted
-		s_CurrentMetrics.triangleCount += indexCount/4/3; // triangle list
+        s_CurrentMetrics.triangleCount += indexCount / 4 / 3; // triangle list
     }
     else
     {
-		s_CurrentMetrics.vertexCount += vertexCount; // vertices processed
-		s_CurrentMetrics.triangleCount += vertexCount / 3; // triangle list
+        s_CurrentMetrics.vertexCount += vertexCount; // vertices processed
+        s_CurrentMetrics.triangleCount += vertexCount / 3; // triangle list
     }
-	//s_CurrentMetrics.triangleCount += indexCount / 3;
+    //s_CurrentMetrics.triangleCount += indexCount / 3;
 }
 
 void GPUProfiler::TrackMemoryAllocation(uint64_t sizeBytes, const std::string& type)
@@ -259,7 +259,7 @@ void GPUProfiler::SetCulledMeshesCount(uint32_t count)
 {
     if (!s_Initialized)
         return;
-	s_CurrentMetrics.culledMeshes = static_cast<uint32_t>(count);
+    s_CurrentMetrics.culledMeshes = static_cast<uint32_t>(count);
 }
 
 void GPUProfiler::ProcessTimerQueries()
@@ -284,21 +284,11 @@ void GPUProfiler::ProcessTimerQueries()
                 // Convert to milliseconds
                 float timeMs = static_cast<float>(timeElapsed) / 1000000.0f;
 
-                // Update event timing data with 60-frame averaging
-                const std::string& eventName = s_EventNames[i];
-                EventTimingData& eventData = s_EventTimings[eventName];
-                eventData.currentMs = timeMs;
-
-                // Add to history
-                eventData.history.push_back(timeMs);
-                if (eventData.history.size() > s_EventAveragingFrames)
-                    eventData.history.pop_front();
-
-                // Calculate 60-frame average
-                float sum = 0.0f;
-                for (float time : eventData.history)
-                    sum += time;
-                eventData.averageMs = eventData.history.empty() ? 0.0f : sum / static_cast<float>(eventData.history.size());
+                // Store the result
+                if (s_EventNames[i] == "Frame")
+                {
+                    s_CurrentMetrics.gpuFrameTimeMs = timeMs;
+                }
 
                 // Clean up the query
                 glDeleteQueries(1, &s_TimerQueries[i]);
@@ -337,18 +327,6 @@ void GPUProfiler::UpdateMetrics(float frameTimeMs)
     {
         s_CurrentMetrics.averageFrameTimeMs = frameTimeMs;
     }
-
-    // Update per-event timing metrics (60-frame averages)
-    s_CurrentMetrics.eventTimingsMs.clear();
-    float totalGpuTime = 0.0f;
-    for (const auto& [eventName, eventData] : s_EventTimings)
-    {
-        s_CurrentMetrics.eventTimingsMs[eventName] = eventData.averageMs;
-        totalGpuTime += eventData.averageMs;
-    }
-
-    // Calculate total GPU time by summing all passes
-    s_CurrentMetrics.gpuFrameTimeMs = totalGpuTime;
 }
 
 const GPUProfiler::PerformanceMetrics& GPUProfiler::GetMetrics()
