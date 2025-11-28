@@ -1577,7 +1577,8 @@ namespace
 		if (!path.empty())
 		{
 			EE_CORE_INFO("SceneManager: Loading scene from script: {}", path);
-			SceneManager::GetInstance().OpenScene(path);
+			//SceneManager::GetInstance().OpenScene(path);
+			SceneManager::GetInstance().RequestOpenScene(path);
 		}
 		else
 		{

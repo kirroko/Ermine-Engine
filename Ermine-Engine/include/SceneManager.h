@@ -150,6 +150,10 @@ public:
     */
     void RemoveHUDEntity();
 
+    // Defer scene loading to a safe point (start of next frame)
+    void RequestOpenScene(const std::string& path);
+    bool HasPendingSceneRequest() const { return m_PendingSceneRequest.has_value(); }
+    void FlushPendingSceneRequest();
 private:
     SceneManager() = default;
 
@@ -157,4 +161,6 @@ private:
     bool m_Dirty = false; // set true when scene modified
 
     std::shared_ptr<Ermine::Scene> m_ActiveScene;
+
+    std::optional<std::string> m_PendingSceneRequest;
 };

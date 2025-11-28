@@ -362,38 +362,26 @@ void SceneManager::OpenSceneDialog()
 
 void SceneManager::OpenScene(const std::string& path)
 {
-    // CRITICAL FIX: Clear all existing entities BEFORE loading the new scene
-    // This prevents entities from previous scenes (e.g., main menu) from persisting
-    // when transitioning to a new scene (e.g., cutscene)
     EE_CORE_INFO("Loading scene from: {}", path);
-    EE_CORE_INFO("Clearing all existing entities before loading new scene...");
-    
-    // STEP 1: Stop all systems that hold entity references
     auto& ecs = Ermine::ECS::GetInstance();
-    
-    // STEP 1a: Clean up script instances FIRST (before any entity destruction)
-    // This ensures scripts properly call OnDisable/OnDestroy without accessing invalid entities
+
     if (auto scriptSystem = ecs.GetSystem<Ermine::scripting::ScriptSystem>()) {
         EE_CORE_INFO("Cleaning up all script instances before entity destruction");
         scriptSystem->CleanupAllScripts();
     }
-    
-    // STEP 1b: Stop physics system and clear ALL physics bodies
+
     if (auto physics = ecs.GetSystem<Ermine::Physics>()) {
         EE_CORE_INFO("Clearing all physics bodies before entity destruction");
         physics->ClearPhysicBody();  // Remove all physics bodies from simulation
     }
-    
-    // STEP 2: Now it's safe to clear entities (no more script or physics references)
     ecs.ClearAllEntities();
 
-    // STEP 3: Load the new scene
     LoadSceneFromFile(ecs, path);
 
-    // STEP 4: Re-initialize systems with new entities
     if (auto renderer = ecs.GetSystem<Ermine::graphics::Renderer>()) {
         renderer->InitializeShadowMapResources();
         renderer->MarkMaterialsDirty();
+        renderer->MarkDrawDataForRebuild();
     }
 
     // Create Scene object from loaded entities
@@ -409,18 +397,17 @@ void SceneManager::OpenScene(const std::string& path)
 
     // Notify EditorGUI to update hierarchy panel and inspector
     Ermine::editor::EditorGUI::SetActiveScene(newScene);
-    if (auto scene = SceneManager::GetInstance().GetActiveScene())
+    if (m_ActiveScene)
     {
         auto baseName = xstrtool::PathBaseName(xstrtool::PathWithoutExtension(path));
-        scene->SetName(baseName);
-        scene->EnsureSyncedWithECS(/*force=*/true);
+        m_ActiveScene->SetName(baseName);
+        m_ActiveScene->EnsureSyncedWithECS(/*force=*/true);
     }
 
     m_CurrentScenePath = path;
     m_Dirty = false;
     
-    // STEP 5: REBUILD physics list after everything is loaded
-    // This creates new physics bodies for entities with PhysicComponents
+    // Create bodies for physicComponent
     if (auto physics = ecs.GetSystem<Ermine::Physics>()) {
         EE_CORE_INFO("Rebuilding physics bodies for new scene");
         physics->UpdatePhysicList();
@@ -570,4 +557,22 @@ void SceneManager::CreateHUDEntity()
 Ermine::EntityID SceneManager::GetHealthBar()
 {
     return healthBar;
+}
+
+void SceneManager::RequestOpenScene(const std::string& path)
+{
+    EE_CORE_INFO("SceneManager: Queuing scene load request: {}", path);
+    m_PendingSceneRequest = path;
+}
+
+void SceneManager::FlushPendingSceneRequest()
+{
+    if (!m_PendingSceneRequest)
+        return;
+
+    const std::string path = *m_PendingSceneRequest;
+    m_PendingSceneRequest.reset();
+
+    // Perform the actual load now (safe point)
+    OpenScene(path);
 }

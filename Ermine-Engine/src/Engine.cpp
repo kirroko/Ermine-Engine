@@ -694,6 +694,10 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 
 	glfwPollEvents();
 
+	auto& sm = SceneManager::GetInstance();
+	if (sm.HasPendingSceneRequest())
+		sm.FlushPendingSceneRequest();
+
 	// Game state update
 	while (FrameController::ShouldUpdateFixed())
 	{
