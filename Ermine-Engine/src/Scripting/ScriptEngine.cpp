@@ -1978,7 +1978,10 @@ namespace
 		using namespace Ermine;
 		EntityID id = GetEntityIDFromManaged(self);
 		if (id == 0 || !ECS::GetInstance().IsEntityValid(id) || !ECS::GetInstance().HasComponent<Transform>(id))
+		{
+			assert(false && "No Transform component on entity!");
 			return nullptr;
+		}
 		MonoObject* obj = CreateManagedTransformWrapper(id);
 		SetComponentGameObject(obj, id);
 		return obj;
@@ -2319,12 +2322,29 @@ namespace
 		return true;
 	}
 
-	MonoObject* icall_physics_gettransform(MonoObject* self)
+	MonoObject* icall_physics_gettransform(uint64_t id)
 	{
-		EntityID id = GetEntityIDFromManaged(self);
 		if (id == 0 || !ECS::GetInstance().IsEntityValid(id) || !ECS::GetInstance().HasComponent<Transform>(id))
+		{
+			assert(false && "Here!");
 			return nullptr;
+		}
 		MonoObject* obj = CreateManagedTransformWrapper(id);
+		SetComponentGameObject(obj, id);
+		return obj;
+	}
+
+	MonoObject* icall_rigidbody_get_rigidbody(uint64_t id)
+	{
+		if (id == 0 || !ECS::GetInstance().IsEntityValid(id) || !ECS::GetInstance().HasComponent<PhysicComponent>(id))
+		{
+			assert(false && "Here!");
+			return nullptr;
+		}
+		//auto physics = ECS::GetInstance().GetSystem<Physics>();
+		//if (!physics->HasRigidbody((EntityID)entityID))
+		//	return nullptr;
+		MonoObject* obj = CreateManagedRigidbodyWrapper(id);
 		SetComponentGameObject(obj, id);
 		return obj;
 	}
@@ -2909,7 +2929,8 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	mono_add_internal_call("ErmineEngine.Physics::MoveEuler", (const void*)icall_Physics_MoveEuler);
 	mono_add_internal_call("ErmineEngine.Physics::MoveQuat", (const void*)icall_Physics_MoveQuat);
 	mono_add_internal_call("ErmineEngine.Physics::Internal_Raycast", (const void*)icall_physics_raycast);
-	mono_add_internal_call("ErmineEngine.Physics.RaycastHit::get_transform", (const void*)icall_gameobject_get_transform);
+	mono_add_internal_call("ErmineEngine.Physics::Internal_GetTransform", (const void*)icall_physics_gettransform);
+	mono_add_internal_call("ErmineEngine.Physics::Internal_GetRigidbody", (const void*)icall_rigidbody_get_rigidbody);
 	mono_add_internal_call("ErmineEngine.Physics::RemovePhysic", (const void*)&icall_Physics_RemovePhysic);
 	mono_add_internal_call("ErmineEngine.Physics::Jump", (const void*)icall_Physics_Jump);
 #pragma endregion
