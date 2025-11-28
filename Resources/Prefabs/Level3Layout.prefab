@@ -37,6 +37,513 @@
     {
       "components": {
         "IDComponent": {
+          "guid": "7b49fa1da4ad5841a92459d2bda90216"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            11.0,
+            -31.299999237060548
+          ],
+          "rotation": [
+            0.0,
+            0.7071068286895752,
+            0.0,
+            0.7071068286895752
+          ],
+          "scale": [
+            0.9995967745780945,
+            1.0,
+            0.9995967745780945
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "LightSource (4)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Trigger",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            2.0,
+            2.0,
+            2.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "31f6e1b8612ef041acad32b8577f0251",
+          "depth": 1
+        },
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "class": "DisableLightCone"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "91262e88200bca4fb80d12bfef5eb762"
+        },
+        "Transform": {
+          "position": [
+            3.5,
+            -12.5,
+            0.0
+          ],
+          "rotation": [
+            8.10741918044755e-10,
+            -5.528749458250104e-9,
+            0.14508989453315736,
+            0.9894185066223145
+          ],
+          "scale": [
+            2.499997615814209,
+            1.3000004291534424,
+            2.5
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "LightCone10",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cone",
+            "size": [
+              3.0,
+              10.0,
+              3.0
+            ]
+          }
+        },
+        "PhysicComponent": {
+          "bodyType": "Trigger",
+          "motionType": "Kinematic",
+          "mass": 1.0,
+          "shapeType": "CustomMesh",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              1.0,
+              0.0,
+              0.0,
+              0.06499999761581421
+            ],
+            "materialAlpha": 0.06499999761581421,
+            "materialTransparency": 0.9350000023841858,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.5370000004768372,
+            "materialEmissive": [
+              1.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 0.5,
+            "materialHasAlbedoMap": false,
+            "materialHasNormalMap": false,
+            "materialHasRoughnessMap": false,
+            "materialHasMetallicMap": false,
+            "materialHasAoMap": false
+          },
+          "textures": [],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "7b49fa1da4ad5841a92459d2bda90216",
+          "depth": 2
+        },
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "class": "DamagePlayer"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "170cb00957e6904c8d80e443a62905eb"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            11.0,
+            -24.700000762939454
+          ],
+          "rotation": [
+            -9.497071005171165e-7,
+            0.7072288990020752,
+            -9.497071005171165e-7,
+            -0.7069846391677856
+          ],
+          "scale": [
+            0.9995967745780945,
+            1.0,
+            0.9995967745780945
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "LightSource (3)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Trigger",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            2.0,
+            2.0,
+            2.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "31f6e1b8612ef041acad32b8577f0251",
+          "depth": 1
+        },
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "class": "DisableLightCone"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "6356d4c17b734f48a46c141f0c00bdbe"
+        },
+        "Transform": {
+          "position": [
+            3.5,
+            -12.5,
+            0.0
+          ],
+          "rotation": [
+            8.10741918044755e-10,
+            -5.528749458250104e-9,
+            0.14508989453315736,
+            0.9894185066223145
+          ],
+          "scale": [
+            2.499997615814209,
+            1.3000004291534424,
+            2.5
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "LightCone10",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cone",
+            "size": [
+              3.0,
+              10.0,
+              3.0
+            ]
+          }
+        },
+        "PhysicComponent": {
+          "bodyType": "Trigger",
+          "motionType": "Kinematic",
+          "mass": 1.0,
+          "shapeType": "CustomMesh",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              1.0,
+              0.0,
+              0.0,
+              0.06499999761581421
+            ],
+            "materialAlpha": 0.06499999761581421,
+            "materialTransparency": 0.9350000023841858,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.5370000004768372,
+            "materialEmissive": [
+              1.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 0.5,
+            "materialHasAlbedoMap": false,
+            "materialHasNormalMap": false,
+            "materialHasRoughnessMap": false,
+            "materialHasMetallicMap": false,
+            "materialHasAoMap": false
+          },
+          "textures": [],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "170cb00957e6904c8d80e443a62905eb",
+          "depth": 2
+        },
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "class": "DamagePlayer"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "7fc3b658694ef942b17f2de05b5c0a5a"
+        },
+        "Transform": {
+          "position": [
+            5.5,
+            -0.5,
+            -51.0
+          ],
+          "rotation": [
+            0.0000011182943353560404,
+            -0.7072288990020752,
+            0.0000011182944490428782,
+            0.7069846391677856
+          ],
+          "scale": [
+            0.7499897480010986,
+            0.75,
+            0.7499897480010986
+          ]
+        },
+        "Light": {
+          "color": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "intensity": 1.0800000429153443,
+          "type": "Point",
+          "castsShadows": false,
+          "castsRays": false,
+          "innerAngle": -1.0,
+          "outerAngle": -1.0,
+          "radius": 5.0
+        },
+        "ObjectMetaData": {
+          "name": "Book",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Trigger",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            2.0,
+            2.0,
+            0.5
+          ]
+        },
+        "ModelComponent": {
+          "model": "C_Book.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "31f6e1b8612ef041acad32b8577f0251",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "953d2c25a9a4e446b72594bac0946648"
+        },
+        "Transform": {
+          "position": [
+            312.50006103515627,
+            -62.5,
+            559.9999389648438
+          ],
+          "rotation": [
+            0.0,
+            0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            25.0,
+            25.0,
+            25.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_C_Book.fbx_Mesh_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_BOOK_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP5_csd3401\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_BOOK_BaseColor.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            -1.0
+          ],
+          "uvOffset": [
+            0.0,
+            1.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "7fc3b658694ef942b17f2de05b5c0a5a",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
           "guid": "72a626c8f9301d428de5be045a2749ac"
         },
         "Transform": {
@@ -279,7 +786,7 @@
           "position": [
             -20.100000381469728,
             3.5,
-            -22.5
+            -22.799999237060548
           ],
           "rotation": [
             -0.4999998211860657,
@@ -288,7 +795,7 @@
             0.5000001788139343
           ],
           "scale": [
-            0.10000000149011612,
+            0.0949999988079071,
             0.10000000149011612,
             0.05900000035762787
           ]
@@ -882,9 +1389,9 @@
         },
         "Transform": {
           "position": [
-            0.1398734450340271,
-            4.400000095367432,
-            -52.0
+            0.699999988079071,
+            5.0,
+            -51.900001525878909
           ],
           "rotation": [
             0.0,
@@ -893,8 +1400,8 @@
             1.0
           ],
           "scale": [
-            10.0,
-            1.0,
+            15.5,
+            0.25,
             10.0
           ]
         },
@@ -1046,7 +1553,7 @@
           "position": [
             0.0,
             0.0,
-            -56.0
+            -55.0
           ],
           "rotation": [
             0.7071068286895752,
@@ -1700,7 +2207,7 @@
         },
         "Transform": {
           "position": [
-            0.0,
+            0.699999988079071,
             -3.4000000953674318,
             -52.0
           ],
@@ -1711,7 +2218,7 @@
             1.0
           ],
           "scale": [
-            10.0,
+            15.5,
             1.0,
             10.0
           ]
@@ -1926,7 +2433,7 @@
         },
         "Transform": {
           "position": [
-            0.7202576994895935,
+            0.0,
             -2.0,
             -28.0
           ],
@@ -2979,7 +3486,7 @@
           "position": [
             -20.099666595458986,
             -13.876089096069336,
-            -22.5
+            -22.799999237060548
           ],
           "rotation": [
             -0.4999998211860657,
@@ -2988,7 +3495,7 @@
             0.5000001788139343
           ],
           "scale": [
-            0.10000000149011612,
+            0.0949999988079071,
             0.10000000149011612,
             0.05900000035762787
           ]
