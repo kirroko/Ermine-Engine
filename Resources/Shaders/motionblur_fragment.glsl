@@ -6,7 +6,8 @@ out vec4 FragColor;
 
 // Input textures
 uniform sampler2D u_ColorTexture;
-uniform uvec2 u_DepthHandle;  // Bindless depth texture handle from G-Buffer
+uniform uvec2 u_DepthHandle;   // Bindless depth texture handle from G-Buffer
+uniform uvec2 u_GBuffer3Handle; // Bindless GBuffer3 handle for motion blur flag
 
 // Motion blur parameters
 uniform mat4 u_CurrentViewProjection;
@@ -34,6 +35,17 @@ void main()
 
     // Skip motion blur for skybox (depth = 1.0)
     if (depth >= 1.0)
+    {
+        FragColor = vec4(color, 1.0);
+        return;
+    }
+
+    // Sample motion blur flag from GBuffer3.a
+    sampler2D gBuffer3Sampler = sampler2D(u_GBuffer3Handle);
+    float motionBlurFlag = texture(gBuffer3Sampler, TexCoord).a;
+
+    // Skip motion blur for camera-attached objects (flag = 1.0)
+    if (motionBlurFlag > 0.5)
     {
         FragColor = vec4(color, 1.0);
         return;

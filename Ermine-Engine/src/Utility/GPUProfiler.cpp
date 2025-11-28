@@ -284,11 +284,21 @@ void GPUProfiler::ProcessTimerQueries()
                 // Convert to milliseconds
                 float timeMs = static_cast<float>(timeElapsed) / 1000000.0f;
 
-                // Store the result
-                if (s_EventNames[i] == "Frame")
-                {
-                    s_CurrentMetrics.gpuFrameTimeMs = timeMs;
-                }
+                // Update event timing data with 60-frame averaging
+                const std::string& eventName = s_EventNames[i];
+                EventTimingData& eventData = s_EventTimings[eventName];
+                eventData.currentMs = timeMs;
+
+                // Add to history
+                eventData.history.push_back(timeMs);
+                if (eventData.history.size() > s_EventAveragingFrames)
+                    eventData.history.pop_front();
+
+                // Calculate 60-frame average
+                float sum = 0.0f;
+                for (float time : eventData.history)
+                    sum += time;
+                eventData.averageMs = eventData.history.empty() ? 0.0f : sum / static_cast<float>(eventData.history.size());
 
                 // Clean up the query
                 glDeleteQueries(1, &s_TimerQueries[i]);
@@ -327,6 +337,18 @@ void GPUProfiler::UpdateMetrics(float frameTimeMs)
     {
         s_CurrentMetrics.averageFrameTimeMs = frameTimeMs;
     }
+
+    // Update per-event timing metrics (60-frame averages)
+    s_CurrentMetrics.eventTimingsMs.clear();
+    float totalGpuTime = 0.0f;
+    for (const auto& [eventName, eventData] : s_EventTimings)
+    {
+        s_CurrentMetrics.eventTimingsMs[eventName] = eventData.averageMs;
+        totalGpuTime += eventData.averageMs;
+    }
+
+    // Calculate total GPU time by summing all passes
+    s_CurrentMetrics.gpuFrameTimeMs = totalGpuTime;
 }
 
 const GPUProfiler::PerformanceMetrics& GPUProfiler::GetMetrics()

@@ -396,12 +396,12 @@ void unpackEmissive(vec4 packedEmissive, out vec3 emissive, out float emissiveIn
 }
 
 // Unpack material properties from RT3 (RGBA8 format)
-void unpackMaterialProperties(vec4 packedMaterial, out float roughness, 
+void unpackMaterialProperties(vec4 packedMaterial, out float roughness,
                              out float metallic, out float ao) {
     roughness = packedMaterial.r;
     metallic = packedMaterial.g;
     ao = packedMaterial.b;
-    // packedMaterial.a is unused
+    // packedMaterial.a contains motion blur flag (not used in lighting pass)
 }
 
 // Main G-Buffer reading function (call this in lighting fragment shader)
