@@ -379,10 +379,10 @@ void SceneManager::OpenScene(const std::string& path)
     }
     
     // STEP 1b: Stop physics system and clear ALL physics bodies
-    if (auto physics = ecs.GetSystem<Ermine::Physics>()) {
-        EE_CORE_INFO("Clearing all physics bodies before entity destruction");
-        physics->ClearPhysicBody();  // Remove all physics bodies from simulation
-    }
+    //if (auto physics = ecs.GetSystem<Ermine::Physics>()) {
+    //    EE_CORE_INFO("Clearing all physics bodies before entity destruction");
+    //    physics->ClearPhysicBody();  // Remove all physics bodies from simulation
+    //}
     
     // STEP 2: Now it's safe to clear entities (no more script or physics references)
     ecs.ClearAllEntities();
@@ -421,10 +421,10 @@ void SceneManager::OpenScene(const std::string& path)
     
     // STEP 5: REBUILD physics list after everything is loaded
     // This creates new physics bodies for entities with PhysicComponents
-    if (auto physics = ecs.GetSystem<Ermine::Physics>()) {
-        EE_CORE_INFO("Rebuilding physics bodies for new scene");
-        physics->UpdatePhysicList();
-    }
+    //if (auto physics = ecs.GetSystem<Ermine::Physics>()) {
+    //    EE_CORE_INFO("Rebuilding physics bodies for new scene");
+    //    physics->UpdatePhysicList();
+    //}
     
     // STEP 6: *** NEW FIX *** Reset cursor state when loading a new scene
     // This ensures cursor is properly reset when transitioning between scenes
