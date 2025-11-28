@@ -72,7 +72,7 @@ namespace Ermine {
         }
 
         ImGui::SameLine();
-        ImGui::Checkbox("Show Inactive", &m_ShowInactive);
+        //ImGui::Checkbox("Show Inactive", &m_ShowInactive);
         if (ImGui::IsItemHovered()) {
             ImGui::SetTooltip("Show inactive entities (grayed out)");
         }
@@ -198,9 +198,9 @@ namespace Ermine {
         bool isInactive = !metadata.selfActive;
 
         // If inactive and we're not showing inactive entities, skip rendering
-        if (isInactive && !m_ShowInactive) {
-            return;
-        }
+        //if (isInactive && !m_ShowInactive) {
+        //    return;
+        //}
 
         // Push gray color for inactive entities
         bool pushedColor = false;

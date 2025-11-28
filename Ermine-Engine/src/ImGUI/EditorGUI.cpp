@@ -594,11 +594,13 @@ void EditorGUI::ViewPortWindow(bool& show)
     const ImVec2 imgSize = ImGui::GetItemRectSize();
 
     // UPDATE UI BUTTON SYSTEM WITH VIEWPORT INFO
+#ifdef EE_EDITOR
     auto uiButtonSystem = ECS::GetInstance().GetSystem<UIButtonSystem>();
     if (uiButtonSystem)
     {
         uiButtonSystem->SetViewportInfo(imgMin, imgSize);
     }
+#endif
 
     // Left-click within the image, perform picking
     if (!isPlaying && ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
