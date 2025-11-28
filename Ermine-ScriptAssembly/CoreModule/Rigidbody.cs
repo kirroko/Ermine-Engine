@@ -36,9 +36,6 @@ namespace ErmineEngine
         public static extern void MoveQuat(ulong entityID, Vector3 position, Quaternion rotation);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
-        private static extern Transform Internal_GetTransform();
-
-        [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern void Jump(ulong entityID, float jump);
         #endregion
 

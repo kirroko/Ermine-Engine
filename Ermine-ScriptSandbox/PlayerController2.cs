@@ -88,6 +88,8 @@ public class PlayerController2 : MonoBehaviour
 
         // Sync physics collider
         Physics.SetPosition((ulong)gameObject.GetInstanceID(), newPos);
+
+        
     }
 
     private void HandleLook()
@@ -155,7 +157,7 @@ public class PlayerController2 : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.E))
         {
-            Physics.RaycastHit hit;
+            RaycastHit hit;
 
             bool hitSomething = Physics.Raycast(
                 gameObject.transform.position + new Vector3(0, cam.position.y * 0.01f, 0),
@@ -166,11 +168,11 @@ public class PlayerController2 : MonoBehaviour
 
             if (!hitSomething) return;
 
-            ulong id = hit.entityID;
-
-            if (id != 0)
+            GameObject obj = hit.transform.gameObject;
+            Debug.LogError("hit");
+            if (obj.GetInstanceID() != 0)
             {
-                GameObject obj = GameObject.FromEntityID(id);
+                //GameObject obj = GameObject.FromEntityID(id);
                 //Debug.Log("You are looking at: " + obj.name);
 
                 if (obj.name == "Switch" && interactTimer >= 1f)
@@ -216,15 +218,15 @@ public class PlayerController2 : MonoBehaviour
         }
     }
 
-    private ulong GetEntityID(Physics.RaycastHit hit)
-    {
-        var field = typeof(Physics.RaycastHit).GetField(
-            "entityID",
-            System.Reflection.BindingFlags.Public |
-            System.Reflection.BindingFlags.Instance);
+    //private ulong GetEntityID(RaycastHit hit)
+    //{
+    //    var field = typeof(RaycastHit).GetField(
+    //        "entityID",
+    //        System.Reflection.BindingFlags.Public |
+    //        System.Reflection.BindingFlags.Instance);
 
-        return (ulong)field.GetValue(hit);
-    }
+    //    return (ulong)field.GetValue(hit);
+    //}
 
     void OnCollisionEnter(Collision col)
     {

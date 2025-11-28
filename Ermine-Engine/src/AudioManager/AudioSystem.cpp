@@ -584,8 +584,8 @@ void AudioSystem::UpdateAudioComponents()
         if (audioComp.isPlaying && audioComp.channelId != -1)
         {
             float currentVolume = ConvertVolumeToFMOD(audioComp.volume);
-            std::cout << "Updating volume for channel " << audioComp.channelId
-                << " to " << audioComp.volume << " (dB: " << currentVolume << ")" << std::endl;
+            //std::cout << "Updating volume for channel " << audioComp.channelId
+            //    << " to " << audioComp.volume << " (dB: " << currentVolume << ")" << std::endl;
             CAudioEngine::SetChannelVolume(audioComp.channelId, currentVolume);
         }
 

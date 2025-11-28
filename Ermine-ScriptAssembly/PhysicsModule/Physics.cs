@@ -17,10 +17,24 @@ using System.Runtime.InteropServices;
 
 namespace ErmineEngine
 {
+    [StructLayout(LayoutKind.Sequential)]
+    public struct RaycastHit
+    {
+        public Vector3 point;      // The impact point in world space where the ray hit the collider.
+        public Vector3 normal;     // The normal of the surface the ray hit.
+        public float distance;     // The distance from the ray's origin to the impact point.
+        //public Collider collider;  // The collider that was hit.
+        internal ulong entityID;
+
+        public Transform transform => Physics.Internal_GetTransform(entityID);
+        public Rigidbody rigidbody => Physics.Internal_GetRigidbody(entityID);
+    }
+
     public class Physics
     {
+        // TODO: Internal call in with internal access modifier
         [MethodImpl(MethodImplOptions.InternalCall)]
-        private static extern bool Internal_Raycast(Vector3 origin, Vector3 direction, out RaycastHit hitInfo, float maxDistance);
+        internal static extern bool Internal_Raycast(Vector3 origin, Vector3 direction, out RaycastHit hitInfo, float maxDistance);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern void RemovePhysic(ulong entityID);
@@ -47,29 +61,15 @@ namespace ErmineEngine
         public static extern void ForceUpdate();
 
         [MethodImpl(MethodImplOptions.InternalCall)]
-        private static extern Transform Internal_GetTransform();
+        internal static extern Transform Internal_GetTransform(ulong id);
 
-        [StructLayout(LayoutKind.Sequential)]
-        public struct RaycastHit
-        {
-            public Vector3 point;      // The impact point in world space where the ray hit the collider.
-            public Vector3 normal;     // The normal of the surface the ray hit.
-            public float distance;     // The distance from the ray's origin to the impact point.
-            //public Collider collider;  // The collider that was hit.
-            public ulong entityID;
-            //public Transform transform
-            //{
-            //    [MethodImpl(MethodImplOptions.InternalCall)]
-            //    get;
-            //}
-        }
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern Rigidbody Internal_GetRigidbody(ulong id);
 
         public static bool Raycast(Vector3 origin, Vector3 direction, out RaycastHit hitInfo, float maxDistance)
         {
             hitInfo = new RaycastHit();
             return Internal_Raycast(origin, direction, out hitInfo, maxDistance);
         }
-
-       
     }
 }
