@@ -183,8 +183,9 @@ namespace Ermine
 		 * @brief Reset the mouse scroll accumulation in editor mode (ignores game input blocking)
 		 */ 
         static void ResetMouseScrollOffsetEditor();
+
+        static GLFWwindow* s_Window; // TODO: This got borrowed from ScriptEngine, might want to think about proper usage?
     private:
-        static GLFWwindow* s_Window;
         static float s_LastMouseX;
         static float s_LastMouseY;
         static float s_MouseDeltaX;

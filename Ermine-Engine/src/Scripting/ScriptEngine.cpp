@@ -30,6 +30,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "SceneManager.h"
 #include "Serialisation.h"
 #include "UIRenderSystem.h"
+#include "Window.h"
 
 namespace fs = std::filesystem;
 
@@ -1593,12 +1594,17 @@ namespace
 #if defined(EE_EDITOR)
 		EE_CORE_WARN("Application.Quit() called in editor - this only works in game builds");
 #else
-		// In game build, request window close
-		extern GLFWwindow* g_window; // Assume this is available globally
-		if (g_window)
-		{
-			glfwSetWindowShouldClose(g_window, GLFW_TRUE);
-		}
+		//// In game build, request window close
+		//extern GLFWwindow* g_window; // Assume this is available globally
+		//if (g_window)
+		//{
+		//	glfwSetWindowShouldClose(g_window, GLFW_TRUE);
+		//}
+
+		if (Ermine::Input::s_Window)
+			Ermine::Window::ShouldCloseWindow(Ermine::Input::s_Window);
+		else
+			assert(false && "Cannot close due to input s_window not populated");
 #endif
 	}
 #pragma endregion

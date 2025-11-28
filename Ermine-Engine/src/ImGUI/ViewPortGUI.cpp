@@ -606,11 +606,13 @@ void Ermine::ViewPortGUI::Update()
 	const ImVec2 imgSize = ImGui::GetItemRectSize();
 
 	// UPDATE UI BUTTON SYSTEM WITH VIEWPORT INFO FOR EDITOR MODE
+#ifdef EE_EDITOR
 	auto uiButtonSystem = ECS::GetInstance().GetSystem<UIButtonSystem>();
 	if (uiButtonSystem)
 	{
 		uiButtonSystem->SetViewportInfo(imgMin, imgSize);
 	}
+#endif
 
 	// View cube (top-right corner)
 	const float pad = 10.f;
