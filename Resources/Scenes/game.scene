@@ -472,48 +472,10 @@
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "PlayerController2",
-              "enabled": true,
-              "fields": {
-                "mouseHorSens": {
-                  "t": 0,
-                  "v": 0.30000001192092898
-                },
-                "jumpHeight": {
-                  "t": 0,
-                  "v": 2.0
-                },
-                "mouseVertSens": {
-                  "t": 0,
-                  "v": 0.30000001192092898
-                },
-                "moveSpeed": {
-                  "t": 0,
-                  "v": 5.0
-                },
-                "jumpspeed": {
-                  "t": 0,
-                  "v": 5.0
-                },
-                "camDefaultY": {
-                  "t": 0,
-                  "v": 5.0
-                },
-                "crouchLerpSpeed": {
-                  "t": 0,
-                  "v": 6.0
-                }
-              }
+              "class": "PlayerController2"
             },
             {
-              "class": "OrbTeleport",
-              "enabled": true,
-              "fields": {
-                "damage": {
-                  "t": 0,
-                  "v": 10.0
-                }
-              }
+              "class": "OrbTeleport"
             }
           ]
         }
@@ -8076,41 +8038,6 @@
       }
     },
     {
-      "id": 111,
-      "components": {
-        "IDComponent": {
-          "guid": "31f6e1b8612ef041acad32b8577f0251"
-        },
-        "Transform": {
-          "position": [
-            12.800000190734864,
-            -2.4749999046325685,
-            -110.25830841064453
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Level3Layout",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "HierarchyComponent": {
-          "depth": 0
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
       "id": 112,
       "components": {
         "IDComponent": {
@@ -8118,9 +8045,9 @@
         },
         "Transform": {
           "position": [
-            -17.5,
-            3.0,
-            -35.599998474121097
+            -4.699999809265137,
+            0.5250000953674316,
+            -145.85830688476563
           ],
           "rotation": [
             0.7071068286895752,
@@ -8130,8 +8057,8 @@
           ],
           "scale": [
             0.009999999776482582,
-            0.010000000707805157,
-            0.010000000707805157
+            0.009999998845160008,
+            0.009999998845160008
           ]
         },
         "ObjectMetaData": {
@@ -8171,7 +8098,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "31f6e1b8612ef041acad32b8577f0251",
+          "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -8305,20 +8232,20 @@
         },
         "Transform": {
           "position": [
-            -13.0,
-            7.646651744842529,
-            -2.4000000953674318
+            -0.19999980926513673,
+            5.171651840209961,
+            -112.65830993652344
           ],
           "rotation": [
-            -6.434212878048129e-7,
-            0.7071066498756409,
-            0.70710688829422,
-            -6.433708108488645e-7
+            -6.434214014916506e-7,
+            0.7071065902709961,
+            0.7071069478988648,
+            -6.433706971620268e-7
           ],
           "scale": [
             0.03999999910593033,
-            0.029995765537023546,
-            0.042991530150175098
+            0.029995761811733247,
+            0.0429915226995945
           ]
         },
         "ObjectMetaData": {
@@ -8371,7 +8298,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "31f6e1b8612ef041acad32b8577f0251",
+          "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -8445,20 +8372,20 @@
         },
         "Transform": {
           "position": [
-            12.699999809265137,
-            7.646999835968018,
-            -2.4000000953674318
+            25.5,
+            5.171999931335449,
+            -112.65830993652344
           ],
           "rotation": [
-            -6.434221404560958e-7,
-            0.7071066498756409,
-            0.70710688829422,
+            -6.434220836126769e-7,
+            0.7071065902709961,
+            0.7071069478988648,
             -6.433699581975816e-7
           ],
           "scale": [
             0.03999999910593033,
-            0.029995571821928026,
-            0.042991142719984058
+            0.029995568096637727,
+            0.04299113526940346
           ]
         },
         "ObjectMetaData": {
@@ -8511,7 +8438,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "31f6e1b8612ef041acad32b8577f0251",
+          "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -8585,20 +8512,20 @@
         },
         "Transform": {
           "position": [
-            27.569778442382814,
-            -2.1779632568359377,
-            2.4000000953674318
+            40.36977767944336,
+            -4.652963161468506,
+            -107.85830688476563
           ],
           "rotation": [
-            -6.434173656089115e-7,
-            0.7071066498756409,
-            0.70710688829422,
+            -6.434174224523304e-7,
+            0.7071065902709961,
+            0.7071069478988648,
             -6.433747330447659e-7
           ],
           "scale": [
             0.07999999821186066,
-            0.029996776953339578,
-            0.04299355298280716
+            0.029996773228049279,
+            0.04299354553222656
           ]
         },
         "ObjectMetaData": {
@@ -8651,7 +8578,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "31f6e1b8612ef041acad32b8577f0251",
+          "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -8725,20 +8652,20 @@
         },
         "Transform": {
           "position": [
-            -28.83700180053711,
-            -2.178065776824951,
-            2.4000000953674318
+            -16.037002563476564,
+            -4.6530656814575199,
+            -107.85830688476563
           ],
           "rotation": [
-            -6.434184456338699e-7,
-            0.7071066498756409,
-            0.70710688829422,
+            -6.434185593207076e-7,
+            0.7071065902709961,
+            0.7071069478988648,
             -6.433737098632264e-7
           ],
           "scale": [
             0.07999999821186066,
-            0.02999647706747055,
-            0.04299295321106911
+            0.029996473342180253,
+            0.04299294576048851
           ]
         },
         "ObjectMetaData": {
@@ -8791,7 +8718,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "31f6e1b8612ef041acad32b8577f0251",
+          "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -8865,9 +8792,9 @@
         },
         "Transform": {
           "position": [
-            2.75,
-            4.484096527099609,
-            -46.89226531982422
+            15.550000190734864,
+            2.009096622467041,
+            -157.15057373046876
           ],
           "rotation": [
             0.0,
@@ -8918,7 +8845,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "31f6e1b8612ef041acad32b8577f0251",
+          "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -8992,9 +8919,9 @@
         },
         "Transform": {
           "position": [
-            -2.1500000953674318,
-            4.484096527099609,
-            -46.89226531982422
+            10.649999618530274,
+            2.009096622467041,
+            -157.15057373046876
           ],
           "rotation": [
             0.0,
@@ -9045,7 +8972,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "31f6e1b8612ef041acad32b8577f0251",
+          "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -9119,9 +9046,9 @@
         },
         "Transform": {
           "position": [
-            2.752004623413086,
-            -2.971067428588867,
-            -46.89226531982422
+            15.55200481414795,
+            -5.4460673332214359,
+            -157.15057373046876
           ],
           "rotation": [
             0.0,
@@ -9172,7 +9099,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "31f6e1b8612ef041acad32b8577f0251",
+          "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -9246,9 +9173,9 @@
         },
         "Transform": {
           "position": [
-            -2.095036506652832,
-            -2.971067428588867,
-            -46.89226531982422
+            10.704963684082032,
+            -5.4460673332214359,
+            -157.15057373046876
           ],
           "rotation": [
             0.0,
@@ -9299,7 +9226,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "31f6e1b8612ef041acad32b8577f0251",
+          "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -9373,20 +9300,20 @@
         },
         "Transform": {
           "position": [
-            0.5,
-            11.911247253417969,
-            -47.419410705566409
+            13.300000190734864,
+            9.436246871948243,
+            -157.67771911621095
           ],
           "rotation": [
             -0.7071068286895752,
             -5.14486630381894e-12,
-            5.14486630381894e-12,
+            5.144865870138071e-12,
             0.7071067094802856
           ],
           "scale": [
             0.019999999552965165,
-            0.10000000149011612,
-            0.03500000014901161
+            0.09999998658895493,
+            0.034999992698431018
           ]
         },
         "ObjectMetaData": {
@@ -9439,7 +9366,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "31f6e1b8612ef041acad32b8577f0251",
+          "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -9513,9 +9440,9 @@
         },
         "Transform": {
           "position": [
-            18.700000762939454,
-            4.457327365875244,
-            -47.41681671142578
+            31.5,
+            1.9823274612426758,
+            -157.6751251220703
           ],
           "rotation": [
             -0.7071068286895752,
@@ -9525,8 +9452,8 @@
           ],
           "scale": [
             0.05000000074505806,
-            0.09999648481607437,
-            0.05899817869067192
+            0.09999646991491318,
+            0.058998171240091327
           ]
         },
         "ObjectMetaData": {
@@ -9579,7 +9506,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "31f6e1b8612ef041acad32b8577f0251",
+          "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -9653,20 +9580,20 @@
         },
         "Transform": {
           "position": [
-            0.5,
-            -15.0,
-            -47.41681671142578
+            13.300000190734864,
+            -17.475000381469728,
+            -157.6751251220703
           ],
           "rotation": [
             -0.7071068286895752,
             -5.14486630381894e-12,
-            5.14486630381894e-12,
+            5.144865870138071e-12,
             0.7071067094802856
           ],
           "scale": [
             0.019999999552965165,
-            0.09999489784240723,
-            0.03999999910593033
+            0.09999488294124603,
+            0.03999999165534973
           ]
         },
         "ObjectMetaData": {
@@ -9746,7 +9673,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "31f6e1b8612ef041acad32b8577f0251",
+          "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -9820,9 +9747,9 @@
         },
         "Transform": {
           "position": [
-            -17.299999237060548,
-            4.456999778747559,
-            -47.41681671142578
+            -4.499999046325684,
+            1.9819998741149903,
+            -157.6751251220703
           ],
           "rotation": [
             -0.7071068286895752,
@@ -9832,8 +9759,8 @@
           ],
           "scale": [
             0.05000000074505806,
-            0.09999574720859528,
-            0.05899780988693237
+            0.09999573230743408,
+            0.058997802436351779
           ]
         },
         "ObjectMetaData": {
@@ -9886,7 +9813,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "31f6e1b8612ef041acad32b8577f0251",
+          "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -9960,9 +9887,9 @@
         },
         "Transform": {
           "position": [
-            0.32987213134765627,
-            -14.300000190734864,
-            -30.78820037841797
+            13.12987232208252,
+            -16.774999618530275,
+            -141.0465087890625
           ],
           "rotation": [
             0.0,
@@ -10061,7 +9988,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "31f6e1b8612ef041acad32b8577f0251",
+          "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -10075,9 +10002,9 @@
         },
         "Transform": {
           "position": [
-            -17.299999237060548,
-            -13.019800186157227,
-            -47.41681671142578
+            -4.499999046325684,
+            -15.494800567626954,
+            -157.6751251220703
           ],
           "rotation": [
             -0.7071068286895752,
@@ -10087,8 +10014,8 @@
           ],
           "scale": [
             0.05000000074505806,
-            0.09999694675207138,
-            0.058998409658670428
+            0.09999693185091019,
+            0.05899840220808983
           ]
         },
         "ObjectMetaData": {
@@ -10141,7 +10068,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "31f6e1b8612ef041acad32b8577f0251",
+          "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -10215,9 +10142,9 @@
         },
         "Transform": {
           "position": [
-            18.700000762939454,
-            -13.019800186157227,
-            -47.41681671142578
+            31.5,
+            -15.494800567626954,
+            -157.6751251220703
           ],
           "rotation": [
             -0.7071068286895752,
@@ -10227,8 +10154,8 @@
           ],
           "scale": [
             0.05000000074505806,
-            0.09999821335077286,
-            0.058999042958021167
+            0.09999819844961167,
+            0.05899903550744057
           ]
         },
         "ObjectMetaData": {
@@ -10281,7 +10208,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "31f6e1b8612ef041acad32b8577f0251",
+          "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -10355,20 +10282,20 @@
         },
         "Transform": {
           "position": [
-            -1.0,
-            12.881975173950196,
-            -2.6516342163085939
+            11.800000190734864,
+            10.406974792480469,
+            -112.90994262695313
           ],
           "rotation": [
-            -6.434390797949163e-7,
-            0.7071066498756409,
-            0.70710688829422,
-            -6.434370334318373e-7
+            -6.43439193481754e-7,
+            0.7071065902709961,
+            0.7071069478988648,
+            -6.434369197449996e-7
           ],
           "scale": [
             0.07999999821186066,
-            0.02999989129602909,
-            0.04299978166818619
+            0.029999887570738794,
+            0.04299977421760559
           ]
         },
         "ObjectMetaData": {
@@ -10421,7 +10348,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "31f6e1b8612ef041acad32b8577f0251",
+          "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -10495,20 +10422,20 @@
         },
         "Transform": {
           "position": [
-            -0.10000000149011612,
-            -14.850601196289063,
-            2.4026031494140627
+            12.699999809265137,
+            -17.32560157775879,
+            -107.85570526123047
           ],
           "rotation": [
-            -6.434161150536966e-7,
-            0.7071066498756409,
-            0.70710688829422,
-            -6.433760972868186e-7
+            -6.434162287405343e-7,
+            0.7071065902709961,
+            0.7071069478988648,
+            -6.433760404433997e-7
           ],
           "scale": [
             0.07999999821186066,
-            0.029997119680047036,
-            0.042994238436222079
+            0.029997115954756738,
+            0.04299423098564148
           ]
         },
         "ObjectMetaData": {
@@ -10561,7 +10488,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "31f6e1b8612ef041acad32b8577f0251",
+          "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -10635,9 +10562,9 @@
         },
         "Transform": {
           "position": [
-            18.399999618530275,
-            -13.899999618530274,
-            -22.356000900268556
+            31.200000762939454,
+            -16.375,
+            -132.6143035888672
           ],
           "rotation": [
             -0.4999997615814209,
@@ -10701,7 +10628,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "31f6e1b8612ef041acad32b8577f0251",
+          "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -10775,14 +10702,14 @@
         },
         "Transform": {
           "position": [
-            19.5,
-            3.5,
-            -22.35572052001953
+            32.29999923706055,
+            1.0250000953674317,
+            -132.61402893066407
           ],
           "rotation": [
             -0.4956153929233551,
             -0.504346489906311,
-            -0.4956153929233551,
+            -0.4956154525279999,
             0.504346489906311
           ],
           "scale": [
@@ -10841,7 +10768,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "31f6e1b8612ef041acad32b8577f0251",
+          "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -10915,9 +10842,9 @@
         },
         "Transform": {
           "position": [
-            -20.099666595458986,
-            -13.876089096069336,
-            -22.799999237060548
+            -7.299666404724121,
+            -16.351089477539064,
+            -133.0583038330078
           ],
           "rotation": [
             -0.4999998211860657,
@@ -10981,7 +10908,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "31f6e1b8612ef041acad32b8577f0251",
+          "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -11055,9 +10982,9 @@
         },
         "Transform": {
           "position": [
-            0.0,
-            20.516983032226564,
-            -31.235374450683595
+            12.800000190734864,
+            18.041982650756837,
+            -141.49368286132813
           ],
           "rotation": [
             0.0,
@@ -11129,7 +11056,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "31f6e1b8612ef041acad32b8577f0251",
+          "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -11143,9 +11070,9 @@
         },
         "Transform": {
           "position": [
-            -17.5,
-            -1.2000000476837159,
-            -37.5
+            -4.699999809265137,
+            -3.674999952316284,
+            -147.75830078125
           ],
           "rotation": [
             0.0,
@@ -11196,7 +11123,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "31f6e1b8612ef041acad32b8577f0251",
+          "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -11270,9 +11197,9 @@
         },
         "Transform": {
           "position": [
-            0.0,
-            -15.300000190734864,
-            -9.0
+            12.800000190734864,
+            -17.774999618530275,
+            -119.25830841064453
           ],
           "rotation": [
             0.0,
@@ -11323,7 +11250,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "31f6e1b8612ef041acad32b8577f0251",
+          "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -11397,9 +11324,9 @@
         },
         "Transform": {
           "position": [
-            0.0,
-            -14.399999618530274,
-            -28.0
+            12.800000190734864,
+            -16.875,
+            -138.25830078125
           ],
           "rotation": [
             0.0,
@@ -11450,7 +11377,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "31f6e1b8612ef041acad32b8577f0251",
+          "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -11524,9 +11451,9 @@
         },
         "Transform": {
           "position": [
-            0.0,
-            7.800000190734863,
-            0.0
+            12.800000190734864,
+            5.325000286102295,
+            -110.25830841064453
           ],
           "rotation": [
             0.0,
@@ -11628,7 +11555,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "31f6e1b8612ef041acad32b8577f0251",
+          "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -11642,9 +11569,9 @@
         },
         "Transform": {
           "position": [
-            -5.199999809265137,
-            10.399999618530274,
-            0.0
+            7.600000381469727,
+            7.924999713897705,
+            -110.25830841064453
           ],
           "rotation": [
             0.0,
@@ -11742,7 +11669,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "31f6e1b8612ef041acad32b8577f0251",
+          "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -11756,9 +11683,9 @@
         },
         "Transform": {
           "position": [
-            5.0,
-            10.399999618530274,
-            0.0
+            17.799999237060548,
+            7.924999713897705,
+            -110.25830841064453
           ],
           "rotation": [
             0.0,
@@ -11856,7 +11783,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "31f6e1b8612ef041acad32b8577f0251",
+          "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -11870,9 +11797,9 @@
         },
         "Transform": {
           "position": [
-            0.0,
-            -0.800000011920929,
-            -9.0
+            12.800000190734864,
+            -3.2749998569488527,
+            -119.25830841064453
           ],
           "rotation": [
             0.0,
@@ -11970,7 +11897,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "31f6e1b8612ef041acad32b8577f0251",
+          "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -11984,9 +11911,9 @@
         },
         "Transform": {
           "position": [
-            0.0,
-            -2.0,
-            -28.0
+            12.800000190734864,
+            -4.474999904632568,
+            -138.25830078125
           ],
           "rotation": [
             0.0,
@@ -12097,29 +12024,14 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "31f6e1b8612ef041acad32b8577f0251",
+          "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
           "depth": 1
         },
         "GlobalTransform": {},
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "RotatingPlatform",
-              "enabled": true,
-              "fields": {
-                "speed": {
-                  "t": 0,
-                  "v": 2.0
-                },
-                "active": {
-                  "t": 2,
-                  "v": true
-                },
-                "audioActivationRange": {
-                  "t": 0,
-                  "v": 120.0
-                }
-              }
+              "class": "RotatingPlatform"
             }
           ]
         }
@@ -12133,9 +12045,9 @@
         },
         "Transform": {
           "position": [
-            -17.5,
-            -2.25,
-            -25.200000762939454
+            -4.699999809265137,
+            -4.724999904632568,
+            -135.45831298828126
           ],
           "rotation": [
             0.0,
@@ -12233,7 +12145,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "31f6e1b8612ef041acad32b8577f0251",
+          "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -12247,9 +12159,9 @@
         },
         "Transform": {
           "position": [
-            0.699999988079071,
-            -3.4000000953674318,
-            -52.0
+            13.5,
+            -5.875,
+            -162.25830078125
           ],
           "rotation": [
             0.0,
@@ -12347,7 +12259,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "31f6e1b8612ef041acad32b8577f0251",
+          "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -12361,9 +12273,9 @@
         },
         "Transform": {
           "position": [
-            -20.0,
-            4.0,
-            -21.899999618530275
+            -7.199999809265137,
+            1.5250000953674317,
+            -132.15830993652345
           ],
           "rotation": [
             0.0,
@@ -12466,7 +12378,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "31f6e1b8612ef041acad32b8577f0251",
+          "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -12480,9 +12392,9 @@
         },
         "Transform": {
           "position": [
-            -17.5,
-            2.9800825119018556,
-            2.799999952316284
+            -4.699999809265137,
+            0.5050826072692871,
+            -107.45830535888672
           ],
           "rotation": [
             0.0,
@@ -12585,7 +12497,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "31f6e1b8612ef041acad32b8577f0251",
+          "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -12599,9 +12511,9 @@
         },
         "Transform": {
           "position": [
-            19.299999237060548,
-            4.0,
-            -21.899999618530275
+            32.099998474121097,
+            1.5250000953674317,
+            -132.15830993652345
           ],
           "rotation": [
             0.0,
@@ -12704,7 +12616,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "31f6e1b8612ef041acad32b8577f0251",
+          "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -12718,9 +12630,9 @@
         },
         "Transform": {
           "position": [
-            3.5,
-            -2.356076717376709,
-            -57.0
+            16.299999237060548,
+            -4.831076622009277,
+            -167.25830078125
           ],
           "rotation": [
             0.0,
@@ -12823,7 +12735,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "31f6e1b8612ef041acad32b8577f0251",
+          "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -12837,15 +12749,15 @@
         },
         "Transform": {
           "position": [
-            0.0,
-            0.0,
-            -55.0
+            12.800000190734864,
+            -2.4749999046325685,
+            -165.25830078125
           ],
           "rotation": [
             0.7071068286895752,
             6.434393640120106e-7,
-            6.434393640120106e-7,
-            0.7071068286895752
+            6.434394776988484e-7,
+            0.7071067094802856
           ],
           "scale": [
             0.009999999776482582,
@@ -12890,7 +12802,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "31f6e1b8612ef041acad32b8577f0251",
+          "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -13024,9 +12936,9 @@
         },
         "Transform": {
           "position": [
-            0.0,
-            10.0,
-            -52.0
+            12.800000190734864,
+            7.525000095367432,
+            -162.25830078125
           ],
           "rotation": [
             0.0,
@@ -13060,7 +12972,7 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parentGuid": "31f6e1b8612ef041acad32b8577f0251",
+          "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -13074,9 +12986,9 @@
         },
         "Transform": {
           "position": [
-            0.699999988079071,
-            5.0,
-            -51.900001525878909
+            13.5,
+            2.5250000953674318,
+            -162.15830993652345
           ],
           "rotation": [
             0.0,
@@ -13174,7 +13086,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "31f6e1b8612ef041acad32b8577f0251",
+          "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -13188,9 +13100,9 @@
         },
         "Transform": {
           "position": [
-            20.5,
-            1.0451710224151612,
-            -47.25847244262695
+            33.29999923706055,
+            -1.4298288822174073,
+            -157.51678466796876
           ],
           "rotation": [
             0.0,
@@ -13293,7 +13205,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "31f6e1b8612ef041acad32b8577f0251",
+          "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -13307,9 +13219,9 @@
         },
         "Transform": {
           "position": [
-            -19.700000762939454,
-            1.0451710224151612,
-            -47.25847244262695
+            -6.90000057220459,
+            -1.4298288822174073,
+            -157.51678466796876
           ],
           "rotation": [
             0.0,
@@ -13412,7 +13324,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "31f6e1b8612ef041acad32b8577f0251",
+          "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -13426,9 +13338,9 @@
         },
         "Transform": {
           "position": [
-            16.200000762939454,
-            -2.25,
-            -31.5
+            29.0,
+            -4.724999904632568,
+            -141.75830078125
           ],
           "rotation": [
             0.0,
@@ -13526,7 +13438,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "31f6e1b8612ef041acad32b8577f0251",
+          "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -13540,9 +13452,9 @@
         },
         "Transform": {
           "position": [
-            19.700000762939454,
-            2.9800825119018556,
-            2.799999952316284
+            32.5,
+            0.5050826072692871,
+            -107.45830535888672
           ],
           "rotation": [
             0.0,
@@ -13645,7 +13557,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "31f6e1b8612ef041acad32b8577f0251",
+          "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -13659,9 +13571,9 @@
         },
         "Transform": {
           "position": [
-            -20.100000381469728,
-            3.5,
-            -22.799999237060548
+            -7.300000190734863,
+            1.0250000953674317,
+            -133.0583038330078
           ],
           "rotation": [
             -0.4999998211860657,
@@ -13725,7 +13637,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "31f6e1b8612ef041acad32b8577f0251",
+          "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -13799,9 +13711,9 @@
         },
         "Transform": {
           "position": [
-            0.0,
-            -5.525000095367432,
-            2.799999952316284
+            12.800000190734864,
+            -8.0,
+            -107.45830535888672
           ],
           "rotation": [
             0.0,
@@ -13904,7 +13816,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "31f6e1b8612ef041acad32b8577f0251",
+          "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -13918,9 +13830,9 @@
         },
         "Transform": {
           "position": [
-            0.0,
-            18.0,
-            2.799999952316284
+            12.800000190734864,
+            15.524999618530274,
+            -107.45830535888672
           ],
           "rotation": [
             0.0,
@@ -14023,7 +13935,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "31f6e1b8612ef041acad32b8577f0251",
+          "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -14234,14 +14146,7 @@
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "DisableLightCone",
-              "enabled": true,
-              "fields": {
-                "timer": {
-                  "t": 0,
-                  "v": 3.0
-                }
-              }
+              "class": "DisableLightCone"
             }
           ]
         }
@@ -14357,9 +14262,7 @@
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "DamagePlayer",
-              "enabled": true,
-              "fields": {}
+              "class": "DamagePlayer"
             }
           ]
         }
@@ -14429,14 +14332,7 @@
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "DisableLightCone",
-              "enabled": true,
-              "fields": {
-                "timer": {
-                  "t": 0,
-                  "v": 3.0
-                }
-              }
+              "class": "DisableLightCone"
             }
           ]
         }
@@ -14552,18 +14448,7 @@
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "DamagePlayer",
-              "enabled": true,
-              "fields": {
-                "timer": {
-                  "t": 0,
-                  "v": 1.0
-                },
-                "damage": {
-                  "t": 0,
-                  "v": 10.0
-                }
-              }
+              "class": "DamagePlayer"
             }
           ]
         }
@@ -14633,14 +14518,7 @@
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "DisableLightCone",
-              "enabled": true,
-              "fields": {
-                "timer": {
-                  "t": 0,
-                  "v": 3.0
-                }
-              }
+              "class": "DisableLightCone"
             }
           ]
         }
@@ -14756,18 +14634,7 @@
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "DamagePlayer",
-              "enabled": true,
-              "fields": {
-                "timer": {
-                  "t": 0,
-                  "v": 1.0
-                },
-                "damage": {
-                  "t": 0,
-                  "v": 10.0
-                }
-              }
+              "class": "DamagePlayer"
             }
           ]
         }
@@ -14837,14 +14704,7 @@
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "DisableLightCone",
-              "enabled": true,
-              "fields": {
-                "timer": {
-                  "t": 0,
-                  "v": 3.0
-                }
-              }
+              "class": "DisableLightCone"
             }
           ]
         }
@@ -14960,18 +14820,7 @@
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "DamagePlayer",
-              "enabled": true,
-              "fields": {
-                "timer": {
-                  "t": 0,
-                  "v": 1.0
-                },
-                "damage": {
-                  "t": 0,
-                  "v": 10.0
-                }
-              }
+              "class": "DamagePlayer"
             }
           ]
         }
@@ -16555,22 +16404,7 @@
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "RotatingPlatform",
-              "enabled": true,
-              "fields": {
-                "speed": {
-                  "t": 0,
-                  "v": 2.0
-                },
-                "active": {
-                  "t": 2,
-                  "v": true
-                },
-                "audioActivationRange": {
-                  "t": 0,
-                  "v": 120.0
-                }
-              }
+              "class": "RotatingPlatform"
             }
           ]
         }
@@ -22376,22 +22210,7 @@
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "RotatingPlatform",
-              "enabled": true,
-              "fields": {
-                "speed": {
-                  "t": 0,
-                  "v": 2.0
-                },
-                "active": {
-                  "t": 2,
-                  "v": true
-                },
-                "audioActivationRange": {
-                  "t": 0,
-                  "v": 120.0
-                }
-              }
+              "class": "RotatingPlatform"
             }
           ]
         }
@@ -24589,14 +24408,7 @@
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "DisableLightCone",
-              "enabled": true,
-              "fields": {
-                "timer": {
-                  "t": 0,
-                  "v": 3.0
-                }
-              }
+              "class": "DisableLightCone"
             }
           ]
         }
@@ -24712,9 +24524,7 @@
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "DamagePlayer",
-              "enabled": true,
-              "fields": {}
+              "class": "DamagePlayer"
             }
           ]
         }
@@ -24784,14 +24594,7 @@
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "DisableLightCone",
-              "enabled": true,
-              "fields": {
-                "timer": {
-                  "t": 0,
-                  "v": 3.0
-                }
-              }
+              "class": "DisableLightCone"
             }
           ]
         }
@@ -24907,9 +24710,7 @@
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "DamagePlayer",
-              "enabled": true,
-              "fields": {}
+              "class": "DamagePlayer"
             }
           ]
         }
@@ -24979,14 +24780,7 @@
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "DisableLightCone",
-              "enabled": true,
-              "fields": {
-                "timer": {
-                  "t": 0,
-                  "v": 3.0
-                }
-              }
+              "class": "DisableLightCone"
             }
           ]
         }
@@ -25102,9 +24896,7 @@
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "DamagePlayer",
-              "enabled": true,
-              "fields": {}
+              "class": "DamagePlayer"
             }
           ]
         }
@@ -25283,14 +25075,7 @@
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "DisableLightCone",
-              "enabled": true,
-              "fields": {
-                "timer": {
-                  "t": 0,
-                  "v": 3.0
-                }
-              }
+              "class": "DisableLightCone"
             }
           ]
         }
@@ -25406,9 +25191,7 @@
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "DamagePlayer",
-              "enabled": true,
-              "fields": {}
+              "class": "DamagePlayer"
             }
           ]
         }
@@ -27211,22 +26994,7 @@
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "RotatingPlatform",
-              "enabled": true,
-              "fields": {
-                "speed": {
-                  "t": 0,
-                  "v": 2.0
-                },
-                "active": {
-                  "t": 2,
-                  "v": true
-                },
-                "audioActivationRange": {
-                  "t": 0,
-                  "v": 120.0
-                }
-              }
+              "class": "RotatingPlatform"
             }
           ]
         }
@@ -27677,22 +27445,7 @@
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "RotatingPlatform",
-              "enabled": true,
-              "fields": {
-                "speed": {
-                  "t": 0,
-                  "v": 2.0
-                },
-                "active": {
-                  "t": 2,
-                  "v": true
-                },
-                "audioActivationRange": {
-                  "t": 0,
-                  "v": 120.0
-                }
-              }
+              "class": "RotatingPlatform"
             }
           ]
         }
@@ -29420,41 +29173,6 @@
       }
     },
     {
-      "id": 390,
-      "components": {
-        "IDComponent": {
-          "guid": "fe86edf73b696842b5cd1b8c3440b773"
-        },
-        "Transform": {
-          "position": [
-            19.92099952697754,
-            2.951773166656494,
-            -165.3852081298828
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Level4Layout",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "HierarchyComponent": {
-          "depth": 0
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
       "id": 391,
       "components": {
         "IDComponent": {
@@ -29462,9 +29180,9 @@
         },
         "Transform": {
           "position": [
-            -6.699999809265137,
-            -9.428000450134278,
-            -1.399999976158142
+            13.220999717712403,
+            -6.476227283477783,
+            -166.7852020263672
           ],
           "rotation": [
             0.0,
@@ -29562,7 +29280,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "fe86edf73b696842b5cd1b8c3440b773",
+          "parentGuid": "919863aa726274488466a7e76c93dedb",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -29576,9 +29294,9 @@
         },
         "Transform": {
           "position": [
-            -14.12883186340332,
-            8.783138275146485,
-            -42.372398376464847
+            5.792167663574219,
+            11.73491096496582,
+            -207.75759887695313
           ],
           "rotation": [
             0.0,
@@ -29681,7 +29399,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "fe86edf73b696842b5cd1b8c3440b773",
+          "parentGuid": "919863aa726274488466a7e76c93dedb",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -29695,9 +29413,9 @@
         },
         "Transform": {
           "position": [
-            57.94216537475586,
-            -13.0,
-            -22.93354034423828
+            77.86316680908203,
+            -10.048227310180664,
+            -188.31875610351563
           ],
           "rotation": [
             0.0,
@@ -29800,7 +29518,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "fe86edf73b696842b5cd1b8c3440b773",
+          "parentGuid": "919863aa726274488466a7e76c93dedb",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -29814,9 +29532,9 @@
         },
         "Transform": {
           "position": [
-            38.169334411621097,
-            -4.035343647003174,
-            -78.69942474365235
+            58.09033203125,
+            -1.0835704803466797,
+            -244.08462524414063
           ],
           "rotation": [
             0.0,
@@ -29825,9 +29543,9 @@
             0.7071067094802856
           ],
           "scale": [
-            9.778386116027832,
+            9.7783842086792,
             75.15856170654297,
-            43.01659393310547
+            43.01658630371094
           ]
         },
         "ObjectMetaData": {
@@ -29919,7 +29637,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "fe86edf73b696842b5cd1b8c3440b773",
+          "parentGuid": "919863aa726274488466a7e76c93dedb",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -29933,9 +29651,9 @@
         },
         "Transform": {
           "position": [
-            -3.6123359203338625,
-            -1.3266582489013672,
-            -16.218929290771486
+            16.308664321899415,
+            1.625114917755127,
+            -181.60414123535157
           ],
           "rotation": [
             0.0,
@@ -30033,25 +29751,14 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "fe86edf73b696842b5cd1b8c3440b773",
+          "parentGuid": "919863aa726274488466a7e76c93dedb",
           "depth": 1
         },
         "GlobalTransform": {},
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "VerticalPlatform",
-              "enabled": true,
-              "fields": {
-                "moveDistance": {
-                  "t": 0,
-                  "v": 2.0
-                },
-                "moveSpeed": {
-                  "t": 0,
-                  "v": 2.0
-                }
-              }
+              "class": "VerticalPlatform"
             }
           ]
         }
@@ -30787,9 +30494,9 @@
         },
         "Transform": {
           "position": [
-            22.24834632873535,
-            -12.969937324523926,
-            -71.64623260498047
+            42.16934585571289,
+            -10.018163681030274,
+            -237.03143310546876
           ],
           "rotation": [
             0.0,
@@ -30887,7 +30594,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "fe86edf73b696842b5cd1b8c3440b773",
+          "parentGuid": "919863aa726274488466a7e76c93dedb",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -30901,9 +30608,9 @@
         },
         "Transform": {
           "position": [
-            37.73674011230469,
-            2.5,
-            3.1311326026916506
+            57.657737731933597,
+            5.451773166656494,
+            -162.2540740966797
           ],
           "rotation": [
             0.0,
@@ -31006,7 +30713,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "fe86edf73b696842b5cd1b8c3440b773",
+          "parentGuid": "919863aa726274488466a7e76c93dedb",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -31020,9 +30727,9 @@
         },
         "Transform": {
           "position": [
-            2.635051727294922,
-            0.694644570350647,
-            -29.15884780883789
+            22.55605125427246,
+            3.6464176177978517,
+            -194.54405212402345
           ],
           "rotation": [
             0.0,
@@ -31120,25 +30827,14 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "fe86edf73b696842b5cd1b8c3440b773",
+          "parentGuid": "919863aa726274488466a7e76c93dedb",
           "depth": 1
         },
         "GlobalTransform": {},
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "VerticalPlatform",
-              "enabled": true,
-              "fields": {
-                "moveSpeed": {
-                  "t": 0,
-                  "v": 2.0
-                },
-                "moveDistance": {
-                  "t": 0,
-                  "v": 2.0
-                }
-              }
+              "class": "VerticalPlatform"
             }
           ]
         }
@@ -31874,9 +31570,9 @@
         },
         "Transform": {
           "position": [
-            12.254135131835938,
-            0.4976832866668701,
-            -16.266008377075197
+            32.175132751464847,
+            3.4494564533233644,
+            -181.65121459960938
           ],
           "rotation": [
             0.0,
@@ -31974,25 +31670,14 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "fe86edf73b696842b5cd1b8c3440b773",
+          "parentGuid": "919863aa726274488466a7e76c93dedb",
           "depth": 1
         },
         "GlobalTransform": {},
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "VerticalPlatform",
-              "enabled": true,
-              "fields": {
-                "moveSpeed": {
-                  "t": 0,
-                  "v": 2.0
-                },
-                "moveDistance": {
-                  "t": 0,
-                  "v": 2.0
-                }
-              }
+              "class": "VerticalPlatform"
             }
           ]
         }
@@ -32728,9 +32413,9 @@
         },
         "Transform": {
           "position": [
-            15.550393104553223,
-            1.5129919052124024,
-            -58.084835052490237
+            35.47139358520508,
+            4.4647650718688969,
+            -223.4700469970703
           ],
           "rotation": [
             0.0,
@@ -32828,25 +32513,14 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "fe86edf73b696842b5cd1b8c3440b773",
+          "parentGuid": "919863aa726274488466a7e76c93dedb",
           "depth": 1
         },
         "GlobalTransform": {},
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "VerticalPlatform",
-              "enabled": true,
-              "fields": {
-                "moveSpeed": {
-                  "t": 0,
-                  "v": 2.0
-                },
-                "moveDistance": {
-                  "t": 0,
-                  "v": 2.0
-                }
-              }
+              "class": "VerticalPlatform"
             }
           ]
         }
@@ -33582,9 +33256,9 @@
         },
         "Transform": {
           "position": [
-            5.50000524520874,
-            0.16380977630615235,
-            -45.35378646850586
+            25.421005249023439,
+            3.1155829429626467,
+            -210.73899841308595
           ],
           "rotation": [
             0.0,
@@ -33682,25 +33356,14 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "fe86edf73b696842b5cd1b8c3440b773",
+          "parentGuid": "919863aa726274488466a7e76c93dedb",
           "depth": 1
         },
         "GlobalTransform": {},
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "VerticalPlatform",
-              "enabled": true,
-              "fields": {
-                "moveSpeed": {
-                  "t": 0,
-                  "v": 2.0
-                },
-                "moveDistance": {
-                  "t": 0,
-                  "v": 2.0
-                }
-              }
+              "class": "VerticalPlatform"
             }
           ]
         }
@@ -34436,9 +34099,9 @@
         },
         "Transform": {
           "position": [
-            20.300996780395509,
-            0.18130648136138917,
-            -28.493711471557618
+            40.22199630737305,
+            3.1330795288085939,
+            -193.87892150878907
           ],
           "rotation": [
             0.0,
@@ -34536,25 +34199,14 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "fe86edf73b696842b5cd1b8c3440b773",
+          "parentGuid": "919863aa726274488466a7e76c93dedb",
           "depth": 1
         },
         "GlobalTransform": {},
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "VerticalPlatform",
-              "enabled": true,
-              "fields": {
-                "moveSpeed": {
-                  "t": 0,
-                  "v": 2.0
-                },
-                "moveDistance": {
-                  "t": 0,
-                  "v": 2.0
-                }
-              }
+              "class": "VerticalPlatform"
             }
           ]
         }
@@ -35290,9 +34942,9 @@
         },
         "Transform": {
           "position": [
-            -0.5574984550476074,
-            -1.0931651592254639,
-            -63.2706413269043
+            19.363500595092775,
+            1.8586080074310303,
+            -228.65585327148438
           ],
           "rotation": [
             0.0,
@@ -35390,25 +35042,14 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "fe86edf73b696842b5cd1b8c3440b773",
+          "parentGuid": "919863aa726274488466a7e76c93dedb",
           "depth": 1
         },
         "GlobalTransform": {},
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "VerticalPlatform",
-              "enabled": true,
-              "fields": {
-                "moveSpeed": {
-                  "t": 0,
-                  "v": 2.0
-                },
-                "moveDistance": {
-                  "t": 0,
-                  "v": 2.0
-                }
-              }
+              "class": "VerticalPlatform"
             }
           ]
         }
@@ -36144,9 +35785,9 @@
         },
         "Transform": {
           "position": [
-            57.87025451660156,
-            2.5,
-            -5.085934162139893
+            77.79125213623047,
+            5.451773166656494,
+            -170.4711456298828
           ],
           "rotation": [
             0.0,
@@ -36249,7 +35890,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "fe86edf73b696842b5cd1b8c3440b773",
+          "parentGuid": "919863aa726274488466a7e76c93dedb",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -36263,9 +35904,9 @@
         },
         "Transform": {
           "position": [
-            57.87025451660156,
-            2.5,
-            -75.00704956054688
+            77.79125213623047,
+            5.451773166656494,
+            -240.3922576904297
           ],
           "rotation": [
             0.0,
@@ -36368,7 +36009,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "fe86edf73b696842b5cd1b8c3440b773",
+          "parentGuid": "919863aa726274488466a7e76c93dedb",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -36382,9 +36023,9 @@
         },
         "Transform": {
           "position": [
-            20.92903709411621,
-            -2.347325325012207,
-            -48.417724609375
+            40.85003662109375,
+            0.6044478416442871,
+            -213.8029327392578
           ],
           "rotation": [
             0.0,
@@ -36482,25 +36123,14 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "fe86edf73b696842b5cd1b8c3440b773",
+          "parentGuid": "919863aa726274488466a7e76c93dedb",
           "depth": 1
         },
         "GlobalTransform": {},
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "VerticalPlatform",
-              "enabled": true,
-              "fields": {
-                "moveSpeed": {
-                  "t": 0,
-                  "v": 2.0
-                },
-                "moveDistance": {
-                  "t": 0,
-                  "v": 2.0
-                }
-              }
+              "class": "VerticalPlatform"
             }
           ]
         }
@@ -37236,9 +36866,9 @@
         },
         "Transform": {
           "position": [
-            18.94056510925293,
-            7.28842830657959,
-            -85.08929443359375
+            38.86156463623047,
+            10.240201950073243,
+            -250.47450256347657
           ],
           "rotation": [
             0.0,
@@ -37341,7 +36971,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "fe86edf73b696842b5cd1b8c3440b773",
+          "parentGuid": "919863aa726274488466a7e76c93dedb",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -37355,9 +36985,9 @@
         },
         "Transform": {
           "position": [
-            5.3541460037231449,
-            -8.192815780639649,
-            -80.036376953125
+            25.275146484375,
+            -5.241042613983154,
+            -245.4215850830078
           ],
           "rotation": [
             0.0,
@@ -37460,7 +37090,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "fe86edf73b696842b5cd1b8c3440b773",
+          "parentGuid": "919863aa726274488466a7e76c93dedb",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -37474,9 +37104,9 @@
         },
         "Transform": {
           "position": [
-            29.998878479003908,
-            -1.481662392616272,
-            -53.41415786743164
+            49.91987609863281,
+            1.4701107740402222,
+            -218.7993621826172
           ],
           "rotation": [
             0.0,
@@ -37574,25 +37204,14 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "fe86edf73b696842b5cd1b8c3440b773",
+          "parentGuid": "919863aa726274488466a7e76c93dedb",
           "depth": 1
         },
         "GlobalTransform": {},
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "VerticalPlatform",
-              "enabled": true,
-              "fields": {
-                "moveSpeed": {
-                  "t": 0,
-                  "v": 2.0
-                },
-                "moveDistance": {
-                  "t": 0,
-                  "v": 2.0
-                }
-              }
+              "class": "VerticalPlatform"
             }
           ]
         }
@@ -38328,9 +37947,9 @@
         },
         "Transform": {
           "position": [
-            57.87025451660156,
-            2.5,
-            -41.053741455078128
+            77.79125213623047,
+            5.451773166656494,
+            -206.43894958496095
           ],
           "rotation": [
             0.0,
@@ -38433,7 +38052,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "fe86edf73b696842b5cd1b8c3440b773",
+          "parentGuid": "919863aa726274488466a7e76c93dedb",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -38447,9 +38066,9 @@
         },
         "Transform": {
           "position": [
-            57.869998931884769,
-            -8.0,
-            -72.0
+            77.79100036621094,
+            -5.048226833343506,
+            -237.3852081298828
           ],
           "rotation": [
             0.0,
@@ -38552,7 +38171,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "fe86edf73b696842b5cd1b8c3440b773",
+          "parentGuid": "919863aa726274488466a7e76c93dedb",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -38566,9 +38185,9 @@
         },
         "Transform": {
           "position": [
-            0.9332062602043152,
-            -12.955804824829102,
-            2.6871140003204347
+            20.854206085205079,
+            -10.004032135009766,
+            -162.69808959960938
           ],
           "rotation": [
             -0.4999997615814209,
@@ -38622,7 +38241,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "fe86edf73b696842b5cd1b8c3440b773",
+          "parentGuid": "919863aa726274488466a7e76c93dedb",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -38696,9 +38315,9 @@
         },
         "Transform": {
           "position": [
-            -13.72721004486084,
-            -12.955795288085938,
-            -65.97676849365235
+            6.193789482116699,
+            -10.004022598266602,
+            -231.36196899414063
           ],
           "rotation": [
             -0.4999997615814209,
@@ -38752,7 +38371,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "fe86edf73b696842b5cd1b8c3440b773",
+          "parentGuid": "919863aa726274488466a7e76c93dedb",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -38826,9 +38445,9 @@
         },
         "Transform": {
           "position": [
-            50.268428802490237,
-            -12.955857276916504,
-            -66.36619567871094
+            70.1894302368164,
+            -10.004083633422852,
+            -231.75140380859376
           ],
           "rotation": [
             -0.4999997615814209,
@@ -38882,7 +38501,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "fe86edf73b696842b5cd1b8c3440b773",
+          "parentGuid": "919863aa726274488466a7e76c93dedb",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -38956,20 +38575,20 @@
         },
         "Transform": {
           "position": [
-            45.489688873291019,
-            -12.955968856811524,
-            -51.77568817138672
+            65.41069030761719,
+            -10.004196166992188,
+            -217.160888671875
           ],
           "rotation": [
             -0.7071080803871155,
             3.874305036788428e-7,
-            -3.874293099670467e-7,
+            -3.874292815453373e-7,
             0.7071054577827454
           ],
           "scale": [
             0.03112916834652424,
-            0.009998844936490059,
-            0.1127147227525711
+            0.00999884307384491,
+            0.11271470785140991
           ]
         },
         "ObjectMetaData": {
@@ -39012,7 +38631,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "fe86edf73b696842b5cd1b8c3440b773",
+          "parentGuid": "919863aa726274488466a7e76c93dedb",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -39086,9 +38705,9 @@
         },
         "Transform": {
           "position": [
-            50.6339225769043,
-            -12.95586109161377,
-            -15.761655807495118
+            70.55492401123047,
+            -10.004087448120118,
+            -181.14686584472657
           ],
           "rotation": [
             -0.4999997615814209,
@@ -39142,7 +38761,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "fe86edf73b696842b5cd1b8c3440b773",
+          "parentGuid": "919863aa726274488466a7e76c93dedb",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -39216,9 +38835,9 @@
         },
         "Transform": {
           "position": [
-            16.444000244140626,
-            -12.955836296081543,
-            -80.5
+            36.36499786376953,
+            -10.00406265258789,
+            -245.8852081298828
           ],
           "rotation": [
             -0.4999997615814209,
@@ -39272,7 +38891,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "fe86edf73b696842b5cd1b8c3440b773",
+          "parentGuid": "919863aa726274488466a7e76c93dedb",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -39346,9 +38965,9 @@
         },
         "Transform": {
           "position": [
-            3.7686948776245119,
-            -12.956048011779786,
-            -84.57616424560547
+            23.689693450927736,
+            -10.004274368286133,
+            -249.96136474609376
           ],
           "rotation": [
             -0.7071080803871155,
@@ -39358,8 +38977,8 @@
           ],
           "scale": [
             0.06613635271787644,
-            0.009998884983360768,
-            0.11271505057811737
+            0.009998883120715618,
+            0.11271503567695618
           ]
         },
         "ObjectMetaData": {
@@ -39402,7 +39021,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "fe86edf73b696842b5cd1b8c3440b773",
+          "parentGuid": "919863aa726274488466a7e76c93dedb",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -39476,9 +39095,9 @@
         },
         "Transform": {
           "position": [
-            45.489688873291019,
-            -12.955889701843262,
-            -29.74656105041504
+            65.41069030761719,
+            -10.00411605834961,
+            -195.13177490234376
           ],
           "rotation": [
             -0.7071080803871155,
@@ -39488,8 +39107,8 @@
           ],
           "scale": [
             0.03112916834652424,
-            0.009999135509133339,
-            0.11271704733371735
+            0.00999913364648819,
+            0.11271703243255615
           ]
         },
         "ObjectMetaData": {
@@ -39532,7 +39151,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "fe86edf73b696842b5cd1b8c3440b773",
+          "parentGuid": "919863aa726274488466a7e76c93dedb",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -39606,20 +39225,20 @@
         },
         "Transform": {
           "position": [
-            27.136621475219728,
-            -12.955727577209473,
-            8.704428672790528
+            47.057621002197269,
+            -10.00395393371582,
+            -156.6807861328125
           ],
           "rotation": [
             -0.7071080803871155,
             3.874305036788428e-7,
-            -3.874293099670467e-7,
+            -3.874292815453373e-7,
             0.7071054577827454
           ],
           "scale": [
             0.09711993485689163,
-            0.00999925471842289,
-            0.11271800100803375
+            0.00999925285577774,
+            0.11271798610687256
           ]
         },
         "ObjectMetaData": {
@@ -39662,7 +39281,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "fe86edf73b696842b5cd1b8c3440b773",
+          "parentGuid": "919863aa726274488466a7e76c93dedb",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -39736,20 +39355,20 @@
         },
         "Transform": {
           "position": [
-            34.36696243286133,
-            -12.956034660339356,
-            -73.47073364257813
+            54.2879638671875,
+            -10.004261016845704,
+            -238.85594177246095
           ],
           "rotation": [
             -0.7071080803871155,
-            3.8743047525713339e-7,
+            3.874305036788428e-7,
             -3.874292815453373e-7,
             0.7071054577827454
           ],
           "scale": [
             0.06613635271787644,
-            0.00999919418245554,
-            0.11271752417087555
+            0.00999919231981039,
+            0.11271750926971436
           ]
         },
         "ObjectMetaData": {
@@ -39792,7 +39411,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "fe86edf73b696842b5cd1b8c3440b773",
+          "parentGuid": "919863aa726274488466a7e76c93dedb",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -39866,9 +39485,9 @@
         },
         "Transform": {
           "position": [
-            37.05673599243164,
-            -12.955848693847657,
-            -40.868072509765628
+            56.97773742675781,
+            -10.00407600402832,
+            -206.25328063964845
           ],
           "rotation": [
             -0.4999997615814209,
@@ -39922,7 +39541,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "fe86edf73b696842b5cd1b8c3440b773",
+          "parentGuid": "919863aa726274488466a7e76c93dedb",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -39996,9 +39615,9 @@
         },
         "Transform": {
           "position": [
-            -13.72721004486084,
-            -12.955795288085938,
-            -15.46025276184082
+            6.193789482116699,
+            -10.004022598266602,
+            -180.845458984375
           ],
           "rotation": [
             -0.4999997615814209,
@@ -40052,7 +39671,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "fe86edf73b696842b5cd1b8c3440b773",
+          "parentGuid": "919863aa726274488466a7e76c93dedb",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -40126,9 +39745,9 @@
         },
         "Transform": {
           "position": [
-            -13.72721004486084,
-            -12.955795288085938,
-            -15.46025276184082
+            6.193789482116699,
+            -10.004022598266602,
+            -180.845458984375
           ],
           "rotation": [
             -0.4999997615814209,
@@ -40182,7 +39801,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "fe86edf73b696842b5cd1b8c3440b773",
+          "parentGuid": "919863aa726274488466a7e76c93dedb",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -40256,9 +39875,9 @@
         },
         "Transform": {
           "position": [
-            26.980249404907228,
-            -12.955770492553711,
-            -2.482585906982422
+            46.901248931884769,
+            -10.003997802734375,
+            -167.8677978515625
           ],
           "rotation": [
             -0.7071080803871155,
@@ -40268,8 +39887,8 @@
           ],
           "scale": [
             0.09711993485689163,
-            0.00999943632632494,
-            0.11271945387125015
+            0.00999943446367979,
+            0.11271943897008896
           ]
         },
         "ObjectMetaData": {
@@ -40312,7 +39931,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "fe86edf73b696842b5cd1b8c3440b773",
+          "parentGuid": "919863aa726274488466a7e76c93dedb",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -40386,9 +40005,9 @@
         },
         "Transform": {
           "position": [
-            23.071794509887697,
-            23.046964645385743,
-            -46.63484573364258
+            42.992794036865237,
+            25.998737335205079,
+            -212.02005004882813
           ],
           "rotation": [
             0.0,
@@ -40459,7 +40078,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "fe86edf73b696842b5cd1b8c3440b773",
+          "parentGuid": "919863aa726274488466a7e76c93dedb",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -40818,9 +40437,9 @@
         },
         "Transform": {
           "position": [
-            5.5,
-            -0.5,
-            -51.0
+            18.299999237060548,
+            -2.9749999046325685,
+            -161.25830078125
           ],
           "rotation": [
             0.0000011182943353560404,
@@ -40885,7 +40504,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "31f6e1b8612ef041acad32b8577f0251",
+          "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -40959,15 +40578,15 @@
         },
         "Transform": {
           "position": [
-            48.0,
-            0.0,
-            -15.0
+            67.9209976196289,
+            2.951773166656494,
+            -180.3852081298828
           ],
           "rotation": [
-            -0.0000012868819112554775,
-            0.7072288990020752,
-            -0.0000012868819112554775,
-            -0.7069846391677856
+            0.0000012868819112554775,
+            -0.7072288990020752,
+            0.0000012868819112554775,
+            0.7069846391677856
           ],
           "scale": [
             0.7499897480010986,
@@ -41026,7 +40645,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "fe86edf73b696842b5cd1b8c3440b773",
+          "parentGuid": "919863aa726274488466a7e76c93dedb",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -41100,15 +40719,15 @@
         },
         "Transform": {
           "position": [
-            0.0,
-            11.0,
-            -24.700000762939454
+            12.800000190734864,
+            8.524999618530274,
+            -134.95831298828126
           ],
           "rotation": [
-            -9.497071005171165e-7,
-            0.7072288990020752,
-            -9.497071005171165e-7,
-            -0.7069846391677856
+            9.497071005171165e-7,
+            -0.7072288990020752,
+            9.497071005171165e-7,
+            0.7069846391677856
           ],
           "scale": [
             0.9995967745780945,
@@ -41149,21 +40768,14 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "31f6e1b8612ef041acad32b8577f0251",
+          "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
           "depth": 1
         },
         "GlobalTransform": {},
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "DisableLightCone",
-              "enabled": true,
-              "fields": {
-                "timer": {
-                  "t": 0,
-                  "v": 3.0
-                }
-              }
+              "class": "DisableLightCone"
             }
           ]
         }
@@ -41279,18 +40891,7 @@
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "DamagePlayer",
-              "enabled": true,
-              "fields": {
-                "timer": {
-                  "t": 0,
-                  "v": 1.0
-                },
-                "damage": {
-                  "t": 0,
-                  "v": 10.0
-                }
-              }
+              "class": "DamagePlayer"
             }
           ]
         }
@@ -41304,20 +40905,20 @@
         },
         "Transform": {
           "position": [
-            0.0,
-            11.0,
-            -31.299999237060548
+            12.800000190734864,
+            8.524999618530274,
+            -141.5583038330078
           ],
           "rotation": [
             0.0,
             0.7071068286895752,
             0.0,
-            0.7071068286895752
+            0.7071067094802856
           ],
           "scale": [
-            0.9995967745780945,
+            0.9995968341827393,
             1.0,
-            0.9995967745780945
+            0.9995968341827393
           ]
         },
         "ObjectMetaData": {
@@ -41353,21 +40954,14 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "31f6e1b8612ef041acad32b8577f0251",
+          "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
           "depth": 1
         },
         "GlobalTransform": {},
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "DisableLightCone",
-              "enabled": true,
-              "fields": {
-                "timer": {
-                  "t": 0,
-                  "v": 3.0
-                }
-              }
+              "class": "DisableLightCone"
             }
           ]
         }
@@ -41483,18 +41077,7 @@
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "DamagePlayer",
-              "enabled": true,
-              "fields": {
-                "timer": {
-                  "t": 0,
-                  "v": 1.0
-                },
-                "damage": {
-                  "t": 0,
-                  "v": 10.0
-                }
-              }
+              "class": "DamagePlayer"
             }
           ]
         }
@@ -41508,9 +41091,9 @@
         },
         "Transform": {
           "position": [
-            4.300000190734863,
-            10.0,
-            -20.0
+            24.22100067138672,
+            12.951772689819336,
+            -185.3852081298828
           ],
           "rotation": [
             0.0,
@@ -41557,21 +41140,14 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "fe86edf73b696842b5cd1b8c3440b773",
+          "parentGuid": "919863aa726274488466a7e76c93dedb",
           "depth": 1
         },
         "GlobalTransform": {},
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "DisableLightCone",
-              "enabled": true,
-              "fields": {
-                "timer": {
-                  "t": 0,
-                  "v": 3.0
-                }
-              }
+              "class": "DisableLightCone"
             }
           ]
         }
@@ -41687,9 +41263,7 @@
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "DamagePlayer",
-              "enabled": true,
-              "fields": {}
+              "class": "DamagePlayer"
             }
           ]
         }
@@ -41703,9 +41277,9 @@
         },
         "Transform": {
           "position": [
-            3.5,
-            10.0,
-            -40.0
+            23.42099952697754,
+            12.951772689819336,
+            -205.3852081298828
           ],
           "rotation": [
             0.0,
@@ -41752,21 +41326,14 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "fe86edf73b696842b5cd1b8c3440b773",
+          "parentGuid": "919863aa726274488466a7e76c93dedb",
           "depth": 1
         },
         "GlobalTransform": {},
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "DisableLightCone",
-              "enabled": true,
-              "fields": {
-                "timer": {
-                  "t": 0,
-                  "v": 3.0
-                }
-              }
+              "class": "DisableLightCone"
             }
           ]
         }
@@ -41882,9 +41449,7 @@
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "DamagePlayer",
-              "enabled": true,
-              "fields": {}
+              "class": "DamagePlayer"
             }
           ]
         }
@@ -41898,9 +41463,9 @@
         },
         "Transform": {
           "position": [
-            20.5,
-            10.0,
-            -40.5
+            40.420997619628909,
+            12.951772689819336,
+            -205.8852081298828
           ],
           "rotation": [
             0.0,
@@ -41947,21 +41512,14 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "fe86edf73b696842b5cd1b8c3440b773",
+          "parentGuid": "919863aa726274488466a7e76c93dedb",
           "depth": 1
         },
         "GlobalTransform": {},
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "DisableLightCone",
-              "enabled": true,
-              "fields": {
-                "timer": {
-                  "t": 0,
-                  "v": 3.0
-                }
-              }
+              "class": "DisableLightCone"
             }
           ]
         }
@@ -42077,9 +41635,7 @@
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "DamagePlayer",
-              "enabled": true,
-              "fields": {}
+              "class": "DamagePlayer"
             }
           ]
         }
@@ -42093,9 +41649,9 @@
         },
         "Transform": {
           "position": [
-            11.0,
-            10.0,
-            -32.0
+            30.92099952697754,
+            12.951772689819336,
+            -197.3852081298828
           ],
           "rotation": [
             0.0,
@@ -42142,21 +41698,14 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "fe86edf73b696842b5cd1b8c3440b773",
+          "parentGuid": "919863aa726274488466a7e76c93dedb",
           "depth": 1
         },
         "GlobalTransform": {},
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "DisableLightCone",
-              "enabled": true,
-              "fields": {
-                "timer": {
-                  "t": 0,
-                  "v": 3.0
-                }
-              }
+              "class": "DisableLightCone"
             }
           ]
         }
@@ -42272,9 +41821,7 @@
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "DamagePlayer",
-              "enabled": true,
-              "fields": {}
+              "class": "DamagePlayer"
             }
           ]
         }
@@ -42288,9 +41835,9 @@
         },
         "Transform": {
           "position": [
-            12.699999809265137,
-            9.0,
-            -50.0
+            32.62099838256836,
+            11.951772689819336,
+            -215.3852081298828
           ],
           "rotation": [
             0.0,
@@ -42337,21 +41884,14 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "fe86edf73b696842b5cd1b8c3440b773",
+          "parentGuid": "919863aa726274488466a7e76c93dedb",
           "depth": 1
         },
         "GlobalTransform": {},
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "DisableLightCone",
-              "enabled": true,
-              "fields": {
-                "timer": {
-                  "t": 0,
-                  "v": 3.0
-                }
-              }
+              "class": "DisableLightCone"
             }
           ]
         }
@@ -42467,9 +42007,7 @@
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "DamagePlayer",
-              "enabled": true,
-              "fields": {}
+              "class": "DamagePlayer"
             }
           ]
         }
@@ -42483,9 +42021,9 @@
         },
         "Transform": {
           "position": [
-            6.0,
-            9.0,
-            -56.5
+            25.92099952697754,
+            11.951772689819336,
+            -221.8852081298828
           ],
           "rotation": [
             0.0,
@@ -42532,21 +42070,14 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "fe86edf73b696842b5cd1b8c3440b773",
+          "parentGuid": "919863aa726274488466a7e76c93dedb",
           "depth": 1
         },
         "GlobalTransform": {},
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "DisableLightCone",
-              "enabled": true,
-              "fields": {
-                "timer": {
-                  "t": 0,
-                  "v": 3.0
-                }
-              }
+              "class": "DisableLightCone"
             }
           ]
         }
@@ -42662,9 +42193,7 @@
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "DamagePlayer",
-              "enabled": true,
-              "fields": {}
+              "class": "DamagePlayer"
             }
           ]
         }
@@ -42678,9 +42207,9 @@
         },
         "Transform": {
           "position": [
-            22.5,
-            8.0,
-            -59.0
+            42.420997619628909,
+            10.951772689819336,
+            -224.3852081298828
           ],
           "rotation": [
             0.0,
@@ -42727,21 +42256,14 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "fe86edf73b696842b5cd1b8c3440b773",
+          "parentGuid": "919863aa726274488466a7e76c93dedb",
           "depth": 1
         },
         "GlobalTransform": {},
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "DisableLightCone",
-              "enabled": true,
-              "fields": {
-                "timer": {
-                  "t": 0,
-                  "v": 3.0
-                }
-              }
+              "class": "DisableLightCone"
             }
           ]
         }
@@ -42857,59 +42379,81 @@
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "DamagePlayer",
-              "enabled": true,
-              "fields": {}
+              "class": "DamagePlayer"
             }
           ]
         }
       }
+    },
+    {
+      "id": 541,
+      "components": {
+        "IDComponent": {
+          "guid": "72873cc904e07547bd5a09bbef7a1b6e"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Level3Layout",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 542,
+      "components": {
+        "IDComponent": {
+          "guid": "919863aa726274488466a7e76c93dedb"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Level4Layout",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
     }
-  ],
-  "globalGraphics": {
-    "ssaoEnabled": false,
-    "ssaoSamples": 16,
-    "ssaoRadius": 10.0,
-    "ssaoBias": 0.009999999776482582,
-    "ssaoIntensity": 1.0,
-    "ssaoFadeout": 0.10000000149011612,
-    "ssaoMaxDistance": 100.0,
-    "fogEnabled": true,
-    "fogMode": 0,
-    "fogColor": [
-      0.5,
-      0.6000000238418579,
-      0.699999988079071
-    ],
-    "fogDensity": 0.019999999552965165,
-    "fogStart": 10.0,
-    "fogEnd": 300.0,
-    "fogHeightCoefficient": 0.10000000149011612,
-    "fogHeightFalloff": 10.0,
-    "vignetteEnabled": false,
-    "fxaaEnabled": true,
-    "toneMappingEnabled": true,
-    "gammaCorrectionEnabled": true,
-    "bloomEnabled": true,
-    "skyboxIsHDR": false,
-    "exposure": 1.0,
-    "contrast": 1.0,
-    "saturation": 1.0,
-    "gamma": 2.200000047683716,
-    "vignetteIntensity": 0.30000001192092898,
-    "vignetteRadius": 0.800000011920929,
-    "bloomStrength": 0.03999999910593033,
-    "fxaaSpanMax": 8.0,
-    "fxaaReduceMin": 0.0078125,
-    "fxaaReduceMul": 0.125,
-    "bloomThreshold": 1.0,
-    "bloomIntensity": 2.0,
-    "bloomRadius": 1.0,
-    "spotlightRaysEnabled": true,
-    "spotlightRayIntensity": 0.30000001192092898,
-    "spotlightRayFalloff": 2.0,
-    "motionBlurEnabled": true,
-    "motionBlurStrength": 0.10000000149011612,
-    "motionBlurSamples": 8
-  }
+  ]
 }
