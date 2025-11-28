@@ -2368,6 +2368,11 @@ namespace
 		auto physics = ECS::GetInstance().GetSystem<Physics>();
 		physics->Jump((EntityID)entityID,jump);
 	}
+	static void icall_Physics_ForceUpdate()
+	{
+		auto physics = ECS::GetInstance().GetSystem<Physics>();
+		physics->ForceUpdate();
+	}
 
 #pragma endregion
 
@@ -2912,6 +2917,7 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	mono_add_internal_call("ErmineEngine.Physics.RaycastHit::get_transform", (const void*)icall_gameobject_get_transform);
 	mono_add_internal_call("ErmineEngine.Physics::RemovePhysic", (const void*)&icall_Physics_RemovePhysic);
 	mono_add_internal_call("ErmineEngine.Physics::Jump", (const void*)icall_Physics_Jump);
+	mono_add_internal_call("ErmineEngine.Physics::ForceUpdate", (const void*)icall_Physics_ForceUpdate);
 #pragma endregion
 
 #pragma region UI ICalls

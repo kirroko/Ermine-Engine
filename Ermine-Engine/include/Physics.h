@@ -274,13 +274,14 @@ namespace Ermine
 		void Jump(EntityID ID, float jumpStrength);
 
 		void RemovePhysic(EntityID ID);
+
+		void ForceUpdate();
 		
 		// Shared pointer to the debug renderer used for visualizing physics.
 		std::shared_ptr<MyDebugRenderer> mDebugRenderer;
 		
 		// Whether to draw wireframe physics bodies.
 		bool wireframe;
-
 	private:
 
 		/*!***********************************************************************

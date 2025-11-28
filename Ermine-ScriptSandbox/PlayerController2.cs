@@ -46,6 +46,8 @@ public class PlayerController2 : MonoBehaviour
         audioComp = GetComponent<AudioComponent>();
         if (audioComp == null)
             Console.WriteLine("Warning: No AudioComponent found on player!");
+
+        Physics.ForceUpdate();
     }
 
     void Update()

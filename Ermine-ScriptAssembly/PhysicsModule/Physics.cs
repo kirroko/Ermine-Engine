@@ -44,6 +44,9 @@ namespace ErmineEngine
         public static extern void Jump(ulong entityID, float jump);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern void ForceUpdate();
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
         private static extern Transform Internal_GetTransform();
 
         [StructLayout(LayoutKind.Sequential)]

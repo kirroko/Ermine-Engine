@@ -1620,6 +1620,11 @@ namespace Ermine
 		}
 	}
 
+	void Physics::ForceUpdate()
+	{
+		UpdatePhysicList();
+	}
+
 	/*!*************************************************************************
 	  \brief
 		Converts pending physics collision pairs into ECS collision events.
