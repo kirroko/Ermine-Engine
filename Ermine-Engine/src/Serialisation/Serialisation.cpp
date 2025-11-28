@@ -25,7 +25,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <ostreamwrapper.h>
 #include <istreamwrapper.h>
 #include "GeometryFactory.h"
-#include <Physics.h>
+#include "Physics.h"
 
 
 using namespace rapidjson;
@@ -54,7 +54,7 @@ void Ermine::Mesh::RebuildPrimitive() {
     else {
         EE_CORE_WARN("Unknown primitive type: {}", primitive.type);
         kind = MeshKind::None;
-	}
+    }
     // TODO: other primitives...
 }
 
@@ -308,7 +308,7 @@ void SaveSceneToFile(const Ermine::ECS& ecs, const std::filesystem::path& path, 
             comps.AddMember(rapidjson::Value("IDComponent", a), idPayload, a);
         }
 
-        for (const std::string& name : ecs.GetComponentNames(id)) {                 // :contentReference[oaicite:1]{index=1}
+        for (const std::string& name : ecs.GetComponentNames(id)) {
             const auto* desc = ecs.GetDescriptor(name);
 
             rapidjson::Value payload(rapidjson::kObjectType);
@@ -322,47 +322,32 @@ void SaveSceneToFile(const Ermine::ECS& ecs, const std::filesystem::path& path, 
             }
             else
             {
-                // --- Custom fallbacks ---
-                //if (name == "IDComponent" && ecs.HasComponent<Ermine::IDComponent>(id))
-                //{
-                //    const auto& c = ecs.GetComponent<Ermine::IDComponent>(id);
-                //    const std::string guid_str = c.guid.ToString();
-                //    payload.AddMember(rapidjson::Value("guid", a),
-                //        rapidjson::Value(guid_str.c_str(), a), a);
-                //    wrote = true;
-                //}
                 if (name == "ScriptsComponent" && ecs.HasComponent<Ermine::ScriptsComponent>(id))
                 {
                     auto& scs = ecs.GetComponent<Ermine::ScriptsComponent>(id);
-                    rapidjson::Value arr(rapidjson::kArrayType);
-                    for (const auto& sc : scs.scripts)
-                    {
-                        rapidjson::Value obj(rapidjson::kObjectType);
-                        obj.AddMember(rapidjson::Value("class", a), rapidjson::Value(sc.m_className.c_str(), a), a);
-                        arr.PushBack(obj, a);
-                    }
-                    payload.AddMember(rapidjson::Value("scripts", a), arr, a);
-                    /*const auto& s = ecs.GetComponent<Ermine::Script>(id);
-                    payload.AddMember(rapidjson::Value("class", a),
-                        rapidjson::Value(s.m_className.c_str(), a), a);*/
-                    // TODO: add more script state here if you later expose it
+                    scs.Serialize(payload, a);   // <-- this already writes fields
                     wrote = true;
                 }
             }
 
-            // Only write if we actually produced a payload
             if (wrote)
-            {
                 comps.AddMember(rapidjson::Value(name.c_str(), a), payload, a);
-            }
         }
-
 
         e.AddMember("components", comps, a);
         entities.PushBack(e, a);
     }
 
     d.AddMember("entities", entities, a);
+
+
+    if (auto renderer = ecs.GetSystem<Ermine::graphics::Renderer>()) {
+        renderer->SyncToGlobalGraphics();
+
+        rapidjson::Value ggJson(rapidjson::kObjectType);
+        renderer->m_GlobalGraphics.Serialize(ggJson, a);
+        d.AddMember("globalGraphics", ggJson, a);
+    }
 
     if (pretty) { PrettyWriter<OStreamWrapper> w(osw); w.SetIndent(' ', 2); d.Accept(w); }
     else { Writer<OStreamWrapper> w(osw); d.Accept(w); }
@@ -437,65 +422,37 @@ void LoadSceneFromFile(Ermine::ECS& ecs, const std::filesystem::path& path) {
             else
             {
                 // --- Custom fallbacks ---
-                //if (compName == "IDComponent")
-                //{
-                //    Ermine::Guid g =
-                //        (payload.HasMember("guid") && payload["guid"].IsString())
-                //        ? Ermine::Guid::FromString(payload["guid"].GetString())
-                //        : Ermine::Guid::New(); // backward-compatible
-
-                //    ecs.AddComponent<Ermine::IDComponent>(id, Ermine::IDComponent{ g });
-                //    ecs.GetGuidRegistry().Register(id, g);
-                //    handled = true;
-                //}
                 if (compName == "ScriptsComponent")
                 {
-                    std::vector<std::string> classNames;
-                    if (payload.HasMember("scripts") && payload["scripts"].IsArray())
+                    // Ensure component exists
+                    if (!ecs.HasComponent<Ermine::ScriptsComponent>(id))
+                        ecs.AddComponent<Ermine::ScriptsComponent>(id, Ermine::ScriptsComponent{});
+
+                    auto& scs = ecs.GetComponent<Ermine::ScriptsComponent>(id);
+
+                    // Let the component handle scripts + fields
+                    scs.Deserialize(payload);
+
+                    // NOTE: Do NOT call AttachAll here if you have a ScriptSystem that does it later.
+                    // If you prefer immediate instances after load, you *can* do:
+                    scs.AttachAll(id);
+
+                    handled = true;
+                }
+                else if (compName == "Script")
+                {
+                    // Optional legacy single-Script -> ScriptsComponent upgrade
+                    if (payload.HasMember("class") && payload["class"].IsString())
                     {
-      //                  const std::string cls = payload["class"].GetString();
-						//ecs.AddComponent<Ermine::ScriptsComponent>(id, Ermine::ScriptsComponent{});
-      //                  scs.Add(cls, id);
-      //                  //ecs.AddComponent<Ermine::Script>(id, Ermine::Script(cls, id));
-      //                  // TODO: post-load hook if you have one, e.g. ScriptSystem::OnAdded(id);
-      //                  handled = true;
-                        const auto arr = payload["scripts"].GetArray();
-                        classNames.reserve(arr.Size());
-
-                        for (const auto& v : arr)
-                        {
-                            if (!v.IsObject()) continue;
-
-                            // Try both "className" (new format) and "class" (legacy format)
-                            auto it = v.FindMember("className");
-                            if (it == v.MemberEnd())
-                                it = v.FindMember("class");
-
-                            if (it != v.MemberEnd() && it->value.IsString())
-                                classNames.emplace_back(it->value.GetString());
-                        }
-                    }
-                    else if (payload.HasMember("className") && payload["className"].IsString())
-                    {
-                        classNames.emplace_back(payload["className"].GetString());
-                    }
-                    else if (payload.HasMember("class") && payload["class"].IsString())
-                    {
-                        classNames.emplace_back(payload["class"].GetString());
-                    }
-
-					ecs.AddComponent<Ermine::ScriptsComponent>(id, Ermine::ScriptsComponent{});
-					auto& scs = ecs.GetComponent<Ermine::ScriptsComponent>(id);
-                    
-                    for (const auto& cls : classNames)
-                    {
-                        scs.Add(cls, id);
-                    }
-
-                    if (!classNames.empty())
+                        const std::string cls = payload["class"].GetString();
+                        if (!ecs.HasComponent<Ermine::ScriptsComponent>(id))
+                            ecs.AddComponent<Ermine::ScriptsComponent>(id, Ermine::ScriptsComponent{});
+                        ecs.GetComponent<Ermine::ScriptsComponent>(id).Add(cls, id);
                         handled = true;
+                    }
                 }
             }
+
 
             if (!handled)
             {
@@ -512,7 +469,12 @@ void LoadSceneFromFile(Ermine::ECS& ecs, const std::filesystem::path& path) {
     if (renderer) {
         renderer->m_MeshManager.UploadAndBuild();
         EE_CORE_INFO("Scene loaded: MeshManager populated with {} meshes",
-                     renderer->m_MeshManager.GetMeshCount());
+            renderer->m_MeshManager.GetMeshCount());
+
+        if (d.HasMember("globalGraphics") && d["globalGraphics"].IsObject()) {
+            renderer->m_GlobalGraphics.Deserialize(d["globalGraphics"]);
+            renderer->ApplyFromGlobalGraphics();
+        }
     }
 }
 
@@ -529,9 +491,7 @@ void LoadScene(const std::string& sceneName)
     filesystem::path scenePath = filesystem::path("Resources") / "Scenes" / (sceneName + ".scene");
 
     LoadSceneFromFile(Ermine::ECS::GetInstance(), scenePath);
-    
     Ermine::ECS::GetInstance().GetSystem<Ermine::Physics>()->UpdatePhysicList();
-
     Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>()->MarkDrawDataForRebuild();
 }
 
@@ -700,6 +660,8 @@ Ermine::EntityID LoadPrefabFromFile(Ermine::ECS& ecs, const std::filesystem::pat
     // finalize
     ecs.ResyncAllSignaturesFromStorage();
     Ermine::ResolveHierarchyGuids(ecs);
+
+    //ecs.GetSystem<Ermine::Physics>()->UpdatePhysicList();
 
     // Return detected root; fallback to first created if none marked as root
     if (rootEntity != 0) return rootEntity;

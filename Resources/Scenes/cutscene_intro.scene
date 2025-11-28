@@ -3,178 +3,399 @@
     {
       "id": 1,
       "components": {
+        "IDComponent": {
+          "guid": "435ce9621f68e14596d68d9242173b49"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            5.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
         "ObjectMetaData": {
           "name": "CutsceneCamera",
           "tag": "MainCamera",
           "selfActive": true
         },
-        "Transform": {
-          "position": [0.0, 0.0, 5.0],
-          "rotation": [0.0, 0.0, 0.0, 1.0],
-          "scale": [1.0, 1.0, 1.0]
+        "HierarchyComponent": {
+          "depth": 0
         },
+        "GlobalTransform": {},
         "CameraComponent": {
           "fov": 60.0,
-          "nearPlane": 0.1,
-          "farPlane": 1000.0,
-          "isActive": true
-        },
-        "HierarchyComponent": {},
-        "GlobalTransform": {}
+          "aspect": 1.7777777910232545,
+          "near": 0.10000000149011612,
+          "far": 100.0,
+          "primary": false,
+          "isGameCamera": false
+        }
       }
     },
     {
       "id": 2,
       "components": {
+        "IDComponent": {
+          "guid": "3db3a3b89e7dc348b32afa32408882db"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
         "ObjectMetaData": {
           "name": "CutsceneController",
           "tag": "Controller",
           "selfActive": true
         },
-        "Transform": {
-          "position": [0.0, 0.0, 0.0],
-          "rotation": [0.0, 0.0, 0.0, 1.0],
-          "scale": [1.0, 1.0, 1.0]
+        "HierarchyComponent": {
+          "depth": 0
         },
+        "GlobalTransform": {},
         "ScriptsComponent": {
           "scripts": [
             {
-              "className": "CutscenePlayer",
-              "enabled": true
+              "class": "CutscenePlayer",
+              "enabled": true,
+              "fields": {}
             }
           ]
-        },
-        "HierarchyComponent": {},
-        "GlobalTransform": {}
+        }
       }
     },
     {
       "id": 3,
       "components": {
+        "IDComponent": {
+          "guid": "15a4fe6a00690e4d9e15e182e8ab7354"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
         "ObjectMetaData": {
           "name": "CutsceneBackground",
           "tag": "UI",
           "selfActive": true
         },
-        "Transform": {
-          "position": [0.0, 0.0, 0.0],
-          "rotation": [0.0, 0.0, 0.0, 1.0],
-          "scale": [1.0, 1.0, 1.0]
+        "HierarchyComponent": {
+          "depth": 0
         },
         "UIImageComponent": {
           "imagePath": "../Resources/Textures/UI/image.png",
           "fullscreen": true,
-          "position": [0.5, 0.5, 0.0],
+          "position": [
+            0.5,
+            0.5,
+            0.0
+          ],
           "width": 1.0,
           "height": 1.0,
-          "tintColor": [1.0, 1.0, 1.0],
+          "tintColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
           "alpha": 1.0,
           "maintainAspectRatio": true,
           "caption": "",
           "showCaption": false,
-          "captionColor": [1.0, 1.0, 1.0],
+          "captionColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
           "captionFontSize": 24.0,
-          "captionPosition": [0.5, 0.1, 0.0]
+          "captionPosition": [
+            0.5,
+            0.10000000149011612,
+            0.0
+          ]
         },
-        "HierarchyComponent": {},
         "GlobalTransform": {}
       }
     },
     {
       "id": 4,
       "components": {
+        "IDComponent": {
+          "guid": "912274477014cc438e7d811904b2c928"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
         "ObjectMetaData": {
           "name": "Slide1",
           "tag": "Cutscene",
           "selfActive": true
         },
-        "Transform": {
-          "position": [0.0, 0.0, 0.0],
-          "rotation": [0.0, 0.0, 0.0, 1.0],
-          "scale": [1.0, 1.0, 1.0]
+        "HierarchyComponent": {
+          "depth": 0
         },
         "UIImageComponent": {
           "imagePath": "../Resources/Textures/UI/cutscene1.png",
           "fullscreen": false,
-          "position": [0.5, 0.5, 0.0],
+          "position": [
+            0.5,
+            0.5,
+            0.0
+          ],
           "width": 1.0,
-          "height": 0.9,
-          "tintColor": [1.0, 1.0, 1.0],
+          "height": 0.8999999761581421,
+          "tintColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
           "alpha": 1.0,
           "maintainAspectRatio": true,
           "caption": "Creation & Betrayal: Scientist invents glowing energy machine; shady boss takes over.",
           "showCaption": true,
-          "captionColor": [1.0, 1.0, 1.0],
+          "captionColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
           "captionFontSize": 28.0,
-          "captionPosition": [0.17, 0.1, 0.0]
+          "captionPosition": [
+            0.17000000178813935,
+            0.10000000149011612,
+            0.0
+          ]
         },
-        "HierarchyComponent": {},
         "GlobalTransform": {}
       }
     },
     {
       "id": 5,
       "components": {
+        "IDComponent": {
+          "guid": "b334179a3030de4e98a340f183e4c79b"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
         "ObjectMetaData": {
           "name": "Slide2",
           "tag": "Cutscene",
           "selfActive": true
         },
-        "Transform": {
-          "position": [0.0, 0.0, 0.0],
-          "rotation": [0.0, 0.0, 0.0, 1.0],
-          "scale": [1.0, 1.0, 1.0]
+        "HierarchyComponent": {
+          "depth": 0
         },
         "UIImageComponent": {
           "imagePath": "../Resources/Textures/UI/cutscene2.png",
           "fullscreen": false,
-          "position": [0.5, 0.5, 0.0],
+          "position": [
+            0.5,
+            0.5,
+            0.0
+          ],
           "width": 1.0,
-          "height": 0.9,
-          "tintColor": [1.0, 1.0, 1.0],
+          "height": 0.8999999761581421,
+          "tintColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
           "alpha": 1.0,
           "maintainAspectRatio": true,
           "caption": "Horror Factory: Scientist, now a prisoner, sees his invention used to torture people in a vast, dark factory.",
           "showCaption": true,
-          "captionColor": [255.0, 255.0, 255.0],
+          "captionColor": [
+            255.0,
+            255.0,
+            255.0
+          ],
           "captionFontSize": 28.0,
-          "captionPosition": [0.1, 0.1, 0.0]
+          "captionPosition": [
+            0.10000000149011612,
+            0.10000000149011612,
+            0.0
+          ]
         },
-        "HierarchyComponent": {},
         "GlobalTransform": {}
       }
     },
     {
       "id": 6,
       "components": {
+        "IDComponent": {
+          "guid": "5fddcd752484c84baf1d98439f99e779"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
         "ObjectMetaData": {
           "name": "Slide3",
           "tag": "Cutscene",
           "selfActive": true
         },
-        "Transform": {
-          "position": [0.0, 0.0, 0.0],
-          "rotation": [0.0, 0.0, 0.0, 1.0],
-          "scale": [1.0, 1.0, 1.0]
+        "HierarchyComponent": {
+          "depth": 0
         },
         "UIImageComponent": {
           "imagePath": "../Resources/Textures/UI/cutscene3.png",
           "fullscreen": false,
-          "position": [0.5, 0.5, 0.0],
+          "position": [
+            0.5,
+            0.5,
+            0.0
+          ],
           "width": 1.0,
-          "height": 0.9,
-          "tintColor": [1.0, 1.0, 1.0],
+          "height": 0.8999999761581421,
+          "tintColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
           "alpha": 1.0,
           "maintainAspectRatio": true,
           "caption": "Revenge Awakens: Scientist grabs his old glowing syringe, eyes burning with determination, ready to fight back.",
           "showCaption": true,
-          "captionColor": [255.0, 255.0, 255.0],
+          "captionColor": [
+            255.0,
+            255.0,
+            255.0
+          ],
           "captionFontSize": 28.0,
-          "captionPosition": [0.09, 0.1, 0.0]
+          "captionPosition": [
+            0.09000000357627869,
+            0.10000000149011612,
+            0.0
+          ]
         },
-        "HierarchyComponent": {},
         "GlobalTransform": {}
       }
     }
-  ]
+  ],
+  "globalGraphics": {
+    "ssaoEnabled": false,
+    "ssaoSamples": 16,
+    "ssaoRadius": 10.0,
+    "ssaoBias": 0.009999999776482582,
+    "ssaoIntensity": 1.0,
+    "ssaoFadeout": 0.10000000149011612,
+    "ssaoMaxDistance": 100.0,
+    "fogEnabled": false,
+    "fogMode": 0,
+    "fogColor": [
+      0.5,
+      0.6000000238418579,
+      0.699999988079071
+    ],
+    "fogDensity": 0.019999999552965165,
+    "fogStart": 50.0,
+    "fogEnd": 200.0,
+    "fogHeightCoefficient": 0.10000000149011612,
+    "fogHeightFalloff": 10.0,
+    "vignetteEnabled": false,
+    "fxaaEnabled": true,
+    "toneMappingEnabled": true,
+    "gammaCorrectionEnabled": true,
+    "bloomEnabled": true,
+    "skyboxIsHDR": false,
+    "exposure": 1.0,
+    "contrast": 1.0,
+    "saturation": 1.0,
+    "gamma": 2.200000047683716,
+    "vignetteIntensity": 0.30000001192092898,
+    "vignetteRadius": 0.800000011920929,
+    "bloomStrength": 0.03999999910593033,
+    "fxaaSpanMax": 8.0,
+    "fxaaReduceMin": 0.0078125,
+    "fxaaReduceMul": 0.125,
+    "bloomThreshold": 1.0,
+    "bloomIntensity": 2.0,
+    "bloomRadius": 1.0,
+    "spotlightRaysEnabled": true,
+    "spotlightRayIntensity": 0.30000001192092898,
+    "spotlightRayFalloff": 2.0,
+    "motionBlurEnabled": true,
+    "motionBlurStrength": 1.0,
+    "motionBlurSamples": 8
+  }
 }
