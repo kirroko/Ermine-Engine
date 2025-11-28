@@ -36,8 +36,8 @@
             0.0
           ],
           "showSkills": true,
-          "skillSlotSize": 0.07999999821186066,
-          "skillSlotSpacing": 0.014999999664723874,
+          "skillSlotSize": 0.12,
+          "skillSlotSpacing": 0.02,
           "skillsPosition": [
             0.5,
             0.10000000149011612,
@@ -49,7 +49,7 @@
             0.949999988079071,
             0.949999988079071
           ],
-          "crosshairSize": 0.012000000104308129,
+          "crosshairSize": 0.05,
           "crosshairThickness": 0.0010000000474974514,
           "crosshairStyle": 0,
           "crosshairGap": 0.004000000189989805,
@@ -103,7 +103,7 @@
                 0.15000000596046449,
                 0.15000000596046449
               ],
-              "iconTexturePath": "../Resources/Textures/UI/Skills/shoot_orb_icon.png",
+              "iconTexturePath": "../Resources/Textures/UI/Skills/ShootOrb.png",
               "skillName": "Orb Control",
               "keyBinding": "LMB",
               "description": "Shoot orb, then teleport to it"

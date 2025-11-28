@@ -411,6 +411,7 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClCompile Include="src\Graphics\SkeletalSSBO.cpp" />
     <ClCompile Include="src\Graphics\Skybox.cpp" />
     <ClCompile Include="src\Graphics\Texture.cpp" />
+    <ClCompile Include="src\Graphics\UIButtonSystem.cpp" />
     <ClCompile Include="src\Graphics\UIRenderSystem.cpp" />
     <ClCompile Include="src\Graphics\UITextRenderer.cpp" />
     <ClCompile Include="src\Graphics\VertexArray.cpp" />
@@ -464,6 +465,7 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <None Include="include\MathUtils.tpp" />
     <None Include="include\Registry.tpp" />
     <None Include="include\Systems.tpp" />
+    <None Include="src\Graphics\Renderer.cpp.backup" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ThirdParty\GLFW\GLFW.vcxproj">

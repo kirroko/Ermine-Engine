@@ -19,6 +19,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Renderer.h"
 #include "Components.h"
 #include "Matrix4x4.h"
+#include "EditorGUI.h"
+#include "ScriptSystem.h"
 #include "../../../Ermine-ResourcePipeline/xresource_pipeline_v2-main/dependencies/xstrtool/source/xstrtool.h"
 
 namespace
@@ -259,58 +261,95 @@ SceneManager& SceneManager::GetInstance()
 
 void SceneManager::NewScene()
 {
-    // Clear ECS
-    Ermine::ECS::GetInstance().ClearAllEntities();
+    auto& ecs = Ermine::ECS::GetInstance();
+    
+    // STEP 1: Clean up scripts before clearing entities
+    if (auto scriptSystem = ecs.GetSystem<Ermine::scripting::ScriptSystem>()) {
+        EE_CORE_INFO("NewScene: Cleaning up all script instances before entity destruction");
+        scriptSystem->CleanupAllScripts();
+    }
+    
+    // STEP 2: Clear physics
+    if (auto physics = ecs.GetSystem<Ermine::Physics>()) {
+        physics->ClearPhysicBody();
+    }
+    
+    // STEP 3: Clear ECS
+    ecs.ClearAllEntities();
 
-    // Recreate HUD entity (UI elements)
-    //CreateHUDEntity();
-
-    auto mainLight = Ermine::ECS::GetInstance().CreateEntity();
+    auto mainLight = ecs.CreateEntity();
 
     // Tilted down and slightly to the side, similar to Unity's default
-    Ermine::ECS::GetInstance().AddComponent(
+    ecs.AddComponent(
         mainLight,
         Ermine::Transform(
             Ermine::Vec3(0, 5, 0),
             Ermine::FromEulerDegrees(50.0f, -30.0f, 0.0f),
             Ermine::Vec3(1, 1, 1)));
 
-    Ermine::ECS::GetInstance().AddComponent(mainLight, Ermine::ObjectMetaData("Main Light", "Light", true));
-    Ermine::ECS::GetInstance().AddComponent(mainLight, Ermine::Light(Ermine::Vec3(1, 1, 1), 1.0f, Ermine::LightType::DIRECTIONAL, true));
-    Ermine::ECS::GetInstance().AddComponent<Ermine::HierarchyComponent>(mainLight, Ermine::HierarchyComponent{});
+    ecs.AddComponent(mainLight, Ermine::ObjectMetaData("Main Light", "Light", true));
+    ecs.AddComponent(mainLight, Ermine::Light(Ermine::Vec3(1, 1, 1), 1.0f, Ermine::LightType::DIRECTIONAL, true));
+    ecs.AddComponent<Ermine::HierarchyComponent>(mainLight, Ermine::HierarchyComponent{});
+    
     // Mark materials dirty to trigger recompilation
-    auto renderer = Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>();
+    auto renderer = ecs.GetSystem<Ermine::graphics::Renderer>();
     if (renderer) {
         renderer->MarkMaterialsDirty();
     }
-    Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>()->InitializeShadowMapResources();
-    Ermine::ECS::GetInstance().GetSystem<Ermine::Physics>()->UpdatePhysicList();
-    if (auto scene = SceneManager::GetInstance().GetActiveScene())
-        scene->EnsureSyncedWithECS(/*force=*/true);
+    ecs.GetSystem<Ermine::graphics::Renderer>()->InitializeShadowMapResources();
+    ecs.GetSystem<Ermine::Physics>()->UpdatePhysicList();
+
+    // Create a new Scene object and sync with ECS
+    auto newScene = std::make_shared<Ermine::Scene>("Untitled Scene");
+    newScene->EnsureSyncedWithECS(/*force=*/true);
+
+    // Set as active scene in SceneManager
+    SetActiveScene(newScene);
+
+    // Notify EditorGUI to update hierarchy panel and inspector
+    Ermine::editor::EditorGUI::SetActiveScene(newScene);
+
     m_CurrentScenePath.reset();
     m_Dirty = false;
 }
 
 void SceneManager::ClearScene()
 {
-    // Clear ECS
-    Ermine::ECS::GetInstance().ClearAllEntities();
+    auto& ecs = Ermine::ECS::GetInstance();
+    
+    // STEP 1: Clean up scripts before clearing entities
+    if (auto scriptSystem = ecs.GetSystem<Ermine::scripting::ScriptSystem>()) {
+        EE_CORE_INFO("ClearScene: Cleaning up all script instances before entity destruction");
+        scriptSystem->CleanupAllScripts();
+    }
+    
+    // STEP 2: Clear physics
+    if (auto physics = ecs.GetSystem<Ermine::Physics>()) {
+        physics->ClearPhysicBody();
+    }
+    
+    // STEP 3: Clear ECS
+    ecs.ClearAllEntities();
 
-    // Recreate HUD entity (UI elements)
-    //CreateHUDEntity();
-
-    //Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>()->UpdateShadowMap();
+    //ecs.GetSystem<Ermine::graphics::Renderer>()->UpdateShadowMap();
 
     // Mark materials dirty to trigger recompilation
-    auto renderer = Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>();
+    auto renderer = ecs.GetSystem<Ermine::graphics::Renderer>();
     if (renderer) {
         renderer->MarkMaterialsDirty();
     }
 
-    if (auto scene = GetActiveScene()) {
-        scene->EnsureSyncedWithECS();
-    }
-    Ermine::ECS::GetInstance().GetSystem<Ermine::Physics>()->UpdatePhysicList();
+    // Create an empty Scene object and sync with ECS
+    auto emptyScene = std::make_shared<Ermine::Scene>("Empty Scene");
+    emptyScene->EnsureSyncedWithECS(/*force=*/true);
+
+    // Set as active scene in SceneManager
+    SetActiveScene(emptyScene);
+
+    // Notify EditorGUI to update hierarchy panel and inspector
+    Ermine::editor::EditorGUI::SetActiveScene(emptyScene);
+
+    ecs.GetSystem<Ermine::Physics>()->UpdatePhysicList();
     m_CurrentScenePath.reset();
     m_Dirty = false;
 }
@@ -323,24 +362,53 @@ void SceneManager::OpenSceneDialog()
 
 void SceneManager::OpenScene(const std::string& path)
 {
-    //auto& ecs = Ermine::ECS::GetInstance();
-    //EnsureActiveScene().Clear();
+    // CRITICAL FIX: Clear all existing entities BEFORE loading the new scene
+    // This prevents entities from previous scenes (e.g., main menu) from persisting
+    // when transitioning to a new scene (e.g., cutscene)
+    EE_CORE_INFO("Loading scene from: {}", path);
+    EE_CORE_INFO("Clearing all existing entities before loading new scene...");
+    
+    // STEP 1: Stop all systems that hold entity references
+    auto& ecs = Ermine::ECS::GetInstance();
+    
+    // STEP 1a: Clean up script instances FIRST (before any entity destruction)
+    // This ensures scripts properly call OnDisable/OnDestroy without accessing invalid entities
+    if (auto scriptSystem = ecs.GetSystem<Ermine::scripting::ScriptSystem>()) {
+        EE_CORE_INFO("Cleaning up all script instances before entity destruction");
+        scriptSystem->CleanupAllScripts();
+    }
+    
+    // STEP 1b: Stop physics system and clear ALL physics bodies
+    if (auto physics = ecs.GetSystem<Ermine::Physics>()) {
+        EE_CORE_INFO("Clearing all physics bodies before entity destruction");
+        physics->ClearPhysicBody();  // Remove all physics bodies from simulation
+    }
+    
+    // STEP 2: Now it's safe to clear entities (no more script or physics references)
+    ecs.ClearAllEntities();
 
-    LoadSceneFromFile(Ermine::ECS::GetInstance(), path);
+    // STEP 3: Load the new scene
+    LoadSceneFromFile(ecs, path);
 
-    // Recreate HUD entity (UI elements)
-    //CreateHUDEntity();
-
-    Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>()->InitializeShadowMapResources();
-
-    // Mark materials dirty to trigger recompilation after scene load
-    auto renderer = Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>();
-    if (renderer) {
+    // STEP 4: Re-initialize systems with new entities
+    if (auto renderer = ecs.GetSystem<Ermine::graphics::Renderer>()) {
+        renderer->InitializeShadowMapResources();
         renderer->MarkMaterialsDirty();
     }
 
-    //RebuildRuntimeHierarchyFromGuids(Ermine::ECS::GetInstance());
+    // Create Scene object from loaded entities
+    std::filesystem::path scenePath(path);
+    std::string sceneName = scenePath.stem().string(); // Get filename without extension
+    auto newScene = std::make_shared<Ermine::Scene>(sceneName);
 
+    // Sync the Scene object with the loaded ECS entities
+    newScene->EnsureSyncedWithECS(/*force=*/true);
+
+    // Set as active scene in SceneManager
+    SetActiveScene(newScene);
+
+    // Notify EditorGUI to update hierarchy panel and inspector
+    Ermine::editor::EditorGUI::SetActiveScene(newScene);
     if (auto scene = SceneManager::GetInstance().GetActiveScene())
     {
         auto baseName = xstrtool::PathBaseName(xstrtool::PathWithoutExtension(path));
@@ -350,7 +418,36 @@ void SceneManager::OpenScene(const std::string& path)
 
     m_CurrentScenePath = path;
     m_Dirty = false;
-    Ermine::ECS::GetInstance().GetSystem<Ermine::Physics>()->UpdatePhysicList();
+    
+    // STEP 5: REBUILD physics list after everything is loaded
+    // This creates new physics bodies for entities with PhysicComponents
+    if (auto physics = ecs.GetSystem<Ermine::Physics>()) {
+        EE_CORE_INFO("Rebuilding physics bodies for new scene");
+        physics->UpdatePhysicList();
+    }
+    
+    // STEP 6: *** NEW FIX *** Reset cursor state when loading a new scene
+    // This ensures cursor is properly reset when transitioning between scenes
+#if defined(EE_EDITOR)
+    GLFWwindow* window = glfwGetCurrentContext();
+    if (!window) {
+        EE_CORE_WARN("Cannot reset cursor - no GLFW context available");
+    } else if (Ermine::editor::EditorGUI::s_state == Ermine::editor::EditorGUI::SimState::playing) {
+        // Runtime scene load: unlock cursor by default
+        // Scripts will re-lock it if needed (e.g., FPS controller)
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        if (glfwRawMouseMotionSupported())
+            glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_FALSE);
+        EE_CORE_INFO("Scene loaded at runtime - cursor unlocked (scripts can re-lock if needed)");
+    } else {
+        // Editor mode: ensure cursor is visible
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        if (glfwRawMouseMotionSupported())
+            glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_FALSE);
+    }
+#endif
+    
+    EE_CORE_INFO("Scene '{}' loaded successfully with {} entities", sceneName, newScene->GetEntityCount());
 }
 
 void SceneManager::SaveScene()

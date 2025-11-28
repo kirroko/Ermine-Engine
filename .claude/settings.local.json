@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir \"C:\\Github\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-ScriptAssembly\")",
+      "Bash(dir /s \"C:\\Github\\Ermine-Engine\\Ermine-Engine\\include\")",
+      "Bash(findstr:*)",
+      "Bash(powershell -Command \"Get-ChildItem -Path ''C:\\Github\\Ermine-Engine\\Ermine-Engine\\src\\Graphics'' -Recurse -Include ''*.cpp'',''*.h'' | Select-Object FullName\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

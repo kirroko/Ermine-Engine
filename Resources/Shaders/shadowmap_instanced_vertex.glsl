@@ -96,7 +96,12 @@ void main()
     // Get draw info from SSBO using gl_DrawID (indirect rendering)
     DrawInfo drawInfo = drawInfos[baseDrawID + gl_DrawID];
     mat4 modelMatrix = drawInfo.modelMatrix;
-    bool useSkinning = (drawInfo.flags & 1u) != 0u;
+
+    // DrawInfo flag bits (must match C++ DrawCommands.h)
+    const uint FLAG_SKINNING = 1u << 0u;
+    const uint FLAG_CAMERA_ATTACHED = 1u << 1u;
+
+    bool useSkinning = (drawInfo.flags & FLAG_SKINNING) != 0u;
 
     // Calculate skinned position
     vec4 skinnedPos = vec4(aPosition, 1.0);

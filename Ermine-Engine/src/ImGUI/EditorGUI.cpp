@@ -29,6 +29,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Scene.h"
 #include "HierarchyPanel.h"
 #include "HierarchyInspector.h"
+#include "UIButtonSystem.h"
 
 #include "CameraSystem.h"
 #include "Components.h"
@@ -41,6 +42,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <optional>
 #include "SceneManager.h"
 #include <imnodes.h>
+
 
 namespace Ermine
 {
@@ -56,6 +58,7 @@ using namespace Ermine::editor;
 // Definition for static member m_Windows, for ImGUI Windows
 std::vector<std::unique_ptr<Ermine::ImGUIWindow>>EditorGUI::m_Windows;
 bool EditorGUI::isPlaying = false; // tied to Play/Stop toolbar state.
+bool EditorGUI::isPreviewingUI = false; // Enable UI preview in editor viewport
 GLFWwindow* EditorGUI::s_WindowContext = nullptr;
 Ermine::EntityID EditorGUI::s_PrimaryCameraEntity = 0;
 
@@ -397,6 +400,11 @@ void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
             EE_CORE_INFO("Console open");
         }
 
+        // Legacy ImGui menu previews removed - use scene-based approach instead:
+        // - Open mainmenu.scene or cutscene_intro.scene in viewport
+        // - Edit UI entities (MenuBackground, GameTitle, Slide1/2/3) with Inspector
+        // - MenuController and CutscenePlayer scripts handle logic
+
         ImGui::EndMenu();
     }
 
@@ -584,6 +592,13 @@ void EditorGUI::ViewPortWindow(bool& show)
     const ImVec2 imgMin = ImGui::GetItemRectMin();
     const ImVec2 imgMax = ImGui::GetItemRectMax();
     const ImVec2 imgSize = ImGui::GetItemRectSize();
+
+    // UPDATE UI BUTTON SYSTEM WITH VIEWPORT INFO
+    auto uiButtonSystem = ECS::GetInstance().GetSystem<UIButtonSystem>();
+    if (uiButtonSystem)
+    {
+        uiButtonSystem->SetViewportInfo(imgMin, imgSize);
+    }
 
     // Left-click within the image, perform picking
     if (!isPlaying && ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left))

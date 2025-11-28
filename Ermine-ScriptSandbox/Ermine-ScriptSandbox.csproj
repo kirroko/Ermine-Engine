@@ -72,6 +72,8 @@
   <ItemGroup>
     <Compile Include="DamagePlayer.cs" />
     <Compile Include="DisableLightCone.cs" />
+    <Compile Include="CutscenePlayer.cs" />
+    <Compile Include="MainMenu.cs" />
     <Compile Include="FakePlayer.cs" />
     <Compile Include="LifeEssenceSkillController.cs" />
     <Compile Include="OrbTeleport.cs" />

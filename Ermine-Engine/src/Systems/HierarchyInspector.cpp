@@ -287,6 +287,12 @@ namespace Ermine::editor {
 		if (ECS::GetInstance().HasComponent<CameraComponent>(selected))
 			DrawCameraComponent(selected);
 
+		if (ECS::GetInstance().HasComponent<UIImageComponent>(selected))
+			DrawUIImageComponent(selected);
+
+		if (ECS::GetInstance().HasComponent<UIButtonComponent>(selected))
+			DrawUIButtonComponent(selected);
+
 		ImGui::PopID();
 
 		ImGui::Separator();
@@ -2273,6 +2279,64 @@ namespace Ermine::editor {
 		}
 	}
 
+	void HierarchyInspector::DrawUIImageComponent(EntityID entity)
+	{
+		if (!ComponentHeaderWithRemove<UIImageComponent>("UI Image Component", entity))
+			return;
+
+		auto& imageComp = ECS::GetInstance().GetComponent<UIImageComponent>(entity);
+
+		// Image Path
+		char pathBuffer[256];
+		strncpy_s(pathBuffer, imageComp.imagePath.c_str(), sizeof(pathBuffer) - 1);
+		pathBuffer[sizeof(pathBuffer) - 1] = '\0';
+		if (ImGui::InputText("Image Path", pathBuffer, sizeof(pathBuffer))) {
+			imageComp.imagePath = pathBuffer;
+		}
+
+		// Fullscreen toggle
+		ImGui::Checkbox("Fullscreen", &imageComp.fullscreen);
+
+		// Position (only relevant when not fullscreen)
+		if (!imageComp.fullscreen) {
+			ImGui::DragFloat3("Position", &imageComp.position.x, 0.01f, 0.0f, 1.0f);
+			ImGui::DragFloat("Width", &imageComp.width, 0.01f, 0.0f, 1.0f);
+			ImGui::DragFloat("Height", &imageComp.height, 0.01f, 0.0f, 1.0f);
+			ImGui::Checkbox("Maintain Aspect Ratio", &imageComp.maintainAspectRatio);
+		}
+
+		// Tint Color
+		ImGui::ColorEdit3("Tint Color", &imageComp.tintColor.x);
+
+		// Alpha
+		ImGui::SliderFloat("Alpha", &imageComp.alpha, 0.0f, 1.0f);
+
+		ImGui::Separator();
+		ImGui::Text("Caption Settings");
+
+		// Show Caption toggle
+		ImGui::Checkbox("Show Caption", &imageComp.showCaption);
+
+		if (imageComp.showCaption) {
+			// Caption text (multiline)
+			char captionBuffer[512];
+			strncpy_s(captionBuffer, imageComp.caption.c_str(), sizeof(captionBuffer) - 1);
+			captionBuffer[sizeof(captionBuffer) - 1] = '\0';
+			if (ImGui::InputTextMultiline("Caption Text", captionBuffer, sizeof(captionBuffer), ImVec2(-FLT_MIN, ImGui::GetTextLineHeight() * 3))) {
+				imageComp.caption = captionBuffer;
+			}
+
+			// Caption color
+			ImGui::ColorEdit3("Caption Color", &imageComp.captionColor.x);
+
+			// Font size
+			ImGui::DragFloat("Font Size", &imageComp.captionFontSize, 1.0f, 8.0f, 72.0f);
+
+			// Caption position
+			ImGui::DragFloat2("Caption Position", &imageComp.captionPosition.x, 0.01f, 0.0f, 1.0f);
+		}
+	}
+
 	void HierarchyInspector::DrawAddComponentMenu(EntityID entity) {
 		if (ImGui::MenuItem("Transform") && !ECS::GetInstance().HasComponent<Transform>(entity)) {
 			ECS::GetInstance().AddComponent(entity, Transform());
@@ -2354,8 +2418,108 @@ namespace Ermine::editor {
 			tempCam.nearPlane = 5.0f;
 			ECS::GetInstance().AddComponent(entity, tempCam);
 		}
+		if (ImGui::MenuItem("UI Image") && !ECS::GetInstance().HasComponent<UIImageComponent>(entity))
+		{
+			ECS::GetInstance().AddComponent(entity, UIImageComponent());
+		}
+		if (ImGui::MenuItem("UI Button") && !ECS::GetInstance().HasComponent<UIButtonComponent>(entity))
+		{
+			ECS::GetInstance().AddComponent(entity, UIButtonComponent());
+		}
 		// Add more component types as needed
 
 		ECS::GetInstance().ResyncAllSignaturesFromStorage();
 	}
+
+	void HierarchyInspector::DrawUIButtonComponent(EntityID entity)
+{
+	if (!ComponentHeaderWithRemove<UIButtonComponent>("UI Button Component", entity))
+		return;
+
+	auto& button = ECS::GetInstance().GetComponent<UIButtonComponent>(entity);
+
+	// Button text
+	char textBuffer[256];
+	strncpy_s(textBuffer, button.text.c_str(), sizeof(textBuffer) - 1);
+	textBuffer[sizeof(textBuffer) - 1] = '\0';
+	if (ImGui::InputText("Button Text", textBuffer, sizeof(textBuffer))) {
+		button.text = textBuffer;
+	}
+
+	// Position and size (UI is 2D, only X and Y needed)
+	ImGui::DragFloat2("Position (X, Y)", &button.position.x, 0.01f, 0.0f, 1.0f);
+	ImGui::DragFloat2("Size (Width, Height)", &button.size.x, 0.01f, 0.01f, 1.0f);
+
+	ImGui::Separator();
+	ImGui::Text("Colors");
+
+	// Colors
+	ImGui::ColorEdit3("Normal Color", &button.normalColor.x);
+	ImGui::ColorEdit3("Hover Color", &button.hoverColor.x);
+	ImGui::ColorEdit3("Pressed Color", &button.pressedColor.x);
+	ImGui::ColorEdit3("Text Color", &button.textColor.x);
+	ImGui::DragFloat("Text Scale", &button.textScale, 0.1f, 0.1f, 5.0f);
+	ImGui::SliderFloat("Background Alpha", &button.backgroundAlpha, 0.0f, 1.0f);
+
+	ImGui::Separator();
+	ImGui::Text("Action");
+
+	// Button action dropdown
+	const char* actionNames[] = { "None", "Load Scene", "Quit", "Custom" };
+	int currentAction = static_cast<int>(button.action);
+	if (ImGui::Combo("Action", &currentAction, actionNames, IM_ARRAYSIZE(actionNames))) {
+		button.action = static_cast<UIButtonComponent::ButtonAction>(currentAction);
+	}
+
+	// Action data (scene path or custom event)
+	if (button.action != UIButtonComponent::ButtonAction::None && button.action != UIButtonComponent::ButtonAction::Quit)
+	{
+		char actionDataBuffer[256];
+		strncpy_s(actionDataBuffer, button.actionData.c_str(), sizeof(actionDataBuffer) - 1);
+		actionDataBuffer[sizeof(actionDataBuffer) - 1] = '\0';
+
+		const char* label = (button.action == UIButtonComponent::ButtonAction::LoadScene)
+			? "Scene Path"
+			: "Event Name";
+
+		if (ImGui::InputText(label, actionDataBuffer, sizeof(actionDataBuffer))) {
+			button.actionData = actionDataBuffer;
+		}
+
+		// Helper text
+		if (button.action == UIButtonComponent::ButtonAction::LoadScene) {
+			ImGui::TextDisabled("Example: ../Resources/Scenes/level.scene");
+		}
+	}
+
+	// Audio settings
+	ImGui::Separator();
+	ImGui::Text("Audio");
+
+	char hoverSoundBuffer[256];
+	strncpy_s(hoverSoundBuffer, button.hoverSoundName.c_str(), sizeof(hoverSoundBuffer) - 1);
+	hoverSoundBuffer[sizeof(hoverSoundBuffer) - 1] = '\0';
+	if (ImGui::InputText("Hover Sound", hoverSoundBuffer, sizeof(hoverSoundBuffer))) {
+		button.hoverSoundName = hoverSoundBuffer;
+	}
+	ImGui::TextDisabled("Example: click.wav");
+
+	char clickSoundBuffer[256];
+	strncpy_s(clickSoundBuffer, button.clickSoundName.c_str(), sizeof(clickSoundBuffer) - 1);
+	clickSoundBuffer[sizeof(clickSoundBuffer) - 1] = '\0';
+	if (ImGui::InputText("Click Sound", clickSoundBuffer, sizeof(clickSoundBuffer))) {
+		button.clickSoundName = clickSoundBuffer;
+	}
+	ImGui::TextDisabled("Example: button_click.wav");
+
+	ImGui::SliderFloat("Sound Volume", &button.soundVolume, 0.0f, 1.0f);
+
+	// Show button state (read-only)
+	ImGui::Separator();
+	ImGui::Text("State (Read-Only)");
+	ImGui::Checkbox("Is Hovered", &button.isHovered);
+	ImGui::SameLine();
+	ImGui::Checkbox("Is Pressed", &button.isPressed);
+}
+
 } // namespace Ermine::editor

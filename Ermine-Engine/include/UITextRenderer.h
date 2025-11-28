@@ -67,13 +67,18 @@ namespace Ermine
             RGB color values (0-1).
         \param[in] alpha
             Alpha transparency (0-1, default 1.0).
+        \param[in] vao
+            OpenGL VAO to use for rendering.
+        \param[in] vbo
+            OpenGL VBO to use for rendering.
         *************************************************************************/
         void RenderText(std::shared_ptr<graphics::Shader> shader,
                        const std::string& text,
                        float x, float y,
                        float scale,
                        const Vec3& color,
-                       float alpha = 1.0f);
+                       float alpha,
+                       GLuint vao, GLuint vbo);
 
         /*!***********************************************************************
         \brief

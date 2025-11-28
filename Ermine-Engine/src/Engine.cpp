@@ -43,6 +43,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "HierarchySystem.h"
 #include "CameraSystem.h"
 #include "UIRenderSystem.h"
+#include "UIButtonSystem.h"
 #include "NavMesh.h"
 #include "NavMeshAgentSystem.h"
 #include "EditorGUI.h"
@@ -58,6 +59,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "FSMEditor.h"
 #include "AnimationGUI.h"
 #include "ResourcePipe.h"
+
 #endif
 
 using namespace Ermine;
@@ -83,6 +85,107 @@ namespace
 	}
 
 	EntityID fbxEntity = 0;
+
+	/*!***********************************************************************
+	\brief
+	Creates a main menu scene dynamically with camera and menu script
+	\return
+	Shared pointer to the created scene
+	*************************************************************************/
+	std::shared_ptr<Ermine::Scene> CreateMainMenuScene()
+	{
+		auto scene = std::make_shared<Ermine::Scene>("Main Menu");
+
+		// Create main camera entity
+		Ermine::EntityID cameraEntity = scene->CreateEntity("MainCamera", true, true);
+		ECS::GetInstance().AddComponent(cameraEntity, CameraComponent(45.0f, 16.0f / 9.0f, 0.1f, 100.0f, true, false));
+		EE_CORE_INFO("Created main menu camera entity: {}", cameraEntity);
+
+		// Create menu script entity
+		Ermine::EntityID menuScriptEntity = scene->CreateEntity("MenuController", true, true);
+		ScriptsComponent scriptsComp;
+		scriptsComp.Add("MainMenu", menuScriptEntity, true);
+		ECS::GetInstance().AddComponent<ScriptsComponent>(menuScriptEntity, scriptsComp);
+		EE_CORE_INFO("Created menu script entity: {}", menuScriptEntity);
+
+		// Create UI entity for menu buttons/text - THIS IS THE MAIN MENU UI
+		Ermine::EntityID uiEntity = scene->CreateEntity("MenuUI", false, false);
+		UIComponent uiComp;
+		
+		// ===== CONFIGURE UI FOR MAIN MENU =====
+		// Enable all UI rendering
+		uiComp.showHealthbar = false;      // No health bar for main menu
+		uiComp.showManaBar = false;        // No mana bar for main menu
+		uiComp.showSkills = false;         // No skill slots for main menu
+		uiComp.showCrosshair = false;      // No crosshair for main menu
+		uiComp.showBookCounter = false;    // No book counter for main menu
+		
+		// Set initial health to render menu background/title
+		uiComp.currentHealth = uiComp.maxHealth;
+		uiComp.currentMana = uiComp.maxMana;
+		
+		// Position menu elements at center of screen
+		uiComp.healthbarPosition = Ermine::Vec3(0.35f, 0.6f, 0.0f);
+		uiComp.healthbarWidth = 0.3f;
+		uiComp.healthbarHeight = 0.15f;
+		
+		// Configure health bar as a background panel (solid color)
+		uiComp.healthbarBgColor = Ermine::Vec3(0.1f, 0.1f, 0.1f);  // Dark background
+		uiComp.healthbarColor = Ermine::Vec3(0.2f, 0.8f, 0.3f);    // Green (menu ready indicator)
+		
+		// Add dummy skills to render menu buttons
+		// Skill 0: Play Button
+		uiComp.skills[0].skillName = "Play Game";
+		uiComp.skills[0].keyBinding = "SPACE";
+		uiComp.skills[0].iconTexturePath = "../Resources/Textures/UI/Skills/play_icon.png";
+		uiComp.skills[0].description = "Start Game";
+		
+		// Skill 1: Settings Button
+		uiComp.skills[1].skillName = "Settings";
+		uiComp.skills[1].keyBinding = "S";
+		uiComp.skills[1].iconTexturePath = "../Resources/Textures/UI/Skills/settings_icon.png";
+		uiComp.skills[1].description = "Game Settings";
+		
+		// Skill 2: Credits Button
+		uiComp.skills[2].skillName = "Credits";
+		uiComp.skills[2].keyBinding = "C";
+		uiComp.skills[2].iconTexturePath = "../Resources/Textures/UI/Skills/credits_icon.png";
+		uiComp.skills[2].description = "View Credits";
+		
+		// Skill 3: Quit Button
+		uiComp.skills[3].skillName = "Quit";
+		uiComp.skills[3].keyBinding = "Q";
+		uiComp.skills[3].iconTexturePath = "../Resources/Textures/UI/Skills/quit_icon.png";
+		uiComp.skills[3].description = "Exit Game";
+		
+		// Position skill slots (menu buttons)
+		uiComp.skillsPosition = Ermine::Vec3(0.5f, 0.4f, 0.0f);
+		uiComp.skillSlotSize = 0.12f;
+		uiComp.skillSlotSpacing = 0.02f;
+		
+		// Show the health bar as background and skills as buttons
+		uiComp.showHealthbar = true;
+		uiComp.showSkills = true;
+		
+		ECS::GetInstance().AddComponent<UIComponent>(uiEntity, uiComp);
+		EE_CORE_INFO("Created menu UI entity with buttons: {}", uiEntity);
+
+		// Create a main light
+		Ermine::EntityID lightEntity = scene->CreateEntity("MainLight", true, true);
+		ECS::GetInstance().AddComponent(
+			lightEntity,
+			Transform(
+				Ermine::Vec3(0, 5, 0),
+				FromEulerDegrees(50.0f, -30.0f, 0.0f),
+				Ermine::Vec3(1, 1, 1)));
+		ECS::GetInstance().AddComponent(lightEntity, ObjectMetaData("Main Light", "Light", true));
+		ECS::GetInstance().AddComponent(lightEntity, Light(Ermine::Vec3(1, 1, 1), 1.0f, LightType::DIRECTIONAL, true));
+		EE_CORE_INFO("Created menu light entity: {}", lightEntity);
+
+		EE_CORE_INFO("Main Menu scene created successfully with {} entities", scene->GetEntityCount());
+		return scene;
+	}
+
 }
 
 bool engine::Init(GLFWwindow* windowContext)
@@ -159,6 +262,8 @@ bool engine::Init(GLFWwindow* windowContext)
 		EE_AUTO_REGISTER_COMPONENT(ParticleEmitter, "ParticleEmitter")
 		EE_AUTO_REGISTER_COMPONENT(CameraComponent, "CameraComponent");
 	EE_AUTO_REGISTER_COMPONENT(UIComponent, "UIComponent");
+	EE_AUTO_REGISTER_COMPONENT(UIButtonComponent, "UIButtonComponent");
+	EE_AUTO_REGISTER_COMPONENT(UIImageComponent, "UIImageComponent");
 
 	// NOTE : THESE ARE SPECIAL CASES DUE TO THE FACT THAT THEIR COMPONENTS ARE UNIQUE AND WOULDN'T WORK BY SHALLOW COPIED OR DEEP COPIED
 	// THE CLONING FUNCTIONALITY HAVE BEEN CONSIDERED INTO ECS ITSELF. UNSURE, ASK.
@@ -212,6 +317,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	//ECS::GetInstance().RegisterSystem<graphics::GameCamera>();
 	ECS::GetInstance().RegisterSystem<graphics::CameraSystem>();
 	ECS::GetInstance().RegisterSystem<UIRenderSystem>();
+	ECS::GetInstance().RegisterSystem<UIButtonSystem>();
 
 	//Register JPH::TempAllocatorImpl for Physcis
 	RegisterDefaultAllocator();
@@ -303,6 +409,11 @@ bool engine::Init(GLFWwindow* windowContext)
 	uiSig.set(ECS::GetInstance().GetComponentType<UIComponent>());
 	ECS::GetInstance().SetSystemSignature<UIRenderSystem>(uiSig);
 
+	// For UI Button System (only requires UIButtonComponent)
+	SignatureID buttonSig;
+	buttonSig.set(ECS::GetInstance().GetComponentType<UIButtonComponent>());
+	ECS::GetInstance().SetSystemSignature<UIButtonSystem>(buttonSig);
+
 	glfwSetFramebufferSizeCallback(windowContext, []([[maybe_unused]] GLFWwindow* window, int width, int height)
 		{
 #if defined(EE_EDITOR)
@@ -317,6 +428,10 @@ bool engine::Init(GLFWwindow* windowContext)
 			auto uiSystem = ECS::GetInstance().GetSystem<UIRenderSystem>();
 			if (uiSystem && width > 0 && height > 0)
 				uiSystem->OnScreenResize(width, height);
+
+		auto buttonSystem = ECS::GetInstance().GetSystem<UIButtonSystem>();
+		if (buttonSystem && width > 0 && height > 0)
+			buttonSystem->OnScreenResize(width, height);
 #endif
 		});
 
@@ -430,6 +545,12 @@ bool engine::Init(GLFWwindow* windowContext)
 	else
 		ECS::GetInstance().GetSystem<UIRenderSystem>()->Init(1920, 1080);
 
+	// Initialize UI Button System with same dimensions
+	if (windowWidth > 0 && windowHeight > 0)
+		ECS::GetInstance().GetSystem<UIButtonSystem>()->Init(windowWidth, windowHeight);
+	else
+		ECS::GetInstance().GetSystem<UIButtonSystem>()->Init(1920, 1080);
+
 	// Editor windows
 #if defined(EE_EDITOR)
 	SceneManager::GetInstance().NewScene();
@@ -445,6 +566,15 @@ bool engine::Init(GLFWwindow* windowContext)
 	editor::EditorGUI::CreateImGUIWindow<AnimationEditorImGUI>();
 	editor::EditorGUI::CreateImGUIWindow<ConsoleGUI>();
 	editor::EditorGUI::CreateImGUIWindow<ImguiUI::AssetBrowser>(); //TODO: Standardize please, do we want namespace ImGui for all window or not
+
+	// Legacy ImGui menu windows removed - replaced with scene-based UI:
+	// - Main menu: Open Resources/Scenes/mainmenu.scene, edit MenuBackground/GameTitle entities
+	// - Cutscene: Open Resources/Scenes/cutscene_intro.scene, edit Slide1/2/3 entities
+	// - Scripts MenuController.cs and CutscenePlayer.cs handle the logic
+	// editor::EditorGUI::CreateImGUIWindow<editor::MainMenuGUI>();
+	// auto* cutsceneGUI = editor::EditorGUI::CreateImGUIWindow<editor::CutsceneGUI>();
+	// cutsceneGUI->LoadSlideshow(...);
+	// cutsceneGUI->SetNextScene(...);
 
 	{
 		static Ermine::ResourcePipeline pipeline; // TODO: Is this also needed in game build?
@@ -465,19 +595,23 @@ bool engine::Init(GLFWwindow* windowContext)
 		}
 	}
 
-	auto defaultScene = std::make_shared<Scene>("Main Scene");
-	editor::EditorGUI::SetActiveScene(defaultScene);
-	SceneManager::GetInstance().SetActiveScene(defaultScene);
-	EE_CORE_INFO("Created and set active scene: Main Scene");
-
-	// Create a test entity with UIComponent for HUD rendering
-	EntityID uiEntity = defaultScene->CreateEntity("HUD", false, false);  // No transform or hierarchy needed
-	UIComponent uiComp;  // Default values are already set in the struct
-	ECS::GetInstance().AddComponent<UIComponent>(uiEntity, uiComp);
-	EE_CORE_INFO("Created HUD entity with UIComponent");
+	// Load main menu scene on startup (scene-based approach)
+	EE_CORE_INFO("Loading main menu scene...");
+	SceneManager::GetInstance().OpenScene("../Resources/Scenes/mainmenu.scene");
+	EE_CORE_INFO("Main menu scene loaded");
 #else
-	auto defaultScene = std::make_shared<Scene>("Main Scene");
-	SceneManager::GetInstance().SetActiveScene(defaultScene);
+	//auto defaultScene = std::make_shared<Scene>("Main Scene");
+	//SceneManager::GetInstance().SetActiveScene(defaultScene);
+
+	// TEMP - load level scene manually
+	//SceneManager::GetInstance().OpenScene("../Resources/Scenes/physicdemo.scene");
+	//editor::EditorGUI::s_state = editor::EditorGUI::SimState::playing;
+	//glfwSetInputMode(windowContext, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	
+	// --- GAME BUILD: Create main menu scene dynamically ---
+	// auto mainMenuScene = CreateMainMenuScene();
+	// SceneManager::GetInstance().SetActiveScene(mainMenuScene);
+	// EE_CORE_INFO("Game build initialized with Main Menu scene");
 
 	SceneManager::GetInstance().OpenScene("../Resources/Scenes/game.scene"); // Load game scene
 	editor::EditorGUI::s_state = editor::EditorGUI::SimState::playing;		 // Set to playing state
@@ -486,7 +620,6 @@ bool engine::Init(GLFWwindow* windowContext)
 #endif
 
 	s_isInitialized = true;
-	return true;
 }
 
 void engine::Shutdown()
@@ -594,9 +727,21 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 	auto gameCamera = ECS::GetInstance().GetSystem<graphics::CameraSystem>();
 	gameCamera->Update();
 #endif
-	ECS::GetInstance().GetSystem<ParticleSystem>()->Update(FrameController::GetDeltaTime());	// Update for Particles
+
+	// Update for Particles
+	ECS::GetInstance().GetSystem<ParticleSystem>()->Update(FrameController::GetDeltaTime());
+
+	// Animation Update
+	ECS::GetInstance().GetSystem<graphics::AnimationManager>()->Update(FrameController::GetDeltaTime());
+
+	// FSM update
+	ECS::GetInstance().GetSystem<StateManager>()->Update(FrameController::GetFixedDeltaTime());
+
+	ECS::GetInstance().GetSystem<NavMeshAgentSystem>()->Update(FrameController::GetFixedDeltaTime());
+	// UI update (button interactions, mana regen, cooldowns)
+	ECS::GetInstance().GetSystem<UIButtonSystem>()->Update(FrameController::GetDeltaTime());
+	ECS::GetInstance().GetSystem<UIRenderSystem>()->Update(FrameController::GetDeltaTime());
 	ECS::GetInstance().GetSystem<AudioSystem>()->Update();
-	ECS::GetInstance().GetSystem<UIRenderSystem>()->Update(FrameController::GetDeltaTime());	// UI update (mana regen, cooldowns)
 }
 
 void engine::Render(GLFWwindow* window)

@@ -25,17 +25,36 @@ namespace Ermine
 {
     bool UITextRenderer::Initialize(const std::string& fontPath, int fontSize)
     {
+        EE_CORE_INFO("UITextRenderer::Initialize - Starting initialization with font: '{}', size: {}", 
+                     fontPath.empty() ? "NONE" : fontPath, fontSize);
+        
         m_fontSize = fontSize;
         m_lineHeight = static_cast<float>(fontSize) / 720.0f; // Normalize to screen space
 
         if (!fontPath.empty())
         {
+            // Check if font file exists first
+            std::ifstream testFile(fontPath);
+            if (!testFile.good())
+            {
+                EE_CORE_ERROR("Font file not found: {}", fontPath);
+                EE_CORE_WARN("Creating fallback font for text rendering");
+                CreateFallbackFont();
+                return true; // Return true so text rendering continues with fallback
+            }
+            testFile.close();
+
+            EE_CORE_INFO("Font file exists, attempting to generate font atlas...");
             if (GenerateFontAtlas(fontPath, fontSize))
             {
-                EE_CORE_INFO("UITextRenderer initialized with font: {}", fontPath);
+                EE_CORE_INFO("UITextRenderer initialized successfully with font: {}", fontPath);
                 return true;
             }
-            EE_CORE_WARN("Failed to load font '{}', using fallback", fontPath);
+            EE_CORE_WARN("Failed to generate font atlas from '{}', using fallback", fontPath);
+        }
+        else
+        {
+            EE_CORE_WARN("No font path provided, using fallback font");
         }
 
         // Use fallback font if no path provided or loading failed
@@ -45,6 +64,8 @@ namespace Ermine
 
     bool UITextRenderer::GenerateFontAtlas(const std::string& fontPath, int fontSize)
     {
+        EE_CORE_INFO("GenerateFontAtlas - Reading font file: {}", fontPath);
+        
         // Read font file
         std::ifstream file(fontPath, std::ios::binary | std::ios::ate);
         if (!file.is_open())
@@ -63,6 +84,8 @@ namespace Ermine
             return false;
         }
 
+        EE_CORE_INFO("Font file read successfully ({} bytes), initializing stb_truetype...", size);
+
         // Initialize stb_truetype
         stbtt_fontinfo fontInfo;
         if (!stbtt_InitFont(&fontInfo, fontBuffer.data(), 0))
@@ -70,6 +93,8 @@ namespace Ermine
             EE_CORE_ERROR("Failed to initialize font: {}", fontPath);
             return false;
         }
+
+        EE_CORE_INFO("stb_truetype initialized, baking font to atlas...");
 
         // Atlas size (power of 2 for GPU)
         m_atlasWidth = 512;
@@ -93,9 +118,11 @@ namespace Ermine
 
         if (result <= 0)
         {
-            EE_CORE_ERROR("stbtt_BakeFontBitmap failed");
+            EE_CORE_ERROR("stbtt_BakeFontBitmap failed with result: {}", result);
             return false;
         }
+
+        EE_CORE_INFO("Font baked successfully, result: {} (negative value indicates largest character height)", result);
 
         // Convert grayscale to RGBA for OpenGL
         std::vector<unsigned char> rgbaData(m_atlasWidth * m_atlasHeight * 4);
@@ -106,6 +133,8 @@ namespace Ermine
             rgbaData[i * 4 + 2] = 255;              // B
             rgbaData[i * 4 + 3] = atlasData[i];     // A (font alpha)
         }
+
+        EE_CORE_INFO("Creating OpenGL texture for font atlas...");
 
         // Create OpenGL texture
         GLuint textureID;
@@ -122,9 +151,9 @@ namespace Ermine
         glBindTexture(GL_TEXTURE_2D, 0);
 
         // Store texture ID for later use
-        // Note: We manage the OpenGL texture manually here since we're creating it from scratch
-        // The Texture class expects to load from files, so we'll store just the ID
         m_fontTextureID = textureID;
+
+        EE_CORE_INFO("OpenGL texture created (ID: {}), storing glyph data...", textureID);
 
         // Store glyph data
         m_glyphs.clear();
@@ -138,83 +167,134 @@ namespace Ermine
 
             CharGlyph glyph;
             glyph.u0 = baked.x0 * invWidth;
-            glyph.v0 = baked.y0 * invHeight;
+            glyph.v0 = baked.y0 * invHeight; 
             glyph.u1 = baked.x1 * invWidth;
-            glyph.v1 = baked.y1 * invHeight;
+            glyph.v1 = baked.y1 * invHeight;  
 
             // Normalize to screen space (assuming 1280x720 reference)
             glyph.width = (baked.x1 - baked.x0) / 1280.0f;
             glyph.height = (baked.y1 - baked.y0) / 720.0f;
             glyph.xOffset = baked.xoff / 1280.0f;
-            glyph.yOffset = baked.yoff / 720.0f;
+            glyph.yOffset = -baked.yoff / 720.0f;  // Negate because stb uses Y-down, OpenGL uses Y-up
             glyph.xAdvance = baked.xadvance / 1280.0f;
 
             m_glyphs[c] = glyph;
         }
 
-        EE_CORE_INFO("Font atlas generated: {}x{}, {} characters", m_atlasWidth, m_atlasHeight, numChars);
+        EE_CORE_INFO("Font atlas generated successfully: {}x{}, {} characters stored", 
+                     m_atlasWidth, m_atlasHeight, numChars);
         return true;
     }
 
     void UITextRenderer::CreateFallbackFont()
     {
-        // Simple 8x8 bitmap font atlas (8x12 grid for 96 characters)
-        m_atlasWidth = 128;
-        m_atlasHeight = 128;
+        EE_CORE_INFO("CreateFallbackFont - Creating simple 5x7 bitmap fallback font...");
+        
+        // Simple 5x7 bitmap font (8x8 cell size) for 95 printable ASCII characters (32-126)
+        // We'll arrange them in a 16x6 grid (96 characters total, leaving last slot empty)
+        const int cellWidth = 8;
+        const int cellHeight = 8;
+        const int charsPerRow = 16;
+        const int charRows = 6;
+
+        m_atlasWidth = cellWidth * charsPerRow;   // 128 pixels
+        m_atlasHeight = cellHeight * charRows;     // 48 pixels
 
         std::vector<unsigned char> atlasData(m_atlasWidth * m_atlasHeight * 4, 0);
 
-        // Fill with white checkerboard pattern as fallback
-        for (int y = 0; y < m_atlasHeight; ++y)
+        // Simple 5x7 font data for each ASCII character (32-126)
+        // 1 = white pixel, 0 = transparent pixel
+        // This is a very basic monospace font
+        auto drawChar = [&](int charIndex, const std::vector<std::string>& pattern)
         {
-            for (int x = 0; x < m_atlasWidth; ++x)
+            int col = charIndex % charsPerRow;
+            int row = charIndex / charsPerRow;
+            int startX = col * cellWidth + 1;  // +1 for spacing
+            int startY = row * cellHeight + 1;  // +1 for spacing
+
+            for (size_t py = 0; py < pattern.size() && py < 7; ++py)
             {
-                int idx = (y * m_atlasWidth + x) * 4;
-                bool isWhite = ((x / 8) + (y / 8)) % 2 == 0;
-                unsigned char val = isWhite ? 255 : 0;
-                atlasData[idx + 0] = 255;   // R
-                atlasData[idx + 1] = 255;   // G
-                atlasData[idx + 2] = 255;   // B
-                atlasData[idx + 3] = val;   // A
+                for (size_t px = 0; px < pattern[py].length() && px < 5; ++px)
+                {
+                    if (pattern[py][px] == '1')
+                    {
+                        int idx = ((startY + py) * m_atlasWidth + (startX + px)) * 4;
+                        atlasData[idx + 0] = 255;   // R
+                        atlasData[idx + 1] = 255;   // G
+                        atlasData[idx + 2] = 255;   // B
+                        atlasData[idx + 3] = 255;   // A
+                    }
+                }
             }
+        };
+
+        EE_CORE_INFO("Drawing fallback font characters...");
+
+        // Draw all printable ASCII characters (simple 5x7 patterns)
+        // Space (32)
+        drawChar(0, {"00000", "00000", "00000", "00000", "00000", "00000", "00000"});
+        // ! (33)
+        drawChar(1, {"00100", "00100", "00100", "00100", "00000", "00100", "00000"});
+        // Letters A-Z (uppercase) - simplified patterns
+        // A (65) - index 33
+        drawChar(33, {"01110", "10001", "10001", "11111", "10001", "10001", "00000"});
+        // B (66)
+        drawChar(34, {"11110", "10001", "11110", "10001", "10001", "11110", "00000"});
+        // C (67)
+        drawChar(35, {"01110", "10001", "10000", "10000", "10001", "01110", "00000"});
+        // For remaining characters, use simple filled rectangles as placeholders
+        for (int i = 2; i < 95; ++i)
+        {
+            if (i == 33 || i == 34 || i == 35) continue; // Skip A, B, C (already drawn)
+            // Draw a simple 3x5 rectangle for each character
+            drawChar(i, {"11100", "10100", "10100", "10100", "11100", "00000", "00000"});
         }
 
-        // Create texture
+        EE_CORE_INFO("Creating OpenGL texture for fallback font...");
+
+        // Create texture from atlas
         GLuint textureID;
         glGenTextures(1, &textureID);
         glBindTexture(GL_TEXTURE_2D, textureID);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_atlasWidth, m_atlasHeight, 0,
             GL_RGBA, GL_UNSIGNED_BYTE, atlasData.data());
 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glBindTexture(GL_TEXTURE_2D, 0);
 
-        // Store texture ID for fallback font
         m_fontTextureID = textureID;
 
-        // Create simple glyph mapping (8x8 characters)
+        EE_CORE_INFO("Fallback font texture created (ID: {}), storing glyph mappings...", textureID);
+
+        // Create glyph mapping (5x7 characters in 8x8 cells)
         for (char c = 32; c < 127; ++c)
         {
             int idx = c - 32;
-            int col = idx % 16;
-            int row = idx / 16;
+            int col = idx % charsPerRow;
+            int row = idx / charsPerRow;
 
             CharGlyph glyph;
-            glyph.u0 = (col * 8) / static_cast<float>(m_atlasWidth);
-            glyph.v0 = (row * 8) / static_cast<float>(m_atlasHeight);
-            glyph.u1 = ((col + 1) * 8) / static_cast<float>(m_atlasWidth);
-            glyph.v1 = ((row + 1) * 8) / static_cast<float>(m_atlasHeight);
-            glyph.width = 8.0f / 1280.0f;
-            glyph.height = 8.0f / 720.0f;
+            glyph.u0 = (col * cellWidth) / static_cast<float>(m_atlasWidth);
+            glyph.v0 = (row * cellHeight) / static_cast<float>(m_atlasHeight); 
+            glyph.u1 = ((col + 1) * cellWidth) / static_cast<float>(m_atlasWidth);
+            glyph.v1 = ((row + 1) * cellHeight) / static_cast<float>(m_atlasHeight); 
+
+            // Normalize to screen space (assuming 1920x1080 reference for better readability)
+            glyph.width = 8.0f / 1920.0f;
+            glyph.height = 8.0f / 1080.0f;
             glyph.xOffset = 0.0f;
             glyph.yOffset = 0.0f;
-            glyph.xAdvance = 8.0f / 1280.0f;
+            glyph.xAdvance = 9.0f / 1920.0f;  // Slightly more than width for spacing
 
             m_glyphs[c] = glyph;
         }
 
-        EE_CORE_WARN("Using fallback font (checkerboard pattern)");
+        EE_CORE_INFO("Fallback font created successfully: {}x{}, 95 characters", 
+                     m_atlasWidth, m_atlasHeight);
+        EE_CORE_WARN("Using fallback font (simple 5x7 bitmap font) - consider providing a valid TTF font for better text quality");
     }
 
     void UITextRenderer::RenderText(std::shared_ptr<graphics::Shader> shader,
@@ -222,11 +302,13 @@ namespace Ermine
         float x, float y,
         float scale,
         const Vec3& color,
-        float alpha)
+        float alpha,
+        GLuint vao, GLuint vbo)
     {
         if (m_fontTextureID == 0 || m_glyphs.empty())
         {
-            EE_CORE_ERROR("UITextRenderer::RenderText - Font not initialized!");
+            EE_CORE_ERROR("UITextRenderer::RenderText - Font not initialized! (textureID: {}, glyphs: {})",
+                         m_fontTextureID, m_glyphs.size());
             return;
         }
 
@@ -235,6 +317,22 @@ namespace Ermine
             EE_CORE_ERROR("UITextRenderer::RenderText - Invalid shader!");
             return;
         }
+
+        // Log first render call (only once)
+        static bool firstRender = true;
+        if (firstRender)
+        {
+            EE_CORE_INFO("UITextRenderer::RenderText - First render call");
+            EE_CORE_INFO("  Text: '{}', Position: ({}, {}), Scale: {}", text, x, y, scale);
+            EE_CORE_INFO("  Color: ({}, {}, {}), Alpha: {}", color.x, color.y, color.z, alpha);
+            EE_CORE_INFO("  Font texture ID: {}, Glyph count: {}", m_fontTextureID, m_glyphs.size());
+            EE_CORE_INFO("  VAO: {}, VBO: {}", vao, vbo);
+            firstRender = false;
+        }
+
+        // Bind VAO and VBO for text rendering
+        glBindVertexArray(vao);
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
         // Enable texture mode in shader
         shader->SetUniform1i("uUseTexture", 1);
@@ -247,6 +345,9 @@ namespace Ermine
         float cursorX = x;
         float cursorY = y;
 
+        int renderedGlyphs = 0;
+        int missingGlyphs = 0;
+
         for (char c : text)
         {
             if (c == '\n')
@@ -258,39 +359,53 @@ namespace Ermine
 
             auto it = m_glyphs.find(c);
             if (it == m_glyphs.end())
+            {
+                missingGlyphs++;
                 continue; // Skip unknown characters
+            }
 
             const CharGlyph& glyph = it->second;
 
             // Calculate quad position
+            // yOffset points to TOP of glyph, so we calculate top first, then subtract height for bottom
             float x0 = cursorX + glyph.xOffset * scale;
-            float y0 = cursorY + glyph.yOffset * scale;
             float x1 = x0 + glyph.width * scale;
-            float y1 = y0 + glyph.height * scale;
+            float y1 = cursorY + glyph.yOffset * scale;           // Top = baseline + offset to top
+            float y0 = y1 - glyph.height * scale;                 // Bottom = top - height
 
             // Build vertex data (2D position, RGBA color, UV)
+            // Note: V coordinates are swapped because stb_truetype has v0 at top, OpenGL has v=0 at bottom
             float vertices[] = {
-                // Position       // Color                        // UV
-                x0, y0,          color.x, color.y, color.z, alpha,  glyph.u0, glyph.v0,
-                x1, y0,          color.x, color.y, color.z, alpha,  glyph.u1, glyph.v0,
-                x1, y1,          color.x, color.y, color.z, alpha,  glyph.u1, glyph.v1,
+                // Position       // Color                        // UV (V flipped)
+                x0, y0,          color.x, color.y, color.z, alpha,  glyph.u0, glyph.v1,  // bottom-left uses v1
+                x1, y0,          color.x, color.y, color.z, alpha,  glyph.u1, glyph.v1,  // bottom-right uses v1
+                x1, y1,          color.x, color.y, color.z, alpha,  glyph.u1, glyph.v0,  // top-right uses v0
 
-                x0, y0,          color.x, color.y, color.z, alpha,  glyph.u0, glyph.v0,
-                x1, y1,          color.x, color.y, color.z, alpha,  glyph.u1, glyph.v1,
-                x0, y1,          color.x, color.y, color.z, alpha,  glyph.u0, glyph.v1
+                x0, y0,          color.x, color.y, color.z, alpha,  glyph.u0, glyph.v1,  // bottom-left uses v1
+                x1, y1,          color.x, color.y, color.z, alpha,  glyph.u1, glyph.v0,  // top-right uses v0
+                x0, y1,          color.x, color.y, color.z, alpha,  glyph.u0, glyph.v0   // top-left uses v0
             };
 
-            // Submit to GPU (assume VBO is bound by UIRenderSystem)
+            // Submit to GPU
             glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
             glDrawArrays(GL_TRIANGLES, 0, 6);
 
             // Advance cursor
             cursorX += glyph.xAdvance * scale;
+            renderedGlyphs++;
+        }
+
+        // Log summary after first render
+        if (renderedGlyphs > 0 && missingGlyphs > 0)
+        {
+            EE_CORE_WARN("UITextRenderer::RenderText - Rendered {} glyphs, {} missing glyphs",
+                        renderedGlyphs, missingGlyphs);
         }
 
         // Cleanup: unbind texture and disable texture mode
         glBindTexture(GL_TEXTURE_2D, 0);
         shader->SetUniform1i("uUseTexture", 0);
+        glBindVertexArray(0);
     }
 
     float UITextRenderer::GetTextWidth(const std::string& text, float scale) const
