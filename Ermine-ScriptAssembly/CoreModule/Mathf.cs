@@ -31,6 +31,16 @@ namespace ErmineEngine
         {
             return (float)Math.Sqrt(f);
         }
+        public static float Sin(float f)
+        {
+            return (float)Math.Sin(f);
+        }
+
+        public static float Cos(float f)
+        {
+            return (float)Math.Cos(f);
+        }
+
         #endregion
     }
 }
