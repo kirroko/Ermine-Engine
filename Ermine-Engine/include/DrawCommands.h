@@ -19,6 +19,10 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 namespace Ermine::graphics
 {
+    // DrawInfo flag bits (must match shader constants)
+    constexpr uint32_t FLAG_SKINNING = 1u << 0;        // bit 0: Skeletal animation enabled
+    constexpr uint32_t FLAG_CAMERA_ATTACHED = 1u << 1; // bit 1: Object attached to camera (no motion blur)
+
     /**
      * @brief DrawElementsIndirectCommand structure for glDrawElementsIndirect
      * Matches the OpenGL spec for indirect draw commands

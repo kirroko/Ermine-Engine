@@ -1440,39 +1440,6 @@ void Renderer::RebuildDrawData()
 			bool castsShadows = CastsShadows(material);
 			bool isCustomShader = HasCustomShader(material);
 
-			// ========== FRUSTUM CULLING TEST ==========
-			// Transform AABB to world space by transforming all 8 corners
-			// This is necessary because rotation can change which corners are min/max
-			glm::vec3 corners[8] = {
-				glm::vec3(mesh.aabbMin.x, mesh.aabbMin.y, mesh.aabbMin.z),
-				glm::vec3(mesh.aabbMax.x, mesh.aabbMin.y, mesh.aabbMin.z),
-				glm::vec3(mesh.aabbMin.x, mesh.aabbMax.y, mesh.aabbMin.z),
-				glm::vec3(mesh.aabbMax.x, mesh.aabbMax.y, mesh.aabbMin.z),
-				glm::vec3(mesh.aabbMin.x, mesh.aabbMin.y, mesh.aabbMax.z),
-				glm::vec3(mesh.aabbMax.x, mesh.aabbMin.y, mesh.aabbMax.z),
-				glm::vec3(mesh.aabbMin.x, mesh.aabbMax.y, mesh.aabbMax.z),
-				glm::vec3(mesh.aabbMax.x, mesh.aabbMax.y, mesh.aabbMax.z)
-			};
-
-			glm::vec3 actualMin = glm::vec3(FLT_MAX);
-			glm::vec3 actualMax = glm::vec3(-FLT_MAX);
-
-			for (int i = 0; i < 8; ++i) {
-				glm::vec3 worldCorner = glm::vec3(model * glm::vec4(corners[i], 1.0f));
-				actualMin = glm::min(actualMin, worldCorner);
-				actualMax = glm::max(actualMax, worldCorner);
-			}
-
-			// Test against frustum
-			bool isCulled = !frustum.TestAABB(actualMin, actualMax);
-
-			// Debug: Draw AABB if enabled (primitives)
-			if (m_DebugDrawAABBs) {
-				// Color: Green for visible, Red for culled
-				glm::vec3 aabbColor = isCulled ? glm::vec3(1.0f, 0.0f, 0.0f) : glm::vec3(0.0f, 1.0f, 0.0f);
-				SubmitDebugAABB(actualMin, actualMax, aabbColor);
-			}
-
 			// Build draw command
 			DrawElementsIndirectCommand cmd;
 			cmd.count = meshData->indexCount;
@@ -1495,7 +1462,7 @@ void Renderer::RebuildDrawData()
 			info.materialIndex = materialIndex;
 			info.aabbMax = glm::vec3(mesh.aabbMax.x, mesh.aabbMax.y, mesh.aabbMax.z);
 			info.entityID = static_cast<uint32_t>(entity);
-			info.flags = 0; // Primitives never use skinning
+			info.flags = 0; // Primitives: no skinning, no camera attachment
 			info.boneTransformOffset = 0;
 			info._pad0 = 0;
 			info._pad1 = 0;
@@ -1519,60 +1486,51 @@ void Renderer::RebuildDrawData()
 			cacheItem.boneOffset = 0;
 			m_CachedDrawItems.push_back(cacheItem);
 
-			// Route based on frustum culling
-			if (isCulled) {
-				// Culled meshes - skip all visible passes (depth, picking, geometry, forward)
-				culledMeshes++;
+			// PASS 1: PICKING PASS - ALL geometry (opaque + transparent, for object selection)
+			m_PickingStandardCommands.push_back(cmd);
+			m_PickingStandardInfos.push_back(info);
+
+			// PASS 2: DEPTH PREPASS - Opaque geometry only (for early-z rejection)
+			// Transparent objects excluded to prevent depth conflicts with objects behind them
+			if (!isTransparent) {
+				m_DepthPrepassStandardCommands.push_back(cmd);
+				m_DepthPrepassStandardInfos.push_back(info);
 			}
-			else {
-				// ========== VISIBLE MESHES - Route to visible passes ==========
 
-				// PASS 1: PICKING PASS - ALL visible geometry (opaque + transparent, for object selection)
-				m_PickingStandardCommands.push_back(cmd);
-				m_PickingStandardInfos.push_back(info);
-
-				// PASS 2: DEPTH PREPASS - Opaque visible geometry only (for early-z rejection)
-				// Transparent objects excluded to prevent depth conflicts with objects behind them
-				if (!isTransparent) {
-					m_DepthPrepassStandardCommands.push_back(cmd);
-					m_DepthPrepassStandardInfos.push_back(info);
-				}
-
-				// PASS 3: GEOMETRY/FORWARD - Route by shader type and transparency
-				if (!isTransparent && !isCustomShader) {
-					// Opaque default shader → Geometry pass (deferred lighting)
-					DefaultShaderDrawItem item;
-					item.command = cmd;
-					item.info = info;
-					item.castsShadows = castsShadows;
-					m_GeometryStandardItems.push_back(item);
-				}
-				else if (!isTransparent && isCustomShader) {
-					// Opaque custom shader → Forward pass (rendered after geometry)
-					CustomShaderDrawItem item;
-					item.command = cmd;
-					item.info = info;
-					item.shader = material->GetShader();
-					item.castsShadows = castsShadows;
-					m_ForwardOpaqueCustomStandardItems.push_back(item);
-				}
-				else if (isTransparent && !isCustomShader) {
-					// Transparent default shader → Forward pass (sorted, back-to-front)
-					DefaultShaderDrawItem item;
-					item.command = cmd;
-					item.info = info;
-					item.castsShadows = castsShadows;
-					m_ForwardTransparentDefaultStandardItems.push_back(item);
-				}
-				else if (isTransparent && isCustomShader) {
-					// Transparent custom shader → Forward pass (sorted, back-to-front)
-					CustomShaderDrawItem item;
-					item.command = cmd;
-					item.info = info;
-					item.shader = material->GetShader();
-					item.castsShadows = castsShadows;
-					m_ForwardTransparentCustomStandardItems.push_back(item);
-				}
+			// PASS 3: GEOMETRY/FORWARD - Route by shader type and transparency
+			if (!isTransparent && !isCustomShader) {
+				// Opaque default shader → Geometry pass (deferred lighting)
+				DefaultShaderDrawItem item;
+				item.command = cmd;
+				item.info = info;
+				item.castsShadows = castsShadows;
+				m_GeometryStandardItems.push_back(item);
+			}
+			else if (!isTransparent && isCustomShader) {
+				// Opaque custom shader → Forward pass (rendered after geometry)
+				CustomShaderDrawItem item;
+				item.command = cmd;
+				item.info = info;
+				item.shader = material->GetShader();
+				item.castsShadows = castsShadows;
+				m_ForwardOpaqueCustomStandardItems.push_back(item);
+			}
+			else if (isTransparent && !isCustomShader) {
+				// Transparent default shader → Forward pass (sorted, back-to-front)
+				DefaultShaderDrawItem item;
+				item.command = cmd;
+				item.info = info;
+				item.castsShadows = castsShadows;
+				m_ForwardTransparentDefaultStandardItems.push_back(item);
+			}
+			else if (isTransparent && isCustomShader) {
+				// Transparent custom shader → Forward pass (sorted, back-to-front)
+				CustomShaderDrawItem item;
+				item.command = cmd;
+				item.info = info;
+				item.shader = material->GetShader();
+				item.castsShadows = castsShadows;
+				m_ForwardTransparentCustomStandardItems.push_back(item);
 			}
 
 			// PASS 4: SHADOW PASS - ALL geometry (visible OR culled) that casts shadows
@@ -1654,39 +1612,6 @@ void Renderer::RebuildDrawData()
 				bool castsShadows = CastsShadows(material);
 				bool isCustomShader = HasCustomShader(material);
 
-				// ========== FRUSTUM CULLING TEST ==========
-				// Transform AABB to world space by transforming all 8 corners
-				// This is necessary because rotation can change which corners are min/max
-				glm::vec3 corners[8] = {
-					glm::vec3(mesh.aabbMin.x, mesh.aabbMin.y, mesh.aabbMin.z),
-					glm::vec3(mesh.aabbMax.x, mesh.aabbMin.y, mesh.aabbMin.z),
-					glm::vec3(mesh.aabbMin.x, mesh.aabbMax.y, mesh.aabbMin.z),
-					glm::vec3(mesh.aabbMax.x, mesh.aabbMax.y, mesh.aabbMin.z),
-					glm::vec3(mesh.aabbMin.x, mesh.aabbMin.y, mesh.aabbMax.z),
-					glm::vec3(mesh.aabbMax.x, mesh.aabbMin.y, mesh.aabbMax.z),
-					glm::vec3(mesh.aabbMin.x, mesh.aabbMax.y, mesh.aabbMax.z),
-					glm::vec3(mesh.aabbMax.x, mesh.aabbMax.y, mesh.aabbMax.z)
-				};
-
-				glm::vec3 actualMin = glm::vec3(FLT_MAX);
-				glm::vec3 actualMax = glm::vec3(-FLT_MAX);
-
-				for (int i = 0; i < 8; ++i) {
-					glm::vec3 worldCorner = glm::vec3(entityModel * glm::vec4(corners[i], 1.0f));
-					actualMin = glm::min(actualMin, worldCorner);
-					actualMax = glm::max(actualMax, worldCorner);
-				}
-
-				// Test against frustum
-				bool isCulled = !frustum.TestAABB(actualMin, actualMax);
-
-				// Debug: Draw AABB if enabled
-				if (m_DebugDrawAABBs) {
-					// Color: Green for visible, Red for culled
-					glm::vec3 aabbColor = isCulled ? glm::vec3(1.0f, 0.0f, 0.0f) : glm::vec3(0.0f, 1.0f, 0.0f);
-					SubmitDebugAABB(actualMin, actualMax, aabbColor);
-				}
-
 				// Build draw command
 				DrawElementsIndirectCommand cmd;
 				cmd.count = meshData->indexCount;
@@ -1709,7 +1634,62 @@ void Renderer::RebuildDrawData()
 				info.materialIndex = materialIndex;
 				info.aabbMax = mesh.aabbMax;
 				info.entityID = static_cast<uint32_t>(entity);
-				info.flags = 0; // No skinning for standard meshes
+
+				// PLAYER OBJECT DETECTION
+				bool isCameraAttached = false;
+
+				// Case 1: Self check
+				if (ecs.HasComponent<CameraComponent>(entity))
+				{
+					isCameraAttached = true;
+				}
+				// Case 2 & 3: Check hierarchy
+				else if (ecs.HasComponent<HierarchyComponent>(entity))
+				{
+					const auto& hierarchy = ecs.GetComponent<HierarchyComponent>(entity);
+					EntityID parentEntity = hierarchy.parent;
+
+					// Recursive function to search entire tree for CameraComponent
+					std::function<bool(EntityID)> hasCamera = [&](EntityID node) -> bool {
+						if (ecs.HasComponent<CameraComponent>(node))
+							return true;
+
+						if (ecs.HasComponent<HierarchyComponent>(node))
+						{
+							const auto& nodeHierarchy = ecs.GetComponent<HierarchyComponent>(node);
+							for (EntityID child : nodeHierarchy.children)
+							{
+								if (hasCamera(child))
+									return true;
+							}
+						}
+						return false;
+					};
+
+					if (parentEntity == 0)
+					{
+						// Case 2: This is a root node - search entire tree from here
+						isCameraAttached = hasCamera(entity);
+					}
+					else
+					{
+						// Case 3: Has a parent - traverse to root, then search entire tree
+						EntityID rootEntity = entity;
+						while (ecs.HasComponent<HierarchyComponent>(rootEntity))
+						{
+							const auto& currentHierarchy = ecs.GetComponent<HierarchyComponent>(rootEntity);
+							if (currentHierarchy.parent == 0)
+								break;
+							rootEntity = currentHierarchy.parent;
+						}
+
+						// Search entire tree from root
+						isCameraAttached = hasCamera(rootEntity);
+					}
+				}
+
+				// Build flags for this draw
+				info.flags = isCameraAttached ? FLAG_CAMERA_ATTACHED : 0;
 				info.boneTransformOffset = 0;
 				info._pad0 = 0;
 				info._pad1 = 0;
@@ -1730,69 +1710,61 @@ void Renderer::RebuildDrawData()
 				cacheItem.castsShadows = castsShadows;
 				cacheItem.hasCustomShader = isCustomShader;
 				cacheItem.useSkinning = false; // Static models never use skinning
+				cacheItem.isCameraAttached = isCameraAttached; // Cache camera-attachment for fast path
 				cacheItem.boneOffset = 0;
 				m_CachedDrawItems.push_back(cacheItem);
 
-				// Route based on frustum culling
-				if (isCulled) {
-					// Culled meshes - skip all visible passes (depth, picking, geometry, forward)
-					culledMeshes++;
+				// PASS 1: PICKING PASS - ALL geometry (opaque + transparent, for object selection)
+				m_PickingStandardCommands.push_back(cmd);
+				m_PickingStandardInfos.push_back(info);
+
+				// PASS 2: DEPTH PREPASS - Opaque geometry only (for early-z rejection)
+				// Transparent objects excluded to prevent depth conflicts with objects behind them
+				if (!isTransparent) {
+					m_DepthPrepassStandardCommands.push_back(cmd);
+					m_DepthPrepassStandardInfos.push_back(info);
 				}
-				else {
-					// ========== VISIBLE MESHES - Route to visible passes ==========
 
-					// PASS 1: PICKING PASS - ALL visible geometry (opaque + transparent, for object selection)
-					m_PickingStandardCommands.push_back(cmd);
-					m_PickingStandardInfos.push_back(info);
-
-					// PASS 2: DEPTH PREPASS - Opaque visible geometry only (for early-z rejection)
-					// Transparent objects excluded to prevent depth conflicts with objects behind them
-					if (!isTransparent) {
-						m_DepthPrepassStandardCommands.push_back(cmd);
-						m_DepthPrepassStandardInfos.push_back(info);
-					}
-
-					// PASS 3: GEOMETRY/FORWARD - Route by shader type and transparency
-					if (!isTransparent && !isCustomShader) {
-						// Opaque default shader → Geometry pass (deferred lighting)
-						DefaultShaderDrawItem item;
-						item.command = cmd;
-						item.info = info;
-						item.castsShadows = castsShadows;
-						m_GeometryStandardItems.push_back(item);
-						m_GeometryStandardVertexCount += meshData->vertexCount;
-						m_GeometryStandardIndexCount += cmd.count;
-					}
-					else if (!isTransparent && isCustomShader) {
-						// Opaque custom shader → Forward pass (rendered after geometry)
-						CustomShaderDrawItem item;
-						item.command = cmd;
-						item.info = info;
-						item.shader = material->GetShader();
-						item.castsShadows = castsShadows;
-						m_ForwardOpaqueCustomStandardItems.push_back(item);
-					}
-					else if (isTransparent && !isCustomShader) {
-						// Transparent default shader → Forward pass (sorted, back-to-front)
-						DefaultShaderDrawItem item;
-						item.command = cmd;
-						item.info = info;
-						item.castsShadows = castsShadows;
-						m_ForwardTransparentDefaultStandardItems.push_back(item);
-						m_ForwardPassDrawCommandsVertexCount += meshData->vertexCount;
-						m_ForwardPassDrawCommandsIndexCount += cmd.count;
-					}
-					else if (isTransparent && isCustomShader) {
-						// Transparent custom shader → Forward pass (sorted, back-to-front)
-						CustomShaderDrawItem item;
-						item.command = cmd;
-						item.info = info;
-						item.shader = material->GetShader();
-						item.castsShadows = castsShadows;
-						m_ForwardTransparentCustomStandardItems.push_back(item);
-						m_ForwardPassDrawCommandsVertexCount += meshData->vertexCount;
-						m_ForwardPassDrawCommandsIndexCount += cmd.count;
-					}
+				// PASS 3: GEOMETRY/FORWARD - Route by shader type and transparency
+				if (!isTransparent && !isCustomShader) {
+					// Opaque default shader → Geometry pass (deferred lighting)
+					DefaultShaderDrawItem item;
+					item.command = cmd;
+					item.info = info;
+					item.castsShadows = castsShadows;
+					m_GeometryStandardItems.push_back(item);
+					m_GeometryStandardVertexCount += meshData->vertexCount;
+					m_GeometryStandardIndexCount += cmd.count;
+				}
+				else if (!isTransparent && isCustomShader) {
+					// Opaque custom shader → Forward pass (rendered after geometry)
+					CustomShaderDrawItem item;
+					item.command = cmd;
+					item.info = info;
+					item.shader = material->GetShader();
+					item.castsShadows = castsShadows;
+					m_ForwardOpaqueCustomStandardItems.push_back(item);
+				}
+				else if (isTransparent && !isCustomShader) {
+					// Transparent default shader → Forward pass (sorted, back-to-front)
+					DefaultShaderDrawItem item;
+					item.command = cmd;
+					item.info = info;
+					item.castsShadows = castsShadows;
+					m_ForwardTransparentDefaultStandardItems.push_back(item);
+					m_ForwardPassDrawCommandsVertexCount += meshData->vertexCount;
+					m_ForwardPassDrawCommandsIndexCount += cmd.count;
+				}
+				else if (isTransparent && isCustomShader) {
+					// Transparent custom shader → Forward pass (sorted, back-to-front)
+					CustomShaderDrawItem item;
+					item.command = cmd;
+					item.info = info;
+					item.shader = material->GetShader();
+					item.castsShadows = castsShadows;
+					m_ForwardTransparentCustomStandardItems.push_back(item);
+					m_ForwardPassDrawCommandsVertexCount += meshData->vertexCount;
+					m_ForwardPassDrawCommandsIndexCount += cmd.count;
 				}
 
 				// PASS 4: SHADOW PASS - ALL geometry (visible OR culled) that casts shadows
@@ -1876,39 +1848,6 @@ void Renderer::RebuildDrawData()
 				bool castsShadows = CastsShadows(meshMaterial);
 				bool isCustomShader = HasCustomShader(meshMaterial);
 
-				// ========== FRUSTUM CULLING TEST ==========
-				// Transform AABB to world space by transforming all 8 corners
-				// This is necessary because rotation can change which corners are min/max
-				glm::vec3 corners[8] = {
-					glm::vec3(mesh.aabbMin.x, mesh.aabbMin.y, mesh.aabbMin.z),
-					glm::vec3(mesh.aabbMax.x, mesh.aabbMin.y, mesh.aabbMin.z),
-					glm::vec3(mesh.aabbMin.x, mesh.aabbMax.y, mesh.aabbMin.z),
-					glm::vec3(mesh.aabbMax.x, mesh.aabbMax.y, mesh.aabbMin.z),
-					glm::vec3(mesh.aabbMin.x, mesh.aabbMin.y, mesh.aabbMax.z),
-					glm::vec3(mesh.aabbMax.x, mesh.aabbMin.y, mesh.aabbMax.z),
-					glm::vec3(mesh.aabbMin.x, mesh.aabbMax.y, mesh.aabbMax.z),
-					glm::vec3(mesh.aabbMax.x, mesh.aabbMax.y, mesh.aabbMax.z)
-				};
-
-				glm::vec3 actualMin = glm::vec3(FLT_MAX);
-				glm::vec3 actualMax = glm::vec3(-FLT_MAX);
-
-				for (int i = 0; i < 8; ++i) {
-					glm::vec3 worldCorner = glm::vec3(modelMatrix * glm::vec4(corners[i], 1.0f));
-					actualMin = glm::min(actualMin, worldCorner);
-					actualMax = glm::max(actualMax, worldCorner);
-				}
-
-				// Test against frustum
-				bool isCulled = !frustum.TestAABB(actualMin, actualMax);
-
-				// Debug: Draw AABB if enabled (skinned meshes)
-				if (m_DebugDrawAABBs) {
-					// Color: Green for visible, Red for culled
-					glm::vec3 aabbColor = isCulled ? glm::vec3(1.0f, 0.0f, 0.0f) : glm::vec3(0.0f, 1.0f, 0.0f);
-					SubmitDebugAABB(actualMin, actualMax, aabbColor);
-				}
-
 				// Build draw command
 				DrawElementsIndirectCommand cmd;
 				cmd.count = meshData->indexCount;
@@ -1931,7 +1870,67 @@ void Renderer::RebuildDrawData()
 				info.materialIndex = materialIndex;
 				info.aabbMax = mesh.aabbMax;
 				info.entityID = static_cast<uint32_t>(entity);
-				info.flags = 1; // Skinning enabled
+
+				// PLAYER OBJECT DETECTION
+				bool isCameraAttached = false;
+
+				// Case 1: Self check
+				if (ecs.HasComponent<CameraComponent>(entity))
+				{
+					isCameraAttached = true;
+				}
+				// Case 2 & 3: Check hierarchy
+				else if (ecs.HasComponent<HierarchyComponent>(entity))
+				{
+					const auto& hierarchy = ecs.GetComponent<HierarchyComponent>(entity);
+					EntityID parentEntity = hierarchy.parent;
+
+					// Recursive function to search entire tree for CameraComponent
+					std::function<bool(EntityID)> hasCamera = [&](EntityID node) -> bool {
+						if (ecs.HasComponent<CameraComponent>(node))
+							return true;
+
+						if (ecs.HasComponent<HierarchyComponent>(node))
+						{
+							const auto& nodeHierarchy = ecs.GetComponent<HierarchyComponent>(node);
+							for (EntityID child : nodeHierarchy.children)
+							{
+								if (hasCamera(child))
+									return true;
+							}
+						}
+						return false;
+					};
+
+					if (parentEntity == 0)
+					{
+						// Case 2: This is a root node - search entire tree from here
+						isCameraAttached = hasCamera(entity);
+					}
+					else
+					{
+						// Case 3: Has a parent - traverse to root, then search entire tree
+						EntityID rootEntity = entity;
+						while (ecs.HasComponent<HierarchyComponent>(rootEntity))
+						{
+							const auto& currentHierarchy = ecs.GetComponent<HierarchyComponent>(rootEntity);
+							if (currentHierarchy.parent == 0)
+								break;
+							rootEntity = currentHierarchy.parent;
+						}
+
+						// Search entire tree from root
+						isCameraAttached = hasCamera(rootEntity);
+					}
+				}
+
+				// Build flags: skinning + camera attachment
+				info.flags = FLAG_SKINNING;
+				if (isCameraAttached)
+				{
+					info.flags |= FLAG_CAMERA_ATTACHED;
+				}
+
 				info.boneTransformOffset = boneOffset;
 				info._pad0 = 0;
 			info._pad1 = 0;
@@ -1952,69 +1951,61 @@ void Renderer::RebuildDrawData()
 				cacheItem.castsShadows = castsShadows;
 				cacheItem.hasCustomShader = isCustomShader;
 				cacheItem.useSkinning = true; // Animated models use skinning
+				cacheItem.isCameraAttached = isCameraAttached; // Cache camera-attachment for fast path
 				cacheItem.boneOffset = boneOffset;
 				m_CachedDrawItems.push_back(cacheItem);
 
-				// Route based on frustum culling
-				if (isCulled) {
-					// Culled meshes - skip all visible passes (depth, picking, geometry, forward)
-					culledMeshes++;
+				// PASS 1: PICKING PASS - ALL geometry (opaque + transparent, for object selection)
+				m_PickingSkinnedCommands.push_back(cmd);
+				m_PickingSkinnedInfos.push_back(info);
+
+				// PASS 2: DEPTH PREPASS - Opaque geometry only (for early-z rejection)
+				// Transparent objects excluded to prevent depth conflicts with objects behind them
+				if (!isTransparent) {
+					m_DepthPrepassSkinnedCommands.push_back(cmd);
+					m_DepthPrepassSkinnedInfos.push_back(info);
 				}
-				else {
-					// ========== VISIBLE MESHES - Route to visible passes ==========
 
-					// PASS 1: PICKING PASS - ALL visible geometry (opaque + transparent, for object selection)
-					m_PickingSkinnedCommands.push_back(cmd);
-					m_PickingSkinnedInfos.push_back(info);
-
-					// PASS 2: DEPTH PREPASS - Opaque visible geometry only (for early-z rejection)
-					// Transparent objects excluded to prevent depth conflicts with objects behind them
-					if (!isTransparent) {
-						m_DepthPrepassSkinnedCommands.push_back(cmd);
-						m_DepthPrepassSkinnedInfos.push_back(info);
-					}
-
-					// PASS 3: GEOMETRY/FORWARD - Route by shader type and transparency
-					if (!isTransparent && !isCustomShader) {
-						// Opaque default shader → Geometry pass (deferred lighting)
-						DefaultShaderDrawItem item;
-						item.command = cmd;
-						item.info = info;
-						item.castsShadows = castsShadows;
-						m_GeometrySkinnedItems.push_back(item);
-						m_GeometrySkinnedVertexCount += meshData->vertexCount;
-						m_GeometrySkinnedIndexCount += cmd.count;
-					}
-					else if (!isTransparent && isCustomShader) {
-						// Opaque custom shader → Forward pass (rendered after geometry)
-						CustomShaderDrawItem item;
-						item.command = cmd;
-						item.info = info;
-						item.shader = meshMaterial->GetShader();
-						item.castsShadows = castsShadows;
-						m_ForwardOpaqueCustomSkinnedItems.push_back(item);
-					}
-					else if (isTransparent && !isCustomShader) {
-						// Transparent default shader → Forward pass (sorted, back-to-front)
-						DefaultShaderDrawItem item;
-						item.command = cmd;
-						item.info = info;
-						item.castsShadows = castsShadows;
-						m_ForwardTransparentDefaultSkinnedItems.push_back(item);
-						m_ForwardPassDrawCommandsVertexCount += meshData->vertexCount;
-						m_ForwardPassDrawCommandsIndexCount += cmd.count;
-					}
-					else if (isTransparent && isCustomShader) {
-						// Transparent custom shader → Forward pass (sorted, back-to-front)
-						CustomShaderDrawItem item;
-						item.command = cmd;
-						item.info = info;
-						item.shader = meshMaterial->GetShader();
-						item.castsShadows = castsShadows;
-						m_ForwardTransparentCustomSkinnedItems.push_back(item);
-						m_ForwardPassDrawCommandsVertexCount += meshData->vertexCount;
-						m_ForwardPassDrawCommandsIndexCount += cmd.count;
-					}
+				// PASS 3: GEOMETRY/FORWARD - Route by shader type and transparency
+				if (!isTransparent && !isCustomShader) {
+					// Opaque default shader → Geometry pass (deferred lighting)
+					DefaultShaderDrawItem item;
+					item.command = cmd;
+					item.info = info;
+					item.castsShadows = castsShadows;
+					m_GeometrySkinnedItems.push_back(item);
+					m_GeometrySkinnedVertexCount += meshData->vertexCount;
+					m_GeometrySkinnedIndexCount += cmd.count;
+				}
+				else if (!isTransparent && isCustomShader) {
+					// Opaque custom shader → Forward pass (rendered after geometry)
+					CustomShaderDrawItem item;
+					item.command = cmd;
+					item.info = info;
+					item.shader = meshMaterial->GetShader();
+					item.castsShadows = castsShadows;
+					m_ForwardOpaqueCustomSkinnedItems.push_back(item);
+				}
+				else if (isTransparent && !isCustomShader) {
+					// Transparent default shader → Forward pass (sorted, back-to-front)
+					DefaultShaderDrawItem item;
+					item.command = cmd;
+					item.info = info;
+					item.castsShadows = castsShadows;
+					m_ForwardTransparentDefaultSkinnedItems.push_back(item);
+					m_ForwardPassDrawCommandsVertexCount += meshData->vertexCount;
+					m_ForwardPassDrawCommandsIndexCount += cmd.count;
+				}
+				else if (isTransparent && isCustomShader) {
+					// Transparent custom shader → Forward pass (sorted, back-to-front)
+					CustomShaderDrawItem item;
+					item.command = cmd;
+					item.info = info;
+					item.shader = meshMaterial->GetShader();
+					item.castsShadows = castsShadows;
+					m_ForwardTransparentCustomSkinnedItems.push_back(item);
+					m_ForwardPassDrawCommandsVertexCount += meshData->vertexCount;
+					m_ForwardPassDrawCommandsIndexCount += cmd.count;
 				}
 
 				// PASS 4: SHADOW PASS - ALL geometry (visible OR culled) that casts shadows
@@ -2312,18 +2303,6 @@ void Renderer::RebuildDrawData()
 	// Update entity list hash for next frame's comparison
 	m_LastEntityListHash = CalculateEntityListHash();
 
-	// Update per-entity transform hashes for next frame's comparison
-	// Only store hashes for entities that were actually processed
-	m_EntityTransformHashes.clear();
-	m_EntityTransformHashes.reserve(m_Entities.size() + m_ModelSystem->m_Entities.size());
-
-	for (auto entity : m_Entities) {
-		m_EntityTransformHashes[entity] = CalculateEntityTransformHash(entity);
-	}
-	for (auto entity : m_ModelSystem->m_Entities) {
-		m_EntityTransformHashes[entity] = CalculateEntityTransformHash(entity);
-	}
-
 	// Clear full rebuild flag (will be set again if major change detected)
 	m_DrawDataNeedsFullRebuild = false;
 }
@@ -2373,28 +2352,6 @@ void Renderer::UpdateDrawData()
 	m_GeometrySkinnedIndexCount = 0;
 	m_ForwardPassDrawCommandsVertexCount = 0;
 	m_ForwardPassDrawCommandsIndexCount = 0;
-
-	// Reserve space (same as rebuild)
-	m_DepthPrepassStandardCommands.reserve(m_Entities.size());
-	m_DepthPrepassStandardInfos.reserve(m_Entities.size());
-	m_DepthPrepassSkinnedCommands.reserve(m_Entities.size() / 4);
-	m_DepthPrepassSkinnedInfos.reserve(m_Entities.size() / 4);
-
-	m_PickingStandardCommands.reserve(m_Entities.size());
-	m_PickingStandardInfos.reserve(m_Entities.size());
-	m_PickingSkinnedCommands.reserve(m_Entities.size() / 4);
-	m_PickingSkinnedInfos.reserve(m_Entities.size() / 4);
-
-	m_GeometryStandardItems.reserve(m_Entities.size());
-	m_GeometrySkinnedItems.reserve(m_Entities.size() / 4);
-
-	m_ForwardTransparentDefaultStandardItems.reserve(m_Entities.size() / 4);
-	m_ForwardTransparentDefaultSkinnedItems.reserve(m_Entities.size() / 8);
-
-	m_ShadowStandardCommands.reserve(m_Entities.size() / 4);
-	m_ShadowStandardInfos.reserve(m_Entities.size() / 4);
-	m_ShadowSkinnedCommands.reserve(m_Entities.size() / 8);
-	m_ShadowSkinnedInfos.reserve(m_Entities.size() / 8);
 
 	// ========== FRUSTUM CULLING SETUP ==========
 	Mtx44 viewMtx, projMtx;
@@ -2481,26 +2438,24 @@ void Renderer::UpdateDrawData()
 			model = GetEntityWorldMatrix(cachedItem.entity);
 		}
 
-		// Transform AABB to world space
-		glm::vec3 corners[8];
-		corners[0] = glm::vec3(cachedItem.aabbMin.x, cachedItem.aabbMin.y, cachedItem.aabbMin.z);
-		corners[1] = glm::vec3(cachedItem.aabbMax.x, cachedItem.aabbMin.y, cachedItem.aabbMin.z);
-		corners[2] = glm::vec3(cachedItem.aabbMin.x, cachedItem.aabbMax.y, cachedItem.aabbMin.z);
-		corners[3] = glm::vec3(cachedItem.aabbMax.x, cachedItem.aabbMax.y, cachedItem.aabbMin.z);
-		corners[4] = glm::vec3(cachedItem.aabbMin.x, cachedItem.aabbMin.y, cachedItem.aabbMax.z);
-		corners[5] = glm::vec3(cachedItem.aabbMax.x, cachedItem.aabbMin.y, cachedItem.aabbMax.z);
-		corners[6] = glm::vec3(cachedItem.aabbMin.x, cachedItem.aabbMax.y, cachedItem.aabbMax.z);
-		corners[7] = glm::vec3(cachedItem.aabbMax.x, cachedItem.aabbMax.y, cachedItem.aabbMax.z);
+		// Transform AABB to world space using center-extent method (faster than 8-corner transform)
+		// Object-space center and half-extents
+		glm::vec3 center = (cachedItem.aabbMin + cachedItem.aabbMax) * 0.5f;
+		glm::vec3 extent = (cachedItem.aabbMax - cachedItem.aabbMin) * 0.5f;
 
-		glm::vec3 actualMin = glm::vec3(FLT_MAX);
-		glm::vec3 actualMax = glm::vec3(-FLT_MAX);
+		// Transform center to world space
+		glm::vec3 worldCenter = glm::vec3(model * glm::vec4(center, 1.0f));
 
-		// Unrolled loop for better instruction-level parallelism
-		for (int i = 0; i < 8; ++i) {
-			glm::vec3 worldCorner = glm::vec3(model * glm::vec4(corners[i], 1.0f));
-			actualMin = glm::min(actualMin, worldCorner);
-			actualMax = glm::max(actualMax, worldCorner);
-		}
+		// Compute maximum transformed extent (conservative bounds)
+		// Extract the 3x3 rotation-scale portion of the model matrix
+		glm::mat3 upperLeft = glm::mat3(model);
+		glm::vec3 worldExtent = glm::abs(upperLeft[0]) * extent.x
+		                      + glm::abs(upperLeft[1]) * extent.y
+		                      + glm::abs(upperLeft[2]) * extent.z;
+
+		// Build world-space AABB
+		glm::vec3 actualMin = worldCenter - worldExtent;
+		glm::vec3 actualMax = worldCenter + worldExtent;
 
 		// Test frustum culling
 		bool isCulled = !frustum.TestAABB(actualMin, actualMax);
@@ -2532,7 +2487,18 @@ void Renderer::UpdateDrawData()
 		info.materialIndex = cachedItem.materialIndex;
 		info.aabbMax = cachedItem.aabbMax;
 		info.entityID = static_cast<uint32_t>(cachedItem.entity);
-		info.flags = cachedItem.useSkinning ? 1 : 0;
+
+		// Build flags from cached data (fast path - no hierarchy traversal)
+		info.flags = 0;
+		if (cachedItem.useSkinning)
+		{
+			info.flags |= FLAG_SKINNING;
+		}
+		if (cachedItem.isCameraAttached)
+		{
+			info.flags |= FLAG_CAMERA_ATTACHED;
+		}
+
 		info.boneTransformOffset = cachedItem.boneOffset;
 		info._pad0 = 0;
 		info._pad1 = 0;
@@ -2917,18 +2883,6 @@ void Renderer::UpdateDrawData()
 	// Unbind buffers
 	glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-
-	// ========== UPDATE DIRTY TRACKING HASHES ==========
-	// Update per-entity transform hashes for next frame
-	m_EntityTransformHashes.clear();
-	m_EntityTransformHashes.reserve(m_Entities.size() + m_ModelSystem->m_Entities.size());
-
-	for (auto entity : m_Entities) {
-		m_EntityTransformHashes[entity] = CalculateEntityTransformHash(entity);
-	}
-	for (auto entity : m_ModelSystem->m_Entities) {
-		m_EntityTransformHashes[entity] = CalculateEntityTransformHash(entity);
-	}
 }
 
 /**
@@ -2993,23 +2947,6 @@ bool Renderer::HasEntityListChanged() const
 {
 	uint64_t currentHash = CalculateEntityListHash();
 	return currentHash != m_LastEntityListHash;
-}
-
-/**
- * @brief Check if an entity's transform has changed since last frame.
- * @param entity The entity to check.
- * @return True if transform changed.
- */
-bool Renderer::HasEntityTransformChanged(EntityID entity) const
-{
-	uint64_t currentHash = CalculateEntityTransformHash(entity);
-	auto it = m_EntityTransformHashes.find(entity);
-
-	if (it == m_EntityTransformHashes.end()) {
-		return true; // New entity
-	}
-
-	return currentHash != it->second;
 }
 
 /**
@@ -3307,6 +3244,14 @@ void Renderer::RenderPostProcessPass(const Mtx44& view, const Mtx44& projection)
 		{
 			glUniform2ui(locDepthMB, static_cast<GLuint>(m_GBuffer->HandleDepthTexture),
 				static_cast<GLuint>(m_GBuffer->HandleDepthTexture >> 32));
+		}
+
+		// Pass bindless GBuffer3 texture handle for motion blur flag
+		GLint locGBuffer3MB = glGetUniformLocation(m_MotionBlurShader->GetRendererID(), "u_GBuffer3Handle");
+		if (locGBuffer3MB != -1 && m_GBuffer)
+		{
+			glUniform2ui(locGBuffer3MB, static_cast<GLuint>(m_GBuffer->HandlePackedTexture3),
+				static_cast<GLuint>(m_GBuffer->HandlePackedTexture3 >> 32));
 		}
 
 		// Convert view and projection matrices to glm
@@ -3770,29 +3715,13 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
 		// ========== FRUSTUM CULLING TEST ==========
 		bool isCulled = false;
 
-		if (light.type == LightType::POINT)
+		if (light.type == LightType::POINT || light.type == LightType::SPOT)
 		{
 			// Point light: test sphere against frustum
 			// Create AABB from sphere bounds
 			float radius = light.radius;
 			glm::vec3 aabbMin = lightPos - glm::vec3(radius);
 			glm::vec3 aabbMax = lightPos + glm::vec3(radius);
-
-			isCulled = !frustum.TestAABB(aabbMin, aabbMax);
-		}
-		else if (light.type == LightType::SPOT)
-		{
-			// Spot light: test cone against frustum
-			glm::vec3 spotDir = glm::normalize(rotQuat * glm::vec3(0.0f, 0.0f, 1.0f));
-			float outerAngleRad = glm::radians(light.outerAngle);
-
-			// Create AABB that encompasses the spot light cone
-			float coneRadius = light.radius * std::tan(outerAngleRad);
-			glm::vec3 coneEnd = lightPos + spotDir * light.radius;
-
-			// Find AABB that contains apex and base circle
-			glm::vec3 aabbMin = glm::min(lightPos, coneEnd - glm::vec3(coneRadius));
-			glm::vec3 aabbMax = glm::max(lightPos, coneEnd + glm::vec3(coneRadius));
 
 			isCulled = !frustum.TestAABB(aabbMin, aabbMax);
 		}

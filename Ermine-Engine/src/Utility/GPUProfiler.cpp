@@ -19,15 +19,15 @@ using namespace Ermine::graphics;
 
 void GPUProfiler::Init(size_t historyLength)
 {
-	if (s_Initialized)
-		return;
+    if (s_Initialized)
+        return;
 
-	s_MaxHistoryLength = historyLength;
-	s_FrameTimeHistory.clear();
-	s_TimerQueries.clear();
-	s_EventNames.clear();
-	s_EventQueryActive.clear();
-	s_MemoryByType.clear();
+    s_MaxHistoryLength = historyLength;
+    s_FrameTimeHistory.clear();
+    s_TimerQueries.clear();
+    s_EventNames.clear();
+    s_EventQueryActive.clear();
+    s_MemoryByType.clear();
 
     // Reset metrics
     s_CurrentMetrics = PerformanceMetrics{};
@@ -105,7 +105,7 @@ void GPUProfiler::EndFrame()
     float processTimeMs = std::chrono::duration<float, std::milli>(frameEndTime - s_FrameStartTime).count();
 
     // Includes v-sync and any pacing (present-to-present time)
-	const float effectiveTimeMs = FrameController::GetDeltaTime() * 1000.0f;
+    const float effectiveTimeMs = FrameController::GetDeltaTime() * 1000.0f;
 
     // Update metrics with this frame's data
     UpdateMetrics(effectiveTimeMs);
@@ -198,14 +198,14 @@ void GPUProfiler::TrackDrawCall(uint32_t vertexCount, uint32_t indexCount)
     if (indexCount > 0)
     {
         s_CurrentMetrics.vertexCount += indexCount / 4; // vertices processed ~= indices submitted
-		s_CurrentMetrics.triangleCount += indexCount/4/3; // triangle list
+        s_CurrentMetrics.triangleCount += indexCount / 4 / 3; // triangle list
     }
     else
     {
-		s_CurrentMetrics.vertexCount += vertexCount; // vertices processed
-		s_CurrentMetrics.triangleCount += vertexCount / 3; // triangle list
+        s_CurrentMetrics.vertexCount += vertexCount; // vertices processed
+        s_CurrentMetrics.triangleCount += vertexCount / 3; // triangle list
     }
-	//s_CurrentMetrics.triangleCount += indexCount / 3;
+    //s_CurrentMetrics.triangleCount += indexCount / 3;
 }
 
 void GPUProfiler::TrackMemoryAllocation(uint64_t sizeBytes, const std::string& type)
@@ -259,7 +259,7 @@ void GPUProfiler::SetCulledMeshesCount(uint32_t count)
 {
     if (!s_Initialized)
         return;
-	s_CurrentMetrics.culledMeshes = static_cast<uint32_t>(count);
+    s_CurrentMetrics.culledMeshes = static_cast<uint32_t>(count);
 }
 
 void GPUProfiler::ProcessTimerQueries()

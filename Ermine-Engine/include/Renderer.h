@@ -699,7 +699,6 @@ namespace Ermine::graphics
             m_MaterialsDirty = true;
             m_DrawDataNeedsFullRebuild = true;
             m_CachedDrawItems.clear();
-            m_EntityTransformHashes.clear();
             m_LastEntityListHash = 0;
         }
 
@@ -1114,7 +1113,6 @@ namespace Ermine::graphics
         bool m_DrawDataNeedsFullRebuild = true;               // Force full rebuild (entity add/remove/major change)
         bool m_NeedsTransparentSort = true;                   // Trigger transparent object sorting (set during full rebuild)
         uint64_t m_LastEntityListHash = 0;                    // Hash of entity list to detect add/remove
-        std::unordered_map<EntityID, uint64_t> m_EntityTransformHashes; // Per-entity transform change detection
 
         // Draw data optimization - Cache for fast path (avoids expensive lookups)
         struct CachedDrawItem {
@@ -1132,6 +1130,7 @@ namespace Ermine::graphics
             bool castsShadows;             // Shadow casting flag (affects shadow pass routing)
             bool hasCustomShader;          // Custom shader flag (affects pass routing)
             bool useSkinning;              // Skinning flag (affects VAO selection)
+            bool isCameraAttached;         // Camera-attached flag (no motion blur)
             uint32_t boneOffset;           // Bone transform offset (skinned only)
         };
         std::vector<CachedDrawItem> m_CachedDrawItems; // Cached draw items for fast updates

@@ -60,8 +60,12 @@ void main()
     mat4 model = drawInfo.modelMatrix;
     mat3 normalMatrix = mat3(drawInfo.normalMatrixCol0, drawInfo.normalMatrixCol1, drawInfo.normalMatrixCol2);
 
+    // DrawInfo flag bits (must match C++ DrawCommands.h)
+    const uint FLAG_SKINNING = 1u << 0u;
+    const uint FLAG_CAMERA_ATTACHED = 1u << 1u;
+
     // Extract useSkinning flag from bit 0 of flags
-    bool useSkinning = (drawInfo.flags & 1u) != 0u;
+    bool useSkinning = (drawInfo.flags & FLAG_SKINNING) != 0u;
 
     vec4 skinnedPos = vec4(aPos, 1.0);
     vec3 skinnedNormal  = aNormal;
