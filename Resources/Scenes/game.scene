@@ -30036,7 +30036,25 @@
           "parentGuid": "fe86edf73b696842b5cd1b8c3440b773",
           "depth": 1
         },
-        "GlobalTransform": {}
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "class": "VerticalPlatform",
+              "enabled": true,
+              "fields": {
+                "moveDistance": {
+                  "t": 0,
+                  "v": 2.0
+                },
+                "moveSpeed": {
+                  "t": 0,
+                  "v": 2.0
+                }
+              }
+            }
+          ]
+        }
       }
     },
     {
@@ -31105,7 +31123,25 @@
           "parentGuid": "fe86edf73b696842b5cd1b8c3440b773",
           "depth": 1
         },
-        "GlobalTransform": {}
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "class": "VerticalPlatform",
+              "enabled": true,
+              "fields": {
+                "moveSpeed": {
+                  "t": 0,
+                  "v": 2.0
+                },
+                "moveDistance": {
+                  "t": 0,
+                  "v": 2.0
+                }
+              }
+            }
+          ]
+        }
       }
     },
     {
@@ -31941,7 +31977,25 @@
           "parentGuid": "fe86edf73b696842b5cd1b8c3440b773",
           "depth": 1
         },
-        "GlobalTransform": {}
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "class": "VerticalPlatform",
+              "enabled": true,
+              "fields": {
+                "moveSpeed": {
+                  "t": 0,
+                  "v": 2.0
+                },
+                "moveDistance": {
+                  "t": 0,
+                  "v": 2.0
+                }
+              }
+            }
+          ]
+        }
       }
     },
     {
@@ -32777,7 +32831,25 @@
           "parentGuid": "fe86edf73b696842b5cd1b8c3440b773",
           "depth": 1
         },
-        "GlobalTransform": {}
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "class": "VerticalPlatform",
+              "enabled": true,
+              "fields": {
+                "moveSpeed": {
+                  "t": 0,
+                  "v": 2.0
+                },
+                "moveDistance": {
+                  "t": 0,
+                  "v": 2.0
+                }
+              }
+            }
+          ]
+        }
       }
     },
     {
@@ -33613,7 +33685,25 @@
           "parentGuid": "fe86edf73b696842b5cd1b8c3440b773",
           "depth": 1
         },
-        "GlobalTransform": {}
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "class": "VerticalPlatform",
+              "enabled": true,
+              "fields": {
+                "moveSpeed": {
+                  "t": 0,
+                  "v": 2.0
+                },
+                "moveDistance": {
+                  "t": 0,
+                  "v": 2.0
+                }
+              }
+            }
+          ]
+        }
       }
     },
     {
@@ -34449,7 +34539,25 @@
           "parentGuid": "fe86edf73b696842b5cd1b8c3440b773",
           "depth": 1
         },
-        "GlobalTransform": {}
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "class": "VerticalPlatform",
+              "enabled": true,
+              "fields": {
+                "moveSpeed": {
+                  "t": 0,
+                  "v": 2.0
+                },
+                "moveDistance": {
+                  "t": 0,
+                  "v": 2.0
+                }
+              }
+            }
+          ]
+        }
       }
     },
     {
@@ -35285,7 +35393,25 @@
           "parentGuid": "fe86edf73b696842b5cd1b8c3440b773",
           "depth": 1
         },
-        "GlobalTransform": {}
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "class": "VerticalPlatform",
+              "enabled": true,
+              "fields": {
+                "moveSpeed": {
+                  "t": 0,
+                  "v": 2.0
+                },
+                "moveDistance": {
+                  "t": 0,
+                  "v": 2.0
+                }
+              }
+            }
+          ]
+        }
       }
     },
     {
@@ -36359,7 +36485,25 @@
           "parentGuid": "fe86edf73b696842b5cd1b8c3440b773",
           "depth": 1
         },
-        "GlobalTransform": {}
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "class": "VerticalPlatform",
+              "enabled": true,
+              "fields": {
+                "moveSpeed": {
+                  "t": 0,
+                  "v": 2.0
+                },
+                "moveDistance": {
+                  "t": 0,
+                  "v": 2.0
+                }
+              }
+            }
+          ]
+        }
       }
     },
     {
@@ -37433,7 +37577,25 @@
           "parentGuid": "fe86edf73b696842b5cd1b8c3440b773",
           "depth": 1
         },
-        "GlobalTransform": {}
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "class": "VerticalPlatform",
+              "enabled": true,
+              "fields": {
+                "moveSpeed": {
+                  "t": 0,
+                  "v": 2.0
+                },
+                "moveDistance": {
+                  "t": 0,
+                  "v": 2.0
+                }
+              }
+            }
+          ]
+        }
       }
     },
     {
@@ -42494,7 +42656,7 @@
         },
         "HierarchyComponent": {
           "parentGuid": "9e37a068af77a745a3df0ab5de6310a3",
-          "depth": 1
+          "depth": 2
         },
         "GlobalTransform": {},
         "ScriptsComponent": {
@@ -42689,7 +42851,7 @@
         },
         "HierarchyComponent": {
           "parentGuid": "82aabb8bc467624f807f9760200fcd8e",
-          "depth": 1
+          "depth": 2
         },
         "GlobalTransform": {},
         "ScriptsComponent": {
