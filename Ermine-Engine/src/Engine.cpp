@@ -613,9 +613,9 @@ bool engine::Init(GLFWwindow* windowContext)
 	// SceneManager::GetInstance().SetActiveScene(mainMenuScene);
 	// EE_CORE_INFO("Game build initialized with Main Menu scene");
 
-	SceneManager::GetInstance().OpenScene("../Resources/Scenes/game.scene"); // Load game scene
-	editor::EditorGUI::s_state = editor::EditorGUI::SimState::playing;		 // Set to playing state
-	glfwSetInputMode(windowContext, GLFW_CURSOR, GLFW_CURSOR_DISABLED);		 // Hide and capture cursor
+	SceneManager::GetInstance().OpenScene("../Resources/Scenes/mainmenu.scene"); // Load mainmenu scene
+	editor::EditorGUI::s_state = editor::EditorGUI::SimState::playing;			 // Set to playing state
+	glfwSetInputMode(windowContext, GLFW_CURSOR, GLFW_CURSOR_DISABLED);			 // Hide and capture cursor
 
 #endif
 
@@ -638,7 +638,12 @@ void engine::Shutdown()
 	cfg.windowHeight = height;
 	cfg.fullscreen = (glfwGetWindowMonitor(glfwGetCurrentContext()) != nullptr);
 	cfg.maximized = (glfwGetWindowAttrib(glfwGetCurrentContext(), GLFW_MAXIMIZED) == GLFW_TRUE);
-	cfg.title = "Ermine Editor 0.2";
+
+#if defined(EE_EDITOR)
+	cfg.title = "Ermine Editor 0.3";
+#else
+	cfg.title = "Mechina";
+#endif
 
 	SaveConfigToFile(cfg, "Ermine-Engine.config", false);
 

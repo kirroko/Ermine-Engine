@@ -321,6 +321,9 @@
     <ClInclude Include="include\TransformMode.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\UIButtonSystem.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\UIRenderSystem.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -426,6 +429,9 @@
       <Filter>src\Graphics</Filter>
     </ClCompile>
     <ClCompile Include="src\Graphics\Texture.cpp">
+      <Filter>src\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Graphics\UIButtonSystem.cpp">
       <Filter>src\Graphics</Filter>
     </ClCompile>
     <ClCompile Include="src\Graphics\UIRenderSystem.cpp">
@@ -560,9 +566,6 @@
     <ClCompile Include="src\dllmain.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\Graphics\UIButtonSystem.cpp">
-      <Filter>src\Graphics</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="include\Component.tpp">
@@ -579,9 +582,6 @@
     </None>
     <None Include="include\Systems.tpp">
       <Filter>include</Filter>
-    </None>
-    <None Include="src\Graphics\Renderer.cpp.backup">
-      <Filter>src\Graphics</Filter>
     </None>
   </ItemGroup>
 </Project>

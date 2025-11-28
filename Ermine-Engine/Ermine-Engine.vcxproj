@@ -374,6 +374,7 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <ClInclude Include="include\Systems.h" />
     <ClInclude Include="include\Texture.h" />
     <ClInclude Include="include\TransformMode.h" />
+    <ClInclude Include="include\UIButtonSystem.h" />
     <ClInclude Include="include\UIRenderSystem.h" />
     <ClInclude Include="include\UITextRenderer.h" />
     <ClInclude Include="include\VertexArray.h" />
@@ -465,7 +466,6 @@ IF EXIST "$(SolutionDir)Resources"\ (xcopy /Q /E /Y /I "$(SolutionDir)Resources"
     <None Include="include\MathUtils.tpp" />
     <None Include="include\Registry.tpp" />
     <None Include="include\Systems.tpp" />
-    <None Include="src\Graphics\Renderer.cpp.backup" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ThirdParty\GLFW\GLFW.vcxproj">
