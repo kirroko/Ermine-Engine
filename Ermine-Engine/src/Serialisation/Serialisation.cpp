@@ -661,7 +661,8 @@ Ermine::EntityID LoadPrefabFromFile(Ermine::ECS& ecs, const std::filesystem::pat
     ecs.ResyncAllSignaturesFromStorage();
     Ermine::ResolveHierarchyGuids(ecs);
 
-    //ecs.GetSystem<Ermine::Physics>()->UpdatePhysicList();
+    //ecs.GetSystem<Ermine::HierarchySystem>()->ForceUpdateAllTransforms();
+    ecs.GetSystem<Ermine::Physics>()->UpdatePhysicList();
 
     // Return detected root; fallback to first created if none marked as root
     if (rootEntity != 0) return rootEntity;

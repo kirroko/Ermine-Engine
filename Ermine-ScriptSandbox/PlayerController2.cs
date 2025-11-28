@@ -36,7 +36,8 @@ public class PlayerController2 : MonoBehaviour
 
     private float interactRange = 5f;
 
-    private bool flipSwitch = false;
+    private bool flipSwitch1 = false;
+    private bool flipSwitch2 = false;
     private float interactTimer = 0f;
 
     void Start()
@@ -46,8 +47,6 @@ public class PlayerController2 : MonoBehaviour
         audioComp = GetComponent<AudioComponent>();
         if (audioComp == null)
             Console.WriteLine("Warning: No AudioComponent found on player!");
-
-        Physics.ForceUpdate();
     }
 
     void Update()
@@ -59,7 +58,7 @@ public class PlayerController2 : MonoBehaviour
         HandleInteract();
         UpdateAudioListener();
     }
-    float verticalVelocity;
+
     private void HandleInput()
     {
         move = Vector3.zero;
@@ -170,30 +169,50 @@ public class PlayerController2 : MonoBehaviour
 
             GameObject obj = hit.transform.gameObject;
             Debug.LogError("hit");
-            if (obj.GetInstanceID() != 0)
+            if (obj!=null)
             {
                 //GameObject obj = GameObject.FromEntityID(id);
                 //Debug.Log("You are looking at: " + obj.name);
 
-                if (obj.name == "Switch" && interactTimer >= 1f)
+                if (obj.name == "Switch1" && interactTimer >= 1f)
                 {
                     // Play switch audio here Kai
                     GlobalAudio.PlaySFX("SwitchOn");
 
-                    if (!flipSwitch)
+                    if (!flipSwitch1)
                     {
                         obj.transform.scale = new Vector3(obj.transform.scale.x, obj.transform.scale.y, obj.transform.scale.z * -1f);
                         obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y + 1.51f, obj.transform.position.z);
-                        flipSwitch = true;
+                        flipSwitch1 = true;
                     }
                     else
                     {
                         obj.transform.scale = new Vector3(obj.transform.scale.x, obj.transform.scale.y, obj.transform.scale.z * -1f);
                         obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y - 1.51f, obj.transform.position.z);
-                        flipSwitch = false;
+                        flipSwitch1 = false;
                     }
                     interactTimer = 0f;
                 }
+                if (obj.name == "Switch2" && interactTimer >= 1f)
+                {
+                    // Play switch audio here Kai
+                    GlobalAudio.PlaySFX("SwitchOn");
+
+                    if (!flipSwitch2)
+                    {
+                        obj.transform.scale = new Vector3(obj.transform.scale.x, obj.transform.scale.y, obj.transform.scale.z * -1f);
+                        obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y + 1.51f, obj.transform.position.z);
+                        flipSwitch2 = true;
+                    }
+                    else
+                    {
+                        obj.transform.scale = new Vector3(obj.transform.scale.x, obj.transform.scale.y, obj.transform.scale.z * -1f);
+                        obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y - 1.51f, obj.transform.position.z);
+                        flipSwitch2 = false;
+                    }
+                    interactTimer = 0f;
+                }
+
                 if (obj.name == "Book" && interactTimer > 1f)
                 {
                     // Collect book

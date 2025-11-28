@@ -402,6 +402,9 @@ void SceneManager::OpenScene(const std::string& path)
 
     m_CurrentScenePath = path;
     m_Dirty = false;
+
+    ecs.GetSystem<Ermine::HierarchySystem>()->ForceUpdateAllTransforms();
+    ecs.GetSystem<Ermine::Physics>()->UpdatePhysicList();
     
     // STEP 6: *** NEW FIX *** Reset cursor state when loading a new scene
     // This ensures cursor is properly reset when transitioning between scenes
