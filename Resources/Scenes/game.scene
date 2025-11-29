@@ -200,55 +200,6 @@
       }
     },
     {
-      "id": 2,
-      "components": {
-        "IDComponent": {
-          "guid": "a2fe56e0852b844f9a210021d5607c46"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            5.0,
-            0.0
-          ],
-          "rotation": [
-            0.8754260540008545,
-            0.4082179069519043,
-            -0.23456971347332,
-            0.10938165336847305
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "Light": {
-          "color": [
-            1.0,
-            1.0,
-            1.0
-          ],
-          "intensity": 1.0,
-          "type": "Directional",
-          "castsShadows": true,
-          "castsRays": false,
-          "innerAngle": -1.0,
-          "outerAngle": -1.0,
-          "radius": 3.0
-        },
-        "ObjectMetaData": {
-          "name": "Main Light",
-          "tag": "Light",
-          "selfActive": true
-        },
-        "HierarchyComponent": {
-          "depth": 0
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
       "id": 3,
       "components": {
         "IDComponent": {
@@ -467,13 +418,13 @@
               "class": "PlayerController2",
               "enabled": true,
               "fields": {
-                "jumpHeight": {
-                  "t": 0,
-                  "v": 2.0
-                },
                 "mouseHorSens": {
                   "t": 0,
                   "v": 0.30000001192092898
+                },
+                "jumpHeight": {
+                  "t": 0,
+                  "v": 2.0
                 },
                 "mouseVertSens": {
                   "t": 0,
@@ -483,13 +434,13 @@
                   "t": 0,
                   "v": 5.0
                 },
-                "camDefaultY": {
-                  "t": 0,
-                  "v": 4.5
-                },
                 "jumpspeed": {
                   "t": 0,
                   "v": 5.0
+                },
+                "camDefaultY": {
+                  "t": 0,
+                  "v": 4.5
                 },
                 "crouchLerpSpeed": {
                   "t": 0,
@@ -24377,10 +24328,10 @@
             0.0
           ],
           "rotation": [
-            1.1944297773069935e-9,
-            -5.4587068198941328e-9,
-            0.21375498175621034,
-            0.9768874049186707
+            1.194429666284691e-9,
+            -5.4587063758049229e-9,
+            0.21375495195388795,
+            0.9768872857093811
           ],
           "scale": [
             2.5,
@@ -25060,10 +25011,10 @@
             0.0
           ],
           "rotation": [
-            1.194429666284691e-9,
-            -5.4587063758049229e-9,
-            0.21375495195388795,
-            0.9768872857093811
+            1.1944297773069935e-9,
+            -5.4587068198941328e-9,
+            0.21375498175621034,
+            0.9768874049186707
           ],
           "scale": [
             2.5,
@@ -29789,11 +29740,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -30883,11 +30834,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -31746,11 +31697,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -32609,11 +32560,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -33472,11 +33423,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -34335,11 +34286,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -35198,11 +35149,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -36293,11 +36244,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -37388,11 +37339,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -42812,6 +42763,291 @@
             }
           ]
         }
+      }
+    },
+    {
+      "id": 539,
+      "components": {
+        "IDComponent": {
+          "guid": "7d1a834ee5efe24f8a6a10152f82ca88"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "LevelsLighting",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 540,
+      "components": {
+        "IDComponent": {
+          "guid": "da6f076504eecc48987a8db9a808a77a"
+        },
+        "Transform": {
+          "position": [
+            40.0,
+            24.0,
+            -200.0
+          ],
+          "rotation": [
+            0.7071066498756409,
+            0.0,
+            0.0,
+            0.70710688829422
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "Light": {
+          "color": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "intensity": 1.0,
+          "type": "Spot",
+          "castsShadows": true,
+          "castsRays": false,
+          "innerAngle": 70.0,
+          "outerAngle": 80.0,
+          "radius": 100.0
+        },
+        "ObjectMetaData": {
+          "name": "Level4 Main Light",
+          "tag": "Light",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "7d1a834ee5efe24f8a6a10152f82ca88",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 541,
+      "components": {
+        "IDComponent": {
+          "guid": "9181ae122270b84fa27d8871f9b41725"
+        },
+        "Transform": {
+          "position": [
+            9.0,
+            17.0,
+            -130.0
+          ],
+          "rotation": [
+            0.7071066498756409,
+            0.0,
+            0.0,
+            0.70710688829422
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "Light": {
+          "color": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "intensity": 1.0,
+          "type": "Spot",
+          "castsShadows": true,
+          "castsRays": false,
+          "innerAngle": 70.0,
+          "outerAngle": 80.0,
+          "radius": 100.0
+        },
+        "ObjectMetaData": {
+          "name": "Level3 Main Light",
+          "tag": "Light",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "7d1a834ee5efe24f8a6a10152f82ca88",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 542,
+      "components": {
+        "IDComponent": {
+          "guid": "f143468d5523a048b6f6d4a0a21223b7"
+        },
+        "Transform": {
+          "position": [
+            3.0,
+            14.0,
+            -83.55000305175781
+          ],
+          "rotation": [
+            0.7071066498756409,
+            0.0,
+            0.0,
+            0.70710688829422
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "Light": {
+          "color": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "intensity": 1.0,
+          "type": "Spot",
+          "castsShadows": true,
+          "castsRays": false,
+          "innerAngle": 70.0,
+          "outerAngle": 80.0,
+          "radius": 100.0
+        },
+        "ObjectMetaData": {
+          "name": "Level2 Main Light",
+          "tag": "Light",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "7d1a834ee5efe24f8a6a10152f82ca88",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 543,
+      "components": {
+        "IDComponent": {
+          "guid": "f46a6040c446a94d8e4ffc3f0291c712"
+        },
+        "Transform": {
+          "position": [
+            6.0,
+            12.0,
+            -16.0
+          ],
+          "rotation": [
+            0.7071066498756409,
+            0.0,
+            0.0,
+            0.70710688829422
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "Light": {
+          "color": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "intensity": 1.0,
+          "type": "Spot",
+          "castsShadows": true,
+          "castsRays": false,
+          "innerAngle": 70.0,
+          "outerAngle": 80.0,
+          "radius": 100.0
+        },
+        "ObjectMetaData": {
+          "name": "Level1 Main Light",
+          "tag": "Light",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "7d1a834ee5efe24f8a6a10152f82ca88",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 544,
+      "components": {
+        "IDComponent": {
+          "guid": "749ab7244e2bad4d811e8fb2f66305ae"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            9.0,
+            23.0
+          ],
+          "rotation": [
+            0.7071066498756409,
+            0.0,
+            0.0,
+            0.70710688829422
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "Light": {
+          "color": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "intensity": 1.0,
+          "type": "Spot",
+          "castsShadows": true,
+          "castsRays": false,
+          "innerAngle": 70.0,
+          "outerAngle": 80.0,
+          "radius": 100.0
+        },
+        "ObjectMetaData": {
+          "name": "Level0 Main Light",
+          "tag": "Light",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "7d1a834ee5efe24f8a6a10152f82ca88",
+          "depth": 1
+        },
+        "GlobalTransform": {}
       }
     }
   ],
