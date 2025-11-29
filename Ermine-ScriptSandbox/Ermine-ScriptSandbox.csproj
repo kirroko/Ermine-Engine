@@ -103,8 +103,4 @@
   <Target Name="AfterBuild">
   </Target>
   -->
-  <PropertyGroup>
-    <PostBuildEvent>set OUTDIR=$(SolutionDir)Build\bin\Editor-Debug-windows-x86_64
-IF EXIST "$(TargetDir)Ermine-ScriptSandbox.dll"\ (xcopy /Q /E /Y /I "$(TargetDir)Ermine-ScriptSandbox.dll" "%OUTDIR%\Ermine-Editor" &gt; nul) ELSE (xcopy /Q /Y /I "$(TargetDir)Ermine-ScriptSandbox.dll" "%OUTDIR%\Ermine-Editor" &gt; nul)</PostBuildEvent>
-  </PropertyGroup>
 </Project>
