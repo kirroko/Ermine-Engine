@@ -66,6 +66,10 @@ namespace Ermine
         // Get normalized mouse position (0-1 range)
         void GetNormalizedMousePosition(float& outX, float& outY);
 
+
+        EntityID GetGlobalAudioEntity();
+        EntityID m_GlobalAudioEntity = MAX_ENTITIES;
+
         // Track mouse state
         bool m_wasMousePressed = false;
 

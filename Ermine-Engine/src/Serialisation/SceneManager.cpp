@@ -21,6 +21,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Matrix4x4.h"
 #include "EditorGUI.h"
 #include "ScriptSystem.h"
+#include "AudioSystem.h"
 #include "../../../Ermine-ResourcePipeline/xresource_pipeline_v2-main/dependencies/xstrtool/source/xstrtool.h"
 
 namespace
@@ -368,6 +369,17 @@ void SceneManager::OpenScene(const std::string& path)
     if (auto scriptSystem = ecs.GetSystem<Ermine::scripting::ScriptSystem>()) {
         EE_CORE_INFO("Cleaning up all script instances before entity destruction");
         scriptSystem->CleanupAllScripts();
+    }
+
+    for (Ermine::EntityID e = 0; e < Ermine::MAX_ENTITIES; ++e) {
+        if (!ecs.IsEntityValid(e)) continue;
+        if (!ecs.HasComponent<Ermine::GlobalAudioComponent>(e)) continue;
+
+        auto& globalAudio = ecs.GetComponent<Ermine::GlobalAudioComponent>(e);
+        Ermine::AudioSystem::StopGlobalMusic(globalAudio);
+        Ermine::AudioSystem::StopGlobalAmbience(globalAudio);
+        EE_CORE_INFO("Stopped global audio");
+        break; // Only one GlobalAudioComponent should exist
     }
 
     ecs.ClearAllEntities();

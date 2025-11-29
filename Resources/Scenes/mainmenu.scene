@@ -226,9 +226,9 @@
           "backgroundAlpha": 0.6650000214576721,
           "action": 1,
           "actionData": "../Resources/Scenes/cutscene_intro.scene",
-          "hoverSoundName": "../Resources/Audio/UI_Hover 5.wav",
-          "clickSoundName": "../Resources/Audio/UI_Confirm.wav",
-          "soundVolume": 0.8
+          "hoverSoundName": "",
+          "clickSoundName": "",
+          "soundVolume": 0.0
         }
       }
     },
@@ -300,11 +300,119 @@
           "backgroundAlpha": 0.6169999837875366,
           "action": 2,
           "actionData": "",
-          "hoverSoundName": "../Resources/Audio/UI_Hover 5.wav",
-          "clickSoundName": "../Resources/Audio/UI_Confirm.wav",
-          "soundVolume": 0.8
+          "hoverSoundName": "",
+          "clickSoundName": "",
+          "soundVolume": 0.0
         }
       }
+    },
+    {
+      "id": 6,
+      "components": {
+        "IDComponent": {
+          "guid": "e35b3131e00f0e4991e7c9cb075d8ebb"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "GlobalAudioComponent": {
+          "masterVolume": 1.0,
+          "musicVolume": 0.5099999904632568,
+          "sfxVolume": 0.800000011920929,
+          "ambienceVolume": 1.0,
+          "autoPlay": true,
+          "music": [
+            {
+              "name": "Main_MenuBGM",
+              "path": "../Resources/Audio/suspense-horror-music-loop-382813.mp3",
+              "volume": 1.0
+            }
+          ],
+          "sfx": [
+            {
+              "name": "Hover",
+              "path": "../Resources/Audio/UI_Hover 5.wav",
+              "volume": 1.0
+            },
+            {
+              "name": "Click",
+              "path": "../Resources/Audio/UI_Confirm.wav",
+              "volume": 1.0
+            }
+          ],
+          "ambience": []
+        },
+        "ObjectMetaData": {
+          "name": "GlobalAudio",
+          "tag": "Audio",
+          "selfActive": false
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
     }
-  ]
+  ],
+  "globalGraphics": {
+    "ssaoEnabled": false,
+    "ssaoSamples": 16,
+    "ssaoRadius": 10.0,
+    "ssaoBias": 0.009999999776482582,
+    "ssaoIntensity": 1.0,
+    "ssaoFadeout": 0.10000000149011612,
+    "ssaoMaxDistance": 100.0,
+    "fogEnabled": false,
+    "fogMode": 0,
+    "fogColor": [
+      0.5,
+      0.6000000238418579,
+      0.699999988079071
+    ],
+    "fogDensity": 0.019999999552965165,
+    "fogStart": 50.0,
+    "fogEnd": 200.0,
+    "fogHeightCoefficient": 0.10000000149011612,
+    "fogHeightFalloff": 10.0,
+    "vignetteEnabled": false,
+    "fxaaEnabled": true,
+    "toneMappingEnabled": true,
+    "gammaCorrectionEnabled": true,
+    "bloomEnabled": true,
+    "skyboxIsHDR": false,
+    "exposure": 1.0,
+    "contrast": 1.0,
+    "saturation": 1.0,
+    "gamma": 2.200000047683716,
+    "vignetteIntensity": 0.30000001192092898,
+    "vignetteRadius": 0.800000011920929,
+    "bloomStrength": 0.03999999910593033,
+    "fxaaSpanMax": 8.0,
+    "fxaaReduceMin": 0.0078125,
+    "fxaaReduceMul": 0.125,
+    "bloomThreshold": 1.0,
+    "bloomIntensity": 2.0,
+    "bloomRadius": 1.0,
+    "spotlightRaysEnabled": true,
+    "spotlightRayIntensity": 0.30000001192092898,
+    "spotlightRayFalloff": 2.0,
+    "motionBlurEnabled": true,
+    "motionBlurStrength": 1.0,
+    "motionBlurSamples": 8
+  }
 }
