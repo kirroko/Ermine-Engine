@@ -37,6 +37,33 @@ namespace Ermine
         EE_CORE_INFO("UIButtonSystem initialized ({}x{}, aspect ratio: {})", screenWidth, screenHeight, m_aspectRatio);
     }
 
+    EntityID UIButtonSystem::GetGlobalAudioEntity()
+    {
+        auto& ecs = ECS::GetInstance();
+
+        // Check if cached entity is still valid
+        if (ecs.IsEntityValid(m_GlobalAudioEntity) &&
+            ecs.HasComponent<GlobalAudioComponent>(m_GlobalAudioEntity))
+        {
+            return m_GlobalAudioEntity;
+        }
+
+        // Find and cache GlobalAudio entity
+        for (EntityID e = 0; e < MAX_ENTITIES; ++e)
+        {
+            if (!ecs.IsEntityValid(e)) continue;
+            if (!ecs.HasComponent<GlobalAudioComponent>(e)) continue;
+
+            m_GlobalAudioEntity = e;
+            EE_CORE_INFO("UIButtonSystem: Cached GlobalAudio entity (ID: {})", e);
+            return e;
+        }
+
+        // Not found - invalidate cache
+        m_GlobalAudioEntity = MAX_ENTITIES;
+        return MAX_ENTITIES;
+    }
+
     void UIButtonSystem::Update(float deltaTime)
     {
         auto& ecs = ECS::GetInstance();
@@ -46,6 +73,14 @@ namespace Ermine
         if (!editor::EditorGUI::isPlaying && !editor::EditorGUI::isPreviewingUI)
             return;
 #endif
+
+        EntityID globalAudioEntity = GetGlobalAudioEntity();
+        GlobalAudioComponent* globalAudio = nullptr;
+
+        if (globalAudioEntity != MAX_ENTITIES)
+        {
+            globalAudio = &ecs.GetComponent<GlobalAudioComponent>(globalAudioEntity);
+        }
 
         // Debug: Log first update call
         static bool firstUpdate = true;
@@ -95,25 +130,11 @@ namespace Ermine
             if (inside && !button.isHovered)
             {
                 button.isHovered = true;
-                EE_CORE_INFO("✓ Button '{}' HOVER START", button.text);
-
-                // Play hover sound if specified
-                if (!button.hoverSoundName.empty())
+                
+                if (globalAudio)
                 {
-                    EE_CORE_WARN("========== HOVER SOUND DEBUG ==========");
-                    EE_CORE_WARN("Sound File: '{}'", button.hoverSoundName);
-                    EE_CORE_WARN("Volume (linear 0-1): {}", button.soundVolume);
-                    float volumeDB = AudioSystem::ConvertVolumeToFMOD(button.soundVolume);
-                    EE_CORE_WARN("Volume (FMOD dB): {}", volumeDB);
-
-                    int channelId = CAudioEngine::PlaySounds(button.hoverSoundName, Vector3D{0, 0, 0}, volumeDB);
-
-                    if (channelId >= 0) {
-                        EE_CORE_WARN("✓ Sound playing on channel: {}", channelId);
-                    } else {
-                        EE_CORE_ERROR("✗ Failed to play sound! Channel ID: {} (negative = error)", channelId);
-                    }
-                    EE_CORE_WARN("======================================");
+                    AudioSystem::PlayGlobalSFX(*globalAudio, "Hover");
+                    EE_CORE_INFO("Playing hover sound");
                 }
             }
             else if (!inside && button.isHovered)
@@ -126,25 +147,10 @@ namespace Ermine
             if (inside && Input::IsMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT))
             {
                 button.isPressed = true;
-                EE_CORE_WARN("Button '{}' CLICKED!", button.text);
-
-                // Play click sound if specified
-                if (!button.clickSoundName.empty())
+                if (globalAudio)
                 {
-                    EE_CORE_WARN("========== CLICK SOUND DEBUG ==========");
-                    EE_CORE_WARN("Sound File: '{}'", button.clickSoundName);
-                    EE_CORE_WARN("Volume (linear 0-1): {}", button.soundVolume);
-                    float volumeDB = AudioSystem::ConvertVolumeToFMOD(button.soundVolume);
-                    EE_CORE_WARN("Volume (FMOD dB): {}", volumeDB);
-
-                    int channelId = CAudioEngine::PlaySounds(button.clickSoundName, Vector3D{0, 0, 0}, volumeDB);
-
-                    if (channelId >= 0) {
-                        EE_CORE_WARN("✓ Sound playing on channel: {}", channelId);
-                    } else {
-                        EE_CORE_ERROR("✗ Failed to play sound! Channel ID: {} (negative = error)", channelId);
-                    }
-                    EE_CORE_WARN("======================================");
+                    AudioSystem::PlayGlobalSFX(*globalAudio, "Click");
+                    EE_CORE_INFO("Playing click sound");
                 }
 
                 ExecuteButtonAction(button);

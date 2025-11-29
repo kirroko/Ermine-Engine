@@ -350,6 +350,57 @@
         },
         "GlobalTransform": {}
       }
+    },
+    {
+      "id": 7,
+      "components": {
+        "IDComponent": {
+          "guid": "155ee7c2181d604d93ed5bf05e146997"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "GlobalAudioComponent": {
+          "masterVolume": 1.0,
+          "musicVolume": 0.699999988079071,
+          "sfxVolume": 0.800000011920929,
+          "ambienceVolume": 1.0,
+          "autoPlay": true,
+          "music": [
+            {
+              "name": "CutSceneBGM",
+              "path": "../Resources/Audio/suspense-horror-music-loop-382813.mp3",
+              "volume": 1.0
+            }
+          ],
+          "sfx": [],
+          "ambience": []
+        },
+        "ObjectMetaData": {
+          "name": "GlobalAudio",
+          "tag": "Audio",
+          "selfActive": false
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
     }
   ],
   "globalGraphics": {
