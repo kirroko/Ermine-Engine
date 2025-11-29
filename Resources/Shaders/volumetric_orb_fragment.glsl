@@ -54,11 +54,11 @@ uniform uvec2 u_IGNHandle;
 uniform vec2 u_IGNResolution;
 
 // Volumetric parameters
-uniform float orbRadius = 0.15;          // Central sphere size
-uniform float textureRadius = 0.15;       // Texture layer radius
-uniform float textureRadius2 = 0.15;     // Second texture layer radius
-uniform float volumeRadius = 0.6;        // Outer boundary for raymarching
-uniform vec3 orbColor = vec3(1.0, 0.5, 0.1);  // Super bright orange
+uniform float orbRadius = 0.3;          // Central sphere size
+uniform float textureRadius = 0.3;       // Texture layer radius
+uniform float textureRadius2 = 0.3;     // Second texture layer radius
+uniform float volumeRadius = 1.2;        // Outer boundary for raymarching
+uniform vec3 orbColor = vec3(0.2, 0.6, 1.0);  // Bright blue
 uniform float orbIntensity = 8.0;        // HDR brightness
 uniform int numSteps = 48;
 
@@ -243,7 +243,7 @@ void main()
         // --- 2. SUPER SMALL BRIGHT SPARKS ---
         float sparkDensity = sampleSparks(samplePos, vModelCenter);
         if (sparkDensity > 0.01) {
-            vec3 sparkEmission = vec3(1.0, 0.9, 0.6) * sparkIntensity * sparkDensity;
+            vec3 sparkEmission = vec3(0.5, 0.8, 1.0) * sparkIntensity * sparkDensity;
 
             float sparkAlpha = sparkDensity * 0.5;
 

@@ -3,7 +3,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "a43ccdba4d170343993b81b70d72d6da"
+          "guid": "cd23834dfed0f54da4abef695522653c"
         },
         "Transform": {
           "position": [
@@ -32,6 +32,7 @@
           "intensity": 1.0,
           "type": "Point",
           "castsShadows": false,
+          "castsRays": false,
           "innerAngle": -1.0,
           "outerAngle": -1.0,
           "radius": 1.7000000476837159
@@ -46,9 +47,9 @@
           "primitive": {
             "type": "Sphere",
             "size": [
-              1.0,
-              1.0,
-              1.0
+              5.0,
+              5.0,
+              5.0
             ]
           }
         },
@@ -83,13 +84,13 @@
           "hasMaterial": true,
           "params": {
             "materialAlbedo": [
-              0.09967845678329468,
-              0.09967869520187378,
               1.0,
-              0.5
+              1.0,
+              1.0,
+              0.0
             ],
-            "materialAlpha": 0.5,
-            "materialTransparency": 0.5,
+            "materialAlpha": 0.0,
+            "materialTransparency": 1.0,
             "materialMetallic": 0.0,
             "materialRoughness": 0.5,
             "materialEmissive": [
@@ -97,10 +98,20 @@
               0.5607843399047852,
               1.0
             ],
-            "materialEmissiveIntensity": 1.0,
-            "materialHasAlbedoMap": false
+            "materialEmissiveIntensity": 0.0,
+            "materialHasAlbedoMap": true,
+            "materialHasEmissiveMap": false
           },
-          "textures": [],
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources/Textures/Icons/refresh.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources/Textures/Icons/refresh.png"
+            }
+          ],
           "uvScale": [
             1.0,
             1.0
@@ -108,7 +119,9 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "customFragmentShader": "../Resources/Shaders/volumetric_orb_fragment.glsl",
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "depth": 0
