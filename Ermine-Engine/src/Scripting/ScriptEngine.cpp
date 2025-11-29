@@ -870,6 +870,9 @@ namespace
 	MonoClass* s_AudioComponentClass = nullptr;
 	MonoClass* s_SerializeFieldAttr = nullptr;
 
+	MonoClass* s_ObjectClass = nullptr;
+	MonoClassField* s_EntityIDField = nullptr;
+
 	// Discover field for a script instance
 	struct ScriptFieldInfo
 	{
@@ -896,36 +899,48 @@ namespace
 		if (!klass || !name) return nullptr;
 		for (MonoClass* c = klass; c; c = mono_class_get_parent(c))
 		{
+			if (!c)
+			{
+				assert(false && "Empty class!");
+				break;
+			}
 			mono_class_init(c);
 			if (MonoClassField* f = mono_class_get_field_from_name(c, name))
 				return f;
 		}
+		//if (MonoClassField* f = mono_class_get_field_from_name(klass, name))
+		//	return f;
+		
 		return nullptr;
 	}
 
 	Ermine::EntityID GetEntityIDFromManaged(MonoObject* obj)
 	{
-		if (!obj) return 0;
-		MonoClass* klass = mono_object_get_class(obj);
-		if (!klass) return 0;
+		if (!obj || !s_EntityIDField) return 0;
+		Ermine::EntityID id = 0;
+		mono_field_get_value(obj, s_EntityIDField, &id);
+		return id;
+		//MonoClass* klass = mono_object_get_class(obj);
+		//if (!klass) return 0;
 
-		if (MonoClassField* field = FindFieldInHierarchy(klass, "EntityID"))
-		{
-			Ermine::EntityID id = 0;
-			mono_field_get_value(obj, field, &id);
-			return id;
-		}
-		return 0;
+		//if (MonoClassField* field = FindFieldInHierarchy(klass, "EntityID"))
+		//{
+		//	Ermine::EntityID id = 0;
+		//	mono_field_get_value(obj, field, &id);
+		//	return id;
+		//}
+		//return 0;
 	}
 
 	void SetEntityIDOnManaged(MonoObject* obj, Ermine::EntityID id)
 	{
-		if (!obj) return;
-		MonoClass* klass = mono_object_get_class(obj);
-		if (!klass) return;
+		if (!obj || !s_EntityIDField) return;
+		mono_field_set_value(obj, s_EntityIDField, &id);
+		//MonoClass* klass = mono_object_get_class(obj);
+		//if (!klass) return;
 
-		if (MonoClassField* field = FindFieldInHierarchy(klass, "EntityID"))
-			mono_field_set_value(obj, field, &id);
+		//if (MonoClassField* field = FindFieldInHierarchy(klass, "EntityID"))
+		//	mono_field_set_value(obj, field, &id);
 	}
 
 	MonoClass* GetAPIClass(const char* nameSpace, const char* name)
@@ -1015,7 +1030,8 @@ namespace
 	{
 		if (!s_GameObjectClass)
 			return nullptr;
-		MonoObject* obj = mono_object_new(mono_domain_get(), s_GameObjectClass); // Creating Gameobject object on managed side
+		auto* dom = Ermine::ECS::GetInstance().GetSystem<Ermine::scripting::ScriptSystem>()->m_ScriptEngine->GetGameDomain();
+		MonoObject* obj = mono_object_new(dom, s_GameObjectClass); // Creating Gameobject object on managed side
 		// Don't call mono_runtime_object_init (its ctor would create a new native entity)
 		SetEntityIDOnManaged(obj, id); // ID is from the native side, it when script was created
 		return obj;
@@ -1025,7 +1041,8 @@ namespace
 	{
 		if (!s_TransformClass)
 			return nullptr;
-		MonoObject* obj = mono_object_new(mono_domain_get(), s_TransformClass);
+		auto* dom = Ermine::ECS::GetInstance().GetSystem<Ermine::scripting::ScriptSystem>()->m_ScriptEngine->GetGameDomain();
+		MonoObject* obj = mono_object_new(dom, s_TransformClass);
 		mono_runtime_object_init(obj);
 		SetEntityIDOnManaged(obj, id);
 		return obj;
@@ -1038,7 +1055,8 @@ namespace
 			assert(false && "Missing RigidbodyClass");
 			return nullptr;
 		}
-		MonoObject* obj = mono_object_new(mono_domain_get(), s_RigidbodyClass);
+		auto* dom = Ermine::ECS::GetInstance().GetSystem<Ermine::scripting::ScriptSystem>()->m_ScriptEngine->GetGameDomain();
+		MonoObject* obj = mono_object_new(dom, s_RigidbodyClass);
 		mono_runtime_object_init(obj);
 		SetEntityIDOnManaged(obj, id);
 		return obj;
@@ -2047,12 +2065,12 @@ namespace
 			}
 
 			auto& scriptComp = ECS::GetInstance().GetComponent<Script>(id);
-			if (scriptComp.m_instance && scriptComp.m_instance->object)
+			if (scriptComp.m_instance && scriptComp.m_instance->GetManaged())
 			{
-				SetComponentGameObject(scriptComp.m_instance->object, id);
-				scripting::ScriptEngine::PushCacheToManagedFields(scriptComp.m_instance->object, scriptComp.m_fields);
+				SetComponentGameObject(scriptComp.m_instance->GetManaged(), id);
+				scripting::ScriptEngine::PushCacheToManagedFields(scriptComp.m_instance->GetManaged(), scriptComp.m_fields);
 			}
-			return scriptComp.m_instance ? scriptComp.m_instance->object : nullptr;
+			return scriptComp.m_instance ? scriptComp.m_instance->GetManaged() : nullptr;
 		}
 		// TODO: Adding other component like Rigidbody, Collider, etc.?
 		EE_CORE_WARN("AddComponent: Unsupported component type '{0}'", mono_class_get_name(klass));
@@ -2095,7 +2113,10 @@ namespace
 			if (!ECS::GetInstance().HasComponent<AudioComponent>(id))
 				return nullptr;
 
-			MonoObject* obj = mono_object_new(mono_domain_get(), s_AudioComponentClass);
+			auto* dom = Ermine::ECS::GetInstance()
+				.GetSystem<Ermine::scripting::ScriptSystem>()->m_ScriptEngine->GetGameDomain();
+
+			MonoObject* obj = mono_object_new(dom, s_AudioComponentClass);
 			mono_runtime_object_init(obj);
 			SetEntityIDOnManaged(obj, id);
 			SetComponentGameObject(obj, id);
@@ -2123,9 +2144,9 @@ namespace
 			const char* cname = mono_class_get_name(klass);
 			auto& scriptComp = scs.GetByClass(cname);
 			//auto& scriptComp = ECS::GetInstance().GetComponent<Script>(id);
-			if (scriptComp.m_instance && scriptComp.m_instance->object)
-				SetComponentGameObject(scriptComp.m_instance->object, id);
-			return scriptComp.m_instance ? scriptComp.m_instance->object : nullptr;
+			if (scriptComp.m_instance && scriptComp.m_instance->GetManaged())
+				SetComponentGameObject(scriptComp.m_instance->GetManaged(), id);
+			return scriptComp.m_instance ? scriptComp.m_instance->GetManaged() : nullptr;
 		}
 
 		EE_CORE_WARN("GetComponent: Unsupported component type '{}'", mono_class_get_name(klass));
@@ -2782,6 +2803,13 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	s_SerializeFieldAttr = mono_class_from_name(s_APIImage, "ErmineEngine", "SerializeFieldAttribute");
 	if (!s_SerializeFieldAttr)
 		s_SerializeFieldAttr = mono_class_from_name(s_APIImage, "ErmineEngine", "SerializeField");
+	
+	s_ObjectClass = GetAPIClass("ErmineEngine", "Object");
+	if (s_ObjectClass && !s_EntityIDField)
+	{
+		mono_class_init(s_ObjectClass);
+		s_EntityIDField = mono_class_get_field_from_name(s_ObjectClass, "EntityID");
+	}
 
 #pragma region Transform ICalls
 	mono_add_internal_call("ErmineEngine.Transform::get_position", (const void*)icall_transform_get_position);

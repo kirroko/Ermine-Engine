@@ -904,7 +904,7 @@ namespace Ermine
 					s.m_instance->SetEnabled(s.m_enabled);
 					s.m_started = false;
 					if(s.m_fields.size() > 0)
-						scripting::ScriptEngine::PushCacheToManagedFields(s.m_instance->object, s.m_fields);
+						scripting::ScriptEngine::PushCacheToManagedFields(s.m_instance->GetManaged(), s.m_fields);
 				}
 			}
 		}

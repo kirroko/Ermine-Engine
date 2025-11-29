@@ -1544,8 +1544,8 @@ namespace Ermine::editor {
 
 			// Display fields
 			std::unordered_map<std::string, ScriptFieldValue> fields;
-			if (script.m_instance && script.m_instance->object)
-				scripting::ScriptEngine::PullManagedFieldsToCache(script.m_instance->object, fields);
+			if (script.m_instance && script.m_instance->GetManaged())
+				scripting::ScriptEngine::PullManagedFieldsToCache(script.m_instance->GetManaged(), fields);
 
 			// Draw each exposed field
 			for (auto& [name, val] : fields)
@@ -1618,17 +1618,17 @@ namespace Ermine::editor {
 
 				ImGui::PopID();
 
-				if (changed && script.m_instance && script.m_instance->object)
+				if (changed && script.m_instance && script.m_instance->GetManaged())
 				{
-					ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->m_ScriptEngine->PushSingleField(script.m_instance->object, name, val);
+					ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->m_ScriptEngine->PushSingleField(script.m_instance->GetManaged(), name, val);
 					// Mark dirty for scene save?
 				}
 			}
 			// Push change to managed object
-			if (script.m_instance && script.m_instance->object)
+			if (script.m_instance && script.m_instance->GetManaged())
 			{
-				scripting::ScriptEngine::PushCacheToManagedFields(script.m_instance->object, fields);
-				scripting::ScriptEngine::PullManagedFieldsToCache(script.m_instance->object, script.m_fields);
+				scripting::ScriptEngine::PushCacheToManagedFields(script.m_instance->GetManaged(), fields);
+				scripting::ScriptEngine::PullManagedFieldsToCache(script.m_instance->GetManaged(), script.m_fields);
 			}
 
 			ImGui::PopID();

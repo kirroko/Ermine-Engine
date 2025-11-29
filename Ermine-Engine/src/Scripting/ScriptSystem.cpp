@@ -91,6 +91,9 @@ void Ermine::scripting::ScriptSystem::Update() const
 		auto& scs = ECS::GetInstance().GetComponent<ScriptsComponent>(entity);
 		for (auto& sc : scs.scripts)
 		{
+			if (sc.m_instance == nullptr || sc.m_instance->object == nullptr)
+				continue;
+
 			sc.m_instance->SetEnabled(sc.m_enabled); // Reconcile enable state every frame
 			if (!sc.m_enabled) continue;
 			if (!sc.m_started) { sc.m_instance->Start(); sc.m_started = true; }
@@ -148,6 +151,9 @@ void Ermine::scripting::ScriptSystem::FixedUpdate() const
 		auto& scs = ECS::GetInstance().GetComponent<ScriptsComponent>(entity);
 		for (auto& sc : scs.scripts)
 		{
+			if (sc.m_instance == nullptr || sc.m_instance->object == nullptr)
+				continue;
+
 			sc.m_instance->SetEnabled(sc.m_enabled); // Reconcile enable state every frame
 
 			if (!sc.m_enabled) continue;
