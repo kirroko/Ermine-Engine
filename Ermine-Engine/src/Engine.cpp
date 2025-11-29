@@ -627,7 +627,7 @@ void engine::Shutdown()
 #if defined(EE_EDITOR)
 	cfg.title = "Ermine Editor 0.3";
 #else
-	cfg.title = "Mechina";
+	cfg.title = "Machina";
 #endif
 
 	SaveConfigToFile(cfg, "Ermine-Engine.config", false);
