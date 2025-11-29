@@ -84,6 +84,7 @@
     <Compile Include="Sandbox2.cs" />
     <Compile Include="Sphere.cs" />
     <Compile Include="Switch.cs" />
+    <Compile Include="GameManager.cs" />
     <Compile Include="TemplateScript.cs" />
     <Compile Include="Test1.cs" />
     <Compile Include="Test2.cs" />
