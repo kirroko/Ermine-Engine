@@ -289,7 +289,9 @@ project "Ermine-Editor"
 
     links
     {
-        "Ermine-Engine"
+        "Ermine-Engine",
+        "Ermine-ScriptAssembly",
+        "Ermine-ScriptSandbox"
     }
 
     filter "system:windows"
@@ -368,7 +370,9 @@ project "Ermine-Game"
 
     links
     {
-        "Ermine-Engine"
+        "Ermine-Engine",
+        "Ermine-ScriptAssembly",
+        "Ermine-ScriptSandbox"
     }
 
     filter "system:windows"
