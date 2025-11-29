@@ -23,14 +23,14 @@ public class DisableLightCone : MonoBehaviour
         if (transform.childCount > 0)
             lightCone = gameObject.transform.GetChild(0).gameObject;
 
-        if (lightCone != null)
-            oldConePos = lightCone.transform.position;
+        //if (lightCone != null)
+        //    oldConePos = lightCone.transform.position;
     }
 
     private void Update()
     {
         currentlyColliding = false;
-
+        //PLS FOR THE LOVE OF GOD FIX THIS
         // Right click to disable light cone if orb is inside
         if (!disabled && orbInside && Input.GetMouseButtonDown(1))
         {
@@ -38,6 +38,8 @@ public class DisableLightCone : MonoBehaviour
             if (sphere != null)
             {
                 DisableLight();
+                sphere.transform.position = new Vector3(0, -20, 0);
+                Physics.SetPosition((ulong)sphere.GetInstanceID(), sphere.transform.position);
                 Physics.RemovePhysic((ulong)sphere.GetInstanceID());
                 GameObject.Destroy(sphere);
             }
@@ -50,7 +52,7 @@ public class DisableLightCone : MonoBehaviour
 
             if (timer <= 0.0f)
             {
-                RespawnLight();
+                //RespawnLight();
             }
         }
 
@@ -61,7 +63,13 @@ public class DisableLightCone : MonoBehaviour
     private void DisableLight()
     {
         disabled = true;
-        lightCone.SetActive(false);
+
+        if (lightCone.activeSelf)
+        {
+            lightCone.transform.position = new Vector3(0, -20, 0);
+            Physics.SetPosition((ulong)lightCone.GetInstanceID(), lightCone.transform.position);
+            lightCone.SetActive(false);
+        }
     }
 
     void RespawnLight()

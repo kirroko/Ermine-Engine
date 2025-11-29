@@ -896,10 +896,30 @@ namespace
 		if (!klass || !name) return nullptr;
 		for (MonoClass* c = klass; c; c = mono_class_get_parent(c))
 		{
+			bool valid = true;
+
+			__try
+			{
+				// Try to init class — may cause access violation
+				if (!mono_class_init(c))
+					valid = false;
+			}
+			__except (EXCEPTION_EXECUTE_HANDLER)
+			{
+				// mono_class_init(c) crashed (invalid MonoClass pointer)
+				valid = false;
+			}
+
+			if (!valid)
+				return nullptr;
+
+			// Only safe to call if first init didn't crash
 			mono_class_init(c);
+
 			if (MonoClassField* f = mono_class_get_field_from_name(c, name))
 				return f;
 		}
+
 		return nullptr;
 	}
 
