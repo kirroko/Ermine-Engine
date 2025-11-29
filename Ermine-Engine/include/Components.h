@@ -1493,6 +1493,18 @@ namespace Ermine
 				out.AddMember("uvScale", Vec2ToJson(uvScale, alloc), alloc);
 				out.AddMember("uvOffset", Vec2ToJson(uvOffset, alloc), alloc);
 			}
+
+			// Custom fragment shader + shadow flag
+			if (!customFragmentShader.empty()) {
+				rapidjson::Value fragPath;
+				fragPath.SetString(customFragmentShader.c_str(),
+					(rapidjson::SizeType)customFragmentShader.size(),
+					alloc);
+				out.AddMember("customFragmentShader", fragPath, alloc);
+			}
+
+			out.AddMember("castsShadows", cacheCastsShadows, alloc);
+
 		}
 
 		void Deserialize(const rapidjson::Value& in) {
@@ -1651,23 +1663,56 @@ namespace Ermine
 				}
 			}
 
+			// Restore custom fragment shader path (if present)
+			if (in.HasMember("customFragmentShader") && in["customFragmentShader"].IsString()) {
+				customFragmentShader = in["customFragmentShader"].GetString();
+			}
+
+			// Restore shadow casting flag
+			if (in.HasMember("castsShadows") && in["castsShadows"].IsBool()) {
+				cacheCastsShadows = in["castsShadows"].GetBool();
+				if (m_material) {
+					m_material->SetBool("materialCastsShadows", cacheCastsShadows);
+					// or whatever uniform name you use in the shader
+				}
+			}
+
 			//  Ensure material has a valid shader after deserialization
 			if (!m_material->GetShader() || !m_material->GetShader()->IsValid())
 			{
-				// Assign default enhanced shader for forward rendering compatibility
-				auto defaultShader = AssetManager::GetInstance().LoadShader(
-					"../Resources/Shaders/vertex.glsl",
-					"../Resources/Shaders/fragment_enhanced.glsl"
-				);
+				// If you have a custom fragment shader path, prefer that
+				if (!customFragmentShader.empty()) {
+					auto shader = AssetManager::GetInstance().LoadShader(
+						"../Resources/Shaders/vertex.glsl",        // or your chosen vertex path
+						customFragmentShader
+					);
 
-				if (defaultShader && defaultShader->IsValid())
-				{
-					m_material->SetShader(defaultShader);
-					EE_CORE_INFO("Auto-assigned default shader to material");
+					if (shader && shader->IsValid()) {
+						m_material->SetShader(shader);
+						EE_CORE_INFO("Assigned custom fragment shader '{}' to material", customFragmentShader);
+					}
+					else {
+						EE_CORE_WARN("Failed to load custom fragment shader '{}', falling back to default", customFragmentShader);
+					}
 				}
-				else
+
+				// Fallback default if still invalid
+				if (!m_material->GetShader() || !m_material->GetShader()->IsValid())
 				{
-					EE_CORE_WARN("Failed to assign default shader to material - shader loading failed");
+					auto defaultShader = AssetManager::GetInstance().LoadShader(
+						"../Resources/Shaders/vertex.glsl",
+						"../Resources/Shaders/fragment_enhanced.glsl"
+					);
+
+					if (defaultShader && defaultShader->IsValid())
+					{
+						m_material->SetShader(defaultShader);
+						EE_CORE_INFO("Auto-assigned default shader to material");
+					}
+					else
+					{
+						EE_CORE_WARN("Failed to assign default shader to material - shader loading failed");
+					}
 				}
 			}
 
@@ -1688,6 +1733,10 @@ namespace Ermine
 			"Material", Material,
 			// authoring template name
 			xproperty::obj_member<"template", &Material::materialTemplate>,
+
+			// custom shader and flags
+			xproperty::obj_member<"fragmentShader", &Material::customFragmentShader>,
+			xproperty::obj_member<"castsShadows", &Material::cacheCastsShadows>,
 
 			// cached parameters
 			xproperty::obj_member<"hasAlbedo", &Material::hasAlbedo>,
