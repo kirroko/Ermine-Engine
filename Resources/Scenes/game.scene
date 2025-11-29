@@ -34,8 +34,8 @@
           "booksCollected": 0,
           "totalBooks": 4,
           "bookCounterPosition": [
-            0.019999999552965165,
-            0.8999999761581421,
+            0.949999988079071,
+            0.9300000071525574,
             0.0
           ],
           "showSkills": true,
@@ -52,7 +52,7 @@
             0.949999988079071,
             0.949999988079071
           ],
-          "crosshairSize": 0.05,
+          "crosshairSize": 0.05000000074505806,
           "crosshairThickness": 0.0010000000474974514,
           "crosshairStyle": 0,
           "crosshairGap": 0.004000000189989805,
@@ -466,13 +466,13 @@
               "class": "PlayerController2",
               "enabled": true,
               "fields": {
-                "mouseHorSens": {
-                  "t": 0,
-                  "v": 0.30000001192092898
-                },
                 "jumpHeight": {
                   "t": 0,
                   "v": 2.0
+                },
+                "mouseHorSens": {
+                  "t": 0,
+                  "v": 0.30000001192092898
                 },
                 "mouseVertSens": {
                   "t": 0,
@@ -482,13 +482,13 @@
                   "t": 0,
                   "v": 5.0
                 },
-                "jumpspeed": {
-                  "t": 0,
-                  "v": 5.0
-                },
                 "camDefaultY": {
                   "t": 0,
                   "v": 4.5
+                },
+                "jumpspeed": {
+                  "t": 0,
+                  "v": 5.0
                 },
                 "crouchLerpSpeed": {
                   "t": 0,
@@ -24088,10 +24088,10 @@
             0.0
           ],
           "rotation": [
-            1.194429666284691e-9,
-            -5.4587063758049229e-9,
-            0.21375495195388795,
-            0.9768872857093811
+            1.1944297773069935e-9,
+            -5.4587068198941328e-9,
+            0.21375498175621034,
+            0.9768874049186707
           ],
           "scale": [
             2.5,
@@ -24767,10 +24767,10 @@
             0.0
           ],
           "rotation": [
-            1.1944297773069935e-9,
-            -5.4587068198941328e-9,
-            0.21375498175621034,
-            0.9768874049186707
+            1.194429666284691e-9,
+            -5.4587063758049229e-9,
+            0.21375495195388795,
+            0.9768872857093811
           ],
           "scale": [
             2.5,
@@ -42147,28 +42147,121 @@
         },
         "GlobalTransform": {}
       }
+    },
+    {
+      "id": 537,
+      "components": {
+        "IDComponent": {
+          "guid": "ae884dd6f4b30c458f2d43e0fbae1e01"
+        },
+        "Transform": {
+          "position": [
+            7.572948455810547,
+            8.624078750610352,
+            5.154140949249268
+          ],
+          "rotation": [
+            0.6663140058517456,
+            -0.09983456134796143,
+            0.0907059833407402,
+            0.7333698272705078
+          ],
+          "scale": [
+            0.9999998807907105,
+            1.0000007152557374,
+            1.000001072883606
+          ]
+        },
+        "Light": {
+          "color": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "intensity": 2.441999912261963,
+          "type": "Spot",
+          "castsShadows": true,
+          "castsRays": true,
+          "innerAngle": 2.0,
+          "outerAngle": 16.399999618530275,
+          "radius": 6.920000076293945
+        },
+        "ObjectMetaData": {
+          "name": "BookLight",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 538,
+      "components": {
+        "IDComponent": {
+          "guid": "2c01d4a152f31042ac035691d2b0f557"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "GameManager",
+          "tag": "Untagged",
+          "selfActive": false
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "class": "GameManager",
+              "enabled": true,
+              "fields": {}
+            }
+          ]
+        }
+      }
     }
   ],
   "globalGraphics": {
-    "ssaoEnabled": false,
+    "ssaoEnabled": true,
     "ssaoSamples": 16,
     "ssaoRadius": 10.0,
     "ssaoBias": 0.009999999776482582,
     "ssaoIntensity": 1.0,
     "ssaoFadeout": 0.10000000149011612,
     "ssaoMaxDistance": 100.0,
-    "fogEnabled": false,
+    "fogEnabled": true,
     "fogMode": 0,
     "fogColor": [
-      0.5,
-      0.6000000238418579,
-      0.699999988079071
+      0.44117647409439089,
+      0.12975777685642243,
+      0.12975777685642243
     ],
-    "fogDensity": 0.019999999552965165,
-    "fogStart": 50.0,
-    "fogEnd": 200.0,
-    "fogHeightCoefficient": 0.10000000149011612,
-    "fogHeightFalloff": 10.0,
+    "fogDensity": 0.007000000216066837,
+    "fogStart": 24.645000457763673,
+    "fogEnd": 337.37701416015627,
+    "fogHeightCoefficient": 0.06400000303983689,
+    "fogHeightFalloff": 8.996000289916993,
     "vignetteEnabled": false,
     "fxaaEnabled": true,
     "toneMappingEnabled": true,
