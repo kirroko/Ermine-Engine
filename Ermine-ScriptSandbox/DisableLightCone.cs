@@ -38,7 +38,7 @@ public class DisableLightCone : MonoBehaviour
             if (sphere != null)
             {
                 DisableLight();
-                sphere.transform.position = new Vector3(0, -20, 0);
+                sphere.transform.position = new Vector3(0, -100, 0);
                 Physics.SetPosition((ulong)sphere.GetInstanceID(), sphere.transform.position);
                 Physics.RemovePhysic((ulong)sphere.GetInstanceID());
                 GameObject.Destroy(sphere);
@@ -66,7 +66,7 @@ public class DisableLightCone : MonoBehaviour
 
         if (lightCone.activeSelf)
         {
-            lightCone.transform.position = new Vector3(0, -20, 0);
+            lightCone.transform.position = new Vector3(0, -100, 0);
             Physics.SetPosition((ulong)lightCone.GetInstanceID(), lightCone.transform.position);
             lightCone.SetActive(false);
         }
