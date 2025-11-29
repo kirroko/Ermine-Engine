@@ -19,7 +19,7 @@ public class DisableLightCone : MonoBehaviour
         //lightCone = FindMatchingCone();
         //if (lightCone != null)
         //    oldConePos = lightCone.transform.position;
-
+        Debug.Log($"@1 {name}");
         if (transform.childCount > 0)
             lightCone = gameObject.transform.GetChild(0).gameObject;
 
@@ -37,6 +37,7 @@ public class DisableLightCone : MonoBehaviour
             GameObject sphere = GameObject.Find("Sphere");
             if (sphere != null)
             {
+                Debug.Log("Try Disable light");
                 DisableLight();
                 sphere.transform.position = new Vector3(0, -100, 0);
                 Physics.SetPosition((ulong)sphere.GetInstanceID(), sphere.transform.position);
