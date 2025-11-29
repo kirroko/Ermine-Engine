@@ -357,7 +357,7 @@ namespace Ermine::ImguiUI
         currentDirectory = projectRoot;
 
         // Default view settings
-        iconSize = 96.0f;
+        iconSize = 60.0f;
         iconSpacing = 16.0f;
     }
 

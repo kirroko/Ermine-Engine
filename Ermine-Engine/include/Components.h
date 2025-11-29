@@ -3645,7 +3645,7 @@ namespace Ermine
 		bool showBookCounter = true;
 		int booksCollected = 0;
 		int totalBooks = 4;
-		Ermine::Vec3 bookCounterPosition = { 0.02f, 0.90f, 0.0f };  // Top-left, below healthbar
+		Ermine::Vec3 bookCounterPosition = { 0.95f, 0.93f, 0.0f };  // Top-right, beside healthbar
 
 		// Skills UI settings
 		bool showSkills = true;
@@ -3656,7 +3656,7 @@ namespace Ermine
 		// Crosshair settings
 		bool showCrosshair = true;
 		Ermine::Vec3 crosshairColor = { 0.95f, 0.95f, 0.95f };  // Bright white for maximum visibility
-		float crosshairSize = 0.012f;   // Reduced size for better precision
+		float crosshairSize = 0.05f;   // Reduced size for better precision
 		float crosshairThickness = 0.001f;  // Thinner and sharper
 		int crosshairStyle = 0;        // 0 = sniper scope, 1 = dot, 2 = circle
 		float crosshairGap = 0.004f;   // Small center gap for precise aiming

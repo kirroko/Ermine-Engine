@@ -11,7 +11,7 @@ public class OrbTeleport : MonoBehaviour
 
     private float forwardOffset = 2.0f; // Distance in front of the player
     private float rightOffset = -0.3f;  // Slightly to the right
-    private float upOffset = 3.7f;      // Above the player
+    private float upOffset = 4.2f;      // Above the player
 
     void Start()
     {
