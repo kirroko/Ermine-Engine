@@ -475,11 +475,27 @@ project "Ermine-ScriptAssembly"
 
     files { "%{prj.name}/**.cs" }
 
+    filter "configurations:*Editor*"
+        postbuildcommands
+        {
+            ("set OUTDIR=$(SolutionDir)Build\\bin\\" .. outputdir),
+            "{COPY} \"$(TargetDir)Ermine-ScriptAssembly.dll\" \"%OUTDIR%\\Ermine-Editor\"",
+            "{COPY} \"$(TargetDir)Ermine-ScriptAssembly.dll\" \"%OUTDIR%\\Ermine-Game\""
+        }
+
+    filter "configurations:*Game*"
+        postbuildcommands
+        {
+            ("set OUTDIR=$(SolutionDir)Build\\bin\\" .. outputdir),
+            "{COPY} \"$(TargetDir)Ermine-ScriptAssembly.dll\" \"%OUTDIR%\\Ermine-Game\""
+        }
+
     filter "system:windows"
         systemversion "latest"
     filter "configurations:Editor-Debug or configurations:Game-Debug"
         defines { "DEBUG" }
         symbols "on"
+
     filter "configurations:Editor-Release or configurations:Game-Release"
         defines { "NDEBUG" }
         optimize "on"
@@ -498,6 +514,20 @@ project "Ermine-ScriptSandbox"
     files { "%{prj.name}/**.cs" }
     includedirs { "Ermine-ScriptAssembly" }
     links { "Ermine-ScriptAssembly" }
+
+    filter "configurations:*Editor*"
+        postbuildcommands
+        {
+            ("set OUTDIR=$(SolutionDir)Build\\bin\\" .. outputdir),
+            "{COPY} \"$(TargetDir)Ermine-ScriptSandbox.dll\" \"%OUTDIR%\\Ermine-Editor\""
+        }
+
+    filter "configurations:*Game*"
+        postbuildcommands
+        {
+            ("set OUTDIR=$(SolutionDir)Build\\bin\\" .. outputdir),
+            "{COPY} \"$(TargetDir)Ermine-ScriptSandbox.dll\" \"%OUTDIR%\\Ermine-Game\""
+        }
 
     filter "system:windows"
         systemversion "latest"

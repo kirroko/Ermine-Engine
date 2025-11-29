@@ -25,8 +25,8 @@ Ermine::scripting::ScriptSystem::ScriptSystem()
 {
 	EE_CORE_TRACE("Script System initialing...");
 	m_ScriptEngine = std::make_unique<ScriptEngine>();
-	m_ScriptEngine->InitMono("../Ermine-ScriptAssembly/Ermine-ScriptAssembly.dll"); // TODO: Move dll into editor's build directory
-	m_ScriptEngine->LoadGameAssembly("../Ermine-ScriptSandbox/Ermine-ScriptSandbox.dll"); // TODO: Move dll into editor's build directory
+	m_ScriptEngine->InitMono("./Ermine-ScriptAssembly.dll"); // TODO: Move dll into editor's build directory
+	m_ScriptEngine->LoadGameAssembly("./Ermine-ScriptSandbox.dll"); // TODO: Move dll into editor's build directory	
 
 	// TODO: Configure MSBuild + source watcher (adjust paths as necessary)
 #if defined(EE_EDITOR) // Only in editor builds do we have hot-reload
