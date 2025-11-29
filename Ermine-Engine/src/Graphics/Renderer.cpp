@@ -905,6 +905,9 @@ void Renderer::RenderDepthPrePass(const Mtx44& view, const Mtx44& projection)
 	glDepthFunc(GL_LEQUAL);
 	glDepthMask(GL_TRUE);
 
+	// Explicitly disable face culling for depth pre-pass
+	glDisable(GL_CULL_FACE);
+
 	// Bind depth pre-pass shader
 	m_DepthPrePassShader->Bind();
 
@@ -980,6 +983,9 @@ void Renderer::BeginGeometryPass()
 
 	// Disable blending for geometry pass
 	glDisable(GL_BLEND);
+
+	// Explicitly disable face culling for geometry pass
+	glDisable(GL_CULL_FACE);
 }
 
 /**
