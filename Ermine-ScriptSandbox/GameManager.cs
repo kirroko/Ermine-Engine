@@ -13,10 +13,10 @@ public class GameManager : MonoBehaviour
 
     void Update()
     {
-        if (player.transform.position.y < -ff)
-        {
-            player.transform.position = startPos;   
-        }
+        //if (player.transform.position.y < -ff)
+        //{
+        //    player.transform.position = startPos;   
+        //}
     }
 }
 
