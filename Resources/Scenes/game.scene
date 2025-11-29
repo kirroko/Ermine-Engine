@@ -7960,7 +7960,7 @@
           ],
           "scale": [
             2.0,
-            -2.0,
+            2.0,
             2.0
           ]
         },
@@ -7974,7 +7974,7 @@
           "primitive": {
             "type": "Quad",
             "size": [
-              1.0,
+              0.5,
               1.0,
               0.0
             ]
@@ -8004,11 +8004,11 @@
           "textures": [
             {
               "slot": "materialAlbedoMap",
-              "path": "../Resources\\Textures\\bookcollected.png"
+              "path": "../Resources\\Textures\\Report.png"
             },
             {
               "slot": "material.albedoMap",
-              "path": "../Resources\\Textures\\bookcollected.png"
+              "path": "../Resources\\Textures\\Report.png"
             }
           ],
           "uvScale": [
