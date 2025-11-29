@@ -454,7 +454,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "depth": 0
@@ -645,7 +646,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "67da2525eed5f04eba3a5ab217b86643",
@@ -745,7 +747,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "b540b4440a5db74c918139ab784ce031",
@@ -805,7 +808,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "b540b4440a5db74c918139ab784ce031",
@@ -865,7 +869,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "b540b4440a5db74c918139ab784ce031",
@@ -1015,7 +1020,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "aeed6ece6fd8fc43bce94feee9da523d",
@@ -1130,7 +1136,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "aeed6ece6fd8fc43bce94feee9da523d",
@@ -1277,7 +1284,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "8c2646dba794404192a41b2fd509f3b5",
@@ -1357,7 +1365,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "8c2646dba794404192a41b2fd509f3b5",
@@ -1504,7 +1513,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "5c45c3a759252342b43c754bc8672f41",
@@ -1651,7 +1661,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "0c7b52c98a9b88459bfa225f992a4b40",
@@ -1731,7 +1742,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "0c7b52c98a9b88459bfa225f992a4b40",
@@ -1811,7 +1823,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "0c7b52c98a9b88459bfa225f992a4b40",
@@ -1891,7 +1904,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "0c7b52c98a9b88459bfa225f992a4b40",
@@ -1971,7 +1985,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "0c7b52c98a9b88459bfa225f992a4b40",
@@ -2098,7 +2113,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "6bf197bb2b485e42a2d9ee95047cd86f",
@@ -2225,7 +2241,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "d3dea32047a89143aa9b27e2b8920061",
@@ -2340,7 +2357,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "aeed6ece6fd8fc43bce94feee9da523d",
@@ -2467,7 +2485,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "528a001e54fa9c4b9e8490ad69015d36",
@@ -2594,7 +2613,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "8352a459488b8f4e9b3e9c096de55ab6",
@@ -2709,7 +2729,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "aeed6ece6fd8fc43bce94feee9da523d",
@@ -2836,7 +2857,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "25e39bacc2abb741996116b552d2a2ac",
@@ -2963,7 +2985,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "8cccd23f0bc66a48af33225d88d6ee99",
@@ -3078,7 +3101,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "aeed6ece6fd8fc43bce94feee9da523d",
@@ -3205,7 +3229,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "ffc1585623043443a79e36e38895188e",
@@ -3332,7 +3357,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "3b28ba1bb197d44ebe3bfab21f70599b",
@@ -3447,7 +3473,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "aeed6ece6fd8fc43bce94feee9da523d",
@@ -3574,7 +3601,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "ad0d0a848d6f33449e52c726bef6c631",
@@ -3701,7 +3729,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "4e454acbe882f24d9e07cabaadb54e89",
@@ -3789,7 +3818,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "aeed6ece6fd8fc43bce94feee9da523d",
@@ -3904,7 +3934,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "aeed6ece6fd8fc43bce94feee9da523d",
@@ -4019,7 +4050,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "aeed6ece6fd8fc43bce94feee9da523d",
@@ -4134,7 +4166,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "aeed6ece6fd8fc43bce94feee9da523d",
@@ -4249,7 +4282,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "aeed6ece6fd8fc43bce94feee9da523d",
@@ -4316,7 +4350,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_WindowWall.fbx",
@@ -4380,7 +4415,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "3c7c466b8cea054795f1dfe7edcb1ca3",
@@ -4447,7 +4483,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_WindowWall.fbx",
@@ -4511,7 +4548,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "47d5ec8489a2754eb06f6fb01d56f9a3",
@@ -4578,7 +4616,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_WindowWall.fbx",
@@ -4642,7 +4681,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "369ab192db8a7a46b4065220b7ec8328",
@@ -4709,7 +4749,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_WindowWall.fbx",
@@ -4773,7 +4814,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "d04f3c28e6139b4a9151fe186846ff10",
@@ -4840,7 +4882,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_WindowWall.fbx",
@@ -4904,7 +4947,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "bb9d11ebbccc5f44b40ac290b1164a5a",
@@ -4971,7 +5015,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_WindowWall.fbx",
@@ -5035,7 +5080,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "d67df0210ebcd148b7805d8a23de3cae",
@@ -5102,7 +5148,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_WindowWall.fbx",
@@ -5166,7 +5213,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "544ecb6c1640394e87632daad342a71c",
@@ -5233,7 +5281,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_WindowWall.fbx",
@@ -5297,7 +5346,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "fa6c522a22f9e444b030d1eaa462ba4c",
@@ -5373,7 +5423,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_LongWall.fbx",
@@ -5453,7 +5504,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_LongWall.fbx",
@@ -5517,7 +5569,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "8b1ee51a9ef69b409cb8ac48cb54beac",
@@ -5593,7 +5646,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_LongWall.fbx",
@@ -5657,7 +5711,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "e7cac516af47bc419f58fbdedd80b565",
@@ -5733,7 +5788,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_LongWall.fbx",
@@ -5797,7 +5853,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "5e69e87437aaeb4380906700d8c5ad92",
@@ -5873,7 +5930,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_LongWall.fbx",
@@ -5937,7 +5995,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "858c5c65d750d44e8b947f9a82908900",
@@ -6013,7 +6072,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_LongWall.fbx",
@@ -6077,7 +6137,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "6984b61ffa2da9448376fa1a7fd2a4e8",
@@ -6144,7 +6205,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_WindowWall.fbx",
@@ -6208,7 +6270,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "c2e1175787aa9b429d644232579e63b7",
@@ -6275,7 +6338,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_WindowWall.fbx",
@@ -6339,7 +6403,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "3d18f863fd102545b66af34706f4fdb7",
@@ -6406,7 +6471,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_WindowWall.fbx",
@@ -6470,7 +6536,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "6a9f3079a9ea4d459709d9ff6893917e",
@@ -6537,7 +6604,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_WindowWall.fbx",
@@ -6601,7 +6669,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "ae457286f9f7dd49bdfc6c231d5a67ab",
@@ -6677,7 +6746,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_LongWall.fbx",
@@ -6741,7 +6811,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "aec47dd6a841df41a49dc56150291f58",
@@ -6817,7 +6888,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_LongWall.fbx",
@@ -6881,7 +6953,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "eb8a7415abc670498cbb2e26cb4b3a69",
@@ -6957,7 +7030,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_LongWall.fbx",
@@ -7021,7 +7095,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "c4b08b99a04ae541bda35b08d54449b4",
@@ -7097,7 +7172,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_LongWall.fbx",
@@ -7161,7 +7237,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "d4e418f8515dbd4393841d0070782130",
@@ -7228,7 +7305,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_WindowWall.fbx",
@@ -7292,7 +7370,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "1a021250b9750944bf72a6407efdd0f5",
@@ -7359,7 +7438,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_WindowWall.fbx",
@@ -7423,7 +7503,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "5764a2946cd46f4c9d28fb2a89b66681",
@@ -7490,7 +7571,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_WindowWall.fbx",
@@ -7554,7 +7636,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "e3134acfd9015b4080f574f79b47b504",
@@ -7621,7 +7704,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_WindowWall.fbx",
@@ -7685,7 +7769,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "54066a3c550adb4289c73acdf9676dfe",
@@ -7752,7 +7837,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_WindowWall.fbx",
@@ -7816,7 +7902,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "b7a6e87e50acd048b4b1af13d30f9750",
@@ -7931,7 +8018,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "aeed6ece6fd8fc43bce94feee9da523d",
@@ -8018,7 +8106,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "depth": 0
@@ -8144,7 +8233,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "b6ea4f5e2c3d8243b4d50e2441913971",
@@ -8204,7 +8294,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "b6ea4f5e2c3d8243b4d50e2441913971",
@@ -8280,7 +8371,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_LongWall.fbx",
@@ -8344,7 +8436,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "46ccb9b15f9dc04c9c45fdf2ead9855a",
@@ -8420,7 +8513,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_LongWall.fbx",
@@ -8484,7 +8578,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "b5b10c9e8534924aa9f6b53f908d0176",
@@ -8560,7 +8655,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_LongWall.fbx",
@@ -8624,7 +8720,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "924f4caffc48e746bcb459f10728006f",
@@ -8700,7 +8797,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_LongWall.fbx",
@@ -8764,7 +8862,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "0bbb6c6c13d221408d9cb2f9a1597042",
@@ -8891,7 +8990,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "7c36acb28e962547a611046fd7d9bb4b",
@@ -9018,7 +9118,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "6844cd5a67c5044b9433ec3ac940d2cc",
@@ -9145,7 +9246,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "92b3d6e8bd418b4e8c1015821bbfe4b4",
@@ -9272,7 +9374,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "09436323719e9c47b54fcc37e2401189",
@@ -9348,7 +9451,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_LongWall.fbx",
@@ -9412,7 +9516,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "334fdcc51fb33b4c8b45e8915a248ff3",
@@ -9488,7 +9593,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_LongWall.fbx",
@@ -9552,7 +9658,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "50bdff3fb860274d8223d58b1f6180cd",
@@ -9655,7 +9762,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_LongWall.fbx",
@@ -9719,7 +9827,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "c764fb7e2519b84d8e2d4c07a9f21221",
@@ -9795,7 +9904,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_LongWall.fbx",
@@ -9859,7 +9969,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "5d9c46400f966545b92d50391a736069",
@@ -9974,7 +10085,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
@@ -10050,7 +10162,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_LongWall.fbx",
@@ -10114,7 +10227,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "a14c44ca95dc0046861760967abecba7",
@@ -10190,7 +10304,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_LongWall.fbx",
@@ -10254,7 +10369,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "d2afd7e194d5064f88b858cf1067d58c",
@@ -10330,7 +10446,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_LongWall.fbx",
@@ -10394,7 +10511,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "c2089302f2800045a62d479287d1c22f",
@@ -10470,7 +10588,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_LongWall.fbx",
@@ -10534,7 +10653,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "d5551a8b66109d48b9cf4b5e0d47a2e3",
@@ -10610,7 +10730,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_LongWall.fbx",
@@ -10674,7 +10795,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "51eae9bfec4d7b4ab19256dded397189",
@@ -10750,7 +10872,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_LongWall.fbx",
@@ -10814,7 +10937,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "0097311a5c344b40819d5bff666de359",
@@ -10890,7 +11014,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_LongWall.fbx",
@@ -10954,7 +11079,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "a4a6fa8b4b0a65479979df4be82030d5",
@@ -11042,7 +11168,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
@@ -11169,7 +11296,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "6ef28e07ec10f34793858f5b07bf8105",
@@ -11296,7 +11424,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "6099b0f2fe7ad94ab1054ff233f2b5f0",
@@ -11423,7 +11552,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "6b82345a91a5334d8e0ede2ee2e45098",
@@ -11541,7 +11671,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
@@ -11655,7 +11786,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
@@ -11769,7 +11901,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
@@ -11883,7 +12016,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
@@ -11947,8 +12081,8 @@
         },
         "PhysicComponent": {
           "bodyType": "Rigid",
-          "motionType": "Static",
-          "mass": 0.0,
+          "motionType": "Kinematic",
+          "mass": 1.0,
           "shapeType": "Box",
           "colliderpivot": [
             0.0,
@@ -12010,7 +12144,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
@@ -12022,7 +12157,20 @@
             {
               "class": "RotatingPlatform",
               "enabled": true,
-              "fields": {}
+              "fields": {
+                "speed": {
+                  "t": 0,
+                  "v": 2.0
+                },
+                "active": {
+                  "t": 2,
+                  "v": true
+                },
+                "audioActivationRange": {
+                  "t": 0,
+                  "v": 120.0
+                }
+              }
             }
           ]
         }
@@ -12133,7 +12281,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
@@ -12247,7 +12396,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
@@ -12362,7 +12512,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
@@ -12477,7 +12628,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
@@ -12592,7 +12744,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
@@ -12707,7 +12860,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
@@ -12834,7 +12988,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "77bef3bed1e28c419beb32ef9d60148a",
@@ -12894,7 +13049,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "77bef3bed1e28c419beb32ef9d60148a",
@@ -13058,7 +13214,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
@@ -13173,7 +13330,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
@@ -13288,7 +13446,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
@@ -13402,7 +13561,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
@@ -13517,7 +13677,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
@@ -13593,7 +13754,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_LongWall.fbx",
@@ -13657,7 +13819,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "11d473e1ee1ba74290a4e581da7aa3be",
@@ -13772,7 +13935,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
@@ -13887,7 +14051,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
@@ -14028,7 +14193,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "7a6955f3d3f23240aeca248783af7921",
@@ -14209,7 +14375,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "8924f8f35373cf42b08110b31f893d77",
@@ -14399,7 +14566,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "e0b694ecf01a424eb9d297da6c8c5d54",
@@ -14589,7 +14757,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "9af14df8958387429b6a0756c44b24ee",
@@ -14779,7 +14948,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "5099c5dc124f754c80c9d29f99809bbd",
@@ -14791,7 +14961,16 @@
             {
               "class": "DamagePlayer",
               "enabled": true,
-              "fields": {}
+              "fields": {
+                "timer": {
+                  "t": 0,
+                  "v": 1.0
+                },
+                "damage": {
+                  "t": 0,
+                  "v": 10.0
+                }
+              }
             }
           ]
         }
@@ -14894,7 +15073,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "7a6955f3d3f23240aeca248783af7921",
@@ -15000,7 +15180,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "7a6955f3d3f23240aeca248783af7921",
@@ -15106,7 +15287,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "7a6955f3d3f23240aeca248783af7921",
@@ -15212,7 +15394,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "7a6955f3d3f23240aeca248783af7921",
@@ -15326,7 +15509,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "7a6955f3d3f23240aeca248783af7921",
@@ -15440,7 +15624,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "7a6955f3d3f23240aeca248783af7921",
@@ -15554,7 +15739,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "7a6955f3d3f23240aeca248783af7921",
@@ -15668,7 +15854,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "7a6955f3d3f23240aeca248783af7921",
@@ -15782,7 +15969,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "7a6955f3d3f23240aeca248783af7921",
@@ -15896,7 +16084,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "7a6955f3d3f23240aeca248783af7921",
@@ -16010,7 +16199,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "7a6955f3d3f23240aeca248783af7921",
@@ -16124,7 +16314,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "7a6955f3d3f23240aeca248783af7921",
@@ -16238,7 +16429,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "7a6955f3d3f23240aeca248783af7921",
@@ -16302,8 +16494,8 @@
         },
         "PhysicComponent": {
           "bodyType": "Rigid",
-          "motionType": "Static",
-          "mass": 0.0,
+          "motionType": "Kinematic",
+          "mass": 1.0,
           "shapeType": "Box",
           "colliderpivot": [
             0.0,
@@ -16365,7 +16557,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "7a6955f3d3f23240aeca248783af7921",
@@ -16377,7 +16570,20 @@
             {
               "class": "RotatingPlatform",
               "enabled": true,
-              "fields": {}
+              "fields": {
+                "speed": {
+                  "t": 0,
+                  "v": 2.0
+                },
+                "active": {
+                  "t": 2,
+                  "v": true
+                },
+                "audioActivationRange": {
+                  "t": 0,
+                  "v": 120.0
+                }
+              }
             }
           ]
         }
@@ -16489,7 +16695,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "7a6955f3d3f23240aeca248783af7921",
@@ -16604,7 +16811,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "7a6955f3d3f23240aeca248783af7921",
@@ -16707,7 +16915,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "c4f2b44019c69b4b9915a51d51d03bb8",
@@ -16822,7 +17031,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "7a6955f3d3f23240aeca248783af7921",
@@ -16937,7 +17147,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "7a6955f3d3f23240aeca248783af7921",
@@ -17052,7 +17263,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "7a6955f3d3f23240aeca248783af7921",
@@ -17193,7 +17405,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "62eb47fef83ad9449ad1b28360088479",
@@ -17308,7 +17521,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "7a6955f3d3f23240aeca248783af7921",
@@ -17411,7 +17625,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "e993a00624c5894fb1d6ef803f8c7a49",
@@ -17541,7 +17756,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "e68b7ff991ca274392e279b2863ae02f",
@@ -17671,7 +17887,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "1289ca46396c9b45b0cbb465f47ffbb0",
@@ -17786,7 +18003,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "7a6955f3d3f23240aeca248783af7921",
@@ -17901,7 +18119,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "7a6955f3d3f23240aeca248783af7921",
@@ -18016,7 +18235,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "7a6955f3d3f23240aeca248783af7921",
@@ -18167,7 +18387,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "7d2304de8a38254b9d195c0f1eeb71d4",
@@ -18282,7 +18503,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "e902a0613c7ed745aa39c9b581dec3dc",
@@ -18397,7 +18619,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "42a53f752913204f9cf98a051b02dd44",
@@ -18512,7 +18735,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "4f1411c00817474f982d8ab8317aa0a0",
@@ -18627,7 +18851,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "4043dcd066b29d4ca8c716be7f2957a8",
@@ -18742,7 +18967,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "f9025476d8405348b5963604edb3d53b",
@@ -18857,7 +19083,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "cd8ffabf1d945c4fa815d1fc98effcaf",
@@ -18957,7 +19184,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "0d9402adb44fa347a159d87c07d13130",
@@ -19057,7 +19285,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "0cfd0f34a7ac2647842cff1af5270e73",
@@ -19157,7 +19386,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "f04c8a1ba99ca445b7f908c277cf4b37",
@@ -19257,7 +19487,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "56375c077bf04d43b1801dd30e052473",
@@ -19357,7 +19588,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "1b7acd9c5fdd934f924d033ad0fbfc22",
@@ -19457,7 +19689,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "7887486e985f064cacb113774c38a4ba",
@@ -19572,7 +19805,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "964d9ce3ee7cc0498531e767af75189a",
@@ -19672,7 +19906,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "3728f01fa05078488a4aecb2864400a0",
@@ -19772,7 +20007,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "99b56f9ca6df1348a7fd1e3bf1db446b",
@@ -19872,7 +20108,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "da7af2850ede944e9553bcdbd8094045",
@@ -19972,7 +20209,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "a14006fab723f547b06dd676148dc408",
@@ -20072,7 +20310,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "7d06e2df1ae88d438c62b422ce37a743",
@@ -20172,7 +20411,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "fcf1b8d2913a4c43b71eee7a040f4dd7",
@@ -20272,7 +20512,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "a5cbbef11c6ddb4dbde988a6c88883a0",
@@ -20372,7 +20613,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "67218921e17dcb4494d7144e75f45c3d",
@@ -20472,7 +20714,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "74cb9b043590ab4b9b794004fc2bea35",
@@ -20572,7 +20815,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "3ed316ad6d497e4db9c788be81742d45",
@@ -20672,7 +20916,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "43a663efa33de64991c06428a6d130b8",
@@ -20787,7 +21032,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "220e04693c47664fa11445a1c0cdccc6",
@@ -20902,7 +21148,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "052810430dd3494b9ea1fa0293f79781",
@@ -21016,7 +21263,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "7a6955f3d3f23240aeca248783af7921",
@@ -21116,7 +21364,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "a184d0b654674d458daa484142f14ad1",
@@ -21216,7 +21465,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "a0868eb9cf08d047a578d05a5eaadcf0",
@@ -21316,7 +21566,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "74b53229f648aa4583dbbfb0fa803188",
@@ -21430,7 +21681,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "7a6955f3d3f23240aeca248783af7921",
@@ -21530,7 +21782,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "0fa0599300c1d34dbd2eddb7958f62d2",
@@ -21630,7 +21883,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "68c4f0a4924b90439debce6c154a823e",
@@ -21730,7 +21984,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "533b941660b6f342a3b9454bc2f24f45",
@@ -21794,8 +22049,8 @@
         },
         "PhysicComponent": {
           "bodyType": "Rigid",
-          "motionType": "Static",
-          "mass": 0.0,
+          "motionType": "Kinematic",
+          "mass": 1.0,
           "shapeType": "Box",
           "colliderpivot": [
             0.0,
@@ -21857,7 +22112,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "7a6955f3d3f23240aeca248783af7921",
@@ -21869,7 +22125,20 @@
             {
               "class": "RotatingPlatform",
               "enabled": true,
-              "fields": {}
+              "fields": {
+                "speed": {
+                  "t": 0,
+                  "v": 2.0
+                },
+                "active": {
+                  "t": 2,
+                  "v": true
+                },
+                "audioActivationRange": {
+                  "t": 0,
+                  "v": 120.0
+                }
+              }
             }
           ]
         }
@@ -21966,7 +22235,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "357cdb820e35924cb2eebcafe141d94e",
@@ -22066,7 +22336,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "0ce20d34780db64fac0690b090ad35c1",
@@ -22166,7 +22437,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "870f33c8662653428522001ec77e4fc9",
@@ -22266,7 +22538,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "b90a013bf0fdca47ac554a18d054f967",
@@ -22366,7 +22639,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "a6004b8d62c98246b15dd46084cd17e0",
@@ -22466,7 +22740,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "7b0616a549cbfa4abd8c6633b2399734",
@@ -22581,7 +22856,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "08c54be3f9fe1a43bd39899fd4237c7e",
@@ -22687,7 +22963,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "7a6955f3d3f23240aeca248783af7921",
@@ -22793,7 +23070,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "7a6955f3d3f23240aeca248783af7921",
@@ -22899,7 +23177,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "7a6955f3d3f23240aeca248783af7921",
@@ -23005,7 +23284,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "7a6955f3d3f23240aeca248783af7921",
@@ -23111,7 +23391,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "7a6955f3d3f23240aeca248783af7921",
@@ -23217,7 +23498,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "7a6955f3d3f23240aeca248783af7921",
@@ -23323,7 +23605,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "7a6955f3d3f23240aeca248783af7921",
@@ -23429,7 +23712,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "7a6955f3d3f23240aeca248783af7921",
@@ -23535,7 +23819,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "7a6955f3d3f23240aeca248783af7921",
@@ -23641,7 +23926,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "7a6955f3d3f23240aeca248783af7921",
@@ -23747,7 +24033,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "7a6955f3d3f23240aeca248783af7921",
@@ -23853,7 +24140,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "7a6955f3d3f23240aeca248783af7921",
@@ -23959,7 +24247,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "7a6955f3d3f23240aeca248783af7921",
@@ -24175,7 +24464,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "1e25ec6f90fbbe41957f907872aebcd3",
@@ -24365,7 +24655,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "0267093c197d494ebe0b4d4a900fc0ce",
@@ -24555,7 +24846,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "f10f818b80a59047a98e67f3334af072",
@@ -24673,7 +24965,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "e03796885632004798d034717f0ea797",
@@ -24854,7 +25147,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "9f8390edb5888445a29622d347ea2c25",
@@ -24972,7 +25266,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "e03796885632004798d034717f0ea797",
@@ -25081,7 +25376,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "e03796885632004798d034717f0ea797",
@@ -25190,7 +25486,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "e03796885632004798d034717f0ea797",
@@ -25299,7 +25596,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "e03796885632004798d034717f0ea797",
@@ -25408,7 +25706,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "e03796885632004798d034717f0ea797",
@@ -25517,7 +25816,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "e03796885632004798d034717f0ea797",
@@ -25626,7 +25926,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "e03796885632004798d034717f0ea797",
@@ -25735,7 +26036,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "e03796885632004798d034717f0ea797",
@@ -25844,7 +26146,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "e03796885632004798d034717f0ea797",
@@ -25953,7 +26256,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "e03796885632004798d034717f0ea797",
@@ -26062,7 +26366,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "e03796885632004798d034717f0ea797",
@@ -26177,7 +26482,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "b45cd66dfca56a42aab343ed0e52230f",
@@ -26304,7 +26610,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "03371d13c2a8fa4e9ac1956aa14f9564",
@@ -26418,7 +26725,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "e03796885632004798d034717f0ea797",
@@ -26532,7 +26840,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "e03796885632004798d034717f0ea797",
@@ -26596,8 +26905,8 @@
         },
         "PhysicComponent": {
           "bodyType": "Rigid",
-          "motionType": "Static",
-          "mass": 0.0,
+          "motionType": "Kinematic",
+          "mass": 1.0,
           "shapeType": "Box",
           "colliderpivot": [
             0.0,
@@ -26659,7 +26968,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "e03796885632004798d034717f0ea797",
@@ -26671,7 +26981,20 @@
             {
               "class": "RotatingPlatform",
               "enabled": true,
-              "fields": {}
+              "fields": {
+                "speed": {
+                  "t": 0,
+                  "v": 2.0
+                },
+                "active": {
+                  "t": 2,
+                  "v": true
+                },
+                "audioActivationRange": {
+                  "t": 0,
+                  "v": 120.0
+                }
+              }
             }
           ]
         }
@@ -26782,7 +27105,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "e03796885632004798d034717f0ea797",
@@ -26870,7 +27194,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "e03796885632004798d034717f0ea797",
@@ -26985,7 +27310,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "e03796885632004798d034717f0ea797",
@@ -27049,8 +27375,8 @@
         },
         "PhysicComponent": {
           "bodyType": "Rigid",
-          "motionType": "Static",
-          "mass": 0.0,
+          "motionType": "Kinematic",
+          "mass": 1.0,
           "shapeType": "Box",
           "colliderpivot": [
             0.0,
@@ -27112,7 +27438,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "e03796885632004798d034717f0ea797",
@@ -27124,7 +27451,20 @@
             {
               "class": "RotatingPlatform",
               "enabled": true,
-              "fields": {}
+              "fields": {
+                "speed": {
+                  "t": 0,
+                  "v": 2.0
+                },
+                "active": {
+                  "t": 2,
+                  "v": true
+                },
+                "audioActivationRange": {
+                  "t": 0,
+                  "v": 120.0
+                }
+              }
             }
           ]
         }
@@ -27235,7 +27575,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "e03796885632004798d034717f0ea797",
@@ -27349,7 +27690,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "e03796885632004798d034717f0ea797",
@@ -27467,7 +27809,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "e03796885632004798d034717f0ea797",
@@ -27567,7 +27910,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "f4e6cb5d13ba8d46901818022e81a4fe",
@@ -27667,7 +28011,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "680cb7250f94114da2a649bc844dcb81",
@@ -27767,7 +28112,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "5b4419958be4f74ea86688b49a924a28",
@@ -27867,7 +28213,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "a7488a60ba7fbd49a163aa05b59df103",
@@ -27967,7 +28314,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "91197b46b4948046885d2a81d16a9f9d",
@@ -28082,7 +28430,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "1b360d9605f62e4e9e3df5e274166080",
@@ -28197,7 +28546,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "0f51b6019067d345b56d829a28375a33",
@@ -28312,7 +28662,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "d03a2b0c5c98634d9e45c7b8560dfd4c",
@@ -28427,7 +28778,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "51e086915a41834681ba0968483905aa",
@@ -28542,7 +28894,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "19a71f0a19241440b571e4ed889f535e",
@@ -28642,7 +28995,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "990df1a4e9315d409ca660e9954d5170",
@@ -28742,7 +29096,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "69c2be73b90f3b4985e26935975f5b78",
@@ -28842,7 +29197,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "1faa738e3ef63e43a41a74a13a0bad5f",
@@ -28956,7 +29312,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "919863aa726274488466a7e76c93dedb",
@@ -29071,7 +29428,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "919863aa726274488466a7e76c93dedb",
@@ -29186,7 +29544,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "919863aa726274488466a7e76c93dedb",
@@ -29301,7 +29660,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "919863aa726274488466a7e76c93dedb",
@@ -29352,8 +29712,8 @@
         },
         "PhysicComponent": {
           "bodyType": "Rigid",
-          "motionType": "Static",
-          "mass": 0.0,
+          "motionType": "Kinematic",
+          "mass": 1.0,
           "shapeType": "Box",
           "colliderpivot": [
             0.0,
@@ -29415,7 +29775,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "919863aa726274488466a7e76c93dedb",
@@ -29427,7 +29788,16 @@
             {
               "class": "VerticalPlatform",
               "enabled": true,
-              "fields": {}
+              "fields": {
+                "moveDistance": {
+                  "t": 0,
+                  "v": 2.0
+                },
+                "moveSpeed": {
+                  "t": 0,
+                  "v": 2.0
+                }
+              }
             }
           ]
         }
@@ -29538,7 +29908,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "2e83e6bb6fcfde41811e75024d617f99",
@@ -29641,7 +30012,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "bars_low.fbx",
@@ -29748,7 +30120,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "bars_low.fbx",
@@ -29812,7 +30185,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "2f28bd897b8de44b8273f73e0cfe41a1",
@@ -29915,7 +30289,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "bars_low.fbx",
@@ -29979,7 +30354,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "3b941a8a571ede45972342b8fb03cae7",
@@ -30082,7 +30458,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "bars_low.fbx",
@@ -30146,7 +30523,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "ed7393d28dd78245a28a9c862f636389",
@@ -30260,7 +30638,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "919863aa726274488466a7e76c93dedb",
@@ -30375,7 +30754,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "919863aa726274488466a7e76c93dedb",
@@ -30426,8 +30806,8 @@
         },
         "PhysicComponent": {
           "bodyType": "Rigid",
-          "motionType": "Static",
-          "mass": 0.0,
+          "motionType": "Kinematic",
+          "mass": 1.0,
           "shapeType": "Box",
           "colliderpivot": [
             0.0,
@@ -30489,7 +30869,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "919863aa726274488466a7e76c93dedb",
@@ -30501,7 +30882,16 @@
             {
               "class": "VerticalPlatform",
               "enabled": true,
-              "fields": {}
+              "fields": {
+                "moveDistance": {
+                  "t": 0,
+                  "v": 2.0
+                },
+                "moveSpeed": {
+                  "t": 0,
+                  "v": 2.0
+                }
+              }
             }
           ]
         }
@@ -30601,7 +30991,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "bars_low.fbx",
@@ -30665,7 +31056,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "261a86140c905047947259d1839918e0",
@@ -30768,7 +31160,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "bars_low.fbx",
@@ -30832,7 +31225,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "d07dd58e17245142a6d3f11fd119b2b7",
@@ -30935,7 +31329,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "bars_low.fbx",
@@ -30999,7 +31394,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "a201c48fcdc39149b26c25504fdab703",
@@ -31102,7 +31498,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "bars_low.fbx",
@@ -31220,7 +31617,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "552be7ba368e464e9a04132eab211933",
@@ -31271,8 +31669,8 @@
         },
         "PhysicComponent": {
           "bodyType": "Rigid",
-          "motionType": "Static",
-          "mass": 0.0,
+          "motionType": "Kinematic",
+          "mass": 1.0,
           "shapeType": "Box",
           "colliderpivot": [
             0.0,
@@ -31334,7 +31732,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "919863aa726274488466a7e76c93dedb",
@@ -31346,7 +31745,16 @@
             {
               "class": "VerticalPlatform",
               "enabled": true,
-              "fields": {}
+              "fields": {
+                "moveDistance": {
+                  "t": 0,
+                  "v": 2.0
+                },
+                "moveSpeed": {
+                  "t": 0,
+                  "v": 2.0
+                }
+              }
             }
           ]
         }
@@ -31457,7 +31865,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "8c9b9d06da382b42a3817251729c57fc",
@@ -31560,7 +31969,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "bars_low.fbx",
@@ -31667,7 +32077,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "bars_low.fbx",
@@ -31731,7 +32142,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "7b91df07fbe2c545878332fa52b8f5d4",
@@ -31834,7 +32246,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "bars_low.fbx",
@@ -31898,7 +32311,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "3de67975909e7b4dac521d1a5d2f679a",
@@ -32001,7 +32415,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "bars_low.fbx",
@@ -32065,7 +32480,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "b196b9d5a4da154caf38e0ed9f6a0758",
@@ -32116,8 +32532,8 @@
         },
         "PhysicComponent": {
           "bodyType": "Rigid",
-          "motionType": "Static",
-          "mass": 0.0,
+          "motionType": "Kinematic",
+          "mass": 1.0,
           "shapeType": "Box",
           "colliderpivot": [
             0.0,
@@ -32179,7 +32595,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "919863aa726274488466a7e76c93dedb",
@@ -32191,7 +32608,16 @@
             {
               "class": "VerticalPlatform",
               "enabled": true,
-              "fields": {}
+              "fields": {
+                "moveDistance": {
+                  "t": 0,
+                  "v": 2.0
+                },
+                "moveSpeed": {
+                  "t": 0,
+                  "v": 2.0
+                }
+              }
             }
           ]
         }
@@ -32302,7 +32728,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "a94af1a096dde347a2e9b593e234943d",
@@ -32405,7 +32832,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "bars_low.fbx",
@@ -32512,7 +32940,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "bars_low.fbx",
@@ -32576,7 +33005,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "6abb165d2d5a6f48a57d0028d1885f82",
@@ -32679,7 +33109,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "bars_low.fbx",
@@ -32743,7 +33174,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "c45c1954e46ec146b57e20a2b0444afc",
@@ -32846,7 +33278,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "bars_low.fbx",
@@ -32910,7 +33343,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "e2765bd54b0fa24d87b9e82fbb77194e",
@@ -32961,8 +33395,8 @@
         },
         "PhysicComponent": {
           "bodyType": "Rigid",
-          "motionType": "Static",
-          "mass": 0.0,
+          "motionType": "Kinematic",
+          "mass": 1.0,
           "shapeType": "Box",
           "colliderpivot": [
             0.0,
@@ -33024,7 +33458,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "919863aa726274488466a7e76c93dedb",
@@ -33036,7 +33471,16 @@
             {
               "class": "VerticalPlatform",
               "enabled": true,
-              "fields": {}
+              "fields": {
+                "moveDistance": {
+                  "t": 0,
+                  "v": 2.0
+                },
+                "moveSpeed": {
+                  "t": 0,
+                  "v": 2.0
+                }
+              }
             }
           ]
         }
@@ -33136,7 +33580,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "bars_low.fbx",
@@ -33200,7 +33645,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "1ad9671113ff2845ad4c227031aa2790",
@@ -33303,7 +33749,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "bars_low.fbx",
@@ -33367,7 +33814,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "94cdd87a21692d429b45dea9ee780665",
@@ -33470,7 +33918,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "bars_low.fbx",
@@ -33534,7 +33983,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "47980e86e491eb4699033076b525e319",
@@ -33637,7 +34087,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "bars_low.fbx",
@@ -33755,7 +34206,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "3cd17a5f8afd9547aa3dcbb10f860fdf",
@@ -33806,8 +34258,8 @@
         },
         "PhysicComponent": {
           "bodyType": "Rigid",
-          "motionType": "Static",
-          "mass": 0.0,
+          "motionType": "Kinematic",
+          "mass": 1.0,
           "shapeType": "Box",
           "colliderpivot": [
             0.0,
@@ -33869,7 +34321,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "919863aa726274488466a7e76c93dedb",
@@ -33881,7 +34334,16 @@
             {
               "class": "VerticalPlatform",
               "enabled": true,
-              "fields": {}
+              "fields": {
+                "moveDistance": {
+                  "t": 0,
+                  "v": 2.0
+                },
+                "moveSpeed": {
+                  "t": 0,
+                  "v": 2.0
+                }
+              }
             }
           ]
         }
@@ -33992,7 +34454,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "2801d71f0582944cafb738d691cc3a44",
@@ -34095,7 +34558,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "bars_low.fbx",
@@ -34202,7 +34666,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "bars_low.fbx",
@@ -34266,7 +34731,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "f6abb8ef049de34494911f33b60b1671",
@@ -34369,7 +34835,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "bars_low.fbx",
@@ -34433,7 +34900,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "ddd87f965fb4384ebdc7b3f1312d7c39",
@@ -34536,7 +35004,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "bars_low.fbx",
@@ -34600,7 +35069,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "73c8a956b3d89e41af3a72c424d14778",
@@ -34651,8 +35121,8 @@
         },
         "PhysicComponent": {
           "bodyType": "Rigid",
-          "motionType": "Static",
-          "mass": 0.0,
+          "motionType": "Kinematic",
+          "mass": 1.0,
           "shapeType": "Box",
           "colliderpivot": [
             0.0,
@@ -34714,7 +35184,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "919863aa726274488466a7e76c93dedb",
@@ -34726,7 +35197,16 @@
             {
               "class": "VerticalPlatform",
               "enabled": true,
-              "fields": {}
+              "fields": {
+                "moveDistance": {
+                  "t": 0,
+                  "v": 2.0
+                },
+                "moveSpeed": {
+                  "t": 0,
+                  "v": 2.0
+                }
+              }
             }
           ]
         }
@@ -34826,7 +35306,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "bars_low.fbx",
@@ -34890,7 +35371,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "cfbb20637df7e24f964eccda192e6a99",
@@ -34993,7 +35475,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "bars_low.fbx",
@@ -35057,7 +35540,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "8857a98b304cd740a00b9fa8b433579d",
@@ -35160,7 +35644,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "bars_low.fbx",
@@ -35224,7 +35709,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "ac14db5e369c954ea40ce7e5e1f3b3bc",
@@ -35327,7 +35813,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "bars_low.fbx",
@@ -35445,7 +35932,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "c7c99f01ba5eeb43951758a03e56095f",
@@ -35560,7 +36048,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "919863aa726274488466a7e76c93dedb",
@@ -35675,7 +36164,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "919863aa726274488466a7e76c93dedb",
@@ -35726,8 +36216,8 @@
         },
         "PhysicComponent": {
           "bodyType": "Rigid",
-          "motionType": "Static",
-          "mass": 0.0,
+          "motionType": "Kinematic",
+          "mass": 1.0,
           "shapeType": "Box",
           "colliderpivot": [
             0.0,
@@ -35789,7 +36279,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "919863aa726274488466a7e76c93dedb",
@@ -35801,7 +36292,16 @@
             {
               "class": "VerticalPlatform",
               "enabled": true,
-              "fields": {}
+              "fields": {
+                "moveDistance": {
+                  "t": 0,
+                  "v": 2.0
+                },
+                "moveSpeed": {
+                  "t": 0,
+                  "v": 2.0
+                }
+              }
             }
           ]
         }
@@ -35912,7 +36412,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "3b170b3f24696c4ab6d8e857bfba930b",
@@ -36015,7 +36516,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "bars_low.fbx",
@@ -36122,7 +36624,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "bars_low.fbx",
@@ -36186,7 +36689,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "a8daaedf090151458d199aa7072d8507",
@@ -36289,7 +36793,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "bars_low.fbx",
@@ -36353,7 +36858,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "45cdf1549606f041816c0c23eca98ed4",
@@ -36456,7 +36962,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "bars_low.fbx",
@@ -36520,7 +37027,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "1e04057bb8d2914e96f07228fa146770",
@@ -36635,7 +37143,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "919863aa726274488466a7e76c93dedb",
@@ -36750,7 +37259,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "919863aa726274488466a7e76c93dedb",
@@ -36801,8 +37311,8 @@
         },
         "PhysicComponent": {
           "bodyType": "Rigid",
-          "motionType": "Static",
-          "mass": 0.0,
+          "motionType": "Kinematic",
+          "mass": 1.0,
           "shapeType": "Box",
           "colliderpivot": [
             0.0,
@@ -36864,7 +37374,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "919863aa726274488466a7e76c93dedb",
@@ -36876,7 +37387,16 @@
             {
               "class": "VerticalPlatform",
               "enabled": true,
-              "fields": {}
+              "fields": {
+                "moveDistance": {
+                  "t": 0,
+                  "v": 2.0
+                },
+                "moveSpeed": {
+                  "t": 0,
+                  "v": 2.0
+                }
+              }
             }
           ]
         }
@@ -36976,7 +37496,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "bars_low.fbx",
@@ -37040,7 +37561,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "26ebb9c0fbe52947a54b048a4d10c374",
@@ -37143,7 +37665,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "bars_low.fbx",
@@ -37207,7 +37730,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "71193f902539b443a6477a26aaecb78f",
@@ -37310,7 +37834,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "bars_low.fbx",
@@ -37374,7 +37899,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "39c10ef4f12cfc46b73da499606e01bb",
@@ -37477,7 +38003,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "bars_low.fbx",
@@ -37595,7 +38122,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "f1bc437f269fd348bc45c4e47aaa8776",
@@ -37710,7 +38238,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "919863aa726274488466a7e76c93dedb",
@@ -37825,7 +38354,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "919863aa726274488466a7e76c93dedb",
@@ -37891,7 +38421,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_LongWall.fbx",
@@ -37955,7 +38486,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "3e92bc6d3f16734099e3c647b5148178",
@@ -38021,7 +38553,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_LongWall.fbx",
@@ -38085,7 +38618,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "f9e99acdacea2b4a882e113199579d57",
@@ -38151,7 +38685,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_LongWall.fbx",
@@ -38215,7 +38750,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "2958653112a0b34bbc76454b44ffc65d",
@@ -38281,7 +38817,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_LongWall.fbx",
@@ -38345,7 +38882,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "dd5a8f296078c24f80c0271e87843335",
@@ -38411,7 +38949,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_LongWall.fbx",
@@ -38475,7 +39014,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "13431303bf30a04e9655a46628160002",
@@ -38541,7 +39081,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_LongWall.fbx",
@@ -38605,7 +39146,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "7aeab450cf77bb4b94beb2c2d78e5622",
@@ -38671,7 +39213,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_LongWall.fbx",
@@ -38735,7 +39278,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "8a937af8cc77ea47be741f6e121512da",
@@ -38801,7 +39345,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_LongWall.fbx",
@@ -38865,7 +39410,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "2272d5bd19a52341acf3ba7893422142",
@@ -38931,7 +39477,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_LongWall.fbx",
@@ -38995,7 +39542,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "091d0a304b00b5438138a72d8b1277e7",
@@ -39061,7 +39609,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_LongWall.fbx",
@@ -39125,7 +39674,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "3702a6c1c6d73b4a9d35bc47064f588c",
@@ -39191,7 +39741,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_LongWall.fbx",
@@ -39255,7 +39806,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "c6775e29050cd24e900be923d319e790",
@@ -39321,7 +39873,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_LongWall.fbx",
@@ -39385,7 +39938,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "5ca8c1e634468843b0d1b096bbc422b5",
@@ -39451,7 +40005,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_LongWall.fbx",
@@ -39515,7 +40070,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "cc9633727fc919418cca6ea779864ad2",
@@ -39581,7 +40137,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "ModelComponent": {
           "model": "C_LongWall.fbx",
@@ -39645,7 +40202,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "d25ee9c58896f74c80868ff25051a794",
@@ -39732,7 +40290,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "919863aa726274488466a7e76c93dedb",
@@ -39847,7 +40406,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "9c845be9106cd04bb6e81e927442d541",
@@ -39962,7 +40522,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "bb1c926dede81a43a2c1b1f66ad81c97",
@@ -40077,7 +40638,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "24ba756d0122bf4d95af37e2ef66c881",
@@ -40218,7 +40780,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "7fc3b658694ef942b17f2de05b5c0a5a",
@@ -40359,7 +40922,8 @@
           "uvOffset": [
             0.0,
             1.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "52b5a3a3bf1c5e49afd566efe8620009",
@@ -40540,7 +41104,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "170cb00957e6904c8d80e443a62905eb",
@@ -40730,7 +41295,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "7b49fa1da4ad5841a92459d2bda90216",
@@ -40920,7 +41486,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "d767e29c5143dd44abcfce7fe9eac622",
@@ -41110,7 +41677,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "a9f515eb10770641803f76ae00936866",
@@ -41300,7 +41868,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "0134853f34e8f94b9c764bfdca4cafe3",
@@ -41490,7 +42059,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "6654ea180758944bada5cadf57606a72",
@@ -41680,7 +42250,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "4366a96040085e4bbbb773c788e32921",
@@ -41870,7 +42441,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "9e37a068af77a745a3df0ab5de6310a3",
@@ -42060,7 +42632,8 @@
           "uvOffset": [
             0.0,
             0.0
-          ]
+          ],
+          "castsShadows": true
         },
         "HierarchyComponent": {
           "parentGuid": "82aabb8bc467624f807f9760200fcd8e",
