@@ -103,6 +103,7 @@ public class OrbTeleport : MonoBehaviour
 
     void TakeDamage(float dmg)
     {
+        health = GameplayHUD.GetHealth(GameplayHUD.GetHealthBar());
         health = Math.Max(0, health - dmg);
 
         GameObject bar = GameplayHUD.GetHealthBar();
