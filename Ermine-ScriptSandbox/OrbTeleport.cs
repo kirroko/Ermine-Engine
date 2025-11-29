@@ -55,6 +55,7 @@ public class OrbTeleport : MonoBehaviour
 
         // Instantiate orb projectile
         var projectile = Prefab.Instantiate("../Resources/Prefabs/Sphere.prefab");
+        
         if (projectile != null)
         {
             projectile.transform.position = origin.transform.position + cam.forward * forwardOffset + cam.right * rightOffset + Vector3.up * upOffset;
@@ -103,6 +104,7 @@ public class OrbTeleport : MonoBehaviour
 
     void TakeDamage(float dmg)
     {
+        health = GameplayHUD.GetHealth(GameplayHUD.GetHealthBar());
         health = Math.Max(0, health - dmg);
 
         GameObject bar = GameplayHUD.GetHealthBar();

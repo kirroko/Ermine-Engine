@@ -899,18 +899,12 @@ namespace
 		if (!klass || !name) return nullptr;
 		for (MonoClass* c = klass; c; c = mono_class_get_parent(c))
 		{
-			if (!c)
-			{
-				assert(false && "Empty class!");
-				break;
-			}
 			mono_class_init(c);
+
 			if (MonoClassField* f = mono_class_get_field_from_name(c, name))
 				return f;
 		}
-		//if (MonoClassField* f = mono_class_get_field_from_name(klass, name))
-		//	return f;
-		
+
 		return nullptr;
 	}
 

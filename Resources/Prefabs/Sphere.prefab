@@ -3,7 +3,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "cd23834dfed0f54da4abef695522653c"
+          "guid": "60e5c3414d69574490fb5d918cc3f6a4"
         },
         "Transform": {
           "position": [
@@ -29,13 +29,13 @@
             0.5590777397155762,
             1.0
           ],
-          "intensity": 1.0,
+          "intensity": 5.0,
           "type": "Point",
           "castsShadows": false,
           "castsRays": false,
           "innerAngle": -1.0,
           "outerAngle": -1.0,
-          "radius": 1.7000000476837159
+          "radius": 3.0
         },
         "ObjectMetaData": {
           "name": "Sphere",
@@ -75,9 +75,9 @@
           "roty": false,
           "rotz": false,
           "collidersize": [
-            1.5,
-            1.5,
-            1.5
+            0.5,
+            0.5,
+            0.5
           ]
         },
         "Material": {
@@ -121,7 +121,7 @@
             0.0
           ],
           "customFragmentShader": "../Resources/Shaders/volumetric_orb_fragment.glsl",
-          "castsShadows": true
+          "castsShadows": false
         },
         "HierarchyComponent": {
           "depth": 0
