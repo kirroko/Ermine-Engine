@@ -7,14 +7,13 @@ public class DisableLightCone : MonoBehaviour
     private Vector3 oldConePos;
     private bool disabled = false;
     private bool orbInside = false;
-
     private bool currentlyColliding = false;
 
     private GameObject lightCone = null;
 
     private void Start()
     {
-        oldPos = transform.position;
+        //oldPos = transform.position;
 
         // Find matching LightConeX
         //lightCone = FindMatchingCone();
@@ -31,13 +30,17 @@ public class DisableLightCone : MonoBehaviour
     private void Update()
     {
         currentlyColliding = false;
-        // orb burst
-        if (!disabled && orbInside && Input.GetMouseButtonDown(0))
+
+        // Right click to disable light cone if orb is inside
+        if (!disabled && orbInside && Input.GetMouseButtonDown(1))
         {
-            DisableLight();
             GameObject sphere = GameObject.Find("Sphere");
-            Physics.RemovePhysic((ulong)sphere.GetInstanceID());
-            GameObject.Destroy(sphere);
+            if (sphere != null)
+            {
+                DisableLight();
+                Physics.RemovePhysic((ulong)sphere.GetInstanceID());
+                GameObject.Destroy(sphere);
+            }
         }
 
         // if u want the lightcone to come back after disabling
@@ -58,19 +61,7 @@ public class DisableLightCone : MonoBehaviour
     private void DisableLight()
     {
         disabled = true;
-        //gameObject.SetActive(false);
-        //gameObject.SetActive(false);
         lightCone.SetActive(false);
-        // we move the lightcone out of view for now until SetActive() is implemented
-        //gameObject.transform.position = new Vector3(0, oldPos.y + 100, 0);
-        //Physics.SetPosition((ulong)gameObject.GetInstanceID(), gameObject.transform.position);
-
-        //// Disable linked cone too
-        //if (lightCone != null)
-        //{
-        //    lightCone.transform.position = new Vector3(0, oldPos.y + 100, 0);
-        //    Physics.SetPosition((ulong)lightCone.GetInstanceID(), lightCone.transform.position);
-        //}
     }
 
     void RespawnLight()
@@ -78,7 +69,6 @@ public class DisableLightCone : MonoBehaviour
         disabled = false;
         timer = 3.0f;
 
-        //gameObject.SetActive(true);
         lightCone.SetActive(true);
 
         //// Respawn original light

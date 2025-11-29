@@ -9,14 +9,13 @@ public class CutscenePlayer : MonoBehaviour
 
     // Slide tracking
     private int currentSlideIndex = 0;  // Which slide we're currently showing (0-based)
-    private int totalSlides = 3;        // Total number of cutscene slides
+    private int totalSlides = 2;        // Total number of cutscene slides
     private float elapsedTime = 0.0f;   // Timer for current slide
     private bool isPlaying = true;      // Is cutscene active?
     
     // References to slide GameObjects (cached for performance)
     private GameObject cutscene1;
     private GameObject cutscene2;
-    private GameObject cutscene3;
 
     void Start()
     {
@@ -25,12 +24,10 @@ public class CutscenePlayer : MonoBehaviour
         // Find all cutscene slide entities
         cutscene1 = GameObject.Find("Slide1");
         cutscene2 = GameObject.Find("Slide2");
-        cutscene3 = GameObject.Find("Slide3");
 
         // Verify all slides exist
         if (cutscene1 == null) Debug.LogError("[CutscenePlayer] ERROR: Could not find 'Slide1' entity!");
         if (cutscene2 == null) Debug.LogError("[CutscenePlayer] ERROR: Could not find 'Slide2' entity!");
-        if (cutscene3 == null) Debug.LogError("[CutscenePlayer] ERROR: Could not find 'Slide3' entity!");
 
         // Start with slide 1 visible, others hidden
         ShowSlide(0);
@@ -84,7 +81,6 @@ public class CutscenePlayer : MonoBehaviour
         // Hide all slides first
         if (cutscene1 != null) cutscene1.SetActive(false);
         if (cutscene2 != null) cutscene2.SetActive(false);
-        if (cutscene3 != null) cutscene3.SetActive(false);
 
         // Show only the requested slide
         switch (slideIndex)
@@ -93,7 +89,7 @@ public class CutscenePlayer : MonoBehaviour
                 if (cutscene1 != null)
                 {
                     cutscene1.SetActive(true);
-                    Debug.Log("[CutscenePlayer] Showing Slide 1 (Creation & Betrayal)");
+                    Debug.Log("[CutscenePlayer] Showing Slide 1");
                 }
                 break;
 
@@ -101,15 +97,7 @@ public class CutscenePlayer : MonoBehaviour
                 if (cutscene2 != null)
                 {
                     cutscene2.SetActive(true);
-                    Debug.Log("[CutscenePlayer] Showing Slide 2 (Horror Factory)");
-                }
-                break;
-
-            case 2:
-                if (cutscene3 != null)
-                {
-                    cutscene3.SetActive(true);
-                    Debug.Log("[CutscenePlayer] Showing Slide 3 (Revenge Awakens)");
+                    Debug.Log("[CutscenePlayer] Showing Slide 2");
                 }
                 break;
 
@@ -125,11 +113,6 @@ public class CutscenePlayer : MonoBehaviour
     void EndCutscene()
     {
         isPlaying = false;
-
-        // Hide all cutscene slides
-        //if (cutscene1 != null) cutscene1.SetActive(false);
-        //if (cutscene2 != null) cutscene2.SetActive(false);
-        //if (cutscene3 != null) cutscene3.SetActive(false);
 
         Debug.Log($"[CutscenePlayer] Loading next scene: {nextScenePath}");
         

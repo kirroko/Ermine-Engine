@@ -91,72 +91,6 @@
       "id": 3,
       "components": {
         "IDComponent": {
-          "guid": "15a4fe6a00690e4d9e15e182e8ab7354"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "CutsceneBackground",
-          "tag": "UI",
-          "selfActive": true
-        },
-        "HierarchyComponent": {
-          "depth": 0
-        },
-        "UIImageComponent": {
-          "imagePath": "../Resources/Textures/UI/image.png",
-          "fullscreen": true,
-          "position": [
-            0.5,
-            0.5,
-            0.0
-          ],
-          "width": 1.0,
-          "height": 1.0,
-          "tintColor": [
-            1.0,
-            1.0,
-            1.0
-          ],
-          "alpha": 1.0,
-          "maintainAspectRatio": true,
-          "caption": "",
-          "showCaption": false,
-          "captionColor": [
-            1.0,
-            1.0,
-            1.0
-          ],
-          "captionFontSize": 24.0,
-          "captionPosition": [
-            0.5,
-            0.1,
-            0.0
-          ]
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "id": 4,
-      "components": {
-        "IDComponent": {
           "guid": "912274477014cc438e7d811904b2c928"
         },
         "Transform": {
@@ -187,14 +121,14 @@
         },
         "UIImageComponent": {
           "imagePath": "../Resources/Textures/UI/cutscene1.png",
-          "fullscreen": false,
+          "fullscreen": true,
           "position": [
             0.5,
-            0.52,
+            0.5,
             0.0
           ],
           "width": 1.0,
-          "height": 0.82,
+          "height": 1.0,
           "tintColor": [
             1.0,
             1.0,
@@ -203,7 +137,7 @@
           "alpha": 1.0,
           "maintainAspectRatio": true,
           "caption": "Creation & Betrayal: Scientist invents glowing energy machine; shady boss takes over.",
-          "showCaption": true,
+          "showCaption": false,
           "captionColor": [
             1.0,
             1.0,
@@ -211,8 +145,8 @@
           ],
           "captionFontSize": 21.0,
           "captionPosition": [
-            0.16,
-            0.06,
+            0.1599999964237213,
+            0.05999999865889549,
             0.0
           ]
         },
@@ -220,7 +154,7 @@
       }
     },
     {
-      "id": 5,
+      "id": 4,
       "components": {
         "IDComponent": {
           "guid": "b334179a3030de4e98a340f183e4c79b"
@@ -253,14 +187,14 @@
         },
         "UIImageComponent": {
           "imagePath": "../Resources/Textures/UI/cutscene2.png",
-          "fullscreen": false,
+          "fullscreen": true,
           "position": [
             0.5,
-            0.52,
+            0.5,
             0.0
           ],
           "width": 1.0,
-          "height": 0.82,
+          "height": 1.0,
           "tintColor": [
             1.0,
             1.0,
@@ -269,7 +203,7 @@
           "alpha": 1.0,
           "maintainAspectRatio": true,
           "caption": "Horror Factory: Scientist, now a prisoner, sees his invention used to torture people in a vast, dark factory.",
-          "showCaption": true,
+          "showCaption": false,
           "captionColor": [
             255.0,
             255.0,
@@ -277,8 +211,8 @@
           ],
           "captionFontSize": 21.0,
           "captionPosition": [
-            0.095,
-            0.06,
+            0.0949999988079071,
+            0.05999999865889549,
             0.0
           ]
         },
@@ -286,73 +220,7 @@
       }
     },
     {
-      "id": 6,
-      "components": {
-        "IDComponent": {
-          "guid": "5fddcd752484c84baf1d98439f99e779"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Slide3",
-          "tag": "Cutscene",
-          "selfActive": true
-        },
-        "HierarchyComponent": {
-          "depth": 0
-        },
-        "UIImageComponent": {
-          "imagePath": "../Resources/Textures/UI/cutscene3.png",
-          "fullscreen": false,
-          "position": [
-            0.5,
-            0.52,
-            0.0
-          ],
-          "width": 1.0,
-          "height": 0.82,
-          "tintColor": [
-            1.0,
-            1.0,
-            1.0
-          ],
-          "alpha": 1.0,
-          "maintainAspectRatio": true,
-          "caption": "Revenge Awakens: Scientist grabs his old glowing syringe, eyes burning with determination, ready to fight back.",
-          "showCaption": true,
-          "captionColor": [
-            255.0,
-            255.0,
-            255.0
-          ],
-          "captionFontSize": 19.0,
-          "captionPosition": [
-            0.1,
-            0.06,
-            0.0
-          ]
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "id": 7,
+      "id": 5,
       "components": {
         "IDComponent": {
           "guid": "155ee7c2181d604d93ed5bf05e146997"

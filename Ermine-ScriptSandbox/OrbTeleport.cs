@@ -13,9 +13,10 @@ public class OrbTeleport : MonoBehaviour
     private float rightOffset = -0.3f;  // Slightly to the right
     private float upOffset = 4.2f;      // Above the player
 
+    private bool orbShot = false;       // Tracks if we already shot an orb
+
     void Start()
     {
-        //origin = GameObject.Find("Origin").GetComponent<Transform>();
         origin = GameObject.Find("Player").GetComponent<Transform>();
         cam = GameObject.Find("Main Camera").transform;
         health = GameplayHUD.GetHealth(GameplayHUD.GetHealthBar());
@@ -23,31 +24,81 @@ public class OrbTeleport : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetMouseButton(0) && GameObject.Find("Sphere") == null)
+        if (Input.GetMouseButton(0))
         {
-            TakeDamage(damage);
-            GlobalAudio.PlaySFX("Shoot");
-            var projectile = Prefab.Instantiate("../Resources/Prefabs/Sphere.prefab");
-            if (projectile != null)
+            if (!orbShot)
             {
-                projectile.transform.position = origin.transform.position + cam.forward * forwardOffset + cam.right * rightOffset + Vector3.up * upOffset;
-                projectile.transform.rotation = transform.rotation;
-                projectile.GetComponent<Sphere>().direction = -cam.forward;
+                // First left click - shoot orb
+                ShootOrb();
+                orbShot = true;
+                return;
             }
+
+            // Second left click - teleport to orb
+            TeleportToOrb();
+            orbShot = false;
         }
 
-        if (Input.GetMouseButton(1))
+        // Recall orb on 'R' key press
+        if (Input.GetKeyDown(KeyCode.R))
+            RecallOrb();
+    }
+
+    void ShootOrb()
+    {
+        // Only one orb at a time
+        if (GameObject.Find("Sphere") != null) return;
+
+        // Deal damage to player
+        TakeDamage(damage);
+        GlobalAudio.PlaySFX("Shoot");
+
+        // Instantiate orb projectile
+        var projectile = Prefab.Instantiate("../Resources/Prefabs/Sphere.prefab");
+        if (projectile != null)
         {
-            // Swap position with ball and destroy it
-            GameObject sphere = GameObject.Find("Sphere");
-            if (sphere == null)
-                return;
-            GlobalAudio.PlaySFX("Teleport");
-            gameObject.transform.position = sphere.transform.position;
-            Physics.SetPosition((ulong)gameObject.GetInstanceID(), sphere.transform.position);
+            projectile.transform.position = origin.transform.position + cam.forward * forwardOffset + cam.right * rightOffset + Vector3.up * upOffset;
+            projectile.transform.rotation = transform.rotation;
+            projectile.GetComponent<Sphere>().direction = -cam.forward;
+        }
+    }
+
+    void TeleportToOrb()
+    {
+        // Find the orb
+        GameObject sphere = GameObject.Find("Sphere");
+        if (sphere == null)
+        {
+            orbShot = false;
+            return;
+        }
+
+        GlobalAudio.PlaySFX("Teleport");
+
+        // Swap positions
+        gameObject.transform.position = sphere.transform.position;
+        Physics.SetPosition((ulong)gameObject.GetInstanceID(), sphere.transform.position);
+
+        // Remove orb
+        Physics.RemovePhysic((ulong)sphere.GetInstanceID());
+        GameObject.Destroy(sphere);
+    }
+
+    void RecallOrb()
+    {
+        // Find the orb
+        GameObject sphere = GameObject.Find("Sphere");
+        if (sphere != null)
+        {
+            GlobalAudio.PlaySFX("Teleport"); // Or a custom recall sound
+            
+            // Remove orb
             Physics.RemovePhysic((ulong)sphere.GetInstanceID());
             GameObject.Destroy(sphere);
         }
+
+        // Reset state fully
+        orbShot = false;
     }
 
     void TakeDamage(float dmg)
