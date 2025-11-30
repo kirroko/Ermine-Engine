@@ -125,7 +125,7 @@
           "depth": 0
         },
         "UIImageComponent": {
-          "imagePath": "../Resources/Textures/UI/image.png",
+          "imagePath": "../Resources/Textures/UI/background.png",
           "fullscreen": true,
           "position": [
             0.5,
@@ -190,17 +190,48 @@
         "HierarchyComponent": {
           "depth": 0
         },
+        "UIImageComponent": {
+          "imagePath": "../Resources/Textures/UI/newgame.png",
+          "fullscreen": false,
+          "position": [
+            0.5,
+            0.3199999928474426,
+            0.0
+          ],
+          "width": 1.0,
+          "height": 0.10000000149011612,
+          "tintColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "alpha": 1.0,
+          "maintainAspectRatio": true,
+          "caption": "",
+          "showCaption": false,
+          "captionColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "captionFontSize": 24.0,
+          "captionPosition": [
+            0.5,
+            0.10000000149011612,
+            0.0
+          ]
+        },
         "GlobalTransform": {},
         "UIButtonComponent": {
           "text": "",
           "position": [
-            0.5019999742507935,
+            0.5,
             0.3199999928474426,
             0.0
           ],
           "size": [
-            0.33000001311302187,
-            0.07999999821186066
+            0.3799999952316284,
+            0.09000000357627869
           ],
           "normalColor": [
             0.30000001192092898,
@@ -208,9 +239,9 @@
             0.30000001192092898
           ],
           "hoverColor": [
-            0.3500319719314575,
-            0.5446685552597046,
-            0.49586915969848635
+            0.4901960790157318,
+            0.7843137383460999,
+            0.3921568691730499
           ],
           "pressedColor": [
             0.2820281386375427,
@@ -223,7 +254,7 @@
             1.0
           ],
           "textScale": 1.0,
-          "backgroundAlpha": 0.6650000214576721,
+          "backgroundAlpha": 0.20200000703334809,
           "action": 1,
           "actionData": "../Resources/Scenes/cutscene_intro.scene",
           "hoverSoundName": "",
@@ -264,17 +295,48 @@
         "HierarchyComponent": {
           "depth": 0
         },
+        "UIImageComponent": {
+          "imagePath": "../Resources/Textures/UI/quit.png",
+          "fullscreen": false,
+          "position": [
+            0.5,
+            0.17000000178813935,
+            0.0
+          ],
+          "width": 1.0,
+          "height": 0.0949999988079071,
+          "tintColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "alpha": 1.0,
+          "maintainAspectRatio": true,
+          "caption": "",
+          "showCaption": false,
+          "captionColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "captionFontSize": 24.0,
+          "captionPosition": [
+            0.5,
+            0.10000000149011612,
+            0.0
+          ]
+        },
         "GlobalTransform": {},
         "UIButtonComponent": {
           "text": "",
           "position": [
-            0.5019999742507935,
+            0.5,
             0.17000000178813935,
             0.0
           ],
           "size": [
-            0.33000001311302187,
-            0.07999999821186066
+            0.3799999952316284,
+            0.09000000357627869
           ],
           "normalColor": [
             0.30000001192092898,
@@ -282,9 +344,9 @@
             0.30000001192092898
           ],
           "hoverColor": [
-            0.6477739810943604,
-            0.28602510690689089,
-            0.8270893096923828
+            1.0,
+            0.3921568691730499,
+            0.3921568691730499
           ],
           "pressedColor": [
             0.910662829875946,
@@ -297,7 +359,7 @@
             1.0
           ],
           "textScale": 1.0,
-          "backgroundAlpha": 0.6169999837875366,
+          "backgroundAlpha": 0.20200000703334809,
           "action": 2,
           "actionData": "",
           "hoverSoundName": "",

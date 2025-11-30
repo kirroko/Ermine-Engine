@@ -193,7 +193,12 @@ void Ermine::Window::ShutDownWindow(GLFWwindow* window)
  */
 void Ermine::Window::ToggleFullscreenWindow(GLFWwindow* window)
 {
-    static bool isFullscreen = false;
+    static bool isFullscreen =
+#if defined(EE_DEBUG)
+        false; // Debug starts in window mode
+#else
+        true;  // Release starts in fullscreen mode
+#endif
 
     if (!isFullscreen)
     {
