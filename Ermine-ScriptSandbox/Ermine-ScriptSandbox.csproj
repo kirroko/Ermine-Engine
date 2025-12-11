@@ -74,6 +74,7 @@
     <Compile Include="DamagePlayer.cs" />
     <Compile Include="DisableLightCone.cs" />
     <Compile Include="FakePlayer.cs" />
+    <Compile Include="GameManager.cs" />
     <Compile Include="LifeEssenceSkillController.cs" />
     <Compile Include="MainMenu.cs" />
     <Compile Include="OrbTeleport.cs" />
@@ -84,7 +85,6 @@
     <Compile Include="Sandbox2.cs" />
     <Compile Include="Sphere.cs" />
     <Compile Include="Switch.cs" />
-    <Compile Include="GameManager.cs" />
     <Compile Include="TemplateScript.cs" />
     <Compile Include="Test1.cs" />
     <Compile Include="Test2.cs" />

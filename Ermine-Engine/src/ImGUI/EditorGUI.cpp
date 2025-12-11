@@ -456,25 +456,25 @@ void EditorGUI::Toolbar()
             return clicked;
         };
 
-    if (RenderToggledButton(isPlaying, gIconPlay, "Play"))
-    {
-        if (!isPlaying)
-        {
-            isPlaying = true;
-            StartPlayMode();
-        }
-    }
+    //if (RenderToggledButton(isPlaying, gIconPlay, "Play"))
+    //{
+    //    if (!isPlaying)
+    //    {
+    //        isPlaying = true;
+    //        StartPlayMode();
+    //    }
+    //}
 
-    ImGui::SameLine();
+    //ImGui::SameLine();
 
-    if (RenderToggledButton(!isPlaying, gIconStop, "Stop"))
-    {
-        if (isPlaying)
-        {
-            isPlaying = false;
-            StopPlayMode();
-        }
-    }
+    //if (RenderToggledButton(!isPlaying, gIconStop, "Stop"))
+    //{
+    //    if (isPlaying)
+    //    {
+    //        isPlaying = false;
+    //        StopPlayMode();
+    //    }
+    //}
 
     ImGui::End();
 
@@ -647,15 +647,15 @@ void EditorGUI::ViewPortWindow(bool& show)
     Input::SetEditorInputActive(viewportFocused && viewportHovered);
 
     // Hotkey to toggle play mode
-    if (Input::IsKeyDownEditor(GLFW_KEY_LEFT_CONTROL) && Input::IsKeyPressedEditor(GLFW_KEY_P))
-    {
-        isPlaying = !isPlaying;
-        if (isPlaying)
-            StartPlayMode();
-        else
-            StopPlayMode();
-        EE_CORE_INFO("Play {0}", isPlaying);
-    }
+    //if (Input::IsKeyDownEditor(GLFW_KEY_LEFT_CONTROL) && Input::IsKeyPressedEditor(GLFW_KEY_P))
+    //{
+    //    isPlaying = !isPlaying;
+    //    if (isPlaying)
+    //        StartPlayMode();
+    //    else
+    //        StopPlayMode();
+    //    EE_CORE_INFO("Play {0}", isPlaying);
+    //}
 
     Input::SetGameInputActive(isPlaying && viewportFocused && viewportHovered);
 
@@ -1167,7 +1167,7 @@ void EditorGUI::ShutDown()
     // Stop play mode if active
     if (isPlaying)
     {
-        StopPlayMode();
+        //StopPlayMode();
         isPlaying = false;
     }
 

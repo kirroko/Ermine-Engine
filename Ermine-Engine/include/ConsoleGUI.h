@@ -56,6 +56,9 @@ namespace Ermine
         // Snapshot for UI (avoids drawing under a lock)
         void Snapshot(std::vector<ConsoleLogEntry>& out) const;
 
+        // Incrementing version that changes when logs mutate
+        uint64_t Version() const { return m_version.load(std::memory_order_relaxed); }
+
         // Stats
         std::array<uint32_t, 4> Counts() const;
 
@@ -70,6 +73,7 @@ namespace Ermine
         std::deque<ConsoleLogEntry> m_logs;
         size_t m_capacity{ 10000 };
         std::array<uint32_t, 4> m_counts{ 0,0,0,0 };
+        std::atomic<uint64_t> m_version{0};
     };
 
     // Unity-like Console window
@@ -101,6 +105,19 @@ namespace Ermine
 
         // Cached snapshot for drawing
         std::vector<ConsoleLogEntry> m_snapshot;
+
+        // Cache of display list to avoid rebuilds when nothing changed
+        std::vector<int> m_cachedDisplayIndices;
+        std::vector<uint32_t> m_cachedCollapsedCounts;
+        uint64_t m_lastSnapshotVersion{0};
+        // Track toggles/filters used to build the cache
+        bool m_cachedShowInfo{ true };
+        bool m_cachedShowWarning{ true };
+        bool m_cachedShowError{ true };
+        bool m_cachedShowDebug{ false };
+        bool m_cachedCollapse{ true };
+        // Store filter text to detect changes
+        std::string m_cachedFilterText;
 
         // Build filtered (and optionally collapsed) view indices
         void buildDisplayList(std::vector<int>& outDisplayIndices,

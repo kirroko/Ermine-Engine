@@ -132,44 +132,43 @@ project "Ermine-Engine"
 
     postbuildcommands
     {
-        -- Compute base output dir once per config
-        ("set OUTDIR=$(SolutionDir)Build\\bin\\" .. outputdir),
+        -- Ensure output subfolders exist
+        ("{MKDIR} \"%{wks.location}Build\\bin\\" .. outputdir .. "\\Ermine-Editor\""),
+        ("{MKDIR} \"%{wks.location}Build\\bin\\" .. outputdir .. "\\Ermine-Game\""),
+        ("{MKDIR} \"%{wks.location}Build\\bin\\" .. outputdir .. "\\Ermine-ResourcePipeline\""),
 
         -- Copy engine DLL to Editor and Game
-        "{COPY} \"$(TargetPath)\" \"%OUTDIR%\\Ermine-Editor\"",
-        "{COPY} \"$(TargetPath)\" \"%OUTDIR%\\Ermine-Game\"",
+        ("{COPY} \"$(TargetPath)\" \"%{wks.location}Build\\bin\\" .. outputdir .. "\\Ermine-Editor\""),
+        ("{COPY} \"$(TargetPath)\" \"%{wks.location}Build\\bin\\" .. outputdir .. "\\Ermine-Game\""),
 
         -- Copy resource pipeline database and project to output dir
-        ("{COPYDIR} ../Ermine-ResourcePipeline/Ermine-Game.lion_rcdbase ../Build/bin/" .. outputdir .. "/Ermine-Game.lion_rcdbase"),
-        ("{COPYDIR} ../Ermine-ResourcePipeline/Ermine-Game.lion_project ../Build/bin/" .. outputdir .. "/Ermine-Game.lion_project"),
-
-        -- Copy DirectXTex pdb
-        ("{COPY} \"$(SolutionDir)ThirdParty\\DirectXTex\\lib\\DirectXTex.pdb\" \"%OUTDIR%\\Ermine-ResourcePipeline\""),
+        ("{COPYDIR} ../Ermine-ResourcePipeline/Ermine-Game.lion_rcdbase \"%{wks.location}Build\\bin\\" .. outputdir .. "\\Ermine-Game.lion_rcdbase\""),
+        ("{COPYDIR} ../Ermine-ResourcePipeline/Ermine-Game.lion_project \"%{wks.location}Build\\bin\\" .. outputdir .. "\\Ermine-Game.lion_project\""),
 
         -- Runtime DLLs (Editor)
-        "{COPY} \"$(SolutionDir)ThirdParty\\Fmod\\lib\\fmod.dll\" \"%OUTDIR%\\Ermine-Editor\"",
-        "{COPY} \"$(SolutionDir)ThirdParty\\Fmod\\lib\\fmodL.dll\" \"%OUTDIR%\\Ermine-Editor\"",
-        "{COPY} \"$(SolutionDir)ThirdParty\\Fmod\\lib\\fmodstudio.dll\" \"%OUTDIR%\\Ermine-Editor\"",
-        "{COPY} \"$(SolutionDir)ThirdParty\\Fmod\\lib\\fmodstudioL.dll\" \"%OUTDIR%\\Ermine-Editor\"",
-        "{COPY} \"$(SolutionDir)ThirdParty\\Mono\\lib\\mono-2.0-sgen.dll\" \"%OUTDIR%\\Ermine-Editor\"",
-        "{COPY} \"$(SolutionDir)ThirdParty\\assimp\\bin\\assimp-vc143-mt.dll\" \"%OUTDIR%\\Ermine-Editor\"",
+        ("{COPY} \"$(SolutionDir)ThirdParty\\Fmod\\lib\\fmod.dll\" \"%{wks.location}Build\\bin\\" .. outputdir .. "\\Ermine-Editor\""),
+        ("{COPY} \"$(SolutionDir)ThirdParty\\Fmod\\lib\\fmodL.dll\" \"%{wks.location}Build\\bin\\" .. outputdir .. "\\Ermine-Editor\""),
+        ("{COPY} \"$(SolutionDir)ThirdParty\\Fmod\\lib\\fmodstudio.dll\" \"%{wks.location}Build\\bin\\" .. outputdir .. "\\Ermine-Editor\""),
+        ("{COPY} \"$(SolutionDir)ThirdParty\\Fmod\\lib\\fmodstudioL.dll\" \"%{wks.location}Build\\bin\\" .. outputdir .. "\\Ermine-Editor\""),
+        ("{COPY} \"$(SolutionDir)ThirdParty\\Mono\\lib\\mono-2.0-sgen.dll\" \"%{wks.location}Build\\bin\\" .. outputdir .. "\\Ermine-Editor\""),
+        ("{COPY} \"$(SolutionDir)ThirdParty\\assimp\\bin\\assimp-vc143-mt.dll\" \"%{wks.location}Build\\bin\\" .. outputdir .. "\\Ermine-Editor\""),
 
         -- Runtime DLLs (Game)
-        "{COPY} \"$(SolutionDir)ThirdParty\\Fmod\\lib\\fmod.dll\" \"%OUTDIR%\\Ermine-Game\"",
-        "{COPY} \"$(SolutionDir)ThirdParty\\Fmod\\lib\\fmodL.dll\" \"%OUTDIR%\\Ermine-Game\"",
-        "{COPY} \"$(SolutionDir)ThirdParty\\Fmod\\lib\\fmodstudio.dll\" \"%OUTDIR%\\Ermine-Game\"",
-        "{COPY} \"$(SolutionDir)ThirdParty\\Fmod\\lib\\fmodstudioL.dll\" \"%OUTDIR%\\Ermine-Game\"",
-        "{COPY} \"$(SolutionDir)ThirdParty\\Mono\\lib\\mono-2.0-sgen.dll\" \"%OUTDIR%\\Ermine-Game\"",
-        "{COPY} \"$(SolutionDir)ThirdParty\\assimp\\bin\\assimp-vc143-mt.dll\" \"%OUTDIR%\\Ermine-Game\"",
+        ("{COPY} \"$(SolutionDir)ThirdParty\\Fmod\\lib\\fmod.dll\" \"%{wks.location}Build\\bin\\" .. outputdir .. "\\Ermine-Game\""),
+        ("{COPY} \"$(SolutionDir)ThirdParty\\Fmod\\lib\\fmodL.dll\" \"%{wks.location}Build\\bin\\" .. outputdir .. "\\Ermine-Game\""),
+        ("{COPY} \"$(SolutionDir)ThirdParty\\Fmod\\lib\\fmodstudio.dll\" \"%{wks.location}Build\\bin\\" .. outputdir .. "\\Ermine-Game\""),
+        ("{COPY} \"$(SolutionDir)ThirdParty\\Fmod\\lib\\fmodstudioL.dll\" \"%{wks.location}Build\\bin\\" .. outputdir .. "\\Ermine-Game\""),
+        ("{COPY} \"$(SolutionDir)ThirdParty\\Mono\\lib\\mono-2.0-sgen.dll\" \"%{wks.location}Build\\bin\\" .. outputdir .. "\\Ermine-Game\""),
+        ("{COPY} \"$(SolutionDir)ThirdParty\\assimp\\bin\\assimp-vc143-mt.dll\" \"%{wks.location}Build\\bin\\" .. outputdir .. "\\Ermine-Game\""),
 
         -- Mono redist
-        "{COPY} \"$(SolutionDir)ThirdParty\\Mono\\lib\" \"%OUTDIR%\\Ermine-Editor\\mono\\lib\"",
-        "{COPY} \"$(SolutionDir)ThirdParty\\Mono\\etc\" \"%OUTDIR%\\Ermine-Editor\\mono\\etc\"",
-        "{COPY} \"$(SolutionDir)ThirdParty\\Mono\\lib\" \"%OUTDIR%\\Ermine-Game\\mono\\lib\"",
-        "{COPY} \"$(SolutionDir)ThirdParty\\Mono\\etc\" \"%OUTDIR%\\Ermine-Game\\mono\\etc\"",
+        ("{COPY} \"$(SolutionDir)ThirdParty\\Mono\\lib\" \"%{wks.location}Build\\bin\\" .. outputdir .. "\\Ermine-Editor\\mono\\lib\""),
+        ("{COPY} \"$(SolutionDir)ThirdParty\\Mono\\etc\" \"%{wks.location}Build\\bin\\" .. outputdir .. "\\Ermine-Editor\\mono\\etc\""),
+        ("{COPY} \"$(SolutionDir)ThirdParty\\Mono\\lib\" \"%{wks.location}Build\\bin\\" .. outputdir .. "\\Ermine-Game\\mono\\lib\""),
+        ("{COPY} \"$(SolutionDir)ThirdParty\\Mono\\etc\" \"%{wks.location}Build\\bin\\" .. outputdir .. "\\Ermine-Game\\mono\\etc\""),
 
         -- Resources (shared)
-        "{COPY} \"$(SolutionDir)Resources\" \"%OUTDIR%\\Resources\""
+        ("{COPY} \"$(SolutionDir)Resources\" \"%{wks.location}Build\\bin\\" .. outputdir .. "\\Resources\"")
     }
 
     filter "configurations:Editor-Debug or configurations:Game-Debug"
@@ -213,10 +212,11 @@ project "Ermine-Engine"
         defines "EE_DEBUG"
         runtime "Debug"
         symbols "on"
-        linkoptions { "/NODEFAULTLIB:LIBCMTD", "/NODEFAULTLIB:LIBCMT", "/NODEFAULTLIB:MSVCRT" }
+        linkoptions { "/NODEFAULTLIB:LIBCMTD", "/NODEFAULTLIB:LIBCMT", "/NODEFAULTLIB:MSVCRT", "/IGNORE:4099"}
         defines { "VERBOSE_LOGGING=1" }
         libdirs { "%{LibraryDir.DirectXTex}" }
         links { "DirectXTexD.lib" }
+        postbuildcommands {("{COPYFILE} \"$(SolutionDir)ThirdParty\\DirectXTex\\lib\\DirectXTexD.pdb\" \"%{wks.location}Build\\bin\\" .. outputdir .. "\\Ermine-ResourcePipeline\\DirectXTex.pdb\"")}
 
     filter "configurations:Editor-Release or configurations:Game-Release"
         defines "EE_RELEASE"
@@ -226,6 +226,7 @@ project "Ermine-Engine"
         defines { "VERBOSE_LOGGING=0" }
         libdirs { "%{LibraryDir.DirectXTex}" }
         links { "DirectXTex.lib" }
+        postbuildcommands {("{COPYFILE} \"$(SolutionDir)ThirdParty\\DirectXTex\\lib\\DirectXTex.pdb\" \"%{wks.location}Build\\bin\\" .. outputdir .. "\\Ermine-ResourcePipeline\\DirectXTex.pdb\"")}
 
 -- Editor Project
 project "Ermine-Editor"
@@ -454,7 +455,7 @@ project "Ermine-ResourcePipeline"
         defines "EE_DEBUG"
         runtime "Debug"
         symbols "on"
-        linkoptions { "/NODEFAULTLIB:LIBCMTD" }
+        linkoptions { "/NODEFAULTLIB:LIBCMTD", "/IGNORE:4099", "/IGNORE:4204" }
         libdirs { "%{LibraryDir.DirectXTex}", "%{LibraryDir.assimp}" }
         links { "DirectXTexD.lib", "assimp-vc143-mt.lib" }
 

@@ -845,7 +845,7 @@ void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 		glBindFramebuffer(GL_FRAMEBUFFER, m_PostProcessBuffer->FBO);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_GBuffer->DepthTexture, 0);
 
-		GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+		status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 		if (status != GL_FRAMEBUFFER_COMPLETE)
 		{
 			EE_CORE_ERROR("ERROR: PostProcess framebuffer not complete after depth attachment!");
@@ -1418,7 +1418,6 @@ void Renderer::RebuildDrawData()
 	// ========== MESHES ==========
 	for (auto& entity : m_Entities) {
 		if (ecs.HasComponent<Ermine::Material>(entity) && ecs.HasComponent<Ermine::Transform>(entity)) {
-			auto& trans = ecs.GetComponent<Transform>(entity);
 			auto& mesh = ecs.GetComponent<Mesh>(entity);
 			auto& materialComponent = ecs.GetComponent<Ermine::Material>(entity);
 
@@ -1553,7 +1552,6 @@ void Renderer::RebuildDrawData()
 			continue;
 
 		auto& modelComp = ecs.GetComponent<ModelComponent>(entity);
-		auto& trans = ecs.GetComponent<Transform>(entity);
 
 		if (!modelComp.m_model)
 			continue;
@@ -3261,13 +3259,13 @@ void Renderer::RenderPostProcessPass(const Mtx44& view, const Mtx44& projection)
 		}
 
 		// Convert view and projection matrices to glm
-		glm::mat4 glmView = glm::mat4(
+		glmView = glm::mat4(
 			view.m00, view.m01, view.m02, view.m03,
 			view.m10, view.m11, view.m12, view.m13,
 			view.m20, view.m21, view.m22, view.m23,
 			view.m30, view.m31, view.m32, view.m33
 		);
-		glm::mat4 glmProjection = glm::mat4(
+		glmProjection = glm::mat4(
 			projection.m00, projection.m01, projection.m02, projection.m03,
 			projection.m10, projection.m11, projection.m12, projection.m13,
 			projection.m20, projection.m21, projection.m22, projection.m23,
@@ -4014,7 +4012,7 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 			{
 				auto& trans = ecs.GetComponent<Transform>(entity);
 				auto& modelComp = ecs.GetComponent<ModelComponent>(entity);
-				auto& materialComp = ecs.GetComponent<Ermine::Material>(entity);
+				//auto& materialComp = ecs.GetComponent<Ermine::Material>(entity);
 
 				if (!modelComp.m_model) continue;
 
@@ -4178,7 +4176,7 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 					shader->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
 
 					// Calculate normal matrix
-					glm::mat4 glmView = glm::mat4(
+					glmView = glm::mat4(
 						view.m00, view.m01, view.m02, view.m03,
 						view.m10, view.m11, view.m12, view.m13,
 						view.m20, view.m21, view.m22, view.m23,

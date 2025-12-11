@@ -195,32 +195,6 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	(void)CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
 
-	//std::string pipelinePath = "../../../../Ermine-ResourcePipeline";
-	//std::cout << "Contents of Ermine-ResourcePipeline:" << std::endl;
-	//try {
-	//	for (const auto& entry : std::filesystem::directory_iterator(pipelinePath)) {
-	//		std::cout << "  " << entry.path().filename().string() << std::endl;
-	//	}
-	//}
-	//catch (const std::exception& e) {
-	//	std::cout << "Error reading pipeline directory: " << e.what() << std::endl;
-	//}
-
-	//// Try the full path
-	//std::string databasePath = "../../../../Ermine-ResourcePipeline/Ermine-Game.lion_rcdbase";
-	//if (std::filesystem::exists(databasePath)) {
-	//	std::cout << "Found database at: " << std::filesystem::absolute(databasePath) << std::endl;
-
-	//	if (!AssetManager::GetInstance().Initialize(databasePath)) {
-	//		EE_CORE_WARN("AssetManager database initialization failed");
-	//	}
-	//}
-	//else {
-	//	std::cout << "Database still not found at: " << databasePath << std::endl;
-	//}
-
-	//std::cout << "Engine working directory: " << std::filesystem::current_path() << std::endl;
-
 	std::string databasePath = "../Ermine-Game.lion_rcdbase";  // Adjust path as needed
 	std::string projectGuid = "";  // Leave empty to auto-detect, or put your actual project GUID
 
@@ -314,7 +288,6 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().RegisterSystem<StateManager>();
 	ECS::GetInstance().RegisterSystem<NavMeshSystem>();
 	ECS::GetInstance().RegisterSystem<NavMeshAgentSystem>();
-	//ECS::GetInstance().RegisterSystem<graphics::GameCamera>();
 	ECS::GetInstance().RegisterSystem<graphics::CameraSystem>();
 	ECS::GetInstance().RegisterSystem<UIRenderSystem>();
 	ECS::GetInstance().RegisterSystem<UIButtonSystem>();
@@ -384,35 +357,36 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().SetSystemSignature<graphics::AnimationManager>(sig);
 
 	// For Hierarchy System
-	SignatureID hierarchySig;
-	hierarchySig.set(ECS::GetInstance().GetComponentType<HierarchyComponent>());
-	hierarchySig.set(ECS::GetInstance().GetComponentType<Transform>());
-	ECS::GetInstance().SetSystemSignature<HierarchySystem>(hierarchySig);
+	sig.reset();
+	sig.set(ECS::GetInstance().GetComponentType<HierarchyComponent>());
+	sig.set(ECS::GetInstance().GetComponentType<Transform>());
+	ECS::GetInstance().SetSystemSignature<HierarchySystem>(sig);
 
 	// For FSM
-	SignatureID fsmSig;
-	fsmSig.set(ECS::GetInstance().GetComponentType<StateMachine>());
-	fsmSig.set(ECS::GetInstance().GetComponentType<Transform>());
-	ECS::GetInstance().SetSystemSignature<StateManager>(fsmSig);
+	sig.reset();
+	sig.set(ECS::GetInstance().GetComponentType<StateMachine>());
+	sig.set(ECS::GetInstance().GetComponentType<Transform>());
+	ECS::GetInstance().SetSystemSignature<StateManager>(sig);
 
-	SignatureID navSig;
-	navSig.set(ECS::GetInstance().GetComponentType<NavMeshComponent>());
-	navSig.set(ECS::GetInstance().GetComponentType<Transform>());
-	ECS::GetInstance().SetSystemSignature<NavMeshSystem>(navSig);
+	sig.reset();
+	sig.set(ECS::GetInstance().GetComponentType<NavMeshComponent>());
+	sig.set(ECS::GetInstance().GetComponentType<Transform>());
+	ECS::GetInstance().SetSystemSignature<NavMeshSystem>(sig);
 
-	SignatureID navAgentSig;
-	navAgentSig.set(ECS::GetInstance().GetComponentType<NavMeshAgent>());
-	navAgentSig.set(ECS::GetInstance().GetComponentType<Transform>());
-	ECS::GetInstance().SetSystemSignature<NavMeshAgentSystem>(navAgentSig);
+	sig.reset();
+	sig.set(ECS::GetInstance().GetComponentType<NavMeshAgent>());
+	sig.set(ECS::GetInstance().GetComponentType<Transform>());
+	ECS::GetInstance().SetSystemSignature<NavMeshAgentSystem>(sig);
+
 	// For UI Rendering System
-	SignatureID uiSig;
-	uiSig.set(ECS::GetInstance().GetComponentType<UIComponent>());
-	ECS::GetInstance().SetSystemSignature<UIRenderSystem>(uiSig);
+	sig.reset();
+	sig.set(ECS::GetInstance().GetComponentType<UIComponent>());
+	ECS::GetInstance().SetSystemSignature<UIRenderSystem>(sig);
 
 	// For UI Button System (only requires UIButtonComponent)
-	SignatureID buttonSig;
-	buttonSig.set(ECS::GetInstance().GetComponentType<UIButtonComponent>());
-	ECS::GetInstance().SetSystemSignature<UIButtonSystem>(buttonSig);
+	sig.reset();
+	sig.set(ECS::GetInstance().GetComponentType<UIButtonComponent>());
+	ECS::GetInstance().SetSystemSignature<UIButtonSystem>(sig);
 
 	glfwSetFramebufferSizeCallback(windowContext, []([[maybe_unused]] GLFWwindow* window, int width, int height)
 		{
@@ -475,57 +449,8 @@ bool engine::Init(GLFWwindow* windowContext)
 	EE_CORE_INFO("Created shared materials with proper texture assignment control");
 
 	// Initialize game camera
-	//auto gameCamera = ECS::GetInstance().GetSystem<graphics::CameraSystem>();
 	int windowWidth, windowHeight;
 	glfwGetFramebufferSize(windowContext, &windowWidth, &windowHeight);
-	//gameCamera->SetViewportSize(static_cast<float>(windowWidth), static_cast<float>(windowHeight));
-	// Audio test entity
-	//auto audioTestEntity = ECS::GetInstance().CreateEntity();
-	//ECS::GetInstance().AddComponent(audioTestEntity, Transform(Vec3(2, 0, -1), Quaternion(), Vec3(1, 1, 1)));
-	//ECS::GetInstance().AddComponent(audioTestEntity, ObjectMetaData());
-	//ECS::GetInstance().AddComponent<Ermine::HierarchyComponent>(audioTestEntity, Ermine::HierarchyComponent{});
-
-	//AudioComponent testAudio;
-	//ECS::GetInstance().AddComponent(audioTestEntity, testAudio);
-	//EE_CORE_INFO("Audio test entity created with ID: {} - will auto-play", audioTestEntity);
-
-	// Example FBX entity
-	//fbxEntity = ECS::GetInstance().CreateEntity();
-	//auto model = AssetManager::GetInstance().LoadModel("../Resources/Models/Walking.fbx");
-	//ECS::GetInstance().AddComponent(fbxEntity, Transform(Vec3(2, -0.5f, 0), Quaternion(), Vec3(0.01f, 0.01f, 0.01f)));
-	////ECS::GetInstance().AddComponent(
-	////	fbxEntity,
-	////	PhysicComponent(
-	////		PhysicsBodyType::Rigid,         // "rigid body", "trigger"
-	////		JPH::EMotionType::Dynamic,      // static, dynamic, or kinematic
-	////		1.0f,                            // mass ( 0 for static , else is dynamic)
-	////		ShapeType::Capsule				// Box, Sphere, Capsule, CustomMesh(need pass vertex)
-	////	));
-	//ECS::GetInstance().AddComponent(fbxEntity, ObjectMetaData("Character", "Model", true));
-	//ECS::GetInstance().AddComponent(fbxEntity, Mesh{}); // empty mesh component for renderer signature
-	//ECS::GetInstance().AddComponent(fbxEntity, ModelComponent(model));
-	//ECS::GetInstance().AddComponent(fbxEntity, AnimationComponent("Walking"));
-	//ECS::GetInstance().AddComponent<Ermine::HierarchyComponent>(fbxEntity, Ermine::HierarchyComponent{});
-
-	//// Adding animation component
-	//const aiScene* scene = model->GetAssimpScene(); // Read animations from aiScene
-	//if (scene && scene->mNumAnimations > 0) {
-	//	ECS::GetInstance().AddComponent(fbxEntity, AnimationComponent(model));
-	//}
-
-	//// Adding material component
-	//auto FBXMaterial = std::make_unique<graphics::Material>(shader);
-	//auto fbxTexture = AssetManager::GetInstance().LoadTexture("../Resources/Textures/Pants_Base_color.png");
-	//FBXMaterial->LoadTemplate(graphics::MaterialTemplates::PBR_WHITE());
-
-	//if (fbxTexture && fbxTexture->IsValid()) {
-	//	FBXMaterial->SetTexture("materialAlbedoMap", fbxTexture);
-	//	FBXMaterial->SetBool("materialHasAlbedoMap", true);
-	//}
-	//ECS::GetInstance().AddComponent(fbxEntity, Material(std::move(FBXMaterial)));
-
-	// Create a simple quad mesh for particles
-	//auto tex = AssetManager::GetInstance().LoadTexture("../Resources/Textures/greybox_red_solid.png");
 
 	ECS::GetInstance().GetSystem<NavMeshSystem>()->Init();
 	// initialize particles emitter
@@ -560,12 +485,12 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	editor::EditorGUI::CreateImGUIWindow<ParticlesImGUI>();
 	editor::EditorGUI::CreateImGUIWindow<AudioImGUI>();
-	editor::EditorGUI::CreateImGUIWindow<editor::GraphicsDebugGUI>("Graphics Debug"); // TODO: Namespace required?
+	editor::EditorGUI::CreateImGUIWindow<editor::GraphicsDebugGUI>("Graphics Debug");
 	editor::EditorGUI::CreateImGUIWindow<ViewPortGUI>();
 	editor::EditorGUI::CreateImGUIWindow<FSMEditorImGUI>();
 	editor::EditorGUI::CreateImGUIWindow<AnimationEditorImGUI>();
 	editor::EditorGUI::CreateImGUIWindow<ConsoleGUI>();
-	editor::EditorGUI::CreateImGUIWindow<ImguiUI::AssetBrowser>(); //TODO: Standardize please, do we want namespace ImGui for all window or not
+	editor::EditorGUI::CreateImGUIWindow<ImguiUI::AssetBrowser>();
 
 	// Legacy ImGui menu windows removed - replaced with scene-based UI:
 	// - Main menu: Open Resources/Scenes/mainmenu.scene, edit MenuBackground/GameTitle entities
@@ -577,7 +502,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	// cutsceneGUI->SetNextScene(...);
 
 	{
-		static Ermine::ResourcePipeline pipeline; // TODO: Is this also needed in game build?
+		static Ermine::ResourcePipeline pipeline;
 		if (pipeline.Initialize("../Resources")) {
 			EE_CORE_INFO("ResourcePipeline initialized successfully");
 
@@ -605,6 +530,8 @@ bool engine::Init(GLFWwindow* windowContext)
 #endif
 
 	s_isInitialized = true;
+
+	return true;
 }
 
 void engine::Shutdown()

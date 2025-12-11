@@ -3,8 +3,8 @@
 public class DisableLightCone : MonoBehaviour
 {
     public float timer = 3.0f;
-    private Vector3 oldPos;
-    private Vector3 oldConePos;
+    //private Vector3 oldPos;
+    //private Vector3 oldConePos;
     private bool disabled = false;
     private bool orbInside = false;
     private bool currentlyColliding = false;

@@ -1342,7 +1342,7 @@ namespace
 		return obj;
 	}
 
-	MonoObject* icall_transform_get_transform_by_name(MonoObject* thisObj, MonoString* name)
+	MonoObject* icall_transform_get_transform_by_name([[maybe_unused]] MonoObject* thisObj, MonoString* name)
 	{
 		using namespace Ermine;
 		if (!name)
@@ -1353,7 +1353,7 @@ namespace
 		}
 		std::string fromMonoName;
 		ToTempUTF8(name, fromMonoName);
-		ToTempUTF8(name, fromMonoName); // Maybe busy thread
+		//ToTempUTF8(name, fromMonoName); // Maybe busy thread
 		const auto& eList = SceneManager::GetInstance().GetActiveScene()->GetAllEntities();
 		for (const auto& entity : eList)
 		{

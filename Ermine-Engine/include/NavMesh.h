@@ -17,9 +17,9 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "ECS.h"
 #include "Components.h"
 
-struct rcContext; struct rcHeightfield; struct rcCompactHeightfield;
+class rcContext; struct rcHeightfield; struct rcCompactHeightfield;
 struct rcContourSet; struct rcPolyMesh; struct rcPolyMeshDetail;
-struct duDebugDraw; struct dtNavMesh; struct dtNavMeshQuery;
+struct duDebugDraw; class dtNavMesh; class dtNavMeshQuery;
 
 namespace Ermine {
 

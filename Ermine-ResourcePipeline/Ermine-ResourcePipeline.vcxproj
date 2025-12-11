@@ -110,7 +110,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>DirectXTexD.lib;assimp-vc143-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>..\ThirdParty\DirectXTex\lib;..\ThirdParty\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalOptions>/NODEFAULTLIB:LIBCMTD %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/NODEFAULTLIB:LIBCMTD /IGNORE:4099 /IGNORE:4204 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PostBuildEvent>
       <Command>IF EXIST "$(SolutionDir)ThirdParty\assimp\bin\assimp-vc143-mt.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\assimp\bin\assimp-vc143-mt.dll" "$(TargetDir)" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\assimp\bin\assimp-vc143-mt.dll" "$(TargetDir)" &gt; nul)</Command>
@@ -160,7 +160,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>DirectXTexD.lib;assimp-vc143-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>..\ThirdParty\DirectXTex\lib;..\ThirdParty\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalOptions>/NODEFAULTLIB:LIBCMTD %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/NODEFAULTLIB:LIBCMTD /IGNORE:4099 /IGNORE:4204 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PostBuildEvent>
       <Command>IF EXIST "$(SolutionDir)ThirdParty\assimp\bin\assimp-vc143-mt.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)ThirdParty\assimp\bin\assimp-vc143-mt.dll" "$(TargetDir)" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)ThirdParty\assimp\bin\assimp-vc143-mt.dll" "$(TargetDir)" &gt; nul)</Command>
