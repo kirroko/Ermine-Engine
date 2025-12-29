@@ -378,7 +378,7 @@ namespace Ermine {
         return true;
     }
 
-
+    /*
     bool NavMeshSystem::BakeNavMesh(EntityID e)
     {
         if (!ECS::GetInstance().HasComponent<NavMeshComponent>(e) ||
@@ -446,6 +446,145 @@ namespace Ermine {
         //}
 
         return true;
+    }*/
+
+    bool NavMeshSystem::BakeNavMesh(EntityID e)
+    {
+        auto& ecs = ECS::GetInstance();
+
+        if (!ecs.HasComponent<NavMeshComponent>(e) ||
+            !ecs.HasComponent<Transform>(e) ||
+            !ecs.HasComponent<Mesh>(e))
+            return false;
+
+        auto& nm = ecs.GetComponent<NavMeshComponent>(e);
+        auto& navT = ecs.GetComponent<Transform>(e);
+
+        // --- helper: append a cube (top-only for floor, full cube for obstacles) ---
+        auto AppendCube = [&](EntityID ent, bool topOnly,
+            std::vector<float>& outVerts,
+            std::vector<int>& outTris)
+            {
+                if (!ecs.HasComponent<Transform>(ent) || !ecs.HasComponent<Mesh>(ent))
+                    return;
+
+                auto& t = ecs.GetComponent<Transform>(ent);
+                auto& m = ecs.GetComponent<Mesh>(ent);
+
+                if (m.kind != MeshKind::Primitive || m.primitive.type != "Cube")
+                    return;
+
+                glm::quat rotQuat = glm::quat(t.rotation.w, t.rotation.x, t.rotation.y, t.rotation.z);
+                glm::mat4 model =
+                    glm::translate(glm::mat4(1.0f), glm::vec3(t.position.x, t.position.y, t.position.z)) *
+                    glm::mat4_cast(rotQuat) *
+                    glm::scale(glm::mat4(1.0f),
+                        glm::vec3(t.scale.x * m.primitive.size.x,
+                            t.scale.y * m.primitive.size.y,
+                            t.scale.z * m.primitive.size.z));
+
+                const int base = (int)(outVerts.size() / 3);
+
+                if (topOnly)
+                {
+                    // top face (4 verts, 2 tris)
+                    const float topVerts[] = {
+                        -0.5f, 0.5f, -0.5f,
+                         0.5f, 0.5f, -0.5f,
+                         0.5f, 0.5f,  0.5f,
+                        -0.5f, 0.5f,  0.5f
+                    };
+                    const int topTris[] = { 0,1,2, 0,2,3 };
+
+                    for (int i = 0; i < 4; ++i)
+                    {
+                        glm::vec4 v = model * glm::vec4(
+                            topVerts[i * 3 + 0], topVerts[i * 3 + 1], topVerts[i * 3 + 2], 1.0f);
+
+                        outVerts.push_back(v.x);
+                        outVerts.push_back(v.y);
+                        outVerts.push_back(v.z);
+                    }
+
+                    for (int i = 0; i < 6; ++i)
+                        outTris.push_back(base + topTris[i]);
+                }
+                else
+                {
+                    // full cube (8 verts, 12 tris)
+                    const float cubeVerts[] = {
+                        -0.5f,-0.5f,-0.5f,  0.5f,-0.5f,-0.5f,  0.5f, 0.5f,-0.5f, -0.5f, 0.5f,-0.5f,
+                        -0.5f,-0.5f, 0.5f,  0.5f,-0.5f, 0.5f,  0.5f, 0.5f, 0.5f, -0.5f, 0.5f, 0.5f
+                    };
+
+                    const int cubeTris[] = {
+                        // bottom
+                        0,1,2, 0,2,3,
+                        // top
+                        4,6,5, 4,7,6,
+                        // front
+                        4,5,1, 4,1,0,
+                        // back
+                        3,2,6, 3,6,7,
+                        // left
+                        4,0,3, 4,3,7,
+                        // right
+                        1,5,6, 1,6,2
+                    };
+
+                    for (int i = 0; i < 8; ++i)
+                    {
+                        glm::vec4 v = model * glm::vec4(
+                            cubeVerts[i * 3 + 0], cubeVerts[i * 3 + 1], cubeVerts[i * 3 + 2], 1.0f);
+
+                        outVerts.push_back(v.x);
+                        outVerts.push_back(v.y);
+                        outVerts.push_back(v.z);
+                    }
+
+                    for (int i = 0; i < (int)(sizeof(cubeTris) / sizeof(int)); ++i)
+                        outTris.push_back(base + cubeTris[i]);
+                }
+            };
+
+        // --- collect geometry ---
+        std::vector<float> verts;
+        std::vector<int> tris;
+        verts.reserve(1024);
+        tris.reserve(1024);
+
+        // Bake floor's TOP face as walkable
+        AppendCube(e, true, verts, tris);
+
+        // Include "nearby" cubes as obstacles:
+        // For now: include ALL cube primitives in scene except the agent meshes.
+        // You can add a distance check here if you want.
+        for (EntityID ent = 1; ent < MAX_ENTITIES; ++ent)
+        {
+            if (!ecs.IsEntityValid(ent)) continue;
+            if (ent == e) continue;
+            if (!ecs.HasComponent<Mesh>(ent) || !ecs.HasComponent<Transform>(ent)) continue;
+
+            // Optional: only include static world geometry (if you have a flag)
+            // Optional: skip entities that are NavMeshAgents etc.
+
+            AppendCube(ent, false, verts, tris);
+        }
+
+        const int nverts = (int)(verts.size() / 3);
+        const int ntris = (int)(tris.size() / 3);
+
+        if (nverts < 3 || ntris < 1)
+            return false;
+
+        bool ok = BuildFromTriangles(nm, verts.data(), nverts, tris.data(), ntris);
+        if (!ok)
+        {
+            EE_CORE_ERROR("[NavMeshSystem] Bake failed for entity %u", e);
+            return false;
+        }
+
+        return true;
     }
 
     void NavMeshSystem::DebugDraw()
@@ -464,6 +603,7 @@ namespace Ermine {
         {
             if (!ECS::GetInstance().HasComponent<NavMeshComponent>(e)) continue;
             auto& c = ECS::GetInstance().GetComponent<NavMeshComponent>(e);
+            if (!c.drawNavMesh) continue;
             if (!c.runtime || !c.runtime->nav) continue;
 
             const dtNavMesh* nav = c.runtime->nav;
@@ -522,6 +662,7 @@ namespace Ermine {
         {
             if (!ECS::GetInstance().HasComponent<NavMeshComponent>(e)) continue;
             auto& c = ECS::GetInstance().GetComponent<NavMeshComponent>(e);
+            if (!c.drawWalkable) continue;
             if (!c.runtime || !c.runtime->nav) continue;
 
             const dtNavMesh* nav = c.runtime->nav;
