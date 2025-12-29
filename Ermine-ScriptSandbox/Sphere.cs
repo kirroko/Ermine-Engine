@@ -5,7 +5,7 @@ public class Sphere : MonoBehaviour
     public Vector3 direction;
     public float speed = 10.0f;
 
-    private float timeAlive = 3.0f;
+    private float timeAlive = 1.0f;
 
     private void Start()
     {
