@@ -197,11 +197,11 @@ void EditorGUI::StartPlayMode()
     }
 
     // Lock cursor for FPS controls
-    if (s_WindowContext)
-    {
-        glfwSetInputMode(s_WindowContext, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-        EE_CORE_INFO("Cursor locked for FPS controls");
-    }
+    //if (s_WindowContext)
+    //{
+    //    glfwSetInputMode(s_WindowContext, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    //    EE_CORE_INFO("Cursor locked for FPS controls");
+    //}
 
     EE_CORE_INFO("Play mode started with camera entity {}", s_PrimaryCameraEntity);
 }
@@ -1125,9 +1125,9 @@ void EditorGUI::Update(GLFWwindow* windowContext)
         s_Inspector->OnImGuiRender();
     }
 
-    static bool show_demo_window = true;
-    if (show_demo_window)
-        ImGui::ShowDemoWindow(&show_demo_window);
+    //static bool show_demo_window = true;
+    //if (show_demo_window)
+    //    ImGui::ShowDemoWindow(&show_demo_window);
 
     // Call Update() for all registered ImGui windows
     for (auto& window : m_Windows) {

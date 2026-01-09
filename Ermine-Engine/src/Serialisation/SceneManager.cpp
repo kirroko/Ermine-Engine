@@ -419,7 +419,7 @@ void SceneManager::OpenScene(const std::string& path)
     ecs.GetSystem<Ermine::Physics>()->UpdatePhysicList();
     
     // Apply cursor rules based on scene type
-    ApplySceneCursorState(path);
+    //ApplySceneCursorState(path);
     
     EE_CORE_INFO("Scene '{}' loaded successfully with {} entities", sceneName, newScene->GetEntityCount());
 }
