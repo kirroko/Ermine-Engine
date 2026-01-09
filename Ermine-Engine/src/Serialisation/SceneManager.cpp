@@ -344,12 +344,6 @@ void SceneManager::ClearScene()
     auto emptyScene = std::make_shared<Ermine::Scene>("Empty Scene");
     emptyScene->EnsureSyncedWithECS(/*force=*/true);
 
-    // Set as active scene in SceneManager
-    SetActiveScene(emptyScene);
-
-    // Notify EditorGUI to update hierarchy panel and inspector
-    Ermine::editor::EditorGUI::SetActiveScene(emptyScene);
-
     ecs.GetSystem<Ermine::Physics>()->UpdatePhysicList();
     m_CurrentScenePath.reset();
     m_Dirty = false;
@@ -401,18 +395,21 @@ void SceneManager::OpenScene(const std::string& path)
     newScene->EnsureSyncedWithECS(/*force=*/true);
 
     // Set as active scene in SceneManager
-    SetActiveScene(newScene);
-
-    // Notify EditorGUI to update hierarchy panel and inspector
-    Ermine::editor::EditorGUI::SetActiveScene(newScene);
-    if (m_ActiveScene)
+    if (path != "../Temp/Temp.scene")
     {
-        auto baseName = xstrtool::PathBaseName(xstrtool::PathWithoutExtension(path));
-        m_ActiveScene->SetName(baseName);
-        m_ActiveScene->EnsureSyncedWithECS(/*force=*/true);
-    }
+        SetActiveScene(newScene);
+        m_CurrentScenePath = path;
+        // Notify EditorGUI to update hierarchy panel and inspector
+        Ermine::editor::EditorGUI::SetActiveScene(newScene);
 
-    m_CurrentScenePath = path;
+        if (m_ActiveScene)
+        {
+            auto baseName = xstrtool::PathBaseName(xstrtool::PathWithoutExtension(path));
+            m_ActiveScene->SetName(baseName);
+            m_ActiveScene->EnsureSyncedWithECS(/*force=*/true);
+        }
+    }
+        
     m_Dirty = false;
 
     ecs.GetSystem<Ermine::HierarchySystem>()->ForceUpdateAllTransforms();
@@ -439,14 +436,26 @@ void SceneManager::SaveScene()
 
 void SceneManager::SaveTemp()
 {
-    SaveSceneTo("../Temp/Temp.scene");
+    auto save = m_CurrentScenePath;
+	
+	auto path = std::string("../Temp/Temp.scene");
+    EE_CORE_INFO("SaveTemp('{}')", path);
+    //SyncHierarchyGuidsFromRuntime(Ermine::ECS::GetInstance());
+    SaveSceneToFile(Ermine::ECS::GetInstance(), path, true);
+    m_Dirty = false;
+
+	m_CurrentScenePath = save;
 }
 
 void SceneManager::LoadTemp()
 {
+    auto save = m_CurrentScenePath;
+
     ClearScene();
     OpenScene("../Temp/Temp.scene");
     RemoveTemp();
+
+    m_CurrentScenePath = save;
 }
 
 void SceneManager::RemoveTemp()
