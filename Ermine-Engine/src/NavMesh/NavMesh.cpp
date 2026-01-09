@@ -378,76 +378,6 @@ namespace Ermine {
         return true;
     }
 
-    /*
-    bool NavMeshSystem::BakeNavMesh(EntityID e)
-    {
-        if (!ECS::GetInstance().HasComponent<NavMeshComponent>(e) ||
-            !ECS::GetInstance().HasComponent<Transform>(e) ||
-            !ECS::GetInstance().HasComponent<Mesh>(e))
-            return false;
-
-        auto& t = ECS::GetInstance().GetComponent<Transform>(e);
-        auto& m = ECS::GetInstance().GetComponent<Mesh>(e);
-        auto& nm = ECS::GetInstance().GetComponent<NavMeshComponent>(e);
-
-        if (m.kind != MeshKind::Primitive || m.primitive.type != "Cube")
-        {
-            EE_CORE_WARN("[NavMeshSystem] Entity %u not a cube primitive; skipping", e);
-            return false;
-        }
-
-        //EE_CORE_INFO("[NavMeshSystem] Baking navmesh for cube entity %u", e);
-
-        // Bake only the TOP face of the cube
-        const float topVerts[] = {
-            -0.5f, 0.5f, -0.5f,   // top left back
-             0.5f, 0.5f, -0.5f,   // top right back
-             0.5f, 0.5f,  0.5f,   // top right front
-            -0.5f, 0.5f,  0.5f    // top left front
-        };
-
-        const int topTris[] = {
-            0,1,2,
-            0,2,3
-        };
-
-        std::vector<float> worldVerts;
-        worldVerts.reserve(4 * 3);
-
-        glm::quat rotQuat = glm::quat(t.rotation.w, t.rotation.x, t.rotation.y, t.rotation.z);
-
-        glm::mat4 model =
-            glm::translate(glm::mat4(1.0f), glm::vec3(t.position.x, t.position.y, t.position.z)) *
-            glm::mat4_cast(rotQuat) *
-            glm::scale(glm::mat4(1.0f),
-                glm::vec3(t.scale.x * m.primitive.size.x,
-                    t.scale.y * m.primitive.size.y,
-                    t.scale.z * m.primitive.size.z));
-
-        for (int i = 0; i < 4; ++i)
-        {
-            glm::vec4 v = model * glm::vec4(topVerts[i * 3], topVerts[i * 3 + 1], topVerts[i * 3 + 2], 1.0f);
-            worldVerts.push_back(v.x);
-            worldVerts.push_back(v.y);
-            worldVerts.push_back(v.z);
-        }
-
-        bool ok = BuildFromTriangles(nm, worldVerts.data(), 4, topTris, 2);
-        if (!ok)
-        {
-            EE_CORE_ERROR("[NavMeshSystem] Bake failed for entity %u", e);
-            return false;
-        }
-
-        //if (nm.build && nm.build->pmesh)
-        //{
-        //    EE_CORE_INFO("[NavMeshSystem] Baked navmesh verts=%d polys=%d",
-        //        nm.build->pmesh->nverts, nm.build->pmesh->npolys);
-        //}
-
-        return true;
-    }*/
-
     bool NavMeshSystem::BakeNavMesh(EntityID e)
     {
         auto& ecs = ECS::GetInstance();
@@ -459,8 +389,9 @@ namespace Ermine {
 
         auto& nm = ecs.GetComponent<NavMeshComponent>(e);
         auto& navT = ecs.GetComponent<Transform>(e);
+        auto& navM = ecs.GetComponent<Mesh>(e);
 
-        // --- helper: append a cube (top-only for floor, full cube for obstacles) ---
+        // helper: append a cube (top-only for floor, full cube for obstacles)
         auto AppendCube = [&](EntityID ent, bool topOnly,
             std::vector<float>& outVerts,
             std::vector<int>& outTris)
@@ -547,26 +478,60 @@ namespace Ermine {
                 }
             };
 
-        // --- collect geometry ---
+        // compute bake region from the cube you're baking on
+        // (AABB region around the bake cube, plus a bit above it for walls sitting on top)
+        if (navM.kind != MeshKind::Primitive || navM.primitive.type != "Cube")
+            return false;
+
+        Vec3 bakeCenter = navT.position;
+
+        Vec3 bakeHalf;
+        bakeHalf.x = 0.5f * navT.scale.x * navM.primitive.size.x;
+        bakeHalf.y = 0.5f * navT.scale.y * navM.primitive.size.y;
+        bakeHalf.z = 0.5f * navT.scale.z * navM.primitive.size.z;
+
+        const float extraSide = 0.25f; // small padding so edge-touching walls are included
+        const float extraAbove = std::max(2.0f, nm.agentHeight * 2.0f); // include "on top" obstacles
+
+        const float minX = bakeCenter.x - bakeHalf.x - extraSide;
+        const float maxX = bakeCenter.x + bakeHalf.x + extraSide;
+        const float minZ = bakeCenter.z - bakeHalf.z - extraSide;
+        const float maxZ = bakeCenter.z + bakeHalf.z + extraSide;
+
+        const float minY = bakeCenter.y - bakeHalf.y - extraSide;
+        const float maxY = bakeCenter.y + bakeHalf.y + extraAbove;
+
+        auto InsideBakeRegionByCenter = [&](const Transform& t) -> bool
+            {
+                return (t.position.x >= minX && t.position.x <= maxX) &&
+                    (t.position.z >= minZ && t.position.z <= maxZ) &&
+                    (t.position.y >= minY && t.position.y <= maxY);
+            };
+
+        // collect geometry
         std::vector<float> verts;
         std::vector<int> tris;
-        verts.reserve(1024);
-        tris.reserve(1024);
+        verts.reserve(2048);
+        tris.reserve(2048);
 
         // Bake floor's TOP face as walkable
         AppendCube(e, true, verts, tris);
 
-        // Include "nearby" cubes as obstacles:
-        // For now: include ALL cube primitives in scene except the agent meshes.
-        // You can add a distance check here if you want.
+        // Include nearby cubes as obstacles (skip NavMeshAgents)
         for (EntityID ent = 1; ent < MAX_ENTITIES; ++ent)
         {
             if (!ecs.IsEntityValid(ent)) continue;
             if (ent == e) continue;
+
             if (!ecs.HasComponent<Mesh>(ent) || !ecs.HasComponent<Transform>(ent)) continue;
 
-            // Optional: only include static world geometry (if you have a flag)
-            // Optional: skip entities that are NavMeshAgents etc.
+            // Skip entities that are NavMeshAgents
+            if (ecs.HasComponent<NavMeshAgent>(ent)) continue;
+
+            auto& ot = ecs.GetComponent<Transform>(ent);
+
+            // Include only entities within/over the bake cube region
+            if (!InsideBakeRegionByCenter(ot)) continue;
 
             AppendCube(ent, false, verts, tris);
         }
