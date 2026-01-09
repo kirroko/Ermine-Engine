@@ -27,9 +27,19 @@ namespace Ermine
     class EE_API Window
     {
     public:
+        enum class CursorLockState : std::int32_t
+        {
+            None = 0,
+            Locked = 1,
+            Confined = 2
+        };
+    private:
+        static bool s_visibleCursor;
+        static CursorLockState s_cursorLockState;
+    public:
         /** 
          * @brief Initialize the window context using GLFW
-         * @param width The width of the window
+         * @param width The width of the window 
          * @param height The height of the window
          * @param title The title of the window
          * @return The window
@@ -52,5 +62,13 @@ namespace Ermine
          * @param window The window to toggle fullscreen mode
          */
         static void ToggleFullscreenWindow(GLFWwindow* window);
+
+        static void SetVisibleCursor(const bool& value);
+
+        static bool GetVisibleCursor() { return s_visibleCursor; }
+
+        static void SetCursorLockState(CursorLockState state);
+
+		static CursorLockState GetCursorLockState() { return s_cursorLockState; }
     };
 }
