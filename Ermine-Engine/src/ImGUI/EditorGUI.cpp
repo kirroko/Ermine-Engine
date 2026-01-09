@@ -270,6 +270,8 @@ void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
     //if (!io.WantTextInput)  // don't trigger if user is typing in text fields
     //{
 
+	// KEYBOARD SHORTCUTS
+
     bool ctrl = io.KeyCtrl;
     bool shift = io.KeyShift;
 
