@@ -60,6 +60,13 @@ namespace Ermine {
         */
         const char* GetEntityIcon(EntityID entity) const;
 
+        /**
+		 * @brief Helper function to recursively check if any descendant of the given entity is selected
+         * @param entity The entity to check
+		 * @return Ture if entity or any descendant is selected, false otherwise
+         */
+        bool HasSelectedDescendant(EntityID entity) const;
+
     public:
         /*!
         \brief Default constructor

@@ -197,11 +197,6 @@ namespace Ermine {
         // Check if entity is inactive
         bool isInactive = !metadata.selfActive;
 
-        // If inactive and we're not showing inactive entities, skip rendering
-        //if (isInactive && !m_ShowInactive) {
-        //    return;
-        //}
-
         // Push gray color for inactive entities
         bool pushedColor = false;
         if (isInactive) {
@@ -232,7 +227,14 @@ namespace Ermine {
         if (isSelected) nodeFlags |= ImGuiTreeNodeFlags_Selected;
         if (children.empty()) nodeFlags |= ImGuiTreeNodeFlags_Leaf;
 
+        // Auto-expand parent
+        if (HasSelectedDescendant(entity))
+            ImGui::SetNextItemOpen(true);
+
         bool nodeOpen = ImGui::TreeNodeEx(label.c_str(), nodeFlags);
+
+        if (isSelected && ImGui::IsWindowAppearing())
+            ImGui::SetScrollHereY(0.5f);
 
         HandleDragDrop(entity);
 
@@ -241,7 +243,6 @@ namespace Ermine {
 				editor::Selection::Toggle(m_ActiveScene, entity); // Multi-select
             else
 				editor::Selection::SelectSingle(m_ActiveScene, entity); // Single select
-            //m_ActiveScene->SetSelectedEntity(entity);
             m_PendingFocusEntity = editor::Selection::Primary();
         }
 
@@ -511,5 +512,23 @@ namespace Ermine {
             return "[Mesh] ";
         }
         return ""; // No prefix for basic entities
+    }
+
+    bool HierarchyPanel::HasSelectedDescendant(EntityID entity) const
+    {
+        if (editor::Selection::IsSelected(entity))
+            return true;
+
+        auto& ecs = ECS::GetInstance();
+        if (!ecs.HasComponent<HierarchyComponent>(entity))
+            return false;
+
+		const auto& hierarchy = ecs.GetComponent<HierarchyComponent>(entity);
+        for (auto child : hierarchy.children)
+        {
+            if (HasSelectedDescendant(child))
+                return true;
+        }
+		return false;
     }
 }

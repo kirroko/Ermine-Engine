@@ -26,7 +26,9 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <glm/gtx/matrix_decompose.hpp>
 
 #include "AssetManager.h"
+#include "HierarchyPanel.h"
 #include "imgui_internal.h"
+#include "InspectorGUI.h"
 
 #include "Scene.h"
 #include "SceneManager.h"
@@ -343,7 +345,20 @@ void Ermine::ViewPortGUI::ObjectPicking(const std::shared_ptr<Ermine::graphics::
 					EditorCamera::GetInstance().GetProjectionMatrix());
 
 				if (hit)
+				{
+					if (EditorGUI::GetHierarchyPanel() && EditorGUI::GetHierarchyPanel()->GetScene())
+					{
+						if (ImGui::GetIO().KeyCtrl)
+							Selection::Toggle(EditorGUI::GetHierarchyPanel()->GetScene(), entity);
+						else
+							Selection::SelectSingle(EditorGUI::GetHierarchyPanel()->GetScene(), entity);
+					}
+
+					// Set selection in Inspector
+					//EditorGUI::GetHierarchyPanel()->
+
 					SceneManager::GetInstance().GetActiveScene()->SetSelectedEntity(entity);
+				}
 				else
 					SceneManager::GetInstance().GetActiveScene()->SetSelectedEntity(0);
 			}

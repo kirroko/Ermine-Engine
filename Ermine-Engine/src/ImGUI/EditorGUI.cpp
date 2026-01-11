@@ -1127,9 +1127,9 @@ void EditorGUI::Update(GLFWwindow* windowContext)
         s_Inspector->OnImGuiRender();
     }
 
-    //static bool show_demo_window = true;
-    //if (show_demo_window)
-    //    ImGui::ShowDemoWindow(&show_demo_window);
+    static bool show_demo_window = true;
+    if (show_demo_window)
+        ImGui::ShowDemoWindow(&show_demo_window);
 
     // Call Update() for all registered ImGui windows
     for (auto& window : m_Windows) {
