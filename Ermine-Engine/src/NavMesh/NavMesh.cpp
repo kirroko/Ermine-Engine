@@ -557,8 +557,8 @@ namespace Ermine {
         auto renderer = ECS::GetInstance().GetSystem<graphics::Renderer>();
         if (!renderer) { EE_CORE_WARN("[NavMesh] DebugDraw: no Renderer system."); return; }
 
-        const auto& view = editor::EditorCamera::GetInstance().GetViewMatrix();
-        const auto& proj = editor::EditorCamera::GetInstance().GetProjectionMatrix();
+        //const auto& view = editor::EditorCamera::GetInstance().GetViewMatrix();
+        //const auto& proj = editor::EditorCamera::GetInstance().GetProjectionMatrix();
 
         int tilesVisited = 0;
         int polysVisited = 0;
@@ -604,13 +604,13 @@ namespace Ermine {
                 }
             }
         }
-        glEnable(GL_DEPTH_TEST);
-        glDepthMask(GL_TRUE);
-        glDisable(GL_BLEND);
+        //glEnable(GL_DEPTH_TEST);
+        //glDepthMask(GL_TRUE);
+        //glDisable(GL_BLEND);
 
-        renderer->RenderDebugLines(view, proj);
+        //renderer->RenderDebugLines(view, proj);
 
-        glDisable(GL_DEPTH_TEST);
+        //glDisable(GL_DEPTH_TEST);
     }
 
     void NavMeshSystem::DebugHighLight()
@@ -618,8 +618,8 @@ namespace Ermine {
         auto renderer = ECS::GetInstance().GetSystem<graphics::Renderer>();
         if (!renderer) return;
 
-        const auto& view = editor::EditorCamera::GetInstance().GetViewMatrix();
-        const auto& proj = editor::EditorCamera::GetInstance().GetProjectionMatrix();
+        //const auto& view = editor::EditorCamera::GetInstance().GetViewMatrix();
+        //const auto& proj = editor::EditorCamera::GetInstance().GetProjectionMatrix();
 
         int trisSubmitted = 0;
 
@@ -665,59 +665,56 @@ namespace Ermine {
         }
 
         //EE_CORE_INFO("[NavMeshSystem] DebugDrawFilled: %d tris submitted", trisSubmitted);
-        renderer->RenderDebugTriangles(view, proj);
+        //renderer->RenderDebugTriangles(view, proj);
     }
 
-    bool NavMeshSystem::ComputeStraightPath(EntityID navEntity, const Vec3& start, const Vec3& end, std::vector<Vec3>& outPath)
+    bool NavMeshSystem::ComputeStraightPath(EntityID navEntity,
+        const Vec3& start, const Vec3& end,
+        const float extents[3],
+        std::vector<Vec3>& outPath)
     {
         auto& ecs = ECS::GetInstance();
         if (!ecs.IsEntityValid(navEntity) || !ecs.HasComponent<NavMeshComponent>(navEntity))
             return false;
 
         auto& navComp = ecs.GetComponent<NavMeshComponent>(navEntity);
-        if (!navComp.runtime)
+        if (!navComp.runtime || !navComp.runtime->query)
             return false;
 
-        // Access the Detour query object
         dtNavMeshQuery* query = navComp.runtime->query;
-        if (!query)
-            return false;
 
         dtQueryFilter filter;
-        filter.setIncludeFlags(0xFFFF); // include all
-        filter.setExcludeFlags(0);      // exclude none
-
-        // Broader extents for testing — you can reduce later (e.g. 2,4,2)
-        const float extents[3] = { 10.0f, 20.0f, 10.0f };
+        filter.setIncludeFlags(0xFFFF);
+        filter.setExcludeFlags(0);
 
         dtPolyRef startRef = 0, endRef = 0;
-        float spos[3] = { start.x, start.y, start.z };
-        float epos[3] = { end.x, end.y, end.z };
 
-        if (dtStatusFailed(query->findNearestPoly(spos, extents, &filter, &startRef, nullptr)))
+        float spos[3] = { start.x, start.y, start.z };
+        float epos[3] = { end.x,   end.y,   end.z };
+
+        float nspos[3]; // nearest start on mesh
+        float nepos[3]; // nearest end on mesh
+
+        if (dtStatusFailed(query->findNearestPoly(spos, extents, &filter, &startRef, nspos)) || !startRef)
         {
             EE_CORE_WARN("[NavMeshSystem] findNearestPoly failed for start point");
             return false;
         }
 
-        if (dtStatusFailed(query->findNearestPoly(epos, extents, &filter, &endRef, nullptr)))
+        if (dtStatusFailed(query->findNearestPoly(epos, extents, &filter, &endRef, nepos)) || !endRef)
         {
             EE_CORE_WARN("[NavMeshSystem] findNearestPoly failed for end point");
             return false;
         }
 
-        if (!startRef || !endRef)
-        {
-            EE_CORE_WARN("[NavMeshSystem] Invalid start or end poly (start=%llu end=%llu)",
-                static_cast<unsigned long long>(startRef),
-                static_cast<unsigned long long>(endRef));
-            return false;
-        }
+        // Use clamped points for the rest of the query
+        spos[0] = nspos[0]; spos[1] = nspos[1]; spos[2] = nspos[2];
+        epos[0] = nepos[0]; epos[1] = nepos[1]; epos[2] = nepos[2];
 
         dtPolyRef polys[256];
         int nPolys = 0;
-        if (dtStatusFailed(query->findPath(startRef, endRef, spos, epos, &filter,
-            polys, &nPolys, 256)))
+
+        if (dtStatusFailed(query->findPath(startRef, endRef, spos, epos, &filter, polys, &nPolys, 256)))
         {
             EE_CORE_WARN("[NavMeshSystem] findPath failed");
             return false;
@@ -735,30 +732,54 @@ namespace Ermine {
         int nStraight = 0;
 
         if (dtStatusFailed(query->findStraightPath(spos, epos, polys, nPolys,
-            straightPath, straightFlags, straightPolys,
-            &nStraight, 256)))
+            straightPath, straightFlags, straightPolys, &nStraight, 256)))
         {
             EE_CORE_WARN("[NavMeshSystem] findStraightPath failed");
             return false;
         }
 
         outPath.clear();
-        outPath.reserve(static_cast<size_t>(nStraight));
+        outPath.reserve((size_t)nStraight);
 
-        //EE_CORE_INFO("[NavMeshSystem] Straight path points: %d", nStraight);
         for (int i = 0; i < nStraight; ++i)
         {
-            Vec3 p;
-            p.x = straightPath[i * 3 + 0];
-            p.y = straightPath[i * 3 + 1];
-            p.z = straightPath[i * 3 + 2];
-            outPath.push_back(p);
-
-            //EE_CORE_INFO("  Path[%d]: %.3f %.3f %.3f", i, p.x, p.y, p.z);
+            outPath.push_back({ straightPath[i * 3 + 0], straightPath[i * 3 + 1], straightPath[i * 3 + 2] });
         }
 
         return !outPath.empty();
     }
+
+
+    bool NavMeshSystem::ClampToNavMesh(EntityID navEntity,
+        const Vec3& inPos,
+        const float extents[3],
+        Vec3& outPos)
+    {
+        auto& ecs = ECS::GetInstance();
+        if (!ecs.IsEntityValid(navEntity) || !ecs.HasComponent<NavMeshComponent>(navEntity))
+            return false;
+
+        auto& navComp = ecs.GetComponent<NavMeshComponent>(navEntity);
+        if (!navComp.runtime || !navComp.runtime->query)
+            return false;
+
+        dtNavMeshQuery* query = navComp.runtime->query;
+
+        dtQueryFilter filter;
+        filter.setIncludeFlags(0xFFFF);
+        filter.setExcludeFlags(0);
+
+        float p[3] = { inPos.x, inPos.y, inPos.z };
+        dtPolyRef ref = 0;
+        float nearest[3];
+
+        if (dtStatusFailed(query->findNearestPoly(p, extents, &filter, &ref, nearest)) || !ref)
+            return false;
+
+        outPos = { nearest[0], nearest[1], nearest[2] };
+        return true;
+    }
+
 
     void NavMeshSystem::RemoveEntity(EntityID e)
     {

@@ -81,7 +81,9 @@ namespace Ermine {
         \return
          True if a valid path was successfully computed, false otherwise.
         *************************************************************************/
-        bool ComputeStraightPath(EntityID navEntity, const Vec3& start, const Vec3& end, std::vector<Vec3>& outPath);
+        bool ComputeStraightPath(EntityID navEntity, const Vec3& start, const Vec3& end, const float extents[3], std::vector<Vec3>& outPath);
+
+        bool ClampToNavMesh(EntityID navEntity, const Vec3& inPos, const float extents[3], Vec3& outPos);
         /*!***********************************************************************
         \brief
          Removes all navigation data associated with the specified entity,

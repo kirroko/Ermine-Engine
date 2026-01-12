@@ -2207,7 +2207,117 @@ namespace Ermine::editor {
 		if (!ComponentHeaderWithRemove<NavMeshAgent>("NavMesh Agent", entity))
 			return;
 
-		auto& agent = ECS::GetInstance().GetComponent<NavMeshAgent>(entity);
+		auto& ecs = ECS::GetInstance();
+		auto& agent = ecs.GetComponent<NavMeshAgent>(entity);
+
+		auto AutoFitFromPhysicsCollider = [&](NavMeshAgent& a) -> bool
+		{
+				if (!ecs.HasComponent<Transform>(entity) || !ecs.HasComponent<PhysicComponent>(entity))
+					return false;
+
+				auto& t = ecs.GetComponent<Transform>(entity);
+				auto& p = ecs.GetComponent<PhysicComponent>(entity);
+
+				// Match Physics.cpp: primitive.size if there's a Mesh, else 1.0
+				float primX = 1.0f, primY = 1.0f, primZ = 1.0f;
+				if (ecs.HasComponent<Mesh>(entity))
+				{
+					auto& m = ecs.GetComponent<Mesh>(entity);
+					primX = m.primitive.size.x;
+					primY = m.primitive.size.y;
+					primZ = m.primitive.size.z;
+				}
+
+				// Defaults if something goes weird
+				const float minVal = 0.01f;
+
+				switch (p.shapeType)
+				{
+				case ShapeType::Box:
+				{
+					// Physics.cpp:
+					// halfExtent = scale * 0.5 * primitive.size * colliderSize
+					float hx = t.scale.x * 0.5f * primX * p.colliderSize.x;
+					float hy = t.scale.y * 0.5f * primY * p.colliderSize.y;
+					float hz = t.scale.z * 0.5f * primZ * p.colliderSize.z;
+
+					hx = std::max(hx, minVal);
+					hy = std::max(hy, minVal);
+					hz = std::max(hz, minVal);
+
+					a.radius = std::max(hx, hz);
+					a.height = 2.0f * hy;
+					break;
+				}
+
+				case ShapeType::Sphere:
+				{
+					// Physics.cpp:
+					// radius = scale.x * primitive.size.x * colliderSize.x
+					float r = t.scale.x * primX * p.colliderSize.x;
+					r = (r > 0.0f && std::isfinite(r)) ? r : minVal;
+
+					a.radius = r;
+					a.height = 2.0f * r; // reasonable nav height for a sphere
+					break;
+				}
+
+				case ShapeType::Capsule:
+				{
+					// Physics.cpp:
+					// halfHeight = scale.y * 0.5 * primY * colliderSize.y
+					// capRadius  = scale.x * 0.5 * primX * colliderSize.x
+					float halfH = t.scale.y * 0.5f * primY * p.colliderSize.y;
+					float r = t.scale.x * 0.5f * primX * p.colliderSize.x;
+
+					halfH = (halfH > 0.0f && std::isfinite(halfH)) ? halfH : minVal;
+					r = (r > 0.0f && std::isfinite(r)) ? r : minVal;
+
+					a.radius = r;
+					// Total capsule height = cylinder(2*halfH) + two hemispheres(2*r)
+					a.height = 2.0f * halfH + 2.0f * r;
+					break;
+				}
+
+				case ShapeType::CustomMesh:
+				{
+					// Fallback: use AABB of whatever vertices are available (scaled)
+					// Prefer PhysicComponent.customMeshVertices (Physics fills this for custom meshes)
+					const auto& verts = p.customMeshVertices;
+					if (verts.empty())
+						return false;
+
+					glm::vec3 mn(FLT_MAX), mx(-FLT_MAX);
+					for (auto& v : verts)
+					{
+						glm::vec3 s(v.x * t.scale.x, v.y * t.scale.y, v.z * t.scale.z);
+						mn = glm::min(mn, s);
+						mx = glm::max(mx, s);
+					}
+
+					glm::vec3 size = mx - mn;
+					a.radius = 0.5f * std::max(size.x, size.z);
+					a.height = std::max(size.y, minVal);
+					a.radius = std::max(a.radius, minVal);
+					break;
+				}
+
+				default:
+					return false;
+				}
+
+				// Corner cutting help
+				if (a.stoppingDistance < a.radius)
+					a.stoppingDistance = a.radius;
+
+				return true;
+		};
+
+		if (agent.autoFitFromCollider && !agent.didAutoFit)
+		{
+			if (AutoFitFromPhysicsCollider(agent))
+				agent.didAutoFit = true;
+		}
 
 		// Editable fields
 		ImGui::DragFloat("Speed", &agent.speed, 0.1f, 0.0f, 100.0f);
@@ -2219,6 +2329,13 @@ namespace Ermine::editor {
 		ImGui::SeparatorText("Debug");
 		ImGui::Checkbox("Show Path", &agent.debugDrawPath);
 #endif
+
+		ImGui::Checkbox("Auto Fit From Collider", &agent.autoFitFromCollider);
+		ImGui::DragFloat("Radius", &agent.radius, 0.01f, 0.01f, 10.0f);
+		ImGui::DragFloat("Height", &agent.height, 0.01f, 0.01f, 20.0f);
+
+		if (ImGui::Button("Refit From Collider"))
+			agent.didAutoFit = false;
 	}
 
 	void HierarchyInspector::DrawParticleEmitterComponent(EntityID entity)
