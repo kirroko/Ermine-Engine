@@ -69,9 +69,10 @@ namespace Ermine {
         // Unparent this entity
         hierarchySystem->UnsetParent(entity);
 
-        // Unparent all children (make them root entities)
-        for (auto child : children) {
-            hierarchySystem->UnsetParent(child);
+        // Delete all children recursively if any
+        for (auto child : children) 
+        {
+            DestroyEntity(child);
         }
 
         // Remove from scene
