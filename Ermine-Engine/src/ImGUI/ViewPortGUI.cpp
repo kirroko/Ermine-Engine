@@ -308,7 +308,7 @@ void Ermine::ViewPortGUI::CameraControls(const bool& overViewCube, const Ermine:
 	}
 
 	// Camera controls
-	if (viewportHovered && !EditorGUI::isPlaying && !s_orbiting)
+	if (viewportHovered && ImGui::IsWindowFocused() && !EditorGUI::isPlaying && !s_orbiting)
 	{
 		if (!ImGuizmo::IsUsing())
 		{
@@ -677,6 +677,8 @@ void Ermine::ViewPortGUI::Update()
 	const bool viewportFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_None);
 
 	if (viewportHovered && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+		ImGui::SetWindowFocus();
+	if (viewportHovered && ImGui::IsMouseClicked(ImGuiMouseButton_Right))
 		ImGui::SetWindowFocus();
 
 	//if (!EditorGUI::isPlaying)
