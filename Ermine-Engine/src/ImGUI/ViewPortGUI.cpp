@@ -723,9 +723,11 @@ void Ermine::ViewPortGUI::Update()
 	const bool ctrlDown = Input::IsKeyDownEditor(GLFW_KEY_LEFT_CONTROL) || Input::IsKeyDownEditor(GLFW_KEY_RIGHT_CONTROL);
 	const float dragThreshold = 3.0f;
 
+	const bool altDown = Input::IsKeyDownEditor(GLFW_KEY_LEFT_ALT);
+
 	// Drag selection
 	if (viewportHovered && !EditorGUI::isPlaying && ImGui::IsMouseClicked(ImGuiMouseButton_Left)
-		&& !overViewCube && !ImGuizmo::IsOver() && !ImGuizmo::IsUsing())
+		&& !overViewCube && !ImGuizmo::IsOver() && !ImGuizmo::IsUsing() && !altDown)
 	{
 		s_dragSelecting = true;
 		s_dragStart = ImGui::GetMousePos();
@@ -733,7 +735,7 @@ void Ermine::ViewPortGUI::Update()
 	}
 
 	// Update drag
-	if (s_dragSelecting && ImGui::IsMouseDown(ImGuiMouseButton_Left) && !ImGuizmo::IsOver() && !ImGuizmo::IsUsing())
+	if (s_dragSelecting && ImGui::IsMouseDown(ImGuiMouseButton_Left) && !ImGuizmo::IsOver() && !ImGuizmo::IsUsing() && !altDown)
 	{
 		s_dragEnd = ImGui::GetMousePos();
 		// Draw rectangle overlay
@@ -749,6 +751,8 @@ void Ermine::ViewPortGUI::Update()
 		dl->AddRectFilled(rMin, rMax, IM_COL32(64, 128, 255, 40));
 		dl->AddRect(rMin, rMax, IM_COL32(64, 128, 255, 180), 0.0f, 0, 2.0f);
 	}
+	else if (s_dragSelecting && altDown)
+		s_dragSelecting = false;
 
 	// Finish drag select
 	if (s_dragSelecting && ImGui::IsMouseReleased(ImGuiMouseButton_Left) && !ImGuizmo::IsOver() && !ImGuizmo::IsUsing())
