@@ -147,6 +147,11 @@ public:
          * @return The shader if it exists, nullptr otherwise
          */
         std::shared_ptr<graphics::Shader> GetShader(const std::string& shaderName);
+        /**
+         * @brief Recompile all cached shaders in place.
+         * @return true if all reloads succeeded, false otherwise.
+         */
+        bool ReloadCachedShaders();
 
         // ================== Model Management ==================
         /**
