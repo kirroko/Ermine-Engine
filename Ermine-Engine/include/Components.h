@@ -3295,6 +3295,12 @@ namespace Ermine
 		bool autoRotate = true;
 		bool debugDrawPath = true;
 
+		float radius = 0.5f;
+		float height = 1.0f;
+
+		bool autoFitFromCollider = true;
+		bool didAutoFit = false;
+
 		bool hasPath = false;
 		Ermine::Vec3 destination{};
 		std::vector<Ermine::Vec3> path;

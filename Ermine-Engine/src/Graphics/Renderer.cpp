@@ -3425,6 +3425,7 @@ void Renderer::RenderDeferredPipeline(const Mtx44& view, const Mtx44& projection
 
 		// Flush the navmesh debug lines to screen
 		RenderDebugLines(view, projection);
+		RenderDebugTriangles(view, projection);
 	}
 
 #endif

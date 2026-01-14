@@ -378,72 +378,176 @@ namespace Ermine {
         return true;
     }
 
-
     bool NavMeshSystem::BakeNavMesh(EntityID e)
     {
-        if (!ECS::GetInstance().HasComponent<NavMeshComponent>(e) ||
-            !ECS::GetInstance().HasComponent<Transform>(e) ||
-            !ECS::GetInstance().HasComponent<Mesh>(e))
+        auto& ecs = ECS::GetInstance();
+
+        if (!ecs.HasComponent<NavMeshComponent>(e) ||
+            !ecs.HasComponent<Transform>(e) ||
+            !ecs.HasComponent<Mesh>(e))
             return false;
 
-        auto& t = ECS::GetInstance().GetComponent<Transform>(e);
-        auto& m = ECS::GetInstance().GetComponent<Mesh>(e);
-        auto& nm = ECS::GetInstance().GetComponent<NavMeshComponent>(e);
+        auto& nm = ecs.GetComponent<NavMeshComponent>(e);
+        auto& navT = ecs.GetComponent<Transform>(e);
+        auto& navM = ecs.GetComponent<Mesh>(e);
 
-        if (m.kind != MeshKind::Primitive || m.primitive.type != "Cube")
-        {
-            EE_CORE_WARN("[NavMeshSystem] Entity %u not a cube primitive; skipping", e);
+        // helper: append a cube (top-only for floor, full cube for obstacles)
+        auto AppendCube = [&](EntityID ent, bool topOnly,
+            std::vector<float>& outVerts,
+            std::vector<int>& outTris)
+            {
+                if (!ecs.HasComponent<Transform>(ent) || !ecs.HasComponent<Mesh>(ent))
+                    return;
+
+                auto& t = ecs.GetComponent<Transform>(ent);
+                auto& m = ecs.GetComponent<Mesh>(ent);
+
+                if (m.kind != MeshKind::Primitive || m.primitive.type != "Cube")
+                    return;
+
+                glm::quat rotQuat = glm::quat(t.rotation.w, t.rotation.x, t.rotation.y, t.rotation.z);
+                glm::mat4 model =
+                    glm::translate(glm::mat4(1.0f), glm::vec3(t.position.x, t.position.y, t.position.z)) *
+                    glm::mat4_cast(rotQuat) *
+                    glm::scale(glm::mat4(1.0f),
+                        glm::vec3(t.scale.x * m.primitive.size.x,
+                            t.scale.y * m.primitive.size.y,
+                            t.scale.z * m.primitive.size.z));
+
+                const int base = (int)(outVerts.size() / 3);
+
+                if (topOnly)
+                {
+                    // top face (4 verts, 2 tris)
+                    const float topVerts[] = {
+                        -0.5f, 0.5f, -0.5f,
+                         0.5f, 0.5f, -0.5f,
+                         0.5f, 0.5f,  0.5f,
+                        -0.5f, 0.5f,  0.5f
+                    };
+                    const int topTris[] = { 0,1,2, 0,2,3 };
+
+                    for (int i = 0; i < 4; ++i)
+                    {
+                        glm::vec4 v = model * glm::vec4(
+                            topVerts[i * 3 + 0], topVerts[i * 3 + 1], topVerts[i * 3 + 2], 1.0f);
+
+                        outVerts.push_back(v.x);
+                        outVerts.push_back(v.y);
+                        outVerts.push_back(v.z);
+                    }
+
+                    for (int i = 0; i < 6; ++i)
+                        outTris.push_back(base + topTris[i]);
+                }
+                else
+                {
+                    // full cube (8 verts, 12 tris)
+                    const float cubeVerts[] = {
+                        -0.5f,-0.5f,-0.5f,  0.5f,-0.5f,-0.5f,  0.5f, 0.5f,-0.5f, -0.5f, 0.5f,-0.5f,
+                        -0.5f,-0.5f, 0.5f,  0.5f,-0.5f, 0.5f,  0.5f, 0.5f, 0.5f, -0.5f, 0.5f, 0.5f
+                    };
+
+                    const int cubeTris[] = {
+                        // bottom
+                        0,1,2, 0,2,3,
+                        // top
+                        4,6,5, 4,7,6,
+                        // front
+                        4,5,1, 4,1,0,
+                        // back
+                        3,2,6, 3,6,7,
+                        // left
+                        4,0,3, 4,3,7,
+                        // right
+                        1,5,6, 1,6,2
+                    };
+
+                    for (int i = 0; i < 8; ++i)
+                    {
+                        glm::vec4 v = model * glm::vec4(
+                            cubeVerts[i * 3 + 0], cubeVerts[i * 3 + 1], cubeVerts[i * 3 + 2], 1.0f);
+
+                        outVerts.push_back(v.x);
+                        outVerts.push_back(v.y);
+                        outVerts.push_back(v.z);
+                    }
+
+                    for (int i = 0; i < (int)(sizeof(cubeTris) / sizeof(int)); ++i)
+                        outTris.push_back(base + cubeTris[i]);
+                }
+            };
+
+        // compute bake region from the cube you're baking on
+        // (AABB region around the bake cube, plus a bit above it for walls sitting on top)
+        if (navM.kind != MeshKind::Primitive || navM.primitive.type != "Cube")
             return false;
-        }
 
-        //EE_CORE_INFO("[NavMeshSystem] Baking navmesh for cube entity %u", e);
+        Vec3 bakeCenter = navT.position;
 
-        // Bake only the TOP face of the cube
-        const float topVerts[] = {
-            -0.5f, 0.5f, -0.5f,   // top left back
-             0.5f, 0.5f, -0.5f,   // top right back
-             0.5f, 0.5f,  0.5f,   // top right front
-            -0.5f, 0.5f,  0.5f    // top left front
-        };
+        Vec3 bakeHalf;
+        bakeHalf.x = 0.5f * navT.scale.x * navM.primitive.size.x;
+        bakeHalf.y = 0.5f * navT.scale.y * navM.primitive.size.y;
+        bakeHalf.z = 0.5f * navT.scale.z * navM.primitive.size.z;
 
-        const int topTris[] = {
-            0,1,2,
-            0,2,3
-        };
+        const float extraSide = 0.25f; // small padding so edge-touching walls are included
+        const float extraAbove = std::max(2.0f, nm.agentHeight * 2.0f); // include "on top" obstacles
 
-        std::vector<float> worldVerts;
-        worldVerts.reserve(4 * 3);
+        const float minX = bakeCenter.x - bakeHalf.x - extraSide;
+        const float maxX = bakeCenter.x + bakeHalf.x + extraSide;
+        const float minZ = bakeCenter.z - bakeHalf.z - extraSide;
+        const float maxZ = bakeCenter.z + bakeHalf.z + extraSide;
 
-        glm::quat rotQuat = glm::quat(t.rotation.w, t.rotation.x, t.rotation.y, t.rotation.z);
+        const float minY = bakeCenter.y - bakeHalf.y - extraSide;
+        const float maxY = bakeCenter.y + bakeHalf.y + extraAbove;
 
-        glm::mat4 model =
-            glm::translate(glm::mat4(1.0f), glm::vec3(t.position.x, t.position.y, t.position.z)) *
-            glm::mat4_cast(rotQuat) *
-            glm::scale(glm::mat4(1.0f),
-                glm::vec3(t.scale.x * m.primitive.size.x,
-                    t.scale.y * m.primitive.size.y,
-                    t.scale.z * m.primitive.size.z));
+        auto InsideBakeRegionByCenter = [&](const Transform& t) -> bool
+            {
+                return (t.position.x >= minX && t.position.x <= maxX) &&
+                    (t.position.z >= minZ && t.position.z <= maxZ) &&
+                    (t.position.y >= minY && t.position.y <= maxY);
+            };
 
-        for (int i = 0; i < 4; ++i)
+        // collect geometry
+        std::vector<float> verts;
+        std::vector<int> tris;
+        verts.reserve(2048);
+        tris.reserve(2048);
+
+        // Bake floor's TOP face as walkable
+        AppendCube(e, true, verts, tris);
+
+        // Include nearby cubes as obstacles (skip NavMeshAgents)
+        for (EntityID ent = 1; ent < MAX_ENTITIES; ++ent)
         {
-            glm::vec4 v = model * glm::vec4(topVerts[i * 3], topVerts[i * 3 + 1], topVerts[i * 3 + 2], 1.0f);
-            worldVerts.push_back(v.x);
-            worldVerts.push_back(v.y);
-            worldVerts.push_back(v.z);
+            if (!ecs.IsEntityValid(ent)) continue;
+            if (ent == e) continue;
+
+            if (!ecs.HasComponent<Mesh>(ent) || !ecs.HasComponent<Transform>(ent)) continue;
+
+            // Skip entities that are NavMeshAgents
+            if (ecs.HasComponent<NavMeshAgent>(ent)) continue;
+
+            auto& ot = ecs.GetComponent<Transform>(ent);
+
+            // Include only entities within/over the bake cube region
+            if (!InsideBakeRegionByCenter(ot)) continue;
+
+            AppendCube(ent, false, verts, tris);
         }
 
-        bool ok = BuildFromTriangles(nm, worldVerts.data(), 4, topTris, 2);
+        const int nverts = (int)(verts.size() / 3);
+        const int ntris = (int)(tris.size() / 3);
+
+        if (nverts < 3 || ntris < 1)
+            return false;
+
+        bool ok = BuildFromTriangles(nm, verts.data(), nverts, tris.data(), ntris);
         if (!ok)
         {
             EE_CORE_ERROR("[NavMeshSystem] Bake failed for entity %u", e);
             return false;
         }
-
-        //if (nm.build && nm.build->pmesh)
-        //{
-        //    EE_CORE_INFO("[NavMeshSystem] Baked navmesh verts=%d polys=%d",
-        //        nm.build->pmesh->nverts, nm.build->pmesh->npolys);
-        //}
 
         return true;
     }
@@ -453,8 +557,8 @@ namespace Ermine {
         auto renderer = ECS::GetInstance().GetSystem<graphics::Renderer>();
         if (!renderer) { EE_CORE_WARN("[NavMesh] DebugDraw: no Renderer system."); return; }
 
-        const auto& view = editor::EditorCamera::GetInstance().GetViewMatrix();
-        const auto& proj = editor::EditorCamera::GetInstance().GetProjectionMatrix();
+        //const auto& view = editor::EditorCamera::GetInstance().GetViewMatrix();
+        //const auto& proj = editor::EditorCamera::GetInstance().GetProjectionMatrix();
 
         int tilesVisited = 0;
         int polysVisited = 0;
@@ -464,6 +568,7 @@ namespace Ermine {
         {
             if (!ECS::GetInstance().HasComponent<NavMeshComponent>(e)) continue;
             auto& c = ECS::GetInstance().GetComponent<NavMeshComponent>(e);
+            if (!c.drawNavMesh) continue;
             if (!c.runtime || !c.runtime->nav) continue;
 
             const dtNavMesh* nav = c.runtime->nav;
@@ -499,13 +604,13 @@ namespace Ermine {
                 }
             }
         }
-        glEnable(GL_DEPTH_TEST);
-        glDepthMask(GL_TRUE);
-        glDisable(GL_BLEND);
+        //glEnable(GL_DEPTH_TEST);
+        //glDepthMask(GL_TRUE);
+        //glDisable(GL_BLEND);
 
-        renderer->RenderDebugLines(view, proj);
+        //renderer->RenderDebugLines(view, proj);
 
-        glDisable(GL_DEPTH_TEST);
+        //glDisable(GL_DEPTH_TEST);
     }
 
     void NavMeshSystem::DebugHighLight()
@@ -513,8 +618,8 @@ namespace Ermine {
         auto renderer = ECS::GetInstance().GetSystem<graphics::Renderer>();
         if (!renderer) return;
 
-        const auto& view = editor::EditorCamera::GetInstance().GetViewMatrix();
-        const auto& proj = editor::EditorCamera::GetInstance().GetProjectionMatrix();
+        //const auto& view = editor::EditorCamera::GetInstance().GetViewMatrix();
+        //const auto& proj = editor::EditorCamera::GetInstance().GetProjectionMatrix();
 
         int trisSubmitted = 0;
 
@@ -522,6 +627,7 @@ namespace Ermine {
         {
             if (!ECS::GetInstance().HasComponent<NavMeshComponent>(e)) continue;
             auto& c = ECS::GetInstance().GetComponent<NavMeshComponent>(e);
+            if (!c.drawWalkable) continue;
             if (!c.runtime || !c.runtime->nav) continue;
 
             const dtNavMesh* nav = c.runtime->nav;
@@ -559,59 +665,56 @@ namespace Ermine {
         }
 
         //EE_CORE_INFO("[NavMeshSystem] DebugDrawFilled: %d tris submitted", trisSubmitted);
-        renderer->RenderDebugTriangles(view, proj);
+        //renderer->RenderDebugTriangles(view, proj);
     }
 
-    bool NavMeshSystem::ComputeStraightPath(EntityID navEntity, const Vec3& start, const Vec3& end, std::vector<Vec3>& outPath)
+    bool NavMeshSystem::ComputeStraightPath(EntityID navEntity,
+        const Vec3& start, const Vec3& end,
+        const float extents[3],
+        std::vector<Vec3>& outPath)
     {
         auto& ecs = ECS::GetInstance();
         if (!ecs.IsEntityValid(navEntity) || !ecs.HasComponent<NavMeshComponent>(navEntity))
             return false;
 
         auto& navComp = ecs.GetComponent<NavMeshComponent>(navEntity);
-        if (!navComp.runtime)
+        if (!navComp.runtime || !navComp.runtime->query)
             return false;
 
-        // Access the Detour query object
         dtNavMeshQuery* query = navComp.runtime->query;
-        if (!query)
-            return false;
 
         dtQueryFilter filter;
-        filter.setIncludeFlags(0xFFFF); // include all
-        filter.setExcludeFlags(0);      // exclude none
-
-        // Broader extents for testing — you can reduce later (e.g. 2,4,2)
-        const float extents[3] = { 10.0f, 20.0f, 10.0f };
+        filter.setIncludeFlags(0xFFFF);
+        filter.setExcludeFlags(0);
 
         dtPolyRef startRef = 0, endRef = 0;
-        float spos[3] = { start.x, start.y, start.z };
-        float epos[3] = { end.x, end.y, end.z };
 
-        if (dtStatusFailed(query->findNearestPoly(spos, extents, &filter, &startRef, nullptr)))
+        float spos[3] = { start.x, start.y, start.z };
+        float epos[3] = { end.x,   end.y,   end.z };
+
+        float nspos[3]; // nearest start on mesh
+        float nepos[3]; // nearest end on mesh
+
+        if (dtStatusFailed(query->findNearestPoly(spos, extents, &filter, &startRef, nspos)) || !startRef)
         {
             EE_CORE_WARN("[NavMeshSystem] findNearestPoly failed for start point");
             return false;
         }
 
-        if (dtStatusFailed(query->findNearestPoly(epos, extents, &filter, &endRef, nullptr)))
+        if (dtStatusFailed(query->findNearestPoly(epos, extents, &filter, &endRef, nepos)) || !endRef)
         {
             EE_CORE_WARN("[NavMeshSystem] findNearestPoly failed for end point");
             return false;
         }
 
-        if (!startRef || !endRef)
-        {
-            EE_CORE_WARN("[NavMeshSystem] Invalid start or end poly (start=%llu end=%llu)",
-                static_cast<unsigned long long>(startRef),
-                static_cast<unsigned long long>(endRef));
-            return false;
-        }
+        // Use clamped points for the rest of the query
+        spos[0] = nspos[0]; spos[1] = nspos[1]; spos[2] = nspos[2];
+        epos[0] = nepos[0]; epos[1] = nepos[1]; epos[2] = nepos[2];
 
         dtPolyRef polys[256];
         int nPolys = 0;
-        if (dtStatusFailed(query->findPath(startRef, endRef, spos, epos, &filter,
-            polys, &nPolys, 256)))
+
+        if (dtStatusFailed(query->findPath(startRef, endRef, spos, epos, &filter, polys, &nPolys, 256)))
         {
             EE_CORE_WARN("[NavMeshSystem] findPath failed");
             return false;
@@ -629,30 +732,54 @@ namespace Ermine {
         int nStraight = 0;
 
         if (dtStatusFailed(query->findStraightPath(spos, epos, polys, nPolys,
-            straightPath, straightFlags, straightPolys,
-            &nStraight, 256)))
+            straightPath, straightFlags, straightPolys, &nStraight, 256)))
         {
             EE_CORE_WARN("[NavMeshSystem] findStraightPath failed");
             return false;
         }
 
         outPath.clear();
-        outPath.reserve(static_cast<size_t>(nStraight));
+        outPath.reserve((size_t)nStraight);
 
-        //EE_CORE_INFO("[NavMeshSystem] Straight path points: %d", nStraight);
         for (int i = 0; i < nStraight; ++i)
         {
-            Vec3 p;
-            p.x = straightPath[i * 3 + 0];
-            p.y = straightPath[i * 3 + 1];
-            p.z = straightPath[i * 3 + 2];
-            outPath.push_back(p);
-
-            //EE_CORE_INFO("  Path[%d]: %.3f %.3f %.3f", i, p.x, p.y, p.z);
+            outPath.push_back({ straightPath[i * 3 + 0], straightPath[i * 3 + 1], straightPath[i * 3 + 2] });
         }
 
         return !outPath.empty();
     }
+
+
+    bool NavMeshSystem::ClampToNavMesh(EntityID navEntity,
+        const Vec3& inPos,
+        const float extents[3],
+        Vec3& outPos)
+    {
+        auto& ecs = ECS::GetInstance();
+        if (!ecs.IsEntityValid(navEntity) || !ecs.HasComponent<NavMeshComponent>(navEntity))
+            return false;
+
+        auto& navComp = ecs.GetComponent<NavMeshComponent>(navEntity);
+        if (!navComp.runtime || !navComp.runtime->query)
+            return false;
+
+        dtNavMeshQuery* query = navComp.runtime->query;
+
+        dtQueryFilter filter;
+        filter.setIncludeFlags(0xFFFF);
+        filter.setExcludeFlags(0);
+
+        float p[3] = { inPos.x, inPos.y, inPos.z };
+        dtPolyRef ref = 0;
+        float nearest[3];
+
+        if (dtStatusFailed(query->findNearestPoly(p, extents, &filter, &ref, nearest)) || !ref)
+            return false;
+
+        outPos = { nearest[0], nearest[1], nearest[2] };
+        return true;
+    }
+
 
     void NavMeshSystem::RemoveEntity(EntityID e)
     {
