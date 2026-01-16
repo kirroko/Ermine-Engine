@@ -864,12 +864,17 @@ void Ermine::ViewPortGUI::Update()
 	// Editor input flags
 	Input::SetEditorInputActive(viewportFocused && viewportHovered);
 
-	// Hotkeys
-	if (Input::IsKeyDownEditor(GLFW_KEY_LEFT_CONTROL) && Input::IsKeyPressedEditor(GLFW_KEY_P))
-		EditorGUI::s_state = EditorGUI::SimState::playing;
-	else if (Input::IsKeyDownEditor(GLFW_KEY_LEFT_CONTROL) && Input::IsKeyDownEditor(GLFW_KEY_LEFT_SHIFT)
+	if (Input::IsKeyDownEditor(GLFW_KEY_LEFT_CONTROL) && Input::IsKeyDownEditor(GLFW_KEY_LEFT_SHIFT)
 		&& Input::IsKeyPressedEditor(GLFW_KEY_P))
+	{
 		EditorGUI::s_state = EditorGUI::SimState::stopped;
+		SceneManager::GetInstance().LoadTemp();
+	}
+	else if (Input::IsKeyDownEditor(GLFW_KEY_LEFT_CONTROL) && Input::IsKeyPressedEditor(GLFW_KEY_P))
+	{
+		EditorGUI::s_state = EditorGUI::SimState::playing;
+		SceneManager::GetInstance().SaveTemp();
+	}
 
 	EditorGUI::isPlaying = EditorGUI::s_state == EditorGUI::SimState::playing;
 
