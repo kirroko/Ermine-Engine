@@ -25,8 +25,8 @@ Ermine::scripting::ScriptSystem::ScriptSystem()
 {
 	EE_CORE_TRACE("Script System initialing...");
 	m_ScriptEngine = std::make_unique<ScriptEngine>();
-	m_ScriptEngine->InitMono("../Ermine-ScriptAssembly/Ermine-ScriptAssembly.dll"); // TODO: Move dll into editor's build directory
-	m_ScriptEngine->LoadGameAssembly("../Ermine-ScriptSandbox/Ermine-ScriptSandbox.dll"); // TODO: Move dll into editor's build directory
+	m_ScriptEngine->InitMono("./Ermine-ScriptAssembly.dll"); // TODO: Move dll into editor's build directory
+	m_ScriptEngine->LoadGameAssembly("./Ermine-ScriptSandbox.dll"); // TODO: Move dll into editor's build directory	
 
 	// TODO: Configure MSBuild + source watcher (adjust paths as necessary)
 #if defined(EE_EDITOR) // Only in editor builds do we have hot-reload
@@ -57,6 +57,12 @@ void Ermine::scripting::ScriptSystem::Update() const
 
 		for (auto& entity : m_Entities)
 		{
+			if (ECS::GetInstance().HasComponent<ObjectMetaData>(entity))
+			{
+				const auto& meta = ECS::GetInstance().GetComponent<ObjectMetaData>(entity);
+				if (!meta.selfActive)
+					continue;
+			}
 			auto& scs = ECS::GetInstance().GetComponent<ScriptsComponent>(entity);
 			for (auto& sc : scs.scripts)
 				sc.m_started = false;
@@ -76,10 +82,18 @@ void Ermine::scripting::ScriptSystem::Update() const
 
 	for (auto& entity : m_Entities)
 	{
-		//auto& sc = ECS::GetInstance().GetComponent<Script>(entity);
+		if (ECS::GetInstance().HasComponent<ObjectMetaData>(entity))
+		{
+			const auto& meta = ECS::GetInstance().GetComponent<ObjectMetaData>(entity);
+			if (!meta.selfActive)
+				continue;
+		}
 		auto& scs = ECS::GetInstance().GetComponent<ScriptsComponent>(entity);
 		for (auto& sc : scs.scripts)
 		{
+			if (sc.m_instance == nullptr || sc.m_instance->object == nullptr)
+				continue;
+
 			sc.m_instance->SetEnabled(sc.m_enabled); // Reconcile enable state every frame
 			if (!sc.m_enabled) continue;
 			if (!sc.m_started) { sc.m_instance->Start(); sc.m_started = true; }
@@ -102,6 +116,12 @@ void Ermine::scripting::ScriptSystem::FixedUpdate() const
 
 		for (auto& entity : m_Entities)
 		{
+			if (ECS::GetInstance().HasComponent<ObjectMetaData>(entity))
+			{
+				const auto& meta = ECS::GetInstance().GetComponent<ObjectMetaData>(entity);
+				if (!meta.selfActive)
+					continue;
+			}
 			auto& scs = ECS::GetInstance().GetComponent<ScriptsComponent>(entity);
 			for (auto& sc : scs.scripts)
 				sc.m_started = false;
@@ -121,14 +141,23 @@ void Ermine::scripting::ScriptSystem::FixedUpdate() const
 
 	for (auto& entity : m_Entities)
 	{
+		if (ECS::GetInstance().HasComponent<ObjectMetaData>(entity))
+		{
+			const auto& meta = ECS::GetInstance().GetComponent<ObjectMetaData>(entity);
+			if (!meta.selfActive)
+				continue;
+		}
 		//auto& sc = ECS::GetInstance().GetComponent<Script>(entity);
 		auto& scs = ECS::GetInstance().GetComponent<ScriptsComponent>(entity);
 		for (auto& sc : scs.scripts)
 		{
+			if (sc.m_instance == nullptr || sc.m_instance->object == nullptr)
+				continue;
+
 			sc.m_instance->SetEnabled(sc.m_enabled); // Reconcile enable state every frame
 
 			if (!sc.m_enabled) continue;
-
+			if (!sc.m_started) { sc.m_instance->Start(); sc.m_started = true; }
 			sc.m_instance->FixedUpdate();
 		}
 	}
@@ -187,4 +216,44 @@ void Ermine::scripting::ScriptSystem::FinishHotReload(bool success) const
 
 	m_RestoreList.clear();
 	EE_CORE_INFO("ScriptSystem: HotReload recreation complete.");
+}
+
+void Ermine::scripting::ScriptSystem::CleanupAllScripts() const
+{
+	EE_CORE_INFO("ScriptSystem: Cleaning up all script instances before scene transition");
+	
+	auto& ecs = ECS::GetInstance();
+	
+	// Copy entities to avoid iterator invalidation
+	std::vector<EntityID> entitiesToProcess(m_Entities.begin(), m_Entities.end());
+	
+	for (auto entity : entitiesToProcess)
+	{
+		// Check if entity is still valid and has scripts
+		if (!ecs.IsEntityValid(entity))
+			continue;
+			
+		if (!ecs.HasComponent<ScriptsComponent>(entity))
+			continue;
+		
+		auto& scs = ecs.GetComponent<ScriptsComponent>(entity);
+		
+		// Dispose all script instances for this entity
+		for (auto& sc : scs.scripts)
+		{
+			// The ScriptInstance destructor will handle proper cleanup
+			// (OnDisable, OnDestroy, mono_gchandle_free_v2)
+			sc.m_instance.reset();
+			sc.m_started = false;
+		}
+		
+		// Clear the scripts vector
+		scs.scripts.clear();
+	}
+	
+	// Flush any late destroy requests
+	if (m_ScriptEngine)
+		m_ScriptEngine->FlushLateDestroy();
+		
+	EE_CORE_INFO("ScriptSystem: Script cleanup complete");
 }

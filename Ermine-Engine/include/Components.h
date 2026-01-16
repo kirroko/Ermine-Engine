@@ -903,9 +903,27 @@ namespace Ermine
 					// Match enabled state so OnEnable is invoked appropriately
 					s.m_instance->SetEnabled(s.m_enabled);
 					s.m_started = false;
+					if(s.m_fields.size() > 0)
+						scripting::ScriptEngine::PushCacheToManagedFields(s.m_instance->GetManaged(), s.m_fields);
 				}
 			}
 		}
+		
+		//void AttachAll(EntityID id, const std::unordered_map<std::string, ScriptFieldValue>& cache)
+		//{
+		//	for (auto& s : scripts)
+		//	{
+		//		if (!s.m_instance)
+		//		{
+		//			auto sc = std::make_unique<scripting::ScriptClass>(scripting::ScriptClass("", s.m_className));
+		//			s.m_instance = std::make_unique<scripting::ScriptInstance>(std::move(sc), id);
+		//			// Match enabled state so OnEnable is invoked appropriately
+		//			s.m_instance->SetEnabled(s.m_enabled);
+		//			s.m_started = false;
+		//			scripting::ScriptEngine::PushCacheToManagedFields(s.m_instance->object, cache);
+		//		}
+		//	}
+		//}
 
 		// Add a new script by class name (instantiates immediately for the given entity)
 		void Add(const std::string& className, EntityID id, bool enabled = true)
@@ -973,7 +991,7 @@ namespace Ermine
 				if (!v.IsObject()) continue;
 				Script s;
 				s.Deserialize(v);
-				// Do not create ScriptInstance here (no EntityID yet) — ScriptSystem should call AttachAll
+				// Do not create ScriptInstance here (no EntityID yet) - ScriptSystem should call AttachAll
 				scripts.emplace_back(std::move(s));
 			}
 		}
@@ -1075,6 +1093,9 @@ namespace Ermine
 		Vec3 aabbMin{ -1.0f, -1.0f, -1.0f };
 		Vec3 aabbMax{ 1.0f,  1.0f,  1.0f };
 
+		//Physic mesh collider
+		std::vector<glm::vec3> cpuVertices;
+
 		Mesh() = default;
 
 		Mesh(const std::shared_ptr<graphics::VertexArray>& vao, const std::shared_ptr<graphics::VertexBuffer>& vbo, const std::shared_ptr<graphics::IndexBuffer>& ibo) :
@@ -1165,6 +1186,8 @@ namespace Ermine
 		bool hasMetal = false;   float cacheMetallic = 0.0f;
 		bool hasEmiss = false;   Vec3  cacheEmissive{ 0,0,0 };
 		float cacheEmissiveIntensity = 1.0f;
+		std::string customFragmentShader = "";   // Custom fragment shader path (empty = use standard PBR)
+		bool cacheCastsShadows = true;           // Whether this material casts shadows
 
 		//// Cached texture paths (only what we set by path)
 		//bool hasAlbedoMapPath = false;   std::string albedoMapPath;
@@ -1470,6 +1493,18 @@ namespace Ermine
 				out.AddMember("uvScale", Vec2ToJson(uvScale, alloc), alloc);
 				out.AddMember("uvOffset", Vec2ToJson(uvOffset, alloc), alloc);
 			}
+
+			// Custom fragment shader + shadow flag
+			if (!customFragmentShader.empty()) {
+				rapidjson::Value fragPath;
+				fragPath.SetString(customFragmentShader.c_str(),
+					(rapidjson::SizeType)customFragmentShader.size(),
+					alloc);
+				out.AddMember("customFragmentShader", fragPath, alloc);
+			}
+
+			out.AddMember("castsShadows", cacheCastsShadows, alloc);
+
 		}
 
 		void Deserialize(const rapidjson::Value& in) {
@@ -1628,23 +1663,56 @@ namespace Ermine
 				}
 			}
 
+			// Restore custom fragment shader path (if present)
+			if (in.HasMember("customFragmentShader") && in["customFragmentShader"].IsString()) {
+				customFragmentShader = in["customFragmentShader"].GetString();
+			}
+
+			// Restore shadow casting flag
+			if (in.HasMember("castsShadows") && in["castsShadows"].IsBool()) {
+				cacheCastsShadows = in["castsShadows"].GetBool();
+				if (m_material) {
+					m_material->SetBool("materialCastsShadows", cacheCastsShadows);
+					// or whatever uniform name you use in the shader
+				}
+			}
+
 			//  Ensure material has a valid shader after deserialization
 			if (!m_material->GetShader() || !m_material->GetShader()->IsValid())
 			{
-				// Assign default enhanced shader for forward rendering compatibility
-				auto defaultShader = AssetManager::GetInstance().LoadShader(
-					"../Resources/Shaders/vertex.glsl",
-					"../Resources/Shaders/fragment_enhanced.glsl"
-				);
+				// If you have a custom fragment shader path, prefer that
+				if (!customFragmentShader.empty()) {
+					auto shader = AssetManager::GetInstance().LoadShader(
+						"../Resources/Shaders/vertex.glsl",        // or your chosen vertex path
+						customFragmentShader
+					);
 
-				if (defaultShader && defaultShader->IsValid())
-				{
-					m_material->SetShader(defaultShader);
-					EE_CORE_INFO("Auto-assigned default shader to material");
+					if (shader && shader->IsValid()) {
+						m_material->SetShader(shader);
+						EE_CORE_INFO("Assigned custom fragment shader '{}' to material", customFragmentShader);
+					}
+					else {
+						EE_CORE_WARN("Failed to load custom fragment shader '{}', falling back to default", customFragmentShader);
+					}
 				}
-				else
+
+				// Fallback default if still invalid
+				if (!m_material->GetShader() || !m_material->GetShader()->IsValid())
 				{
-					EE_CORE_WARN("Failed to assign default shader to material - shader loading failed");
+					auto defaultShader = AssetManager::GetInstance().LoadShader(
+						"../Resources/Shaders/vertex.glsl",
+						"../Resources/Shaders/fragment_enhanced.glsl"
+					);
+
+					if (defaultShader && defaultShader->IsValid())
+					{
+						m_material->SetShader(defaultShader);
+						EE_CORE_INFO("Auto-assigned default shader to material");
+					}
+					else
+					{
+						EE_CORE_WARN("Failed to assign default shader to material - shader loading failed");
+					}
 				}
 			}
 
@@ -1666,6 +1734,10 @@ namespace Ermine
 			// authoring template name
 			xproperty::obj_member<"template", &Material::materialTemplate>,
 
+			// custom shader and flags
+			xproperty::obj_member<"fragmentShader", &Material::customFragmentShader>,
+			xproperty::obj_member<"castsShadows", &Material::cacheCastsShadows>,
+
 			// cached parameters
 			xproperty::obj_member<"hasAlbedo", &Material::hasAlbedo>,
 			xproperty::obj_member<"albedo", &Material::cacheAlbedo>,
@@ -1681,10 +1753,138 @@ namespace Ermine
 			xproperty::obj_member<"emissiveIntensity", &Material::cacheEmissiveIntensity>
 		)
 	};
-}
 
-namespace Ermine
-{
+	struct GlobalGraphics
+	{
+		// SSAO parameters
+		bool  ssaoEnabled = false;
+		int   ssaoSamples = 16;
+		float ssaoRadius = 10.0f;
+		float ssaoBias = 0.01f;
+		float ssaoIntensity = 1.0f;
+		float ssaoFadeout = 0.1f;
+		float ssaoMaxDistance = 100.0f;
+
+		// Fog parameters
+		bool  fogEnabled = false;
+		int   fogMode = 0;                     // 0 = linear, 1 = exp, 2 = exp^2
+		Vec3  fogColor = Vec3{ 0.5f, 0.6f, 0.7f };
+		float fogDensity = 0.02f;                 // exp modes
+		float fogStart = 50.0f;                 // linear
+		float fogEnd = 200.0f;                // linear
+		float fogHeightCoefficient = 0.1f; // For height-based fog
+		float fogHeightFalloff = 10.0f;      // For height-based fog
+
+		// Post-processing toggles
+		bool vignetteEnabled = false;
+		bool fxaaEnabled = true;
+		bool toneMappingEnabled = true;
+		bool gammaCorrectionEnabled = true;
+		bool bloomEnabled = true;
+		bool skyboxIsHDR = false;
+
+		// Post-processing parameters
+		float exposure = 1.0f;
+		float contrast = 1.0f;
+		float saturation = 1.0f;
+		float gamma = 2.2f;
+		float vignetteIntensity = 0.3f;
+		float vignetteRadius = 0.8f;
+		float bloomStrength = 0.04f;
+
+		// FXAA parameters
+		float fxaaSpanMax = 8.0f;
+		float fxaaReduceMin = 1.0f / 128.0f;
+		float fxaaReduceMul = 1.0f / 8.0f;
+
+		// Bloom pass parameters
+		float bloomThreshold = 1.0f;
+		float bloomIntensity = 2.0f;
+		float bloomRadius = 1.0f;
+
+		// Spotlight ray parameters
+		bool spotlightRaysEnabled = true;
+		float spotlightRayIntensity = 0.3f;
+		float spotlightRayFalloff = 2.0f;
+
+		// === Motion blur parameters ===
+		bool motionBlurEnabled = true;
+		float motionBlurStrength = 1.0f;
+		int motionBlurSamples = 8;
+
+		// --- generic xproperty-based serialization ---
+		template<typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const
+		{
+			xprop_utils::SerializeToJson(*this, out, alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in)
+		{
+			xprop_utils::DeserializeFromJson(*this, in);
+		}
+
+		XPROPERTY_DEF(
+			"GlobalGraphics", GlobalGraphics,
+
+			// SSAO
+			xproperty::obj_member<"ssaoEnabled", &GlobalGraphics::ssaoEnabled>,
+			xproperty::obj_member<"ssaoSamples", &GlobalGraphics::ssaoSamples>,
+			xproperty::obj_member<"ssaoRadius", &GlobalGraphics::ssaoRadius>,
+			xproperty::obj_member<"ssaoBias", &GlobalGraphics::ssaoBias>,
+			xproperty::obj_member<"ssaoIntensity", &GlobalGraphics::ssaoIntensity>,
+			xproperty::obj_member<"ssaoFadeout", &GlobalGraphics::ssaoFadeout>,
+			xproperty::obj_member<"ssaoMaxDistance", &GlobalGraphics::ssaoMaxDistance>,
+
+			// Fog
+			xproperty::obj_member<"fogEnabled", &GlobalGraphics::fogEnabled>,
+			xproperty::obj_member<"fogMode", &GlobalGraphics::fogMode>,
+			xproperty::obj_member<"fogColor", &GlobalGraphics::fogColor>,
+			xproperty::obj_member<"fogDensity", &GlobalGraphics::fogDensity>,
+			xproperty::obj_member<"fogStart", &GlobalGraphics::fogStart>,
+			xproperty::obj_member<"fogEnd", &GlobalGraphics::fogEnd>,
+			xproperty::obj_member<"fogHeightCoefficient", &GlobalGraphics::fogHeightCoefficient>,
+			xproperty::obj_member<"fogHeightFalloff", &GlobalGraphics::fogHeightFalloff>,
+
+			// Post-process toggles
+			xproperty::obj_member<"vignetteEnabled", &GlobalGraphics::vignetteEnabled>,
+			xproperty::obj_member<"fxaaEnabled", &GlobalGraphics::fxaaEnabled>,
+			xproperty::obj_member<"toneMappingEnabled", &GlobalGraphics::toneMappingEnabled>,
+			xproperty::obj_member<"gammaCorrectionEnabled", &GlobalGraphics::gammaCorrectionEnabled>,
+			xproperty::obj_member<"bloomEnabled", &GlobalGraphics::bloomEnabled>,
+			xproperty::obj_member<"skyboxIsHDR", &GlobalGraphics::skyboxIsHDR>,
+
+			// Post-process params
+			xproperty::obj_member<"exposure", &GlobalGraphics::exposure>,
+			xproperty::obj_member<"contrast", &GlobalGraphics::contrast>,
+			xproperty::obj_member<"saturation", &GlobalGraphics::saturation>,
+			xproperty::obj_member<"gamma", &GlobalGraphics::gamma>,
+			xproperty::obj_member<"vignetteIntensity", &GlobalGraphics::vignetteIntensity>,
+			xproperty::obj_member<"vignetteRadius", &GlobalGraphics::vignetteRadius>,
+			xproperty::obj_member<"bloomStrength", &GlobalGraphics::bloomStrength>,
+
+			// FXAA
+			xproperty::obj_member<"fxaaSpanMax", &GlobalGraphics::fxaaSpanMax>,
+			xproperty::obj_member<"fxaaReduceMin", &GlobalGraphics::fxaaReduceMin>,
+			xproperty::obj_member<"fxaaReduceMul", &GlobalGraphics::fxaaReduceMul>,
+
+			// Bloom pass
+			xproperty::obj_member<"bloomThreshold", &GlobalGraphics::bloomThreshold>,
+			xproperty::obj_member<"bloomIntensity", &GlobalGraphics::bloomIntensity>,
+			xproperty::obj_member<"bloomRadius", &GlobalGraphics::bloomRadius>,
+
+			// Spotlight ray parameters
+			xproperty::obj_member<"spotlightRaysEnabled", &GlobalGraphics::spotlightRaysEnabled>,
+			xproperty::obj_member<"spotlightRayIntensity", &GlobalGraphics::spotlightRayIntensity>,
+			xproperty::obj_member<"spotlightRayFalloff", &GlobalGraphics::spotlightRayFalloff>,
+			
+			// Motion blur
+			xproperty::obj_member<"motionBlurEnabled", &GlobalGraphics::motionBlurEnabled>,
+			xproperty::obj_member<"motionBlurStrength", &GlobalGraphics::motionBlurStrength>,
+			xproperty::obj_member<"motionBlurSamples", &GlobalGraphics::motionBlurSamples>
+		)
+	};
+
 	/*!***********************************************************************
 	\brief
 	 Light structure
@@ -1694,6 +1894,7 @@ namespace Ermine
 		float intensity{};
 		LightType type{};
 		bool castsShadows{ false };
+		bool castsRays{ false }; // For volumetric light shafts/god rays
 		glm::mat4 lightSpaceMatrices[NUM_CASCADES]{}; // For shadow mapping
 		int startOffset{ 0 }; // For UBO indexing
 		float innerAngle{ -1.0f }; // For spotlights
@@ -1745,6 +1946,7 @@ namespace Ermine
 			xproperty::obj_member<"intensity", &Light::intensity>,
 			xproperty::obj_member<"type", &Light::type>,
 			xproperty::obj_member<"castsShadows", &Light::castsShadows>,
+			xproperty::obj_member<"castsRays", &Light::castsRays>,
 			xproperty::obj_member<"innerAngle", &Light::innerAngle>,  // used for spot
 			xproperty::obj_member<"outerAngle", &Light::outerAngle>,  // used for spot
 			xproperty::obj_member<"radius", &Light::radius>       // used for point/spot
@@ -2043,9 +2245,9 @@ namespace Ermine
 		// Playback control
 		int channelId{ -1 }; // Managed by CAudioEngine
 		bool isPlaying{ false };
-		bool shouldPlay{ true }; // Trigger flag for AudioSystem
+		bool shouldPlay{ false }; // Trigger flag for AudioSystem
 		bool shouldStop{ false }; // Trigger flag for AudioSystem
-		//bool playOnStart = false;
+		bool playOnStart{ false };
 
 		// Audio settings
 		bool is3D{ true };
@@ -2112,7 +2314,8 @@ namespace Ermine
 			xproperty::obj_member<"volume", &AudioComponent::volume>,
 			xproperty::obj_member<"followTransform", &AudioComponent::followTransform>,
 			xproperty::obj_member<"minDistance", &AudioComponent::minDistance>,
-			xproperty::obj_member<"maxDistance", &AudioComponent::maxDistance>
+			xproperty::obj_member<"maxDistance", &AudioComponent::maxDistance>,
+			xproperty::obj_member<"playOnStart", &AudioComponent::playOnStart>
 		)
 	};
 
@@ -2210,94 +2413,69 @@ namespace Ermine
 		}
 
 		template <typename Alloc>
-		void Serialize(rapidjson::Value& out, Alloc& alloc) const
-		{
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
 			out.SetObject();
 
-			// parent
-			{
-				rapidjson::Value parentVal;
-				parentVal.SetUint64(static_cast<uint64_t>(parent));
-				out.AddMember(
-					rapidjson::Value("parent", alloc),
-					parentVal,
-					alloc
-				);
-			}
-
-			// children
-			{
-				rapidjson::Value arr(rapidjson::kArrayType);
-				arr.Reserve(static_cast<rapidjson::SizeType>(children.size()), alloc);
-
-				for (EntityID cid : children)
-				{
-					rapidjson::Value childVal;
-					childVal.SetUint64(static_cast<uint64_t>(cid));
-					arr.PushBack(childVal, alloc);
+			// Write parentGuid from runtime parent
+			if (parent != INVALID_PARENT) {
+				auto& ecs = ECS::GetInstance();
+				if (ecs.HasComponent<IDComponent>(parent)) {
+					const auto& pid = ecs.GetComponent<IDComponent>(parent);
+					const std::string g = pid.guid.ToString();
+					rapidjson::Value s;
+					s.SetString(g.c_str(), (rapidjson::SizeType)g.size(), alloc);
+					out.AddMember("parentGuid", s, alloc);
 				}
-
-				out.AddMember(
-					rapidjson::Value("children", alloc),
-					arr,
-					alloc
-				);
 			}
-
-			// depth
-			{
-				rapidjson::Value depthVal;
-				depthVal.SetInt(depth);
-				out.AddMember(
-					rapidjson::Value("depth", alloc),
-					depthVal,
-					alloc
-				);
-			}
+			// optional editor fields
+			rapidjson::Value dv; dv.SetInt(depth);
+			out.AddMember("depth", dv, alloc);
 		}
 
 		void Deserialize(const rapidjson::Value& in)
 		{
 			if (!in.IsObject()) return;
 
-			// parent
-			if (in.HasMember("parent") && in["parent"].IsUint64())
-			{
-				parent = static_cast<EntityID>(in["parent"].GetUint64());
-			}
-			else
-			{
-				parent = INVALID_PARENT;
+			// Reset runtime links; we rebuild them later in a resolve pass
+			parent = INVALID_PARENT;
+			children.clear();
+
+			// --- Read GUID-based form (authoritative on disk) ---
+			parentGuid = {};
+			childrenGuids.clear();
+
+			if (in.HasMember("parentGuid") && in["parentGuid"].IsString()) {
+				parentGuid = Guid::FromString(in["parentGuid"].GetString());
 			}
 
-			// children
-			children.clear();
-			if (in.HasMember("children") && in["children"].IsArray())
-			{
-				const auto& arr = in["children"].GetArray();
-				children.reserve(arr.Size());
-				for (rapidjson::SizeType i = 0; i < arr.Size(); ++i)
-				{
-					if (arr[i].IsUint64())
-					{
-						children.push_back(
-							static_cast<EntityID>(arr[i].GetUint64())
-						);
+			if (in.HasMember("childrenGuids") && in["childrenGuids"].IsArray()) {
+				for (const auto& v : in["childrenGuids"].GetArray()) {
+					if (v.IsString()) {
+						childrenGuids.push_back(Guid::FromString(v.GetString()));
 					}
 				}
 			}
 
-			// depth
-			if (in.HasMember("depth") && in["depth"].IsInt())
-			{
-				depth = in["depth"].GetInt();
-			}
-			else
-			{
-				depth = 0;
+			// --- Legacy numeric fallback ONLY if no GUID present ---
+			if (!parentGuid.IsValid()) {
+				if (in.HasMember("parent") && in["parent"].IsUint64())
+					parent = static_cast<EntityID>(in["parent"].GetUint64());
+
+				if (in.HasMember("children") && in["children"].IsArray()) {
+					const auto& arr = in["children"].GetArray();
+					children.reserve(arr.Size());
+					for (rapidjson::SizeType i = 0; i < arr.Size(); ++i) {
+						if (arr[i].IsUint64())
+							children.push_back(static_cast<EntityID>(arr[i].GetUint64()));
+					}
+				}
 			}
 
-			// housekeeping so world transforms get recomputed
+			// Depth (editor/UI)
+			depth = (in.HasMember("depth") && in["depth"].IsInt())
+				? in["depth"].GetInt() : 0;
+
+			// Housekeeping
 			isDirty = true;
 			worldTransform = Mtx44{ 1.0f };
 			worldTransformDirty = true;
@@ -2318,18 +2496,31 @@ namespace Ermine
 	*************************************************************************/
 	struct PhysicComponent
 	{
+		//collision type
 		PhysicsBodyType bodyType{ PhysicsBodyType::Rigid };
+		//obj type
 		JPH::EMotionType motionType{ JPH::EMotionType::Static };
+		//obj weight
 		float mass{ 0.0f };
+		//collision shape
 		ShapeType shapeType{ ShapeType::Box };
+		//collision transform & constrains
 		Ermine::Vec3 colliderPivot{ 0,0,0 };
+		bool posX = false; bool posY = false; bool posZ = false;
 		Ermine::Vec3 colliderRot{ 0,0,0 };
+		bool rotX = false; bool rotY = false; bool rotZ = false;
 		Ermine::Vec3 colliderSize{ 1,1,1 };
+
+		Vec3 prevTranPos{};
+		Quaternion prevTranRot{};
+		Vec3 prevTranScale{};
+		bool update = false;
 
 		JPH::BodyID bodyID{ JPH::BodyID::cInvalidBodyID };
 		JPH::Body* body{ nullptr };
 		std::vector<glm::vec3> customMeshVertices;   // For custom mesh
 		JPH::RefConst<JPH::Shape> shapeRef;
+		bool isDead = false;
 
 		PhysicComponent() = default;
 
@@ -2358,7 +2549,13 @@ namespace Ermine
 			xproperty::obj_member<"mass", &PhysicComponent::mass>,
 			xproperty::obj_member<"shapeType", &PhysicComponent::shapeType>,
 			xproperty::obj_member<"colliderpivot", &PhysicComponent::colliderPivot>,
+			xproperty::obj_member<"posx", &PhysicComponent::posX>,
+			xproperty::obj_member<"posy", &PhysicComponent::posY>,
+			xproperty::obj_member<"posz", &PhysicComponent::posZ>,
 			xproperty::obj_member<"colliderrot", &PhysicComponent::colliderRot>,
+			xproperty::obj_member<"rotx", &PhysicComponent::rotX>,
+			xproperty::obj_member<"roty", &PhysicComponent::rotY>,
+			xproperty::obj_member<"rotz", &PhysicComponent::rotZ>,
 			xproperty::obj_member<"collidersize", &PhysicComponent::colliderSize>
 		)
 	};
@@ -2891,6 +3088,171 @@ namespace Ermine
 			if (m_CurrentScript && m_CurrentScript->instance)
 				m_CurrentScript->OnUpdate();
 		}
+
+		template <typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const
+		{
+			using namespace rapidjson;
+
+			out.SetObject();
+
+			// =======================
+			// 1) Serialize nodes
+			// =======================
+			Value nodes(kArrayType);
+
+			for (const auto& nodePtr : m_Nodes)
+			{
+				if (!nodePtr)
+					continue;
+
+				Value n(kObjectType);
+
+				// id
+				n.AddMember("id", nodePtr->id, alloc);
+
+				// name
+				{
+					Value nameVal;
+					nameVal.SetString(nodePtr->name.c_str(),
+						static_cast<SizeType>(nodePtr->name.size()),
+						alloc);
+					n.AddMember("name", nameVal, alloc);
+				}
+
+				// scriptClassName
+				{
+					Value scriptVal;
+					scriptVal.SetString(nodePtr->scriptClassName.c_str(),
+						static_cast<SizeType>(nodePtr->scriptClassName.size()),
+						alloc);
+					n.AddMember("scriptClassName", scriptVal, alloc);
+				}
+
+				// flags
+				n.AddMember("isAttached", nodePtr->isAttached, alloc);
+				n.AddMember("isStartNode", nodePtr->isStartNode, alloc);
+
+				// NOTE: instance is runtime-only and NOT serialized.
+
+				nodes.PushBack(n, alloc);
+			}
+
+			out.AddMember("nodes", nodes, alloc);
+
+			// =======================
+			// 2) Serialize links
+			// =======================
+			Value links(kArrayType);
+
+			for (const auto& link : m_Links)
+			{
+				Value l(kObjectType);
+				l.AddMember("fromId", link.first, alloc);
+				l.AddMember("toId", link.second, alloc);
+				links.PushBack(l, alloc);
+			}
+
+			out.AddMember("links", links, alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in)
+		{
+			using namespace rapidjson;
+
+			// Clear old state
+			m_Nodes.clear();
+			m_Links.clear();
+			scriptTransitions.clear();
+			m_CurrentScript = nullptr;
+			m_PreviousScript = nullptr;
+
+			if (!in.IsObject())
+				return;
+
+			// =======================
+			// 1) Recreate nodes
+			// =======================
+			std::unordered_map<int, ScriptNode*> idToNode;
+
+			if (in.HasMember("nodes") && in["nodes"].IsArray())
+			{
+				const auto& nodes = in["nodes"];
+				for (auto& nVal : nodes.GetArray())
+				{
+					if (!nVal.IsObject())
+						continue;
+
+					auto node = std::make_shared<ScriptNode>();
+
+					// id
+					if (nVal.HasMember("id") && nVal["id"].IsInt())
+						node->id = nVal["id"].GetInt();
+
+					// name
+					if (nVal.HasMember("name") && nVal["name"].IsString())
+						node->name = nVal["name"].GetString();
+
+					// scriptClassName
+					if (nVal.HasMember("scriptClassName") && nVal["scriptClassName"].IsString())
+						node->scriptClassName = nVal["scriptClassName"].GetString();
+
+					// isAttached
+					if (nVal.HasMember("isAttached") && nVal["isAttached"].IsBool())
+						node->isAttached = nVal["isAttached"].GetBool();
+
+					// isStartNode
+					if (nVal.HasMember("isStartNode") && nVal["isStartNode"].IsBool())
+						node->isStartNode = nVal["isStartNode"].GetBool();
+
+					// instance is runtime-only; will be created via CreateInstance(entity)
+					// when Init(entity) is called.
+
+					idToNode[node->id] = node.get();
+					m_Nodes.emplace_back(std::move(node));
+				}
+			}
+
+			// =======================
+			// 2) Recreate links + scriptTransitions
+			// =======================
+			if (in.HasMember("links") && in["links"].IsArray())
+			{
+				const auto& links = in["links"];
+				for (auto& lVal : links.GetArray())
+				{
+					if (!lVal.IsObject())
+						continue;
+
+					if (!lVal.HasMember("fromId") || !lVal.HasMember("toId"))
+						continue;
+
+					if (!lVal["fromId"].IsInt() || !lVal["toId"].IsInt())
+						continue;
+
+					int fromId = lVal["fromId"].GetInt();
+					int toId = lVal["toId"].GetInt();
+
+					m_Links.emplace_back(fromId, toId);
+
+					// Build scriptTransitions if both nodes exist
+					auto fromIt = idToNode.find(fromId);
+					auto toIt = idToNode.find(toId);
+
+					if (fromIt != idToNode.end() && toIt != idToNode.end())
+					{
+						// If you only expect one outgoing transition per node,
+						// this is fine. If multiple, you may want a multimap / vector instead.
+						scriptTransitions[fromIt->second] = toIt->second;
+					}
+				}
+			}
+
+			// manager pointer is not restored here; set it externally if needed.
+			// Actual script instances will be created when you call Init(entity),
+			// which finds the start node and calls CreateInstance + OnEnter().
+		}
+
 	};
 
 	/*!***********************************************************************
@@ -3200,6 +3562,122 @@ namespace Ermine
 
 	/*!***********************************************************************
 	\brief
+	  UI Button component for clickable menu buttons
+	*************************************************************************/
+	struct UIButtonComponent
+	{
+		enum class ButtonAction
+		{
+			None,
+			LoadScene,
+			Quit,
+			Custom
+		};
+
+		// Button visual properties
+		std::string text = "";
+		Vec3 position = { 0.5f, 0.5f, 0.0f };  // Normalized screen position
+		Vec2 size = { 0.12f, 0.12f };           // Normalized screen size
+
+		// Button state colors
+		Vec3 normalColor = { 0.3f, 0.3f, 0.3f };
+		Vec3 hoverColor = { 0.5f, 0.5f, 0.5f };
+		Vec3 pressedColor = { 0.7f, 0.7f, 0.7f };
+		Vec3 textColor = { 1.0f, 1.0f, 1.0f };
+		float textScale = 1.0f;
+		float backgroundAlpha = 1.0f;  // Button background transparency (0.0 = invisible, 1.0 = opaque)
+
+		// Button action
+		ButtonAction action = ButtonAction::None;
+		std::string actionData = "";  // Scene path for LoadScene, custom event name, etc.
+
+		// Audio settings
+		std::string hoverSoundName = "";  // Sound to play on hover
+		std::string clickSoundName = "";  // Sound to play on click
+		float soundVolume = 1.0f;         // Volume for button sounds (0.0 - 1.0)
+
+		// Button state (runtime - don't serialize)
+		bool isHovered = false;
+		bool isPressed = false;
+
+		template<typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const
+		{
+			out.SetObject();
+			rapidjson::Value textVal(text.c_str(), alloc);
+			out.AddMember("text", textVal, alloc);
+			out.AddMember("position", Vec3ToJson(position, alloc), alloc);
+
+			rapidjson::Value sizeVal(rapidjson::kArrayType);
+			sizeVal.PushBack(size.x, alloc);
+			sizeVal.PushBack(size.y, alloc);
+			out.AddMember("size", sizeVal, alloc);
+
+			out.AddMember("normalColor", Vec3ToJson(normalColor, alloc), alloc);
+			out.AddMember("hoverColor", Vec3ToJson(hoverColor, alloc), alloc);
+			out.AddMember("pressedColor", Vec3ToJson(pressedColor, alloc), alloc);
+			out.AddMember("textColor", Vec3ToJson(textColor, alloc), alloc);
+			out.AddMember("textScale", textScale, alloc);
+			out.AddMember("backgroundAlpha", backgroundAlpha, alloc);
+
+			out.AddMember("action", static_cast<int>(action), alloc);
+			rapidjson::Value actionDataVal(actionData.c_str(), alloc);
+			out.AddMember("actionData", actionDataVal, alloc);
+
+			// Audio settings
+			rapidjson::Value hoverSoundVal(hoverSoundName.c_str(), alloc);
+			out.AddMember("hoverSoundName", hoverSoundVal, alloc);
+			rapidjson::Value clickSoundVal(clickSoundName.c_str(), alloc);
+			out.AddMember("clickSoundName", clickSoundVal, alloc);
+			out.AddMember("soundVolume", soundVolume, alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in)
+		{
+			if (in.HasMember("text") && in["text"].IsString())
+				text = in["text"].GetString();
+			if (in.HasMember("position") && in["position"].IsArray())
+				position = JsonToVec3(in["position"]);
+			if (in.HasMember("size") && in["size"].IsArray())
+			{
+				const auto& arr = in["size"].GetArray();
+				if (arr.Size() >= 2)
+				{
+					size.x = arr[0].GetFloat();
+					size.y = arr[1].GetFloat();
+				}
+			}
+			if (in.HasMember("normalColor") && in["normalColor"].IsArray())
+				normalColor = JsonToVec3(in["normalColor"]);
+			if (in.HasMember("hoverColor") && in["hoverColor"].IsArray())
+				hoverColor = JsonToVec3(in["hoverColor"]);
+			if (in.HasMember("pressedColor") && in["pressedColor"].IsArray())
+				pressedColor = JsonToVec3(in["pressedColor"]);
+			if (in.HasMember("textColor") && in["textColor"].IsArray())
+				textColor = JsonToVec3(in["textColor"]);
+			if (in.HasMember("textScale") && in["textScale"].IsNumber())
+				textScale = in["textScale"].GetFloat();
+			if (in.HasMember("backgroundAlpha") && in["backgroundAlpha"].IsNumber())
+				backgroundAlpha = in["backgroundAlpha"].GetFloat();
+			if (in.HasMember("action") && in["action"].IsInt())
+				action = static_cast<ButtonAction>(in["action"].GetInt());
+			if (in.HasMember("actionData") && in["actionData"].IsString())
+				actionData = in["actionData"].GetString();
+
+			// Audio settings
+			if (in.HasMember("hoverSoundName") && in["hoverSoundName"].IsString())
+				hoverSoundName = in["hoverSoundName"].GetString();
+			if (in.HasMember("clickSoundName") && in["clickSoundName"].IsString())
+				clickSoundName = in["clickSoundName"].GetString();
+			if (in.HasMember("soundVolume") && in["soundVolume"].IsNumber())
+				soundVolume = in["soundVolume"].GetFloat();
+		}
+
+		XPROPERTY_DEF("UIButtonComponent", UIButtonComponent)
+	};
+
+	/*!***********************************************************************
+	\brief
 	  UI configuration component for HUD elements
 	*************************************************************************/
 	struct UIComponent
@@ -3216,7 +3694,7 @@ namespace Ermine
 		bool showBookCounter = true;
 		int booksCollected = 0;
 		int totalBooks = 4;
-		Ermine::Vec3 bookCounterPosition = { 0.02f, 0.90f, 0.0f };  // Top-left, below healthbar
+		Ermine::Vec3 bookCounterPosition = { 0.95f, 0.93f, 0.0f };  // Top-right, beside healthbar
 
 		// Skills UI settings
 		bool showSkills = true;
@@ -3227,14 +3705,14 @@ namespace Ermine
 		// Crosshair settings
 		bool showCrosshair = true;
 		Ermine::Vec3 crosshairColor = { 0.95f, 0.95f, 0.95f };  // Bright white for maximum visibility
-		float crosshairSize = 0.012f;   // Reduced size for better precision
+		float crosshairSize = 0.05f;   // Reduced size for better precision
 		float crosshairThickness = 0.001f;  // Thinner and sharper
 		int crosshairStyle = 0;        // 0 = sniper scope, 1 = dot, 2 = circle
 		float crosshairGap = 0.004f;   // Small center gap for precise aiming
 
 		// Health system (Life Essence)
-		float currentHealth = 100.0f;
-		float maxHealth = 100.0f;
+		float currentHealth = 50.0f;
+		float maxHealth = 50.0f;
 		float healthRegenRate = 5.0f;          // Health per second when regenerating
 		float healthRegenDelay = 3.0f;         // Delay after skill use before regen starts
 		float healthRegenTimer = 0.0f;         // Internal timer (don't serialize)
@@ -3252,6 +3730,16 @@ namespace Ermine
 		float manaBarHeight = 0.03f;          // Percentage of screen height
 		Ermine::Vec3 manaBarPosition = { 0.1f, 0.85f, 0.0f };   // Below health bar
 
+		float GetHealth() const
+		{
+			return currentHealth;
+		}
+
+		void SetHealth(float value)
+		{
+			currentHealth = std::clamp(value, 0.0f, maxHealth);
+		}
+
 		// Skill slot data
 		struct SkillSlot
 		{
@@ -3259,6 +3747,7 @@ namespace Ermine
 			float maxCooldown = 5.0f;         // Total cooldown duration
 			float manaCost = 20.0f;           // Life essence cost to cast
 			bool isOnCooldown = false;        // Is skill currently on cooldown?
+			float activationFlashTimer = 0.0f; // Flash effect duration when skill is activated
 			Ermine::Vec3 slotColor = { 0.25f, 0.25f, 0.25f };        // Dark gray background
 			Ermine::Vec3 readyColor = { 0.85f, 0.85f, 0.85f };       // Light gray when ready
 			Ermine::Vec3 cooldownColor = { 0.45f, 0.45f, 0.45f };    // Medium gray during cooldown
@@ -3478,6 +3967,96 @@ namespace Ermine
 			xproperty::obj_member<"showCrosshair", &UIComponent::showCrosshair>,
 			xproperty::obj_member<"crosshairSize", &UIComponent::crosshairSize>,
 			xproperty::obj_member<"crosshairStyle", &UIComponent::crosshairStyle>
+		)
+	};
+
+	/*!***********************************************************************
+	\brief
+		UI Image Component for rendering fullscreen or positioned images.
+		Used for menus, cutscenes, splash screens, and UI backgrounds.
+	*************************************************************************/
+	struct UIImageComponent
+	{
+		std::string imagePath = "";           ///< Path to the image texture (PNG, JPG, DDS)
+		bool fullscreen = true;               ///< If true, renders fullscreen. If false, uses position/size
+		Ermine::Vec3 position = { 0.5f, 0.5f, 0.0f }; ///< Center position in normalized coordinates (0-1)
+		float width = 1.0f;                   ///< Width in normalized coordinates (0-1)
+		float height = 1.0f;                  ///< Height in normalized coordinates (0-1)
+		Ermine::Vec3 tintColor = { 1.0f, 1.0f, 1.0f }; ///< Color tint (1,1,1 = no tint)
+		float alpha = 1.0f;                   ///< Alpha transparency (0-1)
+		bool maintainAspectRatio = true;      ///< Preserve image aspect ratio
+
+		// Caption/Text overlay
+		std::string caption = "";             ///< Caption text to display
+		bool showCaption = false;             ///< If true, renders caption text
+		Ermine::Vec3 captionColor = { 1.0f, 1.0f, 1.0f }; ///< Caption text color
+		float captionFontSize = 24.0f;        ///< Caption font size
+		Ermine::Vec3 captionPosition = { 0.5f, 0.1f, 0.0f }; ///< Caption position (bottom center by default)
+
+		template<typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const
+		{
+			out.SetObject();
+			out.AddMember("imagePath", rapidjson::Value(imagePath.c_str(), alloc), alloc);
+			out.AddMember("fullscreen", fullscreen, alloc);
+			out.AddMember("position", Vec3ToJson(position, alloc), alloc);
+			out.AddMember("width", width, alloc);
+			out.AddMember("height", height, alloc);
+			out.AddMember("tintColor", Vec3ToJson(tintColor, alloc), alloc);
+			out.AddMember("alpha", alpha, alloc);
+			out.AddMember("maintainAspectRatio", maintainAspectRatio, alloc);
+			out.AddMember("caption", rapidjson::Value(caption.c_str(), alloc), alloc);
+			out.AddMember("showCaption", showCaption, alloc);
+			out.AddMember("captionColor", Vec3ToJson(captionColor, alloc), alloc);
+			out.AddMember("captionFontSize", captionFontSize, alloc);
+			out.AddMember("captionPosition", Vec3ToJson(captionPosition, alloc), alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in)
+		{
+			if (in.HasMember("imagePath") && in["imagePath"].IsString())
+				imagePath = in["imagePath"].GetString();
+			if (in.HasMember("fullscreen") && in["fullscreen"].IsBool())
+				fullscreen = in["fullscreen"].GetBool();
+			if (in.HasMember("position") && in["position"].IsArray())
+				position = JsonToVec3(in["position"]);
+			if (in.HasMember("width") && in["width"].IsNumber())
+				width = in["width"].GetFloat();
+			if (in.HasMember("height") && in["height"].IsNumber())
+				height = in["height"].GetFloat();
+			if (in.HasMember("tintColor") && in["tintColor"].IsArray())
+				tintColor = JsonToVec3(in["tintColor"]);
+			if (in.HasMember("alpha") && in["alpha"].IsNumber())
+				alpha = in["alpha"].GetFloat();
+			if (in.HasMember("maintainAspectRatio") && in["maintainAspectRatio"].IsBool())
+				maintainAspectRatio = in["maintainAspectRatio"].GetBool();
+			if (in.HasMember("caption") && in["caption"].IsString())
+				caption = in["caption"].GetString();
+			if (in.HasMember("showCaption") && in["showCaption"].IsBool())
+				showCaption = in["showCaption"].GetBool();
+			if (in.HasMember("captionColor") && in["captionColor"].IsArray())
+				captionColor = JsonToVec3(in["captionColor"]);
+			if (in.HasMember("captionFontSize") && in["captionFontSize"].IsNumber())
+				captionFontSize = in["captionFontSize"].GetFloat();
+			if (in.HasMember("captionPosition") && in["captionPosition"].IsArray())
+				captionPosition = JsonToVec3(in["captionPosition"]);
+		}
+
+		XPROPERTY_DEF(
+			"UIImageComponent", UIImageComponent,
+			xproperty::obj_member<"imagePath", &UIImageComponent::imagePath>,
+			xproperty::obj_member<"fullscreen", &UIImageComponent::fullscreen>,
+			xproperty::obj_member<"position", &UIImageComponent::position>,
+			xproperty::obj_member<"width", &UIImageComponent::width>,
+			xproperty::obj_member<"height", &UIImageComponent::height>,
+			xproperty::obj_member<"tintColor", &UIImageComponent::tintColor>,
+			xproperty::obj_member<"alpha", &UIImageComponent::alpha>,
+			xproperty::obj_member<"maintainAspectRatio", &UIImageComponent::maintainAspectRatio>,
+			xproperty::obj_member<"caption", &UIImageComponent::caption>,
+			xproperty::obj_member<"showCaption", &UIImageComponent::showCaption>,
+			xproperty::obj_member<"captionColor", &UIImageComponent::captionColor>,
+			xproperty::obj_member<"captionFontSize", &UIImageComponent::captionFontSize>,
+			xproperty::obj_member<"captionPosition", &UIImageComponent::captionPosition>
 		)
 	};
 } // namespace Ermine

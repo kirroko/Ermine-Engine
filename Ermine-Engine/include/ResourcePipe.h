@@ -95,6 +95,14 @@ namespace Ermine {
         bool optimizeVertices = true;
         bool flipUVs = true;
         bool combineMeshes = true; // For skinned meshes with multiple sub-meshes
+
+        bool applyPreTransform = false;
+        float scale[3] = { 1.0f, 1.0f, 1.0f };        // Uniform or per-axis scale
+        float translation[3] = { 0.0f, 0.0f, 0.0f };  // Position offset
+        float rotation[3] = { 0.0f, 0.0f, 0.0f };     // Euler angles in degrees (X, Y, Z)
+
+        MeshImportSettings() = default;
+
     };
 
     //=============================================================================
@@ -177,6 +185,9 @@ namespace Ermine {
             const std::string& outputPath,
             const TextureImportSettings& settings);
 
+        // Determine optimal compression format based on filename
+        DXGI_FORMAT DetermineOptimalFormat(const std::string& filename);
+
         // Assimp mesh conversion helpers
         bool LoadAssimpScene(const std::string& filePath,
             const aiScene*& outScene,
@@ -185,9 +196,13 @@ namespace Ermine {
 
         bool HasSkinning(const aiMesh* mesh) const;
 
-        bool ProcessStaticMesh(const aiMesh* mesh, MeshData& outData);
+        void BuildTransformMatrix(const MeshImportSettings& settings, float outMatrix[16]);
+        void TransformVector(const float matrix[16], const float in[3], float out[3]);
+        void TransformNormal(const float matrix[16], const float in[3], float out[3]);
 
-        bool ProcessSkinnedMeshCombined(const aiScene* scene, SkinnedMeshData& outData);
+        bool ProcessStaticMesh(const aiMesh* mesh, MeshData& outData, const MeshImportSettings& settings);
+
+        bool ProcessSkinnedMeshCombined(const aiScene* scene, SkinnedMeshData& outData, const MeshImportSettings& settings);
 
         // File writing
         bool WriteMeshFile(const std::string& outputPath, const MeshData& meshData);

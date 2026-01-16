@@ -1,177 +1,504 @@
 {
-  "entity": {
-    "id": 53,
-    "components": {
-      "Transform": {
-        "position": [
-          0.0,
-          0.25,
-          0.0
-        ],
-        "rotation": [
-          0.0,
-          0.0,
-          0.0,
-          1.0
-        ],
-        "scale": [
-          0.009999999776482582,
-          0.009999999776482582,
-          0.009999999776482582
-        ]
-      },
-      "ObjectMetaData": {
-        "name": "Player",
-        "tag": "Model",
-        "selfActive": true
-      },
-      "Mesh": {
-        "kind": "None"
-      },
-      "Material": {
-        "hasMaterial": true,
-        "params": {
-          "materialAlbedo": [
-            0.800000011920929,
-            0.800000011920929,
-            0.800000011920929,
+  "entities": [
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "0f43ca3f1f776c44a64a0b20e6177bb2"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.25,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
             1.0
           ],
-          "materialAlpha": 1.0,
-          "materialTransparency": 0.0,
-          "materialMetallic": 0.0,
-          "materialRoughness": 0.30000001192092898,
-          "materialAo": 1.0,
-          "materialEmissive": [
+          "scale": [
+            0.009999999776482582,
+            0.009999999776482582,
+            0.009999999776482582
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Player",
+          "tag": "Model",
+          "selfActive": true
+        },
+        "AudioComponent": {
+          "soundName": "",
+          "eventName": "",
+          "useRandomVariation": true,
+          "is3D": false,
+          "isLooping": false,
+          "isStreaming": false,
+          "volume": 1.0,
+          "followTransform": false,
+          "minDistance": 1.0,
+          "maxDistance": 100.0,
+          "playOnStart": false,
+          "soundVariations": [
+            "../Resources/Audio/1.wav",
+            "../Resources/Audio/2.wav",
+            "../Resources/Audio/3.wav",
+            "../Resources/Audio/4.wav",
+            "../Resources/Audio/5.wav",
+            "../Resources/Audio/6.wav"
+          ]
+        },
+        "Mesh": {
+          "kind": "None"
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Dynamic",
+          "mass": 1.0,
+          "shapeType": "Capsule",
+          "colliderpivot": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
             0.0,
             0.0,
             0.0
           ],
-          "materialEmissiveIntensity": 0.0,
-          "materialNormalStrength": 1.0,
-          "materialShadingModel": 0,
-          "materialHasAlbedoMap": true,
-          "materialHasNormalMap": false,
-          "materialHasRoughnessMap": false,
-          "materialHasMetallicMap": false,
-          "materialHasAoMap": false,
-          "materialHasEmissiveMap": false
+          "rotx": true,
+          "roty": false,
+          "rotz": true,
+          "collidersize": [
+            50.0,
+            200.0,
+            50.0
+          ]
         },
-        "textures": [
-          {
-            "slot": "materialAlbedoMap",
-            "path": "../Resources/Textures/Pants_Base_color.png"
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              0.800000011920929,
+              0.800000011920929,
+              0.800000011920929,
+              1.0
+            ],
+            "materialAlpha": 1.0,
+            "materialTransparency": 0.0,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.30000001192092898,
+            "materialAo": 1.0,
+            "materialEmissive": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 0.0,
+            "materialNormalStrength": 1.0,
+            "materialShadingModel": 0,
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": false,
+            "materialHasRoughnessMap": false,
+            "materialHasMetallicMap": false,
+            "materialHasAoMap": false,
+            "materialHasEmissiveMap": false
           },
-          {
-            "slot": "material.albedoMap",
-            "path": "../Resources/Textures/Pants_Base_color.png"
-          }
-        ],
-        "uvScale": [
-          1.0,
-          1.0
-        ],
-        "uvOffset": [
-          0.0,
-          0.0
-        ]
-      },
-      "ModelComponent": {
-        "model": "Walking.fbx",
-        "isSkinFile": false
-      },
-      "AnimationComponent": {
-        "model": "Walking.fbx",
-        "graph": {
-          "playbackSpeed": 1.0,
-          "playing": false,
-          "currentTime": 0.0,
-          "states": [
+          "textures": [
             {
-              "id": 1,
-              "name": "Idle",
-              "clipName": "mixamo.com",
-              "isStartState": true,
-              "isAttached": true,
-              "speed": 1.0,
-              "blendWeight": 1.0,
-              "editorPos": [
-                108.0,
-                75.0
-              ]
+              "slot": "materialAlbedoMap",
+              "path": "../Resources/Textures/Pants_Base_color.png"
             },
             {
-              "id": 2,
-              "name": "Move",
-              "clipName": "mixamo.com",
-              "isStartState": false,
-              "isAttached": true,
-              "speed": 1.0,
-              "blendWeight": 1.0,
-              "editorPos": [
-                516.0,
-                85.0
-              ]
+              "slot": "material.albedoMap",
+              "path": "../Resources/Textures/Pants_Base_color.png"
             }
           ],
-          "transitions": [
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ]
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
             {
-              "fromNodeId": 1,
-              "toNodeId": 2,
-              "exitTime": 0.0,
-              "duration": 0.25,
-              "conditions": [
-                {
-                  "parameterName": "isMoving",
-                  "comparison": "==",
-                  "threshold": 0.0,
-                  "boolValue": true
-                }
-              ]
+              "class": "PlayerController2"
             },
             {
-              "fromNodeId": 2,
-              "toNodeId": 1,
-              "exitTime": 0.0,
-              "duration": 0.25,
-              "conditions": [
-                {
-                  "parameterName": "isMoving",
-                  "comparison": "==",
-                  "threshold": 0.0,
-                  "boolValue": false
-                }
-              ]
-            }
-          ],
-          "parameters": [
-            {
-              "name": "isMoving",
-              "type": 0,
-              "boolValue": false,
-              "floatValue": 0.0,
-              "intValue": 0,
-              "triggerValue": false
+              "class": "OrbTeleport"
             }
           ]
         }
-      },
-      "HierarchyComponent": {
-        "parent": 0,
-        "children": [],
-        "depth": 0
-      },
-      "GlobalTransform": {},
-      "ScriptsComponent": {
-        "scripts": [
-          {
-            "class": "PlayerController"
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "1de50975648d454cbfa61a5c513ec22b"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            100.0,
+            100.0,
+            100.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Main Camera",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "0f43ca3f1f776c44a64a0b20e6177bb2",
+          "depth": 1
+        },
+        "GlobalTransform": {},
+        "CameraComponent": {
+          "fov": 70.0,
+          "aspect": 1.7777777910232545,
+          "near": 0.10000000149011612,
+          "far": 1000.0,
+          "primary": false,
+          "isGameCamera": false
+        }
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "57b287143bcced4e9d11cc5dec60322c"
+        },
+        "Transform": {
+          "position": [
+            0.02500000037252903,
+            -1.399999976158142,
+            0.0
+          ],
+          "rotation": [
+            -0.7071066498756409,
+            0.0,
+            0.0,
+            0.70710688829422
+          ],
+          "scale": [
+            1.0,
+            0.9999998211860657,
+            0.9999998211860657
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Player Arms",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ArmsOnly.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "1de50975648d454cbfa61a5c513ec22b",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "68f14c0d536ef743943ffec91f19d44d"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ArmsOnly.fbx_base.002_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true
           },
-          {
-            "class": "OrbTeleport"
-          }
-        ]
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources\\Textures\\Arms_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources\\Textures\\Arms_BaseColor.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            -1.0
+          ],
+          "uvOffset": [
+            0.0,
+            1.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "57b287143bcced4e9d11cc5dec60322c",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "9391fbe6c397e84a83e7a9a491dfa83e"
+        },
+        "Transform": {
+          "position": [
+            -0.1599999964237213,
+            -0.2999999523162842,
+            1.2500001192092896
+          ],
+          "rotation": [
+            -0.7071061730384827,
+            0.0,
+            0.0,
+            0.7071074843406677
+          ],
+          "scale": [
+            0.00009999999747378752,
+            0.00010000001202570274,
+            0.00010000001202570274
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Syringe",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "C_Syringe.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "57b287143bcced4e9d11cc5dec60322c",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "c8bccb19ee6be2418e04791707e5fb54"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_C_Syringe.fbx_Mesh.014_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources\\Textures\\C_Syringe_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources\\Textures\\C_Syringe_BaseColor.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            -1.0
+          ],
+          "uvOffset": [
+            0.0,
+            1.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "9391fbe6c397e84a83e7a9a491dfa83e",
+          "depth": 4
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "f0c37f804f53ba4fb4f8ce2f0a679673"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_C_Syringe.fbx_Mesh.016_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources\\Textures\\C_Syringe_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources\\Textures\\C_Syringe_BaseColor.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            -1.0
+          ],
+          "uvOffset": [
+            0.0,
+            1.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "9391fbe6c397e84a83e7a9a491dfa83e",
+          "depth": 4
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "e459015df8b4b34eb601506c85b93d72"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_C_Syringe.fbx_Mesh.015_mesh2",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "../Resources\\Textures\\C_Syringe_BaseColor.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "../Resources\\Textures\\C_Syringe_BaseColor.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            -1.0
+          ],
+          "uvOffset": [
+            0.0,
+            1.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "9391fbe6c397e84a83e7a9a491dfa83e",
+          "depth": 4
+        },
+        "GlobalTransform": {}
       }
     }
-  }
+  ]
 }

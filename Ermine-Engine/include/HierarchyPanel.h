@@ -25,6 +25,7 @@ namespace Ermine {
     private:
         Scene* m_ActiveScene = nullptr;      ///< Pointer to the currently active scene
         bool m_IsVisible = true;              ///< Panel visibility state
+        bool m_ShowInactive = false;          ///< Show inactive entities in hierarchy (grayed out)
         EntityID m_PendingFocusEntity = 0;    ///< Entity waiting for inspector focus after interaction
 
         // UI helper functions

@@ -143,6 +143,14 @@ namespace Ermine
 
 		/*!***********************************************************************
 		  \brief
+			Provides access to the Jolt BodyLockInterface for safe body access.
+		  \return
+			Reference to the const BodyLockInterface instance.
+		*************************************************************************/
+		const BodyLockInterface& GetBodyLockInterface() { return mPhysicsSystem.GetBodyLockInterface(); }
+
+		/*!***********************************************************************
+		  \brief
 			BodyManager DrawSettings setup for draw debug
 		*************************************************************************/
 		void DrawDebug();
@@ -199,7 +207,7 @@ namespace Ermine
 		  \return 
 			True if the ray hit a body, false otherwise.
 		*************************************************************************/
-		bool Raycast(const JPH::RVec3& origin, const JPH::RVec3& direction, float maxDistance, JPH::RayCastResult& outResult);
+		bool Raycast(const JPH::Vec3& origin, const JPH::Vec3& direction, float maxDistance, JPH::RayCastResult& outResult);
 
 		/*!***********************************************************************
 		  \brief 
@@ -213,7 +221,7 @@ namespace Ermine
 		  \return 
 			A vector of all RayCastResults encountered.
 		*************************************************************************/
-		std::vector<JPH::RayCastResult> RaycastAll(const JPH::RVec3& origin, const JPH::RVec3& direction, float maxDistance);
+		std::vector<JPH::RayCastResult> RaycastAll(const JPH::Vec3& origin, const JPH::Vec3& direction, float maxDistance);
 
 		/*!***********************************************************************
 		  \brief
@@ -241,6 +249,18 @@ namespace Ermine
 
 		/*!***********************************************************************
 		  \brief
+			Gets the world position of a physics body by entity ID
+		*************************************************************************/
+		Ermine::Vec3 GetPosition(EntityID id);
+
+		/*!***********************************************************************
+		  \brief
+			Gets the world rotation of a physics body by entity ID
+		*************************************************************************/
+		Ermine::Quaternion GetRotation(EntityID id);
+
+		/*!***********************************************************************
+		  \brief
 			Moves the body using (position + rotation in Euler).
 		*************************************************************************/
 		void Move(EntityID ID, Ermine::Vec3 position, Ermine::Vec3 rotation);
@@ -250,13 +270,18 @@ namespace Ermine
 			Moves the body using (position + rotation in Quaternion).
 		*************************************************************************/
 		void Move(EntityID ID, Ermine::Vec3 position, Ermine::Quaternion rotation);
+
+		void Jump(EntityID ID, float jumpStrength);
+
+		void RemovePhysic(EntityID ID);
+
+		void ForceUpdate();
 		
 		// Shared pointer to the debug renderer used for visualizing physics.
 		std::shared_ptr<MyDebugRenderer> mDebugRenderer;
 		
 		// Whether to draw wireframe physics bodies.
 		bool wireframe;
-
 	private:
 
 		/*!***********************************************************************

@@ -78,7 +78,7 @@ namespace Ermine::graphics {
         }
     }
 
-    void MeshManager::Initialize()
+    void MeshManager::Initialize(size_t estimatedDrawCount)
     {
         // Create GPU buffers (SSBOs)
         CreateBuffers();
@@ -87,11 +87,75 @@ namespace Ermine::graphics {
         SetupStandardVAO();
         SetupSkinnedVAO();
 
-        // Initialize persistent mapped buffer for DrawInfo (max 10000 draws)
-        constexpr size_t MAX_DRAW_CALLS = 100000;
-        if (!m_PersistentDrawInfoBuffer.Initialize(MAX_DRAW_CALLS))
-        {
-            EE_CORE_ERROR("Failed to initialize persistent DrawInfo buffer");
+        // Calculate buffer size based on scene complexity
+        size_t bufferSize;
+        if (estimatedDrawCount > 0) {
+            // Scene-based sizing: Add 50% headroom for dynamic objects
+            bufferSize = static_cast<size_t>(estimatedDrawCount * 1.5f);
+
+            // Clamp to reasonable range
+            bufferSize = std::max(bufferSize, size_t(1000));    // Min 1k draws
+            bufferSize = std::min(bufferSize, size_t(100000));  // Max 100k draws
+
+            EE_CORE_INFO("MeshManager: Scene-based buffer sizing - Estimated {} draws, allocating for {} draws",
+                         estimatedDrawCount, bufferSize);
+        } else {
+            // No estimate provided, use default maximum
+            bufferSize = 100000;
+            EE_CORE_INFO("MeshManager: Using default buffer sizing - {} draws", bufferSize);
+        }
+
+        // Initialize separate buffers for each pass and VAO type
+        // Each pass gets its own buffers to avoid overwrites (simpler, cleaner code)
+
+        // Depth prepass buffers (early-z rejection - opaque objects only)
+        if (!m_DepthPrepassStandardDrawCommandBuffer.Initialize(bufferSize) ||
+            !m_DepthPrepassStandardDrawInfoBuffer.Initialize(bufferSize)) {
+            EE_CORE_ERROR("Failed to initialize depth prepass standard buffers");
+        }
+        if (!m_DepthPrepassSkinnedDrawCommandBuffer.Initialize(bufferSize) ||
+            !m_DepthPrepassSkinnedDrawInfoBuffer.Initialize(bufferSize)) {
+            EE_CORE_ERROR("Failed to initialize depth prepass skinned buffers");
+        }
+
+        // Picking pass buffers (object selection - all visible objects)
+        if (!m_PickingStandardDrawCommandBuffer.Initialize(bufferSize) ||
+            !m_PickingStandardDrawInfoBuffer.Initialize(bufferSize)) {
+            EE_CORE_ERROR("Failed to initialize picking standard buffers");
+        }
+        if (!m_PickingSkinnedDrawCommandBuffer.Initialize(bufferSize) ||
+            !m_PickingSkinnedDrawInfoBuffer.Initialize(bufferSize)) {
+            EE_CORE_ERROR("Failed to initialize picking skinned buffers");
+        }
+
+        // Geometry pass buffers
+        if (!m_GeometryStandardDrawCommandBuffer.Initialize(bufferSize) ||
+            !m_GeometryStandardDrawInfoBuffer.Initialize(bufferSize)) {
+            EE_CORE_ERROR("Failed to initialize geometry standard buffers");
+        }
+        if (!m_GeometrySkinnedDrawCommandBuffer.Initialize(bufferSize) ||
+            !m_GeometrySkinnedDrawInfoBuffer.Initialize(bufferSize)) {
+            EE_CORE_ERROR("Failed to initialize geometry skinned buffers");
+        }
+
+        // Forward pass buffers
+        if (!m_ForwardStandardDrawCommandBuffer.Initialize(bufferSize) ||
+            !m_ForwardStandardDrawInfoBuffer.Initialize(bufferSize)) {
+            EE_CORE_ERROR("Failed to initialize forward standard buffers");
+        }
+        if (!m_ForwardSkinnedDrawCommandBuffer.Initialize(bufferSize) ||
+            !m_ForwardSkinnedDrawInfoBuffer.Initialize(bufferSize)) {
+            EE_CORE_ERROR("Failed to initialize forward skinned buffers");
+        }
+
+        // Shadow pass buffers
+        if (!m_ShadowStandardDrawCommandBuffer.Initialize(bufferSize) ||
+            !m_ShadowStandardDrawInfoBuffer.Initialize(bufferSize)) {
+            EE_CORE_ERROR("Failed to initialize shadow standard buffers");
+        }
+        if (!m_ShadowSkinnedDrawCommandBuffer.Initialize(bufferSize) ||
+            !m_ShadowSkinnedDrawInfoBuffer.Initialize(bufferSize)) {
+            EE_CORE_ERROR("Failed to initialize shadow skinned buffers");
         }
 
         // Initialize skeletal SSBO (max 100 skeletons = 100 * 128 bones = 12800 bones)
@@ -104,8 +168,86 @@ namespace Ermine::graphics {
         EE_CORE_INFO("MeshManager: Initialized");
     }
 
+    void MeshManager::LogBufferUtilization() const
+    {
+        size_t capacity = m_GeometryStandardDrawCommandBuffer.GetMaxCommands();
+
+        // Calculate total memory allocated
+        size_t totalMemoryMB = (capacity * sizeof(DrawInfo) * 6 + capacity * sizeof(DrawElementsIndirectCommand) * 6) / (1024 * 1024);
+
+        // Get current usage from each buffer
+        size_t geomStandardCount = m_GeometryStandardDrawCommandBuffer.GetCommandCount();
+        size_t geomSkinnedCount = m_GeometrySkinnedDrawCommandBuffer.GetCommandCount();
+        size_t forwardStandardCount = m_ForwardStandardDrawCommandBuffer.GetCommandCount();
+        size_t forwardSkinnedCount = m_ForwardSkinnedDrawCommandBuffer.GetCommandCount();
+        size_t shadowStandardCount = m_ShadowStandardDrawCommandBuffer.GetCommandCount();
+        size_t shadowSkinnedCount = m_ShadowSkinnedDrawCommandBuffer.GetCommandCount();
+
+        size_t totalUsed = geomStandardCount + geomSkinnedCount + forwardStandardCount +
+                          forwardSkinnedCount + shadowStandardCount + shadowSkinnedCount;
+        size_t totalCapacity = capacity * 6;
+
+        float utilizationPercent = (totalCapacity > 0) ? (totalUsed * 100.0f / totalCapacity) : 0.0f;
+
+        EE_CORE_INFO("=== MeshManager Buffer Utilization ===");
+        EE_CORE_INFO("  Buffer Capacity: {} draws per buffer ({} total)", capacity, totalCapacity);
+        EE_CORE_INFO("  Total Memory Allocated: {} MB", totalMemoryMB);
+        EE_CORE_INFO("  Current Usage:");
+        EE_CORE_INFO("    Geometry Standard:  {}/{} ({:.1f}%)", geomStandardCount, capacity,
+                     capacity > 0 ? (geomStandardCount * 100.0f / capacity) : 0.0f);
+        EE_CORE_INFO("    Geometry Skinned:   {}/{} ({:.1f}%)", geomSkinnedCount, capacity,
+                     capacity > 0 ? (geomSkinnedCount * 100.0f / capacity) : 0.0f);
+        EE_CORE_INFO("    Forward Standard:   {}/{} ({:.1f}%)", forwardStandardCount, capacity,
+                     capacity > 0 ? (forwardStandardCount * 100.0f / capacity) : 0.0f);
+        EE_CORE_INFO("    Forward Skinned:    {}/{} ({:.1f}%)", forwardSkinnedCount, capacity,
+                     capacity > 0 ? (forwardSkinnedCount * 100.0f / capacity) : 0.0f);
+        EE_CORE_INFO("    Shadow Standard:    {}/{} ({:.1f}%)", shadowStandardCount, capacity,
+                     capacity > 0 ? (shadowStandardCount * 100.0f / capacity) : 0.0f);
+        EE_CORE_INFO("    Shadow Skinned:     {}/{} ({:.1f}%)", shadowSkinnedCount, capacity,
+                     capacity > 0 ? (shadowSkinnedCount * 100.0f / capacity) : 0.0f);
+        EE_CORE_INFO("  Total Utilization: {}/{} ({:.1f}%)", totalUsed, totalCapacity, utilizationPercent);
+
+        if (utilizationPercent < 10.0f) {
+            EE_CORE_WARN("  WARNING: Buffer utilization is very low (<10%%). Consider using scene-based sizing to reduce memory waste.");
+            EE_CORE_WARN("           Estimated optimal capacity: ~{} draws per buffer",
+                        static_cast<size_t>((totalUsed / 6) * 1.5f));
+        }
+    }
+
     void MeshManager::CreateBuffers()
     {
+        // Clean up existing buffers if reinitializing
+        if (m_VertexVBO != 0) {
+            EE_CORE_INFO("MeshManager: Cleaning up existing Vertex VBO before reinitialization");
+            glDeleteBuffers(1, &m_VertexVBO);
+            m_VertexVBO = 0;
+        }
+        if (m_SkinnedVBO != 0) {
+            EE_CORE_INFO("MeshManager: Cleaning up existing Skinned VBO before reinitialization");
+            glDeleteBuffers(1, &m_SkinnedVBO);
+            m_SkinnedVBO = 0;
+        }
+        if (m_IndexSSBO != 0) {
+            EE_CORE_INFO("MeshManager: Cleaning up existing Index SSBO before reinitialization");
+            glDeleteBuffers(1, &m_IndexSSBO);
+            m_IndexSSBO = 0;
+        }
+        if (m_DrawCommandsSSBO != 0) {
+            EE_CORE_INFO("MeshManager: Cleaning up existing Draw Commands SSBO before reinitialization");
+            glDeleteBuffers(1, &m_DrawCommandsSSBO);
+            m_DrawCommandsSSBO = 0;
+        }
+        if (m_DrawInfoSSBO != 0) {
+            EE_CORE_INFO("MeshManager: Cleaning up existing Draw Info SSBO before reinitialization");
+            glDeleteBuffers(1, &m_DrawInfoSSBO);
+            m_DrawInfoSSBO = 0;
+        }
+        if (m_IndirectBuffer.bufferID != 0) {
+            EE_CORE_INFO("MeshManager: Cleaning up existing Indirect Buffer before reinitialization");
+            glDeleteBuffers(1, &m_IndirectBuffer.bufferID);
+            m_IndirectBuffer.bufferID = 0;
+        }
+
         // Create Vertex VBO for standard vertices (64 bytes each)
         glGenBuffers(1, &m_VertexVBO);
         glBindBuffer(GL_ARRAY_BUFFER, m_VertexVBO);
@@ -157,6 +299,13 @@ namespace Ermine::graphics {
 
     void MeshManager::SetupStandardVAO()
     {
+        // Clean up existing VAO if reinitializing
+        if (m_StandardVAO != 0) {
+            EE_CORE_INFO("MeshManager: Cleaning up existing Standard VAO before reinitialization");
+            glDeleteVertexArrays(1, &m_StandardVAO);
+            m_StandardVAO = 0;
+        }
+
         // Create Standard VAO
         glGenVertexArrays(1, &m_StandardVAO);
         glBindVertexArray(m_StandardVAO);
@@ -187,18 +336,24 @@ namespace Ermine::graphics {
         glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
                              (void*)offsetof(Vertex, tangent));
 
-        EE_CORE_INFO("MeshManager: Configured Standard VAO (locations 0-3) - NOT USED YET");
+        EE_CORE_INFO("MeshManager: Configured Standard VAO (locations 0-3)");
 
-        // CRITICAL: Unbind array buffer to avoid VAO 0 corruption, but DON'T unbind element buffer!
-        // Element buffer binding is VAO state - unbinding it here would remove it from the VAO!
+        // Unbind array buffer to avoid VAO 0 corruption
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-        // Unbind VAO (element buffer remains bound to the VAO)
+        // Unbind VAO (element buffer will be bound later during UploadAndBuild)
         glBindVertexArray(0);
     }
 
     void MeshManager::SetupSkinnedVAO()
     {
+        // Clean up existing VAO if reinitializing
+        if (m_SkinnedVAO != 0) {
+            EE_CORE_INFO("MeshManager: Cleaning up existing Skinned VAO before reinitialization");
+            glDeleteVertexArrays(1, &m_SkinnedVAO);
+            m_SkinnedVAO = 0;
+        }
+
         // Create Skinned VAO
         glGenVertexArrays(1, &m_SkinnedVAO);
         glBindVertexArray(m_SkinnedVAO);
@@ -241,10 +396,10 @@ namespace Ermine::graphics {
 
         EE_CORE_INFO("MeshManager: Configured Skinned VAO (locations 0-5)");
 
-        // CRITICAL: Unbind array buffer to avoid VAO 0 corruption, but DON'T unbind element buffer!
+        // Unbind array buffer to avoid VAO 0 corruption
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-        // Unbind VAO (element buffer remains bound to the VAO)
+        // Unbind VAO (element buffer will be bound later during UploadAndBuild)
         glBindVertexArray(0);
     }
 
@@ -350,6 +505,8 @@ namespace Ermine::graphics {
         EE_CORE_INFO("MeshManager::UploadAndBuild() called - Staged: {} regular vertices, {} skinned vertices, {} indices",
                      m_StagedVertices.size(), m_StagedSkinnedVertices.size(), m_StagedIndices.size());
 
+        glBindVertexArray(0);
+
         // Upload Vertex SSBO data
         if (!m_StagedVertices.empty()) {
             size_t vertexBufferSize = m_StagedVertices.size() * sizeof(Vertex);
@@ -445,8 +602,20 @@ namespace Ermine::graphics {
         m_IndirectBuffer.MarkClean();
     }
 
-    void MeshManager::SetupShadowVAOs(GLuint preSkinnedBuffer)
+    void MeshManager::SetupShadowVAOs()
     {
+        // Clean up existing shadow VAOs if reinitializing
+        if (m_StandardShadowVAO != 0) {
+            EE_CORE_INFO("MeshManager: Cleaning up existing Standard Shadow VAO before reinitialization");
+            glDeleteVertexArrays(1, &m_StandardShadowVAO);
+            m_StandardShadowVAO = 0;
+        }
+        if (m_SkinnedShadowVAO != 0) {
+            EE_CORE_INFO("MeshManager: Cleaning up existing Skinned Shadow VAO before reinitialization");
+            glDeleteVertexArrays(1, &m_SkinnedShadowVAO);
+            m_SkinnedShadowVAO = 0;
+        }
+
         // ==================== STANDARD SHADOW VAO ====================
         // Create shadow VAO for standard (non-skinned) meshes
         glGenVertexArrays(1, &m_StandardShadowVAO);
@@ -478,12 +647,7 @@ namespace Ermine::graphics {
         glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
                              (void*)offsetof(Vertex, tangent));
 
-        // Bind pre-skinned buffer for attribute 6 (vec4 - xyz = position, w = unused)
-        glBindBuffer(GL_ARRAY_BUFFER, preSkinnedBuffer);
-        glEnableVertexAttribArray(6);
-        glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(glm::vec4), (void*)0);
-
-        EE_CORE_INFO("MeshManager: Configured Standard Shadow VAO (locations 0-3, 6)");
+        EE_CORE_INFO("MeshManager: Configured Standard Shadow VAO (locations 0-3)");
 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindVertexArray(0);
@@ -529,12 +693,7 @@ namespace Ermine::graphics {
         glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(SkinnedVertex),
                              (void*)offsetof(SkinnedVertex, boneWeights));
 
-        // Bind pre-skinned buffer for attribute 6 (vec4 - xyz = position, w = unused)
-        glBindBuffer(GL_ARRAY_BUFFER, preSkinnedBuffer);
-        glEnableVertexAttribArray(6);
-        glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(glm::vec4), (void*)0);
-
-        EE_CORE_INFO("MeshManager: Configured Skinned Shadow VAO (locations 0-6)");
+        EE_CORE_INFO("MeshManager: Configured Skinned Shadow VAO (locations 0-5)");
 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindVertexArray(0);

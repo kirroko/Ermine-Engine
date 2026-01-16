@@ -10,6 +10,7 @@ in vec3 ViewNormal;
 in vec3 ViewTangent;
 in vec3 ViewBitangent;
 flat in uint vMaterialIndex; // Material index from vertex shader
+flat in uint vDrawFlags;     // DrawInfo flags from vertex shader
 
 // G-Buffer outputs
 layout(location = 0) out vec3 gBuffer0; // RT0: Albedo
@@ -17,57 +18,25 @@ layout(location = 1) out vec3 gBuffer1; // RT1: Normal
 layout(location = 2) out vec4 gBuffer2; // RT2: Emissive
 layout(location = 3) out vec4 gBuffer3; // RT3: Material
 
-// Material structure
-struct MaterialData {
-    vec4 albedo;                    // 16 bytes
-    float metallic;                 // 4 bytes
-    float roughness;                // 4 bytes
-    float ao;                       // 4 bytes
-    float normalStrength;           // 4 bytes
+// Material texture flag bits (must match C++ MaterialTextureFlags enum)
+const uint MAT_FLAG_ALBEDO_MAP    = 1u << 0u;  // bit 0
+const uint MAT_FLAG_NORMAL_MAP    = 1u << 1u;  // bit 1
+const uint MAT_FLAG_ROUGHNESS_MAP = 1u << 2u;  // bit 2
+const uint MAT_FLAG_METALLIC_MAP  = 1u << 3u;  // bit 3
+const uint MAT_FLAG_AO_MAP        = 1u << 4u;  // bit 4
+const uint MAT_FLAG_EMISSIVE_MAP  = 1u << 5u;  // bit 5
 
-    vec3 emissive;                  // 12 bytes
-    float emissiveIntensity;        // 4 bytes
+// DrawInfo flag bits (must match C++ DrawCommands.h)
+const uint FLAG_SKINNING = 1u << 0u;        // bit 0: Skeletal animation
+const uint FLAG_CAMERA_ATTACHED = 1u << 1u; // bit 1: Camera-attached (no motion blur)
 
-    int shadingModel;               // 4 bytes (0 = PBR, 1 = Blinn-Phong)
-    int hasAlbedoMap;               // 4 bytes
-    int hasNormalMap;               // 4 bytes
-    int hasRoughnessMap;            // 4 bytes
-
-    int hasMetallicMap;             // 4 bytes
-    int hasAoMap;                   // 4 bytes
-    int hasEmissiveMap;             // 4 bytes
-    float _pad0;                    // 4 bytes (padding)
-
-    vec2 uvScale;                   // 8 bytes (UV scale)
-    vec2 uvOffset;                  // 8 bytes (UV offset)
-
-    // Texture Array Indices
-    int albedoMapIndex;             // 4 bytes
-    int normalMapIndex;             // 4 bytes
-    int roughnessMapIndex;          // 4 bytes
-    int metallicMapIndex;           // 4 bytes
-
-    int aoMapIndex;                 // 4 bytes
-    int emissiveMapIndex;           // 4 bytes
-    int _pad1;                      // 4 bytes (padding)
-    int _pad2;                      // 4 bytes (padding)
-};
-
-// Material SSBO - array of materials
-layout(std430, binding = 3) restrict readonly buffer MaterialBlock
-{
-    MaterialData materials[];
-};
+// NO MATERIAL SSBO IN FRAGMENT SHADER - materials are fetched in vertex shader and passed via varyings!
 
 // Bindless texture array SSBO - stores texture handles as uvec2 (64-bit split into two 32-bit values)
 layout(std430, binding = 5) restrict readonly buffer TextureArrayBlock
 {
     uvec2 textureHandles[];
 };
-
-// Material index uniform - which material to use from the array
-uniform int u_MaterialIndex = 0;
-
 
 // Pack albedo RGB into RT0 (RGB16F format)
 vec3 packAlbedo(vec3 albedo) {
@@ -87,111 +56,127 @@ vec4 packEmissive(vec3 emissive, float emissiveIntensity) {
     if (emissiveIntensity < 0.001) {
         return vec4(0.0, 0.0, 0.0, 0.0); // Black emissive
     }
-    
+
     float clampedIntensity = clamp(emissiveIntensity, 0.0, 255.0);
-    
+
     return vec4(clamp(emissive, 0.0, 1.0), clampedIntensity / 255.0);
 }
 
 // Pack material properties into RT3 (RGBA8 format)
-vec4 packMaterialProperties(float roughness, float metallic, float ao, float unused) {
+vec4 packMaterialProperties(float roughness, float metallic, float ao, float motionBlurFlag) {
     return vec4(
         clamp(roughness, 0.0, 1.0),
         clamp(metallic, 0.0, 1.0),
         clamp(ao, 0.0, 1.0),
-        0.0 // Unused channel
+        motionBlurFlag  // 0.0 = apply motion blur, 1.0 = skip motion blur
     );
 }
 
 // Main G-Buffer output function (call this in geometry fragment shader)
 void writeGBuffer(vec3 albedo, vec3 normal, vec3 emissive, float emissiveIntensity,
-                  float roughness, float metallic, float ao) {
+                  float roughness, float metallic, float ao, float motionBlurFlag) {
     // Output to multiple render targets
-    gBuffer0 = packAlbedo(albedo);                                    // RT0: RGB16F
-    gBuffer1 = packNormal(normal);                                    // RT1: RGB16F
-    gBuffer2 = packEmissive(emissive, emissiveIntensity);            // RT2: RGBA8
-    gBuffer3 = packMaterialProperties(roughness, metallic, ao, 0.0); // RT3: RGBA8
+    gBuffer0 = packAlbedo(albedo);                                           // RT0: RGB16F
+    gBuffer1 = packNormal(normal);                                           // RT1: RGB16F
+    gBuffer2 = packEmissive(emissive, emissiveIntensity);                   // RT2: RGBA8
+    gBuffer3 = packMaterialProperties(roughness, metallic, ao, motionBlurFlag); // RT3: RGBA8
 }
 
-vec3 getNormalFromMap_TBN(sampler2D normalMap, vec2 texCoords, vec3 viewNormal, vec3 viewTangent, vec3 viewBitangent)
-{
-    // Sample normal map (tangent space normal)
-    vec3 tangentNormal = texture(normalMap, texCoords).xyz * 2.0 - 1.0;
-    
-    // Construct TBN matrix using pre-calculated tangent and bitangent
-    // Ensure all vectors are normalized and orthogonal
-    vec3 T = normalize(viewTangent);
-    vec3 B = normalize(viewBitangent);
-    vec3 N = normalize(viewNormal);
-    
-    // Re-orthogonalize T with respect to N (Gram-Schmidt process)
-    T = normalize(T - dot(T, N) * N);
-    
-    // Re-calculate B to ensure proper handedness
-    B = cross(N, T);
-    
-    // Construct the TBN matrix
-    mat3 TBN = mat3(T, B, N);
-    
-    // Transform tangent space normal to view space
-    return normalize(TBN * tangentNormal);
-}
+// ========== MATERIAL DATA PASSED FROM VERTEX SHADER ==========
+// All material properties are fetched ONCE per vertex (not per fragment!)
+// This eliminates millions of SSBO accesses per frame
+flat in vec4 vAlbedo;              // rgb=albedo, a=metallic
+flat in vec4 vRoughnessAoEmissive; // r=roughness, g=ao, b=emissiveIntensity, a=normalStrength
+flat in vec3 vEmissive;
+flat in uint vTextureFlags;
+flat in ivec4 vTextureIndices;     // albedo, normal, roughness, metallic
+flat in ivec2 vTextureIndices2;    // ao, emissive
+
+// ========== OPTIMIZATIONS: PRE-COMPUTED IN VERTEX SHADER ==========
+in vec2 vTransformedUV;            // UV with scale/offset already applied
+flat in float vMotionBlurFlag;     // Pre-calculated motion blur flag
 
 void main()
 {
-    // Get the material for this draw call from the array using the per-vertex material index
-    MaterialData material = materials[vMaterialIndex];
+    // Unpack material data from varyings (NO SSBO ACCESS!)
+    vec3 albedo = vAlbedo.rgb;
+    float metallic = vAlbedo.a;
+    float roughness = vRoughnessAoEmissive.r;
+    float ao = vRoughnessAoEmissive.g;
+    float emissiveIntensity = vRoughnessAoEmissive.b;
+    float normalStrength = vRoughnessAoEmissive.a;
 
-    // Apply UV transform (scale and offset)
-    vec2 transformedUV = TexCoord * material.uvScale + material.uvOffset;
+    // Use pre-calculated motion blur flag from vertex shader (NO per-fragment calculation!)
+    float motionBlurFlag = vMotionBlurFlag;
 
-    // Sample material properties from textures if available
-    vec3 finalAlbedo = material.albedo.rgb; // Use RGB components from vec4 albedo
-    if (material.hasAlbedoMap != 0 && material.albedoMapIndex >= 0)
-    {
-        vec4 albedoSample = texture(sampler2D(textureHandles[material.albedoMapIndex]), transformedUV);
-        finalAlbedo *= albedoSample.rgb;
+    // Check if material uses any textures (early-out optimization for procedural materials)
+    // Fast path: No textures, pure procedural material
+    if (vTextureFlags == 0u) {
+        writeGBuffer(albedo, ViewNormal, vEmissive,
+                     emissiveIntensity, roughness,
+                     metallic, ao, motionBlurFlag);
+        return;
     }
 
-    // Normal mapping
-    vec3 finalNormal = ViewNormal;
-    if (material.hasNormalMap != 0 && material.normalMapIndex >= 0)
-    {
-        vec3 normalSample = texture(sampler2D(textureHandles[material.normalMapIndex]), transformedUV).rgb * 2.0 - 1.0;
-        normalSample.xy *= material.normalStrength;
+    // ========== BATCH TEXTURE SAMPLES ==========
+    // Use pre-transformed UV from vertex shader (NO per-fragment calculation!)
+    // Sample all textures first to hide latency and improve texture cache usage
+    vec3 albedoSample = ((vTextureFlags & MAT_FLAG_ALBEDO_MAP) != 0u && vTextureIndices.x >= 0)
+        ? texture(sampler2D(textureHandles[vTextureIndices.x]), vTransformedUV).rgb
+        : vec3(1.0);
 
-        mat3 TBN = mat3(normalize(ViewTangent), normalize(ViewBitangent), normalize(ViewNormal));
-        finalNormal = normalize(TBN * normalSample);
+    vec3 normalSample = ((vTextureFlags & MAT_FLAG_NORMAL_MAP) != 0u && vTextureIndices.y >= 0)
+        ? texture(sampler2D(textureHandles[vTextureIndices.y]), vTransformedUV).rgb
+        : vec3(0.5, 0.5, 1.0);
+
+    float roughnessSample = ((vTextureFlags & MAT_FLAG_ROUGHNESS_MAP) != 0u && vTextureIndices.z >= 0)
+        ? texture(sampler2D(textureHandles[vTextureIndices.z]), vTransformedUV).r
+        : 1.0;
+
+    float metallicSample = ((vTextureFlags & MAT_FLAG_METALLIC_MAP) != 0u && vTextureIndices.w >= 0)
+        ? texture(sampler2D(textureHandles[vTextureIndices.w]), vTransformedUV).r
+        : 1.0;
+
+    float aoSample = ((vTextureFlags & MAT_FLAG_AO_MAP) != 0u && vTextureIndices2.x >= 0)
+        ? texture(sampler2D(textureHandles[vTextureIndices2.x]), vTransformedUV).r
+        : 1.0;
+
+    vec3 emissiveSample = ((vTextureFlags & MAT_FLAG_EMISSIVE_MAP) != 0u && vTextureIndices2.y >= 0)
+        ? texture(sampler2D(textureHandles[vTextureIndices2.y]), vTransformedUV).rgb
+        : vec3(1.0);
+
+    // ========== PROCESS SAMPLES ==========
+    // Albedo
+    vec3 finalAlbedo = albedo * albedoSample;
+
+    // Normal - optimized transformation
+    vec3 finalNormal = ViewNormal;
+    if ((vTextureFlags & MAT_FLAG_NORMAL_MAP) != 0u && vTextureIndices.y >= 0) {
+        // Decode normal map using fma for efficiency
+        vec3 tangentNormal = fma(normalSample, vec3(2.0), vec3(-1.0));
+        tangentNormal.xy *= normalStrength;
+
+        // Normalize only if normal strength modified the vector significantly
+        if (abs(normalStrength - 1.0) > 0.01) {
+            tangentNormal = normalize(tangentNormal);
+        }
+
+        // Transform to view space using explicit vector operations (faster than matrix multiply)
+        finalNormal = normalize(ViewTangent * tangentNormal.x +
+                               ViewBitangent * tangentNormal.y +
+                               ViewNormal * tangentNormal.z);
     }
 
     // Material properties
-    float finalRoughness = material.roughness;
-    if (material.hasRoughnessMap != 0 && material.roughnessMapIndex >= 0)
-    {
-        finalRoughness *= texture(sampler2D(textureHandles[material.roughnessMapIndex]), transformedUV).r;
-    }
+    float finalRoughness = roughness * roughnessSample;
+    float finalMetallic = metallic * metallicSample;
+    float finalAO = ao * aoSample;
 
-    float finalMetallic = material.metallic;
-    if (material.hasMetallicMap != 0 && material.metallicMapIndex >= 0)
-    {
-        finalMetallic *= texture(sampler2D(textureHandles[material.metallicMapIndex]), transformedUV).r;
-    }
-
-    float finalAO = material.ao;
-    if (material.hasAoMap != 0 && material.aoMapIndex >= 0)
-    {
-        finalAO *= texture(sampler2D(textureHandles[material.aoMapIndex]), transformedUV).r;
-    }
-
-    vec3 finalEmissive = material.emissive;
-    float finalEmissiveIntensity = material.emissiveIntensity;
-    if (material.hasEmissiveMap != 0 && material.emissiveMapIndex >= 0)
-    {
-        vec3 emissiveSample = texture(sampler2D(textureHandles[material.emissiveMapIndex]), transformedUV).rgb;
-        finalEmissive *= emissiveSample;
-    }
+    // Emissive
+    vec3 finalEmissive = vEmissive * emissiveSample;
+    float finalEmissiveIntensity = emissiveIntensity;
 
     // Write to G-Buffer
     writeGBuffer(finalAlbedo, finalNormal, finalEmissive, finalEmissiveIntensity,
-                 finalRoughness, finalMetallic, finalAO);
+                 finalRoughness, finalMetallic, finalAO, motionBlurFlag);
 }

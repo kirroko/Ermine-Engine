@@ -20,17 +20,22 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "GLFW/glfw3.h"
 #include "EditorGUI.h"
 #include "HierarchySystem.h"
+#include "UIButtonSystem.h"
 
 #include <ImGuizmo.h>
 #include <glm/gtx/matrix_decompose.hpp>
 
 #include "AssetManager.h"
+#include "imgui_internal.h"
 
 #include "Scene.h"
 #include "SceneManager.h"
 #include "PrefabManager.h"
 #include "Physics.h"
 #include "TransformMode.h"
+#include "Selection.h"
+#include "MultiSelectionManipulator.h"
+#include "Window.h"
 
 using namespace Ermine::editor;
 
@@ -105,11 +110,6 @@ void Ermine::ViewPortGUI::TopBarSimulationControl(const ImVec2 iconSize)
 			EditorGUI::s_state = EditorGUI::SimState::playing;
 			SceneManager::GetInstance().SaveTemp();
 			EE_CORE_INFO("Simulation: Play");
-
-			glfwSetInputMode(glfwGetCurrentContext(), GLFW_CURSOR,GLFW_CURSOR_DISABLED);
-			if (glfwRawMouseMotionSupported())
-				glfwSetInputMode(glfwGetCurrentContext(), GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
-			EE_CORE_INFO("Cursor locked (FPS), raw mouse motion {}", glfwRawMouseMotionSupported() ? "enabled" : "not supported");
 		}
 		if (ImGui::IsItemHovered())
 			ImGui::SetTooltip("Play (Ctrl+P)");
@@ -140,12 +140,30 @@ void Ermine::ViewPortGUI::TopBarSimulationControl(const ImVec2 iconSize)
 			SceneManager::GetInstance().LoadTemp();
 			EE_CORE_INFO("Simulation: Stop");
 
-			if (glfwRawMouseMotionSupported())
-				glfwSetInputMode(glfwGetCurrentContext(), GLFW_RAW_MOUSE_MOTION, GLFW_FALSE);
-			glfwSetInputMode(glfwGetCurrentContext(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+			// *** ALWAYS reset cursor state when stopping play mode ***
+			GLFWwindow* window = glfwGetCurrentContext();
+			if (window)
+			{
+				Window::SetCursorLockState(Window::CursorLockState::None);
+				EE_CORE_INFO("Cursor unlocked - play mode stopped");
+			}
 		}
 		if (ImGui::IsItemHovered())
 			ImGui::SetTooltip("Stop (Ctrl+Shift+P)");
+		ImGui::EndDisabled();
+
+		ImGui::SameLine();
+		ImGui::Spacing();
+		ImGui::SameLine();
+
+		// Preview UI toggle button
+		ImGui::BeginDisabled(playing);
+		if (ImGui::Checkbox("Preview UI", &EditorGUI::isPreviewingUI))
+		{
+			EE_CORE_INFO("UI Preview: {}", EditorGUI::isPreviewingUI ? "Enabled" : "Disabled");
+		}
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip("Toggle UI preview in viewport (for Main Menu & Cutscenes)");
 		ImGui::EndDisabled();
 	}
 	ImGui::EndGroup();
@@ -326,6 +344,8 @@ void Ermine::ViewPortGUI::ObjectPicking(const std::shared_ptr<Ermine::graphics::
 
 				if (hit)
 					SceneManager::GetInstance().GetActiveScene()->SetSelectedEntity(entity);
+				else
+					SceneManager::GetInstance().GetActiveScene()->SetSelectedEntity(0);
 			}
 		}
 	}
@@ -356,30 +376,54 @@ void Ermine::ViewPortGUI::GizmoOverlay(const ImVec2& imgMin, const ImVec2& imgSi
 	ImGuizmo::SetRect(imgMin.x, imgMin.y, imgSize.x, imgSize.y);
 
 	// OBJECT Gizmo overlay
-	if (!EditorGUI::isPlaying && ECS::GetInstance().IsEntityValid(selectedEntity) && ECS::GetInstance().HasComponent<Transform>(selectedEntity))
+	bool multi = Selection::Multiple();
+	if (!EditorGUI::isPlaying && 
+		((multi && !Selection::TopLevel().empty()) ||
+			(!multi && ECS::GetInstance().IsEntityValid(selectedEntity) && ECS::GetInstance().HasComponent<Transform>(selectedEntity))))
 	{
 		auto& ecs = ECS::GetInstance();
-		auto& tr = ecs.GetComponent<Transform>(selectedEntity);
+		//auto& tr = ecs.GetComponent<Transform>(selectedEntity);
+		Transform* singleTr = nullptr;
+		if (!multi)
+			singleTr = &ecs.GetComponent<Transform>(selectedEntity);
 
-		// --- NEW: Toggle transform mode with Y key ---
+		// Toggle transform mode with Y key
 		if (Input::IsKeyPressedEditor(GLFW_KEY_Y)) {
-			editor::s_transformMode = (editor::s_transformMode == TransformMode::Pivot) 
-				? TransformMode::Center 
+			editor::s_transformMode = (editor::s_transformMode == TransformMode::Pivot)
+				? TransformMode::Center
 				: TransformMode::Pivot;
-			//EE_CORE_INFO("Transform mode: {}", 
+			//EE_CORE_INFO("Transform mode: {}",
 			//	(editor::s_transformMode == TransformMode::Pivot) ? "Pivot" : "Center");
 		}
 
 		// Get the position where gizmo should appear
-		Vec3 gizmoPosition = TransformModeHelper::GetManipulationPosition(selectedEntity, editor::s_transformMode);
+		//Vec3 gizmoPosition = TransformModeHelper::GetManipulationPosition(selectedEntity, editor::s_transformMode);
+		Vec3 gizmoPosition{};
+		Quaternion gizmoRotation{ 0,0,0,1 };
+		Vec3 gizmoScale{ 1,1,1 };
+
+		if (multi)
+		{
+			auto gt = MultiSelectionManipulator::BuildGroup();
+			gizmoPosition = gt.pivotWorld;
+			gizmoScale = gt.averageScale;
+		}
+		else
+		{
+			gizmoPosition = TransformModeHelper::GetManipulationPosition(selectedEntity, s_transformMode);
+			gizmoScale = singleTr->scale;
+			gizmoRotation = singleTr->rotation;
+		}
 
 		// Build model matrix using gizmo position instead of transform.position
 		glm::mat4 model = glm::mat4(1.0f);
 		model = glm::translate(model, glm::vec3(gizmoPosition.x, gizmoPosition.y, gizmoPosition.z));
-		glm::quat rotQuat(tr.rotation.w, tr.rotation.x, tr.rotation.y, tr.rotation.z);
+		//glm::quat rotQuat(tr.rotation.w, tr.rotation.x, tr.rotation.y, tr.rotation.z);
+		glm::quat rotQuat(gizmoRotation.w, gizmoRotation.x, gizmoRotation.y, gizmoRotation.z);
 		rotQuat = glm::normalize(rotQuat);
 		model *= glm::mat4_cast(rotQuat);
-		model = glm::scale(model, glm::vec3(tr.scale.x, tr.scale.y, tr.scale.z));
+		//model = glm::scale(model, glm::vec3(tr.scale.x, tr.scale.y, tr.scale.z));
+		model = glm::scale(model, glm::vec3(gizmoScale.x, gizmoScale.y, gizmoScale.z));
 
 		// Snapping
 		const bool useSnap = Input::IsKeyDownEditor(GLFW_KEY_LEFT_CONTROL) || Input::IsKeyDownEditor(GLFW_KEY_RIGHT_CONTROL);
@@ -407,40 +451,64 @@ void Ermine::ViewPortGUI::GizmoOverlay(const ImVec2& imgMin, const ImVec2& imgSi
 			if (glm::decompose(model, scale, rotation, translation, skew, perspective))
 			{
 				rotation = glm::normalize(rotation);
-				
-				// --- NEW: Calculate offset from geometric center to pivot ---
-				Vec3 centerOffset = gizmoPosition - tr.position;
-				
-				// The gizmo manipulated the center point, so we need to adjust for pivot
-				if (editor::s_transformMode == TransformMode::Center && gOperation == ImGuizmo::ROTATE)
+
+				if (multi)
 				{
-					// When rotating around center, we need to orbit the pivot around that center
-					glm::vec3 centerPos = glm::vec3(gizmoPosition.x, gizmoPosition.y, gizmoPosition.z);
-					glm::vec3 pivotOffset = glm::vec3(centerOffset.x, centerOffset.y, centerOffset.z);
-					
-					// Rotate the offset vector by the rotation difference
-					glm::quat oldRot(tr.rotation.w, tr.rotation.x, tr.rotation.y, tr.rotation.z);
-					glm::quat deltaRot = rotation * glm::inverse(oldRot);
-					glm::vec3 rotatedOffset = deltaRot * pivotOffset;
-					
-					// New pivot position = center position - rotated offset
-					tr.position = Vector3D(
-						translation.x - rotatedOffset.x,
-						translation.y - rotatedOffset.y,
-						translation.z - rotatedOffset.z
-					);
+					// Derive deltas
+					Vec3 newPivot(translation.x, translation.y, translation.z);
+					Vec3 deltaT = newPivot - gizmoPosition;
+
+					// For rotation delta
+					glm::quat prevRot = rotQuat;
+					glm::quat deltaRot = rotation * glm::inverse(prevRot);
+					Quaternion deltaQ(deltaRot.x, deltaRot.y, deltaRot.z, deltaRot.w);
+
+					float scaleFactor = (gizmoScale.x != 0.0f) ? (scale.x / gizmoScale.x) : 1.0f;
+					if (gOperation == ImGuizmo::TRANSLATE)
+						MultiSelectionManipulator::ApplyTranslation(deltaT);
+					else if (gOperation == ImGuizmo::ROTATE)
+						MultiSelectionManipulator::ApplyRotation(deltaQ, gizmoPosition);
+					else if (gOperation == ImGuizmo::SCALE)
+						MultiSelectionManipulator::ApplyUniformScale(scaleFactor, gizmoPosition);
 				}
 				else
 				{
-					// For translation and pivot mode, just use the manipulated position directly
-					tr.position = Vector3D(translation.x, translation.y, translation.z);
+					auto& thisTR = *singleTr;
+					// Calculate offset from geometric center to pivot
+					Vec3 centerOffset = gizmoPosition - thisTR.position;
+
+					// The gizmo manipulated the center point, so we need to adjust for pivot
+					if (s_transformMode == TransformMode::Center && gOperation == ImGuizmo::ROTATE)
+					{
+						// When rotating around center, we need to orbit the pivot around that center
+						glm::vec3 centerPos = glm::vec3(gizmoPosition.x, gizmoPosition.y, gizmoPosition.z);
+						glm::vec3 pivotOffset = glm::vec3(centerOffset.x, centerOffset.y, centerOffset.z);
+
+						// Rotate the offset vector by the rotation difference
+						glm::quat oldRot(thisTR.rotation.w, thisTR.rotation.x, thisTR.rotation.y, thisTR.rotation.z);
+						glm::quat deltaRot = rotation * glm::inverse(oldRot);
+						glm::vec3 rotatedOffset = deltaRot * pivotOffset;
+
+						// New pivot position = center position - rotated offset
+						thisTR.position = Vector3D(
+							translation.x - rotatedOffset.x,
+							translation.y - rotatedOffset.y,
+							translation.z - rotatedOffset.z
+						);
+					}
+					else
+					{
+						// For translation and pivot mode, just use the manipulated position directly
+						thisTR.position = Vector3D(translation.x, translation.y, translation.z);
+					}
+
+					thisTR.scale = Vector3D(scale.x, scale.y, scale.z);
+					thisTR.rotation = Quaternion(rotation.x, rotation.y, rotation.z, rotation.w);
+
+					// Mark transform as dirty to trigger hierarchy update
+					ecs.GetSystem<HierarchySystem>()->MarkDirty(selectedEntity);
+					ecs.GetSystem<HierarchySystem>()->OnTransformChanged(selectedEntity);
 				}
-				
-				tr.scale = Vector3D(scale.x, scale.y, scale.z);
-				tr.rotation = Quaternion(rotation.x, rotation.y, rotation.z, rotation.w);
-				
-				// Mark transform as dirty to trigger hierarchy update
-				ECS::GetInstance().GetSystem<HierarchySystem>()->MarkDirty(selectedEntity);
 			}
 		}
 	}
@@ -560,6 +628,15 @@ void Ermine::ViewPortGUI::Update()
 	const ImVec2 imgMax = ImGui::GetItemRectMax();
 	const ImVec2 imgSize = ImGui::GetItemRectSize();
 
+	// UPDATE UI BUTTON SYSTEM WITH VIEWPORT INFO FOR EDITOR MODE
+#ifdef EE_EDITOR
+	auto uiButtonSystem = ECS::GetInstance().GetSystem<UIButtonSystem>();
+	if (uiButtonSystem)
+	{
+		uiButtonSystem->SetViewportInfo(imgMin, imgSize);
+	}
+#endif
+
 	// View cube (top-right corner)
 	const float pad = 10.f;
 	const ImVec2 vmSize = ImVec2(100.f, 100.f);
@@ -584,6 +661,26 @@ void Ermine::ViewPortGUI::Update()
 	const bool viewportHovered = ImGui::IsItemHovered(hovFlags);
 	const bool viewportFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_None);
 
+	if (viewportHovered && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+		ImGui::SetWindowFocus();
+
+	//if (!EditorGUI::isPlaying)
+	//{
+	//	const bool rmbDown = Input::IsMouseButtonDownEditor(GLFW_MOUSE_BUTTON_RIGHT);
+	//	const bool shouldCapture = viewportFocused && viewportHovered && rmbDown;
+
+	//	if (shouldCapture)
+	//	{
+	//		Window::SetVisibleCursor(false);
+	//		Window::SetCursorLockState(Window::CursorLockState::Locked);
+	//	}
+	//	else
+	//	{
+	//		Window::SetCursorLockState(Window::CursorLockState::None);
+	//		Window::SetVisibleCursor(true);
+	//	}
+	//}
+
 	// Set manipulation mode based on keyboard shortcuts
 	if (viewportFocused && viewportHovered && !EditorGUI::isPlaying && !Input::IsMouseButtonDownEditor(GLFW_MOUSE_BUTTON_RIGHT))
 	{
@@ -602,7 +699,150 @@ void Ermine::ViewPortGUI::Update()
 
 	GizmoOverlay(imgMin, imgSize, vmSize, vmPos, selectedEntity, gOperation, gMode);
 
-	ObjectPicking(offscreen_buffer, imgMin, imgSize, overViewCube, s_orbiting);
+	// Marquee mutli-selection state
+	static bool s_dragSelecting = false;
+	static ImVec2 s_dragStart = {};
+	static ImVec2 s_dragEnd = {};
+	const bool ctrlDown = Input::IsKeyDownEditor(GLFW_KEY_LEFT_CONTROL) || Input::IsKeyDownEditor(GLFW_KEY_RIGHT_CONTROL);
+	const float dragThreshold = 3.0f;
+
+	// Drag selection
+	if (viewportHovered && !EditorGUI::isPlaying && ImGui::IsMouseClicked(ImGuiMouseButton_Left)
+		&& !overViewCube && !ImGuizmo::IsOver() && !ImGuizmo::IsUsing())
+	{
+		s_dragSelecting = true;
+		s_dragStart = ImGui::GetMousePos();
+		s_dragEnd = s_dragStart;
+	}
+
+	// Update drag
+	if (s_dragSelecting && ImGui::IsMouseDown(ImGuiMouseButton_Left) && !ImGuizmo::IsOver() && !ImGuizmo::IsUsing())
+	{
+		s_dragEnd = ImGui::GetMousePos();
+		// Draw rectangle overlay
+		ImVec2 rMin(ImMin(s_dragStart.x, s_dragEnd.x), ImMin(s_dragStart.y, s_dragEnd.y));
+		ImVec2 rMax(ImMax(s_dragStart.x, s_dragEnd.x), ImMax(s_dragStart.y, s_dragEnd.y));
+		// Clamp
+		rMin.x = ImClamp(rMin.x, imgMin.x, imgMax.x);
+		rMin.y = ImClamp(rMin.y, imgMin.y, imgMax.y);
+		rMax.x = ImClamp(rMax.x, imgMin.x, imgMax.x);
+		rMax.y = ImClamp(rMax.y, imgMin.y, imgMax.y);
+
+		ImDrawList* dl = ImGui::GetWindowDrawList();
+		dl->AddRectFilled(rMin, rMax, IM_COL32(64, 128, 255, 40));
+		dl->AddRect(rMin, rMax, IM_COL32(64, 128, 255, 180), 0.0f, 0, 2.0f);
+	}
+
+	// Finish drag select
+	if (s_dragSelecting && ImGui::IsMouseReleased(ImGuiMouseButton_Left) && !ImGuizmo::IsOver() && !ImGuizmo::IsUsing())
+	{
+		bool didDrag = fabsf(s_dragEnd.x - s_dragStart.x) > dragThreshold ||
+			fabsf(s_dragEnd.y - s_dragStart.y) > dragThreshold;
+		if (didDrag && offscreen_buffer)
+		{
+			// Compute clamped rect in screen space
+			ImVec2 rMin(ImMin(s_dragStart.x, s_dragEnd.x), ImMin(s_dragStart.y, s_dragEnd.y));
+			ImVec2 rMax(ImMax(s_dragStart.x, s_dragEnd.x), ImMax(s_dragStart.y, s_dragEnd.y));
+			rMin.x = ImClamp(rMin.x, imgMin.x, imgMax.x);
+			rMin.y = ImClamp(rMin.y, imgMin.y, imgMax.y);
+			rMax.x = ImClamp(rMax.x, imgMin.x, imgMax.x);
+			rMax.y = ImClamp(rMax.y, imgMin.y, imgMax.y);
+
+			// Convert to local image coords
+			ImVec2 localMin(rMin.x - imgMin.x, rMin.y - imgMin.y);
+			ImVec2 localMax(rMax.x - imgMin.x, rMax.y - imgMin.y);
+
+			// convert to framebuffer pixel coords
+			const int fbW = offscreen_buffer->width;
+			const int fbH = offscreen_buffer->height;
+			auto toPx = [&](float lx, float ly) -> ImVec2
+				{
+					float u = (imgSize.x > 0.0f) ? (lx / imgSize.x) : 0.0f;
+					float v = (imgSize.y > 0.0f) ? (ly / imgSize.y) : 0.0f;
+					int px = static_cast<int>(std::roundf(u * fbW));
+					int py = static_cast<int>(std::roundf((1.0f - v) * fbH));
+					px = std::clamp(px, 0, fbW - 1);
+					py = std::clamp(py, 0, fbH - 1);
+					return { static_cast<float>(px), static_cast<float>(py) };
+				};
+			ImVec2 pMin = toPx(localMin.x, localMin.y);
+			ImVec2 pMax = toPx(localMax.x, localMax.y);
+
+			int x0 = static_cast<int>(ImMin(pMin.x, pMax.x));
+			int y0 = static_cast<int>(ImMin(pMin.y, pMax.y));
+			int x1 = static_cast<int>(ImMax(pMin.x, pMax.x));
+			int y1 = static_cast<int>(ImMax(pMin.y, pMax.y));
+
+			// Sample picking buffer on a grid to collect entities
+			// TODO: Tune sampling pattern for better performance/accuracy tradeoff
+			std::unordered_set<EntityID> picked{};
+			const int stepX = std::max(1, (x1 - x0) / 50); // ~2500 samples worst-case
+			const int stepY = std::max(1, (y1 - y0) / 50);
+
+			auto renderer = ECS::GetInstance().GetSystem<graphics::Renderer>();
+			for (int y = y0; y <= y1; y += stepY)
+			{
+				for (int x = x0; x <= x1; x += stepX)
+				{
+					auto [hit, entity] = renderer->PickEntityAt(x, y,
+						EditorCamera::GetInstance().GetViewMatrix(),
+						EditorCamera::GetInstance().GetProjectionMatrix());
+					if (hit && entity != 0)
+						picked.insert(entity);
+				}
+			}
+
+			auto scene = SceneManager::GetInstance().GetActiveScene();
+			if (!picked.empty())
+			{
+				if (ctrlDown)
+					for (auto id : picked) Selection::Toggle(scene.get(), id);
+				else
+					Selection::Set(scene.get(), picked);
+			}
+			else
+				if (!ctrlDown) Selection::Clear(scene.get());
+		}
+		else
+		{
+			if (offscreen_buffer && ImGui::IsItemHovered())
+			{
+				ImGuiIO& io = ImGui::GetIO();
+				const float localX = io.MousePos.x - imgMin.x;
+				const float localY = io.MousePos.y - imgMin.y;
+				if (localX >= 0.0f && localY >= 0.0f && localX <= imgSize.x && localY <= imgSize.y)
+				{
+					const float u = (imgSize.x > 0.0f) ? (localX / imgSize.x) : 0.0f;
+					const float v = (imgSize.y > 0.0f) ? (localY / imgSize.y) : 0.0f;
+					const int px = static_cast<int>(u * offscreen_buffer->width);
+					const int py = static_cast<int>((1.0f - v) * offscreen_buffer->height);
+
+					auto renderer = ECS::GetInstance().GetSystem<graphics::Renderer>();
+					auto [hit, entity] = renderer->PickEntityAt(std::clamp(px, 0, offscreen_buffer->width - 1),
+						std::clamp(py, 0, offscreen_buffer->height - 1),
+						EditorCamera::GetInstance().GetViewMatrix(),
+						EditorCamera::GetInstance().GetProjectionMatrix());
+
+					auto scene = SceneManager::GetInstance().GetActiveScene();
+					if (hit && entity != 0)
+					{
+						if (ctrlDown) Selection::Toggle(scene.get(), entity);
+						else Selection::SetSingle(scene.get(), entity);
+					}
+					else
+						if (!ctrlDown) Selection::Clear(scene.get());
+				}
+			}
+		}
+
+		// End drag cycle
+		s_dragSelecting = false;
+	}
+
+	//ObjectPicking(offscreen_buffer, imgMin, imgSize, overViewCube, s_orbiting);
+	if (!(s_dragSelecting || (ImGui::IsMouseReleased(ImGuiMouseButton_Left) &&
+		(fabsf(s_dragEnd.x - s_dragStart.x) > dragThreshold || fabsf(s_dragEnd.y - s_dragStart.y) > dragThreshold))))
+		ObjectPicking(offscreen_buffer, imgMin, imgSize, overViewCube, s_orbiting);
 
 	ImGui::EndChild();
 
@@ -621,6 +861,7 @@ void Ermine::ViewPortGUI::Update()
 		ImGui::EndDragDropTarget(); // End drag & drop target
 	}
 
+	// Editor input flags
 	Input::SetEditorInputActive(viewportFocused && viewportHovered);
 
 	// Hotkeys
@@ -636,12 +877,13 @@ void Ermine::ViewPortGUI::Update()
 
 	if (EditorGUI::isPlaying && Input::IsKeyPressed(GLFW_KEY_ESCAPE))
 	{
-		EditorGUI::s_state = EditorGUI::SimState::stopped;
-		SceneManager::GetInstance().LoadTemp();
+		Window::SetCursorLockState(Window::CursorLockState::None);
+		//EditorGUI::s_state = EditorGUI::SimState::stopped;
+		//SceneManager::GetInstance().LoadTemp();
 
-		if (glfwRawMouseMotionSupported())
-			glfwSetInputMode(glfwGetCurrentContext(), GLFW_RAW_MOUSE_MOTION, GLFW_FALSE);
-		glfwSetInputMode(glfwGetCurrentContext(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+		//if (glfwRawMouseMotionSupported())
+		//	glfwSetInputMode(glfwGetCurrentContext(), GLFW_RAW_MOUSE_MOTION, GLFW_FALSE);
+		//glfwSetInputMode(glfwGetCurrentContext(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 	}
 
 	ImGui::End();

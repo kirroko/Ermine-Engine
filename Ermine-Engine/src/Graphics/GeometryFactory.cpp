@@ -179,6 +179,8 @@ Ermine::Mesh GeometryFactory::CreateCube(float width, float height, float depth)
 
     auto ibo = std::make_shared<IndexBuffer>(indices.data(), indices.size() * sizeof(unsigned int));
 
+    vao->Unbind();
+
 	auto mesh = Mesh(vao, vbo, ibo);
 	mesh.kind = MeshKind::Primitive;
 	mesh.primitive.type = "Cube";
@@ -202,7 +204,7 @@ Ermine::Mesh GeometryFactory::CreateCube(float width, float height, float depth)
             graphics::Vertex meshVert;
 			meshVert.position.x = v.pos.x;
 			meshVert.position.y = v.pos.y;
-			meshVert.position.z = v.pos.z;  // Fixed: Was missing Z coordinate!
+			meshVert.position.z = v.pos.z;
 			meshVert.normal.x = v.norms.x;
 			meshVert.normal.y = v.norms.y;
 			meshVert.normal.z = v.norms.z;
@@ -258,6 +260,9 @@ Ermine::Mesh GeometryFactory::CreateQuad(float width, float height)
     vbo->Unbind();
 
     auto ibo = std::make_shared<IndexBuffer>(indices.data(), indices.size() * sizeof(unsigned int));
+
+    vao->Unbind();
+
 	auto mesh = Mesh(vao, vbo, ibo);
 	mesh.kind = MeshKind::Primitive;
 	mesh.primitive.type = "Quad";
@@ -281,7 +286,7 @@ Ermine::Mesh GeometryFactory::CreateQuad(float width, float height)
             graphics::Vertex meshVert;
             meshVert.position.x = v.pos.x;
             meshVert.position.y = v.pos.y;
-            meshVert.position.z = v.pos.z;  // Fixed: Was missing Z coordinate!
+            meshVert.position.z = v.pos.z;
             meshVert.normal.x = v.norms.x;
             meshVert.normal.y = v.norms.y;
             meshVert.normal.z = v.norms.z;
@@ -378,6 +383,8 @@ Ermine::Mesh GeometryFactory::CreateSphere(float radius, unsigned int sectors, u
 
     auto ibo = std::make_shared<IndexBuffer>(indices.data(), indices.size() * sizeof(unsigned int));
 
+    vao->Unbind();
+
 	auto mesh = Mesh(vao, vbo, ibo);
 	mesh.kind = MeshKind::Primitive;
 	mesh.primitive.type = "Sphere";
@@ -401,7 +408,7 @@ Ermine::Mesh GeometryFactory::CreateSphere(float radius, unsigned int sectors, u
             graphics::Vertex meshVert;
             meshVert.position.x = v.pos.x;
             meshVert.position.y = v.pos.y;
-            meshVert.position.z = v.pos.z;  // Fixed: Was missing Z coordinate!
+            meshVert.position.z = v.pos.z;
             meshVert.normal.x = v.norms.x;
             meshVert.normal.y = v.norms.y;
             meshVert.normal.z = v.norms.z;
@@ -427,67 +434,114 @@ Ermine::Mesh GeometryFactory::CreateSphere(float radius, unsigned int sectors, u
  * 
  * @param radius The radius of the cone base
  * @param height The height of the cone
- * @param sectors The number of sectors around the cone
- * @return Mesh The cone mesh
+ * @param sectors The number of sectors around the cone (default 32 for smooth appearance)
+ * @return Mesh The cone mesh with smooth normals and proper UV mapping
  */
 Ermine::Mesh GeometryFactory::CreateCone(float radius, float height, unsigned int sectors)
 {
     std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;
 
-    // Apex vertex (tip of the cone at top)
-    vertices.push_back({{0.0f, height, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.5f, 1.0f}});
-
-    // Base center vertex
-    vertices.push_back({{0.0f, 0.0f, 0.0f}, {0.0f, -1.0f, 0.0f}, {0.5f, 0.0f}});
+    // Reserve space to avoid reallocations
+    vertices.reserve(sectors * 3 + 2);
+    indices.reserve(sectors * 6);
 
     float sectorStep = 2 * PI<float> / sectors;
+    
+    // Calculate slant length for proper normal calculation
+    float slantLength = sqrtf(radius * radius + height * height);
 
-    // Generate base circle vertices
+    // --- APEX VERTEX (Tip of the cone) ---
+    // The apex will share multiple vertex entries (one per side triangle) for smooth normals
+    unsigned int apexStartIndex = 0;
+    
+    // Create one apex vertex per sector for smooth normals along the sides
+    for (unsigned int i = 0; i <= sectors; ++i)
+    {
+        float sectorAngle = i * sectorStep;
+        
+        // Calculate smooth surface normal at the apex for this sector
+        // The normal points outward from the cone surface
+        float normalY = radius / slantLength;      // Vertical component
+        float normalXZ = height / slantLength;     // Horizontal component magnitude
+        
+        float nx = normalXZ * cosf(sectorAngle);
+        float nz = normalXZ * sinf(sectorAngle);
+        
+        // UV for the apex (top center of the unwrapped cone)
+        float u = (float)i / sectors;
+        float v = 1.0f; // Top of the texture
+        
+        vertices.push_back({{0.0f, height, 0.0f}, {nx, normalY, nz}, {u, v}});
+    }
+
+    // --- BASE CENTER VERTEX (for bottom cap) ---
+    unsigned int baseCenterIndex = vertices.size();
+    vertices.push_back({{0.0f, 0.0f, 0.0f}, {0.0f, -1.0f, 0.0f}, {0.5f, 0.5f}});
+
+    // --- SIDE VERTICES (Base circle for cone sides) ---
+    unsigned int sideBaseStartIndex = vertices.size();
     for (unsigned int i = 0; i <= sectors; ++i)
     {
         float sectorAngle = i * sectorStep;
         float x = radius * cosf(sectorAngle);
         float z = radius * sinf(sectorAngle);
 
-        // For side surface (pointing outward and up)
-        glm::vec3 toApex = glm::normalize(glm::vec3(-x, height, -z));
-        glm::vec3 tangent = glm::normalize(glm::vec3(-sinf(sectorAngle), 0.0f, cosf(sectorAngle)));
-        glm::vec3 normal = glm::normalize(glm::cross(tangent, toApex));
+        // Calculate smooth surface normal (perpendicular to cone surface)
+        float normalY = radius / slantLength;
+        float normalXZ = height / slantLength;
+        
+        float nx = normalXZ * cosf(sectorAngle);
+        float nz = normalXZ * sinf(sectorAngle);
 
+        // UV coordinates wrapping around the cone
         float u = (float)i / sectors;
-        vertices.push_back({{x, 0.0f, z}, {normal.x, normal.y, normal.z}, {u, 0.0f}});
+        float v = 0.0f; // Base is at bottom of texture
+
+        vertices.push_back({{x, 0.0f, z}, {nx, normalY, nz}, {u, v}});
     }
 
-    // Generate base circle vertices (for bottom cap with downward normals)
+    // --- BOTTOM CAP VERTICES ---
+    unsigned int bottomCapStartIndex = vertices.size();
     for (unsigned int i = 0; i <= sectors; ++i)
     {
         float sectorAngle = i * sectorStep;
         float x = radius * cosf(sectorAngle);
         float z = radius * sinf(sectorAngle);
-        float u = (float)i / sectors;
 
-        vertices.push_back({{x, 0.0f, z}, {0.0f, -1.0f, 0.0f}, {u, 0.0f}});
+        // Bottom face normals point straight down
+        // Radial UV mapping for the bottom disc
+        float u = 0.5f + 0.5f * cosf(sectorAngle);
+        float v = 0.5f + 0.5f * sinf(sectorAngle);
+
+        vertices.push_back({{x, 0.0f, z}, {0.0f, -1.0f, 0.0f}, {u, v}});
     }
 
-    // Generate indices for cone sides
-    unsigned int apexIndex = 0;
-    unsigned int baseStartIndex = 2;
+    // --- GENERATE INDICES FOR CONE SIDES ---
+    // Connect apex vertices to base circle vertices
     for (unsigned int i = 0; i < sectors; ++i)
     {
-        indices.push_back(apexIndex);
-        indices.push_back(baseStartIndex + i);
-        indices.push_back(baseStartIndex + i + 1);
+        unsigned int apex = apexStartIndex + i;
+        unsigned int baseVertex = sideBaseStartIndex + i;
+        unsigned int nextBaseVertex = sideBaseStartIndex + i + 1;
+        
+        // Triangle: apex -> current base -> next base (counter-clockwise winding)
+        indices.push_back(apex);
+        indices.push_back(baseVertex);
+        indices.push_back(nextBaseVertex);
     }
 
-    // Generate indices for base (bottom cap)
-    unsigned int baseCenterIndex = 1;
-    unsigned int baseCapStartIndex = baseStartIndex + sectors + 1;
+    // --- GENERATE INDICES FOR BASE (Bottom cap) ---
+    // Connect center to base circle vertices (clockwise for downward normal)
     for (unsigned int i = 0; i < sectors; ++i)
     {
+        unsigned int current = bottomCapStartIndex + i;
+        unsigned int next = bottomCapStartIndex + i + 1;
+        
+        // Triangle: center -> next -> current (clockwise winding for bottom face)
         indices.push_back(baseCenterIndex);
-        indices.push_back(baseCapStartIndex + i + 1);
-        indices.push_back(baseCapStartIndex + i);
+        indices.push_back(next);
+        indices.push_back(current);
     }
 
     // Create VAO, VBO, IBO
@@ -515,7 +569,7 @@ Ermine::Mesh GeometryFactory::CreateCone(float radius, float height, unsigned in
     // Register mesh with MeshManager for indirect rendering
     auto renderer = Ermine::ECS::GetInstance().GetSystem<Renderer>();
     if (renderer) {
-        // Calculate tangents
+        // Calculate tangents for normal mapping support
         std::vector<glm::vec3> tangents = CalculateTangents(vertices, indices);
 
         // Convert local Vertex to MeshTypes::Vertex
@@ -536,9 +590,28 @@ Ermine::Mesh GeometryFactory::CreateCone(float radius, float height, unsigned in
             meshVertices.push_back(meshVert);
         }
 
+        //physic
+        mesh.cpuVertices.clear();
+        mesh.cpuVertices.reserve(indices.size());
+
+        for (size_t i = 0; i < indices.size(); i += 3)
+        {
+            unsigned int i0 = indices[i + 0];
+            unsigned int i1 = indices[i + 1];
+            unsigned int i2 = indices[i + 2];
+
+            const auto& v0 = vertices[i0].pos;
+            const auto& v1 = vertices[i1].pos;
+            const auto& v2 = vertices[i2].pos;
+
+            mesh.cpuVertices.push_back(glm::vec3(v0.x, v0.y, v0.z));
+            mesh.cpuVertices.push_back(glm::vec3(v1.x, v1.y, v1.z));
+            mesh.cpuVertices.push_back(glm::vec3(v2.x, v2.y, v2.z));
+        }
+
         std::string meshID = "Cone_" + std::to_string(radius) + "_" + std::to_string(height) + "_" + std::to_string(sectors);
         renderer->m_MeshManager.RegisterMesh(meshVertices, indices, meshID);
-
+        //store in comp for physic
         // Store the registered mesh ID in the Mesh component
         mesh.registeredMeshID = meshID;
     }

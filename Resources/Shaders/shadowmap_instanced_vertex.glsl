@@ -24,24 +24,32 @@ layout(location = 3) in vec3 aTangent;     // Not used for shadows, but needed f
 layout(location = 4) in ivec4 aBoneIDs;
 layout(location = 5) in vec4 aWeights;
 
-// Pre-skinned position attribute (location 6) - hardware vertex fetch from pre-skinned buffer
-layout(location = 6) in vec4 aPreSkinnedPosition;
-
 // Draw info structure matching CPU-side DrawInfo (std430 layout)
+// Total size: 160 bytes (must match C++ DrawInfo in DrawCommands.h)
 struct DrawInfo {
-    mat4 modelMatrix;           // 64 bytes - Model transformation matrix
-    vec3 aabbMin;               // 12 bytes - AABB minimum bounds
-    uint materialIndex;         // 4 bytes - Index into material SSBO
-    vec3 aabbMax;               // 12 bytes - AABB maximum bounds
-    uint entityID;              // 4 bytes - Entity ID
-    uint flags;                 // 4 bytes - Flags (bit 0: useSkinning)
-    uint boneTransformOffset;   // 4 bytes - Starting index in skeletal SSBO
-    uint _pad[2];               // 8 bytes - Padding
+    mat4 modelMatrix;           // 64 bytes (offset 0-63) - Model transformation matrix
+    vec3 aabbMin;               // 12 bytes (offset 64-75) - AABB minimum bounds
+    uint materialIndex;         // 4 bytes (offset 76-79) - Index into material SSBO
+    vec3 aabbMax;               // 12 bytes (offset 80-91) - AABB maximum bounds
+    uint entityID;              // 4 bytes (offset 92-95) - Entity ID
+    uint flags;                 // 4 bytes (offset 96-99) - Flags (bit 0: useSkinning)
+    uint boneTransformOffset;   // 4 bytes (offset 100-103) - Starting index in skeletal SSBO
+    uint _pad0;                 // 4 bytes (offset 104-107) - Padding
+    uint _pad1;                 // 4 bytes (offset 108-111) - Padding to 16-byte boundary
+    vec4 normalMatrixCol0;      // 16 bytes (offset 112-127) - Normal matrix column 0 (xyz used)
+    vec4 normalMatrixCol1;      // 16 bytes (offset 128-143) - Normal matrix column 1 (xyz used)
+    vec4 normalMatrixCol2;      // 16 bytes (offset 144-159) - Normal matrix column 2 (xyz used)
+    
 };
 
 // SSBO binding for indirect rendering DrawInfo
 layout(std430, binding = 1) restrict readonly buffer DrawInfoBuffer {
     DrawInfo drawInfos[];
+};
+
+// Skeletal animation bone transforms SSBO (Binding 2)
+layout(std430, binding = 2) restrict readonly buffer BoneTransformBuffer {
+    mat4 boneTransforms[]; // All bone transforms for all entities
 };
 
 // Base draw ID offset for multi-batch indirect rendering
@@ -52,7 +60,7 @@ struct Light {
     vec4 position_type;    // xyz = position (view space), w = light type
     vec4 color_intensity;  // xyz = color, w = intensity
     vec4 direction_range;  // xyz = direction (view space), w = range
-    vec4 spot_angles_castshadows_startOffset; // x = inner angle (cos), y = outer angle (cos), z = cast shadows (bool), w = shadow map index or 0 if no shadows
+    vec4 spot_angles_castshadows_startOffset; // x = inner angle (cos), y = outer angle (cos), z = flags bitfield (bit 0: castsShadows, bit 1: castsRays), w = shadow map index or 0 if no shadows
     mat4 lightSpaceMatrix[NUM_CASCADES]; // Light view-projection matrices for cascaded shadow maps
     vec4 splitDepths[(NUM_CASCADES + 3) / 4]; // Split depths for cascaded shadow maps
 };
@@ -62,6 +70,24 @@ layout (std140, binding = 1) uniform LightsUBO {
     Light lights[MAX_LIGHTS]; // Fixed-size array required for UBO
 };
 
+// Light type constants
+const int POINT_LIGHT = 0;
+const int DIRECTIONAL_LIGHT = 1;
+const int SPOT_LIGHT = 2;
+
+// Light flag bit positions
+const int LIGHT_FLAG_CASTS_SHADOWS = 1;  // bit 0
+const int LIGHT_FLAG_CASTS_RAYS = 2;     // bit 1
+
+// Helper functions to extract light flags
+bool lightCastsShadows(Light light) {
+    return (int(light.spot_angles_castshadows_startOffset.z) & LIGHT_FLAG_CASTS_SHADOWS) != 0;
+}
+
+bool lightCastsRays(Light light) {
+    return (int(light.spot_angles_castshadows_startOffset.z) & LIGHT_FLAG_CASTS_RAYS) != 0;
+}
+
 // Per-frame uniforms - avoid additional SSBOs
 uniform int u_ActiveShadowLights[16];    // Indices of shadow-casting directional lights
 
@@ -70,20 +96,28 @@ void main()
     // Get draw info from SSBO using gl_DrawID (indirect rendering)
     DrawInfo drawInfo = drawInfos[baseDrawID + gl_DrawID];
     mat4 modelMatrix = drawInfo.modelMatrix;
-    bool useSkinning = (drawInfo.flags & 1u) != 0u;
 
-    // Apply skinning transformation if enabled
-    // OPTIMIZATION: Use hardware vertex fetch from pre-skinned attribute instead of SSBO random access
-    vec4 skinnedPos;
+    // DrawInfo flag bits (must match C++ DrawCommands.h)
+    const uint FLAG_SKINNING = 1u << 0u;
+    const uint FLAG_CAMERA_ATTACHED = 1u << 1u;
+
+    bool useSkinning = (drawInfo.flags & FLAG_SKINNING) != 0u;
+
+    // Calculate skinned position
+    vec4 skinnedPos = vec4(aPosition, 1.0);
 
     if (useSkinning) {
-        // Read pre-skinned position from vertex attribute (location 6)
-        // Hardware vertex fetch is MUCH faster than SSBO random access!
-        // Geometry pass wrote these positions, shadow pass reads via vertex fetch units
-        skinnedPos = aPreSkinnedPosition;
-    } else {
-        // Non-skinned mesh: use vertex position directly
-        skinnedPos = vec4(aPosition, 1.0);
+        // Get bone offset for this entity from DrawInfo
+        uint boneOffset = drawInfo.boneTransformOffset;
+
+        // Calculate final bone transform using weighted blend
+        mat4 boneTransform =
+            boneTransforms[boneOffset + aBoneIDs[0]] * aWeights[0] +
+            boneTransforms[boneOffset + aBoneIDs[1]] * aWeights[1] +
+            boneTransforms[boneOffset + aBoneIDs[2]] * aWeights[2] +
+            boneTransforms[boneOffset + aBoneIDs[3]] * aWeights[3];
+
+        skinnedPos = boneTransform * vec4(aPosition, 1.0);
     }
 
     // Calculate light and cascade from gl_InstanceID
@@ -96,6 +130,17 @@ void main()
 
     // Get the light data
     Light light = lights[lightIndex];
+
+    // Get light type
+    int lightType = int(light.position_type.w);
+
+    // Spotlights only use cascade 0 - skip invalid instances
+    if (lightType == SPOT_LIGHT && cascadeIndex > 0) {
+        // Discard this instance by moving vertex off-screen
+        gl_Position = vec4(0.0, 0.0, -10.0, 1.0);
+        gl_Layer = 0;
+        return;
+    }
 
     // Calculate target layer: startOffset + cascadeIndex
     int startOffset = int(light.spot_angles_castshadows_startOffset.w);

@@ -67,9 +67,40 @@ namespace Ermine::editor {
 
 	static bool FieldAppliesToType(const std::string& key, LightType t) {
 		if (key == "innerAngle" || key == "outerAngle") return t == LightType::SPOT;
+		if (key == "castsRays") return t == LightType::SPOT; // Only show for spotlights
 		if (key == "radius") return t == LightType::SPOT || t == LightType::POINT;
 		// color, intensity, castsShadows, type are always shown
 		return true;
+	}
+
+	// Scan for available fragment shaders in the Resources/Shaders directory
+	static std::vector<std::string> ScanFragmentShaders() {
+		std::vector<std::string> shaders;
+		const std::string shaderDir = "../Resources/Shaders/";
+
+		try {
+			namespace fs = std::filesystem;
+			if (fs::exists(shaderDir) && fs::is_directory(shaderDir)) {
+				for (const auto& entry : fs::directory_iterator(shaderDir)) {
+					if (entry.is_regular_file()) {
+						std::string filename = entry.path().filename().string();
+						// Look for fragment shaders (contains "fragment" or ends with .frag)
+						if (filename.find("fragment") != std::string::npos ||
+							filename.find(".frag") != std::string::npos) {
+							// Store the full path relative to Resources/Shaders/
+							shaders.push_back(shaderDir + filename);
+						}
+					}
+				}
+			}
+		}
+		catch (const std::exception& e) {
+			EE_CORE_WARN("Failed to scan fragment shaders: {0}", e.what());
+		}
+
+		// Sort alphabetically for consistent UI
+		std::sort(shaders.begin(), shaders.end());
+		return shaders;
 	}
 	template<typename T>
 	static bool ComponentHeaderWithRemove(const char* headerLabel, EntityID entity,
@@ -256,6 +287,12 @@ namespace Ermine::editor {
 		if (ECS::GetInstance().HasComponent<CameraComponent>(selected))
 			DrawCameraComponent(selected);
 
+		if (ECS::GetInstance().HasComponent<UIImageComponent>(selected))
+			DrawUIImageComponent(selected);
+
+		if (ECS::GetInstance().HasComponent<UIButtonComponent>(selected))
+			DrawUIButtonComponent(selected);
+
 		ImGui::PopID();
 
 		ImGui::Separator();
@@ -349,14 +386,13 @@ namespace Ermine::editor {
 			if (guid == xproperty::settings::var_type<Ermine::Vec3>::guid_v) {
 				Ermine::Vec3 v = p.m_Value.get<Ermine::Vec3>();
 
-				// FIXED: Check if widget is being actively edited OR if value changed
 				if (DrawVec3XYZ(label.c_str(), &v.x) || ImGui::IsItemActive()) {
 					p.m_Value.set<Ermine::Vec3>({ v.x, v.y, v.z });
 					xproperty::sprop::setProperty(err, t, p, ctx);
 
 					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
-					// CRITICAL: Mark entity dirty so hierarchy system updates immediately
 					hierarchySystem->MarkDirty(entity);
+					ECS::GetInstance().GetSystem<graphics::Renderer>()->MarkDrawDataForRebuild();
 				}
 			}
 			// Quaternion (rotation) – shown/edited as Euler degrees
@@ -370,14 +406,13 @@ namespace Ermine::editor {
 				const bool isRotation = (label == "Rotation");
 				const char* rotLabel = isRotation ? "Rotation (Degrees)" : label.c_str();
 
-				// FIXED: Check if widget is being actively edited OR if value changed
 				if (DrawVec3XYZ(rotLabel, &eulerDeg.x, 1.0f, 0.0f, -360.0f, 360.0f) || ImGui::IsItemActive()) {
 					p.m_Value.set<Ermine::Quaternion>(FromEulerDegrees(eulerDeg));
 					xproperty::sprop::setProperty(err, t, p, ctx);
 
 					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
-					// CRITICAL: Mark entity dirty so hierarchy system updates immediately
 					hierarchySystem->MarkDirty(entity);
+					ECS::GetInstance().GetSystem<graphics::Renderer>()->MarkDrawDataForRebuild();
 				}
 			}
 
@@ -401,27 +436,62 @@ namespace Ermine::editor {
 			mesh.kind = static_cast<MeshKind>(currentKind);
 			if (mesh.kind == MeshKind::Primitive)
 				mesh.RebuildPrimitive();
+			// Mark renderer for full rebuild due to mesh kind change
+			ECS::GetInstance().GetSystem<graphics::Renderer>()->MarkDrawDataForRebuild();
 		}
 
 		// Primitive controls
 		if (mesh.kind == MeshKind::Primitive) {
-			// Shape type dropdown
-			const char* types[] = { "Cube", "Sphere", "Quad" };
+			// Shape type dropdown - UPDATED TO INCLUDE CONE
+			const char* types[] = { "Cube", "Sphere", "Quad", "Cone" };
 			int currentType = 0;
 			if (mesh.primitive.type == "Sphere") currentType = 1;
 			else if (mesh.primitive.type == "Quad") currentType = 2;
+			else if (mesh.primitive.type == "Cone") currentType = 3;
 
 			if (ImGui::Combo("Primitive Type", &currentType, types, IM_ARRAYSIZE(types))) {
 				mesh.primitive.type = types[currentType];
 				mesh.RebuildPrimitive();
+				// Mark renderer for full rebuild due to primitive type change
+				ECS::GetInstance().GetSystem<graphics::Renderer>()->MarkDrawDataForRebuild();
 			}
 
-			// Size control
-			float size[3] = { mesh.primitive.size.x, mesh.primitive.size.y, mesh.primitive.size.z };
-			if (ImGui::DragFloat3("Size", size, 0.1f, 0.01f, 100.f)) {
-				mesh.primitive.size = { size[0], size[1], size[2] };
-				ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
-				mesh.RebuildPrimitive();
+			// Size control - different for different primitives
+			if (mesh.primitive.type == "Cone") {
+				// For cone: size.x = diameter (radius * 2), size.y = height
+				float diameter = mesh.primitive.size.x;
+				float height = mesh.primitive.size.y;
+
+				bool changed = false;
+				changed |= ImGui::DragFloat("Diameter", &diameter, 0.1f, 0.01f, 100.f);
+				changed |= ImGui::DragFloat("Height", &height, 0.1f, 0.01f, 100.f);
+
+				if (changed) {
+					mesh.primitive.size = { diameter, height, diameter };
+					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
+					mesh.RebuildPrimitive();
+					ECS::GetInstance().GetSystem<graphics::Renderer>()->MarkDrawDataForRebuild();
+				}
+			}
+			else if (mesh.primitive.type == "Sphere") {
+				// For sphere: size.x = radius
+				float radius = mesh.primitive.size.x;
+				if (ImGui::DragFloat("Radius", &radius, 0.1f, 0.01f, 100.f)) {
+					mesh.primitive.size = { radius, radius, radius };
+					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
+					mesh.RebuildPrimitive();
+					ECS::GetInstance().GetSystem<graphics::Renderer>()->MarkDrawDataForRebuild();
+				}
+			}
+			else {
+				// For cube/quad: size = width, height, depth
+				float size[3] = { mesh.primitive.size.x, mesh.primitive.size.y, mesh.primitive.size.z };
+				if (ImGui::DragFloat3("Size", size, 0.1f, 0.01f, 100.f)) {
+					mesh.primitive.size = { size[0], size[1], size[2] };
+					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
+					mesh.RebuildPrimitive();
+					ECS::GetInstance().GetSystem<graphics::Renderer>()->MarkDrawDataForRebuild();
+				}
 			}
 		}
 
@@ -431,6 +501,8 @@ namespace Ermine::editor {
 			strcpy_s(buf, mesh.asset.meshName.c_str());
 			if (ImGui::InputText("Mesh Name", buf, sizeof(buf))) {
 				mesh.asset.meshName = buf;
+				// Mark renderer for full rebuild due to mesh asset change
+				ECS::GetInstance().GetSystem<graphics::Renderer>()->MarkDrawDataForRebuild();
 				// TODO: trigger asset reload here
 			}
 		}
@@ -458,9 +530,33 @@ namespace Ermine::editor {
 				gm->SetFloat("materialRoughness", 0.5f);          gm->SetFloat("material.roughness", 0.5f);
 				gm->SetVec3("materialEmissive", { 0.f,0.f,0.f });   gm->SetVec3("material.emissive", { 0.f,0.f,0.f });
 				gm->SetFloat("materialEmissiveIntensity", 1.0f);  gm->SetFloat("material.emissiveIntensity", 1.0f);
+				gm->SetBool("materialCastsShadows", true);
 			}
 
 			return;
+		}
+
+		// --- Load custom shader if path is set (for scene deserialization) ---
+		if (!matComp.customFragmentShader.empty() &&
+			(!gm->GetShader() || gm->GetShader() == nullptr)) {
+			auto& assetManager = AssetManager::GetInstance();
+			auto customShader = assetManager.LoadShader(
+				"../Resources/Shaders/vertex.glsl",
+				matComp.customFragmentShader
+			);
+			if (customShader && customShader->IsValid()) {
+				gm->SetShader(customShader);
+				EE_CORE_INFO("Restored custom fragment shader from scene: {0}", matComp.customFragmentShader);
+			}
+			else {
+				EE_CORE_WARN("Failed to restore custom fragment shader: {0}", matComp.customFragmentShader);
+			}
+		}
+
+		// --- Sync cacheCastsShadows to graphics::Material (for scene deserialization) ---
+		// Ensure the material's castsShadows parameter matches the serialized component value
+		if (auto param = gm->GetParameter("materialCastsShadows"); !param || param->boolValue != matComp.cacheCastsShadows) {
+			gm->SetBool("materialCastsShadows", matComp.cacheCastsShadows);
 		}
 
 		// --- Safe param accessors (no nullptrs, with fallbacks) ---
@@ -616,6 +712,91 @@ namespace Ermine::editor {
 			}
 		}
 
+		ImGui::SeparatorText("Rendering");
+
+		// --- Casts Shadows ---
+		{
+			bool castsShadows = getBool("materialCastsShadows", nullptr, matComp.cacheCastsShadows);
+			if (ImGui::Checkbox("Casts Shadows", &castsShadows)) {
+				gm->SetBool("materialCastsShadows", castsShadows);
+				matComp.cacheCastsShadows = castsShadows;  // Update component cache for serialization
+			}
+		}
+
+		// --- Custom Fragment Shader ---
+		{
+			static std::vector<std::string> fragmentShaders; // Cache the shader list
+			static bool shadersScanned = false;
+
+			// Scan shaders once per session
+			if (!shadersScanned) {
+				fragmentShaders = ScanFragmentShaders();
+				shadersScanned = true;
+			}
+
+			// Get current selection from component
+			std::string currentShader = matComp.customFragmentShader;
+
+			// Build display name for combo box
+			std::string displayName = currentShader.empty() ? "None (Standard PBR)" : currentShader;
+			if (!currentShader.empty()) {
+				// Show just the filename for cleaner UI
+				size_t lastSlash = currentShader.find_last_of('/');
+				if (lastSlash != std::string::npos) {
+					displayName = currentShader.substr(lastSlash + 1);
+				}
+			}
+
+			if (ImGui::BeginCombo("Fragment Shader", displayName.c_str())) {
+				// First option: None (use standard PBR)
+				bool isSelected = currentShader.empty();
+				if (ImGui::Selectable("None (Standard PBR)", isSelected)) {
+					matComp.customFragmentShader = "";
+					// Clear custom shader from material
+					gm->SetShader(nullptr); // Will revert to standard in renderer
+				}
+				if (isSelected) {
+					ImGui::SetItemDefaultFocus();
+				}
+
+				// List all available fragment shaders
+				for (const auto& shaderPath : fragmentShaders) {
+					// Extract filename for display
+					std::string filename = shaderPath;
+					size_t lastSlash = shaderPath.find_last_of('/');
+					if (lastSlash != std::string::npos) {
+						filename = shaderPath.substr(lastSlash + 1);
+					}
+
+					bool isShaderSelected = (currentShader == shaderPath);
+					if (ImGui::Selectable(filename.c_str(), isShaderSelected)) {
+						// Update component cache
+						matComp.customFragmentShader = shaderPath;
+
+						// Load and set the custom shader on the material
+						auto& assetManager = AssetManager::GetInstance();
+						// Use standard forward pass vertex shader with custom fragment
+						auto customShader = assetManager.LoadShader(
+							"../Resources/Shaders/vertex.glsl",
+							shaderPath
+						);
+						if (customShader && customShader->IsValid()) {
+							gm->SetShader(customShader);
+							EE_CORE_INFO("Loaded custom fragment shader: {0}", shaderPath);
+						}
+						else {
+							EE_CORE_WARN("Failed to load custom fragment shader: {0}", shaderPath);
+						}
+					}
+					if (isShaderSelected) {
+						ImGui::SetItemDefaultFocus();
+					}
+				}
+
+				ImGui::EndCombo();
+			}
+		}
+
 		ImGui::SeparatorText("Maps");
 
 		// --- Presence flags (use same keys as (de)serialize) ---
@@ -660,6 +841,9 @@ namespace Ermine::editor {
 			gm->SetUVScale(Vec2(1.0f, 1.0f));
 			gm->SetUVOffset(Vec2(0.0f, 0.0f));
 
+			gm->SetBool("materialCastsShadows", true);
+			matComp.cacheCastsShadows = true;
+
 			gm->SetBool("materialHasAlbedoMap", false);
 			setBoolBoth("materialHasNormalMap", "material.hasNormalMap", false);
 			gm->SetBool("materialHasRoughnessMap", false);
@@ -686,9 +870,9 @@ namespace Ermine::editor {
 
 		SlotRow rows[] = {
 			{ "Albedo",    "materialAlbedoMap",   "material.albedoMap",   "materialHasAlbedoMap",    nullptr },
-			{ "Normal",    "material.normalMap",  nullptr,                 "materialHasNormalMap",   "material.hasNormalMap" },
+			{ "Normal",    "materialNormalMap",   "material.normalMap",    "materialHasNormalMap",   "material.hasNormalMap" },
 			{ "Roughness", "materialRoughnessMap",nullptr,                 "materialHasRoughnessMap",nullptr },
-			{ "Metallic",  "material.metallicMap",nullptr,                 "materialHasMetallicMap", nullptr },
+			{ "Metallic",  "materialMetallicMap", "material.metallicMap",  "materialHasMetallicMap", nullptr },
 			{ "AO",        "materialAoMap",       nullptr,                 "materialHasAoMap",       nullptr },
 			{ "Emissive",  "materialEmissiveMap", nullptr,                 "materialHasEmissiveMap", nullptr },
 		};
@@ -1076,6 +1260,7 @@ namespace Ermine::editor {
 					if (m < 0.0f) m = 0.0f;
 					p.m_Value.set<float>(m);
 					xproperty::sprop::setProperty(err, pc, p, ctx);
+					pc.update = true;
 					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
 				}
 			}
@@ -1086,6 +1271,7 @@ namespace Ermine::editor {
 				if (ImGui::Combo("Physics Body Type", &idx, names, IM_ARRAYSIZE(names))) {
 					p.m_Value.set<PhysicsBodyType>(static_cast<PhysicsBodyType>(idx));
 					xproperty::sprop::setProperty(err, pc, p, ctx);
+					pc.update = true;
 					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
 				}
 			}
@@ -1096,6 +1282,7 @@ namespace Ermine::editor {
 				if (ImGui::Combo("Motion Type", &idx, names, IM_ARRAYSIZE(names))) {
 					p.m_Value.set<JPH::EMotionType>(static_cast<JPH::EMotionType>(idx));
 					xproperty::sprop::setProperty(err, pc, p, ctx);
+					pc.update = true;
 					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
 				}
 			}
@@ -1106,6 +1293,7 @@ namespace Ermine::editor {
 				if (ImGui::Combo("Shape Type", &idx, names, (int)ShapeType::Total)) {
 					p.m_Value.set<ShapeType>(static_cast<ShapeType>(idx));
 					xproperty::sprop::setProperty(err, pc, p, ctx);
+					pc.update = true;
 					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
 				}
 			}
@@ -1121,7 +1309,7 @@ namespace Ermine::editor {
 					v.z = arr[2];
 					p.m_Value.set<Ermine::Vec3>(v);
 					xproperty::sprop::setProperty(err, pc, p, ctx);
-
+					pc.update = true;
 					// Rebuild physics body with updated size
 					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
 				}
@@ -1138,7 +1326,7 @@ namespace Ermine::editor {
 					v.z = arr[2];
 					p.m_Value.set<Ermine::Vec3>(v);
 					xproperty::sprop::setProperty(err, pc, p, ctx);
-
+					pc.update = true;
 					// Rebuild physics body with updated size
 					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
 				}
@@ -1155,10 +1343,69 @@ namespace Ermine::editor {
 					v.z = arr[2];
 					p.m_Value.set<Ermine::Vec3>(v);
 					xproperty::sprop::setProperty(err, pc, p, ctx);
-
+					pc.update = true;
 					// Rebuild physics body with updated size
 					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
 				}
+			}
+			else if (guid == xproperty::settings::var_type<bool>::guid_v && label == "Posx") {
+				bool b = p.m_Value.get<bool>();
+				if (ImGui::Checkbox("Freeze Pos X", &b)) {
+					p.m_Value.set<bool>(b);
+					xproperty::sprop::setProperty(err, pc, p, ctx);
+					pc.update = true;
+					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
+				}
+				ImGui::SameLine();
+			}
+			else if (guid == xproperty::settings::var_type<bool>::guid_v && label == "Posy") {
+				bool b = p.m_Value.get<bool>();
+				if (ImGui::Checkbox("Y", &b)) {
+					p.m_Value.set<bool>(b);
+					xproperty::sprop::setProperty(err, pc, p, ctx);
+					pc.update = true;
+					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
+				}
+				ImGui::SameLine();
+			}
+			else if (guid == xproperty::settings::var_type<bool>::guid_v && label == "Posz") {
+				bool b = p.m_Value.get<bool>();
+				if (ImGui::Checkbox("Z", &b)) {
+					p.m_Value.set<bool>(b);
+					xproperty::sprop::setProperty(err, pc, p, ctx);
+					pc.update = true;
+					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
+				}
+			}
+			else if (guid == xproperty::settings::var_type<bool>::guid_v && label == "Rotx") {
+				bool b = p.m_Value.get<bool>();
+				if (ImGui::Checkbox("Freeze Rot X", &b)) {
+					p.m_Value.set<bool>(b);
+					xproperty::sprop::setProperty(err, pc, p, ctx);
+					pc.update = true;
+					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
+				}
+				ImGui::SameLine();
+			}
+			else if (guid == xproperty::settings::var_type<bool>::guid_v && label == "Roty") {
+				bool b = p.m_Value.get<bool>();
+				if (ImGui::Checkbox("Y", &b)) {
+					p.m_Value.set<bool>(b);
+					xproperty::sprop::setProperty(err, pc, p, ctx);
+					pc.update = true;
+					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
+				}
+				ImGui::SameLine();
+			}
+			else if (guid == xproperty::settings::var_type<bool>::guid_v && label == "Rotz") {
+				bool b = p.m_Value.get<bool>();
+				if (ImGui::Checkbox("Z", &b)) {
+					p.m_Value.set<bool>(b);
+					xproperty::sprop::setProperty(err, pc, p, ctx);
+					pc.update = true;
+					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
+				}
+
 			}
 
 			ImGui::PopID();
@@ -1292,13 +1539,13 @@ namespace Ermine::editor {
 						script = Script{ std::string(buf), entity }; // Reconstruct a new state to initialize the Script
 						scs.AttachAll(entity);
 					}
-				});
+					});
 			}
 
 			// Display fields
 			std::unordered_map<std::string, ScriptFieldValue> fields;
-			if (script.m_instance && script.m_instance->object)
-				scripting::ScriptEngine::PullManagedFieldsToCache(script.m_instance->object, fields);
+			if (script.m_instance && script.m_instance->GetManaged())
+				scripting::ScriptEngine::PullManagedFieldsToCache(script.m_instance->GetManaged(), fields);
 
 			// Draw each exposed field
 			for (auto& [name, val] : fields)
@@ -1371,15 +1618,18 @@ namespace Ermine::editor {
 
 				ImGui::PopID();
 
-				if (changed && script.m_instance && script.m_instance->object)
+				if (changed && script.m_instance && script.m_instance->GetManaged())
 				{
-					ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->m_ScriptEngine->PushSingleField(script.m_instance->object, name, val);
+					ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->m_ScriptEngine->PushSingleField(script.m_instance->GetManaged(), name, val);
 					// Mark dirty for scene save?
 				}
 			}
 			// Push change to managed object
-			if (script.m_instance && script.m_instance->object)
-				scripting::ScriptEngine::PushCacheToManagedFields(script.m_instance->object, fields);
+			if (script.m_instance && script.m_instance->GetManaged())
+			{
+				scripting::ScriptEngine::PushCacheToManagedFields(script.m_instance->GetManaged(), fields);
+				scripting::ScriptEngine::PullManagedFieldsToCache(script.m_instance->GetManaged(), script.m_fields);
+			}
 
 			ImGui::PopID();
 		}
@@ -1449,7 +1699,7 @@ namespace Ermine::editor {
 
 						EE_CORE_INFO("Loading model: {} with {} meshes", fullPath, model->GetMeshes().size());
 
-						if (hierarchySystem && renderer && scene) {
+						if (hierarchySystem && renderer && !model->GetMeshes().empty()) {
 							const auto& meshes = model->GetMeshes();
 							int childrenCreated = 0;
 
@@ -1457,20 +1707,15 @@ namespace Ermine::editor {
 								const auto& meshData = meshes[meshIndex];
 								const std::string& meshID = meshData.meshID;
 
-								// Get material index from aiScene
-								if (meshIndex >= scene->mNumMeshes) {
-									EE_CORE_WARN("Mesh index {} >= scene->mNumMeshes {}, skipping", meshIndex, scene->mNumMeshes);
-									continue;
-								}
-								aiMesh* aiMsh = scene->mMeshes[meshIndex];
-								if (!aiMsh) {
-									EE_CORE_WARN("aiMesh at index {} is null, skipping", meshIndex);
-									continue;
-								}
-								uint32_t matIndex = aiMsh->mMaterialIndex;
-								if (matIndex >= scene->mNumMaterials) {
-									EE_CORE_WARN("Material index {} >= scene->mNumMaterials {}, skipping mesh {}", matIndex, scene->mNumMaterials, meshID);
-									continue;
+								// For cache files without scene, create basic material
+								uint32_t matIndex = 0;  // Default material index
+
+								// If we have a scene, get material from it
+								if (scene && meshIndex < scene->mNumMeshes) {
+									aiMesh* aiMsh = scene->mMeshes[meshIndex];
+									if (aiMsh && aiMsh->mMaterialIndex < scene->mNumMaterials) {
+										matIndex = aiMsh->mMaterialIndex;
+									}
 								}
 
 								// Create child entity
@@ -1481,113 +1726,97 @@ namespace Ermine::editor {
 								if (!ecs.HasComponent<HierarchyComponent>(childEntity)) {
 									ecs.AddComponent<HierarchyComponent>(childEntity, HierarchyComponent());
 								}
-								else {
-									auto& hc = ecs.GetComponent<HierarchyComponent>(childEntity);
-									hc.parent = 0;
-									hc.children.clear();
-								}
 								if (!ecs.HasComponent<Transform>(childEntity))
 									ecs.AddComponent<Transform>(childEntity, Transform());
-								else {
-									ecs.GetComponent<Transform>(childEntity) = Transform();
-								}
 								if (!ecs.HasComponent<ObjectMetaData>(childEntity)) {
 									ecs.AddComponent<ObjectMetaData>(childEntity,
 										ObjectMetaData("Mesh_" + meshID, "Mesh", true));
-								}
-								else {
-									ecs.GetComponent<ObjectMetaData>(childEntity) =
-										ObjectMetaData("Mesh_" + meshID, "Mesh", true);
 								}
 
 								// Set parent-child relationship
 								hierarchySystem->SetParent(childEntity, entity, true);
 
-								// Create and assign material
-								aiMaterial* aiMat = scene->mMaterials[matIndex];
+								// Create material - either from scene or default
 								auto materialPtr = std::make_shared<graphics::Material>();
-								// Don't load template - start with empty material
 
-								aiString texPath;
+								if (scene && matIndex < scene->mNumMaterials) {
+									// Load textures from Assimp material
+									aiMaterial* aiMat = scene->mMaterials[matIndex];
+									aiString texPath;
 
-								// Albedo
-								if (aiMat->GetTexture(aiTextureType_BASE_COLOR, 0, &texPath) == AI_SUCCESS ||
-									aiMat->GetTexture(aiTextureType_DIFFUSE, 0, &texPath) == AI_SUCCESS) {
-									std::string texPathStr = std::string(texPath.C_Str());
-									std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
-									auto lastSlash = texPathStr.find_last_of('/');
-									std::string filename = (lastSlash != std::string::npos) ? texPathStr.substr(lastSlash + 1) : texPathStr;
-									auto albedoTex = AssetManager::GetInstance().LoadTexture("../Resources/Textures/" + filename);
-									if (albedoTex->IsValid()) {
-										materialPtr->SetTexture("materialAlbedoMap", albedoTex);
-										materialPtr->SetBool("materialHasAlbedoMap", true);
+									// Albedo
+									if (aiMat->GetTexture(aiTextureType_BASE_COLOR, 0, &texPath) == AI_SUCCESS ||
+										aiMat->GetTexture(aiTextureType_DIFFUSE, 0, &texPath) == AI_SUCCESS) {
+										std::string texPathStr = std::string(texPath.C_Str());
+										std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
+										auto lastSlash = texPathStr.find_last_of('/');
+										std::string filename = (lastSlash != std::string::npos) ? texPathStr.substr(lastSlash + 1) : texPathStr;
+										auto albedoTex = AssetManager::GetInstance().LoadTexture("../Resources/Textures/" + filename);
+										if (albedoTex->IsValid()) {
+											materialPtr->SetTexture("materialAlbedoMap", albedoTex);
+											materialPtr->SetBool("materialHasAlbedoMap", true);
+										}
 									}
-								}
 
-								// Normal
-								if (aiMat->GetTexture(aiTextureType_NORMALS, 0, &texPath) == AI_SUCCESS) {
-									std::string texPathStr = std::string(texPath.C_Str());
-									std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
-									auto lastSlash = texPathStr.find_last_of('/');
-									std::string filename = (lastSlash != std::string::npos) ? texPathStr.substr(lastSlash + 1) : texPathStr;
-									EE_CORE_INFO("Loading normal texture: {}", texPathStr);
-									auto normalTex = AssetManager::GetInstance().LoadTexture("../Resources/Textures/" + filename);
-									if (normalTex->IsValid()) {
-										materialPtr->SetTexture("materialNormalMap", normalTex);
-										materialPtr->SetBool("materialHasNormalMap", true);
-										EE_CORE_INFO("Normal map loaded successfully");
-									}
-									else {
-										EE_CORE_WARN("Failed to load normal texture from: {}", "../Resources/Textures/" + filename);
-									}
-								}
-								else {
-									EE_CORE_INFO("No normal map found in material");
-								}
-
-								// Roughness
-								if (aiMat->GetTexture(aiTextureType_SHININESS, 0, &texPath) == AI_SUCCESS) {
-									std::string texPathStr = std::string(texPath.C_Str());
-									std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
-									auto lastSlash = texPathStr.find_last_of('/');
-									std::string filename = (lastSlash != std::string::npos) ? texPathStr.substr(lastSlash + 1) : texPathStr;
-									auto roughnessTex = AssetManager::GetInstance().LoadTexture("../Resources/Textures/" + filename);
-									if (roughnessTex->IsValid()) {
-										materialPtr->SetTexture("materialRoughnessMap", roughnessTex);
-										materialPtr->SetBool("materialHasRoughnessMap", true);
-									}
-								}
-
-								// Metallic
-								if (aiMat->GetTexture(aiTextureType_METALNESS, 0, &texPath) == AI_SUCCESS) {
-									std::string texPathStr = std::string(texPath.C_Str());
-									std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
-									auto lastSlash = texPathStr.find_last_of('/');
-									std::string filename = (lastSlash != std::string::npos) ? texPathStr.substr(lastSlash + 1) : texPathStr;
-									EE_CORE_INFO("Loading metallic texture: {}", texPathStr);
-									auto metallicTex = AssetManager::GetInstance().LoadTexture("../Resources/Textures/" + filename);
-									if (metallicTex->IsValid()) {
-										materialPtr->SetTexture("materialMetallicMap", metallicTex);
-										materialPtr->SetBool("materialHasMetallicMap", true);
-										EE_CORE_INFO("Metallic map loaded successfully");
+									// Normal
+									if (aiMat->GetTexture(aiTextureType_NORMALS, 0, &texPath) == AI_SUCCESS) {
+										std::string texPathStr = std::string(texPath.C_Str());
+										std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
+										auto lastSlash = texPathStr.find_last_of('/');
+										std::string filename = (lastSlash != std::string::npos) ? texPathStr.substr(lastSlash + 1) : texPathStr;
+										auto normalTex = AssetManager::GetInstance().LoadTexture("../Resources/Textures/" + filename);
+										if (normalTex->IsValid()) {
+											materialPtr->SetTexture("materialNormalMap", normalTex);
+											materialPtr->SetBool("materialHasNormalMap", true);
+										}
 									}
 									else {
-										EE_CORE_WARN("Failed to load metallic texture from: {}", "../Resources/Textures/" + texPathStr);
+										EE_CORE_INFO("No normal map found in material");
+									}
+
+									// Roughness
+									if (aiMat->GetTexture(aiTextureType_SHININESS, 0, &texPath) == AI_SUCCESS) {
+										std::string texPathStr = std::string(texPath.C_Str());
+										std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
+										auto lastSlash = texPathStr.find_last_of('/');
+										std::string filename = (lastSlash != std::string::npos) ? texPathStr.substr(lastSlash + 1) : texPathStr;
+										auto roughnessTex = AssetManager::GetInstance().LoadTexture("../Resources/Textures/" + filename);
+										if (roughnessTex->IsValid()) {
+											materialPtr->SetTexture("materialRoughnessMap", roughnessTex);
+											materialPtr->SetBool("materialHasRoughnessMap", true);
+										}
+									}
+
+									// Metallic
+									if (aiMat->GetTexture(aiTextureType_METALNESS, 0, &texPath) == AI_SUCCESS) {
+										std::string texPathStr = std::string(texPath.C_Str());
+										std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
+										auto lastSlash = texPathStr.find_last_of('/');
+										std::string filename = (lastSlash != std::string::npos) ? texPathStr.substr(lastSlash + 1) : texPathStr;
+										auto metallicTex = AssetManager::GetInstance().LoadTexture("../Resources/Textures/" + filename);
+										if (metallicTex->IsValid()) {
+											materialPtr->SetTexture("materialMetallicMap", metallicTex);
+											materialPtr->SetBool("materialHasMetallicMap", true);
+										}
+									}
+
+									// UV transform
+									aiUVTransform uvTransform;
+									if (aiMat->Get(AI_MATKEY_UVTRANSFORM(aiTextureType_DIFFUSE, 0), uvTransform) == AI_SUCCESS) {
+										materialPtr->SetUVScale(Vec2(uvTransform.mScaling.x, uvTransform.mScaling.y));
+										materialPtr->SetUVOffset(Vec2(uvTransform.mTranslation.x, uvTransform.mTranslation.y));
+									}
+									else {
+										materialPtr->SetUVScale(Vec2(1.0f, 1.0f));
+										materialPtr->SetUVOffset(Vec2(0.0f, 0.0f));
 									}
 								}
 								else {
-									EE_CORE_INFO("No metallic map found in material");
-								}
-
-								// UV transform with V-flip
-								aiUVTransform uvTransform;
-								if (aiMat->Get(AI_MATKEY_UVTRANSFORM(aiTextureType_DIFFUSE, 0), uvTransform) == AI_SUCCESS) {
-									materialPtr->SetUVScale(Vec2(uvTransform.mScaling.x, -uvTransform.mScaling.y));
-									materialPtr->SetUVOffset(Vec2(uvTransform.mTranslation.x, 1.0f - uvTransform.mTranslation.y));
-								}
-								else {
-									materialPtr->SetUVScale(Vec2(1.0f, -1.0f));
-									materialPtr->SetUVOffset(Vec2(0.0f, 1.0f));
+									// Cache file without scene - use default white material
+									EE_CORE_INFO("Using default material for cache file mesh");
+									materialPtr->SetVec4("materialAlbedo", Vec4(1.0f, 1.0f, 1.0f, 1.0f));
+									materialPtr->SetFloat("materialRoughness", 0.5f);
+									materialPtr->SetFloat("materialMetallic", 0.0f);
 								}
 
 								// Add material component
@@ -1601,7 +1830,7 @@ namespace Ermine::editor {
 						else {
 							if (!hierarchySystem) EE_CORE_ERROR("HierarchySystem is null");
 							if (!renderer) EE_CORE_ERROR("Renderer is null");
-							if (!scene) EE_CORE_ERROR("aiScene is null");
+							if (model->GetMeshes().empty()) EE_CORE_WARN("Model has no meshes");
 						}
 
 						// Auto-attach animator if entity has AnimationComponent
@@ -1613,6 +1842,9 @@ namespace Ermine::editor {
 							else
 								animComp.m_animator.reset();
 						}
+
+						// Mark renderer for full rebuild due to model load
+						ECS::GetInstance().GetSystem<graphics::Renderer>()->MarkDrawDataForRebuild();
 					}
 				}
 				if (isSelected) ImGui::SetItemDefaultFocus();
@@ -1655,21 +1887,26 @@ namespace Ermine::editor {
 
 					// Reuse or create child entities for each mesh with a material
 					auto renderer = ecs.GetSystem<graphics::Renderer>();
-					const aiScene* scene = reloaded->GetAssimpScene();
+					const aiScene* scene = reloaded->GetAssimpScene(); // May be nullptr for cache files
 
-					if (hierarchySystem && renderer && scene) {
+					if (hierarchySystem && renderer && !reloaded->GetMeshes().empty()) {
 						const auto& meshes = reloaded->GetMeshes();
 
 						for (size_t meshIndex = 0; meshIndex < meshes.size(); ++meshIndex) {
 							const auto& meshData = meshes[meshIndex];
 							const std::string& meshID = meshData.meshID;
 
-							// Get material index from aiScene
-							if (meshIndex >= scene->mNumMeshes) continue;
-							aiMesh* aiMsh = scene->mMeshes[meshIndex];
-							if (!aiMsh) continue;
-							uint32_t matIndex = aiMsh->mMaterialIndex;
-							if (matIndex >= scene->mNumMaterials) continue;
+							// Get material index from aiScene (if available)
+							uint32_t matIndex = 0;
+							bool hasSceneMaterial = false;
+
+							if (scene && meshIndex < scene->mNumMeshes) {
+								aiMesh* aiMsh = scene->mMeshes[meshIndex];
+								if (aiMsh && aiMsh->mMaterialIndex < scene->mNumMaterials) {
+									matIndex = aiMsh->mMaterialIndex;
+									hasSceneMaterial = true;
+								}
+							}
 
 							// Reuse existing child entity if available, otherwise create new one
 							EntityID childEntity;
@@ -1714,74 +1951,84 @@ namespace Ermine::editor {
 								hierarchySystem->SetParent(childEntity, entity, true);
 							}
 
-							// Create and assign material
-							aiMaterial* aiMat = scene->mMaterials[matIndex];
+							// Create material - either from scene or default
 							auto materialPtr = std::make_shared<graphics::Material>();
-							// Don't load template - start with empty material
 
-							aiString texPath;
+							if (hasSceneMaterial) {
+								// Load textures from Assimp material
+								aiMaterial* aiMat = scene->mMaterials[matIndex];
+								aiString texPath;
 
-							// Albedo
-							if (aiMat->GetTexture(aiTextureType_BASE_COLOR, 0, &texPath) == AI_SUCCESS ||
-								aiMat->GetTexture(aiTextureType_DIFFUSE, 0, &texPath) == AI_SUCCESS) {
-								std::string texPathStr = std::string(texPath.C_Str());
-								std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
-								// Extract just the filename without subdirectories
-								auto lastSlash = texPathStr.find_last_of('/');
-								std::string filename = (lastSlash != std::string::npos) ? texPathStr.substr(lastSlash + 1) : texPathStr;
-								auto albedoTex = AssetManager::GetInstance().LoadTexture("../Resources/Textures/" + filename);
-								if (albedoTex->IsValid()) {
-									materialPtr->SetTexture("materialAlbedoMap", albedoTex);
-									materialPtr->SetBool("materialHasAlbedoMap", true);
+								// Albedo
+								if (aiMat->GetTexture(aiTextureType_BASE_COLOR, 0, &texPath) == AI_SUCCESS ||
+									aiMat->GetTexture(aiTextureType_DIFFUSE, 0, &texPath) == AI_SUCCESS) {
+									std::string texPathStr = std::string(texPath.C_Str());
+									std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
+									auto lastSlash = texPathStr.find_last_of('/');
+									std::string filename = (lastSlash != std::string::npos) ? texPathStr.substr(lastSlash + 1) : texPathStr;
+									auto albedoTex = AssetManager::GetInstance().LoadTexture("../Resources/Textures/" + filename);
+									if (albedoTex->IsValid()) {
+										materialPtr->SetTexture("materialAlbedoMap", albedoTex);
+										materialPtr->SetBool("materialHasAlbedoMap", true);
+									}
 								}
-							}
 
-							// Normal
-							if (aiMat->GetTexture(aiTextureType_NORMALS, 0, &texPath) == AI_SUCCESS) {
-								std::string texPathStr = std::string(texPath.C_Str());
-								std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
-								auto lastSlash = texPathStr.find_last_of('/');
-								std::string filename = (lastSlash != std::string::npos) ? texPathStr.substr(lastSlash + 1) : texPathStr;
-								auto normalTex = AssetManager::GetInstance().LoadTexture("../Resources/Textures/" + filename);
-								if (normalTex->IsValid()) {
-									materialPtr->SetTexture("materialNormalMap", normalTex);
-									materialPtr->SetBool("materialHasNormalMap", true);
+								// Normal
+								if (aiMat->GetTexture(aiTextureType_NORMALS, 0, &texPath) == AI_SUCCESS) {
+									std::string texPathStr = std::string(texPath.C_Str());
+									std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
+									auto lastSlash = texPathStr.find_last_of('/');
+									std::string filename = (lastSlash != std::string::npos) ? texPathStr.substr(lastSlash + 1) : texPathStr;
+									auto normalTex = AssetManager::GetInstance().LoadTexture("../Resources/Textures/" + filename);
+									if (normalTex->IsValid()) {
+										materialPtr->SetTexture("materialNormalMap", normalTex);
+										materialPtr->SetBool("materialHasNormalMap", true);
+									}
 								}
-							}
 
-							// Roughness
-							if (aiMat->GetTexture(aiTextureType_SHININESS, 0, &texPath) == AI_SUCCESS) {
-								std::string texPathStr = std::string(texPath.C_Str());
-								std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
-								auto lastSlash = texPathStr.find_last_of('/');
-								std::string filename = (lastSlash != std::string::npos) ? texPathStr.substr(lastSlash + 1) : texPathStr;
-								auto roughnessTex = AssetManager::GetInstance().LoadTexture("../Resources/Textures/" + filename);
-								if (roughnessTex->IsValid()) {
-									materialPtr->SetTexture("materialRoughnessMap", roughnessTex);
-									materialPtr->SetBool("materialHasRoughnessMap", true);
+								// Roughness
+								if (aiMat->GetTexture(aiTextureType_SHININESS, 0, &texPath) == AI_SUCCESS) {
+									std::string texPathStr = std::string(texPath.C_Str());
+									std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
+									auto lastSlash = texPathStr.find_last_of('/');
+									std::string filename = (lastSlash != std::string::npos) ? texPathStr.substr(lastSlash + 1) : texPathStr;
+									auto roughnessTex = AssetManager::GetInstance().LoadTexture("../Resources/Textures/" + filename);
+									if (roughnessTex->IsValid()) {
+										materialPtr->SetTexture("materialRoughnessMap", roughnessTex);
+										materialPtr->SetBool("materialHasRoughnessMap", true);
+									}
 								}
-							}
 
-							// Metallic
-							if (aiMat->GetTexture(aiTextureType_METALNESS, 0, &texPath) == AI_SUCCESS) {
-								std::string texPathStr = std::string(texPath.C_Str());
-								std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
-								auto lastSlash = texPathStr.find_last_of('/');
-								std::string filename = (lastSlash != std::string::npos) ? texPathStr.substr(lastSlash + 1) : texPathStr;
-								auto metallicTex = AssetManager::GetInstance().LoadTexture("../Resources/Textures/" + filename);
-								if (metallicTex->IsValid()) {
-									materialPtr->SetTexture("materialMetallicMap", metallicTex);
-									materialPtr->SetBool("materialHasMetallicMap", true);
+								// Metallic
+								if (aiMat->GetTexture(aiTextureType_METALNESS, 0, &texPath) == AI_SUCCESS) {
+									std::string texPathStr = std::string(texPath.C_Str());
+									std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
+									auto lastSlash = texPathStr.find_last_of('/');
+									std::string filename = (lastSlash != std::string::npos) ? texPathStr.substr(lastSlash + 1) : texPathStr;
+									auto metallicTex = AssetManager::GetInstance().LoadTexture("../Resources/Textures/" + filename);
+									if (metallicTex->IsValid()) {
+										materialPtr->SetTexture("materialMetallicMap", metallicTex);
+										materialPtr->SetBool("materialHasMetallicMap", true);
+									}
 								}
-							}
 
-							// UV transform with V-flip
-							aiUVTransform uvTransform;
-							if (aiMat->Get(AI_MATKEY_UVTRANSFORM(aiTextureType_DIFFUSE, 0), uvTransform) == AI_SUCCESS) {
-								materialPtr->SetUVScale(Vec2(uvTransform.mScaling.x, -uvTransform.mScaling.y));
-								materialPtr->SetUVOffset(Vec2(uvTransform.mTranslation.x, 1.0f - uvTransform.mTranslation.y));
+								// UV transform
+								aiUVTransform uvTransform;
+								if (aiMat->Get(AI_MATKEY_UVTRANSFORM(aiTextureType_DIFFUSE, 0), uvTransform) == AI_SUCCESS) {
+									materialPtr->SetUVScale(Vec2(uvTransform.mScaling.x, uvTransform.mScaling.y));
+									materialPtr->SetUVOffset(Vec2(uvTransform.mTranslation.x, uvTransform.mTranslation.y));
+								}
+								else {
+									materialPtr->SetUVScale(Vec2(1.0f, 1.0f));
+									materialPtr->SetUVOffset(Vec2(0.0f, 0.0f));
+								}
 							}
 							else {
+								// Cache file without scene - use default white material
+								EE_CORE_INFO("Using default material for cache file mesh on reload");
+								materialPtr->SetVec4("materialAlbedo", Vec4(1.0f, 1.0f, 1.0f, 1.0f));
+								materialPtr->SetFloat("materialRoughness", 0.5f);
+								materialPtr->SetFloat("materialMetallic", 0.0f);
 								materialPtr->SetUVScale(Vec2(1.0f, -1.0f));
 								materialPtr->SetUVOffset(Vec2(0.0f, 1.0f));
 							}
@@ -1810,15 +2057,17 @@ namespace Ermine::editor {
 						}
 					}
 
-					// Refresh animator
+					// Refresh animator (only if scene has animations)
 					if (ecs.HasComponent<AnimationComponent>(entity)) {
 						auto& animComp = ecs.GetComponent<AnimationComponent>(entity);
-						scene = reloaded->GetAssimpScene();
 						if (scene && scene->mNumAnimations > 0)
 							animComp.m_animator = std::make_shared<graphics::Animator>(reloaded);
 						else
 							animComp.m_animator.reset();
 					}
+
+					// Mark renderer for full rebuild due to model reload
+					ecs.GetSystem<graphics::Renderer>()->MarkDrawDataForRebuild();
 
 					EE_CORE_INFO("Model reloaded successfully");
 				}
@@ -2030,6 +2279,64 @@ namespace Ermine::editor {
 		}
 	}
 
+	void HierarchyInspector::DrawUIImageComponent(EntityID entity)
+	{
+		if (!ComponentHeaderWithRemove<UIImageComponent>("UI Image Component", entity))
+			return;
+
+		auto& imageComp = ECS::GetInstance().GetComponent<UIImageComponent>(entity);
+
+		// Image Path
+		char pathBuffer[256];
+		strncpy_s(pathBuffer, imageComp.imagePath.c_str(), sizeof(pathBuffer) - 1);
+		pathBuffer[sizeof(pathBuffer) - 1] = '\0';
+		if (ImGui::InputText("Image Path", pathBuffer, sizeof(pathBuffer))) {
+			imageComp.imagePath = pathBuffer;
+		}
+
+		// Fullscreen toggle
+		ImGui::Checkbox("Fullscreen", &imageComp.fullscreen);
+
+		// Position (only relevant when not fullscreen)
+		if (!imageComp.fullscreen) {
+			ImGui::DragFloat3("Position", &imageComp.position.x, 0.01f, 0.0f, 1.0f);
+			ImGui::DragFloat("Width", &imageComp.width, 0.01f, 0.0f, 1.0f);
+			ImGui::DragFloat("Height", &imageComp.height, 0.01f, 0.0f, 1.0f);
+			ImGui::Checkbox("Maintain Aspect Ratio", &imageComp.maintainAspectRatio);
+		}
+
+		// Tint Color
+		ImGui::ColorEdit3("Tint Color", &imageComp.tintColor.x);
+
+		// Alpha
+		ImGui::SliderFloat("Alpha", &imageComp.alpha, 0.0f, 1.0f);
+
+		ImGui::Separator();
+		ImGui::Text("Caption Settings");
+
+		// Show Caption toggle
+		ImGui::Checkbox("Show Caption", &imageComp.showCaption);
+
+		if (imageComp.showCaption) {
+			// Caption text (multiline)
+			char captionBuffer[512];
+			strncpy_s(captionBuffer, imageComp.caption.c_str(), sizeof(captionBuffer) - 1);
+			captionBuffer[sizeof(captionBuffer) - 1] = '\0';
+			if (ImGui::InputTextMultiline("Caption Text", captionBuffer, sizeof(captionBuffer), ImVec2(-FLT_MIN, ImGui::GetTextLineHeight() * 3))) {
+				imageComp.caption = captionBuffer;
+			}
+
+			// Caption color
+			ImGui::ColorEdit3("Caption Color", &imageComp.captionColor.x);
+
+			// Font size
+			ImGui::DragFloat("Font Size", &imageComp.captionFontSize, 1.0f, 8.0f, 72.0f);
+
+			// Caption position
+			ImGui::DragFloat2("Caption Position", &imageComp.captionPosition.x, 0.01f, 0.0f, 1.0f);
+		}
+	}
+
 	void HierarchyInspector::DrawAddComponentMenu(EntityID entity) {
 		if (ImGui::MenuItem("Transform") && !ECS::GetInstance().HasComponent<Transform>(entity)) {
 			ECS::GetInstance().AddComponent(entity, Transform());
@@ -2111,8 +2418,108 @@ namespace Ermine::editor {
 			tempCam.nearPlane = 5.0f;
 			ECS::GetInstance().AddComponent(entity, tempCam);
 		}
+		if (ImGui::MenuItem("UI Image") && !ECS::GetInstance().HasComponent<UIImageComponent>(entity))
+		{
+			ECS::GetInstance().AddComponent(entity, UIImageComponent());
+		}
+		if (ImGui::MenuItem("UI Button") && !ECS::GetInstance().HasComponent<UIButtonComponent>(entity))
+		{
+			ECS::GetInstance().AddComponent(entity, UIButtonComponent());
+		}
 		// Add more component types as needed
 
 		ECS::GetInstance().ResyncAllSignaturesFromStorage();
 	}
+
+	void HierarchyInspector::DrawUIButtonComponent(EntityID entity)
+{
+	if (!ComponentHeaderWithRemove<UIButtonComponent>("UI Button Component", entity))
+		return;
+
+	auto& button = ECS::GetInstance().GetComponent<UIButtonComponent>(entity);
+
+	// Button text
+	char textBuffer[256];
+	strncpy_s(textBuffer, button.text.c_str(), sizeof(textBuffer) - 1);
+	textBuffer[sizeof(textBuffer) - 1] = '\0';
+	if (ImGui::InputText("Button Text", textBuffer, sizeof(textBuffer))) {
+		button.text = textBuffer;
+	}
+
+	// Position and size (UI is 2D, only X and Y needed)
+	ImGui::DragFloat2("Position (X, Y)", &button.position.x, 0.01f, 0.0f, 1.0f);
+	ImGui::DragFloat2("Size (Width, Height)", &button.size.x, 0.01f, 0.01f, 1.0f);
+
+	ImGui::Separator();
+	ImGui::Text("Colors");
+
+	// Colors
+	ImGui::ColorEdit3("Normal Color", &button.normalColor.x);
+	ImGui::ColorEdit3("Hover Color", &button.hoverColor.x);
+	ImGui::ColorEdit3("Pressed Color", &button.pressedColor.x);
+	ImGui::ColorEdit3("Text Color", &button.textColor.x);
+	ImGui::DragFloat("Text Scale", &button.textScale, 0.1f, 0.1f, 5.0f);
+	ImGui::SliderFloat("Background Alpha", &button.backgroundAlpha, 0.0f, 1.0f);
+
+	ImGui::Separator();
+	ImGui::Text("Action");
+
+	// Button action dropdown
+	const char* actionNames[] = { "None", "Load Scene", "Quit", "Custom" };
+	int currentAction = static_cast<int>(button.action);
+	if (ImGui::Combo("Action", &currentAction, actionNames, IM_ARRAYSIZE(actionNames))) {
+		button.action = static_cast<UIButtonComponent::ButtonAction>(currentAction);
+	}
+
+	// Action data (scene path or custom event)
+	if (button.action != UIButtonComponent::ButtonAction::None && button.action != UIButtonComponent::ButtonAction::Quit)
+	{
+		char actionDataBuffer[256];
+		strncpy_s(actionDataBuffer, button.actionData.c_str(), sizeof(actionDataBuffer) - 1);
+		actionDataBuffer[sizeof(actionDataBuffer) - 1] = '\0';
+
+		const char* label = (button.action == UIButtonComponent::ButtonAction::LoadScene)
+			? "Scene Path"
+			: "Event Name";
+
+		if (ImGui::InputText(label, actionDataBuffer, sizeof(actionDataBuffer))) {
+			button.actionData = actionDataBuffer;
+		}
+
+		// Helper text
+		if (button.action == UIButtonComponent::ButtonAction::LoadScene) {
+			ImGui::TextDisabled("Example: ../Resources/Scenes/level.scene");
+		}
+	}
+
+	// Audio settings
+	ImGui::Separator();
+	ImGui::Text("Audio");
+
+	char hoverSoundBuffer[256];
+	strncpy_s(hoverSoundBuffer, button.hoverSoundName.c_str(), sizeof(hoverSoundBuffer) - 1);
+	hoverSoundBuffer[sizeof(hoverSoundBuffer) - 1] = '\0';
+	if (ImGui::InputText("Hover Sound", hoverSoundBuffer, sizeof(hoverSoundBuffer))) {
+		button.hoverSoundName = hoverSoundBuffer;
+	}
+	ImGui::TextDisabled("Example: click.wav");
+
+	char clickSoundBuffer[256];
+	strncpy_s(clickSoundBuffer, button.clickSoundName.c_str(), sizeof(clickSoundBuffer) - 1);
+	clickSoundBuffer[sizeof(clickSoundBuffer) - 1] = '\0';
+	if (ImGui::InputText("Click Sound", clickSoundBuffer, sizeof(clickSoundBuffer))) {
+		button.clickSoundName = clickSoundBuffer;
+	}
+	ImGui::TextDisabled("Example: button_click.wav");
+
+	ImGui::SliderFloat("Sound Volume", &button.soundVolume, 0.0f, 1.0f);
+
+	// Show button state (read-only)
+	ImGui::Separator();
+	ImGui::Text("State (Read-Only)");
+	ImGui::Checkbox("Is Hovered", &button.isHovered);
+	ImGui::SameLine();
+	ImGui::Checkbox("Is Pressed", &button.isPressed);
+}
+
 } // namespace Ermine::editor

@@ -12,7 +12,7 @@ int main()
 {
 	Ermine::Logger::Init();
 
-    GLFWwindow* window = Ermine::Window::InitWindow(1920, 1080, "Shadow Splitter");
+    GLFWwindow* window = Ermine::Window::InitWindow(1920, 1080, "Machina");
     if (!window) return -1;
 
     if (!Ermine::engine::Init(window)) return -1;

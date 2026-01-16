@@ -108,6 +108,7 @@ void GraphicsDebugGUI::Render()
     DrawShadowMappingControls();
     DrawLightingControls();
     DrawPerformanceMetrics();
+    DrawShaderControls();
 
     ImGui::End();
 }
@@ -169,7 +170,56 @@ void GraphicsDebugGUI::DrawRenderingModeControls()
             
             ImGui::TreePop();
         }
-        
+
+        ImGui::Separator();
+
+        // Fog Toggle
+        if (DrawToggleButton("Distance-Based Fog", &renderer->m_FogEnabled,
+                            "Enable/disable atmospheric fog based on distance from camera")) {
+            EE_CORE_INFO("Fog {}", renderer->m_FogEnabled ? "enabled" : "disabled");
+        }
+
+        // Fog Parameters (shown when Fog is enabled)
+        if (renderer->m_FogEnabled && ImGui::TreeNode("Fog Settings"))
+        {
+            const char* fogModes[] = { "Linear", "Exponential", "Exponential Squared" };
+            if (ImGui::Combo("Fog Mode", &renderer->m_FogMode, fogModes, 3)) {
+                EE_CORE_INFO("Fog mode changed to {}", fogModes[renderer->m_FogMode]);
+            }
+            DrawTooltip("Linear = smooth fade between start/end\nExponential = natural fog falloff\nExp² = most realistic atmospheric fog");
+
+            // Fog color picker
+            if (ImGui::ColorEdit3("Fog Color", &renderer->m_FogColor.r)) {
+                EE_CORE_INFO("Fog color changed to ({:.2f}, {:.2f}, {:.2f})",
+                           renderer->m_FogColor.r, renderer->m_FogColor.g, renderer->m_FogColor.b);
+            }
+            DrawTooltip("RGB color of the fog");
+
+            // Linear fog parameters
+            if (renderer->m_FogMode == 0) {
+                DrawFloatSlider("Fog Start", &renderer->m_FogStart, 0.0f, 500.0f,
+                               "Distance where fog begins to appear (linear mode)");
+                DrawFloatSlider("Fog End", &renderer->m_FogEnd, 1.0f, 1000.0f,
+                               "Distance where fog is fully opaque (linear mode)");
+            }
+            // Exponential fog parameters
+            else {
+                DrawFloatSlider("Fog Density", &renderer->m_FogDensity, 0.0f, 0.1f,
+                               "Fog density for exponential modes (lower = less dense)");
+            }
+
+            ImGui::Separator();
+
+            // Height-based fog parameters
+            ImGui::Text("Height-Based Fog");
+            DrawFloatSlider("Height Influence", &renderer->m_FogHeightCoefficient, 0.0f, 1.0f,
+                "How much height affects fog density (0=disabled, 1=maximum effect)");
+            DrawFloatSlider("Height Falloff", &renderer->m_FogHeightFalloff, 1.0f, 100.0f,
+                "Height at which fog starts to thin out (lower=fog stays near ground)");
+
+            ImGui::TreePop();
+        }
+
         ImGui::Unindent(10.0f);
     }
 }
@@ -238,12 +288,34 @@ void GraphicsDebugGUI::DrawPostProcessingControls()
         // FXAA Controls
         if (ImGui::TreeNode("FXAA Settings"))
         {
-            DrawFloatSlider("FXAA Span Max", &renderer->m_FXAASpanMax, 2.0f, 16.0f, 
+            DrawFloatSlider("FXAA Span Max", &renderer->m_FXAASpanMax, 2.0f, 16.0f,
                            "Maximum search span for edge detection");
-            DrawFloatSlider("FXAA Reduce Min", &renderer->m_FXAAReduceMin, 1.0f/256.0f, 1.0f/32.0f, 
+            DrawFloatSlider("FXAA Reduce Min", &renderer->m_FXAAReduceMin, 1.0f/256.0f, 1.0f/32.0f,
                            "Minimum luminance reduction threshold");
-            DrawFloatSlider("FXAA Reduce Mul", &renderer->m_FXAAReduceMul, 1.0f/16.0f, 1.0f/4.0f, 
+            DrawFloatSlider("FXAA Reduce Mul", &renderer->m_FXAAReduceMul, 1.0f/16.0f, 1.0f/4.0f,
                            "Luminance reduction multiplier");
+            ImGui::TreePop();
+        }
+
+        ImGui::Separator();
+
+        // Motion Blur Toggle
+        if (DrawToggleButton("Motion Blur", &renderer->m_MotionBlurEnabled,
+                            "Enable motion blur based on camera and object movement")) {
+            EE_CORE_INFO("Motion blur {}", renderer->m_MotionBlurEnabled ? "enabled" : "disabled");
+        }
+
+        // Motion Blur Controls
+        if (renderer->m_MotionBlurEnabled && ImGui::TreeNode("Motion Blur Settings"))
+        {
+            DrawFloatSlider("Blur Strength", &renderer->m_MotionBlurStrength, 0.0f, 3.0f,
+                           "Intensity of motion blur effect");
+
+            if (ImGui::SliderInt("Sample Count", &renderer->m_MotionBlurSamples, 2, 32)) {
+                EE_CORE_INFO("Motion blur samples changed to {}", renderer->m_MotionBlurSamples);
+            }
+            DrawTooltip("Number of samples for motion blur (higher = smoother blur but slower)");
+
             ImGui::TreePop();
         }
 
@@ -326,7 +398,29 @@ void GraphicsDebugGUI::DrawLightingControls()
             ImGui::Text("  Spot: %d", spotLights);
             ImGui::Text("  Shadow Casters: %d", shadowCasters);
         }
-        
+
+        ImGui::Separator();
+
+        // Volumetric Spotlight Rays
+        auto renderer = ECS::GetInstance().GetSystem<Renderer>();
+        if (renderer) {
+            if (DrawToggleButton("Volumetric Spotlight Rays", &renderer->m_SpotlightRaysEnabled,
+                                "Enable volumetric god rays for spotlights")) {
+                EE_CORE_INFO("Spotlight rays {}", renderer->m_SpotlightRaysEnabled ? "enabled" : "disabled");
+            }
+
+            // Spotlight ray parameters (shown when enabled)
+            if (renderer->m_SpotlightRaysEnabled && ImGui::TreeNode("Spotlight Ray Settings"))
+            {
+                DrawFloatSlider("Ray Intensity", &renderer->m_SpotlightRayIntensity, 0.0f, 2.0f,
+                               "Brightness of volumetric god rays from spotlights");
+                DrawFloatSlider("Ray Falloff", &renderer->m_SpotlightRayFalloff, 0.5f, 5.0f,
+                               "How quickly rays fade with distance");
+
+                ImGui::TreePop();
+            }
+        }
+
         ImGui::Unindent(10.0f);
     }
 }
@@ -374,6 +468,15 @@ void GraphicsDebugGUI::DrawPerformanceMetrics()
                                 "Draw camera frustum planes (Cyan)")) {
                 EE_CORE_INFO("Frustum visualization {}", renderer->m_DebugDrawFrustum ? "enabled" : "disabled");
             }
+
+            ImGui::Separator();
+
+            // Draw Data Rebuild Control
+            if (ImGui::Button("Force Draw Data Rebuild")) {
+                renderer->ForceDrawDataRebuild();
+                EE_CORE_INFO("Draw data rebuild triggered manually");
+            }
+            DrawTooltip("Force a full rebuild of draw commands and shadow buffers on the next frame");
         }
 
         ImGui::Separator();
@@ -438,4 +541,20 @@ bool GraphicsDebugGUI::DrawToggleButton(const char* label, bool* value, const ch
     bool changed = ImGui::Checkbox(label, value);
     if (tooltip) DrawTooltip(tooltip);
     return changed;
+}
+
+void GraphicsDebugGUI::DrawShaderControls()
+{
+    if (!ImGui::CollapsingHeader("Shader Tools", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        return;
+    }
+
+    ImGui::Indent(10.0f);
+    if (ImGui::Button("Recompile Shaders"))
+    {
+        AssetManager::GetInstance().ReloadCachedShaders();
+    }
+    DrawTooltip("Recompile all cached shaders from disk");
+    ImGui::Unindent(10.0f);
 }

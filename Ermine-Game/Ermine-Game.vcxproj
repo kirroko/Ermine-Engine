@@ -175,6 +175,12 @@
     <ProjectReference Include="..\Ermine-Engine\Ermine-Engine.vcxproj">
       <Project>{88292A83-F4E9-A5B9-BD24-EF3629A4EA95}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\Ermine-ScriptAssembly\Ermine-ScriptAssembly.csproj">
+      <Project>{E76B644C-53D8-1F47-1CCC-B7A488F741AF}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Ermine-ScriptSandbox\Ermine-ScriptSandbox.csproj">
+      <Project>{F6EBEDB5-E27A-777F-8B99-8B7A77078825}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

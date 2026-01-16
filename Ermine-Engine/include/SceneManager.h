@@ -128,6 +128,40 @@ public:
     */
     void CreateHUDEntity();
 
+    // temporary reference to health bar, to be removed
+    static Ermine::EntityID healthBar;
+    static Ermine::EntityID GetHealthBar();
+    /*!
+    \brief Checks if a HUD entity with UIComponent exists in the current scene
+    \return True if HUD entity exists, false otherwise
+    */
+    bool HasHUDEntity() const;
+
+    /*!
+    \brief Ensures a HUD entity exists, creating one if needed
+    \details This is the recommended way to guarantee HUD presence.
+             Safe to call multiple times - only creates if missing.
+    */
+    void EnsureHUDExists();
+
+    /*!
+    \brief Removes any existing HUD entity from the scene
+    \details Useful before saving if you want clean scene files without HUD data
+    */
+    void RemoveHUDEntity();
+
+    // Defer scene loading to a safe point (start of next frame)
+    void RequestOpenScene(const std::string& path);
+    bool HasPendingSceneRequest() const { return m_PendingSceneRequest.has_value(); }
+    void FlushPendingSceneRequest();
+
+    /*!
+    \brief Apply cursor state based on scene type
+    \details E.g., game scenes may hide the cursor, while editor scenes show it
+    \param scenePath The path of the scene to determine cursor state
+    */
+    void ApplySceneCursorState(const std::string& scenePath);
+
 private:
     SceneManager() = default;
 
@@ -135,4 +169,6 @@ private:
     bool m_Dirty = false; // set true when scene modified
 
     std::shared_ptr<Ermine::Scene> m_ActiveScene;
+
+    std::optional<std::string> m_PendingSceneRequest;
 };

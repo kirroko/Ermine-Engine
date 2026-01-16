@@ -124,6 +124,14 @@ namespace Ermine
 
         /*!***********************************************************************
         \brief
+            Renders a UI button with text.
+        \param[in] button
+            Reference to UIButtonComponent with button settings.
+        *************************************************************************/
+        void RenderButton(const UIButtonComponent& button);
+
+        /*!***********************************************************************
+        \brief
             Renders a filled quad at the specified position with color.
         \param[in] posX
             X position in normalized screen coordinates (0-1).
@@ -160,45 +168,16 @@ namespace Ermine
 
         /*!***********************************************************************
         \brief
-            Renders a circle outline (for crosshair and borders).
+            Renders a textured icon with correct aspect ratio (for skill icons, images, etc).
+            Maintains the texture's original proportions and accounts for screen
+            aspect ratio to prevent any stretching or distortion during window resize.
         \param[in] centerX
             Center X position in normalized screen coordinates (0-1).
         \param[in] centerY
             Center Y position in normalized screen coordinates (0-1).
-        \param[in] radius
-            Radius in normalized screen coordinates (0-1).
-        \param[in] thickness
-            Line thickness in normalized screen coordinates.
-        \param[in] color
-            RGB color values (0-1).
-        *************************************************************************/
-        void RenderCircle(float centerX, float centerY, float radius, float thickness, const Vec3& color);
-
-        /*!***********************************************************************
-        \brief
-            Renders a filled circle (for skill slots and UI elements).
-        \param[in] centerX
-            Center X position in normalized screen coordinates (0-1).
-        \param[in] centerY
-            Center Y position in normalized screen coordinates (0-1).
-        \param[in] radius
-            Radius in normalized screen coordinates (0-1).
-        \param[in] color
-            RGB color values (0-1).
-        \param[in] alpha
-            Alpha transparency (0-1, default 1.0).
-        *************************************************************************/
-        void RenderFilledCircle(float centerX, float centerY, float radius, const Vec3& color, float alpha = 1.0f);
-
-        /*!***********************************************************************
-        \brief
-            Renders a textured filled circle (for skill icons).
-        \param[in] centerX
-            Center X position in normalized screen coordinates (0-1).
-        \param[in] centerY
-            Center Y position in normalized screen coordinates (0-1).
-        \param[in] radius
-            Radius in normalized screen coordinates (0-1).
+        \param[in] size
+            Height size in normalized screen coordinates (0-1).
+            Width is automatically calculated based on texture aspect ratio.
         \param[in] texture
             Shared pointer to texture to render.
         \param[in] color
@@ -206,7 +185,7 @@ namespace Ermine
         \param[in] alpha
             Alpha transparency (0-1, default 1.0).
         *************************************************************************/
-        void RenderTexturedCircle(float centerX, float centerY, float radius,
+        void RenderTexturedSquare(float centerX, float centerY, float size,
                                   std::shared_ptr<graphics::Texture> texture,
                                   const Vec3& color = {1.0f, 1.0f, 1.0f},
                                   float alpha = 1.0f);
@@ -219,6 +198,7 @@ namespace Ermine
         // Screen dimensions
         int m_screenWidth = 0;
         int m_screenHeight = 0;
+        float m_aspectRatio = 1.0f; // width / height
 
         // Orthographic projection matrix for screen-space rendering
         glm::mat4 m_orthoProjection{};
@@ -226,10 +206,10 @@ namespace Ermine
         // Vertex data for dynamic rendering
         std::vector<float> m_vertexData;
 
-        // Texture cache for skill icons (path -> texture)
+        // Texture cache for skill icons and UI images (path -> texture)
         std::unordered_map<std::string, std::shared_ptr<graphics::Texture>> m_textureCache;
 
-        // Text renderer for keybind labels
+        // Text renderer for keybind labels and UI text
         std::shared_ptr<UITextRenderer> m_textRenderer;
     };
 

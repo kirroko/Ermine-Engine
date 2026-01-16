@@ -204,6 +204,16 @@ namespace Ermine::graphics
 		float m_SSAOFadeout = 0.1f;
 		float m_SSAOMaxDistance = 100.0f;
 
+        // Fog parameters
+        bool m_FogEnabled = false;
+        int m_FogMode = 0;  // 0 = linear, 1 = exponential, 2 = exponential squared
+        glm::vec3 m_FogColor = glm::vec3(0.5f, 0.6f, 0.7f);
+        float m_FogDensity = 0.02f;   // For exponential fog modes
+        float m_FogStart = 50.0f;     // For linear fog
+        float m_FogEnd = 200.0f;      // For linear fog
+		float m_FogHeightCoefficient = 0.1f; // For height-based fog
+		float m_FogHeightFalloff = 10.0f;      // For height-based fog
+        
         // Post-processing uniforms - toggles
         bool m_VignetteEnabled = false;
         bool m_FXAAEnabled = true;
@@ -231,8 +241,24 @@ namespace Ermine::graphics
         float m_BloomIntensity = 2.0f;
         float m_BloomRadius = 1.0f;
 
+		// Spotlight ray parameters
+        bool m_SpotlightRaysEnabled = true;
+        float m_SpotlightRayIntensity = 0.3f;
+        float m_SpotlightRayFalloff = 2.0f;
+
+        // Motion blur parameters
+        bool m_MotionBlurEnabled = true;
+        float m_MotionBlurStrength = 1.0f;
+        int m_MotionBlurSamples = 8;
+
         // Maximum bone array size expected in shader
         static constexpr int MAX_BONE_UNIFORMS = 128;
+
+        GlobalGraphics m_GlobalGraphics;
+
+        // Sync helpers
+        void SyncToGlobalGraphics();    // copy class -> m_GlobalGraphics
+        void ApplyFromGlobalGraphics(); // copy m_GlobalGraphics -> class
 
         /**
          * @brief To run the pass and read GL_STENCIL_INDEX at a pixel
@@ -254,6 +280,13 @@ namespace Ermine::graphics
          * @param screenHeight The height of the screen
          */
         void Init(const int& screenWidth, const int& screenHeight);
+
+        /**
+         * @brief Marks draw data for full rebuild on next frame.
+         * Call this when entities, materials, meshes, transforms, or hierarchy changes
+         * to ensure all rendering data is properly updated.
+         */
+        void MarkDrawDataForRebuild() { m_DrawDataNeedsFullRebuild = true; }
 
         //PHYSICS
         /**
@@ -280,7 +313,7 @@ namespace Ermine::graphics
 
         /*!***********************************************************************
         \brief
-         Adds a filled debug triangle to the renderer’s internal vertex list for
+         Adds a filled debug triangle to the rendererï¿½s internal vertex list for
          visualization purposes. The triangle will be rendered during the next call
          to RenderDebugTriangles().
         \param[in] a
@@ -303,7 +336,7 @@ namespace Ermine::graphics
         \param[in] view
          The view matrix representing the current camera orientation and position.
         \param[in] proj
-         The projection matrix defining the camera’s perspective or orthographic view.
+         The projection matrix defining the cameraï¿½s perspective or orthographic view.
         \return
          None.
         *************************************************************************/
@@ -400,7 +433,6 @@ namespace Ermine::graphics
         {
 			unsigned int FBO = 0;
 			unsigned int ColorTexture = 0;
-            unsigned int DepthTexture = 0;
 
 			int width = 0;
 			int height = 0;
@@ -473,6 +505,14 @@ namespace Ermine::graphics
         void EndLightingPass();
 
         /**
+         * @brief Render depth pre-pass to eliminate overdraw in geometry pass.
+         * Renders all geometry depth-only, so expensive G-buffer fragment shader only runs for visible pixels.
+         * @param view The view matrix
+         * @param projection The projection matrix
+         */
+        void RenderDepthPrePass(const Mtx44& view, const Mtx44& projection);
+
+        /**
          * @brief Render a geometry pass for deferred rendering
          * This function handles the CPU-side setup and issues draw calls
          * The actual g-buffer writing happens in the geometry fragment shader
@@ -491,8 +531,10 @@ namespace Ermine::graphics
 
         /**
          * @brief Render Post-processing effects using the lighting pass output
+         * @param view The view matrix
+         * @param projection The projection matrix
          */
-        void RenderPostProcessPass();
+        void RenderPostProcessPass(const Mtx44& view, const Mtx44& projection);
 
         /**
          * @brief Complete deferred rendering pipeline
@@ -651,8 +693,22 @@ namespace Ermine::graphics
         /**
          * @brief Marks materials as dirty, triggering recompilation on next frame.
          * Call this when materials are added, removed, or modified.
+         * Also clears draw data cache to force full rebuild (prevents stale cache on scene reload).
          */
-        void MarkMaterialsDirty() { m_MaterialsDirty = true; }
+        void MarkMaterialsDirty() {
+            m_MaterialsDirty = true;
+            m_DrawDataNeedsFullRebuild = true;
+            m_CachedDrawItems.clear();
+            m_LastEntityListHash = 0;
+        }
+
+        /**
+         * @brief Forces a full rebuild of draw data on the next frame.
+         * Useful for debugging or when manual refresh is needed.
+         */
+        void ForceDrawDataRebuild() {
+            m_DrawDataNeedsFullRebuild = true;
+        }
 
         /**
          * @brief Registers a texture in the global texture array.
@@ -681,6 +737,28 @@ namespace Ermine::graphics
          * Should be called every frame.
          */
         void CompileDrawData();
+
+        /**
+         * @brief Performs full rebuild of all draw data (called when entities change).
+         * Clears and rebuilds entire draw command lists from scratch.
+         * Called by CompileDrawData() when m_DrawDataNeedsFullRebuild is true.
+         */
+        void RebuildDrawData();
+
+        /**
+         * @brief Fast per-frame update of draw data (called when only transforms change).
+         * Updates frustum, model matrices, and culling results without rebuilding structures.
+         * Called by CompileDrawData() when only transforms changed (optimization path).
+         */
+        void UpdateDrawData();
+
+        /**
+         * @brief Helper functions for draw data optimization and dirty tracking.
+         */
+        uint64_t CalculateEntityListHash() const;
+        uint64_t CalculateEntityTransformHash(EntityID entity) const;
+        bool HasEntityListChanged() const;
+        bool HasEntityTransformChanged(EntityID entity) const;
 
         /**
          * @brief Binds the MaterialBlock shader storage buffer to the specified shader program if it has not been bound before.
@@ -806,17 +884,38 @@ namespace Ermine::graphics
 #pragma endregion
 
         /**
-         * @brief Render transparent objects using forward rendering with depth peeling
+         * @brief Render opaque objects with custom shaders before transparent pass
+         * @param view The view matrix
+         * @param projection The projection matrix
+         */
+        void RenderOpaqueCustomShaders(const Mtx44& view, const Mtx44& projection);
+
+        /**
+         * @brief Render transparent objects with custom shaders
+         * @param view The view matrix
+         * @param projection The projection matrix
+         */
+        void RenderTransparentCustomShaders(const Mtx44& view, const Mtx44& projection);
+
+        /**
+         * @brief Render transparent objects using forward rendering
          * @param view The view matrix
          * @param projection The projection matrix
          */
         void RenderForwardPass(const Mtx44& view, const Mtx44& projection);
 
         /**
+         * @brief Sort opaque custom shader objects by shader pointer (for batching)
+         * Opaque objects don't need distance sorting, only shader batching
+         */
+        void SortOpaqueCustomShadersByShader();
+
+        /**
          * @brief Sort transparent objects by distance from camera
          * @param cameraPos Camera position in world space
+         * @param fullRebuild If true, sort by shader then distance. If false, sort only by distance within shader groups.
          */
-        void SortTransparentObjects(const Vec3& cameraPos);
+        void SortTransparentObjects(const Vec3& cameraPos, bool fullRebuild = true);
 
         /**
          * @brief Check if material is transparent based on transparency value
@@ -824,6 +923,13 @@ namespace Ermine::graphics
          * @return true if material should be rendered in transparent pass
          */
         bool IsTransparentMaterial(const Ermine::graphics::Material* material) const;
+
+        /**
+         * @brief Check if material casts shadows
+         * @param material Material to check
+         * @return true if material casts shadows
+         */
+        bool CastsShadows(const Ermine::graphics::Material* material) const;
 
         /**
          * @brief Check if material uses a custom shader (not standard deferred pipeline)
@@ -859,10 +965,16 @@ namespace Ermine::graphics
         std::unordered_map<std::string, int> m_TexturePathToIndex;    // Map file path to array index
         std::unordered_map<GLuint, int> m_TextureIDToIndex;           // Map texture ID to array index
         GLuint m_TextureArraySSBO = 0;                                // SSBO containing texture handles
+        size_t m_TextureArraySSBOCapacity = 0;                        // Track buffer capacity to avoid orphaning
         bool m_TextureArrayDirty = true;                              // Flag to trigger texture array rebuild
 
         // Renderer state
 		uint8_t frameCounter = 0;
+		float m_ElapsedTime = 0.0f;  // Accumulated time for shader effects
+
+        // Motion blur - previous frame matrices
+        glm::mat4 m_PreviousViewProjectionMatrix = glm::mat4(1.0f);
+        bool m_FirstFrame = true; // Skip motion blur on first frame
 
 		// Light System
 		std::shared_ptr<LightSystem> m_LightSystem = nullptr;
@@ -880,6 +992,7 @@ namespace Ermine::graphics
 
         // Material SSBO
         GLuint m_MaterialSSBO = 0;
+        size_t m_MaterialSSBOCapacity = 0; // Track buffer capacity to avoid orphaning
         std::unordered_set<GLuint> m_MaterialBlockBoundPrograms;
         std::unordered_map<EntityID, uint32_t> m_EntityMaterialIndices; // Maps entity to material index in SSBO
         
@@ -893,30 +1006,146 @@ namespace Ermine::graphics
          */
         void UploadMaterialsToGPU();
 
-        // Draw data for geometry/shadow passes (opaque, non-custom shader meshes)
-        std::vector<DrawElementsIndirectCommand> m_StandardDrawCommands;
-        std::vector<DrawInfo> m_StandardDrawInfos;
-		GLuint m_StandardDrawCommandsVertexCount = 0;
-		GLuint m_StandardDrawCommandsIndexCount = 0;
-        std::vector<DrawElementsIndirectCommand> m_SkinnedDrawCommands;
-        std::vector<DrawInfo> m_SkinnedDrawInfos;
-		GLuint m_SkinnedDrawCommandsVertexCount = 0;
-		GLuint m_SkinnedDrawCommandsIndexCount = 0;
+        // ========================================================================
+        // CUSTOM SHADER DRAW ITEM - Bundles GPU data with CPU metadata
+        // ========================================================================
 
-        // Draw data for forward pass (transparent + custom shader meshes)
-        std::vector<DrawElementsIndirectCommand> m_ForwardPassDrawCommands;
-        std::vector<DrawInfo> m_ForwardPassDrawInfos;
-		GLuint m_ForwardPassDrawCommandsVertexCount = 0;
-		GLuint m_ForwardPassDrawCommandsIndexCount = 0;
+        /**
+         * @brief Combines GPU draw data with CPU-side metadata for custom shaders.
+         * This eliminates parallel array alignment issues - shader travels with its data.
+         */
+        struct CustomShaderDrawItem {
+            DrawElementsIndirectCommand command;  // GPU indirect draw command
+            DrawInfo info;                        // GPU draw info (model matrix, material index, etc.)
+            std::shared_ptr<graphics::Shader> shader;  // CPU-only: for sorting and batching
+            bool castsShadows;                    // Shadow casting flag (for shadow pass routing)
+        };
 
-        // Cached shadow pass draw commands (reused to avoid per-frame allocation)
+        /**
+         * @brief Combines GPU draw data with CPU-side metadata for default shader passes.
+         * Used for geometry and transparent default passes.
+         */
+        struct DefaultShaderDrawItem {
+            DrawElementsIndirectCommand command;  // GPU indirect draw command
+            DrawInfo info;                        // GPU draw info (model matrix, material index, etc.)
+            bool castsShadows;                    // Shadow casting flag (for shadow pass routing)
+        };
+
+        // ========================================================================
+        // RENDER PASS CONTAINERS - Organized by pass, never cleared in fast path
+        // ========================================================================
+
+        // DEPTH PREPASS - Opaque geometry only (for early-z rejection)
+        // Transparent objects excluded to prevent depth conflicts with objects behind them
+        std::vector<DrawElementsIndirectCommand> m_DepthPrepassStandardCommands;
+        std::vector<DrawInfo> m_DepthPrepassStandardInfos;
+        std::vector<DrawElementsIndirectCommand> m_DepthPrepassSkinnedCommands;
+        std::vector<DrawInfo> m_DepthPrepassSkinnedInfos;
+
+        // PICKING PASS - ALL geometry (opaque + transparent, for object selection)
+        std::vector<DrawElementsIndirectCommand> m_PickingStandardCommands;
+        std::vector<DrawInfo> m_PickingStandardInfos;
+        std::vector<DrawElementsIndirectCommand> m_PickingSkinnedCommands;
+        std::vector<DrawInfo> m_PickingSkinnedInfos;
+
+        // GEOMETRY PASS - Opaque default shader only (for deferred lighting)
+        std::vector<DefaultShaderDrawItem> m_GeometryStandardItems;
+        std::vector<DefaultShaderDrawItem> m_GeometrySkinnedItems;
+
+        // SHADOW PASS - ALL geometry with castsShadows=true
         std::vector<DrawElementsIndirectCommand> m_ShadowStandardCommands;
+        std::vector<DrawInfo> m_ShadowStandardInfos;
         std::vector<DrawElementsIndirectCommand> m_ShadowSkinnedCommands;
+        std::vector<DrawInfo> m_ShadowSkinnedInfos;
+
+        // FORWARD PASS - Opaque Custom Shaders (rendered after geometry pass, before transparent)
+        std::vector<CustomShaderDrawItem> m_ForwardOpaqueCustomStandardItems;
+        std::vector<CustomShaderDrawItem> m_ForwardOpaqueCustomSkinnedItems;
+
+        // FORWARD PASS - Transparent Default Shaders (rendered in sorted order)
+        std::vector<DefaultShaderDrawItem> m_ForwardTransparentDefaultStandardItems;
+        std::vector<DefaultShaderDrawItem> m_ForwardTransparentDefaultSkinnedItems;
+
+        // FORWARD PASS - Transparent Custom Shaders (rendered in sorted order)
+        std::vector<CustomShaderDrawItem> m_ForwardTransparentCustomStandardItems;
+        std::vector<CustomShaderDrawItem> m_ForwardTransparentCustomSkinnedItems;
+
+        // ========================================================================
+        // GPU BUFFERS AND CAPACITY TRACKING - For custom shader passes only
+        // (Standard passes use MeshManager's buffers)
+        // ========================================================================
+
+        // Opaque custom shader GPU buffers
+        GLuint m_ForwardOpaqueCustomStandardCmdBuffer = 0;
+        GLuint m_ForwardOpaqueCustomStandardInfoBuffer = 0;
+        GLuint m_ForwardOpaqueCustomSkinnedCmdBuffer = 0;
+        GLuint m_ForwardOpaqueCustomSkinnedInfoBuffer = 0;
+        size_t m_ForwardOpaqueCustomStandardCmdBufferCapacity = 0;
+        size_t m_ForwardOpaqueCustomStandardInfoBufferCapacity = 0;
+        size_t m_ForwardOpaqueCustomSkinnedCmdBufferCapacity = 0;
+        size_t m_ForwardOpaqueCustomSkinnedInfoBufferCapacity = 0;
+
+        // Transparent custom shader GPU buffers
+        GLuint m_ForwardTransparentCustomStandardCmdBuffer = 0;
+        GLuint m_ForwardTransparentCustomStandardInfoBuffer = 0;
+        GLuint m_ForwardTransparentCustomSkinnedCmdBuffer = 0;
+        GLuint m_ForwardTransparentCustomSkinnedInfoBuffer = 0;
+        size_t m_ForwardTransparentCustomStandardCmdBufferCapacity = 0;
+        size_t m_ForwardTransparentCustomStandardInfoBufferCapacity = 0;
+        size_t m_ForwardTransparentCustomSkinnedCmdBufferCapacity = 0;
+        size_t m_ForwardTransparentCustomSkinnedInfoBufferCapacity = 0;
+
+        // Custom shader uploaded count tracking (for render loops)
+        size_t m_ForwardOpaqueCustomStandardUploadedCount = 0;
+        size_t m_ForwardOpaqueCustomSkinnedUploadedCount = 0;
+        size_t m_ForwardTransparentCustomStandardUploadedCount = 0;
+        size_t m_ForwardTransparentCustomSkinnedUploadedCount = 0;
+
+        // Geometry and forward pass vertex/index count tracking (for GPU profiler)
+        size_t m_GeometryStandardVertexCount = 0;
+        size_t m_GeometryStandardIndexCount = 0;
+        size_t m_GeometrySkinnedVertexCount = 0;
+        size_t m_GeometrySkinnedIndexCount = 0;
+        size_t m_ForwardPassDrawCommandsVertexCount = 0;
+        size_t m_ForwardPassDrawCommandsIndexCount = 0;
+
+        // Draw data optimization - Dirty tracking infrastructure
+        bool m_DrawDataNeedsFullRebuild = true;               // Force full rebuild (entity add/remove/major change)
+        bool m_NeedsTransparentSort = true;                   // Trigger transparent object sorting (set during full rebuild)
+        uint64_t m_LastEntityListHash = 0;                    // Hash of entity list to detect add/remove
+
+        // Draw data optimization - Cache for fast path (avoids expensive lookups)
+        struct CachedDrawItem {
+            EntityID entity;               // Parent entity ID (model root)
+            EntityID childMaterialEntity;  // Child entity that was checked for material (0 if none)
+            EntityID materialEntity;       // Entity that actually provided the material (child or parent)
+            bool hadParentMaterial;        // Whether parent had valid material when cached
+            bool hadChildMaterial;         // Whether child had valid material when cached
+            MeshHandle meshHandle;         // Cached mesh handle (avoids hash map lookup)
+            const MeshSubset* meshData;    // Cached mesh data pointer
+            uint32_t materialIndex;        // Cached material index
+            glm::vec3 aabbMin;             // Object-space AABB min
+            glm::vec3 aabbMax;             // Object-space AABB max
+            bool isTransparent;            // Transparency flag (affects pass routing)
+            bool castsShadows;             // Shadow casting flag (affects shadow pass routing)
+            bool hasCustomShader;          // Custom shader flag (affects pass routing)
+            bool useSkinning;              // Skinning flag (affects VAO selection)
+            bool isCameraAttached;         // Camera-attached flag (no motion blur)
+            uint32_t boneOffset;           // Bone transform offset (skinned only)
+        };
+        std::vector<CachedDrawItem> m_CachedDrawItems; // Cached draw items for fast updates
+
+        // Debug/validation flags
+        #ifdef EE_DEBUG
+        bool m_ForceFullRebuildEveryFrame = false;            // Disable optimization for testing
+        bool m_ValidateDrawDataEveryFrame = false;            // Compare optimized vs full rebuild
+        #endif
 
         // Deferred rendering buffers
         bool m_UseDeferredRendering = true;
         Ermine::Mesh m_QuadMesh;
         std::shared_ptr<GBuffer> m_GBuffer;
+        std::shared_ptr<Shader> m_DepthPrePassShader = nullptr; // Shader for depth pre-pass (eliminates overdraw)
         std::shared_ptr<Shader> m_GBufferShader = 0; // Shader for executing g-buffer pass
         std::shared_ptr<Shader> m_LightPassShader = 0; // Shader for lighting pass
 
@@ -927,9 +1156,11 @@ namespace Ermine::graphics
         std::shared_ptr<PostProcessBuffer> m_BloomBlurBuffer1;
         std::shared_ptr<PostProcessBuffer> m_BloomBlurBuffer2;
 		std::shared_ptr<PostProcessBuffer> m_AntiAliasingBuffer;
+        std::shared_ptr<PostProcessBuffer> m_MotionBlurBuffer;
         std::shared_ptr<Shader> m_BloomShader = 0; // Shader for bloom effect
         std::shared_ptr<Shader> m_PostProcessShader = 0; // Shader for post-processing effects
 		std::shared_ptr<Shader> m_AAShader = 0; // Shader for anti-aliasing
+        std::shared_ptr<Shader> m_MotionBlurShader = 0; // Shader for motion blur effect
 
         // Skybox
         Skybox* m_skybox = nullptr;
@@ -941,10 +1172,19 @@ namespace Ermine::graphics
         GLuint m_ShadowMapFBO = 0;
         GLuint m_ShadowMapArray = 0;
 
-        // Pre-skinned positions buffer (binding 8) - written by geometry pass, read by shadow pass
-        GLuint m_PreSkinnedPositionsSSBO = 0;
-        size_t m_PreSkinnedBufferSize = 0;
+        // Noise textures
+        GLuint m_IGNTexture = 0;
+        GLuint64 m_IGNTextureHandle = 0;
+		glm::vec2 m_IGNTextureSize = glm::vec2(128.0f, 128.0f);
+
+        /**
+         * @brief Generates an Interleaved Gradient Noise texture for dithering and sampling.
+		 */
+		void GenerateIGNTexture();
+
         unsigned int m_TotalShadowLayers = 0; // Total layers used by all shadow-casting lights
+        std::vector<int> m_ActiveShadowLights; // Indices of shadow-casting lights (updated in UpdateLightsUBO)
+        int m_TotalShadowInstances = 0; // Total instances for shadow rendering (maxLights * NUM_CASCADES)
 
         // Forward rendering shader for transparent objects
         std::shared_ptr<Shader> m_ForwardShader = nullptr;
@@ -968,7 +1208,9 @@ namespace Ermine::graphics
         };
 
         std::shared_ptr<PickingBuffer> m_PickingBuffer;
-        std::shared_ptr<Shader> m_PickingShader = nullptr;
+        std::shared_ptr<Shader> m_PickingShader = nullptr; // Legacy picking shader (unused)
+        std::shared_ptr<Shader> m_PickingIndirectShader = nullptr; // Indirect rendering picking (standard meshes)
+        std::shared_ptr<Shader> m_PickingIndirectSkinnedShader = nullptr; // Indirect rendering picking (skinned meshes)
 
         // NavMesh
         std::vector<DebugVertex> m_DebugTriangleVertices;
@@ -1185,17 +1427,15 @@ namespace Ermine::graphics
                 }
             }
 
-            // Fetch UV transform and apply V-flip
+            // Fetch UV transform (UVs are already flipped at import)
             aiUVTransform uvTransform;
             if (aiMat->Get(AI_MATKEY_UVTRANSFORM(aiTextureType_DIFFUSE, 0), uvTransform) == AI_SUCCESS) {
-                // Apply V-flip
-                materialPtr->SetUVScale(Vec2(uvTransform.mScaling.x, -uvTransform.mScaling.y));
-                materialPtr->SetUVOffset(Vec2(uvTransform.mTranslation.x, 1.0f - uvTransform.mTranslation.y));
+                materialPtr->SetUVScale(Vec2(uvTransform.mScaling.x, uvTransform.mScaling.y));
+                materialPtr->SetUVOffset(Vec2(uvTransform.mTranslation.x, uvTransform.mTranslation.y));
             }
             else {
-                // Default V-flip for FBX compatibility
-                materialPtr->SetUVScale(Vec2(1.0f, -1.0f));
-                materialPtr->SetUVOffset(Vec2(0.0f, 1.0f));
+                materialPtr->SetUVScale(Vec2(1.0f, 1.0f));
+                materialPtr->SetUVOffset(Vec2(0.0f, 0.0f));
             }
 
             // Add or update material component on child entity

@@ -113,7 +113,7 @@ namespace Ermine {
         \brief Sets the name of the scene
         \param name New name for the scene
         */
-        void SetName(const std::string& name) { m_Name = name; }
+        void SetName(const std::string_view& name) { m_Name = name; }
 
         // Cleanup
         /*!

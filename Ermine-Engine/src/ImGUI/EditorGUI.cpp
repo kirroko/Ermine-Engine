@@ -29,6 +29,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Scene.h"
 #include "HierarchyPanel.h"
 #include "HierarchyInspector.h"
+#include "UIButtonSystem.h"
 
 #include "CameraSystem.h"
 #include "Components.h"
@@ -41,6 +42,9 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <optional>
 #include "SceneManager.h"
 #include <imnodes.h>
+
+#include "SettingsGUI.h"
+
 
 namespace Ermine
 {
@@ -56,6 +60,7 @@ using namespace Ermine::editor;
 // Definition for static member m_Windows, for ImGUI Windows
 std::vector<std::unique_ptr<Ermine::ImGUIWindow>>EditorGUI::m_Windows;
 bool EditorGUI::isPlaying = false; // tied to Play/Stop toolbar state.
+bool EditorGUI::isPreviewingUI = false; // Enable UI preview in editor viewport
 GLFWwindow* EditorGUI::s_WindowContext = nullptr;
 Ermine::EntityID EditorGUI::s_PrimaryCameraEntity = 0;
 
@@ -194,11 +199,11 @@ void EditorGUI::StartPlayMode()
     }
 
     // Lock cursor for FPS controls
-    if (s_WindowContext)
-    {
-        glfwSetInputMode(s_WindowContext, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-        EE_CORE_INFO("Cursor locked for FPS controls");
-    }
+    //if (s_WindowContext)
+    //{
+    //    glfwSetInputMode(s_WindowContext, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    //    EE_CORE_INFO("Cursor locked for FPS controls");
+    //}
 
     EE_CORE_INFO("Play mode started with camera entity {}", s_PrimaryCameraEntity);
 }
@@ -232,7 +237,6 @@ void SetCutesyPinkTheme();
 void SetCyberpunk2077Theme();
 void SetOverwatchTheme(bool dark_variant = true);
 
-// Replace the existing EditorGUI::TopMenuBar implementation with this updated version
 void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
 {
     ImGui::BeginMainMenuBar();
@@ -265,54 +269,58 @@ void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
 
     ImGuiIO& io = ImGui::GetIO();
 
-    if (!io.WantTextInput)  // don't trigger if user is typing in text fields
+    //if (!io.WantTextInput)  // don't trigger if user is typing in text fields
+    //{
+
+	// KEYBOARD SHORTCUTS
+
+    bool ctrl = io.KeyCtrl;
+    bool shift = io.KeyShift;
+
+    if (ImGui::IsKeyPressed(ImGuiKey_S, false))
     {
-        bool ctrl = io.KeyCtrl;
-        bool shift = io.KeyShift;
-
-        if (ImGui::IsKeyPressed(ImGuiKey_S, false))
+        if (ctrl && shift)
         {
-            if (ctrl && shift)
-            {
-                if (auto path = SceneManager::ShowSaveDialog(L"untitled.scene", GetActiveWindow()))
-                    SceneManager::GetInstance().SaveSceneTo(*path);
-            }
-            else if (ctrl)
-            {
-                SceneManager::GetInstance().SaveScene();
-            }
+            if (auto path = SceneManager::ShowSaveDialog(L"untitled.scene", GetActiveWindow()))
+                SceneManager::GetInstance().SaveSceneTo(*path);
         }
-
-        if (ImGui::IsKeyPressed(ImGuiKey_O, false))
+        else if (ctrl)
         {
-            if (ctrl)
-            {
-                if (auto path = SceneManager::ShowOpenDialog(GetActiveWindow()))
-                {
-                    SceneManager::GetInstance().ClearScene();
-                    SceneManager::GetInstance().OpenScene(*path);
-                }
-            }
+            SceneManager::GetInstance().SaveScene();
         }
+    }
 
-        if (ImGui::IsKeyPressed(ImGuiKey_Z, false))
+    if (ImGui::IsKeyPressed(ImGuiKey_O, false))
+    {
+        if (ctrl)
         {
-            if (ctrl)
+            if (auto path = SceneManager::ShowOpenDialog(GetActiveWindow()))
             {
-                EE_CORE_INFO("Ctrl + Z = UNDO");
-                // code to undo
-            }
-        }
-
-        if (ImGui::IsKeyPressed(ImGuiKey_Y, false))
-        {
-            if (ctrl)
-            {
-                EE_CORE_INFO("Ctrl + Y = REDO");
-                // code to redo
+                SceneManager::GetInstance().ClearScene();
+                SceneManager::GetInstance().OpenScene(*path);
             }
         }
     }
+
+    if (ImGui::IsKeyPressed(ImGuiKey_Z, false))
+    {
+        if (ctrl)
+        {
+            EE_CORE_INFO("Ctrl + Z = UNDO");
+            // code to undo
+        }
+    }
+
+    if (ImGui::IsKeyPressed(ImGuiKey_Y, false))
+    {
+        if (ctrl)
+        {
+            EE_CORE_INFO("Ctrl + Y = REDO");
+            // code to redo
+        }
+    }
+
+    //}
 
     if (ImGui::BeginMenu("Edit"))
     {
@@ -348,12 +356,14 @@ void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
             ImGui::StyleColorsLight();
             fixViewportsStyling();
             EE_CORE_INFO("Light theme applied");
+			SettingsGUI::SetMode(0);
         }
         if (ImGui::MenuItem("Dark Mode"))
         {
             ImGui::StyleColorsDark();
             fixViewportsStyling();
             EE_CORE_INFO("Dark theme applied");
+            SettingsGUI::SetMode(1);
         }
         if (ImGui::MenuItem("Pink Mode"))
         {
@@ -361,6 +371,7 @@ void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
             SetCutesyPinkTheme();
             fixViewportsStyling();
             EE_CORE_INFO("Pink theme applied");
+            SettingsGUI::SetMode(2);
         }
         if (ImGui::MenuItem("Cyberpunk Mode"))
         {
@@ -368,6 +379,7 @@ void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
             SetCyberpunk2077Theme();
             fixViewportsStyling();
             EE_CORE_INFO("Cyberpunk theme applied");
+			SettingsGUI::SetMode(3);
         }
         if (ImGui::BeginMenu("Overwatch Mode"))
         {
@@ -376,12 +388,14 @@ void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
                 SetOverwatchTheme(true);
                 fixViewportsStyling();
                 EE_CORE_INFO("Overwatch (Dark) theme applied");
+                SettingsGUI::SetMode(4);
             }
             if (ImGui::MenuItem("Overwatch - Light"))
             {
                 SetOverwatchTheme(false);
                 fixViewportsStyling();
                 EE_CORE_INFO("Overwatch (Light) theme applied");
+                SettingsGUI::SetMode(5);
             }
             ImGui::EndMenu();
         }
@@ -395,6 +409,18 @@ void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
         {
             EE_CORE_INFO("Console open");
         }
+
+        if (ImGui::MenuItem("UI Settings"))
+        {
+            EE_CORE_INFO("Settings open");
+            //SettingsGUI::SetSettings(true);
+			SettingsGUI::SetSettingsOpen(true);
+        }
+
+        // Legacy ImGui menu previews removed - use scene-based approach instead:
+        // - Open mainmenu.scene or cutscene_intro.scene in viewport
+        // - Edit UI entities (MenuBackground, GameTitle, Slide1/2/3) with Inspector
+        // - MenuController and CutscenePlayer scripts handle logic
 
         ImGui::EndMenu();
     }
@@ -447,25 +473,25 @@ void EditorGUI::Toolbar()
             return clicked;
         };
 
-    if (RenderToggledButton(isPlaying, gIconPlay, "Play"))
-    {
-        if (!isPlaying)
-        {
-            isPlaying = true;
-            StartPlayMode();
-        }
-    }
+    //if (RenderToggledButton(isPlaying, gIconPlay, "Play"))
+    //{
+    //    if (!isPlaying)
+    //    {
+    //        isPlaying = true;
+    //        StartPlayMode();
+    //    }
+    //}
 
-    ImGui::SameLine();
+    //ImGui::SameLine();
 
-    if (RenderToggledButton(!isPlaying, gIconStop, "Stop"))
-    {
-        if (isPlaying)
-        {
-            isPlaying = false;
-            StopPlayMode();
-        }
-    }
+    //if (RenderToggledButton(!isPlaying, gIconStop, "Stop"))
+    //{
+    //    if (isPlaying)
+    //    {
+    //        isPlaying = false;
+    //        StopPlayMode();
+    //    }
+    //}
 
     ImGui::End();
 
@@ -584,6 +610,15 @@ void EditorGUI::ViewPortWindow(bool& show)
     const ImVec2 imgMax = ImGui::GetItemRectMax();
     const ImVec2 imgSize = ImGui::GetItemRectSize();
 
+    // UPDATE UI BUTTON SYSTEM WITH VIEWPORT INFO
+#ifdef EE_EDITOR
+    auto uiButtonSystem = ECS::GetInstance().GetSystem<UIButtonSystem>();
+    if (uiButtonSystem)
+    {
+        uiButtonSystem->SetViewportInfo(imgMin, imgSize);
+    }
+#endif
+
     // Left-click within the image, perform picking
     if (!isPlaying && ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
     {
@@ -629,15 +664,15 @@ void EditorGUI::ViewPortWindow(bool& show)
     Input::SetEditorInputActive(viewportFocused && viewportHovered);
 
     // Hotkey to toggle play mode
-    if (Input::IsKeyDownEditor(GLFW_KEY_LEFT_CONTROL) && Input::IsKeyPressedEditor(GLFW_KEY_P))
-    {
-        isPlaying = !isPlaying;
-        if (isPlaying)
-            StartPlayMode();
-        else
-            StopPlayMode();
-        EE_CORE_INFO("Play {0}", isPlaying);
-    }
+    //if (Input::IsKeyDownEditor(GLFW_KEY_LEFT_CONTROL) && Input::IsKeyPressedEditor(GLFW_KEY_P))
+    //{
+    //    isPlaying = !isPlaying;
+    //    if (isPlaying)
+    //        StartPlayMode();
+    //    else
+    //        StopPlayMode();
+    //    EE_CORE_INFO("Play {0}", isPlaying);
+    //}
 
     Input::SetGameInputActive(isPlaying && viewportFocused && viewportHovered);
 
@@ -645,7 +680,7 @@ void EditorGUI::ViewPortWindow(bool& show)
     if (viewportHovered && !isPlaying)
     {
         EditorCamera::GetInstance().ProcessMouseMovement();
-        EditorCamera::GetInstance().ProcessKeyboardInput(FrameController::GetDeltaTime());
+        EditorCamera::GetInstance().ProcessKeyboardInput(FrameController::GetFixedDeltaTime());
         EditorCamera::GetInstance().ProcessScrollWheel(Input::GetMouseScrollOffsetEditor());
     }
 
@@ -968,7 +1003,8 @@ void EditorGUI::Init(GLFWwindow* window)
     // --- DPI scaling for UI ---
     float xScale, yScale;
     glfwGetWindowContentScale(window, &xScale, &yScale);
-	io.FontGlobalScale = xScale; // Apply the xScale to the global font scale
+	//io.FontGlobalScale = xScale; // Apply the xScale to the global font scale
+    io.FontGlobalScale = SettingsGUI::GetBaseFontSize();
     {
         const char* kFontPath = "../Resources/Fonts/Rajdhani-Regular.ttf";
         constexpr float kFontSizePx = 18.0f; // base pixel size at scale 1.0
@@ -1022,6 +1058,60 @@ void EditorGUI::Init(GLFWwindow* window)
     // Setup Platform/Renderer backends
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 460");
+
+    const auto fixViewportsStyling = []()
+    {
+        ImGuiIO& ioFix = ImGui::GetIO();
+        if (ioFix.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+        {
+            ImGuiStyle& style = ImGui::GetStyle();
+            style.WindowRounding = 0.0f;
+            style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+        }
+    };
+
+    // Apply once, via switch:
+    switch (SettingsGUI::GetMode())
+    {
+    case 0:
+        ImGui::StyleColorsLight();
+        fixViewportsStyling();
+        EE_CORE_INFO("Light theme applied");
+        break;
+
+    case 1:
+	default:
+        ImGui::StyleColorsDark();
+        fixViewportsStyling();
+        EE_CORE_INFO("Dark theme applied");
+        break;
+
+    case 2:
+        ImGui::StyleColorsLight();
+        SetCutesyPinkTheme();
+        fixViewportsStyling();
+        EE_CORE_INFO("Pink theme applied");
+        break;
+
+    case 3:
+        ImGui::StyleColorsDark();
+        SetCyberpunk2077Theme();
+        fixViewportsStyling();
+        EE_CORE_INFO("Cyberpunk theme applied");
+        break;
+
+    case 4:
+        SetOverwatchTheme(true);
+        fixViewportsStyling();
+        EE_CORE_INFO("Overwatch (Dark) theme applied");
+        break;
+
+    case 5:
+        SetOverwatchTheme(false);
+        fixViewportsStyling();
+        EE_CORE_INFO("Overwatch (Light) theme applied");
+        break;
+    }
 
     ImNodes::CreateContext();
 
@@ -1107,9 +1197,9 @@ void EditorGUI::Update(GLFWwindow* windowContext)
         s_Inspector->OnImGuiRender();
     }
 
-    static bool show_demo_window = true;
-    if (show_demo_window)
-        ImGui::ShowDemoWindow(&show_demo_window);
+    //static bool show_demo_window = true;
+    //if (show_demo_window)
+    //    ImGui::ShowDemoWindow(&show_demo_window);
 
     // Call Update() for all registered ImGui windows
     for (auto& window : m_Windows) {
@@ -1149,7 +1239,7 @@ void EditorGUI::ShutDown()
     // Stop play mode if active
     if (isPlaying)
     {
-        StopPlayMode();
+        //StopPlayMode();
         isPlaying = false;
     }
 

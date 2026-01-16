@@ -388,12 +388,14 @@ namespace Ermine
                 if (ImGui::Button("Play Audio"))
                 {
                     audioComp.shouldPlay = true;
+                    audioComp.playOnStart = true;
                     SetStatusMessage("Playing audio for Entity " + std::to_string(m_SelectedEntity));
                 }
                 ImGui::SameLine();
                 if (ImGui::Button("Stop Audio"))
                 {
                     audioComp.shouldStop = true;
+                    audioComp.playOnStart = false;
                     SetStatusMessage("Stopping audio for Entity " + std::to_string(m_SelectedEntity));
                 }
 
@@ -750,6 +752,26 @@ namespace Ermine
         }
     }
 
+    void AudioImGUI::ScanForExistingGlobalAudio()
+    {
+        auto& ecs = ECS::GetInstance();
+
+        // Scan through all entities to find existing GlobalAudioComponent
+        for (EntityID entity = 1; entity <= MAX_ENTITIES; ++entity)
+        {
+            if (ecs.IsEntityValid(entity) && ecs.HasComponent<GlobalAudioComponent>(entity))
+            {
+                m_GlobalAudioEntity = entity;
+                m_HasGlobalAudio = true;
+                SetStatusMessage("Found existing Global Audio Entity (ID: " + std::to_string(entity) + ")");
+                return; // Found it, no need to continue
+            }
+        }
+
+        // If we get here, no GlobalAudioComponent was found
+        m_HasGlobalAudio = false;
+    }
+
     void AudioImGUI::CreateTestGlobalAudioEntity()
     {
         if (m_HasGlobalAudio) return; // Already created
@@ -782,7 +804,26 @@ namespace Ermine
         ImGui::Text("Global Audio System");
         ImGui::Separator();
 
-        // Create test entity button
+        if (m_HasGlobalAudio)
+        {
+            auto& ecs = ECS::GetInstance();
+            // Check if the entity we think exists is still valid
+            if (!ecs.IsEntityValid(m_GlobalAudioEntity) ||
+                !ecs.HasComponent<GlobalAudioComponent>(m_GlobalAudioEntity))
+            {
+                // Our cached entity is invalid, rescan the scene
+                m_HasGlobalAudio = false;
+                m_GlobalAudioEntity = 0;
+            }
+        }
+
+        // If we don't have a valid global audio reference, scan for one
+        if (!m_HasGlobalAudio)
+        {
+            ScanForExistingGlobalAudio();
+        }
+
+        // Now render based on the current state
         if (!m_HasGlobalAudio)
         {
             if (ImGui::Button("Create Test Global Audio Entity"))
@@ -1084,7 +1125,7 @@ namespace Ermine
 
                 for (size_t i = 0; i < globalAudio.sfx.size(); ++i)
                 {
-                    const auto& sfx = globalAudio.sfx[i];
+                    auto& sfx = globalAudio.sfx[i];  // Changed to non-const so we can modify volume
                     ImGui::PushID(("sfx_" + std::to_string(i)).c_str());
 
                     // Track info with editing capability
@@ -1123,8 +1164,18 @@ namespace Ermine
                     {
                         // Display mode
                         ImGui::Text("SFX %zu: %s", i, sfx.audioName.c_str());
-                        ImGui::SameLine();
 
+                        // *** NEW: Individual SFX Volume Slider ***
+                        ImGui::PushItemWidth(150.0f);
+                        if (ImGui::SliderFloat(("Volume##SFX" + std::to_string(i)).c_str(),
+                            &sfx.volume, 0.0f, 1.0f, "%.2f"))
+                        {
+                            SetStatusMessage("Changed " + sfx.audioName + " volume to " +
+                                std::to_string(sfx.volume));
+                        }
+                        ImGui::PopItemWidth();
+
+                        ImGui::SameLine();
                         if (ImGui::Button("Play by Index"))
                         {
                             globalAudio.PlaySFX(static_cast<int>(i));
@@ -1143,8 +1194,10 @@ namespace Ermine
                         if (ImGui::Button("Edit"))
                         {
                             m_EditingSFXIndex = static_cast<int>(i);
-							strncpy_s(m_EditSFXName, sizeof(m_EditSFXName), sfx.audioName.c_str(), sizeof(m_EditSFXName) - 1);
-							strncpy_s(m_EditSFXPath, sizeof(m_EditSFXPath), sfx.audioPath.c_str(), sizeof(m_EditSFXPath) - 1);
+                            strncpy_s(m_EditSFXName, sizeof(m_EditSFXName),
+                                sfx.audioName.c_str(), sizeof(m_EditSFXName) - 1);
+                            strncpy_s(m_EditSFXPath, sizeof(m_EditSFXPath),
+                                sfx.audioPath.c_str(), sizeof(m_EditSFXPath) - 1);
                             m_EditSFXName[sizeof(m_EditSFXName) - 1] = '\0';
                             m_EditSFXPath[sizeof(m_EditSFXPath) - 1] = '\0';
                         }
@@ -1158,10 +1211,11 @@ namespace Ermine
                             m_DeletingMusic = false;
                         }
 
-                        // Show tooltip with full path
+                        // Show tooltip with full path and volume info
                         if (ImGui::IsItemHovered())
                         {
-                            ImGui::SetTooltip("Path: %s", sfx.audioPath.c_str());
+                            ImGui::SetTooltip("Path: %s\nVolume: %.2f",
+                                sfx.audioPath.c_str(), sfx.volume);
                         }
                     }
 

@@ -33,7 +33,7 @@ namespace ErmineEngine
                 throw new System.ArgumentException("Invalid or dead entityID.", nameof(entityID));
         }
 
-        public static GameObject FromEntityID(ulong entityID) => Internal_WrapExisting(entityID);
+        internal static GameObject FromEntityID(ulong entityID) => Internal_WrapExisting(entityID);
 
         //public GameObject()
         //{
@@ -86,7 +86,11 @@ namespace ErmineEngine
 
         public Component GetComponent(Type type)
         {
-            if (type == null) throw new ArgumentNullException(nameof(type));
+            if (type == null)
+            {
+                Debug.LogError("Null exception on get component!");
+                throw new ArgumentNullException(nameof(type));
+            }
             return Internal_GetComponent(this, type);
         }
 

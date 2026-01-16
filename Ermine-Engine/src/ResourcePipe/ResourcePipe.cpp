@@ -41,7 +41,7 @@ namespace Ermine {
     // TextureImportSettings
     //=============================================================================
     TextureImportSettings::TextureImportSettings()
-        : targetFormat(DXGI_FORMAT_B8G8R8A8_UNORM) {
+        : targetFormat(DXGI_FORMAT_B8G8R8A8_UNORM_SRGB) {
     }
 
     //=============================================================================
@@ -143,7 +143,8 @@ namespace Ermine {
             DXGI_FORMAT_BC1_UNORM,       // Best compression, no alpha
             DXGI_FORMAT_BC3_UNORM,       // Good compression with alpha
             //DXGI_FORMAT_BC7_UNORM,       // Best quality compression
-            DXGI_FORMAT_BC5_UNORM        // For normal maps
+            DXGI_FORMAT_BC5_UNORM,        // For normal maps
+            DXGI_FORMAT_BC4_UNORM
         };
     }
 
@@ -394,6 +395,61 @@ namespace Ermine {
     //=============================================================================
     // Texture Import Implementation
     //=============================================================================
+
+    // Determine optimal compression format based on texture filename
+    DXGI_FORMAT ResourcePipeline::DetermineOptimalFormat(const std::string& filename) {
+        // Convert filename to lowercase for case-insensitive matching
+        std::string lowerFilename = filename;
+        std::transform(lowerFilename.begin(), lowerFilename.end(), lowerFilename.begin(), ::tolower);
+
+        // ✅ NORMAL MAPS: BC5 (always linear - stores XY direction vectors)
+        if (lowerFilename.find("normal") != std::string::npos ||
+            lowerFilename.find("norm") != std::string::npos ||
+            lowerFilename.find("_n.") != std::string::npos ||
+            lowerFilename.find("_nrm") != std::string::npos) {
+            return DXGI_FORMAT_BC5_UNORM;  // Linear - critical!
+        }
+
+        // ✅ DATA TEXTURES: BC4 Linear (grayscale data, not for display)
+        if (lowerFilename.find("roughness") != std::string::npos ||
+            lowerFilename.find("metallic") != std::string::npos ||
+            lowerFilename.find("metalness") != std::string::npos ||
+            lowerFilename.find("ao") != std::string::npos ||
+            lowerFilename.find("ambient") != std::string::npos ||
+            lowerFilename.find("occlusion") != std::string::npos ||
+            lowerFilename.find("height") != std::string::npos ||
+            lowerFilename.find("displacement") != std::string::npos ||
+            lowerFilename.find("_r.") != std::string::npos ||
+            lowerFilename.find("_m.") != std::string::npos) {
+            return DXGI_FORMAT_BC4_UNORM;  // Linear - stores data values
+        }
+
+        // ✅ COLOR TEXTURES: BC3 sRGB (gamma-corrected colors for display)
+        if (lowerFilename.find("albedo") != std::string::npos ||
+            lowerFilename.find("diffuse") != std::string::npos ||
+            lowerFilename.find("color") != std::string::npos ||
+            lowerFilename.find("basecolor") != std::string::npos ||
+            lowerFilename.find("_d.") != std::string::npos ||
+            lowerFilename.find("_a.") != std::string::npos) {
+            return DXGI_FORMAT_BC3_UNORM_SRGB;  // sRGB - for display colors!
+        }
+
+        // ✅ EMISSIVE: BC3 sRGB (emissive colors)
+        if (lowerFilename.find("emissive") != std::string::npos ||
+            lowerFilename.find("emission") != std::string::npos) {
+            return DXGI_FORMAT_BC3_UNORM_SRGB;  // sRGB
+        }
+
+        // ✅ OPAQUE TEXTURES: BC1 sRGB (no alpha, gamma-corrected)
+        if (lowerFilename.find("opaque") != std::string::npos ||
+            lowerFilename.find("noalpha") != std::string::npos) {
+            return DXGI_FORMAT_BC1_UNORM_SRGB;  // sRGB
+        }
+
+        // ✅ DEFAULT: BC3 sRGB (safe for most color textures with alpha)
+        return DXGI_FORMAT_BC3_UNORM_SRGB;
+    }
+
     ImportResult ResourcePipeline::ImportTextureInternal(const std::string& sourcePath,
         const std::string& outputPath,
         const TextureImportSettings& settings) {
@@ -559,16 +615,16 @@ namespace Ermine {
 
         bool success = false;
         if (isSkinned) {
-            // Process as skinned mesh
+            // ✅ CHANGED: Pass settings parameter
             SkinnedMeshData skinnedData;
-            if (ProcessSkinnedMeshCombined(scene, skinnedData)) {
+            if (ProcessSkinnedMeshCombined(scene, skinnedData, settings)) {
                 success = WriteSkinFile(outputPath, skinnedData);
             }
         }
         else {
-            // Process as static mesh
+            // ✅ CHANGED: Pass settings parameter
             MeshData meshData;
-            if (ProcessStaticMesh(scene->mMeshes[0], meshData)) {
+            if (ProcessStaticMesh(scene->mMeshes[0], meshData, settings)) {
                 success = WriteMeshFile(outputPath, meshData);
             }
         }
@@ -628,40 +684,139 @@ namespace Ermine {
         return mesh->HasBones();
     }
 
-    bool ResourcePipeline::ProcessStaticMesh(const aiMesh* mesh, MeshData& outData) {
+    // Helper function to create a 4x4 transformation matrix
+    void ResourcePipeline::BuildTransformMatrix(const MeshImportSettings& settings, float outMatrix[16]) {
+        // Initialize as identity matrix
+        for (int i = 0; i < 16; i++) {
+            outMatrix[i] = (i % 5 == 0) ? 1.0f : 0.0f;
+        }
+
+        if (!settings.applyPreTransform) return;
+
+        // Convert rotation from degrees to radians
+        float rx = settings.rotation[0] * 3.14159265f / 180.0f;
+        float ry = settings.rotation[1] * 3.14159265f / 180.0f;
+        float rz = settings.rotation[2] * 3.14159265f / 180.0f;
+
+        // Build rotation matrices
+        float cosX = cosf(rx), sinX = sinf(rx);
+        float cosY = cosf(ry), sinY = sinf(ry);
+        float cosZ = cosf(rz), sinZ = sinf(rz);
+
+        // Combined rotation matrix (ZYX order - typical for 3D engines)
+        float rotMatrix[16] = {
+            cosY * cosZ,
+            cosY * sinZ,
+            -sinY,
+            0,
+
+            sinX * sinY * cosZ - cosX * sinZ,
+            sinX * sinY * sinZ + cosX * cosZ,
+            sinX * cosY,
+            0,
+
+            cosX * sinY * cosZ + sinX * sinZ,
+            cosX * sinY * sinZ - sinX * cosZ,
+            cosX * cosY,
+            0,
+
+            0, 0, 0, 1
+        };
+
+        // Apply scale to rotation matrix
+        for (int col = 0; col < 3; col++) {
+            for (int row = 0; row < 3; row++) {
+                outMatrix[col * 4 + row] = rotMatrix[col * 4 + row] * settings.scale[row];
+            }
+        }
+
+        // Apply translation
+        outMatrix[12] = settings.translation[0];
+        outMatrix[13] = settings.translation[1];
+        outMatrix[14] = settings.translation[2];
+        outMatrix[15] = 1.0f;
+    }
+
+    // Helper function to transform a 3D vector by a 4x4 matrix
+    void ResourcePipeline::TransformVector(const float matrix[16], const float in[3], float out[3]) {
+        out[0] = matrix[0] * in[0] + matrix[4] * in[1] + matrix[8] * in[2] + matrix[12];
+        out[1] = matrix[1] * in[0] + matrix[5] * in[1] + matrix[9] * in[2] + matrix[13];
+        out[2] = matrix[2] * in[0] + matrix[6] * in[1] + matrix[10] * in[2] + matrix[14];
+    }
+
+    // Helper function to transform a normal/tangent (ignores translation)
+    void ResourcePipeline::TransformNormal(const float matrix[16], const float in[3], float out[3]) {
+        out[0] = matrix[0] * in[0] + matrix[4] * in[1] + matrix[8] * in[2];
+        out[1] = matrix[1] * in[0] + matrix[5] * in[1] + matrix[9] * in[2];
+        out[2] = matrix[2] * in[0] + matrix[6] * in[1] + matrix[10] * in[2];
+
+        // Normalize the result
+        float length = sqrtf(out[0] * out[0] + out[1] * out[1] + out[2] * out[2]);
+        if (length > 0.0001f) {
+            out[0] /= length;
+            out[1] /= length;
+            out[2] /= length;
+        }
+    }
+
+
+    bool ResourcePipeline::ProcessStaticMesh(const aiMesh* mesh, MeshData& outData,
+        const MeshImportSettings& settings) {
+        // Build transformation matrix if needed
+        float transformMatrix[16];
+        BuildTransformMatrix(settings, transformMatrix);
+
         // Process vertices
         for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
             Vertex vertex = {};
 
-            // Position
-            vertex.position[0] = mesh->mVertices[i].x;
-            vertex.position[1] = mesh->mVertices[i].y;
-            vertex.position[2] = mesh->mVertices[i].z;
-
-            // Normal
-            if (mesh->HasNormals()) {
-                vertex.normal[0] = mesh->mNormals[i].x;
-                vertex.normal[1] = mesh->mNormals[i].y;
-                vertex.normal[2] = mesh->mNormals[i].z;
+            // Position - apply full transformation
+            float pos[3] = { mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z };
+            if (settings.applyPreTransform) {
+                TransformVector(transformMatrix, pos, vertex.position);
+            }
+            else {
+                vertex.position[0] = pos[0];
+                vertex.position[1] = pos[1];
+                vertex.position[2] = pos[2];
             }
 
-            // Texture coordinates
+            // Normal - apply rotation and scale only
+            if (mesh->HasNormals()) {
+                float norm[3] = { mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z };
+                if (settings.applyPreTransform) {
+                    TransformNormal(transformMatrix, norm, vertex.normal);
+                }
+                else {
+                    vertex.normal[0] = norm[0];
+                    vertex.normal[1] = norm[1];
+                    vertex.normal[2] = norm[2];
+                }
+            }
+
+            // Texture coordinates (unchanged)
             if (mesh->HasTextureCoords(0)) {
                 vertex.texCoord[0] = mesh->mTextureCoords[0][i].x;
                 vertex.texCoord[1] = mesh->mTextureCoords[0][i].y;
             }
 
-            // Tangent
+            // Tangent - apply rotation and scale only
             if (mesh->HasTangentsAndBitangents()) {
-                vertex.tangent[0] = mesh->mTangents[i].x;
-                vertex.tangent[1] = mesh->mTangents[i].y;
-                vertex.tangent[2] = mesh->mTangents[i].z;
+                float tang[3] = { mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z };
+                if (settings.applyPreTransform) {
+                    TransformNormal(transformMatrix, tang, vertex.tangent);
+                }
+                else {
+                    vertex.tangent[0] = tang[0];
+                    vertex.tangent[1] = tang[1];
+                    vertex.tangent[2] = tang[2];
+                }
             }
 
             outData.vertices.push_back(vertex);
         }
 
-        // Process indices
+        // Process indices (unchanged)
         for (unsigned int i = 0; i < mesh->mNumFaces; i++) {
             aiFace face = mesh->mFaces[i];
             for (unsigned int j = 0; j < face.mNumIndices; j++) {
@@ -669,14 +824,27 @@ namespace Ermine {
             }
         }
 
+        if (settings.applyPreTransform) {
+            std::cout << "    ✓ Applied pre-transformation: "
+                << "Scale(" << settings.scale[0] << "," << settings.scale[1] << "," << settings.scale[2] << ") "
+                << "Rotation(" << settings.rotation[0] << "°," << settings.rotation[1] << "°," << settings.rotation[2] << "°) "
+                << "Translation(" << settings.translation[0] << "," << settings.translation[1] << "," << settings.translation[2] << ")"
+                << std::endl;
+        }
+
         return !outData.vertices.empty();
     }
 
-    bool ResourcePipeline::ProcessSkinnedMeshCombined(const aiScene* scene, SkinnedMeshData& outData) {
+    bool ResourcePipeline::ProcessSkinnedMeshCombined(const aiScene* scene, SkinnedMeshData& outData,
+        const MeshImportSettings& settings) {
+        // Build transformation matrix if needed
+        float transformMatrix[16];
+        BuildTransformMatrix(settings, transformMatrix);
+
         // Build bone mapping from ALL meshes
         std::map<std::string, int> boneMapping;
 
-        // First pass: collect all unique bones
+        // First pass: collect all unique bones (unchanged)
         for (unsigned int meshIdx = 0; meshIdx < scene->mNumMeshes; meshIdx++) {
             const aiMesh* sceneMesh = scene->mMeshes[meshIdx];
             if (!sceneMesh->HasBones()) continue;
@@ -718,7 +886,7 @@ namespace Ermine {
             // Initialize vertex weights
             std::vector<std::vector<std::pair<int, float>>> vertexWeights(mesh->mNumVertices);
 
-            // Process bone weights
+            // Process bone weights (unchanged)
             for (unsigned int boneIndex = 0; boneIndex < mesh->mNumBones; boneIndex++) {
                 aiBone* bone = mesh->mBones[boneIndex];
                 int globalBoneIndex = boneMapping[bone->mName.C_Str()];
@@ -729,47 +897,63 @@ namespace Ermine {
                 }
             }
 
-            // Process vertices
+            // Process vertices with transformation
             for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
                 SkinnedVertex vertex = {};
 
-                // Position
-                vertex.position[0] = mesh->mVertices[i].x;
-                vertex.position[1] = mesh->mVertices[i].y;
-                vertex.position[2] = mesh->mVertices[i].z;
-
-                // Normal
-                if (mesh->HasNormals()) {
-                    vertex.normal[0] = mesh->mNormals[i].x;
-                    vertex.normal[1] = mesh->mNormals[i].y;
-                    vertex.normal[2] = mesh->mNormals[i].z;
+                // Position - apply full transformation
+                float pos[3] = { mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z };
+                if (settings.applyPreTransform) {
+                    TransformVector(transformMatrix, pos, vertex.position);
+                }
+                else {
+                    vertex.position[0] = pos[0];
+                    vertex.position[1] = pos[1];
+                    vertex.position[2] = pos[2];
                 }
 
-                // Texture coordinates
+                // Normal - apply rotation and scale only
+                if (mesh->HasNormals()) {
+                    float norm[3] = { mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z };
+                    if (settings.applyPreTransform) {
+                        TransformNormal(transformMatrix, norm, vertex.normal);
+                    }
+                    else {
+                        vertex.normal[0] = norm[0];
+                        vertex.normal[1] = norm[1];
+                        vertex.normal[2] = norm[2];
+                    }
+                }
+
+                // Texture coordinates (unchanged)
                 if (mesh->HasTextureCoords(0)) {
                     vertex.texCoord[0] = mesh->mTextureCoords[0][i].x;
                     vertex.texCoord[1] = mesh->mTextureCoords[0][i].y;
                 }
 
-                // Tangent
+                // Tangent - apply rotation and scale only
                 if (mesh->HasTangentsAndBitangents()) {
-                    vertex.tangent[0] = mesh->mTangents[i].x;
-                    vertex.tangent[1] = mesh->mTangents[i].y;
-                    vertex.tangent[2] = mesh->mTangents[i].z;
+                    float tang[3] = { mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z };
+                    if (settings.applyPreTransform) {
+                        TransformNormal(transformMatrix, tang, vertex.tangent);
+                    }
+                    else {
+                        vertex.tangent[0] = tang[0];
+                        vertex.tangent[1] = tang[1];
+                        vertex.tangent[2] = tang[2];
+                    }
                 }
 
-                // Bone weights (limit to 4, sorted by weight)
+                // Bone weights (unchanged)
                 auto& weights = vertexWeights[i];
                 std::sort(weights.begin(), weights.end(),
                     [](const auto& a, const auto& b) { return a.second > b.second; });
 
-                // Initialize with defaults
                 for (int j = 0; j < 4; j++) {
                     vertex.boneIndices[j] = 0;
                     vertex.boneWeights[j] = 0.0f;
                 }
 
-                // Fill in actual weights (up to 4)
                 float totalWeight = 0.0f;
                 int weightCount = std::min(4, (int)weights.size());
 
@@ -779,14 +963,12 @@ namespace Ermine {
                     totalWeight += weights[j].second;
                 }
 
-                // Normalize weights to sum to 1.0
                 if (totalWeight > 0.0f) {
                     for (int j = 0; j < 4; j++) {
                         vertex.boneWeights[j] /= totalWeight;
                     }
                 }
                 else {
-                    // Vertex has no weights - assign to bone 0
                     vertex.boneIndices[0] = 0;
                     vertex.boneWeights[0] = 1.0f;
                 }
@@ -794,13 +976,21 @@ namespace Ermine {
                 outData.vertices.push_back(vertex);
             }
 
-            // Process indices (offset by base vertex)
+            // Process indices (unchanged)
             for (unsigned int i = 0; i < mesh->mNumFaces; i++) {
                 aiFace face = mesh->mFaces[i];
                 for (unsigned int j = 0; j < face.mNumIndices; j++) {
                     outData.indices.push_back(baseVertex + face.mIndices[j]);
                 }
             }
+        }
+
+        if (settings.applyPreTransform) {
+            std::cout << "    ✓ Applied pre-transformation to skinned mesh: "
+                << "Scale(" << settings.scale[0] << "," << settings.scale[1] << "," << settings.scale[2] << ") "
+                << "Rotation(" << settings.rotation[0] << "°," << settings.rotation[1] << "°," << settings.rotation[2] << "°) "
+                << "Translation(" << settings.translation[0] << "," << settings.translation[1] << "," << settings.translation[2] << ")"
+                << std::endl;
         }
 
         return !outData.vertices.empty();

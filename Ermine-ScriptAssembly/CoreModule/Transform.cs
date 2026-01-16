@@ -20,6 +20,22 @@ namespace ErmineEngine
 {
     public class Transform : Component
     {
+        #region InternalCalls
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        private extern Vector3 Internal_GetWorldForward();
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        private extern Vector3 Internal_GetWorldRight();
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        private extern Vector3 Internal_GetWorldUp();
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        private extern Transform Internal_GetParentTransform();
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        private extern Transform Internal_GetChildTransformByName(string n);
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        private extern Transform Internal_GetChildTransformByIndex(int index);
+        #endregion 
+
+        // World position in Vector3
         public Vector3 position
         {
             [MethodImpl(MethodImplOptions.InternalCall)]
@@ -28,6 +44,7 @@ namespace ErmineEngine
             set;
         }
 
+        // World rotation in Quaternion
         public Quaternion rotation
         {
             [MethodImpl(MethodImplOptions.InternalCall)]
@@ -36,6 +53,7 @@ namespace ErmineEngine
             set;
         }
 
+        // World scale in Vector3
         public Vector3 scale
         {
             [MethodImpl(MethodImplOptions.InternalCall)]
@@ -44,64 +62,29 @@ namespace ErmineEngine
             set;
         }
 
-        //// Internal call to fetch global matrix; implement in native scripting bridge.
-        //[MethodImpl(MethodImplOptions.InternalCall)]
-        //private static extern bool Internal_GetGlobalMatrix(IntPtr nativeHandle, out Matrix4x4 matrix);
+        public int childCount
+        {
+            [MethodImpl(MethodImplOptions.InternalCall)]
+            get;
+        }
 
-        //// Cache native pointer/handle if you already store it; placeholder:
-        //private IntPtr m_NativeHandle;
+        public Vector3 eulerAngles => rotation.eulerAngles;
 
-        //private bool TryGetGlobalMatrix(out Matrix4x4 m) => Internal_GetGlobalMatrix(m_NativeHandle, out m);
+        public Transform parent
+        {
+            get
+            {
+                Transform result = Internal_GetParentTransform();
+                if(result == null)
+                    Debug.LogWarning($"Transform.parent returned null for entity {gameObject?.name ?? "unknown"}");
+                return result;
+            }
 
-        [MethodImpl(MethodImplOptions.InternalCall)]
-        private extern Vector3 Internal_GetWorldForward();
-        [MethodImpl(MethodImplOptions.InternalCall)]
-        private extern Vector3 Internal_GetWorldRight();
-        [MethodImpl(MethodImplOptions.InternalCall)]
-        private extern Vector3 Internal_GetWorldUp();
+        }
 
         public Vector3 forward => Internal_GetWorldForward();
         public Vector3 right => Internal_GetWorldRight();
         public Vector3 up => Internal_GetWorldUp();
-
-        //public Vector3 forward
-        //{
-        //    get
-        //    {
-        //        Vector3 e = rotation.eulerAngles;
-        //        float cx = (float)System.Math.Cos(e.x * Mathf.Deg2Rad);
-        //        float sx = (float)System.Math.Sin(e.x * Mathf.Deg2Rad);
-        //        float cy = (float)System.Math.Cos(e.y * Mathf.Deg2Rad);
-        //        float sy = (float)System.Math.Sin(e.y * Mathf.Deg2Rad);
-        //        return new Vector3(sy * cx, -sx, cy * cx).normalized;
-        //    }
-        //}
-
-        //public Vector3 up
-        //{
-        //    get
-        //    {
-        //        Vector3 f = forward;
-        //        Vector3 r = right;
-        //        return Vector3.Cross(r, f).normalized;
-        //    }
-        //}
-
-        //public Vector3 right
-        //{
-        //    get
-        //    {
-        //        Vector3 e = rotation.eulerAngles;
-        //        float cx = (float)System.Math.Cos(e.x * Mathf.Deg2Rad);
-        //        float sx = (float)System.Math.Sin(e.x * Mathf.Deg2Rad);
-        //        float cy = (float)System.Math.Cos(e.y * Mathf.Deg2Rad);
-        //        float sy = (float)System.Math.Sin(e.y * Mathf.Deg2Rad);
-        //        Vector3 r = new Vector3(cy, 0f, -sy);
-        //        if (System.Math.Abs(sx) > 1e-6f)
-        //            r = (r + new Vector3(0f, sx, 0f)).normalized;
-        //        return r.normalized;
-        //    }
-        //}
 
         public void Translate(Vector3 delta) => position += delta;
 
@@ -124,6 +107,34 @@ namespace ErmineEngine
             Vector3 currentEuler = q.eulerAngles;
             q.eulerAngles = new Vector3(pitch, yaw, currentEuler.z);
             rotation = q.normalized;
+        }
+
+        public Transform Find(string n)
+        {
+            if (string.IsNullOrEmpty(n))
+            {
+                Debug.LogWarning("Transform.Find called with null or empty name");
+                return null;
+            }
+
+            Transform result = Internal_GetChildTransformByName(n);
+            if(result == null)
+                Debug.LogWarning($"Transform.Find: Child '{n}' not found!");
+            return result;
+        }
+
+        public Transform GetChild(int index)
+        {
+            if (index < 0 || index >= childCount)
+            {
+                Debug.LogError($"Transform.GetChild: Index {index} out of range [0, {childCount})");
+                return null;
+            }
+
+            Transform result = Internal_GetChildTransformByIndex(index);
+            if(result == null)
+                Debug.LogError($"Transform.GetChild: Native call returned null!");
+            return result;
         }
     }
 }

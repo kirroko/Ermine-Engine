@@ -30,5 +30,8 @@ namespace Ermine::scripting
 
 		void PrepareForHotReload() const;
 		void FinishHotReload(bool success) const;
+		
+		// New method: Cleanup all script instances before scene transition
+		void CleanupAllScripts() const;
 	};
 }

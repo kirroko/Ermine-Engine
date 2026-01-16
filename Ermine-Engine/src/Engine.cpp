@@ -25,6 +25,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "GeometryFactory.h"
 #include "JobSystem.h"
 #include "Serialisation.h"
+#include "Window.h"
 // Engine Systems
 #include "Renderer.h"
 #include "ScriptEngine.h"
@@ -37,13 +38,16 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "ScriptSystem.h"
 #include "AnimationManager.h"
 #include "ConsoleGUI.h"
+#include "SettingsGUI.h"
 #include "GuidRegistry.h"
 #include "Scene.h"
 #include "HierarchySystem.h"
 #include "CameraSystem.h"
 #include "UIRenderSystem.h"
-#include "NavMesh.h"
+#include "UIButtonSystem.h"
+#include "NavMesh.h"	 
 #include "NavMeshAgentSystem.h"
+//#include "EditorGUI.h"
 
 #if defined(EE_EDITOR)
 #include "GraphicsDebugGUI.h"
@@ -56,6 +60,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "FSMEditor.h"
 #include "AnimationGUI.h"
 #include "ResourcePipe.h"
+
 #endif
 
 using namespace Ermine;
@@ -82,6 +87,106 @@ namespace
 
 	EntityID fbxEntity = 0;
 
+	/*!***********************************************************************
+	\brief
+	Creates a main menu scene dynamically with camera and menu script
+	\return
+	Shared pointer to the created scene
+	*************************************************************************/
+	std::shared_ptr<Ermine::Scene> CreateMainMenuScene()
+	{
+		auto scene = std::make_shared<Ermine::Scene>("Main Menu");
+
+		// Create main camera entity
+		Ermine::EntityID cameraEntity = scene->CreateEntity("MainCamera", true, true);
+		ECS::GetInstance().AddComponent(cameraEntity, CameraComponent(45.0f, 16.0f / 9.0f, 0.1f, 100.0f, true, false));
+		EE_CORE_INFO("Created main menu camera entity: {}", cameraEntity);
+
+		// Create menu script entity
+		Ermine::EntityID menuScriptEntity = scene->CreateEntity("MenuController", true, true);
+		ScriptsComponent scriptsComp;
+		scriptsComp.Add("MainMenu", menuScriptEntity, true);
+		ECS::GetInstance().AddComponent<ScriptsComponent>(menuScriptEntity, scriptsComp);
+		EE_CORE_INFO("Created menu script entity: {}", menuScriptEntity);
+
+		// Create UI entity for menu buttons/text - THIS IS THE MAIN MENU UI
+		Ermine::EntityID uiEntity = scene->CreateEntity("MenuUI", false, false);
+		UIComponent uiComp;
+		
+		// ===== CONFIGURE UI FOR MAIN MENU =====
+		// Enable all UI rendering
+		uiComp.showHealthbar = false;      // No health bar for main menu
+		uiComp.showManaBar = false;        // No mana bar for main menu
+		uiComp.showSkills = false;         // No skill slots for main menu
+		uiComp.showCrosshair = false;      // No crosshair for main menu
+		uiComp.showBookCounter = false;    // No book counter for main menu
+		
+		// Set initial health to render menu background/title
+		uiComp.currentHealth = uiComp.maxHealth;
+		uiComp.currentMana = uiComp.maxMana;
+		
+		// Position menu elements at center of screen
+		uiComp.healthbarPosition = Ermine::Vec3(0.35f, 0.6f, 0.0f);
+		uiComp.healthbarWidth = 0.3f;
+		uiComp.healthbarHeight = 0.15f;
+		
+		// Configure health bar as a background panel (solid color)
+		uiComp.healthbarBgColor = Ermine::Vec3(0.1f, 0.1f, 0.1f);  // Dark background
+		uiComp.healthbarColor = Ermine::Vec3(0.2f, 0.8f, 0.3f);    // Green (menu ready indicator)
+		
+		// Add dummy skills to render menu buttons
+		// Skill 0: Play Button
+		uiComp.skills[0].skillName = "Play Game";
+		uiComp.skills[0].keyBinding = "SPACE";
+		uiComp.skills[0].iconTexturePath = "../Resources/Textures/UI/Skills/play_icon.png";
+		uiComp.skills[0].description = "Start Game";
+		
+		// Skill 1: Settings Button
+		uiComp.skills[1].skillName = "Settings";
+		uiComp.skills[1].keyBinding = "S";
+		uiComp.skills[1].iconTexturePath = "../Resources/Textures/UI/Skills/settings_icon.png";
+		uiComp.skills[1].description = "Game Settings";
+		
+		// Skill 2: Credits Button
+		uiComp.skills[2].skillName = "Credits";
+		uiComp.skills[2].keyBinding = "C";
+		uiComp.skills[2].iconTexturePath = "../Resources/Textures/UI/Skills/credits_icon.png";
+		uiComp.skills[2].description = "View Credits";
+		
+		// Skill 3: Quit Button
+		uiComp.skills[3].skillName = "Quit";
+		uiComp.skills[3].keyBinding = "Q";
+		uiComp.skills[3].iconTexturePath = "../Resources/Textures/UI/Skills/quit_icon.png";
+		uiComp.skills[3].description = "Exit Game";
+		
+		// Position skill slots (menu buttons)
+		uiComp.skillsPosition = Ermine::Vec3(0.5f, 0.4f, 0.0f);
+		uiComp.skillSlotSize = 0.12f;
+		uiComp.skillSlotSpacing = 0.02f;
+		
+		// Show the health bar as background and skills as buttons
+		uiComp.showHealthbar = true;
+		uiComp.showSkills = true;
+		
+		ECS::GetInstance().AddComponent<UIComponent>(uiEntity, uiComp);
+		EE_CORE_INFO("Created menu UI entity with buttons: {}", uiEntity);
+
+		// Create a main light
+		Ermine::EntityID lightEntity = scene->CreateEntity("MainLight", true, true);
+		ECS::GetInstance().AddComponent(
+			lightEntity,
+			Transform(
+				Ermine::Vec3(0, 5, 0),
+				FromEulerDegrees(50.0f, -30.0f, 0.0f),
+				Ermine::Vec3(1, 1, 1)));
+		ECS::GetInstance().AddComponent(lightEntity, ObjectMetaData("Main Light", "Light", true));
+		ECS::GetInstance().AddComponent(lightEntity, Light(Ermine::Vec3(1, 1, 1), 1.0f, LightType::DIRECTIONAL, true));
+		EE_CORE_INFO("Created menu light entity: {}", lightEntity);
+
+		EE_CORE_INFO("Main Menu scene created successfully with {} entities", scene->GetEntityCount());
+		return scene;
+	}
+
 }
 
 bool engine::Init(GLFWwindow* windowContext)
@@ -90,32 +195,6 @@ bool engine::Init(GLFWwindow* windowContext)
 		return true;
 
 	(void)CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
-
-	//std::string pipelinePath = "../../../../Ermine-ResourcePipeline";
-	//std::cout << "Contents of Ermine-ResourcePipeline:" << std::endl;
-	//try {
-	//	for (const auto& entry : std::filesystem::directory_iterator(pipelinePath)) {
-	//		std::cout << "  " << entry.path().filename().string() << std::endl;
-	//	}
-	//}
-	//catch (const std::exception& e) {
-	//	std::cout << "Error reading pipeline directory: " << e.what() << std::endl;
-	//}
-
-	//// Try the full path
-	//std::string databasePath = "../../../../Ermine-ResourcePipeline/Ermine-Game.lion_rcdbase";
-	//if (std::filesystem::exists(databasePath)) {
-	//	std::cout << "Found database at: " << std::filesystem::absolute(databasePath) << std::endl;
-
-	//	if (!AssetManager::GetInstance().Initialize(databasePath)) {
-	//		EE_CORE_WARN("AssetManager database initialization failed");
-	//	}
-	//}
-	//else {
-	//	std::cout << "Database still not found at: " << databasePath << std::endl;
-	//}
-
-	//std::cout << "Engine working directory: " << std::filesystem::current_path() << std::endl;
 
 	std::string databasePath = "../Ermine-Game.lion_rcdbase";  // Adjust path as needed
 	std::string projectGuid = "";  // Leave empty to auto-detect, or put your actual project GUID
@@ -140,24 +219,26 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	// TODO: Register all components here, limit of 255 components
 	EE_AUTO_REGISTER_COMPONENT(Transform, "Transform")
-	EE_AUTO_REGISTER_COMPONENT(Rigidbody3D, "Rigidbody3D")
-	EE_AUTO_REGISTER_COMPONENT(Mesh, "Mesh")
-	EE_AUTO_REGISTER_COMPONENT(Material, "Material")
-	EE_AUTO_REGISTER_COMPONENT(ObjectMetaData, "ObjectMetaData")
-	EE_AUTO_REGISTER_COMPONENT(Light, "Light")
-	EE_AUTO_REGISTER_COMPONENT(AudioComponent, "AudioComponent") 
-	EE_AUTO_REGISTER_COMPONENT(GlobalAudioComponent, "GlobalAudioComponent")
-	EE_AUTO_REGISTER_COMPONENT(PhysicComponent, "PhysicComponent")
-	EE_AUTO_REGISTER_COMPONENT(ModelComponent, "ModelComponent")
-	EE_AUTO_REGISTER_COMPONENT(AnimationComponent, "AnimationComponent")
-	EE_AUTO_REGISTER_COMPONENT(HierarchyComponent, "HierarchyComponent"); 
+		EE_AUTO_REGISTER_COMPONENT(Rigidbody3D, "Rigidbody3D")
+		EE_AUTO_REGISTER_COMPONENT(Mesh, "Mesh")
+		EE_AUTO_REGISTER_COMPONENT(Material, "Material")
+		EE_AUTO_REGISTER_COMPONENT(ObjectMetaData, "ObjectMetaData")
+		EE_AUTO_REGISTER_COMPONENT(Light, "Light")
+		EE_AUTO_REGISTER_COMPONENT(AudioComponent, "AudioComponent")
+		EE_AUTO_REGISTER_COMPONENT(GlobalAudioComponent, "GlobalAudioComponent")
+		EE_AUTO_REGISTER_COMPONENT(PhysicComponent, "PhysicComponent")
+		EE_AUTO_REGISTER_COMPONENT(ModelComponent, "ModelComponent")
+		EE_AUTO_REGISTER_COMPONENT(AnimationComponent, "AnimationComponent")
+		EE_AUTO_REGISTER_COMPONENT(HierarchyComponent, "HierarchyComponent");
 	EE_AUTO_REGISTER_COMPONENT(StateMachine, "StateMachine")
-	EE_AUTO_REGISTER_COMPONENT(NavMeshComponent, "NavMesh")
-	EE_AUTO_REGISTER_COMPONENT(NavMeshAgent, "NavMeshAgent")
-	EE_AUTO_REGISTER_COMPONENT(GlobalTransform, "GlobalTransform")
-	EE_AUTO_REGISTER_COMPONENT(ParticleEmitter, "ParticleEmitter")
-	EE_AUTO_REGISTER_COMPONENT(CameraComponent, "CameraComponent");
+		EE_AUTO_REGISTER_COMPONENT(NavMeshComponent, "NavMesh")
+		EE_AUTO_REGISTER_COMPONENT(NavMeshAgent, "NavMeshAgent")
+		EE_AUTO_REGISTER_COMPONENT(GlobalTransform, "GlobalTransform")
+		EE_AUTO_REGISTER_COMPONENT(ParticleEmitter, "ParticleEmitter")
+		EE_AUTO_REGISTER_COMPONENT(CameraComponent, "CameraComponent");
 	EE_AUTO_REGISTER_COMPONENT(UIComponent, "UIComponent");
+	EE_AUTO_REGISTER_COMPONENT(UIButtonComponent, "UIButtonComponent");
+	EE_AUTO_REGISTER_COMPONENT(UIImageComponent, "UIImageComponent");
 
 	// NOTE : THESE ARE SPECIAL CASES DUE TO THE FACT THAT THEIR COMPONENTS ARE UNIQUE AND WOULDN'T WORK BY SHALLOW COPIED OR DEEP COPIED
 	// THE CLONING FUNCTIONALITY HAVE BEEN CONSIDERED INTO ECS ITSELF. UNSURE, ASK.
@@ -208,9 +289,9 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().RegisterSystem<StateManager>();
 	ECS::GetInstance().RegisterSystem<NavMeshSystem>();
 	ECS::GetInstance().RegisterSystem<NavMeshAgentSystem>();
-	//ECS::GetInstance().RegisterSystem<graphics::GameCamera>();
 	ECS::GetInstance().RegisterSystem<graphics::CameraSystem>();
 	ECS::GetInstance().RegisterSystem<UIRenderSystem>();
+	ECS::GetInstance().RegisterSystem<UIButtonSystem>();
 
 	//Register JPH::TempAllocatorImpl for Physcis
 	RegisterDefaultAllocator();
@@ -277,30 +358,36 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().SetSystemSignature<graphics::AnimationManager>(sig);
 
 	// For Hierarchy System
-	SignatureID hierarchySig;
-	hierarchySig.set(ECS::GetInstance().GetComponentType<HierarchyComponent>());
-	hierarchySig.set(ECS::GetInstance().GetComponentType<Transform>());
-	ECS::GetInstance().SetSystemSignature<HierarchySystem>(hierarchySig);
+	sig.reset();
+	sig.set(ECS::GetInstance().GetComponentType<HierarchyComponent>());
+	sig.set(ECS::GetInstance().GetComponentType<Transform>());
+	ECS::GetInstance().SetSystemSignature<HierarchySystem>(sig);
 
 	// For FSM
-	SignatureID fsmSig;
-	fsmSig.set(ECS::GetInstance().GetComponentType<StateMachine>());
-	fsmSig.set(ECS::GetInstance().GetComponentType<Transform>());
-	ECS::GetInstance().SetSystemSignature<StateManager>(fsmSig);
+	sig.reset();
+	sig.set(ECS::GetInstance().GetComponentType<StateMachine>());
+	sig.set(ECS::GetInstance().GetComponentType<Transform>());
+	ECS::GetInstance().SetSystemSignature<StateManager>(sig);
 
-	SignatureID navSig;
-	navSig.set(ECS::GetInstance().GetComponentType<NavMeshComponent>());
-	navSig.set(ECS::GetInstance().GetComponentType<Transform>());
-	ECS::GetInstance().SetSystemSignature<NavMeshSystem>(navSig);
+	sig.reset();
+	sig.set(ECS::GetInstance().GetComponentType<NavMeshComponent>());
+	sig.set(ECS::GetInstance().GetComponentType<Transform>());
+	ECS::GetInstance().SetSystemSignature<NavMeshSystem>(sig);
 
-	SignatureID navAgentSig;
-	navAgentSig.set(ECS::GetInstance().GetComponentType<NavMeshAgent>());
-	navAgentSig.set(ECS::GetInstance().GetComponentType<Transform>());
-	ECS::GetInstance().SetSystemSignature<NavMeshAgentSystem>(navAgentSig);
+	sig.reset();
+	sig.set(ECS::GetInstance().GetComponentType<NavMeshAgent>());
+	sig.set(ECS::GetInstance().GetComponentType<Transform>());
+	ECS::GetInstance().SetSystemSignature<NavMeshAgentSystem>(sig);
+
 	// For UI Rendering System
-	SignatureID uiSig;
-	uiSig.set(ECS::GetInstance().GetComponentType<UIComponent>());
-	ECS::GetInstance().SetSystemSignature<UIRenderSystem>(uiSig);
+	sig.reset();
+	sig.set(ECS::GetInstance().GetComponentType<UIComponent>());
+	ECS::GetInstance().SetSystemSignature<UIRenderSystem>(sig);
+
+	// For UI Button System (only requires UIButtonComponent)
+	sig.reset();
+	sig.set(ECS::GetInstance().GetComponentType<UIButtonComponent>());
+	ECS::GetInstance().SetSystemSignature<UIButtonSystem>(sig);
 
 	glfwSetFramebufferSizeCallback(windowContext, []([[maybe_unused]] GLFWwindow* window, int width, int height)
 		{
@@ -316,11 +403,15 @@ bool engine::Init(GLFWwindow* windowContext)
 			auto uiSystem = ECS::GetInstance().GetSystem<UIRenderSystem>();
 			if (uiSystem && width > 0 && height > 0)
 				uiSystem->OnScreenResize(width, height);
+
+		auto buttonSystem = ECS::GetInstance().GetSystem<UIButtonSystem>();
+		if (buttonSystem && width > 0 && height > 0)
+			buttonSystem->OnScreenResize(width, height);
 #endif
 		});
 
 	// Create graphics resources
-	auto shader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/vertex.glsl", "../Resources/Shaders/fragment.glsl");
+	auto shader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/gBuffer_vertex.glsl", "../Resources/Shaders/gBuffer_fragment.glsl");
 	auto texture = AssetManager::GetInstance().LoadTexture("../Resources/Textures/greybox_light_grid.png");
 
 	// Load skybox shader and create a simple test cubemap
@@ -328,9 +419,9 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	std::array<std::string, 6> cubemapFaces = {
 		"../Resources/Textures/Skybox/right.jpg",   // +X (right)
-		"../Resources/Textures/Skybox/left.jpg",    // -X (left)  
-		"../Resources/Textures/Skybox/bottom.jpg",  // +Y (top) 
-		"../Resources/Textures/Skybox/top.jpg",     // -Y (bottom) 
+		"../Resources/Textures/Skybox/left.jpg",    // -X (left)
+		"../Resources/Textures/Skybox/bottom.jpg",  // +Y (top)
+		"../Resources/Textures/Skybox/top.jpg",     // -Y (bottom)
 		"../Resources/Textures/Skybox/front.jpg",   // +Z (front)
 		"../Resources/Textures/Skybox/back.jpg"     // -Z (back)
 	};
@@ -349,7 +440,6 @@ bool engine::Init(GLFWwindow* windowContext)
 		EE_CORE_WARN("Failed to create skybox - cubemap or shader invalid");
 	}
 
-
 	// Create shared materials for common use cases
 	std::shared_ptr<graphics::Material> basicWhiteMaterial = AssetManager::GetInstance().CreateMaterial("basic_white", shader, "PBR_WHITE");
 	std::shared_ptr<graphics::Material> metalMaterial = AssetManager::GetInstance().CreateMaterial("shiny_metal", shader, "PBR_METAL");
@@ -360,57 +450,8 @@ bool engine::Init(GLFWwindow* windowContext)
 	EE_CORE_INFO("Created shared materials with proper texture assignment control");
 
 	// Initialize game camera
-	//auto gameCamera = ECS::GetInstance().GetSystem<graphics::CameraSystem>();
 	int windowWidth, windowHeight;
 	glfwGetFramebufferSize(windowContext, &windowWidth, &windowHeight);
-	//gameCamera->SetViewportSize(static_cast<float>(windowWidth), static_cast<float>(windowHeight));
-	// Audio test entity
-	//auto audioTestEntity = ECS::GetInstance().CreateEntity();
-	//ECS::GetInstance().AddComponent(audioTestEntity, Transform(Vec3(2, 0, -1), Quaternion(), Vec3(1, 1, 1)));
-	//ECS::GetInstance().AddComponent(audioTestEntity, ObjectMetaData());
-	//ECS::GetInstance().AddComponent<Ermine::HierarchyComponent>(audioTestEntity, Ermine::HierarchyComponent{});
-
-	//AudioComponent testAudio;
-	//ECS::GetInstance().AddComponent(audioTestEntity, testAudio);
-	//EE_CORE_INFO("Audio test entity created with ID: {} - will auto-play", audioTestEntity);
-
-	// Example FBX entity
-	//fbxEntity = ECS::GetInstance().CreateEntity();
-	//auto model = AssetManager::GetInstance().LoadModel("../Resources/Models/Walking.fbx");
-	//ECS::GetInstance().AddComponent(fbxEntity, Transform(Vec3(2, -0.5f, 0), Quaternion(), Vec3(0.01f, 0.01f, 0.01f)));
-	////ECS::GetInstance().AddComponent(
-	////	fbxEntity,
-	////	PhysicComponent(
-	////		PhysicsBodyType::Rigid,         // "rigid body", "trigger"
-	////		JPH::EMotionType::Dynamic,      // static, dynamic, or kinematic
-	////		1.0f,                            // mass ( 0 for static , else is dynamic)
-	////		ShapeType::Capsule				// Box, Sphere, Capsule, CustomMesh(need pass vertex)
-	////	));
-	//ECS::GetInstance().AddComponent(fbxEntity, ObjectMetaData("Character", "Model", true));
-	//ECS::GetInstance().AddComponent(fbxEntity, Mesh{}); // empty mesh component for renderer signature
-	//ECS::GetInstance().AddComponent(fbxEntity, ModelComponent(model));
-	//ECS::GetInstance().AddComponent(fbxEntity, AnimationComponent("Walking"));
-	//ECS::GetInstance().AddComponent<Ermine::HierarchyComponent>(fbxEntity, Ermine::HierarchyComponent{});
-
-	//// Adding animation component
-	//const aiScene* scene = model->GetAssimpScene(); // Read animations from aiScene
-	//if (scene && scene->mNumAnimations > 0) {
-	//	ECS::GetInstance().AddComponent(fbxEntity, AnimationComponent(model));
-	//}
-
-	//// Adding material component
-	//auto FBXMaterial = std::make_unique<graphics::Material>(shader);
-	//auto fbxTexture = AssetManager::GetInstance().LoadTexture("../Resources/Textures/Pants_Base_color.png");
-	//FBXMaterial->LoadTemplate(graphics::MaterialTemplates::PBR_WHITE());
-
-	//if (fbxTexture && fbxTexture->IsValid()) {
-	//	FBXMaterial->SetTexture("materialAlbedoMap", fbxTexture);
-	//	FBXMaterial->SetBool("materialHasAlbedoMap", true);
-	//}
-	//ECS::GetInstance().AddComponent(fbxEntity, Material(std::move(FBXMaterial)));
-
-	// Create a simple quad mesh for particles
-	//auto tex = AssetManager::GetInstance().LoadTexture("../Resources/Textures/greybox_red_solid.png");
 
 	ECS::GetInstance().GetSystem<NavMeshSystem>()->Init();
 	// initialize particles emitter
@@ -430,6 +471,12 @@ bool engine::Init(GLFWwindow* windowContext)
 	else
 		ECS::GetInstance().GetSystem<UIRenderSystem>()->Init(1920, 1080);
 
+	// Initialize UI Button System with same dimensions
+	if (windowWidth > 0 && windowHeight > 0)
+		ECS::GetInstance().GetSystem<UIButtonSystem>()->Init(windowWidth, windowHeight);
+	else
+		ECS::GetInstance().GetSystem<UIButtonSystem>()->Init(1920, 1080);
+
 	// Editor windows
 #if defined(EE_EDITOR)
 	SceneManager::GetInstance().NewScene();
@@ -439,16 +486,26 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	editor::EditorGUI::CreateImGUIWindow<ParticlesImGUI>();
 	editor::EditorGUI::CreateImGUIWindow<AudioImGUI>();
-	editor::EditorGUI::CreateImGUIWindow<editor::GraphicsDebugGUI>("Graphics Debug"); // TODO: Namespace required?
+	editor::EditorGUI::CreateImGUIWindow<editor::GraphicsDebugGUI>("Graphics Debug");
 	editor::EditorGUI::CreateImGUIWindow<ViewPortGUI>();
 	editor::EditorGUI::CreateImGUIWindow<FSMEditorImGUI>();
 	editor::EditorGUI::CreateImGUIWindow<AnimationEditorImGUI>();
 	editor::EditorGUI::CreateImGUIWindow<ConsoleGUI>();
-	editor::EditorGUI::CreateImGUIWindow<ImguiUI::AssetBrowser>(); //TODO: Standardize please, do we want namespace ImGui for all window or not
+	editor::EditorGUI::CreateImGUIWindow<ImguiUI::AssetBrowser>();
+	editor::EditorGUI::CreateImGUIWindow<SettingsGUI>("Settings");
+
+	// Legacy ImGui menu windows removed - replaced with scene-based UI:
+	// - Main menu: Open Resources/Scenes/mainmenu.scene, edit MenuBackground/GameTitle entities
+	// - Cutscene: Open Resources/Scenes/cutscene_intro.scene, edit Slide1/2/3 entities
+	// - Scripts MenuController.cs and CutscenePlayer.cs handle the logic
+	// editor::EditorGUI::CreateImGUIWindow<editor::MainMenuGUI>();
+	// auto* cutsceneGUI = editor::EditorGUI::CreateImGUIWindow<editor::CutsceneGUI>();
+	// cutsceneGUI->LoadSlideshow(...);
+	// cutsceneGUI->SetNextScene(...);
 
 	{
-		static Ermine::ResourcePipeline pipeline; // TODO: Is this also needed in game build?
-		if (pipeline.Initialize("../Resources")) { 
+		static Ermine::ResourcePipeline pipeline;
+		if (pipeline.Initialize("../Resources")) {
 			EE_CORE_INFO("ResourcePipeline initialized successfully");
 
 			auto* assetBrowser = editor::EditorGUI::GetWindow<ImguiUI::AssetBrowser>();
@@ -465,25 +522,17 @@ bool engine::Init(GLFWwindow* windowContext)
 		}
 	}
 
-	auto defaultScene = std::make_shared<Scene>("Main Scene");
-	editor::EditorGUI::SetActiveScene(defaultScene);
-	SceneManager::GetInstance().SetActiveScene(defaultScene);
-	EE_CORE_INFO("Created and set active scene: Main Scene");
-
-	// Create a test entity with UIComponent for HUD rendering
-	EntityID uiEntity = defaultScene->CreateEntity("HUD", false, false);  // No transform or hierarchy needed
-	UIComponent uiComp;  // Default values are already set in the struct
-	ECS::GetInstance().AddComponent<UIComponent>(uiEntity, uiComp);
-	EE_CORE_INFO("Created HUD entity with UIComponent");
+	// Load main menu scene on startup (scene-based approach)
+	EE_CORE_INFO("Loading main menu scene...");
+	SceneManager::GetInstance().OpenScene("../Resources/Scenes/mainmenu.scene");
+	EE_CORE_INFO("Main menu scene loaded");
 #else
-	auto defaultScene = std::make_shared<Scene>("Main Scene");
-	SceneManager::GetInstance().SetActiveScene(defaultScene);
-
-	// TEMP - load level scene manually
-	SceneManager::GetInstance().OpenScene("../Resources/Scenes/level.scene");
+	SceneManager::GetInstance().OpenScene("../Resources/Scenes/mainmenu.scene"); // Load mainmenu scene
+	editor::EditorGUI::s_state = editor::EditorGUI::SimState::playing;			 // Set to playing state
 #endif
 
 	s_isInitialized = true;
+
 	return true;
 }
 
@@ -503,7 +552,16 @@ void engine::Shutdown()
 	cfg.windowHeight = height;
 	cfg.fullscreen = (glfwGetWindowMonitor(glfwGetCurrentContext()) != nullptr);
 	cfg.maximized = (glfwGetWindowAttrib(glfwGetCurrentContext(), GLFW_MAXIMIZED) == GLFW_TRUE);
-	cfg.title = "Ermine Editor 0.2";
+	cfg.settingsIsOpen = SettingsGUI::GetSettingsOpen();
+	cfg.fontSize = SettingsGUI::GetFontSizeS();
+	cfg.baseFontSize = SettingsGUI::GetBaseFontSize();
+	cfg.themeMode = SettingsGUI::GetMode();
+
+#if defined(EE_EDITOR)
+	cfg.title = "Ermine Editor 0.3";
+#else
+	cfg.title = "Machina";
+#endif
 
 	SaveConfigToFile(cfg, "Ermine-Engine.config", false);
 
@@ -551,24 +609,32 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 	// Handle shading mode toggle
 	//HandleShadingToggle(windowContext);
 
+	// Handle fullscreen toggle
+	HandleFullscreenToggle(windowContext);
+
 	// Update input states
 	Input::Update();
 
 	glfwPollEvents();
 
+	auto& sm = SceneManager::GetInstance();
+	if (sm.HasPendingSceneRequest())
+		sm.FlushPendingSceneRequest();
+
 	// Game state update
 	while (FrameController::ShouldUpdateFixed())
 	{
-		ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->FixedUpdate();
-		ECS::GetInstance().GetSystem<Physics>()->Update(FrameController::GetFixedDeltaTime());
+		ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->FixedUpdate();					// Scripts modify physics before sim
+		ECS::GetInstance().GetSystem<Physics>()->Update(FrameController::GetFixedDeltaTime());	// Physics simulation runs
 	}
 
 	// Other non-fixed logic
-	ECS::GetInstance().GetSystem<AudioSystem>()->Update();
-	ECS::GetInstance().GetSystem<HierarchySystem>()->UpdateHierarchy();
-
-	ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->Update();
-	
+	// NOTE: Order of updates is important! Don't move things around without considering dependencies
+	ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->Update();									// Game logic updates transforms, forces, etc
+	ECS::GetInstance().GetSystem<HierarchySystem>()->UpdateHierarchy();									// Update hierarchy transforms first
+	ECS::GetInstance().GetSystem<StateManager>()->Update(FrameController::GetFixedDeltaTime());		// FSM update
+	ECS::GetInstance().GetSystem<NavMeshAgentSystem>()->Update(FrameController::GetFixedDeltaTime());	// AI NavMesh Agent update
+	ECS::GetInstance().GetSystem<graphics::AnimationManager>()->Update(FrameController::GetDeltaTime());// Animation Update
 	// Update editor camera
 #if defined(EE_EDITOR)
 	// Update appropriate camera based on play state
@@ -599,8 +665,10 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 	ECS::GetInstance().GetSystem<StateManager>()->Update(FrameController::GetFixedDeltaTime());
 
 	ECS::GetInstance().GetSystem<NavMeshAgentSystem>()->Update(FrameController::GetFixedDeltaTime());
-	// UI update (mana regen, cooldowns)
+	// UI update (button interactions, mana regen, cooldowns)
+	ECS::GetInstance().GetSystem<UIButtonSystem>()->Update(FrameController::GetDeltaTime());
 	ECS::GetInstance().GetSystem<UIRenderSystem>()->Update(FrameController::GetDeltaTime());
+	ECS::GetInstance().GetSystem<AudioSystem>()->Update();
 }
 
 void engine::Render(GLFWwindow* window)
@@ -690,6 +758,10 @@ void engine::Render(GLFWwindow* window)
 	graphics::GPUProfiler::EndFrame();
 }
 
+/**
+ * @brief Handle shading mode toggle (keys 1-4)
+ * @param windowContext The GLFW window context
+ */
 void engine::HandleShadingToggle(GLFWwindow* windowContext)
 {
 	static bool key1WasPressed = false;
@@ -709,7 +781,7 @@ void engine::HandleShadingToggle(GLFWwindow* windowContext)
 		EE_CORE_INFO("Switched to PBR shading");
 	}
 
-	// Toggle to Blinn-Phong (key 2)  
+	// Toggle to Blinn-Phong (key 2)
 	if (key2IsPressed && !key2WasPressed) {
 		auto renderer = ECS::GetInstance().GetSystem<graphics::Renderer>();
 		renderer->SetShadingMode(true);
@@ -732,4 +804,16 @@ void engine::HandleShadingToggle(GLFWwindow* windowContext)
 	key2WasPressed = key2IsPressed;
 	key3WasPressed = key3IsPressed;
 	key4WasPressed = key4IsPressed;
+}
+
+/**
+ * @brief Handle fullscreen toggle (F11 key)
+ * @param windowContext The GLFW window context
+ */
+void Ermine::engine::HandleFullscreenToggle(GLFWwindow* windowContext)
+{
+	static bool f11WasPressed = false;
+	bool f11IsPressed = glfwGetKey(windowContext, GLFW_KEY_F11) == GLFW_PRESS;
+	if (f11IsPressed && !f11WasPressed) Ermine::Window::ToggleFullscreenWindow(windowContext);
+	f11WasPressed = f11IsPressed;
 }

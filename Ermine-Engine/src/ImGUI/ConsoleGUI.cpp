@@ -12,6 +12,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 /* End Header **************************************************************************/
 #include "PreCompile.h"
 #include "ConsoleGUI.h"
+#include <string_view>
 
 using namespace Ermine;
 
@@ -145,6 +146,9 @@ void EditorConsole::addLogUnlocked(ConsoleLogEntry&& e)
             : 0;
         m_logs.pop_front();
     }
+
+    // Bump version to indicate mutation
+    m_version.fetch_add(1, std::memory_order_relaxed);
 }
 
 void EditorConsole::Snapshot(std::vector<ConsoleLogEntry>& out) const
@@ -247,11 +251,19 @@ void ConsoleGUI::buildDisplayList(std::vector<int>& outDisplayIndices,
     // We collapse across the entire snapshot, not just consecutive.
     if (m_collapse)
     {
-        struct Key { ConsoleLogType t; std::string msg; std::string ch; };
+        // Use string_view to avoid allocating/copying strings for map keys
+        struct Key { ConsoleLogType t; std::string_view msg; std::string_view ch; };
         struct KeyHash {
             size_t operator()(Key const& k) const noexcept {
-                std::hash<std::string> hs;
-                return (static_cast<size_t>(k.t) * 1315423911u) ^ hs(k.msg) ^ (hs(k.ch) << 1);
+                size_t h = static_cast<size_t>(k.t);
+                std::hash<std::string_view> hs;
+                // combine hashes
+                size_t hm = hs(k.msg);
+                size_t hc = hs(k.ch);
+                // boost-like combine
+                h ^= hm + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2);
+                h ^= hc + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2);
+                return h;
             }
         };
         struct KeyEq {
@@ -260,35 +272,44 @@ void ConsoleGUI::buildDisplayList(std::vector<int>& outDisplayIndices,
             }
         };
 
-        std::unordered_map<Key, uint32_t, KeyHash, KeyEq> agg;
-        std::unordered_map<Key, int, KeyHash, KeyEq> firstIndex;
+        const size_t n = m_snapshot.size();
+        std::unordered_map<Key, std::pair<int, uint32_t>, KeyHash, KeyEq> map;
+        map.reserve(n);
+
+        const bool filterActive = m_filter.IsActive();
+
         for (int i = 0; i < static_cast<int>(m_snapshot.size()); ++i)
         {
             const auto& e = m_snapshot[static_cast<size_t>(i)];
             if (!typeAllow[static_cast<size_t>(e.type)])
                 continue;
-            if (!m_filter.PassFilter(e.message.c_str()) && (e.channel.empty() || !m_filter.PassFilter(e.channel.c_str())))
-                continue;
 
-            Key k{ e.type, e.message, e.channel };
-            auto it = agg.find(k);
-            if (it == agg.end())
+            if (filterActive)
             {
-                agg.emplace(k, e.count);
-                firstIndex.emplace(k, i);
+                if (!m_filter.PassFilter(e.message.c_str()) && (e.channel.empty() || !m_filter.PassFilter(e.channel.c_str())))
+                    continue;
+            }
+
+            Key k{ e.type, std::string_view(e.message), std::string_view(e.channel) };
+            auto it = map.find(k);
+            if (it == map.end())
+            {
+                map.emplace(k, std::make_pair(i, e.count));
             }
             else
             {
-                it->second += e.count;
+                it->second.second += e.count;
             }
         }
-        outDisplayIndices.reserve(agg.size());
-        outCollapsedCounts.reserve(agg.size());
-        for (auto& kv : firstIndex)
+
+        outDisplayIndices.reserve(map.size());
+        outCollapsedCounts.reserve(map.size());
+        for (auto& kv : map)
         {
-            outDisplayIndices.push_back(kv.second);
-            outCollapsedCounts.push_back(agg[kv.first]);
+            outDisplayIndices.push_back(kv.second.first);
+            outCollapsedCounts.push_back(kv.second.second);
         }
+
         // Keep original order by sorting on first occurrence index
         std::vector<size_t> order(outDisplayIndices.size());
         for (size_t i = 0; i < order.size(); ++i) order[i] = i;
@@ -302,13 +323,18 @@ void ConsoleGUI::buildDisplayList(std::vector<int>& outDisplayIndices,
     }
     else
     {
+        outDisplayIndices.reserve(m_snapshot.size());
+        const bool filterActive = m_filter.IsActive();
         for (int i = 0; i < static_cast<int>(m_snapshot.size()); ++i)
         {
             const auto& e = m_snapshot[static_cast<size_t>(i)];
             if (!typeAllow[static_cast<size_t>(e.type)])
                 continue;
-            if (!m_filter.PassFilter(e.message.c_str()) && (e.channel.empty() || !m_filter.PassFilter(e.channel.c_str())))
-                continue;
+            if (filterActive)
+            {
+                if (!m_filter.PassFilter(e.message.c_str()) && (e.channel.empty() || !m_filter.PassFilter(e.channel.c_str())))
+                    continue;
+            }
             outDisplayIndices.push_back(i);
         }
     }
@@ -321,8 +347,28 @@ void ConsoleGUI::Update()
 
     if (ImGui::Begin("Console", &show))
     {
-        // Refresh snapshot (always collect, Pause only affects scrolling)
-        EditorConsole::GetInstance().Snapshot(m_snapshot);
+        // Refresh snapshot only if changed (always collect copy when changed;
+        // Pause only affects scrolling)
+        auto& ec = EditorConsole::GetInstance();
+        uint64_t ver = ec.Version();
+        bool filterChanged = false;
+        {
+            // ImGuiTextFilter has no direct API to read text; we can detect changes by drawing returns
+            // Instead, approximate by comparing flags and a cached string captured via Draw() side effects
+            // We'll rebuild on any UI toggle/filter change tracked below.
+        }
+
+        // Detect UI changes that require rebuild
+        bool togglesChanged = (m_cachedShowInfo != m_showInfo) || (m_cachedShowWarning != m_showWarning)
+            || (m_cachedShowError != m_showError) || (m_cachedShowDebug != m_showDebug)
+            || (m_cachedCollapse != m_collapse);
+
+        if (ver != m_lastSnapshotVersion)
+        {
+            ec.Snapshot(m_snapshot);
+            m_lastSnapshotVersion = ver;
+            togglesChanged = true; // content changed implies rebuild
+        }
 
         // Toolbar
         {
@@ -368,7 +414,13 @@ void ConsoleGUI::Update()
             constexpr float searchWidth = 240.0f;
             ImGui::SetNextItemWidth(searchWidth);
             if (m_focusSearch) { ImGui::SetKeyboardFocusHere(); m_focusSearch = false; }
+            // Capture filter before and after Draw to detect changes
+            // Note: ImGuiTextFilter doesn't expose text; we rely on its internal behavior.
+            // As a simple approach: rebuild every frame when filter is active.
+            bool filterWasActive = m_filter.IsActive();
             m_filter.Draw("Search");
+            bool filterNowActive = m_filter.IsActive();
+            filterChanged = (filterWasActive != filterNowActive) || filterNowActive;
 
             ImGui::EndGroup();
             ImGui::PopStyleVar();
@@ -383,10 +435,21 @@ void ConsoleGUI::Update()
                 counts[0], counts[1], counts[2], counts[3]);
         }
 
-        // Build display indices (+ optional collapse counts)
-        std::vector<int> displayIndices;
-        std::vector<uint32_t> collapsedCounts;
-        buildDisplayList(displayIndices, collapsedCounts);
+        // Build display indices (+ optional collapse counts) only when needed
+        if (togglesChanged || filterChanged || m_cachedDisplayIndices.empty())
+        {
+            m_cachedDisplayIndices.clear();
+            m_cachedCollapsedCounts.clear();
+            buildDisplayList(m_cachedDisplayIndices, m_cachedCollapsedCounts);
+            // Update cached toggles
+            m_cachedShowInfo = m_showInfo;
+            m_cachedShowWarning = m_showWarning;
+            m_cachedShowError = m_showError;
+            m_cachedShowDebug = m_showDebug;
+            m_cachedCollapse = m_collapse;
+        }
+        auto& displayIndices = m_cachedDisplayIndices;
+        auto& collapsedCounts = m_cachedCollapsedCounts;
 
         // Main list region
         constexpr float detailsHeight = 120.0f;

@@ -1,9 +1,11 @@
-﻿using System;
-using ErmineEngine;
+﻿using ErmineEngine;
+using System;
+using System.Collections;
 
 public class PlayerController : MonoBehaviour
 {
     private Transform cam;
+    private AudioComponent audioComp;
 
     public float moveSpeed = 5f;
     public float sprintSpeed = 8f;
@@ -18,6 +20,8 @@ public class PlayerController : MonoBehaviour
     private bool wasGrounded;
     private bool isGrounded;
     private Vector3 groundNormal = Vector3.up;
+
+    private bool movementKeyPressed = false;
 
     // Moving-ground tracking (Catlike-style)
     private Rigidbody connectedBody, previousConnectedBody;
@@ -34,32 +38,65 @@ public class PlayerController : MonoBehaviour
     private float camDefaultY = 200f;
     private float camCrouchY = 50f;
 
+    // Footstep timing
+    private float footstepTimer = 0f;
+    private float footstepInterval = 0.5f; // Time between footsteps (adjust this!)
+
     void Start()
     {
         cam = GameObject.Find("Main Camera").GetComponent<Transform>();
         //cam = GetComponent<Transform>();
+        audioComp = GetComponent<AudioComponent>();
+        if (audioComp == null)
+        {
+            Console.WriteLine("Warning: No AudioComponent found on player!");
+        }
+        else
+        {
+            Console.WriteLine("AudioComponent found successfully!");
+        }
     }
 
     void Update()
     {
         moveInput = Vector2.zero;
+        movementKeyPressed = false; // Reset each frame
         //lookInput = Vector2.zero;
 
         if (Input.GetKeyDown(KeyCode.A))
+        {
             moveInput.x = Vector2.left.x;
+            movementKeyPressed = true;
+        }
         if (Input.GetKeyDown(KeyCode.D))
+        {
             moveInput.x = Vector2.right.x;
+            movementKeyPressed = true;
+        }
         if(Input.GetKeyDown(KeyCode.W))
+        {
             moveInput.y = Vector2.up.y;
+            movementKeyPressed = true;
+        }
         if(Input.GetKeyDown(KeyCode.S))
+        {
             moveInput.y = Vector2.down.y;
+            movementKeyPressed = true;
+        }
 
         lookInput = Input.mousePositionDelta;
+
+        // Jump
+        if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
+        {
+            velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+            isGrounded = false;
+        }
 
         HandleMovement();
         HandleLook();
         HandleCameraLerp();
-
+        HandleFootstepAudio();
         wasGrounded = isGrounded;
         //if (Input.GetMouseButton(0))
         //{
@@ -104,8 +141,34 @@ public class PlayerController : MonoBehaviour
 
         // Move the character in world space using the computed horizontal velocity
         transform.Translate(horizontalVelocity * Time.deltaTime);
-        //velocity.y += gravity * Time.deltaTime;
-        //transform.Translate(velocity * Time.deltaTime);
+        Physics.SetPosition((ulong)gameObject.GetInstanceID(),transform.position);
+
+        velocity.y += gravity * Time.deltaTime;
+        transform.Translate(velocity * Time.deltaTime);
+    }
+
+    private void HandleFootstepAudio()
+    {
+        if (audioComp == null) return;
+
+        footstepTimer += Time.deltaTime;
+
+        // Play footstep when a movement key is pressed and player is grounded
+        if (movementKeyPressed && footstepTimer >= footstepInterval && !audioComp.isPlaying)
+        {
+            Console.WriteLine("Playing footstep sound - Key pressed and grounded");
+            audioComp.shouldPlay = true;
+            footstepTimer = 0f;
+        }
+        else if (movementKeyPressed && !isGrounded)
+        {
+            Console.WriteLine("Key pressed but NOT grounded - no footstep");
+        }
+        else if (!movementKeyPressed)
+        {
+            // This will spam the console, but helps debug
+            // Console.WriteLine("No movement key pressed this frame");
+        }
     }
 
     private void HandleLook()
@@ -126,5 +189,29 @@ public class PlayerController : MonoBehaviour
         Vector3 camPos = cam.position;
         camPos.y = Mathf.Lerp(camPos.y, targetY, Time.deltaTime * crouchLerpSpeed);
         cam.position = camPos;
+    }
+
+    void CheckGround(Collision col)
+    {
+        if (col.transform.position.y < transform.position.y - 0.1f)
+        {
+            isGrounded = true;
+        }
+    }
+
+    void OnCollisionEnter(Collision col)
+    {
+        CheckGround(col);
+    }
+
+    void OnCollisionStay(Collision col)
+    {
+        CheckGround(col);
+    }
+
+    void OnCollisionExit(Collision col)
+    {
+        // When losing contact, you are no longer grounded
+        isGrounded = false;
     }
 }

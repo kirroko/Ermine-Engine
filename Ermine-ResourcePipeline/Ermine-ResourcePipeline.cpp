@@ -568,6 +568,34 @@ private:
         if (FAILED(hr))
             mipChain = std::move(standardized);
 
+        std::string filename = std::filesystem::path(inputPath).filename().string();
+        DXGI_FORMAT targetFormat = DetermineOptimalFormat(filename);
+
+        // Compress to target format
+        ScratchImage compressed;
+        hr = Compress(mipChain.GetImages(), mipChain.GetImageCount(), mipChain.GetMetadata(),
+            targetFormat, TEX_COMPRESS_DEFAULT, TEX_THRESHOLD_DEFAULT, compressed);
+
+        if (FAILED(hr)) {
+            std::cout << "      ⚠ Compression failed (HRESULT: 0x" << std::hex << hr << std::dec
+                << "), saving uncompressed" << std::endl;
+            // Fallback: save uncompressed
+            hr = SaveToDDSFile(mipChain.GetImages(), mipChain.GetImageCount(),
+                mipChain.GetMetadata(), DDS_FLAGS_NONE, wOutput.c_str());
+        }
+        else {
+            // Print compression stats
+            size_t originalSize = metadata.width * metadata.height * 4; // Rough estimate for RGBA
+            size_t compressedSize = compressed.GetPixelsSize();
+            float ratio = (float)originalSize / (float)compressedSize;
+
+            std::cout << "      ✓ Compressed: " << std::fixed << std::setprecision(1)
+                << ratio << "x reduction" << std::endl;
+
+            // Save compressed DDS
+            hr = SaveToDDSFile(compressed.GetImages(), compressed.GetImageCount(),
+                compressed.GetMetadata(), DDS_FLAGS_NONE, wOutput.c_str());
+        }
         //// Optional: Force fully opaque alpha for debug/placeholder textures
         //auto imgs = mipChain.GetImages();
         //for (size_t i = 0; i < mipChain.GetImageCount(); ++i)
@@ -580,10 +608,6 @@ private:
         //            pixels[p] |= 0xFF000000;
         //    }
         //}
-
-        // Save DDS uncompressed
-        hr = SaveToDDSFile(mipChain.GetImages(), mipChain.GetImageCount(),
-            mipChain.GetMetadata(), DDS_FLAGS_NONE, wOutput.c_str());
 
         return SUCCEEDED(hr);
     }
@@ -715,6 +739,58 @@ public:
         return true;
     }
 
+    void CleanupUnusedResources() {
+        std::cout << "\n=== Cleaning Up Unused Resources ===" << std::endl;
+
+        std::string projectFolder = databasePath + "/" + projectGuid;
+        std::string dataFolder = projectFolder + "/Windows.platform/Data";
+        std::string browserFolder = projectFolder + "/Browser.dbase";
+
+        size_t removedCount = 0;
+
+        for (auto it = existingResources.begin(); it != existingResources.end();) {
+
+            const ResourceEntry& entry = *it;
+
+            // If source file does NOT exist anymore → it's unused
+            if (!std::filesystem::exists(entry.sourcePath)) {
+                std::cout << "  🗑 Removing unused resource: "
+                    << entry.outputPath << std::endl;
+
+                // Delete generated binary (.dds / .mesh / .skin)
+                std::filesystem::path outputPath = dataFolder + "/" +
+                    std::filesystem::path(entry.outputPath).filename().string();
+
+                if (std::filesystem::exists(outputPath)) {
+                    std::filesystem::remove(outputPath);
+                    std::cout << "    Deleted: " << outputPath.filename().string() << std::endl;
+                }
+
+                // Delete Browser.dbase metadata
+                std::string typeFolder = browserFolder + "/" +
+                    std::to_string(entry.guid.m_Type.m_Value);
+
+                std::string infoFile = typeFolder + "/" +
+                    std::to_string(entry.guid.m_Instance.m_Value) + "_info.txt";
+
+                if (std::filesystem::exists(infoFile)) {
+                    std::filesystem::remove(infoFile);
+                    std::cout << "    Deleted metadata: "
+                        << std::filesystem::path(infoFile).filename().string() << std::endl;
+                }
+
+                // Erase from DB entry list
+                it = existingResources.erase(it);
+                removedCount++;
+            }
+            else {
+                ++it;
+            }
+        }
+
+        std::cout << "✓ Cleanup complete. Removed " << removedCount << " unused assets.\n";
+    }
+
     void SaveResourceDatabase() {
         std::string projectFolder = databasePath + "/" + projectGuid;
         std::string resourceDbPath = projectFolder + "/Browser.dbase/resource_database.txt";
@@ -817,6 +893,7 @@ public:
         ProcessTextures(pngFiles);
         ProcessMeshFiles(meshFiles);
 
+        CleanupUnusedResources();
         SaveResourceDatabase();
     }
 
@@ -1085,6 +1162,61 @@ public:
                 }
             }
         }
+    }
+
+
+    /**
+     * @brief Determines the optimal DXGI compression format based on texture filename conventions
+     * @param filename The source texture filename (used for heuristic detection)
+     * @return Optimal DXGI_FORMAT for compression
+     */
+    DXGI_FORMAT DetermineOptimalFormat(const std::string& filename) {
+        // Convert filename to lowercase for case-insensitive matching
+        std::string lowerFilename = filename;
+        std::transform(lowerFilename.begin(), lowerFilename.end(), lowerFilename.begin(), ::tolower);
+
+        // Normal maps: Use BC5 (two-channel compression for X and Y, reconstruct Z in shader)
+        if (lowerFilename.find("_normal") != std::string::npos ||
+            lowerFilename.find("_norm") != std::string::npos ||
+            lowerFilename.find("_nrm") != std::string::npos ||
+            lowerFilename.find("normal_") != std::string::npos) {
+            std::cout << "      Detected: Normal Map → BC5_UNORM" << std::endl;
+            return DXGI_FORMAT_BC5_UNORM;
+        }
+
+        // Roughness/Metallic/AO maps: Use BC4 (single-channel grayscale compression)
+        if (lowerFilename.find("_rough") != std::string::npos ||
+            lowerFilename.find("_metallic") != std::string::npos ||
+            lowerFilename.find("_metal") != std::string::npos ||
+            lowerFilename.find("_ao") != std::string::npos ||
+            lowerFilename.find("_occlusion") != std::string::npos ||
+            lowerFilename.find("_orm") != std::string::npos ||  // Occlusion-Roughness-Metallic packed
+            lowerFilename.find("_mr") != std::string::npos) {
+            std::cout << "      Detected: PBR Map (Grayscale) → BC4_UNORM" << std::endl;
+            return DXGI_FORMAT_BC4_UNORM;
+        }
+
+        // Height/Displacement maps: Also single-channel
+        if (lowerFilename.find("_height") != std::string::npos ||
+            lowerFilename.find("_disp") != std::string::npos ||
+            lowerFilename.find("_displacement") != std::string::npos) {
+            std::cout << "      Detected: Height Map → BC4_UNORM" << std::endl;
+            return DXGI_FORMAT_BC4_UNORM;
+        }
+
+        // Albedo/Color maps with potential alpha: Use BC3 (high-quality color + alpha)
+        if (lowerFilename.find("_albedo") != std::string::npos ||
+            lowerFilename.find("_diffuse") != std::string::npos ||
+            lowerFilename.find("_color") != std::string::npos ||
+            lowerFilename.find("_base") != std::string::npos) {
+            std::cout << "      Detected: Albedo/Color Map → BC3_UNORM" << std::endl;
+            return DXGI_FORMAT_BC3_UNORM;
+        }
+
+        // Default: BC1 for simple RGB textures (no alpha)
+        // BC1 offers 6:1 compression and is suitable for most color textures
+        std::cout << "      Default: Color Texture → BC1_UNORM" << std::endl;
+        return DXGI_FORMAT_BC1_UNORM;
     }
 };
 

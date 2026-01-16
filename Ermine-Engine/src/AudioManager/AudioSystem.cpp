@@ -291,6 +291,7 @@ void AudioSystem::Update()
 {
     auto& ecs = ECS::GetInstance();
     static bool s_WasPlaying = false; // Track previous state
+    static bool s_HasAutoPlayed = false; // ← ADD THIS LINE
 
     bool isPlaying = (editor::EditorGUI::s_state == editor::EditorGUI::SimState::playing);
 
@@ -306,6 +307,12 @@ void AudioSystem::Update()
             for (EntityID entity : m_Entities)
             {
                 if (!ecs.IsEntityValid(entity)) continue;
+                if (ECS::GetInstance().HasComponent<ObjectMetaData>(entity))
+                {
+                    const auto& meta = ECS::GetInstance().GetComponent<ObjectMetaData>(entity);
+                    if (!meta.selfActive)
+                        continue;
+                }
                 if (ecs.HasComponent<AudioComponent>(entity))
                 {
                     auto& audioComp = ecs.GetComponent<AudioComponent>(entity);
@@ -324,8 +331,8 @@ void AudioSystem::Update()
                     auto& globalAudio = ecs.GetComponent<GlobalAudioComponent>(entity);
                     globalAudio.currentMusicChannelId = -1;
                     globalAudio.currentMusicIndex = -1;
-                    globalAudio.currentAmbienceChannelId = -1;  
-                    globalAudio.currentAmbienceIndex = -1;      
+                    globalAudio.currentAmbienceChannelId = -1;
+                    globalAudio.currentAmbienceIndex = -1;
                     break;
                 }
             }
@@ -334,6 +341,7 @@ void AudioSystem::Update()
         }
 
         s_WasPlaying = false;
+        s_HasAutoPlayed = false; // ← ADD THIS LINE - Reset auto-play flag when stopped
 
         // Still update audio components in editor mode for testing
         CAudioEngine::Update();
@@ -373,6 +381,38 @@ void AudioSystem::Update()
         }
 
         UpdateGlobalAudio(globalAudio);
+    }
+
+    // ← ADD THIS ENTIRE BLOCK HERE (after global audio handling)
+    // Auto-play entities ONLY ONCE on first frame
+    if (!s_HasAutoPlayed)
+    {
+        std::cout << "=== AUTO-PLAY CHECK ===" << std::endl;
+        for (EntityID entity : m_Entities)
+        {
+            if (!ecs.IsEntityValid(entity)) continue;
+
+            // Check if entity is active
+            if (ECS::GetInstance().HasComponent<ObjectMetaData>(entity))
+            {
+                const auto& meta = ECS::GetInstance().GetComponent<ObjectMetaData>(entity);
+                if (!meta.selfActive)
+                    continue;
+            }
+
+            if (ecs.HasComponent<AudioComponent>(entity))
+            {
+                auto& audioComp = ecs.GetComponent<AudioComponent>(entity);
+                if (audioComp.playOnStart && !audioComp.soundName.empty())
+                {
+                    std::cout << "Auto-playing entity " << entity
+                        << " (" << audioComp.soundName << ")" << std::endl;
+                    audioComp.shouldPlay = true;
+                }
+            }
+        }
+        s_HasAutoPlayed = true;
+        std::cout << "=== AUTO-PLAY DONE ===" << std::endl;
     }
 
     // Update audio
@@ -519,6 +559,10 @@ void AudioSystem::UpdateAudioComponents()
         if (!ecs.IsEntityValid(entity))
             continue;
 
+        // Defensive check: ensure components still exist (in case of timing issues during scene transitions)
+        if (!ecs.HasComponent<AudioComponent>(entity) || !ecs.HasComponent<Transform>(entity))
+            continue;
+
         auto& audioComp = ecs.GetComponent<AudioComponent>(entity);
         auto& transform = ecs.GetComponent<Transform>(entity);
 
@@ -540,8 +584,8 @@ void AudioSystem::UpdateAudioComponents()
         if (audioComp.isPlaying && audioComp.channelId != -1)
         {
             float currentVolume = ConvertVolumeToFMOD(audioComp.volume);
-            std::cout << "Updating volume for channel " << audioComp.channelId
-                << " to " << audioComp.volume << " (dB: " << currentVolume << ")" << std::endl;
+            //std::cout << "Updating volume for channel " << audioComp.channelId
+            //    << " to " << audioComp.volume << " (dB: " << currentVolume << ")" << std::endl;
             CAudioEngine::SetChannelVolume(audioComp.channelId, currentVolume);
         }
 

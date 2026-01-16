@@ -123,17 +123,40 @@ namespace Ermine::ImguiUI
                         // ✅ Add helpful tooltips
                         if (ImGui::IsItemHovered()) {
                             switch (formats[i]) {
+                            case DXGI_FORMAT_BC1_UNORM_SRGB:
+                                ImGui::SetTooltip("BC1 sRGB (6:1 compression, no alpha)\nFor color/albedo textures without transparency");
+                                break;
+                            case DXGI_FORMAT_BC3_UNORM_SRGB:
+                                ImGui::SetTooltip("BC3 sRGB (4:1 compression with alpha)\nFor color/albedo textures with transparency");
+                                break;
+                            case DXGI_FORMAT_BC7_UNORM_SRGB:
+                                ImGui::SetTooltip("BC7 sRGB (High quality compression)\nBest quality for color textures, slower compression");
+                                break;
+                            case DXGI_FORMAT_R8G8B8A8_UNORM_SRGB:
+                                ImGui::SetTooltip("RGBA8 sRGB (Uncompressed)\nFor UI or textures requiring exact colors");
+                                break;
+                            case DXGI_FORMAT_B8G8R8A8_UNORM_SRGB:
+                                ImGui::SetTooltip("BGRA8 sRGB (Uncompressed)\nDefault uncompressed format for color textures");
+                                break;
+
+                                // Linear formats (for data textures)
+                            case DXGI_FORMAT_BC5_UNORM:
+                                ImGui::SetTooltip("BC5 Linear (2-channel compression)\n ONLY for normal maps! Stores XY direction vectors");
+                                break;
+                            case DXGI_FORMAT_BC4_UNORM:
+                                ImGui::SetTooltip("BC4 Linear (Grayscale compression)\nFor roughness, metallic, AO, or height maps");
+                                break;
                             case DXGI_FORMAT_BC1_UNORM:
-                                ImGui::SetTooltip("6:1 compression, no alpha. Best for diffuse textures.");
+                                ImGui::SetTooltip("BC1 Linear (6:1 compression, no alpha)\n For data textures only, NOT for colors!");
                                 break;
                             case DXGI_FORMAT_BC3_UNORM:
-                                ImGui::SetTooltip("4:1 compression with alpha. Good for most textures.");
+                                ImGui::SetTooltip("BC3 Linear (4:1 compression with alpha)\n For data textures only, NOT for colors!");
                                 break;
-                            case DXGI_FORMAT_BC7_UNORM:
-                                ImGui::SetTooltip("High quality compression. Slower but better quality.");
+                            case DXGI_FORMAT_R8G8B8A8_UNORM:
+                                ImGui::SetTooltip("RGBA8 Linear (Uncompressed)\nFor data that needs exact values (not display colors)");
                                 break;
-                            case DXGI_FORMAT_BC5_UNORM:
-                                ImGui::SetTooltip("Specialized for normal maps (2-channel).");
+                            case DXGI_FORMAT_B8G8R8A8_UNORM:
+                                ImGui::SetTooltip("BGRA8 Linear (Uncompressed)\n For data textures only, NOT for colors!");
                                 break;
                             }
                         }
@@ -180,26 +203,118 @@ namespace Ermine::ImguiUI
             {
                 static Ermine::MeshImportSettings settings;
 
-                ImGui::Checkbox("Generate Normals", &settings.generateNormals);
-                ImGui::Checkbox("Generate Tangents", &settings.generateTangents);
-                ImGui::Checkbox("Flip UVs", &settings.flipUVs);
-                ImGui::Checkbox("Optimize", &settings.optimizeVertices);
-
+                // Processing Options Section
+                ImGui::TextDisabled("Processing Options:");
                 ImGui::Separator();
-                if (ImGui::MenuItem("Import Now"))
+
+                ImGui::Checkbox("Generate Normals", &settings.generateNormals);
+                if (ImGui::IsItemHovered()) {
+                    ImGui::SetTooltip("Compute normals if missing or replace existing ones");
+                }
+
+                ImGui::Checkbox("Generate Tangents", &settings.generateTangents);
+                if (ImGui::IsItemHovered()) {
+                    ImGui::SetTooltip("Required for normal mapping");
+                }
+
+                ImGui::Checkbox("Flip UVs", &settings.flipUVs);
+                if (ImGui::IsItemHovered()) {
+                    ImGui::SetTooltip("Flip texture coordinates vertically (useful for DirectX assets)");
+                }
+
+                ImGui::Checkbox("Optimize Vertices", &settings.optimizeVertices);
+                if (ImGui::IsItemHovered()) {
+                    ImGui::SetTooltip("Improve GPU cache performance");
+                }
+
+                ImGui::Spacing();
+
+                // Pre-Transform Section
+                ImGui::TextDisabled("Pre-Transform:");
+                ImGui::Separator();
+
+                ImGui::Checkbox("Apply Pre-Transform", &settings.applyPreTransform);
+                if (ImGui::IsItemHovered()) {
+                    ImGui::SetTooltip("Bake transformations into the mesh data");
+                }
+
+                if (settings.applyPreTransform)
+                {
+                    ImGui::Indent();
+
+                    // Scale
+                    ImGui::TextDisabled("Scale:");
+                    ImGui::SetNextItemWidth(200);
+                    ImGui::DragFloat3("##Scale", settings.scale, 0.01f, 0.001f, 100.0f, "%.3f");
+                    if (ImGui::IsItemHovered()) {
+                        ImGui::SetTooltip("Uniform or non-uniform scaling");
+                    }
+
+                    ImGui::SameLine();
+                    if (ImGui::SmallButton("Reset##ScaleReset")) {
+                        settings.scale[0] = settings.scale[1] = settings.scale[2] = 1.0f;
+                    }
+
+                    // Rotation
+                    ImGui::TextDisabled("Rotation (Degrees):");
+                    ImGui::SetNextItemWidth(200);
+                    ImGui::DragFloat3("##Rotation", settings.rotation, 1.0f, -360.0f, 360.0f, "%.1f°");
+                    if (ImGui::IsItemHovered()) {
+                        ImGui::SetTooltip("Euler angles: X (Pitch), Y (Yaw), Z (Roll)");
+                    }
+
+                    ImGui::SameLine();
+                    if (ImGui::SmallButton("Reset##RotReset")) {
+                        settings.rotation[0] = settings.rotation[1] = settings.rotation[2] = 0.0f;
+                    }
+
+                    // Translation
+                    ImGui::TextDisabled("Translation:");
+                    ImGui::SetNextItemWidth(200);
+                    ImGui::DragFloat3("##Translation", settings.translation, 0.1f, -1000.0f, 1000.0f, "%.2f");
+                    if (ImGui::IsItemHovered()) {
+                        ImGui::SetTooltip("Offset the mesh position");
+                    }
+
+                    ImGui::SameLine();
+                    if (ImGui::SmallButton("Reset##TransReset")) {
+                        settings.translation[0] = settings.translation[1] = settings.translation[2] = 0.0f;
+                    }
+
+                    ImGui::Unindent();
+                }
+
+                ImGui::Spacing();
+                ImGui::Separator();
+
+                // Import button
+                if (ImGui::Button("Import Now", ImVec2(120, 0)))
                 {
                     EE_CORE_INFO("Importing mesh: {}", filePath.string());
+
+                    if (settings.applyPreTransform) {
+                        EE_CORE_INFO("  Pre-transform enabled:");
+                        EE_CORE_INFO("    Scale: ({:.3f}, {:.3f}, {:.3f})",
+                            settings.scale[0], settings.scale[1], settings.scale[2]);
+                        EE_CORE_INFO("    Rotation: ({:.1f}°, {:.1f}°, {:.1f}°)",
+                            settings.rotation[0], settings.rotation[1], settings.rotation[2]);
+                        EE_CORE_INFO("    Translation: ({:.2f}, {:.2f}, {:.2f})",
+                            settings.translation[0], settings.translation[1], settings.translation[2]);
+                    }
+
                     auto result = m_Pipeline->ImportMesh(filePath.string(), settings);
 
                     if (result.success) {
-                        EE_CORE_INFO("Import successful: {} ({}ms)",
+                        EE_CORE_INFO("✓ Import successful: {} ({}ms)",
                             result.outputPath, result.importTimeMs);
                         m_Pipeline->GetDatabase().Save();
                         Refresh();
                     }
                     else {
-                        EE_CORE_ERROR("Import failed: {}", result.errorMessage);
+                        EE_CORE_ERROR("✗ Import failed: {}", result.errorMessage);
                     }
+
+                    ImGui::CloseCurrentPopup();
                 }
 
                 ImGui::EndMenu();
@@ -242,7 +357,7 @@ namespace Ermine::ImguiUI
         currentDirectory = projectRoot;
 
         // Default view settings
-        iconSize = 96.0f;
+        iconSize = 60.0f;
         iconSpacing = 16.0f;
     }
 
@@ -532,7 +647,7 @@ namespace Ermine::ImguiUI
             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0, 0, 0, 0));
             ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0, 0, 0, 0));
-            bool clicked = ImGui::ImageButton(("##icon" + asset->Name).c_str(), asset->Icon, ImVec2(iconSize, iconSize), ImVec2(0, 1), ImVec2(1, 0));
+            bool clicked = ImGui::ImageButton(("##icon" + asset->Name).c_str(), asset->Icon, ImVec2(iconSize, iconSize), ImVec2(0, 0), ImVec2(1, 1));
             ImGui::PopStyleColor(3);
 
             if (asset->needsReimport) {

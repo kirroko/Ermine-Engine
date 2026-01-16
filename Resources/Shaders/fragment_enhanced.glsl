@@ -4,6 +4,14 @@
 const int MAX_LIGHTS = 32;
 const int NUM_CASCADES = 4;
 
+// Material texture flag bits (must match C++ MaterialTextureFlags enum)
+const uint MAT_FLAG_ALBEDO_MAP    = 1u << 0u;  // bit 0
+const uint MAT_FLAG_NORMAL_MAP    = 1u << 1u;  // bit 1
+const uint MAT_FLAG_ROUGHNESS_MAP = 1u << 2u;  // bit 2
+const uint MAT_FLAG_METALLIC_MAP  = 1u << 3u;  // bit 3
+const uint MAT_FLAG_AO_MAP        = 1u << 4u;  // bit 4
+const uint MAT_FLAG_EMISSIVE_MAP  = 1u << 5u;  // bit 5
+
 in vec2 TexCoord;
 in vec3 Normal;
 in vec3 FragPos;
@@ -14,40 +22,36 @@ flat in uint vMaterialIndex;
 
 out vec4 FragColor;
 
-// Material structure
+// Material structure (112 bytes, matches C++ MaterialSSBO)
 struct MaterialData {
-    vec4 albedo;
-    float metallic;
-    float roughness;
-    float ao;
-    float normalStrength;
+    vec4 albedo;                // 16 bytes (0-15)
+    float metallic;             // 4 bytes (16-19)
+    float roughness;            // 4 bytes (20-23)
+    float ao;                   // 4 bytes (24-27)
+    float normalStrength;       // 4 bytes (28-31)
 
-    vec3 emissive;
-    float emissiveIntensity;
+    vec3 emissive;              // 12 bytes (32-43)
+    float emissiveIntensity;    // 4 bytes (44-47)
 
-    int shadingModel; // 0 = PBR, 1 = Blinn-Phong
-    int hasAlbedoMap;
-    int hasNormalMap;
-    int hasRoughnessMap;
+    int shadingModel;           // 4 bytes (48-51) - 0 = PBR, 1 = Blinn-Phong
+    uint textureFlags;          // 4 bytes (52-55) - Packed bitfield for all texture flags
+    float _pad0;                // 4 bytes (56-59)
+    float _pad1;                // 4 bytes (60-63)
 
-    int hasMetallicMap;
-    int hasAoMap;
-    int hasEmissiveMap;
-    float _pad0;
-
-    vec2 uvScale;   // UV scale for texture tiling
-    vec2 uvOffset;  // UV offset for texture positioning
+    vec2 uvScale;               // 8 bytes (64-71) - UV scale for texture tiling
+    vec2 uvOffset;              // 8 bytes (72-79) - UV offset for texture positioning
 
     // Texture Array Indices
-    int albedoMapIndex;
-    int normalMapIndex;
-    int roughnessMapIndex;
-    int metallicMapIndex;
+    int albedoMapIndex;         // 4 bytes (80-83)
+    int normalMapIndex;         // 4 bytes (84-87)
+    int roughnessMapIndex;      // 4 bytes (88-91)
+    int metallicMapIndex;       // 4 bytes (92-95)
 
-    int aoMapIndex;
-    int emissiveMapIndex;
-    int _pad1;
-    int _pad2;
+    int aoMapIndex;             // 4 bytes (96-99)
+    int emissiveMapIndex;       // 4 bytes (100-103)
+    int _pad2;                  // 4 bytes (104-107)
+    int _pad3;                  // 4 bytes (108-111)
+    // Total: 112 bytes
 };
 
 // Material SSBO block - array of materials
@@ -76,7 +80,7 @@ struct Light {
     vec4 position_type;    // xyz = position (view space), w = light type
     vec4 color_intensity;  // xyz = color, w = intensity
     vec4 direction_range;  // xyz = direction (view space), w = range
-    vec4 spot_angles_castshadows_startOffset; // x = inner angle (cos), y = outer angle (cos), z = cast shadows (bool), w = shadow map index or 0 if no shadows
+    vec4 spot_angles_castshadows_startOffset; // x = inner angle (cos), y = outer angle (cos), z = flags bitfield (bit 0: castsShadows, bit 1: castsRays), w = shadow map index or 0 if no shadows
     mat4 lightSpaceMatrix[NUM_CASCADES]; // Light view-projection matrices for cascaded shadow maps
     vec4 splitDepths[(NUM_CASCADES + 3) / 4]; // Split depths for cascaded shadow maps
 };
@@ -91,12 +95,25 @@ const int POINT_LIGHT = 0;
 const int DIRECTIONAL_LIGHT = 1;
 const int SPOT_LIGHT = 2;
 
+// Light flag bit positions
+const int LIGHT_FLAG_CASTS_SHADOWS = 1;  // bit 0
+const int LIGHT_FLAG_CASTS_RAYS = 2;     // bit 1
+
+// Helper functions to extract light flags
+bool lightCastsShadows(Light light) {
+    return (int(light.spot_angles_castshadows_startOffset.z) & LIGHT_FLAG_CASTS_SHADOWS) != 0;
+}
+
+bool lightCastsRays(Light light) {
+    return (int(light.spot_angles_castshadows_startOffset.z) & LIGHT_FLAG_CASTS_RAYS) != 0;
+}
+
 // Normal mapping function
 vec3 calculateNormal(MaterialData material, vec2 uv)
 {
     vec3 normal = normalize(Normal);
 
-    if (material.hasNormalMap != 0 && material.normalMapIndex >= 0) {
+    if ((material.textureFlags & MAT_FLAG_NORMAL_MAP) != 0u && material.normalMapIndex >= 0) {
         vec3 normalMap = texture(sampler2D(textureHandles[material.normalMapIndex]), uv).rgb * 2.0 - 1.0;
         normalMap.xy *= material.normalStrength;
 
@@ -116,7 +133,7 @@ vec3 getAlbedo(MaterialData material, vec2 uv)
 {
     vec3 albedo = material.albedo.rgb;
 
-    if (material.hasAlbedoMap != 0 && material.albedoMapIndex >= 0) {
+    if ((material.textureFlags & MAT_FLAG_ALBEDO_MAP) != 0u && material.albedoMapIndex >= 0) {
         vec4 texColor = texture(sampler2D(textureHandles[material.albedoMapIndex]), uv);
         albedo *= texColor.rgb;
     }
@@ -127,7 +144,7 @@ vec3 getAlbedo(MaterialData material, vec2 uv)
 float getRoughness(MaterialData material, vec2 uv)
 {
     float roughness = material.roughness;
-    if (material.hasRoughnessMap != 0 && material.roughnessMapIndex >= 0) {
+    if ((material.textureFlags & MAT_FLAG_ROUGHNESS_MAP) != 0u && material.roughnessMapIndex >= 0) {
         roughness *= texture(sampler2D(textureHandles[material.roughnessMapIndex]), uv).r;
     }
     return clamp(roughness, 0.05, 1.0);
@@ -136,7 +153,7 @@ float getRoughness(MaterialData material, vec2 uv)
 float getMetallic(MaterialData material, vec2 uv)
 {
     float metallic = material.metallic;
-    if (material.hasMetallicMap != 0 && material.metallicMapIndex >= 0) {
+    if ((material.textureFlags & MAT_FLAG_METALLIC_MAP) != 0u && material.metallicMapIndex >= 0) {
         metallic *= texture(sampler2D(textureHandles[material.metallicMapIndex]), uv).r;
     }
     return clamp(metallic, 0.0, 1.0);
@@ -145,7 +162,7 @@ float getMetallic(MaterialData material, vec2 uv)
 float getAO(MaterialData material, vec2 uv)
 {
     float ao = material.ao;
-    if (material.hasAoMap != 0 && material.aoMapIndex >= 0) {
+    if ((material.textureFlags & MAT_FLAG_AO_MAP) != 0u && material.aoMapIndex >= 0) {
         ao *= texture(sampler2D(textureHandles[material.aoMapIndex]), uv).r;
     }
     return ao;
@@ -154,7 +171,7 @@ float getAO(MaterialData material, vec2 uv)
 vec3 getEmissive(MaterialData material, vec2 uv)
 {
     vec3 emissive = material.emissive * material.emissiveIntensity;
-    if (material.hasEmissiveMap != 0 && material.emissiveMapIndex >= 0) {
+    if ((material.textureFlags & MAT_FLAG_EMISSIVE_MAP) != 0u && material.emissiveMapIndex >= 0) {
         vec4 emissiveTexel = texture(sampler2D(textureHandles[material.emissiveMapIndex]), uv);
         emissive *= emissiveTexel.rgb;
     }
@@ -307,20 +324,38 @@ void main()
 {
     // Get the material for this draw call from the array
     MaterialData material = materials[vMaterialIndex];
-    
+
     // Apply UV transform (scale and offset)
     vec2 transformedUV = TexCoord * material.uvScale + material.uvOffset;
-    
-    // Calculate normal (with potential normal mapping)
-    vec3 norm = calculateNormal(material, transformedUV);
+
+    // Early-out optimization for untextured materials
+    // If no textures, use base material properties directly (skip function calls and texture sampling)
+    vec3 norm;
+    vec3 albedo;
+    float roughness;
+    float metallic;
+    float ao;
+    vec3 emissive;
+
+    if (material.textureFlags == 0u) {
+        // Fast path: no textures, use base material properties
+        norm = normalize(Normal);
+        albedo = material.albedo.rgb;
+        roughness = clamp(material.roughness, 0.05, 1.0);
+        metallic = clamp(material.metallic, 0.0, 1.0);
+        ao = material.ao;
+        emissive = material.emissive * material.emissiveIntensity;
+    } else {
+        // Standard path: sample textures and calculate properties
+        norm = calculateNormal(material, transformedUV);
+        albedo = getAlbedo(material, transformedUV);
+        roughness = getRoughness(material, transformedUV);
+        metallic = getMetallic(material, transformedUV);
+        ao = getAO(material, transformedUV);
+        emissive = getEmissive(material, transformedUV);
+    }
+
     vec3 viewDir = normalize(-ViewPos);
-    
-    // Sample material properties
-    vec3 albedo = getAlbedo(material, transformedUV);
-    float roughness = getRoughness(material, transformedUV);
-    float metallic = getMetallic(material, transformedUV);
-    float ao = getAO(material, transformedUV);
-    vec3 emissive = getEmissive(material, transformedUV);
     
     vec3 result = vec3(0.0);
     int numLights = int(lightCount.x);

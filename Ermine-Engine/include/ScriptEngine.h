@@ -16,6 +16,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #pragma once
 #include <mono/jit/jit.h>
 #include <mono/metadata/assembly.h>
+#include <mono/metadata/appdomain.h>
 
 #include "Entity.h"
 

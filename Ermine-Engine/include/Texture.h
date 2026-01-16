@@ -76,5 +76,15 @@ namespace Ermine::graphics
          * @brief  Getter for file path
          */
         std::string GetFilePath();
+
+        /**
+         * @brief  Getter for texture width
+         */
+        int GetWidth() const { return m_Width; }
+
+        /**
+         * @brief  Getter for texture height
+         */
+        int GetHeight() const { return m_Height; }
     };
 }

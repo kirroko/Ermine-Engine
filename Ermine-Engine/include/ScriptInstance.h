@@ -36,15 +36,20 @@ namespace Ermine::scripting
 				return;
 			}
 			GCHandle = mono_gchandle_new_v2(object, false);
-			InjectEntityIfAvailable();
-			NativeBindComponentGameObject(object, eid);
+
+			MonoObject* target = mono_gchandle_get_target_v2(GCHandle);
+			InjectEntityIfAvailable(target);
+			NativeBindComponentGameObject(target, eid);
 			Awake(); // called when an enabled script instance is being loaded.
 		}
 
 		~ScriptInstance()
 		{
-			if (m_enabled) OnDisable();
+			MonoObject* target = GCHandle ? mono_gchandle_get_target_v2(GCHandle) : nullptr;
+
+			if (m_enabled && target) OnDisable();
 			Invoke(klass ? klass->MethodOnDestroy : nullptr);
+
 			if (GCHandle)
 			{
 				mono_gchandle_free_v2(GCHandle);
@@ -87,12 +92,6 @@ namespace Ermine::scripting
 		{
 			InvokeWithCollision(klass ? klass->MethodOnTriggerStay : nullptr, other, isTrigger);
 		}
-		//void OnCollisionEnter() { Invoke(klass ? klass->MethodOnCollisionEnter : nullptr); }
-		//void OnCollisionExit() { Invoke(klass ? klass->MethodOnCollisionExit : nullptr); }
-		//void OnCollisionStay() { Invoke(klass ? klass->MethodOnCollisionStay : nullptr); }
-		//void OnTriggerEnter() { Invoke(klass ? klass->MethodOnTriggerEnter : nullptr); }
-		//void OnTriggerExit() { Invoke(klass ? klass->MethodOnTriggerExit : nullptr); }
-		//void OnTriggerStay() { Invoke(klass ? klass->MethodOnTriggerStay : nullptr); }
 
 		void SetEnabled(bool enabled)
 		{
@@ -102,26 +101,61 @@ namespace Ermine::scripting
 			else OnDisable();
 		}
 
+		/**
+		 * @brief This function retrieves the managed MonoObject associated with this ScriptInstance.
+		 * It gets from the GCHandle if available; otherwise, it returns the direct object pointer (Dangerous, object could have been moved already).
+		 * @return The managed MonoObject pointer.
+		 */
+		MonoObject* GetManaged() const
+		{
+			return GCHandle ? mono_gchandle_get_target_v2(GCHandle) : object;
+		}
 	private:
+
 		void Invoke(MonoMethod* method)
 		{
-			if (!method || !object) return;
+			MonoObject* target = GetManaged();
+			if (!method || !target) return;
+
+			MonoDomain* objDomain = mono_object_get_domain(target);
+			MonoDomain* gameDomain = ECS::GetInstance().GetSystem<ScriptSystem>()->m_ScriptEngine->GetGameDomain();
+			if (objDomain != gameDomain)
+			{
+				EE_CORE_WARN("Skipping invoke: domain mismatch (obj={0}, game={1})",
+					static_cast<void*>(objDomain), static_cast<void*>(gameDomain));
+				return;
+			}
+
+			// Ensure current thread is attached to Mono
+			MonoDomain* cur = mono_domain_get();
+			MonoDomain* orig = nullptr;
+			if (!cur)
+				orig = mono_jit_thread_attach(gameDomain); // attaches external thread
+
 			MonoObject* exc = nullptr;
-			mono_runtime_invoke(method, object, nullptr, &exc);
+			mono_runtime_invoke(method, target, nullptr, &exc);
+
+			if (orig) {
+				// Optional: restore previous domain
+				mono_domain_set(orig,true);
+			}
+
 			if (exc) ReportManagedException(exc);
 		}
 
 		void InvokeArgs(MonoMethod* method, void** args)
 		{
-			if (!method || !object) return;
+			MonoObject* target = GetManaged();
+			if (!method || !target) return;
 			MonoObject* exc = nullptr;
-			mono_runtime_invoke(method, object, args, &exc); // Invoke monobehaviour method and object
+			mono_runtime_invoke(method, target, args, &exc); // Invoke monobehaviour method and object
 			if (exc) ReportManagedException(exc);
 		}
 
 		void InvokeWithCollision(MonoMethod* method, EntityID other, bool isTrigger)
 		{
-			if (!method || !object) return;
+			MonoObject* target = GetManaged();
+			if (!method || !target) return;
 			assert(ECS::GetInstance().IsEntityValid(other) && "ScriptInstance: other entity is not valid!");
 
 			auto scriptSystem = ECS::GetInstance().GetSystem<ScriptSystem>();
@@ -182,7 +216,7 @@ namespace Ermine::scripting
 			// Collider
 			if (MonoClassField* field = mono_class_get_field_from_name(colliderClass, "EntityID")) 
 				mono_field_set_value(colliderObj, field, &other);
-			else EE_CORE_WARN("ScriptInstance: Failed to set field ColliderClass");
+			//else EE_CORE_WARN("ScriptInstance: Failed to set field ColliderClass");
 			// GameObject
 			if (MonoClassField* field = mono_class_get_field_from_name(goClass, "EntityID"))
 				mono_field_set_value(goObj, field, &other);
@@ -198,7 +232,7 @@ namespace Ermine::scripting
 
 			// Set fields of Collision
 			if (MonoClassField* f = mono_class_get_field_from_name(colliderClass, "isTrigger")) mono_field_set_value(colliderObj, f, &isTrigger);
-			else EE_CORE_WARN("ScriptInstance: Failed to set field to colliderClass");
+			//else EE_CORE_WARN("ScriptInstance: Failed to set field to colliderClass");
 			if (MonoClassField* f = mono_class_get_field_from_name(collisionClass, "collider"))   mono_field_set_value(colObj, f, colliderObj);
 			else EE_CORE_WARN("ScriptInstance: Failed to set field to collider");
 			if (MonoClassField* f = mono_class_get_field_from_name(collisionClass, "gameObject")) mono_field_set_value(colObj, f, goObj);
@@ -220,13 +254,13 @@ namespace Ermine::scripting
 			if (utf8) mono_free(utf8);
 		}
 
-		void InjectEntityIfAvailable() const
+		void InjectEntityIfAvailable(MonoObject* target) const
 		{
-			if (!object || !klass) return;
+			if (!target || !klass) return;
 
 			if (MonoClassField* field = mono_class_get_field_from_name(klass->Class, "EntityID")) {
 				EntityID id = entityID;
-				mono_field_set_value(object, field, &id);
+				mono_field_set_value(target, field, &id);
 			}
 		}
 	};

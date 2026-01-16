@@ -478,6 +478,36 @@ std::shared_ptr<graphics::Shader> AssetManager::GetShader(const std::string& sha
     return it != m_shaders.end() ? it->second : nullptr;
 }
 
+bool AssetManager::ReloadCachedShaders()
+{
+    size_t reloadFailures = 0;
+    for (auto& [key, shader] : m_shaders)
+    {
+        if (!shader)
+        {
+            ++reloadFailures;
+            continue;
+        }
+
+        if (!shader->Reload())
+        {
+            EE_CORE_WARN("Shader reload failed: {0}", key);
+            ++reloadFailures;
+        }
+    }
+
+    if (reloadFailures == 0)
+    {
+        EE_CORE_INFO("Reloaded cached shaders");
+    }
+    else
+    {
+        EE_CORE_WARN("Shader reload finished with {0} failures", reloadFailures);
+    }
+
+    return reloadFailures == 0;
+}
+
 /**
 * @brief Load a 3D model from file using Assimp.
 * @param filePath The path to the model file (e.g. .fbx, .obj, .gltf).
@@ -502,7 +532,7 @@ std::shared_ptr<graphics::Model> AssetManager::LoadModel(const std::string& file
         // Determine file type by extension
         std::string ext = std::filesystem::path(filePath).extension().string();
 
-        if (ext == ".skin") {
+        if (ext == ".skin" || ext == ".mesh") {
             // Load binary .skin file from resource pipeline
             EE_CORE_INFO("Loading .skin file: {0}", filePath);
             model = std::make_shared<graphics::Model>(filePath, true);

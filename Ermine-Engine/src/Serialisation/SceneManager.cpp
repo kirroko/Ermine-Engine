@@ -19,6 +19,10 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Renderer.h"
 #include "Components.h"
 #include "Matrix4x4.h"
+#include "EditorGUI.h"
+#include "ScriptSystem.h"
+#include "AudioSystem.h"
+#include "../../../Ermine-ResourcePipeline/xresource_pipeline_v2-main/dependencies/xstrtool/source/xstrtool.h"
 
 namespace
 {
@@ -258,58 +262,89 @@ SceneManager& SceneManager::GetInstance()
 
 void SceneManager::NewScene()
 {
-    // Clear ECS
-    Ermine::ECS::GetInstance().ClearAllEntities();
+    auto& ecs = Ermine::ECS::GetInstance();
+    
+    // STEP 1: Clean up scripts before clearing entities
+    if (auto scriptSystem = ecs.GetSystem<Ermine::scripting::ScriptSystem>()) {
+        EE_CORE_INFO("NewScene: Cleaning up all script instances before entity destruction");
+        scriptSystem->CleanupAllScripts();
+    }
+    
+    // STEP 2: Clear physics
+    if (auto physics = ecs.GetSystem<Ermine::Physics>()) {
+        physics->ClearPhysicBody();
+    }
+    
+    // STEP 3: Clear ECS
+    ecs.ClearAllEntities();
 
-    // Recreate HUD entity (UI elements)
-    //CreateHUDEntity();
-
-    auto mainLight = Ermine::ECS::GetInstance().CreateEntity();
+    auto mainLight = ecs.CreateEntity();
 
     // Tilted down and slightly to the side, similar to Unity's default
-    Ermine::ECS::GetInstance().AddComponent(
+    ecs.AddComponent(
         mainLight,
         Ermine::Transform(
             Ermine::Vec3(0, 5, 0),
             Ermine::FromEulerDegrees(50.0f, -30.0f, 0.0f),
             Ermine::Vec3(1, 1, 1)));
 
-    Ermine::ECS::GetInstance().AddComponent(mainLight, Ermine::ObjectMetaData("Main Light", "Light", true));
-    Ermine::ECS::GetInstance().AddComponent(mainLight, Ermine::Light(Ermine::Vec3(1, 1, 1), 1.0f, Ermine::LightType::DIRECTIONAL, true));
-    Ermine::ECS::GetInstance().AddComponent<Ermine::HierarchyComponent>(mainLight, Ermine::HierarchyComponent{});
+    ecs.AddComponent(mainLight, Ermine::ObjectMetaData("Main Light", "Light", true));
+    ecs.AddComponent(mainLight, Ermine::Light(Ermine::Vec3(1, 1, 1), 1.0f, Ermine::LightType::DIRECTIONAL, true));
+    ecs.AddComponent<Ermine::HierarchyComponent>(mainLight, Ermine::HierarchyComponent{});
+    
     // Mark materials dirty to trigger recompilation
-    auto renderer = Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>();
+    auto renderer = ecs.GetSystem<Ermine::graphics::Renderer>();
     if (renderer) {
         renderer->MarkMaterialsDirty();
     }
-    Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>()->InitializeShadowMapResources();
-    Ermine::ECS::GetInstance().GetSystem<Ermine::Physics>()->UpdatePhysicList();
-    if (auto scene = SceneManager::GetInstance().GetActiveScene())
-        scene->EnsureSyncedWithECS(/*force=*/true);
+    ecs.GetSystem<Ermine::graphics::Renderer>()->InitializeShadowMapResources();
+    ecs.GetSystem<Ermine::Physics>()->UpdatePhysicList();
+
+    // Create a new Scene object and sync with ECS
+    auto newScene = std::make_shared<Ermine::Scene>("Untitled Scene");
+    newScene->EnsureSyncedWithECS(/*force=*/true);
+
+    // Set as active scene in SceneManager
+    SetActiveScene(newScene);
+
+    // Notify EditorGUI to update hierarchy panel and inspector
+    Ermine::editor::EditorGUI::SetActiveScene(newScene);
+
     m_CurrentScenePath.reset();
     m_Dirty = false;
 }
 
 void SceneManager::ClearScene()
 {
-    // Clear ECS
-    Ermine::ECS::GetInstance().ClearAllEntities();
+    auto& ecs = Ermine::ECS::GetInstance();
+    
+    // STEP 1: Clean up scripts before clearing entities
+    if (auto scriptSystem = ecs.GetSystem<Ermine::scripting::ScriptSystem>()) {
+        EE_CORE_INFO("ClearScene: Cleaning up all script instances before entity destruction");
+        scriptSystem->CleanupAllScripts();
+    }
+    
+    // STEP 2: Clear physics
+    if (auto physics = ecs.GetSystem<Ermine::Physics>()) {
+        physics->ClearPhysicBody();
+    }
+    
+    // STEP 3: Clear ECS
+    ecs.ClearAllEntities();
 
-    // Recreate HUD entity (UI elements)
-    //CreateHUDEntity();
-
-    //Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>()->UpdateShadowMap();
+    //ecs.GetSystem<Ermine::graphics::Renderer>()->UpdateShadowMap();
 
     // Mark materials dirty to trigger recompilation
-    auto renderer = Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>();
+    auto renderer = ecs.GetSystem<Ermine::graphics::Renderer>();
     if (renderer) {
         renderer->MarkMaterialsDirty();
     }
 
-    if (auto scene = GetActiveScene()) {
-        scene->EnsureSyncedWithECS();
-    }
-    Ermine::ECS::GetInstance().GetSystem<Ermine::Physics>()->UpdatePhysicList();
+    // Create an empty Scene object and sync with ECS
+    auto emptyScene = std::make_shared<Ermine::Scene>("Empty Scene");
+    emptyScene->EnsureSyncedWithECS(/*force=*/true);
+
+    ecs.GetSystem<Ermine::Physics>()->UpdatePhysicList();
     m_CurrentScenePath.reset();
     m_Dirty = false;
 }
@@ -322,52 +357,105 @@ void SceneManager::OpenSceneDialog()
 
 void SceneManager::OpenScene(const std::string& path)
 {
-    //auto& ecs = Ermine::ECS::GetInstance();
-    //EnsureActiveScene().Clear();
+    EE_CORE_INFO("Loading scene from: {}", path);
+    auto& ecs = Ermine::ECS::GetInstance();
 
-    LoadSceneFromFile(Ermine::ECS::GetInstance(), path);
-
-    // Recreate HUD entity (UI elements)
-    //CreateHUDEntity();
-
-    Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>()->InitializeShadowMapResources();
-
-    // Mark materials dirty to trigger recompilation after scene load
-    auto renderer = Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>();
-    if (renderer) {
-        renderer->MarkMaterialsDirty();
+    if (auto scriptSystem = ecs.GetSystem<Ermine::scripting::ScriptSystem>()) {
+        EE_CORE_INFO("Cleaning up all script instances before entity destruction");
+        scriptSystem->CleanupAllScripts();
     }
 
-    //RebuildRuntimeHierarchyFromGuids(Ermine::ECS::GetInstance());
+    for (Ermine::EntityID e = 0; e < Ermine::MAX_ENTITIES; ++e) {
+        if (!ecs.IsEntityValid(e)) continue;
+        if (!ecs.HasComponent<Ermine::GlobalAudioComponent>(e)) continue;
 
-    if (auto scene = SceneManager::GetInstance().GetActiveScene())
-        scene->EnsureSyncedWithECS(/*force=*/true);
+        auto& globalAudio = ecs.GetComponent<Ermine::GlobalAudioComponent>(e);
+        Ermine::AudioSystem::StopGlobalMusic(globalAudio);
+        Ermine::AudioSystem::StopGlobalAmbience(globalAudio);
+        EE_CORE_INFO("Stopped global audio");
+        break; // Only one GlobalAudioComponent should exist
+    }
 
-    m_CurrentScenePath = path;
+    ecs.ClearAllEntities();
+
+    LoadSceneFromFile(ecs, path);
+
+    if (auto renderer = ecs.GetSystem<Ermine::graphics::Renderer>()) {
+        renderer->InitializeShadowMapResources();
+        renderer->MarkMaterialsDirty();
+        renderer->MarkDrawDataForRebuild();
+    }
+
+    // Create Scene object from loaded entities
+    std::filesystem::path scenePath(path);
+    std::string sceneName = scenePath.stem().string(); // Get filename without extension
+    auto newScene = std::make_shared<Ermine::Scene>(sceneName);
+
+    // Sync the Scene object with the loaded ECS entities
+    newScene->EnsureSyncedWithECS(/*force=*/true);
+
+    // Set as active scene in SceneManager
+    if (path != "../Temp/Temp.scene")
+    {
+        SetActiveScene(newScene);
+        m_CurrentScenePath = path;
+        // Notify EditorGUI to update hierarchy panel and inspector
+        Ermine::editor::EditorGUI::SetActiveScene(newScene);
+
+        if (m_ActiveScene)
+        {
+            auto baseName = xstrtool::PathBaseName(xstrtool::PathWithoutExtension(path));
+            m_ActiveScene->SetName(baseName);
+            m_ActiveScene->EnsureSyncedWithECS(/*force=*/true);
+        }
+    }
+        
     m_Dirty = false;
-    Ermine::ECS::GetInstance().GetSystem<Ermine::Physics>()->UpdatePhysicList();
+
+    ecs.GetSystem<Ermine::HierarchySystem>()->ForceUpdateAllTransforms();
+    ecs.GetSystem<Ermine::Physics>()->UpdatePhysicList();
+    
+    // Apply cursor rules based on scene type
+    //ApplySceneCursorState(path);
+    
+    EE_CORE_INFO("Scene '{}' loaded successfully with {} entities", sceneName, newScene->GetEntityCount());
 }
 
 void SceneManager::SaveScene()
 {
+    EE_CORE_INFO("SaveScene() pressed. hasPath = {}", m_CurrentScenePath.has_value());
+
     if (!m_CurrentScenePath)
     {
         SaveSceneAsDialog(); // fallback if never saved
         return;
     }
+    EE_CORE_INFO("SaveScene(): saving to '{}'", *m_CurrentScenePath);
     SaveSceneTo(*m_CurrentScenePath);
 }
 
 void SceneManager::SaveTemp()
 {
-    SaveSceneTo("../Temp/Temp.scene");
+    auto save = m_CurrentScenePath;
+	
+	auto path = std::string("../Temp/Temp.scene");
+    EE_CORE_INFO("SaveTemp('{}')", path);
+    //SyncHierarchyGuidsFromRuntime(Ermine::ECS::GetInstance());
+    SaveSceneToFile(Ermine::ECS::GetInstance(), path, true);
+    m_Dirty = false;
+
+	m_CurrentScenePath = save;
 }
 
 void SceneManager::LoadTemp()
 {
+    auto save = m_CurrentScenePath;
+
     ClearScene();
     OpenScene("../Temp/Temp.scene");
     RemoveTemp();
+
+    m_CurrentScenePath = save;
 }
 
 void SceneManager::RemoveTemp()
@@ -381,17 +469,22 @@ void SceneManager::RemoveTemp()
 
 void SceneManager::SaveSceneAsDialog()
 {
+    EE_CORE_INFO("SaveSceneAsDialog() opened");
     auto path = ShowSaveDialog(L"untitled.scene", GetActiveWindow());
     if (path) SaveSceneTo(*path);
 }
 
 void SceneManager::SaveSceneTo(const std::string& path)
 {
+    EE_CORE_INFO("SaveSceneTo('{}')", path);
     //SyncHierarchyGuidsFromRuntime(Ermine::ECS::GetInstance());
     SaveSceneToFile(Ermine::ECS::GetInstance(), path, true);
     m_CurrentScenePath = path;
     m_Dirty = false;
 }
+
+// temporary reference to health bar, to be removed
+Ermine::EntityID SceneManager::healthBar = 1;
 
 void SceneManager::CreateHUDEntity()
 {
@@ -404,6 +497,7 @@ void SceneManager::CreateHUDEntity()
     }
 
     Ermine::EntityID uiEntity = scene->CreateEntity("HUD", false, false);  // No transform or hierarchy needed
+    healthBar = uiEntity; // temporary reference to health bar, to be removed
     Ermine::UIComponent uiComp;  // Default values are already set in the struct
 
     // ============================================================================
@@ -453,4 +547,76 @@ void SceneManager::CreateHUDEntity()
     Ermine::ECS::GetInstance().AddComponent<Ermine::UIComponent>(uiEntity, uiComp);
     EE_CORE_INFO("Created HUD entity with UIComponent and skill icons configured");
 #endif
+}
+
+// temporary reference to health bar, to be removed
+Ermine::EntityID SceneManager::GetHealthBar()
+{
+    return healthBar;
+}
+
+void SceneManager::RequestOpenScene(const std::string& path)
+{
+    EE_CORE_INFO("SceneManager: Queuing scene load request: {}", path);
+    m_PendingSceneRequest = path;
+}
+
+void SceneManager::FlushPendingSceneRequest()
+{
+    if (!m_PendingSceneRequest)
+        return;
+
+    const std::string path = *m_PendingSceneRequest;
+    m_PendingSceneRequest.reset();
+
+    // Perform the actual load now (safe point)
+    OpenScene(path);
+}
+
+void SceneManager::ApplySceneCursorState(const std::string& scenePath)
+{
+    GLFWwindow* window = glfwGetCurrentContext();
+    if (!window)
+    {
+        EE_CORE_WARN("Cannot apply cursor rules � no GLFW window context");
+        return;
+    }
+
+    // Extract scene name (without extension)
+    std::filesystem::path p(scenePath);
+    std::string name = p.stem().string();
+
+#if defined(EE_EDITOR)
+    // If in editor mode (not playing), always show cursor
+    if (Ermine::editor::EditorGUI::s_state == Ermine::editor::EditorGUI::SimState::stopped)
+    {
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        if (glfwRawMouseMotionSupported())
+            glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_FALSE);
+        return;
+    }
+#endif
+
+    // --- Cursor Rules ---
+    if (name == "mainmenu") // main menu scene
+    {
+        // Show cursor
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        if (glfwRawMouseMotionSupported())
+            glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_FALSE);
+    }
+    else if (name == "game" || name == "cutscene_intro") // game or cutscene scene
+    {
+        // Hide and lock cursor
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        if (glfwRawMouseMotionSupported())
+            glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+    }
+    else
+    {
+        // Default behaviour � show cursor
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        if (glfwRawMouseMotionSupported())
+            glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_FALSE);
+    }
 }
