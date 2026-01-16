@@ -52,7 +52,7 @@ namespace Ermine {
         // Toolbar
         if (ImGui::Button("Create Entity")) {
             EntityID newEntity = m_ActiveScene->CreateEntity("New Entity");
-			editor::Selection::SelectSingle(m_ActiveScene, newEntity);
+            editor::Selection::SelectSingle(m_ActiveScene, newEntity);
             ImGui::SetWindowFocus("Inspector");
         }
         ImGui::SameLine();
@@ -71,39 +71,77 @@ namespace Ermine {
             editor::Selection::Clear(m_ActiveScene);
         }
 
-        ImGui::SameLine();
+        //ImGui::SameLine();
         //ImGui::Checkbox("Show Inactive", &m_ShowInactive);
-        if (ImGui::IsItemHovered()) {
-            ImGui::SetTooltip("Show inactive entities (grayed out)");
+        //if (ImGui::IsItemHovered()) {
+        //    ImGui::SetTooltip("Show inactive entities (grayed out)");
+        //}
+
+        ImGui::Separator();
+
+        // Search bar
+        ImGui::PushItemWidth(-1);
+        if (ImGui::InputTextWithHint(
+            "##HierarchySearch",
+            "Search entities...",
+            m_SearchBuffer,
+            sizeof(m_SearchBuffer)))
+        {
+            m_IsSearching = (strlen(m_SearchBuffer) > 0);
         }
+        ImGui::PopItemWidth();
 
         ImGui::Separator();
 
         // Entity hierarchy
-        auto rootEntities = m_ActiveScene->GetRootEntities();
-        for (auto entity : rootEntities) {
-            DrawEntityNode(entity, 0);
+        if (!m_IsSearching)
+        {
+            // Normal hierarchy view
+            auto rootEntities = m_ActiveScene->GetRootEntities();
+            for (auto entity : rootEntities)
+                DrawEntityNode(entity, 0);
+        }
+        else
+        {
+            // Search result view (flat list)
+            auto& ecs = ECS::GetInstance();
+
+            for (EntityID id = 1; id < MAX_ENTITIES; ++id)
+            {
+                if (!ecs.IsEntityValid(id))
+                    continue;
+
+                if (!ecs.HasComponent<ObjectMetaData>(id))
+                    continue;
+
+                const auto& meta = ecs.GetComponent<ObjectMetaData>(id);
+
+                if (!NameMatchesSearch(meta.name, m_SearchBuffer))
+                    continue;
+
+                DrawEntityNode(id, 0);
+            }
         }
 
         // Add invisible button to catch drops on empty space
         ImVec2 space = ImGui::GetContentRegionAvail();
-		if (space.x != 0.0f && space.y != 0.0f)
-			ImGui::InvisibleButton("UnparentDropZone", ImGui::GetContentRegionAvail());
+        if (space.x != 0.0f && space.y != 0.0f)
+            ImGui::InvisibleButton("UnparentDropZone", ImGui::GetContentRegionAvail());
         HandleUnparentDrop();
 
         // Right-click context menu
         DrawContextMenu();
 
         // Handle delayed inspector focus - wait for mouse release
-            if (m_PendingFocusEntity != 0) {
-                if (!ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
-                    // Mouse released - check if it was a drag or just a click
-                    if (!ImGui::GetDragDropPayload()) {
-                        ImGui::SetWindowFocus("Inspector");
-                    }
-                    m_PendingFocusEntity = 0; // Reset
+        if (m_PendingFocusEntity != 0) {
+            if (!ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
+                // Mouse released - check if it was a drag or just a click
+                if (!ImGui::GetDragDropPayload()) {
+                    ImGui::SetWindowFocus("Inspector");
                 }
+                m_PendingFocusEntity = 0; // Reset
             }
+        }
 
         ImGui::End();
     }
@@ -126,7 +164,7 @@ namespace Ermine {
         try {
             // Save source entity as a prefab
             SavePrefabToFile(ecs, sourceEntity, tempPrefabPath);
-            
+
             // Load the prefab which creates our new entity
             EntityID newEntity = LoadPrefabFromFile(ecs, tempPrefabPath);
 
@@ -140,7 +178,7 @@ namespace Ermine {
             if (ecs.HasComponent<ObjectMetaData>(newEntity)) {
                 auto& meta = ecs.GetComponent<ObjectMetaData>(newEntity);
                 const auto& sourceMeta = ecs.GetComponent<ObjectMetaData>(sourceEntity);
-                
+
                 // Get the base name (without any existing numeric suffix)
                 std::string baseName = sourceMeta.name;
                 size_t parenPos = baseName.find(" (");
@@ -155,7 +193,7 @@ namespace Ermine {
                 do {
                     newName = baseName + " (" + std::to_string(suffix) + ")";
                     nameExists = false;
-                    
+
                     // Check if this name is already taken
                     for (EntityID id = 1; id < MAX_ENTITIES; ++id) {
                         if (id != newEntity && ecs.IsEntityValid(id) && ecs.HasComponent<ObjectMetaData>(id)) {
@@ -174,7 +212,7 @@ namespace Ermine {
 
             // Make sure the new entity is added to the scene and selected
             //m_ActiveScene->SetSelectedEntity(newEntity);
-			editor::Selection::SelectSingle(m_ActiveScene, newEntity);
+            editor::Selection::SelectSingle(m_ActiveScene, newEntity);
             ImGui::SetWindowFocus("Inspector");
 
             // Clean up the temporary prefab file
@@ -189,6 +227,9 @@ namespace Ermine {
 
     void HierarchyPanel::DrawEntityNode(EntityID entity, int depth) {
         if (!ECS::GetInstance().IsEntityValid(entity)) return;
+
+        // Prevent recursive hierarchy during search
+        if (m_IsSearching && depth > 0) return;
 
         auto& ecs = ECS::GetInstance();
         auto& metadata = ecs.GetComponent<ObjectMetaData>(entity);
@@ -238,9 +279,9 @@ namespace Ermine {
 
         if (ImGui::IsItemClicked()) {
             if (ImGui::GetIO().KeyCtrl)
-				editor::Selection::Toggle(m_ActiveScene, entity); // Multi-select
+                editor::Selection::Toggle(m_ActiveScene, entity); // Multi-select
             else
-				editor::Selection::SelectSingle(m_ActiveScene, entity); // Single select
+                editor::Selection::SelectSingle(m_ActiveScene, entity); // Single select
             //m_ActiveScene->SetSelectedEntity(entity);
             m_PendingFocusEntity = editor::Selection::Primary();
         }
@@ -303,31 +344,31 @@ namespace Ermine {
                     //        childMeta.name.find("Sphere") != std::string::npos);
 
                     //if (isCubeOrSphere) {
-                        if (auto hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>()) {
-                            if (!hierarchySystem->WouldCreateCycle(droppedEntity, entity)) {
-                                // Log initial state
-                                //const auto& childTransform = ECS::GetInstance().GetComponent<Transform>(droppedEntity);
-                                //EE_CORE_INFO("{} (Child) before parenting:", childMeta.name);
-                                //EE_CORE_INFO("Position: {},{},{}",
-                                //    childTransform.position.x,
-                                //    childTransform.position.y,
-                                //    childTransform.position.z);
+                    if (auto hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>()) {
+                        if (!hierarchySystem->WouldCreateCycle(droppedEntity, entity)) {
+                            // Log initial state
+                            //const auto& childTransform = ECS::GetInstance().GetComponent<Transform>(droppedEntity);
+                            //EE_CORE_INFO("{} (Child) before parenting:", childMeta.name);
+                            //EE_CORE_INFO("Position: {},{},{}",
+                            //    childTransform.position.x,
+                            //    childTransform.position.y,
+                            //    childTransform.position.z);
 
-                                // Do the parenting
-                                hierarchySystem->SetParent(droppedEntity, entity);
-                                hierarchySystem->MarkDirty(entity);
-                                hierarchySystem->MarkDirty(droppedEntity);
+                            // Do the parenting
+                            hierarchySystem->SetParent(droppedEntity, entity);
+                            hierarchySystem->MarkDirty(entity);
+                            hierarchySystem->MarkDirty(droppedEntity);
 
-                                // Log after parenting
-                                //const auto& updatedTransform = ECS::GetInstance().GetComponent<Transform>(droppedEntity);
-                                //EE_CORE_INFO("{} is now child of {}", childMeta.name, parentMeta.name);
-                                //EE_CORE_INFO("New Position: {},{},{}",
-                                //    updatedTransform.position.x,
-                                //    updatedTransform.position.y,
-                                //    updatedTransform.position.z);
-                                //EE_CORE_INFO("Is Transform Dirty: {}", updatedTransform.isDirty);
-                            }
+                            // Log after parenting
+                            //const auto& updatedTransform = ECS::GetInstance().GetComponent<Transform>(droppedEntity);
+                            //EE_CORE_INFO("{} is now child of {}", childMeta.name, parentMeta.name);
+                            //EE_CORE_INFO("New Position: {},{},{}",
+                            //    updatedTransform.position.x,
+                            //    updatedTransform.position.y,
+                            //    updatedTransform.position.z);
+                            //EE_CORE_INFO("Is Transform Dirty: {}", updatedTransform.isDirty);
                         }
+                    }
                     //}
                 }
             }
@@ -358,7 +399,7 @@ namespace Ermine {
             if (ImGui::MenuItem("Create Empty Entity")) {
                 EntityID newEntity = m_ActiveScene->CreateEntity("Empty Entity");
                 //m_ActiveScene->SetSelectedEntity(newEntity); // Auto-select the new entity
-				editor::Selection::SelectSingle(m_ActiveScene, newEntity);
+                editor::Selection::SelectSingle(m_ActiveScene, newEntity);
                 ImGui::SetWindowFocus("Inspector");
             }
 
@@ -386,7 +427,7 @@ namespace Ermine {
                     EE_CORE_INFO("==================");
 
                     //m_ActiveScene->SetSelectedEntity(entity);
-					editor::Selection::SelectSingle(m_ActiveScene, entity);
+                    editor::Selection::SelectSingle(m_ActiveScene, entity);
                     ImGui::SetWindowFocus("Inspector");
                 }
                 if (ImGui::MenuItem("Sphere")) {
@@ -411,7 +452,7 @@ namespace Ermine {
                     }
                     EE_CORE_INFO("==================");
                     //m_ActiveScene->SetSelectedEntity(entity);
-					editor::Selection::SelectSingle(m_ActiveScene, entity);
+                    editor::Selection::SelectSingle(m_ActiveScene, entity);
                     ImGui::SetWindowFocus("Inspector");
                 }
                 if (ImGui::MenuItem("Cone")) {
@@ -436,7 +477,7 @@ namespace Ermine {
                     }
                     EE_CORE_INFO("==================");
                     //m_ActiveScene->SetSelectedEntity(entity);
-					editor::Selection::SelectSingle(m_ActiveScene, entity);
+                    editor::Selection::SelectSingle(m_ActiveScene, entity);
                     ImGui::SetWindowFocus("Inspector");
                 }
                 ImGui::EndMenu();
@@ -447,19 +488,19 @@ namespace Ermine {
                 ECS::GetInstance().AddComponent(entity, Light());
                 /*m_ActiveScene->SetSelectedEntity(entity); */
                 editor::Selection::SelectSingle(m_ActiveScene, entity);
-                ImGui::SetWindowFocus("Inspector"); 
+                ImGui::SetWindowFocus("Inspector");
             }
 
 
             ImGui::Separator();
 
-			EntityID primary = editor::Selection::Primary();
+            EntityID primary = editor::Selection::Primary();
             if (primary != 0)
             {
-				auto hs = ECS::GetInstance().GetSystem<HierarchySystem>();
+                auto hs = ECS::GetInstance().GetSystem<HierarchySystem>();
                 if (hs->GetParent(primary) != 0)
                 {
-	                if (ImGui::MenuItem("Unparent Selected"))
+                    if (ImGui::MenuItem("Unparent Selected"))
                         for (auto id : editor::Selection::All())
                         {
                             hs->UnsetParent(id);
@@ -469,13 +510,13 @@ namespace Ermine {
 
                 if (ImGui::MenuItem("Delete Selected"))
                 {
-	                auto sel = editor::Selection::All();
+                    auto sel = editor::Selection::All();
                     for (auto id : sel)
                     {
                         m_ActiveScene->DestroyEntity(id);
                     }
-					editor::Selection::Clear(m_ActiveScene);
-					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
+                    editor::Selection::Clear(m_ActiveScene);
+                    ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
                 }
             }
             //EntityID selected = m_ActiveScene->GetSelectedEntity();
@@ -511,5 +552,19 @@ namespace Ermine {
             return "[Mesh] ";
         }
         return ""; // No prefix for basic entities
+    }
+
+    bool HierarchyPanel::NameMatchesSearch(const std::string& name, const char* search)
+    {
+        if (!search || search[0] == '\0')
+            return true;
+
+        std::string lowerName = name;
+        std::string lowerSearch = search;
+
+        std::transform(lowerName.begin(), lowerName.end(), lowerName.begin(), ::tolower);
+        std::transform(lowerSearch.begin(), lowerSearch.end(), lowerSearch.begin(), ::tolower);
+
+        return lowerName.find(lowerSearch) != std::string::npos;
     }
 }

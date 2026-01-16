@@ -28,6 +28,9 @@ namespace Ermine {
         bool m_ShowInactive = false;          ///< Show inactive entities in hierarchy (grayed out)
         EntityID m_PendingFocusEntity = 0;    ///< Entity waiting for inspector focus after interaction
 
+        char m_SearchBuffer[128] = {};  ///< Buffer for entity search input
+        bool m_IsSearching = false;		///< Flag indicating if search mode is active
+
         // UI helper functions
         void DuplicateEntity(EntityID sourceEntity);
         /*!
@@ -59,6 +62,8 @@ namespace Ermine {
         \return Icon string (e.g., "[Light] ", "[Audio] ") or empty string
         */
         const char* GetEntityIcon(EntityID entity) const;
+
+        bool NameMatchesSearch(const std::string& name, const char* search);
 
     public:
         /*!
