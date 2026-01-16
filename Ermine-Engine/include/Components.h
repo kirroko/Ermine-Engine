@@ -3297,6 +3297,7 @@ namespace Ermine
 
 		float radius = 0.5f;
 		float height = 1.0f;
+		float centerYOffset = 0.0f;
 
 		bool autoFitFromCollider = true;
 		bool didAutoFit = false;

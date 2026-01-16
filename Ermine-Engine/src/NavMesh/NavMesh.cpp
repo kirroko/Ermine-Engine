@@ -122,6 +122,34 @@ struct Ermine::NavMeshComponent::Runtime
 };
 
 namespace Ermine {
+    static void SyncBakeAgentSettingsFromAgents(NavMeshComponent& nm)
+    {
+        auto& ecs = ECS::GetInstance();
+
+        float maxR = 0.0f;
+        float maxH = 0.0f;
+
+        // Use your ECS iteration method; this is a generic idea.
+        // If you don't have a global iterator, do it using the system entity lists.
+        for (EntityID e = 0; e < MAX_ENTITIES; ++e)
+        {
+            if (!ecs.IsEntityValid(e)) continue;
+            if (!ecs.HasComponent<NavMeshAgent>(e)) continue;
+
+            const auto& ag = ecs.GetComponent<NavMeshAgent>(e);
+
+            maxR = std::max(maxR, ag.radius);
+            maxH = std::max(maxH, ag.height);
+        }
+
+        if (maxR > 0.0f) nm.agentRadius = maxR;
+        if (maxH > 0.0f) nm.agentHeight = maxH;
+
+        // small safety margin so it doesn’t hug walls
+        nm.agentRadius *= 1.05f;
+        nm.agentHeight *= 1.02f;
+    }
+
     void NavMeshSystem::Init()
     {
         if (!m_dd) m_dd = new DebugDrawGL();
@@ -131,17 +159,37 @@ namespace Ermine {
         dtAllocSetCustom(MyDtAlloc, MyDtFree);
     }
 
+    void NavMeshSystem::FreeAllNavMeshes()
+    {
+        EE_CORE_INFO("[NavMeshSystem] FreeAllNavMeshes() START");
+
+        auto& ecs = ECS::GetInstance();
+        int destroyed = 0;
+        int has = 0;
+
+        for (EntityID e = 0; e < MAX_ENTITIES; ++e)
+        {
+            if (!ecs.HasComponent<NavMeshComponent>(e))
+                continue;
+
+            ++has;
+            EE_CORE_INFO("[NavMeshSystem] Found NavMeshComponent on entity {}", (int)e);
+
+            auto& nav = ecs.GetComponent<NavMeshComponent>(e);
+            DestroyRuntime(nav);
+            DestroyBuild(nav);
+            ++destroyed;
+        }
+
+        EE_CORE_INFO("[NavMeshSystem] Components found: {}", has);
+        EE_CORE_INFO("[NavMeshSystem] FreeAllNavMeshes destroyed: {}", destroyed);
+    }
+
     void NavMeshSystem::Shutdown()
     {
         EE_CORE_INFO("[NavMeshSystem] Freeing all navmesh data");
-        EE_CORE_INFO("[NavMeshSystem] Entities to destroy: {}", m_Entities.size());
-        for (auto e : m_Entities)
-        {
-            if (!ECS::GetInstance().HasComponent<NavMeshComponent>(e)) continue;
-            auto& c = ECS::GetInstance().GetComponent<NavMeshComponent>(e);
-            DestroyBuild(c);
-            DestroyRuntime(c);
-        }
+
+        FreeAllNavMeshes();
 
         EE_CORE_INFO("[NavMesh] RC outstanding = {} (allocs={} frees={})",
             g_rcAllocs.load() - g_rcFrees.load(),
@@ -157,6 +205,7 @@ namespace Ermine {
 
     void NavMeshSystem::DestroyBuild(NavMeshComponent& c)
     {
+        EE_CORE_INFO("[NavMeshSystem] DestroyBuild");
         if (!c.build) return;
 
         if (c.build->dmesh) { rcFreePolyMeshDetail(c.build->dmesh); c.build->dmesh = nullptr; }
@@ -388,6 +437,9 @@ namespace Ermine {
             return false;
 
         auto& nm = ecs.GetComponent<NavMeshComponent>(e);
+
+        SyncBakeAgentSettingsFromAgents(nm);
+
         auto& navT = ecs.GetComponent<Transform>(e);
         auto& navM = ecs.GetComponent<Mesh>(e);
 

@@ -2184,8 +2184,8 @@ namespace Ermine::editor {
 		ImGui::TextUnformatted("Recast Build Settings");
 		ImGui::DragFloat("Cell Size", &nav.cellSize, 0.01f, 0.01f, 2.0f);
 		ImGui::DragFloat("Cell Height", &nav.cellHeight, 0.01f, 0.01f, 2.0f);
-		ImGui::DragFloat("Agent Height", &nav.agentHeight, 0.01f, 0.1f, 5.0f);
-		ImGui::DragFloat("Agent Radius", &nav.agentRadius, 0.01f, 0.05f, 2.0f);
+		//ImGui::DragFloat("Agent Height", &nav.agentHeight, 0.01f, 0.1f, 5.0f);
+		//ImGui::DragFloat("Agent Radius", &nav.agentRadius, 0.01f, 0.05f, 2.0f);
 		ImGui::DragFloat("Max Climb", &nav.agentMaxClimb, 0.01f, 0.0f, 2.0f);
 		ImGui::DragFloat("Max Slope", &nav.agentMaxSlope, 0.1f, 0.0f, 89.0f);
 
@@ -2247,6 +2247,7 @@ namespace Ermine::editor {
 
 					a.radius = std::max(hx, hz);
 					a.height = 2.0f * hy;
+					a.centerYOffset = hy;
 					break;
 				}
 
@@ -2259,6 +2260,7 @@ namespace Ermine::editor {
 
 					a.radius = r;
 					a.height = 2.0f * r; // reasonable nav height for a sphere
+					a.centerYOffset = a.radius;
 					break;
 				}
 
@@ -2276,6 +2278,7 @@ namespace Ermine::editor {
 					a.radius = r;
 					// Total capsule height = cylinder(2*halfH) + two hemispheres(2*r)
 					a.height = 2.0f * halfH + 2.0f * r;
+					a.centerYOffset = halfH + r;
 					break;
 				}
 
@@ -2299,6 +2302,7 @@ namespace Ermine::editor {
 					a.radius = 0.5f * std::max(size.x, size.z);
 					a.height = std::max(size.y, minVal);
 					a.radius = std::max(a.radius, minVal);
+					a.centerYOffset = a.height * 0.5f;
 					break;
 				}
 

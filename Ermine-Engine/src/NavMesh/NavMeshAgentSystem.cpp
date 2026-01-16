@@ -84,8 +84,10 @@ namespace Ermine
             Vec3 target = agent.path[agent.currentCorner];
             Vec3 pos = trans.position;
             Vec3 dir = target - pos;
+            dir.y = 0.0f;
 
-            float dist = std::sqrt(dir.x * dir.x + dir.y * dir.y + dir.z * dir.z);
+            //float dist = std::sqrt(dir.x * dir.x + dir.y * dir.y + dir.z * dir.z);
+            float dist = std::sqrt(dir.x * dir.x + dir.z * dir.z);
 
             // if very close to the corner, go to next one
             if (dist < agent.stoppingDistance)
@@ -124,10 +126,15 @@ namespace Ermine
                     Vec3 clamped;
                     auto navSys = ecs.GetSystem<NavMeshSystem>();
                     if (navSys && navSys->ClampToNavMesh(navE, pos, ext, clamped))
+                    {
                         pos = clamped;
+
+                        // Navmesh point is on the floor. Your physics body wants its CENTER.
+                        pos.y += agent.centerYOffset;
+                    }
                 }
 
-                // NEW: move using physics so collisions resolve
+                // move using physics so collisions resolve
                 auto phys = ecs.GetSystem<Physics>();
                 if (phys && ecs.HasComponent<PhysicComponent>(e))
                 {

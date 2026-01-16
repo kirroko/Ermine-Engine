@@ -23,6 +23,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "ScriptSystem.h"
 #include "AudioSystem.h"
 #include "../../../Ermine-ResourcePipeline/xresource_pipeline_v2-main/dependencies/xstrtool/source/xstrtool.h"
+#include "NavMesh.h"
 
 namespace
 {
@@ -274,6 +275,10 @@ void SceneManager::NewScene()
     if (auto physics = ecs.GetSystem<Ermine::Physics>()) {
         physics->ClearPhysicBody();
     }
+
+    if (auto nav = ecs.GetSystem<Ermine::NavMeshSystem>()) {
+        nav->FreeAllNavMeshes();
+    }
     
     // STEP 3: Clear ECS
     ecs.ClearAllEntities();
@@ -327,6 +332,10 @@ void SceneManager::ClearScene()
     // STEP 2: Clear physics
     if (auto physics = ecs.GetSystem<Ermine::Physics>()) {
         physics->ClearPhysicBody();
+    }
+
+    if (auto nav = ecs.GetSystem<Ermine::NavMeshSystem>()) {
+        nav->FreeAllNavMeshes();
     }
     
     // STEP 3: Clear ECS
