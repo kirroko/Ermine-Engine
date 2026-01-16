@@ -42,6 +42,7 @@ namespace Ermine
 	XPROPERTY_REG(HierarchyComponent)
 	XPROPERTY_REG(UIComponent)
 	XPROPERTY_REG(GlobalGraphics)
+	XPROPERTY_REG(AmbientLightProbe)
 
 	//XPROPERTY_REG(ModelComponent)
 	//XPROPERTY_REG(AnimationComponent)

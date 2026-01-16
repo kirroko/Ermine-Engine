@@ -1884,12 +1884,69 @@ namespace Ermine
 			xproperty::obj_member<"spotlightRayIntensity", &GlobalGraphics::spotlightRayIntensity>,
 			xproperty::obj_member<"spotlightRayFalloff", &GlobalGraphics::spotlightRayFalloff>,
 			
-			// Motion blur
-			xproperty::obj_member<"motionBlurEnabled", &GlobalGraphics::motionBlurEnabled>,
-			xproperty::obj_member<"motionBlurStrength", &GlobalGraphics::motionBlurStrength>,
-			xproperty::obj_member<"motionBlurSamples", &GlobalGraphics::motionBlurSamples>
-		)
-	};
+		// Motion blur
+		xproperty::obj_member<"motionBlurEnabled", &GlobalGraphics::motionBlurEnabled>,
+		xproperty::obj_member<"motionBlurStrength", &GlobalGraphics::motionBlurStrength>,
+		xproperty::obj_member<"motionBlurSamples", &GlobalGraphics::motionBlurSamples>,
+
+		// Ambient lighting
+		xproperty::obj_member<"ambientLightEnabled", &GlobalGraphics::ambientLightEnabled>,
+		xproperty::obj_member<"ambientColor", &GlobalGraphics::ambientColor>,
+		xproperty::obj_member<"ambientIntensity", &GlobalGraphics::ambientIntensity>,
+		xproperty::obj_member<"ambientOcclusionStrength", &GlobalGraphics::ambientOcclusionStrength>
+	)
+};
+
+/*!***********************************************************************
+\brief
+ Ambient Light Probe - Captures ambient lighting at a specific location.
+ Multiple probes are interpolated to provide smooth ambient transitions.
+ Similar to Unity's Light Probe system.
+*************************************************************************/
+struct AmbientLightProbe
+{
+	// Probe identification
+	std::string probeName = "AmbientProbe";
+	bool isActive = true;
+
+	// Baked ambient data (captured at this probe's position)
+	Vec3 ambientColor = Vec3{ 1.0f, 1.0f, 1.0f };
+	float ambientIntensity = 0.1f;
+
+	// Probe influence settings
+	float influenceRadius = 10.0f;  // How far this probe affects surrounding areas
+	float blendWeight = 1.0f;       // Blend weight for interpolation (0-1)
+
+	// Optional: Spherical harmonics data for more accurate ambient (future enhancement)
+	// You can add SH coefficients here for directional ambient lighting
+
+	// Visualization settings (editor only)
+	bool showGizmo = true;
+	Vec3 gizmoColor = Vec3{ 1.0f, 1.0f, 0.0f }; // Yellow gizmo by default
+
+	AmbientLightProbe() = default;
+
+	template<typename Alloc>
+	void Serialize(rapidjson::Value& out, Alloc& alloc) const {
+		xprop_utils::SerializeToJson(*this, out, alloc);
+	}
+
+	void Deserialize(const rapidjson::Value& in) {
+		xprop_utils::DeserializeFromJson(*this, in);
+	}
+
+	XPROPERTY_DEF(
+		"AmbientLightProbe", AmbientLightProbe,
+		xproperty::obj_member<"probeName", &AmbientLightProbe::probeName>,
+		xproperty::obj_member<"isActive", &AmbientLightProbe::isActive>,
+		xproperty::obj_member<"ambientColor", &AmbientLightProbe::ambientColor>,
+		xproperty::obj_member<"ambientIntensity", &AmbientLightProbe::ambientIntensity>,
+		xproperty::obj_member<"influenceRadius", &AmbientLightProbe::influenceRadius>,
+		xproperty::obj_member<"blendWeight", &AmbientLightProbe::blendWeight>,
+		xproperty::obj_member<"showGizmo", &AmbientLightProbe::showGizmo>,
+		xproperty::obj_member<"gizmoColor", &AmbientLightProbe::gizmoColor>
+	)
+};
 
 	/*!***********************************************************************
 	\brief

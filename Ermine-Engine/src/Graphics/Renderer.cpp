@@ -3032,10 +3032,21 @@ void Renderer::RenderLightingPass(const Mtx44& view, const Mtx44& projection)
 	m_LightPassShader->SetUniform1f("u_FogHeightCoefficient", m_FogHeightCoefficient);
 	m_LightPassShader->SetUniform1f("u_FogHeightFalloff", m_FogHeightFalloff);
 
-	// Set ambient lighting parameters
+	// Get camera position for probe interpolation
+	Vec3 cameraPos = Vec3(invView[3][0], invView[3][1], invView[3][2]);
+
+	// Interpolate ambient lighting from nearby probes
+	auto probeResult = InterpolateAmbientProbes(cameraPos);
+
+	// Use probe-blended ambient if probes are active, otherwise use global settings
+	// If probes returned default values, it means no probes were nearby - use global ambient
+	glm::vec3 finalAmbientColor = glm::vec3(probeResult.color.x, probeResult.color.y, probeResult.color.z);
+	float finalAmbientIntensity = probeResult.intensity;
+
+	// Set ambient lighting parameters (probe-interpolated or global fallback)
 	m_LightPassShader->SetUniform1i("u_AmbientLightEnabled", m_AmbientLightEnabled ? 1 : 0);
-	m_LightPassShader->SetUniform3f("u_AmbientColor", m_AmbientColor);
-	m_LightPassShader->SetUniform1f("u_AmbientIntensity", m_AmbientIntensity);
+	m_LightPassShader->SetUniform3f("u_AmbientColor", finalAmbientColor);
+	m_LightPassShader->SetUniform1f("u_AmbientIntensity", finalAmbientIntensity);
 	m_LightPassShader->SetUniform1f("u_AmbientOcclusionStrength", m_AmbientOcclusionStrength);
 
 	// Set shading mode
@@ -6882,4 +6893,91 @@ void Renderer::GenerateIGNTexture()
 
 	EE_CORE_INFO("Generated IGN texture: {0}x{1}, Handle: {2}", width, height, m_IGNTextureHandle);
 	glCheckError();
+}
+
+/**
+ * @brief Interpolates ambient lighting from nearby probes based on sample position.
+ * Blends up to 4 nearest probes using inverse distance weighting for smooth transitions.
+ * @param samplePosition World-space position to sample ambient lighting (typically camera position)
+ * @return Blended ambient color and intensity from nearby probes
+ */
+Renderer::ProbeBlendResult Renderer::InterpolateAmbientProbes(const Vec3& samplePosition)
+{
+	auto& ecs = ECS::GetInstance();
+	ProbeBlendResult result;
+	result.color = Vec3{ 1.0f, 1.0f, 1.0f }; // Default fallback
+	result.intensity = 0.1f;
+
+	std::vector<std::pair<float, EntityID>> nearbyProbes; // distance, entity
+
+	// Iterate through all entities to find AmbientLightProbe components
+	// Since we can't directly iterate the component array, we check all valid entities
+	for (EntityID entity = 0; entity < MAX_ENTITIES; ++entity)
+	{
+		if (!ecs.IsEntityValid(entity)) continue;
+		if (!ecs.HasComponent<AmbientLightProbe>(entity)) continue;
+		if (!ecs.HasComponent<Transform>(entity)) continue;
+
+		auto& probe = ecs.GetComponent<AmbientLightProbe>(entity);
+		if (!probe.isActive) continue;
+
+		auto& transform = ecs.GetComponent<Transform>(entity);
+		Vec3 probePos = transform.position;
+
+		// Use GlobalTransform if available for hierarchical probes
+		if (ecs.HasComponent<GlobalTransform>(entity)) {
+			auto& globalTransform = ecs.GetComponent<GlobalTransform>(entity);
+			probePos = globalTransform.GetWorldPosition();
+		}
+
+		float distance = Vec3Length(samplePosition - probePos);
+
+		// Only consider probes within influence radius
+		if (distance <= probe.influenceRadius) {
+			nearbyProbes.push_back({ distance, entity });
+		}
+	}
+
+	if (nearbyProbes.empty()) {
+		// No probes nearby - use global ambient from GlobalGraphics
+		return result;
+	}
+
+	// Sort by distance (closest first)
+	std::sort(nearbyProbes.begin(), nearbyProbes.end(),
+		[](const auto& a, const auto& b) { return a.first < b.first; });
+
+	// Blend up to 4 nearest probes (like Unity's system)
+	const int maxProbes = 4;
+	int count = std::min(static_cast<int>(nearbyProbes.size()), maxProbes);
+
+	float totalWeight = 0.0f;
+	Vec3 blendedColor{ 0.0f, 0.0f, 0.0f };
+	float blendedIntensity = 0.0f;
+
+	for (int i = 0; i < count; ++i)
+	{
+		float distance = nearbyProbes[i].first;
+		EntityID entity = nearbyProbes[i].second;
+
+		auto& probe = ecs.GetComponent<AmbientLightProbe>(entity);
+
+		// Calculate weight based on distance (inverse distance weighting)
+		// Closer probes have more influence
+		float weight = 1.0f - (distance / probe.influenceRadius);
+		weight = std::clamp(weight, 0.0f, 1.0f);
+		weight *= probe.blendWeight; // Apply per-probe blend weight
+
+		totalWeight += weight;
+		blendedColor += probe.ambientColor * weight;
+		blendedIntensity += probe.ambientIntensity * weight;
+	}
+
+	// Normalize by total weight
+	if (totalWeight > 0.0f) {
+		result.color = blendedColor / totalWeight;
+		result.intensity = blendedIntensity / totalWeight;
+	}
+
+	return result;
 }

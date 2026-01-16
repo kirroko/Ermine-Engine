@@ -589,9 +589,12 @@ void main()
         // Ambient - configurable ambient lighting with color and intensity
         vec3 ambient = vec3(0.0);
         if (u_AmbientLightEnabled != 0) {
-            // Calculate ambient with color, intensity, AO, and SSAO
-            float aoFactor = mix(1.0, ao, u_AmbientOcclusionStrength);
-            ambient = u_AmbientColor * u_AmbientIntensity * albedo * aoFactor * ssaoFactor;
+            // Calculate ambient with color, intensity, and combined AO (material + SSAO)
+            // Combine material AO and SSAO into a single occlusion factor
+            float combinedAO = ao * ssaoFactor;
+            // Apply the ambient occlusion strength to modulate how much AO affects the ambient
+            float aoInfluence = mix(1.0, combinedAO, u_AmbientOcclusionStrength);
+            ambient = u_AmbientColor * u_AmbientIntensity * albedo * aoInfluence;
         }
         result += ambient;
 
@@ -663,9 +666,12 @@ void main()
         // PBR ambient - configurable ambient lighting with color and intensity
         vec3 ambient = vec3(0.0);
         if (u_AmbientLightEnabled != 0) {
-            // Calculate ambient with color, intensity, AO, and SSAO
-            float aoFactor = mix(1.0, ao, u_AmbientOcclusionStrength);
-            ambient = u_AmbientColor * u_AmbientIntensity * albedo * aoFactor * ssaoFactor;
+            // Calculate ambient with color, intensity, and combined AO (material + SSAO)
+            // Combine material AO and SSAO into a single occlusion factor
+            float combinedAO = ao * ssaoFactor;
+            // Apply the ambient occlusion strength to modulate how much AO affects the ambient
+            float aoInfluence = mix(1.0, combinedAO, u_AmbientOcclusionStrength);
+            ambient = u_AmbientColor * u_AmbientIntensity * albedo * aoInfluence;
         }
         result += ambient;
 

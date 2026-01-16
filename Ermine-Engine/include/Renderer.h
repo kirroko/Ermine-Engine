@@ -945,6 +945,22 @@ namespace Ermine::graphics
         bool HasCustomShader(const Ermine::graphics::Material* material) const;
 
         /**
+         * @brief Result structure for ambient probe interpolation
+         */
+        struct ProbeBlendResult {
+            Vec3 color;
+            float intensity;
+        };
+
+        /**
+         * @brief Interpolates ambient lighting from nearby probes based on sample position.
+         * Blends up to 4 nearest probes using inverse distance weighting for smooth transitions.
+         * @param samplePosition World-space position to sample ambient lighting (typically camera position)
+         * @return Blended ambient color and intensity from nearby probes
+         */
+        ProbeBlendResult InterpolateAmbientProbes(const Vec3& samplePosition);
+
+        /**
          * @brief Handle window resize events to adjust buffers and viewports
          * @param width New window width
          * @param height New window height
