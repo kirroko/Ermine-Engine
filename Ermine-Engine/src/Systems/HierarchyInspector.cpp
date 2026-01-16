@@ -1707,7 +1707,7 @@ namespace Ermine::editor {
 								const auto& meshData = meshes[meshIndex];
 								const std::string& meshID = meshData.meshID;
 
-								// ✅ For cache files without scene, create basic material
+								// For cache files without scene, create basic material
 								uint32_t matIndex = 0;  // Default material index
 
 								// If we have a scene, get material from it
@@ -1736,7 +1736,7 @@ namespace Ermine::editor {
 								// Set parent-child relationship
 								hierarchySystem->SetParent(childEntity, entity, true);
 
-								// ✅ Create material - either from scene or default
+								// Create material - either from scene or default
 								auto materialPtr = std::make_shared<graphics::Material>();
 
 								if (scene && matIndex < scene->mNumMaterials) {
@@ -1800,19 +1800,19 @@ namespace Ermine::editor {
 										}
 									}
 
-									// UV transform with V-flip
+									// UV transform
 									aiUVTransform uvTransform;
 									if (aiMat->Get(AI_MATKEY_UVTRANSFORM(aiTextureType_DIFFUSE, 0), uvTransform) == AI_SUCCESS) {
-										materialPtr->SetUVScale(Vec2(uvTransform.mScaling.x, -uvTransform.mScaling.y));
-										materialPtr->SetUVOffset(Vec2(uvTransform.mTranslation.x, 1.0f - uvTransform.mTranslation.y));
+										materialPtr->SetUVScale(Vec2(uvTransform.mScaling.x, uvTransform.mScaling.y));
+										materialPtr->SetUVOffset(Vec2(uvTransform.mTranslation.x, uvTransform.mTranslation.y));
 									}
 									else {
-										materialPtr->SetUVScale(Vec2(1.0f, -1.0f));
-										materialPtr->SetUVOffset(Vec2(0.0f, 1.0f));
+										materialPtr->SetUVScale(Vec2(1.0f, 1.0f));
+										materialPtr->SetUVOffset(Vec2(0.0f, 0.0f));
 									}
 								}
 								else {
-									// ✅ Cache file without scene - use default white material
+									// Cache file without scene - use default white material
 									EE_CORE_INFO("Using default material for cache file mesh");
 									materialPtr->SetVec4("materialAlbedo", Vec4(1.0f, 1.0f, 1.0f, 1.0f));
 									materialPtr->SetFloat("materialRoughness", 0.5f);
@@ -1896,7 +1896,7 @@ namespace Ermine::editor {
 							const auto& meshData = meshes[meshIndex];
 							const std::string& meshID = meshData.meshID;
 
-							// ✅ Get material index from aiScene (if available)
+							// Get material index from aiScene (if available)
 							uint32_t matIndex = 0;
 							bool hasSceneMaterial = false;
 
@@ -1951,7 +1951,7 @@ namespace Ermine::editor {
 								hierarchySystem->SetParent(childEntity, entity, true);
 							}
 
-							// ✅ Create material - either from scene or default
+							// Create material - either from scene or default
 							auto materialPtr = std::make_shared<graphics::Material>();
 
 							if (hasSceneMaterial) {
@@ -2012,19 +2012,19 @@ namespace Ermine::editor {
 									}
 								}
 
-								// UV transform with V-flip
+								// UV transform
 								aiUVTransform uvTransform;
 								if (aiMat->Get(AI_MATKEY_UVTRANSFORM(aiTextureType_DIFFUSE, 0), uvTransform) == AI_SUCCESS) {
-									materialPtr->SetUVScale(Vec2(uvTransform.mScaling.x, -uvTransform.mScaling.y));
-									materialPtr->SetUVOffset(Vec2(uvTransform.mTranslation.x, 1.0f - uvTransform.mTranslation.y));
+									materialPtr->SetUVScale(Vec2(uvTransform.mScaling.x, uvTransform.mScaling.y));
+									materialPtr->SetUVOffset(Vec2(uvTransform.mTranslation.x, uvTransform.mTranslation.y));
 								}
 								else {
-									materialPtr->SetUVScale(Vec2(1.0f, -1.0f));
-									materialPtr->SetUVOffset(Vec2(0.0f, 1.0f));
+									materialPtr->SetUVScale(Vec2(1.0f, 1.0f));
+									materialPtr->SetUVOffset(Vec2(0.0f, 0.0f));
 								}
 							}
 							else {
-								// ✅ Cache file without scene - use default white material
+								// Cache file without scene - use default white material
 								EE_CORE_INFO("Using default material for cache file mesh on reload");
 								materialPtr->SetVec4("materialAlbedo", Vec4(1.0f, 1.0f, 1.0f, 1.0f));
 								materialPtr->SetFloat("materialRoughness", 0.5f);

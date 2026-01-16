@@ -43,6 +43,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "SceneManager.h"
 #include <imnodes.h>
 
+#include "SettingsGUI.h"
+
 
 namespace Ermine
 {
@@ -354,12 +356,14 @@ void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
             ImGui::StyleColorsLight();
             fixViewportsStyling();
             EE_CORE_INFO("Light theme applied");
+			SettingsGUI::SetMode(0);
         }
         if (ImGui::MenuItem("Dark Mode"))
         {
             ImGui::StyleColorsDark();
             fixViewportsStyling();
             EE_CORE_INFO("Dark theme applied");
+            SettingsGUI::SetMode(1);
         }
         if (ImGui::MenuItem("Pink Mode"))
         {
@@ -367,6 +371,7 @@ void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
             SetCutesyPinkTheme();
             fixViewportsStyling();
             EE_CORE_INFO("Pink theme applied");
+            SettingsGUI::SetMode(2);
         }
         if (ImGui::MenuItem("Cyberpunk Mode"))
         {
@@ -374,6 +379,7 @@ void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
             SetCyberpunk2077Theme();
             fixViewportsStyling();
             EE_CORE_INFO("Cyberpunk theme applied");
+			SettingsGUI::SetMode(3);
         }
         if (ImGui::BeginMenu("Overwatch Mode"))
         {
@@ -382,12 +388,14 @@ void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
                 SetOverwatchTheme(true);
                 fixViewportsStyling();
                 EE_CORE_INFO("Overwatch (Dark) theme applied");
+                SettingsGUI::SetMode(4);
             }
             if (ImGui::MenuItem("Overwatch - Light"))
             {
                 SetOverwatchTheme(false);
                 fixViewportsStyling();
                 EE_CORE_INFO("Overwatch (Light) theme applied");
+                SettingsGUI::SetMode(5);
             }
             ImGui::EndMenu();
         }
@@ -400,6 +408,13 @@ void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
         if (ImGui::MenuItem("Console"))
         {
             EE_CORE_INFO("Console open");
+        }
+
+        if (ImGui::MenuItem("UI Settings"))
+        {
+            EE_CORE_INFO("Settings open");
+            //SettingsGUI::SetSettings(true);
+			SettingsGUI::SetSettingsOpen(true);
         }
 
         // Legacy ImGui menu previews removed - use scene-based approach instead:
@@ -988,7 +1003,8 @@ void EditorGUI::Init(GLFWwindow* window)
     // --- DPI scaling for UI ---
     float xScale, yScale;
     glfwGetWindowContentScale(window, &xScale, &yScale);
-	io.FontGlobalScale = xScale; // Apply the xScale to the global font scale
+	//io.FontGlobalScale = xScale; // Apply the xScale to the global font scale
+    io.FontGlobalScale = SettingsGUI::GetBaseFontSize();
     {
         const char* kFontPath = "../Resources/Fonts/Rajdhani-Regular.ttf";
         constexpr float kFontSizePx = 18.0f; // base pixel size at scale 1.0
@@ -1042,6 +1058,60 @@ void EditorGUI::Init(GLFWwindow* window)
     // Setup Platform/Renderer backends
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 460");
+
+    const auto fixViewportsStyling = []()
+    {
+        ImGuiIO& ioFix = ImGui::GetIO();
+        if (ioFix.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+        {
+            ImGuiStyle& style = ImGui::GetStyle();
+            style.WindowRounding = 0.0f;
+            style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+        }
+    };
+
+    // Apply once, via switch:
+    switch (SettingsGUI::GetMode())
+    {
+    case 0:
+        ImGui::StyleColorsLight();
+        fixViewportsStyling();
+        EE_CORE_INFO("Light theme applied");
+        break;
+
+    case 1:
+	default:
+        ImGui::StyleColorsDark();
+        fixViewportsStyling();
+        EE_CORE_INFO("Dark theme applied");
+        break;
+
+    case 2:
+        ImGui::StyleColorsLight();
+        SetCutesyPinkTheme();
+        fixViewportsStyling();
+        EE_CORE_INFO("Pink theme applied");
+        break;
+
+    case 3:
+        ImGui::StyleColorsDark();
+        SetCyberpunk2077Theme();
+        fixViewportsStyling();
+        EE_CORE_INFO("Cyberpunk theme applied");
+        break;
+
+    case 4:
+        SetOverwatchTheme(true);
+        fixViewportsStyling();
+        EE_CORE_INFO("Overwatch (Dark) theme applied");
+        break;
+
+    case 5:
+        SetOverwatchTheme(false);
+        fixViewportsStyling();
+        EE_CORE_INFO("Overwatch (Light) theme applied");
+        break;
+    }
 
     ImNodes::CreateContext();
 
