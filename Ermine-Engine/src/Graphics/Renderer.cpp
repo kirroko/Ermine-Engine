@@ -3032,6 +3032,12 @@ void Renderer::RenderLightingPass(const Mtx44& view, const Mtx44& projection)
 	m_LightPassShader->SetUniform1f("u_FogHeightCoefficient", m_FogHeightCoefficient);
 	m_LightPassShader->SetUniform1f("u_FogHeightFalloff", m_FogHeightFalloff);
 
+	// Set ambient lighting parameters
+	m_LightPassShader->SetUniform1i("u_AmbientLightEnabled", m_AmbientLightEnabled ? 1 : 0);
+	m_LightPassShader->SetUniform3f("u_AmbientColor", m_AmbientColor);
+	m_LightPassShader->SetUniform1f("u_AmbientIntensity", m_AmbientIntensity);
+	m_LightPassShader->SetUniform1f("u_AmbientOcclusionStrength", m_AmbientOcclusionStrength);
+
 	// Set shading mode
 	m_LightPassShader->SetUniform1i("u_ShadingMode", m_IsBlinnPhong ? 1 : 0);
 
@@ -6352,6 +6358,12 @@ void Renderer::SyncToGlobalGraphics()
 	m_GlobalGraphics.spotlightRaysEnabled = m_SpotlightRaysEnabled;
 	m_GlobalGraphics.spotlightRayIntensity = m_SpotlightRayIntensity;
 	m_GlobalGraphics.spotlightRayFalloff = m_SpotlightRayFalloff;
+
+	// Ambient lighting parameters
+	m_GlobalGraphics.ambientLightEnabled = m_AmbientLightEnabled;
+	m_GlobalGraphics.ambientColor = Ermine::Vec3(m_AmbientColor.x, m_AmbientColor.y, m_AmbientColor.z);
+	m_GlobalGraphics.ambientIntensity = m_AmbientIntensity;
+	m_GlobalGraphics.ambientOcclusionStrength = m_AmbientOcclusionStrength;
 }
 
 void Renderer::ApplyFromGlobalGraphics()
@@ -6407,6 +6419,16 @@ void Renderer::ApplyFromGlobalGraphics()
 	m_SpotlightRaysEnabled = m_GlobalGraphics.spotlightRaysEnabled;
 	m_SpotlightRayIntensity = m_GlobalGraphics.spotlightRayIntensity;
 	m_SpotlightRayFalloff = m_GlobalGraphics.spotlightRayFalloff;
+
+	// Ambient lighting parameters
+	m_AmbientLightEnabled = m_GlobalGraphics.ambientLightEnabled;
+	m_AmbientColor = glm::vec3(
+		m_GlobalGraphics.ambientColor.x,
+		m_GlobalGraphics.ambientColor.y,
+		m_GlobalGraphics.ambientColor.z
+	);
+	m_AmbientIntensity = m_GlobalGraphics.ambientIntensity;
+	m_AmbientOcclusionStrength = m_GlobalGraphics.ambientOcclusionStrength;
 }
 
 /**

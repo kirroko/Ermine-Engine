@@ -45,6 +45,12 @@ uniform float u_FogEnd = 200.0;         // For linear fog
 uniform float u_FogHeightCoefficient = 0.0;  // Height influence on fog density
 uniform float u_FogHeightFalloff = 10.0;     // Rate of fog density falloff with height
 
+// Ambient Lighting Parameters
+uniform int u_AmbientLightEnabled = 1;         // 0 = disabled, 1 = enabled
+uniform vec3 u_AmbientColor = vec3(1.0, 1.0, 1.0);  // Ambient light color
+uniform float u_AmbientIntensity = 0.1;        // Ambient light intensity
+uniform float u_AmbientOcclusionStrength = 1.0; // How much AO affects ambient
+
 
 // Light structure
 struct Light {
@@ -580,8 +586,13 @@ void main()
     float ssaoFactor = calculateSSAO(TexCoord, fragPosView, normalView, depth);
 
     if (useBlinnPhong) {
-        // Ambient
-        vec3 ambient = vec3(0.2) * 0.1 * albedo * ao * ssaoFactor;
+        // Ambient - configurable ambient lighting with color and intensity
+        vec3 ambient = vec3(0.0);
+        if (u_AmbientLightEnabled != 0) {
+            // Calculate ambient with color, intensity, AO, and SSAO
+            float aoFactor = mix(1.0, ao, u_AmbientOcclusionStrength);
+            ambient = u_AmbientColor * u_AmbientIntensity * albedo * aoFactor * ssaoFactor;
+        }
         result += ambient;
 
         // Blinn-Phong lighting
@@ -649,8 +660,13 @@ void main()
         // Emissive
         result += emissive * emissiveIntensity;
     } else {
-        // PBR ambient
-        vec3 ambient = vec3(0.08) * albedo * ao * ssaoFactor;
+        // PBR ambient - configurable ambient lighting with color and intensity
+        vec3 ambient = vec3(0.0);
+        if (u_AmbientLightEnabled != 0) {
+            // Calculate ambient with color, intensity, AO, and SSAO
+            float aoFactor = mix(1.0, ao, u_AmbientOcclusionStrength);
+            ambient = u_AmbientColor * u_AmbientIntensity * albedo * aoFactor * ssaoFactor;
+        }
         result += ambient;
 
         // PBR lighting

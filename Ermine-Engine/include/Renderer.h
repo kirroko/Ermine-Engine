@@ -246,6 +246,12 @@ namespace Ermine::graphics
         float m_SpotlightRayIntensity = 0.3f;
         float m_SpotlightRayFalloff = 2.0f;
 
+        // Ambient lighting parameters
+        bool m_AmbientLightEnabled = true;
+        glm::vec3 m_AmbientColor = glm::vec3(1.0f, 1.0f, 1.0f);
+        float m_AmbientIntensity = 0.1f;
+        float m_AmbientOcclusionStrength = 1.0f; // How much AO affects ambient
+
         // Motion blur parameters
         bool m_MotionBlurEnabled = true;
         float m_MotionBlurStrength = 1.0f;

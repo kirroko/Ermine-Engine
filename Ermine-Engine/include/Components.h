@@ -1812,6 +1812,12 @@ namespace Ermine
 		float motionBlurStrength = 1.0f;
 		int motionBlurSamples = 8;
 
+		// === Ambient lighting parameters ===
+		bool ambientLightEnabled = true;
+		Vec3 ambientColor = Vec3{ 1.0f, 1.0f, 1.0f };
+		float ambientIntensity = 0.1f;
+		float ambientOcclusionStrength = 1.0f; // How much AO affects ambient
+
 		// --- generic xproperty-based serialization ---
 		template<typename Alloc>
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const

@@ -419,6 +419,33 @@ void GraphicsDebugGUI::DrawLightingControls()
 
                 ImGui::TreePop();
             }
+
+            ImGui::Separator();
+
+            // Ambient Lighting Controls
+            if (DrawToggleButton("Global Ambient Light", &renderer->m_AmbientLightEnabled,
+                                "Enable/disable global ambient lighting for the scene")) {
+                EE_CORE_INFO("Ambient lighting {}", renderer->m_AmbientLightEnabled ? "enabled" : "disabled");
+            }
+
+            // Ambient light parameters (shown when enabled)
+            if (renderer->m_AmbientLightEnabled && ImGui::TreeNode("Ambient Light Settings"))
+            {
+                // Ambient color picker
+                if (ImGui::ColorEdit3("Ambient Color", &renderer->m_AmbientColor.r)) {
+                    EE_CORE_INFO("Ambient color changed to ({:.2f}, {:.2f}, {:.2f})",
+                               renderer->m_AmbientColor.r, renderer->m_AmbientColor.g, renderer->m_AmbientColor.b);
+                }
+                DrawTooltip("RGB color of ambient light (use warm/cool tints for atmosphere)");
+
+                DrawFloatSlider("Ambient Intensity", &renderer->m_AmbientIntensity, 0.0f, 2.0f,
+                               "Strength of ambient lighting (0=none, 1=normal, 2=very bright)");
+
+                DrawFloatSlider("AO Influence", &renderer->m_AmbientOcclusionStrength, 0.0f, 1.0f,
+                               "How much ambient occlusion affects ambient light (0=no effect, 1=full darkening)");
+
+                ImGui::TreePop();
+            }
         }
 
         ImGui::Unindent(10.0f);
