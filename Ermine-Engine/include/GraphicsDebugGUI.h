@@ -56,6 +56,7 @@ namespace Ermine::editor
         void DrawShadowMappingControls();
         void DrawPerformanceMetrics();
         void DrawLightingControls();
+        void DrawShaderControls();
         
         // Helper methods
         void DrawTooltip(const char* description);
