@@ -149,6 +149,8 @@ std::string SerializeConfig(const Config& config) {
     d.AddMember("fullscreen", config.fullscreen, allocator);
     d.AddMember("maximized", config.maximized, allocator);
     d.AddMember("title", Value(config.title.c_str(), allocator), allocator);
+	d.AddMember("settingsIsOpen", config.settingsIsOpen, allocator);
+	d.AddMember("fontSize", config.fontSize, allocator);
 
     StringBuffer buffer;
     Writer<StringBuffer> writer(buffer);
@@ -176,6 +178,10 @@ Config DeserializeConfig(const std::string& jsonStr) {
         config.maximized = d["maximized"].GetBool();
     if (d.HasMember("title") && d["title"].IsString())
         config.title = d["title"].GetString();
+	if (d.HasMember("settingsIsOpen") && d["settingsIsOpen"].IsBool())
+		config.settingsIsOpen = d["settingsIsOpen"].GetBool();
+	if (d.HasMember("fontSize") && d["fontSize"].IsNumber())
+		config.fontSize = d["fontSize"].GetFloat();
 
     return config;
 }
@@ -215,6 +221,8 @@ void SaveConfigToFile(const Config& config, const std::filesystem::path& path, b
         d.AddMember("fullscreen", config.fullscreen, a);
         d.AddMember("maximized", config.maximized, a);
         d.AddMember("title", rapidjson::Value(config.title.c_str(), a), a);
+		d.AddMember("settingsIsOpen", config.settingsIsOpen, a);
+		d.AddMember("fontSize", config.fontSize, a);
         d.Accept(writer);
     }
     else {
@@ -233,6 +241,10 @@ void SaveConfigToFile(const Config& config, const std::filesystem::path& path, b
         d.AddMember("fullscreen", config.fullscreen, a);
         d.AddMember("maximized", config.maximized, a);
         d.AddMember("title", rapidjson::Value(config.title.c_str(), a), a);
+		d.AddMember("settingsIsOpen", config.settingsIsOpen, a);
+		d.AddMember("fontSize", config.fontSize, a);
+		d.AddMember("baseFontSize", config.baseFontSize, a);
+		d.AddMember("themeMode", config.themeMode, a);
         d.Accept(writer);
     }
 }
@@ -262,6 +274,14 @@ Config LoadConfigFromFile(const std::filesystem::path& path) {
         config.maximized = d["maximized"].GetBool();
     if (d.HasMember("title") && d["title"].IsString())
         config.title = d["title"].GetString();
+	if (d.HasMember("settingsIsOpen") && d["settingsIsOpen"].IsBool())
+		config.settingsIsOpen = d["settingsIsOpen"].GetBool();
+	if (d.HasMember("fontSize") && d["fontSize"].IsNumber())
+		config.fontSize = d["fontSize"].GetFloat();
+	if (d.HasMember("baseFontSize") && d["baseFontSize"].IsNumber())
+		config.baseFontSize = d["baseFontSize"].GetFloat();
+    if (d.HasMember("themeMode") && d["themeMode"].IsInt())
+		config.themeMode = d["themeMode"].GetInt();
 
     return config;
 }

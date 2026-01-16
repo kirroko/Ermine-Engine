@@ -26,6 +26,10 @@ struct Config {
     bool fullscreen{};
     bool maximized{};
     std::string title;
+	bool settingsIsOpen = false;
+	float fontSize = 16.0f;
+	float baseFontSize = 1.0f;
+	int themeMode = -1; // 0: Light, 1: Dark, 2: Pink, 3: Cyberpunk, 4: Overwatch(Dark), 5: Overwatch(Light)
 };
 
 /**
