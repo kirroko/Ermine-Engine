@@ -217,6 +217,23 @@ namespace Ermine
         if (nearestNav == 0 || !ecs.HasComponent<NavMeshComponent>(nearestNav))
             return false;
 
+        const auto& navComp = ecs.GetComponent<NavMeshComponent>(nearestNav);
+        const float bakedR = navComp.bakedAgentRadius;
+        const float bakedH = navComp.bakedAgentHeight;
+
+        if (bakedR > 0.0f && agent.radius > bakedR + 1e-4f)
+        {
+            EE_CORE_ERROR("[NavMeshAgentSystem] Agent radius (%.3f) > navmesh baked radius (%.3f). Re-bake navmesh for this agent size.",
+                agent.radius, bakedR);
+            return false;
+        }
+        if (bakedH > 0.0f && agent.height > bakedH + 1e-4f)
+        {
+            EE_CORE_ERROR("[NavMeshAgentSystem] Agent height (%.3f) > navmesh baked height (%.3f). Re-bake navmesh for this agent size.",
+                agent.height, bakedH);
+            return false;
+        }
+
         auto navSystem = ecs.GetSystem<NavMeshSystem>();
         if (!navSystem)
             return false;

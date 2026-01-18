@@ -113,13 +113,13 @@ struct Ermine::NavMeshComponent::BuildData
     rcPolyMeshDetail* dmesh = nullptr;
 };
 
-struct Ermine::NavMeshComponent::Runtime
+/*struct Ermine::NavMeshComponent::Runtime
 {
     dtNavMesh* nav = nullptr;
     dtNavMeshQuery* query = nullptr;
     //unsigned char* navData = nullptr;
     dtTileRef tileRef = 0;
-};
+};*/
 
 namespace Ermine {
     static void SyncBakeAgentSettingsFromAgents(NavMeshComponent& nm)
@@ -260,6 +260,9 @@ namespace Ermine {
 
         delete c.runtime;
         c.runtime = nullptr;
+
+        c.bakedAgentRadius = 0.0f;
+        c.bakedAgentHeight = 0.0f;
     }
 
     bool NavMeshSystem::BuildFromTriangles(NavMeshComponent& c, const float* verts, int nverts, const int* tris, int ntris)
@@ -337,8 +340,25 @@ namespace Ermine {
             return false;
         }
 
+        //// Remove low-hanging obstacles that would be “walkable”
+        //rcFilterLowHangingWalkableObstacles(c.build->ctx, cfg.walkableClimb, *c.build->hf);
+
+        //// Remove ledges you can't step up/down safely (prevents fake “step to top” links)
+        //rcFilterLedgeSpans(c.build->ctx, cfg.walkableHeight, cfg.walkableClimb, *c.build->hf);
+
+        //// Remove spans where the clearance is too low
+        //rcFilterWalkableLowHeightSpans(c.build->ctx, cfg.walkableHeight, *c.build->hf);
+
         c.build->chf = rcAllocCompactHeightfield();
         rcBuildCompactHeightfield(c.build->ctx, cfg.walkableHeight, cfg.walkableClimb, *c.build->hf, *c.build->chf);
+
+        if (!rcErodeWalkableArea(c.build->ctx, cfg.walkableRadius, *c.build->chf))
+        {
+            EE_CORE_ERROR("[NavMeshSystem] rcErodeWalkableArea failed (walkableRadius=%d)", cfg.walkableRadius);
+            DestroyBuild(c);
+            return false;
+        }
+
         rcBuildDistanceField(c.build->ctx, *c.build->chf);
         rcBuildRegions(c.build->ctx, *c.build->chf, 0, cfg.minRegionArea, cfg.mergeRegionArea);
 
@@ -396,6 +416,10 @@ namespace Ermine {
         }
 
         c.runtime = new NavMeshComponent::Runtime();
+
+        c.bakedAgentRadius = c.agentRadius;
+        c.bakedAgentHeight = c.agentHeight;
+
         c.runtime->nav = dtAllocNavMesh();
 
         dtNavMeshParams navParams{};
@@ -416,16 +440,163 @@ namespace Ermine {
         //EE_CORE_INFO("[NavMeshSystem] addTile status={} ref={}", (int)st, (unsigned)tileRef);
         if (dtStatusFailed(st)) { dtFree(navData); DestroyBuild(c); DestroyRuntime(c); return false; }
 
-        c.runtime->tileRef = tileRef;
+        //c.runtime->tileRef = tileRef;
 
         c.runtime->query = dtAllocNavMeshQuery();
         if (dtStatusFailed(c.runtime->query->init(c.runtime->nav, 2048))) { DestroyBuild(c); DestroyRuntime(c); return false; }
 
-        c.runtime->tileRef = tileRef;
+        c.runtime->tileRef = (unsigned long long)tileRef;
 
         EE_CORE_INFO("[NavMeshSystem] Build complete!");
         return true;
     }
+
+    // helper: append a cube (top-only for floor, full cube for obstacles)
+    auto AppendCube = [&](EntityID ent, bool topOnly,
+        std::vector<float>& outVerts,
+        std::vector<int>& outTris)
+        {
+            auto& ecs = ECS::GetInstance();
+            if (!ecs.HasComponent<Transform>(ent) || !ecs.HasComponent<Mesh>(ent))
+                return;
+
+            auto& t = ecs.GetComponent<Transform>(ent);
+            auto& m = ecs.GetComponent<Mesh>(ent);
+
+            if (m.kind != MeshKind::Primitive || m.primitive.type != "Cube")
+                return;
+
+            glm::quat rotQuat = glm::quat(t.rotation.w, t.rotation.x, t.rotation.y, t.rotation.z);
+            glm::mat4 model =
+                glm::translate(glm::mat4(1.0f), glm::vec3(t.position.x, t.position.y, t.position.z)) *
+                glm::mat4_cast(rotQuat) *
+                glm::scale(glm::mat4(1.0f),
+                    glm::vec3(t.scale.x * m.primitive.size.x,
+                        t.scale.y * m.primitive.size.y,
+                        t.scale.z * m.primitive.size.z));
+
+            const int base = (int)(outVerts.size() / 3);
+
+            if (topOnly)
+            {
+                // top face (4 verts, 2 tris)
+                const float topVerts[] = {
+                    -0.5f, 0.5f, -0.5f,
+                     0.5f, 0.5f, -0.5f,
+                     0.5f, 0.5f,  0.5f,
+                    -0.5f, 0.5f,  0.5f
+                };
+                const int topTris[] = { 0,1,2, 0,2,3 };
+
+                for (int i = 0; i < 4; ++i)
+                {
+                    glm::vec4 v = model * glm::vec4(
+                        topVerts[i * 3 + 0], topVerts[i * 3 + 1], topVerts[i * 3 + 2], 1.0f);
+
+                    outVerts.push_back(v.x);
+                    outVerts.push_back(v.y);
+                    outVerts.push_back(v.z);
+                }
+
+                for (int i = 0; i < 6; ++i)
+                    outTris.push_back(base + topTris[i]);
+            }
+            else
+            {
+                // full cube (8 verts, 12 tris)
+                const float cubeVerts[] = {
+                    -0.5f,-0.5f,-0.5f,  0.5f,-0.5f,-0.5f,  0.5f, 0.5f,-0.5f, -0.5f, 0.5f,-0.5f,
+                    -0.5f,-0.5f, 0.5f,  0.5f,-0.5f, 0.5f,  0.5f, 0.5f, 0.5f, -0.5f, 0.5f, 0.5f
+                };
+
+                const int cubeTris[] = {
+                    // bottom
+                    0,1,2, 0,2,3,
+                    // top
+                    4,6,5, 4,7,6,
+                    // front
+                    4,5,1, 4,1,0,
+                    // back
+                    3,2,6, 3,6,7,
+                    // left
+                    4,0,3, 4,3,7,
+                    // right
+                    1,5,6, 1,6,2
+                };
+
+                for (int i = 0; i < 8; ++i)
+                {
+                    glm::vec4 v = model * glm::vec4(
+                        cubeVerts[i * 3 + 0], cubeVerts[i * 3 + 1], cubeVerts[i * 3 + 2], 1.0f);
+
+                    outVerts.push_back(v.x);
+                    outVerts.push_back(v.y);
+                    outVerts.push_back(v.z);
+                }
+
+                for (int i = 0; i < (int)(sizeof(cubeTris) / sizeof(int)); ++i)
+                    outTris.push_back(base + cubeTris[i]);
+            }
+        };
+
+    auto AppendStaticCollider = [&](EntityID ent, std::vector<float>& outVerts, std::vector<int>& outTris)
+    {
+            auto& ecs = ECS::GetInstance();
+            auto& t = ecs.GetComponent<Transform>(ent);
+            auto& pc = ecs.GetComponent<PhysicComponent>(ent);
+
+            // For now: only Box colliders (fast + most common)
+            if (pc.shapeType != ShapeType::Box) return;
+
+            // Build collider local transform (pivot + collider rotation)
+            glm::quat entRot = glm::quat(t.rotation.w, t.rotation.x, t.rotation.y, t.rotation.z);
+
+            // If colliderRot is degrees in your editor, convert to radians.
+            glm::vec3 colEulerRad(glm::radians(pc.colliderRot.x),
+                glm::radians(pc.colliderRot.y),
+                glm::radians(pc.colliderRot.z));
+            glm::quat colRot = glm::quat(colEulerRad);
+
+            glm::mat4 model =
+                glm::translate(glm::mat4(1.0f), glm::vec3(t.position.x, t.position.y, t.position.z)) *
+                glm::mat4_cast(entRot) *
+                glm::translate(glm::mat4(1.0f), glm::vec3(pc.colliderPivot.x, pc.colliderPivot.y, pc.colliderPivot.z)) *
+                glm::mat4_cast(colRot) *
+                glm::scale(glm::mat4(1.0f),
+                    glm::vec3(t.scale.x * pc.colliderSize.x,
+                        t.scale.y * pc.colliderSize.y,
+                        t.scale.z * pc.colliderSize.z));
+
+            const int base = (int)(outVerts.size() / 3);
+
+            // Unit cube vertices (centered)
+            const float cubeVerts[] = {
+                -0.5f,-0.5f,-0.5f,  0.5f,-0.5f,-0.5f,  0.5f, 0.5f,-0.5f, -0.5f, 0.5f,-0.5f,
+                -0.5f,-0.5f, 0.5f,  0.5f,-0.5f, 0.5f,  0.5f, 0.5f, 0.5f, -0.5f, 0.5f, 0.5f
+            };
+            const int cubeTris[] = {
+                0,1,2, 0,2,3,
+                4,6,5, 4,7,6,
+                4,5,1, 4,1,0,
+                3,2,6, 3,6,7,
+                4,0,3, 4,3,7,
+                1,5,6, 1,6,2
+            };
+
+            for (int i = 0; i < 8; ++i)
+            {
+                glm::vec4 v = model * glm::vec4(
+                    cubeVerts[i * 3 + 0], cubeVerts[i * 3 + 1], cubeVerts[i * 3 + 2], 1.0f);
+
+                outVerts.push_back(v.x);
+                outVerts.push_back(v.y);
+                outVerts.push_back(v.z);
+            }
+
+            for (int i = 0; i < (int)(sizeof(cubeTris) / sizeof(int)); ++i)
+                outTris.push_back(base + cubeTris[i]);
+    };
+
 
     bool NavMeshSystem::BakeNavMesh(EntityID e)
     {
@@ -442,93 +613,6 @@ namespace Ermine {
 
         auto& navT = ecs.GetComponent<Transform>(e);
         auto& navM = ecs.GetComponent<Mesh>(e);
-
-        // helper: append a cube (top-only for floor, full cube for obstacles)
-        auto AppendCube = [&](EntityID ent, bool topOnly,
-            std::vector<float>& outVerts,
-            std::vector<int>& outTris)
-            {
-                if (!ecs.HasComponent<Transform>(ent) || !ecs.HasComponent<Mesh>(ent))
-                    return;
-
-                auto& t = ecs.GetComponent<Transform>(ent);
-                auto& m = ecs.GetComponent<Mesh>(ent);
-
-                if (m.kind != MeshKind::Primitive || m.primitive.type != "Cube")
-                    return;
-
-                glm::quat rotQuat = glm::quat(t.rotation.w, t.rotation.x, t.rotation.y, t.rotation.z);
-                glm::mat4 model =
-                    glm::translate(glm::mat4(1.0f), glm::vec3(t.position.x, t.position.y, t.position.z)) *
-                    glm::mat4_cast(rotQuat) *
-                    glm::scale(glm::mat4(1.0f),
-                        glm::vec3(t.scale.x * m.primitive.size.x,
-                            t.scale.y * m.primitive.size.y,
-                            t.scale.z * m.primitive.size.z));
-
-                const int base = (int)(outVerts.size() / 3);
-
-                if (topOnly)
-                {
-                    // top face (4 verts, 2 tris)
-                    const float topVerts[] = {
-                        -0.5f, 0.5f, -0.5f,
-                         0.5f, 0.5f, -0.5f,
-                         0.5f, 0.5f,  0.5f,
-                        -0.5f, 0.5f,  0.5f
-                    };
-                    const int topTris[] = { 0,1,2, 0,2,3 };
-
-                    for (int i = 0; i < 4; ++i)
-                    {
-                        glm::vec4 v = model * glm::vec4(
-                            topVerts[i * 3 + 0], topVerts[i * 3 + 1], topVerts[i * 3 + 2], 1.0f);
-
-                        outVerts.push_back(v.x);
-                        outVerts.push_back(v.y);
-                        outVerts.push_back(v.z);
-                    }
-
-                    for (int i = 0; i < 6; ++i)
-                        outTris.push_back(base + topTris[i]);
-                }
-                else
-                {
-                    // full cube (8 verts, 12 tris)
-                    const float cubeVerts[] = {
-                        -0.5f,-0.5f,-0.5f,  0.5f,-0.5f,-0.5f,  0.5f, 0.5f,-0.5f, -0.5f, 0.5f,-0.5f,
-                        -0.5f,-0.5f, 0.5f,  0.5f,-0.5f, 0.5f,  0.5f, 0.5f, 0.5f, -0.5f, 0.5f, 0.5f
-                    };
-
-                    const int cubeTris[] = {
-                        // bottom
-                        0,1,2, 0,2,3,
-                        // top
-                        4,6,5, 4,7,6,
-                        // front
-                        4,5,1, 4,1,0,
-                        // back
-                        3,2,6, 3,6,7,
-                        // left
-                        4,0,3, 4,3,7,
-                        // right
-                        1,5,6, 1,6,2
-                    };
-
-                    for (int i = 0; i < 8; ++i)
-                    {
-                        glm::vec4 v = model * glm::vec4(
-                            cubeVerts[i * 3 + 0], cubeVerts[i * 3 + 1], cubeVerts[i * 3 + 2], 1.0f);
-
-                        outVerts.push_back(v.x);
-                        outVerts.push_back(v.y);
-                        outVerts.push_back(v.z);
-                    }
-
-                    for (int i = 0; i < (int)(sizeof(cubeTris) / sizeof(int)); ++i)
-                        outTris.push_back(base + cubeTris[i]);
-                }
-            };
 
         // compute bake region from the cube you're baking on
         // (AABB region around the bake cube, plus a bit above it for walls sitting on top)
@@ -569,23 +653,25 @@ namespace Ermine {
         // Bake floor's TOP face as walkable
         AppendCube(e, true, verts, tris);
 
-        // Include nearby cubes as obstacles (skip NavMeshAgents)
+        // Include nearby static colliders as obstacles (skip NavMeshAgents)
         for (EntityID ent = 1; ent < MAX_ENTITIES; ++ent)
         {
             if (!ecs.IsEntityValid(ent)) continue;
             if (ent == e) continue;
 
-            if (!ecs.HasComponent<Mesh>(ent) || !ecs.HasComponent<Transform>(ent)) continue;
-
-            // Skip entities that are NavMeshAgents
+            if (!ecs.HasComponent<PhysicComponent>(ent) || !ecs.HasComponent<Transform>(ent)) continue;
             if (ecs.HasComponent<NavMeshAgent>(ent)) continue;
 
+            auto& pc = ecs.GetComponent<PhysicComponent>(ent);
+
+            // Only bake static rigid colliders as obstacles
+            if (pc.bodyType != PhysicsBodyType::Rigid) continue;
+            if (pc.motionType != JPH::EMotionType::Static) continue;
+
             auto& ot = ecs.GetComponent<Transform>(ent);
+            if (!InsideBakeRegionByCenter(ot)) continue; // you can improve this later to use AABB
 
-            // Include only entities within/over the bake cube region
-            if (!InsideBakeRegionByCenter(ot)) continue;
-
-            AppendCube(ent, false, verts, tris);
+            AppendStaticCollider(ent, verts, tris);
         }
 
         const int nverts = (int)(verts.size() / 3);

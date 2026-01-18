@@ -2199,7 +2199,7 @@ namespace Ermine::editor {
 
 		ImGui::Separator();
 		ImGui::Checkbox("Draw Walkable", &nav.drawWalkable);
-		ImGui::Checkbox("Draw NavMesh", &nav.drawNavMesh);
+		//ImGui::Checkbox("Draw NavMesh", &nav.drawNavMesh);
 	}
 
 	void HierarchyInspector::DrawNavMeshAgentComponent(EntityID entity)
@@ -2324,10 +2324,10 @@ namespace Ermine::editor {
 		}
 
 		// Editable fields
-		ImGui::DragFloat("Speed", &agent.speed, 0.1f, 0.0f, 100.0f);
-		ImGui::DragFloat("Acceleration", &agent.acceleration, 0.1f, 0.0f, 100.0f);
-		ImGui::DragFloat("Stopping Distance", &agent.stoppingDistance, 0.01f, 0.0f, 10.0f);
-		ImGui::Checkbox("Auto Rotate", &agent.autoRotate);
+		//ImGui::DragFloat("Speed", &agent.speed, 0.1f, 0.0f, 100.0f);
+		//ImGui::DragFloat("Acceleration", &agent.acceleration, 0.1f, 0.0f, 100.0f);
+		//ImGui::DragFloat("Stopping Distance", &agent.stoppingDistance, 0.01f, 0.0f, 10.0f);
+		//ImGui::Checkbox("Auto Rotate", &agent.autoRotate);
 
 #if defined(EE_EDITOR)
 		ImGui::SeparatorText("Debug");
