@@ -63,6 +63,12 @@ namespace Ermine {
         */
         const char* GetEntityIcon(EntityID entity) const;
 
+        /*!
+        \brief Checks if an entity name matches the current search query
+        \param name The entity name to check
+        \param search The search query string
+        \return True if the name matches the search query, false otherwise
+        */
         bool NameMatchesSearch(const std::string& name, const char* search);
 
     public:
