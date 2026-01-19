@@ -28,6 +28,9 @@ namespace Ermine {
         bool m_ShowInactive = false;          ///< Show inactive entities in hierarchy (grayed out)
         EntityID m_PendingFocusEntity = 0;    ///< Entity waiting for inspector focus after interaction
 
+        char m_SearchBuffer[128] = {};  ///< Buffer for entity search input
+        bool m_IsSearching = false;		///< Flag indicating if search mode is active
+
         // UI helper functions
         void DuplicateEntity(EntityID sourceEntity);
         /*!
@@ -61,11 +64,19 @@ namespace Ermine {
         const char* GetEntityIcon(EntityID entity) const;
 
         /**
-		 * @brief Helper function to recursively check if any descendant of the given entity is selected
+         * @brief Helper function to recursively check if any descendant of the given entity is selected
          * @param entity The entity to check
-		 * @return Ture if entity or any descendant is selected, false otherwise
+         * @return Ture if entity or any descendant is selected, false otherwise
          */
         bool HasSelectedDescendant(EntityID entity) const;
+
+        /*!
+        \brief Checks if an entity name matches the current search query
+        \param name The entity name to check
+        \param search The search query string
+        \return True if the name matches the search query, false otherwise
+        */
+        bool NameMatchesSearch(const std::string& name, const char* search);
 
     public:
         /*!
