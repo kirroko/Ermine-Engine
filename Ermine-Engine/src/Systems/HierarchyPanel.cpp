@@ -143,6 +143,48 @@ namespace Ermine {
             }
         }
 
+        // Handle keyboard shortcuts for reordering
+        if (primary != 0 && ImGui::IsWindowFocused()) {
+            auto hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>();
+
+            // Check if entity is a root entity
+            bool isRootEntity = false;
+            if (ECS::GetInstance().HasComponent<HierarchyComponent>(primary)) {
+                const auto& hierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(primary);
+                isRootEntity = (hierarchy.parent == 0);
+            }
+
+            // Ctrl+Up to move up
+            if (ImGui::IsKeyPressed(ImGuiKey_UpArrow) && ImGui::GetIO().KeyCtrl) {
+                if (isRootEntity) {
+                    // Move root entity up
+                    if (m_ActiveScene->MoveRootEntityUp(primary)) {
+                        EE_CORE_INFO("Moved root entity {} up via keyboard", primary);
+                    }
+                } else {
+                    // Move child entity up within parent
+                    if (hierarchySystem->MoveChildUp(primary)) {
+                        EE_CORE_INFO("Moved entity {} up via keyboard", primary);
+                    }
+                }
+            }
+
+            // Ctrl+Down to move down
+            if (ImGui::IsKeyPressed(ImGuiKey_DownArrow) && ImGui::GetIO().KeyCtrl) {
+                if (isRootEntity) {
+                    // Move root entity down
+                    if (m_ActiveScene->MoveRootEntityDown(primary)) {
+                        EE_CORE_INFO("Moved root entity {} down via keyboard", primary);
+                    }
+                } else {
+                    // Move child entity down within parent
+                    if (hierarchySystem->MoveChildDown(primary)) {
+                        EE_CORE_INFO("Moved entity {} down via keyboard", primary);
+                    }
+                }
+            }
+        }
+
         ImGui::End();
     }
 
@@ -279,14 +321,16 @@ namespace Ermine {
 
         if (ImGui::IsItemClicked()) {
             if (ImGui::GetIO().KeyCtrl)
-                editor::Selection::Toggle(m_ActiveScene, entity); // Multi-select
+                editor::Selection::Toggle(m_ActiveScene, entity);
             else
-                editor::Selection::SelectSingle(m_ActiveScene, entity); // Single select
-            //m_ActiveScene->SetSelectedEntity(entity);
+                editor::Selection::SelectSingle(m_ActiveScene, entity);
+
+            // Only set pending focus if we're not about to start dragging
+            // We'll clear this in HandleDragDrop if a drag actually starts
             m_PendingFocusEntity = editor::Selection::Primary();
         }
 
-        if (ImGui::BeginPopupContextItem(("ctx##" + std::to_string((uint64_t)entity)).c_str())) { // unique popup
+        if (ImGui::BeginPopupContextItem(("ctx##" + std::to_string((uint64_t)entity)).c_str())) {
             if (ImGui::MenuItem("Delete")) {
                 ECS::GetInstance().GetSystem<Physics>()->RemovePhysic(entity);
                 m_ActiveScene->DestroyEntity(entity);
@@ -295,9 +339,42 @@ namespace Ermine {
             }
 
             if (ImGui::MenuItem("Duplicate")) {
-                DuplicateEntity(entity);  // Use the right-clicked entity, not the selected one
+                DuplicateEntity(entity);
                 ImGui::CloseCurrentPopup();
             }
+
+            // === NEW: Reordering options ===
+            auto hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>();
+            EntityID parent = hierarchySystem->GetParent(entity);
+            
+            if (parent != 0) {
+                // Entity has a parent - show child reordering options
+                ImGui::Separator();
+                if (ImGui::MenuItem("Move Up", "Ctrl+Up")) {
+                    if (hierarchySystem->MoveChildUp(entity)) {
+                        EE_CORE_INFO("Moved entity {} up in hierarchy", entity);
+                    }
+                }
+                if (ImGui::MenuItem("Move Down", "Ctrl+Down")) {
+                    if (hierarchySystem->MoveChildDown(entity)) {
+                        EE_CORE_INFO("Moved entity {} down in hierarchy", entity);
+                    }
+                }
+            } else {
+                // Entity is a root - show root reordering options
+                ImGui::Separator();
+                if (ImGui::MenuItem("Move Up", "Ctrl+Up")) {
+                    if (m_ActiveScene->MoveRootEntityUp(entity)) {
+                        EE_CORE_INFO("Moved root entity {} up", entity);
+                    }
+                }
+                if (ImGui::MenuItem("Move Down", "Ctrl+Down")) {
+                    if (m_ActiveScene->MoveRootEntityDown(entity)) {
+                        EE_CORE_INFO("Moved root entity {} down", entity);
+                    }
+                }
+            }
+
             ImGui::EndPopup();
         }
 
@@ -322,54 +399,95 @@ namespace Ermine {
     void HierarchyPanel::HandleDragDrop(EntityID entity) {
         // Drag source code
         if (ImGui::BeginDragDropSource()) {
+            // Clear pending focus when drag starts
+            m_PendingFocusEntity = 0;
+
             ImGui::SetDragDropPayload("HIERARCHY_ENTITY", &entity, sizeof(EntityID));
             auto& metadata = ECS::GetInstance().GetComponent<ObjectMetaData>(entity);
             ImGui::Text("Moving: %s", metadata.name.c_str());
             ImGui::EndDragDropSource();
         }
 
-        // Drop target code for parenting
+        // Drop target with VISUAL FEEDBACK
         if (ImGui::BeginDragDropTarget()) {
+            ImDrawList* draw_list = ImGui::GetWindowDrawList();
+            ImVec2 p_min = ImGui::GetItemRectMin();
+            ImVec2 p_max = ImGui::GetItemRectMax();
+
+            bool shiftHeld = ImGui::GetIO().KeyShift;
+
+            // Show different visual feedback based on modifier
+            if (shiftHeld) {
+                // Yellow line ABOVE the entity = "insert before"
+                draw_list->AddLine(
+                    ImVec2(p_min.x, p_min.y),
+                    ImVec2(p_max.x, p_min.y),
+                    IM_COL32(255, 255, 0, 255), // Yellow
+                    3.0f
+                );
+
+                // Show tooltip
+                auto& metadata = ECS::GetInstance().GetComponent<ObjectMetaData>(entity);
+                ImGui::SetTooltip("Insert before '%s'", metadata.name.c_str());
+            }
+            else {
+                // Blue border = "make child of"
+                draw_list->AddRect(
+                    p_min, p_max,
+                    IM_COL32(100, 200, 255, 255), // Blue
+                    0.0f, 0, 2.0f
+                );
+
+                // Show tooltip
+                auto& metadata = ECS::GetInstance().GetComponent<ObjectMetaData>(entity);
+                ImGui::SetTooltip("Make child of '%s'", metadata.name.c_str());
+            }
+
             if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("HIERARCHY_ENTITY")) {
                 EntityID droppedEntity = *(EntityID*)payload->Data;
 
                 if (droppedEntity != entity) {
-                    //auto& parentMeta = ECS::GetInstance().GetComponent<ObjectMetaData>(entity);
-                    //auto& childMeta = ECS::GetInstance().GetComponent<ObjectMetaData>(droppedEntity);
-
-                    // ONLY log if both entities are either Cube or Sphere
-                    //bool isCubeOrSphere = (parentMeta.name.find("Cube") != std::string::npos ||
-                    //    parentMeta.name.find("Sphere") != std::string::npos) &&
-                    //    (childMeta.name.find("Cube") != std::string::npos ||
-                    //        childMeta.name.find("Sphere") != std::string::npos);
-
-                    //if (isCubeOrSphere) {
                     if (auto hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>()) {
                         if (!hierarchySystem->WouldCreateCycle(droppedEntity, entity)) {
-                            // Log initial state
-                            //const auto& childTransform = ECS::GetInstance().GetComponent<Transform>(droppedEntity);
-                            //EE_CORE_INFO("{} (Child) before parenting:", childMeta.name);
-                            //EE_CORE_INFO("Position: {},{},{}",
-                            //    childTransform.position.x,
-                            //    childTransform.position.y,
-                            //    childTransform.position.z);
-
-                            // Do the parenting
-                            hierarchySystem->SetParent(droppedEntity, entity);
-                            hierarchySystem->MarkDirty(entity);
-                            hierarchySystem->MarkDirty(droppedEntity);
-
-                            // Log after parenting
-                            //const auto& updatedTransform = ECS::GetInstance().GetComponent<Transform>(droppedEntity);
-                            //EE_CORE_INFO("{} is now child of {}", childMeta.name, parentMeta.name);
-                            //EE_CORE_INFO("New Position: {},{},{}",
-                            //    updatedTransform.position.x,
-                            //    updatedTransform.position.y,
-                            //    updatedTransform.position.z);
-                            //EE_CORE_INFO("Is Transform Dirty: {}", updatedTransform.isDirty);
+                            if (shiftHeld) {
+                                // Shift = insert BEFORE this entity (reorder)
+                                auto parent = hierarchySystem->GetParent(entity);
+                                
+                                if (parent != 0) {
+                                    // Both have a parent - reorder within parent's children
+                                    const auto& siblings = hierarchySystem->GetChildren(parent);
+                                    auto it = std::find(siblings.begin(), siblings.end(), entity);
+                                    if (it != siblings.end()) {
+                                        size_t targetIndex = std::distance(siblings.begin(), it);
+                                        hierarchySystem->InsertChildAt(parent, droppedEntity, targetIndex);
+                                        EE_CORE_INFO("Inserted entity {} at index {} under parent {}",
+                                            droppedEntity, targetIndex, parent);
+                                    }
+                                }
+                                else {
+                                    // Target is a root entity - use scene's root reordering
+                                    auto rootEntities = m_ActiveScene->GetRootEntities();
+                                    auto it = std::find(rootEntities.begin(), rootEntities.end(), entity);
+                                    if (it != rootEntities.end()) {
+                                        size_t targetIndex = std::distance(rootEntities.begin(), it);
+                                        m_ActiveScene->InsertRootEntityAt(droppedEntity, targetIndex);
+                                        EE_CORE_INFO("Inserted root entity {} at index {}", 
+                                                     droppedEntity, targetIndex);
+                                    }
+                                }
+                            }
+                            else {
+                                // Default = make child (parenting)
+                                hierarchySystem->SetParent(droppedEntity, entity);
+                                hierarchySystem->MarkDirty(entity);
+                                hierarchySystem->MarkDirty(droppedEntity);
+                                EE_CORE_INFO("Parented entity {} to {}", droppedEntity, entity);
+                            }
+                        }
+                        else {
+                            EE_CORE_WARN("Cannot parent entity {} to {} - would create cycle!", droppedEntity, entity);
                         }
                     }
-                    //}
                 }
             }
             ImGui::EndDragDropTarget();
@@ -519,22 +637,6 @@ namespace Ermine {
                     ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
                 }
             }
-            //EntityID selected = m_ActiveScene->GetSelectedEntity();
-            //if (selected != 0) {
-            //    // Check if selected entity has a parent
-            //    auto hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>();
-            //    if (hierarchySystem->GetParent(selected) != 0) {
-            //        if (ImGui::MenuItem("Unparent Selected")) {
-            //            hierarchySystem->UnsetParent(selected);
-            //            EE_CORE_INFO("Unparented entity {}", selected);
-            //        }
-            //    }
-
-            //    if (ImGui::MenuItem("Delete Selected")) {
-            //        m_ActiveScene->DestroyEntity(selected);
-            //        ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
-            //    }
-            //}
 
             ImGui::EndPopup();
         }

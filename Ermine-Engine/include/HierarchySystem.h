@@ -191,6 +191,37 @@ namespace Ermine
 		 */
 		void ForceUpdateAllTransforms();
 
+        /**
+         * @brief Move a child to a specific position in its parent's children list
+         * @param[in] child The entity to reorder
+         * @param[in] newIndex The new position in the parent's children list
+         * @return True if successful, false otherwise
+         */
+        bool ReorderChild(EntityID child, size_t newIndex);
+
+        /**
+         * @brief Move a child up one position in its parent's children list
+         * @param[in] child The entity to move up
+         * @return True if successful, false otherwise
+         */
+        bool MoveChildUp(EntityID child);
+
+        /**
+         * @brief Move a child down one position in its parent's children list
+         * @param[in] child The entity to move down
+         * @return True if successful, false otherwise
+         */
+        bool MoveChildDown(EntityID child);
+
+        /**
+         * @brief Insert a child at a specific position in a parent's children list
+         * @param[in] parent The parent entity
+         * @param[in] child The child entity to insert
+         * @param[in] index The position to insert at
+         * @return True if successful, false otherwise
+         */
+        bool InsertChildAt(EntityID parent, EntityID child, size_t index);
+
     private:
         /**
          * @brief Helper method to recursively mark only world transforms as dirty for children

@@ -768,4 +768,133 @@ namespace Ermine
         // Mark as dirty to trigger transform update propagation
         MarkDirty(entity);
     }
+
+    /**
+     * @brief Move a child to a specific position in its parent's children list
+     * @param[in] child The entity to reorder
+     * @param[in] newIndex The new position in the parent's children list
+     * @return True if successful, false otherwise
+     */
+    bool HierarchySystem::ReorderChild(EntityID child, size_t newIndex)
+    {
+        if (!ECS::GetInstance().IsEntityValid(child))
+            return false;
+
+        auto& childHierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(child);
+        
+        if (childHierarchy.parent == 0)
+            return false; // Root entities can't be reordered this way
+
+        auto& parentHierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(childHierarchy.parent);
+        
+        // Find current index
+        auto it = std::find(parentHierarchy.children.begin(), parentHierarchy.children.end(), child);
+        if (it == parentHierarchy.children.end())
+            return false; // Child not found in parent's list
+
+        // Clamp newIndex to valid range
+        newIndex = std::min(newIndex, parentHierarchy.children.size() - 1);
+
+        size_t currentIndex = std::distance(parentHierarchy.children.begin(), it);
+        
+        if (currentIndex == newIndex)
+            return true; // Already at the correct position
+
+        // Remove from current position
+        parentHierarchy.children.erase(it);
+        
+        // Insert at new position
+        parentHierarchy.children.insert(parentHierarchy.children.begin() + newIndex, child);
+        
+        return true;
+    }
+
+    /**
+     * @brief Move a child up one position in its parent's children list
+     * @param[in] child The entity to move up
+     * @return True if successful, false otherwise
+     */
+    bool HierarchySystem::MoveChildUp(EntityID child)
+    {
+        if (!ECS::GetInstance().IsEntityValid(child))
+            return false;
+
+        auto& childHierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(child);
+        
+        if (childHierarchy.parent == 0)
+            return false; // Root entities can't be moved this way
+
+        auto& parentHierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(childHierarchy.parent);
+        
+        // Find current index
+        auto it = std::find(parentHierarchy.children.begin(), parentHierarchy.children.end(), child);
+        if (it == parentHierarchy.children.end() || it == parentHierarchy.children.begin())
+            return false; // Child not found or already at the top
+
+        // Swap with previous
+        std::iter_swap(it, it - 1);
+        
+        return true;
+    }
+
+    /**
+     * @brief Move a child down one position in its parent's children list
+     * @param[in] child The entity to move down
+     * @return True if successful, false otherwise
+     */
+    bool HierarchySystem::MoveChildDown(EntityID child)
+    {
+        if (!ECS::GetInstance().IsEntityValid(child))
+            return false;
+
+        auto& childHierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(child);
+        
+        if (childHierarchy.parent == 0)
+            return false; // Root entities can't be moved this way
+
+        auto& parentHierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(childHierarchy.parent);
+        
+        // Find current index
+        auto it = std::find(parentHierarchy.children.begin(), parentHierarchy.children.end(), child);
+        if (it == parentHierarchy.children.end() || it == parentHierarchy.children.end() - 1)
+            return false; // Child not found or already at the bottom
+
+        // Swap with next
+        std::iter_swap(it, it + 1);
+        
+        return true;
+    }
+
+    /**
+     * @brief Insert a child at a specific position in a parent's children list
+     * @param[in] parent The parent entity
+     * @param[in] child The child entity to insert
+     * @param[in] index The position to insert at
+     * @return True if successful, false otherwise
+     */
+    bool HierarchySystem::InsertChildAt(EntityID parent, EntityID child, size_t index)
+    {
+        if (!ECS::GetInstance().IsEntityValid(parent) || !ECS::GetInstance().IsEntityValid(child))
+            return false;
+
+        if (WouldCreateCycle(child, parent))
+            return false;
+
+        auto& childHierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(child);
+
+        // Check if we're actually changing parents (not just reordering)
+        bool changingParent = (childHierarchy.parent != parent);
+
+        if (changingParent) {
+            // Use SetParent which already handles world transform preservation
+            SetParent(child, parent, true);  // preserveWorldTransform = true
+
+            // Now reorder to the desired index
+            return ReorderChild(child, index);
+        }
+        else {
+            // Just reordering within same parent - use ReorderChild
+            return ReorderChild(child, index);
+        }
+    }
 }

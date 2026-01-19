@@ -38,15 +38,16 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "ScriptSystem.h"
 #include "AnimationManager.h"
 #include "ConsoleGUI.h"
+#include "SettingsGUI.h"
 #include "GuidRegistry.h"
 #include "Scene.h"
 #include "HierarchySystem.h"
 #include "CameraSystem.h"
 #include "UIRenderSystem.h"
 #include "UIButtonSystem.h"
-#include "NavMesh.h"
+#include "NavMesh.h"	 
 #include "NavMeshAgentSystem.h"
-#include "EditorGUI.h"
+//#include "EditorGUI.h"
 
 #if defined(EE_EDITOR)
 #include "GraphicsDebugGUI.h"
@@ -491,6 +492,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	editor::EditorGUI::CreateImGUIWindow<AnimationEditorImGUI>();
 	editor::EditorGUI::CreateImGUIWindow<ConsoleGUI>();
 	editor::EditorGUI::CreateImGUIWindow<ImguiUI::AssetBrowser>();
+	editor::EditorGUI::CreateImGUIWindow<SettingsGUI>("Settings");
 
 	// Legacy ImGui menu windows removed - replaced with scene-based UI:
 	// - Main menu: Open Resources/Scenes/mainmenu.scene, edit MenuBackground/GameTitle entities
@@ -550,6 +552,10 @@ void engine::Shutdown()
 	cfg.windowHeight = height;
 	cfg.fullscreen = (glfwGetWindowMonitor(glfwGetCurrentContext()) != nullptr);
 	cfg.maximized = (glfwGetWindowAttrib(glfwGetCurrentContext(), GLFW_MAXIMIZED) == GLFW_TRUE);
+	cfg.settingsIsOpen = SettingsGUI::GetSettingsOpen();
+	cfg.fontSize = SettingsGUI::GetFontSizeS();
+	cfg.baseFontSize = SettingsGUI::GetBaseFontSize();
+	cfg.themeMode = SettingsGUI::GetMode();
 
 #if defined(EE_EDITOR)
 	cfg.title = "Ermine Editor 0.3";
