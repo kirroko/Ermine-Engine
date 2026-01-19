@@ -446,6 +446,57 @@ void GraphicsDebugGUI::DrawLightingControls()
 
                 ImGui::TreePop();
             }
+
+            ImGui::Separator();
+
+            // Light Probe System Controls
+            if (DrawToggleButton("Use Light Probes", &renderer->m_UseLightProbes,
+                                "Enable/disable Spherical Harmonics light probe system for dynamic ambient")) {
+                EE_CORE_INFO("Light probe system {}", renderer->m_UseLightProbes ? "enabled" : "disabled");
+                renderer->m_LightProbesDirty = true;
+            }
+
+            // Light probe parameters (shown when enabled)
+            if (renderer->m_UseLightProbes && ImGui::TreeNode("Light Probe Settings"))
+            {
+                int maxProbes = renderer->m_MaxLightProbes;
+                if (ImGui::SliderInt("Max Blend Probes", &maxProbes, 1, 8)) {
+                    renderer->m_MaxLightProbes = maxProbes;
+                }
+                DrawTooltip("Maximum number of nearby probes to blend (higher = smoother but slower)");
+
+                // Show number of active probes in scene
+                size_t probeCount = renderer->GetLightProbeCount();
+                ImGui::Text("Active Probes in Scene: %zu", probeCount);
+                DrawTooltip("Number of AmbientLightProbe components found in the scene");
+
+                // Button to force probe refresh
+                if (ImGui::Button("Refresh Probes")) {
+                    renderer->m_LightProbesDirty = true;
+                    EE_CORE_INFO("Forced light probe refresh");
+                }
+                DrawTooltip("Force update of cached light probe data");
+
+                ImGui::Separator();
+                ImGui::Text("Global Fallback SH Coefficients:");
+                DrawTooltip("Used when no probes are nearby");
+
+                // Show first 3 SH coefficients (most important)
+                if (ImGui::TreeNode("SH L0 & L1 Bands"))
+                {
+                    ImGui::ColorEdit3("L0 (DC)", &renderer->m_LightProbeSH[0].r);
+                    DrawTooltip("L0: Average ambient color (constant term)");
+                    
+                    ImGui::ColorEdit3("L1,-1 (Y)", &renderer->m_LightProbeSH[1].r);
+                    ImGui::ColorEdit3("L1,0 (Z)", &renderer->m_LightProbeSH[2].r);
+                    ImGui::ColorEdit3("L1,1 (X)", &renderer->m_LightProbeSH[3].r);
+                    DrawTooltip("L1: Linear gradients (directional ambient)");
+                    
+                    ImGui::TreePop();
+                }
+
+                ImGui::TreePop();
+            }
         }
 
         ImGui::Unindent(10.0f);

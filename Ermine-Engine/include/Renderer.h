@@ -252,6 +252,12 @@ namespace Ermine::graphics
         float m_AmbientIntensity = 0.1f;
         float m_AmbientOcclusionStrength = 1.0f; // How much AO affects ambient
 
+        // Light Probe System
+        bool m_UseLightProbes = false;  // Enable/disable light probe system
+        int m_MaxLightProbes = 8;       // Maximum number of probes to blend
+        glm::vec3 m_LightProbeSH[9];    // Global/fallback SH coefficients (9 coeffs for L2)
+        bool m_LightProbesDirty = true; // Flag to update probe data
+
         // Motion blur parameters
         bool m_MotionBlurEnabled = true;
         float m_MotionBlurStrength = 1.0f;
@@ -945,6 +951,46 @@ namespace Ermine::graphics
         bool HasCustomShader(const Ermine::graphics::Material* material) const;
 
         /**
+         * @brief Captures/bakes spherical harmonics data for a light probe at the given position.
+         * Samples the scene lighting in 6 directions (cube map) and projects to SH coefficients.
+         * This is a simplified capture - for production you would render cube maps.
+         * @param probePosition World-space position to capture lighting
+         * @param entity Entity ID with AmbientLightProbe component to update
+         * @return true if capture was successful
+         */
+        bool CaptureLightProbe(const Vec3& probePosition, EntityID entity);
+
+        /**
+         * @brief Sets SH coefficients for a light probe from a simple directional light setup.
+         * Useful for manually authoring probe data or testing.
+         * @param entity Entity ID with AmbientLightProbe component
+         * @param skyColor Color of sky hemisphere
+         * @param groundColor Color of ground hemisphere  
+         * @param lightDirection Main light direction (normalized)
+         * @param lightColor Color of the main directional light
+         * @param lightIntensity Intensity of the main light
+         */
+        void SetProbeSHFromDirectionalLight(EntityID entity, const Vec3& skyColor, 
+                                            const Vec3& groundColor, const Vec3& lightDirection,
+                                            const Vec3& lightColor, float lightIntensity);
+
+        /**
+         * @brief Creates a new light probe entity at the specified position with default settings.
+         * @param position World-space position for the probe
+         * @param influenceRadius Radius of influence for this probe
+         * @param probeName Optional name for the probe
+         * @return EntityID of the created probe entity
+         */
+        Ermine::EntityID CreateLightProbeEntity(const Vec3& position, float influenceRadius = 10.0f,
+                                        const std::string& probeName = "AmbientProbe");
+
+        /**
+         * @brief Gets the number of cached light probes.
+         * @return Number of cached probes
+         */
+        size_t GetLightProbeCount() const { return m_CachedProbes.size(); }
+
+        /**
          * @brief Result structure for ambient probe interpolation
          */
         struct ProbeBlendResult {
@@ -1027,6 +1073,41 @@ namespace Ermine::graphics
          * This should be called once after CompileMaterials() during load time.
          */
         void UploadMaterialsToGPU();
+
+        // ========================================================================
+        // LIGHT PROBE SYSTEM - Ambient lighting interpolation
+        // ========================================================================
+
+        /**
+         * @brief Gathers all active light probes from entities with AmbientLightProbe component.
+         * Updates m_LightProbesDirty flag if probe count or data has changed.
+         */
+        void GatherLightProbes();
+
+        /**
+         * @brief Interpolates Spherical Harmonics coefficients from nearby probes.
+         * Blends up to m_MaxLightProbes using inverse distance weighting.
+         * @param samplePosition World-space position to sample (typically camera position)
+         * @param outSH Output array of 9 SH coefficients (L2)
+         */
+        void InterpolateProbeSH(const Vec3& samplePosition, glm::vec3 outSH[9]);
+
+        /**
+         * @brief Updates light probe shader uniforms for the lighting pass.
+         * Sends interpolated SH coefficients to the shader.
+         */
+        void UpdateLightProbeUniforms();
+
+        // Light probe cache
+        struct CachedProbe {
+            EntityID entity;
+            Vec3 position;
+            Vec3 shCoefficients[9];
+            float influenceRadius;
+            float blendWeight;
+            bool isActive;
+        };
+        std::vector<CachedProbe> m_CachedProbes;
 
         // ========================================================================
         // CUSTOM SHADER DRAW ITEM - Bundles GPU data with CPU metadata

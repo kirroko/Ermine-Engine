@@ -1900,8 +1900,9 @@ namespace Ermine
 /*!***********************************************************************
 \brief
  Ambient Light Probe - Captures ambient lighting at a specific location.
- Multiple probes are interpolated to provide smooth ambient transitions.
- Similar to Unity's Light Probe system.
+ Uses Spherical Harmonics (L2, 9 coefficients per color channel) for
+ directional ambient lighting. Multiple probes are interpolated to provide
+ smooth ambient transitions. Similar to Unity's Light Probe system.
 *************************************************************************/
 struct AmbientLightProbe
 {
@@ -1909,36 +1910,138 @@ struct AmbientLightProbe
 	std::string probeName = "AmbientProbe";
 	bool isActive = true;
 
-	// Baked ambient data (captured at this probe's position)
+	// Spherical Harmonics coefficients (L2 - 9 coefficients per RGB channel)
+	// These encode directional ambient light captured at this probe location
+	// SH bands: L0 (1 coeff), L1 (3 coeffs), L2 (5 coeffs) = 9 total per channel
+	Vec3 shCoefficients[9] = {
+		Vec3{0.0f, 0.0f, 0.0f}, Vec3{0.0f, 0.0f, 0.0f}, Vec3{0.0f, 0.0f, 0.0f},
+		Vec3{0.0f, 0.0f, 0.0f}, Vec3{0.0f, 0.0f, 0.0f}, Vec3{0.0f, 0.0f, 0.0f},
+		Vec3{0.0f, 0.0f, 0.0f}, Vec3{0.0f, 0.0f, 0.0f}, Vec3{0.0f, 0.0f, 0.0f}
+	};
+
+	// Legacy/fallback: Simple ambient data (used when SH is not available)
 	Vec3 ambientColor = Vec3{ 1.0f, 1.0f, 1.0f };
 	float ambientIntensity = 0.1f;
+	bool useSphericalHarmonics = true; // If false, falls back to simple ambient color
 
 	// Probe influence settings
 	float influenceRadius = 10.0f;  // How far this probe affects surrounding areas
 	float blendWeight = 1.0f;       // Blend weight for interpolation (0-1)
 
-	// Optional: Spherical harmonics data for more accurate ambient (future enhancement)
-	// You can add SH coefficients here for directional ambient lighting
-
 	// Visualization settings (editor only)
 	bool showGizmo = true;
 	Vec3 gizmoColor = Vec3{ 1.0f, 1.0f, 0.0f }; // Yellow gizmo by default
 
-	AmbientLightProbe() = default;
+	AmbientLightProbe() {
+		// Initialize with default uniform ambient (hemisphere lighting)
+		InitializeDefaultSH();
+	}
+
+	// Initialize with default SH coefficients for uniform ambient lighting
+	void InitializeDefaultSH() {
+		// L0 band (DC term) - represents average ambient color
+		shCoefficients[0] = Vec3{ 0.5f, 0.5f, 0.5f };
+		// All other bands to zero for uniform lighting
+		for (int i = 1; i < 9; ++i) {
+			shCoefficients[i] = Vec3{ 0.0f, 0.0f, 0.0f };
+		}
+	}
+
+	// Set from a simple ambient color (converts to SH)
+	void SetFromAmbientColor(const Vec3& color, float intensity) {
+		ambientColor = color;
+		ambientIntensity = intensity;
+		// Convert to SH L0 coefficient (DC term)
+		// The constant 0.282095 is the normalization factor for Y_0^0
+		float normFactor = 0.282095f;
+		shCoefficients[0] = Vec3{
+			color.x * intensity * normFactor,
+			color.y * intensity * normFactor,
+			color.z * intensity * normFactor
+		};
+		// Clear other bands for uniform lighting
+		for (int i = 1; i < 9; ++i) {
+			shCoefficients[i] = Vec3{ 0.0f, 0.0f, 0.0f };
+		}
+	}
 
 	template<typename Alloc>
 	void Serialize(rapidjson::Value& out, Alloc& alloc) const {
-		xprop_utils::SerializeToJson(*this, out, alloc);
+		out.SetObject();
+		out.AddMember("probeName", rapidjson::Value(probeName.c_str(), alloc), alloc);
+		out.AddMember("isActive", isActive, alloc);
+		out.AddMember("useSphericalHarmonics", useSphericalHarmonics, alloc);
+		
+		// Serialize SH coefficients
+		rapidjson::Value shArray(rapidjson::kArrayType);
+		for (int i = 0; i < 9; ++i) {
+			rapidjson::Value coeff(rapidjson::kArrayType);
+			coeff.PushBack(shCoefficients[i].x, alloc);
+			coeff.PushBack(shCoefficients[i].y, alloc);
+			coeff.PushBack(shCoefficients[i].z, alloc);
+			shArray.PushBack(coeff, alloc);
+		}
+		out.AddMember("shCoefficients", shArray, alloc);
+		
+		// Legacy ambient
+		out.AddMember("ambientColor", Vec3ToJson(ambientColor, alloc), alloc);
+		out.AddMember("ambientIntensity", ambientIntensity, alloc);
+		
+		// Influence
+		out.AddMember("influenceRadius", influenceRadius, alloc);
+		out.AddMember("blendWeight", blendWeight, alloc);
+		
+		// Visualization
+		out.AddMember("showGizmo", showGizmo, alloc);
+		out.AddMember("gizmoColor", Vec3ToJson(gizmoColor, alloc), alloc);
 	}
 
 	void Deserialize(const rapidjson::Value& in) {
-		xprop_utils::DeserializeFromJson(*this, in);
+		if (in.HasMember("probeName") && in["probeName"].IsString())
+			probeName = in["probeName"].GetString();
+		if (in.HasMember("isActive") && in["isActive"].IsBool())
+			isActive = in["isActive"].GetBool();
+		if (in.HasMember("useSphericalHarmonics") && in["useSphericalHarmonics"].IsBool())
+			useSphericalHarmonics = in["useSphericalHarmonics"].GetBool();
+		
+		// Deserialize SH coefficients
+		if (in.HasMember("shCoefficients") && in["shCoefficients"].IsArray()) {
+			const auto& shArray = in["shCoefficients"].GetArray();
+			for (int i = 0; i < 9 && i < (int)shArray.Size(); ++i) {
+				if (shArray[i].IsArray() && shArray[i].Size() >= 3) {
+					shCoefficients[i] = Vec3{
+						shArray[i][0].GetFloat(),
+						shArray[i][1].GetFloat(),
+						shArray[i][2].GetFloat()
+					};
+				}
+			}
+		}
+		
+		// Legacy ambient
+		if (in.HasMember("ambientColor"))
+			ambientColor = JsonToVec3(in["ambientColor"]);
+		if (in.HasMember("ambientIntensity") && in["ambientIntensity"].IsNumber())
+			ambientIntensity = in["ambientIntensity"].GetFloat();
+		
+		// Influence
+		if (in.HasMember("influenceRadius") && in["influenceRadius"].IsNumber())
+			influenceRadius = in["influenceRadius"].GetFloat();
+		if (in.HasMember("blendWeight") && in["blendWeight"].IsNumber())
+			blendWeight = in["blendWeight"].GetFloat();
+		
+		// Visualization
+		if (in.HasMember("showGizmo") && in["showGizmo"].IsBool())
+			showGizmo = in["showGizmo"].GetBool();
+		if (in.HasMember("gizmoColor"))
+			gizmoColor = JsonToVec3(in["gizmoColor"]);
 	}
 
 	XPROPERTY_DEF(
 		"AmbientLightProbe", AmbientLightProbe,
 		xproperty::obj_member<"probeName", &AmbientLightProbe::probeName>,
 		xproperty::obj_member<"isActive", &AmbientLightProbe::isActive>,
+		xproperty::obj_member<"useSphericalHarmonics", &AmbientLightProbe::useSphericalHarmonics>,
 		xproperty::obj_member<"ambientColor", &AmbientLightProbe::ambientColor>,
 		xproperty::obj_member<"ambientIntensity", &AmbientLightProbe::ambientIntensity>,
 		xproperty::obj_member<"influenceRadius", &AmbientLightProbe::influenceRadius>,

@@ -51,6 +51,14 @@ uniform vec3 u_AmbientColor = vec3(1.0, 1.0, 1.0);  // Ambient light color
 uniform float u_AmbientIntensity = 0.1;        // Ambient light intensity
 uniform float u_AmbientOcclusionStrength = 1.0; // How much AO affects ambient
 
+// Light Probe Parameters (Spherical Harmonics L2 - 9 coefficients)
+uniform int u_UseLightProbes = 0;              // 0 = use simple ambient, 1 = use light probes
+uniform vec3 u_LightProbeSH[9] = vec3[9](      // SH coefficients (interpolated from probes)
+    vec3(0.0), vec3(0.0), vec3(0.0),
+    vec3(0.0), vec3(0.0), vec3(0.0),
+    vec3(0.0), vec3(0.0), vec3(0.0)
+);
+
 
 // Light structure
 struct Light {
@@ -217,6 +225,93 @@ float calculateSSAO(vec2 texCoord, vec3 fragPosView, vec3 normalView, float dept
     aoFactor = mix(aoFactor, 1.0, fadeoutFactor);
     
     return aoFactor;
+}
+
+// ===================================================================
+// SPHERICAL HARMONICS - Ambient Light Probe Evaluation (L2)
+// ===================================================================
+
+/**
+ * @brief Evaluates L2 Spherical Harmonics for a given normal direction
+ * Uses 9 SH coefficients (L0 + L1 + L2 bands) to compute directional ambient lighting
+ * Based on "Stupid Spherical Harmonics" by Peter-Pike Sloan
+ * @param normal Surface normal in world space (must be normalized)
+ * @param sh Array of 9 SH coefficient vectors (RGB per coefficient)
+ * @return Irradiance color from the light probe at this normal direction
+ */
+vec3 evaluateSH(vec3 normal, vec3 sh[9]) {
+    // Pre-compute polynomial terms
+    float x = normal.x;
+    float y = normal.y;
+    float z = normal.z;
+    
+    float x2 = x * x;
+    float y2 = y * y;
+    float z2 = z * z;
+    
+    // SH basis functions (normalized for irradiance)
+    // L0 band (DC) - constant across all directions
+    float Y00 = 0.282095;  // sqrt(1/(4*pi))
+    
+    // L1 band - linear gradients (encodes dominant light direction)
+    float Y1_1 = 0.488603 * y;  // sqrt(3/(4*pi)) * y
+    float Y10  = 0.488603 * z;  // sqrt(3/(4*pi)) * z
+    float Y11  = 0.488603 * x;  // sqrt(3/(4*pi)) * x
+    
+    // L2 band - quadratic terms (captures more detail)
+    float Y2_2 = 1.092548 * x * y;                    // sqrt(15/(4*pi)) * xy
+    float Y2_1 = 1.092548 * y * z;                    // sqrt(15/(4*pi)) * yz
+    float Y20  = 0.315392 * (3.0 * z2 - 1.0);         // sqrt(5/(16*pi)) * (3z^2-1)
+    float Y21  = 1.092548 * x * z;                    // sqrt(15/(4*pi)) * xz
+    float Y22  = 0.546274 * (x2 - y2);                // sqrt(15/(16*pi)) * (x^2-y^2)
+    
+    // Accumulate irradiance by weighting each SH coefficient by its basis function
+    vec3 irradiance = vec3(0.0);
+    irradiance += sh[0] * Y00;   // L0
+    irradiance += sh[1] * Y1_1;  // L1
+    irradiance += sh[2] * Y10;
+    irradiance += sh[3] * Y11;
+    irradiance += sh[4] * Y2_2;  // L2
+    irradiance += sh[5] * Y2_1;
+    irradiance += sh[6] * Y20;
+    irradiance += sh[7] * Y21;
+    irradiance += sh[8] * Y22;
+    
+    // Clamp to prevent negative values (can occur due to numerical precision)
+    return max(irradiance, vec3(0.0));
+}
+
+/**
+ * @brief Computes ambient lighting using light probes with SH or fallback to simple ambient
+ * @param normal Surface normal in world space (must be normalized)
+ * @param albedo Surface albedo color
+ * @param ao Ambient occlusion factor (from G-buffer and/or SSAO)
+ * @param ssaoFactor SSAO contribution
+ * @return Ambient lighting contribution
+ */
+vec3 calculateAmbient(vec3 normal, vec3 albedo, float ao, float ssaoFactor) {
+    if (u_AmbientLightEnabled == 0) {
+        return vec3(0.0);
+    }
+    
+    vec3 ambient = vec3(0.0);
+    
+    if (u_UseLightProbes != 0) {
+        // Use spherical harmonics light probe for directional ambient
+        vec3 irradiance = evaluateSH(normal, u_LightProbeSH);
+        ambient = irradiance * albedo;
+    } else {
+        // Fallback to simple uniform ambient lighting
+        ambient = u_AmbientColor * u_AmbientIntensity * albedo;
+    }
+    
+    // Apply ambient occlusion
+    // Combine material AO and SSAO into a single occlusion factor
+    float combinedAO = ao * ssaoFactor;
+    float aoInfluence = mix(1.0, combinedAO, u_AmbientOcclusionStrength);
+    ambient *= aoInfluence;
+    
+    return ambient;
 }
 
 // PBR Functions
@@ -586,16 +681,8 @@ void main()
     float ssaoFactor = calculateSSAO(TexCoord, fragPosView, normalView, depth);
 
     if (useBlinnPhong) {
-        // Ambient - configurable ambient lighting with color and intensity
-        vec3 ambient = vec3(0.0);
-        if (u_AmbientLightEnabled != 0) {
-            // Calculate ambient with color, intensity, and combined AO (material + SSAO)
-            // Combine material AO and SSAO into a single occlusion factor
-            float combinedAO = ao * ssaoFactor;
-            // Apply the ambient occlusion strength to modulate how much AO affects the ambient
-            float aoInfluence = mix(1.0, combinedAO, u_AmbientOcclusionStrength);
-            ambient = u_AmbientColor * u_AmbientIntensity * albedo * aoInfluence;
-        }
+        // Ambient - use light probe system or fallback to simple ambient
+        vec3 ambient = calculateAmbient(normalWorld, albedo, ao, ssaoFactor);
         result += ambient;
 
         // Blinn-Phong lighting
@@ -663,16 +750,8 @@ void main()
         // Emissive
         result += emissive * emissiveIntensity;
     } else {
-        // PBR ambient - configurable ambient lighting with color and intensity
-        vec3 ambient = vec3(0.0);
-        if (u_AmbientLightEnabled != 0) {
-            // Calculate ambient with color, intensity, and combined AO (material + SSAO)
-            // Combine material AO and SSAO into a single occlusion factor
-            float combinedAO = ao * ssaoFactor;
-            // Apply the ambient occlusion strength to modulate how much AO affects the ambient
-            float aoInfluence = mix(1.0, combinedAO, u_AmbientOcclusionStrength);
-            ambient = u_AmbientColor * u_AmbientIntensity * albedo * aoInfluence;
-        }
+        // PBR ambient - use light probe system or fallback to simple ambient
+        vec3 ambient = calculateAmbient(normalWorld, albedo, ao, ssaoFactor);
         result += ambient;
 
         // PBR lighting

@@ -181,6 +181,14 @@ void Renderer::Init(const int& screenWidth, const int& screenHeight)
 	m_MaterialsDirty = true;
 
 	GenerateIGNTexture();
+
+	// Initialize default global light probe SH coefficients
+	// Default to uniform ambient (hemisphere lighting)
+	float normFactor = 0.282095f; // sqrt(1/(4*pi))
+	m_LightProbeSH[0] = m_AmbientColor * m_AmbientIntensity * normFactor;
+	for (int i = 1; i < 9; ++i) {
+		m_LightProbeSH[i] = glm::vec3(0.0f);
+	}
 }
 
 /**
@@ -3048,6 +3056,22 @@ void Renderer::RenderLightingPass(const Mtx44& view, const Mtx44& projection)
 	m_LightPassShader->SetUniform3f("u_AmbientColor", finalAmbientColor);
 	m_LightPassShader->SetUniform1f("u_AmbientIntensity", finalAmbientIntensity);
 	m_LightPassShader->SetUniform1f("u_AmbientOcclusionStrength", m_AmbientOcclusionStrength);
+
+	// Set light probe parameters (Spherical Harmonics)
+	m_LightPassShader->SetUniform1i("u_UseLightProbes", m_UseLightProbes ? 1 : 0);
+	if (m_UseLightProbes) {
+		// Gather and interpolate light probes
+		GatherLightProbes();
+		
+		glm::vec3 interpolatedSH[9];
+		InterpolateProbeSH(cameraPos, interpolatedSH);
+		
+		// Upload SH coefficients to shader (all 9 coefficients)
+		for (int i = 0; i < 9; ++i) {
+			std::string uniformName = "u_LightProbeSH[" + std::to_string(i) + "]";
+			m_LightPassShader->SetUniform3f(uniformName, interpolatedSH[i]);
+		}
+	}
 
 	// Set shading mode
 	m_LightPassShader->SetUniform1i("u_ShadingMode", m_IsBlinnPhong ? 1 : 0);
@@ -6980,4 +7004,333 @@ Renderer::ProbeBlendResult Renderer::InterpolateAmbientProbes(const Vec3& sample
 	}
 
 	return result;
+}
+
+/**
+ * @brief Gathers all active light probes from entities with AmbientLightProbe component.
+ * Updates m_CachedProbes and m_LightProbesDirty flag if probe count or data has changed.
+ */
+void Renderer::GatherLightProbes()
+{
+	auto& ecs = ECS::GetInstance();
+	std::vector<CachedProbe> newProbes;
+
+	// Iterate through all entities to find AmbientLightProbe components
+	for (EntityID entity = 0; entity < MAX_ENTITIES; ++entity)
+	{
+		if (!ecs.IsEntityValid(entity)) continue;
+		if (!ecs.HasComponent<AmbientLightProbe>(entity)) continue;
+		if (!ecs.HasComponent<Transform>(entity)) continue;
+
+		auto& probe = ecs.GetComponent<AmbientLightProbe>(entity);
+		if (!probe.isActive) continue;
+
+		auto& transform = ecs.GetComponent<Transform>(entity);
+		Vec3 probePos = transform.position;
+
+		// Use GlobalTransform if available for hierarchical probes
+		if (ecs.HasComponent<GlobalTransform>(entity)) {
+			auto& globalTransform = ecs.GetComponent<GlobalTransform>(entity);
+			probePos = globalTransform.GetWorldPosition();
+		}
+
+		CachedProbe cached;
+		cached.entity = entity;
+		cached.position = probePos;
+		cached.influenceRadius = probe.influenceRadius;
+		cached.blendWeight = probe.blendWeight;
+		cached.isActive = probe.isActive;
+
+		// Copy SH coefficients
+		for (int i = 0; i < 9; ++i) {
+			cached.shCoefficients[i] = probe.shCoefficients[i];
+		}
+
+		newProbes.push_back(cached);
+	}
+
+	// Check if probes have changed
+	if (newProbes.size() != m_CachedProbes.size()) {
+		m_LightProbesDirty = true;
+		m_CachedProbes = std::move(newProbes);
+	}
+	else {
+		// Check if any probe data changed
+		for (size_t i = 0; i < newProbes.size(); ++i) {
+			if (newProbes[i].entity != m_CachedProbes[i].entity ||
+				newProbes[i].position.x != m_CachedProbes[i].position.x ||
+				newProbes[i].position.y != m_CachedProbes[i].position.y ||
+				newProbes[i].position.z != m_CachedProbes[i].position.z) {
+				m_LightProbesDirty = true;
+				m_CachedProbes = std::move(newProbes);
+				break;
+			}
+		}
+	}
+}
+
+/**
+ * @brief Interpolates Spherical Harmonics coefficients from nearby probes.
+ * Blends up to m_MaxLightProbes using inverse distance weighting.
+ * @param samplePosition World-space position to sample (typically camera position)
+ * @param outSH Output array of 9 SH coefficients (L2)
+ */
+void Renderer::InterpolateProbeSH(const Vec3& samplePosition, glm::vec3 outSH[9])
+{
+	// Initialize with default global SH coefficients or zeros
+	for (int i = 0; i < 9; ++i) {
+		outSH[i] = m_LightProbeSH[i];
+	}
+
+	if (m_CachedProbes.empty()) {
+		// No probes available - use global fallback
+		// Convert global ambient color to SH L0 coefficient
+		float normFactor = 0.282095f; // sqrt(1/(4*pi))
+		outSH[0] = m_AmbientColor * m_AmbientIntensity * normFactor;
+		for (int i = 1; i < 9; ++i) {
+			outSH[i] = glm::vec3(0.0f);
+		}
+		return;
+	}
+
+	// Find nearby probes within influence radius
+	std::vector<std::pair<float, const CachedProbe*>> nearbyProbes;
+	for (const auto& probe : m_CachedProbes) {
+		if (!probe.isActive) continue;
+
+		float distance = Vec3Length(samplePosition - probe.position);
+		if (distance <= probe.influenceRadius) {
+			nearbyProbes.push_back({ distance, &probe });
+		}
+	}
+
+	if (nearbyProbes.empty()) {
+		// No probes nearby - use global fallback
+		float normFactor = 0.282095f;
+		outSH[0] = m_AmbientColor * m_AmbientIntensity * normFactor;
+		for (int i = 1; i < 9; ++i) {
+			outSH[i] = glm::vec3(0.0f);
+		}
+		return;
+	}
+
+	// Sort by distance (closest first)
+	std::sort(nearbyProbes.begin(), nearbyProbes.end(),
+		[](const auto& a, const auto& b) { return a.first < b.first; });
+
+	// Blend up to m_MaxLightProbes nearest probes
+	int count = std::min(static_cast<int>(nearbyProbes.size()), m_MaxLightProbes);
+
+	float totalWeight = 0.0f;
+	glm::vec3 blendedSH[9] = { glm::vec3(0.0f) };
+
+	for (int i = 0; i < count; ++i) {
+		float distance = nearbyProbes[i].first;
+		const CachedProbe* probe = nearbyProbes[i].second;
+
+		// Calculate weight based on distance (inverse distance weighting)
+		float weight = 1.0f - (distance / probe->influenceRadius);
+		weight = std::clamp(weight, 0.0f, 1.0f);
+		weight *= probe->blendWeight;
+
+		totalWeight += weight;
+
+		// Accumulate weighted SH coefficients
+		for (int j = 0; j < 9; ++j) {
+			glm::vec3 shCoeff(
+				probe->shCoefficients[j].x,
+				probe->shCoefficients[j].y,
+				probe->shCoefficients[j].z
+			);
+			blendedSH[j] += shCoeff * weight;
+		}
+	}
+
+	// Normalize by total weight
+	if (totalWeight > 0.0f) {
+		for (int i = 0; i < 9; ++i) {
+			outSH[i] = blendedSH[i] / totalWeight;
+		}
+	}
+}
+
+/**
+ * @brief Sets SH coefficients for a light probe from a simple directional light setup.
+ * Creates hemisphere lighting (sky/ground) with a directional light contribution.
+ * @param entity Entity ID with AmbientLightProbe component
+ * @param skyColor Color of sky hemisphere
+ * @param groundColor Color of ground hemisphere
+ * @param lightDirection Main light direction (normalized)
+ * @param lightColor Color of the main directional light
+ * @param lightIntensity Intensity of the main light
+ */
+void Renderer::SetProbeSHFromDirectionalLight(EntityID entity, const Vec3& skyColor,
+	const Vec3& groundColor, const Vec3& lightDirection,
+	const Vec3& lightColor, float lightIntensity)
+{
+	auto& ecs = ECS::GetInstance();
+	if (!ecs.HasComponent<AmbientLightProbe>(entity)) {
+		EE_CORE_WARN("Entity {0} does not have AmbientLightProbe component", entity);
+		return;
+	}
+
+	auto& probe = ecs.GetComponent<AmbientLightProbe>(entity);
+
+	// SH basis normalization factors
+	const float c0 = 0.282095f;  // sqrt(1/(4*pi))
+	const float c1 = 0.488603f;  // sqrt(3/(4*pi))
+	const float c2_0 = 0.315392f; // sqrt(5/(16*pi))
+	const float c2_1 = 1.092548f; // sqrt(15/(4*pi))
+	const float c2_2 = 0.546274f; // sqrt(15/(16*pi))
+
+	// Convert Vec3 to glm::vec3 for easier math
+	glm::vec3 sky(skyColor.x, skyColor.y, skyColor.z);
+	glm::vec3 ground(groundColor.x, groundColor.y, groundColor.z);
+	glm::vec3 lightDir(lightDirection.x, lightDirection.y, lightDirection.z);
+	lightDir = glm::normalize(lightDir);
+	glm::vec3 light(lightColor.x * lightIntensity, lightColor.y * lightIntensity, lightColor.z * lightIntensity);
+
+	// L0 band - average color (hemisphere blend)
+	glm::vec3 avgColor = (sky + ground) * 0.5f;
+	probe.shCoefficients[0] = Vec3{ avgColor.x * c0, avgColor.y * c0, avgColor.z * c0 };
+
+	// L1 band - linear gradient (sky-ground gradient + directional light)
+	// Y axis gradient for sky/ground
+	glm::vec3 skyGroundGradient = (sky - ground) * 0.5f;
+	// Add directional light contribution to L1
+	glm::vec3 l1_y = skyGroundGradient + light * lightDir.y;
+	glm::vec3 l1_z = light * lightDir.z;
+	glm::vec3 l1_x = light * lightDir.x;
+
+	probe.shCoefficients[1] = Vec3{ l1_y.x * c1, l1_y.y * c1, l1_y.z * c1 }; // Y1,-1
+	probe.shCoefficients[2] = Vec3{ l1_z.x * c1, l1_z.y * c1, l1_z.z * c1 }; // Y1,0
+	probe.shCoefficients[3] = Vec3{ l1_x.x * c1, l1_x.y * c1, l1_x.z * c1 }; // Y1,1
+
+	// L2 band - quadratic terms (simplified - mostly for directional detail)
+	// For a simple setup, we can add some directional light detail
+	float dx = lightDir.x;
+	float dy = lightDir.y;
+	float dz = lightDir.z;
+
+	glm::vec3 l2Factor = light * 0.3f; // Scale down L2 contribution
+
+	probe.shCoefficients[4] = Vec3{ l2Factor.x * dx * dy * c2_1, l2Factor.y * dx * dy * c2_1, l2Factor.z * dx * dy * c2_1 }; // Y2,-2
+	probe.shCoefficients[5] = Vec3{ l2Factor.x * dy * dz * c2_1, l2Factor.y * dy * dz * c2_1, l2Factor.z * dy * dz * c2_1 }; // Y2,-1
+	probe.shCoefficients[6] = Vec3{ l2Factor.x * (3.0f * dz * dz - 1.0f) * c2_0, l2Factor.y * (3.0f * dz * dz - 1.0f) * c2_0, l2Factor.z * (3.0f * dz * dz - 1.0f) * c2_0 }; // Y2,0
+	probe.shCoefficients[7] = Vec3{ l2Factor.x * dx * dz * c2_1, l2Factor.y * dx * dz * c2_1, l2Factor.z * dx * dz * c2_1 }; // Y2,1
+	probe.shCoefficients[8] = Vec3{ l2Factor.x * (dx * dx - dy * dy) * c2_2, l2Factor.y * (dx * dx - dy * dy) * c2_2, l2Factor.z * (dx * dx - dy * dy) * c2_2 }; // Y2,2
+
+	// Also update legacy ambient color for backward compatibility
+	probe.ambientColor = Vec3{ avgColor.x, avgColor.y, avgColor.z };
+	probe.ambientIntensity = 1.0f;
+
+	EE_CORE_INFO("Light probe SH coefficients set for entity {0}", entity);
+}
+
+/**
+ * @brief Simplified light probe capture - sets SH from current scene lighting.
+ * In a full implementation, this would render cube maps and project to SH.
+ * For now, it samples existing lights in the scene.
+ * @param probePosition World-space position to capture lighting
+ * @param entity Entity ID with AmbientLightProbe component to update
+ * @return true if capture was successful
+ */
+bool Renderer::CaptureLightProbe(const Vec3& probePosition, EntityID entity)
+{
+	auto& ecs = ECS::GetInstance();
+	if (!ecs.HasComponent<AmbientLightProbe>(entity)) {
+		EE_CORE_WARN("Entity {0} does not have AmbientLightProbe component", entity);
+		return false;
+	}
+
+	// Simple capture: sample the first directional light if available
+	// In production, you'd render 6 cube map faces and project to SH
+
+	Vec3 skyColor = Vec3{ 0.5f, 0.6f, 0.7f };  // Default sky blue
+	Vec3 groundColor = Vec3{ 0.3f, 0.25f, 0.2f }; // Default ground brown
+	Vec3 lightDir = Vec3{ 0.5f, -1.0f, 0.3f };  // Default down-angled light
+	Vec3 lightColor = Vec3{ 1.0f, 0.95f, 0.9f }; // Warm white
+	float lightIntensity = 1.0f;
+
+	// Find first directional light in scene
+	bool foundLight = false;
+	for (EntityID e = 0; e < MAX_ENTITIES; ++e) {
+		if (!ecs.IsEntityValid(e)) continue;
+		if (!ecs.HasComponent<Light>(e)) continue;
+
+		const auto& light = ecs.GetComponent<Light>(e);
+		if (light.type == LightType::DIRECTIONAL) {
+			if (ecs.HasComponent<Transform>(e)) {
+				const auto& trans = ecs.GetComponent<Transform>(e);
+				// Transform's forward direction is the light direction
+				// Assuming forward is -Z in local space
+				glm::quat q(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
+				glm::vec3 forward = q * glm::vec3(0, 0, -1);
+				lightDir = Vec3{ forward.x, forward.y, forward.z };
+			}
+			lightColor = light.color;
+			lightIntensity = light.intensity;
+			foundLight = true;
+			break;
+		}
+	}
+
+	if (!foundLight) {
+		EE_CORE_INFO("No directional light found for probe capture, using defaults");
+	}
+
+	// Set the SH coefficients based on the captured/default lighting
+	SetProbeSHFromDirectionalLight(entity, skyColor, groundColor, lightDir, lightColor, lightIntensity);
+
+	return true;
+}
+
+/**
+ * @brief Creates a new light probe entity at the specified position with default settings.
+ * @param position World-space position for the probe
+ * @param influenceRadius Radius of influence for this probe
+ * @param probeName Optional name for the probe
+ * @return EntityID of the created probe entity
+ */
+Ermine::EntityID Renderer::CreateLightProbeEntity(const Vec3& position, float influenceRadius, const std::string& probeName)
+{
+	auto& ecs = ECS::GetInstance();
+	
+	// Create a new entity
+	Ermine::EntityID probeEntity = ecs.CreateEntity();
+	
+	// Add ObjectMetaData
+	ObjectMetaData metaData;
+	metaData.name = probeName;
+	metaData.tag = "LightProbe";
+	metaData.selfActive = true;
+	ecs.AddComponent(probeEntity, metaData);
+	
+	// Add Transform at the specified position
+	Transform transformComp;
+	transformComp.position = position;
+	transformComp.rotation = Quaternion(); // Identity quaternion
+	transformComp.scale = Vec3{ 1.0f, 1.0f, 1.0f };
+	ecs.AddComponent(probeEntity, transformComp);
+	
+	// Add AmbientLightProbe component
+	AmbientLightProbe probeComp;
+	probeComp.probeName = probeName;
+	probeComp.influenceRadius = influenceRadius;
+	probeComp.isActive = true;
+	probeComp.useSphericalHarmonics = true;
+	
+	probeComp.InitializeDefaultSH();
+	ecs.AddComponent(probeEntity, probeComp);
+	
+	// Optionally capture from scene if there are lights
+	CaptureLightProbe(position, probeEntity);
+	
+	// Mark probes as dirty to trigger cache update
+	m_LightProbesDirty = true;
+	
+	EE_CORE_INFO("Created light probe entity {0} at ({1}, {2}, {3}) with radius {4}",
+	            probeEntity, position.x, position.y, position.z, influenceRadius);
+	
+	return probeEntity;
 }
