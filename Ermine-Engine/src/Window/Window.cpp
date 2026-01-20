@@ -81,6 +81,16 @@ namespace
 
 }
 
+static bool s_pauseOnFocusLoss = true; // Enable by default
+
+void Ermine::Window::SetPausedOnFocusLoss(bool enabled) {
+    s_pauseOnFocusLoss = enabled;
+}
+
+bool Ermine::Window::IsPausedOnFocusLoss() {  
+    return s_pauseOnFocusLoss;
+}
+
 /**
  * @brief GLFW callback function for handling file drops.
  * This function is registered with GLFW to receive notifications
@@ -212,13 +222,55 @@ GLFWwindow* Ermine::Window::InitWindow(int width, int height, const char* title)
         {
             if (!focused)
             {
-                // Always release on focus loss to avoid trapping the cursor outside your app.
+                // Always release cursor confinement on focus loss
+#ifdef _WIN32
                 ConfineCursorToGLFWWindow(w, false);
+#endif
+
+                // Pause the game if enabled (works in both editor and standalone)
+                if (Ermine::Window::IsPausedOnFocusLoss())
+                {
+#if defined(EE_EDITOR)
+                    // In editor, only pause if actively playing
+                    if (editor::EditorGUI::isPlaying)
+                    {
+                        editor::EditorGUI::s_state = editor::EditorGUI::SimState::paused;
+                        EE_CORE_INFO("Game paused (window lost focus)");
+                    }
+#else
+                    // In standalone build, always pause
+                    editor::EditorGUI::s_state = editor::EditorGUI::SimState::paused;
+                    EE_CORE_INFO("Game paused (window lost focus)");
+#endif
+                }
+
                 return;
             }
 
-            // On focus gain, re-apply if needed.
+            // On focus gain, re-apply cursor confinement if needed
+#ifdef _WIN32
             RefreshCursorConfinement(w);
+#endif
+
+            // Auto-resume when window regains focus
+            if (Ermine::Window::IsPausedOnFocusLoss())
+            {
+#if defined(EE_EDITOR)
+                // In editor, only resume if we were playing before
+                if (editor::EditorGUI::s_state == editor::EditorGUI::SimState::paused)
+                {
+                    editor::EditorGUI::s_state = editor::EditorGUI::SimState::playing;
+                    EE_CORE_INFO("Game resumed (window gained focus)");
+                }
+#else
+                // In standalone build, always resume from pause
+                if (editor::EditorGUI::s_state == editor::EditorGUI::SimState::paused)
+                {
+                    editor::EditorGUI::s_state = editor::EditorGUI::SimState::playing;
+                    EE_CORE_INFO("Game resumed (window gained focus)");
+                }
+#endif
+            }
         });
 
     glfwSetWindowIconifyCallback(window, [](GLFWwindow* w, int iconified)
