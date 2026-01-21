@@ -1394,14 +1394,344 @@
         },
         "GlobalTransform": {}
       }
+    },
+    {
+      "id": 24,
+      "components": {
+        "IDComponent": {
+          "guid": "6bb602d2f6950e4f9adbe70d2fa23dc3"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            20.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.10000000149011612,
+            0.10000000149011612,
+            0.10000000149011612
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "New Entity (6)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_floor_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 25,
+      "components": {
+        "IDComponent": {
+          "guid": "3bc0738c71adac4e987658d11398045f"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_floor_low.fbx_floor_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {},
+          "textures": [],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ],
+          "castsShadows": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "6bb602d2f6950e4f9adbe70d2fa23dc3",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 26,
+      "components": {
+        "IDComponent": {
+          "guid": "755ae6db5a456a46b85a848634098797"
+        },
+        "Transform": {
+          "position": [
+            -17.752370834350587,
+            20.42470359802246,
+            15.056640625
+          ],
+          "rotation": [
+            0.7071068286895752,
+            0.0,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            2.0,
+            0.9999988079071045,
+            1.100000023841858
+          ]
+        },
+        "Light": {
+          "color": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "intensity": 4.882999897003174,
+          "type": "Spot",
+          "castsShadows": false,
+          "castsRays": true,
+          "innerAngle": 30.0,
+          "outerAngle": 40.0,
+          "radius": 30.0
+        },
+        "ObjectMetaData": {
+          "name": "New Entity",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cube",
+            "size": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "materialAlpha": 1.0,
+            "materialTransparency": 0.0,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.5,
+            "materialEmissive": [
+              1.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 10.0
+          },
+          "textures": [],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ],
+          "castsShadows": true
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 27,
+      "components": {
+        "IDComponent": {
+          "guid": "b3376c9e3f3ba142b67c8a2753405323"
+        },
+        "Transform": {
+          "position": [
+            -28.3936767578125,
+            1.4875376224517823,
+            20.755355834960939
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.10000000149011612,
+            0.10000000149011612,
+            0.10000000149011612
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "New Entity",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "Walking.fbx",
+          "isSkinFile": false
+        },
+        "AnimationComponent": {
+          "model": "Walking.fbx",
+          "graph": {
+            "playbackSpeed": 0.10000000149011612,
+            "playing": false,
+            "currentTime": 0.0,
+            "states": [],
+            "transitions": [],
+            "parameters": []
+          }
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 28,
+      "components": {
+        "IDComponent": {
+          "guid": "e78a57ec8ef9f747876c43e1cd680a9e"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Walking.fbx_Alpha_Surface_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {},
+          "textures": [],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ],
+          "castsShadows": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "b3376c9e3f3ba142b67c8a2753405323",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 29,
+      "components": {
+        "IDComponent": {
+          "guid": "75aee3780abed74b8fce479f6d8bf89f"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Walking.fbx_Alpha_Joints_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {},
+          "textures": [],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ],
+          "castsShadows": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "b3376c9e3f3ba142b67c8a2753405323",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
     }
   ],
   "globalGraphics": {
     "ssaoEnabled": true,
     "ssaoSamples": 16,
-    "ssaoRadius": 21.599000930786134,
+    "ssaoRadius": 3.815999984741211,
     "ssaoBias": 0.0,
-    "ssaoIntensity": 0.1860000044107437,
+    "ssaoIntensity": 1.409999966621399,
     "ssaoFadeout": 0.0,
     "ssaoMaxDistance": 500.0,
     "fogEnabled": false,
