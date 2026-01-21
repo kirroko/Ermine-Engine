@@ -165,7 +165,7 @@ void GraphicsDebugGUI::DrawRenderingModeControls()
             DrawFloatSlider("Fadeout Distance", &renderer->m_SSAOFadeout, 0.0f, 1.0f, 
                            "Distance factor for fading out SSAO effect");
             
-            DrawFloatSlider("Max Distance", &renderer->m_SSAOMaxDistance, 10.0f, 500.0f, 
+            DrawFloatSlider("Max Distance", &renderer->m_SSAOMaxDistance, 10.0f, 1000.0f, 
                            "Maximum distance for SSAO calculation");
             
             ImGui::TreePop();

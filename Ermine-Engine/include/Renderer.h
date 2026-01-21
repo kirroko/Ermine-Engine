@@ -202,7 +202,7 @@ namespace Ermine::graphics
 		float m_SSAOBias = 0.01f;
 		float m_SSAOIntensity = 1.0f;
 		float m_SSAOFadeout = 0.1f;
-		float m_SSAOMaxDistance = 100.0f;
+		float m_SSAOMaxDistance = 1000.0f;
 
         // Fog parameters
         bool m_FogEnabled = false;

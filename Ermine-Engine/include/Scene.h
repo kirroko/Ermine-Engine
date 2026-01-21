@@ -28,6 +28,7 @@ namespace Ermine {
         std::string m_Name;                          ///< Name of the scene
         mutable std::unordered_set<EntityID> m_Entities;     ///< Set of all entities in this scene
         EntityID m_SelectedEntity = 0;               ///< Currently selected entity (0 = none)
+        mutable std::vector<EntityID> m_RootEntitiesOrder;   ///< Ordered list of root entities (NEW)
 
     public:
         /*!
@@ -76,6 +77,37 @@ namespace Ermine {
         \return Vector of all entity IDs
         */
         std::vector<EntityID> GetAllEntities() const;
+
+        // === NEW: Root entity reordering methods ===
+        /*!
+        \brief Reorder a root entity to a specific index
+        \param entity The root entity to reorder
+        \param newIndex The new position in the root list
+        \return True if successful, false otherwise
+        */
+        bool ReorderRootEntity(EntityID entity, size_t newIndex);
+
+        /*!
+        \brief Move a root entity up one position
+        \param entity The root entity to move up
+        \return True if successful, false otherwise
+        */
+        bool MoveRootEntityUp(EntityID entity);
+
+        /*!
+        \brief Move a root entity down one position
+        \param entity The root entity to move down
+        \return True if successful, false otherwise
+        */
+        bool MoveRootEntityDown(EntityID entity);
+
+        /*!
+        \brief Insert a root entity at a specific index
+        \param entity The entity to insert (will be made root if not already)
+        \param index The index to insert at
+        \return True if successful, false otherwise
+        */
+        bool InsertRootEntityAt(EntityID entity, size_t index);
 
         // Selection
         /*!

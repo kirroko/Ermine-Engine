@@ -20,6 +20,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "glad/glad.h"
 #include "AssetBrowser.h" // For forwarding dropped files to the asset browser
 #include "EditorGUI.h"
+#include "SettingsGUI.h"
 
 #if defined(_WIN32)
 	#define GLFW_EXPOSE_NATIVE_WIN32
@@ -132,8 +133,8 @@ GLFWwindow* Ermine::Window::InitWindow(int width, int height, const char* title)
     Config cfg{};
     try {
         cfg = LoadConfigFromFile(cfgPath);
-        EE_CORE_INFO("Loaded config: {0}x{1}, fullscreen={2}, maximised={3}, title={4}",
-            cfg.windowWidth, cfg.windowHeight, cfg.fullscreen, cfg.maximized, cfg.title);
+        EE_CORE_INFO("Loaded config: {0}x{1}, fullscreen={2}, maximised={3}, title={4}, settings={5}, fontsize={6}, baseFontSize{7}, themeMode{8}",
+            cfg.windowWidth, cfg.windowHeight, cfg.fullscreen, cfg.maximized, cfg.title, cfg.settingsIsOpen, cfg.fontSize, cfg.baseFontSize, cfg.themeMode);
     }
     catch (const std::exception& e) {
         EE_CORE_WARN("Config not found/invalid ({}). Using defaults.", e.what());
@@ -150,6 +151,9 @@ GLFWwindow* Ermine::Window::InitWindow(int width, int height, const char* title)
 
     window_width = cfg.windowWidth;
     window_height = cfg.windowHeight;
+	SettingsGUI::SetSettingsOpen(cfg.settingsIsOpen);
+	SettingsGUI::SetFontSize(cfg.fontSize, cfg.baseFontSize); // call this after ImGui is initialized
+	SettingsGUI::SetMode(cfg.themeMode);
 
     glfwSetErrorCallback([]([[maybe_unused]] int error , const char* description) { EE_CORE_ERROR("GLFW Error: {0}", description); });
     
