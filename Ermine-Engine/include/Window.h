@@ -70,5 +70,9 @@ namespace Ermine
         static void SetCursorLockState(CursorLockState state);
 
 		static CursorLockState GetCursorLockState() { return s_cursorLockState; }
+
+        static void SetPausedOnFocusLoss(bool enabled);
+        static bool IsPausedOnFocusLoss();
+
     };
 }
