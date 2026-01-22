@@ -38,6 +38,8 @@ namespace Ermine {
 
         if (needsHierarchy) {
             ECS::GetInstance().AddComponent(entity, HierarchyComponent());
+            // New entities with hierarchy start as root entities
+            m_RootEntitiesOrder.push_back(entity);
         }
 
         m_Entities.insert(entity);
@@ -75,6 +77,12 @@ namespace Ermine {
             DestroyEntity(child);
         }
 
+        // Remove from root entities order list
+        auto it = std::find(m_RootEntitiesOrder.begin(), m_RootEntitiesOrder.end(), entity);
+        if (it != m_RootEntitiesOrder.end()) {
+            m_RootEntitiesOrder.erase(it);
+        }
+
         // Remove from scene
         m_Entities.erase(entity);
 
@@ -93,20 +101,116 @@ namespace Ermine {
 
     std::vector<EntityID> Scene::GetRootEntities() const {
         EnsureSyncedWithECS();
-        std::vector<EntityID> roots;
-
-        for (auto entity : m_Entities) {
-            if (!ECS::GetInstance().IsEntityValid(entity)) continue;
-
-            if (ECS::GetInstance().HasComponent<HierarchyComponent>(entity)) {
-                const auto& hierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(entity);
-                if (hierarchy.parent == 0) {
-                    roots.push_back(entity);
+        
+        // Return the ordered list of root entities
+        // This ensures consistent ordering across frames
+        std::vector<EntityID> validRoots;
+        for (auto entity : m_RootEntitiesOrder) {
+            if (ECS::GetInstance().IsEntityValid(entity) && HasEntity(entity)) {
+                if (ECS::GetInstance().HasComponent<HierarchyComponent>(entity)) {
+                    const auto& hierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(entity);
+                    if (hierarchy.parent == 0) {
+                        validRoots.push_back(entity);
+                    }
                 }
             }
         }
+        
+        return validRoots;
+    }
 
-        return roots;
+    // === NEW: Root entity reordering methods ===
+    
+    bool Scene::ReorderRootEntity(EntityID entity, size_t newIndex) {
+        if (!HasEntity(entity)) return false;
+        
+        // Verify it's a root entity
+        if (ECS::GetInstance().HasComponent<HierarchyComponent>(entity)) {
+            const auto& hierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(entity);
+            if (hierarchy.parent != 0) {
+                EE_CORE_WARN("Cannot reorder entity {} - it has a parent", entity);
+                return false;
+            }
+        }
+        
+        // Find current index
+        auto it = std::find(m_RootEntitiesOrder.begin(), m_RootEntitiesOrder.end(), entity);
+        if (it == m_RootEntitiesOrder.end()) {
+            // Entity not in list, add it
+            m_RootEntitiesOrder.push_back(entity);
+            it = m_RootEntitiesOrder.end() - 1;
+        }
+        
+        // Clamp newIndex to valid range
+        newIndex = std::min(newIndex, m_RootEntitiesOrder.size() - 1);
+        
+        size_t currentIndex = std::distance(m_RootEntitiesOrder.begin(), it);
+        if (currentIndex == newIndex) return true; // Already at correct position
+        
+        // Remove from current position
+        m_RootEntitiesOrder.erase(it);
+        
+        // Insert at new position
+        m_RootEntitiesOrder.insert(m_RootEntitiesOrder.begin() + newIndex, entity);
+        
+        EE_CORE_INFO("Reordered root entity {} to index {}", entity, newIndex);
+        return true;
+    }
+    
+    bool Scene::MoveRootEntityUp(EntityID entity) {
+        if (!HasEntity(entity)) return false;
+        
+        auto it = std::find(m_RootEntitiesOrder.begin(), m_RootEntitiesOrder.end(), entity);
+        if (it == m_RootEntitiesOrder.end() || it == m_RootEntitiesOrder.begin()) {
+            return false; // Not found or already at top
+        }
+        
+        // Swap with previous
+        std::iter_swap(it, it - 1);
+        EE_CORE_INFO("Moved root entity {} up", entity);
+        return true;
+    }
+    
+    bool Scene::MoveRootEntityDown(EntityID entity) {
+        if (!HasEntity(entity)) return false;
+        
+        auto it = std::find(m_RootEntitiesOrder.begin(), m_RootEntitiesOrder.end(), entity);
+        if (it == m_RootEntitiesOrder.end() || it == m_RootEntitiesOrder.end() - 1) {
+            return false; // Not found or already at bottom
+        }
+        
+        // Swap with next
+        std::iter_swap(it, it + 1);
+        EE_CORE_INFO("Moved root entity {} down", entity);
+        return true;
+    }
+    
+    bool Scene::InsertRootEntityAt(EntityID entity, size_t index) {
+        if (!HasEntity(entity)) return false;
+        
+        // If entity has a parent, unparent it first
+        if (ECS::GetInstance().HasComponent<HierarchyComponent>(entity)) {
+            auto& hierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(entity);
+            if (hierarchy.parent != 0) {
+                auto hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>();
+                if (hierarchySystem) {
+                    hierarchySystem->UnsetParent(entity);
+                }
+            }
+        }
+        
+        // Remove from current position if already in list
+        auto it = std::find(m_RootEntitiesOrder.begin(), m_RootEntitiesOrder.end(), entity);
+        if (it != m_RootEntitiesOrder.end()) {
+            m_RootEntitiesOrder.erase(it);
+        }
+        
+        // Insert at new position
+        index = std::min(index, m_RootEntitiesOrder.size());
+        m_RootEntitiesOrder.insert(m_RootEntitiesOrder.begin() + index, entity);
+        
+        EE_CORE_INFO("Inserted root entity {} at index {}", entity, index);
+        return true;
     }
 
     void Scene::SetSelectedEntity(EntityID entity) {
@@ -156,6 +260,9 @@ namespace Ermine {
             return;
 
         m_Entities.clear();
+        
+        // Track which root entities we've seen
+        std::unordered_set<EntityID> foundRoots;
 
         for (EntityID e = 0; e < MAX_ENTITIES; ++e) {
             if (!ecs.IsEntityValid(e)) continue;
@@ -168,6 +275,27 @@ namespace Ermine {
                 hc.depth = 0;
             }
             m_Entities.insert(e);
+            
+            // Track root entities
+            if (hc.parent == 0) {
+                foundRoots.insert(e);
+            }
+        }
+        
+        // Update root entities order list
+        // Remove entities that are no longer root or don't exist
+        m_RootEntitiesOrder.erase(
+            std::remove_if(m_RootEntitiesOrder.begin(), m_RootEntitiesOrder.end(),
+                [&foundRoots](EntityID e) { return foundRoots.find(e) == foundRoots.end(); }),
+            m_RootEntitiesOrder.end()
+        );
+        
+        // Add new root entities that aren't in the order list yet
+        for (EntityID rootEntity : foundRoots) {
+            if (std::find(m_RootEntitiesOrder.begin(), m_RootEntitiesOrder.end(), rootEntity) 
+                == m_RootEntitiesOrder.end()) {
+                m_RootEntitiesOrder.push_back(rootEntity);
+            }
         }
     }
 }

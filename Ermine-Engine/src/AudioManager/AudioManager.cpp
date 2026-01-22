@@ -294,6 +294,21 @@ void CAudioEngine::StopAllChannels() {
 	sgpImplementation->mChannels.clear();
 }
 
+void CAudioEngine::PauseAllChannels() {
+	for (auto& channel : sgpImplementation->mChannels) {
+		CAudioEngine::ErrorCheck(channel.second->setPaused(true));
+	}
+	//std::cout << "Paused " << sgpImplementation->mChannels.size() << " channels" << std::endl;
+}
+
+void CAudioEngine::ResumeAllChannels() {
+	for (auto& channel : sgpImplementation->mChannels) {
+		CAudioEngine::ErrorCheck(channel.second->setPaused(false));
+	}
+	//std::cout << "Resumed " << sgpImplementation->mChannels.size() << " channels" << std::endl;
+}
+
+
 void CAudioEngine::SetListenerPosition(const Vector3D& position) {
 	FMOD_VECTOR pos = VectorToFmod(position);
 	FMOD_VECTOR vel = { 0, 0, 0 }; // No velocity by default

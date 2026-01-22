@@ -33,6 +33,7 @@ namespace Ermine
         // Static initialization flag
         static bool s_initialized;
         static EntityID s_globalAudioEntity;
+        static bool s_isPaused;
 
     public:
         AudioSystem() = default;
@@ -44,6 +45,10 @@ namespace Ermine
 
         // Main update function called by the engine
         void Update();
+
+        static void PauseAll();
+        static void ResumeAll();
+        static bool IsPaused() { return s_isPaused; }
 
         // GlobalAudioComponent management (static functions for global access)
         static void UpdateGlobalAudio(GlobalAudioComponent& globalAudio);
