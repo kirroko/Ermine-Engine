@@ -57,14 +57,13 @@ uniform vec2 u_IGNResolution;
 uniform float orbRadius = 0.3;          // Central sphere size
 uniform float textureRadius = 0.3;       // Texture layer radius
 uniform float textureRadius2 = 0.3;     // Second texture layer radius
-uniform float volumeRadius = 1.2;        // Outer boundary for raymarching
+uniform float volumeRadius = 1.2;        // Outer boundary for sparks
 uniform vec3 orbColor = vec3(0.2, 0.6, 1.0);  // Bright blue
-uniform float orbIntensity = 8.0;        // HDR brightness
-uniform int numSteps = 48;
+uniform float orbIntensity = 80.0;        // HDR brightness
 
 // Spark parameters
 uniform int sparkCount = 10;             // Fewer sparks
-uniform float sparkSize = 0.015;         // Super small but visible
+uniform float sparkSize = 0.1;         // Small but visible
 uniform float sparkSpeed = 3.0;          // Slower
 uniform float sparkIntensity = 15.0;     // Super bright
 
@@ -86,24 +85,6 @@ float getIGNForSpark(float seed) {
     return getIGN(fixedCoord);
 }
 
-// 3D noise for warping (kept for animation)
-float hash(vec3 p) {
-    p = fract(p * 0.3183099 + 0.1);
-    p *= 17.0;
-    return fract(p.x * p.y * p.z * (p.x + p.y + p.z));
-}
-
-float noise(vec3 x) {
-    vec3 p = floor(x);
-    vec3 f = fract(x);
-    f = f * f * (3.0 - 2.0 * f);
-    return mix(
-        mix(mix(hash(p + vec3(0,0,0)), hash(p + vec3(1,0,0)), f.x),
-            mix(hash(p + vec3(0,1,0)), hash(p + vec3(1,1,0)), f.x), f.y),
-        mix(mix(hash(p + vec3(0,0,1)), hash(p + vec3(1,0,1)), f.x),
-            mix(hash(p + vec3(0,1,1)), hash(p + vec3(1,1,1)), f.x), f.y),
-        f.z);
-}
 
 // Ray-sphere intersection
 bool intersectSphere(vec3 ro, vec3 rd, vec3 center, float radius, out float t0, out float t1) {
@@ -118,82 +99,71 @@ bool intersectSphere(vec3 ro, vec3 rd, vec3 center, float radius, out float t0, 
     return true;
 }
 
-// Sample density - simple uniform sphere
-float sampleOrbDensity(vec3 pos, vec3 center) {
-    float dist = length(pos - center);
+vec2 GetRayPlaneUV(vec3 rayOrigin, vec3 rayDir, vec3 center, out float tClosest) {
+    vec3 toCenter = center - rayOrigin;
+    tClosest = dot(toCenter, rayDir);
+    vec3 closestPoint = rayOrigin + rayDir * tClosest;
+    vec3 local = closestPoint - center;
 
-    // Simple sphere - uniform density inside, nothing outside
-    if (dist <= orbRadius) {
-        return 1.0;  // Constant density
-    }
-
-    return 0.0;
+    vec3 up = abs(rayDir.y) > 0.9 ? vec3(1.0, 0.0, 0.0) : vec3(0.0, 1.0, 0.0);
+    vec3 tangent = normalize(cross(up, rayDir));
+    vec3 bitangent = normalize(cross(rayDir, tangent));
+    return vec2(dot(local, tangent), dot(local, bitangent));
 }
 
 // Sample sparks - super small bright particles
-float sampleSparks(vec3 pos, vec3 center) {
+float sampleSparksRay(vec3 rayOrigin, vec3 rayDir, vec3 center, float tNear, float tFar) {
     float sparkContribution = 0.0;
 
     for (int i = 0; i < sparkCount; i++) {
-        // More random seed variation
         float sparkSeed = float(i) * 7.123 + float(i * i) * 0.314;
 
-        // Sporadic emission - each spark has random intervals of activity using IGN (per-spark, coherent)
         float emissionCycle = getIGNForSpark(sparkSeed * 8.1);
-        float emissionFrequency = 0.2 + emissionCycle * 0.3;  // Random frequency between 0.2-0.5
+        float emissionFrequency = 0.2 + emissionCycle * 0.3;
         float emissionPhase = fract(u_Time * emissionFrequency + emissionCycle);
 
-        // Spark only active during certain windows (creates gaps)
         float activeWindow = getIGNForSpark(sparkSeed * 11.2);
-        float windowSize = 0.3 + activeWindow * 0.3;  // Active for 30-60% of the cycle
-
-        // Check if spark is in active window
+        float windowSize = 0.3 + activeWindow * 0.3;
         if (emissionPhase > windowSize) {
-            continue;  // Skip this spark, it's not emitting right now
+            continue;
         }
 
-        // Normalize phase within the active window
         float normalizedPhase = emissionPhase / windowSize;
 
-        // Random direction for this spark using IGN (per-spark, coherent across all pixels)
         vec3 sparkDir = normalize(vec3(
             getIGNForSpark(sparkSeed * 1.0) * 2.0 - 1.0,
             getIGNForSpark(sparkSeed * 2.1) * 2.0 - 1.0,
             getIGNForSpark(sparkSeed * 3.3) * 2.0 - 1.0
         ));
 
-        // Variable speed per spark for organic feel (per-spark, coherent)
-        float speedVariation = 0.5 + getIGNForSpark(sparkSeed * 4.3) * 1.0;
-
-        // Add organic wobble using noise
-        vec3 wobbleOffset = vec3(
-            noise(vec3(sparkSeed * 2.0, u_Time * 0.8, sparkSeed * 3.0)) - 0.5,
-            noise(vec3(sparkSeed * 3.0, u_Time * 0.8, sparkSeed * 4.0)) - 0.5,
-            noise(vec3(sparkSeed * 4.0, u_Time * 0.8, sparkSeed * 5.0)) - 0.5
-        ) * 0.15;  // Wobble amount
-
-        // Outward motion with organic curve
         float sparkDist = mix(orbRadius * 1.05, volumeRadius * 1.5, smoothstep(0.0, 1.0, normalizedPhase));
 
-        // Current spark position with wobble
-        vec3 sparkPos = center + sparkDir * sparkDist + wobbleOffset;
+        vec3 sparkPos = center + sparkDir * sparkDist;
 
-        // Distance to spark
-        float distToSpark = length(pos - sparkPos);
-
-        // Super small, super bright point
-        if (distToSpark < sparkSize) {
-            float falloff = 1.0 - (distToSpark / sparkSize);
-            falloff = falloff * falloff;
-
-            // Fade in at start and fade out at end
-            float lifeFade = smoothstep(0.0, 0.1, normalizedPhase) * (1.0 - smoothstep(0.7, 1.0, normalizedPhase));
-
-            // Add flicker using noise
-            float flicker = 0.8 + 0.2 * noise(vec3(sparkSeed * 15.0, u_Time * 10.0, sparkSeed * 16.0));
-
-            sparkContribution += falloff * lifeFade * flicker;
+        if (length(sparkPos - center) > volumeRadius + sparkSize) {
+            continue;
         }
+
+        vec3 toCenter = sparkPos - rayOrigin;
+        float tClosest = dot(toCenter, rayDir);
+        if (tClosest < tNear || tClosest > tFar) {
+            continue;
+        }
+
+        vec3 closestPoint = rayOrigin + rayDir * tClosest;
+        vec3 diff = closestPoint - sparkPos;
+        float dist2 = dot(diff, diff);
+        float sparkSize2 = sparkSize * sparkSize;
+        if (dist2 >= sparkSize2) {
+            continue;
+        }
+
+        float dist = sqrt(dist2);
+        float falloff = 1.0 - (dist / sparkSize);
+        falloff = falloff * falloff;
+
+        float lifeFade = smoothstep(0.0, 0.1, normalizedPhase) * (1.0 - smoothstep(0.7, 1.0, normalizedPhase));
+        sparkContribution += falloff * lifeFade;
     }
 
     return sparkContribution;
@@ -216,40 +186,30 @@ void main()
     tNear = max(tNear, 0.0);
     if (tNear >= tFar) discard;
 
-    // Raymarch through volume with IGN jitter
-    float stepSize = (tFar - tNear) / float(numSteps);
-    float noise = getIGN(gl_FragCoord.xy);
     vec3 accumulatedColor = vec3(0.0);
     float accumulatedAlpha = 0.0;
 
-    for (int i = 0; i < numSteps; i++) {
-        if (accumulatedAlpha > 0.98) break;
-
-        float t = tNear + (float(i) + noise) * stepSize;
-        vec3 samplePos = rayOrigin + rayDir * t;
-
-        // --- 1. SUPER BRIGHT ORANGE ORB WITH WARPING ---
-        float orbDensity = sampleOrbDensity(samplePos, vModelCenter);
-        if (orbDensity > 0.01) {
-            vec3 orbEmission = orbColor * orbIntensity * orbDensity;
-
-            float stepDensity = orbDensity * stepSize * 3.0;
-            float stepAlpha = 1.0 - exp(-stepDensity);
-
-            accumulatedColor += orbEmission * stepAlpha * (1.0 - accumulatedAlpha);
-            accumulatedAlpha += stepAlpha * (1.0 - accumulatedAlpha);
+    // --- 1. ORB SURFACE (FLAT 2D DISC) ---
+    float tClosest;
+    vec2 orbUV = GetRayPlaneUV(rayOrigin, rayDir, vModelCenter, tClosest);
+    if (tClosest > 0.0) {
+        float dist = length(orbUV);
+        if (dist <= orbRadius) {
+            vec3 orbEmission = orbColor * orbIntensity;
+            accumulatedColor += orbEmission * (1.0 - accumulatedAlpha);
+            accumulatedAlpha = 1.0;
         }
+    }
 
-        // --- 2. SUPER SMALL BRIGHT SPARKS ---
-        float sparkDensity = sampleSparks(samplePos, vModelCenter);
-        if (sparkDensity > 0.01) {
-            vec3 sparkEmission = vec3(0.5, 0.8, 1.0) * sparkIntensity * sparkDensity;
+    // --- 2. SUPER SMALL BRIGHT SPARKS (ANALYTIC PER-RAY) ---
+    float sparkDensity = sampleSparksRay(rayOrigin, rayDir, vModelCenter, tNear, tFar);
+    if (sparkDensity > 0.01) {
+        vec3 sparkEmission = vec3(0.5, 0.8, 1.0) * sparkIntensity * sparkDensity;
 
-            float sparkAlpha = sparkDensity * 0.5;
+        float sparkAlpha = sparkDensity * 0.5;
 
-            accumulatedColor += sparkEmission * sparkAlpha * (1.0 - accumulatedAlpha);
-            accumulatedAlpha += sparkAlpha * (1.0 - accumulatedAlpha);
-        }
+        accumulatedColor += sparkEmission * sparkAlpha * (1.0 - accumulatedAlpha);
+        accumulatedAlpha += sparkAlpha * (1.0 - accumulatedAlpha);
     }
 
     // --- 3. FLAT TEXTURE LAYER (NON-VOLUMETRIC, MOVING AROUND) ---

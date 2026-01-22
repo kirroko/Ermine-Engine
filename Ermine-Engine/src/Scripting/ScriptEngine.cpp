@@ -2533,6 +2533,29 @@ namespace
 		return (uint64_t)SceneManager::GetHealthBar();
 	}
 #pragma endregion
+
+#pragma region Cursor ICalls
+
+	void icall_cursor_set_visible(bool value)
+	{
+		Window::SetVisibleCursor(value);
+	}
+
+	bool icall_cursor_get_visible()
+	{
+		return Window::GetVisibleCursor();
+	}
+
+	void icall_cursor_set_locked(std::int32_t state) noexcept
+	{
+		Window::SetCursorLockState(static_cast<Window::CursorLockState>(state));
+	}
+
+	std::int32_t icall_cursor_get_locked()
+	{
+		return static_cast<std::int32_t>(Window::GetCursorLockState());
+	}
+#pragma endregion
 }
 
 namespace Ermine::scripting
@@ -2964,11 +2987,20 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	mono_add_internal_call("ErmineEngine.Physics::ForceUpdate", (const void*)icall_Physics_ForceUpdate);
 #pragma endregion
 
+#pragma region Cursor ICalls
+	mono_add_internal_call("ErmineEngine.Cursor::set_visible", (const void*)icall_cursor_set_visible);
+	mono_add_internal_call("ErmineEngine.Cursor::get_visible", (const void*)icall_cursor_get_visible);
+	mono_add_internal_call("ErmineEngine.Cursor::set_lockState", (const void*)icall_cursor_set_locked);
+	mono_add_internal_call("ErmineEngine.Cursor::get_lockState", (const void*)icall_cursor_get_locked);
+
+#pragma endregion
+
 #pragma region UI ICalls
 	mono_add_internal_call("ErmineEngine.GameplayHUD::Internal_GetHealth", (const void*)Internal_GetHealth);
 	mono_add_internal_call("ErmineEngine.GameplayHUD::Internal_SetHealth", (const void*)Internal_SetHealth);
 	// temporary reference to health bar, to be removed
 	mono_add_internal_call("ErmineEngine.GameplayHUD::Internal_GetHealthBar", Internal_GetHealthBar);
+#pragma endregion UI ICalls
 
 #pragma region UISystem ICalls
 	mono_add_internal_call("ErmineEngine.UISystem::Internal_CastSkill",

@@ -29,8 +29,20 @@ namespace Ermine::graphics
      */
     class Shader
     {
-        GLuint m_RendererID;
+        GLuint m_RendererID = 0;
         std::unordered_map<std::string, GLint> m_UniformLocationCache;
+        enum class ShaderKind
+        {
+            None,
+            Compute,
+            VertexFragment,
+            VertexGeometryFragment
+        };
+        ShaderKind m_ShaderKind = ShaderKind::None;
+        std::string m_ComputePath;
+        std::string m_VertexPath;
+        std::string m_GeometryPath;
+        std::string m_FragmentPath;
 
         /**
          * @brief Get the uniform location of the shader
@@ -45,6 +57,12 @@ namespace Ermine::graphics
          * @return The shader ID
          */
         GLuint CompileShader(GLenum type, const std::string& source);
+        /**
+         * @brief Rebuilds the program from stored shader paths.
+         * @param outProgram Newly linked program on success.
+         * @return true when a new program was created successfully.
+         */
+        bool BuildProgram(GLuint& outProgram);
         /**
          * @brief Load the shader source
          * @param filepath The path of the shader
@@ -86,6 +104,11 @@ namespace Ermine::graphics
          * @return True if the shader is valid, false otherwise
          */
         bool IsValid() const;
+        /**
+         * @brief Reload the shader from its original source files.
+         * @return True if recompilation succeeded, false otherwise.
+         */
+        bool Reload();
 
         /**
         * @brief Bind the shader

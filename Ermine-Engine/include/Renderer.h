@@ -202,7 +202,7 @@ namespace Ermine::graphics
 		float m_SSAOBias = 0.01f;
 		float m_SSAOIntensity = 1.0f;
 		float m_SSAOFadeout = 0.1f;
-		float m_SSAOMaxDistance = 100.0f;
+		float m_SSAOMaxDistance = 1000.0f;
 
         // Fog parameters
         bool m_FogEnabled = false;
@@ -1427,17 +1427,15 @@ namespace Ermine::graphics
                 }
             }
 
-            // Fetch UV transform and apply V-flip
+            // Fetch UV transform (UVs are already flipped at import)
             aiUVTransform uvTransform;
             if (aiMat->Get(AI_MATKEY_UVTRANSFORM(aiTextureType_DIFFUSE, 0), uvTransform) == AI_SUCCESS) {
-                // Apply V-flip
-                materialPtr->SetUVScale(Vec2(uvTransform.mScaling.x, -uvTransform.mScaling.y));
-                materialPtr->SetUVOffset(Vec2(uvTransform.mTranslation.x, 1.0f - uvTransform.mTranslation.y));
+                materialPtr->SetUVScale(Vec2(uvTransform.mScaling.x, uvTransform.mScaling.y));
+                materialPtr->SetUVOffset(Vec2(uvTransform.mTranslation.x, uvTransform.mTranslation.y));
             }
             else {
-                // Default V-flip for FBX compatibility
-                materialPtr->SetUVScale(Vec2(1.0f, -1.0f));
-                materialPtr->SetUVOffset(Vec2(0.0f, 1.0f));
+                materialPtr->SetUVScale(Vec2(1.0f, 1.0f));
+                materialPtr->SetUVOffset(Vec2(0.0f, 0.0f));
             }
 
             // Add or update material component on child entity

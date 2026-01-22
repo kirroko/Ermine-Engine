@@ -27,6 +27,10 @@ namespace Ermine {
         bool m_IsVisible = true;              ///< Panel visibility state
         bool m_ShowInactive = false;          ///< Show inactive entities in hierarchy (grayed out)
         EntityID m_PendingFocusEntity = 0;    ///< Entity waiting for inspector focus after interaction
+        EntityID m_LastClickedEntity = 0;     ///< Last clicked entity for Shift+Click range selection
+
+        char m_SearchBuffer[128] = {};  ///< Buffer for entity search input
+        bool m_IsSearching = false;		///< Flag indicating if search mode is active
 
         // UI helper functions
         void DuplicateEntity(EntityID sourceEntity);
@@ -59,6 +63,40 @@ namespace Ermine {
         \return Icon string (e.g., "[Light] ", "[Audio] ") or empty string
         */
         const char* GetEntityIcon(EntityID entity) const;
+
+        /**
+         * @brief Helper function to recursively check if any descendant of the given entity is selected
+         * @param entity The entity to check
+         * @return Ture if entity or any descendant is selected, false otherwise
+         */
+        bool HasSelectedDescendant(EntityID entity) const;
+
+        /*!
+        \brief Checks if an entity name matches the current search query
+        \param name The entity name to check
+        \param search The search query string
+        \return True if the name matches the search query, false otherwise
+        */
+        bool NameMatchesSearch(const std::string& name, const char* search) const;
+
+        /*!
+        \brief Builds a flat list of visible entities in display order for range selection
+        \param outList Output vector to store the ordered entity list
+        */
+        void BuildVisibleEntityList(std::vector<EntityID>& outList) const;
+
+        /*!
+        \brief Helper to recursively add entities to visible list in hierarchy order
+        \param entity Current entity to process
+        \param outList Output vector to append entities to
+        */
+        void CollectVisibleEntitiesRecursive(EntityID entity, std::vector<EntityID>& outList) const;
+
+        /*!
+        \brief Performs Shift+Click range selection between last clicked and current entity
+        \param clickedEntity The entity that was just clicked
+        */
+        void SelectRange(EntityID clickedEntity);
 
     public:
         /*!

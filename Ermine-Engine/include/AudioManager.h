@@ -59,6 +59,9 @@ namespace Ermine {
         static bool IsPlaying(int nChannelId);
         static void StopChannel(int nChannelId);
         static void StopAllChannels();
+        static void PauseAllChannels();
+        static void ResumeAllChannels();
+
         // FMOD Studio functions
         static void LoadBank(const std::string& strBankName, FMOD_STUDIO_LOAD_BANK_FLAGS flags);
         static void LoadEvent(const std::string& strEventName);

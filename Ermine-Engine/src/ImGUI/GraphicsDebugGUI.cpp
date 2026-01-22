@@ -108,6 +108,7 @@ void GraphicsDebugGUI::Render()
     DrawShadowMappingControls();
     DrawLightingControls();
     DrawPerformanceMetrics();
+    DrawShaderControls();
 
     ImGui::End();
 }
@@ -164,7 +165,7 @@ void GraphicsDebugGUI::DrawRenderingModeControls()
             DrawFloatSlider("Fadeout Distance", &renderer->m_SSAOFadeout, 0.0f, 1.0f, 
                            "Distance factor for fading out SSAO effect");
             
-            DrawFloatSlider("Max Distance", &renderer->m_SSAOMaxDistance, 10.0f, 500.0f, 
+            DrawFloatSlider("Max Distance", &renderer->m_SSAOMaxDistance, 10.0f, 1000.0f, 
                            "Maximum distance for SSAO calculation");
             
             ImGui::TreePop();
@@ -540,4 +541,20 @@ bool GraphicsDebugGUI::DrawToggleButton(const char* label, bool* value, const ch
     bool changed = ImGui::Checkbox(label, value);
     if (tooltip) DrawTooltip(tooltip);
     return changed;
+}
+
+void GraphicsDebugGUI::DrawShaderControls()
+{
+    if (!ImGui::CollapsingHeader("Shader Tools", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        return;
+    }
+
+    ImGui::Indent(10.0f);
+    if (ImGui::Button("Recompile Shaders"))
+    {
+        AssetManager::GetInstance().ReloadCachedShaders();
+    }
+    DrawTooltip("Recompile all cached shaders from disk");
+    ImGui::Unindent(10.0f);
 }
