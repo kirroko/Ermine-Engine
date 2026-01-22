@@ -27,6 +27,7 @@ namespace Ermine {
         bool m_IsVisible = true;              ///< Panel visibility state
         bool m_ShowInactive = false;          ///< Show inactive entities in hierarchy (grayed out)
         EntityID m_PendingFocusEntity = 0;    ///< Entity waiting for inspector focus after interaction
+        float m_indentPadding = 8.0f;
 
         // UI helper functions
         void DuplicateEntity(EntityID sourceEntity);
