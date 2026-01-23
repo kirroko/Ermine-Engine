@@ -299,10 +299,6 @@ namespace Ermine {
         if (isSelected) nodeFlags |= ImGuiTreeNodeFlags_Selected;
         if (children.empty()) nodeFlags |= ImGuiTreeNodeFlags_Leaf;
 
-        // Auto-expand parent
-        if (HasSelectedDescendant(entity))
-            ImGui::SetNextItemOpen(true);
-
         bool nodeOpen = ImGui::TreeNodeEx(label.c_str(), nodeFlags);
 
         if (isSelected && ImGui::IsWindowAppearing())
