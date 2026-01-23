@@ -2399,6 +2399,11 @@ namespace
 		auto physics = ECS::GetInstance().GetSystem<Physics>();
 		physics->RemovePhysic((EntityID)entityID);
 	}
+	static void icall_Physics_HasPhysicComp(uint64_t entityID)
+	{
+		auto physics = ECS::GetInstance().GetSystem<Physics>();
+		physics->HasPhysicComp((EntityID)entityID);
+	}
 	static void icall_Physics_Jump(uint64_t entityID,float jump)
 	{
 		auto physics = ECS::GetInstance().GetSystem<Physics>();
