@@ -165,11 +165,27 @@ void GraphicsDebugGUI::DrawRenderingModeControls()
             DrawFloatSlider("Fadeout Distance", &renderer->m_SSAOFadeout, 0.0f, 1.0f, 
                            "Distance factor for fading out SSAO effect");
             
-            DrawFloatSlider("Max Distance", &renderer->m_SSAOMaxDistance, 10.0f, 500.0f, 
+            DrawFloatSlider("Max Distance", &renderer->m_SSAOMaxDistance, 10.0f, 1000.0f, 
                            "Maximum distance for SSAO calculation");
             
             ImGui::TreePop();
         }
+
+        ImGui::Separator();
+
+        // Ambient Lighting Toggle and Controls
+        ImGui::Text("Global Ambient Lighting");
+        
+        // Color picker for ambient light
+        if (ImGui::ColorEdit3("Ambient Color", &renderer->m_AmbientColor.r)) {
+            EE_CORE_INFO("Ambient color changed to ({:.2f}, {:.2f}, {:.2f})",
+                       renderer->m_AmbientColor.r, renderer->m_AmbientColor.g, renderer->m_AmbientColor.b);
+        }
+        DrawTooltip("RGB color of the global ambient lighting");
+
+        // Intensity slider
+        DrawFloatSlider("Ambient Intensity", &renderer->m_AmbientIntensity, 0.0f, 1.0f,
+                       "Brightness of ambient lighting (0=black, 1=full brightness)");
 
         ImGui::Separator();
 

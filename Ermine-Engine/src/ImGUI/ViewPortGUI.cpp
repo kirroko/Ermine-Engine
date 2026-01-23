@@ -1,4 +1,4 @@
-﻿/* Start Header ************************************************************************/
+﻿	/* Start Header ************************************************************************/
 /*!
 \file       ViewPortGUI.cpp
 \author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu
@@ -26,7 +26,11 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <glm/gtx/matrix_decompose.hpp>
 
 #include "AssetManager.h"
+#include "CommandHistory.h"
+#include "EditorCommand.h"
+#include "HierarchyPanel.h"
 #include "imgui_internal.h"
+#include "InspectorGUI.h"
 
 #include "Scene.h"
 #include "SceneManager.h"
@@ -92,9 +96,6 @@ void Ermine::ViewPortGUI::Render()
 
 void Ermine::ViewPortGUI::TopBarSimulationControl(const ImVec2 iconSize)
 {
-	// Find primary camera entity
-	//auto& ecs = ECS::GetInstance();
-
 	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6.f, 6.f));
 	ImGui::BeginGroup();
 	{
@@ -138,6 +139,8 @@ void Ermine::ViewPortGUI::TopBarSimulationControl(const ImVec2 iconSize)
 		{
 			EditorGUI::s_state = EditorGUI::SimState::stopped;
 			SceneManager::GetInstance().LoadTemp();
+
+			CommandHistory::GetInstance().Clear();
 			EE_CORE_INFO("Simulation: Stop");
 
 			// *** ALWAYS reset cursor state when stopping play mode ***
@@ -306,7 +309,7 @@ void Ermine::ViewPortGUI::CameraControls(const bool& overViewCube, const Ermine:
 	}
 
 	// Camera controls
-	if (viewportHovered && !EditorGUI::isPlaying && !s_orbiting)
+	if (viewportHovered && ImGui::IsWindowFocused() && !EditorGUI::isPlaying && !s_orbiting)
 	{
 		if (!ImGuizmo::IsUsing())
 		{
@@ -343,7 +346,20 @@ void Ermine::ViewPortGUI::ObjectPicking(const std::shared_ptr<Ermine::graphics::
 					EditorCamera::GetInstance().GetProjectionMatrix());
 
 				if (hit)
+				{
+					if (EditorGUI::GetHierarchyPanel() && EditorGUI::GetHierarchyPanel()->GetScene())
+					{
+						if (ImGui::GetIO().KeyCtrl)
+							Selection::Toggle(EditorGUI::GetHierarchyPanel()->GetScene(), entity);
+						else
+							Selection::SelectSingle(EditorGUI::GetHierarchyPanel()->GetScene(), entity);
+					}
+
+					// Set selection in Inspector
+					//EditorGUI::GetHierarchyPanel()->
+
 					SceneManager::GetInstance().GetActiveScene()->SetSelectedEntity(entity);
+				}
 				else
 					SceneManager::GetInstance().GetActiveScene()->SetSelectedEntity(0);
 			}
@@ -388,13 +404,13 @@ void Ermine::ViewPortGUI::GizmoOverlay(const ImVec2& imgMin, const ImVec2& imgSi
 			singleTr = &ecs.GetComponent<Transform>(selectedEntity);
 
 		// Toggle transform mode with Y key
-		if (Input::IsKeyPressedEditor(GLFW_KEY_Y)) {
-			editor::s_transformMode = (editor::s_transformMode == TransformMode::Pivot)
-				? TransformMode::Center
-				: TransformMode::Pivot;
-			//EE_CORE_INFO("Transform mode: {}",
-			//	(editor::s_transformMode == TransformMode::Pivot) ? "Pivot" : "Center");
-		}
+		//if (Input::IsKeyPressedEditor(GLFW_KEY_Y)) {
+		//	editor::s_transformMode = (editor::s_transformMode == TransformMode::Pivot)
+		//		? TransformMode::Center
+		//		: TransformMode::Pivot;
+		//	//EE_CORE_INFO("Transform mode: {}",
+		//	//	(editor::s_transformMode == TransformMode::Pivot) ? "Pivot" : "Center");
+		//}
 
 		// Get the position where gizmo should appear
 		//Vec3 gizmoPosition = TransformModeHelper::GetManipulationPosition(selectedEntity, editor::s_transformMode);
@@ -442,6 +458,9 @@ void Ermine::ViewPortGUI::GizmoOverlay(const ImVec2& imgMin, const ImVec2& imgSi
 			useSnap ? snap : nullptr
 		);
 
+		static Transform s_startTransform;
+		static bool s_commandStarted = false;
+
 		// Apply result back into Transform
 		if (ImGuizmo::IsUsing())
 		{
@@ -451,6 +470,12 @@ void Ermine::ViewPortGUI::GizmoOverlay(const ImVec2& imgMin, const ImVec2& imgSi
 			if (glm::decompose(model, scale, rotation, translation, skew, perspective))
 			{
 				rotation = glm::normalize(rotation);
+
+				if (!s_commandStarted && singleTr)
+				{
+					s_startTransform = *singleTr;
+					s_commandStarted = true;
+				}
 
 				if (multi)
 				{
@@ -510,6 +535,20 @@ void Ermine::ViewPortGUI::GizmoOverlay(const ImVec2& imgMin, const ImVec2& imgSi
 					ecs.GetSystem<HierarchySystem>()->OnTransformChanged(selectedEntity);
 				}
 			}
+		}
+
+		if (s_commandStarted && !ImGuizmo::IsUsing())
+		{
+			auto& finalTransform = ecs.GetComponent<Transform>(selectedEntity);
+
+			auto cmd = std::make_unique<TransformCommand>(
+				selectedEntity,
+				s_startTransform,
+				finalTransform
+			);
+
+			CommandHistory::GetInstance().Execute(std::move(cmd));
+			s_commandStarted = false;
 		}
 	}
 
@@ -663,6 +702,8 @@ void Ermine::ViewPortGUI::Update()
 
 	if (viewportHovered && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
 		ImGui::SetWindowFocus();
+	if (viewportHovered && ImGui::IsMouseClicked(ImGuiMouseButton_Right))
+		ImGui::SetWindowFocus();
 
 	//if (!EditorGUI::isPlaying)
 	//{
@@ -706,9 +747,11 @@ void Ermine::ViewPortGUI::Update()
 	const bool ctrlDown = Input::IsKeyDownEditor(GLFW_KEY_LEFT_CONTROL) || Input::IsKeyDownEditor(GLFW_KEY_RIGHT_CONTROL);
 	const float dragThreshold = 3.0f;
 
+	const bool altDown = Input::IsKeyDownEditor(GLFW_KEY_LEFT_ALT);
+
 	// Drag selection
 	if (viewportHovered && !EditorGUI::isPlaying && ImGui::IsMouseClicked(ImGuiMouseButton_Left)
-		&& !overViewCube && !ImGuizmo::IsOver() && !ImGuizmo::IsUsing())
+		&& !overViewCube && !ImGuizmo::IsOver() && !ImGuizmo::IsUsing() && !altDown)
 	{
 		s_dragSelecting = true;
 		s_dragStart = ImGui::GetMousePos();
@@ -716,7 +759,7 @@ void Ermine::ViewPortGUI::Update()
 	}
 
 	// Update drag
-	if (s_dragSelecting && ImGui::IsMouseDown(ImGuiMouseButton_Left) && !ImGuizmo::IsOver() && !ImGuizmo::IsUsing())
+	if (s_dragSelecting && ImGui::IsMouseDown(ImGuiMouseButton_Left) && !ImGuizmo::IsOver() && !ImGuizmo::IsUsing() && !altDown)
 	{
 		s_dragEnd = ImGui::GetMousePos();
 		// Draw rectangle overlay
@@ -732,6 +775,8 @@ void Ermine::ViewPortGUI::Update()
 		dl->AddRectFilled(rMin, rMax, IM_COL32(64, 128, 255, 40));
 		dl->AddRect(rMin, rMax, IM_COL32(64, 128, 255, 180), 0.0f, 0, 2.0f);
 	}
+	else if (s_dragSelecting && altDown)
+		s_dragSelecting = false;
 
 	// Finish drag select
 	if (s_dragSelecting && ImGui::IsMouseReleased(ImGuiMouseButton_Left) && !ImGuizmo::IsOver() && !ImGuizmo::IsUsing())
@@ -875,6 +920,13 @@ void Ermine::ViewPortGUI::Update()
 		EditorGUI::s_state = EditorGUI::SimState::playing;
 		SceneManager::GetInstance().SaveTemp();
 	}
+
+	if (Input::IsKeyDownEditor(GLFW_KEY_LEFT_CONTROL) && Input::IsKeyPressedEditor(GLFW_KEY_Z))
+		CommandHistory::GetInstance().Undo();
+
+	if (Input::IsKeyDownEditor(GLFW_KEY_LEFT_CONTROL) && Input::IsKeyPressedEditor(GLFW_KEY_Y))
+		CommandHistory::GetInstance().Redo();
+	
 
 	EditorGUI::isPlaying = EditorGUI::s_state == EditorGUI::SimState::playing;
 

@@ -2309,6 +2309,8 @@ void Renderer::RebuildDrawData()
 
 	// Clear full rebuild flag (will be set again if major change detected)
 	m_DrawDataNeedsFullRebuild = false;
+
+	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_COMMAND_BARRIER_BIT);
 }
 
 /**
@@ -3030,6 +3032,10 @@ void Renderer::RenderLightingPass(const Mtx44& view, const Mtx44& projection)
 	m_LightPassShader->SetUniform1f("u_FogHeightCoefficient", m_FogHeightCoefficient);
 	m_LightPassShader->SetUniform1f("u_FogHeightFalloff", m_FogHeightFalloff);
 
+	// Set ambient lighting parameters
+	m_LightPassShader->SetUniform3f("u_AmbientColor", m_AmbientColor);
+	m_LightPassShader->SetUniform1f("u_AmbientIntensity", m_AmbientIntensity);
+
 	// Set shading mode
 	m_LightPassShader->SetUniform1i("u_ShadingMode", m_IsBlinnPhong ? 1 : 0);
 
@@ -3346,6 +3352,9 @@ void Renderer::RenderDeferredPipeline(const Mtx44& view, const Mtx44& projection
 	// MUST be called first - populates draw command buffers for all subsequent passes
 	CompileDrawData();
 
+	// Ensure SSBO writes visible to all passes
+	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_COMMAND_BARRIER_BIT);
+
 	// Shadow pass - render scene from light's perspective (independent of G-buffer)
 	// Runs BEFORE depth pre-pass to avoid GL state pollution from depth pre-pass
 	if (frameCounter % SHADOW_MAP_REFRESH_INTERVAL_IN_FRAMES == 0)
@@ -3425,6 +3434,7 @@ void Renderer::RenderDeferredPipeline(const Mtx44& view, const Mtx44& projection
 
 		// Flush the navmesh debug lines to screen
 		RenderDebugLines(view, projection);
+		RenderDebugTriangles(view, projection);
 	}
 
 #endif
@@ -5925,6 +5935,8 @@ void Renderer::RenderShadowMapInstanced()
 	// Unbind framebuffer and restore viewport
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glViewport(prevViewport[0], prevViewport[1], prevViewport[2], prevViewport[3]);
+	// Ensure shadow textures ready
+	glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT);
 
 	glCheckError();
 }
