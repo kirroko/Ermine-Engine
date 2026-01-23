@@ -193,6 +193,7 @@ namespace Ermine::graphics
         // Debug visualization toggles
         bool m_DebugDrawAABBs = false;
         bool m_DebugDrawFrustum = false;
+        bool m_DebugDrawBoneAABBs = false;
 
         // Lighting Pass Parameters
         // SSAO parameters
@@ -1123,6 +1124,7 @@ namespace Ermine::graphics
             bool hadChildMaterial;         // Whether child had valid material when cached
             MeshHandle meshHandle;         // Cached mesh handle (avoids hash map lookup)
             const MeshSubset* meshData;    // Cached mesh data pointer
+            const MeshData* modelMeshData; // Cached model mesh data (for skinned CPU bounds)
             uint32_t materialIndex;        // Cached material index
             glm::vec3 aabbMin;             // Object-space AABB min
             glm::vec3 aabbMax;             // Object-space AABB max
@@ -1130,6 +1132,7 @@ namespace Ermine::graphics
             bool castsShadows;             // Shadow casting flag (affects shadow pass routing)
             bool hasCustomShader;          // Custom shader flag (affects pass routing)
             bool useSkinning;              // Skinning flag (affects VAO selection)
+            bool hasSkinningData;          // Mesh has valid bone influences
             bool isCameraAttached;         // Camera-attached flag (no motion blur)
             uint32_t boneOffset;           // Bone transform offset (skinned only)
         };

@@ -21,6 +21,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "EditorGUI.h"
 #include "FrameController.h"
 
+#include <algorithm>
 #include <numeric> // For std::iota
 
 #include "ECS.h"
@@ -73,6 +74,110 @@ GLenum glCheckError_(const char* file, int line)
 	return errorCode;
 }
 #define glCheckError() glCheckError_(__FILE__, __LINE__)
+
+namespace {
+	bool ComputeSkinnedMeshAABB(const Ermine::graphics::MeshData& mesh,
+		const std::vector<glm::mat4>& boneTransforms,
+		glm::vec3& outMin,
+		glm::vec3& outMax)
+	{
+		if (boneTransforms.empty()) {
+			return false;
+		}
+
+		if (mesh.boneAabbMin.size() == boneTransforms.size()
+			&& mesh.boneAabbMax.size() == boneTransforms.size()
+			&& !mesh.boneAabbMin.empty()) {
+			glm::vec3 aabbMin(FLT_MAX);
+			glm::vec3 aabbMax(-FLT_MAX);
+			bool any = false;
+
+			for (size_t i = 0; i < boneTransforms.size(); ++i) {
+				if (!mesh.boneAabbValid.empty() && mesh.boneAabbValid[i] == 0) {
+					continue;
+				}
+
+				glm::vec3 localMin = mesh.boneAabbMin[i];
+				glm::vec3 localMax = mesh.boneAabbMax[i];
+				glm::vec3 center = (localMin + localMax) * 0.5f;
+				glm::vec3 extent = (localMax - localMin) * 0.5f;
+
+				const glm::mat4& boneTransform = boneTransforms[i];
+				glm::vec3 worldCenter = glm::vec3(boneTransform * glm::vec4(center, 1.0f));
+				glm::mat3 upperLeft = glm::mat3(boneTransform);
+				glm::vec3 worldExtent = glm::abs(upperLeft[0]) * extent.x
+					+ glm::abs(upperLeft[1]) * extent.y
+					+ glm::abs(upperLeft[2]) * extent.z;
+
+				glm::vec3 boneMin = worldCenter - worldExtent;
+				glm::vec3 boneMax = worldCenter + worldExtent;
+
+				aabbMin = glm::min(aabbMin, boneMin);
+				aabbMax = glm::max(aabbMax, boneMax);
+				any = true;
+			}
+
+			if (any) {
+				outMin = aabbMin;
+				outMax = aabbMax;
+				return true;
+			}
+		}
+
+		if (!mesh.vbo) {
+			return false;
+		}
+
+		const auto* vertexData = reinterpret_cast<const Ermine::graphics::VertexData*>(mesh.vbo->GetDataPointer());
+		if (!vertexData) {
+			return false;
+		}
+
+		const unsigned int numVertices = mesh.vbo->GetSize() / sizeof(Ermine::graphics::VertexData);
+		if (numVertices == 0) {
+			return false;
+		}
+
+		glm::vec3 aabbMin(FLT_MAX);
+		glm::vec3 aabbMax(-FLT_MAX);
+		bool anyWeighted = false;
+
+		for (unsigned int i = 0; i < numVertices; ++i) {
+			const Ermine::graphics::VertexData& v = vertexData[i];
+			glm::vec4 skinnedPos(0.0f);
+
+			for (int j = 0; j < Ermine::graphics::MAX_BONE_INFLUENCE; ++j) {
+				const int boneID = v.IDs[j];
+				const float weight = v.Weights[j];
+
+				if (weight <= 0.0f) {
+					continue;
+				}
+				anyWeighted = true;
+
+				if (boneID < 0 || boneID >= static_cast<int>(boneTransforms.size())) {
+					continue;
+				}
+
+				skinnedPos += boneTransforms[boneID]
+					* glm::vec4(v.position[0], v.position[1], v.position[2], 1.0f)
+					* weight;
+			}
+
+			const glm::vec3 pos(skinnedPos);
+			aabbMin = glm::min(aabbMin, pos);
+			aabbMax = glm::max(aabbMax, pos);
+		}
+
+		if (!anyWeighted) {
+			return false;
+		}
+
+		outMin = aabbMin;
+		outMax = aabbMax;
+		return true;
+	}
+}
 
 void Renderer::InitializeShadowMapResources()
 {
@@ -1481,6 +1586,7 @@ void Renderer::RebuildDrawData()
 			cacheItem.hadChildMaterial = false; // No child material
 			cacheItem.meshHandle = meshHandle;
 			cacheItem.meshData = meshData;
+			cacheItem.modelMeshData = nullptr;
 			cacheItem.materialIndex = materialIndex;
 			cacheItem.aabbMin = glm::vec3(mesh.aabbMin.x, mesh.aabbMin.y, mesh.aabbMin.z);
 			cacheItem.aabbMax = glm::vec3(mesh.aabbMax.x, mesh.aabbMax.y, mesh.aabbMax.z);
@@ -1488,6 +1594,7 @@ void Renderer::RebuildDrawData()
 			cacheItem.castsShadows = castsShadows;
 			cacheItem.hasCustomShader = isCustomShader;
 			cacheItem.useSkinning = false; // Primitives never use skinning
+			cacheItem.hasSkinningData = false;
 			cacheItem.boneOffset = 0;
 			m_CachedDrawItems.push_back(cacheItem);
 
@@ -1707,6 +1814,7 @@ void Renderer::RebuildDrawData()
 				cacheItem.hadChildMaterial = hadChildMaterial;    // Whether child had valid material
 				cacheItem.meshHandle = meshHandle;
 				cacheItem.meshData = meshData;
+				cacheItem.modelMeshData = &mesh;
 				cacheItem.materialIndex = materialIndex;
 				cacheItem.aabbMin = mesh.aabbMin;
 				cacheItem.aabbMax = mesh.aabbMax;
@@ -1714,6 +1822,7 @@ void Renderer::RebuildDrawData()
 				cacheItem.castsShadows = castsShadows;
 				cacheItem.hasCustomShader = isCustomShader;
 				cacheItem.useSkinning = false; // Static models never use skinning
+				cacheItem.hasSkinningData = false;
 				cacheItem.isCameraAttached = isCameraAttached; // Cache camera-attachment for fast path
 				cacheItem.boneOffset = 0;
 				m_CachedDrawItems.push_back(cacheItem);
@@ -1948,6 +2057,7 @@ void Renderer::RebuildDrawData()
 				cacheItem.hadChildMaterial = hadChildMaterial;    // Whether child had valid material
 				cacheItem.meshHandle = meshHandle;
 				cacheItem.meshData = meshData;
+				cacheItem.modelMeshData = &mesh;
 				cacheItem.materialIndex = materialIndex;
 				cacheItem.aabbMin = mesh.aabbMin;
 				cacheItem.aabbMax = mesh.aabbMax;
@@ -1955,6 +2065,9 @@ void Renderer::RebuildDrawData()
 				cacheItem.castsShadows = castsShadows;
 				cacheItem.hasCustomShader = isCustomShader;
 				cacheItem.useSkinning = true; // Animated models use skinning
+				cacheItem.hasSkinningData = std::any_of(
+					mesh.boneAabbValid.begin(), mesh.boneAabbValid.end(),
+					[](uint8_t v) { return v != 0; });
 				cacheItem.isCameraAttached = isCameraAttached; // Cache camera-attachment for fast path
 				cacheItem.boneOffset = boneOffset;
 				m_CachedDrawItems.push_back(cacheItem);
@@ -2427,10 +2540,10 @@ void Renderer::UpdateDrawData()
 		}
 
 		// Get current entity transform (this is what changed!)
-		// Note: Animated models manually build matrix (no hierarchy), static models use GetEntityWorldMatrix
+		// Note: Use hierarchy-based world matrix unless we have valid skinning data.
 		glm::mat4 model;
-		if (cachedItem.useSkinning) {
-			// Animated models: manually build matrix (matches RebuildDrawData behavior)
+		if (cachedItem.useSkinning && cachedItem.hasSkinningData) {
+			// Animated models with skinning data: manually build matrix (fast path)
 			const auto& trans = ecs.GetComponent<Transform>(cachedItem.entity);
 			model = glm::mat4(1.0f);
 			model = glm::translate(model, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
@@ -2444,10 +2557,22 @@ void Renderer::UpdateDrawData()
 			model = GetEntityWorldMatrix(cachedItem.entity);
 		}
 
+		glm::vec3 localAabbMin = cachedItem.aabbMin;
+		glm::vec3 localAabbMax = cachedItem.aabbMax;
+		if (cachedItem.useSkinning && cachedItem.hasSkinningData && cachedItem.modelMeshData
+			&& ecs.HasComponent<AnimationComponent>(cachedItem.entity)) {
+			const auto& animComp = ecs.GetComponent<AnimationComponent>(cachedItem.entity);
+			if (animComp.m_animator) {
+				ComputeSkinnedMeshAABB(*cachedItem.modelMeshData,
+					animComp.m_animator->GetFinalBoneMatrices(),
+					localAabbMin, localAabbMax);
+			}
+		}
+
 		// Transform AABB to world space using center-extent method (faster than 8-corner transform)
 		// Object-space center and half-extents
-		glm::vec3 center = (cachedItem.aabbMin + cachedItem.aabbMax) * 0.5f;
-		glm::vec3 extent = (cachedItem.aabbMax - cachedItem.aabbMin) * 0.5f;
+		glm::vec3 center = (localAabbMin + localAabbMax) * 0.5f;
+		glm::vec3 extent = (localAabbMax - localAabbMin) * 0.5f;
 
 		// Transform center to world space
 		glm::vec3 worldCenter = glm::vec3(model * glm::vec4(center, 1.0f));
@@ -2471,6 +2596,40 @@ void Renderer::UpdateDrawData()
 			glm::vec3 aabbColor = isCulled ? glm::vec3(1.0f, 0.0f, 0.0f) : glm::vec3(0.0f, 1.0f, 0.0f);
 			SubmitDebugAABB(actualMin, actualMax, aabbColor);
 		}
+		if (m_DebugDrawBoneAABBs && cachedItem.useSkinning && cachedItem.modelMeshData
+			&& ecs.HasComponent<AnimationComponent>(cachedItem.entity)) {
+			const auto& animComp = ecs.GetComponent<AnimationComponent>(cachedItem.entity);
+			if (animComp.m_animator) {
+				const auto& boneTransforms = animComp.m_animator->GetFinalBoneMatrices();
+				const auto& boneAabbMin = cachedItem.modelMeshData->boneAabbMin;
+				const auto& boneAabbMax = cachedItem.modelMeshData->boneAabbMax;
+				const auto& boneAabbValid = cachedItem.modelMeshData->boneAabbValid;
+				if (boneAabbMin.size() == boneTransforms.size()
+					&& boneAabbMax.size() == boneTransforms.size()) {
+					for (size_t i = 0; i < boneTransforms.size(); ++i) {
+						if (!boneAabbValid.empty() && boneAabbValid[i] == 0) {
+							continue;
+						}
+
+						const glm::vec3 localMin = boneAabbMin[i];
+						const glm::vec3 localMax = boneAabbMax[i];
+						const glm::vec3 center = (localMin + localMax) * 0.5f;
+						const glm::vec3 extent = (localMax - localMin) * 0.5f;
+						const glm::mat4 boneMatrix = model * boneTransforms[i];
+
+						const glm::vec3 worldCenter = glm::vec3(boneMatrix * glm::vec4(center, 1.0f));
+						const glm::mat3 upperLeft = glm::mat3(boneMatrix);
+						const glm::vec3 worldExtent = glm::abs(upperLeft[0]) * extent.x
+							+ glm::abs(upperLeft[1]) * extent.y
+							+ glm::abs(upperLeft[2]) * extent.z;
+
+						const glm::vec3 boneMin = worldCenter - worldExtent;
+						const glm::vec3 boneMax = worldCenter + worldExtent;
+						SubmitDebugAABB(boneMin, boneMax, glm::vec3(1.0f, 0.75f, 0.0f));
+					}
+				}
+			}
+		}
 
 		// Build draw command (using cached mesh data - no lookups!)
 		DrawElementsIndirectCommand cmd;
@@ -2489,9 +2648,9 @@ void Renderer::UpdateDrawData()
 		info.normalMatrixCol0 = glm::vec4(normalMat[0], 0.0f);
 		info.normalMatrixCol1 = glm::vec4(normalMat[1], 0.0f);
 		info.normalMatrixCol2 = glm::vec4(normalMat[2], 0.0f);
-		info.aabbMin = cachedItem.aabbMin;
+		info.aabbMin = localAabbMin;
 		info.materialIndex = cachedItem.materialIndex;
-		info.aabbMax = cachedItem.aabbMax;
+		info.aabbMax = localAabbMax;
 		info.entityID = static_cast<uint32_t>(cachedItem.entity);
 
 		// Build flags from cached data (fast path - no hierarchy traversal)
