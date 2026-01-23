@@ -283,7 +283,7 @@ namespace Ermine
             }
         }
 
-        // Render UI for all entities with UIComponent
+        // Render UI for all entities with UIComponent (legacy support)
         for (EntityID entity : m_Entities)
         {
             const auto& ui = ECS::GetInstance().GetComponent<UIComponent>(entity);
@@ -302,6 +302,53 @@ namespace Ermine
 
             if (ui.showCrosshair)
                 RenderCrosshair(ui);
+        }
+
+        // Render new separate UI components
+        for (EntityID entity = 1; entity < MAX_ENTITIES; ++entity)
+        {
+            if (!ecs.IsEntityValid(entity))
+                continue;
+
+            // Render UIHealthbarComponent
+            if (ecs.HasComponent<UIHealthbarComponent>(entity))
+            {
+                const auto& healthbar = ecs.GetComponent<UIHealthbarComponent>(entity);
+                if (healthbar.showHealthbar)
+                    RenderHealthBarNew(healthbar);
+            }
+
+            // Render UICrosshairComponent
+            if (ecs.HasComponent<UICrosshairComponent>(entity))
+            {
+                const auto& crosshair = ecs.GetComponent<UICrosshairComponent>(entity);
+                if (crosshair.showCrosshair)
+                    RenderCrosshairNew(crosshair);
+            }
+
+            // Render UISkillsComponent
+            if (ecs.HasComponent<UISkillsComponent>(entity))
+            {
+                const auto& skills = ecs.GetComponent<UISkillsComponent>(entity);
+                if (skills.showSkills)
+                    RenderSkillSlotsNew(skills, entity);
+            }
+
+            // Render UIManaBarComponent
+            if (ecs.HasComponent<UIManaBarComponent>(entity))
+            {
+                const auto& manaBar = ecs.GetComponent<UIManaBarComponent>(entity);
+                if (manaBar.showManaBar)
+                    RenderManaBarNew(manaBar);
+            }
+
+            // Render UIBookCounterComponent
+            if (ecs.HasComponent<UIBookCounterComponent>(entity))
+            {
+                const auto& bookCounter = ecs.GetComponent<UIBookCounterComponent>(entity);
+                if (bookCounter.showBookCounter)
+                    RenderBookCounterNew(bookCounter);
+            }
         }
 
         // Render UIButtonComponent entities
@@ -370,45 +417,139 @@ namespace Ermine
         float width = ui.healthbarWidth;
         float height = ui.healthbarHeight;
 
-        // Outer border (black outline for contrast)
-        float outerBorder = 0.003f;
-        Vec3 outerBorderColor = { 0.0f, 0.0f, 0.0f };
-        RenderQuad(x - outerBorder, y - outerBorder, width + outerBorder * 2.0f, height + outerBorder * 2.0f, outerBorderColor, 0.9f);
+        // Try to load health bar textures if paths are specified
+        std::shared_ptr<graphics::Texture> bgTex = nullptr;
+        std::shared_ptr<graphics::Texture> fillTex = nullptr;
+        std::shared_ptr<graphics::Texture> frameTex = nullptr;
 
-        // Inner border (bright accent)
-        float innerBorder = 0.0015f;
-        Vec3 innerBorderColor = { 0.8f, 0.8f, 0.8f };
-        RenderQuad(x - innerBorder, y - innerBorder, width + innerBorder * 2.0f, height + innerBorder * 2.0f, innerBorderColor, 0.8f);
+        // Load background texture
+        if (!ui.healthbarBgTexture.empty())
+        {
+            auto it = m_textureCache.find(ui.healthbarBgTexture);
+            if (it != m_textureCache.end())
+            {
+                bgTex = it->second;
+            }
+            else
+            {
+                bgTex = AssetManager::GetInstance().LoadTexture(ui.healthbarBgTexture);
+                if (bgTex && bgTex->IsValid())
+                {
+                    m_textureCache[ui.healthbarBgTexture] = bgTex;
+                }
+            }
+        }
 
-        // Render background
-        RenderQuad(x, y, width, height, ui.healthbarBgColor, 0.9f);
+        // Load fill texture
+        if (!ui.healthbarFillTexture.empty())
+        {
+            auto it = m_textureCache.find(ui.healthbarFillTexture);
+            if (it != m_textureCache.end())
+            {
+                fillTex = it->second;
+            }
+            else
+            {
+                fillTex = AssetManager::GetInstance().LoadTexture(ui.healthbarFillTexture);
+                if (fillTex && fillTex->IsValid())
+                {
+                    m_textureCache[ui.healthbarFillTexture] = fillTex;
+                }
+            }
+        }
 
-        // Render health fill with gradient effect (darker at bottom, brighter at top)
+        // Load frame texture
+        if (!ui.healthbarFrameTexture.empty())
+        {
+            auto it = m_textureCache.find(ui.healthbarFrameTexture);
+            if (it != m_textureCache.end())
+            {
+                frameTex = it->second;
+            }
+            else
+            {
+                frameTex = AssetManager::GetInstance().LoadTexture(ui.healthbarFrameTexture);
+                if (frameTex && frameTex->IsValid())
+                {
+                    m_textureCache[ui.healthbarFrameTexture] = frameTex;
+                }
+            }
+        }
+
+        // ========================================================================
+        // RENDER BACKGROUND (textured or solid color)
+        // ========================================================================
+        if (bgTex && bgTex->IsValid())
+        {
+            // Render textured background
+            RenderTexturedRect(x, y, width, height, bgTex, { 1.0f, 1.0f, 1.0f }, 0.9f);
+        }
+        else
+        {
+            // Fallback: render solid color background with border
+            float outerBorder = 0.003f;
+            Vec3 outerBorderColor = { 0.0f, 0.0f, 0.0f };
+            RenderQuad(x - outerBorder, y - outerBorder, width + outerBorder * 2.0f, height + outerBorder * 2.0f, outerBorderColor, 0.9f);
+
+            float innerBorder = 0.0015f;
+            Vec3 innerBorderColor = { 0.8f, 0.8f, 0.8f };
+            RenderQuad(x - innerBorder, y - innerBorder, width + innerBorder * 2.0f, height + innerBorder * 2.0f, innerBorderColor, 0.8f);
+
+            RenderQuad(x, y, width, height, ui.healthbarBgColor, 0.9f);
+        }
+
+        // ========================================================================
+        // RENDER HEALTH FILL (textured or solid color)
+        // ========================================================================
         float healthPercent = ui.currentHealth / ui.maxHealth;
         if (healthPercent > 0.0f)
         {
             float fillWidth = width * healthPercent;
 
-            // Determine health color based on percentage - STEAMPUNK THEME
-            Vec3 healthColor = ui.healthbarColor;
-            if (healthPercent < 0.25f)
-                healthColor = { 0.75f, 0.20f, 0.10f }; // Dark rusty copper when critical
-            else if (healthPercent < 0.5f)
-                healthColor = { 0.85f, 0.45f, 0.15f }; // Dimmer brass/copper when low
+            if (fillTex && fillTex->IsValid())
+            {
+                // Render textured fill with UV clipping to show partial fill
+                RenderTexturedRectUV(x, y, fillWidth, height, fillTex,
+                                     0.0f, 0.0f, healthPercent, 1.0f, // UV coords (clip U based on health %)
+                                     { 1.0f, 1.0f, 1.0f }, 1.0f);
+            }
+            else
+            {
+                // Fallback: render solid color fill with gradient effect
+                Vec3 healthColor = ui.healthbarColor;
+                if (healthPercent < 0.25f)
+                    healthColor = { 0.75f, 0.20f, 0.10f }; // Dark rusty copper when critical
+                else if (healthPercent < 0.5f)
+                    healthColor = { 0.85f, 0.45f, 0.15f }; // Dimmer brass/copper when low
 
-            // Main health bar
-            RenderQuad(x, y, fillWidth, height, healthColor, 1.0f);
+                // Main health bar
+                RenderQuad(x, y, fillWidth, height, healthColor, 1.0f);
 
-            // Shine effect on top of health bar (brighter overlay)
-            float shineHeight = height * 0.4f;
-            Vec3 shineColor = { 1.0f, 1.0f, 1.0f };
-            RenderQuad(x, y + height - shineHeight, fillWidth, shineHeight, shineColor, 0.3f);
+                // Shine effect on top of health bar (brighter overlay)
+                float shineHeight = height * 0.4f;
+                Vec3 shineColor = { 1.0f, 1.0f, 1.0f };
+                RenderQuad(x, y + height - shineHeight, fillWidth, shineHeight, shineColor, 0.3f);
+            }
         }
 
-        // Inner shadow at the bottom for depth
-        float shadowHeight = height * 0.2f;
-        Vec3 shadowColor = { 0.0f, 0.0f, 0.0f };
-        RenderQuad(x, y, width, shadowHeight, shadowColor, 0.3f);
+        // ========================================================================
+        // RENDER FRAME OVERLAY (textured or shadow effect)
+        // ========================================================================
+        if (frameTex && frameTex->IsValid())
+        {
+            // Render textured frame overlay (renders on top of everything)
+            RenderTexturedRect(x, y, width, height, frameTex, { 1.0f, 1.0f, 1.0f }, 1.0f);
+        }
+        else
+        {
+            // Fallback: inner shadow at the bottom for depth (only if no bg texture)
+            if (!bgTex || !bgTex->IsValid())
+            {
+                float shadowHeight = height * 0.2f;
+                Vec3 shadowColor = { 0.0f, 0.0f, 0.0f };
+                RenderQuad(x, y, width, shadowHeight, shadowColor, 0.3f);
+            }
+        }
     }
 
     void UIRenderSystem::RenderManaBar(const UIComponent& ui)
@@ -510,20 +651,20 @@ namespace Ermine
             if (skillTexture && skillTexture->IsValid())
             {
                 // Render clean icon texture with full brightness
-                Vec3 tintColor = { 1.0f, 1.0f, 1.0f }; // No tinting - show texture as-is
-                float alpha = 1.0f;
+                Vec3 tintColor = ui.skillReadyTint;
+                float alpha = ui.skillReadyAlpha;
 
                 // Slightly dim when on cooldown
                 if (skill.isOnCooldown)
                 {
-                    tintColor = { 0.5f, 0.5f, 0.5f }; // Darken when on cooldown
-                    alpha = 0.6f;
+                    tintColor = ui.skillCooldownTint;
+                    alpha = ui.skillCooldownAlpha;
                 }
                 // Slightly dim when insufficient health
                 else if (ui.currentHealth < skill.manaCost)
                 {
-                    tintColor = { 0.7f, 0.7f, 0.7f };
-                    alpha = 0.7f;
+                    tintColor = ui.skillLowHealthTint;
+                    alpha = ui.skillLowHealthAlpha;
                 }
 
                 // Use square rendering to maintain aspect ratio (size = diameter of old circle)
@@ -532,11 +673,11 @@ namespace Ermine
             else
             {
                 // Fallback: render simple square if no texture
-                Vec3 fallbackColor = { 0.3f, 0.3f, 0.3f };
+                Vec3 fallbackColor = ui.skillFallbackColor;
                 float halfSize = slotSize * 0.5f;
                 float adjustedHalfWidth = halfSize / m_aspectRatio;
                 RenderQuad(centerX - adjustedHalfWidth, centerY - halfSize,
-                          adjustedHalfWidth * 2.0f, slotSize, fallbackColor, 0.5f);
+                          adjustedHalfWidth * 2.0f, slotSize, fallbackColor, ui.skillFallbackAlpha);
             }
 
             // ========================================================================
@@ -545,9 +686,9 @@ namespace Ermine
             if (skill.isOnCooldown && skill.maxCooldown > 0.0f)
             {
                 float progress = skill.currentCooldown / skill.maxCooldown;
-                Vec3 cooldownColor = { 0.0f, 0.0f, 0.0f }; // Black overlay
+                Vec3 cooldownColor = ui.skillCooldownOverlayColor;
                 // Use radius for cooldown overlay (centered on square icon)
-                RenderRadialCooldown(centerX, centerY, slotSize * 0.5f, progress, cooldownColor, 0.7f);
+                RenderRadialCooldown(centerX, centerY, slotSize * 0.5f, progress, cooldownColor, ui.skillCooldownOverlayAlpha);
             }
 
             // ========================================================================
@@ -555,12 +696,12 @@ namespace Ermine
             // ========================================================================
             if (skill.activationFlashTimer > 0.0f)
             {
-                // Calculate flash intensity (fades from 1.0 to 0.0 over 0.2 seconds)
-                float flashIntensity = skill.activationFlashTimer / 0.2f;
+                // Calculate flash intensity (fades from 1.0 to 0.0 over duration)
+                float flashIntensity = skill.activationFlashTimer / ui.skillFlashDuration;
 
                 // Bright white/yellow flash
-                float glowSize = slotSize + 0.02f; // Slightly larger than icon
-                Vec3 flashColor = { 1.0f, 1.0f, 0.8f }; // Bright white-yellow
+                float glowSize = slotSize + ui.skillFlashGlowSize; // Slightly larger than icon
+                Vec3 flashColor = ui.skillFlashColor;
 
                 // Render flash as a square border
                 float halfSize = glowSize * 0.5f;
@@ -575,17 +716,17 @@ namespace Ermine
             if (m_textRenderer && m_uiShader && !skill.keyBinding.empty())
             {
                 // Calculate label position (centered below the skill slot)
-                float textScale = 0.6f; // Slightly larger text for better readability
+                float textScale = ui.skillKeybindTextScale;
                 float textWidth = m_textRenderer->GetTextWidth(skill.keyBinding, textScale);
                 float labelX = centerX - (textWidth * 0.5f); // Center horizontally
-                float labelY = centerY - (slotSize * 0.5f) - 0.02f; // Position below the square slot
+                float labelY = centerY - (slotSize * 0.5f) - ui.skillKeybindOffsetY; // Position below the square slot
 
                 // Check if skill is ready to use
                 bool isReady = !skill.isOnCooldown && ui.currentHealth >= skill.manaCost;
 
                 // Professional white text with slight transparency
-                Vec3 labelColor = { 1.0f, 1.0f, 1.0f };
-                float labelAlpha = isReady ? 1.0f : 0.6f;
+                Vec3 labelColor = ui.skillKeybindColor;
+                float labelAlpha = isReady ? ui.skillKeybindAlphaReady : ui.skillKeybindAlphaNotReady;
 
                 // Render the keybind text (e.g., "LMB", "RMB", "R")
                 m_textRenderer->RenderText(m_uiShader, skill.keyBinding, labelX, labelY, textScale, labelColor, labelAlpha, m_VAO, m_VBO);
@@ -631,6 +772,354 @@ namespace Ermine
             // Use square rendering to maintain aspect ratio
             RenderTexturedSquare(centerX, centerY, size, crosshairTexture, tintColor, alpha);
         }
+    }
+
+    // ========================================================================
+    // NEW RENDER FUNCTIONS FOR SEPARATE UI COMPONENTS
+    // ========================================================================
+
+    void UIRenderSystem::RenderHealthBarNew(const UIHealthbarComponent& healthbar)
+    {
+        float x = healthbar.healthbarPosition.x;
+        float y = healthbar.healthbarPosition.y;
+        float width = healthbar.healthbarWidth;
+        float height = healthbar.healthbarHeight;
+
+        // Try to load health bar textures if paths are specified
+        std::shared_ptr<graphics::Texture> bgTex = nullptr;
+        std::shared_ptr<graphics::Texture> fillTex = nullptr;
+        std::shared_ptr<graphics::Texture> frameTex = nullptr;
+
+        // Load background texture
+        if (!healthbar.healthbarBgTexture.empty())
+        {
+            auto it = m_textureCache.find(healthbar.healthbarBgTexture);
+            if (it != m_textureCache.end())
+                bgTex = it->second;
+            else
+            {
+                bgTex = AssetManager::GetInstance().LoadTexture(healthbar.healthbarBgTexture);
+                if (bgTex && bgTex->IsValid())
+                    m_textureCache[healthbar.healthbarBgTexture] = bgTex;
+            }
+        }
+
+        // Load fill texture
+        if (!healthbar.healthbarFillTexture.empty())
+        {
+            auto it = m_textureCache.find(healthbar.healthbarFillTexture);
+            if (it != m_textureCache.end())
+                fillTex = it->second;
+            else
+            {
+                fillTex = AssetManager::GetInstance().LoadTexture(healthbar.healthbarFillTexture);
+                if (fillTex && fillTex->IsValid())
+                    m_textureCache[healthbar.healthbarFillTexture] = fillTex;
+            }
+        }
+
+        // Load frame texture
+        if (!healthbar.healthbarFrameTexture.empty())
+        {
+            auto it = m_textureCache.find(healthbar.healthbarFrameTexture);
+            if (it != m_textureCache.end())
+                frameTex = it->second;
+            else
+            {
+                frameTex = AssetManager::GetInstance().LoadTexture(healthbar.healthbarFrameTexture);
+                if (frameTex && frameTex->IsValid())
+                    m_textureCache[healthbar.healthbarFrameTexture] = frameTex;
+            }
+        }
+
+        // Render background
+        if (bgTex && bgTex->IsValid())
+        {
+            RenderTexturedRect(x, y, width, height, bgTex, { 1.0f, 1.0f, 1.0f }, 0.9f);
+        }
+        else
+        {
+            float outerBorder = 0.003f;
+            Vec3 outerBorderColor = { 0.1f, 0.1f, 0.1f };
+            RenderQuad(x - outerBorder, y - outerBorder, width + outerBorder * 2.0f, height + outerBorder * 2.0f, outerBorderColor, 0.7f);
+
+            float innerBorder = 0.0015f;
+            Vec3 innerBorderColor = { 0.8f, 0.8f, 0.8f };
+            RenderQuad(x - innerBorder, y - innerBorder, width + innerBorder * 2.0f, height + innerBorder * 2.0f, innerBorderColor, 0.8f);
+
+            RenderQuad(x, y, width, height, healthbar.healthbarBgColor, 0.9f);
+        }
+
+        // Render health fill
+        float healthPercent = (healthbar.maxHealth > 0.0f) ? (healthbar.currentHealth / healthbar.maxHealth) : 0.0f;
+        float fillWidth = width * healthPercent;
+
+        if (fillWidth > 0.0f)
+        {
+            if (fillTex && fillTex->IsValid())
+            {
+                float uMax = healthPercent;
+                RenderTexturedRectUV(x, y, fillWidth, height, fillTex, 0.0f, 0.0f, uMax, 1.0f, { 1.0f, 1.0f, 1.0f }, 1.0f);
+            }
+            else
+            {
+                // Use configurable colors based on health percentage
+                Vec3 healthColor = healthbar.healthbarColor;
+                if (healthPercent < 0.25f)
+                    healthColor = healthbar.healthbarCriticalColor;
+                else if (healthPercent < 0.5f)
+                    healthColor = healthbar.healthbarLowColor;
+
+                RenderQuad(x, y, fillWidth, height, healthColor, 1.0f);
+
+                // Shine effect (configurable!)
+                float shineHeight = height * 0.4f;
+                RenderQuad(x, y + height - shineHeight, fillWidth, shineHeight, healthbar.healthbarShineColor, healthbar.healthbarShineAlpha);
+            }
+        }
+
+        // Render frame
+        if (frameTex && frameTex->IsValid())
+        {
+            RenderTexturedRect(x, y, width, height, frameTex, { 1.0f, 1.0f, 1.0f }, 1.0f);
+        }
+    }
+
+    void UIRenderSystem::RenderCrosshairNew(const UICrosshairComponent& crosshair)
+    {
+        float centerX = 0.5f;
+        float centerY = 0.5f;
+        float size = crosshair.crosshairSize;
+
+        std::shared_ptr<graphics::Texture> crosshairTexture = nullptr;
+
+        // Use texture path from component (editable in inspector!)
+        if (!crosshair.crosshairTexturePath.empty())
+        {
+            auto it = m_textureCache.find(crosshair.crosshairTexturePath);
+            if (it != m_textureCache.end())
+            {
+                crosshairTexture = it->second;
+            }
+            else
+            {
+                crosshairTexture = AssetManager::GetInstance().LoadTexture(crosshair.crosshairTexturePath);
+                if (crosshairTexture && crosshairTexture->IsValid())
+                    m_textureCache[crosshair.crosshairTexturePath] = crosshairTexture;
+            }
+        }
+
+        if (crosshairTexture && crosshairTexture->IsValid())
+        {
+            Vec3 tintColor = { 1.0f, 1.0f, 1.0f };
+            float alpha = 1.0f;
+            RenderTexturedSquare(centerX, centerY, size, crosshairTexture, tintColor, alpha);
+        }
+    }
+
+    void UIRenderSystem::RenderSkillSlotsNew(const UISkillsComponent& skills, EntityID entity)
+    {
+        float startX = skills.skillsPosition.x;
+        float startY = skills.skillsPosition.y;
+        float slotSize = skills.skillSlotSize;
+        float spacing = skills.skillSlotSpacing;
+        float radius = slotSize * 0.5f;
+
+        // Check if entity has healthbar component for health-based tinting
+        float currentHealth = 100.0f;
+        bool hasHealthbar = ECS::GetInstance().HasComponent<UIHealthbarComponent>(entity);
+        if (hasHealthbar)
+            currentHealth = ECS::GetInstance().GetComponent<UIHealthbarComponent>(entity).currentHealth;
+
+        // Collect non-empty skill slots to render
+        std::vector<int> activeSlots;
+        for (int i = 0; i < 4; ++i)
+        {
+            if (!skills.skills[i].skillName.empty())
+                activeSlots.push_back(i);
+        }
+
+        if (activeSlots.empty())
+            return;
+
+        float totalWidth = (slotSize * activeSlots.size()) + (spacing * (activeSlots.size() - 1));
+        float currentX = startX - (totalWidth * 0.5f);
+
+        for (size_t slotIdx = 0; slotIdx < activeSlots.size(); ++slotIdx)
+        {
+            size_t i = activeSlots[slotIdx];
+            const auto& skill = skills.skills[i];
+
+            float centerX = currentX + radius;
+            float centerY = startY + radius;
+
+            // Load skill icon texture
+            std::shared_ptr<graphics::Texture> skillTexture = nullptr;
+            if (!skill.iconTexturePath.empty())
+            {
+                auto it = m_textureCache.find(skill.iconTexturePath);
+                if (it != m_textureCache.end())
+                {
+                    skillTexture = it->second;
+                }
+                else
+                {
+                    skillTexture = AssetManager::GetInstance().LoadTexture(skill.iconTexturePath);
+                    if (skillTexture && skillTexture->IsValid())
+                        m_textureCache[skill.iconTexturePath] = skillTexture;
+                }
+            }
+
+            // Render skill icon
+            if (skillTexture && skillTexture->IsValid())
+            {
+                Vec3 tintColor = skills.skillReadyTint;
+                float alpha = skills.skillReadyAlpha;
+
+                if (skill.isOnCooldown)
+                {
+                    tintColor = skills.skillCooldownTint;
+                    alpha = skills.skillCooldownAlpha;
+                }
+                else if (currentHealth < skill.manaCost)
+                {
+                    tintColor = skills.skillLowHealthTint;
+                    alpha = skills.skillLowHealthAlpha;
+                }
+
+                RenderTexturedSquare(centerX, centerY, slotSize, skillTexture, tintColor, alpha);
+            }
+            else
+            {
+                Vec3 fallbackColor = skills.skillFallbackColor;
+                float halfSize = slotSize * 0.5f;
+                float adjustedHalfWidth = halfSize / m_aspectRatio;
+                RenderQuad(centerX - adjustedHalfWidth, centerY - halfSize,
+                          adjustedHalfWidth * 2.0f, slotSize, fallbackColor, skills.skillFallbackAlpha);
+            }
+
+            // Render cooldown overlay
+            if (skill.isOnCooldown && skill.maxCooldown > 0.0f)
+            {
+                float progress = skill.currentCooldown / skill.maxCooldown;
+                Vec3 cooldownColor = skills.skillCooldownOverlayColor;
+                RenderRadialCooldown(centerX, centerY, slotSize * 0.5f, progress, cooldownColor, skills.skillCooldownOverlayAlpha);
+            }
+
+            // Render activation flash
+            if (skill.activationFlashTimer > 0.0f)
+            {
+                float flashIntensity = skill.activationFlashTimer / skills.skillFlashDuration;
+                float glowSize = slotSize + skills.skillFlashGlowSize;
+                Vec3 flashColor = skills.skillFlashColor;
+
+                float halfSize = glowSize * 0.5f;
+                float adjustedHalfWidth = halfSize / m_aspectRatio;
+                RenderQuad(centerX - adjustedHalfWidth, centerY - halfSize,
+                          adjustedHalfWidth * 2.0f, glowSize, flashColor, flashIntensity * 0.8f);
+            }
+
+            // Render keybind label
+            if (m_textRenderer && m_uiShader && !skill.keyBinding.empty())
+            {
+                float textScale = skills.skillKeybindTextScale;
+                float textWidth = m_textRenderer->GetTextWidth(skill.keyBinding, textScale);
+                float labelX = centerX - (textWidth * 0.5f);
+                float labelY = centerY - (slotSize * 0.5f) - skills.skillKeybindOffsetY;
+
+                bool isReady = !skill.isOnCooldown && currentHealth >= skill.manaCost;
+                Vec3 labelColor = skills.skillKeybindColor;
+                float labelAlpha = isReady ? skills.skillKeybindAlphaReady : skills.skillKeybindAlphaNotReady;
+
+                m_textRenderer->RenderText(m_uiShader, skill.keyBinding, labelX, labelY, textScale, labelColor, labelAlpha, m_VAO, m_VBO);
+            }
+
+            currentX += slotSize + spacing;
+        }
+    }
+
+    void UIRenderSystem::RenderManaBarNew(const UIManaBarComponent& manaBar)
+    {
+        float x = manaBar.manaBarPosition.x;
+        float y = manaBar.manaBarPosition.y;
+        float width = manaBar.manaBarWidth;
+        float height = manaBar.manaBarHeight;
+
+        // Render background
+        RenderQuad(x, y, width, height, manaBar.manaBarBgColor, 0.9f);
+
+        // Render mana fill
+        float manaPercent = (manaBar.maxMana > 0.0f) ? (manaBar.currentMana / manaBar.maxMana) : 0.0f;
+        float fillWidth = width * manaPercent;
+
+        if (fillWidth > 0.0f)
+        {
+            RenderQuad(x, y, fillWidth, height, manaBar.manaBarColor, 1.0f);
+        }
+    }
+
+    void UIRenderSystem::RenderBookCounterNew(const UIBookCounterComponent& bookCounter)
+    {
+        if (!m_textRenderer || !m_uiShader)
+            return;
+
+        std::string counterText = std::to_string(bookCounter.booksCollected) + "/" + std::to_string(bookCounter.totalBooks);
+        float textWidth = m_textRenderer->GetTextWidth(counterText, bookCounter.textScale);
+
+        float textX = bookCounter.bookCounterPosition.x - textWidth;
+        float textY = bookCounter.bookCounterPosition.y;
+
+        // Render optional background panel
+        if (!bookCounter.backgroundTexture.empty())
+        {
+            std::shared_ptr<graphics::Texture> bgTexture = nullptr;
+            auto it = m_textureCache.find(bookCounter.backgroundTexture);
+            if (it != m_textureCache.end())
+            {
+                bgTexture = it->second;
+            }
+            else
+            {
+                bgTexture = AssetManager::GetInstance().LoadTexture(bookCounter.backgroundTexture);
+                if (bgTexture && bgTexture->IsValid())
+                    m_textureCache[bookCounter.backgroundTexture] = bgTexture;
+            }
+
+            if (bgTexture && bgTexture->IsValid())
+            {
+                float bgX = bookCounter.bookCounterPosition.x - bookCounter.backgroundSize.x;
+                float bgY = bookCounter.bookCounterPosition.y;
+                RenderTexturedRect(bgX, bgY, bookCounter.backgroundSize.x, bookCounter.backgroundSize.y, bgTexture, { 1.0f, 1.0f, 1.0f }, 0.9f);
+            }
+        }
+
+        // Render optional book icon
+        if (!bookCounter.bookIconTexture.empty())
+        {
+            std::shared_ptr<graphics::Texture> iconTexture = nullptr;
+            auto it = m_textureCache.find(bookCounter.bookIconTexture);
+            if (it != m_textureCache.end())
+            {
+                iconTexture = it->second;
+            }
+            else
+            {
+                iconTexture = AssetManager::GetInstance().LoadTexture(bookCounter.bookIconTexture);
+                if (iconTexture && iconTexture->IsValid())
+                    m_textureCache[bookCounter.bookIconTexture] = iconTexture;
+            }
+
+            if (iconTexture && iconTexture->IsValid())
+            {
+                float iconX = textX + bookCounter.bookIconOffsetX;
+                float iconY = textY;
+                RenderTexturedSquare(iconX + bookCounter.bookIconSize * 0.5f, iconY + bookCounter.bookIconSize * 0.5f,
+                                    bookCounter.bookIconSize, iconTexture, { 1.0f, 1.0f, 1.0f }, 1.0f);
+            }
+        }
+
+        // Render text (always visible)
+        m_textRenderer->RenderText(m_uiShader, counterText, textX, textY, bookCounter.textScale, bookCounter.textColor, bookCounter.textAlpha, m_VAO, m_VBO);
     }
 
     void UIRenderSystem::RenderQuad(float posX, float posY, float width, float height, const Vec3& color, float alpha)
@@ -750,6 +1239,95 @@ namespace Ermine
         m_uiShader->SetUniform1i("uTexture", 0);
 
         // Render the square
+        glBindVertexArray(m_VAO);
+        glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glBindVertexArray(0);
+
+        // Disable texture mode
+        texture->Unbind();
+        m_uiShader->SetUniform1i("uUseTexture", 0);
+    }
+
+    void UIRenderSystem::RenderTexturedRect(float posX, float posY, float width, float height,
+                                            std::shared_ptr<graphics::Texture> texture,
+                                            const Vec3& color, float alpha)
+    {
+        if (!texture || !texture->IsValid())
+            return;
+
+        // Calculate corner positions
+        float left = posX;
+        float right = posX + width;
+        float bottom = posY;
+        float top = posY + height;
+
+        // Define quad vertices (2 triangles) with texture coordinates
+        float vertices[] = {
+            // Position (x, y)    // Color (r, g, b, a)                  // TexCoord (u, v)
+            left,  bottom,        color.x, color.y, color.z, alpha,     0.0f, 1.0f,  // Bottom-left
+            right, bottom,        color.x, color.y, color.z, alpha,     1.0f, 1.0f,  // Bottom-right
+            right, top,           color.x, color.y, color.z, alpha,     1.0f, 0.0f,  // Top-right
+
+            left,  bottom,        color.x, color.y, color.z, alpha,     0.0f, 1.0f,  // Bottom-left
+            right, top,           color.x, color.y, color.z, alpha,     1.0f, 0.0f,  // Top-right
+            left,  top,           color.x, color.y, color.z, alpha,     0.0f, 0.0f   // Top-left
+        };
+
+        // Enable texture mode in shader
+        m_uiShader->SetUniform1i("uUseTexture", 1);
+        texture->Bind(0);
+        m_uiShader->SetUniform1i("uTexture", 0);
+
+        // Render the rectangle
+        glBindVertexArray(m_VAO);
+        glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glBindVertexArray(0);
+
+        // Disable texture mode
+        texture->Unbind();
+        m_uiShader->SetUniform1i("uUseTexture", 0);
+    }
+
+    void UIRenderSystem::RenderTexturedRectUV(float posX, float posY, float width, float height,
+                                               std::shared_ptr<graphics::Texture> texture,
+                                               float u0, float v0, float u1, float v1,
+                                               const Vec3& color, float alpha)
+    {
+        if (!texture || !texture->IsValid())
+            return;
+
+        // Calculate corner positions
+        float left = posX;
+        float right = posX + width;
+        float bottom = posY;
+        float top = posY + height;
+
+        // Flip V coordinates (OpenGL has origin at bottom-left, textures loaded with flip)
+        float texV0 = 1.0f - v0;
+        float texV1 = 1.0f - v1;
+
+        // Define quad vertices (2 triangles) with custom UV coordinates
+        float vertices[] = {
+            // Position (x, y)    // Color (r, g, b, a)                  // TexCoord (u, v)
+            left,  bottom,        color.x, color.y, color.z, alpha,     u0, texV0,   // Bottom-left
+            right, bottom,        color.x, color.y, color.z, alpha,     u1, texV0,   // Bottom-right
+            right, top,           color.x, color.y, color.z, alpha,     u1, texV1,   // Top-right
+
+            left,  bottom,        color.x, color.y, color.z, alpha,     u0, texV0,   // Bottom-left
+            right, top,           color.x, color.y, color.z, alpha,     u1, texV1,   // Top-right
+            left,  top,           color.x, color.y, color.z, alpha,     u0, texV1    // Top-left
+        };
+
+        // Enable texture mode in shader
+        m_uiShader->SetUniform1i("uUseTexture", 1);
+        texture->Bind(0);
+        m_uiShader->SetUniform1i("uTexture", 0);
+
+        // Render the rectangle
         glBindVertexArray(m_VAO);
         glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);

@@ -160,6 +160,12 @@ namespace Ermine::editor {
         \param entity The entity to add components to
         */
         void DrawCameraComponent(EntityID entity);
+        void DrawUIComponent(EntityID entity);
+        void DrawUIHealthbarComponent(EntityID entity);
+        void DrawUICrosshairComponent(EntityID entity);
+        void DrawUISkillsComponent(EntityID entity);
+        void DrawUIManaBarComponent(EntityID entity);
+        void DrawUIBookCounterComponent(EntityID entity);
         void DrawUIImageComponent(EntityID entity);
         void DrawUIButtonComponent(EntityID entity);
 
