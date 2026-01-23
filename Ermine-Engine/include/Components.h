@@ -52,7 +52,7 @@ namespace Ermine {
 	\brief
 	 Meshkind type structure
 	*************************************************************************/
-	enum class MeshKind { None, Primitive, Asset };
+	enum class MeshKind { None, Primitive/*, Asset*/ };
 
 	/*!***********************************************************************
 	\brief
@@ -88,7 +88,7 @@ namespace xproperty::settings {
 		inline static constexpr std::array enum_list_v{
 			enum_item{"None",      Ermine::MeshKind::None},
 			enum_item{"Primitive", Ermine::MeshKind::Primitive},
-			enum_item{"Asset",     Ermine::MeshKind::Asset},
+			//enum_item{"Asset",     Ermine::MeshKind::Asset},
 		};
 	};
 
@@ -175,7 +175,7 @@ namespace xprop_utils
 		static constexpr std::pair<const char*, E> items[] = {
 			{"None",      E::None},
 			{"Primitive", E::Primitive},
-			{"Asset",     E::Asset},
+			//{"Asset",     E::Asset},
 		};
 	};
 	constexpr std::pair<const char*, Ermine::MeshKind> EnumMap<Ermine::MeshKind>::items[];
@@ -1122,13 +1122,13 @@ namespace Ermine
 				out.AddMember("primitive", p, alloc);
 				break;
 			}
-			case MeshKind::Asset: {
-				out.AddMember("kind", "Asset", alloc);
-				rapidjson::Value a(rapidjson::kObjectType);
-				a.AddMember("meshName", rapidjson::Value(asset.meshName.c_str(), alloc), alloc);
-				out.AddMember("asset", a, alloc);
-				break;
-			}
+			//case MeshKind::Asset: {
+			//	out.AddMember("kind", "Asset", alloc);
+			//	rapidjson::Value a(rapidjson::kObjectType);
+			//	a.AddMember("meshName", rapidjson::Value(asset.meshName.c_str(), alloc), alloc);
+			//	out.AddMember("asset", a, alloc);
+			//	break;
+			//}
 			default:
 				out.AddMember("kind", "None", alloc);
 				break;
@@ -1149,12 +1149,12 @@ namespace Ermine
 					// extend for other primitives
 				}
 
-				else if (strcmp(k.GetString(), "Asset") == 0) {
-					kind = MeshKind::Asset;
-					const auto& a = in["asset"];
-					if (a.HasMember("meshName") && a["meshName"].IsString()) asset.meshName = a["meshName"].GetString();
-					// Rebuild from asset if you have a mesh loader separate from Model
-				}
+				//else if (strcmp(k.GetString(), "Asset") == 0) {
+				//	kind = MeshKind::Asset;
+				//	const auto& a = in["asset"];
+				//	if (a.HasMember("meshName") && a["meshName"].IsString()) asset.meshName = a["meshName"].GetString();
+				//	// Rebuild from asset if you have a mesh loader separate from Model
+				//}
 				else {
 					kind = MeshKind::None;
 				}
@@ -1165,8 +1165,8 @@ namespace Ermine
 		XPROPERTY_DEF(
 			"Mesh", Mesh,
 			xproperty::obj_member<"kind", &Mesh::kind>,
-			xproperty::obj_member<"primitive", &Mesh::primitive>,
-			xproperty::obj_member<"asset", &Mesh::asset>
+			xproperty::obj_member<"primitive", &Mesh::primitive>
+			//xproperty::obj_member<"asset", &Mesh::asset>
 		)
 	};
 
@@ -1896,6 +1896,7 @@ namespace Ermine
 		bool castsShadows{ false };
 		bool castsRays{ false }; // For volumetric light shafts/god rays
 		glm::mat4 lightSpaceMatrices[NUM_CASCADES]{}; // For shadow mapping
+		glm::mat4 pointLightMatrices[6]{}; // Cubemap faces for point light shadows
 		int startOffset{ 0 }; // For UBO indexing
 		float innerAngle{ -1.0f }; // For spotlights
 		float outerAngle{ -1.0f }; // For spotlights
@@ -2488,6 +2489,9 @@ namespace Ermine
 	};
 }
 
+// Forward declarations for NavMesh
+struct dtNavMesh;
+struct dtNavMeshQuery;
 namespace Ermine
 {
 	/*!***********************************************************************
@@ -3264,22 +3268,30 @@ namespace Ermine
 		// Recast build config
 		float cellSize = 0.05f;
 		float cellHeight = 0.05f;
-		float agentHeight = 0.2f;
-		float agentRadius = 0.1f;
-		float agentMaxClimb = 0.1f;
+		float agentHeight = 1.0f;
+		float agentRadius = 0.5f;
+		float bakedAgentRadius = 0.0f;
+		float bakedAgentHeight = 0.0f;
+		float agentMaxClimb = 0.0f;
 		float agentMaxSlope = 45.0f;
 
 		// Debug toggles
 		bool  drawInputTri = false;
 		bool  drawWalkable = true;
-		bool  drawNavMesh = true;
+		bool  drawNavMesh = false;
 
 		// Recast transient build data
 		struct BuildData;
 		BuildData* build = nullptr;
 
 		// Detour runtime
-		struct Runtime;
+		struct Runtime
+		{
+			dtNavMesh* nav = nullptr;
+			dtNavMeshQuery* query = nullptr;
+			unsigned long long tileRef = 0;
+			//dtTileRef tileRef = 0;
+		};
 		Runtime* runtime = nullptr;
 	};
 
@@ -3294,6 +3306,13 @@ namespace Ermine
 		float stoppingDistance = 0.2f;
 		bool autoRotate = true;
 		bool debugDrawPath = true;
+
+		float radius = 0.5f;
+		float height = 1.0f;
+		float centerYOffset = 0.0f;
+
+		bool autoFitFromCollider = true;
+		bool didAutoFit = false;
 
 		bool hasPath = false;
 		Ermine::Vec3 destination{};

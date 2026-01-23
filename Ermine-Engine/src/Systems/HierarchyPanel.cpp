@@ -22,6 +22,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Physics.h"
 #include "Serialisation.h" // Added for prefab support
 #include "Selection.h"
+#include "EditorCamera.h"
 
 namespace Ermine {
     void HierarchyPanel::SetScene(Scene* scene) {
@@ -285,7 +286,7 @@ namespace Ermine {
         }
 
         // indent
-        float indent = depth * 16.0f;
+        float indent = static_cast<float>(depth) * m_indentPadding;
         if (indent > 0) ImGui::Indent(indent);
 
         // visible name + unique ID suffix
@@ -298,10 +299,6 @@ namespace Ermine {
 
         if (isSelected) nodeFlags |= ImGuiTreeNodeFlags_Selected;
         if (children.empty()) nodeFlags |= ImGuiTreeNodeFlags_Leaf;
-
-        // Auto-expand parent
-        if (HasSelectedDescendant(entity))
-            ImGui::SetNextItemOpen(true);
 
         bool nodeOpen = ImGui::TreeNodeEx(label.c_str(), nodeFlags);
 
@@ -336,6 +333,7 @@ namespace Ermine {
         {
             editor::Selection::SelectSingle(m_ActiveScene, entity);
             m_LastClickedEntity = entity;
+            editor::EditorCamera::GetInstance().Focus(ecs.GetComponent<Transform>(entity).position, 2.5f);
             ImGui::SetWindowFocus("Inspector");
         }
 
