@@ -1,4 +1,4 @@
-/* Start Header ************************************************************************/
+`/* Start Header ************************************************************************/
 /*!
 \file       HierarchyPanel.cpp
 \author     Edwin Lee Zirui, edwinzirui.lee, 2301299, edwinzirui.lee\@digipen.edu
@@ -285,7 +285,7 @@ namespace Ermine {
         }
 
         // indent
-        float indent = depth * 16.0f;
+        float indent = static_cast<float>(depth) * m_indentPadding;
         if (indent > 0) ImGui::Indent(indent);
 
         // visible name + unique ID suffix
@@ -298,10 +298,6 @@ namespace Ermine {
 
         if (isSelected) nodeFlags |= ImGuiTreeNodeFlags_Selected;
         if (children.empty()) nodeFlags |= ImGuiTreeNodeFlags_Leaf;
-
-        // Auto-expand parent
-        if (HasSelectedDescendant(entity))
-            ImGui::SetNextItemOpen(true);
 
         bool nodeOpen = ImGui::TreeNodeEx(label.c_str(), nodeFlags);
 

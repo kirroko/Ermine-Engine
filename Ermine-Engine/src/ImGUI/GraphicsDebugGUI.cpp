@@ -173,6 +173,22 @@ void GraphicsDebugGUI::DrawRenderingModeControls()
 
         ImGui::Separator();
 
+        // Ambient Lighting Toggle and Controls
+        ImGui::Text("Global Ambient Lighting");
+        
+        // Color picker for ambient light
+        if (ImGui::ColorEdit3("Ambient Color", &renderer->m_AmbientColor.r)) {
+            EE_CORE_INFO("Ambient color changed to ({:.2f}, {:.2f}, {:.2f})",
+                       renderer->m_AmbientColor.r, renderer->m_AmbientColor.g, renderer->m_AmbientColor.b);
+        }
+        DrawTooltip("RGB color of the global ambient lighting");
+
+        // Intensity slider
+        DrawFloatSlider("Ambient Intensity", &renderer->m_AmbientIntensity, 0.0f, 1.0f,
+                       "Brightness of ambient lighting (0=black, 1=full brightness)");
+
+        ImGui::Separator();
+
         // Fog Toggle
         if (DrawToggleButton("Distance-Based Fog", &renderer->m_FogEnabled,
                             "Enable/disable atmospheric fog based on distance from camera")) {

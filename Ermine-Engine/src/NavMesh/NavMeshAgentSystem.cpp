@@ -14,6 +14,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #include "PreCompile.h"
 #include "NavMeshAgentSystem.h"
+#include "Physics.h"
 
 namespace Ermine
 {
@@ -83,8 +84,10 @@ namespace Ermine
             Vec3 target = agent.path[agent.currentCorner];
             Vec3 pos = trans.position;
             Vec3 dir = target - pos;
+            dir.y = 0.0f;
 
-            float dist = std::sqrt(dir.x * dir.x + dir.y * dir.y + dir.z * dir.z);
+            //float dist = std::sqrt(dir.x * dir.x + dir.y * dir.y + dir.z * dir.z);
+            float dist = std::sqrt(dir.x * dir.x + dir.z * dir.z);
 
             // if very close to the corner, go to next one
             if (dist < agent.stoppingDistance)
@@ -109,21 +112,55 @@ namespace Ermine
                 dir.z /= dist;
 
                 // Move
-                pos += dir * agent.speed * dt;
-                trans.position = pos;
+                float step = agent.speed * dt;
+                if (step > dist) step = dist; // prevents overshoot/corner cutting
 
-                if (ecs.HasComponent<GlobalTransform>(e))
+                pos += dir * step;
+
+                // Clamp to navmesh as you already do
+                EntityID navE = FindNearestNavMeshEntity(pos);
+                if (navE != 0)
                 {
-                    auto& global = ecs.GetComponent<GlobalTransform>(e);
-                    global.worldMatrix = trans.GetLocalMatrix();
-                    global.isDirty = true;
+                    float ext[3] = { agent.radius * 2.0f, agent.height * 0.5f + 0.5f, agent.radius * 2.0f };
+
+                    Vec3 clamped;
+                    auto navSys = ecs.GetSystem<NavMeshSystem>();
+                    if (navSys && navSys->ClampToNavMesh(navE, pos, ext, clamped))
+                    {
+                        pos = clamped;
+
+                        // Navmesh point is on the floor. Your physics body wants its CENTER.
+                        pos.y += agent.centerYOffset;
+                    }
                 }
 
-                if (ecs.HasComponent<HierarchyComponent>(e))
+                // move using physics so collisions resolve
+                auto phys = ecs.GetSystem<Physics>();
+                if (phys && ecs.HasComponent<PhysicComponent>(e))
                 {
-                    auto& h = ecs.GetComponent<HierarchyComponent>(e);
-                    h.worldTransformDirty = true;
+                    phys->SetPosition(e, pos);
+
+                    // If you want rotation too (optional), keep it synced:
+                    // phys->SetRotation(e, trans.rotation);
                 }
+                else
+                {
+                    // fallback if no physics body
+                    trans.position = pos;
+                }
+
+                //if (ecs.HasComponent<GlobalTransform>(e))
+                //{
+                //    auto& global = ecs.GetComponent<GlobalTransform>(e);
+                //    global.worldMatrix = trans.GetLocalMatrix();
+                //    global.isDirty = true;
+                //}
+
+                //if (ecs.HasComponent<HierarchyComponent>(e))
+                //{
+                //    auto& h = ecs.GetComponent<HierarchyComponent>(e);
+                //    h.worldTransformDirty = true;
+                //}
             }
 
 #if defined(EE_EDITOR)
@@ -148,21 +185,71 @@ namespace Ermine
         }
     }
 
-    bool NavMeshAgentSystem::FindPath(EntityID /*agentEntity*/, const Ermine::Vec3& startPos, const Ermine::Vec3& endPos, std::vector<Ermine::Vec3>& outPath)
+    //bool NavMeshAgentSystem::FindPath(EntityID /*agentEntity*/, const Ermine::Vec3& startPos, const Ermine::Vec3& endPos, std::vector<Ermine::Vec3>& outPath)
+    //{
+    //    auto& ecs = ECS::GetInstance();
+
+    //    EntityID nearestNav = FindNearestNavMeshEntity(startPos);
+    //    if (nearestNav == 0 || !ecs.HasComponent<NavMeshComponent>(nearestNav))
+    //        return false;
+
+    //    auto navSystem = ecs.GetSystem<NavMeshSystem>();
+    //    if (!navSystem)
+    //        return false;
+
+    //    outPath.clear();
+    //    return navSystem->ComputeStraightPath(nearestNav, startPos, endPos, outPath);
+    //}
+
+    bool NavMeshAgentSystem::FindPath(EntityID agentEntity,
+        const Ermine::Vec3& startPos,
+        const Ermine::Vec3& endPos,
+        std::vector<Ermine::Vec3>& outPath)
     {
         auto& ecs = ECS::GetInstance();
+
+        if (!ecs.HasComponent<NavMeshAgent>(agentEntity))
+            return false;
+
+        const auto& agent = ecs.GetComponent<NavMeshAgent>(agentEntity);
 
         EntityID nearestNav = FindNearestNavMeshEntity(startPos);
         if (nearestNav == 0 || !ecs.HasComponent<NavMeshComponent>(nearestNav))
             return false;
 
+        const auto& navComp = ecs.GetComponent<NavMeshComponent>(nearestNav);
+        const float bakedR = navComp.bakedAgentRadius;
+        const float bakedH = navComp.bakedAgentHeight;
+
+        if (bakedR > 0.0f && agent.radius > bakedR + 1e-4f)
+        {
+            EE_CORE_ERROR("[NavMeshAgentSystem] Agent radius (%.3f) > navmesh baked radius (%.3f). Re-bake navmesh for this agent size.",
+                agent.radius, bakedR);
+            return false;
+        }
+        if (bakedH > 0.0f && agent.height > bakedH + 1e-4f)
+        {
+            EE_CORE_ERROR("[NavMeshAgentSystem] Agent height (%.3f) > navmesh baked height (%.3f). Re-bake navmesh for this agent size.",
+                agent.height, bakedH);
+            return false;
+        }
+
         auto navSystem = ecs.GetSystem<NavMeshSystem>();
         if (!navSystem)
             return false;
 
+        // extents based on the agent size (NOT 10,20,10)
+        float extents[3] =
+        {
+            agent.radius * 2.0f,
+            agent.height,
+            agent.radius * 2.0f
+        };
+
         outPath.clear();
-        return navSystem->ComputeStraightPath(nearestNav, startPos, endPos, outPath);
+        return navSystem->ComputeStraightPath(nearestNav, startPos, endPos, extents, outPath);
     }
+
 
     EntityID NavMeshAgentSystem::FindNearestNavMeshEntity(const Ermine::Vec3& pos)
     {
