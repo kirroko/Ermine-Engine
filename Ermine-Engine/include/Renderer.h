@@ -193,6 +193,7 @@ namespace Ermine::graphics
         // Debug visualization toggles
         bool m_DebugDrawAABBs = false;
         bool m_DebugDrawFrustum = false;
+        bool m_DebugDrawProbes = true; // Show light probe gizmos
 
         // Lighting Pass Parameters
         // SSAO parameters
@@ -322,6 +323,12 @@ namespace Ermine::graphics
          * @param proj Projection matrix for the camera (custom Mtx44 type).
          */
         void RenderDebugLines(const Mtx44& view, const Mtx44& proj);
+
+        /**
+         * @brief Draws debug gizmos for all active light probes in the scene.
+         * Shows probe position, influence radius, and visual state.
+         */
+        void DrawLightProbeGizmos();
 
         /*!***********************************************************************
         \brief

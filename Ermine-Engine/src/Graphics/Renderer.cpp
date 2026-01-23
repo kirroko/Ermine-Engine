@@ -3379,6 +3379,87 @@ void Renderer::RenderDebugLines(const Mtx44& view, const Mtx44& proj)
 }
 
 /**
+ * @brief Draws debug gizmos for all active light probes in the scene.
+ * Shows sphere wireframes at probe positions with color indicating state.
+ */
+void Renderer::DrawLightProbeGizmos()
+{
+	if (!m_DebugDrawProbes) return;
+
+	auto& ecs = ECS::GetInstance();
+
+	// Iterate through all entities to find probes
+	for (EntityID entity = 0; entity < MAX_ENTITIES; ++entity)
+	{
+		if (!ecs.IsEntityValid(entity)) continue;
+		if (!ecs.HasComponent<AmbientLightProbe>(entity)) continue;
+		if (!ecs.HasComponent<Transform>(entity)) continue;
+
+		auto& probe = ecs.GetComponent<AmbientLightProbe>(entity);
+		if (!probe.showGizmo) continue;
+
+		auto& transform = ecs.GetComponent<Transform>(entity);
+		Vec3 probePos = transform.position;
+
+		// Use GlobalTransform if available
+		if (ecs.HasComponent<GlobalTransform>(entity)) {
+			auto& globalTransform = ecs.GetComponent<GlobalTransform>(entity);
+			probePos = globalTransform.GetWorldPosition();
+		}
+
+		// Determine gizmo color based on probe state
+		glm::vec3 gizmoColor;
+		if (!probe.isActive) {
+			gizmoColor = glm::vec3(0.5f, 0.5f, 0.5f); // Gray for inactive
+		}
+		else {
+			gizmoColor = glm::vec3(probe.gizmoColor.x, probe.gizmoColor.y, probe.gizmoColor.z);
+		}
+
+		// Draw sphere wireframe to represent influence radius
+		glm::vec3 center(probePos.x, probePos.y, probePos.z);
+		float radius = probe.influenceRadius;
+
+		// Draw circles in 3 orthogonal planes
+		const int segments = 24;
+		const float angleStep = 2.0f * 3.14159265f / segments;
+
+		// XY plane circle
+		for (int i = 0; i < segments; ++i) {
+			float angle1 = i * angleStep;
+			float angle2 = (i + 1) * angleStep;
+			glm::vec3 p1 = center + glm::vec3(cosf(angle1) * radius, sinf(angle1) * radius, 0.0f);
+			glm::vec3 p2 = center + glm::vec3(cosf(angle2) * radius, sinf(angle2) * radius, 0.0f);
+			SubmitDebugLine(p1, p2, gizmoColor);
+		}
+
+		// XZ plane circle
+		for (int i = 0; i < segments; ++i) {
+			float angle1 = i * angleStep;
+			float angle2 = (i + 1) * angleStep;
+			glm::vec3 p1 = center + glm::vec3(cosf(angle1) * radius, 0.0f, sinf(angle1) * radius);
+			glm::vec3 p2 = center + glm::vec3(cosf(angle2) * radius, 0.0f, sinf(angle2) * radius);
+			SubmitDebugLine(p1, p2, gizmoColor);
+		}
+
+		// YZ plane circle
+		for (int i = 0; i < segments; ++i) {
+			float angle1 = i * angleStep;
+			float angle2 = (i + 1) * angleStep;
+			glm::vec3 p1 = center + glm::vec3(0.0f, cosf(angle1) * radius, sinf(angle1) * radius);
+			glm::vec3 p2 = center + glm::vec3(0.0f, cosf(angle2) * radius, sinf(angle2) * radius);
+			SubmitDebugLine(p1, p2, gizmoColor);
+		}
+
+		// Draw center crosshair
+		float crossSize = radius * 0.1f;
+		SubmitDebugLine(center - glm::vec3(crossSize, 0, 0), center + glm::vec3(crossSize, 0, 0), gizmoColor);
+		SubmitDebugLine(center - glm::vec3(0, crossSize, 0), center + glm::vec3(0, crossSize, 0), gizmoColor);
+		SubmitDebugLine(center - glm::vec3(0, 0, crossSize), center + glm::vec3(0, 0, crossSize), gizmoColor);
+	}
+}
+
+/**
  * @brief Complete deferred rendering pipeline
  * @param view The view matrix
  * @param projection The projection matrix
@@ -3450,6 +3531,7 @@ void Renderer::RenderDeferredPipeline(const Mtx44& view, const Mtx44& projection
 		if (auto physics = ECS::GetInstance().GetSystem<Physics>()) {
 			physics->DrawDebugPhysics();
 		}
+		DrawLightProbeGizmos(); // Draw probe gizmos
 		RenderDebugLines(view, projection);
 	}
 
@@ -7237,6 +7319,7 @@ void Renderer::SetProbeSHFromDirectionalLight(EntityID entity, const Vec3& skyCo
  */
 bool Renderer::CaptureLightProbe(const Vec3& probePosition, EntityID entity)
 {
+	(void)probePosition; // Currently unused - would be used for raytracing/cubemap capture
 	auto& ecs = ECS::GetInstance();
 	if (!ecs.HasComponent<AmbientLightProbe>(entity)) {
 		EE_CORE_WARN("Entity {0} does not have AmbientLightProbe component", entity);
@@ -7333,4 +7416,47 @@ Ermine::EntityID Renderer::CreateLightProbeEntity(const Vec3& position, float in
 	            probeEntity, position.x, position.y, position.z, influenceRadius);
 	
 	return probeEntity;
+}
+
+/**
+ * @brief Updates light probe uniforms in the current shader.
+ * Gathers probes, interpolates SH at camera position, and uploads to shader.
+ * Should be called before rendering with light probe-enabled shaders.
+ */
+void Renderer::UpdateLightProbeUniforms()
+{
+	if (!m_UseLightProbes || !m_LightPassShader) {
+		return;
+	}
+
+	// Gather light probes from scene (updates cache if dirty)
+	GatherLightProbes();
+
+	// Get camera position for probe interpolation
+	Vec3 cameraPos = Vec3{ 0.0f, 0.0f, 0.0f };
+	auto cameraSystem = ECS::GetInstance().GetSystem<CameraSystem>();
+	if (cameraSystem && !cameraSystem->m_Entities.empty()) {
+		EntityID cameraEntity = *cameraSystem->m_Entities.begin(); // Get first entity from set
+		auto& ecs = ECS::GetInstance();
+		if (ecs.HasComponent<Transform>(cameraEntity)) {
+			auto& trans = ecs.GetComponent<Transform>(cameraEntity);
+			cameraPos = trans.position;
+			// Use GlobalTransform if available
+			if (ecs.HasComponent<GlobalTransform>(cameraEntity)) {
+				auto& globalTrans = ecs.GetComponent<GlobalTransform>(cameraEntity);
+				cameraPos = globalTrans.GetWorldPosition();
+			}
+		}
+	}
+
+	// Interpolate SH coefficients at camera position
+	glm::vec3 interpolatedSH[9];
+	InterpolateProbeSH(cameraPos, interpolatedSH);
+
+	// Upload to shader (assumes shader is already bound)
+	m_LightPassShader->SetUniform1i("u_UseLightProbes", 1);
+	for (int i = 0; i < 9; ++i) {
+		std::string uniformName = "u_LightProbeSH[" + std::to_string(i) + "]";
+		m_LightPassShader->SetUniform3f(uniformName, interpolatedSH[i]);
+	}
 }

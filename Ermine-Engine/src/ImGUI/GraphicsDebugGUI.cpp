@@ -107,6 +107,7 @@ void GraphicsDebugGUI::Render()
     DrawPostProcessingControls();
     DrawShadowMappingControls();
     DrawLightingControls();
+    DrawLightProbeTools();
     DrawPerformanceMetrics();
     DrawShaderControls();
 
@@ -547,6 +548,11 @@ void GraphicsDebugGUI::DrawPerformanceMetrics()
                 EE_CORE_INFO("Frustum visualization {}", renderer->m_DebugDrawFrustum ? "enabled" : "disabled");
             }
 
+            if (DrawToggleButton("Show Light Probe Gizmos", &renderer->m_DebugDrawProbes,
+                                "Draw light probe spheres showing influence radius")) {
+                EE_CORE_INFO("Probe gizmos {}", renderer->m_DebugDrawProbes ? "enabled" : "disabled");
+            }
+
             ImGui::Separator();
 
             // Draw Data Rebuild Control
@@ -636,3 +642,311 @@ void GraphicsDebugGUI::DrawShaderControls()
     DrawTooltip("Recompile all cached shaders from disk");
     ImGui::Unindent(10.0f);
 }
+
+/**
+ * @brief Draws comprehensive light probe testing and management tools
+ */
+void GraphicsDebugGUI::DrawLightProbeTools()
+{
+    auto renderer = ECS::GetInstance().GetSystem<Renderer>();
+    if (!renderer) return;
+
+    if (ImGui::CollapsingHeader("Light Probe Tools & Testing", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        ImGui::Indent(10.0f);
+
+        // === PROBE CREATION TOOLS ===
+        if (ImGui::TreeNode("Probe Creation"))
+        {
+            static float probeRadius = 10.0f;
+            static float probeSpacing = 5.0f;
+            static char probeName[128] = "TestProbe";
+            static float probePos[3] = { 0.0f, 0.0f, 0.0f };
+
+            ImGui::InputText("Probe Name", probeName, sizeof(probeName));
+            DrawTooltip("Name for the new probe entity");
+
+            ImGui::DragFloat3("Position", probePos, 0.1f);
+            DrawTooltip("World-space position for the new probe");
+
+            DrawFloatSlider("Influence Radius", &probeRadius, 1.0f, 50.0f,
+                           "How far this probe affects surrounding areas");
+
+            if (ImGui::Button("Create Single Probe", ImVec2(200, 0)))
+            {
+                Vec3 position = Vec3{ probePos[0], probePos[1], probePos[2] };
+                EntityID newProbe = renderer->CreateLightProbeEntity(position, probeRadius, probeName);
+                EE_CORE_INFO("Created probe entity {} at ({}, {}, {})", newProbe, position.x, position.y, position.z);
+            }
+            DrawTooltip("Create a new light probe at the specified position");
+
+            ImGui::Separator();
+
+            // Grid generation
+            ImGui::Text("Grid Generation");
+            static int gridX = 3, gridY = 1, gridZ = 3;
+            ImGui::DragInt("Grid X", &gridX, 0.1f, 1, 20);
+            ImGui::DragInt("Grid Y", &gridY, 0.1f, 1, 10);
+            ImGui::DragInt("Grid Z", &gridZ, 0.1f, 1, 20);
+            DrawFloatSlider("Probe Spacing", &probeSpacing, 2.0f, 20.0f,
+                           "Distance between probes in the grid");
+
+            if (ImGui::Button("Generate Probe Grid", ImVec2(200, 0)))
+            {
+                Vec3 startPos = Vec3{ probePos[0], probePos[1], probePos[2] };
+                int count = 0;
+                for (int x = 0; x < gridX; ++x) {
+                    for (int y = 0; y < gridY; ++y) {
+                        for (int z = 0; z < gridZ; ++z) {
+                            Vec3 gridPos = Vec3{
+                                startPos.x + x * probeSpacing,
+                                startPos.y + y * probeSpacing,
+                                startPos.z + z * probeSpacing
+                            };
+                            std::string name = std::string(probeName) + "_" + std::to_string(count++);
+                            renderer->CreateLightProbeEntity(gridPos, probeRadius, name);
+                        }
+                    }
+                }
+                EE_CORE_INFO("Generated {} probes in a {}x{}x{} grid", count, gridX, gridY, gridZ);
+            }
+            DrawTooltip("Create a grid of probes for volumetric coverage");
+
+            ImGui::TreePop();
+        }
+
+        ImGui::Separator();
+
+        // === PROBE MANAGEMENT ===
+        if (ImGui::TreeNode("Probe Management"))
+        {
+            auto& ecs = ECS::GetInstance();
+            std::vector<EntityID> probeEntities;
+
+            // Find all probe entities
+            for (EntityID entity = 0; entity < MAX_ENTITIES; ++entity) {
+                if (!ecs.IsEntityValid(entity)) continue;
+                if (ecs.HasComponent<AmbientLightProbe>(entity)) {
+                    probeEntities.push_back(entity);
+                }
+            }
+
+            ImGui::Text("Total Probes in Scene: %zu", probeEntities.size());
+
+            if (!probeEntities.empty())
+            {
+                static int selectedProbeIdx = 0;
+                selectedProbeIdx = std::clamp(selectedProbeIdx, 0, (int)probeEntities.size() - 1);
+
+                // Probe selector
+                if (ImGui::BeginCombo("Select Probe", std::to_string(probeEntities[selectedProbeIdx]).c_str()))
+                {
+                    for (size_t i = 0; i < probeEntities.size(); ++i) {
+                        EntityID entity = probeEntities[i];
+                        bool isSelected = (selectedProbeIdx == i);
+                        std::string label = "Entity " + std::to_string(entity);
+                        
+                        if (ecs.HasComponent<ObjectMetaData>(entity)) {
+                            auto& meta = ecs.GetComponent<ObjectMetaData>(entity);
+                            label = meta.name + " (ID:" + std::to_string(entity) + ")";
+                        }
+
+                        if (ImGui::Selectable(label.c_str(), isSelected)) {
+                            selectedProbeIdx = i;
+                        }
+                        if (isSelected) {
+                            ImGui::SetItemDefaultFocus();
+                        }
+                    }
+                    ImGui::EndCombo();
+                }
+
+                EntityID selectedEntity = probeEntities[selectedProbeIdx];
+                auto& probe = ecs.GetComponent<AmbientLightProbe>(selectedEntity);
+
+                // Probe properties editor
+                ImGui::Separator();
+                ImGui::Text("Probe Properties:");
+
+                ImGui::Checkbox("Active##probe", &probe.isActive);
+                ImGui::Checkbox("Use Spherical Harmonics", &probe.useSphericalHarmonics);
+                ImGui::Checkbox("Show Gizmo", &probe.showGizmo);
+
+                DrawFloatSlider("Influence Radius##edit", &probe.influenceRadius, 1.0f, 100.0f,
+                               "Radius of influence for this probe");
+                DrawFloatSlider("Blend Weight##edit", &probe.blendWeight, 0.0f, 2.0f,
+                               "Weight for blending (1.0 = normal)");
+
+                if (ImGui::ColorEdit3("Gizmo Color", &probe.gizmoColor.x)) {
+                    // Color updated
+                }
+
+                // Position info
+                if (ecs.HasComponent<Transform>(selectedEntity)) {
+                    auto& trans = ecs.GetComponent<Transform>(selectedEntity);
+                    ImGui::Text("Position: (%.2f, %.2f, %.2f)", trans.position.x, trans.position.y, trans.position.z);
+                }
+
+                ImGui::Separator();
+
+                // Capture button
+                if (ImGui::Button("Capture Lighting##selected", ImVec2(200, 0)))
+                {
+                    Vec3 probePos = Vec3{ 0, 0, 0 };
+                    if (ecs.HasComponent<Transform>(selectedEntity)) {
+                        probePos = ecs.GetComponent<Transform>(selectedEntity).position;
+                    }
+                    if (renderer->CaptureLightProbe(probePos, selectedEntity)) {
+                        EE_CORE_INFO("Captured lighting for probe {}", selectedEntity);
+                        renderer->m_LightProbesDirty = true;
+                    }
+                }
+                DrawTooltip("Capture ambient lighting from the scene at this probe's position");
+
+                if (ImGui::Button("Delete Probe##selected", ImVec2(200, 0)))
+                {
+                    ecs.DestroyEntity(selectedEntity);
+                    EE_CORE_INFO("Deleted probe entity {}", selectedEntity);
+                    renderer->m_LightProbesDirty = true;
+                    selectedProbeIdx = 0;
+                }
+                DrawTooltip("Delete this probe entity");
+
+                ImGui::Separator();
+
+                // SH Coefficient Viewer
+                if (ImGui::TreeNode("SH Coefficients (Advanced)"))
+                {
+                    ImGui::Text("Spherical Harmonics L2 (9 RGB coefficients):");
+                    for (int i = 0; i < 9; ++i) {
+                        std::string label = "SH[" + std::to_string(i) + "]";
+                        ImGui::ColorEdit3(label.c_str(), &probe.shCoefficients[i].x);
+                    }
+                    ImGui::TreePop();
+                }
+            }
+            else
+            {
+                ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.0f, 1.0f), "No probes in scene. Create some above!");
+            }
+
+            ImGui::TreePop();
+        }
+
+        ImGui::Separator();
+
+        // === BATCH OPERATIONS ===
+        if (ImGui::TreeNode("Batch Operations"))
+        {
+            auto& ecs = ECS::GetInstance();
+            
+            if (ImGui::Button("Capture All Probes", ImVec2(200, 0)))
+            {
+                int capturedCount = 0;
+                for (EntityID entity = 0; entity < MAX_ENTITIES; ++entity) {
+                    if (!ecs.IsEntityValid(entity)) continue;
+                    if (!ecs.HasComponent<AmbientLightProbe>(entity)) continue;
+                    
+                    Vec3 probePos = Vec3{ 0, 0, 0 };
+                    if (ecs.HasComponent<Transform>(entity)) {
+                        probePos = ecs.GetComponent<Transform>(entity).position;
+                    }
+                    
+                    if (renderer->CaptureLightProbe(probePos, entity)) {
+                        capturedCount++;
+                    }
+                }
+                EE_CORE_INFO("Captured lighting for {} probes", capturedCount);
+                renderer->m_LightProbesDirty = true;
+            }
+            DrawTooltip("Capture ambient lighting for ALL probes in the scene");
+
+            if (ImGui::Button("Delete All Probes", ImVec2(200, 0)))
+            {
+                std::vector<EntityID> toDelete;
+                for (EntityID entity = 0; entity < MAX_ENTITIES; ++entity) {
+                    if (!ecs.IsEntityValid(entity)) continue;
+                    if (ecs.HasComponent<AmbientLightProbe>(entity)) {
+                        toDelete.push_back(entity);
+                    }
+                }
+                for (EntityID entity : toDelete) {
+                    ecs.DestroyEntity(entity);
+                }
+                EE_CORE_INFO("Deleted {} probe entities", toDelete.size());
+                renderer->m_LightProbesDirty = true;
+            }
+            DrawTooltip("WARNING: Deletes ALL probe entities in the scene");
+
+            ImGui::TreePop();
+        }
+
+        ImGui::Separator();
+
+        // === TESTING & VISUALIZATION ===
+        if (ImGui::TreeNode("Testing & Visualization"))
+        {
+            ImGui::Text("Probe System Status:");
+            ImGui::Text("  System Enabled: %s", renderer->m_UseLightProbes ? "YES" : "NO");
+            ImGui::Text("  Cached Probes: %zu", renderer->GetLightProbeCount());
+            ImGui::Text("  Cache Dirty: %s", renderer->m_LightProbesDirty ? "YES" : "NO");
+            ImGui::Text("  Max Blend Probes: %d", renderer->m_MaxLightProbes);
+
+            ImGui::Separator();
+
+            // Test different probe setups
+            ImGui::Text("Quick Test Setups:");
+            
+            if (ImGui::Button("Setup: Outdoor Day", ImVec2(200, 0)))
+            {
+                // Create a single probe with outdoor day lighting
+                Vec3 pos = Vec3{ 0.0f, 0.0f, 0.0f };
+                EntityID probe = renderer->CreateLightProbeEntity(pos, 50.0f, "OutdoorDay");
+                
+                Vec3 skyColor = Vec3{ 0.5f, 0.7f, 1.0f };  // Blue sky
+                Vec3 groundColor = Vec3{ 0.3f, 0.25f, 0.2f }; // Brown ground
+                Vec3 lightDir = Vec3{ 0.5f, -1.0f, 0.3f };
+                Vec3 lightColor = Vec3{ 1.0f, 0.95f, 0.85f }; // Warm sunlight
+                
+                renderer->SetProbeSHFromDirectionalLight(probe, skyColor, groundColor, lightDir, lightColor, 1.2f);
+                renderer->m_LightProbesDirty = true;
+                EE_CORE_INFO("Created outdoor day probe setup");
+            }
+
+            if (ImGui::Button("Setup: Indoor Warm", ImVec2(200, 0)))
+            {
+                Vec3 pos = Vec3{ 0.0f, 0.0f, 0.0f };
+                EntityID probe = renderer->CreateLightProbeEntity(pos, 20.0f, "IndoorWarm");
+                
+                Vec3 skyColor = Vec3{ 0.8f, 0.7f, 0.6f };  // Warm ceiling
+                Vec3 groundColor = Vec3{ 0.4f, 0.3f, 0.25f };
+                Vec3 lightDir = Vec3{ 0.0f, -1.0f, 0.0f };
+                Vec3 lightColor = Vec3{ 1.0f, 0.9f, 0.7f };
+                
+                renderer->SetProbeSHFromDirectionalLight(probe, skyColor, groundColor, lightDir, lightColor, 0.8f);
+                renderer->m_LightProbesDirty = true;
+                EE_CORE_INFO("Created indoor warm probe setup");
+            }
+
+            if (ImGui::Button("Setup: Night/Cool", ImVec2(200, 0)))
+            {
+                Vec3 pos = Vec3{ 0.0f, 0.0f, 0.0f };
+                EntityID probe = renderer->CreateLightProbeEntity(pos, 30.0f, "NightCool");
+                
+                Vec3 skyColor = Vec3{ 0.1f, 0.15f, 0.3f };  // Dark blue night
+                Vec3 groundColor = Vec3{ 0.05f, 0.05f, 0.1f };
+                Vec3 lightDir = Vec3{ 0.2f, -0.8f, 0.5f };
+                Vec3 lightColor = Vec3{ 0.6f, 0.7f, 0.9f }; // Cool moonlight
+                
+                renderer->SetProbeSHFromDirectionalLight(probe, skyColor, groundColor, lightDir, lightColor, 0.3f);
+                renderer->m_LightProbesDirty = true;
+                EE_CORE_INFO("Created night/cool probe setup");
+            }
+
+            ImGui::TreePop();
+        }
+
+        ImGui::Unindent(10.0f);
+    }
+}
+
