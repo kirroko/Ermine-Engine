@@ -213,7 +213,7 @@ bool Model::LoadMeshFile(const std::string& path)
     }
 
     // Add mesh to model with all metadata
-    MeshData meshData{ vao, vbo, ibo, glm::mat4(1.0f), meshID, aabbMin, aabbMax };
+    MeshData meshData{ vao, vbo, ibo, glm::mat4(1.0f), meshID, aabbMin, aabbMax, {}, {}, {} };
     m_meshes.push_back(meshData);
 
     // Success! Log the results
@@ -401,7 +401,27 @@ bool Model::LoadSkinFile(const std::string& path)
     }
 
     // Add mesh to model with all metadata
-    MeshData meshData{ vao, vbo, ibo, glm::mat4(1.0f), meshID, aabbMin, aabbMax };
+    std::vector<glm::vec3> boneAabbMin(boneCount, glm::vec3(FLT_MAX));
+    std::vector<glm::vec3> boneAabbMax(boneCount, glm::vec3(-FLT_MAX));
+    std::vector<uint8_t> boneAabbValid(boneCount, 0);
+    for (const auto& v : vertices) {
+        glm::vec3 pos(v.position[0], v.position[1], v.position[2]);
+        for (int j = 0; j < MAX_BONE_INFLUENCE; ++j) {
+            if (v.Weights[j] <= 0.0f) {
+                continue;
+            }
+            int boneID = v.IDs[j];
+            if (boneID < 0 || boneID >= static_cast<int>(boneCount)) {
+                continue;
+            }
+            boneAabbMin[boneID] = glm::min(boneAabbMin[boneID], pos);
+            boneAabbMax[boneID] = glm::max(boneAabbMax[boneID], pos);
+            boneAabbValid[boneID] = 1;
+        }
+    }
+
+    MeshData meshData{ vao, vbo, ibo, glm::mat4(1.0f), meshID, aabbMin, aabbMax,
+        std::move(boneAabbMin), std::move(boneAabbMax), std::move(boneAabbValid) };
     m_meshes.push_back(meshData);
 
     // Initialize bone transforms to identity
@@ -459,8 +479,19 @@ void Model::LoadModel(const std::string& path)
 
     EE_CORE_INFO("  Processed {} meshes from model", m_meshes.size());
 
+    const size_t boneCount = m_BoneOffsets.size();
+    if (boneCount > 0) {
+        for (auto& mesh : m_meshes) {
+            if (mesh.boneAabbMin.size() < boneCount) {
+                mesh.boneAabbMin.resize(boneCount, glm::vec3(FLT_MAX));
+                mesh.boneAabbMax.resize(boneCount, glm::vec3(-FLT_MAX));
+                mesh.boneAabbValid.resize(boneCount, 0);
+            }
+        }
+    }
+
     // Init bone transforms to identity
-    m_BoneTransforms.resize(m_BoneOffsets.size(), glm::mat4(1.0f));
+    m_BoneTransforms.resize(boneCount, glm::mat4(1.0f));
 }
 
 /**
@@ -571,6 +602,25 @@ MeshData Model::ProcessMesh(aiMesh* mesh)
                 vertices[i].Weights[j] /= total;
     }
 
+    std::vector<glm::vec3> boneAabbMin(m_BoneOffsets.size(), glm::vec3(FLT_MAX));
+    std::vector<glm::vec3> boneAabbMax(m_BoneOffsets.size(), glm::vec3(-FLT_MAX));
+    std::vector<uint8_t> boneAabbValid(m_BoneOffsets.size(), 0);
+    for (const auto& v : vertices) {
+        glm::vec3 pos(v.position[0], v.position[1], v.position[2]);
+        for (int j = 0; j < MAX_BONE_INFLUENCE; ++j) {
+            if (v.Weights[j] <= 0.0f) {
+                continue;
+            }
+            int boneID = v.IDs[j];
+            if (boneID < 0 || boneID >= static_cast<int>(boneAabbMin.size())) {
+                continue;
+            }
+            boneAabbMin[boneID] = glm::min(boneAabbMin[boneID], pos);
+            boneAabbMax[boneID] = glm::max(boneAabbMax[boneID], pos);
+            boneAabbValid[boneID] = 1;
+        }
+    }
+
     // Build indices
     for (unsigned int i = 0; i < mesh->mNumFaces; ++i)
     {
@@ -667,10 +717,11 @@ MeshData Model::ProcessMesh(aiMesh* mesh)
             aabbMax = glm::max(aabbMax, pos);
         }
 
-        return MeshData{ vao, vbo, ibo, glm::mat4(1.0f), meshID, aabbMin, aabbMax };
+        return MeshData{ vao, vbo, ibo, glm::mat4(1.0f), meshID, aabbMin, aabbMax,
+            std::move(boneAabbMin), std::move(boneAabbMax), std::move(boneAabbValid) };
     }
 
-    return MeshData{ vao, vbo, ibo, glm::mat4(1.0f) };
+    return MeshData{ vao, vbo, ibo, glm::mat4(1.0f), "", glm::vec3(0.0f), glm::vec3(0.0f), {}, {}, {} };
 
 }
 

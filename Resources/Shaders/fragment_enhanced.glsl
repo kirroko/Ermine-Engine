@@ -80,8 +80,9 @@ struct Light {
     vec4 position_type;    // xyz = position (view space), w = light type
     vec4 color_intensity;  // xyz = color, w = intensity
     vec4 direction_range;  // xyz = direction (view space), w = range
-    vec4 spot_angles_castshadows_startOffset; // x = inner angle (cos), y = outer angle (cos), z = flags bitfield (bit 0: castsShadows, bit 1: castsRays), w = shadow map index or 0 if no shadows
+    vec4 spot_angles_castshadows_startOffset; // x = inner angle (cos), y = outer angle (cos), z = flags bitfield (bit 0: castsShadows, bit 1: castsRays), w = shadow base layer or -1 if no shadows
     mat4 lightSpaceMatrix[NUM_CASCADES]; // Light view-projection matrices for cascaded shadow maps
+    mat4 pointLightMatrices[6]; // Point light shadow matrices for cubemap faces
     vec4 splitDepths[(NUM_CASCADES + 3) / 4]; // Split depths for cascaded shadow maps
 };
 

@@ -1896,6 +1896,7 @@ namespace Ermine
 		bool castsShadows{ false };
 		bool castsRays{ false }; // For volumetric light shafts/god rays
 		glm::mat4 lightSpaceMatrices[NUM_CASCADES]{}; // For shadow mapping
+		glm::mat4 pointLightMatrices[6]{}; // Cubemap faces for point light shadows
 		int startOffset{ 0 }; // For UBO indexing
 		float innerAngle{ -1.0f }; // For spotlights
 		float outerAngle{ -1.0f }; // For spotlights

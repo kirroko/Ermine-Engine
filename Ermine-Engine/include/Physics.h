@@ -275,6 +275,8 @@ namespace Ermine
 
 		void RemovePhysic(EntityID ID);
 
+		bool HasPhysicComp(EntityID ID);
+
 		void ForceUpdate();
 		
 		// Shared pointer to the debug renderer used for visualizing physics.
