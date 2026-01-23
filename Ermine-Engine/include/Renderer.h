@@ -213,6 +213,10 @@ namespace Ermine::graphics
         float m_FogEnd = 200.0f;      // For linear fog
 		float m_FogHeightCoefficient = 0.1f; // For height-based fog
 		float m_FogHeightFalloff = 10.0f;      // For height-based fog
+
+        // Ambient lighting parameters
+        glm::vec3 m_AmbientColor = glm::vec3(1.0f, 1.0f, 1.0f);  // RGB color of ambient light
+        float m_AmbientIntensity = 0.08f;  // Intensity multiplier for ambient light
         
         // Post-processing uniforms - toggles
         bool m_VignetteEnabled = false;
