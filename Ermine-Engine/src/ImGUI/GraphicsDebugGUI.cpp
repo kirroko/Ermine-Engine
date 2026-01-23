@@ -891,6 +891,36 @@ void GraphicsDebugGUI::DrawLightProbeTools()
             ImGui::Text("  Cached Probes: %zu", renderer->GetLightProbeCount());
             ImGui::Text("  Cache Dirty: %s", renderer->m_LightProbesDirty ? "YES" : "NO");
             ImGui::Text("  Max Blend Probes: %d", renderer->m_MaxLightProbes);
+            ImGui::Text("  Gizmo Drawing: %s", renderer->m_DebugDrawProbes ? "ENABLED" : "DISABLED");
+
+            if (ImGui::Button("Print Probe Debug Info", ImVec2(200, 0)))
+            {
+                auto& ecs = ECS::GetInstance();
+                int totalProbes = 0;
+                int visibleProbes = 0;
+                
+                for (EntityID entity = 0; entity < MAX_ENTITIES; ++entity) {
+                    if (!ecs.IsEntityValid(entity)) continue;
+                    if (!ecs.HasComponent<AmbientLightProbe>(entity)) continue;
+                    
+                    totalProbes++;
+                    auto& probe = ecs.GetComponent<AmbientLightProbe>(entity);
+                    
+                    if (probe.showGizmo) visibleProbes++;
+                    
+                    Vec3 pos = Vec3{0, 0, 0};
+                    if (ecs.HasComponent<Transform>(entity)) {
+                        pos = ecs.GetComponent<Transform>(entity).position;
+                    }
+                    
+                    EE_CORE_INFO("Probe Entity {}: pos=({:.1f},{:.1f},{:.1f}) active={} showGizmo={} radius={:.1f}",
+                        entity, pos.x, pos.y, pos.z, probe.isActive, probe.showGizmo, probe.influenceRadius);
+                }
+                
+                EE_CORE_INFO("Total probes: {} | Visible gizmos: {} | m_DebugDrawProbes: {}",
+                    totalProbes, visibleProbes, renderer->m_DebugDrawProbes);
+            }
+            DrawTooltip("Print detailed info about all probes to console");
 
             ImGui::Separator();
 

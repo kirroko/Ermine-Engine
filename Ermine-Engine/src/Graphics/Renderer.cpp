@@ -3387,6 +3387,7 @@ void Renderer::DrawLightProbeGizmos()
 	if (!m_DebugDrawProbes) return;
 
 	auto& ecs = ECS::GetInstance();
+	int probeCount = 0;
 
 	// Iterate through all entities to find probes
 	for (EntityID entity = 0; entity < MAX_ENTITIES; ++entity)
@@ -3397,6 +3398,8 @@ void Renderer::DrawLightProbeGizmos()
 
 		auto& probe = ecs.GetComponent<AmbientLightProbe>(entity);
 		if (!probe.showGizmo) continue;
+
+		probeCount++;
 
 		auto& transform = ecs.GetComponent<Transform>(entity);
 		Vec3 probePos = transform.position;
@@ -3550,6 +3553,9 @@ void Renderer::RenderDeferredPipeline(const Mtx44& view, const Mtx44& projection
 			navSys->DebugDraw();
 			navSys->DebugHighLight();
 		}
+
+		// Draw light probe gizmos
+		DrawLightProbeGizmos();
 
 		// Flush the navmesh debug lines to screen
 		RenderDebugLines(view, projection);
