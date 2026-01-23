@@ -1337,10 +1337,83 @@ namespace
 
 		auto hs = ecs.GetSystem<HierarchySystem>();
 		auto parentID = hs->GetParent(id);
+
 		MonoObject* obj = CreateManagedTransformWrapper(parentID);
 		SetComponentGameObject(obj, parentID);
 		return obj;
 	}
+
+	void icall_transform_add_child(MonoObject* thisObj, MonoObject* childObj)
+	{
+		using namespace Ermine;
+
+		auto& ecs = ECS::GetInstance();
+
+		EntityID parentID = GetEntityIDFromManaged(thisObj);
+		EntityID childID = childObj ? GetEntityIDFromManaged(childObj) : 0;
+
+		// Validate parent
+		if (parentID == 0 || !ecs.IsEntityValid(parentID) || !ecs.HasComponent<Transform>(parentID))
+			return;
+
+		// Validate child
+		if (childID == 0 || !ecs.IsEntityValid(childID) || !ecs.HasComponent<Transform>(childID))
+			return;
+
+		// Prevent self-parenting
+		if (parentID == childID)
+		{
+			EE_CORE_WARN("Cannot add entity {} as a child of itself", parentID);
+			return;
+		}
+
+		// Use HierarchySystem
+		if (auto hs = ecs.GetSystem<HierarchySystem>())
+		{
+			hs->SetParent(childID, parentID);
+		}
+		else
+		{
+			EE_CORE_WARN("HierarchySystem not available. Failed to add child.");
+		}
+	}
+
+	void icall_transform_remove_child(MonoObject* thisObj, MonoObject* childObj)
+	{
+		using namespace Ermine;
+
+		auto& ecs = ECS::GetInstance();
+
+		EntityID parentID = GetEntityIDFromManaged(thisObj);
+		EntityID childID = childObj ? GetEntityIDFromManaged(childObj) : 0;
+
+		// Validate parent
+		if (parentID == 0 || !ecs.IsEntityValid(parentID) || !ecs.HasComponent<Transform>(parentID))
+			return;
+
+		// Validate child
+		if (childID == 0 || !ecs.IsEntityValid(childID) || !ecs.HasComponent<Transform>(childID))
+			return;
+
+		if (auto hs = ecs.GetSystem<HierarchySystem>())
+		{
+			// Make sure this child actually belongs to this parent
+			if (hs->GetParent(childID) != parentID)
+			{
+				EE_CORE_WARN("Entity {} is not a child of {}", childID, parentID);
+				return;
+			}
+
+			// Unparent parent = 0 (world root)
+			hs->SetParent(childID, 0);
+		}
+		else
+		{
+			EE_CORE_WARN("HierarchySystem not available. Failed to remove child.");
+		}
+	}
+
+
 
 	MonoObject* icall_transform_get_transform_by_name([[maybe_unused]] MonoObject* thisObj, MonoString* name)
 	{
@@ -2847,6 +2920,8 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	mono_add_internal_call("ErmineEngine.Transform::Internal_GetWorldRight", (const void*)icall_transform_get_world_right);
 	mono_add_internal_call("ErmineEngine.Transform::Internal_GetWorldUp", (const void*)icall_transform_get_world_up);
 	mono_add_internal_call("ErmineEngine.Transform::Internal_GetParentTransform", (const void*)icall_transform_get_transform_parent);
+	mono_add_internal_call("ErmineEngine.Transform::Internal_AddChild", (const void*)icall_transform_add_child);
+	mono_add_internal_call("ErmineEngine.Transform::Internal_RemoveChild", (const void*)icall_transform_remove_child);
 	mono_add_internal_call("ErmineEngine.Transform::Internal_GetChildTransformByName", (const void*)icall_transform_get_transform_by_name);
 	mono_add_internal_call("ErmineEngine.Transform::Internal_GetChildTransformByIndex", (const void*)icall_transform_get_transform_by_index);
 #pragma endregion
