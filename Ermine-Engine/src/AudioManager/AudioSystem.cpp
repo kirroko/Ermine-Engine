@@ -23,6 +23,7 @@ class ECS;
 using namespace Ermine;
 
 bool AudioSystem::s_initialized = false;
+bool AudioSystem::s_isPaused = false;
 
 void GlobalAudioComponent::PlayMusic(int index) {
     AudioSystem::PlayGlobalMusic(*this, index);
@@ -287,21 +288,51 @@ void AudioSystem::Init()
     }
 }
 
+void AudioSystem::PauseAll()
+{
+    if (s_isPaused) return; // Already paused
+
+    //std::cout << "=== PAUSING ALL AUDIO ===" << std::endl;
+    CAudioEngine::PauseAllChannels(); // Pause instead of stop
+    s_isPaused = true;
+}
+
+void AudioSystem::ResumeAll()
+{
+    if (!s_isPaused) return; // Not paused
+
+    //std::cout << "=== RESUMING ALL AUDIO ===" << std::endl;
+    CAudioEngine::ResumeAllChannels(); // Resume all paused channels
+    s_isPaused = false;
+}
+
 void AudioSystem::Update()
 {
     auto& ecs = ECS::GetInstance();
-    static bool s_WasPlaying = false; // Track previous state
-    static bool s_HasAutoPlayed = false; // ← ADD THIS LINE
+    static bool s_WasPlaying = false;
+    static bool s_HasAutoPlayed = false;
 
     bool isPlaying = (editor::EditorGUI::s_state == editor::EditorGUI::SimState::playing);
 
-    // Handle STOPPED/PAUSED state
+    // Handle PAUSED state (different from STOPPED)
+    if (editor::EditorGUI::s_state == editor::EditorGUI::SimState::paused)
+    {
+        if (!s_isPaused)
+        {
+            PauseAll(); // Pause all audio instead of stopping
+        }
+
+        CAudioEngine::Update(); // Still update FMOD (for pause state)
+        return;
+    }
+
+    // Handle STOPPED state (complete stop)
     if (!isPlaying)
     {
         if (s_WasPlaying)
         {
             std::cout << "=== STOPPING ALL AUDIO ===" << std::endl;
-            CAudioEngine::StopAllChannels();
+            CAudioEngine::StopAllChannels(); // Complete stop
 
             // Clear entity audio states
             for (EntityID entity : m_Entities)
@@ -341,15 +372,21 @@ void AudioSystem::Update()
         }
 
         s_WasPlaying = false;
-        s_HasAutoPlayed = false; // ← ADD THIS LINE - Reset auto-play flag when stopped
+        s_HasAutoPlayed = false;
+        s_isPaused = false; // Reset pause state when stopped
 
-        // Still update audio components in editor mode for testing
         CAudioEngine::Update();
         UpdateAudioComponents();
         return;
     }
 
     // ===== PLAYING STATE =====
+
+    // Resume if we were paused
+    if (s_isPaused)
+    {
+        ResumeAll();
+    }
 
     // Find global audio entity
     EntityID globalAudioEntity = 0;
@@ -374,7 +411,6 @@ void AudioSystem::Update()
             PlayGlobalMusic(globalAudio, 0);
         }
 
-        // Auto-play ambience if not already playing
         if (globalAudio.currentAmbienceChannelId == -1 && !globalAudio.ambience.empty())
         {
             PlayGlobalAmbience(globalAudio, 0);
@@ -383,7 +419,6 @@ void AudioSystem::Update()
         UpdateGlobalAudio(globalAudio);
     }
 
-    // ← ADD THIS ENTIRE BLOCK HERE (after global audio handling)
     // Auto-play entities ONLY ONCE on first frame
     if (!s_HasAutoPlayed)
     {
@@ -392,7 +427,6 @@ void AudioSystem::Update()
         {
             if (!ecs.IsEntityValid(entity)) continue;
 
-            // Check if entity is active
             if (ECS::GetInstance().HasComponent<ObjectMetaData>(entity))
             {
                 const auto& meta = ECS::GetInstance().GetComponent<ObjectMetaData>(entity);
@@ -415,7 +449,6 @@ void AudioSystem::Update()
         std::cout << "=== AUTO-PLAY DONE ===" << std::endl;
     }
 
-    // Update audio
     CAudioEngine::Update();
     UpdateAudioComponents();
 

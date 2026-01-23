@@ -3191,6 +3191,10 @@ void Renderer::RenderLightingPass(const Mtx44& view, const Mtx44& projection)
 	m_LightPassShader->SetUniform1f("u_FogHeightCoefficient", m_FogHeightCoefficient);
 	m_LightPassShader->SetUniform1f("u_FogHeightFalloff", m_FogHeightFalloff);
 
+	// Set ambient lighting parameters
+	m_LightPassShader->SetUniform3f("u_AmbientColor", m_AmbientColor);
+	m_LightPassShader->SetUniform1f("u_AmbientIntensity", m_AmbientIntensity);
+
 	// Set shading mode
 	m_LightPassShader->SetUniform1i("u_ShadingMode", m_IsBlinnPhong ? 1 : 0);
 
@@ -3596,6 +3600,7 @@ void Renderer::RenderDeferredPipeline(const Mtx44& view, const Mtx44& projection
 
 		// Flush the navmesh debug lines to screen
 		RenderDebugLines(view, projection);
+		RenderDebugTriangles(view, projection);
 	}
 
 #endif

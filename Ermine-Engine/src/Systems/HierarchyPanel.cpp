@@ -1,4 +1,4 @@
-/* Start Header ************************************************************************/
+`/* Start Header ************************************************************************/
 /*!
 \file       HierarchyPanel.cpp
 \author     Edwin Lee Zirui, edwinzirui.lee, 2301299, edwinzirui.lee\@digipen.edu
@@ -131,17 +131,6 @@ namespace Ermine {
 
         // Right-click context menu
         DrawContextMenu();
-
-        // Handle delayed inspector focus - wait for mouse release
-        if (m_PendingFocusEntity != 0) {
-            if (!ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
-                // Mouse released - check if it was a drag or just a click
-                if (!ImGui::GetDragDropPayload()) {
-                    ImGui::SetWindowFocus("Inspector");
-                }
-                m_PendingFocusEntity = 0; // Reset
-            }
-        }
 
         // Handle keyboard shortcuts for reordering
         if (primary != 0 && ImGui::IsWindowFocused()) {
@@ -296,7 +285,7 @@ namespace Ermine {
         }
 
         // indent
-        float indent = depth * 16.0f;
+        float indent = static_cast<float>(depth) * m_indentPadding;
         if (indent > 0) ImGui::Indent(indent);
 
         // visible name + unique ID suffix
@@ -310,10 +299,6 @@ namespace Ermine {
         if (isSelected) nodeFlags |= ImGuiTreeNodeFlags_Selected;
         if (children.empty()) nodeFlags |= ImGuiTreeNodeFlags_Leaf;
 
-        // Auto-expand parent
-        if (HasSelectedDescendant(entity))
-            ImGui::SetNextItemOpen(true);
-
         bool nodeOpen = ImGui::TreeNodeEx(label.c_str(), nodeFlags);
 
         if (isSelected && ImGui::IsWindowAppearing())
@@ -321,24 +306,78 @@ namespace Ermine {
 
         HandleDragDrop(entity);
 
+        // Handle single click for selection (don't focus inspector)
         if (ImGui::IsItemClicked()) {
-            if (ImGui::GetIO().KeyCtrl)
-				editor::Selection::Toggle(m_ActiveScene, entity); // Multi-select
+            if (ImGui::GetIO().KeyShift && m_LastClickedEntity != 0)
+            {
+                // Shift+Click: Range selection (Unity/Unreal style)
+                SelectRange(entity);
+            }
+            else if (ImGui::GetIO().KeyCtrl)
+            {
+                // Ctrl+Click: Toggle selection (add/remove from selection)
+                editor::Selection::Toggle(m_ActiveScene, entity);
+                m_LastClickedEntity = entity;
+            }
             else
-				editor::Selection::SelectSingle(m_ActiveScene, entity); // Single select
-            m_PendingFocusEntity = editor::Selection::Primary();
+            {
+                // Normal click: Single select (clears previous selection)
+                editor::Selection::SelectSingle(m_ActiveScene, entity);
+                m_LastClickedEntity = entity;
+            }
+        }
+
+        // Handle double click to focus Inspector (Unity/Unreal style)
+        if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+        {
+            editor::Selection::SelectSingle(m_ActiveScene, entity);
+            m_LastClickedEntity = entity;
+            ImGui::SetWindowFocus("Inspector");
         }
 
         if (ImGui::BeginPopupContextItem(("ctx##" + std::to_string((uint64_t)entity)).c_str())) {
             if (ImGui::MenuItem("Delete")) {
-                ECS::GetInstance().GetSystem<Physics>()->RemovePhysic(entity);
-                m_ActiveScene->DestroyEntity(entity);
-                ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
+                // Delete all selected entities, not just the right-clicked one
+                auto sel = editor::Selection::All();
+                if (sel.empty() || !editor::Selection::IsSelected(entity))
+                {
+                    // If nothing selected or right-clicked entity isn't selected, just delete the right-clicked one
+                    ECS::GetInstance().GetSystem<Physics>()->RemovePhysic(entity);
+                    m_ActiveScene->DestroyEntity(entity);
+                    ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
+                }
+                else
+                {
+                    // Delete all selected entities
+                    std::vector<EntityID> toDelete(sel.begin(), sel.end());
+                    for (auto id : toDelete)
+                    {
+                        ECS::GetInstance().GetSystem<Physics>()->RemovePhysic(id);
+                        m_ActiveScene->DestroyEntity(id);
+                    }
+                    ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
+                    editor::Selection::Clear(m_ActiveScene);
+                }
                 ImGui::CloseCurrentPopup();
             }
 
             if (ImGui::MenuItem("Duplicate")) {
-                DuplicateEntity(entity);
+                // Duplicate all selected entities, not just the right-clicked one
+                auto sel = editor::Selection::All();
+                if (sel.empty() || !editor::Selection::IsSelected(entity))
+                {
+                    // If nothing selected or right-clicked entity isn't selected, just duplicate the right-clicked one
+                    DuplicateEntity(entity);
+                }
+                else
+                {
+                    // Duplicate all selected entities
+                    std::vector<EntityID> toDuplicate(sel.begin(), sel.end());
+                    for (auto id : toDuplicate)
+                    {
+                        DuplicateEntity(id);
+                    }
+                }
                 ImGui::CloseCurrentPopup();
             }
 
@@ -673,7 +712,7 @@ namespace Ermine {
 		return false;
     }
 
-    bool HierarchyPanel::NameMatchesSearch(const std::string& name, const char* search)
+    bool HierarchyPanel::NameMatchesSearch(const std::string& name, const char* search) const
     {
         if (!search || search[0] == '\0')
             return true;
@@ -685,5 +724,97 @@ namespace Ermine {
         std::transform(lowerSearch.begin(), lowerSearch.end(), lowerSearch.begin(), ::tolower);
 
         return lowerName.find(lowerSearch) != std::string::npos;
+    }
+
+    void HierarchyPanel::BuildVisibleEntityList(std::vector<EntityID>& outList) const
+    {
+        outList.clear();
+        if (!m_ActiveScene) return;
+
+        if (!m_IsSearching)
+        {
+            // Normal hierarchy view - collect in tree order
+            auto rootEntities = m_ActiveScene->GetRootEntities();
+            for (auto entity : rootEntities)
+            {
+                CollectVisibleEntitiesRecursive(entity, outList);
+            }
+        }
+        else
+        {
+            // Search result view - flat list of matching entities
+            auto& ecs = ECS::GetInstance();
+            for (EntityID id = 1; id < MAX_ENTITIES; ++id)
+            {
+                if (!ecs.IsEntityValid(id))
+                    continue;
+
+                if (!ecs.HasComponent<ObjectMetaData>(id))
+                    continue;
+
+                const auto& meta = ecs.GetComponent<ObjectMetaData>(id);
+
+                if (NameMatchesSearch(meta.name, m_SearchBuffer))
+                    outList.push_back(id);
+            }
+        }
+    }
+
+    void HierarchyPanel::CollectVisibleEntitiesRecursive(EntityID entity, std::vector<EntityID>& outList) const
+    {
+        if (!ECS::GetInstance().IsEntityValid(entity)) return;
+
+        outList.push_back(entity);
+
+        auto& ecs = ECS::GetInstance();
+        if (ecs.HasComponent<HierarchyComponent>(entity))
+        {
+            const auto& hierarchy = ecs.GetComponent<HierarchyComponent>(entity);
+            for (auto child : hierarchy.children)
+            {
+                CollectVisibleEntitiesRecursive(child, outList);
+            }
+        }
+    }
+
+    void HierarchyPanel::SelectRange(EntityID clickedEntity)
+    {
+        if (m_LastClickedEntity == 0 || clickedEntity == 0)
+        {
+            // No previous selection, just select single
+            editor::Selection::SelectSingle(m_ActiveScene, clickedEntity);
+            m_LastClickedEntity = clickedEntity;
+            return;
+        }
+
+        // Build the visible entity list in display order
+        std::vector<EntityID> visibleEntities;
+        BuildVisibleEntityList(visibleEntities);
+
+        // Find indices of both entities
+        auto startIt = std::find(visibleEntities.begin(), visibleEntities.end(), m_LastClickedEntity);
+        auto endIt = std::find(visibleEntities.begin(), visibleEntities.end(), clickedEntity);
+
+        if (startIt == visibleEntities.end() || endIt == visibleEntities.end())
+        {
+            // One of the entities not found in visible list, just select single
+            editor::Selection::SelectSingle(m_ActiveScene, clickedEntity);
+            m_LastClickedEntity = clickedEntity;
+            return;
+        }
+
+        // Ensure start <= end
+        if (startIt > endIt)
+            std::swap(startIt, endIt);
+
+        // Select all entities in range
+        std::unordered_set<EntityID> rangeSelection;
+        for (auto it = startIt; it <= endIt; ++it)
+        {
+            rangeSelection.insert(*it);
+        }
+
+        editor::Selection::Set(m_ActiveScene, rangeSelection);
+        // Note: m_LastClickedEntity stays the same for chained Shift+clicks
     }
 }
