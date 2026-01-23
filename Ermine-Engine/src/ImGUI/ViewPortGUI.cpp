@@ -1,4 +1,4 @@
-﻿/* Start Header ************************************************************************/
+﻿	/* Start Header ************************************************************************/
 /*!
 \file       ViewPortGUI.cpp
 \author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu
@@ -26,7 +26,11 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <glm/gtx/matrix_decompose.hpp>
 
 #include "AssetManager.h"
+#include "CommandHistory.h"
+#include "EditorCommand.h"
+#include "HierarchyPanel.h"
 #include "imgui_internal.h"
+#include "InspectorGUI.h"
 
 #include "Scene.h"
 #include "SceneManager.h"
@@ -35,6 +39,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "TransformMode.h"
 #include "Selection.h"
 #include "MultiSelectionManipulator.h"
+#include "Window.h"
 
 using namespace Ermine::editor;
 
@@ -91,9 +96,6 @@ void Ermine::ViewPortGUI::Render()
 
 void Ermine::ViewPortGUI::TopBarSimulationControl(const ImVec2 iconSize)
 {
-	// Find primary camera entity
-	//auto& ecs = ECS::GetInstance();
-
 	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6.f, 6.f));
 	ImGui::BeginGroup();
 	{
@@ -109,34 +111,6 @@ void Ermine::ViewPortGUI::TopBarSimulationControl(const ImVec2 iconSize)
 			EditorGUI::s_state = EditorGUI::SimState::playing;
 			SceneManager::GetInstance().SaveTemp();
 			EE_CORE_INFO("Simulation: Play");
-
-			// Check if scene has UI buttons (menu scene) - if so, keep cursor visible
-			bool isMenuScene = false;
-			auto& ecs = ECS::GetInstance();
-			constexpr EntityID MAX_ENTITIES = 10000;
-			for (EntityID entity = 1; entity < MAX_ENTITIES; ++entity)
-			{
-				if (ecs.IsEntityValid(entity) && ecs.HasComponent<UIButtonComponent>(entity))
-				{
-					isMenuScene = true;
-					break;
-				}
-			}
-
-			if (isMenuScene)
-			{
-				// Menu scene: keep cursor visible and normal
-				glfwSetInputMode(glfwGetCurrentContext(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-				EE_CORE_INFO("Menu scene detected - cursor visible");
-			}
-			else
-			{
-				// Gameplay scene: disable cursor for FPS controls
-				glfwSetInputMode(glfwGetCurrentContext(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-				if (glfwRawMouseMotionSupported())
-					glfwSetInputMode(glfwGetCurrentContext(), GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
-				EE_CORE_INFO("Cursor locked (FPS), raw mouse motion {}", glfwRawMouseMotionSupported() ? "enabled" : "not supported");
-			}
 		}
 		if (ImGui::IsItemHovered())
 			ImGui::SetTooltip("Play (Ctrl+P)");
@@ -165,15 +139,15 @@ void Ermine::ViewPortGUI::TopBarSimulationControl(const ImVec2 iconSize)
 		{
 			EditorGUI::s_state = EditorGUI::SimState::stopped;
 			SceneManager::GetInstance().LoadTemp();
+
+			CommandHistory::GetInstance().Clear();
 			EE_CORE_INFO("Simulation: Stop");
 
 			// *** ALWAYS reset cursor state when stopping play mode ***
 			GLFWwindow* window = glfwGetCurrentContext();
 			if (window)
 			{
-				if (glfwRawMouseMotionSupported())
-					glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_FALSE);
-				glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+				Window::SetCursorLockState(Window::CursorLockState::None);
 				EE_CORE_INFO("Cursor unlocked - play mode stopped");
 			}
 		}
@@ -335,7 +309,7 @@ void Ermine::ViewPortGUI::CameraControls(const bool& overViewCube, const Ermine:
 	}
 
 	// Camera controls
-	if (viewportHovered && !EditorGUI::isPlaying && !s_orbiting)
+	if (viewportHovered && ImGui::IsWindowFocused() && !EditorGUI::isPlaying && !s_orbiting)
 	{
 		if (!ImGuizmo::IsUsing())
 		{
@@ -372,7 +346,20 @@ void Ermine::ViewPortGUI::ObjectPicking(const std::shared_ptr<Ermine::graphics::
 					EditorCamera::GetInstance().GetProjectionMatrix());
 
 				if (hit)
+				{
+					if (EditorGUI::GetHierarchyPanel() && EditorGUI::GetHierarchyPanel()->GetScene())
+					{
+						if (ImGui::GetIO().KeyCtrl)
+							Selection::Toggle(EditorGUI::GetHierarchyPanel()->GetScene(), entity);
+						else
+							Selection::SelectSingle(EditorGUI::GetHierarchyPanel()->GetScene(), entity);
+					}
+
+					// Set selection in Inspector
+					//EditorGUI::GetHierarchyPanel()->
+
 					SceneManager::GetInstance().GetActiveScene()->SetSelectedEntity(entity);
+				}
 				else
 					SceneManager::GetInstance().GetActiveScene()->SetSelectedEntity(0);
 			}
@@ -411,19 +398,19 @@ void Ermine::ViewPortGUI::GizmoOverlay(const ImVec2& imgMin, const ImVec2& imgSi
 			(!multi && ECS::GetInstance().IsEntityValid(selectedEntity) && ECS::GetInstance().HasComponent<Transform>(selectedEntity))))
 	{
 		auto& ecs = ECS::GetInstance();
-		auto& tr = ecs.GetComponent<Transform>(selectedEntity);
+		//auto& tr = ecs.GetComponent<Transform>(selectedEntity);
 		Transform* singleTr = nullptr;
 		if (!multi)
 			singleTr = &ecs.GetComponent<Transform>(selectedEntity);
 
 		// Toggle transform mode with Y key
-		if (Input::IsKeyPressedEditor(GLFW_KEY_Y)) {
-			editor::s_transformMode = (editor::s_transformMode == TransformMode::Pivot)
-				? TransformMode::Center
-				: TransformMode::Pivot;
-			//EE_CORE_INFO("Transform mode: {}",
-			//	(editor::s_transformMode == TransformMode::Pivot) ? "Pivot" : "Center");
-		}
+		//if (Input::IsKeyPressedEditor(GLFW_KEY_Y)) {
+		//	editor::s_transformMode = (editor::s_transformMode == TransformMode::Pivot)
+		//		? TransformMode::Center
+		//		: TransformMode::Pivot;
+		//	//EE_CORE_INFO("Transform mode: {}",
+		//	//	(editor::s_transformMode == TransformMode::Pivot) ? "Pivot" : "Center");
+		//}
 
 		// Get the position where gizmo should appear
 		//Vec3 gizmoPosition = TransformModeHelper::GetManipulationPosition(selectedEntity, editor::s_transformMode);
@@ -471,6 +458,9 @@ void Ermine::ViewPortGUI::GizmoOverlay(const ImVec2& imgMin, const ImVec2& imgSi
 			useSnap ? snap : nullptr
 		);
 
+		static Transform s_startTransform;
+		static bool s_commandStarted = false;
+
 		// Apply result back into Transform
 		if (ImGuizmo::IsUsing())
 		{
@@ -480,6 +470,12 @@ void Ermine::ViewPortGUI::GizmoOverlay(const ImVec2& imgMin, const ImVec2& imgSi
 			if (glm::decompose(model, scale, rotation, translation, skew, perspective))
 			{
 				rotation = glm::normalize(rotation);
+
+				if (!s_commandStarted && singleTr)
+				{
+					s_startTransform = *singleTr;
+					s_commandStarted = true;
+				}
 
 				if (multi)
 				{
@@ -502,9 +498,9 @@ void Ermine::ViewPortGUI::GizmoOverlay(const ImVec2& imgMin, const ImVec2& imgSi
 				}
 				else
 				{
-					auto& tr = *singleTr;
+					auto& thisTR = *singleTr;
 					// Calculate offset from geometric center to pivot
-					Vec3 centerOffset = gizmoPosition - tr.position;
+					Vec3 centerOffset = gizmoPosition - thisTR.position;
 
 					// The gizmo manipulated the center point, so we need to adjust for pivot
 					if (s_transformMode == TransformMode::Center && gOperation == ImGuizmo::ROTATE)
@@ -514,12 +510,12 @@ void Ermine::ViewPortGUI::GizmoOverlay(const ImVec2& imgMin, const ImVec2& imgSi
 						glm::vec3 pivotOffset = glm::vec3(centerOffset.x, centerOffset.y, centerOffset.z);
 
 						// Rotate the offset vector by the rotation difference
-						glm::quat oldRot(tr.rotation.w, tr.rotation.x, tr.rotation.y, tr.rotation.z);
+						glm::quat oldRot(thisTR.rotation.w, thisTR.rotation.x, thisTR.rotation.y, thisTR.rotation.z);
 						glm::quat deltaRot = rotation * glm::inverse(oldRot);
 						glm::vec3 rotatedOffset = deltaRot * pivotOffset;
 
 						// New pivot position = center position - rotated offset
-						tr.position = Vector3D(
+						thisTR.position = Vector3D(
 							translation.x - rotatedOffset.x,
 							translation.y - rotatedOffset.y,
 							translation.z - rotatedOffset.z
@@ -528,17 +524,31 @@ void Ermine::ViewPortGUI::GizmoOverlay(const ImVec2& imgMin, const ImVec2& imgSi
 					else
 					{
 						// For translation and pivot mode, just use the manipulated position directly
-						tr.position = Vector3D(translation.x, translation.y, translation.z);
+						thisTR.position = Vector3D(translation.x, translation.y, translation.z);
 					}
 
-					tr.scale = Vector3D(scale.x, scale.y, scale.z);
-					tr.rotation = Quaternion(rotation.x, rotation.y, rotation.z, rotation.w);
+					thisTR.scale = Vector3D(scale.x, scale.y, scale.z);
+					thisTR.rotation = Quaternion(rotation.x, rotation.y, rotation.z, rotation.w);
 
 					// Mark transform as dirty to trigger hierarchy update
 					ecs.GetSystem<HierarchySystem>()->MarkDirty(selectedEntity);
 					ecs.GetSystem<HierarchySystem>()->OnTransformChanged(selectedEntity);
 				}
 			}
+		}
+
+		if (s_commandStarted && !ImGuizmo::IsUsing())
+		{
+			auto& finalTransform = ecs.GetComponent<Transform>(selectedEntity);
+
+			auto cmd = std::make_unique<TransformCommand>(
+				selectedEntity,
+				s_startTransform,
+				finalTransform
+			);
+
+			CommandHistory::GetInstance().Execute(std::move(cmd));
+			s_commandStarted = false;
 		}
 	}
 
@@ -690,6 +700,28 @@ void Ermine::ViewPortGUI::Update()
 	const bool viewportHovered = ImGui::IsItemHovered(hovFlags);
 	const bool viewportFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_None);
 
+	if (viewportHovered && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+		ImGui::SetWindowFocus();
+	if (viewportHovered && ImGui::IsMouseClicked(ImGuiMouseButton_Right))
+		ImGui::SetWindowFocus();
+
+	//if (!EditorGUI::isPlaying)
+	//{
+	//	const bool rmbDown = Input::IsMouseButtonDownEditor(GLFW_MOUSE_BUTTON_RIGHT);
+	//	const bool shouldCapture = viewportFocused && viewportHovered && rmbDown;
+
+	//	if (shouldCapture)
+	//	{
+	//		Window::SetVisibleCursor(false);
+	//		Window::SetCursorLockState(Window::CursorLockState::Locked);
+	//	}
+	//	else
+	//	{
+	//		Window::SetCursorLockState(Window::CursorLockState::None);
+	//		Window::SetVisibleCursor(true);
+	//	}
+	//}
+
 	// Set manipulation mode based on keyboard shortcuts
 	if (viewportFocused && viewportHovered && !EditorGUI::isPlaying && !Input::IsMouseButtonDownEditor(GLFW_MOUSE_BUTTON_RIGHT))
 	{
@@ -715,9 +747,11 @@ void Ermine::ViewPortGUI::Update()
 	const bool ctrlDown = Input::IsKeyDownEditor(GLFW_KEY_LEFT_CONTROL) || Input::IsKeyDownEditor(GLFW_KEY_RIGHT_CONTROL);
 	const float dragThreshold = 3.0f;
 
+	const bool altDown = Input::IsKeyDownEditor(GLFW_KEY_LEFT_ALT);
+
 	// Drag selection
 	if (viewportHovered && !EditorGUI::isPlaying && ImGui::IsMouseClicked(ImGuiMouseButton_Left)
-		&& !overViewCube && !ImGuizmo::IsOver() && !ImGuizmo::IsUsing())
+		&& !overViewCube && !ImGuizmo::IsOver() && !ImGuizmo::IsUsing() && !altDown)
 	{
 		s_dragSelecting = true;
 		s_dragStart = ImGui::GetMousePos();
@@ -725,7 +759,7 @@ void Ermine::ViewPortGUI::Update()
 	}
 
 	// Update drag
-	if (s_dragSelecting && ImGui::IsMouseDown(ImGuiMouseButton_Left) && !ImGuizmo::IsOver() && !ImGuizmo::IsUsing())
+	if (s_dragSelecting && ImGui::IsMouseDown(ImGuiMouseButton_Left) && !ImGuizmo::IsOver() && !ImGuizmo::IsUsing() && !altDown)
 	{
 		s_dragEnd = ImGui::GetMousePos();
 		// Draw rectangle overlay
@@ -741,6 +775,8 @@ void Ermine::ViewPortGUI::Update()
 		dl->AddRectFilled(rMin, rMax, IM_COL32(64, 128, 255, 40));
 		dl->AddRect(rMin, rMax, IM_COL32(64, 128, 255, 180), 0.0f, 0, 2.0f);
 	}
+	else if (s_dragSelecting && altDown)
+		s_dragSelecting = false;
 
 	// Finish drag select
 	if (s_dragSelecting && ImGui::IsMouseReleased(ImGuiMouseButton_Left) && !ImGuizmo::IsOver() && !ImGuizmo::IsUsing())
@@ -870,6 +906,7 @@ void Ermine::ViewPortGUI::Update()
 		ImGui::EndDragDropTarget(); // End drag & drop target
 	}
 
+	// Editor input flags
 	Input::SetEditorInputActive(viewportFocused && viewportHovered);
 
 	// Hotkeys
@@ -879,18 +916,26 @@ void Ermine::ViewPortGUI::Update()
 		&& Input::IsKeyPressedEditor(GLFW_KEY_P))
 		EditorGUI::s_state = EditorGUI::SimState::stopped;
 
+	if (Input::IsKeyDownEditor(GLFW_KEY_LEFT_CONTROL) && Input::IsKeyPressedEditor(GLFW_KEY_Z))
+		CommandHistory::GetInstance().Undo();
+
+	if (Input::IsKeyDownEditor(GLFW_KEY_LEFT_CONTROL) && Input::IsKeyPressedEditor(GLFW_KEY_Y))
+		CommandHistory::GetInstance().Redo();
+	
+
 	EditorGUI::isPlaying = EditorGUI::s_state == EditorGUI::SimState::playing;
 
 	Input::SetGameInputActive(EditorGUI::isPlaying && viewportFocused && viewportHovered);
 
 	if (EditorGUI::isPlaying && Input::IsKeyPressed(GLFW_KEY_ESCAPE))
 	{
-		EditorGUI::s_state = EditorGUI::SimState::stopped;
-		SceneManager::GetInstance().LoadTemp();
+		Window::SetCursorLockState(Window::CursorLockState::None);
+		//EditorGUI::s_state = EditorGUI::SimState::stopped;
+		//SceneManager::GetInstance().LoadTemp();
 
-		if (glfwRawMouseMotionSupported())
-			glfwSetInputMode(glfwGetCurrentContext(), GLFW_RAW_MOUSE_MOTION, GLFW_FALSE);
-		glfwSetInputMode(glfwGetCurrentContext(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+		//if (glfwRawMouseMotionSupported())
+		//	glfwSetInputMode(glfwGetCurrentContext(), GLFW_RAW_MOUSE_MOTION, GLFW_FALSE);
+		//glfwSetInputMode(glfwGetCurrentContext(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 	}
 
 	ImGui::End();

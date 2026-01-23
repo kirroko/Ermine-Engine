@@ -121,7 +121,7 @@ void EditorCamera::UpdateProjectionMatrix()
 */
 void EditorCamera::ProcessKeyboardInput(float deltaTime)
 {
-	if (!Input::IsMouseButtonDownEditor(GLFW_MOUSE_BUTTON_RIGHT))
+	if (!Input::IsMouseButtonDown(GLFW_MOUSE_BUTTON_RIGHT))
 		return;
 	
 	float velocity = m_MovementSpeed * deltaTime;
@@ -148,7 +148,7 @@ void EditorCamera::ProcessKeyboardInput(float deltaTime)
 void EditorCamera::ProcessMouseMovement()
 {
 	// Only rotate camera if right mouse button is pressed
-	if (Input::IsMouseButtonDownEditor(GLFW_MOUSE_BUTTON_RIGHT))
+	if (Input::IsMouseButtonDown(GLFW_MOUSE_BUTTON_RIGHT))
 	{
 		double xpos = Input::GetMouseX(), ypos = Input::GetMouseY();
 

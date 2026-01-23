@@ -317,6 +317,7 @@ copy /B /Y "$(SolutionDir)ThirdParty\DirectXTex\lib\DirectXTex.pdb" "$(SolutionD
     <ClInclude Include="include\AudioSystem.h" />
     <ClInclude Include="include\Camera.h" />
     <ClInclude Include="include\CameraSystem.h" />
+    <ClInclude Include="include\CommandHistory.h" />
     <ClInclude Include="include\Component.h" />
     <ClInclude Include="include\Components.h" />
     <ClInclude Include="include\ConsoleGUI.h" />
@@ -324,6 +325,7 @@ copy /B /Y "$(SolutionDir)ThirdParty\DirectXTex\lib\DirectXTex.pdb" "$(SolutionD
     <ClInclude Include="include\DrawCommands.h" />
     <ClInclude Include="include\ECS.h" />
     <ClInclude Include="include\EditorCamera.h" />
+    <ClInclude Include="include\EditorCommand.h" />
     <ClInclude Include="include\EditorGUI.h" />
     <ClInclude Include="include\Engine.h" />
     <ClInclude Include="include\EngineAPI.h" />
@@ -367,6 +369,7 @@ copy /B /Y "$(SolutionDir)ThirdParty\DirectXTex\lib\DirectXTex.pdb" "$(SolutionD
     <ClInclude Include="include\Registry.h" />
     <ClInclude Include="include\Renderer.h" />
     <ClInclude Include="include\ResourcePipe.h" />
+    <ClInclude Include="include\SettingsGUI.h" />
     <ClInclude Include="include\SSBO_Bindings.h" />
     <ClInclude Include="include\Scene.h" />
     <ClInclude Include="include\SceneManager.h" />
@@ -431,6 +434,7 @@ copy /B /Y "$(SolutionDir)ThirdParty\DirectXTex\lib\DirectXTex.pdb" "$(SolutionD
     <ClCompile Include="src\ImGUI\EditorGUI.cpp" />
     <ClCompile Include="src\ImGUI\GraphicsDebugGUI.cpp" />
     <ClCompile Include="src\ImGUI\InspectorGUI.cpp" />
+    <ClCompile Include="src\ImGUI\SettingsGUI.cpp" />
     <ClCompile Include="src\ImGUI\ViewPortGUI.cpp" />
     <ClCompile Include="src\Logger\Logger.cpp" />
     <ClCompile Include="src\Math\MathVector.cpp" />

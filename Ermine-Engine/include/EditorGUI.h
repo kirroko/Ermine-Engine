@@ -149,6 +149,8 @@ namespace Ermine::editor
             return nullptr;
         }
 
+        
+
         /*!***********************************************************************
         \brief
             Focus an ImGUI window by its name (brings it to the front).
@@ -159,6 +161,8 @@ namespace Ermine::editor
 
         static void SetActiveScene(std::shared_ptr<Ermine::Scene> scene);
         static std::shared_ptr<Ermine::Scene> GetActiveScene() { return s_ActiveScene; }
+
+		static HierarchyPanel* GetHierarchyPanel() { return s_HierarchyPanel.get(); }
 
         /**
          * @brief Get the window context (for cursor locking)

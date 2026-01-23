@@ -27,6 +27,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "NavMesh.h"
 #include "Particles.h"
 #include "AnimationGUI.h"
+#include "CommandHistory.h"
 
 #include "xcore/my_properties.h"
 #include "xproperty.h"
@@ -144,11 +145,33 @@ namespace Ermine::editor {
 		return true;
 	}
 
+	enum class Vec3AxisMask : uint8_t
+	{
+		None = 0,
+		X = 1 << 0,
+		Y = 1 << 1,
+		Z = 1 << 2
+	};
+
+	static Vec3AxisMask operator|(Vec3AxisMask a, Vec3AxisMask b)
+	{
+		return static_cast<Vec3AxisMask>(static_cast<uint8_t>(a) | static_cast<uint8_t>(b));
+	}
+
+	static Vec3AxisMask& operator|=(Vec3AxisMask& a, Vec3AxisMask b)
+	{
+		a = a | b;
+		return a;
+	}
+
 	// Unity-like XYZ control. Returns true if any component changed.
 // - Clicking X/Y/Z button resets that axis to resetValue.
 // - speed/min/max behave like regular DragFloat.
-	static bool DrawVec3XYZ(const char* label, float v[3], float speed = 0.1f, float resetValue = 0.0f, float minVal = -FLT_MAX, float maxVal = FLT_MAX)
+	static bool DrawVec3XYZ(const char* label, float v[3], Vec3AxisMask& outActivatedAxes, Vec3AxisMask& outCommittedAxes, float speed = 0.1f, float resetValue = 0.0f, float minVal = -FLT_MAX, float maxVal = FLT_MAX)
 	{
+		outActivatedAxes = Vec3AxisMask::None;
+		outCommittedAxes = Vec3AxisMask::None;
+
 		ImGui::PushID(label);
 
 		ImGui::Columns(2, nullptr, false);
@@ -164,17 +187,22 @@ namespace Ermine::editor {
 		const ImVec2 btnSize(lineH, lineH);
 		const float inner = ImGui::GetStyle().ItemInnerSpacing.x;
 
-		auto axisWidget = [&](const char* id, const char* axisName, float axisColor[3], float& val)
+		auto axisWidget = [&](const char* id, const char* axisName, float axisColor[3], float& val, Vec3AxisMask axisBit)
 			{
 				ImGui::PushID(id);
 				ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(axisColor[0], axisColor[1], axisColor[2], 1.f));
 				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(axisColor[0] + 0.1f, axisColor[1] + 0.1f, axisColor[2] + 0.1f, 1.f));
 				ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(axisColor[0] + 0.2f, axisColor[1] + 0.2f, axisColor[2] + 0.2f, 1.f));
-				if (ImGui::Button(axisName, btnSize)) { val = resetValue; changed = true; }
+				if (ImGui::Button(axisName, btnSize)) { val = resetValue; changed = true; outCommittedAxes |= axisBit; }
 				ImGui::PopStyleColor(3);
 
 				ImGui::SameLine(0.0f, inner);
 				changed |= ImGui::DragFloat("##v", &val, speed, minVal, maxVal, "%.3f");
+				if (ImGui::IsItemActivated())
+					outActivatedAxes |= axisBit;
+
+				if (ImGui::IsItemDeactivatedAfterEdit())
+					outCommittedAxes |= axisBit;
 				ImGui::PopItemWidth();
 				ImGui::PopID();
 
@@ -185,17 +213,21 @@ namespace Ermine::editor {
 		float colY[3] = { 0.40f, 0.80f, 0.40f }; // green-ish
 		float colZ[3] = { 0.35f, 0.55f, 0.90f }; // blue-ish
 
-		axisWidget("X", "X", colX, v[0]);
-		axisWidget("Y", "Y", colY, v[1]);
+		axisWidget("X", "X", colX, v[0], Vec3AxisMask::X);
+		axisWidget("Y", "Y", colY, v[1], Vec3AxisMask::Y);
 		// Last axis on the row: avoid trailing SameLine
 		ImGui::PushID("Z");
 		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(colZ[0], colZ[1], colZ[2], 1.f));
 		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(colZ[0] + 0.1f, colZ[1] + 0.1f, colZ[2] + 0.1f, 1.f));
 		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(colZ[0] + 0.2f, colZ[1] + 0.2f, colZ[2] + 0.2f, 1.f));
-		if (ImGui::Button("Z", btnSize)) { v[2] = resetValue; changed = true; }
+		if (ImGui::Button("Z", btnSize)) { v[2] = resetValue; changed = true; outCommittedAxes |= Vec3AxisMask::Z; }
 		ImGui::PopStyleColor(3);
 		ImGui::SameLine(0.0f, inner);
 		changed |= ImGui::DragFloat("##v", &v[2], speed, minVal, maxVal, "%.3f");
+		if (ImGui::IsItemActivated())
+			outActivatedAxes |= Vec3AxisMask::Z;
+		if (ImGui::IsItemDeactivatedAfterEdit())
+			outCommittedAxes |= Vec3AxisMask::Z;
 		ImGui::PopItemWidth();
 		ImGui::PopID();
 
@@ -386,7 +418,23 @@ namespace Ermine::editor {
 			if (guid == xproperty::settings::var_type<Ermine::Vec3>::guid_v) {
 				Ermine::Vec3 v = p.m_Value.get<Ermine::Vec3>();
 
-				if (DrawVec3XYZ(label.c_str(), &v.x) || ImGui::IsItemActive()) {
+				static std::unordered_map<std::string, Transform> s_DragStart;
+				static std::unordered_map<std::string, bool> s_Dragging;
+
+				const std::string& key = p.m_Path;
+
+				//const Transform before = t;
+				Vec3AxisMask committedAxes{};
+				Vec3AxisMask activatedAxes{};
+				const bool changed = DrawVec3XYZ(label.c_str(), &v.x, activatedAxes, committedAxes);
+
+				if (activatedAxes != Vec3AxisMask::None && !s_Dragging[key]) // Capture before on first activation frame
+				{
+					s_DragStart[key] = t;
+					s_Dragging[key] = true;
+				}
+
+				if (changed) {
 					p.m_Value.set<Ermine::Vec3>({ v.x, v.y, v.z });
 					xproperty::sprop::setProperty(err, t, p, ctx);
 
@@ -394,10 +442,24 @@ namespace Ermine::editor {
 					hierarchySystem->MarkDirty(entity);
 					ECS::GetInstance().GetSystem<graphics::Renderer>()->MarkDrawDataForRebuild();
 				}
+
+				if (committedAxes != Vec3AxisMask::None && s_Dragging[key])
+				{
+					const Transform before = s_DragStart[key];
+					const Transform after = t;
+					CommandHistory::GetInstance().Execute(std::make_unique<TransformCommand>(entity, before, t));
+					s_Dragging[key] = false;
+					EE_CORE_WARN("POI");
+				}
 			}
 			// Quaternion (rotation) – shown/edited as Euler degrees
 			else if (guid == xproperty::settings::var_type<Ermine::Quaternion>::guid_v) {
 				Ermine::Quaternion q = p.m_Value.get<Ermine::Quaternion>();
+
+				static std::unordered_map<std::string, Transform> s_DragStart;
+				static std::unordered_map<std::string, bool> s_Dragging;
+
+				const std::string& key = p.m_Path;
 
 				// Convert to Euler (degrees) for UI
 				Ermine::Vec3 eulerDeg = QuaternionToEuler(q, /*degrees*/true);
@@ -406,13 +468,32 @@ namespace Ermine::editor {
 				const bool isRotation = (label == "Rotation");
 				const char* rotLabel = isRotation ? "Rotation (Degrees)" : label.c_str();
 
-				if (DrawVec3XYZ(rotLabel, &eulerDeg.x, 1.0f, 0.0f, -360.0f, 360.0f) || ImGui::IsItemActive()) {
+				Vec3AxisMask committedAxes{};
+				Vec3AxisMask activatedAxes{};
+				const bool changed = DrawVec3XYZ(rotLabel, &eulerDeg.x, activatedAxes, committedAxes, 1.0f, 0.0f, -360.0f, 360.0f);
+
+				if (activatedAxes != Vec3AxisMask::None && !s_Dragging[key]) // Capture before on first activation frame
+				{
+					s_DragStart[key] = t;
+					s_Dragging[key] = true;
+				}
+
+				if (changed) {
 					p.m_Value.set<Ermine::Quaternion>(FromEulerDegrees(eulerDeg));
 					xproperty::sprop::setProperty(err, t, p, ctx);
 
 					ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
 					hierarchySystem->MarkDirty(entity);
 					ECS::GetInstance().GetSystem<graphics::Renderer>()->MarkDrawDataForRebuild();
+				}
+
+				if (committedAxes != Vec3AxisMask::None && s_Dragging[key])
+				{
+					const Transform before = s_DragStart[key];
+					const Transform after = t;
+					CommandHistory::GetInstance().Execute(std::make_unique<TransformCommand>(entity, before, t));
+					s_Dragging[key] = false;
+					EE_CORE_WARN("POI");
 				}
 			}
 
@@ -1582,7 +1663,9 @@ namespace Ermine::editor {
 				case ScriptFieldValue::Kind::Vector3:
 				{
 					// Uses internal two-column layout with label left
-					if (changed == DrawVec3XYZ(name.c_str(), &std::get<Vec3>(val.value).x))
+					Vec3AxisMask committedAxis{  };
+					Vec3AxisMask activatedAxis{  };
+					if (changed == DrawVec3XYZ(name.c_str(), &std::get<Vec3>(val.value).x, activatedAxis, committedAxis))
 					{
 					}
 					break;
@@ -1591,7 +1674,9 @@ namespace Ermine::editor {
 				{
 					// Uses internal two-column layout with label left
 					Vec3 euler = QuaternionToEuler(std::get<Quaternion>(val.value), true);
-					if (changed == DrawVec3XYZ(name.c_str(), &euler.x))
+					Vec3AxisMask committedAxis{};
+					Vec3AxisMask activatedAxis{  };
+					if (changed == DrawVec3XYZ(name.c_str(), &euler.x, activatedAxis, committedAxis))
 					{
 					}
 					val.value = FromEulerDegrees(euler);
@@ -1707,7 +1792,7 @@ namespace Ermine::editor {
 								const auto& meshData = meshes[meshIndex];
 								const std::string& meshID = meshData.meshID;
 
-								// ✅ For cache files without scene, create basic material
+								// For cache files without scene, create basic material
 								uint32_t matIndex = 0;  // Default material index
 
 								// If we have a scene, get material from it
@@ -1736,7 +1821,7 @@ namespace Ermine::editor {
 								// Set parent-child relationship
 								hierarchySystem->SetParent(childEntity, entity, true);
 
-								// ✅ Create material - either from scene or default
+								// Create material - either from scene or default
 								auto materialPtr = std::make_shared<graphics::Material>();
 
 								if (scene && matIndex < scene->mNumMaterials) {
@@ -1800,19 +1885,19 @@ namespace Ermine::editor {
 										}
 									}
 
-									// UV transform with V-flip
+									// UV transform
 									aiUVTransform uvTransform;
 									if (aiMat->Get(AI_MATKEY_UVTRANSFORM(aiTextureType_DIFFUSE, 0), uvTransform) == AI_SUCCESS) {
-										materialPtr->SetUVScale(Vec2(uvTransform.mScaling.x, -uvTransform.mScaling.y));
-										materialPtr->SetUVOffset(Vec2(uvTransform.mTranslation.x, 1.0f - uvTransform.mTranslation.y));
+										materialPtr->SetUVScale(Vec2(uvTransform.mScaling.x, uvTransform.mScaling.y));
+										materialPtr->SetUVOffset(Vec2(uvTransform.mTranslation.x, uvTransform.mTranslation.y));
 									}
 									else {
-										materialPtr->SetUVScale(Vec2(1.0f, -1.0f));
-										materialPtr->SetUVOffset(Vec2(0.0f, 1.0f));
+										materialPtr->SetUVScale(Vec2(1.0f, 1.0f));
+										materialPtr->SetUVOffset(Vec2(0.0f, 0.0f));
 									}
 								}
 								else {
-									// ✅ Cache file without scene - use default white material
+									// Cache file without scene - use default white material
 									EE_CORE_INFO("Using default material for cache file mesh");
 									materialPtr->SetVec4("materialAlbedo", Vec4(1.0f, 1.0f, 1.0f, 1.0f));
 									materialPtr->SetFloat("materialRoughness", 0.5f);
@@ -1896,7 +1981,7 @@ namespace Ermine::editor {
 							const auto& meshData = meshes[meshIndex];
 							const std::string& meshID = meshData.meshID;
 
-							// ✅ Get material index from aiScene (if available)
+							// Get material index from aiScene (if available)
 							uint32_t matIndex = 0;
 							bool hasSceneMaterial = false;
 
@@ -1951,7 +2036,7 @@ namespace Ermine::editor {
 								hierarchySystem->SetParent(childEntity, entity, true);
 							}
 
-							// ✅ Create material - either from scene or default
+							// Create material - either from scene or default
 							auto materialPtr = std::make_shared<graphics::Material>();
 
 							if (hasSceneMaterial) {
@@ -2012,19 +2097,19 @@ namespace Ermine::editor {
 									}
 								}
 
-								// UV transform with V-flip
+								// UV transform
 								aiUVTransform uvTransform;
 								if (aiMat->Get(AI_MATKEY_UVTRANSFORM(aiTextureType_DIFFUSE, 0), uvTransform) == AI_SUCCESS) {
-									materialPtr->SetUVScale(Vec2(uvTransform.mScaling.x, -uvTransform.mScaling.y));
-									materialPtr->SetUVOffset(Vec2(uvTransform.mTranslation.x, 1.0f - uvTransform.mTranslation.y));
+									materialPtr->SetUVScale(Vec2(uvTransform.mScaling.x, uvTransform.mScaling.y));
+									materialPtr->SetUVOffset(Vec2(uvTransform.mTranslation.x, uvTransform.mTranslation.y));
 								}
 								else {
-									materialPtr->SetUVScale(Vec2(1.0f, -1.0f));
-									materialPtr->SetUVOffset(Vec2(0.0f, 1.0f));
+									materialPtr->SetUVScale(Vec2(1.0f, 1.0f));
+									materialPtr->SetUVOffset(Vec2(0.0f, 0.0f));
 								}
 							}
 							else {
-								// ✅ Cache file without scene - use default white material
+								// Cache file without scene - use default white material
 								EE_CORE_INFO("Using default material for cache file mesh on reload");
 								materialPtr->SetVec4("materialAlbedo", Vec4(1.0f, 1.0f, 1.0f, 1.0f));
 								materialPtr->SetFloat("materialRoughness", 0.5f);

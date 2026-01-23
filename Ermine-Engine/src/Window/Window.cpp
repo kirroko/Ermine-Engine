@@ -19,6 +19,78 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Serialisation.h"
 #include "glad/glad.h"
 #include "AssetBrowser.h" // For forwarding dropped files to the asset browser
+#include "EditorGUI.h"
+#include "SettingsGUI.h"
+
+#if defined(_WIN32)
+	#define GLFW_EXPOSE_NATIVE_WIN32
+	#include <GLFW/glfw3native.h>
+#endif
+
+Ermine::Window::CursorLockState Ermine::Window::s_cursorLockState = Ermine::Window::CursorLockState::None;
+bool Ermine::Window::s_visibleCursor = true;
+
+namespace
+{
+#ifdef _WIN32
+	void ConfineCursorToGLFWWindow(GLFWwindow* window, bool confine) noexcept
+    {
+        if (!window)
+            return;
+
+        if (!confine)
+        {
+	        ClipCursor(nullptr);
+	        return;
+        }
+
+		const HWND hwnd = glfwGetWin32Window(window);
+        if (!hwnd)
+            return;
+
+        RECT clientRect{};
+        if (!GetClientRect(hwnd, &clientRect))
+            return;
+
+        POINT tl{ clientRect.left, clientRect.top };
+        POINT br{ clientRect.right, clientRect.bottom };
+
+        if (!ClientToScreen(hwnd, &tl) || !ClientToScreen(hwnd, &br))
+            return;
+
+        RECT clipRect{};
+        clipRect.left = tl.x;
+        clipRect.top = tl.y;
+        clipRect.right = br.x;
+        clipRect.bottom = br.y;
+
+        ClipCursor(&clipRect);
+    }
+
+    void RefreshCursorConfinement(GLFWwindow* window) noexcept
+    {
+        // Re-apply clipping based on current state. Safe to call often.
+        if (!window)
+            return;
+
+        if (Ermine::Window::GetCursorLockState() == Ermine::Window::CursorLockState::Confined)
+            ConfineCursorToGLFWWindow(window, true);
+        else
+            ConfineCursorToGLFWWindow(window, false);
+    }
+#endif
+
+}
+
+static bool s_pauseOnFocusLoss = true; // Enable by default
+
+void Ermine::Window::SetPausedOnFocusLoss(bool enabled) {
+    s_pauseOnFocusLoss = enabled;
+}
+
+bool Ermine::Window::IsPausedOnFocusLoss() {  
+    return s_pauseOnFocusLoss;
+}
 
 /**
  * @brief GLFW callback function for handling file drops.
@@ -29,7 +101,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
  * @param count Number of files dropped.
  * @param paths Array of C-style strings representing the dropped file paths.
  */
-static void GLFW_DropCallback(GLFWwindow* window, int count, const char** paths)
+static void GLFW_DropCallback([[maybe_unused]] GLFWwindow* window, int count, const char** paths)
 {
     // Collect dropped file paths into a vector of strings
     std::vector<std::string> droppedFiles;
@@ -61,8 +133,8 @@ GLFWwindow* Ermine::Window::InitWindow(int width, int height, const char* title)
     Config cfg{};
     try {
         cfg = LoadConfigFromFile(cfgPath);
-        EE_CORE_INFO("Loaded config: {0}x{1}, fullscreen={2}, maximised={3}, title={4}",
-            cfg.windowWidth, cfg.windowHeight, cfg.fullscreen, cfg.maximized, cfg.title);
+        EE_CORE_INFO("Loaded config: {0}x{1}, fullscreen={2}, maximised={3}, title={4}, settings={5}, fontsize={6}, baseFontSize{7}, themeMode{8}",
+            cfg.windowWidth, cfg.windowHeight, cfg.fullscreen, cfg.maximized, cfg.title, cfg.settingsIsOpen, cfg.fontSize, cfg.baseFontSize, cfg.themeMode);
     }
     catch (const std::exception& e) {
         EE_CORE_WARN("Config not found/invalid ({}). Using defaults.", e.what());
@@ -79,6 +151,9 @@ GLFWwindow* Ermine::Window::InitWindow(int width, int height, const char* title)
 
     window_width = cfg.windowWidth;
     window_height = cfg.windowHeight;
+	SettingsGUI::SetSettingsOpen(cfg.settingsIsOpen);
+	SettingsGUI::SetFontSize(cfg.fontSize, cfg.baseFontSize); // call this after ImGui is initialized
+	SettingsGUI::SetMode(cfg.themeMode);
 
     glfwSetErrorCallback([]([[maybe_unused]] int error , const char* description) { EE_CORE_ERROR("GLFW Error: {0}", description); });
     
@@ -141,6 +216,80 @@ GLFWwindow* Ermine::Window::InitWindow(int width, int height, const char* title)
     // Set the drop callback to handle file drops
     glfwSetDropCallback(window, GLFW_DropCallback);
 
+#ifdef _WIN32
+    glfwSetWindowSizeCallback(window, [](GLFWwindow* w, [[maybe_unused]] int width, [[maybe_unused]] int height)
+        {
+            RefreshCursorConfinement(w);
+        });
+
+    glfwSetWindowFocusCallback(window, [](GLFWwindow* w, int focused)
+        {
+            if (!focused)
+            {
+                // Always release cursor confinement on focus loss
+#ifdef _WIN32
+                ConfineCursorToGLFWWindow(w, false);
+#endif
+
+                // Pause the game if enabled (works in both editor and standalone)
+                if (Ermine::Window::IsPausedOnFocusLoss())
+                {
+#if defined(EE_EDITOR)
+                    // In editor, only pause if actively playing
+                    if (editor::EditorGUI::isPlaying)
+                    {
+                        editor::EditorGUI::s_state = editor::EditorGUI::SimState::paused;
+                        EE_CORE_INFO("Game paused (window lost focus)");
+                    }
+#else
+                    // In standalone build, always pause
+                    editor::EditorGUI::s_state = editor::EditorGUI::SimState::paused;
+                    EE_CORE_INFO("Game paused (window lost focus)");
+#endif
+                }
+
+                return;
+            }
+
+            // On focus gain, re-apply cursor confinement if needed
+#ifdef _WIN32
+            RefreshCursorConfinement(w);
+#endif
+
+            // Auto-resume when window regains focus
+            if (Ermine::Window::IsPausedOnFocusLoss())
+            {
+#if defined(EE_EDITOR)
+                // In editor, only resume if we were playing before
+                if (editor::EditorGUI::s_state == editor::EditorGUI::SimState::paused)
+                {
+                    editor::EditorGUI::s_state = editor::EditorGUI::SimState::playing;
+                    EE_CORE_INFO("Game resumed (window gained focus)");
+                }
+#else
+                // In standalone build, always resume from pause
+                if (editor::EditorGUI::s_state == editor::EditorGUI::SimState::paused)
+                {
+                    editor::EditorGUI::s_state = editor::EditorGUI::SimState::playing;
+                    EE_CORE_INFO("Game resumed (window gained focus)");
+                }
+#endif
+            }
+        });
+
+    glfwSetWindowIconifyCallback(window, [](GLFWwindow* w, int iconified)
+        {
+            if (iconified)
+            {
+                ConfineCursorToGLFWWindow(w, false);
+                return;
+            }
+
+            RefreshCursorConfinement(w);
+        });
+#endif
+
+
     // We'll like to initialize GLAD as well...
     if (!gladLoadGL())
     {
@@ -194,8 +343,8 @@ void Ermine::Window::ShutDownWindow(GLFWwindow* window)
 void Ermine::Window::ToggleFullscreenWindow(GLFWwindow* window)
 {
     static bool isFullscreen =
-#if defined(EE_DEBUG)
-        false; // Debug starts in window mode
+#ifdef EE_DEBUG
+	    false; // Debug starts in window mode
 #else
         true;  // Release starts in fullscreen mode
 #endif
@@ -216,4 +365,52 @@ void Ermine::Window::ToggleFullscreenWindow(GLFWwindow* window)
     }
 
     isFullscreen = !isFullscreen;
+}
+
+void Ermine::Window::SetVisibleCursor(const bool& value)
+{
+    s_visibleCursor = value;
+    if (!glfwRawMouseMotionSupported())
+    {
+        EE_CORE_WARN("Current device doesn't support raw mouse motion support, cursor input mode will not be set.");
+        return;
+    }
+
+    if (!s_visibleCursor)
+        glfwSetInputMode(editor::EditorGUI::GetWindowContext(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    else
+        glfwSetInputMode(editor::EditorGUI::GetWindowContext(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+}
+
+void Ermine::Window::SetCursorLockState(CursorLockState state)
+{
+    s_cursorLockState = state;
+    GLFWwindow* window = editor::EditorGUI::GetWindowContext();
+    if (!window)
+        return;
+
+    if (glfwRawMouseMotionSupported())
+        glfwSetInputMode(glfwGetCurrentContext(), GLFW_RAW_MOUSE_MOTION, GLFW_FALSE);
+
+    switch (s_cursorLockState)
+    {
+    case CursorLockState::None:
+#ifdef _WIN32
+	    ConfineCursorToGLFWWindow(window, false);
+#endif
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+		break;
+    case CursorLockState::Locked:
+#ifdef _WIN32
+	    ConfineCursorToGLFWWindow(window, false);
+#endif
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        break;
+	case CursorLockState::Confined:
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+#ifdef _WIN32
+		ConfineCursorToGLFWWindow(window, true);
+#endif
+        break;
+    }
 }
