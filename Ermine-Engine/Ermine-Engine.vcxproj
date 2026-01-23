@@ -312,6 +312,7 @@ copy /B /Y "$(SolutionDir)ThirdParty\DirectXTex\lib\DirectXTex.pdb" "$(SolutionD
     <ClInclude Include="include\AssetBrowser.h" />
     <ClInclude Include="include\AssetDatabase.h" />
     <ClInclude Include="include\AssetManager.h" />
+    <ClInclude Include="include\AssetRef.h" />
     <ClInclude Include="include\AssetRegistry.h" />
     <ClInclude Include="include\AudioImGUI.h" />
     <ClInclude Include="include\AudioManager.h" />
@@ -370,7 +371,6 @@ copy /B /Y "$(SolutionDir)ThirdParty\DirectXTex\lib\DirectXTex.pdb" "$(SolutionD
     <ClInclude Include="include\Registry.h" />
     <ClInclude Include="include\Renderer.h" />
     <ClInclude Include="include\ResourcePipe.h" />
-    <ClInclude Include="include\SettingsGUI.h" />
     <ClInclude Include="include\SSBO_Bindings.h" />
     <ClInclude Include="include\Scene.h" />
     <ClInclude Include="include\SceneManager.h" />
@@ -380,6 +380,7 @@ copy /B /Y "$(SolutionDir)ThirdParty\DirectXTex\lib\DirectXTex.pdb" "$(SolutionD
     <ClInclude Include="include\ScriptSystem.h" />
     <ClInclude Include="include\Selection.h" />
     <ClInclude Include="include\Serialisation.h" />
+    <ClInclude Include="include\SettingsGUI.h" />
     <ClInclude Include="include\Shader.h" />
     <ClInclude Include="include\SkeletalSSBO.h" />
     <ClInclude Include="include\Skybox.h" />
