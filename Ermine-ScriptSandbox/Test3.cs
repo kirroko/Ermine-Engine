@@ -3,65 +3,88 @@ using ErmineEngine;
 
 public class Test3 : MonoBehaviour
 {
-    public float radius = 5.0f;          // How wide the patrol circle is
-    public float speed = 2.0f;           // How fast to move between points
-    public int numPoints = 8;            // Number of patrol points in the circle
-    public float waitTime = 1.0f;        // Pause time at each point
+    public float radius = 5f;
+    public int pointCount = 16;
+    public float reachDist = 0.5f;
+
+    // If we’re not getting closer for this long, we give up and pick the next point.
+    public float stuckTime = 0.75f;
+    public float minProgressEpsilon = 0.02f;
 
     private Vector3[] patrolPoints;
-    private int currentIndex = 0;
-    private float waitTimer = 0f;
-    private bool waiting = false;
+    private int currentIndex = -1;
+
+    private float stuckTimer = 0f;
+    private float lastDist = float.MaxValue;
+
+    private ulong entityID;
 
     void Start()
     {
-        // Generate circular patrol points around the starting position
-        Vector3 center = transform.position;
-        patrolPoints = new Vector3[numPoints];
+        entityID = (ulong)gameObject.GetInstanceID();
 
-        for (int i = 0; i < numPoints; i++)
+        // Build patrol points around the spawn position
+        Vector3 center = transform.position;
+        patrolPoints = new Vector3[pointCount];
+
+        for (int i = 0; i < pointCount; i++)
         {
-            float angle = (float)(i * 2 * Math.PI / numPoints);
-            float x = center.x + radius * (float)Math.Cos(angle);
-            float z = center.z + radius * (float)Math.Sin(angle);
-            patrolPoints[i] = new Vector3(x, center.y, z);
+            float t = (float)i / (float)pointCount;
+            float ang = t * 6.28318530718f; // 2*pi
+
+            patrolPoints[i] = new Vector3(
+                center.x + (float)Math.Cos(ang) * radius,
+                center.y,
+                center.z + (float)Math.Sin(ang) * radius
+            );
         }
 
-        // Start moving toward the first point
-        MoveToNextPoint();
+        MoveToNextPoint(); // start moving
     }
 
     void Update()
     {
-        if (waiting)
+        if (patrolPoints == null || patrolPoints.Length == 0)
+            return;
+
+        Vector3 pos = transform.position;
+        Vector3 target = patrolPoints[currentIndex];
+
+        float dist = (target - pos).Magnitude;
+
+        // Reached target -> go next
+        if (dist <= reachDist)
         {
-            waitTimer += Time.deltaTime;
-            if (waitTimer >= waitTime)
-            {
-                waiting = false;
-                MoveToNextPoint();
-            }
+            MoveToNextPoint();
             return;
         }
 
-        // Check if we’re close to our current target
-        Vector3 currentPos = transform.position;
-        Vector3 target = patrolPoints[currentIndex];
-        float distance = (target - currentPos).Magnitude;
+        // Stuck detection: if we’re not getting closer, count time
+        if (dist >= lastDist - minProgressEpsilon)
+            stuckTimer += Time.deltaTime;
+        else
+            stuckTimer = 0f;
 
-        if (distance < 0.5f)
+        lastDist = dist;
+
+        if (stuckTimer >= stuckTime)
         {
-            waiting = true;
-            waitTimer = 0f;
+            // Give up on this point and try the next one
+            MoveToNextPoint();
         }
     }
 
     private void MoveToNextPoint()
     {
-        // Go to next waypoint in the circle
+        if (patrolPoints == null || patrolPoints.Length == 0)
+            return;
+
         currentIndex = (currentIndex + 1) % patrolPoints.Length;
 
-        // Ask the NavMeshAgent to move there
-        NavAgent.SetDestination((ulong)gameObject.GetInstanceID(), patrolPoints[currentIndex]);
+        stuckTimer = 0f;
+        lastDist = float.MaxValue;
+
+        NavAgent.SetDestination(entityID, patrolPoints[currentIndex]);
     }
 }
+

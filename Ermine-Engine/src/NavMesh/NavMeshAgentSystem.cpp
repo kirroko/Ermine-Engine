@@ -84,8 +84,10 @@ namespace Ermine
             Vec3 target = agent.path[agent.currentCorner];
             Vec3 pos = trans.position;
             Vec3 dir = target - pos;
+            dir.y = 0.0f;
 
-            float dist = std::sqrt(dir.x * dir.x + dir.y * dir.y + dir.z * dir.z);
+            //float dist = std::sqrt(dir.x * dir.x + dir.y * dir.y + dir.z * dir.z);
+            float dist = std::sqrt(dir.x * dir.x + dir.z * dir.z);
 
             // if very close to the corner, go to next one
             if (dist < agent.stoppingDistance)
@@ -124,10 +126,15 @@ namespace Ermine
                     Vec3 clamped;
                     auto navSys = ecs.GetSystem<NavMeshSystem>();
                     if (navSys && navSys->ClampToNavMesh(navE, pos, ext, clamped))
+                    {
                         pos = clamped;
+
+                        // Navmesh point is on the floor. Your physics body wants its CENTER.
+                        pos.y += agent.centerYOffset;
+                    }
                 }
 
-                // NEW: move using physics so collisions resolve
+                // move using physics so collisions resolve
                 auto phys = ecs.GetSystem<Physics>();
                 if (phys && ecs.HasComponent<PhysicComponent>(e))
                 {
@@ -209,6 +216,23 @@ namespace Ermine
         EntityID nearestNav = FindNearestNavMeshEntity(startPos);
         if (nearestNav == 0 || !ecs.HasComponent<NavMeshComponent>(nearestNav))
             return false;
+
+        const auto& navComp = ecs.GetComponent<NavMeshComponent>(nearestNav);
+        const float bakedR = navComp.bakedAgentRadius;
+        const float bakedH = navComp.bakedAgentHeight;
+
+        if (bakedR > 0.0f && agent.radius > bakedR + 1e-4f)
+        {
+            EE_CORE_ERROR("[NavMeshAgentSystem] Agent radius (%.3f) > navmesh baked radius (%.3f). Re-bake navmesh for this agent size.",
+                agent.radius, bakedR);
+            return false;
+        }
+        if (bakedH > 0.0f && agent.height > bakedH + 1e-4f)
+        {
+            EE_CORE_ERROR("[NavMeshAgentSystem] Agent height (%.3f) > navmesh baked height (%.3f). Re-bake navmesh for this agent size.",
+                agent.height, bakedH);
+            return false;
+        }
 
         auto navSystem = ecs.GetSystem<NavMeshSystem>();
         if (!navSystem)

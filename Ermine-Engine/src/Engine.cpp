@@ -38,15 +38,16 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "ScriptSystem.h"
 #include "AnimationManager.h"
 #include "ConsoleGUI.h"
+#include "SettingsGUI.h"
 #include "GuidRegistry.h"
 #include "Scene.h"
 #include "HierarchySystem.h"
 #include "CameraSystem.h"
 #include "UIRenderSystem.h"
 #include "UIButtonSystem.h"
-#include "NavMesh.h"
+#include "NavMesh.h"	 
 #include "NavMeshAgentSystem.h"
-#include "EditorGUI.h"
+//#include "EditorGUI.h"
 
 #if defined(EE_EDITOR)
 #include "GraphicsDebugGUI.h"
@@ -491,6 +492,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	editor::EditorGUI::CreateImGUIWindow<AnimationEditorImGUI>();
 	editor::EditorGUI::CreateImGUIWindow<ConsoleGUI>();
 	editor::EditorGUI::CreateImGUIWindow<ImguiUI::AssetBrowser>();
+	editor::EditorGUI::CreateImGUIWindow<SettingsGUI>("Settings");
 
 	// Legacy ImGui menu windows removed - replaced with scene-based UI:
 	// - Main menu: Open Resources/Scenes/mainmenu.scene, edit MenuBackground/GameTitle entities
@@ -550,6 +552,10 @@ void engine::Shutdown()
 	cfg.windowHeight = height;
 	cfg.fullscreen = (glfwGetWindowMonitor(glfwGetCurrentContext()) != nullptr);
 	cfg.maximized = (glfwGetWindowAttrib(glfwGetCurrentContext(), GLFW_MAXIMIZED) == GLFW_TRUE);
+	cfg.settingsIsOpen = SettingsGUI::GetSettingsOpen();
+	cfg.fontSize = SettingsGUI::GetFontSizeS();
+	cfg.baseFontSize = SettingsGUI::GetBaseFontSize();
+	cfg.themeMode = SettingsGUI::GetMode();
 
 #if defined(EE_EDITOR)
 	cfg.title = "Ermine Editor 0.3";
@@ -615,21 +621,43 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 	if (sm.HasPendingSceneRequest())
 		sm.FlushPendingSceneRequest();
 
-	// Game state update
-	while (FrameController::ShouldUpdateFixed())
-	{
-		ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->FixedUpdate();					// Scripts modify physics before sim
-		ECS::GetInstance().GetSystem<Physics>()->Update(FrameController::GetFixedDeltaTime());	// Physics simulation runs
-	}
+	// ========== ADD THIS PAUSE CHECK ==========
+	// Check if game is paused - skip game updates but continue rendering
+#if defined(EE_EDITOR)
+	bool isPaused = (editor::EditorGUI::s_state == editor::EditorGUI::SimState::paused);
+#else
+	// In standalone, we still need to check pause state
+	bool isPaused = (editor::EditorGUI::s_state == editor::EditorGUI::SimState::paused);
+#endif
 
-	// Other non-fixed logic
-	// NOTE: Order of updates is important! Don't move things around without considering dependencies
-	ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->Update();									// Game logic updates transforms, forces, etc
-	ECS::GetInstance().GetSystem<HierarchySystem>()->UpdateHierarchy();									// Update hierarchy transforms first
-	ECS::GetInstance().GetSystem<StateManager>()->Update(FrameController::GetFixedDeltaTime());		// FSM update
-	ECS::GetInstance().GetSystem<NavMeshAgentSystem>()->Update(FrameController::GetFixedDeltaTime());	// AI NavMesh Agent update
-	ECS::GetInstance().GetSystem<graphics::AnimationManager>()->Update(FrameController::GetDeltaTime());// Animation Update
-	// Update editor camera
+	// Only update game logic if not paused
+	if (!isPaused)
+	{
+		// Game state update
+		while (FrameController::ShouldUpdateFixed())
+		{
+			ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->FixedUpdate();					// Scripts modify physics before sim
+			ECS::GetInstance().GetSystem<Physics>()->Update(FrameController::GetFixedDeltaTime());	// Physics simulation runs
+		}
+
+		// Other non-fixed logic
+		// NOTE: Order of updates is important! Don't move things around without considering dependencies
+		ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->Update();									// Game logic updates transforms, forces, etc
+		ECS::GetInstance().GetSystem<HierarchySystem>()->UpdateHierarchy();									// Update hierarchy transforms first
+		ECS::GetInstance().GetSystem<StateManager>()->Update(FrameController::GetFixedDeltaTime());		// FSM update
+		ECS::GetInstance().GetSystem<NavMeshAgentSystem>()->Update(FrameController::GetFixedDeltaTime());	// AI NavMesh Agent update
+		ECS::GetInstance().GetSystem<graphics::AnimationManager>()->Update(FrameController::GetDeltaTime());// Animation Update
+
+		// Update for Particles
+		ECS::GetInstance().GetSystem<ParticleSystem>()->Update(FrameController::GetDeltaTime());
+
+		// UI update (button interactions, mana regen, cooldowns)
+		ECS::GetInstance().GetSystem<UIButtonSystem>()->Update(FrameController::GetDeltaTime());
+		ECS::GetInstance().GetSystem<UIRenderSystem>()->Update(FrameController::GetDeltaTime());
+	}
+	// ========== END PAUSE CHECK ==========
+
+	// Update editor camera (always update regardless of pause state)
 #if defined(EE_EDITOR)
 	// Update appropriate camera based on play state
 	if (editor::EditorGUI::isPlaying)
@@ -649,19 +677,7 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 	gameCamera->Update();
 #endif
 
-	// Update for Particles
-	ECS::GetInstance().GetSystem<ParticleSystem>()->Update(FrameController::GetDeltaTime());
-
-	// Animation Update
-	ECS::GetInstance().GetSystem<graphics::AnimationManager>()->Update(FrameController::GetDeltaTime());
-
-	// FSM update
-	ECS::GetInstance().GetSystem<StateManager>()->Update(FrameController::GetFixedDeltaTime());
-
-	ECS::GetInstance().GetSystem<NavMeshAgentSystem>()->Update(FrameController::GetFixedDeltaTime());
-	// UI update (button interactions, mana regen, cooldowns)
-	ECS::GetInstance().GetSystem<UIButtonSystem>()->Update(FrameController::GetDeltaTime());
-	ECS::GetInstance().GetSystem<UIRenderSystem>()->Update(FrameController::GetDeltaTime());
+	// Audio always updates (handles pause state internally)
 	ECS::GetInstance().GetSystem<AudioSystem>()->Update();
 }
 

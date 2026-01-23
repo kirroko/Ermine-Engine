@@ -478,6 +478,36 @@ std::shared_ptr<graphics::Shader> AssetManager::GetShader(const std::string& sha
     return it != m_shaders.end() ? it->second : nullptr;
 }
 
+bool AssetManager::ReloadCachedShaders()
+{
+    size_t reloadFailures = 0;
+    for (auto& [key, shader] : m_shaders)
+    {
+        if (!shader)
+        {
+            ++reloadFailures;
+            continue;
+        }
+
+        if (!shader->Reload())
+        {
+            EE_CORE_WARN("Shader reload failed: {0}", key);
+            ++reloadFailures;
+        }
+    }
+
+    if (reloadFailures == 0)
+    {
+        EE_CORE_INFO("Reloaded cached shaders");
+    }
+    else
+    {
+        EE_CORE_WARN("Shader reload finished with {0} failures", reloadFailures);
+    }
+
+    return reloadFailures == 0;
+}
+
 /**
 * @brief Load a 3D model from file using Assimp.
 * @param filePath The path to the model file (e.g. .fbx, .obj, .gltf).

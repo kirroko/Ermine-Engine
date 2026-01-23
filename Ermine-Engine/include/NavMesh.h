@@ -42,6 +42,8 @@ namespace Ermine {
          None.
         *************************************************************************/
         void Shutdown();
+
+        void FreeAllNavMeshes();
         /*!***********************************************************************
         \brief
          Bakes a simple navigation mesh on top of the given entity, typically used

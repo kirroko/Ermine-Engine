@@ -2488,6 +2488,9 @@ namespace Ermine
 	};
 }
 
+// Forward declarations for NavMesh
+struct dtNavMesh;
+struct dtNavMeshQuery;
 namespace Ermine
 {
 	/*!***********************************************************************
@@ -3264,22 +3267,30 @@ namespace Ermine
 		// Recast build config
 		float cellSize = 0.05f;
 		float cellHeight = 0.05f;
-		float agentHeight = 0.2f;
-		float agentRadius = 0.1f;
-		float agentMaxClimb = 0.1f;
+		float agentHeight = 1.0f;
+		float agentRadius = 0.5f;
+		float bakedAgentRadius = 0.0f;
+		float bakedAgentHeight = 0.0f;
+		float agentMaxClimb = 0.0f;
 		float agentMaxSlope = 45.0f;
 
 		// Debug toggles
 		bool  drawInputTri = false;
 		bool  drawWalkable = true;
-		bool  drawNavMesh = true;
+		bool  drawNavMesh = false;
 
 		// Recast transient build data
 		struct BuildData;
 		BuildData* build = nullptr;
 
 		// Detour runtime
-		struct Runtime;
+		struct Runtime
+		{
+			dtNavMesh* nav = nullptr;
+			dtNavMeshQuery* query = nullptr;
+			unsigned long long tileRef = 0;
+			//dtTileRef tileRef = 0;
+		};
 		Runtime* runtime = nullptr;
 	};
 
@@ -3297,6 +3308,7 @@ namespace Ermine
 
 		float radius = 0.5f;
 		float height = 1.0f;
+		float centerYOffset = 0.0f;
 
 		bool autoFitFromCollider = true;
 		bool didAutoFit = false;

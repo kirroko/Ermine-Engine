@@ -112,29 +112,9 @@ std::string Shader::LoadShaderSource(const std::string& filepath)
  */
 Shader::Shader(const std::string& computePath)
 {
-    std::string computeSource = LoadShaderSource(computePath);
-
-	GLuint computeShader = CompileShader(GL_COMPUTE_SHADER, computeSource);
-
-	// Link the shaders to the program
-	m_RendererID = glCreateProgram();
-	glAttachShader(m_RendererID, computeShader);
-	glLinkProgram(m_RendererID);
-	GLint isLinked = 0;
-	glGetProgramiv(m_RendererID, GL_LINK_STATUS, &isLinked);
-    if (isLinked == GL_FALSE)
-    {
-        GLint maxLength = 0;
-        glGetProgramiv(m_RendererID, GL_INFO_LOG_LENGTH, &maxLength);
-        std::vector<GLchar> infoLog(maxLength);
-        glGetProgramInfoLog(m_RendererID, maxLength, &maxLength, &infoLog[0]);
-        glDeleteProgram(m_RendererID);
-        glDeleteShader(computeShader);
-        EE_CORE_ERROR("Shader linking failed: {0}", infoLog.data());
-        m_RendererID = 0;
-        return;
-	}
-	glDeleteShader(computeShader);
+    m_ShaderKind = ShaderKind::Compute;
+    m_ComputePath = computePath;
+    Reload();
 }
 
 /**
@@ -144,40 +124,10 @@ Shader::Shader(const std::string& computePath)
  */
 Shader::Shader(const std::string& vertexPath, const std::string& fragmentPath)
 {
-    std::string vertexSource = LoadShaderSource(vertexPath);
-    std::string fragmentSource = LoadShaderSource(fragmentPath);
-
-    GLuint vertexShader = CompileShader(GL_VERTEX_SHADER, vertexSource);
-    GLuint fragmentShader = CompileShader(GL_FRAGMENT_SHADER, fragmentSource);
-
-    // Link the shaders to the program
-    m_RendererID = glCreateProgram();
-    glAttachShader(m_RendererID,vertexShader);
-    glAttachShader(m_RendererID,fragmentShader);
-    glLinkProgram(m_RendererID);
-
-    GLint isLinked = 0;
-    glGetProgramiv(m_RendererID, GL_LINK_STATUS, &isLinked);
-    if (isLinked == GL_FALSE)
-    {
-        GLint maxLength = 0;
-        glGetProgramiv(m_RendererID,GL_INFO_LOG_LENGTH,&maxLength);
-
-        std::vector<GLchar> infoLog(maxLength);
-        glGetProgramInfoLog(m_RendererID,maxLength,&maxLength, &infoLog[0]);
-
-        glDeleteProgram(m_RendererID);
-        glDeleteShader(vertexShader);
-        glDeleteShader(fragmentShader);
-
-        EE_CORE_ERROR("Shader linking failed: {0}", infoLog.data());
-        m_RendererID = 0;
-        return;
-    }
-
-    // Delete the shaders as they are linked to the program and no longer needed
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
+    m_ShaderKind = ShaderKind::VertexFragment;
+    m_VertexPath = vertexPath;
+    m_FragmentPath = fragmentPath;
+    Reload();
 }
 
 
@@ -189,44 +139,11 @@ Shader::Shader(const std::string& vertexPath, const std::string& fragmentPath)
  */
 Shader::Shader(const std::string& vertexPath, const std::string& geometryPath, const std::string& fragmentPath)
 {
-    std::string vertexSource = LoadShaderSource(vertexPath);
-    std::string geometrySource = LoadShaderSource(geometryPath);
-    std::string fragmentSource = LoadShaderSource(fragmentPath);
-
-    GLuint vertexShader = CompileShader(GL_VERTEX_SHADER, vertexSource);
-    GLuint geometryShader = CompileShader(GL_GEOMETRY_SHADER, geometrySource);
-    GLuint fragmentShader = CompileShader(GL_FRAGMENT_SHADER, fragmentSource);
-
-    // Link the shaders to the program
-    m_RendererID = glCreateProgram();
-    glAttachShader(m_RendererID, vertexShader);
-    glAttachShader(m_RendererID, geometryShader);
-    glAttachShader(m_RendererID, fragmentShader);
-    glLinkProgram(m_RendererID);
-
-    GLint isLinked = 0;
-    glGetProgramiv(m_RendererID, GL_LINK_STATUS, &isLinked);
-    if (isLinked == GL_FALSE)
-    {
-        GLint maxLength = 0;
-        glGetProgramiv(m_RendererID, GL_INFO_LOG_LENGTH, &maxLength);
-
-        std::vector<GLchar> infoLog(maxLength);
-        glGetProgramInfoLog(m_RendererID, maxLength, &maxLength, &infoLog[0]);
-
-        glDeleteProgram(m_RendererID);
-        glDeleteShader(vertexShader);
-        glDeleteShader(geometryShader);
-        glDeleteShader(fragmentShader);
-
-        EE_CORE_ERROR("Shader linking failed: {0}", infoLog.data());
-        m_RendererID = 0;
-        return;
-    }
-
-    // Delete the shaders as they are linked to the program and no longer needed
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
+    m_ShaderKind = ShaderKind::VertexGeometryFragment;
+    m_VertexPath = vertexPath;
+    m_GeometryPath = geometryPath;
+    m_FragmentPath = fragmentPath;
+    Reload();
 }
 
 
@@ -245,6 +162,148 @@ Shader::~Shader()
 bool Shader::IsValid() const
 {
     return m_RendererID != 0;
+}
+
+bool Shader::BuildProgram(GLuint& outProgram)
+{
+    outProgram = 0;
+
+    if (m_ShaderKind == ShaderKind::Compute)
+    {
+        std::string computeSource = LoadShaderSource(m_ComputePath);
+        GLuint computeShader = CompileShader(GL_COMPUTE_SHADER, computeSource);
+        if (computeShader == 0)
+        {
+            return false;
+        }
+
+        GLuint program = glCreateProgram();
+        glAttachShader(program, computeShader);
+        glLinkProgram(program);
+
+        GLint isLinked = 0;
+        glGetProgramiv(program, GL_LINK_STATUS, &isLinked);
+        if (isLinked == GL_FALSE)
+        {
+            GLint maxLength = 0;
+            glGetProgramiv(program, GL_INFO_LOG_LENGTH, &maxLength);
+            std::vector<GLchar> infoLog(maxLength);
+            glGetProgramInfoLog(program, maxLength, &maxLength, &infoLog[0]);
+            glDeleteProgram(program);
+            glDeleteShader(computeShader);
+            EE_CORE_ERROR("Shader linking failed: {0}", infoLog.data());
+            return false;
+        }
+
+        glDeleteShader(computeShader);
+        outProgram = program;
+        return true;
+    }
+
+    if (m_ShaderKind == ShaderKind::VertexFragment)
+    {
+        std::string vertexSource = LoadShaderSource(m_VertexPath);
+        std::string fragmentSource = LoadShaderSource(m_FragmentPath);
+
+        GLuint vertexShader = CompileShader(GL_VERTEX_SHADER, vertexSource);
+        GLuint fragmentShader = CompileShader(GL_FRAGMENT_SHADER, fragmentSource);
+        if (vertexShader == 0 || fragmentShader == 0)
+        {
+            if (vertexShader != 0) glDeleteShader(vertexShader);
+            if (fragmentShader != 0) glDeleteShader(fragmentShader);
+            return false;
+        }
+
+        GLuint program = glCreateProgram();
+        glAttachShader(program, vertexShader);
+        glAttachShader(program, fragmentShader);
+        glLinkProgram(program);
+
+        GLint isLinked = 0;
+        glGetProgramiv(program, GL_LINK_STATUS, &isLinked);
+        if (isLinked == GL_FALSE)
+        {
+            GLint maxLength = 0;
+            glGetProgramiv(program, GL_INFO_LOG_LENGTH, &maxLength);
+            std::vector<GLchar> infoLog(maxLength);
+            glGetProgramInfoLog(program, maxLength, &maxLength, &infoLog[0]);
+            glDeleteProgram(program);
+            glDeleteShader(vertexShader);
+            glDeleteShader(fragmentShader);
+            EE_CORE_ERROR("Shader linking failed: {0}", infoLog.data());
+            return false;
+        }
+
+        glDeleteShader(vertexShader);
+        glDeleteShader(fragmentShader);
+        outProgram = program;
+        return true;
+    }
+
+    if (m_ShaderKind == ShaderKind::VertexGeometryFragment)
+    {
+        std::string vertexSource = LoadShaderSource(m_VertexPath);
+        std::string geometrySource = LoadShaderSource(m_GeometryPath);
+        std::string fragmentSource = LoadShaderSource(m_FragmentPath);
+
+        GLuint vertexShader = CompileShader(GL_VERTEX_SHADER, vertexSource);
+        GLuint geometryShader = CompileShader(GL_GEOMETRY_SHADER, geometrySource);
+        GLuint fragmentShader = CompileShader(GL_FRAGMENT_SHADER, fragmentSource);
+        if (vertexShader == 0 || geometryShader == 0 || fragmentShader == 0)
+        {
+            if (vertexShader != 0) glDeleteShader(vertexShader);
+            if (geometryShader != 0) glDeleteShader(geometryShader);
+            if (fragmentShader != 0) glDeleteShader(fragmentShader);
+            return false;
+        }
+
+        GLuint program = glCreateProgram();
+        glAttachShader(program, vertexShader);
+        glAttachShader(program, geometryShader);
+        glAttachShader(program, fragmentShader);
+        glLinkProgram(program);
+
+        GLint isLinked = 0;
+        glGetProgramiv(program, GL_LINK_STATUS, &isLinked);
+        if (isLinked == GL_FALSE)
+        {
+            GLint maxLength = 0;
+            glGetProgramiv(program, GL_INFO_LOG_LENGTH, &maxLength);
+            std::vector<GLchar> infoLog(maxLength);
+            glGetProgramInfoLog(program, maxLength, &maxLength, &infoLog[0]);
+            glDeleteProgram(program);
+            glDeleteShader(vertexShader);
+            glDeleteShader(geometryShader);
+            glDeleteShader(fragmentShader);
+            EE_CORE_ERROR("Shader linking failed: {0}", infoLog.data());
+            return false;
+        }
+
+        glDeleteShader(vertexShader);
+        glDeleteShader(geometryShader);
+        glDeleteShader(fragmentShader);
+        outProgram = program;
+        return true;
+    }
+
+    return false;
+}
+
+bool Shader::Reload()
+{
+    GLuint newProgram = 0;
+    if (!BuildProgram(newProgram))
+    {
+        return false;
+    }
+
+    if (m_RendererID != 0)
+    {
+        glDeleteProgram(m_RendererID);
+    }
+    m_RendererID = newProgram;
+    m_UniformLocationCache.clear();
+    return true;
 }
 
 /**

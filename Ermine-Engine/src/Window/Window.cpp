@@ -20,6 +20,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "glad/glad.h"
 #include "AssetBrowser.h" // For forwarding dropped files to the asset browser
 #include "EditorGUI.h"
+#include "SettingsGUI.h"
 
 #if defined(_WIN32)
 	#define GLFW_EXPOSE_NATIVE_WIN32
@@ -81,6 +82,16 @@ namespace
 
 }
 
+static bool s_pauseOnFocusLoss = true; // Enable by default
+
+void Ermine::Window::SetPausedOnFocusLoss(bool enabled) {
+    s_pauseOnFocusLoss = enabled;
+}
+
+bool Ermine::Window::IsPausedOnFocusLoss() {  
+    return s_pauseOnFocusLoss;
+}
+
 /**
  * @brief GLFW callback function for handling file drops.
  * This function is registered with GLFW to receive notifications
@@ -122,8 +133,8 @@ GLFWwindow* Ermine::Window::InitWindow(int width, int height, const char* title)
     Config cfg{};
     try {
         cfg = LoadConfigFromFile(cfgPath);
-        EE_CORE_INFO("Loaded config: {0}x{1}, fullscreen={2}, maximised={3}, title={4}",
-            cfg.windowWidth, cfg.windowHeight, cfg.fullscreen, cfg.maximized, cfg.title);
+        EE_CORE_INFO("Loaded config: {0}x{1}, fullscreen={2}, maximised={3}, title={4}, settings={5}, fontsize={6}, baseFontSize{7}, themeMode{8}",
+            cfg.windowWidth, cfg.windowHeight, cfg.fullscreen, cfg.maximized, cfg.title, cfg.settingsIsOpen, cfg.fontSize, cfg.baseFontSize, cfg.themeMode);
     }
     catch (const std::exception& e) {
         EE_CORE_WARN("Config not found/invalid ({}). Using defaults.", e.what());
@@ -140,6 +151,9 @@ GLFWwindow* Ermine::Window::InitWindow(int width, int height, const char* title)
 
     window_width = cfg.windowWidth;
     window_height = cfg.windowHeight;
+	SettingsGUI::SetSettingsOpen(cfg.settingsIsOpen);
+	SettingsGUI::SetFontSize(cfg.fontSize, cfg.baseFontSize); // call this after ImGui is initialized
+	SettingsGUI::SetMode(cfg.themeMode);
 
     glfwSetErrorCallback([]([[maybe_unused]] int error , const char* description) { EE_CORE_ERROR("GLFW Error: {0}", description); });
     
@@ -212,13 +226,55 @@ GLFWwindow* Ermine::Window::InitWindow(int width, int height, const char* title)
         {
             if (!focused)
             {
-                // Always release on focus loss to avoid trapping the cursor outside your app.
+                // Always release cursor confinement on focus loss
+#ifdef _WIN32
                 ConfineCursorToGLFWWindow(w, false);
+#endif
+
+                // Pause the game if enabled (works in both editor and standalone)
+                if (Ermine::Window::IsPausedOnFocusLoss())
+                {
+#if defined(EE_EDITOR)
+                    // In editor, only pause if actively playing
+                    if (editor::EditorGUI::isPlaying)
+                    {
+                        editor::EditorGUI::s_state = editor::EditorGUI::SimState::paused;
+                        EE_CORE_INFO("Game paused (window lost focus)");
+                    }
+#else
+                    // In standalone build, always pause
+                    editor::EditorGUI::s_state = editor::EditorGUI::SimState::paused;
+                    EE_CORE_INFO("Game paused (window lost focus)");
+#endif
+                }
+
                 return;
             }
 
-            // On focus gain, re-apply if needed.
+            // On focus gain, re-apply cursor confinement if needed
+#ifdef _WIN32
             RefreshCursorConfinement(w);
+#endif
+
+            // Auto-resume when window regains focus
+            if (Ermine::Window::IsPausedOnFocusLoss())
+            {
+#if defined(EE_EDITOR)
+                // In editor, only resume if we were playing before
+                if (editor::EditorGUI::s_state == editor::EditorGUI::SimState::paused)
+                {
+                    editor::EditorGUI::s_state = editor::EditorGUI::SimState::playing;
+                    EE_CORE_INFO("Game resumed (window gained focus)");
+                }
+#else
+                // In standalone build, always resume from pause
+                if (editor::EditorGUI::s_state == editor::EditorGUI::SimState::paused)
+                {
+                    editor::EditorGUI::s_state = editor::EditorGUI::SimState::playing;
+                    EE_CORE_INFO("Game resumed (window gained focus)");
+                }
+#endif
+            }
         });
 
     glfwSetWindowIconifyCallback(window, [](GLFWwindow* w, int iconified)

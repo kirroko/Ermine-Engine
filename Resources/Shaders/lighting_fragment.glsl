@@ -26,6 +26,10 @@ uniform mat4 projection;
 // Shading mode
 uniform int u_ShadingMode; // 0 = PBR, 1 = Blinn-Phong
 
+// Ambient lighting parameters
+uniform vec3 u_AmbientColor = vec3(1.0, 1.0, 1.0);  // RGB color of ambient light
+uniform float u_AmbientIntensity = 0.08;  // Intensity multiplier
+
 // SSAO Parameters
 uniform int u_SSAO = 1;
 uniform int u_SSAOSamples = 16;
@@ -33,7 +37,7 @@ uniform float u_SSAORadius = 10.0;
 uniform float u_SSAOBias = 0.01;
 uniform float u_SSAOIntensity = 1.0;
 uniform float u_SSAOFadeout = 0.1;
-uniform float u_SSAOMaxDistance = 100.0;
+uniform float u_SSAOMaxDistance = 1000.0;
 
 // Fog Parameters
 uniform int u_FogEnabled = 0;           // 0 = disabled, 1 = enabled
@@ -123,15 +127,10 @@ float calculateSSAO(vec2 texCoord, vec3 fragPosView, vec3 normalView, float dept
         return 1.0;
     }
     
-    // Early exit for background or very far pixels
-    if (depth >= 0.999) {
-        return 1.0;
-    }
-    
     // Distance-based fadeout
     float viewDistance = length(fragPosView);
     float fadeoutFactor = smoothstep(u_SSAOMaxDistance * u_SSAOFadeout, u_SSAOMaxDistance, viewDistance);
-    if (fadeoutFactor >= 0.99) {
+    if (fadeoutFactor >= 1.0) {
         return 1.0;
     }
 
@@ -472,7 +471,8 @@ float calculateShadowFactor(mat4 lightSpaceMatrix, int lightIndex, vec3 fragPosW
 
     // Dynamic bias based on surface angle to light
     float cosAngle = max(0.0, dot(normalWorld, lightDirWorld));
-    float bias = max(0.005 * (1.0 - cosAngle), 0.0005);
+    float slope = 1.0 - cosAngle;
+    float bias = max(0.0002, 0.002 * slope);
     vec2 texelSize = 1.0 / vec2(textureSize(shadowArraySampler, 0).xy);
     float shadow = 0.0;
 
@@ -580,8 +580,8 @@ void main()
     float ssaoFactor = calculateSSAO(TexCoord, fragPosView, normalView, depth);
 
     if (useBlinnPhong) {
-        // Ambient
-        vec3 ambient = vec3(0.2) * 0.1 * albedo * ao * ssaoFactor;
+        // Ambient with global ambient lighting
+        vec3 ambient = u_AmbientColor * u_AmbientIntensity * albedo * ao * ssaoFactor;
         result += ambient;
 
         // Blinn-Phong lighting
@@ -649,8 +649,8 @@ void main()
         // Emissive
         result += emissive * emissiveIntensity;
     } else {
-        // PBR ambient
-        vec3 ambient = vec3(0.08) * albedo * ao * ssaoFactor;
+        // PBR ambient with global ambient lighting
+        vec3 ambient = u_AmbientColor * u_AmbientIntensity * albedo * ao * ssaoFactor;
         result += ambient;
 
         // PBR lighting

@@ -32,3 +32,4 @@ ThirdParty/Glad/bin-int/
 ThirdParty/GLFW/bin-int/
 ThirdParty/imgui/bin-int/
 ThirdParty/Mono/bin-int/
+dist/*
