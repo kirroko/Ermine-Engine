@@ -433,14 +433,14 @@ namespace Ermine::ImguiUI
                 std::string uniqueKey = entry.path().string();
                 ImGuiID id = static_cast<ImGuiID>(std::hash<std::string>{}(uniqueKey));
 
-                // ❌ Remove this line:
+                // Remove this line:
                 // Items.emplace_back(id, type, name, false, icon, uniqueKey);
 
-                // ✅ Create asset and check import status
+                // Create asset and check import status
                 Asset asset(id, type, name, false, icon, uniqueKey);
                 CheckImportStatus(asset);
 
-                // ✅ Add only once
+                // Add only once
                 Items.emplace_back(asset);
             }
         }
@@ -482,7 +482,7 @@ namespace Ermine::ImguiUI
             fs::copy_file(src, dest, fs::copy_options::overwrite_existing);
             EE_CORE_INFO("Imported {} -> {}", src.string(), dest.string());
 
-            // ✅ NEW: Auto-import
+            // Auto-import
             if (m_Pipeline)
             {
                 auto GetExtLower = [](const std::string& path) {
@@ -502,11 +502,11 @@ namespace Ermine::ImguiUI
                     auto result = m_Pipeline->ReimportAsset(dest.string());
 
                     if (result.success) {
-                        EE_CORE_INFO("✓ Auto-import successful ({}ms)", result.importTimeMs);
+                        EE_CORE_INFO("Auto-import successful ({}ms)", result.importTimeMs);
                         m_Pipeline->GetDatabase().Save();
                     }
                     else {
-                        EE_CORE_WARN("⚠ Auto-import failed: {}", result.errorMessage);
+                        EE_CORE_WARN("Auto-import failed: {}", result.errorMessage);
                     }
                 }
             }

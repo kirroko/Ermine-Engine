@@ -354,6 +354,9 @@
     <ClInclude Include="include\EditorCommand.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\AssetRegistry.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\ThirdParty\xresource_pipeline_v2-main\dependencies\xtextfile\source\xtextfile.cpp">
@@ -577,6 +580,9 @@
     </ClCompile>
     <ClCompile Include="src\ImGUI\SettingsGUI.cpp">
       <Filter>src\ImGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Utility\AssetRegistry.cpp">
+      <Filter>src\Utility</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

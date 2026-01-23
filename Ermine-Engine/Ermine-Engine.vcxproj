@@ -312,6 +312,7 @@ copy /B /Y "$(SolutionDir)ThirdParty\DirectXTex\lib\DirectXTex.pdb" "$(SolutionD
     <ClInclude Include="include\AssetBrowser.h" />
     <ClInclude Include="include\AssetDatabase.h" />
     <ClInclude Include="include\AssetManager.h" />
+    <ClInclude Include="include\AssetRegistry.h" />
     <ClInclude Include="include\AudioImGUI.h" />
     <ClInclude Include="include\AudioManager.h" />
     <ClInclude Include="include\AudioSystem.h" />
@@ -462,6 +463,7 @@ copy /B /Y "$(SolutionDir)ThirdParty\DirectXTex\lib\DirectXTex.pdb" "$(SolutionD
     <ClCompile Include="src\Systems\HierarchyPanel.cpp" />
     <ClCompile Include="src\Systems\HierarchySystem.cpp" />
     <ClCompile Include="src\Systems\TransformMode.cpp" />
+    <ClCompile Include="src\Utility\AssetRegistry.cpp" />
     <ClCompile Include="src\Utility\EditorCamera.cpp" />
     <ClCompile Include="src\Utility\FrameController.cpp" />
     <ClCompile Include="src\Utility\GPUProfiler.cpp" />

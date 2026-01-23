@@ -1082,7 +1082,6 @@ namespace Ermine::editor {
 					ImGui::EndPopup();
 				}
 
-				// Accept drag & drop from AssetBrowser (keeping this as bonus feature)
 				if (ImGui::BeginDragDropTarget()) {
 					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_FILE")) {
 						const char* droppedPathCStr = static_cast<const char*>(payload->Data);
@@ -2498,6 +2497,45 @@ namespace Ermine::editor {
 		pathBuffer[sizeof(pathBuffer) - 1] = '\0';
 		if (ImGui::InputText("Image Path", pathBuffer, sizeof(pathBuffer))) {
 			imageComp.imagePath = pathBuffer;
+		}
+		if (ImGui::BeginDragDropTarget()) {
+			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_FILE")) {
+				const char* droppedPathCStr = static_cast<const char*>(payload->Data);
+				std::filesystem::path droppedPath = droppedPathCStr;
+
+				// Only accept texture-ish files
+				std::string ext = droppedPath.extension().string();
+				for (auto& c : ext) c = (char)tolower(c);
+
+				bool isTextureFile =
+					(ext == ".png" ||
+						ext == ".jpg" || ext == ".jpeg" ||
+						ext == ".tga" ||
+						ext == ".bmp" ||
+						ext == ".dds" ||
+						ext == ".ktx" ||
+						ext == ".hdr");
+
+				if (isTextureFile) {
+					std::shared_ptr<graphics::Texture> newTex =
+						AssetManager::GetInstance().LoadTexture(droppedPath.string());
+
+					if (newTex && newTex->IsValid()) 
+					{
+						imageComp.imagePath = droppedPath.string();
+					}
+					else 
+					{
+						EE_CORE_WARN("Failed to load dropped texture: {}", droppedPath.string());
+					}
+				}
+				else {
+					// Ignore non-texture drops so we don't crash
+					EE_CORE_INFO("Ignored drop '%s': not a supported texture format",
+						droppedPath.string().c_str());
+				}
+			}
+			ImGui::EndDragDropTarget();
 		}
 
 		// Fullscreen toggle
