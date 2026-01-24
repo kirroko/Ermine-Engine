@@ -1010,8 +1010,9 @@ void Renderer::RenderDepthPrePass(const Mtx44& view, const Mtx44& projection)
 	glDepthFunc(GL_LEQUAL);
 	glDepthMask(GL_TRUE);
 
-	// Explicitly disable face culling for depth pre-pass
-	glDisable(GL_CULL_FACE);
+	// Enable backface culling for depth pre-pass
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
 
 	// Bind depth pre-pass shader
 	m_DepthPrePassShader->Bind();
@@ -1089,8 +1090,9 @@ void Renderer::BeginGeometryPass()
 	// Disable blending for geometry pass
 	glDisable(GL_BLEND);
 
-	// Explicitly disable face culling for geometry pass
-	glDisable(GL_CULL_FACE);
+	// Enable backface culling for geometry pass
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
 }
 
 /**
@@ -5080,7 +5082,7 @@ void Renderer::RenderOpaqueCustomShaders(const Mtx44& view, const Mtx44& project
 	glEnable(GL_DEPTH_TEST);          // Enable depth testing
 	glDepthFunc(GL_LEQUAL);           // Use LEQUAL to match geometry pass
 	glDepthMask(GL_FALSE);            // DON'T write depth (depth pre-pass already wrote it)
-	glEnable(GL_CULL_FACE);           // Enable face culling
+	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
 
 	// ========== RENDER OPAQUE CUSTOM STANDARD MESHES (NON-SKINNED) ==========
@@ -6148,6 +6150,8 @@ void Renderer::RenderShadowMapInstanced()
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
 	glDepthMask(GL_TRUE); // Ensure depth writes are enabled (may be disabled from geometry pass)
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
 
 	// Bind shadow shader
 	m_ShadowMapInstancedShader->Bind();
