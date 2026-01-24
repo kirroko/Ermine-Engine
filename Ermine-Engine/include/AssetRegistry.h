@@ -1,10 +1,10 @@
 /* Start Header ************************************************************************/
 /*!
-\file       GuidRegistry.h
-\author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu
+\file       AssetRegistry.cpp
+\author     Wee Hong RU Curtis, h.wee, 2301266, h.wee\@digipen.edu
 \date       8/10/2025
-\brief      This file contains the declaration of the GuidRegistry class.
-			Used for mapping between GUIDs and Entity IDs.
+\brief      This file contains the declaration of the AssetRegistry class.
+			Used for mapping between GUIDs and File Paths.
 
 Copyright (C) 2025 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents without the

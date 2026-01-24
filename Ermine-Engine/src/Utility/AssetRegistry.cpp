@@ -1,10 +1,10 @@
 /* Start Header ************************************************************************/
 /*!
-\file       GuidRegistry.cpp
-\author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu
+\file       AssetRegistry.cpp
+\author     Wee Hong RU Curtis, h.wee, 2301266, h.wee\@digipen.edu
 \date       8/10/2025
-\brief      This file contains the declaration of the GuidRegistry class.
-			Used for mapping between GUIDs and Entity IDs.
+\brief      This file contains the definition of the AssetRegistry class.
+			Used for mapping between GUIDs and File Paths.
 
 Copyright (C) 2025 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents without the
@@ -12,9 +12,9 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 */
 /* End Header **************************************************************************/
 #include "PreCompile.h"
-#include "GuidRegistry.h"
+#include "AssetRegistry.h"
 
-void Ermine::GuidRegistry::Register(EntityID e, Guid g)
+void Ermine::AssetRegistry::Register(EntityID e, Guid g)
 {
 	if (auto it = m_EntityToGuid.find(e); it != m_EntityToGuid.end())
 		m_GuidToEntity.erase(it->second);
@@ -25,7 +25,7 @@ void Ermine::GuidRegistry::Register(EntityID e, Guid g)
 	m_GuidToEntity[g] = e;
 }
 
-void Ermine::GuidRegistry::Unregister(EntityID e)
+void Ermine::AssetRegistry::Unregister(EntityID e)
 {
 	if (auto it = m_EntityToGuid.find(e); it != m_EntityToGuid.end()) {
 		m_GuidToEntity.erase(it->second);
@@ -33,19 +33,19 @@ void Ermine::GuidRegistry::Unregister(EntityID e)
 	}
 }
 
-Ermine::EntityID Ermine::GuidRegistry::FindEntity(Guid g) const
+Ermine::EntityID Ermine::AssetRegistry::FindEntity(Guid g) const
 {
 	auto it = m_GuidToEntity.find(g);
 	return it == m_GuidToEntity.end() ? 0 : it->second;
 }
 
-Ermine::Guid Ermine::GuidRegistry::FindGuid(EntityID e) const
+Ermine::Guid Ermine::AssetRegistry::FindGuid(EntityID e) const
 {
 	auto it = m_EntityToGuid.find(e);
 	return it == m_EntityToGuid.end() ? Guid{} : it->second;
 }
 
-void Ermine::GuidRegistry::Clear()
+void Ermine::AssetRegistry::Clear()
 {
 	m_GuidToEntity.clear();
 	m_EntityToGuid.clear();
