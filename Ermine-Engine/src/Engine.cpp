@@ -233,6 +233,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	EE_AUTO_REGISTER_COMPONENT(StateMachine, "StateMachine")
 		EE_AUTO_REGISTER_COMPONENT(NavMeshComponent, "NavMesh")
 		EE_AUTO_REGISTER_COMPONENT(NavMeshAgent, "NavMeshAgent")
+		EE_AUTO_REGISTER_COMPONENT(NavJumpLink, "NavJumpLink")
 		EE_AUTO_REGISTER_COMPONENT(GlobalTransform, "GlobalTransform")
 		EE_AUTO_REGISTER_COMPONENT(ParticleEmitter, "ParticleEmitter")
 		EE_AUTO_REGISTER_COMPONENT(CameraComponent, "CameraComponent");

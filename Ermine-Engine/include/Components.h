@@ -3321,6 +3321,19 @@ namespace Ermine
 		unsigned long long startPoly = 0;
 		unsigned long long endPoly = 0;
 
+		// jump
+		bool navPaused = false;
+		bool isJumping = false;
+
+		Ermine::Vec3 jumpStart;
+		Ermine::Vec3 jumpTarget;
+
+		float jumpTimer = 0.0f;
+		float jumpDuration = 0.4f;
+		float jumpHeight = 1.0f;
+
+		Vec3 lastDestination;
+
 		// Serialization
 		/*
 		template<typename Alloc>
@@ -3348,6 +3361,13 @@ namespace Ermine
 			xproperty::obj_member<"stoppingDistance", &NavMeshAgent::stoppingDistance>,
 			xproperty::obj_member<"autoRotate", &NavMeshAgent::autoRotate>
 		);*/
+	};
+
+	struct NavJumpLink
+	{
+		Ermine::Vec3 landingPosition;   // where the agent should land
+		float jumpDuration = 0.4f;      // seconds
+		float jumpHeight = 1.0f;        // purely visual
 	};
 
 	/*!***********************************************************************

@@ -2506,6 +2506,44 @@ namespace
 	}
 #pragma endregion
 
+#pragma region NavAgent ICalls
+	void icall_navagent_start_jump(uint64_t agentEntityID, uint64_t linkEntityID)
+	{
+		using namespace Ermine;
+
+		auto& ecs = ECS::GetInstance();
+
+		EntityID agentID = (EntityID)agentEntityID;
+		EntityID linkID = (EntityID)linkEntityID;
+
+		if (agentID == 0 || linkID == 0) return;
+		if (!ecs.IsEntityValid(agentID) || !ecs.IsEntityValid(linkID)) return;
+
+		if (!ecs.HasComponent<NavMeshAgent>(agentID)) return;
+		if (!ecs.HasComponent<Transform>(agentID)) return;
+		if (!ecs.HasComponent<NavJumpLink>(linkID)) return;
+
+		auto& agent = ecs.GetComponent<NavMeshAgent>(agentID);
+		auto& tr = ecs.GetComponent<Transform>(agentID);
+		const auto& link = ecs.GetComponent<NavJumpLink>(linkID);
+
+		// prevent spam
+		if (agent.isJumping) return;
+
+		agent.isJumping = true;
+		agent.navPaused = true;
+
+		agent.jumpStart = tr.position;
+		agent.jumpTarget = link.landingPosition;
+		agent.jumpTimer = 0.0f;
+		agent.jumpDuration = link.jumpDuration;
+		agent.jumpHeight = link.jumpHeight;
+
+		agent.hasPath = false;
+	}
+
+#pragma endregion
+
 #pragma region UI ICalls
 	static float Internal_GetHealth(uint64_t entityID)
 	{
@@ -2971,6 +3009,7 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 			v.z = dest.z;
 			Ermine::RequestPathForAgent((Ermine::EntityID)entityID, v);
 		});
+	mono_add_internal_call("ErmineEngine.NavAgent::StartJump", (const void*)icall_navagent_start_jump);
 #pragma endregion
 
 #pragma region Physics ICalls

@@ -312,6 +312,9 @@ namespace Ermine::editor {
 		if (ECS::GetInstance().HasComponent<NavMeshAgent>(selected))
 			DrawNavMeshAgentComponent(selected);
 
+		if (ECS::GetInstance().HasComponent<NavJumpLink>(selected))
+			DrawNavJumpComponent(selected);
+
 		if (ECS::GetInstance().HasComponent<ParticleEmitter>(selected)) {
 			DrawParticleEmitterComponent(selected);
 		}
@@ -2427,6 +2430,20 @@ namespace Ermine::editor {
 			agent.didAutoFit = false;
 	}
 
+	void HierarchyInspector::DrawNavJumpComponent(EntityID entity)
+	{
+		if (!ComponentHeaderWithRemove<NavJumpLink>("Nav Jump Link", entity))
+			return;
+
+		auto& navJ = ECS::GetInstance().GetComponent<NavJumpLink>(entity);
+
+		ImGui::SeparatorText("Jump Settings");
+
+		ImGui::DragFloat3("Landing Position", &navJ.landingPosition.x, 0.1f);
+		ImGui::DragFloat("Jump Duration", &navJ.jumpDuration, 0.01f, 0.05f, 3.0f);
+		ImGui::DragFloat("Jump Height", &navJ.jumpHeight, 0.05f, 0.0f, 10.0f);
+	}
+
 	void HierarchyInspector::DrawParticleEmitterComponent(EntityID entity)
 	{
 		//if (!ImGui::CollapsingHeader("Particle Emitter", ImGuiTreeNodeFlags_DefaultOpen))
@@ -2613,6 +2630,9 @@ namespace Ermine::editor {
 		}
 		if (ImGui::MenuItem("NavMeshAgent") && !ECS::GetInstance().HasComponent<NavMeshAgent>(entity)) {
 			ECS::GetInstance().AddComponent(entity, NavMeshAgent());
+		}
+		if (ImGui::MenuItem("NavJumpLink") && !ECS::GetInstance().HasComponent<NavJumpLink>(entity)) {
+			ECS::GetInstance().AddComponent(entity, NavJumpLink());
 		}
 		if (ImGui::MenuItem("ParticleEmitter") && !ECS::GetInstance().HasComponent<ParticleEmitter>(entity)) {
 			ECS::GetInstance().AddComponent(entity, ParticleEmitter());

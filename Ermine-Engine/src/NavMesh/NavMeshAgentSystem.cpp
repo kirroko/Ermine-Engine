@@ -70,6 +70,39 @@ namespace Ermine
             auto& agent = ecs.GetComponent<NavMeshAgent>(e);
             auto& trans = ecs.GetComponent<Transform>(e);
 
+            // jump
+            if (agent.isJumping)
+            {
+                EE_CORE_INFO("JUMPING");
+                agent.jumpTimer += dt;
+                float t = (agent.jumpDuration > 1e-5f) ? (agent.jumpTimer / agent.jumpDuration) : 1.0f;
+                if (t > 1.0f) t = 1.0f;
+
+                // Linear interpolate start->target
+                Vec3 pos = agent.jumpStart + (agent.jumpTarget - agent.jumpStart) * t;
+
+                // Add parabolic arc on Y (visual jump)
+                float arc = agent.jumpHeight * 4.0f * t * (1.0f - t);
+                pos.y += arc;
+
+                trans.position = pos;
+
+                if (t >= 1.0f)
+                {
+                    agent.isJumping = false;
+                    agent.navPaused = false;
+
+                    // After landing, you can re-request the path if you store a destination.
+                    // For now, you can let your script call SetDestination again after jump if needed.
+                }
+
+                continue; // skip normal nav movement while jumping
+            }
+            // jump
+
+            if (agent.navPaused)
+                continue;
+
             // skip if no path
             if (!agent.hasPath)
                 continue;
@@ -117,20 +150,46 @@ namespace Ermine
 
                 pos += dir * step;
 
-                // Clamp to navmesh as you already do
-                EntityID navE = FindNearestNavMeshEntity(pos);
+                Vec3 feetQuery = pos;
+                feetQuery.y -= agent.centerYOffset; // convert center -> feet for the nav query
+
+                EntityID navE = FindNearestNavMeshEntity(feetQuery);
                 if (navE != 0)
                 {
-                    float ext[3] = { agent.radius * 2.0f, agent.height * 0.5f + 0.5f, agent.radius * 2.0f };
+                    float ext[3] = {
+                        agent.radius * 2.0f,
+                        agent.height * 0.5f + 0.5f,
+                        agent.radius * 2.0f
+                    };
 
-                    Vec3 clamped;
+                    Vec3 clampedFeet;
                     auto navSys = ecs.GetSystem<NavMeshSystem>();
-                    if (navSys && navSys->ClampToNavMesh(navE, pos, ext, clamped))
+                    if (navSys && navSys->ClampToNavMesh(navE, feetQuery, ext, clampedFeet))
                     {
-                        pos = clamped;
+                        // Keep XZ from navmesh, and compute CENTER Y deterministically
+                        pos.x = clampedFeet.x;
+                        pos.z = clampedFeet.z;
+                        
+                        if (ecs.HasComponent<PhysicComponent>(e))
+                        {
+                            auto& p = ecs.GetComponent<PhysicComponent>(e);
 
-                        // Navmesh point is on the floor. Your physics body wants its CENTER.
-                        pos.y += agent.centerYOffset;
+                            if (p.shapeType == ShapeType::Capsule)
+                            {
+                                // For capsule, don't add center offset
+                                pos.y = clampedFeet.y;
+                            }
+                            else
+                            {
+                                // For box/sphere etc, keep the old behavior
+                                pos.y = clampedFeet.y + agent.centerYOffset;
+                            }
+                        }
+                        else
+                        {
+                            // No physics info: fallback to old behavior
+                            pos.y = clampedFeet.y + agent.centerYOffset;
+                        }
                     }
                 }
 
@@ -138,10 +197,24 @@ namespace Ermine
                 auto phys = ecs.GetSystem<Physics>();
                 if (phys && ecs.HasComponent<PhysicComponent>(e))
                 {
-                    phys->SetPosition(e, pos);
+                    if (agent.autoRotate)
+                    {
+                        Vec3 move = pos - trans.position; // trans.position is old position (before move)
+                        move.y = 0.0f;
 
-                    // If you want rotation too (optional), keep it synced:
-                    // phys->SetRotation(e, trans.rotation);
+                        float lenSq = move.x * move.x + move.z * move.z;
+                        if (lenSq > 1e-6f) // only rotate if we actually moved
+                        {
+                            float yawRad = std::atan2(move.x, move.z);
+                            float yawDeg = yawRad * 57.2957795f;
+
+                            trans.rotation = FromEulerDegrees(Vec3(0.0f, yawDeg, 0.0f));
+                            trans.isDirty = true;
+                        }
+                    }
+
+                    phys->SetPosition(e, pos);
+                    phys->SetRotation(e, trans.rotation);
                 }
                 else
                 {

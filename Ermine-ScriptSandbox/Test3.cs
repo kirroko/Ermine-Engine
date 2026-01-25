@@ -19,6 +19,8 @@ public class Test3 : MonoBehaviour
 
     private ulong entityID;
 
+    private bool jumping = false;
+
     void Start()
     {
         entityID = (ulong)gameObject.GetInstanceID();
@@ -44,6 +46,9 @@ public class Test3 : MonoBehaviour
 
     void Update()
     {
+        if (jumping)
+            return;
+
         if (patrolPoints == null || patrolPoints.Length == 0)
             return;
 
@@ -85,6 +90,18 @@ public class Test3 : MonoBehaviour
         lastDist = float.MaxValue;
 
         NavAgent.SetDestination(entityID, patrolPoints[currentIndex]);
+    }
+
+
+    void OnCollisionEnter(Collision col)
+    {
+        Debug.Log("AI OnCollisionEnter hit: " + col);
+        if (col.gameObject.name == "JumpArea")
+        {
+            jumping = true;
+            Debug.Log("JUMP!!!");
+            NavAgent.StartJump((ulong)gameObject.GetInstanceID(), (ulong)col.gameObject.GetInstanceID());
+        }
     }
 }
 
