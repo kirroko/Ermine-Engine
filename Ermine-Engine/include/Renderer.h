@@ -163,9 +163,16 @@ namespace Ermine::graphics
         glm::vec4 position_type;    // xyz = position (view space), w = light type
         glm::vec4 color_intensity;  // xyz = color, w = intensity
         glm::vec4 direction_range;  // xyz = direction (view space), w = range
-		glm::vec4 spot_angles_castshadows_startOffset; // x = inner angle (cos), y = outer angle (cos), z = cast shadows (bool), w = shadow map index or 0 if no shadows
+		glm::vec4 spot_angles_castshadows_startOffset; // x = inner angle (cos), y = outer angle (cos), z = flags bitfield, w = shadow base layer or -1 if no shadows
         glm::mat4 lightSpaceMatrix[NUM_CASCADES];
+        glm::mat4 pointLightMatrices[6];
 		glm::vec4 splitDepths[(NUM_CASCADES+3)/4]; // split depths for cascaded shadow maps xyzw
+    };
+
+    struct ShadowViewGPU
+    {
+        glm::mat4 lightSpaceMatrix;
+        glm::uvec4 data; // x = shadow layer index
     };
 
 
@@ -193,6 +200,7 @@ namespace Ermine::graphics
         // Debug visualization toggles
         bool m_DebugDrawAABBs = false;
         bool m_DebugDrawFrustum = false;
+        bool m_DebugDrawBoneAABBs = false;
 
         // Lighting Pass Parameters
         // SSAO parameters
@@ -885,6 +893,9 @@ namespace Ermine::graphics
             const glm::vec3& spotDir,
             float outerAngleRad,
             float lightRadius);
+        void calculatePointLightShadowMatrices(const glm::vec3& lightPos,
+            float lightRadius,
+            glm::mat4 outMatrices[6]);
 #pragma endregion
 
         /**
@@ -1127,6 +1138,7 @@ namespace Ermine::graphics
             bool hadChildMaterial;         // Whether child had valid material when cached
             MeshHandle meshHandle;         // Cached mesh handle (avoids hash map lookup)
             const MeshSubset* meshData;    // Cached mesh data pointer
+            const MeshData* modelMeshData; // Cached model mesh data (for skinned CPU bounds)
             uint32_t materialIndex;        // Cached material index
             glm::vec3 aabbMin;             // Object-space AABB min
             glm::vec3 aabbMax;             // Object-space AABB max
@@ -1134,6 +1146,7 @@ namespace Ermine::graphics
             bool castsShadows;             // Shadow casting flag (affects shadow pass routing)
             bool hasCustomShader;          // Custom shader flag (affects pass routing)
             bool useSkinning;              // Skinning flag (affects VAO selection)
+            bool hasSkinningData;          // Mesh has valid bone influences
             bool isCameraAttached;         // Camera-attached flag (no motion blur)
             uint32_t boneOffset;           // Bone transform offset (skinned only)
         };
@@ -1187,8 +1200,11 @@ namespace Ermine::graphics
 		void GenerateIGNTexture();
 
         unsigned int m_TotalShadowLayers = 0; // Total layers used by all shadow-casting lights
-        std::vector<int> m_ActiveShadowLights; // Indices of shadow-casting lights (updated in UpdateLightsUBO)
-        int m_TotalShadowInstances = 0; // Total instances for shadow rendering (maxLights * NUM_CASCADES)
+        int m_TotalShadowInstances = 0; // Total instances for shadow rendering (one per shadow layer)
+        GLuint m_ShadowViewSSBO = 0; // SSBO containing per-layer shadow view matrices
+        size_t m_ShadowViewSSBOCapacity = 0;
+        std::vector<ShadowViewGPU> m_ShadowViews;
+        std::vector<EntityID> m_ShadowCastingLights;
 
         // Forward rendering shader for transparent objects
         std::shared_ptr<Shader> m_ForwardShader = nullptr;

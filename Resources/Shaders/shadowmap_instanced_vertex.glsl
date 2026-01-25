@@ -12,9 +12,6 @@
 #extension GL_ARB_shader_viewport_layer_array : enable
 #endif
 
-const int MAX_LIGHTS = 32;
-const int NUM_CASCADES = 4;
-
 layout(location = 0) in vec3 aPosition;
 layout(location = 1) in vec3 aNormal;      // Not used for shadows, but needed for attribute layout
 layout(location = 2) in vec2 aTexCoord;    // Not used for shadows, but needed for attribute layout
@@ -55,41 +52,14 @@ layout(std430, binding = 2) restrict readonly buffer BoneTransformBuffer {
 // Base draw ID offset for multi-batch indirect rendering
 uniform uint baseDrawID;
 
-// Light structure
-struct Light {
-    vec4 position_type;    // xyz = position (view space), w = light type
-    vec4 color_intensity;  // xyz = color, w = intensity
-    vec4 direction_range;  // xyz = direction (view space), w = range
-    vec4 spot_angles_castshadows_startOffset; // x = inner angle (cos), y = outer angle (cos), z = flags bitfield (bit 0: castsShadows, bit 1: castsRays), w = shadow map index or 0 if no shadows
-    mat4 lightSpaceMatrix[NUM_CASCADES]; // Light view-projection matrices for cascaded shadow maps
-    vec4 splitDepths[(NUM_CASCADES + 3) / 4]; // Split depths for cascaded shadow maps
+struct ShadowView {
+    mat4 lightSpaceMatrix;
+    uvec4 data; // x = layer index
 };
 
-layout (std140, binding = 1) uniform LightsUBO {
-    vec4 lightCount;
-    Light lights[MAX_LIGHTS]; // Fixed-size array required for UBO
+layout(std430, binding = 7) restrict readonly buffer ShadowViewBuffer {
+    ShadowView shadowViews[];
 };
-
-// Light type constants
-const int POINT_LIGHT = 0;
-const int DIRECTIONAL_LIGHT = 1;
-const int SPOT_LIGHT = 2;
-
-// Light flag bit positions
-const int LIGHT_FLAG_CASTS_SHADOWS = 1;  // bit 0
-const int LIGHT_FLAG_CASTS_RAYS = 2;     // bit 1
-
-// Helper functions to extract light flags
-bool lightCastsShadows(Light light) {
-    return (int(light.spot_angles_castshadows_startOffset.z) & LIGHT_FLAG_CASTS_SHADOWS) != 0;
-}
-
-bool lightCastsRays(Light light) {
-    return (int(light.spot_angles_castshadows_startOffset.z) & LIGHT_FLAG_CASTS_RAYS) != 0;
-}
-
-// Per-frame uniforms - avoid additional SSBOs
-uniform int u_ActiveShadowLights[16];    // Indices of shadow-casting directional lights
 
 void main()
 {
@@ -120,35 +90,8 @@ void main()
         skinnedPos = boneTransform * vec4(aPosition, 1.0);
     }
 
-    // Calculate light and cascade from gl_InstanceID
-    // Instance layout: light0_cascade0, light0_cascade1, ..., light0_cascade3, light1_cascade0, ...
-    int cascadeIndex = gl_InstanceID % NUM_CASCADES;
-    int lightArrayIndex = gl_InstanceID / NUM_CASCADES;
+    ShadowView viewEntry = shadowViews[gl_InstanceID];
 
-    // Get the actual light index from the active shadow lights array
-    int lightIndex = u_ActiveShadowLights[lightArrayIndex];
-
-    // Get the light data
-    Light light = lights[lightIndex];
-
-    // Get light type
-    int lightType = int(light.position_type.w);
-
-    // Spotlights only use cascade 0 - skip invalid instances
-    if (lightType == SPOT_LIGHT && cascadeIndex > 0) {
-        // Discard this instance by moving vertex off-screen
-        gl_Position = vec4(0.0, 0.0, -10.0, 1.0);
-        gl_Layer = 0;
-        return;
-    }
-
-    // Calculate target layer: startOffset + cascadeIndex
-    int startOffset = int(light.spot_angles_castshadows_startOffset.w);
-    int targetLayer = startOffset + cascadeIndex;
-
-    // Transform vertex to light space using the appropriate cascade matrix
-    gl_Position = light.lightSpaceMatrix[cascadeIndex] * modelMatrix * skinnedPos;
-
-    // Pass layer to fragment shader (for gl_Layer assignment if needed)
-    gl_Layer = targetLayer;
+    gl_Position = viewEntry.lightSpaceMatrix * modelMatrix * skinnedPos;
+    gl_Layer = int(viewEntry.data.x);
 }

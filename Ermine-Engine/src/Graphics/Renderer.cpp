@@ -21,6 +21,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "EditorGUI.h"
 #include "FrameController.h"
 
+#include <algorithm>
 #include <numeric> // For std::iota
 
 #include "ECS.h"
@@ -73,6 +74,110 @@ GLenum glCheckError_(const char* file, int line)
 	return errorCode;
 }
 #define glCheckError() glCheckError_(__FILE__, __LINE__)
+
+namespace {
+	bool ComputeSkinnedMeshAABB(const Ermine::graphics::MeshData& mesh,
+		const std::vector<glm::mat4>& boneTransforms,
+		glm::vec3& outMin,
+		glm::vec3& outMax)
+	{
+		if (boneTransforms.empty()) {
+			return false;
+		}
+
+		if (mesh.boneAabbMin.size() == boneTransforms.size()
+			&& mesh.boneAabbMax.size() == boneTransforms.size()
+			&& !mesh.boneAabbMin.empty()) {
+			glm::vec3 aabbMin(FLT_MAX);
+			glm::vec3 aabbMax(-FLT_MAX);
+			bool any = false;
+
+			for (size_t i = 0; i < boneTransforms.size(); ++i) {
+				if (!mesh.boneAabbValid.empty() && mesh.boneAabbValid[i] == 0) {
+					continue;
+				}
+
+				glm::vec3 localMin = mesh.boneAabbMin[i];
+				glm::vec3 localMax = mesh.boneAabbMax[i];
+				glm::vec3 center = (localMin + localMax) * 0.5f;
+				glm::vec3 extent = (localMax - localMin) * 0.5f;
+
+				const glm::mat4& boneTransform = boneTransforms[i];
+				glm::vec3 worldCenter = glm::vec3(boneTransform * glm::vec4(center, 1.0f));
+				glm::mat3 upperLeft = glm::mat3(boneTransform);
+				glm::vec3 worldExtent = glm::abs(upperLeft[0]) * extent.x
+					+ glm::abs(upperLeft[1]) * extent.y
+					+ glm::abs(upperLeft[2]) * extent.z;
+
+				glm::vec3 boneMin = worldCenter - worldExtent;
+				glm::vec3 boneMax = worldCenter + worldExtent;
+
+				aabbMin = glm::min(aabbMin, boneMin);
+				aabbMax = glm::max(aabbMax, boneMax);
+				any = true;
+			}
+
+			if (any) {
+				outMin = aabbMin;
+				outMax = aabbMax;
+				return true;
+			}
+		}
+
+		if (!mesh.vbo) {
+			return false;
+		}
+
+		const auto* vertexData = reinterpret_cast<const Ermine::graphics::VertexData*>(mesh.vbo->GetDataPointer());
+		if (!vertexData) {
+			return false;
+		}
+
+		const unsigned int numVertices = mesh.vbo->GetSize() / sizeof(Ermine::graphics::VertexData);
+		if (numVertices == 0) {
+			return false;
+		}
+
+		glm::vec3 aabbMin(FLT_MAX);
+		glm::vec3 aabbMax(-FLT_MAX);
+		bool anyWeighted = false;
+
+		for (unsigned int i = 0; i < numVertices; ++i) {
+			const Ermine::graphics::VertexData& v = vertexData[i];
+			glm::vec4 skinnedPos(0.0f);
+
+			for (int j = 0; j < Ermine::graphics::MAX_BONE_INFLUENCE; ++j) {
+				const int boneID = v.IDs[j];
+				const float weight = v.Weights[j];
+
+				if (weight <= 0.0f) {
+					continue;
+				}
+				anyWeighted = true;
+
+				if (boneID < 0 || boneID >= static_cast<int>(boneTransforms.size())) {
+					continue;
+				}
+
+				skinnedPos += boneTransforms[boneID]
+					* glm::vec4(v.position[0], v.position[1], v.position[2], 1.0f)
+					* weight;
+			}
+
+			const glm::vec3 pos(skinnedPos);
+			aabbMin = glm::min(aabbMin, pos);
+			aabbMax = glm::max(aabbMax, pos);
+		}
+
+		if (!anyWeighted) {
+			return false;
+		}
+
+		outMin = aabbMin;
+		outMax = aabbMax;
+		return true;
+	}
+}
 
 void Renderer::InitializeShadowMapResources()
 {
@@ -905,8 +1010,9 @@ void Renderer::RenderDepthPrePass(const Mtx44& view, const Mtx44& projection)
 	glDepthFunc(GL_LEQUAL);
 	glDepthMask(GL_TRUE);
 
-	// Explicitly disable face culling for depth pre-pass
-	glDisable(GL_CULL_FACE);
+	// Enable backface culling for depth pre-pass
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
 
 	// Bind depth pre-pass shader
 	m_DepthPrePassShader->Bind();
@@ -984,8 +1090,9 @@ void Renderer::BeginGeometryPass()
 	// Disable blending for geometry pass
 	glDisable(GL_BLEND);
 
-	// Explicitly disable face culling for geometry pass
-	glDisable(GL_CULL_FACE);
+	// Enable backface culling for geometry pass
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
 }
 
 /**
@@ -1481,6 +1588,7 @@ void Renderer::RebuildDrawData()
 			cacheItem.hadChildMaterial = false; // No child material
 			cacheItem.meshHandle = meshHandle;
 			cacheItem.meshData = meshData;
+			cacheItem.modelMeshData = nullptr;
 			cacheItem.materialIndex = materialIndex;
 			cacheItem.aabbMin = glm::vec3(mesh.aabbMin.x, mesh.aabbMin.y, mesh.aabbMin.z);
 			cacheItem.aabbMax = glm::vec3(mesh.aabbMax.x, mesh.aabbMax.y, mesh.aabbMax.z);
@@ -1488,6 +1596,7 @@ void Renderer::RebuildDrawData()
 			cacheItem.castsShadows = castsShadows;
 			cacheItem.hasCustomShader = isCustomShader;
 			cacheItem.useSkinning = false; // Primitives never use skinning
+			cacheItem.hasSkinningData = false;
 			cacheItem.boneOffset = 0;
 			m_CachedDrawItems.push_back(cacheItem);
 
@@ -1707,6 +1816,7 @@ void Renderer::RebuildDrawData()
 				cacheItem.hadChildMaterial = hadChildMaterial;    // Whether child had valid material
 				cacheItem.meshHandle = meshHandle;
 				cacheItem.meshData = meshData;
+				cacheItem.modelMeshData = &mesh;
 				cacheItem.materialIndex = materialIndex;
 				cacheItem.aabbMin = mesh.aabbMin;
 				cacheItem.aabbMax = mesh.aabbMax;
@@ -1714,6 +1824,7 @@ void Renderer::RebuildDrawData()
 				cacheItem.castsShadows = castsShadows;
 				cacheItem.hasCustomShader = isCustomShader;
 				cacheItem.useSkinning = false; // Static models never use skinning
+				cacheItem.hasSkinningData = false;
 				cacheItem.isCameraAttached = isCameraAttached; // Cache camera-attachment for fast path
 				cacheItem.boneOffset = 0;
 				m_CachedDrawItems.push_back(cacheItem);
@@ -1948,6 +2059,7 @@ void Renderer::RebuildDrawData()
 				cacheItem.hadChildMaterial = hadChildMaterial;    // Whether child had valid material
 				cacheItem.meshHandle = meshHandle;
 				cacheItem.meshData = meshData;
+				cacheItem.modelMeshData = &mesh;
 				cacheItem.materialIndex = materialIndex;
 				cacheItem.aabbMin = mesh.aabbMin;
 				cacheItem.aabbMax = mesh.aabbMax;
@@ -1955,6 +2067,9 @@ void Renderer::RebuildDrawData()
 				cacheItem.castsShadows = castsShadows;
 				cacheItem.hasCustomShader = isCustomShader;
 				cacheItem.useSkinning = true; // Animated models use skinning
+				cacheItem.hasSkinningData = std::any_of(
+					mesh.boneAabbValid.begin(), mesh.boneAabbValid.end(),
+					[](uint8_t v) { return v != 0; });
 				cacheItem.isCameraAttached = isCameraAttached; // Cache camera-attachment for fast path
 				cacheItem.boneOffset = boneOffset;
 				m_CachedDrawItems.push_back(cacheItem);
@@ -2427,10 +2542,10 @@ void Renderer::UpdateDrawData()
 		}
 
 		// Get current entity transform (this is what changed!)
-		// Note: Animated models manually build matrix (no hierarchy), static models use GetEntityWorldMatrix
+		// Note: Use hierarchy-based world matrix unless we have valid skinning data.
 		glm::mat4 model;
-		if (cachedItem.useSkinning) {
-			// Animated models: manually build matrix (matches RebuildDrawData behavior)
+		if (cachedItem.useSkinning && cachedItem.hasSkinningData) {
+			// Animated models with skinning data: manually build matrix (fast path)
 			const auto& trans = ecs.GetComponent<Transform>(cachedItem.entity);
 			model = glm::mat4(1.0f);
 			model = glm::translate(model, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
@@ -2444,10 +2559,22 @@ void Renderer::UpdateDrawData()
 			model = GetEntityWorldMatrix(cachedItem.entity);
 		}
 
+		glm::vec3 localAabbMin = cachedItem.aabbMin;
+		glm::vec3 localAabbMax = cachedItem.aabbMax;
+		if (cachedItem.useSkinning && cachedItem.hasSkinningData && cachedItem.modelMeshData
+			&& ecs.HasComponent<AnimationComponent>(cachedItem.entity)) {
+			const auto& animComp = ecs.GetComponent<AnimationComponent>(cachedItem.entity);
+			if (animComp.m_animator) {
+				ComputeSkinnedMeshAABB(*cachedItem.modelMeshData,
+					animComp.m_animator->GetFinalBoneMatrices(),
+					localAabbMin, localAabbMax);
+			}
+		}
+
 		// Transform AABB to world space using center-extent method (faster than 8-corner transform)
 		// Object-space center and half-extents
-		glm::vec3 center = (cachedItem.aabbMin + cachedItem.aabbMax) * 0.5f;
-		glm::vec3 extent = (cachedItem.aabbMax - cachedItem.aabbMin) * 0.5f;
+		glm::vec3 center = (localAabbMin + localAabbMax) * 0.5f;
+		glm::vec3 extent = (localAabbMax - localAabbMin) * 0.5f;
 
 		// Transform center to world space
 		glm::vec3 worldCenter = glm::vec3(model * glm::vec4(center, 1.0f));
@@ -2471,6 +2598,40 @@ void Renderer::UpdateDrawData()
 			glm::vec3 aabbColor = isCulled ? glm::vec3(1.0f, 0.0f, 0.0f) : glm::vec3(0.0f, 1.0f, 0.0f);
 			SubmitDebugAABB(actualMin, actualMax, aabbColor);
 		}
+		if (m_DebugDrawBoneAABBs && cachedItem.useSkinning && cachedItem.modelMeshData
+			&& ecs.HasComponent<AnimationComponent>(cachedItem.entity)) {
+			const auto& animComp = ecs.GetComponent<AnimationComponent>(cachedItem.entity);
+			if (animComp.m_animator) {
+				const auto& boneTransforms = animComp.m_animator->GetFinalBoneMatrices();
+				const auto& boneAabbMin = cachedItem.modelMeshData->boneAabbMin;
+				const auto& boneAabbMax = cachedItem.modelMeshData->boneAabbMax;
+				const auto& boneAabbValid = cachedItem.modelMeshData->boneAabbValid;
+				if (boneAabbMin.size() == boneTransforms.size()
+					&& boneAabbMax.size() == boneTransforms.size()) {
+					for (size_t i = 0; i < boneTransforms.size(); ++i) {
+						if (!boneAabbValid.empty() && boneAabbValid[i] == 0) {
+							continue;
+						}
+
+						const glm::vec3 localMin = boneAabbMin[i];
+						const glm::vec3 localMax = boneAabbMax[i];
+						const glm::vec3 center = (localMin + localMax) * 0.5f;
+						const glm::vec3 extent = (localMax - localMin) * 0.5f;
+						const glm::mat4 boneMatrix = model * boneTransforms[i];
+
+						const glm::vec3 worldCenter = glm::vec3(boneMatrix * glm::vec4(center, 1.0f));
+						const glm::mat3 upperLeft = glm::mat3(boneMatrix);
+						const glm::vec3 worldExtent = glm::abs(upperLeft[0]) * extent.x
+							+ glm::abs(upperLeft[1]) * extent.y
+							+ glm::abs(upperLeft[2]) * extent.z;
+
+						const glm::vec3 boneMin = worldCenter - worldExtent;
+						const glm::vec3 boneMax = worldCenter + worldExtent;
+						SubmitDebugAABB(boneMin, boneMax, glm::vec3(1.0f, 0.75f, 0.0f));
+					}
+				}
+			}
+		}
 
 		// Build draw command (using cached mesh data - no lookups!)
 		DrawElementsIndirectCommand cmd;
@@ -2489,9 +2650,9 @@ void Renderer::UpdateDrawData()
 		info.normalMatrixCol0 = glm::vec4(normalMat[0], 0.0f);
 		info.normalMatrixCol1 = glm::vec4(normalMat[1], 0.0f);
 		info.normalMatrixCol2 = glm::vec4(normalMat[2], 0.0f);
-		info.aabbMin = cachedItem.aabbMin;
+		info.aabbMin = localAabbMin;
 		info.materialIndex = cachedItem.materialIndex;
-		info.aabbMax = cachedItem.aabbMax;
+		info.aabbMax = localAabbMax;
 		info.entityID = static_cast<uint32_t>(cachedItem.entity);
 
 		// Build flags from cached data (fast path - no hierarchy traversal)
@@ -3358,7 +3519,14 @@ void Renderer::RenderDeferredPipeline(const Mtx44& view, const Mtx44& projection
 	// Shadow pass - render scene from light's perspective (independent of G-buffer)
 	// Runs BEFORE depth pre-pass to avoid GL state pollution from depth pre-pass
 	if (frameCounter % SHADOW_MAP_REFRESH_INTERVAL_IN_FRAMES == 0)
+	{
+		// Build shadow light list and layer allocation for this frame's shadow pass
+		UpdateLightsUBO(editor::EditorCamera::GetInstance().GetViewMatrix());
 		RenderShadowPass();
+	}
+
+	// Re-sync lights UBO after shadow layer allocation/matrix updates
+	UpdateLightsUBO(editor::EditorCamera::GetInstance().GetViewMatrix());
 
 	// Depth pre-pass - render depth-only to eliminate fragment shader overdraw
 	RenderDepthPrePass(view, projection);
@@ -3650,6 +3818,9 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
 	(void)view;
 
 	const auto& ecs = Ermine::ECS::GetInstance();
+	if (!m_LightSystem) {
+		return;
+	}
 
 	// ========== FRUSTUM CULLING SETUP ==========
 	// Get camera view and projection matrices
@@ -3710,14 +3881,15 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
 	std::vector<LightGPU> lights;
 	lights.reserve(MAX_LIGHTS);
 
-	// Clear and prepare active shadow lights list
-	m_ActiveShadowLights.clear();
+	// Clear and prepare shadow casting light list and layer allocator
+	m_ShadowCastingLights.clear();
+	int currentLayer = 0;
 	int lightIndex = 0;
 
 	for (EntityID e : m_LightSystem->m_Entities)
 	{
 		const auto& trans = ecs.GetComponent<Transform>(e);
-		const auto& light = ecs.GetComponent<Light>(e);
+		auto& light = ecs.GetComponent<Light>(e);
 
 		// Get light position in world space
 		glm::vec3 lightPos(trans.position.x, trans.position.y, trans.position.z);
@@ -3750,9 +3922,24 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
 		{
 			continue;
 		}
-		// Track shadow-casting lights for instanced shadow rendering
-		if ((light.type == LightType::DIRECTIONAL || light.type == LightType::SPOT) && light.castsShadows) {
-			m_ActiveShadowLights.push_back(lightIndex);
+		// Allocate shadow layers for this light (if any)
+		int shadowLayersNeeded = 0;
+		if (light.castsShadows) {
+			if (light.type == LightType::DIRECTIONAL) {
+				shadowLayersNeeded = NUM_CASCADES;
+			} else if (light.type == LightType::SPOT) {
+				shadowLayersNeeded = 1;
+			} else if (light.type == LightType::POINT) {
+				shadowLayersNeeded = 6;
+			}
+		}
+
+		if (shadowLayersNeeded > 0 && (currentLayer + shadowLayersNeeded) <= static_cast<int>(SHADOW_MAX_LAYERS)) {
+			light.startOffset = currentLayer;
+			currentLayer += shadowLayersNeeded;
+			m_ShadowCastingLights.push_back(e);
+		} else {
+			light.startOffset = -1;
 		}
 
 		// Keep direction in WORLD SPACE
@@ -3776,22 +3963,25 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
 
 		// Pack flags into bitfield: bit 0 = castsShadows, bit 1 = castsRays
 		float flags = 0.0f;
-		if (light.castsShadows) flags += 1.0f;  // bit 0
+		bool hasShadowLayers = light.castsShadows && light.startOffset >= 0;
+		if (hasShadowLayers) flags += 1.0f;  // bit 0
 		if (light.castsRays) flags += 2.0f;     // bit 1
 
-		gpu.spot_angles_castshadows_startOffset = glm::vec4(innerCos, outerCos, flags, light.startOffset);
+		gpu.spot_angles_castshadows_startOffset = glm::vec4(innerCos, outerCos, flags, static_cast<float>(light.startOffset));
 
 		for (int i = 0; i < NUM_CASCADES; ++i) {
 			gpu.lightSpaceMatrix[i] = light.lightSpaceMatrices[i];
 			gpu.splitDepths[i / 4][i % 4] = light.splitDepths[i];
+		}
+		for (int i = 0; i < 6; ++i) {
+			gpu.pointLightMatrices[i] = light.pointLightMatrices[i];
 		}
 		lights.emplace_back(gpu);
 		lightIndex++;
 	}
 
 	// Calculate total shadow instances for cascade rendering
-	unsigned int maxShadowLights = std::min(static_cast<unsigned int>(m_ActiveShadowLights.size()), static_cast<unsigned int>(MAX_LIGHTS));
-	m_TotalShadowInstances = maxShadowLights * NUM_CASCADES;
+	m_TotalShadowInstances = currentLayer;
 
 	// Upload to UBO
 	glBindBuffer(GL_UNIFORM_BUFFER, m_LightsUBO);
@@ -3956,7 +4146,9 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 	m_ElapsedTime += FrameController::GetDeltaTime();
 
 	// Update lights UBO
-	UpdateLightsUBO(editor::EditorCamera::GetInstance().GetViewMatrix());
+	if (!m_UseDeferredRendering) {
+		UpdateLightsUBO(editor::EditorCamera::GetInstance().GetViewMatrix());
+	}
 
 
 	// Check if new meshes have been registered and need uploading
@@ -4386,6 +4578,12 @@ Renderer::~Renderer()
 		{
 			glDeleteBuffers(1, &m_TextureArraySSBO);
 			m_TextureArraySSBO = 0;
+		}
+		if (m_ShadowViewSSBO)
+		{
+			glDeleteBuffers(1, &m_ShadowViewSSBO);
+			m_ShadowViewSSBO = 0;
+			m_ShadowViewSSBOCapacity = 0;
 		}
 
 		// Clean up opaque custom shader buffers
@@ -4884,7 +5082,7 @@ void Renderer::RenderOpaqueCustomShaders(const Mtx44& view, const Mtx44& project
 	glEnable(GL_DEPTH_TEST);          // Enable depth testing
 	glDepthFunc(GL_LEQUAL);           // Use LEQUAL to match geometry pass
 	glDepthMask(GL_FALSE);            // DON'T write depth (depth pre-pass already wrote it)
-	glEnable(GL_CULL_FACE);           // Enable face culling
+	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
 
 	// ========== RENDER OPAQUE CUSTOM STANDARD MESHES (NON-SKINNED) ==========
@@ -5607,6 +5805,22 @@ glm::mat4 Renderer::calculateSpotlightShadowMatrix(const glm::vec3& lightPos,
 	return proj * view;
 }
 
+void Renderer::calculatePointLightShadowMatrices(const glm::vec3& lightPos,
+	float lightRadius,
+	glm::mat4 outMatrices[6]) {
+
+	float nearPlane = 0.1f;
+	float farPlane = glm::max(lightRadius, nearPlane + 0.1f);
+	glm::mat4 proj = glm::perspective(glm::radians(90.0f), 1.0f, nearPlane, farPlane);
+
+	outMatrices[0] = proj * glm::lookAt(lightPos, lightPos + glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f));  // +X
+	outMatrices[1] = proj * glm::lookAt(lightPos, lightPos + glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)); // -X
+	outMatrices[2] = proj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));   // +Y
+	outMatrices[3] = proj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)); // -Y
+	outMatrices[4] = proj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f));  // +Z
+	outMatrices[5] = proj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f)); // -Z
+}
+
 /**
  * @brief Calculates light-space matrices for all shadow-casting lights.
  * Computes cascade splits and shadow matrices for directional and spot lights based on the camera's view and projection.
@@ -5661,12 +5875,17 @@ void Renderer::CalculateLightMatrix(const editor::EditorCamera& editorCamera)
 	glm::vec3 viewDir = glm::normalize(farPos - nearPos);
 
 	const auto& ecs = Ermine::ECS::GetInstance();
-	unsigned int currentLayer = 0;
+	m_ShadowViews.clear();
+	if (m_TotalShadowInstances > 0) {
+		m_ShadowViews.resize(static_cast<size_t>(m_TotalShadowInstances));
+	}
 
-	for (auto e : m_LightSystem->m_Entities) {
+	for (EntityID e : m_ShadowCastingLights) {
 		if (!ecs.HasComponent<Light>(e) || !ecs.HasComponent<Transform>(e)) continue;
 		auto& light = ecs.GetComponent<Light>(e);
 		if (light.castsShadows == 0) continue;
+		int baseLayer = light.startOffset;
+		if (baseLayer < 0) continue;
 
 		// Get transform data
 		const auto& trans = ecs.GetComponent<Transform>(e);
@@ -5675,12 +5894,10 @@ void Renderer::CalculateLightMatrix(const editor::EditorCamera& editorCamera)
 
 		if (light.type == LightType::DIRECTIONAL) {
 			// DIRECTIONAL LIGHT PROCESSING (existing code)
-			if (currentLayer + NUM_CASCADES > SHADOW_MAX_LAYERS) {
+			if (baseLayer + NUM_CASCADES > m_TotalShadowInstances) {
 				EE_CORE_WARN("Not enough layers in shadow map array for directional light entity {0}. Skipping.", e);
 				continue;
 			}
-
-			light.startOffset = currentLayer;
 
 			// Get light direction
 			glm::vec3 fwd = glm::normalize(rotQuat * glm::vec3(0.0f, 0.0f, 1.0f));
@@ -5823,13 +6040,15 @@ void Renderer::CalculateLightMatrix(const editor::EditorCamera& editorCamera)
 				// Store final matrix and split depth
 				light.lightSpaceMatrices[split] = lightProj * rotatedLightView;
 				light.splitDepths[split] = splitFarDist;
-			}
 
-			currentLayer += NUM_CASCADES;
+				ShadowViewGPU viewEntry{};
+				viewEntry.lightSpaceMatrix = light.lightSpaceMatrices[split];
+				viewEntry.data = glm::uvec4(static_cast<unsigned int>(baseLayer + split), 0u, 0u, 0u);
+				m_ShadowViews[static_cast<size_t>(baseLayer + split)] = viewEntry;
+			}
 		}
 		else if (light.type == LightType::SPOT) {
-			// Check if we have a shadow map layer available
-			if (currentLayer >= SHADOW_MAX_LAYERS) {
+			if (baseLayer >= m_TotalShadowInstances) {
 				continue;
 			}
 
@@ -5841,14 +6060,48 @@ void Renderer::CalculateLightMatrix(const editor::EditorCamera& editorCamera)
 			light.lightSpaceMatrices[0] = calculateSpotlightShadowMatrix(
 				lightPos, spotDir, outerAngleRad, light.radius);
 
-			// Assign shadow map layer
-			light.startOffset = currentLayer;
-			currentLayer += 1;
+			ShadowViewGPU viewEntry{};
+			viewEntry.lightSpaceMatrix = light.lightSpaceMatrices[0];
+			viewEntry.data = glm::uvec4(static_cast<unsigned int>(baseLayer), 0u, 0u, 0u);
+			m_ShadowViews[static_cast<size_t>(baseLayer)] = viewEntry;
+		}
+		else if (light.type == LightType::POINT) {
+			if (baseLayer + 6 > m_TotalShadowInstances) {
+				continue;
+			}
+
+			calculatePointLightShadowMatrices(lightPos, light.radius, light.pointLightMatrices);
+
+			for (int face = 0; face < 6; ++face) {
+				ShadowViewGPU viewEntry{};
+				viewEntry.lightSpaceMatrix = light.pointLightMatrices[face];
+				viewEntry.data = glm::uvec4(static_cast<unsigned int>(baseLayer + face), 0u, 0u, 0u);
+				m_ShadowViews[static_cast<size_t>(baseLayer + face)] = viewEntry;
+			}
 		}
 	}
 
 	// Store total layers for instanced shadow rendering
-	m_TotalShadowLayers = currentLayer;
+	m_TotalShadowLayers = static_cast<unsigned int>(m_ShadowViews.size());
+
+	// Upload shadow view SSBO
+	if (!m_ShadowViewSSBO) {
+		glGenBuffers(1, &m_ShadowViewSSBO);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_ShadowViewSSBO);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SHADOW_VIEW_SSBO_BINDING, m_ShadowViewSSBO);
+	}
+
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_ShadowViewSSBO);
+	size_t requiredSize = m_ShadowViews.size() * sizeof(ShadowViewGPU);
+	if (requiredSize != m_ShadowViewSSBOCapacity) {
+		glBufferData(GL_SHADER_STORAGE_BUFFER, requiredSize,
+			m_ShadowViews.empty() ? nullptr : m_ShadowViews.data(),
+			GL_DYNAMIC_DRAW);
+		m_ShadowViewSSBOCapacity = requiredSize;
+	} else if (!m_ShadowViews.empty()) {
+		glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, requiredSize, m_ShadowViews.data());
+	}
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }
 
 /**
@@ -5867,6 +6120,10 @@ void Renderer::RenderShadowMapInstanced()
 	if (!m_ShadowMapFBO || !m_ShadowMapArray || !m_ShadowMapInstancedShader)
 	{
 		EE_CORE_WARN("RenderShadowMapInstanced: missing shadow FBO/texture/shader");
+		return;
+	}
+	if (m_TotalShadowInstances <= 0 || m_ShadowViews.empty() || !m_ShadowViewSSBO)
+	{
 		return;
 	}
 
@@ -5893,16 +6150,14 @@ void Renderer::RenderShadowMapInstanced()
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
 	glDepthMask(GL_TRUE); // Ensure depth writes are enabled (may be disabled from geometry pass)
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
 
 	// Bind shadow shader
 	m_ShadowMapInstancedShader->Bind();
 
-	// Use cached active shadow lights (calculated in UpdateLightsUBO)
-	// Set up per-frame uniforms
-	for (unsigned int i = 0; i < m_ActiveShadowLights.size(); ++i) {
-		std::string uniformName = "u_ActiveShadowLights[" + std::to_string(i) + "]";
-		m_ShadowMapInstancedShader->SetUniform1i(uniformName, m_ActiveShadowLights[i]);
-	}
+	// Bind shadow view SSBO for per-layer matrices and layer indices
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SHADOW_VIEW_SSBO_BINDING, m_ShadowViewSSBO);
 
 	// ========== RENDER STANDARD SHADOW MESHES ==========
 	// Shadow buffers contain ALL geometry with castsShadows=true with correct instanceCount
