@@ -2,7 +2,7 @@
 /*!
 \file       Particles.h
 \author     LEE Wen Jie, Brian, wenjiebrian.lee, 2301261, wenjiebrian.lee\@digipen.edu
-\date       07/09/2025
+\date       26/01/2026
 \brief      This file contains declarations for ParticleSystem, ParticleEmitter and ParticlesImGUI.
 
 Copyright (C) 2025 DigiPen Institute of Technology.
@@ -87,7 +87,7 @@ namespace Ermine {
     class ParticlesImGUI : public ImGUIWindow
     {
     public:
-        ParticlesImGUI() : ImGUIWindow("Particles IMGUI") {}
+        ParticlesImGUI() : ImGUIWindow("Particle Editor") {}
 
         /*!***********************************************************************
         \brief

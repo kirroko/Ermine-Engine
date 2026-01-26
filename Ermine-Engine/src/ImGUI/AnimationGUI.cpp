@@ -2,7 +2,7 @@
 /*!
 \file       AnimationGUI.cpp
 \author     Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu
-\date       28/10/2025
+\date       26/01/2026
 \brief      This file contains the definition of the animation editor GUI.
 
 Copyright (C) 2025 DigiPen Institute of Technology.
@@ -665,7 +665,14 @@ namespace Ermine
             ImNodes::StyleColorsDark();
         }
 
-        ImGui::Begin(Name().c_str()); // Window begin
+        // Return if window is closed
+        if (!m_isOpen) return;
+
+        if (!ImGui::Begin(m_name.c_str(), &m_isOpen)) // Window begin
+        {
+            ImGui::End();
+            return;
+        }
 
         // Check if no entity selected
         if (m_SelectedEntity == 0) {

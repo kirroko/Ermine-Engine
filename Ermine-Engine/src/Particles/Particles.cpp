@@ -2,7 +2,7 @@
 /*!
 \file       Particles.cpp
 \author     LEE Wen Jie, Brian, wenjiebrian.lee, 2301261, wenjiebrian.lee\@digipen.edu
-\date       07/09/2025
+\date       26/01/2026
 \brief      This file contains definitions for ParticleSystem, ParticleEmitter and ParticlesImGUI.
 
 Copyright (C) 2025 DigiPen Institute of Technology.
@@ -141,7 +141,15 @@ namespace Ermine {
 
     void ParticlesImGUI::Render()
     {
-        ImGui::Begin("Particle Editor");
+        // Return if window is closed
+        if (!m_isOpen) return;
+
+        if (!ImGui::Begin(m_name.c_str(), &m_isOpen))
+        {
+            ImGui::End();
+            return;
+        }
+
         EntityID selected = SceneManager::GetInstance().EnsureActiveScene().GetSelectedEntity();
         if (selected == 0) {
             ImGui::Text("No entity selected");
@@ -216,7 +224,7 @@ namespace Ermine {
                     break;
                 }
 
-                // load the preset’s texture
+                // load the presetï¿½s texture
                 m_SelectedTexture = AssetManager::GetInstance().GetTexture(emitter.textureName);
             }
 
