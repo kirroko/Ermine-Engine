@@ -3372,6 +3372,8 @@ namespace Ermine
 		float jumpHeight = 1.0f;
 
 		Vec3 lastDestination;
+		Ermine::Vec3 postJumpDestination = Ermine::Vec3{ 0.0f, 0.0f, 0.0f };
+		bool hasPostJumpDestination = false;
 
 		template<typename Alloc>
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
@@ -3420,14 +3422,17 @@ namespace Ermine
 			navPaused = false;
 			isJumping = false;
 			jumpTimer = 0.0f;
+
+			postJumpDestination = Ermine::Vec3{ 0.0f, 0.0f, 0.0f };
+			hasPostJumpDestination = false;
 		}
 	};
 
 	struct NavJumpLink
 	{
-		Ermine::Vec3 landingPosition;   // where the agent should land
-		float jumpDuration = 0.4f;      // seconds
-		float jumpHeight = 1.0f;        // purely visual
+		Ermine::Vec3 landingPosition; // where the agent should land
+		float jumpDuration = 1.0f; // seconds
+		float jumpHeight = 5.0f; // purely visual
 
 		template<typename Alloc>
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const {

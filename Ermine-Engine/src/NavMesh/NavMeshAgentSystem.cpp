@@ -36,6 +36,9 @@ namespace Ermine
         if (!navAgentSys->FindPath(agentEntity, trans.position, destination, path))
             return false;
 
+        agent.destination = destination;
+        agent.lastDestination = destination;
+
         agent.path = path;
         //for (size_t i = 0; i < path.size(); ++i)
         //{
@@ -102,11 +105,16 @@ namespace Ermine
 
                 if (t >= 1.0f)
                 {
+                    trans.position = agent.jumpTarget;
+
                     agent.isJumping = false;
                     agent.navPaused = false;
 
-                    // After landing, you can re-request the path if you store a destination.
-                    // For now, you can let your script call SetDestination again after jump if needed.
+                    if (agent.hasPostJumpDestination)
+                    {
+                        RequestPathForAgent(e, agent.postJumpDestination);
+                        agent.hasPostJumpDestination = false;
+                    }
                 }
 
                 continue; // skip normal nav movement while jumping

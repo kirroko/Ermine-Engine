@@ -2620,9 +2620,7 @@ namespace
 		EntityID agentID = (EntityID)agentEntityID;
 		EntityID linkID = (EntityID)linkEntityID;
 
-		if (agentID == 0 || linkID == 0) return;
 		if (!ecs.IsEntityValid(agentID) || !ecs.IsEntityValid(linkID)) return;
-
 		if (!ecs.HasComponent<NavMeshAgent>(agentID)) return;
 		if (!ecs.HasComponent<Transform>(agentID)) return;
 		if (!ecs.HasComponent<NavJumpLink>(linkID)) return;
@@ -2631,64 +2629,83 @@ namespace
 		auto& tr = ecs.GetComponent<Transform>(agentID);
 		const auto& link = ecs.GetComponent<NavJumpLink>(linkID);
 
-		// prevent spam
 		if (agent.isJumping) return;
 
-		// --- Choose landing target ---
-		Vector3D desired = link.landingPosition;
-		Vector3D snapped = desired;
+		auto isUnset = [](const Ermine::Vec3& v) -> bool
+			{
+				return std::fabs(v.x) < 1e-4f && std::fabs(v.y) < 1e-4f && std::fabs(v.z) < 1e-4f;
+			};
 
+		// Current navmesh under agent
 		EntityID currentNav = 0;
-		EntityID navEntity = 0;
+		auto navSys = ecs.GetSystem<NavMeshAgentSystem>();
+		if (navSys)
+			currentNav = navSys->FindNearestNavMeshEntity(tr.position);
 
-		auto navAgentSys = ecs.GetSystem<NavMeshAgentSystem>();
-		if (navAgentSys)
+		// Takeoff anchor: JumpArea transform if present
+		Ermine::Vec3 takeoff = tr.position;
+		if (ecs.HasComponent<Transform>(linkID))
+			takeoff = ecs.GetComponent<Transform>(linkID).position;
+
+		Ermine::Vec3 landing = link.landingPosition;
+
+		// ---------- AUTO LANDING (when landingPosition is not authored) ----------
+		if (isUnset(landing))
 		{
-			currentNav = navAgentSys->FindNearestNavMeshEntity(tr.position);
-			navEntity = navAgentSys->FindNearestNavMeshEntity(desired);
+			if (!navSys)
+			{
+				EE_CORE_WARN("[NavAgentJump] No NavMeshAgentSystem. Jump cancelled.");
+				return;
+			}
 
-			if (navEntity == currentNav)
-				navEntity = navAgentSys->FindNearestNavMeshEntityExcluding(desired, currentNav);
+			// Pick the "other" navmesh by asking for nearest EXCLUDING current.
+			EntityID targetNav = navSys->FindNearestNavMeshEntityExcluding(takeoff, currentNav);
+
+			// Fallback: if excluding returns 0 for any reason, try using agent pos
+			if (targetNav == 0)
+				targetNav = navSys->FindNearestNavMeshEntityExcluding(tr.position, currentNav);
+
+			if (targetNav == 0 || !ecs.HasComponent<Transform>(targetNav))
+			{
+				EE_CORE_WARN("[NavAgentJump] No target navmesh found. Jump cancelled.");
+				return;
+			}
+
+			// Use the target navmesh entity's transform position as a probe
+			Ermine::Vec3 probe = ecs.GetComponent<Transform>(targetNav).position;
+
+			// Snap probe onto that navmesh (use large extents so it always finds a nearby poly)
+			float ext[3] = { 10.0f, 30.0f, 10.0f };
+
+			Ermine::Vec3 snapped;
+			if (!SnapPointToNavMesh(targetNav, probe, snapped, ext))
+			{
+				EE_CORE_WARN("[NavAgentJump] Failed to snap to target navmesh (ent={}). Jump cancelled.", targetNav);
+				return;
+			}
+
+			landing = snapped;
 		}
+		// ----------------------------------------------------------------------
 
-		// Generous extents (half-extents) to find a poly even if the point is slightly off.
-		float ext[3] = { 2.0f, 4.0f, 2.0f };
-
-		if (navEntity != 0)
-		{
-			Vector3D tmp;
-			if (SnapPointToNavMesh(navEntity, desired, tmp, ext))
-				snapped = tmp;
-		}
-
-		// --- Start jump ---
+		// Start jump
 		agent.isJumping = true;
 		agent.navPaused = true;
 		agent.hasPath = false;
 
 		agent.jumpStart = tr.position;
-		agent.jumpTarget = snapped;
+		agent.jumpTarget = landing;
 		agent.jumpTimer = 0.0f;
 
-		// --- Auto duration/height from distance ---
-		Vector3D d = agent.jumpTarget - agent.jumpStart;
+		// Auto duration/height from distance
+		Ermine::Vec3 d = agent.jumpTarget - agent.jumpStart;
 		float dist = std::sqrt(d.x * d.x + d.y * d.y + d.z * d.z);
 
-		// Base auto values (tune constants to taste)
 		float autoDuration = std::clamp(dist / 6.0f, 0.25f, 1.5f);
 		float autoHeight = std::clamp(dist / 4.0f, 0.5f, 3.0f);
 
-		agent.jumpDuration = autoDuration;
-		agent.jumpHeight = autoHeight;
-
-		// Respect designer overrides if they put something meaningful in the component
-		// (Pick your rule: here we treat >0 as "override".)
-		if (link.jumpDuration > 0.0f) agent.jumpDuration = link.jumpDuration;
-		if (link.jumpHeight > 0.0f) agent.jumpHeight = link.jumpHeight;
-
-		// Optional debug once:
-		// EE_CORE_INFO("Jump desired(%.2f,%.2f,%.2f) snapped(%.2f,%.2f,%.2f) dist=%.2f dur=%.2f h=%.2f",
-		//     desired.x,desired.y,desired.z, snapped.x,snapped.y,snapped.z, dist, agent.jumpDuration, agent.jumpHeight);
+		agent.jumpDuration = (link.jumpDuration > 0.0f) ? link.jumpDuration : autoDuration;
+		agent.jumpHeight = (link.jumpHeight > 0.0f) ? link.jumpHeight : autoHeight;
 	}
 #pragma endregion
 
