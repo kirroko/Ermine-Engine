@@ -158,6 +158,15 @@ namespace Ermine::graphics {
             EE_CORE_ERROR("Failed to initialize shadow skinned buffers");
         }
 
+        // Outline pass buffers
+        if (!m_OutlineStandardDrawCommandBuffer.Initialize(bufferSize) ||
+            !m_OutlineStandardDrawInfoBuffer.Initialize(bufferSize))
+            EE_CORE_ERROR("Failed to initialize outline standard buffers");
+
+        if (!m_OutlineSkinnedDrawCommandBuffer.Initialize(bufferSize) ||
+            !m_OutlineSkinnedDrawInfoBuffer.Initialize(bufferSize))
+            EE_CORE_ERROR("Failed to initialize outline skinned buffers");
+
         // Initialize skeletal SSBO (max 100 skeletons = 100 * 128 bones = 12800 bones)
         constexpr size_t MAX_SKELETONS = 10;
         if (!m_SkeletalSSBO.Initialize(MAX_SKELETONS))
@@ -699,4 +708,147 @@ namespace Ermine::graphics {
         glBindVertexArray(0);
     }
 
+    static void ReadBackBuffers(
+        const DrawCommandBuffer& cmdBuffer,
+        const DrawInfoBuffer& infoBuffer,
+        std::vector<DrawElementsIndirectCommand>& outCmds,
+        std::vector<DrawInfo>& outInfos)
+    {
+        outCmds.clear();
+        outInfos.clear();
+
+        const auto cmdCount = cmdBuffer.GetCommandCount();
+        const auto infoCount = infoBuffer.GetDrawCount();
+        if (cmdCount == 0 || infoCount == 0)
+            return;
+
+        const size_t n = std::min(cmdCount, infoCount);
+
+        outCmds.resize(n);
+        outInfos.resize(n);
+
+        glBindBuffer(GL_COPY_READ_BUFFER, cmdBuffer.GetBufferID());
+        glGetBufferSubData(
+            GL_COPY_READ_BUFFER,
+            0,
+            static_cast<GLsizeiptr>(n * sizeof(DrawElementsIndirectCommand)),
+            outCmds.data());
+
+        glBindBuffer(GL_COPY_READ_BUFFER, infoBuffer.GetBufferID());
+        glGetBufferSubData(
+            GL_COPY_READ_BUFFER,
+            0,
+            static_cast<GLsizeiptr>(n * sizeof(DrawInfo)),
+            outInfos.data());
+
+        glBindBuffer(GL_COPY_READ_BUFFER, 0);
+    }
+
+    void MeshManager::RenderOutlineMaskIndirect(const glm::mat4& view, const glm::mat4& projection,
+	    const std::function<bool(EntityID)>& filterFn, Shader& standardShader, Shader& skinnedShader)
+    {
+        // Outline uses the same DrawInfo layout the shaders expect.
+                // We re-filter from picking buffers (contains all visible objects).
+                // NOTE: This uses glGetBufferSubData (readback). If you want the fast path,
+                // we should instead filter from the CPU vectors at CompileDrawData-time.
+
+                // ---------- Standard ----------
+        std::vector<DrawElementsIndirectCommand> srcStdCmds;
+        std::vector<DrawInfo> srcStdInfos;
+        ReadBackBuffers(m_PickingStandardDrawCommandBuffer, m_PickingStandardDrawInfoBuffer, srcStdCmds, srcStdInfos);
+
+        std::vector<DrawElementsIndirectCommand> outStdCmds;
+        std::vector<DrawInfo> outStdInfos;
+        outStdCmds.reserve(srcStdCmds.size());
+        outStdInfos.reserve(srcStdInfos.size());
+
+        for (size_t i = 0; i < srcStdInfos.size(); ++i)
+        {
+            const EntityID id = static_cast<EntityID>(srcStdInfos[i].entityID);
+            if (!filterFn || filterFn(id))
+            {
+                outStdCmds.push_back(srcStdCmds[i]);
+                outStdInfos.push_back(srcStdInfos[i]);
+            }
+        }
+
+        if (!outStdCmds.empty())
+        {
+            m_OutlineStandardDrawCommandBuffer.WriteCommands(outStdCmds);
+            m_OutlineStandardDrawInfoBuffer.WriteDrawInfos(outStdInfos);
+
+            standardShader.Bind();
+            standardShader.SetUniformMatrix4fv("view", view);
+            standardShader.SetUniformMatrix4fv("projection", projection);
+            standardShader.SetUniform1ui("baseDrawID", 0);
+
+            glBindVertexArray(m_StandardVAO);
+
+            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, m_OutlineStandardDrawInfoBuffer.GetBufferID());
+            glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_OutlineStandardDrawCommandBuffer.GetBufferID());
+
+            glMultiDrawElementsIndirect(
+                GL_TRIANGLES,
+                GL_UNSIGNED_INT,
+                nullptr,
+                static_cast<GLsizei>(outStdCmds.size()),
+                0);
+
+            glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
+            glBindVertexArray(0);
+
+            standardShader.Unbind();
+        }
+
+        // ---------- Skinned ----------
+        std::vector<DrawElementsIndirectCommand> srcSkinCmds;
+        std::vector<DrawInfo> srcSkinInfos;
+        ReadBackBuffers(m_PickingSkinnedDrawCommandBuffer, m_PickingSkinnedDrawInfoBuffer, srcSkinCmds, srcSkinInfos);
+
+        std::vector<DrawElementsIndirectCommand> outSkinCmds;
+        std::vector<DrawInfo> outSkinInfos;
+        outSkinCmds.reserve(srcSkinCmds.size());
+        outSkinInfos.reserve(srcSkinInfos.size());
+
+        for (size_t i = 0; i < srcSkinInfos.size(); ++i)
+        {
+            const EntityID id = static_cast<EntityID>(srcSkinInfos[i].entityID);
+            if (!filterFn || filterFn(id))
+            {
+                outSkinCmds.push_back(srcSkinCmds[i]);
+                outSkinInfos.push_back(srcSkinInfos[i]);
+            }
+        }
+
+        if (!outSkinCmds.empty())
+        {
+            m_OutlineSkinnedDrawCommandBuffer.WriteCommands(outSkinCmds);
+            m_OutlineSkinnedDrawInfoBuffer.WriteDrawInfos(outSkinInfos);
+
+            skinnedShader.Bind();
+            skinnedShader.SetUniformMatrix4fv("view", view);
+            skinnedShader.SetUniformMatrix4fv("projection", projection);
+            skinnedShader.SetUniform1ui("baseDrawID", 0);
+
+            // Bind skeleton SSBO too (the shader reads boneTransforms)
+            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, m_SkeletalSSBO.GetBufferID());
+
+            glBindVertexArray(m_SkinnedVAO);
+
+            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, m_OutlineSkinnedDrawInfoBuffer.GetBufferID());
+            glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_OutlineSkinnedDrawCommandBuffer.GetBufferID());
+
+            glMultiDrawElementsIndirect(
+                GL_TRIANGLES,
+                GL_UNSIGNED_INT,
+                nullptr,
+                static_cast<GLsizei>(outSkinCmds.size()),
+                0);
+
+            glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
+            glBindVertexArray(0);
+
+            skinnedShader.Unbind();
+        }
+    }
 } // namespace Ermine::graphics
