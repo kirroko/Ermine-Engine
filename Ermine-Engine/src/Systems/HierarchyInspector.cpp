@@ -2751,20 +2751,48 @@ namespace Ermine::editor {
 		auto& skills = ECS::GetInstance().GetComponent<UISkillsComponent>(entity);
 
 		ImGui::Checkbox("Show Skills", &skills.showSkills);
-		ImGui::DragFloat("Slot Size", &skills.skillSlotSize, 0.001f, 0.01f, 0.2f);
-		ImGui::DragFloat("Slot Spacing", &skills.skillSlotSpacing, 0.001f, 0.0f, 0.1f);
-		ImGui::DragFloat3("Skills Position", &skills.skillsPosition.x, 0.01f, 0.0f, 1.0f);
+		ImGui::DragFloat("Default Slot Size", &skills.skillSlotSize, 0.001f, 0.01f, 0.2f);
+		ImGui::TextDisabled("(Individual slots can override this)");
 
 		ImGui::Separator();
-		if (ImGui::CollapsingHeader("Individual Skills", ImGuiTreeNodeFlags_DefaultOpen))
+		if (ImGui::CollapsingHeader("Skill Slots", ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			ImGui::TextDisabled("Skills only render if Skill Name is set!");
-			for (int i = 0; i < 4; ++i)
+			ImGui::TextDisabled("Each slot has its own position - arrange them anywhere!");
+
+			// Add/Remove buttons
+			if (ImGui::Button("+ Add Skill Slot"))
 			{
-				ImGui::PushID(i);
-				if (ImGui::TreeNode(("Skill Slot " + std::to_string(i + 1)).c_str()))
+				UISkillsComponent::SkillSlot newSlot;
+				newSlot.position = { 0.5f, 0.1f, 0.0f };  // Default center bottom
+				skills.skills.push_back(newSlot);
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("- Remove Last Slot") && !skills.skills.empty())
+			{
+				skills.skills.pop_back();
+			}
+			ImGui::Text("Total Slots: %zu", skills.skills.size());
+
+			ImGui::Separator();
+
+			for (size_t i = 0; i < skills.skills.size(); ++i)
+			{
+				ImGui::PushID(static_cast<int>(i));
+				std::string header = "Skill Slot " + std::to_string(i + 1);
+				if (!skills.skills[i].skillName.empty())
+					header += " (" + skills.skills[i].skillName + ")";
+
+				if (ImGui::TreeNode(header.c_str()))
 				{
 					auto& skill = skills.skills[i];
+
+					// Position and size (MOST IMPORTANT - at top!)
+					ImGui::DragFloat3("Position", &skill.position.x, 0.01f, 0.0f, 1.0f);
+					ImGui::DragFloat("Size Override", &skill.size, 0.001f, 0.0f, 0.2f);
+					ImGui::TextDisabled("(0 = use default size)");
+
+					ImGui::Separator();
 
 					char nameBuffer[128];
 					strncpy_s(nameBuffer, skill.skillName.c_str(), sizeof(nameBuffer) - 1);

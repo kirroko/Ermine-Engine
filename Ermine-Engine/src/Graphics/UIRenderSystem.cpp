@@ -919,39 +919,28 @@ namespace Ermine
 
     void UIRenderSystem::RenderSkillSlotsNew(const UISkillsComponent& skills, EntityID entity)
     {
-        float startX = skills.skillsPosition.x;
-        float startY = skills.skillsPosition.y;
-        float slotSize = skills.skillSlotSize;
-        float spacing = skills.skillSlotSpacing;
-        float radius = slotSize * 0.5f;
-
         // Check if entity has healthbar component for health-based tinting
         float currentHealth = 100.0f;
         bool hasHealthbar = ECS::GetInstance().HasComponent<UIHealthbarComponent>(entity);
         if (hasHealthbar)
             currentHealth = ECS::GetInstance().GetComponent<UIHealthbarComponent>(entity).currentHealth;
 
-        // Collect non-empty skill slots to render
-        std::vector<int> activeSlots;
-        for (int i = 0; i < 4; ++i)
+        // Render each skill slot (only if skillName is set)
+        for (size_t i = 0; i < skills.skills.size(); ++i)
         {
-            if (!skills.skills[i].skillName.empty())
-                activeSlots.push_back(i);
-        }
-
-        if (activeSlots.empty())
-            return;
-
-        float totalWidth = (slotSize * activeSlots.size()) + (spacing * (activeSlots.size() - 1));
-        float currentX = startX - (totalWidth * 0.5f);
-
-        for (size_t slotIdx = 0; slotIdx < activeSlots.size(); ++slotIdx)
-        {
-            size_t i = activeSlots[slotIdx];
             const auto& skill = skills.skills[i];
 
-            float centerX = currentX + radius;
-            float centerY = startY + radius;
+            // Only render skills with a name set
+            if (skill.skillName.empty())
+                continue;
+
+            // Use slot's individual size (or fall back to component default)
+            float slotSize = (skill.size > 0.0f) ? skill.size : skills.skillSlotSize;
+            float radius = slotSize * 0.5f;
+
+            // Use slot's individual position
+            float centerX = skill.position.x;
+            float centerY = skill.position.y;
 
             // Load skill icon texture
             std::shared_ptr<graphics::Texture> skillTexture = nullptr;
@@ -1033,8 +1022,6 @@ namespace Ermine
 
                 m_textRenderer->RenderText(m_uiShader, skill.keyBinding, labelX, labelY, textScale, labelColor, labelAlpha, m_VAO, m_VBO);
             }
-
-            currentX += slotSize + spacing;
         }
     }
 
