@@ -25,6 +25,13 @@ uniform float u_VignetteIntensity = 0.3;
 uniform float u_VignetteRadius = 0.8;
 uniform float u_BloomStrength = 0.04;
 
+// Post-processing outline
+uniform sampler2D u_OutlineMask;
+uniform int u_OutlineEnabled = 0;
+uniform vec3 u_OutlineColor = vec3(0.25, 0.63, 1.0);
+uniform float u_OutlineThickness = 1.5;
+uniform float u_OutlineIntensity = 1.0;
+
 // Tone mapping functions
 vec3 reinhardToneMapping(vec3 color)
 {
@@ -73,6 +80,26 @@ vec3 adjustSaturation(vec3 color, float saturation)
     return mix(vec3(luminance), color, saturation);
 }
 
+float sampleMask(vec2 uv)
+{
+    return texture(u_OutlineMask, uv).r;
+}
+
+float outlineEdge(vec2 uv, float thicknessPx)
+{
+    vec2 texel = 1.0 / vec2(textureSize(u_OutlineMask, 0));
+    vec2 o = texel * thicknessPx;
+
+    float c = sampleMask(uv);
+    float n = sampleMask(uv + vec2(0.0, o.y));
+    float s = sampleMask(uv + vec2(0.0, -o.y));
+    float e = sampleMask(uv + vec2(o.x, 0.0));
+    float w = sampleMask(uv + vec2(-o.x, 0.0));
+
+    float diff = max(max(abs(c-n), abs(c - s)), max(abs(c-e), abs(c-w)));
+    return clamp(diff, 0.0, 1.0);
+}
+
 void main()
 {
     vec3 color = texture(u_LightingTexture, TexCoord).rgb;
@@ -103,6 +130,12 @@ void main()
     if(u_Vignette == 1)
     {
         color = applyVignette(color, TexCoord);
+    }
+
+    if(u_OutlineEnabled == 1 && !isSky)
+    {
+        float edge = outlineEdge(TexCoord, u_OutlineThickness);
+        color += u_OutlineColor * edge * u_OutlineIntensity;
     }
 
     color = adjustContrast(color, u_Contrast);

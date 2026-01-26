@@ -256,6 +256,12 @@ namespace Ermine::graphics
 
         GlobalGraphics m_GlobalGraphics;
 
+        // Outline (selection) parameters
+        bool m_OutlineEnabled = true;
+        glm::vec3 m_OutlineColor = glm::vec3(1.0, 0.4f, 0.0f);
+        float m_OutlineThickness = 2.5f;
+        float m_OutlineIntensity = 1.5f;
+
         // Sync helpers
         void SyncToGlobalGraphics();    // copy class -> m_GlobalGraphics
         void ApplyFromGlobalGraphics(); // copy m_GlobalGraphics -> class
@@ -999,6 +1005,19 @@ namespace Ermine::graphics
         // Material compilation system - upload all materials at load time
         std::vector<MaterialSSBO> m_CompiledMaterials; // All materials compiled into a single vector
         bool m_MaterialsDirty = true; // Flag to trigger recompilation when materials change
+
+        // Outline mask pass resources
+		GLuint m_OutlineMaskFBO = 0;
+		GLuint m_OutlineMaskTexture = 0;
+
+        int m_ViewportWidth = 0, m_ViewportHeight = 0;
+
+        std::shared_ptr<Shader> m_OutlineMaskIndirectShader;
+        std::shared_ptr<Shader> m_OutlineMaskIndirectSkinnedShader;
+
+        void CreateOutlineMaskBuffer(const int& width, const int& height);
+        void DestroyOutlineMaskBuffer();
+        void RenderOutlineMaskPass(const Mtx44& view, const Mtx44& projection);
 
         /**
          * @brief Uploads all compiled materials to the GPU SSBO at once.
