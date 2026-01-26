@@ -102,7 +102,6 @@ public class Test3 : MonoBehaviour
 
     void OnCollisionEnter(Collision col)
     {
-        Debug.Log(col.gameObject.name);
         if (jumping) return;
 
         if (col.gameObject.name == "JumpArea")
