@@ -190,6 +190,65 @@ namespace
 		dl->AddRect(ImVec2(r.min.x - 1.0f, r.min.y - 1.0f), ImVec2(r.max.x + 1.0f, r.max.y + 1.0f), IM_COL32(0, 0, 0, 120), 2.0f, 0, 2.0f);
 	}
 
+	void SubmitReferenceGridY0(const float y,
+		const float spacing,
+		const int halfLineCount,
+		const int majorEvery,
+		const glm::vec3& minorColor,
+		const glm::vec3& majorColor,
+		const glm::vec3& axisXColor,
+		const glm::vec3& axisZColor)
+	{
+		auto renderer = Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>();
+		if (!renderer)
+			return;
+
+		const Ermine::Vector3D camPosEE = Ermine::editor::EditorCamera::GetInstance().GetPosition();
+		const glm::vec2 camXZ(camPosEE.x, camPosEE.z);
+
+		// Snap the grid to spacing so it doesn't "swim" when moving.
+		const float snappedX = std::floor(camXZ.x / spacing) * spacing;
+		const float snappedZ = std::floor(camXZ.y / spacing) * spacing;
+
+		const float extent = static_cast<float>(halfLineCount) * spacing;
+
+		for (int i = -halfLineCount; i <= halfLineCount; ++i)
+		{
+			const float offset = static_cast<float>(i) * spacing;
+
+			const bool isMajor = (majorEvery > 0) && (i % majorEvery == 0);
+			const glm::vec3 col = isMajor ? majorColor : minorColor;
+
+			// Lines parallel to Z (vary X)
+			{
+				const float x = snappedX + offset;
+				const glm::vec3 a(x, y, snappedZ - extent);
+				const glm::vec3 b(x, y, snappedZ + extent);
+				renderer->SubmitDebugLine(a, b, col);
+			}
+
+			// Lines parallel to X (vary Z)
+			{
+				const float z = snappedZ + offset;
+				const glm::vec3 a(snappedX - extent, y, z);
+				const glm::vec3 b(snappedX + extent, y, z);
+				renderer->SubmitDebugLine(a, b, col);
+			}
+		}
+
+		// Axis emphasis at world origin (only if origin is inside the drawn tile)
+		// X axis (Z=0), Z axis (X=0)
+		{
+			const glm::vec3 xA(-extent, y, 0.0f);
+			const glm::vec3 xB(extent, y, 0.0f);
+			renderer->SubmitDebugLine(xA, xB, axisXColor);
+
+			const glm::vec3 zA(0.0f, y, -extent);
+			const glm::vec3 zB(0.0f, y, extent);
+			renderer->SubmitDebugLine(zA, zB, axisZColor);
+		}
+	}
+
 	void LoadToolbarIcons()
 	{
 		if (gIconsLoaded) return;
@@ -763,6 +822,23 @@ void Ermine::ViewPortGUI::Update()
 	constexpr int minSize = 1;
 	int max_size;
 	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_size);
+
+	if (!EditorGUI::isPlaying)
+	{
+		constexpr float lineSpacing = 1.0f;
+		constexpr int majorEvery = 10;
+		constexpr int halfLineCount = 75;
+
+		SubmitReferenceGridY0(
+			0.0f,
+			lineSpacing,
+			halfLineCount,
+			majorEvery,
+			glm::vec3(0.25f, 0.25f, 0.25f),
+			glm::vec3(0.40f, 0.40f, 0.40f),
+			glm::vec3(0.80f, 0.20f, 0.20f),
+			glm::vec3(0.20f, 0.80f, 0.20f));
+	}
 
 	viewport_size.x = std::clamp(viewport_size.x, static_cast<float>(minSize), static_cast<float>(max_size));
 	viewport_size.y = std::clamp(viewport_size.y, static_cast<float>(minSize), static_cast<float>(max_size));
