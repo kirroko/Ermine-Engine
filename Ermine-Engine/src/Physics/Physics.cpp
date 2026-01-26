@@ -1992,6 +1992,15 @@ namespace Ermine
 		UpdatePhysicList();
 	}
 
+	int Physics::GetMotionType(EntityID ID)
+	{
+		if (ECS::GetInstance().HasComponent<PhysicComponent>(ID))
+		{
+			return (int)ECS::GetInstance().GetComponent<PhysicComponent>(ID).motionType;
+		}
+		return 3;
+	}
+
 	/*!*************************************************************************
 	  \brief
 		Converts pending physics collision pairs into ECS collision events.

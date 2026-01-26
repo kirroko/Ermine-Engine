@@ -278,6 +278,8 @@ namespace Ermine
 		bool HasPhysicComp(EntityID ID);
 
 		void ForceUpdate();
+
+		int GetMotionType(EntityID ID);
 		
 		// Shared pointer to the debug renderer used for visualizing physics.
 		std::shared_ptr<MyDebugRenderer> mDebugRenderer;
