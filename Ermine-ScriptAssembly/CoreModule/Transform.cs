@@ -33,6 +33,13 @@ namespace ErmineEngine
         private extern Transform Internal_GetChildTransformByName(string n);
         [MethodImpl(MethodImplOptions.InternalCall)]
         private extern Transform Internal_GetChildTransformByIndex(int index);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        private extern void Internal_AddChild(Transform child);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        private extern void Internal_RemoveChild(Transform child);
+
         #endregion 
 
         // World position in Vector3
@@ -136,5 +143,39 @@ namespace ErmineEngine
                 Debug.LogError($"Transform.GetChild: Native call returned null!");
             return result;
         }
+
+        public void AddChild(Transform child)
+        {
+            if (child == null)
+            {
+                Debug.LogWarning("Transform.AddChild called with null child");
+                return;
+            }
+
+            if (child == this)
+            {
+                Debug.LogWarning("Transform.AddChild: Cannot add transform as its own child");
+                return;
+            }
+
+            Internal_AddChild(child);
+        }
+        public void RemoveChild(Transform child)
+        {
+            if (child == null)
+            {
+                Debug.LogWarning("Transform.RemoveChild called with null child");
+                return;
+            }
+
+            if (child == this)
+            {
+                Debug.LogWarning("Transform.RemoveChild: Cannot remove self as child");
+                return;
+            }
+
+            Internal_RemoveChild(child);
+        }
+
     }
 }

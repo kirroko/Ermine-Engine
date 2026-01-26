@@ -300,10 +300,6 @@ namespace Ermine {
         if (isSelected) nodeFlags |= ImGuiTreeNodeFlags_Selected;
         if (children.empty()) nodeFlags |= ImGuiTreeNodeFlags_Leaf;
 
-        // Auto-expand parent
-        if (HasSelectedDescendant(entity))
-            ImGui::SetNextItemOpen(true);
-
         bool nodeOpen = ImGui::TreeNodeEx(label.c_str(), nodeFlags);
 
         if (isSelected && ImGui::IsWindowAppearing())
@@ -337,6 +333,7 @@ namespace Ermine {
         {
             editor::Selection::SelectSingle(m_ActiveScene, entity);
             m_LastClickedEntity = entity;
+            editor::EditorCamera::GetInstance().Focus(ecs.GetComponent<Transform>(entity).position, 2.5f);
             ImGui::SetWindowFocus("Inspector");
             Vector3D position = ecs.GetComponent<Transform>(entity).position;
             editor::EditorCamera::GetInstance().Focus(position, 2.5f);
