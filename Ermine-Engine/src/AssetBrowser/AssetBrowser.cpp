@@ -3,7 +3,7 @@
 \file       AssetBrowser.cpp
 \author     LEE Wen Jie, Brian, wenjiebrian.lee, 2301261, wenjiebrian.lee\@digipen.edu (30%)
 \co-author  Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu (70%)
-\date       18/10/2025
+\date       26/01/2026
 \brief      This file contains the definition of the ImGui-based Asset Browser system.
             It provides UI functionality for browsing, previewing, and managing
             project assets such as textures, audio, and shaders. It includes a
@@ -657,7 +657,7 @@ namespace Ermine::ImguiUI
                     IM_COL32(255, 255, 255, 255), "!");
             }
 
-            // ✅ ADD THIS: Show tooltip on hover
+            // Show tooltip on hover
             if (ImGui::IsItemHovered() && asset->needsReimport) {
                 ImGui::SetTooltip("Source file modified - needs reimport");
             }
@@ -838,7 +838,6 @@ namespace Ermine::ImguiUI
     {
         // Set initial window size and begin ImGui window
         ImGui::SetNextWindowSize(ImVec2(iconSize * 12, iconSize * 7), ImGuiCond_FirstUseEver);
-        if (!ImGui::Begin(title)) { ImGui::End(); return; }
 
         // --- Top bar: search box, view scale, refresh button ---
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6, 4));
@@ -977,12 +976,9 @@ namespace Ermine::ImguiUI
         }
         ImGui::EndChild(); // End footer
 
-       
-
         ImGui::EndChild(); // End files panel
 
         ImGui::Columns(1); // End columns
-        ImGui::End(); // End main window
     }
 
     /**
@@ -995,8 +991,15 @@ namespace Ermine::ImguiUI
         // Initialize icons on first render
         assets_browser.InitIcons();
 
-        // Draw the asset browser window
-        assets_browser.Draw("Asset Browser");
+        // Return if window is closed
+        if (!m_isOpen) return;
+
+        if (ImGui::Begin(m_name.c_str(), &m_isOpen)) // Begin ImGui window
+        {
+            // Draw the asset browser window
+            assets_browser.Draw(m_name.c_str());
+        }
+        ImGui::End(); // End ImGui window
     }
 
     /**
