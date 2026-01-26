@@ -1,5 +1,5 @@
-﻿using System;
-using ErmineEngine;
+﻿using ErmineEngine;
+using System;
 
 public class Test3 : MonoBehaviour
 {
@@ -20,6 +20,20 @@ public class Test3 : MonoBehaviour
     private ulong entityID;
 
     private bool jumping = false;
+    private ulong jumpLinkEntityID = 0;
+
+    private void MoveToNextPoint()
+    {
+        if (patrolPoints == null || patrolPoints.Length == 0)
+            return;
+
+        currentIndex = (currentIndex + 1) % patrolPoints.Length;
+
+        stuckTimer = 0f;
+        lastDist = float.MaxValue;
+
+        NavAgent.SetDestination(entityID, patrolPoints[currentIndex]);
+    }
 
     void Start()
     {
@@ -47,7 +61,14 @@ public class Test3 : MonoBehaviour
     void Update()
     {
         if (jumping)
+        {
+            Debug.Log("CALL StartJump: me=" + entityID + " link=" + jumpLinkEntityID);
+            NavAgent.StartJump(entityID, jumpLinkEntityID);
+
+            jumping = false;
+            jumpLinkEntityID = 0; // clear after use
             return;
+        }
 
         if (patrolPoints == null || patrolPoints.Length == 0)
             return;
@@ -79,29 +100,38 @@ public class Test3 : MonoBehaviour
         }
     }
 
-    private void MoveToNextPoint()
-    {
-        if (patrolPoints == null || patrolPoints.Length == 0)
-            return;
-
-        currentIndex = (currentIndex + 1) % patrolPoints.Length;
-
-        stuckTimer = 0f;
-        lastDist = float.MaxValue;
-
-        NavAgent.SetDestination(entityID, patrolPoints[currentIndex]);
-    }
-
-
     void OnCollisionEnter(Collision col)
     {
-        Debug.Log("AI OnCollisionEnter hit: " + col);
+        Debug.Log(col.gameObject.name);
+        if (jumping) return;
+
         if (col.gameObject.name == "JumpArea")
         {
             jumping = true;
-            Debug.Log("JUMP!!!");
-            NavAgent.StartJump((ulong)gameObject.GetInstanceID(), (ulong)col.gameObject.GetInstanceID());
+            jumpLinkEntityID = (ulong)col.gameObject.GetInstanceID();
         }
     }
+
+    //void OnCollisionStay(Collision col)
+    //{
+    //    if (jumping) return;
+
+    //    if (col.gameObject.name == "JumpArea")
+    //    {
+    //        jumping = true;
+    //        jumpLinkEntityID = (ulong)col.gameObject.GetInstanceID();
+    //    }
+    //}
+
+    //void OnCollisionExit(Collision col)
+    //{
+    //    if (jumping) return;
+
+    //    if (col.gameObject.name == "JumpArea")
+    //    {
+    //        jumping = true;
+    //        jumpLinkEntityID = (ulong)col.gameObject.GetInstanceID();
+    //    }
+    //}
 }
 
