@@ -2585,6 +2585,32 @@ namespace
 #pragma endregion
 
 #pragma region NavAgent ICalls
+	static bool SnapPointToNavMesh(EntityID navEntity, const Ermine::Vec3& inPos, Ermine::Vec3& outPos, const float extents[3])
+	{
+		auto& ecs = Ermine::ECS::GetInstance();
+
+		if (navEntity == 0 || !ecs.HasComponent<NavMeshComponent>(navEntity))
+			return false;
+
+		const auto& nav = ecs.GetComponent<NavMeshComponent>(navEntity);
+		if (!nav.runtime || !nav.runtime->query)
+			return false;
+
+		dtNavMeshQuery* q = nav.runtime->query;
+		dtQueryFilter filter; // default filter is fine if you don’t use flags
+
+		float p[3] = { inPos.x, inPos.y, inPos.z };
+		dtPolyRef ref = 0;
+		float nearestPt[3] = {};
+
+		dtStatus st = q->findNearestPoly(p, extents, &filter, &ref, nearestPt);
+		if (dtStatusFailed(st) || ref == 0)
+			return false;
+
+		outPos = Ermine::Vec3{ nearestPt[0], nearestPt[1], nearestPt[2] };
+		return true;
+	}
+
 	void icall_navagent_start_jump(uint64_t agentEntityID, uint64_t linkEntityID)
 	{
 		using namespace Ermine;
@@ -2608,18 +2634,62 @@ namespace
 		// prevent spam
 		if (agent.isJumping) return;
 
+		// --- Choose landing target ---
+		Vector3D desired = link.landingPosition;
+		Vector3D snapped = desired;
+
+		EntityID currentNav = 0;
+		EntityID navEntity = 0;
+
+		auto navAgentSys = ecs.GetSystem<NavMeshAgentSystem>();
+		if (navAgentSys)
+		{
+			currentNav = navAgentSys->FindNearestNavMeshEntity(tr.position);
+			navEntity = navAgentSys->FindNearestNavMeshEntity(desired);
+
+			if (navEntity == currentNav)
+				navEntity = navAgentSys->FindNearestNavMeshEntityExcluding(desired, currentNav);
+		}
+
+		// Generous extents (half-extents) to find a poly even if the point is slightly off.
+		float ext[3] = { 2.0f, 4.0f, 2.0f };
+
+		if (navEntity != 0)
+		{
+			Vector3D tmp;
+			if (SnapPointToNavMesh(navEntity, desired, tmp, ext))
+				snapped = tmp;
+		}
+
+		// --- Start jump ---
 		agent.isJumping = true;
 		agent.navPaused = true;
+		agent.hasPath = false;
 
 		agent.jumpStart = tr.position;
-		agent.jumpTarget = link.landingPosition;
+		agent.jumpTarget = snapped;
 		agent.jumpTimer = 0.0f;
-		agent.jumpDuration = link.jumpDuration;
-		agent.jumpHeight = link.jumpHeight;
 
-		agent.hasPath = false;
+		// --- Auto duration/height from distance ---
+		Vector3D d = agent.jumpTarget - agent.jumpStart;
+		float dist = std::sqrt(d.x * d.x + d.y * d.y + d.z * d.z);
+
+		// Base auto values (tune constants to taste)
+		float autoDuration = std::clamp(dist / 6.0f, 0.25f, 1.5f);
+		float autoHeight = std::clamp(dist / 4.0f, 0.5f, 3.0f);
+
+		agent.jumpDuration = autoDuration;
+		agent.jumpHeight = autoHeight;
+
+		// Respect designer overrides if they put something meaningful in the component
+		// (Pick your rule: here we treat >0 as "override".)
+		if (link.jumpDuration > 0.0f) agent.jumpDuration = link.jumpDuration;
+		if (link.jumpHeight > 0.0f) agent.jumpHeight = link.jumpHeight;
+
+		// Optional debug once:
+		// EE_CORE_INFO("Jump desired(%.2f,%.2f,%.2f) snapped(%.2f,%.2f,%.2f) dist=%.2f dur=%.2f h=%.2f",
+		//     desired.x,desired.y,desired.z, snapped.x,snapped.y,snapped.z, dist, agent.jumpDuration, agent.jumpHeight);
 	}
-
 #pragma endregion
 
 #pragma region UI ICalls

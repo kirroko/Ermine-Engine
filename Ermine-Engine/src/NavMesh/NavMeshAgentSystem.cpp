@@ -85,7 +85,20 @@ namespace Ermine
                 float arc = agent.jumpHeight * 4.0f * t * (1.0f - t);
                 pos.y += arc;
 
-                trans.position = pos;
+                auto phys = ecs.GetSystem<Physics>();
+                if (phys && ecs.HasComponent<PhysicComponent>(e))
+                {
+                    // move the physics body (so the object actually moves in the world)
+                    phys->SetPosition(e, pos);
+
+                    // keep transform in sync (optional, but nice for editor/debug)
+                    trans.position = pos;
+                }
+                else
+                {
+                    // fallback if no physics body
+                    trans.position = pos;
+                }
 
                 if (t >= 1.0f)
                 {
@@ -349,6 +362,33 @@ namespace Ermine
                 best = e;
             }
         }
+        return best;
+    }
+    EntityID NavMeshAgentSystem::FindNearestNavMeshEntityExcluding(const Ermine::Vec3& pos, EntityID exclude) const
+    {
+        auto& ecs = ECS::GetInstance();
+
+        EntityID best = 0;
+        float bestDist2 = FLT_MAX;
+
+        for (EntityID ent = 1; ent < MAX_ENTITIES; ++ent)
+        {
+            if (ent == exclude) continue;
+            if (!ecs.IsEntityValid(ent)) continue;
+            if (!ecs.HasComponent<NavMeshComponent>(ent)) continue;
+            if (!ecs.HasComponent<Transform>(ent)) continue;
+
+            const auto& tr = ecs.GetComponent<Transform>(ent);
+            Ermine::Vec3 d = tr.position - pos;
+            float dist2 = d.x * d.x + d.y * d.y + d.z * d.z;
+
+            if (dist2 < bestDist2)
+            {
+                bestDist2 = dist2;
+                best = ent;
+            }
+        }
+
         return best;
     }
 }
