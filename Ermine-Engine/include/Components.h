@@ -3807,6 +3807,9 @@ namespace Ermine
 		float healthbarWidth = 0.30f;  // Percentage of screen width (increased for visibility)
 		float healthbarHeight = 0.03f; // Percentage of screen height (increased for visibility)
 		Ermine::Vec3 healthbarPosition = { 0.02f, 0.92f, 0.0f };  // Top-left corner, slightly lower
+		std::string healthbarBgTexture = "";      // Background texture path (optional)
+		std::string healthbarFillTexture = "";    // Fill texture path (optional)
+		std::string healthbarFrameTexture = "";   // Frame texture path (optional)
 
 		// Book Counter settings
 		bool showBookCounter = true;
@@ -3819,6 +3822,32 @@ namespace Ermine
 		float skillSlotSize = 0.06f;   // Percentage of screen size
 		float skillSlotSpacing = 0.01f;
 		Ermine::Vec3 skillsPosition = { 0.5f, 0.1f, 0.0f };  // Center bottom
+
+		// Skill icon appearance states
+		Ermine::Vec3 skillReadyTint = { 1.0f, 1.0f, 1.0f };         // Tint when skill is ready
+		float skillReadyAlpha = 1.0f;                               // Alpha when skill is ready
+		Ermine::Vec3 skillCooldownTint = { 0.5f, 0.5f, 0.5f };      // Tint when on cooldown
+		float skillCooldownAlpha = 0.6f;                            // Alpha when on cooldown
+		Ermine::Vec3 skillLowHealthTint = { 0.7f, 0.7f, 0.7f };     // Tint when insufficient health
+		float skillLowHealthAlpha = 0.7f;                           // Alpha when insufficient health
+		Ermine::Vec3 skillFallbackColor = { 0.3f, 0.3f, 0.3f };     // Color when no icon texture
+		float skillFallbackAlpha = 0.5f;                            // Alpha when no icon texture
+
+		// Skill cooldown overlay
+		Ermine::Vec3 skillCooldownOverlayColor = { 0.0f, 0.0f, 0.0f };  // Cooldown radial overlay color
+		float skillCooldownOverlayAlpha = 0.7f;                         // Cooldown radial overlay alpha
+
+		// Skill activation flash effect
+		float skillFlashDuration = 0.2f;                            // Flash effect duration (seconds)
+		Ermine::Vec3 skillFlashColor = { 1.0f, 1.0f, 0.8f };        // Flash color (white-yellow)
+		float skillFlashGlowSize = 0.02f;                           // Glow size increase beyond slot
+
+		// Skill keybind label
+		float skillKeybindTextScale = 0.6f;                         // Text scale for keybind labels
+		float skillKeybindOffsetY = 0.02f;                          // Distance below slot
+		Ermine::Vec3 skillKeybindColor = { 1.0f, 1.0f, 1.0f };      // Label text color
+		float skillKeybindAlphaReady = 1.0f;                        // Alpha when skill ready
+		float skillKeybindAlphaNotReady = 0.6f;                     // Alpha when skill not ready
 
 		// Crosshair settings
 		bool showCrosshair = true;
@@ -3891,6 +3920,12 @@ namespace Ermine
 			out.AddMember("healthbarWidth", healthbarWidth, alloc);
 			out.AddMember("healthbarHeight", healthbarHeight, alloc);
 			out.AddMember("healthbarPosition", Vec3ToJson(healthbarPosition, alloc), alloc);
+			rapidjson::Value bgTexVal(healthbarBgTexture.c_str(), alloc);
+			out.AddMember("healthbarBgTexture", bgTexVal, alloc);
+			rapidjson::Value fillTexVal(healthbarFillTexture.c_str(), alloc);
+			out.AddMember("healthbarFillTexture", fillTexVal, alloc);
+			rapidjson::Value frameTexVal(healthbarFrameTexture.c_str(), alloc);
+			out.AddMember("healthbarFrameTexture", frameTexVal, alloc);
 
 			out.AddMember("showBookCounter", showBookCounter, alloc);
 			out.AddMember("booksCollected", booksCollected, alloc);
@@ -3901,6 +3936,26 @@ namespace Ermine
 			out.AddMember("skillSlotSize", skillSlotSize, alloc);
 			out.AddMember("skillSlotSpacing", skillSlotSpacing, alloc);
 			out.AddMember("skillsPosition", Vec3ToJson(skillsPosition, alloc), alloc);
+
+			// Skill appearance states
+			out.AddMember("skillReadyTint", Vec3ToJson(skillReadyTint, alloc), alloc);
+			out.AddMember("skillReadyAlpha", skillReadyAlpha, alloc);
+			out.AddMember("skillCooldownTint", Vec3ToJson(skillCooldownTint, alloc), alloc);
+			out.AddMember("skillCooldownAlpha", skillCooldownAlpha, alloc);
+			out.AddMember("skillLowHealthTint", Vec3ToJson(skillLowHealthTint, alloc), alloc);
+			out.AddMember("skillLowHealthAlpha", skillLowHealthAlpha, alloc);
+			out.AddMember("skillFallbackColor", Vec3ToJson(skillFallbackColor, alloc), alloc);
+			out.AddMember("skillFallbackAlpha", skillFallbackAlpha, alloc);
+			out.AddMember("skillCooldownOverlayColor", Vec3ToJson(skillCooldownOverlayColor, alloc), alloc);
+			out.AddMember("skillCooldownOverlayAlpha", skillCooldownOverlayAlpha, alloc);
+			out.AddMember("skillFlashDuration", skillFlashDuration, alloc);
+			out.AddMember("skillFlashColor", Vec3ToJson(skillFlashColor, alloc), alloc);
+			out.AddMember("skillFlashGlowSize", skillFlashGlowSize, alloc);
+			out.AddMember("skillKeybindTextScale", skillKeybindTextScale, alloc);
+			out.AddMember("skillKeybindOffsetY", skillKeybindOffsetY, alloc);
+			out.AddMember("skillKeybindColor", Vec3ToJson(skillKeybindColor, alloc), alloc);
+			out.AddMember("skillKeybindAlphaReady", skillKeybindAlphaReady, alloc);
+			out.AddMember("skillKeybindAlphaNotReady", skillKeybindAlphaNotReady, alloc);
 
 			out.AddMember("showCrosshair", showCrosshair, alloc);
 			out.AddMember("crosshairColor", Vec3ToJson(crosshairColor, alloc), alloc);
@@ -3953,16 +4008,22 @@ namespace Ermine
 		{
 			if (in.HasMember("showHealthbar") && in["showHealthbar"].IsBool())
 				showHealthbar = in["showHealthbar"].GetBool();
-			if (in.HasMember("healthbarColor") && in["healthbarColor"].IsObject())
+			if (in.HasMember("healthbarColor") && in["healthbarColor"].IsArray())
 				healthbarColor = JsonToVec3(in["healthbarColor"]);
-			if (in.HasMember("healthbarBgColor") && in["healthbarBgColor"].IsObject())
+			if (in.HasMember("healthbarBgColor") && in["healthbarBgColor"].IsArray())
 				healthbarBgColor = JsonToVec3(in["healthbarBgColor"]);
 			if (in.HasMember("healthbarWidth") && in["healthbarWidth"].IsNumber())
 				healthbarWidth = in["healthbarWidth"].GetFloat();
 			if (in.HasMember("healthbarHeight") && in["healthbarHeight"].IsNumber())
 				healthbarHeight = in["healthbarHeight"].GetFloat();
-			if (in.HasMember("healthbarPosition") && in["healthbarPosition"].IsObject())
+			if (in.HasMember("healthbarPosition") && in["healthbarPosition"].IsArray())
 				healthbarPosition = JsonToVec3(in["healthbarPosition"]);
+			if (in.HasMember("healthbarBgTexture") && in["healthbarBgTexture"].IsString())
+				healthbarBgTexture = in["healthbarBgTexture"].GetString();
+			if (in.HasMember("healthbarFillTexture") && in["healthbarFillTexture"].IsString())
+				healthbarFillTexture = in["healthbarFillTexture"].GetString();
+			if (in.HasMember("healthbarFrameTexture") && in["healthbarFrameTexture"].IsString())
+				healthbarFrameTexture = in["healthbarFrameTexture"].GetString();
 
 			if (in.HasMember("showBookCounter") && in["showBookCounter"].IsBool())
 				showBookCounter = in["showBookCounter"].GetBool();
@@ -3970,7 +4031,7 @@ namespace Ermine
 				booksCollected = in["booksCollected"].GetInt();
 			if (in.HasMember("totalBooks") && in["totalBooks"].IsInt())
 				totalBooks = in["totalBooks"].GetInt();
-			if (in.HasMember("bookCounterPosition") && in["bookCounterPosition"].IsObject())
+			if (in.HasMember("bookCounterPosition") && in["bookCounterPosition"].IsArray())
 				bookCounterPosition = JsonToVec3(in["bookCounterPosition"]);
 
 			if (in.HasMember("showSkills") && in["showSkills"].IsBool())
@@ -3979,12 +4040,50 @@ namespace Ermine
 				skillSlotSize = in["skillSlotSize"].GetFloat();
 			if (in.HasMember("skillSlotSpacing") && in["skillSlotSpacing"].IsNumber())
 				skillSlotSpacing = in["skillSlotSpacing"].GetFloat();
-			if (in.HasMember("skillsPosition") && in["skillsPosition"].IsObject())
+			if (in.HasMember("skillsPosition") && in["skillsPosition"].IsArray())
 				skillsPosition = JsonToVec3(in["skillsPosition"]);
+
+			// Skill appearance states
+			if (in.HasMember("skillReadyTint") && in["skillReadyTint"].IsArray())
+				skillReadyTint = JsonToVec3(in["skillReadyTint"]);
+			if (in.HasMember("skillReadyAlpha") && in["skillReadyAlpha"].IsNumber())
+				skillReadyAlpha = in["skillReadyAlpha"].GetFloat();
+			if (in.HasMember("skillCooldownTint") && in["skillCooldownTint"].IsArray())
+				skillCooldownTint = JsonToVec3(in["skillCooldownTint"]);
+			if (in.HasMember("skillCooldownAlpha") && in["skillCooldownAlpha"].IsNumber())
+				skillCooldownAlpha = in["skillCooldownAlpha"].GetFloat();
+			if (in.HasMember("skillLowHealthTint") && in["skillLowHealthTint"].IsArray())
+				skillLowHealthTint = JsonToVec3(in["skillLowHealthTint"]);
+			if (in.HasMember("skillLowHealthAlpha") && in["skillLowHealthAlpha"].IsNumber())
+				skillLowHealthAlpha = in["skillLowHealthAlpha"].GetFloat();
+			if (in.HasMember("skillFallbackColor") && in["skillFallbackColor"].IsArray())
+				skillFallbackColor = JsonToVec3(in["skillFallbackColor"]);
+			if (in.HasMember("skillFallbackAlpha") && in["skillFallbackAlpha"].IsNumber())
+				skillFallbackAlpha = in["skillFallbackAlpha"].GetFloat();
+			if (in.HasMember("skillCooldownOverlayColor") && in["skillCooldownOverlayColor"].IsArray())
+				skillCooldownOverlayColor = JsonToVec3(in["skillCooldownOverlayColor"]);
+			if (in.HasMember("skillCooldownOverlayAlpha") && in["skillCooldownOverlayAlpha"].IsNumber())
+				skillCooldownOverlayAlpha = in["skillCooldownOverlayAlpha"].GetFloat();
+			if (in.HasMember("skillFlashDuration") && in["skillFlashDuration"].IsNumber())
+				skillFlashDuration = in["skillFlashDuration"].GetFloat();
+			if (in.HasMember("skillFlashColor") && in["skillFlashColor"].IsArray())
+				skillFlashColor = JsonToVec3(in["skillFlashColor"]);
+			if (in.HasMember("skillFlashGlowSize") && in["skillFlashGlowSize"].IsNumber())
+				skillFlashGlowSize = in["skillFlashGlowSize"].GetFloat();
+			if (in.HasMember("skillKeybindTextScale") && in["skillKeybindTextScale"].IsNumber())
+				skillKeybindTextScale = in["skillKeybindTextScale"].GetFloat();
+			if (in.HasMember("skillKeybindOffsetY") && in["skillKeybindOffsetY"].IsNumber())
+				skillKeybindOffsetY = in["skillKeybindOffsetY"].GetFloat();
+			if (in.HasMember("skillKeybindColor") && in["skillKeybindColor"].IsArray())
+				skillKeybindColor = JsonToVec3(in["skillKeybindColor"]);
+			if (in.HasMember("skillKeybindAlphaReady") && in["skillKeybindAlphaReady"].IsNumber())
+				skillKeybindAlphaReady = in["skillKeybindAlphaReady"].GetFloat();
+			if (in.HasMember("skillKeybindAlphaNotReady") && in["skillKeybindAlphaNotReady"].IsNumber())
+				skillKeybindAlphaNotReady = in["skillKeybindAlphaNotReady"].GetFloat();
 
 			if (in.HasMember("showCrosshair") && in["showCrosshair"].IsBool())
 				showCrosshair = in["showCrosshair"].GetBool();
-			if (in.HasMember("crosshairColor") && in["crosshairColor"].IsObject())
+			if (in.HasMember("crosshairColor") && in["crosshairColor"].IsArray())
 				crosshairColor = JsonToVec3(in["crosshairColor"]);
 			if (in.HasMember("crosshairSize") && in["crosshairSize"].IsNumber())
 				crosshairSize = in["crosshairSize"].GetFloat();
@@ -4014,15 +4113,15 @@ namespace Ermine
 				manaRegenRate = in["manaRegenRate"].GetFloat();
 			if (in.HasMember("manaRegenDelay") && in["manaRegenDelay"].IsNumber())
 				manaRegenDelay = in["manaRegenDelay"].GetFloat();
-			if (in.HasMember("manaBarColor") && in["manaBarColor"].IsObject())
+			if (in.HasMember("manaBarColor") && in["manaBarColor"].IsArray())
 				manaBarColor = JsonToVec3(in["manaBarColor"]);
-			if (in.HasMember("manaBarBgColor") && in["manaBarBgColor"].IsObject())
+			if (in.HasMember("manaBarBgColor") && in["manaBarBgColor"].IsArray())
 				manaBarBgColor = JsonToVec3(in["manaBarBgColor"]);
 			if (in.HasMember("manaBarWidth") && in["manaBarWidth"].IsNumber())
 				manaBarWidth = in["manaBarWidth"].GetFloat();
 			if (in.HasMember("manaBarHeight") && in["manaBarHeight"].IsNumber())
 				manaBarHeight = in["manaBarHeight"].GetFloat();
-			if (in.HasMember("manaBarPosition") && in["manaBarPosition"].IsObject())
+			if (in.HasMember("manaBarPosition") && in["manaBarPosition"].IsArray())
 				manaBarPosition = JsonToVec3(in["manaBarPosition"]);
 
 			// Skill slots
@@ -4035,13 +4134,13 @@ namespace Ermine
 						skills[i].maxCooldown = skillObj["maxCooldown"].GetFloat();
 					if (skillObj.HasMember("manaCost") && skillObj["manaCost"].IsNumber())
 						skills[i].manaCost = skillObj["manaCost"].GetFloat();
-					if (skillObj.HasMember("slotColor") && skillObj["slotColor"].IsObject())
+					if (skillObj.HasMember("slotColor") && skillObj["slotColor"].IsArray())
 						skills[i].slotColor = JsonToVec3(skillObj["slotColor"]);
-					if (skillObj.HasMember("readyColor") && skillObj["readyColor"].IsObject())
+					if (skillObj.HasMember("readyColor") && skillObj["readyColor"].IsArray())
 						skills[i].readyColor = JsonToVec3(skillObj["readyColor"]);
-					if (skillObj.HasMember("cooldownColor") && skillObj["cooldownColor"].IsObject())
+					if (skillObj.HasMember("cooldownColor") && skillObj["cooldownColor"].IsArray())
 						skills[i].cooldownColor = JsonToVec3(skillObj["cooldownColor"]);
-					if (skillObj.HasMember("cooldownOverlayColor") && skillObj["cooldownOverlayColor"].IsObject())
+					if (skillObj.HasMember("cooldownOverlayColor") && skillObj["cooldownOverlayColor"].IsArray())
 						skills[i].cooldownOverlayColor = JsonToVec3(skillObj["cooldownOverlayColor"]);
 					// Deserialize icon texture path and skill info
 					if (skillObj.HasMember("iconTexturePath") && skillObj["iconTexturePath"].IsString())
@@ -4066,25 +4165,596 @@ namespace Ermine
 
 		XPROPERTY_DEF(
 			"UIComponent", UIComponent,
+			// Healthbar settings
 			xproperty::obj_member<"showHealthbar", &UIComponent::showHealthbar>,
 			xproperty::obj_member<"healthbarColor", &UIComponent::healthbarColor>,
+			xproperty::obj_member<"healthbarBgColor", &UIComponent::healthbarBgColor>,
 			xproperty::obj_member<"healthbarWidth", &UIComponent::healthbarWidth>,
 			xproperty::obj_member<"healthbarHeight", &UIComponent::healthbarHeight>,
+			xproperty::obj_member<"healthbarPosition", &UIComponent::healthbarPosition>,
+			xproperty::obj_member<"healthbarBgTexture", &UIComponent::healthbarBgTexture>,
+			xproperty::obj_member<"healthbarFillTexture", &UIComponent::healthbarFillTexture>,
+			xproperty::obj_member<"healthbarFrameTexture", &UIComponent::healthbarFrameTexture>,
+
+			// Health system
 			xproperty::obj_member<"currentHealth", &UIComponent::currentHealth>,
 			xproperty::obj_member<"maxHealth", &UIComponent::maxHealth>,
 			xproperty::obj_member<"healthRegenRate", &UIComponent::healthRegenRate>,
 			xproperty::obj_member<"healthRegenDelay", &UIComponent::healthRegenDelay>,
+
+			// Mana bar settings
 			xproperty::obj_member<"showManaBar", &UIComponent::showManaBar>,
 			xproperty::obj_member<"currentMana", &UIComponent::currentMana>,
 			xproperty::obj_member<"maxMana", &UIComponent::maxMana>,
 			xproperty::obj_member<"manaRegenRate", &UIComponent::manaRegenRate>,
 			xproperty::obj_member<"manaRegenDelay", &UIComponent::manaRegenDelay>,
 			xproperty::obj_member<"manaBarColor", &UIComponent::manaBarColor>,
+
+			// Skills UI settings
 			xproperty::obj_member<"showSkills", &UIComponent::showSkills>,
 			xproperty::obj_member<"skillSlotSize", &UIComponent::skillSlotSize>,
+			xproperty::obj_member<"skillSlotSpacing", &UIComponent::skillSlotSpacing>,
+			xproperty::obj_member<"skillsPosition", &UIComponent::skillsPosition>,
+
+			// Skill appearance states
+			xproperty::obj_member<"skillReadyTint", &UIComponent::skillReadyTint>,
+			xproperty::obj_member<"skillReadyAlpha", &UIComponent::skillReadyAlpha>,
+			xproperty::obj_member<"skillCooldownTint", &UIComponent::skillCooldownTint>,
+			xproperty::obj_member<"skillCooldownAlpha", &UIComponent::skillCooldownAlpha>,
+			xproperty::obj_member<"skillLowHealthTint", &UIComponent::skillLowHealthTint>,
+			xproperty::obj_member<"skillLowHealthAlpha", &UIComponent::skillLowHealthAlpha>,
+			xproperty::obj_member<"skillFallbackColor", &UIComponent::skillFallbackColor>,
+			xproperty::obj_member<"skillFallbackAlpha", &UIComponent::skillFallbackAlpha>,
+			xproperty::obj_member<"skillCooldownOverlayColor", &UIComponent::skillCooldownOverlayColor>,
+			xproperty::obj_member<"skillCooldownOverlayAlpha", &UIComponent::skillCooldownOverlayAlpha>,
+			xproperty::obj_member<"skillFlashDuration", &UIComponent::skillFlashDuration>,
+			xproperty::obj_member<"skillFlashColor", &UIComponent::skillFlashColor>,
+			xproperty::obj_member<"skillFlashGlowSize", &UIComponent::skillFlashGlowSize>,
+			xproperty::obj_member<"skillKeybindTextScale", &UIComponent::skillKeybindTextScale>,
+			xproperty::obj_member<"skillKeybindOffsetY", &UIComponent::skillKeybindOffsetY>,
+			xproperty::obj_member<"skillKeybindColor", &UIComponent::skillKeybindColor>,
+			xproperty::obj_member<"skillKeybindAlphaReady", &UIComponent::skillKeybindAlphaReady>,
+			xproperty::obj_member<"skillKeybindAlphaNotReady", &UIComponent::skillKeybindAlphaNotReady>,
+
+			// Crosshair settings
 			xproperty::obj_member<"showCrosshair", &UIComponent::showCrosshair>,
 			xproperty::obj_member<"crosshairSize", &UIComponent::crosshairSize>,
 			xproperty::obj_member<"crosshairStyle", &UIComponent::crosshairStyle>
+		)
+	};
+
+	/*!***********************************************************************
+	\brief
+		UI Healthbar Component - displays player health with optional textures.
+		Separate from other UI elements for better organization.
+	*************************************************************************/
+	struct UIHealthbarComponent
+	{
+		// Healthbar settings
+		bool showHealthbar = true;
+		Ermine::Vec3 healthbarColor = { 0.85f, 0.15f, 0.15f };      // Red for health (normal)
+		Ermine::Vec3 healthbarLowColor = { 0.85f, 0.45f, 0.15f };   // Color when health < 50%
+		Ermine::Vec3 healthbarCriticalColor = { 0.75f, 0.20f, 0.10f }; // Color when health < 25%
+		Ermine::Vec3 healthbarBgColor = { 0.2f, 0.2f, 0.2f };       // Dark gray
+		float healthbarWidth = 0.30f;  // Percentage of screen width
+		float healthbarHeight = 0.03f; // Percentage of screen height
+		Ermine::Vec3 healthbarPosition = { 0.02f, 0.92f, 0.0f };  // Top-left corner
+		std::string healthbarBgTexture = "";      // Background texture path (optional)
+		std::string healthbarFillTexture = "";    // Fill texture path (optional)
+		std::string healthbarFrameTexture = "";   // Frame texture path (optional)
+
+		// Shine effect (only visible without fill texture)
+		Ermine::Vec3 healthbarShineColor = { 1.0f, 1.0f, 1.0f };    // Shine overlay color
+		float healthbarShineAlpha = 0.3f;                           // Shine overlay alpha
+
+		// Health system (Life Essence)
+		float currentHealth = 50.0f;
+		float maxHealth = 50.0f;
+		float healthRegenRate = 5.0f;          // Health per second when regenerating
+		float healthRegenDelay = 3.0f;         // Delay after damage before regen starts
+		float healthRegenTimer = 0.0f;         // Internal timer (don't serialize)
+
+		float GetHealth() const { return currentHealth; }
+		void SetHealth(float value) { currentHealth = std::clamp(value, 0.0f, maxHealth); }
+
+		template<typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const
+		{
+			out.SetObject();
+			out.AddMember("showHealthbar", showHealthbar, alloc);
+			out.AddMember("healthbarColor", Vec3ToJson(healthbarColor, alloc), alloc);
+			out.AddMember("healthbarLowColor", Vec3ToJson(healthbarLowColor, alloc), alloc);
+			out.AddMember("healthbarCriticalColor", Vec3ToJson(healthbarCriticalColor, alloc), alloc);
+			out.AddMember("healthbarBgColor", Vec3ToJson(healthbarBgColor, alloc), alloc);
+			out.AddMember("healthbarWidth", healthbarWidth, alloc);
+			out.AddMember("healthbarHeight", healthbarHeight, alloc);
+			out.AddMember("healthbarPosition", Vec3ToJson(healthbarPosition, alloc), alloc);
+			rapidjson::Value bgTexVal(healthbarBgTexture.c_str(), alloc);
+			out.AddMember("healthbarBgTexture", bgTexVal, alloc);
+			rapidjson::Value fillTexVal(healthbarFillTexture.c_str(), alloc);
+			out.AddMember("healthbarFillTexture", fillTexVal, alloc);
+			rapidjson::Value frameTexVal(healthbarFrameTexture.c_str(), alloc);
+			out.AddMember("healthbarFrameTexture", frameTexVal, alloc);
+			out.AddMember("healthbarShineColor", Vec3ToJson(healthbarShineColor, alloc), alloc);
+			out.AddMember("healthbarShineAlpha", healthbarShineAlpha, alloc);
+			out.AddMember("currentHealth", currentHealth, alloc);
+			out.AddMember("maxHealth", maxHealth, alloc);
+			out.AddMember("healthRegenRate", healthRegenRate, alloc);
+			out.AddMember("healthRegenDelay", healthRegenDelay, alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in)
+		{
+			if (in.HasMember("showHealthbar") && in["showHealthbar"].IsBool())
+				showHealthbar = in["showHealthbar"].GetBool();
+			if (in.HasMember("healthbarColor") && in["healthbarColor"].IsArray())
+				healthbarColor = JsonToVec3(in["healthbarColor"]);
+			if (in.HasMember("healthbarLowColor") && in["healthbarLowColor"].IsArray())
+				healthbarLowColor = JsonToVec3(in["healthbarLowColor"]);
+			if (in.HasMember("healthbarCriticalColor") && in["healthbarCriticalColor"].IsArray())
+				healthbarCriticalColor = JsonToVec3(in["healthbarCriticalColor"]);
+			if (in.HasMember("healthbarBgColor") && in["healthbarBgColor"].IsArray())
+				healthbarBgColor = JsonToVec3(in["healthbarBgColor"]);
+			if (in.HasMember("healthbarWidth") && in["healthbarWidth"].IsNumber())
+				healthbarWidth = in["healthbarWidth"].GetFloat();
+			if (in.HasMember("healthbarHeight") && in["healthbarHeight"].IsNumber())
+				healthbarHeight = in["healthbarHeight"].GetFloat();
+			if (in.HasMember("healthbarPosition") && in["healthbarPosition"].IsArray())
+				healthbarPosition = JsonToVec3(in["healthbarPosition"]);
+			if (in.HasMember("healthbarBgTexture") && in["healthbarBgTexture"].IsString())
+				healthbarBgTexture = in["healthbarBgTexture"].GetString();
+			if (in.HasMember("healthbarFillTexture") && in["healthbarFillTexture"].IsString())
+				healthbarFillTexture = in["healthbarFillTexture"].GetString();
+			if (in.HasMember("healthbarFrameTexture") && in["healthbarFrameTexture"].IsString())
+				healthbarFrameTexture = in["healthbarFrameTexture"].GetString();
+			if (in.HasMember("healthbarShineColor") && in["healthbarShineColor"].IsArray())
+				healthbarShineColor = JsonToVec3(in["healthbarShineColor"]);
+			if (in.HasMember("healthbarShineAlpha") && in["healthbarShineAlpha"].IsNumber())
+				healthbarShineAlpha = in["healthbarShineAlpha"].GetFloat();
+			if (in.HasMember("currentHealth") && in["currentHealth"].IsNumber())
+				currentHealth = in["currentHealth"].GetFloat();
+			if (in.HasMember("maxHealth") && in["maxHealth"].IsNumber())
+				maxHealth = in["maxHealth"].GetFloat();
+			if (in.HasMember("healthRegenRate") && in["healthRegenRate"].IsNumber())
+				healthRegenRate = in["healthRegenRate"].GetFloat();
+			if (in.HasMember("healthRegenDelay") && in["healthRegenDelay"].IsNumber())
+				healthRegenDelay = in["healthRegenDelay"].GetFloat();
+			healthRegenTimer = 0.0f;
+		}
+
+		XPROPERTY_DEF(
+			"UIHealthbarComponent", UIHealthbarComponent,
+			xproperty::obj_member<"showHealthbar", &UIHealthbarComponent::showHealthbar>,
+			xproperty::obj_member<"healthbarColor", &UIHealthbarComponent::healthbarColor>,
+			xproperty::obj_member<"healthbarLowColor", &UIHealthbarComponent::healthbarLowColor>,
+			xproperty::obj_member<"healthbarCriticalColor", &UIHealthbarComponent::healthbarCriticalColor>,
+			xproperty::obj_member<"healthbarBgColor", &UIHealthbarComponent::healthbarBgColor>,
+			xproperty::obj_member<"healthbarWidth", &UIHealthbarComponent::healthbarWidth>,
+			xproperty::obj_member<"healthbarHeight", &UIHealthbarComponent::healthbarHeight>,
+			xproperty::obj_member<"healthbarPosition", &UIHealthbarComponent::healthbarPosition>,
+			xproperty::obj_member<"healthbarBgTexture", &UIHealthbarComponent::healthbarBgTexture>,
+			xproperty::obj_member<"healthbarFillTexture", &UIHealthbarComponent::healthbarFillTexture>,
+			xproperty::obj_member<"healthbarFrameTexture", &UIHealthbarComponent::healthbarFrameTexture>,
+			xproperty::obj_member<"healthbarShineColor", &UIHealthbarComponent::healthbarShineColor>,
+			xproperty::obj_member<"healthbarShineAlpha", &UIHealthbarComponent::healthbarShineAlpha>,
+			xproperty::obj_member<"currentHealth", &UIHealthbarComponent::currentHealth>,
+			xproperty::obj_member<"maxHealth", &UIHealthbarComponent::maxHealth>,
+			xproperty::obj_member<"healthRegenRate", &UIHealthbarComponent::healthRegenRate>,
+			xproperty::obj_member<"healthRegenDelay", &UIHealthbarComponent::healthRegenDelay>
+		)
+	};
+
+	/*!***********************************************************************
+	\brief
+		UI Crosshair Component - displays crosshair for aiming.
+	*************************************************************************/
+	struct UICrosshairComponent
+	{
+		bool showCrosshair = true;
+		std::string crosshairTexturePath = "../Resources/Textures/UI/crosshair.png";  // Texture path (editable in inspector!)
+		Ermine::Vec3 crosshairColor = { 0.95f, 0.95f, 0.95f };  // Bright white
+		float crosshairSize = 0.05f;   // Reduced size for better precision
+		float crosshairThickness = 0.001f;  // Thinner and sharper
+		int crosshairStyle = 0;        // 0 = sniper scope, 1 = dot, 2 = circle
+		float crosshairGap = 0.004f;   // Small center gap for precise aiming
+
+		template<typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const
+		{
+			out.SetObject();
+			out.AddMember("showCrosshair", showCrosshair, alloc);
+			rapidjson::Value texPathVal(crosshairTexturePath.c_str(), alloc);
+			out.AddMember("crosshairTexturePath", texPathVal, alloc);
+			out.AddMember("crosshairColor", Vec3ToJson(crosshairColor, alloc), alloc);
+			out.AddMember("crosshairSize", crosshairSize, alloc);
+			out.AddMember("crosshairThickness", crosshairThickness, alloc);
+			out.AddMember("crosshairStyle", crosshairStyle, alloc);
+			out.AddMember("crosshairGap", crosshairGap, alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in)
+		{
+			if (in.HasMember("showCrosshair") && in["showCrosshair"].IsBool())
+				showCrosshair = in["showCrosshair"].GetBool();
+			if (in.HasMember("crosshairTexturePath") && in["crosshairTexturePath"].IsString())
+				crosshairTexturePath = in["crosshairTexturePath"].GetString();
+			if (in.HasMember("crosshairColor") && in["crosshairColor"].IsArray())
+				crosshairColor = JsonToVec3(in["crosshairColor"]);
+			if (in.HasMember("crosshairSize") && in["crosshairSize"].IsNumber())
+				crosshairSize = in["crosshairSize"].GetFloat();
+			if (in.HasMember("crosshairThickness") && in["crosshairThickness"].IsNumber())
+				crosshairThickness = in["crosshairThickness"].GetFloat();
+			if (in.HasMember("crosshairStyle") && in["crosshairStyle"].IsInt())
+				crosshairStyle = in["crosshairStyle"].GetInt();
+			if (in.HasMember("crosshairGap") && in["crosshairGap"].IsNumber())
+				crosshairGap = in["crosshairGap"].GetFloat();
+		}
+
+		XPROPERTY_DEF(
+			"UICrosshairComponent", UICrosshairComponent,
+			xproperty::obj_member<"showCrosshair", &UICrosshairComponent::showCrosshair>,
+			xproperty::obj_member<"crosshairTexturePath", &UICrosshairComponent::crosshairTexturePath>,
+			xproperty::obj_member<"crosshairColor", &UICrosshairComponent::crosshairColor>,
+			xproperty::obj_member<"crosshairSize", &UICrosshairComponent::crosshairSize>,
+			xproperty::obj_member<"crosshairThickness", &UICrosshairComponent::crosshairThickness>,
+			xproperty::obj_member<"crosshairStyle", &UICrosshairComponent::crosshairStyle>,
+			xproperty::obj_member<"crosshairGap", &UICrosshairComponent::crosshairGap>
+		)
+	};
+
+	/*!***********************************************************************
+	\brief
+		UI Skills Component - displays skill slots with cooldowns and keybinds.
+	*************************************************************************/
+	struct UISkillsComponent
+	{
+		// Skills UI settings
+		bool showSkills = true;
+		float skillSlotSize = 0.06f;   // Default size for all slots (can be overridden per-slot)
+
+		// Skill appearance states (default for all slots)
+		Ermine::Vec3 skillReadyTint = { 1.0f, 1.0f, 1.0f };
+		float skillReadyAlpha = 1.0f;
+		Ermine::Vec3 skillCooldownTint = { 0.5f, 0.5f, 0.5f };
+		float skillCooldownAlpha = 0.6f;
+		Ermine::Vec3 skillLowHealthTint = { 0.7f, 0.7f, 0.7f };
+		float skillLowHealthAlpha = 0.7f;
+		Ermine::Vec3 skillFallbackColor = { 0.3f, 0.3f, 0.3f };
+		float skillFallbackAlpha = 0.5f;
+
+		// Skill cooldown overlay
+		Ermine::Vec3 skillCooldownOverlayColor = { 0.0f, 0.0f, 0.0f };
+		float skillCooldownOverlayAlpha = 0.7f;
+
+		// Skill activation flash effect
+		float skillFlashDuration = 0.2f;
+		Ermine::Vec3 skillFlashColor = { 1.0f, 1.0f, 0.8f };
+		float skillFlashGlowSize = 0.02f;
+
+		// Skill keybind label
+		float skillKeybindTextScale = 0.6f;
+		float skillKeybindOffsetY = 0.02f;
+		Ermine::Vec3 skillKeybindColor = { 1.0f, 1.0f, 1.0f };
+		float skillKeybindAlphaReady = 1.0f;
+		float skillKeybindAlphaNotReady = 0.6f;
+
+		// Skill slot data - EACH SLOT HAS ITS OWN POSITION!
+		struct SkillSlot
+		{
+			Ermine::Vec3 position = { 0.5f, 0.1f, 0.0f };  // Individual position for this slot
+			float size = 0.0f;  // Size override (0 = use component's skillSlotSize)
+			float currentCooldown = 0.0f;
+			float maxCooldown = 5.0f;
+			float manaCost = 20.0f;
+			bool isOnCooldown = false;
+			float activationFlashTimer = 0.0f;
+			Ermine::Vec3 slotColor = { 0.25f, 0.25f, 0.25f };
+			Ermine::Vec3 readyColor = { 0.85f, 0.85f, 0.85f };
+			Ermine::Vec3 cooldownColor = { 0.45f, 0.45f, 0.45f };
+			Ermine::Vec3 cooldownOverlayColor = { 0.15f, 0.15f, 0.15f };
+			std::string iconTexturePath = "";
+			std::string skillName = "";
+			std::string keyBinding = "";
+			std::string description = "";
+		};
+		std::vector<SkillSlot> skills;
+
+		template<typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const
+		{
+			out.SetObject();
+			out.AddMember("showSkills", showSkills, alloc);
+			out.AddMember("skillSlotSize", skillSlotSize, alloc);
+			out.AddMember("skillReadyTint", Vec3ToJson(skillReadyTint, alloc), alloc);
+			out.AddMember("skillReadyAlpha", skillReadyAlpha, alloc);
+			out.AddMember("skillCooldownTint", Vec3ToJson(skillCooldownTint, alloc), alloc);
+			out.AddMember("skillCooldownAlpha", skillCooldownAlpha, alloc);
+			out.AddMember("skillLowHealthTint", Vec3ToJson(skillLowHealthTint, alloc), alloc);
+			out.AddMember("skillLowHealthAlpha", skillLowHealthAlpha, alloc);
+			out.AddMember("skillFallbackColor", Vec3ToJson(skillFallbackColor, alloc), alloc);
+			out.AddMember("skillFallbackAlpha", skillFallbackAlpha, alloc);
+			out.AddMember("skillCooldownOverlayColor", Vec3ToJson(skillCooldownOverlayColor, alloc), alloc);
+			out.AddMember("skillCooldownOverlayAlpha", skillCooldownOverlayAlpha, alloc);
+			out.AddMember("skillFlashDuration", skillFlashDuration, alloc);
+			out.AddMember("skillFlashColor", Vec3ToJson(skillFlashColor, alloc), alloc);
+			out.AddMember("skillFlashGlowSize", skillFlashGlowSize, alloc);
+			out.AddMember("skillKeybindTextScale", skillKeybindTextScale, alloc);
+			out.AddMember("skillKeybindOffsetY", skillKeybindOffsetY, alloc);
+			out.AddMember("skillKeybindColor", Vec3ToJson(skillKeybindColor, alloc), alloc);
+			out.AddMember("skillKeybindAlphaReady", skillKeybindAlphaReady, alloc);
+			out.AddMember("skillKeybindAlphaNotReady", skillKeybindAlphaNotReady, alloc);
+
+			rapidjson::Value skillsArray(rapidjson::kArrayType);
+			for (const auto& skill : skills) {
+				rapidjson::Value skillObj(rapidjson::kObjectType);
+				skillObj.AddMember("position", Vec3ToJson(skill.position, alloc), alloc);
+				skillObj.AddMember("size", skill.size, alloc);
+				skillObj.AddMember("maxCooldown", skill.maxCooldown, alloc);
+				skillObj.AddMember("manaCost", skill.manaCost, alloc);
+				skillObj.AddMember("slotColor", Vec3ToJson(skill.slotColor, alloc), alloc);
+				skillObj.AddMember("readyColor", Vec3ToJson(skill.readyColor, alloc), alloc);
+				skillObj.AddMember("cooldownColor", Vec3ToJson(skill.cooldownColor, alloc), alloc);
+				skillObj.AddMember("cooldownOverlayColor", Vec3ToJson(skill.cooldownOverlayColor, alloc), alloc);
+				rapidjson::Value iconPathVal(skill.iconTexturePath.c_str(), alloc);
+				skillObj.AddMember("iconTexturePath", iconPathVal, alloc);
+				rapidjson::Value skillNameVal(skill.skillName.c_str(), alloc);
+				skillObj.AddMember("skillName", skillNameVal, alloc);
+				rapidjson::Value keyBindingVal(skill.keyBinding.c_str(), alloc);
+				skillObj.AddMember("keyBinding", keyBindingVal, alloc);
+				rapidjson::Value descriptionVal(skill.description.c_str(), alloc);
+				skillObj.AddMember("description", descriptionVal, alloc);
+				skillsArray.PushBack(skillObj, alloc);
+			}
+			out.AddMember("skills", skillsArray, alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in)
+		{
+			if (in.HasMember("showSkills") && in["showSkills"].IsBool())
+				showSkills = in["showSkills"].GetBool();
+			if (in.HasMember("skillSlotSize") && in["skillSlotSize"].IsNumber())
+				skillSlotSize = in["skillSlotSize"].GetFloat();
+			if (in.HasMember("skillReadyTint") && in["skillReadyTint"].IsArray())
+				skillReadyTint = JsonToVec3(in["skillReadyTint"]);
+			if (in.HasMember("skillReadyAlpha") && in["skillReadyAlpha"].IsNumber())
+				skillReadyAlpha = in["skillReadyAlpha"].GetFloat();
+			if (in.HasMember("skillCooldownTint") && in["skillCooldownTint"].IsArray())
+				skillCooldownTint = JsonToVec3(in["skillCooldownTint"]);
+			if (in.HasMember("skillCooldownAlpha") && in["skillCooldownAlpha"].IsNumber())
+				skillCooldownAlpha = in["skillCooldownAlpha"].GetFloat();
+			if (in.HasMember("skillLowHealthTint") && in["skillLowHealthTint"].IsArray())
+				skillLowHealthTint = JsonToVec3(in["skillLowHealthTint"]);
+			if (in.HasMember("skillLowHealthAlpha") && in["skillLowHealthAlpha"].IsNumber())
+				skillLowHealthAlpha = in["skillLowHealthAlpha"].GetFloat();
+			if (in.HasMember("skillFallbackColor") && in["skillFallbackColor"].IsArray())
+				skillFallbackColor = JsonToVec3(in["skillFallbackColor"]);
+			if (in.HasMember("skillFallbackAlpha") && in["skillFallbackAlpha"].IsNumber())
+				skillFallbackAlpha = in["skillFallbackAlpha"].GetFloat();
+			if (in.HasMember("skillCooldownOverlayColor") && in["skillCooldownOverlayColor"].IsArray())
+				skillCooldownOverlayColor = JsonToVec3(in["skillCooldownOverlayColor"]);
+			if (in.HasMember("skillCooldownOverlayAlpha") && in["skillCooldownOverlayAlpha"].IsNumber())
+				skillCooldownOverlayAlpha = in["skillCooldownOverlayAlpha"].GetFloat();
+			if (in.HasMember("skillFlashDuration") && in["skillFlashDuration"].IsNumber())
+				skillFlashDuration = in["skillFlashDuration"].GetFloat();
+			if (in.HasMember("skillFlashColor") && in["skillFlashColor"].IsArray())
+				skillFlashColor = JsonToVec3(in["skillFlashColor"]);
+			if (in.HasMember("skillFlashGlowSize") && in["skillFlashGlowSize"].IsNumber())
+				skillFlashGlowSize = in["skillFlashGlowSize"].GetFloat();
+			if (in.HasMember("skillKeybindTextScale") && in["skillKeybindTextScale"].IsNumber())
+				skillKeybindTextScale = in["skillKeybindTextScale"].GetFloat();
+			if (in.HasMember("skillKeybindOffsetY") && in["skillKeybindOffsetY"].IsNumber())
+				skillKeybindOffsetY = in["skillKeybindOffsetY"].GetFloat();
+			if (in.HasMember("skillKeybindColor") && in["skillKeybindColor"].IsArray())
+				skillKeybindColor = JsonToVec3(in["skillKeybindColor"]);
+			if (in.HasMember("skillKeybindAlphaReady") && in["skillKeybindAlphaReady"].IsNumber())
+				skillKeybindAlphaReady = in["skillKeybindAlphaReady"].GetFloat();
+			if (in.HasMember("skillKeybindAlphaNotReady") && in["skillKeybindAlphaNotReady"].IsNumber())
+				skillKeybindAlphaNotReady = in["skillKeybindAlphaNotReady"].GetFloat();
+
+			// Load skills array - supports both old "skillSlots" and new "skills" key for backward compatibility
+			const rapidjson::Value* skillsArrayPtr = nullptr;
+			if (in.HasMember("skills") && in["skills"].IsArray())
+				skillsArrayPtr = &in["skills"];
+			else if (in.HasMember("skillSlots") && in["skillSlots"].IsArray())
+				skillsArrayPtr = &in["skillSlots"];
+
+			if (skillsArrayPtr) {
+				const auto& skillsArray = *skillsArrayPtr;
+				skills.clear();
+				skills.reserve(skillsArray.Size());
+				for (rapidjson::SizeType i = 0; i < skillsArray.Size(); ++i) {
+					const auto& skillObj = skillsArray[i];
+					SkillSlot slot;
+					if (skillObj.HasMember("position") && skillObj["position"].IsArray())
+						slot.position = JsonToVec3(skillObj["position"]);
+					if (skillObj.HasMember("size") && skillObj["size"].IsNumber())
+						slot.size = skillObj["size"].GetFloat();
+					if (skillObj.HasMember("maxCooldown") && skillObj["maxCooldown"].IsNumber())
+						slot.maxCooldown = skillObj["maxCooldown"].GetFloat();
+					if (skillObj.HasMember("manaCost") && skillObj["manaCost"].IsNumber())
+						slot.manaCost = skillObj["manaCost"].GetFloat();
+					if (skillObj.HasMember("slotColor") && skillObj["slotColor"].IsArray())
+						slot.slotColor = JsonToVec3(skillObj["slotColor"]);
+					if (skillObj.HasMember("readyColor") && skillObj["readyColor"].IsArray())
+						slot.readyColor = JsonToVec3(skillObj["readyColor"]);
+					if (skillObj.HasMember("cooldownColor") && skillObj["cooldownColor"].IsArray())
+						slot.cooldownColor = JsonToVec3(skillObj["cooldownColor"]);
+					if (skillObj.HasMember("cooldownOverlayColor") && skillObj["cooldownOverlayColor"].IsArray())
+						slot.cooldownOverlayColor = JsonToVec3(skillObj["cooldownOverlayColor"]);
+					if (skillObj.HasMember("iconTexturePath") && skillObj["iconTexturePath"].IsString())
+						slot.iconTexturePath = skillObj["iconTexturePath"].GetString();
+					if (skillObj.HasMember("skillName") && skillObj["skillName"].IsString())
+						slot.skillName = skillObj["skillName"].GetString();
+					if (skillObj.HasMember("keyBinding") && skillObj["keyBinding"].IsString())
+						slot.keyBinding = skillObj["keyBinding"].GetString();
+					if (skillObj.HasMember("description") && skillObj["description"].IsString())
+						slot.description = skillObj["description"].GetString();
+					slot.currentCooldown = 0.0f;
+					slot.isOnCooldown = false;
+					skills.push_back(slot);
+				}
+			}
+		}
+
+		XPROPERTY_DEF(
+			"UISkillsComponent", UISkillsComponent,
+			xproperty::obj_member<"showSkills", &UISkillsComponent::showSkills>,
+			xproperty::obj_member<"skillSlotSize", &UISkillsComponent::skillSlotSize>
+		)
+	};
+
+	/*!***********************************************************************
+	\brief
+		UI Mana Bar Component - displays mana/energy with regeneration.
+	*************************************************************************/
+	struct UIManaBarComponent
+	{
+		bool showManaBar = false;
+		float currentMana = 100.0f;
+		float maxMana = 100.0f;
+		float manaRegenRate = 10.0f;
+		float manaRegenDelay = 2.0f;
+		float manaRegenTimer = 0.0f;
+		Ermine::Vec3 manaBarColor = { 0.0f, 0.5f, 1.0f };
+		Ermine::Vec3 manaBarBgColor = { 0.2f, 0.2f, 0.3f };
+		float manaBarWidth = 0.3f;
+		float manaBarHeight = 0.03f;
+		Ermine::Vec3 manaBarPosition = { 0.1f, 0.85f, 0.0f };
+
+		template<typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const
+		{
+			out.SetObject();
+			out.AddMember("showManaBar", showManaBar, alloc);
+			out.AddMember("currentMana", currentMana, alloc);
+			out.AddMember("maxMana", maxMana, alloc);
+			out.AddMember("manaRegenRate", manaRegenRate, alloc);
+			out.AddMember("manaRegenDelay", manaRegenDelay, alloc);
+			out.AddMember("manaBarColor", Vec3ToJson(manaBarColor, alloc), alloc);
+			out.AddMember("manaBarBgColor", Vec3ToJson(manaBarBgColor, alloc), alloc);
+			out.AddMember("manaBarWidth", manaBarWidth, alloc);
+			out.AddMember("manaBarHeight", manaBarHeight, alloc);
+			out.AddMember("manaBarPosition", Vec3ToJson(manaBarPosition, alloc), alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in)
+		{
+			if (in.HasMember("showManaBar") && in["showManaBar"].IsBool())
+				showManaBar = in["showManaBar"].GetBool();
+			if (in.HasMember("currentMana") && in["currentMana"].IsNumber())
+				currentMana = in["currentMana"].GetFloat();
+			if (in.HasMember("maxMana") && in["maxMana"].IsNumber())
+				maxMana = in["maxMana"].GetFloat();
+			if (in.HasMember("manaRegenRate") && in["manaRegenRate"].IsNumber())
+				manaRegenRate = in["manaRegenRate"].GetFloat();
+			if (in.HasMember("manaRegenDelay") && in["manaRegenDelay"].IsNumber())
+				manaRegenDelay = in["manaRegenDelay"].GetFloat();
+			if (in.HasMember("manaBarColor") && in["manaBarColor"].IsArray())
+				manaBarColor = JsonToVec3(in["manaBarColor"]);
+			if (in.HasMember("manaBarBgColor") && in["manaBarBgColor"].IsArray())
+				manaBarBgColor = JsonToVec3(in["manaBarBgColor"]);
+			if (in.HasMember("manaBarWidth") && in["manaBarWidth"].IsNumber())
+				manaBarWidth = in["manaBarWidth"].GetFloat();
+			if (in.HasMember("manaBarHeight") && in["manaBarHeight"].IsNumber())
+				manaBarHeight = in["manaBarHeight"].GetFloat();
+			if (in.HasMember("manaBarPosition") && in["manaBarPosition"].IsArray())
+				manaBarPosition = JsonToVec3(in["manaBarPosition"]);
+			manaRegenTimer = 0.0f;
+		}
+
+		XPROPERTY_DEF(
+			"UIManaBarComponent", UIManaBarComponent,
+			xproperty::obj_member<"showManaBar", &UIManaBarComponent::showManaBar>,
+			xproperty::obj_member<"currentMana", &UIManaBarComponent::currentMana>,
+			xproperty::obj_member<"maxMana", &UIManaBarComponent::maxMana>,
+			xproperty::obj_member<"manaRegenRate", &UIManaBarComponent::manaRegenRate>,
+			xproperty::obj_member<"manaRegenDelay", &UIManaBarComponent::manaRegenDelay>,
+			xproperty::obj_member<"manaBarColor", &UIManaBarComponent::manaBarColor>
+		)
+	};
+
+	/*!***********************************************************************
+	\brief
+		UI Book Counter Component - displays collected books count.
+	*************************************************************************/
+	struct UIBookCounterComponent
+	{
+		bool showBookCounter = true;
+		int booksCollected = 0;
+		int totalBooks = 4;
+		Ermine::Vec3 bookCounterPosition = { 0.95f, 0.93f, 0.0f };
+		Ermine::Vec3 textColor = { 1.0f, 1.0f, 1.0f };  // Text color (white by default)
+		float textScale = 1.2f;                         // Text size scale
+		float textAlpha = 1.0f;                         // Text transparency
+
+		// Optional textures for visual polish
+		std::string bookIconTexture = "";               // Icon to show next to counter (e.g., book icon)
+		float bookIconSize = 0.04f;                     // Icon size (if texture provided)
+		float bookIconOffsetX = -0.05f;                 // Icon offset from text
+		std::string backgroundTexture = "";             // Background panel texture (optional)
+		Ermine::Vec3 backgroundSize = { 0.15f, 0.05f, 0.0f }; // Background panel size
+
+		template<typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const
+		{
+			out.SetObject();
+			out.AddMember("showBookCounter", showBookCounter, alloc);
+			out.AddMember("booksCollected", booksCollected, alloc);
+			out.AddMember("totalBooks", totalBooks, alloc);
+			out.AddMember("bookCounterPosition", Vec3ToJson(bookCounterPosition, alloc), alloc);
+			out.AddMember("textColor", Vec3ToJson(textColor, alloc), alloc);
+			out.AddMember("textScale", textScale, alloc);
+			out.AddMember("textAlpha", textAlpha, alloc);
+
+			rapidjson::Value iconTexVal(bookIconTexture.c_str(), alloc);
+			out.AddMember("bookIconTexture", iconTexVal, alloc);
+			out.AddMember("bookIconSize", bookIconSize, alloc);
+			out.AddMember("bookIconOffsetX", bookIconOffsetX, alloc);
+			rapidjson::Value bgTexVal(backgroundTexture.c_str(), alloc);
+			out.AddMember("backgroundTexture", bgTexVal, alloc);
+			out.AddMember("backgroundSize", Vec3ToJson(backgroundSize, alloc), alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in)
+		{
+			if (in.HasMember("showBookCounter") && in["showBookCounter"].IsBool())
+				showBookCounter = in["showBookCounter"].GetBool();
+			if (in.HasMember("booksCollected") && in["booksCollected"].IsInt())
+				booksCollected = in["booksCollected"].GetInt();
+			if (in.HasMember("totalBooks") && in["totalBooks"].IsInt())
+				totalBooks = in["totalBooks"].GetInt();
+			if (in.HasMember("bookCounterPosition") && in["bookCounterPosition"].IsArray())
+				bookCounterPosition = JsonToVec3(in["bookCounterPosition"]);
+			if (in.HasMember("textColor") && in["textColor"].IsArray())
+				textColor = JsonToVec3(in["textColor"]);
+			if (in.HasMember("textScale") && in["textScale"].IsNumber())
+				textScale = in["textScale"].GetFloat();
+			if (in.HasMember("textAlpha") && in["textAlpha"].IsNumber())
+				textAlpha = in["textAlpha"].GetFloat();
+			if (in.HasMember("bookIconTexture") && in["bookIconTexture"].IsString())
+				bookIconTexture = in["bookIconTexture"].GetString();
+			if (in.HasMember("bookIconSize") && in["bookIconSize"].IsNumber())
+				bookIconSize = in["bookIconSize"].GetFloat();
+			if (in.HasMember("bookIconOffsetX") && in["bookIconOffsetX"].IsNumber())
+				bookIconOffsetX = in["bookIconOffsetX"].GetFloat();
+			if (in.HasMember("backgroundTexture") && in["backgroundTexture"].IsString())
+				backgroundTexture = in["backgroundTexture"].GetString();
+			if (in.HasMember("backgroundSize") && in["backgroundSize"].IsArray())
+				backgroundSize = JsonToVec3(in["backgroundSize"]);
+		}
+
+		XPROPERTY_DEF(
+			"UIBookCounterComponent", UIBookCounterComponent,
+			xproperty::obj_member<"showBookCounter", &UIBookCounterComponent::showBookCounter>,
+			xproperty::obj_member<"booksCollected", &UIBookCounterComponent::booksCollected>,
+			xproperty::obj_member<"totalBooks", &UIBookCounterComponent::totalBooks>,
+			xproperty::obj_member<"bookCounterPosition", &UIBookCounterComponent::bookCounterPosition>,
+			xproperty::obj_member<"textColor", &UIBookCounterComponent::textColor>,
+			xproperty::obj_member<"textScale", &UIBookCounterComponent::textScale>,
+			xproperty::obj_member<"textAlpha", &UIBookCounterComponent::textAlpha>,
+			xproperty::obj_member<"bookIconTexture", &UIBookCounterComponent::bookIconTexture>,
+			xproperty::obj_member<"bookIconSize", &UIBookCounterComponent::bookIconSize>,
+			xproperty::obj_member<"backgroundTexture", &UIBookCounterComponent::backgroundTexture>
 		)
 	};
 

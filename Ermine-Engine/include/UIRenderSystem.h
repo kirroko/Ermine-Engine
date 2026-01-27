@@ -122,6 +122,13 @@ namespace Ermine
         *************************************************************************/
         void RenderBookCounter(const UIComponent& ui);
 
+        // New render functions for separate UI components
+        void RenderHealthBarNew(const UIHealthbarComponent& healthbar);
+        void RenderCrosshairNew(const UICrosshairComponent& crosshair);
+        void RenderSkillSlotsNew(const UISkillsComponent& skills, EntityID entity);
+        void RenderManaBarNew(const UIManaBarComponent& manaBar);
+        void RenderBookCounterNew(const UIBookCounterComponent& bookCounter);
+
         /*!***********************************************************************
         \brief
             Renders a UI button with text.
@@ -189,6 +196,62 @@ namespace Ermine
                                   std::shared_ptr<graphics::Texture> texture,
                                   const Vec3& color = {1.0f, 1.0f, 1.0f},
                                   float alpha = 1.0f);
+
+        /*!***********************************************************************
+        \brief
+            Renders a textured rectangle at the specified position.
+        \param[in] posX
+            Left X position in normalized screen coordinates (0-1).
+        \param[in] posY
+            Bottom Y position in normalized screen coordinates (0-1).
+        \param[in] width
+            Width in normalized screen coordinates (0-1).
+        \param[in] height
+            Height in normalized screen coordinates (0-1).
+        \param[in] texture
+            Shared pointer to texture to render.
+        \param[in] color
+            Tint color RGB values (0-1), default white.
+        \param[in] alpha
+            Alpha transparency (0-1, default 1.0).
+        *************************************************************************/
+        void RenderTexturedRect(float posX, float posY, float width, float height,
+                                std::shared_ptr<graphics::Texture> texture,
+                                const Vec3& color = {1.0f, 1.0f, 1.0f},
+                                float alpha = 1.0f);
+
+        /*!***********************************************************************
+        \brief
+            Renders a textured rectangle with custom UV coordinates.
+            Used for partial texture rendering (e.g., health bar fill).
+        \param[in] posX
+            Left X position in normalized screen coordinates (0-1).
+        \param[in] posY
+            Bottom Y position in normalized screen coordinates (0-1).
+        \param[in] width
+            Width in normalized screen coordinates (0-1).
+        \param[in] height
+            Height in normalized screen coordinates (0-1).
+        \param[in] texture
+            Shared pointer to texture to render.
+        \param[in] u0
+            Left UV coordinate (0-1).
+        \param[in] v0
+            Bottom UV coordinate (0-1).
+        \param[in] u1
+            Right UV coordinate (0-1).
+        \param[in] v1
+            Top UV coordinate (0-1).
+        \param[in] color
+            Tint color RGB values (0-1), default white.
+        \param[in] alpha
+            Alpha transparency (0-1, default 1.0).
+        *************************************************************************/
+        void RenderTexturedRectUV(float posX, float posY, float width, float height,
+                                   std::shared_ptr<graphics::Texture> texture,
+                                   float u0, float v0, float u1, float v1,
+                                   const Vec3& color = {1.0f, 1.0f, 1.0f},
+                                   float alpha = 1.0f);
 
         // OpenGL resources
         std::shared_ptr<graphics::Shader> m_uiShader;

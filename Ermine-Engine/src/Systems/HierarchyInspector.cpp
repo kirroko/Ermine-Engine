@@ -124,6 +124,37 @@ namespace Ermine::editor {
 		return true;
 	}
 
+	// Component header with Remove, Copy, and Paste functionality
+	template<typename T>
+	static bool ComponentHeaderWithCopyPaste(const char* headerLabel, EntityID entity,
+		std::optional<T>& clipboard, ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_DefaultOpen)
+	{
+		bool open = ImGui::CollapsingHeader(headerLabel, flags);
+
+		// Open context menu when right-clicking the header row
+		if (ImGui::BeginPopupContextItem()) {
+			if (ImGui::MenuItem("Copy Component")) {
+				auto& ecs = Ermine::ECS::GetInstance();
+				clipboard = ecs.GetComponent<T>(entity);
+			}
+			if (ImGui::MenuItem("Paste Component", nullptr, false, clipboard.has_value())) {
+				auto& ecs = Ermine::ECS::GetInstance();
+				ecs.GetComponent<T>(entity) = clipboard.value();
+			}
+			ImGui::Separator();
+			if (ImGui::MenuItem("Remove Component")) {
+				auto& ecs = Ermine::ECS::GetInstance();
+				ecs.RemoveComponent<T>(entity);
+				ImGui::EndPopup();
+				return false;
+			}
+			ImGui::EndPopup();
+		}
+
+		if (!open) return false;
+		return true;
+	}
+
 	static bool ComponentHeaderWithRemoveForScriptsComponent(const char* headerLabel, EntityID entity, const std::string& className,
 		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_DefaultOpen)
 	{
@@ -321,6 +352,24 @@ namespace Ermine::editor {
 
 		if (ECS::GetInstance().HasComponent<CameraComponent>(selected))
 			DrawCameraComponent(selected);
+
+		if (ECS::GetInstance().HasComponent<UIComponent>(selected))
+			DrawUIComponent(selected);
+
+		if (ECS::GetInstance().HasComponent<UIHealthbarComponent>(selected))
+			DrawUIHealthbarComponent(selected);
+
+		if (ECS::GetInstance().HasComponent<UICrosshairComponent>(selected))
+			DrawUICrosshairComponent(selected);
+
+		if (ECS::GetInstance().HasComponent<UISkillsComponent>(selected))
+			DrawUISkillsComponent(selected);
+
+		if (ECS::GetInstance().HasComponent<UIManaBarComponent>(selected))
+			DrawUIManaBarComponent(selected);
+
+		if (ECS::GetInstance().HasComponent<UIBookCounterComponent>(selected))
+			DrawUIBookCounterComponent(selected);
 
 		if (ECS::GetInstance().HasComponent<UIImageComponent>(selected))
 			DrawUIImageComponent(selected);
@@ -2551,6 +2600,439 @@ namespace Ermine::editor {
 		}
 	}
 
+	void HierarchyInspector::DrawUIComponent(EntityID entity)
+	{
+		if (!ComponentHeaderWithRemove<UIComponent>("UI Component (HUD)", entity))
+			return;
+
+		auto& ui = ECS::GetInstance().GetComponent<UIComponent>(entity);
+
+		// === HEALTHBAR SETTINGS ===
+		if (ImGui::CollapsingHeader("Healthbar Settings", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			ImGui::Checkbox("Show Healthbar", &ui.showHealthbar);
+			ImGui::ColorEdit3("Health Color", &ui.healthbarColor.x);
+			ImGui::ColorEdit3("Background Color", &ui.healthbarBgColor.x);
+			ImGui::DragFloat("Width", &ui.healthbarWidth, 0.01f, 0.0f, 1.0f);
+			ImGui::DragFloat("Height", &ui.healthbarHeight, 0.01f, 0.0f, 1.0f);
+			ImGui::DragFloat3("Position", &ui.healthbarPosition.x, 0.01f, 0.0f, 1.0f);
+
+			char bgTexBuffer[256];
+			strncpy_s(bgTexBuffer, ui.healthbarBgTexture.c_str(), sizeof(bgTexBuffer) - 1);
+			bgTexBuffer[sizeof(bgTexBuffer) - 1] = '\0';
+			if (ImGui::InputText("BG Texture", bgTexBuffer, sizeof(bgTexBuffer)))
+				ui.healthbarBgTexture = bgTexBuffer;
+
+			char fillTexBuffer[256];
+			strncpy_s(fillTexBuffer, ui.healthbarFillTexture.c_str(), sizeof(fillTexBuffer) - 1);
+			fillTexBuffer[sizeof(fillTexBuffer) - 1] = '\0';
+			if (ImGui::InputText("Fill Texture", fillTexBuffer, sizeof(fillTexBuffer)))
+				ui.healthbarFillTexture = fillTexBuffer;
+
+			char frameTexBuffer[256];
+			strncpy_s(frameTexBuffer, ui.healthbarFrameTexture.c_str(), sizeof(frameTexBuffer) - 1);
+			frameTexBuffer[sizeof(frameTexBuffer) - 1] = '\0';
+			if (ImGui::InputText("Frame Texture", frameTexBuffer, sizeof(frameTexBuffer)))
+				ui.healthbarFrameTexture = frameTexBuffer;
+		}
+
+		// === HEALTH SYSTEM ===
+		if (ImGui::CollapsingHeader("Health System"))
+		{
+			ImGui::DragFloat("Current Health", &ui.currentHealth, 1.0f, 0.0f, ui.maxHealth);
+			ImGui::DragFloat("Max Health", &ui.maxHealth, 1.0f, 1.0f, 1000.0f);
+			ImGui::DragFloat("Regen Rate", &ui.healthRegenRate, 0.1f, 0.0f, 100.0f);
+			ImGui::DragFloat("Regen Delay", &ui.healthRegenDelay, 0.1f, 0.0f, 10.0f);
+		}
+
+		// === SKILL SLOTS ===
+		if (ImGui::CollapsingHeader("Skill Slots Settings", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			ImGui::Checkbox("Show Skills", &ui.showSkills);
+			ImGui::DragFloat("Slot Size", &ui.skillSlotSize, 0.001f, 0.01f, 0.2f);
+			ImGui::DragFloat("Slot Spacing", &ui.skillSlotSpacing, 0.001f, 0.0f, 0.1f);
+			ImGui::DragFloat3("Skills Position", &ui.skillsPosition.x, 0.01f, 0.0f, 1.0f);
+		}
+
+		// === INDIVIDUAL SKILLS ===
+		if (ImGui::CollapsingHeader("Individual Skills (4 Slots)", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			ImGui::TextDisabled("Skills only render if Skill Name is set!");
+			ImGui::Separator();
+
+			for (int i = 0; i < 4; ++i)
+			{
+				ImGui::PushID(i);
+				if (ImGui::TreeNode(("Skill Slot " + std::to_string(i + 1)).c_str()))
+				{
+					auto& skill = ui.skills[i];
+
+					// Skill Name (REQUIRED for skill to render!)
+					char nameBuffer[128];
+					strncpy_s(nameBuffer, skill.skillName.c_str(), sizeof(nameBuffer) - 1);
+					nameBuffer[sizeof(nameBuffer) - 1] = '\0';
+					if (ImGui::InputText("Skill Name", nameBuffer, sizeof(nameBuffer)))
+						skill.skillName = nameBuffer;
+					if (skill.skillName.empty())
+						ImGui::TextColored(ImVec4(1, 0, 0, 1), "WARNING: Empty name - skill won't render!");
+
+					// Keybind
+					char keybindBuffer[32];
+					strncpy_s(keybindBuffer, skill.keyBinding.c_str(), sizeof(keybindBuffer) - 1);
+					keybindBuffer[sizeof(keybindBuffer) - 1] = '\0';
+					if (ImGui::InputText("Key Binding", keybindBuffer, sizeof(keybindBuffer)))
+						skill.keyBinding = keybindBuffer;
+
+					// Description
+					char descBuffer[256];
+					strncpy_s(descBuffer, skill.description.c_str(), sizeof(descBuffer) - 1);
+					descBuffer[sizeof(descBuffer) - 1] = '\0';
+					if (ImGui::InputText("Description", descBuffer, sizeof(descBuffer)))
+						skill.description = descBuffer;
+
+					// Icon Texture Path
+					char iconBuffer[256];
+					strncpy_s(iconBuffer, skill.iconTexturePath.c_str(), sizeof(iconBuffer) - 1);
+					iconBuffer[sizeof(iconBuffer) - 1] = '\0';
+					if (ImGui::InputText("Icon Texture Path", iconBuffer, sizeof(iconBuffer)))
+						skill.iconTexturePath = iconBuffer;
+
+					// Cooldown and Cost
+					ImGui::DragFloat("Max Cooldown (sec)", &skill.maxCooldown, 0.1f, 0.0f, 60.0f);
+					ImGui::DragFloat("Health Cost", &skill.manaCost, 1.0f, 0.0f, 100.0f);
+
+					ImGui::TreePop();
+				}
+				ImGui::PopID();
+				ImGui::Separator();
+			}
+		}
+
+		// === SKILL APPEARANCE ===
+		if (ImGui::CollapsingHeader("Skill Appearance"))
+		{
+			ImGui::Text("Ready State:");
+			ImGui::ColorEdit3("Ready Tint", &ui.skillReadyTint.x);
+			ImGui::DragFloat("Ready Alpha", &ui.skillReadyAlpha, 0.01f, 0.0f, 1.0f);
+
+			ImGui::Separator();
+			ImGui::Text("Cooldown State:");
+			ImGui::ColorEdit3("Cooldown Tint", &ui.skillCooldownTint.x);
+			ImGui::DragFloat("Cooldown Alpha", &ui.skillCooldownAlpha, 0.01f, 0.0f, 1.0f);
+
+			ImGui::Separator();
+			ImGui::Text("Low Health State:");
+			ImGui::ColorEdit3("Low Health Tint", &ui.skillLowHealthTint.x);
+			ImGui::DragFloat("Low Health Alpha", &ui.skillLowHealthAlpha, 0.01f, 0.0f, 1.0f);
+
+			ImGui::Separator();
+			ImGui::Text("Fallback (No Texture):");
+			ImGui::ColorEdit3("Fallback Color", &ui.skillFallbackColor.x);
+			ImGui::DragFloat("Fallback Alpha", &ui.skillFallbackAlpha, 0.01f, 0.0f, 1.0f);
+		}
+
+		// === SKILL EFFECTS ===
+		if (ImGui::CollapsingHeader("Skill Effects"))
+		{
+			ImGui::Text("Cooldown Overlay:");
+			ImGui::ColorEdit3("Overlay Color", &ui.skillCooldownOverlayColor.x);
+			ImGui::DragFloat("Overlay Alpha", &ui.skillCooldownOverlayAlpha, 0.01f, 0.0f, 1.0f);
+
+			ImGui::Separator();
+			ImGui::Text("Activation Flash:");
+			ImGui::DragFloat("Flash Duration", &ui.skillFlashDuration, 0.01f, 0.0f, 1.0f);
+			ImGui::ColorEdit3("Flash Color", &ui.skillFlashColor.x);
+			ImGui::DragFloat("Flash Glow Size", &ui.skillFlashGlowSize, 0.001f, 0.0f, 0.1f);
+		}
+
+		// === SKILL KEYBIND LABELS ===
+		if (ImGui::CollapsingHeader("Skill Keybind Labels"))
+		{
+			ImGui::DragFloat("Text Scale", &ui.skillKeybindTextScale, 0.01f, 0.1f, 2.0f);
+			ImGui::DragFloat("Offset Below Slot", &ui.skillKeybindOffsetY, 0.001f, 0.0f, 0.2f);
+			ImGui::ColorEdit3("Label Color", &ui.skillKeybindColor.x);
+			ImGui::DragFloat("Alpha (Ready)", &ui.skillKeybindAlphaReady, 0.01f, 0.0f, 1.0f);
+			ImGui::DragFloat("Alpha (Not Ready)", &ui.skillKeybindAlphaNotReady, 0.01f, 0.0f, 1.0f);
+		}
+
+		// === CROSSHAIR ===
+		if (ImGui::CollapsingHeader("Crosshair"))
+		{
+			ImGui::Checkbox("Show Crosshair", &ui.showCrosshair);
+			ImGui::DragFloat("Size", &ui.crosshairSize, 0.001f, 0.01f, 0.2f);
+			ImGui::DragInt("Style", &ui.crosshairStyle, 1, 0, 2);
+		}
+	}
+
+	void HierarchyInspector::DrawUIHealthbarComponent(EntityID entity)
+	{
+		if (!ComponentHeaderWithCopyPaste<UIHealthbarComponent>("UI Healthbar", entity, s_ClipboardUIHealthbar))
+			return;
+
+		auto& healthbar = ECS::GetInstance().GetComponent<UIHealthbarComponent>(entity);
+
+		ImGui::Checkbox("Show Healthbar", &healthbar.showHealthbar);
+
+		ImGui::Separator();
+		ImGui::Text("Colors (based on health %)");
+		ImGui::ColorEdit3("Normal Color", &healthbar.healthbarColor.x);
+		ImGui::ColorEdit3("Low Health Color (< 50%)", &healthbar.healthbarLowColor.x);
+		ImGui::ColorEdit3("Critical Color (< 25%)", &healthbar.healthbarCriticalColor.x);
+		ImGui::ColorEdit3("Background Color", &healthbar.healthbarBgColor.x);
+
+		ImGui::Separator();
+		ImGui::Text("Shine Effect (no texture only)");
+		ImGui::ColorEdit3("Shine Color", &healthbar.healthbarShineColor.x);
+		ImGui::DragFloat("Shine Alpha", &healthbar.healthbarShineAlpha, 0.01f, 0.0f, 1.0f);
+
+		ImGui::Separator();
+		ImGui::Text("Size & Position");
+		ImGui::DragFloat("Width", &healthbar.healthbarWidth, 0.01f, 0.0f, 1.0f);
+		ImGui::DragFloat("Height", &healthbar.healthbarHeight, 0.01f, 0.0f, 1.0f);
+		ImGui::DragFloat3("Position", &healthbar.healthbarPosition.x, 0.01f, 0.0f, 1.0f);
+
+		char bgTexBuffer[256];
+		strncpy_s(bgTexBuffer, healthbar.healthbarBgTexture.c_str(), sizeof(bgTexBuffer) - 1);
+		bgTexBuffer[sizeof(bgTexBuffer) - 1] = '\0';
+		if (ImGui::InputText("BG Texture", bgTexBuffer, sizeof(bgTexBuffer)))
+			healthbar.healthbarBgTexture = bgTexBuffer;
+
+		char fillTexBuffer[256];
+		strncpy_s(fillTexBuffer, healthbar.healthbarFillTexture.c_str(), sizeof(fillTexBuffer) - 1);
+		fillTexBuffer[sizeof(fillTexBuffer) - 1] = '\0';
+		if (ImGui::InputText("Fill Texture", fillTexBuffer, sizeof(fillTexBuffer)))
+			healthbar.healthbarFillTexture = fillTexBuffer;
+
+		char frameTexBuffer[256];
+		strncpy_s(frameTexBuffer, healthbar.healthbarFrameTexture.c_str(), sizeof(frameTexBuffer) - 1);
+		frameTexBuffer[sizeof(frameTexBuffer) - 1] = '\0';
+		if (ImGui::InputText("Frame Texture", frameTexBuffer, sizeof(frameTexBuffer)))
+			healthbar.healthbarFrameTexture = frameTexBuffer;
+
+		ImGui::Separator();
+		ImGui::Text("Health System");
+		ImGui::DragFloat("Current Health", &healthbar.currentHealth, 1.0f, 0.0f, healthbar.maxHealth);
+		ImGui::DragFloat("Max Health", &healthbar.maxHealth, 1.0f, 1.0f, 1000.0f);
+		ImGui::DragFloat("Regen Rate", &healthbar.healthRegenRate, 0.1f, 0.0f, 100.0f);
+		ImGui::DragFloat("Regen Delay", &healthbar.healthRegenDelay, 0.1f, 0.0f, 10.0f);
+	}
+
+	void HierarchyInspector::DrawUICrosshairComponent(EntityID entity)
+	{
+		if (!ComponentHeaderWithCopyPaste<UICrosshairComponent>("UI Crosshair", entity, s_ClipboardUICrosshair))
+			return;
+
+		auto& crosshair = ECS::GetInstance().GetComponent<UICrosshairComponent>(entity);
+
+		ImGui::Checkbox("Show Crosshair", &crosshair.showCrosshair);
+
+		// Texture Path (editable!)
+		char texPathBuffer[256];
+		strncpy_s(texPathBuffer, crosshair.crosshairTexturePath.c_str(), sizeof(texPathBuffer) - 1);
+		texPathBuffer[sizeof(texPathBuffer) - 1] = '\0';
+		if (ImGui::InputText("Texture Path", texPathBuffer, sizeof(texPathBuffer)))
+			crosshair.crosshairTexturePath = texPathBuffer;
+
+		ImGui::ColorEdit3("Crosshair Color", &crosshair.crosshairColor.x);
+		ImGui::DragFloat("Size", &crosshair.crosshairSize, 0.001f, 0.01f, 0.2f);
+		ImGui::DragFloat("Thickness", &crosshair.crosshairThickness, 0.0001f, 0.0001f, 0.01f);
+		ImGui::DragInt("Style", &crosshair.crosshairStyle, 1, 0, 2);
+		ImGui::DragFloat("Gap", &crosshair.crosshairGap, 0.001f, 0.0f, 0.1f);
+	}
+
+	void HierarchyInspector::DrawUISkillsComponent(EntityID entity)
+	{
+		if (!ComponentHeaderWithCopyPaste<UISkillsComponent>("UI Skills", entity, s_ClipboardUISkills))
+			return;
+
+		auto& skills = ECS::GetInstance().GetComponent<UISkillsComponent>(entity);
+
+		ImGui::Checkbox("Show Skills", &skills.showSkills);
+		ImGui::DragFloat("Default Slot Size", &skills.skillSlotSize, 0.001f, 0.01f, 0.2f);
+		ImGui::TextDisabled("(Individual slots can override this)");
+
+		ImGui::Separator();
+		if (ImGui::CollapsingHeader("Skill Slots", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			ImGui::TextDisabled("Skills only render if Skill Name is set!");
+			ImGui::TextDisabled("Each slot has its own position - arrange them anywhere!");
+
+			// Add/Remove buttons
+			if (ImGui::Button("+ Add Skill Slot"))
+			{
+				UISkillsComponent::SkillSlot newSlot;
+				newSlot.position = { 0.5f, 0.1f, 0.0f };  // Default center bottom
+				skills.skills.push_back(newSlot);
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("- Remove Last Slot") && !skills.skills.empty())
+			{
+				skills.skills.pop_back();
+			}
+			ImGui::Text("Total Slots: %zu", skills.skills.size());
+
+			ImGui::Separator();
+
+			for (size_t i = 0; i < skills.skills.size(); ++i)
+			{
+				ImGui::PushID(static_cast<int>(i));
+				std::string header = "Skill Slot " + std::to_string(i + 1);
+				if (!skills.skills[i].skillName.empty())
+					header += " (" + skills.skills[i].skillName + ")";
+
+				if (ImGui::TreeNode(header.c_str()))
+				{
+					auto& skill = skills.skills[i];
+
+					// Position and size (MOST IMPORTANT - at top!)
+					ImGui::DragFloat3("Position", &skill.position.x, 0.01f, 0.0f, 1.0f);
+					ImGui::DragFloat("Size Override", &skill.size, 0.001f, 0.0f, 0.2f);
+					ImGui::TextDisabled("(0 = use default size)");
+
+					ImGui::Separator();
+
+					char nameBuffer[128];
+					strncpy_s(nameBuffer, skill.skillName.c_str(), sizeof(nameBuffer) - 1);
+					nameBuffer[sizeof(nameBuffer) - 1] = '\0';
+					if (ImGui::InputText("Skill Name", nameBuffer, sizeof(nameBuffer)))
+						skill.skillName = nameBuffer;
+					if (skill.skillName.empty())
+						ImGui::TextColored(ImVec4(1, 0, 0, 1), "WARNING: Empty name - skill won't render!");
+
+					char keybindBuffer[32];
+					strncpy_s(keybindBuffer, skill.keyBinding.c_str(), sizeof(keybindBuffer) - 1);
+					keybindBuffer[sizeof(keybindBuffer) - 1] = '\0';
+					if (ImGui::InputText("Key Binding", keybindBuffer, sizeof(keybindBuffer)))
+						skill.keyBinding = keybindBuffer;
+
+					char descBuffer[256];
+					strncpy_s(descBuffer, skill.description.c_str(), sizeof(descBuffer) - 1);
+					descBuffer[sizeof(descBuffer) - 1] = '\0';
+					if (ImGui::InputText("Description", descBuffer, sizeof(descBuffer)))
+						skill.description = descBuffer;
+
+					char iconBuffer[256];
+					strncpy_s(iconBuffer, skill.iconTexturePath.c_str(), sizeof(iconBuffer) - 1);
+					iconBuffer[sizeof(iconBuffer) - 1] = '\0';
+					if (ImGui::InputText("Icon Texture Path", iconBuffer, sizeof(iconBuffer)))
+						skill.iconTexturePath = iconBuffer;
+
+					ImGui::DragFloat("Max Cooldown (sec)", &skill.maxCooldown, 0.1f, 0.0f, 60.0f);
+					ImGui::DragFloat("Health Cost", &skill.manaCost, 1.0f, 0.0f, 100.0f);
+
+					ImGui::TreePop();
+				}
+				ImGui::PopID();
+			}
+		}
+
+		ImGui::Separator();
+		if (ImGui::CollapsingHeader("Skill Appearance"))
+		{
+			ImGui::Text("Ready State:");
+			ImGui::ColorEdit3("Ready Tint", &skills.skillReadyTint.x);
+			ImGui::DragFloat("Ready Alpha", &skills.skillReadyAlpha, 0.01f, 0.0f, 1.0f);
+
+			ImGui::Separator();
+			ImGui::Text("Cooldown State:");
+			ImGui::ColorEdit3("Cooldown Tint", &skills.skillCooldownTint.x);
+			ImGui::DragFloat("Cooldown Alpha", &skills.skillCooldownAlpha, 0.01f, 0.0f, 1.0f);
+
+			ImGui::Separator();
+			ImGui::Text("Low Health State:");
+			ImGui::ColorEdit3("Low Health Tint", &skills.skillLowHealthTint.x);
+			ImGui::DragFloat("Low Health Alpha", &skills.skillLowHealthAlpha, 0.01f, 0.0f, 1.0f);
+
+			ImGui::Separator();
+			ImGui::Text("Fallback (No Texture):");
+			ImGui::ColorEdit3("Fallback Color", &skills.skillFallbackColor.x);
+			ImGui::DragFloat("Fallback Alpha", &skills.skillFallbackAlpha, 0.01f, 0.0f, 1.0f);
+		}
+
+		if (ImGui::CollapsingHeader("Skill Effects"))
+		{
+			ImGui::Text("Cooldown Overlay:");
+			ImGui::ColorEdit3("Overlay Color", &skills.skillCooldownOverlayColor.x);
+			ImGui::DragFloat("Overlay Alpha", &skills.skillCooldownOverlayAlpha, 0.01f, 0.0f, 1.0f);
+
+			ImGui::Separator();
+			ImGui::Text("Activation Flash:");
+			ImGui::DragFloat("Flash Duration", &skills.skillFlashDuration, 0.01f, 0.0f, 1.0f);
+			ImGui::ColorEdit3("Flash Color", &skills.skillFlashColor.x);
+			ImGui::DragFloat("Flash Glow Size", &skills.skillFlashGlowSize, 0.001f, 0.0f, 0.1f);
+		}
+
+		if (ImGui::CollapsingHeader("Skill Keybind Labels"))
+		{
+			ImGui::DragFloat("Text Scale", &skills.skillKeybindTextScale, 0.01f, 0.1f, 2.0f);
+			ImGui::DragFloat("Offset Below Slot", &skills.skillKeybindOffsetY, 0.001f, 0.0f, 0.2f);
+			ImGui::ColorEdit3("Label Color", &skills.skillKeybindColor.x);
+			ImGui::DragFloat("Alpha (Ready)", &skills.skillKeybindAlphaReady, 0.01f, 0.0f, 1.0f);
+			ImGui::DragFloat("Alpha (Not Ready)", &skills.skillKeybindAlphaNotReady, 0.01f, 0.0f, 1.0f);
+		}
+	}
+
+	void HierarchyInspector::DrawUIManaBarComponent(EntityID entity)
+	{
+		if (!ComponentHeaderWithCopyPaste<UIManaBarComponent>("UI Mana Bar", entity, s_ClipboardUIManaBar))
+			return;
+
+		auto& manaBar = ECS::GetInstance().GetComponent<UIManaBarComponent>(entity);
+
+		ImGui::Checkbox("Show Mana Bar", &manaBar.showManaBar);
+		ImGui::ColorEdit3("Mana Color", &manaBar.manaBarColor.x);
+		ImGui::ColorEdit3("Background Color", &manaBar.manaBarBgColor.x);
+		ImGui::DragFloat("Width", &manaBar.manaBarWidth, 0.01f, 0.0f, 1.0f);
+		ImGui::DragFloat("Height", &manaBar.manaBarHeight, 0.01f, 0.0f, 1.0f);
+		ImGui::DragFloat3("Position", &manaBar.manaBarPosition.x, 0.01f, 0.0f, 1.0f);
+
+		ImGui::Separator();
+		ImGui::Text("Mana System");
+		ImGui::DragFloat("Current Mana", &manaBar.currentMana, 1.0f, 0.0f, manaBar.maxMana);
+		ImGui::DragFloat("Max Mana", &manaBar.maxMana, 1.0f, 1.0f, 1000.0f);
+		ImGui::DragFloat("Regen Rate", &manaBar.manaRegenRate, 0.1f, 0.0f, 100.0f);
+		ImGui::DragFloat("Regen Delay", &manaBar.manaRegenDelay, 0.1f, 0.0f, 10.0f);
+	}
+
+	void HierarchyInspector::DrawUIBookCounterComponent(EntityID entity)
+	{
+		if (!ComponentHeaderWithCopyPaste<UIBookCounterComponent>("UI Book Counter", entity, s_ClipboardUIBookCounter))
+			return;
+
+		auto& bookCounter = ECS::GetInstance().GetComponent<UIBookCounterComponent>(entity);
+
+		ImGui::Checkbox("Show Book Counter", &bookCounter.showBookCounter);
+		ImGui::DragInt("Books Collected", &bookCounter.booksCollected, 1, 0, bookCounter.totalBooks);
+		ImGui::DragInt("Total Books", &bookCounter.totalBooks, 1, 1, 100);
+		ImGui::DragFloat3("Position", &bookCounter.bookCounterPosition.x, 0.01f, 0.0f, 1.0f);
+
+		ImGui::Separator();
+		ImGui::Text("Text Appearance");
+		ImGui::ColorEdit3("Text Color", &bookCounter.textColor.x);
+		ImGui::DragFloat("Text Scale", &bookCounter.textScale, 0.1f, 0.1f, 5.0f);
+		ImGui::DragFloat("Text Alpha", &bookCounter.textAlpha, 0.01f, 0.0f, 1.0f);
+
+		ImGui::Separator();
+		ImGui::Text("Optional Textures");
+
+		// Book Icon Texture
+		char iconTexBuffer[256];
+		strncpy_s(iconTexBuffer, bookCounter.bookIconTexture.c_str(), sizeof(iconTexBuffer) - 1);
+		iconTexBuffer[sizeof(iconTexBuffer) - 1] = '\0';
+		if (ImGui::InputText("Book Icon Texture", iconTexBuffer, sizeof(iconTexBuffer)))
+			bookCounter.bookIconTexture = iconTexBuffer;
+		ImGui::DragFloat("Icon Size", &bookCounter.bookIconSize, 0.001f, 0.01f, 0.2f);
+		ImGui::DragFloat("Icon Offset X", &bookCounter.bookIconOffsetX, 0.01f, -0.5f, 0.5f);
+
+		// Background Texture
+		char bgTexBuffer[256];
+		strncpy_s(bgTexBuffer, bookCounter.backgroundTexture.c_str(), sizeof(bgTexBuffer) - 1);
+		bgTexBuffer[sizeof(bgTexBuffer) - 1] = '\0';
+		if (ImGui::InputText("Background Texture", bgTexBuffer, sizeof(bgTexBuffer)))
+			bookCounter.backgroundTexture = bgTexBuffer;
+		ImGui::DragFloat2("Background Size", &bookCounter.backgroundSize.x, 0.01f, 0.01f, 1.0f);
+	}
+
 	void HierarchyInspector::DrawUIImageComponent(EntityID entity)
 	{
 		if (!ComponentHeaderWithRemove<UIImageComponent>("UI Image Component", entity))
@@ -2692,6 +3174,30 @@ namespace Ermine::editor {
 			tempCam.fov = 45;
 			tempCam.nearPlane = 5.0f;
 			ECS::GetInstance().AddComponent(entity, tempCam);
+		}
+		if (ImGui::MenuItem("UI Component (Legacy)") && !ECS::GetInstance().HasComponent<UIComponent>(entity))
+		{
+			ECS::GetInstance().AddComponent(entity, UIComponent());
+		}
+		if (ImGui::MenuItem("UI Healthbar") && !ECS::GetInstance().HasComponent<UIHealthbarComponent>(entity))
+		{
+			ECS::GetInstance().AddComponent(entity, UIHealthbarComponent());
+		}
+		if (ImGui::MenuItem("UI Crosshair") && !ECS::GetInstance().HasComponent<UICrosshairComponent>(entity))
+		{
+			ECS::GetInstance().AddComponent(entity, UICrosshairComponent());
+		}
+		if (ImGui::MenuItem("UI Skills") && !ECS::GetInstance().HasComponent<UISkillsComponent>(entity))
+		{
+			ECS::GetInstance().AddComponent(entity, UISkillsComponent());
+		}
+		if (ImGui::MenuItem("UI Mana Bar") && !ECS::GetInstance().HasComponent<UIManaBarComponent>(entity))
+		{
+			ECS::GetInstance().AddComponent(entity, UIManaBarComponent());
+		}
+		if (ImGui::MenuItem("UI Book Counter") && !ECS::GetInstance().HasComponent<UIBookCounterComponent>(entity))
+		{
+			ECS::GetInstance().AddComponent(entity, UIBookCounterComponent());
 		}
 		if (ImGui::MenuItem("UI Image") && !ECS::GetInstance().HasComponent<UIImageComponent>(entity))
 		{
