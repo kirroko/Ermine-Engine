@@ -1,4 +1,4 @@
-`/* Start Header ************************************************************************/
+/* Start Header ************************************************************************/
 /*!
 \file       HierarchyPanel.cpp
 \author     Edwin Lee Zirui, edwinzirui.lee, 2301299, edwinzirui.lee\@digipen.edu
@@ -22,6 +22,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Physics.h"
 #include "Serialisation.h" // Added for prefab support
 #include "Selection.h"
+#include "EditorCamera.h"
 
 namespace Ermine {
     void HierarchyPanel::SetScene(Scene* scene) {
@@ -332,7 +333,10 @@ namespace Ermine {
         {
             editor::Selection::SelectSingle(m_ActiveScene, entity);
             m_LastClickedEntity = entity;
+            editor::EditorCamera::GetInstance().Focus(ecs.GetComponent<Transform>(entity).position, 2.5f);
             ImGui::SetWindowFocus("Inspector");
+            Vector3D position = ecs.GetComponent<Transform>(entity).position;
+            editor::EditorCamera::GetInstance().Focus(position, 2.5f);
         }
 
         if (ImGui::BeginPopupContextItem(("ctx##" + std::to_string((uint64_t)entity)).c_str())) {

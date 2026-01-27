@@ -23,7 +23,8 @@ xcopy /Y /E /I Build\bin\%BUILD_CONFIG%-windows-x86_64\Resources %DIST_DIR%\Reso
 
 REM Copy assets (if needed for editor)
 REM xcopy /Y /E /I Assets %DIST_DIR%\Assets\
-xcopy /Y Build\bin\%BUILD_CONFIG%-windows-x86_64\ErmineEngine\Ermine-Engine.dll %DIST_DIR%\
+echo Copying dll to root...
+xcopy /Y Build\bin\%BUILD_CONFIG%-windows-x86_64\Ermine-Engine\Ermine-Engine.dll %DIST_DIR%\
 
 REM Create version file
 echo Version: %VERSION% > %DIST_DIR%\VERSION.txt

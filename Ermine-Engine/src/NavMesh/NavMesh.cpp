@@ -841,7 +841,7 @@ namespace Ermine {
 
         if (dtStatusFailed(query->findNearestPoly(epos, extents, &filter, &endRef, nepos)) || !endRef)
         {
-            EE_CORE_WARN("[NavMeshSystem] findNearestPoly failed for end point");
+            //EE_CORE_WARN("[NavMeshSystem] findNearestPoly failed for end point");
             return false;
         }
 

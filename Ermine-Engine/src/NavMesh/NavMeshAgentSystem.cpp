@@ -36,6 +36,9 @@ namespace Ermine
         if (!navAgentSys->FindPath(agentEntity, trans.position, destination, path))
             return false;
 
+        agent.destination = destination;
+        agent.lastDestination = destination;
+
         agent.path = path;
         //for (size_t i = 0; i < path.size(); ++i)
         //{
@@ -69,6 +72,57 @@ namespace Ermine
 
             auto& agent = ecs.GetComponent<NavMeshAgent>(e);
             auto& trans = ecs.GetComponent<Transform>(e);
+
+            // jump
+            if (agent.isJumping)
+            {
+                EE_CORE_INFO("JUMPING");
+                agent.jumpTimer += dt;
+                float t = (agent.jumpDuration > 1e-5f) ? (agent.jumpTimer / agent.jumpDuration) : 1.0f;
+                if (t > 1.0f) t = 1.0f;
+
+                // Linear interpolate start->target
+                Vec3 pos = agent.jumpStart + (agent.jumpTarget - agent.jumpStart) * t;
+
+                // Add parabolic arc on Y (visual jump)
+                float arc = agent.jumpHeight * 4.0f * t * (1.0f - t);
+                pos.y += arc;
+
+                auto phys = ecs.GetSystem<Physics>();
+                if (phys && ecs.HasComponent<PhysicComponent>(e))
+                {
+                    // move the physics body (so the object actually moves in the world)
+                    phys->SetPosition(e, pos);
+
+                    // keep transform in sync (optional, but nice for editor/debug)
+                    trans.position = pos;
+                }
+                else
+                {
+                    // fallback if no physics body
+                    trans.position = pos;
+                }
+
+                if (t >= 1.0f)
+                {
+                    trans.position = agent.jumpTarget;
+
+                    agent.isJumping = false;
+                    agent.navPaused = false;
+
+                    if (agent.hasPostJumpDestination)
+                    {
+                        RequestPathForAgent(e, agent.postJumpDestination);
+                        agent.hasPostJumpDestination = false;
+                    }
+                }
+
+                continue; // skip normal nav movement while jumping
+            }
+            // jump
+
+            if (agent.navPaused)
+                continue;
 
             // skip if no path
             if (!agent.hasPath)
@@ -117,20 +171,46 @@ namespace Ermine
 
                 pos += dir * step;
 
-                // Clamp to navmesh as you already do
-                EntityID navE = FindNearestNavMeshEntity(pos);
+                Vec3 feetQuery = pos;
+                feetQuery.y -= agent.centerYOffset; // convert center -> feet for the nav query
+
+                EntityID navE = FindNearestNavMeshEntity(feetQuery);
                 if (navE != 0)
                 {
-                    float ext[3] = { agent.radius * 2.0f, agent.height * 0.5f + 0.5f, agent.radius * 2.0f };
+                    float ext[3] = {
+                        agent.radius * 2.0f,
+                        agent.height * 0.5f + 0.5f,
+                        agent.radius * 2.0f
+                    };
 
-                    Vec3 clamped;
+                    Vec3 clampedFeet;
                     auto navSys = ecs.GetSystem<NavMeshSystem>();
-                    if (navSys && navSys->ClampToNavMesh(navE, pos, ext, clamped))
+                    if (navSys && navSys->ClampToNavMesh(navE, feetQuery, ext, clampedFeet))
                     {
-                        pos = clamped;
+                        // Keep XZ from navmesh, and compute CENTER Y deterministically
+                        pos.x = clampedFeet.x;
+                        pos.z = clampedFeet.z;
+                        
+                        if (ecs.HasComponent<PhysicComponent>(e))
+                        {
+                            auto& p = ecs.GetComponent<PhysicComponent>(e);
 
-                        // Navmesh point is on the floor. Your physics body wants its CENTER.
-                        pos.y += agent.centerYOffset;
+                            if (p.shapeType == ShapeType::Capsule)
+                            {
+                                // For capsule, don't add center offset
+                                pos.y = clampedFeet.y;
+                            }
+                            else
+                            {
+                                // For box/sphere etc, keep the old behavior
+                                pos.y = clampedFeet.y + agent.centerYOffset;
+                            }
+                        }
+                        else
+                        {
+                            // No physics info: fallback to old behavior
+                            pos.y = clampedFeet.y + agent.centerYOffset;
+                        }
                     }
                 }
 
@@ -138,10 +218,24 @@ namespace Ermine
                 auto phys = ecs.GetSystem<Physics>();
                 if (phys && ecs.HasComponent<PhysicComponent>(e))
                 {
-                    phys->SetPosition(e, pos);
+                    if (agent.autoRotate)
+                    {
+                        Vec3 move = pos - trans.position; // trans.position is old position (before move)
+                        move.y = 0.0f;
 
-                    // If you want rotation too (optional), keep it synced:
-                    // phys->SetRotation(e, trans.rotation);
+                        float lenSq = move.x * move.x + move.z * move.z;
+                        if (lenSq > 1e-6f) // only rotate if we actually moved
+                        {
+                            float yawRad = std::atan2(move.x, move.z);
+                            float yawDeg = yawRad * 57.2957795f;
+
+                            trans.rotation = FromEulerDegrees(Vec3(0.0f, yawDeg, 0.0f));
+                            trans.isDirty = true;
+                        }
+                    }
+
+                    phys->SetPosition(e, pos);
+                    phys->SetRotation(e, trans.rotation);
                 }
                 else
                 {
@@ -276,6 +370,33 @@ namespace Ermine
                 best = e;
             }
         }
+        return best;
+    }
+    EntityID NavMeshAgentSystem::FindNearestNavMeshEntityExcluding(const Ermine::Vec3& pos, EntityID exclude) const
+    {
+        auto& ecs = ECS::GetInstance();
+
+        EntityID best = 0;
+        float bestDist2 = FLT_MAX;
+
+        for (EntityID ent = 1; ent < MAX_ENTITIES; ++ent)
+        {
+            if (ent == exclude) continue;
+            if (!ecs.IsEntityValid(ent)) continue;
+            if (!ecs.HasComponent<NavMeshComponent>(ent)) continue;
+            if (!ecs.HasComponent<Transform>(ent)) continue;
+
+            const auto& tr = ecs.GetComponent<Transform>(ent);
+            Ermine::Vec3 d = tr.position - pos;
+            float dist2 = d.x * d.x + d.y * d.y + d.z * d.z;
+
+            if (dist2 < bestDist2)
+            {
+                bestDist2 = dist2;
+                best = ent;
+            }
+        }
+
         return best;
     }
 }

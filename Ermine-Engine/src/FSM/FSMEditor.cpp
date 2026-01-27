@@ -2,7 +2,7 @@
 /*!
 \file       FSMEditor.cpp
 \author     LEE Wen Jie, Brian, wenjiebrian.lee, 2301261, wenjiebrian.lee\@digipen.edu
-\date       06/10/2025
+\date       26/01/2026
 \brief      This file contains definitions for imgui window FSM editor.
 
 Copyright (C) 2025 DigiPen Institute of Technology.
@@ -58,7 +58,14 @@ namespace Ermine
             ImNodes::StyleColorsDark();
         }
 
-        ImGui::Begin(Name().c_str());
+        // Return if window is closed
+        if (!m_isOpen) return;
+
+        if (!ImGui::Begin(m_name.c_str(), &m_isOpen))
+        {
+            ImGui::End();
+            return;
+        }
 
         if (m_SelectedEntity == 0)
         {

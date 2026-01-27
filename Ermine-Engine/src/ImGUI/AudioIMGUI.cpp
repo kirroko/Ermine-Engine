@@ -2,7 +2,7 @@
 /*!
 \file       AudioImGUI.cpp
 \author     Hurng Kai Rui, h.kairui, 2301278, h.kairui\@digipen.edu
-\date       15/9/2025
+\date       26/01/2026
 \brief      This file contains the implementation of AudioImGUI for managing audio through ImGUI.
 
 Copyright (C) 2025 DigiPen Institute of Technology.
@@ -36,7 +36,10 @@ namespace Ermine
 
     void AudioImGUI::Render()
     {
-        if (ImGui::Begin("Audio Manager"))
+        // Return if window is closed
+        if (!m_isOpen) return;
+
+        if (ImGui::Begin(m_name.c_str(), &m_isOpen))
         {
             // Status message display
             if (m_StatusTimer > 0.0f)

@@ -21,5 +21,8 @@ namespace ErmineEngine
     {
         [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern void SetDestination(ulong entityID, Vector3 destination);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern void StartJump(ulong agentEntityID, ulong linkEntityID);
     }
 }

@@ -343,6 +343,9 @@ namespace Ermine::editor {
 		if (ECS::GetInstance().HasComponent<NavMeshAgent>(selected))
 			DrawNavMeshAgentComponent(selected);
 
+		if (ECS::GetInstance().HasComponent<NavJumpLink>(selected))
+			DrawNavJumpComponent(selected);
+
 		if (ECS::GetInstance().HasComponent<ParticleEmitter>(selected)) {
 			DrawParticleEmitterComponent(selected);
 		}
@@ -560,7 +563,7 @@ namespace Ermine::editor {
 		auto& mesh = ECS::GetInstance().GetComponent<Mesh>(entity);
 
 		// Combo for mesh kind
-		const char* kinds[] = { "None", "Primitive", "Asset" };
+		const char* kinds[] = { "None", "Primitive", /*"Asset"*/ };
 		int currentKind = static_cast<int>(mesh.kind);
 		if (ImGui::Combo("Kind", &currentKind, kinds, IM_ARRAYSIZE(kinds))) {
 			mesh.kind = static_cast<MeshKind>(currentKind);
@@ -626,16 +629,16 @@ namespace Ermine::editor {
 		}
 
 		// Asset controls (basic stub)
-		if (mesh.kind == MeshKind::Asset) {
-			char buf[256];
-			strcpy_s(buf, mesh.asset.meshName.c_str());
-			if (ImGui::InputText("Mesh Name", buf, sizeof(buf))) {
-				mesh.asset.meshName = buf;
-				// Mark renderer for full rebuild due to mesh asset change
-				ECS::GetInstance().GetSystem<graphics::Renderer>()->MarkDrawDataForRebuild();
-				// TODO: trigger asset reload here
-			}
-		}
+		//if (mesh.kind == MeshKind::Asset) {
+		//	char buf[256];
+		//	strcpy_s(buf, mesh.asset.meshName.c_str());
+		//	if (ImGui::InputText("Mesh Name", buf, sizeof(buf))) {
+		//		mesh.asset.meshName = buf;
+		//		// Mark renderer for full rebuild due to mesh asset change
+		//		ECS::GetInstance().GetSystem<graphics::Renderer>()->MarkDrawDataForRebuild();
+		//		// TODO: trigger asset reload here
+		//	}
+		//}
 	}
 
 	void HierarchyInspector::DrawMaterialComponent(EntityID entity) {
@@ -1820,60 +1823,96 @@ namespace Ermine::editor {
 					selectedModel = i;
 					std::string fullPath = modelsDir + availableModels[i];
 
-					// Use LoadModel (loads if missing, returns cached if present)
-					auto model = AssetManager::GetInstance().LoadModel(fullPath);
-					if (model) {
-						modelComp.m_model = model;
+					auto& ecs = ECS::GetInstance();
+					auto hierarchySystem = ecs.GetSystem<HierarchySystem>();
 
-						// Create child entities for each mesh with a material
-						auto& ecs = ECS::GetInstance();
-						auto hierarchySystem = ecs.GetSystem<HierarchySystem>();
+					// Store existing children to reuse them
+					std::vector<EntityID> existingChildren;
+					if (hierarchySystem && ecs.HasComponent<HierarchyComponent>(entity)) {
+						auto& hierarchy = ecs.GetComponent<HierarchyComponent>(entity);
+						existingChildren = hierarchy.children;
+						EE_CORE_INFO("Reusing {} existing child entities for reload", existingChildren.size());
+					}
+
+					// Remove cached version (forces reload from disk)
+					auto& manager = AssetManager::GetInstance();
+					manager.UnloadModel(fullPath);
+
+					// Load fresh copy from disk
+					auto reloaded = manager.LoadModel(fullPath);
+					if (reloaded) {
+						modelComp.m_model = reloaded;
+
+						// Reuse or create child entities for each mesh with a material
 						auto renderer = ecs.GetSystem<graphics::Renderer>();
-						const aiScene* scene = model->GetAssimpScene();
+						const aiScene* scene = reloaded->GetAssimpScene(); // May be nullptr for cache files
 
-						EE_CORE_INFO("Loading model: {} with {} meshes", fullPath, model->GetMeshes().size());
-
-						if (hierarchySystem && renderer && !model->GetMeshes().empty()) {
-							const auto& meshes = model->GetMeshes();
-							int childrenCreated = 0;
+						if (hierarchySystem && renderer && !reloaded->GetMeshes().empty()) {
+							const auto& meshes = reloaded->GetMeshes();
 
 							for (size_t meshIndex = 0; meshIndex < meshes.size(); ++meshIndex) {
 								const auto& meshData = meshes[meshIndex];
 								const std::string& meshID = meshData.meshID;
 
-								// For cache files without scene, create basic material
-								uint32_t matIndex = 0;  // Default material index
+								// Get material index from aiScene (if available)
+								uint32_t matIndex = 0;
+								bool hasSceneMaterial = false;
 
-								// If we have a scene, get material from it
 								if (scene && meshIndex < scene->mNumMeshes) {
 									aiMesh* aiMsh = scene->mMeshes[meshIndex];
 									if (aiMsh && aiMsh->mMaterialIndex < scene->mNumMaterials) {
 										matIndex = aiMsh->mMaterialIndex;
+										hasSceneMaterial = true;
 									}
 								}
 
-								// Create child entity
-								EntityID childEntity = ecs.CreateEntity();
-								EE_CORE_INFO("Created child entity {} for mesh {}", childEntity, meshID);
+								// Reuse existing child entity if available, otherwise create new one
+								EntityID childEntity;
+								if (meshIndex < existingChildren.size()) {
+									childEntity = existingChildren[meshIndex];
+									EE_CORE_INFO("Reusing child entity {} for mesh {}", childEntity, meshID);
+								}
+								else {
+									childEntity = ecs.CreateEntity();
+									EE_CORE_INFO("Creating new child entity {} for mesh {}", childEntity, meshID);
+								}
 
-								// Add required components
+								// Reset/add required components
 								if (!ecs.HasComponent<HierarchyComponent>(childEntity)) {
 									ecs.AddComponent<HierarchyComponent>(childEntity, HierarchyComponent());
 								}
+								else {
+									auto& hc = ecs.GetComponent<HierarchyComponent>(childEntity);
+									hc.parent = entity;
+									hc.children.clear();
+									hc.depth = 1;
+									hc.isDirty = true;
+								}
+
 								if (!ecs.HasComponent<Transform>(childEntity))
 									ecs.AddComponent<Transform>(childEntity, Transform());
+								else {
+									ecs.GetComponent<Transform>(childEntity) = Transform();
+								}
+
 								if (!ecs.HasComponent<ObjectMetaData>(childEntity)) {
 									ecs.AddComponent<ObjectMetaData>(childEntity,
 										ObjectMetaData("Mesh_" + meshID, "Mesh", true));
 								}
+								else {
+									ecs.GetComponent<ObjectMetaData>(childEntity) =
+										ObjectMetaData("Mesh_" + meshID, "Mesh", true);
+								}
 
-								// Set parent-child relationship
-								hierarchySystem->SetParent(childEntity, entity, true);
+								// Only set parent if this is a newly created child
+								if (meshIndex >= existingChildren.size()) {
+									hierarchySystem->SetParent(childEntity, entity, true);
+								}
 
 								// Create material - either from scene or default
 								auto materialPtr = std::make_shared<graphics::Material>();
 
-								if (scene && matIndex < scene->mNumMaterials) {
+								if (hasSceneMaterial) {
 									// Load textures from Assimp material
 									aiMaterial* aiMat = scene->mMaterials[matIndex];
 									aiString texPath;
@@ -1903,9 +1942,6 @@ namespace Ermine::editor {
 											materialPtr->SetTexture("materialNormalMap", normalTex);
 											materialPtr->SetBool("materialHasNormalMap", true);
 										}
-									}
-									else {
-										EE_CORE_INFO("No normal map found in material");
 									}
 
 									// Roughness
@@ -1947,38 +1983,54 @@ namespace Ermine::editor {
 								}
 								else {
 									// Cache file without scene - use default white material
-									EE_CORE_INFO("Using default material for cache file mesh");
+									EE_CORE_INFO("Using default material for cache file mesh on reload");
 									materialPtr->SetVec4("materialAlbedo", Vec4(1.0f, 1.0f, 1.0f, 1.0f));
 									materialPtr->SetFloat("materialRoughness", 0.5f);
 									materialPtr->SetFloat("materialMetallic", 0.0f);
+									materialPtr->SetUVScale(Vec2(1.0f, -1.0f));
+									materialPtr->SetUVOffset(Vec2(0.0f, 1.0f));
 								}
 
-								// Add material component
-								ecs.AddComponent<Ermine::Material>(childEntity, Ermine::Material(materialPtr));
-								EE_CORE_INFO("Added material to child entity {}", childEntity);
-								childrenCreated++;
+								// Reset or add material component
+								if (ecs.HasComponent<Ermine::Material>(childEntity)) {
+									auto& matComp = ecs.GetComponent<Ermine::Material>(childEntity);
+									matComp = Ermine::Material(materialPtr);
+									EE_CORE_INFO("Reset material on child entity {}", childEntity);
+								}
+								else {
+									ecs.AddComponent<Ermine::Material>(childEntity, Ermine::Material(materialPtr));
+									EE_CORE_INFO("Added material to child entity {}", childEntity);
+								}
 							}
 
-							EE_CORE_INFO("Created {} child entities for model", childrenCreated);
-						}
-						else {
-							if (!hierarchySystem) EE_CORE_ERROR("HierarchySystem is null");
-							if (!renderer) EE_CORE_ERROR("Renderer is null");
-							if (model->GetMeshes().empty()) EE_CORE_WARN("Model has no meshes");
+							// Delete any excess children that are no longer needed
+							if (meshes.size() < existingChildren.size()) {
+								EE_CORE_INFO("Deleting {} excess child entities", existingChildren.size() - meshes.size());
+								for (size_t i = meshes.size(); i < existingChildren.size(); ++i) {
+									EntityID excessChild = existingChildren[i];
+									EE_CORE_INFO("Deleting excess child entity {}", excessChild);
+									hierarchySystem->UnsetParent(excessChild);
+									ecs.DestroyEntity(excessChild);
+								}
+							}
 						}
 
-						// Auto-attach animator if entity has AnimationComponent
-						if (ECS::GetInstance().HasComponent<AnimationComponent>(entity)) {
-							auto& animComp = ECS::GetInstance().GetComponent<AnimationComponent>(entity);
-							scene = model->GetAssimpScene();
+						// Refresh animator (only if scene has animations)
+						if (ecs.HasComponent<AnimationComponent>(entity)) {
+							auto& animComp = ecs.GetComponent<AnimationComponent>(entity);
 							if (scene && scene->mNumAnimations > 0)
-								animComp.m_animator = std::make_shared<graphics::Animator>(model);
+								animComp.m_animator = std::make_shared<graphics::Animator>(reloaded);
 							else
 								animComp.m_animator.reset();
 						}
 
-						// Mark renderer for full rebuild due to model load
-						ECS::GetInstance().GetSystem<graphics::Renderer>()->MarkDrawDataForRebuild();
+						// Mark renderer for full rebuild due to model reload
+						ecs.GetSystem<graphics::Renderer>()->MarkDrawDataForRebuild();
+
+						EE_CORE_INFO("Model reloaded successfully");
+					}
+					else {
+						EE_CORE_ERROR("Failed to reload model from: {}", fullPath);
 					}
 				}
 				if (isSelected) ImGui::SetItemDefaultFocus();
@@ -2474,6 +2526,20 @@ namespace Ermine::editor {
 
 		if (ImGui::Button("Refit From Collider"))
 			agent.didAutoFit = false;
+	}
+
+	void HierarchyInspector::DrawNavJumpComponent(EntityID entity)
+	{
+		if (!ComponentHeaderWithRemove<NavJumpLink>("Nav Jump Link", entity))
+			return;
+
+		auto& navJ = ECS::GetInstance().GetComponent<NavJumpLink>(entity);
+
+		ImGui::SeparatorText("Jump Settings");
+
+		ImGui::DragFloat3("Landing Position", &navJ.landingPosition.x, 0.1f);
+		ImGui::DragFloat("Jump Duration", &navJ.jumpDuration, 0.01f, 0.05f, 3.0f);
+		ImGui::DragFloat("Jump Height", &navJ.jumpHeight, 0.05f, 0.0f, 10.0f);
 	}
 
 	void HierarchyInspector::DrawParticleEmitterComponent(EntityID entity)
@@ -3095,6 +3161,9 @@ namespace Ermine::editor {
 		}
 		if (ImGui::MenuItem("NavMeshAgent") && !ECS::GetInstance().HasComponent<NavMeshAgent>(entity)) {
 			ECS::GetInstance().AddComponent(entity, NavMeshAgent());
+		}
+		if (ImGui::MenuItem("NavJumpLink") && !ECS::GetInstance().HasComponent<NavJumpLink>(entity)) {
+			ECS::GetInstance().AddComponent(entity, NavJumpLink());
 		}
 		if (ImGui::MenuItem("ParticleEmitter") && !ECS::GetInstance().HasComponent<ParticleEmitter>(entity)) {
 			ECS::GetInstance().AddComponent(entity, ParticleEmitter());

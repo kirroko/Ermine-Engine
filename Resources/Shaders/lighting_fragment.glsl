@@ -55,8 +55,9 @@ struct Light {
     vec4 position_type;    // xyz = position (world space), w = light type
     vec4 color_intensity;  // xyz = color, w = intensity
     vec4 direction_range;  // xyz = direction (world space), w = range
-    vec4 spot_angles_castshadows_startOffset; // x = inner angle (cos), y = outer angle (cos), z = flags bitfield (bit 0: castsShadows, bit 1: castsRays), w = shadow map index or 0 if no shadows
+    vec4 spot_angles_castshadows_startOffset; // x = inner angle (cos), y = outer angle (cos), z = flags bitfield (bit 0: castsShadows, bit 1: castsRays), w = shadow base layer or -1 if no shadows
     mat4 lightSpaceMatrix[NUM_CASCADES]; // Light view-projection matrices for cascaded shadow maps
+    mat4 pointLightMatrices[6]; // Point light shadow matrices for cubemap faces
     vec4 splitDepths[(NUM_CASCADES + 3) / 4]; // Split depths for cascaded shadow maps
 };
 
@@ -84,6 +85,21 @@ bool lightCastsShadows(Light light) {
 
 bool lightCastsRays(Light light) {
     return (int(light.spot_angles_castshadows_startOffset.z) & LIGHT_FLAG_CASTS_RAYS) != 0;
+}
+
+int getShadowBaseLayer(Light light) {
+    return int(light.spot_angles_castshadows_startOffset.w);
+}
+
+int getPointLightFaceIndex(vec3 dir) {
+    vec3 absDir = abs(dir);
+    if (absDir.x >= absDir.y && absDir.x >= absDir.z) {
+        return dir.x >= 0.0 ? 0 : 1;
+    }
+    if (absDir.y >= absDir.x && absDir.y >= absDir.z) {
+        return dir.y >= 0.0 ? 2 : 3;
+    }
+    return dir.z >= 0.0 ? 4 : 5;
 }
 
 vec3 getViewPosition(vec2 texCoord, float depth) {
@@ -594,7 +610,8 @@ void main()
             float shadowFactor = 1.0;
             int lightType = int(lights[i].position_type.w);
 
-            if (lightCastsShadows(lights[i]) && lightType == DIRECTIONAL_LIGHT) {
+            int baseLayer = getShadowBaseLayer(lights[i]);
+            if (lightCastsShadows(lights[i]) && baseLayer >= 0 && lightType == DIRECTIONAL_LIGHT) {
                 int cascadeIndex = NUM_CASCADES - 1; // Default to last cascade
 
                 // Select cascade based on view-space distance
@@ -607,8 +624,7 @@ void main()
                 }
 
                 // Calculate shadow with selected cascade
-                int startOffset = int(lights[i].spot_angles_castshadows_startOffset.w);
-                int layerIndex = startOffset + cascadeIndex;
+                int layerIndex = baseLayer + cascadeIndex;
 
                 shadowFactor = calculateShadowFactor(
                     lights[i].lightSpaceMatrix[cascadeIndex], 
@@ -619,7 +635,7 @@ void main()
                 );
 
             }
-            else if (lightCastsShadows(lights[i]) && (lightType == SPOT_LIGHT)) {
+            else if (lightCastsShadows(lights[i]) && baseLayer >= 0 && (lightType == SPOT_LIGHT)) {
                 // Check if this cascade has a valid matrix (non-zero)
                 mat4 cascadeMatrix = lights[i].lightSpaceMatrix[0];
                 bool hasValidMatrix = (cascadeMatrix[0][0] != 0.0 || cascadeMatrix[0][1] != 0.0 || 
@@ -628,12 +644,29 @@ void main()
                                       cascadeMatrix[1][2] != 0.0 || cascadeMatrix[1][3] != 0.0);
 
                 if (hasValidMatrix) {
-                    int layerIndex = int(lights[i].spot_angles_castshadows_startOffset.w);            
+                    int layerIndex = baseLayer;            
                     shadowFactor = calculateShadowFactor(
                         cascadeMatrix, 
                         i, 
                         worldPos, 
                         normalWorld, 
+                        layerIndex
+                    );
+                }
+            }
+            else if (lightCastsShadows(lights[i]) && baseLayer >= 0 && (lightType == POINT_LIGHT)) {
+                vec3 lightPosWorld = lights[i].position_type.xyz;
+                vec3 toFrag = worldPos - lightPosWorld;
+                float dist = length(toFrag);
+                if (dist > 0.001) {
+                    vec3 dir = toFrag / dist;
+                    int faceIndex = getPointLightFaceIndex(dir);
+                    int layerIndex = baseLayer + faceIndex;
+                    shadowFactor = calculateShadowFactor(
+                        lights[i].pointLightMatrices[faceIndex],
+                        i,
+                        worldPos,
+                        normalWorld,
                         layerIndex
                     );
                 }
@@ -661,7 +694,8 @@ void main()
             float shadowFactor = 1.0;
             int lightType = int(lights[i].position_type.w);
 
-            if (lightCastsShadows(lights[i]) && lightType == DIRECTIONAL_LIGHT) {
+            int baseLayer = getShadowBaseLayer(lights[i]);
+            if (lightCastsShadows(lights[i]) && baseLayer >= 0 && lightType == DIRECTIONAL_LIGHT) {
                 int cascadeIndex = NUM_CASCADES - 1;
 
                 // Select cascade based on view-space distance
@@ -673,8 +707,7 @@ void main()
                     }
                 }
 
-                int startOffset = int(lights[i].spot_angles_castshadows_startOffset.w);
-                int layerIndex = startOffset + cascadeIndex;
+                int layerIndex = baseLayer + cascadeIndex;
 
                 shadowFactor = calculateShadowFactor(
                     lights[i].lightSpaceMatrix[cascadeIndex],
@@ -685,7 +718,7 @@ void main()
                 );
 
             }
-            else if (lightCastsShadows(lights[i]) && (lightType == SPOT_LIGHT)) {
+            else if (lightCastsShadows(lights[i]) && baseLayer >= 0 && (lightType == SPOT_LIGHT)) {
                 // Check if this cascade has a valid matrix (non-zero)
                 mat4 cascadeMatrix = lights[i].lightSpaceMatrix[0];
                 bool hasValidMatrix = (cascadeMatrix[0][0] != 0.0 || cascadeMatrix[0][1] != 0.0 || 
@@ -694,7 +727,7 @@ void main()
                                       cascadeMatrix[1][2] != 0.0 || cascadeMatrix[1][3] != 0.0);
 
                 if (hasValidMatrix) {
-                    int layerIndex = int(lights[i].spot_angles_castshadows_startOffset.w);
+                    int layerIndex = baseLayer;
 
                     shadowFactor = calculateShadowFactor(
                         cascadeMatrix, 
@@ -704,6 +737,23 @@ void main()
                         layerIndex
                     );
                 } 
+            }
+            else if (lightCastsShadows(lights[i]) && baseLayer >= 0 && (lightType == POINT_LIGHT)) {
+                vec3 lightPosWorld = lights[i].position_type.xyz;
+                vec3 toFrag = worldPos - lightPosWorld;
+                float dist = length(toFrag);
+                if (dist > 0.001) {
+                    vec3 dir = toFrag / dist;
+                    int faceIndex = getPointLightFaceIndex(dir);
+                    int layerIndex = baseLayer + faceIndex;
+                    shadowFactor = calculateShadowFactor(
+                        lights[i].pointLightMatrices[faceIndex],
+                        i,
+                        worldPos,
+                        normalWorld,
+                        layerIndex
+                    );
+                }
             }
             else {
                     // No valid shadow matrix for this cascade, assume fully lit

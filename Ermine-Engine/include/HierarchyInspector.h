@@ -150,6 +150,7 @@ namespace Ermine::editor {
         \param entity The entity to add components to
         */
         void DrawNavMeshAgentComponent(EntityID entity);
+        void DrawNavJumpComponent(EntityID entity);
 
         /*!
         \brief Draws UI for Particle Emitter component
