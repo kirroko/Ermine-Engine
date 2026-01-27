@@ -124,6 +124,37 @@ namespace Ermine::editor {
 		return true;
 	}
 
+	// Component header with Remove, Copy, and Paste functionality
+	template<typename T>
+	static bool ComponentHeaderWithCopyPaste(const char* headerLabel, EntityID entity,
+		std::optional<T>& clipboard, ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_DefaultOpen)
+	{
+		bool open = ImGui::CollapsingHeader(headerLabel, flags);
+
+		// Open context menu when right-clicking the header row
+		if (ImGui::BeginPopupContextItem()) {
+			if (ImGui::MenuItem("Copy Component")) {
+				auto& ecs = Ermine::ECS::GetInstance();
+				clipboard = ecs.GetComponent<T>(entity);
+			}
+			if (ImGui::MenuItem("Paste Component", nullptr, false, clipboard.has_value())) {
+				auto& ecs = Ermine::ECS::GetInstance();
+				ecs.GetComponent<T>(entity) = clipboard.value();
+			}
+			ImGui::Separator();
+			if (ImGui::MenuItem("Remove Component")) {
+				auto& ecs = Ermine::ECS::GetInstance();
+				ecs.RemoveComponent<T>(entity);
+				ImGui::EndPopup();
+				return false;
+			}
+			ImGui::EndPopup();
+		}
+
+		if (!open) return false;
+		return true;
+	}
+
 	static bool ComponentHeaderWithRemoveForScriptsComponent(const char* headerLabel, EntityID entity, const std::string& className,
 		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_DefaultOpen)
 	{
@@ -2669,7 +2700,7 @@ namespace Ermine::editor {
 
 	void HierarchyInspector::DrawUIHealthbarComponent(EntityID entity)
 	{
-		if (!ComponentHeaderWithRemove<UIHealthbarComponent>("UI Healthbar", entity))
+		if (!ComponentHeaderWithCopyPaste<UIHealthbarComponent>("UI Healthbar", entity, s_ClipboardUIHealthbar))
 			return;
 
 		auto& healthbar = ECS::GetInstance().GetComponent<UIHealthbarComponent>(entity);
@@ -2722,7 +2753,7 @@ namespace Ermine::editor {
 
 	void HierarchyInspector::DrawUICrosshairComponent(EntityID entity)
 	{
-		if (!ComponentHeaderWithRemove<UICrosshairComponent>("UI Crosshair", entity))
+		if (!ComponentHeaderWithCopyPaste<UICrosshairComponent>("UI Crosshair", entity, s_ClipboardUICrosshair))
 			return;
 
 		auto& crosshair = ECS::GetInstance().GetComponent<UICrosshairComponent>(entity);
@@ -2745,7 +2776,7 @@ namespace Ermine::editor {
 
 	void HierarchyInspector::DrawUISkillsComponent(EntityID entity)
 	{
-		if (!ComponentHeaderWithRemove<UISkillsComponent>("UI Skills", entity))
+		if (!ComponentHeaderWithCopyPaste<UISkillsComponent>("UI Skills", entity, s_ClipboardUISkills))
 			return;
 
 		auto& skills = ECS::GetInstance().GetComponent<UISkillsComponent>(entity);
@@ -2877,7 +2908,7 @@ namespace Ermine::editor {
 
 	void HierarchyInspector::DrawUIManaBarComponent(EntityID entity)
 	{
-		if (!ComponentHeaderWithRemove<UIManaBarComponent>("UI Mana Bar", entity))
+		if (!ComponentHeaderWithCopyPaste<UIManaBarComponent>("UI Mana Bar", entity, s_ClipboardUIManaBar))
 			return;
 
 		auto& manaBar = ECS::GetInstance().GetComponent<UIManaBarComponent>(entity);
@@ -2899,7 +2930,7 @@ namespace Ermine::editor {
 
 	void HierarchyInspector::DrawUIBookCounterComponent(EntityID entity)
 	{
-		if (!ComponentHeaderWithRemove<UIBookCounterComponent>("UI Book Counter", entity))
+		if (!ComponentHeaderWithCopyPaste<UIBookCounterComponent>("UI Book Counter", entity, s_ClipboardUIBookCounter))
 			return;
 
 		auto& bookCounter = ECS::GetInstance().GetComponent<UIBookCounterComponent>(entity);
