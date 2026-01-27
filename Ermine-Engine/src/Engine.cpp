@@ -238,6 +238,11 @@ bool engine::Init(GLFWwindow* windowContext)
 	EE_AUTO_REGISTER_COMPONENT(ParticleEmitter, "ParticleEmitter")
 	EE_AUTO_REGISTER_COMPONENT(CameraComponent, "CameraComponent");
 	EE_AUTO_REGISTER_COMPONENT(UIComponent, "UIComponent");
+	EE_AUTO_REGISTER_COMPONENT(UIHealthbarComponent, "UIHealthbarComponent");
+	EE_AUTO_REGISTER_COMPONENT(UICrosshairComponent, "UICrosshairComponent");
+	EE_AUTO_REGISTER_COMPONENT(UISkillsComponent, "UISkillsComponent");
+	EE_AUTO_REGISTER_COMPONENT(UIManaBarComponent, "UIManaBarComponent");
+	EE_AUTO_REGISTER_COMPONENT(UIBookCounterComponent, "UIBookCounterComponent");
 	EE_AUTO_REGISTER_COMPONENT(UIButtonComponent, "UIButtonComponent");
 	EE_AUTO_REGISTER_COMPONENT(UIImageComponent, "UIImageComponent");
 

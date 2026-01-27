@@ -2740,6 +2740,83 @@ namespace
 	{
 		return (uint64_t)SceneManager::GetHealthBar();
 	}
+
+	// ========================================================================
+	// NEW UI COMPONENT BINDINGS
+	// ========================================================================
+
+	// UIHealthbarComponent bindings
+	static float Internal_Healthbar_GetHealth(uint64_t entityID)
+	{
+		auto& ecs = ECS::GetInstance();
+		if (!ecs.HasComponent<UIHealthbarComponent>(entityID))
+			return 0.0f;
+
+		auto& healthbar = ecs.GetComponent<UIHealthbarComponent>(entityID);
+		return healthbar.GetHealth();
+	}
+
+	static void Internal_Healthbar_SetHealth(uint64_t entityID, float value)
+	{
+		auto& ecs = ECS::GetInstance();
+		if (!ecs.HasComponent<UIHealthbarComponent>(entityID))
+			return;
+
+		auto& healthbar = ecs.GetComponent<UIHealthbarComponent>(entityID);
+		healthbar.SetHealth(value);
+	}
+
+	static float Internal_Healthbar_GetMaxHealth(uint64_t entityID)
+	{
+		auto& ecs = ECS::GetInstance();
+		if (!ecs.HasComponent<UIHealthbarComponent>(entityID))
+			return 100.0f;
+
+		auto& healthbar = ecs.GetComponent<UIHealthbarComponent>(entityID);
+		return healthbar.maxHealth;
+	}
+
+	// UIBookCounterComponent bindings
+	static int Internal_BookCounter_GetCollected(uint64_t entityID)
+	{
+		auto& ecs = ECS::GetInstance();
+		if (!ecs.HasComponent<UIBookCounterComponent>(entityID))
+			return 0;
+
+		auto& bookCounter = ecs.GetComponent<UIBookCounterComponent>(entityID);
+		return bookCounter.booksCollected;
+	}
+
+	static void Internal_BookCounter_SetCollected(uint64_t entityID, int value)
+	{
+		auto& ecs = ECS::GetInstance();
+		if (!ecs.HasComponent<UIBookCounterComponent>(entityID))
+			return;
+
+		auto& bookCounter = ecs.GetComponent<UIBookCounterComponent>(entityID);
+		bookCounter.booksCollected = std::clamp(value, 0, bookCounter.totalBooks);
+	}
+
+	static void Internal_BookCounter_AddBook(uint64_t entityID)
+	{
+		auto& ecs = ECS::GetInstance();
+		if (!ecs.HasComponent<UIBookCounterComponent>(entityID))
+			return;
+
+		auto& bookCounter = ecs.GetComponent<UIBookCounterComponent>(entityID);
+		bookCounter.booksCollected = std::min(bookCounter.booksCollected + 1, bookCounter.totalBooks);
+	}
+
+	static int Internal_BookCounter_GetTotal(uint64_t entityID)
+	{
+		auto& ecs = ECS::GetInstance();
+		if (!ecs.HasComponent<UIBookCounterComponent>(entityID))
+			return 0;
+
+		auto& bookCounter = ecs.GetComponent<UIBookCounterComponent>(entityID);
+		return bookCounter.totalBooks;
+	}
+
 #pragma endregion
 
 #pragma region Cursor ICalls
@@ -3212,6 +3289,16 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	mono_add_internal_call("ErmineEngine.GameplayHUD::Internal_SetHealth", (const void*)Internal_SetHealth);
 	// temporary reference to health bar, to be removed
 	mono_add_internal_call("ErmineEngine.GameplayHUD::Internal_GetHealthBar", Internal_GetHealthBar);
+
+	// New UI Component Bindings
+	mono_add_internal_call("ErmineEngine.UIHealthbar::Internal_GetHealth", (const void*)Internal_Healthbar_GetHealth);
+	mono_add_internal_call("ErmineEngine.UIHealthbar::Internal_SetHealth", (const void*)Internal_Healthbar_SetHealth);
+	mono_add_internal_call("ErmineEngine.UIHealthbar::Internal_GetMaxHealth", (const void*)Internal_Healthbar_GetMaxHealth);
+	mono_add_internal_call("ErmineEngine.UIBookCounter::Internal_GetCollected", (const void*)Internal_BookCounter_GetCollected);
+	mono_add_internal_call("ErmineEngine.UIBookCounter::Internal_SetCollected", (const void*)Internal_BookCounter_SetCollected);
+	mono_add_internal_call("ErmineEngine.UIBookCounter::Internal_AddBook", (const void*)Internal_BookCounter_AddBook);
+	mono_add_internal_call("ErmineEngine.UIBookCounter::Internal_GetTotal", (const void*)Internal_BookCounter_GetTotal);
+
 #pragma endregion UI ICalls
 
 #pragma region UISystem ICalls

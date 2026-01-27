@@ -15,6 +15,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "PreCompile.h"
 #include "Scene.h"
 #include "HierarchyPanel.h"
+#include "Components.h"
+#include <optional>
 
 namespace Ermine::editor {
     /*!
@@ -161,10 +163,23 @@ namespace Ermine::editor {
         \param entity The entity to add components to
         */
         void DrawCameraComponent(EntityID entity);
+        void DrawUIComponent(EntityID entity);
+        void DrawUIHealthbarComponent(EntityID entity);
+        void DrawUICrosshairComponent(EntityID entity);
+        void DrawUISkillsComponent(EntityID entity);
+        void DrawUIManaBarComponent(EntityID entity);
+        void DrawUIBookCounterComponent(EntityID entity);
         void DrawUIImageComponent(EntityID entity);
         void DrawUIButtonComponent(EntityID entity);
 
         Scene* m_ActiveScene = nullptr;  ///< Pointer to the currently active scene
         bool m_IsVisible = true;         ///< Inspector panel visibility state
+
+        // Component clipboard for copy/paste functionality
+        static inline std::optional<UIHealthbarComponent> s_ClipboardUIHealthbar;
+        static inline std::optional<UICrosshairComponent> s_ClipboardUICrosshair;
+        static inline std::optional<UISkillsComponent> s_ClipboardUISkills;
+        static inline std::optional<UIManaBarComponent> s_ClipboardUIManaBar;
+        static inline std::optional<UIBookCounterComponent> s_ClipboardUIBookCounter;
     };
 } // namespace Ermine::editor
