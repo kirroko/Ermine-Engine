@@ -90,6 +90,10 @@ namespace Ermine
         // Iterate through all entities with UIComponent
         for (EntityID entity : m_Entities)
         {
+            // Skip if entity no longer has UIComponent (may have been removed in inspector)
+            if (!ECS::GetInstance().HasComponent<UIComponent>(entity))
+                continue;
+
             if (ECS::GetInstance().HasComponent<ObjectMetaData>(entity))
             {
                 const auto& meta = ECS::GetInstance().GetComponent<ObjectMetaData>(entity);
@@ -144,6 +148,47 @@ namespace Ermine
             {
                 // Reset timer when skills are being used
                 ui.healthRegenTimer = 0.0f;
+            }
+        }
+
+        // Update UIHealthbarComponent (new separate component)
+        auto& ecs = ECS::GetInstance();
+        constexpr EntityID MAX_ENTITIES_UPDATE = 10000;
+        for (EntityID entity = 1; entity < MAX_ENTITIES_UPDATE; ++entity)
+        {
+            if (!ecs.IsEntityValid(entity))
+                continue;
+
+            if (!ecs.HasComponent<UIHealthbarComponent>(entity))
+                continue;
+
+            // Skip if entity is inactive
+            if (ecs.HasComponent<ObjectMetaData>(entity))
+            {
+                const auto& meta = ecs.GetComponent<ObjectMetaData>(entity);
+                if (!meta.selfActive)
+                    continue;
+            }
+
+            auto& healthbar = ecs.GetComponent<UIHealthbarComponent>(entity);
+
+            // Health Regeneration System (Option A: regenerate independently)
+            if (healthbar.currentHealth < healthbar.maxHealth)
+            {
+                healthbar.healthRegenTimer += deltaTime;
+
+                // Only regenerate health after the delay
+                if (healthbar.healthRegenTimer >= healthbar.healthRegenDelay)
+                {
+                    healthbar.currentHealth += healthbar.healthRegenRate * deltaTime;
+                    if (healthbar.currentHealth > healthbar.maxHealth)
+                        healthbar.currentHealth = healthbar.maxHealth;
+                }
+            }
+            else
+            {
+                // Reset timer when at full health
+                healthbar.healthRegenTimer = 0.0f;
             }
         }
     }
@@ -286,6 +331,10 @@ namespace Ermine
         // Render UI for all entities with UIComponent (legacy support)
         for (EntityID entity : m_Entities)
         {
+            // Skip if entity no longer has UIComponent (may have been removed in inspector)
+            if (!ECS::GetInstance().HasComponent<UIComponent>(entity))
+                continue;
+
             const auto& ui = ECS::GetInstance().GetComponent<UIComponent>(entity);
 
             if (ui.showHealthbar)
