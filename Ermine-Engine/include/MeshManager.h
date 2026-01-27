@@ -30,6 +30,9 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <string>
 #include <glad/glad.h>
 
+#include "Entity.h"
+#include "Shader.h"
+
 namespace Ermine::graphics {
 
     /*!***********************************************************************
@@ -127,13 +130,25 @@ namespace Ermine::graphics {
         DrawCommandBuffer m_ShadowSkinnedDrawCommandBuffer;
         DrawInfoBuffer m_ShadowSkinnedDrawInfoBuffer;
 
+		// Outline mask pass buffers
+        DrawCommandBuffer m_OutlineStandardDrawCommandBuffer;
+        DrawInfoBuffer m_OutlineStandardDrawInfoBuffer;
+        DrawCommandBuffer m_OutlineSkinnedDrawCommandBuffer;
+        DrawInfoBuffer m_OutlineSkinnedDrawInfoBuffer;
+
         // Skeletal animation SSBO for bone transforms (Binding 7)
         SkeletalSSBO m_SkeletalSSBO;
 
 		// VBO/VAO system for hardware vertex fetch
         void SetupShadowVAOs();  // Configure shadow VAOs for shadow pass
 
-
+        // Outline mask pass
+        void RenderOutlineMaskIndirect(
+            const glm::mat4& view,
+            const glm::mat4& projection,
+            const std::function<bool(EntityID)>& filterFn,
+            Shader& standardShader,
+            Shader& skinnedShader);
     private:
         void CreateBuffers();
         void SetupStandardVAO();   // Configure StandardVAO attribute bindings (locations 0-3)

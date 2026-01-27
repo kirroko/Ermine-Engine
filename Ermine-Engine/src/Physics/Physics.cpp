@@ -376,9 +376,6 @@ namespace Ermine
 			if (!ecs.IsEntityValid(recipientEntity) || !ecs.IsEntityValid(otherEntity))
 				continue;
 
-			if (!ecs.HasComponent<ScriptsComponent>(recipientEntity))
-				continue;
-
 			if (ECS::GetInstance().HasComponent<ObjectMetaData>(recipientEntity))
 			{
 				const auto& meta = ECS::GetInstance().GetComponent<ObjectMetaData>(recipientEntity);
@@ -392,22 +389,46 @@ namespace Ermine
 					continue;
 			}
 
-			auto& scs = ecs.GetComponent<ScriptsComponent>(recipientEntity);
-			for (auto& scriptComp : scs.scripts)
+			if (ecs.HasComponent<ScriptsComponent>(recipientEntity))
 			{
-				if (!scriptComp.m_instance)
+				auto& scs = ecs.GetComponent<ScriptsComponent>(recipientEntity);
+				for (auto& scriptComp : scs.scripts)
+				{
+					if (!scriptComp.m_instance)
+						continue;
+
+					switch (type)
+					{
+					case CollisionEventType::Begin:
+						scriptComp.m_instance->OnCollisionEnter(otherEntity, sensor);
+						break;
+					case CollisionEventType::Stay:
+						scriptComp.m_instance->OnCollisionStay(otherEntity, sensor);
+						break;
+					case CollisionEventType::End:
+						scriptComp.m_instance->OnCollisionExit(otherEntity, sensor);
+						break;
+					}
+				}
+			}
+
+			if (ecs.HasComponent<StateMachine>(recipientEntity))
+			{
+				auto& statem = ecs.GetComponent<StateMachine>(recipientEntity);
+
+				if (!statem.m_CurrentScript->instance)
 					continue;
 
 				switch (type)
 				{
 				case CollisionEventType::Begin:
-					scriptComp.m_instance->OnCollisionEnter(otherEntity, sensor);
+					statem.m_CurrentScript->instance->OnCollisionEnter(otherEntity, sensor);
 					break;
 				case CollisionEventType::Stay:
-					scriptComp.m_instance->OnCollisionStay(otherEntity, sensor);
+					statem.m_CurrentScript->instance->OnCollisionStay(otherEntity, sensor);
 					break;
 				case CollisionEventType::End:
-					scriptComp.m_instance->OnCollisionExit(otherEntity, sensor);
+					statem.m_CurrentScript->instance->OnCollisionExit(otherEntity, sensor);
 					break;
 				}
 			}
@@ -1971,6 +1992,15 @@ namespace Ermine
 		UpdatePhysicList();
 	}
 
+	int Physics::GetMotionType(EntityID ID)
+	{
+		if (ECS::GetInstance().HasComponent<PhysicComponent>(ID))
+		{
+			return (int)ECS::GetInstance().GetComponent<PhysicComponent>(ID).motionType;
+		}
+		return 3;
+	}
+
 	/*!*************************************************************************
 	  \brief
 		Converts pending physics collision pairs into ECS collision events.
@@ -2033,9 +2063,9 @@ namespace Ermine
 					continue;
 			}
 
-			if (ecs.IsEntityValid(entA) && ecs.HasComponent<ScriptsComponent>(entA))
+			if (ecs.IsEntityValid(entA) && (ecs.HasComponent<ScriptsComponent>(entA) || ecs.HasComponent<StateMachine>(entA)))
 				mCollisionEvent.emplace(pp.type, entA, entB, bIsSensor);
-			if (ecs.IsEntityValid(entB) && ecs.HasComponent<ScriptsComponent>(entB))
+			if (ecs.IsEntityValid(entB) && (ecs.HasComponent<ScriptsComponent>(entB) || ecs.HasComponent<StateMachine>(entB)))
 				mCollisionEvent.emplace(pp.type, entB, entA, aIsSensor);
 		}
 	}

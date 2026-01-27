@@ -3293,6 +3293,44 @@ namespace Ermine
 			//dtTileRef tileRef = 0;
 		};
 		Runtime* runtime = nullptr;
+		
+		template<typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
+			out.SetObject();
+			out.AddMember("cellSize", cellSize, alloc);
+			out.AddMember("cellHeight", cellHeight, alloc);
+			out.AddMember("agentHeight", agentHeight, alloc);
+			out.AddMember("agentRadius", agentRadius, alloc);
+			out.AddMember("bakedAgentRadius", bakedAgentRadius, alloc);
+			out.AddMember("bakedAgentHeight", bakedAgentHeight, alloc);
+			out.AddMember("agentMaxClimb", agentMaxClimb, alloc);
+			out.AddMember("agentMaxSlope", agentMaxSlope, alloc);
+
+			out.AddMember("drawInputTri", drawInputTri, alloc);
+			out.AddMember("drawWalkable", drawWalkable, alloc);
+			out.AddMember("drawNavMesh", drawNavMesh, alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in) {
+			if (!in.IsObject()) return;
+
+			if (in.HasMember("cellSize")) cellSize = in["cellSize"].GetFloat();
+			if (in.HasMember("cellHeight")) cellHeight = in["cellHeight"].GetFloat();
+			if (in.HasMember("agentHeight")) agentHeight = in["agentHeight"].GetFloat();
+			if (in.HasMember("agentRadius")) agentRadius = in["agentRadius"].GetFloat();
+			if (in.HasMember("bakedAgentRadius")) bakedAgentRadius = in["bakedAgentRadius"].GetFloat();
+			if (in.HasMember("bakedAgentHeight")) bakedAgentHeight = in["bakedAgentHeight"].GetFloat();
+			if (in.HasMember("agentMaxClimb")) agentMaxClimb = in["agentMaxClimb"].GetFloat();
+			if (in.HasMember("agentMaxSlope")) agentMaxSlope = in["agentMaxSlope"].GetFloat();
+
+			if (in.HasMember("drawInputTri")) drawInputTri = in["drawInputTri"].GetBool();
+			if (in.HasMember("drawWalkable")) drawWalkable = in["drawWalkable"].GetBool();
+			if (in.HasMember("drawNavMesh")) drawNavMesh = in["drawNavMesh"].GetBool();
+
+			// reset runtime-only
+			build = nullptr;
+			runtime = nullptr;
+		}
 	};
 
 	/*!***********************************************************************
@@ -3322,33 +3360,94 @@ namespace Ermine
 		unsigned long long startPoly = 0;
 		unsigned long long endPoly = 0;
 
-		// Serialization
-		/*
+		// jump
+		bool navPaused = false;
+		bool isJumping = false;
+
+		Ermine::Vec3 jumpStart;
+		Ermine::Vec3 jumpTarget;
+
+		float jumpTimer = 0.0f;
+		float jumpDuration = 0.4f;
+		float jumpHeight = 1.0f;
+
+		Vec3 lastDestination;
+		Ermine::Vec3 postJumpDestination = Ermine::Vec3{ 0.0f, 0.0f, 0.0f };
+		bool hasPostJumpDestination = false;
+
 		template<typename Alloc>
-		void Serialize(rapidjson::Value& out, Alloc& alloc) const
-		{
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
 			out.SetObject();
+
 			out.AddMember("speed", speed, alloc);
 			out.AddMember("acceleration", acceleration, alloc);
 			out.AddMember("stoppingDistance", stoppingDistance, alloc);
 			out.AddMember("autoRotate", autoRotate, alloc);
+			out.AddMember("debugDrawPath", debugDrawPath, alloc);
+
+			out.AddMember("radius", radius, alloc);
+			out.AddMember("height", height, alloc);
+			out.AddMember("centerYOffset", centerYOffset, alloc);
+
+			out.AddMember("autoFitFromCollider", autoFitFromCollider, alloc);
+
+			// Optional: persist destination (NOT the computed path)
+			out.AddMember("destination", Ermine::Vec3ToJson(destination, alloc), alloc);
 		}
 
-		void Deserialize(const rapidjson::Value& in)
-		{
+		void Deserialize(const rapidjson::Value& in) {
+			if (!in.IsObject()) return;
+
 			if (in.HasMember("speed")) speed = in["speed"].GetFloat();
 			if (in.HasMember("acceleration")) acceleration = in["acceleration"].GetFloat();
 			if (in.HasMember("stoppingDistance")) stoppingDistance = in["stoppingDistance"].GetFloat();
 			if (in.HasMember("autoRotate")) autoRotate = in["autoRotate"].GetBool();
+			if (in.HasMember("debugDrawPath")) debugDrawPath = in["debugDrawPath"].GetBool();
+
+			if (in.HasMember("radius")) radius = in["radius"].GetFloat();
+			if (in.HasMember("height")) height = in["height"].GetFloat();
+			if (in.HasMember("centerYOffset")) centerYOffset = in["centerYOffset"].GetFloat();
+
+			if (in.HasMember("autoFitFromCollider")) autoFitFromCollider = in["autoFitFromCollider"].GetBool();
+			if (in.HasMember("destination")) destination = Ermine::JsonToVec3(in["destination"]);
+
+			// reset runtime-only
+			didAutoFit = false;
+			hasPath = false;
+			path.clear();
+			currentCorner = 0;
+			startPoly = 0;
+			endPoly = 0;
+
+			navPaused = false;
+			isJumping = false;
+			jumpTimer = 0.0f;
+
+			postJumpDestination = Ermine::Vec3{ 0.0f, 0.0f, 0.0f };
+			hasPostJumpDestination = false;
+		}
+	};
+
+	struct NavJumpLink
+	{
+		Ermine::Vec3 landingPosition; // where the agent should land
+		float jumpDuration = 1.0f; // seconds
+		float jumpHeight = 5.0f; // purely visual
+
+		template<typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
+			out.SetObject();
+			out.AddMember("landingPosition", Ermine::Vec3ToJson(landingPosition, alloc), alloc);
+			out.AddMember("jumpDuration", jumpDuration, alloc);
+			out.AddMember("jumpHeight", jumpHeight, alloc);
 		}
 
-		XPROPERTY_DEF(
-			"NavMeshAgent", NavMeshAgent,
-			xproperty::obj_member<"speed", &NavMeshAgent::speed>,
-			xproperty::obj_member<"acceleration", &NavMeshAgent::acceleration>,
-			xproperty::obj_member<"stoppingDistance", &NavMeshAgent::stoppingDistance>,
-			xproperty::obj_member<"autoRotate", &NavMeshAgent::autoRotate>
-		);*/
+		void Deserialize(const rapidjson::Value& in) {
+			if (!in.IsObject()) return;
+			if (in.HasMember("landingPosition")) landingPosition = Ermine::JsonToVec3(in["landingPosition"]);
+			if (in.HasMember("jumpDuration")) jumpDuration = in["jumpDuration"].GetFloat();
+			if (in.HasMember("jumpHeight")) jumpHeight = in["jumpHeight"].GetFloat();
+		}
 	};
 
 	/*!***********************************************************************

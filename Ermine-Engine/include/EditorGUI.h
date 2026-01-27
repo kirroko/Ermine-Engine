@@ -1,10 +1,11 @@
 /* Start Header ************************************************************************/
 /*!
 \file       EditorGUI.h
-\author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu (90%)
+\author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu (85%)
 \co-authors LEE Wen Jie, Brian, wenjiebrian.lee, 2301261, wenjiebrian.lee\@digipen.edu (2%)
 \co-authors Jeremy Lim Ting Jie, jeremytingjie.lim, 2301370, jeremytingjie.lim\@digipen.edu (8%)
-\date       27/03/2025
+\co-authors Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu (5%)
+\date       26/01/2026
 \brief      This file contains the declaration of the EditorGUI class.
             Function just like a wrapper for the ImGUI library.
             Each window for teh editor should be encapsulated into a function in this class.

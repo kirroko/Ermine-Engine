@@ -42,6 +42,9 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #include <GLFW/glfw3.h>
 
+#include "SceneManager.h"
+#include "Selection.h"
+
 using namespace Ermine::graphics;
 
 unsigned int SHADOW_MAX_LAYERS = SHADOW_MAX_LAYERS_DESIRED;
@@ -261,6 +264,19 @@ void Renderer::Init(const int& screenWidth, const int& screenHeight)
 
 	// Create shadow map FBO and texture
 	InitializeShadowMapResources();
+
+	// Create outline mask buffer for select outline
+#ifdef EE_EDITOR
+	CreateOutlineMaskBuffer(screenWidth, screenHeight);
+
+	m_OutlineMaskIndirectShader = AssetManager::GetInstance().LoadShader(
+		"../Resources/Shaders/outline_mask_indirect_vertex.glsl",
+		"../Resources/Shaders/outline_mask_fragment.glsl");
+
+	m_OutlineMaskIndirectSkinnedShader = AssetManager::GetInstance().LoadShader(
+		"../Resources/Shaders/outline_mask_indirect_skinned_vertex.glsl",
+		"../Resources/Shaders/outline_mask_fragment.glsl");
+#endif
 
 	// Setup shadow VAOs for shadow pass rendering
 	m_MeshManager.SetupShadowVAOs();
@@ -802,6 +818,15 @@ void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pPBuffer.ColorTexture, 0);
 
+	// outline
+	//glActiveTexture(GL_TEXTURE2);
+	//glBindTexture(GL_TEXTURE_2D, m_OutlineMaskTexture);
+	//m_PostProcessShader->SetUniform1i("u_OutlineMask", 2);
+	//m_PostProcessShader->SetUniform1i("u_OutlineEnabled", m_OutlineEnabled ? 1 : 0);
+	//m_PostProcessShader->SetUniform3f("u_OutlineColor", m_OutlineColor.r, m_OutlineColor.g, m_OutlineColor.b);
+	//m_PostProcessShader->SetUniform1f("u_OutlineThickness", m_OutlineThickness);
+	//m_PostProcessShader->SetUniform1f("u_OutlineIntensity", m_OutlineIntensity);
+
 	// Share G-Buffer's depth texture instead of creating a separate one
 	// The depth attachment will be added after G-Buffer creation
 	// Note: We don't create a depth texture here - we'll attach the G-Buffer's depth texture later
@@ -875,6 +900,8 @@ void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, MBBuffer.ColorTexture, 0);
 	glCheckError();
+
+	//
 
 	// Making sure dimensions are non-zero
 	if (width <= 0 || height <= 0)
@@ -979,6 +1006,8 @@ void Renderer::ResizeGBuffer(const int& width, const int& height)
 
 	CreatePostProcessBuffer(width, height);
 
+	CreateOutlineMaskBuffer(width, height);
+
 	ResizePickingBuffer(width, height);
 }
 
@@ -1010,8 +1039,9 @@ void Renderer::RenderDepthPrePass(const Mtx44& view, const Mtx44& projection)
 	glDepthFunc(GL_LEQUAL);
 	glDepthMask(GL_TRUE);
 
-	// Explicitly disable face culling for depth pre-pass
-	glDisable(GL_CULL_FACE);
+	// Enable backface culling for depth pre-pass
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
 
 	// Bind depth pre-pass shader
 	m_DepthPrePassShader->Bind();
@@ -1089,8 +1119,9 @@ void Renderer::BeginGeometryPass()
 	// Disable blending for geometry pass
 	glDisable(GL_BLEND);
 
-	// Explicitly disable face culling for geometry pass
-	glDisable(GL_CULL_FACE);
+	// Enable backface culling for geometry pass
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
 }
 
 /**
@@ -3221,6 +3252,10 @@ void Renderer::RenderPostProcessPass(const Mtx44& view, const Mtx44& projection)
 		return;
 	}
 
+#ifdef EE_EDITOR
+	RenderOutlineMaskPass(view, projection);
+#endif
+
 	glDisable(GL_DEPTH_TEST);
 
 	// Pass 1: Extract bright areas + volumetric god rays (at half resolution)
@@ -3365,6 +3400,20 @@ void Renderer::RenderPostProcessPass(const Mtx44& view, const Mtx44& projection)
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, m_BloomBlurBuffer2->ColorTexture);
 	m_PostProcessShader->SetUniform1i("u_BloomTexture", 1);
+
+#ifdef EE_EDITOR
+	// Outline mask + params
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, m_OutlineMaskTexture);
+	m_PostProcessShader->SetUniform1i("u_OutlineMask", 2);
+	
+	m_PostProcessShader->SetUniform1i("u_OutlineEnabled", m_OutlineEnabled);
+	m_PostProcessShader->SetUniform3f("u_OutlineColor", m_OutlineColor);
+	m_PostProcessShader->SetUniform1f("u_OutlineThickness", m_OutlineThickness);
+	m_PostProcessShader->SetUniform1f("u_OutlineIntensity", m_OutlineIntensity);
+#else
+	m_PostProcessShader->SetUniform1i("u_OutlineEnabled", 0);
+#endif
 
 	// Pass bindless depth texture handle
 	GLint locDepth = glGetUniformLocation(m_PostProcessShader->GetRendererID(), "u_GBufferDepthHandle");
@@ -5080,7 +5129,7 @@ void Renderer::RenderOpaqueCustomShaders(const Mtx44& view, const Mtx44& project
 	glEnable(GL_DEPTH_TEST);          // Enable depth testing
 	glDepthFunc(GL_LEQUAL);           // Use LEQUAL to match geometry pass
 	glDepthMask(GL_FALSE);            // DON'T write depth (depth pre-pass already wrote it)
-	glEnable(GL_CULL_FACE);           // Enable face culling
+	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
 
 	// ========== RENDER OPAQUE CUSTOM STANDARD MESHES (NON-SKINNED) ==========
@@ -6148,6 +6197,8 @@ void Renderer::RenderShadowMapInstanced()
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
 	glDepthMask(GL_TRUE); // Ensure depth writes are enabled (may be disabled from geometry pass)
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
 
 	// Bind shadow shader
 	m_ShadowMapInstancedShader->Bind();
@@ -6825,6 +6876,112 @@ void Renderer::CompileMaterials()
 		m_CompiledMaterials.size(), m_EntityMaterialIndices.size());
 }
 
+
+void Renderer::CreateOutlineMaskBuffer(const int& width, const int& height)
+{
+	DestroyOutlineMaskBuffer();
+
+	glGenFramebuffers(1, &m_OutlineMaskFBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, m_OutlineMaskFBO);
+
+	// R8 is enough: we only need 0/1 coverage
+	glGenTextures(1, &m_OutlineMaskTexture);
+	glBindTexture(GL_TEXTURE_2D, m_OutlineMaskTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, width, height, 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_OutlineMaskTexture, 0);
+
+	//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_GBuffer->DepthTexture, 0);
+
+	GLenum drawBuffers[] = { GL_COLOR_ATTACHMENT0 };
+	glDrawBuffers(1, drawBuffers);
+
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+	{
+		EE_CORE_ERROR("OutlineMask FBO incomplete");
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	// Update viewport sizes
+	m_ViewportWidth = width;
+	m_ViewportHeight = height;
+}
+
+void Renderer::DestroyOutlineMaskBuffer()
+{
+	if (m_OutlineMaskTexture != 0)
+	{
+		glDeleteTextures(1, &m_OutlineMaskTexture);
+		m_OutlineMaskTexture = 0;
+	}
+	if (m_OutlineMaskFBO != 0)
+	{
+		glDeleteFramebuffers(1, &m_OutlineMaskFBO);
+		m_OutlineMaskFBO = 0;
+	}
+}
+
+void Renderer::RenderOutlineMaskPass(const Mtx44& view, const Mtx44& projection)
+{
+	if (!m_OutlineEnabled)
+		return;
+
+	const auto& selectedSet = Ermine::editor::Selection::All();
+	EntityID primary = 0;
+
+#ifdef EE_EDITOR
+	auto sceneMgr = SceneManager::GetInstance();
+#endif
+
+	primary = sceneMgr.GetActiveScene()->GetSelectedEntity();
+
+	glBindFramebuffer(GL_FRAMEBUFFER, m_OutlineMaskFBO);
+	glViewport(0, 0, m_ViewportWidth, m_ViewportHeight);
+
+	// Not selected
+	glDisable(GL_BLEND);
+	glColorMask(GL_TRUE, GL_FALSE, GL_FALSE, GL_FALSE);
+	glClearColor(0, 0, 0, 0);
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	//glEnable(GL_DEPTH_TEST);
+	glDisable(GL_DEPTH_TEST);
+	glDepthMask(GL_FALSE);
+
+	auto isSelected = [&](EntityID id) -> bool
+	{
+		if (id == 0) return false;
+		if (!selectedSet.empty())
+			return selectedSet.contains(id);
+		return id == primary;
+	};
+
+	glm::mat4 glmView = glm::mat4(
+		view.m00, view.m01, view.m02, view.m03,
+		view.m10, view.m11, view.m12, view.m13,
+		view.m20, view.m21, view.m22, view.m23,
+		view.m30, view.m31, view.m32, view.m33
+	);
+	glm::mat4 glmProjection = glm::mat4(
+		projection.m00, projection.m01, projection.m02, projection.m03,
+		projection.m10, projection.m11, projection.m12, projection.m13,
+		projection.m20, projection.m21, projection.m22, projection.m23,
+		projection.m30, projection.m31, projection.m32, projection.m33
+	);
+	glm::mat4 vp = glmProjection * glmView;
+
+	m_MeshManager.RenderOutlineMaskIndirect(glmView, glmProjection, [&](const EntityID id) { return editor::Selection::IsSelected(id); }, *m_OutlineMaskIndirectShader, *m_OutlineMaskIndirectSkinnedShader);
+
+	// Restore
+	glDepthMask(GL_TRUE);
+	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
 
 /**
  * @brief Uploads all compiled materials to the GPU SSBO in one batch.

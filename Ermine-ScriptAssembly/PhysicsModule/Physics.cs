@@ -43,6 +43,9 @@ namespace ErmineEngine
         public static extern bool HasPhysicComp(ulong entityID);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern int CheckMotionType(ulong entityID);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern void SetPosition(ulong entityID, Vector3 position);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
