@@ -1,9 +1,10 @@
 /* Start Header ************************************************************************/
 /*!
 \file       HierarchyInspector.h
-\author     Edwin Lee Zirui, edwinzirui.lee, 2301299, edwinzirui.lee\@digipen.edu (30%)
-\co-author  WEE HONG RU, Curtis, h.wee, 2301266, h.wee\@digipen.edu (70%)
-\date       10/09/2025
+\author     Edwin Lee Zirui, edwinzirui.lee, 2301299, edwinzirui.lee\@digipen.edu (25%)
+\co-authors WEE HONG RU, Curtis, h.wee, 2301266, h.wee\@digipen.edu (65%)
+\co-authors Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu (10%)
+\date       29/01/2026
 \brief      Inspector panel for viewing and editing entity properties
 
 Copyright (C) 2025 DigiPen Institute of Technology.
