@@ -2482,6 +2482,11 @@ namespace
 		auto physics = ECS::GetInstance().GetSystem<Physics>();
 		physics->Jump((EntityID)entityID,jump);
 	}
+	static int icall_Physics_CheckMotionType(uint64_t entityID)
+	{
+		auto physics = ECS::GetInstance().GetSystem<Physics>();
+		return physics->GetMotionType((EntityID)entityID);
+	}
 	static void icall_Physics_ForceUpdate()
 	{
 		auto physics = ECS::GetInstance().GetSystem<Physics>();
@@ -2584,6 +2589,131 @@ namespace
 	}
 #pragma endregion
 
+#pragma region NavAgent ICalls
+	static bool SnapPointToNavMesh(EntityID navEntity, const Ermine::Vec3& inPos, Ermine::Vec3& outPos, const float extents[3])
+	{
+		auto& ecs = Ermine::ECS::GetInstance();
+
+		if (navEntity == 0 || !ecs.HasComponent<NavMeshComponent>(navEntity))
+			return false;
+
+		const auto& nav = ecs.GetComponent<NavMeshComponent>(navEntity);
+		if (!nav.runtime || !nav.runtime->query)
+			return false;
+
+		dtNavMeshQuery* q = nav.runtime->query;
+		dtQueryFilter filter; // default filter is fine if you don’t use flags
+
+		float p[3] = { inPos.x, inPos.y, inPos.z };
+		dtPolyRef ref = 0;
+		float nearestPt[3] = {};
+
+		dtStatus st = q->findNearestPoly(p, extents, &filter, &ref, nearestPt);
+		if (dtStatusFailed(st) || ref == 0)
+			return false;
+
+		outPos = Ermine::Vec3{ nearestPt[0], nearestPt[1], nearestPt[2] };
+		return true;
+	}
+
+	void icall_navagent_start_jump(uint64_t agentEntityID, uint64_t linkEntityID)
+	{
+		using namespace Ermine;
+
+		auto& ecs = ECS::GetInstance();
+
+		EntityID agentID = (EntityID)agentEntityID;
+		EntityID linkID = (EntityID)linkEntityID;
+
+		if (!ecs.IsEntityValid(agentID) || !ecs.IsEntityValid(linkID)) return;
+		if (!ecs.HasComponent<NavMeshAgent>(agentID)) return;
+		if (!ecs.HasComponent<Transform>(agentID)) return;
+		if (!ecs.HasComponent<NavJumpLink>(linkID)) return;
+
+		auto& agent = ecs.GetComponent<NavMeshAgent>(agentID);
+		auto& tr = ecs.GetComponent<Transform>(agentID);
+		const auto& link = ecs.GetComponent<NavJumpLink>(linkID);
+
+		if (agent.isJumping) return;
+
+		auto isUnset = [](const Ermine::Vec3& v) -> bool
+			{
+				return std::fabs(v.x) < 1e-4f && std::fabs(v.y) < 1e-4f && std::fabs(v.z) < 1e-4f;
+			};
+
+		// Current navmesh under agent
+		EntityID currentNav = 0;
+		auto navSys = ecs.GetSystem<NavMeshAgentSystem>();
+		if (navSys)
+			currentNav = navSys->FindNearestNavMeshEntity(tr.position);
+
+		// Takeoff anchor: JumpArea transform if present
+		Ermine::Vec3 takeoff = tr.position;
+		if (ecs.HasComponent<Transform>(linkID))
+			takeoff = ecs.GetComponent<Transform>(linkID).position;
+
+		Ermine::Vec3 landing = link.landingPosition;
+
+		// ---------- AUTO LANDING (when landingPosition is not authored) ----------
+		if (isUnset(landing))
+		{
+			if (!navSys)
+			{
+				EE_CORE_WARN("[NavAgentJump] No NavMeshAgentSystem. Jump cancelled.");
+				return;
+			}
+
+			// Pick the "other" navmesh by asking for nearest EXCLUDING current.
+			EntityID targetNav = navSys->FindNearestNavMeshEntityExcluding(takeoff, currentNav);
+
+			// Fallback: if excluding returns 0 for any reason, try using agent pos
+			if (targetNav == 0)
+				targetNav = navSys->FindNearestNavMeshEntityExcluding(tr.position, currentNav);
+
+			if (targetNav == 0 || !ecs.HasComponent<Transform>(targetNav))
+			{
+				EE_CORE_WARN("[NavAgentJump] No target navmesh found. Jump cancelled.");
+				return;
+			}
+
+			// Use the target navmesh entity's transform position as a probe
+			Ermine::Vec3 probe = ecs.GetComponent<Transform>(targetNav).position;
+
+			// Snap probe onto that navmesh (use large extents so it always finds a nearby poly)
+			float ext[3] = { 10.0f, 30.0f, 10.0f };
+
+			Ermine::Vec3 snapped;
+			if (!SnapPointToNavMesh(targetNav, probe, snapped, ext))
+			{
+				EE_CORE_WARN("[NavAgentJump] Failed to snap to target navmesh (ent={}). Jump cancelled.", targetNav);
+				return;
+			}
+
+			landing = snapped;
+		}
+		// ----------------------------------------------------------------------
+
+		// Start jump
+		agent.isJumping = true;
+		agent.navPaused = true;
+		agent.hasPath = false;
+
+		agent.jumpStart = tr.position;
+		agent.jumpTarget = landing;
+		agent.jumpTimer = 0.0f;
+
+		// Auto duration/height from distance
+		Ermine::Vec3 d = agent.jumpTarget - agent.jumpStart;
+		float dist = std::sqrt(d.x * d.x + d.y * d.y + d.z * d.z);
+
+		float autoDuration = std::clamp(dist / 6.0f, 0.25f, 1.5f);
+		float autoHeight = std::clamp(dist / 4.0f, 0.5f, 3.0f);
+
+		agent.jumpDuration = (link.jumpDuration > 0.0f) ? link.jumpDuration : autoDuration;
+		agent.jumpHeight = (link.jumpHeight > 0.0f) ? link.jumpHeight : autoHeight;
+	}
+#pragma endregion
+
 #pragma region UI ICalls
 	static float Internal_GetHealth(uint64_t entityID)
 	{
@@ -2610,6 +2740,83 @@ namespace
 	{
 		return (uint64_t)SceneManager::GetHealthBar();
 	}
+
+	// ========================================================================
+	// NEW UI COMPONENT BINDINGS
+	// ========================================================================
+
+	// UIHealthbarComponent bindings
+	static float Internal_Healthbar_GetHealth(uint64_t entityID)
+	{
+		auto& ecs = ECS::GetInstance();
+		if (!ecs.HasComponent<UIHealthbarComponent>(entityID))
+			return 0.0f;
+
+		auto& healthbar = ecs.GetComponent<UIHealthbarComponent>(entityID);
+		return healthbar.GetHealth();
+	}
+
+	static void Internal_Healthbar_SetHealth(uint64_t entityID, float value)
+	{
+		auto& ecs = ECS::GetInstance();
+		if (!ecs.HasComponent<UIHealthbarComponent>(entityID))
+			return;
+
+		auto& healthbar = ecs.GetComponent<UIHealthbarComponent>(entityID);
+		healthbar.SetHealth(value);
+	}
+
+	static float Internal_Healthbar_GetMaxHealth(uint64_t entityID)
+	{
+		auto& ecs = ECS::GetInstance();
+		if (!ecs.HasComponent<UIHealthbarComponent>(entityID))
+			return 100.0f;
+
+		auto& healthbar = ecs.GetComponent<UIHealthbarComponent>(entityID);
+		return healthbar.maxHealth;
+	}
+
+	// UIBookCounterComponent bindings
+	static int Internal_BookCounter_GetCollected(uint64_t entityID)
+	{
+		auto& ecs = ECS::GetInstance();
+		if (!ecs.HasComponent<UIBookCounterComponent>(entityID))
+			return 0;
+
+		auto& bookCounter = ecs.GetComponent<UIBookCounterComponent>(entityID);
+		return bookCounter.booksCollected;
+	}
+
+	static void Internal_BookCounter_SetCollected(uint64_t entityID, int value)
+	{
+		auto& ecs = ECS::GetInstance();
+		if (!ecs.HasComponent<UIBookCounterComponent>(entityID))
+			return;
+
+		auto& bookCounter = ecs.GetComponent<UIBookCounterComponent>(entityID);
+		bookCounter.booksCollected = std::clamp(value, 0, bookCounter.totalBooks);
+	}
+
+	static void Internal_BookCounter_AddBook(uint64_t entityID)
+	{
+		auto& ecs = ECS::GetInstance();
+		if (!ecs.HasComponent<UIBookCounterComponent>(entityID))
+			return;
+
+		auto& bookCounter = ecs.GetComponent<UIBookCounterComponent>(entityID);
+		bookCounter.booksCollected = std::min(bookCounter.booksCollected + 1, bookCounter.totalBooks);
+	}
+
+	static int Internal_BookCounter_GetTotal(uint64_t entityID)
+	{
+		auto& ecs = ECS::GetInstance();
+		if (!ecs.HasComponent<UIBookCounterComponent>(entityID))
+			return 0;
+
+		auto& bookCounter = ecs.GetComponent<UIBookCounterComponent>(entityID);
+		return bookCounter.totalBooks;
+	}
+
 #pragma endregion
 
 #pragma region Cursor ICalls
@@ -3051,6 +3258,7 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 			v.z = dest.z;
 			Ermine::RequestPathForAgent((Ermine::EntityID)entityID, v);
 		});
+	mono_add_internal_call("ErmineEngine.NavAgent::StartJump", (const void*)icall_navagent_start_jump);
 #pragma endregion
 
 #pragma region Physics ICalls
@@ -3064,6 +3272,7 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	mono_add_internal_call("ErmineEngine.Physics::Internal_GetRigidbody", (const void*)icall_rigidbody_get_rigidbody);
 	mono_add_internal_call("ErmineEngine.Physics::RemovePhysic", (const void*)&icall_Physics_RemovePhysic);
 	mono_add_internal_call("ErmineEngine.Physics::Jump", (const void*)icall_Physics_Jump);
+	mono_add_internal_call("ErmineEngine.Physics::CheckMotionType", (const int*)icall_Physics_CheckMotionType);
 	mono_add_internal_call("ErmineEngine.Physics::ForceUpdate", (const void*)icall_Physics_ForceUpdate);
 #pragma endregion
 
@@ -3080,6 +3289,16 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	mono_add_internal_call("ErmineEngine.GameplayHUD::Internal_SetHealth", (const void*)Internal_SetHealth);
 	// temporary reference to health bar, to be removed
 	mono_add_internal_call("ErmineEngine.GameplayHUD::Internal_GetHealthBar", Internal_GetHealthBar);
+
+	// New UI Component Bindings
+	mono_add_internal_call("ErmineEngine.UIHealthbar::Internal_GetHealth", (const void*)Internal_Healthbar_GetHealth);
+	mono_add_internal_call("ErmineEngine.UIHealthbar::Internal_SetHealth", (const void*)Internal_Healthbar_SetHealth);
+	mono_add_internal_call("ErmineEngine.UIHealthbar::Internal_GetMaxHealth", (const void*)Internal_Healthbar_GetMaxHealth);
+	mono_add_internal_call("ErmineEngine.UIBookCounter::Internal_GetCollected", (const void*)Internal_BookCounter_GetCollected);
+	mono_add_internal_call("ErmineEngine.UIBookCounter::Internal_SetCollected", (const void*)Internal_BookCounter_SetCollected);
+	mono_add_internal_call("ErmineEngine.UIBookCounter::Internal_AddBook", (const void*)Internal_BookCounter_AddBook);
+	mono_add_internal_call("ErmineEngine.UIBookCounter::Internal_GetTotal", (const void*)Internal_BookCounter_GetTotal);
+
 #pragma endregion UI ICalls
 
 #pragma region UISystem ICalls

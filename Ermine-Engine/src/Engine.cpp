@@ -221,24 +221,30 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	// TODO: Register all components here, limit of 255 components
 	EE_AUTO_REGISTER_COMPONENT(Transform, "Transform")
-		EE_AUTO_REGISTER_COMPONENT(Rigidbody3D, "Rigidbody3D")
-		EE_AUTO_REGISTER_COMPONENT(Mesh, "Mesh")
-		EE_AUTO_REGISTER_COMPONENT(Material, "Material")
-		EE_AUTO_REGISTER_COMPONENT(ObjectMetaData, "ObjectMetaData")
-		EE_AUTO_REGISTER_COMPONENT(Light, "Light")
-		EE_AUTO_REGISTER_COMPONENT(AudioComponent, "AudioComponent")
-		EE_AUTO_REGISTER_COMPONENT(GlobalAudioComponent, "GlobalAudioComponent")
-		EE_AUTO_REGISTER_COMPONENT(PhysicComponent, "PhysicComponent")
-		EE_AUTO_REGISTER_COMPONENT(ModelComponent, "ModelComponent")
-		EE_AUTO_REGISTER_COMPONENT(AnimationComponent, "AnimationComponent")
-		EE_AUTO_REGISTER_COMPONENT(HierarchyComponent, "HierarchyComponent");
+	EE_AUTO_REGISTER_COMPONENT(Rigidbody3D, "Rigidbody3D")
+	EE_AUTO_REGISTER_COMPONENT(Mesh, "Mesh")
+	EE_AUTO_REGISTER_COMPONENT(Material, "Material")
+	EE_AUTO_REGISTER_COMPONENT(ObjectMetaData, "ObjectMetaData")
+	EE_AUTO_REGISTER_COMPONENT(Light, "Light")
+	EE_AUTO_REGISTER_COMPONENT(AudioComponent, "AudioComponent")
+	EE_AUTO_REGISTER_COMPONENT(GlobalAudioComponent, "GlobalAudioComponent")
+	EE_AUTO_REGISTER_COMPONENT(PhysicComponent, "PhysicComponent")
+	EE_AUTO_REGISTER_COMPONENT(ModelComponent, "ModelComponent")
+	EE_AUTO_REGISTER_COMPONENT(AnimationComponent, "AnimationComponent")
+	EE_AUTO_REGISTER_COMPONENT(HierarchyComponent, "HierarchyComponent");
 	EE_AUTO_REGISTER_COMPONENT(StateMachine, "StateMachine")
-		EE_AUTO_REGISTER_COMPONENT(NavMeshComponent, "NavMesh")
-		EE_AUTO_REGISTER_COMPONENT(NavMeshAgent, "NavMeshAgent")
-		EE_AUTO_REGISTER_COMPONENT(GlobalTransform, "GlobalTransform")
-		EE_AUTO_REGISTER_COMPONENT(ParticleEmitter, "ParticleEmitter")
-		EE_AUTO_REGISTER_COMPONENT(CameraComponent, "CameraComponent");
+	EE_AUTO_REGISTER_COMPONENT(NavMeshComponent, "NavMesh")
+	EE_AUTO_REGISTER_COMPONENT(NavMeshAgent, "NavMeshAgent")
+	EE_AUTO_REGISTER_COMPONENT(NavJumpLink, "NavJumpLink")
+	EE_AUTO_REGISTER_COMPONENT(GlobalTransform, "GlobalTransform")
+	EE_AUTO_REGISTER_COMPONENT(ParticleEmitter, "ParticleEmitter")
+	EE_AUTO_REGISTER_COMPONENT(CameraComponent, "CameraComponent");
 	EE_AUTO_REGISTER_COMPONENT(UIComponent, "UIComponent");
+	EE_AUTO_REGISTER_COMPONENT(UIHealthbarComponent, "UIHealthbarComponent");
+	EE_AUTO_REGISTER_COMPONENT(UICrosshairComponent, "UICrosshairComponent");
+	EE_AUTO_REGISTER_COMPONENT(UISkillsComponent, "UISkillsComponent");
+	EE_AUTO_REGISTER_COMPONENT(UIManaBarComponent, "UIManaBarComponent");
+	EE_AUTO_REGISTER_COMPONENT(UIBookCounterComponent, "UIBookCounterComponent");
 	EE_AUTO_REGISTER_COMPONENT(UIButtonComponent, "UIButtonComponent");
 	EE_AUTO_REGISTER_COMPONENT(UIImageComponent, "UIImageComponent");
 

@@ -335,6 +335,8 @@ namespace Ermine {
             m_LastClickedEntity = entity;
             editor::EditorCamera::GetInstance().Focus(ecs.GetComponent<Transform>(entity).position, 2.5f);
             ImGui::SetWindowFocus("Inspector");
+            Vector3D position = ecs.GetComponent<Transform>(entity).position;
+            editor::EditorCamera::GetInstance().Focus(position, 2.5f);
         }
 
         if (ImGui::BeginPopupContextItem(("ctx##" + std::to_string((uint64_t)entity)).c_str())) {
