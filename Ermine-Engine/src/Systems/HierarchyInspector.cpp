@@ -2,8 +2,9 @@
 /*!
 \file       HierarchyInspector.cpp
 \author     Edwin Lee Zirui, edwinzirui.lee, 2301299, edwinzirui.lee\@digipen.edu (30%)
-\co-author  WEE HONG RU Curtis, h.wee, 2301266, h.wee\@digipen.edu (70%)
-\date       10/09/2025
+\co-authors  WEE HONG RU Curtis, h.wee, 2301266, h.wee\@digipen.edu (70%)
+\co-authors Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu
+\date       29/01/2026
 \brief      Inspector panel for viewing and editing entity properties
 
 Copyright (C) 2025 DigiPen Institute of Technology.
@@ -1136,7 +1137,7 @@ namespace Ermine::editor {
 
 				// Accept drag & drop from AssetBrowser (keeping this as bonus feature)
 				if (ImGui::BeginDragDropTarget()) {
-					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_FILE")) {
+					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_TEXTURE")) {
 						const char* droppedPathCStr = static_cast<const char*>(payload->Data);
 						std::filesystem::path droppedPath = droppedPathCStr;
 
