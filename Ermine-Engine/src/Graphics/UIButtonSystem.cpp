@@ -1,4 +1,4 @@
-/* Start Header ************************************************************************/
+﻿/* Start Header ************************************************************************/
 /*!
 \file       UIButtonSystem.cpp
 \author     Edwin Lee Zirui, edwinzirui.lee, 2301299, edwinzirui.lee@digipen.edu
@@ -35,6 +35,23 @@ namespace Ermine
         m_screenHeight = screenHeight;
         m_aspectRatio = (screenHeight > 0) ? static_cast<float>(screenWidth) / static_cast<float>(screenHeight) : 1.0f;
         EE_CORE_INFO("UIButtonSystem initialized ({}x{}, aspect ratio: {})", screenWidth, screenHeight, m_aspectRatio);
+
+        auto& ecs = ECS::GetInstance();
+        for (EntityID e = 0; e < MAX_ENTITIES; ++e)
+        {
+            if (!ecs.IsEntityValid(e)) continue;
+            if (!ecs.HasComponent<ObjectMetaData>(e)) continue;
+
+            auto& meta = ecs.GetComponent<ObjectMetaData>(e);
+            if (meta.name == "PauseMenu" || meta.name == "PauseBackground" || meta.name == "ResumeButton")
+            {
+                EE_CORE_INFO("Entity '{}' (ID: {}) has selfActive = {}", meta.name, e, meta.selfActive);
+            }
+        }
+
+        EE_CORE_INFO("UIButtonSystem::s_isGamePaused = {}", s_isGamePaused);
+        EE_CORE_INFO("UIButtonSystem initialized ({}x{}, aspect ratio: {})", screenWidth, screenHeight, m_aspectRatio);
+
     }
 
     EntityID UIButtonSystem::GetGlobalAudioEntity()
@@ -74,6 +91,17 @@ namespace Ermine
             return;
 #endif
 
+        // ==================== PAUSE MENU TOGGLE ====================
+        static bool pWasPressed = false;
+        bool pIsPressed = Input::IsKeyDown(GLFW_KEY_P);
+
+        if (pIsPressed && !pWasPressed)
+        {
+            TogglePauseMenu();
+        }
+        pWasPressed = pIsPressed;
+        // ===========================================================
+
         EntityID globalAudioEntity = GetGlobalAudioEntity();
         GlobalAudioComponent* globalAudio = nullptr;
 
@@ -82,30 +110,18 @@ namespace Ermine
             globalAudio = &ecs.GetComponent<GlobalAudioComponent>(globalAudioEntity);
         }
 
-        // Debug: Log first update call
-        static bool firstUpdate = true;
-        if (firstUpdate)
-        {
-            EE_CORE_INFO("UIButtonSystem::Update - First update call");
-            EE_CORE_INFO("  Screen: {}x{}, Aspect: {}", m_screenWidth, m_screenHeight, m_aspectRatio);
-#ifdef EE_EDITOR
-            EE_CORE_INFO("  Viewport: ({}, {}) size: {}x{}",
-                         m_viewportMin.x, m_viewportMin.y, m_viewportSize.x, m_viewportSize.y);
-#endif
-            firstUpdate = false;
-        }
-
         // Get normalized mouse position once per frame
         float mouseX, mouseY;
         GetNormalizedMousePosition(mouseX, mouseY);
-
-        // Debug: Log mouse position
-        //EE_CORE_INFO("Mouse Position - X: {}, Y: {}", mouseX, mouseY);
 
         // Iterate through all entities that have UIButtonComponent
         for (EntityID entity : m_Entities)
         {
             if (!ecs.IsEntityValid(entity) || !ecs.HasComponent<UIButtonComponent>(entity))
+                continue;
+
+            // ✅ FIX: Check if entity is active in hierarchy (including parents)
+            if (!IsEntityActiveInHierarchy(entity))
                 continue;
 
             auto& button = ecs.GetComponent<UIButtonComponent>(entity);
@@ -118,11 +134,6 @@ namespace Ermine
             float bottom = button.position.y - halfH;
             float top = button.position.y + halfH;
 
-            // Debug: Log button bounds and state
-            //EE_CORE_INFO("Button: '{}' Bounds - L: {}, R: {}, B: {}, T: {}",
-            //             button.text, left, right, bottom, top);
-            //EE_CORE_INFO("  Hovered: {}, Pressed: {}", button.isHovered, button.isPressed);
-
             // Check if mouse is inside button bounds
             bool inside = (mouseX >= left && mouseX <= right && mouseY >= bottom && mouseY <= top);
 
@@ -130,7 +141,7 @@ namespace Ermine
             if (inside && !button.isHovered)
             {
                 button.isHovered = true;
-                
+
                 if (globalAudio)
                 {
                     AudioSystem::PlayGlobalSFX(*globalAudio, "Hover");
@@ -166,12 +177,12 @@ namespace Ermine
             EE_CORE_INFO("Executing deferred scene load: {}", m_PendingSceneToLoad);
             try
             {
-                #ifdef EE_EDITOR
+#ifdef EE_EDITOR
                 auto& sceneManager = SceneManager::GetInstance();
                 sceneManager.OpenScene(m_PendingSceneToLoad);
-                #else
+#else
                 SceneManager::GetInstance().OpenScene(m_PendingSceneToLoad);
-                #endif
+#endif
             }
             catch (const std::exception& e)
             {
@@ -181,6 +192,77 @@ namespace Ermine
             m_HasPendingSceneLoad = false;
             m_PendingSceneToLoad.clear();
         }
+    }
+
+    bool UIButtonSystem::IsEntityActiveInHierarchy(EntityID entity)
+    {
+        auto& ecs = ECS::GetInstance();
+
+        // Check if entity itself is valid
+        if (!ecs.IsEntityValid(entity))
+            return false;
+
+        // Check self active state
+        if (ecs.HasComponent<ObjectMetaData>(entity))
+        {
+            auto& meta = ecs.GetComponent<ObjectMetaData>(entity);
+            if (!meta.selfActive)
+                return false;
+        }
+
+        // Check parent chain via HierarchyComponent
+        if (ecs.HasComponent<HierarchyComponent>(entity))
+        {
+            auto& hierarchy = ecs.GetComponent<HierarchyComponent>(entity);
+
+            // If has a valid parent, check if parent is active
+            if (hierarchy.parent != HierarchyComponent::INVALID_PARENT)
+            {
+                // Recursively check parent's active state
+                return IsEntityActiveInHierarchy(hierarchy.parent);
+            }
+        }
+
+        // No parent or parent is active - entity is active
+        return true;
+    }
+
+    void UIButtonSystem::TogglePauseMenu()
+    {
+        auto& ecs = ECS::GetInstance();
+
+        for (EntityID e = 0; e < MAX_ENTITIES; ++e)
+        {
+            if (!ecs.IsEntityValid(e)) continue;
+            if (!ecs.HasComponent<ObjectMetaData>(e)) continue;
+
+            auto& meta = ecs.GetComponent<ObjectMetaData>(e);
+            if (meta.name == "PauseMenu")
+            {
+                meta.selfActive = !meta.selfActive;
+                s_isGamePaused = meta.selfActive;
+                EE_CORE_INFO("Game {}", s_isGamePaused ? "PAUSED" : "RESUMED");
+
+#if defined(EE_EDITOR)
+                // Update editor state if in editor
+                if (editor::EditorGUI::isPlaying)
+                {
+                    editor::EditorGUI::s_state = s_isGamePaused
+                        ? editor::EditorGUI::SimState::paused
+                        : editor::EditorGUI::SimState::playing;
+                }
+#endif
+
+                return;
+            }
+        }
+
+        EE_CORE_WARN("PauseMenu entity not found in scene!");
+    }
+
+    bool UIButtonSystem::IsGamePaused()
+    {
+        return s_isGamePaused;
     }
 
     void UIButtonSystem::ExecuteButtonAction(const UIButtonComponent& button)
@@ -214,7 +296,15 @@ namespace Ermine
             break;
 
         case UIButtonComponent::ButtonAction::Custom:
-            EE_CORE_INFO("Custom action triggered: {}", button.actionData);
+            if (button.actionData == "Resume" || button.actionData == "resume_game")
+            {
+                TogglePauseMenu();
+                EE_CORE_INFO("Resume button clicked");
+            }
+            else
+            {
+                EE_CORE_INFO("Custom action triggered: {}", button.actionData);
+            }
             break;
 
         case UIButtonComponent::ButtonAction::None:
@@ -226,7 +316,7 @@ namespace Ermine
 
     void UIButtonSystem::GetNormalizedMousePosition(float& outX, float& outY)
     {
-        #ifdef EE_EDITOR
+#ifdef EE_EDITOR
         // EDITOR MODE: Get mouse position from ImGui
         ImGuiIO& io = ImGui::GetIO();
 
@@ -252,7 +342,7 @@ namespace Ermine
         outX = viewportX / m_viewportSize.x;
         outY = 1.0f - (viewportY / m_viewportSize.y);  // Flip Y
 
-        #else
+#else
         // GAME MODE: Get mouse position from GLFW
         auto [mouseX, mouseY] = Input::GetMousePosition();
         auto window = glfwGetCurrentContext();
@@ -273,6 +363,6 @@ namespace Ermine
         // Clamp
         outX = std::max(0.0f, std::min(1.0f, outX));
         outY = std::max(0.0f, std::min(1.0f, outY));
-        #endif
+#endif
     }
 }

@@ -36,6 +36,8 @@ namespace Ermine
             m_aspectRatio = (height > 0) ? static_cast<float>(width) / static_cast<float>(height) : 1.0f;
         }
 
+        static bool IsGamePaused();  // ADD THIS
+
 #ifdef EE_EDITOR
         // Set viewport info for editor mode (called from EditorGUI)
         void SetViewportInfo(const ImVec2& min, const ImVec2& size)
@@ -66,6 +68,9 @@ namespace Ermine
         // Get normalized mouse position (0-1 range)
         void GetNormalizedMousePosition(float& outX, float& outY);
 
+        static inline bool s_isGamePaused = false;  // ADD THIS
+        bool IsEntityActiveInHierarchy(EntityID entity);
+        void TogglePauseMenu();  // ADD THIS
 
         EntityID GetGlobalAudioEntity();
         EntityID m_GlobalAudioEntity = MAX_ENTITIES;
