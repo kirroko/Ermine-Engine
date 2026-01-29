@@ -31,6 +31,7 @@ IncludeDir["xproperty"] = "ThirdParty/xproperty/source"
 IncludeDir["xresource_Pipeline"] = "ThirdParty/xresource_pipeline_v2-main/source"
 IncludeDir["imnodes"] = "ThirdParty/imnodes"
 IncludeDir["recastnavigation"] = "ThirdParty/recastnavigation"
+IncludeDir["pl_mpeg"] = "ThirdParty/pl_mpeg"
 
 -- Libraries
 LibraryDir = {}
