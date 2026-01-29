@@ -3,7 +3,7 @@
 \file       Components.h
 \author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu (45%)
 \co-author  Jeremy Lim Ting Jie, jeremytingjie.lim, 2301370, jeremytingjie.lim\@digipen.edu (10%)
-\co-author  Ridhwan (5%)
+\co-author  Ridhwan Afandi, mohamedridhwan.b, 2301367, mohamedridhwan.b\@digipen.edu (5%)
 \co-author  WEE HONG RU Curtis, h.wee, 2301266, h.wee\@digipen.edu (40%)
 \date       Jan 24, 2025
 \brief      Updated components with modular material system
@@ -1782,6 +1782,7 @@ namespace Ermine
 		bool gammaCorrectionEnabled = true;
 		bool bloomEnabled = true;
 		bool skyboxIsHDR = false;
+		bool showSkybox = true;
 
 		// Post-processing parameters
 		float exposure = 1.0f;
@@ -1853,6 +1854,7 @@ namespace Ermine
 			xproperty::obj_member<"gammaCorrectionEnabled", &GlobalGraphics::gammaCorrectionEnabled>,
 			xproperty::obj_member<"bloomEnabled", &GlobalGraphics::bloomEnabled>,
 			xproperty::obj_member<"skyboxIsHDR", &GlobalGraphics::skyboxIsHDR>,
+			xproperty::obj_member<"showSkybox", &GlobalGraphics::showSkybox>,
 
 			// Post-process params
 			xproperty::obj_member<"exposure", &GlobalGraphics::exposure>,

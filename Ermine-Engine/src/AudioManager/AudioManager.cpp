@@ -357,6 +357,10 @@ void CAudioEngine::SetListenerAttributes(const Vector3D& position,
 	));
 }
 
+FMOD::System* CAudioEngine::GetCoreSystem() {
+	return sgpImplementation ? sgpImplementation->mpSystem : nullptr;
+}
+
 void CAudioEngine::Shutdown() {
 	delete sgpImplementation;
 }

@@ -31,6 +31,7 @@ IncludeDir["xproperty"] = "ThirdParty/xproperty/source"
 IncludeDir["xresource_Pipeline"] = "ThirdParty/xresource_pipeline_v2-main/source"
 IncludeDir["imnodes"] = "ThirdParty/imnodes"
 IncludeDir["recastnavigation"] = "ThirdParty/recastnavigation"
+IncludeDir["pl_mpeg"] = "ThirdParty/pl_mpeg"
 
 -- Libraries
 LibraryDir = {}
@@ -101,7 +102,8 @@ project "Ermine-Engine"
         "%{IncludeDir.xresource_Pipeline}",
         "ThirdParty/xresource_pipeline_v2-main/dependencies/xtextfile/source",
         "ThirdParty/xresource_pipeline_v2-main/dependencies/xerr/source",
-        "%{IncludeDir.imnodes}"
+        "%{IncludeDir.imnodes}",
+        "%{IncludeDir.pl_mpeg}"
     }
 
     libdirs
@@ -269,7 +271,8 @@ project "Ermine-Editor"
         "%{IncludeDir.xresource_Pipeline}",
         "ThirdParty/xresource_pipeline_v2-main/dependencies/xtextfile/source",
         "ThirdParty/xresource_pipeline_v2-main/dependencies/xerr/source",
-        "%{IncludeDir.imnodes}"
+        "%{IncludeDir.imnodes}",
+        "%{IncludeDir.pl_mpeg}"
     } 
 
     -- Ensure the resource pipeline builds before running it
@@ -366,7 +369,8 @@ project "Ermine-Game"
         "%{IncludeDir.stb}",
         "%{IncludeDir.Fmod}",
         "%{IncludeDir.Mono}",
-        "%{IncludeDir.rapidjson}"
+        "%{IncludeDir.rapidjson}",
+        "%{IncludeDir.pl_mpeg}"
     }
 
     links

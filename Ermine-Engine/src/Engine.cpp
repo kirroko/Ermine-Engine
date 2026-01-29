@@ -45,6 +45,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "CameraSystem.h"
 #include "UIRenderSystem.h"
 #include "UIButtonSystem.h"
+#include "VideoManager.h"
 #include "NavMesh.h"	 
 #include "NavMeshAgentSystem.h"
 //#include "EditorGUI.h"
@@ -60,6 +61,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "FSMEditor.h"
 #include "AnimationGUI.h"
 #include "ResourcePipe.h"
+#include "VideoImGUI.h"
 
 #endif
 
@@ -292,6 +294,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().RegisterSystem<graphics::CameraSystem>();
 	ECS::GetInstance().RegisterSystem<UIRenderSystem>();
 	ECS::GetInstance().RegisterSystem<UIButtonSystem>();
+	ECS::GetInstance().RegisterSystem<VideoManager>();
 
 	//Register JPH::TempAllocatorImpl for Physcis
 	RegisterDefaultAllocator();
@@ -389,6 +392,10 @@ bool engine::Init(GLFWwindow* windowContext)
 	sig.set(ECS::GetInstance().GetComponentType<UIButtonComponent>());
 	ECS::GetInstance().SetSystemSignature<UIButtonSystem>(sig);
 
+	// Video Manager (no component requirements)
+	sig.reset();
+	ECS::GetInstance().SetSystemSignature<VideoManager>(sig);
+
 	glfwSetFramebufferSizeCallback(windowContext, []([[maybe_unused]] GLFWwindow* window, int width, int height)
 		{
 #if defined(EE_EDITOR)
@@ -407,6 +414,10 @@ bool engine::Init(GLFWwindow* windowContext)
 		auto buttonSystem = ECS::GetInstance().GetSystem<UIButtonSystem>();
 		if (buttonSystem && width > 0 && height > 0)
 			buttonSystem->OnScreenResize(width, height);
+
+		auto videoSystem = ECS::GetInstance().GetSystem<VideoManager>();
+		if (videoSystem && width > 0 && height > 0)
+			videoSystem->OnScreenResize(width, height);
 #endif
 		});
 
@@ -477,6 +488,12 @@ bool engine::Init(GLFWwindow* windowContext)
 	else
 		ECS::GetInstance().GetSystem<UIButtonSystem>()->Init(1920, 1080);
 
+	// Initialize Video Manager with same dimensions
+	if (windowWidth > 0 && windowHeight > 0)
+		ECS::GetInstance().GetSystem<VideoManager>()->Init(windowWidth, windowHeight);
+	else
+		ECS::GetInstance().GetSystem<VideoManager>()->Init(1920, 1080);
+
 	// Editor windows
 #if defined(EE_EDITOR)
 	SceneManager::GetInstance().NewScene();
@@ -493,6 +510,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	editor::EditorGUI::CreateImGUIWindow<ConsoleGUI>();
 	editor::EditorGUI::CreateImGUIWindow<ImguiUI::AssetBrowser>();
 	editor::EditorGUI::CreateImGUIWindow<SettingsGUI>("Settings");
+	editor::EditorGUI::CreateImGUIWindow<VideoImGUI>();
 
 	// Legacy ImGui menu windows removed - replaced with scene-based UI:
 	// - Main menu: Open Resources/Scenes/mainmenu.scene, edit MenuBackground/GameTitle entities
@@ -573,6 +591,7 @@ void engine::Shutdown()
 	AssetManager::GetInstance().Clear();
 	ECS::GetInstance().GetSystem<Physics>()->Shutdown();
 	ECS::GetInstance().GetSystem<NavMeshSystem>()->Shutdown();
+	ECS::GetInstance().GetSystem<VideoManager>()->Shutdown();
 
 	graphics::GPUProfiler::Shutdown();
 
@@ -650,6 +669,9 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 
 		// Update for Particles
 		ECS::GetInstance().GetSystem<ParticleSystem>()->Update(FrameController::GetDeltaTime());
+
+		// Update video playback
+		ECS::GetInstance().GetSystem<VideoManager>()->Update(FrameController::GetDeltaTime());
 
 		// UI update (button interactions, mana regen, cooldowns)
 		ECS::GetInstance().GetSystem<UIButtonSystem>()->Update(FrameController::GetDeltaTime());
@@ -742,6 +764,11 @@ void engine::Render(GLFWwindow* window)
 
 	// Draw scene objects
 	renderer->Update(view, proj);
+
+	// Render video overlay (before UI and ImGui)
+	auto videoSystem = ECS::GetInstance().GetSystem<VideoManager>();
+	if (videoSystem)
+		videoSystem->Render();
 
 	// Stop GPU timing for rendering
 	graphics::GPUProfiler::EndEvent();

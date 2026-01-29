@@ -233,6 +233,7 @@ namespace Ermine::graphics
         bool m_GammaCorrectionEnabled = true;
         bool m_BloomEnabled = true;
         bool m_SkyBoxisHDR = false;
+        bool m_ShowSkybox = true;
 
         // Post-processing uniforms - parameters
         float m_Exposure = 1.0f;

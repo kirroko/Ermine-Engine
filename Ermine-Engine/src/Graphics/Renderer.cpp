@@ -3539,7 +3539,7 @@ void Renderer::RenderDeferredPipeline(const Mtx44& view, const Mtx44& projection
 
 	// Render skybox after lighting but before transparent objects
 	// No depth blit needed - PostProcess FBO shares G-Buffer's depth texture
-	if (m_skybox && m_skybox->IsValid() && m_PostProcessBuffer && m_GBuffer) {
+	if (m_ShowSkybox && m_skybox && m_skybox->IsValid() && m_PostProcessBuffer && m_GBuffer) {
 		glBindFramebuffer(GL_FRAMEBUFFER, m_PostProcessBuffer->FBO);
 		glViewport(0, 0, m_PostProcessBuffer->width, m_PostProcessBuffer->height);
 
@@ -4178,7 +4178,7 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 #endif
 
 		// Render skybox FIRST as the background
-		if (m_skybox && m_skybox->IsValid()) {
+		if (m_ShowSkybox && m_skybox && m_skybox->IsValid()) {
 			glDepthMask(GL_FALSE);
 			m_skybox->Render(view, projection);
 			glDepthMask(GL_TRUE);
@@ -6588,6 +6588,7 @@ void Renderer::SyncToGlobalGraphics()
 	m_GlobalGraphics.gammaCorrectionEnabled = m_GammaCorrectionEnabled;
 	m_GlobalGraphics.bloomEnabled = m_BloomEnabled;
 	m_GlobalGraphics.skyboxIsHDR = m_SkyBoxisHDR;
+	m_GlobalGraphics.showSkybox = m_ShowSkybox;
 
 	m_GlobalGraphics.exposure = m_Exposure;
 	m_GlobalGraphics.contrast = m_Contrast;
@@ -6643,6 +6644,7 @@ void Renderer::ApplyFromGlobalGraphics()
 	m_GammaCorrectionEnabled = m_GlobalGraphics.gammaCorrectionEnabled;
 	m_BloomEnabled = m_GlobalGraphics.bloomEnabled;
 	m_SkyBoxisHDR = m_GlobalGraphics.skyboxIsHDR;
+	m_ShowSkybox = m_GlobalGraphics.showSkybox;
 
 	m_Exposure = m_GlobalGraphics.exposure;
 	m_Contrast = m_GlobalGraphics.contrast;

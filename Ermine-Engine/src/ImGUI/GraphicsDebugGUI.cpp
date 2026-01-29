@@ -144,6 +144,11 @@ void GraphicsDebugGUI::DrawRenderingModeControls()
                             "Enable/disable Screen Space Ambient Occlusion for enhanced depth perception")) {
             EE_CORE_INFO("SSAO {}", renderer->m_SSAOEnabled ? "enabled" : "disabled");
         }
+
+        if (DrawToggleButton("Show Skybox", &renderer->m_ShowSkybox,
+                            "Toggle skybox rendering on/off")) {
+            EE_CORE_INFO("Skybox {}", renderer->m_ShowSkybox ? "enabled" : "disabled");
+        }
         
         // SSAO Parameters (shown when SSAO is enabled)
         if (renderer->m_SSAOEnabled && ImGui::TreeNode("SSAO Settings"))
