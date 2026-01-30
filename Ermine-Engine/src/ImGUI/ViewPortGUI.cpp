@@ -1104,7 +1104,7 @@ void Ermine::ViewPortGUI::Update()
 
 	// Dropping assets into viewport to load prefabs
 	if (ImGui::BeginDragDropTarget()) { // Begin drag & drop target
-		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_PREFAB")) {
+		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_FILE")) {
 			const char* cpath = static_cast<const char*>(payload->Data);
 
 			std::filesystem::path path = cpath;

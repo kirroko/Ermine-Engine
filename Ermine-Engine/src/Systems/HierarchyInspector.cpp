@@ -883,7 +883,8 @@ namespace Ermine::editor {
 				}
 			}
 
-			if (ImGui::BeginCombo("Fragment Shader", displayName.c_str())) {
+			ImGui::Text("Fragment Shader");
+			if (ImGui::BeginCombo("##FragmentShaderCombo", displayName.c_str())) {
 				// First option: None (use standard PBR)
 				bool isSelected = currentShader.empty();
 				if (ImGui::Selectable("None (Standard PBR)", isSelected)) {
@@ -930,6 +931,34 @@ namespace Ermine::editor {
 				}
 
 				ImGui::EndCombo();
+			}
+
+			// Drag & Drop for shader files
+			if (ImGui::BeginDragDropTarget())
+			{
+				if (const ImGuiPayload* payload =
+					ImGui::AcceptDragDropPayload("ASSET_BROWSER_FILE"))
+				{
+					const char* droppedPath = static_cast<const char*>(payload->Data);
+					std::filesystem::path shaderPath = droppedPath;
+
+					if (shaderPath.extension() == ".glsl")
+					{
+						matComp.customFragmentShader = shaderPath.string();
+
+						auto& assetManager = AssetManager::GetInstance();
+						auto shader = assetManager.LoadShader(
+							"../Resources/Shaders/vertex.glsl",
+							matComp.customFragmentShader
+						);
+
+						if (shader && shader->IsValid()) {
+							gm->SetShader(shader);
+							EE_CORE_INFO("Applied dropped fragment shader: {}", shaderPath.string());
+						}
+					}
+				}
+				ImGui::EndDragDropTarget();
 			}
 		}
 
@@ -1138,7 +1167,7 @@ namespace Ermine::editor {
 				}
 
 				if (ImGui::BeginDragDropTarget()) {
-					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_TEXTURE")) {
+					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_FILE")) {
 						const char* droppedPathCStr = static_cast<const char*>(payload->Data);
 						std::filesystem::path droppedPath = droppedPathCStr;
 
@@ -1586,7 +1615,7 @@ namespace Ermine::editor {
 				if (ImGui::BeginDragDropTarget())
 				{
 					if (const ImGuiPayload* payload =
-						ImGui::AcceptDragDropPayload("ASSET_AUDIO"))
+						ImGui::AcceptDragDropPayload("ASSET_BROWSER_FILE"))
 					{
 						const char* droppedPath = static_cast<const char*>(payload->Data);
 						p.m_Value.set<std::string>(droppedPath);

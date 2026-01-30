@@ -706,27 +706,9 @@ namespace Ermine::ImguiUI
 
             // Drag-and-drop support
             if (ImGui::BeginDragDropSource()) {
-                std::string ext = GetExtensionLower(isSelectedFile);
-
-                const char* payloadType = "ASSET_FILE";
-
-                // Determine payload type based on file extension
-                if (ext == "fbx" || ext == "obj" || ext == "gltf" || ext == "glb" || ext == "mesh" || ext == "skin")
-                    payloadType = "ASSET_MODEL";
-                else if (ext == "png" || ext == "jpg" || ext == "jpeg" || ext == "dds")
-                    payloadType = "ASSET_TEXTURE";
-                else if (ext == "wav" || ext == "mp3" || ext == "ogg")
-                    payloadType = "ASSET_AUDIO";
-                else if (ext == "prefab")
-                    payloadType = "ASSET_PREFAB";
-                else if (ext == "ttf")
-                    payloadType = "ASSET_FONT";
-                else if (ext == "glsl")
-                    payloadType = "ASSET_SHADER";
-
-                ImGui::SetDragDropPayload(payloadType, isSelectedFile.c_str(), isSelectedFile.size() + 1);
+                ImGui::SetDragDropPayload("ASSET_BROWSER_FILE", isSelectedFile.c_str(), isSelectedFile.size() + 1);
                 //auto& metadata = ECS::GetInstance().GetComponent<ObjectMetaData>(entity);
-                ImGui::TextUnformatted(payloadType);
+                ImGui::Text("Moving File");
                 ImGui::EndDragDropSource();
             }
 
