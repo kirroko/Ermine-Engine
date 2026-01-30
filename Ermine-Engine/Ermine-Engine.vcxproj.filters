@@ -111,6 +111,12 @@
     <ClInclude Include="include\AssetManager.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\AssetRef.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\AssetRegistry.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\AudioImGUI.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -124,6 +130,9 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\CameraSystem.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\CommandHistory.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\Component.h">
@@ -145,6 +154,9 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\EditorCamera.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\EditorCommand.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\EditorGUI.h">
@@ -301,6 +313,9 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\Serialisation.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\SettingsGUI.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\Shader.h">
@@ -479,6 +494,9 @@
     <ClCompile Include="src\ImGUI\InspectorGUI.cpp">
       <Filter>src\ImGUI</Filter>
     </ClCompile>
+    <ClCompile Include="src\ImGUI\SettingsGUI.cpp">
+      <Filter>src\ImGUI</Filter>
+    </ClCompile>
     <ClCompile Include="src\ImGUI\ViewPortGUI.cpp">
       <Filter>src\ImGUI</Filter>
     </ClCompile>
@@ -553,6 +571,9 @@
     </ClCompile>
     <ClCompile Include="src\Systems\TransformMode.cpp">
       <Filter>src\Systems</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Utility\AssetRegistry.cpp">
+      <Filter>src\Utility</Filter>
     </ClCompile>
     <ClCompile Include="src\Utility\EditorCamera.cpp">
       <Filter>src\Utility</Filter>

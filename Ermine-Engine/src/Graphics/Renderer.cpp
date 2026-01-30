@@ -6354,23 +6354,23 @@ void Renderer::RenderPickingPass(const Mtx44& view, const Mtx44& projection)
 		return;
 
 	// 1) Prime depth: copy scene depth into picking FBO (source depends on path)
-	if (m_UseDeferredRendering && m_GBuffer)
-	{
-		glBindFramebuffer(GL_READ_FRAMEBUFFER, m_GBuffer->FBO);
-	}
-	else if (m_OffscreenBuffer)
-	{
-		glBindFramebuffer(GL_READ_FRAMEBUFFER, m_OffscreenBuffer->FBO);
-	}
-	else
-	{
-		return;
-	}
+	//if (m_UseDeferredRendering && m_GBuffer)
+	//{
+	//	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_GBuffer->FBO);
+	//}
+	//else if (m_OffscreenBuffer)
+	//{
+	//	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_OffscreenBuffer->FBO);
+	//}
+	//else
+	//{
+	//	return;
+	//}
 
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_PickingBuffer->FBO);
-	glBlitFramebuffer(0, 0, m_PickingBuffer->width, m_PickingBuffer->height,
-		0, 0, m_PickingBuffer->width, m_PickingBuffer->height,
-		GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+	//glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_PickingBuffer->FBO);
+	//glBlitFramebuffer(0, 0, m_PickingBuffer->width, m_PickingBuffer->height,
+	//	0, 0, m_PickingBuffer->width, m_PickingBuffer->height,
+	//	GL_DEPTH_BUFFER_BIT, GL_NEAREST);
 
 	// 2) Render IDs using indirect rendering
 	glBindFramebuffer(GL_FRAMEBUFFER, m_PickingBuffer->FBO);
@@ -6379,6 +6379,8 @@ void Renderer::RenderPickingPass(const Mtx44& view, const Mtx44& projection)
 	// Clear IDs to 0
 	GLuint clearVal[1] = { 0u };
 	glClearBufferuiv(GL_COLOR, 0, clearVal);
+	glClearDepth(1.0);
+	glClear(GL_DEPTH_BUFFER_BIT);
 
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
@@ -6740,7 +6742,7 @@ std::pair<bool, Ermine::EntityID> Renderer::PickEntityAt(const int& x, const int
 	glPixelStorei(GL_PACK_ALIGNMENT, 1);
 
 	uint32_t id = 0u;
-	glReadPixels(x, y, 1, 1, GL_RED_INTEGER, GL_UNSIGNED_BYTE, &id);
+	glReadPixels(x, y, 1, 1, GL_RED_INTEGER, GL_UNSIGNED_INT, &id);
 
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 

@@ -17,6 +17,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "PreCompile.h"
 #include <filesystem>
 #include <string>
+#include <string_view>
 #include "ECS.h"
 
 
@@ -31,6 +32,8 @@ struct Config {
 	float baseFontSize = 1.0f;
 	int themeMode = -1; // 0: Light, 1: Dark, 2: Pink, 3: Cyberpunk, 4: Overwatch(Dark), 5: Overwatch(Light)
 };
+
+namespace Ermine { struct Guid; }
 
 /**
  * @brief Serialise config file
@@ -99,5 +102,16 @@ void SavePrefabToFile(const Ermine::ECS& ecs, Ermine::EntityID id, const std::fi
  * @param file path
  */
 Ermine::EntityID LoadPrefabFromFile(Ermine::ECS& ecs, const std::filesystem::path& path);
+
+bool LoadAssetMetaGuid(const std::filesystem::path& metaPath, Ermine::Guid& outGuid);
+bool SaveAssetMetaGuid(const std::filesystem::path& metaPath,
+    const Ermine::Guid& guid,
+    std::string_view type = {},
+    int metaVersion = 1,
+    bool pretty = true);
+
+Ermine::Guid EnsureMetaForSource(const std::filesystem::path& sourcePath,
+    std::string_view type = {},
+    bool pretty = true);
 
 #endif // SERIALISATION_H
