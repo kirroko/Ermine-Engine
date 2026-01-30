@@ -430,10 +430,10 @@ void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
             EE_CORE_INFO("Particle Editor open");
         }
 
-        if (ImGui::MenuItem("Audio Editor"))
+        if (ImGui::MenuItem("Audio Manager"))
         {
             reopen("Audio Manager");
-            EE_CORE_INFO("Audio Editor open");
+            EE_CORE_INFO("Audio Manager open");
         }
 
         if (ImGui::MenuItem("FSM Editor"))
