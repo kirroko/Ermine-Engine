@@ -708,6 +708,7 @@ namespace Ermine::ImguiUI
 
                 const char* payloadType = "ASSET_FILE";
 
+                // Determine payload type based on file extension
                 if (ext == "fbx" || ext == "obj" || ext == "gltf" || ext == "glb" || ext == "mesh" || ext == "skin")
                     payloadType = "ASSET_MODEL";
                 else if (ext == "png" || ext == "jpg" || ext == "jpeg" || ext == "dds")
@@ -716,6 +717,10 @@ namespace Ermine::ImguiUI
                     payloadType = "ASSET_AUDIO";
                 else if (ext == "prefab")
                     payloadType = "ASSET_PREFAB";
+                else if (ext == "ttf")
+                    payloadType = "ASSET_FONT";
+                else if (ext == "glsl")
+                    payloadType = "ASSET_SHADER";
 
                 ImGui::SetDragDropPayload(payloadType, isSelectedFile.c_str(), isSelectedFile.size() + 1);
                 //auto& metadata = ECS::GetInstance().GetComponent<ObjectMetaData>(entity);
