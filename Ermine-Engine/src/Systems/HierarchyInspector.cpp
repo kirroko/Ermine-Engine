@@ -1575,11 +1575,28 @@ namespace Ermine::editor {
 
 			ImGui::PushID(id);
 
-			// string fields
+			// string fields (USED FOR AUDIO PATH)
 			if (guid == xproperty::settings::var_type<std::string>::guid_v) {
 				std::string s = p.m_Value.get<std::string>();
-				char buf[256]; std::snprintf(buf, sizeof(buf), "%s", s.c_str());
-				if (ImGui::InputText(label.c_str(), buf, IM_ARRAYSIZE(buf))) {
+				char buf[256];
+				std::snprintf(buf, sizeof(buf), "%s", s.c_str());
+
+				ImGui::InputText(label.c_str(), buf, IM_ARRAYSIZE(buf));
+
+				// --- Drag & Drop audio ---
+				if (ImGui::BeginDragDropTarget())
+				{
+					if (const ImGuiPayload* payload =
+						ImGui::AcceptDragDropPayload("ASSET_AUDIO"))
+					{
+						const char* droppedPath = static_cast<const char*>(payload->Data);
+						p.m_Value.set<std::string>(droppedPath);
+						xproperty::sprop::setProperty(err, audio, p, ctx);
+					}
+					ImGui::EndDragDropTarget();
+				}
+
+				if (strcmp(buf, s.c_str()) != 0) {
 					p.m_Value.set<std::string>(buf);
 					xproperty::sprop::setProperty(err, audio, p, ctx);
 				}
