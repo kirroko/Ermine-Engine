@@ -21,6 +21,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "AudioManager.h"
 #include "AudioSystem.h"
 #include "GLFW/glfw3.h"
+#include "EditorGUI.h"
 
 #ifdef EE_EDITOR
 #include "EditorGUI.h"
@@ -241,17 +242,14 @@ namespace Ermine
             {
                 meta.selfActive = !meta.selfActive;
                 s_isGamePaused = meta.selfActive;
-                EE_CORE_INFO("Game {}", s_isGamePaused ? "PAUSED" : "RESUMED");
 
-#if defined(EE_EDITOR)
-                // Update editor state if in editor
-                if (editor::EditorGUI::isPlaying)
-                {
-                    editor::EditorGUI::s_state = s_isGamePaused
-                        ? editor::EditorGUI::SimState::paused
-                        : editor::EditorGUI::SimState::playing;
-                }
-#endif
+                // ✅ CRITICAL FIX: Use the same pause mechanism as alt-tab (EditorGUI::s_state)
+                // This ensures audio and ALL systems respect the pause, not just game logic
+                editor::EditorGUI::s_state = s_isGamePaused
+                    ? editor::EditorGUI::SimState::paused
+                    : editor::EditorGUI::SimState::playing;
+
+                EE_CORE_INFO("Game {} (using EditorGUI::s_state)", s_isGamePaused ? "PAUSED" : "RESUMED");
 
                 return;
             }
@@ -312,6 +310,72 @@ namespace Ermine
             EE_CORE_WARN("Button '{}' has no action assigned", button.text);
             break;
         }
+    }
+
+    void UIButtonSystem::ShowPauseMenuOnAltTab()
+    {
+        auto& ecs = ECS::GetInstance();
+
+        // Search for PauseMenu entity
+        for (EntityID e = 0; e < MAX_ENTITIES; ++e)
+        {
+            if (!ecs.IsEntityValid(e)) continue;
+            if (!ecs.HasComponent<ObjectMetaData>(e)) continue;
+
+            auto& meta = ecs.GetComponent<ObjectMetaData>(e);
+            if (meta.name == "PauseMenu")
+            {
+                meta.selfActive = true;
+                s_isGamePaused = true;
+                EE_CORE_INFO("Pause menu shown (alt-tab)");
+                return;
+            }
+        }
+
+        // No pause menu found - just pause gameplay
+        s_isGamePaused = true;
+        EE_CORE_INFO("No pause menu in scene - gameplay paused only");
+    }
+
+    void UIButtonSystem::TryAutoResumeOnAltTab()
+    {
+        auto& ecs = ECS::GetInstance();
+
+        // Check if pause menu exists
+        bool hasPauseMenu = false;
+        for (EntityID e = 0; e < MAX_ENTITIES; ++e)
+        {
+            if (!ecs.IsEntityValid(e)) continue;
+            if (!ecs.HasComponent<ObjectMetaData>(e)) continue;
+
+            auto& meta = ecs.GetComponent<ObjectMetaData>(e);
+            if (meta.name == "PauseMenu")
+            {
+                hasPauseMenu = true;
+                break;
+            }
+        }
+
+        // If no pause menu exists (e.g., main menu scene), auto-resume
+        if (!hasPauseMenu)
+        {
+#if defined(EE_EDITOR)
+            if (editor::EditorGUI::s_state == editor::EditorGUI::SimState::paused)
+            {
+                editor::EditorGUI::s_state = editor::EditorGUI::SimState::playing;
+                s_isGamePaused = false;
+                EE_CORE_INFO("Auto-resumed (no pause menu in scene)");
+            }
+#else
+            if (editor::EditorGUI::s_state == editor::EditorGUI::SimState::paused)
+            {
+                editor::EditorGUI::s_state = editor::EditorGUI::SimState::playing;
+                s_isGamePaused = false;
+                EE_CORE_INFO("Auto-resumed (no pause menu in scene)");
+            }
+#endif
+        }
+        // Otherwise, let the pause menu's Resume button handle it
     }
 
     void UIButtonSystem::GetNormalizedMousePosition(float& outX, float& outY)

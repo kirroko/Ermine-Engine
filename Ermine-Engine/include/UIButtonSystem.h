@@ -38,6 +38,9 @@ namespace Ermine
 
         static bool IsGamePaused();  // ADD THIS
 
+        static void ShowPauseMenuOnAltTab();
+        static void TryAutoResumeOnAltTab();
+
 #ifdef EE_EDITOR
         // Set viewport info for editor mode (called from EditorGUI)
         void SetViewportInfo(const ImVec2& min, const ImVec2& size)
