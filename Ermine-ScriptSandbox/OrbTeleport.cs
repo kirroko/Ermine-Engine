@@ -8,6 +8,7 @@ public class OrbTeleport : MonoBehaviour
     private Transform cam;
     private float health = 0f;
     public float damage = 10f;
+    public float recallHealAmt = 10f;
 
     private float forwardOffset = 2.0f; // Distance in front of the player
     private float rightOffset = -0.3f;  // Slightly to the right
@@ -15,11 +16,17 @@ public class OrbTeleport : MonoBehaviour
 
     private bool orbShot = false;       // Tracks if we already shot an orb
 
+    
+
+    //Health
+    private GameObject healthBar;
+
     void Start()
     {
         origin = GameObject.Find("Player").GetComponent<Transform>();
         cam = GameObject.Find("Main Camera").transform;
         health = GameplayHUD.GetHealth(GameplayHUD.GetHealthBar());
+        healthBar = GameplayHUD.GetHealthBar();
     }
 
     void Update()
@@ -95,19 +102,26 @@ public class OrbTeleport : MonoBehaviour
             
             // Remove orb
             Physics.RemovePhysic((ulong)sphere.GetInstanceID());
+            HealDamage(recallHealAmt);
             GameObject.Destroy(sphere);
         }
-
+        
         // Reset state fully
         orbShot = false;
     }
 
     void TakeDamage(float dmg)
     {
-        health = GameplayHUD.GetHealth(GameplayHUD.GetHealthBar());
+        health = GameplayHUD.GetHealth(healthBar);
         health = Math.Max(0, health - dmg);
 
-        GameObject bar = GameplayHUD.GetHealthBar();
-        GameplayHUD.SetHealth(bar, health);
+        
+        GameplayHUD.SetHealth(healthBar, health);
+    }
+
+    void HealDamage(float heal)
+    {
+        health = GameplayHUD.GetHealth(healthBar);
+        GameplayHUD.SetHealth(healthBar, health + heal);
     }
 }

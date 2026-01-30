@@ -1,9 +1,10 @@
 ﻿/* Start Header ************************************************************************/
 /*!
 \file       HierarchyInspector.cpp
-\author     Edwin Lee Zirui, edwinzirui.lee, 2301299, edwinzirui.lee\@digipen.edu (30%)
-\co-author  WEE HONG RU Curtis, h.wee, 2301266, h.wee\@digipen.edu (70%)
-\date       10/09/2025
+\author     Edwin Lee Zirui, edwinzirui.lee, 2301299, edwinzirui.lee\@digipen.edu (25%)
+\co-authors WEE HONG RU Curtis, h.wee, 2301266, h.wee\@digipen.edu (65%)
+\co-authors Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu (10%)
+\date       29/01/2026
 \brief      Inspector panel for viewing and editing entity properties
 
 Copyright (C) 2025 DigiPen Institute of Technology.
@@ -33,6 +34,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "xproperty.h"
 #include "sprop/property_sprop.h"
 #include "sprop/property_sprop_getset.h"
+#include <algorithm> // for std::transform
 
 namespace Ermine::editor {
 	// --- small helpers ---
@@ -103,6 +105,7 @@ namespace Ermine::editor {
 		std::sort(shaders.begin(), shaders.end());
 		return shaders;
 	}
+
 	template<typename T>
 	static bool ComponentHeaderWithRemove(const char* headerLabel, EntityID entity,
 		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_DefaultOpen)
@@ -196,8 +199,8 @@ namespace Ermine::editor {
 	}
 
 	// Unity-like XYZ control. Returns true if any component changed.
-// - Clicking X/Y/Z button resets that axis to resetValue.
-// - speed/min/max behave like regular DragFloat.
+	// - Clicking X/Y/Z button resets that axis to resetValue.
+	// - speed/min/max behave like regular DragFloat.
 	static bool DrawVec3XYZ(const char* label, float v[3], Vec3AxisMask& outActivatedAxes, Vec3AxisMask& outCommittedAxes, float speed = 0.1f, float resetValue = 0.0f, float minVal = -FLT_MAX, float maxVal = FLT_MAX)
 	{
 		outActivatedAxes = Vec3AxisMask::None;
@@ -1136,7 +1139,7 @@ namespace Ermine::editor {
 
 				// Accept drag & drop from AssetBrowser (keeping this as bonus feature)
 				if (ImGui::BeginDragDropTarget()) {
-					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_FILE")) {
+					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_TEXTURE")) {
 						const char* droppedPathCStr = static_cast<const char*>(payload->Data);
 						std::filesystem::path droppedPath = droppedPathCStr;
 
@@ -3091,125 +3094,223 @@ namespace Ermine::editor {
 		}
 	}
 
-	void HierarchyInspector::DrawAddComponentMenu(EntityID entity) {
-		if (ImGui::MenuItem("Transform") && !ECS::GetInstance().HasComponent<Transform>(entity)) {
-			ECS::GetInstance().AddComponent(entity, Transform());
-		}
-		if (ImGui::MenuItem("Mesh") && !ECS::GetInstance().HasComponent<Mesh>(entity)) {
-			ECS::GetInstance().AddComponent(entity, graphics::GeometryFactory::CreateCube());
-			ECS::GetInstance().AddComponent(entity, Material());
-		}
-		if (ImGui::MenuItem("Material") && !ECS::GetInstance().HasComponent<Material>(entity)) {
-			ECS::GetInstance().AddComponent(entity, Material());
-		}
-		if (ImGui::MenuItem("Light") && !ECS::GetInstance().HasComponent<Light>(entity)) {
-			ECS::GetInstance().AddComponent(entity, Light());
-		}
-		if (ImGui::MenuItem("Physics") && !ECS::GetInstance().HasComponent<PhysicComponent>(entity)) {
-			ECS::GetInstance().AddComponent(entity, PhysicComponent());
-			ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
-		}
-		if (ImGui::MenuItem("Audio") && !ECS::GetInstance().HasComponent<AudioComponent>(entity)) {
-			ECS::GetInstance().AddComponent(entity, AudioComponent());
-		}
-		if (ImGui::MenuItem("Script"))
+	void HierarchyInspector::DrawAddComponentMenu(EntityID entity)
+	{
+		auto& ecs = Ermine::ECS::GetInstance();
+
+		// =========================
+		// Search Bar
+		// =========================
+		static char searchBuffer[128] = "";
+		ImGui::InputTextWithHint("##componentSearch", "Search components...", searchBuffer, sizeof(searchBuffer));
+
+		// Convert string to lowercase
+		auto toLower = [](const std::string& str) {
+			std::string out = str;
+			std::transform(out.begin(), out.end(), out.begin(), ::tolower);
+			return out;
+			};
+
+		std::string searchLower = toLower(searchBuffer);
+
+		auto matchSearch = [&](const char* name) {
+			if (searchLower.empty()) return true;
+			std::string nameLower = toLower(name);
+			return nameLower.find(searchLower) != std::string::npos;
+			};
+
+		auto shouldShowMenu = [&](const char* menuName, const std::vector<const char*>& items) {
+			if (matchSearch(menuName)) return true;
+			for (auto& item : items)
+				if (matchSearch(item)) return true;
+			return false;
+			};
+
+		bool itemSelected = false; // Tracks if a component was added
+
+		// =========================
+		// Transform
+		// =========================
+		if (shouldShowMenu("Transform", { "Transform" }) && ImGui::BeginMenu("Transform"))
 		{
-			if (!ECS::GetInstance().HasComponent<ScriptsComponent>(entity))
-				ECS::GetInstance().AddComponent(entity, ScriptsComponent{});
-			auto& scs = ECS::GetInstance().GetComponent<ScriptsComponent>(entity);
-			scs.AddEmpty();
-		}
-		//if (ImGui::MenuItem("Script") && !ECS::GetInstance().HasComponent<ScriptsComponent>(entity)) {
-		//	//ECS::GetInstance().AddComponent(entity, Script());
-		//	ECS::GetInstance().AddComponent(entity, ScriptsComponent{});
-		//	//auto& scs = ECS::GetInstance().GetComponent<ScriptsComponent>(entity);
-		//	//scs.Add()
-		//	//scs.AttachAll()
-		//}
-		if (ImGui::MenuItem("Model") && !ECS::GetInstance().HasComponent<ModelComponent>(entity)) {
-			ECS::GetInstance().AddComponent(entity, ModelComponent());
-		}
-		if (ImGui::MenuItem("Animation") && !ECS::GetInstance().HasComponent<AnimationComponent>(entity)) {
-			ECS::GetInstance().AddComponent(entity, AnimationComponent());
-		}
-		if (ImGui::MenuItem("State Machine") && !ECS::GetInstance().HasComponent<StateMachine>(entity)) {
-			ECS::GetInstance().AddComponent(entity, StateMachine());
-
-			auto& fsmComp = ECS::GetInstance().GetComponent<StateMachine>(entity);
-
-			if (fsmComp.m_Nodes.empty())
+			if (matchSearch("Transform") && ImGui::MenuItem("Transform") && !ecs.HasComponent<Transform>(entity))
 			{
-				auto defaultNode = std::make_shared<ScriptNode>();
-				defaultNode->id = 0;
-				defaultNode->name = "Start";
-				defaultNode->isAttached = false;
-				defaultNode->scriptClassName = "";
-				defaultNode->isStartNode = true;
-
-				fsmComp.m_Nodes.push_back(defaultNode);
-
-				//EE_CORE_INFO("Created default FSM start node for entity {0}", entity);
+				ecs.AddComponent(entity, Transform());
+				itemSelected = true;
 			}
+			ImGui::EndMenu();
+		}
 
-			// Initialize FSM
-			fsmComp.Init(entity);
+		// =========================
+		// Rendering
+		// =========================
+		if (shouldShowMenu("Rendering", { "Mesh","Material","Model","Animation","Light","Camera" }) && ImGui::BeginMenu("Rendering"))
+		{
+			if (matchSearch("Mesh") && ImGui::MenuItem("Mesh") && !ecs.HasComponent<Mesh>(entity))
+			{
+				ecs.AddComponent(entity, graphics::GeometryFactory::CreateCube());
+				ecs.AddComponent(entity, Material());
+				itemSelected = true;
+			}
+			if (matchSearch("Material") && ImGui::MenuItem("Material") && !ecs.HasComponent<Material>(entity))
+			{
+				ecs.AddComponent(entity, Material());
+				itemSelected = true;
+			}
+			if (matchSearch("Model") && ImGui::MenuItem("Model") && !ecs.HasComponent<ModelComponent>(entity))
+			{
+				ecs.AddComponent(entity, ModelComponent());
+				itemSelected = true;
+			}
+			if (matchSearch("Animation") && ImGui::MenuItem("Animation") && !ecs.HasComponent<AnimationComponent>(entity))
+			{
+				ecs.AddComponent(entity, AnimationComponent());
+				itemSelected = true;
+			}
+			if (matchSearch("Light") && ImGui::MenuItem("Light") && !ecs.HasComponent<Light>(entity))
+			{
+				ecs.AddComponent(entity, Light());
+				itemSelected = true;
+			}
+			if (matchSearch("Camera") && ImGui::MenuItem("Camera") && !ecs.HasComponent<CameraComponent>(entity))
+			{
+				CameraComponent tempCam{};
+				tempCam.fov = 45;
+				tempCam.nearPlane = 5.0f;
+				ecs.AddComponent(entity, tempCam);
+				itemSelected = true;
+			}
+			ImGui::EndMenu();
+		}
 
-			//EE_CORE_INFO("StateMachine component added and initialized for entity {0}", entity);
-		}
-		if (ImGui::MenuItem("NavMesh") && !ECS::GetInstance().HasComponent<NavMeshComponent>(entity)) {
-			ECS::GetInstance().AddComponent(entity, NavMeshComponent());
-		}
-		if (ImGui::MenuItem("NavMeshAgent") && !ECS::GetInstance().HasComponent<NavMeshAgent>(entity)) {
-			ECS::GetInstance().AddComponent(entity, NavMeshAgent());
-		}
-		if (ImGui::MenuItem("NavJumpLink") && !ECS::GetInstance().HasComponent<NavJumpLink>(entity)) {
-			ECS::GetInstance().AddComponent(entity, NavJumpLink());
-		}
-		if (ImGui::MenuItem("ParticleEmitter") && !ECS::GetInstance().HasComponent<ParticleEmitter>(entity)) {
-			ECS::GetInstance().AddComponent(entity, ParticleEmitter());
-		}
-		if (ImGui::MenuItem("Camera") && !ECS::GetInstance().HasComponent<CameraComponent>(entity))
+		// =========================
+		// Physics
+		// =========================
+		if (shouldShowMenu("Physics", { "Physics" }) && ImGui::BeginMenu("Physics"))
 		{
-			auto tempCam = CameraComponent{};
-			tempCam.fov = 45;
-			tempCam.nearPlane = 5.0f;
-			ECS::GetInstance().AddComponent(entity, tempCam);
+			if (matchSearch("Physics") && ImGui::MenuItem("Physics") && !ecs.HasComponent<PhysicComponent>(entity))
+			{
+				ecs.AddComponent(entity, PhysicComponent());
+				ecs.GetSystem<Physics>()->UpdatePhysicList();
+				itemSelected = true;
+			}
+			ImGui::EndMenu();
 		}
-		if (ImGui::MenuItem("UI Component (Legacy)") && !ECS::GetInstance().HasComponent<UIComponent>(entity))
-		{
-			ECS::GetInstance().AddComponent(entity, UIComponent());
-		}
-		if (ImGui::MenuItem("UI Healthbar") && !ECS::GetInstance().HasComponent<UIHealthbarComponent>(entity))
-		{
-			ECS::GetInstance().AddComponent(entity, UIHealthbarComponent());
-		}
-		if (ImGui::MenuItem("UI Crosshair") && !ECS::GetInstance().HasComponent<UICrosshairComponent>(entity))
-		{
-			ECS::GetInstance().AddComponent(entity, UICrosshairComponent());
-		}
-		if (ImGui::MenuItem("UI Skills") && !ECS::GetInstance().HasComponent<UISkillsComponent>(entity))
-		{
-			ECS::GetInstance().AddComponent(entity, UISkillsComponent());
-		}
-		if (ImGui::MenuItem("UI Mana Bar") && !ECS::GetInstance().HasComponent<UIManaBarComponent>(entity))
-		{
-			ECS::GetInstance().AddComponent(entity, UIManaBarComponent());
-		}
-		if (ImGui::MenuItem("UI Book Counter") && !ECS::GetInstance().HasComponent<UIBookCounterComponent>(entity))
-		{
-			ECS::GetInstance().AddComponent(entity, UIBookCounterComponent());
-		}
-		if (ImGui::MenuItem("UI Image") && !ECS::GetInstance().HasComponent<UIImageComponent>(entity))
-		{
-			ECS::GetInstance().AddComponent(entity, UIImageComponent());
-		}
-		if (ImGui::MenuItem("UI Button") && !ECS::GetInstance().HasComponent<UIButtonComponent>(entity))
-		{
-			ECS::GetInstance().AddComponent(entity, UIButtonComponent());
-		}
-		// Add more component types as needed
 
-		ECS::GetInstance().ResyncAllSignaturesFromStorage();
+		// =========================
+		// Audio
+		// =========================
+		if (shouldShowMenu("Audio", { "Audio" }) && ImGui::BeginMenu("Audio"))
+		{
+			if (matchSearch("Audio") && ImGui::MenuItem("Audio") && !ecs.HasComponent<AudioComponent>(entity))
+			{
+				ecs.AddComponent(entity, AudioComponent());
+				itemSelected = true;
+			}
+			ImGui::EndMenu();
+		}
+
+		// =========================
+		// Gameplay
+		// =========================
+		if (shouldShowMenu("Gameplay", { "State Machine","Script" }) && ImGui::BeginMenu("Gameplay"))
+		{
+			if (matchSearch("State Machine") && ImGui::MenuItem("State Machine") && !ecs.HasComponent<StateMachine>(entity))
+			{
+				ecs.AddComponent(entity, StateMachine());
+				auto& fsmComp = ecs.GetComponent<StateMachine>(entity);
+				if (fsmComp.m_Nodes.empty())
+				{
+					auto defaultNode = std::make_shared<ScriptNode>();
+					defaultNode->id = 0;
+					defaultNode->name = "Start";
+					defaultNode->isAttached = false;
+					defaultNode->scriptClassName = "";
+					defaultNode->isStartNode = true;
+					fsmComp.m_Nodes.push_back(defaultNode);
+				}
+				fsmComp.Init(entity);
+				itemSelected = true;
+			}
+			if (matchSearch("Script") && ImGui::MenuItem("Script"))
+			{
+				if (!ecs.HasComponent<ScriptsComponent>(entity))
+					ecs.AddComponent(entity, ScriptsComponent{});
+				ecs.GetComponent<ScriptsComponent>(entity).AddEmpty();
+				itemSelected = true;
+			}
+			ImGui::EndMenu();
+		}
+
+		// =========================
+		// AI & Navigation
+		// =========================
+		if (shouldShowMenu("AI & Navigation", { "Nav Mesh","Nav Mesh Agent","Nav Jump Link" }) && ImGui::BeginMenu("AI & Navigation"))
+		{
+			if (matchSearch("Nav Mesh") && ImGui::MenuItem("Nav Mesh") && !ecs.HasComponent<NavMeshComponent>(entity))
+			{
+				ecs.AddComponent(entity, NavMeshComponent());
+				itemSelected = true;
+			}
+			if (matchSearch("Nav Mesh Agent") && ImGui::MenuItem("Nav Mesh Agent") && !ecs.HasComponent<NavMeshAgent>(entity))
+			{
+				ecs.AddComponent(entity, NavMeshAgent());
+				itemSelected = true;
+			}
+			if (matchSearch("Nav Jump Link") && ImGui::MenuItem("Nav Jump Link") && !ecs.HasComponent<NavJumpLink>(entity))
+			{
+				ecs.AddComponent(entity, NavJumpLink());
+				itemSelected = true;
+			}
+			ImGui::EndMenu();
+		}
+
+		// =========================
+		// Particles
+		// =========================
+		if (shouldShowMenu("Particles", { "Particle Emitter" }) && ImGui::BeginMenu("Particles"))
+		{
+			if (matchSearch("Particle Emitter") && ImGui::MenuItem("Particle Emitter") && !ecs.HasComponent<ParticleEmitter>(entity))
+			{
+				ecs.AddComponent(entity, ParticleEmitter());
+				itemSelected = true;
+			}
+			ImGui::EndMenu();
+		}
+
+		// =========================
+		// UI
+		// =========================
+		const std::vector<std::pair<const char*, std::function<void(EntityID)>>> uiComponents = {
+			{"UI Component (Legacy)", [&](EntityID e) { ecs.AddComponent(e, UIComponent{}); }},
+			{"UI Healthbar",         [&](EntityID e) { ecs.AddComponent(e, UIHealthbarComponent{}); }},
+			{"UI Crosshair",         [&](EntityID e) { ecs.AddComponent(e, UICrosshairComponent{}); }},
+			{"UI Skills",            [&](EntityID e) { ecs.AddComponent(e, UISkillsComponent{}); }},
+			{"UI Mana Bar",          [&](EntityID e) { ecs.AddComponent(e, UIManaBarComponent{}); }},
+			{"UI Book Counter",      [&](EntityID e) { ecs.AddComponent(e, UIBookCounterComponent{}); }},
+			{"UI Image",             [&](EntityID e) { ecs.AddComponent(e, UIImageComponent{}); }},
+			{"UI Button",            [&](EntityID e) { ecs.AddComponent(e, UIButtonComponent{}); }}
+		};
+
+		if (shouldShowMenu("UI", { "UI Component (Legacy)", "UI Healthbar","UI Crosshair",
+								   "UI Skills","UI Mana Bar","UI Book Counter","UI Image","UI Button" }) &&
+			ImGui::BeginMenu("UI"))
+		{
+			for (auto& [name, addFunc] : uiComponents)
+			{
+				if (matchSearch(name) && ImGui::MenuItem(name))
+				{
+					addFunc(entity);
+					itemSelected = true;
+				}
+			}
+			ImGui::EndMenu();
+		}
+
+		// Reset search buffer if item was added
+		if (itemSelected) searchBuffer[0] = '\0';
+
+		ecs.ResyncAllSignaturesFromStorage();
 	}
 
 	void HierarchyInspector::DrawUIButtonComponent(EntityID entity)
