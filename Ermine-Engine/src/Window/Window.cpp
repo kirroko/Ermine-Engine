@@ -21,6 +21,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "AssetBrowser.h" // For forwarding dropped files to the asset browser
 #include "EditorGUI.h"
 #include "SettingsGUI.h"
+#include "UIButtonSystem.h"
 
 #if defined(_WIN32)
 	#define GLFW_EXPOSE_NATIVE_WIN32
@@ -240,11 +241,13 @@ GLFWwindow* Ermine::Window::InitWindow(int width, int height, const char* title)
                     {
                         editor::EditorGUI::s_state = editor::EditorGUI::SimState::paused;
                         EE_CORE_INFO("Game paused (window lost focus)");
+                        UIButtonSystem::ShowPauseMenuOnAltTab();
                     }
 #else
                     // In standalone build, always pause
                     editor::EditorGUI::s_state = editor::EditorGUI::SimState::paused;
                     EE_CORE_INFO("Game paused (window lost focus)");
+                    UIButtonSystem::ShowPauseMenuOnAltTab();
 #endif
                 }
 
@@ -256,24 +259,9 @@ GLFWwindow* Ermine::Window::InitWindow(int width, int height, const char* title)
             RefreshCursorConfinement(w);
 #endif
 
-            // Auto-resume when window regains focus
             if (Ermine::Window::IsPausedOnFocusLoss())
             {
-#if defined(EE_EDITOR)
-                // In editor, only resume if we were playing before
-                if (editor::EditorGUI::s_state == editor::EditorGUI::SimState::paused)
-                {
-                    editor::EditorGUI::s_state = editor::EditorGUI::SimState::playing;
-                    EE_CORE_INFO("Game resumed (window gained focus)");
-                }
-#else
-                // In standalone build, always resume from pause
-                if (editor::EditorGUI::s_state == editor::EditorGUI::SimState::paused)
-                {
-                    editor::EditorGUI::s_state = editor::EditorGUI::SimState::playing;
-                    EE_CORE_INFO("Game resumed (window gained focus)");
-                }
-#endif
+                UIButtonSystem::TryAutoResumeOnAltTab();
             }
         });
 
