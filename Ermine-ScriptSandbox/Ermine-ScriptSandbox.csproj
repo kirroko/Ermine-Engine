@@ -76,6 +76,7 @@
     <Compile Include="EnvironmentAnimation\TemplateScript.cs" />
     <Compile Include="FakePlayer.cs" />
     <Compile Include="GameManager.cs" />
+    <Compile Include="GearRotateAnimation.cs" />
     <Compile Include="LifeEssenceSkillController.cs" />
     <Compile Include="MainMenu.cs" />
     <Compile Include="OrbTeleport.cs" />
