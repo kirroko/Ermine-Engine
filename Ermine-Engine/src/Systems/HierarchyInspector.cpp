@@ -3382,6 +3382,32 @@ namespace Ermine::editor {
 	ImGui::SliderFloat("Background Alpha", &button.backgroundAlpha, 0.0f, 1.0f);
 
 	ImGui::Separator();
+	ImGui::Text("Images (Optional)");
+	ImGui::TextDisabled("If set, images override color-based rendering");
+
+	char normalImageBuffer[256];
+	strncpy_s(normalImageBuffer, button.normalImage.c_str(), sizeof(normalImageBuffer) - 1);
+	normalImageBuffer[sizeof(normalImageBuffer) - 1] = '\0';
+	if (ImGui::InputText("Normal Image", normalImageBuffer, sizeof(normalImageBuffer))) {
+		button.normalImage = normalImageBuffer;
+	}
+
+	char hoverImageBuffer[256];
+	strncpy_s(hoverImageBuffer, button.hoverImage.c_str(), sizeof(hoverImageBuffer) - 1);
+	hoverImageBuffer[sizeof(hoverImageBuffer) - 1] = '\0';
+	if (ImGui::InputText("Hover Image", hoverImageBuffer, sizeof(hoverImageBuffer))) {
+		button.hoverImage = hoverImageBuffer;
+	}
+
+	char pressedImageBuffer[256];
+	strncpy_s(pressedImageBuffer, button.pressedImage.c_str(), sizeof(pressedImageBuffer) - 1);
+	pressedImageBuffer[sizeof(pressedImageBuffer) - 1] = '\0';
+	if (ImGui::InputText("Pressed Image", pressedImageBuffer, sizeof(pressedImageBuffer))) {
+		button.pressedImage = pressedImageBuffer;
+	}
+	ImGui::TextDisabled("Example: ../Resources/Textures/UI/button.png");
+
+	ImGui::Separator();
 	ImGui::Text("Action");
 
 	// Button action dropdown

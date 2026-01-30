@@ -1420,9 +1420,48 @@ namespace Ermine
         float bottom = button.position.y - halfHeight;
         float width = adjustedHalfWidth * 2.0f;
         float height = button.size.y;
-        
-        // Render button background
-        RenderQuad(left, bottom, width, height, currentColor, button.backgroundAlpha);
+
+        // Determine which image to use based on button state
+        // Priority: pressedImage > hoverImage > normalImage (with fallback chain)
+        std::string currentImagePath = button.normalImage;
+        if (button.isPressed && !button.pressedImage.empty())
+            currentImagePath = button.pressedImage;
+        else if (button.isPressed && !button.hoverImage.empty())
+            currentImagePath = button.hoverImage;  // Fallback pressed to hover
+        else if (button.isHovered && !button.hoverImage.empty())
+            currentImagePath = button.hoverImage;
+
+        // Try to render with texture if image path is set
+        std::shared_ptr<graphics::Texture> buttonTexture = nullptr;
+        if (!currentImagePath.empty())
+        {
+            auto it = m_textureCache.find(currentImagePath);
+            if (it != m_textureCache.end())
+            {
+                buttonTexture = it->second;
+            }
+            else
+            {
+                buttonTexture = AssetManager::GetInstance().LoadTexture(currentImagePath);
+                if (buttonTexture && buttonTexture->IsValid())
+                {
+                    m_textureCache[currentImagePath] = buttonTexture;
+                }
+            }
+        }
+
+        // Render button background (textured or solid color)
+        if (buttonTexture && buttonTexture->IsValid())
+        {
+            // Render textured button without color tint (image handles its own appearance)
+            Vec3 whiteTint = { 1.0f, 1.0f, 1.0f };
+            RenderTexturedSquare(button.position.x, button.position.y, button.size.y, buttonTexture, whiteTint, button.backgroundAlpha);
+        }
+        else
+        {
+            // Fallback: render solid color background
+            RenderQuad(left, bottom, width, height, currentColor, button.backgroundAlpha);
+        }
 
         // Render button text if present
         if (m_textRenderer && !button.text.empty())
