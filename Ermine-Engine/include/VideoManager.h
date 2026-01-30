@@ -40,6 +40,10 @@ namespace Ermine
         {
             unsigned int width = 0;
             unsigned int height = 0;
+            unsigned int cb_width = 0;
+            unsigned int cb_height = 0;
+            unsigned int cr_width = 0;
+            unsigned int cr_height = 0;
             std::unique_ptr<uint8_t[]> y_buffer;
             std::unique_ptr<uint8_t[]> cr_buffer;
             std::unique_ptr<uint8_t[]> cb_buffer;
@@ -53,6 +57,12 @@ namespace Ermine
             GLuint tex_y = 0;
             GLuint tex_cb = 0;
             GLuint tex_cr = 0;
+            unsigned int tex_y_width = 0;
+            unsigned int tex_y_height = 0;
+            unsigned int tex_cb_width = 0;
+            unsigned int tex_cb_height = 0;
+            unsigned int tex_cr_width = 0;
+            unsigned int tex_cr_height = 0;
             GLuint pbo_y[kPboCount]{};
             GLuint pbo_cb[kPboCount]{};
             GLuint pbo_cr[kPboCount]{};
@@ -104,6 +114,12 @@ namespace Ermine
                   tex_y(other.tex_y),
                   tex_cb(other.tex_cb),
                   tex_cr(other.tex_cr),
+                  tex_y_width(other.tex_y_width),
+                  tex_y_height(other.tex_y_height),
+                  tex_cb_width(other.tex_cb_width),
+                  tex_cb_height(other.tex_cb_height),
+                  tex_cr_width(other.tex_cr_width),
+                  tex_cr_height(other.tex_cr_height),
                   pboSizeY(other.pboSizeY),
                   pboSizeCb(other.pboSizeCb),
                   pboSizeCr(other.pboSizeCr),
@@ -141,6 +157,12 @@ namespace Ermine
                 other.tex_y = 0;
                 other.tex_cb = 0;
                 other.tex_cr = 0;
+                other.tex_y_width = 0;
+                other.tex_y_height = 0;
+                other.tex_cb_width = 0;
+                other.tex_cb_height = 0;
+                other.tex_cr_width = 0;
+                other.tex_cr_height = 0;
                 memset(other.pbo_y, 0, sizeof(other.pbo_y));
                 memset(other.pbo_cb, 0, sizeof(other.pbo_cb));
                 memset(other.pbo_cr, 0, sizeof(other.pbo_cr));
@@ -165,6 +187,12 @@ namespace Ermine
                     tex_y = other.tex_y;
                     tex_cb = other.tex_cb;
                     tex_cr = other.tex_cr;
+                    tex_y_width = other.tex_y_width;
+                    tex_y_height = other.tex_y_height;
+                    tex_cb_width = other.tex_cb_width;
+                    tex_cb_height = other.tex_cb_height;
+                    tex_cr_width = other.tex_cr_width;
+                    tex_cr_height = other.tex_cr_height;
                     memcpy(pbo_y, other.pbo_y, sizeof(pbo_y));
                     memcpy(pbo_cb, other.pbo_cb, sizeof(pbo_cb));
                     memcpy(pbo_cr, other.pbo_cr, sizeof(pbo_cr));
@@ -202,6 +230,12 @@ namespace Ermine
                     other.tex_y = 0;
                     other.tex_cb = 0;
                     other.tex_cr = 0;
+                    other.tex_y_width = 0;
+                    other.tex_y_height = 0;
+                    other.tex_cb_width = 0;
+                    other.tex_cb_height = 0;
+                    other.tex_cr_width = 0;
+                    other.tex_cr_height = 0;
                     memset(other.pbo_y, 0, sizeof(other.pbo_y));
                     memset(other.pbo_cb, 0, sizeof(other.pbo_cb));
                     memset(other.pbo_cr, 0, sizeof(other.pbo_cr));

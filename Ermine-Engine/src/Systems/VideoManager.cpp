@@ -616,21 +616,27 @@ namespace Ermine
 
         glGenTextures(1, &video.tex_y);
         glBindTexture(GL_TEXTURE_2D, video.tex_y);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, static_cast<int>(video.width), static_cast<int>(video.height), 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
+        video.tex_y_width = video.width;
+        video.tex_y_height = video.height;
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, static_cast<int>(video.tex_y_width), static_cast<int>(video.tex_y_height), 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glBindTexture(GL_TEXTURE_2D, 0);
 
         glGenTextures(1, &video.tex_cb);
         glBindTexture(GL_TEXTURE_2D, video.tex_cb);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, static_cast<int>(video.width / 2), static_cast<int>(video.height / 2), 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
+        video.tex_cb_width = (video.width + 1) / 2;
+        video.tex_cb_height = (video.height + 1) / 2;
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, static_cast<int>(video.tex_cb_width), static_cast<int>(video.tex_cb_height), 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glBindTexture(GL_TEXTURE_2D, 0);
 
         glGenTextures(1, &video.tex_cr);
         glBindTexture(GL_TEXTURE_2D, video.tex_cr);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, static_cast<int>(video.width / 2), static_cast<int>(video.height / 2), 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
+        video.tex_cr_width = video.tex_cb_width;
+        video.tex_cr_height = video.tex_cb_height;
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, static_cast<int>(video.tex_cr_width), static_cast<int>(video.tex_cr_height), 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glBindTexture(GL_TEXTURE_2D, 0);
@@ -639,9 +645,9 @@ namespace Ermine
         glGenBuffers(kPboCount, video.pbo_cb);
         glGenBuffers(kPboCount, video.pbo_cr);
 
-        const size_t ySize = static_cast<size_t>(video.width) * static_cast<size_t>(video.height);
-        const size_t cbSize = static_cast<size_t>(video.width / 2) * static_cast<size_t>(video.height / 2);
-        const size_t crSize = cbSize;
+        const size_t ySize = static_cast<size_t>(video.tex_y_width) * static_cast<size_t>(video.tex_y_height);
+        const size_t cbSize = static_cast<size_t>(video.tex_cb_width) * static_cast<size_t>(video.tex_cb_height);
+        const size_t crSize = static_cast<size_t>(video.tex_cr_width) * static_cast<size_t>(video.tex_cr_height);
 
         for (int i = 0; i < kPboCount; ++i)
         {
@@ -773,6 +779,10 @@ namespace Ermine
 
         unsigned int frameWidth = 0;
         unsigned int frameHeight = 0;
+        unsigned int cbWidth = 0;
+        unsigned int cbHeight = 0;
+        unsigned int crWidth = 0;
+        unsigned int crHeight = 0;
         const uint8_t* yBuffer = nullptr;
         const uint8_t* cbBuffer = nullptr;
         const uint8_t* crBuffer = nullptr;
@@ -782,6 +792,10 @@ namespace Ermine
                 return;
             frameWidth = video.currentFrame.width;
             frameHeight = video.currentFrame.height;
+            cbWidth = video.currentFrame.cb_width;
+            cbHeight = video.currentFrame.cb_height;
+            crWidth = video.currentFrame.cr_width;
+            crHeight = video.currentFrame.cr_height;
             yBuffer = video.currentFrame.y_buffer.get();
             cbBuffer = video.currentFrame.cb_buffer.get();
             crBuffer = video.currentFrame.cr_buffer.get();
@@ -800,7 +814,23 @@ namespace Ermine
 
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-        auto UploadPlane = [](GLuint texture, GLuint pbo, size_t& pboSize, int width, int height, const uint8_t* src)
+        auto EnsureTexture = [](GLuint texture, unsigned int& texWidth, unsigned int& texHeight, unsigned int desiredWidth, unsigned int desiredHeight)
+        {
+            if (desiredWidth == 0 || desiredHeight == 0)
+                return;
+            if (texWidth == desiredWidth && texHeight == desiredHeight)
+                return;
+
+            glBindTexture(GL_TEXTURE_2D, texture);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, static_cast<int>(desiredWidth), static_cast<int>(desiredHeight), 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glBindTexture(GL_TEXTURE_2D, 0);
+            texWidth = desiredWidth;
+            texHeight = desiredHeight;
+        };
+
+        auto UploadPlane = [](GLuint texture, GLuint pbo, size_t& pboSize, unsigned int width, unsigned int height, const uint8_t* src)
         {
             const size_t size = static_cast<size_t>(width) * static_cast<size_t>(height);
             glBindBuffer(GL_PIXEL_UNPACK_BUFFER, pbo);
@@ -824,13 +854,16 @@ namespace Ermine
         const int pboIndex = video.pboIndex;
 
         glActiveTexture(GL_TEXTURE0);
+        EnsureTexture(video.tex_y, video.tex_y_width, video.tex_y_height, frameWidth, frameHeight);
         UploadPlane(video.tex_y, video.pbo_y[pboIndex], video.pboSizeY, frameWidth, frameHeight, yBuffer);
 
         glActiveTexture(GL_TEXTURE1);
-        UploadPlane(video.tex_cb, video.pbo_cb[pboIndex], video.pboSizeCb, frameWidth / 2, frameHeight / 2, cbBuffer);
+        EnsureTexture(video.tex_cb, video.tex_cb_width, video.tex_cb_height, cbWidth, cbHeight);
+        UploadPlane(video.tex_cb, video.pbo_cb[pboIndex], video.pboSizeCb, cbWidth, cbHeight, cbBuffer);
 
         glActiveTexture(GL_TEXTURE2);
-        UploadPlane(video.tex_cr, video.pbo_cr[pboIndex], video.pboSizeCr, frameWidth / 2, frameHeight / 2, crBuffer);
+        EnsureTexture(video.tex_cr, video.tex_cr_width, video.tex_cr_height, crWidth, crHeight);
+        UploadPlane(video.tex_cr, video.pbo_cr[pboIndex], video.pboSizeCr, crWidth, crHeight, crBuffer);
 
         video.pboIndex = (video.pboIndex + 1) % kPboCount;
 
@@ -999,6 +1032,10 @@ namespace Ermine
                     VideoFrame decoded;
                     decoded.width = frame->y.width;
                     decoded.height = frame->y.height;
+                    decoded.cb_width = frame->cb.width;
+                    decoded.cb_height = frame->cb.height;
+                    decoded.cr_width = frame->cr.width;
+                    decoded.cr_height = frame->cr.height;
                     const size_t y_size = static_cast<size_t>(frame->y.width) * static_cast<size_t>(frame->y.height);
                     const size_t cr_size = static_cast<size_t>(frame->cr.width) * static_cast<size_t>(frame->cr.height);
                     const size_t cb_size = static_cast<size_t>(frame->cb.width) * static_cast<size_t>(frame->cb.height);
@@ -1012,10 +1049,10 @@ namespace Ermine
                     memcpy(decoded.cb_buffer.get(), frame->cb.data, cb_size);
 
                     std::lock_guard<std::mutex> stateLock(m_stateMutex);
-                    video->nextFrame = std::move(decoded);
-                    video->hasNextFrame = true;
-                }
-            }
+            video->nextFrame = std::move(decoded);
+            video->hasNextFrame = true;
+        }
+    }
 
         }
     }
@@ -1049,18 +1086,24 @@ namespace Ermine
             glDeleteTextures(1, &video.tex_y);
             video.tex_y = 0;
         }
+        video.tex_y_width = 0;
+        video.tex_y_height = 0;
 
         if (video.tex_cb)
         {
             glDeleteTextures(1, &video.tex_cb);
             video.tex_cb = 0;
         }
+        video.tex_cb_width = 0;
+        video.tex_cb_height = 0;
 
         if (video.tex_cr)
         {
             glDeleteTextures(1, &video.tex_cr);
             video.tex_cr = 0;
         }
+        video.tex_cr_width = 0;
+        video.tex_cr_height = 0;
 
         if (video.pbo_y[0] || video.pbo_y[1] || video.pbo_y[2])
         {
