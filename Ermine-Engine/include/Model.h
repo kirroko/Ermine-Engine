@@ -26,6 +26,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <atomic>
 #include <mutex>
 #include <unordered_map>
+#include <cstdint>
 #include <glm/glm.hpp>
 #include <assimp/scene.h>
 #include <assimp/Importer.hpp>
@@ -103,6 +104,9 @@ namespace Ermine::graphics
         std::string meshID;                // Unique mesh identifier (for MeshManager lookup)
         glm::vec3 aabbMin{ 0.0f };        // AABB minimum bounds
         glm::vec3 aabbMax{ 0.0f };        // AABB maximum bounds
+        std::vector<glm::vec3> boneAabbMin;   // Per-bone bind-space AABB min
+        std::vector<glm::vec3> boneAabbMax;   // Per-bone bind-space AABB max
+        std::vector<uint8_t> boneAabbValid;   // Per-bone AABB validity
     };
 
     /**

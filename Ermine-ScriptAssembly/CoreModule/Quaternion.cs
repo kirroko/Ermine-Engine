@@ -461,5 +461,46 @@ namespace ErmineEngine
                 lhs.w * rhs.w - lhs.x * rhs.x - lhs.y * rhs.y - lhs.z * rhs.z
             );
         }
+
+        public Quaternion Conjugate
+        {
+            get => new Quaternion(-x, -y, -z, w);
+        }
+
+        public Quaternion Inversefunc
+        {
+            get
+            {
+                float magSq = x * x + y * y + z * z + w * w;
+                if (magSq > 1e-6f)
+                {
+                    float invMag = 1f / magSq;
+                    return new Quaternion(-x * invMag, -y * invMag, -z * invMag, w * invMag);
+                }
+                return identity; // fallback
+            }
+        }
+        public static Quaternion Inverse(Quaternion q)
+        {
+            return q.Inversefunc;
+        }
+
+        public Vector3 Rotate(Vector3 v)
+        {
+            // Convert vector to quaternion (x, y, z, w=0)
+            Quaternion qVec = new Quaternion(v.x, v.y, v.z, 0f);
+
+            // rotated = q * v * q^-1
+            Quaternion rotated = this * qVec * this.Inversefunc;
+
+            return new Vector3(rotated.x, rotated.y, rotated.z);
+        }
+
+        public static Vector3 operator *(Quaternion q, Vector3 v)
+        {
+            return q.Rotate(v);
+        }
+
+
     }
 }

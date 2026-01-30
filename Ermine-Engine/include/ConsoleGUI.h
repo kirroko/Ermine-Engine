@@ -2,7 +2,7 @@
 /*!
 \file       ConsoleGUI.h
 \author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu
-\date       20/10/2025
+\date       26/01/2026
 \brief      This file contains the Unity-like Console window and log collector for the editor.
 
 Copyright (C) 2025 DigiPen Institute of Technology.
@@ -83,8 +83,6 @@ namespace Ermine
         ConsoleGUI();
         void Update() override;
 		void Render() override;
-
-        bool show = true;
 
         // Optional: call to bring focus to the search box
         void FocusSearch() { m_focusSearch = true; }

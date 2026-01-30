@@ -7,4 +7,5 @@ static constexpr GLuint SKELETAL_SSBO_BINDING = 2;
 static constexpr GLuint MATERIAL_SSBO_BINDING = 3;
 static constexpr GLuint TEXTURE_SSBO_BINDING = 5;
 static constexpr GLuint INDEX_SSBO_BINDING = 6;
+static constexpr GLuint SHADOW_VIEW_SSBO_BINDING = 7;
 

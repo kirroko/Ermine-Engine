@@ -39,8 +39,9 @@ struct Light {
     vec4 position_type;    // xyz = position (world space), w = light type
     vec4 color_intensity;  // xyz = color, w = intensity
     vec4 direction_range;  // xyz = direction (world space), w = range
-    vec4 spot_angles_castshadows_startOffset; // x = inner angle (cos), y = outer angle (cos), z = flags bitfield (bit 0: castsShadows, bit 1: castsRays), w = shadow map index or 0 if no shadows
+    vec4 spot_angles_castshadows_startOffset; // x = inner angle (cos), y = outer angle (cos), z = flags bitfield (bit 0: castsShadows, bit 1: castsRays), w = shadow base layer or -1 if no shadows
     mat4 lightSpaceMatrix[NUM_CASCADES]; // Light view-projection matrices for cascaded shadow maps
+    mat4 pointLightMatrices[6]; // Point light shadow matrices for cubemap faces
     vec4 splitDepths[(NUM_CASCADES + 3) / 4]; // Split depths for cascaded shadow maps
 };
 
@@ -60,6 +61,10 @@ bool lightCastsShadows(Light light) {
 
 bool lightCastsRays(Light light) {
     return (int(light.spot_angles_castshadows_startOffset.z) & LIGHT_FLAG_CASTS_RAYS) != 0;
+}
+
+int getShadowBaseLayer(Light light) {
+    return int(light.spot_angles_castshadows_startOffset.w);
 }
 
 // Gaussian blur weights for 5-tap kernel
@@ -180,9 +185,10 @@ vec3 calculateSpotlightRays(vec2 texCoord, vec3 fragPosWorld, vec3 cameraPos, fl
                 // Shadows
                 float occlusion = 1.0;
                 if (lightCastsShadows(lights[i])) {
-                    if (distToLight > 0.5) { // Prevent near-plane clip
+                    int baseLayer = getShadowBaseLayer(lights[i]);
+                    if (baseLayer >= 0 && distToLight > 0.5) { // Prevent near-plane clip
                         mat4 lightSpaceMatrix = lights[i].lightSpaceMatrix[0];
-                        int layerIndex = int(lights[i].spot_angles_castshadows_startOffset.w);
+                        int layerIndex = baseLayer;
                         vec4 shadowCoord = lightSpaceMatrix * vec4(samplePos, 1.0);
                         if (shadowCoord.w > 0.0) {
                              vec3 projCoords = shadowCoord.xyz / shadowCoord.w;

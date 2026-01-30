@@ -1,5 +1,5 @@
-﻿using System;
-using ErmineEngine;
+﻿using ErmineEngine;
+using System;
 
 public class Test3 : MonoBehaviour
 {
@@ -11,6 +11,8 @@ public class Test3 : MonoBehaviour
     public float stuckTime = 0.75f;
     public float minProgressEpsilon = 0.02f;
 
+    public float recenterDelay = 1.0f;
+
     private Vector3[] patrolPoints;
     private int currentIndex = -1;
 
@@ -19,12 +21,29 @@ public class Test3 : MonoBehaviour
 
     private ulong entityID;
 
-    void Start()
-    {
-        entityID = (ulong)gameObject.GetInstanceID();
+    private bool jumping = false;
+    private ulong jumpLinkEntityID = 0;
 
-        // Build patrol points around the spawn position
-        Vector3 center = transform.position;
+    private bool pendingRecenter = false;
+    private float recenterTimer = 0f;
+
+    private void MoveToNextPoint()
+    {
+        if (patrolPoints == null || patrolPoints.Length == 0)
+            return;
+
+        currentIndex = (currentIndex + 1) % patrolPoints.Length;
+
+        stuckTimer = 0f;
+        lastDist = float.MaxValue;
+
+        NavAgent.SetDestination(entityID, patrolPoints[currentIndex]);
+    }
+
+    private void BuildPatrolPoints(Vector3 center)
+    {
+        if (pointCount < 2) pointCount = 2;
+
         patrolPoints = new Vector3[pointCount];
 
         for (int i = 0; i < pointCount; i++)
@@ -39,12 +58,49 @@ public class Test3 : MonoBehaviour
             );
         }
 
-        MoveToNextPoint(); // start moving
+        currentIndex = -1;
+        MoveToNextPoint();
+    }
+
+    void Start()
+    {
+        entityID = (ulong)gameObject.GetInstanceID();
+
+        // Build patrol points around the spawn position
+        BuildPatrolPoints(transform.position);
     }
 
     void Update()
     {
-        if (patrolPoints == null || patrolPoints.Length == 0)
+        // If we just requested a jump, call StartJump once.
+        if (jumping)
+        {
+            Debug.Log("CALL StartJump: me=" + entityID + " link=" + jumpLinkEntityID);
+            NavAgent.StartJump(entityID, jumpLinkEntityID);
+
+            jumping = false;
+            jumpLinkEntityID = 0; // clear after use
+
+            // Schedule a patrol recenter after the jump likely finishes
+            pendingRecenter = true;
+            recenterTimer = recenterDelay;
+
+            return;
+        }
+
+        // After landing (likely), rebuild patrol points around current position (new platform)
+        if (pendingRecenter)
+        {
+            recenterTimer -= Time.deltaTime;
+            if (recenterTimer <= 0f)
+            {
+                pendingRecenter = false;
+                BuildPatrolPoints(transform.position);
+                return; // let destination update settle this frame
+            }
+        }
+
+        if (patrolPoints == null || patrolPoints.Length == 0 || currentIndex < 0)
             return;
 
         Vector3 pos = transform.position;
@@ -74,17 +130,37 @@ public class Test3 : MonoBehaviour
         }
     }
 
-    private void MoveToNextPoint()
+    void OnCollisionEnter(Collision col)
     {
-        if (patrolPoints == null || patrolPoints.Length == 0)
-            return;
+        if (jumping) return;
 
-        currentIndex = (currentIndex + 1) % patrolPoints.Length;
-
-        stuckTimer = 0f;
-        lastDist = float.MaxValue;
-
-        NavAgent.SetDestination(entityID, patrolPoints[currentIndex]);
+        if (col.gameObject.name == "JumpArea")
+        {
+            jumping = true;
+            jumpLinkEntityID = (ulong)col.gameObject.GetInstanceID();
+        }
     }
+
+    //void OnCollisionStay(Collision col)
+    //{
+    //    if (jumping) return;
+
+    //    if (col.gameObject.name == "JumpArea")
+    //    {
+    //        jumping = true;
+    //        jumpLinkEntityID = (ulong)col.gameObject.GetInstanceID();
+    //    }
+    //}
+
+    //void OnCollisionExit(Collision col)
+    //{
+    //    if (jumping) return;
+
+    //    if (col.gameObject.name == "JumpArea")
+    //    {
+    //        jumping = true;
+    //        jumpLinkEntityID = (ulong)col.gameObject.GetInstanceID();
+    //    }
+    //}
 }
 

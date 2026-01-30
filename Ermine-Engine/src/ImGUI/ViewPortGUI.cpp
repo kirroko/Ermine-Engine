@@ -57,6 +57,198 @@ namespace
 	ImTextureID gIconStop = 0;
 	bool gIconsLoaded = false;
 
+	struct ViewportRect
+	{
+		ImVec2 min{};
+		ImVec2 max{};
+	};
+
+	std::optional<ViewportRect> ProjectAABBToViewportRect(
+		const glm::mat4& viewProj,
+		const ImVec2& imgMin,
+		const ImVec2& imgMax,
+		const glm::vec3& aabbMin,
+		const glm::vec3& aabbMax)
+	{
+		glm::vec3 corners[8] =
+		{
+			{ aabbMin.x, aabbMin.y, aabbMin.z },
+			{ aabbMax.x, aabbMin.y, aabbMin.z },
+			{ aabbMin.x, aabbMax.y, aabbMin.z },
+			{ aabbMax.x, aabbMax.y, aabbMin.z },
+			{ aabbMin.x, aabbMin.y, aabbMax.z },
+			{ aabbMax.x, aabbMin.y, aabbMax.z },
+			{ aabbMin.x, aabbMax.y, aabbMax.z },
+			{ aabbMax.x, aabbMax.y, aabbMax.z },
+		};
+
+		bool anyVisible = false;
+
+		float minX = std::numeric_limits<float>::infinity();
+		float minY = std::numeric_limits<float>::infinity();
+		float maxX = -std::numeric_limits<float>::infinity();
+		float maxY = -std::numeric_limits<float>::infinity();
+
+		const float vpW = imgMax.x - imgMin.x;
+		const float vpH = imgMax.y - imgMin.y;
+		if (vpW <= 1.0f || vpH <= 1.0f) // Invalid viewport size
+			return std::nullopt;
+
+		for (const glm::vec3& c : corners)
+		{
+			glm::vec4 clip = viewProj * glm::vec4(c, 1.0f);
+
+			if (clip.w <= 0.00001f) // Object's aabb is behind camera
+				continue;
+
+			const glm::vec3 ndc = glm::vec3(clip) / clip.w;
+
+			if (ndc.z >= -1.0f && ndc.z <= 1.0f)
+				anyVisible = true;
+
+			// Convert NDC to viewport Coords
+			const float sx = imgMin.x + (ndc.x * 0.5f + 0.5f) * vpW;
+			const float sy = imgMin.y + (1.0f - (ndc.y * 0.5f + 0.5f)) * vpH; // 1.0f for flip in ImGUI
+
+			minX = std::min(minX, sx);
+			minY = std::min(minY, sy);
+			maxX = std::max(maxX, sx);
+			maxY = std::max(maxY, sy);
+		}
+
+		if (!anyVisible || !std::isfinite(minX) || !std::isfinite(minY) || !std::isfinite(maxX) || !std::isfinite(maxY))
+			return std::nullopt;
+
+		ViewportRect r{};
+		r.min = ImVec2(ImClamp(minX, imgMin.x, imgMax.x), ImClamp(minY, imgMin.y, imgMax.y));
+		r.max = ImVec2(ImClamp(maxX, imgMin.x, imgMax.x), ImClamp(maxY, imgMin.y, imgMax.y));
+
+		if ((r.max.x - r.min.x) < 2.0f || (r.max.y - r.min.y) < 2.0f)
+			return std::nullopt;
+
+		return r;
+	}
+
+	void DrawSelectionHighlightRect(
+		const Ermine::EntityID selectedEntity,
+		const ImVec2& imgMin,
+		const ImVec2& imgMax)
+	{
+		if (EditorGUI::isPlaying)
+			return;
+
+		auto& ecs = Ermine::ECS::GetInstance();
+		if (!ecs.IsEntityValid(selectedEntity) || !ecs.HasComponent<Ermine::Transform>(selectedEntity))
+			return;
+
+		// Build a conservative AABB.
+		// If you later have mesh/model bounds in components, replace this with real bounds.
+		const Ermine::Transform& tr = ecs.GetComponent<Ermine::Transform>(selectedEntity);
+
+		const glm::vec3 center(tr.position.x, tr.position.y, tr.position.z);
+		const glm::vec3 halfExtents(
+			std::max(0.25f, std::abs(tr.scale.x) * 0.5f),
+			std::max(0.25f, std::abs(tr.scale.y) * 0.5f),
+			std::max(0.25f, std::abs(tr.scale.z) * 0.5f));
+
+		const glm::vec3 aabbMin = center - halfExtents;
+		const glm::vec3 aabbMax = center + halfExtents;
+
+		const Ermine::Mtx44& v = Ermine::editor::EditorCamera::GetInstance().GetViewMatrix();
+		const Ermine::Mtx44& p = Ermine::editor::EditorCamera::GetInstance().GetProjectionMatrix();
+
+		const glm::mat4 view = glm::mat4(
+			v.m00, v.m01, v.m02, v.m03,
+			v.m10, v.m11, v.m12, v.m13,
+			v.m20, v.m21, v.m22, v.m23,
+			v.m30, v.m31, v.m32, v.m33
+		);
+
+		const glm::mat4 proj = glm::mat4(
+			p.m00, p.m01, p.m02, p.m03,
+			p.m10, p.m11, p.m12, p.m13,
+			p.m20, p.m21, p.m22, p.m23,
+			p.m30, p.m31, p.m32, p.m33
+		);
+
+		const glm::mat4 viewProj = proj * view;
+
+		const auto rectOpt = ProjectAABBToViewportRect(viewProj, imgMin, imgMax, aabbMin, aabbMax);
+		if (!rectOpt.has_value())
+			return;
+
+		const ViewportRect r = rectOpt.value();
+
+		ImDrawList* dl = ImGui::GetWindowDrawList();
+
+		const ImU32 outlineCol = IM_COL32(64, 160, 255, 235);
+		const ImU32 fillCol = IM_COL32(64, 160, 255, 35);
+
+		// Soft fill + double outline
+		dl->AddRectFilled(r.min, r.max, fillCol, 2.0f);
+		dl->AddRect(r.min, r.max, outlineCol, 2.0f, 0, 2.0f);
+		dl->AddRect(ImVec2(r.min.x - 1.0f, r.min.y - 1.0f), ImVec2(r.max.x + 1.0f, r.max.y + 1.0f), IM_COL32(0, 0, 0, 120), 2.0f, 0, 2.0f);
+	}
+
+	void SubmitReferenceGridY0(const float y,
+		const float spacing,
+		const int halfLineCount,
+		const int majorEvery,
+		const glm::vec3& minorColor,
+		const glm::vec3& majorColor,
+		const glm::vec3& axisXColor,
+		const glm::vec3& axisZColor)
+	{
+		auto renderer = Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>();
+		if (!renderer)
+			return;
+
+		const Ermine::Vector3D camPosEE = Ermine::editor::EditorCamera::GetInstance().GetPosition();
+		const glm::vec2 camXZ(camPosEE.x, camPosEE.z);
+
+		// Snap the grid to spacing so it doesn't "swim" when moving.
+		const float snappedX = std::floor(camXZ.x / spacing) * spacing;
+		const float snappedZ = std::floor(camXZ.y / spacing) * spacing;
+
+		const float extent = static_cast<float>(halfLineCount) * spacing;
+
+		for (int i = -halfLineCount; i <= halfLineCount; ++i)
+		{
+			const float offset = static_cast<float>(i) * spacing;
+
+			const bool isMajor = (majorEvery > 0) && (i % majorEvery == 0);
+			const glm::vec3 col = isMajor ? majorColor : minorColor;
+
+			// Lines parallel to Z (vary X)
+			{
+				const float x = snappedX + offset;
+				const glm::vec3 a(x, y, snappedZ - extent);
+				const glm::vec3 b(x, y, snappedZ + extent);
+				renderer->SubmitDebugLine(a, b, col);
+			}
+
+			// Lines parallel to X (vary Z)
+			{
+				const float z = snappedZ + offset;
+				const glm::vec3 a(snappedX - extent, y, z);
+				const glm::vec3 b(snappedX + extent, y, z);
+				renderer->SubmitDebugLine(a, b, col);
+			}
+		}
+
+		// Axis emphasis at world origin (only if origin is inside the drawn tile)
+		// X axis (Z=0), Z axis (X=0)
+		{
+			const glm::vec3 xA(-extent, y, 0.0f);
+			const glm::vec3 xB(extent, y, 0.0f);
+			renderer->SubmitDebugLine(xA, xB, axisXColor);
+
+			const glm::vec3 zA(0.0f, y, -extent);
+			const glm::vec3 zB(0.0f, y, extent);
+			renderer->SubmitDebugLine(zA, zB, axisZColor);
+		}
+	}
+
 	void LoadToolbarIcons()
 	{
 		if (gIconsLoaded) return;
@@ -631,6 +823,23 @@ void Ermine::ViewPortGUI::Update()
 	int max_size;
 	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_size);
 
+	if (!EditorGUI::isPlaying)
+	{
+		constexpr float lineSpacing = 1.0f;
+		constexpr int majorEvery = 10;
+		constexpr int halfLineCount = 75;
+
+		SubmitReferenceGridY0(
+			0.0f,
+			lineSpacing,
+			halfLineCount,
+			majorEvery,
+			glm::vec3(0.25f, 0.25f, 0.25f),
+			glm::vec3(0.40f, 0.40f, 0.40f),
+			glm::vec3(0.80f, 0.20f, 0.20f),
+			glm::vec3(0.20f, 0.80f, 0.20f));
+	}
+
 	viewport_size.x = std::clamp(viewport_size.x, static_cast<float>(minSize), static_cast<float>(max_size));
 	viewport_size.y = std::clamp(viewport_size.y, static_cast<float>(minSize), static_cast<float>(max_size));
 
@@ -737,6 +946,8 @@ void Ermine::ViewPortGUI::Update()
 
 	static bool s_orbiting = false;
 	CameraControls(overViewCube, selectedEntity, viewportHovered, s_orbiting);
+
+	//DrawSelectionHighlightRect(selectedEntity, imgMin, imgMax);
 
 	GizmoOverlay(imgMin, imgSize, vmSize, vmPos, selectedEntity, gOperation, gMode);
 
@@ -893,7 +1104,7 @@ void Ermine::ViewPortGUI::Update()
 
 	// Dropping assets into viewport to load prefabs
 	if (ImGui::BeginDragDropTarget()) { // Begin drag & drop target
-		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_FILE")) {
+		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_PREFAB")) {
 			const char* cpath = static_cast<const char*>(payload->Data);
 
 			std::filesystem::path path = cpath;

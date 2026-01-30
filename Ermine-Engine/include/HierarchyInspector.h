@@ -1,9 +1,10 @@
 /* Start Header ************************************************************************/
 /*!
 \file       HierarchyInspector.h
-\author     Edwin Lee Zirui, edwinzirui.lee, 2301299, edwinzirui.lee\@digipen.edu (30%)
-\co-author  WEE HONG RU, Curtis, h.wee, 2301266, h.wee\@digipen.edu (70%)
-\date       10/09/2025
+\author     Edwin Lee Zirui, edwinzirui.lee, 2301299, edwinzirui.lee\@digipen.edu (25%)
+\co-authors WEE HONG RU, Curtis, h.wee, 2301266, h.wee\@digipen.edu (65%)
+\co-authors Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu (10%)
+\date       29/01/2026
 \brief      Inspector panel for viewing and editing entity properties
 
 Copyright (C) 2025 DigiPen Institute of Technology.
@@ -15,6 +16,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "PreCompile.h"
 #include "Scene.h"
 #include "HierarchyPanel.h"
+#include "Components.h"
+#include <optional>
 
 namespace Ermine::editor {
     /*!
@@ -148,6 +151,7 @@ namespace Ermine::editor {
         \param entity The entity to add components to
         */
         void DrawNavMeshAgentComponent(EntityID entity);
+        void DrawNavJumpComponent(EntityID entity);
 
         /*!
         \brief Draws UI for Particle Emitter component
@@ -160,10 +164,23 @@ namespace Ermine::editor {
         \param entity The entity to add components to
         */
         void DrawCameraComponent(EntityID entity);
+        void DrawUIComponent(EntityID entity);
+        void DrawUIHealthbarComponent(EntityID entity);
+        void DrawUICrosshairComponent(EntityID entity);
+        void DrawUISkillsComponent(EntityID entity);
+        void DrawUIManaBarComponent(EntityID entity);
+        void DrawUIBookCounterComponent(EntityID entity);
         void DrawUIImageComponent(EntityID entity);
         void DrawUIButtonComponent(EntityID entity);
 
         Scene* m_ActiveScene = nullptr;  ///< Pointer to the currently active scene
         bool m_IsVisible = true;         ///< Inspector panel visibility state
+
+        // Component clipboard for copy/paste functionality
+        static inline std::optional<UIHealthbarComponent> s_ClipboardUIHealthbar;
+        static inline std::optional<UICrosshairComponent> s_ClipboardUICrosshair;
+        static inline std::optional<UISkillsComponent> s_ClipboardUISkills;
+        static inline std::optional<UIManaBarComponent> s_ClipboardUIManaBar;
+        static inline std::optional<UIBookCounterComponent> s_ClipboardUIBookCounter;
     };
 } // namespace Ermine::editor

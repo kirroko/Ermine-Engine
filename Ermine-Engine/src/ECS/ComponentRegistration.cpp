@@ -41,6 +41,11 @@ namespace Ermine
 	XPROPERTY_REG(AABBComponent)
 	XPROPERTY_REG(HierarchyComponent)
 	XPROPERTY_REG(UIComponent)
+	XPROPERTY_REG(UIHealthbarComponent)
+	XPROPERTY_REG(UICrosshairComponent)
+	XPROPERTY_REG(UISkillsComponent)
+	XPROPERTY_REG(UIManaBarComponent)
+	XPROPERTY_REG(UIBookCounterComponent)
 	XPROPERTY_REG(GlobalGraphics)
 
 	//XPROPERTY_REG(ModelComponent)

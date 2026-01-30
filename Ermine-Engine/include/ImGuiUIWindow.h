@@ -1,8 +1,9 @@
 /* Start Header ************************************************************************/
 /*!
 \file       ImguiUIWindow.h
-\author     LEE Wen Jie, Brian, wenjiebrian.lee, 2301261, wenjiebrian.lee\@digipen.edu
-\date       02/09/2025
+\author     LEE Wen Jie, Brian, wenjiebrian.lee, 2301261, wenjiebrian.lee\@digipen.edu (95%)
+\co-author Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu (5%)
+\date       26/01/2026
 \brief      This file contains declarations for interfaces of ImguiUIWindow.
 
 Copyright (C) 2025 DigiPen Institute of Technology.
@@ -24,7 +25,7 @@ namespace Ermine {
 		\param[in] _name
 		 Optional name for the ImGui window. Defaults to an empty string.
 		*************************************************************************/
-		ImGUIWindow(std::string _name = "") : m_name{_name} {}
+		ImGUIWindow(std::string _name = "") : m_name{ _name } {}
 		/*!***********************************************************************
 		\brief
 		 Virtual destructor for ImGUIWindow.
@@ -57,7 +58,24 @@ namespace Ermine {
 		*************************************************************************/
 		void Name(std::string _name) { m_name = _name; }
 
-	private:
-		std::string m_name;
+		/*!***********************************************************************
+		\brief
+		 Check if the window is open.
+		\return
+		 True if the window is open, false otherwise.
+		*************************************************************************/
+		bool IsOpen() const { return m_isOpen; }
+
+		/*!***********************************************************************
+		\brief
+		 Set the open state of the window.
+		\param[in] open
+		 True to open the window, false to close it.
+		*************************************************************************/
+		void SetOpen(bool open) { m_isOpen = open; }
+
+	protected:
+		std::string m_name;   // Name of the ImGui window
+		bool m_isOpen = true; // Flag indicating if the window is open
 	};
 }

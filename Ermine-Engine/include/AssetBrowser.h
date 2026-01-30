@@ -3,7 +3,7 @@
 \file       AssetBrowser.h
 \author     LEE Wen Jie, Brian, wenjiebrian.lee, 2301261, wenjiebrian.lee\@digipen.edu (30%)
 \co-author  Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu (70%)
-\date       18/10/2025
+\date       26/01/2026
 \brief      This file contains the declaration of the ImGui-based Asset Browser system.
             It provides UI functionality for browsing, previewing, and managing
             project assets such as textures, audio, and shaders. It includes a
@@ -277,7 +277,7 @@ namespace Ermine::ImguiUI
 		 * @brief Construct an AssetBrowser window with a default title.
 		 * The window allows users to browse and manage assets.
 		 */
-		AssetBrowser() : ImGUIWindow("Asset Browser IMGUI") {}
+		AssetBrowser() : ImGUIWindow("Asset Browser") {}
 
 		void InitWithPipeline(Ermine::ResourcePipeline* pipeline) {
 			assets_browser.InitWithPipeline(pipeline);

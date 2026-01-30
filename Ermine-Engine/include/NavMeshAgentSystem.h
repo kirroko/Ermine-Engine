@@ -85,7 +85,6 @@ namespace Ermine
         *************************************************************************/
         bool FindPath(EntityID agentEntity, const Ermine::Vec3& startPos, const Ermine::Vec3& endPos, std::vector<Ermine::Vec3>& outPath);
 
-    private:
         /*!***********************************************************************
         \brief
          Finds the nearest entity in the ECS that has a NavMeshComponent relative
@@ -100,5 +99,7 @@ namespace Ermine
          or 0 if none are found.
         *************************************************************************/
         EntityID FindNearestNavMeshEntity(const Ermine::Vec3& pos);
+        EntityID FindNearestNavMeshEntityExcluding(const Ermine::Vec3& pos, EntityID exclude) const;
+    private:
     };
 }

@@ -5,7 +5,7 @@ public class Sphere : MonoBehaviour
     public Vector3 direction;
     public float speed = 10.0f;
 
-    private float timeAlive = 3.0f;
+    private float timeAlive = 1.0f;
 
     private void Start()
     {
@@ -27,6 +27,12 @@ public class Sphere : MonoBehaviour
 
     void OnCollisionEnter(Collision col)
     {
+        
+        if (Physics.CheckMotionType((ulong)col.gameObject.GetInstanceID()) == 0 && !col.gameObject.name.Contains("Bars")) //static obj
+        {
+            Debug.Log(Physics.CheckMotionType((ulong)col.gameObject.GetInstanceID()));
+            timeAlive = 0f;
+        }
         /*
         Debug.Log("Yes me lord? : " + gameObject.name);
 
