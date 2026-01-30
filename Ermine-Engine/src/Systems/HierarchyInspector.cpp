@@ -1137,7 +1137,6 @@ namespace Ermine::editor {
 					ImGui::EndPopup();
 				}
 
-				// Accept drag & drop from AssetBrowser (keeping this as bonus feature)
 				if (ImGui::BeginDragDropTarget()) {
 					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_TEXTURE")) {
 						const char* droppedPathCStr = static_cast<const char*>(payload->Data);
@@ -3050,6 +3049,45 @@ namespace Ermine::editor {
 		if (ImGui::InputText("Image Path", pathBuffer, sizeof(pathBuffer))) {
 			imageComp.imagePath = pathBuffer;
 		}
+		if (ImGui::BeginDragDropTarget()) {
+			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_FILE")) {
+				const char* droppedPathCStr = static_cast<const char*>(payload->Data);
+				std::filesystem::path droppedPath = droppedPathCStr;
+
+				// Only accept texture-ish files
+				std::string ext = droppedPath.extension().string();
+				for (auto& c : ext) c = (char)tolower(c);
+
+				bool isTextureFile =
+					(ext == ".png" ||
+						ext == ".jpg" || ext == ".jpeg" ||
+						ext == ".tga" ||
+						ext == ".bmp" ||
+						ext == ".dds" ||
+						ext == ".ktx" ||
+						ext == ".hdr");
+
+				if (isTextureFile) {
+					std::shared_ptr<graphics::Texture> newTex =
+						AssetManager::GetInstance().LoadTexture(droppedPath.string());
+
+					if (newTex && newTex->IsValid()) 
+					{
+						imageComp.imagePath = droppedPath.string();
+					}
+					else 
+					{
+						EE_CORE_WARN("Failed to load dropped texture: {}", droppedPath.string());
+					}
+				}
+				else {
+					// Ignore non-texture drops so we don't crash
+					EE_CORE_INFO("Ignored drop '%s': not a supported texture format",
+						droppedPath.string().c_str());
+				}
+			}
+			ImGui::EndDragDropTarget();
+		}
 
 		// Fullscreen toggle
 		ImGui::Checkbox("Fullscreen", &imageComp.fullscreen);
@@ -3342,6 +3380,32 @@ namespace Ermine::editor {
 	ImGui::ColorEdit3("Text Color", &button.textColor.x);
 	ImGui::DragFloat("Text Scale", &button.textScale, 0.1f, 0.1f, 5.0f);
 	ImGui::SliderFloat("Background Alpha", &button.backgroundAlpha, 0.0f, 1.0f);
+
+	ImGui::Separator();
+	ImGui::Text("Images (Optional)");
+	ImGui::TextDisabled("If set, images override color-based rendering");
+
+	char normalImageBuffer[256];
+	strncpy_s(normalImageBuffer, button.normalImage.c_str(), sizeof(normalImageBuffer) - 1);
+	normalImageBuffer[sizeof(normalImageBuffer) - 1] = '\0';
+	if (ImGui::InputText("Normal Image", normalImageBuffer, sizeof(normalImageBuffer))) {
+		button.normalImage = normalImageBuffer;
+	}
+
+	char hoverImageBuffer[256];
+	strncpy_s(hoverImageBuffer, button.hoverImage.c_str(), sizeof(hoverImageBuffer) - 1);
+	hoverImageBuffer[sizeof(hoverImageBuffer) - 1] = '\0';
+	if (ImGui::InputText("Hover Image", hoverImageBuffer, sizeof(hoverImageBuffer))) {
+		button.hoverImage = hoverImageBuffer;
+	}
+
+	char pressedImageBuffer[256];
+	strncpy_s(pressedImageBuffer, button.pressedImage.c_str(), sizeof(pressedImageBuffer) - 1);
+	pressedImageBuffer[sizeof(pressedImageBuffer) - 1] = '\0';
+	if (ImGui::InputText("Pressed Image", pressedImageBuffer, sizeof(pressedImageBuffer))) {
+		button.pressedImage = pressedImageBuffer;
+	}
+	ImGui::TextDisabled("Example: ../Resources/Textures/UI/button.png");
 
 	ImGui::Separator();
 	ImGui::Text("Action");

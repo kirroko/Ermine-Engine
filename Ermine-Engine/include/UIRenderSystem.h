@@ -137,6 +137,8 @@ namespace Ermine
         *************************************************************************/
         void RenderButton(const UIButtonComponent& button);
 
+        bool IsEntityActiveInHierarchy(EntityID entity);
+
         /*!***********************************************************************
         \brief
             Renders a filled quad at the specified position with color.
