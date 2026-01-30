@@ -688,6 +688,7 @@ namespace Ermine
         (void)deltaTime;
         int targetFrame = video.currentFrameIndex;
         bool audioWrapped = false;
+        bool videoWrapped = false;
 
         if (video.audioEnabled && video.audioChannel && video.frameDuration > 0.0 && video.audioClockValid && video.audioSampleRate > 0)
         {
@@ -721,7 +722,12 @@ namespace Ermine
             video.videoClockSeconds += deltaTime;
             targetFrame = static_cast<int>(video.videoClockSeconds / video.frameDuration);
             if (video.loop && video.totalFrames > 0)
-                targetFrame = targetFrame % video.totalFrames;
+            {
+                const int wrapped = targetFrame % video.totalFrames;
+                if (wrapped < video.currentFrameIndex)
+                    videoWrapped = true;
+                targetFrame = wrapped;
+            }
         }
         else
         {
@@ -730,7 +736,7 @@ namespace Ermine
 
         {
             std::lock_guard<std::mutex> lock(m_stateMutex);
-            if (audioWrapped)
+            if (audioWrapped || videoWrapped)
             {
                 video.pendingSeekToStart = true;
                 video.pendingSkips = 0;
