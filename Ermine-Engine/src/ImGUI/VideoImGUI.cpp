@@ -21,6 +21,9 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 namespace Ermine
 {
+    /**
+     * @brief Construct the video UI window with default labels.
+     */
     VideoImGUI::VideoImGUI()
         : ImGUIWindow("Video Player")
     {

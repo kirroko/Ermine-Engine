@@ -29,6 +29,9 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 namespace Ermine
 {
+    /**
+     * @brief Clear queued frame data and pending seek/skip flags.
+     */
     void VideoManager::ResetStreamingState(VideoData& video)
     {
         video.currentFrame = {};
@@ -39,6 +42,9 @@ namespace Ermine
         video.pendingSeekToStart = false;
     }
 
+    /**
+     * @brief Initialize video rendering resources and spawn the decode thread.
+     */
     void VideoManager::Init(int screenWidth, int screenHeight)
     {
         m_screenWidth = screenWidth;
