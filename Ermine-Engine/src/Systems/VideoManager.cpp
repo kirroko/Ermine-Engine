@@ -3,7 +3,8 @@
 \file       VideoManager.cpp
 \author     Ridhwan Afandi, mohamedridhwan.b, 2301367, mohamedridhwan.b\@digipen.edu
 \date       01/29/2026
-\brief      Video playback system using pl_mpeg with a dedicated preload thread.
+\brief      Video playback system using pl_mpeg with a dedicated decode thread
+            and audio-synced streaming playback.
 
 Copyright (C) 2026 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents without the
@@ -17,141 +18,27 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #include <glad/glad.h>
 #include <cstring>
+#include <algorithm>
+#include <chrono>
+#include <cmath>
 
 #include "AssetManager.h"
 #include "AudioManager.h"
-#include "Logger.h"
-#include "fmod_common.h"
 #include "fmod.h"
 #include "fmod.hpp"
 
 namespace Ermine
 {
-    static FMOD_RESULT F_CALL VideoPcmReadCallback(FMOD_SOUND* sound, void* data, unsigned int datalen)
+    void VideoManager::ResetStreamingState(VideoData& video)
     {
-        if (!sound || !data)
-            return FMOD_OK;
-
-        void* user = nullptr;
-        if (FMOD_Sound_GetUserData(sound, &user) != FMOD_OK || !user)
-        {
-            memset(data, 0, datalen);
-            return FMOD_OK;
-        }
-
-        auto* video = reinterpret_cast<VideoManager::VideoData*>(user);
-        if (!video || !video->audioEnabled || video->audioBuffer.empty())
-        {
-            memset(data, 0, datalen);
-            return FMOD_OK;
-        }
-
-        const size_t samplesRequested = datalen / sizeof(float);
-        float* out = reinterpret_cast<float*>(data);
-
-        std::lock_guard<std::mutex> lock(video->audioMutex);
-        const size_t totalSamples = video->audioBuffer.size();
-
-        static size_t s_callbackCount = 0;
-        if ((s_callbackCount++ % 120) == 0)
-        {
-            EE_CORE_INFO("VideoAudio: PCM callback requested {} samples, total {}", samplesRequested, totalSamples);
-        }
-
-        for (size_t i = 0; i < samplesRequested; ++i)
-        {
-            if (totalSamples == 0)
-            {
-                out[i] = 0.0f;
-                continue;
-            }
-
-            if (video->audioReadIndex >= totalSamples)
-            {
-                if (video->loop)
-                    video->audioReadIndex = 0;
-                else
-                {
-                    out[i] = 0.0f;
-                    continue;
-                }
-            }
-
-            out[i] = video->audioBuffer[video->audioReadIndex];
-            ++video->audioReadIndex;
-        }
-
-        return FMOD_OK;
-    }
-
-    VideoManager::VideoFrame VideoManager::AcquireFrameBuffer(unsigned int width, unsigned int height)
-    {
-        VideoFrame frame;
-        frame.width = width;
-        frame.height = height;
-
-        const size_t ySize = static_cast<size_t>(width) * static_cast<size_t>(height);
-        const size_t cbSize = static_cast<size_t>(width / 2) * static_cast<size_t>(height / 2);
-        const size_t crSize = cbSize;
-
-        std::lock_guard<std::mutex> lock(m_poolMutex);
-        size_t index = kInvalidBufferIndex;
-        if (!m_freeBuffers.empty())
-        {
-            index = m_freeBuffers.front();
-            m_freeBuffers.pop_front();
-        }
-        else
-        {
-            index = m_framePool.size();
-            m_framePool.emplace_back();
-        }
-
-        auto& buffer = m_framePool[index];
-        if (buffer.ySize < ySize)
-        {
-            buffer.y = std::make_unique<uint8_t[]>(ySize);
-            buffer.ySize = ySize;
-        }
-        if (buffer.cbSize < cbSize)
-        {
-            buffer.cb = std::make_unique<uint8_t[]>(cbSize);
-            buffer.cbSize = cbSize;
-        }
-        if (buffer.crSize < crSize)
-        {
-            buffer.cr = std::make_unique<uint8_t[]>(crSize);
-            buffer.crSize = crSize;
-        }
-
-        frame.bufferIndex = index;
-        frame.y_buffer = buffer.y.get();
-        frame.cb_buffer = buffer.cb.get();
-        frame.cr_buffer = buffer.cr.get();
-        return frame;
-    }
-
-    void VideoManager::ReleaseFrameBuffer(VideoFrame& frame)
-    {
-        if (frame.bufferIndex == kInvalidBufferIndex)
-            return;
-
-        std::lock_guard<std::mutex> lock(m_poolMutex);
-        m_freeBuffers.push_back(frame.bufferIndex);
-        frame.bufferIndex = kInvalidBufferIndex;
-        frame.y_buffer = nullptr;
-        frame.cb_buffer = nullptr;
-        frame.cr_buffer = nullptr;
-    }
-
-    void VideoManager::ReleasePreloadedFrames(VideoData& video)
-    {
-        ReleaseFrameBuffer(video.currentFrame);
+        video.currentFrame = {};
         video.hasCurrentFrame = false;
-        for (auto& frame : video.frames)
-            ReleaseFrameBuffer(frame);
-        video.frames.clear();
+        video.nextFrame = {};
+        video.hasNextFrame = false;
+        video.pendingSkips = 0;
+        video.pendingSeekToStart = false;
     }
+
     void VideoManager::Init(int screenWidth, int screenHeight)
     {
         m_screenWidth = screenWidth;
@@ -163,9 +50,7 @@ namespace Ermine
         );
 
         if (!m_videoShader || !m_videoShader->IsValid())
-        {
-            EE_CORE_ERROR("VideoManager: Failed to load video shaders");
-        }
+            m_videoShader = nullptr;
 
         glGenVertexArrays(1, &m_VAO);
         glGenBuffers(1, &m_VBO);
@@ -238,10 +123,7 @@ namespace Ermine
     bool VideoManager::LoadVideo(const std::string& name, const std::string& filepath, bool loop)
     {
         if (name.empty() || filepath.empty())
-        {
-            EE_CORE_ERROR("VideoManager: Invalid name or filepath.");
             return false;
-        }
 
         if (VideoExists(name))
         {
@@ -254,14 +136,10 @@ namespace Ermine
 
         video->plm = plm_create_with_filename(filepath.c_str());
         if (!video->plm)
-        {
-            EE_CORE_ERROR("VideoManager: Failed to load video {}", filepath);
             return false;
-        }
 
         if (!plm_probe(video->plm, 5000 * 1024))
         {
-            EE_CORE_ERROR("VideoManager: No MPEG streams found in {}", filepath);
             plm_destroy(video->plm);
             video->plm = nullptr;
             return false;
@@ -277,28 +155,41 @@ namespace Ermine
             video->totalFrames = 1;
 
         video->frameDuration = (frameRate > 0) ? (1.0 / static_cast<double>(frameRate)) : (duration / video->totalFrames);
+        video->videoClockSeconds = 0.0;
 
-        if (!FinishLoadingVideo(*video))
+        if (!m_audioOnly)
         {
-            EE_CORE_ERROR("VideoManager: Failed to finalize video {}", name);
-            ReleaseVideoResources(*video);
-            return false;
+            if (!FinishLoadingVideo(*video))
+            {
+                ReleaseVideoResources(*video);
+                return false;
+            }
+        }
+        else
+        {
+            plm_set_video_enabled(video->plm, 0);
+            video->loaded = true;
         }
 
-        // Initialize audio decoding if present
-        if (plm_get_num_audio_streams(video->plm) > 0)
+        // Initialize audio playback (predecode to memory if present)
+        video->hasAudioStream = (plm_get_num_audio_streams(video->plm) > 0);
+        if (video->hasAudioStream)
         {
-            video->audioPlm = plm_create_with_filename(filepath.c_str());
-            if (video->audioPlm && plm_probe(video->audioPlm, 5000 * 1024))
+            plm_t* audioPlm = plm_create_with_filename(filepath.c_str());
+            if (audioPlm && plm_probe(audioPlm, 5000 * 1024))
             {
-                plm_set_video_enabled(video->audioPlm, 0);
-                plm_set_audio_enabled(video->audioPlm, 1);
+                plm_set_video_enabled(audioPlm, 0);
+                plm_set_audio_enabled(audioPlm, 1);
 
-                video->audioSampleRate = plm_get_samplerate(video->audioPlm);
+                video->audioSampleRate = plm_get_samplerate(audioPlm);
                 if (video->audioSampleRate <= 0)
                     video->audioSampleRate = 44100;
 
-                double audioDuration = plm_get_duration(video->audioPlm);
+                video->audioChannels = 2;
+                if (audioPlm->audio_decoder && audioPlm->audio_decoder->mode == PLM_AUDIO_MODE_MONO)
+                    video->audioChannels = 1;
+
+                double audioDuration = plm_get_duration(audioPlm);
                 if (audioDuration <= 0.0)
                     audioDuration = plm_get_duration(video->plm);
                 if (audioDuration <= 0.0 && video->frameDuration > 0.0 && video->totalFrames > 0)
@@ -306,53 +197,78 @@ namespace Ermine
                 if (audioDuration <= 0.0)
                     audioDuration = 1.0;
 
-                const uint64_t totalPcmSamples = static_cast<uint64_t>(audioDuration * static_cast<double>(video->audioSampleRate) * 2.0);
+                const uint64_t expectedSamples = static_cast<uint64_t>(audioDuration * static_cast<double>(video->audioSampleRate) * static_cast<double>(video->audioChannels));
+                video->audioPcm.clear();
+                video->audioPcm.reserve(static_cast<size_t>(expectedSamples));
 
-                video->audioBuffer.clear();
-                video->audioBuffer.reserve(totalPcmSamples);
-                video->audioReadIndex = 0;
-
-                if (auto* core = CAudioEngine::GetCoreSystem())
+                while (true)
                 {
-                    FMOD_CREATESOUNDEXINFO exinfo{};
-                    exinfo.cbsize = sizeof(exinfo);
-                    exinfo.numchannels = 2;
-                    exinfo.defaultfrequency = video->audioSampleRate;
-                    exinfo.format = FMOD_SOUND_FORMAT_PCMFLOAT;
-                    exinfo.length = static_cast<unsigned int>(totalPcmSamples * sizeof(float));
-                    exinfo.decodebuffersize = PLM_AUDIO_SAMPLES_PER_FRAME;
-                    exinfo.pcmreadcallback = VideoPcmReadCallback;
-                    exinfo.userdata = video.get();
+                    plm_samples_t* samples = plm_decode_audio(audioPlm);
+                    if (!samples)
+                        break;
 
-                    FMOD::Sound* sound = nullptr;
-                    if (core->createSound(nullptr, FMOD_OPENUSER | FMOD_CREATESTREAM | FMOD_LOOP_NORMAL, &exinfo, &sound) == FMOD_OK && sound)
+                    if (video->audioChannels == 1)
                     {
-                        sound->setUserData(video.get());
-                        sound->setMode(video->loop ? FMOD_LOOP_NORMAL : FMOD_LOOP_OFF);
-                        if (totalPcmSamples > 0)
-                            sound->setLoopPoints(0, FMOD_TIMEUNIT_PCM, static_cast<unsigned int>(totalPcmSamples), FMOD_TIMEUNIT_PCM);
-                        video->audioSound = sound;
-                        video->audioEnabled = true;
-                        EE_CORE_INFO("VideoAudio: Created FMOD user sound at {} Hz", video->audioSampleRate);
+                        const size_t count = static_cast<size_t>(samples->count);
+                        video->audioPcm.reserve(video->audioPcm.size() + count);
+                        for (size_t i = 0; i < count; ++i)
+                            video->audioPcm.push_back(samples->interleaved[i * 2]);
                     }
                     else
                     {
-                        EE_CORE_ERROR("VideoAudio: Failed to create FMOD user sound");
+                        const size_t count = static_cast<size_t>(samples->count) * 2;
+                        video->audioPcm.insert(video->audioPcm.end(), samples->interleaved, samples->interleaved + count);
+                    }
+                }
+
+                plm_destroy(audioPlm);
+                audioPlm = nullptr;
+
+                if (!video->audioPcm.empty())
+                {
+                    if (auto* core = CAudioEngine::GetCoreSystem())
+                    {
+                        FMOD_CREATESOUNDEXINFO exinfo{};
+                        exinfo.cbsize = sizeof(exinfo);
+                        exinfo.numchannels = video->audioChannels;
+                        exinfo.defaultfrequency = video->audioSampleRate;
+                        exinfo.format = FMOD_SOUND_FORMAT_PCMFLOAT;
+                        exinfo.length = static_cast<unsigned int>(video->audioPcm.size() * sizeof(float));
+
+                        const FMOD_MODE mode = static_cast<FMOD_MODE>(FMOD_OPENRAW | FMOD_OPENMEMORY | FMOD_OPENMEMORY_POINT | FMOD_CREATESAMPLE | (video->loop ? FMOD_LOOP_NORMAL : FMOD_LOOP_OFF));
+                        FMOD::Sound* sound = nullptr;
+                        if (core->createSound(reinterpret_cast<const char*>(video->audioPcm.data()), mode, &exinfo, &sound) == FMOD_OK && sound)
+                        {
+                            sound->setDefaults(video->audioSampleRate, 0);
+                            if (video->loop && video->audioChannels > 0)
+                            {
+                                const unsigned int pcmSamples = static_cast<unsigned int>(video->audioPcm.size() / static_cast<size_t>(video->audioChannels));
+                                sound->setLoopPoints(0, FMOD_TIMEUNIT_PCM, pcmSamples, FMOD_TIMEUNIT_PCM);
+                            }
+                            video->audioSound = sound;
+                            video->audioEnabled = true;
+                        }
                     }
                 }
             }
-            else
+            else if (audioPlm)
             {
-                EE_CORE_WARN("VideoAudio: Audio stream detected but pl_mpeg audio probe failed");
+                plm_destroy(audioPlm);
+                audioPlm = nullptr;
             }
+        }
+
+        if (!video->audioEnabled)
+        {
+            video->hasAudioStream = false;
         }
 
         {
             std::lock_guard<std::mutex> lock(m_stateMutex);
-            video->preloadRequested = true;
-            video->preloaded = false;
-            video->preloadFailed = false;
             video->hasCurrentFrame = false;
+            video->hasNextFrame = false;
+            video->pendingSkips = 0;
+            video->pendingSeekToStart = false;
             m_videos[name] = video;
         }
 
@@ -370,9 +286,20 @@ namespace Ermine
             std::lock_guard<std::mutex> lock(m_stateMutex);
             auto it = m_videos.find(name);
             if (it == m_videos.end())
-            {
-                EE_CORE_WARN("VideoManager: Video {} not found.", name);
                 return;
+
+            if (!m_currentVideo.empty() && m_currentVideo != name)
+            {
+                auto prev = m_videos.find(m_currentVideo);
+                if (prev != m_videos.end() && prev->second)
+                {
+                    prev->second->audioClockValid = false;
+                    if (prev->second->audioChannel)
+                    {
+                        prev->second->audioChannel->stop();
+                        prev->second->audioChannel = nullptr;
+                    }
+                }
             }
 
             m_currentVideo = name;
@@ -397,27 +324,35 @@ namespace Ermine
 
         if (!it->second->loaded)
             return;
-        if (!it->second->preloaded)
-        {
-            EE_CORE_INFO("VideoManager: Video {} not preloaded yet.", m_currentVideo);
-            return;
-        }
-
-        m_isPlaying = true;
-        m_decodeCv.notify_one();
+        if (!it->second->hasCurrentFrame && !it->second->hasNextFrame)
+            m_decodeCv.notify_one();
 
         if (it->second->audioEnabled && it->second->audioSound)
         {
+            m_isPlaying = true;
+            m_decodeCv.notify_one();
+
             if (auto* core = CAudioEngine::GetCoreSystem())
             {
                 if (!it->second->audioChannel)
                 {
                     core->playSound(it->second->audioSound, nullptr, false, &it->second->audioChannel);
                     if (it->second->audioChannel && it->second->audioSampleRate > 0)
+                    {
                         it->second->audioChannel->setFrequency(static_cast<float>(it->second->audioSampleRate));
+                    }
                     if (it->second->audioChannel)
                         it->second->audioChannel->setMode(it->second->loop ? FMOD_LOOP_NORMAL : FMOD_LOOP_OFF);
-                    EE_CORE_INFO("VideoAudio: Started playback channel");
+                    if (it->second->audioChannel)
+                    {
+                        unsigned long long channelClock = 0;
+                        unsigned long long parentClock = 0;
+                        if (it->second->audioChannel->getDSPClock(&channelClock, &parentClock) == FMOD_OK)
+                        {
+                            it->second->audioStartClock = parentClock;
+                            it->second->audioClockValid = true;
+                        }
+                    }
                 }
                 else
                 {
@@ -425,8 +360,24 @@ namespace Ermine
                     it->second->audioChannel->getPaused(&paused);
                     if (paused)
                         it->second->audioChannel->setPaused(false);
+                    unsigned long long dspClock = 0;
+                    unsigned long long parentClock = 0;
+                    if (it->second->audioChannel->getDSPClock(&dspClock, &parentClock) == FMOD_OK && it->second->audioSampleRate > 0)
+                    {
+                        unsigned int posPcm = 0;
+                        if (it->second->audioChannel->getPosition(&posPcm, FMOD_TIMEUNIT_PCM) == FMOD_OK)
+                        {
+                            it->second->audioStartClock = parentClock - posPcm;
+                            it->second->audioClockValid = true;
+                        }
+                    }
                 }
             }
+        }
+        else
+        {
+            m_isPlaying = true;
+            m_decodeCv.notify_one();
         }
     }
 
@@ -462,30 +413,33 @@ namespace Ermine
                 return;
 
             video = it->second;
-            video->currentFrameIndex = 0;
-            video->elapsedTime = 0.0;
+            video->currentFrameIndex = -1;
+            video->videoClockSeconds = 0.0;
             video->done = false;
             m_isPlaying = false;
         }
 
         if (video)
         {
-            if (video->preloaded && !video->frames.empty())
             {
                 std::lock_guard<std::mutex> lock(m_stateMutex);
-                video->currentFrame = video->frames.front();
-                video->hasCurrentFrame = true;
+                ResetStreamingState(*video);
+                video->pendingSeekToStart = true;
             }
+
+            {
+                std::lock_guard<std::mutex> decodeLock(video->decodeMutex);
+                if (video->plm)
+                    plm_seek(video->plm, 0.0, 1);
+            }
+
             if (video->audioChannel)
             {
                 video->audioChannel->stop();
                 video->audioChannel = nullptr;
             }
 
-            {
-                std::lock_guard<std::mutex> alock(video->audioMutex);
-                video->audioReadIndex = 0;
-            }
+            video->audioClockValid = false;
         }
     }
 
@@ -494,6 +448,8 @@ namespace Ermine
      */
     void VideoManager::Update(float deltaTime)
     {
+        if (m_audioOnly)
+            return;
         std::shared_ptr<VideoData> current;
         {
             std::lock_guard<std::mutex> lock(m_stateMutex);
@@ -519,7 +475,7 @@ namespace Ermine
      */
     void VideoManager::Render()
     {
-        if (!m_renderEnabled)
+        if (!m_renderEnabled || m_audioOnly)
             return;
         std::shared_ptr<VideoData> video;
         {
@@ -699,13 +655,10 @@ namespace Ermine
 
         video.loaded = true;
         video.done = false;
-        video.currentFrameIndex = 0;
-        video.elapsedTime = 0.0;
-        ReleasePreloadedFrames(video);
+        video.currentFrameIndex = -1;
+        video.videoClockSeconds = 0.0;
+        ResetStreamingState(video);
         video.hasCurrentFrame = false;
-        video.preloaded = false;
-        video.preloadRequested = false;
-        video.preloadFailed = false;
         video.stopDecoding = false;
         m_quadDirty = true;
 
@@ -720,56 +673,88 @@ namespace Ermine
         if (!m_isPlaying || video.done)
             return;
 
-        bool audioDriven = false;
+        (void)deltaTime;
         int targetFrame = video.currentFrameIndex;
+        bool audioWrapped = false;
 
-        if (video.audioEnabled && video.audioChannel && video.frameDuration > 0.0)
+        if (video.audioEnabled && video.audioChannel && video.frameDuration > 0.0 && video.audioClockValid && video.audioSampleRate > 0)
         {
-            unsigned int positionMs = 0;
-            if (video.audioChannel->getPosition(&positionMs, FMOD_TIMEUNIT_MS) == FMOD_OK)
+            unsigned long long dspClock = 0;
+            unsigned long long parentClock = 0;
+            if (video.audioChannel->getDSPClock(&dspClock, &parentClock) == FMOD_OK)
             {
-                audioDriven = true;
-                const double audioSeconds = static_cast<double>(positionMs) / 1000.0;
+                unsigned long long elapsed = 0;
+                if (parentClock >= video.audioStartClock)
+                    elapsed = parentClock - video.audioStartClock;
+
+                double audioSeconds = static_cast<double>(elapsed) / static_cast<double>(video.audioSampleRate);
+                const double durationSeconds = (video.totalFrames > 0) ? (video.frameDuration * static_cast<double>(video.totalFrames)) : 0.0;
+
+                if (video.loop && durationSeconds > 0.0)
+                {
+                    const double wrapped = std::fmod(audioSeconds, durationSeconds);
+                    if (wrapped + 1e-6 < video.videoClockSeconds)
+                        audioWrapped = true;
+                    audioSeconds = wrapped;
+                }
+
+                video.videoClockSeconds = audioSeconds;
                 targetFrame = static_cast<int>(audioSeconds / video.frameDuration);
-                if (video.loop && video.totalFrames > 0)
-                    targetFrame = targetFrame % video.totalFrames;
+                if (video.totalFrames > 0 && targetFrame >= video.totalFrames)
+                    targetFrame = video.totalFrames - 1;
             }
         }
-
-        if (!audioDriven)
+        else if (!video.hasAudioStream || !video.audioEnabled)
         {
-            video.elapsedTime += deltaTime;
-            if (video.frameDuration > 0.0)
-            {
-                int framesToAdvance = static_cast<int>(video.elapsedTime / video.frameDuration);
-                if (framesToAdvance <= 0)
-                    return;
-                video.elapsedTime -= static_cast<double>(framesToAdvance) * video.frameDuration;
-                targetFrame = video.currentFrameIndex + framesToAdvance;
-                if (video.loop && video.totalFrames > 0)
-                    targetFrame = targetFrame % video.totalFrames;
-            }
+            video.videoClockSeconds += deltaTime;
+            targetFrame = static_cast<int>(video.videoClockSeconds / video.frameDuration);
+            if (video.loop && video.totalFrames > 0)
+                targetFrame = targetFrame % video.totalFrames;
         }
-
-        if (!video.preloaded || video.frames.empty())
-            return;
-
-        if (!video.loop && targetFrame >= static_cast<int>(video.frames.size()))
+        else
         {
-            targetFrame = static_cast<int>(video.frames.size()) - 1;
-            video.done = true;
-            m_isPlaying = false;
-        }
-
-        if (targetFrame < 0 || targetFrame >= static_cast<int>(video.frames.size()))
             return;
+        }
 
         {
             std::lock_guard<std::mutex> lock(m_stateMutex);
-            video.currentFrame = video.frames[static_cast<size_t>(targetFrame)];
-            video.hasCurrentFrame = true;
-            video.currentFrameIndex = targetFrame;
+            if (audioWrapped)
+            {
+                video.pendingSeekToStart = true;
+                video.pendingSkips = 0;
+                video.nextFrame = {};
+                video.hasNextFrame = false;
+            }
+
+            if (targetFrame > video.currentFrameIndex)
+            {
+                int desiredAdvance = targetFrame - video.currentFrameIndex;
+                if (desiredAdvance > 1)
+                    video.pendingSkips = desiredAdvance - 1;
+            }
         }
+
+        bool hasNextFrame = false;
+        bool shouldPresent = false;
+        {
+            std::lock_guard<std::mutex> lock(m_stateMutex);
+            hasNextFrame = video.hasNextFrame;
+            shouldPresent = (targetFrame > video.currentFrameIndex);
+        }
+
+        if (hasNextFrame && shouldPresent)
+        {
+            std::lock_guard<std::mutex> lock(m_stateMutex);
+            video.currentFrame = std::move(video.nextFrame);
+            video.hasCurrentFrame = true;
+            video.hasNextFrame = false;
+            if (video.currentFrameIndex < 0)
+                video.currentFrameIndex = 0;
+            else
+                video.currentFrameIndex += 1;
+        }
+
+        m_decodeCv.notify_one();
     }
 
     /**
@@ -780,11 +765,22 @@ namespace Ermine
         if (!m_videoShader || !m_videoShader->IsValid())
             return;
 
-        if (!video.hasCurrentFrame)
-            return;
-
-        auto& frame = video.currentFrame;
-        if (!frame.y_buffer || !frame.cb_buffer || !frame.cr_buffer)
+        unsigned int frameWidth = 0;
+        unsigned int frameHeight = 0;
+        const uint8_t* yBuffer = nullptr;
+        const uint8_t* cbBuffer = nullptr;
+        const uint8_t* crBuffer = nullptr;
+        {
+            std::lock_guard<std::mutex> lock(m_stateMutex);
+            if (!video.hasCurrentFrame)
+                return;
+            frameWidth = video.currentFrame.width;
+            frameHeight = video.currentFrame.height;
+            yBuffer = video.currentFrame.y_buffer.get();
+            cbBuffer = video.currentFrame.cb_buffer.get();
+            crBuffer = video.currentFrame.cr_buffer.get();
+        }
+        if (!yBuffer || !cbBuffer || !crBuffer)
             return;
 
         UpdateQuadForVideo(video);
@@ -822,13 +818,13 @@ namespace Ermine
         const int pboIndex = video.pboIndex;
 
         glActiveTexture(GL_TEXTURE0);
-        UploadPlane(video.tex_y, video.pbo_y[pboIndex], video.pboSizeY, frame.width, frame.height, frame.y_buffer);
+        UploadPlane(video.tex_y, video.pbo_y[pboIndex], video.pboSizeY, frameWidth, frameHeight, yBuffer);
 
         glActiveTexture(GL_TEXTURE1);
-        UploadPlane(video.tex_cb, video.pbo_cb[pboIndex], video.pboSizeCb, frame.width / 2, frame.height / 2, frame.cb_buffer);
+        UploadPlane(video.tex_cb, video.pbo_cb[pboIndex], video.pboSizeCb, frameWidth / 2, frameHeight / 2, cbBuffer);
 
         glActiveTexture(GL_TEXTURE2);
-        UploadPlane(video.tex_cr, video.pbo_cr[pboIndex], video.pboSizeCr, frame.width / 2, frame.height / 2, frame.cr_buffer);
+        UploadPlane(video.tex_cr, video.pbo_cr[pboIndex], video.pboSizeCr, frameWidth / 2, frameHeight / 2, crBuffer);
 
         video.pboIndex = (video.pboIndex + 1) % kPboCount;
 
@@ -902,6 +898,11 @@ namespace Ermine
     {
         while (!m_decodeStop)
         {
+            if (m_audioOnly)
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(5));
+                continue;
+            }
             std::shared_ptr<VideoData> video;
 
             {
@@ -911,17 +912,18 @@ namespace Ermine
                 {
                     if (m_decodeStop)
                         return true;
-                    for (auto& entry : m_videos)
-                    {
-                        auto& candidate = entry.second;
-                        if (!candidate || !candidate->loaded || candidate->stopDecoding)
-                            continue;
-                        if (!candidate->preloadRequested || candidate->preloaded)
-                            continue;
-                        video = candidate;
-                        return true;
-                    }
-                    return false;
+                    if (!m_isPlaying || m_currentVideo.empty())
+                        return false;
+                    auto it = m_videos.find(m_currentVideo);
+                    if (it == m_videos.end() || !it->second)
+                        return false;
+                    auto candidate = it->second;
+                    if (!candidate->loaded || candidate->stopDecoding || candidate->done)
+                        return false;
+                    if (candidate->hasNextFrame && candidate->pendingSkips <= 0 && !candidate->pendingSeekToStart)
+                        return false;
+                    video = candidate;
+                    return true;
                 });
             }
 
@@ -931,80 +933,84 @@ namespace Ermine
             if (!video)
                 continue;
 
+            std::lock_guard<std::mutex> decodeLock(video->decodeMutex);
+            if (video->stopDecoding || !video->plm)
+                continue;
+
+            bool seekToStart = false;
+            int skipsToProcess = 0;
             {
-                std::lock_guard<std::mutex> decodeLock(video->decodeMutex);
-                if (video->stopDecoding || !video->plm)
-                    continue;
+                std::lock_guard<std::mutex> stateLock(m_stateMutex);
+                seekToStart = video->pendingSeekToStart;
+                skipsToProcess = video->pendingSkips;
+            }
 
-                ReleasePreloadedFrames(*video);
-                video->preloaded = false;
-                video->preloadFailed = false;
+            if (seekToStart)
+            {
+                plm_seek(video->plm, 0.0, 1);
+                std::lock_guard<std::mutex> stateLock(m_stateMutex);
+                video->pendingSeekToStart = false;
+                video->pendingSkips = 0;
+                video->currentFrameIndex = -1;
+            }
 
-                while (!video->stopDecoding)
+            while (skipsToProcess > 0)
+            {
+                plm_frame_t* skipped = plm_decode_video(video->plm);
+                if (!skipped)
+                    break;
+                skipsToProcess--;
+                std::lock_guard<std::mutex> stateLock(m_stateMutex);
+                video->pendingSkips = skipsToProcess;
+                video->currentFrameIndex += 1;
+            }
+
+            bool needVideoFrame = false;
+            {
+                std::lock_guard<std::mutex> stateLock(m_stateMutex);
+                needVideoFrame = !video->hasNextFrame && !video->stopDecoding;
+            }
+
+            if (needVideoFrame)
+            {
+                plm_frame_t* frame = plm_decode_video(video->plm);
+                if (!frame)
                 {
-                    plm_frame_t* frame = plm_decode_video(video->plm);
-                    if (!frame)
-                        break;
-
-                    VideoFrame decoded = AcquireFrameBuffer(frame->y.width, frame->y.height);
+                    if (video->loop)
+                    {
+                        std::lock_guard<std::mutex> stateLock(m_stateMutex);
+                        video->pendingSeekToStart = true;
+                    }
+                    else
+                    {
+                        std::lock_guard<std::mutex> stateLock(m_stateMutex);
+                        video->done = true;
+                        m_isPlaying = false;
+                    }
+                }
+                else
+                {
+                    VideoFrame decoded;
+                    decoded.width = frame->y.width;
+                    decoded.height = frame->y.height;
                     const size_t y_size = static_cast<size_t>(frame->y.width) * static_cast<size_t>(frame->y.height);
                     const size_t cr_size = static_cast<size_t>(frame->cr.width) * static_cast<size_t>(frame->cr.height);
                     const size_t cb_size = static_cast<size_t>(frame->cb.width) * static_cast<size_t>(frame->cb.height);
 
-                    memcpy(decoded.y_buffer, frame->y.data, y_size);
-                    memcpy(decoded.cr_buffer, frame->cr.data, cr_size);
-                    memcpy(decoded.cb_buffer, frame->cb.data, cb_size);
+                    decoded.y_buffer = std::make_unique<uint8_t[]>(y_size);
+                    decoded.cr_buffer = std::make_unique<uint8_t[]>(cr_size);
+                    decoded.cb_buffer = std::make_unique<uint8_t[]>(cb_size);
 
-                    video->frames.push_back(decoded);
-                }
+                    memcpy(decoded.y_buffer.get(), frame->y.data, y_size);
+                    memcpy(decoded.cr_buffer.get(), frame->cr.data, cr_size);
+                    memcpy(decoded.cb_buffer.get(), frame->cb.data, cb_size);
 
-                if (video->audioEnabled && video->audioPlm)
-                {
-                    std::lock_guard<std::mutex> alock(video->audioMutex);
-                    video->audioBuffer.clear();
-                    while (!video->stopDecoding)
-                    {
-                        plm_samples_t* samples = plm_decode_audio(video->audioPlm);
-                        if (!samples)
-                            break;
-                        const size_t sampleCount = static_cast<size_t>(samples->count) * 2;
-                        const size_t oldSize = video->audioBuffer.size();
-                        video->audioBuffer.resize(oldSize + sampleCount);
-                        memcpy(video->audioBuffer.data() + oldSize, samples->interleaved, sampleCount * sizeof(float));
-                    }
-                    video->audioReadIndex = 0;
-                }
-
-                video->totalFrames = static_cast<int>(video->frames.size());
-                if (video->totalFrames <= 0)
-                {
-                    video->preloadFailed = true;
-                    video->done = true;
-                }
-                else
-                {
-                    video->currentFrameIndex = 0;
-                    video->elapsedTime = 0.0;
-                    video->currentFrame = video->frames.front();
-                    video->hasCurrentFrame = true;
-                    video->done = false;
-                }
-
-                video->preloaded = true;
-                video->preloadRequested = false;
-
-                if (video->plm)
-                {
-                    plm_destroy(video->plm);
-                    video->plm = nullptr;
-                }
-
-                if (video->audioPlm)
-                {
-                    plm_destroy(video->audioPlm);
-                    video->audioPlm = nullptr;
+                    std::lock_guard<std::mutex> stateLock(m_stateMutex);
+                    video->nextFrame = std::move(decoded);
+                    video->hasNextFrame = true;
                 }
             }
+
         }
     }
 
@@ -1019,12 +1025,6 @@ namespace Ermine
             video.plm = nullptr;
         }
 
-        if (video.audioPlm)
-        {
-            plm_destroy(video.audioPlm);
-            video.audioPlm = nullptr;
-        }
-
         if (video.audioChannel)
         {
             video.audioChannel->stop();
@@ -1036,6 +1036,7 @@ namespace Ermine
             video.audioSound->release();
             video.audioSound = nullptr;
         }
+        video.audioPcm.clear();
 
         if (video.tex_y)
         {
@@ -1068,17 +1069,10 @@ namespace Ermine
         video.pboSizeCb = 0;
         video.pboSizeCr = 0;
 
-        ReleasePreloadedFrames(video);
+        ResetStreamingState(video);
         video.stopDecoding = true;
-        {
-            std::lock_guard<std::mutex> alock(video.audioMutex);
-            video.audioBuffer.clear();
-            video.audioReadIndex = 0;
-        }
+        video.audioClockValid = false;
         video.audioEnabled = false;
-        video.preloaded = false;
-        video.preloadRequested = false;
-        video.preloadFailed = false;
         video.loaded = false;
         video.done = false;
     }
