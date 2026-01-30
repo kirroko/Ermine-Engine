@@ -427,14 +427,16 @@ namespace Ermine::ImguiUI
         if (!fs::exists(dir)) return;
         try {
             for (auto& entry : fs::directory_iterator(dir)) {
+
+                // Skip Unity-style meta files
+                if (entry.is_regular_file() && entry.path().extension() == ".meta") continue;
+
+                // Create asset entry
                 std::string name = entry.path().filename().string();
                 ImTextureID icon = GetPreviewIconForFile(entry.path());
                 int type = entry.is_directory() ? 1 : 0;
                 std::string uniqueKey = entry.path().string();
                 ImGuiID id = static_cast<ImGuiID>(std::hash<std::string>{}(uniqueKey));
-
-                // Remove this line:
-                // Items.emplace_back(id, type, name, false, icon, uniqueKey);
 
                 // Create asset and check import status
                 Asset asset(id, type, name, false, icon, uniqueKey);
