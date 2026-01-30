@@ -79,6 +79,7 @@
     <Compile Include="GearRotateAnimation.cs" />
     <Compile Include="LifeEssenceSkillController.cs" />
     <Compile Include="MainMenu.cs" />
+    <Compile Include="MainMenuVideo.cs" />
     <Compile Include="OrbTeleport.cs" />
     <Compile Include="PlayerController.cs" />
     <Compile Include="PlayerController2.cs" />

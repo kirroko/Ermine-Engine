@@ -3,7 +3,7 @@
 \file       Components.h
 \author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu (45%)
 \co-author  Jeremy Lim Ting Jie, jeremytingjie.lim, 2301370, jeremytingjie.lim\@digipen.edu (10%)
-\co-author  Ridhwan (5%)
+\co-author  Ridhwan Afandi, mohamedridhwan.b, 2301367, mohamedridhwan.b\@digipen.edu (5%)
 \co-author  WEE HONG RU Curtis, h.wee, 2301266, h.wee\@digipen.edu (40%)
 \date       Jan 24, 2025
 \brief      Updated components with modular material system
@@ -1782,6 +1782,7 @@ namespace Ermine
 		bool gammaCorrectionEnabled = true;
 		bool bloomEnabled = true;
 		bool skyboxIsHDR = false;
+		bool showSkybox = true;
 
 		// Post-processing parameters
 		float exposure = 1.0f;
@@ -1853,6 +1854,7 @@ namespace Ermine
 			xproperty::obj_member<"gammaCorrectionEnabled", &GlobalGraphics::gammaCorrectionEnabled>,
 			xproperty::obj_member<"bloomEnabled", &GlobalGraphics::bloomEnabled>,
 			xproperty::obj_member<"skyboxIsHDR", &GlobalGraphics::skyboxIsHDR>,
+			xproperty::obj_member<"showSkybox", &GlobalGraphics::showSkybox>,
 
 			// Post-process params
 			xproperty::obj_member<"exposure", &GlobalGraphics::exposure>,
@@ -3705,6 +3707,11 @@ namespace Ermine
 		float textScale = 1.0f;
 		float backgroundAlpha = 1.0f;  // Button background transparency (0.0 = invisible, 1.0 = opaque)
 
+		// Button state images (optional - if set, overrides color-based rendering)
+		std::string normalImage = "";   // Image shown in normal state
+		std::string hoverImage = "";    // Image shown when hovered (falls back to normalImage if empty)
+		std::string pressedImage = "";  // Image shown when pressed (falls back to hoverImage if empty)
+
 		// Button action
 		ButtonAction action = ButtonAction::None;
 		std::string actionData = "";  // Scene path for LoadScene, custom event name, etc.
@@ -3737,6 +3744,14 @@ namespace Ermine
 			out.AddMember("textColor", Vec3ToJson(textColor, alloc), alloc);
 			out.AddMember("textScale", textScale, alloc);
 			out.AddMember("backgroundAlpha", backgroundAlpha, alloc);
+
+			// Button state images
+			rapidjson::Value normalImageVal(normalImage.c_str(), alloc);
+			out.AddMember("normalImage", normalImageVal, alloc);
+			rapidjson::Value hoverImageVal(hoverImage.c_str(), alloc);
+			out.AddMember("hoverImage", hoverImageVal, alloc);
+			rapidjson::Value pressedImageVal(pressedImage.c_str(), alloc);
+			out.AddMember("pressedImage", pressedImageVal, alloc);
 
 			out.AddMember("action", static_cast<int>(action), alloc);
 			rapidjson::Value actionDataVal(actionData.c_str(), alloc);
@@ -3777,6 +3792,15 @@ namespace Ermine
 				textScale = in["textScale"].GetFloat();
 			if (in.HasMember("backgroundAlpha") && in["backgroundAlpha"].IsNumber())
 				backgroundAlpha = in["backgroundAlpha"].GetFloat();
+
+			// Button state images
+			if (in.HasMember("normalImage") && in["normalImage"].IsString())
+				normalImage = in["normalImage"].GetString();
+			if (in.HasMember("hoverImage") && in["hoverImage"].IsString())
+				hoverImage = in["hoverImage"].GetString();
+			if (in.HasMember("pressedImage") && in["pressedImage"].IsString())
+				pressedImage = in["pressedImage"].GetString();
+
 			if (in.HasMember("action") && in["action"].IsInt())
 				action = static_cast<ButtonAction>(in["action"].GetInt());
 			if (in.HasMember("actionData") && in["actionData"].IsString())

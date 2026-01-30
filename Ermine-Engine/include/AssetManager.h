@@ -20,6 +20,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Texture.h"
 #include "Cubemap.h"
 #include "Model.h"
+#include "Serialisation.h"
 
 // Forward declaration to avoid circular includes
 namespace Ermine::graphics {

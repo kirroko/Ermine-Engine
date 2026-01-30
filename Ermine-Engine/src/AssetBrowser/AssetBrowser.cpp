@@ -427,20 +427,22 @@ namespace Ermine::ImguiUI
         if (!fs::exists(dir)) return;
         try {
             for (auto& entry : fs::directory_iterator(dir)) {
+
+                // Skip Unity-style meta files
+                if (entry.is_regular_file() && entry.path().extension() == ".meta") continue;
+
+                // Create asset entry
                 std::string name = entry.path().filename().string();
                 ImTextureID icon = GetPreviewIconForFile(entry.path());
                 int type = entry.is_directory() ? 1 : 0;
                 std::string uniqueKey = entry.path().string();
                 ImGuiID id = static_cast<ImGuiID>(std::hash<std::string>{}(uniqueKey));
 
-                // ❌ Remove this line:
-                // Items.emplace_back(id, type, name, false, icon, uniqueKey);
-
-                // ✅ Create asset and check import status
+                // Create asset and check import status
                 Asset asset(id, type, name, false, icon, uniqueKey);
                 CheckImportStatus(asset);
 
-                // ✅ Add only once
+                // Add only once
                 Items.emplace_back(asset);
             }
         }
@@ -482,7 +484,7 @@ namespace Ermine::ImguiUI
             fs::copy_file(src, dest, fs::copy_options::overwrite_existing);
             EE_CORE_INFO("Imported {} -> {}", src.string(), dest.string());
 
-            // ✅ NEW: Auto-import
+            // Auto-import
             if (m_Pipeline)
             {
                 auto GetExtLower = [](const std::string& path) {
@@ -502,11 +504,11 @@ namespace Ermine::ImguiUI
                     auto result = m_Pipeline->ReimportAsset(dest.string());
 
                     if (result.success) {
-                        EE_CORE_INFO("✓ Auto-import successful ({}ms)", result.importTimeMs);
+                        EE_CORE_INFO("Auto-import successful ({}ms)", result.importTimeMs);
                         m_Pipeline->GetDatabase().Save();
                     }
                     else {
-                        EE_CORE_WARN("⚠ Auto-import failed: {}", result.errorMessage);
+                        EE_CORE_WARN("Auto-import failed: {}", result.errorMessage);
                     }
                 }
             }
@@ -704,27 +706,9 @@ namespace Ermine::ImguiUI
 
             // Drag-and-drop support
             if (ImGui::BeginDragDropSource()) {
-                std::string ext = GetExtensionLower(isSelectedFile);
-
-                const char* payloadType = "ASSET_FILE";
-
-                // Determine payload type based on file extension
-                if (ext == "fbx" || ext == "obj" || ext == "gltf" || ext == "glb" || ext == "mesh" || ext == "skin")
-                    payloadType = "ASSET_MODEL";
-                else if (ext == "png" || ext == "jpg" || ext == "jpeg" || ext == "dds")
-                    payloadType = "ASSET_TEXTURE";
-                else if (ext == "wav" || ext == "mp3" || ext == "ogg")
-                    payloadType = "ASSET_AUDIO";
-                else if (ext == "prefab")
-                    payloadType = "ASSET_PREFAB";
-                else if (ext == "ttf")
-                    payloadType = "ASSET_FONT";
-                else if (ext == "glsl")
-                    payloadType = "ASSET_SHADER";
-
-                ImGui::SetDragDropPayload(payloadType, isSelectedFile.c_str(), isSelectedFile.size() + 1);
+                ImGui::SetDragDropPayload("ASSET_BROWSER_FILE", isSelectedFile.c_str(), isSelectedFile.size() + 1);
                 //auto& metadata = ECS::GetInstance().GetComponent<ObjectMetaData>(entity);
-                ImGui::TextUnformatted(payloadType);
+                ImGui::Text("Moving File");
                 ImGui::EndDragDropSource();
             }
 

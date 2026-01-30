@@ -303,7 +303,7 @@ float calculateAttenuation(int lightIndex, vec3 fragPosView, out vec3 lightDir)
         if (distance > range) {
             attenuation = 0.0;
         } else {
-            float fadeDistance = range * 0.1;
+            float fadeDistance = range * 0.4;
             float fadeStart = range - fadeDistance;
             float fadeFactor = smoothstep(range, fadeStart, distance);
             attenuation *= fadeFactor;

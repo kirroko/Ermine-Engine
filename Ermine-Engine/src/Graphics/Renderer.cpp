@@ -3586,7 +3586,7 @@ void Renderer::RenderDeferredPipeline(const Mtx44& view, const Mtx44& projection
 
 	// Render skybox after lighting but before transparent objects
 	// No depth blit needed - PostProcess FBO shares G-Buffer's depth texture
-	if (m_skybox && m_skybox->IsValid() && m_PostProcessBuffer && m_GBuffer) {
+	if (m_ShowSkybox && m_skybox && m_skybox->IsValid() && m_PostProcessBuffer && m_GBuffer) {
 		glBindFramebuffer(GL_FRAMEBUFFER, m_PostProcessBuffer->FBO);
 		glViewport(0, 0, m_PostProcessBuffer->width, m_PostProcessBuffer->height);
 
@@ -4225,7 +4225,7 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 #endif
 
 		// Render skybox FIRST as the background
-		if (m_skybox && m_skybox->IsValid()) {
+		if (m_ShowSkybox && m_skybox && m_skybox->IsValid()) {
 			glDepthMask(GL_FALSE);
 			m_skybox->Render(view, projection);
 			glDepthMask(GL_TRUE);
@@ -6354,23 +6354,23 @@ void Renderer::RenderPickingPass(const Mtx44& view, const Mtx44& projection)
 		return;
 
 	// 1) Prime depth: copy scene depth into picking FBO (source depends on path)
-	if (m_UseDeferredRendering && m_GBuffer)
-	{
-		glBindFramebuffer(GL_READ_FRAMEBUFFER, m_GBuffer->FBO);
-	}
-	else if (m_OffscreenBuffer)
-	{
-		glBindFramebuffer(GL_READ_FRAMEBUFFER, m_OffscreenBuffer->FBO);
-	}
-	else
-	{
-		return;
-	}
+	//if (m_UseDeferredRendering && m_GBuffer)
+	//{
+	//	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_GBuffer->FBO);
+	//}
+	//else if (m_OffscreenBuffer)
+	//{
+	//	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_OffscreenBuffer->FBO);
+	//}
+	//else
+	//{
+	//	return;
+	//}
 
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_PickingBuffer->FBO);
-	glBlitFramebuffer(0, 0, m_PickingBuffer->width, m_PickingBuffer->height,
-		0, 0, m_PickingBuffer->width, m_PickingBuffer->height,
-		GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+	//glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_PickingBuffer->FBO);
+	//glBlitFramebuffer(0, 0, m_PickingBuffer->width, m_PickingBuffer->height,
+	//	0, 0, m_PickingBuffer->width, m_PickingBuffer->height,
+	//	GL_DEPTH_BUFFER_BIT, GL_NEAREST);
 
 	// 2) Render IDs using indirect rendering
 	glBindFramebuffer(GL_FRAMEBUFFER, m_PickingBuffer->FBO);
@@ -6379,6 +6379,8 @@ void Renderer::RenderPickingPass(const Mtx44& view, const Mtx44& projection)
 	// Clear IDs to 0
 	GLuint clearVal[1] = { 0u };
 	glClearBufferuiv(GL_COLOR, 0, clearVal);
+	glClearDepth(1.0);
+	glClear(GL_DEPTH_BUFFER_BIT);
 
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
@@ -6635,6 +6637,7 @@ void Renderer::SyncToGlobalGraphics()
 	m_GlobalGraphics.gammaCorrectionEnabled = m_GammaCorrectionEnabled;
 	m_GlobalGraphics.bloomEnabled = m_BloomEnabled;
 	m_GlobalGraphics.skyboxIsHDR = m_SkyBoxisHDR;
+	m_GlobalGraphics.showSkybox = m_ShowSkybox;
 
 	m_GlobalGraphics.exposure = m_Exposure;
 	m_GlobalGraphics.contrast = m_Contrast;
@@ -6690,6 +6693,7 @@ void Renderer::ApplyFromGlobalGraphics()
 	m_GammaCorrectionEnabled = m_GlobalGraphics.gammaCorrectionEnabled;
 	m_BloomEnabled = m_GlobalGraphics.bloomEnabled;
 	m_SkyBoxisHDR = m_GlobalGraphics.skyboxIsHDR;
+	m_ShowSkybox = m_GlobalGraphics.showSkybox;
 
 	m_Exposure = m_GlobalGraphics.exposure;
 	m_Contrast = m_GlobalGraphics.contrast;
@@ -6738,7 +6742,7 @@ std::pair<bool, Ermine::EntityID> Renderer::PickEntityAt(const int& x, const int
 	glPixelStorei(GL_PACK_ALIGNMENT, 1);
 
 	uint32_t id = 0u;
-	glReadPixels(x, y, 1, 1, GL_RED_INTEGER, GL_UNSIGNED_BYTE, &id);
+	glReadPixels(x, y, 1, 1, GL_RED_INTEGER, GL_UNSIGNED_INT, &id);
 
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 

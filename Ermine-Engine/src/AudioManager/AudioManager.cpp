@@ -24,6 +24,8 @@ Implementation::Implementation() {
 
 	mpSystem = NULL;
 	CAudioEngine::ErrorCheck(mpStudioSystem->getCoreSystem(&mpSystem));
+	// Increase DSP buffer size to reduce underruns/crackling on streaming audio.
+	CAudioEngine::ErrorCheck(mpSystem->setDSPBufferSize(2048, 4));
 
 	mnNextChannelId = 0;
 }
@@ -355,6 +357,10 @@ void CAudioEngine::SetListenerAttributes(const Vector3D& position,
 		&fwd,
 		&upVec
 	));
+}
+
+FMOD::System* CAudioEngine::GetCoreSystem() {
+	return sgpImplementation ? sgpImplementation->mpSystem : nullptr;
 }
 
 void CAudioEngine::Shutdown() {
