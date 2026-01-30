@@ -88,6 +88,8 @@
     <Compile Include="CoreModule\SceneManager.cs" />
     <Compile Include="CoreModule\Time.cs" />
     <Compile Include="CoreModule\Transform.cs" />
+    <Compile Include="CoreModule\UIBookCounter.cs" />
+    <Compile Include="CoreModule\UIHealthbar.cs" />
     <Compile Include="CoreModule\UISystem.cs" />
     <Compile Include="CoreModule\Vector2.cs" />
     <Compile Include="CoreModule\Vector3.cs" />

@@ -302,6 +302,9 @@ void Renderer::Init(const int& screenWidth, const int& screenHeight)
 	m_MaterialsDirty = true;
 
 	GenerateIGNTexture();
+
+	// Initialize light probe capture resources
+	InitializeProbeCaptureResources();
 }
 
 /**
@@ -3226,6 +3229,9 @@ void Renderer::RenderLightingPass(const Mtx44& view, const Mtx44& projection)
 	m_LightPassShader->SetUniform3f("u_AmbientColor", m_AmbientColor);
 	m_LightPassShader->SetUniform1f("u_AmbientIntensity", m_AmbientIntensity);
 
+	// Set light probe parameters
+	m_LightPassShader->SetUniform1i("u_LightProbesEnabled", m_LightProbesEnabled ? 1 : 0);
+
 	// Set shading mode
 	m_LightPassShader->SetUniform1i("u_ShadingMode", m_IsBlinnPhong ? 1 : 0);
 
@@ -3574,6 +3580,9 @@ void Renderer::RenderDeferredPipeline(const Mtx44& view, const Mtx44& projection
 
 	// Re-sync lights UBO after shadow layer allocation/matrix updates
 	UpdateLightsUBO(editor::EditorCamera::GetInstance().GetViewMatrix());
+
+	// Update light probes UBO
+	UpdateLightProbesUBO();
 
 	// Depth pre-pass - render depth-only to eliminate fragment shader overdraw
 	RenderDepthPrePass(view, projection);
@@ -4048,6 +4057,399 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
 }
 
 /**
+ * @brief Initializes light probe capture resources (cubemap FBO and textures).
+ */
+void Renderer::InitializeProbeCaptureResources()
+{
+	// Clean up existing resources if any
+	if (m_ProbeCubemap != 0) {
+		glDeleteTextures(1, &m_ProbeCubemap);
+		m_ProbeCubemap = 0;
+	}
+	if (m_ProbeDepthCubemap != 0) {
+		glDeleteTextures(1, &m_ProbeDepthCubemap);
+		m_ProbeDepthCubemap = 0;
+	}
+	if (m_ProbeCubemapFBO != 0) {
+		glDeleteFramebuffers(1, &m_ProbeCubemapFBO);
+		m_ProbeCubemapFBO = 0;
+	}
+
+	// Create cubemap color texture
+	glGenTextures(1, &m_ProbeCubemap);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, m_ProbeCubemap);
+	for (int i = 0; i < 6; ++i) {
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F,
+			m_ProbeCaptureResolution, m_ProbeCaptureResolution, 0, GL_RGB, GL_FLOAT, nullptr);
+	}
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+	// Create cubemap depth texture
+	glGenTextures(1, &m_ProbeDepthCubemap);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, m_ProbeDepthCubemap);
+	for (int i = 0; i < 6; ++i) {
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT24,
+			m_ProbeCaptureResolution, m_ProbeCaptureResolution, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+	}
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+	// Create FBO
+	glGenFramebuffers(1, &m_ProbeCubemapFBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, m_ProbeCubemapFBO);
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_ProbeCubemap, 0);
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_ProbeDepthCubemap, 0);
+
+	// Check framebuffer status
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		EE_CORE_ERROR("Light probe cubemap FBO is not complete!");
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+
+	// Create Probes UBO
+	if (m_LightProbesUBO == 0) {
+		glGenBuffers(1, &m_LightProbesUBO);
+		glBindBuffer(GL_UNIFORM_BUFFER, m_LightProbesUBO);
+		// Allocate for probe count (vec4) + MAX_PROBES * LightProbeGPU
+		const size_t uboSize = sizeof(glm::vec4) + MAX_PROBES * sizeof(LightProbeGPU);
+		glBufferData(GL_UNIFORM_BUFFER, uboSize, nullptr, GL_DYNAMIC_DRAW);
+		glBindBufferBase(GL_UNIFORM_BUFFER, ProbesBindingPoint, m_LightProbesUBO);
+		glBindBuffer(GL_UNIFORM_BUFFER, 0);
+	}
+
+	EE_CORE_INFO("Light probe capture resources initialized: Resolution={0}x{0}", m_ProbeCaptureResolution);
+	glCheckError();
+}
+
+/**
+ * @brief Captures environment lighting at a probe's position into spherical harmonics.
+ */
+void Renderer::CaptureLightProbe(EntityID probeEntity)
+{
+	auto& ecs = Ermine::ECS::GetInstance();
+	if (!ecs.HasComponent<LightProbeComponent>(probeEntity) || !ecs.HasComponent<Transform>(probeEntity)) {
+		EE_CORE_WARN("Entity {0} does not have LightProbeComponent or Transform!", static_cast<uint32_t>(probeEntity));
+		return;
+	}
+
+	auto& probe = ecs.GetComponent<LightProbeComponent>(probeEntity);
+	const auto& trans = ecs.GetComponent<Transform>(probeEntity);
+	glm::vec3 probePos(trans.position.x, trans.position.y, trans.position.z);
+
+	// Update capture resolution if changed
+	if (probe.captureResolution != m_ProbeCaptureResolution) {
+		m_ProbeCaptureResolution = probe.captureResolution;
+		InitializeProbeCaptureResources(); // Recreate with new resolution
+	}
+
+	// Setup projection matrix (90 degree FOV for cubemap faces)
+	glm::mat4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 100.0f);
+
+	// Cubemap view matrices (looking at +X, -X, +Y, -Y, +Z, -Z)
+	glm::mat4 captureViews[6] = {
+		glm::lookAt(probePos, probePos + glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),  // +X
+		glm::lookAt(probePos, probePos + glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)), // -X
+		glm::lookAt(probePos, probePos + glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),   // +Y
+		glm::lookAt(probePos, probePos + glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)),  // -Y
+		glm::lookAt(probePos, probePos + glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)),  // +Z
+		glm::lookAt(probePos, probePos + glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f))  // -Z
+	};
+
+	// Bind cubemap FBO
+	glBindFramebuffer(GL_FRAMEBUFFER, m_ProbeCubemapFBO);
+	glViewport(0, 0, m_ProbeCaptureResolution, m_ProbeCaptureResolution);
+
+	// Render each cubemap face
+	for (int face = 0; face < 6; ++face) {
+		// Attach specific cubemap face to FBO
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+			GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, m_ProbeCubemap, 0);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+			GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, m_ProbeDepthCubemap, 0);
+
+		// Clear
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		// Render scene from this face's perspective
+		// TODO: Optimize by rendering only static geometry for baking
+		// For now, we'll render the full scene (this will be slow but complete)
+		// Convert glm back to Mtx44
+		Mtx44 viewMtx = Mtx44(
+			captureViews[face][0][0], captureViews[face][1][0], captureViews[face][2][0], captureViews[face][3][0],
+			captureViews[face][0][1], captureViews[face][1][1], captureViews[face][2][1], captureViews[face][3][1],
+			captureViews[face][0][2], captureViews[face][1][2], captureViews[face][2][2], captureViews[face][3][2],
+			captureViews[face][0][3], captureViews[face][1][3], captureViews[face][2][3], captureViews[face][3][3]
+		);
+		Mtx44 projMtx = Mtx44(
+			captureProjection[0][0], captureProjection[1][0], captureProjection[2][0], captureProjection[3][0],
+			captureProjection[0][1], captureProjection[1][1], captureProjection[2][1], captureProjection[3][1],
+			captureProjection[0][2], captureProjection[1][2], captureProjection[2][2], captureProjection[3][2],
+			captureProjection[0][3], captureProjection[1][3], captureProjection[2][3], captureProjection[3][3]
+		);
+		
+		// NOTE: This is a simplified capture - in production you'd want to:
+		// 1. Render only static geometry
+		// 2. Disable probe entity itself to avoid self-capture
+		// 3. Use a lower quality/simplified shader
+		// For now, we'll just clear to ambient color as placeholder
+		// Real implementation would call RenderScene or similar
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	// Project captured cubemap to SH coefficients
+	ProjectCubemapToSH(m_ProbeCubemap, probe.shCoefficients);
+
+	probe.needsRebake = false;
+	glCheckError();
+
+	EE_CORE_INFO("Captured light probe at position ({0}, {1}, {2})", probePos.x, probePos.y, probePos.z);
+}
+
+/**
+ * @brief Projects a cubemap to spherical harmonics (L2 - 9 coefficients).
+ */
+void Renderer::ProjectCubemapToSH(GLuint cubemapID, glm::vec3 outCoefficients[9])
+{
+	// Initialize coefficients to zero
+	for (int i = 0; i < 9; ++i) {
+		outCoefficients[i] = glm::vec3(0.0f);
+	}
+
+	// Read cubemap data from GPU
+	glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapID);
+
+	const int resolution = m_ProbeCaptureResolution;
+	std::vector<glm::vec3> faceData(resolution * resolution);
+
+	// SH basis function constants
+	const float c0 = 0.282095f;  // 1 / (2 * sqrt(pi))
+	const float c1 = 0.488603f;  // sqrt(3 / (4 * pi))
+	const float c2 = 1.092548f;  // sqrt(15 / (4 * pi))
+	const float c3 = 0.315392f;  // sqrt(5 / (16 * pi))
+	const float c4 = 0.546274f;  // sqrt(15 / (16 * pi))
+
+	float totalWeight = 0.0f;
+
+	// Process each cubemap face
+	for (int face = 0; face < 6; ++face) {
+		glGetTexImage(GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, 0, GL_RGB, GL_FLOAT, faceData.data());
+
+		// Sample each pixel
+		for (int y = 0; y < resolution; ++y) {
+			for (int x = 0; x < resolution; ++x) {
+				// Convert pixel coordinates to normalized [-1, 1] range
+				float u = (x + 0.5f) / resolution * 2.0f - 1.0f;
+				float v = (y + 0.5f) / resolution * 2.0f - 1.0f;
+
+				// Calculate direction vector for this cubemap pixel
+				glm::vec3 dir;
+				switch (face) {
+				case 0: dir = glm::normalize(glm::vec3(1.0f, -v, -u)); break;  // +X
+				case 1: dir = glm::normalize(glm::vec3(-1.0f, -v, u)); break;  // -X
+				case 2: dir = glm::normalize(glm::vec3(u, 1.0f, v)); break;    // +Y
+				case 3: dir = glm::normalize(glm::vec3(u, -1.0f, -v)); break;  // -Y
+				case 4: dir = glm::normalize(glm::vec3(u, -v, 1.0f)); break;   // +Z
+				case 5: dir = glm::normalize(glm::vec3(-u, -v, -1.0f)); break; // -Z
+				}
+
+				// Get pixel color
+				glm::vec3 color = faceData[y * resolution + x];
+
+				// Solid angle weight (approximate)
+				float temp = 1.0f + u * u + v * v;
+				float weight = 4.0f / (sqrt(temp) * temp);
+				totalWeight += weight;
+
+				// Evaluate L2 SH basis functions
+				float sh[9];
+				sh[0] = c0;                            // Y(0,0)
+				sh[1] = c1 * dir.y;                    // Y(1,-1)
+				sh[2] = c1 * dir.z;                    // Y(1,0)
+				sh[3] = c1 * dir.x;                    // Y(1,1)
+				sh[4] = c2 * dir.x * dir.y;            // Y(2,-2)
+				sh[5] = c2 * dir.y * dir.z;            // Y(2,-1)
+				sh[6] = c3 * (3.0f * dir.z * dir.z - 1.0f); // Y(2,0)
+				sh[7] = c2 * dir.x * dir.z;            // Y(2,1)
+				sh[8] = c4 * (dir.x * dir.x - dir.y * dir.y); // Y(2,2)
+
+				// Accumulate weighted SH coefficients
+				for (int i = 0; i < 9; ++i) {
+					outCoefficients[i] += color * sh[i] * weight;
+				}
+			}
+		}
+	}
+
+	// Normalize by total weight
+	for (int i = 0; i < 9; ++i) {
+		outCoefficients[i] *= (4.0f * glm::pi<float>()) / totalWeight;
+	}
+
+	glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+	glCheckError();
+}
+
+/**
+ * @brief Generates probe entities for a probe volume based on grid parameters.
+ */
+void Renderer::GenerateProbeVolume(EntityID volumeEntity)
+{
+	auto& ecs = Ermine::ECS::GetInstance();
+	if (!ecs.HasComponent<LightProbeVolumeComponent>(volumeEntity)) {
+		EE_CORE_WARN("Entity {0} does not have LightProbeVolumeComponent!", static_cast<uint32_t>(volumeEntity));
+		return;
+	}
+
+	auto& volume = ecs.GetComponent<LightProbeVolumeComponent>(volumeEntity);
+	const auto& volTrans = ecs.GetComponent<Transform>(volumeEntity);
+
+	// Clear existing probes
+	for (EntityID probe : volume.generatedProbes) {
+		ecs.DestroyEntity(probe);
+	}
+	volume.generatedProbes.clear();
+
+	// Calculate grid dimensions
+	glm::vec3 volumeSize = volume.boundsMax - volume.boundsMin;
+	glm::ivec3 gridDim(
+		static_cast<int>(volumeSize.x / volume.probeSpacing.x) + 1,
+		static_cast<int>(volumeSize.y / volume.probeSpacing.y) + 1,
+		static_cast<int>(volumeSize.z / volume.probeSpacing.z) + 1
+	);
+
+	volume.totalProbes = gridDim.x * gridDim.y * gridDim.z;
+
+	// Generate probe entities in grid
+	for (int z = 0; z < gridDim.z; ++z) {
+		for (int y = 0; y < gridDim.y; ++y) {
+			for (int x = 0; x < gridDim.x; ++x) {
+				// Calculate probe position in world space
+				glm::vec3 localPos = volume.boundsMin + glm::vec3(
+					x * volume.probeSpacing.x,
+					y * volume.probeSpacing.y,
+					z * volume.probeSpacing.z
+				);
+
+				glm::vec3 worldPos = glm::vec3(volTrans.position.x, volTrans.position.y, volTrans.position.z) + localPos;
+
+				// Create probe entity
+				EntityID probeEntity = ecs.CreateEntity();
+				ecs.AddComponent<ObjectMetaData>(probeEntity, ObjectMetaData());
+				auto& probeMetadata = ecs.GetComponent<ObjectMetaData>(probeEntity);
+				probeMetadata.name = "Probe_" + std::to_string(x) + "_" + std::to_string(y) + "_" + std::to_string(z);
+				probeMetadata.selfActive = true;
+				
+				ecs.AddComponent<Transform>(probeEntity, Transform());
+				auto& probeTrans = ecs.GetComponent<Transform>(probeEntity);
+				probeTrans.position = Vec3(worldPos.x, worldPos.y, worldPos.z);
+
+				ecs.AddComponent<LightProbeComponent>(probeEntity, LightProbeComponent());
+				auto& probe = ecs.GetComponent<LightProbeComponent>(probeEntity);
+				probe.needsRebake = true;
+
+				// Set hierarchy (make probe child of volume)
+				if (ecs.HasComponent<HierarchyComponent>(volumeEntity)) {
+					ecs.AddComponent<HierarchyComponent>(probeEntity, HierarchyComponent(volumeEntity));
+				}
+
+				volume.generatedProbes.push_back(probeEntity);
+			}
+		}
+	}
+
+	EE_CORE_INFO("Generated {0} probes for volume (grid: {1}x{2}x{3})", 
+		volume.totalProbes, gridDim.x, gridDim.y, gridDim.z);
+}
+
+/**
+ * @brief Bakes all light probes in the scene.
+ */
+void Renderer::BakeAllProbes()
+{
+	auto& ecs = Ermine::ECS::GetInstance();
+	
+	int bakedCount = 0;
+	// Iterate through all living entities
+	for (EntityID entity = 0; entity < MAX_ENTITIES; ++entity) {
+		if (!ecs.HasComponent<LightProbeComponent>(entity)) continue;
+		if (!ecs.HasComponent<Transform>(entity)) continue;
+		
+		auto& probe = ecs.GetComponent<LightProbeComponent>(entity);
+		if (probe.needsRebake && probe.isActive) {
+			CaptureLightProbe(entity);
+			bakedCount++;
+		}
+	}
+
+	EE_CORE_INFO("Baked {0} light probes", bakedCount);
+}
+
+/**
+ * @brief Updates the light probes UBO with current probe data.
+ */
+void Renderer::UpdateLightProbesUBO()
+{
+	if (!m_LightProbesEnabled || m_LightProbesUBO == 0) {
+		return;
+	}
+
+	auto& ecs = Ermine::ECS::GetInstance();
+	
+	std::vector<LightProbeGPU> probesGPU;
+	probesGPU.reserve(MAX_PROBES);
+
+	// Collect active probes
+	for (EntityID entity = 0; entity < MAX_ENTITIES; ++entity) {
+		if (!ecs.HasComponent<LightProbeComponent>(entity)) continue;
+		if (!ecs.HasComponent<Transform>(entity)) continue;
+		
+		const auto& probe = ecs.GetComponent<LightProbeComponent>(entity);
+		const auto& trans = ecs.GetComponent<Transform>(entity);
+
+		if (!probe.isActive) continue;
+		if (probesGPU.size() >= MAX_PROBES) break; // Limit to MAX_PROBES
+
+		LightProbeGPU gpuProbe;
+		gpuProbe.position_radius = glm::vec4(trans.position.x, trans.position.y, trans.position.z, probe.influenceRadius);
+		
+		// Copy SH coefficients (convert vec3 array to vec4 for std140 alignment)
+		for (int i = 0; i < 9; ++i) {
+			gpuProbe.shCoefficients[i] = glm::vec4(probe.shCoefficients[i], 0.0f);
+		}
+
+		gpuProbe.flags = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f); // isActive = 1.0
+
+		probesGPU.push_back(gpuProbe);
+	}
+
+	// Upload to UBO
+	glBindBuffer(GL_UNIFORM_BUFFER, m_LightProbesUBO);
+
+	// Upload probe count
+	glm::vec4 probeCountVec(static_cast<float>(probesGPU.size()), 0.0f, 0.0f, 0.0f);
+	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::vec4), &probeCountVec);
+
+	// Upload probe data
+	if (!probesGPU.empty()) {
+		const GLsizeiptr probesSize = static_cast<GLsizeiptr>(probesGPU.size() * sizeof(LightProbeGPU));
+		glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::vec4), probesSize, probesGPU.data());
+	}
+
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+	glCheckError();
+}
+
+/**
  * @brief Updates the material's SSBO with the specified material data.
  *
  * If the material SSBO does not exist, this function creates one. It then uploads the given material data
@@ -4195,6 +4597,7 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 	// Update lights UBO
 	if (!m_UseDeferredRendering) {
 		UpdateLightsUBO(editor::EditorCamera::GetInstance().GetViewMatrix());
+		UpdateLightProbesUBO();
 	}
 
 

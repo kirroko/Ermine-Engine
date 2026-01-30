@@ -175,6 +175,29 @@ namespace Ermine::graphics
         glm::uvec4 data; // x = shadow layer index
     };
 
+	/**
+	 * @brief GPU representation of a light probe for UBO transmission
+	 * Stores spherical harmonics coefficients for indirect lighting
+	 */
+	struct LightProbeGPU
+	{
+		glm::vec4 position_radius;      // xyz = world position, w = influence radius
+		glm::vec4 shCoefficients[9];    // SH L2 coefficients (vec4 for std140 alignment, only xyz used)
+		glm::vec4 flags;                // x = isActive (1.0 or 0.0), yzw = padding
+	};
+
+	/**
+	 * @brief Volume of light probes stored on GPU
+	 */
+	struct LightProbeVolumeGPU
+	{
+		glm::vec4 boundsMin_spacing;    // xyz = boundsMin, w = unused
+		glm::vec4 boundsMax_padding;    // xyz = boundsMax, w = unused
+		glm::vec4 gridDimensions;       // xyz = probe count per axis, w = total probe count
+		glm::vec4 probeSpacing;         // xyz = spacing between probes, w = unused
+	};
+
+
 
     // Forward declarations
     struct MaterialSSBO;
@@ -622,6 +645,45 @@ namespace Ermine::graphics
          */
         void UpdateLightsUBO(const Mtx44& view);
         
+		/**
+		 * @brief Updates the light probes UBO with current probe data from all probe entities.
+		 * Uploads probe positions, SH coefficients, and influence radii to GPU.
+		 */
+		void UpdateLightProbesUBO();
+
+		/**
+		 * @brief Initializes light probe capture resources (cubemap FBO, textures).
+		 * Must be called before capturing any probes.
+		 */
+		void InitializeProbeCaptureResources();
+
+		/**
+		 * @brief Captures environment lighting at a probe's position into SH coefficients.
+		 * Renders scene to cubemap, then projects to spherical harmonics.
+		 * @param probeEntity The entity containing the LightProbeComponent to update.
+		 */
+		void CaptureLightProbe(EntityID probeEntity);
+
+		/**
+		 * @brief Projects a cubemap texture to spherical harmonics (L2, 9 coefficients).
+		 * @param cubemapID OpenGL texture ID of the cubemap to project.
+		 * @param outCoefficients Array to store 9 vec3 SH coefficients (27 floats total).
+		 */
+		void ProjectCubemapToSH(GLuint cubemapID, glm::vec3 outCoefficients[9]);
+
+		/**
+		 * @brief Generates probe entities for a probe volume based on grid parameters.
+		 * Creates child probe entities within the volume's bounds at specified spacing.
+		 * @param volumeEntity The entity containing the LightProbeVolumeComponent.
+		 */
+		void GenerateProbeVolume(EntityID volumeEntity);
+
+		/**
+		 * @brief Bakes all probes in the scene (captures environment lighting).
+		 * Iterates through all probe entities and captures their lighting data.
+		 */
+		void BakeAllProbes();
+
         /**
          * @brief Updates the material's shader storage buffer object (SSBO) at a specific index.
          * Used for dynamic material updates after initial compilation.
@@ -1012,6 +1074,13 @@ namespace Ermine::graphics
         std::unordered_set<GLuint> m_LightBlockBoundPrograms;
         bool m_IsBlinnPhong = false; // Default to PBR shading
 
+		// Light Probe UBO
+		GLuint m_LightProbesUBO = 0;
+		static constexpr GLuint ProbesBindingPoint = 5; // UBO binding point for probes
+		static constexpr int MAX_PROBES = 128; // Maximum probes in UBO at once
+		std::unordered_set<GLuint> m_ProbeBlockBoundPrograms;
+		bool m_LightProbesEnabled = true; // Toggle probe contribution
+
         // Material SSBO
         GLuint m_MaterialSSBO = 0;
         size_t m_MaterialSSBOCapacity = 0; // Track buffer capacity to avoid orphaning
@@ -1208,6 +1277,12 @@ namespace Ermine::graphics
         uint64_t m_ShadowMapArrayHandle = 0;
         GLuint m_ShadowMapFBO = 0;
         GLuint m_ShadowMapArray = 0;
+
+		// Light Probe Capture Resources
+		GLuint m_ProbeCubemapFBO = 0;       // Framebuffer for capturing probe cubemaps
+		GLuint m_ProbeCubemap = 0;          // Cubemap texture for capture
+		GLuint m_ProbeDepthCubemap = 0;     // Depth buffer for cubemap capture
+		int m_ProbeCaptureResolution = 64;  // Default capture resolution per face
 
         // Noise textures
         GLuint m_IGNTexture = 0;

@@ -4849,4 +4849,165 @@ namespace Ermine
 			xproperty::obj_member<"captionPosition", &UIImageComponent::captionPosition>
 		)
 	};
+
+	/*!***********************************************************************
+	\brief
+		Light Probe Component stores spherical harmonics coefficients for
+		indirect lighting at a specific point in the scene. Probes capture
+		environment lighting and provide ambient/GI contributions.
+	*************************************************************************/
+	struct LightProbeComponent
+	{
+		glm::vec3 shCoefficients[9]{};  // L2 SH coefficients (9 per RGB channel stored as vec3)
+		float influenceRadius{ 5.0f };  // Radius of influence for blending
+		bool isActive{ true };          // Whether this probe contributes to lighting
+		bool needsRebake{ true };       // Flag to trigger recapture
+		int captureResolution{ 64 };    // Cubemap face resolution for capture (64, 128, 256)
+		
+		LightProbeComponent() 
+		{
+			// Initialize SH coefficients to zero
+			for (int i = 0; i < 9; ++i) {
+				shCoefficients[i] = glm::vec3(0.0f);
+			}
+		}
+
+		template<typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const
+		{
+			out.SetObject();
+			out.AddMember("influenceRadius", influenceRadius, alloc);
+			out.AddMember("isActive", isActive, alloc);
+			out.AddMember("captureResolution", captureResolution, alloc);
+			
+			// Serialize SH coefficients
+			rapidjson::Value shArray(rapidjson::kArrayType);
+			for (int i = 0; i < 9; ++i) {
+				rapidjson::Value coeff(rapidjson::kArrayType);
+				coeff.PushBack(shCoefficients[i].x, alloc);
+				coeff.PushBack(shCoefficients[i].y, alloc);
+				coeff.PushBack(shCoefficients[i].z, alloc);
+				shArray.PushBack(coeff, alloc);
+			}
+			out.AddMember("shCoefficients", shArray, alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in)
+		{
+			if (in.HasMember("influenceRadius") && in["influenceRadius"].IsNumber())
+				influenceRadius = in["influenceRadius"].GetFloat();
+			if (in.HasMember("isActive") && in["isActive"].IsBool())
+				isActive = in["isActive"].GetBool();
+			if (in.HasMember("captureResolution") && in["captureResolution"].IsInt())
+				captureResolution = in["captureResolution"].GetInt();
+			
+			// Deserialize SH coefficients
+			if (in.HasMember("shCoefficients") && in["shCoefficients"].IsArray()) {
+				const auto& shArray = in["shCoefficients"].GetArray();
+				int count = std::min(9, static_cast<int>(shArray.Size()));
+				for (int i = 0; i < count; ++i) {
+					if (shArray[i].IsArray() && shArray[i].Size() >= 3) {
+						shCoefficients[i].x = shArray[i][0].GetFloat();
+						shCoefficients[i].y = shArray[i][1].GetFloat();
+						shCoefficients[i].z = shArray[i][2].GetFloat();
+					}
+				}
+			}
+		}
+
+		XPROPERTY_DEF(
+			"LightProbeComponent", LightProbeComponent,
+			xproperty::obj_member<"influenceRadius", &LightProbeComponent::influenceRadius>,
+			xproperty::obj_member<"isActive", &LightProbeComponent::isActive>,
+			xproperty::obj_member<"needsRebake", &LightProbeComponent::needsRebake>,
+			xproperty::obj_member<"captureResolution", &LightProbeComponent::captureResolution>
+		)
+	};
+
+	/*!***********************************************************************
+	\brief
+		Light Probe Volume Component defines a grid-based volume of light probes.
+		Auto-generates probe entities within the volume bounds at specified spacing.
+		Used for large-scale GI coverage in scenes.
+	*************************************************************************/
+	struct LightProbeVolumeComponent
+	{
+		glm::vec3 boundsMin{ -10.0f, 0.0f, -10.0f };  // Minimum corner of volume
+		glm::vec3 boundsMax{ 10.0f, 10.0f, 10.0f };   // Maximum corner of volume
+		glm::vec3 probeSpacing{ 2.0f, 2.0f, 2.0f };   // Distance between probes (grid cells)
+		bool autoUpdate{ false };                      // Auto-rebake probes on scene changes
+		bool showGizmos{ true };                       // Visualize volume bounds and probes in editor
+		int totalProbes{ 0 };                          // Computed: total probe count in grid
+		
+		// Runtime data (not serialized)
+		std::vector<EntityID> generatedProbes{};   // Entities of probes in this volume
+
+		template<typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const
+		{
+			out.SetObject();
+			
+			rapidjson::Value minArray(rapidjson::kArrayType);
+			minArray.PushBack(boundsMin.x, alloc);
+			minArray.PushBack(boundsMin.y, alloc);
+			minArray.PushBack(boundsMin.z, alloc);
+			out.AddMember("boundsMin", minArray, alloc);
+			
+			rapidjson::Value maxArray(rapidjson::kArrayType);
+			maxArray.PushBack(boundsMax.x, alloc);
+			maxArray.PushBack(boundsMax.y, alloc);
+			maxArray.PushBack(boundsMax.z, alloc);
+			out.AddMember("boundsMax", maxArray, alloc);
+			
+			rapidjson::Value spacingArray(rapidjson::kArrayType);
+			spacingArray.PushBack(probeSpacing.x, alloc);
+			spacingArray.PushBack(probeSpacing.y, alloc);
+			spacingArray.PushBack(probeSpacing.z, alloc);
+			out.AddMember("probeSpacing", spacingArray, alloc);
+			
+			out.AddMember("autoUpdate", autoUpdate, alloc);
+			out.AddMember("showGizmos", showGizmos, alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in)
+		{
+			if (in.HasMember("boundsMin") && in["boundsMin"].IsArray()) {
+				const auto& arr = in["boundsMin"].GetArray();
+				if (arr.Size() >= 3) {
+					boundsMin.x = arr[0].GetFloat();
+					boundsMin.y = arr[1].GetFloat();
+					boundsMin.z = arr[2].GetFloat();
+				}
+			}
+			if (in.HasMember("boundsMax") && in["boundsMax"].IsArray()) {
+				const auto& arr = in["boundsMax"].GetArray();
+				if (arr.Size() >= 3) {
+					boundsMax.x = arr[0].GetFloat();
+					boundsMax.y = arr[1].GetFloat();
+					boundsMax.z = arr[2].GetFloat();
+				}
+			}
+			if (in.HasMember("probeSpacing") && in["probeSpacing"].IsArray()) {
+				const auto& arr = in["probeSpacing"].GetArray();
+				if (arr.Size() >= 3) {
+					probeSpacing.x = arr[0].GetFloat();
+					probeSpacing.y = arr[1].GetFloat();
+					probeSpacing.z = arr[2].GetFloat();
+				}
+			}
+			if (in.HasMember("autoUpdate") && in["autoUpdate"].IsBool())
+				autoUpdate = in["autoUpdate"].GetBool();
+			if (in.HasMember("showGizmos") && in["showGizmos"].IsBool())
+				showGizmos = in["showGizmos"].GetBool();
+		}
+
+		XPROPERTY_DEF(
+			"LightProbeVolumeComponent", LightProbeVolumeComponent,
+			xproperty::obj_member<"boundsMin", &LightProbeVolumeComponent::boundsMin>,
+			xproperty::obj_member<"boundsMax", &LightProbeVolumeComponent::boundsMax>,
+			xproperty::obj_member<"probeSpacing", &LightProbeVolumeComponent::probeSpacing>,
+			xproperty::obj_member<"autoUpdate", &LightProbeVolumeComponent::autoUpdate>,
+			xproperty::obj_member<"showGizmos", &LightProbeVolumeComponent::showGizmos>
+		)
+	};
 } // namespace Ermine

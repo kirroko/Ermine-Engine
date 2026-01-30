@@ -47,6 +47,8 @@ namespace Ermine
 	XPROPERTY_REG(UIManaBarComponent)
 	XPROPERTY_REG(UIBookCounterComponent)
 	XPROPERTY_REG(GlobalGraphics)
+	XPROPERTY_REG(LightProbeComponent)
+	XPROPERTY_REG(LightProbeVolumeComponent)
 
 	//XPROPERTY_REG(ModelComponent)
 	//XPROPERTY_REG(AnimationComponent)
