@@ -1,4 +1,4 @@
-/* Start Header ************************************************************************/
+﻿/* Start Header ************************************************************************/
 /*!
 \file       UIRenderSystem.cpp
 \author     Edwin Lee Zirui, edwinzirui.lee, 2301299, edwinzirui.lee@digipen.edu
@@ -208,12 +208,10 @@ namespace Ermine
 
 #if defined(EE_EDITOR)
         // In editor: render UI during play mode OR when the active scene is a menu/UI-focused scene
-        // Main menu scenes should always show their UI in the editor viewport
         if (!editor::EditorGUI::isPlaying)
         {
             // Check if we're viewing a menu scene (heuristic: if only UI entities with no game logic)
             // For now, always render UI in editor to support menu scene previewing
-            // TODO: Add a scene flag to indicate it's a "menu scene" that should always show UI
         }
 #endif
 
@@ -229,7 +227,6 @@ namespace Ermine
         m_uiShader->SetUniformMatrix4fv("projection", m_orthoProjection);
         m_uiShader->SetUniform1i("uUseTexture", 0); // Default: don't use textures
 
-        // Debug: Log once when UI starts rendering
         static bool firstRender = true;
         if (firstRender)
         {
@@ -239,7 +236,7 @@ namespace Ermine
 
         // Render UIImageComponent entities first (fullscreen images, cutscenes, backgrounds)
         auto& ecs = ECS::GetInstance();
-        constexpr EntityID MAX_ENTITIES = 10000; // Assume reasonable max entities
+        constexpr EntityID MAX_ENTITIES = 10000;
 
         for (EntityID entity = 1; entity < MAX_ENTITIES; ++entity)
         {
@@ -250,14 +247,9 @@ namespace Ermine
             if (!ecs.HasComponent<UIImageComponent>(entity))
                 continue;
 
-            // FIXED: Skip rendering if entity has ObjectMetaData and is marked inactive
-            if (ecs.HasComponent<ObjectMetaData>(entity))
-            {
-                const auto& metadata = ecs.GetComponent<ObjectMetaData>(entity);
-                // Check if selfActive is false (entity is disabled via GameObject.SetActive(false))
-                if (!metadata.selfActive)
-                    continue; // Skip rendering this inactive entity
-            }
+            // ✅ FIX: Check if entity is active in hierarchy (including parents)
+            if (!IsEntityActiveInHierarchy(entity))
+                continue;
 
             const auto& imageComp = ecs.GetComponent<UIImageComponent>(entity);
 
@@ -285,16 +277,14 @@ namespace Ermine
             {
                 if (imageComp.fullscreen)
                 {
-                    // Fullscreen image (for cutscenes, splash screens)
                     RenderTexturedSquare(0.5f, 0.5f, imageComp.height, texture, imageComp.tintColor, imageComp.alpha);
                 }
                 else
                 {
-                    // Positioned image
                     RenderTexturedSquare(
                         imageComp.position.x,
                         imageComp.position.y,
-                        imageComp.height,  // Height determines size
+                        imageComp.height,
                         texture,
                         imageComp.tintColor,
                         imageComp.alpha
@@ -302,16 +292,14 @@ namespace Ermine
                 }
             }
 
-            // Render caption (even if no image - supports text-only UI elements)
+            // Render caption
             if (imageComp.showCaption && !imageComp.caption.empty() && m_textRenderer)
             {
-                float textScale = imageComp.captionFontSize / 24.0f; // Normalize to default font size
-
-                // Use component alpha, or full opacity if no image and alpha is 0
+                float textScale = imageComp.captionFontSize / 24.0f;
                 float textAlpha = imageComp.alpha;
                 if (imageComp.imagePath.empty() && imageComp.alpha == 0.0f)
                 {
-                    textAlpha = 1.0f; // Text-only elements should be visible by default
+                    textAlpha = 1.0f;
                 }
 
                 m_textRenderer->RenderText(
@@ -331,8 +319,8 @@ namespace Ermine
         // Render UI for all entities with UIComponent (legacy support)
         for (EntityID entity : m_Entities)
         {
-            // Skip if entity no longer has UIComponent (may have been removed in inspector)
-            if (!ECS::GetInstance().HasComponent<UIComponent>(entity))
+            // ✅ FIX: Check hierarchy before rendering UIComponent elements
+            if (!IsEntityActiveInHierarchy(entity))
                 continue;
 
             const auto& ui = ECS::GetInstance().GetComponent<UIComponent>(entity);
@@ -409,6 +397,10 @@ namespace Ermine
             if (!ecs.HasComponent<UIButtonComponent>(entity))
                 continue;
 
+            // ✅ FIX: Check hierarchy before rendering buttons
+            if (!IsEntityActiveInHierarchy(entity))
+                continue;
+
             const auto& button = ecs.GetComponent<UIButtonComponent>(entity);
             RenderButton(button);
         }
@@ -416,6 +408,39 @@ namespace Ermine
         // Re-enable depth test
         glEnable(GL_DEPTH_TEST);
         glDisable(GL_BLEND);
+    }
+
+    bool UIRenderSystem::IsEntityActiveInHierarchy(EntityID entity)
+    {
+        auto& ecs = ECS::GetInstance();
+
+        // Check if entity itself is valid
+        if (!ecs.IsEntityValid(entity))
+            return false;
+
+        // Check self active state
+        if (ecs.HasComponent<ObjectMetaData>(entity))
+        {
+            auto& meta = ecs.GetComponent<ObjectMetaData>(entity);
+            if (!meta.selfActive)
+                return false;
+        }
+
+        // Check parent chain via HierarchyComponent
+        if (ecs.HasComponent<HierarchyComponent>(entity))
+        {
+            auto& hierarchy = ecs.GetComponent<HierarchyComponent>(entity);
+
+            // If has a valid parent, check if parent is active
+            if (hierarchy.parent != HierarchyComponent::INVALID_PARENT)
+            {
+                // Recursively check parent's active state
+                return IsEntityActiveInHierarchy(hierarchy.parent);
+            }
+        }
+
+        // No parent or parent is active - entity is active
+        return true;
     }
 
     void UIRenderSystem::OnScreenResize(int width, int height)
