@@ -39,6 +39,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Physics.h"
 #include "NavMesh.h"
 #include "AnimationManager.h"
+#include "VideoManager.h"
 
 #include <GLFW/glfw3.h>
 
@@ -6831,6 +6832,31 @@ void Renderer::CompileMaterials()
 		// New material - register textures and assign indices
 		uint32_t materialIndex = static_cast<uint32_t>(m_CompiledMaterials.size());
 
+		// Check for video texture source
+		bool hasVideoTexture = false;
+		if (materialComponent.videoTextureSource != NULL_ENTITY)
+		{
+			// Check if the video source entity has a valid VideoComponent with a texture
+			if (ecs.IsEntityValid(materialComponent.videoTextureSource) &&
+				ecs.HasComponent<VideoComponent>(materialComponent.videoTextureSource))
+			{
+				auto& videoComp = ecs.GetComponent<VideoComponent>(materialComponent.videoTextureSource);
+				if (videoComp.outputTextureId != 0)
+				{
+					// Register the video output texture as the albedo map
+					int videoTexIndex = RegisterTextureByID(videoComp.outputTextureId, "VideoTexture");
+					if (videoTexIndex >= 0)
+					{
+						material->SetTextureArrayIndex("materialAlbedoMap", videoTexIndex);
+						material->SetBool("materialHasAlbedoMap", true);
+						hasVideoTexture = true;
+						EE_CORE_INFO("Material using video texture from entity {} at index {}",
+							materialComponent.videoTextureSource, videoTexIndex);
+					}
+				}
+			}
+		}
+
 		// Register all textures used by this material
 		const std::vector<std::string> textureTypes = {
 			"materialAlbedoMap",
@@ -6843,6 +6869,10 @@ void Renderer::CompileMaterials()
 
 		for (const auto& texName : textureTypes)
 		{
+			// Skip albedo map if we're using a video texture
+			if (hasVideoTexture && texName == "materialAlbedoMap")
+				continue;
+
 			if (auto texture = material->GetTexture(texName))
 			{
 				int textureIndex = RegisterTexture(texture);
@@ -7090,6 +7120,37 @@ int Renderer::RegisterTexture(std::shared_ptr<Texture> texture)
 	m_TextureArrayDirty = true;
 
 	EE_CORE_INFO("Registered texture '{0}' at index {1}", filePath, index);
+	return index;
+}
+
+/**
+ * @brief Registers a raw OpenGL texture ID in the global texture array.
+ * @param textureID The OpenGL texture ID.
+ * @param debugName Optional debug name for logging.
+ * @return The index of the texture in the array, or -1 if registration failed.
+ */
+int Renderer::RegisterTextureByID(GLuint textureID, const std::string& debugName)
+{
+	if (textureID == 0)
+	{
+		return -1;
+	}
+
+	// Check if texture is already registered by ID
+	auto idIt = m_TextureIDToIndex.find(textureID);
+	if (idIt != m_TextureIDToIndex.end())
+	{
+		return idIt->second;
+	}
+
+	// Register new texture
+	int index = static_cast<int>(m_TextureArray.size());
+	m_TextureArray.push_back(textureID);
+	m_TextureIDToIndex[textureID] = index;
+
+	m_TextureArrayDirty = true;
+
+	EE_CORE_INFO("Registered texture ID {} ({}) at index {}", textureID, debugName.empty() ? "video" : debugName, index);
 	return index;
 }
 

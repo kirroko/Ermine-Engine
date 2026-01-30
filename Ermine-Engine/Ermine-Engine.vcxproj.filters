@@ -79,6 +79,9 @@
     <Filter Include="src\Utility">
       <UniqueIdentifier>{70464FB2-DCFB-C7A7-65F0-C17ED1A4BEAB}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Video">
+      <UniqueIdentifier>{73940BB4-DFFE-BF2A-283D-71D094E69D7F}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Window">
       <UniqueIdentifier>{74C3D837-607B-1A85-C982-F3E0B559B575}</UniqueIdentifier>
     </Filter>
@@ -126,6 +129,9 @@
     <ClInclude Include="include\CameraSystem.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\CommandHistory.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\Component.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -145,6 +151,9 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\EditorCamera.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\EditorCommand.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\EditorGUI.h">
@@ -303,6 +312,9 @@
     <ClInclude Include="include\Serialisation.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\SettingsGUI.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\Shader.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -336,6 +348,12 @@
     <ClInclude Include="include\VertexBuffer.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\VideoManager.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\VideoSystem.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\ViewPortGUI.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -343,15 +361,6 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\shadow_config.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\SettingsGUI.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\CommandHistory.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\EditorCommand.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
@@ -473,6 +482,9 @@
     <ClCompile Include="src\ImGUI\InspectorGUI.cpp">
       <Filter>src\ImGUI</Filter>
     </ClCompile>
+    <ClCompile Include="src\ImGUI\SettingsGUI.cpp">
+      <Filter>src\ImGUI</Filter>
+    </ClCompile>
     <ClCompile Include="src\ImGUI\ViewPortGUI.cpp">
       <Filter>src\ImGUI</Filter>
     </ClCompile>
@@ -569,14 +581,17 @@
     <ClCompile Include="src\Utility\JobSystem.cpp">
       <Filter>src\Utility</Filter>
     </ClCompile>
+    <ClCompile Include="src\Video\VideoManager.cpp">
+      <Filter>src\Video</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Video\VideoSystem.cpp">
+      <Filter>src\Video</Filter>
+    </ClCompile>
     <ClCompile Include="src\Window\Window.cpp">
       <Filter>src\Window</Filter>
     </ClCompile>
     <ClCompile Include="src\dllmain.cpp">
       <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ImGUI\SettingsGUI.cpp">
-      <Filter>src\ImGUI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

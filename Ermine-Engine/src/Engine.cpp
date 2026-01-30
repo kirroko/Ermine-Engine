@@ -30,6 +30,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Renderer.h"
 #include "ScriptEngine.h"
 #include "AudioSystem.h"
+#include "VideoSystem.h"
 #include "Particles.h"
 #include "Physics.h"
 #include "FiniteStateMachine.h"
@@ -216,6 +217,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().Init();
 
 	AudioSystem::Init();
+	VideoSystem::Init();
 
 	// TODO: Register all components here, limit of 255 components
 	EE_AUTO_REGISTER_COMPONENT(Transform, "Transform")
@@ -226,6 +228,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	EE_AUTO_REGISTER_COMPONENT(Light, "Light")
 	EE_AUTO_REGISTER_COMPONENT(AudioComponent, "AudioComponent")
 	EE_AUTO_REGISTER_COMPONENT(GlobalAudioComponent, "GlobalAudioComponent")
+	EE_AUTO_REGISTER_COMPONENT(VideoComponent, "VideoComponent")
 	EE_AUTO_REGISTER_COMPONENT(PhysicComponent, "PhysicComponent")
 	EE_AUTO_REGISTER_COMPONENT(ModelComponent, "ModelComponent")
 	EE_AUTO_REGISTER_COMPONENT(AnimationComponent, "AnimationComponent")
@@ -288,6 +291,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().RegisterSystem<graphics::MaterialSystem>();
 	ECS::GetInstance().RegisterSystem<scripting::ScriptSystem>();
 	ECS::GetInstance().RegisterSystem<AudioSystem>();
+	ECS::GetInstance().RegisterSystem<VideoSystem>();
 	ECS::GetInstance().RegisterSystem<ParticleSystem>();
 	ECS::GetInstance().RegisterSystem<graphics::LightSystem>();
 	ECS::GetInstance().RegisterSystem<graphics::AnimationManager>();
@@ -339,6 +343,11 @@ bool engine::Init(GLFWwindow* windowContext)
 	sig.set(ECS::GetInstance().GetComponentType<AudioComponent>());
 	sig.set(ECS::GetInstance().GetComponentType<Transform>());
 	ECS::GetInstance().SetSystemSignature<AudioSystem>(sig);
+
+	// For Video system
+	sig.reset();
+	sig.set(ECS::GetInstance().GetComponentType<VideoComponent>());
+	ECS::GetInstance().SetSystemSignature<VideoSystem>(sig);
 
 	// For Particles
 	sig.reset();
@@ -595,6 +604,7 @@ void engine::Shutdown()
 
 	ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->m_ScriptEngine->Shutdown();
 	AudioSystem::Shutdown();
+	VideoSystem::Shutdown();
 
 	ECS::GetInstance().Shutdown();
 
@@ -685,6 +695,9 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 
 	// Audio always updates (handles pause state internally)
 	ECS::GetInstance().GetSystem<AudioSystem>()->Update();
+
+	// Video always updates (handles pause state internally)
+	ECS::GetInstance().GetSystem<VideoSystem>()->Update(FrameController::GetDeltaTime());
 }
 
 void engine::Render(GLFWwindow* window)

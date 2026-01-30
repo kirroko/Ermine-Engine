@@ -102,7 +102,8 @@ project "Ermine-Engine"
         "%{IncludeDir.xresource_Pipeline}",
         "ThirdParty/xresource_pipeline_v2-main/dependencies/xtextfile/source",
         "ThirdParty/xresource_pipeline_v2-main/dependencies/xerr/source",
-        "%{IncludeDir.imnodes}"
+        "%{IncludeDir.imnodes}",
+        "%{IncludeDir.pl_mpeg}"
     }
 
     libdirs

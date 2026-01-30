@@ -736,6 +736,14 @@ namespace Ermine::graphics
         int RegisterTexture(std::shared_ptr<Texture> texture);
 
         /**
+         * @brief Registers a raw OpenGL texture ID in the global texture array.
+         * @param textureID The OpenGL texture ID.
+         * @param debugName Optional debug name for logging.
+         * @return The index of the texture in the array, or -1 if registration failed.
+         */
+        int RegisterTextureByID(GLuint textureID, const std::string& debugName = "");
+
+        /**
          * @brief Gets the texture array index for a given texture ID.
          * @param textureID The OpenGL texture ID.
          * @return The array index, or -1 if not found.

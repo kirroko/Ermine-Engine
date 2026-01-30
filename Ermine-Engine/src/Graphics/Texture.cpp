@@ -370,3 +370,68 @@ std::string Ermine::graphics::Texture::GetFilePath()
 {
     return m_filePath;
 }
+
+/**
+ * @brief Create an empty texture with specified dimensions (for video frames)
+ * @param width Texture width in pixels
+ * @param height Texture height in pixels
+ * @param internalFormat OpenGL internal format (default GL_RGBA8)
+ * @param format OpenGL format (default GL_RGBA)
+ */
+void Texture::CreateEmpty(int width, int height, GLenum internalFormat, GLenum format)
+{
+    // Release existing texture if any
+    if (m_RendererID != 0)
+    {
+        Release(true);
+    }
+
+    m_Width = width;
+    m_Height = height;
+    m_BPP = 4;
+    m_filePath = "[dynamic]";
+
+    glGenTextures(1, &m_RendererID);
+    glBindTexture(GL_TEXTURE_2D, m_RendererID);
+
+    // Use CLAMP_TO_EDGE for video textures to avoid edge artifacts
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    // Allocate texture storage with no initial data
+    glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, GL_UNSIGNED_BYTE, nullptr);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    GPUProfiler::TrackMemoryAllocation(static_cast<size_t>(width) * height * 4, "Texture");
+
+    EE_CORE_TRACE("Created empty texture {}x{} (ID: {})", width, height, m_RendererID);
+}
+
+/**
+ * @brief Update texture pixels (for video frame updates)
+ * @param pixels Pointer to pixel data
+ * @param width Width of the pixel data
+ * @param height Height of the pixel data
+ * @param format OpenGL format (default GL_RGBA)
+ */
+void Texture::UpdatePixels(const unsigned char* pixels, int width, int height, GLenum format)
+{
+    if (!pixels)
+    {
+        EE_CORE_WARN("UpdatePixels called with null pixel data");
+        return;
+    }
+
+    // If texture doesn't exist or dimensions changed, recreate it
+    if (m_RendererID == 0 || m_Width != width || m_Height != height)
+    {
+        CreateEmpty(width, height, GL_RGBA8, format);
+    }
+
+    glBindTexture(GL_TEXTURE_2D, m_RendererID);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, format, GL_UNSIGNED_BYTE, pixels);
+    glBindTexture(GL_TEXTURE_2D, 0);
+}

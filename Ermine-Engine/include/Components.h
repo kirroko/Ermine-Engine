@@ -1189,6 +1189,10 @@ namespace Ermine
 		std::string customFragmentShader = "";   // Custom fragment shader path (empty = use standard PBR)
 		bool cacheCastsShadows = true;           // Whether this material casts shadows
 
+		// Video texture support - entity ID with VideoComponent to use as albedo texture
+		EntityID videoTextureSource{ NULL_ENTITY };  // NULL_ENTITY means no video source (runtime resolved)
+		std::string videoTextureSourceGuid{};        // GUID for serialization (resolved to EntityID after load)
+
 		//// Cached texture paths (only what we set by path)
 		//bool hasAlbedoMapPath = false;   std::string albedoMapPath;
 		//bool hasNormalMapPath = false;   std::string normalMapPath;
@@ -1505,6 +1509,13 @@ namespace Ermine
 
 			out.AddMember("castsShadows", cacheCastsShadows, alloc);
 
+			// Video texture source - save GUID for proper remapping on scene load
+			if (videoTextureSource != NULL_ENTITY && !videoTextureSourceGuid.empty()) {
+				rapidjson::Value guidVal;
+				guidVal.SetString(videoTextureSourceGuid.c_str(), static_cast<rapidjson::SizeType>(videoTextureSourceGuid.size()), alloc);
+				out.AddMember("videoTextureSourceGuid", guidVal, alloc);
+			}
+
 		}
 
 		void Deserialize(const rapidjson::Value& in) {
@@ -1677,6 +1688,11 @@ namespace Ermine
 				}
 			}
 
+			// Restore video texture source
+			if (in.HasMember("videoTextureSource") && in["videoTextureSource"].IsUint64()) {
+				videoTextureSource = static_cast<EntityID>(in["videoTextureSource"].GetUint64());
+			}
+
 			//  Ensure material has a valid shader after deserialization
 			if (!m_material->GetShader() || !m_material->GetShader()->IsValid())
 			{
@@ -1737,6 +1753,9 @@ namespace Ermine
 			// custom shader and flags
 			xproperty::obj_member<"fragmentShader", &Material::customFragmentShader>,
 			xproperty::obj_member<"castsShadows", &Material::cacheCastsShadows>,
+
+			// video texture source
+			xproperty::obj_member<"videoTextureSource", &Material::videoTextureSource>,
 
 			// cached parameters
 			xproperty::obj_member<"hasAlbedo", &Material::hasAlbedo>,
@@ -4845,6 +4864,74 @@ namespace Ermine
 			xproperty::obj_member<"captionColor", &UIImageComponent::captionColor>,
 			xproperty::obj_member<"captionFontSize", &UIImageComponent::captionFontSize>,
 			xproperty::obj_member<"captionPosition", &UIImageComponent::captionPosition>
+		)
+	};
+
+	/*!***********************************************************************
+	\brief
+	 VideoComponent for MPEG1 video playback using PL_MPEG library.
+	 Supports video and audio playback with seeking and looping.
+	*************************************************************************/
+	struct VideoComponent
+	{
+		// Video source
+		std::string videoPath{};              // Path to .mpg file
+
+		// Playback state (managed by VideoSystem)
+		int videoId{ -1 };                    // Unique ID from VideoManager
+		bool isPlaying{ false };              // Current playback state (read-only)
+		bool shouldPlay{ false };             // Trigger flag to start playback
+		bool shouldStop{ false };             // Trigger flag to stop playback
+		bool shouldPause{ false };            // Trigger flag to pause playback
+		bool playOnStart{ false };            // Auto-play when scene starts
+
+		// Playback settings
+		bool isLooping{ false };              // Loop video when it ends
+		float volume{ 0.5f };                 // Audio volume 0.0 to 1.0
+		float playbackSpeed{ 1.0f };          // Playback speed multiplier
+		bool muteAudio{ false };              // Mute audio track
+
+		// Read-only state (updated by VideoSystem)
+		float playbackPosition{ 0.0f };       // Current position in seconds
+		float duration{ 0.0f };               // Total duration in seconds
+		int videoWidth{ 0 };                  // Video resolution width
+		int videoHeight{ 0 };                 // Video resolution height
+		unsigned int outputTextureId{ 0 };    // OpenGL texture ID for rendered frame
+		int audioChannelId{ -1 };             // FMOD channel for audio playback
+
+		// Constructors
+		VideoComponent() = default;
+		explicit VideoComponent(const std::string& path, bool loop = false, float vol = 0.5f)
+			: videoPath(path), isLooping(loop), volume(vol) {}
+
+		template<typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const
+		{
+			xprop_utils::SerializeToJson(*this, out, alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in)
+		{
+			xprop_utils::DeserializeFromJson(*this, in);
+			// Reset runtime state on load
+			videoId = -1;
+			isPlaying = false;
+			shouldPlay = false;
+			shouldStop = false;
+			shouldPause = false;
+			playbackPosition = 0.0f;
+			outputTextureId = 0;
+			audioChannelId = -1;
+		}
+
+		XPROPERTY_DEF(
+			"VideoComponent", VideoComponent,
+			xproperty::obj_member<"videoPath", &VideoComponent::videoPath>,
+			xproperty::obj_member<"playOnStart", &VideoComponent::playOnStart>,
+			xproperty::obj_member<"isLooping", &VideoComponent::isLooping>,
+			xproperty::obj_member<"volume", &VideoComponent::volume>,
+			xproperty::obj_member<"playbackSpeed", &VideoComponent::playbackSpeed>,
+			xproperty::obj_member<"muteAudio", &VideoComponent::muteAudio>
 		)
 	};
 } // namespace Ermine

@@ -28,6 +28,9 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Particles.h"
 #include "AnimationGUI.h"
 #include "CommandHistory.h"
+#include "VideoSystem.h"
+#include "VideoManager.h"
+#include "Renderer.h"
 
 #include "xcore/my_properties.h"
 #include "xproperty.h"
@@ -318,6 +321,10 @@ namespace Ermine::editor {
 
 		if (ECS::GetInstance().HasComponent<AudioComponent>(selected)) {
 			DrawAudioComponent(selected);
+		}
+
+		if (ECS::GetInstance().HasComponent<VideoComponent>(selected)) {
+			DrawVideoComponent(selected);
 		}
 
 		if (ECS::GetInstance().HasComponent<ScriptsComponent>(selected)) {
@@ -1206,6 +1213,96 @@ namespace Ermine::editor {
 				renderer->UpdateMaterialSSBO(ssboData, materialIndex);
 			}
 		}
+
+		// --- Video Texture Source ---
+		ImGui::SeparatorText("Video Texture");
+
+		// Build list of entities with VideoComponent
+		auto& ecs = ECS::GetInstance();
+		std::vector<EntityID> videoEntities;
+		std::vector<std::string> videoEntityNames;
+		videoEntityNames.push_back("<None>");
+		videoEntities.push_back(NULL_ENTITY);
+
+		// Iterate through all entities to find those with VideoComponent
+		for (auto videoEntity : ecs.GetSystem<VideoSystem>()->GetEntities())
+		{
+			if (ecs.HasComponent<VideoComponent>(videoEntity))
+			{
+				videoEntities.push_back(videoEntity);
+				// Get entity name for display
+				std::string name = "Entity " + std::to_string(videoEntity);
+				if (ecs.HasComponent<ObjectMetaData>(videoEntity))
+				{
+					const auto& meta = ecs.GetComponent<ObjectMetaData>(videoEntity);
+					if (!meta.name.empty())
+						name = meta.name;
+				}
+				// Append video path info
+				const auto& videoComp = ecs.GetComponent<VideoComponent>(videoEntity);
+				if (!videoComp.videoPath.empty())
+				{
+					std::filesystem::path p(videoComp.videoPath);
+					name += " (" + p.filename().string() + ")";
+				}
+				videoEntityNames.push_back(name);
+			}
+		}
+
+		// Find current selection index
+		int currentIdx = 0;
+		for (size_t i = 0; i < videoEntities.size(); ++i)
+		{
+			if (videoEntities[i] == matComp.videoTextureSource)
+			{
+				currentIdx = static_cast<int>(i);
+				break;
+			}
+		}
+
+		// Combo box for video source selection
+		if (ImGui::BeginCombo("Video Source", videoEntityNames[currentIdx].c_str()))
+		{
+			for (size_t i = 0; i < videoEntityNames.size(); ++i)
+			{
+				bool isSelected = (currentIdx == static_cast<int>(i));
+				if (ImGui::Selectable(videoEntityNames[i].c_str(), isSelected))
+				{
+					matComp.videoTextureSource = videoEntities[i];
+
+					// Mark materials dirty to re-register video texture
+					auto renderer = ecs.GetSystem<Ermine::graphics::Renderer>();
+					if (renderer)
+					{
+						renderer->MarkMaterialsDirty();
+					}
+
+					EE_CORE_INFO("Material video source set to entity {}", videoEntities[i]);
+				}
+				if (isSelected)
+				{
+					ImGui::SetItemDefaultFocus();
+				}
+			}
+			ImGui::EndCombo();
+		}
+
+		// Show video preview if a source is selected
+		if (matComp.videoTextureSource != NULL_ENTITY &&
+			ecs.IsEntityValid(matComp.videoTextureSource) &&
+			ecs.HasComponent<VideoComponent>(matComp.videoTextureSource))
+		{
+			const auto& videoComp = ecs.GetComponent<VideoComponent>(matComp.videoTextureSource);
+			if (videoComp.outputTextureId != 0 && videoComp.videoWidth > 0)
+			{
+				ImGui::Text("Video: %dx%d", videoComp.videoWidth, videoComp.videoHeight);
+				if (videoComp.isPlaying)
+				{
+					ImGui::SameLine();
+					ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "(Playing)");
+				}
+			}
+		}
 	}
 
 	void HierarchyInspector::DrawLightComponent(EntityID entity)
@@ -1622,6 +1719,110 @@ namespace Ermine::editor {
 
 		if (!err.empty())
 			ImGui::TextColored(ImVec4(1, 0.3f, 0.3f, 1), "Error: %s", err.c_str());
+	}
+
+	void HierarchyInspector::DrawVideoComponent(EntityID entity)
+	{
+		if (!ComponentHeaderWithRemove<VideoComponent>("Video", entity))
+			return;
+
+		auto& video = ECS::GetInstance().GetComponent<VideoComponent>(entity);
+
+		// Video Path input with file browser
+		{
+			char buf[512];
+			std::snprintf(buf, sizeof(buf), "%s", video.videoPath.c_str());
+			ImGui::Text("Video Path");
+			ImGui::SameLine();
+			ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - 80.0f);
+			if (ImGui::InputText("##VideoPath", buf, sizeof(buf))) {
+				video.videoPath = buf;
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Browse##Video")) {
+				// TODO: Open file browser for .mpg files
+			}
+		}
+
+		ImGui::Separator();
+
+		// Playback settings
+		ImGui::Checkbox("Play On Start", &video.playOnStart);
+		ImGui::Checkbox("Loop", &video.isLooping);
+		ImGui::Checkbox("Mute Audio", &video.muteAudio);
+
+		if (ImGui::SliderFloat("Volume", &video.volume, 0.0f, 1.0f, "%.2f")) {
+			if (video.videoId != -1) {
+				CVideoEngine::SetVolume(video.videoId, video.volume);
+			}
+		}
+
+		if (ImGui::SliderFloat("Playback Speed", &video.playbackSpeed, 0.1f, 4.0f, "%.2f")) {
+			if (video.videoId != -1) {
+				CVideoEngine::SetPlaybackSpeed(video.videoId, video.playbackSpeed);
+			}
+		}
+
+		ImGui::Separator();
+
+		// Playback controls
+		bool isPlaying = video.isPlaying && video.videoId != -1;
+
+		if (isPlaying) {
+			if (ImGui::Button("Pause")) {
+				video.shouldPause = true;
+			}
+		} else {
+			if (ImGui::Button("Play")) {
+				video.shouldPlay = true;
+			}
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Stop")) {
+			video.shouldStop = true;
+		}
+
+		// Seek slider
+		if (video.videoId != -1 && video.duration > 0.0f) {
+			float pos = video.playbackPosition;
+			ImGui::Text("Position: %.2f / %.2f s", pos, video.duration);
+			if (ImGui::SliderFloat("##Seek", &pos, 0.0f, video.duration, "")) {
+				CVideoEngine::Seek(video.videoId, static_cast<double>(pos));
+			}
+		}
+
+		ImGui::Separator();
+
+		// Video info (read-only)
+		if (video.videoId != -1) {
+			ImGui::Text("Resolution: %d x %d", video.videoWidth, video.videoHeight);
+			ImGui::Text("Framerate: %.2f fps", CVideoEngine::GetFramerate(video.videoId));
+
+			// Video preview thumbnail
+			if (video.outputTextureId != 0) {
+				ImGui::Text("Preview:");
+				float previewWidth = ImGui::GetContentRegionAvail().x;
+				float aspectRatio = video.videoHeight > 0 ?
+					static_cast<float>(video.videoWidth) / static_cast<float>(video.videoHeight) : 16.0f / 9.0f;
+				float previewHeight = previewWidth / aspectRatio;
+
+				// Clamp preview height
+				if (previewHeight > 200.0f) {
+					previewHeight = 200.0f;
+					previewWidth = previewHeight * aspectRatio;
+				}
+
+				ImGui::Image(
+					(ImTextureID)(uint64_t)video.outputTextureId,
+					ImVec2(previewWidth, previewHeight),
+					ImVec2(0, 1), ImVec2(1, 0)  // Flip UV for OpenGL
+				);
+			}
+		} else {
+			ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.6f, 1.0f), "No video loaded");
+		}
+
+		ImGui::Separator();
 	}
 
 	void HierarchyInspector::DrawScriptComponent(EntityID entity)
@@ -3111,6 +3312,9 @@ namespace Ermine::editor {
 		}
 		if (ImGui::MenuItem("Audio") && !ECS::GetInstance().HasComponent<AudioComponent>(entity)) {
 			ECS::GetInstance().AddComponent(entity, AudioComponent());
+		}
+		if (ImGui::MenuItem("Video") && !ECS::GetInstance().HasComponent<VideoComponent>(entity)) {
+			ECS::GetInstance().AddComponent(entity, VideoComponent());
 		}
 		if (ImGui::MenuItem("Script"))
 		{

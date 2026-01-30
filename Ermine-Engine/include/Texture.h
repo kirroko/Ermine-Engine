@@ -86,5 +86,23 @@ namespace Ermine::graphics
          * @brief  Getter for texture height
          */
         int GetHeight() const { return m_Height; }
+
+        /**
+         * @brief Create an empty texture with specified dimensions (for video frames)
+         * @param width Texture width in pixels
+         * @param height Texture height in pixels
+         * @param internalFormat OpenGL internal format (default GL_RGBA8)
+         * @param format OpenGL format (default GL_RGBA)
+         */
+        void CreateEmpty(int width, int height, GLenum internalFormat = GL_RGBA8, GLenum format = GL_RGBA);
+
+        /**
+         * @brief Update texture pixels (for video frame updates)
+         * @param pixels Pointer to pixel data
+         * @param width Width of the pixel data
+         * @param height Height of the pixel data
+         * @param format OpenGL format (default GL_RGBA)
+         */
+        void UpdatePixels(const unsigned char* pixels, int width, int height, GLenum format = GL_RGBA);
     };
 }

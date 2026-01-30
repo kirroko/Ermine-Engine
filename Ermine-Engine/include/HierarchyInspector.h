@@ -110,6 +110,12 @@ namespace Ermine::editor {
         void DrawAudioComponent(EntityID entity);
 
         /*!
+        \brief Draws UI controls for the Video component
+        \param entity The entity whose Video component to display
+        */
+        void DrawVideoComponent(EntityID entity);
+
+        /*!
         \brief Draws UI controls for the Script component
         \param entity The entity whose Script component to display
         */
