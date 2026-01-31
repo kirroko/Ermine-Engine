@@ -5,7 +5,7 @@
 \date       26/01/2026
 \brief      This file contains definitions for ParticleSystem, ParticleEmitter and ParticlesImGUI.
 
-Copyright (C) 2025 DigiPen Institute of Technology.
+Copyright (C) 2026 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents without the
 prior written consent of DigiPen Institute of Technology is prohibited.
 */
@@ -142,9 +142,9 @@ namespace Ermine {
     void ParticlesImGUI::Render()
     {
         // Return if window is closed
-        if (!m_isOpen) return;
+        if (!IsOpen()) return;
 
-        if (!ImGui::Begin(m_name.c_str(), &m_isOpen))
+        if (!ImGui::Begin(Name().c_str(), GetOpenPtr()))
         {
             ImGui::End();
             return;

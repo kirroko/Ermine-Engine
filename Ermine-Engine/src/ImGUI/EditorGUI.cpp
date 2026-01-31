@@ -10,7 +10,7 @@
             Function just like a wrapper for the ImGUI library.
             Each window for teh editor should be encapsulated into a function in this class.
 
-Copyright (C) 2025 DigiPen Institute of Technology.
+Copyright (C) 2026 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents without the
 prior written consent of DigiPen Institute of Technology is prohibited.
 */
@@ -424,16 +424,16 @@ void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
             EE_CORE_INFO("Asset Browser open");
         }
 
-        if (ImGui::MenuItem("Particle Editor"))
-        {
-            reopen("Particle Editor");
-            EE_CORE_INFO("Particle Editor open");
-        }
-
         if (ImGui::MenuItem("Audio Manager"))
         {
             reopen("Audio Manager");
             EE_CORE_INFO("Audio Manager open");
+        }
+
+        if (ImGui::MenuItem("Particle Editor"))
+        {
+            reopen("Particle Editor");
+            EE_CORE_INFO("Particle Editor open");
         }
 
         if (ImGui::MenuItem("FSM Editor"))
@@ -448,6 +448,12 @@ void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
             EE_CORE_INFO("Animation Editor open");
         }
 
+        if (ImGui::MenuItem("Video Player"))
+        {
+            reopen("Video Player");
+            EE_CORE_INFO("Video Player open");
+        }
+
         if (ImGui::MenuItem("Console"))
         {
             reopen("Console");
@@ -456,9 +462,20 @@ void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
 
         if (ImGui::MenuItem("UI Settings"))
         {
+            reopen("UI Settings");
             EE_CORE_INFO("UI Settings open");
-            //SettingsGUI::SetSettings(true);
-            SettingsGUI::SetSettingsOpen(true);
+        }
+
+        if(ImGui::MenuItem("Graphics Settings"))
+        {
+            reopen("Graphics Settings");
+			EE_CORE_INFO("Graphics Settings open");
+		}
+
+        if (ImGui::MenuItem("Viewport"))
+        {
+            reopen("Viewport");
+            EE_CORE_INFO("Viewport open");
         }
 
         // Legacy ImGui menu previews removed - use scene-based approach instead:
@@ -1247,6 +1264,7 @@ void EditorGUI::Update(GLFWwindow* windowContext)
 
     // Call Update() for all registered ImGui windows
     for (auto& window : m_Windows) {
+        if (!window->IsOpen()) continue;
         window->Update();
     }
 }
@@ -1259,6 +1277,7 @@ void EditorGUI::Render()
 
     // Render additional ImGUI windows
     for (auto& window : m_Windows) {
+        if (!window->IsOpen()) continue;
         window->Render();
     }
 

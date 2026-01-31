@@ -2,10 +2,10 @@
 /*!
 \file       Serialisation.h
 \author     WEE HONG RU Curtis, h.wee, 2301266, h.wee\@digipen.edu
-\date       Sep 10, 2025
+\date       Jan 31, 2026
 \brief      Serialisation functions for Config and Scene
 
-Copyright (C) 2025 DigiPen Institute of Technology.
+Copyright (C) 2026 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents without the
 prior written consent of DigiPen Institute of Technology is prohibited.
 */
@@ -18,6 +18,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <filesystem>
 #include <string>
 #include <string_view>
+#include <unordered_map>
 #include "ECS.h"
 
 
@@ -27,7 +28,7 @@ struct Config {
     bool fullscreen{};
     bool maximized{};
     std::string title;
-	bool settingsIsOpen = false;
+    std::unordered_map<std::string, bool> imguiWindows; // Key: Window Name, Value: Is Open
 	float fontSize = 16.0f;
 	float baseFontSize = 1.0f;
 	int themeMode = -1; // 0: Light, 1: Dark, 2: Pink, 3: Cyberpunk, 4: Overwatch(Dark), 5: Overwatch(Light)

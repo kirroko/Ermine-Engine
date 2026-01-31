@@ -26,8 +26,6 @@ namespace Ermine
         void Render() override;
 
     private:
-        bool m_showWindow = true;
-
         char m_videoName[128] = "main-menu";
         char m_videoPath[260] = "../Resources/Videos/main_menu.mpeg";
         bool m_loop = true;
