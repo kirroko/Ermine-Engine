@@ -338,7 +338,7 @@ void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
         ImGui::EndMenu();
     }
 
-    if (ImGui::BeginMenu("Settings"))
+    if (ImGui::BeginMenu("Themes"))
     {
         // Ensure consistent styling when multi-viewports are enabled
         const auto fixViewportsStyling = []()
@@ -418,64 +418,39 @@ void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
                 }
             }};
 
-        if (ImGui::MenuItem("Asset Browser"))
+        if (ImGui::BeginMenu("Core"))
         {
-            reopen("Asset Browser");
-            EE_CORE_INFO("Asset Browser open");
+            if (ImGui::MenuItem("Viewport")) reopen("Viewport");
+            if (ImGui::MenuItem("Console"))  reopen("Console");
+            ImGui::EndMenu();
         }
 
-        if (ImGui::MenuItem("Audio Manager"))
+        if (ImGui::BeginMenu("Assets"))
         {
-            reopen("Audio Manager");
-            EE_CORE_INFO("Audio Manager open");
+            if (ImGui::MenuItem("Asset Browser")) reopen("Asset Browser");
+            if (ImGui::MenuItem("Audio Manager")) reopen("Audio Manager");
+            ImGui::EndMenu();
         }
 
-        if (ImGui::MenuItem("Particle Editor"))
+        if (ImGui::BeginMenu("Tools"))
         {
-            reopen("Particle Editor");
-            EE_CORE_INFO("Particle Editor open");
+            if (ImGui::MenuItem("FSM Editor"))       reopen("FSM Editor");
+            if (ImGui::MenuItem("Animation Editor")) reopen("Animation Editor");
+            if (ImGui::MenuItem("Video Player"))    reopen("Video Player");
+            ImGui::EndMenu();
         }
 
-        if (ImGui::MenuItem("FSM Editor"))
+        if (ImGui::BeginMenu("VFX"))
         {
-            reopen("FSM Editor");
-            EE_CORE_INFO("FSM Editor open");
+            if (ImGui::MenuItem("Particle Editor")) reopen("Particle Editor");
+            ImGui::EndMenu();
         }
 
-        if (ImGui::MenuItem("Animation Editor"))
+        if (ImGui::BeginMenu("Settings"))
         {
-            reopen("Animation Editor");
-            EE_CORE_INFO("Animation Editor open");
-        }
-
-        if (ImGui::MenuItem("Video Player"))
-        {
-            reopen("Video Player");
-            EE_CORE_INFO("Video Player open");
-        }
-
-        if (ImGui::MenuItem("Console"))
-        {
-            reopen("Console");
-            EE_CORE_INFO("Console open");
-        }
-
-        if (ImGui::MenuItem("UI Settings"))
-        {
-            reopen("UI Settings");
-            EE_CORE_INFO("UI Settings open");
-        }
-
-        if(ImGui::MenuItem("Graphics Settings"))
-        {
-            reopen("Graphics Settings");
-			EE_CORE_INFO("Graphics Settings open");
-		}
-
-        if (ImGui::MenuItem("Viewport"))
-        {
-            reopen("Viewport");
-            EE_CORE_INFO("Viewport open");
+            if (ImGui::MenuItem("Graphics Settings"))  reopen("Graphics Settings");
+            if (ImGui::MenuItem("UI Settings")) reopen("UI Settings");
+            ImGui::EndMenu();
         }
 
         // Legacy ImGui menu previews removed - use scene-based approach instead:
