@@ -554,7 +554,7 @@ Renderer::OffscreenBuffer Renderer::CreateOffscreenBuffer(const int& width, cons
 	{
 		EE_CORE_ERROR("ERROR: Invalid framebuffer dimensions: {0}x{1}", width, height);
 	}
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH32F_STENCIL8, width, height);
 	glBindRenderbuffer(GL_RENDERBUFFER, buffer.RBO);
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, buffer.RBO);
 
@@ -633,7 +633,7 @@ void Renderer::ResizeOffscreenBuffer(const int& width, const int& height)
 
 	// Resize depth-stencil renderbuffer
 	glBindRenderbuffer(GL_RENDERBUFFER, m_OffscreenBuffer->RBO);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH32F_STENCIL8, width, height);
 
 	// Validate framebuffer completeness after resize
 	glBindFramebuffer(GL_FRAMEBUFFER, m_OffscreenBuffer->FBO);
@@ -734,7 +734,7 @@ void Renderer::CreateGBuffer(const int& width, const int& height)
 	// Create depth texture for depth testing and reconstruction. 24 bits
 	glGenTextures(1, &gBuffer.DepthTexture);
 	glBindTexture(GL_TEXTURE_2D, gBuffer.DepthTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
