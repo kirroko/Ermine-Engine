@@ -67,6 +67,7 @@ layout(std430, binding = 5) restrict readonly buffer TextureArrayBlock
 
 // Shading mode toggle
 uniform bool isBlinnPhong;
+uniform mat4 view;
 
 // Material properties for Blinn-Phong
 uniform vec3 materialKa = vec3(0.2, 0.2, 0.2);
@@ -224,15 +225,19 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0)
 float calculateAttenuation(int lightIndex, vec3 fragPosView, out vec3 lightDir)
 {
     int lightType = int(lights[lightIndex].position_type.w);
-    vec3 lightPosView = lights[lightIndex].position_type.xyz;
     float range = lights[lightIndex].direction_range.w;
     
     float attenuation = 1.0;
     
     if (lightType == DIRECTIONAL_LIGHT) {
-        lightDir = normalize(-lights[lightIndex].direction_range.xyz);
+        vec3 dirWorld = lights[lightIndex].direction_range.xyz;
+        vec4 dirView4 = view * vec4(dirWorld, 0.0);
+        lightDir = normalize(dirView4.xyz);
         attenuation = 1.0;
     } else {
+        vec3 lightPosWorld = lights[lightIndex].position_type.xyz;
+        vec4 lightPosView4 = view * vec4(lightPosWorld, 1.0);
+        vec3 lightPosView = lightPosView4.xyz / lightPosView4.w;
         lightDir = normalize(lightPosView - fragPosView);
         float distance = length(lightPosView - fragPosView);
         
@@ -252,7 +257,9 @@ float calculateAttenuation(int lightIndex, vec3 fragPosView, out vec3 lightDir)
         }
         
         if (lightType == SPOT_LIGHT) {
-            vec3 spotDir = normalize(lights[lightIndex].direction_range.xyz);
+            vec3 spotDirWorld = lights[lightIndex].direction_range.xyz;
+            vec4 spotDirView4 = view * vec4(spotDirWorld, 0.0);
+            vec3 spotDir = normalize(spotDirView4.xyz);
             float cosAngle = dot(-lightDir, spotDir);
             float innerCos = lights[lightIndex].spot_angles_castshadows_startOffset.x;
             float outerCos = lights[lightIndex].spot_angles_castshadows_startOffset.y;
@@ -356,7 +363,9 @@ void main()
         emissive = getEmissive(material, transformedUV);
     }
 
-    vec3 viewDir = normalize(-ViewPos);
+    vec3 fragPosView = ViewPos;
+    vec3 normalView = normalize(mat3(view) * norm);
+    vec3 viewDir = normalize(-fragPosView);
     
     vec3 result = vec3(0.0);
     int numLights = int(lightCount.x);
@@ -371,7 +380,7 @@ void main()
 
         // Add contribution from each light
         for (int i = 0; i < numLights && i < 16; ++i) {
-            result += calculateBlinnPhong(i, norm, viewDir, ViewPos, albedo);
+            result += calculateBlinnPhong(i, normalView, viewDir, fragPosView, albedo);
         }
         
         // Add emissive
@@ -388,7 +397,7 @@ void main()
 
         // Add contribution from each light
         for (int i = 0; i < numLights && i < 16; ++i) {
-            result += calculatePBR(i, norm, viewDir, ViewPos, albedo, F0, roughness, metallic);
+            result += calculatePBR(i, normalView, viewDir, fragPosView, albedo, F0, roughness, metallic);
         }
         
         // Energy compensation for very rough surfaces
@@ -405,9 +414,6 @@ void main()
     vec3 c = 2.43 * result + 0.59;
     vec3 d = 0.14 + result;
     result = clamp((a * b) / (c * d), 0.0, 1.0);
-    
-    // Gamma correction
-    result = pow(result, vec3(1.0/2.2));
     
     // Use alpha directly from albedo
     float alpha = material.albedo.a;
