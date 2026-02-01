@@ -29,6 +29,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Particles.h"
 #include "AnimationGUI.h"
 #include "CommandHistory.h"
+#include "GISystem.h"
+#include "Renderer.h"
 
 #include "xcore/my_properties.h"
 #include "xproperty.h"
@@ -309,6 +311,10 @@ namespace Ermine::editor {
 
 		if (ECS::GetInstance().HasComponent<Light>(selected)) {
 			DrawLightComponent(selected);
+		}
+
+		if (ECS::GetInstance().HasComponent<LightProbeVolumeComponent>(selected)) {
+			DrawLightProbeVolumeComponent(selected);
 		}
 
 		if (ECS::GetInstance().HasComponent<HierarchyComponent>(selected)) {
@@ -1353,6 +1359,37 @@ namespace Ermine::editor {
 					}
 					ImGui::TreePop();
 				}
+			}
+		}
+	}
+
+	void HierarchyInspector::DrawLightProbeVolumeComponent(EntityID entity)
+	{
+		if (!ComponentHeaderWithRemove<LightProbeVolumeComponent>("Light Probe Volume", entity))
+			return;
+
+		auto& ecs = ECS::GetInstance();
+		auto& volume = ecs.GetComponent<LightProbeVolumeComponent>(entity);
+
+		ImGui::Checkbox("Active", &volume.isActive);
+		ImGui::SliderInt("Capture Resolution", &volume.captureResolution, 16, 512);
+		if (volume.captureResolution < 1) volume.captureResolution = 1;
+		ImGui::SliderInt("Voxel Resolution", &volume.voxelResolution, 16, 256);
+		if (volume.voxelResolution < 1) volume.voxelResolution = 1;
+		ImGui::InputInt("Priority", &volume.priority);
+		ImGui::DragFloat3("Bounds Min", &volume.boundsMin.x, 0.1f);
+		ImGui::DragFloat3("Bounds Max", &volume.boundsMax.x, 0.1f);
+		ImGui::Checkbox("Show Gizmos", &volume.showGizmos);
+		ImGui::Text("Probe Index: %d", volume.probeIndex);
+
+		if (ImGui::Button("Bake Probe")) {
+			auto giSystem = ecs.GetSystem<GISystem>();
+			if (giSystem) {
+				giSystem->AssignProbeIndices();
+			}
+			auto renderer = ecs.GetSystem<graphics::Renderer>();
+			if (renderer) {
+				renderer->CaptureLightProbe(entity);
 			}
 		}
 	}
@@ -3144,7 +3181,7 @@ namespace Ermine::editor {
 		// =========================
 		// Rendering
 		// =========================
-		if (shouldShowMenu("Rendering", { "Mesh","Material","Model","Animation","Light","Camera" }) && ImGui::BeginMenu("Rendering"))
+		if (shouldShowMenu("Rendering", { "Mesh","Material","Model","Animation","Light","Camera","Light Probe Volume" }) && ImGui::BeginMenu("Rendering"))
 		{
 			if (matchSearch("Mesh") && ImGui::MenuItem("Mesh") && !ecs.HasComponent<Mesh>(entity))
 			{
@@ -3178,6 +3215,11 @@ namespace Ermine::editor {
 				tempCam.fov = 45;
 				tempCam.nearPlane = 5.0f;
 				ecs.AddComponent(entity, tempCam);
+				itemSelected = true;
+			}
+			if (matchSearch("Light Probe Volume") && ImGui::MenuItem("Light Probe Volume") && !ecs.HasComponent<LightProbeVolumeComponent>(entity))
+			{
+				ecs.AddComponent(entity, LightProbeVolumeComponent());
 				itemSelected = true;
 			}
 			ImGui::EndMenu();

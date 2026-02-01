@@ -181,9 +181,11 @@ namespace Ermine::graphics
 	 */
 	struct LightProbeGPU
 	{
-		glm::vec4 position_radius;      // xyz = world position, w = influence radius
+		glm::vec4 position_radius;      // xyz = world position, w = unused
 		glm::vec4 shCoefficients[9];    // SH L2 coefficients (vec4 for std140 alignment, only xyz used)
-		glm::vec4 flags;                // x = isActive (1.0 or 0.0), yzw = padding
+		glm::vec4 boundsMin;            // xyz = world bounds min, w = padding
+		glm::vec4 boundsMax;            // xyz = world bounds max, w = padding
+		glm::vec4 flags;                // x = isActive (1.0 or 0.0), y = priority, zw = padding
 	};
 
 	/**
@@ -248,6 +250,10 @@ namespace Ermine::graphics
         // Ambient lighting parameters
         glm::vec3 m_AmbientColor = glm::vec3(1.0f, 1.0f, 1.0f);  // RGB color of ambient light
         float m_AmbientIntensity = 0.08f;  // Intensity multiplier for ambient light
+
+		// GI bake parameters
+		int m_GIBakeBounces = 2;
+		float m_GIBakeEnergyLoss = 0.6f;
         
         // Post-processing uniforms - toggles
         bool m_VignetteEnabled = false;
@@ -672,6 +678,13 @@ namespace Ermine::graphics
 		void ProjectCubemapToSH(GLuint cubemapID, glm::vec3 outCoefficients[9]);
 
 		/**
+		 * @brief Projects a cubemap array layer (6 faces) to spherical harmonics (L2, 9 coefficients).
+		 * @param probeIndex Index of the probe in the cubemap array.
+		 * @param outCoefficients Array to store 9 vec3 SH coefficients (27 floats total).
+		 */
+		void ProjectCubemapArrayToSH(int probeIndex, glm::vec3 outCoefficients[9]);
+
+		/**
 		 * @brief Generates probe entities for a probe volume based on grid parameters.
 		 * Creates child probe entities within the volume's bounds at specified spacing.
 		 * @param volumeEntity The entity containing the LightProbeVolumeComponent.
@@ -1080,6 +1093,19 @@ namespace Ermine::graphics
 		static constexpr int MAX_PROBES = 128; // Maximum probes in UBO at once
 		std::unordered_set<GLuint> m_ProbeBlockBoundPrograms;
 		bool m_LightProbesEnabled = true; // Toggle probe contribution
+
+		// Light Probe Capture (indirect cubemap array)
+		GLuint m_ProbeIndirectCubemapArray = 0; // GL_TEXTURE_CUBE_MAP_ARRAY
+		GLuint m_ProbeIndirectDepthArray = 0;   // Depth cubemap array
+		GLuint m_ProbeVoxelAlbedoTexture = 0;   // 3D voxel albedo texture (RGBA8)
+		GLuint m_ProbeVoxelEmissiveTexture = 0; // 3D voxel emissive texture (RGBA8)
+		GLuint m_ProbeVoxelNormalTexture = 0;   // 3D voxel normal texture (RGBA8)
+		int m_ProbeVoxelResolution = 0;
+
+		// GI bake compute shader
+		std::shared_ptr<Shader> m_ProbeBakeComputeShader;
+		std::shared_ptr<Shader> m_ProbeVoxelizeComputeShader;
+		std::shared_ptr<Shader> m_ProbeLightInjectComputeShader;
 
         // Material SSBO
         GLuint m_MaterialSSBO = 0;

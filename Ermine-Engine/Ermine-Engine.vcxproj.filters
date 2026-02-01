@@ -198,6 +198,9 @@
     <ClInclude Include="include\GuidRegistry.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\GISystem.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\HierarchyInspector.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -555,6 +558,9 @@
       <Filter>src\Systems</Filter>
     </ClCompile>
     <ClCompile Include="src\Systems\HierarchySystem.cpp">
+      <Filter>src\Systems</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Systems\GISystem.cpp">
       <Filter>src\Systems</Filter>
     </ClCompile>
     <ClCompile Include="src\Systems\TransformMode.cpp">

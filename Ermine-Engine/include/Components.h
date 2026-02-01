@@ -4859,10 +4859,9 @@ namespace Ermine
 	struct LightProbeComponent
 	{
 		glm::vec3 shCoefficients[9]{};  // L2 SH coefficients (9 per RGB channel stored as vec3)
-		float influenceRadius{ 5.0f };  // Radius of influence for blending
 		bool isActive{ true };          // Whether this probe contributes to lighting
-		bool needsRebake{ true };       // Flag to trigger recapture
 		int captureResolution{ 64 };    // Cubemap face resolution for capture (64, 128, 256)
+		int probeIndex{ -1 };           // Runtime index into probe cubemap array (not serialized)
 		
 		LightProbeComponent() 
 		{
@@ -4876,7 +4875,6 @@ namespace Ermine
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const
 		{
 			out.SetObject();
-			out.AddMember("influenceRadius", influenceRadius, alloc);
 			out.AddMember("isActive", isActive, alloc);
 			out.AddMember("captureResolution", captureResolution, alloc);
 			
@@ -4894,8 +4892,6 @@ namespace Ermine
 
 		void Deserialize(const rapidjson::Value& in)
 		{
-			if (in.HasMember("influenceRadius") && in["influenceRadius"].IsNumber())
-				influenceRadius = in["influenceRadius"].GetFloat();
 			if (in.HasMember("isActive") && in["isActive"].IsBool())
 				isActive = in["isActive"].GetBool();
 			if (in.HasMember("captureResolution") && in["captureResolution"].IsInt())
@@ -4917,9 +4913,7 @@ namespace Ermine
 
 		XPROPERTY_DEF(
 			"LightProbeComponent", LightProbeComponent,
-			xproperty::obj_member<"influenceRadius", &LightProbeComponent::influenceRadius>,
 			xproperty::obj_member<"isActive", &LightProbeComponent::isActive>,
-			xproperty::obj_member<"needsRebake", &LightProbeComponent::needsRebake>,
 			xproperty::obj_member<"captureResolution", &LightProbeComponent::captureResolution>
 		)
 	};
@@ -4932,15 +4926,26 @@ namespace Ermine
 	*************************************************************************/
 	struct LightProbeVolumeComponent
 	{
-		glm::vec3 boundsMin{ -10.0f, 0.0f, -10.0f };  // Minimum corner of volume
-		glm::vec3 boundsMax{ 10.0f, 10.0f, 10.0f };   // Maximum corner of volume
-		glm::vec3 probeSpacing{ 2.0f, 2.0f, 2.0f };   // Distance between probes (grid cells)
-		bool autoUpdate{ false };                      // Auto-rebake probes on scene changes
-		bool showGizmos{ true };                       // Visualize volume bounds and probes in editor
-		int totalProbes{ 0 };                          // Computed: total probe count in grid
-		
+		glm::vec3 boundsMin{ -5.0f, -5.0f, -5.0f };   // Minimum corner of volume
+		glm::vec3 boundsMax{ 5.0f, 5.0f, 5.0f };      // Maximum corner of volume
+		bool isActive{ true };                        // Whether this probe contributes to lighting
+		int captureResolution{ 64 };                 // Cubemap face resolution for capture
+		int voxelResolution{ 64 };                   // Voxel grid resolution per axis
+		int priority{ 0 };                            // Higher priority wins; equal priorities blend
+		bool showGizmos{ true };                      // Visualize volume bounds in editor
+		std::string bakedProbePath{};                // Path to baked probe data on disk
+
 		// Runtime data (not serialized)
-		std::vector<EntityID> generatedProbes{};   // Entities of probes in this volume
+		glm::vec3 shCoefficients[9]{};                // L2 SH coefficients
+		int probeIndex{ -1 };                         // Runtime index into probe cubemap array
+		bool bakedDataLoaded{ false };                // Runtime: loaded SH from disk
+
+		LightProbeVolumeComponent()
+		{
+			for (int i = 0; i < 9; ++i) {
+				shCoefficients[i] = glm::vec3(0.0f);
+			}
+		}
 
 		template<typename Alloc>
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const
@@ -4952,21 +4957,19 @@ namespace Ermine
 			minArray.PushBack(boundsMin.y, alloc);
 			minArray.PushBack(boundsMin.z, alloc);
 			out.AddMember("boundsMin", minArray, alloc);
-			
+
 			rapidjson::Value maxArray(rapidjson::kArrayType);
 			maxArray.PushBack(boundsMax.x, alloc);
 			maxArray.PushBack(boundsMax.y, alloc);
 			maxArray.PushBack(boundsMax.z, alloc);
 			out.AddMember("boundsMax", maxArray, alloc);
-			
-			rapidjson::Value spacingArray(rapidjson::kArrayType);
-			spacingArray.PushBack(probeSpacing.x, alloc);
-			spacingArray.PushBack(probeSpacing.y, alloc);
-			spacingArray.PushBack(probeSpacing.z, alloc);
-			out.AddMember("probeSpacing", spacingArray, alloc);
-			
-			out.AddMember("autoUpdate", autoUpdate, alloc);
+
+			out.AddMember("isActive", isActive, alloc);
+			out.AddMember("captureResolution", captureResolution, alloc);
+			out.AddMember("voxelResolution", voxelResolution, alloc);
+			out.AddMember("priority", priority, alloc);
 			out.AddMember("showGizmos", showGizmos, alloc);
+			out.AddMember("bakedProbePath", rapidjson::Value(bakedProbePath.c_str(), alloc), alloc);
 		}
 
 		void Deserialize(const rapidjson::Value& in)
@@ -4987,27 +4990,30 @@ namespace Ermine
 					boundsMax.z = arr[2].GetFloat();
 				}
 			}
-			if (in.HasMember("probeSpacing") && in["probeSpacing"].IsArray()) {
-				const auto& arr = in["probeSpacing"].GetArray();
-				if (arr.Size() >= 3) {
-					probeSpacing.x = arr[0].GetFloat();
-					probeSpacing.y = arr[1].GetFloat();
-					probeSpacing.z = arr[2].GetFloat();
-				}
-			}
-			if (in.HasMember("autoUpdate") && in["autoUpdate"].IsBool())
-				autoUpdate = in["autoUpdate"].GetBool();
+			if (in.HasMember("isActive") && in["isActive"].IsBool())
+				isActive = in["isActive"].GetBool();
+			if (in.HasMember("captureResolution") && in["captureResolution"].IsInt())
+				captureResolution = in["captureResolution"].GetInt();
+			if (in.HasMember("voxelResolution") && in["voxelResolution"].IsInt())
+				voxelResolution = in["voxelResolution"].GetInt();
+			if (in.HasMember("priority") && in["priority"].IsInt())
+				priority = in["priority"].GetInt();
 			if (in.HasMember("showGizmos") && in["showGizmos"].IsBool())
 				showGizmos = in["showGizmos"].GetBool();
+			if (in.HasMember("bakedProbePath") && in["bakedProbePath"].IsString())
+				bakedProbePath = in["bakedProbePath"].GetString();
 		}
 
 		XPROPERTY_DEF(
 			"LightProbeVolumeComponent", LightProbeVolumeComponent,
 			xproperty::obj_member<"boundsMin", &LightProbeVolumeComponent::boundsMin>,
 			xproperty::obj_member<"boundsMax", &LightProbeVolumeComponent::boundsMax>,
-			xproperty::obj_member<"probeSpacing", &LightProbeVolumeComponent::probeSpacing>,
-			xproperty::obj_member<"autoUpdate", &LightProbeVolumeComponent::autoUpdate>,
-			xproperty::obj_member<"showGizmos", &LightProbeVolumeComponent::showGizmos>
+			xproperty::obj_member<"isActive", &LightProbeVolumeComponent::isActive>,
+			xproperty::obj_member<"captureResolution", &LightProbeVolumeComponent::captureResolution>,
+			xproperty::obj_member<"voxelResolution", &LightProbeVolumeComponent::voxelResolution>,
+			xproperty::obj_member<"priority", &LightProbeVolumeComponent::priority>,
+			xproperty::obj_member<"showGizmos", &LightProbeVolumeComponent::showGizmos>,
+			xproperty::obj_member<"bakedProbePath", &LightProbeVolumeComponent::bakedProbePath>
 		)
 	};
 } // namespace Ermine

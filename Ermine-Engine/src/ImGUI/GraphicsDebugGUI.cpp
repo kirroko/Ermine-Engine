@@ -23,6 +23,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Material.h"
 #include "FrameController.h"
 #include "AssetManager.h"
+#include "GISystem.h"
 
 using namespace Ermine::editor;
 using namespace Ermine::graphics;
@@ -440,6 +441,31 @@ void GraphicsDebugGUI::DrawLightingControls()
 
                 ImGui::TreePop();
             }
+        }
+
+        ImGui::Separator();
+
+        // Light probe volume controls
+        if (ImGui::TreeNode("Light Probe Volumes"))
+        {
+            auto giSystem = ECS::GetInstance().GetSystem<GISystem>();
+            int probeCount = giSystem ? static_cast<int>(giSystem->GetProbeEntities().size()) : 0;
+            ImGui::Text("Active Volumes: %d", probeCount);
+
+            if (renderer) {
+                ImGui::SliderInt("GI Bounces", &renderer->m_GIBakeBounces, 1, 8);
+                ImGui::SliderFloat("Energy Loss", &renderer->m_GIBakeEnergyLoss, 0.0f, 1.0f);
+            }
+
+            if (ImGui::Button("Bake All Volumes")) {
+                if (giSystem) {
+                    giSystem->BakeAllProbes();
+                    EE_CORE_INFO("Bake all probe volumes triggered");
+                }
+            }
+            DrawTooltip("Captures indirect lighting into each probe");
+
+            ImGui::TreePop();
         }
 
         ImGui::Unindent(10.0f);

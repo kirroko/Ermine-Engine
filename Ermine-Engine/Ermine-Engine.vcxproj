@@ -341,6 +341,7 @@ copy /B /Y "$(SolutionDir)ThirdParty\DirectXTex\lib\DirectXTex.pdb" "$(SolutionD
     <ClInclude Include="include\GraphicsDebugGUI.h" />
     <ClInclude Include="include\Guid.h" />
     <ClInclude Include="include\GuidRegistry.h" />
+    <ClInclude Include="include\GISystem.h" />
     <ClInclude Include="include\HierarchyInspector.h" />
     <ClInclude Include="include\HierarchyPanel.h" />
     <ClInclude Include="include\HierarchySystem.h" />
@@ -464,6 +465,7 @@ copy /B /Y "$(SolutionDir)ThirdParty\DirectXTex\lib\DirectXTex.pdb" "$(SolutionD
     <ClCompile Include="src\Systems\HierarchyInspector.cpp" />
     <ClCompile Include="src\Systems\HierarchyPanel.cpp" />
     <ClCompile Include="src\Systems\HierarchySystem.cpp" />
+    <ClCompile Include="src\Systems\GISystem.cpp" />
     <ClCompile Include="src\Systems\TransformMode.cpp" />
     <ClCompile Include="src\Systems\VideoManager.cpp" />
     <ClCompile Include="src\Utility\EditorCamera.cpp" />

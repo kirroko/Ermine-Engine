@@ -35,10 +35,48 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "GeometryFactory.h"
 #include "AssetManager.h"
 #include "Skybox.h"
+#include "SceneManager.h"
 #include <random>  
+#include <filesystem>
+#include <fstream>
 #include "Physics.h"
 #include "NavMesh.h"
+
+namespace {
+	constexpr uint32_t kProbeFileMagic = 0x49475245u; // 'ERGI'
+	constexpr uint32_t kProbeFileVersion = 1;
+
+	bool SaveProbeSHToFile(const std::filesystem::path& path, const glm::vec3 sh[9])
+	{
+		std::ofstream out(path, std::ios::binary);
+		if (!out.is_open())
+			return false;
+
+		out.write(reinterpret_cast<const char*>(&kProbeFileMagic), sizeof(kProbeFileMagic));
+		out.write(reinterpret_cast<const char*>(&kProbeFileVersion), sizeof(kProbeFileVersion));
+		out.write(reinterpret_cast<const char*>(sh), sizeof(glm::vec3) * 9);
+		return out.good();
+	}
+
+	bool LoadProbeSHFromFile(const std::filesystem::path& path, glm::vec3 sh[9])
+	{
+		std::ifstream in(path, std::ios::binary);
+		if (!in.is_open())
+			return false;
+
+		uint32_t magic = 0;
+		uint32_t version = 0;
+		in.read(reinterpret_cast<char*>(&magic), sizeof(magic));
+		in.read(reinterpret_cast<char*>(&version), sizeof(version));
+		if (!in.good() || magic != kProbeFileMagic || version != kProbeFileVersion)
+			return false;
+
+		in.read(reinterpret_cast<char*>(sh), sizeof(glm::vec3) * 9);
+		return in.good();
+	}
+} // namespace
 #include "AnimationManager.h"
+#include "DrawCommands.h"
 
 #include <GLFW/glfw3.h>
 
@@ -251,6 +289,9 @@ void Renderer::Init(const int& screenWidth, const int& screenHeight)
 	m_PostProcessShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/postprocess_vertex.glsl", "../Resources/Shaders/postprocess_fragment.glsl");
 	m_AAShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/FXAA_vertex.glsl", "../Resources/Shaders/FXAA_fragment.glsl");
 	m_MotionBlurShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/motionblur_vertex.glsl", "../Resources/Shaders/motionblur_fragment.glsl");
+	m_ProbeBakeComputeShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/gi_probe_bake_compute.glsl");
+	m_ProbeVoxelizeComputeShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/gi_probe_voxelize_compute.glsl");
+	m_ProbeLightInjectComputeShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/gi_probe_light_inject_compute.glsl");
 	// Load forward rendering shader for transparent objects
 	m_ForwardShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/vertex.glsl", "../Resources/Shaders/fragment_enhanced.glsl");
 	if (!m_ForwardShader || !m_ForwardShader->IsValid()) {
@@ -3649,6 +3690,37 @@ void Renderer::RenderDeferredPipeline(const Mtx44& view, const Mtx44& projection
 		glDepthFunc(GL_LEQUAL);
 		glDisable(GL_CULL_FACE);
 
+		// Light probe volume gizmos
+		{
+			auto& ecs = ECS::GetInstance();
+			for (EntityID entity = 0; entity < MAX_ENTITIES; ++entity) {
+				if (!ecs.HasComponent<LightProbeVolumeComponent>(entity)) continue;
+				if (!ecs.HasComponent<Transform>(entity)) continue;
+
+				const auto& volume = ecs.GetComponent<LightProbeVolumeComponent>(entity);
+				if (!volume.showGizmos) continue;
+
+				glm::mat4 model = GetEntityWorldMatrix(entity);
+				glm::vec3 localMin = volume.boundsMin;
+				glm::vec3 localMax = volume.boundsMax;
+
+				glm::vec3 center = (localMin + localMax) * 0.5f;
+				glm::vec3 extent = (localMax - localMin) * 0.5f;
+
+				glm::vec3 worldCenter = glm::vec3(model * glm::vec4(center, 1.0f));
+				glm::mat3 upperLeft = glm::mat3(model);
+				glm::vec3 worldExtent = glm::abs(upperLeft[0]) * extent.x
+					+ glm::abs(upperLeft[1]) * extent.y
+					+ glm::abs(upperLeft[2]) * extent.z;
+
+				glm::vec3 actualMin = worldCenter - worldExtent;
+				glm::vec3 actualMax = worldCenter + worldExtent;
+
+				glm::vec3 color = volume.isActive ? glm::vec3(0.2f, 0.8f, 1.0f) : glm::vec3(0.5f, 0.5f, 0.5f);
+				SubmitDebugAABB(actualMin, actualMax, color);
+			}
+		}
+
 		if (auto navSys = ECS::GetInstance().GetSystem<NavMeshSystem>())
 		{
 			//EE_CORE_INFO("[Renderer] Drawing NavMesh debug lines");
@@ -4070,42 +4142,59 @@ void Renderer::InitializeProbeCaptureResources()
 		glDeleteTextures(1, &m_ProbeDepthCubemap);
 		m_ProbeDepthCubemap = 0;
 	}
+	if (m_ProbeIndirectCubemapArray != 0) {
+		glDeleteTextures(1, &m_ProbeIndirectCubemapArray);
+		m_ProbeIndirectCubemapArray = 0;
+	}
+	if (m_ProbeIndirectDepthArray != 0) {
+		glDeleteTextures(1, &m_ProbeIndirectDepthArray);
+		m_ProbeIndirectDepthArray = 0;
+	}
+	if (m_ProbeVoxelAlbedoTexture != 0) {
+		glDeleteTextures(1, &m_ProbeVoxelAlbedoTexture);
+		m_ProbeVoxelAlbedoTexture = 0;
+	}
+	if (m_ProbeVoxelEmissiveTexture != 0) {
+		glDeleteTextures(1, &m_ProbeVoxelEmissiveTexture);
+		m_ProbeVoxelEmissiveTexture = 0;
+	}
+	if (m_ProbeVoxelNormalTexture != 0) {
+		glDeleteTextures(1, &m_ProbeVoxelNormalTexture);
+		m_ProbeVoxelNormalTexture = 0;
+	}
+	m_ProbeVoxelResolution = 0;
 	if (m_ProbeCubemapFBO != 0) {
 		glDeleteFramebuffers(1, &m_ProbeCubemapFBO);
 		m_ProbeCubemapFBO = 0;
 	}
 
-	// Create cubemap color texture
-	glGenTextures(1, &m_ProbeCubemap);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, m_ProbeCubemap);
-	for (int i = 0; i < 6; ++i) {
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F,
-			m_ProbeCaptureResolution, m_ProbeCaptureResolution, 0, GL_RGB, GL_FLOAT, nullptr);
-	}
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+	// Create cubemap array for indirect lighting (RGBA16F)
+	glGenTextures(1, &m_ProbeIndirectCubemapArray);
+	glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, m_ProbeIndirectCubemapArray);
+	glTexStorage3D(GL_TEXTURE_CUBE_MAP_ARRAY, 1, GL_RGBA16F,
+		m_ProbeCaptureResolution, m_ProbeCaptureResolution, 6 * MAX_PROBES);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
-	// Create cubemap depth texture
-	glGenTextures(1, &m_ProbeDepthCubemap);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, m_ProbeDepthCubemap);
-	for (int i = 0; i < 6; ++i) {
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT24,
-			m_ProbeCaptureResolution, m_ProbeCaptureResolution, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
-	}
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+	// Create cubemap array depth texture
+	glGenTextures(1, &m_ProbeIndirectDepthArray);
+	glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, m_ProbeIndirectDepthArray);
+	glTexStorage3D(GL_TEXTURE_CUBE_MAP_ARRAY, 1, GL_DEPTH_COMPONENT24,
+		m_ProbeCaptureResolution, m_ProbeCaptureResolution, 6 * MAX_PROBES);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
 	// Create FBO
 	glGenFramebuffers(1, &m_ProbeCubemapFBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, m_ProbeCubemapFBO);
-	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_ProbeCubemap, 0);
-	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_ProbeDepthCubemap, 0);
+	glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_ProbeIndirectCubemapArray, 0, 0);
+	glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_ProbeIndirectDepthArray, 0, 0);
 
 	// Check framebuffer status
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
@@ -4113,7 +4202,7 @@ void Renderer::InitializeProbeCaptureResources()
 	}
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+	glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, 0);
 
 	// Create Probes UBO
 	if (m_LightProbesUBO == 0) {
@@ -4136,19 +4225,91 @@ void Renderer::InitializeProbeCaptureResources()
 void Renderer::CaptureLightProbe(EntityID probeEntity)
 {
 	auto& ecs = Ermine::ECS::GetInstance();
-	if (!ecs.HasComponent<LightProbeComponent>(probeEntity) || !ecs.HasComponent<Transform>(probeEntity)) {
-		EE_CORE_WARN("Entity {0} does not have LightProbeComponent or Transform!", static_cast<uint32_t>(probeEntity));
+	if (!ecs.HasComponent<LightProbeVolumeComponent>(probeEntity) || !ecs.HasComponent<Transform>(probeEntity)) {
+		EE_CORE_WARN("Entity {0} does not have LightProbeVolumeComponent or Transform!", static_cast<uint32_t>(probeEntity));
 		return;
 	}
 
-	auto& probe = ecs.GetComponent<LightProbeComponent>(probeEntity);
+	auto& probe = ecs.GetComponent<LightProbeVolumeComponent>(probeEntity);
 	const auto& trans = ecs.GetComponent<Transform>(probeEntity);
 	glm::vec3 probePos(trans.position.x, trans.position.y, trans.position.z);
 
+	if (probe.probeIndex < 0 || probe.probeIndex >= MAX_PROBES) {
+		EE_CORE_WARN("Light probe entity {0} has invalid probeIndex {1}", static_cast<uint32_t>(probeEntity), probe.probeIndex);
+		return;
+	}
+
 	// Update capture resolution if changed
 	if (probe.captureResolution != m_ProbeCaptureResolution) {
+		if (probe.captureResolution < 1) {
+			probe.captureResolution = 1;
+		}
 		m_ProbeCaptureResolution = probe.captureResolution;
 		InitializeProbeCaptureResources(); // Recreate with new resolution
+	}
+
+	// Allocate voxel texture if needed
+	if (probe.voxelResolution < 1) {
+		probe.voxelResolution = 1;
+	}
+	if (probe.voxelResolution != m_ProbeVoxelResolution || m_ProbeVoxelAlbedoTexture == 0 || m_ProbeVoxelEmissiveTexture == 0 || m_ProbeVoxelNormalTexture == 0) {
+		if (m_ProbeVoxelAlbedoTexture != 0) {
+			glDeleteTextures(1, &m_ProbeVoxelAlbedoTexture);
+			m_ProbeVoxelAlbedoTexture = 0;
+		}
+		if (m_ProbeVoxelEmissiveTexture != 0) {
+			glDeleteTextures(1, &m_ProbeVoxelEmissiveTexture);
+			m_ProbeVoxelEmissiveTexture = 0;
+		}
+		if (m_ProbeVoxelNormalTexture != 0) {
+			glDeleteTextures(1, &m_ProbeVoxelNormalTexture);
+			m_ProbeVoxelNormalTexture = 0;
+		}
+		m_ProbeVoxelResolution = probe.voxelResolution;
+		glGenTextures(1, &m_ProbeVoxelAlbedoTexture);
+		glBindTexture(GL_TEXTURE_3D, m_ProbeVoxelAlbedoTexture);
+		glTexStorage3D(GL_TEXTURE_3D, 1, GL_RGBA8,
+			m_ProbeVoxelResolution, m_ProbeVoxelResolution, m_ProbeVoxelResolution);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+		glGenTextures(1, &m_ProbeVoxelEmissiveTexture);
+		glBindTexture(GL_TEXTURE_3D, m_ProbeVoxelEmissiveTexture);
+		glTexStorage3D(GL_TEXTURE_3D, 1, GL_RGBA8,
+			m_ProbeVoxelResolution, m_ProbeVoxelResolution, m_ProbeVoxelResolution);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+		glGenTextures(1, &m_ProbeVoxelNormalTexture);
+		glBindTexture(GL_TEXTURE_3D, m_ProbeVoxelNormalTexture);
+		glTexStorage3D(GL_TEXTURE_3D, 1, GL_RGBA8,
+			m_ProbeVoxelResolution, m_ProbeVoxelResolution, m_ProbeVoxelResolution);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+		glBindTexture(GL_TEXTURE_3D, 0);
+	}
+
+	// Clear voxel texture
+	if (m_ProbeVoxelAlbedoTexture != 0) {
+		const GLuint clearValue[4] = { 0, 0, 0, 0 };
+		glClearTexImage(m_ProbeVoxelAlbedoTexture, 0, GL_RGBA, GL_UNSIGNED_BYTE, clearValue);
+	}
+	if (m_ProbeVoxelEmissiveTexture != 0) {
+		const GLuint clearValue[4] = { 0, 0, 0, 0 };
+		glClearTexImage(m_ProbeVoxelEmissiveTexture, 0, GL_RGBA, GL_UNSIGNED_BYTE, clearValue);
+	}
+	if (m_ProbeVoxelNormalTexture != 0) {
+		const GLuint clearValue[4] = { 0, 0, 0, 0 };
+		glClearTexImage(m_ProbeVoxelNormalTexture, 0, GL_RGBA, GL_UNSIGNED_BYTE, clearValue);
 	}
 
 	// Setup projection matrix (90 degree FOV for cubemap faces)
@@ -4164,52 +4325,297 @@ void Renderer::CaptureLightProbe(EntityID probeEntity)
 		glm::lookAt(probePos, probePos + glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f))  // -Z
 	};
 
-	// Bind cubemap FBO
-	glBindFramebuffer(GL_FRAMEBUFFER, m_ProbeCubemapFBO);
-	glViewport(0, 0, m_ProbeCaptureResolution, m_ProbeCaptureResolution);
+	GLint prevFBO = 0;
+	GLint prevViewport[4] = { 0, 0, 0, 0 };
+	glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prevFBO);
+	glGetIntegerv(GL_VIEWPORT, prevViewport);
 
-	// Render each cubemap face
-	for (int face = 0; face < 6; ++face) {
-		// Attach specific cubemap face to FBO
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-			GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, m_ProbeCubemap, 0);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-			GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, m_ProbeDepthCubemap, 0);
+	// Dispatch GI bake compute shader (indirect-only)
+	// Compute world-space voxel bounds (probe bounds are local to entity)
+	glm::mat4 volumeModel = GetEntityWorldMatrix(probeEntity);
+	glm::vec3 localMin = probe.boundsMin;
+	glm::vec3 localMax = probe.boundsMax;
+	glm::vec3 localCenter = (localMin + localMax) * 0.5f;
+	glm::vec3 localExtent = (localMax - localMin) * 0.5f;
+	glm::vec3 worldCenter = glm::vec3(volumeModel * glm::vec4(localCenter, 1.0f));
+	glm::mat3 upperLeft = glm::mat3(volumeModel);
+	glm::vec3 worldExtent = glm::abs(upperLeft[0]) * localExtent.x
+		+ glm::abs(upperLeft[1]) * localExtent.y
+		+ glm::abs(upperLeft[2]) * localExtent.z;
+	glm::vec3 worldBoundsMin = worldCenter - worldExtent;
+	glm::vec3 worldBoundsMax = worldCenter + worldExtent;
 
-		// Clear
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	// Voxelize scene into probe-local volume (RGBA8: rgb=albedo+emissive, a=occupancy)
+	if (m_ProbeVoxelizeComputeShader && m_ProbeVoxelizeComputeShader->IsValid()) {
+		const GLuint program = m_ProbeVoxelizeComputeShader->GetRendererID();
+		glUseProgram(program);
 
-		// Render scene from this face's perspective
-		// TODO: Optimize by rendering only static geometry for baking
-		// For now, we'll render the full scene (this will be slow but complete)
-		// Convert glm back to Mtx44
-		Mtx44 viewMtx = Mtx44(
-			captureViews[face][0][0], captureViews[face][1][0], captureViews[face][2][0], captureViews[face][3][0],
-			captureViews[face][0][1], captureViews[face][1][1], captureViews[face][2][1], captureViews[face][3][1],
-			captureViews[face][0][2], captureViews[face][1][2], captureViews[face][2][2], captureViews[face][3][2],
-			captureViews[face][0][3], captureViews[face][1][3], captureViews[face][2][3], captureViews[face][3][3]
-		);
-		Mtx44 projMtx = Mtx44(
-			captureProjection[0][0], captureProjection[1][0], captureProjection[2][0], captureProjection[3][0],
-			captureProjection[0][1], captureProjection[1][1], captureProjection[2][1], captureProjection[3][1],
-			captureProjection[0][2], captureProjection[1][2], captureProjection[2][2], captureProjection[3][2],
-			captureProjection[0][3], captureProjection[1][3], captureProjection[2][3], captureProjection[3][3]
-		);
-		
-		// NOTE: This is a simplified capture - in production you'd want to:
-		// 1. Render only static geometry
-		// 2. Disable probe entity itself to avoid self-capture
-		// 3. Use a lower quality/simplified shader
-		// For now, we'll just clear to ambient color as placeholder
-		// Real implementation would call RenderScene or similar
+		GLint locVoxelMin = glGetUniformLocation(program, "u_VoxelBoundsMin");
+		GLint locVoxelMax = glGetUniformLocation(program, "u_VoxelBoundsMax");
+		GLint locVoxelRes = glGetUniformLocation(program, "u_VoxelResolution");
+		GLint locIndexCount = glGetUniformLocation(program, "u_IndexCount");
+		GLint locFirstIndex = glGetUniformLocation(program, "u_FirstIndex");
+		GLint locBaseVertex = glGetUniformLocation(program, "u_BaseVertex");
+		GLint locVertexStride = glGetUniformLocation(program, "u_VertexStride");
+		GLint locVertexPosOffset = glGetUniformLocation(program, "u_VertexPositionOffset");
+		GLint locModelMatrix = glGetUniformLocation(program, "u_ModelMatrix");
+		GLint locMatAlbedo = glGetUniformLocation(program, "u_MaterialAlbedo");
+		GLint locMatEmissive = glGetUniformLocation(program, "u_MaterialEmissive");
+		GLint locMatEmissiveIntensity = glGetUniformLocation(program, "u_MaterialEmissiveIntensity");
+
+		if (locVoxelMin != -1) glUniform3f(locVoxelMin, worldBoundsMin.x, worldBoundsMin.y, worldBoundsMin.z);
+		if (locVoxelMax != -1) glUniform3f(locVoxelMax, worldBoundsMax.x, worldBoundsMax.y, worldBoundsMax.z);
+		if (locVoxelRes != -1) glUniform1i(locVoxelRes, m_ProbeVoxelResolution);
+		if (locVertexStride != -1) {
+			const int strideFloats = static_cast<int>(sizeof(graphics::Vertex) / sizeof(float));
+			glUniform1i(locVertexStride, strideFloats);
+		}
+		if (locVertexPosOffset != -1) {
+			const int positionOffset = static_cast<int>(offsetof(graphics::Vertex, position) / sizeof(float));
+			glUniform1i(locVertexPosOffset, positionOffset);
+		}
+
+		glBindImageTexture(0, m_ProbeVoxelAlbedoTexture, 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA8);
+		glBindImageTexture(1, m_ProbeVoxelEmissiveTexture, 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA8);
+		glBindImageTexture(2, m_ProbeVoxelNormalTexture, 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA8);
+
+		// Bind buffers for voxelization
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, INDEX_SSBO_BINDING, m_MeshManager.m_IndexSSBO);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, VERTEX_SSBO_BINDING, m_MeshManager.GetVertexVBO());
+
+		// Read draw commands from GPU (geometry standard pass)
+		size_t drawCount = m_MeshManager.m_GeometryStandardDrawCommandBuffer.GetCommandCount();
+		GLuint cmdBuffer = m_MeshManager.m_GeometryStandardDrawCommandBuffer.GetBufferID();
+		EE_CORE_INFO("Probe voxelize: drawCount={0} cmdBuffer={1}", drawCount, cmdBuffer);
+		if (cmdBuffer == 0 || drawCount == 0) {
+			glUseProgram(0);
+		} else {
+			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, cmdBuffer);
+			GLint bufferSize = 0;
+			glGetBufferParameteriv(GL_DRAW_INDIRECT_BUFFER, GL_BUFFER_SIZE, &bufferSize);
+			size_t maxCmds = bufferSize > 0 ? static_cast<size_t>(bufferSize) / sizeof(DrawElementsIndirectCommand) : 0;
+			if (maxCmds == 0) {
+				glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
+				glUseProgram(0);
+			} else {
+				if (drawCount > maxCmds) {
+					drawCount = maxCmds;
+				}
+				const size_t kMaxSafeDraws = 100000;
+				if (drawCount > kMaxSafeDraws) {
+					drawCount = kMaxSafeDraws;
+				}
+				std::vector<DrawElementsIndirectCommand> commands(drawCount);
+				glGetBufferSubData(GL_DRAW_INDIRECT_BUFFER, 0,
+					static_cast<GLsizeiptr>(drawCount * sizeof(DrawElementsIndirectCommand)),
+					commands.data());
+				glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
+
+				// Read draw infos to get model matrix + material index
+				std::vector<DrawInfo> drawInfos(drawCount);
+				GLuint infoBuffer = m_MeshManager.m_GeometryStandardDrawInfoBuffer.GetBufferID();
+				if (infoBuffer != 0) {
+					glBindBuffer(GL_SHADER_STORAGE_BUFFER, infoBuffer);
+					glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0,
+						static_cast<GLsizeiptr>(drawCount * sizeof(DrawInfo)),
+						drawInfos.data());
+					glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+				}
+
+				const GLuint groupSize = 64;
+				size_t totalTris = 0;
+				if (!commands.empty()) {
+					EE_CORE_INFO("Probe voxelize first cmd: count={0} firstIndex={1} baseVertex={2}",
+						commands[0].count, commands[0].firstIndex, commands[0].baseVertex);
+				}
+				for (size_t i = 0; i < drawCount; ++i) {
+					const auto& cmd = commands[i];
+					if (cmd.count < 3) continue;
+
+					if (locIndexCount != -1) glUniform1i(locIndexCount, static_cast<int>(cmd.count));
+					if (locFirstIndex != -1) glUniform1i(locFirstIndex, static_cast<int>(cmd.firstIndex));
+					if (locBaseVertex != -1) glUniform1i(locBaseVertex, static_cast<int>(cmd.baseVertex));
+					if (locModelMatrix != -1 && i < drawInfos.size()) {
+						glUniformMatrix4fv(locModelMatrix, 1, GL_FALSE, &drawInfos[i].modelMatrix[0][0]);
+					}
+					if (locMatAlbedo != -1 || locMatEmissive != -1 || locMatEmissiveIntensity != -1) {
+						glm::vec3 albedo(0.8f);
+						glm::vec3 emissive(0.0f);
+						float emissiveIntensity = 0.0f;
+						if (i < drawInfos.size()) {
+							const uint32_t matIndex = drawInfos[i].materialIndex;
+							if (matIndex < m_CompiledMaterials.size()) {
+								const auto& mat = m_CompiledMaterials[matIndex];
+								albedo = glm::vec3(mat.albedo.x, mat.albedo.y, mat.albedo.z);
+								emissive = glm::vec3(mat.emissive.x, mat.emissive.y, mat.emissive.z);
+								emissiveIntensity = mat.emissiveIntensity;
+							}
+						}
+						if (locMatAlbedo != -1) glUniform3f(locMatAlbedo, albedo.x, albedo.y, albedo.z);
+						if (locMatEmissive != -1) glUniform3f(locMatEmissive, emissive.x, emissive.y, emissive.z);
+						if (locMatEmissiveIntensity != -1) glUniform1f(locMatEmissiveIntensity, emissiveIntensity);
+					}
+
+					const GLuint triCount = cmd.count / 3;
+					totalTris += triCount;
+					const GLuint groupsX = (triCount + groupSize - 1) / groupSize;
+					glDispatchCompute(groupsX, 1, 1);
+				}
+				EE_CORE_INFO("Probe voxelize total tris dispatched: {0}", totalTris);
+			}
+		}
+		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+		glUseProgram(0);
 	}
 
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	// Inject direct lighting into voxel emissive using LightsUBO
+	if (m_ProbeLightInjectComputeShader && m_ProbeLightInjectComputeShader->IsValid()) {
+		const GLuint program = m_ProbeLightInjectComputeShader->GetRendererID();
+		glUseProgram(program);
+
+		GLint locVoxelMin = glGetUniformLocation(program, "u_VoxelBoundsMin");
+		GLint locVoxelMax = glGetUniformLocation(program, "u_VoxelBoundsMax");
+		GLint locVoxelRes = glGetUniformLocation(program, "u_VoxelResolution");
+		GLint locView = glGetUniformLocation(program, "u_View");
+		if (locVoxelMin != -1) glUniform3f(locVoxelMin, worldBoundsMin.x, worldBoundsMin.y, worldBoundsMin.z);
+		if (locVoxelMax != -1) glUniform3f(locVoxelMax, worldBoundsMax.x, worldBoundsMax.y, worldBoundsMax.z);
+		if (locVoxelRes != -1) glUniform1i(locVoxelRes, m_ProbeVoxelResolution);
+		if (locView != -1) {
+			const glm::mat4 viewMat = ToGlm(editor::EditorCamera::GetInstance().GetViewMatrix());
+			glUniformMatrix4fv(locView, 1, GL_FALSE, &viewMat[0][0]);
+		}
+
+		glBindBufferBase(GL_UNIFORM_BUFFER, LightsBindingPoint, m_LightsUBO);
+		glBindImageTexture(0, m_ProbeVoxelAlbedoTexture, 0, GL_TRUE, 0, GL_READ_ONLY, GL_RGBA8);
+		glBindImageTexture(1, m_ProbeVoxelEmissiveTexture, 0, GL_TRUE, 0, GL_READ_WRITE, GL_RGBA8);
+		glBindImageTexture(2, m_ProbeVoxelNormalTexture, 0, GL_TRUE, 0, GL_READ_ONLY, GL_RGBA8);
+
+		const GLuint groupSize = 4;
+		const GLuint groups = (m_ProbeVoxelResolution + groupSize - 1) / groupSize;
+		glDispatchCompute(groups, groups, groups);
+		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+		glUseProgram(0);
+	}
+
+	// Debug: read back voxel volume stats
+	if (m_ProbeVoxelAlbedoTexture != 0) {
+		const int res = m_ProbeVoxelResolution;
+		const size_t voxelCount = static_cast<size_t>(res) * static_cast<size_t>(res) * static_cast<size_t>(res);
+		std::vector<uint8_t> albedoVoxels(voxelCount * 4);
+		glBindTexture(GL_TEXTURE_3D, m_ProbeVoxelAlbedoTexture);
+		glGetTexImage(GL_TEXTURE_3D, 0, GL_RGBA, GL_UNSIGNED_BYTE, albedoVoxels.data());
+		glBindTexture(GL_TEXTURE_3D, 0);
+
+		size_t occupied = 0;
+		double sumR = 0.0, sumG = 0.0, sumB = 0.0;
+		for (size_t i = 0; i < voxelCount; ++i) {
+			const uint8_t a = albedoVoxels[i * 4 + 3];
+			if (a > 0) {
+				occupied++;
+				sumR += albedoVoxels[i * 4 + 0] / 255.0;
+				sumG += albedoVoxels[i * 4 + 1] / 255.0;
+				sumB += albedoVoxels[i * 4 + 2] / 255.0;
+			}
+		}
+		const double invOcc = occupied > 0 ? 1.0 / static_cast<double>(occupied) : 0.0;
+		EE_CORE_INFO("Probe albedo voxel: res={0} occupied={1}/{2} avgRGB=({3:.5f},{4:.5f},{5:.5f})",
+			res, occupied, voxelCount, sumR * invOcc, sumG * invOcc, sumB * invOcc);
+	}
+	if (m_ProbeVoxelEmissiveTexture != 0) {
+		const int res = m_ProbeVoxelResolution;
+		const size_t voxelCount = static_cast<size_t>(res) * static_cast<size_t>(res) * static_cast<size_t>(res);
+		std::vector<uint8_t> emissiveVoxels(voxelCount * 4);
+		glBindTexture(GL_TEXTURE_3D, m_ProbeVoxelEmissiveTexture);
+		glGetTexImage(GL_TEXTURE_3D, 0, GL_RGBA, GL_UNSIGNED_BYTE, emissiveVoxels.data());
+		glBindTexture(GL_TEXTURE_3D, 0);
+
+		size_t occupied = 0;
+		double sumR = 0.0, sumG = 0.0, sumB = 0.0;
+		for (size_t i = 0; i < voxelCount; ++i) {
+			const uint8_t a = emissiveVoxels[i * 4 + 3];
+			if (a > 0) {
+				occupied++;
+				sumR += emissiveVoxels[i * 4 + 0] / 255.0;
+				sumG += emissiveVoxels[i * 4 + 1] / 255.0;
+				sumB += emissiveVoxels[i * 4 + 2] / 255.0;
+			}
+		}
+		const double invOcc = occupied > 0 ? 1.0 / static_cast<double>(occupied) : 0.0;
+		EE_CORE_INFO("Probe emissive voxel: res={0} occupied={1}/{2} avgRGB=({3:.5f},{4:.5f},{5:.5f})",
+			res, occupied, voxelCount, sumR * invOcc, sumG * invOcc, sumB * invOcc);
+	}
+
+	if (m_ProbeBakeComputeShader && m_ProbeBakeComputeShader->IsValid()) {
+		const GLuint program = m_ProbeBakeComputeShader->GetRendererID();
+		glUseProgram(program);
+
+		GLint locBaseLayer = glGetUniformLocation(program, "u_ProbeBaseLayer");
+		GLint locProbePos = glGetUniformLocation(program, "u_ProbePosition");
+		GLint locResolution = glGetUniformLocation(program, "u_Resolution");
+		GLint locBounces = glGetUniformLocation(program, "u_Bounces");
+		GLint locEnergyLoss = glGetUniformLocation(program, "u_EnergyLoss");
+		GLint locVoxelMin = glGetUniformLocation(program, "u_VoxelBoundsMin");
+		GLint locVoxelMax = glGetUniformLocation(program, "u_VoxelBoundsMax");
+		GLint locVoxelRes = glGetUniformLocation(program, "u_VoxelResolution");
+		if (locBaseLayer != -1) glUniform1i(locBaseLayer, probe.probeIndex * 6);
+		if (locProbePos != -1) glUniform3f(locProbePos, probePos.x, probePos.y, probePos.z);
+		if (locResolution != -1) glUniform1i(locResolution, m_ProbeCaptureResolution);
+		if (locBounces != -1) glUniform1i(locBounces, m_GIBakeBounces);
+		if (locEnergyLoss != -1) glUniform1f(locEnergyLoss, m_GIBakeEnergyLoss);
+		if (locVoxelMin != -1) glUniform3f(locVoxelMin, worldBoundsMin.x, worldBoundsMin.y, worldBoundsMin.z);
+		if (locVoxelMax != -1) glUniform3f(locVoxelMax, worldBoundsMax.x, worldBoundsMax.y, worldBoundsMax.z);
+		if (locVoxelRes != -1) glUniform1i(locVoxelRes, m_ProbeVoxelResolution);
+
+		glBindImageTexture(0, m_ProbeIndirectCubemapArray, 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA16F);
+		if (m_ProbeVoxelAlbedoTexture != 0) {
+			glBindImageTexture(1, m_ProbeVoxelAlbedoTexture, 0, GL_TRUE, 0, GL_READ_ONLY, GL_RGBA8);
+		}
+		if (m_ProbeVoxelEmissiveTexture != 0) {
+			glBindImageTexture(2, m_ProbeVoxelEmissiveTexture, 0, GL_TRUE, 0, GL_READ_ONLY, GL_RGBA8);
+		}
+
+		const GLuint groupSize = 8;
+		const GLuint groupsX = (m_ProbeCaptureResolution + groupSize - 1) / groupSize;
+		const GLuint groupsY = (m_ProbeCaptureResolution + groupSize - 1) / groupSize;
+		glDispatchCompute(groupsX, groupsY, 6);
+		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+		glUseProgram(0);
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, prevFBO);
+	glViewport(prevViewport[0], prevViewport[1], prevViewport[2], prevViewport[3]);
 
 	// Project captured cubemap to SH coefficients
-	ProjectCubemapToSH(m_ProbeCubemap, probe.shCoefficients);
+	ProjectCubemapArrayToSH(probe.probeIndex, probe.shCoefficients);
 
-	probe.needsRebake = false;
+	// Save baked probe data to disk
+	{
+		std::string sceneName = "UnsavedScene";
+		if (auto scenePathOpt = SceneManager::GetInstance().GetCurrentScenePath()) {
+			std::filesystem::path scenePath(*scenePathOpt);
+			sceneName = scenePath.stem().string();
+		}
+		std::filesystem::path outDir = std::filesystem::path("../Resources/Textures/GI") / sceneName;
+		std::filesystem::create_directories(outDir);
+		std::filesystem::path outPath = outDir / ("Probe_" + std::to_string(static_cast<uint64_t>(probeEntity)) + ".probe");
+
+		if (SaveProbeSHToFile(outPath, probe.shCoefficients)) {
+			probe.bakedProbePath = outPath.generic_string();
+			probe.bakedDataLoaded = true;
+			EE_CORE_INFO("Saved probe SH to {}", probe.bakedProbePath);
+		} else {
+			EE_CORE_WARN("Failed to save probe SH to {}", outPath.string());
+		}
+	}
+
+	// Debug: log SH energy
+	double shEnergy = 0.0;
+	for (int i = 0; i < 9; ++i) {
+		const glm::vec3 c = probe.shCoefficients[i];
+		shEnergy += static_cast<double>(c.x * c.x + c.y * c.y + c.z * c.z);
+	}
+	EE_CORE_INFO("Probe SH energy: {0:.6f}", shEnergy);
+
 	glCheckError();
 
 	EE_CORE_INFO("Captured light probe at position ({0}, {1}, {2})", probePos.x, probePos.y, probePos.z);
@@ -4229,7 +4635,7 @@ void Renderer::ProjectCubemapToSH(GLuint cubemapID, glm::vec3 outCoefficients[9]
 	glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapID);
 
 	const int resolution = m_ProbeCaptureResolution;
-	std::vector<glm::vec3> faceData(resolution * resolution);
+	std::vector<glm::vec4> faceData(resolution * resolution);
 
 	// SH basis function constants
 	const float c0 = 0.282095f;  // 1 / (2 * sqrt(pi))
@@ -4300,75 +4706,124 @@ void Renderer::ProjectCubemapToSH(GLuint cubemapID, glm::vec3 outCoefficients[9]
 }
 
 /**
- * @brief Generates probe entities for a probe volume based on grid parameters.
+ * @brief Projects a cubemap array layer to spherical harmonics (L2 - 9 coefficients).
  */
-void Renderer::GenerateProbeVolume(EntityID volumeEntity)
+void Renderer::ProjectCubemapArrayToSH(int probeIndex, glm::vec3 outCoefficients[9])
 {
-	auto& ecs = Ermine::ECS::GetInstance();
-	if (!ecs.HasComponent<LightProbeVolumeComponent>(volumeEntity)) {
-		EE_CORE_WARN("Entity {0} does not have LightProbeVolumeComponent!", static_cast<uint32_t>(volumeEntity));
+	if (probeIndex < 0 || probeIndex >= MAX_PROBES) {
+		EE_CORE_WARN("ProjectCubemapArrayToSH: invalid probeIndex {0}", probeIndex);
 		return;
 	}
 
-	auto& volume = ecs.GetComponent<LightProbeVolumeComponent>(volumeEntity);
-	const auto& volTrans = ecs.GetComponent<Transform>(volumeEntity);
-
-	// Clear existing probes
-	for (EntityID probe : volume.generatedProbes) {
-		ecs.DestroyEntity(probe);
+	// Initialize coefficients to zero
+	for (int i = 0; i < 9; ++i) {
+		outCoefficients[i] = glm::vec3(0.0f);
 	}
-	volume.generatedProbes.clear();
 
-	// Calculate grid dimensions
-	glm::vec3 volumeSize = volume.boundsMax - volume.boundsMin;
-	glm::ivec3 gridDim(
-		static_cast<int>(volumeSize.x / volume.probeSpacing.x) + 1,
-		static_cast<int>(volumeSize.y / volume.probeSpacing.y) + 1,
-		static_cast<int>(volumeSize.z / volume.probeSpacing.z) + 1
-	);
+	const int resolution = m_ProbeCaptureResolution;
+	std::vector<glm::vec4> faceData(resolution * resolution);
 
-	volume.totalProbes = gridDim.x * gridDim.y * gridDim.z;
+	// SH basis function constants
+	const float c0 = 0.282095f;  // 1 / (2 * sqrt(pi))
+	const float c1 = 0.488603f;  // sqrt(3 / (4 * pi))
+	const float c2 = 1.092548f;  // sqrt(15 / (4 * pi))
+	const float c3 = 0.315392f;  // sqrt(5 / (16 * pi))
+	const float c4 = 0.546274f;  // sqrt(15 / (16 * pi))
 
-	// Generate probe entities in grid
-	for (int z = 0; z < gridDim.z; ++z) {
-		for (int y = 0; y < gridDim.y; ++y) {
-			for (int x = 0; x < gridDim.x; ++x) {
-				// Calculate probe position in world space
-				glm::vec3 localPos = volume.boundsMin + glm::vec3(
-					x * volume.probeSpacing.x,
-					y * volume.probeSpacing.y,
-					z * volume.probeSpacing.z
-				);
+	float totalWeight = 0.0f;
+	double sumLuma = 0.0;
+	size_t sampleCount = 0;
 
-				glm::vec3 worldPos = glm::vec3(volTrans.position.x, volTrans.position.y, volTrans.position.z) + localPos;
+	GLint prevFBO = 0;
+	GLint prevViewport[4] = { 0, 0, 0, 0 };
+	glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prevFBO);
+	glGetIntegerv(GL_VIEWPORT, prevViewport);
 
-				// Create probe entity
-				EntityID probeEntity = ecs.CreateEntity();
-				ecs.AddComponent<ObjectMetaData>(probeEntity, ObjectMetaData());
-				auto& probeMetadata = ecs.GetComponent<ObjectMetaData>(probeEntity);
-				probeMetadata.name = "Probe_" + std::to_string(x) + "_" + std::to_string(y) + "_" + std::to_string(z);
-				probeMetadata.selfActive = true;
-				
-				ecs.AddComponent<Transform>(probeEntity, Transform());
-				auto& probeTrans = ecs.GetComponent<Transform>(probeEntity);
-				probeTrans.position = Vec3(worldPos.x, worldPos.y, worldPos.z);
+	glBindFramebuffer(GL_FRAMEBUFFER, m_ProbeCubemapFBO);
+	glViewport(0, 0, resolution, resolution);
 
-				ecs.AddComponent<LightProbeComponent>(probeEntity, LightProbeComponent());
-				auto& probe = ecs.GetComponent<LightProbeComponent>(probeEntity);
-				probe.needsRebake = true;
+	// Process each cubemap face from array layer
+	for (int face = 0; face < 6; ++face) {
+		const int layer = probeIndex * 6 + face;
+		glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_ProbeIndirectCubemapArray, 0, layer);
+		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+			EE_CORE_ERROR("Probe cubemap array FBO incomplete while projecting SH.");
+			break;
+		}
 
-				// Set hierarchy (make probe child of volume)
-				if (ecs.HasComponent<HierarchyComponent>(volumeEntity)) {
-					ecs.AddComponent<HierarchyComponent>(probeEntity, HierarchyComponent(volumeEntity));
+		glReadPixels(0, 0, resolution, resolution, GL_RGBA, GL_FLOAT, faceData.data());
+
+		// Sample each pixel
+		for (int y = 0; y < resolution; ++y) {
+			for (int x = 0; x < resolution; ++x) {
+				// Convert pixel coordinates to normalized [-1, 1] range
+				float u = (x + 0.5f) / resolution * 2.0f - 1.0f;
+				float v = (y + 0.5f) / resolution * 2.0f - 1.0f;
+
+				// Calculate direction vector for this cubemap pixel
+				glm::vec3 dir;
+				switch (face) {
+				case 0: dir = glm::normalize(glm::vec3(1.0f, -v, -u)); break;  // +X
+				case 1: dir = glm::normalize(glm::vec3(-1.0f, -v, u)); break;  // -X
+				case 2: dir = glm::normalize(glm::vec3(u, 1.0f, v)); break;    // +Y
+				case 3: dir = glm::normalize(glm::vec3(u, -1.0f, -v)); break;  // -Y
+				case 4: dir = glm::normalize(glm::vec3(u, -v, 1.0f)); break;   // +Z
+				case 5: dir = glm::normalize(glm::vec3(-u, -v, -1.0f)); break; // -Z
 				}
 
-				volume.generatedProbes.push_back(probeEntity);
+				// Get pixel color
+				glm::vec3 color = glm::vec3(faceData[y * resolution + x]);
+				sumLuma += static_cast<double>(0.2126f * color.r + 0.7152f * color.g + 0.0722f * color.b);
+				++sampleCount;
+
+				// Solid angle weight (approximate)
+				float temp = 1.0f + u * u + v * v;
+				float weight = 4.0f / (sqrt(temp) * temp);
+				totalWeight += weight;
+
+				// Evaluate L2 SH basis functions
+				float sh[9];
+				sh[0] = c0;                            // Y(0,0)
+				sh[1] = c1 * dir.y;                    // Y(1,-1)
+				sh[2] = c1 * dir.z;                    // Y(1,0)
+				sh[3] = c1 * dir.x;                    // Y(1,1)
+				sh[4] = c2 * dir.x * dir.y;            // Y(2,-2)
+				sh[5] = c2 * dir.y * dir.z;            // Y(2,-1)
+				sh[6] = c3 * (3.0f * dir.z * dir.z - 1.0f); // Y(2,0)
+				sh[7] = c2 * dir.x * dir.z;            // Y(2,1)
+				sh[8] = c4 * (dir.x * dir.x - dir.y * dir.y); // Y(2,2)
+
+				// Accumulate weighted SH coefficients
+				for (int i = 0; i < 9; ++i) {
+					outCoefficients[i] += color * sh[i] * weight;
+				}
 			}
 		}
 	}
 
-	EE_CORE_INFO("Generated {0} probes for volume (grid: {1}x{2}x{3})", 
-		volume.totalProbes, gridDim.x, gridDim.y, gridDim.z);
+	glBindFramebuffer(GL_FRAMEBUFFER, prevFBO);
+	glViewport(prevViewport[0], prevViewport[1], prevViewport[2], prevViewport[3]);
+
+	// Normalize by total weight
+	if (totalWeight > 0.0f) {
+		for (int i = 0; i < 9; ++i) {
+			outCoefficients[i] *= (4.0f * glm::pi<float>()) / totalWeight;
+		}
+	}
+
+	if (sampleCount > 0) {
+		EE_CORE_INFO("Probe cubemap avg luma: {0:.6f}", static_cast<float>(sumLuma / static_cast<double>(sampleCount)));
+	}
+
+	glCheckError();
+}
+
+/**
+ * @brief Generates probe entities for a probe volume based on grid parameters.
+ */
+void Renderer::GenerateProbeVolume(EntityID volumeEntity)
+{
+	EE_CORE_WARN("GenerateProbeVolume is deprecated; one probe per volume is now used.");
 }
 
 /**
@@ -4379,16 +4834,24 @@ void Renderer::BakeAllProbes()
 	auto& ecs = Ermine::ECS::GetInstance();
 	
 	int bakedCount = 0;
+	int probeIndex = 0;
 	// Iterate through all living entities
 	for (EntityID entity = 0; entity < MAX_ENTITIES; ++entity) {
-		if (!ecs.HasComponent<LightProbeComponent>(entity)) continue;
+		if (!ecs.HasComponent<LightProbeVolumeComponent>(entity)) continue;
 		if (!ecs.HasComponent<Transform>(entity)) continue;
 		
-		auto& probe = ecs.GetComponent<LightProbeComponent>(entity);
-		if (probe.needsRebake && probe.isActive) {
-			CaptureLightProbe(entity);
-			bakedCount++;
+		auto& probe = ecs.GetComponent<LightProbeVolumeComponent>(entity);
+		if (!probe.isActive) continue;
+		if (probeIndex >= MAX_PROBES) {
+			EE_CORE_WARN("Exceeded MAX_PROBES while baking; remaining probes skipped.");
+			break;
 		}
+
+		probe.probeIndex = probeIndex;
+		probeIndex++;
+
+		CaptureLightProbe(entity);
+		bakedCount++;
 	}
 
 	EE_CORE_INFO("Baked {0} light probes", bakedCount);
@@ -4410,24 +4873,52 @@ void Renderer::UpdateLightProbesUBO()
 
 	// Collect active probes
 	for (EntityID entity = 0; entity < MAX_ENTITIES; ++entity) {
-		if (!ecs.HasComponent<LightProbeComponent>(entity)) continue;
+		if (!ecs.HasComponent<LightProbeVolumeComponent>(entity)) continue;
 		if (!ecs.HasComponent<Transform>(entity)) continue;
 		
-		const auto& probe = ecs.GetComponent<LightProbeComponent>(entity);
+		auto& probe = ecs.GetComponent<LightProbeVolumeComponent>(entity);
 		const auto& trans = ecs.GetComponent<Transform>(entity);
 
 		if (!probe.isActive) continue;
 		if (probesGPU.size() >= MAX_PROBES) break; // Limit to MAX_PROBES
 
+		if (!probe.bakedDataLoaded && !probe.bakedProbePath.empty()) {
+			std::filesystem::path bakedPath(probe.bakedProbePath);
+			if (LoadProbeSHFromFile(bakedPath, probe.shCoefficients)) {
+				probe.bakedDataLoaded = true;
+				EE_CORE_INFO("Loaded probe SH from {}", probe.bakedProbePath);
+			} else {
+				EE_CORE_WARN("Failed to load probe SH from {}", probe.bakedProbePath);
+			}
+		}
+
 		LightProbeGPU gpuProbe;
-		gpuProbe.position_radius = glm::vec4(trans.position.x, trans.position.y, trans.position.z, probe.influenceRadius);
+		gpuProbe.position_radius = glm::vec4(trans.position.x, trans.position.y, trans.position.z, 0.0f);
 		
 		// Copy SH coefficients (convert vec3 array to vec4 for std140 alignment)
 		for (int i = 0; i < 9; ++i) {
 			gpuProbe.shCoefficients[i] = glm::vec4(probe.shCoefficients[i], 0.0f);
 		}
 
-		gpuProbe.flags = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f); // isActive = 1.0
+		glm::mat4 model = GetEntityWorldMatrix(entity);
+		glm::vec3 localMin = probe.boundsMin;
+		glm::vec3 localMax = probe.boundsMax;
+
+		glm::vec3 center = (localMin + localMax) * 0.5f;
+		glm::vec3 extent = (localMax - localMin) * 0.5f;
+
+		glm::vec3 worldCenter = glm::vec3(model * glm::vec4(center, 1.0f));
+		glm::mat3 upperLeft = glm::mat3(model);
+		glm::vec3 worldExtent = glm::abs(upperLeft[0]) * extent.x
+			+ glm::abs(upperLeft[1]) * extent.y
+			+ glm::abs(upperLeft[2]) * extent.z;
+
+		glm::vec3 actualMin = worldCenter - worldExtent;
+		glm::vec3 actualMax = worldCenter + worldExtent;
+
+		gpuProbe.boundsMin = glm::vec4(actualMin, 0.0f);
+		gpuProbe.boundsMax = glm::vec4(actualMax, 0.0f);
+		gpuProbe.flags = glm::vec4(1.0f, static_cast<float>(probe.priority), 0.0f, 0.0f);
 
 		probesGPU.push_back(gpuProbe);
 	}

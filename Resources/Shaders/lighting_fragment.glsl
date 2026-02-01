@@ -72,7 +72,9 @@ const int MAX_PROBES = 128;
 struct LightProbe {
     vec4 position_radius;      // xyz = world position, w = influence radius
     vec4 shCoefficients[9];    // SH L2 coefficients (vec3 stored in xyz, w unused)
-    vec4 flags;                // x = isActive (1.0 or 0.0), yzw = padding
+    vec4 boundsMin;            // xyz = world bounds min, w = padding
+    vec4 boundsMax;            // xyz = world bounds max, w = padding
+    vec4 flags;                // x = isActive (1.0 or 0.0), y = priority, zw = padding
 };
 
 layout (std140, binding = 5) uniform LightProbesUBO {
@@ -619,36 +621,31 @@ vec3 sampleLightProbes(vec3 worldPos, vec3 worldNormal)
         return vec3(0.0);
     }
 
-    // Find nearest probe or blend between nearby probes
-    // For simplicity, we'll do distance-weighted blending of the 4 nearest probes
+    // Find probes that contain the point; blend among same-priority probes
     const int MAX_INFLUENCES = 4;
     float weights[MAX_INFLUENCES];
     int probeIndices[MAX_INFLUENCES];
+    int probePriorities[MAX_INFLUENCES];
     float totalWeight = 0.0;
 
     // Initialize with invalid values
     for (int i = 0; i < MAX_INFLUENCES; ++i) {
         weights[i] = 0.0;
         probeIndices[i] = -1;
+        probePriorities[i] = -2147483647;
     }
 
     // Find nearest probes
     for (int i = 0; i < numProbes && i < MAX_PROBES; ++i) {
-        vec3 probePos = probes[i].position_radius.xyz;
-        float influenceRadius = probes[i].position_radius.w;
         float isActive = probes[i].flags.x;
+        int priority = int(probes[i].flags.y + 0.5);
 
         if (isActive < 0.5) continue; // Skip inactive probes
 
-        float distance = length(worldPos - probePos);
-        
-        // Calculate weight (inverse distance with falloff)
-        float weight = 0.0;
-        if (distance < influenceRadius) {
-            // Smooth falloff within radius
-            float t = distance / influenceRadius;
-            weight = 1.0 - (t * t * t); // Cubic falloff
-        }
+        vec3 bmin = probes[i].boundsMin.xyz;
+        vec3 bmax = probes[i].boundsMax.xyz;
+        bool inside = all(greaterThanEqual(worldPos, bmin)) && all(lessThanEqual(worldPos, bmax));
+        float weight = inside ? 1.0 : 0.0;
 
         if (weight > 0.0) {
             // Insert into sorted list (keep top MAX_INFLUENCES)
@@ -658,19 +655,31 @@ vec3 sampleLightProbes(vec3 worldPos, vec3 worldNormal)
                     for (int k = MAX_INFLUENCES - 1; k > j; --k) {
                         weights[k] = weights[k - 1];
                         probeIndices[k] = probeIndices[k - 1];
+                        probePriorities[k] = probePriorities[k - 1];
                     }
                     // Insert
                     weights[j] = weight;
                     probeIndices[j] = i;
+                    probePriorities[j] = priority;
                     break;
                 }
             }
         }
     }
 
+    // Determine highest priority among influences
+    int maxPriority = -2147483647;
+    for (int i = 0; i < MAX_INFLUENCES; ++i) {
+        if (probeIndices[i] >= 0 && probePriorities[i] > maxPriority) {
+            maxPriority = probePriorities[i];
+        }
+    }
+
     // Calculate total weight for normalization
     for (int i = 0; i < MAX_INFLUENCES; ++i) {
-        totalWeight += weights[i];
+        if (probeIndices[i] >= 0 && probePriorities[i] == maxPriority) {
+            totalWeight += weights[i];
+        }
     }
 
     if (totalWeight < 0.001) {
@@ -680,7 +689,7 @@ vec3 sampleLightProbes(vec3 worldPos, vec3 worldNormal)
     // Blend probe contributions
     vec3 indirectLighting = vec3(0.0);
     for (int i = 0; i < MAX_INFLUENCES; ++i) {
-        if (probeIndices[i] >= 0) {
+        if (probeIndices[i] >= 0 && probePriorities[i] == maxPriority) {
             float normalizedWeight = weights[i] / totalWeight;
             vec3 probeContribution = evaluateSH(worldNormal, probes[probeIndices[i]].shCoefficients);
             indirectLighting += probeContribution * normalizedWeight;

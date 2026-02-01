@@ -48,6 +48,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "VideoManager.h"
 #include "NavMesh.h"	 
 #include "NavMeshAgentSystem.h"
+#include "GISystem.h"
 //#include "EditorGUI.h"
 
 #if defined(EE_EDITOR)
@@ -303,6 +304,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().RegisterSystem<UIRenderSystem>();
 	ECS::GetInstance().RegisterSystem<UIButtonSystem>();
 	ECS::GetInstance().RegisterSystem<VideoManager>();
+	ECS::GetInstance().RegisterSystem<GISystem>();
 
 	//Register JPH::TempAllocatorImpl for Physcis
 	RegisterDefaultAllocator();
@@ -403,6 +405,12 @@ bool engine::Init(GLFWwindow* windowContext)
 	// Video Manager (no component requirements)
 	sig.reset();
 	ECS::GetInstance().SetSystemSignature<VideoManager>(sig);
+
+	// GI System (light probe volumes)
+	sig.reset();
+	sig.set(ECS::GetInstance().GetComponentType<LightProbeVolumeComponent>());
+	sig.set(ECS::GetInstance().GetComponentType<Transform>());
+	ECS::GetInstance().SetSystemSignature<GISystem>(sig);
 
 	glfwSetFramebufferSizeCallback(windowContext, []([[maybe_unused]] GLFWwindow* window, int width, int height)
 		{
@@ -671,6 +679,7 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 		// NOTE: Order of updates is important! Don't move things around without considering dependencies
 		ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->Update();									// Game logic updates transforms, forces, etc
 		ECS::GetInstance().GetSystem<HierarchySystem>()->UpdateHierarchy();									// Update hierarchy transforms first
+		ECS::GetInstance().GetSystem<GISystem>()->Update();													// Assign GI probe indices
 		ECS::GetInstance().GetSystem<StateManager>()->Update(FrameController::GetFixedDeltaTime());		// FSM update
 		ECS::GetInstance().GetSystem<NavMeshAgentSystem>()->Update(FrameController::GetFixedDeltaTime());	// AI NavMesh Agent update
 		ECS::GetInstance().GetSystem<graphics::AnimationManager>()->Update(FrameController::GetDeltaTime());// Animation Update

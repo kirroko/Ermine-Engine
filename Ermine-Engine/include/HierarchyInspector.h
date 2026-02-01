@@ -93,6 +93,12 @@ namespace Ermine::editor {
         void DrawLightComponent(EntityID entity);
 
         /*!
+        \brief Draws UI controls for the Light Probe Volume component
+        \param entity The entity whose Light Probe Volume component to display
+        */
+        void DrawLightProbeVolumeComponent(EntityID entity);
+
+        /*!
         \brief Draws UI controls for the Hierarchy component
         \param entity The entity whose Hierarchy component to display
         */
