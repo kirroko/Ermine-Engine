@@ -653,7 +653,7 @@ namespace Ermine::graphics
         
 		/**
 		 * @brief Updates the light probes UBO with current probe data from all probe entities.
-		 * Uploads probe positions, SH coefficients, and influence radii to GPU.
+		 * Uploads probe positions, SH coefficients, bounds, and priority to GPU.
 		 */
 		void UpdateLightProbesUBO();
 
@@ -666,7 +666,7 @@ namespace Ermine::graphics
 		/**
 		 * @brief Captures environment lighting at a probe's position into SH coefficients.
 		 * Renders scene to cubemap, then projects to spherical harmonics.
-		 * @param probeEntity The entity containing the LightProbeComponent to update.
+		 * @param probeEntity The entity containing the LightProbeVolumeComponent to update.
 		 */
 		void CaptureLightProbe(EntityID probeEntity);
 
@@ -683,13 +683,6 @@ namespace Ermine::graphics
 		 * @param outCoefficients Array to store 9 vec3 SH coefficients (27 floats total).
 		 */
 		void ProjectCubemapArrayToSH(int probeIndex, glm::vec3 outCoefficients[9]);
-
-		/**
-		 * @brief Generates probe entities for a probe volume based on grid parameters.
-		 * Creates child probe entities within the volume's bounds at specified spacing.
-		 * @param volumeEntity The entity containing the LightProbeVolumeComponent.
-		 */
-		void GenerateProbeVolume(EntityID volumeEntity);
 
 		/**
 		 * @brief Bakes all probes in the scene (captures environment lighting).

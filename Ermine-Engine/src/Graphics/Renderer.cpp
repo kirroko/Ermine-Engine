@@ -4198,7 +4198,6 @@ void Renderer::InitializeProbeCaptureResources()
 
 	// Check framebuffer status
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-		EE_CORE_ERROR("Light probe cubemap FBO is not complete!");
 	}
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -4215,7 +4214,6 @@ void Renderer::InitializeProbeCaptureResources()
 		glBindBuffer(GL_UNIFORM_BUFFER, 0);
 	}
 
-	EE_CORE_INFO("Light probe capture resources initialized: Resolution={0}x{0}", m_ProbeCaptureResolution);
 	glCheckError();
 }
 
@@ -4226,7 +4224,6 @@ void Renderer::CaptureLightProbe(EntityID probeEntity)
 {
 	auto& ecs = Ermine::ECS::GetInstance();
 	if (!ecs.HasComponent<LightProbeVolumeComponent>(probeEntity) || !ecs.HasComponent<Transform>(probeEntity)) {
-		EE_CORE_WARN("Entity {0} does not have LightProbeVolumeComponent or Transform!", static_cast<uint32_t>(probeEntity));
 		return;
 	}
 
@@ -4235,7 +4232,6 @@ void Renderer::CaptureLightProbe(EntityID probeEntity)
 	glm::vec3 probePos(trans.position.x, trans.position.y, trans.position.z);
 
 	if (probe.probeIndex < 0 || probe.probeIndex >= MAX_PROBES) {
-		EE_CORE_WARN("Light probe entity {0} has invalid probeIndex {1}", static_cast<uint32_t>(probeEntity), probe.probeIndex);
 		return;
 	}
 
@@ -4386,7 +4382,6 @@ void Renderer::CaptureLightProbe(EntityID probeEntity)
 		// Read draw commands from GPU (geometry standard pass)
 		size_t drawCount = m_MeshManager.m_GeometryStandardDrawCommandBuffer.GetCommandCount();
 		GLuint cmdBuffer = m_MeshManager.m_GeometryStandardDrawCommandBuffer.GetBufferID();
-		EE_CORE_INFO("Probe voxelize: drawCount={0} cmdBuffer={1}", drawCount, cmdBuffer);
 		if (cmdBuffer == 0 || drawCount == 0) {
 			glUseProgram(0);
 		} else {
@@ -4424,10 +4419,6 @@ void Renderer::CaptureLightProbe(EntityID probeEntity)
 
 				const GLuint groupSize = 64;
 				size_t totalTris = 0;
-				if (!commands.empty()) {
-					EE_CORE_INFO("Probe voxelize first cmd: count={0} firstIndex={1} baseVertex={2}",
-						commands[0].count, commands[0].firstIndex, commands[0].baseVertex);
-				}
 				for (size_t i = 0; i < drawCount; ++i) {
 					const auto& cmd = commands[i];
 					if (cmd.count < 3) continue;
@@ -4461,7 +4452,6 @@ void Renderer::CaptureLightProbe(EntityID probeEntity)
 					const GLuint groupsX = (triCount + groupSize - 1) / groupSize;
 					glDispatchCompute(groupsX, 1, 1);
 				}
-				EE_CORE_INFO("Probe voxelize total tris dispatched: {0}", totalTris);
 			}
 		}
 		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
@@ -4495,54 +4485,6 @@ void Renderer::CaptureLightProbe(EntityID probeEntity)
 		glDispatchCompute(groups, groups, groups);
 		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 		glUseProgram(0);
-	}
-
-	// Debug: read back voxel volume stats
-	if (m_ProbeVoxelAlbedoTexture != 0) {
-		const int res = m_ProbeVoxelResolution;
-		const size_t voxelCount = static_cast<size_t>(res) * static_cast<size_t>(res) * static_cast<size_t>(res);
-		std::vector<uint8_t> albedoVoxels(voxelCount * 4);
-		glBindTexture(GL_TEXTURE_3D, m_ProbeVoxelAlbedoTexture);
-		glGetTexImage(GL_TEXTURE_3D, 0, GL_RGBA, GL_UNSIGNED_BYTE, albedoVoxels.data());
-		glBindTexture(GL_TEXTURE_3D, 0);
-
-		size_t occupied = 0;
-		double sumR = 0.0, sumG = 0.0, sumB = 0.0;
-		for (size_t i = 0; i < voxelCount; ++i) {
-			const uint8_t a = albedoVoxels[i * 4 + 3];
-			if (a > 0) {
-				occupied++;
-				sumR += albedoVoxels[i * 4 + 0] / 255.0;
-				sumG += albedoVoxels[i * 4 + 1] / 255.0;
-				sumB += albedoVoxels[i * 4 + 2] / 255.0;
-			}
-		}
-		const double invOcc = occupied > 0 ? 1.0 / static_cast<double>(occupied) : 0.0;
-		EE_CORE_INFO("Probe albedo voxel: res={0} occupied={1}/{2} avgRGB=({3:.5f},{4:.5f},{5:.5f})",
-			res, occupied, voxelCount, sumR * invOcc, sumG * invOcc, sumB * invOcc);
-	}
-	if (m_ProbeVoxelEmissiveTexture != 0) {
-		const int res = m_ProbeVoxelResolution;
-		const size_t voxelCount = static_cast<size_t>(res) * static_cast<size_t>(res) * static_cast<size_t>(res);
-		std::vector<uint8_t> emissiveVoxels(voxelCount * 4);
-		glBindTexture(GL_TEXTURE_3D, m_ProbeVoxelEmissiveTexture);
-		glGetTexImage(GL_TEXTURE_3D, 0, GL_RGBA, GL_UNSIGNED_BYTE, emissiveVoxels.data());
-		glBindTexture(GL_TEXTURE_3D, 0);
-
-		size_t occupied = 0;
-		double sumR = 0.0, sumG = 0.0, sumB = 0.0;
-		for (size_t i = 0; i < voxelCount; ++i) {
-			const uint8_t a = emissiveVoxels[i * 4 + 3];
-			if (a > 0) {
-				occupied++;
-				sumR += emissiveVoxels[i * 4 + 0] / 255.0;
-				sumG += emissiveVoxels[i * 4 + 1] / 255.0;
-				sumB += emissiveVoxels[i * 4 + 2] / 255.0;
-			}
-		}
-		const double invOcc = occupied > 0 ? 1.0 / static_cast<double>(occupied) : 0.0;
-		EE_CORE_INFO("Probe emissive voxel: res={0} occupied={1}/{2} avgRGB=({3:.5f},{4:.5f},{5:.5f})",
-			res, occupied, voxelCount, sumR * invOcc, sumG * invOcc, sumB * invOcc);
 	}
 
 	if (m_ProbeBakeComputeShader && m_ProbeBakeComputeShader->IsValid()) {
@@ -4602,23 +4544,11 @@ void Renderer::CaptureLightProbe(EntityID probeEntity)
 		if (SaveProbeSHToFile(outPath, probe.shCoefficients)) {
 			probe.bakedProbePath = outPath.generic_string();
 			probe.bakedDataLoaded = true;
-			EE_CORE_INFO("Saved probe SH to {}", probe.bakedProbePath);
-		} else {
-			EE_CORE_WARN("Failed to save probe SH to {}", outPath.string());
 		}
 	}
 
-	// Debug: log SH energy
-	double shEnergy = 0.0;
-	for (int i = 0; i < 9; ++i) {
-		const glm::vec3 c = probe.shCoefficients[i];
-		shEnergy += static_cast<double>(c.x * c.x + c.y * c.y + c.z * c.z);
-	}
-	EE_CORE_INFO("Probe SH energy: {0:.6f}", shEnergy);
-
 	glCheckError();
 
-	EE_CORE_INFO("Captured light probe at position ({0}, {1}, {2})", probePos.x, probePos.y, probePos.z);
 }
 
 /**
@@ -4711,7 +4641,6 @@ void Renderer::ProjectCubemapToSH(GLuint cubemapID, glm::vec3 outCoefficients[9]
 void Renderer::ProjectCubemapArrayToSH(int probeIndex, glm::vec3 outCoefficients[9])
 {
 	if (probeIndex < 0 || probeIndex >= MAX_PROBES) {
-		EE_CORE_WARN("ProjectCubemapArrayToSH: invalid probeIndex {0}", probeIndex);
 		return;
 	}
 
@@ -4731,8 +4660,6 @@ void Renderer::ProjectCubemapArrayToSH(int probeIndex, glm::vec3 outCoefficients
 	const float c4 = 0.546274f;  // sqrt(15 / (16 * pi))
 
 	float totalWeight = 0.0f;
-	double sumLuma = 0.0;
-	size_t sampleCount = 0;
 
 	GLint prevFBO = 0;
 	GLint prevViewport[4] = { 0, 0, 0, 0 };
@@ -4747,7 +4674,6 @@ void Renderer::ProjectCubemapArrayToSH(int probeIndex, glm::vec3 outCoefficients
 		const int layer = probeIndex * 6 + face;
 		glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_ProbeIndirectCubemapArray, 0, layer);
 		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-			EE_CORE_ERROR("Probe cubemap array FBO incomplete while projecting SH.");
 			break;
 		}
 
@@ -4773,8 +4699,6 @@ void Renderer::ProjectCubemapArrayToSH(int probeIndex, glm::vec3 outCoefficients
 
 				// Get pixel color
 				glm::vec3 color = glm::vec3(faceData[y * resolution + x]);
-				sumLuma += static_cast<double>(0.2126f * color.r + 0.7152f * color.g + 0.0722f * color.b);
-				++sampleCount;
 
 				// Solid angle weight (approximate)
 				float temp = 1.0f + u * u + v * v;
@@ -4811,19 +4735,7 @@ void Renderer::ProjectCubemapArrayToSH(int probeIndex, glm::vec3 outCoefficients
 		}
 	}
 
-	if (sampleCount > 0) {
-		EE_CORE_INFO("Probe cubemap avg luma: {0:.6f}", static_cast<float>(sumLuma / static_cast<double>(sampleCount)));
-	}
-
 	glCheckError();
-}
-
-/**
- * @brief Generates probe entities for a probe volume based on grid parameters.
- */
-void Renderer::GenerateProbeVolume(EntityID volumeEntity)
-{
-	EE_CORE_WARN("GenerateProbeVolume is deprecated; one probe per volume is now used.");
 }
 
 /**
@@ -4843,7 +4755,6 @@ void Renderer::BakeAllProbes()
 		auto& probe = ecs.GetComponent<LightProbeVolumeComponent>(entity);
 		if (!probe.isActive) continue;
 		if (probeIndex >= MAX_PROBES) {
-			EE_CORE_WARN("Exceeded MAX_PROBES while baking; remaining probes skipped.");
 			break;
 		}
 
@@ -4854,7 +4765,6 @@ void Renderer::BakeAllProbes()
 		bakedCount++;
 	}
 
-	EE_CORE_INFO("Baked {0} light probes", bakedCount);
 }
 
 /**
@@ -4886,9 +4796,6 @@ void Renderer::UpdateLightProbesUBO()
 			std::filesystem::path bakedPath(probe.bakedProbePath);
 			if (LoadProbeSHFromFile(bakedPath, probe.shCoefficients)) {
 				probe.bakedDataLoaded = true;
-				EE_CORE_INFO("Loaded probe SH from {}", probe.bakedProbePath);
-			} else {
-				EE_CORE_WARN("Failed to load probe SH from {}", probe.bakedProbePath);
 			}
 		}
 

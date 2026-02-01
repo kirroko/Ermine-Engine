@@ -457,12 +457,6 @@ void GraphicsDebugGUI::DrawLightingControls()
                 ImGui::SliderFloat("Energy Loss", &renderer->m_GIBakeEnergyLoss, 0.0f, 1.0f);
             }
 
-            if (ImGui::Button("Bake All Volumes")) {
-                if (giSystem) {
-                    giSystem->BakeAllProbes();
-                    EE_CORE_INFO("Bake all probe volumes triggered");
-                }
-            }
             DrawTooltip("Captures indirect lighting into each probe");
 
             ImGui::TreePop();
