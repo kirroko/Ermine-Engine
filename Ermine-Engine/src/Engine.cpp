@@ -669,7 +669,6 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 		}
 
 		// Other non-fixed logic
-		// NOTE: Order of updates is important! Don't move things around without considering dependencies
 		ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->Update();									// Game logic updates transforms, forces, etc
 		ECS::GetInstance().GetSystem<HierarchySystem>()->UpdateHierarchy();									// Update hierarchy transforms first
 		ECS::GetInstance().GetSystem<GISystem>()->Update();													// Assign GI probe indices

@@ -366,6 +366,27 @@
           "tag": "Model",
           "selfActive": true
         },
+        "AudioComponent": {
+          "soundName": "",
+          "eventName": "",
+          "useRandomVariation": true,
+          "is3D": false,
+          "isLooping": false,
+          "isStreaming": false,
+          "volume": 1.0,
+          "followTransform": false,
+          "minDistance": 1.0,
+          "maxDistance": 100.0,
+          "playOnStart": false,
+          "soundVariations": [
+            "../Resources/Audio/1.wav",
+            "../Resources/Audio/2.wav",
+            "../Resources/Audio/3.wav",
+            "../Resources/Audio/4.wav",
+            "../Resources/Audio/5.wav",
+            "../Resources/Audio/6.wav"
+          ]
+        },
         "Mesh": {
           "kind": "None"
         },
@@ -437,27 +458,6 @@
           "customFragmentShader": "../Resources/Shaders/volumetric_orb_fragment.glsl",
           "castsShadows": true
         },
-        "AudioComponent": {
-          "soundName": "",
-          "eventName": "",
-          "useRandomVariation": true,
-          "is3D": false,
-          "isLooping": false,
-          "isStreaming": false,
-          "volume": 1.0,
-          "followTransform": false,
-          "minDistance": 1.0,
-          "maxDistance": 100.0,
-          "playOnStart": false,
-          "soundVariations": [
-            "../Resources/Audio/1.wav",
-            "../Resources/Audio/2.wav",
-            "../Resources/Audio/3.wav",
-            "../Resources/Audio/4.wav",
-            "../Resources/Audio/5.wav",
-            "../Resources/Audio/6.wav"
-          ]
-        },
         "HierarchyComponent": {
           "depth": 0
         },
@@ -468,13 +468,13 @@
               "class": "PlayerController2",
               "enabled": true,
               "fields": {
-                "mouseHorSens": {
-                  "t": 0,
-                  "v": 0.30000001192092898
-                },
                 "jumpHeight": {
                   "t": 0,
                   "v": 2.0
+                },
+                "mouseHorSens": {
+                  "t": 0,
+                  "v": 0.30000001192092898
                 },
                 "mouseVertSens": {
                   "t": 0,
@@ -484,13 +484,13 @@
                   "t": 0,
                   "v": 5.0
                 },
-                "jumpspeed": {
-                  "t": 0,
-                  "v": 5.0
-                },
                 "camDefaultY": {
                   "t": 0,
                   "v": 4.5
+                },
+                "jumpspeed": {
+                  "t": 0,
+                  "v": 5.0
                 },
                 "crouchLerpSpeed": {
                   "t": 0,
@@ -6099,6 +6099,19 @@
           "tag": "Untagged",
           "selfActive": true
         },
+        "AudioComponent": {
+          "soundName": "../Resources/Audio/RotatingPlatform_Loop.wav",
+          "eventName": "",
+          "useRandomVariation": false,
+          "is3D": true,
+          "isLooping": true,
+          "isStreaming": false,
+          "volume": 1.0,
+          "followTransform": true,
+          "minDistance": 5.0,
+          "maxDistance": 100.0,
+          "playOnStart": false
+        },
         "Mesh": {
           "kind": "Primitive",
           "primitive": {
@@ -6177,19 +6190,6 @@
             0.0
           ],
           "castsShadows": true
-        },
-        "AudioComponent": {
-          "soundName": "../Resources/Audio/RotatingPlatform_Loop.wav",
-          "eventName": "",
-          "useRandomVariation": false,
-          "is3D": true,
-          "isLooping": true,
-          "isStreaming": false,
-          "volume": 1.0,
-          "followTransform": true,
-          "minDistance": 5.0,
-          "maxDistance": 100.0,
-          "playOnStart": false
         },
         "HierarchyComponent": {
           "parentGuid": "72873cc904e07547bd5a09bbef7a1b6e",
@@ -10526,6 +10526,19 @@
           "tag": "Untagged",
           "selfActive": true
         },
+        "AudioComponent": {
+          "soundName": "../Resources/Audio/RotatingPlatform_Loop.wav",
+          "eventName": "",
+          "useRandomVariation": false,
+          "is3D": true,
+          "isLooping": true,
+          "isStreaming": false,
+          "volume": 1.0,
+          "followTransform": true,
+          "minDistance": 5.0,
+          "maxDistance": 100.0,
+          "playOnStart": false
+        },
         "Mesh": {
           "kind": "Primitive",
           "primitive": {
@@ -10604,19 +10617,6 @@
             0.0
           ],
           "castsShadows": true
-        },
-        "AudioComponent": {
-          "soundName": "../Resources/Audio/RotatingPlatform_Loop.wav",
-          "eventName": "",
-          "useRandomVariation": false,
-          "is3D": true,
-          "isLooping": true,
-          "isStreaming": false,
-          "volume": 1.0,
-          "followTransform": true,
-          "minDistance": 5.0,
-          "maxDistance": 100.0,
-          "playOnStart": false
         },
         "HierarchyComponent": {
           "parentGuid": "7a6955f3d3f23240aeca248783af7921",
@@ -15602,6 +15602,19 @@
           "tag": "Untagged",
           "selfActive": true
         },
+        "AudioComponent": {
+          "soundName": "../Resources/Audio/RotatingPlatform_Loop.wav",
+          "eventName": "",
+          "useRandomVariation": false,
+          "is3D": true,
+          "isLooping": true,
+          "isStreaming": false,
+          "volume": 1.0,
+          "followTransform": true,
+          "minDistance": 5.0,
+          "maxDistance": 100.0,
+          "playOnStart": false
+        },
         "Mesh": {
           "kind": "Primitive",
           "primitive": {
@@ -15680,19 +15693,6 @@
             0.0
           ],
           "castsShadows": true
-        },
-        "AudioComponent": {
-          "soundName": "../Resources/Audio/RotatingPlatform_Loop.wav",
-          "eventName": "",
-          "useRandomVariation": false,
-          "is3D": true,
-          "isLooping": true,
-          "isStreaming": false,
-          "volume": 1.0,
-          "followTransform": true,
-          "minDistance": 5.0,
-          "maxDistance": 100.0,
-          "playOnStart": false
         },
         "HierarchyComponent": {
           "parentGuid": "7a6955f3d3f23240aeca248783af7921",
@@ -20467,6 +20467,19 @@
           "tag": "Untagged",
           "selfActive": true
         },
+        "AudioComponent": {
+          "soundName": "../Resources/Audio/RotatingPlatform_Loop.wav",
+          "eventName": "",
+          "useRandomVariation": false,
+          "is3D": true,
+          "isLooping": true,
+          "isStreaming": false,
+          "volume": 1.0,
+          "followTransform": true,
+          "minDistance": 5.0,
+          "maxDistance": 100.0,
+          "playOnStart": false
+        },
         "Mesh": {
           "kind": "Primitive",
           "primitive": {
@@ -20545,19 +20558,6 @@
             0.0
           ],
           "castsShadows": true
-        },
-        "AudioComponent": {
-          "soundName": "../Resources/Audio/RotatingPlatform_Loop.wav",
-          "eventName": "",
-          "useRandomVariation": false,
-          "is3D": true,
-          "isLooping": true,
-          "isStreaming": false,
-          "volume": 1.0,
-          "followTransform": true,
-          "minDistance": 5.0,
-          "maxDistance": 100.0,
-          "playOnStart": false
         },
         "HierarchyComponent": {
           "parentGuid": "e03796885632004798d034717f0ea797",
@@ -20937,6 +20937,19 @@
           "tag": "Untagged",
           "selfActive": true
         },
+        "AudioComponent": {
+          "soundName": "../Resources/Audio/RotatingPlatform_Loop.wav",
+          "eventName": "",
+          "useRandomVariation": false,
+          "is3D": true,
+          "isLooping": true,
+          "isStreaming": false,
+          "volume": 1.0,
+          "followTransform": true,
+          "minDistance": 5.0,
+          "maxDistance": 100.0,
+          "playOnStart": false
+        },
         "Mesh": {
           "kind": "Primitive",
           "primitive": {
@@ -21015,19 +21028,6 @@
             0.0
           ],
           "castsShadows": true
-        },
-        "AudioComponent": {
-          "soundName": "../Resources/Audio/RotatingPlatform_Loop.wav",
-          "eventName": "",
-          "useRandomVariation": false,
-          "is3D": true,
-          "isLooping": true,
-          "isStreaming": false,
-          "volume": 1.0,
-          "followTransform": true,
-          "minDistance": 5.0,
-          "maxDistance": 100.0,
-          "playOnStart": false
         },
         "HierarchyComponent": {
           "parentGuid": "e03796885632004798d034717f0ea797",
@@ -23377,11 +23377,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -24471,11 +24471,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -25334,11 +25334,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -26197,11 +26197,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -27060,11 +27060,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -27923,11 +27923,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -28786,11 +28786,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -29881,11 +29881,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -30976,11 +30976,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -49199,7 +49199,7 @@
           "captureResolution": 65,
           "voxelResolution": 33,
           "priority": 0,
-          "showGizmos": true,
+          "showGizmos": false,
           "bakedProbePath": "../Resources/Textures/GI/new_test_file/Probe_702.probe"
         },
         "HierarchyComponent": {
@@ -49252,7 +49252,7 @@
           "captureResolution": 64,
           "voxelResolution": 34,
           "priority": 0,
-          "showGizmos": true,
+          "showGizmos": false,
           "bakedProbePath": "../Resources/Textures/GI/new_test_file/Probe_703.probe"
         },
         "HierarchyComponent": {
