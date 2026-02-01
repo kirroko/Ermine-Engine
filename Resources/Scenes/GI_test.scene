@@ -29131,8 +29131,8 @@
         "Light": {
           "color": [
             1.0,
-            1.0,
-            1.0
+            0.9137254953384399,
+            0.6784313917160034
           ],
           "intensity": 1.0,
           "type": "Spot",
@@ -29173,8 +29173,8 @@
             "materialRoughness": 0.5,
             "materialEmissive": [
               1.0,
-              1.0,
-              1.0
+              0.9143598675727844,
+              0.6764705777168274
             ],
             "materialEmissiveIntensity": 10.0
           },
@@ -53358,10 +53358,10 @@
           ],
           "isActive": true,
           "captureResolution": 64,
-          "voxelResolution": 64,
+          "voxelResolution": 43,
           "priority": 0,
           "showGizmos": true,
-          "bakedProbePath": "../Resources/Textures/GI/m4-test/Probe_792.probe"
+          "bakedProbePath": "../Resources/Textures/GI/GI_test/Probe_792.probe"
         },
         "HierarchyComponent": {
           "depth": 0
@@ -53381,7 +53381,7 @@
     "ssaoSamples": 16,
     "ssaoRadius": 10.0,
     "ssaoBias": 0.0,
-    "ssaoIntensity": 2.0199999809265138,
+    "ssaoIntensity": 1.937999963760376,
     "ssaoFadeout": 0.10000000149011612,
     "ssaoMaxDistance": 100.0,
     "fogEnabled": true,
