@@ -598,7 +598,7 @@ Renderer::OffscreenBuffer Renderer::CreateOffscreenBuffer(const int& width, cons
 	{
 		EE_CORE_ERROR("ERROR: Invalid framebuffer dimensions: {0}x{1}", width, height);
 	}
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH32F_STENCIL8, width, height);
 	glBindRenderbuffer(GL_RENDERBUFFER, buffer.RBO);
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, buffer.RBO);
 
@@ -677,7 +677,7 @@ void Renderer::ResizeOffscreenBuffer(const int& width, const int& height)
 
 	// Resize depth-stencil renderbuffer
 	glBindRenderbuffer(GL_RENDERBUFFER, m_OffscreenBuffer->RBO);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH32F_STENCIL8, width, height);
 
 	// Validate framebuffer completeness after resize
 	glBindFramebuffer(GL_FRAMEBUFFER, m_OffscreenBuffer->FBO);
@@ -778,7 +778,7 @@ void Renderer::CreateGBuffer(const int& width, const int& height)
 	// Create depth texture for depth testing and reconstruction. 24 bits
 	glGenTextures(1, &gBuffer.DepthTexture);
 	glBindTexture(GL_TEXTURE_2D, gBuffer.DepthTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -7155,23 +7155,23 @@ void Renderer::RenderPickingPass(const Mtx44& view, const Mtx44& projection)
 		return;
 
 	// 1) Prime depth: copy scene depth into picking FBO (source depends on path)
-	if (m_UseDeferredRendering && m_GBuffer)
-	{
-		glBindFramebuffer(GL_READ_FRAMEBUFFER, m_GBuffer->FBO);
-	}
-	else if (m_OffscreenBuffer)
-	{
-		glBindFramebuffer(GL_READ_FRAMEBUFFER, m_OffscreenBuffer->FBO);
-	}
-	else
-	{
-		return;
-	}
+	//if (m_UseDeferredRendering && m_GBuffer)
+	//{
+	//	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_GBuffer->FBO);
+	//}
+	//else if (m_OffscreenBuffer)
+	//{
+	//	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_OffscreenBuffer->FBO);
+	//}
+	//else
+	//{
+	//	return;
+	//}
 
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_PickingBuffer->FBO);
-	glBlitFramebuffer(0, 0, m_PickingBuffer->width, m_PickingBuffer->height,
-		0, 0, m_PickingBuffer->width, m_PickingBuffer->height,
-		GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+	//glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_PickingBuffer->FBO);
+	//glBlitFramebuffer(0, 0, m_PickingBuffer->width, m_PickingBuffer->height,
+	//	0, 0, m_PickingBuffer->width, m_PickingBuffer->height,
+	//	GL_DEPTH_BUFFER_BIT, GL_NEAREST);
 
 	// 2) Render IDs using indirect rendering
 	glBindFramebuffer(GL_FRAMEBUFFER, m_PickingBuffer->FBO);
@@ -7180,6 +7180,8 @@ void Renderer::RenderPickingPass(const Mtx44& view, const Mtx44& projection)
 	// Clear IDs to 0
 	GLuint clearVal[1] = { 0u };
 	glClearBufferuiv(GL_COLOR, 0, clearVal);
+	glClearDepth(1.0);
+	glClear(GL_DEPTH_BUFFER_BIT);
 
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
@@ -7541,7 +7543,7 @@ std::pair<bool, Ermine::EntityID> Renderer::PickEntityAt(const int& x, const int
 	glPixelStorei(GL_PACK_ALIGNMENT, 1);
 
 	uint32_t id = 0u;
-	glReadPixels(x, y, 1, 1, GL_RED_INTEGER, GL_UNSIGNED_BYTE, &id);
+	glReadPixels(x, y, 1, 1, GL_RED_INTEGER, GL_UNSIGNED_INT, &id);
 
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 

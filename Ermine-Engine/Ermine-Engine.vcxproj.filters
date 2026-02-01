@@ -111,6 +111,12 @@
     <ClInclude Include="include\AssetManager.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\AssetRef.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\AssetRegistry.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\AudioImGUI.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -568,6 +574,9 @@
     </ClCompile>
     <ClCompile Include="src\Systems\VideoManager.cpp">
       <Filter>src\Systems</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Utility\AssetRegistry.cpp">
+      <Filter>src\Utility</Filter>
     </ClCompile>
     <ClCompile Include="src\Utility\EditorCamera.cpp">
       <Filter>src\Utility</Filter>

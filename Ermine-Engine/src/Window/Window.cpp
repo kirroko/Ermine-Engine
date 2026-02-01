@@ -3,11 +3,11 @@
 \file       Window.cpp
 \author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu
 \co-author  WEE HUNG RU, Curtis, h.wee, 230xxx, h.wee\@digipen.edu (25%)
-\date       09/03/2025
+\date       31/01/2026
 \brief      This file contains the definition of the Window system.
             This file is used to create a window using GLFW.
 
-Copyright (C) 2025 DigiPen Institute of Technology.
+Copyright (C) 2026 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents without the
 prior written consent of DigiPen Institute of Technology is prohibited.
 */
@@ -21,6 +21,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "AssetBrowser.h" // For forwarding dropped files to the asset browser
 #include "EditorGUI.h"
 #include "SettingsGUI.h"
+#include "UIButtonSystem.h"
 
 #if defined(_WIN32)
 	#define GLFW_EXPOSE_NATIVE_WIN32
@@ -133,8 +134,8 @@ GLFWwindow* Ermine::Window::InitWindow(int width, int height, const char* title)
     Config cfg{};
     try {
         cfg = LoadConfigFromFile(cfgPath);
-        EE_CORE_INFO("Loaded config: {0}x{1}, fullscreen={2}, maximised={3}, title={4}, settings={5}, fontsize={6}, baseFontSize{7}, themeMode{8}",
-            cfg.windowWidth, cfg.windowHeight, cfg.fullscreen, cfg.maximized, cfg.title, cfg.settingsIsOpen, cfg.fontSize, cfg.baseFontSize, cfg.themeMode);
+        EE_CORE_INFO("Loaded config: {0}x{1}, fullscreen={2}, maximised={3}, title={4}, fontsize={5}, baseFontSize{6}, themeMode{7}",
+            cfg.windowWidth, cfg.windowHeight, cfg.fullscreen, cfg.maximized, cfg.title, cfg.fontSize, cfg.baseFontSize, cfg.themeMode);
     }
     catch (const std::exception& e) {
         EE_CORE_WARN("Config not found/invalid ({}). Using defaults.", e.what());
@@ -151,7 +152,7 @@ GLFWwindow* Ermine::Window::InitWindow(int width, int height, const char* title)
 
     window_width = cfg.windowWidth;
     window_height = cfg.windowHeight;
-	SettingsGUI::SetSettingsOpen(cfg.settingsIsOpen);
+    ImGUIWindow::SetAllWindowStates(cfg.imguiWindows);
 	SettingsGUI::SetFontSize(cfg.fontSize, cfg.baseFontSize); // call this after ImGui is initialized
 	SettingsGUI::SetMode(cfg.themeMode);
 
@@ -240,11 +241,13 @@ GLFWwindow* Ermine::Window::InitWindow(int width, int height, const char* title)
                     {
                         editor::EditorGUI::s_state = editor::EditorGUI::SimState::paused;
                         EE_CORE_INFO("Game paused (window lost focus)");
+                        UIButtonSystem::ShowPauseMenuOnAltTab();
                     }
 #else
                     // In standalone build, always pause
                     editor::EditorGUI::s_state = editor::EditorGUI::SimState::paused;
                     EE_CORE_INFO("Game paused (window lost focus)");
+                    UIButtonSystem::ShowPauseMenuOnAltTab();
 #endif
                 }
 
@@ -256,24 +259,9 @@ GLFWwindow* Ermine::Window::InitWindow(int width, int height, const char* title)
             RefreshCursorConfinement(w);
 #endif
 
-            // Auto-resume when window regains focus
             if (Ermine::Window::IsPausedOnFocusLoss())
             {
-#if defined(EE_EDITOR)
-                // In editor, only resume if we were playing before
-                if (editor::EditorGUI::s_state == editor::EditorGUI::SimState::paused)
-                {
-                    editor::EditorGUI::s_state = editor::EditorGUI::SimState::playing;
-                    EE_CORE_INFO("Game resumed (window gained focus)");
-                }
-#else
-                // In standalone build, always resume from pause
-                if (editor::EditorGUI::s_state == editor::EditorGUI::SimState::paused)
-                {
-                    editor::EditorGUI::s_state = editor::EditorGUI::SimState::playing;
-                    EE_CORE_INFO("Game resumed (window gained focus)");
-                }
-#endif
+                UIButtonSystem::TryAutoResumeOnAltTab();
             }
         });
 

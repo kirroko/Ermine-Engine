@@ -2,10 +2,10 @@
 /*!
 \file       ViewPortGUI.cpp
 \author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu
-\date       21/09/2025
+\date       31/01/2026
 \brief      This file contains the responsibility for rendering the viewport window
 
-Copyright (C) 2025 DigiPen Institute of Technology.
+Copyright (C) 2026 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents without the
 prior written consent of DigiPen Institute of Technology is prohibited.
 */
@@ -278,7 +278,7 @@ namespace
 	}
 }
 
-Ermine::ViewPortGUI::ViewPortGUI() : ImGUIWindow("Viewport"), show(true)
+Ermine::ViewPortGUI::ViewPortGUI() : ImGUIWindow("Viewport")
 {
 }
 
@@ -857,7 +857,14 @@ void Ermine::ViewPortGUI::GizmoOverlay(const ImVec2& imgMin, const ImVec2& imgSi
 
 void Ermine::ViewPortGUI::Update()
 {
-	ImGui::Begin("Scene Viewer", &show);
+	// Return if window is closed
+	if (!IsOpen()) return;
+
+	if (!ImGui::Begin(Name().c_str(), GetOpenPtr()))
+	{
+		ImGui::End();
+		return;
+	}
 
 	LoadToolbarIcons();
 
@@ -1187,12 +1194,17 @@ void Ermine::ViewPortGUI::Update()
 	// Editor input flags
 	Input::SetEditorInputActive(viewportFocused && viewportHovered);
 
-	// Hotkeys
-	if (Input::IsKeyDownEditor(GLFW_KEY_LEFT_CONTROL) && Input::IsKeyPressedEditor(GLFW_KEY_P))
-		EditorGUI::s_state = EditorGUI::SimState::playing;
-	else if (Input::IsKeyDownEditor(GLFW_KEY_LEFT_CONTROL) && Input::IsKeyDownEditor(GLFW_KEY_LEFT_SHIFT)
+	if (Input::IsKeyDownEditor(GLFW_KEY_LEFT_CONTROL) && Input::IsKeyDownEditor(GLFW_KEY_LEFT_SHIFT)
 		&& Input::IsKeyPressedEditor(GLFW_KEY_P))
+	{
 		EditorGUI::s_state = EditorGUI::SimState::stopped;
+		SceneManager::GetInstance().LoadTemp();
+	}
+	else if (Input::IsKeyDownEditor(GLFW_KEY_LEFT_CONTROL) && Input::IsKeyPressedEditor(GLFW_KEY_P))
+	{
+		EditorGUI::s_state = EditorGUI::SimState::playing;
+		SceneManager::GetInstance().SaveTemp();
+	}
 
 	if (Input::IsKeyDownEditor(GLFW_KEY_LEFT_CONTROL) && Input::IsKeyPressedEditor(GLFW_KEY_Z))
 		CommandHistory::GetInstance().Undo();
