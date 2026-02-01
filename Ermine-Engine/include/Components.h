@@ -1756,6 +1756,10 @@ namespace Ermine
 
 	struct GlobalGraphics
 	{
+		// Ambient lighting parameters
+		Vec3  ambientColor = Vec3{ 1.0f, 1.0f, 1.0f };
+		float ambientIntensity = 0.08f;
+
 		// SSAO parameters
 		bool  ssaoEnabled = false;
 		int   ssaoSamples = 16;
@@ -1827,6 +1831,10 @@ namespace Ermine
 
 		XPROPERTY_DEF(
 			"GlobalGraphics", GlobalGraphics,
+
+			// Ambient lighting
+			xproperty::obj_member<"ambientColor", &GlobalGraphics::ambientColor>,
+			xproperty::obj_member<"ambientIntensity", &GlobalGraphics::ambientIntensity>,
 
 			// SSAO
 			xproperty::obj_member<"ssaoEnabled", &GlobalGraphics::ssaoEnabled>,

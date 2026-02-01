@@ -6614,6 +6614,9 @@ glm::mat4 Renderer::GetEntityWorldMatrix(EntityID entity) const
 
 void Renderer::SyncToGlobalGraphics()
 {
+	m_GlobalGraphics.ambientColor = Ermine::Vec3(m_AmbientColor.x, m_AmbientColor.y, m_AmbientColor.z);
+	m_GlobalGraphics.ambientIntensity = m_AmbientIntensity;
+
 	m_GlobalGraphics.ssaoEnabled = m_SSAOEnabled;
 	m_GlobalGraphics.ssaoSamples = m_SSAOSamples;
 	m_GlobalGraphics.ssaoRadius = m_SSAORadius;
@@ -6666,6 +6669,13 @@ void Renderer::SyncToGlobalGraphics()
 
 void Renderer::ApplyFromGlobalGraphics()
 {
+	m_AmbientColor = glm::vec3(
+		m_GlobalGraphics.ambientColor.x,
+		m_GlobalGraphics.ambientColor.y,
+		m_GlobalGraphics.ambientColor.z
+	);
+	m_AmbientIntensity = m_GlobalGraphics.ambientIntensity;
+
 	m_SSAOEnabled = m_GlobalGraphics.ssaoEnabled;
 	m_SSAOSamples = m_GlobalGraphics.ssaoSamples;
 	m_SSAORadius = m_GlobalGraphics.ssaoRadius;
