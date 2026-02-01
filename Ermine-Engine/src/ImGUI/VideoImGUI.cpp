@@ -34,10 +34,10 @@ namespace Ermine
      */
     void VideoImGUI::Update()
     {
-        if (!m_showWindow)
-            return;
+        // Return if window is closed
+        if (!IsOpen()) return;
 
-        if (!ImGui::Begin("Video Player", &m_showWindow))
+        if (!ImGui::Begin(Name().c_str(), GetOpenPtr()))
         {
             ImGui::End();
             return;

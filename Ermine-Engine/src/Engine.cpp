@@ -509,13 +509,13 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	editor::EditorGUI::CreateImGUIWindow<ParticlesImGUI>();
 	editor::EditorGUI::CreateImGUIWindow<AudioImGUI>();
-	editor::EditorGUI::CreateImGUIWindow<editor::GraphicsDebugGUI>("Graphics Debug");
+	editor::EditorGUI::CreateImGUIWindow<editor::GraphicsDebugGUI>();
 	editor::EditorGUI::CreateImGUIWindow<ViewPortGUI>();
 	editor::EditorGUI::CreateImGUIWindow<FSMEditorImGUI>();
 	editor::EditorGUI::CreateImGUIWindow<AnimationEditorImGUI>();
 	editor::EditorGUI::CreateImGUIWindow<ConsoleGUI>();
 	editor::EditorGUI::CreateImGUIWindow<ImguiUI::AssetBrowser>();
-	editor::EditorGUI::CreateImGUIWindow<SettingsGUI>("Settings");
+	editor::EditorGUI::CreateImGUIWindow<SettingsGUI>();
 	editor::EditorGUI::CreateImGUIWindow<VideoImGUI>();
 
 	// Legacy ImGui menu windows removed - replaced with scene-based UI:
@@ -576,7 +576,7 @@ void engine::Shutdown()
 	cfg.windowHeight = height;
 	cfg.fullscreen = (glfwGetWindowMonitor(glfwGetCurrentContext()) != nullptr);
 	cfg.maximized = (glfwGetWindowAttrib(glfwGetCurrentContext(), GLFW_MAXIMIZED) == GLFW_TRUE);
-	cfg.settingsIsOpen = SettingsGUI::GetSettingsOpen();
+	cfg.imguiWindows = ImGUIWindow::GetAllWindowStates();
 	cfg.fontSize = SettingsGUI::GetFontSizeS();
 	cfg.baseFontSize = SettingsGUI::GetBaseFontSize();
 	cfg.themeMode = SettingsGUI::GetMode();

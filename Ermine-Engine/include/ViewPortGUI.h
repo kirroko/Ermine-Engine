@@ -2,10 +2,10 @@
 /*!
 \file       ViewPortGUI.h
 \author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu
-\date       21/09/2025
+\date       31/01/2026
 \brief      This file contains the responsibility for rendering the viewport window
 
-Copyright (C) 2025 DigiPen Institute of Technology.
+Copyright (C) 2026 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents without the
 prior written consent of DigiPen Institute of Technology is prohibited.
 */
@@ -21,7 +21,6 @@ namespace Ermine
 {
 	class ViewPortGUI : public ImGUIWindow
 	{
-		bool show = true;
 	public:
 		ViewPortGUI();
 

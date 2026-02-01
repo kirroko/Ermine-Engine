@@ -142,6 +142,11 @@ float calculateSSAO(vec2 texCoord, vec3 fragPosView, vec3 normalView, float dept
     if (u_SSAO == 0) {
         return 1.0;
     }
+
+    // Early out for invalid depths
+    if (depth <= 0.0) {
+        return 1.0;
+    }
     
     // Distance-based fadeout
     float viewDistance = length(fragPosView);
