@@ -10,7 +10,7 @@
             Function just like a wrapper for the ImGUI library.
             Each window for teh editor should be encapsulated into a function in this class.
 
-Copyright (C) 2025 DigiPen Institute of Technology.
+Copyright (C) 2026 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents without the
 prior written consent of DigiPen Institute of Technology is prohibited.
 */
@@ -338,7 +338,7 @@ void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
         ImGui::EndMenu();
     }
 
-    if (ImGui::BeginMenu("Settings"))
+    if (ImGui::BeginMenu("Themes"))
     {
         // Ensure consistent styling when multi-viewports are enabled
         const auto fixViewportsStyling = []()
@@ -418,47 +418,39 @@ void EditorGUI::TopMenuBar(GLFWwindow* windowContext)
                 }
             }};
 
-        if (ImGui::MenuItem("Asset Browser"))
+        if (ImGui::BeginMenu("Core"))
         {
-            reopen("Asset Browser");
-            EE_CORE_INFO("Asset Browser open");
+            if (ImGui::MenuItem("Viewport")) reopen("Viewport");
+            if (ImGui::MenuItem("Console"))  reopen("Console");
+            ImGui::EndMenu();
         }
 
-        if (ImGui::MenuItem("Particle Editor"))
+        if (ImGui::BeginMenu("Assets"))
         {
-            reopen("Particle Editor");
-            EE_CORE_INFO("Particle Editor open");
+            if (ImGui::MenuItem("Asset Browser")) reopen("Asset Browser");
+            if (ImGui::MenuItem("Audio Manager")) reopen("Audio Manager");
+            ImGui::EndMenu();
         }
 
-        if (ImGui::MenuItem("Audio Manager"))
+        if (ImGui::BeginMenu("Tools"))
         {
-            reopen("Audio Manager");
-            EE_CORE_INFO("Audio Manager open");
+            if (ImGui::MenuItem("FSM Editor"))       reopen("FSM Editor");
+            if (ImGui::MenuItem("Animation Editor")) reopen("Animation Editor");
+            if (ImGui::MenuItem("Video Player"))    reopen("Video Player");
+            ImGui::EndMenu();
         }
 
-        if (ImGui::MenuItem("FSM Editor"))
+        if (ImGui::BeginMenu("VFX"))
         {
-            reopen("FSM Editor");
-            EE_CORE_INFO("FSM Editor open");
+            if (ImGui::MenuItem("Particle Editor")) reopen("Particle Editor");
+            ImGui::EndMenu();
         }
 
-        if (ImGui::MenuItem("Animation Editor"))
+        if (ImGui::BeginMenu("Settings"))
         {
-            reopen("Animation Editor");
-            EE_CORE_INFO("Animation Editor open");
-        }
-
-        if (ImGui::MenuItem("Console"))
-        {
-            reopen("Console");
-            EE_CORE_INFO("Console open");
-        }
-
-        if (ImGui::MenuItem("UI Settings"))
-        {
-            EE_CORE_INFO("UI Settings open");
-            //SettingsGUI::SetSettings(true);
-            SettingsGUI::SetSettingsOpen(true);
+            if (ImGui::MenuItem("Graphics Settings"))  reopen("Graphics Settings");
+            if (ImGui::MenuItem("UI Settings")) reopen("UI Settings");
+            ImGui::EndMenu();
         }
 
         // Legacy ImGui menu previews removed - use scene-based approach instead:
@@ -1247,6 +1239,7 @@ void EditorGUI::Update(GLFWwindow* windowContext)
 
     // Call Update() for all registered ImGui windows
     for (auto& window : m_Windows) {
+        if (!window->IsOpen()) continue;
         window->Update();
     }
 }
@@ -1259,6 +1252,7 @@ void EditorGUI::Render()
 
     // Render additional ImGUI windows
     for (auto& window : m_Windows) {
+        if (!window->IsOpen()) continue;
         window->Render();
     }
 

@@ -5,7 +5,7 @@
 \date       26/01/2026
 \brief      This file contains the Unity-like Console window and log collector for the editor.
 
-Copyright (C) 2025 DigiPen Institute of Technology.
+Copyright (C) 2026 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents without the
 prior written consent of DigiPen Institute of Technology is prohibited.
 */
@@ -343,200 +343,204 @@ void ConsoleGUI::buildDisplayList(std::vector<int>& outDisplayIndices,
 void ConsoleGUI::Update()
 {
     // Return if window is closed
-    if (!m_isOpen) return;
+    if (!IsOpen()) return;
 
-    if (ImGui::Begin(m_name.c_str(), &m_isOpen))
+    if (!ImGui::Begin(Name().c_str(), GetOpenPtr()))
     {
-        // Refresh snapshot only if changed (always collect copy when changed;
-        // Pause only affects scrolling)
-        auto& ec = EditorConsole::GetInstance();
-        uint64_t ver = ec.Version();
-        bool filterChanged = false;
+        ImGui::End();
+        return;
+    }
+
+    // Refresh snapshot only if changed (always collect copy when changed;
+    // Pause only affects scrolling)
+    auto& ec = EditorConsole::GetInstance();
+    uint64_t ver = ec.Version();
+    bool filterChanged = false;
+    {
+        // ImGuiTextFilter has no direct API to read text; we can detect changes by drawing returns
+        // Instead, approximate by comparing flags and a cached string captured via Draw() side effects
+        // We'll rebuild on any UI toggle/filter change tracked below.
+    }
+
+    // Detect UI changes that require rebuild
+    bool togglesChanged = (m_cachedShowInfo != m_showInfo) || (m_cachedShowWarning != m_showWarning)
+        || (m_cachedShowError != m_showError) || (m_cachedShowDebug != m_showDebug)
+        || (m_cachedCollapse != m_collapse);
+
+    if (ver != m_lastSnapshotVersion)
+    {
+        ec.Snapshot(m_snapshot);
+        m_lastSnapshotVersion = ver;
+        togglesChanged = true; // content changed implies rebuild
+    }
+
+    // Toolbar
+    {
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6.f, 6.f));
+        ImGui::BeginGroup();
+
+        // Level toggles
+        ImGui::BeginDisabled(false);
+        ImGui::Checkbox("Info", &m_showInfo); ImGui::SameLine();
+        ImGui::Checkbox("Warning", &m_showWarning); ImGui::SameLine();
+        ImGui::Checkbox("Error", &m_showError); ImGui::SameLine();
+        ImGui::Checkbox("Debug", &m_showDebug);
+        ImGui::EndDisabled();
+
+        ImGui::SameLine();
+
+        // Collapse/Pause/Auto-scroll
+        ImGui::Checkbox("Collapse", &m_collapse); ImGui::SameLine();
+        ImGui::Checkbox("Pause", &m_pause); ImGui::SameLine();
+        ImGui::Checkbox("Auto-scroll", &m_autoScroll);
+
+        ImGui::SameLine();
+
+        // Clear / Copy
+        if (ImGui::Button("Clear"))
         {
-            // ImGuiTextFilter has no direct API to read text; we can detect changes by drawing returns
-            // Instead, approximate by comparing flags and a cached string captured via Draw() side effects
-            // We'll rebuild on any UI toggle/filter change tracked below.
+            EditorConsole::GetInstance().Clear();
+            m_selectedIndex = -1;
+        }
+        ImGui::SameLine();
+        bool copyOnlySelected = (m_selectedIndex >= 0);
+        if (ImGui::Button(copyOnlySelected ? "Copy Selected" : "Copy All"))
+        {
+            std::vector<int> indices;
+            std::vector<uint32_t> counts;
+            buildDisplayList(indices, counts);
+            copyToClipboard(m_snapshot, indices, m_collapse ? &counts : nullptr, copyOnlySelected, m_selectedIndex);
         }
 
-        // Detect UI changes that require rebuild
-        bool togglesChanged = (m_cachedShowInfo != m_showInfo) || (m_cachedShowWarning != m_showWarning)
-            || (m_cachedShowError != m_showError) || (m_cachedShowDebug != m_showDebug)
-            || (m_cachedCollapse != m_collapse);
+        ImGui::SameLine();
 
-        if (ver != m_lastSnapshotVersion)
+        // Search
+        constexpr float searchWidth = 240.0f;
+        ImGui::SetNextItemWidth(searchWidth);
+        if (m_focusSearch) { ImGui::SetKeyboardFocusHere(); m_focusSearch = false; }
+        // Capture filter before and after Draw to detect changes
+        // Note: ImGuiTextFilter doesn't expose text; we rely on its internal behavior.
+        // As a simple approach: rebuild every frame when filter is active.
+        bool filterWasActive = m_filter.IsActive();
+        m_filter.Draw("Search");
+        bool filterNowActive = m_filter.IsActive();
+        filterChanged = (filterWasActive != filterNowActive) || filterNowActive;
+
+        ImGui::EndGroup();
+        ImGui::PopStyleVar();
+    }
+
+    ImGui::Separator();
+
+    // Counts
+    {
+        auto counts = EditorConsole::GetInstance().Counts();
+        ImGui::Text("Info: %u  |  Warning: %u  |  Error: %u  |  Debug: %u",
+            counts[0], counts[1], counts[2], counts[3]);
+    }
+
+    // Build display indices (+ optional collapse counts) only when needed
+    if (togglesChanged || filterChanged || m_cachedDisplayIndices.empty())
+    {
+        m_cachedDisplayIndices.clear();
+        m_cachedCollapsedCounts.clear();
+        buildDisplayList(m_cachedDisplayIndices, m_cachedCollapsedCounts);
+        // Update cached toggles
+        m_cachedShowInfo = m_showInfo;
+        m_cachedShowWarning = m_showWarning;
+        m_cachedShowError = m_showError;
+        m_cachedShowDebug = m_showDebug;
+        m_cachedCollapse = m_collapse;
+    }
+    auto& displayIndices = m_cachedDisplayIndices;
+    auto& collapsedCounts = m_cachedCollapsedCounts;
+
+    // Main list region
+    constexpr float detailsHeight = 120.0f;
+    ImVec2 avail = ImGui::GetContentRegionAvail();
+    ImGui::BeginChild("ConsoleListRegion", ImVec2(0, avail.y - detailsHeight), false,
+        ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar /*| ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse*/);
+
+    ImGuiListClipper clipper;
+    clipper.Begin(static_cast<int>(displayIndices.size()));
+    while (clipper.Step())
+    {
+        for (int row = clipper.DisplayStart; row < clipper.DisplayEnd; ++row)
         {
-            ec.Snapshot(m_snapshot);
-            m_lastSnapshotVersion = ver;
-            togglesChanged = true; // content changed implies rebuild
-        }
-
-        // Toolbar
-        {
-            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6.f, 6.f));
-            ImGui::BeginGroup();
-
-            // Level toggles
-            ImGui::BeginDisabled(false);
-            ImGui::Checkbox("Info", &m_showInfo); ImGui::SameLine();
-            ImGui::Checkbox("Warning", &m_showWarning); ImGui::SameLine();
-            ImGui::Checkbox("Error", &m_showError); ImGui::SameLine();
-            ImGui::Checkbox("Debug", &m_showDebug);
-            ImGui::EndDisabled();
-
-            ImGui::SameLine();
-
-            // Collapse/Pause/Auto-scroll
-            ImGui::Checkbox("Collapse", &m_collapse); ImGui::SameLine();
-            ImGui::Checkbox("Pause", &m_pause); ImGui::SameLine();
-            ImGui::Checkbox("Auto-scroll", &m_autoScroll);
-
-            ImGui::SameLine();
-
-            // Clear / Copy
-            if (ImGui::Button("Clear"))
-            {
-                EditorConsole::GetInstance().Clear();
-                m_selectedIndex = -1;
-            }
-            ImGui::SameLine();
-            bool copyOnlySelected = (m_selectedIndex >= 0);
-            if (ImGui::Button(copyOnlySelected ? "Copy Selected" : "Copy All"))
-            {
-                std::vector<int> indices;
-                std::vector<uint32_t> counts;
-                buildDisplayList(indices, counts);
-                copyToClipboard(m_snapshot, indices, m_collapse ? &counts : nullptr, copyOnlySelected, m_selectedIndex);
-            }
-
-            ImGui::SameLine();
-
-            // Search
-            constexpr float searchWidth = 240.0f;
-            ImGui::SetNextItemWidth(searchWidth);
-            if (m_focusSearch) { ImGui::SetKeyboardFocusHere(); m_focusSearch = false; }
-            // Capture filter before and after Draw to detect changes
-            // Note: ImGuiTextFilter doesn't expose text; we rely on its internal behavior.
-            // As a simple approach: rebuild every frame when filter is active.
-            bool filterWasActive = m_filter.IsActive();
-            m_filter.Draw("Search");
-            bool filterNowActive = m_filter.IsActive();
-            filterChanged = (filterWasActive != filterNowActive) || filterNowActive;
-
-            ImGui::EndGroup();
-            ImGui::PopStyleVar();
-        }
-
-        ImGui::Separator();
-
-        // Counts
-        {
-            auto counts = EditorConsole::GetInstance().Counts();
-            ImGui::Text("Info: %u  |  Warning: %u  |  Error: %u  |  Debug: %u",
-                counts[0], counts[1], counts[2], counts[3]);
-        }
-
-        // Build display indices (+ optional collapse counts) only when needed
-        if (togglesChanged || filterChanged || m_cachedDisplayIndices.empty())
-        {
-            m_cachedDisplayIndices.clear();
-            m_cachedCollapsedCounts.clear();
-            buildDisplayList(m_cachedDisplayIndices, m_cachedCollapsedCounts);
-            // Update cached toggles
-            m_cachedShowInfo = m_showInfo;
-            m_cachedShowWarning = m_showWarning;
-            m_cachedShowError = m_showError;
-            m_cachedShowDebug = m_showDebug;
-            m_cachedCollapse = m_collapse;
-        }
-        auto& displayIndices = m_cachedDisplayIndices;
-        auto& collapsedCounts = m_cachedCollapsedCounts;
-
-        // Main list region
-        constexpr float detailsHeight = 120.0f;
-        ImVec2 avail = ImGui::GetContentRegionAvail();
-        ImGui::BeginChild("ConsoleListRegion", ImVec2(0, avail.y - detailsHeight), false,
-            ImGuiWindowFlags_NoNav | ImGuiWindowFlags_HorizontalScrollbar /*| ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse*/);
-
-        ImGuiListClipper clipper;
-        clipper.Begin(static_cast<int>(displayIndices.size()));
-        while (clipper.Step())
-        {
-            for (int row = clipper.DisplayStart; row < clipper.DisplayEnd; ++row)
-            {
-                const int srcIdx = displayIndices[static_cast<size_t>(row)];
-                const auto& e = m_snapshot[static_cast<size_t>(srcIdx)];
-
-                ImGui::PushStyleColor(ImGuiCol_Text, colorFor(e.type));
-                bool selected = (m_selectedIndex == row);
-                // Row text
-                std::string line;
-                line.reserve(e.message.size() + 64);
-                if (!e.channel.empty()) { line += "["; line += e.channel; line += "] "; }
-                line += e.message;
-
-                // Icon + Selectable
-                ImGui::AlignTextToFramePadding();
-                ImGui::TextUnformatted(iconFor(e.type));
-                ImGui::SameLine();
-                if (ImGui::Selectable(line.c_str(), selected, ImGuiSelectableFlags_AllowDoubleClick))
-                {
-                    m_selectedIndex = row;
-                }
-                ImGui::PopStyleColor();
-
-                // Draw collapsed count on the right if >1
-                uint32_t shownCount = m_collapse ? collapsedCounts[static_cast<size_t>(row)] : e.count;
-                if (shownCount > 1)
-                {
-                    float right = ImGui::GetWindowContentRegionMax().x + ImGui::GetWindowPos().x;
-                    ImVec2 cursor = ImGui::GetCursorScreenPos();
-                    ImGui::SameLine();
-                    ImGui::SetCursorScreenPos(ImVec2(right - 48.0f, cursor.y));
-                    ImGui::TextDisabled("x%u", shownCount);
-                }
-            }
-        }
-        clipper.End();
-
-        // Auto-scroll behavior
-        if (!m_pause && m_autoScroll && ImGui::GetScrollY() >= ImGui::GetScrollMaxY() - 5.0f)
-            ImGui::SetScrollHereY(1.0f);
-
-        ImGui::EndChild();
-
-        // Details panel
-        ImGui::Separator();
-        ImGui::BeginChild("ConsoleDetailsRegion", ImVec2(0, 0), false);
-        if (m_selectedIndex >= 0 && m_selectedIndex < static_cast<int>(displayIndices.size()))
-        {
-            const int srcIdx = displayIndices[static_cast<size_t>(m_selectedIndex)];
+            const int srcIdx = displayIndices[static_cast<size_t>(row)];
             const auto& e = m_snapshot[static_cast<size_t>(srcIdx)];
 
-            ImGui::Text("Level: ");
+            ImGui::PushStyleColor(ImGuiCol_Text, colorFor(e.type));
+            bool selected = (m_selectedIndex == row);
+            // Row text
+            std::string line;
+            line.reserve(e.message.size() + 64);
+            if (!e.channel.empty()) { line += "["; line += e.channel; line += "] "; }
+            line += e.message;
+
+            // Icon + Selectable
+            ImGui::AlignTextToFramePadding();
+            ImGui::TextUnformatted(iconFor(e.type));
             ImGui::SameLine();
-            ImGui::TextColored(ImGui::ColorConvertU32ToFloat4(colorFor(e.type)), "%s",
-                (e.type == ConsoleLogType::Info) ? "Info" :
-                (e.type == ConsoleLogType::Warning) ? "Warning" :
-                (e.type == ConsoleLogType::Error) ? "Error" : "Debug");
-
-            if (!e.channel.empty())
+            if (ImGui::Selectable(line.c_str(), selected, ImGuiSelectableFlags_AllowDoubleClick))
             {
-                ImGui::SameLine(); ImGui::Text("| Channel: %s", e.channel.c_str());
+                m_selectedIndex = row;
             }
+            ImGui::PopStyleColor();
 
-            ImGui::TextWrapped("%s", e.message.c_str());
-            if (!e.details.empty())
+            // Draw collapsed count on the right if >1
+            uint32_t shownCount = m_collapse ? collapsedCounts[static_cast<size_t>(row)] : e.count;
+            if (shownCount > 1)
             {
-                ImGui::Separator();
-                ImGui::TextDisabled("%s", e.details.c_str());
+                float right = ImGui::GetWindowContentRegionMax().x + ImGui::GetWindowPos().x;
+                ImVec2 cursor = ImGui::GetCursorScreenPos();
+                ImGui::SameLine();
+                ImGui::SetCursorScreenPos(ImVec2(right - 48.0f, cursor.y));
+                ImGui::TextDisabled("x%u", shownCount);
             }
         }
-        else
-        {
-            ImGui::TextDisabled("Select a log entry to see details...");
-        }
-        ImGui::EndChild();
     }
+    clipper.End();
+
+    // Auto-scroll behavior
+    if (!m_pause && m_autoScroll && ImGui::GetScrollY() >= ImGui::GetScrollMaxY() - 5.0f)
+        ImGui::SetScrollHereY(1.0f);
+
+    ImGui::EndChild();
+
+    // Details panel
+    ImGui::Separator();
+    ImGui::BeginChild("ConsoleDetailsRegion", ImVec2(0, 0), false);
+    if (m_selectedIndex >= 0 && m_selectedIndex < static_cast<int>(displayIndices.size()))
+    {
+        const int srcIdx = displayIndices[static_cast<size_t>(m_selectedIndex)];
+        const auto& e = m_snapshot[static_cast<size_t>(srcIdx)];
+
+        ImGui::Text("Level: ");
+        ImGui::SameLine();
+        ImGui::TextColored(ImGui::ColorConvertU32ToFloat4(colorFor(e.type)), "%s",
+            (e.type == ConsoleLogType::Info) ? "Info" :
+            (e.type == ConsoleLogType::Warning) ? "Warning" :
+            (e.type == ConsoleLogType::Error) ? "Error" : "Debug");
+
+        if (!e.channel.empty())
+        {
+            ImGui::SameLine(); ImGui::Text("| Channel: %s", e.channel.c_str());
+        }
+
+        ImGui::TextWrapped("%s", e.message.c_str());
+        if (!e.details.empty())
+        {
+            ImGui::Separator();
+            ImGui::TextDisabled("%s", e.details.c_str());
+        }
+    }
+    else
+    {
+        ImGui::TextDisabled("Select a log entry to see details...");
+    }
+    ImGui::EndChild();
+
     ImGui::End();
 }
 

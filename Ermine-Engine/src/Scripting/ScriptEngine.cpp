@@ -31,6 +31,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Serialisation.h"
 #include "UIRenderSystem.h"
 #include "Window.h"
+#include "VideoManager.h"
 
 namespace fs = std::filesystem;
 
@@ -2841,6 +2842,148 @@ namespace
 		return static_cast<std::int32_t>(Window::GetCursorLockState());
 	}
 #pragma endregion
+
+#pragma region VideoManager ICalls
+
+	std::shared_ptr<Ermine::VideoManager> GetVideoManager()
+	{
+		auto videoSystem = Ermine::ECS::GetInstance().GetSystem<Ermine::VideoManager>();
+		if (!videoSystem)
+			EE_CORE_WARN("VideoManager internal call: VideoManager system not registered.");
+		return videoSystem;
+	}
+
+	mono_bool icall_videomanager_load(MonoString* name, MonoString* filepath, mono_bool loop)
+	{
+		auto videoSystem = GetVideoManager();
+		if (!videoSystem || !name || !filepath)
+			return 0;
+
+		std::string videoName;
+		std::string videoPath;
+		ToTempUTF8(name, videoName);
+		ToTempUTF8(filepath, videoPath);
+		return videoSystem->LoadVideo(videoName, videoPath, loop != 0) ? 1 : 0;
+	}
+
+	void icall_videomanager_set_current(MonoString* name)
+	{
+		auto videoSystem = GetVideoManager();
+		if (!videoSystem || !name)
+			return;
+
+		std::string videoName;
+		ToTempUTF8(name, videoName);
+		videoSystem->SetCurrentVideo(videoName);
+	}
+
+	MonoString* icall_videomanager_get_current()
+	{
+		auto videoSystem = GetVideoManager();
+		if (!videoSystem)
+			return mono_string_new(mono_domain_get(), "");
+
+		return mono_string_new(mono_domain_get(), videoSystem->GetCurrentVideo().c_str());
+	}
+
+	void icall_videomanager_play()
+	{
+		if (auto videoSystem = GetVideoManager())
+			videoSystem->Play();
+	}
+
+	void icall_videomanager_pause()
+	{
+		if (auto videoSystem = GetVideoManager())
+			videoSystem->Pause();
+	}
+
+	void icall_videomanager_stop()
+	{
+		if (auto videoSystem = GetVideoManager())
+			videoSystem->Stop();
+	}
+
+	mono_bool icall_videomanager_is_playing()
+	{
+		if (auto videoSystem = GetVideoManager())
+			return videoSystem->IsVideoPlaying() ? 1 : 0;
+		return 0;
+	}
+
+	mono_bool icall_videomanager_is_done(MonoString* name)
+	{
+		auto videoSystem = GetVideoManager();
+		if (!videoSystem || !name)
+			return 0;
+
+		std::string videoName;
+		ToTempUTF8(name, videoName);
+		return videoSystem->IsVideoDonePlaying(videoName) ? 1 : 0;
+	}
+
+	mono_bool icall_videomanager_exists(MonoString* name)
+	{
+		auto videoSystem = GetVideoManager();
+		if (!videoSystem || !name)
+			return 0;
+
+		std::string videoName;
+		ToTempUTF8(name, videoName);
+		return videoSystem->VideoExists(videoName) ? 1 : 0;
+	}
+
+	void icall_videomanager_free(MonoString* name)
+	{
+		auto videoSystem = GetVideoManager();
+		if (!videoSystem || !name)
+			return;
+
+		std::string videoName;
+		ToTempUTF8(name, videoName);
+		videoSystem->FreeVideo(videoName);
+	}
+
+	void icall_videomanager_cleanup_all()
+	{
+		if (auto videoSystem = GetVideoManager())
+			videoSystem->CleanupAllVideos();
+	}
+
+	void icall_videomanager_set_fit_mode(int mode)
+	{
+		auto videoSystem = GetVideoManager();
+		if (!videoSystem)
+			return;
+
+		using FitMode = Ermine::VideoManager::VideoFitMode;
+		if (mode <= static_cast<int>(FitMode::AspectFit))
+			videoSystem->SetFitMode(FitMode::AspectFit);
+		else
+			videoSystem->SetFitMode(FitMode::StretchToFill);
+	}
+
+	int icall_videomanager_get_fit_mode()
+	{
+		if (auto videoSystem = GetVideoManager())
+			return static_cast<int>(videoSystem->GetFitMode());
+		return static_cast<int>(Ermine::VideoManager::VideoFitMode::AspectFit);
+	}
+
+	void icall_videomanager_set_render_enabled(mono_bool enabled)
+	{
+		if (auto videoSystem = GetVideoManager())
+			videoSystem->SetRenderEnabled(enabled != 0);
+	}
+
+	mono_bool icall_videomanager_get_render_enabled()
+	{
+		if (auto videoSystem = GetVideoManager())
+			return videoSystem->IsRenderEnabled() ? 1 : 0;
+		return 0;
+	}
+
+#pragma endregion
 }
 
 namespace Ermine::scripting
@@ -3311,4 +3454,27 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 			return uiSystem->CastSkill((Ermine::EntityID)entityID, skillIndex);
 		});
 #pragma endregion
+
+#pragma region VideoManager ICalls
+	mono_add_internal_call("ErmineEngine.VideoManager::Internal_LoadVideo", (const void*)icall_videomanager_load);
+	mono_add_internal_call("ErmineEngine.VideoManager::Internal_SetCurrentVideo", (const void*)icall_videomanager_set_current);
+	mono_add_internal_call("ErmineEngine.VideoManager::Internal_GetCurrentVideo", (const void*)icall_videomanager_get_current);
+
+	mono_add_internal_call("ErmineEngine.VideoManager::Internal_Play", (const void*)icall_videomanager_play);
+	mono_add_internal_call("ErmineEngine.VideoManager::Internal_Pause", (const void*)icall_videomanager_pause);
+	mono_add_internal_call("ErmineEngine.VideoManager::Internal_Stop", (const void*)icall_videomanager_stop);
+
+	mono_add_internal_call("ErmineEngine.VideoManager::Internal_IsPlaying", (const void*)icall_videomanager_is_playing);
+	mono_add_internal_call("ErmineEngine.VideoManager::Internal_IsDonePlaying", (const void*)icall_videomanager_is_done);
+	mono_add_internal_call("ErmineEngine.VideoManager::Internal_VideoExists", (const void*)icall_videomanager_exists);
+
+	mono_add_internal_call("ErmineEngine.VideoManager::Internal_FreeVideo", (const void*)icall_videomanager_free);
+	mono_add_internal_call("ErmineEngine.VideoManager::Internal_CleanupAllVideos", (const void*)icall_videomanager_cleanup_all);
+
+	mono_add_internal_call("ErmineEngine.VideoManager::Internal_SetFitMode", (const void*)icall_videomanager_set_fit_mode);
+	mono_add_internal_call("ErmineEngine.VideoManager::Internal_GetFitMode", (const void*)icall_videomanager_get_fit_mode);
+
+	mono_add_internal_call("ErmineEngine.VideoManager::Internal_SetRenderEnabled", (const void*)icall_videomanager_set_render_enabled);
+	mono_add_internal_call("ErmineEngine.VideoManager::Internal_GetRenderEnabled", (const void*)icall_videomanager_get_render_enabled);
+#pragma endregion VideoManager ICalls
 }

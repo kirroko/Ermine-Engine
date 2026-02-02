@@ -42,6 +42,12 @@ bool AssetManager::Initialize(const std::string& databasePath, const std::string
     if (LoadResourceDatabase())
     {
         EE_CORE_INFO("Resource database loaded successfully with {0} entries", m_resourceDatabase.size());
+        for (const auto& [key, entry] : m_resourceDatabase)
+        {
+            // If your DB includes non-texture assets, you can pick type based on entry.typeGUID/typeName
+            // For now, if this DB is textures-only, "Texture2D" is fine.
+            EnsureMetaForSource(entry.sourcePath, "Texture2D");
+        }
         return true;
     }
     else
@@ -50,6 +56,15 @@ bool AssetManager::Initialize(const std::string& databasePath, const std::string
         return true; // Don't fail initialization, just fall back to direct loading
     }
 }
+
+//void AssetManager::EnsureAllMetaFiles()
+//{
+//    for (const auto& [key, entry] : m_resourceDatabase)
+//    {
+//        // entry.sourcePath is the real source file path from the pipeline
+//        EnsureMetaForSource(entry.sourcePath, entry.instanceGUID, entry.typeGUID);
+//    }
+//}
 
 /**
  * @brief Load the resource database from the pipeline output

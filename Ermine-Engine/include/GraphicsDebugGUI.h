@@ -2,11 +2,11 @@
 /*!
 \file       GraphicsDebugGUI.h
 \author     Jeremy Lim Ting Jie, jeremytingjie.lim, 2301370, jeremytingjie.lim\@digipen.edu
-\date       29/9/2025
+\date       31/01/2026
 \brief      This file contains the declaration of the GraphicsDebugGUI class.
             A debug GUI for graphics-related parameters and controls using ImGui.
 
-Copyright (C) 2025 DigiPen Institute of Technology.
+Copyright (C) 2026 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents without the
 prior written consent of DigiPen Institute of Technology is prohibited.
 */
@@ -33,7 +33,7 @@ namespace Ermine::editor
          * @brief Constructor
          * @param title Window title for ImGui window
          */
-        explicit GraphicsDebugGUI(const std::string& title = "Graphics Debug");
+        explicit GraphicsDebugGUI(const std::string& title = "Graphics Settings");
 
         /**
          * @brief Update the GUI - called every frame

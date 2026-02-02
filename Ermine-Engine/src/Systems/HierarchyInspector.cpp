@@ -883,7 +883,8 @@ namespace Ermine::editor {
 				}
 			}
 
-			if (ImGui::BeginCombo("Fragment Shader", displayName.c_str())) {
+			ImGui::Text("Fragment Shader");
+			if (ImGui::BeginCombo("##FragmentShaderCombo", displayName.c_str())) {
 				// First option: None (use standard PBR)
 				bool isSelected = currentShader.empty();
 				if (ImGui::Selectable("None (Standard PBR)", isSelected)) {
@@ -930,6 +931,34 @@ namespace Ermine::editor {
 				}
 
 				ImGui::EndCombo();
+			}
+
+			// Drag & Drop for shader files
+			if (ImGui::BeginDragDropTarget())
+			{
+				if (const ImGuiPayload* payload =
+					ImGui::AcceptDragDropPayload("ASSET_BROWSER_FILE"))
+				{
+					const char* droppedPath = static_cast<const char*>(payload->Data);
+					std::filesystem::path shaderPath = droppedPath;
+
+					if (shaderPath.extension() == ".glsl")
+					{
+						matComp.customFragmentShader = shaderPath.string();
+
+						auto& assetManager = AssetManager::GetInstance();
+						auto shader = assetManager.LoadShader(
+							"../Resources/Shaders/vertex.glsl",
+							matComp.customFragmentShader
+						);
+
+						if (shader && shader->IsValid()) {
+							gm->SetShader(shader);
+							EE_CORE_INFO("Applied dropped fragment shader: {}", shaderPath.string());
+						}
+					}
+				}
+				ImGui::EndDragDropTarget();
 			}
 		}
 
@@ -1137,9 +1166,8 @@ namespace Ermine::editor {
 					ImGui::EndPopup();
 				}
 
-				// Accept drag & drop from AssetBrowser (keeping this as bonus feature)
 				if (ImGui::BeginDragDropTarget()) {
-					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_TEXTURE")) {
+					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_FILE")) {
 						const char* droppedPathCStr = static_cast<const char*>(payload->Data);
 						std::filesystem::path droppedPath = droppedPathCStr;
 
@@ -1575,11 +1603,28 @@ namespace Ermine::editor {
 
 			ImGui::PushID(id);
 
-			// string fields
+			// string fields (USED FOR AUDIO PATH)
 			if (guid == xproperty::settings::var_type<std::string>::guid_v) {
 				std::string s = p.m_Value.get<std::string>();
-				char buf[256]; std::snprintf(buf, sizeof(buf), "%s", s.c_str());
-				if (ImGui::InputText(label.c_str(), buf, IM_ARRAYSIZE(buf))) {
+				char buf[256];
+				std::snprintf(buf, sizeof(buf), "%s", s.c_str());
+
+				ImGui::InputText(label.c_str(), buf, IM_ARRAYSIZE(buf));
+
+				// --- Drag & Drop audio ---
+				if (ImGui::BeginDragDropTarget())
+				{
+					if (const ImGuiPayload* payload =
+						ImGui::AcceptDragDropPayload("ASSET_BROWSER_FILE"))
+					{
+						const char* droppedPath = static_cast<const char*>(payload->Data);
+						p.m_Value.set<std::string>(droppedPath);
+						xproperty::sprop::setProperty(err, audio, p, ctx);
+					}
+					ImGui::EndDragDropTarget();
+				}
+
+				if (strcmp(buf, s.c_str()) != 0) {
 					p.m_Value.set<std::string>(buf);
 					xproperty::sprop::setProperty(err, audio, p, ctx);
 				}
@@ -3050,6 +3095,45 @@ namespace Ermine::editor {
 		if (ImGui::InputText("Image Path", pathBuffer, sizeof(pathBuffer))) {
 			imageComp.imagePath = pathBuffer;
 		}
+		if (ImGui::BeginDragDropTarget()) {
+			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_FILE")) {
+				const char* droppedPathCStr = static_cast<const char*>(payload->Data);
+				std::filesystem::path droppedPath = droppedPathCStr;
+
+				// Only accept texture-ish files
+				std::string ext = droppedPath.extension().string();
+				for (auto& c : ext) c = (char)tolower(c);
+
+				bool isTextureFile =
+					(ext == ".png" ||
+						ext == ".jpg" || ext == ".jpeg" ||
+						ext == ".tga" ||
+						ext == ".bmp" ||
+						ext == ".dds" ||
+						ext == ".ktx" ||
+						ext == ".hdr");
+
+				if (isTextureFile) {
+					std::shared_ptr<graphics::Texture> newTex =
+						AssetManager::GetInstance().LoadTexture(droppedPath.string());
+
+					if (newTex && newTex->IsValid()) 
+					{
+						imageComp.imagePath = droppedPath.string();
+					}
+					else 
+					{
+						EE_CORE_WARN("Failed to load dropped texture: {}", droppedPath.string());
+					}
+				}
+				else {
+					// Ignore non-texture drops so we don't crash
+					EE_CORE_INFO("Ignored drop '%s': not a supported texture format",
+						droppedPath.string().c_str());
+				}
+			}
+			ImGui::EndDragDropTarget();
+		}
 
 		// Fullscreen toggle
 		ImGui::Checkbox("Fullscreen", &imageComp.fullscreen);
@@ -3342,6 +3426,32 @@ namespace Ermine::editor {
 	ImGui::ColorEdit3("Text Color", &button.textColor.x);
 	ImGui::DragFloat("Text Scale", &button.textScale, 0.1f, 0.1f, 5.0f);
 	ImGui::SliderFloat("Background Alpha", &button.backgroundAlpha, 0.0f, 1.0f);
+
+	ImGui::Separator();
+	ImGui::Text("Images (Optional)");
+	ImGui::TextDisabled("If set, images override color-based rendering");
+
+	char normalImageBuffer[256];
+	strncpy_s(normalImageBuffer, button.normalImage.c_str(), sizeof(normalImageBuffer) - 1);
+	normalImageBuffer[sizeof(normalImageBuffer) - 1] = '\0';
+	if (ImGui::InputText("Normal Image", normalImageBuffer, sizeof(normalImageBuffer))) {
+		button.normalImage = normalImageBuffer;
+	}
+
+	char hoverImageBuffer[256];
+	strncpy_s(hoverImageBuffer, button.hoverImage.c_str(), sizeof(hoverImageBuffer) - 1);
+	hoverImageBuffer[sizeof(hoverImageBuffer) - 1] = '\0';
+	if (ImGui::InputText("Hover Image", hoverImageBuffer, sizeof(hoverImageBuffer))) {
+		button.hoverImage = hoverImageBuffer;
+	}
+
+	char pressedImageBuffer[256];
+	strncpy_s(pressedImageBuffer, button.pressedImage.c_str(), sizeof(pressedImageBuffer) - 1);
+	pressedImageBuffer[sizeof(pressedImageBuffer) - 1] = '\0';
+	if (ImGui::InputText("Pressed Image", pressedImageBuffer, sizeof(pressedImageBuffer))) {
+		button.pressedImage = pressedImageBuffer;
+	}
+	ImGui::TextDisabled("Example: ../Resources/Textures/UI/button.png");
 
 	ImGui::Separator();
 	ImGui::Text("Action");

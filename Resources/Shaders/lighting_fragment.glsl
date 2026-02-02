@@ -142,6 +142,11 @@ float calculateSSAO(vec2 texCoord, vec3 fragPosView, vec3 normalView, float dept
     if (u_SSAO == 0) {
         return 1.0;
     }
+
+    // Early out for invalid depths
+    if (depth <= 0.0) {
+        return 1.0;
+    }
     
     // Distance-based fadeout
     float viewDistance = length(fragPosView);
@@ -303,7 +308,7 @@ float calculateAttenuation(int lightIndex, vec3 fragPosView, out vec3 lightDir)
         if (distance > range) {
             attenuation = 0.0;
         } else {
-            float fadeDistance = range * 0.1;
+            float fadeDistance = range * 0.4;
             float fadeStart = range - fadeDistance;
             float fadeFactor = smoothstep(range, fadeStart, distance);
             attenuation *= fadeFactor;

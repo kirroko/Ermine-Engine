@@ -2,11 +2,11 @@
 /*!
 \file       GraphicsDebugGUI.cpp
 \author     Jeremy Lim Ting Jie, jeremytingjie.lim, 2301370, jeremytingjie.lim\@digipen.edu
-\date       29/9/2025
+\date       31/01/2026
 \brief      This file contains the implementation of the GraphicsDebugGUI class.
             A debug GUI for graphics-related parameters and controls using ImGui.
 
-Copyright (C) 2025 DigiPen Institute of Technology.
+Copyright (C) 2026 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents without the
 prior written consent of DigiPen Institute of Technology is prohibited.
 */
@@ -100,7 +100,14 @@ void GraphicsDebugGUI::Update()
  */
 void GraphicsDebugGUI::Render()
 {
-    ImGui::Begin(m_title.c_str());
+    // Return if window is closed
+    if (!IsOpen()) return;
+
+    if (!ImGui::Begin(Name().c_str(), GetOpenPtr()))
+    {
+        ImGui::End();
+        return;
+    }
 
     // Create collapsible sections for organized UI
     DrawRenderingModeControls();
@@ -143,6 +150,11 @@ void GraphicsDebugGUI::DrawRenderingModeControls()
         if (DrawToggleButton("Screen Space Ambient Occlusion", &renderer->m_SSAOEnabled, 
                             "Enable/disable Screen Space Ambient Occlusion for enhanced depth perception")) {
             EE_CORE_INFO("SSAO {}", renderer->m_SSAOEnabled ? "enabled" : "disabled");
+        }
+
+        if (DrawToggleButton("Show Skybox", &renderer->m_ShowSkybox,
+                            "Toggle skybox rendering on/off")) {
+            EE_CORE_INFO("Skybox {}", renderer->m_ShowSkybox ? "enabled" : "disabled");
         }
         
         // SSAO Parameters (shown when SSAO is enabled)
