@@ -328,26 +328,6 @@ void GraphicsDebugGUI::DrawPostProcessingControls()
 
         ImGui::Separator();
 
-        // Motion Blur Toggle
-        if (DrawToggleButton("Motion Blur", &renderer->m_MotionBlurEnabled,
-                            "Enable motion blur based on camera and object movement")) {
-            EE_CORE_INFO("Motion blur {}", renderer->m_MotionBlurEnabled ? "enabled" : "disabled");
-        }
-
-        // Motion Blur Controls
-        if (renderer->m_MotionBlurEnabled && ImGui::TreeNode("Motion Blur Settings"))
-        {
-            DrawFloatSlider("Blur Strength", &renderer->m_MotionBlurStrength, 0.0f, 3.0f,
-                           "Intensity of motion blur effect");
-
-            if (ImGui::SliderInt("Sample Count", &renderer->m_MotionBlurSamples, 2, 32)) {
-                EE_CORE_INFO("Motion blur samples changed to {}", renderer->m_MotionBlurSamples);
-            }
-            DrawTooltip("Number of samples for motion blur (higher = smoother blur but slower)");
-
-            ImGui::TreePop();
-        }
-
         ImGui::Unindent(10.0f);
     }
 }

@@ -288,7 +288,8 @@ void Renderer::Init(const int& screenWidth, const int& screenHeight)
 	m_BloomShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/bloom_vertex.glsl", "../Resources/Shaders/bloom_fragment.glsl");
 	m_PostProcessShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/postprocess_vertex.glsl", "../Resources/Shaders/postprocess_fragment.glsl");
 	m_AAShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/FXAA_vertex.glsl", "../Resources/Shaders/FXAA_fragment.glsl");
-	m_MotionBlurShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/motionblur_vertex.glsl", "../Resources/Shaders/motionblur_fragment.glsl");
+	// m_MotionBlurShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/motionblur_vertex.glsl", "../Resources/Shaders/motionblur_fragment.glsl");
+	// m_MotionBlurMaskShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/motionblur_mask_vertex.glsl", "../Resources/Shaders/motionblur_mask_fragment.glsl");
 	m_ProbeBakeComputeShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/gi_probe_bake_compute.glsl");
 	m_ProbeVoxelizeComputeShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/gi_probe_voxelize_compute.glsl");
 	m_ProbeLightInjectComputeShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/gi_probe_light_inject_compute.glsl");
@@ -830,7 +831,7 @@ void Renderer::CreateGBuffer(const int& width, const int& height)
  */
 void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 {
-	PostProcessBuffer pPBuffer, bEBuffer, bBBuffer1, bBBuffer2, AABuffer, MBBuffer;
+	PostProcessBuffer pPBuffer, bEBuffer, bBBuffer1, bBBuffer2, AABuffer, MBBuffer, MBMaskBuffer;
 
 
 	// If an  buffer already exists, delete its OpenGL resources before creating a new one.
@@ -846,6 +847,11 @@ void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 		glDeleteTextures(1, &m_BloomBlurBuffer2->ColorTexture);
 		glDeleteFramebuffers(1, &m_MotionBlurBuffer->FBO);
 		glDeleteTextures(1, &m_MotionBlurBuffer->ColorTexture);
+		if (m_MotionBlurMaskBuffer)
+		{
+			glDeleteFramebuffers(1, &m_MotionBlurMaskBuffer->FBO);
+			glDeleteTextures(1, &m_MotionBlurMaskBuffer->ColorTexture);
+		}
 	}
 
 	// Create main post-process buffer with depth attachment for skybox rendering
@@ -945,6 +951,29 @@ void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, MBBuffer.ColorTexture, 0);
 	glCheckError();
 
+	// Create motion blur mask buffer at full resolution (R8)
+	glGenFramebuffers(1, &MBMaskBuffer.FBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, MBMaskBuffer.FBO);
+	glGenTextures(1, &MBMaskBuffer.ColorTexture);
+	glBindTexture(GL_TEXTURE_2D, MBMaskBuffer.ColorTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, width, height, 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, MBMaskBuffer.ColorTexture, 0);
+
+	// Explicitly specify draw buffer for mask FBO
+	GLenum maskDrawBuffers[1] = { GL_COLOR_ATTACHMENT0 };
+	glDrawBuffers(1, maskDrawBuffers);
+	glCheckError();
+
+	GLenum maskStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if (maskStatus != GL_FRAMEBUFFER_COMPLETE)
+	{
+		EE_CORE_ERROR("ERROR: Motion blur mask framebuffer not complete! Status: {0}", maskStatus);
+	}
+
 	//
 
 	// Making sure dimensions are non-zero
@@ -1013,6 +1042,9 @@ void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 	MBBuffer.width = width;
 	MBBuffer.height = height;
 	m_MotionBlurBuffer = std::make_shared<PostProcessBuffer>(MBBuffer);
+	MBMaskBuffer.width = width;
+	MBMaskBuffer.height = height;
+	m_MotionBlurMaskBuffer = std::make_shared<PostProcessBuffer>(MBMaskBuffer);
 
 	// Attach G-Buffer's depth texture to PostProcess FBO for shared depth testing
 	// This must happen AFTER PostProcess buffer is created and AFTER G-Buffer exists
@@ -1031,6 +1063,21 @@ void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 		else
 		{
 			EE_CORE_INFO("Successfully attached G-Buffer depth texture to PostProcess FBO");
+		}
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	}
+
+	if (m_MotionBlurMaskBuffer && m_GBuffer)
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, m_MotionBlurMaskBuffer->FBO);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_GBuffer->DepthTexture, 0);
+
+		GLenum maskDepthStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+		if (maskDepthStatus != GL_FRAMEBUFFER_COMPLETE)
+		{
+			EE_CORE_ERROR("ERROR: Motion blur mask framebuffer not complete after depth attachment!");
+			EE_CORE_ERROR("Status: {0}, G-Buffer DepthTexture: {1}, Mask FBO: {2}",
+				maskDepthStatus, m_GBuffer->DepthTexture, m_MotionBlurMaskBuffer->FBO);
 		}
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
@@ -3489,68 +3536,7 @@ void Renderer::RenderPostProcessPass(const Mtx44& view, const Mtx44& projection)
 
 	Draw(m_QuadMesh.vertex_array, m_QuadMesh.index_buffer);
 
-	// Motion blur pass: Apply motion blur between post-processing and FXAA
-	if (m_MotionBlurEnabled && m_MotionBlurShader && m_MotionBlurBuffer)
-	{
-		glBindFramebuffer(GL_FRAMEBUFFER, m_MotionBlurBuffer->FBO);
-		glViewport(0, 0, m_MotionBlurBuffer->width, m_MotionBlurBuffer->height);
-		glClear(GL_COLOR_BUFFER_BIT);
-
-		m_MotionBlurShader->Bind();
-
-		// Bind the post-processed color texture as input
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, m_AntiAliasingBuffer->ColorTexture);
-		m_MotionBlurShader->SetUniform1i("u_ColorTexture", 0);
-
-		// Pass bindless depth texture handle
-		GLint locDepthMB = glGetUniformLocation(m_MotionBlurShader->GetRendererID(), "u_DepthHandle");
-		if (locDepthMB != -1 && m_GBuffer)
-		{
-			glUniform2ui(locDepthMB, static_cast<GLuint>(m_GBuffer->HandleDepthTexture),
-				static_cast<GLuint>(m_GBuffer->HandleDepthTexture >> 32));
-		}
-
-		// Pass bindless GBuffer3 texture handle for motion blur flag
-		GLint locGBuffer3MB = glGetUniformLocation(m_MotionBlurShader->GetRendererID(), "u_GBuffer3Handle");
-		if (locGBuffer3MB != -1 && m_GBuffer)
-		{
-			glUniform2ui(locGBuffer3MB, static_cast<GLuint>(m_GBuffer->HandlePackedTexture3),
-				static_cast<GLuint>(m_GBuffer->HandlePackedTexture3 >> 32));
-		}
-
-		// Convert view and projection matrices to glm
-		glmView = glm::mat4(
-			view.m00, view.m01, view.m02, view.m03,
-			view.m10, view.m11, view.m12, view.m13,
-			view.m20, view.m21, view.m22, view.m23,
-			view.m30, view.m31, view.m32, view.m33
-		);
-		glmProjection = glm::mat4(
-			projection.m00, projection.m01, projection.m02, projection.m03,
-			projection.m10, projection.m11, projection.m12, projection.m13,
-			projection.m20, projection.m21, projection.m22, projection.m23,
-			projection.m30, projection.m31, projection.m32, projection.m33
-		);
-
-		// Calculate current view-projection matrix
-		glm::mat4 currentViewProjection = glmProjection * glmView;
-		glm::mat4 invViewProjection = glm::inverse(currentViewProjection);
-
-		// Set motion blur uniforms
-		m_MotionBlurShader->SetUniformMatrix4fv("u_CurrentViewProjection", currentViewProjection);
-		m_MotionBlurShader->SetUniformMatrix4fv("u_PreviousViewProjection", m_PreviousViewProjectionMatrix);
-		m_MotionBlurShader->SetUniformMatrix4fv("u_InvViewProjection", invViewProjection);
-		m_MotionBlurShader->SetUniform1f("u_MotionBlurStrength", m_MotionBlurStrength);
-		m_MotionBlurShader->SetUniform1i("u_NumSamples", m_MotionBlurSamples);
-		m_MotionBlurShader->SetUniform1i("u_FirstFrame", m_FirstFrame ? 1 : 0);
-
-		Draw(m_QuadMesh.vertex_array, m_QuadMesh.index_buffer);
-
-		// Update previous frame view-projection matrix for next frame
-		m_PreviousViewProjectionMatrix = currentViewProjection;
-		m_FirstFrame = false;
-	}
+	// Motion blur pass removed (disabled).
 
 	// Final pass: FXAA
 #if defined(EE_EDITOR)
@@ -3564,15 +3550,8 @@ void Renderer::RenderPostProcessPass(const Mtx44& view, const Mtx44& projection)
 
 	m_AAShader->Bind();
 	glActiveTexture(GL_TEXTURE0);
-	// Use motion blur output if enabled, otherwise use anti-aliasing buffer
-	if (m_MotionBlurEnabled && m_MotionBlurBuffer)
-	{
-		glBindTexture(GL_TEXTURE_2D, m_MotionBlurBuffer->ColorTexture);
-	}
-	else
-	{
-		glBindTexture(GL_TEXTURE_2D, m_AntiAliasingBuffer->ColorTexture);
-	}
+	// Motion blur output disabled; always use anti-aliasing buffer
+	glBindTexture(GL_TEXTURE_2D, m_AntiAliasingBuffer->ColorTexture);
 	m_AAShader->SetUniform1i("u_LightingTexture", 0);
 
 	// Set FXAA parameters
@@ -3665,6 +3644,9 @@ void Renderer::RenderDeferredPipeline(const Mtx44& view, const Mtx44& projection
 	// FORWARD PASS - render all custom shaders (opaque + transparent) and transparent standard
 	// This handles: opaque custom shaders, transparent custom shaders, and transparent standard
 	RenderForwardPass(view, projection);
+
+	// Render camera-attached mask for forward-rendered objects (motion blur)
+	// RenderMotionBlurMask(view, projection);
 
 #if defined(EE_EDITOR)
 	if (m_PostProcessBuffer && ECS::GetInstance().GetSystem<Physics>()->wireframe) {
@@ -3933,6 +3915,38 @@ void Renderer::CleanupPostProcessBuffer()
 			m_AntiAliasingBuffer->ColorTexture = 0;
 		}
 		m_AntiAliasingBuffer.reset();
+	}
+
+	// Clean up motion blur buffer
+	if (m_MotionBlurBuffer)
+	{
+		if (m_MotionBlurBuffer->FBO != 0)
+		{
+			glDeleteFramebuffers(1, &m_MotionBlurBuffer->FBO);
+			m_MotionBlurBuffer->FBO = 0;
+		}
+		if (m_MotionBlurBuffer->ColorTexture != 0)
+		{
+			glDeleteTextures(1, &m_MotionBlurBuffer->ColorTexture);
+			m_MotionBlurBuffer->ColorTexture = 0;
+		}
+		m_MotionBlurBuffer.reset();
+	}
+
+	// Clean up motion blur mask buffer
+	if (m_MotionBlurMaskBuffer)
+	{
+		if (m_MotionBlurMaskBuffer->FBO != 0)
+		{
+			glDeleteFramebuffers(1, &m_MotionBlurMaskBuffer->FBO);
+			m_MotionBlurMaskBuffer->FBO = 0;
+		}
+		if (m_MotionBlurMaskBuffer->ColorTexture != 0)
+		{
+			glDeleteTextures(1, &m_MotionBlurMaskBuffer->ColorTexture);
+			m_MotionBlurMaskBuffer->ColorTexture = 0;
+		}
+		m_MotionBlurMaskBuffer.reset();
 	}
 
 }
@@ -6345,6 +6359,160 @@ void Renderer::RenderForwardPass(const Mtx44& view, const Mtx44& projection)
 	glDisable(GL_BLEND);
 
 	GPUProfiler::EndEvent();
+}
+
+void Renderer::RenderMotionBlurMask(const Mtx44& view, const Mtx44& projection)
+{
+	if (!m_MotionBlurMaskBuffer)
+	{
+		return;
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, m_MotionBlurMaskBuffer->FBO);
+	glViewport(0, 0, m_MotionBlurMaskBuffer->width, m_MotionBlurMaskBuffer->height);
+
+	glDisable(GL_BLEND);
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LEQUAL);
+	glDepthMask(GL_FALSE);
+	glDisable(GL_CULL_FACE);
+
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	if (!m_MotionBlurEnabled || !m_MotionBlurMaskShader || !m_MotionBlurMaskShader->IsValid())
+	{
+		glDepthMask(GL_TRUE);
+		glEnable(GL_CULL_FACE);
+		return;
+	}
+
+	const bool hasForwardContent =
+		!m_ForwardTransparentDefaultStandardItems.empty() ||
+		!m_ForwardTransparentDefaultSkinnedItems.empty() ||
+		(m_ForwardOpaqueCustomStandardUploadedCount > 0) ||
+		(m_ForwardOpaqueCustomSkinnedUploadedCount > 0) ||
+		(m_ForwardTransparentCustomStandardUploadedCount > 0) ||
+		(m_ForwardTransparentCustomSkinnedUploadedCount > 0);
+
+	if (!hasForwardContent)
+	{
+		glDepthMask(GL_TRUE);
+		glEnable(GL_CULL_FACE);
+		return;
+	}
+
+	m_MotionBlurMaskShader->Bind();
+	m_MotionBlurMaskShader->SetUniformMatrix4fv("view", &view.m2[0][0]);
+	m_MotionBlurMaskShader->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
+
+	// Standard forward transparent (non-skinned)
+	if (!m_ForwardTransparentDefaultStandardItems.empty() && m_MeshManager.GetStandardVAO() != 0)
+	{
+		m_MotionBlurMaskShader->SetUniform1ui("baseDrawID", 0);
+		glBindVertexArray(m_MeshManager.GetStandardVAO());
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_MeshManager.m_ForwardStandardDrawInfoBuffer.GetBufferID());
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_MeshManager.m_ForwardStandardDrawCommandBuffer.GetBufferID());
+		glMultiDrawElementsIndirect(
+			GL_TRIANGLES,
+			GL_UNSIGNED_INT,
+			nullptr,
+			static_cast<GLsizei>(m_ForwardTransparentDefaultStandardItems.size()),
+			0
+		);
+	}
+
+	// Standard forward transparent (skinned)
+	if (!m_ForwardTransparentDefaultSkinnedItems.empty() && m_MeshManager.GetSkinnedVAO() != 0)
+	{
+		m_MotionBlurMaskShader->SetUniform1ui("baseDrawID", 0);
+		glBindVertexArray(m_MeshManager.GetSkinnedVAO());
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_MeshManager.m_ForwardSkinnedDrawInfoBuffer.GetBufferID());
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_MeshManager.m_ForwardSkinnedDrawCommandBuffer.GetBufferID());
+		glMultiDrawElementsIndirect(
+			GL_TRIANGLES,
+			GL_UNSIGNED_INT,
+			nullptr,
+			static_cast<GLsizei>(m_ForwardTransparentDefaultSkinnedItems.size()),
+			0
+		);
+	}
+
+	// Custom opaque (standard)
+	if (m_ForwardOpaqueCustomStandardUploadedCount > 0 && m_MeshManager.GetStandardVAO() != 0 &&
+		m_ForwardOpaqueCustomStandardInfoBuffer != 0 && m_ForwardOpaqueCustomStandardCmdBuffer != 0)
+	{
+		m_MotionBlurMaskShader->SetUniform1ui("baseDrawID", 0);
+		glBindVertexArray(m_MeshManager.GetStandardVAO());
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_ForwardOpaqueCustomStandardInfoBuffer);
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardOpaqueCustomStandardCmdBuffer);
+		glMultiDrawElementsIndirect(
+			GL_TRIANGLES,
+			GL_UNSIGNED_INT,
+			nullptr,
+			static_cast<GLsizei>(m_ForwardOpaqueCustomStandardUploadedCount),
+			0
+		);
+	}
+
+	// Custom opaque (skinned)
+	if (m_ForwardOpaqueCustomSkinnedUploadedCount > 0 && m_MeshManager.GetSkinnedVAO() != 0 &&
+		m_ForwardOpaqueCustomSkinnedInfoBuffer != 0 && m_ForwardOpaqueCustomSkinnedCmdBuffer != 0)
+	{
+		m_MotionBlurMaskShader->SetUniform1ui("baseDrawID", 0);
+		glBindVertexArray(m_MeshManager.GetSkinnedVAO());
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_ForwardOpaqueCustomSkinnedInfoBuffer);
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardOpaqueCustomSkinnedCmdBuffer);
+		glMultiDrawElementsIndirect(
+			GL_TRIANGLES,
+			GL_UNSIGNED_INT,
+			nullptr,
+			static_cast<GLsizei>(m_ForwardOpaqueCustomSkinnedUploadedCount),
+			0
+		);
+	}
+
+	// Custom transparent (standard)
+	if (m_ForwardTransparentCustomStandardUploadedCount > 0 && m_MeshManager.GetStandardVAO() != 0 &&
+		m_ForwardTransparentCustomStandardInfoBuffer != 0 && m_ForwardTransparentCustomStandardCmdBuffer != 0)
+	{
+		m_MotionBlurMaskShader->SetUniform1ui("baseDrawID", 0);
+		glBindVertexArray(m_MeshManager.GetStandardVAO());
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_ForwardTransparentCustomStandardInfoBuffer);
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardTransparentCustomStandardCmdBuffer);
+		glMultiDrawElementsIndirect(
+			GL_TRIANGLES,
+			GL_UNSIGNED_INT,
+			nullptr,
+			static_cast<GLsizei>(m_ForwardTransparentCustomStandardUploadedCount),
+			0
+		);
+	}
+
+	// Custom transparent (skinned)
+	if (m_ForwardTransparentCustomSkinnedUploadedCount > 0 && m_MeshManager.GetSkinnedVAO() != 0 &&
+		m_ForwardTransparentCustomSkinnedInfoBuffer != 0 && m_ForwardTransparentCustomSkinnedCmdBuffer != 0)
+	{
+		m_MotionBlurMaskShader->SetUniform1ui("baseDrawID", 0);
+		glBindVertexArray(m_MeshManager.GetSkinnedVAO());
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_ForwardTransparentCustomSkinnedInfoBuffer);
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardTransparentCustomSkinnedCmdBuffer);
+		glMultiDrawElementsIndirect(
+			GL_TRIANGLES,
+			GL_UNSIGNED_INT,
+			nullptr,
+			static_cast<GLsizei>(m_ForwardTransparentCustomSkinnedUploadedCount),
+			0
+		);
+	}
+
+	glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
+	glBindVertexArray(0);
+	m_MotionBlurMaskShader->Unbind();
+
+	glDepthMask(GL_TRUE);
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
 }
 
 #pragma region Shadow Mapping

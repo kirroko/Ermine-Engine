@@ -289,7 +289,7 @@ namespace Ermine::graphics
         float m_SpotlightRayFalloff = 2.0f;
 
         // Motion blur parameters
-        bool m_MotionBlurEnabled = true;
+        bool m_MotionBlurEnabled = false;
         float m_MotionBlurStrength = 1.0f;
         int m_MotionBlurSamples = 8;
 
@@ -989,6 +989,13 @@ namespace Ermine::graphics
         void RenderForwardPass(const Mtx44& view, const Mtx44& projection);
 
         /**
+         * @brief Render camera-attached mask for forward-rendered objects (used by motion blur)
+         * @param view The view matrix
+         * @param projection The projection matrix
+         */
+        void RenderMotionBlurMask(const Mtx44& view, const Mtx44& projection);
+
+        /**
          * @brief Sort opaque custom shader objects by shader pointer (for batching)
          * Opaque objects don't need distance sorting, only shader batching
          */
@@ -1276,10 +1283,12 @@ namespace Ermine::graphics
         std::shared_ptr<PostProcessBuffer> m_BloomBlurBuffer2;
 		std::shared_ptr<PostProcessBuffer> m_AntiAliasingBuffer;
         std::shared_ptr<PostProcessBuffer> m_MotionBlurBuffer;
+        std::shared_ptr<PostProcessBuffer> m_MotionBlurMaskBuffer;
         std::shared_ptr<Shader> m_BloomShader = 0; // Shader for bloom effect
         std::shared_ptr<Shader> m_PostProcessShader = 0; // Shader for post-processing effects
 		std::shared_ptr<Shader> m_AAShader = 0; // Shader for anti-aliasing
         std::shared_ptr<Shader> m_MotionBlurShader = 0; // Shader for motion blur effect
+        std::shared_ptr<Shader> m_MotionBlurMaskShader = 0; // Shader for motion blur mask rendering
 
         // Skybox
         Skybox* m_skybox = nullptr;
