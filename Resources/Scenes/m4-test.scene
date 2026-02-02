@@ -263,6 +263,11 @@
         "IDComponent": {
           "guid": "618b3fbaca931742b5b675ff1871c7e6"
         },
+        "ObjectMetaData": {
+          "name": "GlobalAudio",
+          "tag": "Audio",
+          "selfActive": false
+        },
         "GlobalAudioComponent": {
           "masterVolume": 1.0,
           "musicVolume": 0.0860000029206276,
@@ -325,11 +330,6 @@
               "volume": 1.0
             }
           ]
-        },
-        "ObjectMetaData": {
-          "name": "GlobalAudio",
-          "tag": "Audio",
-          "selfActive": false
         },
         "HierarchyComponent": {
           "depth": 0
@@ -468,13 +468,13 @@
               "class": "PlayerController2",
               "enabled": true,
               "fields": {
-                "mouseHorSens": {
-                  "t": 0,
-                  "v": 0.30000001192092898
-                },
                 "jumpHeight": {
                   "t": 0,
                   "v": 2.0
+                },
+                "mouseHorSens": {
+                  "t": 0,
+                  "v": 0.30000001192092898
                 },
                 "mouseVertSens": {
                   "t": 0,
@@ -484,13 +484,13 @@
                   "t": 0,
                   "v": 5.0
                 },
-                "jumpspeed": {
-                  "t": 0,
-                  "v": 5.0
-                },
                 "camDefaultY": {
                   "t": 0,
                   "v": 4.5
+                },
+                "jumpspeed": {
+                  "t": 0,
+                  "v": 5.0
                 },
                 "crouchLerpSpeed": {
                   "t": 0,
@@ -502,11 +502,11 @@
               "class": "OrbTeleport",
               "enabled": true,
               "fields": {
-                "recallHealAmt": {
+                "damage": {
                   "t": 0,
                   "v": 10.0
                 },
-                "damage": {
+                "recallHealAmt": {
                   "t": 0,
                   "v": 10.0
                 }
@@ -9125,7 +9125,16 @@
             {
               "class": "DamagePlayer",
               "enabled": true,
-              "fields": {}
+              "fields": {
+                "timer": {
+                  "t": 0,
+                  "v": 1.0
+                },
+                "damage": {
+                  "t": 0,
+                  "v": 10.0
+                }
+              }
             }
           ]
         }
@@ -27724,7 +27733,7 @@
           "position": [
             12.362046241760254,
             -2.9875807762145998,
-            -55.467437744140628
+            -60.439090728759769
           ],
           "rotation": [
             0.0,
@@ -27733,9 +27742,9 @@
             0.7071067094802856
           ],
           "scale": [
-            0.027393735945224763,
+            0.03999980911612511,
             0.04648089408874512,
-            0.030723804607987405
+            0.03072354756295681
           ]
         },
         "ObjectMetaData": {
@@ -27993,7 +28002,7 @@
             0.7071067094802856
           ],
           "scale": [
-            0.027392379939556123,
+            0.03999999910593033,
             0.04648089408874512,
             0.030722448602318765
           ]
@@ -33249,7 +33258,7 @@
           "selfActive": true
         },
         "ModelComponent": {
-          "model": "ART1_David.fbx",
+          "model": "",
           "isSkinFile": false
         },
         "HierarchyComponent": {
@@ -36549,7 +36558,7 @@
           "selfActive": true
         },
         "ModelComponent": {
-          "model": "ART1_Guard.fbx",
+          "model": "",
           "isSkinFile": false
         },
         "HierarchyComponent": {
@@ -40200,7 +40209,7 @@
       }
     },
     {
-      "id": 636,
+      "id": 634,
       "components": {
         "IDComponent": {
           "guid": "13a1d5c98a3c8c4a964ffcf7319ae0e4"
@@ -40239,7 +40248,7 @@
       }
     },
     {
-      "id": 637,
+      "id": 635,
       "components": {
         "IDComponent": {
           "guid": "8e9fdb94494c804f80f9c102deb7d52e"
@@ -40289,7 +40298,7 @@
       }
     },
     {
-      "id": 638,
+      "id": 636,
       "components": {
         "IDComponent": {
           "guid": "e3726f4e3c46cb4b81adb99294957b8e"
@@ -40339,7 +40348,7 @@
       }
     },
     {
-      "id": 639,
+      "id": 637,
       "components": {
         "IDComponent": {
           "guid": "9090c1e672feb44d933ba040f23ee437"
@@ -40378,7 +40387,7 @@
       }
     },
     {
-      "id": 640,
+      "id": 638,
       "components": {
         "IDComponent": {
           "guid": "98bb7eb638ce3f48a5883958d33f2d16"
@@ -40428,7 +40437,7 @@
       }
     },
     {
-      "id": 641,
+      "id": 639,
       "components": {
         "IDComponent": {
           "guid": "fe8341fdfb40104f8a2a64f03494aaec"
@@ -40478,7 +40487,7 @@
       }
     },
     {
-      "id": 642,
+      "id": 640,
       "components": {
         "IDComponent": {
           "guid": "f4a8b382b3a83b45b302d0cba3549bc4"
@@ -40527,7 +40536,7 @@
       }
     },
     {
-      "id": 643,
+      "id": 641,
       "components": {
         "IDComponent": {
           "guid": "ba83d8eeb6d6ef44bba4f9a5f5dbb41c"
@@ -40566,7 +40575,7 @@
       }
     },
     {
-      "id": 644,
+      "id": 642,
       "components": {
         "IDComponent": {
           "guid": "1916f68c5bf9574fb87de3b28ee5eaef"
@@ -40616,7 +40625,7 @@
       }
     },
     {
-      "id": 645,
+      "id": 643,
       "components": {
         "IDComponent": {
           "guid": "6edd6862a6cec84db2a7852fd0062133"
@@ -40666,7 +40675,7 @@
       }
     },
     {
-      "id": 646,
+      "id": 644,
       "components": {
         "IDComponent": {
           "guid": "abf2e4324acb694ca7438f87c218aa4a"
@@ -40705,7 +40714,7 @@
       }
     },
     {
-      "id": 647,
+      "id": 645,
       "components": {
         "IDComponent": {
           "guid": "540fd2b76584e04f9cbe958a2cff43d4"
@@ -40755,7 +40764,7 @@
       }
     },
     {
-      "id": 648,
+      "id": 646,
       "components": {
         "IDComponent": {
           "guid": "0b8b0423d544ed44808856de06e94928"
@@ -40805,7 +40814,7 @@
       }
     },
     {
-      "id": 649,
+      "id": 647,
       "components": {
         "IDComponent": {
           "guid": "da44783eccff0e4aa2779a674903d28a"
@@ -40844,7 +40853,7 @@
       }
     },
     {
-      "id": 650,
+      "id": 648,
       "components": {
         "IDComponent": {
           "guid": "a2bdbcbcb42675459ff09bb173898360"
@@ -40894,7 +40903,7 @@
       }
     },
     {
-      "id": 651,
+      "id": 649,
       "components": {
         "IDComponent": {
           "guid": "bec21c799c91064bab1f1be4d415c1b6"
@@ -40944,7 +40953,7 @@
       }
     },
     {
-      "id": 652,
+      "id": 650,
       "components": {
         "IDComponent": {
           "guid": "f6aaf3765c18b1409bf27a979c161dc4"
@@ -40983,7 +40992,7 @@
       }
     },
     {
-      "id": 653,
+      "id": 651,
       "components": {
         "IDComponent": {
           "guid": "b92719e88c507e419f5b636f719ac977"
@@ -41033,7 +41042,7 @@
       }
     },
     {
-      "id": 654,
+      "id": 652,
       "components": {
         "IDComponent": {
           "guid": "ffb172c3855b1e4b909c741776f71798"
@@ -41083,7 +41092,7 @@
       }
     },
     {
-      "id": 655,
+      "id": 653,
       "components": {
         "IDComponent": {
           "guid": "ea2d987218924d4ea79b773d5c53785e"
@@ -41122,7 +41131,7 @@
       }
     },
     {
-      "id": 656,
+      "id": 654,
       "components": {
         "IDComponent": {
           "guid": "b6a39f1183b8c144b7a3a13411fe818c"
@@ -41172,7 +41181,7 @@
       }
     },
     {
-      "id": 657,
+      "id": 655,
       "components": {
         "IDComponent": {
           "guid": "f56c5969ac77454fa19e16dc52498e30"
@@ -41222,7 +41231,7 @@
       }
     },
     {
-      "id": 658,
+      "id": 656,
       "components": {
         "IDComponent": {
           "guid": "89d87d175f9a3a478195abe012763500"
@@ -41271,7 +41280,7 @@
       }
     },
     {
-      "id": 659,
+      "id": 657,
       "components": {
         "IDComponent": {
           "guid": "b225af6031e0794ea8e08f186157230c"
@@ -41320,7 +41329,7 @@
       }
     },
     {
-      "id": 660,
+      "id": 658,
       "components": {
         "IDComponent": {
           "guid": "fab3cbadd933fe408c9cd6e9c17e718d"
@@ -41359,7 +41368,7 @@
       }
     },
     {
-      "id": 661,
+      "id": 659,
       "components": {
         "IDComponent": {
           "guid": "933e6586ad0ce3428049467aaaca1de5"
@@ -41409,7 +41418,7 @@
       }
     },
     {
-      "id": 662,
+      "id": 660,
       "components": {
         "IDComponent": {
           "guid": "808206e8a6bd504b932f8ba416bd2d77"
@@ -41448,7 +41457,7 @@
       }
     },
     {
-      "id": 663,
+      "id": 661,
       "components": {
         "IDComponent": {
           "guid": "0c899b6f39cd664383f9cd91beda9a2c"
@@ -41509,7 +41518,7 @@
       }
     },
     {
-      "id": 664,
+      "id": 662,
       "components": {
         "IDComponent": {
           "guid": "66fd1600c33e454886def06977d75d15"
@@ -41548,7 +41557,7 @@
       }
     },
     {
-      "id": 665,
+      "id": 663,
       "components": {
         "IDComponent": {
           "guid": "314f2a3200715f4b8d9f47c2eac20546"
@@ -41609,7 +41618,7 @@
       }
     },
     {
-      "id": 666,
+      "id": 664,
       "components": {
         "IDComponent": {
           "guid": "c0ba5a7d90e8864ab9c9d4d3f2904bd6"
@@ -41648,7 +41657,7 @@
       }
     },
     {
-      "id": 667,
+      "id": 665,
       "components": {
         "IDComponent": {
           "guid": "a7d0ed16a425114eb957630abbe1e289"
@@ -41709,7 +41718,7 @@
       }
     },
     {
-      "id": 668,
+      "id": 666,
       "components": {
         "IDComponent": {
           "guid": "653c1a6be7ddfe498eae072b5ba9c7c7"
@@ -41748,7 +41757,7 @@
       }
     },
     {
-      "id": 669,
+      "id": 667,
       "components": {
         "IDComponent": {
           "guid": "d53c2722b40a8749a16b2ecb5360e449"
@@ -41798,7 +41807,7 @@
       }
     },
     {
-      "id": 670,
+      "id": 668,
       "components": {
         "IDComponent": {
           "guid": "181fe11e3c51c24599e84535721281e1"
@@ -41848,7 +41857,7 @@
       }
     },
     {
-      "id": 671,
+      "id": 669,
       "components": {
         "IDComponent": {
           "guid": "ea6a1c0781965e479d86a74d86bd00d4"
@@ -41887,7 +41896,7 @@
       }
     },
     {
-      "id": 672,
+      "id": 670,
       "components": {
         "IDComponent": {
           "guid": "3031114de684d341a89ef028432bd2ab"
@@ -41937,7 +41946,7 @@
       }
     },
     {
-      "id": 673,
+      "id": 671,
       "components": {
         "IDComponent": {
           "guid": "bc22c887ec6a6541aba73aa4ec7f99f0"
@@ -41976,7 +41985,7 @@
       }
     },
     {
-      "id": 674,
+      "id": 672,
       "components": {
         "IDComponent": {
           "guid": "436499bd068a29498d985d7cc140cfed"
@@ -42026,7 +42035,7 @@
       }
     },
     {
-      "id": 675,
+      "id": 673,
       "components": {
         "IDComponent": {
           "guid": "7473f7d2a011db4aae0d3aeeeea8ce9c"
@@ -42065,7 +42074,7 @@
       }
     },
     {
-      "id": 676,
+      "id": 674,
       "components": {
         "IDComponent": {
           "guid": "2a8c99e2e819dd45a46189fc80af4e4d"
@@ -42115,7 +42124,7 @@
       }
     },
     {
-      "id": 677,
+      "id": 675,
       "components": {
         "IDComponent": {
           "guid": "1a6042e6328d924f9861ba7f4f95f7a8"
@@ -42154,7 +42163,7 @@
       }
     },
     {
-      "id": 678,
+      "id": 676,
       "components": {
         "IDComponent": {
           "guid": "4caa99855660d94697656a12b62713f4"
@@ -42204,7 +42213,7 @@
       }
     },
     {
-      "id": 679,
+      "id": 677,
       "components": {
         "IDComponent": {
           "guid": "ea949a030cb81a409747e5465efb3466"
@@ -42243,7 +42252,7 @@
       }
     },
     {
-      "id": 680,
+      "id": 678,
       "components": {
         "IDComponent": {
           "guid": "77b4190353476741979a4a20128d647c"
@@ -42293,7 +42302,7 @@
       }
     },
     {
-      "id": 681,
+      "id": 679,
       "components": {
         "IDComponent": {
           "guid": "106227c02e16f5449a6a53d0f5682006"
@@ -42332,7 +42341,7 @@
       }
     },
     {
-      "id": 682,
+      "id": 680,
       "components": {
         "IDComponent": {
           "guid": "b235d07491e9064190f421039b1f041f"
@@ -42382,7 +42391,7 @@
       }
     },
     {
-      "id": 683,
+      "id": 681,
       "components": {
         "IDComponent": {
           "guid": "392f06b8c4fbe14ca3082adb6aceec42"
@@ -42421,7 +42430,7 @@
       }
     },
     {
-      "id": 684,
+      "id": 682,
       "components": {
         "IDComponent": {
           "guid": "3c37f3d5a4656a4d98dbaa8fdad1e639"
@@ -42482,7 +42491,7 @@
       }
     },
     {
-      "id": 685,
+      "id": 683,
       "components": {
         "IDComponent": {
           "guid": "778a70510cfaef40961766f2daf61d56"
@@ -42521,7 +42530,7 @@
       }
     },
     {
-      "id": 686,
+      "id": 684,
       "components": {
         "IDComponent": {
           "guid": "6773f31412cf9943bd8f4cc95fa1fd50"
@@ -42571,7 +42580,7 @@
       }
     },
     {
-      "id": 687,
+      "id": 685,
       "components": {
         "IDComponent": {
           "guid": "6b1848d3e9c9c043be72d4dc2a793f76"
@@ -42621,7 +42630,7 @@
       }
     },
     {
-      "id": 688,
+      "id": 686,
       "components": {
         "IDComponent": {
           "guid": "9113eb49b36fea4985646c947634b90f"
@@ -42660,7 +42669,7 @@
       }
     },
     {
-      "id": 689,
+      "id": 687,
       "components": {
         "IDComponent": {
           "guid": "d4056fa6dda3ce40975a7c6a96a1319a"
@@ -42710,7 +42719,7 @@
       }
     },
     {
-      "id": 690,
+      "id": 688,
       "components": {
         "IDComponent": {
           "guid": "d677238ab54f924f976a7f766e5dc025"
@@ -42749,7 +42758,7 @@
       }
     },
     {
-      "id": 691,
+      "id": 689,
       "components": {
         "IDComponent": {
           "guid": "aae6a02204f61e4eb26d1a510970c951"
@@ -42799,7 +42808,7 @@
       }
     },
     {
-      "id": 692,
+      "id": 690,
       "components": {
         "IDComponent": {
           "guid": "2e0b0c7827737745a1bc95d9f0fb59b6"
@@ -42865,7 +42874,7 @@
       }
     },
     {
-      "id": 693,
+      "id": 691,
       "components": {
         "IDComponent": {
           "guid": "92210e8902d8e4469051376ac10cca04"
@@ -42926,7 +42935,7 @@
       }
     },
     {
-      "id": 694,
+      "id": 692,
       "components": {
         "IDComponent": {
           "guid": "61513d06fbfa5d47bf2651cabee80a59"
@@ -42992,7 +43001,7 @@
       }
     },
     {
-      "id": 695,
+      "id": 693,
       "components": {
         "IDComponent": {
           "guid": "c2c2a0cf9597a249a590c7b7dcae2f30"
@@ -43053,7 +43062,7 @@
       }
     },
     {
-      "id": 696,
+      "id": 694,
       "components": {
         "IDComponent": {
           "guid": "f9e775b0ea288f46b5c806fc548d9261"
@@ -43119,7 +43128,7 @@
       }
     },
     {
-      "id": 697,
+      "id": 695,
       "components": {
         "IDComponent": {
           "guid": "1e6254b3f4422b4380f84ef4d4389cba"
@@ -43180,7 +43189,7 @@
       }
     },
     {
-      "id": 698,
+      "id": 696,
       "components": {
         "IDComponent": {
           "guid": "4dbdb28e6980f0418ae673b9693b2fcd"
@@ -43246,7 +43255,7 @@
       }
     },
     {
-      "id": 699,
+      "id": 697,
       "components": {
         "IDComponent": {
           "guid": "9c2067aa62a3084a8b7d5009fc3c64b5"
@@ -43307,7 +43316,7 @@
       }
     },
     {
-      "id": 700,
+      "id": 698,
       "components": {
         "IDComponent": {
           "guid": "7c67550575e50f4d82108e2d7a18aaf0"
@@ -43373,7 +43382,7 @@
       }
     },
     {
-      "id": 701,
+      "id": 699,
       "components": {
         "IDComponent": {
           "guid": "de2c536d59ce7c4aa3a4d30c335fafd1"
@@ -43434,7 +43443,7 @@
       }
     },
     {
-      "id": 702,
+      "id": 700,
       "components": {
         "IDComponent": {
           "guid": "16880c763fe95c4a84ff4c5351f2cb09"
@@ -43500,7 +43509,7 @@
       }
     },
     {
-      "id": 703,
+      "id": 701,
       "components": {
         "IDComponent": {
           "guid": "ccdf5981252d244c8c6bf0f4877c98c2"
@@ -43561,7 +43570,7 @@
       }
     },
     {
-      "id": 704,
+      "id": 702,
       "components": {
         "IDComponent": {
           "guid": "6b485d7b0b38e8469df1e0f8adcd1436"
@@ -43627,7 +43636,7 @@
       }
     },
     {
-      "id": 705,
+      "id": 703,
       "components": {
         "IDComponent": {
           "guid": "d22bdd2a9d1f0243a461267cb44d05db"
@@ -43688,7 +43697,7 @@
       }
     },
     {
-      "id": 706,
+      "id": 704,
       "components": {
         "IDComponent": {
           "guid": "6c3ea64d2d151c4ca2d2e02e069f08a9"
@@ -43754,7 +43763,7 @@
       }
     },
     {
-      "id": 707,
+      "id": 705,
       "components": {
         "IDComponent": {
           "guid": "4c3ad52141896440ab5232805d43b40d"
@@ -43815,7 +43824,7 @@
       }
     },
     {
-      "id": 708,
+      "id": 706,
       "components": {
         "IDComponent": {
           "guid": "be24e2359bdea24d9303992198b8b649"
@@ -43881,7 +43890,7 @@
       }
     },
     {
-      "id": 709,
+      "id": 707,
       "components": {
         "IDComponent": {
           "guid": "2440ecea23f2fb45be75057407d1551d"
@@ -43942,7 +43951,7 @@
       }
     },
     {
-      "id": 710,
+      "id": 708,
       "components": {
         "IDComponent": {
           "guid": "35f909f60d51b84e8b9040113dd2bc95"
@@ -44008,7 +44017,7 @@
       }
     },
     {
-      "id": 711,
+      "id": 709,
       "components": {
         "IDComponent": {
           "guid": "2db081e15248e04b892b5cff35ba8fea"
@@ -44069,7 +44078,7 @@
       }
     },
     {
-      "id": 712,
+      "id": 710,
       "components": {
         "IDComponent": {
           "guid": "c8f13d62351c914f9681890c51bfe2b4"
@@ -44135,7 +44144,7 @@
       }
     },
     {
-      "id": 713,
+      "id": 711,
       "components": {
         "IDComponent": {
           "guid": "b5c0fd15880ae048b93b1e36ad77587f"
@@ -44196,7 +44205,7 @@
       }
     },
     {
-      "id": 714,
+      "id": 712,
       "components": {
         "IDComponent": {
           "guid": "587fa3144548da4a9fbabd8610bae5e7"
@@ -44262,7 +44271,7 @@
       }
     },
     {
-      "id": 715,
+      "id": 713,
       "components": {
         "IDComponent": {
           "guid": "74bcea5bd6f1a7428ca68987feee4d7e"
@@ -44323,7 +44332,7 @@
       }
     },
     {
-      "id": 716,
+      "id": 714,
       "components": {
         "IDComponent": {
           "guid": "720e641adb6f5443b794d3a2c45d1aee"
@@ -44389,7 +44398,7 @@
       }
     },
     {
-      "id": 717,
+      "id": 715,
       "components": {
         "IDComponent": {
           "guid": "b936340da9500c4d9a145e51c5447aba"
@@ -44450,7 +44459,7 @@
       }
     },
     {
-      "id": 718,
+      "id": 716,
       "components": {
         "IDComponent": {
           "guid": "7f1178e9bf2ea14eabc96380ad227285"
@@ -44516,7 +44525,7 @@
       }
     },
     {
-      "id": 719,
+      "id": 717,
       "components": {
         "IDComponent": {
           "guid": "a44d130cfa875440b85bfc201d820bd3"
@@ -44577,7 +44586,7 @@
       }
     },
     {
-      "id": 720,
+      "id": 718,
       "components": {
         "IDComponent": {
           "guid": "7787d8b707bc734282acdd11aa5402cf"
@@ -44643,7 +44652,7 @@
       }
     },
     {
-      "id": 721,
+      "id": 719,
       "components": {
         "IDComponent": {
           "guid": "4f56bc4060f11740825d4bf33283459e"
@@ -44704,7 +44713,7 @@
       }
     },
     {
-      "id": 722,
+      "id": 720,
       "components": {
         "IDComponent": {
           "guid": "4f43c2b3df77094ead19ad8c44c9a3c0"
@@ -44770,7 +44779,7 @@
       }
     },
     {
-      "id": 723,
+      "id": 721,
       "components": {
         "IDComponent": {
           "guid": "1560d90c8f1cd54b9052d349aae98e67"
@@ -44831,7 +44840,7 @@
       }
     },
     {
-      "id": 724,
+      "id": 722,
       "components": {
         "IDComponent": {
           "guid": "175b4ac36f53a74381dbf24e8b5420f5"
@@ -44897,7 +44906,7 @@
       }
     },
     {
-      "id": 725,
+      "id": 723,
       "components": {
         "IDComponent": {
           "guid": "3f756d780cd54e4d88511ea4d30cc5a7"
@@ -44958,7 +44967,7 @@
       }
     },
     {
-      "id": 726,
+      "id": 724,
       "components": {
         "IDComponent": {
           "guid": "8d351edb7fc0bc4da53ca953bcdfdff9"
@@ -45024,7 +45033,7 @@
       }
     },
     {
-      "id": 727,
+      "id": 725,
       "components": {
         "IDComponent": {
           "guid": "05427828d79c7c408df1155856936ac0"
@@ -45085,7 +45094,7 @@
       }
     },
     {
-      "id": 728,
+      "id": 726,
       "components": {
         "IDComponent": {
           "guid": "c60615bc653ae14291ba8df64daf61c3"
@@ -45151,7 +45160,7 @@
       }
     },
     {
-      "id": 729,
+      "id": 727,
       "components": {
         "IDComponent": {
           "guid": "03205fc9301da245bee2cfdf944d6832"
@@ -45212,7 +45221,7 @@
       }
     },
     {
-      "id": 730,
+      "id": 728,
       "components": {
         "IDComponent": {
           "guid": "31ed68f578f52b428aaf792c8cae955e"
@@ -45278,7 +45287,7 @@
       }
     },
     {
-      "id": 731,
+      "id": 729,
       "components": {
         "IDComponent": {
           "guid": "f912b46081fda149a9876663710e1a48"
@@ -45339,7 +45348,7 @@
       }
     },
     {
-      "id": 732,
+      "id": 730,
       "components": {
         "IDComponent": {
           "guid": "cfb5558c7857cc47b07a457826feb28f"
@@ -45405,7 +45414,7 @@
       }
     },
     {
-      "id": 733,
+      "id": 731,
       "components": {
         "IDComponent": {
           "guid": "d2f50476423ba94c95c199cc4009abc6"
@@ -45466,7 +45475,7 @@
       }
     },
     {
-      "id": 734,
+      "id": 732,
       "components": {
         "IDComponent": {
           "guid": "3bf209bf35ab16479a2817af306e26f1"
@@ -45532,7 +45541,7 @@
       }
     },
     {
-      "id": 735,
+      "id": 733,
       "components": {
         "IDComponent": {
           "guid": "682cb8693bfb0944b99342eb15122c28"
@@ -45593,7 +45602,7 @@
       }
     },
     {
-      "id": 736,
+      "id": 734,
       "components": {
         "IDComponent": {
           "guid": "cc6586e0acbee14dbbb737f147bacfae"
@@ -45708,7 +45717,7 @@
       }
     },
     {
-      "id": 737,
+      "id": 735,
       "components": {
         "IDComponent": {
           "guid": "67d6f5dae360e144acdc1a8ca5bdef3c"
@@ -45774,7 +45783,7 @@
       }
     },
     {
-      "id": 738,
+      "id": 736,
       "components": {
         "IDComponent": {
           "guid": "35bb5dffb0da9b468ba206330ea3b095"
@@ -45835,7 +45844,7 @@
       }
     },
     {
-      "id": 739,
+      "id": 737,
       "components": {
         "IDComponent": {
           "guid": "7c35a29db8bfa745ad91d1cad86ff636"
@@ -45901,7 +45910,7 @@
       }
     },
     {
-      "id": 740,
+      "id": 738,
       "components": {
         "IDComponent": {
           "guid": "5f86fd8e01066b4d913403c0a233cfb8"
@@ -45962,7 +45971,7 @@
       }
     },
     {
-      "id": 741,
+      "id": 739,
       "components": {
         "IDComponent": {
           "guid": "37d494a4245b5143a8bb8e4f232d1952"
@@ -46004,11 +46013,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -46019,7 +46028,7 @@
       }
     },
     {
-      "id": 742,
+      "id": 740,
       "components": {
         "IDComponent": {
           "guid": "dd2eefc6cbaba549b0984d92c9d817d8"
@@ -46069,7 +46078,7 @@
       }
     },
     {
-      "id": 743,
+      "id": 741,
       "components": {
         "IDComponent": {
           "guid": "7de09f3ce5885a41986d5e34697b09fd"
@@ -46119,7 +46128,7 @@
       }
     },
     {
-      "id": 744,
+      "id": 742,
       "components": {
         "IDComponent": {
           "guid": "0ef25499a76ee244abc71f6d0d31b8d5"
@@ -46161,11 +46170,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -46176,7 +46185,7 @@
       }
     },
     {
-      "id": 745,
+      "id": 743,
       "components": {
         "IDComponent": {
           "guid": "6525644307359548b1a51fe8587e309a"
@@ -46226,7 +46235,7 @@
       }
     },
     {
-      "id": 746,
+      "id": 744,
       "components": {
         "IDComponent": {
           "guid": "c312fcafa9db5a45a2d0bc16b7861afa"
@@ -46276,7 +46285,7 @@
       }
     },
     {
-      "id": 747,
+      "id": 745,
       "components": {
         "IDComponent": {
           "guid": "5fa861b1dea8654c8245dba89443e3db"
@@ -46318,11 +46327,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -46333,7 +46342,7 @@
       }
     },
     {
-      "id": 748,
+      "id": 746,
       "components": {
         "IDComponent": {
           "guid": "2ba5253c1d5f44429ae6870e603b8252"
@@ -46383,7 +46392,7 @@
       }
     },
     {
-      "id": 749,
+      "id": 747,
       "components": {
         "IDComponent": {
           "guid": "78ead57da5ef904cbeb084d903939a37"
@@ -46433,7 +46442,7 @@
       }
     },
     {
-      "id": 750,
+      "id": 748,
       "components": {
         "IDComponent": {
           "guid": "bee3cfa43e802f49bc66e876964bad95"
@@ -46475,11 +46484,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -46490,7 +46499,7 @@
       }
     },
     {
-      "id": 751,
+      "id": 749,
       "components": {
         "IDComponent": {
           "guid": "dec77e4b2debb6458562d9a4e1957331"
@@ -46540,7 +46549,7 @@
       }
     },
     {
-      "id": 752,
+      "id": 750,
       "components": {
         "IDComponent": {
           "guid": "e7e3325a06cd564285ab3951e8841aa2"
@@ -46590,7 +46599,7 @@
       }
     },
     {
-      "id": 753,
+      "id": 751,
       "components": {
         "IDComponent": {
           "guid": "04e47a2a53506d4a82de88ae776af0a2"
@@ -46632,11 +46641,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -46647,7 +46656,7 @@
       }
     },
     {
-      "id": 754,
+      "id": 752,
       "components": {
         "IDComponent": {
           "guid": "611f0ff8885d88439e22e4d7214815f2"
@@ -46697,7 +46706,7 @@
       }
     },
     {
-      "id": 755,
+      "id": 753,
       "components": {
         "IDComponent": {
           "guid": "fe5b5c8d5c306447bcf84d4120f72f3a"
@@ -46747,7 +46756,7 @@
       }
     },
     {
-      "id": 756,
+      "id": 754,
       "components": {
         "IDComponent": {
           "guid": "2569ec13ce73534ead48f13f046fd71c"
@@ -46789,11 +46798,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -46804,7 +46813,7 @@
       }
     },
     {
-      "id": 757,
+      "id": 755,
       "components": {
         "IDComponent": {
           "guid": "de5be3fd499c2f4299b238e314904fe8"
@@ -46854,7 +46863,7 @@
       }
     },
     {
-      "id": 758,
+      "id": 756,
       "components": {
         "IDComponent": {
           "guid": "628d4c24e7121448877d3404661b30dd"
@@ -46904,7 +46913,7 @@
       }
     },
     {
-      "id": 759,
+      "id": 757,
       "components": {
         "IDComponent": {
           "guid": "76ff996086ed65479a5683e3e2015c20"
@@ -46946,11 +46955,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -46961,7 +46970,7 @@
       }
     },
     {
-      "id": 760,
+      "id": 758,
       "components": {
         "IDComponent": {
           "guid": "8b8caf126c6a95409528f7968b52f9de"
@@ -47011,7 +47020,7 @@
       }
     },
     {
-      "id": 761,
+      "id": 759,
       "components": {
         "IDComponent": {
           "guid": "e0ecdf27a83c78418730fe6ab6d7e366"
@@ -47061,7 +47070,7 @@
       }
     },
     {
-      "id": 762,
+      "id": 760,
       "components": {
         "IDComponent": {
           "guid": "aa1e4d85ebb62b4f9191838418df0365"
@@ -47103,11 +47112,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -47118,7 +47127,7 @@
       }
     },
     {
-      "id": 763,
+      "id": 761,
       "components": {
         "IDComponent": {
           "guid": "39d8d6e85eee59478fc836a220078cc7"
@@ -47168,7 +47177,7 @@
       }
     },
     {
-      "id": 764,
+      "id": 762,
       "components": {
         "IDComponent": {
           "guid": "b1ed6c10fe6b1c4cbbcea1d541653f66"
@@ -47218,7 +47227,7 @@
       }
     },
     {
-      "id": 765,
+      "id": 763,
       "components": {
         "IDComponent": {
           "guid": "ee0d54e244f7da4b9977e67f660a87e2"
@@ -47260,11 +47269,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -47275,7 +47284,7 @@
       }
     },
     {
-      "id": 766,
+      "id": 764,
       "components": {
         "IDComponent": {
           "guid": "b90035fd2f89b045b02295db0f9e6039"
@@ -47325,7 +47334,7 @@
       }
     },
     {
-      "id": 767,
+      "id": 765,
       "components": {
         "IDComponent": {
           "guid": "a81ca890a23bf74a86c131a0bc229ad1"
@@ -47375,7 +47384,7 @@
       }
     },
     {
-      "id": 768,
+      "id": 766,
       "components": {
         "IDComponent": {
           "guid": "f7b1868976aba547aae584b8d2b0e0ed"
@@ -47417,11 +47426,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -47432,7 +47441,7 @@
       }
     },
     {
-      "id": 769,
+      "id": 767,
       "components": {
         "IDComponent": {
           "guid": "52ebe97496d4ef4ebcca60751d7d3dde"
@@ -47482,7 +47491,7 @@
       }
     },
     {
-      "id": 770,
+      "id": 768,
       "components": {
         "IDComponent": {
           "guid": "6e3b1dfbf9c9ce47b1aa8b7a9cefc9f3"
@@ -47532,7 +47541,7 @@
       }
     },
     {
-      "id": 771,
+      "id": 769,
       "components": {
         "IDComponent": {
           "guid": "24f84862e8d1f74d88a5b4560ceebcd4"
@@ -47561,7 +47570,7 @@
           "selfActive": true
         },
         "ModelComponent": {
-          "model": "ART1_David.fbx",
+          "model": "",
           "isSkinFile": false
         },
         "HierarchyComponent": {
@@ -47571,7 +47580,7 @@
       }
     },
     {
-      "id": 772,
+      "id": 770,
       "components": {
         "IDComponent": {
           "guid": "1272fb520a507c4fbb55afe923c36aed"
@@ -47632,7 +47641,7 @@
       }
     },
     {
-      "id": 773,
+      "id": 771,
       "components": {
         "IDComponent": {
           "guid": "a553fa2184604c4691b4fb3475f66cfb"
@@ -47693,7 +47702,7 @@
       }
     },
     {
-      "id": 774,
+      "id": 772,
       "components": {
         "IDComponent": {
           "guid": "35a0653604325b44b28a772e8909e7a5"
@@ -47754,7 +47763,7 @@
       }
     },
     {
-      "id": 775,
+      "id": 773,
       "components": {
         "IDComponent": {
           "guid": "c8367cc0419190438b2623f53fdabb9a"
@@ -47815,7 +47824,7 @@
       }
     },
     {
-      "id": 776,
+      "id": 774,
       "components": {
         "IDComponent": {
           "guid": "fad73ba55e2e6c40a1b9b69cdc779b42"
@@ -47876,7 +47885,7 @@
       }
     },
     {
-      "id": 777,
+      "id": 775,
       "components": {
         "IDComponent": {
           "guid": "d822c0f00b281443ab182765fe30abc9"
@@ -47937,7 +47946,7 @@
       }
     },
     {
-      "id": 778,
+      "id": 776,
       "components": {
         "IDComponent": {
           "guid": "1c3fe51d6a49af4dad7d22a6ed047d92"
@@ -47998,7 +48007,7 @@
       }
     },
     {
-      "id": 779,
+      "id": 777,
       "components": {
         "IDComponent": {
           "guid": "d41ce43e5b097d47893973c9151ca47e"
@@ -48059,7 +48068,7 @@
       }
     },
     {
-      "id": 780,
+      "id": 778,
       "components": {
         "IDComponent": {
           "guid": "f04d1d4c745a1948b36caababad522b5"
@@ -48120,7 +48129,7 @@
       }
     },
     {
-      "id": 781,
+      "id": 779,
       "components": {
         "IDComponent": {
           "guid": "3e849bf808d4ba4ba7b2db3f938bbba6"
@@ -48181,7 +48190,7 @@
       }
     },
     {
-      "id": 782,
+      "id": 780,
       "components": {
         "IDComponent": {
           "guid": "01d3a920497cbc4c83dfed92cc321382"
@@ -48242,7 +48251,7 @@
       }
     },
     {
-      "id": 783,
+      "id": 781,
       "components": {
         "IDComponent": {
           "guid": "21016194f38aea409d93eab10f99463a"
@@ -48303,7 +48312,7 @@
       }
     },
     {
-      "id": 784,
+      "id": 782,
       "components": {
         "IDComponent": {
           "guid": "bbb068792ed11d49b445c0b63173e3da"
@@ -48364,7 +48373,7 @@
       }
     },
     {
-      "id": 785,
+      "id": 783,
       "components": {
         "IDComponent": {
           "guid": "40a5665f8f8f5948a8cf3e28ff58a3b0"
@@ -48425,7 +48434,7 @@
       }
     },
     {
-      "id": 786,
+      "id": 784,
       "components": {
         "IDComponent": {
           "guid": "e06d117a113fe243a2fa667681f64b65"
@@ -48486,7 +48495,7 @@
       }
     },
     {
-      "id": 787,
+      "id": 785,
       "components": {
         "IDComponent": {
           "guid": "942a46d18f410548804d9d6e7f8c354a"
@@ -48547,7 +48556,7 @@
       }
     },
     {
-      "id": 788,
+      "id": 786,
       "components": {
         "IDComponent": {
           "guid": "9886106b4a4b8347a42512633bd118c7"
@@ -48608,7 +48617,7 @@
       }
     },
     {
-      "id": 789,
+      "id": 787,
       "components": {
         "IDComponent": {
           "guid": "c93ac6f66d682c4fbaade6e08555f30b"
@@ -48669,7 +48678,7 @@
       }
     },
     {
-      "id": 790,
+      "id": 788,
       "components": {
         "IDComponent": {
           "guid": "c747448703e748478a6ae3426320b7be"
@@ -48730,7 +48739,7 @@
       }
     },
     {
-      "id": 791,
+      "id": 789,
       "components": {
         "IDComponent": {
           "guid": "05f72563e08b6745ba57c98224528774"
@@ -48791,7 +48800,7 @@
       }
     },
     {
-      "id": 792,
+      "id": 790,
       "components": {
         "IDComponent": {
           "guid": "1b6bae4093aa1d428490fc9f263cdfe5"
@@ -48852,7 +48861,7 @@
       }
     },
     {
-      "id": 793,
+      "id": 791,
       "components": {
         "IDComponent": {
           "guid": "3da9341097e680418c7ae6fcd298ad3b"
@@ -48913,7 +48922,7 @@
       }
     },
     {
-      "id": 794,
+      "id": 792,
       "components": {
         "IDComponent": {
           "guid": "5dedc5a82fcee346899b91186902997f"
@@ -48974,7 +48983,7 @@
       }
     },
     {
-      "id": 795,
+      "id": 793,
       "components": {
         "IDComponent": {
           "guid": "4540925c7475644986136abcda2f8ed2"
@@ -49035,7 +49044,7 @@
       }
     },
     {
-      "id": 796,
+      "id": 794,
       "components": {
         "IDComponent": {
           "guid": "60ea668ae74f894abd792b8469d7728d"
@@ -49096,7 +49105,7 @@
       }
     },
     {
-      "id": 797,
+      "id": 795,
       "components": {
         "IDComponent": {
           "guid": "2d948677a8976b4a927835978585cbaf"
@@ -49157,7 +49166,7 @@
       }
     },
     {
-      "id": 798,
+      "id": 796,
       "components": {
         "IDComponent": {
           "guid": "5ce2ac478f71fa48803b34e42c0268df"
@@ -49218,7 +49227,7 @@
       }
     },
     {
-      "id": 799,
+      "id": 797,
       "components": {
         "IDComponent": {
           "guid": "cf73add2eabfc64f9f77d557e4fb1b9f"
@@ -49279,7 +49288,7 @@
       }
     },
     {
-      "id": 800,
+      "id": 798,
       "components": {
         "IDComponent": {
           "guid": "67760f39c8ca944b81d893eb00fbac85"
@@ -49340,7 +49349,7 @@
       }
     },
     {
-      "id": 801,
+      "id": 799,
       "components": {
         "IDComponent": {
           "guid": "0ad4d47e992843468afa391c679be38f"
@@ -49401,7 +49410,7 @@
       }
     },
     {
-      "id": 802,
+      "id": 800,
       "components": {
         "IDComponent": {
           "guid": "0bafa3bc8972bd40a97d818aa055a865"
@@ -49462,7 +49471,7 @@
       }
     },
     {
-      "id": 803,
+      "id": 801,
       "components": {
         "IDComponent": {
           "guid": "ff800f06e7675a479090ca29b3768d9f"
@@ -49523,7 +49532,7 @@
       }
     },
     {
-      "id": 804,
+      "id": 802,
       "components": {
         "IDComponent": {
           "guid": "874fc118ab96f440b37b3677fcc22aec"
@@ -49584,7 +49593,7 @@
       }
     },
     {
-      "id": 805,
+      "id": 803,
       "components": {
         "IDComponent": {
           "guid": "8d2fb358c3bba74d929cbf7009d03b59"
@@ -49645,7 +49654,7 @@
       }
     },
     {
-      "id": 806,
+      "id": 804,
       "components": {
         "IDComponent": {
           "guid": "6d583939ce127f4982679be1a4f62264"
@@ -49706,7 +49715,7 @@
       }
     },
     {
-      "id": 807,
+      "id": 805,
       "components": {
         "IDComponent": {
           "guid": "6e22e483f86435409039758f1d199008"
@@ -49767,7 +49776,7 @@
       }
     },
     {
-      "id": 808,
+      "id": 806,
       "components": {
         "IDComponent": {
           "guid": "e532f69e8971714a9959643324288926"
@@ -49828,7 +49837,7 @@
       }
     },
     {
-      "id": 809,
+      "id": 807,
       "components": {
         "IDComponent": {
           "guid": "c5f34ad967a02e48960d57146e9824aa"
@@ -49889,7 +49898,7 @@
       }
     },
     {
-      "id": 810,
+      "id": 808,
       "components": {
         "IDComponent": {
           "guid": "f3c44f7252f03a499bac0169aafe6df4"
@@ -49950,7 +49959,7 @@
       }
     },
     {
-      "id": 811,
+      "id": 809,
       "components": {
         "IDComponent": {
           "guid": "3ff140e889779b4daa78ed42e54e3dcc"
@@ -50011,7 +50020,7 @@
       }
     },
     {
-      "id": 812,
+      "id": 810,
       "components": {
         "IDComponent": {
           "guid": "05e4876e53832c4eb5bebd694c16dab4"
@@ -50072,7 +50081,7 @@
       }
     },
     {
-      "id": 813,
+      "id": 811,
       "components": {
         "IDComponent": {
           "guid": "e1d483d1e0740646a315adc2dd45b6fb"
@@ -50133,7 +50142,7 @@
       }
     },
     {
-      "id": 814,
+      "id": 812,
       "components": {
         "IDComponent": {
           "guid": "e7e2adb720fcbf4a868322c80157db42"
@@ -50194,7 +50203,7 @@
       }
     },
     {
-      "id": 815,
+      "id": 813,
       "components": {
         "IDComponent": {
           "guid": "ecc08b82c48d8346a2f58635dffd821d"
@@ -50255,7 +50264,7 @@
       }
     },
     {
-      "id": 816,
+      "id": 814,
       "components": {
         "IDComponent": {
           "guid": "6aab830a176a704990f086c89db2980e"
@@ -50305,7 +50314,7 @@
       }
     },
     {
-      "id": 817,
+      "id": 815,
       "components": {
         "IDComponent": {
           "guid": "993c8fd5bad33e4c94a0a172b2745638"
@@ -50355,7 +50364,7 @@
       }
     },
     {
-      "id": 818,
+      "id": 816,
       "components": {
         "IDComponent": {
           "guid": "1fd8b644803d2841b9810dc04f5059b2"
@@ -50416,7 +50425,7 @@
       }
     },
     {
-      "id": 819,
+      "id": 817,
       "components": {
         "IDComponent": {
           "guid": "0be92ba1ef7b354592942518269103dd"
@@ -50477,7 +50486,7 @@
       }
     },
     {
-      "id": 820,
+      "id": 818,
       "components": {
         "IDComponent": {
           "guid": "a6fac2935418d24abdc8a04a6544fa5f"
@@ -50538,7 +50547,7 @@
       }
     },
     {
-      "id": 821,
+      "id": 819,
       "components": {
         "IDComponent": {
           "guid": "8d34b927bd647d4e83962dc973f59ab9"
@@ -50599,7 +50608,7 @@
       }
     },
     {
-      "id": 822,
+      "id": 820,
       "components": {
         "IDComponent": {
           "guid": "b975c622b8d87449a5f2679eb9c1a9dd"
@@ -50660,7 +50669,7 @@
       }
     },
     {
-      "id": 823,
+      "id": 821,
       "components": {
         "IDComponent": {
           "guid": "21305c31bcbad84e9e0732a848223601"
@@ -50710,7 +50719,7 @@
       }
     },
     {
-      "id": 824,
+      "id": 822,
       "components": {
         "IDComponent": {
           "guid": "dc56b468e5b3a84186f496787a558c45"
@@ -50771,7 +50780,7 @@
       }
     },
     {
-      "id": 825,
+      "id": 823,
       "components": {
         "IDComponent": {
           "guid": "d3d8de049abf0940909462afb5529728"
@@ -50832,7 +50841,7 @@
       }
     },
     {
-      "id": 826,
+      "id": 824,
       "components": {
         "IDComponent": {
           "guid": "cb19cdf1c1cbf444b1f5952234c6e9cd"
@@ -50861,7 +50870,7 @@
           "selfActive": true
         },
         "ModelComponent": {
-          "model": "ART1_David.fbx",
+          "model": "",
           "isSkinFile": false
         },
         "HierarchyComponent": {
@@ -50871,7 +50880,7 @@
       }
     },
     {
-      "id": 827,
+      "id": 825,
       "components": {
         "IDComponent": {
           "guid": "a48202fda2f2304d841dfaa4a318eb84"
@@ -50932,7 +50941,7 @@
       }
     },
     {
-      "id": 828,
+      "id": 826,
       "components": {
         "IDComponent": {
           "guid": "819cba5569a76a469a6412ff38db64d2"
@@ -50993,7 +51002,7 @@
       }
     },
     {
-      "id": 829,
+      "id": 827,
       "components": {
         "IDComponent": {
           "guid": "5919904336136d4f9bf9fc341ff65014"
@@ -51043,7 +51052,7 @@
       }
     },
     {
-      "id": 830,
+      "id": 828,
       "components": {
         "IDComponent": {
           "guid": "97467934d5ab2047b0b16760733fc776"
@@ -51104,7 +51113,7 @@
       }
     },
     {
-      "id": 831,
+      "id": 829,
       "components": {
         "IDComponent": {
           "guid": "609533d9ad380d45a4aa86f62af29afd"
@@ -51165,7 +51174,7 @@
       }
     },
     {
-      "id": 832,
+      "id": 830,
       "components": {
         "IDComponent": {
           "guid": "af8ef795d9a5cf48aa9b891b94bf4475"
@@ -51226,7 +51235,7 @@
       }
     },
     {
-      "id": 833,
+      "id": 831,
       "components": {
         "IDComponent": {
           "guid": "f5f7619e29dcd249a7bed3d94be32f18"
@@ -51287,7 +51296,7 @@
       }
     },
     {
-      "id": 834,
+      "id": 832,
       "components": {
         "IDComponent": {
           "guid": "021f24c6e50e484ea3a2da7b8c617ae9"
@@ -51348,7 +51357,7 @@
       }
     },
     {
-      "id": 835,
+      "id": 833,
       "components": {
         "IDComponent": {
           "guid": "9ffe18dedeb83d4fb6d1c50680c9a454"
@@ -51398,7 +51407,7 @@
       }
     },
     {
-      "id": 836,
+      "id": 834,
       "components": {
         "IDComponent": {
           "guid": "8e739fd33f7eed48afc0e958092f3ba2"
@@ -51448,7 +51457,7 @@
       }
     },
     {
-      "id": 837,
+      "id": 835,
       "components": {
         "IDComponent": {
           "guid": "b8a43ec52df8184d82c8ae8a239bc5bb"
@@ -51509,7 +51518,7 @@
       }
     },
     {
-      "id": 838,
+      "id": 836,
       "components": {
         "IDComponent": {
           "guid": "57248fe5e3173640b7418e68cc6eec26"
@@ -51570,7 +51579,7 @@
       }
     },
     {
-      "id": 839,
+      "id": 837,
       "components": {
         "IDComponent": {
           "guid": "98626e5a4c45884baeb82d8d6fbab14a"
@@ -51631,7 +51640,7 @@
       }
     },
     {
-      "id": 840,
+      "id": 838,
       "components": {
         "IDComponent": {
           "guid": "ea816fcbea417f49b92e45dc02f0f3eb"
@@ -51692,7 +51701,7 @@
       }
     },
     {
-      "id": 841,
+      "id": 839,
       "components": {
         "IDComponent": {
           "guid": "a788f547f838694dbe87be583d26e87d"
@@ -51753,7 +51762,7 @@
       }
     },
     {
-      "id": 842,
+      "id": 840,
       "components": {
         "IDComponent": {
           "guid": "fbd5ac171ef7c44391aab899372cbce7"
@@ -51814,7 +51823,7 @@
       }
     },
     {
-      "id": 843,
+      "id": 841,
       "components": {
         "IDComponent": {
           "guid": "71d95dafb4de4549a4b9594093ead906"
@@ -51875,7 +51884,7 @@
       }
     },
     {
-      "id": 844,
+      "id": 842,
       "components": {
         "IDComponent": {
           "guid": "818942ae871e3146bfb0968db11163a8"
@@ -51936,7 +51945,7 @@
       }
     },
     {
-      "id": 845,
+      "id": 843,
       "components": {
         "IDComponent": {
           "guid": "60bc80ffeeea3f43bb2d610009fec437"
@@ -51997,7 +52006,7 @@
       }
     },
     {
-      "id": 846,
+      "id": 844,
       "components": {
         "IDComponent": {
           "guid": "b385749a4a0b3b4292a26edaf4038c76"
@@ -52058,7 +52067,7 @@
       }
     },
     {
-      "id": 847,
+      "id": 845,
       "components": {
         "IDComponent": {
           "guid": "1fb5ce0972b1cd4eab1ac256b877ff73"
@@ -52119,7 +52128,7 @@
       }
     },
     {
-      "id": 848,
+      "id": 846,
       "components": {
         "IDComponent": {
           "guid": "2fc339b61ace22488d82df410ff32714"
@@ -52180,7 +52189,7 @@
       }
     },
     {
-      "id": 849,
+      "id": 847,
       "components": {
         "IDComponent": {
           "guid": "bf275874f998f34486c8561722424ae9"
@@ -52241,7 +52250,7 @@
       }
     },
     {
-      "id": 850,
+      "id": 848,
       "components": {
         "IDComponent": {
           "guid": "cf031a803a271342a55f73e7e9d55635"
@@ -52302,7 +52311,7 @@
       }
     },
     {
-      "id": 851,
+      "id": 849,
       "components": {
         "IDComponent": {
           "guid": "3f4b4345276c194f9d6333dd0b43c267"
@@ -52363,7 +52372,7 @@
       }
     },
     {
-      "id": 852,
+      "id": 850,
       "components": {
         "IDComponent": {
           "guid": "4d5c830a0407b14d9c67c8eec0adf381"
@@ -52424,7 +52433,7 @@
       }
     },
     {
-      "id": 853,
+      "id": 851,
       "components": {
         "IDComponent": {
           "guid": "b9d4463c37a86e47a9185d317d46f049"
@@ -52485,7 +52494,7 @@
       }
     },
     {
-      "id": 854,
+      "id": 852,
       "components": {
         "IDComponent": {
           "guid": "5c73585de959ae4398e04cb242f11a24"
@@ -52546,7 +52555,7 @@
       }
     },
     {
-      "id": 855,
+      "id": 853,
       "components": {
         "IDComponent": {
           "guid": "16ce0505133b2f43952241acad8347ee"
@@ -52607,7 +52616,7 @@
       }
     },
     {
-      "id": 856,
+      "id": 854,
       "components": {
         "IDComponent": {
           "guid": "836e92d51923964ca8ec2c510843e344"
@@ -52668,7 +52677,7 @@
       }
     },
     {
-      "id": 857,
+      "id": 855,
       "components": {
         "IDComponent": {
           "guid": "82a8d905e0aced4eb2e22df862819ea5"
@@ -52729,7 +52738,7 @@
       }
     },
     {
-      "id": 858,
+      "id": 856,
       "components": {
         "IDComponent": {
           "guid": "7270c8e130868540b368dbab1422805f"
@@ -52790,7 +52799,7 @@
       }
     },
     {
-      "id": 859,
+      "id": 857,
       "components": {
         "IDComponent": {
           "guid": "a0221a189d6b7b48accd59235203d281"
@@ -52851,7 +52860,7 @@
       }
     },
     {
-      "id": 860,
+      "id": 858,
       "components": {
         "IDComponent": {
           "guid": "530b5e0f41cf2342b86aeb8cb763cac8"
@@ -52912,7 +52921,7 @@
       }
     },
     {
-      "id": 861,
+      "id": 859,
       "components": {
         "IDComponent": {
           "guid": "1ffcbc2e80b05042a34e98ecaf58d3fa"
@@ -52973,7 +52982,7 @@
       }
     },
     {
-      "id": 862,
+      "id": 860,
       "components": {
         "IDComponent": {
           "guid": "6b9a14c18005af4dbc0b0c6f7fd1b8a8"
@@ -53034,7 +53043,7 @@
       }
     },
     {
-      "id": 863,
+      "id": 861,
       "components": {
         "IDComponent": {
           "guid": "b8534c52e78dd8409592211558baf438"
@@ -53095,7 +53104,7 @@
       }
     },
     {
-      "id": 864,
+      "id": 862,
       "components": {
         "IDComponent": {
           "guid": "818bd0b9165b56499ba8756565526dd5"
@@ -53156,7 +53165,7 @@
       }
     },
     {
-      "id": 865,
+      "id": 863,
       "components": {
         "IDComponent": {
           "guid": "62a03fbc201322499818ef681c2e978e"
@@ -53217,7 +53226,7 @@
       }
     },
     {
-      "id": 866,
+      "id": 864,
       "components": {
         "IDComponent": {
           "guid": "4d82785c935e88428b617249f40a9fb3"
@@ -53278,7 +53287,7 @@
       }
     },
     {
-      "id": 867,
+      "id": 865,
       "components": {
         "IDComponent": {
           "guid": "9cf97a16b9052d4a9400144f0ac10c9b"
@@ -53339,7 +53348,7 @@
       }
     },
     {
-      "id": 868,
+      "id": 866,
       "components": {
         "IDComponent": {
           "guid": "517e3271d3f0aa4cbe6a1d2f4030996f"
@@ -53400,7 +53409,7 @@
       }
     },
     {
-      "id": 869,
+      "id": 867,
       "components": {
         "IDComponent": {
           "guid": "77e602713b51f84096bb079ea312b633"
@@ -53461,7 +53470,7 @@
       }
     },
     {
-      "id": 870,
+      "id": 868,
       "components": {
         "IDComponent": {
           "guid": "ea3e3bcc189b1e41a20db09c522a9b7c"
@@ -53522,7 +53531,7 @@
       }
     },
     {
-      "id": 871,
+      "id": 869,
       "components": {
         "IDComponent": {
           "guid": "cbbfab133b2aaf4d95b056158af91763"
@@ -53583,7 +53592,7 @@
       }
     },
     {
-      "id": 872,
+      "id": 870,
       "components": {
         "IDComponent": {
           "guid": "b46adb1ecbd0f64186821df01cf6cf76"
@@ -53644,7 +53653,7 @@
       }
     },
     {
-      "id": 873,
+      "id": 871,
       "components": {
         "IDComponent": {
           "guid": "a9ae2a5b7433c54e945caabdbd010598"
@@ -53705,7 +53714,7 @@
       }
     },
     {
-      "id": 874,
+      "id": 872,
       "components": {
         "IDComponent": {
           "guid": "4a1c5a3aa6e69b4d9f98773664b3d9b7"
@@ -53766,7 +53775,7 @@
       }
     },
     {
-      "id": 875,
+      "id": 873,
       "components": {
         "IDComponent": {
           "guid": "60c2e21d966e6443b46661e5028fb888"
@@ -53827,7 +53836,7 @@
       }
     },
     {
-      "id": 876,
+      "id": 874,
       "components": {
         "IDComponent": {
           "guid": "044c40d56498234ead1cf5aa91e4d5da"
@@ -53888,7 +53897,7 @@
       }
     },
     {
-      "id": 877,
+      "id": 875,
       "components": {
         "IDComponent": {
           "guid": "30ad7ebb6741a9419b40df7c2c0a5f52"
@@ -53949,7 +53958,7 @@
       }
     },
     {
-      "id": 878,
+      "id": 876,
       "components": {
         "IDComponent": {
           "guid": "3c58542a318a3947864599315c9f3184"
@@ -54010,7 +54019,7 @@
       }
     },
     {
-      "id": 879,
+      "id": 877,
       "components": {
         "IDComponent": {
           "guid": "515ed4d887ac61438ab25ee05c7ec566"
@@ -54071,7 +54080,7 @@
       }
     },
     {
-      "id": 880,
+      "id": 878,
       "components": {
         "IDComponent": {
           "guid": "6df2338300aabb419cc0defa90eeb51f"
@@ -54132,7 +54141,7 @@
       }
     },
     {
-      "id": 881,
+      "id": 879,
       "components": {
         "IDComponent": {
           "guid": "3147544dd50c9a4b888e347c0f108f42"
@@ -54161,7 +54170,7 @@
           "selfActive": true
         },
         "ModelComponent": {
-          "model": "ART1_David.fbx",
+          "model": "",
           "isSkinFile": false
         },
         "HierarchyComponent": {
@@ -54171,7 +54180,7 @@
       }
     },
     {
-      "id": 882,
+      "id": 880,
       "components": {
         "IDComponent": {
           "guid": "2a8f6304055e704bb764137ce6d4c0c3"
@@ -54232,7 +54241,7 @@
       }
     },
     {
-      "id": 883,
+      "id": 881,
       "components": {
         "IDComponent": {
           "guid": "99bfdda438dce440bfcc1c7d266738ec"
@@ -54293,7 +54302,7 @@
       }
     },
     {
-      "id": 884,
+      "id": 882,
       "components": {
         "IDComponent": {
           "guid": "bf02795148e8bd469345a0c92ad97611"
@@ -54343,7 +54352,7 @@
       }
     },
     {
-      "id": 885,
+      "id": 883,
       "components": {
         "IDComponent": {
           "guid": "e0e0d19f2cea5f4db75f2ad4a95aeeb8"
@@ -54404,7 +54413,7 @@
       }
     },
     {
-      "id": 886,
+      "id": 884,
       "components": {
         "IDComponent": {
           "guid": "92ccd1f136578841b4a37b40855e1af2"
@@ -54465,7 +54474,7 @@
       }
     },
     {
-      "id": 887,
+      "id": 885,
       "components": {
         "IDComponent": {
           "guid": "6ba726d21fea71439ac809d66dc42cc4"
@@ -54526,7 +54535,7 @@
       }
     },
     {
-      "id": 888,
+      "id": 886,
       "components": {
         "IDComponent": {
           "guid": "2384cdb017d253429aeeb7075435caa3"
@@ -54587,7 +54596,7 @@
       }
     },
     {
-      "id": 889,
+      "id": 887,
       "components": {
         "IDComponent": {
           "guid": "ca85d142e1e70c46b86739c000b7f3c5"
@@ -54648,7 +54657,7 @@
       }
     },
     {
-      "id": 890,
+      "id": 888,
       "components": {
         "IDComponent": {
           "guid": "24a9623c6508b1428d1e9d4c56f22ce0"
@@ -54698,7 +54707,7 @@
       }
     },
     {
-      "id": 891,
+      "id": 889,
       "components": {
         "IDComponent": {
           "guid": "be31fe723876d24982e87bc9aec46977"
@@ -54748,7 +54757,7 @@
       }
     },
     {
-      "id": 892,
+      "id": 890,
       "components": {
         "IDComponent": {
           "guid": "e67504adcd0e3c4d8a2bbe5f9c35b1dc"
@@ -54809,7 +54818,7 @@
       }
     },
     {
-      "id": 893,
+      "id": 891,
       "components": {
         "IDComponent": {
           "guid": "a7439a6650ca7c4394c2d5d2a68eb61f"
@@ -54870,7 +54879,7 @@
       }
     },
     {
-      "id": 894,
+      "id": 892,
       "components": {
         "IDComponent": {
           "guid": "ec07caad9ca62a48b2c518cbcd0846d2"
@@ -54931,7 +54940,7 @@
       }
     },
     {
-      "id": 895,
+      "id": 893,
       "components": {
         "IDComponent": {
           "guid": "cfa07df26f4520488107f9ee4f7ef9a0"
@@ -54992,7 +55001,7 @@
       }
     },
     {
-      "id": 896,
+      "id": 894,
       "components": {
         "IDComponent": {
           "guid": "ad494188e5a8ff4c968721a0050f79f4"
@@ -55053,7 +55062,7 @@
       }
     },
     {
-      "id": 897,
+      "id": 895,
       "components": {
         "IDComponent": {
           "guid": "3cd35c5c59d1974295f7fb738333bfab"
@@ -55114,7 +55123,7 @@
       }
     },
     {
-      "id": 898,
+      "id": 896,
       "components": {
         "IDComponent": {
           "guid": "12db42077c8aa6418cd4f75923ba793b"
@@ -55175,7 +55184,7 @@
       }
     },
     {
-      "id": 899,
+      "id": 897,
       "components": {
         "IDComponent": {
           "guid": "5d4c39f9499c084583ad5f9dbe2789c4"
@@ -55236,7 +55245,7 @@
       }
     },
     {
-      "id": 900,
+      "id": 898,
       "components": {
         "IDComponent": {
           "guid": "ed6fa985c1f60a48b52a21de2abd599f"
@@ -55297,7 +55306,7 @@
       }
     },
     {
-      "id": 901,
+      "id": 899,
       "components": {
         "IDComponent": {
           "guid": "fa732948313a0b43a343aa340df80235"
@@ -55358,7 +55367,7 @@
       }
     },
     {
-      "id": 902,
+      "id": 900,
       "components": {
         "IDComponent": {
           "guid": "09bca6a885fbfa4eb531127f11a78fc6"
@@ -55419,7 +55428,7 @@
       }
     },
     {
-      "id": 903,
+      "id": 901,
       "components": {
         "IDComponent": {
           "guid": "ef4e8ba592c0c7459c20e570e007030a"
@@ -55480,7 +55489,7 @@
       }
     },
     {
-      "id": 904,
+      "id": 902,
       "components": {
         "IDComponent": {
           "guid": "3f3a001fec3d6f41ba5ed647ea3f4138"
@@ -55541,7 +55550,7 @@
       }
     },
     {
-      "id": 905,
+      "id": 903,
       "components": {
         "IDComponent": {
           "guid": "926bcdbe553d104d8e7376ecde07f37e"
@@ -55602,7 +55611,7 @@
       }
     },
     {
-      "id": 906,
+      "id": 904,
       "components": {
         "IDComponent": {
           "guid": "f220dd2f4c00ba4b9c32e43518fca7b5"
@@ -55663,7 +55672,7 @@
       }
     },
     {
-      "id": 907,
+      "id": 905,
       "components": {
         "IDComponent": {
           "guid": "742c22db46b2da4eb4319c2262d3aeda"
@@ -55724,7 +55733,7 @@
       }
     },
     {
-      "id": 908,
+      "id": 906,
       "components": {
         "IDComponent": {
           "guid": "449b64ee3876304791ddba88d0a2ed2e"
@@ -55785,7 +55794,7 @@
       }
     },
     {
-      "id": 909,
+      "id": 907,
       "components": {
         "IDComponent": {
           "guid": "49837970f16cc44698d8cc75789d5111"
@@ -55846,7 +55855,7 @@
       }
     },
     {
-      "id": 910,
+      "id": 908,
       "components": {
         "IDComponent": {
           "guid": "9f9efd519aa5c64d8016bc8db3e23b19"
@@ -55907,7 +55916,7 @@
       }
     },
     {
-      "id": 911,
+      "id": 909,
       "components": {
         "IDComponent": {
           "guid": "98ccb370aa4f6d42b440b281eff28bd2"
@@ -55968,7 +55977,7 @@
       }
     },
     {
-      "id": 912,
+      "id": 910,
       "components": {
         "IDComponent": {
           "guid": "8b4f17e4ffbdca4abbddf0bd63e09745"
@@ -56029,7 +56038,7 @@
       }
     },
     {
-      "id": 913,
+      "id": 911,
       "components": {
         "IDComponent": {
           "guid": "c34a7aca99f05849b55a6279fb4f8ea5"
@@ -56090,7 +56099,7 @@
       }
     },
     {
-      "id": 914,
+      "id": 912,
       "components": {
         "IDComponent": {
           "guid": "58a2beb83c9bfd4084898ae62dd4ec9b"
@@ -56151,7 +56160,7 @@
       }
     },
     {
-      "id": 915,
+      "id": 913,
       "components": {
         "IDComponent": {
           "guid": "d0a1d9dadc6a124483b54f32bfe86569"
@@ -56212,7 +56221,7 @@
       }
     },
     {
-      "id": 916,
+      "id": 914,
       "components": {
         "IDComponent": {
           "guid": "c8633a3473adcb46ae01b5aa2687b0c2"
@@ -56273,7 +56282,7 @@
       }
     },
     {
-      "id": 917,
+      "id": 915,
       "components": {
         "IDComponent": {
           "guid": "9b1dc7a80a0de24fba383fb65f557769"
@@ -56334,7 +56343,7 @@
       }
     },
     {
-      "id": 918,
+      "id": 916,
       "components": {
         "IDComponent": {
           "guid": "8fdc19bcc3c65f44bd95fc6a267763c1"
@@ -56395,7 +56404,7 @@
       }
     },
     {
-      "id": 919,
+      "id": 917,
       "components": {
         "IDComponent": {
           "guid": "3e48cb1cd7feb04db90070e70c053d80"
@@ -56456,7 +56465,7 @@
       }
     },
     {
-      "id": 920,
+      "id": 918,
       "components": {
         "IDComponent": {
           "guid": "204f805c5e898f4c985ffd79a6e1858e"
@@ -56517,7 +56526,7 @@
       }
     },
     {
-      "id": 921,
+      "id": 919,
       "components": {
         "IDComponent": {
           "guid": "47c79f4afd440847b676a342b6b7bfdc"
@@ -56578,7 +56587,7 @@
       }
     },
     {
-      "id": 922,
+      "id": 920,
       "components": {
         "IDComponent": {
           "guid": "8d0bf320ea2fcd40b81299ab9ca60226"
@@ -56639,7 +56648,7 @@
       }
     },
     {
-      "id": 923,
+      "id": 921,
       "components": {
         "IDComponent": {
           "guid": "387f3b238a01ac47a71a4eed1ce63400"
@@ -56700,7 +56709,7 @@
       }
     },
     {
-      "id": 924,
+      "id": 922,
       "components": {
         "IDComponent": {
           "guid": "6aaabe67a0d68e4aa20de27abfe9a352"
@@ -56761,7 +56770,7 @@
       }
     },
     {
-      "id": 925,
+      "id": 923,
       "components": {
         "IDComponent": {
           "guid": "eb1e75f6b8f5a042bfd838b8a6da0e6c"
@@ -56822,7 +56831,7 @@
       }
     },
     {
-      "id": 926,
+      "id": 924,
       "components": {
         "IDComponent": {
           "guid": "9d40bebe83f56644bc14ea9177eee5f8"
@@ -56883,7 +56892,7 @@
       }
     },
     {
-      "id": 927,
+      "id": 925,
       "components": {
         "IDComponent": {
           "guid": "8f51e0c23ef14b42947000b4a1b1c0cd"
@@ -56944,7 +56953,7 @@
       }
     },
     {
-      "id": 928,
+      "id": 926,
       "components": {
         "IDComponent": {
           "guid": "d9232e485110f041b0252a275d0193cf"
@@ -57005,7 +57014,7 @@
       }
     },
     {
-      "id": 929,
+      "id": 927,
       "components": {
         "IDComponent": {
           "guid": "8e825c7395df5a4c9b8b1d149849c4ac"
@@ -57066,7 +57075,7 @@
       }
     },
     {
-      "id": 930,
+      "id": 928,
       "components": {
         "IDComponent": {
           "guid": "876ee004c756c64790cff05b7d28bb3f"
@@ -57127,7 +57136,7 @@
       }
     },
     {
-      "id": 931,
+      "id": 929,
       "components": {
         "IDComponent": {
           "guid": "cd045aee0f7f684492718565f84e7e72"
@@ -57188,7 +57197,7 @@
       }
     },
     {
-      "id": 932,
+      "id": 930,
       "components": {
         "IDComponent": {
           "guid": "c745f34ca6c1684590077726d3476034"
@@ -57249,7 +57258,7 @@
       }
     },
     {
-      "id": 933,
+      "id": 931,
       "components": {
         "IDComponent": {
           "guid": "60c04016515d0d4694ff4e957e5778f6"
@@ -57310,7 +57319,7 @@
       }
     },
     {
-      "id": 934,
+      "id": 932,
       "components": {
         "IDComponent": {
           "guid": "282d18640fc54b4b9a36b124b2289788"
@@ -57371,7 +57380,7 @@
       }
     },
     {
-      "id": 935,
+      "id": 933,
       "components": {
         "IDComponent": {
           "guid": "2f52ca472dccc247b7a08bcd9174bed5"
@@ -57432,7 +57441,7 @@
       }
     },
     {
-      "id": 936,
+      "id": 934,
       "components": {
         "IDComponent": {
           "guid": "065b74c715f7ce40a32a388e4ad9d5e7"
@@ -57461,7 +57470,7 @@
           "selfActive": true
         },
         "ModelComponent": {
-          "model": "ART1_David.fbx",
+          "model": "",
           "isSkinFile": false
         },
         "HierarchyComponent": {
@@ -57471,7 +57480,7 @@
       }
     },
     {
-      "id": 937,
+      "id": 935,
       "components": {
         "IDComponent": {
           "guid": "fc8829d5e6f6244aa58004ee75e3e9eb"
@@ -57532,7 +57541,7 @@
       }
     },
     {
-      "id": 938,
+      "id": 936,
       "components": {
         "IDComponent": {
           "guid": "828eeae279be0e4c8764d4c1c537caea"
@@ -57593,7 +57602,7 @@
       }
     },
     {
-      "id": 939,
+      "id": 937,
       "components": {
         "IDComponent": {
           "guid": "df764e6509caf24a91a509e739c57f85"
@@ -57654,7 +57663,7 @@
       }
     },
     {
-      "id": 940,
+      "id": 938,
       "components": {
         "IDComponent": {
           "guid": "35f31b2bd594e6448ef6c62401a07834"
@@ -57715,7 +57724,7 @@
       }
     },
     {
-      "id": 941,
+      "id": 939,
       "components": {
         "IDComponent": {
           "guid": "aa16c08368a67241a582672fad1b29b4"
@@ -57776,7 +57785,7 @@
       }
     },
     {
-      "id": 942,
+      "id": 940,
       "components": {
         "IDComponent": {
           "guid": "eff1e2b32f8c8d48b8b284dbfd4c28f8"
@@ -57837,7 +57846,7 @@
       }
     },
     {
-      "id": 943,
+      "id": 941,
       "components": {
         "IDComponent": {
           "guid": "4d86fa00ee3e0840972d4cc425617124"
@@ -57898,7 +57907,7 @@
       }
     },
     {
-      "id": 944,
+      "id": 942,
       "components": {
         "IDComponent": {
           "guid": "99f680f8f7eff642b59807cc5e68501e"
@@ -57959,7 +57968,7 @@
       }
     },
     {
-      "id": 945,
+      "id": 943,
       "components": {
         "IDComponent": {
           "guid": "eae67bf18178314f8a6ca89d7d86a830"
@@ -58020,7 +58029,7 @@
       }
     },
     {
-      "id": 946,
+      "id": 944,
       "components": {
         "IDComponent": {
           "guid": "2e41bad0fa1a75469a79e4fbe942194a"
@@ -58081,7 +58090,7 @@
       }
     },
     {
-      "id": 947,
+      "id": 945,
       "components": {
         "IDComponent": {
           "guid": "8b5c9a803fe8164a99e6fec102685c33"
@@ -58142,7 +58151,7 @@
       }
     },
     {
-      "id": 948,
+      "id": 946,
       "components": {
         "IDComponent": {
           "guid": "397f80d49de9e04d8d382da856c62a1e"
@@ -58203,7 +58212,7 @@
       }
     },
     {
-      "id": 949,
+      "id": 947,
       "components": {
         "IDComponent": {
           "guid": "a7ab18ee65be9048ae8c9963578de721"
@@ -58264,7 +58273,7 @@
       }
     },
     {
-      "id": 950,
+      "id": 948,
       "components": {
         "IDComponent": {
           "guid": "7f317cfb2fc6d343bd5d33c29009c64b"
@@ -58325,7 +58334,7 @@
       }
     },
     {
-      "id": 951,
+      "id": 949,
       "components": {
         "IDComponent": {
           "guid": "cd800985827af049badc28ec0f9be0c0"
@@ -58386,7 +58395,7 @@
       }
     },
     {
-      "id": 952,
+      "id": 950,
       "components": {
         "IDComponent": {
           "guid": "79365b232d519248bb3067c42a31db74"
@@ -58447,7 +58456,7 @@
       }
     },
     {
-      "id": 953,
+      "id": 951,
       "components": {
         "IDComponent": {
           "guid": "d65ca586c55a8a44b0d03354777b3f4c"
@@ -58508,7 +58517,7 @@
       }
     },
     {
-      "id": 954,
+      "id": 952,
       "components": {
         "IDComponent": {
           "guid": "bad11e2c88d757408ed9048e67bf5965"
@@ -58569,7 +58578,7 @@
       }
     },
     {
-      "id": 955,
+      "id": 953,
       "components": {
         "IDComponent": {
           "guid": "9049e494f534f944803b6ec88c01508c"
@@ -58630,7 +58639,7 @@
       }
     },
     {
-      "id": 956,
+      "id": 954,
       "components": {
         "IDComponent": {
           "guid": "25b66c4c0dac914abea77eb4d5392e71"
@@ -58691,7 +58700,7 @@
       }
     },
     {
-      "id": 957,
+      "id": 955,
       "components": {
         "IDComponent": {
           "guid": "1ba590e6379ac1409908cf745fbf5661"
@@ -58752,7 +58761,7 @@
       }
     },
     {
-      "id": 958,
+      "id": 956,
       "components": {
         "IDComponent": {
           "guid": "ae0d54dda73ed84bbf9242c6ac2a4beb"
@@ -58813,7 +58822,7 @@
       }
     },
     {
-      "id": 959,
+      "id": 957,
       "components": {
         "IDComponent": {
           "guid": "0ca0669d501a7144ae332a02b13aa291"
@@ -58874,7 +58883,7 @@
       }
     },
     {
-      "id": 960,
+      "id": 958,
       "components": {
         "IDComponent": {
           "guid": "1777bb167d603e4eb4371810d79aec3f"
@@ -58935,7 +58944,7 @@
       }
     },
     {
-      "id": 961,
+      "id": 959,
       "components": {
         "IDComponent": {
           "guid": "079473cd2a7b8c4ebe2a90c9fd326518"
@@ -58996,7 +59005,7 @@
       }
     },
     {
-      "id": 962,
+      "id": 960,
       "components": {
         "IDComponent": {
           "guid": "319915e64a0c6346a09e10c900270c17"
@@ -59057,7 +59066,7 @@
       }
     },
     {
-      "id": 963,
+      "id": 961,
       "components": {
         "IDComponent": {
           "guid": "94a28c0674fec2409142ab504128e3e2"
@@ -59118,7 +59127,7 @@
       }
     },
     {
-      "id": 964,
+      "id": 962,
       "components": {
         "IDComponent": {
           "guid": "db0883c64fc9384eb715e514dcd1742e"
@@ -59179,7 +59188,7 @@
       }
     },
     {
-      "id": 965,
+      "id": 963,
       "components": {
         "IDComponent": {
           "guid": "47148cea25a2ce4480dbd17f7566fdbb"
@@ -59240,7 +59249,7 @@
       }
     },
     {
-      "id": 966,
+      "id": 964,
       "components": {
         "IDComponent": {
           "guid": "a6642e6e2f7063428197c288929ce9e1"
@@ -59301,7 +59310,7 @@
       }
     },
     {
-      "id": 967,
+      "id": 965,
       "components": {
         "IDComponent": {
           "guid": "4135461b509f6a4996d4af74a915bd7e"
@@ -59362,7 +59371,7 @@
       }
     },
     {
-      "id": 968,
+      "id": 966,
       "components": {
         "IDComponent": {
           "guid": "bd79944a067cb040ad96c67eab381400"
@@ -59423,7 +59432,7 @@
       }
     },
     {
-      "id": 969,
+      "id": 967,
       "components": {
         "IDComponent": {
           "guid": "62060b9d3fd6e044ac4649bf98afb233"
@@ -59484,7 +59493,7 @@
       }
     },
     {
-      "id": 970,
+      "id": 968,
       "components": {
         "IDComponent": {
           "guid": "f681fd5e2d55db4f85b8fa4fcd163503"
@@ -59545,7 +59554,7 @@
       }
     },
     {
-      "id": 971,
+      "id": 969,
       "components": {
         "IDComponent": {
           "guid": "05cc7d5cd6411748be2a0902e1d658e7"
@@ -59606,7 +59615,7 @@
       }
     },
     {
-      "id": 972,
+      "id": 970,
       "components": {
         "IDComponent": {
           "guid": "aa99ceeef95c6d48b9996e2fa3729d3b"
@@ -59667,7 +59676,7 @@
       }
     },
     {
-      "id": 973,
+      "id": 971,
       "components": {
         "IDComponent": {
           "guid": "2538f03e98a3cd40a36ccc556725c04d"
@@ -59728,7 +59737,7 @@
       }
     },
     {
-      "id": 974,
+      "id": 972,
       "components": {
         "IDComponent": {
           "guid": "49cd5584272ca04297d3e21388c15010"
@@ -59789,7 +59798,7 @@
       }
     },
     {
-      "id": 975,
+      "id": 973,
       "components": {
         "IDComponent": {
           "guid": "b2191a0d3c6bbf418906cfffc36c4dec"
@@ -59850,7 +59859,7 @@
       }
     },
     {
-      "id": 976,
+      "id": 974,
       "components": {
         "IDComponent": {
           "guid": "89481a891eb78b43817bfc215b64b2e1"
@@ -59911,7 +59920,7 @@
       }
     },
     {
-      "id": 977,
+      "id": 975,
       "components": {
         "IDComponent": {
           "guid": "f812fdc3adda22488d7da51c91620f05"
@@ -59972,7 +59981,7 @@
       }
     },
     {
-      "id": 978,
+      "id": 976,
       "components": {
         "IDComponent": {
           "guid": "34665b30e912ba42a4912b562dc5ceaa"
@@ -60033,7 +60042,7 @@
       }
     },
     {
-      "id": 979,
+      "id": 977,
       "components": {
         "IDComponent": {
           "guid": "ab921ce7d39d4c43b5d6eb63ee06c6ba"
@@ -60094,7 +60103,7 @@
       }
     },
     {
-      "id": 980,
+      "id": 978,
       "components": {
         "IDComponent": {
           "guid": "a0788c790a4dd44b80bc8809a8eca4b2"
@@ -60155,7 +60164,7 @@
       }
     },
     {
-      "id": 981,
+      "id": 979,
       "components": {
         "IDComponent": {
           "guid": "15437c12e1705a48b01bdee2676240d3"
@@ -60205,7 +60214,7 @@
       }
     },
     {
-      "id": 982,
+      "id": 980,
       "components": {
         "IDComponent": {
           "guid": "0a467be4f5a86f46953a6b8bc311a26c"
@@ -60255,7 +60264,7 @@
       }
     },
     {
-      "id": 983,
+      "id": 981,
       "components": {
         "IDComponent": {
           "guid": "41a5f8e373b9ae4d822e7f95e2bba84b"
@@ -60316,7 +60325,7 @@
       }
     },
     {
-      "id": 984,
+      "id": 982,
       "components": {
         "IDComponent": {
           "guid": "95d166fa15f885489272ad34a2bd42cf"
@@ -60377,7 +60386,7 @@
       }
     },
     {
-      "id": 985,
+      "id": 983,
       "components": {
         "IDComponent": {
           "guid": "8d20ba33f244d343ac3b07cf14aec7dd"
@@ -60438,7 +60447,7 @@
       }
     },
     {
-      "id": 986,
+      "id": 984,
       "components": {
         "IDComponent": {
           "guid": "e721e936faa2b545b4f317f231079b85"
@@ -60499,7 +60508,7 @@
       }
     },
     {
-      "id": 987,
+      "id": 985,
       "components": {
         "IDComponent": {
           "guid": "dfd392c294fe374e91b465b3897bb9d2"
@@ -60560,7 +60569,7 @@
       }
     },
     {
-      "id": 988,
+      "id": 986,
       "components": {
         "IDComponent": {
           "guid": "85e6dad3e38e8d4eaac7ed4a6df61311"
@@ -60610,7 +60619,7 @@
       }
     },
     {
-      "id": 989,
+      "id": 987,
       "components": {
         "IDComponent": {
           "guid": "d6937371f13d6f488a92acfdf602b75e"
@@ -60671,7 +60680,7 @@
       }
     },
     {
-      "id": 990,
+      "id": 988,
       "components": {
         "IDComponent": {
           "guid": "49317043e2105f40abd54c2fb01417d4"
@@ -60733,6 +60742,12 @@
     }
   ],
   "globalGraphics": {
+    "ambientColor": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "ambientIntensity": 0.07999999821186066,
     "ssaoEnabled": true,
     "ssaoSamples": 16,
     "ssaoRadius": 10.0,
@@ -60758,6 +60773,7 @@
     "gammaCorrectionEnabled": true,
     "bloomEnabled": true,
     "skyboxIsHDR": false,
+    "showSkybox": true,
     "exposure": 1.0,
     "contrast": 1.0,
     "saturation": 1.0,
