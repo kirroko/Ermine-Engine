@@ -52,6 +52,29 @@ namespace Ermine::ImguiUI
         }
     }
 
+    void Browser::PreloadAllTextureAssets(const fs::path& dir)
+    {
+        // Check if directory exists
+        if (!fs::exists(dir)) return;
+
+        // Iterate through directory entries
+        for (auto& entry : fs::directory_iterator(dir)) {
+            if (entry.is_directory()) {
+                PreloadAllTextureAssets(entry.path()); // Recurse into subfolders
+            }
+            else {
+                // Load texture files
+                std::string ext = GetExtensionLower(entry.path().string());
+                if (ext == "png" || ext == "jpg" || ext == "jpeg") {
+                    auto tex = AssetManager::GetInstance().LoadTexture(entry.path().string().c_str());
+                    if (!tex || !tex->IsValid()) {
+                        EE_CORE_WARN("Failed to preload texture: {}", entry.path().string());
+                    }
+                }
+            }
+        }
+    }
+
     void Browser::CheckImportStatus(Asset& asset)
     {
         if (!m_Pipeline) return;
@@ -107,7 +130,7 @@ namespace Ermine::ImguiUI
                 ImGui::TextDisabled("Format:");
                 ImGui::Separator();
 
-                // ✅ Format dropdown
+                // Format dropdown
                 auto formats = Ermine::ResourcePipeline::GetSupportedFormats();
                 if (ImGui::BeginCombo("##Format", Ermine::ResourcePipeline::GetFormatName(settings.targetFormat))) {
                     for (int i = 0; i < formats.size(); i++) {
@@ -120,7 +143,7 @@ namespace Ermine::ImguiUI
                             ImGui::SetItemDefaultFocus();
                         }
 
-                        // ✅ Add helpful tooltips
+                        // Add helpful tooltips
                         if (ImGui::IsItemHovered()) {
                             switch (formats[i]) {
                             case DXGI_FORMAT_BC1_UNORM_SRGB:
@@ -378,6 +401,9 @@ namespace Ermine::ImguiUI
         if (folderTex && folderTex->IsValid()) folderIcon = (ImTextureID)(intptr_t)folderTex->GetRendererID();
         if (fileTex && fileTex->IsValid()) fileIcon = (ImTextureID)(intptr_t)fileTex->GetRendererID();
         if (refreshTex && refreshTex->IsValid()) refreshIcon = (ImTextureID)(intptr_t)refreshTex->GetRendererID();
+
+        // Preload all texture assets
+        PreloadAllTextureAssets(projectRoot);
 
         // Initial load of directory contents
         LoadDirectoryContents(projectRoot);
