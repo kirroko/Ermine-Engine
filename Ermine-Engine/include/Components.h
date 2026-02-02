@@ -1347,6 +1347,69 @@ namespace Ermine
 			}
 		}
 
+		/**
+		* @brief Syncs cached values from the internal material for serialization.
+		* @details Call this before saving to ensure cached values match the actual material state.
+		*/
+		void SyncFromMaterial()
+		{
+			if (!m_material) return;
+
+			// Sync albedo
+			if (auto param = m_material->GetParameter("materialAlbedo"))
+			{
+				if (param->floatValues.size() >= 3)
+				{
+					hasAlbedo = true;
+					cacheAlbedo = Vec3(param->floatValues[0], param->floatValues[1], param->floatValues[2]);
+				}
+			}
+
+			// Sync roughness
+			if (auto param = m_material->GetParameter("materialRoughness"))
+			{
+				if (!param->floatValues.empty())
+				{
+					hasRough = true;
+					cacheRoughness = param->floatValues[0];
+				}
+			}
+
+			// Sync metallic
+			if (auto param = m_material->GetParameter("materialMetallic"))
+			{
+				if (!param->floatValues.empty())
+				{
+					hasMetal = true;
+					cacheMetallic = param->floatValues[0];
+				}
+			}
+
+			// Sync emissive
+			if (auto param = m_material->GetParameter("materialEmissive"))
+			{
+				if (param->floatValues.size() >= 3)
+				{
+					hasEmiss = true;
+					cacheEmissive = Vec3(param->floatValues[0], param->floatValues[1], param->floatValues[2]);
+				}
+			}
+
+			if (auto param = m_material->GetParameter("materialEmissiveIntensity"))
+			{
+				if (!param->floatValues.empty())
+				{
+					cacheEmissiveIntensity = param->floatValues[0];
+				}
+			}
+
+			// Sync shadows
+			if (auto param = m_material->GetParameter("materialCastsShadows"))
+			{
+				cacheCastsShadows = param->boolValue;
+			}
+		}
+
 		template <typename Alloc>
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
 			out.SetObject();

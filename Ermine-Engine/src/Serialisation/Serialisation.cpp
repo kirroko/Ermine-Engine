@@ -319,6 +319,14 @@ Config LoadConfigFromFile(const std::filesystem::path& path) {
 
 void SaveSceneToFile(const Ermine::ECS& ecs, const std::filesystem::path& path, bool pretty) {
 
+    // Sync all Material components from their internal materials before saving
+    for (Ermine::EntityID id = 0; id < Ermine::MAX_ENTITIES; ++id) {
+        if (ecs.IsEntityValid(id) && ecs.HasComponent<Ermine::Material>(id)) {
+            auto& matComp = const_cast<Ermine::ECS&>(ecs).GetComponent<Ermine::Material>(id);
+            matComp.SyncFromMaterial();
+        }
+    }
+
     if (path.has_parent_path()) {
         std::error_code ec;
         std::filesystem::create_directories(path.parent_path(), ec);
@@ -547,6 +555,25 @@ void LoadScene(const std::string& sceneName)
 
 void SavePrefabToFile(const Ermine::ECS& ecs, Ermine::EntityID root, const std::filesystem::path& path)
 {
+    // Sync all Material components in the prefab subtree
+    std::vector<Ermine::EntityID> toSync{ root };
+    while (!toSync.empty()) {
+        Ermine::EntityID e = toSync.back();
+        toSync.pop_back();
+        if (!ecs.IsEntityValid(e)) continue;
+        
+        if (ecs.HasComponent<Ermine::Material>(e)) {
+            auto& matComp = const_cast<Ermine::ECS&>(ecs).GetComponent<Ermine::Material>(e);
+            matComp.SyncFromMaterial();
+        }
+
+        if (ecs.HasComponent<Ermine::HierarchyComponent>(e)) {
+            const auto& h = ecs.GetComponent<Ermine::HierarchyComponent>(e);
+            for (auto c : h.children)
+                toSync.push_back(c);
+        }
+    }
+
     if (path.has_parent_path()) {
         std::error_code ec;
         std::filesystem::create_directories(path.parent_path(), ec);
