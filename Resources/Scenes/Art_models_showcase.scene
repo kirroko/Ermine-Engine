@@ -120,7 +120,11 @@
         "Material": {
           "hasMaterial": true,
           "params": {
-            "materialHasAlbedoMap": true
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
+            "materialHasRoughnessMap": true,
+            "materialHasMetallicMap": true,
+            "materialHasAoMap": true
           },
           "textures": [
             {
@@ -130,6 +134,22 @@
             {
               "slot": "material.albedoMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_BC.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_NRM.png"
+            },
+            {
+              "slot": "materialRoughnessMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_Roughness.png"
+            },
+            {
+              "slot": "material.metallicMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_Metallic.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_AO.png"
             }
           ],
           "uvScale": [
@@ -222,7 +242,7 @@
           "hasMaterial": true,
           "params": {
             "materialHasAlbedoMap": true,
-            "materialHasNormalMap": false,
+            "materialHasNormalMap": true,
             "materialHasRoughnessMap": true,
             "materialHasMetallicMap": true,
             "materialHasAoMap": true
@@ -235,6 +255,10 @@
             {
               "slot": "material.albedoMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_BC.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_NRM.png"
             },
             {
               "slot": "materialRoughnessMap",
@@ -538,7 +562,11 @@
         "Material": {
           "hasMaterial": true,
           "params": {
-            "materialHasAlbedoMap": true
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
+            "materialHasRoughnessMap": true,
+            "materialHasMetallicMap": true,
+            "materialHasAoMap": true
           },
           "textures": [
             {
@@ -548,6 +576,22 @@
             {
               "slot": "material.albedoMap",
               "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_clock_BC.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_clock_NRM.png"
+            },
+            {
+              "slot": "materialRoughnessMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_clock_Roughness.png"
+            },
+            {
+              "slot": "material.metallicMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_clock_Metallic.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_clock_AO.png"
             }
           ],
           "uvScale": [
@@ -738,7 +782,11 @@
         "Material": {
           "hasMaterial": true,
           "params": {
-            "materialHasAlbedoMap": true
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
+            "materialHasRoughnessMap": true,
+            "materialHasMetallicMap": true,
+            "materialHasAoMap": true
           },
           "textures": [
             {
@@ -748,6 +796,22 @@
             {
               "slot": "material.albedoMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_BC.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_NRM.png"
+            },
+            {
+              "slot": "materialRoughnessMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_Roughness.png"
+            },
+            {
+              "slot": "material.metallicMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_Metallic.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_AO.png"
             }
           ],
           "uvScale": [
@@ -981,7 +1045,19 @@
         "Material": {
           "hasMaterial": true,
           "params": {
-            "materialHasAlbedoMap": true
+            "materialAlbedo": [
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "materialAlpha": 1.0,
+            "materialTransparency": 0.0,
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
+            "materialHasRoughnessMap": true,
+            "materialHasMetallicMap": true,
+            "materialHasAoMap": true
           },
           "textures": [
             {
@@ -991,6 +1067,22 @@
             {
               "slot": "material.albedoMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\Platform\\ART1_platform_BC.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\Platform\\ART1_platform_NRM.png"
+            },
+            {
+              "slot": "materialRoughnessMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\Platform\\ART1_platform_Roughness.png"
+            },
+            {
+              "slot": "material.metallicMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\Platform\\ART1_platform_Metallic.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\Platform\\ART1_platform_AO.png"
             }
           ],
           "uvScale": [
@@ -1081,7 +1173,11 @@
         "Material": {
           "hasMaterial": true,
           "params": {
-            "materialHasAlbedoMap": true
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
+            "materialHasRoughnessMap": true,
+            "materialHasMetallicMap": true,
+            "materialHasAoMap": true
           },
           "textures": [
             {
@@ -1091,6 +1187,22 @@
             {
               "slot": "material.albedoMap",
               "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_bars_BC.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_bars_NRM.png"
+            },
+            {
+              "slot": "materialRoughnessMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_bars_Roughness.png"
+            },
+            {
+              "slot": "material.metallicMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_bars_Metallic.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_bars_AO.png"
             }
           ],
           "uvScale": [
@@ -1181,7 +1293,10 @@
         "Material": {
           "hasMaterial": true,
           "params": {
-            "materialHasAlbedoMap": true
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
+            "materialHasMetallicMap": true,
+            "materialHasAoMap": true
           },
           "textures": [
             {
@@ -1191,6 +1306,18 @@
             {
               "slot": "material.albedoMap",
               "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_door_BC.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_door_NRM.png"
+            },
+            {
+              "slot": "material.metallicMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_door_Metalness.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_door_AO.png"
             }
           ],
           "uvScale": [
@@ -1281,7 +1408,11 @@
         "Material": {
           "hasMaterial": true,
           "params": {
-            "materialHasAlbedoMap": true
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
+            "materialHasRoughnessMap": true,
+            "materialHasMetallicMap": true,
+            "materialHasAoMap": true
           },
           "textures": [
             {
@@ -1291,6 +1422,22 @@
             {
               "slot": "material.albedoMap",
               "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_deco_BC.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_deco_NRM.png"
+            },
+            {
+              "slot": "materialRoughnessMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_deco_Roughness.png"
+            },
+            {
+              "slot": "material.metallicMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_deco_Metallic.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_deco_AO.png"
             }
           ],
           "uvScale": [
@@ -1381,7 +1528,11 @@
         "Material": {
           "hasMaterial": true,
           "params": {
-            "materialHasAlbedoMap": true
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
+            "materialHasRoughnessMap": true,
+            "materialHasMetallicMap": true,
+            "materialHasAoMap": true
           },
           "textures": [
             {
@@ -1391,6 +1542,22 @@
             {
               "slot": "material.albedoMap",
               "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_deco_BC.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_deco_NRM.png"
+            },
+            {
+              "slot": "materialRoughnessMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_deco_Roughness.png"
+            },
+            {
+              "slot": "material.metallicMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_deco_Metallic.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_deco_AO.png"
             }
           ],
           "uvScale": [
@@ -1481,7 +1648,11 @@
         "Material": {
           "hasMaterial": true,
           "params": {
-            "materialHasAlbedoMap": true
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
+            "materialHasRoughnessMap": true,
+            "materialHasMetallicMap": true,
+            "materialHasAoMap": true
           },
           "textures": [
             {
@@ -1491,6 +1662,22 @@
             {
               "slot": "material.albedoMap",
               "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_floor_drain_BC.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_floor_drain_NRM.png"
+            },
+            {
+              "slot": "materialRoughnessMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_floor_drain_Roughness.png"
+            },
+            {
+              "slot": "material.metallicMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_floor_drain_Metallic.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_floor_drain_AO.png"
             }
           ],
           "uvScale": [
@@ -1581,7 +1768,11 @@
         "Material": {
           "hasMaterial": true,
           "params": {
-            "materialHasAlbedoMap": true
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
+            "materialHasRoughnessMap": true,
+            "materialHasMetallicMap": true,
+            "materialHasAoMap": true
           },
           "textures": [
             {
@@ -1591,6 +1782,22 @@
             {
               "slot": "material.albedoMap",
               "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_floor_BC.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_floor_NRM.png"
+            },
+            {
+              "slot": "materialRoughnessMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_floor_Roughness.png"
+            },
+            {
+              "slot": "material.metallicMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_floor_Metallic.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_floor_AO.png"
             }
           ],
           "uvScale": [
@@ -1681,7 +1888,11 @@
         "Material": {
           "hasMaterial": true,
           "params": {
-            "materialHasAlbedoMap": true
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
+            "materialHasRoughnessMap": true,
+            "materialHasMetallicMap": true,
+            "materialHasAoMap": true
           },
           "textures": [
             {
@@ -1691,6 +1902,22 @@
             {
               "slot": "material.albedoMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_BC.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_NRM.png"
+            },
+            {
+              "slot": "materialRoughnessMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_Roughness.png"
+            },
+            {
+              "slot": "material.metallicMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_Metallic.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_AO.png"
             }
           ],
           "uvScale": [
@@ -1781,7 +2008,11 @@
         "Material": {
           "hasMaterial": true,
           "params": {
-            "materialHasAlbedoMap": true
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
+            "materialHasRoughnessMap": true,
+            "materialHasMetallicMap": true,
+            "materialHasAoMap": true
           },
           "textures": [
             {
@@ -1791,6 +2022,22 @@
             {
               "slot": "material.albedoMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_BC.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_NRM.png"
+            },
+            {
+              "slot": "materialRoughnessMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_Roughness.png"
+            },
+            {
+              "slot": "material.metallicMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_Metallic.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_AO.png"
             }
           ],
           "uvScale": [
@@ -1881,7 +2128,11 @@
         "Material": {
           "hasMaterial": true,
           "params": {
-            "materialHasAlbedoMap": true
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
+            "materialHasRoughnessMap": true,
+            "materialHasMetallicMap": true,
+            "materialHasAoMap": true
           },
           "textures": [
             {
@@ -1891,6 +2142,22 @@
             {
               "slot": "material.albedoMap",
               "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_deco_BC.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_deco_NRM.png"
+            },
+            {
+              "slot": "materialRoughnessMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_deco_Roughness.png"
+            },
+            {
+              "slot": "material.metallicMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_deco_Metallic.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_deco_AO.png"
             }
           ],
           "uvScale": [
@@ -1942,7 +2209,11 @@
         "Material": {
           "hasMaterial": true,
           "params": {
-            "materialHasAlbedoMap": true
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
+            "materialHasRoughnessMap": true,
+            "materialHasMetallicMap": true,
+            "materialHasAoMap": true
           },
           "textures": [
             {
@@ -1952,6 +2223,22 @@
             {
               "slot": "material.albedoMap",
               "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_deco_BC.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_deco_NRM.png"
+            },
+            {
+              "slot": "materialRoughnessMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_deco_Roughness.png"
+            },
+            {
+              "slot": "material.metallicMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_deco_Metallic.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_deco_AO.png"
             }
           ],
           "uvScale": [
@@ -2043,7 +2330,7 @@
           "hasMaterial": true,
           "params": {
             "materialHasAlbedoMap": true,
-            "materialHasNormalMap": false,
+            "materialHasNormalMap": true,
             "materialHasRoughnessMap": true,
             "materialHasMetallicMap": true,
             "materialHasAoMap": true
@@ -2056,6 +2343,10 @@
             {
               "slot": "material.albedoMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_machine_2_BC.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_machine_2_NRM.png"
             },
             {
               "slot": "materialRoughnessMap",
@@ -2332,6 +2623,7 @@
           "hasMaterial": true,
           "params": {
             "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
             "materialHasRoughnessMap": true,
             "materialHasMetallicMap": true,
             "materialHasAoMap": true
@@ -2344,6 +2636,10 @@
             {
               "slot": "material.albedoMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_machine_BC.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_machine_NRM.png"
             },
             {
               "slot": "materialRoughnessMap",
@@ -2506,6 +2802,7 @@
           "hasMaterial": true,
           "params": {
             "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
             "materialHasRoughnessMap": true,
             "materialHasMetallicMap": true,
             "materialHasAoMap": true
@@ -2518,6 +2815,10 @@
             {
               "slot": "material.albedoMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_minibars_BC.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_minibars_NRM.png"
             },
             {
               "slot": "materialRoughnessMap",
@@ -2737,6 +3038,7 @@
           "hasMaterial": true,
           "params": {
             "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
             "materialHasRoughnessMap": true,
             "materialHasMetallicMap": true,
             "materialHasAoMap": true
@@ -2749,6 +3051,10 @@
             {
               "slot": "material.albedoMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_BC.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_NRM.png"
             },
             {
               "slot": "materialRoughnessMap",
@@ -2852,6 +3158,7 @@
           "hasMaterial": true,
           "params": {
             "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
             "materialHasRoughnessMap": true,
             "materialHasMetallicMap": true,
             "materialHasAoMap": true
@@ -2864,6 +3171,10 @@
             {
               "slot": "material.albedoMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_BC.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_NRM.png"
             },
             {
               "slot": "materialRoughnessMap",
@@ -2967,6 +3278,7 @@
           "hasMaterial": true,
           "params": {
             "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
             "materialHasRoughnessMap": true,
             "materialHasMetallicMap": true,
             "materialHasAoMap": true
@@ -2979,6 +3291,10 @@
             {
               "slot": "material.albedoMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_BC.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_NRM.png"
             },
             {
               "slot": "materialRoughnessMap",
@@ -3451,7 +3767,7 @@
           "hasMaterial": true,
           "params": {
             "materialHasAlbedoMap": true,
-            "materialHasNormalMap": false,
+            "materialHasNormalMap": true,
             "materialHasRoughnessMap": true,
             "materialHasMetallicMap": true,
             "materialHasAoMap": true
@@ -3464,6 +3780,10 @@
             {
               "slot": "material.albedoMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_deco_BC.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_deco_NRM.png"
             },
             {
               "slot": "materialRoughnessMap",
@@ -3989,6 +4309,7 @@
           "hasMaterial": true,
           "params": {
             "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
             "materialHasRoughnessMap": true,
             "materialHasMetallicMap": true,
             "materialHasAoMap": true
@@ -4001,6 +4322,10 @@
             {
               "slot": "material.albedoMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_BC.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_NRM.png"
             },
             {
               "slot": "materialRoughnessMap",
@@ -9783,7 +10108,7 @@
       }
     },
     {
-      "id": 179,
+      "id": 176,
       "components": {
         "IDComponent": {
           "guid": "6b0ad94486c2764bace7c9bf73a0c119"
@@ -9832,7 +10157,7 @@
       }
     },
     {
-      "id": 180,
+      "id": 177,
       "components": {
         "IDComponent": {
           "guid": "8b78adaf53a0db4bb343be70c8d0f6bc"
@@ -9881,16 +10206,16 @@
       }
     },
     {
-      "id": 181,
+      "id": 178,
       "components": {
         "IDComponent": {
           "guid": "53399b72a435864ebfb2bb6af1d96445"
         },
         "Transform": {
           "position": [
-            96.28805541992188,
-            24.678470611572267,
-            30.64649772644043
+            82.05094146728516,
+            21.501073837280275,
+            39.824806213378909
           ],
           "rotation": [
             0.0,
@@ -9930,7 +10255,7 @@
       }
     },
     {
-      "id": 182,
+      "id": 179,
       "components": {
         "IDComponent": {
           "guid": "1c3ea3ac0461c649b57e4f43b686d659"
@@ -9979,7 +10304,7 @@
       }
     },
     {
-      "id": 183,
+      "id": 180,
       "components": {
         "IDComponent": {
           "guid": "89d7ac39c744cf459e5d35deee03bd68"
@@ -10028,7 +10353,7 @@
       }
     },
     {
-      "id": 184,
+      "id": 181,
       "components": {
         "IDComponent": {
           "guid": "7e674090e5e111409822ed4a7ce97d22"
@@ -10077,7 +10402,7 @@
       }
     },
     {
-      "id": 185,
+      "id": 182,
       "components": {
         "IDComponent": {
           "guid": "b853468239b7ab4f9cb327ec344da42a"
@@ -10126,7 +10451,7 @@
       }
     },
     {
-      "id": 186,
+      "id": 183,
       "components": {
         "IDComponent": {
           "guid": "cfbe88cde428384eb7ab28355738bccb"
@@ -10175,7 +10500,7 @@
       }
     },
     {
-      "id": 187,
+      "id": 184,
       "components": {
         "IDComponent": {
           "guid": "86bb654ca201514fb448ac6ba6227556"
@@ -10225,6 +10550,12 @@
     }
   ],
   "globalGraphics": {
+    "ambientColor": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "ambientIntensity": 0.07999999821186066,
     "ssaoEnabled": false,
     "ssaoSamples": 16,
     "ssaoRadius": 10.0,
