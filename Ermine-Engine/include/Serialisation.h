@@ -115,4 +115,22 @@ Ermine::Guid EnsureMetaForSource(const std::filesystem::path& sourcePath,
     std::string_view type = {},
     bool pretty = true);
 
+// Forward declarations for material serialization
+namespace Ermine::graphics { class Material; }
+
+/**
+ * @brief Save material to .mat file
+ * @param material Material to save
+ * @param path File path for the .mat file
+ * @param pretty Use pretty formatting (default: true)
+ */
+void SaveMaterialToFile(const Ermine::graphics::Material& material, const std::filesystem::path& path, bool pretty = true);
+
+/**
+ * @brief Load material from .mat file
+ * @param path File path of the .mat file
+ * @return Loaded material
+ */
+Ermine::graphics::Material LoadMaterialFromFile(const std::filesystem::path& path);
+
 #endif // SERIALISATION_H

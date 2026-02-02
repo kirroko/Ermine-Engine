@@ -336,6 +336,7 @@ copy /B /Y "$(SolutionDir)ThirdParty\DirectXTex\lib\DirectXTex.pdb" "$(SolutionD
     <ClInclude Include="include\FSMNode.h" />
     <ClInclude Include="include\FiniteStateMachine.h" />
     <ClInclude Include="include\FrameController.h" />
+    <ClInclude Include="include\GISystem.h" />
     <ClInclude Include="include\GPUProfiler.h" />
     <ClInclude Include="include\GameObject.h" />
     <ClInclude Include="include\GameObjectFactory.h" />
@@ -343,7 +344,6 @@ copy /B /Y "$(SolutionDir)ThirdParty\DirectXTex\lib\DirectXTex.pdb" "$(SolutionD
     <ClInclude Include="include\GraphicsDebugGUI.h" />
     <ClInclude Include="include\Guid.h" />
     <ClInclude Include="include\GuidRegistry.h" />
-    <ClInclude Include="include\GISystem.h" />
     <ClInclude Include="include\HierarchyInspector.h" />
     <ClInclude Include="include\HierarchyPanel.h" />
     <ClInclude Include="include\HierarchySystem.h" />
@@ -354,6 +354,7 @@ copy /B /Y "$(SolutionDir)ThirdParty\DirectXTex\lib\DirectXTex.pdb" "$(SolutionD
     <ClInclude Include="include\JobSystem.h" />
     <ClInclude Include="include\Logger.h" />
     <ClInclude Include="include\Material.h" />
+    <ClInclude Include="include\MaterialEditorGUI.h" />
     <ClInclude Include="include\MathUtils.h" />
     <ClInclude Include="include\MathVector.h" />
     <ClInclude Include="include\Matrix3x3.h" />
@@ -439,6 +440,7 @@ copy /B /Y "$(SolutionDir)ThirdParty\DirectXTex\lib\DirectXTex.pdb" "$(SolutionD
     <ClCompile Include="src\ImGUI\EditorGUI.cpp" />
     <ClCompile Include="src\ImGUI\GraphicsDebugGUI.cpp" />
     <ClCompile Include="src\ImGUI\InspectorGUI.cpp" />
+    <ClCompile Include="src\ImGUI\MaterialEditorGUI.cpp" />
     <ClCompile Include="src\ImGUI\SettingsGUI.cpp" />
     <ClCompile Include="src\ImGUI\VideoImGUI.cpp" />
     <ClCompile Include="src\ImGUI\ViewPortGUI.cpp" />
@@ -464,10 +466,10 @@ copy /B /Y "$(SolutionDir)ThirdParty\DirectXTex\lib\DirectXTex.pdb" "$(SolutionD
     <ClCompile Include="src\Serialisation\PrefabManager.cpp" />
     <ClCompile Include="src\Serialisation\SceneManager.cpp" />
     <ClCompile Include="src\Serialisation\Serialisation.cpp" />
+    <ClCompile Include="src\Systems\GISystem.cpp" />
     <ClCompile Include="src\Systems\HierarchyInspector.cpp" />
     <ClCompile Include="src\Systems\HierarchyPanel.cpp" />
     <ClCompile Include="src\Systems\HierarchySystem.cpp" />
-    <ClCompile Include="src\Systems\GISystem.cpp" />
     <ClCompile Include="src\Systems\TransformMode.cpp" />
     <ClCompile Include="src\Systems\VideoManager.cpp" />
     <ClCompile Include="src\Utility\AssetRegistry.cpp" />

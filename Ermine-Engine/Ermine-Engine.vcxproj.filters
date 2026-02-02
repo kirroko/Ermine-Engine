@@ -183,6 +183,9 @@
     <ClInclude Include="include\FrameController.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\GISystem.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\GPUProfiler.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -202,9 +205,6 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\GuidRegistry.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\GISystem.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\HierarchyInspector.h">
@@ -235,6 +235,9 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\Material.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\MaterialEditorGUI.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\MathUtils.h">
@@ -488,6 +491,9 @@
     <ClCompile Include="src\ImGUI\InspectorGUI.cpp">
       <Filter>src\ImGUI</Filter>
     </ClCompile>
+    <ClCompile Include="src\ImGUI\MaterialEditorGUI.cpp">
+      <Filter>src\ImGUI</Filter>
+    </ClCompile>
     <ClCompile Include="src\ImGUI\SettingsGUI.cpp">
       <Filter>src\ImGUI</Filter>
     </ClCompile>
@@ -557,6 +563,9 @@
     <ClCompile Include="src\Serialisation\Serialisation.cpp">
       <Filter>src\Serialisation</Filter>
     </ClCompile>
+    <ClCompile Include="src\Systems\GISystem.cpp">
+      <Filter>src\Systems</Filter>
+    </ClCompile>
     <ClCompile Include="src\Systems\HierarchyInspector.cpp">
       <Filter>src\Systems</Filter>
     </ClCompile>
@@ -564,9 +573,6 @@
       <Filter>src\Systems</Filter>
     </ClCompile>
     <ClCompile Include="src\Systems\HierarchySystem.cpp">
-      <Filter>src\Systems</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Systems\GISystem.cpp">
       <Filter>src\Systems</Filter>
     </ClCompile>
     <ClCompile Include="src\Systems\TransformMode.cpp">

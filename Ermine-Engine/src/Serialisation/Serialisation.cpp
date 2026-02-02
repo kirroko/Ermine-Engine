@@ -939,3 +939,239 @@ Ermine::Guid EnsureMetaForSource(const std::filesystem::path& sourcePath,
     return created;
 }
 
+// --- Material Serialization ---
+
+#include "Material.h"
+
+void SaveMaterialToFile(const Ermine::graphics::Material& material, const std::filesystem::path& path, bool pretty)
+{
+    if (path.has_parent_path()) {
+        std::error_code ec;
+        std::filesystem::create_directories(path.parent_path(), ec);
+        if (ec) {
+            throw std::runtime_error("Failed to create directory: " + path.parent_path().string());
+        }
+    }
+
+    std::ofstream ofs(path, std::ios::binary);
+    if (!ofs) {
+        throw std::runtime_error("Could not open file for writing: " + path.string());
+    }
+
+    rapidjson::Document d;
+    d.SetObject();
+    auto& a = d.GetAllocator();
+
+    // Save all material parameters
+    rapidjson::Value paramsObj(rapidjson::kObjectType);
+
+    // Helper lambda to save a parameter if it exists
+    auto saveParam = [&](const std::string& name) {
+        if (const auto* param = material.GetParameter(name)) {
+            rapidjson::Value paramObj(rapidjson::kObjectType);
+            
+            switch (param->type) {
+                case Ermine::graphics::MaterialParamType::FLOAT:
+                    paramObj.AddMember("type", "float", a);
+                    if (!param->floatValues.empty()) {
+                        paramObj.AddMember("value", param->floatValues[0], a);
+                    }
+                    break;
+                    
+                case Ermine::graphics::MaterialParamType::VEC2:
+                    paramObj.AddMember("type", "vec2", a);
+                    if (param->floatValues.size() >= 2) {
+                        rapidjson::Value arr(rapidjson::kArrayType);
+                        arr.PushBack(param->floatValues[0], a);
+                        arr.PushBack(param->floatValues[1], a);
+                        paramObj.AddMember("value", arr, a);
+                    }
+                    break;
+                    
+                case Ermine::graphics::MaterialParamType::VEC3:
+                    paramObj.AddMember("type", "vec3", a);
+                    if (param->floatValues.size() >= 3) {
+                        rapidjson::Value arr(rapidjson::kArrayType);
+                        arr.PushBack(param->floatValues[0], a);
+                        arr.PushBack(param->floatValues[1], a);
+                        arr.PushBack(param->floatValues[2], a);
+                        paramObj.AddMember("value", arr, a);
+                    }
+                    break;
+                    
+                case Ermine::graphics::MaterialParamType::VEC4:
+                    paramObj.AddMember("type", "vec4", a);
+                    if (param->floatValues.size() >= 4) {
+                        rapidjson::Value arr(rapidjson::kArrayType);
+                        arr.PushBack(param->floatValues[0], a);
+                        arr.PushBack(param->floatValues[1], a);
+                        arr.PushBack(param->floatValues[2], a);
+                        arr.PushBack(param->floatValues[3], a);
+                        paramObj.AddMember("value", arr, a);
+                    }
+                    break;
+                    
+                case Ermine::graphics::MaterialParamType::INT:
+                    paramObj.AddMember("type", "int", a);
+                    paramObj.AddMember("value", param->intValue, a);
+                    break;
+                    
+                case Ermine::graphics::MaterialParamType::BOOL:
+                    paramObj.AddMember("type", "bool", a);
+                    paramObj.AddMember("value", param->boolValue, a);
+                    break;
+                    
+                case Ermine::graphics::MaterialParamType::TEXTURE_2D:
+                    paramObj.AddMember("type", "texture2d", a);
+                    if (param->texture) {
+                        std::string texPath = param->texture->GetFilePath();
+                        paramObj.AddMember("value", rapidjson::Value(texPath.c_str(), a), a);
+                    }
+                    break;
+            }
+            
+            paramsObj.AddMember(rapidjson::Value(name.c_str(), a), paramObj, a);
+        }
+    };
+
+    // Save all common material parameters
+    saveParam("materialAlbedo");
+    saveParam("materialMetallic");
+    saveParam("materialRoughness");
+    saveParam("materialAo");
+    saveParam("materialEmissive");
+    saveParam("materialEmissiveIntensity");
+    saveParam("materialNormalStrength");
+    saveParam("materialShadingModel");
+    saveParam("materialCastsShadows");
+    saveParam("materialHasAlbedoMap");
+    saveParam("materialHasNormalMap");
+    saveParam("materialHasRoughnessMap");
+    saveParam("materialHasMetallicMap");
+    saveParam("materialHasAoMap");
+    saveParam("materialHasEmissiveMap");
+    saveParam("materialAlbedoMap");
+    saveParam("materialNormalMap");
+    saveParam("materialRoughnessMap");
+    saveParam("materialMetallicMap");
+    saveParam("materialAoMap");
+    saveParam("materialEmissiveMap");
+
+    d.AddMember("parameters", paramsObj, a);
+
+    // Save UV transform
+    rapidjson::Value uvObj(rapidjson::kObjectType);
+    auto uvScale = material.GetUVScale();
+    auto uvOffset = material.GetUVOffset();
+    
+    rapidjson::Value scaleArr(rapidjson::kArrayType);
+    scaleArr.PushBack(uvScale.x, a);
+    scaleArr.PushBack(uvScale.y, a);
+    uvObj.AddMember("scale", scaleArr, a);
+    
+    rapidjson::Value offsetArr(rapidjson::kArrayType);
+    offsetArr.PushBack(uvOffset.x, a);
+    offsetArr.PushBack(uvOffset.y, a);
+    uvObj.AddMember("offset", offsetArr, a);
+    
+    d.AddMember("uvTransform", uvObj, a);
+
+    // Write to file
+    rapidjson::OStreamWrapper osw(ofs);
+    if (pretty) {
+        rapidjson::PrettyWriter<rapidjson::OStreamWrapper> writer(osw);
+        d.Accept(writer);
+    }
+    else {
+        rapidjson::Writer<rapidjson::OStreamWrapper> writer(osw);
+        d.Accept(writer);
+    }
+}
+
+Ermine::graphics::Material LoadMaterialFromFile(const std::filesystem::path& path)
+{
+    std::ifstream ifs(path, std::ios::binary);
+    if (!ifs) {
+        throw std::runtime_error("Could not open file for reading: " + path.string());
+    }
+
+    rapidjson::IStreamWrapper isw(ifs);
+    rapidjson::Document d;
+    d.ParseStream(isw);
+
+    if (d.HasParseError() || !d.IsObject()) {
+        throw std::runtime_error("Invalid JSON file: " + path.string());
+    }
+
+    Ermine::graphics::Material material;
+
+    // Load parameters
+    if (d.HasMember("parameters") && d["parameters"].IsObject()) {
+        const auto& paramsObj = d["parameters"];
+        
+        for (auto it = paramsObj.MemberBegin(); it != paramsObj.MemberEnd(); ++it) {
+            std::string paramName = it->name.GetString();
+            const auto& paramData = it->value;
+            
+            if (!paramData.IsObject() || !paramData.HasMember("type")) continue;
+            
+            std::string type = paramData["type"].GetString();
+            
+            if (type == "float" && paramData.HasMember("value") && paramData["value"].IsNumber()) {
+                material.SetFloat(paramName, paramData["value"].GetFloat());
+            }
+            else if (type == "vec2" && paramData.HasMember("value") && paramData["value"].IsArray()) {
+                const auto& arr = paramData["value"].GetArray();
+                if (arr.Size() >= 2) {
+                    material.SetVec2(paramName, Ermine::Vec2(arr[0].GetFloat(), arr[1].GetFloat()));
+                }
+            }
+            else if (type == "vec3" && paramData.HasMember("value") && paramData["value"].IsArray()) {
+                const auto& arr = paramData["value"].GetArray();
+                if (arr.Size() >= 3) {
+                    material.SetVec3(paramName, Ermine::Vec3(arr[0].GetFloat(), arr[1].GetFloat(), arr[2].GetFloat()));
+                }
+            }
+            else if (type == "vec4" && paramData.HasMember("value") && paramData["value"].IsArray()) {
+                const auto& arr = paramData["value"].GetArray();
+                if (arr.Size() >= 4) {
+                    material.SetVec4(paramName, Ermine::Vec4(arr[0].GetFloat(), arr[1].GetFloat(), arr[2].GetFloat(), arr[3].GetFloat()));
+                }
+            }
+            else if (type == "int" && paramData.HasMember("value") && paramData["value"].IsInt()) {
+                material.SetInt(paramName, paramData["value"].GetInt());
+            }
+            else if (type == "bool" && paramData.HasMember("value") && paramData["value"].IsBool()) {
+                material.SetBool(paramName, paramData["value"].GetBool());
+            }
+            else if (type == "texture2d" && paramData.HasMember("value") && paramData["value"].IsString()) {
+                std::string texPath = paramData["value"].GetString();
+                // Note: Texture loading needs to be handled by the caller with AssetManager
+                // We just store the path info for now
+                // The UI layer will need to load the actual texture
+            }
+        }
+    }
+
+    // Load UV transform
+    if (d.HasMember("uvTransform") && d["uvTransform"].IsObject()) {
+        const auto& uvObj = d["uvTransform"];
+        
+        if (uvObj.HasMember("scale") && uvObj["scale"].IsArray()) {
+            const auto& scaleArr = uvObj["scale"].GetArray();
+            if (scaleArr.Size() >= 2) {
+                material.SetUVScale(Ermine::Vec2(scaleArr[0].GetFloat(), scaleArr[1].GetFloat()));
+            }
+        }
+        
+        if (uvObj.HasMember("offset") && uvObj["offset"].IsArray()) {
+            const auto& offsetArr = uvObj["offset"].GetArray();
+            if (offsetArr.Size() >= 2) {
+                material.SetUVOffset(Ermine::Vec2(offsetArr[0].GetFloat(), offsetArr[1].GetFloat()));
+            }
+        }
+    }
+
+    return material;
+}
+
