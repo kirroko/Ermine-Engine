@@ -1455,8 +1455,10 @@ namespace Ermine
 			// Known slots across the codebase (support both dot and non-dot styles + fallback)
 			const char* slots[] = {
 				"materialAlbedoMap", "material.albedoMap",
-				"material.normalMap",
-				"materialRoughnessMap", "material.metallicMap", "materialAoMap", "materialEmissiveMap",
+				"material.normalMap", "materialNormalMap",
+				"materialRoughnessMap", 
+				"material.metallicMap", "materialMetallicMap", 
+				"materialAoMap", "materialEmissiveMap",
 				"texture0" // fallback for legacy
 			};
 
@@ -1641,7 +1643,7 @@ namespace Ermine
 							m_material->SetBool(nonDot, true);
 							m_material->SetBool(dot, true);
 							};
-						if (slot.find("normal") != std::string::npos) {
+						if (slot.find("Normal") != std::string::npos) {
 							setPresence("materialHasNormalMap", "material.hasNormalMap");
 						}
 						if (slot.find("Albedo") != std::string::npos || slot.find("albedo") != std::string::npos) {
