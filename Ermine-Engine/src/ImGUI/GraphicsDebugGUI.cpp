@@ -459,11 +459,6 @@ void GraphicsDebugGUI::DrawLightingControls()
             int probeCount = giSystem ? static_cast<int>(giSystem->GetProbeEntities().size()) : 0;
             ImGui::Text("Active Volumes: %d", probeCount);
 
-            if (renderer) {
-                ImGui::SliderInt("GI Bounces", &renderer->m_GIBakeBounces, 1, 8);
-                ImGui::SliderFloat("Energy Loss", &renderer->m_GIBakeEnergyLoss, 0.0f, 1.0f);
-            }
-
             DrawTooltip("Captures indirect lighting into each probe");
 
             ImGui::TreePop();

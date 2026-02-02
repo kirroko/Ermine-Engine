@@ -684,12 +684,6 @@ namespace Ermine::graphics
 		 */
 		void ProjectCubemapArrayToSH(int probeIndex, glm::vec3 outCoefficients[9]);
 
-		/**
-		 * @brief Bakes all probes in the scene (captures environment lighting).
-		 * Iterates through all probe entities and captures their lighting data.
-		 */
-		void BakeAllProbes();
-
         /**
          * @brief Updates the material's shader storage buffer object (SSBO) at a specific index.
          * Used for dynamic material updates after initial compilation.

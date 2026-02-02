@@ -4231,8 +4231,27 @@ void Renderer::CaptureLightProbe(EntityID probeEntity)
 	const auto& trans = ecs.GetComponent<Transform>(probeEntity);
 	glm::vec3 probePos(trans.position.x, trans.position.y, trans.position.z);
 
-	if (probe.probeIndex < 0 || probe.probeIndex >= MAX_PROBES) {
-		return;
+	// Ensure the probe has a unique index in the cubemap array
+	std::vector<bool> usedIndices(MAX_PROBES, false);
+	for (EntityID other = 0; other < MAX_ENTITIES; ++other) {
+		if (!ecs.HasComponent<LightProbeVolumeComponent>(other)) continue;
+		if (other == probeEntity) continue;
+		auto& otherProbe = ecs.GetComponent<LightProbeVolumeComponent>(other);
+		if (!otherProbe.isActive) continue;
+		if (otherProbe.probeIndex >= 0 && otherProbe.probeIndex < MAX_PROBES) {
+			usedIndices[otherProbe.probeIndex] = true;
+		}
+	}
+	const bool needsIndex = (probe.probeIndex < 0 || probe.probeIndex >= MAX_PROBES || usedIndices[probe.probeIndex]);
+	if (needsIndex) {
+		int freeIndex = -1;
+		for (int i = 0; i < MAX_PROBES; ++i) {
+			if (!usedIndices[i]) { freeIndex = i; break; }
+		}
+		if (freeIndex < 0) {
+			return;
+		}
+		probe.probeIndex = freeIndex;
 	}
 
 	// Update capture resolution if changed
@@ -4736,35 +4755,6 @@ void Renderer::ProjectCubemapArrayToSH(int probeIndex, glm::vec3 outCoefficients
 	}
 
 	glCheckError();
-}
-
-/**
- * @brief Bakes all light probes in the scene.
- */
-void Renderer::BakeAllProbes()
-{
-	auto& ecs = Ermine::ECS::GetInstance();
-	
-	int bakedCount = 0;
-	int probeIndex = 0;
-	// Iterate through all living entities
-	for (EntityID entity = 0; entity < MAX_ENTITIES; ++entity) {
-		if (!ecs.HasComponent<LightProbeVolumeComponent>(entity)) continue;
-		if (!ecs.HasComponent<Transform>(entity)) continue;
-		
-		auto& probe = ecs.GetComponent<LightProbeVolumeComponent>(entity);
-		if (!probe.isActive) continue;
-		if (probeIndex >= MAX_PROBES) {
-			break;
-		}
-
-		probe.probeIndex = probeIndex;
-		probeIndex++;
-
-		CaptureLightProbe(entity);
-		bakedCount++;
-	}
-
 }
 
 /**

@@ -20,17 +20,6 @@ namespace Ermine
 {
 	void GISystem::Update()
 	{
-		AssignProbeIndices();
-	}
-
-	void GISystem::BakeAllProbes()
-	{
-		auto renderer = ECS::GetInstance().GetSystem<graphics::Renderer>();
-		if (!renderer)
-			return;
-
-		AssignProbeIndices();
-		renderer->BakeAllProbes();
 	}
 
 	void GISystem::RebuildAllProbeVolumes()
@@ -38,33 +27,4 @@ namespace Ermine
 		// No-op: one probe per volume (user-placed)
 	}
 
-	int GISystem::AssignProbeIndices()
-	{
-		auto& ecs = ECS::GetInstance();
-		int index = 0;
-
-		for (EntityID entity : m_Entities)
-		{
-			if (!ecs.HasComponent<LightProbeVolumeComponent>(entity))
-				continue;
-
-			auto& volume = ecs.GetComponent<LightProbeVolumeComponent>(entity);
-			if (!volume.isActive)
-			{
-				volume.probeIndex = -1;
-				continue;
-			}
-
-			if (index >= kMaxProbeIndices)
-			{
-				volume.probeIndex = -1;
-				continue;
-			}
-
-			volume.probeIndex = index;
-			++index;
-		}
-
-		return index;
-	}
 }

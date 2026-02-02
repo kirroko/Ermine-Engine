@@ -23,14 +23,9 @@ namespace Ermine
 	{
 	public:
 		/**
-		 * @brief Updates probe indices for active probes.
+		 * @brief Updates GI system state.
 		 */
 		void Update();
-
-		/**
-		 * @brief Bakes all active light probes (indirect capture).
-		 */
-		void BakeAllProbes();
 
 		/**
 		 * @brief Rebuilds all light probe volumes (regenerates probe entities).
@@ -42,13 +37,5 @@ namespace Ermine
 		 */
 		const std::set<EntityID>& GetProbeEntities() const { return m_Entities; }
 
-		/**
-		 * @brief Iterates active probes and assigns sequential probe indices.
-		 * @return Number of active probes assigned an index.
-		 */
-		int AssignProbeIndices();
-
-	private:
-		static constexpr int kMaxProbeIndices = 128;
 	};
 }

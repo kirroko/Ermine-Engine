@@ -468,13 +468,13 @@
               "class": "PlayerController2",
               "enabled": true,
               "fields": {
-                "jumpHeight": {
-                  "t": 0,
-                  "v": 2.0
-                },
                 "mouseHorSens": {
                   "t": 0,
                   "v": 0.30000001192092898
+                },
+                "jumpHeight": {
+                  "t": 0,
+                  "v": 2.0
                 },
                 "mouseVertSens": {
                   "t": 0,
@@ -484,13 +484,13 @@
                   "t": 0,
                   "v": 5.0
                 },
-                "camDefaultY": {
-                  "t": 0,
-                  "v": 4.5
-                },
                 "jumpspeed": {
                   "t": 0,
                   "v": 5.0
+                },
+                "camDefaultY": {
+                  "t": 0,
+                  "v": 4.5
                 },
                 "crouchLerpSpeed": {
                   "t": 0,
@@ -502,11 +502,11 @@
               "class": "OrbTeleport",
               "enabled": true,
               "fields": {
-                "damage": {
+                "recallHealAmt": {
                   "t": 0,
                   "v": 10.0
                 },
-                "recallHealAmt": {
+                "damage": {
                   "t": 0,
                   "v": 10.0
                 }
@@ -16968,11 +16968,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -17946,11 +17946,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -18809,11 +18809,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -19672,11 +19672,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -20535,11 +20535,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -21398,11 +21398,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -22261,11 +22261,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -23356,11 +23356,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -24451,11 +24451,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -53360,7 +53360,7 @@
           "captureResolution": 64,
           "voxelResolution": 43,
           "priority": 0,
-          "showGizmos": true,
+          "showGizmos": false,
           "bakedProbePath": "../Resources/Textures/GI/GI_test/Probe_792.probe"
         },
         "HierarchyComponent": {

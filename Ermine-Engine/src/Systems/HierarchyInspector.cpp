@@ -1410,11 +1410,16 @@ namespace Ermine::editor {
 		ImGui::Checkbox("Show Gizmos", &volume.showGizmos);
 		ImGui::Text("Probe Index: %d", volume.probeIndex);
 
-		if (ImGui::Button("Bake Probe")) {
-			auto giSystem = ecs.GetSystem<GISystem>();
-			if (giSystem) {
-				giSystem->AssignProbeIndices();
+		if (ImGui::TreeNode("Bake Settings")) {
+			auto renderer = ecs.GetSystem<graphics::Renderer>();
+			if (renderer) {
+				ImGui::SliderInt("GI Bounces", &renderer->m_GIBakeBounces, 1, 8);
+				ImGui::SliderFloat("Energy Loss", &renderer->m_GIBakeEnergyLoss, 0.0f, 1.0f);
 			}
+			ImGui::TreePop();
+		}
+
+		if (ImGui::Button("Bake Probe")) {
 			auto renderer = ecs.GetSystem<graphics::Renderer>();
 			if (renderer) {
 				renderer->CaptureLightProbe(entity);
