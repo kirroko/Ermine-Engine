@@ -273,9 +273,13 @@ void GraphicsDebugGUI::DrawPostProcessingControls()
                         "Fast Approximate Anti-Aliasing to reduce jagged edges");
         DrawToggleButton("Bloom Effect", &renderer->m_BloomEnabled, 
                         "Bloom effect for bright light sources");
-        DrawToggleButton("Vignette Effect", &renderer->m_VignetteEnabled, 
+        DrawToggleButton("Vignette Effect", &renderer->m_VignetteEnabled,
                         "Vignette darkening at screen borders");
-        
+        DrawToggleButton("Film Grain", &renderer->m_FilmGrainEnabled,
+                        "Add film grain noise effect");
+        DrawToggleButton("Chromatic Aberration", &renderer->m_ChromaticAberrationEnabled,
+                        "Color fringing effect at screen edges");
+
         ImGui::Separator();
         
         // Exposure and Color Controls
@@ -307,13 +311,31 @@ void GraphicsDebugGUI::DrawPostProcessingControls()
         // Vignette Controls
         if (ImGui::TreeNode("Vignette Settings"))
         {
-            DrawFloatSlider("Vignette Intensity", &renderer->m_VignetteIntensity, 0.0f, 1.0f, 
+            DrawFloatSlider("Vignette Intensity", &renderer->m_VignetteIntensity, 0.0f, 1.0f,
                            "Strength of vignette darkening");
-            DrawFloatSlider("Vignette Radius", &renderer->m_VignetteRadius, 0.1f, 1.0f, 
+            DrawFloatSlider("Vignette Radius", &renderer->m_VignetteRadius, 0.1f, 1.0f,
                            "Size of vignette effect");
             ImGui::TreePop();
         }
-        
+
+        // Film Grain Controls
+        if (ImGui::TreeNode("Film Grain Settings"))
+        {
+            DrawFloatSlider("Grain Intensity", &renderer->m_GrainIntensity, 0.0f, 0.1f,
+                           "Strength of film grain noise");
+            DrawFloatSlider("Grain Scale", &renderer->m_GrainScale, 0.5f, 5.0f,
+                           "Scale of film grain pattern");
+            ImGui::TreePop();
+        }
+
+        // Chromatic Aberration Controls
+        if (ImGui::TreeNode("Chromatic Aberration Settings"))
+        {
+            DrawFloatSlider("Aberration Amount", &renderer->m_ChromaticAmount, 0.0f, 0.02f,
+                           "Strength of color separation at edges");
+            ImGui::TreePop();
+        }
+
         // FXAA Controls
         if (ImGui::TreeNode("FXAA Settings"))
         {

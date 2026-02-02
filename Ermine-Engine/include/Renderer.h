@@ -263,6 +263,8 @@ namespace Ermine::graphics
         bool m_BloomEnabled = true;
         bool m_SkyBoxisHDR = false;
         bool m_ShowSkybox = true;
+        bool m_FilmGrainEnabled = false;
+        bool m_ChromaticAberrationEnabled = false;
 
         // Post-processing uniforms - parameters
         float m_Exposure = 1.0f;
@@ -272,6 +274,9 @@ namespace Ermine::graphics
         float m_VignetteIntensity = 0.3f;
         float m_VignetteRadius = 0.8f;
         float m_BloomStrength = 0.04f;
+        float m_GrainIntensity = 0.015f;
+        float m_GrainScale = 1.5f;
+        float m_ChromaticAmount = 0.003f;
 
         // FXAA parameters
         float m_FXAASpanMax = 8.0f;
@@ -1284,6 +1289,7 @@ namespace Ermine::graphics
 		std::shared_ptr<PostProcessBuffer> m_AntiAliasingBuffer;
         std::shared_ptr<PostProcessBuffer> m_MotionBlurBuffer;
         std::shared_ptr<PostProcessBuffer> m_MotionBlurMaskBuffer;
+        GLuint m_NoiseTexture = 0; // Film grain noise texture
         std::shared_ptr<Shader> m_BloomShader = 0; // Shader for bloom effect
         std::shared_ptr<Shader> m_PostProcessShader = 0; // Shader for post-processing effects
 		std::shared_ptr<Shader> m_AAShader = 0; // Shader for anti-aliasing

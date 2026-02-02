@@ -852,6 +852,11 @@ void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 			glDeleteFramebuffers(1, &m_MotionBlurMaskBuffer->FBO);
 			glDeleteTextures(1, &m_MotionBlurMaskBuffer->ColorTexture);
 		}
+		if (m_NoiseTexture != 0)
+		{
+			glDeleteTextures(1, &m_NoiseTexture);
+			m_NoiseTexture = 0;
+		}
 	}
 
 	// Create main post-process buffer with depth attachment for skybox rendering
@@ -1045,6 +1050,54 @@ void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 	MBMaskBuffer.width = width;
 	MBMaskBuffer.height = height;
 	m_MotionBlurMaskBuffer = std::make_shared<PostProcessBuffer>(MBMaskBuffer);
+
+	// Generate film grain noise texture (256x256, single channel)
+	{
+		constexpr int NOISE_SIZE = 256;
+		std::vector<unsigned char> noiseData(NOISE_SIZE * NOISE_SIZE);
+
+		// Use a better noise algorithm - blue noise approximation via void-and-cluster
+		std::mt19937 rng(42); // Fixed seed for reproducibility
+		std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+
+		// Generate base white noise
+		for (int i = 0; i < NOISE_SIZE * NOISE_SIZE; ++i)
+		{
+			noiseData[i] = static_cast<unsigned char>(dist(rng) * 255.0f);
+		}
+
+		// Apply simple low-pass filter to reduce harsh patterns (makes grain more filmic)
+		std::vector<unsigned char> filtered(NOISE_SIZE * NOISE_SIZE);
+		for (int y = 0; y < NOISE_SIZE; ++y)
+		{
+			for (int x = 0; x < NOISE_SIZE; ++x)
+			{
+				int sum = 0;
+				int count = 0;
+				for (int dy = -1; dy <= 1; ++dy)
+				{
+					for (int dx = -1; dx <= 1; ++dx)
+					{
+						int nx = (x + dx + NOISE_SIZE) % NOISE_SIZE;
+						int ny = (y + dy + NOISE_SIZE) % NOISE_SIZE;
+						sum += noiseData[ny * NOISE_SIZE + nx];
+						++count;
+					}
+				}
+				filtered[y * NOISE_SIZE + x] = static_cast<unsigned char>(sum / count);
+			}
+		}
+
+		glGenTextures(1, &m_NoiseTexture);
+		glBindTexture(GL_TEXTURE_2D, m_NoiseTexture);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, NOISE_SIZE, NOISE_SIZE, 0, GL_RED, GL_UNSIGNED_BYTE, filtered.data());
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		EE_CORE_INFO("Film grain noise texture created ({}x{})", NOISE_SIZE, NOISE_SIZE);
+	}
 
 	// Attach G-Buffer's depth texture to PostProcess FBO for shared depth testing
 	// This must happen AFTER PostProcess buffer is created and AFTER G-Buffer exists
@@ -3533,6 +3586,19 @@ void Renderer::RenderPostProcessPass(const Mtx44& view, const Mtx44& projection)
 	m_PostProcessShader->SetUniform1f("u_VignetteRadius", m_VignetteRadius);
 	m_PostProcessShader->SetUniform1f("u_BloomStrength", m_BloomStrength);
 
+	// Film grain and chromatic aberration
+	m_PostProcessShader->SetUniform1i("u_FilmGrain", m_FilmGrainEnabled ? 1 : 0);
+	m_PostProcessShader->SetUniform1f("u_GrainIntensity", m_GrainIntensity);
+	m_PostProcessShader->SetUniform1f("u_GrainScale", m_GrainScale);
+	m_PostProcessShader->SetUniform1i("u_ChromaticAberration", m_ChromaticAberrationEnabled ? 1 : 0);
+	m_PostProcessShader->SetUniform1f("u_ChromaticAmount", m_ChromaticAmount);
+
+	// Bind noise texture for film grain (use texture unit 3 to avoid conflict with outline mask on unit 2)
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, m_NoiseTexture);
+	m_PostProcessShader->SetUniform1i("u_NoiseTexture", 3);
+	// Animate noise by offsetting UV based on time
+	m_PostProcessShader->SetUniform2f("u_NoiseOffset", std::fmod(m_ElapsedTime * 10.0f, 1.0f), std::fmod(m_ElapsedTime * 7.0f, 1.0f));
 
 	Draw(m_QuadMesh.vertex_array, m_QuadMesh.index_buffer);
 
@@ -3947,6 +4013,13 @@ void Renderer::CleanupPostProcessBuffer()
 			m_MotionBlurMaskBuffer->ColorTexture = 0;
 		}
 		m_MotionBlurMaskBuffer.reset();
+	}
+
+	// Clean up noise texture
+	if (m_NoiseTexture != 0)
+	{
+		glDeleteTextures(1, &m_NoiseTexture);
+		m_NoiseTexture = 0;
 	}
 
 }
@@ -7609,6 +7682,12 @@ void Renderer::SyncToGlobalGraphics()
 	m_GlobalGraphics.vignetteRadius = m_VignetteRadius;
 	m_GlobalGraphics.bloomStrength = m_BloomStrength;
 
+	m_GlobalGraphics.filmGrainEnabled = m_FilmGrainEnabled;
+	m_GlobalGraphics.grainIntensity = m_GrainIntensity;
+	m_GlobalGraphics.grainScale = m_GrainScale;
+	m_GlobalGraphics.chromaticAberrationEnabled = m_ChromaticAberrationEnabled;
+	m_GlobalGraphics.chromaticAmount = m_ChromaticAmount;
+
 	m_GlobalGraphics.fxaaSpanMax = m_FXAASpanMax;
 	m_GlobalGraphics.fxaaReduceMin = m_FXAAReduceMin;
 	m_GlobalGraphics.fxaaReduceMul = m_FXAAReduceMul;
@@ -7671,6 +7750,12 @@ void Renderer::ApplyFromGlobalGraphics()
 	m_VignetteIntensity = m_GlobalGraphics.vignetteIntensity;
 	m_VignetteRadius = m_GlobalGraphics.vignetteRadius;
 	m_BloomStrength = m_GlobalGraphics.bloomStrength;
+
+	m_FilmGrainEnabled = m_GlobalGraphics.filmGrainEnabled;
+	m_GrainIntensity = m_GlobalGraphics.grainIntensity;
+	m_GrainScale = m_GlobalGraphics.grainScale;
+	m_ChromaticAberrationEnabled = m_GlobalGraphics.chromaticAberrationEnabled;
+	m_ChromaticAmount = m_GlobalGraphics.chromaticAmount;
 
 	m_FXAASpanMax = m_GlobalGraphics.fxaaSpanMax;
 	m_FXAAReduceMin = m_GlobalGraphics.fxaaReduceMin;

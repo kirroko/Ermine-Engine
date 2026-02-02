@@ -1799,6 +1799,13 @@ namespace Ermine
 		float vignetteRadius = 0.8f;
 		float bloomStrength = 0.04f;
 
+		// Film grain and chromatic aberration
+		bool filmGrainEnabled = false;
+		float grainIntensity = 0.015f;
+		float grainScale = 1.5f;
+		bool chromaticAberrationEnabled = false;
+		float chromaticAmount = 0.003f;
+
 		// FXAA parameters
 		float fxaaSpanMax = 8.0f;
 		float fxaaReduceMin = 1.0f / 128.0f;
@@ -1874,6 +1881,13 @@ namespace Ermine
 			xproperty::obj_member<"vignetteIntensity", &GlobalGraphics::vignetteIntensity>,
 			xproperty::obj_member<"vignetteRadius", &GlobalGraphics::vignetteRadius>,
 			xproperty::obj_member<"bloomStrength", &GlobalGraphics::bloomStrength>,
+
+			// Film grain and chromatic aberration
+			xproperty::obj_member<"filmGrainEnabled", &GlobalGraphics::filmGrainEnabled>,
+			xproperty::obj_member<"grainIntensity", &GlobalGraphics::grainIntensity>,
+			xproperty::obj_member<"grainScale", &GlobalGraphics::grainScale>,
+			xproperty::obj_member<"chromaticAberrationEnabled", &GlobalGraphics::chromaticAberrationEnabled>,
+			xproperty::obj_member<"chromaticAmount", &GlobalGraphics::chromaticAmount>,
 
 			// FXAA
 			xproperty::obj_member<"fxaaSpanMax", &GlobalGraphics::fxaaSpanMax>,
