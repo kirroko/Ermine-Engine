@@ -140,11 +140,19 @@
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_NRM.png"
             },
             {
+              "slot": "materialNormalMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_NRM.png"
+            },
+            {
               "slot": "materialRoughnessMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_Roughness.png"
             },
             {
               "slot": "material.metallicMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_Metallic.png"
+            },
+            {
+              "slot": "materialMetallicMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_Metallic.png"
             },
             {
@@ -160,7 +168,6 @@
             0.0,
             0.0
           ],
-          "customFragmentShader": "../Resources/Shaders/volumetric_orb_fragment.glsl",
           "castsShadows": false
         },
         "HierarchyComponent": {
@@ -261,11 +268,19 @@
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_NRM.png"
             },
             {
+              "slot": "materialNormalMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_NRM.png"
+            },
+            {
               "slot": "materialRoughnessMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_Roughness.png"
             },
             {
               "slot": "material.metallicMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_Metallic.png"
+            },
+            {
+              "slot": "materialMetallicMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_Metallic.png"
             },
             {
@@ -381,11 +396,19 @@
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Floating_Jail_Cell_NRM.png"
             },
             {
+              "slot": "materialNormalMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Floating_Jail_Cell_NRM.png"
+            },
+            {
               "slot": "materialRoughnessMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Floating_Jail_Cell_Roughness.png"
             },
             {
               "slot": "material.metallicMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Floating_Jail_Cell_Metallic.png"
+            },
+            {
+              "slot": "materialMetallicMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Floating_Jail_Cell_Metallic.png"
             },
             {
@@ -462,11 +485,19 @@
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Floating_Jail_Cell_NRM.png"
             },
             {
+              "slot": "materialNormalMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Floating_Jail_Cell_NRM.png"
+            },
+            {
               "slot": "materialRoughnessMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Floating_Jail_Cell_Roughness.png"
             },
             {
               "slot": "material.metallicMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Floating_Jail_Cell_Metallic.png"
+            },
+            {
+              "slot": "materialMetallicMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Floating_Jail_Cell_Metallic.png"
             },
             {
@@ -582,11 +613,19 @@
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_clock_NRM.png"
             },
             {
+              "slot": "materialNormalMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_clock_NRM.png"
+            },
+            {
               "slot": "materialRoughnessMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_clock_Roughness.png"
             },
             {
               "slot": "material.metallicMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_clock_Metallic.png"
+            },
+            {
+              "slot": "materialMetallicMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_clock_Metallic.png"
             },
             {
@@ -621,7 +660,7 @@
           "position": [
             -0.39031821489334109,
             3.50418758392334,
-            -2.3435020446777345
+            1.3098106384277344
           ],
           "rotation": [
             0.0,
@@ -682,7 +721,11 @@
         "Material": {
           "hasMaterial": true,
           "params": {
-            "materialHasAlbedoMap": true
+            "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
+            "materialHasRoughnessMap": true,
+            "materialHasMetallicMap": true,
+            "materialHasAoMap": true
           },
           "textures": [
             {
@@ -692,6 +735,30 @@
             {
               "slot": "material.albedoMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_BC.png"
+            },
+            {
+              "slot": "material.normalMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_NRM.png"
+            },
+            {
+              "slot": "materialNormalMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_NRM.png"
+            },
+            {
+              "slot": "materialRoughnessMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_Roughness.png"
+            },
+            {
+              "slot": "material.metallicMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_Metallic.png"
+            },
+            {
+              "slot": "materialMetallicMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_Metallic.png"
+            },
+            {
+              "slot": "materialAoMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_AO.png"
             }
           ],
           "uvScale": [
@@ -802,11 +869,19 @@
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_NRM.png"
             },
             {
+              "slot": "materialNormalMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_NRM.png"
+            },
+            {
               "slot": "materialRoughnessMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_Roughness.png"
             },
             {
               "slot": "material.metallicMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_Metallic.png"
+            },
+            {
+              "slot": "materialMetallicMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_Metallic.png"
             },
             {
@@ -1073,11 +1148,19 @@
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\Platform\\ART1_platform_NRM.png"
             },
             {
+              "slot": "materialNormalMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\Platform\\ART1_platform_NRM.png"
+            },
+            {
               "slot": "materialRoughnessMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\Platform\\ART1_platform_Roughness.png"
             },
             {
               "slot": "material.metallicMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\Platform\\ART1_platform_Metallic.png"
+            },
+            {
+              "slot": "materialMetallicMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\Platform\\ART1_platform_Metallic.png"
             },
             {
@@ -1193,11 +1276,19 @@
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_bars_NRM.png"
             },
             {
+              "slot": "materialNormalMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_bars_NRM.png"
+            },
+            {
               "slot": "materialRoughnessMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_bars_Roughness.png"
             },
             {
               "slot": "material.metallicMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_bars_Metallic.png"
+            },
+            {
+              "slot": "materialMetallicMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_bars_Metallic.png"
             },
             {
@@ -1295,6 +1386,7 @@
           "params": {
             "materialHasAlbedoMap": true,
             "materialHasNormalMap": true,
+            "materialHasRoughnessMap": true,
             "materialHasMetallicMap": true,
             "materialHasAoMap": true
           },
@@ -1312,7 +1404,19 @@
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_door_NRM.png"
             },
             {
+              "slot": "materialNormalMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_door_NRM.png"
+            },
+            {
+              "slot": "materialRoughnessMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_door_Roughness.png"
+            },
+            {
               "slot": "material.metallicMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_door_Metalness.png"
+            },
+            {
+              "slot": "materialMetallicMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_door_Metalness.png"
             },
             {
@@ -1428,11 +1532,19 @@
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_deco_NRM.png"
             },
             {
+              "slot": "materialNormalMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_deco_NRM.png"
+            },
+            {
               "slot": "materialRoughnessMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_deco_Roughness.png"
             },
             {
               "slot": "material.metallicMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_deco_Metallic.png"
+            },
+            {
+              "slot": "materialMetallicMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_deco_Metallic.png"
             },
             {
@@ -1548,11 +1660,19 @@
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_deco_NRM.png"
             },
             {
+              "slot": "materialNormalMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_deco_NRM.png"
+            },
+            {
               "slot": "materialRoughnessMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_deco_Roughness.png"
             },
             {
               "slot": "material.metallicMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_deco_Metallic.png"
+            },
+            {
+              "slot": "materialMetallicMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_deco_Metallic.png"
             },
             {
@@ -1668,11 +1788,19 @@
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_floor_drain_NRM.png"
             },
             {
+              "slot": "materialNormalMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_floor_drain_NRM.png"
+            },
+            {
               "slot": "materialRoughnessMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_floor_drain_Roughness.png"
             },
             {
               "slot": "material.metallicMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_floor_drain_Metallic.png"
+            },
+            {
+              "slot": "materialMetallicMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_floor_drain_Metallic.png"
             },
             {
@@ -1788,11 +1916,19 @@
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_floor_NRM.png"
             },
             {
+              "slot": "materialNormalMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_floor_NRM.png"
+            },
+            {
               "slot": "materialRoughnessMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_floor_Roughness.png"
             },
             {
               "slot": "material.metallicMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_floor_Metallic.png"
+            },
+            {
+              "slot": "materialMetallicMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_floor_Metallic.png"
             },
             {
@@ -1825,20 +1961,20 @@
         },
         "Transform": {
           "position": [
-            -0.3802897334098816,
-            3.493683099746704,
-            -1.7271437644958497
+            1.482923984527588,
+            0.5689714550971985,
+            -2.101576089859009
           ],
           "rotation": [
-            0.6979809403419495,
             0.0,
             0.0,
-            0.7161163091659546
+            0.0,
+            1.0
           ],
           "scale": [
             0.2809999883174896,
-            0.28100040555000307,
-            0.28100040555000307
+            0.28100094199180605,
+            0.28100094199180605
           ]
         },
         "ObjectMetaData": {
@@ -1908,11 +2044,19 @@
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_NRM.png"
             },
             {
+              "slot": "materialNormalMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_NRM.png"
+            },
+            {
               "slot": "materialRoughnessMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_Roughness.png"
             },
             {
               "slot": "material.metallicMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_Metallic.png"
+            },
+            {
+              "slot": "materialMetallicMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_Metallic.png"
             },
             {
@@ -2028,11 +2172,19 @@
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_NRM.png"
             },
             {
+              "slot": "materialNormalMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_NRM.png"
+            },
+            {
               "slot": "materialRoughnessMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_Roughness.png"
             },
             {
               "slot": "material.metallicMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_Metallic.png"
+            },
+            {
+              "slot": "materialMetallicMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_Metallic.png"
             },
             {
@@ -2148,11 +2300,19 @@
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_deco_NRM.png"
             },
             {
+              "slot": "materialNormalMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_deco_NRM.png"
+            },
+            {
               "slot": "materialRoughnessMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_deco_Roughness.png"
             },
             {
               "slot": "material.metallicMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_deco_Metallic.png"
+            },
+            {
+              "slot": "materialMetallicMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_deco_Metallic.png"
             },
             {
@@ -2229,11 +2389,19 @@
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_deco_NRM.png"
             },
             {
+              "slot": "materialNormalMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_deco_NRM.png"
+            },
+            {
               "slot": "materialRoughnessMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_deco_Roughness.png"
             },
             {
               "slot": "material.metallicMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_deco_Metallic.png"
+            },
+            {
+              "slot": "materialMetallicMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_deco_Metallic.png"
             },
             {
@@ -2349,11 +2517,19 @@
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_machine_2_NRM.png"
             },
             {
+              "slot": "materialNormalMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_machine_2_NRM.png"
+            },
+            {
               "slot": "materialRoughnessMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_machine_2_Roughness.png"
             },
             {
               "slot": "material.metallicMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_machine_2_Metallic.png"
+            },
+            {
+              "slot": "materialMetallicMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_machine_2_Metallic.png"
             },
             {
@@ -2642,11 +2818,19 @@
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_machine_NRM.png"
             },
             {
+              "slot": "materialNormalMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_machine_NRM.png"
+            },
+            {
               "slot": "materialRoughnessMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_machine_Roughness.png"
             },
             {
               "slot": "material.metallicMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_machine_Metallic.png"
+            },
+            {
+              "slot": "materialMetallicMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_machine_Metallic.png"
             },
             {
@@ -2821,11 +3005,19 @@
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_minibars_NRM.png"
             },
             {
+              "slot": "materialNormalMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_minibars_NRM.png"
+            },
+            {
               "slot": "materialRoughnessMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_minibars_Roughness.png"
             },
             {
               "slot": "material.metallicMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_minibars_Metallic.png"
+            },
+            {
+              "slot": "materialMetallicMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_minibars_Metallic.png"
             },
             {
@@ -3057,11 +3249,19 @@
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_NRM.png"
             },
             {
+              "slot": "materialNormalMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_NRM.png"
+            },
+            {
               "slot": "materialRoughnessMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_Roughness.png"
             },
             {
               "slot": "material.metallicMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_Metallic.png"
+            },
+            {
+              "slot": "materialMetallicMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_Metallic.png"
             },
             {
@@ -3177,11 +3377,19 @@
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_NRM.png"
             },
             {
+              "slot": "materialNormalMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_NRM.png"
+            },
+            {
               "slot": "materialRoughnessMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_Roughness.png"
             },
             {
               "slot": "material.metallicMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_Metallic.png"
+            },
+            {
+              "slot": "materialMetallicMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_Metallic.png"
             },
             {
@@ -3297,11 +3505,19 @@
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_NRM.png"
             },
             {
+              "slot": "materialNormalMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_NRM.png"
+            },
+            {
               "slot": "materialRoughnessMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_Roughness.png"
             },
             {
               "slot": "material.metallicMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_Metallic.png"
+            },
+            {
+              "slot": "materialMetallicMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_Metallic.png"
             },
             {
@@ -3786,11 +4002,19 @@
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_deco_NRM.png"
             },
             {
+              "slot": "materialNormalMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_deco_NRM.png"
+            },
+            {
               "slot": "materialRoughnessMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_deco_Roughness.png"
             },
             {
               "slot": "material.metallicMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_deco_Metallic.png"
+            },
+            {
+              "slot": "materialMetallicMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_deco_Metallic.png"
             },
             {
@@ -3824,7 +4048,7 @@
         "Transform": {
           "position": [
             17.723684310913087,
-            0.4269825220108032,
+            1.1864945888519288,
             18.225465774536134
           ],
           "rotation": [
@@ -3887,6 +4111,7 @@
           "hasMaterial": true,
           "params": {
             "materialHasAlbedoMap": true,
+            "materialHasNormalMap": true,
             "materialHasRoughnessMap": true,
             "materialHasMetallicMap": true,
             "materialHasAoMap": true
@@ -3901,11 +4126,23 @@
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_BC.png"
             },
             {
+              "slot": "material.normalMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_NRM.png"
+            },
+            {
+              "slot": "materialNormalMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_NRM.png"
+            },
+            {
               "slot": "materialRoughnessMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_Roughness.png"
             },
             {
               "slot": "material.metallicMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_Metallic.png"
+            },
+            {
+              "slot": "materialMetallicMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_Metallic.png"
             },
             {
@@ -3939,7 +4176,7 @@
         "Transform": {
           "position": [
             14.280011177062989,
-            0.4270908832550049,
+            0.8856980800628662,
             23.124893188476564
           ],
           "rotation": [
@@ -4002,7 +4239,7 @@
           "hasMaterial": true,
           "params": {
             "materialHasAlbedoMap": true,
-            "materialHasNormalMap": false,
+            "materialHasNormalMap": true,
             "materialHasRoughnessMap": true,
             "materialHasMetallicMap": true,
             "materialHasAoMap": true
@@ -4017,11 +4254,23 @@
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_BC.png"
             },
             {
+              "slot": "material.normalMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_NRM.png"
+            },
+            {
+              "slot": "materialNormalMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_NRM.png"
+            },
+            {
               "slot": "materialRoughnessMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_Roughness.png"
             },
             {
               "slot": "material.metallicMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_Metallic.png"
+            },
+            {
+              "slot": "materialMetallicMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_Metallic.png"
             },
             {
@@ -4328,11 +4577,19 @@
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_NRM.png"
             },
             {
+              "slot": "materialNormalMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_NRM.png"
+            },
+            {
               "slot": "materialRoughnessMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_Roughness.png"
             },
             {
               "slot": "material.metallicMap",
+              "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_Metallic.png"
+            },
+            {
+              "slot": "materialMetallicMap",
               "path": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_Metallic.png"
             },
             {
@@ -10213,9 +10470,9 @@
         },
         "Transform": {
           "position": [
-            82.05094146728516,
-            21.501073837280275,
-            39.824806213378909
+            92.833251953125,
+            18.494029998779298,
+            41.125980377197269
           ],
           "rotation": [
             0.0,
