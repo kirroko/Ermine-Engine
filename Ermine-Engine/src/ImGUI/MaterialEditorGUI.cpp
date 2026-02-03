@@ -494,10 +494,11 @@ namespace Ermine::editor
         }
 
         auto& matComponent = ecs.GetComponent<Material>(selectedEntity);
-        if (matComponent.m_material)
+        auto sharedMat = matComponent.GetSharedMaterial();
+        if (sharedMat)
         {
             // Edit the entity's material directly (shared_ptr)
-            m_material = matComponent.m_material;
+            m_material = sharedMat;
             m_editingEntityMaterial = true;
             EE_CORE_INFO("Loaded material from entity {} (real-time editing)", selectedEntity);
             m_lastError.clear();
@@ -526,7 +527,12 @@ namespace Ermine::editor
         }
 
         auto& matComponent = ecs.GetComponent<Material>(selectedEntity);
-        matComponent.m_material = m_material; // Share the material
+        Guid guid = AssetManager::GetInstance().FindMaterialGuid(m_material.get());
+        if (!guid.IsValid() && m_material) {
+            std::string fallbackName = "Material_" + Guid::New().ToString();
+            guid = AssetManager::GetInstance().SaveMaterialAsset(fallbackName, *m_material, true);
+        }
+        matComponent.SetMaterial(m_material, guid); // Share the material + guid
         m_editingEntityMaterial = true;
         
         EE_CORE_INFO("Applied material to entity {}", selectedEntity);

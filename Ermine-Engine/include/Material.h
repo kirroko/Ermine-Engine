@@ -491,6 +491,14 @@ namespace Ermine::graphics
             return m_parameters.find(name) != m_parameters.end();
         }
         /**
+         * @brief Get all parameters (read-only).
+         * @return Reference to the internal parameter map.
+         */
+        const std::map<std::string, MaterialParam>& GetParameters() const
+        {
+            return m_parameters;
+        }
+        /**
          * @brief Gets a parameter by name.
          * @param name Parameter name.
          * @return Pointer to MaterialParam, or nullptr if not found.

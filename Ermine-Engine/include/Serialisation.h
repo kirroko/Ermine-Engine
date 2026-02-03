@@ -124,13 +124,17 @@ namespace Ermine::graphics { class Material; }
  * @param path File path for the .mat file
  * @param pretty Use pretty formatting (default: true)
  */
-void SaveMaterialToFile(const Ermine::graphics::Material& material, const std::filesystem::path& path, bool pretty = true);
+void SaveMaterialToFile(const Ermine::graphics::Material& material,
+    const std::filesystem::path& path,
+    bool pretty = true,
+    std::string_view customFragmentShader = {});
 
 /**
  * @brief Load material from .mat file
  * @param path File path of the .mat file
  * @return Loaded material
  */
-Ermine::graphics::Material LoadMaterialFromFile(const std::filesystem::path& path);
+Ermine::graphics::Material LoadMaterialFromFile(const std::filesystem::path& path,
+    std::string* outCustomFragmentShader = nullptr);
 
 #endif // SERIALISATION_H

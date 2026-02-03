@@ -1484,112 +1484,121 @@ namespace Ermine::graphics
                 continue;
             }
 
-            // Create or update material component
+            // Create or load a shared material asset for this mesh
             aiMaterial* aiMat = scene->mMaterials[materialIndex];
-            auto materialPtr = std::make_shared<graphics::Material>();
-            materialPtr->LoadTemplate(graphics::MaterialTemplates::PBR_WHITE());
+            Guid materialGuid{};
+            std::string materialName = AssetManager::SanitizeAssetName(meshID);
+            auto materialPtr = AssetManager::GetInstance().CreateMaterialAsset(
+                materialName,
+                [&](graphics::Material& material) {
+                    // Load textures using AssetManager
+                    aiString texPath;
 
-            // Load textures using AssetManager
-            aiString texPath;
+                    // Albedo: Try BASE_COLOR first, fallback to DIFFUSE
+                    if (aiMat->GetTexture(aiTextureType_BASE_COLOR, 0, &texPath) == AI_SUCCESS ||
+                        aiMat->GetTexture(aiTextureType_DIFFUSE, 0, &texPath) == AI_SUCCESS) {
+                        std::string texPathStr = std::string(texPath.C_Str());
+                        std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
+                        std::string fullTexPath = "../Resources/Textures/" + texPathStr;
+                        auto albedoTex = AssetManager::GetInstance().LoadTexture(fullTexPath);
+                        if (albedoTex && albedoTex->IsValid()) {
+                            material.SetTexture("materialAlbedoMap", albedoTex);
+                            material.SetTexture("material.albedoMap", albedoTex);
+                            material.SetBool("materialHasAlbedoMap", true);
+                        }
+                    }
 
-            // Albedo: Try BASE_COLOR first, fallback to DIFFUSE
-            if (aiMat->GetTexture(aiTextureType_BASE_COLOR, 0, &texPath) == AI_SUCCESS ||
-                aiMat->GetTexture(aiTextureType_DIFFUSE, 0, &texPath) == AI_SUCCESS) {
-                std::string texPathStr = std::string(texPath.C_Str());
-                std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
-                std::string fullTexPath = "../Resources/Textures/" + texPathStr;
-                auto albedoTex = AssetManager::GetInstance().LoadTexture(fullTexPath);
-                if (albedoTex && albedoTex->IsValid()) {
-                    materialPtr->SetTexture("materialAlbedoMap", albedoTex);
-                    materialPtr->SetTexture("material.albedoMap", albedoTex);
-                    materialPtr->SetBool("materialHasAlbedoMap", true);
-                }
-            }
+                    // Normal map
+                    if (aiMat->GetTexture(aiTextureType_NORMALS, 0, &texPath) == AI_SUCCESS) {
+                        std::string texPathStr = std::string(texPath.C_Str());
+                        std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
+                        std::string fullTexPath = "../Resources/Textures/" + texPathStr;
+                        auto normalTex = AssetManager::GetInstance().LoadTexture(fullTexPath);
+                        if (normalTex && normalTex->IsValid()) {
+                            material.SetTexture("materialNormalMap", normalTex);
+                            material.SetTexture("material.normalMap", normalTex);
+                            material.SetBool("materialHasNormalMap", true);
+                            material.SetBool("material.hasNormalMap", true);
+                        }
+                    }
 
-            // Normal map
-            if (aiMat->GetTexture(aiTextureType_NORMALS, 0, &texPath) == AI_SUCCESS) {
-                std::string texPathStr = std::string(texPath.C_Str());
-                std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
-                std::string fullTexPath = "../Resources/Textures/" + texPathStr;
-                auto normalTex = AssetManager::GetInstance().LoadTexture(fullTexPath);
-                if (normalTex && normalTex->IsValid()) {
-                    materialPtr->SetTexture("materialNormalMap", normalTex);
-                    materialPtr->SetTexture("material.normalMap", normalTex);
-                    materialPtr->SetBool("materialHasNormalMap", true);
-                    materialPtr->SetBool("material.hasNormalMap", true);
-                }
-            }
+                    // Roughness map (SHININESS in Assimp)
+                    if (aiMat->GetTexture(aiTextureType_SHININESS, 0, &texPath) == AI_SUCCESS) {
+                        std::string texPathStr = std::string(texPath.C_Str());
+                        std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
+                        std::string fullTexPath = "../Resources/Textures/" + texPathStr;
+                        auto roughnessTex = AssetManager::GetInstance().LoadTexture(fullTexPath);
+                        if (roughnessTex && roughnessTex->IsValid()) {
+                            material.SetTexture("materialRoughnessMap", roughnessTex);
+                            material.SetBool("materialHasRoughnessMap", true);
+                        }
+                    }
 
-            // Roughness map (SHININESS in Assimp)
-            if (aiMat->GetTexture(aiTextureType_SHININESS, 0, &texPath) == AI_SUCCESS) {
-                std::string texPathStr = std::string(texPath.C_Str());
-                std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
-                std::string fullTexPath = "../Resources/Textures/" + texPathStr;
-                auto roughnessTex = AssetManager::GetInstance().LoadTexture(fullTexPath);
-                if (roughnessTex && roughnessTex->IsValid()) {
-                    materialPtr->SetTexture("materialRoughnessMap", roughnessTex);
-                    materialPtr->SetBool("materialHasRoughnessMap", true);
-                }
-            }
+                    // Metallic map
+                    if (aiMat->GetTexture(aiTextureType_METALNESS, 0, &texPath) == AI_SUCCESS) {
+                        std::string texPathStr = std::string(texPath.C_Str());
+                        std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
+                        std::string fullTexPath = "../Resources/Textures/" + texPathStr;
+                        auto metallicTex = AssetManager::GetInstance().LoadTexture(fullTexPath);
+                        if (metallicTex && metallicTex->IsValid()) {
+                            material.SetTexture("materialMetallicMap", metallicTex);
+                            material.SetTexture("material.metallicMap", metallicTex);
+                            material.SetBool("materialHasMetallicMap", true);
+                        }
+                    }
 
-            // Metallic map
-            if (aiMat->GetTexture(aiTextureType_METALNESS, 0, &texPath) == AI_SUCCESS) {
-                std::string texPathStr = std::string(texPath.C_Str());
-                std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
-                std::string fullTexPath = "../Resources/Textures/" + texPathStr;
-                auto metallicTex = AssetManager::GetInstance().LoadTexture(fullTexPath);
-                if (metallicTex && metallicTex->IsValid()) {
-                    materialPtr->SetTexture("materialMetallicMap", metallicTex);
-                    materialPtr->SetTexture("material.metallicMap", metallicTex);
-                    materialPtr->SetBool("materialHasMetallicMap", true);
-                }
-            }
+                    // AO map
+                    if (aiMat->GetTexture(aiTextureType_LIGHTMAP, 0, &texPath) == AI_SUCCESS ||
+                        aiMat->GetTexture(aiTextureType_AMBIENT_OCCLUSION, 0, &texPath) == AI_SUCCESS) {
+                        std::string texPathStr = std::string(texPath.C_Str());
+                        std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
+                        std::string fullTexPath = "../Resources/Textures/" + texPathStr;
+                        auto aoTex = AssetManager::GetInstance().LoadTexture(fullTexPath);
+                        if (aoTex && aoTex->IsValid()) {
+                            material.SetTexture("materialAoMap", aoTex);
+                            material.SetBool("materialHasAoMap", true);
+                        }
+                    }
 
-            // AO map
-            if (aiMat->GetTexture(aiTextureType_LIGHTMAP, 0, &texPath) == AI_SUCCESS ||
-                aiMat->GetTexture(aiTextureType_AMBIENT_OCCLUSION, 0, &texPath) == AI_SUCCESS) {
-                std::string texPathStr = std::string(texPath.C_Str());
-                std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
-                std::string fullTexPath = "../Resources/Textures/" + texPathStr;
-                auto aoTex = AssetManager::GetInstance().LoadTexture(fullTexPath);
-                if (aoTex && aoTex->IsValid()) {
-                    materialPtr->SetTexture("materialAoMap", aoTex);
-                    materialPtr->SetBool("materialHasAoMap", true);
-                }
-            }
+                    // Emissive map
+                    if (aiMat->GetTexture(aiTextureType_EMISSIVE, 0, &texPath) == AI_SUCCESS) {
+                        std::string texPathStr = std::string(texPath.C_Str());
+                        std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
+                        std::string fullTexPath = "../Resources/Textures/" + texPathStr;
+                        auto emissiveTex = AssetManager::GetInstance().LoadTexture(fullTexPath);
+                        if (emissiveTex && emissiveTex->IsValid()) {
+                            material.SetTexture("materialEmissiveMap", emissiveTex);
+                            material.SetBool("materialHasEmissiveMap", true);
+                        }
+                    }
 
-            // Emissive map
-            if (aiMat->GetTexture(aiTextureType_EMISSIVE, 0, &texPath) == AI_SUCCESS) {
-                std::string texPathStr = std::string(texPath.C_Str());
-                std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
-                std::string fullTexPath = "../Resources/Textures/" + texPathStr;
-                auto emissiveTex = AssetManager::GetInstance().LoadTexture(fullTexPath);
-                if (emissiveTex && emissiveTex->IsValid()) {
-                    materialPtr->SetTexture("materialEmissiveMap", emissiveTex);
-                    materialPtr->SetBool("materialHasEmissiveMap", true);
-                }
-            }
-
-            // Fetch UV transform (UVs are already flipped at import)
-            aiUVTransform uvTransform;
-            if (aiMat->Get(AI_MATKEY_UVTRANSFORM(aiTextureType_DIFFUSE, 0), uvTransform) == AI_SUCCESS) {
-                materialPtr->SetUVScale(Vec2(uvTransform.mScaling.x, uvTransform.mScaling.y));
-                materialPtr->SetUVOffset(Vec2(uvTransform.mTranslation.x, uvTransform.mTranslation.y));
-            }
-            else {
-                materialPtr->SetUVScale(Vec2(1.0f, 1.0f));
-                materialPtr->SetUVOffset(Vec2(0.0f, 0.0f));
+                    // Fetch UV transform (UVs are already flipped at import)
+                    aiUVTransform uvTransform;
+                    if (aiMat->Get(AI_MATKEY_UVTRANSFORM(aiTextureType_DIFFUSE, 0), uvTransform) == AI_SUCCESS) {
+                        material.SetUVScale(Vec2(uvTransform.mScaling.x, uvTransform.mScaling.y));
+                        material.SetUVOffset(Vec2(uvTransform.mTranslation.x, uvTransform.mTranslation.y));
+                    }
+                    else {
+                        material.SetUVScale(Vec2(1.0f, 1.0f));
+                        material.SetUVOffset(Vec2(0.0f, 0.0f));
+                    }
+                },
+                &materialGuid
+            );
+            if (!materialPtr) {
+                EE_CORE_WARN("Failed to create/load material asset for mesh '{}'", meshID);
+                continue;
             }
 
             // Add or update material component on child entity
             if (ecs.HasComponent<Ermine::Material>(childEntity)) {
                 // Update existing material
                 auto& matComp = ecs.GetComponent<Ermine::Material>(childEntity);
-                matComp = Ermine::Material(materialPtr);
+                matComp = Ermine::Material(materialPtr, materialGuid);
             }
             else {
                 // Add new material component
-                ecs.AddComponent<Ermine::Material>(childEntity, Ermine::Material(materialPtr));
+                ecs.AddComponent<Ermine::Material>(childEntity, Ermine::Material(materialPtr, materialGuid));
             }
         }
 
