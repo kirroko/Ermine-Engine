@@ -172,6 +172,7 @@ namespace Ermine::editor {
         void DrawUIBookCounterComponent(EntityID entity);
         void DrawUIImageComponent(EntityID entity);
         void DrawUIButtonComponent(EntityID entity);
+        void DrawUISliderComponent(EntityID entity);
 
         Scene* m_ActiveScene = nullptr;  ///< Pointer to the currently active scene
         bool m_IsVisible = true;         ///< Inspector panel visibility state

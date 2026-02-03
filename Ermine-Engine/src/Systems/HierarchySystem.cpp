@@ -381,25 +381,39 @@ namespace Ermine
      */
     void HierarchySystem::MarkDirty(EntityID entity)
     {
-        if (!ECS::GetInstance().IsEntityValid(entity))
+        auto& ecs = ECS::GetInstance();
+
+        if (!ecs.IsEntityValid(entity))
             return;
 
-        auto& hierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(entity);
-        auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
+        // Check if entity has required components before accessing
+        if (!ecs.HasComponent<HierarchyComponent>(entity))
+            return;
+
+        auto& hierarchy = ecs.GetComponent<HierarchyComponent>(entity);
 
         // DEBUG LOG - Can be commented out in production
         //EE_CORE_WARN("MarkDirty called for entity {} - investigate why!", entity);
-        
-        // Mark both local transform and world transform as needing update
+
+        // Mark hierarchy as needing update
         hierarchy.isDirty = true;
         hierarchy.worldTransformDirty = true;
-        transform.isDirty = true;  // Make sure Transform component is also marked dirty
+
+        // Only mark Transform dirty if entity has one
+        if (ecs.HasComponent<Transform>(entity))
+        {
+            auto& transform = ecs.GetComponent<Transform>(entity);
+            transform.isDirty = true;  // Make sure Transform component is also marked dirty
+        }
 
         // Bubble up so a root (or any ancestor) triggers UpdateWorldTransform
         EntityID ancestor = hierarchy.parent;
-        while (ancestor != HierarchyComponent::INVALID_PARENT)
+        while (ancestor != HierarchyComponent::INVALID_PARENT && ecs.IsEntityValid(ancestor))
         {
-            auto& ancHier = ECS::GetInstance().GetComponent<HierarchyComponent>(ancestor);
+            if (!ecs.HasComponent<HierarchyComponent>(ancestor))
+                break;
+
+            auto& ancHier = ecs.GetComponent<HierarchyComponent>(ancestor);
             // No need to mark ancestor's local transform dirty unless its own local changed.
             // We only need worldTransform recompute.
             ancHier.worldTransformDirty = true;
@@ -412,12 +426,20 @@ namespace Ermine
 
         // Mark all children's world transforms as needing update (but not their local transforms)
         for (auto child : hierarchy.children) {
-            auto& childHierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(child);
-            auto& childTransform = ECS::GetInstance().GetComponent<Transform>(child);
-            
+            if (!ecs.IsEntityValid(child) || !ecs.HasComponent<HierarchyComponent>(child))
+                continue;
+
+            auto& childHierarchy = ecs.GetComponent<HierarchyComponent>(child);
+
             // Mark world transform as dirty for children - their local transforms haven't changed
             childHierarchy.worldTransformDirty = true;
-            childTransform.isDirty = true; // Also mark Transform component dirty for proper rendering
+
+            // Only mark Transform dirty if child has one
+            if (ecs.HasComponent<Transform>(child))
+            {
+                auto& childTransform = ecs.GetComponent<Transform>(child);
+                childTransform.isDirty = true; // Also mark Transform component dirty for proper rendering
+            }
             
             // Recursively mark children's world transforms as dirty
             MarkChildrenWorldTransformDirty(child);
@@ -430,17 +452,30 @@ namespace Ermine
      */
     void HierarchySystem::MarkChildrenWorldTransformDirty(EntityID entity)
     {
-        if (!ECS::GetInstance().IsEntityValid(entity))
+        auto& ecs = ECS::GetInstance();
+
+        if (!ecs.IsEntityValid(entity))
             return;
 
-        const auto& hierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(entity);
-        
+        if (!ecs.HasComponent<HierarchyComponent>(entity))
+            return;
+
+        const auto& hierarchy = ecs.GetComponent<HierarchyComponent>(entity);
+
         for (auto child : hierarchy.children) {
-            auto& childHierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(child);
-            auto& childTransform = ECS::GetInstance().GetComponent<Transform>(child);
+            if (!ecs.IsEntityValid(child) || !ecs.HasComponent<HierarchyComponent>(child))
+                continue;
+
+            auto& childHierarchy = ecs.GetComponent<HierarchyComponent>(child);
             childHierarchy.worldTransformDirty = true;
-            childTransform.isDirty = true; // Also mark Transform component dirty
-            
+
+            // Only mark Transform dirty if child has one
+            if (ecs.HasComponent<Transform>(child))
+            {
+                auto& childTransform = ecs.GetComponent<Transform>(child);
+                childTransform.isDirty = true; // Also mark Transform component dirty
+            }
+
             // Recursively mark grandchildren
             MarkChildrenWorldTransformDirty(child);
         }
@@ -453,9 +488,12 @@ namespace Ermine
     */
     EntityID HierarchySystem::GetParent(EntityID entity) const
     {
-        if (!ECS::GetInstance().IsEntityValid(entity))
+        auto& ecs = ECS::GetInstance();
+        if (!ecs.IsEntityValid(entity))
             return 0;
-        return ECS::GetInstance().GetComponent<HierarchyComponent>(entity).parent;
+        if (!ecs.HasComponent<HierarchyComponent>(entity))
+            return 0;
+        return ecs.GetComponent<HierarchyComponent>(entity).parent;
     }
 
     /**
@@ -466,16 +504,22 @@ namespace Ermine
     const std::vector<EntityID>& HierarchySystem::GetChildren(EntityID entity) const
     {
         static std::vector<EntityID> empty;
-        if (!ECS::GetInstance().IsEntityValid(entity))
+        auto& ecs = ECS::GetInstance();
+        if (!ecs.IsEntityValid(entity))
             return empty;
-        return ECS::GetInstance().GetComponent<HierarchyComponent>(entity).children;
+        if (!ecs.HasComponent<HierarchyComponent>(entity))
+            return empty;
+        return ecs.GetComponent<HierarchyComponent>(entity).children;
     }
 
     const int HierarchySystem::GetChildCount(EntityID entity) const
     {
-        if (!ECS::GetInstance().IsEntityValid(entity))
+        auto& ecs = ECS::GetInstance();
+        if (!ecs.IsEntityValid(entity))
             return 0;
-        return ECS::GetInstance().GetComponent<HierarchyComponent>(entity).children.size();
+        if (!ecs.HasComponent<HierarchyComponent>(entity))
+            return 0;
+        return ecs.GetComponent<HierarchyComponent>(entity).children.size();
     }
 
     /**
@@ -485,18 +529,23 @@ namespace Ermine
      */
     Vec3 HierarchySystem::GetWorldPosition(EntityID entity) const
     {
-        if (!ECS::GetInstance().IsEntityValid(entity))
+        auto& ecs = ECS::GetInstance();
+        if (!ecs.IsEntityValid(entity))
             return Vec3(0.0f, 0.0f, 0.0f);
 
         // Use GlobalTransform
-        if (ECS::GetInstance().HasComponent<GlobalTransform>(entity)) {
-            const auto& globalTransform = ECS::GetInstance().GetComponent<GlobalTransform>(entity);
+        if (ecs.HasComponent<GlobalTransform>(entity)) {
+            const auto& globalTransform = ecs.GetComponent<GlobalTransform>(entity);
             return globalTransform.GetWorldPosition();
         }
-        else {
+        else if (ecs.HasComponent<Transform>(entity)) {
             // Fallback to local position if no GlobalTransform
-            const auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
+            const auto& transform = ecs.GetComponent<Transform>(entity);
             return transform.position;
+        }
+        else {
+            // No transform components at all
+            return Vec3(0.0f, 0.0f, 0.0f);
         }
     }
 
@@ -507,18 +556,23 @@ namespace Ermine
      */
     Quaternion HierarchySystem::GetWorldRotation(EntityID entity) const
     {
-        if (!ECS::GetInstance().IsEntityValid(entity))
+        auto& ecs = ECS::GetInstance();
+        if (!ecs.IsEntityValid(entity))
             return Quaternion(0.0f, 0.0f, 0.0f, 1.0f);
 
         // FIXED: Use GlobalTransform instead of transform.transform_matrix
-        if (ECS::GetInstance().HasComponent<GlobalTransform>(entity)) {
-            const auto& globalTransform = ECS::GetInstance().GetComponent<GlobalTransform>(entity);
+        if (ecs.HasComponent<GlobalTransform>(entity)) {
+            const auto& globalTransform = ecs.GetComponent<GlobalTransform>(entity);
             return globalTransform.GetWorldRotation();
         }
-        else {
+        else if (ecs.HasComponent<Transform>(entity)) {
             // Fallback to local rotation if no GlobalTransform
-            const auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
+            const auto& transform = ecs.GetComponent<Transform>(entity);
             return transform.rotation;
+        }
+        else {
+            // No transform components - return identity
+            return Quaternion(0.0f, 0.0f, 0.0f, 1.0f);
         }
     }
 
@@ -529,18 +583,23 @@ namespace Ermine
      */
     Vec3 HierarchySystem::GetWorldScale(EntityID entity) const
     {
-        if (!ECS::GetInstance().IsEntityValid(entity))
+        auto& ecs = ECS::GetInstance();
+        if (!ecs.IsEntityValid(entity))
             return Vec3(1.0f, 1.0f, 1.0f);
 
         // FIXED: Use GlobalTransform instead of transform.transform_matrix
-        if (ECS::GetInstance().HasComponent<GlobalTransform>(entity)) {
-            const auto& globalTransform = ECS::GetInstance().GetComponent<GlobalTransform>(entity);
+        if (ecs.HasComponent<GlobalTransform>(entity)) {
+            const auto& globalTransform = ecs.GetComponent<GlobalTransform>(entity);
             return globalTransform.GetWorldScale();
         }
-        else {
+        else if (ecs.HasComponent<Transform>(entity)) {
             // Fallback to local scale if no GlobalTransform
-            const auto& transform = ECS::GetInstance().GetComponent<Transform>(entity);
+            const auto& transform = ecs.GetComponent<Transform>(entity);
             return transform.scale;
+        }
+        else {
+            // No transform components - return identity scale
+            return Vec3(1.0f, 1.0f, 1.0f);
         }
     }
 
