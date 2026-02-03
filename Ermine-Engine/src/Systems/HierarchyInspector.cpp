@@ -173,7 +173,9 @@ namespace Ermine::editor {
 			&outGuid);
 	}
 
-	static std::string BuildMaterialSignature(const graphics::Material& material, std::string_view customFragmentShader)
+	static std::string BuildMaterialSignature(const graphics::Material& material,
+		std::string_view customFragmentShader,
+		std::string_view meshName = {})
 	{
 		auto canonicalName = [](const std::string& name) -> std::string {
 			if (name == "material.albedo") return "materialAlbedo";
@@ -217,6 +219,7 @@ namespace Ermine::editor {
 
 		std::ostringstream oss;
 		oss << std::setprecision(6) << std::fixed;
+		oss << "mesh=" << meshName << ";";
 		oss << "frag=" << customFragmentShader << ";";
 
 		// UV transform
@@ -990,20 +993,6 @@ namespace Ermine::editor {
 		if (ImGui::Button("Compile All Materials##MaterialAsset")) {
 			auto& ecs = ECS::GetInstance();
 
-			std::unordered_map<std::string, Guid> signatureToGuid;
-			assetManager.ScanMaterialAssets();
-			for (const auto& [guid, path] : assetManager.GetMaterialPathsByGuid()) {
-				auto existing = assetManager.LoadMaterialAsset(path, false);
-				if (!existing)
-					continue;
-				std::string frag = "";
-				if (const std::string* stored = assetManager.GetMaterialCustomFragmentShader(guid))
-					frag = *stored;
-				const std::string sig = BuildMaterialSignature(*existing, frag);
-				if (signatureToGuid.find(sig) == signatureToGuid.end())
-					signatureToGuid.emplace(sig, guid);
-			}
-
 			for (Ermine::EntityID id = 0; id < Ermine::MAX_ENTITIES; ++id) {
 				if (!ecs.IsEntityValid(id) || !ecs.HasComponent<Ermine::Material>(id))
 					continue;
@@ -1012,14 +1001,6 @@ namespace Ermine::editor {
 				auto matShared = comp.GetSharedMaterial();
 				if (!matShared)
 					continue;
-
-				const std::string sig = BuildMaterialSignature(*matShared, comp.customFragmentShader);
-				auto sigIt = signatureToGuid.find(sig);
-				if (sigIt != signatureToGuid.end()) {
-					auto shared = assetManager.GetMaterialByGuid(sigIt->second);
-					comp.SetMaterial(shared ? shared : matShared, sigIt->second);
-					continue;
-				}
 
 				std::string baseName = "Material";
 				if (ecs.HasComponent<ObjectMetaData>(id)) {
@@ -1030,12 +1011,41 @@ namespace Ermine::editor {
 				}
 
 				baseName = AssetManager::SanitizeAssetName(baseName);
-				std::string uniqueName = makeUniqueMaterialName(baseName);
+				std::filesystem::path basePath = std::filesystem::absolute("../Resources/Materials") / (baseName + ".mat");
+				const std::string currentSig = BuildMaterialSignature(*matShared, comp.customFragmentShader, baseName);
 
-				Guid newGuid = assetManager.SaveMaterialAsset(uniqueName, *matShared, false, comp.customFragmentShader);
-				auto shared = assetManager.GetMaterialByGuid(newGuid);
-				comp.SetMaterial(shared ? shared : matShared, newGuid);
-				signatureToGuid.emplace(sig, newGuid);
+				if (std::filesystem::exists(basePath)) {
+					auto existing = assetManager.LoadMaterialAsset(basePath.string(), false);
+					if (existing) {
+						Guid baseGuid = assetManager.GetMaterialGuidForPath(basePath.string());
+						std::string frag = "";
+						if (const std::string* stored = assetManager.GetMaterialCustomFragmentShader(baseGuid))
+							frag = *stored;
+						const std::string existingSig = BuildMaterialSignature(*existing, frag, baseName);
+
+						if (existingSig == currentSig) {
+							Guid guid = assetManager.SaveMaterialAsset(baseName, *matShared, true, comp.customFragmentShader);
+							auto shared = assetManager.GetMaterialByGuid(guid);
+							comp.SetMaterial(shared ? shared : matShared, guid);
+							continue;
+						}
+					}
+
+					std::string uniqueName = baseName;
+					int suffix = 1;
+					do {
+						uniqueName = baseName + "_Copy" + std::to_string(suffix++);
+					} while (std::filesystem::exists(std::filesystem::absolute("../Resources/Materials") / (uniqueName + ".mat")));
+
+					Guid guid = assetManager.SaveMaterialAsset(uniqueName, *matShared, true, comp.customFragmentShader);
+					auto shared = assetManager.GetMaterialByGuid(guid);
+					comp.SetMaterial(shared ? shared : matShared, guid);
+					continue;
+				}
+
+				Guid guid = assetManager.SaveMaterialAsset(baseName, *matShared, true, comp.customFragmentShader);
+				auto shared = assetManager.GetMaterialByGuid(guid);
+				comp.SetMaterial(shared ? shared : matShared, guid);
 			}
 
 			refreshMaterialAssets();

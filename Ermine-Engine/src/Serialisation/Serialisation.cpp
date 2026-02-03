@@ -32,7 +32,9 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <unordered_map>
 
 namespace {
-    std::string BuildMaterialSignature(const Ermine::graphics::Material& material, std::string_view customFragmentShader)
+    std::string BuildMaterialSignature(const Ermine::graphics::Material& material,
+        std::string_view customFragmentShader,
+        std::string_view meshName = {})
     {
         auto canonicalName = [](const std::string& name) -> std::string {
             if (name == "material.albedo") return "materialAlbedo";
@@ -76,6 +78,7 @@ namespace {
 
         std::ostringstream oss;
         oss << std::setprecision(6) << std::fixed;
+        oss << "mesh=" << meshName << ";";
         oss << "frag=" << customFragmentShader << ";";
 
         Ermine::Vec2 uvScale = material.GetUVScale();
@@ -631,7 +634,8 @@ void LoadSceneFromFile(Ermine::ECS& ecs, const std::filesystem::path& path) {
             std::string frag = "";
             if (const std::string* stored = assets.GetMaterialCustomFragmentShader(guid))
                 frag = *stored;
-            const std::string sig = BuildMaterialSignature(*existing, frag);
+            std::string meshName = std::filesystem::path(path).stem().string();
+            const std::string sig = BuildMaterialSignature(*existing, frag, meshName);
             if (signatureToGuid.find(sig) == signatureToGuid.end())
                 signatureToGuid.emplace(sig, guid);
         }
@@ -657,7 +661,7 @@ void LoadSceneFromFile(Ermine::ECS& ecs, const std::filesystem::path& path) {
             }
 
             baseName = Ermine::AssetManager::SanitizeAssetName(baseName);
-            const std::string sig = BuildMaterialSignature(*matShared, matComp.customFragmentShader);
+            const std::string sig = BuildMaterialSignature(*matShared, matComp.customFragmentShader, baseName);
             std::filesystem::path basePath = std::filesystem::absolute("../Resources/Materials") / (baseName + ".mat");
 
             if (std::filesystem::exists(basePath)) {
@@ -667,7 +671,7 @@ void LoadSceneFromFile(Ermine::ECS& ecs, const std::filesystem::path& path) {
                     std::string frag = "";
                     if (const std::string* stored = assets.GetMaterialCustomFragmentShader(baseGuid))
                         frag = *stored;
-                    const std::string existingSig = BuildMaterialSignature(*existing, frag);
+                    const std::string existingSig = BuildMaterialSignature(*existing, frag, baseName);
                     if (existingSig == sig) {
                         auto shared = assets.GetMaterialByGuid(baseGuid);
                         matComp.SetMaterial(shared ? shared : matShared, baseGuid);
