@@ -3864,6 +3864,10 @@ namespace Ermine
 		float labelScale = 0.8f;
 		Vec2 labelOffset = { 0.0f, 0.04f };  // Offset from slider center
 
+		// Label images (optional - shows image next to slider label)
+		std::string labelImagePath = "";        // Normal/unselected image
+		std::string labelActiveImagePath = "";  // Active/selected image (shown when dragging)
+
 		// State (runtime - don't serialize)
 		bool isHovered = false;
 		bool isDragging = false;
@@ -3910,6 +3914,11 @@ namespace Ermine
 			labelOffsetVal.PushBack(labelOffset.x, alloc);
 			labelOffsetVal.PushBack(labelOffset.y, alloc);
 			out.AddMember("labelOffset", labelOffsetVal, alloc);
+
+			rapidjson::Value labelImagePathVal(labelImagePath.c_str(), alloc);
+			out.AddMember("labelImagePath", labelImagePathVal, alloc);
+			rapidjson::Value labelActiveImagePathVal(labelActiveImagePath.c_str(), alloc);
+			out.AddMember("labelActiveImagePath", labelActiveImagePathVal, alloc);
 		}
 
 		void Deserialize(const rapidjson::Value& in)
@@ -3972,6 +3981,10 @@ namespace Ermine
 					labelOffset.y = arr[1].GetFloat();
 				}
 			}
+			if (in.HasMember("labelImagePath") && in["labelImagePath"].IsString())
+				labelImagePath = in["labelImagePath"].GetString();
+			if (in.HasMember("labelActiveImagePath") && in["labelActiveImagePath"].IsString())
+				labelActiveImagePath = in["labelActiveImagePath"].GetString();
 		}
 
 		XPROPERTY_DEF("UISliderComponent", UISliderComponent)

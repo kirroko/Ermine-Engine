@@ -443,14 +443,22 @@ namespace Ermine
             }
             else if (button.actionData == "OpenSettings")
             {
-                // Show SettingsMenu entity
+                // Show SettingsMenu, hide main menu buttons
                 SetEntityActiveByName("SettingsMenu", true);
+                SetEntityActiveByName("Play Button", false);
+                SetEntityActiveByName("Quit Button", false);
+                SetEntityActiveByName("Settings Button", false);
+                SetEntityActiveByName("MenuBackground", false);
                 EE_CORE_INFO("Settings menu opened");
             }
             else if (button.actionData == "CloseSettings")
             {
-                // Hide SettingsMenu entity
+                // Hide SettingsMenu, show main menu buttons
                 SetEntityActiveByName("SettingsMenu", false);
+                SetEntityActiveByName("Play Button", true);
+                SetEntityActiveByName("Quit Button", true);
+                SetEntityActiveByName("Settings Button", true);
+                SetEntityActiveByName("MenuBackground", true);
                 EE_CORE_INFO("Settings menu closed");
             }
             else

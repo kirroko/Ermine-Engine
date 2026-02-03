@@ -1616,7 +1616,35 @@ namespace Ermine
                       currentHandleColor, 1.0f);
         }
 
-        // Render label if present
+        // Render label image if present (swap between normal and active based on state)
+        std::string labelImageToUse = slider.isDragging && !slider.labelActiveImagePath.empty()
+            ? slider.labelActiveImagePath
+            : slider.labelImagePath;
+
+        if (!labelImageToUse.empty())
+        {
+            std::shared_ptr<graphics::Texture> labelTexture = nullptr;
+            auto it = m_textureCache.find(labelImageToUse);
+            if (it != m_textureCache.end())
+                labelTexture = it->second;
+            else
+            {
+                labelTexture = AssetManager::GetInstance().LoadTexture(labelImageToUse);
+                if (labelTexture && labelTexture->IsValid())
+                    m_textureCache[labelImageToUse] = labelTexture;
+            }
+
+            if (labelTexture && labelTexture->IsValid())
+            {
+                float labelImgX = slider.position.x + slider.labelOffset.x;
+                float labelImgY = slider.position.y + slider.labelOffset.y;
+                float labelImgSize = slider.labelScale * 0.1f;  // Scale based on labelScale
+
+                RenderTexturedSquare(labelImgX, labelImgY, labelImgSize, labelTexture, { 1.0f, 1.0f, 1.0f }, 1.0f);
+            }
+        }
+
+        // Render label text if present
         if (m_textRenderer && !slider.label.empty())
         {
             float labelX = slider.position.x + slider.labelOffset.x;

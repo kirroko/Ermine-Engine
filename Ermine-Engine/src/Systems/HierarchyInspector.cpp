@@ -3568,6 +3568,21 @@ void HierarchyInspector::DrawUISliderComponent(EntityID entity)
 	ImGui::DragFloat("Label Scale", &slider.labelScale, 0.1f, 0.1f, 3.0f);
 	ImGui::DragFloat2("Label Offset", &slider.labelOffset.x, 0.01f, -0.5f, 0.5f);
 
+	// Label images (unselected/selected)
+	char labelImageBuffer[256];
+	strncpy_s(labelImageBuffer, slider.labelImagePath.c_str(), sizeof(labelImageBuffer) - 1);
+	labelImageBuffer[sizeof(labelImageBuffer) - 1] = '\0';
+	if (ImGui::InputText("Label Image (Normal)", labelImageBuffer, sizeof(labelImageBuffer))) {
+		slider.labelImagePath = labelImageBuffer;
+	}
+
+	char labelActiveImageBuffer[256];
+	strncpy_s(labelActiveImageBuffer, slider.labelActiveImagePath.c_str(), sizeof(labelActiveImageBuffer) - 1);
+	labelActiveImageBuffer[sizeof(labelActiveImageBuffer) - 1] = '\0';
+	if (ImGui::InputText("Label Image (Active)", labelActiveImageBuffer, sizeof(labelActiveImageBuffer))) {
+		slider.labelActiveImagePath = labelActiveImageBuffer;
+	}
+
 	// Show slider state (read-only)
 	ImGui::Separator();
 	ImGui::Text("State (Read-Only)");
