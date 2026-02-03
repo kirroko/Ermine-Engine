@@ -942,11 +942,9 @@ namespace Ermine::editor {
 			// Drag & Drop for shader files
 			if (ImGui::BeginDragDropTarget())
 			{
-				if (const ImGuiPayload* payload =
-					ImGui::AcceptDragDropPayload("ASSET_BROWSER_FILE"))
-				{
+				if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_FILE")) {
 					const char* droppedPath = static_cast<const char*>(payload->Data);
-					std::filesystem::path shaderPath = droppedPath;
+					std::filesystem::path shaderPath = std::filesystem::path(droppedPath).filename().string();
 
 					if (shaderPath.extension() == ".glsl")
 					{
@@ -1656,9 +1654,7 @@ namespace Ermine::editor {
 				// --- Drag & Drop audio ---
 				if (ImGui::BeginDragDropTarget())
 				{
-					if (const ImGuiPayload* payload =
-						ImGui::AcceptDragDropPayload("ASSET_BROWSER_FILE"))
-					{
+					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_FILE")) {
 						const char* droppedPath = static_cast<const char*>(payload->Data);
 						p.m_Value.set<std::string>(droppedPath);
 						xproperty::sprop::setProperty(err, audio, p, ctx);
@@ -2128,18 +2124,14 @@ namespace Ermine::editor {
 			ImGui::EndCombo();
 		}
 
-		// --- Info about the model ---
-		if (modelComp.m_model) {
-			auto& model = modelComp.m_model;
-			ImGui::Text("Name: %s", model->GetName().c_str());
-			ImGui::Text("Meshes: %d", (int)model->GetMeshes().size());
-			ImGui::Text("Bones: %d", model->GetBoneCount());
-		}
-
-		// --- Reload Button ---
-		if (modelComp.m_model) {
-			if (ImGui::Button("Reload Model")) {
-				std::string fullPath = modelsDir + modelComp.m_model->GetName();
+		// --- Drag & Drop Target ---
+		if (ImGui::BeginDragDropTarget()) {
+			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_FILE")) {
+			
+				// Handle dropped model file
+				const char* modelPath = (const char*)payload->Data;
+				std::string filename = std::filesystem::path(modelPath).filename().string();
+				std::string fullPath = modelsDir + filename;
 
 				auto& ecs = ECS::GetInstance();
 				auto hierarchySystem = ecs.GetSystem<HierarchySystem>();
@@ -2149,7 +2141,6 @@ namespace Ermine::editor {
 				if (hierarchySystem && ecs.HasComponent<HierarchyComponent>(entity)) {
 					auto& hierarchy = ecs.GetComponent<HierarchyComponent>(entity);
 					existingChildren = hierarchy.children;
-					EE_CORE_INFO("Reusing {} existing child entities for reload", existingChildren.size());
 				}
 
 				// Remove cached version (forces reload from disk)
@@ -2160,6 +2151,10 @@ namespace Ermine::editor {
 				auto reloaded = manager.LoadModel(fullPath);
 				if (reloaded) {
 					modelComp.m_model = reloaded;
+
+					// Update dropdown selection
+					auto it = std::find(availableModels.begin(), availableModels.end(), modelComp.m_model->GetName());
+					selectedModel = (it != availableModels.end()) ? (int)std::distance(availableModels.begin(), it) : -1;
 
 					// Reuse or create child entities for each mesh with a material
 					auto renderer = ecs.GetSystem<graphics::Renderer>();
@@ -2342,15 +2337,18 @@ namespace Ermine::editor {
 							animComp.m_animator.reset();
 					}
 
-					// Mark renderer for full rebuild due to model reload
 					ecs.GetSystem<graphics::Renderer>()->MarkDrawDataForRebuild();
-
-					EE_CORE_INFO("Model reloaded successfully");
-				}
-				else {
-					EE_CORE_ERROR("Failed to reload model from: {}", fullPath);
 				}
 			}
+			ImGui::EndDragDropTarget();
+		}
+
+		// --- Info about the model ---
+		if (modelComp.m_model) {
+			auto& model = modelComp.m_model;
+			ImGui::Text("Name: %s", model->GetName().c_str());
+			ImGui::Text("Meshes: %d", (int)model->GetMeshes().size());
+			ImGui::Text("Bones: %d", model->GetBoneCount());
 		}
 	}
 

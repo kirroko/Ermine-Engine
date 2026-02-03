@@ -265,21 +265,21 @@
         },
         "GlobalAudioComponent": {
           "masterVolume": 1.0,
-          "musicVolume": 0.0860000029206276,
+          "musicVolume": 0.25200000405311587,
           "sfxVolume": 1.0,
           "ambienceVolume": 0.052000001072883609,
           "autoPlay": true,
           "music": [
             {
               "name": "test_music",
-              "path": "../Resources/Audio/231113-industrial-noise-dark-176107.mp3",
+              "path": "../Resources/Audio/NewBGM.wav",
               "volume": 1.0
             }
           ],
           "sfx": [
             {
               "name": "Shoot",
-              "path": "../Resources/Audio/Shoot_Orb.wav",
+              "path": "../Resources/Audio/NewShootOrb.wav",
               "volume": 1.0
             },
             {

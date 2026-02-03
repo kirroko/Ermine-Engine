@@ -74,6 +74,8 @@ namespace Ermine
         static inline bool s_isGamePaused = false;  // ADD THIS
         bool IsEntityActiveInHierarchy(EntityID entity);
         void TogglePauseMenu();  // ADD THIS
+        void ShowControlInfo(const std::string& infoToShow);
+        void CloseControlsScreen();
 
         EntityID GetGlobalAudioEntity();
         EntityID m_GlobalAudioEntity = MAX_ENTITIES;
