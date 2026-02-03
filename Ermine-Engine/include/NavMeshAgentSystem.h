@@ -99,7 +99,7 @@ namespace Ermine
          or 0 if none are found.
         *************************************************************************/
         EntityID FindNearestNavMeshEntity(const Ermine::Vec3& pos);
-        EntityID FindNearestNavMeshEntityExcluding(const Ermine::Vec3& pos, EntityID exclude) const;
+        EntityID FindNearestNavMeshEntityExcluding(const Ermine::Vec3& pos, EntityID exclude, EntityID excludePrev) const;
     private:
     };
 }

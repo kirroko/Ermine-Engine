@@ -3365,8 +3365,8 @@ namespace Ermine
 		bool didAutoFit = false;
 
 		bool hasPath = false;
-		Ermine::Vec3 destination{};
-		std::vector<Ermine::Vec3> path;
+		Vec3 destination{};
+		std::vector<Vec3> path;
 		size_t currentCorner = 0;
 
 		unsigned long long startPoly = 0;
@@ -3376,16 +3376,18 @@ namespace Ermine
 		bool navPaused = false;
 		bool isJumping = false;
 
-		Ermine::Vec3 jumpStart;
-		Ermine::Vec3 jumpTarget;
+		Vec3 jumpStart;
+		Vec3 jumpTarget;
 
 		float jumpTimer = 0.0f;
 		float jumpDuration = 0.4f;
 		float jumpHeight = 1.0f;
 
 		Vec3 lastDestination;
-		Ermine::Vec3 postJumpDestination = Ermine::Vec3{ 0.0f, 0.0f, 0.0f };
+		Vec3 postJumpDestination = Ermine::Vec3{ 0.0f, 0.0f, 0.0f };
 		bool hasPostJumpDestination = false;
+
+		EntityID lastJumpFromNavMesh = 0;
 
 		template<typename Alloc>
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
@@ -3435,8 +3437,9 @@ namespace Ermine
 			isJumping = false;
 			jumpTimer = 0.0f;
 
-			postJumpDestination = Ermine::Vec3{ 0.0f, 0.0f, 0.0f };
+			postJumpDestination = Vec3{ 0.0f, 0.0f, 0.0f };
 			hasPostJumpDestination = false;
+			lastJumpFromNavMesh = 0;
 		}
 	};
 

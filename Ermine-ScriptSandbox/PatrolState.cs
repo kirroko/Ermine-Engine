@@ -168,26 +168,26 @@ public class Patrol : MonoBehaviour
         }
     }
 
-    //void OnCollisionStay(Collision col)
-    //{
-    //    if (jumping) return;
+    void OnCollisionStay(Collision col)
+    {
+        if (jumping) return;
 
-    //    if (col.gameObject.name == "JumpArea")
-    //    {
-    //        jumping = true;
-    //        jumpLinkEntityID = (ulong)col.gameObject.GetInstanceID();
-    //    }
-    //}
+        if (col.gameObject.name == "JumpArea")
+        {
+            jumping = true;
+            jumpLinkEntityID = (ulong)col.gameObject.GetInstanceID();
+        }
+    }
 
-    //void OnCollisionExit(Collision col)
-    //{
-    //    if (jumping) return;
+    void OnCollisionExit(Collision col)
+    {
+        if (jumping) return;
 
-    //    if (col.gameObject.name == "JumpArea")
-    //    {
-    //        jumping = true;
-    //        jumpLinkEntityID = (ulong)col.gameObject.GetInstanceID();
-    //    }
-    //}
+        if (col.gameObject.name == "JumpArea")
+        {
+            jumping = true;
+            jumpLinkEntityID = (ulong)col.gameObject.GetInstanceID();
+        }
+    }
 }
 

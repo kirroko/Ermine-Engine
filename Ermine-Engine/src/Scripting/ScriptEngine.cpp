@@ -2642,20 +2642,24 @@ namespace
 				return std::fabs(v.x) < 1e-4f && std::fabs(v.y) < 1e-4f && std::fabs(v.z) < 1e-4f;
 			};
 
-		// Current navmesh under agent
+		// current navmesh under agent
 		EntityID currentNav = 0;
+		EntityID prevNav = agent.lastJumpFromNavMesh;
 		auto navSys = ecs.GetSystem<NavMeshAgentSystem>();
 		if (navSys)
 			currentNav = navSys->FindNearestNavMeshEntity(tr.position);
 
-		// Takeoff anchor: JumpArea transform if present
+		// update BEFORE picking next
+		agent.lastJumpFromNavMesh = currentNav;
+
+		// takeoff anchor: JumpArea transform if present
 		Ermine::Vec3 takeoff = tr.position;
 		if (ecs.HasComponent<Transform>(linkID))
 			takeoff = ecs.GetComponent<Transform>(linkID).position;
 
 		Ermine::Vec3 landing = link.landingPosition;
 
-		// ---------- AUTO LANDING (when landingPosition is not authored) ----------
+		// auto fill landing, when landingPosition is not authored
 		if (isUnset(landing))
 		{
 			if (!navSys)
@@ -2665,11 +2669,11 @@ namespace
 			}
 
 			// Pick the "other" navmesh by asking for nearest EXCLUDING current.
-			EntityID targetNav = navSys->FindNearestNavMeshEntityExcluding(takeoff, currentNav);
+			EntityID targetNav = navSys->FindNearestNavMeshEntityExcluding(takeoff, currentNav, prevNav);
 
 			// Fallback: if excluding returns 0 for any reason, try using agent pos
 			if (targetNav == 0)
-				targetNav = navSys->FindNearestNavMeshEntityExcluding(tr.position, currentNav);
+				targetNav = navSys->FindNearestNavMeshEntityExcluding(tr.position, currentNav, prevNav);
 
 			if (targetNav == 0 || !ecs.HasComponent<Transform>(targetNav))
 			{
@@ -2692,7 +2696,6 @@ namespace
 
 			landing = snapped;
 		}
-		// ----------------------------------------------------------------------
 
 		// Start jump
 		agent.isJumping = true;
