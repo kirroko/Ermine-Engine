@@ -41,6 +41,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <fstream>
 #include "Physics.h"
 #include "NavMesh.h"
+#include "GISystem.h"
 
 namespace {
 	constexpr uint32_t kProbeFileMagic = 0x49475245u; // 'ERGI'
@@ -3675,31 +3676,31 @@ void Renderer::RenderDeferredPipeline(const Mtx44& view, const Mtx44& projection
 		// Light probe volume gizmos
 		{
 			auto& ecs = ECS::GetInstance();
-			for (EntityID entity = 0; entity < MAX_ENTITIES; ++entity) {
-				if (!ecs.HasComponent<LightProbeVolumeComponent>(entity)) continue;
-				if (!ecs.HasComponent<Transform>(entity)) continue;
+			auto giSystem = ecs.GetSystem<GISystem>();
+			if (giSystem) {
+				for (EntityID entity : giSystem->GetProbeEntities()) {
+					const auto& volume = ecs.GetComponent<LightProbeVolumeComponent>(entity);
+					if (!volume.showGizmos) continue;
 
-				const auto& volume = ecs.GetComponent<LightProbeVolumeComponent>(entity);
-				if (!volume.showGizmos) continue;
+					glm::mat4 model = GetEntityWorldMatrix(entity);
+					glm::vec3 localMin = volume.boundsMin;
+					glm::vec3 localMax = volume.boundsMax;
 
-				glm::mat4 model = GetEntityWorldMatrix(entity);
-				glm::vec3 localMin = volume.boundsMin;
-				glm::vec3 localMax = volume.boundsMax;
+					glm::vec3 center = (localMin + localMax) * 0.5f;
+					glm::vec3 extent = (localMax - localMin) * 0.5f;
 
-				glm::vec3 center = (localMin + localMax) * 0.5f;
-				glm::vec3 extent = (localMax - localMin) * 0.5f;
+					glm::vec3 worldCenter = glm::vec3(model * glm::vec4(center, 1.0f));
+					glm::mat3 upperLeft = glm::mat3(model);
+					glm::vec3 worldExtent = glm::abs(upperLeft[0]) * extent.x
+						+ glm::abs(upperLeft[1]) * extent.y
+						+ glm::abs(upperLeft[2]) * extent.z;
 
-				glm::vec3 worldCenter = glm::vec3(model * glm::vec4(center, 1.0f));
-				glm::mat3 upperLeft = glm::mat3(model);
-				glm::vec3 worldExtent = glm::abs(upperLeft[0]) * extent.x
-					+ glm::abs(upperLeft[1]) * extent.y
-					+ glm::abs(upperLeft[2]) * extent.z;
+					glm::vec3 actualMin = worldCenter - worldExtent;
+					glm::vec3 actualMax = worldCenter + worldExtent;
 
-				glm::vec3 actualMin = worldCenter - worldExtent;
-				glm::vec3 actualMax = worldCenter + worldExtent;
-
-				glm::vec3 color = volume.isActive ? glm::vec3(0.2f, 0.8f, 1.0f) : glm::vec3(0.5f, 0.5f, 0.5f);
-				SubmitDebugAABB(actualMin, actualMax, color);
+					glm::vec3 color = volume.isActive ? glm::vec3(0.2f, 0.8f, 1.0f) : glm::vec3(0.5f, 0.5f, 0.5f);
+					SubmitDebugAABB(actualMin, actualMax, color);
+				}
 			}
 		}
 
@@ -4247,13 +4248,26 @@ void Renderer::CaptureLightProbe(EntityID probeEntity)
 
 	// Ensure the probe has a unique index in the cubemap array
 	std::vector<bool> usedIndices(MAX_PROBES, false);
-	for (EntityID other = 0; other < MAX_ENTITIES; ++other) {
-		if (!ecs.HasComponent<LightProbeVolumeComponent>(other)) continue;
-		if (other == probeEntity) continue;
-		auto& otherProbe = ecs.GetComponent<LightProbeVolumeComponent>(other);
-		if (!otherProbe.isActive) continue;
-		if (otherProbe.probeIndex >= 0 && otherProbe.probeIndex < MAX_PROBES) {
-			usedIndices[otherProbe.probeIndex] = true;
+	auto giSystem = ecs.GetSystem<GISystem>();
+	if (giSystem) {
+		for (EntityID other : giSystem->GetProbeEntities()) {
+			if (other == probeEntity) continue;
+			auto& otherProbe = ecs.GetComponent<LightProbeVolumeComponent>(other);
+			if (!otherProbe.isActive) continue;
+			if (otherProbe.probeIndex >= 0 && otherProbe.probeIndex < MAX_PROBES) {
+				usedIndices[otherProbe.probeIndex] = true;
+			}
+		}
+	}
+	else {
+		for (EntityID other = 0; other < MAX_ENTITIES; ++other) {
+			if (!ecs.HasComponent<LightProbeVolumeComponent>(other)) continue;
+			if (other == probeEntity) continue;
+			auto& otherProbe = ecs.GetComponent<LightProbeVolumeComponent>(other);
+			if (!otherProbe.isActive) continue;
+			if (otherProbe.probeIndex >= 0 && otherProbe.probeIndex < MAX_PROBES) {
+				usedIndices[otherProbe.probeIndex] = true;
+			}
 		}
 	}
 	const bool needsIndex = (probe.probeIndex < 0 || probe.probeIndex >= MAX_PROBES || usedIndices[probe.probeIndex]);
@@ -4776,57 +4790,106 @@ void Renderer::UpdateLightProbesUBO()
 	}
 
 	auto& ecs = Ermine::ECS::GetInstance();
+	auto giSystem = ecs.GetSystem<GISystem>();
 	
 	std::vector<LightProbeGPU> probesGPU;
 	probesGPU.reserve(MAX_PROBES);
 
 	// Collect active probes
-	for (EntityID entity = 0; entity < MAX_ENTITIES; ++entity) {
-		if (!ecs.HasComponent<LightProbeVolumeComponent>(entity)) continue;
-		if (!ecs.HasComponent<Transform>(entity)) continue;
-		
-		auto& probe = ecs.GetComponent<LightProbeVolumeComponent>(entity);
-		const auto& trans = ecs.GetComponent<Transform>(entity);
+	if (giSystem) {
+		for (EntityID entity : giSystem->GetProbeEntities()) {
+			auto& probe = ecs.GetComponent<LightProbeVolumeComponent>(entity);
+			const auto& trans = ecs.GetComponent<Transform>(entity);
 
-		if (!probe.isActive) continue;
-		if (probesGPU.size() >= MAX_PROBES) break; // Limit to MAX_PROBES
+			if (!probe.isActive) continue;
+			if (probesGPU.size() >= MAX_PROBES) break; // Limit to MAX_PROBES
 
-		if (!probe.bakedDataLoaded && !probe.bakedProbePath.empty()) {
-			std::filesystem::path bakedPath(probe.bakedProbePath);
-			if (LoadProbeSHFromFile(bakedPath, probe.shCoefficients)) {
-				probe.bakedDataLoaded = true;
+			if (!probe.bakedDataLoaded && !probe.bakedProbePath.empty()) {
+				std::filesystem::path bakedPath(probe.bakedProbePath);
+				if (LoadProbeSHFromFile(bakedPath, probe.shCoefficients)) {
+					probe.bakedDataLoaded = true;
+				}
 			}
+
+			LightProbeGPU gpuProbe;
+			gpuProbe.position_radius = glm::vec4(trans.position.x, trans.position.y, trans.position.z, 0.0f);
+			
+			// Copy SH coefficients (convert vec3 array to vec4 for std140 alignment)
+			for (int i = 0; i < 9; ++i) {
+				gpuProbe.shCoefficients[i] = glm::vec4(probe.shCoefficients[i], 0.0f);
+			}
+
+			glm::mat4 model = GetEntityWorldMatrix(entity);
+			glm::vec3 localMin = probe.boundsMin;
+			glm::vec3 localMax = probe.boundsMax;
+
+			glm::vec3 center = (localMin + localMax) * 0.5f;
+			glm::vec3 extent = (localMax - localMin) * 0.5f;
+
+			glm::vec3 worldCenter = glm::vec3(model * glm::vec4(center, 1.0f));
+			glm::mat3 upperLeft = glm::mat3(model);
+			glm::vec3 worldExtent = glm::abs(upperLeft[0]) * extent.x
+				+ glm::abs(upperLeft[1]) * extent.y
+				+ glm::abs(upperLeft[2]) * extent.z;
+
+			glm::vec3 actualMin = worldCenter - worldExtent;
+			glm::vec3 actualMax = worldCenter + worldExtent;
+
+			gpuProbe.boundsMin = glm::vec4(actualMin, 0.0f);
+			gpuProbe.boundsMax = glm::vec4(actualMax, 0.0f);
+			gpuProbe.flags = glm::vec4(1.0f, static_cast<float>(probe.priority), 0.0f, 0.0f);
+
+			probesGPU.push_back(gpuProbe);
 		}
+	}
+	else {
+		for (EntityID entity = 0; entity < MAX_ENTITIES; ++entity) {
+			if (!ecs.HasComponent<LightProbeVolumeComponent>(entity)) continue;
+			if (!ecs.HasComponent<Transform>(entity)) continue;
 
-		LightProbeGPU gpuProbe;
-		gpuProbe.position_radius = glm::vec4(trans.position.x, trans.position.y, trans.position.z, 0.0f);
-		
-		// Copy SH coefficients (convert vec3 array to vec4 for std140 alignment)
-		for (int i = 0; i < 9; ++i) {
-			gpuProbe.shCoefficients[i] = glm::vec4(probe.shCoefficients[i], 0.0f);
+			auto& probe = ecs.GetComponent<LightProbeVolumeComponent>(entity);
+			const auto& trans = ecs.GetComponent<Transform>(entity);
+
+			if (!probe.isActive) continue;
+			if (probesGPU.size() >= MAX_PROBES) break; // Limit to MAX_PROBES
+
+			if (!probe.bakedDataLoaded && !probe.bakedProbePath.empty()) {
+				std::filesystem::path bakedPath(probe.bakedProbePath);
+				if (LoadProbeSHFromFile(bakedPath, probe.shCoefficients)) {
+					probe.bakedDataLoaded = true;
+				}
+			}
+
+			LightProbeGPU gpuProbe;
+			gpuProbe.position_radius = glm::vec4(trans.position.x, trans.position.y, trans.position.z, 0.0f);
+
+			// Copy SH coefficients (convert vec3 array to vec4 for std140 alignment)
+			for (int i = 0; i < 9; ++i) {
+				gpuProbe.shCoefficients[i] = glm::vec4(probe.shCoefficients[i], 0.0f);
+			}
+
+			glm::mat4 model = GetEntityWorldMatrix(entity);
+			glm::vec3 localMin = probe.boundsMin;
+			glm::vec3 localMax = probe.boundsMax;
+
+			glm::vec3 center = (localMin + localMax) * 0.5f;
+			glm::vec3 extent = (localMax - localMin) * 0.5f;
+
+			glm::vec3 worldCenter = glm::vec3(model * glm::vec4(center, 1.0f));
+			glm::mat3 upperLeft = glm::mat3(model);
+			glm::vec3 worldExtent = glm::abs(upperLeft[0]) * extent.x
+				+ glm::abs(upperLeft[1]) * extent.y
+				+ glm::abs(upperLeft[2]) * extent.z;
+
+			glm::vec3 actualMin = worldCenter - worldExtent;
+			glm::vec3 actualMax = worldCenter + worldExtent;
+
+			gpuProbe.boundsMin = glm::vec4(actualMin, 0.0f);
+			gpuProbe.boundsMax = glm::vec4(actualMax, 0.0f);
+			gpuProbe.flags = glm::vec4(1.0f, static_cast<float>(probe.priority), 0.0f, 0.0f);
+
+			probesGPU.push_back(gpuProbe);
 		}
-
-		glm::mat4 model = GetEntityWorldMatrix(entity);
-		glm::vec3 localMin = probe.boundsMin;
-		glm::vec3 localMax = probe.boundsMax;
-
-		glm::vec3 center = (localMin + localMax) * 0.5f;
-		glm::vec3 extent = (localMax - localMin) * 0.5f;
-
-		glm::vec3 worldCenter = glm::vec3(model * glm::vec4(center, 1.0f));
-		glm::mat3 upperLeft = glm::mat3(model);
-		glm::vec3 worldExtent = glm::abs(upperLeft[0]) * extent.x
-			+ glm::abs(upperLeft[1]) * extent.y
-			+ glm::abs(upperLeft[2]) * extent.z;
-
-		glm::vec3 actualMin = worldCenter - worldExtent;
-		glm::vec3 actualMax = worldCenter + worldExtent;
-
-		gpuProbe.boundsMin = glm::vec4(actualMin, 0.0f);
-		gpuProbe.boundsMax = glm::vec4(actualMax, 0.0f);
-		gpuProbe.flags = glm::vec4(1.0f, static_cast<float>(probe.priority), 0.0f, 0.0f);
-
-		probesGPU.push_back(gpuProbe);
 	}
 
 	// Upload to UBO
