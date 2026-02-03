@@ -449,7 +449,6 @@ namespace Ermine
                 SetEntityActiveByName("Quit Button", false);
                 SetEntityActiveByName("Settings Button", false);
                 SetEntityActiveByName("MenuBackground", false);
-                EE_CORE_INFO("Settings menu opened");
             }
             else if (button.actionData == "CloseSettings")
             {
@@ -459,7 +458,7 @@ namespace Ermine
                 SetEntityActiveByName("Quit Button", true);
                 SetEntityActiveByName("Settings Button", true);
                 SetEntityActiveByName("MenuBackground", true);
-                EE_CORE_INFO("Settings menu closed");
+            }
             else if (button.actionData == "ShowTeleportInfo")
             {
                 ShowControlInfo("Teleport_Info");
