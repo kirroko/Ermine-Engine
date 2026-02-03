@@ -248,6 +248,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	EE_AUTO_REGISTER_COMPONENT(UIManaBarComponent, "UIManaBarComponent");
 	EE_AUTO_REGISTER_COMPONENT(UIBookCounterComponent, "UIBookCounterComponent");
 	EE_AUTO_REGISTER_COMPONENT(UIButtonComponent, "UIButtonComponent");
+	EE_AUTO_REGISTER_COMPONENT(UISliderComponent, "UISliderComponent");
 	EE_AUTO_REGISTER_COMPONENT(UIImageComponent, "UIImageComponent");
 
 	// NOTE : THESE ARE SPECIAL CASES DUE TO THE FACT THAT THEIR COMPONENTS ARE UNIQUE AND WOULDN'T WORK BY SHALLOW COPIED OR DEEP COPIED

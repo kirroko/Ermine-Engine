@@ -71,9 +71,14 @@ namespace Ermine
         // Get normalized mouse position (0-1 range)
         void GetNormalizedMousePosition(float& outX, float& outY);
 
+        // Apply slider value to its target (audio volume, etc.)
+        void ApplySliderValue(const UISliderComponent& slider, EntityID globalAudioEntity);
+
         static inline bool s_isGamePaused = false;  // ADD THIS
         bool IsEntityActiveInHierarchy(EntityID entity);
+        bool IsEntityChildOf(EntityID entity, EntityID potentialParent);  // Check if entity is child of another
         void TogglePauseMenu();  // ADD THIS
+        void SetEntityActiveByName(const std::string& name, bool active);  // Show/hide entities by name
         void ShowControlInfo(const std::string& infoToShow);
         void CloseControlsScreen();
 

@@ -574,6 +574,9 @@ namespace Ermine::editor {
 		if (ECS::GetInstance().HasComponent<UIButtonComponent>(selected))
 			DrawUIButtonComponent(selected);
 
+		if (ECS::GetInstance().HasComponent<UISliderComponent>(selected))
+			DrawUISliderComponent(selected);
+
 		ImGui::PopID();
 
 		ImGui::Separator();
@@ -1753,12 +1756,16 @@ namespace Ermine::editor {
 
 	void HierarchyInspector::DrawHierarchyComponent(EntityID entity) {
 		if (ImGui::CollapsingHeader("Hierarchy")) {
-			auto& hierarchy = ECS::GetInstance().GetComponent<HierarchyComponent>(entity);
+			auto& ecs = ECS::GetInstance();
+			auto& hierarchy = ecs.GetComponent<HierarchyComponent>(entity);
 
-			if (hierarchy.parent != 0) {
-				if (ECS::GetInstance().HasComponent<ObjectMetaData>(hierarchy.parent)) {
-					auto& metadata = ECS::GetInstance().GetComponent<ObjectMetaData>(hierarchy.parent);
+			if (hierarchy.parent != 0 && hierarchy.parent != HierarchyComponent::INVALID_PARENT) {
+				if (ecs.IsEntityValid(hierarchy.parent) && ecs.HasComponent<ObjectMetaData>(hierarchy.parent)) {
+					auto& metadata = ecs.GetComponent<ObjectMetaData>(hierarchy.parent);
 					ImGui::Text("Parent: %s", metadata.name.c_str());
+				}
+				else {
+					ImGui::Text("Parent: (Invalid Entity %u)", hierarchy.parent);
 				}
 			}
 			else {
@@ -1768,9 +1775,12 @@ namespace Ermine::editor {
 			if (!hierarchy.children.empty()) {
 				if (ImGui::TreeNode("Children")) {
 					for (auto child : hierarchy.children) {
-						if (ECS::GetInstance().HasComponent<ObjectMetaData>(child)) {
-							auto& metadata = ECS::GetInstance().GetComponent<ObjectMetaData>(child);
+						if (ecs.IsEntityValid(child) && ecs.HasComponent<ObjectMetaData>(child)) {
+							auto& metadata = ecs.GetComponent<ObjectMetaData>(child);
 							ImGui::BulletText("%s", metadata.name.c_str());
+						}
+						else {
+							ImGui::BulletText("(Invalid Entity %u)", child);
 						}
 					}
 					ImGui::TreePop();
@@ -3670,11 +3680,12 @@ namespace Ermine::editor {
 			{"UI Mana Bar",          [&](EntityID e) { ecs.AddComponent(e, UIManaBarComponent{}); }},
 			{"UI Book Counter",      [&](EntityID e) { ecs.AddComponent(e, UIBookCounterComponent{}); }},
 			{"UI Image",             [&](EntityID e) { ecs.AddComponent(e, UIImageComponent{}); }},
-			{"UI Button",            [&](EntityID e) { ecs.AddComponent(e, UIButtonComponent{}); }}
+			{"UI Button",            [&](EntityID e) { ecs.AddComponent(e, UIButtonComponent{}); }},
+			{"UI Slider",            [&](EntityID e) { ecs.AddComponent(e, UISliderComponent{}); }}
 		};
 
 		if (shouldShowMenu("UI", { "UI Component (Legacy)", "UI Healthbar","UI Crosshair",
-								   "UI Skills","UI Mana Bar","UI Book Counter","UI Image","UI Button" }) &&
+								   "UI Skills","UI Mana Bar","UI Book Counter","UI Image","UI Button","UI Slider" }) &&
 			ImGui::BeginMenu("UI"))
 		{
 			for (auto& [name, addFunc] : uiComponents)
@@ -3809,6 +3820,118 @@ namespace Ermine::editor {
 	ImGui::Checkbox("Is Hovered", &button.isHovered);
 	ImGui::SameLine();
 	ImGui::Checkbox("Is Pressed", &button.isPressed);
+}
+
+void HierarchyInspector::DrawUISliderComponent(EntityID entity)
+{
+	if (!ComponentHeaderWithRemove<UISliderComponent>("UI Slider Component", entity))
+		return;
+
+	auto& slider = ECS::GetInstance().GetComponent<UISliderComponent>(entity);
+
+	// Position and size
+	ImGui::DragFloat2("Position (X, Y)", &slider.position.x, 0.01f, 0.0f, 1.0f);
+	ImGui::DragFloat2("Size (Width, Height)", &slider.size.x, 0.01f, 0.01f, 1.0f);
+
+	ImGui::Separator();
+	ImGui::Text("Target");
+
+	// Slider target dropdown
+	const char* targetNames[] = { "None", "Master Volume", "Music Volume", "SFX Volume", "Ambience Volume", "Custom" };
+	int currentTarget = static_cast<int>(slider.target);
+	if (ImGui::Combo("Target", &currentTarget, targetNames, IM_ARRAYSIZE(targetNames))) {
+		slider.target = static_cast<UISliderComponent::SliderTarget>(currentTarget);
+	}
+
+	// Custom target field
+	if (slider.target == UISliderComponent::SliderTarget::Custom)
+	{
+		char customTargetBuffer[256];
+		strncpy_s(customTargetBuffer, slider.customTarget.c_str(), sizeof(customTargetBuffer) - 1);
+		customTargetBuffer[sizeof(customTargetBuffer) - 1] = '\0';
+		if (ImGui::InputText("Custom Target", customTargetBuffer, sizeof(customTargetBuffer))) {
+			slider.customTarget = customTargetBuffer;
+		}
+	}
+
+	ImGui::Separator();
+	ImGui::Text("Value");
+
+	ImGui::DragFloat("Min Value", &slider.minValue, 0.01f, 0.0f, 1.0f);
+	ImGui::DragFloat("Max Value", &slider.maxValue, 0.01f, 0.0f, 1.0f);
+	ImGui::SliderFloat("Current Value", &slider.value, slider.minValue, slider.maxValue);
+
+	ImGui::Separator();
+	ImGui::Text("Colors");
+
+	ImGui::ColorEdit3("Track Color", &slider.trackColor.x);
+	ImGui::ColorEdit3("Fill Color", &slider.fillColor.x);
+	ImGui::ColorEdit3("Handle Color", &slider.handleColor.x);
+	ImGui::ColorEdit3("Handle Hover Color", &slider.handleHoverColor.x);
+	ImGui::SliderFloat("Track Alpha", &slider.trackAlpha, 0.0f, 1.0f);
+	ImGui::DragFloat("Handle Size", &slider.handleSize, 0.005f, 0.01f, 0.1f);
+
+	ImGui::Separator();
+	ImGui::Text("Images (Optional)");
+	ImGui::TextDisabled("If set, images override color-based rendering");
+
+	char trackImageBuffer[256];
+	strncpy_s(trackImageBuffer, slider.trackImage.c_str(), sizeof(trackImageBuffer) - 1);
+	trackImageBuffer[sizeof(trackImageBuffer) - 1] = '\0';
+	if (ImGui::InputText("Track Image", trackImageBuffer, sizeof(trackImageBuffer))) {
+		slider.trackImage = trackImageBuffer;
+	}
+
+	char fillImageBuffer[256];
+	strncpy_s(fillImageBuffer, slider.fillImage.c_str(), sizeof(fillImageBuffer) - 1);
+	fillImageBuffer[sizeof(fillImageBuffer) - 1] = '\0';
+	if (ImGui::InputText("Fill Image", fillImageBuffer, sizeof(fillImageBuffer))) {
+		slider.fillImage = fillImageBuffer;
+	}
+
+	char handleImageBuffer[256];
+	strncpy_s(handleImageBuffer, slider.handleImage.c_str(), sizeof(handleImageBuffer) - 1);
+	handleImageBuffer[sizeof(handleImageBuffer) - 1] = '\0';
+	if (ImGui::InputText("Handle Image", handleImageBuffer, sizeof(handleImageBuffer))) {
+		slider.handleImage = handleImageBuffer;
+	}
+	ImGui::TextDisabled("Example: ../Resources/Textures/UI/slider_track.png");
+
+	ImGui::Separator();
+	ImGui::Text("Label");
+
+	char labelBuffer[256];
+	strncpy_s(labelBuffer, slider.label.c_str(), sizeof(labelBuffer) - 1);
+	labelBuffer[sizeof(labelBuffer) - 1] = '\0';
+	if (ImGui::InputText("Label Text", labelBuffer, sizeof(labelBuffer))) {
+		slider.label = labelBuffer;
+	}
+
+	ImGui::ColorEdit3("Label Color", &slider.labelColor.x);
+	ImGui::DragFloat("Label Scale", &slider.labelScale, 0.1f, 0.1f, 3.0f);
+	ImGui::DragFloat2("Label Offset", &slider.labelOffset.x, 0.01f, -0.5f, 0.5f);
+
+	// Label images (unselected/selected)
+	char labelImageBuffer[256];
+	strncpy_s(labelImageBuffer, slider.labelImagePath.c_str(), sizeof(labelImageBuffer) - 1);
+	labelImageBuffer[sizeof(labelImageBuffer) - 1] = '\0';
+	if (ImGui::InputText("Label Image (Normal)", labelImageBuffer, sizeof(labelImageBuffer))) {
+		slider.labelImagePath = labelImageBuffer;
+	}
+
+	char labelActiveImageBuffer[256];
+	strncpy_s(labelActiveImageBuffer, slider.labelActiveImagePath.c_str(), sizeof(labelActiveImageBuffer) - 1);
+	labelActiveImageBuffer[sizeof(labelActiveImageBuffer) - 1] = '\0';
+	if (ImGui::InputText("Label Image (Active)", labelActiveImageBuffer, sizeof(labelActiveImageBuffer))) {
+		slider.labelActiveImagePath = labelActiveImageBuffer;
+	}
+
+	// Show slider state (read-only)
+	ImGui::Separator();
+	ImGui::Text("State (Read-Only)");
+	ImGui::Checkbox("Is Hovered", &slider.isHovered);
+	ImGui::SameLine();
+	ImGui::Checkbox("Is Dragging", &slider.isDragging);
 }
 
 } // namespace Ermine::editor

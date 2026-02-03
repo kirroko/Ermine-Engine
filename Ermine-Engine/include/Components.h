@@ -3789,6 +3789,180 @@ namespace Ermine
 
 	/*!***********************************************************************
 	\brief
+	  UI Slider component for volume controls and other adjustable values
+	*************************************************************************/
+	struct UISliderComponent
+	{
+		enum class SliderTarget
+		{
+			None,
+			MasterVolume,
+			MusicVolume,
+			SFXVolume,
+			AmbienceVolume,
+			Custom
+		};
+
+		// Slider visual properties
+		Vec3 position = { 0.5f, 0.5f, 0.0f };  // Normalized screen position (center of slider)
+		Vec2 size = { 0.2f, 0.03f };           // Normalized screen size (width, height)
+
+		// Slider colors
+		Vec3 trackColor = { 0.2f, 0.2f, 0.2f };      // Background track color
+		Vec3 fillColor = { 0.4f, 0.6f, 0.9f };       // Filled portion color
+		Vec3 handleColor = { 1.0f, 1.0f, 1.0f };     // Handle/knob color
+		Vec3 handleHoverColor = { 0.9f, 0.9f, 0.5f }; // Handle color when hovered
+		float trackAlpha = 0.9f;
+		float handleSize = 0.04f;  // Handle diameter (normalized)
+
+		// Slider images (optional - overrides color-based rendering)
+		std::string trackImage = "";   // Background track image
+		std::string fillImage = "";    // Fill bar image
+		std::string handleImage = "";  // Handle/knob image
+
+		// Slider value
+		float value = 1.0f;      // Current value (0.0 - 1.0)
+		float minValue = 0.0f;   // Minimum value
+		float maxValue = 1.0f;   // Maximum value
+
+		// Slider target (what this slider controls)
+		SliderTarget target = SliderTarget::None;
+		std::string customTarget = "";  // For Custom target type
+
+		// Label
+		std::string label = "";
+		Vec3 labelColor = { 1.0f, 1.0f, 1.0f };
+		float labelScale = 0.8f;
+		Vec2 labelOffset = { 0.0f, 0.04f };  // Offset from slider center
+
+		// Label images (optional - shows image next to slider label)
+		std::string labelImagePath = "";        // Normal/unselected image
+		std::string labelActiveImagePath = "";  // Active/selected image (shown when dragging)
+
+		// State (runtime - don't serialize)
+		bool isHovered = false;
+		bool isDragging = false;
+
+		template<typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const
+		{
+			out.SetObject();
+			out.AddMember("position", Vec3ToJson(position, alloc), alloc);
+
+			rapidjson::Value sizeVal(rapidjson::kArrayType);
+			sizeVal.PushBack(size.x, alloc);
+			sizeVal.PushBack(size.y, alloc);
+			out.AddMember("size", sizeVal, alloc);
+
+			out.AddMember("trackColor", Vec3ToJson(trackColor, alloc), alloc);
+			out.AddMember("fillColor", Vec3ToJson(fillColor, alloc), alloc);
+			out.AddMember("handleColor", Vec3ToJson(handleColor, alloc), alloc);
+			out.AddMember("handleHoverColor", Vec3ToJson(handleHoverColor, alloc), alloc);
+			out.AddMember("trackAlpha", trackAlpha, alloc);
+			out.AddMember("handleSize", handleSize, alloc);
+
+			rapidjson::Value trackImageVal(trackImage.c_str(), alloc);
+			out.AddMember("trackImage", trackImageVal, alloc);
+			rapidjson::Value fillImageVal(fillImage.c_str(), alloc);
+			out.AddMember("fillImage", fillImageVal, alloc);
+			rapidjson::Value handleImageVal(handleImage.c_str(), alloc);
+			out.AddMember("handleImage", handleImageVal, alloc);
+
+			out.AddMember("value", value, alloc);
+			out.AddMember("minValue", minValue, alloc);
+			out.AddMember("maxValue", maxValue, alloc);
+
+			out.AddMember("target", static_cast<int>(target), alloc);
+			rapidjson::Value customTargetVal(customTarget.c_str(), alloc);
+			out.AddMember("customTarget", customTargetVal, alloc);
+
+			rapidjson::Value labelVal(label.c_str(), alloc);
+			out.AddMember("label", labelVal, alloc);
+			out.AddMember("labelColor", Vec3ToJson(labelColor, alloc), alloc);
+			out.AddMember("labelScale", labelScale, alloc);
+
+			rapidjson::Value labelOffsetVal(rapidjson::kArrayType);
+			labelOffsetVal.PushBack(labelOffset.x, alloc);
+			labelOffsetVal.PushBack(labelOffset.y, alloc);
+			out.AddMember("labelOffset", labelOffsetVal, alloc);
+
+			rapidjson::Value labelImagePathVal(labelImagePath.c_str(), alloc);
+			out.AddMember("labelImagePath", labelImagePathVal, alloc);
+			rapidjson::Value labelActiveImagePathVal(labelActiveImagePath.c_str(), alloc);
+			out.AddMember("labelActiveImagePath", labelActiveImagePathVal, alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in)
+		{
+			if (in.HasMember("position") && in["position"].IsArray())
+				position = JsonToVec3(in["position"]);
+			if (in.HasMember("size") && in["size"].IsArray())
+			{
+				const auto& arr = in["size"].GetArray();
+				if (arr.Size() >= 2)
+				{
+					size.x = arr[0].GetFloat();
+					size.y = arr[1].GetFloat();
+				}
+			}
+			if (in.HasMember("trackColor") && in["trackColor"].IsArray())
+				trackColor = JsonToVec3(in["trackColor"]);
+			if (in.HasMember("fillColor") && in["fillColor"].IsArray())
+				fillColor = JsonToVec3(in["fillColor"]);
+			if (in.HasMember("handleColor") && in["handleColor"].IsArray())
+				handleColor = JsonToVec3(in["handleColor"]);
+			if (in.HasMember("handleHoverColor") && in["handleHoverColor"].IsArray())
+				handleHoverColor = JsonToVec3(in["handleHoverColor"]);
+			if (in.HasMember("trackAlpha") && in["trackAlpha"].IsNumber())
+				trackAlpha = in["trackAlpha"].GetFloat();
+			if (in.HasMember("handleSize") && in["handleSize"].IsNumber())
+				handleSize = in["handleSize"].GetFloat();
+
+			if (in.HasMember("trackImage") && in["trackImage"].IsString())
+				trackImage = in["trackImage"].GetString();
+			if (in.HasMember("fillImage") && in["fillImage"].IsString())
+				fillImage = in["fillImage"].GetString();
+			if (in.HasMember("handleImage") && in["handleImage"].IsString())
+				handleImage = in["handleImage"].GetString();
+
+			if (in.HasMember("value") && in["value"].IsNumber())
+				value = in["value"].GetFloat();
+			if (in.HasMember("minValue") && in["minValue"].IsNumber())
+				minValue = in["minValue"].GetFloat();
+			if (in.HasMember("maxValue") && in["maxValue"].IsNumber())
+				maxValue = in["maxValue"].GetFloat();
+
+			if (in.HasMember("target") && in["target"].IsInt())
+				target = static_cast<SliderTarget>(in["target"].GetInt());
+			if (in.HasMember("customTarget") && in["customTarget"].IsString())
+				customTarget = in["customTarget"].GetString();
+
+			if (in.HasMember("label") && in["label"].IsString())
+				label = in["label"].GetString();
+			if (in.HasMember("labelColor") && in["labelColor"].IsArray())
+				labelColor = JsonToVec3(in["labelColor"]);
+			if (in.HasMember("labelScale") && in["labelScale"].IsNumber())
+				labelScale = in["labelScale"].GetFloat();
+			if (in.HasMember("labelOffset") && in["labelOffset"].IsArray())
+			{
+				const auto& arr = in["labelOffset"].GetArray();
+				if (arr.Size() >= 2)
+				{
+					labelOffset.x = arr[0].GetFloat();
+					labelOffset.y = arr[1].GetFloat();
+				}
+			}
+			if (in.HasMember("labelImagePath") && in["labelImagePath"].IsString())
+				labelImagePath = in["labelImagePath"].GetString();
+			if (in.HasMember("labelActiveImagePath") && in["labelActiveImagePath"].IsString())
+				labelActiveImagePath = in["labelActiveImagePath"].GetString();
+		}
+
+		XPROPERTY_DEF("UISliderComponent", UISliderComponent)
+	};
+
+	/*!***********************************************************************
+	\brief
 	  UI configuration component for HUD elements
 	*************************************************************************/
 	struct UIComponent

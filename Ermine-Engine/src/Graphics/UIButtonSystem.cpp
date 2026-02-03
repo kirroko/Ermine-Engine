@@ -115,6 +115,26 @@ namespace Ermine
         float mouseX, mouseY;
         GetNormalizedMousePosition(mouseX, mouseY);
 
+        // ==================== CHECK FOR MODAL/OVERLAY UI ====================
+        // If SettingsMenu (or similar overlay) is active, only process UI within that hierarchy
+        bool hasActiveOverlay = false;
+        EntityID overlayRootEntity = MAX_ENTITIES;
+
+        for (EntityID e = 0; e < MAX_ENTITIES; ++e)
+        {
+            if (!ecs.IsEntityValid(e)) continue;
+            if (!ecs.HasComponent<ObjectMetaData>(e)) continue;
+
+            auto& meta = ecs.GetComponent<ObjectMetaData>(e);
+            // Check for known overlay/modal entities
+            if ((meta.name == "SettingsMenu" || meta.name == "PauseMenu") && meta.selfActive)
+            {
+                hasActiveOverlay = true;
+                overlayRootEntity = e;
+                break;
+            }
+        }
+
         // Iterate through all entities that have UIButtonComponent
         for (EntityID entity : m_Entities)
         {
@@ -124,6 +144,16 @@ namespace Ermine
             // ✅ FIX: Check if entity is active in hierarchy (including parents)
             if (!IsEntityActiveInHierarchy(entity))
                 continue;
+
+            // ✅ FIX: If overlay is active, only process buttons that are children of the overlay
+            if (hasActiveOverlay && !IsEntityChildOf(entity, overlayRootEntity))
+            {
+                // Reset hover state for buttons outside the overlay
+                auto& button = ecs.GetComponent<UIButtonComponent>(entity);
+                button.isHovered = false;
+                button.isPressed = false;
+                continue;
+            }
 
             auto& button = ecs.GetComponent<UIButtonComponent>(entity);
 
@@ -172,6 +202,85 @@ namespace Ermine
                 button.isPressed = false;
             }
         }
+
+        // ==================== UI SLIDER INTERACTION ====================
+        for (EntityID entity = 0; entity < MAX_ENTITIES; ++entity)
+        {
+            if (!ecs.IsEntityValid(entity))
+                continue;
+
+            if (!ecs.HasComponent<UISliderComponent>(entity))
+                continue;
+
+            if (!IsEntityActiveInHierarchy(entity))
+                continue;
+
+            // ✅ FIX: If overlay is active, only process sliders that are children of the overlay
+            if (hasActiveOverlay && !IsEntityChildOf(entity, overlayRootEntity))
+            {
+                auto& slider = ecs.GetComponent<UISliderComponent>(entity);
+                slider.isHovered = false;
+                slider.isDragging = false;
+                continue;
+            }
+
+            auto& slider = ecs.GetComponent<UISliderComponent>(entity);
+
+            // Calculate slider bounds in normalized space (matching RenderSlider)
+            float halfWidth = slider.size.x * 0.5f;
+            float halfHeight = slider.size.y * 0.5f;
+            float adjustedHalfWidth = halfWidth / m_aspectRatio;
+
+            float left = slider.position.x - adjustedHalfWidth;
+            float right = slider.position.x + adjustedHalfWidth;
+            float bottom = slider.position.y - halfHeight;
+            float top = slider.position.y + halfHeight;
+            float width = adjustedHalfWidth * 2.0f;
+
+            // Expand hit area slightly for easier interaction
+            float handleHalfSize = slider.handleSize * 0.5f;
+            float adjustedHandleHalfWidth = handleHalfSize / m_aspectRatio;
+            float normalizedValue = (slider.value - slider.minValue) / (slider.maxValue - slider.minValue);
+            float handleX = left + (width * normalizedValue);
+
+            // Check if mouse is over the slider track or handle
+            bool insideTrack = (mouseX >= left && mouseX <= right && mouseY >= bottom && mouseY <= top);
+            bool insideHandle = (mouseX >= handleX - adjustedHandleHalfWidth && mouseX <= handleX + adjustedHandleHalfWidth &&
+                                mouseY >= bottom - handleHalfSize && mouseY <= top + handleHalfSize);
+
+            bool inside = insideTrack || insideHandle;
+
+            // Update hover state
+            slider.isHovered = inside;
+
+            // Handle drag start
+            if (inside && Input::IsMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT))
+            {
+                slider.isDragging = true;
+            }
+
+            // Handle dragging
+            if (slider.isDragging)
+            {
+                if (Input::IsMouseButtonDown(GLFW_MOUSE_BUTTON_LEFT))
+                {
+                    // Calculate new value based on mouse position (matching RenderSlider calculation)
+                    float newNormalizedValue = (mouseX - left) / width;
+                    newNormalizedValue = std::max(0.0f, std::min(1.0f, newNormalizedValue));
+                    slider.value = slider.minValue + (newNormalizedValue * (slider.maxValue - slider.minValue));
+
+                    // Apply value to target
+                    ApplySliderValue(slider, globalAudioEntity);
+                }
+                else
+                {
+                    // Mouse released, stop dragging
+                    slider.isDragging = false;
+                }
+            }
+        }
+        // ==============================================================
+
         // CRITICAL: Process pending scene load AFTER iteration completes
         if (m_HasPendingSceneLoad)
         {
@@ -212,20 +321,53 @@ namespace Ermine
         }
 
         // Check parent chain via HierarchyComponent
-        if (ecs.HasComponent<HierarchyComponent>(entity))
-        {
-            auto& hierarchy = ecs.GetComponent<HierarchyComponent>(entity);
+        if (!ecs.HasComponent<HierarchyComponent>(entity))
+            return true;  // No hierarchy = root entity, considered active
 
-            // If has a valid parent, check if parent is active
-            if (hierarchy.parent != HierarchyComponent::INVALID_PARENT)
-            {
-                // Recursively check parent's active state
-                return IsEntityActiveInHierarchy(hierarchy.parent);
-            }
-        }
+        auto& hierarchy = ecs.GetComponent<HierarchyComponent>(entity);
 
-        // No parent or parent is active - entity is active
-        return true;
+        // If has a valid parent, check if parent is active
+        if (hierarchy.parent == HierarchyComponent::INVALID_PARENT)
+            return true;  // No parent = root entity
+
+        // Validate parent entity before recursing
+        if (!ecs.IsEntityValid(hierarchy.parent))
+            return true;  // Invalid parent reference, treat as root
+
+        // Recursively check parent's active state
+        return IsEntityActiveInHierarchy(hierarchy.parent);
+    }
+
+    bool UIButtonSystem::IsEntityChildOf(EntityID entity, EntityID potentialParent)
+    {
+        auto& ecs = ECS::GetInstance();
+
+        // Entity is considered a child of itself (for the overlay root case)
+        if (entity == potentialParent)
+            return true;
+
+        if (!ecs.IsEntityValid(entity))
+            return false;
+
+        // Check parent chain via HierarchyComponent
+        if (!ecs.HasComponent<HierarchyComponent>(entity))
+            return false;
+
+        auto& hierarchy = ecs.GetComponent<HierarchyComponent>(entity);
+
+        // If has a valid parent, check if it matches or recurse
+        if (hierarchy.parent == HierarchyComponent::INVALID_PARENT)
+            return false;
+
+        // Validate parent entity before recursing
+        if (!ecs.IsEntityValid(hierarchy.parent))
+            return false;
+
+        if (hierarchy.parent == potentialParent)
+            return true;
+
+        // Recursively check parent chain
+        return IsEntityChildOf(hierarchy.parent, potentialParent);
     }
 
     void UIButtonSystem::TogglePauseMenu()
@@ -298,6 +440,24 @@ namespace Ermine
             {
                 TogglePauseMenu();
                 EE_CORE_INFO("Resume button clicked");
+            }
+            else if (button.actionData == "OpenSettings")
+            {
+                // Show SettingsMenu, hide main menu buttons
+                SetEntityActiveByName("SettingsMenu", true);
+                SetEntityActiveByName("Play Button", false);
+                SetEntityActiveByName("Quit Button", false);
+                SetEntityActiveByName("Settings Button", false);
+                SetEntityActiveByName("MenuBackground", false);
+            }
+            else if (button.actionData == "CloseSettings")
+            {
+                // Hide SettingsMenu, show main menu buttons
+                SetEntityActiveByName("SettingsMenu", false);
+                SetEntityActiveByName("Play Button", true);
+                SetEntityActiveByName("Quit Button", true);
+                SetEntityActiveByName("Settings Button", true);
+                SetEntityActiveByName("MenuBackground", true);
             }
             else if (button.actionData == "ShowTeleportInfo")
             {
@@ -507,5 +667,79 @@ namespace Ermine
         outX = std::max(0.0f, std::min(1.0f, outX));
         outY = std::max(0.0f, std::min(1.0f, outY));
 #endif
+    }
+
+    void UIButtonSystem::SetEntityActiveByName(const std::string& name, bool active)
+    {
+        auto& ecs = ECS::GetInstance();
+
+        for (EntityID e = 0; e < MAX_ENTITIES; ++e)
+        {
+            if (!ecs.IsEntityValid(e)) continue;
+            if (!ecs.HasComponent<ObjectMetaData>(e)) continue;
+
+            auto& meta = ecs.GetComponent<ObjectMetaData>(e);
+            if (meta.name == name)
+            {
+                meta.selfActive = active;
+                EE_CORE_INFO("Set entity '{}' (ID: {}) selfActive = {}", name, e, active);
+                return;
+            }
+        }
+
+        EE_CORE_WARN("Entity '{}' not found!", name);
+    }
+
+    void UIButtonSystem::ApplySliderValue(const UISliderComponent& slider, EntityID globalAudioEntity)
+    {
+        auto& ecs = ECS::GetInstance();
+
+        // Only apply if we have a valid target
+        if (slider.target == UISliderComponent::SliderTarget::None)
+            return;
+
+        // Get GlobalAudioComponent if needed for audio targets
+        if (slider.target != UISliderComponent::SliderTarget::Custom &&
+            slider.target != UISliderComponent::SliderTarget::None)
+        {
+            if (globalAudioEntity == MAX_ENTITIES || !ecs.IsEntityValid(globalAudioEntity))
+                return;
+
+            if (!ecs.HasComponent<GlobalAudioComponent>(globalAudioEntity))
+                return;
+
+            auto& globalAudio = ecs.GetComponent<GlobalAudioComponent>(globalAudioEntity);
+
+            switch (slider.target)
+            {
+            case UISliderComponent::SliderTarget::MasterVolume:
+                globalAudio.masterVolume = slider.value;
+                // Re-apply volumes to update all playing sounds
+                globalAudio.SetMusicVolume(globalAudio.musicVolume);
+                globalAudio.SetSFXVolume(globalAudio.sfxVolume);
+                globalAudio.SetAmbienceVolume(globalAudio.ambienceVolume);
+                break;
+
+            case UISliderComponent::SliderTarget::MusicVolume:
+                globalAudio.SetMusicVolume(slider.value);
+                break;
+
+            case UISliderComponent::SliderTarget::SFXVolume:
+                globalAudio.SetSFXVolume(slider.value);
+                break;
+
+            case UISliderComponent::SliderTarget::AmbienceVolume:
+                globalAudio.SetAmbienceVolume(slider.value);
+                break;
+
+            default:
+                break;
+            }
+        }
+        else if (slider.target == UISliderComponent::SliderTarget::Custom)
+        {
+            // Custom target handling can be extended here
+            EE_CORE_INFO("Custom slider '{}' value: {}", slider.customTarget, slider.value);
+        }
     }
 }

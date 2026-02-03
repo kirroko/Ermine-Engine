@@ -405,6 +405,22 @@ namespace Ermine
             RenderButton(button);
         }
 
+        // Render UISliderComponent entities
+        for (EntityID entity = 1; entity < MAX_ENTITIES; ++entity)
+        {
+            if (!ecs.IsEntityValid(entity))
+                continue;
+
+            if (!ecs.HasComponent<UISliderComponent>(entity))
+                continue;
+
+            if (!IsEntityActiveInHierarchy(entity))
+                continue;
+
+            const auto& slider = ecs.GetComponent<UISliderComponent>(entity);
+            RenderSlider(slider);
+        }
+
         // Re-enable depth test
         glEnable(GL_DEPTH_TEST);
         glDisable(GL_BLEND);
@@ -1480,6 +1496,170 @@ namespace Ermine
                 textY,
                 button.textScale,
                 button.textColor,
+                1.0f,
+                m_VAO,
+                m_VBO
+            );
+        }
+    }
+
+    void UIRenderSystem::RenderSlider(const UISliderComponent& slider)
+    {
+        // Calculate slider bounds with aspect ratio correction
+        float halfWidth = slider.size.x * 0.5f;
+        float halfHeight = slider.size.y * 0.5f;
+        float adjustedHalfWidth = halfWidth / m_aspectRatio;
+
+        float left = slider.position.x - adjustedHalfWidth;
+        float bottom = slider.position.y - halfHeight;
+        float width = adjustedHalfWidth * 2.0f;
+        float height = slider.size.y;
+
+        // Calculate value as normalized 0-1
+        float normalizedValue = (slider.value - slider.minValue) / (slider.maxValue - slider.minValue);
+        normalizedValue = std::max(0.0f, std::min(1.0f, normalizedValue));
+
+        // Try to load track texture
+        std::shared_ptr<graphics::Texture> trackTexture = nullptr;
+        if (!slider.trackImage.empty())
+        {
+            auto it = m_textureCache.find(slider.trackImage);
+            if (it != m_textureCache.end())
+                trackTexture = it->second;
+            else
+            {
+                trackTexture = AssetManager::GetInstance().LoadTexture(slider.trackImage);
+                if (trackTexture && trackTexture->IsValid())
+                    m_textureCache[slider.trackImage] = trackTexture;
+            }
+        }
+
+        // Render track (background)
+        if (trackTexture && trackTexture->IsValid())
+        {
+            Vec3 whiteTint = { 1.0f, 1.0f, 1.0f };
+            RenderTexturedRect(left, bottom, width, height, trackTexture, whiteTint, slider.trackAlpha);
+        }
+        else
+        {
+            RenderQuad(left, bottom, width, height, slider.trackColor, slider.trackAlpha);
+        }
+
+        // Try to load fill texture
+        std::shared_ptr<graphics::Texture> fillTexture = nullptr;
+        if (!slider.fillImage.empty())
+        {
+            auto it = m_textureCache.find(slider.fillImage);
+            if (it != m_textureCache.end())
+                fillTexture = it->second;
+            else
+            {
+                fillTexture = AssetManager::GetInstance().LoadTexture(slider.fillImage);
+                if (fillTexture && fillTexture->IsValid())
+                    m_textureCache[slider.fillImage] = fillTexture;
+            }
+        }
+
+        // Render fill (based on value)
+        float fillWidth = width * normalizedValue;
+        if (fillWidth > 0.0f)
+        {
+            if (fillTexture && fillTexture->IsValid())
+            {
+                RenderTexturedRectUV(left, bottom, fillWidth, height, fillTexture,
+                                     0.0f, 0.0f, normalizedValue, 1.0f,
+                                     { 1.0f, 1.0f, 1.0f }, 1.0f);
+            }
+            else
+            {
+                RenderQuad(left, bottom, fillWidth, height, slider.fillColor, 1.0f);
+            }
+        }
+
+        // Try to load handle texture
+        std::shared_ptr<graphics::Texture> handleTexture = nullptr;
+        if (!slider.handleImage.empty())
+        {
+            auto it = m_textureCache.find(slider.handleImage);
+            if (it != m_textureCache.end())
+                handleTexture = it->second;
+            else
+            {
+                handleTexture = AssetManager::GetInstance().LoadTexture(slider.handleImage);
+                if (handleTexture && handleTexture->IsValid())
+                    m_textureCache[slider.handleImage] = handleTexture;
+            }
+        }
+
+        // Calculate handle position
+        float handleX = left + (width * normalizedValue);
+        float handleY = slider.position.y;
+
+        // Choose handle color based on state
+        Vec3 currentHandleColor = slider.handleColor;
+        if (slider.isHovered || slider.isDragging)
+            currentHandleColor = slider.handleHoverColor;
+
+        // Render handle
+        if (handleTexture && handleTexture->IsValid())
+        {
+            Vec3 whiteTint = { 1.0f, 1.0f, 1.0f };
+            RenderTexturedSquare(handleX, handleY, slider.handleSize, handleTexture, whiteTint, 1.0f);
+        }
+        else
+        {
+            // Render circular handle as a square for simplicity
+            float handleHalfSize = slider.handleSize * 0.5f;
+            float adjustedHandleHalfWidth = handleHalfSize / m_aspectRatio;
+            RenderQuad(handleX - adjustedHandleHalfWidth, handleY - handleHalfSize,
+                      adjustedHandleHalfWidth * 2.0f, slider.handleSize,
+                      currentHandleColor, 1.0f);
+        }
+
+        // Render label image if present (swap between normal and active based on state)
+        std::string labelImageToUse = slider.isDragging && !slider.labelActiveImagePath.empty()
+            ? slider.labelActiveImagePath
+            : slider.labelImagePath;
+
+        if (!labelImageToUse.empty())
+        {
+            std::shared_ptr<graphics::Texture> labelTexture = nullptr;
+            auto it = m_textureCache.find(labelImageToUse);
+            if (it != m_textureCache.end())
+                labelTexture = it->second;
+            else
+            {
+                labelTexture = AssetManager::GetInstance().LoadTexture(labelImageToUse);
+                if (labelTexture && labelTexture->IsValid())
+                    m_textureCache[labelImageToUse] = labelTexture;
+            }
+
+            if (labelTexture && labelTexture->IsValid())
+            {
+                float labelImgX = slider.position.x + slider.labelOffset.x;
+                float labelImgY = slider.position.y + slider.labelOffset.y;
+                float labelImgSize = slider.labelScale * 0.1f;  // Scale based on labelScale
+
+                RenderTexturedSquare(labelImgX, labelImgY, labelImgSize, labelTexture, { 1.0f, 1.0f, 1.0f }, 1.0f);
+            }
+        }
+
+        // Render label text if present
+        if (m_textRenderer && !slider.label.empty())
+        {
+            float labelX = slider.position.x + slider.labelOffset.x;
+            float labelY = slider.position.y + slider.labelOffset.y;
+
+            float textWidth = m_textRenderer->GetTextWidth(slider.label, slider.labelScale);
+            labelX -= textWidth * 0.5f;  // Center the label
+
+            m_textRenderer->RenderText(
+                m_uiShader,
+                slider.label,
+                labelX,
+                labelY,
+                slider.labelScale,
+                slider.labelColor,
                 1.0f,
                 m_VAO,
                 m_VBO
