@@ -441,23 +441,104 @@ namespace Ermine
                 TogglePauseMenu();
                 EE_CORE_INFO("Resume button clicked");
             }
+            else if (button.actionData == "OpenControls")
+            {
+                // Show ControlsScreen, hide main menu buttons
+                SetEntityActiveByName("ControlsScreen", true);
+                SetEntityActiveByName("Play Button", false);
+                SetEntityActiveByName("ControlsButton", false);  // Use actual button name
+                SetEntityActiveByName("AudioButton", false);
+                SetEntityActiveByName("Quit Button", false);
+            }
+            else if (button.actionData == "CloseControlsScreen")
+            {
+                // Hide ControlsScreen, show main menu buttons
+                SetEntityActiveByName("ControlsScreen", false);
+                SetEntityActiveByName("Play Button", true);
+                SetEntityActiveByName("ControlsButton", true);  // Use actual button name
+                SetEntityActiveByName("AudioButton", true);
+                SetEntityActiveByName("Quit Button", true);
+            }
             else if (button.actionData == "OpenSettings")
             {
-                // Show SettingsMenu, hide main menu buttons
+                auto& ecs = ECS::GetInstance();
+
+                // Show SettingsMenu
                 SetEntityActiveByName("SettingsMenu", true);
-                SetEntityActiveByName("Play Button", false);
-                SetEntityActiveByName("Quit Button", false);
-                SetEntityActiveByName("Settings Button", false);
-                SetEntityActiveByName("MenuBackground", false);
+
+                // Hide all buttons EXCEPT Back Button (which is inside SettingsMenu)
+                for (EntityID e = 0; e < MAX_ENTITIES; ++e)
+                {
+                    if (!ecs.IsEntityValid(e)) continue;
+                    if (!ecs.HasComponent<ObjectMetaData>(e)) continue;
+                    if (!ecs.HasComponent<UIButtonComponent>(e)) continue;
+
+                    auto& meta = ecs.GetComponent<ObjectMetaData>(e);
+
+                    // Don't hide buttons that are inside SettingsMenu
+                    if (ecs.HasComponent<HierarchyComponent>(e))
+                    {
+                        auto& hierarchy = ecs.GetComponent<HierarchyComponent>(e);
+                        EntityID parent = hierarchy.parent;
+
+                        // Check if parent is SettingsMenu
+                        if (ecs.IsEntityValid(parent) && ecs.HasComponent<ObjectMetaData>(parent))
+                        {
+                            auto& parentMeta = ecs.GetComponent<ObjectMetaData>(parent);
+                            if (parentMeta.name == "SettingsMenu")
+                            {
+                                continue; // Skip hiding this button
+                            }
+                        }
+                    }
+
+                    // Hide all other buttons
+                    meta.selfActive = false;
+                }
+
+                // Also hide backgrounds
+                SetEntityActiveByName("PauseBackground", false);
+                //SetEntityActiveByName("MenuBackground", false);
             }
             else if (button.actionData == "CloseSettings")
             {
-                // Hide SettingsMenu, show main menu buttons
+                auto& ecs = ECS::GetInstance();
+
+                // Hide SettingsMenu
                 SetEntityActiveByName("SettingsMenu", false);
-                SetEntityActiveByName("Play Button", true);
-                SetEntityActiveByName("Quit Button", true);
-                SetEntityActiveByName("Settings Button", true);
-                SetEntityActiveByName("MenuBackground", true);
+
+                // Show all buttons that were hidden
+                for (EntityID e = 0; e < MAX_ENTITIES; ++e)
+                {
+                    if (!ecs.IsEntityValid(e)) continue;
+                    if (!ecs.HasComponent<ObjectMetaData>(e)) continue;
+                    if (!ecs.HasComponent<UIButtonComponent>(e)) continue;
+
+                    auto& meta = ecs.GetComponent<ObjectMetaData>(e);
+
+                    // Don't show buttons that are inside SettingsMenu
+                    if (ecs.HasComponent<HierarchyComponent>(e))
+                    {
+                        auto& hierarchy = ecs.GetComponent<HierarchyComponent>(e);
+                        EntityID parent = hierarchy.parent;
+
+                        if (ecs.IsEntityValid(parent) && ecs.HasComponent<ObjectMetaData>(parent))
+                        {
+                            auto& parentMeta = ecs.GetComponent<ObjectMetaData>(parent);
+                            if (parentMeta.name == "SettingsMenu")
+                            {
+                                continue; // Skip showing this button
+                            }
+                        }
+                    }
+
+                    // Show all other buttons
+                    meta.selfActive = true;
+                }
+
+                // Show backgrounds
+                SetEntityActiveByName("PauseBackground", true);
+                //SetEntityActiveByName("MenuBackground", true);
             }
             else if (button.actionData == "ShowTeleportInfo")
             {
