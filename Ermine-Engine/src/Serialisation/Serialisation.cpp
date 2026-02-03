@@ -620,8 +620,8 @@ void LoadSceneFromFile(Ermine::ECS& ecs, const std::filesystem::path& path) {
         }
     }
 
-    // Backward-compat: compile legacy materials (no GUID) using mesh/entity names.
-    // If a name exists and matches, reuse it; if name exists but differs, create a copy.
+    // Backward-compat: compile legacy materials (no GUID) using mesh/entity names
+    // with name -> signature check (same as Compile All Materials).
     {
         auto& assets = Ermine::AssetManager::GetInstance();
         std::unordered_map<std::string, Ermine::Guid> signatureToGuid;
@@ -675,6 +675,15 @@ void LoadSceneFromFile(Ermine::ECS& ecs, const std::filesystem::path& path) {
                     if (existingSig == sig) {
                         auto shared = assets.GetMaterialByGuid(baseGuid);
                         matComp.SetMaterial(shared ? shared : matShared, baseGuid);
+                        if (shared) {
+                            for (Ermine::EntityID other = 0; other < Ermine::MAX_ENTITIES; ++other) {
+                                if (!ecs.IsEntityValid(other) || !ecs.HasComponent<Ermine::Material>(other))
+                                    continue;
+                                auto& otherComp = ecs.GetComponent<Ermine::Material>(other);
+                                if (otherComp.materialGuid == baseGuid)
+                                    otherComp.SetMaterial(shared, baseGuid);
+                            }
+                        }
                         signatureToGuid.emplace(sig, baseGuid);
                         continue;
                     }
@@ -690,6 +699,15 @@ void LoadSceneFromFile(Ermine::ECS& ecs, const std::filesystem::path& path) {
                 Ermine::Guid guid = assets.SaveMaterialAsset(uniqueName, *matShared, false, matComp.customFragmentShader);
                 auto shared = assets.GetMaterialByGuid(guid);
                 matComp.SetMaterial(shared ? shared : matShared, guid);
+                if (shared) {
+                    for (Ermine::EntityID other = 0; other < Ermine::MAX_ENTITIES; ++other) {
+                        if (!ecs.IsEntityValid(other) || !ecs.HasComponent<Ermine::Material>(other))
+                            continue;
+                        auto& otherComp = ecs.GetComponent<Ermine::Material>(other);
+                        if (otherComp.materialGuid == guid)
+                            otherComp.SetMaterial(shared, guid);
+                    }
+                }
                 signatureToGuid.emplace(sig, guid);
                 continue;
             }
@@ -699,12 +717,30 @@ void LoadSceneFromFile(Ermine::ECS& ecs, const std::filesystem::path& path) {
             if (sigIt != signatureToGuid.end()) {
                 auto shared = assets.GetMaterialByGuid(sigIt->second);
                 matComp.SetMaterial(shared ? shared : matShared, sigIt->second);
+                if (shared) {
+                    for (Ermine::EntityID other = 0; other < Ermine::MAX_ENTITIES; ++other) {
+                        if (!ecs.IsEntityValid(other) || !ecs.HasComponent<Ermine::Material>(other))
+                            continue;
+                        auto& otherComp = ecs.GetComponent<Ermine::Material>(other);
+                        if (otherComp.materialGuid == sigIt->second)
+                            otherComp.SetMaterial(shared, sigIt->second);
+                    }
+                }
                 continue;
             }
 
             Ermine::Guid guid = assets.SaveMaterialAsset(baseName, *matShared, false, matComp.customFragmentShader);
             auto shared = assets.GetMaterialByGuid(guid);
             matComp.SetMaterial(shared ? shared : matShared, guid);
+            if (shared) {
+                for (Ermine::EntityID other = 0; other < Ermine::MAX_ENTITIES; ++other) {
+                    if (!ecs.IsEntityValid(other) || !ecs.HasComponent<Ermine::Material>(other))
+                        continue;
+                    auto& otherComp = ecs.GetComponent<Ermine::Material>(other);
+                    if (otherComp.materialGuid == guid)
+                        otherComp.SetMaterial(shared, guid);
+                }
+            }
             signatureToGuid.emplace(sig, guid);
         }
     }

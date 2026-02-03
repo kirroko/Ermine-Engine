@@ -1027,6 +1027,15 @@ namespace Ermine::editor {
 							Guid guid = assetManager.SaveMaterialAsset(baseName, *matShared, true, comp.customFragmentShader);
 							auto shared = assetManager.GetMaterialByGuid(guid);
 							comp.SetMaterial(shared ? shared : matShared, guid);
+							if (shared) {
+								for (Ermine::EntityID other = 0; other < Ermine::MAX_ENTITIES; ++other) {
+									if (!ecs.IsEntityValid(other) || !ecs.HasComponent<Ermine::Material>(other))
+										continue;
+									auto& otherComp = ecs.GetComponent<Ermine::Material>(other);
+									if (otherComp.materialGuid == guid)
+										otherComp.SetMaterial(shared, guid);
+								}
+							}
 							continue;
 						}
 					}
@@ -1040,12 +1049,30 @@ namespace Ermine::editor {
 					Guid guid = assetManager.SaveMaterialAsset(uniqueName, *matShared, true, comp.customFragmentShader);
 					auto shared = assetManager.GetMaterialByGuid(guid);
 					comp.SetMaterial(shared ? shared : matShared, guid);
+					if (shared) {
+						for (Ermine::EntityID other = 0; other < Ermine::MAX_ENTITIES; ++other) {
+							if (!ecs.IsEntityValid(other) || !ecs.HasComponent<Ermine::Material>(other))
+								continue;
+							auto& otherComp = ecs.GetComponent<Ermine::Material>(other);
+							if (otherComp.materialGuid == guid)
+								otherComp.SetMaterial(shared, guid);
+						}
+					}
 					continue;
 				}
 
 				Guid guid = assetManager.SaveMaterialAsset(baseName, *matShared, true, comp.customFragmentShader);
 				auto shared = assetManager.GetMaterialByGuid(guid);
 				comp.SetMaterial(shared ? shared : matShared, guid);
+				if (shared) {
+					for (Ermine::EntityID other = 0; other < Ermine::MAX_ENTITIES; ++other) {
+						if (!ecs.IsEntityValid(other) || !ecs.HasComponent<Ermine::Material>(other))
+							continue;
+						auto& otherComp = ecs.GetComponent<Ermine::Material>(other);
+						if (otherComp.materialGuid == guid)
+							otherComp.SetMaterial(shared, guid);
+					}
+				}
 			}
 
 			refreshMaterialAssets();
