@@ -42,6 +42,24 @@ namespace Ermine
 
         auto& fsm = ECS::GetInstance().GetComponent<StateMachine>(m_SelectedEntity);
 
+        // Sync next id to existing nodes, prevents collisions when loading a scene
+        int maxId = 0;
+        for (auto& n : fsm.m_Nodes)
+            if (n && n->id > maxId) maxId = n->id;
+
+        if (m_nextNodeId <= maxId)
+            m_nextNodeId = maxId + 1;
+
+        // ensure chosen id isn't already taken in case scene has duplicates
+        auto idExists = [&](int id)
+            {
+                for (auto& n : fsm.m_Nodes)
+                    if (n && n->id == id) return true;
+                return false;
+            };
+        while (idExists(m_nextNodeId))
+            ++m_nextNodeId;
+
         auto node = std::make_shared<ScriptNode>();
         node->id = m_nextNodeId++;
         node->name = name;

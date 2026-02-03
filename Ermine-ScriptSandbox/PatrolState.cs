@@ -1,7 +1,7 @@
 ﻿using ErmineEngine;
 using System;
 
-public class Test3 : MonoBehaviour
+public class Patrol : MonoBehaviour
 {
     public float radius = 5f;
     public int pointCount = 16;
@@ -12,6 +12,11 @@ public class Test3 : MonoBehaviour
     public float minProgressEpsilon = 0.02f;
 
     public float recenterDelay = 1.0f;
+
+    public string playerName = "Player";
+    public float detectPlayerDistance = 6.0f;
+
+    private GameObject playerGO;
 
     private Vector3[] patrolPoints;
     private int currentIndex = -1;
@@ -26,6 +31,21 @@ public class Test3 : MonoBehaviour
 
     private bool pendingRecenter = false;
     private float recenterTimer = 0f;
+
+    private void CachePlayerIfNeeded()
+    {
+        if (playerGO == null)
+            playerGO = GameObject.Find(playerName);
+    }
+
+    private bool PlayerCloseEnoughToChase()
+    {
+        CachePlayerIfNeeded();
+        if (playerGO == null) return false;
+
+        float d = (playerGO.transform.position - transform.position).Magnitude;
+        return d <= detectPlayerDistance;
+    }
 
     private void MoveToNextPoint()
     {
@@ -65,6 +85,7 @@ public class Test3 : MonoBehaviour
     void Start()
     {
         entityID = (ulong)gameObject.GetInstanceID();
+        CachePlayerIfNeeded();
 
         // Build patrol points around the spawn position
         BuildPatrolPoints(transform.position);
@@ -72,6 +93,12 @@ public class Test3 : MonoBehaviour
 
     void Update()
     {
+        if (PlayerCloseEnoughToChase())
+        {
+            StateMachine.RequestNextState(entityID);
+            return;
+        }
+
         // If we just requested a jump, call StartJump once.
         if (jumping)
         {
