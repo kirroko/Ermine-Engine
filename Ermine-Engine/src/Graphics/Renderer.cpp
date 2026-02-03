@@ -4499,14 +4499,9 @@ void Renderer::CaptureLightProbe(EntityID probeEntity)
 		GLint locVoxelMin = glGetUniformLocation(program, "u_VoxelBoundsMin");
 		GLint locVoxelMax = glGetUniformLocation(program, "u_VoxelBoundsMax");
 		GLint locVoxelRes = glGetUniformLocation(program, "u_VoxelResolution");
-		GLint locView = glGetUniformLocation(program, "u_View");
 		if (locVoxelMin != -1) glUniform3f(locVoxelMin, worldBoundsMin.x, worldBoundsMin.y, worldBoundsMin.z);
 		if (locVoxelMax != -1) glUniform3f(locVoxelMax, worldBoundsMax.x, worldBoundsMax.y, worldBoundsMax.z);
 		if (locVoxelRes != -1) glUniform1i(locVoxelRes, m_ProbeVoxelResolution);
-		if (locView != -1) {
-			const glm::mat4 viewMat = ToGlm(editor::EditorCamera::GetInstance().GetViewMatrix());
-			glUniformMatrix4fv(locView, 1, GL_FALSE, &viewMat[0][0]);
-		}
 
 		glBindBufferBase(GL_UNIFORM_BUFFER, LightsBindingPoint, m_LightsUBO);
 		glBindImageTexture(0, m_ProbeVoxelAlbedoTexture, 0, GL_TRUE, 0, GL_READ_ONLY, GL_RGBA8);
