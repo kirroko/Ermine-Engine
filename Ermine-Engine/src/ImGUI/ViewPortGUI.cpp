@@ -2,10 +2,10 @@
 /*!
 \file       ViewPortGUI.cpp
 \author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu
-\date       21/09/2025
+\date       31/01/2026
 \brief      This file contains the responsibility for rendering the viewport window
 
-Copyright (C) 2025 DigiPen Institute of Technology.
+Copyright (C) 2026 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents without the
 prior written consent of DigiPen Institute of Technology is prohibited.
 */
@@ -278,7 +278,7 @@ namespace
 	}
 }
 
-Ermine::ViewPortGUI::ViewPortGUI() : ImGUIWindow("Viewport"), show(true)
+Ermine::ViewPortGUI::ViewPortGUI() : ImGUIWindow("Viewport")
 {
 }
 
@@ -640,6 +640,73 @@ void Ermine::ViewPortGUI::GizmoOverlay(const ImVec2& imgMin, const ImVec2& imgSi
 		if (gOperation == ImGuizmo::SCALE) { snap[0] = snap[1] = snap[2] = 0.1f; }
 
 		// Manipulate
+		LightProbeVolumeComponent* volume = nullptr;
+		if (!multi && ecs.HasComponent<LightProbeVolumeComponent>(selectedEntity)) {
+			auto& vol = ecs.GetComponent<LightProbeVolumeComponent>(selectedEntity);
+			if (vol.showGizmos) {
+				volume = &vol;
+			}
+		}
+
+		if (volume && gOperation == ImGuizmo::SCALE)
+		{
+			auto hs = ecs.GetSystem<HierarchySystem>();
+			Vec3 worldPos = singleTr ? singleTr->position : Vec3{};
+			Quaternion worldRot = singleTr ? singleTr->rotation : Quaternion{ 0,0,0,1 };
+			Vec3 worldScale = singleTr ? singleTr->scale : Vec3{ 1,1,1 };
+
+			if (hs) {
+				worldPos = hs->GetWorldPosition(selectedEntity);
+				worldRot = hs->GetWorldRotation(selectedEntity);
+				worldScale = hs->GetWorldScale(selectedEntity);
+			}
+
+			glm::mat4 entityWorld = glm::mat4(1.0f);
+			entityWorld = glm::translate(entityWorld, glm::vec3(worldPos.x, worldPos.y, worldPos.z));
+			glm::quat worldQuat(worldRot.w, worldRot.x, worldRot.y, worldRot.z);
+			worldQuat = glm::normalize(worldQuat);
+			entityWorld *= glm::mat4_cast(worldQuat);
+			entityWorld = glm::scale(entityWorld, glm::vec3(worldScale.x, worldScale.y, worldScale.z));
+
+			glm::vec3 localMin = glm::vec3(volume->boundsMin.x, volume->boundsMin.y, volume->boundsMin.z);
+			glm::vec3 localMax = glm::vec3(volume->boundsMax.x, volume->boundsMax.y, volume->boundsMax.z);
+			glm::vec3 localCenter = (localMin + localMax) * 0.5f;
+			glm::vec3 localSize = (localMax - localMin);
+
+			glm::mat4 localBox = glm::mat4(1.0f);
+			localBox = glm::translate(localBox, localCenter);
+			localBox = glm::scale(localBox, localSize);
+
+			glm::mat4 boxWorld = entityWorld * localBox;
+
+			ImGuizmo::Manipulate(
+				glm::value_ptr(view),
+				glm::value_ptr(proj),
+				ImGuizmo::SCALE,
+				ImGuizmo::LOCAL,
+				glm::value_ptr(boxWorld),
+				nullptr,
+				useSnap ? snap : nullptr
+			);
+
+			if (ImGuizmo::IsUsing())
+			{
+				glm::mat4 local = glm::inverse(entityWorld) * boxWorld;
+				glm::vec3 skew, translation, scale;
+				glm::vec4 perspective;
+				glm::quat rotation;
+				if (glm::decompose(local, scale, rotation, translation, skew, perspective))
+				{
+					scale = glm::abs(scale);
+					glm::vec3 newCenter = translation;
+					glm::vec3 halfSize = scale * 0.5f;
+					volume->boundsMin = glm::vec3(newCenter.x - halfSize.x, newCenter.y - halfSize.y, newCenter.z - halfSize.z);
+					volume->boundsMax = glm::vec3(newCenter.x + halfSize.x, newCenter.y + halfSize.y, newCenter.z + halfSize.z);
+				}
+			}
+			return;
+		}
+
 		ImGuizmo::Manipulate(
 			glm::value_ptr(view),
 			glm::value_ptr(proj),
@@ -790,7 +857,14 @@ void Ermine::ViewPortGUI::GizmoOverlay(const ImVec2& imgMin, const ImVec2& imgSi
 
 void Ermine::ViewPortGUI::Update()
 {
-	ImGui::Begin("Scene Viewer", &show);
+	// Return if window is closed
+	if (!IsOpen()) return;
+
+	if (!ImGui::Begin(Name().c_str(), GetOpenPtr()))
+	{
+		ImGui::End();
+		return;
+	}
 
 	LoadToolbarIcons();
 
@@ -1104,7 +1178,7 @@ void Ermine::ViewPortGUI::Update()
 
 	// Dropping assets into viewport to load prefabs
 	if (ImGui::BeginDragDropTarget()) { // Begin drag & drop target
-		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_PREFAB")) {
+		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_FILE")) {
 			const char* cpath = static_cast<const char*>(payload->Data);
 
 			std::filesystem::path path = cpath;

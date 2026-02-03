@@ -66,6 +66,25 @@ layout (std140, binding = 1) uniform LightsUBO {
     Light lights[MAX_LIGHTS]; // Fixed-size array required for UBO
 };
 
+// Light Probe structure
+const int MAX_PROBES = 128;
+
+struct LightProbe {
+    vec4 position_radius;      // xyz = world position, w = influence radius
+    vec4 shCoefficients[9];    // SH L2 coefficients (vec3 stored in xyz, w unused)
+    vec4 boundsMin;            // xyz = world bounds min, w = padding
+    vec4 boundsMax;            // xyz = world bounds max, w = padding
+    vec4 flags;                // x = isActive (1.0 or 0.0), y = priority, zw = padding
+};
+
+layout (std140, binding = 5) uniform LightProbesUBO {
+    vec4 probeCount;           // x = number of active probes, yzw = unused
+    LightProbe probes[MAX_PROBES];
+};
+
+// Light probe toggle
+uniform int u_LightProbesEnabled = 1;
+
 // Constants
 const float PI = 3.14159265359;
 const float HALF_PI = PI * 0.5;
@@ -140,6 +159,11 @@ float getIGN(vec2 fragCoord) {
 float calculateSSAO(vec2 texCoord, vec3 fragPosView, vec3 normalView, float depth) {
     // Early exit if SSAO is disabled
     if (u_SSAO == 0) {
+        return 1.0;
+    }
+
+    // Early out for invalid depths
+    if (depth <= 0.0) {
         return 1.0;
     }
     
@@ -303,7 +327,7 @@ float calculateAttenuation(int lightIndex, vec3 fragPosView, out vec3 lightDir)
         if (distance > range) {
             attenuation = 0.0;
         } else {
-            float fadeDistance = range * 0.1;
+            float fadeDistance = range * 0.4;
             float fadeStart = range - fadeDistance;
             float fadeFactor = smoothstep(range, fadeStart, distance);
             attenuation *= fadeFactor;
@@ -548,6 +572,138 @@ float calculateFogFactor(float distance, float height) {
 
     return clamp(fogFactor, 0.0, 1.0);
 }
+
+/**
+ * @brief Evaluates spherical harmonics at a given direction
+ * @param normal Direction vector to evaluate SH (normalized)
+ * @param shCoefficients SH coefficients (L2, 9 coefficients)
+ * @return Reconstructed color from SH
+ */
+vec3 evaluateSH(vec3 normal, vec4 shCoefficients[9])
+{
+    // SH basis function constants
+    const float c0 = 0.282095;  // 1 / (2 * sqrt(pi))
+    const float c1 = 0.488603;  // sqrt(3 / (4 * pi))
+    const float c2 = 1.092548;  // sqrt(15 / (4 * pi))
+    const float c3 = 0.315392;  // sqrt(5 / (16 * pi))
+    const float c4 = 0.546274;  // sqrt(15 / (16 * pi))
+
+    // L2 SH basis functions
+    float sh[9];
+    sh[0] = c0;                                    // Y(0,0)
+    sh[1] = c1 * normal.y;                         // Y(1,-1)
+    sh[2] = c1 * normal.z;                         // Y(1,0)
+    sh[3] = c1 * normal.x;                         // Y(1,1)
+    sh[4] = c2 * normal.x * normal.y;              // Y(2,-2)
+    sh[5] = c2 * normal.y * normal.z;              // Y(2,-1)
+    sh[6] = c3 * (3.0 * normal.z * normal.z - 1.0);// Y(2,0)
+    sh[7] = c2 * normal.x * normal.z;              // Y(2,1)
+    sh[8] = c4 * (normal.x * normal.x - normal.y * normal.y); // Y(2,2)
+
+    // Reconstruct color by summing weighted basis functions
+    vec3 result = vec3(0.0);
+    for (int i = 0; i < 9; ++i) {
+        result += shCoefficients[i].xyz * sh[i];
+    }
+
+    return max(result, vec3(0.0)); // Clamp to prevent negative values
+}
+
+/**
+ * @brief Samples light probes and returns interpolated indirect lighting
+ * @param worldPos World position to sample at
+ * @param worldNormal Surface normal in world space
+ * @return Indirect lighting contribution from probes
+ */
+vec3 sampleLightProbes(vec3 worldPos, vec3 worldNormal)
+{
+    if (u_LightProbesEnabled == 0) {
+        return vec3(0.0);
+    }
+
+    int numProbes = int(probeCount.x);
+    if (numProbes == 0) {
+        return vec3(0.0);
+    }
+
+    // Find probes that contain the point; blend among same-priority probes
+    const int MAX_INFLUENCES = 4;
+    float weights[MAX_INFLUENCES];
+    int probeIndices[MAX_INFLUENCES];
+    int probePriorities[MAX_INFLUENCES];
+    float totalWeight = 0.0;
+
+    // Initialize with invalid values
+    for (int i = 0; i < MAX_INFLUENCES; ++i) {
+        weights[i] = 0.0;
+        probeIndices[i] = -1;
+        probePriorities[i] = -2147483647;
+    }
+
+    // Find nearest probes
+    for (int i = 0; i < numProbes && i < MAX_PROBES; ++i) {
+        float isActive = probes[i].flags.x;
+        int priority = int(probes[i].flags.y + 0.5);
+
+        if (isActive < 0.5) continue; // Skip inactive probes
+
+        vec3 bmin = probes[i].boundsMin.xyz;
+        vec3 bmax = probes[i].boundsMax.xyz;
+        bool inside = all(greaterThanEqual(worldPos, bmin)) && all(lessThanEqual(worldPos, bmax));
+        float weight = inside ? 1.0 : 0.0;
+
+        if (weight > 0.0) {
+            // Insert into sorted list (keep top MAX_INFLUENCES)
+            for (int j = 0; j < MAX_INFLUENCES; ++j) {
+                if (weight > weights[j]) {
+                    // Shift down
+                    for (int k = MAX_INFLUENCES - 1; k > j; --k) {
+                        weights[k] = weights[k - 1];
+                        probeIndices[k] = probeIndices[k - 1];
+                        probePriorities[k] = probePriorities[k - 1];
+                    }
+                    // Insert
+                    weights[j] = weight;
+                    probeIndices[j] = i;
+                    probePriorities[j] = priority;
+                    break;
+                }
+            }
+        }
+    }
+
+    // Determine highest priority among influences
+    int maxPriority = -2147483647;
+    for (int i = 0; i < MAX_INFLUENCES; ++i) {
+        if (probeIndices[i] >= 0 && probePriorities[i] > maxPriority) {
+            maxPriority = probePriorities[i];
+        }
+    }
+
+    // Calculate total weight for normalization
+    for (int i = 0; i < MAX_INFLUENCES; ++i) {
+        if (probeIndices[i] >= 0 && probePriorities[i] == maxPriority) {
+            totalWeight += weights[i];
+        }
+    }
+
+    if (totalWeight < 0.001) {
+        return vec3(0.0); // No probe influence
+    }
+
+    // Blend probe contributions
+    vec3 indirectLighting = vec3(0.0);
+    for (int i = 0; i < MAX_INFLUENCES; ++i) {
+        if (probeIndices[i] >= 0 && probePriorities[i] == maxPriority) {
+            float normalizedWeight = weights[i] / totalWeight;
+            vec3 probeContribution = evaluateSH(worldNormal, probes[probeIndices[i]].shCoefficients);
+            indirectLighting += probeContribution * normalizedWeight;
+        }
+    }
+
+    return indirectLighting;
+}
+
 void main()
 {    
     // Sample depth
@@ -596,8 +752,13 @@ void main()
     float ssaoFactor = calculateSSAO(TexCoord, fragPosView, normalView, depth);
 
     if (useBlinnPhong) {
-        // Ambient with global ambient lighting
+        // Ambient with global ambient lighting + light probes
         vec3 ambient = u_AmbientColor * u_AmbientIntensity * albedo * ao * ssaoFactor;
+        
+        // Add light probe indirect lighting
+        vec3 probeContribution = sampleLightProbes(worldPos, normalWorld) * albedo * ao * ssaoFactor;
+        ambient += probeContribution;
+        
         result += ambient;
 
         // Blinn-Phong lighting
@@ -682,8 +843,13 @@ void main()
         // Emissive
         result += emissive * emissiveIntensity;
     } else {
-        // PBR ambient with global ambient lighting
+        // PBR ambient with global ambient lighting + light probes
         vec3 ambient = u_AmbientColor * u_AmbientIntensity * albedo * ao * ssaoFactor;
+        
+        // Add light probe indirect lighting
+        vec3 probeContribution = sampleLightProbes(worldPos, normalWorld) * albedo * ao * ssaoFactor;
+        ambient += probeContribution;
+        
         result += ambient;
 
         // PBR lighting

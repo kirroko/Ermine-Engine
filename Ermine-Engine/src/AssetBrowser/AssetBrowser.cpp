@@ -10,7 +10,7 @@
             folder tree view, search filtering, context menus, and file
             management features.
 
-Copyright (C) 2025 DigiPen Institute of Technology.
+Copyright (C) 2026 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents without the
 prior written consent of DigiPen Institute of Technology is prohibited.
 */
@@ -49,6 +49,29 @@ namespace Ermine::ImguiUI
         m_Pipeline = pipeline;
         if (m_Pipeline) {
             EE_CORE_INFO("[AssetBrowser] Connected to ResourcePipeline");
+        }
+    }
+
+    void Browser::PreloadAllTextureAssets(const fs::path& dir)
+    {
+        // Check if directory exists
+        if (!fs::exists(dir)) return;
+
+        // Iterate through directory entries
+        for (auto& entry : fs::directory_iterator(dir)) {
+            if (entry.is_directory()) {
+                PreloadAllTextureAssets(entry.path()); // Recurse into subfolders
+            }
+            else {
+                // Load texture files
+                std::string ext = GetExtensionLower(entry.path().string());
+                if (ext == "png" || ext == "jpg" || ext == "jpeg") {
+                    auto tex = AssetManager::GetInstance().LoadTexture(entry.path().string().c_str());
+                    if (!tex || !tex->IsValid()) {
+                        EE_CORE_WARN("Failed to preload texture: {}", entry.path().string());
+                    }
+                }
+            }
         }
     }
 
@@ -107,7 +130,7 @@ namespace Ermine::ImguiUI
                 ImGui::TextDisabled("Format:");
                 ImGui::Separator();
 
-                // ✅ Format dropdown
+                // Format dropdown
                 auto formats = Ermine::ResourcePipeline::GetSupportedFormats();
                 if (ImGui::BeginCombo("##Format", Ermine::ResourcePipeline::GetFormatName(settings.targetFormat))) {
                     for (int i = 0; i < formats.size(); i++) {
@@ -120,7 +143,7 @@ namespace Ermine::ImguiUI
                             ImGui::SetItemDefaultFocus();
                         }
 
-                        // ✅ Add helpful tooltips
+                        // Add helpful tooltips
                         if (ImGui::IsItemHovered()) {
                             switch (formats[i]) {
                             case DXGI_FORMAT_BC1_UNORM_SRGB:
@@ -379,6 +402,9 @@ namespace Ermine::ImguiUI
         if (fileTex && fileTex->IsValid()) fileIcon = (ImTextureID)(intptr_t)fileTex->GetRendererID();
         if (refreshTex && refreshTex->IsValid()) refreshIcon = (ImTextureID)(intptr_t)refreshTex->GetRendererID();
 
+        // Preload all texture assets
+        PreloadAllTextureAssets(projectRoot);
+
         // Initial load of directory contents
         LoadDirectoryContents(projectRoot);
         iconsInitialized = true;
@@ -427,14 +453,16 @@ namespace Ermine::ImguiUI
         if (!fs::exists(dir)) return;
         try {
             for (auto& entry : fs::directory_iterator(dir)) {
+
+                // Skip Unity-style meta files
+                if (entry.is_regular_file() && entry.path().extension() == ".meta") continue;
+
+                // Create asset entry
                 std::string name = entry.path().filename().string();
                 ImTextureID icon = GetPreviewIconForFile(entry.path());
                 int type = entry.is_directory() ? 1 : 0;
                 std::string uniqueKey = entry.path().string();
                 ImGuiID id = static_cast<ImGuiID>(std::hash<std::string>{}(uniqueKey));
-
-                // Remove this line:
-                // Items.emplace_back(id, type, name, false, icon, uniqueKey);
 
                 // Create asset and check import status
                 Asset asset(id, type, name, false, icon, uniqueKey);
@@ -704,27 +732,9 @@ namespace Ermine::ImguiUI
 
             // Drag-and-drop support
             if (ImGui::BeginDragDropSource()) {
-                std::string ext = GetExtensionLower(isSelectedFile);
-
-                const char* payloadType = "ASSET_FILE";
-
-                // Determine payload type based on file extension
-                if (ext == "fbx" || ext == "obj" || ext == "gltf" || ext == "glb" || ext == "mesh" || ext == "skin")
-                    payloadType = "ASSET_MODEL";
-                else if (ext == "png" || ext == "jpg" || ext == "jpeg" || ext == "dds")
-                    payloadType = "ASSET_TEXTURE";
-                else if (ext == "wav" || ext == "mp3" || ext == "ogg")
-                    payloadType = "ASSET_AUDIO";
-                else if (ext == "prefab")
-                    payloadType = "ASSET_PREFAB";
-                else if (ext == "ttf")
-                    payloadType = "ASSET_FONT";
-                else if (ext == "glsl")
-                    payloadType = "ASSET_SHADER";
-
-                ImGui::SetDragDropPayload(payloadType, isSelectedFile.c_str(), isSelectedFile.size() + 1);
+                ImGui::SetDragDropPayload("ASSET_BROWSER_FILE", isSelectedFile.c_str(), isSelectedFile.size() + 1);
                 //auto& metadata = ECS::GetInstance().GetComponent<ObjectMetaData>(entity);
-                ImGui::TextUnformatted(payloadType);
+                ImGui::Text("Moving File");
                 ImGui::EndDragDropSource();
             }
 
@@ -1011,13 +1021,17 @@ namespace Ermine::ImguiUI
         assets_browser.InitIcons();
 
         // Return if window is closed
-        if (!m_isOpen) return;
+        if (!IsOpen()) return;
 
-        if (ImGui::Begin(m_name.c_str(), &m_isOpen)) // Begin ImGui window
+        if (!ImGui::Begin(Name().c_str(), GetOpenPtr()))
         {
-            // Draw the asset browser window
-            assets_browser.Draw(m_name.c_str());
+            ImGui::End();
+            return;
         }
+
+        // Draw the asset browser window
+        assets_browser.Draw(m_name.c_str());
+
         ImGui::End(); // End ImGui window
     }
 

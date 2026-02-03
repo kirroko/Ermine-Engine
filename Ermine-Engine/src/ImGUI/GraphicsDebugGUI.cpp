@@ -2,11 +2,11 @@
 /*!
 \file       GraphicsDebugGUI.cpp
 \author     Jeremy Lim Ting Jie, jeremytingjie.lim, 2301370, jeremytingjie.lim\@digipen.edu
-\date       29/9/2025
+\date       31/01/2026
 \brief      This file contains the implementation of the GraphicsDebugGUI class.
             A debug GUI for graphics-related parameters and controls using ImGui.
 
-Copyright (C) 2025 DigiPen Institute of Technology.
+Copyright (C) 2026 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents without the
 prior written consent of DigiPen Institute of Technology is prohibited.
 */
@@ -23,6 +23,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Material.h"
 #include "FrameController.h"
 #include "AssetManager.h"
+#include "GISystem.h"
 
 using namespace Ermine::editor;
 using namespace Ermine::graphics;
@@ -100,7 +101,14 @@ void GraphicsDebugGUI::Update()
  */
 void GraphicsDebugGUI::Render()
 {
-    ImGui::Begin(m_title.c_str());
+    // Return if window is closed
+    if (!IsOpen()) return;
+
+    if (!ImGui::Begin(Name().c_str(), GetOpenPtr()))
+    {
+        ImGui::End();
+        return;
+    }
 
     // Create collapsible sections for organized UI
     DrawRenderingModeControls();
@@ -143,6 +151,11 @@ void GraphicsDebugGUI::DrawRenderingModeControls()
         if (DrawToggleButton("Screen Space Ambient Occlusion", &renderer->m_SSAOEnabled, 
                             "Enable/disable Screen Space Ambient Occlusion for enhanced depth perception")) {
             EE_CORE_INFO("SSAO {}", renderer->m_SSAOEnabled ? "enabled" : "disabled");
+        }
+
+        if (DrawToggleButton("Show Skybox", &renderer->m_ShowSkybox,
+                            "Toggle skybox rendering on/off")) {
+            EE_CORE_INFO("Skybox {}", renderer->m_ShowSkybox ? "enabled" : "disabled");
         }
         
         // SSAO Parameters (shown when SSAO is enabled)
@@ -315,26 +328,6 @@ void GraphicsDebugGUI::DrawPostProcessingControls()
 
         ImGui::Separator();
 
-        // Motion Blur Toggle
-        if (DrawToggleButton("Motion Blur", &renderer->m_MotionBlurEnabled,
-                            "Enable motion blur based on camera and object movement")) {
-            EE_CORE_INFO("Motion blur {}", renderer->m_MotionBlurEnabled ? "enabled" : "disabled");
-        }
-
-        // Motion Blur Controls
-        if (renderer->m_MotionBlurEnabled && ImGui::TreeNode("Motion Blur Settings"))
-        {
-            DrawFloatSlider("Blur Strength", &renderer->m_MotionBlurStrength, 0.0f, 3.0f,
-                           "Intensity of motion blur effect");
-
-            if (ImGui::SliderInt("Sample Count", &renderer->m_MotionBlurSamples, 2, 32)) {
-                EE_CORE_INFO("Motion blur samples changed to {}", renderer->m_MotionBlurSamples);
-            }
-            DrawTooltip("Number of samples for motion blur (higher = smoother blur but slower)");
-
-            ImGui::TreePop();
-        }
-
         ImGui::Unindent(10.0f);
     }
 }
@@ -435,6 +428,20 @@ void GraphicsDebugGUI::DrawLightingControls()
 
                 ImGui::TreePop();
             }
+        }
+
+        ImGui::Separator();
+
+        // Light probe volume controls
+        if (ImGui::TreeNode("Light Probe Volumes"))
+        {
+            auto giSystem = ECS::GetInstance().GetSystem<GISystem>();
+            int probeCount = giSystem ? static_cast<int>(giSystem->GetProbeEntities().size()) : 0;
+            ImGui::Text("Active Volumes: %d", probeCount);
+
+            DrawTooltip("Captures indirect lighting into each probe");
+
+            ImGui::TreePop();
         }
 
         ImGui::Unindent(10.0f);

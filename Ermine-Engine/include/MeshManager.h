@@ -98,6 +98,7 @@ namespace Ermine::graphics {
         GLuint m_DrawCommandsSSBO = 0;    // Binding 2 - Draw commands [DEPRECATED]
         GLuint m_DrawInfoSSBO = 0;        // Binding 3 - Draw info (per-draw data) [DEPRECATED]
         GLuint m_IndexSSBO = 0;           // Binding 1 - All indices
+		GLuint GetVertexVBO() const { return m_VertexVBO; }
 
         // Separate buffers for each pass and VAO type (no shared buffers = no overwrites)
         // Depth prepass buffers (early-z rejection - opaque objects only)

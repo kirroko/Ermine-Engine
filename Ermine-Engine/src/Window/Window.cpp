@@ -3,11 +3,11 @@
 \file       Window.cpp
 \author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu
 \co-author  WEE HUNG RU, Curtis, h.wee, 230xxx, h.wee\@digipen.edu (25%)
-\date       09/03/2025
+\date       31/01/2026
 \brief      This file contains the definition of the Window system.
             This file is used to create a window using GLFW.
 
-Copyright (C) 2025 DigiPen Institute of Technology.
+Copyright (C) 2026 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents without the
 prior written consent of DigiPen Institute of Technology is prohibited.
 */
@@ -134,8 +134,8 @@ GLFWwindow* Ermine::Window::InitWindow(int width, int height, const char* title)
     Config cfg{};
     try {
         cfg = LoadConfigFromFile(cfgPath);
-        EE_CORE_INFO("Loaded config: {0}x{1}, fullscreen={2}, maximised={3}, title={4}, settings={5}, fontsize={6}, baseFontSize{7}, themeMode{8}",
-            cfg.windowWidth, cfg.windowHeight, cfg.fullscreen, cfg.maximized, cfg.title, cfg.settingsIsOpen, cfg.fontSize, cfg.baseFontSize, cfg.themeMode);
+        EE_CORE_INFO("Loaded config: {0}x{1}, fullscreen={2}, maximised={3}, title={4}, fontsize={5}, baseFontSize{6}, themeMode{7}",
+            cfg.windowWidth, cfg.windowHeight, cfg.fullscreen, cfg.maximized, cfg.title, cfg.fontSize, cfg.baseFontSize, cfg.themeMode);
     }
     catch (const std::exception& e) {
         EE_CORE_WARN("Config not found/invalid ({}). Using defaults.", e.what());
@@ -152,7 +152,7 @@ GLFWwindow* Ermine::Window::InitWindow(int width, int height, const char* title)
 
     window_width = cfg.windowWidth;
     window_height = cfg.windowHeight;
-	SettingsGUI::SetSettingsOpen(cfg.settingsIsOpen);
+    ImGUIWindow::SetAllWindowStates(cfg.imguiWindows);
 	SettingsGUI::SetFontSize(cfg.fontSize, cfg.baseFontSize); // call this after ImGui is initialized
 	SettingsGUI::SetMode(cfg.themeMode);
 

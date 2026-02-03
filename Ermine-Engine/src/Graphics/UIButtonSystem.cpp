@@ -460,6 +460,25 @@ namespace Ermine
                 SetEntityActiveByName("Settings Button", true);
                 SetEntityActiveByName("MenuBackground", true);
                 EE_CORE_INFO("Settings menu closed");
+            else if (button.actionData == "ShowTeleportInfo")
+            {
+                ShowControlInfo("Teleport_Info");
+            }
+            else if (button.actionData == "ShowShootingInfo")
+            {
+                ShowControlInfo("Shooting_Info");
+            }
+            else if (button.actionData == "ShowReturnInfo")
+            {
+				ShowControlInfo("Return_Info");
+            }
+            else if (button.actionData == "ShowLightDInfo")
+            {
+				ShowControlInfo("LightD_Info");
+            }
+            else if (button.actionData == "CloseControlsScreen")
+            {
+                CloseControlsScreen();
             }
             else
             {
@@ -471,6 +490,65 @@ namespace Ermine
         default:
             EE_CORE_WARN("Button '{}' has no action assigned", button.text);
             break;
+        }
+    }
+
+    void UIButtonSystem::CloseControlsScreen()
+    {
+        auto& ecs = ECS::GetInstance();
+
+        for (EntityID e = 0; e < MAX_ENTITIES; ++e)
+        {
+            if (!ecs.IsEntityValid(e)) continue;
+            if (!ecs.HasComponent<ObjectMetaData>(e)) continue;
+
+            auto& meta = ecs.GetComponent<ObjectMetaData>(e);
+
+            // Hide the entire ControlsScreen
+            if (meta.name == "ControlsScreen")
+            {
+                meta.selfActive = false;
+                return;
+            }
+        }
+
+    }
+
+    void UIButtonSystem::ShowControlInfo(const std::string& infoToShow)
+    {
+        auto& ecs = ECS::GetInstance();
+
+        // List of all info panels
+        std::vector<std::string> allInfoPanels = {
+            "Teleport_Info",
+            "Shooting_Info",
+			"Return_Info",
+			"LightD_Info"
+            // Add more as needed
+        };
+
+        // Hide all panels first, then show the requested one
+        for (EntityID e = 0; e < MAX_ENTITIES; ++e)
+        {
+            if (!ecs.IsEntityValid(e)) continue;
+            if (!ecs.HasComponent<ObjectMetaData>(e)) continue;
+
+            auto& meta = ecs.GetComponent<ObjectMetaData>(e);
+
+            // Check if this entity is an info panel
+            for (const auto& panelName : allInfoPanels)
+            {
+                if (meta.name == panelName)
+                {
+                    // Show only the requested panel, hide others
+                    meta.selfActive = (meta.name == infoToShow);
+
+                    if (meta.selfActive)
+                    {
+                        EE_CORE_INFO("Showing info panel: {}", meta.name);
+                    }
+                }
+            }
         }
     }
 

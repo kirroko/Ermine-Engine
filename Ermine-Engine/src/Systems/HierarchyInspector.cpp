@@ -29,6 +29,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Particles.h"
 #include "AnimationGUI.h"
 #include "CommandHistory.h"
+#include "GISystem.h"
+#include "Renderer.h"
 
 #include "xcore/my_properties.h"
 #include "xproperty.h"
@@ -309,6 +311,10 @@ namespace Ermine::editor {
 
 		if (ECS::GetInstance().HasComponent<Light>(selected)) {
 			DrawLightComponent(selected);
+		}
+
+		if (ECS::GetInstance().HasComponent<LightProbeVolumeComponent>(selected)) {
+			DrawLightProbeVolumeComponent(selected);
 		}
 
 		if (ECS::GetInstance().HasComponent<HierarchyComponent>(selected)) {
@@ -886,7 +892,8 @@ namespace Ermine::editor {
 				}
 			}
 
-			if (ImGui::BeginCombo("Fragment Shader", displayName.c_str())) {
+			ImGui::Text("Fragment Shader");
+			if (ImGui::BeginCombo("##FragmentShaderCombo", displayName.c_str())) {
 				// First option: None (use standard PBR)
 				bool isSelected = currentShader.empty();
 				if (ImGui::Selectable("None (Standard PBR)", isSelected)) {
@@ -933,6 +940,32 @@ namespace Ermine::editor {
 				}
 
 				ImGui::EndCombo();
+			}
+
+			// Drag & Drop for shader files
+			if (ImGui::BeginDragDropTarget())
+			{
+				if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_FILE")) {
+					const char* droppedPath = static_cast<const char*>(payload->Data);
+					std::filesystem::path shaderPath = std::filesystem::path(droppedPath).filename().string();
+
+					if (shaderPath.extension() == ".glsl")
+					{
+						matComp.customFragmentShader = shaderPath.string();
+
+						auto& assetManager = AssetManager::GetInstance();
+						auto shader = assetManager.LoadShader(
+							"../Resources/Shaders/vertex.glsl",
+							matComp.customFragmentShader
+						);
+
+						if (shader && shader->IsValid()) {
+							gm->SetShader(shader);
+							EE_CORE_INFO("Applied dropped fragment shader: {}", shaderPath.string());
+						}
+					}
+				}
+				ImGui::EndDragDropTarget();
 			}
 		}
 
@@ -1141,7 +1174,7 @@ namespace Ermine::editor {
 				}
 
 				if (ImGui::BeginDragDropTarget()) {
-					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_TEXTURE")) {
+					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_FILE")) {
 						const char* droppedPathCStr = static_cast<const char*>(payload->Data);
 						std::filesystem::path droppedPath = droppedPathCStr;
 
@@ -1366,6 +1399,42 @@ namespace Ermine::editor {
 		}
 	}
 
+	void HierarchyInspector::DrawLightProbeVolumeComponent(EntityID entity)
+	{
+		if (!ComponentHeaderWithRemove<LightProbeVolumeComponent>("Light Probe Volume", entity))
+			return;
+
+		auto& ecs = ECS::GetInstance();
+		auto& volume = ecs.GetComponent<LightProbeVolumeComponent>(entity);
+
+		ImGui::Checkbox("Active", &volume.isActive);
+		ImGui::SliderInt("Capture Resolution", &volume.captureResolution, 16, 512);
+		if (volume.captureResolution < 1) volume.captureResolution = 1;
+		ImGui::SliderInt("Voxel Resolution", &volume.voxelResolution, 16, 256);
+		if (volume.voxelResolution < 1) volume.voxelResolution = 1;
+		ImGui::InputInt("Priority", &volume.priority);
+		ImGui::DragFloat3("Bounds Min", &volume.boundsMin.x, 0.1f);
+		ImGui::DragFloat3("Bounds Max", &volume.boundsMax.x, 0.1f);
+		ImGui::Checkbox("Show Gizmos", &volume.showGizmos);
+		ImGui::Text("Probe Index: %d", volume.probeIndex);
+
+		if (ImGui::TreeNode("Bake Settings")) {
+			auto renderer = ecs.GetSystem<graphics::Renderer>();
+			if (renderer) {
+				ImGui::SliderInt("GI Bounces", &renderer->m_GIBakeBounces, 1, 8);
+				ImGui::SliderFloat("Energy Loss", &renderer->m_GIBakeEnergyLoss, 0.0f, 1.0f);
+			}
+			ImGui::TreePop();
+		}
+
+		if (ImGui::Button("Bake Probe")) {
+			auto renderer = ecs.GetSystem<graphics::Renderer>();
+			if (renderer) {
+				renderer->CaptureLightProbe(entity);
+			}
+		}
+	}
+
 	void HierarchyInspector::DrawPhysicsComponent(EntityID entity)
 	{
 		bool open = ImGui::CollapsingHeader("Physics", ImGuiTreeNodeFlags_DefaultOpen);
@@ -1584,11 +1653,26 @@ namespace Ermine::editor {
 
 			ImGui::PushID(id);
 
-			// string fields
+			// string fields (USED FOR AUDIO PATH)
 			if (guid == xproperty::settings::var_type<std::string>::guid_v) {
 				std::string s = p.m_Value.get<std::string>();
-				char buf[256]; std::snprintf(buf, sizeof(buf), "%s", s.c_str());
-				if (ImGui::InputText(label.c_str(), buf, IM_ARRAYSIZE(buf))) {
+				char buf[256];
+				std::snprintf(buf, sizeof(buf), "%s", s.c_str());
+
+				ImGui::InputText(label.c_str(), buf, IM_ARRAYSIZE(buf));
+
+				// --- Drag & Drop audio ---
+				if (ImGui::BeginDragDropTarget())
+				{
+					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_FILE")) {
+						const char* droppedPath = static_cast<const char*>(payload->Data);
+						p.m_Value.set<std::string>(droppedPath);
+						xproperty::sprop::setProperty(err, audio, p, ctx);
+					}
+					ImGui::EndDragDropTarget();
+				}
+
+				if (strcmp(buf, s.c_str()) != 0) {
 					p.m_Value.set<std::string>(buf);
 					xproperty::sprop::setProperty(err, audio, p, ctx);
 				}
@@ -2050,18 +2134,14 @@ namespace Ermine::editor {
 			ImGui::EndCombo();
 		}
 
-		// --- Info about the model ---
-		if (modelComp.m_model) {
-			auto& model = modelComp.m_model;
-			ImGui::Text("Name: %s", model->GetName().c_str());
-			ImGui::Text("Meshes: %d", (int)model->GetMeshes().size());
-			ImGui::Text("Bones: %d", model->GetBoneCount());
-		}
-
-		// --- Reload Button ---
-		if (modelComp.m_model) {
-			if (ImGui::Button("Reload Model")) {
-				std::string fullPath = modelsDir + modelComp.m_model->GetName();
+		// --- Drag & Drop Target ---
+		if (ImGui::BeginDragDropTarget()) {
+			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_FILE")) {
+			
+				// Handle dropped model file
+				const char* modelPath = (const char*)payload->Data;
+				std::string filename = std::filesystem::path(modelPath).filename().string();
+				std::string fullPath = modelsDir + filename;
 
 				auto& ecs = ECS::GetInstance();
 				auto hierarchySystem = ecs.GetSystem<HierarchySystem>();
@@ -2071,7 +2151,6 @@ namespace Ermine::editor {
 				if (hierarchySystem && ecs.HasComponent<HierarchyComponent>(entity)) {
 					auto& hierarchy = ecs.GetComponent<HierarchyComponent>(entity);
 					existingChildren = hierarchy.children;
-					EE_CORE_INFO("Reusing {} existing child entities for reload", existingChildren.size());
 				}
 
 				// Remove cached version (forces reload from disk)
@@ -2082,6 +2161,10 @@ namespace Ermine::editor {
 				auto reloaded = manager.LoadModel(fullPath);
 				if (reloaded) {
 					modelComp.m_model = reloaded;
+
+					// Update dropdown selection
+					auto it = std::find(availableModels.begin(), availableModels.end(), modelComp.m_model->GetName());
+					selectedModel = (it != availableModels.end()) ? (int)std::distance(availableModels.begin(), it) : -1;
 
 					// Reuse or create child entities for each mesh with a material
 					auto renderer = ecs.GetSystem<graphics::Renderer>();
@@ -2264,15 +2347,18 @@ namespace Ermine::editor {
 							animComp.m_animator.reset();
 					}
 
-					// Mark renderer for full rebuild due to model reload
 					ecs.GetSystem<graphics::Renderer>()->MarkDrawDataForRebuild();
-
-					EE_CORE_INFO("Model reloaded successfully");
-				}
-				else {
-					EE_CORE_ERROR("Failed to reload model from: {}", fullPath);
 				}
 			}
+			ImGui::EndDragDropTarget();
+		}
+
+		// --- Info about the model ---
+		if (modelComp.m_model) {
+			auto& model = modelComp.m_model;
+			ImGui::Text("Name: %s", model->GetName().c_str());
+			ImGui::Text("Meshes: %d", (int)model->GetMeshes().size());
+			ImGui::Text("Bones: %d", model->GetBoneCount());
 		}
 	}
 
@@ -3192,7 +3278,7 @@ namespace Ermine::editor {
 		// =========================
 		// Rendering
 		// =========================
-		if (shouldShowMenu("Rendering", { "Mesh","Material","Model","Animation","Light","Camera" }) && ImGui::BeginMenu("Rendering"))
+		if (shouldShowMenu("Rendering", { "Mesh","Material","Model","Animation","Light","Camera","Light Probe Volume" }) && ImGui::BeginMenu("Rendering"))
 		{
 			if (matchSearch("Mesh") && ImGui::MenuItem("Mesh") && !ecs.HasComponent<Mesh>(entity))
 			{
@@ -3226,6 +3312,11 @@ namespace Ermine::editor {
 				tempCam.fov = 45;
 				tempCam.nearPlane = 5.0f;
 				ecs.AddComponent(entity, tempCam);
+				itemSelected = true;
+			}
+			if (matchSearch("Light Probe Volume") && ImGui::MenuItem("Light Probe Volume") && !ecs.HasComponent<LightProbeVolumeComponent>(entity))
+			{
+				ecs.AddComponent(entity, LightProbeVolumeComponent());
 				itemSelected = true;
 			}
 			ImGui::EndMenu();

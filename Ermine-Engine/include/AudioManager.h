@@ -80,6 +80,8 @@ namespace Ermine {
             const Vector3D& forward,
             const Vector3D& up);
 
+        static FMOD::System* GetCoreSystem();
+
         // Utility functions
         static float dbToVolume(float dB);
         static float VolumeTodB(float volume);

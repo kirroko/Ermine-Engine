@@ -175,6 +175,31 @@ namespace Ermine::graphics
         glm::uvec4 data; // x = shadow layer index
     };
 
+	/**
+	 * @brief GPU representation of a light probe for UBO transmission
+	 * Stores spherical harmonics coefficients for indirect lighting
+	 */
+	struct LightProbeGPU
+	{
+		glm::vec4 position_radius;      // xyz = world position, w = unused
+		glm::vec4 shCoefficients[9];    // SH L2 coefficients (vec4 for std140 alignment, only xyz used)
+		glm::vec4 boundsMin;            // xyz = world bounds min, w = padding
+		glm::vec4 boundsMax;            // xyz = world bounds max, w = padding
+		glm::vec4 flags;                // x = isActive (1.0 or 0.0), y = priority, zw = padding
+	};
+
+	/**
+	 * @brief Volume of light probes stored on GPU
+	 */
+	struct LightProbeVolumeGPU
+	{
+		glm::vec4 boundsMin_spacing;    // xyz = boundsMin, w = unused
+		glm::vec4 boundsMax_padding;    // xyz = boundsMax, w = unused
+		glm::vec4 gridDimensions;       // xyz = probe count per axis, w = total probe count
+		glm::vec4 probeSpacing;         // xyz = spacing between probes, w = unused
+	};
+
+
 
     // Forward declarations
     struct MaterialSSBO;
@@ -225,6 +250,10 @@ namespace Ermine::graphics
         // Ambient lighting parameters
         glm::vec3 m_AmbientColor = glm::vec3(1.0f, 1.0f, 1.0f);  // RGB color of ambient light
         float m_AmbientIntensity = 0.08f;  // Intensity multiplier for ambient light
+
+		// GI bake parameters
+		int m_GIBakeBounces = 2;
+		float m_GIBakeEnergyLoss = 0.6f;
         
         // Post-processing uniforms - toggles
         bool m_VignetteEnabled = false;
@@ -233,6 +262,7 @@ namespace Ermine::graphics
         bool m_GammaCorrectionEnabled = true;
         bool m_BloomEnabled = true;
         bool m_SkyBoxisHDR = false;
+        bool m_ShowSkybox = true;
 
         // Post-processing uniforms - parameters
         float m_Exposure = 1.0f;
@@ -259,7 +289,7 @@ namespace Ermine::graphics
         float m_SpotlightRayFalloff = 2.0f;
 
         // Motion blur parameters
-        bool m_MotionBlurEnabled = true;
+        bool m_MotionBlurEnabled = false;
         float m_MotionBlurStrength = 1.0f;
         int m_MotionBlurSamples = 8;
 
@@ -621,6 +651,39 @@ namespace Ermine::graphics
          */
         void UpdateLightsUBO(const Mtx44& view);
         
+		/**
+		 * @brief Updates the light probes UBO with current probe data from all probe entities.
+		 * Uploads probe positions, SH coefficients, bounds, and priority to GPU.
+		 */
+		void UpdateLightProbesUBO();
+
+		/**
+		 * @brief Initializes light probe capture resources (cubemap FBO, textures).
+		 * Must be called before capturing any probes.
+		 */
+		void InitializeProbeCaptureResources();
+
+		/**
+		 * @brief Captures environment lighting at a probe's position into SH coefficients.
+		 * Renders scene to cubemap, then projects to spherical harmonics.
+		 * @param probeEntity The entity containing the LightProbeVolumeComponent to update.
+		 */
+		void CaptureLightProbe(EntityID probeEntity);
+
+		/**
+		 * @brief Projects a cubemap texture to spherical harmonics (L2, 9 coefficients).
+		 * @param cubemapID OpenGL texture ID of the cubemap to project.
+		 * @param outCoefficients Array to store 9 vec3 SH coefficients (27 floats total).
+		 */
+		void ProjectCubemapToSH(GLuint cubemapID, glm::vec3 outCoefficients[9]);
+
+		/**
+		 * @brief Projects a cubemap array layer (6 faces) to spherical harmonics (L2, 9 coefficients).
+		 * @param probeIndex Index of the probe in the cubemap array.
+		 * @param outCoefficients Array to store 9 vec3 SH coefficients (27 floats total).
+		 */
+		void ProjectCubemapArrayToSH(int probeIndex, glm::vec3 outCoefficients[9]);
+
         /**
          * @brief Updates the material's shader storage buffer object (SSBO) at a specific index.
          * Used for dynamic material updates after initial compilation.
@@ -926,6 +989,13 @@ namespace Ermine::graphics
         void RenderForwardPass(const Mtx44& view, const Mtx44& projection);
 
         /**
+         * @brief Render camera-attached mask for forward-rendered objects (used by motion blur)
+         * @param view The view matrix
+         * @param projection The projection matrix
+         */
+        void RenderMotionBlurMask(const Mtx44& view, const Mtx44& projection);
+
+        /**
          * @brief Sort opaque custom shader objects by shader pointer (for batching)
          * Opaque objects don't need distance sorting, only shader batching
          */
@@ -1010,6 +1080,26 @@ namespace Ermine::graphics
         static constexpr GLuint LightsBindingPoint = 1;
         std::unordered_set<GLuint> m_LightBlockBoundPrograms;
         bool m_IsBlinnPhong = false; // Default to PBR shading
+
+		// Light Probe UBO
+		GLuint m_LightProbesUBO = 0;
+		static constexpr GLuint ProbesBindingPoint = 5; // UBO binding point for probes
+		static constexpr int MAX_PROBES = 128; // Maximum probes in UBO at once
+		std::unordered_set<GLuint> m_ProbeBlockBoundPrograms;
+		bool m_LightProbesEnabled = true; // Toggle probe contribution
+
+		// Light Probe Capture (indirect cubemap array)
+		GLuint m_ProbeIndirectCubemapArray = 0; // GL_TEXTURE_CUBE_MAP_ARRAY
+		GLuint m_ProbeIndirectDepthArray = 0;   // Depth cubemap array
+		GLuint m_ProbeVoxelAlbedoTexture = 0;   // 3D voxel albedo texture (RGBA8)
+		GLuint m_ProbeVoxelEmissiveTexture = 0; // 3D voxel emissive texture (RGBA8)
+		GLuint m_ProbeVoxelNormalTexture = 0;   // 3D voxel normal texture (RGBA8)
+		int m_ProbeVoxelResolution = 0;
+
+		// GI bake compute shader
+		std::shared_ptr<Shader> m_ProbeBakeComputeShader;
+		std::shared_ptr<Shader> m_ProbeVoxelizeComputeShader;
+		std::shared_ptr<Shader> m_ProbeLightInjectComputeShader;
 
         // Material SSBO
         GLuint m_MaterialSSBO = 0;
@@ -1193,10 +1283,12 @@ namespace Ermine::graphics
         std::shared_ptr<PostProcessBuffer> m_BloomBlurBuffer2;
 		std::shared_ptr<PostProcessBuffer> m_AntiAliasingBuffer;
         std::shared_ptr<PostProcessBuffer> m_MotionBlurBuffer;
+        std::shared_ptr<PostProcessBuffer> m_MotionBlurMaskBuffer;
         std::shared_ptr<Shader> m_BloomShader = 0; // Shader for bloom effect
         std::shared_ptr<Shader> m_PostProcessShader = 0; // Shader for post-processing effects
 		std::shared_ptr<Shader> m_AAShader = 0; // Shader for anti-aliasing
         std::shared_ptr<Shader> m_MotionBlurShader = 0; // Shader for motion blur effect
+        std::shared_ptr<Shader> m_MotionBlurMaskShader = 0; // Shader for motion blur mask rendering
 
         // Skybox
         Skybox* m_skybox = nullptr;
@@ -1207,6 +1299,12 @@ namespace Ermine::graphics
         uint64_t m_ShadowMapArrayHandle = 0;
         GLuint m_ShadowMapFBO = 0;
         GLuint m_ShadowMapArray = 0;
+
+		// Light Probe Capture Resources
+		GLuint m_ProbeCubemapFBO = 0;       // Framebuffer for capturing probe cubemaps
+		GLuint m_ProbeCubemap = 0;          // Cubemap texture for capture
+		GLuint m_ProbeDepthCubemap = 0;     // Depth buffer for cubemap capture
+		int m_ProbeCaptureResolution = 64;  // Default capture resolution per face
 
         // Noise textures
         GLuint m_IGNTexture = 0;

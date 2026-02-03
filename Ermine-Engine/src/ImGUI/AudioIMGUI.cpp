@@ -5,7 +5,7 @@
 \date       26/01/2026
 \brief      This file contains the implementation of AudioImGUI for managing audio through ImGUI.
 
-Copyright (C) 2025 DigiPen Institute of Technology.
+Copyright (C) 2026 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents without the
 prior written consent of DigiPen Institute of Technology is prohibited.
 */
@@ -37,47 +37,51 @@ namespace Ermine
     void AudioImGUI::Render()
     {
         // Return if window is closed
-        if (!m_isOpen) return;
+        if (!IsOpen()) return;
 
-        if (ImGui::Begin(m_name.c_str(), &m_isOpen))
+        if (!ImGui::Begin(Name().c_str(), GetOpenPtr()))
         {
-            // Status message display
-            if (m_StatusTimer > 0.0f)
-            {
-                ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "%s", m_StatusMessage.c_str());
-                ImGui::Separator();
-            }
-
-            // Tabs for different audio management sections
-            if (ImGui::BeginTabBar("AudioTabs"))
-            {
-                if (ImGui::BeginTabItem("Entity Audio"))
-                {
-                    RenderEntityAudioControls();
-                    ImGui::EndTabItem();
-                }
-
-                if (ImGui::BeginTabItem("Audio Tester"))
-                {
-                    RenderAudioTester();
-                    ImGui::EndTabItem();
-                }
-
-                if (ImGui::BeginTabItem("Audio Browser"))
-                {
-                    RenderAudioBrowser();
-                    ImGui::EndTabItem();
-                }
-
-                if (ImGui::BeginTabItem("Global Audio"))
-                {
-                    RenderGlobalAudioControls();
-                    ImGui::EndTabItem();
-                }
-
-                ImGui::EndTabBar();
-            }
+            ImGui::End();
+            return;
         }
+
+        // Status message display
+        if (m_StatusTimer > 0.0f)
+        {
+            ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "%s", m_StatusMessage.c_str());
+            ImGui::Separator();
+        }
+
+        // Tabs for different audio management sections
+        if (ImGui::BeginTabBar("AudioTabs"))
+        {
+            if (ImGui::BeginTabItem("Entity Audio"))
+            {
+                RenderEntityAudioControls();
+                ImGui::EndTabItem();
+            }
+
+            if (ImGui::BeginTabItem("Audio Tester"))
+            {
+                RenderAudioTester();
+                ImGui::EndTabItem();
+            }
+
+            if (ImGui::BeginTabItem("Audio Browser"))
+            {
+                RenderAudioBrowser();
+                ImGui::EndTabItem();
+            }
+
+            if (ImGui::BeginTabItem("Global Audio"))
+            {
+                RenderGlobalAudioControls();
+                ImGui::EndTabItem();
+            }
+
+            ImGui::EndTabBar();
+        }
+
         ImGui::End();
     }
 

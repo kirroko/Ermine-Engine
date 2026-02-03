@@ -100,11 +100,11 @@
       <PrecompiledHeaderFile>PreCompile.h</PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
       <PreprocessorDefinitions>EE_PLATFORM_WINDOWS;EE_BUILD_DLL;ERMINE_USE_SPDLOG;GLFW_INCLUDE_NONE;IMGUI_DEFINE_MATH_OPERATORS;GLM_ENABLE_EXPERIMENTAL;_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING;JPH_USE_SUBMERGENCE;JPH_DEBUG_RENDERER;EE_EDITOR;EE_DEBUG;VERBOSE_LOGGING=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>include;..\ThirdParty\GLFW\include;..\ThirdParty\Glad\include;..\ThirdParty\imgui;..\ThirdParty\glm;..\ThirdParty\spdlog\include;..\ThirdParty\stb;..\ThirdParty\Fmod\inc;..\ThirdParty\Mono\include;..\ThirdParty;..\ThirdParty\rapidjson;..\ThirdParty\assimp\include;..\ThirdParty\DirectXTex\inc;..\ThirdParty\xproperty\source;..\ThirdParty\recastnavigation\Recast\Include;..\ThirdParty\recastnavigation\Detour\Include;..\ThirdParty\recastnavigation\DetourCrowd\Include;..\ThirdParty\recastnavigation\DetourTileCache\Include;..\ThirdParty\recastnavigation\DebugUtils\Include;..\ThirdParty\xresource_pipeline_v2-main\source;..\ThirdParty\xresource_pipeline_v2-main\dependencies\xtextfile\source;..\ThirdParty\xresource_pipeline_v2-main\dependencies\xerr\source;..\ThirdParty\imnodes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;..\ThirdParty\GLFW\include;..\ThirdParty\Glad\include;..\ThirdParty\imgui;..\ThirdParty\glm;..\ThirdParty\spdlog\include;..\ThirdParty\stb;..\ThirdParty\Fmod\inc;..\ThirdParty\Mono\include;..\ThirdParty;..\ThirdParty\rapidjson;..\ThirdParty\assimp\include;..\ThirdParty\DirectXTex\inc;..\ThirdParty\xproperty\source;..\ThirdParty\recastnavigation\Recast\Include;..\ThirdParty\recastnavigation\Detour\Include;..\ThirdParty\recastnavigation\DetourCrowd\Include;..\ThirdParty\recastnavigation\DetourTileCache\Include;..\ThirdParty\recastnavigation\DebugUtils\Include;..\ThirdParty\xresource_pipeline_v2-main\source;..\ThirdParty\xresource_pipeline_v2-main\dependencies\xtextfile\source;..\ThirdParty\xresource_pipeline_v2-main\dependencies\xerr\source;..\ThirdParty\imnodes;..\ThirdParty\pl_mpeg;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <AdditionalOptions>/MP /wd4251 /wd4005 /wd4267 /wd5054 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/MP /bigobj /wd4251 /wd4005 /wd4267 /wd5054 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -150,14 +150,14 @@ copy /B /Y "$(SolutionDir)ThirdParty\DirectXTex\lib\DirectXTexD.pdb" "$(Solution
       <PrecompiledHeaderFile>PreCompile.h</PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
       <PreprocessorDefinitions>EE_PLATFORM_WINDOWS;EE_BUILD_DLL;ERMINE_USE_SPDLOG;GLFW_INCLUDE_NONE;IMGUI_DEFINE_MATH_OPERATORS;GLM_ENABLE_EXPERIMENTAL;_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING;JPH_USE_SUBMERGENCE;JPH_DEBUG_RENDERER;EE_EDITOR;EE_RELEASE;VERBOSE_LOGGING=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>include;..\ThirdParty\GLFW\include;..\ThirdParty\Glad\include;..\ThirdParty\imgui;..\ThirdParty\glm;..\ThirdParty\spdlog\include;..\ThirdParty\stb;..\ThirdParty\Fmod\inc;..\ThirdParty\Mono\include;..\ThirdParty;..\ThirdParty\rapidjson;..\ThirdParty\assimp\include;..\ThirdParty\DirectXTex\inc;..\ThirdParty\xproperty\source;..\ThirdParty\recastnavigation\Recast\Include;..\ThirdParty\recastnavigation\Detour\Include;..\ThirdParty\recastnavigation\DetourCrowd\Include;..\ThirdParty\recastnavigation\DetourTileCache\Include;..\ThirdParty\recastnavigation\DebugUtils\Include;..\ThirdParty\xresource_pipeline_v2-main\source;..\ThirdParty\xresource_pipeline_v2-main\dependencies\xtextfile\source;..\ThirdParty\xresource_pipeline_v2-main\dependencies\xerr\source;..\ThirdParty\imnodes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;..\ThirdParty\GLFW\include;..\ThirdParty\Glad\include;..\ThirdParty\imgui;..\ThirdParty\glm;..\ThirdParty\spdlog\include;..\ThirdParty\stb;..\ThirdParty\Fmod\inc;..\ThirdParty\Mono\include;..\ThirdParty;..\ThirdParty\rapidjson;..\ThirdParty\assimp\include;..\ThirdParty\DirectXTex\inc;..\ThirdParty\xproperty\source;..\ThirdParty\recastnavigation\Recast\Include;..\ThirdParty\recastnavigation\Detour\Include;..\ThirdParty\recastnavigation\DetourCrowd\Include;..\ThirdParty\recastnavigation\DetourTileCache\Include;..\ThirdParty\recastnavigation\DebugUtils\Include;..\ThirdParty\xresource_pipeline_v2-main\source;..\ThirdParty\xresource_pipeline_v2-main\dependencies\xtextfile\source;..\ThirdParty\xresource_pipeline_v2-main\dependencies\xerr\source;..\ThirdParty\imnodes;..\ThirdParty\pl_mpeg;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <MinimalRebuild>false</MinimalRebuild>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalOptions>/MP /wd4251 /wd4005 /wd4267 /wd5054 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/MP /bigobj /wd4251 /wd4005 /wd4267 /wd5054 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -204,11 +204,11 @@ copy /B /Y "$(SolutionDir)ThirdParty\DirectXTex\lib\DirectXTex.pdb" "$(SolutionD
       <PrecompiledHeaderFile>PreCompile.h</PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
       <PreprocessorDefinitions>EE_PLATFORM_WINDOWS;EE_BUILD_DLL;ERMINE_USE_SPDLOG;GLFW_INCLUDE_NONE;IMGUI_DEFINE_MATH_OPERATORS;GLM_ENABLE_EXPERIMENTAL;_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING;JPH_USE_SUBMERGENCE;JPH_DEBUG_RENDERER;EE_GAME;EE_DEBUG;VERBOSE_LOGGING=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>include;..\ThirdParty\GLFW\include;..\ThirdParty\Glad\include;..\ThirdParty\imgui;..\ThirdParty\glm;..\ThirdParty\spdlog\include;..\ThirdParty\stb;..\ThirdParty\Fmod\inc;..\ThirdParty\Mono\include;..\ThirdParty;..\ThirdParty\rapidjson;..\ThirdParty\assimp\include;..\ThirdParty\DirectXTex\inc;..\ThirdParty\xproperty\source;..\ThirdParty\recastnavigation\Recast\Include;..\ThirdParty\recastnavigation\Detour\Include;..\ThirdParty\recastnavigation\DetourCrowd\Include;..\ThirdParty\recastnavigation\DetourTileCache\Include;..\ThirdParty\recastnavigation\DebugUtils\Include;..\ThirdParty\xresource_pipeline_v2-main\source;..\ThirdParty\xresource_pipeline_v2-main\dependencies\xtextfile\source;..\ThirdParty\xresource_pipeline_v2-main\dependencies\xerr\source;..\ThirdParty\imnodes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;..\ThirdParty\GLFW\include;..\ThirdParty\Glad\include;..\ThirdParty\imgui;..\ThirdParty\glm;..\ThirdParty\spdlog\include;..\ThirdParty\stb;..\ThirdParty\Fmod\inc;..\ThirdParty\Mono\include;..\ThirdParty;..\ThirdParty\rapidjson;..\ThirdParty\assimp\include;..\ThirdParty\DirectXTex\inc;..\ThirdParty\xproperty\source;..\ThirdParty\recastnavigation\Recast\Include;..\ThirdParty\recastnavigation\Detour\Include;..\ThirdParty\recastnavigation\DetourCrowd\Include;..\ThirdParty\recastnavigation\DetourTileCache\Include;..\ThirdParty\recastnavigation\DebugUtils\Include;..\ThirdParty\xresource_pipeline_v2-main\source;..\ThirdParty\xresource_pipeline_v2-main\dependencies\xtextfile\source;..\ThirdParty\xresource_pipeline_v2-main\dependencies\xerr\source;..\ThirdParty\imnodes;..\ThirdParty\pl_mpeg;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <AdditionalOptions>/MP /wd4251 /wd4005 /wd4267 /wd5054 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/MP /bigobj /wd4251 /wd4005 /wd4267 /wd5054 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -254,14 +254,14 @@ copy /B /Y "$(SolutionDir)ThirdParty\DirectXTex\lib\DirectXTexD.pdb" "$(Solution
       <PrecompiledHeaderFile>PreCompile.h</PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
       <PreprocessorDefinitions>EE_PLATFORM_WINDOWS;EE_BUILD_DLL;ERMINE_USE_SPDLOG;GLFW_INCLUDE_NONE;IMGUI_DEFINE_MATH_OPERATORS;GLM_ENABLE_EXPERIMENTAL;_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING;JPH_USE_SUBMERGENCE;JPH_DEBUG_RENDERER;EE_GAME;EE_RELEASE;VERBOSE_LOGGING=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>include;..\ThirdParty\GLFW\include;..\ThirdParty\Glad\include;..\ThirdParty\imgui;..\ThirdParty\glm;..\ThirdParty\spdlog\include;..\ThirdParty\stb;..\ThirdParty\Fmod\inc;..\ThirdParty\Mono\include;..\ThirdParty;..\ThirdParty\rapidjson;..\ThirdParty\assimp\include;..\ThirdParty\DirectXTex\inc;..\ThirdParty\xproperty\source;..\ThirdParty\recastnavigation\Recast\Include;..\ThirdParty\recastnavigation\Detour\Include;..\ThirdParty\recastnavigation\DetourCrowd\Include;..\ThirdParty\recastnavigation\DetourTileCache\Include;..\ThirdParty\recastnavigation\DebugUtils\Include;..\ThirdParty\xresource_pipeline_v2-main\source;..\ThirdParty\xresource_pipeline_v2-main\dependencies\xtextfile\source;..\ThirdParty\xresource_pipeline_v2-main\dependencies\xerr\source;..\ThirdParty\imnodes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;..\ThirdParty\GLFW\include;..\ThirdParty\Glad\include;..\ThirdParty\imgui;..\ThirdParty\glm;..\ThirdParty\spdlog\include;..\ThirdParty\stb;..\ThirdParty\Fmod\inc;..\ThirdParty\Mono\include;..\ThirdParty;..\ThirdParty\rapidjson;..\ThirdParty\assimp\include;..\ThirdParty\DirectXTex\inc;..\ThirdParty\xproperty\source;..\ThirdParty\recastnavigation\Recast\Include;..\ThirdParty\recastnavigation\Detour\Include;..\ThirdParty\recastnavigation\DetourCrowd\Include;..\ThirdParty\recastnavigation\DetourTileCache\Include;..\ThirdParty\recastnavigation\DebugUtils\Include;..\ThirdParty\xresource_pipeline_v2-main\source;..\ThirdParty\xresource_pipeline_v2-main\dependencies\xtextfile\source;..\ThirdParty\xresource_pipeline_v2-main\dependencies\xerr\source;..\ThirdParty\imnodes;..\ThirdParty\pl_mpeg;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <MinimalRebuild>false</MinimalRebuild>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalOptions>/MP /wd4251 /wd4005 /wd4267 /wd5054 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/MP /bigobj /wd4251 /wd4005 /wd4267 /wd5054 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -343,6 +343,7 @@ copy /B /Y "$(SolutionDir)ThirdParty\DirectXTex\lib\DirectXTex.pdb" "$(SolutionD
     <ClInclude Include="include\GraphicsDebugGUI.h" />
     <ClInclude Include="include\Guid.h" />
     <ClInclude Include="include\GuidRegistry.h" />
+    <ClInclude Include="include\GISystem.h" />
     <ClInclude Include="include\HierarchyInspector.h" />
     <ClInclude Include="include\HierarchyPanel.h" />
     <ClInclude Include="include\HierarchySystem.h" />
@@ -392,6 +393,8 @@ copy /B /Y "$(SolutionDir)ThirdParty\DirectXTex\lib\DirectXTex.pdb" "$(SolutionD
     <ClInclude Include="include\UITextRenderer.h" />
     <ClInclude Include="include\VertexArray.h" />
     <ClInclude Include="include\VertexBuffer.h" />
+    <ClInclude Include="include\VideoImGUI.h" />
+    <ClInclude Include="include\VideoManager.h" />
     <ClInclude Include="include\ViewPortGUI.h" />
     <ClInclude Include="include\Window.h" />
     <ClInclude Include="include\shadow_config.h" />
@@ -437,6 +440,7 @@ copy /B /Y "$(SolutionDir)ThirdParty\DirectXTex\lib\DirectXTex.pdb" "$(SolutionD
     <ClCompile Include="src\ImGUI\GraphicsDebugGUI.cpp" />
     <ClCompile Include="src\ImGUI\InspectorGUI.cpp" />
     <ClCompile Include="src\ImGUI\SettingsGUI.cpp" />
+    <ClCompile Include="src\ImGUI\VideoImGUI.cpp" />
     <ClCompile Include="src\ImGUI\ViewPortGUI.cpp" />
     <ClCompile Include="src\Logger\Logger.cpp" />
     <ClCompile Include="src\Math\MathVector.cpp" />
@@ -463,7 +467,9 @@ copy /B /Y "$(SolutionDir)ThirdParty\DirectXTex\lib\DirectXTex.pdb" "$(SolutionD
     <ClCompile Include="src\Systems\HierarchyInspector.cpp" />
     <ClCompile Include="src\Systems\HierarchyPanel.cpp" />
     <ClCompile Include="src\Systems\HierarchySystem.cpp" />
+    <ClCompile Include="src\Systems\GISystem.cpp" />
     <ClCompile Include="src\Systems\TransformMode.cpp" />
+    <ClCompile Include="src\Systems\VideoManager.cpp" />
     <ClCompile Include="src\Utility\AssetRegistry.cpp" />
     <ClCompile Include="src\Utility\EditorCamera.cpp" />
     <ClCompile Include="src\Utility\FrameController.cpp" />

@@ -3,7 +3,7 @@
 \file       Components.h
 \author     WONG JUN YU, Kean, junyukean.wong, 2301234, junyukean.wong\@digipen.edu (45%)
 \co-author  Jeremy Lim Ting Jie, jeremytingjie.lim, 2301370, jeremytingjie.lim\@digipen.edu (10%)
-\co-author  Ridhwan (5%)
+\co-author  Ridhwan Afandi, mohamedridhwan.b, 2301367, mohamedridhwan.b\@digipen.edu (5%)
 \co-author  WEE HONG RU Curtis, h.wee, 2301266, h.wee\@digipen.edu (40%)
 \date       Jan 24, 2025
 \brief      Updated components with modular material system
@@ -1455,8 +1455,10 @@ namespace Ermine
 			// Known slots across the codebase (support both dot and non-dot styles + fallback)
 			const char* slots[] = {
 				"materialAlbedoMap", "material.albedoMap",
-				"material.normalMap",
-				"materialRoughnessMap", "material.metallicMap", "materialAoMap", "materialEmissiveMap",
+				"material.normalMap", "materialNormalMap",
+				"materialRoughnessMap", 
+				"material.metallicMap", "materialMetallicMap", 
+				"materialAoMap", "materialEmissiveMap",
 				"texture0" // fallback for legacy
 			};
 
@@ -1641,7 +1643,7 @@ namespace Ermine
 							m_material->SetBool(nonDot, true);
 							m_material->SetBool(dot, true);
 							};
-						if (slot.find("normal") != std::string::npos) {
+						if (slot.find("Normal") != std::string::npos) {
 							setPresence("materialHasNormalMap", "material.hasNormalMap");
 						}
 						if (slot.find("Albedo") != std::string::npos || slot.find("albedo") != std::string::npos) {
@@ -1756,6 +1758,10 @@ namespace Ermine
 
 	struct GlobalGraphics
 	{
+		// Ambient lighting parameters
+		Vec3  ambientColor = Vec3{ 1.0f, 1.0f, 1.0f };
+		float ambientIntensity = 0.08f;
+
 		// SSAO parameters
 		bool  ssaoEnabled = false;
 		int   ssaoSamples = 16;
@@ -1782,6 +1788,7 @@ namespace Ermine
 		bool gammaCorrectionEnabled = true;
 		bool bloomEnabled = true;
 		bool skyboxIsHDR = false;
+		bool showSkybox = true;
 
 		// Post-processing parameters
 		float exposure = 1.0f;
@@ -1827,6 +1834,10 @@ namespace Ermine
 		XPROPERTY_DEF(
 			"GlobalGraphics", GlobalGraphics,
 
+			// Ambient lighting
+			xproperty::obj_member<"ambientColor", &GlobalGraphics::ambientColor>,
+			xproperty::obj_member<"ambientIntensity", &GlobalGraphics::ambientIntensity>,
+
 			// SSAO
 			xproperty::obj_member<"ssaoEnabled", &GlobalGraphics::ssaoEnabled>,
 			xproperty::obj_member<"ssaoSamples", &GlobalGraphics::ssaoSamples>,
@@ -1853,6 +1864,7 @@ namespace Ermine
 			xproperty::obj_member<"gammaCorrectionEnabled", &GlobalGraphics::gammaCorrectionEnabled>,
 			xproperty::obj_member<"bloomEnabled", &GlobalGraphics::bloomEnabled>,
 			xproperty::obj_member<"skyboxIsHDR", &GlobalGraphics::skyboxIsHDR>,
+			xproperty::obj_member<"showSkybox", &GlobalGraphics::showSkybox>,
 
 			// Post-process params
 			xproperty::obj_member<"exposure", &GlobalGraphics::exposure>,
@@ -5041,6 +5053,105 @@ namespace Ermine
 			xproperty::obj_member<"captionColor", &UIImageComponent::captionColor>,
 			xproperty::obj_member<"captionFontSize", &UIImageComponent::captionFontSize>,
 			xproperty::obj_member<"captionPosition", &UIImageComponent::captionPosition>
+		)
+	};
+
+	/*!***********************************************************************
+	\brief
+		Light Probe Volume Component defines a grid-based volume of light probes.
+		Auto-generates probe entities within the volume bounds at specified spacing.
+		Used for large-scale GI coverage in scenes.
+	*************************************************************************/
+	struct LightProbeVolumeComponent
+	{
+		glm::vec3 boundsMin{ -5.0f, -5.0f, -5.0f };   // Minimum corner of volume
+		glm::vec3 boundsMax{ 5.0f, 5.0f, 5.0f };      // Maximum corner of volume
+		bool isActive{ true };                        // Whether this probe contributes to lighting
+		int captureResolution{ 64 };                 // Cubemap face resolution for capture
+		int voxelResolution{ 64 };                   // Voxel grid resolution per axis
+		int priority{ 0 };                            // Higher priority wins; equal priorities blend
+		bool showGizmos{ true };                      // Visualize volume bounds in editor
+		std::string bakedProbePath{};                // Path to baked probe data on disk
+
+		// Runtime data (not serialized)
+		glm::vec3 shCoefficients[9]{};                // L2 SH coefficients
+		int probeIndex{ -1 };                         // Runtime index into probe cubemap array
+		bool bakedDataLoaded{ false };                // Runtime: loaded SH from disk
+
+		LightProbeVolumeComponent()
+		{
+			for (int i = 0; i < 9; ++i) {
+				shCoefficients[i] = glm::vec3(0.0f);
+			}
+		}
+
+		template<typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const
+		{
+			out.SetObject();
+			
+			rapidjson::Value minArray(rapidjson::kArrayType);
+			minArray.PushBack(boundsMin.x, alloc);
+			minArray.PushBack(boundsMin.y, alloc);
+			minArray.PushBack(boundsMin.z, alloc);
+			out.AddMember("boundsMin", minArray, alloc);
+
+			rapidjson::Value maxArray(rapidjson::kArrayType);
+			maxArray.PushBack(boundsMax.x, alloc);
+			maxArray.PushBack(boundsMax.y, alloc);
+			maxArray.PushBack(boundsMax.z, alloc);
+			out.AddMember("boundsMax", maxArray, alloc);
+
+			out.AddMember("isActive", isActive, alloc);
+			out.AddMember("captureResolution", captureResolution, alloc);
+			out.AddMember("voxelResolution", voxelResolution, alloc);
+			out.AddMember("priority", priority, alloc);
+			out.AddMember("showGizmos", showGizmos, alloc);
+			out.AddMember("bakedProbePath", rapidjson::Value(bakedProbePath.c_str(), alloc), alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in)
+		{
+			if (in.HasMember("boundsMin") && in["boundsMin"].IsArray()) {
+				const auto& arr = in["boundsMin"].GetArray();
+				if (arr.Size() >= 3) {
+					boundsMin.x = arr[0].GetFloat();
+					boundsMin.y = arr[1].GetFloat();
+					boundsMin.z = arr[2].GetFloat();
+				}
+			}
+			if (in.HasMember("boundsMax") && in["boundsMax"].IsArray()) {
+				const auto& arr = in["boundsMax"].GetArray();
+				if (arr.Size() >= 3) {
+					boundsMax.x = arr[0].GetFloat();
+					boundsMax.y = arr[1].GetFloat();
+					boundsMax.z = arr[2].GetFloat();
+				}
+			}
+			if (in.HasMember("isActive") && in["isActive"].IsBool())
+				isActive = in["isActive"].GetBool();
+			if (in.HasMember("captureResolution") && in["captureResolution"].IsInt())
+				captureResolution = in["captureResolution"].GetInt();
+			if (in.HasMember("voxelResolution") && in["voxelResolution"].IsInt())
+				voxelResolution = in["voxelResolution"].GetInt();
+			if (in.HasMember("priority") && in["priority"].IsInt())
+				priority = in["priority"].GetInt();
+			if (in.HasMember("showGizmos") && in["showGizmos"].IsBool())
+				showGizmos = in["showGizmos"].GetBool();
+			if (in.HasMember("bakedProbePath") && in["bakedProbePath"].IsString())
+				bakedProbePath = in["bakedProbePath"].GetString();
+		}
+
+		XPROPERTY_DEF(
+			"LightProbeVolumeComponent", LightProbeVolumeComponent,
+			xproperty::obj_member<"boundsMin", &LightProbeVolumeComponent::boundsMin>,
+			xproperty::obj_member<"boundsMax", &LightProbeVolumeComponent::boundsMax>,
+			xproperty::obj_member<"isActive", &LightProbeVolumeComponent::isActive>,
+			xproperty::obj_member<"captureResolution", &LightProbeVolumeComponent::captureResolution>,
+			xproperty::obj_member<"voxelResolution", &LightProbeVolumeComponent::voxelResolution>,
+			xproperty::obj_member<"priority", &LightProbeVolumeComponent::priority>,
+			xproperty::obj_member<"showGizmos", &LightProbeVolumeComponent::showGizmos>,
+			xproperty::obj_member<"bakedProbePath", &LightProbeVolumeComponent::bakedProbePath>
 		)
 	};
 } // namespace Ermine

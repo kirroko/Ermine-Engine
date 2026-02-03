@@ -35,10 +35,48 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "GeometryFactory.h"
 #include "AssetManager.h"
 #include "Skybox.h"
+#include "SceneManager.h"
 #include <random>  
+#include <filesystem>
+#include <fstream>
 #include "Physics.h"
 #include "NavMesh.h"
+
+namespace {
+	constexpr uint32_t kProbeFileMagic = 0x49475245u; // 'ERGI'
+	constexpr uint32_t kProbeFileVersion = 1;
+
+	bool SaveProbeSHToFile(const std::filesystem::path& path, const glm::vec3 sh[9])
+	{
+		std::ofstream out(path, std::ios::binary);
+		if (!out.is_open())
+			return false;
+
+		out.write(reinterpret_cast<const char*>(&kProbeFileMagic), sizeof(kProbeFileMagic));
+		out.write(reinterpret_cast<const char*>(&kProbeFileVersion), sizeof(kProbeFileVersion));
+		out.write(reinterpret_cast<const char*>(sh), sizeof(glm::vec3) * 9);
+		return out.good();
+	}
+
+	bool LoadProbeSHFromFile(const std::filesystem::path& path, glm::vec3 sh[9])
+	{
+		std::ifstream in(path, std::ios::binary);
+		if (!in.is_open())
+			return false;
+
+		uint32_t magic = 0;
+		uint32_t version = 0;
+		in.read(reinterpret_cast<char*>(&magic), sizeof(magic));
+		in.read(reinterpret_cast<char*>(&version), sizeof(version));
+		if (!in.good() || magic != kProbeFileMagic || version != kProbeFileVersion)
+			return false;
+
+		in.read(reinterpret_cast<char*>(sh), sizeof(glm::vec3) * 9);
+		return in.good();
+	}
+} // namespace
 #include "AnimationManager.h"
+#include "DrawCommands.h"
 
 #include <GLFW/glfw3.h>
 
@@ -250,7 +288,11 @@ void Renderer::Init(const int& screenWidth, const int& screenHeight)
 	m_BloomShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/bloom_vertex.glsl", "../Resources/Shaders/bloom_fragment.glsl");
 	m_PostProcessShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/postprocess_vertex.glsl", "../Resources/Shaders/postprocess_fragment.glsl");
 	m_AAShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/FXAA_vertex.glsl", "../Resources/Shaders/FXAA_fragment.glsl");
-	m_MotionBlurShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/motionblur_vertex.glsl", "../Resources/Shaders/motionblur_fragment.glsl");
+	// m_MotionBlurShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/motionblur_vertex.glsl", "../Resources/Shaders/motionblur_fragment.glsl");
+	// m_MotionBlurMaskShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/motionblur_mask_vertex.glsl", "../Resources/Shaders/motionblur_mask_fragment.glsl");
+	m_ProbeBakeComputeShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/gi_probe_bake_compute.glsl");
+	m_ProbeVoxelizeComputeShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/gi_probe_voxelize_compute.glsl");
+	m_ProbeLightInjectComputeShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/gi_probe_light_inject_compute.glsl");
 	// Load forward rendering shader for transparent objects
 	m_ForwardShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/vertex.glsl", "../Resources/Shaders/fragment_enhanced.glsl");
 	if (!m_ForwardShader || !m_ForwardShader->IsValid()) {
@@ -302,6 +344,9 @@ void Renderer::Init(const int& screenWidth, const int& screenHeight)
 	m_MaterialsDirty = true;
 
 	GenerateIGNTexture();
+
+	// Initialize light probe capture resources
+	InitializeProbeCaptureResources();
 }
 
 /**
@@ -554,7 +599,7 @@ Renderer::OffscreenBuffer Renderer::CreateOffscreenBuffer(const int& width, cons
 	{
 		EE_CORE_ERROR("ERROR: Invalid framebuffer dimensions: {0}x{1}", width, height);
 	}
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH32F_STENCIL8, width, height);
 	glBindRenderbuffer(GL_RENDERBUFFER, buffer.RBO);
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, buffer.RBO);
 
@@ -633,7 +678,7 @@ void Renderer::ResizeOffscreenBuffer(const int& width, const int& height)
 
 	// Resize depth-stencil renderbuffer
 	glBindRenderbuffer(GL_RENDERBUFFER, m_OffscreenBuffer->RBO);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH32F_STENCIL8, width, height);
 
 	// Validate framebuffer completeness after resize
 	glBindFramebuffer(GL_FRAMEBUFFER, m_OffscreenBuffer->FBO);
@@ -734,7 +779,7 @@ void Renderer::CreateGBuffer(const int& width, const int& height)
 	// Create depth texture for depth testing and reconstruction. 24 bits
 	glGenTextures(1, &gBuffer.DepthTexture);
 	glBindTexture(GL_TEXTURE_2D, gBuffer.DepthTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -786,7 +831,7 @@ void Renderer::CreateGBuffer(const int& width, const int& height)
  */
 void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 {
-	PostProcessBuffer pPBuffer, bEBuffer, bBBuffer1, bBBuffer2, AABuffer, MBBuffer;
+	PostProcessBuffer pPBuffer, bEBuffer, bBBuffer1, bBBuffer2, AABuffer, MBBuffer, MBMaskBuffer;
 
 
 	// If an  buffer already exists, delete its OpenGL resources before creating a new one.
@@ -802,6 +847,11 @@ void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 		glDeleteTextures(1, &m_BloomBlurBuffer2->ColorTexture);
 		glDeleteFramebuffers(1, &m_MotionBlurBuffer->FBO);
 		glDeleteTextures(1, &m_MotionBlurBuffer->ColorTexture);
+		if (m_MotionBlurMaskBuffer)
+		{
+			glDeleteFramebuffers(1, &m_MotionBlurMaskBuffer->FBO);
+			glDeleteTextures(1, &m_MotionBlurMaskBuffer->ColorTexture);
+		}
 	}
 
 	// Create main post-process buffer with depth attachment for skybox rendering
@@ -901,6 +951,29 @@ void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, MBBuffer.ColorTexture, 0);
 	glCheckError();
 
+	// Create motion blur mask buffer at full resolution (R8)
+	glGenFramebuffers(1, &MBMaskBuffer.FBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, MBMaskBuffer.FBO);
+	glGenTextures(1, &MBMaskBuffer.ColorTexture);
+	glBindTexture(GL_TEXTURE_2D, MBMaskBuffer.ColorTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, width, height, 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, MBMaskBuffer.ColorTexture, 0);
+
+	// Explicitly specify draw buffer for mask FBO
+	GLenum maskDrawBuffers[1] = { GL_COLOR_ATTACHMENT0 };
+	glDrawBuffers(1, maskDrawBuffers);
+	glCheckError();
+
+	GLenum maskStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if (maskStatus != GL_FRAMEBUFFER_COMPLETE)
+	{
+		EE_CORE_ERROR("ERROR: Motion blur mask framebuffer not complete! Status: {0}", maskStatus);
+	}
+
 	//
 
 	// Making sure dimensions are non-zero
@@ -969,6 +1042,9 @@ void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 	MBBuffer.width = width;
 	MBBuffer.height = height;
 	m_MotionBlurBuffer = std::make_shared<PostProcessBuffer>(MBBuffer);
+	MBMaskBuffer.width = width;
+	MBMaskBuffer.height = height;
+	m_MotionBlurMaskBuffer = std::make_shared<PostProcessBuffer>(MBMaskBuffer);
 
 	// Attach G-Buffer's depth texture to PostProcess FBO for shared depth testing
 	// This must happen AFTER PostProcess buffer is created and AFTER G-Buffer exists
@@ -987,6 +1063,21 @@ void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 		else
 		{
 			EE_CORE_INFO("Successfully attached G-Buffer depth texture to PostProcess FBO");
+		}
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	}
+
+	if (m_MotionBlurMaskBuffer && m_GBuffer)
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, m_MotionBlurMaskBuffer->FBO);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_GBuffer->DepthTexture, 0);
+
+		GLenum maskDepthStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+		if (maskDepthStatus != GL_FRAMEBUFFER_COMPLETE)
+		{
+			EE_CORE_ERROR("ERROR: Motion blur mask framebuffer not complete after depth attachment!");
+			EE_CORE_ERROR("Status: {0}, G-Buffer DepthTexture: {1}, Mask FBO: {2}",
+				maskDepthStatus, m_GBuffer->DepthTexture, m_MotionBlurMaskBuffer->FBO);
 		}
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
@@ -3226,6 +3317,9 @@ void Renderer::RenderLightingPass(const Mtx44& view, const Mtx44& projection)
 	m_LightPassShader->SetUniform3f("u_AmbientColor", m_AmbientColor);
 	m_LightPassShader->SetUniform1f("u_AmbientIntensity", m_AmbientIntensity);
 
+	// Set light probe parameters
+	m_LightPassShader->SetUniform1i("u_LightProbesEnabled", m_LightProbesEnabled ? 1 : 0);
+
 	// Set shading mode
 	m_LightPassShader->SetUniform1i("u_ShadingMode", m_IsBlinnPhong ? 1 : 0);
 
@@ -3442,68 +3536,7 @@ void Renderer::RenderPostProcessPass(const Mtx44& view, const Mtx44& projection)
 
 	Draw(m_QuadMesh.vertex_array, m_QuadMesh.index_buffer);
 
-	// Motion blur pass: Apply motion blur between post-processing and FXAA
-	if (m_MotionBlurEnabled && m_MotionBlurShader && m_MotionBlurBuffer)
-	{
-		glBindFramebuffer(GL_FRAMEBUFFER, m_MotionBlurBuffer->FBO);
-		glViewport(0, 0, m_MotionBlurBuffer->width, m_MotionBlurBuffer->height);
-		glClear(GL_COLOR_BUFFER_BIT);
-
-		m_MotionBlurShader->Bind();
-
-		// Bind the post-processed color texture as input
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, m_AntiAliasingBuffer->ColorTexture);
-		m_MotionBlurShader->SetUniform1i("u_ColorTexture", 0);
-
-		// Pass bindless depth texture handle
-		GLint locDepthMB = glGetUniformLocation(m_MotionBlurShader->GetRendererID(), "u_DepthHandle");
-		if (locDepthMB != -1 && m_GBuffer)
-		{
-			glUniform2ui(locDepthMB, static_cast<GLuint>(m_GBuffer->HandleDepthTexture),
-				static_cast<GLuint>(m_GBuffer->HandleDepthTexture >> 32));
-		}
-
-		// Pass bindless GBuffer3 texture handle for motion blur flag
-		GLint locGBuffer3MB = glGetUniformLocation(m_MotionBlurShader->GetRendererID(), "u_GBuffer3Handle");
-		if (locGBuffer3MB != -1 && m_GBuffer)
-		{
-			glUniform2ui(locGBuffer3MB, static_cast<GLuint>(m_GBuffer->HandlePackedTexture3),
-				static_cast<GLuint>(m_GBuffer->HandlePackedTexture3 >> 32));
-		}
-
-		// Convert view and projection matrices to glm
-		glmView = glm::mat4(
-			view.m00, view.m01, view.m02, view.m03,
-			view.m10, view.m11, view.m12, view.m13,
-			view.m20, view.m21, view.m22, view.m23,
-			view.m30, view.m31, view.m32, view.m33
-		);
-		glmProjection = glm::mat4(
-			projection.m00, projection.m01, projection.m02, projection.m03,
-			projection.m10, projection.m11, projection.m12, projection.m13,
-			projection.m20, projection.m21, projection.m22, projection.m23,
-			projection.m30, projection.m31, projection.m32, projection.m33
-		);
-
-		// Calculate current view-projection matrix
-		glm::mat4 currentViewProjection = glmProjection * glmView;
-		glm::mat4 invViewProjection = glm::inverse(currentViewProjection);
-
-		// Set motion blur uniforms
-		m_MotionBlurShader->SetUniformMatrix4fv("u_CurrentViewProjection", currentViewProjection);
-		m_MotionBlurShader->SetUniformMatrix4fv("u_PreviousViewProjection", m_PreviousViewProjectionMatrix);
-		m_MotionBlurShader->SetUniformMatrix4fv("u_InvViewProjection", invViewProjection);
-		m_MotionBlurShader->SetUniform1f("u_MotionBlurStrength", m_MotionBlurStrength);
-		m_MotionBlurShader->SetUniform1i("u_NumSamples", m_MotionBlurSamples);
-		m_MotionBlurShader->SetUniform1i("u_FirstFrame", m_FirstFrame ? 1 : 0);
-
-		Draw(m_QuadMesh.vertex_array, m_QuadMesh.index_buffer);
-
-		// Update previous frame view-projection matrix for next frame
-		m_PreviousViewProjectionMatrix = currentViewProjection;
-		m_FirstFrame = false;
-	}
+	// Motion blur pass removed (disabled).
 
 	// Final pass: FXAA
 #if defined(EE_EDITOR)
@@ -3517,15 +3550,8 @@ void Renderer::RenderPostProcessPass(const Mtx44& view, const Mtx44& projection)
 
 	m_AAShader->Bind();
 	glActiveTexture(GL_TEXTURE0);
-	// Use motion blur output if enabled, otherwise use anti-aliasing buffer
-	if (m_MotionBlurEnabled && m_MotionBlurBuffer)
-	{
-		glBindTexture(GL_TEXTURE_2D, m_MotionBlurBuffer->ColorTexture);
-	}
-	else
-	{
-		glBindTexture(GL_TEXTURE_2D, m_AntiAliasingBuffer->ColorTexture);
-	}
+	// Motion blur output disabled; always use anti-aliasing buffer
+	glBindTexture(GL_TEXTURE_2D, m_AntiAliasingBuffer->ColorTexture);
 	m_AAShader->SetUniform1i("u_LightingTexture", 0);
 
 	// Set FXAA parameters
@@ -3575,6 +3601,9 @@ void Renderer::RenderDeferredPipeline(const Mtx44& view, const Mtx44& projection
 	// Re-sync lights UBO after shadow layer allocation/matrix updates
 	UpdateLightsUBO(editor::EditorCamera::GetInstance().GetViewMatrix());
 
+	// Update light probes UBO
+	UpdateLightProbesUBO();
+
 	// Depth pre-pass - render depth-only to eliminate fragment shader overdraw
 	RenderDepthPrePass(view, projection);
 
@@ -3586,7 +3615,7 @@ void Renderer::RenderDeferredPipeline(const Mtx44& view, const Mtx44& projection
 
 	// Render skybox after lighting but before transparent objects
 	// No depth blit needed - PostProcess FBO shares G-Buffer's depth texture
-	if (m_skybox && m_skybox->IsValid() && m_PostProcessBuffer && m_GBuffer) {
+	if (m_ShowSkybox && m_skybox && m_skybox->IsValid() && m_PostProcessBuffer && m_GBuffer) {
 		glBindFramebuffer(GL_FRAMEBUFFER, m_PostProcessBuffer->FBO);
 		glViewport(0, 0, m_PostProcessBuffer->width, m_PostProcessBuffer->height);
 
@@ -3616,6 +3645,9 @@ void Renderer::RenderDeferredPipeline(const Mtx44& view, const Mtx44& projection
 	// This handles: opaque custom shaders, transparent custom shaders, and transparent standard
 	RenderForwardPass(view, projection);
 
+	// Render camera-attached mask for forward-rendered objects (motion blur)
+	// RenderMotionBlurMask(view, projection);
+
 #if defined(EE_EDITOR)
 	if (m_PostProcessBuffer && ECS::GetInstance().GetSystem<Physics>()->wireframe) {
 		glBindFramebuffer(GL_FRAMEBUFFER, m_PostProcessBuffer->FBO);
@@ -3639,6 +3671,37 @@ void Renderer::RenderDeferredPipeline(const Mtx44& view, const Mtx44& projection
 		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_LEQUAL);
 		glDisable(GL_CULL_FACE);
+
+		// Light probe volume gizmos
+		{
+			auto& ecs = ECS::GetInstance();
+			for (EntityID entity = 0; entity < MAX_ENTITIES; ++entity) {
+				if (!ecs.HasComponent<LightProbeVolumeComponent>(entity)) continue;
+				if (!ecs.HasComponent<Transform>(entity)) continue;
+
+				const auto& volume = ecs.GetComponent<LightProbeVolumeComponent>(entity);
+				if (!volume.showGizmos) continue;
+
+				glm::mat4 model = GetEntityWorldMatrix(entity);
+				glm::vec3 localMin = volume.boundsMin;
+				glm::vec3 localMax = volume.boundsMax;
+
+				glm::vec3 center = (localMin + localMax) * 0.5f;
+				glm::vec3 extent = (localMax - localMin) * 0.5f;
+
+				glm::vec3 worldCenter = glm::vec3(model * glm::vec4(center, 1.0f));
+				glm::mat3 upperLeft = glm::mat3(model);
+				glm::vec3 worldExtent = glm::abs(upperLeft[0]) * extent.x
+					+ glm::abs(upperLeft[1]) * extent.y
+					+ glm::abs(upperLeft[2]) * extent.z;
+
+				glm::vec3 actualMin = worldCenter - worldExtent;
+				glm::vec3 actualMax = worldCenter + worldExtent;
+
+				glm::vec3 color = volume.isActive ? glm::vec3(0.2f, 0.8f, 1.0f) : glm::vec3(0.5f, 0.5f, 0.5f);
+				SubmitDebugAABB(actualMin, actualMax, color);
+			}
+		}
 
 		if (auto navSys = ECS::GetInstance().GetSystem<NavMeshSystem>())
 		{
@@ -3854,6 +3917,38 @@ void Renderer::CleanupPostProcessBuffer()
 		m_AntiAliasingBuffer.reset();
 	}
 
+	// Clean up motion blur buffer
+	if (m_MotionBlurBuffer)
+	{
+		if (m_MotionBlurBuffer->FBO != 0)
+		{
+			glDeleteFramebuffers(1, &m_MotionBlurBuffer->FBO);
+			m_MotionBlurBuffer->FBO = 0;
+		}
+		if (m_MotionBlurBuffer->ColorTexture != 0)
+		{
+			glDeleteTextures(1, &m_MotionBlurBuffer->ColorTexture);
+			m_MotionBlurBuffer->ColorTexture = 0;
+		}
+		m_MotionBlurBuffer.reset();
+	}
+
+	// Clean up motion blur mask buffer
+	if (m_MotionBlurMaskBuffer)
+	{
+		if (m_MotionBlurMaskBuffer->FBO != 0)
+		{
+			glDeleteFramebuffers(1, &m_MotionBlurMaskBuffer->FBO);
+			m_MotionBlurMaskBuffer->FBO = 0;
+		}
+		if (m_MotionBlurMaskBuffer->ColorTexture != 0)
+		{
+			glDeleteTextures(1, &m_MotionBlurMaskBuffer->ColorTexture);
+			m_MotionBlurMaskBuffer->ColorTexture = 0;
+		}
+		m_MotionBlurMaskBuffer.reset();
+	}
+
 }
 
 /**
@@ -4048,6 +4143,715 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
 }
 
 /**
+ * @brief Initializes light probe capture resources (cubemap FBO and textures).
+ */
+void Renderer::InitializeProbeCaptureResources()
+{
+	// Clean up existing resources if any
+	if (m_ProbeCubemap != 0) {
+		glDeleteTextures(1, &m_ProbeCubemap);
+		m_ProbeCubemap = 0;
+	}
+	if (m_ProbeDepthCubemap != 0) {
+		glDeleteTextures(1, &m_ProbeDepthCubemap);
+		m_ProbeDepthCubemap = 0;
+	}
+	if (m_ProbeIndirectCubemapArray != 0) {
+		glDeleteTextures(1, &m_ProbeIndirectCubemapArray);
+		m_ProbeIndirectCubemapArray = 0;
+	}
+	if (m_ProbeIndirectDepthArray != 0) {
+		glDeleteTextures(1, &m_ProbeIndirectDepthArray);
+		m_ProbeIndirectDepthArray = 0;
+	}
+	if (m_ProbeVoxelAlbedoTexture != 0) {
+		glDeleteTextures(1, &m_ProbeVoxelAlbedoTexture);
+		m_ProbeVoxelAlbedoTexture = 0;
+	}
+	if (m_ProbeVoxelEmissiveTexture != 0) {
+		glDeleteTextures(1, &m_ProbeVoxelEmissiveTexture);
+		m_ProbeVoxelEmissiveTexture = 0;
+	}
+	if (m_ProbeVoxelNormalTexture != 0) {
+		glDeleteTextures(1, &m_ProbeVoxelNormalTexture);
+		m_ProbeVoxelNormalTexture = 0;
+	}
+	m_ProbeVoxelResolution = 0;
+	if (m_ProbeCubemapFBO != 0) {
+		glDeleteFramebuffers(1, &m_ProbeCubemapFBO);
+		m_ProbeCubemapFBO = 0;
+	}
+
+	// Create cubemap array for indirect lighting (RGBA16F)
+	glGenTextures(1, &m_ProbeIndirectCubemapArray);
+	glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, m_ProbeIndirectCubemapArray);
+	glTexStorage3D(GL_TEXTURE_CUBE_MAP_ARRAY, 1, GL_RGBA16F,
+		m_ProbeCaptureResolution, m_ProbeCaptureResolution, 6 * MAX_PROBES);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+	// Create cubemap array depth texture
+	glGenTextures(1, &m_ProbeIndirectDepthArray);
+	glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, m_ProbeIndirectDepthArray);
+	glTexStorage3D(GL_TEXTURE_CUBE_MAP_ARRAY, 1, GL_DEPTH_COMPONENT24,
+		m_ProbeCaptureResolution, m_ProbeCaptureResolution, 6 * MAX_PROBES);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+	// Create FBO
+	glGenFramebuffers(1, &m_ProbeCubemapFBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, m_ProbeCubemapFBO);
+	glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_ProbeIndirectCubemapArray, 0, 0);
+	glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_ProbeIndirectDepthArray, 0, 0);
+
+	// Check framebuffer status
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, 0);
+
+	// Create Probes UBO
+	if (m_LightProbesUBO == 0) {
+		glGenBuffers(1, &m_LightProbesUBO);
+		glBindBuffer(GL_UNIFORM_BUFFER, m_LightProbesUBO);
+		// Allocate for probe count (vec4) + MAX_PROBES * LightProbeGPU
+		const size_t uboSize = sizeof(glm::vec4) + MAX_PROBES * sizeof(LightProbeGPU);
+		glBufferData(GL_UNIFORM_BUFFER, uboSize, nullptr, GL_DYNAMIC_DRAW);
+		glBindBufferBase(GL_UNIFORM_BUFFER, ProbesBindingPoint, m_LightProbesUBO);
+		glBindBuffer(GL_UNIFORM_BUFFER, 0);
+	}
+
+	glCheckError();
+}
+
+/**
+ * @brief Captures environment lighting at a probe's position into spherical harmonics.
+ */
+void Renderer::CaptureLightProbe(EntityID probeEntity)
+{
+	auto& ecs = Ermine::ECS::GetInstance();
+	if (!ecs.HasComponent<LightProbeVolumeComponent>(probeEntity) || !ecs.HasComponent<Transform>(probeEntity)) {
+		return;
+	}
+
+	auto& probe = ecs.GetComponent<LightProbeVolumeComponent>(probeEntity);
+	const auto& trans = ecs.GetComponent<Transform>(probeEntity);
+	glm::vec3 probePos(trans.position.x, trans.position.y, trans.position.z);
+
+	// Ensure the probe has a unique index in the cubemap array
+	std::vector<bool> usedIndices(MAX_PROBES, false);
+	for (EntityID other = 0; other < MAX_ENTITIES; ++other) {
+		if (!ecs.HasComponent<LightProbeVolumeComponent>(other)) continue;
+		if (other == probeEntity) continue;
+		auto& otherProbe = ecs.GetComponent<LightProbeVolumeComponent>(other);
+		if (!otherProbe.isActive) continue;
+		if (otherProbe.probeIndex >= 0 && otherProbe.probeIndex < MAX_PROBES) {
+			usedIndices[otherProbe.probeIndex] = true;
+		}
+	}
+	const bool needsIndex = (probe.probeIndex < 0 || probe.probeIndex >= MAX_PROBES || usedIndices[probe.probeIndex]);
+	if (needsIndex) {
+		int freeIndex = -1;
+		for (int i = 0; i < MAX_PROBES; ++i) {
+			if (!usedIndices[i]) { freeIndex = i; break; }
+		}
+		if (freeIndex < 0) {
+			return;
+		}
+		probe.probeIndex = freeIndex;
+	}
+
+	// Update capture resolution if changed
+	if (probe.captureResolution != m_ProbeCaptureResolution) {
+		if (probe.captureResolution < 1) {
+			probe.captureResolution = 1;
+		}
+		m_ProbeCaptureResolution = probe.captureResolution;
+		InitializeProbeCaptureResources(); // Recreate with new resolution
+	}
+
+	// Allocate voxel texture if needed
+	if (probe.voxelResolution < 1) {
+		probe.voxelResolution = 1;
+	}
+	if (probe.voxelResolution != m_ProbeVoxelResolution || m_ProbeVoxelAlbedoTexture == 0 || m_ProbeVoxelEmissiveTexture == 0 || m_ProbeVoxelNormalTexture == 0) {
+		if (m_ProbeVoxelAlbedoTexture != 0) {
+			glDeleteTextures(1, &m_ProbeVoxelAlbedoTexture);
+			m_ProbeVoxelAlbedoTexture = 0;
+		}
+		if (m_ProbeVoxelEmissiveTexture != 0) {
+			glDeleteTextures(1, &m_ProbeVoxelEmissiveTexture);
+			m_ProbeVoxelEmissiveTexture = 0;
+		}
+		if (m_ProbeVoxelNormalTexture != 0) {
+			glDeleteTextures(1, &m_ProbeVoxelNormalTexture);
+			m_ProbeVoxelNormalTexture = 0;
+		}
+		m_ProbeVoxelResolution = probe.voxelResolution;
+		glGenTextures(1, &m_ProbeVoxelAlbedoTexture);
+		glBindTexture(GL_TEXTURE_3D, m_ProbeVoxelAlbedoTexture);
+		glTexStorage3D(GL_TEXTURE_3D, 1, GL_RGBA8,
+			m_ProbeVoxelResolution, m_ProbeVoxelResolution, m_ProbeVoxelResolution);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+		glGenTextures(1, &m_ProbeVoxelEmissiveTexture);
+		glBindTexture(GL_TEXTURE_3D, m_ProbeVoxelEmissiveTexture);
+		glTexStorage3D(GL_TEXTURE_3D, 1, GL_RGBA8,
+			m_ProbeVoxelResolution, m_ProbeVoxelResolution, m_ProbeVoxelResolution);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+		glGenTextures(1, &m_ProbeVoxelNormalTexture);
+		glBindTexture(GL_TEXTURE_3D, m_ProbeVoxelNormalTexture);
+		glTexStorage3D(GL_TEXTURE_3D, 1, GL_RGBA8,
+			m_ProbeVoxelResolution, m_ProbeVoxelResolution, m_ProbeVoxelResolution);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+		glBindTexture(GL_TEXTURE_3D, 0);
+	}
+
+	// Clear voxel texture
+	if (m_ProbeVoxelAlbedoTexture != 0) {
+		const GLuint clearValue[4] = { 0, 0, 0, 0 };
+		glClearTexImage(m_ProbeVoxelAlbedoTexture, 0, GL_RGBA, GL_UNSIGNED_BYTE, clearValue);
+	}
+	if (m_ProbeVoxelEmissiveTexture != 0) {
+		const GLuint clearValue[4] = { 0, 0, 0, 0 };
+		glClearTexImage(m_ProbeVoxelEmissiveTexture, 0, GL_RGBA, GL_UNSIGNED_BYTE, clearValue);
+	}
+	if (m_ProbeVoxelNormalTexture != 0) {
+		const GLuint clearValue[4] = { 0, 0, 0, 0 };
+		glClearTexImage(m_ProbeVoxelNormalTexture, 0, GL_RGBA, GL_UNSIGNED_BYTE, clearValue);
+	}
+
+	// Setup projection matrix (90 degree FOV for cubemap faces)
+	glm::mat4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 100.0f);
+
+	// Cubemap view matrices (looking at +X, -X, +Y, -Y, +Z, -Z)
+	glm::mat4 captureViews[6] = {
+		glm::lookAt(probePos, probePos + glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),  // +X
+		glm::lookAt(probePos, probePos + glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)), // -X
+		glm::lookAt(probePos, probePos + glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),   // +Y
+		glm::lookAt(probePos, probePos + glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)),  // -Y
+		glm::lookAt(probePos, probePos + glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)),  // +Z
+		glm::lookAt(probePos, probePos + glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f))  // -Z
+	};
+
+	GLint prevFBO = 0;
+	GLint prevViewport[4] = { 0, 0, 0, 0 };
+	glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prevFBO);
+	glGetIntegerv(GL_VIEWPORT, prevViewport);
+
+	// Dispatch GI bake compute shader (indirect-only)
+	// Compute world-space voxel bounds (probe bounds are local to entity)
+	glm::mat4 volumeModel = GetEntityWorldMatrix(probeEntity);
+	glm::vec3 localMin = probe.boundsMin;
+	glm::vec3 localMax = probe.boundsMax;
+	glm::vec3 localCenter = (localMin + localMax) * 0.5f;
+	glm::vec3 localExtent = (localMax - localMin) * 0.5f;
+	glm::vec3 worldCenter = glm::vec3(volumeModel * glm::vec4(localCenter, 1.0f));
+	glm::mat3 upperLeft = glm::mat3(volumeModel);
+	glm::vec3 worldExtent = glm::abs(upperLeft[0]) * localExtent.x
+		+ glm::abs(upperLeft[1]) * localExtent.y
+		+ glm::abs(upperLeft[2]) * localExtent.z;
+	glm::vec3 worldBoundsMin = worldCenter - worldExtent;
+	glm::vec3 worldBoundsMax = worldCenter + worldExtent;
+
+	// Voxelize scene into probe-local volume (RGBA8: rgb=albedo+emissive, a=occupancy)
+	if (m_ProbeVoxelizeComputeShader && m_ProbeVoxelizeComputeShader->IsValid()) {
+		const GLuint program = m_ProbeVoxelizeComputeShader->GetRendererID();
+		glUseProgram(program);
+
+		GLint locVoxelMin = glGetUniformLocation(program, "u_VoxelBoundsMin");
+		GLint locVoxelMax = glGetUniformLocation(program, "u_VoxelBoundsMax");
+		GLint locVoxelRes = glGetUniformLocation(program, "u_VoxelResolution");
+		GLint locIndexCount = glGetUniformLocation(program, "u_IndexCount");
+		GLint locFirstIndex = glGetUniformLocation(program, "u_FirstIndex");
+		GLint locBaseVertex = glGetUniformLocation(program, "u_BaseVertex");
+		GLint locVertexStride = glGetUniformLocation(program, "u_VertexStride");
+		GLint locVertexPosOffset = glGetUniformLocation(program, "u_VertexPositionOffset");
+		GLint locModelMatrix = glGetUniformLocation(program, "u_ModelMatrix");
+		GLint locMatAlbedo = glGetUniformLocation(program, "u_MaterialAlbedo");
+		GLint locMatEmissive = glGetUniformLocation(program, "u_MaterialEmissive");
+		GLint locMatEmissiveIntensity = glGetUniformLocation(program, "u_MaterialEmissiveIntensity");
+
+		if (locVoxelMin != -1) glUniform3f(locVoxelMin, worldBoundsMin.x, worldBoundsMin.y, worldBoundsMin.z);
+		if (locVoxelMax != -1) glUniform3f(locVoxelMax, worldBoundsMax.x, worldBoundsMax.y, worldBoundsMax.z);
+		if (locVoxelRes != -1) glUniform1i(locVoxelRes, m_ProbeVoxelResolution);
+		if (locVertexStride != -1) {
+			const int strideFloats = static_cast<int>(sizeof(graphics::Vertex) / sizeof(float));
+			glUniform1i(locVertexStride, strideFloats);
+		}
+		if (locVertexPosOffset != -1) {
+			const int positionOffset = static_cast<int>(offsetof(graphics::Vertex, position) / sizeof(float));
+			glUniform1i(locVertexPosOffset, positionOffset);
+		}
+
+		glBindImageTexture(0, m_ProbeVoxelAlbedoTexture, 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA8);
+		glBindImageTexture(1, m_ProbeVoxelEmissiveTexture, 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA8);
+		glBindImageTexture(2, m_ProbeVoxelNormalTexture, 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA8);
+
+		// Bind buffers for voxelization
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, INDEX_SSBO_BINDING, m_MeshManager.m_IndexSSBO);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, VERTEX_SSBO_BINDING, m_MeshManager.GetVertexVBO());
+
+		// Read draw commands from GPU (geometry standard pass)
+		size_t drawCount = m_MeshManager.m_GeometryStandardDrawCommandBuffer.GetCommandCount();
+		GLuint cmdBuffer = m_MeshManager.m_GeometryStandardDrawCommandBuffer.GetBufferID();
+		if (cmdBuffer == 0 || drawCount == 0) {
+			glUseProgram(0);
+		} else {
+			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, cmdBuffer);
+			GLint bufferSize = 0;
+			glGetBufferParameteriv(GL_DRAW_INDIRECT_BUFFER, GL_BUFFER_SIZE, &bufferSize);
+			size_t maxCmds = bufferSize > 0 ? static_cast<size_t>(bufferSize) / sizeof(DrawElementsIndirectCommand) : 0;
+			if (maxCmds == 0) {
+				glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
+				glUseProgram(0);
+			} else {
+				if (drawCount > maxCmds) {
+					drawCount = maxCmds;
+				}
+				const size_t kMaxSafeDraws = 100000;
+				if (drawCount > kMaxSafeDraws) {
+					drawCount = kMaxSafeDraws;
+				}
+				std::vector<DrawElementsIndirectCommand> commands(drawCount);
+				glGetBufferSubData(GL_DRAW_INDIRECT_BUFFER, 0,
+					static_cast<GLsizeiptr>(drawCount * sizeof(DrawElementsIndirectCommand)),
+					commands.data());
+				glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
+
+				// Read draw infos to get model matrix + material index
+				std::vector<DrawInfo> drawInfos(drawCount);
+				GLuint infoBuffer = m_MeshManager.m_GeometryStandardDrawInfoBuffer.GetBufferID();
+				if (infoBuffer != 0) {
+					glBindBuffer(GL_SHADER_STORAGE_BUFFER, infoBuffer);
+					glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0,
+						static_cast<GLsizeiptr>(drawCount * sizeof(DrawInfo)),
+						drawInfos.data());
+					glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+				}
+
+				const GLuint groupSize = 64;
+				size_t totalTris = 0;
+				for (size_t i = 0; i < drawCount; ++i) {
+					const auto& cmd = commands[i];
+					if (cmd.count < 3) continue;
+
+					if (locIndexCount != -1) glUniform1i(locIndexCount, static_cast<int>(cmd.count));
+					if (locFirstIndex != -1) glUniform1i(locFirstIndex, static_cast<int>(cmd.firstIndex));
+					if (locBaseVertex != -1) glUniform1i(locBaseVertex, static_cast<int>(cmd.baseVertex));
+					if (locModelMatrix != -1 && i < drawInfos.size()) {
+						glUniformMatrix4fv(locModelMatrix, 1, GL_FALSE, &drawInfos[i].modelMatrix[0][0]);
+					}
+					if (locMatAlbedo != -1 || locMatEmissive != -1 || locMatEmissiveIntensity != -1) {
+						glm::vec3 albedo(0.8f);
+						glm::vec3 emissive(0.0f);
+						float emissiveIntensity = 0.0f;
+						if (i < drawInfos.size()) {
+							const uint32_t matIndex = drawInfos[i].materialIndex;
+							if (matIndex < m_CompiledMaterials.size()) {
+								const auto& mat = m_CompiledMaterials[matIndex];
+								albedo = glm::vec3(mat.albedo.x, mat.albedo.y, mat.albedo.z);
+								emissive = glm::vec3(mat.emissive.x, mat.emissive.y, mat.emissive.z);
+								emissiveIntensity = mat.emissiveIntensity;
+							}
+						}
+						if (locMatAlbedo != -1) glUniform3f(locMatAlbedo, albedo.x, albedo.y, albedo.z);
+						if (locMatEmissive != -1) glUniform3f(locMatEmissive, emissive.x, emissive.y, emissive.z);
+						if (locMatEmissiveIntensity != -1) glUniform1f(locMatEmissiveIntensity, emissiveIntensity);
+					}
+
+					const GLuint triCount = cmd.count / 3;
+					totalTris += triCount;
+					const GLuint groupsX = (triCount + groupSize - 1) / groupSize;
+					glDispatchCompute(groupsX, 1, 1);
+				}
+			}
+		}
+		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+		glUseProgram(0);
+	}
+
+	// Inject direct lighting into voxel emissive using LightsUBO
+	if (m_ProbeLightInjectComputeShader && m_ProbeLightInjectComputeShader->IsValid()) {
+		const GLuint program = m_ProbeLightInjectComputeShader->GetRendererID();
+		glUseProgram(program);
+
+		GLint locVoxelMin = glGetUniformLocation(program, "u_VoxelBoundsMin");
+		GLint locVoxelMax = glGetUniformLocation(program, "u_VoxelBoundsMax");
+		GLint locVoxelRes = glGetUniformLocation(program, "u_VoxelResolution");
+		GLint locView = glGetUniformLocation(program, "u_View");
+		if (locVoxelMin != -1) glUniform3f(locVoxelMin, worldBoundsMin.x, worldBoundsMin.y, worldBoundsMin.z);
+		if (locVoxelMax != -1) glUniform3f(locVoxelMax, worldBoundsMax.x, worldBoundsMax.y, worldBoundsMax.z);
+		if (locVoxelRes != -1) glUniform1i(locVoxelRes, m_ProbeVoxelResolution);
+		if (locView != -1) {
+			const glm::mat4 viewMat = ToGlm(editor::EditorCamera::GetInstance().GetViewMatrix());
+			glUniformMatrix4fv(locView, 1, GL_FALSE, &viewMat[0][0]);
+		}
+
+		glBindBufferBase(GL_UNIFORM_BUFFER, LightsBindingPoint, m_LightsUBO);
+		glBindImageTexture(0, m_ProbeVoxelAlbedoTexture, 0, GL_TRUE, 0, GL_READ_ONLY, GL_RGBA8);
+		glBindImageTexture(1, m_ProbeVoxelEmissiveTexture, 0, GL_TRUE, 0, GL_READ_WRITE, GL_RGBA8);
+		glBindImageTexture(2, m_ProbeVoxelNormalTexture, 0, GL_TRUE, 0, GL_READ_ONLY, GL_RGBA8);
+
+		const GLuint groupSize = 4;
+		const GLuint groups = (m_ProbeVoxelResolution + groupSize - 1) / groupSize;
+		glDispatchCompute(groups, groups, groups);
+		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+		glUseProgram(0);
+	}
+
+	if (m_ProbeBakeComputeShader && m_ProbeBakeComputeShader->IsValid()) {
+		const GLuint program = m_ProbeBakeComputeShader->GetRendererID();
+		glUseProgram(program);
+
+		GLint locBaseLayer = glGetUniformLocation(program, "u_ProbeBaseLayer");
+		GLint locProbePos = glGetUniformLocation(program, "u_ProbePosition");
+		GLint locResolution = glGetUniformLocation(program, "u_Resolution");
+		GLint locBounces = glGetUniformLocation(program, "u_Bounces");
+		GLint locEnergyLoss = glGetUniformLocation(program, "u_EnergyLoss");
+		GLint locVoxelMin = glGetUniformLocation(program, "u_VoxelBoundsMin");
+		GLint locVoxelMax = glGetUniformLocation(program, "u_VoxelBoundsMax");
+		GLint locVoxelRes = glGetUniformLocation(program, "u_VoxelResolution");
+		if (locBaseLayer != -1) glUniform1i(locBaseLayer, probe.probeIndex * 6);
+		if (locProbePos != -1) glUniform3f(locProbePos, probePos.x, probePos.y, probePos.z);
+		if (locResolution != -1) glUniform1i(locResolution, m_ProbeCaptureResolution);
+		if (locBounces != -1) glUniform1i(locBounces, m_GIBakeBounces);
+		if (locEnergyLoss != -1) glUniform1f(locEnergyLoss, m_GIBakeEnergyLoss);
+		if (locVoxelMin != -1) glUniform3f(locVoxelMin, worldBoundsMin.x, worldBoundsMin.y, worldBoundsMin.z);
+		if (locVoxelMax != -1) glUniform3f(locVoxelMax, worldBoundsMax.x, worldBoundsMax.y, worldBoundsMax.z);
+		if (locVoxelRes != -1) glUniform1i(locVoxelRes, m_ProbeVoxelResolution);
+
+		glBindImageTexture(0, m_ProbeIndirectCubemapArray, 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA16F);
+		if (m_ProbeVoxelAlbedoTexture != 0) {
+			glBindImageTexture(1, m_ProbeVoxelAlbedoTexture, 0, GL_TRUE, 0, GL_READ_ONLY, GL_RGBA8);
+		}
+		if (m_ProbeVoxelEmissiveTexture != 0) {
+			glBindImageTexture(2, m_ProbeVoxelEmissiveTexture, 0, GL_TRUE, 0, GL_READ_ONLY, GL_RGBA8);
+		}
+
+		const GLuint groupSize = 8;
+		const GLuint groupsX = (m_ProbeCaptureResolution + groupSize - 1) / groupSize;
+		const GLuint groupsY = (m_ProbeCaptureResolution + groupSize - 1) / groupSize;
+		glDispatchCompute(groupsX, groupsY, 6);
+		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+		glUseProgram(0);
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, prevFBO);
+	glViewport(prevViewport[0], prevViewport[1], prevViewport[2], prevViewport[3]);
+
+	// Project captured cubemap to SH coefficients
+	ProjectCubemapArrayToSH(probe.probeIndex, probe.shCoefficients);
+
+	// Save baked probe data to disk
+	{
+		std::string sceneName = "UnsavedScene";
+		if (auto scenePathOpt = SceneManager::GetInstance().GetCurrentScenePath()) {
+			std::filesystem::path scenePath(*scenePathOpt);
+			sceneName = scenePath.stem().string();
+		}
+		std::filesystem::path outDir = std::filesystem::path("../Resources/Textures/GI") / sceneName;
+		std::filesystem::create_directories(outDir);
+		std::filesystem::path outPath = outDir / ("Probe_" + std::to_string(static_cast<uint64_t>(probeEntity)) + ".probe");
+
+		if (SaveProbeSHToFile(outPath, probe.shCoefficients)) {
+			probe.bakedProbePath = outPath.generic_string();
+			probe.bakedDataLoaded = true;
+		}
+	}
+
+	glCheckError();
+
+}
+
+/**
+ * @brief Projects a cubemap to spherical harmonics (L2 - 9 coefficients).
+ */
+void Renderer::ProjectCubemapToSH(GLuint cubemapID, glm::vec3 outCoefficients[9])
+{
+	// Initialize coefficients to zero
+	for (int i = 0; i < 9; ++i) {
+		outCoefficients[i] = glm::vec3(0.0f);
+	}
+
+	// Read cubemap data from GPU
+	glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapID);
+
+	const int resolution = m_ProbeCaptureResolution;
+	std::vector<glm::vec4> faceData(resolution * resolution);
+
+	// SH basis function constants
+	const float c0 = 0.282095f;  // 1 / (2 * sqrt(pi))
+	const float c1 = 0.488603f;  // sqrt(3 / (4 * pi))
+	const float c2 = 1.092548f;  // sqrt(15 / (4 * pi))
+	const float c3 = 0.315392f;  // sqrt(5 / (16 * pi))
+	const float c4 = 0.546274f;  // sqrt(15 / (16 * pi))
+
+	float totalWeight = 0.0f;
+
+	// Process each cubemap face
+	for (int face = 0; face < 6; ++face) {
+		glGetTexImage(GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, 0, GL_RGB, GL_FLOAT, faceData.data());
+
+		// Sample each pixel
+		for (int y = 0; y < resolution; ++y) {
+			for (int x = 0; x < resolution; ++x) {
+				// Convert pixel coordinates to normalized [-1, 1] range
+				float u = (x + 0.5f) / resolution * 2.0f - 1.0f;
+				float v = (y + 0.5f) / resolution * 2.0f - 1.0f;
+
+				// Calculate direction vector for this cubemap pixel
+				glm::vec3 dir;
+				switch (face) {
+				case 0: dir = glm::normalize(glm::vec3(1.0f, -v, -u)); break;  // +X
+				case 1: dir = glm::normalize(glm::vec3(-1.0f, -v, u)); break;  // -X
+				case 2: dir = glm::normalize(glm::vec3(u, 1.0f, v)); break;    // +Y
+				case 3: dir = glm::normalize(glm::vec3(u, -1.0f, -v)); break;  // -Y
+				case 4: dir = glm::normalize(glm::vec3(u, -v, 1.0f)); break;   // +Z
+				case 5: dir = glm::normalize(glm::vec3(-u, -v, -1.0f)); break; // -Z
+				}
+
+				// Get pixel color
+				glm::vec3 color = faceData[y * resolution + x];
+
+				// Solid angle weight (approximate)
+				float temp = 1.0f + u * u + v * v;
+				float weight = 4.0f / (sqrt(temp) * temp);
+				totalWeight += weight;
+
+				// Evaluate L2 SH basis functions
+				float sh[9];
+				sh[0] = c0;                            // Y(0,0)
+				sh[1] = c1 * dir.y;                    // Y(1,-1)
+				sh[2] = c1 * dir.z;                    // Y(1,0)
+				sh[3] = c1 * dir.x;                    // Y(1,1)
+				sh[4] = c2 * dir.x * dir.y;            // Y(2,-2)
+				sh[5] = c2 * dir.y * dir.z;            // Y(2,-1)
+				sh[6] = c3 * (3.0f * dir.z * dir.z - 1.0f); // Y(2,0)
+				sh[7] = c2 * dir.x * dir.z;            // Y(2,1)
+				sh[8] = c4 * (dir.x * dir.x - dir.y * dir.y); // Y(2,2)
+
+				// Accumulate weighted SH coefficients
+				for (int i = 0; i < 9; ++i) {
+					outCoefficients[i] += color * sh[i] * weight;
+				}
+			}
+		}
+	}
+
+	// Normalize by total weight
+	for (int i = 0; i < 9; ++i) {
+		outCoefficients[i] *= (4.0f * glm::pi<float>()) / totalWeight;
+	}
+
+	glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+	glCheckError();
+}
+
+/**
+ * @brief Projects a cubemap array layer to spherical harmonics (L2 - 9 coefficients).
+ */
+void Renderer::ProjectCubemapArrayToSH(int probeIndex, glm::vec3 outCoefficients[9])
+{
+	if (probeIndex < 0 || probeIndex >= MAX_PROBES) {
+		return;
+	}
+
+	// Initialize coefficients to zero
+	for (int i = 0; i < 9; ++i) {
+		outCoefficients[i] = glm::vec3(0.0f);
+	}
+
+	const int resolution = m_ProbeCaptureResolution;
+	std::vector<glm::vec4> faceData(resolution * resolution);
+
+	// SH basis function constants
+	const float c0 = 0.282095f;  // 1 / (2 * sqrt(pi))
+	const float c1 = 0.488603f;  // sqrt(3 / (4 * pi))
+	const float c2 = 1.092548f;  // sqrt(15 / (4 * pi))
+	const float c3 = 0.315392f;  // sqrt(5 / (16 * pi))
+	const float c4 = 0.546274f;  // sqrt(15 / (16 * pi))
+
+	float totalWeight = 0.0f;
+
+	GLint prevFBO = 0;
+	GLint prevViewport[4] = { 0, 0, 0, 0 };
+	glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prevFBO);
+	glGetIntegerv(GL_VIEWPORT, prevViewport);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, m_ProbeCubemapFBO);
+	glViewport(0, 0, resolution, resolution);
+
+	// Process each cubemap face from array layer
+	for (int face = 0; face < 6; ++face) {
+		const int layer = probeIndex * 6 + face;
+		glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_ProbeIndirectCubemapArray, 0, layer);
+		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+			break;
+		}
+
+		glReadPixels(0, 0, resolution, resolution, GL_RGBA, GL_FLOAT, faceData.data());
+
+		// Sample each pixel
+		for (int y = 0; y < resolution; ++y) {
+			for (int x = 0; x < resolution; ++x) {
+				// Convert pixel coordinates to normalized [-1, 1] range
+				float u = (x + 0.5f) / resolution * 2.0f - 1.0f;
+				float v = (y + 0.5f) / resolution * 2.0f - 1.0f;
+
+				// Calculate direction vector for this cubemap pixel
+				glm::vec3 dir;
+				switch (face) {
+				case 0: dir = glm::normalize(glm::vec3(1.0f, -v, -u)); break;  // +X
+				case 1: dir = glm::normalize(glm::vec3(-1.0f, -v, u)); break;  // -X
+				case 2: dir = glm::normalize(glm::vec3(u, 1.0f, v)); break;    // +Y
+				case 3: dir = glm::normalize(glm::vec3(u, -1.0f, -v)); break;  // -Y
+				case 4: dir = glm::normalize(glm::vec3(u, -v, 1.0f)); break;   // +Z
+				case 5: dir = glm::normalize(glm::vec3(-u, -v, -1.0f)); break; // -Z
+				}
+
+				// Get pixel color
+				glm::vec3 color = glm::vec3(faceData[y * resolution + x]);
+
+				// Solid angle weight (approximate)
+				float temp = 1.0f + u * u + v * v;
+				float weight = 4.0f / (sqrt(temp) * temp);
+				totalWeight += weight;
+
+				// Evaluate L2 SH basis functions
+				float sh[9];
+				sh[0] = c0;                            // Y(0,0)
+				sh[1] = c1 * dir.y;                    // Y(1,-1)
+				sh[2] = c1 * dir.z;                    // Y(1,0)
+				sh[3] = c1 * dir.x;                    // Y(1,1)
+				sh[4] = c2 * dir.x * dir.y;            // Y(2,-2)
+				sh[5] = c2 * dir.y * dir.z;            // Y(2,-1)
+				sh[6] = c3 * (3.0f * dir.z * dir.z - 1.0f); // Y(2,0)
+				sh[7] = c2 * dir.x * dir.z;            // Y(2,1)
+				sh[8] = c4 * (dir.x * dir.x - dir.y * dir.y); // Y(2,2)
+
+				// Accumulate weighted SH coefficients
+				for (int i = 0; i < 9; ++i) {
+					outCoefficients[i] += color * sh[i] * weight;
+				}
+			}
+		}
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, prevFBO);
+	glViewport(prevViewport[0], prevViewport[1], prevViewport[2], prevViewport[3]);
+
+	// Normalize by total weight
+	if (totalWeight > 0.0f) {
+		for (int i = 0; i < 9; ++i) {
+			outCoefficients[i] *= (4.0f * glm::pi<float>()) / totalWeight;
+		}
+	}
+
+	glCheckError();
+}
+
+/**
+ * @brief Updates the light probes UBO with current probe data.
+ */
+void Renderer::UpdateLightProbesUBO()
+{
+	if (!m_LightProbesEnabled || m_LightProbesUBO == 0) {
+		return;
+	}
+
+	auto& ecs = Ermine::ECS::GetInstance();
+	
+	std::vector<LightProbeGPU> probesGPU;
+	probesGPU.reserve(MAX_PROBES);
+
+	// Collect active probes
+	for (EntityID entity = 0; entity < MAX_ENTITIES; ++entity) {
+		if (!ecs.HasComponent<LightProbeVolumeComponent>(entity)) continue;
+		if (!ecs.HasComponent<Transform>(entity)) continue;
+		
+		auto& probe = ecs.GetComponent<LightProbeVolumeComponent>(entity);
+		const auto& trans = ecs.GetComponent<Transform>(entity);
+
+		if (!probe.isActive) continue;
+		if (probesGPU.size() >= MAX_PROBES) break; // Limit to MAX_PROBES
+
+		if (!probe.bakedDataLoaded && !probe.bakedProbePath.empty()) {
+			std::filesystem::path bakedPath(probe.bakedProbePath);
+			if (LoadProbeSHFromFile(bakedPath, probe.shCoefficients)) {
+				probe.bakedDataLoaded = true;
+			}
+		}
+
+		LightProbeGPU gpuProbe;
+		gpuProbe.position_radius = glm::vec4(trans.position.x, trans.position.y, trans.position.z, 0.0f);
+		
+		// Copy SH coefficients (convert vec3 array to vec4 for std140 alignment)
+		for (int i = 0; i < 9; ++i) {
+			gpuProbe.shCoefficients[i] = glm::vec4(probe.shCoefficients[i], 0.0f);
+		}
+
+		glm::mat4 model = GetEntityWorldMatrix(entity);
+		glm::vec3 localMin = probe.boundsMin;
+		glm::vec3 localMax = probe.boundsMax;
+
+		glm::vec3 center = (localMin + localMax) * 0.5f;
+		glm::vec3 extent = (localMax - localMin) * 0.5f;
+
+		glm::vec3 worldCenter = glm::vec3(model * glm::vec4(center, 1.0f));
+		glm::mat3 upperLeft = glm::mat3(model);
+		glm::vec3 worldExtent = glm::abs(upperLeft[0]) * extent.x
+			+ glm::abs(upperLeft[1]) * extent.y
+			+ glm::abs(upperLeft[2]) * extent.z;
+
+		glm::vec3 actualMin = worldCenter - worldExtent;
+		glm::vec3 actualMax = worldCenter + worldExtent;
+
+		gpuProbe.boundsMin = glm::vec4(actualMin, 0.0f);
+		gpuProbe.boundsMax = glm::vec4(actualMax, 0.0f);
+		gpuProbe.flags = glm::vec4(1.0f, static_cast<float>(probe.priority), 0.0f, 0.0f);
+
+		probesGPU.push_back(gpuProbe);
+	}
+
+	// Upload to UBO
+	glBindBuffer(GL_UNIFORM_BUFFER, m_LightProbesUBO);
+
+	// Upload probe count
+	glm::vec4 probeCountVec(static_cast<float>(probesGPU.size()), 0.0f, 0.0f, 0.0f);
+	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::vec4), &probeCountVec);
+
+	// Upload probe data
+	if (!probesGPU.empty()) {
+		const GLsizeiptr probesSize = static_cast<GLsizeiptr>(probesGPU.size() * sizeof(LightProbeGPU));
+		glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::vec4), probesSize, probesGPU.data());
+	}
+
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+	glCheckError();
+}
+
+/**
  * @brief Updates the material's SSBO with the specified material data.
  *
  * If the material SSBO does not exist, this function creates one. It then uploads the given material data
@@ -4195,6 +4999,7 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 	// Update lights UBO
 	if (!m_UseDeferredRendering) {
 		UpdateLightsUBO(editor::EditorCamera::GetInstance().GetViewMatrix());
+		UpdateLightProbesUBO();
 	}
 
 
@@ -4225,7 +5030,7 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 #endif
 
 		// Render skybox FIRST as the background
-		if (m_skybox && m_skybox->IsValid()) {
+		if (m_ShowSkybox && m_skybox && m_skybox->IsValid()) {
 			glDepthMask(GL_FALSE);
 			m_skybox->Render(view, projection);
 			glDepthMask(GL_TRUE);
@@ -5556,6 +6361,160 @@ void Renderer::RenderForwardPass(const Mtx44& view, const Mtx44& projection)
 	GPUProfiler::EndEvent();
 }
 
+void Renderer::RenderMotionBlurMask(const Mtx44& view, const Mtx44& projection)
+{
+	if (!m_MotionBlurMaskBuffer)
+	{
+		return;
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, m_MotionBlurMaskBuffer->FBO);
+	glViewport(0, 0, m_MotionBlurMaskBuffer->width, m_MotionBlurMaskBuffer->height);
+
+	glDisable(GL_BLEND);
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LEQUAL);
+	glDepthMask(GL_FALSE);
+	glDisable(GL_CULL_FACE);
+
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	if (!m_MotionBlurEnabled || !m_MotionBlurMaskShader || !m_MotionBlurMaskShader->IsValid())
+	{
+		glDepthMask(GL_TRUE);
+		glEnable(GL_CULL_FACE);
+		return;
+	}
+
+	const bool hasForwardContent =
+		!m_ForwardTransparentDefaultStandardItems.empty() ||
+		!m_ForwardTransparentDefaultSkinnedItems.empty() ||
+		(m_ForwardOpaqueCustomStandardUploadedCount > 0) ||
+		(m_ForwardOpaqueCustomSkinnedUploadedCount > 0) ||
+		(m_ForwardTransparentCustomStandardUploadedCount > 0) ||
+		(m_ForwardTransparentCustomSkinnedUploadedCount > 0);
+
+	if (!hasForwardContent)
+	{
+		glDepthMask(GL_TRUE);
+		glEnable(GL_CULL_FACE);
+		return;
+	}
+
+	m_MotionBlurMaskShader->Bind();
+	m_MotionBlurMaskShader->SetUniformMatrix4fv("view", &view.m2[0][0]);
+	m_MotionBlurMaskShader->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
+
+	// Standard forward transparent (non-skinned)
+	if (!m_ForwardTransparentDefaultStandardItems.empty() && m_MeshManager.GetStandardVAO() != 0)
+	{
+		m_MotionBlurMaskShader->SetUniform1ui("baseDrawID", 0);
+		glBindVertexArray(m_MeshManager.GetStandardVAO());
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_MeshManager.m_ForwardStandardDrawInfoBuffer.GetBufferID());
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_MeshManager.m_ForwardStandardDrawCommandBuffer.GetBufferID());
+		glMultiDrawElementsIndirect(
+			GL_TRIANGLES,
+			GL_UNSIGNED_INT,
+			nullptr,
+			static_cast<GLsizei>(m_ForwardTransparentDefaultStandardItems.size()),
+			0
+		);
+	}
+
+	// Standard forward transparent (skinned)
+	if (!m_ForwardTransparentDefaultSkinnedItems.empty() && m_MeshManager.GetSkinnedVAO() != 0)
+	{
+		m_MotionBlurMaskShader->SetUniform1ui("baseDrawID", 0);
+		glBindVertexArray(m_MeshManager.GetSkinnedVAO());
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_MeshManager.m_ForwardSkinnedDrawInfoBuffer.GetBufferID());
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_MeshManager.m_ForwardSkinnedDrawCommandBuffer.GetBufferID());
+		glMultiDrawElementsIndirect(
+			GL_TRIANGLES,
+			GL_UNSIGNED_INT,
+			nullptr,
+			static_cast<GLsizei>(m_ForwardTransparentDefaultSkinnedItems.size()),
+			0
+		);
+	}
+
+	// Custom opaque (standard)
+	if (m_ForwardOpaqueCustomStandardUploadedCount > 0 && m_MeshManager.GetStandardVAO() != 0 &&
+		m_ForwardOpaqueCustomStandardInfoBuffer != 0 && m_ForwardOpaqueCustomStandardCmdBuffer != 0)
+	{
+		m_MotionBlurMaskShader->SetUniform1ui("baseDrawID", 0);
+		glBindVertexArray(m_MeshManager.GetStandardVAO());
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_ForwardOpaqueCustomStandardInfoBuffer);
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardOpaqueCustomStandardCmdBuffer);
+		glMultiDrawElementsIndirect(
+			GL_TRIANGLES,
+			GL_UNSIGNED_INT,
+			nullptr,
+			static_cast<GLsizei>(m_ForwardOpaqueCustomStandardUploadedCount),
+			0
+		);
+	}
+
+	// Custom opaque (skinned)
+	if (m_ForwardOpaqueCustomSkinnedUploadedCount > 0 && m_MeshManager.GetSkinnedVAO() != 0 &&
+		m_ForwardOpaqueCustomSkinnedInfoBuffer != 0 && m_ForwardOpaqueCustomSkinnedCmdBuffer != 0)
+	{
+		m_MotionBlurMaskShader->SetUniform1ui("baseDrawID", 0);
+		glBindVertexArray(m_MeshManager.GetSkinnedVAO());
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_ForwardOpaqueCustomSkinnedInfoBuffer);
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardOpaqueCustomSkinnedCmdBuffer);
+		glMultiDrawElementsIndirect(
+			GL_TRIANGLES,
+			GL_UNSIGNED_INT,
+			nullptr,
+			static_cast<GLsizei>(m_ForwardOpaqueCustomSkinnedUploadedCount),
+			0
+		);
+	}
+
+	// Custom transparent (standard)
+	if (m_ForwardTransparentCustomStandardUploadedCount > 0 && m_MeshManager.GetStandardVAO() != 0 &&
+		m_ForwardTransparentCustomStandardInfoBuffer != 0 && m_ForwardTransparentCustomStandardCmdBuffer != 0)
+	{
+		m_MotionBlurMaskShader->SetUniform1ui("baseDrawID", 0);
+		glBindVertexArray(m_MeshManager.GetStandardVAO());
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_ForwardTransparentCustomStandardInfoBuffer);
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardTransparentCustomStandardCmdBuffer);
+		glMultiDrawElementsIndirect(
+			GL_TRIANGLES,
+			GL_UNSIGNED_INT,
+			nullptr,
+			static_cast<GLsizei>(m_ForwardTransparentCustomStandardUploadedCount),
+			0
+		);
+	}
+
+	// Custom transparent (skinned)
+	if (m_ForwardTransparentCustomSkinnedUploadedCount > 0 && m_MeshManager.GetSkinnedVAO() != 0 &&
+		m_ForwardTransparentCustomSkinnedInfoBuffer != 0 && m_ForwardTransparentCustomSkinnedCmdBuffer != 0)
+	{
+		m_MotionBlurMaskShader->SetUniform1ui("baseDrawID", 0);
+		glBindVertexArray(m_MeshManager.GetSkinnedVAO());
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_ForwardTransparentCustomSkinnedInfoBuffer);
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardTransparentCustomSkinnedCmdBuffer);
+		glMultiDrawElementsIndirect(
+			GL_TRIANGLES,
+			GL_UNSIGNED_INT,
+			nullptr,
+			static_cast<GLsizei>(m_ForwardTransparentCustomSkinnedUploadedCount),
+			0
+		);
+	}
+
+	glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
+	glBindVertexArray(0);
+	m_MotionBlurMaskShader->Unbind();
+
+	glDepthMask(GL_TRUE);
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
+}
+
 #pragma region Shadow Mapping
 /**
  * @brief Initializes the shadow map framebuffer object (FBO).
@@ -6354,23 +7313,23 @@ void Renderer::RenderPickingPass(const Mtx44& view, const Mtx44& projection)
 		return;
 
 	// 1) Prime depth: copy scene depth into picking FBO (source depends on path)
-	if (m_UseDeferredRendering && m_GBuffer)
-	{
-		glBindFramebuffer(GL_READ_FRAMEBUFFER, m_GBuffer->FBO);
-	}
-	else if (m_OffscreenBuffer)
-	{
-		glBindFramebuffer(GL_READ_FRAMEBUFFER, m_OffscreenBuffer->FBO);
-	}
-	else
-	{
-		return;
-	}
+	//if (m_UseDeferredRendering && m_GBuffer)
+	//{
+	//	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_GBuffer->FBO);
+	//}
+	//else if (m_OffscreenBuffer)
+	//{
+	//	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_OffscreenBuffer->FBO);
+	//}
+	//else
+	//{
+	//	return;
+	//}
 
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_PickingBuffer->FBO);
-	glBlitFramebuffer(0, 0, m_PickingBuffer->width, m_PickingBuffer->height,
-		0, 0, m_PickingBuffer->width, m_PickingBuffer->height,
-		GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+	//glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_PickingBuffer->FBO);
+	//glBlitFramebuffer(0, 0, m_PickingBuffer->width, m_PickingBuffer->height,
+	//	0, 0, m_PickingBuffer->width, m_PickingBuffer->height,
+	//	GL_DEPTH_BUFFER_BIT, GL_NEAREST);
 
 	// 2) Render IDs using indirect rendering
 	glBindFramebuffer(GL_FRAMEBUFFER, m_PickingBuffer->FBO);
@@ -6379,6 +7338,8 @@ void Renderer::RenderPickingPass(const Mtx44& view, const Mtx44& projection)
 	// Clear IDs to 0
 	GLuint clearVal[1] = { 0u };
 	glClearBufferuiv(GL_COLOR, 0, clearVal);
+	glClearDepth(1.0);
+	glClear(GL_DEPTH_BUFFER_BIT);
 
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
@@ -6612,6 +7573,9 @@ glm::mat4 Renderer::GetEntityWorldMatrix(EntityID entity) const
 
 void Renderer::SyncToGlobalGraphics()
 {
+	m_GlobalGraphics.ambientColor = Ermine::Vec3(m_AmbientColor.x, m_AmbientColor.y, m_AmbientColor.z);
+	m_GlobalGraphics.ambientIntensity = m_AmbientIntensity;
+
 	m_GlobalGraphics.ssaoEnabled = m_SSAOEnabled;
 	m_GlobalGraphics.ssaoSamples = m_SSAOSamples;
 	m_GlobalGraphics.ssaoRadius = m_SSAORadius;
@@ -6635,6 +7599,7 @@ void Renderer::SyncToGlobalGraphics()
 	m_GlobalGraphics.gammaCorrectionEnabled = m_GammaCorrectionEnabled;
 	m_GlobalGraphics.bloomEnabled = m_BloomEnabled;
 	m_GlobalGraphics.skyboxIsHDR = m_SkyBoxisHDR;
+	m_GlobalGraphics.showSkybox = m_ShowSkybox;
 
 	m_GlobalGraphics.exposure = m_Exposure;
 	m_GlobalGraphics.contrast = m_Contrast;
@@ -6663,6 +7628,13 @@ void Renderer::SyncToGlobalGraphics()
 
 void Renderer::ApplyFromGlobalGraphics()
 {
+	m_AmbientColor = glm::vec3(
+		m_GlobalGraphics.ambientColor.x,
+		m_GlobalGraphics.ambientColor.y,
+		m_GlobalGraphics.ambientColor.z
+	);
+	m_AmbientIntensity = m_GlobalGraphics.ambientIntensity;
+
 	m_SSAOEnabled = m_GlobalGraphics.ssaoEnabled;
 	m_SSAOSamples = m_GlobalGraphics.ssaoSamples;
 	m_SSAORadius = m_GlobalGraphics.ssaoRadius;
@@ -6690,6 +7662,7 @@ void Renderer::ApplyFromGlobalGraphics()
 	m_GammaCorrectionEnabled = m_GlobalGraphics.gammaCorrectionEnabled;
 	m_BloomEnabled = m_GlobalGraphics.bloomEnabled;
 	m_SkyBoxisHDR = m_GlobalGraphics.skyboxIsHDR;
+	m_ShowSkybox = m_GlobalGraphics.showSkybox;
 
 	m_Exposure = m_GlobalGraphics.exposure;
 	m_Contrast = m_GlobalGraphics.contrast;
@@ -6738,7 +7711,7 @@ std::pair<bool, Ermine::EntityID> Renderer::PickEntityAt(const int& x, const int
 	glPixelStorei(GL_PACK_ALIGNMENT, 1);
 
 	uint32_t id = 0u;
-	glReadPixels(x, y, 1, 1, GL_RED_INTEGER, GL_UNSIGNED_BYTE, &id);
+	glReadPixels(x, y, 1, 1, GL_RED_INTEGER, GL_UNSIGNED_INT, &id);
 
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 

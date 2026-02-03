@@ -79,6 +79,8 @@ namespace Ermine
         bool IsEntityChildOf(EntityID entity, EntityID potentialParent);  // Check if entity is child of another
         void TogglePauseMenu();  // ADD THIS
         void SetEntityActiveByName(const std::string& name, bool active);  // Show/hide entities by name
+        void ShowControlInfo(const std::string& infoToShow);
+        void CloseControlsScreen();
 
         EntityID GetGlobalAudioEntity();
         EntityID m_GlobalAudioEntity = MAX_ENTITIES;

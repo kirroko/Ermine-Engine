@@ -45,9 +45,10 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "CameraSystem.h"
 #include "UIRenderSystem.h"
 #include "UIButtonSystem.h"
+#include "VideoManager.h"
 #include "NavMesh.h"	 
 #include "NavMeshAgentSystem.h"
-#include "EditorGUI.h"
+#include "GISystem.h"
 
 #if defined(EE_EDITOR)
 #include "GraphicsDebugGUI.h"
@@ -60,6 +61,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "FSMEditor.h"
 #include "AnimationGUI.h"
 #include "ResourcePipe.h"
+#include "VideoImGUI.h"
 
 #endif
 
@@ -224,6 +226,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	EE_AUTO_REGISTER_COMPONENT(Material, "Material")
 	EE_AUTO_REGISTER_COMPONENT(ObjectMetaData, "ObjectMetaData")
 	EE_AUTO_REGISTER_COMPONENT(Light, "Light")
+	EE_AUTO_REGISTER_COMPONENT(LightProbeVolumeComponent, "LightProbeVolumeComponent")
 	EE_AUTO_REGISTER_COMPONENT(AudioComponent, "AudioComponent")
 	EE_AUTO_REGISTER_COMPONENT(GlobalAudioComponent, "GlobalAudioComponent")
 	EE_AUTO_REGISTER_COMPONENT(PhysicComponent, "PhysicComponent")
@@ -299,6 +302,8 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().RegisterSystem<graphics::CameraSystem>();
 	ECS::GetInstance().RegisterSystem<UIRenderSystem>();
 	ECS::GetInstance().RegisterSystem<UIButtonSystem>();
+	ECS::GetInstance().RegisterSystem<VideoManager>();
+	ECS::GetInstance().RegisterSystem<GISystem>();
 
 	//Register JPH::TempAllocatorImpl for Physcis
 	RegisterDefaultAllocator();
@@ -396,6 +401,16 @@ bool engine::Init(GLFWwindow* windowContext)
 	sig.set(ECS::GetInstance().GetComponentType<UIButtonComponent>());
 	ECS::GetInstance().SetSystemSignature<UIButtonSystem>(sig);
 
+	// Video Manager (no component requirements)
+	sig.reset();
+	ECS::GetInstance().SetSystemSignature<VideoManager>(sig);
+
+	// GI System (light probe volumes)
+	sig.reset();
+	sig.set(ECS::GetInstance().GetComponentType<LightProbeVolumeComponent>());
+	sig.set(ECS::GetInstance().GetComponentType<Transform>());
+	ECS::GetInstance().SetSystemSignature<GISystem>(sig);
+
 	glfwSetFramebufferSizeCallback(windowContext, []([[maybe_unused]] GLFWwindow* window, int width, int height)
 		{
 #if defined(EE_EDITOR)
@@ -414,6 +429,10 @@ bool engine::Init(GLFWwindow* windowContext)
 		auto buttonSystem = ECS::GetInstance().GetSystem<UIButtonSystem>();
 		if (buttonSystem && width > 0 && height > 0)
 			buttonSystem->OnScreenResize(width, height);
+
+		auto videoSystem = ECS::GetInstance().GetSystem<VideoManager>();
+		if (videoSystem && width > 0 && height > 0)
+			videoSystem->OnScreenResize(width, height);
 #endif
 		});
 
@@ -484,6 +503,12 @@ bool engine::Init(GLFWwindow* windowContext)
 	else
 		ECS::GetInstance().GetSystem<UIButtonSystem>()->Init(1920, 1080);
 
+	// Initialize Video Manager with same dimensions
+	if (windowWidth > 0 && windowHeight > 0)
+		ECS::GetInstance().GetSystem<VideoManager>()->Init(windowWidth, windowHeight);
+	else
+		ECS::GetInstance().GetSystem<VideoManager>()->Init(1920, 1080);
+
 	// Editor windows
 #if defined(EE_EDITOR)
 	SceneManager::GetInstance().NewScene();
@@ -493,13 +518,14 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	editor::EditorGUI::CreateImGUIWindow<ParticlesImGUI>();
 	editor::EditorGUI::CreateImGUIWindow<AudioImGUI>();
-	editor::EditorGUI::CreateImGUIWindow<editor::GraphicsDebugGUI>("Graphics Debug");
+	editor::EditorGUI::CreateImGUIWindow<editor::GraphicsDebugGUI>();
 	editor::EditorGUI::CreateImGUIWindow<ViewPortGUI>();
 	editor::EditorGUI::CreateImGUIWindow<FSMEditorImGUI>();
 	editor::EditorGUI::CreateImGUIWindow<AnimationEditorImGUI>();
 	editor::EditorGUI::CreateImGUIWindow<ConsoleGUI>();
 	editor::EditorGUI::CreateImGUIWindow<ImguiUI::AssetBrowser>();
-	editor::EditorGUI::CreateImGUIWindow<SettingsGUI>("Settings");
+	editor::EditorGUI::CreateImGUIWindow<SettingsGUI>();
+	editor::EditorGUI::CreateImGUIWindow<VideoImGUI>();
 
 	// Legacy ImGui menu windows removed - replaced with scene-based UI:
 	// - Main menu: Open Resources/Scenes/mainmenu.scene, edit MenuBackground/GameTitle entities
@@ -559,7 +585,7 @@ void engine::Shutdown()
 	cfg.windowHeight = height;
 	cfg.fullscreen = (glfwGetWindowMonitor(glfwGetCurrentContext()) != nullptr);
 	cfg.maximized = (glfwGetWindowAttrib(glfwGetCurrentContext(), GLFW_MAXIMIZED) == GLFW_TRUE);
-	cfg.settingsIsOpen = SettingsGUI::GetSettingsOpen();
+	cfg.imguiWindows = ImGUIWindow::GetAllWindowStates();
 	cfg.fontSize = SettingsGUI::GetFontSizeS();
 	cfg.baseFontSize = SettingsGUI::GetBaseFontSize();
 	cfg.themeMode = SettingsGUI::GetMode();
@@ -580,6 +606,7 @@ void engine::Shutdown()
 	AssetManager::GetInstance().Clear();
 	ECS::GetInstance().GetSystem<Physics>()->Shutdown();
 	ECS::GetInstance().GetSystem<NavMeshSystem>()->Shutdown();
+	ECS::GetInstance().GetSystem<VideoManager>()->Shutdown();
 
 	graphics::GPUProfiler::Shutdown();
 
@@ -643,12 +670,16 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 		}
 
 		// Other non-fixed logic
-		ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->Update();
-		ECS::GetInstance().GetSystem<HierarchySystem>()->UpdateHierarchy();
-		ECS::GetInstance().GetSystem<StateManager>()->Update(FrameController::GetFixedDeltaTime());
-		ECS::GetInstance().GetSystem<NavMeshAgentSystem>()->Update(FrameController::GetFixedDeltaTime());
-		ECS::GetInstance().GetSystem<graphics::AnimationManager>()->Update(FrameController::GetDeltaTime());
+		ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->Update();									// Game logic updates transforms, forces, etc
+		ECS::GetInstance().GetSystem<HierarchySystem>()->UpdateHierarchy();									// Update hierarchy transforms first
+		ECS::GetInstance().GetSystem<GISystem>()->Update();													// Assign GI probe indices
+		ECS::GetInstance().GetSystem<StateManager>()->Update(FrameController::GetFixedDeltaTime());		// FSM update
+		ECS::GetInstance().GetSystem<NavMeshAgentSystem>()->Update(FrameController::GetFixedDeltaTime());	// AI NavMesh Agent update
+		ECS::GetInstance().GetSystem<graphics::AnimationManager>()->Update(FrameController::GetDeltaTime());// Animation Update
 		ECS::GetInstance().GetSystem<ParticleSystem>()->Update(FrameController::GetDeltaTime());
+
+		// Update video playback
+		ECS::GetInstance().GetSystem<VideoManager>()->Update(FrameController::GetDeltaTime());
 	}
 
 	// UI ALWAYS updates (even when paused, so pause menu works!)
@@ -736,6 +767,11 @@ void engine::Render(GLFWwindow* window)
 
 	// Draw scene objects
 	renderer->Update(view, proj);
+
+	// Render video overlay (before UI and ImGui)
+	auto videoSystem = ECS::GetInstance().GetSystem<VideoManager>();
+	if (videoSystem)
+		videoSystem->Render();
 
 	// Stop GPU timing for rendering
 	graphics::GPUProfiler::EndEvent();
