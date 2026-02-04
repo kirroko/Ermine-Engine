@@ -2539,55 +2539,55 @@ namespace
 	static void icall_statemachine_request_next_state(uint64_t entityID)
 	{
 		using namespace Ermine;
+
 		if (entityID == 0 || !ECS::GetInstance().IsEntityValid(entityID))
 			return;
 
-		auto& fsm = ECS::GetInstance().GetComponent<StateMachine>(entityID);
-		if (fsm.manager)
-			fsm.manager->RequestNextState(entityID);
-
-		/*EE_CORE_INFO("[ICall] StateMachine.RequestNextState called from C#, entityID = {}", entityID);
-
-		if (entityID == 0)
-		{
-			EE_CORE_WARN("[ICall] Invalid entityID (0)");
-			return;
-		}
-
-		if (!ECS::GetInstance().IsEntityValid(entityID))
-		{
-			EE_CORE_WARN("[ICall] Entity {} is not valid", entityID);
-			return;
-		}
-
 		if (!ECS::GetInstance().HasComponent<StateMachine>(entityID))
-		{
-			EE_CORE_WARN("[ICall] Entity {} has no StateMachine component", entityID);
 			return;
-		}
 
 		auto& fsm = ECS::GetInstance().GetComponent<StateMachine>(entityID);
+
+		// Rebind runtime-only manager pointer (common after loading a scene)
+		if (!fsm.manager)
+			fsm.manager = ECS::GetInstance().GetSystem<StateManager>().get();
 
 		if (!fsm.manager)
-		{
-			EE_CORE_WARN("[ICall] Entity {} FSM has no manager assigned!", entityID);
 			return;
-		}
 
-		EE_CORE_INFO("[ICall] Forwarding to StateManager::RequestNextState()");
-		fsm.manager->RequestNextState(entityID);*/
+		// Optional safety: make sure there's a current script before transitioning
+		if (fsm.m_CurrentScript == nullptr)
+			fsm.Init(entityID);
+
+		fsm.manager->RequestNextState(entityID);
 	}
 
 	static void icall_statemachine_request_previous_state(uint64_t entityID)
 	{
 		using namespace Ermine;
+
 		if (entityID == 0 || !ECS::GetInstance().IsEntityValid(entityID))
 			return;
 
+		if (!ECS::GetInstance().HasComponent<StateMachine>(entityID))
+			return;
+
 		auto& fsm = ECS::GetInstance().GetComponent<StateMachine>(entityID);
-		if (fsm.manager)
-			fsm.manager->RequestPreviousState(entityID);
+
+		// Rebind runtime-only manager pointer (common after loading a scene)
+		if (!fsm.manager)
+			fsm.manager = ECS::GetInstance().GetSystem<StateManager>().get();
+
+		if (!fsm.manager)
+			return;
+
+		// Optional safety: make sure there's a current script before transitioning
+		if (fsm.m_CurrentScript == nullptr)
+			fsm.Init(entityID);
+
+		fsm.manager->RequestPreviousState(entityID);
 	}
+
 #pragma endregion
 
 #pragma region NavAgent ICalls
@@ -2642,20 +2642,24 @@ namespace
 				return std::fabs(v.x) < 1e-4f && std::fabs(v.y) < 1e-4f && std::fabs(v.z) < 1e-4f;
 			};
 
-		// Current navmesh under agent
+		// current navmesh under agent
 		EntityID currentNav = 0;
+		EntityID prevNav = agent.lastJumpFromNavMesh;
 		auto navSys = ecs.GetSystem<NavMeshAgentSystem>();
 		if (navSys)
 			currentNav = navSys->FindNearestNavMeshEntity(tr.position);
 
-		// Takeoff anchor: JumpArea transform if present
+		// update BEFORE picking next
+		agent.lastJumpFromNavMesh = currentNav;
+
+		// takeoff anchor: JumpArea transform if present
 		Ermine::Vec3 takeoff = tr.position;
 		if (ecs.HasComponent<Transform>(linkID))
 			takeoff = ecs.GetComponent<Transform>(linkID).position;
 
 		Ermine::Vec3 landing = link.landingPosition;
 
-		// ---------- AUTO LANDING (when landingPosition is not authored) ----------
+		// auto fill landing, when landingPosition is not authored
 		if (isUnset(landing))
 		{
 			if (!navSys)
@@ -2665,11 +2669,11 @@ namespace
 			}
 
 			// Pick the "other" navmesh by asking for nearest EXCLUDING current.
-			EntityID targetNav = navSys->FindNearestNavMeshEntityExcluding(takeoff, currentNav);
+			EntityID targetNav = navSys->FindNearestNavMeshEntityExcluding(takeoff, currentNav, prevNav);
 
 			// Fallback: if excluding returns 0 for any reason, try using agent pos
 			if (targetNav == 0)
-				targetNav = navSys->FindNearestNavMeshEntityExcluding(tr.position, currentNav);
+				targetNav = navSys->FindNearestNavMeshEntityExcluding(tr.position, currentNav, prevNav);
 
 			if (targetNav == 0 || !ecs.HasComponent<Transform>(targetNav))
 			{
@@ -2692,7 +2696,6 @@ namespace
 
 			landing = snapped;
 		}
-		// ----------------------------------------------------------------------
 
 		// Start jump
 		agent.isJumping = true;
