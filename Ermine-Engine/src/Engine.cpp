@@ -49,12 +49,12 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "NavMesh.h"	 
 #include "NavMeshAgentSystem.h"
 #include "GISystem.h"
+#include "EditorGUI.h"
 
 #if defined(EE_EDITOR)
 #include "GraphicsDebugGUI.h"
 #include "AssetBrowser.h"
 #include "EditorCamera.h"
-#include "EditorGUI.h"
 #include "ViewPortGUI.h"
 #include "AudioImGUI.h"
 #include "SceneManager.h"

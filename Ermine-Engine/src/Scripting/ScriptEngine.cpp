@@ -870,6 +870,7 @@ namespace
 	MonoClass* s_ComponentClass = nullptr;
 	MonoClass* s_AudioComponentClass = nullptr;
 	MonoClass* s_SerializeFieldAttr = nullptr;
+	MonoClass* s_AnimatorClass = nullptr;
 
 	MonoClass* s_ObjectClass = nullptr;
 	MonoClassField* s_EntityIDField = nullptr;
@@ -1144,7 +1145,7 @@ namespace
 		return &ECS::GetInstance().GetComponent<Transform>(id);
 	}
 
-#pragma region Trasnform ICalls
+#pragma region Transform ICalls
 	ManagedVector3 icall_transform_get_position(MonoObject* thisObj)
 	{
 		if (auto* t = GetTransformFromManaged(thisObj))
@@ -2203,6 +2204,23 @@ namespace
 			return obj;
 		}
 
+		// Handle Animator component
+		if (klass == s_AnimatorClass)
+		{
+			if (!ECS::GetInstance().HasComponent<AnimationComponent>(id))
+				return nullptr;
+
+			auto* dom = Ermine::ECS::GetInstance()
+				.GetSystem<Ermine::scripting::ScriptSystem>()->m_ScriptEngine->GetGameDomain();
+
+			MonoObject* obj = mono_object_new(dom, s_AnimatorClass);
+			mono_runtime_object_init(obj);
+			SetEntityIDOnManaged(obj, id);
+			SetComponentGameObject(obj, id);
+
+			return obj;
+		}
+
 		// return back the obj when requesting MonoBehaviour derived -> Script component
 		if (IsSubclassOf(klass, s_MonoBehaviourClass))
 		{
@@ -2239,6 +2257,9 @@ namespace
 
 		if (klass == s_AudioComponentClass)
 			return ECS::GetInstance().HasComponent<AudioComponent>(id);
+
+		if (klass == s_AnimatorClass)
+			return ECS::GetInstance().HasComponent<AnimationComponent>(id);
 
 		if (IsSubclassOf(klass, s_MonoBehaviourClass))
 			return ECS::GetInstance().HasComponent<Script>(id);
@@ -2473,10 +2494,10 @@ namespace
 		auto physics = ECS::GetInstance().GetSystem<Physics>();
 		physics->RemovePhysic((EntityID)entityID);
 	}
-	static void icall_Physics_HasPhysicComp(uint64_t entityID)
+	static bool icall_Physics_HasPhysicComp(uint64_t entityID)
 	{
 		auto physics = ECS::GetInstance().GetSystem<Physics>();
-		physics->HasPhysicComp((EntityID)entityID);
+		return physics->HasPhysicComp((EntityID)entityID);
 	}
 	static void icall_Physics_Jump(uint64_t entityID,float jump)
 	{
@@ -2539,55 +2560,55 @@ namespace
 	static void icall_statemachine_request_next_state(uint64_t entityID)
 	{
 		using namespace Ermine;
+
 		if (entityID == 0 || !ECS::GetInstance().IsEntityValid(entityID))
 			return;
 
-		auto& fsm = ECS::GetInstance().GetComponent<StateMachine>(entityID);
-		if (fsm.manager)
-			fsm.manager->RequestNextState(entityID);
-
-		/*EE_CORE_INFO("[ICall] StateMachine.RequestNextState called from C#, entityID = {}", entityID);
-
-		if (entityID == 0)
-		{
-			EE_CORE_WARN("[ICall] Invalid entityID (0)");
-			return;
-		}
-
-		if (!ECS::GetInstance().IsEntityValid(entityID))
-		{
-			EE_CORE_WARN("[ICall] Entity {} is not valid", entityID);
-			return;
-		}
-
 		if (!ECS::GetInstance().HasComponent<StateMachine>(entityID))
-		{
-			EE_CORE_WARN("[ICall] Entity {} has no StateMachine component", entityID);
 			return;
-		}
 
 		auto& fsm = ECS::GetInstance().GetComponent<StateMachine>(entityID);
+
+		// Rebind runtime-only manager pointer (common after loading a scene)
+		if (!fsm.manager)
+			fsm.manager = ECS::GetInstance().GetSystem<StateManager>().get();
 
 		if (!fsm.manager)
-		{
-			EE_CORE_WARN("[ICall] Entity {} FSM has no manager assigned!", entityID);
 			return;
-		}
 
-		EE_CORE_INFO("[ICall] Forwarding to StateManager::RequestNextState()");
-		fsm.manager->RequestNextState(entityID);*/
+		// Optional safety: make sure there's a current script before transitioning
+		if (fsm.m_CurrentScript == nullptr)
+			fsm.Init(entityID);
+
+		fsm.manager->RequestNextState(entityID);
 	}
 
 	static void icall_statemachine_request_previous_state(uint64_t entityID)
 	{
 		using namespace Ermine;
+
 		if (entityID == 0 || !ECS::GetInstance().IsEntityValid(entityID))
 			return;
 
+		if (!ECS::GetInstance().HasComponent<StateMachine>(entityID))
+			return;
+
 		auto& fsm = ECS::GetInstance().GetComponent<StateMachine>(entityID);
-		if (fsm.manager)
-			fsm.manager->RequestPreviousState(entityID);
+
+		// Rebind runtime-only manager pointer (common after loading a scene)
+		if (!fsm.manager)
+			fsm.manager = ECS::GetInstance().GetSystem<StateManager>().get();
+
+		if (!fsm.manager)
+			return;
+
+		// Optional safety: make sure there's a current script before transitioning
+		if (fsm.m_CurrentScript == nullptr)
+			fsm.Init(entityID);
+
+		fsm.manager->RequestPreviousState(entityID);
 	}
+
 #pragma endregion
 
 #pragma region NavAgent ICalls
@@ -2642,20 +2663,24 @@ namespace
 				return std::fabs(v.x) < 1e-4f && std::fabs(v.y) < 1e-4f && std::fabs(v.z) < 1e-4f;
 			};
 
-		// Current navmesh under agent
+		// current navmesh under agent
 		EntityID currentNav = 0;
+		EntityID prevNav = agent.lastJumpFromNavMesh;
 		auto navSys = ecs.GetSystem<NavMeshAgentSystem>();
 		if (navSys)
 			currentNav = navSys->FindNearestNavMeshEntity(tr.position);
 
-		// Takeoff anchor: JumpArea transform if present
+		// update BEFORE picking next
+		agent.lastJumpFromNavMesh = currentNav;
+
+		// takeoff anchor: JumpArea transform if present
 		Ermine::Vec3 takeoff = tr.position;
 		if (ecs.HasComponent<Transform>(linkID))
 			takeoff = ecs.GetComponent<Transform>(linkID).position;
 
 		Ermine::Vec3 landing = link.landingPosition;
 
-		// ---------- AUTO LANDING (when landingPosition is not authored) ----------
+		// auto fill landing, when landingPosition is not authored
 		if (isUnset(landing))
 		{
 			if (!navSys)
@@ -2665,11 +2690,11 @@ namespace
 			}
 
 			// Pick the "other" navmesh by asking for nearest EXCLUDING current.
-			EntityID targetNav = navSys->FindNearestNavMeshEntityExcluding(takeoff, currentNav);
+			EntityID targetNav = navSys->FindNearestNavMeshEntityExcluding(takeoff, currentNav, prevNav);
 
 			// Fallback: if excluding returns 0 for any reason, try using agent pos
 			if (targetNav == 0)
-				targetNav = navSys->FindNearestNavMeshEntityExcluding(tr.position, currentNav);
+				targetNav = navSys->FindNearestNavMeshEntityExcluding(tr.position, currentNav, prevNav);
 
 			if (targetNav == 0 || !ecs.HasComponent<Transform>(targetNav))
 			{
@@ -2692,7 +2717,6 @@ namespace
 
 			landing = snapped;
 		}
-		// ----------------------------------------------------------------------
 
 		// Start jump
 		agent.isJumping = true;
@@ -2984,6 +3008,179 @@ namespace
 	}
 
 #pragma endregion
+
+#pragma region Animation ICalls
+	static AnimationComponent* GetAnimationFromManaged(MonoObject* thisObj)
+	{
+		using namespace Ermine;
+
+		EntityID id = GetEntityIDFromManaged(thisObj);
+		if (id == 0 || !ECS::GetInstance().IsEntityValid(id))
+			return nullptr;
+
+		if (!ECS::GetInstance().HasComponent<AnimationComponent>(id))
+			return nullptr;
+
+		auto& anim = ECS::GetInstance().GetComponent<AnimationComponent>(id);
+		if (!anim.m_animationGraph)
+			return nullptr;
+
+		return &anim;
+	}
+
+	bool icall_animator_get_bool(MonoObject* thisObj, MonoString* name)
+	{
+		auto* anim = GetAnimationFromManaged(thisObj);
+		if (!anim || !name) return false;
+
+		std::string param;
+		ToTempUTF8(name, param);
+
+		for (auto& p : anim->m_animationGraph->parameters)
+		{
+			if (p.name == param && p.type == AnimationParameter::Type::Bool)
+				return p.boolValue;
+		}
+
+		return false;
+	}
+
+	void icall_animator_set_bool(MonoObject* thisObj, MonoString* name, bool value)
+	{
+		auto* anim = GetAnimationFromManaged(thisObj);
+		if (!anim || !name) return;
+
+		std::string param;
+		ToTempUTF8(name, param);
+
+		for (auto& p : anim->m_animationGraph->parameters)
+		{
+			if (p.name == param && p.type == AnimationParameter::Type::Bool)
+			{
+				p.boolValue = value;
+				return;
+			}
+		}
+	}
+
+	float icall_animator_get_float(MonoObject* thisObj, MonoString* name)
+	{
+		auto* anim = GetAnimationFromManaged(thisObj);
+		if (!anim || !name) return 0.f;
+
+		std::string param;
+		ToTempUTF8(name, param);
+
+		for (auto& p : anim->m_animationGraph->parameters)
+		{
+			if (p.name == param && p.type == AnimationParameter::Type::Float)
+				return p.floatValue;
+		}
+		return 0.f;
+	}
+
+	void icall_animator_set_float(MonoObject* thisObj, MonoString* name, float value)
+	{
+		auto* anim = GetAnimationFromManaged(thisObj);
+		if (!anim || !name) return;
+
+		std::string param;
+		ToTempUTF8(name, param);
+
+		for (auto& p : anim->m_animationGraph->parameters)
+		{
+			if (p.name == param && p.type == AnimationParameter::Type::Float)
+			{
+				p.floatValue = value;
+				return;
+			}
+		}
+	}
+
+	int icall_animator_get_int(MonoObject* thisObj, MonoString* name)
+	{
+		auto* anim = GetAnimationFromManaged(thisObj);
+		if (!anim || !name) return 0;
+
+		std::string param;
+		ToTempUTF8(name, param);
+
+		for (auto& p : anim->m_animationGraph->parameters)
+		{
+			if (p.name == param && p.type == AnimationParameter::Type::Int)
+				return p.intValue;
+		}
+		return 0;
+	}
+
+	void icall_animator_set_int(MonoObject* thisObj, MonoString* name, int value)
+	{
+		auto* anim = GetAnimationFromManaged(thisObj);
+		if (!anim || !name) return;
+
+		std::string param;
+		ToTempUTF8(name, param);
+
+		for (auto& p : anim->m_animationGraph->parameters)
+		{
+			if (p.name == param && p.type == AnimationParameter::Type::Int)
+			{
+				p.intValue = value;
+				return;
+			}
+		}
+	}
+
+	void icall_animator_set_trigger(MonoObject* thisObj, MonoString* name)
+	{
+		auto* anim = GetAnimationFromManaged(thisObj);
+		if (!anim || !name) return;
+
+		std::string param;
+		ToTempUTF8(name, param);
+
+		for (auto& p : anim->m_animationGraph->parameters)
+		{
+			if (p.name == param && p.type == AnimationParameter::Type::Trigger)
+			{
+				p.triggerValue = true;
+				return;
+			}
+		}
+	}
+
+	MonoString* icall_animator_get_current_state(MonoObject* thisObj)
+	{
+		auto* anim = GetAnimationFromManaged(thisObj);
+		if (!anim || !anim->m_animationGraph->current)
+			return nullptr;
+
+		return mono_string_new(
+			mono_domain_get(),
+			anim->m_animationGraph->current->name.c_str()
+		);
+	}
+
+	void icall_animator_set_state(MonoObject* thisObj, MonoString* name)
+	{
+		auto* anim = GetAnimationFromManaged(thisObj);
+		if (!anim || !name) return;
+
+		std::string stateName;
+		ToTempUTF8(name, stateName);
+
+		for (auto& s : anim->m_animationGraph->states)
+		{
+			if (s->name == stateName)
+			{
+				anim->m_animationGraph->current = s;
+				anim->m_animationGraph->currentTime = 0.f;
+				anim->m_animationGraph->playing = true;
+				return;
+			}
+		}
+	}
+#pragma endregion
 }
 
 namespace Ermine::scripting
@@ -3248,7 +3445,8 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	s_SerializeFieldAttr = mono_class_from_name(s_APIImage, "ErmineEngine", "SerializeFieldAttribute");
 	if (!s_SerializeFieldAttr)
 		s_SerializeFieldAttr = mono_class_from_name(s_APIImage, "ErmineEngine", "SerializeField");
-	
+	s_AnimatorClass = GetAPIClass("ErmineEngine", "Animator");
+
 	s_ObjectClass = GetAPIClass("ErmineEngine", "Object");
 	if (s_ObjectClass && !s_EntityIDField)
 	{
@@ -3415,8 +3613,9 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	mono_add_internal_call("ErmineEngine.Physics::Internal_GetRigidbody", (const void*)icall_rigidbody_get_rigidbody);
 	mono_add_internal_call("ErmineEngine.Physics::RemovePhysic", (const void*)&icall_Physics_RemovePhysic);
 	mono_add_internal_call("ErmineEngine.Physics::Jump", (const void*)icall_Physics_Jump);
-	mono_add_internal_call("ErmineEngine.Physics::CheckMotionType", (const int*)icall_Physics_CheckMotionType);
+	mono_add_internal_call("ErmineEngine.Physics::CheckMotionType", (const void*)icall_Physics_CheckMotionType);
 	mono_add_internal_call("ErmineEngine.Physics::ForceUpdate", (const void*)icall_Physics_ForceUpdate);
+	mono_add_internal_call("ErmineEngine.Physics::HasPhysicComp", (const void*)icall_Physics_HasPhysicComp);
 #pragma endregion
 
 #pragma region Cursor ICalls
@@ -3563,4 +3762,21 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	mono_add_internal_call("ErmineEngine.VideoManager::Internal_SetRenderEnabled", (const void*)icall_videomanager_set_render_enabled);
 	mono_add_internal_call("ErmineEngine.VideoManager::Internal_GetRenderEnabled", (const void*)icall_videomanager_get_render_enabled);
 #pragma endregion VideoManager ICalls
+
+#pragma region Animation ICalls
+	mono_add_internal_call("ErmineEngine.Animator::Internal_GetBool", (const void*)icall_animator_get_bool);
+	mono_add_internal_call("ErmineEngine.Animator::Internal_SetBool", (const void*)icall_animator_set_bool);
+
+	mono_add_internal_call("ErmineEngine.Animator::Internal_GetFloat", (const void*)icall_animator_get_float);
+	mono_add_internal_call("ErmineEngine.Animator::Internal_SetFloat", (const void*)icall_animator_set_float);
+
+	mono_add_internal_call("ErmineEngine.Animator::Internal_GetInt", (const void*)icall_animator_get_int);
+	mono_add_internal_call("ErmineEngine.Animator::Internal_SetInt", (const void*)icall_animator_set_int);
+
+	mono_add_internal_call("ErmineEngine.Animator::Internal_SetTrigger", (const void*)icall_animator_set_trigger);
+
+	mono_add_internal_call("ErmineEngine.Animator::Internal_GetCurrentStateName", (const void*)icall_animator_get_current_state);
+
+	mono_add_internal_call("ErmineEngine.Animator::Internal_SetState", (const void*)icall_animator_set_state);
+#pragma endregion
 }

@@ -76,7 +76,7 @@ namespace Ermine
             // jump
             if (agent.isJumping)
             {
-                EE_CORE_INFO("JUMPING");
+                //EE_CORE_INFO("JUMPING");
                 agent.jumpTimer += dt;
                 float t = (agent.jumpDuration > 1e-5f) ? (agent.jumpTimer / agent.jumpDuration) : 1.0f;
                 if (t > 1.0f) t = 1.0f;
@@ -88,12 +88,26 @@ namespace Ermine
                 float arc = agent.jumpHeight * 4.0f * t * (1.0f - t);
                 pos.y += arc;
 
+                // rotate in jumping direction
+                Vec3 face = agent.jumpTarget - agent.jumpStart;
+                face.y = 0.0f;
+
+                float lenSq = face.x * face.x + face.z * face.z;
+                if (lenSq > 1e-6f)
+                {
+                    float yawRad = std::atan2(face.x, face.z);
+                    float yawDeg = yawRad * 57.2957795f;
+
+                    trans.rotation = FromEulerDegrees(Vec3(0.0f, yawDeg, 0.0f));
+                    trans.isDirty = true;
+                }
+
                 auto phys = ecs.GetSystem<Physics>();
                 if (phys && ecs.HasComponent<PhysicComponent>(e))
                 {
                     // move the physics body (so the object actually moves in the world)
                     phys->SetPosition(e, pos);
-
+                    phys->SetRotation(e, trans.rotation);
                     // keep transform in sync (optional, but nice for editor/debug)
                     trans.position = pos;
                 }
@@ -372,7 +386,7 @@ namespace Ermine
         }
         return best;
     }
-    EntityID NavMeshAgentSystem::FindNearestNavMeshEntityExcluding(const Ermine::Vec3& pos, EntityID exclude) const
+    EntityID NavMeshAgentSystem::FindNearestNavMeshEntityExcluding(const Ermine::Vec3& pos, EntityID exclude, EntityID excludePrev) const
     {
         auto& ecs = ECS::GetInstance();
 
@@ -381,7 +395,7 @@ namespace Ermine
 
         for (EntityID ent = 1; ent < MAX_ENTITIES; ++ent)
         {
-            if (ent == exclude) continue;
+            if (ent == exclude || ent == excludePrev) continue;
             if (!ecs.IsEntityValid(ent)) continue;
             if (!ecs.HasComponent<NavMeshComponent>(ent)) continue;
             if (!ecs.HasComponent<Transform>(ent)) continue;

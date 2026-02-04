@@ -41,6 +41,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <fstream>
 #include "Physics.h"
 #include "NavMesh.h"
+#include "GISystem.h"
 
 namespace {
 	constexpr uint32_t kProbeFileMagic = 0x49475245u; // 'ERGI'
@@ -852,6 +853,11 @@ void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 			glDeleteFramebuffers(1, &m_MotionBlurMaskBuffer->FBO);
 			glDeleteTextures(1, &m_MotionBlurMaskBuffer->ColorTexture);
 		}
+		if (m_NoiseTexture != 0)
+		{
+			glDeleteTextures(1, &m_NoiseTexture);
+			m_NoiseTexture = 0;
+		}
 	}
 
 	// Create main post-process buffer with depth attachment for skybox rendering
@@ -1045,6 +1051,54 @@ void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 	MBMaskBuffer.width = width;
 	MBMaskBuffer.height = height;
 	m_MotionBlurMaskBuffer = std::make_shared<PostProcessBuffer>(MBMaskBuffer);
+
+	// Generate film grain noise texture (256x256, single channel)
+	{
+		constexpr int NOISE_SIZE = 256;
+		std::vector<unsigned char> noiseData(NOISE_SIZE * NOISE_SIZE);
+
+		// Use a better noise algorithm - blue noise approximation via void-and-cluster
+		std::mt19937 rng(42); // Fixed seed for reproducibility
+		std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+
+		// Generate base white noise
+		for (int i = 0; i < NOISE_SIZE * NOISE_SIZE; ++i)
+		{
+			noiseData[i] = static_cast<unsigned char>(dist(rng) * 255.0f);
+		}
+
+		// Apply simple low-pass filter to reduce harsh patterns (makes grain more filmic)
+		std::vector<unsigned char> filtered(NOISE_SIZE * NOISE_SIZE);
+		for (int y = 0; y < NOISE_SIZE; ++y)
+		{
+			for (int x = 0; x < NOISE_SIZE; ++x)
+			{
+				int sum = 0;
+				int count = 0;
+				for (int dy = -1; dy <= 1; ++dy)
+				{
+					for (int dx = -1; dx <= 1; ++dx)
+					{
+						int nx = (x + dx + NOISE_SIZE) % NOISE_SIZE;
+						int ny = (y + dy + NOISE_SIZE) % NOISE_SIZE;
+						sum += noiseData[ny * NOISE_SIZE + nx];
+						++count;
+					}
+				}
+				filtered[y * NOISE_SIZE + x] = static_cast<unsigned char>(sum / count);
+			}
+		}
+
+		glGenTextures(1, &m_NoiseTexture);
+		glBindTexture(GL_TEXTURE_2D, m_NoiseTexture);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, NOISE_SIZE, NOISE_SIZE, 0, GL_RED, GL_UNSIGNED_BYTE, filtered.data());
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		EE_CORE_INFO("Film grain noise texture created ({}x{})", NOISE_SIZE, NOISE_SIZE);
+	}
 
 	// Attach G-Buffer's depth texture to PostProcess FBO for shared depth testing
 	// This must happen AFTER PostProcess buffer is created and AFTER G-Buffer exists
@@ -3533,6 +3587,19 @@ void Renderer::RenderPostProcessPass(const Mtx44& view, const Mtx44& projection)
 	m_PostProcessShader->SetUniform1f("u_VignetteRadius", m_VignetteRadius);
 	m_PostProcessShader->SetUniform1f("u_BloomStrength", m_BloomStrength);
 
+	// Film grain and chromatic aberration
+	m_PostProcessShader->SetUniform1i("u_FilmGrain", m_FilmGrainEnabled ? 1 : 0);
+	m_PostProcessShader->SetUniform1f("u_GrainIntensity", m_GrainIntensity);
+	m_PostProcessShader->SetUniform1f("u_GrainScale", m_GrainScale);
+	m_PostProcessShader->SetUniform1i("u_ChromaticAberration", m_ChromaticAberrationEnabled ? 1 : 0);
+	m_PostProcessShader->SetUniform1f("u_ChromaticAmount", m_ChromaticAmount);
+
+	// Bind noise texture for film grain (use texture unit 3 to avoid conflict with outline mask on unit 2)
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, m_NoiseTexture);
+	m_PostProcessShader->SetUniform1i("u_NoiseTexture", 3);
+	// Animate noise by offsetting UV based on time
+	m_PostProcessShader->SetUniform2f("u_NoiseOffset", std::fmod(m_ElapsedTime * 10.0f, 1.0f), std::fmod(m_ElapsedTime * 7.0f, 1.0f));
 
 	Draw(m_QuadMesh.vertex_array, m_QuadMesh.index_buffer);
 
@@ -3675,31 +3742,31 @@ void Renderer::RenderDeferredPipeline(const Mtx44& view, const Mtx44& projection
 		// Light probe volume gizmos
 		{
 			auto& ecs = ECS::GetInstance();
-			for (EntityID entity = 0; entity < MAX_ENTITIES; ++entity) {
-				if (!ecs.HasComponent<LightProbeVolumeComponent>(entity)) continue;
-				if (!ecs.HasComponent<Transform>(entity)) continue;
+			auto giSystem = ecs.GetSystem<GISystem>();
+			if (giSystem) {
+				for (EntityID entity : giSystem->GetProbeEntities()) {
+					const auto& volume = ecs.GetComponent<LightProbeVolumeComponent>(entity);
+					if (!volume.showGizmos) continue;
 
-				const auto& volume = ecs.GetComponent<LightProbeVolumeComponent>(entity);
-				if (!volume.showGizmos) continue;
+					glm::mat4 model = GetEntityWorldMatrix(entity);
+					glm::vec3 localMin = volume.boundsMin;
+					glm::vec3 localMax = volume.boundsMax;
 
-				glm::mat4 model = GetEntityWorldMatrix(entity);
-				glm::vec3 localMin = volume.boundsMin;
-				glm::vec3 localMax = volume.boundsMax;
+					glm::vec3 center = (localMin + localMax) * 0.5f;
+					glm::vec3 extent = (localMax - localMin) * 0.5f;
 
-				glm::vec3 center = (localMin + localMax) * 0.5f;
-				glm::vec3 extent = (localMax - localMin) * 0.5f;
+					glm::vec3 worldCenter = glm::vec3(model * glm::vec4(center, 1.0f));
+					glm::mat3 upperLeft = glm::mat3(model);
+					glm::vec3 worldExtent = glm::abs(upperLeft[0]) * extent.x
+						+ glm::abs(upperLeft[1]) * extent.y
+						+ glm::abs(upperLeft[2]) * extent.z;
 
-				glm::vec3 worldCenter = glm::vec3(model * glm::vec4(center, 1.0f));
-				glm::mat3 upperLeft = glm::mat3(model);
-				glm::vec3 worldExtent = glm::abs(upperLeft[0]) * extent.x
-					+ glm::abs(upperLeft[1]) * extent.y
-					+ glm::abs(upperLeft[2]) * extent.z;
+					glm::vec3 actualMin = worldCenter - worldExtent;
+					glm::vec3 actualMax = worldCenter + worldExtent;
 
-				glm::vec3 actualMin = worldCenter - worldExtent;
-				glm::vec3 actualMax = worldCenter + worldExtent;
-
-				glm::vec3 color = volume.isActive ? glm::vec3(0.2f, 0.8f, 1.0f) : glm::vec3(0.5f, 0.5f, 0.5f);
-				SubmitDebugAABB(actualMin, actualMax, color);
+					glm::vec3 color = volume.isActive ? glm::vec3(0.2f, 0.8f, 1.0f) : glm::vec3(0.5f, 0.5f, 0.5f);
+					SubmitDebugAABB(actualMin, actualMax, color);
+				}
 			}
 		}
 
@@ -3947,6 +4014,13 @@ void Renderer::CleanupPostProcessBuffer()
 			m_MotionBlurMaskBuffer->ColorTexture = 0;
 		}
 		m_MotionBlurMaskBuffer.reset();
+	}
+
+	// Clean up noise texture
+	if (m_NoiseTexture != 0)
+	{
+		glDeleteTextures(1, &m_NoiseTexture);
+		m_NoiseTexture = 0;
 	}
 
 }
@@ -4247,13 +4321,26 @@ void Renderer::CaptureLightProbe(EntityID probeEntity)
 
 	// Ensure the probe has a unique index in the cubemap array
 	std::vector<bool> usedIndices(MAX_PROBES, false);
-	for (EntityID other = 0; other < MAX_ENTITIES; ++other) {
-		if (!ecs.HasComponent<LightProbeVolumeComponent>(other)) continue;
-		if (other == probeEntity) continue;
-		auto& otherProbe = ecs.GetComponent<LightProbeVolumeComponent>(other);
-		if (!otherProbe.isActive) continue;
-		if (otherProbe.probeIndex >= 0 && otherProbe.probeIndex < MAX_PROBES) {
-			usedIndices[otherProbe.probeIndex] = true;
+	auto giSystem = ecs.GetSystem<GISystem>();
+	if (giSystem) {
+		for (EntityID other : giSystem->GetProbeEntities()) {
+			if (other == probeEntity) continue;
+			auto& otherProbe = ecs.GetComponent<LightProbeVolumeComponent>(other);
+			if (!otherProbe.isActive) continue;
+			if (otherProbe.probeIndex >= 0 && otherProbe.probeIndex < MAX_PROBES) {
+				usedIndices[otherProbe.probeIndex] = true;
+			}
+		}
+	}
+	else {
+		for (EntityID other = 0; other < MAX_ENTITIES; ++other) {
+			if (!ecs.HasComponent<LightProbeVolumeComponent>(other)) continue;
+			if (other == probeEntity) continue;
+			auto& otherProbe = ecs.GetComponent<LightProbeVolumeComponent>(other);
+			if (!otherProbe.isActive) continue;
+			if (otherProbe.probeIndex >= 0 && otherProbe.probeIndex < MAX_PROBES) {
+				usedIndices[otherProbe.probeIndex] = true;
+			}
 		}
 	}
 	const bool needsIndex = (probe.probeIndex < 0 || probe.probeIndex >= MAX_PROBES || usedIndices[probe.probeIndex]);
@@ -4387,10 +4474,15 @@ void Renderer::CaptureLightProbe(EntityID probeEntity)
 		GLint locBaseVertex = glGetUniformLocation(program, "u_BaseVertex");
 		GLint locVertexStride = glGetUniformLocation(program, "u_VertexStride");
 		GLint locVertexPosOffset = glGetUniformLocation(program, "u_VertexPositionOffset");
+		GLint locVertexTexOffset = glGetUniformLocation(program, "u_VertexTexCoordOffset");
 		GLint locModelMatrix = glGetUniformLocation(program, "u_ModelMatrix");
 		GLint locMatAlbedo = glGetUniformLocation(program, "u_MaterialAlbedo");
 		GLint locMatEmissive = glGetUniformLocation(program, "u_MaterialEmissive");
 		GLint locMatEmissiveIntensity = glGetUniformLocation(program, "u_MaterialEmissiveIntensity");
+		GLint locMatUVScale = glGetUniformLocation(program, "u_MaterialUVScale");
+		GLint locMatUVOffset = glGetUniformLocation(program, "u_MaterialUVOffset");
+		GLint locMatTexFlags = glGetUniformLocation(program, "u_MaterialTextureFlags");
+		GLint locMatAlbedoMapIndex = glGetUniformLocation(program, "u_MaterialAlbedoMapIndex");
 
 		if (locVoxelMin != -1) glUniform3f(locVoxelMin, worldBoundsMin.x, worldBoundsMin.y, worldBoundsMin.z);
 		if (locVoxelMax != -1) glUniform3f(locVoxelMax, worldBoundsMax.x, worldBoundsMax.y, worldBoundsMax.z);
@@ -4402,6 +4494,10 @@ void Renderer::CaptureLightProbe(EntityID probeEntity)
 		if (locVertexPosOffset != -1) {
 			const int positionOffset = static_cast<int>(offsetof(graphics::Vertex, position) / sizeof(float));
 			glUniform1i(locVertexPosOffset, positionOffset);
+		}
+		if (locVertexTexOffset != -1) {
+			const int texCoordOffset = static_cast<int>(offsetof(graphics::Vertex, texCoord) / sizeof(float));
+			glUniform1i(locVertexTexOffset, texCoordOffset);
 		}
 
 		glBindImageTexture(0, m_ProbeVoxelAlbedoTexture, 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA8);
@@ -4462,10 +4558,15 @@ void Renderer::CaptureLightProbe(EntityID probeEntity)
 					if (locModelMatrix != -1 && i < drawInfos.size()) {
 						glUniformMatrix4fv(locModelMatrix, 1, GL_FALSE, &drawInfos[i].modelMatrix[0][0]);
 					}
-					if (locMatAlbedo != -1 || locMatEmissive != -1 || locMatEmissiveIntensity != -1) {
+					if (locMatAlbedo != -1 || locMatEmissive != -1 || locMatEmissiveIntensity != -1 ||
+						locMatUVScale != -1 || locMatUVOffset != -1 || locMatTexFlags != -1 || locMatAlbedoMapIndex != -1) {
 						glm::vec3 albedo(0.8f);
 						glm::vec3 emissive(0.0f);
 						float emissiveIntensity = 0.0f;
+						glm::vec2 uvScale(1.0f);
+						glm::vec2 uvOffset(0.0f);
+						uint32_t textureFlags = 0;
+						int albedoMapIndex = -1;
 						if (i < drawInfos.size()) {
 							const uint32_t matIndex = drawInfos[i].materialIndex;
 							if (matIndex < m_CompiledMaterials.size()) {
@@ -4473,11 +4574,19 @@ void Renderer::CaptureLightProbe(EntityID probeEntity)
 								albedo = glm::vec3(mat.albedo.x, mat.albedo.y, mat.albedo.z);
 								emissive = glm::vec3(mat.emissive.x, mat.emissive.y, mat.emissive.z);
 								emissiveIntensity = mat.emissiveIntensity;
+								uvScale = glm::vec2(mat.uvScale.x, mat.uvScale.y);
+								uvOffset = glm::vec2(mat.uvOffset.x, mat.uvOffset.y);
+								textureFlags = mat.textureFlags;
+								albedoMapIndex = mat.albedoMapIndex;
 							}
 						}
 						if (locMatAlbedo != -1) glUniform3f(locMatAlbedo, albedo.x, albedo.y, albedo.z);
 						if (locMatEmissive != -1) glUniform3f(locMatEmissive, emissive.x, emissive.y, emissive.z);
 						if (locMatEmissiveIntensity != -1) glUniform1f(locMatEmissiveIntensity, emissiveIntensity);
+						if (locMatUVScale != -1) glUniform2f(locMatUVScale, uvScale.x, uvScale.y);
+						if (locMatUVOffset != -1) glUniform2f(locMatUVOffset, uvOffset.x, uvOffset.y);
+						if (locMatTexFlags != -1) glUniform1ui(locMatTexFlags, textureFlags);
+						if (locMatAlbedoMapIndex != -1) glUniform1i(locMatAlbedoMapIndex, albedoMapIndex);
 					}
 
 					const GLuint triCount = cmd.count / 3;
@@ -4499,14 +4608,9 @@ void Renderer::CaptureLightProbe(EntityID probeEntity)
 		GLint locVoxelMin = glGetUniformLocation(program, "u_VoxelBoundsMin");
 		GLint locVoxelMax = glGetUniformLocation(program, "u_VoxelBoundsMax");
 		GLint locVoxelRes = glGetUniformLocation(program, "u_VoxelResolution");
-		GLint locView = glGetUniformLocation(program, "u_View");
 		if (locVoxelMin != -1) glUniform3f(locVoxelMin, worldBoundsMin.x, worldBoundsMin.y, worldBoundsMin.z);
 		if (locVoxelMax != -1) glUniform3f(locVoxelMax, worldBoundsMax.x, worldBoundsMax.y, worldBoundsMax.z);
 		if (locVoxelRes != -1) glUniform1i(locVoxelRes, m_ProbeVoxelResolution);
-		if (locView != -1) {
-			const glm::mat4 viewMat = ToGlm(editor::EditorCamera::GetInstance().GetViewMatrix());
-			glUniformMatrix4fv(locView, 1, GL_FALSE, &viewMat[0][0]);
-		}
 
 		glBindBufferBase(GL_UNIFORM_BUFFER, LightsBindingPoint, m_LightsUBO);
 		glBindImageTexture(0, m_ProbeVoxelAlbedoTexture, 0, GL_TRUE, 0, GL_READ_ONLY, GL_RGBA8);
@@ -4781,57 +4885,106 @@ void Renderer::UpdateLightProbesUBO()
 	}
 
 	auto& ecs = Ermine::ECS::GetInstance();
+	auto giSystem = ecs.GetSystem<GISystem>();
 	
 	std::vector<LightProbeGPU> probesGPU;
 	probesGPU.reserve(MAX_PROBES);
 
 	// Collect active probes
-	for (EntityID entity = 0; entity < MAX_ENTITIES; ++entity) {
-		if (!ecs.HasComponent<LightProbeVolumeComponent>(entity)) continue;
-		if (!ecs.HasComponent<Transform>(entity)) continue;
-		
-		auto& probe = ecs.GetComponent<LightProbeVolumeComponent>(entity);
-		const auto& trans = ecs.GetComponent<Transform>(entity);
+	if (giSystem) {
+		for (EntityID entity : giSystem->GetProbeEntities()) {
+			auto& probe = ecs.GetComponent<LightProbeVolumeComponent>(entity);
+			const auto& trans = ecs.GetComponent<Transform>(entity);
 
-		if (!probe.isActive) continue;
-		if (probesGPU.size() >= MAX_PROBES) break; // Limit to MAX_PROBES
+			if (!probe.isActive) continue;
+			if (probesGPU.size() >= MAX_PROBES) break; // Limit to MAX_PROBES
 
-		if (!probe.bakedDataLoaded && !probe.bakedProbePath.empty()) {
-			std::filesystem::path bakedPath(probe.bakedProbePath);
-			if (LoadProbeSHFromFile(bakedPath, probe.shCoefficients)) {
-				probe.bakedDataLoaded = true;
+			if (!probe.bakedDataLoaded && !probe.bakedProbePath.empty()) {
+				std::filesystem::path bakedPath(probe.bakedProbePath);
+				if (LoadProbeSHFromFile(bakedPath, probe.shCoefficients)) {
+					probe.bakedDataLoaded = true;
+				}
 			}
+
+			LightProbeGPU gpuProbe;
+			gpuProbe.position_radius = glm::vec4(trans.position.x, trans.position.y, trans.position.z, 0.0f);
+			
+			// Copy SH coefficients (convert vec3 array to vec4 for std140 alignment)
+			for (int i = 0; i < 9; ++i) {
+				gpuProbe.shCoefficients[i] = glm::vec4(probe.shCoefficients[i], 0.0f);
+			}
+
+			glm::mat4 model = GetEntityWorldMatrix(entity);
+			glm::vec3 localMin = probe.boundsMin;
+			glm::vec3 localMax = probe.boundsMax;
+
+			glm::vec3 center = (localMin + localMax) * 0.5f;
+			glm::vec3 extent = (localMax - localMin) * 0.5f;
+
+			glm::vec3 worldCenter = glm::vec3(model * glm::vec4(center, 1.0f));
+			glm::mat3 upperLeft = glm::mat3(model);
+			glm::vec3 worldExtent = glm::abs(upperLeft[0]) * extent.x
+				+ glm::abs(upperLeft[1]) * extent.y
+				+ glm::abs(upperLeft[2]) * extent.z;
+
+			glm::vec3 actualMin = worldCenter - worldExtent;
+			glm::vec3 actualMax = worldCenter + worldExtent;
+
+			gpuProbe.boundsMin = glm::vec4(actualMin, 0.0f);
+			gpuProbe.boundsMax = glm::vec4(actualMax, 0.0f);
+			gpuProbe.flags = glm::vec4(1.0f, static_cast<float>(probe.priority), 0.0f, 0.0f);
+
+			probesGPU.push_back(gpuProbe);
 		}
+	}
+	else {
+		for (EntityID entity = 0; entity < MAX_ENTITIES; ++entity) {
+			if (!ecs.HasComponent<LightProbeVolumeComponent>(entity)) continue;
+			if (!ecs.HasComponent<Transform>(entity)) continue;
 
-		LightProbeGPU gpuProbe;
-		gpuProbe.position_radius = glm::vec4(trans.position.x, trans.position.y, trans.position.z, 0.0f);
-		
-		// Copy SH coefficients (convert vec3 array to vec4 for std140 alignment)
-		for (int i = 0; i < 9; ++i) {
-			gpuProbe.shCoefficients[i] = glm::vec4(probe.shCoefficients[i], 0.0f);
+			auto& probe = ecs.GetComponent<LightProbeVolumeComponent>(entity);
+			const auto& trans = ecs.GetComponent<Transform>(entity);
+
+			if (!probe.isActive) continue;
+			if (probesGPU.size() >= MAX_PROBES) break; // Limit to MAX_PROBES
+
+			if (!probe.bakedDataLoaded && !probe.bakedProbePath.empty()) {
+				std::filesystem::path bakedPath(probe.bakedProbePath);
+				if (LoadProbeSHFromFile(bakedPath, probe.shCoefficients)) {
+					probe.bakedDataLoaded = true;
+				}
+			}
+
+			LightProbeGPU gpuProbe;
+			gpuProbe.position_radius = glm::vec4(trans.position.x, trans.position.y, trans.position.z, 0.0f);
+
+			// Copy SH coefficients (convert vec3 array to vec4 for std140 alignment)
+			for (int i = 0; i < 9; ++i) {
+				gpuProbe.shCoefficients[i] = glm::vec4(probe.shCoefficients[i], 0.0f);
+			}
+
+			glm::mat4 model = GetEntityWorldMatrix(entity);
+			glm::vec3 localMin = probe.boundsMin;
+			glm::vec3 localMax = probe.boundsMax;
+
+			glm::vec3 center = (localMin + localMax) * 0.5f;
+			glm::vec3 extent = (localMax - localMin) * 0.5f;
+
+			glm::vec3 worldCenter = glm::vec3(model * glm::vec4(center, 1.0f));
+			glm::mat3 upperLeft = glm::mat3(model);
+			glm::vec3 worldExtent = glm::abs(upperLeft[0]) * extent.x
+				+ glm::abs(upperLeft[1]) * extent.y
+				+ glm::abs(upperLeft[2]) * extent.z;
+
+			glm::vec3 actualMin = worldCenter - worldExtent;
+			glm::vec3 actualMax = worldCenter + worldExtent;
+
+			gpuProbe.boundsMin = glm::vec4(actualMin, 0.0f);
+			gpuProbe.boundsMax = glm::vec4(actualMax, 0.0f);
+			gpuProbe.flags = glm::vec4(1.0f, static_cast<float>(probe.priority), 0.0f, 0.0f);
+
+			probesGPU.push_back(gpuProbe);
 		}
-
-		glm::mat4 model = GetEntityWorldMatrix(entity);
-		glm::vec3 localMin = probe.boundsMin;
-		glm::vec3 localMax = probe.boundsMax;
-
-		glm::vec3 center = (localMin + localMax) * 0.5f;
-		glm::vec3 extent = (localMax - localMin) * 0.5f;
-
-		glm::vec3 worldCenter = glm::vec3(model * glm::vec4(center, 1.0f));
-		glm::mat3 upperLeft = glm::mat3(model);
-		glm::vec3 worldExtent = glm::abs(upperLeft[0]) * extent.x
-			+ glm::abs(upperLeft[1]) * extent.y
-			+ glm::abs(upperLeft[2]) * extent.z;
-
-		glm::vec3 actualMin = worldCenter - worldExtent;
-		glm::vec3 actualMax = worldCenter + worldExtent;
-
-		gpuProbe.boundsMin = glm::vec4(actualMin, 0.0f);
-		gpuProbe.boundsMax = glm::vec4(actualMax, 0.0f);
-		gpuProbe.flags = glm::vec4(1.0f, static_cast<float>(probe.priority), 0.0f, 0.0f);
-
-		probesGPU.push_back(gpuProbe);
 	}
 
 	// Upload to UBO
@@ -7609,6 +7762,12 @@ void Renderer::SyncToGlobalGraphics()
 	m_GlobalGraphics.vignetteRadius = m_VignetteRadius;
 	m_GlobalGraphics.bloomStrength = m_BloomStrength;
 
+	m_GlobalGraphics.filmGrainEnabled = m_FilmGrainEnabled;
+	m_GlobalGraphics.grainIntensity = m_GrainIntensity;
+	m_GlobalGraphics.grainScale = m_GrainScale;
+	m_GlobalGraphics.chromaticAberrationEnabled = m_ChromaticAberrationEnabled;
+	m_GlobalGraphics.chromaticAmount = m_ChromaticAmount;
+
 	m_GlobalGraphics.fxaaSpanMax = m_FXAASpanMax;
 	m_GlobalGraphics.fxaaReduceMin = m_FXAAReduceMin;
 	m_GlobalGraphics.fxaaReduceMul = m_FXAAReduceMul;
@@ -7671,6 +7830,12 @@ void Renderer::ApplyFromGlobalGraphics()
 	m_VignetteIntensity = m_GlobalGraphics.vignetteIntensity;
 	m_VignetteRadius = m_GlobalGraphics.vignetteRadius;
 	m_BloomStrength = m_GlobalGraphics.bloomStrength;
+
+	m_FilmGrainEnabled = m_GlobalGraphics.filmGrainEnabled;
+	m_GrainIntensity = m_GlobalGraphics.grainIntensity;
+	m_GrainScale = m_GlobalGraphics.grainScale;
+	m_ChromaticAberrationEnabled = m_GlobalGraphics.chromaticAberrationEnabled;
+	m_ChromaticAmount = m_GlobalGraphics.chromaticAmount;
 
 	m_FXAASpanMax = m_GlobalGraphics.fxaaSpanMax;
 	m_FXAAReduceMin = m_GlobalGraphics.fxaaReduceMin;

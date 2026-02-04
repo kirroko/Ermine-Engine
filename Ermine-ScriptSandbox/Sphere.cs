@@ -3,7 +3,7 @@
 public class Sphere : MonoBehaviour
 {
     public Vector3 direction;
-    public float speed = 10.0f;
+    public float speed = 20.0f;
 
     private float timeAlive = 1.0f;
 
@@ -27,8 +27,10 @@ public class Sphere : MonoBehaviour
 
     void OnCollisionEnter(Collision col)
     {
-        
-        if (Physics.CheckMotionType((ulong)col.gameObject.GetInstanceID()) == 0 && !col.gameObject.name.Contains("Bars")) //static obj
+
+        if (Physics.CheckMotionType((ulong)col.gameObject.GetInstanceID()) == 0
+            && !col.gameObject.name.Contains("Bars")
+            && !col.gameObject.name.Contains("gate")) //static obj
         {
             Debug.Log(Physics.CheckMotionType((ulong)col.gameObject.GetInstanceID()));
             timeAlive = 0f;
