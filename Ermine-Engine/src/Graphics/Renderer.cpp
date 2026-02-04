@@ -4474,10 +4474,15 @@ void Renderer::CaptureLightProbe(EntityID probeEntity)
 		GLint locBaseVertex = glGetUniformLocation(program, "u_BaseVertex");
 		GLint locVertexStride = glGetUniformLocation(program, "u_VertexStride");
 		GLint locVertexPosOffset = glGetUniformLocation(program, "u_VertexPositionOffset");
+		GLint locVertexTexOffset = glGetUniformLocation(program, "u_VertexTexCoordOffset");
 		GLint locModelMatrix = glGetUniformLocation(program, "u_ModelMatrix");
 		GLint locMatAlbedo = glGetUniformLocation(program, "u_MaterialAlbedo");
 		GLint locMatEmissive = glGetUniformLocation(program, "u_MaterialEmissive");
 		GLint locMatEmissiveIntensity = glGetUniformLocation(program, "u_MaterialEmissiveIntensity");
+		GLint locMatUVScale = glGetUniformLocation(program, "u_MaterialUVScale");
+		GLint locMatUVOffset = glGetUniformLocation(program, "u_MaterialUVOffset");
+		GLint locMatTexFlags = glGetUniformLocation(program, "u_MaterialTextureFlags");
+		GLint locMatAlbedoMapIndex = glGetUniformLocation(program, "u_MaterialAlbedoMapIndex");
 
 		if (locVoxelMin != -1) glUniform3f(locVoxelMin, worldBoundsMin.x, worldBoundsMin.y, worldBoundsMin.z);
 		if (locVoxelMax != -1) glUniform3f(locVoxelMax, worldBoundsMax.x, worldBoundsMax.y, worldBoundsMax.z);
@@ -4489,6 +4494,10 @@ void Renderer::CaptureLightProbe(EntityID probeEntity)
 		if (locVertexPosOffset != -1) {
 			const int positionOffset = static_cast<int>(offsetof(graphics::Vertex, position) / sizeof(float));
 			glUniform1i(locVertexPosOffset, positionOffset);
+		}
+		if (locVertexTexOffset != -1) {
+			const int texCoordOffset = static_cast<int>(offsetof(graphics::Vertex, texCoord) / sizeof(float));
+			glUniform1i(locVertexTexOffset, texCoordOffset);
 		}
 
 		glBindImageTexture(0, m_ProbeVoxelAlbedoTexture, 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA8);
@@ -4549,10 +4558,15 @@ void Renderer::CaptureLightProbe(EntityID probeEntity)
 					if (locModelMatrix != -1 && i < drawInfos.size()) {
 						glUniformMatrix4fv(locModelMatrix, 1, GL_FALSE, &drawInfos[i].modelMatrix[0][0]);
 					}
-					if (locMatAlbedo != -1 || locMatEmissive != -1 || locMatEmissiveIntensity != -1) {
+					if (locMatAlbedo != -1 || locMatEmissive != -1 || locMatEmissiveIntensity != -1 ||
+						locMatUVScale != -1 || locMatUVOffset != -1 || locMatTexFlags != -1 || locMatAlbedoMapIndex != -1) {
 						glm::vec3 albedo(0.8f);
 						glm::vec3 emissive(0.0f);
 						float emissiveIntensity = 0.0f;
+						glm::vec2 uvScale(1.0f);
+						glm::vec2 uvOffset(0.0f);
+						uint32_t textureFlags = 0;
+						int albedoMapIndex = -1;
 						if (i < drawInfos.size()) {
 							const uint32_t matIndex = drawInfos[i].materialIndex;
 							if (matIndex < m_CompiledMaterials.size()) {
@@ -4560,11 +4574,19 @@ void Renderer::CaptureLightProbe(EntityID probeEntity)
 								albedo = glm::vec3(mat.albedo.x, mat.albedo.y, mat.albedo.z);
 								emissive = glm::vec3(mat.emissive.x, mat.emissive.y, mat.emissive.z);
 								emissiveIntensity = mat.emissiveIntensity;
+								uvScale = glm::vec2(mat.uvScale.x, mat.uvScale.y);
+								uvOffset = glm::vec2(mat.uvOffset.x, mat.uvOffset.y);
+								textureFlags = mat.textureFlags;
+								albedoMapIndex = mat.albedoMapIndex;
 							}
 						}
 						if (locMatAlbedo != -1) glUniform3f(locMatAlbedo, albedo.x, albedo.y, albedo.z);
 						if (locMatEmissive != -1) glUniform3f(locMatEmissive, emissive.x, emissive.y, emissive.z);
 						if (locMatEmissiveIntensity != -1) glUniform1f(locMatEmissiveIntensity, emissiveIntensity);
+						if (locMatUVScale != -1) glUniform2f(locMatUVScale, uvScale.x, uvScale.y);
+						if (locMatUVOffset != -1) glUniform2f(locMatUVOffset, uvOffset.x, uvOffset.y);
+						if (locMatTexFlags != -1) glUniform1ui(locMatTexFlags, textureFlags);
+						if (locMatAlbedoMapIndex != -1) glUniform1i(locMatAlbedoMapIndex, albedoMapIndex);
 					}
 
 					const GLuint triCount = cmd.count / 3;
