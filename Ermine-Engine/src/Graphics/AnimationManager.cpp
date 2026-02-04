@@ -56,6 +56,37 @@ namespace Ermine::graphics
 			if (!animComp.m_animator)
 				continue;
 
+			// Initialize animation graph on first update
+			if (!animComp.initialized)
+			{
+				auto& graph = animComp.m_animationGraph;
+
+				if (graph && !graph->states.empty())
+				{
+					// Find start state
+					auto it = std::find_if(
+						graph->states.begin(),
+						graph->states.end(),
+						[](const auto& s) { return s->isStartState && s->isAttached; }
+					);
+
+					if (it != graph->states.end())
+					{
+						graph->current = *it;
+						graph->playing = true;
+
+						animComp.m_animator->PlayAnimation(
+							graph->current->clipName,
+							true // default loop
+						);
+
+						EE_CORE_INFO("Animation started at state '{}'", graph->current->name);
+					}
+				}
+
+				animComp.initialized = true;
+			}
+
 			// Update animator if animation is playing
 			if (animComp.m_animator->GetCurrentClip())
 			{
