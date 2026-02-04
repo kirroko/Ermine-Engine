@@ -1032,20 +1032,32 @@ namespace Ermine
             float centerX = skill.position.x;
             float centerY = skill.position.y;
 
+            // Determine which icon to use based on selection state
+            // Priority: selected/unselected icons > default iconTexturePath
+            std::string iconPath = skill.iconTexturePath;  // Default fallback
+            if (skill.isSelected && !skill.selectedIconPath.empty())
+            {
+                iconPath = skill.selectedIconPath;
+            }
+            else if (!skill.isSelected && !skill.unselectedIconPath.empty())
+            {
+                iconPath = skill.unselectedIconPath;
+            }
+
             // Load skill icon texture
             std::shared_ptr<graphics::Texture> skillTexture = nullptr;
-            if (!skill.iconTexturePath.empty())
+            if (!iconPath.empty())
             {
-                auto it = m_textureCache.find(skill.iconTexturePath);
+                auto it = m_textureCache.find(iconPath);
                 if (it != m_textureCache.end())
                 {
                     skillTexture = it->second;
                 }
                 else
                 {
-                    skillTexture = AssetManager::GetInstance().LoadTexture(skill.iconTexturePath);
+                    skillTexture = AssetManager::GetInstance().LoadTexture(iconPath);
                     if (skillTexture && skillTexture->IsValid())
-                        m_textureCache[skill.iconTexturePath] = skillTexture;
+                        m_textureCache[iconPath] = skillTexture;
                 }
             }
 

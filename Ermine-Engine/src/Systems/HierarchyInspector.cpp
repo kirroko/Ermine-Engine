@@ -3014,7 +3014,27 @@ namespace Ermine::editor {
 					iconBuffer[sizeof(iconBuffer) - 1] = '\0';
 					if (ImGui::InputText("Icon Texture Path", iconBuffer, sizeof(iconBuffer)))
 						skill.iconTexturePath = iconBuffer;
+					ImGui::TextDisabled("(Default icon - used if selected/unselected not set)");
 
+					ImGui::Separator();
+					ImGui::Text("Selection State Icons:");
+
+					char selectedIconBuffer[256];
+					strncpy_s(selectedIconBuffer, skill.selectedIconPath.c_str(), sizeof(selectedIconBuffer) - 1);
+					selectedIconBuffer[sizeof(selectedIconBuffer) - 1] = '\0';
+					if (ImGui::InputText("Selected Icon Path", selectedIconBuffer, sizeof(selectedIconBuffer)))
+						skill.selectedIconPath = selectedIconBuffer;
+
+					char unselectedIconBuffer[256];
+					strncpy_s(unselectedIconBuffer, skill.unselectedIconPath.c_str(), sizeof(unselectedIconBuffer) - 1);
+					unselectedIconBuffer[sizeof(unselectedIconBuffer) - 1] = '\0';
+					if (ImGui::InputText("Unselected Icon Path", unselectedIconBuffer, sizeof(unselectedIconBuffer)))
+						skill.unselectedIconPath = unselectedIconBuffer;
+
+					ImGui::Checkbox("Is Selected", &skill.isSelected);
+					ImGui::TextDisabled("(Runtime state - set by game logic)");
+
+					ImGui::Separator();
 					ImGui::DragFloat("Max Cooldown (sec)", &skill.maxCooldown, 0.1f, 0.0f, 60.0f);
 					ImGui::DragFloat("Health Cost", &skill.manaCost, 1.0f, 0.0f, 100.0f);
 

@@ -4661,6 +4661,9 @@ namespace Ermine
 			Ermine::Vec3 cooldownColor = { 0.45f, 0.45f, 0.45f };
 			Ermine::Vec3 cooldownOverlayColor = { 0.15f, 0.15f, 0.15f };
 			std::string iconTexturePath = "";
+			std::string selectedIconPath = "";    // Icon when skill is selected/active
+			std::string unselectedIconPath = "";  // Icon when skill is not selected
+			bool isSelected = false;              // Current selection state
 			std::string skillName = "";
 			std::string keyBinding = "";
 			std::string description = "";
@@ -4705,6 +4708,11 @@ namespace Ermine
 				skillObj.AddMember("cooldownOverlayColor", Vec3ToJson(skill.cooldownOverlayColor, alloc), alloc);
 				rapidjson::Value iconPathVal(skill.iconTexturePath.c_str(), alloc);
 				skillObj.AddMember("iconTexturePath", iconPathVal, alloc);
+				rapidjson::Value selectedIconVal(skill.selectedIconPath.c_str(), alloc);
+				skillObj.AddMember("selectedIconPath", selectedIconVal, alloc);
+				rapidjson::Value unselectedIconVal(skill.unselectedIconPath.c_str(), alloc);
+				skillObj.AddMember("unselectedIconPath", unselectedIconVal, alloc);
+				skillObj.AddMember("isSelected", skill.isSelected, alloc);
 				rapidjson::Value skillNameVal(skill.skillName.c_str(), alloc);
 				skillObj.AddMember("skillName", skillNameVal, alloc);
 				rapidjson::Value keyBindingVal(skill.keyBinding.c_str(), alloc);
@@ -4791,6 +4799,12 @@ namespace Ermine
 						slot.cooldownOverlayColor = JsonToVec3(skillObj["cooldownOverlayColor"]);
 					if (skillObj.HasMember("iconTexturePath") && skillObj["iconTexturePath"].IsString())
 						slot.iconTexturePath = skillObj["iconTexturePath"].GetString();
+					if (skillObj.HasMember("selectedIconPath") && skillObj["selectedIconPath"].IsString())
+						slot.selectedIconPath = skillObj["selectedIconPath"].GetString();
+					if (skillObj.HasMember("unselectedIconPath") && skillObj["unselectedIconPath"].IsString())
+						slot.unselectedIconPath = skillObj["unselectedIconPath"].GetString();
+					if (skillObj.HasMember("isSelected") && skillObj["isSelected"].IsBool())
+						slot.isSelected = skillObj["isSelected"].GetBool();
 					if (skillObj.HasMember("skillName") && skillObj["skillName"].IsString())
 						slot.skillName = skillObj["skillName"].GetString();
 					if (skillObj.HasMember("keyBinding") && skillObj["keyBinding"].IsString())
