@@ -15,10 +15,12 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <unordered_set>
 #include "Entity.h"
 #include "Scene.h"
+#include "HierarchySystem.h"
 
 namespace Ermine
 {
 	class Scene;
+	class HierarchySystem;
 }
 
 namespace Ermine::editor

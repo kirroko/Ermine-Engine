@@ -17,6 +17,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Components.h"
 #include "Renderer.h"
 #include "MeshTypes.h"
+#include "AssetManager.h"
 
 #include <document.h>
 #include <writer.h>
@@ -26,6 +27,106 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <istreamwrapper.h>
 #include "GeometryFactory.h"
 #include "Physics.h"
+#include <sstream>
+#include <iomanip>
+#include <unordered_map>
+
+namespace {
+    std::string BuildMaterialSignature(const Ermine::graphics::Material& material,
+        std::string_view customFragmentShader,
+        std::string_view meshName = {})
+    {
+        auto canonicalName = [](const std::string& name) -> std::string {
+            if (name == "material.albedo") return "materialAlbedo";
+            if (name == "material.albedoMap") return "materialAlbedoMap";
+            if (name == "material.normalMap") return "materialNormalMap";
+            if (name == "material.metallic") return "materialMetallic";
+            if (name == "material.roughness") return "materialRoughness";
+            if (name == "material.emissive") return "materialEmissive";
+            if (name == "material.emissiveIntensity") return "materialEmissiveIntensity";
+            if (name == "material.ao") return "materialAo";
+            if (name == "material.normalStrength") return "materialNormalStrength";
+            if (name == "material.hasNormalMap") return "materialHasNormalMap";
+            if (name == "material.metallicMap") return "materialMetallicMap";
+            if (name == "materialAlbedoMap") return "materialAlbedoMap";
+            if (name == "materialNormalMap") return "materialNormalMap";
+            if (name == "materialMetallicMap") return "materialMetallicMap";
+            if (name == "materialRoughnessMap") return "materialRoughnessMap";
+            if (name == "materialAoMap") return "materialAoMap";
+            if (name == "materialEmissiveMap") return "materialEmissiveMap";
+            if (name == "materialAlpha" || name == "materialTransparency")
+                return {};
+            return name;
+        };
+
+        auto normalizePath = [](std::string path) -> std::string {
+            for (char& c : path) {
+                if (c == '\\') c = '/';
+                else c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+            }
+            return path;
+        };
+
+        std::map<std::string, Ermine::graphics::MaterialParam> normalized;
+        for (const auto& [name, param] : material.GetParameters()) {
+            std::string key = canonicalName(name);
+            if (key.empty())
+                continue;
+            if (normalized.find(key) == normalized.end())
+                normalized.emplace(key, param);
+        }
+
+        std::ostringstream oss;
+        oss << std::setprecision(6) << std::fixed;
+        oss << "mesh=" << meshName << ";";
+        oss << "frag=" << customFragmentShader << ";";
+
+        Ermine::Vec2 uvScale = material.GetUVScale();
+        Ermine::Vec2 uvOffset = material.GetUVOffset();
+        oss << "uvs=" << uvScale.x << "," << uvScale.y << ";";
+        oss << "uvo=" << uvOffset.x << "," << uvOffset.y << ";";
+
+        for (const auto& [name, param] : normalized) {
+            oss << "p:" << name << "|";
+            switch (param.type) {
+            case Ermine::graphics::MaterialParamType::FLOAT:
+                oss << "f:" << (param.floatValues.empty() ? 0.0f : param.floatValues[0]);
+                break;
+            case Ermine::graphics::MaterialParamType::VEC2:
+                oss << "v2:";
+                if (param.floatValues.size() >= 2)
+                    oss << param.floatValues[0] << "," << param.floatValues[1];
+                break;
+            case Ermine::graphics::MaterialParamType::VEC3:
+                oss << "v3:";
+                if (param.floatValues.size() >= 3)
+                    oss << param.floatValues[0] << "," << param.floatValues[1] << "," << param.floatValues[2];
+                break;
+            case Ermine::graphics::MaterialParamType::VEC4:
+                oss << "v4:";
+                if (param.floatValues.size() >= 4)
+                    oss << param.floatValues[0] << "," << param.floatValues[1] << "," << param.floatValues[2] << "," << param.floatValues[3];
+                break;
+            case Ermine::graphics::MaterialParamType::INT:
+                oss << "i:" << param.intValue;
+                break;
+            case Ermine::graphics::MaterialParamType::BOOL:
+                oss << "b:" << (param.boolValue ? 1 : 0);
+                break;
+            case Ermine::graphics::MaterialParamType::TEXTURE_2D:
+                oss << "t:";
+                if (param.texture) {
+                    std::string path = param.texture->GetFilePath();
+                    oss << normalizePath(path);
+                }
+                break;
+            }
+            oss << ";";
+        }
+
+        return oss.str();
+    }
+}
 
 
 using namespace rapidjson;
@@ -319,6 +420,14 @@ Config LoadConfigFromFile(const std::filesystem::path& path) {
 
 void SaveSceneToFile(const Ermine::ECS& ecs, const std::filesystem::path& path, bool pretty) {
 
+    // Sync all Material components from their internal materials before saving
+    for (Ermine::EntityID id = 0; id < Ermine::MAX_ENTITIES; ++id) {
+        if (ecs.IsEntityValid(id) && ecs.HasComponent<Ermine::Material>(id)) {
+            auto& matComp = const_cast<Ermine::ECS&>(ecs).GetComponent<Ermine::Material>(id);
+            matComp.SyncFromMaterial();
+        }
+    }
+
     if (path.has_parent_path()) {
         std::error_code ec;
         std::filesystem::create_directories(path.parent_path(), ec);
@@ -511,6 +620,131 @@ void LoadSceneFromFile(Ermine::ECS& ecs, const std::filesystem::path& path) {
         }
     }
 
+    // Backward-compat: compile legacy materials (no GUID) using mesh/entity names
+    // with name -> signature check (same as Compile All Materials).
+    {
+        auto& assets = Ermine::AssetManager::GetInstance();
+        std::unordered_map<std::string, Ermine::Guid> signatureToGuid;
+
+        assets.ScanMaterialAssets();
+        for (const auto& [guid, path] : assets.GetMaterialPathsByGuid()) {
+            auto existing = assets.LoadMaterialAsset(path, false);
+            if (!existing)
+                continue;
+            std::string frag = "";
+            if (const std::string* stored = assets.GetMaterialCustomFragmentShader(guid))
+                frag = *stored;
+            std::string meshName = std::filesystem::path(path).stem().string();
+            const std::string sig = BuildMaterialSignature(*existing, frag, meshName);
+            if (signatureToGuid.find(sig) == signatureToGuid.end())
+                signatureToGuid.emplace(sig, guid);
+        }
+
+        for (Ermine::EntityID id = 0; id < Ermine::MAX_ENTITIES; ++id) {
+            if (!ecs.IsEntityValid(id) || !ecs.HasComponent<Ermine::Material>(id))
+                continue;
+
+            auto& matComp = ecs.GetComponent<Ermine::Material>(id);
+            if (matComp.materialGuid.IsValid())
+                continue;
+
+            auto matShared = matComp.GetSharedMaterial();
+            if (!matShared)
+                continue;
+
+            std::string baseName = "Material";
+            if (ecs.HasComponent<Ermine::ObjectMetaData>(id)) {
+                const auto& meta = ecs.GetComponent<Ermine::ObjectMetaData>(id);
+                baseName = meta.name.empty() ? baseName : meta.name;
+                if (baseName.rfind("Mesh_", 0) == 0 && baseName.size() > 5)
+                    baseName = baseName.substr(5);
+            }
+
+            baseName = Ermine::AssetManager::SanitizeAssetName(baseName);
+            const std::string sig = BuildMaterialSignature(*matShared, matComp.customFragmentShader, baseName);
+            std::filesystem::path basePath = std::filesystem::absolute("../Resources/Materials") / (baseName + ".mat");
+
+            if (std::filesystem::exists(basePath)) {
+                auto existing = assets.LoadMaterialAsset(basePath.string(), false);
+                if (existing) {
+                    Ermine::Guid baseGuid = assets.GetMaterialGuidForPath(basePath.string());
+                    std::string frag = "";
+                    if (const std::string* stored = assets.GetMaterialCustomFragmentShader(baseGuid))
+                        frag = *stored;
+                    const std::string existingSig = BuildMaterialSignature(*existing, frag, baseName);
+                    if (existingSig == sig) {
+                        auto shared = assets.GetMaterialByGuid(baseGuid);
+                        matComp.SetMaterial(shared ? shared : matShared, baseGuid);
+                        if (shared) {
+                            for (Ermine::EntityID other = 0; other < Ermine::MAX_ENTITIES; ++other) {
+                                if (!ecs.IsEntityValid(other) || !ecs.HasComponent<Ermine::Material>(other))
+                                    continue;
+                                auto& otherComp = ecs.GetComponent<Ermine::Material>(other);
+                                if (otherComp.materialGuid == baseGuid)
+                                    otherComp.SetMaterial(shared, baseGuid);
+                            }
+                        }
+                        signatureToGuid.emplace(sig, baseGuid);
+                        continue;
+                    }
+                }
+
+                // Name exists but different material -> create a copy name
+                std::string uniqueName = baseName;
+                int suffix = 1;
+                do {
+                    uniqueName = baseName + "_Copy" + std::to_string(suffix++);
+                } while (std::filesystem::exists(std::filesystem::absolute("../Resources/Materials") / (uniqueName + ".mat")));
+
+                Ermine::Guid guid = assets.SaveMaterialAsset(uniqueName, *matShared, false, matComp.customFragmentShader);
+                auto shared = assets.GetMaterialByGuid(guid);
+                matComp.SetMaterial(shared ? shared : matShared, guid);
+                if (shared) {
+                    for (Ermine::EntityID other = 0; other < Ermine::MAX_ENTITIES; ++other) {
+                        if (!ecs.IsEntityValid(other) || !ecs.HasComponent<Ermine::Material>(other))
+                            continue;
+                        auto& otherComp = ecs.GetComponent<Ermine::Material>(other);
+                        if (otherComp.materialGuid == guid)
+                            otherComp.SetMaterial(shared, guid);
+                    }
+                }
+                signatureToGuid.emplace(sig, guid);
+                continue;
+            }
+
+            // Name doesn't exist: try dedupe by signature to reuse an identical material.
+            auto sigIt = signatureToGuid.find(sig);
+            if (sigIt != signatureToGuid.end()) {
+                auto shared = assets.GetMaterialByGuid(sigIt->second);
+                matComp.SetMaterial(shared ? shared : matShared, sigIt->second);
+                if (shared) {
+                    for (Ermine::EntityID other = 0; other < Ermine::MAX_ENTITIES; ++other) {
+                        if (!ecs.IsEntityValid(other) || !ecs.HasComponent<Ermine::Material>(other))
+                            continue;
+                        auto& otherComp = ecs.GetComponent<Ermine::Material>(other);
+                        if (otherComp.materialGuid == sigIt->second)
+                            otherComp.SetMaterial(shared, sigIt->second);
+                    }
+                }
+                continue;
+            }
+
+            Ermine::Guid guid = assets.SaveMaterialAsset(baseName, *matShared, false, matComp.customFragmentShader);
+            auto shared = assets.GetMaterialByGuid(guid);
+            matComp.SetMaterial(shared ? shared : matShared, guid);
+            if (shared) {
+                for (Ermine::EntityID other = 0; other < Ermine::MAX_ENTITIES; ++other) {
+                    if (!ecs.IsEntityValid(other) || !ecs.HasComponent<Ermine::Material>(other))
+                        continue;
+                    auto& otherComp = ecs.GetComponent<Ermine::Material>(other);
+                    if (otherComp.materialGuid == guid)
+                        otherComp.SetMaterial(shared, guid);
+                }
+            }
+            signatureToGuid.emplace(sig, guid);
+        }
+    }
+
     ecs.ResyncAllSignaturesFromStorage();
 
     Ermine::ResolveHierarchyGuids(ecs);
@@ -547,6 +781,25 @@ void LoadScene(const std::string& sceneName)
 
 void SavePrefabToFile(const Ermine::ECS& ecs, Ermine::EntityID root, const std::filesystem::path& path)
 {
+    // Sync all Material components in the prefab subtree
+    std::vector<Ermine::EntityID> toSync{ root };
+    while (!toSync.empty()) {
+        Ermine::EntityID e = toSync.back();
+        toSync.pop_back();
+        if (!ecs.IsEntityValid(e)) continue;
+        
+        if (ecs.HasComponent<Ermine::Material>(e)) {
+            auto& matComp = const_cast<Ermine::ECS&>(ecs).GetComponent<Ermine::Material>(e);
+            matComp.SyncFromMaterial();
+        }
+
+        if (ecs.HasComponent<Ermine::HierarchyComponent>(e)) {
+            const auto& h = ecs.GetComponent<Ermine::HierarchyComponent>(e);
+            for (auto c : h.children)
+                toSync.push_back(c);
+        }
+    }
+
     if (path.has_parent_path()) {
         std::error_code ec;
         std::filesystem::create_directories(path.parent_path(), ec);
@@ -937,5 +1190,273 @@ Ermine::Guid EnsureMetaForSource(const std::filesystem::path& sourcePath,
     Ermine::Guid created = Ermine::Guid::New();
     SaveAssetMetaGuid(metaPath, created, type, /*metaVersion*/1, pretty);
     return created;
+}
+
+// --- Material Serialization ---
+
+#include "Material.h"
+
+void SaveMaterialToFile(const Ermine::graphics::Material& material,
+    const std::filesystem::path& path,
+    bool pretty,
+    std::string_view customFragmentShader)
+{
+    if (path.has_parent_path()) {
+        std::error_code ec;
+        std::filesystem::create_directories(path.parent_path(), ec);
+        if (ec) {
+            throw std::runtime_error("Failed to create directory: " + path.parent_path().string());
+        }
+    }
+
+    std::ofstream ofs(path, std::ios::binary);
+    if (!ofs) {
+        throw std::runtime_error("Could not open file for writing: " + path.string());
+    }
+
+    rapidjson::Document d;
+    d.SetObject();
+    auto& a = d.GetAllocator();
+
+    // Save all material parameters
+    rapidjson::Value paramsObj(rapidjson::kObjectType);
+
+    // Helper lambda to save a parameter if it exists
+    auto saveParam = [&](const std::string& name) {
+        if (const auto* param = material.GetParameter(name)) {
+            rapidjson::Value paramObj(rapidjson::kObjectType);
+            
+            switch (param->type) {
+                case Ermine::graphics::MaterialParamType::FLOAT:
+                    paramObj.AddMember("type", "float", a);
+                    if (!param->floatValues.empty()) {
+                        paramObj.AddMember("value", param->floatValues[0], a);
+                    }
+                    break;
+                    
+                case Ermine::graphics::MaterialParamType::VEC2:
+                    paramObj.AddMember("type", "vec2", a);
+                    if (param->floatValues.size() >= 2) {
+                        rapidjson::Value arr(rapidjson::kArrayType);
+                        arr.PushBack(param->floatValues[0], a);
+                        arr.PushBack(param->floatValues[1], a);
+                        paramObj.AddMember("value", arr, a);
+                    }
+                    break;
+                    
+                case Ermine::graphics::MaterialParamType::VEC3:
+                    paramObj.AddMember("type", "vec3", a);
+                    if (param->floatValues.size() >= 3) {
+                        rapidjson::Value arr(rapidjson::kArrayType);
+                        arr.PushBack(param->floatValues[0], a);
+                        arr.PushBack(param->floatValues[1], a);
+                        arr.PushBack(param->floatValues[2], a);
+                        paramObj.AddMember("value", arr, a);
+                    }
+                    break;
+                    
+                case Ermine::graphics::MaterialParamType::VEC4:
+                    paramObj.AddMember("type", "vec4", a);
+                    if (param->floatValues.size() >= 4) {
+                        rapidjson::Value arr(rapidjson::kArrayType);
+                        arr.PushBack(param->floatValues[0], a);
+                        arr.PushBack(param->floatValues[1], a);
+                        arr.PushBack(param->floatValues[2], a);
+                        arr.PushBack(param->floatValues[3], a);
+                        paramObj.AddMember("value", arr, a);
+                    }
+                    break;
+                    
+                case Ermine::graphics::MaterialParamType::INT:
+                    paramObj.AddMember("type", "int", a);
+                    paramObj.AddMember("value", param->intValue, a);
+                    break;
+                    
+                case Ermine::graphics::MaterialParamType::BOOL:
+                    paramObj.AddMember("type", "bool", a);
+                    paramObj.AddMember("value", param->boolValue, a);
+                    break;
+                    
+                case Ermine::graphics::MaterialParamType::TEXTURE_2D:
+                    paramObj.AddMember("type", "texture2d", a);
+                    if (param->texture) {
+                        std::string texPath = param->texture->GetFilePath();
+                        paramObj.AddMember("value", rapidjson::Value(texPath.c_str(), a), a);
+                    }
+                    break;
+            }
+            
+            paramsObj.AddMember(rapidjson::Value(name.c_str(), a), paramObj, a);
+        }
+    };
+
+    // Save all common material parameters
+    saveParam("materialAlbedo");
+    saveParam("materialMetallic");
+    saveParam("materialRoughness");
+    saveParam("materialAo");
+    saveParam("materialEmissive");
+    saveParam("materialEmissiveIntensity");
+    saveParam("materialNormalStrength");
+    saveParam("materialShadingModel");
+    saveParam("materialCastsShadows");
+    saveParam("materialHasAlbedoMap");
+    saveParam("materialHasNormalMap");
+    saveParam("materialHasRoughnessMap");
+    saveParam("materialHasMetallicMap");
+    saveParam("materialHasAoMap");
+    saveParam("materialHasEmissiveMap");
+    saveParam("materialAlbedoMap");
+    saveParam("materialNormalMap");
+    saveParam("materialRoughnessMap");
+    saveParam("materialMetallicMap");
+    saveParam("materialAoMap");
+    saveParam("materialEmissiveMap");
+
+    d.AddMember("parameters", paramsObj, a);
+
+    // Save UV transform
+    rapidjson::Value uvObj(rapidjson::kObjectType);
+    auto uvScale = material.GetUVScale();
+    auto uvOffset = material.GetUVOffset();
+    
+    rapidjson::Value scaleArr(rapidjson::kArrayType);
+    scaleArr.PushBack(uvScale.x, a);
+    scaleArr.PushBack(uvScale.y, a);
+    uvObj.AddMember("scale", scaleArr, a);
+    
+    rapidjson::Value offsetArr(rapidjson::kArrayType);
+    offsetArr.PushBack(uvOffset.x, a);
+    offsetArr.PushBack(uvOffset.y, a);
+    uvObj.AddMember("offset", offsetArr, a);
+    
+    d.AddMember("uvTransform", uvObj, a);
+
+    if (!customFragmentShader.empty()) {
+        rapidjson::Value fragPath;
+        fragPath.SetString(customFragmentShader.data(),
+            static_cast<rapidjson::SizeType>(customFragmentShader.size()),
+            a);
+        d.AddMember("customFragmentShader", fragPath, a);
+    }
+
+    // Write to file
+    rapidjson::OStreamWrapper osw(ofs);
+    if (pretty) {
+        rapidjson::PrettyWriter<rapidjson::OStreamWrapper> writer(osw);
+        d.Accept(writer);
+    }
+    else {
+        rapidjson::Writer<rapidjson::OStreamWrapper> writer(osw);
+        d.Accept(writer);
+    }
+}
+
+Ermine::graphics::Material LoadMaterialFromFile(const std::filesystem::path& path,
+    std::string* outCustomFragmentShader)
+{
+    std::ifstream ifs(path, std::ios::binary);
+    if (!ifs) {
+        throw std::runtime_error("Could not open file for reading: " + path.string());
+    }
+
+    rapidjson::IStreamWrapper isw(ifs);
+    rapidjson::Document d;
+    d.ParseStream(isw);
+
+    if (d.HasParseError() || !d.IsObject()) {
+        throw std::runtime_error("Invalid JSON file: " + path.string());
+    }
+
+    Ermine::graphics::Material material;
+
+    // Load parameters
+    if (d.HasMember("parameters") && d["parameters"].IsObject()) {
+        const auto& paramsObj = d["parameters"];
+        
+        for (auto it = paramsObj.MemberBegin(); it != paramsObj.MemberEnd(); ++it) {
+            std::string paramName = it->name.GetString();
+            const auto& paramData = it->value;
+            
+            if (!paramData.IsObject() || !paramData.HasMember("type")) continue;
+            
+            std::string type = paramData["type"].GetString();
+            
+            if (type == "float" && paramData.HasMember("value") && paramData["value"].IsNumber()) {
+                material.SetFloat(paramName, paramData["value"].GetFloat());
+            }
+            else if (type == "vec2" && paramData.HasMember("value") && paramData["value"].IsArray()) {
+                const auto& arr = paramData["value"].GetArray();
+                if (arr.Size() >= 2) {
+                    material.SetVec2(paramName, Ermine::Vec2(arr[0].GetFloat(), arr[1].GetFloat()));
+                }
+            }
+            else if (type == "vec3" && paramData.HasMember("value") && paramData["value"].IsArray()) {
+                const auto& arr = paramData["value"].GetArray();
+                if (arr.Size() >= 3) {
+                    material.SetVec3(paramName, Ermine::Vec3(arr[0].GetFloat(), arr[1].GetFloat(), arr[2].GetFloat()));
+                }
+            }
+            else if (type == "vec4" && paramData.HasMember("value") && paramData["value"].IsArray()) {
+                const auto& arr = paramData["value"].GetArray();
+                if (arr.Size() >= 4) {
+                    material.SetVec4(paramName, Ermine::Vec4(arr[0].GetFloat(), arr[1].GetFloat(), arr[2].GetFloat(), arr[3].GetFloat()));
+                }
+            }
+            else if (type == "int" && paramData.HasMember("value") && paramData["value"].IsInt()) {
+                material.SetInt(paramName, paramData["value"].GetInt());
+            }
+            else if (type == "bool" && paramData.HasMember("value") && paramData["value"].IsBool()) {
+                material.SetBool(paramName, paramData["value"].GetBool());
+            }
+            else if (type == "texture2d" && paramData.HasMember("value") && paramData["value"].IsString()) {
+                std::string texPath = paramData["value"].GetString();
+                auto tex = Ermine::AssetManager::GetInstance().LoadTexture(texPath);
+                if (tex && tex->IsValid()) {
+                    material.SetTexture(paramName, tex);
+                }
+            }
+        }
+    }
+
+    // Load UV transform
+    if (d.HasMember("uvTransform") && d["uvTransform"].IsObject()) {
+        const auto& uvObj = d["uvTransform"];
+        
+        if (uvObj.HasMember("scale") && uvObj["scale"].IsArray()) {
+            const auto& scaleArr = uvObj["scale"].GetArray();
+            if (scaleArr.Size() >= 2) {
+                material.SetUVScale(Ermine::Vec2(scaleArr[0].GetFloat(), scaleArr[1].GetFloat()));
+            }
+        }
+        
+        if (uvObj.HasMember("offset") && uvObj["offset"].IsArray()) {
+            const auto& offsetArr = uvObj["offset"].GetArray();
+            if (offsetArr.Size() >= 2) {
+                material.SetUVOffset(Ermine::Vec2(offsetArr[0].GetFloat(), offsetArr[1].GetFloat()));
+            }
+        }
+    }
+
+    if (d.HasMember("customFragmentShader") && d["customFragmentShader"].IsString()) {
+        std::string fragPath = d["customFragmentShader"].GetString();
+        if (outCustomFragmentShader)
+            *outCustomFragmentShader = fragPath;
+
+        if (!fragPath.empty()) {
+            auto shader = Ermine::AssetManager::GetInstance().LoadShader(
+                "../Resources/Shaders/vertex.glsl",
+                fragPath
+            );
+            if (shader && shader->IsValid()) {
+                material.SetShader(shader);
+            }
+            else {
+                EE_CORE_WARN("Failed to load custom fragment shader '{}' from material file", fragPath);
+            }
+        }
+    }
+
+    return material;
 }
 

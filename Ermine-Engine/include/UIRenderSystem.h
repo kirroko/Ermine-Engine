@@ -137,6 +137,14 @@ namespace Ermine
         *************************************************************************/
         void RenderButton(const UIButtonComponent& button);
 
+        /*!***********************************************************************
+        \brief
+            Renders a UI slider with track, fill, and handle.
+        \param[in] slider
+            Reference to UISliderComponent with slider settings.
+        *************************************************************************/
+        void RenderSlider(const UISliderComponent& slider);
+
         bool IsEntityActiveInHierarchy(EntityID entity);
 
         /*!***********************************************************************

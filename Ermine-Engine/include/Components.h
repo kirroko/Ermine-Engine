@@ -1177,7 +1177,8 @@ namespace Ermine
 	struct Material
 	{
 		//material class
-		std::shared_ptr<graphics::Material> m_material;
+		mutable std::shared_ptr<graphics::Material> m_material;
+		Guid materialGuid{};
 
 		// ---- Minimal cached authoring values for serialization ----
 		std::string materialTemplate;       // optional
@@ -1199,7 +1200,7 @@ namespace Ermine
 		 * @brief Constructor taking a modular material.
 		 * @param material A shared pointer to a `graphics::Material` object that will be used to initialize the Material.
 		 */
-		Material(std::shared_ptr<graphics::Material> material) : m_material(std::move(material))
+		Material(std::shared_ptr<graphics::Material> material, Guid guid = {}) : m_material(std::move(material)), materialGuid(guid)
 		{
 		}
 
@@ -1227,7 +1228,7 @@ namespace Ermine
 		 * @brief Copy constructor for the Material class.
 		 * @param other The other Material object to copy from.
 		 */
-		Material(const Material& other) : m_material(other.m_material)
+		Material(const Material& other) : m_material(other.m_material), materialGuid(other.materialGuid)
 		{
 			// Shared ownership - multiple entities can share the same material
 		}
@@ -1242,6 +1243,7 @@ namespace Ermine
 			if (this != &other)
 			{
 				m_material = other.m_material; // Shared ownership
+				materialGuid = other.materialGuid;
 			}
 			return *this;
 		}
@@ -1250,7 +1252,7 @@ namespace Ermine
 		 * @brief Move constructor for the Material class.
 		 * @param other The Material object to move from.
 		 */
-		Material(Material&& other) noexcept : m_material(std::move(other.m_material))
+		Material(Material&& other) noexcept : m_material(std::move(other.m_material)), materialGuid(other.materialGuid)
 		{
 		}
 
@@ -1264,6 +1266,7 @@ namespace Ermine
 			if (this != &other)
 			{
 				m_material = std::move(other.m_material);
+				materialGuid = other.materialGuid;
 			}
 			return *this;
 		}
@@ -1273,6 +1276,9 @@ namespace Ermine
 		 * @return A pointer to the internal `graphics::Material` object.
 		 */
 		graphics::Material* GetMaterial() const {
+			if (!m_material && materialGuid.IsValid()) {
+				m_material = AssetManager::GetInstance().GetMaterialByGuid(materialGuid);
+			}
 			return m_material.get();
 		}
 
@@ -1281,7 +1287,15 @@ namespace Ermine
 		 * @return A shared pointer to the internal `graphics::Material` object.
 		 */
 		std::shared_ptr<graphics::Material> GetSharedMaterial() const {
+			if (!m_material && materialGuid.IsValid()) {
+				m_material = AssetManager::GetInstance().GetMaterialByGuid(materialGuid);
+			}
 			return m_material;
+		}
+
+		void SetMaterial(const std::shared_ptr<graphics::Material>& material, Guid guid) {
+			m_material = material;
+			materialGuid = guid;
 		}
 
 		/**
@@ -1347,174 +1361,104 @@ namespace Ermine
 			}
 		}
 
+		/**
+		* @brief Syncs cached values from the internal material for serialization.
+		* @details Call this before saving to ensure cached values match the actual material state.
+		*/
+		void SyncFromMaterial()
+		{
+			if (!m_material) return;
+
+			// Sync albedo
+			if (auto param = m_material->GetParameter("materialAlbedo"))
+			{
+				if (param->floatValues.size() >= 3)
+				{
+					hasAlbedo = true;
+					cacheAlbedo = Vec3(param->floatValues[0], param->floatValues[1], param->floatValues[2]);
+				}
+			}
+
+			// Sync roughness
+			if (auto param = m_material->GetParameter("materialRoughness"))
+			{
+				if (!param->floatValues.empty())
+				{
+					hasRough = true;
+					cacheRoughness = param->floatValues[0];
+				}
+			}
+
+			// Sync metallic
+			if (auto param = m_material->GetParameter("materialMetallic"))
+			{
+				if (!param->floatValues.empty())
+				{
+					hasMetal = true;
+					cacheMetallic = param->floatValues[0];
+				}
+			}
+
+			// Sync emissive
+			if (auto param = m_material->GetParameter("materialEmissive"))
+			{
+				if (param->floatValues.size() >= 3)
+				{
+					hasEmiss = true;
+					cacheEmissive = Vec3(param->floatValues[0], param->floatValues[1], param->floatValues[2]);
+				}
+			}
+
+			if (auto param = m_material->GetParameter("materialEmissiveIntensity"))
+			{
+				if (!param->floatValues.empty())
+				{
+					cacheEmissiveIntensity = param->floatValues[0];
+				}
+			}
+
+			// Sync shadows
+			if (auto param = m_material->GetParameter("materialCastsShadows"))
+			{
+				cacheCastsShadows = param->boolValue;
+			}
+		}
+
 		template <typename Alloc>
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
 			out.SetObject();
-
-			// No material => nothing to serialize
-			if (!m_material) {
-				out.AddMember("hasMaterial", false, alloc);
-				return;
-			}
-			out.AddMember("hasMaterial", true, alloc);
-
-			// Serialize selected scalar/vector params so UBO can be restored
-			rapidjson::Value params(rapidjson::kObjectType);
-
-			auto writeFloat = [&](const char* name) {
-				if (auto p = m_material->GetParameter(name)) {
-					if (!p->floatValues.empty()) {
-						rapidjson::Value v;
-						v.SetFloat(p->floatValues[0]);
-						params.AddMember(rapidjson::StringRef(name), v, alloc);
-					}
+			Guid guidToWrite = materialGuid;
+			if (!guidToWrite.IsValid() && m_material) {
+				auto& assets = AssetManager::GetInstance();
+				guidToWrite = assets.FindMaterialGuid(m_material.get());
+				if (!guidToWrite.IsValid()) {
+					std::string fallbackName = "Material_" + Guid::New().ToString();
+					guidToWrite = assets.SaveMaterialAsset(fallbackName, *m_material, true, customFragmentShader);
 				}
-				};
-
-			auto writeInt = [&](const char* name) {
-				if (auto p = m_material->GetParameter(name)) {
-					rapidjson::Value v;
-					v.SetInt(p->intValue);
-					params.AddMember(rapidjson::StringRef(name), v, alloc);
-				}
-				};
-
-			auto writeBool = [&](const char* name) {
-				if (auto p = m_material->GetParameter(name)) {
-					rapidjson::Value v;
-					v.SetBool(p->boolValue);
-					params.AddMember(rapidjson::StringRef(name), v, alloc);
-				}
-				};
-
-			auto writeVec3 = [&](const char* name) {
-				if (auto p = m_material->GetParameter(name); p && p->floatValues.size() >= 3) {
-					rapidjson::Value a(rapidjson::kArrayType);
-					a.PushBack(p->floatValues[0], alloc)
-						.PushBack(p->floatValues[1], alloc)
-						.PushBack(p->floatValues[2], alloc);
-					params.AddMember(rapidjson::StringRef(name), a, alloc);
-				}
-				};
-
-			auto writeVec4 = [&](const char* name) {
-				if (auto p = m_material->GetParameter(name); p && p->floatValues.size() >= 4) {
-					rapidjson::Value a(rapidjson::kArrayType);
-					a.PushBack(p->floatValues[0], alloc)
-						.PushBack(p->floatValues[1], alloc)
-						.PushBack(p->floatValues[2], alloc)
-						.PushBack(p->floatValues[3], alloc);
-					params.AddMember(rapidjson::StringRef(name), a, alloc);
-
-					// Also emit explicit alpha & transparency fields for compatibility
-					const float alpha = p->floatValues[3];
-					rapidjson::Value alphaVal; alphaVal.SetFloat(alpha);
-					params.AddMember("materialAlpha", alphaVal, alloc);
-
-					rapidjson::Value tVal; tVal.SetFloat(1.0f - alpha);
-					params.AddMember("materialTransparency", tVal, alloc);
-					return true;
-				}
-				return false;
-				};
-
-			// Core PBR parameters (prefer RGBA if available; fall back to RGB)
-			bool wroteRGBA = writeVec4("materialAlbedo");
-			if (!wroteRGBA) {
-				// Legacy RGB path
-				writeVec3("materialAlbedo");
-				// If an explicit alpha was authored as separate fields, preserve them too
-				writeFloat("materialAlpha");
-				writeFloat("materialTransparency");
-			}
-			writeFloat("materialMetallic");
-			writeFloat("materialRoughness");
-			writeFloat("materialAo");
-			writeVec3("materialEmissive");
-			writeFloat("materialEmissiveIntensity");
-			writeFloat("materialNormalStrength");
-			writeInt("materialShadingModel");
-			writeFloat("materialReflectance");
-			writeFloat("materialEnvironmentIntensity");
-
-			// Map presence flags
-			writeBool("materialHasAlbedoMap");
-			writeBool("materialHasNormalMap");
-			writeBool("materialHasRoughnessMap");
-			writeBool("materialHasMetallicMap");
-			writeBool("materialHasAoMap");
-			writeBool("materialHasEmissiveMap");
-			writeBool("materialHasEnvironmentMap");
-			writeBool("materialHasIrradianceMap");
-
-			out.AddMember("params", params, alloc);
-
-			// Serialize textures: store slot name and source file path
-			rapidjson::Value textures(rapidjson::kArrayType);
-
-			// Known slots across the codebase (support both dot and non-dot styles + fallback)
-			const char* slots[] = {
-				"materialAlbedoMap", "material.albedoMap",
-				"material.normalMap", "materialNormalMap",
-				"materialRoughnessMap", 
-				"material.metallicMap", "materialMetallicMap", 
-				"materialAoMap", "materialEmissiveMap",
-				"texture0" // fallback for legacy
-			};
-
-			// Helper: find file path for a given texture via AssetManager cache
-			auto findPathForTexture = [](const std::shared_ptr<graphics::Texture>& tex) -> std::string {
-				if (!tex) return {};
-				for (const auto& kv : AssetManager::GetInstance().GetLoadedTextures()) {
-					if (kv.second.get() == tex.get())
-						return kv.first;
-				}
-				return {};
-				};
-
-			for (const char* slot : slots) {
-				if (auto tex = m_material->GetTexture(slot)) {
-					if (tex && tex->IsValid()) {
-						std::string path = findPathForTexture(tex);
-						if (!path.empty()) {
-							rapidjson::Value texObj(rapidjson::kObjectType);
-							texObj.AddMember("slot", rapidjson::Value(slot, alloc), alloc);
-							texObj.AddMember("path", rapidjson::Value(path.c_str(), alloc), alloc);
-							textures.PushBack(texObj, alloc);
-						}
-					}
-				}
+				const_cast<Material*>(this)->materialGuid = guidToWrite;
 			}
 
-			out.AddMember("textures", textures, alloc);
-
-			if (auto gm = GetMaterial()) {
-				Ermine::Vec2 uvScale = gm->GetUVScale();
-				Ermine::Vec2 uvOffset = gm->GetUVOffset();
-
-				out.AddMember("uvScale", Vec2ToJson(uvScale, alloc), alloc);
-				out.AddMember("uvOffset", Vec2ToJson(uvOffset, alloc), alloc);
-			}
-
-			// Custom fragment shader + shadow flag
-			if (!customFragmentShader.empty()) {
-				rapidjson::Value fragPath;
-				fragPath.SetString(customFragmentShader.c_str(),
-					(rapidjson::SizeType)customFragmentShader.size(),
-					alloc);
-				out.AddMember("customFragmentShader", fragPath, alloc);
-			}
-
-			out.AddMember("castsShadows", cacheCastsShadows, alloc);
-
+			std::string guidStr = guidToWrite.IsValid() ? guidToWrite.ToString() : "";
+			out.AddMember("guid",
+				rapidjson::Value(guidStr.c_str(), (rapidjson::SizeType)guidStr.size(), alloc),
+				alloc);
 		}
 
 		void Deserialize(const rapidjson::Value& in) {
+			if (!in.IsObject()) return;
+			if (in.HasMember("guid") && in["guid"].IsString()) {
+				std::string guidStr = in["guid"].GetString();
+				if (!guidStr.empty()) {
+					materialGuid = Guid::FromString(guidStr);
+					m_material = AssetManager::GetInstance().GetMaterialByGuid(materialGuid);
+				}
+				return;
+			}
+
 			// Ensure material exists
 			if (!m_material) {
 				m_material = std::make_shared<graphics::Material>();
 			}
-			if (!in.IsObject()) return;
 			if (in.HasMember("hasMaterial") && in["hasMaterial"].IsBool() && !in["hasMaterial"].GetBool())
 				return;
 
@@ -1729,6 +1673,7 @@ namespace Ermine
 					gm->SetUVOffset(JsonToVec2(it->value));
 				}
 			}
+
 		}
 
 		XPROPERTY_DEF(
@@ -1798,6 +1743,13 @@ namespace Ermine
 		float vignetteIntensity = 0.3f;
 		float vignetteRadius = 0.8f;
 		float bloomStrength = 0.04f;
+
+		// Film grain and chromatic aberration
+		bool filmGrainEnabled = false;
+		float grainIntensity = 0.015f;
+		float grainScale = 1.5f;
+		bool chromaticAberrationEnabled = false;
+		float chromaticAmount = 0.003f;
 
 		// FXAA parameters
 		float fxaaSpanMax = 8.0f;
@@ -1874,6 +1826,13 @@ namespace Ermine
 			xproperty::obj_member<"vignetteIntensity", &GlobalGraphics::vignetteIntensity>,
 			xproperty::obj_member<"vignetteRadius", &GlobalGraphics::vignetteRadius>,
 			xproperty::obj_member<"bloomStrength", &GlobalGraphics::bloomStrength>,
+
+			// Film grain and chromatic aberration
+			xproperty::obj_member<"filmGrainEnabled", &GlobalGraphics::filmGrainEnabled>,
+			xproperty::obj_member<"grainIntensity", &GlobalGraphics::grainIntensity>,
+			xproperty::obj_member<"grainScale", &GlobalGraphics::grainScale>,
+			xproperty::obj_member<"chromaticAberrationEnabled", &GlobalGraphics::chromaticAberrationEnabled>,
+			xproperty::obj_member<"chromaticAmount", &GlobalGraphics::chromaticAmount>,
 
 			// FXAA
 			xproperty::obj_member<"fxaaSpanMax", &GlobalGraphics::fxaaSpanMax>,
@@ -3826,6 +3785,180 @@ namespace Ermine
 		}
 
 		XPROPERTY_DEF("UIButtonComponent", UIButtonComponent)
+	};
+
+	/*!***********************************************************************
+	\brief
+	  UI Slider component for volume controls and other adjustable values
+	*************************************************************************/
+	struct UISliderComponent
+	{
+		enum class SliderTarget
+		{
+			None,
+			MasterVolume,
+			MusicVolume,
+			SFXVolume,
+			AmbienceVolume,
+			Custom
+		};
+
+		// Slider visual properties
+		Vec3 position = { 0.5f, 0.5f, 0.0f };  // Normalized screen position (center of slider)
+		Vec2 size = { 0.2f, 0.03f };           // Normalized screen size (width, height)
+
+		// Slider colors
+		Vec3 trackColor = { 0.2f, 0.2f, 0.2f };      // Background track color
+		Vec3 fillColor = { 0.4f, 0.6f, 0.9f };       // Filled portion color
+		Vec3 handleColor = { 1.0f, 1.0f, 1.0f };     // Handle/knob color
+		Vec3 handleHoverColor = { 0.9f, 0.9f, 0.5f }; // Handle color when hovered
+		float trackAlpha = 0.9f;
+		float handleSize = 0.04f;  // Handle diameter (normalized)
+
+		// Slider images (optional - overrides color-based rendering)
+		std::string trackImage = "";   // Background track image
+		std::string fillImage = "";    // Fill bar image
+		std::string handleImage = "";  // Handle/knob image
+
+		// Slider value
+		float value = 1.0f;      // Current value (0.0 - 1.0)
+		float minValue = 0.0f;   // Minimum value
+		float maxValue = 1.0f;   // Maximum value
+
+		// Slider target (what this slider controls)
+		SliderTarget target = SliderTarget::None;
+		std::string customTarget = "";  // For Custom target type
+
+		// Label
+		std::string label = "";
+		Vec3 labelColor = { 1.0f, 1.0f, 1.0f };
+		float labelScale = 0.8f;
+		Vec2 labelOffset = { 0.0f, 0.04f };  // Offset from slider center
+
+		// Label images (optional - shows image next to slider label)
+		std::string labelImagePath = "";        // Normal/unselected image
+		std::string labelActiveImagePath = "";  // Active/selected image (shown when dragging)
+
+		// State (runtime - don't serialize)
+		bool isHovered = false;
+		bool isDragging = false;
+
+		template<typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const
+		{
+			out.SetObject();
+			out.AddMember("position", Vec3ToJson(position, alloc), alloc);
+
+			rapidjson::Value sizeVal(rapidjson::kArrayType);
+			sizeVal.PushBack(size.x, alloc);
+			sizeVal.PushBack(size.y, alloc);
+			out.AddMember("size", sizeVal, alloc);
+
+			out.AddMember("trackColor", Vec3ToJson(trackColor, alloc), alloc);
+			out.AddMember("fillColor", Vec3ToJson(fillColor, alloc), alloc);
+			out.AddMember("handleColor", Vec3ToJson(handleColor, alloc), alloc);
+			out.AddMember("handleHoverColor", Vec3ToJson(handleHoverColor, alloc), alloc);
+			out.AddMember("trackAlpha", trackAlpha, alloc);
+			out.AddMember("handleSize", handleSize, alloc);
+
+			rapidjson::Value trackImageVal(trackImage.c_str(), alloc);
+			out.AddMember("trackImage", trackImageVal, alloc);
+			rapidjson::Value fillImageVal(fillImage.c_str(), alloc);
+			out.AddMember("fillImage", fillImageVal, alloc);
+			rapidjson::Value handleImageVal(handleImage.c_str(), alloc);
+			out.AddMember("handleImage", handleImageVal, alloc);
+
+			out.AddMember("value", value, alloc);
+			out.AddMember("minValue", minValue, alloc);
+			out.AddMember("maxValue", maxValue, alloc);
+
+			out.AddMember("target", static_cast<int>(target), alloc);
+			rapidjson::Value customTargetVal(customTarget.c_str(), alloc);
+			out.AddMember("customTarget", customTargetVal, alloc);
+
+			rapidjson::Value labelVal(label.c_str(), alloc);
+			out.AddMember("label", labelVal, alloc);
+			out.AddMember("labelColor", Vec3ToJson(labelColor, alloc), alloc);
+			out.AddMember("labelScale", labelScale, alloc);
+
+			rapidjson::Value labelOffsetVal(rapidjson::kArrayType);
+			labelOffsetVal.PushBack(labelOffset.x, alloc);
+			labelOffsetVal.PushBack(labelOffset.y, alloc);
+			out.AddMember("labelOffset", labelOffsetVal, alloc);
+
+			rapidjson::Value labelImagePathVal(labelImagePath.c_str(), alloc);
+			out.AddMember("labelImagePath", labelImagePathVal, alloc);
+			rapidjson::Value labelActiveImagePathVal(labelActiveImagePath.c_str(), alloc);
+			out.AddMember("labelActiveImagePath", labelActiveImagePathVal, alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in)
+		{
+			if (in.HasMember("position") && in["position"].IsArray())
+				position = JsonToVec3(in["position"]);
+			if (in.HasMember("size") && in["size"].IsArray())
+			{
+				const auto& arr = in["size"].GetArray();
+				if (arr.Size() >= 2)
+				{
+					size.x = arr[0].GetFloat();
+					size.y = arr[1].GetFloat();
+				}
+			}
+			if (in.HasMember("trackColor") && in["trackColor"].IsArray())
+				trackColor = JsonToVec3(in["trackColor"]);
+			if (in.HasMember("fillColor") && in["fillColor"].IsArray())
+				fillColor = JsonToVec3(in["fillColor"]);
+			if (in.HasMember("handleColor") && in["handleColor"].IsArray())
+				handleColor = JsonToVec3(in["handleColor"]);
+			if (in.HasMember("handleHoverColor") && in["handleHoverColor"].IsArray())
+				handleHoverColor = JsonToVec3(in["handleHoverColor"]);
+			if (in.HasMember("trackAlpha") && in["trackAlpha"].IsNumber())
+				trackAlpha = in["trackAlpha"].GetFloat();
+			if (in.HasMember("handleSize") && in["handleSize"].IsNumber())
+				handleSize = in["handleSize"].GetFloat();
+
+			if (in.HasMember("trackImage") && in["trackImage"].IsString())
+				trackImage = in["trackImage"].GetString();
+			if (in.HasMember("fillImage") && in["fillImage"].IsString())
+				fillImage = in["fillImage"].GetString();
+			if (in.HasMember("handleImage") && in["handleImage"].IsString())
+				handleImage = in["handleImage"].GetString();
+
+			if (in.HasMember("value") && in["value"].IsNumber())
+				value = in["value"].GetFloat();
+			if (in.HasMember("minValue") && in["minValue"].IsNumber())
+				minValue = in["minValue"].GetFloat();
+			if (in.HasMember("maxValue") && in["maxValue"].IsNumber())
+				maxValue = in["maxValue"].GetFloat();
+
+			if (in.HasMember("target") && in["target"].IsInt())
+				target = static_cast<SliderTarget>(in["target"].GetInt());
+			if (in.HasMember("customTarget") && in["customTarget"].IsString())
+				customTarget = in["customTarget"].GetString();
+
+			if (in.HasMember("label") && in["label"].IsString())
+				label = in["label"].GetString();
+			if (in.HasMember("labelColor") && in["labelColor"].IsArray())
+				labelColor = JsonToVec3(in["labelColor"]);
+			if (in.HasMember("labelScale") && in["labelScale"].IsNumber())
+				labelScale = in["labelScale"].GetFloat();
+			if (in.HasMember("labelOffset") && in["labelOffset"].IsArray())
+			{
+				const auto& arr = in["labelOffset"].GetArray();
+				if (arr.Size() >= 2)
+				{
+					labelOffset.x = arr[0].GetFloat();
+					labelOffset.y = arr[1].GetFloat();
+				}
+			}
+			if (in.HasMember("labelImagePath") && in["labelImagePath"].IsString())
+				labelImagePath = in["labelImagePath"].GetString();
+			if (in.HasMember("labelActiveImagePath") && in["labelActiveImagePath"].IsString())
+				labelActiveImagePath = in["labelActiveImagePath"].GetString();
+		}
+
+		XPROPERTY_DEF("UISliderComponent", UISliderComponent)
 	};
 
 	/*!***********************************************************************
