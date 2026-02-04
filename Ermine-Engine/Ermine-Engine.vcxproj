@@ -354,7 +354,6 @@ copy /B /Y "$(SolutionDir)ThirdParty\DirectXTex\lib\DirectXTex.pdb" "$(SolutionD
     <ClInclude Include="include\JobSystem.h" />
     <ClInclude Include="include\Logger.h" />
     <ClInclude Include="include\Material.h" />
-    <ClInclude Include="include\MaterialEditorGUI.h" />
     <ClInclude Include="include\MathUtils.h" />
     <ClInclude Include="include\MathVector.h" />
     <ClInclude Include="include\Matrix3x3.h" />
@@ -440,7 +439,6 @@ copy /B /Y "$(SolutionDir)ThirdParty\DirectXTex\lib\DirectXTex.pdb" "$(SolutionD
     <ClCompile Include="src\ImGUI\EditorGUI.cpp" />
     <ClCompile Include="src\ImGUI\GraphicsDebugGUI.cpp" />
     <ClCompile Include="src\ImGUI\InspectorGUI.cpp" />
-    <ClCompile Include="src\ImGUI\MaterialEditorGUI.cpp" />
     <ClCompile Include="src\ImGUI\SettingsGUI.cpp" />
     <ClCompile Include="src\ImGUI\VideoImGUI.cpp" />
     <ClCompile Include="src\ImGUI\ViewPortGUI.cpp" />

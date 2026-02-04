@@ -57,7 +57,6 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "EditorGUI.h"
 #include "ViewPortGUI.h"
 #include "AudioImGUI.h"
-#include "MaterialEditorGUI.h"
 #include "SceneManager.h"
 #include "FSMEditor.h"
 #include "AnimationGUI.h"
@@ -520,7 +519,6 @@ bool engine::Init(GLFWwindow* windowContext)
 	editor::EditorGUI::CreateImGUIWindow<ParticlesImGUI>();
 	editor::EditorGUI::CreateImGUIWindow<AudioImGUI>();
 	editor::EditorGUI::CreateImGUIWindow<editor::GraphicsDebugGUI>();
-	editor::EditorGUI::CreateImGUIWindow<editor::MaterialEditorGUI>();
 	editor::EditorGUI::CreateImGUIWindow<ViewPortGUI>();
 	editor::EditorGUI::CreateImGUIWindow<FSMEditorImGUI>();
 	editor::EditorGUI::CreateImGUIWindow<AnimationEditorImGUI>();
