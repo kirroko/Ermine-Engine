@@ -76,7 +76,7 @@ public class Patrol : MonoBehaviour
         for (int i = 0; i < pointCount; i++)
         {
             float t = (float)i / (float)pointCount;
-            float ang = t * 6.28318530718f; // 2*pi
+            float ang = t * 6.28318530718f;
 
             patrolPoints[i] = new Vector3(
                 center.x + (float)Math.Cos(ang) * radius,
@@ -91,7 +91,7 @@ public class Patrol : MonoBehaviour
 
     private void TryStun()
     {
-        if (isStunned) // don't keep resetting timer
+        if (isStunned)
             return;
 
         isStunned = true;
@@ -141,14 +141,13 @@ public class Patrol : MonoBehaviour
             return;
         }
 
-        // If we just requested a jump, call StartJump once.
         if (jumping)
         {
-            Debug.Log("CALL StartJump: me=" + entityID + " link=" + jumpLinkEntityID);
+            //Debug.Log("CALL StartJump: me=" + entityID + " link=" + jumpLinkEntityID);
             NavAgent.StartJump(entityID, jumpLinkEntityID);
 
             jumping = false;
-            jumpLinkEntityID = 0; // clear after use
+            jumpLinkEntityID = 0;
 
             // Schedule a patrol recenter after the jump likely finishes
             pendingRecenter = true;
@@ -157,7 +156,7 @@ public class Patrol : MonoBehaviour
             return;
         }
 
-        // After landing (likely), rebuild patrol points around current position (new platform)
+        // after landing, rebuild patrol points around current position
         if (pendingRecenter)
         {
             recenterTimer -= Time.deltaTime;
@@ -165,7 +164,7 @@ public class Patrol : MonoBehaviour
             {
                 pendingRecenter = false;
                 BuildPatrolPoints(transform.position);
-                return; // let destination update settle this frame
+                return;
             }
         }
 
@@ -180,14 +179,14 @@ public class Patrol : MonoBehaviour
 
         float dist = (target - pos).Magnitude;
 
-        // Reached target -> go next
+        // reached target, go next
         if (dist <= reachDist)
         {
             MoveToNextPoint();
             return;
         }
 
-        // Stuck detection: if we’re not getting closer, count time
+        // stuck detection if we’re not getting closer, count time
         if (dist >= lastDist - minProgressEpsilon)
             stuckTimer += Time.deltaTime;
         else
@@ -197,7 +196,7 @@ public class Patrol : MonoBehaviour
 
         if (stuckTimer >= stuckTime)
         {
-            // Give up on this point and try the next one
+            // give up on this point and try the next one
             MoveToNextPoint();
         }
     }

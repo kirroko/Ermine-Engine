@@ -6,13 +6,13 @@ public class Attack : MonoBehaviour
     public string playerName = "Player";
 
     public float attackRange = 5.0f;
-    // If player no longer “close enough” -> go back to Chase (previous state)
+    // If player no longer close enough go back to Chase
     public float disengageDistance = 8.0f;
 
     // Line-of-sight (raycast) settings
     public float viewDistance = 18.0f;
     public float rayHeight = 0.8f;
-    public float rayForwardOffset = 2.0f;    // push ray out of own collider
+    public float rayForwardOffset = 2.0f; // push ray out of own collider
     public float loseSightGraceTime = 0.25f; // prevents flicker behind corners
 
     // Damage settings
@@ -22,7 +22,7 @@ public class Attack : MonoBehaviour
     private GameObject playerGO;
     private ulong entityID;
 
-    private bool collidingWithPlayer = false;
+    //private bool collidingWithPlayer = false;
     private float tickTimer = 0f;
 
     private float loseSightTimer = 0f;
@@ -41,7 +41,7 @@ public class Attack : MonoBehaviour
 
     private void TryStun()
     {
-        if (isStunned) // don't keep resetting timer
+        if (isStunned)
             return;
 
         isStunned = true;
@@ -112,14 +112,13 @@ public class Attack : MonoBehaviour
             return; // do NOTHING while stunned
         }
 
-        // If we just requested a jump, call StartJump once.
         if (jumping)
         {
             //Debug.Log("CALL StartJump: me=" + entityID + " link=" + jumpLinkEntityID);
             NavAgent.StartJump(entityID, jumpLinkEntityID);
 
             jumping = false;
-            jumpLinkEntityID = 0; // clear after use
+            jumpLinkEntityID = 0;
 
             return;
         }
@@ -136,7 +135,7 @@ public class Attack : MonoBehaviour
         else
             loseSightTimer -= Time.deltaTime;
 
-        // If too far OR lost LOS -> back to Chase (previous state)
+        // If too far OR lost LOS back to Chase
         if (distToPlayer > disengageDistance || loseSightTimer <= 0f)
         {
             StateMachine.RequestPreviousState(entityID);
@@ -144,7 +143,7 @@ public class Attack : MonoBehaviour
             return;
         }
 
-        // If NOT in attack range, move towards player (but stay in Attack state)
+        // If NOT in attack range, move towards player but stay in Attack state
         if (distToPlayer > attackRange)
         {
             tickTimer = tickInterval; // don’t damage while out of range
@@ -158,7 +157,7 @@ public class Attack : MonoBehaviour
             return;
         }
 
-        // IN attack range: stop moving and deal damage
+        // IN attack range, stop moving and deal damage
         NavAgent.SetDestination(entityID, transform.position);
 
         tickTimer -= Time.deltaTime;

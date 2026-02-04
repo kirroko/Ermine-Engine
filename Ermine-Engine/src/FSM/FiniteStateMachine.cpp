@@ -32,16 +32,13 @@ namespace Ermine
 
             auto& fsm = ECS::GetInstance().GetComponent<StateMachine>(entity);
 
-            // 1) Rebind runtime-only pointer after load
             if (fsm.manager == nullptr)
                 fsm.manager = this;
 
-            // 2) If scene load cleared current state, initialize it now
             auto currentValid = [&](StateMachine& f)->bool
                 {
                     if (f.m_CurrentScript == nullptr) return false;
 
-                    // 1) Must exist inside the node list (prevents stale pointer after load)
                     bool found = false;
                     for (auto& n : f.m_Nodes)
                     {
@@ -52,12 +49,7 @@ namespace Ermine
                         }
                     }
                     if (!found) return false;
-
-                    // 2) Must have a script class name to instantiate
                     if (f.m_CurrentScript->scriptClassName.empty()) return false;
-
-                    // 3) Must have an instance (or be able to create one)
-                    // If your ScriptNode has `instance` pointer:
                     if (!f.m_CurrentScript->instance) return false;
 
                     return true;
@@ -69,7 +61,6 @@ namespace Ermine
 
                 fsm.Init(entity);
 
-                // IMPORTANT: ensure state is actually running after init
                 if (fsm.m_CurrentScript && !fsm.m_CurrentScript->instance)
                 {
                     fsm.m_CurrentScript->CreateInstance(entity);
@@ -77,7 +68,6 @@ namespace Ermine
                 }
             }
 
-            // 3) Normal update
             fsm.Update(entity, dt);
         }
     }

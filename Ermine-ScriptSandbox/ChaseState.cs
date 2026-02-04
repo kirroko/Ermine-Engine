@@ -8,10 +8,10 @@ public class Chase : MonoBehaviour
     // If player is too far, stop chasing and return to previous state
     public float losePlayerDistance = 18.0f;
 
-    // Line-of-sight (raycast) settings
+    // Line of sight (raycast) settings
     public float viewDistance = 25.0f;
     public float rayHeight = 0.8f;
-    public float rayForwardOffset = 2.0f;   // push ray out of own collider
+    public float rayForwardOffset = 2.0f; // push ray out of own collider
     public float loseSightGraceTime = 0.35f; // prevents flicker behind corners
     public float attackEnterDistance = 5.0f;
 
@@ -20,7 +20,7 @@ public class Chase : MonoBehaviour
     private GameObject playerGO;
     private ulong entityID;
 
-    private bool collidingWithPlayer = false;
+    //private bool collidingWithPlayer = false;
     private float repathTimer = 0f;
 
     // counts down while LOS is lost; resets while LOS is true
@@ -44,7 +44,7 @@ public class Chase : MonoBehaviour
 
     private void TryStun()
     {
-        if (isStunned) // don't keep resetting timer
+        if (isStunned)
             return;
 
         isStunned = true;
@@ -107,14 +107,13 @@ public class Chase : MonoBehaviour
             return; // do NOTHING while stunned
         }
 
-        // If we just requested a jump, call StartJump once.
         if (jumping)
         {
             //Debug.Log("CALL StartJump: me=" + entityID + " link=" + jumpLinkEntityID);
             NavAgent.StartJump(entityID, jumpLinkEntityID);
 
             jumping = false;
-            jumpLinkEntityID = 0; // clear after use
+            jumpLinkEntityID = 0;
 
             return;
         }
@@ -131,21 +130,21 @@ public class Chase : MonoBehaviour
         else
             loseSightTimer -= Time.deltaTime;
 
-        // Too far OR lost sight long enough back to previous (patrol)
+        // Too far OR lost sight long enough back to previous
         if (dist > losePlayerDistance || loseSightTimer <= 0f)
         {
             StateMachine.RequestPreviousState(entityID);
             return;
         }
 
-        // If near player go to Attack (next state)
+        // If near player go to Attack
         if (dist <= attackEnterDistance && hasLOS)
         {
             StateMachine.RequestNextState(entityID);
             return;
         }
 
-        // Keep chasing: update destination periodically
+        // Keep chasing, update destination periodically
         repathTimer -= Time.deltaTime;
         if (repathTimer <= 0f)
         {
@@ -156,8 +155,8 @@ public class Chase : MonoBehaviour
 
     void OnCollisionEnter(Collision col)
     {
-        if (col.gameObject.name == playerName)
-            collidingWithPlayer = true;
+        //if (col.gameObject.name == playerName)
+        //    collidingWithPlayer = true;
 
         if (jumping) return;
         if (col.gameObject.name == "JumpArea")
@@ -177,8 +176,8 @@ public class Chase : MonoBehaviour
 
     void OnCollisionStay(Collision col)
     {
-        if (col.gameObject.name == playerName)
-            collidingWithPlayer = true;
+        //if (col.gameObject.name == playerName)
+        //    collidingWithPlayer = true;
 
         if (jumping) return;
         if (col.gameObject.name == "JumpArea")
@@ -198,8 +197,8 @@ public class Chase : MonoBehaviour
 
     void OnCollisionExit(Collision col)
     {
-        if (col.gameObject.name == playerName)
-            collidingWithPlayer = false;
+        //if (col.gameObject.name == playerName)
+        //    collidingWithPlayer = false;
 
         if (jumping) return;
         if (col.gameObject.name == "JumpArea")

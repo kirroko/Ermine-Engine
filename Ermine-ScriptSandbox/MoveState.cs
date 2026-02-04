@@ -10,8 +10,8 @@ public class Move : MonoBehaviour
     public float rayHeight = 0.8f;
     public float rayForwardOffset = 2.0f;
 
-    public float turnCooldown = 0.5f;      // prevents spam turning
-    public float repathInterval = 0.25f;   // prevents spamming SetDestination
+    public float turnCooldown = 0.5f; // prevents spam turning
+    public float repathInterval = 0.25f; // prevents spamming SetDestination
 
     private ulong entityID;
 
@@ -33,7 +33,7 @@ public class Move : MonoBehaviour
 
     private void TryStun()
     {
-        if (isStunned) // don't keep resetting timer
+        if (isStunned)
             return;
 
         isStunned = true;
@@ -78,14 +78,13 @@ public class Move : MonoBehaviour
             return; // do NOTHING while stunned
         }
 
-        // If we just requested a jump, call StartJump once.
         if (jumping)
         {
             //Debug.Log("CALL StartJump: me=" + entityID + " link=" + jumpLinkEntityID);
             NavAgent.StartJump(entityID, jumpLinkEntityID);
 
             jumping = false;
-            jumpLinkEntityID = 0; // clear after use
+            jumpLinkEntityID = 0;
 
             return;
         }
@@ -93,7 +92,7 @@ public class Move : MonoBehaviour
         if (turnTimer > 0f) turnTimer -= Time.deltaTime;
         if (repathTimer > 0f) repathTimer -= Time.deltaTime;
 
-        // Only check turning if cooldown is over
+        // only check turning if cooldown is over
         if (turnTimer <= 0f && HitsSomethingInFront())
         {
             TurnAround();
@@ -104,7 +103,6 @@ public class Move : MonoBehaviour
             return;
         }
 
-        // Repath gently (don't spam every frame)
         float dist = (target - transform.position).Magnitude;
 
         if (dist <= reachDist)
@@ -113,7 +111,6 @@ public class Move : MonoBehaviour
         }
         else if (repathTimer <= 0f)
         {
-            // keep nudging destination forward sometimes to maintain motion
             PushTargetForward(false);
         }
     }
@@ -132,7 +129,7 @@ public class Move : MonoBehaviour
         else
             Debug.Log(hit.transform.gameObject.name);
 
-        // Ignore self-hit (safety)
+        // Ignore self-hit
         ulong hitID = (ulong)hit.transform.gameObject.GetInstanceID();
         if (hitID == entityID) return false;
 
