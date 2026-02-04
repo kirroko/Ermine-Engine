@@ -62,7 +62,7 @@ namespace Ermine::graphics
     struct AnimationClip {
         std::string name;             // Name of the animation clip.
         double duration = 0.0;        // Duration of the clip, in ticks.
-        double ticksPerSecond = 25.0; // Conversion rate from ticks to seconds.
+        double ticksPerSecond = 30.0; // Conversion rate from ticks to seconds.
 
         // Mapping of bone names to their animations
         std::unordered_map<std::string, BoneAnimation> boneAnimations;

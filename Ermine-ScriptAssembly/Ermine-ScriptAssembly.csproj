@@ -72,6 +72,7 @@
   <ItemGroup>
     <Compile Include="Behaviour.cs" />
     <Compile Include="Component.cs" />
+    <Compile Include="CoreModule\Animator.cs" />
     <Compile Include="CoreModule\Application.cs" />
     <Compile Include="CoreModule\AudioComponent.cs" />
     <Compile Include="CoreModule\AudioListener.cs" />
