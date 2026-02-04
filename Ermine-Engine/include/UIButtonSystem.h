@@ -43,21 +43,13 @@ namespace Ermine
 
 #ifdef EE_EDITOR
         // Set viewport info for editor mode (called from EditorGUI)
+        // NOTE: Only updates viewport position/size for mouse conversion.
+        // Aspect ratio must stay synced with UIRenderSystem (screen-based).
         void SetViewportInfo(const ImVec2& min, const ImVec2& size)
         {
-            // Only log if viewport actually changed
-            bool changed = (m_viewportMin.x != min.x || m_viewportMin.y != min.y ||
-                           m_viewportSize.x != size.x || m_viewportSize.y != size.y);
-
             m_viewportMin = min;
             m_viewportSize = size;
-            m_aspectRatio = (size.y > 0.0f) ? (size.x / size.y) : 1.0f;
-
-            if (changed)
-            {
-                EE_CORE_WARN("Viewport changed: Min=({:.0f},{:.0f}), Size=({:.0f},{:.0f}), Aspect={:.2f}",
-                    min.x, min.y, size.x, size.y, m_aspectRatio);
-            }
+            // Do NOT update m_aspectRatio here - it must match UIRenderSystem
         }
 #endif
 

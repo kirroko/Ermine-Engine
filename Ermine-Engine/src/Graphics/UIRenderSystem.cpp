@@ -1469,9 +1469,9 @@ namespace Ermine
         // Render button background (textured or solid color)
         if (buttonTexture && buttonTexture->IsValid())
         {
-            // Render textured button without color tint (image handles its own appearance)
+            // Render textured button using button's size (matches hit detection area)
             Vec3 whiteTint = { 1.0f, 1.0f, 1.0f };
-            RenderTexturedSquare(button.position.x, button.position.y, button.size.y, buttonTexture, whiteTint, button.backgroundAlpha);
+            RenderTexturedRect(left, bottom, width, height, buttonTexture, whiteTint, button.backgroundAlpha);
         }
         else
         {
