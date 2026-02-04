@@ -10,7 +10,6 @@ layout(rgba8, binding = 2) uniform image3D u_VoxelNormal;
 uniform vec3 u_VoxelBoundsMin;
 uniform vec3 u_VoxelBoundsMax;
 uniform int u_VoxelResolution;
-uniform mat4 u_View;
 
 const int MAX_LIGHTS = 32;
 const int NUM_CASCADES = 4;
@@ -33,20 +32,20 @@ layout (std140, binding = 1) uniform LightsUBO {
     Light lights[MAX_LIGHTS];
 };
 
-float calculateAttenuation(int lightIndex, vec3 fragPosView, out vec3 lightDir)
+float calculateAttenuation(int lightIndex, vec3 fragPosWorld, out vec3 lightDir)
 {
     int lightType = int(lights[lightIndex].position_type.w);
-    vec3 lightPosView = lights[lightIndex].position_type.xyz;
+    vec3 lightPosWorld = lights[lightIndex].position_type.xyz;
     float range = lights[lightIndex].direction_range.w;
     float attenuation = 1.0;
 
     if (lightType == DIRECTIONAL_LIGHT) {
-        vec3 dirView = lights[lightIndex].direction_range.xyz;
-        lightDir = normalize(dirView);
+        vec3 dirWorld = lights[lightIndex].direction_range.xyz;
+        lightDir = normalize(dirWorld);
         attenuation = 1.0;
     } else {
-        lightDir = normalize(lightPosView - fragPosView);
-        float distance = length(lightPosView - fragPosView);
+        lightDir = normalize(lightPosWorld - fragPosWorld);
+        float distance = length(lightPosWorld - fragPosWorld);
         distance = max(distance, 0.01);
         float linearTerm = 0.045;
         float quadraticTerm = 0.0075;
@@ -94,16 +93,13 @@ void main()
         normalWorld = vec3(0.0, 1.0, 0.0);
     }
 
-    vec3 normalView = normalize(mat3(u_View) * normalWorld);
-    vec3 fragPosView = (u_View * vec4(worldPos, 1.0)).xyz;
-
     int numLights = int(lightCount.x);
     vec3 direct = vec3(0.0);
     for (int i = 0; i < numLights; ++i) {
         vec3 lightDir;
-        float attenuation = calculateAttenuation(i, fragPosView, lightDir);
+        float attenuation = calculateAttenuation(i, worldPos, lightDir);
         if (attenuation <= 0.0) continue;
-        float NdotL = max(dot(normalView, lightDir), 0.0);
+        float NdotL = max(dot(normalWorld, lightDir), 0.0);
         vec3 lightColor = lights[i].color_intensity.xyz * lights[i].color_intensity.w;
         direct += lightColor * attenuation * NdotL;
     }
