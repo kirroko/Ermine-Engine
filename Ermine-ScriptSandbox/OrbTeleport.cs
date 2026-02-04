@@ -19,6 +19,9 @@ public class OrbTeleport : MonoBehaviour
     // Name of the entity with UISkillsComponent (must match your scene)
     public string skillsHUDName = "Skills";
 
+    // Name of the entity with UIHealthbarComponent (must match your scene)
+    public string healthBarName = "Healthbar";
+
     // Skill indices - match your UISkillsComponent skill slot order (0-based)
     // Slot 1 = Shoot (index 0)
     // Slot 2 = Return (index 1)
@@ -36,11 +39,34 @@ public class OrbTeleport : MonoBehaviour
     {
         origin = GameObject.Find("Player").GetComponent<Transform>();
         cam = GameObject.Find("Main Camera").transform;
-        health = GameplayHUD.GetHealth(GameplayHUD.GetHealthBar());
-        healthBar = GameplayHUD.GetHealthBar();
 
-        // Initialize: no skill selected at start
-        UISystem.SelectOnlySkill(skillsHUDName, -1);
+        // Find healthbar by name
+        healthBar = GameObject.Find(healthBarName);
+        if (healthBar != null)
+        {
+            health = GameplayHUD.GetHealth(healthBar);
+        }
+
+        // Initialize: Shoot is ready (lit up), others are not
+        SetSkillsForReadyToShoot();
+    }
+
+    // Helper: Set skills to "ready to shoot" state (no orb out)
+    void SetSkillsForReadyToShoot()
+    {
+        UISystem.SetSkillSelected(skillsHUDName, SKILL_SHOOT, true);     // Shoot ready
+        UISystem.SetSkillSelected(skillsHUDName, SKILL_RETURN, false);   // Return not ready
+        UISystem.SetSkillSelected(skillsHUDName, SKILL_TELEPORT, false); // Teleport not ready
+        UISystem.SetSkillSelected(skillsHUDName, SKILL_DISRUPT, false);  // Disrupt not ready (for now)
+    }
+
+    // Helper: Set skills to "orb is out" state (ready to teleport or recall)
+    void SetSkillsForOrbOut()
+    {
+        UISystem.SetSkillSelected(skillsHUDName, SKILL_SHOOT, false);    // Shoot not ready (already shot)
+        UISystem.SetSkillSelected(skillsHUDName, SKILL_RETURN, true);    // Return ready
+        UISystem.SetSkillSelected(skillsHUDName, SKILL_TELEPORT, true);  // Teleport ready
+        UISystem.SetSkillSelected(skillsHUDName, SKILL_DISRUPT, false);  // Disrupt not ready (for now)
     }
 
     void Update()
@@ -49,7 +75,13 @@ public class OrbTeleport : MonoBehaviour
         if (orbShot && GameObject.Find("Sphere") == null)
         {
             orbShot = false;
-            UISystem.SelectOnlySkill(skillsHUDName, -1);  // Deselect all
+            SetSkillsForReadyToShoot();
+        }
+
+        // Regenerate health when orb is not out
+        if (!orbShot)
+        {
+            RegenerateHealth();
         }
 
         if (Input.GetMouseButton(0))
@@ -72,6 +104,19 @@ public class OrbTeleport : MonoBehaviour
             RecallOrb();
     }
 
+    void RegenerateHealth()
+    {
+        float currentHealth = GameplayHUD.GetHealth(healthBar);
+        float maxHealth = GameplayHUD.GetMaxHealth(healthBar);
+        float regenRate = GameplayHUD.GetRegenRate(healthBar);
+
+        if (currentHealth < maxHealth && regenRate > 0)
+        {
+            float newHealth = Math.Min(currentHealth + regenRate * Time.deltaTime, maxHealth);
+            GameplayHUD.SetHealth(healthBar, newHealth);
+        }
+    }
+
     void ShootOrb()
     {
         // Only one orb at a time
@@ -81,8 +126,8 @@ public class OrbTeleport : MonoBehaviour
         TakeDamage(damage);
         GlobalAudio.PlaySFX("Shoot");
 
-        // Update UI: Shoot skill is now selected (orb is out, ready to teleport)
-        UISystem.SelectOnlySkill(skillsHUDName, SKILL_SHOOT);
+        // Update UI: Orb is out, teleport and return are now ready
+        SetSkillsForOrbOut();
 
         // Instantiate orb projectile
         var projectile = Prefab.Instantiate("../Resources/Prefabs/Sphere.prefab");
@@ -102,14 +147,11 @@ public class OrbTeleport : MonoBehaviour
         if (sphere == null)
         {
             orbShot = false;
-            UISystem.SelectOnlySkill(skillsHUDName, -1);
+            SetSkillsForReadyToShoot();
             return;
         }
 
         GlobalAudio.PlaySFX("Teleport");
-
-        // Update UI: Teleport skill is now selected (teleporting)
-        UISystem.SelectOnlySkill(skillsHUDName, SKILL_TELEPORT);
 
         // Swap positions
         gameObject.transform.position = sphere.transform.position;
@@ -119,7 +161,8 @@ public class OrbTeleport : MonoBehaviour
         Physics.RemovePhysic((ulong)sphere.GetInstanceID());
         GameObject.Destroy(sphere);
 
-        // Note: SKILL_TELEPORT stays selected briefly until next Update() detects orb is gone
+        // Back to ready to shoot
+        SetSkillsForReadyToShoot();
     }
 
     void RecallOrb()
@@ -130,19 +173,17 @@ public class OrbTeleport : MonoBehaviour
         {
             GlobalAudio.PlaySFX("Teleport"); // Or a custom recall sound
 
-            // Update UI: Return skill is now selected
-            UISystem.SelectOnlySkill(skillsHUDName, SKILL_RETURN);
-
             // Remove orb
             Physics.RemovePhysic((ulong)sphere.GetInstanceID());
             HealDamage(recallHealAmt);
             GameObject.Destroy(sphere);
+
+            // Back to ready to shoot
+            SetSkillsForReadyToShoot();
         }
 
         // Reset state fully
         orbShot = false;
-
-        // Note: SKILL_RETURN stays selected briefly until next Update() detects orb is gone
     }
 
     void TakeDamage(float dmg)
