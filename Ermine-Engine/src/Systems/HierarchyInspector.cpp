@@ -2974,11 +2974,14 @@ namespace Ermine::editor {
 			for (size_t i = 0; i < skills.skills.size(); ++i)
 			{
 				ImGui::PushID(static_cast<int>(i));
-				std::string header = "Skill Slot " + std::to_string(i + 1);
-				if (!skills.skills[i].skillName.empty())
-					header += " (" + skills.skills[i].skillName + ")";
 
-				if (ImGui::TreeNode(header.c_str()))
+				// Use fixed header ID to prevent tree node from closing when name changes
+				std::string headerId = "skill_slot_" + std::to_string(i);
+				std::string displayName = "Skill Slot " + std::to_string(i + 1);
+				if (!skills.skills[i].skillName.empty())
+					displayName += " (" + skills.skills[i].skillName + ")";
+
+				if (ImGui::TreeNodeEx(headerId.c_str(), ImGuiTreeNodeFlags_None, "%s", displayName.c_str()))
 				{
 					auto& skill = skills.skills[i];
 

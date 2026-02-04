@@ -2603,7 +2603,7 @@ namespace
 			return false;
 
 		dtNavMeshQuery* q = nav.runtime->query;
-		dtQueryFilter filter; // default filter is fine if you don’t use flags
+		dtQueryFilter filter; // default filter is fine if you donï¿½t use flags
 
 		float p[3] = { inPos.x, inPos.y, inPos.z };
 		dtPolyRef ref = 0;
@@ -3452,6 +3452,92 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 			if (!uiSystem)
 				return false;
 			return uiSystem->CastSkill((Ermine::EntityID)entityID, skillIndex);
+		});
+
+	// Set skill selected state by entity name
+	mono_add_internal_call("ErmineEngine.UISystem::Internal_SetSkillSelected",
+		(const void*)+[](MonoString* entityNameMono, int skillIndex, bool isSelected)
+		{
+			if (!entityNameMono) return;
+			char* entityName = mono_string_to_utf8(entityNameMono);
+
+			auto& ecs = Ermine::ECS::GetInstance();
+			for (Ermine::EntityID e = 0; e < 10000; ++e)
+			{
+				if (!ecs.IsEntityValid(e)) continue;
+				if (!ecs.HasComponent<Ermine::ObjectMetaData>(e)) continue;
+				if (!ecs.HasComponent<Ermine::UISkillsComponent>(e)) continue;
+
+				auto& meta = ecs.GetComponent<Ermine::ObjectMetaData>(e);
+				if (meta.name == entityName)
+				{
+					auto& skills = ecs.GetComponent<Ermine::UISkillsComponent>(e);
+					if (skillIndex >= 0 && skillIndex < static_cast<int>(skills.skills.size()))
+					{
+						skills.skills[skillIndex].isSelected = isSelected;
+					}
+					break;
+				}
+			}
+			mono_free(entityName);
+		});
+
+	// Get skill selected state by entity name
+	mono_add_internal_call("ErmineEngine.UISystem::Internal_GetSkillSelected",
+		(const void*)+[](MonoString* entityNameMono, int skillIndex) -> bool
+		{
+			if (!entityNameMono) return false;
+			char* entityName = mono_string_to_utf8(entityNameMono);
+
+			auto& ecs = Ermine::ECS::GetInstance();
+			for (Ermine::EntityID e = 0; e < 10000; ++e)
+			{
+				if (!ecs.IsEntityValid(e)) continue;
+				if (!ecs.HasComponent<Ermine::ObjectMetaData>(e)) continue;
+				if (!ecs.HasComponent<Ermine::UISkillsComponent>(e)) continue;
+
+				auto& meta = ecs.GetComponent<Ermine::ObjectMetaData>(e);
+				if (meta.name == entityName)
+				{
+					auto& skills = ecs.GetComponent<Ermine::UISkillsComponent>(e);
+					if (skillIndex >= 0 && skillIndex < static_cast<int>(skills.skills.size()))
+					{
+						mono_free(entityName);
+						return skills.skills[skillIndex].isSelected;
+					}
+					break;
+				}
+			}
+			mono_free(entityName);
+			return false;
+		});
+
+	// Select only one skill (deselect all others)
+	mono_add_internal_call("ErmineEngine.UISystem::Internal_SelectOnlySkill",
+		(const void*)+[](MonoString* entityNameMono, int skillIndexToSelect)
+		{
+			if (!entityNameMono) return;
+			char* entityName = mono_string_to_utf8(entityNameMono);
+
+			auto& ecs = Ermine::ECS::GetInstance();
+			for (Ermine::EntityID e = 0; e < 10000; ++e)
+			{
+				if (!ecs.IsEntityValid(e)) continue;
+				if (!ecs.HasComponent<Ermine::ObjectMetaData>(e)) continue;
+				if (!ecs.HasComponent<Ermine::UISkillsComponent>(e)) continue;
+
+				auto& meta = ecs.GetComponent<Ermine::ObjectMetaData>(e);
+				if (meta.name == entityName)
+				{
+					auto& skills = ecs.GetComponent<Ermine::UISkillsComponent>(e);
+					for (size_t i = 0; i < skills.skills.size(); ++i)
+					{
+						skills.skills[i].isSelected = (static_cast<int>(i) == skillIndexToSelect);
+					}
+					break;
+				}
+			}
+			mono_free(entityName);
 		});
 #pragma endregion
 

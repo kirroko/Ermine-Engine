@@ -16,7 +16,18 @@ public class OrbTeleport : MonoBehaviour
 
     private bool orbShot = false;       // Tracks if we already shot an orb
 
-    
+    // Name of the entity with UISkillsComponent (must match your scene)
+    public string skillsHUDName = "Skills";
+
+    // Skill indices - match your UISkillsComponent skill slot order (0-based)
+    // Slot 1 = Shoot (index 0)
+    // Slot 2 = Return (index 1)
+    // Slot 3 = Teleport (index 2)
+    // Slot 4 = Disrupt (index 3)
+    private const int SKILL_SHOOT = 0;
+    private const int SKILL_RETURN = 1;
+    private const int SKILL_TELEPORT = 2;
+    private const int SKILL_DISRUPT = 3;
 
     //Health
     private GameObject healthBar;
@@ -27,10 +38,20 @@ public class OrbTeleport : MonoBehaviour
         cam = GameObject.Find("Main Camera").transform;
         health = GameplayHUD.GetHealth(GameplayHUD.GetHealthBar());
         healthBar = GameplayHUD.GetHealthBar();
+
+        // Initialize: no skill selected at start
+        UISystem.SelectOnlySkill(skillsHUDName, -1);
     }
 
     void Update()
     {
+        // Check if orb disappeared on its own (hit something, traveled too far, etc.)
+        if (orbShot && GameObject.Find("Sphere") == null)
+        {
+            orbShot = false;
+            UISystem.SelectOnlySkill(skillsHUDName, -1);  // Deselect all
+        }
+
         if (Input.GetMouseButton(0))
         {
             if (!orbShot)
@@ -60,9 +81,12 @@ public class OrbTeleport : MonoBehaviour
         TakeDamage(damage);
         GlobalAudio.PlaySFX("Shoot");
 
+        // Update UI: Shoot skill is now selected (orb is out, ready to teleport)
+        UISystem.SelectOnlySkill(skillsHUDName, SKILL_SHOOT);
+
         // Instantiate orb projectile
         var projectile = Prefab.Instantiate("../Resources/Prefabs/Sphere.prefab");
-        
+
         if (projectile != null)
         {
             projectile.transform.position = origin.transform.position + cam.forward * forwardOffset + cam.right * rightOffset + Vector3.up * upOffset;
@@ -78,10 +102,14 @@ public class OrbTeleport : MonoBehaviour
         if (sphere == null)
         {
             orbShot = false;
+            UISystem.SelectOnlySkill(skillsHUDName, -1);
             return;
         }
 
         GlobalAudio.PlaySFX("Teleport");
+
+        // Update UI: Teleport skill is now selected (teleporting)
+        UISystem.SelectOnlySkill(skillsHUDName, SKILL_TELEPORT);
 
         // Swap positions
         gameObject.transform.position = sphere.transform.position;
@@ -90,6 +118,8 @@ public class OrbTeleport : MonoBehaviour
         // Remove orb
         Physics.RemovePhysic((ulong)sphere.GetInstanceID());
         GameObject.Destroy(sphere);
+
+        // Note: SKILL_TELEPORT stays selected briefly until next Update() detects orb is gone
     }
 
     void RecallOrb()
@@ -99,15 +129,20 @@ public class OrbTeleport : MonoBehaviour
         if (sphere != null)
         {
             GlobalAudio.PlaySFX("Teleport"); // Or a custom recall sound
-            
+
+            // Update UI: Return skill is now selected
+            UISystem.SelectOnlySkill(skillsHUDName, SKILL_RETURN);
+
             // Remove orb
             Physics.RemovePhysic((ulong)sphere.GetInstanceID());
             HealDamage(recallHealAmt);
             GameObject.Destroy(sphere);
         }
-        
+
         // Reset state fully
         orbShot = false;
+
+        // Note: SKILL_RETURN stays selected briefly until next Update() detects orb is gone
     }
 
     void TakeDamage(float dmg)
@@ -115,7 +150,7 @@ public class OrbTeleport : MonoBehaviour
         health = GameplayHUD.GetHealth(healthBar);
         health = Math.Max(0, health - dmg);
 
-        
+
         GameplayHUD.SetHealth(healthBar, health);
     }
 
