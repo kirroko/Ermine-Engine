@@ -437,6 +437,12 @@ namespace Ermine::graphics
         if (!m_CurrentClip || !m_Scene || !m_Scene->mRootNode) return;
         if (m_Paused) return;
 
+        if (ECS::GetInstance().HasComponent<AnimationComponent>(entity))
+        {
+            auto& graph = ECS::GetInstance().GetComponent<AnimationComponent>(entity).m_animationGraph;
+            if (graph && !graph->playing) return;
+        }
+
         // Handle playback speed from graph
         double playbackSpeed = 1.0;
         if (ECS::GetInstance().HasComponent<AnimationComponent>(entity)) {
@@ -446,7 +452,7 @@ namespace Ermine::graphics
 
         // Advance animation time in ticks
         double ticksPerSecond = m_CurrentClip->ticksPerSecond != 0.0
-            ? m_CurrentClip->ticksPerSecond : 25.0;
+            ? m_CurrentClip->ticksPerSecond : 30.0;
         m_CurrentTime += deltaTime * ticksPerSecond * playbackSpeed;
 
         // Check animation looping
@@ -466,13 +472,6 @@ namespace Ermine::graphics
 
         // Evaluate any animation graph transitions
         EvaluateTransitions(entity);
-
-        // Example of setting a parameter (to be replaced with actual game logic)
-        //auto& graph = ECS::GetInstance().GetComponent<AnimationComponent>(entity).m_animationGraph;
-        //for (auto& p : graph->parameters)
-        //{
-        //    if (p.name == "isRunning") p.boolValue = true;
-        //}
     }
 
     /**
