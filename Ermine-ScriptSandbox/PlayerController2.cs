@@ -251,7 +251,7 @@ public class PlayerController2 : MonoBehaviour
 
     void OnCollisionEnter(Collision col)
     {
-        if (col.gameObject.name.Contains("Platform"))
+        if (col.gameObject.name.Contains("floor"))
         {
             isGrounded = true;
             isKeyJump = false;
@@ -259,14 +259,14 @@ public class PlayerController2 : MonoBehaviour
     }
     void OnCollisionStay(Collision col)
     {
-        if (col.gameObject.name.Contains("Platform"))
+        if (col.gameObject.name.Contains("floor"))
         {
             isGrounded = true;
         }
     }
     void OnCollisionExit(Collision col)
     {
-        if (col.gameObject.name.Contains("Platform"))
+        if (col.gameObject.name.Contains("floor"))
         {
             isGrounded = false;
         }

@@ -2473,10 +2473,10 @@ namespace
 		auto physics = ECS::GetInstance().GetSystem<Physics>();
 		physics->RemovePhysic((EntityID)entityID);
 	}
-	static void icall_Physics_HasPhysicComp(uint64_t entityID)
+	static bool icall_Physics_HasPhysicComp(uint64_t entityID)
 	{
 		auto physics = ECS::GetInstance().GetSystem<Physics>();
-		physics->HasPhysicComp((EntityID)entityID);
+		return physics->HasPhysicComp((EntityID)entityID);
 	}
 	static void icall_Physics_Jump(uint64_t entityID,float jump)
 	{
@@ -3418,8 +3418,9 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	mono_add_internal_call("ErmineEngine.Physics::Internal_GetRigidbody", (const void*)icall_rigidbody_get_rigidbody);
 	mono_add_internal_call("ErmineEngine.Physics::RemovePhysic", (const void*)&icall_Physics_RemovePhysic);
 	mono_add_internal_call("ErmineEngine.Physics::Jump", (const void*)icall_Physics_Jump);
-	mono_add_internal_call("ErmineEngine.Physics::CheckMotionType", (const int*)icall_Physics_CheckMotionType);
+	mono_add_internal_call("ErmineEngine.Physics::CheckMotionType", (const void*)icall_Physics_CheckMotionType);
 	mono_add_internal_call("ErmineEngine.Physics::ForceUpdate", (const void*)icall_Physics_ForceUpdate);
+	mono_add_internal_call("ErmineEngine.Physics::HasPhysicComp", (const void*)icall_Physics_HasPhysicComp);
 #pragma endregion
 
 #pragma region Cursor ICalls
