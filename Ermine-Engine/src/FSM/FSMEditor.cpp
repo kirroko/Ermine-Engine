@@ -302,8 +302,10 @@ namespace Ermine
                 // Remove transitions referencing this node
                 for (auto it = fsm.scriptTransitions.begin(); it != fsm.scriptTransitions.end();)
                 {
-                    if ((it->first && it->first->id == deleteId) ||
-                        (it->second && it->second->id == deleteId))
+                    int fromId = it->first;
+                    int toId = it->second;
+
+                    if (fromId == deleteId || toId == deleteId)
                         it = fsm.scriptTransitions.erase(it);
                     else
                         ++it;
@@ -344,8 +346,8 @@ namespace Ermine
                 if (sPtr->id == toId)   toScriptNode = sPtr.get();
             }
 
-            if (fromScriptNode && toScriptNode)
-                fsm.scriptTransitions[fromScriptNode] = toScriptNode;
+            if (fromId != 0 && toId != 0)
+                fsm.scriptTransitions[fromId] = toId;
 
             fsm.m_Links.emplace_back(fromAttr, toAttr);
         }

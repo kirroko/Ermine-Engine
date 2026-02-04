@@ -2539,55 +2539,55 @@ namespace
 	static void icall_statemachine_request_next_state(uint64_t entityID)
 	{
 		using namespace Ermine;
+
 		if (entityID == 0 || !ECS::GetInstance().IsEntityValid(entityID))
 			return;
 
-		auto& fsm = ECS::GetInstance().GetComponent<StateMachine>(entityID);
-		if (fsm.manager)
-			fsm.manager->RequestNextState(entityID);
-
-		/*EE_CORE_INFO("[ICall] StateMachine.RequestNextState called from C#, entityID = {}", entityID);
-
-		if (entityID == 0)
-		{
-			EE_CORE_WARN("[ICall] Invalid entityID (0)");
-			return;
-		}
-
-		if (!ECS::GetInstance().IsEntityValid(entityID))
-		{
-			EE_CORE_WARN("[ICall] Entity {} is not valid", entityID);
-			return;
-		}
-
 		if (!ECS::GetInstance().HasComponent<StateMachine>(entityID))
-		{
-			EE_CORE_WARN("[ICall] Entity {} has no StateMachine component", entityID);
 			return;
-		}
 
 		auto& fsm = ECS::GetInstance().GetComponent<StateMachine>(entityID);
+
+		// Rebind runtime-only manager pointer (common after loading a scene)
+		if (!fsm.manager)
+			fsm.manager = ECS::GetInstance().GetSystem<StateManager>().get();
 
 		if (!fsm.manager)
-		{
-			EE_CORE_WARN("[ICall] Entity {} FSM has no manager assigned!", entityID);
 			return;
-		}
 
-		EE_CORE_INFO("[ICall] Forwarding to StateManager::RequestNextState()");
-		fsm.manager->RequestNextState(entityID);*/
+		// Optional safety: make sure there's a current script before transitioning
+		if (fsm.m_CurrentScript == nullptr)
+			fsm.Init(entityID);
+
+		fsm.manager->RequestNextState(entityID);
 	}
 
 	static void icall_statemachine_request_previous_state(uint64_t entityID)
 	{
 		using namespace Ermine;
+
 		if (entityID == 0 || !ECS::GetInstance().IsEntityValid(entityID))
 			return;
 
+		if (!ECS::GetInstance().HasComponent<StateMachine>(entityID))
+			return;
+
 		auto& fsm = ECS::GetInstance().GetComponent<StateMachine>(entityID);
-		if (fsm.manager)
-			fsm.manager->RequestPreviousState(entityID);
+
+		// Rebind runtime-only manager pointer (common after loading a scene)
+		if (!fsm.manager)
+			fsm.manager = ECS::GetInstance().GetSystem<StateManager>().get();
+
+		if (!fsm.manager)
+			return;
+
+		// Optional safety: make sure there's a current script before transitioning
+		if (fsm.m_CurrentScript == nullptr)
+			fsm.Init(entityID);
+
+		fsm.manager->RequestPreviousState(entityID);
 	}
+
 #pragma endregion
 
 #pragma region NavAgent ICalls

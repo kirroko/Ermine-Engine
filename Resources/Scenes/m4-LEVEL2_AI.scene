@@ -347,7 +347,7 @@
           "position": [
             -1.6234480142593384,
             2.901981830596924,
-            108.3725814819336
+            4.936999797821045
           ],
           "rotation": [
             0.0,
@@ -468,13 +468,13 @@
               "class": "PlayerController2",
               "enabled": true,
               "fields": {
-                "mouseHorSens": {
-                  "t": 0,
-                  "v": 0.30000001192092898
-                },
                 "jumpHeight": {
                   "t": 0,
                   "v": 2.0
+                },
+                "mouseHorSens": {
+                  "t": 0,
+                  "v": 0.30000001192092898
                 },
                 "mouseVertSens": {
                   "t": 0,
@@ -484,13 +484,13 @@
                   "t": 0,
                   "v": 5.0
                 },
-                "jumpspeed": {
-                  "t": 0,
-                  "v": 5.0
-                },
                 "camDefaultY": {
                   "t": 0,
                   "v": 4.5
+                },
+                "jumpspeed": {
+                  "t": 0,
+                  "v": 5.0
                 },
                 "crouchLerpSpeed": {
                   "t": 0,
@@ -502,11 +502,11 @@
               "class": "OrbTeleport",
               "enabled": true,
               "fields": {
-                "recallHealAmt": {
+                "damage": {
                   "t": 0,
                   "v": 10.0
                 },
-                "damage": {
+                "recallHealAmt": {
                   "t": 0,
                   "v": 10.0
                 }
@@ -4882,10 +4882,10 @@
             51.70610046386719
           ],
           "rotation": [
-            0.0,
-            0.7071068286895752,
-            0.0,
-            0.7071067094802856
+            -1.4231617662119334e-8,
+            0.8509035110473633,
+            -1.4231617662119334e-8,
+            0.5253219604492188
           ],
           "scale": [
             0.02499917708337307,
@@ -4908,17 +4908,17 @@
             3.200000047683716,
             0.0
           ],
-          "posx": false,
+          "posx": true,
           "posy": false,
-          "posz": false,
+          "posz": true,
           "colliderrot": [
             0.0,
             0.0,
             0.0
           ],
           "rotx": true,
-          "roty": false,
-          "rotz": false,
+          "roty": true,
+          "rotz": true,
           "collidersize": [
             75.0,
             200.0,
@@ -4937,8 +4937,8 @@
             {
               "id": 0,
               "name": "Start",
-              "scriptClassName": "",
-              "isAttached": false,
+              "scriptClassName": "Move",
+              "isAttached": true,
               "isStartNode": true
             }
           ],
@@ -4955,9 +4955,9 @@
           "centerYOffset": 3.437469005584717,
           "autoFitFromCollider": true,
           "destination": [
-            0.0,
-            0.0,
-            0.0
+            -17.925134658813478,
+            0.15801317989826203,
+            51.70610046386719
           ]
         },
         "GlobalTransform": {}
@@ -8524,10 +8524,10 @@
             24.937240600585939
           ],
           "rotation": [
-            -9.099645694732317e-7,
-            8.280355567880093e-13,
-            -9.099645694732317e-7,
-            1.0
+            0.0,
+            0.3491823971271515,
+            0.0,
+            0.9370547533035278
           ],
           "scale": [
             0.02500000037252903,
@@ -8550,17 +8550,17 @@
             3.200000047683716,
             0.5
           ],
-          "posx": false,
+          "posx": true,
           "posy": false,
-          "posz": false,
+          "posz": true,
           "colliderrot": [
             0.0,
             0.0,
             0.0
           ],
           "rotx": true,
-          "roty": false,
-          "rotz": false,
+          "roty": true,
+          "rotz": true,
           "collidersize": [
             75.0,
             200.0,
@@ -8579,8 +8579,8 @@
             {
               "id": 0,
               "name": "Start",
-              "scriptClassName": "",
-              "isAttached": false,
+              "scriptClassName": "Patrol",
+              "isAttached": true,
               "isStartNode": true
             }
           ],
@@ -8597,9 +8597,9 @@
           "centerYOffset": 3.4375,
           "autoFitFromCollider": true,
           "destination": [
-            0.0,
-            0.0,
-            0.0
+            -2.175553321838379,
+            0.15797074139118195,
+            28.472774505615236
           ]
         },
         "GlobalTransform": {}
@@ -12086,9 +12086,9 @@
           ],
           "rotation": [
             0.0,
-            0.7071068286895752,
+            0.3826834559440613,
             0.0,
-            0.7071067094802856
+            0.9238795042037964
           ],
           "scale": [
             0.024996651336550714,
@@ -12111,17 +12111,17 @@
             3.200000047683716,
             0.0
           ],
-          "posx": false,
+          "posx": true,
           "posy": false,
-          "posz": false,
+          "posz": true,
           "colliderrot": [
             0.0,
             0.0,
             0.0
           ],
           "rotx": true,
-          "roty": false,
-          "rotz": false,
+          "roty": true,
+          "rotz": true,
           "collidersize": [
             75.0,
             200.0,
@@ -12140,12 +12140,39 @@
             {
               "id": 0,
               "name": "Start",
-              "scriptClassName": "",
-              "isAttached": false,
+              "scriptClassName": "Patrol",
+              "isAttached": true,
               "isStartNode": true
+            },
+            {
+              "id": 1,
+              "name": "Chase",
+              "scriptClassName": "Chase",
+              "isAttached": true,
+              "isStartNode": false
+            },
+            {
+              "id": 2,
+              "name": "Attack",
+              "scriptClassName": "Attack",
+              "isAttached": true,
+              "isStartNode": false
             }
           ],
-          "links": []
+          "links": [
+            {
+              "fromId": 0,
+              "toId": 0
+            },
+            {
+              "fromId": 1,
+              "toId": 2
+            },
+            {
+              "fromId": 0,
+              "toId": 1
+            }
+          ]
         },
         "NavMeshAgent": {
           "speed": 3.0,
@@ -12158,9 +12185,9 @@
           "centerYOffset": 3.4373743534088136,
           "autoFitFromCollider": true,
           "destination": [
-            0.0,
-            0.0,
-            0.0
+            33.62683868408203,
+            0.30163222551345827,
+            103.21627807617188
           ]
         },
         "GlobalTransform": {}
@@ -14523,17 +14550,17 @@
             3.200000047683716,
             0.0
           ],
-          "posx": false,
+          "posx": true,
           "posy": false,
-          "posz": false,
+          "posz": true,
           "colliderrot": [
             0.0,
             0.0,
             0.0
           ],
           "rotx": true,
-          "roty": false,
-          "rotz": false,
+          "roty": true,
+          "rotz": true,
           "collidersize": [
             75.0,
             200.0,
@@ -17208,10 +17235,10 @@
         "NavMesh": {
           "cellSize": 0.05000000074505806,
           "cellHeight": 0.05000000074505806,
-          "agentHeight": 1.0199999809265137,
-          "agentRadius": 0.5249999761581421,
-          "bakedAgentRadius": 0.5249999761581421,
-          "bakedAgentHeight": 1.0199999809265137,
+          "agentHeight": 7.012499809265137,
+          "agentRadius": 0.9843749403953552,
+          "bakedAgentRadius": 0.9843749403953552,
+          "bakedAgentHeight": 7.012499809265137,
           "agentMaxClimb": 0.0,
           "agentMaxSlope": 45.0,
           "drawInputTri": false,
@@ -17333,9 +17360,9 @@
         },
         "Transform": {
           "position": [
-            -7.760942459106445,
-            -6.844624042510986,
-            152.4347381591797
+            23.214664459228517,
+            -7.023000717163086,
+            118.2577133178711
           ],
           "rotation": [
             0.0,
@@ -17344,13 +17371,13 @@
             1.0
           ],
           "scale": [
-            124.0,
+            62.0,
             15.0,
-            135.0
+            67.5
           ]
         },
         "ObjectMetaData": {
-          "name": "floor_1 (3) collider",
+          "name": "floor_1 (3) collider1",
           "tag": "Untagged",
           "selfActive": true
         },
@@ -17429,10 +17456,10 @@
         "NavMesh": {
           "cellSize": 0.05000000074505806,
           "cellHeight": 0.05000000074505806,
-          "agentHeight": 1.0199999809265137,
-          "agentRadius": 0.5249999761581421,
-          "bakedAgentRadius": 0.5249999761581421,
-          "bakedAgentHeight": 1.0199999809265137,
+          "agentHeight": 7.012499809265137,
+          "agentRadius": 0.9843749403953552,
+          "bakedAgentRadius": 0.9843749403953552,
+          "bakedAgentHeight": 7.012499809265137,
           "agentMaxClimb": 0.0,
           "agentMaxSlope": 45.0,
           "drawInputTri": false,
@@ -17571,7 +17598,7 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "floor_1 (7) collider",
+          "name": "floor_1 (3) collider1",
           "tag": "Untagged",
           "selfActive": true
         },
@@ -17773,9 +17800,9 @@
             1.0
           ],
           "scale": [
-            6.0,
+            7.0,
             2.0,
-            6.0
+            7.0
           ]
         },
         "ObjectMetaData": {
@@ -17858,10 +17885,10 @@
         "NavMesh": {
           "cellSize": 0.05000000074505806,
           "cellHeight": 0.05000000074505806,
-          "agentHeight": 1.0199999809265137,
-          "agentRadius": 0.5249999761581421,
-          "bakedAgentRadius": 0.5249999761581421,
-          "bakedAgentHeight": 1.0199999809265137,
+          "agentHeight": 7.012499809265137,
+          "agentRadius": 0.9843749403953552,
+          "bakedAgentRadius": 0.9843749403953552,
+          "bakedAgentHeight": 7.012499809265137,
           "agentMaxClimb": 0.0,
           "agentMaxSlope": 45.0,
           "drawInputTri": false,
@@ -18927,77 +18954,6 @@
       "id": 309,
       "components": {
         "IDComponent": {
-          "guid": "8e81b897188b2840932603c10120e6e0"
-        },
-        "Transform": {
-          "position": [
-            -15.097710609436036,
-            3.140345573425293,
-            120.55265808105469
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "JumpArea",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "PhysicComponent": {
-          "bodyType": "Trigger",
-          "motionType": "Static",
-          "mass": 0.0,
-          "shapeType": "Box",
-          "colliderpivot": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "posx": false,
-          "posy": false,
-          "posz": false,
-          "colliderrot": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotx": false,
-          "roty": false,
-          "rotz": false,
-          "collidersize": [
-            8.0,
-            1.0,
-            8.0
-          ]
-        },
-        "HierarchyComponent": {
-          "depth": 0
-        },
-        "NavJumpLink": {
-          "landingPosition": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "jumpDuration": 1.0,
-          "jumpHeight": 5.0
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "id": 310,
-      "components": {
-        "IDComponent": {
           "guid": "577998d03b780243a07d80294306047f"
         },
         "Transform": {
@@ -19066,7 +19022,7 @@
       }
     },
     {
-      "id": 311,
+      "id": 310,
       "components": {
         "IDComponent": {
           "guid": "bd5262d7b7a47c4db0743300deb04c88"
@@ -19137,7 +19093,7 @@
       }
     },
     {
-      "id": 312,
+      "id": 311,
       "components": {
         "IDComponent": {
           "guid": "1ed5fd244b527247af31ae4453e4f72f"
@@ -19147,6 +19103,311 @@
             3.182905912399292,
             3.140345573425293,
             138.39939880371095
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "JumpArea",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Trigger",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            8.0,
+            1.0,
+            8.0
+          ]
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "NavJumpLink": {
+          "landingPosition": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "jumpDuration": 1.0,
+          "jumpHeight": 5.0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 312,
+      "components": {
+        "IDComponent": {
+          "guid": "ac1b91dfffcbdb488f445457eb357980"
+        },
+        "Transform": {
+          "position": [
+            -38.34685516357422,
+            -7.039767265319824,
+            152.85333251953126
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            62.0,
+            15.0,
+            135.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "floor_1 (3) collider2",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cube",
+            "size": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              1.0,
+              1.0,
+              1.0,
+              0.0
+            ],
+            "materialAlpha": 0.0,
+            "materialTransparency": 1.0,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.5,
+            "materialEmissive": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 1.0
+          },
+          "textures": [],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ],
+          "castsShadows": true
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "NavMesh": {
+          "cellSize": 0.05000000074505806,
+          "cellHeight": 0.05000000074505806,
+          "agentHeight": 7.012499809265137,
+          "agentRadius": 0.9843749403953552,
+          "bakedAgentRadius": 0.9843749403953552,
+          "bakedAgentHeight": 7.012499809265137,
+          "agentMaxClimb": 0.0,
+          "agentMaxSlope": 45.0,
+          "drawInputTri": false,
+          "drawWalkable": true,
+          "drawNavMesh": false
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 313,
+      "components": {
+        "IDComponent": {
+          "guid": "11183f82292c84469e186b22c4e491c4"
+        },
+        "Transform": {
+          "position": [
+            23.12122344970703,
+            -7.06593132019043,
+            186.01812744140626
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            62.0,
+            15.0,
+            70.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "floor_1 (3) collider3",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cube",
+            "size": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              1.0,
+              1.0,
+              1.0,
+              0.0
+            ],
+            "materialAlpha": 0.0,
+            "materialTransparency": 1.0,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.5,
+            "materialEmissive": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 1.0
+          },
+          "textures": [],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ],
+          "castsShadows": true
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "NavMesh": {
+          "cellSize": 0.05000000074505806,
+          "cellHeight": 0.05000000074505806,
+          "agentHeight": 7.012499809265137,
+          "agentRadius": 0.9843749403953552,
+          "bakedAgentRadius": 0.9843749403953552,
+          "bakedAgentHeight": 7.012499809265137,
+          "agentMaxClimb": 0.0,
+          "agentMaxSlope": 45.0,
+          "drawInputTri": false,
+          "drawWalkable": false,
+          "drawNavMesh": false
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 314,
+      "components": {
+        "IDComponent": {
+          "guid": "bc486fb29b79f843bfa5d36c310041f6"
+        },
+        "Transform": {
+          "position": [
+            -15.097710609436036,
+            3.140345573425293,
+            120.55265808105469
           ],
           "rotation": [
             0.0,

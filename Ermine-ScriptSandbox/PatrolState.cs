@@ -14,7 +14,7 @@ public class Patrol : MonoBehaviour
     public float recenterDelay = 1.0f;
 
     public string playerName = "Player";
-    public float detectPlayerDistance = 6.0f;
+    public float detectPlayerDistance = 15.0f;
 
     private GameObject playerGO;
 
@@ -31,6 +31,13 @@ public class Patrol : MonoBehaviour
 
     private bool pendingRecenter = false;
     private float recenterTimer = 0f;
+
+    // stun guard
+    public float stunDuration = 5.0f;
+    private bool isStunned = false;
+    private float stunTimer = 0.0f;
+    public static bool RightClickStunArmed = false;
+    private float armTimer = 0.0f;
 
     private void CachePlayerIfNeeded()
     {
@@ -82,6 +89,18 @@ public class Patrol : MonoBehaviour
         MoveToNextPoint();
     }
 
+    private void TryStun()
+    {
+        if (isStunned) // don't keep resetting timer
+            return;
+
+        isStunned = true;
+        stunTimer = stunDuration;
+
+        // stop immediately while stunned
+        NavAgent.SetDestination(entityID, transform.position);
+    }
+
     void Start()
     {
         entityID = (ulong)gameObject.GetInstanceID();
@@ -93,6 +112,29 @@ public class Patrol : MonoBehaviour
 
     void Update()
     {
+        if (Input.GetMouseButtonDown(1))
+            armTimer = 0.3f;
+
+        if (armTimer > 0.0f)
+            armTimer -= Time.deltaTime;
+
+        RightClickStunArmed = armTimer > 0f;
+
+        if (isStunned)
+        {
+            //Debug.Log("stunned");
+            stunTimer -= Time.deltaTime;
+            if (stunTimer <= 0.0f)
+            {
+                isStunned = false;
+
+                // Resume the current target after stun ends
+                if (patrolPoints != null && patrolPoints.Length > 0 && currentIndex >= 0)
+                    NavAgent.SetDestination(entityID, patrolPoints[currentIndex]);
+            }
+            return; // do NOTHING while stunned
+        }
+
         if (PlayerCloseEnoughToChase())
         {
             StateMachine.RequestNextState(entityID);
@@ -128,7 +170,10 @@ public class Patrol : MonoBehaviour
         }
 
         if (patrolPoints == null || patrolPoints.Length == 0 || currentIndex < 0)
+        {
+            BuildPatrolPoints(transform.position);
             return;
+        }
 
         Vector3 pos = transform.position;
         Vector3 target = patrolPoints[currentIndex];
@@ -160,29 +205,42 @@ public class Patrol : MonoBehaviour
     void OnCollisionEnter(Collision col)
     {
         if (jumping) return;
-
         if (col.gameObject.name == "JumpArea")
         {
             jumping = true;
             jumpLinkEntityID = (ulong)col.gameObject.GetInstanceID();
+        }
+
+        if (!RightClickStunArmed) return;
+        if (col.gameObject.name == "Sphere")
+        {
+            TryStun();
+            armTimer = 0.0f;
+            RightClickStunArmed = false;
         }
     }
 
     void OnCollisionStay(Collision col)
     {
         if (jumping) return;
-
         if (col.gameObject.name == "JumpArea")
         {
             jumping = true;
             jumpLinkEntityID = (ulong)col.gameObject.GetInstanceID();
+        }
+
+        if (!RightClickStunArmed) return;
+        if (col.gameObject.name == "Sphere")
+        {
+            TryStun();
+            armTimer = 0.0f;
+            RightClickStunArmed = false;
         }
     }
 
     void OnCollisionExit(Collision col)
     {
         if (jumping) return;
-
         if (col.gameObject.name == "JumpArea")
         {
             jumping = true;

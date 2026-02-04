@@ -71,6 +71,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AttackState.cs" />
+    <Compile Include="MoveState.cs" />
     <Compile Include="ChaseState.cs" />
     <Compile Include="CutscenePlayer.cs" />
     <Compile Include="DamagePlayer.cs" />

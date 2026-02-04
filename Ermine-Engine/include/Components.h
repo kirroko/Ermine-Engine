@@ -3012,7 +3012,9 @@ namespace Ermine
 
 		std::deque<std::shared_ptr<ScriptNode>> m_Nodes;
 		std::vector<std::pair<int, int>> m_Links;
-		std::unordered_map<ScriptNode*, ScriptNode*> scriptTransitions;
+		//std::unordered_map<ScriptNode*, ScriptNode*> scriptTransitions;
+		std::unordered_map<int, int> scriptTransitions;
+		std::vector<int> m_History;
 	public:
 		/*!***********************************************************************
 		\brief
@@ -3053,6 +3055,9 @@ namespace Ermine
 			//{
 			//	EE_CORE_WARN("FSM: Init() called but no valid start node found for entity %d!", entity);
 			//}
+
+			m_History.clear();
+			m_PreviousScript = nullptr;
 		}
 		/*!***********************************************************************
 		\brief
@@ -3103,6 +3108,14 @@ namespace Ermine
 			// Run script update logic (C# handles transitions now)
 			if (m_CurrentScript && m_CurrentScript->instance)
 				m_CurrentScript->OnUpdate();
+		}
+
+		ScriptNode* FindNodeById(int id)
+		{
+			for (auto& n : m_Nodes)
+				if (n && n->id == id)
+					return n.get();
+			return nullptr;
 		}
 
 		template <typename Alloc>
@@ -3163,9 +3176,15 @@ namespace Ermine
 
 			for (const auto& link : m_Links)
 			{
+				// In your editor:
+				// output attr = nodeId*10
+				// input  attr = nodeId*10 + 1
+				const int fromNodeId = link.first / 10;
+				const int toNodeId = (link.second - 1) / 10;
+
 				Value l(kObjectType);
-				l.AddMember("fromId", link.first, alloc);
-				l.AddMember("toId", link.second, alloc);
+				l.AddMember("fromId", fromNodeId, alloc);
+				l.AddMember("toId", toNodeId, alloc);
 				links.PushBack(l, alloc);
 			}
 
@@ -3182,6 +3201,7 @@ namespace Ermine
 			scriptTransitions.clear();
 			m_CurrentScript = nullptr;
 			m_PreviousScript = nullptr;
+			m_History.clear();
 
 			if (!in.IsObject())
 				return;
@@ -3234,8 +3254,7 @@ namespace Ermine
 			// =======================
 			if (in.HasMember("links") && in["links"].IsArray())
 			{
-				const auto& links = in["links"];
-				for (auto& lVal : links.GetArray())
+				for (auto& lVal : in["links"].GetArray())
 				{
 					if (!lVal.IsObject())
 						continue;
@@ -3246,21 +3265,49 @@ namespace Ermine
 					if (!lVal["fromId"].IsInt() || !lVal["toId"].IsInt())
 						continue;
 
-					int fromId = lVal["fromId"].GetInt();
-					int toId = lVal["toId"].GetInt();
+					int rawFrom = lVal["fromId"].GetInt();
+					int rawTo = lVal["toId"].GetInt();
 
-					m_Links.emplace_back(fromId, toId);
+					int fromNodeId = rawFrom;
+					int toNodeId = rawTo;
 
-					// Build scriptTransitions if both nodes exist
-					auto fromIt = idToNode.find(fromId);
-					auto toIt = idToNode.find(toId);
+					// --- Prefer interpreting as NODE ids ---
+					const bool rawAreNodeIds =
+						(idToNode.find(rawFrom) != idToNode.end()) &&
+						(idToNode.find(rawTo) != idToNode.end());
 
-					if (fromIt != idToNode.end() && toIt != idToNode.end())
+					if (!rawAreNodeIds)
 					{
-						// If you only expect one outgoing transition per node,
-						// this is fine. If multiple, you may want a multimap / vector instead.
-						scriptTransitions[fromIt->second] = toIt->second;
+						// --- Try old ATTR-id format ---
+						const bool couldBeAttr =
+							((rawFrom % 10) == 0) &&
+							((rawTo % 10) == 1);
+
+						if (!couldBeAttr)
+							continue;
+
+						int convFrom = rawFrom / 10;
+						int convTo = (rawTo - 1) / 10;
+
+						const bool convertedAreNodeIds =
+							(idToNode.find(convFrom) != idToNode.end()) &&
+							(idToNode.find(convTo) != idToNode.end());
+
+						if (!convertedAreNodeIds)
+							continue;
+
+						fromNodeId = convFrom;
+						toNodeId = convTo;
 					}
+
+					// --- Rebuild ImNodes attribute IDs ---
+					const int fromAttr = fromNodeId * 10;      // output
+					const int toAttr = toNodeId * 10 + 1;  // input
+
+					m_Links.emplace_back(fromAttr, toAttr);
+
+					// --- FSM transitions use NODE ids ---
+					scriptTransitions[fromNodeId] = toNodeId;
 				}
 			}
 
