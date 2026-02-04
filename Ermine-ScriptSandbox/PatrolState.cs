@@ -14,7 +14,6 @@ public class Patrol : MonoBehaviour
     public float recenterDelay = 1.0f;
 
     public string playerName = "Player";
-    public float detectPlayerDistance = 15.0f;
 
     private GameObject playerGO;
 
@@ -39,19 +38,41 @@ public class Patrol : MonoBehaviour
     public static bool RightClickStunArmed = false;
     private float armTimer = 0.0f;
 
+    public float viewDistance = 15.0f;
+    public float rayHeight = 0.8f;
+    public float rayForwardOffset = 2.0f;
+
     private void CachePlayerIfNeeded()
     {
         if (playerGO == null)
             playerGO = GameObject.Find(playerName);
     }
 
-    private bool PlayerCloseEnoughToChase()
+    private bool HasLineOfSightToPlayer()
     {
         CachePlayerIfNeeded();
         if (playerGO == null) return false;
 
-        float d = (playerGO.transform.position - transform.position).Magnitude;
-        return d <= detectPlayerDistance;
+        Vector3 origin = transform.position
+                       + new Vector3(0f, rayHeight, 0f)
+                       + transform.forward * rayForwardOffset;
+
+        Vector3 playerPoint = playerGO.transform.position + new Vector3(0f, rayHeight, 0f);
+        Vector3 toPlayer = playerPoint - origin;
+
+        float dist = toPlayer.Magnitude;
+        if (dist <= 0.0001f) return true;
+        if (dist > viewDistance) return false;
+
+        Vector3 dirToPlayer = toPlayer / dist;
+
+        RaycastHit hit;
+        bool didHit = Physics.Raycast(origin, dirToPlayer, out hit, dist);
+        if (!didHit) return false;
+
+        return hit.transform != null &&
+               hit.transform.gameObject != null &&
+               hit.transform.gameObject.name == playerName;
     }
 
     private void MoveToNextPoint()
@@ -135,7 +156,7 @@ public class Patrol : MonoBehaviour
             return; // do NOTHING while stunned
         }
 
-        if (PlayerCloseEnoughToChase())
+        if (HasLineOfSightToPlayer())
         {
             StateMachine.RequestNextState(entityID);
             return;
