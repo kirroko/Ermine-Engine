@@ -3,7 +3,7 @@
 public class Sphere : MonoBehaviour
 {
     public Vector3 direction;
-    public float speed = 10.0f;
+    public float speed = 20.0f;
 
     private float timeAlive = 1.0f;
 
