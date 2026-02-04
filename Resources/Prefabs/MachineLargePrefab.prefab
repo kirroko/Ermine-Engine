@@ -1,0 +1,118 @@
+{
+  "entities": [
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "54c10e37ccb0cf4ca599c4dbfa1692fe"
+        },
+        "Transform": {
+          "position": [
+            24.11094093322754,
+            0.6259733438491821,
+            25.63770866394043
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.05000000074505806,
+            0.05000000074505806,
+            0.05000000074505806
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "MachineLargePrefab",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_machine_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "b1e221026c8ae240b859995918732e9b"
+        },
+        "Transform": {
+          "position": [
+            716.4374389648438,
+            -0.0012224119855090976,
+            -1359.504638671875
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            20.0,
+            20.0,
+            20.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_machine_low.fbx_Machine_1_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "81983ba53c3d274b8942efee41e2ec72"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "54c10e37ccb0cf4ca599c4dbfa1692fe",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "0c07accc35808844b880d60cff1da695"
+        },
+        "Transform": {
+          "position": [
+            716.4374389648438,
+            -0.0012224119855090976,
+            -1359.504638671875
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            20.0,
+            20.0,
+            20.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_machine_low.fbx_Machine_1_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "f41e3df4af06ce4a9b874cb6d151c51e"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "54c10e37ccb0cf4ca599c4dbfa1692fe",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    }
+  ]
+}
