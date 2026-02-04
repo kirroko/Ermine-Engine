@@ -99,7 +99,24 @@ namespace Ermine
          or 0 if none are found.
         *************************************************************************/
         EntityID FindNearestNavMeshEntity(const Ermine::Vec3& pos);
-        EntityID FindNearestNavMeshEntityExcluding(const Ermine::Vec3& pos, EntityID exclude) const;
+        /*!***********************************************************************
+        \brief
+         Same Function as before now with 2 more parameters. Use to find nearest Nav
+         Mesh for AI to jump.
+
+         This is used to determine which navigation mesh an agent should query when
+         performing pathfinding.
+        \param[in] pos
+         The world-space position to compare against all entities with NavMeshComponents.
+        \param[in] exclude
+         Current entity that the AI is standing on.
+        \param[in] excludePrev
+         The previous entity that the AI jumped from.
+        \return
+         The entity ID of the nearest entity that has a NavMeshComponent,
+         or 0 if none are found.
+        *************************************************************************/
+        EntityID FindNearestNavMeshEntityExcluding(const Ermine::Vec3& pos, EntityID exclude, EntityID excludePrev) const;
     private:
     };
 }

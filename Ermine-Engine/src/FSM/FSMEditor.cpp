@@ -42,6 +42,24 @@ namespace Ermine
 
         auto& fsm = ECS::GetInstance().GetComponent<StateMachine>(m_SelectedEntity);
 
+        // Sync next id to existing nodes, prevents collisions when loading a scene
+        int maxId = 0;
+        for (auto& n : fsm.m_Nodes)
+            if (n && n->id > maxId) maxId = n->id;
+
+        if (m_nextNodeId <= maxId)
+            m_nextNodeId = maxId + 1;
+
+        // ensure chosen id isn't already taken in case scene has duplicates
+        auto idExists = [&](int id)
+            {
+                for (auto& n : fsm.m_Nodes)
+                    if (n && n->id == id) return true;
+                return false;
+            };
+        while (idExists(m_nextNodeId))
+            ++m_nextNodeId;
+
         auto node = std::make_shared<ScriptNode>();
         node->id = m_nextNodeId++;
         node->name = name;
@@ -284,8 +302,10 @@ namespace Ermine
                 // Remove transitions referencing this node
                 for (auto it = fsm.scriptTransitions.begin(); it != fsm.scriptTransitions.end();)
                 {
-                    if ((it->first && it->first->id == deleteId) ||
-                        (it->second && it->second->id == deleteId))
+                    int fromId = it->first;
+                    int toId = it->second;
+
+                    if (fromId == deleteId || toId == deleteId)
                         it = fsm.scriptTransitions.erase(it);
                     else
                         ++it;
@@ -326,8 +346,8 @@ namespace Ermine
                 if (sPtr->id == toId)   toScriptNode = sPtr.get();
             }
 
-            if (fromScriptNode && toScriptNode)
-                fsm.scriptTransitions[fromScriptNode] = toScriptNode;
+            if (fromId != 0 && toId != 0)
+                fsm.scriptTransitions[fromId] = toId;
 
             fsm.m_Links.emplace_back(fromAttr, toAttr);
         }
