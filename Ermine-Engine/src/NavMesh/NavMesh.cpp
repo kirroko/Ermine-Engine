@@ -122,6 +122,63 @@ struct Ermine::NavMeshComponent::BuildData
 };*/
 
 namespace Ermine {
+    static bool EnsureRuntimeFromBaked(NavMeshSystem& sys, NavMeshComponent& c)
+    {
+        if (c.runtime && c.runtime->query) return true;
+        if (!c.HasBaked()) return false;
+
+        sys.DestroyRuntime(c);
+
+        c.runtime = new NavMeshComponent::Runtime();
+        c.runtime->nav = dtAllocNavMesh();
+
+        dtNavMeshParams p{};
+        p.orig[0] = c.bakedOrig[0];
+        p.orig[1] = c.bakedOrig[1];
+        p.orig[2] = c.bakedOrig[2];
+        p.tileWidth = c.bakedTileWidth;
+        p.tileHeight = c.bakedTileHeight;
+        p.maxTiles = (c.bakedMaxTiles > 0) ? c.bakedMaxTiles : 1;
+        p.maxPolys = (c.bakedMaxPolys > 0) ? c.bakedMaxPolys : 0x8000;
+
+        if (dtStatusFailed(c.runtime->nav->init(&p)))
+        {
+            sys.DestroyRuntime(c);
+            return false;
+        }
+
+        for (auto const& t : c.bakedTiles)
+        {
+            std::vector<unsigned char> bytes;
+            if (!NavMeshComponent::Base64Decode(t.dataB64.c_str(), bytes)) continue;
+
+            unsigned char* data = (unsigned char*)dtAlloc((int)bytes.size(), DT_ALLOC_PERM);
+            if (!data) continue;
+            std::memcpy(data, bytes.data(), bytes.size());
+
+            dtTileRef ref{};
+            dtStatus st = c.runtime->nav->addTile(data, (int)bytes.size(), DT_TILE_FREE_DATA, 0, &ref);
+            if (dtStatusFailed(st))
+            {
+                dtFree(data);
+            }
+            else
+            {
+                c.runtime->tileRef = (unsigned long long)ref;
+            }
+        }
+
+        c.runtime->query = dtAllocNavMeshQuery();
+        if (!c.runtime->query || dtStatusFailed(c.runtime->query->init(c.runtime->nav, 2048)))
+        {
+            sys.DestroyRuntime(c);
+            return false;
+        }
+
+        return true;
+    }
+
+
     static void SyncBakeAgentSettingsFromAgents(NavMeshComponent& nm)
     {
         auto& ecs = ECS::GetInstance();
@@ -446,6 +503,27 @@ namespace Ermine {
         if (dtStatusFailed(c.runtime->query->init(c.runtime->nav, 2048))) { DestroyBuild(c); DestroyRuntime(c); return false; }
 
         c.runtime->tileRef = (unsigned long long)tileRef;
+
+        // Persist baked navmesh into component (for scene serialization)
+        c.bakedOrig[0] = navParams.orig[0];
+        c.bakedOrig[1] = navParams.orig[1];
+        c.bakedOrig[2] = navParams.orig[2];
+        c.bakedTileWidth = navParams.tileWidth;
+        c.bakedTileHeight = navParams.tileHeight;
+        c.bakedMaxTiles = navParams.maxTiles;
+        c.bakedMaxPolys = navParams.maxPolys;
+
+        c.bakedTiles.clear();
+
+        const dtMeshTile* tile = c.runtime->nav->getTileByRef(tileRef);
+        if (tile && tile->data && tile->dataSize > 0)
+        {
+            NavMeshComponent::BakedTile bt;
+            bt.dataSize = tile->dataSize;
+            bt.dataB64 = NavMeshComponent::Base64Encode((const unsigned char*)tile->data, (size_t)tile->dataSize);
+            c.bakedTiles.push_back(std::move(bt));
+        }
+
 
         EE_CORE_INFO("[NavMeshSystem] Build complete!");
         return true;
@@ -817,7 +895,10 @@ namespace Ermine {
 
         auto& navComp = ecs.GetComponent<NavMeshComponent>(navEntity);
         if (!navComp.runtime || !navComp.runtime->query)
-            return false;
+        {
+            if (!EnsureRuntimeFromBaked(*this, navComp))
+                return false;
+        }
 
         dtNavMeshQuery* query = navComp.runtime->query;
 
@@ -899,7 +980,11 @@ namespace Ermine {
 
         auto& navComp = ecs.GetComponent<NavMeshComponent>(navEntity);
         if (!navComp.runtime || !navComp.runtime->query)
-            return false;
+        {
+            if (!EnsureRuntimeFromBaked(*this, navComp))
+                return false;
+        }
+
 
         dtNavMeshQuery* query = navComp.runtime->query;
 
