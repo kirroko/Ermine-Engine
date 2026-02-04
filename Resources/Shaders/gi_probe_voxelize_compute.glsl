@@ -1,4 +1,5 @@
 #version 460 core
+#extension GL_ARB_bindless_texture : require
 
 // Voxelize scene into a probe-local 3D volume.
 // RGBA8: rgb = albedo + emissive, a = occupancy (0/1).
@@ -18,10 +19,18 @@ uniform int u_FirstIndex;
 uniform int u_BaseVertex;
 uniform int u_VertexStride;         // stride in floats
 uniform int u_VertexPositionOffset; // position offset in floats
+uniform int u_VertexTexCoordOffset; // texcoord offset in floats
 uniform mat4 u_ModelMatrix;
 uniform vec3 u_MaterialAlbedo;
 uniform vec3 u_MaterialEmissive;
 uniform float u_MaterialEmissiveIntensity;
+uniform vec2 u_MaterialUVScale;
+uniform vec2 u_MaterialUVOffset;
+uniform uint u_MaterialTextureFlags;
+uniform int u_MaterialAlbedoMapIndex;
+
+// Material texture flag bits (must match C++ MaterialTextureFlags enum)
+const uint MAT_FLAG_ALBEDO_MAP = 1u << 0u;  // bit 0
 
 layout(std430, binding = 6) readonly buffer IndexBuffer
 {
@@ -39,6 +48,18 @@ vec3 LoadPosition(uint vertexIndex)
     uint base = vertexIndex * uint(u_VertexStride) + uint(u_VertexPositionOffset);
     return vec3(vdata[base + 0], vdata[base + 1], vdata[base + 2]);
 }
+
+vec2 LoadTexCoord(uint vertexIndex)
+{
+    uint base = vertexIndex * uint(u_VertexStride) + uint(u_VertexTexCoordOffset);
+    return vec2(vdata[base + 0], vdata[base + 1]);
+}
+
+// Bindless texture array SSBO - stores texture handles as uvec2 (64-bit split into two 32-bit values)
+layout(std430, binding = 5) restrict readonly buffer TextureArrayBlock
+{
+    uvec2 textureHandles[];
+};
 
 void main()
 {
@@ -70,6 +91,15 @@ void main()
 
     vec3 emissive = u_MaterialEmissive * u_MaterialEmissiveIntensity;
     vec3 albedo = clamp(u_MaterialAlbedo, 0.0, 1.0);
+    if ((u_MaterialTextureFlags & MAT_FLAG_ALBEDO_MAP) != 0u && u_MaterialAlbedoMapIndex >= 0) {
+        vec2 uv0 = LoadTexCoord(i0);
+        vec2 uv1 = LoadTexCoord(i1);
+        vec2 uv2 = LoadTexCoord(i2);
+        vec2 uv = (uv0 + uv1 + uv2) * (1.0 / 3.0);
+        vec2 transformedUV = uv * u_MaterialUVScale + u_MaterialUVOffset;
+        vec3 albedoSample = texture(sampler2D(textureHandles[u_MaterialAlbedoMapIndex]), transformedUV).rgb;
+        albedo *= albedoSample;
+    }
     vec3 emissiveColor = clamp(emissive, 0.0, 1.0);
     float emissiveOccupied = (dot(emissiveColor, vec3(0.3333)) > 0.0001) ? 1.0 : 0.0;
     vec3 triNormal = normalize(cross(w1 - w0, w2 - w0));
