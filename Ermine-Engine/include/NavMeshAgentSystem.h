@@ -115,7 +115,7 @@ namespace Ermine
         \return
          The entity ID of the nearest entity that has a NavMeshComponent,
          or 0 if none are found.
-*************************************************************************/
+        *************************************************************************/
         EntityID FindNearestNavMeshEntityExcluding(const Ermine::Vec3& pos, EntityID exclude, EntityID excludePrev) const;
     private:
     };

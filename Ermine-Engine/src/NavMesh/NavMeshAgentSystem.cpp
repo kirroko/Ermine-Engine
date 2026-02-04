@@ -76,7 +76,7 @@ namespace Ermine
             // jump
             if (agent.isJumping)
             {
-                EE_CORE_INFO("JUMPING");
+                //EE_CORE_INFO("JUMPING");
                 agent.jumpTimer += dt;
                 float t = (agent.jumpDuration > 1e-5f) ? (agent.jumpTimer / agent.jumpDuration) : 1.0f;
                 if (t > 1.0f) t = 1.0f;
