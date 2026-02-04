@@ -2743,21 +2743,37 @@ namespace
 	static float Internal_GetHealth(uint64_t entityID)
 	{
 		auto& ecs = ECS::GetInstance();
-		if (!ecs.HasComponent<UIComponent>(entityID))
-			return 0.0f;
-
-		auto& ui = ecs.GetComponent<UIComponent>(entityID);
-		return ui.GetHealth();
+		// Try UIHealthbarComponent first (new system)
+		if (ecs.HasComponent<UIHealthbarComponent>(entityID))
+		{
+			auto& healthbar = ecs.GetComponent<UIHealthbarComponent>(entityID);
+			return healthbar.currentHealth;
+		}
+		// Fall back to UIComponent (legacy)
+		if (ecs.HasComponent<UIComponent>(entityID))
+		{
+			auto& ui = ecs.GetComponent<UIComponent>(entityID);
+			return ui.GetHealth();
+		}
+		return 0.0f;
 	}
 
 	static void Internal_SetHealth(uint64_t entityID, float value)
 	{
 		auto& ecs = ECS::GetInstance();
-		if (!ecs.HasComponent<UIComponent>(entityID))
+		// Try UIHealthbarComponent first (new system)
+		if (ecs.HasComponent<UIHealthbarComponent>(entityID))
+		{
+			auto& healthbar = ecs.GetComponent<UIHealthbarComponent>(entityID);
+			healthbar.currentHealth = value;
 			return;
-
-		auto& ui = ecs.GetComponent<UIComponent>(entityID);
-		ui.SetHealth(value);
+		}
+		// Fall back to UIComponent (legacy)
+		if (ecs.HasComponent<UIComponent>(entityID))
+		{
+			auto& ui = ecs.GetComponent<UIComponent>(entityID);
+			ui.SetHealth(value);
+		}
 	}
 
 	// temporary reference to health bar, to be removed
@@ -2799,6 +2815,37 @@ namespace
 
 		auto& healthbar = ecs.GetComponent<UIHealthbarComponent>(entityID);
 		return healthbar.maxHealth;
+	}
+
+	static float Internal_Healthbar_GetRegenRate(uint64_t entityID)
+	{
+		auto& ecs = ECS::GetInstance();
+		if (!ecs.HasComponent<UIHealthbarComponent>(entityID))
+			return 0.0f;
+
+		auto& healthbar = ecs.GetComponent<UIHealthbarComponent>(entityID);
+		return healthbar.healthRegenRate;
+	}
+
+	// GameplayHUD wrappers for UIHealthbarComponent
+	static float Internal_GameplayHUD_GetMaxHealth(uint64_t entityID)
+	{
+		auto& ecs = ECS::GetInstance();
+		if (!ecs.HasComponent<UIHealthbarComponent>(entityID))
+			return 100.0f;
+
+		auto& healthbar = ecs.GetComponent<UIHealthbarComponent>(entityID);
+		return healthbar.maxHealth;
+	}
+
+	static float Internal_GameplayHUD_GetRegenRate(uint64_t entityID)
+	{
+		auto& ecs = ECS::GetInstance();
+		if (!ecs.HasComponent<UIHealthbarComponent>(entityID))
+			return 0.0f;
+
+		auto& healthbar = ecs.GetComponent<UIHealthbarComponent>(entityID);
+		return healthbar.healthRegenRate;
 	}
 
 	// UIBookCounterComponent bindings
@@ -3629,6 +3676,8 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 #pragma region UI ICalls
 	mono_add_internal_call("ErmineEngine.GameplayHUD::Internal_GetHealth", (const void*)Internal_GetHealth);
 	mono_add_internal_call("ErmineEngine.GameplayHUD::Internal_SetHealth", (const void*)Internal_SetHealth);
+	mono_add_internal_call("ErmineEngine.GameplayHUD::Internal_GetMaxHealth", (const void*)Internal_GameplayHUD_GetMaxHealth);
+	mono_add_internal_call("ErmineEngine.GameplayHUD::Internal_GetRegenRate", (const void*)Internal_GameplayHUD_GetRegenRate);
 	// temporary reference to health bar, to be removed
 	mono_add_internal_call("ErmineEngine.GameplayHUD::Internal_GetHealthBar", Internal_GetHealthBar);
 
