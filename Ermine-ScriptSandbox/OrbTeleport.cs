@@ -16,6 +16,10 @@ public class OrbTeleport : MonoBehaviour
 
     private bool orbShot = false;       // Tracks if we already shot an orb
 
+    private float timeSinceLastDamage = 0f;
+    public float regenDelay = 2.0f; // seconds before regen starts
+
+
     // Name of the entity with UISkillsComponent (must match your scene)
     public string skillsHUDName = "Skills";
 
@@ -54,7 +58,9 @@ public class OrbTeleport : MonoBehaviour
     // Helper: Set skills to "ready to shoot" state (no orb out)
     void SetSkillsForReadyToShoot()
     {
-        UISystem.SetSkillSelected(skillsHUDName, SKILL_SHOOT, true);     // Shoot ready
+        bool canShoot = CanShootOrb();
+
+        UISystem.SetSkillSelected(skillsHUDName, SKILL_SHOOT, canShoot);     // Shoot ready
         UISystem.SetSkillSelected(skillsHUDName, SKILL_RETURN, false);   // Return not ready
         UISystem.SetSkillSelected(skillsHUDName, SKILL_TELEPORT, false); // Teleport not ready
         UISystem.SetSkillSelected(skillsHUDName, SKILL_DISRUPT, false);  // Disrupt not ready (for now)
@@ -71,6 +77,8 @@ public class OrbTeleport : MonoBehaviour
 
     void Update()
     {
+        timeSinceLastDamage += Time.deltaTime;
+
         // Check if orb disappeared on its own (hit something, traveled too far, etc.)
         if (orbShot && GameObject.Find("Sphere") == null)
         {
@@ -79,25 +87,32 @@ public class OrbTeleport : MonoBehaviour
         }
 
         // Regenerate health when orb is not out
-        if (!orbShot)
+        if (!orbShot && timeSinceLastDamage >= regenDelay)
         {
             RegenerateHealth();
         }
+
 
         if (Input.GetMouseButton(0))
         {
             if (!orbShot)
             {
-                // First left click - shoot orb
+                if (!CanShootOrb())
+                {
+                    // Optional feedback
+                    //GlobalAudio.PlaySFX("Error"); 
+                    return;
+                }
+
                 ShootOrb();
                 orbShot = true;
                 return;
             }
 
-            // Second left click - teleport to orb
             TeleportToOrb();
             orbShot = false;
         }
+
 
         // Recall orb on 'R' key press
         if (Input.GetKeyDown(KeyCode.R))
@@ -191,13 +206,22 @@ public class OrbTeleport : MonoBehaviour
         health = GameplayHUD.GetHealth(healthBar);
         health = Math.Max(0, health - dmg);
 
-
+        timeSinceLastDamage = 0f; // reset regen timer
         GameplayHUD.SetHealth(healthBar, health);
     }
 
     void HealDamage(float heal)
     {
-        health = GameplayHUD.GetHealth(healthBar);
-        GameplayHUD.SetHealth(healthBar, health + heal);
+        float current = GameplayHUD.GetHealth(healthBar);
+        float max = GameplayHUD.GetMaxHealth(healthBar);
+
+        GameplayHUD.SetHealth(healthBar, Math.Min(current + heal, max));
     }
+
+    bool CanShootOrb()
+    {
+        float currentHealth = GameplayHUD.GetHealth(healthBar);
+        return currentHealth >= damage;
+    }
+
 }
