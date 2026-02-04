@@ -487,8 +487,8 @@
           "normalImage": "Resources/Textures/UI/MainMenu/Audio_Unselected.png",
           "hoverImage": "Resources/Textures/UI/MainMenu/Audio_Selected.png",
           "pressedImage": "",
-          "action": 0,
-          "actionData": "",
+          "action": 3,
+          "actionData": "OpenSettings",
           "hoverSoundName": "",
           "clickSoundName": "",
           "soundVolume": 0.0
@@ -565,11 +565,1288 @@
           "hoverImage": "Resources/Textures/UI/MainMenu/Controls_Selected.png",
           "pressedImage": "",
           "action": 3,
-          "actionData": "",
+          "actionData": "OpenControls",
           "hoverSoundName": "",
           "clickSoundName": "",
           "soundVolume": 0.0
         }
+      }
+    },
+    {
+      "id": 10,
+      "components": {
+        "IDComponent": {
+          "guid": "af4a406985c21d48841bdd2758cd8f4d"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "ControlsScreen",
+          "tag": "Untagged",
+          "selfActive": false
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 11,
+      "components": {
+        "IDComponent": {
+          "guid": "93cefcea905048438dcef8d8720c3adb"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "ControlBackground",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "af4a406985c21d48841bdd2758cd8f4d",
+          "depth": 1
+        },
+        "UIImageComponent": {
+          "imagePath": "Resources/Textures/UI/Controls_Menu_BG.png",
+          "fullscreen": true,
+          "position": [
+            0.5,
+            0.5,
+            0.0
+          ],
+          "width": 1.0,
+          "height": 1.0,
+          "tintColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "alpha": 1.0,
+          "maintainAspectRatio": true,
+          "caption": "",
+          "showCaption": false,
+          "captionColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "captionFontSize": 24.0,
+          "captionPosition": [
+            0.5,
+            0.10000000149011612,
+            0.0
+          ]
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 12,
+      "components": {
+        "IDComponent": {
+          "guid": "5426b462b7bf434394f8fc8cae49d2ab"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Teleport_Button",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "af4a406985c21d48841bdd2758cd8f4d",
+          "depth": 1
+        },
+        "GlobalTransform": {},
+        "UIButtonComponent": {
+          "text": "",
+          "position": [
+            0.41999998688697817,
+            0.6200000047683716,
+            0.0
+          ],
+          "size": [
+            0.11999999731779099,
+            0.18000000715255738
+          ],
+          "normalColor": [
+            0.30000001192092898,
+            0.30000001192092898,
+            0.30000001192092898
+          ],
+          "hoverColor": [
+            0.5,
+            0.5,
+            0.5
+          ],
+          "pressedColor": [
+            0.699999988079071,
+            0.699999988079071,
+            0.699999988079071
+          ],
+          "textColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "textScale": 1.0,
+          "backgroundAlpha": 1.0,
+          "normalImage": "Resources/Textures/UI/Teleport_Unselected.png",
+          "hoverImage": "Resources/Textures/UI/Teleport_Selected.png",
+          "pressedImage": "Resources/Textures/UI/Teleport_Selected.png",
+          "action": 3,
+          "actionData": "ShowTeleportInfo",
+          "hoverSoundName": "",
+          "clickSoundName": "",
+          "soundVolume": 1.0
+        }
+      }
+    },
+    {
+      "id": 13,
+      "components": {
+        "IDComponent": {
+          "guid": "2d74c77a83dcfd41b9632a9d200d37fe"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Shooting_Button",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "af4a406985c21d48841bdd2758cd8f4d",
+          "depth": 1
+        },
+        "GlobalTransform": {},
+        "UIButtonComponent": {
+          "text": "",
+          "position": [
+            0.41999998688697817,
+            0.8199999928474426,
+            0.0
+          ],
+          "size": [
+            0.11999999731779099,
+            0.20000000298023225
+          ],
+          "normalColor": [
+            0.30000001192092898,
+            0.30000001192092898,
+            0.30000001192092898
+          ],
+          "hoverColor": [
+            0.5,
+            0.5,
+            0.5
+          ],
+          "pressedColor": [
+            0.699999988079071,
+            0.699999988079071,
+            0.699999988079071
+          ],
+          "textColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "textScale": 1.0,
+          "backgroundAlpha": 1.0,
+          "normalImage": "Resources/Textures/UI/Shooting_Unselected.png",
+          "hoverImage": "Resources/Textures/UI/Shooting_Selected.png",
+          "pressedImage": "",
+          "action": 3,
+          "actionData": "ShowShootingInfo",
+          "hoverSoundName": "",
+          "clickSoundName": "",
+          "soundVolume": 1.0
+        }
+      }
+    },
+    {
+      "id": 14,
+      "components": {
+        "IDComponent": {
+          "guid": "ce5b77bdfe39ed459dadc1e5dae19ecf"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "LightDisrupter_Button",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "af4a406985c21d48841bdd2758cd8f4d",
+          "depth": 1
+        },
+        "GlobalTransform": {},
+        "UIButtonComponent": {
+          "text": "",
+          "position": [
+            0.41999998688697817,
+            0.4099999964237213,
+            0.0
+          ],
+          "size": [
+            0.11999999731779099,
+            0.20000000298023225
+          ],
+          "normalColor": [
+            0.30000001192092898,
+            0.30000001192092898,
+            0.30000001192092898
+          ],
+          "hoverColor": [
+            0.5,
+            0.5,
+            0.5
+          ],
+          "pressedColor": [
+            0.699999988079071,
+            0.699999988079071,
+            0.699999988079071
+          ],
+          "textColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "textScale": 1.0,
+          "backgroundAlpha": 1.0,
+          "normalImage": "Resources/Textures/UI/LightDisrupter_Unselected.png",
+          "hoverImage": "Resources/Textures/UI/LightDisrupter_Selected.png",
+          "pressedImage": "Resources/Textures/UI/LightDisrupter_Selected.png",
+          "action": 3,
+          "actionData": "ShowLightDInfo",
+          "hoverSoundName": "",
+          "clickSoundName": "",
+          "soundVolume": 1.0
+        }
+      }
+    },
+    {
+      "id": 15,
+      "components": {
+        "IDComponent": {
+          "guid": "03c002f70bddd54085a8c43e4c8fd4ad"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Return_Button",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "af4a406985c21d48841bdd2758cd8f4d",
+          "depth": 1
+        },
+        "GlobalTransform": {},
+        "UIButtonComponent": {
+          "text": "",
+          "position": [
+            0.4300000071525574,
+            0.23000000417232514,
+            0.0
+          ],
+          "size": [
+            0.11999999731779099,
+            0.17000000178813935
+          ],
+          "normalColor": [
+            0.30000001192092898,
+            0.30000001192092898,
+            0.30000001192092898
+          ],
+          "hoverColor": [
+            0.5,
+            0.5,
+            0.5
+          ],
+          "pressedColor": [
+            0.699999988079071,
+            0.699999988079071,
+            0.699999988079071
+          ],
+          "textColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "textScale": 1.0,
+          "backgroundAlpha": 1.0,
+          "normalImage": "Resources/Textures/UI/Return_Unselected.png",
+          "hoverImage": "Resources/Textures/UI/Return_Selected.png",
+          "pressedImage": "Resources/Textures/UI/Return_Selected.png",
+          "action": 3,
+          "actionData": "ShowReturnInfo",
+          "hoverSoundName": "",
+          "clickSoundName": "",
+          "soundVolume": 1.0
+        }
+      }
+    },
+    {
+      "id": 16,
+      "components": {
+        "IDComponent": {
+          "guid": "9f31626db335c64eb88c3e19c368655e"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Close_Button",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "af4a406985c21d48841bdd2758cd8f4d",
+          "depth": 1
+        },
+        "GlobalTransform": {},
+        "UIButtonComponent": {
+          "text": "",
+          "position": [
+            0.8700000047683716,
+            0.800000011920929,
+            0.0
+          ],
+          "size": [
+            0.11999999731779099,
+            0.11999999731779099
+          ],
+          "normalColor": [
+            0.30000001192092898,
+            0.30000001192092898,
+            0.30000001192092898
+          ],
+          "hoverColor": [
+            0.5,
+            0.5,
+            0.5
+          ],
+          "pressedColor": [
+            0.699999988079071,
+            0.699999988079071,
+            0.699999988079071
+          ],
+          "textColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "textScale": 1.0,
+          "backgroundAlpha": 1.0,
+          "normalImage": "Resources/Textures/UI/Exit_Button_V2.png",
+          "hoverImage": "Resources/Textures/UI/Exit_Button_V2.png",
+          "pressedImage": "Resources/Textures/UI/Exit_Button_V2.png",
+          "action": 3,
+          "actionData": "CloseControlsScreen",
+          "hoverSoundName": "",
+          "clickSoundName": "",
+          "soundVolume": 1.0
+        }
+      }
+    },
+    {
+      "id": 17,
+      "components": {
+        "IDComponent": {
+          "guid": "af9e7f2ee4b1984b94a36565f49a4500"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Teleport_Info",
+          "tag": "Untagged",
+          "selfActive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "af4a406985c21d48841bdd2758cd8f4d",
+          "depth": 1
+        },
+        "UIImageComponent": {
+          "imagePath": "Resources/Textures/UI/Description_Teleport.png",
+          "fullscreen": false,
+          "position": [
+            0.7250000238418579,
+            0.47999998927116396,
+            0.0
+          ],
+          "width": 1.0,
+          "height": 0.6899999976158142,
+          "tintColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "alpha": 1.0,
+          "maintainAspectRatio": true,
+          "caption": "",
+          "showCaption": false,
+          "captionColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "captionFontSize": 24.0,
+          "captionPosition": [
+            0.5,
+            0.10000000149011612,
+            0.0
+          ]
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 18,
+      "components": {
+        "IDComponent": {
+          "guid": "cd20bc92493b8545bec592b3ebe1e50c"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Shooting_Info",
+          "tag": "Untagged",
+          "selfActive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "af4a406985c21d48841bdd2758cd8f4d",
+          "depth": 1
+        },
+        "UIImageComponent": {
+          "imagePath": "Resources/Textures/UI/Description_Shooting.png",
+          "fullscreen": false,
+          "position": [
+            0.7250000238418579,
+            0.47999998927116396,
+            0.0
+          ],
+          "width": 1.0,
+          "height": 0.6899999976158142,
+          "tintColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "alpha": 1.0,
+          "maintainAspectRatio": false,
+          "caption": "",
+          "showCaption": false,
+          "captionColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "captionFontSize": 24.0,
+          "captionPosition": [
+            0.5,
+            0.10000000149011612,
+            0.0
+          ]
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 19,
+      "components": {
+        "IDComponent": {
+          "guid": "ff5695aa5c56914aa2b58e905fcdf07f"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "LightD_Info",
+          "tag": "Untagged",
+          "selfActive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "af4a406985c21d48841bdd2758cd8f4d",
+          "depth": 1
+        },
+        "UIImageComponent": {
+          "imagePath": "Resources/Textures/UI/Description_LightDisrupter.png",
+          "fullscreen": false,
+          "position": [
+            0.7250000238418579,
+            0.47999998927116396,
+            0.0
+          ],
+          "width": 1.0,
+          "height": 0.6899999976158142,
+          "tintColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "alpha": 1.0,
+          "maintainAspectRatio": false,
+          "caption": "",
+          "showCaption": false,
+          "captionColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "captionFontSize": 24.0,
+          "captionPosition": [
+            0.5,
+            0.10000000149011612,
+            0.0
+          ]
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 20,
+      "components": {
+        "IDComponent": {
+          "guid": "355998c107c1394887f39ef29c103fdc"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Return_Info",
+          "tag": "Untagged",
+          "selfActive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "af4a406985c21d48841bdd2758cd8f4d",
+          "depth": 1
+        },
+        "UIImageComponent": {
+          "imagePath": "Resources/Textures/UI/Description_Return.png",
+          "fullscreen": false,
+          "position": [
+            0.7250000238418579,
+            0.47999998927116396,
+            0.0
+          ],
+          "width": 1.0,
+          "height": 0.6899999976158142,
+          "tintColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "alpha": 1.0,
+          "maintainAspectRatio": true,
+          "caption": "",
+          "showCaption": false,
+          "captionColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "captionFontSize": 24.0,
+          "captionPosition": [
+            0.5,
+            0.10000000149011612,
+            0.0
+          ]
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 21,
+      "components": {
+        "IDComponent": {
+          "guid": "d86aa31009209d48bc5d7a9b10e0902a"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "SettingsMenu",
+          "tag": "Untagged",
+          "selfActive": false
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 22,
+      "components": {
+        "IDComponent": {
+          "guid": "89b81f3924dc37469cd8d165648702ca"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Settings Background",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "d86aa31009209d48bc5d7a9b10e0902a",
+          "depth": 1
+        },
+        "UIImageComponent": {
+          "imagePath": "./Resources/Textures/UI/Book_Audio_Menu_BG.png",
+          "fullscreen": true,
+          "position": [
+            0.5,
+            0.5,
+            0.0
+          ],
+          "width": 1.0,
+          "height": 1.0,
+          "tintColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "alpha": 1.0,
+          "maintainAspectRatio": true,
+          "caption": "AUDIO",
+          "showCaption": false,
+          "captionColor": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "captionFontSize": 48.0,
+          "captionPosition": [
+            0.6100000143051148,
+            0.75,
+            0.0
+          ]
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 23,
+      "components": {
+        "IDComponent": {
+          "guid": "c692884e38e9d7438fb560e0bdcd1782"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Master Volume Slider",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "d86aa31009209d48bc5d7a9b10e0902a",
+          "depth": 1
+        },
+        "GlobalTransform": {},
+        "UISliderComponent": {
+          "position": [
+            0.7599999904632568,
+            0.6299999952316284,
+            0.0
+          ],
+          "size": [
+            0.30000001192092898,
+            0.05000000074505806
+          ],
+          "trackColor": [
+            0.5567424893379211,
+            0.1070539578795433,
+            0.1070539578795433
+          ],
+          "fillColor": [
+            0.4000000059604645,
+            0.6000000238418579,
+            0.8999999761581421
+          ],
+          "handleColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "handleHoverColor": [
+            0.8999999761581421,
+            0.8999999761581421,
+            0.5
+          ],
+          "trackAlpha": 1.0,
+          "handleSize": 0.03999999910593033,
+          "trackImage": "./Resources/Textures/UI/Audio_Bar.png",
+          "fillImage": "./Resources/Textures/UI/Audio_Fill.png",
+          "handleImage": "./Resources/Textures/UI/Audio_Indicator.png",
+          "value": 1.0,
+          "minValue": 0.0,
+          "maxValue": 1.0,
+          "target": 1,
+          "customTarget": "",
+          "label": "",
+          "labelColor": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "labelScale": 0.33000001311302187,
+          "labelOffset": [
+            -0.16500000655651093,
+            0.0
+          ],
+          "labelImagePath": "Resources/Textures/UI/MasterVolume_Unselected.png",
+          "labelActiveImagePath": "./Resources/Textures/UI/MasterVolume_Selected.png"
+        }
+      }
+    },
+    {
+      "id": 24,
+      "components": {
+        "IDComponent": {
+          "guid": "b227a1917269794c8ed581cba7fa35be"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Music Volume Slider",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "d86aa31009209d48bc5d7a9b10e0902a",
+          "depth": 1
+        },
+        "GlobalTransform": {},
+        "UISliderComponent": {
+          "position": [
+            0.7549999952316284,
+            0.5099999904632568,
+            0.0
+          ],
+          "size": [
+            0.30000001192092898,
+            0.05000000074505806
+          ],
+          "trackColor": [
+            0.20000000298023225,
+            0.20000000298023225,
+            0.20000000298023225
+          ],
+          "fillColor": [
+            0.8999999761581421,
+            0.8875832557678223,
+            0.4000000059604645
+          ],
+          "handleColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "handleHoverColor": [
+            0.8999999761581421,
+            0.8999999761581421,
+            0.5
+          ],
+          "trackAlpha": 1.0,
+          "handleSize": 0.03999999910593033,
+          "trackImage": "./Resources/Textures/UI/Audio_Bar.png",
+          "fillImage": "./Resources/Textures/UI/Audio_Fill.png",
+          "handleImage": "./Resources/Textures/UI/Audio_Indicator.png",
+          "value": 1.0,
+          "minValue": 0.0,
+          "maxValue": 1.0,
+          "target": 2,
+          "customTarget": "",
+          "label": "",
+          "labelColor": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "labelScale": 0.33500000834465029,
+          "labelOffset": [
+            -0.16500000655651093,
+            0.0
+          ],
+          "labelImagePath": "Resources/Textures/UI/MusicVolume_Unselected.png",
+          "labelActiveImagePath": "Resources/Textures/UI/MusicVolume_Selected.png"
+        }
+      }
+    },
+    {
+      "id": 25,
+      "components": {
+        "IDComponent": {
+          "guid": "ce120d2b6266b6498a60e477a520a55d"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "SFX Volume Slider",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "d86aa31009209d48bc5d7a9b10e0902a",
+          "depth": 1
+        },
+        "GlobalTransform": {},
+        "UISliderComponent": {
+          "position": [
+            0.75,
+            0.38999998569488528,
+            0.0
+          ],
+          "size": [
+            0.30000001192092898,
+            0.05000000074505806
+          ],
+          "trackColor": [
+            0.20000000298023225,
+            0.20000000298023225,
+            0.20000000298023225
+          ],
+          "fillColor": [
+            0.5578108429908752,
+            0.8999999761581421,
+            0.4000000059604645
+          ],
+          "handleColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "handleHoverColor": [
+            0.8999999761581421,
+            0.8999999761581421,
+            0.5
+          ],
+          "trackAlpha": 1.0,
+          "handleSize": 0.03999999910593033,
+          "trackImage": "./Resources/Textures/UI/Audio_Bar.png",
+          "fillImage": "./Resources/Textures/UI/Audio_Fill.png",
+          "handleImage": "./Resources/Textures/UI/Audio_Indicator.png",
+          "value": 1.0,
+          "minValue": 0.0,
+          "maxValue": 1.0,
+          "target": 3,
+          "customTarget": "",
+          "label": "",
+          "labelColor": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "labelScale": 0.3400000035762787,
+          "labelOffset": [
+            -0.1599999964237213,
+            -0.004999999888241291
+          ],
+          "labelImagePath": "./Resources/Textures/UI/SFXVolume_Unselected.png",
+          "labelActiveImagePath": "./Resources/Textures/UI/SFXVolume_Selected.png"
+        }
+      }
+    },
+    {
+      "id": 26,
+      "components": {
+        "IDComponent": {
+          "guid": "cb595325c2952b438d49bddb4f8c8ac2"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Back Button",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "d86aa31009209d48bc5d7a9b10e0902a",
+          "depth": 1
+        },
+        "GlobalTransform": {},
+        "UIButtonComponent": {
+          "text": "",
+          "position": [
+            0.20000000298023225,
+            0.8999999761581421,
+            0.0
+          ],
+          "size": [
+            0.14000000059604646,
+            0.11999999731779099
+          ],
+          "normalColor": [
+            0.30000001192092898,
+            0.30000001192092898,
+            0.30000001192092898
+          ],
+          "hoverColor": [
+            0.5,
+            0.5,
+            0.5
+          ],
+          "pressedColor": [
+            0.699999988079071,
+            0.699999988079071,
+            0.699999988079071
+          ],
+          "textColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "textScale": 1.0,
+          "backgroundAlpha": 1.0,
+          "normalImage": "./Resources/Textures/UI/Back_Button_V2.png",
+          "hoverImage": "",
+          "pressedImage": "",
+          "action": 3,
+          "actionData": "CloseSettings",
+          "hoverSoundName": "",
+          "clickSoundName": "",
+          "soundVolume": 1.0
+        }
+      }
+    },
+    {
+      "id": 27,
+      "components": {
+        "IDComponent": {
+          "guid": "3e96308ce326d142825c92f8e31b0cb7"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Z_AudioHead",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "d86aa31009209d48bc5d7a9b10e0902a",
+          "depth": 1
+        },
+        "UIImageComponent": {
+          "imagePath": "Resources/Textures/UI/Audio_Unselected.png",
+          "fullscreen": false,
+          "position": [
+            0.7099999785423279,
+            0.7799999713897705,
+            0.0
+          ],
+          "width": 1.0,
+          "height": 0.07000000029802323,
+          "tintColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "alpha": 1.0,
+          "maintainAspectRatio": true,
+          "caption": "",
+          "showCaption": false,
+          "captionColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "captionFontSize": 24.0,
+          "captionPosition": [
+            0.5,
+            0.10000000149011612,
+            0.0
+          ]
+        },
+        "GlobalTransform": {}
       }
     }
   ],
@@ -613,6 +1890,11 @@
     "vignetteIntensity": 0.30000001192092898,
     "vignetteRadius": 0.800000011920929,
     "bloomStrength": 0.03999999910593033,
+    "filmGrainEnabled": false,
+    "grainIntensity": 0.014999999664723874,
+    "grainScale": 1.5,
+    "chromaticAberrationEnabled": false,
+    "chromaticAmount": 0.003000000026077032,
     "fxaaSpanMax": 8.0,
     "fxaaReduceMin": 0.0078125,
     "fxaaReduceMul": 0.125,

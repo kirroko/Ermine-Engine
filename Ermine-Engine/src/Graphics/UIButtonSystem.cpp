@@ -446,8 +446,8 @@ namespace Ermine
                 // Show ControlsScreen, hide main menu buttons
                 SetEntityActiveByName("ControlsScreen", true);
                 SetEntityActiveByName("Play Button", false);
-                SetEntityActiveByName("ControlsButton", false);  // Use actual button name
-                SetEntityActiveByName("AudioButton", false);
+                SetEntityActiveByName("Controls", false);  // Use actual button name
+                SetEntityActiveByName("Audio", false);
                 SetEntityActiveByName("Quit Button", false);
             }
             else if (button.actionData == "CloseControlsScreen")
@@ -455,8 +455,8 @@ namespace Ermine
                 // Hide ControlsScreen, show main menu buttons
                 SetEntityActiveByName("ControlsScreen", false);
                 SetEntityActiveByName("Play Button", true);
-                SetEntityActiveByName("ControlsButton", true);  // Use actual button name
-                SetEntityActiveByName("AudioButton", true);
+                SetEntityActiveByName("Controls", true);  // Use actual button name
+                SetEntityActiveByName("Audio", true);
                 SetEntityActiveByName("Quit Button", true);
             }
             else if (button.actionData == "OpenSettings")
