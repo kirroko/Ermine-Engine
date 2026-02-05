@@ -3,11 +3,11 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "56440dce3f8c2848b9f6d4b19e6ea312"
+          "guid": "dd06387797926041a52b9206f9592584"
         },
         "Transform": {
           "position": [
-            1.8565778732299805,
+            0.0,
             0.0,
             0.0
           ],
@@ -24,7 +24,7 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "MachineWithLiquid",
+          "name": "ClockParentPrefab",
           "tag": "Untagged",
           "selfActive": true
         },
@@ -37,89 +37,12 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "27d699481fbbfd48b2204d7b5388774e"
+          "guid": "4e374d60759af74fa4a55a5fbbb1a8db"
         },
         "Transform": {
           "position": [
-            3.700000047683716,
-            7.034999847412109,
-            -3.7980000972747804
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            0.23633231222629548,
-            0.32679054141044619,
-            0.23633231222629548
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Cylinder",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "ModelComponent": {
-          "model": "CylinderPrimitive.fbx",
-          "isSkinFile": false
-        },
-        "HierarchyComponent": {
-          "parentGuid": "56440dce3f8c2848b9f6d4b19e6ea312",
-          "depth": 1
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "components": {
-        "IDComponent": {
-          "guid": "8704757b36545f47a10c6316bc85d72e"
-        },
-        "Transform": {
-          "position": [
-            849.7122192382813,
-            -131.140380859375,
-            1485.00244140625
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Mesh_CylinderPrimitive.fbx_Cylinder.001_mesh0",
-          "tag": "Mesh",
-          "selfActive": true
-        },
-        "Material": {
-          "guid": "c4d5398cbeb8f04084a211005a7eaece"
-        },
-        "HierarchyComponent": {
-          "parentGuid": "27d699481fbbfd48b2204d7b5388774e",
-          "depth": 2
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "components": {
-        "IDComponent": {
-          "guid": "b850c537a2fbb44fa893a382bde78fa4"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.6259733438491821,
+            35.26044464111328,
+            10.027045249938965,
             0.0
           ],
           "rotation": [
@@ -129,22 +52,22 @@
             1.0
           ],
           "scale": [
-            0.05000000074505806,
-            0.05000000074505806,
-            0.05000000074505806
+            0.029999999329447748,
+            0.029999999329447748,
+            0.029999999329447748
           ]
         },
         "ObjectMetaData": {
-          "name": "machine",
+          "name": "Clock wall",
           "tag": "Untagged",
           "selfActive": true
         },
         "ModelComponent": {
-          "model": "ART1_machine_low.fbx",
+          "model": "ART1_clock_wall_low.fbx",
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "56440dce3f8c2848b9f6d4b19e6ea312",
+          "parentGuid": "dd06387797926041a52b9206f9592584",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -153,13 +76,13 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "047fdd1525bdd14ba6b66a680586fe94"
+          "guid": "e6716a2986592f49b9906a7e4d5061be"
         },
         "Transform": {
           "position": [
-            716.4374389648438,
-            -0.0012224119855090976,
-            -1359.504638671875
+            0.0,
+            0.0,
+            0.0
           ],
           "rotation": [
             0.0,
@@ -168,22 +91,22 @@
             1.0
           ],
           "scale": [
-            20.0,
-            20.0,
-            20.0
+            1.0,
+            1.0,
+            1.0
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_machine_low.fbx_Machine_1_mesh0",
+          "name": "Mesh_ART1_clock_wall_low.fbx_Jail_wall_old_mesh0",
           "tag": "Mesh",
           "selfActive": true
         },
         "Material": {
-          "guid": "d1390df6197190429507c752b4df35b6"
+          "guid": "e7a44247d1b4b443ac66198d556c8b89"
         },
         "HierarchyComponent": {
-          "parentGuid": "b850c537a2fbb44fa893a382bde78fa4",
-          "depth": 2
+          "parentGuid": "4e374d60759af74fa4a55a5fbbb1a8db",
+          "depth": 1
         },
         "GlobalTransform": {}
       }
@@ -191,13 +114,52 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "82f2c03e0c8bb94e8676bae45c6c1987"
+          "guid": "5ea9dbd5a1cace46a1e14b728cb8300c"
         },
         "Transform": {
           "position": [
-            716.4374389648438,
-            -0.0012224119855090976,
-            -1359.504638671875
+            35.421142578125,
+            10.09822940826416,
+            2.3402912616729738
+          ],
+          "rotation": [
+            -9.099629210140847e-7,
+            1.0,
+            -0.0000010291722674082849,
+            9.365085746823598e-13
+          ],
+          "scale": [
+            0.030000369995832444,
+            0.029999999329447748,
+            0.030000369995832444
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Clock",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_clock_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "dd06387797926041a52b9206f9592584",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "1086c5879c210e43bf55ccae2b1354b9"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
           ],
           "rotation": [
             0.0,
@@ -206,22 +168,22 @@
             1.0
           ],
           "scale": [
-            20.0,
-            20.0,
-            20.0
+            1.0,
+            1.0,
+            1.0
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_machine_low.fbx_Machine_1_mesh1",
+          "name": "Mesh_ART1_clock_low.fbx_pCube82_mesh0",
           "tag": "Mesh",
           "selfActive": true
         },
         "Material": {
-          "guid": "54ff6cef95c39b46a02f7feaf309b2da"
+          "guid": "b82a3bdefc40d943a7e663e05d025877"
         },
         "HierarchyComponent": {
-          "parentGuid": "b850c537a2fbb44fa893a382bde78fa4",
-          "depth": 2
+          "parentGuid": "5ea9dbd5a1cace46a1e14b728cb8300c",
+          "depth": 1
         },
         "GlobalTransform": {}
       }
