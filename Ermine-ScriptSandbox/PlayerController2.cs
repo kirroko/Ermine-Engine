@@ -6,8 +6,8 @@ public class PlayerController2 : MonoBehaviour
     private Transform cam;
     private AudioComponent audioComp;
 
-    public float mouseHorSens = 0.15f;
-    public float mouseVertSens = 0.15f;
+    public float mouseHorSens = 0.1f;
+    public float mouseVertSens = 0.1f;
 
     public float moveSpeed = 5f;
     public float jumpspeed = 5f;

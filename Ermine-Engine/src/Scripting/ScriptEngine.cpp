@@ -2437,6 +2437,11 @@ namespace
 	{
 		if (id == 0 || !ECS::GetInstance().IsEntityValid(id) || !ECS::GetInstance().HasComponent<Transform>(id))
 		{
+			{
+				std::cerr << "[Physics] GetTransform failed. EntityID = "
+					<< id << std::endl;
+				return nullptr;
+			}
 			assert(false && "Here!");
 			return nullptr;
 		}

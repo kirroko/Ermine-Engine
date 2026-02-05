@@ -5,7 +5,7 @@ public class CutscenePlayer : MonoBehaviour
 {
     // Configuration
     private float imageDisplayTime = 3.0f;  // Duration each slide is shown (seconds)
-    public string nextScenePath = "../Resources/Scenes/m4-test.scene";
+    public string nextScenePath = "../Resources/Scenes/m4-test_copy_copy.scene";
 
     // Slide tracking
     private int currentSlideIndex = 0;  // Which slide we're currently showing (0-based)

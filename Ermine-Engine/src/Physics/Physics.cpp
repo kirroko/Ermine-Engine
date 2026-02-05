@@ -416,7 +416,7 @@ namespace Ermine
 			{
 				auto& statem = ecs.GetComponent<StateMachine>(recipientEntity);
 
-				if (!statem.m_CurrentScript->instance)
+				if (!statem.m_CurrentScript)
 					continue;
 
 				switch (type)
