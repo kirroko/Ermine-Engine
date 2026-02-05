@@ -1451,6 +1451,14 @@ namespace Ermine
 				if (!guidStr.empty()) {
 					materialGuid = Guid::FromString(guidStr);
 					m_material = AssetManager::GetInstance().GetMaterialByGuid(materialGuid);
+					if (!m_material) {
+						materialGuid = {};
+						m_material.reset();
+					}
+				}
+				else {
+					materialGuid = {};
+					m_material.reset();
 				}
 				return;
 			}
@@ -1459,8 +1467,11 @@ namespace Ermine
 			if (!m_material) {
 				m_material = std::make_shared<graphics::Material>();
 			}
-			if (in.HasMember("hasMaterial") && in["hasMaterial"].IsBool() && !in["hasMaterial"].GetBool())
+			if (in.HasMember("hasMaterial") && in["hasMaterial"].IsBool() && !in["hasMaterial"].GetBool()) {
+				materialGuid = {};
+				m_material.reset();
 				return;
+			}
 
 			// Restore params
 			if (in.HasMember("params") && in["params"].IsObject()) {
