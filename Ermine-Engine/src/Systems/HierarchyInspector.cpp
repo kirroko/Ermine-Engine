@@ -934,6 +934,49 @@ namespace Ermine::editor {
 			ImGui::EndCombo();
 		}
 
+		// Drag & Drop target for Material (.mat files)
+		if (ImGui::BeginDragDropTarget())
+		{
+			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_FILE"))
+			{
+				const char* droppedPathCStr = static_cast<const char*>(payload->Data);
+				std::filesystem::path droppedPath = droppedPathCStr;
+
+				// Only accept .mat files
+				if (droppedPath.extension() == ".mat")
+				{
+					auto& assetManager = AssetManager::GetInstance();
+
+					// Normalize / absolute path if needed
+					std::string matPath = droppedPath.string();
+
+					// Load or fetch material
+					auto material = assetManager.LoadMaterialAsset(matPath, true);
+					if (material)
+					{
+						Guid matGuid = assetManager.GetMaterialGuidForPath(matPath);
+
+						matComp.SetMaterial(material, matGuid);
+
+						// Sync custom fragment shader (if any)
+						if (const std::string* frag = assetManager.GetMaterialCustomFragmentShader(matGuid))
+							matComp.customFragmentShader = *frag;
+
+						// Mark renderer dirty
+						if (auto renderer = ECS::GetInstance().GetSystem<graphics::Renderer>())
+							renderer->MarkMaterialsDirty();
+
+						EE_CORE_INFO("Applied dropped material: {}", matPath);
+					}
+					else
+						EE_CORE_WARN("Failed to load dropped material: {}", matPath);
+				}
+				else
+					EE_CORE_INFO("Ignored drop '{}': not a .mat file", droppedPath.string().c_str());
+			}
+			ImGui::EndDragDropTarget();
+		}
+
 		ImGui::SameLine();
 		if (ImGui::Button("Refresh##MaterialAsset")) {
 			refreshMaterialAssets();
