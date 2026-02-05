@@ -535,6 +535,9 @@ void LoadSceneFromFile(Ermine::ECS& ecs, const std::filesystem::path& path) {
 
     Ermine::AssetManager::GetInstance().ClearModelCache();
 
+    // Pre-scan materials so GUID -> path is resolved before component deserialization
+    Ermine::AssetManager::GetInstance().ScanMaterialAssets();
+
     for (auto& e : d["entities"].GetArray()) {
         if (!e.IsObject()) continue;
 
@@ -568,6 +571,10 @@ void LoadSceneFromFile(Ermine::ECS& ecs, const std::filesystem::path& path) {
 
             const std::string compName = it->name.GetString();
             const rapidjson::Value& payload = it->value;
+
+            // IDComponent is handled above; avoid warning spam.
+            if (compName == "IDComponent")
+                continue;
 
             // Look up the component descriptor and call its type-erased deserializer
             const auto* desc = ecs.GetDescriptor(compName);
@@ -616,7 +623,8 @@ void LoadSceneFromFile(Ermine::ECS& ecs, const std::filesystem::path& path) {
 
             if (!handled)
             {
-                EE_CORE_WARN("Unknown or non-deserializable component '{}'; skipping.", compName.c_str());
+                EE_CORE_WARN("Unknown or non-deserializable component '{}' on entity {}; skipping.",
+                    compName.c_str(), static_cast<uint64_t>(id));
             }
         }
     }
