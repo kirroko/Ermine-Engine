@@ -121,6 +121,8 @@ public class OrbTeleport : MonoBehaviour
 
     void RegenerateHealth()
     {
+        if (healthBar == null) return;
+
         float currentHealth = GameplayHUD.GetHealth(healthBar);
         float maxHealth = GameplayHUD.GetMaxHealth(healthBar);
         float regenRate = GameplayHUD.GetRegenRate(healthBar);
@@ -203,6 +205,8 @@ public class OrbTeleport : MonoBehaviour
 
     void TakeDamage(float dmg)
     {
+        if (healthBar == null) return;
+
         health = GameplayHUD.GetHealth(healthBar);
         health = Math.Max(0, health - dmg);
 
@@ -212,6 +216,8 @@ public class OrbTeleport : MonoBehaviour
 
     void HealDamage(float heal)
     {
+        if (healthBar == null) return;
+
         float current = GameplayHUD.GetHealth(healthBar);
         float max = GameplayHUD.GetMaxHealth(healthBar);
 
@@ -220,6 +226,8 @@ public class OrbTeleport : MonoBehaviour
 
     bool CanShootOrb()
     {
+        if (healthBar == null) return true;
+
         float currentHealth = GameplayHUD.GetHealth(healthBar);
         return currentHealth >= damage;
     }
