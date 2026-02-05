@@ -30,6 +30,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 Ermine::Window::CursorLockState Ermine::Window::s_cursorLockState = Ermine::Window::CursorLockState::None;
 bool Ermine::Window::s_visibleCursor = true;
+GLFWwindow* Ermine::Window::s_window = nullptr;
 
 namespace
 {
@@ -296,7 +297,7 @@ GLFWwindow* Ermine::Window::InitWindow(int width, int height, const char* title)
     std::string glVersion = std::string(reinterpret_cast<const char*>(glGetString(GL_VERSION)));
     EE_CORE_TRACE("Renderer: {0}", glRenderer);
     EE_CORE_TRACE("OpenGL version supported {0}", glVersion);
-
+    s_window = window;
     return window;
 }
 
@@ -373,8 +374,8 @@ void Ermine::Window::SetVisibleCursor(const bool& value)
 void Ermine::Window::SetCursorLockState(CursorLockState state)
 {
     s_cursorLockState = state;
-    GLFWwindow* window = editor::EditorGUI::GetWindowContext();
-    if (!window)
+    
+    if (!s_window)
         return;
 
     if (glfwRawMouseMotionSupported())
@@ -384,20 +385,20 @@ void Ermine::Window::SetCursorLockState(CursorLockState state)
     {
     case CursorLockState::None:
 #ifdef _WIN32
-	    ConfineCursorToGLFWWindow(window, false);
+	    ConfineCursorToGLFWWindow(s_window, false);
 #endif
-		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+		glfwSetInputMode(s_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 		break;
     case CursorLockState::Locked:
 #ifdef _WIN32
-	    ConfineCursorToGLFWWindow(window, false);
+	    ConfineCursorToGLFWWindow(s_window, false);
 #endif
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        glfwSetInputMode(s_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         break;
 	case CursorLockState::Confined:
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        glfwSetInputMode(s_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 #ifdef _WIN32
-		ConfineCursorToGLFWWindow(window, true);
+		ConfineCursorToGLFWWindow(s_window, true);
 #endif
         break;
     }
