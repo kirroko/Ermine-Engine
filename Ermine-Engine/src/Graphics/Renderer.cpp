@@ -8072,10 +8072,7 @@ void Renderer::RenderOutlineMaskPass(const Mtx44& view, const Mtx44& projection)
 	const auto& selectedSet = Ermine::editor::Selection::All();
 	EntityID primary = 0;
 
-#ifdef EE_EDITOR
 	auto sceneMgr = SceneManager::GetInstance();
-#endif
-
 	primary = sceneMgr.GetActiveScene()->GetSelectedEntity();
 
 	glBindFramebuffer(GL_FRAMEBUFFER, m_OutlineMaskFBO);

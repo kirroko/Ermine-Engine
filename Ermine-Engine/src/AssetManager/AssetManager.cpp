@@ -1071,12 +1071,50 @@ void AssetManager::ScanMaterialAssets(const std::string& materialsDir)
     if (!std::filesystem::exists(dir))
         return;
 
-    for (const auto& entry : std::filesystem::directory_iterator(dir)) {
+    for (const auto& entry : std::filesystem::recursive_directory_iterator(dir)) {
+        if (!entry.is_regular_file())
+            continue;
+        if (entry.path().extension() != ".meta")
+            continue;
+
+        Guid guid{};
+        if (!LoadAssetMetaGuid(entry.path(), guid))
+            continue;
+
+        std::filesystem::path candidate = entry.path();
+        candidate.replace_extension(); // strip ".meta"
+        if (!std::filesystem::exists(candidate))
+            continue;
+        if (candidate.extension() != ".mat")
+            continue;
+
+        const std::string materialPath = candidate.string();
+        m_materialGuidsByPath[materialPath] = guid;
+        m_materialPathsByGuid[guid] = materialPath;
+    }
+
+    for (const auto& entry : std::filesystem::recursive_directory_iterator(dir)) {
         if (!entry.is_regular_file())
             continue;
         if (entry.path().extension() != ".mat")
             continue;
-        GetMaterialGuidForPath(entry.path().string());
+
+        const std::string materialPath = entry.path().string();
+        if (m_materialGuidsByPath.find(materialPath) != m_materialGuidsByPath.end())
+            continue;
+
+        // Try adjacent .meta first to avoid creating a new guid if one already exists.
+        std::filesystem::path metaPath = entry.path();
+        metaPath += ".meta";
+        Guid guid{};
+        if (LoadAssetMetaGuid(metaPath, guid)) {
+            m_materialGuidsByPath[materialPath] = guid;
+            m_materialPathsByGuid[guid] = materialPath;
+            continue;
+        }
+
+        // Fallback: create a meta file next to the material if none was found.
+        GetMaterialGuidForPath(materialPath);
     }
 }
 
