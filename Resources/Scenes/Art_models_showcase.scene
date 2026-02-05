@@ -1705,7 +1705,7 @@
         },
         "Transform": {
           "position": [
-            24.11094093322754,
+            23.755678176879884,
             0.6259733438491821,
             25.63770866394043
           ],
@@ -7316,7 +7316,7 @@
           "selfActive": true
         },
         "ModelComponent": {
-          "model": "DavidArms.fbx",
+          "model": "",
           "isSkinFile": false
         },
         "AnimationComponent": {

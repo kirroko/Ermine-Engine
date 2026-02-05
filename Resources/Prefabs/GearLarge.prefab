@@ -3,13 +3,13 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "fc9ef11fe0e5944191724c14d015836e"
+          "guid": "2335cc8c536aed42a677d6c36e70f541"
         },
         "Transform": {
           "position": [
-            1.482923984527588,
-            0.5689714550971985,
-            -2.101576089859009
+            0.0,
+            0.0,
+            0.0
           ],
           "rotation": [
             0.0,
@@ -24,7 +24,7 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Gear 1",
+          "name": "GearLarge",
           "tag": "Untagged",
           "selfActive": true
         },
@@ -41,7 +41,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "a4659ad3a7c71846ba2063fe409f7250"
+          "guid": "1bb24a2be3379840ab9e26894aa4a5bf"
         },
         "Transform": {
           "position": [
@@ -70,7 +70,7 @@
           "guid": "615b37664d2cb94dba01ae44ccb86ed7"
         },
         "HierarchyComponent": {
-          "parentGuid": "fc9ef11fe0e5944191724c14d015836e",
+          "parentGuid": "2335cc8c536aed42a677d6c36e70f541",
           "depth": 1
         },
         "GlobalTransform": {}
