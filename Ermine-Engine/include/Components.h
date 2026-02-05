@@ -3324,6 +3324,85 @@ namespace Ermine
 			//dtTileRef tileRef = 0;
 		};
 		Runtime* runtime = nullptr;
+
+		// -----------------------------
+		// Persistent baked navmesh data
+		// -----------------------------
+		struct BakedTile
+		{
+			std::string dataB64;
+			int dataSize = 0;
+		};
+
+		float bakedOrig[3]{ 0.0f, 0.0f, 0.0f };
+		float bakedTileWidth = 0.0f;
+		float bakedTileHeight = 0.0f;
+		int bakedMaxTiles = 0;
+		int bakedMaxPolys = 0;
+		std::vector<BakedTile> bakedTiles;
+
+		bool HasBaked() const { return !bakedTiles.empty(); }
+
+		// Small header-only Base64 (so Serialize/Deserialize can use it without extra includes)
+		static std::string Base64Encode(const unsigned char* data, size_t len)
+		{
+			static const char* kB64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+			std::string out;
+			out.reserve(((len + 2) / 3) * 4);
+
+			size_t i = 0;
+			while (i < len)
+			{
+				uint32_t a = i < len ? data[i++] : 0;
+				uint32_t b = i < len ? data[i++] : 0;
+				uint32_t c = i < len ? data[i++] : 0;
+
+				uint32_t triple = (a << 16) | (b << 8) | c;
+
+				out.push_back(kB64[(triple >> 18) & 0x3F]);
+				out.push_back(kB64[(triple >> 12) & 0x3F]);
+				out.push_back(((i - 2) <= len) ? kB64[(triple >> 6) & 0x3F] : '=');
+				out.push_back(((i - 1) <= len) ? kB64[(triple) & 0x3F] : '=');
+			}
+
+			const size_t mod = len % 3;
+			if (mod == 1) { out[out.size() - 1] = '='; out[out.size() - 2] = '='; }
+			else if (mod == 2) { out[out.size() - 1] = '='; }
+
+			return out;
+		}
+
+		static bool Base64Decode(const char* b64, std::vector<unsigned char>& out)
+		{
+			if (!b64) return false;
+
+			static int rev[256];
+			static bool init = false;
+			if (!init)
+			{
+				for (int i = 0; i < 256; ++i) rev[i] = -1;
+				const char* kB64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+				for (int i = 0; i < 64; ++i) rev[(unsigned char)kB64[i]] = i;
+				rev[(unsigned char)'='] = 0;
+				init = true;
+			}
+
+			out.clear();
+			int val = 0, valb = -8;
+			for (const unsigned char* p = (const unsigned char*)b64; *p; ++p)
+			{
+				int d = rev[*p];
+				if (d == -1) continue; // skip whitespace/invalid
+				val = (val << 6) + d;
+				valb += 6;
+				if (valb >= 0)
+				{
+					out.push_back((unsigned char)((val >> valb) & 0xFF));
+					valb -= 8;
+				}
+			}
+			return !out.empty();
+		}
 		
 		template<typename Alloc>
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
@@ -3340,6 +3419,31 @@ namespace Ermine
 			out.AddMember("drawInputTri", drawInputTri, alloc);
 			out.AddMember("drawWalkable", drawWalkable, alloc);
 			out.AddMember("drawNavMesh", drawNavMesh, alloc);
+
+			rapidjson::Value bakedObj(rapidjson::kObjectType);
+
+			bakedObj.AddMember("origX", bakedOrig[0], alloc);
+			bakedObj.AddMember("origY", bakedOrig[1], alloc);
+			bakedObj.AddMember("origZ", bakedOrig[2], alloc);
+			bakedObj.AddMember("tileWidth", bakedTileWidth, alloc);
+			bakedObj.AddMember("tileHeight", bakedTileHeight, alloc);
+			bakedObj.AddMember("maxTiles", bakedMaxTiles, alloc);
+			bakedObj.AddMember("maxPolys", bakedMaxPolys, alloc);
+
+			rapidjson::Value tilesArr(rapidjson::kArrayType);
+			tilesArr.Reserve((rapidjson::SizeType)bakedTiles.size(), alloc);
+
+			for (auto const& t : bakedTiles)
+			{
+				rapidjson::Value tObj(rapidjson::kObjectType);
+				tObj.AddMember("size", t.dataSize, alloc);
+				tObj.AddMember("data", rapidjson::Value(t.dataB64.c_str(), alloc), alloc);
+				tilesArr.PushBack(tObj, alloc);
+			}
+
+			bakedObj.AddMember("tiles", tilesArr, alloc);
+			out.AddMember("bakedNav", bakedObj, alloc);
+
 		}
 
 		void Deserialize(const rapidjson::Value& in) {
@@ -3357,6 +3461,34 @@ namespace Ermine
 			if (in.HasMember("drawInputTri")) drawInputTri = in["drawInputTri"].GetBool();
 			if (in.HasMember("drawWalkable")) drawWalkable = in["drawWalkable"].GetBool();
 			if (in.HasMember("drawNavMesh")) drawNavMesh = in["drawNavMesh"].GetBool();
+
+			bakedTiles.clear();
+
+			if (in.HasMember("bakedNav") && in["bakedNav"].IsObject())
+			{
+				const auto& b = in["bakedNav"];
+
+				if (b.HasMember("origX")) bakedOrig[0] = b["origX"].GetFloat();
+				if (b.HasMember("origY")) bakedOrig[1] = b["origY"].GetFloat();
+				if (b.HasMember("origZ")) bakedOrig[2] = b["origZ"].GetFloat();
+				if (b.HasMember("tileWidth")) bakedTileWidth = b["tileWidth"].GetFloat();
+				if (b.HasMember("tileHeight")) bakedTileHeight = b["tileHeight"].GetFloat();
+				if (b.HasMember("maxTiles")) bakedMaxTiles = b["maxTiles"].GetInt();
+				if (b.HasMember("maxPolys")) bakedMaxPolys = b["maxPolys"].GetInt();
+
+				if (b.HasMember("tiles") && b["tiles"].IsArray())
+				{
+					for (auto& tv : b["tiles"].GetArray())
+					{
+						if (!tv.IsObject()) continue;
+
+						BakedTile t{};
+						if (tv.HasMember("size")) t.dataSize = tv["size"].GetInt();
+						if (tv.HasMember("data") && tv["data"].IsString()) t.dataB64 = tv["data"].GetString();
+						bakedTiles.push_back(std::move(t));
+					}
+				}
+			}
 
 			// reset runtime-only
 			build = nullptr;
