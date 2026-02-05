@@ -128,12 +128,12 @@
         "UIButtonComponent": {
           "text": "",
           "position": [
-            0.14000000059604646,
+            0.1289999932050705,
             0.5,
             0.0
           ],
           "size": [
-            0.3799999952316284,
+            0.25,
             0.09000000357627869
           ],
           "normalColor": [
@@ -205,7 +205,7 @@
         "UIButtonComponent": {
           "text": "",
           "position": [
-            0.19499999284744264,
+            0.16500000655651093,
             0.17000000178813935,
             0.0
           ],
@@ -388,7 +388,7 @@
           "imagePath": "C:\\Users\\Kean\\Desktop\\Personal\\Ermine Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\UI\\Game_Title_WIP.png",
           "fullscreen": false,
           "position": [
-            0.20000000298023225,
+            0.19499999284744264,
             0.800000011920929,
             0.0
           ],
@@ -454,12 +454,12 @@
         "UIButtonComponent": {
           "text": "",
           "position": [
-            0.13699999451637269,
-            0.28999999165534975,
+            0.125,
+            0.2849999964237213,
             0.0
           ],
           "size": [
-            0.3799999952316284,
+            0.23999999463558198,
             0.09000000357627869
           ],
           "normalColor": [
@@ -531,13 +531,13 @@
         "UIButtonComponent": {
           "text": "",
           "position": [
-            0.19499999284744264,
-            0.4000000059604645,
+            0.16500000655651093,
+            0.38999998569488528,
             0.0
           ],
           "size": [
-            0.3799999952316284,
-            0.09000000357627869
+            0.38999998569488528,
+            0.10000000149011612
           ],
           "normalColor": [
             1.0,
@@ -573,7 +573,7 @@
       }
     },
     {
-      "id": 21,
+      "id": 10,
       "components": {
         "IDComponent": {
           "guid": "d86aa31009209d48bc5d7a9b10e0902a"
@@ -608,7 +608,7 @@
       }
     },
     {
-      "id": 22,
+      "id": 11,
       "components": {
         "IDComponent": {
           "guid": "89b81f3924dc37469cd8d165648702ca"
@@ -675,7 +675,7 @@
       }
     },
     {
-      "id": 23,
+      "id": 12,
       "components": {
         "IDComponent": {
           "guid": "c692884e38e9d7438fb560e0bdcd1782"
@@ -765,7 +765,7 @@
       }
     },
     {
-      "id": 24,
+      "id": 13,
       "components": {
         "IDComponent": {
           "guid": "b227a1917269794c8ed581cba7fa35be"
@@ -855,7 +855,7 @@
       }
     },
     {
-      "id": 25,
+      "id": 14,
       "components": {
         "IDComponent": {
           "guid": "ce120d2b6266b6498a60e477a520a55d"
@@ -945,7 +945,7 @@
       }
     },
     {
-      "id": 26,
+      "id": 15,
       "components": {
         "IDComponent": {
           "guid": "cb595325c2952b438d49bddb4f8c8ac2"
@@ -1023,7 +1023,7 @@
       }
     },
     {
-      "id": 27,
+      "id": 16,
       "components": {
         "IDComponent": {
           "guid": "3e96308ce326d142825c92f8e31b0cb7"
@@ -1090,7 +1090,7 @@
       }
     },
     {
-      "id": 28,
+      "id": 17,
       "components": {
         "IDComponent": {
           "guid": "40614fe61d6c7041a046690e3c7fd474"
@@ -1125,7 +1125,7 @@
       }
     },
     {
-      "id": 29,
+      "id": 18,
       "components": {
         "IDComponent": {
           "guid": "0d8b896063d4a2418cb411f6d798ee2b"
@@ -1192,7 +1192,7 @@
       }
     },
     {
-      "id": 30,
+      "id": 19,
       "components": {
         "IDComponent": {
           "guid": "78f259f20157504ca7a1d169a3d73c45"
@@ -1270,7 +1270,7 @@
       }
     },
     {
-      "id": 31,
+      "id": 20,
       "components": {
         "IDComponent": {
           "guid": "6cb987a38482f24f83e96a3ea817e681"
@@ -1348,7 +1348,7 @@
       }
     },
     {
-      "id": 32,
+      "id": 21,
       "components": {
         "IDComponent": {
           "guid": "f4d880fb2b124c4ebf8ada7d77c6de14"
@@ -1426,7 +1426,7 @@
       }
     },
     {
-      "id": 33,
+      "id": 22,
       "components": {
         "IDComponent": {
           "guid": "150c811b78d2eb4c9bad87599e9a6900"
@@ -1504,7 +1504,7 @@
       }
     },
     {
-      "id": 34,
+      "id": 23,
       "components": {
         "IDComponent": {
           "guid": "eadfe51283fdec4b8a304677d729b2c1"
@@ -1582,7 +1582,7 @@
       }
     },
     {
-      "id": 35,
+      "id": 24,
       "components": {
         "IDComponent": {
           "guid": "c75354139fa8df48ba4afdb31bedc8da"
@@ -1649,7 +1649,7 @@
       }
     },
     {
-      "id": 36,
+      "id": 25,
       "components": {
         "IDComponent": {
           "guid": "af635bea0b43dd42b6e3983af26842e9"
@@ -1716,7 +1716,7 @@
       }
     },
     {
-      "id": 37,
+      "id": 26,
       "components": {
         "IDComponent": {
           "guid": "5cf7790cb98cd9419e6d9dced853184a"
@@ -1783,7 +1783,7 @@
       }
     },
     {
-      "id": 38,
+      "id": 27,
       "components": {
         "IDComponent": {
           "guid": "24e9f31d1161d949ac679be75dd40fbe"
