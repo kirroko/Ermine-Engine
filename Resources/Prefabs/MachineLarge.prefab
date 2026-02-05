@@ -3,13 +3,13 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "54c10e37ccb0cf4ca599c4dbfa1692fe"
+          "guid": "e2fd87b21ab0b747aa487cf6b040800a"
         },
         "Transform": {
           "position": [
-            24.11094093322754,
-            0.6259733438491821,
-            25.63770866394043
+            0.0,
+            0.0,
+            0.0
           ],
           "rotation": [
             0.0,
@@ -24,7 +24,7 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "MachineLargePrefab",
+          "name": "MachineLarge",
           "tag": "Untagged",
           "selfActive": true
         },
@@ -41,13 +41,13 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "b1e221026c8ae240b859995918732e9b"
+          "guid": "c4746168e0e82f48ba97d4eea07424f7"
         },
         "Transform": {
           "position": [
-            716.4374389648438,
-            -0.0012224119855090976,
-            -1359.504638671875
+            0.0,
+            0.0,
+            0.0
           ],
           "rotation": [
             0.0,
@@ -56,9 +56,9 @@
             1.0
           ],
           "scale": [
-            20.0,
-            20.0,
-            20.0
+            1.0,
+            1.0,
+            1.0
           ]
         },
         "ObjectMetaData": {
@@ -70,7 +70,7 @@
           "guid": "81983ba53c3d274b8942efee41e2ec72"
         },
         "HierarchyComponent": {
-          "parentGuid": "54c10e37ccb0cf4ca599c4dbfa1692fe",
+          "parentGuid": "e2fd87b21ab0b747aa487cf6b040800a",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -79,13 +79,13 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "0c07accc35808844b880d60cff1da695"
+          "guid": "f6879268fe183949acabb88c22d8ef9c"
         },
         "Transform": {
           "position": [
-            716.4374389648438,
-            -0.0012224119855090976,
-            -1359.504638671875
+            0.0,
+            0.0,
+            0.0
           ],
           "rotation": [
             0.0,
@@ -94,9 +94,9 @@
             1.0
           ],
           "scale": [
-            20.0,
-            20.0,
-            20.0
+            1.0,
+            1.0,
+            1.0
           ]
         },
         "ObjectMetaData": {
@@ -108,7 +108,7 @@
           "guid": "f41e3df4af06ce4a9b874cb6d151c51e"
         },
         "HierarchyComponent": {
-          "parentGuid": "54c10e37ccb0cf4ca599c4dbfa1692fe",
+          "parentGuid": "e2fd87b21ab0b747aa487cf6b040800a",
           "depth": 1
         },
         "GlobalTransform": {}

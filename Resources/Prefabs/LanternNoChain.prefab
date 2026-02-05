@@ -3,12 +3,12 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "741130f00de5a148853dd113a4aaf652"
+          "guid": "72eb10acdd17474993b6eff4a51331ee"
         },
         "Transform": {
           "position": [
             0.0,
-            14.141351699829102,
+            0.0,
             0.0
           ],
           "rotation": [
@@ -41,45 +41,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "157847d908874a4290d03643ccf06062"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Mesh_ART1_lantern_low.fbx_lantern1_mesh1",
-          "tag": "Mesh",
-          "selfActive": true
-        },
-        "Material": {
-          "guid": "2f78405adf3dc64e9415d5a3becd950e"
-        },
-        "HierarchyComponent": {
-          "parentGuid": "741130f00de5a148853dd113a4aaf652",
-          "depth": 1
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "components": {
-        "IDComponent": {
-          "guid": "e2bfa690fc198a4eba8e77f083b3e2c2"
+          "guid": "296ef3a3cafcf64c99fab50a6724c70d"
         },
         "Transform": {
           "position": [
@@ -108,7 +70,45 @@
           "guid": "ee20451ebcb49b4b8a127c78452bbe1d"
         },
         "HierarchyComponent": {
-          "parentGuid": "741130f00de5a148853dd113a4aaf652",
+          "parentGuid": "72eb10acdd17474993b6eff4a51331ee",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "774889edc01b3043b9f5e22a47aa1f2a"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_lantern_low.fbx_lantern1_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "549e9b15a8c9a64593d882f81fc9e0dd"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "72eb10acdd17474993b6eff4a51331ee",
           "depth": 1
         },
         "GlobalTransform": {}
