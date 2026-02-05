@@ -3,7 +3,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "6f4e1bf699d61347858cc29a77b0e33f"
+          "guid": "e4fd79702a958d458967bc442f9daee3"
         },
         "Transform": {
           "position": [
@@ -37,90 +37,13 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "685498f8e90da7488873f5f5f7bce8a8"
-        },
-        "Transform": {
-          "position": [
-            15.206706047058106,
-            2.21334171295166,
-            13.147825241088868
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            0.05000000074505806,
-            0.05000000074505806,
-            0.05000000074505806
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Pipe (2)",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "ModelComponent": {
-          "model": "ART1_pipe_low.fbx",
-          "isSkinFile": false
-        },
-        "HierarchyComponent": {
-          "parentGuid": "6f4e1bf699d61347858cc29a77b0e33f",
-          "depth": 1
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "components": {
-        "IDComponent": {
-          "guid": "b60b5712bcbc1f40895b22aa2854a781"
+          "guid": "531dde5bcbbb2e438c2c653c6e07485c"
         },
         "Transform": {
           "position": [
             0.0,
             0.0,
             0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Mesh_ART1_pipe_low.fbx_Pipe_low_mesh0",
-          "tag": "Mesh",
-          "selfActive": true
-        },
-        "Material": {
-          "guid": "ada2a822f8f14b4f8e6427dcb9de40cb"
-        },
-        "HierarchyComponent": {
-          "parentGuid": "685498f8e90da7488873f5f5f7bce8a8",
-          "depth": 1
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "components": {
-        "IDComponent": {
-          "guid": "d7745a297bd94b4a900a6340687aebdf"
-        },
-        "Transform": {
-          "position": [
-            15.206706047058106,
-            2.2133209705352785,
-            0.4926423132419586
           ],
           "rotation": [
             -9.099628641706659e-7,
@@ -144,7 +67,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "6f4e1bf699d61347858cc29a77b0e33f",
+          "parentGuid": "e4fd79702a958d458967bc442f9daee3",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -153,7 +76,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "228dda28acf2ca4388878b441d8ddc33"
+          "guid": "475425bddf138d4f9d9a2b287b4e73dc"
         },
         "Transform": {
           "position": [
@@ -182,8 +105,85 @@
           "guid": "ada2a822f8f14b4f8e6427dcb9de40cb"
         },
         "HierarchyComponent": {
-          "parentGuid": "d7745a297bd94b4a900a6340687aebdf",
+          "parentGuid": "531dde5bcbbb2e438c2c653c6e07485c",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "b93412f4c998d04790cd31a97930f14c"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.05000000074505806,
+            0.05000000074505806,
+            0.05000000074505806
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Pipe (2)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_pipe_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "e4fd79702a958d458967bc442f9daee3",
           "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "74b29c6bfebaac41bd43446bd77f59d1"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_pipe_low.fbx_Pipe_low_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "ada2a822f8f14b4f8e6427dcb9de40cb"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "b93412f4c998d04790cd31a97930f14c",
+          "depth": 2
         },
         "GlobalTransform": {}
       }

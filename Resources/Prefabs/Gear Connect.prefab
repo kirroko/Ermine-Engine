@@ -3,13 +3,13 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "17aec4f71b67dc42ba543565898a90ab"
+          "guid": "3615e226d61c1844b38a918b3415a292"
         },
         "Transform": {
           "position": [
-            -0.39031821489334109,
-            3.50418758392334,
-            1.3098106384277344
+            0.0,
+            0.0,
+            0.0
           ],
           "rotation": [
             0.0,
@@ -41,7 +41,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "fd918c132a6ccd44a559894b843e9cfa"
+          "guid": "caa5cc83d2305d45801b3f0b49bf0c98"
         },
         "Transform": {
           "position": [
@@ -70,7 +70,7 @@
           "guid": "43faf74cc0d3df45a5d68a8b682eb1ff"
         },
         "HierarchyComponent": {
-          "parentGuid": "17aec4f71b67dc42ba543565898a90ab",
+          "parentGuid": "3615e226d61c1844b38a918b3415a292",
           "depth": 1
         },
         "GlobalTransform": {}

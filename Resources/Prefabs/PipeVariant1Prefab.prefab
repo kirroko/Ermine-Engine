@@ -3,7 +3,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "6f4e1bf699d61347858cc29a77b0e33f"
+          "guid": "8dbce7d3b10182499d4c3caa6f6bd2e8"
         },
         "Transform": {
           "position": [
@@ -37,13 +37,13 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "d7745a297bd94b4a900a6340687aebdf"
+          "guid": "ad78cf6a9742764caaa47a16313cbc15"
         },
         "Transform": {
           "position": [
-            15.206706047058106,
-            2.21334171295166,
-            13.147825241088868
+            0.0,
+            1.758005142211914,
+            6.379195213317871
           ],
           "rotation": [
             0.0,
@@ -67,7 +67,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "6f4e1bf699d61347858cc29a77b0e33f",
+          "parentGuid": "8dbce7d3b10182499d4c3caa6f6bd2e8",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -76,7 +76,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "228dda28acf2ca4388878b441d8ddc33"
+          "guid": "5e076b36c8a43a488d1045cd9b8f6cd5"
         },
         "Transform": {
           "position": [
@@ -105,8 +105,8 @@
           "guid": "ada2a822f8f14b4f8e6427dcb9de40cb"
         },
         "HierarchyComponent": {
-          "parentGuid": "d7745a297bd94b4a900a6340687aebdf",
-          "depth": 1
+          "parentGuid": "ad78cf6a9742764caaa47a16313cbc15",
+          "depth": 2
         },
         "GlobalTransform": {}
       }
@@ -114,13 +114,13 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "bf75428e69be7d4bb6610c8309e9766c"
+          "guid": "827f289932d4bf46861821ee237c5164"
         },
         "Transform": {
           "position": [
-            15.196502685546875,
-            0.427046537399292,
-            6.76895809173584
+            0.0,
+            0.0,
+            0.0
           ],
           "rotation": [
             0.0,
@@ -144,7 +144,7 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "6f4e1bf699d61347858cc29a77b0e33f",
+          "parentGuid": "8dbce7d3b10182499d4c3caa6f6bd2e8",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -153,7 +153,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "ee48a598d05719479632a450bd61465f"
+          "guid": "37051c609615d145af5eae2703202982"
         },
         "Transform": {
           "position": [
@@ -182,8 +182,85 @@
           "guid": "aaad4c6b02d70f41995a264eed213679"
         },
         "HierarchyComponent": {
-          "parentGuid": "bf75428e69be7d4bb6610c8309e9766c",
+          "parentGuid": "827f289932d4bf46861821ee237c5164",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "7bb48eeb275db64dba5b5ae503ddf17a"
+        },
+        "Transform": {
+          "position": [
+            -0.014170503243803978,
+            0.0,
+            6.28610372543335
+          ],
+          "rotation": [
+            0.0,
+            0.999999463558197,
+            0.0,
+            0.0011271520052105189
+          ],
+          "scale": [
+            0.05000075325369835,
+            0.05000000074505806,
+            0.05000075325369835
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Pipe turn (2)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_pipe_turn_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "8dbce7d3b10182499d4c3caa6f6bd2e8",
           "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "81e73db9a2150941887016cb143ab6ae"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_pipe_turn_low.fbx_Pipe_turn_low_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "aaad4c6b02d70f41995a264eed213679"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "7bb48eeb275db64dba5b5ae503ddf17a",
+          "depth": 2
         },
         "GlobalTransform": {}
       }
