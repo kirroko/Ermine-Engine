@@ -3,6 +3,46 @@
         "materialCastsShadows": {
             "type": "bool",
             "value": true
+        },
+        "materialHasAlbedoMap": {
+            "type": "bool",
+            "value": true
+        },
+        "materialHasNormalMap": {
+            "type": "bool",
+            "value": true
+        },
+        "materialHasRoughnessMap": {
+            "type": "bool",
+            "value": true
+        },
+        "materialHasMetallicMap": {
+            "type": "bool",
+            "value": true
+        },
+        "materialHasAoMap": {
+            "type": "bool",
+            "value": true
+        },
+        "materialAlbedoMap": {
+            "type": "texture2d",
+            "value": "../Ermine-Game.lion_rcdbase/12345678-1234-1234-1234-123456789ABC/Windows.platform/Data/6742065126561366019.dds"
+        },
+        "materialNormalMap": {
+            "type": "texture2d",
+            "value": "../Ermine-Game.lion_rcdbase/12345678-1234-1234-1234-123456789ABC/Windows.platform/Data/10200829640381906951.dds"
+        },
+        "materialRoughnessMap": {
+            "type": "texture2d",
+            "value": "../Ermine-Game.lion_rcdbase/12345678-1234-1234-1234-123456789ABC/Windows.platform/Data/15965437163416141833.dds"
+        },
+        "materialMetallicMap": {
+            "type": "texture2d",
+            "value": "../Ermine-Game.lion_rcdbase/12345678-1234-1234-1234-123456789ABC/Windows.platform/Data/13659594154202447877.dds"
+        },
+        "materialAoMap": {
+            "type": "texture2d",
+            "value": "../Ermine-Game.lion_rcdbase/12345678-1234-1234-1234-123456789ABC/Windows.platform/Data/400996851223707649.dds"
         }
     },
     "uvTransform": {

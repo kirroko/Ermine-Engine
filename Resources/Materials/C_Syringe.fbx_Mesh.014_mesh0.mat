@@ -2,7 +2,7 @@
     "parameters": {
         "materialCastsShadows": {
             "type": "bool",
-            "value": false
+            "value": true
         },
         "materialHasAlbedoMap": {
             "type": "bool",
