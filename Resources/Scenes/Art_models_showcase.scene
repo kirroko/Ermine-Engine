@@ -118,7 +118,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "ee1fe105e816c949ac8a17e7c5652dae"
+          "guid": "13244f2856e23a47a55f515b01f2f6e0"
         },
         "HierarchyComponent": {
           "parentGuid": "0e4f981bf09e734d99d2a1bce915c438",
@@ -196,7 +196,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "8d1a3f9414ead2409edbef5be7453e83"
+          "guid": "96cacfa4c8efe04e99da750349af4552"
         },
         "HierarchyComponent": {
           "parentGuid": "a8460025c4f99d48b9002cfbd9a45bc1",
@@ -274,7 +274,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "117fd7408aed764f86006030c5fb18f6"
+          "guid": "bf305e64cb891f419740ae20d471585d"
         },
         "HierarchyComponent": {
           "parentGuid": "2dbe42a020e544429d7fad19679106c1",
@@ -313,7 +313,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "925988cf8916c64bbfbf61c122143bb6"
+          "guid": "39928a0f0bdd224383fa58493217b333"
         },
         "HierarchyComponent": {
           "parentGuid": "2dbe42a020e544429d7fad19679106c1",
@@ -469,7 +469,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "43faf74cc0d3df45a5d68a8b682eb1ff"
+          "guid": "2af0e2c084895c4e94539b67f47074b3"
         },
         "HierarchyComponent": {
           "parentGuid": "17aec4f71b67dc42ba543565898a90ab",
@@ -547,7 +547,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "6660e3d68b22d94e892fce041c34df99"
+          "guid": "ce93d6ba7a8922429aad42ba1884b78c"
         },
         "HierarchyComponent": {
           "parentGuid": "43e60c4ba682eb4498b0b77c1dca6a10",
@@ -820,7 +820,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "584f4fb986e79c468d0598fe74163a98"
+          "guid": "ae9f28954076c24bbf374e5edd1b416f"
         },
         "HierarchyComponent": {
           "parentGuid": "afeaf5a8467f4d46b5c8cf3cbc0b68e3",
@@ -898,7 +898,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "c4d5646fb391d841b3f80996151b0249"
+          "guid": "ff451c6729efe74396832a82f3149b43"
         },
         "HierarchyComponent": {
           "parentGuid": "48827d43ba11304ca7a8bd41b20b27e3",
@@ -1054,7 +1054,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "bda83d226955c34c981d31809dc30d32"
+          "guid": "05feba605278c8478b12213ef560337b"
         },
         "HierarchyComponent": {
           "parentGuid": "933018a6c61bd646b1f87e575274e664",
@@ -1132,7 +1132,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "abc5abca79a75e49a93717fc9061a427"
+          "guid": "73bc77c7e01c6149a93b77bfeba917c9"
         },
         "HierarchyComponent": {
           "parentGuid": "9266556a030f264ea5e3c45d3fa6c1a4",
@@ -1210,7 +1210,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "ae167f3b49e4fd44bdf23a678774c0cc"
+          "guid": "09bedbcf1f780b41a2b642af90d65e0d"
         },
         "HierarchyComponent": {
           "parentGuid": "f507e93478239745b9ab30a74c892c17",
@@ -1288,7 +1288,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "615b37664d2cb94dba01ae44ccb86ed7"
+          "guid": "165039358434dc4083c3cd453d78fc20"
         },
         "HierarchyComponent": {
           "parentGuid": "fc9ef11fe0e5944191724c14d015836e",
@@ -1444,7 +1444,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "ee20451ebcb49b4b8a127c78452bbe1d"
+          "guid": "4f992f4d36179849a6c5749c4d7c74bb"
         },
         "HierarchyComponent": {
           "parentGuid": "ad70f6faad86714ca61ba2c695e4c872",
@@ -1483,7 +1483,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "90f995100a58e645ba7fc6eac2bd90ba"
+          "guid": "3f34107762bf264495c473ca62acb725"
         },
         "HierarchyComponent": {
           "parentGuid": "ad70f6faad86714ca61ba2c695e4c872",
@@ -1766,7 +1766,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "f41e3df4af06ce4a9b874cb6d151c51e"
+          "guid": "d1390df6197190429507c752b4df35b6"
         },
         "HierarchyComponent": {
           "parentGuid": "54c10e37ccb0cf4ca599c4dbfa1692fe",
@@ -1805,7 +1805,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "81983ba53c3d274b8942efee41e2ec72"
+          "guid": "a80e0a617e77b940841b1328ecf397aa"
         },
         "HierarchyComponent": {
           "parentGuid": "54c10e37ccb0cf4ca599c4dbfa1692fe",
@@ -1883,7 +1883,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "813928e702c42f4d8192c9bb49e3d54d"
+          "guid": "565490f49786b742bd2da6b338c2e9e9"
         },
         "HierarchyComponent": {
           "parentGuid": "9be8626548d7754684d9441d957f9e66",
@@ -2117,7 +2117,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "ada2a822f8f14b4f8e6427dcb9de40cb"
+          "guid": "82e89f3e477a6e468bb911e6a4cf96da"
         },
         "HierarchyComponent": {
           "parentGuid": "b984caf11f50c84d839044180559ab62",
@@ -2195,7 +2195,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "aaad4c6b02d70f41995a264eed213679"
+          "guid": "30b2304b232fed4293c89652d5ef20ec"
         },
         "HierarchyComponent": {
           "parentGuid": "ab2f2eb920b84741a566d67e38371209",
@@ -2273,7 +2273,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "5917a441d792e6418b242ce77c3fcb48"
+          "guid": "9cac8b2b0e1fea4a94ddefd40f6017a1"
         },
         "HierarchyComponent": {
           "parentGuid": "fbbe8b5d87e7ac48b47d0a126db3d508",
@@ -2312,7 +2312,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "8ed7488f1db63e4db0c2f46a84652b24"
+          "guid": "be36f79bedf7f84783aa5292585bcd86"
         },
         "HierarchyComponent": {
           "parentGuid": "fbbe8b5d87e7ac48b47d0a126db3d508",
@@ -2390,7 +2390,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "164015a3729a5f46807a5c1fd040d142"
+          "guid": "08d8bc340888814e809a34d3dee6dc7a"
         },
         "HierarchyComponent": {
           "parentGuid": "fdbcd7b2d87cc5449185028c613f121a",
@@ -2429,7 +2429,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "8122f81938b9024ab505e63f3328f645"
+          "guid": "e9c948c6a567c747a4b0e15d3184f9f0"
         },
         "HierarchyComponent": {
           "parentGuid": "fdbcd7b2d87cc5449185028c613f121a",
@@ -2585,7 +2585,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "6125164304222f4080208d60ae008675"
+          "guid": "9da3f5dce761b74eabf5b9bcdeafb623"
         },
         "HierarchyComponent": {
           "parentGuid": "a2ac3a048ced5546abb1ecbd9fa25561",
@@ -2663,7 +2663,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "72d8ff267fb0094bafdc18e3685196e4"
+          "guid": "2838af5dcef59443874a3603bff661d1"
         },
         "HierarchyComponent": {
           "parentGuid": "24a2d75e0d348b4d89b667a3d708afc0",
@@ -2780,7 +2780,7 @@
           "selfActive": true
         },
         "ModelComponent": {
-          "model": "",
+          "model": "syringe_low.fbx",
           "isSkinFile": false
         },
         "HierarchyComponent": {
@@ -2819,7 +2819,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "d821731416af0e4d8ddbd93f527828bb"
+          "guid": "dc46c17d7c453e47b6e15d02ca926484"
         },
         "HierarchyComponent": {
           "parentGuid": "ac0a6e011faec744bd272bd488d66be9",
@@ -2858,7 +2858,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "62da562f62cb1f4c9e7e40aa099e4c3c"
+          "guid": "0dc35b832c5d9c4b9df5251dd69b23bf"
         },
         "HierarchyComponent": {
           "parentGuid": "ac0a6e011faec744bd272bd488d66be9",
@@ -2936,7 +2936,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "2795f767137ca545a149c088989848b2"
+          "guid": "1c7e368869a95a499eccbed936214dae"
         },
         "HierarchyComponent": {
           "parentGuid": "d34466aec35a52409a9a9726d7fbafb1",
@@ -2975,7 +2975,7 @@
           "selfActive": true
         },
         "ModelComponent": {
-          "model": "",
+          "model": "ART1_CeilingLight.fbx",
           "isSkinFile": false
         },
         "HierarchyComponent": {
@@ -3131,7 +3131,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "e1ab0a0780f7e841bf289df4f93742f8"
+          "guid": "a2eef635836f2d4a9349a3eec7c926d8"
         },
         "HierarchyComponent": {
           "parentGuid": "c2fbc7ec197fcb47b81241468ce823b0",
@@ -3170,7 +3170,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "4a4721f0be8f7248a1b936d932ceb834"
+          "guid": "c19ea7870f7b314994aa3d514da26aa7"
         },
         "HierarchyComponent": {
           "parentGuid": "c2fbc7ec197fcb47b81241468ce823b0",
@@ -3209,7 +3209,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "a53b244aecf5a94b9496dde254c30bf8"
+          "guid": "f1071af65646c948ac76cc1a2de429f2"
         },
         "HierarchyComponent": {
           "parentGuid": "c2fbc7ec197fcb47b81241468ce823b0",
@@ -3248,7 +3248,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "983159d79a43e8429a957dff13b0f2cd"
+          "guid": "a3d4dc26005fc04897be53d8e4a66825"
         },
         "HierarchyComponent": {
           "parentGuid": "c2fbc7ec197fcb47b81241468ce823b0",
@@ -3287,7 +3287,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "c56317ed15a5714a8672fe658965eb0f"
+          "guid": "c42a8b515ccc5d4c8babca6a261ba162"
         },
         "HierarchyComponent": {
           "parentGuid": "c2fbc7ec197fcb47b81241468ce823b0",
@@ -3326,7 +3326,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "50b618a3b1cbe748b44462c5646d2f9f"
+          "guid": "c5491feedc34df49a1de6ccce87c979f"
         },
         "HierarchyComponent": {
           "parentGuid": "c2fbc7ec197fcb47b81241468ce823b0",
@@ -3365,7 +3365,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "d4dce5d6b02a8d4d9e0ede2d07fe31db"
+          "guid": "e0e59c469fca3d4b9ebf7ba1272efc02"
         },
         "HierarchyComponent": {
           "parentGuid": "c2fbc7ec197fcb47b81241468ce823b0",
@@ -3404,7 +3404,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "b6ff30cad4083a4cbb95497127048928"
+          "guid": "8ccda7495abb204ebb3f8e4ac941c55b"
         },
         "HierarchyComponent": {
           "parentGuid": "c2fbc7ec197fcb47b81241468ce823b0",
@@ -3443,7 +3443,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "31df76010ef19c458b0294073f17de9e"
+          "guid": "c123e9b44d83c748bb08ea3831412aba"
         },
         "HierarchyComponent": {
           "parentGuid": "c2fbc7ec197fcb47b81241468ce823b0",
@@ -3482,7 +3482,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "5011ff45f9f26447bf9e08cbba66c010"
+          "guid": "78d62bda61295f459e6f17ca2a1cd3b5"
         },
         "HierarchyComponent": {
           "parentGuid": "c2fbc7ec197fcb47b81241468ce823b0",
@@ -3521,7 +3521,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "88f51f3e9dddb3419a304c8521f7a66b"
+          "guid": "e558e134d01cfa4d95324bb64e0dea66"
         },
         "HierarchyComponent": {
           "parentGuid": "c2fbc7ec197fcb47b81241468ce823b0",
@@ -3560,7 +3560,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "dee0748da419c74da3a30ff92c5c9fb7"
+          "guid": "9a208980334ea64b8be3ba931a4df287"
         },
         "HierarchyComponent": {
           "parentGuid": "c2fbc7ec197fcb47b81241468ce823b0",
@@ -3599,7 +3599,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "8ce45f5a7f682445a5acf996b231ae36"
+          "guid": "d50f61b3e0cb5b4e8a9612799468a24f"
         },
         "HierarchyComponent": {
           "parentGuid": "c2fbc7ec197fcb47b81241468ce823b0",
@@ -3638,7 +3638,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "50611e01e1bebc4093e7e75f13772ae8"
+          "guid": "16c365323a376b4c884c7c52503101c2"
         },
         "HierarchyComponent": {
           "parentGuid": "c2fbc7ec197fcb47b81241468ce823b0",
@@ -3677,7 +3677,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "c5abea53414801458eb1c022eedc93e1"
+          "guid": "ff6ce34e41242f4eaec2be233e603bdf"
         },
         "HierarchyComponent": {
           "parentGuid": "c2fbc7ec197fcb47b81241468ce823b0",
@@ -3716,7 +3716,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9fa7d7aa7c96c74fb395d048b2422a91"
+          "guid": "b7c8287abdb5894da7da13f7fe60e227"
         },
         "HierarchyComponent": {
           "parentGuid": "c2fbc7ec197fcb47b81241468ce823b0",
@@ -3755,7 +3755,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "0dc4a4db1889a54b893bb48792ebf2b7"
+          "guid": "bf4906881e552946a677e85e433d698f"
         },
         "HierarchyComponent": {
           "parentGuid": "c2fbc7ec197fcb47b81241468ce823b0",
@@ -3794,7 +3794,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "131556a71945df4eba363d048475d93b"
+          "guid": "6822755b2b2b5e49bdd736cc8d4ce2f0"
         },
         "HierarchyComponent": {
           "parentGuid": "c2fbc7ec197fcb47b81241468ce823b0",
@@ -3833,7 +3833,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "faf144c9401a524bb136f805baba9605"
+          "guid": "7ed822975961024e9d0c9e4c07145f78"
         },
         "HierarchyComponent": {
           "parentGuid": "c2fbc7ec197fcb47b81241468ce823b0",
@@ -3872,7 +3872,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "1183b0791437a84eb9f1f46eda27cdfb"
+          "guid": "85344b5c1d53964390d636c7a68756d6"
         },
         "HierarchyComponent": {
           "parentGuid": "c2fbc7ec197fcb47b81241468ce823b0",
@@ -3911,7 +3911,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "e612106b62914b4b87e9873c0928c400"
+          "guid": "aa3aa59d9dc1d9438c723ca0382302c1"
         },
         "HierarchyComponent": {
           "parentGuid": "c2fbc7ec197fcb47b81241468ce823b0",
@@ -3950,7 +3950,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "5ad37053930dd342a0fc46c204f31eaf"
+          "guid": "1c2b00f563e206438c5ef25fffaefd19"
         },
         "HierarchyComponent": {
           "parentGuid": "c2fbc7ec197fcb47b81241468ce823b0",
@@ -3989,7 +3989,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "43e206d3faa6a14fbf6ff3e7ae17247b"
+          "guid": "35798c109ff1994b9dcaef65bae1215c"
         },
         "HierarchyComponent": {
           "parentGuid": "c2fbc7ec197fcb47b81241468ce823b0",
@@ -4028,7 +4028,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "afc641fe9bf7854b8a257c8b572f168b"
+          "guid": "f4a066077b0a224f94d8d0df7a64be56"
         },
         "HierarchyComponent": {
           "parentGuid": "c2fbc7ec197fcb47b81241468ce823b0",
@@ -4067,7 +4067,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "f8081f6f2e9e51419f901c7f6c17384f"
+          "guid": "d00506b46b5dfc46bcc1589234096fb3"
         },
         "HierarchyComponent": {
           "parentGuid": "c2fbc7ec197fcb47b81241468ce823b0",
@@ -4106,7 +4106,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "55181b298b74c248a56edba8ec5bad46"
+          "guid": "016d7c88f1156547b9b260085f4e5ac6"
         },
         "HierarchyComponent": {
           "parentGuid": "c2fbc7ec197fcb47b81241468ce823b0",
@@ -4145,7 +4145,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "f8ec4d54645bdb4d8dd0e8dad86041e0"
+          "guid": "67404a38a7d2584187c9f9619db6a1c1"
         },
         "HierarchyComponent": {
           "parentGuid": "c2fbc7ec197fcb47b81241468ce823b0",
@@ -4184,7 +4184,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "ec06236776a0a847a4bfddcc9ae31a9e"
+          "guid": "5238470f538f704d855733fcd846790a"
         },
         "HierarchyComponent": {
           "parentGuid": "c2fbc7ec197fcb47b81241468ce823b0",
@@ -4223,7 +4223,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "4734bc3aa8574a42ba233d5a4705386c"
+          "guid": "94293a16d5c1c6429ba32c16c0ead80c"
         },
         "HierarchyComponent": {
           "parentGuid": "c2fbc7ec197fcb47b81241468ce823b0",
@@ -4262,7 +4262,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "b82fba5ac82ad844a9af63edfe14fdb3"
+          "guid": "fa4d8d87e16f384da26e2f8b6eff8a9f"
         },
         "HierarchyComponent": {
           "parentGuid": "c2fbc7ec197fcb47b81241468ce823b0",
@@ -4301,7 +4301,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "54db02e856df8142bdde88f61a1ac4d2"
+          "guid": "3b5f5694b736f7479ae2c21e38c3cfae"
         },
         "HierarchyComponent": {
           "parentGuid": "c2fbc7ec197fcb47b81241468ce823b0",
@@ -4340,7 +4340,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "053c9da8a31ae94c9160cfb826012353"
+          "guid": "1e1ea79763141d4a9b1e3dd6a4dc2dd8"
         },
         "HierarchyComponent": {
           "parentGuid": "c2fbc7ec197fcb47b81241468ce823b0",
@@ -4379,7 +4379,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "bde978a7826f3f479229341a124f5e0e"
+          "guid": "018d14e499622743a6212a10f65eaed9"
         },
         "HierarchyComponent": {
           "parentGuid": "c2fbc7ec197fcb47b81241468ce823b0",
@@ -4418,7 +4418,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "702d2ef45f6b0c4da47f76e73dd5b5c8"
+          "guid": "b060d332b2882b42ad29d5b551366e1a"
         },
         "HierarchyComponent": {
           "parentGuid": "c2fbc7ec197fcb47b81241468ce823b0",
@@ -4457,7 +4457,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "065234a8b1eb074da20f72cbe4a5bda3"
+          "guid": "08c81a7afe82434a8e3fb1103e671def"
         },
         "HierarchyComponent": {
           "parentGuid": "c2fbc7ec197fcb47b81241468ce823b0",
@@ -4496,7 +4496,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "8e6ffb5747d7804f93e829ca2cf5b30a"
+          "guid": "4cd85d0e8691cb4a999ed8a2835797d6"
         },
         "HierarchyComponent": {
           "parentGuid": "c2fbc7ec197fcb47b81241468ce823b0",
@@ -4535,7 +4535,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "3e89c582613a8b48813e2d23db697788"
+          "guid": "965ec94fb1eb4e41ac071045e26e3765"
         },
         "HierarchyComponent": {
           "parentGuid": "c2fbc7ec197fcb47b81241468ce823b0",
@@ -4574,7 +4574,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "1a5f911d741c054eb78a5e84a36076e2"
+          "guid": "e5e294e8bc87f54fb9bdd681b3d2458e"
         },
         "HierarchyComponent": {
           "parentGuid": "c2fbc7ec197fcb47b81241468ce823b0",
@@ -4613,7 +4613,7 @@
           "selfActive": true
         },
         "ModelComponent": {
-          "model": "",
+          "model": "enemy_low.fbx",
           "isSkinFile": false
         },
         "HierarchyComponent": {
@@ -5042,7 +5042,7 @@
           "selfActive": true
         },
         "ModelComponent": {
-          "model": "",
+          "model": "ART1_WallLight.fbx",
           "isSkinFile": false
         },
         "HierarchyComponent": {
@@ -7316,11 +7316,11 @@
           "selfActive": true
         },
         "ModelComponent": {
-          "model": "",
+          "model": "DavidArmswCamera_Shoot.fbx",
           "isSkinFile": false
         },
         "AnimationComponent": {
-          "model": "",
+          "model": "DavidArmswCamera_Shoot.fbx",
           "graph": {
             "playbackSpeed": 1.0,
             "playing": false,
@@ -7361,12 +7361,12 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_DavidArms.fbx_DavidArms:David_Arms_geo_mesh0",
+          "name": "Mesh_DavidArmswCamera_Shoot.fbx_DavidArms:David_Arms_geo_mesh0",
           "tag": "Mesh",
           "selfActive": true
         },
         "Material": {
-          "guid": "e8037e2a3d36f248aaf403566d3c87c3"
+          "guid": "5c95235d6e184e439f9f2a1f2934fec4"
         },
         "HierarchyComponent": {
           "parentGuid": "a63061cd85a7304c9712e06908d7fa26",
@@ -7400,12 +7400,12 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_DavidArms.fbx_DavidArms:David_Sleeves_geo_mesh1",
+          "name": "Mesh_DavidArmswCamera_Shoot.fbx_DavidArms:David_Sleeves_geo_mesh1",
           "tag": "Mesh",
           "selfActive": true
         },
         "Material": {
-          "guid": "a2b224753347444cb727c4fac6a5d380"
+          "guid": "e085f0ddddae9e4c8c5fa6a9e28470c0"
         },
         "HierarchyComponent": {
           "parentGuid": "a63061cd85a7304c9712e06908d7fa26",
@@ -7439,12 +7439,12 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_DavidArms.fbx_DavidArms:David_Cuffs_geo_mesh2",
+          "name": "Mesh_DavidArmswCamera_Shoot.fbx_DavidArms:David_Cuffs_geo_mesh2",
           "tag": "Mesh",
           "selfActive": true
         },
         "Material": {
-          "guid": "1565d4a4f2ef3840a299e345a037de64"
+          "guid": "83b6a77a1acb874db9a208b83cd742a4"
         },
         "HierarchyComponent": {
           "parentGuid": "a63061cd85a7304c9712e06908d7fa26",
@@ -7478,12 +7478,12 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_DavidArms.fbx_DavidArms:Syringe_Body_geo_mesh3",
+          "name": "Mesh_DavidArmswCamera_Shoot.fbx_DavidArms:Syringe_Body_geo_mesh3",
           "tag": "Mesh",
           "selfActive": true
         },
         "Material": {
-          "guid": "5a746d872cb6f24cb50ecf6536e8358d"
+          "guid": "def96bef5d1d7b42aaca6422810f79fd"
         },
         "HierarchyComponent": {
           "parentGuid": "a63061cd85a7304c9712e06908d7fa26",
@@ -7517,12 +7517,12 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_DavidArms.fbx_DavidArms:Syringe_Trigger_geo_mesh4",
+          "name": "Mesh_DavidArmswCamera_Shoot.fbx_DavidArms:Syringe_Trigger_geo_mesh4",
           "tag": "Mesh",
           "selfActive": true
         },
         "Material": {
-          "guid": "03981965feb2154c8dd01c7104b9fd74"
+          "guid": "99cca26dc7fea94e851ce651e3e83cf5"
         },
         "HierarchyComponent": {
           "parentGuid": "a63061cd85a7304c9712e06908d7fa26",
@@ -7556,12 +7556,12 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_DavidArms.fbx_DavidArms:Syringe_Meter_geo_mesh5",
+          "name": "Mesh_DavidArmswCamera_Shoot.fbx_DavidArms:Syringe_Meter_geo_mesh5",
           "tag": "Mesh",
           "selfActive": true
         },
         "Material": {
-          "guid": "e3a1918a34d6ae4da3e67f60eb0054ec"
+          "guid": "691c83b5a433044c808e9b60718b28e0"
         },
         "HierarchyComponent": {
           "parentGuid": "a63061cd85a7304c9712e06908d7fa26",

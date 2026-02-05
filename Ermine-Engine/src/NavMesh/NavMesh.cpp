@@ -322,6 +322,84 @@ namespace Ermine {
         c.bakedAgentHeight = 0.0f;
     }
 
+    void NavMeshSystem::WarmStartBakedNavMeshes()
+    {
+        auto& ecs = ECS::GetInstance();
+        int warmed = 0;
+
+        for (EntityID e = 0; e < MAX_ENTITIES; ++e)
+        {
+            if (!ecs.IsEntityValid(e)) continue;
+            if (!ecs.HasComponent<NavMeshComponent>(e)) continue;
+
+            auto& nm = ecs.GetComponent<NavMeshComponent>(e);
+
+            if (nm.runtime) continue;           // already live
+            if (!nm.HasBaked()) continue;       // nothing to restore
+
+            if (CreateRuntimeFromBaked(nm))
+                ++warmed;
+        }
+
+        EE_CORE_INFO("[NavMeshSystem] Warm-started {} baked navmeshes", warmed);
+    }
+
+    bool NavMeshSystem::CreateRuntimeFromBaked(NavMeshComponent& nm)
+    {
+        if (!nm.HasBaked()) return false;
+
+        DestroyRuntime(nm);
+
+        nm.runtime = new NavMeshComponent::Runtime();
+        nm.runtime->nav = dtAllocNavMesh();
+        if (!nm.runtime->nav) return false;
+
+        dtNavMeshParams p{};
+        p.orig[0] = nm.bakedOrig[0];
+        p.orig[1] = nm.bakedOrig[1];
+        p.orig[2] = nm.bakedOrig[2];
+        p.tileWidth = nm.bakedTileWidth;
+        p.tileHeight = nm.bakedTileHeight;
+        p.maxTiles = (nm.bakedMaxTiles > 0) ? nm.bakedMaxTiles : 1;
+        p.maxPolys = (nm.bakedMaxPolys > 0) ? nm.bakedMaxPolys : 0x8000;
+
+        if (dtStatusFailed(nm.runtime->nav->init(&p)))
+        {
+            DestroyRuntime(nm);
+            return false;
+        }
+
+        for (auto const& t : nm.bakedTiles)
+        {
+            std::vector<unsigned char> bytes;
+            if (!NavMeshComponent::Base64Decode(t.dataB64.c_str(), bytes)) continue;
+
+            unsigned char* data = (unsigned char*)dtAlloc((int)bytes.size(), DT_ALLOC_PERM);
+            if (!data) continue;
+            std::memcpy(data, bytes.data(), bytes.size());
+
+            dtTileRef ref{};
+            dtStatus st = nm.runtime->nav->addTile(data, (int)bytes.size(), DT_TILE_FREE_DATA, 0, &ref);
+            if (dtStatusFailed(st))
+            {
+                dtFree(data);
+            }
+            else
+            {
+                nm.runtime->tileRef = (unsigned long long)ref;
+            }
+        }
+
+        nm.runtime->query = dtAllocNavMeshQuery();
+        if (!nm.runtime->query || dtStatusFailed(nm.runtime->query->init(nm.runtime->nav, 2048)))
+        {
+            DestroyRuntime(nm);
+            return false;
+        }
+
+        return true;
+    }
+
     bool NavMeshSystem::BuildFromTriangles(NavMeshComponent& c, const float* verts, int nverts, const int* tris, int ntris)
     {
         //EE_CORE_INFO("[NavMeshSystem] Begin BuildFromTriangles (verts=%d tris=%d)", nverts, ntris);

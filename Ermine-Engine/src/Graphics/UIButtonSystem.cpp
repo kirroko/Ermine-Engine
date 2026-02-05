@@ -22,6 +22,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "AudioSystem.h"
 #include "GLFW/glfw3.h"
 #include "EditorGUI.h"
+#include "Window.h"
 
 #ifdef EE_EDITOR
 #include "EditorGUI.h"
@@ -94,7 +95,7 @@ namespace Ermine
 
         // ==================== PAUSE MENU TOGGLE ====================
         static bool pWasPressed = false;
-        bool pIsPressed = Input::IsKeyDown(GLFW_KEY_P);
+        bool pIsPressed = Input::IsKeyDown(GLFW_KEY_P) || Input::IsKeyDown(GLFW_KEY_ESCAPE);
 
         if (pIsPressed && !pWasPressed)
         {
@@ -391,6 +392,8 @@ namespace Ermine
                     ? editor::EditorGUI::SimState::paused
                     : editor::EditorGUI::SimState::playing;
 
+                s_isGamePaused ? Window::SetCursorLockState(Window::CursorLockState::None) : Window::SetCursorLockState(Window::CursorLockState::Confined);
+
                 EE_CORE_INFO("Game {} (using EditorGUI::s_state)", s_isGamePaused ? "PAUSED" : "RESUMED");
 
                 return;
@@ -648,6 +651,7 @@ namespace Ermine
                 meta.selfActive = true;
                 s_isGamePaused = true;
                 EE_CORE_INFO("Pause menu shown (alt-tab)");
+                Window::SetCursorLockState(Window::CursorLockState::None);
                 return;
             }
         }

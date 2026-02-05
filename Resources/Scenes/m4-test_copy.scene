@@ -26342,7 +26342,16 @@
             {
               "class": "VerticalPlatform",
               "enabled": true,
-              "fields": {}
+              "fields": {
+                "moveDistance": {
+                  "t": 0,
+                  "v": 2.0
+                },
+                "moveSpeed": {
+                  "t": 0,
+                  "v": 2.0
+                }
+              }
             }
           ]
         }
@@ -27165,7 +27174,16 @@
             {
               "class": "VerticalPlatform",
               "enabled": true,
-              "fields": {}
+              "fields": {
+                "moveDistance": {
+                  "t": 0,
+                  "v": 2.0
+                },
+                "moveSpeed": {
+                  "t": 0,
+                  "v": 2.0
+                }
+              }
             }
           ]
         }
@@ -27988,7 +28006,16 @@
             {
               "class": "VerticalPlatform",
               "enabled": true,
-              "fields": {}
+              "fields": {
+                "moveDistance": {
+                  "t": 0,
+                  "v": 2.0
+                },
+                "moveSpeed": {
+                  "t": 0,
+                  "v": 2.0
+                }
+              }
             }
           ]
         }
@@ -28811,7 +28838,16 @@
             {
               "class": "VerticalPlatform",
               "enabled": true,
-              "fields": {}
+              "fields": {
+                "moveDistance": {
+                  "t": 0,
+                  "v": 2.0
+                },
+                "moveSpeed": {
+                  "t": 0,
+                  "v": 2.0
+                }
+              }
             }
           ]
         }
@@ -29634,7 +29670,16 @@
             {
               "class": "VerticalPlatform",
               "enabled": true,
-              "fields": {}
+              "fields": {
+                "moveDistance": {
+                  "t": 0,
+                  "v": 2.0
+                },
+                "moveSpeed": {
+                  "t": 0,
+                  "v": 2.0
+                }
+              }
             }
           ]
         }
@@ -30457,7 +30502,16 @@
             {
               "class": "VerticalPlatform",
               "enabled": true,
-              "fields": {}
+              "fields": {
+                "moveDistance": {
+                  "t": 0,
+                  "v": 2.0
+                },
+                "moveSpeed": {
+                  "t": 0,
+                  "v": 2.0
+                }
+              }
             }
           ]
         }
@@ -31280,7 +31334,16 @@
             {
               "class": "VerticalPlatform",
               "enabled": true,
-              "fields": {}
+              "fields": {
+                "moveDistance": {
+                  "t": 0,
+                  "v": 2.0
+                },
+                "moveSpeed": {
+                  "t": 0,
+                  "v": 2.0
+                }
+              }
             }
           ]
         }
@@ -32103,7 +32166,16 @@
             {
               "class": "VerticalPlatform",
               "enabled": true,
-              "fields": {}
+              "fields": {
+                "moveDistance": {
+                  "t": 0,
+                  "v": 2.0
+                },
+                "moveSpeed": {
+                  "t": 0,
+                  "v": 2.0
+                }
+              }
             }
           ]
         }
@@ -32926,7 +32998,16 @@
             {
               "class": "VerticalPlatform",
               "enabled": true,
-              "fields": {}
+              "fields": {
+                "moveDistance": {
+                  "t": 0,
+                  "v": 2.0
+                },
+                "moveSpeed": {
+                  "t": 0,
+                  "v": 2.0
+                }
+              }
             }
           ]
         }
@@ -33749,7 +33830,16 @@
             {
               "class": "VerticalPlatform",
               "enabled": true,
-              "fields": {}
+              "fields": {
+                "moveDistance": {
+                  "t": 0,
+                  "v": 2.0
+                },
+                "moveSpeed": {
+                  "t": 0,
+                  "v": 2.0
+                }
+              }
             }
           ]
         }
@@ -35548,7 +35638,16 @@
             {
               "class": "DamagePlayer",
               "enabled": true,
-              "fields": {}
+              "fields": {
+                "timer": {
+                  "t": 0,
+                  "v": 1.0
+                },
+                "damage": {
+                  "t": 0,
+                  "v": 10.0
+                }
+              }
             }
           ]
         }
