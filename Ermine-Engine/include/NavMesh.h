@@ -116,6 +116,11 @@ namespace Ermine {
          None.
         *************************************************************************/
         void DestroyRuntime(NavMeshComponent& c);
+        // BRIAN COMMENT
+        void WarmStartBakedNavMeshes();
+        // BRIAN STUPID
+        bool CreateRuntimeFromBaked(NavMeshComponent& nm);
+
     private:
         /*!***********************************************************************
         \brief

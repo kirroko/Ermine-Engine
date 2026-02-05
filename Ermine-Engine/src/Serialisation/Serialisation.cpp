@@ -30,6 +30,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <sstream>
 #include <iomanip>
 #include <unordered_map>
+#include "NavMesh.h"
 
 namespace {
     std::string BuildMaterialSignature(const Ermine::graphics::Material& material,
@@ -748,6 +749,11 @@ void LoadSceneFromFile(Ermine::ECS& ecs, const std::filesystem::path& path) {
     ecs.ResyncAllSignaturesFromStorage();
 
     Ermine::ResolveHierarchyGuids(ecs);
+
+    if (auto navSys = ecs.GetSystem<Ermine::NavMeshSystem>())
+    {
+        navSys->WarmStartBakedNavMeshes();
+    }
 
     // Upload all registered meshes to GPU and build indirect draw commands
     if (renderer) {

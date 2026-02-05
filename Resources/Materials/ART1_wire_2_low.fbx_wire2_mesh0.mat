@@ -1,0 +1,58 @@
+{
+    "parameters": {
+        "materialCastsShadows": {
+            "type": "bool",
+            "value": true
+        },
+        "materialHasAlbedoMap": {
+            "type": "bool",
+            "value": true
+        },
+        "materialHasNormalMap": {
+            "type": "bool",
+            "value": true
+        },
+        "materialHasRoughnessMap": {
+            "type": "bool",
+            "value": true
+        },
+        "materialHasMetallicMap": {
+            "type": "bool",
+            "value": true
+        },
+        "materialHasAoMap": {
+            "type": "bool",
+            "value": true
+        },
+        "materialAlbedoMap": {
+            "type": "texture2d",
+            "value": "../Ermine-Game.lion_rcdbase/12345678-1234-1234-1234-123456789ABC/Windows.platform/Data/13064125030918455299.dds"
+        },
+        "materialNormalMap": {
+            "type": "texture2d",
+            "value": "../Ermine-Game.lion_rcdbase/12345678-1234-1234-1234-123456789ABC/Windows.platform/Data/14793507287828742151.dds"
+        },
+        "materialRoughnessMap": {
+            "type": "texture2d",
+            "value": "../Ermine-Game.lion_rcdbase/12345678-1234-1234-1234-123456789ABC/Windows.platform/Data/9605360517097930761.dds"
+        },
+        "materialMetallicMap": {
+            "type": "texture2d",
+            "value": "../Ermine-Game.lion_rcdbase/12345678-1234-1234-1234-123456789ABC/Windows.platform/Data/7875978260187660293.dds"
+        },
+        "materialAoMap": {
+            "type": "texture2d",
+            "value": "../Ermine-Game.lion_rcdbase/12345678-1234-1234-1234-123456789ABC/Windows.platform/Data/3840752994063679489.dds"
+        }
+    },
+    "uvTransform": {
+        "scale": [
+            1.0,
+            1.0
+        ],
+        "offset": [
+            0.0,
+            0.0
+        ]
+    }
+}
