@@ -63,5 +63,6 @@
             0.0,
             0.0
         ]
-    }
+    },
+    "customFragmentShader": "../Resources/Shaders/custom_uv_effects_fragment.glsl"
 }

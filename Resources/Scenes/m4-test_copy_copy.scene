@@ -430,13 +430,13 @@
               "class": "PlayerController2",
               "enabled": true,
               "fields": {
-                "mouseHorSens": {
-                  "t": 0,
-                  "v": 0.30000001192092898
-                },
                 "jumpHeight": {
                   "t": 0,
                   "v": 2.0
+                },
+                "mouseHorSens": {
+                  "t": 0,
+                  "v": 0.30000001192092898
                 },
                 "mouseVertSens": {
                   "t": 0,
@@ -446,13 +446,13 @@
                   "t": 0,
                   "v": 5.0
                 },
-                "jumpspeed": {
-                  "t": 0,
-                  "v": 5.0
-                },
                 "camDefaultY": {
                   "t": 0,
                   "v": 4.5
+                },
+                "jumpspeed": {
+                  "t": 0,
+                  "v": 5.0
                 },
                 "crouchLerpSpeed": {
                   "t": 0,
@@ -464,11 +464,11 @@
               "class": "OrbTeleport",
               "enabled": true,
               "fields": {
-                "recallHealAmt": {
+                "damage": {
                   "t": 0,
                   "v": 10.0
                 },
-                "damage": {
+                "recallHealAmt": {
                   "t": 0,
                   "v": 10.0
                 }
@@ -9261,9 +9261,9 @@
           "roty": false,
           "rotz": false,
           "collidersize": [
-            2.0,
-            2.0,
-            2.0
+            3.0,
+            3.0,
+            3.0
           ]
         },
         "HierarchyComponent": {
@@ -9276,7 +9276,12 @@
             {
               "class": "DisableLightCone",
               "enabled": true,
-              "fields": {}
+              "fields": {
+                "timer": {
+                  "t": 0,
+                  "v": 3.0
+                }
+              }
             }
           ]
         }
@@ -9350,7 +9355,7 @@
           ]
         },
         "Material": {
-          "guid": "61605e4de84ff142b877f5f88a910196"
+          "guid": "132380496a978c4c9d61a45a9b0d0afe"
         },
         "HierarchyComponent": {
           "parentGuid": "f48413f09565c44c9c63034045c08468",
@@ -9428,9 +9433,9 @@
           "roty": false,
           "rotz": false,
           "collidersize": [
-            2.0,
-            2.0,
-            2.0
+            3.0,
+            3.0,
+            3.0
           ]
         },
         "HierarchyComponent": {
@@ -9443,7 +9448,12 @@
             {
               "class": "DisableLightCone",
               "enabled": true,
-              "fields": {}
+              "fields": {
+                "timer": {
+                  "t": 0,
+                  "v": 3.0
+                }
+              }
             }
           ]
         }
@@ -9517,7 +9527,7 @@
           ]
         },
         "Material": {
-          "guid": "873834110ef1a348af4caefaed59b198"
+          "guid": "132380496a978c4c9d61a45a9b0d0afe"
         },
         "HierarchyComponent": {
           "parentGuid": "4903cf4b38da4740b8d6bef7eba17065",
@@ -9595,9 +9605,9 @@
           "roty": false,
           "rotz": false,
           "collidersize": [
-            2.0,
-            2.0,
-            2.0
+            3.0,
+            3.0,
+            3.0
           ]
         },
         "HierarchyComponent": {
@@ -9610,7 +9620,12 @@
             {
               "class": "DisableLightCone",
               "enabled": true,
-              "fields": {}
+              "fields": {
+                "timer": {
+                  "t": 0,
+                  "v": 3.0
+                }
+              }
             }
           ]
         }
@@ -9641,7 +9656,7 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "LightCone10",
+          "name": "LightCone45",
           "tag": "Untagged",
           "selfActive": true
         },
@@ -9762,9 +9777,9 @@
           "roty": false,
           "rotz": false,
           "collidersize": [
-            2.0,
-            2.0,
-            2.0
+            3.0,
+            3.0,
+            3.0
           ]
         },
         "HierarchyComponent": {
@@ -9777,7 +9792,12 @@
             {
               "class": "DisableLightCone",
               "enabled": true,
-              "fields": {}
+              "fields": {
+                "timer": {
+                  "t": 0,
+                  "v": 3.0
+                }
+              }
             }
           ]
         }
@@ -9851,7 +9871,7 @@
           ]
         },
         "Material": {
-          "guid": "fd74d37bb222104594d89cafd1fc90db"
+          "guid": "132380496a978c4c9d61a45a9b0d0afe"
         },
         "HierarchyComponent": {
           "parentGuid": "f4e13440738da64a97847e8f9c89d9cb",
@@ -13380,7 +13400,7 @@
         "Transform": {
           "position": [
             12.256691932678223,
-            -2.2761716842651369,
+            -5.706271171569824,
             -47.9605827331543
           ],
           "rotation": [
@@ -13391,7 +13411,7 @@
           ],
           "scale": [
             0.06047368794679642,
-            0.47533804178237917,
+            0.7909402847290039,
             0.03599219769239426
           ]
         },
@@ -13407,7 +13427,7 @@
           "shapeType": "Box",
           "colliderpivot": [
             -6.050000190734863,
-            2.5,
+            4.050000190734863,
             5.300000190734863
           ],
           "posx": false,
@@ -17724,9 +17744,9 @@
           "roty": false,
           "rotz": false,
           "collidersize": [
+            4.0,
             2.0,
-            2.0,
-            2.0
+            4.0
           ]
         },
         "HierarchyComponent": {
@@ -17818,7 +17838,7 @@
           ]
         },
         "Material": {
-          "guid": "c2521801ee9a9342b9ba12500423e033"
+          "guid": "132380496a978c4c9d61a45a9b0d0afe"
         },
         "HierarchyComponent": {
           "parentGuid": "a3942a55ce3b6a4794fb1bb84a4ea892",
@@ -17887,9 +17907,9 @@
           "roty": false,
           "rotz": false,
           "collidersize": [
+            4.0,
             2.0,
-            2.0,
-            2.0
+            4.0
           ]
         },
         "HierarchyComponent": {
@@ -17981,7 +18001,7 @@
           ]
         },
         "Material": {
-          "guid": "966a09cbde1bb4468a8edaa9f8531c98"
+          "guid": "132380496a978c4c9d61a45a9b0d0afe"
         },
         "HierarchyComponent": {
           "parentGuid": "60a5f246c8e7734e9cdad80574223704",
@@ -18274,9 +18294,9 @@
           "roty": false,
           "rotz": false,
           "collidersize": [
+            4.0,
             2.0,
-            2.0,
-            3.0
+            4.0
           ]
         },
         "HierarchyComponent": {
@@ -18368,7 +18388,7 @@
           ]
         },
         "Material": {
-          "guid": "d094fc91515a8d428284c5843cc09fbb"
+          "guid": "132380496a978c4c9d61a45a9b0d0afe"
         },
         "HierarchyComponent": {
           "parentGuid": "85aa6c3ef535c24e818e87540dacb1d4",
@@ -18437,9 +18457,9 @@
           "roty": false,
           "rotz": false,
           "collidersize": [
+            4.0,
             2.0,
-            2.0,
-            3.0
+            4.0
           ]
         },
         "HierarchyComponent": {
@@ -18531,7 +18551,7 @@
           ]
         },
         "Material": {
-          "guid": "52a1cef01113c047ae2e2bff9711a6c9"
+          "guid": "132380496a978c4c9d61a45a9b0d0afe"
         },
         "HierarchyComponent": {
           "parentGuid": "e3748c4c0361674db440340de8653bdd",
@@ -22443,9 +22463,9 @@
           "roty": false,
           "rotz": false,
           "collidersize": [
+            4.0,
             2.0,
-            2.0,
-            2.0
+            4.0
           ]
         },
         "HierarchyComponent": {
@@ -22458,7 +22478,12 @@
             {
               "class": "DisableLightCone",
               "enabled": true,
-              "fields": {}
+              "fields": {
+                "timer": {
+                  "t": 0,
+                  "v": 3.0
+                }
+              }
             }
           ]
         }
@@ -22532,7 +22557,7 @@
           ]
         },
         "Material": {
-          "guid": "21bb90f6e66606498ff3929688c99ec0"
+          "guid": "132380496a978c4c9d61a45a9b0d0afe"
         },
         "HierarchyComponent": {
           "parentGuid": "9355061758d78c41b253150cd387592e",
@@ -22601,9 +22626,9 @@
           "roty": false,
           "rotz": false,
           "collidersize": [
+            4.0,
             2.0,
-            2.0,
-            2.0
+            4.0
           ]
         },
         "HierarchyComponent": {
@@ -22616,7 +22641,12 @@
             {
               "class": "DisableLightCone",
               "enabled": true,
-              "fields": {}
+              "fields": {
+                "timer": {
+                  "t": 0,
+                  "v": 3.0
+                }
+              }
             }
           ]
         }
@@ -22690,7 +22720,7 @@
           ]
         },
         "Material": {
-          "guid": "f118ec36bda9be43bb5bd847e2e7202d"
+          "guid": "132380496a978c4c9d61a45a9b0d0afe"
         },
         "HierarchyComponent": {
           "parentGuid": "b75b63e52d1b444696b5aff5574f8b3b",
@@ -26182,19 +26212,19 @@
         },
         "Transform": {
           "position": [
-            -6.357515811920166,
+            6.994058609008789,
             -15.987639427185059,
             -156.24984741210938
           ],
           "rotation": [
-            -4.371144513015679e-8,
+            -4.371145223558415e-8,
             1.0,
-            -4.3711430919302077e-8,
-            1.9106835593405738e-15
+            -4.371142381387472e-8,
+            1.9106839828570475e-15
           ],
           "scale": [
-            0.03611978888511658,
-            0.08806271851062775,
+            0.03611978515982628,
+            0.024349117651581765,
             0.046859510242938998
           ]
         },
@@ -26210,7 +26240,7 @@
           "shapeType": "Box",
           "colliderpivot": [
             7.300000190734863,
-            16.049999237060548,
+            5.400000095367432,
             -0.4000000059604645
           ],
           "posx": false,
@@ -26382,11 +26412,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -27214,11 +27244,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -28046,11 +28076,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -28878,11 +28908,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -29710,11 +29740,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -30542,11 +30572,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -31374,11 +31404,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -32206,11 +32236,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -33038,11 +33068,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -33870,11 +33900,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -35665,7 +35695,7 @@
           ]
         },
         "Material": {
-          "guid": "e1199d61d4a6114bb2b7eff5fc4f8e46"
+          "guid": "132380496a978c4c9d61a45a9b0d0afe"
         },
         "HierarchyComponent": {
           "parentGuid": "b08fa7f0b67aa849b1aa418627dde8f1",
@@ -35832,7 +35862,7 @@
           ]
         },
         "Material": {
-          "guid": "9de1b9deeff68040b86cb430641644f9"
+          "guid": "132380496a978c4c9d61a45a9b0d0afe"
         },
         "HierarchyComponent": {
           "parentGuid": "25069e014abb854bb0ca339f8b5a69f9",
@@ -35990,7 +36020,7 @@
           ]
         },
         "Material": {
-          "guid": "e0483676e133444b9e137fde7e7a4135"
+          "guid": "132380496a978c4c9d61a45a9b0d0afe"
         },
         "HierarchyComponent": {
           "parentGuid": "2e52c6d6408b2247b85fa7ecad107bb2",
@@ -36148,7 +36178,7 @@
           ]
         },
         "Material": {
-          "guid": "38fa3078954a2947b30040ad70b67cc7"
+          "guid": "132380496a978c4c9d61a45a9b0d0afe"
         },
         "HierarchyComponent": {
           "parentGuid": "1a19e02f2d687a4bb0be94e0462ca49d",
@@ -36306,7 +36336,7 @@
           ]
         },
         "Material": {
-          "guid": "3fd887923c40fa43bab86253fb715f05"
+          "guid": "132380496a978c4c9d61a45a9b0d0afe"
         },
         "HierarchyComponent": {
           "parentGuid": "f09cbbcf7735794c9c57ad0f87be724a",
@@ -36464,7 +36494,7 @@
           ]
         },
         "Material": {
-          "guid": "de8dde8ffc3ce74787e8be6bed055158"
+          "guid": "132380496a978c4c9d61a45a9b0d0afe"
         },
         "HierarchyComponent": {
           "parentGuid": "3cc4794f0bd89645aafd74276bebd3d9",
@@ -36622,7 +36652,7 @@
           ]
         },
         "Material": {
-          "guid": "0aced2994c873f4c9acf257e02e31fbb"
+          "guid": "132380496a978c4c9d61a45a9b0d0afe"
         },
         "HierarchyComponent": {
           "parentGuid": "7a647fd21f65ae4bb6d1d40d5b5afa7c",
@@ -47093,13 +47123,13 @@
                   "t": 0,
                   "v": 1.0
                 },
-                "sceneName": {
-                  "t": 3,
-                  "v": "m4-LEVEL2_AI.scene"
-                },
                 "doorMoveDuration": {
                   "t": 0,
                   "v": 2.0
+                },
+                "sceneName": {
+                  "t": 3,
+                  "v": "m4-LEVEL2_AI.scene"
                 }
               }
             }
@@ -47640,6 +47670,111 @@
         "HierarchyComponent": {
           "parentGuid": "0d83a081097cb74c9ab5e5df30a7597d",
           "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 951,
+      "components": {
+        "IDComponent": {
+          "guid": "b231268a7398fa468bfbd395c3e7d9e2"
+        },
+        "Transform": {
+          "position": [
+            -6.357515811920166,
+            -15.987639427185059,
+            -156.24984741210938
+          ],
+          "rotation": [
+            -4.371144513015679e-8,
+            1.0,
+            -4.3711430919302077e-8,
+            1.9106835593405738e-15
+          ],
+          "scale": [
+            0.03611978888511658,
+            0.08806271851062775,
+            0.046859510242938998
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "wall11 (19)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            7.300000190734863,
+            16.049999237060548,
+            -0.4000000059604645
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            400.0,
+            400.0,
+            34.650001525878909
+          ]
+        },
+        "ModelComponent": {
+          "model": "ART1_wall_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 952,
+      "components": {
+        "IDComponent": {
+          "guid": "707574dfc3977a46b1322050b35aa60b"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_wall_low.fbx_Jail_wall_old_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "1c7e368869a95a499eccbed936214dae"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "b231268a7398fa468bfbd395c3e7d9e2",
+          "depth": 1
         },
         "GlobalTransform": {}
       }
