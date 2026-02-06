@@ -369,6 +369,9 @@
     <ClInclude Include="include\shadow_config.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\GPUParticles.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\ThirdParty\xresource_pipeline_v2-main\dependencies\xtextfile\source\xtextfile.cpp">
@@ -604,6 +607,9 @@
     </ClCompile>
     <ClCompile Include="src\dllmain.cpp">
       <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Particles\GPUParticles.cpp">
+      <Filter>src\Particles</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

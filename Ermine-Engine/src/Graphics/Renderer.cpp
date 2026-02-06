@@ -42,6 +42,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Physics.h"
 #include "NavMesh.h"
 #include "GISystem.h"
+#include "GPUParticles.h"
 
 namespace {
 	constexpr uint32_t kProbeFileMagic = 0x49475245u; // 'ERGI'
@@ -3696,7 +3697,7 @@ void Renderer::RenderDeferredPipeline(const Mtx44& view, const Mtx44& projection
 
 		// Restore depth state
 		glDepthMask(GL_TRUE);
-		glDepthFunc(GL_LESS);
+		glDepthFunc(GL_LEQUAL);
 	}
 	else if (m_PostProcessBuffer && m_GBuffer) {
 		// No skybox, but set up framebuffer and depth state for forward pass
@@ -6382,8 +6383,12 @@ void Renderer::RenderForwardPass(const Mtx44& view, const Mtx44& projection)
 	bool hasTransparentCustom = !m_ForwardTransparentCustomStandardItems.empty() || !m_ForwardTransparentCustomSkinnedItems.empty();
 	bool hasTransparentStandard = !m_ForwardTransparentDefaultStandardItems.empty() || !m_ForwardTransparentDefaultSkinnedItems.empty();
 
+	auto& ecs = ECS::GetInstance();
+	auto gpuParticles = ecs.GetSystem<GPUParticleSystem>();
+	bool hasGpuParticles = gpuParticles && gpuParticles->HasActiveEmitters();
+
 	// Skip if nothing to render
-	if (!hasOpaqueCustom && !hasTransparentCustom && !hasTransparentStandard) {
+	if (!hasOpaqueCustom && !hasTransparentCustom && !hasTransparentStandard && !hasGpuParticles) {
 		return;
 	}
 
@@ -6392,6 +6397,10 @@ void Renderer::RenderForwardPass(const Mtx44& view, const Mtx44& projection)
 		EE_CORE_ERROR("Post-process buffer not initialized for forward pass!");
 		return;
 	}
+
+	glm::mat4 glmView = ToGlm(view);
+	glm::mat4 invView = glm::inverse(glmView);
+	Vec3 cameraPos = Vec3(invView[3][0], invView[3][1], invView[3][2]);
 
 	// ========== STEP 1: RENDER OPAQUE CUSTOM SHADERS ==========
 	// These render with depth writing ENABLED (before transparent objects)
@@ -6503,6 +6512,13 @@ void Renderer::RenderForwardPass(const Mtx44& view, const Mtx44& projection)
 				glBindVertexArray(0);
 			}
 		}
+
+	}
+
+	if (hasGpuParticles) {
+		glBindFramebuffer(GL_FRAMEBUFFER, m_PostProcessBuffer->FBO);
+		glViewport(0, 0, m_PostProcessBuffer->width, m_PostProcessBuffer->height);
+		gpuParticles->Render(view, projection, cameraPos);
 	}
 
 	// Restore render state

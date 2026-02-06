@@ -27,6 +27,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <EditorGUI.h>
 #include "NavMesh.h"
 #include "Particles.h"
+#include "GPUParticles.h"
 #include "AnimationGUI.h"
 #include "CommandHistory.h"
 #include "GISystem.h"
@@ -548,6 +549,10 @@ namespace Ermine::editor {
 
 		if (ECS::GetInstance().HasComponent<ParticleEmitter>(selected)) {
 			DrawParticleEmitterComponent(selected);
+		}
+
+		if (ECS::GetInstance().HasComponent<GPUParticleEmitter>(selected)) {
+			DrawGPUParticleEmitterComponent(selected);
 		}
 
 		if (ECS::GetInstance().HasComponent<CameraComponent>(selected))
@@ -2954,6 +2959,120 @@ namespace Ermine::editor {
 		ImGui::Text("Particles Alive: %d", alive);
 	}
 
+	void HierarchyInspector::DrawGPUParticleEmitterComponent(EntityID entity)
+	{
+		if (!ComponentHeaderWithRemove<GPUParticleEmitter>("Particle Emitter (GPU)", entity))
+			return;
+
+		auto& emitter = ECS::GetInstance().GetComponent<GPUParticleEmitter>(entity);
+
+		ImGui::Checkbox("Active", &emitter.active);
+
+		ImGui::Separator();
+		ImGui::Text("Particle Settings");
+
+		int maxParticles = emitter.maxParticles;
+		if (ImGui::DragInt("Max Particles", &maxParticles, 1.0f, 16, 4096)) {
+			emitter.maxParticles = maxParticles;
+			emitter.initialized = false; // Force reinit
+		}
+
+		ImGui::Separator();
+		ImGui::Text("Emission");
+
+		const char* emissionShapes[] = { "Point", "Sphere", "Box", "Disc (XZ)" };
+		ImGui::Combo("Emission Shape", &emitter.emissionShape, emissionShapes, 4);
+		ImGui::DragFloat("Spawn Radius", &emitter.spawnRadius, 0.01f, 0.0f, 50.0f);
+		ImGui::DragFloat("Spawn Inner Radius", &emitter.spawnRadiusInner, 0.01f, 0.0f, emitter.spawnRadius);
+		ImGui::DragFloat3("Spawn Box Extents", &emitter.spawnBoxExtents.x, 0.01f, 0.0f, 50.0f);
+		ImGui::DragFloat("Spawn Rate (per sec)", &emitter.spawnRate, 0.1f, 0.0f, 500.0f);
+		ImGui::DragInt("Burst Count Min", &emitter.burstCountMin, 1.0f, 0, 1024);
+		ImGui::DragInt("Burst Count Max", &emitter.burstCountMax, 1.0f, 0, 1024);
+		ImGui::DragFloat("Burst Interval (sec)", &emitter.burstInterval, 0.01f, 0.0f, 10.0f);
+		ImGui::Checkbox("Burst On Start", &emitter.burstOnStart);
+
+		ImGui::Separator();
+		ImGui::Text("Direction");
+
+		const char* directionModes[] = { "Fixed", "Cone", "From Spawn", "Random Sphere" };
+		ImGui::Combo("Direction Mode", &emitter.directionMode, directionModes, 4);
+		ImGui::DragFloat3("Direction", &emitter.direction.x, 0.01f, -1.0f, 1.0f);
+		ImGui::DragFloat("Cone Angle", &emitter.coneAngle, 0.1f, 0.0f, 180.0f);
+		ImGui::DragFloat("Cone Inner Angle", &emitter.coneInnerAngle, 0.1f, 0.0f, emitter.coneAngle);
+
+		ImGui::Separator();
+		ImGui::Text("Bounds");
+
+		const char* boundsModes[] = { "None", "Kill", "Clamp", "Bounce" };
+		const char* boundsShapes[] = { "Sphere", "Box", "Disc (XZ)" };
+		ImGui::Combo("Bounds Mode", &emitter.boundsMode, boundsModes, 4);
+		ImGui::Combo("Bounds Shape", &emitter.boundsShape, boundsShapes, 3);
+		ImGui::DragFloat("Bounds Radius", &emitter.boundsRadius, 0.01f, 0.0f, 100.0f);
+		ImGui::DragFloat("Bounds Inner Radius", &emitter.boundsRadiusInner, 0.01f, 0.0f, emitter.boundsRadius);
+		ImGui::DragFloat3("Bounds Box Extents", &emitter.boundsBoxExtents.x, 0.01f, 0.0f, 100.0f);
+
+		ImGui::Separator();
+		ImGui::Text("Forces");
+
+		ImGui::DragFloat("Speed Min", &emitter.speedMin, 0.01f, 0.0f, 50.0f);
+		ImGui::DragFloat("Speed Max", &emitter.speedMax, 0.01f, 0.0f, 50.0f);
+		ImGui::DragFloat3("Gravity", &emitter.gravity.x, 0.01f, -50.0f, 50.0f);
+		ImGui::DragFloat("Drag", &emitter.drag, 0.01f, 0.0f, 10.0f);
+		ImGui::DragFloat("Turbulence Strength", &emitter.turbulenceStrength, 0.01f, 0.0f, 10.0f);
+		ImGui::DragFloat("Turbulence Scale", &emitter.turbulenceScale, 0.01f, 0.01f, 10.0f);
+
+		ImGui::Separator();
+		ImGui::Text("Appearance");
+
+		const char* renderModes[] = { "Glow", "Smoke" };
+		ImGui::Combo("Render Mode", &emitter.renderMode, renderModes, 2);
+		if (emitter.renderMode == 1) {
+			ImGui::DragFloat("Smoke Opacity", &emitter.smokeOpacity, 0.01f, 0.0f, 2.0f);
+			ImGui::DragFloat("Smoke Softness", &emitter.smokeSoftness, 0.01f, 0.01f, 2.0f);
+			ImGui::DragFloat("Smoke Noise Scale", &emitter.smokeNoiseScale, 0.01f, 0.01f, 5.0f);
+			ImGui::DragFloat("Smoke Distort Scale", &emitter.smokeDistortScale, 0.01f, 0.01f, 5.0f);
+			ImGui::DragFloat("Smoke Distort Strength", &emitter.smokeDistortStrength, 0.01f, 0.0f, 2.0f);
+			ImGui::DragFloat("Smoke Puff Scale", &emitter.smokePuffScale, 0.01f, 0.01f, 5.0f);
+			ImGui::DragFloat("Smoke Puff Strength", &emitter.smokePuffStrength, 0.01f, 0.0f, 1.0f);
+			ImGui::DragFloat("Smoke Stretch", &emitter.smokeStretch, 0.01f, 0.0f, 5.0f);
+			ImGui::DragFloat("Smoke Up Bias", &emitter.smokeUpBias, 0.01f, 0.0f, 2.0f);
+			ImGui::DragFloat("Smoke Depth Fade", &emitter.smokeDepthFade, 0.1f, 0.0f, 20.0f);
+		}
+
+		float colorStart[3] = { emitter.colorStart.x, emitter.colorStart.y, emitter.colorStart.z };
+		if (ImGui::ColorEdit3("Color Start", colorStart)) {
+			emitter.colorStart = Vec3(colorStart[0], colorStart[1], colorStart[2]);
+		}
+		float colorEnd[3] = { emitter.colorEnd.x, emitter.colorEnd.y, emitter.colorEnd.z };
+		if (ImGui::ColorEdit3("Color End", colorEnd)) {
+			emitter.colorEnd = Vec3(colorEnd[0], colorEnd[1], colorEnd[2]);
+		}
+		ImGui::DragFloat("Alpha Start", &emitter.alphaStart, 0.01f, 0.0f, 1.0f);
+		ImGui::DragFloat("Alpha End", &emitter.alphaEnd, 0.01f, 0.0f, 1.0f);
+
+		ImGui::DragFloat("Size Start Min", &emitter.sizeStartMin, 0.001f, 0.001f, 5.0f);
+		ImGui::DragFloat("Size Start Max", &emitter.sizeStartMax, 0.001f, 0.001f, 5.0f);
+		ImGui::DragFloat("Size End Min", &emitter.sizeEndMin, 0.001f, 0.001f, 5.0f);
+		ImGui::DragFloat("Size End Max", &emitter.sizeEndMax, 0.001f, 0.001f, 5.0f);
+
+		ImGui::Separator();
+		ImGui::Text("Lifetime");
+
+		ImGui::DragFloat("Lifetime Min", &emitter.lifetimeMin, 0.1f, 0.1f, 10.0f);
+		ImGui::DragFloat("Lifetime Max", &emitter.lifetimeMax, 0.1f, 0.1f, 10.0f);
+
+		ImGui::Separator();
+		ImGui::Text("Sparkle Shape");
+
+		const char* shapes[] = { "Soft Circle", "Star", "Diamond" };
+		ImGui::Combo("Shape", &emitter.sparkleShape, shapes, 3);
+
+		// Status
+		ImGui::Separator();
+		ImGui::Text("Status: %s", emitter.initialized ? "Initialized" : "Not Initialized");
+		ImGui::Text("Particles: %d", emitter.maxParticles);
+	}
+
 	void HierarchyInspector::DrawCameraComponent(EntityID entity)
 	{
 		if (!ComponentHeaderWithRemove<CameraComponent>("Camera Component", entity))
@@ -3696,11 +3815,16 @@ namespace Ermine::editor {
 		// =========================
 		// Particles
 		// =========================
-		if (shouldShowMenu("Particles", { "Particle Emitter" }) && ImGui::BeginMenu("Particles"))
+		if (shouldShowMenu("Particles", { "Particle Emitter", "GPU Particle Emitter" }) && ImGui::BeginMenu("Particles"))
 		{
 			if (matchSearch("Particle Emitter") && ImGui::MenuItem("Particle Emitter") && !ecs.HasComponent<ParticleEmitter>(entity))
 			{
 				ecs.AddComponent(entity, ParticleEmitter());
+				itemSelected = true;
+			}
+			if (matchSearch("GPU Particle Emitter") && ImGui::MenuItem("Particle Emitter (GPU)") && !ecs.HasComponent<GPUParticleEmitter>(entity))
+			{
+				ecs.AddComponent(entity, GPUParticleEmitter());
 				itemSelected = true;
 			}
 			ImGui::EndMenu();

@@ -165,6 +165,12 @@ namespace Ermine::editor {
         */
         void DrawParticleEmitterComponent(EntityID entity);
 
+        /*!***********************************************************************
+        \brief Draws the GPU Orb Particle Emitter component inspector
+        \param entity The entity to inspect
+        *************************************************************************/
+        void DrawGPUParticleEmitterComponent(EntityID entity);
+
         /*!
         \brief Draws UI for Camera component
         \param entity The entity to add components to
