@@ -13,6 +13,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #include "PreCompile.h"
 #include "UIRenderSystem.h"
+#include "UIButtonSystem.h"
 #include "ECS.h"
 #include "AssetManager.h"
 #include "Logger.h"
@@ -151,44 +152,47 @@ namespace Ermine
             }
         }
 
-        // Update UIHealthbarComponent (new separate component)
+        // Update UIHealthbarComponent (new separate component, skip when paused)
         auto& ecs = ECS::GetInstance();
-        constexpr EntityID MAX_ENTITIES_UPDATE = 10000;
-        for (EntityID entity = 1; entity < MAX_ENTITIES_UPDATE; ++entity)
+        if (!UIButtonSystem::IsGamePaused())
         {
-            if (!ecs.IsEntityValid(entity))
-                continue;
-
-            if (!ecs.HasComponent<UIHealthbarComponent>(entity))
-                continue;
-
-            // Skip if entity is inactive
-            if (ecs.HasComponent<ObjectMetaData>(entity))
+            constexpr EntityID MAX_ENTITIES_UPDATE = 10000;
+            for (EntityID entity = 1; entity < MAX_ENTITIES_UPDATE; ++entity)
             {
-                const auto& meta = ecs.GetComponent<ObjectMetaData>(entity);
-                if (!meta.selfActive)
+                if (!ecs.IsEntityValid(entity))
                     continue;
-            }
 
-            auto& healthbar = ecs.GetComponent<UIHealthbarComponent>(entity);
+                if (!ecs.HasComponent<UIHealthbarComponent>(entity))
+                    continue;
 
-            // Health Regeneration System (Option A: regenerate independently)
-            if (healthbar.currentHealth < healthbar.maxHealth)
-            {
-                healthbar.healthRegenTimer += deltaTime;
-
-                // Only regenerate health after the delay
-                if (healthbar.healthRegenTimer >= healthbar.healthRegenDelay)
+                // Skip if entity is inactive
+                if (ecs.HasComponent<ObjectMetaData>(entity))
                 {
-                    healthbar.currentHealth += healthbar.healthRegenRate * deltaTime;
-                    if (healthbar.currentHealth > healthbar.maxHealth)
-                        healthbar.currentHealth = healthbar.maxHealth;
+                    const auto& meta = ecs.GetComponent<ObjectMetaData>(entity);
+                    if (!meta.selfActive)
+                        continue;
                 }
-            }
-            else
-            {
-                // Reset timer when at full health
-                healthbar.healthRegenTimer = 0.0f;
+
+                auto& healthbar = ecs.GetComponent<UIHealthbarComponent>(entity);
+
+                // Health Regeneration System (Option A: regenerate independently)
+                if (healthbar.currentHealth < healthbar.maxHealth)
+                {
+                    healthbar.healthRegenTimer += deltaTime;
+
+                    // Only regenerate health after the delay
+                    if (healthbar.healthRegenTimer >= healthbar.healthRegenDelay)
+                    {
+                        healthbar.currentHealth += healthbar.healthRegenRate * deltaTime;
+                        if (healthbar.currentHealth > healthbar.maxHealth)
+                            healthbar.currentHealth = healthbar.maxHealth;
+                    }
+                }
+                else
+                {
+                    // Reset timer when at full health
+                    healthbar.healthRegenTimer = 0.0f;
+                }
             }
         }
     }
@@ -341,10 +345,14 @@ namespace Ermine
                 RenderCrosshair(ui);
         }
 
-        // Render new separate UI components
+        // Render new separate UI components (skip when game is paused — pause background covers them)
+        if (!UIButtonSystem::IsGamePaused())
         for (EntityID entity = 1; entity < MAX_ENTITIES; ++entity)
         {
             if (!ecs.IsEntityValid(entity))
+                continue;
+
+            if (!IsEntityActiveInHierarchy(entity))
                 continue;
 
             // Render UIHealthbarComponent
