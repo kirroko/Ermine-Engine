@@ -37,13 +37,9 @@
             "type": "bool",
             "value": true
         },
-        "materialHasAoMap": {
-            "type": "bool",
-            "value": false
-        },
         "materialAlbedoMap": {
             "type": "texture2d",
-            "value": "../Ermine-Game.lion_rcdbase/12345678-1234-1234-1234-123456789ABC/Windows.platform/Data/11275070067773030443.dds"
+            "value": "../Ermine-Game.lion_rcdbase/12345678-1234-1234-1234-123456789ABC/Windows.platform/Data/3204619535525085197.dds"
         }
     },
     "uvTransform": {

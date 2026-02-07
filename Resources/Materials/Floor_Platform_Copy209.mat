@@ -43,13 +43,13 @@
         },
         "materialAlbedoMap": {
             "type": "texture2d",
-            "value": "../Ermine-Game.lion_rcdbase/12345678-1234-1234-1234-123456789ABC/Windows.platform/Data/11275070067773030443.dds"
+            "value": "../Ermine-Game.lion_rcdbase/12345678-1234-1234-1234-123456789ABC/Windows.platform/Data/14658223331517481051.dds"
         }
     },
     "uvTransform": {
         "scale": [
-            1.0,
-            1.0
+            2.0,
+            2.0
         ],
         "offset": [
             0.0,

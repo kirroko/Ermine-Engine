@@ -170,7 +170,7 @@
           ]
         },
         "Material": {
-          "guid": "02a1f3b255054045947f2e2706611523"
+          "guid": "e9e56fa412a7da44a00a730e7f3ebc30"
         },
         "HierarchyComponent": {
           "depth": 0
@@ -223,6 +223,18 @@
                 "damage": {
                   "t": 0,
                   "v": 10.0
+                },
+                "regenDelay": {
+                  "t": 0,
+                  "v": 2.0
+                },
+                "skillsHUDName": {
+                  "t": 3,
+                  "v": "Skills"
+                },
+                "healthBarName": {
+                  "t": 3,
+                  "v": "Healthbar"
                 }
               }
             }
@@ -4233,7 +4245,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "5a3425826815be44b5707080cd1e29c7"
+          "guid": "f13273eb038a834296bc92c185ee5f75"
         },
         "HierarchyComponent": {
           "parentGuid": "6ebec40c54bba3479a03b0363a6fccd2",
@@ -4312,7 +4324,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "c86ced3f4c8eb44691a979dad903fd59"
+          "guid": "13eed7790c28204ca09b9f7c7ebb09ae"
         },
         "HierarchyComponent": {
           "parentGuid": "085a3ec52aa7d447a385741ec911ba10",
@@ -4391,7 +4403,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "3363eb38b4942a40bbd4477f61400835"
+          "guid": "22b2aa0a55dec74aacbe5258b6dcec00"
         },
         "HierarchyComponent": {
           "parentGuid": "19b05c9146e0844f8b1f673c1e4a7b10",
@@ -4470,7 +4482,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "c2d374dd9b05af43839f952612c22754"
+          "guid": "ca17abef9d97cb46b8edac9cf5a886dd"
         },
         "HierarchyComponent": {
           "parentGuid": "b329b0ba47a92b4987a139e6d84652ac",
@@ -9107,7 +9119,7 @@
           ]
         },
         "Material": {
-          "guid": "132380496a978c4c9d61a45a9b0d0afe"
+          "guid": "16abb3066e61ae4790ac6638e331961f"
         },
         "HierarchyComponent": {
           "parentGuid": "f48413f09565c44c9c63034045c08468",
@@ -9279,7 +9291,7 @@
           ]
         },
         "Material": {
-          "guid": "132380496a978c4c9d61a45a9b0d0afe"
+          "guid": "7fb3be6bb490fa439674df7bc6da26ae"
         },
         "HierarchyComponent": {
           "parentGuid": "4903cf4b38da4740b8d6bef7eba17065",
@@ -9451,7 +9463,7 @@
           ]
         },
         "Material": {
-          "guid": "132380496a978c4c9d61a45a9b0d0afe"
+          "guid": "9cc4ac880808e6428d15a25849c536c9"
         },
         "HierarchyComponent": {
           "parentGuid": "59b256fa424f3d4caa0167928e3b8011",
@@ -9623,7 +9635,7 @@
           ]
         },
         "Material": {
-          "guid": "132380496a978c4c9d61a45a9b0d0afe"
+          "guid": "0274691289381a40813e1194e4c1acc2"
         },
         "HierarchyComponent": {
           "parentGuid": "f4e13440738da64a97847e8f9c89d9cb",
@@ -11537,7 +11549,7 @@
           ]
         },
         "Material": {
-          "guid": "2b956dab22bd20478e06caf3070c93ce"
+          "guid": "5dde5ed9258700478c253ef2021356a0"
         },
         "HierarchyComponent": {
           "parentGuid": "7eaab91798495543b79cad6d7cefba2e",
@@ -11845,7 +11857,7 @@
           ]
         },
         "Material": {
-          "guid": "5484f6196e602144820929dd8c821fa3"
+          "guid": "1faaa27ac32e6e4cb925dd53e0446a79"
         },
         "HierarchyComponent": {
           "parentGuid": "7eaab91798495543b79cad6d7cefba2e",
@@ -11922,7 +11934,7 @@
           ]
         },
         "Material": {
-          "guid": "5cb66fe3b6a93f4694a314eb2ee6aca0"
+          "guid": "e4f2f99249e0624d98d357e70ca08fb5"
         },
         "HierarchyComponent": {
           "parentGuid": "7eaab91798495543b79cad6d7cefba2e",
@@ -12042,7 +12054,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9990dfb8f5a99d4caf46506835b76f1c"
+          "guid": "d139151ae189f44ca2c8a139dee29c7c"
         },
         "HierarchyComponent": {
           "parentGuid": "eb8e94c79ff98b44992b89d971c937b4",
@@ -14720,7 +14732,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "5096af590f5f0647985f5c8e87f03539"
+          "guid": "25ef428487a0264f9fb0d2b031eb23bb"
         },
         "HierarchyComponent": {
           "parentGuid": "b1ec829ca81d204cbc8ef6dede852ea2",
@@ -17590,7 +17602,7 @@
           ]
         },
         "Material": {
-          "guid": "132380496a978c4c9d61a45a9b0d0afe"
+          "guid": "408cac99f55dc0448354f75fbbacc857"
         },
         "HierarchyComponent": {
           "parentGuid": "a3942a55ce3b6a4794fb1bb84a4ea892",
@@ -17753,7 +17765,7 @@
           ]
         },
         "Material": {
-          "guid": "132380496a978c4c9d61a45a9b0d0afe"
+          "guid": "47b785752220ff419f4561deeddf69b6"
         },
         "HierarchyComponent": {
           "parentGuid": "60a5f246c8e7734e9cdad80574223704",
@@ -18140,7 +18152,7 @@
           ]
         },
         "Material": {
-          "guid": "132380496a978c4c9d61a45a9b0d0afe"
+          "guid": "e0142d0ca18b7a41b8ca046952faa5f9"
         },
         "HierarchyComponent": {
           "parentGuid": "85aa6c3ef535c24e818e87540dacb1d4",
@@ -18303,7 +18315,7 @@
           ]
         },
         "Material": {
-          "guid": "132380496a978c4c9d61a45a9b0d0afe"
+          "guid": "a2b17f1439edf74fb6d41252777be97e"
         },
         "HierarchyComponent": {
           "parentGuid": "e3748c4c0361674db440340de8653bdd",
@@ -19271,7 +19283,7 @@
           ]
         },
         "Material": {
-          "guid": "766e04e23215a34b83277c90c5db21c2"
+          "guid": "741c0e4cc4bcb240a9e9ed067572b4da"
         },
         "HierarchyComponent": {
           "parentGuid": "33fdb980be039149a798c3eb4184667a",
@@ -19348,7 +19360,7 @@
           ]
         },
         "Material": {
-          "guid": "9bccd062ef11764c80d286ac152af0c4"
+          "guid": "549ae948463fbf419db026643f68bf01"
         },
         "HierarchyComponent": {
           "parentGuid": "33fdb980be039149a798c3eb4184667a",
@@ -22309,7 +22321,7 @@
           ]
         },
         "Material": {
-          "guid": "132380496a978c4c9d61a45a9b0d0afe"
+          "guid": "ee94f27c517a964384cdcbf8006794b7"
         },
         "HierarchyComponent": {
           "parentGuid": "9355061758d78c41b253150cd387592e",
@@ -22472,7 +22484,7 @@
           ]
         },
         "Material": {
-          "guid": "132380496a978c4c9d61a45a9b0d0afe"
+          "guid": "b410ba559d365e448d19cc7648450003"
         },
         "HierarchyComponent": {
           "parentGuid": "b75b63e52d1b444696b5aff5574f8b3b",
@@ -23794,7 +23806,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9812a9f9f4569d4293b1d11f985803bd"
+          "guid": "1331eb84b67077498ecc83c08b816d21"
         },
         "HierarchyComponent": {
           "parentGuid": "235e7dff45a2ff4e99cce7a216f65d05",
@@ -30411,7 +30423,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "70c2f5b20c901144b67a175150d6c1a4"
+          "guid": "5db40fc50a18944e9cdd1c7af82a9586"
         },
         "HierarchyComponent": {
           "parentGuid": "ed07c8428ac6ce41966e007a0e4df576",
@@ -34716,7 +34728,7 @@
           ]
         },
         "Material": {
-          "guid": "66828359848705458d91bab1c79c0c6e"
+          "guid": "dfee3d284bb43c4d8ed14aa6916706c4"
         },
         "HierarchyComponent": {
           "parentGuid": "321b3e7c1d89db4498257e775f32e9d1",
@@ -35178,7 +35190,7 @@
           ]
         },
         "Material": {
-          "guid": "f75ed9b8e03dec459a7e4e47b9ee7768"
+          "guid": "dd192322e5bcdd48998628af67d28e39"
         },
         "HierarchyComponent": {
           "parentGuid": "321b3e7c1d89db4498257e775f32e9d1",
@@ -35298,7 +35310,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "2df4df8bd25db64d843ec0ac1088f35f"
+          "guid": "bd3660f147ee834f844fd0ba50225ecd"
         },
         "HierarchyComponent": {
           "parentGuid": "18f93d8591084b4dbd4a82eaba4ee25f",
@@ -35373,7 +35385,12 @@
             {
               "class": "DisableLightCone",
               "enabled": true,
-              "fields": {}
+              "fields": {
+                "timer": {
+                  "t": 0,
+                  "v": 3.0
+                }
+              }
             }
           ]
         }
@@ -35447,7 +35464,7 @@
           ]
         },
         "Material": {
-          "guid": "132380496a978c4c9d61a45a9b0d0afe"
+          "guid": "7359462e1549274eaf8a9621c941a267"
         },
         "HierarchyComponent": {
           "parentGuid": "b08fa7f0b67aa849b1aa418627dde8f1",
@@ -35540,7 +35557,12 @@
             {
               "class": "DisableLightCone",
               "enabled": true,
-              "fields": {}
+              "fields": {
+                "timer": {
+                  "t": 0,
+                  "v": 3.0
+                }
+              }
             }
           ]
         }
@@ -35614,7 +35636,7 @@
           ]
         },
         "Material": {
-          "guid": "132380496a978c4c9d61a45a9b0d0afe"
+          "guid": "4e5a8144bd28f74fabb9a2c5bd2cb2ca"
         },
         "HierarchyComponent": {
           "parentGuid": "25069e014abb854bb0ca339f8b5a69f9",
@@ -35698,7 +35720,12 @@
             {
               "class": "DisableLightCone",
               "enabled": true,
-              "fields": {}
+              "fields": {
+                "timer": {
+                  "t": 0,
+                  "v": 3.0
+                }
+              }
             }
           ]
         }
@@ -35772,7 +35799,7 @@
           ]
         },
         "Material": {
-          "guid": "132380496a978c4c9d61a45a9b0d0afe"
+          "guid": "90105e5dd44a2e49bd231673dbb8bad0"
         },
         "HierarchyComponent": {
           "parentGuid": "2e52c6d6408b2247b85fa7ecad107bb2",
@@ -35856,7 +35883,12 @@
             {
               "class": "DisableLightCone",
               "enabled": true,
-              "fields": {}
+              "fields": {
+                "timer": {
+                  "t": 0,
+                  "v": 3.0
+                }
+              }
             }
           ]
         }
@@ -35930,7 +35962,7 @@
           ]
         },
         "Material": {
-          "guid": "132380496a978c4c9d61a45a9b0d0afe"
+          "guid": "a53d9cd5cf925946af6c697414ab58fd"
         },
         "HierarchyComponent": {
           "parentGuid": "1a19e02f2d687a4bb0be94e0462ca49d",
@@ -36014,7 +36046,12 @@
             {
               "class": "DisableLightCone",
               "enabled": true,
-              "fields": {}
+              "fields": {
+                "timer": {
+                  "t": 0,
+                  "v": 3.0
+                }
+              }
             }
           ]
         }
@@ -36088,7 +36125,7 @@
           ]
         },
         "Material": {
-          "guid": "132380496a978c4c9d61a45a9b0d0afe"
+          "guid": "7a99bf9718f77947a040dd913e213bde"
         },
         "HierarchyComponent": {
           "parentGuid": "f09cbbcf7735794c9c57ad0f87be724a",
@@ -36172,7 +36209,12 @@
             {
               "class": "DisableLightCone",
               "enabled": true,
-              "fields": {}
+              "fields": {
+                "timer": {
+                  "t": 0,
+                  "v": 3.0
+                }
+              }
             }
           ]
         }
@@ -36246,7 +36288,7 @@
           ]
         },
         "Material": {
-          "guid": "132380496a978c4c9d61a45a9b0d0afe"
+          "guid": "916addfbbbbcfb4f9386148dfdc4a13f"
         },
         "HierarchyComponent": {
           "parentGuid": "3cc4794f0bd89645aafd74276bebd3d9",
@@ -36330,7 +36372,12 @@
             {
               "class": "DisableLightCone",
               "enabled": true,
-              "fields": {}
+              "fields": {
+                "timer": {
+                  "t": 0,
+                  "v": 3.0
+                }
+              }
             }
           ]
         }
@@ -36404,7 +36451,7 @@
           ]
         },
         "Material": {
-          "guid": "132380496a978c4c9d61a45a9b0d0afe"
+          "guid": "b40c107cc5eee749aa6c9d3468d5fe42"
         },
         "HierarchyComponent": {
           "parentGuid": "7a647fd21f65ae4bb6d1d40d5b5afa7c",
@@ -40058,7 +40105,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "4d6ee725c8b50e4bb077c5e8628f84ac"
+          "guid": "a1e7af185b537941bed789f2a136857f"
         },
         "ModelComponent": {
           "model": "ART1_clock_low.fbx",
@@ -40101,7 +40148,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "2bd7051d9d3fd943ae71dddd0822d370"
+          "guid": "92d3692cb270254b8383e43392ad325e"
         },
         "ModelComponent": {
           "model": "ART1_clock_low.fbx",
@@ -40184,7 +40231,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "6943bc1ab2def74593f8a3000f4e7191"
+          "guid": "82e89f3e477a6e468bb911e6a4cf96da"
         },
         "HierarchyComponent": {
           "parentGuid": "108ec6cdcb2bc648a37e319ce8801ce7",
@@ -40263,7 +40310,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "d79b0c17ddc30a4c8ffa2ee1d4c19c99"
+          "guid": "82e89f3e477a6e468bb911e6a4cf96da"
         },
         "HierarchyComponent": {
           "parentGuid": "0b95f076ec05154396fac813ed6eb529",
@@ -40342,7 +40389,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "d42f69c38b317649973a565376ed2b48"
+          "guid": "82e89f3e477a6e468bb911e6a4cf96da"
         },
         "HierarchyComponent": {
           "parentGuid": "9fde3fbf8eb27f4d8186e23b9027b370",
@@ -40421,7 +40468,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "a4e7d2903957c14e926baed16f0b82b7"
+          "guid": "82e89f3e477a6e468bb911e6a4cf96da"
         },
         "HierarchyComponent": {
           "parentGuid": "57a7836ae24df14482049764d376a19a",
@@ -40460,7 +40507,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "739ac601cfe0e94cae4d8912851efd15"
+          "guid": "f002bd4c57a6ed4789ba356e329438aa"
         },
         "ModelComponent": {
           "model": "ART1_clock_low.fbx",
@@ -40543,7 +40590,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "2ce2f28c4182744898c35860d467f347"
+          "guid": "9da3f5dce761b74eabf5b9bcdeafb623"
         },
         "HierarchyComponent": {
           "parentGuid": "1d030288b35bb34da4d3dfea6de9b6d6",
@@ -40582,7 +40629,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "4924a49cc4e9c844ad0a5dc14236f2dd"
+          "guid": "21315e61e4b3b6428c3e55ba728caf51"
         },
         "ModelComponent": {
           "model": "ART1_clock_low.fbx",
@@ -40665,7 +40712,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "c0ddfa67c750cf449eceba6e2fff7f72"
+          "guid": "82e89f3e477a6e468bb911e6a4cf96da"
         },
         "HierarchyComponent": {
           "parentGuid": "9e174b64175cfb4e8a31b6839caabd10",
@@ -40744,7 +40791,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "d289536e79c3e64389a5644d71d1bc76"
+          "guid": "30b2304b232fed4293c89652d5ef20ec"
         },
         "HierarchyComponent": {
           "parentGuid": "089c36e62ae68b4daf2a779273954df0",
@@ -40823,7 +40870,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "a8acb77b2aa8a042a5accb8576e21cdb"
+          "guid": "30b2304b232fed4293c89652d5ef20ec"
         },
         "HierarchyComponent": {
           "parentGuid": "b30cd06510f2154787f6005fc45cc3ae",
@@ -40902,7 +40949,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "06c19f008fdb4e4a947d6a63c5cc4b23"
+          "guid": "82e89f3e477a6e468bb911e6a4cf96da"
         },
         "HierarchyComponent": {
           "parentGuid": "0026f5405694b643bbb2f4e6edf54b64",
@@ -40981,7 +41028,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "4cc2154671334f4581c7f4af49c5ef27"
+          "guid": "82e89f3e477a6e468bb911e6a4cf96da"
         },
         "HierarchyComponent": {
           "parentGuid": "b38adc30f5b0b549aeff865722f75a74",
@@ -41060,7 +41107,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "eaccac19cc588b4384f8d05c8b3a13c1"
+          "guid": "165039358434dc4083c3cd453d78fc20"
         },
         "HierarchyComponent": {
           "parentGuid": "abfdf98edd8eee4299993934b2516a50",
@@ -41139,7 +41186,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "fdfe0e9992f9b144aca4e2379abe2226"
+          "guid": "165039358434dc4083c3cd453d78fc20"
         },
         "HierarchyComponent": {
           "parentGuid": "75a7b69921675b428600b05cc2590e03",
@@ -41258,7 +41305,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "6dc55e08e4fd984bb3dfecc7dbc7a78f"
+          "guid": "30b2304b232fed4293c89652d5ef20ec"
         },
         "HierarchyComponent": {
           "parentGuid": "5530a0603eeadd4d8a1fcdabae9c784d",
@@ -41337,7 +41384,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "820a21f3ed99ef40940eca3e788ce856"
+          "guid": "30b2304b232fed4293c89652d5ef20ec"
         },
         "HierarchyComponent": {
           "parentGuid": "e3e087f8900f5745a2af8e0966003d81",
@@ -41376,7 +41423,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "1d86c4aeb6ba3148951e55f8bce2534d"
+          "guid": "82e89f3e477a6e468bb911e6a4cf96da"
         },
         "HierarchyComponent": {
           "parentGuid": "478290da72b5fe47b4aed33467999716",
@@ -41455,7 +41502,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "3b08565c0a74a040a5a8b2ac81310577"
+          "guid": "82e89f3e477a6e468bb911e6a4cf96da"
         },
         "HierarchyComponent": {
           "parentGuid": "022af0eb86356c4db609c3284f95464c",
@@ -41534,7 +41581,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "b1bd970e8665d64cb6377885a0298975"
+          "guid": "82e89f3e477a6e468bb911e6a4cf96da"
         },
         "HierarchyComponent": {
           "parentGuid": "c095bc6c522ae64a8a6f51650d0486c8",
@@ -41613,7 +41660,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "4989599d00470c438eb41b45f3f4ae8d"
+          "guid": "82e89f3e477a6e468bb911e6a4cf96da"
         },
         "HierarchyComponent": {
           "parentGuid": "4aae5abac8013e44bacc370b5c326a41",
@@ -41692,7 +41739,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "8bf52c910cea9a4ca6ab87e5420d00ac"
+          "guid": "82e89f3e477a6e468bb911e6a4cf96da"
         },
         "HierarchyComponent": {
           "parentGuid": "7f72bde2e1630a4a90a55e91c390ce46",
@@ -41771,7 +41818,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "edfe353237dbea46adf1f9553cc26e11"
+          "guid": "d1390df6197190429507c752b4df35b6"
         },
         "HierarchyComponent": {
           "parentGuid": "9f6602360104b849bd0957a0cfb94561",
@@ -41810,7 +41857,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "e6dd40c676be1d42b810890bc122444d"
+          "guid": "54ff6cef95c39b46a02f7feaf309b2da"
         },
         "HierarchyComponent": {
           "parentGuid": "9f6602360104b849bd0957a0cfb94561",
@@ -41889,7 +41936,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "38daf5c51edd5b4ebe4288fee2565df3"
+          "guid": "54ff6cef95c39b46a02f7feaf309b2da"
         },
         "HierarchyComponent": {
           "parentGuid": "ccaad93e97b3aa409161df991d2eab55",
@@ -41928,7 +41975,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "4ed50b805b26d146af2ce07a96e2b3a6"
+          "guid": "d1390df6197190429507c752b4df35b6"
         },
         "HierarchyComponent": {
           "parentGuid": "ccaad93e97b3aa409161df991d2eab55",
@@ -42007,7 +42054,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "e498b07dc9f73048a4bcba5914b36f80"
+          "guid": "54ff6cef95c39b46a02f7feaf309b2da"
         },
         "HierarchyComponent": {
           "parentGuid": "8d54249810b224458ff8b156a2bcae1e",
@@ -42046,7 +42093,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "b12f6ef36aa04343b668077fb77bd987"
+          "guid": "d1390df6197190429507c752b4df35b6"
         },
         "HierarchyComponent": {
           "parentGuid": "8d54249810b224458ff8b156a2bcae1e",
@@ -42085,7 +42132,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "56870284a96e464fa04de992dce12d43"
+          "guid": "29ba94211084884f84a1b059a89e8be5"
         },
         "ModelComponent": {
           "model": "ART1_clock_low.fbx",
@@ -42168,7 +42215,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "0f14d2a2af9bc845bc6c2f755d8d205b"
+          "guid": "82e89f3e477a6e468bb911e6a4cf96da"
         },
         "HierarchyComponent": {
           "parentGuid": "cccf713af13b494094d2f30a216be670",
@@ -42247,7 +42294,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "c6b1f79d72011a47871b82f996c70be8"
+          "guid": "30b2304b232fed4293c89652d5ef20ec"
         },
         "HierarchyComponent": {
           "parentGuid": "2ab7ecfb14272f4ba253eef60ab3a124",
@@ -42326,7 +42373,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "379897445a97184580343912ec50f6d6"
+          "guid": "30b2304b232fed4293c89652d5ef20ec"
         },
         "HierarchyComponent": {
           "parentGuid": "3157293f5bb63348b3e04e659e49fa90",
@@ -42445,7 +42492,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "de5a7fcf4693404e9208792e829b9ef7"
+          "guid": "30b2304b232fed4293c89652d5ef20ec"
         },
         "HierarchyComponent": {
           "parentGuid": "2c2635645bc3974a86e53fef77950cd0",
@@ -42524,7 +42571,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "a3bdd4fc5ce557439d3597db0aa7e0d7"
+          "guid": "30b2304b232fed4293c89652d5ef20ec"
         },
         "HierarchyComponent": {
           "parentGuid": "ab7d956f328a0f48a5ccd2c1f9b2a6b7",
@@ -42563,7 +42610,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "0ccc847c002f214d858f44f836892328"
+          "guid": "82e89f3e477a6e468bb911e6a4cf96da"
         },
         "HierarchyComponent": {
           "parentGuid": "e67a4f792527ca4eb91e33b405ba6ce6",
@@ -42642,7 +42689,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "563c6dc197b1a3418bc4b3f526fd8b49"
+          "guid": "165039358434dc4083c3cd453d78fc20"
         },
         "HierarchyComponent": {
           "parentGuid": "deaa8101be4d2847925156780517060f",
@@ -42721,7 +42768,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "bb214c40d40ab6449ee6344b05133bac"
+          "guid": "165039358434dc4083c3cd453d78fc20"
         },
         "HierarchyComponent": {
           "parentGuid": "80b8626da9960543b2fb8c64f4070c25",
@@ -42800,7 +42847,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "a98ddf353caa6d429b7a1edcca3e24b2"
+          "guid": "165039358434dc4083c3cd453d78fc20"
         },
         "HierarchyComponent": {
           "parentGuid": "bc61b7077b64254999e8602346552eda",
@@ -42879,7 +42926,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "204eac7c2c929744b18fa8e8e15ca9a0"
+          "guid": "165039358434dc4083c3cd453d78fc20"
         },
         "HierarchyComponent": {
           "parentGuid": "066195740e254242a2ab51d1d2c427f1",
@@ -42958,7 +43005,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "37fa5a947c65da49baa5ba0d67565685"
+          "guid": "2838af5dcef59443874a3603bff661d1"
         },
         "HierarchyComponent": {
           "parentGuid": "39056290100de44cbb51ded36ed77796",
@@ -43037,7 +43084,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "88f1acd273981f4dbd87c04ecbf0121c"
+          "guid": "9da3f5dce761b74eabf5b9bcdeafb623"
         },
         "HierarchyComponent": {
           "parentGuid": "9c1d77d96d29044ab6e2ff6e9bd4b56e",
@@ -43116,7 +43163,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "523274625829c242b7043755cfbee09a"
+          "guid": "9da3f5dce761b74eabf5b9bcdeafb623"
         },
         "HierarchyComponent": {
           "parentGuid": "1a00e6d97018cb42bd5279aa8a8c065b",
@@ -43195,7 +43242,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "e75d072ecfc62e4aba20d515a7b43a20"
+          "guid": "9da3f5dce761b74eabf5b9bcdeafb623"
         },
         "HierarchyComponent": {
           "parentGuid": "5ebb76c82cc04c49af02427c7a22664e",
@@ -43274,7 +43321,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "ca87ea014843d047bfa48c93e5a189cf"
+          "guid": "82e89f3e477a6e468bb911e6a4cf96da"
         },
         "HierarchyComponent": {
           "parentGuid": "4a713c76b955bc4d992d3016933d133d",
@@ -43353,7 +43400,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "3487158ff58bbd47ad91c3d432a16f3d"
+          "guid": "82e89f3e477a6e468bb911e6a4cf96da"
         },
         "HierarchyComponent": {
           "parentGuid": "3db87d124a97c342be1534b01b654702",
@@ -43472,7 +43519,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "691a37c8e1cf4549a0eda54c0c05b3b1"
+          "guid": "30b2304b232fed4293c89652d5ef20ec"
         },
         "HierarchyComponent": {
           "parentGuid": "27dfa7f909322e40a6d2d90f067a3ba0",
@@ -43551,7 +43598,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "d78fbd73dfae5641beffbf73c223d15c"
+          "guid": "30b2304b232fed4293c89652d5ef20ec"
         },
         "HierarchyComponent": {
           "parentGuid": "bf5ab1e87fe8da4c9d837db6e5268a28",
@@ -43590,7 +43637,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9b2eb3eb5add4647ab95326e807c1ff9"
+          "guid": "82e89f3e477a6e468bb911e6a4cf96da"
         },
         "HierarchyComponent": {
           "parentGuid": "5acd8b5e31f79148918ae358f15f8068",
@@ -43669,7 +43716,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "8bd3f5381599f84ab4fd97de113ef56c"
+          "guid": "82e89f3e477a6e468bb911e6a4cf96da"
         },
         "HierarchyComponent": {
           "parentGuid": "ef57a510b483a8469251de2a31827fed",
@@ -43748,7 +43795,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "e5b76eef2fee0f4b8b2d3a3bb09dcb72"
+          "guid": "30b2304b232fed4293c89652d5ef20ec"
         },
         "HierarchyComponent": {
           "parentGuid": "9c652ef61446d849a7ad5a5422cb1a0b",
@@ -43827,7 +43874,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "6e02fdb9f630484185cc9f43ac20b9d0"
+          "guid": "30b2304b232fed4293c89652d5ef20ec"
         },
         "HierarchyComponent": {
           "parentGuid": "f756bb15cc6a6645b833dccd7f6e7fd3",
@@ -43946,7 +43993,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "ea281dc51e91b64eac71e94cbf3a6678"
+          "guid": "30b2304b232fed4293c89652d5ef20ec"
         },
         "HierarchyComponent": {
           "parentGuid": "ee763a2110edf14c8cdf6c078c36869d",
@@ -44025,7 +44072,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "322c45ded9b62649995d0ec58d6cf461"
+          "guid": "30b2304b232fed4293c89652d5ef20ec"
         },
         "HierarchyComponent": {
           "parentGuid": "7555791a73baff4291bc1efa0678d7e2",
@@ -44064,7 +44111,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "e422685ea78ab54a92e8769b54ccf66b"
+          "guid": "82e89f3e477a6e468bb911e6a4cf96da"
         },
         "HierarchyComponent": {
           "parentGuid": "c4266e66ef67604e98ca7f2c49f5965f",
@@ -44143,7 +44190,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "528da878a9a6df4f881b989eaec574f4"
+          "guid": "13244f2856e23a47a55f515b01f2f6e0"
         },
         "HierarchyComponent": {
           "parentGuid": "395ecb28130d7444aba8d0190292c00a",
@@ -44222,7 +44269,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "bff339d13b44294a889b911a85bda598"
+          "guid": "13244f2856e23a47a55f515b01f2f6e0"
         },
         "HierarchyComponent": {
           "parentGuid": "7161b3551ef2f946877911e9136f002e",
@@ -44301,7 +44348,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "4736908c147ef648aeebfe689cc1e63e"
+          "guid": "82e89f3e477a6e468bb911e6a4cf96da"
         },
         "HierarchyComponent": {
           "parentGuid": "da383e66851f2c4b96e72d487808fb4c",
@@ -44380,7 +44427,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "78af035538330944967a0d900b9c3286"
+          "guid": "82e89f3e477a6e468bb911e6a4cf96da"
         },
         "HierarchyComponent": {
           "parentGuid": "d4cae6ca2f5cdd409cf8afe601c71c8a",
@@ -44459,7 +44506,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "2385dcffc04f9e48b12cddfa53ed8727"
+          "guid": "82e89f3e477a6e468bb911e6a4cf96da"
         },
         "HierarchyComponent": {
           "parentGuid": "67711c2600276947a85fbb0a1ff5b120",
@@ -44538,7 +44585,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "59e6a2c3f3e4ea41a779aaf61861ca47"
+          "guid": "82e89f3e477a6e468bb911e6a4cf96da"
         },
         "HierarchyComponent": {
           "parentGuid": "3fa82e645b09a749be3ed7dfb0d50780",
@@ -44577,7 +44624,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "a39857bd5bb97e429072524fa234836a"
+          "guid": "1088481406765a4991c8d93b95488fb1"
         },
         "ModelComponent": {
           "model": "ART1_clock_low.fbx",
@@ -44620,7 +44667,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "be5e14eacb3ea9419a7a01ba66059421"
+          "guid": "caf61e21d1fafa4b976c1db558220955"
         },
         "ModelComponent": {
           "model": "ART1_clock_low.fbx",
@@ -44703,7 +44750,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "5f66b4f7b6e47747b191e0be2b0820dd"
+          "guid": "13244f2856e23a47a55f515b01f2f6e0"
         },
         "HierarchyComponent": {
           "parentGuid": "c19dfc326951904a8583b2d34ddbf2e4",
@@ -44782,7 +44829,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "71d6ebdece982f4c870c06e5e7b0292d"
+          "guid": "3f34107762bf264495c473ca62acb725"
         },
         "HierarchyComponent": {
           "parentGuid": "5e035937ac70dc46bc28811399a7ff5f",
@@ -44821,7 +44868,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "2f8f16a960e53c4598a28d74c8b935d0"
+          "guid": "4f992f4d36179849a6c5749c4d7c74bb"
         },
         "HierarchyComponent": {
           "parentGuid": "5e035937ac70dc46bc28811399a7ff5f",
@@ -44900,7 +44947,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "f4994a3d6bb62248befc9c50868d7a12"
+          "guid": "4f992f4d36179849a6c5749c4d7c74bb"
         },
         "HierarchyComponent": {
           "parentGuid": "914e8f4b1e1c7a46a8cc17dc50a99786",
@@ -44939,7 +44986,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "1060ac17e917154987ff1e87291cbd04"
+          "guid": "3f34107762bf264495c473ca62acb725"
         },
         "HierarchyComponent": {
           "parentGuid": "914e8f4b1e1c7a46a8cc17dc50a99786",
@@ -45058,7 +45105,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "d570642d28f3844eb391857290cda3ff"
+          "guid": "30b2304b232fed4293c89652d5ef20ec"
         },
         "HierarchyComponent": {
           "parentGuid": "032d94964089d34d9a4c6ab7af7e7c09",
@@ -45137,7 +45184,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "4790a4f3da85e34e84704a59c3c1d628"
+          "guid": "30b2304b232fed4293c89652d5ef20ec"
         },
         "HierarchyComponent": {
           "parentGuid": "2d5bd75c28525549a47835cc2cce8937",
@@ -45176,7 +45223,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "d1c19b3231f24a40989ff462f6bfadbf"
+          "guid": "82e89f3e477a6e468bb911e6a4cf96da"
         },
         "HierarchyComponent": {
           "parentGuid": "ab86da2c9f01764eb02f4e23a7856e26",
@@ -45255,7 +45302,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "639e26ee0111d04ea68686042c168380"
+          "guid": "82e89f3e477a6e468bb911e6a4cf96da"
         },
         "HierarchyComponent": {
           "parentGuid": "42045ebcbadc1f45b7f519a9c05f8e61",
@@ -45334,7 +45381,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "d4bcf42b91470249b5d155e39c3d09d6"
+          "guid": "30b2304b232fed4293c89652d5ef20ec"
         },
         "HierarchyComponent": {
           "parentGuid": "073186ee66b8014887b340bbf7d865bf",
@@ -45413,7 +45460,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "2297f787b5c1b74ca4f16257cb039870"
+          "guid": "30b2304b232fed4293c89652d5ef20ec"
         },
         "HierarchyComponent": {
           "parentGuid": "2097ac32b8709445b81dc24a466dd2aa",
@@ -45492,7 +45539,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "fa5a21fcb7f8f24a811377043f80cea8"
+          "guid": "82e89f3e477a6e468bb911e6a4cf96da"
         },
         "HierarchyComponent": {
           "parentGuid": "d43c7e93e66a1f4886233a13b4b76872",
@@ -45571,7 +45618,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "c555e4cce1abb2478bc931e29e1d43b4"
+          "guid": "82e89f3e477a6e468bb911e6a4cf96da"
         },
         "HierarchyComponent": {
           "parentGuid": "bc6db6f332527444b65ab11ff07c0955",
@@ -45650,7 +45697,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "99134c81b3cef440a48354ddf20976c9"
+          "guid": "d1390df6197190429507c752b4df35b6"
         },
         "HierarchyComponent": {
           "parentGuid": "c2e9f6157352724d9a9f9f9e4b44049a",
@@ -45689,7 +45736,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "aef9c4e8f0a0b943ae013bf0e8b218c2"
+          "guid": "54ff6cef95c39b46a02f7feaf309b2da"
         },
         "HierarchyComponent": {
           "parentGuid": "c2e9f6157352724d9a9f9f9e4b44049a",
@@ -45768,7 +45815,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "291414281d3800408fc69992a9c01e2b"
+          "guid": "d1390df6197190429507c752b4df35b6"
         },
         "HierarchyComponent": {
           "parentGuid": "fa9eae4abe3acf40880da7998941c150",
@@ -45807,7 +45854,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "3882dc0b44056d4392efade10f0ea232"
+          "guid": "54ff6cef95c39b46a02f7feaf309b2da"
         },
         "HierarchyComponent": {
           "parentGuid": "fa9eae4abe3acf40880da7998941c150",
@@ -45846,7 +45893,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "c6b6cc05f4bc7142a103e67b63935982"
+          "guid": "321df9607c29f2449635182df7b58cd7"
         },
         "ModelComponent": {
           "model": "ART1_clock_low.fbx",
@@ -45979,7 +46026,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "5b8ec18220a850468d5d1e9099bfb2b7"
+          "guid": "54ff6cef95c39b46a02f7feaf309b2da"
         },
         "HierarchyComponent": {
           "parentGuid": "777a39841ac33147ba9679f72d67fa84",
@@ -46018,7 +46065,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "2aced7042163a64a919dd88df3597a02"
+          "guid": "d1390df6197190429507c752b4df35b6"
         },
         "HierarchyComponent": {
           "parentGuid": "777a39841ac33147ba9679f72d67fa84",
@@ -46147,7 +46194,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "545c357fae008241a7ed1403012cb405"
+          "guid": "165039358434dc4083c3cd453d78fc20"
         },
         "HierarchyComponent": {
           "parentGuid": "e1cb900db102f643a6b927dab765c646",
@@ -46226,7 +46273,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "7bd54d7311fb3841945be5a192e67f95"
+          "guid": "165039358434dc4083c3cd453d78fc20"
         },
         "HierarchyComponent": {
           "parentGuid": "ee99e7ea76a5af44b14190b6c7d220c6",
@@ -46265,7 +46312,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "3ffba358f5c3c54dbf5fde44a1d3165d"
+          "guid": "506f28f18d94e646949d80dc0b8883b0"
         },
         "ModelComponent": {
           "model": "ART1_clock_low.fbx",
@@ -46348,7 +46395,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "f2d8c620f27e6640aa01ec165155be25"
+          "guid": "13244f2856e23a47a55f515b01f2f6e0"
         },
         "HierarchyComponent": {
           "parentGuid": "7ded8ed94af0234183581517c4289d5b",
@@ -46427,7 +46474,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "e83a30e80dd079468da3930e3e710e76"
+          "guid": "13244f2856e23a47a55f515b01f2f6e0"
         },
         "HierarchyComponent": {
           "parentGuid": "dcc98e4ce4d4d84ea8410c8e7274b50d",
@@ -46506,7 +46553,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "8f7ee76054a8874f8dfbbc9bfc3c6316"
+          "guid": "165039358434dc4083c3cd453d78fc20"
         },
         "HierarchyComponent": {
           "parentGuid": "f7b305ee07d6704fa7d7d6af8cb02f30",
@@ -46545,7 +46592,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "1d1ed7440fb3344b8d903ad5eaef580e"
+          "guid": "382861486facf94a947cae17769829ad"
         },
         "ModelComponent": {
           "model": "ART1_clock_low.fbx",
@@ -46588,7 +46635,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "e2dc4fa9ee37404fbda560324ead5a46"
+          "guid": "c68ca7be595bc44abff34a28dbeff3cf"
         },
         "ModelComponent": {
           "model": "ART1_clock_low.fbx",
@@ -47890,6 +47937,2012 @@
             }
           ]
         }
+      }
+    },
+    {
+      "id": 955,
+      "components": {
+        "IDComponent": {
+          "guid": "f1ab9679ce9a764f9ec3f9d494fa6d22"
+        },
+        "Transform": {
+          "position": [
+            -0.050999999046325687,
+            4.874000072479248,
+            -0.3400000035762787
+          ],
+          "rotation": [
+            9.099582598537381e-7,
+            8.280240100348724e-13,
+            9.099582598537381e-7,
+            1.0
+          ],
+          "scale": [
+            0.009999999776482582,
+            0.019999999552965165,
+            0.009999999776482582
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Wall lights",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_WallLight.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "ad0bbaaef448434a825115dd852b9d79",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 956,
+      "components": {
+        "IDComponent": {
+          "guid": "b0c3fb76b4a70f4fa283c5ad9276d9f7"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_WallLight.fbx_Bulb4_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "fe22843a2c58ea40a252cc3610a3105a"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "f1ab9679ce9a764f9ec3f9d494fa6d22",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 957,
+      "components": {
+        "IDComponent": {
+          "guid": "391f46affd57f640b50e12ff28e0cd1a"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_WallLight.fbx_Bulb4_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "0926a8d1ccfc734eb766a0aebca7836c"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "f1ab9679ce9a764f9ec3f9d494fa6d22",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 958,
+      "components": {
+        "IDComponent": {
+          "guid": "d3b90b4ab0798a438f9ff27769d02824"
+        },
+        "Transform": {
+          "position": [
+            0.03799999877810478,
+            13.562999725341797,
+            -0.210999995470047
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.019999999552965165,
+            0.03999999910593033,
+            0.019999999552965165
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Wall lights",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_WallLight.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "cdde5e734369c74abb6aab481df463d4",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 959,
+      "components": {
+        "IDComponent": {
+          "guid": "2dd2a0c35f12044189e707e2c14daa0a"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_WallLight.fbx_Bulb4_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "fe22843a2c58ea40a252cc3610a3105a"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "d3b90b4ab0798a438f9ff27769d02824",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 960,
+      "components": {
+        "IDComponent": {
+          "guid": "bc2436f7a3e0824fba1b2ed476e5adce"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_WallLight.fbx_Bulb4_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "dc913f39317be945a40b3fc7cbda8658"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "d3b90b4ab0798a438f9ff27769d02824",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 961,
+      "components": {
+        "IDComponent": {
+          "guid": "ca5a9c52c0819740996c5043a762aff5"
+        },
+        "Transform": {
+          "position": [
+            0.027000000700354577,
+            8.600000381469727,
+            -0.36000001430511477
+          ],
+          "rotation": [
+            -0.000017670647139311769,
+            4.533424624636646e-16,
+            -2.5655113450318013e-11,
+            1.0
+          ],
+          "scale": [
+            0.009999999776482582,
+            0.019999999552965165,
+            0.009999999776482582
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Wall lights",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_WallLight.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "5277a8e3aa52bd4da696cc54c342786f",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 962,
+      "components": {
+        "IDComponent": {
+          "guid": "2b5545d5647e404c9168c7c125abccc8"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_WallLight.fbx_Bulb4_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "fe22843a2c58ea40a252cc3610a3105a"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "ca5a9c52c0819740996c5043a762aff5",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 963,
+      "components": {
+        "IDComponent": {
+          "guid": "e070fc9ae82be34db93538b05cd80d01"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_WallLight.fbx_Bulb4_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "5f46c805520ee940a08f4b88e66ed87c"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "ca5a9c52c0819740996c5043a762aff5",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 964,
+      "components": {
+        "IDComponent": {
+          "guid": "a18add0bcd5cf840a311734715f07745"
+        },
+        "Transform": {
+          "position": [
+            42.42100143432617,
+            15.552000045776368,
+            -228.28500366210938
+          ],
+          "rotation": [
+            -9.09962807327247e-7,
+            -1.0,
+            -9.09962807327247e-7,
+            -4.371221606902509e-8
+          ],
+          "scale": [
+            0.03999999910593033,
+            0.03999999910593033,
+            0.03999999910593033
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Ceilling lights",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_CeilingLight.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "321b3e7c1d89db4498257e775f32e9d1",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 965,
+      "components": {
+        "IDComponent": {
+          "guid": "6cd928a0e48aa245adf3b772f6dbd07f"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_CeilingLight.fbx_pCylinder3_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "9951b3d68d7ee04a9141ac9287fc7944"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "a18add0bcd5cf840a311734715f07745",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 966,
+      "components": {
+        "IDComponent": {
+          "guid": "1747c0fd749eab409ae1fa21243f9bef"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_CeilingLight.fbx_pCylinder3_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "96fba8f71323ba4aa5d617b0cffe8d5d"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "a18add0bcd5cf840a311734715f07745",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 967,
+      "components": {
+        "IDComponent": {
+          "guid": "0b6a40469ea45f48a8911e169ab21d83"
+        },
+        "Transform": {
+          "position": [
+            10.168999671936036,
+            10.595999717712403,
+            -22.058000564575197
+          ],
+          "rotation": [
+            -9.099629210140847e-7,
+            1.0,
+            -9.099629210140847e-7,
+            -4.371056050445077e-8
+          ],
+          "scale": [
+            0.029999999329447748,
+            0.029999999329447748,
+            0.029999999329447748
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Wall lights",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_WallLight.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "3fbee5b2a2a144489ac15883f91a6fd3",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 968,
+      "components": {
+        "IDComponent": {
+          "guid": "7952474fe5281f4a80dc504aa7d0d362"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_WallLight.fbx_Bulb4_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "fe22843a2c58ea40a252cc3610a3105a"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "0b6a40469ea45f48a8911e169ab21d83",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 969,
+      "components": {
+        "IDComponent": {
+          "guid": "ee8e49f1dae2d74bbcafebc78f21fe73"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_WallLight.fbx_Bulb4_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "b5a2cecd3661544f9bd307b705cff48a"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "0b6a40469ea45f48a8911e169ab21d83",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 970,
+      "components": {
+        "IDComponent": {
+          "guid": "2d8ca268a81771449d9938dc2871dacd"
+        },
+        "Transform": {
+          "position": [
+            17.650999069213868,
+            6.952000141143799,
+            -12.295999526977539
+          ],
+          "rotation": [
+            0.0,
+            0.7071067690849304,
+            0.0,
+            0.7071067690849304
+          ],
+          "scale": [
+            0.029999999329447748,
+            0.029999999329447748,
+            0.029999999329447748
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Wall lights",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_WallLight.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "3fbee5b2a2a144489ac15883f91a6fd3",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 971,
+      "components": {
+        "IDComponent": {
+          "guid": "8e056ae5a1d3524ca26ed89c8fdece61"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_WallLight.fbx_Bulb4_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "fe22843a2c58ea40a252cc3610a3105a"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "2d8ca268a81771449d9938dc2871dacd",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 972,
+      "components": {
+        "IDComponent": {
+          "guid": "3cfa8999e3963343a13e98cac045311b"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_WallLight.fbx_Bulb4_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "b1154b6acb7e69419a0d51c3e63decbe"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "2d8ca268a81771449d9938dc2871dacd",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 973,
+      "components": {
+        "IDComponent": {
+          "guid": "c57787eb4d97f94288a362ed460236d9"
+        },
+        "Transform": {
+          "position": [
+            -3.0859999656677248,
+            8.49899959564209,
+            -16.170000076293947
+          ],
+          "rotation": [
+            9.099629210140847e-7,
+            -1.0,
+            -9.099629210140847e-7,
+            8.280325210219264e-13
+          ],
+          "scale": [
+            0.029999999329447748,
+            0.029999999329447748,
+            0.029999999329447748
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Wall lights",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_WallLight.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "3fbee5b2a2a144489ac15883f91a6fd3",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 974,
+      "components": {
+        "IDComponent": {
+          "guid": "b011a819b4f46c44851da4b7aa299ae6"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_WallLight.fbx_Bulb4_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "fe22843a2c58ea40a252cc3610a3105a"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "c57787eb4d97f94288a362ed460236d9",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 975,
+      "components": {
+        "IDComponent": {
+          "guid": "aecdd48c1e61694095ba0348f2246d4b"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_WallLight.fbx_Bulb4_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "0364e86db4384b4893eed46e10085a9b"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "c57787eb4d97f94288a362ed460236d9",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 976,
+      "components": {
+        "IDComponent": {
+          "guid": "1e5b32082e858243bbb84826dc9aff76"
+        },
+        "Transform": {
+          "position": [
+            -2.5169999599456789,
+            8.795999526977539,
+            -17.283000946044923
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.029999999329447748,
+            0.029999999329447748,
+            0.029999999329447748
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Wall lights",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_WallLight.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "3fbee5b2a2a144489ac15883f91a6fd3",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 977,
+      "components": {
+        "IDComponent": {
+          "guid": "d345e6cdbd2c8b46ba473ce2dd698cd8"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_WallLight.fbx_Bulb4_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "fe22843a2c58ea40a252cc3610a3105a"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "1e5b32082e858243bbb84826dc9aff76",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 978,
+      "components": {
+        "IDComponent": {
+          "guid": "4d926a346a6fc0458626eddd121b4db6"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_WallLight.fbx_Bulb4_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "65d3b96f4f94ed48bacbefb4fa65fe9c"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "1e5b32082e858243bbb84826dc9aff76",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 979,
+      "components": {
+        "IDComponent": {
+          "guid": "301f011612690b48b20722d8af209e29"
+        },
+        "Transform": {
+          "position": [
+            -0.050999999046325687,
+            4.673999786376953,
+            0.2770000100135803
+          ],
+          "rotation": [
+            -9.099629210140847e-7,
+            1.0,
+            -9.099629210140847e-7,
+            8.280325210219264e-13
+          ],
+          "scale": [
+            0.009999999776482582,
+            0.019999999552965165,
+            0.009999999776482582
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Wall lights",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_WallLight.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "ad0bbaaef448434a825115dd852b9d79",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 980,
+      "components": {
+        "IDComponent": {
+          "guid": "41abd6af2067a24d8f485555d9b6bebd"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_WallLight.fbx_Bulb4_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "fe22843a2c58ea40a252cc3610a3105a"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "301f011612690b48b20722d8af209e29",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 981,
+      "components": {
+        "IDComponent": {
+          "guid": "07c1465dc160634890edb2d35693362b"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_WallLight.fbx_Bulb4_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "d4fe9077c6c06b459481eb6114fef8af"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "301f011612690b48b20722d8af209e29",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 982,
+      "components": {
+        "IDComponent": {
+          "guid": "3bde945d768a5f4a9d00cff50cf7c590"
+        },
+        "Transform": {
+          "position": [
+            -0.02800000086426735,
+            8.600000381469727,
+            0.23600000143051148
+          ],
+          "rotation": [
+            -9.099629210140847e-7,
+            1.0,
+            -9.099629210140847e-7,
+            8.280325210219264e-13
+          ],
+          "scale": [
+            0.009999999776482582,
+            0.019999999552965165,
+            0.009999999776482582
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Wall lights",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_WallLight.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "5277a8e3aa52bd4da696cc54c342786f",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 983,
+      "components": {
+        "IDComponent": {
+          "guid": "872e2c9d9124364a817a545fd9f32ed4"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_WallLight.fbx_Bulb4_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "fe22843a2c58ea40a252cc3610a3105a"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "3bde945d768a5f4a9d00cff50cf7c590",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 984,
+      "components": {
+        "IDComponent": {
+          "guid": "a1ee41fbfeff014abf98157779ff1575"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_WallLight.fbx_Bulb4_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "397e190d1178924bb5b132fe72b4c933"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "3bde945d768a5f4a9d00cff50cf7c590",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 985,
+      "components": {
+        "IDComponent": {
+          "guid": "8cb620add0c15649be5a9af0b77cf618"
+        },
+        "Transform": {
+          "position": [
+            0.03799999877810478,
+            13.562999725341797,
+            0.1889999955892563
+          ],
+          "rotation": [
+            -9.099629210140847e-7,
+            1.0,
+            -9.099629210140847e-7,
+            8.280325210219264e-13
+          ],
+          "scale": [
+            0.019999999552965165,
+            0.03999999910593033,
+            0.019999999552965165
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Wall lights",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_WallLight.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "cdde5e734369c74abb6aab481df463d4",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 986,
+      "components": {
+        "IDComponent": {
+          "guid": "7c0e5bf9aaa1dd41816b015bc722f855"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_WallLight.fbx_Bulb4_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "fe22843a2c58ea40a252cc3610a3105a"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "8cb620add0c15649be5a9af0b77cf618",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 987,
+      "components": {
+        "IDComponent": {
+          "guid": "294a31a0700e7d46b1066ec3d065150c"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_WallLight.fbx_Bulb4_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "5b246235967d3947bc170b44797146e2"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "8cb620add0c15649be5a9af0b77cf618",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 988,
+      "components": {
+        "IDComponent": {
+          "guid": "825f57bade4d54479187c2d2391c7bbf"
+        },
+        "Transform": {
+          "position": [
+            25.92099952697754,
+            16.95199966430664,
+            -225.98500061035157
+          ],
+          "rotation": [
+            9.099628641706659e-7,
+            1.0,
+            9.099628641706659e-7,
+            4.371221606902509e-8
+          ],
+          "scale": [
+            0.03999999910593033,
+            0.03999999910593033,
+            0.03999999910593033
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Ceilling lights",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_CeilingLight.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "321b3e7c1d89db4498257e775f32e9d1",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 989,
+      "components": {
+        "IDComponent": {
+          "guid": "df6c512cc5464e4abe2da9e812a83f6e"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_CeilingLight.fbx_pCylinder3_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "96fba8f71323ba4aa5d617b0cffe8d5d"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "825f57bade4d54479187c2d2391c7bbf",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 990,
+      "components": {
+        "IDComponent": {
+          "guid": "5a91c4f6a510e64d8db31b90e417c842"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_CeilingLight.fbx_pCylinder3_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "9951b3d68d7ee04a9141ac9287fc7944"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "825f57bade4d54479187c2d2391c7bbf",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 991,
+      "components": {
+        "IDComponent": {
+          "guid": "4b8761965df5a9459c40f8752e99543d"
+        },
+        "Transform": {
+          "position": [
+            32.62099838256836,
+            16.95199966430664,
+            -219.68499755859376
+          ],
+          "rotation": [
+            9.099628641706659e-7,
+            1.0,
+            9.099628641706659e-7,
+            4.371221606902509e-8
+          ],
+          "scale": [
+            0.03999999910593033,
+            0.03999999910593033,
+            0.03999999910593033
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Ceilling lights",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_CeilingLight.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "321b3e7c1d89db4498257e775f32e9d1",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 992,
+      "components": {
+        "IDComponent": {
+          "guid": "e9fe8991b4b2384c8fb33f875ccd7e4a"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_CeilingLight.fbx_pCylinder3_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "96fba8f71323ba4aa5d617b0cffe8d5d"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "4b8761965df5a9459c40f8752e99543d",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 993,
+      "components": {
+        "IDComponent": {
+          "guid": "fcb5620d43e9dc4aa6a383e800fda19e"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_CeilingLight.fbx_pCylinder3_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "9951b3d68d7ee04a9141ac9287fc7944"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "4b8761965df5a9459c40f8752e99543d",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 994,
+      "components": {
+        "IDComponent": {
+          "guid": "f48bc430a53b064ba579a7ab706ae873"
+        },
+        "Transform": {
+          "position": [
+            30.92099952697754,
+            16.95199966430664,
+            -200.88499450683595
+          ],
+          "rotation": [
+            9.099628641706659e-7,
+            1.0,
+            9.099628641706659e-7,
+            4.371221606902509e-8
+          ],
+          "scale": [
+            0.03999999910593033,
+            0.03999999910593033,
+            0.03999999910593033
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Ceilling lights",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_CeilingLight.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "321b3e7c1d89db4498257e775f32e9d1",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 995,
+      "components": {
+        "IDComponent": {
+          "guid": "96846a66fd222c439d2020aa6fcf7e03"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_CeilingLight.fbx_pCylinder3_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "96fba8f71323ba4aa5d617b0cffe8d5d"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "f48bc430a53b064ba579a7ab706ae873",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 996,
+      "components": {
+        "IDComponent": {
+          "guid": "d4330ffaaa05774aa015910d82ebdbb1"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_CeilingLight.fbx_pCylinder3_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "9951b3d68d7ee04a9141ac9287fc7944"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "f48bc430a53b064ba579a7ab706ae873",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 997,
+      "components": {
+        "IDComponent": {
+          "guid": "bf55ed3dce276a469458b9720faec7d5"
+        },
+        "Transform": {
+          "position": [
+            40.42100143432617,
+            16.95199966430664,
+            -209.38499450683595
+          ],
+          "rotation": [
+            9.099628641706659e-7,
+            1.0,
+            9.099628641706659e-7,
+            4.371221606902509e-8
+          ],
+          "scale": [
+            0.03999999910593033,
+            0.03999999910593033,
+            0.03999999910593033
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Ceilling lights",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_CeilingLight.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "321b3e7c1d89db4498257e775f32e9d1",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 998,
+      "components": {
+        "IDComponent": {
+          "guid": "0007657e9f6caf4fa3168246a842bd01"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_CeilingLight.fbx_pCylinder3_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "96fba8f71323ba4aa5d617b0cffe8d5d"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "bf55ed3dce276a469458b9720faec7d5",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 999,
+      "components": {
+        "IDComponent": {
+          "guid": "80badddf68a58f4ead33150fea41b5de"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_CeilingLight.fbx_pCylinder3_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "9951b3d68d7ee04a9141ac9287fc7944"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "bf55ed3dce276a469458b9720faec7d5",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1000,
+      "components": {
+        "IDComponent": {
+          "guid": "869612ae17690b4481000f2492dd9591"
+        },
+        "Transform": {
+          "position": [
+            23.42099952697754,
+            16.95199966430664,
+            -209.0850067138672
+          ],
+          "rotation": [
+            9.099628641706659e-7,
+            1.0,
+            9.099628641706659e-7,
+            4.371221606902509e-8
+          ],
+          "scale": [
+            0.03999999910593033,
+            0.03999999910593033,
+            0.03999999910593033
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Ceilling lights",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_CeilingLight.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "321b3e7c1d89db4498257e775f32e9d1",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1001,
+      "components": {
+        "IDComponent": {
+          "guid": "5d6a15619a90b4418523807e7aebf374"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_CeilingLight.fbx_pCylinder3_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "96fba8f71323ba4aa5d617b0cffe8d5d"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "869612ae17690b4481000f2492dd9591",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1002,
+      "components": {
+        "IDComponent": {
+          "guid": "72f84da32121174caf58d9f5ffd731c3"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_CeilingLight.fbx_pCylinder3_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "9951b3d68d7ee04a9141ac9287fc7944"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "869612ae17690b4481000f2492dd9591",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1003,
+      "components": {
+        "IDComponent": {
+          "guid": "44eb9cbc17e75041896a5e99af0032c0"
+        },
+        "Transform": {
+          "position": [
+            24.22100067138672,
+            16.95199966430664,
+            -188.98500061035157
+          ],
+          "rotation": [
+            9.099628641706659e-7,
+            1.0,
+            9.099628641706659e-7,
+            4.371221606902509e-8
+          ],
+          "scale": [
+            0.03999999910593033,
+            0.03999999910593033,
+            0.03999999910593033
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Ceilling lights",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_CeilingLight.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "321b3e7c1d89db4498257e775f32e9d1",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1004,
+      "components": {
+        "IDComponent": {
+          "guid": "ba73a8ccab12d04198726d01b892f7c7"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_CeilingLight.fbx_pCylinder3_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "96fba8f71323ba4aa5d617b0cffe8d5d"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "44eb9cbc17e75041896a5e99af0032c0",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1005,
+      "components": {
+        "IDComponent": {
+          "guid": "6bc33bb86055e14790bdce2c66dfa82d"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_CeilingLight.fbx_pCylinder3_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "9951b3d68d7ee04a9141ac9287fc7944"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "44eb9cbc17e75041896a5e99af0032c0",
+          "depth": 2
+        },
+        "GlobalTransform": {}
       }
     }
   ],

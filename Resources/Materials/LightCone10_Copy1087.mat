@@ -4,9 +4,9 @@
             "type": "vec4",
             "value": [
                 1.0,
-                1.0,
-                1.0,
-                1.0
+                0.0,
+                0.0,
+                0.06499999761581421
             ]
         },
         "materialMetallic": {
@@ -15,19 +15,19 @@
         },
         "materialRoughness": {
             "type": "float",
-            "value": 0.5
+            "value": 0.5370000004768372
         },
         "materialEmissive": {
             "type": "vec3",
             "value": [
-                0.0,
+                1.0,
                 0.0,
                 0.0
             ]
         },
         "materialEmissiveIntensity": {
             "type": "float",
-            "value": 1.0
+            "value": 0.5
         },
         "materialCastsShadows": {
             "type": "bool",
@@ -35,15 +35,23 @@
         },
         "materialHasAlbedoMap": {
             "type": "bool",
-            "value": true
+            "value": false
+        },
+        "materialHasNormalMap": {
+            "type": "bool",
+            "value": false
+        },
+        "materialHasRoughnessMap": {
+            "type": "bool",
+            "value": false
+        },
+        "materialHasMetallicMap": {
+            "type": "bool",
+            "value": false
         },
         "materialHasAoMap": {
             "type": "bool",
             "value": false
-        },
-        "materialAlbedoMap": {
-            "type": "texture2d",
-            "value": "../Ermine-Game.lion_rcdbase/12345678-1234-1234-1234-123456789ABC/Windows.platform/Data/11275070067773030443.dds"
         }
     },
     "uvTransform": {

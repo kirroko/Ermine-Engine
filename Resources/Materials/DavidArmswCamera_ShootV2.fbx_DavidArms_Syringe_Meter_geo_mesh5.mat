@@ -3,9 +3,9 @@
         "materialAlbedo": {
             "type": "vec4",
             "value": [
-                1.0,
-                1.0,
-                1.0,
+                0.800000011920929,
+                0.800000011920929,
+                0.800000011920929,
                 1.0
             ]
         },
@@ -15,7 +15,11 @@
         },
         "materialRoughness": {
             "type": "float",
-            "value": 0.5
+            "value": 0.30000001192092898
+        },
+        "materialAo": {
+            "type": "float",
+            "value": 1.0
         },
         "materialEmissive": {
             "type": "vec3",
@@ -27,7 +31,15 @@
         },
         "materialEmissiveIntensity": {
             "type": "float",
+            "value": 0.0
+        },
+        "materialNormalStrength": {
+            "type": "float",
             "value": 1.0
+        },
+        "materialShadingModel": {
+            "type": "int",
+            "value": 0
         },
         "materialCastsShadows": {
             "type": "bool",
@@ -35,15 +47,27 @@
         },
         "materialHasAlbedoMap": {
             "type": "bool",
-            "value": true
+            "value": false
+        },
+        "materialHasNormalMap": {
+            "type": "bool",
+            "value": false
+        },
+        "materialHasRoughnessMap": {
+            "type": "bool",
+            "value": false
+        },
+        "materialHasMetallicMap": {
+            "type": "bool",
+            "value": false
         },
         "materialHasAoMap": {
             "type": "bool",
             "value": false
         },
-        "materialAlbedoMap": {
-            "type": "texture2d",
-            "value": "../Ermine-Game.lion_rcdbase/12345678-1234-1234-1234-123456789ABC/Windows.platform/Data/11275070067773030443.dds"
+        "materialHasEmissiveMap": {
+            "type": "bool",
+            "value": false
         }
     },
     "uvTransform": {

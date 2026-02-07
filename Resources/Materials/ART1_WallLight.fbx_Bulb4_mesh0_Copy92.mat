@@ -1,5 +1,46 @@
 {
     "parameters": {
+        "materialAlbedo": {
+            "type": "vec4",
+            "value": [
+                0.800000011920929,
+                0.800000011920929,
+                0.800000011920929,
+                1.0
+            ]
+        },
+        "materialMetallic": {
+            "type": "float",
+            "value": 0.0
+        },
+        "materialRoughness": {
+            "type": "float",
+            "value": 0.30000001192092898
+        },
+        "materialAo": {
+            "type": "float",
+            "value": 1.0
+        },
+        "materialEmissive": {
+            "type": "vec3",
+            "value": [
+                0.0,
+                0.0,
+                0.0
+            ]
+        },
+        "materialEmissiveIntensity": {
+            "type": "float",
+            "value": 0.0
+        },
+        "materialNormalStrength": {
+            "type": "float",
+            "value": 1.0
+        },
+        "materialShadingModel": {
+            "type": "int",
+            "value": 0
+        },
         "materialCastsShadows": {
             "type": "bool",
             "value": true
@@ -23,6 +64,10 @@
         "materialHasAoMap": {
             "type": "bool",
             "value": true
+        },
+        "materialHasEmissiveMap": {
+            "type": "bool",
+            "value": false
         },
         "materialAlbedoMap": {
             "type": "texture2d",
