@@ -106,6 +106,9 @@ namespace Ermine::ImguiUI
 
 		Ermine::ResourcePipeline* m_Pipeline = nullptr; // Pointer to the resource pipeline
 
+		std::atomic<bool> preloadInProgress{ false };
+		std::thread preloadThread;
+
 		/**
 		 * @brief Default constructor that initializes the asset browser state.
 		 */
@@ -267,6 +270,12 @@ namespace Ermine::ImguiUI
 		 * @param dir Path to the directory containing texture assets.
 		 */
 		void PreloadAllTextureAssets(const std::filesystem::path& dir);
+
+		/**
+		 * @brief Preloads all texture assets from the specified directory asynchronously.
+		 * @param dir Path to the directory containing texture assets.
+		 */
+		void PreloadAllTextureAssetsAsync(const std::filesystem::path& dir);
 
 		/**
 		 * @brief Checks and updates the import status of the given asset.
