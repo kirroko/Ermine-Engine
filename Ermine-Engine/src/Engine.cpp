@@ -591,7 +591,7 @@ void engine::Shutdown()
 	cfg.themeMode = SettingsGUI::GetMode();
 
 #if defined(EE_EDITOR)
-	cfg.title = "Ermine Editor 0.3";
+	cfg.title = "Ermine Editor 0.4";
 #else
 	cfg.title = "Machina";
 #endif
@@ -619,7 +619,16 @@ void engine::Shutdown()
 	}
 #endif
 
+	if (auto scriptSys = ECS::GetInstance().GetSystem<scripting::ScriptSystem>())
+		scriptSys->CleanupAllScripts();
+
 	job::Shutdown();
+
+	AssetManager::GetInstance().Clear();
+	ECS::GetInstance().GetSystem<Physics>()->Shutdown();
+	ECS::GetInstance().GetSystem<NavMeshSystem>()->Shutdown();
+	ECS::GetInstance().GetSystem<VideoManager>()->Shutdown();
+	graphics::GPUProfiler::Shutdown();
 
 	ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->m_ScriptEngine->Shutdown();
 	AudioSystem::Shutdown();
