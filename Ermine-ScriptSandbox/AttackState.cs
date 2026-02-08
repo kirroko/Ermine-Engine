@@ -39,6 +39,11 @@ public class Attack : MonoBehaviour
     public static bool RightClickStunArmed = false;
     private float armTimer = 0.0f;
 
+    // replace to this
+    // Name of the entity with UIHealthbarComponent (must match your scene)
+    //public string playerHealthBarName = "Healthbar";
+    //private GameObject playerHealthBar;
+
     private void TryStun()
     {
         if (isStunned)
@@ -63,6 +68,9 @@ public class Attack : MonoBehaviour
         CachePlayerIfNeeded();
         tickTimer = tickInterval;
         loseSightTimer = loseSightGraceTime;
+
+        // Find healthbar by name (replace to this)
+        //playerHealthBar = GameObject.Find(playerHealthBarName);
     }
 
     private bool HasLineOfSightToPlayer()
@@ -176,6 +184,14 @@ public class Attack : MonoBehaviour
 
         GameObject bar = GameplayHUD.GetHealthBar();
         GameplayHUD.SetHealth(bar, health);
+
+        // replace to this
+        //if (playerHealthBar == null) return;
+
+        //float health = GameplayHUD.GetHealth(playerHealthBar);
+        //health = Math.Max(0, health - dmg);
+
+        //GameplayHUD.SetHealth(playerHealthBar, health);
     }
 
     void OnCollisionEnter(Collision col)
