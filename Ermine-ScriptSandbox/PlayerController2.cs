@@ -5,7 +5,7 @@ public class PlayerController2 : MonoBehaviour
 {
     private Transform cam;
     private AudioComponent audioComp;
-    private Animator anim;
+    //private Animator anim;
 
     public float mouseHorSens = 0.1f;
     public float mouseVertSens = 0.1f;
@@ -44,7 +44,7 @@ public class PlayerController2 : MonoBehaviour
     void Start()
     {
         cam = GameObject.Find("Main Camera").GetComponent<Transform>();
-        anim = GameObject.Find("PlayerAnim").GetComponent<Animator>();
+        //anim = GameObject.Find("PlayerAnim").GetComponent<Animator>();
         //HandleCameraLerp();
         audioComp = GetComponent<AudioComponent>();
         if (audioComp == null)
@@ -243,8 +243,8 @@ public class PlayerController2 : MonoBehaviour
 
     void HandleAnimUpdate()
     {
-        anim.SetBool("IsGrounded", isGrounded);
-        anim.SetBool("IsMoving", movementKeyPressed);
+        //anim.SetBool("IsGrounded", isGrounded);
+        //anim.SetBool("IsMoving", movementKeyPressed);
     }
 
     //private ulong GetEntityID(RaycastHit hit)
