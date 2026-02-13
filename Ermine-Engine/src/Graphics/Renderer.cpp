@@ -6519,6 +6519,7 @@ void Renderer::RenderForwardPass(const Mtx44& view, const Mtx44& projection)
 		glBindFramebuffer(GL_FRAMEBUFFER, m_PostProcessBuffer->FBO);
 		glViewport(0, 0, m_PostProcessBuffer->width, m_PostProcessBuffer->height);
 		gpuParticles->Render(view, projection, cameraPos);
+		gpuParticles->RenderDebug(view, projection);
 	}
 
 	// Restore render state

@@ -2967,6 +2967,137 @@ namespace Ermine::editor {
 		auto& emitter = ECS::GetInstance().GetComponent<GPUParticleEmitter>(entity);
 
 		ImGui::Checkbox("Active", &emitter.active);
+		ImGui::SameLine();
+		ImGui::Checkbox("Show Debug Bounds", &emitter.showDebugBounds);
+
+		// Quick manipulation section
+		if (ImGui::CollapsingHeader("Quick Controls", ImGuiTreeNodeFlags_DefaultOpen)) {
+			
+			// Overall Scale
+			ImGui::Text("Overall Size");
+			ImGui::SetNextItemWidth(-1);
+			if (ImGui::SliderFloat("##OverallScale", &emitter.overallScale, 0.1f, 10.0f, "%.2fx")) {
+				emitter.overallScale = std::max(0.01f, emitter.overallScale);
+			}
+			if (ImGui::IsItemHovered()) {
+				ImGui::SetTooltip("Scales all size/radius/area parameters\nAffects: particle size, spawn area, bounds");
+			}
+
+			// Quick size buttons
+			ImGui::Text("Quick Sizes:");
+			if (ImGui::Button("Tiny##Size")) {
+				emitter.overallScale = 0.25f;
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Small##Size")) {
+				emitter.overallScale = 0.5f;
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Normal##Size")) {
+				emitter.overallScale = 1.0f;
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Large##Size")) {
+				emitter.overallScale = 2.0f;
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Huge##Size")) {
+				emitter.overallScale = 4.0f;
+			}
+
+			ImGui::Separator();
+			ImGui::Text("Particle Offset (relative to parent)");
+			ImGui::SetNextItemWidth(-1);
+			
+			// Local position offset controls
+			float offset[3] = { emitter.localPositionOffset.x, emitter.localPositionOffset.y, emitter.localPositionOffset.z };
+			if (ImGui::DragFloat3("Local Position", offset, 0.01f)) {
+				emitter.localPositionOffset = Vec3(offset[0], offset[1], offset[2]);
+			}
+			
+			if (ImGui::IsItemHovered()) {
+				ImGui::SetTooltip("Offset from parent object's position\nX=Right, Y=Up, Z=Forward in local space");
+			}
+
+			// Helper buttons for common offsets
+			ImGui::Text("Quick Offsets:");
+			if (ImGui::Button("Center")) {
+				emitter.localPositionOffset = Vec3(0.0f, 0.0f, 0.0f);
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Top")) {
+				emitter.localPositionOffset = Vec3(0.0f, 1.0f, 0.0f);
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Front")) {
+				emitter.localPositionOffset = Vec3(0.0f, 0.0f, 1.0f);
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Right")) {
+				emitter.localPositionOffset = Vec3(1.0f, 0.0f, 0.0f);
+			}
+
+			// Quick preset buttons
+			ImGui::Separator();
+			ImGui::Text("Quick Presets");
+			
+			if (ImGui::Button("Electric Door Lock")) {
+				emitter.renderMode = 2; // Electric
+				emitter.electricIntensity = 2.0f;
+				emitter.electricFrequency = 15.0f;
+				emitter.electricBoltCount = 3;
+				emitter.electricBoltThickness = 0.08f;
+				emitter.electricBoltVariation = 1.5f;
+				emitter.electricGlow = 0.5f;
+				emitter.colorStart = Vec3(0.3f, 0.6f, 1.0f);
+				emitter.colorEnd = Vec3(0.1f, 0.2f, 0.5f);
+				emitter.spawnRate = 20.0f;
+				emitter.lifetimeMin = 0.3f;
+				emitter.lifetimeMax = 0.6f;
+				emitter.sizeStartMin = 0.05f;
+				emitter.sizeStartMax = 0.1f;
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Electric Hazard")) {
+				emitter.renderMode = 2;
+				emitter.electricIntensity = 1.5f;
+				emitter.electricFrequency = 25.0f;
+				emitter.electricBoltCount = 2;
+				emitter.electricBoltThickness = 0.06f;
+				emitter.electricBoltVariation = 2.5f;
+				emitter.electricGlow = 0.3f;
+				emitter.colorStart = Vec3(1.0f, 0.9f, 0.2f);
+				emitter.colorEnd = Vec3(1.0f, 0.5f, 0.0f);
+				emitter.burstOnStart = true;
+				emitter.burstInterval = 1.0f;
+				emitter.burstCountMin = 20;
+				emitter.burstCountMax = 40;
+			}
+			
+			if (ImGui::Button("Magic Glow")) {
+				emitter.renderMode = 0; // Glow
+				emitter.sparkleShape = 1; // Star
+				emitter.colorStart = Vec3(0.8f, 0.2f, 1.0f);
+				emitter.colorEnd = Vec3(0.2f, 0.1f, 0.5f);
+				emitter.spawnRate = 30.0f;
+				emitter.lifetimeMin = 0.8f;
+				emitter.lifetimeMax = 1.5f;
+				emitter.gravity = Vec3(0.0f, 0.5f, 0.0f);
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Smoke Puff")) {
+				emitter.renderMode = 1; // Smoke
+				emitter.smokeOpacity = 0.6f;
+				emitter.smokeSoftness = 0.5f;
+				emitter.colorStart = Vec3(0.3f, 0.3f, 0.3f);
+				emitter.colorEnd = Vec3(0.1f, 0.1f, 0.1f);
+				emitter.burstOnStart = true;
+				emitter.burstCountMin = 50;
+				emitter.burstCountMax = 100;
+				emitter.lifetimeMin = 1.5f;
+				emitter.lifetimeMax = 3.0f;
+			}
+		}
 
 		ImGui::Separator();
 		ImGui::Text("Particle Settings");
@@ -3024,8 +3155,8 @@ namespace Ermine::editor {
 		ImGui::Separator();
 		ImGui::Text("Appearance");
 
-		const char* renderModes[] = { "Glow", "Smoke" };
-		ImGui::Combo("Render Mode", &emitter.renderMode, renderModes, 2);
+		const char* renderModes[] = { "Glow", "Smoke", "Electric" };
+		ImGui::Combo("Render Mode", &emitter.renderMode, renderModes, 3);
 		if (emitter.renderMode == 1) {
 			ImGui::DragFloat("Smoke Opacity", &emitter.smokeOpacity, 0.01f, 0.0f, 2.0f);
 			ImGui::DragFloat("Smoke Softness", &emitter.smokeSoftness, 0.01f, 0.01f, 2.0f);
@@ -3037,6 +3168,14 @@ namespace Ermine::editor {
 			ImGui::DragFloat("Smoke Stretch", &emitter.smokeStretch, 0.01f, 0.0f, 5.0f);
 			ImGui::DragFloat("Smoke Up Bias", &emitter.smokeUpBias, 0.01f, 0.0f, 2.0f);
 			ImGui::DragFloat("Smoke Depth Fade", &emitter.smokeDepthFade, 0.1f, 0.0f, 20.0f);
+		}
+		else if (emitter.renderMode == 2) { // Electric mode
+			ImGui::DragFloat("Electric Intensity", &emitter.electricIntensity, 0.01f, 0.0f, 5.0f);
+			ImGui::DragFloat("Electric Frequency", &emitter.electricFrequency, 0.1f, 1.0f, 50.0f);
+			ImGui::DragInt("Bolt Count", &emitter.electricBoltCount, 0.1f, 1, 10);
+			ImGui::DragFloat("Bolt Thickness", &emitter.electricBoltThickness, 0.01f, 0.01f, 0.5f);
+			ImGui::DragFloat("Bolt Variation", &emitter.electricBoltVariation, 0.01f, 0.0f, 5.0f);
+			ImGui::DragFloat("Electric Glow", &emitter.electricGlow, 0.01f, 0.0f, 2.0f);
 		}
 
 		float colorStart[3] = { emitter.colorStart.x, emitter.colorStart.y, emitter.colorStart.z };

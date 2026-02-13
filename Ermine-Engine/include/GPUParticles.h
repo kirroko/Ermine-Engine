@@ -87,6 +87,16 @@ namespace Ermine {
         *************************************************************************/
         void DestroyEmitter(GPUParticleEmitter& emitter);
 
+        /*!***********************************************************************
+        \brief
+            Renders debug visualization for particle emitters.
+        \param[in] view
+            View matrix.
+        \param[in] projection
+            Projection matrix.
+        *************************************************************************/
+        void RenderDebug(const Mtx44& view, const Mtx44& projection);
+
     private:
         std::shared_ptr<graphics::Shader> m_ComputeShader;
         std::shared_ptr<graphics::Shader> m_RenderShader;

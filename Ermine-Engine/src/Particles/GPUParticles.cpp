@@ -210,6 +210,12 @@ namespace Ermine {
             Vec3 up = QuaternionRotateVector(q, Vec3(0.0f, 1.0f, 0.0f));
             Vec3 forward = QuaternionRotateVector(q, Vec3(0.0f, 0.0f, 1.0f));
 
+            // Apply local position offset in emitter's local space
+            Vec3 emitterPos = transform.position;
+            emitterPos.x += emitter.localPositionOffset.x * right.x + emitter.localPositionOffset.y * up.x + emitter.localPositionOffset.z * forward.x;
+            emitterPos.y += emitter.localPositionOffset.x * right.y + emitter.localPositionOffset.y * up.y + emitter.localPositionOffset.z * forward.y;
+            emitterPos.z += emitter.localPositionOffset.x * right.z + emitter.localPositionOffset.y * up.z + emitter.localPositionOffset.z * forward.z;
+
             // Compute spawn count (rate + bursts)
             int spawnCount = 0;
             if (emitter.spawnRate > 0.0f) {
@@ -270,7 +276,7 @@ namespace Ermine {
             glUniform1f(glGetUniformLocation(program, "u_DeltaTime"), dt);
             glUniform1f(glGetUniformLocation(program, "u_Time"), m_ElapsedTime);
             glUniform3f(glGetUniformLocation(program, "u_EmitterPosition"),
-                        transform.position.x, transform.position.y, transform.position.z);
+                        emitterPos.x, emitterPos.y, emitterPos.z);
             glUniform3f(glGetUniformLocation(program, "u_EmitterRight"), right.x, right.y, right.z);
             glUniform3f(glGetUniformLocation(program, "u_EmitterUp"), up.x, up.y, up.z);
             glUniform3f(glGetUniformLocation(program, "u_EmitterForward"), forward.x, forward.y, forward.z);
@@ -278,10 +284,14 @@ namespace Ermine {
                         transform.scale.x, transform.scale.y, transform.scale.z);
             glUniform1i(glGetUniformLocation(program, "u_MaxParticles"), emitter.maxParticles);
             glUniform1i(glGetUniformLocation(program, "u_EmissionShape"), emitter.emissionShape);
+            
+            // Apply overall scale to spawn parameters
             glUniform3f(glGetUniformLocation(program, "u_SpawnBoxExtents"),
-                        emitter.spawnBoxExtents.x, emitter.spawnBoxExtents.y, emitter.spawnBoxExtents.z);
-            glUniform1f(glGetUniformLocation(program, "u_SpawnRadius"), emitter.spawnRadius);
-            glUniform1f(glGetUniformLocation(program, "u_SpawnRadiusInner"), emitter.spawnRadiusInner);
+                        emitter.spawnBoxExtents.x * emitter.overallScale, 
+                        emitter.spawnBoxExtents.y * emitter.overallScale, 
+                        emitter.spawnBoxExtents.z * emitter.overallScale);
+            glUniform1f(glGetUniformLocation(program, "u_SpawnRadius"), emitter.spawnRadius * emitter.overallScale);
+            glUniform1f(glGetUniformLocation(program, "u_SpawnRadiusInner"), emitter.spawnRadiusInner * emitter.overallScale);
             glUniform1ui(glGetUniformLocation(program, "u_SpawnCount"), static_cast<unsigned int>(spawnCount));
             glUniform1i(glGetUniformLocation(program, "u_DirectionMode"), emitter.directionMode);
             glUniform3f(glGetUniformLocation(program, "u_Direction"),
@@ -290,10 +300,15 @@ namespace Ermine {
             glUniform1f(glGetUniformLocation(program, "u_ConeInnerAngle"), emitter.coneInnerAngle);
             glUniform1i(glGetUniformLocation(program, "u_BoundsMode"), emitter.boundsMode);
             glUniform1i(glGetUniformLocation(program, "u_BoundsShape"), emitter.boundsShape);
+            
+            // Apply overall scale to bounds parameters
             glUniform3f(glGetUniformLocation(program, "u_BoundsBoxExtents"),
-                        emitter.boundsBoxExtents.x, emitter.boundsBoxExtents.y, emitter.boundsBoxExtents.z);
-            glUniform1f(glGetUniformLocation(program, "u_BoundsRadius"), emitter.boundsRadius);
-            glUniform1f(glGetUniformLocation(program, "u_BoundsRadiusInner"), emitter.boundsRadiusInner);
+                        emitter.boundsBoxExtents.x * emitter.overallScale, 
+                        emitter.boundsBoxExtents.y * emitter.overallScale, 
+                        emitter.boundsBoxExtents.z * emitter.overallScale);
+            glUniform1f(glGetUniformLocation(program, "u_BoundsRadius"), emitter.boundsRadius * emitter.overallScale);
+            glUniform1f(glGetUniformLocation(program, "u_BoundsRadiusInner"), emitter.boundsRadiusInner * emitter.overallScale);
+            
             glUniform1f(glGetUniformLocation(program, "u_SpeedMin"), emitter.speedMin);
             glUniform1f(glGetUniformLocation(program, "u_SpeedMax"), emitter.speedMax);
             glUniform3f(glGetUniformLocation(program, "u_Gravity"),
@@ -307,10 +322,12 @@ namespace Ermine {
                         emitter.colorEnd.x, emitter.colorEnd.y, emitter.colorEnd.z);
             glUniform1f(glGetUniformLocation(program, "u_AlphaStart"), emitter.alphaStart);
             glUniform1f(glGetUniformLocation(program, "u_AlphaEnd"), emitter.alphaEnd);
-            glUniform1f(glGetUniformLocation(program, "u_SizeStartMin"), emitter.sizeStartMin);
-            glUniform1f(glGetUniformLocation(program, "u_SizeStartMax"), emitter.sizeStartMax);
-            glUniform1f(glGetUniformLocation(program, "u_SizeEndMin"), emitter.sizeEndMin);
-            glUniform1f(glGetUniformLocation(program, "u_SizeEndMax"), emitter.sizeEndMax);
+            
+            // Apply overall scale to particle sizes
+            glUniform1f(glGetUniformLocation(program, "u_SizeStartMin"), emitter.sizeStartMin * emitter.overallScale);
+            glUniform1f(glGetUniformLocation(program, "u_SizeStartMax"), emitter.sizeStartMax * emitter.overallScale);
+            glUniform1f(glGetUniformLocation(program, "u_SizeEndMin"), emitter.sizeEndMin * emitter.overallScale);
+            glUniform1f(glGetUniformLocation(program, "u_SizeEndMax"), emitter.sizeEndMax * emitter.overallScale);
             glUniform1f(glGetUniformLocation(program, "u_LifetimeMin"), emitter.lifetimeMin);
             glUniform1f(glGetUniformLocation(program, "u_LifetimeMax"), emitter.lifetimeMax);
 
@@ -411,6 +428,12 @@ namespace Ermine {
             glUniform1f(glGetUniformLocation(program, "u_SmokeStretch"), emitter.smokeStretch);
             glUniform1f(glGetUniformLocation(program, "u_SmokeUpBias"), emitter.smokeUpBias);
             glUniform1f(glGetUniformLocation(program, "u_SmokeDepthFade"), emitter.smokeDepthFade);
+            glUniform1f(glGetUniformLocation(program, "u_ElectricIntensity"), emitter.electricIntensity);
+            glUniform1f(glGetUniformLocation(program, "u_ElectricFrequency"), emitter.electricFrequency);
+            glUniform1f(glGetUniformLocation(program, "u_ElectricBoltThickness"), emitter.electricBoltThickness);
+            glUniform1f(glGetUniformLocation(program, "u_ElectricBoltVariation"), emitter.electricBoltVariation);
+            glUniform1f(glGetUniformLocation(program, "u_ElectricGlow"), emitter.electricGlow);
+            glUniform1i(glGetUniformLocation(program, "u_ElectricBoltCount"), emitter.electricBoltCount);
 
             if (m_SmokeNoiseHandle != 0 && GL_ARB_bindless_texture) {
                 glUniformHandleui64ARB(glGetUniformLocation(program, "u_SmokeNoise"), m_SmokeNoiseHandle);
@@ -430,6 +453,8 @@ namespace Ermine {
 
             if (emitter.renderMode == 1) {
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            } else if (emitter.renderMode == 2) {
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE); // Additive for electric
             } else {
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE);
             }
@@ -505,6 +530,194 @@ namespace Ermine {
 
         m_Initialized = false;
         EE_CORE_INFO("GPU Orb Particle System cleaned up");
+    }
+
+    void GPUParticleSystem::RenderDebug(const Mtx44& view, const Mtx44& projection)
+    {
+        auto& ecs = ECS::GetInstance();
+        auto renderer = ecs.GetSystem<graphics::Renderer>();
+        if (!renderer) return;
+
+        for (EntityID entity : m_Entities) {
+            if (!ecs.HasComponent<GPUParticleEmitter>(entity)) continue;
+            if (!ecs.HasComponent<Transform>(entity)) continue;
+
+            auto& emitter = ecs.GetComponent<GPUParticleEmitter>(entity);
+            if (!emitter.active || !emitter.showDebugBounds) continue;
+
+            const auto& transform = ecs.GetComponent<Transform>(entity);
+            Vec3 pos = transform.position;
+
+            // Build emitter basis from rotation
+            Quaternion q = QuaternionNormalize(transform.rotation);
+            Vec3 right = QuaternionRotateVector(q, Vec3(1.0f, 0.0f, 0.0f));
+            Vec3 up = QuaternionRotateVector(q, Vec3(0.0f, 1.0f, 0.0f));
+            Vec3 forward = QuaternionRotateVector(q, Vec3(0.0f, 0.0f, 1.0f));
+
+            // Apply local position offset in emitter's local space
+            pos.x += emitter.localPositionOffset.x * right.x + emitter.localPositionOffset.y * up.x + emitter.localPositionOffset.z * forward.x;
+            pos.y += emitter.localPositionOffset.x * right.y + emitter.localPositionOffset.y * up.y + emitter.localPositionOffset.z * forward.y;
+            pos.z += emitter.localPositionOffset.x * right.z + emitter.localPositionOffset.y * up.z + emitter.localPositionOffset.z * forward.z;
+
+            glm::vec3 glmPos(pos.x, pos.y, pos.z);
+            glm::vec3 glmRight(right.x, right.y, right.z);
+            glm::vec3 glmUp(up.x, up.y, up.z);
+            glm::vec3 glmForward(forward.x, forward.y, forward.z);
+
+            // Draw emission shape
+            glm::vec3 emissionColor(0.0f, 1.0f, 0.5f); // Green for emission
+
+            if (emitter.emissionShape == 0) { // Point
+                // Draw small cross
+                float size = 0.05f;
+                renderer->SubmitDebugLine(glmPos - glmRight * size, glmPos + glmRight * size, emissionColor);
+                renderer->SubmitDebugLine(glmPos - glmUp * size, glmPos + glmUp * size, emissionColor);
+                renderer->SubmitDebugLine(glmPos - glmForward * size, glmPos + glmForward * size, emissionColor);
+            }
+            else if (emitter.emissionShape == 1) { // Sphere
+                // Draw sphere wireframe
+                const int segments = 16;
+                float radius = emitter.spawnRadius * emitter.overallScale * transform.scale.x;
+                
+                // Draw circles in XY, XZ, YZ planes
+                for (int axis = 0; axis < 3; axis++) {
+                    for (int i = 0; i < segments; i++) {
+                        float angle1 = (float)i / segments * 6.28318530718f;
+                        float angle2 = (float)(i + 1) / segments * 6.28318530718f;
+                        
+                        glm::vec3 p1, p2;
+                        if (axis == 0) { // XY plane
+                            p1 = glmPos + (glmRight * cosf(angle1) + glmUp * sinf(angle1)) * radius;
+                            p2 = glmPos + (glmRight * cosf(angle2) + glmUp * sinf(angle2)) * radius;
+                        }
+                        else if (axis == 1) { // XZ plane
+                            p1 = glmPos + (glmRight * cosf(angle1) + glmForward * sinf(angle1)) * radius;
+                            p2 = glmPos + (glmRight * cosf(angle2) + glmForward * sinf(angle2)) * radius;
+                        }
+                        else { // YZ plane
+                            p1 = glmPos + (glmUp * cosf(angle1) + glmForward * sinf(angle1)) * radius;
+                            p2 = glmPos + (glmUp * cosf(angle2) + glmForward * sinf(angle2)) * radius;
+                        }
+                        renderer->SubmitDebugLine(p1, p2, emissionColor);
+                    }
+                }
+
+                // Draw inner radius if present
+                if (emitter.spawnRadiusInner > 0.0f) {
+                    float innerRadius = emitter.spawnRadiusInner * emitter.overallScale * transform.scale.x;
+                    for (int i = 0; i < segments; i++) {
+                        float angle1 = (float)i / segments * 6.28318530718f;
+                        float angle2 = (float)(i + 1) / segments * 6.28318530718f;
+                        glm::vec3 p1 = glmPos + (glmRight * cosf(angle1) + glmUp * sinf(angle1)) * innerRadius;
+                        glm::vec3 p2 = glmPos + (glmRight * cosf(angle2) + glmUp * sinf(angle2)) * innerRadius;
+                        renderer->SubmitDebugLine(p1, p2, emissionColor * 0.6f);
+                    }
+                }
+            }
+            else if (emitter.emissionShape == 2) { // Box
+                // Draw box wireframe
+                Vec3 extents = Vec3(
+                    emitter.spawnBoxExtents.x * emitter.overallScale * transform.scale.x,
+                    emitter.spawnBoxExtents.y * emitter.overallScale * transform.scale.y,
+                    emitter.spawnBoxExtents.z * emitter.overallScale * transform.scale.z
+                );
+
+                glm::vec3 corners[8];
+                for (int i = 0; i < 8; i++) {
+                    float sx = (i & 1) ? 1.0f : -1.0f;
+                    float sy = (i & 2) ? 1.0f : -1.0f;
+                    float sz = (i & 4) ? 1.0f : -1.0f;
+                    corners[i] = glmPos + glmRight * (sx * extents.x) +
+                                         glmUp * (sy * extents.y) +
+                                         glmForward * (sz * extents.z);
+                }
+
+                // Draw 12 edges of the box
+                int edges[12][2] = {
+                    {0,1}, {1,3}, {3,2}, {2,0}, // Bottom
+                    {4,5}, {5,7}, {7,6}, {6,4}, // Top
+                    {0,4}, {1,5}, {2,6}, {3,7}  // Vertical
+                };
+                for (auto& edge : edges) {
+                    renderer->SubmitDebugLine(corners[edge[0]], corners[edge[1]], emissionColor);
+                }
+            }
+            else if (emitter.emissionShape == 3) { // Disc (XZ)
+                // Draw disc wireframe
+                const int segments = 24;
+                float radius = emitter.spawnRadius * emitter.overallScale * transform.scale.x;
+                
+                for (int i = 0; i < segments; i++) {
+                    float angle1 = (float)i / segments * 6.28318530718f;
+                    float angle2 = (float)(i + 1) / segments * 6.28318530718f;
+                    glm::vec3 p1 = glmPos + (glmRight * cosf(angle1) + glmForward * sinf(angle1)) * radius;
+                    glm::vec3 p2 = glmPos + (glmRight * cosf(angle2) + glmForward * sinf(angle2)) * radius;
+                    renderer->SubmitDebugLine(p1, p2, emissionColor);
+                }
+
+                // Draw cross lines
+                renderer->SubmitDebugLine(glmPos - glmRight * radius, glmPos + glmRight * radius, emissionColor);
+                renderer->SubmitDebugLine(glmPos - glmForward * radius, glmPos + glmForward * radius, emissionColor);
+            }
+
+            // Draw bounds if enabled
+            if (emitter.boundsMode > 0) {
+                glm::vec3 boundsColor(1.0f, 0.5f, 0.0f); // Orange for bounds
+
+                if (emitter.boundsShape == 0) { // Sphere
+                    const int segments = 16;
+                    float radius = emitter.boundsRadius * emitter.overallScale * transform.scale.x;
+                    
+                    for (int axis = 0; axis < 3; axis++) {
+                        for (int i = 0; i < segments; i++) {
+                            float angle1 = (float)i / segments * 6.28318530718f;
+                            float angle2 = (float)(i + 1) / segments * 6.28318530718f;
+                            
+                            glm::vec3 p1, p2;
+                            if (axis == 0) {
+                                p1 = glmPos + (glmRight * cosf(angle1) + glmUp * sinf(angle1)) * radius;
+                                p2 = glmPos + (glmRight * cosf(angle2) + glmUp * sinf(angle2)) * radius;
+                            }
+                            else if (axis == 1) {
+                                p1 = glmPos + (glmRight * cosf(angle1) + glmForward * sinf(angle1)) * radius;
+                                p2 = glmPos + (glmRight * cosf(angle2) + glmForward * sinf(angle2)) * radius;
+                            }
+                            else {
+                                p1 = glmPos + (glmUp * cosf(angle1) + glmForward * sinf(angle1)) * radius;
+                                p2 = glmPos + (glmUp * cosf(angle2) + glmForward * sinf(angle2)) * radius;
+                            }
+                            renderer->SubmitDebugLine(p1, p2, boundsColor);
+                        }
+                    }
+                }
+                else if (emitter.boundsShape == 1) { // Box
+                    Vec3 extents = Vec3(
+                        emitter.boundsBoxExtents.x * emitter.overallScale * transform.scale.x,
+                        emitter.boundsBoxExtents.y * emitter.overallScale * transform.scale.y,
+                        emitter.boundsBoxExtents.z * emitter.overallScale * transform.scale.z
+                    );
+
+                    glm::vec3 corners[8];
+                    for (int i = 0; i < 8; i++) {
+                        float sx = (i & 1) ? 1.0f : -1.0f;
+                        float sy = (i & 2) ? 1.0f : -1.0f;
+                        float sz = (i & 4) ? 1.0f : -1.0f;
+                        corners[i] = glmPos + glmRight * (sx * extents.x) +
+                                             glmUp * (sy * extents.y) +
+                                             glmForward * (sz * extents.z);
+                    }
+
+                    int edges[12][2] = {
+                        {0,1}, {1,3}, {3,2}, {2,0},
+                        {4,5}, {5,7}, {7,6}, {6,4},
+                        {0,4}, {1,5}, {2,6}, {3,7}
+                    };
+                    for (auto& edge : edges) {
+                        renderer->SubmitDebugLine(corners[edge[0]], corners[edge[1]], boundsColor);
+                    }
+                }
+            }
+        }
     }
 
 } // namespace Ermine
