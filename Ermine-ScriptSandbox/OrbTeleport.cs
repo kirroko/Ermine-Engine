@@ -82,6 +82,7 @@ public class OrbTeleport : MonoBehaviour
         // Check if orb disappeared on its own (hit something, traveled too far, etc.)
         if (orbShot && GameObject.Find("Sphere") == null)
         {
+            Debug.Log("OrbTeleport: Orb vanished, resetting state");
             orbShot = false;
             SetSkillsForReadyToShoot();
         }
@@ -170,11 +171,27 @@ public class OrbTeleport : MonoBehaviour
 
         GlobalAudio.PlaySFX("Teleport");
 
+        // Snap explosion to ground for better visual accuracy
+        Vector3 explosionPos = sphere.transform.position;
+        RaycastHit hit;
+        if (Physics.Raycast(sphere.transform.position, Vector3.down, out hit, 5.0f))
+        {
+            explosionPos = hit.point + Vector3.up * 0.1f; // Slightly above ground
+        }
+
+        // Spawn explosion effect at teleport location
+        GameObject explosion = Prefab.Instantiate("../Resources/Prefabs/ParticleExplosion.prefab");
+        if (explosion != null)
+        {
+            explosion.transform.position = explosionPos;
+        }
+
         // Swap positions
         gameObject.transform.position = sphere.transform.position;
         Physics.SetPosition((ulong)gameObject.GetInstanceID(), sphere.transform.position);
 
         // Remove orb
+        Debug.Log("OrbTeleport: Destroying orb after teleport: " + sphere.GetInstanceID());
         Physics.RemovePhysic((ulong)sphere.GetInstanceID());
         GameObject.Destroy(sphere);
 

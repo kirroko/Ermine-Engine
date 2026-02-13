@@ -234,6 +234,7 @@ public class Patrol : MonoBehaviour
         if (!RightClickStunArmed) return;
         if (col.gameObject.name == "Sphere")
         {
+            Debug.Log("Patrol: Hit by sphere! Attempting stun.");
             TryStun();
             armTimer = 0.0f;
             RightClickStunArmed = false;
@@ -252,6 +253,7 @@ public class Patrol : MonoBehaviour
         if (!RightClickStunArmed) return;
         if (col.gameObject.name == "Sphere")
         {
+            Debug.Log("Patrol: Hit by sphere! Attempting stun.");
             TryStun();
             armTimer = 0.0f;
             RightClickStunArmed = false;
