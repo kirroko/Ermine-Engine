@@ -3042,20 +3042,61 @@ namespace Ermine::editor {
 			ImGui::Text("Quick Presets");
 			
 			if (ImGui::Button("Electric Door Lock")) {
+				// Gate (1) settings
+				emitter.maxParticles = 512;
+				emitter.emissionShape = 1;
+				emitter.overallScale = 1.0f;
+				emitter.spawnBoxExtents = Vec3(1.0f, 1.0f, 1.0f);
+				emitter.spawnRadius = 150.0f;
+				emitter.spawnRadiusInner = 50.0f;
+				emitter.spawnRate = 20.0f;
+				emitter.burstCountMin = 20;
+				emitter.burstCountMax = 40;
+				emitter.burstInterval = 1.5f;
+				emitter.burstOnStart = true;
+				emitter.directionMode = 0;
+				emitter.direction = Vec3(0.0f, 0.0f, 1.0f);
+				emitter.coneAngle = 25.0f;
+				emitter.coneInnerAngle = 0.0f;
+				emitter.speedMin = 0.5f;
+				emitter.speedMax = 3.0f;
+				emitter.gravity = Vec3(0.0f, 0.5f, 0.0f);
+				emitter.drag = 0.0f;
+				emitter.turbulenceStrength = 0.0f;
+				emitter.turbulenceScale = 1.0f;
+				emitter.boundsMode = 1;
+				emitter.boundsShape = 0;
+				emitter.boundsBoxExtents = Vec3(1.0f, 1.0f, 1.0f);
+				emitter.boundsRadius = 2.0f;
+				emitter.boundsRadiusInner = 0.0f;
 				emitter.renderMode = 2; // Electric
-				emitter.electricIntensity = 2.0f;
+				emitter.smokeOpacity = 0.6f;
+				emitter.smokeSoftness = 0.5f;
+				emitter.smokeNoiseScale = 0.15f;
+				emitter.smokeDistortScale = 0.25f;
+				emitter.smokeDistortStrength = 0.35f;
+				emitter.smokePuffScale = 0.35f;
+				emitter.smokePuffStrength = 0.6f;
+				emitter.smokeStretch = 0.5f;
+				emitter.smokeUpBias = 0.2f;
+				emitter.smokeDepthFade = 6.0f;
+				emitter.electricIntensity = 5.0f;
 				emitter.electricFrequency = 15.0f;
-				emitter.electricBoltCount = 3;
 				emitter.electricBoltThickness = 0.08f;
 				emitter.electricBoltVariation = 1.5f;
-				emitter.electricGlow = 0.5f;
+				emitter.electricGlow = 2.0f;
+				emitter.electricBoltCount = 1;
 				emitter.colorStart = Vec3(0.3f, 0.6f, 1.0f);
 				emitter.colorEnd = Vec3(0.1f, 0.2f, 0.5f);
-				emitter.spawnRate = 20.0f;
+				emitter.alphaStart = 1.0f;
+				emitter.alphaEnd = 0.0f;
+				emitter.sizeStartMin = 0.5f;
+				emitter.sizeStartMax = 1.0f;
+				emitter.sizeEndMin = 0.15f;
+				emitter.sizeEndMax = 2.0f;
 				emitter.lifetimeMin = 0.3f;
 				emitter.lifetimeMax = 0.6f;
-				emitter.sizeStartMin = 0.05f;
-				emitter.sizeStartMax = 0.1f;
+				emitter.sparkleShape = 0;
 			}
 			ImGui::SameLine();
 			if (ImGui::Button("Electric Hazard")) {
