@@ -416,7 +416,7 @@ namespace Ermine
 			{
 				auto& statem = ecs.GetComponent<StateMachine>(recipientEntity);
 
-				if (!statem.m_CurrentScript->instance)
+				if (!statem.m_CurrentScript)
 					continue;
 
 				switch (type)
@@ -1534,7 +1534,7 @@ namespace Ermine
 			JPH::Color color;
 			switch (body.GetMotionType())
 			{
-			case JPH::EMotionType::Static:    color = JPH::Color::sGrey; break;
+			case JPH::EMotionType::Static:    color = JPH::Color::sCyan; break;
 			case JPH::EMotionType::Kinematic: color = JPH::Color::sGreen; break;
 			case JPH::EMotionType::Dynamic:   color = JPH::Color::sGetDistinctColor(body.GetID().GetIndex()); break;
 			default:                          color = JPH::Color::sWhite; break;

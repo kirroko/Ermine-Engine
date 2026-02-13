@@ -36,6 +36,7 @@ namespace Ermine
     private:
         static bool s_visibleCursor;
         static CursorLockState s_cursorLockState;
+        static GLFWwindow* s_window;
     public:
         /** 
          * @brief Initialize the window context using GLFW

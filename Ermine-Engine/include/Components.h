@@ -1451,6 +1451,14 @@ namespace Ermine
 				if (!guidStr.empty()) {
 					materialGuid = Guid::FromString(guidStr);
 					m_material = AssetManager::GetInstance().GetMaterialByGuid(materialGuid);
+					if (!m_material) {
+						materialGuid = {};
+						m_material.reset();
+					}
+				}
+				else {
+					materialGuid = {};
+					m_material.reset();
 				}
 				return;
 			}
@@ -1459,8 +1467,11 @@ namespace Ermine
 			if (!m_material) {
 				m_material = std::make_shared<graphics::Material>();
 			}
-			if (in.HasMember("hasMaterial") && in["hasMaterial"].IsBool() && !in["hasMaterial"].GetBool())
+			if (in.HasMember("hasMaterial") && in["hasMaterial"].IsBool() && !in["hasMaterial"].GetBool()) {
+				materialGuid = {};
+				m_material.reset();
 				return;
+			}
 
 			// Restore params
 			if (in.HasMember("params") && in["params"].IsObject()) {
@@ -2762,6 +2773,8 @@ namespace Ermine
 		int boneTransformOffset = -1;                           // Per-entity bone offset in SkeletalSSBO (allocated by AnimationManager)
 		std::shared_ptr<AnimationGraph> m_animationGraph;		// Handles animation states and transitions
 
+		bool initialized = false;								// Flag to initialize animation graph on first update
+
 		AnimationComponent() : m_animationGraph(std::make_shared<AnimationGraph>()) {}
 		explicit AnimationComponent(const std::shared_ptr<graphics::Model>& model)
 			: m_animator(std::make_shared<graphics::Animator>(model)), m_animationGraph(std::make_shared<AnimationGraph>()) {
@@ -3273,6 +3286,9 @@ namespace Ermine
 				n.AddMember("isAttached", nodePtr->isAttached, alloc);
 				n.AddMember("isStartNode", nodePtr->isStartNode, alloc);
 
+				n.AddMember("posX", nodePtr->editorPosition.x, alloc);
+				n.AddMember("posY", nodePtr->editorPosition.y, alloc);
+
 				// NOTE: instance is runtime-only and NOT serialized.
 
 				nodes.PushBack(n, alloc);
@@ -3351,6 +3367,14 @@ namespace Ermine
 					// isStartNode
 					if (nVal.HasMember("isStartNode") && nVal["isStartNode"].IsBool())
 						node->isStartNode = nVal["isStartNode"].GetBool();
+
+					if (nVal.HasMember("posX") && nVal["posX"].IsNumber())
+						node->editorPosition.x = nVal["posX"].GetFloat();
+
+					if (nVal.HasMember("posY") && nVal["posY"].IsNumber())
+						node->editorPosition.y = nVal["posY"].GetFloat();
+
+					node->positionInitialized = false;
 
 					// instance is runtime-only; will be created via CreateInstance(entity)
 					// when Init(entity) is called.
@@ -3463,6 +3487,85 @@ namespace Ermine
 			//dtTileRef tileRef = 0;
 		};
 		Runtime* runtime = nullptr;
+
+		// -----------------------------
+		// Persistent baked navmesh data
+		// -----------------------------
+		struct BakedTile
+		{
+			std::string dataB64;
+			int dataSize = 0;
+		};
+
+		float bakedOrig[3]{ 0.0f, 0.0f, 0.0f };
+		float bakedTileWidth = 0.0f;
+		float bakedTileHeight = 0.0f;
+		int bakedMaxTiles = 0;
+		int bakedMaxPolys = 0;
+		std::vector<BakedTile> bakedTiles;
+
+		bool HasBaked() const { return !bakedTiles.empty(); }
+
+		// Small header-only Base64 (so Serialize/Deserialize can use it without extra includes)
+		static std::string Base64Encode(const unsigned char* data, size_t len)
+		{
+			static const char* kB64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+			std::string out;
+			out.reserve(((len + 2) / 3) * 4);
+
+			size_t i = 0;
+			while (i < len)
+			{
+				uint32_t a = i < len ? data[i++] : 0;
+				uint32_t b = i < len ? data[i++] : 0;
+				uint32_t c = i < len ? data[i++] : 0;
+
+				uint32_t triple = (a << 16) | (b << 8) | c;
+
+				out.push_back(kB64[(triple >> 18) & 0x3F]);
+				out.push_back(kB64[(triple >> 12) & 0x3F]);
+				out.push_back(((i - 2) <= len) ? kB64[(triple >> 6) & 0x3F] : '=');
+				out.push_back(((i - 1) <= len) ? kB64[(triple) & 0x3F] : '=');
+			}
+
+			const size_t mod = len % 3;
+			if (mod == 1) { out[out.size() - 1] = '='; out[out.size() - 2] = '='; }
+			else if (mod == 2) { out[out.size() - 1] = '='; }
+
+			return out;
+		}
+
+		static bool Base64Decode(const char* b64, std::vector<unsigned char>& out)
+		{
+			if (!b64) return false;
+
+			static int rev[256];
+			static bool init = false;
+			if (!init)
+			{
+				for (int i = 0; i < 256; ++i) rev[i] = -1;
+				const char* kB64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+				for (int i = 0; i < 64; ++i) rev[(unsigned char)kB64[i]] = i;
+				rev[(unsigned char)'='] = 0;
+				init = true;
+			}
+
+			out.clear();
+			int val = 0, valb = -8;
+			for (const unsigned char* p = (const unsigned char*)b64; *p; ++p)
+			{
+				int d = rev[*p];
+				if (d == -1) continue; // skip whitespace/invalid
+				val = (val << 6) + d;
+				valb += 6;
+				if (valb >= 0)
+				{
+					out.push_back((unsigned char)((val >> valb) & 0xFF));
+					valb -= 8;
+				}
+			}
+			return !out.empty();
+		}
 		
 		template<typename Alloc>
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
@@ -3479,6 +3582,31 @@ namespace Ermine
 			out.AddMember("drawInputTri", drawInputTri, alloc);
 			out.AddMember("drawWalkable", drawWalkable, alloc);
 			out.AddMember("drawNavMesh", drawNavMesh, alloc);
+
+			rapidjson::Value bakedObj(rapidjson::kObjectType);
+
+			bakedObj.AddMember("origX", bakedOrig[0], alloc);
+			bakedObj.AddMember("origY", bakedOrig[1], alloc);
+			bakedObj.AddMember("origZ", bakedOrig[2], alloc);
+			bakedObj.AddMember("tileWidth", bakedTileWidth, alloc);
+			bakedObj.AddMember("tileHeight", bakedTileHeight, alloc);
+			bakedObj.AddMember("maxTiles", bakedMaxTiles, alloc);
+			bakedObj.AddMember("maxPolys", bakedMaxPolys, alloc);
+
+			rapidjson::Value tilesArr(rapidjson::kArrayType);
+			tilesArr.Reserve((rapidjson::SizeType)bakedTiles.size(), alloc);
+
+			for (auto const& t : bakedTiles)
+			{
+				rapidjson::Value tObj(rapidjson::kObjectType);
+				tObj.AddMember("size", t.dataSize, alloc);
+				tObj.AddMember("data", rapidjson::Value(t.dataB64.c_str(), alloc), alloc);
+				tilesArr.PushBack(tObj, alloc);
+			}
+
+			bakedObj.AddMember("tiles", tilesArr, alloc);
+			out.AddMember("bakedNav", bakedObj, alloc);
+
 		}
 
 		void Deserialize(const rapidjson::Value& in) {
@@ -3496,6 +3624,34 @@ namespace Ermine
 			if (in.HasMember("drawInputTri")) drawInputTri = in["drawInputTri"].GetBool();
 			if (in.HasMember("drawWalkable")) drawWalkable = in["drawWalkable"].GetBool();
 			if (in.HasMember("drawNavMesh")) drawNavMesh = in["drawNavMesh"].GetBool();
+
+			bakedTiles.clear();
+
+			if (in.HasMember("bakedNav") && in["bakedNav"].IsObject())
+			{
+				const auto& b = in["bakedNav"];
+
+				if (b.HasMember("origX")) bakedOrig[0] = b["origX"].GetFloat();
+				if (b.HasMember("origY")) bakedOrig[1] = b["origY"].GetFloat();
+				if (b.HasMember("origZ")) bakedOrig[2] = b["origZ"].GetFloat();
+				if (b.HasMember("tileWidth")) bakedTileWidth = b["tileWidth"].GetFloat();
+				if (b.HasMember("tileHeight")) bakedTileHeight = b["tileHeight"].GetFloat();
+				if (b.HasMember("maxTiles")) bakedMaxTiles = b["maxTiles"].GetInt();
+				if (b.HasMember("maxPolys")) bakedMaxPolys = b["maxPolys"].GetInt();
+
+				if (b.HasMember("tiles") && b["tiles"].IsArray())
+				{
+					for (auto& tv : b["tiles"].GetArray())
+					{
+						if (!tv.IsObject()) continue;
+
+						BakedTile t{};
+						if (tv.HasMember("size")) t.dataSize = tv["size"].GetInt();
+						if (tv.HasMember("data") && tv["data"].IsString()) t.dataB64 = tv["data"].GetString();
+						bakedTiles.push_back(std::move(t));
+					}
+				}
+			}
 
 			// reset runtime-only
 			build = nullptr;
@@ -4822,6 +4978,9 @@ namespace Ermine
 			Ermine::Vec3 cooldownColor = { 0.45f, 0.45f, 0.45f };
 			Ermine::Vec3 cooldownOverlayColor = { 0.15f, 0.15f, 0.15f };
 			std::string iconTexturePath = "";
+			std::string selectedIconPath = "";    // Icon when skill is selected/active
+			std::string unselectedIconPath = "";  // Icon when skill is not selected
+			bool isSelected = false;              // Current selection state
 			std::string skillName = "";
 			std::string keyBinding = "";
 			std::string description = "";
@@ -4866,6 +5025,11 @@ namespace Ermine
 				skillObj.AddMember("cooldownOverlayColor", Vec3ToJson(skill.cooldownOverlayColor, alloc), alloc);
 				rapidjson::Value iconPathVal(skill.iconTexturePath.c_str(), alloc);
 				skillObj.AddMember("iconTexturePath", iconPathVal, alloc);
+				rapidjson::Value selectedIconVal(skill.selectedIconPath.c_str(), alloc);
+				skillObj.AddMember("selectedIconPath", selectedIconVal, alloc);
+				rapidjson::Value unselectedIconVal(skill.unselectedIconPath.c_str(), alloc);
+				skillObj.AddMember("unselectedIconPath", unselectedIconVal, alloc);
+				skillObj.AddMember("isSelected", skill.isSelected, alloc);
 				rapidjson::Value skillNameVal(skill.skillName.c_str(), alloc);
 				skillObj.AddMember("skillName", skillNameVal, alloc);
 				rapidjson::Value keyBindingVal(skill.keyBinding.c_str(), alloc);
@@ -4952,6 +5116,12 @@ namespace Ermine
 						slot.cooldownOverlayColor = JsonToVec3(skillObj["cooldownOverlayColor"]);
 					if (skillObj.HasMember("iconTexturePath") && skillObj["iconTexturePath"].IsString())
 						slot.iconTexturePath = skillObj["iconTexturePath"].GetString();
+					if (skillObj.HasMember("selectedIconPath") && skillObj["selectedIconPath"].IsString())
+						slot.selectedIconPath = skillObj["selectedIconPath"].GetString();
+					if (skillObj.HasMember("unselectedIconPath") && skillObj["unselectedIconPath"].IsString())
+						slot.unselectedIconPath = skillObj["unselectedIconPath"].GetString();
+					if (skillObj.HasMember("isSelected") && skillObj["isSelected"].IsBool())
+						slot.isSelected = skillObj["isSelected"].GetBool();
 					if (skillObj.HasMember("skillName") && skillObj["skillName"].IsString())
 						slot.skillName = skillObj["skillName"].GetString();
 					if (skillObj.HasMember("keyBinding") && skillObj["keyBinding"].IsString())

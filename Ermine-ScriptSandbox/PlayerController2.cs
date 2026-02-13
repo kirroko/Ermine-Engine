@@ -5,9 +5,10 @@ public class PlayerController2 : MonoBehaviour
 {
     private Transform cam;
     private AudioComponent audioComp;
+    //private Animator anim;
 
-    public float mouseHorSens = 0.3f;
-    public float mouseVertSens = 0.3f;
+    public float mouseHorSens = 0.1f;
+    public float mouseVertSens = 0.1f;
 
     public float moveSpeed = 5f;
     public float jumpspeed = 5f;
@@ -43,6 +44,7 @@ public class PlayerController2 : MonoBehaviour
     void Start()
     {
         cam = GameObject.Find("Main Camera").GetComponent<Transform>();
+        //anim = GameObject.Find("PlayerAnim").GetComponent<Animator>();
         //HandleCameraLerp();
         audioComp = GetComponent<AudioComponent>();
         if (audioComp == null)
@@ -239,6 +241,12 @@ public class PlayerController2 : MonoBehaviour
         }
     }
 
+    void HandleAnimUpdate()
+    {
+        //anim.SetBool("IsGrounded", isGrounded);
+        //anim.SetBool("IsMoving", movementKeyPressed);
+    }
+
     //private ulong GetEntityID(RaycastHit hit)
     //{
     //    var field = typeof(RaycastHit).GetField(
@@ -251,7 +259,7 @@ public class PlayerController2 : MonoBehaviour
 
     void OnCollisionEnter(Collision col)
     {
-        if (col.gameObject.name.Contains("Platform"))
+        if (col.gameObject.name.Contains("floor"))
         {
             isGrounded = true;
             isKeyJump = false;
@@ -259,14 +267,14 @@ public class PlayerController2 : MonoBehaviour
     }
     void OnCollisionStay(Collision col)
     {
-        if (col.gameObject.name.Contains("Platform"))
+        if (col.gameObject.name.Contains("floor"))
         {
             isGrounded = true;
         }
     }
     void OnCollisionExit(Collision col)
     {
-        if (col.gameObject.name.Contains("Platform"))
+        if (col.gameObject.name.Contains("floor"))
         {
             isGrounded = false;
         }

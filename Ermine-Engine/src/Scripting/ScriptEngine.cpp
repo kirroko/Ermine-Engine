@@ -870,6 +870,7 @@ namespace
 	MonoClass* s_ComponentClass = nullptr;
 	MonoClass* s_AudioComponentClass = nullptr;
 	MonoClass* s_SerializeFieldAttr = nullptr;
+	MonoClass* s_AnimatorClass = nullptr;
 
 	MonoClass* s_ObjectClass = nullptr;
 	MonoClassField* s_EntityIDField = nullptr;
@@ -1144,7 +1145,7 @@ namespace
 		return &ECS::GetInstance().GetComponent<Transform>(id);
 	}
 
-#pragma region Trasnform ICalls
+#pragma region Transform ICalls
 	ManagedVector3 icall_transform_get_position(MonoObject* thisObj)
 	{
 		if (auto* t = GetTransformFromManaged(thisObj))
@@ -2203,6 +2204,23 @@ namespace
 			return obj;
 		}
 
+		// Handle Animator component
+		if (klass == s_AnimatorClass)
+		{
+			if (!ECS::GetInstance().HasComponent<AnimationComponent>(id))
+				return nullptr;
+
+			auto* dom = Ermine::ECS::GetInstance()
+				.GetSystem<Ermine::scripting::ScriptSystem>()->m_ScriptEngine->GetGameDomain();
+
+			MonoObject* obj = mono_object_new(dom, s_AnimatorClass);
+			mono_runtime_object_init(obj);
+			SetEntityIDOnManaged(obj, id);
+			SetComponentGameObject(obj, id);
+
+			return obj;
+		}
+
 		// return back the obj when requesting MonoBehaviour derived -> Script component
 		if (IsSubclassOf(klass, s_MonoBehaviourClass))
 		{
@@ -2239,6 +2257,9 @@ namespace
 
 		if (klass == s_AudioComponentClass)
 			return ECS::GetInstance().HasComponent<AudioComponent>(id);
+
+		if (klass == s_AnimatorClass)
+			return ECS::GetInstance().HasComponent<AnimationComponent>(id);
 
 		if (IsSubclassOf(klass, s_MonoBehaviourClass))
 			return ECS::GetInstance().HasComponent<Script>(id);
@@ -2416,6 +2437,11 @@ namespace
 	{
 		if (id == 0 || !ECS::GetInstance().IsEntityValid(id) || !ECS::GetInstance().HasComponent<Transform>(id))
 		{
+			{ //TEMP
+				std::cerr << "[Physics] GetTransform failed. EntityID = "
+					<< id << std::endl;
+				return nullptr;
+			}
 			assert(false && "Here!");
 			return nullptr;
 		}
@@ -2473,10 +2499,10 @@ namespace
 		auto physics = ECS::GetInstance().GetSystem<Physics>();
 		physics->RemovePhysic((EntityID)entityID);
 	}
-	static void icall_Physics_HasPhysicComp(uint64_t entityID)
+	static bool icall_Physics_HasPhysicComp(uint64_t entityID)
 	{
 		auto physics = ECS::GetInstance().GetSystem<Physics>();
-		physics->HasPhysicComp((EntityID)entityID);
+		return physics->HasPhysicComp((EntityID)entityID);
 	}
 	static void icall_Physics_Jump(uint64_t entityID,float jump)
 	{
@@ -2603,7 +2629,7 @@ namespace
 			return false;
 
 		dtNavMeshQuery* q = nav.runtime->query;
-		dtQueryFilter filter; // default filter is fine if you don’t use flags
+		dtQueryFilter filter; // default filter is fine if you donï¿½t use flags
 
 		float p[3] = { inPos.x, inPos.y, inPos.z };
 		dtPolyRef ref = 0;
@@ -2722,21 +2748,37 @@ namespace
 	static float Internal_GetHealth(uint64_t entityID)
 	{
 		auto& ecs = ECS::GetInstance();
-		if (!ecs.HasComponent<UIComponent>(entityID))
-			return 0.0f;
-
-		auto& ui = ecs.GetComponent<UIComponent>(entityID);
-		return ui.GetHealth();
+		// Try UIHealthbarComponent first (new system)
+		if (ecs.HasComponent<UIHealthbarComponent>(entityID))
+		{
+			auto& healthbar = ecs.GetComponent<UIHealthbarComponent>(entityID);
+			return healthbar.currentHealth;
+		}
+		// Fall back to UIComponent (legacy)
+		if (ecs.HasComponent<UIComponent>(entityID))
+		{
+			auto& ui = ecs.GetComponent<UIComponent>(entityID);
+			return ui.GetHealth();
+		}
+		return 0.0f;
 	}
 
 	static void Internal_SetHealth(uint64_t entityID, float value)
 	{
 		auto& ecs = ECS::GetInstance();
-		if (!ecs.HasComponent<UIComponent>(entityID))
+		// Try UIHealthbarComponent first (new system)
+		if (ecs.HasComponent<UIHealthbarComponent>(entityID))
+		{
+			auto& healthbar = ecs.GetComponent<UIHealthbarComponent>(entityID);
+			healthbar.currentHealth = value;
 			return;
-
-		auto& ui = ecs.GetComponent<UIComponent>(entityID);
-		ui.SetHealth(value);
+		}
+		// Fall back to UIComponent (legacy)
+		if (ecs.HasComponent<UIComponent>(entityID))
+		{
+			auto& ui = ecs.GetComponent<UIComponent>(entityID);
+			ui.SetHealth(value);
+		}
 	}
 
 	// temporary reference to health bar, to be removed
@@ -2778,6 +2820,37 @@ namespace
 
 		auto& healthbar = ecs.GetComponent<UIHealthbarComponent>(entityID);
 		return healthbar.maxHealth;
+	}
+
+	static float Internal_Healthbar_GetRegenRate(uint64_t entityID)
+	{
+		auto& ecs = ECS::GetInstance();
+		if (!ecs.HasComponent<UIHealthbarComponent>(entityID))
+			return 0.0f;
+
+		auto& healthbar = ecs.GetComponent<UIHealthbarComponent>(entityID);
+		return healthbar.healthRegenRate;
+	}
+
+	// GameplayHUD wrappers for UIHealthbarComponent
+	static float Internal_GameplayHUD_GetMaxHealth(uint64_t entityID)
+	{
+		auto& ecs = ECS::GetInstance();
+		if (!ecs.HasComponent<UIHealthbarComponent>(entityID))
+			return 100.0f;
+
+		auto& healthbar = ecs.GetComponent<UIHealthbarComponent>(entityID);
+		return healthbar.maxHealth;
+	}
+
+	static float Internal_GameplayHUD_GetRegenRate(uint64_t entityID)
+	{
+		auto& ecs = ECS::GetInstance();
+		if (!ecs.HasComponent<UIHealthbarComponent>(entityID))
+			return 0.0f;
+
+		auto& healthbar = ecs.GetComponent<UIHealthbarComponent>(entityID);
+		return healthbar.healthRegenRate;
 	}
 
 	// UIBookCounterComponent bindings
@@ -2986,6 +3059,179 @@ namespace
 		return 0;
 	}
 
+#pragma endregion
+
+#pragma region Animation ICalls
+	static AnimationComponent* GetAnimationFromManaged(MonoObject* thisObj)
+	{
+		using namespace Ermine;
+
+		EntityID id = GetEntityIDFromManaged(thisObj);
+		if (id == 0 || !ECS::GetInstance().IsEntityValid(id))
+			return nullptr;
+
+		if (!ECS::GetInstance().HasComponent<AnimationComponent>(id))
+			return nullptr;
+
+		auto& anim = ECS::GetInstance().GetComponent<AnimationComponent>(id);
+		if (!anim.m_animationGraph)
+			return nullptr;
+
+		return &anim;
+	}
+
+	bool icall_animator_get_bool(MonoObject* thisObj, MonoString* name)
+	{
+		auto* anim = GetAnimationFromManaged(thisObj);
+		if (!anim || !name) return false;
+
+		std::string param;
+		ToTempUTF8(name, param);
+
+		for (auto& p : anim->m_animationGraph->parameters)
+		{
+			if (p.name == param && p.type == AnimationParameter::Type::Bool)
+				return p.boolValue;
+		}
+
+		return false;
+	}
+
+	void icall_animator_set_bool(MonoObject* thisObj, MonoString* name, bool value)
+	{
+		auto* anim = GetAnimationFromManaged(thisObj);
+		if (!anim || !name) return;
+
+		std::string param;
+		ToTempUTF8(name, param);
+
+		for (auto& p : anim->m_animationGraph->parameters)
+		{
+			if (p.name == param && p.type == AnimationParameter::Type::Bool)
+			{
+				p.boolValue = value;
+				return;
+			}
+		}
+	}
+
+	float icall_animator_get_float(MonoObject* thisObj, MonoString* name)
+	{
+		auto* anim = GetAnimationFromManaged(thisObj);
+		if (!anim || !name) return 0.f;
+
+		std::string param;
+		ToTempUTF8(name, param);
+
+		for (auto& p : anim->m_animationGraph->parameters)
+		{
+			if (p.name == param && p.type == AnimationParameter::Type::Float)
+				return p.floatValue;
+		}
+		return 0.f;
+	}
+
+	void icall_animator_set_float(MonoObject* thisObj, MonoString* name, float value)
+	{
+		auto* anim = GetAnimationFromManaged(thisObj);
+		if (!anim || !name) return;
+
+		std::string param;
+		ToTempUTF8(name, param);
+
+		for (auto& p : anim->m_animationGraph->parameters)
+		{
+			if (p.name == param && p.type == AnimationParameter::Type::Float)
+			{
+				p.floatValue = value;
+				return;
+			}
+		}
+	}
+
+	int icall_animator_get_int(MonoObject* thisObj, MonoString* name)
+	{
+		auto* anim = GetAnimationFromManaged(thisObj);
+		if (!anim || !name) return 0;
+
+		std::string param;
+		ToTempUTF8(name, param);
+
+		for (auto& p : anim->m_animationGraph->parameters)
+		{
+			if (p.name == param && p.type == AnimationParameter::Type::Int)
+				return p.intValue;
+		}
+		return 0;
+	}
+
+	void icall_animator_set_int(MonoObject* thisObj, MonoString* name, int value)
+	{
+		auto* anim = GetAnimationFromManaged(thisObj);
+		if (!anim || !name) return;
+
+		std::string param;
+		ToTempUTF8(name, param);
+
+		for (auto& p : anim->m_animationGraph->parameters)
+		{
+			if (p.name == param && p.type == AnimationParameter::Type::Int)
+			{
+				p.intValue = value;
+				return;
+			}
+		}
+	}
+
+	void icall_animator_set_trigger(MonoObject* thisObj, MonoString* name)
+	{
+		auto* anim = GetAnimationFromManaged(thisObj);
+		if (!anim || !name) return;
+
+		std::string param;
+		ToTempUTF8(name, param);
+
+		for (auto& p : anim->m_animationGraph->parameters)
+		{
+			if (p.name == param && p.type == AnimationParameter::Type::Trigger)
+			{
+				p.triggerValue = true;
+				return;
+			}
+		}
+	}
+
+	MonoString* icall_animator_get_current_state(MonoObject* thisObj)
+	{
+		auto* anim = GetAnimationFromManaged(thisObj);
+		if (!anim || !anim->m_animationGraph->current)
+			return nullptr;
+
+		return mono_string_new(
+			mono_domain_get(),
+			anim->m_animationGraph->current->name.c_str()
+		);
+	}
+
+	void icall_animator_set_state(MonoObject* thisObj, MonoString* name)
+	{
+		auto* anim = GetAnimationFromManaged(thisObj);
+		if (!anim || !name) return;
+
+		std::string stateName;
+		ToTempUTF8(name, stateName);
+
+		for (auto& s : anim->m_animationGraph->states)
+		{
+			if (s->name == stateName)
+			{
+				anim->m_animationGraph->current = s;
+				anim->m_animationGraph->currentTime = 0.f;
+				anim->m_animationGraph->playing = true;
+				return;
+			}
+		}
+	}
 #pragma endregion
 }
 
@@ -3251,7 +3497,8 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	s_SerializeFieldAttr = mono_class_from_name(s_APIImage, "ErmineEngine", "SerializeFieldAttribute");
 	if (!s_SerializeFieldAttr)
 		s_SerializeFieldAttr = mono_class_from_name(s_APIImage, "ErmineEngine", "SerializeField");
-	
+	s_AnimatorClass = GetAPIClass("ErmineEngine", "Animator");
+
 	s_ObjectClass = GetAPIClass("ErmineEngine", "Object");
 	if (s_ObjectClass && !s_EntityIDField)
 	{
@@ -3418,8 +3665,9 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	mono_add_internal_call("ErmineEngine.Physics::Internal_GetRigidbody", (const void*)icall_rigidbody_get_rigidbody);
 	mono_add_internal_call("ErmineEngine.Physics::RemovePhysic", (const void*)&icall_Physics_RemovePhysic);
 	mono_add_internal_call("ErmineEngine.Physics::Jump", (const void*)icall_Physics_Jump);
-	mono_add_internal_call("ErmineEngine.Physics::CheckMotionType", (const int*)icall_Physics_CheckMotionType);
+	mono_add_internal_call("ErmineEngine.Physics::CheckMotionType", (const void*)icall_Physics_CheckMotionType);
 	mono_add_internal_call("ErmineEngine.Physics::ForceUpdate", (const void*)icall_Physics_ForceUpdate);
+	mono_add_internal_call("ErmineEngine.Physics::HasPhysicComp", (const void*)icall_Physics_HasPhysicComp);
 #pragma endregion
 
 #pragma region Cursor ICalls
@@ -3433,6 +3681,8 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 #pragma region UI ICalls
 	mono_add_internal_call("ErmineEngine.GameplayHUD::Internal_GetHealth", (const void*)Internal_GetHealth);
 	mono_add_internal_call("ErmineEngine.GameplayHUD::Internal_SetHealth", (const void*)Internal_SetHealth);
+	mono_add_internal_call("ErmineEngine.GameplayHUD::Internal_GetMaxHealth", (const void*)Internal_GameplayHUD_GetMaxHealth);
+	mono_add_internal_call("ErmineEngine.GameplayHUD::Internal_GetRegenRate", (const void*)Internal_GameplayHUD_GetRegenRate);
 	// temporary reference to health bar, to be removed
 	mono_add_internal_call("ErmineEngine.GameplayHUD::Internal_GetHealthBar", Internal_GetHealthBar);
 
@@ -3455,6 +3705,92 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 			if (!uiSystem)
 				return false;
 			return uiSystem->CastSkill((Ermine::EntityID)entityID, skillIndex);
+		});
+
+	// Set skill selected state by entity name
+	mono_add_internal_call("ErmineEngine.UISystem::Internal_SetSkillSelected",
+		(const void*)+[](MonoString* entityNameMono, int skillIndex, bool isSelected)
+		{
+			if (!entityNameMono) return;
+			char* entityName = mono_string_to_utf8(entityNameMono);
+
+			auto& ecs = Ermine::ECS::GetInstance();
+			for (Ermine::EntityID e = 0; e < 10000; ++e)
+			{
+				if (!ecs.IsEntityValid(e)) continue;
+				if (!ecs.HasComponent<Ermine::ObjectMetaData>(e)) continue;
+				if (!ecs.HasComponent<Ermine::UISkillsComponent>(e)) continue;
+
+				auto& meta = ecs.GetComponent<Ermine::ObjectMetaData>(e);
+				if (meta.name == entityName)
+				{
+					auto& skills = ecs.GetComponent<Ermine::UISkillsComponent>(e);
+					if (skillIndex >= 0 && skillIndex < static_cast<int>(skills.skills.size()))
+					{
+						skills.skills[skillIndex].isSelected = isSelected;
+					}
+					break;
+				}
+			}
+			mono_free(entityName);
+		});
+
+	// Get skill selected state by entity name
+	mono_add_internal_call("ErmineEngine.UISystem::Internal_GetSkillSelected",
+		(const void*)+[](MonoString* entityNameMono, int skillIndex) -> bool
+		{
+			if (!entityNameMono) return false;
+			char* entityName = mono_string_to_utf8(entityNameMono);
+
+			auto& ecs = Ermine::ECS::GetInstance();
+			for (Ermine::EntityID e = 0; e < 10000; ++e)
+			{
+				if (!ecs.IsEntityValid(e)) continue;
+				if (!ecs.HasComponent<Ermine::ObjectMetaData>(e)) continue;
+				if (!ecs.HasComponent<Ermine::UISkillsComponent>(e)) continue;
+
+				auto& meta = ecs.GetComponent<Ermine::ObjectMetaData>(e);
+				if (meta.name == entityName)
+				{
+					auto& skills = ecs.GetComponent<Ermine::UISkillsComponent>(e);
+					if (skillIndex >= 0 && skillIndex < static_cast<int>(skills.skills.size()))
+					{
+						mono_free(entityName);
+						return skills.skills[skillIndex].isSelected;
+					}
+					break;
+				}
+			}
+			mono_free(entityName);
+			return false;
+		});
+
+	// Select only one skill (deselect all others)
+	mono_add_internal_call("ErmineEngine.UISystem::Internal_SelectOnlySkill",
+		(const void*)+[](MonoString* entityNameMono, int skillIndexToSelect)
+		{
+			if (!entityNameMono) return;
+			char* entityName = mono_string_to_utf8(entityNameMono);
+
+			auto& ecs = Ermine::ECS::GetInstance();
+			for (Ermine::EntityID e = 0; e < 10000; ++e)
+			{
+				if (!ecs.IsEntityValid(e)) continue;
+				if (!ecs.HasComponent<Ermine::ObjectMetaData>(e)) continue;
+				if (!ecs.HasComponent<Ermine::UISkillsComponent>(e)) continue;
+
+				auto& meta = ecs.GetComponent<Ermine::ObjectMetaData>(e);
+				if (meta.name == entityName)
+				{
+					auto& skills = ecs.GetComponent<Ermine::UISkillsComponent>(e);
+					for (size_t i = 0; i < skills.skills.size(); ++i)
+					{
+						skills.skills[i].isSelected = (static_cast<int>(i) == skillIndexToSelect);
+					}
+					break;
+				}
+			}
+			mono_free(entityName);
 		});
 #pragma endregion
 
@@ -3480,4 +3816,21 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	mono_add_internal_call("ErmineEngine.VideoManager::Internal_SetRenderEnabled", (const void*)icall_videomanager_set_render_enabled);
 	mono_add_internal_call("ErmineEngine.VideoManager::Internal_GetRenderEnabled", (const void*)icall_videomanager_get_render_enabled);
 #pragma endregion VideoManager ICalls
+
+#pragma region Animation ICalls
+	mono_add_internal_call("ErmineEngine.Animator::Internal_GetBool", (const void*)icall_animator_get_bool);
+	mono_add_internal_call("ErmineEngine.Animator::Internal_SetBool", (const void*)icall_animator_set_bool);
+
+	mono_add_internal_call("ErmineEngine.Animator::Internal_GetFloat", (const void*)icall_animator_get_float);
+	mono_add_internal_call("ErmineEngine.Animator::Internal_SetFloat", (const void*)icall_animator_set_float);
+
+	mono_add_internal_call("ErmineEngine.Animator::Internal_GetInt", (const void*)icall_animator_get_int);
+	mono_add_internal_call("ErmineEngine.Animator::Internal_SetInt", (const void*)icall_animator_set_int);
+
+	mono_add_internal_call("ErmineEngine.Animator::Internal_SetTrigger", (const void*)icall_animator_set_trigger);
+
+	mono_add_internal_call("ErmineEngine.Animator::Internal_GetCurrentStateName", (const void*)icall_animator_get_current_state);
+
+	mono_add_internal_call("ErmineEngine.Animator::Internal_SetState", (const void*)icall_animator_set_state);
+#pragma endregion
 }

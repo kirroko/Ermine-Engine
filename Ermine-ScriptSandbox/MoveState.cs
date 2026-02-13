@@ -6,7 +6,7 @@ public class Move : MonoBehaviour
     public float stepDistance = 3.0f;
     public float reachDist = 0.6f;
 
-    public float rayDistance = 0.8f;
+    public float viewDistance = 15.0f;
     public float rayHeight = 0.8f;
     public float rayForwardOffset = 2.0f;
 
@@ -24,12 +24,49 @@ public class Move : MonoBehaviour
     private bool jumping = false;
     private ulong jumpLinkEntityID = 0;
 
+    public string playerName = "Player";
+
+    private GameObject playerGO;
+
     // stun guard
     public float stunDuration = 5.0f;
     private bool isStunned = false;
     private float stunTimer = 0.0f;
     public static bool RightClickStunArmed = false;
     private float armTimer = 0.0f;
+
+    private void CachePlayerIfNeeded()
+    {
+        if (playerGO == null)
+            playerGO = GameObject.Find(playerName);
+    }
+
+    private bool HasLineOfSightToPlayer()
+    {
+        CachePlayerIfNeeded();
+        if (playerGO == null) return false;
+
+        Vector3 origin = transform.position
+                       + new Vector3(0f, rayHeight, 0f)
+                       + transform.forward * rayForwardOffset;
+
+        Vector3 playerPoint = playerGO.transform.position + new Vector3(0f, rayHeight, 0f);
+        Vector3 toPlayer = playerPoint - origin;
+
+        float dist = toPlayer.Magnitude;
+        if (dist <= 0.0001f) return true;
+        if (dist > viewDistance) return false;
+
+        Vector3 dirToPlayer = toPlayer / dist;
+
+        RaycastHit hit;
+        bool didHit = Physics.Raycast(origin, dirToPlayer, out hit, dist);
+        if (!didHit) return false;
+
+        return hit.transform != null &&
+               hit.transform.gameObject != null &&
+               hit.transform.gameObject.name == playerName;
+    }
 
     private void TryStun()
     {
@@ -78,6 +115,12 @@ public class Move : MonoBehaviour
             return; // do NOTHING while stunned
         }
 
+        if (HasLineOfSightToPlayer())
+        {
+            StateMachine.RequestNextState(entityID);
+            return;
+        }
+
         if (jumping)
         {
             //Debug.Log("CALL StartJump: me=" + entityID + " link=" + jumpLinkEntityID);
@@ -122,16 +165,22 @@ public class Move : MonoBehaviour
                        + dir * rayForwardOffset;
 
         RaycastHit hit;
-        bool didHit = Physics.Raycast(origin, dir, out hit, rayDistance);
+        bool didHit = Physics.Raycast(origin, dir, out hit, 0.8f);
 
         if (!didHit)
             return false;
-        else
-            Debug.Log(hit.transform.gameObject.name);
+        //else
+        //    Debug.Log(hit.transform.gameObject.name);
+
+        var hitGO = hit.transform.gameObject;
 
         // Ignore self-hit
         ulong hitID = (ulong)hit.transform.gameObject.GetInstanceID();
         if (hitID == entityID) return false;
+
+        string n = hitGO.name;
+        if (n == playerName) return false;
+        if (n == "Sphere") return false;
 
         // Debug.Log("Hit: " + hit.transform.gameObject.name);
         return true;

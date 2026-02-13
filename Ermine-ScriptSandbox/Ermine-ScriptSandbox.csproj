@@ -70,7 +70,10 @@
   <ItemGroup Condition=" '$(Configuration)|$(Platform)' == 'Game-Release|x64' ">
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AnimationExample.cs" />
     <Compile Include="AttackState.cs" />
+    <Compile Include="EndElevator.cs" />
+    <Compile Include="MoveState.cs" />
     <Compile Include="ChaseState.cs" />
     <Compile Include="CutscenePlayer.cs" />
     <Compile Include="DamagePlayer.cs" />

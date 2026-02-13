@@ -22,7 +22,50 @@ namespace ErmineEngine
             return Internal_CastSkill((ulong)entity.GetInstanceID(), skillIndex);
         }
 
+        /// <summary>
+        /// Sets the selected state of a skill in UISkillsComponent.
+        /// Use this to visually indicate which skill is currently active.
+        /// </summary>
+        /// <param name="entityName">Name of the entity with UISkillsComponent (e.g., "SkillsHUD")</param>
+        /// <param name="skillIndex">Skill slot index (0-based)</param>
+        /// <param name="isSelected">True to show selected icon, false to show unselected icon</param>
+        public static void SetSkillSelected(string entityName, int skillIndex, bool isSelected)
+        {
+            Internal_SetSkillSelected(entityName, skillIndex, isSelected);
+        }
+
+        /// <summary>
+        /// Gets the selected state of a skill in UISkillsComponent.
+        /// </summary>
+        /// <param name="entityName">Name of the entity with UISkillsComponent</param>
+        /// <param name="skillIndex">Skill slot index (0-based)</param>
+        /// <returns>True if skill is selected, false otherwise</returns>
+        public static bool GetSkillSelected(string entityName, int skillIndex)
+        {
+            return Internal_GetSkillSelected(entityName, skillIndex);
+        }
+
+        /// <summary>
+        /// Selects one skill and deselects all others in UISkillsComponent.
+        /// Useful for showing only one active skill at a time.
+        /// </summary>
+        /// <param name="entityName">Name of the entity with UISkillsComponent</param>
+        /// <param name="skillIndex">Skill slot index to select (-1 to deselect all)</param>
+        public static void SelectOnlySkill(string entityName, int skillIndex)
+        {
+            Internal_SelectOnlySkill(entityName, skillIndex);
+        }
+
         [MethodImpl(MethodImplOptions.InternalCall)]
         private static extern bool Internal_CastSkill(ulong entityID, int skillIndex);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        private static extern void Internal_SetSkillSelected(string entityName, int skillIndex, bool isSelected);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        private static extern bool Internal_GetSkillSelected(string entityName, int skillIndex);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        private static extern void Internal_SelectOnlySkill(string entityName, int skillIndex);
     }
 }

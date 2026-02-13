@@ -939,6 +939,49 @@ namespace Ermine::editor {
 			ImGui::EndCombo();
 		}
 
+		// Drag & Drop target for Material (.mat files)
+		if (ImGui::BeginDragDropTarget())
+		{
+			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_FILE"))
+			{
+				const char* droppedPathCStr = static_cast<const char*>(payload->Data);
+				std::filesystem::path droppedPath = droppedPathCStr;
+
+				// Only accept .mat files
+				if (droppedPath.extension() == ".mat")
+				{
+					auto& assetManager = AssetManager::GetInstance();
+
+					// Normalize / absolute path if needed
+					std::string matPath = droppedPath.string();
+
+					// Load or fetch material
+					auto material = assetManager.LoadMaterialAsset(matPath, true);
+					if (material)
+					{
+						Guid matGuid = assetManager.GetMaterialGuidForPath(matPath);
+
+						matComp.SetMaterial(material, matGuid);
+
+						// Sync custom fragment shader (if any)
+						if (const std::string* frag = assetManager.GetMaterialCustomFragmentShader(matGuid))
+							matComp.customFragmentShader = *frag;
+
+						// Mark renderer dirty
+						if (auto renderer = ECS::GetInstance().GetSystem<graphics::Renderer>())
+							renderer->MarkMaterialsDirty();
+
+						EE_CORE_INFO("Applied dropped material: {}", matPath);
+					}
+					else
+						EE_CORE_WARN("Failed to load dropped material: {}", matPath);
+				}
+				else
+					EE_CORE_INFO("Ignored drop '{}': not a .mat file", droppedPath.string().c_str());
+			}
+			ImGui::EndDragDropTarget();
+		}
+
 		ImGui::SameLine();
 		if (ImGui::Button("Refresh##MaterialAsset")) {
 			refreshMaterialAssets();
@@ -3562,11 +3605,14 @@ namespace Ermine::editor {
 			for (size_t i = 0; i < skills.skills.size(); ++i)
 			{
 				ImGui::PushID(static_cast<int>(i));
-				std::string header = "Skill Slot " + std::to_string(i + 1);
-				if (!skills.skills[i].skillName.empty())
-					header += " (" + skills.skills[i].skillName + ")";
 
-				if (ImGui::TreeNode(header.c_str()))
+				// Use fixed header ID to prevent tree node from closing when name changes
+				std::string headerId = "skill_slot_" + std::to_string(i);
+				std::string displayName = "Skill Slot " + std::to_string(i + 1);
+				if (!skills.skills[i].skillName.empty())
+					displayName += " (" + skills.skills[i].skillName + ")";
+
+				if (ImGui::TreeNodeEx(headerId.c_str(), ImGuiTreeNodeFlags_None, "%s", displayName.c_str()))
 				{
 					auto& skill = skills.skills[i];
 
@@ -3602,7 +3648,27 @@ namespace Ermine::editor {
 					iconBuffer[sizeof(iconBuffer) - 1] = '\0';
 					if (ImGui::InputText("Icon Texture Path", iconBuffer, sizeof(iconBuffer)))
 						skill.iconTexturePath = iconBuffer;
+					ImGui::TextDisabled("(Default icon - used if selected/unselected not set)");
 
+					ImGui::Separator();
+					ImGui::Text("Selection State Icons:");
+
+					char selectedIconBuffer[256];
+					strncpy_s(selectedIconBuffer, skill.selectedIconPath.c_str(), sizeof(selectedIconBuffer) - 1);
+					selectedIconBuffer[sizeof(selectedIconBuffer) - 1] = '\0';
+					if (ImGui::InputText("Selected Icon Path", selectedIconBuffer, sizeof(selectedIconBuffer)))
+						skill.selectedIconPath = selectedIconBuffer;
+
+					char unselectedIconBuffer[256];
+					strncpy_s(unselectedIconBuffer, skill.unselectedIconPath.c_str(), sizeof(unselectedIconBuffer) - 1);
+					unselectedIconBuffer[sizeof(unselectedIconBuffer) - 1] = '\0';
+					if (ImGui::InputText("Unselected Icon Path", unselectedIconBuffer, sizeof(unselectedIconBuffer)))
+						skill.unselectedIconPath = unselectedIconBuffer;
+
+					ImGui::Checkbox("Is Selected", &skill.isSelected);
+					ImGui::TextDisabled("(Runtime state - set by game logic)");
+
+					ImGui::Separator();
 					ImGui::DragFloat("Max Cooldown (sec)", &skill.maxCooldown, 0.1f, 0.0f, 60.0f);
 					ImGui::DragFloat("Health Cost", &skill.manaCost, 1.0f, 0.0f, 100.0f);
 

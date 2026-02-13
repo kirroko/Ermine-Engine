@@ -75,6 +75,41 @@ namespace Ermine::ImguiUI
         }
     }
 
+    void Browser::PreloadAllTextureAssetsAsync(const std::filesystem::path& dir)
+    {
+        if (preloadInProgress) return; // Already running
+        preloadInProgress = true;
+
+        preloadThread = std::thread([this, dir]()
+            {
+                EE_CORE_INFO("Starting async preload of all textures...");
+
+                try {
+                    for (auto& entry : fs::recursive_directory_iterator(dir))
+                    {
+                        if (!entry.is_regular_file()) continue;
+
+                        std::string ext = GetExtensionLower(entry.path().string());
+                        if (ext == "png" || ext == "jpg" || ext == "jpeg")
+                        {
+                            auto tex = AssetManager::GetInstance().LoadTexture(entry.path().string().c_str());
+                            if (!tex || !tex->IsValid())
+                                EE_CORE_WARN("Failed to preload texture: {}", entry.path().string());
+                        }
+                    }
+                }
+                catch (const std::exception& e) {
+                    EE_CORE_ERROR("Async preload failed: {}", e.what());
+                }
+
+                EE_CORE_INFO("Async texture preload completed.");
+                preloadInProgress = false;
+            });
+
+        // Detach thread so it continues running independently
+        preloadThread.detach();
+    }
+
     void Browser::CheckImportStatus(Asset& asset)
     {
         if (!m_Pipeline) return;
@@ -404,6 +439,7 @@ namespace Ermine::ImguiUI
 
         // Preload all texture assets
         PreloadAllTextureAssets(projectRoot);
+        //PreloadAllTextureAssetsAsync(projectRoot);
 
         // Initial load of directory contents
         LoadDirectoryContents(projectRoot);

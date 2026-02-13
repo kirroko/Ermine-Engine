@@ -1,0 +1,19 @@
+{
+    "parameters": {
+        "materialCastsShadows": {
+            "type": "bool",
+            "value": true
+        }
+    },
+    "uvTransform": {
+        "scale": [
+            1.0,
+            1.0
+        ],
+        "offset": [
+            0.0,
+            0.0
+        ]
+    },
+    "customFragmentShader": "../Resources/Shaders/custom_uv_effects_fragment.glsl"
+}
