@@ -71,23 +71,23 @@
         },
         "materialAlbedoMap": {
             "type": "texture2d",
-            "value": "../Ermine-Game.lion_rcdbase/12345678-1234-1234-1234-123456789ABC/Windows.platform/Data/4149284771552362535.dds"
+            "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP6_csd3451\\Ermine-Engine\\Resources\\Textures\\ART1_Floating_Jail_Cell_BC.png"
         },
         "materialNormalMap": {
             "type": "texture2d",
-            "value": "../Ermine-Game.lion_rcdbase/12345678-1234-1234-1234-123456789ABC/Windows.platform/Data/13949117560710561835.dds"
+            "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP6_csd3451\\Ermine-Engine\\Resources\\Textures\\ART1_Floating_Jail_Cell_NRM.png"
         },
         "materialRoughnessMap": {
             "type": "texture2d",
-            "value": "../Ermine-Game.lion_rcdbase/12345678-1234-1234-1234-123456789ABC/Windows.platform/Data/9913892294586613805.dds"
+            "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP6_csd3451\\Ermine-Engine\\Resources\\Textures\\ART1_Floating_Jail_Cell_Roughness.png"
         },
         "materialMetallicMap": {
             "type": "texture2d",
-            "value": "../Ermine-Game.lion_rcdbase/12345678-1234-1234-1234-123456789ABC/Windows.platform/Data/5302206276159209513.dds"
+            "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP6_csd3451\\Ermine-Engine\\Resources\\Textures\\ART1_Floating_Jail_Cell_Metallic.png"
         },
         "materialAoMap": {
             "type": "texture2d",
-            "value": "../Ermine-Game.lion_rcdbase/12345678-1234-1234-1234-123456789ABC/Windows.platform/Data/2419902514642092069.dds"
+            "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP6_csd3451\\Ermine-Engine\\Resources\\Textures\\ART1_Floating_Jail_Cell_AO.png"
         }
     },
     "uvTransform": {
