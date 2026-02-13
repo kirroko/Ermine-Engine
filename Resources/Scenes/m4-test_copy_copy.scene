@@ -182,13 +182,13 @@
               "class": "PlayerController2",
               "enabled": true,
               "fields": {
-                "jumpHeight": {
-                  "t": 0,
-                  "v": 2.0
-                },
                 "mouseHorSens": {
                   "t": 0,
                   "v": 0.30000001192092898
+                },
+                "jumpHeight": {
+                  "t": 0,
+                  "v": 2.0
                 },
                 "mouseVertSens": {
                   "t": 0,
@@ -198,13 +198,13 @@
                   "t": 0,
                   "v": 5.0
                 },
-                "camDefaultY": {
-                  "t": 0,
-                  "v": 4.5
-                },
                 "jumpspeed": {
                   "t": 0,
                   "v": 5.0
+                },
+                "camDefaultY": {
+                  "t": 0,
+                  "v": 4.5
                 },
                 "crouchLerpSpeed": {
                   "t": 0,
@@ -216,11 +216,11 @@
               "class": "OrbTeleport",
               "enabled": true,
               "fields": {
-                "damage": {
+                "recallHealAmt": {
                   "t": 0,
                   "v": 10.0
                 },
-                "recallHealAmt": {
+                "damage": {
                   "t": 0,
                   "v": 10.0
                 },
@@ -8251,6 +8251,92 @@
             0.026000000536441804,
             0.009999999776482582
           ]
+        },
+        "GPUParticleEmitter": {
+          "active": true,
+          "maxParticles": 512,
+          "emissionShape": 1,
+          "localPositionOffset": [
+            -3.7300000190734865,
+            1.309999942779541,
+            21.889999389648439
+          ],
+          "overallScale": 1.0,
+          "spawnBoxExtents": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "spawnRadius": 150.0,
+          "spawnRadiusInner": 50.0,
+          "spawnRate": 20.0,
+          "burstCountMin": 20,
+          "burstCountMax": 40,
+          "burstInterval": 1.5,
+          "burstOnStart": true,
+          "directionMode": 0,
+          "direction": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "coneAngle": 25.0,
+          "coneInnerAngle": 0.0,
+          "speedMin": 0.5,
+          "speedMax": 3.0,
+          "gravity": [
+            0.0,
+            0.5,
+            0.0
+          ],
+          "drag": 0.0,
+          "turbulenceStrength": 0.0,
+          "turbulenceScale": 1.0,
+          "boundsMode": 1,
+          "boundsShape": 0,
+          "boundsBoxExtents": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "boundsRadius": 2.0,
+          "boundsRadiusInner": 0.0,
+          "renderMode": 2,
+          "smokeOpacity": 0.6000000238418579,
+          "smokeSoftness": 0.5,
+          "smokeNoiseScale": 0.15000000596046449,
+          "smokeDistortScale": 0.25,
+          "smokeDistortStrength": 0.3499999940395355,
+          "smokePuffScale": 0.3499999940395355,
+          "smokePuffStrength": 0.6000000238418579,
+          "smokeStretch": 0.5,
+          "smokeUpBias": 0.20000000298023225,
+          "smokeDepthFade": 6.0,
+          "electricIntensity": 5.0,
+          "electricFrequency": 15.0,
+          "electricBoltThickness": 0.07999999821186066,
+          "electricBoltVariation": 1.5,
+          "electricGlow": 2.0,
+          "electricBoltCount": 1,
+          "colorStart": [
+            0.30000001192092898,
+            0.6000000238418579,
+            1.0
+          ],
+          "colorEnd": [
+            0.10000000149011612,
+            0.20000000298023225,
+            0.5
+          ],
+          "alphaStart": 1.0,
+          "alphaEnd": 0.0,
+          "sizeStartMin": 0.5,
+          "sizeStartMax": 1.0,
+          "sizeEndMin": 0.15000000596046449,
+          "sizeEndMax": 2.0,
+          "lifetimeMin": 0.30000001192092898,
+          "lifetimeMax": 0.6000000238418579,
+          "sparkleShape": 0
         },
         "ObjectMetaData": {
           "name": "gate (1)",
@@ -26176,11 +26262,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -27008,11 +27094,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -27840,11 +27926,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -28672,11 +28758,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -29504,11 +29590,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -30336,11 +30422,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -31168,11 +31254,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -32000,11 +32086,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -32832,11 +32918,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -33664,11 +33750,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -46687,17 +46773,13 @@
                   "t": 0,
                   "v": 15.0
                 },
-                "eSpeed": {
-                  "t": 0,
-                  "v": 1.0
-                },
                 "doorMoveSpeed": {
                   "t": 0,
                   "v": 1.0
                 },
-                "eDuration": {
+                "eSpeed": {
                   "t": 0,
-                  "v": 15.0
+                  "v": 1.0
                 },
                 "sceneName": {
                   "t": 3,
@@ -46706,6 +46788,10 @@
                 "doorMoveDuration": {
                   "t": 0,
                   "v": 2.0
+                },
+                "eDuration": {
+                  "t": 0,
+                  "v": 15.0
                 },
                 "dSpeed": {
                   "t": 0,
