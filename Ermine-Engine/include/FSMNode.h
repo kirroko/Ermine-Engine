@@ -28,6 +28,9 @@ namespace Ermine
 
         std::unique_ptr<scripting::ScriptInstance> instance;
 
+        ImVec2 editorPosition = ImVec2(100.0f, 100.0f);
+        bool positionInitialized = false;
+
         // Default constructor
         ScriptNode() = default;
 

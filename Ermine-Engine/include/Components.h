@@ -3134,6 +3134,9 @@ namespace Ermine
 				n.AddMember("isAttached", nodePtr->isAttached, alloc);
 				n.AddMember("isStartNode", nodePtr->isStartNode, alloc);
 
+				n.AddMember("posX", nodePtr->editorPosition.x, alloc);
+				n.AddMember("posY", nodePtr->editorPosition.y, alloc);
+
 				// NOTE: instance is runtime-only and NOT serialized.
 
 				nodes.PushBack(n, alloc);
@@ -3212,6 +3215,14 @@ namespace Ermine
 					// isStartNode
 					if (nVal.HasMember("isStartNode") && nVal["isStartNode"].IsBool())
 						node->isStartNode = nVal["isStartNode"].GetBool();
+
+					if (nVal.HasMember("posX") && nVal["posX"].IsNumber())
+						node->editorPosition.x = nVal["posX"].GetFloat();
+
+					if (nVal.HasMember("posY") && nVal["posY"].IsNumber())
+						node->editorPosition.y = nVal["posY"].GetFloat();
+
+					node->positionInitialized = false;
 
 					// instance is runtime-only; will be created via CreateInstance(entity)
 					// when Init(entity) is called.

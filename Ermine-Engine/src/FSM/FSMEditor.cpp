@@ -63,6 +63,9 @@ namespace Ermine
         auto node = std::make_shared<ScriptNode>();
         node->id = m_nextNodeId++;
         node->name = name;
+        //node->editorPosition = ImVec2(40.0f + node->id * 30.0f, 40.0f + node->id * 20.0f);
+        node->editorPosition = ImVec2(0.0f, 0.0f);
+        node->positionInitialized = false;
         node->isAttached = false;
         node->scriptClassName = "";
         fsm.m_Nodes.push_back(node);
@@ -120,6 +123,14 @@ namespace Ermine
         {
             auto& snode = *nodePtr;
             ImNodes::BeginNode(snode.id);
+
+            // Restore saved position once
+            if (!snode.positionInitialized)
+            {
+                ImNodes::SetNodeGridSpacePos(snode.id, snode.editorPosition);
+                snode.positionInitialized = true;
+            }
+
             ImNodes::BeginNodeTitleBar();
             ImGui::TextUnformatted(snode.name.c_str());
             ImNodes::EndNodeTitleBar();
@@ -237,6 +248,13 @@ namespace Ermine
             ImNodes::Link(linkId++, link.first, link.second);
 
         ImNodes::EndNodeEditor();
+
+        // save current position
+        for (auto& nodePtr : fsm.m_Nodes)
+        {
+            auto& snode = *nodePtr;
+            snode.editorPosition = ImNodes::GetNodeGridSpacePos(snode.id);
+        }
 
         if (!nodesToDetachScript.empty())
         {
