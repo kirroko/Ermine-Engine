@@ -71,23 +71,23 @@
         },
         "materialAlbedoMap": {
             "type": "texture2d",
-            "value": "../Ermine-Game.lion_rcdbase/12345678-1234-1234-1234-123456789ABC/Windows.platform/Data/16228677843710115853.dds"
+            "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP6_csd3451\\Ermine-Engine\\Resources\\Textures\\ART1_pillars_BC.png"
         },
         "materialNormalMap": {
             "type": "texture2d",
-            "value": "../Ermine-Game.lion_rcdbase/12345678-1234-1234-1234-123456789ABC/Windows.platform/Data/11040531072979304465.dds"
+            "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP6_csd3451\\Ermine-Engine\\Resources\\Textures\\ART1_pillars_NRM.png"
         },
         "materialRoughnessMap": {
             "type": "texture2d",
-            "value": "../Ermine-Game.lion_rcdbase/12345678-1234-1234-1234-123456789ABC/Windows.platform/Data/6428845054551916563.dds"
+            "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP6_csd3451\\Ermine-Engine\\Resources\\Textures\\ART1_pillars_Roughness.png"
         },
         "materialMetallicMap": {
             "type": "texture2d",
-            "value": "../Ermine-Game.lion_rcdbase/12345678-1234-1234-1234-123456789ABC/Windows.platform/Data/15652217091406692367.dds"
+            "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP6_csd3451\\Ermine-Engine\\Resources\\Textures\\ART1_pillars_Metallic.png"
         },
         "materialAoMap": {
             "type": "texture2d",
-            "value": "../Ermine-Game.lion_rcdbase/12345678-1234-1234-1234-123456789ABC/Windows.platform/Data/8734688063765610507.dds"
+            "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP6_csd3451\\Ermine-Engine\\Resources\\Textures\\ART1_pillars_AO.png"
         }
     },
     "uvTransform": {

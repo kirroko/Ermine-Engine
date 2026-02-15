@@ -125,6 +125,12 @@ public:
          * The key is the texture file path, and the value is the shared Texture.
          */
         const std::unordered_map<std::string, std::shared_ptr<graphics::Texture>>& GetLoadedTextures() const;
+        /**
+         * @brief Resolve the best source path to persist in .mat files for a texture.
+         * @param texture Texture reference currently bound to material parameter.
+         * @return Source path when resolvable, otherwise the texture's current file path.
+         */
+        std::string ResolveTexturePathForMaterialWrite(const std::shared_ptr<graphics::Texture>& texture) const;
 
         // ================== Shader Management ==================
         /**
@@ -324,8 +330,10 @@ public:
         /**
          * @brief Scan the materials directory and cache GUID->path mappings.
          * @param materialsDir Directory to scan
+         * @param createMissingMeta When true, generates missing .meta files for .mat assets.
          */
-        void ScanMaterialAssets(const std::string& materialsDir = "../Resources/Materials/");
+        void ScanMaterialAssets(const std::string& materialsDir = "../Resources/Materials/",
+            bool createMissingMeta = false);
 
         /**
          * @brief Get cached GUID->path mappings for material assets.

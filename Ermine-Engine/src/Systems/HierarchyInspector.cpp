@@ -32,6 +32,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "CommandHistory.h"
 #include "GISystem.h"
 #include "Renderer.h"
+#include "Serialisation.h"
 
 #include "xcore/my_properties.h"
 #include "xproperty.h"
@@ -259,7 +260,8 @@ namespace Ermine::editor {
 			case graphics::MaterialParamType::TEXTURE_2D:
 				oss << "t:";
 				if (param.texture) {
-					std::string path = param.texture->GetFilePath();
+					std::string path =
+						AssetManager::GetInstance().ResolveTexturePathForMaterialWrite(param.texture);
 					oss << normalizePath(path);
 				}
 				break;
@@ -875,10 +877,9 @@ namespace Ermine::editor {
 
 		static std::vector<MaterialAssetEntry> materialAssets;
 		static bool materialAssetsScanned = false;
-		static auto lastMaterialScan = std::chrono::steady_clock::now();
 
 		auto refreshMaterialAssets = [&]() {
-			assetManager.ScanMaterialAssets();
+			assetManager.ScanMaterialAssets("../Resources/Materials/", false);
 			materialAssets.clear();
 			for (const auto& [guid, path] : assetManager.GetMaterialPathsByGuid()) {
 				MaterialAssetEntry entry;
@@ -894,14 +895,6 @@ namespace Ermine::editor {
 		if (!materialAssetsScanned) {
 			refreshMaterialAssets();
 			materialAssetsScanned = true;
-			lastMaterialScan = std::chrono::steady_clock::now();
-		}
-		else {
-			auto now = std::chrono::steady_clock::now();
-			if (now - lastMaterialScan > std::chrono::seconds(1)) {
-				refreshMaterialAssets();
-				lastMaterialScan = now;
-			}
 		}
 
 		if (matComp.materialGuid.IsValid()) {
@@ -1040,87 +1033,134 @@ namespace Ermine::editor {
 
 		if (ImGui::Button("Compile All Materials##MaterialAsset")) {
 			auto& ecs = ECS::GetInstance();
+			assetManager.ScanMaterialAssets("../Resources/Materials/", false);
+
+			struct ExistingMaterialEntry {
+				Guid guid;
+				std::string name;
+			};
+
+			std::unordered_map<std::string, std::vector<ExistingMaterialEntry>> signatureIndex;
+			signatureIndex.reserve(assetManager.GetMaterialPathsByGuid().size());
+			std::unordered_map<Guid, std::shared_ptr<graphics::Material>> boundByGuid;
+			std::vector<Ermine::EntityID> materialEntities;
+			materialEntities.reserve(256);
+
+			for (const auto& [guid, path] : assetManager.GetMaterialPathsByGuid()) {
+				auto existing = assetManager.LoadMaterialAsset(path, false);
+				if (!existing)
+					continue;
+				std::string frag;
+				if (const std::string* stored = assetManager.GetMaterialCustomFragmentShader(guid))
+					frag = *stored;
+				const std::string sig = BuildMaterialSignature(*existing, frag, {});
+				signatureIndex[sig].push_back({ guid, std::filesystem::path(path).stem().string() });
+				boundByGuid.try_emplace(guid, existing);
+			}
+
+			const std::filesystem::path materialsDir = std::filesystem::absolute("../Resources/Materials");
+
+			auto preferredMaterialName = [&](Ermine::EntityID id) {
+				std::string baseName = "Material";
+				if (ecs.HasComponent<ObjectMetaData>(id)) {
+					const auto& meta = ecs.GetComponent<ObjectMetaData>(id);
+					if (!meta.name.empty())
+						baseName = meta.name;
+					if (baseName.rfind("Mesh_", 0) == 0 && baseName.size() > 5)
+						baseName = baseName.substr(5);
+				}
+				return AssetManager::SanitizeAssetName(baseName);
+			};
 
 			for (Ermine::EntityID id = 0; id < Ermine::MAX_ENTITIES; ++id) {
 				if (!ecs.IsEntityValid(id) || !ecs.HasComponent<Ermine::Material>(id))
 					continue;
 
+				materialEntities.push_back(id);
 				auto& comp = ecs.GetComponent<Ermine::Material>(id);
 				auto matShared = comp.GetSharedMaterial();
 				if (!matShared)
 					continue;
 
-				std::string baseName = "Material";
-				if (ecs.HasComponent<ObjectMetaData>(id)) {
-					const auto& meta = ecs.GetComponent<ObjectMetaData>(id);
-					baseName = meta.name.empty() ? baseName : meta.name;
-					if (baseName.rfind("Mesh_", 0) == 0 && baseName.size() > 5)
-						baseName = baseName.substr(5);
+				const std::string preferredName = preferredMaterialName(id);
+				const std::string currentSig = BuildMaterialSignature(*matShared, comp.customFragmentShader, {});
+
+				Guid resolvedGuid{};
+				std::string resolvedName;
+				auto sigIt = signatureIndex.find(currentSig);
+				if (sigIt != signatureIndex.end() && !sigIt->second.empty()) {
+					auto matchIt = std::find_if(sigIt->second.begin(), sigIt->second.end(),
+						[&](const ExistingMaterialEntry& e) { return e.name == preferredName; });
+					if (matchIt != sigIt->second.end()) {
+						resolvedGuid = matchIt->guid;
+						resolvedName = matchIt->name;
+					}
+					else {
+						resolvedGuid = sigIt->second.front().guid;
+						resolvedName = sigIt->second.front().name;
+					}
+
+					// Force recompilation overwrite even when signature/name already matches.
+					resolvedGuid = assetManager.SaveMaterialAsset(resolvedName, *matShared, true, comp.customFragmentShader);
+				}
+				else {
+					std::string saveName = preferredName;
+					std::filesystem::path targetPath = materialsDir / (saveName + ".mat");
+					if (std::filesystem::exists(targetPath)) {
+						int suffix = 1;
+						do {
+							saveName = preferredName + "_Copy" + std::to_string(suffix++);
+							targetPath = materialsDir / (saveName + ".mat");
+						} while (std::filesystem::exists(targetPath));
+					}
+
+					resolvedName = saveName;
+					resolvedGuid = assetManager.SaveMaterialAsset(resolvedName, *matShared, true, comp.customFragmentShader);
+					if (resolvedGuid.IsValid()) {
+						signatureIndex[currentSig].push_back({ resolvedGuid, resolvedName });
+					}
 				}
 
-				baseName = AssetManager::SanitizeAssetName(baseName);
-				std::filesystem::path basePath = std::filesystem::absolute("../Resources/Materials") / (baseName + ".mat");
-				const std::string currentSig = BuildMaterialSignature(*matShared, comp.customFragmentShader, baseName);
+				if (!resolvedGuid.IsValid())
+					continue;
 
-				if (std::filesystem::exists(basePath)) {
-					auto existing = assetManager.LoadMaterialAsset(basePath.string(), false);
-					if (existing) {
-						Guid baseGuid = assetManager.GetMaterialGuidForPath(basePath.string());
-						std::string frag = "";
-						if (const std::string* stored = assetManager.GetMaterialCustomFragmentShader(baseGuid))
-							frag = *stored;
-						const std::string existingSig = BuildMaterialSignature(*existing, frag, baseName);
+				// Force-write/refresh .meta alongside recompiled .mat.
+				const std::string resolvedPath = assetManager.GetMaterialPathByGuid(resolvedGuid);
+				if (!resolvedPath.empty()) {
+					if (resolvedName.empty())
+						resolvedName = std::filesystem::path(resolvedPath).stem().string();
 
-						if (existingSig == currentSig) {
-							Guid guid = assetManager.SaveMaterialAsset(baseName, *matShared, true, comp.customFragmentShader);
-							auto shared = assetManager.GetMaterialByGuid(guid);
-							comp.SetMaterial(shared ? shared : matShared, guid);
-							if (shared) {
-								for (Ermine::EntityID other = 0; other < Ermine::MAX_ENTITIES; ++other) {
-									if (!ecs.IsEntityValid(other) || !ecs.HasComponent<Ermine::Material>(other))
-										continue;
-									auto& otherComp = ecs.GetComponent<Ermine::Material>(other);
-									if (otherComp.materialGuid == guid)
-										otherComp.SetMaterial(shared, guid);
-								}
-							}
-							continue;
-						}
-					}
+					std::filesystem::path metaPath = resolvedPath;
+					metaPath += ".meta";
+					SaveAssetMetaGuid(metaPath, resolvedGuid, "Material", 1, true);
+				}
 
-					std::string uniqueName = baseName;
-					int suffix = 1;
-					do {
-						uniqueName = baseName + "_Copy" + std::to_string(suffix++);
-					} while (std::filesystem::exists(std::filesystem::absolute("../Resources/Materials") / (uniqueName + ".mat")));
+				auto& bucket = signatureIndex[currentSig];
+				const bool alreadyIndexed = std::any_of(bucket.begin(), bucket.end(),
+					[&](const ExistingMaterialEntry& e) { return e.guid == resolvedGuid; });
+				if (!alreadyIndexed)
+					bucket.push_back({ resolvedGuid, resolvedName });
 
-					Guid guid = assetManager.SaveMaterialAsset(uniqueName, *matShared, true, comp.customFragmentShader);
-					auto shared = assetManager.GetMaterialByGuid(guid);
-					comp.SetMaterial(shared ? shared : matShared, guid);
-					if (shared) {
-						for (Ermine::EntityID other = 0; other < Ermine::MAX_ENTITIES; ++other) {
-							if (!ecs.IsEntityValid(other) || !ecs.HasComponent<Ermine::Material>(other))
-								continue;
-							auto& otherComp = ecs.GetComponent<Ermine::Material>(other);
-							if (otherComp.materialGuid == guid)
-								otherComp.SetMaterial(shared, guid);
-						}
-					}
+				auto boundIt = boundByGuid.find(resolvedGuid);
+				if (boundIt != boundByGuid.end() && boundIt->second) {
+					comp.SetMaterial(boundIt->second, resolvedGuid);
 					continue;
 				}
 
-				Guid guid = assetManager.SaveMaterialAsset(baseName, *matShared, true, comp.customFragmentShader);
-				auto shared = assetManager.GetMaterialByGuid(guid);
-				comp.SetMaterial(shared ? shared : matShared, guid);
-				if (shared) {
-					for (Ermine::EntityID other = 0; other < Ermine::MAX_ENTITIES; ++other) {
-						if (!ecs.IsEntityValid(other) || !ecs.HasComponent<Ermine::Material>(other))
-							continue;
-						auto& otherComp = ecs.GetComponent<Ermine::Material>(other);
-						if (otherComp.materialGuid == guid)
-							otherComp.SetMaterial(shared, guid);
-					}
-				}
+				auto shared = assetManager.GetMaterialByGuid(resolvedGuid);
+				if (!shared)
+					shared = matShared;
+				comp.SetMaterial(shared, resolvedGuid);
+				boundByGuid[resolvedGuid] = shared;
+			}
+
+			for (Ermine::EntityID id : materialEntities) {
+				auto& comp = ecs.GetComponent<Ermine::Material>(id);
+				if (!comp.materialGuid.IsValid())
+					continue;
+				auto it = boundByGuid.find(comp.materialGuid);
+				if (it != boundByGuid.end() && it->second)
+					comp.SetMaterial(it->second, comp.materialGuid);
 			}
 
 			refreshMaterialAssets();

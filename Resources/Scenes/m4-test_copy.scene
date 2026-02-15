@@ -418,7 +418,7 @@
           ]
         },
         "Material": {
-          "guid": "02a1f3b255054045947f2e2706611523"
+          "guid": "97a7287a9cc002479cf02779a576a8c3"
         },
         "HierarchyComponent": {
           "depth": 0
@@ -430,13 +430,13 @@
               "class": "PlayerController2",
               "enabled": true,
               "fields": {
-                "mouseHorSens": {
-                  "t": 0,
-                  "v": 0.30000001192092898
-                },
                 "jumpHeight": {
                   "t": 0,
                   "v": 2.0
+                },
+                "mouseHorSens": {
+                  "t": 0,
+                  "v": 0.30000001192092898
                 },
                 "mouseVertSens": {
                   "t": 0,
@@ -446,13 +446,13 @@
                   "t": 0,
                   "v": 5.0
                 },
-                "jumpspeed": {
-                  "t": 0,
-                  "v": 5.0
-                },
                 "camDefaultY": {
                   "t": 0,
                   "v": 4.5
+                },
+                "jumpspeed": {
+                  "t": 0,
+                  "v": 5.0
                 },
                 "crouchLerpSpeed": {
                   "t": 0,
@@ -464,11 +464,11 @@
               "class": "OrbTeleport",
               "enabled": true,
               "fields": {
-                "recallHealAmt": {
+                "damage": {
                   "t": 0,
                   "v": 10.0
                 },
-                "damage": {
+                "recallHealAmt": {
                   "t": 0,
                   "v": 10.0
                 }
@@ -4481,7 +4481,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "5a3425826815be44b5707080cd1e29c7"
+          "guid": "0c8d38e1c7ce56479a49fbe254c5be0d"
         },
         "HierarchyComponent": {
           "parentGuid": "6ebec40c54bba3479a03b0363a6fccd2",
@@ -4560,7 +4560,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "c86ced3f4c8eb44691a979dad903fd59"
+          "guid": "0c8d38e1c7ce56479a49fbe254c5be0d"
         },
         "HierarchyComponent": {
           "parentGuid": "085a3ec52aa7d447a385741ec911ba10",
@@ -4639,7 +4639,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "3363eb38b4942a40bbd4477f61400835"
+          "guid": "0c8d38e1c7ce56479a49fbe254c5be0d"
         },
         "HierarchyComponent": {
           "parentGuid": "19b05c9146e0844f8b1f673c1e4a7b10",
@@ -4718,7 +4718,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "c2d374dd9b05af43839f952612c22754"
+          "guid": "0c8d38e1c7ce56479a49fbe254c5be0d"
         },
         "HierarchyComponent": {
           "parentGuid": "b329b0ba47a92b4987a139e6d84652ac",
@@ -9350,7 +9350,7 @@
           ]
         },
         "Material": {
-          "guid": "61605e4de84ff142b877f5f88a910196"
+          "guid": "7359462e1549274eaf8a9621c941a267"
         },
         "HierarchyComponent": {
           "parentGuid": "f48413f09565c44c9c63034045c08468",
@@ -9517,7 +9517,7 @@
           ]
         },
         "Material": {
-          "guid": "873834110ef1a348af4caefaed59b198"
+          "guid": "7359462e1549274eaf8a9621c941a267"
         },
         "HierarchyComponent": {
           "parentGuid": "4903cf4b38da4740b8d6bef7eba17065",
@@ -9684,7 +9684,7 @@
           ]
         },
         "Material": {
-          "guid": "132380496a978c4c9d61a45a9b0d0afe"
+          "guid": "7359462e1549274eaf8a9621c941a267"
         },
         "HierarchyComponent": {
           "parentGuid": "59b256fa424f3d4caa0167928e3b8011",
@@ -9851,7 +9851,7 @@
           ]
         },
         "Material": {
-          "guid": "fd74d37bb222104594d89cafd1fc90db"
+          "guid": "7359462e1549274eaf8a9621c941a267"
         },
         "HierarchyComponent": {
           "parentGuid": "f4e13440738da64a97847e8f9c89d9cb",
@@ -11765,7 +11765,7 @@
           ]
         },
         "Material": {
-          "guid": "2b956dab22bd20478e06caf3070c93ce"
+          "guid": "60a7ab2d8caa594486b1c863ebcb68a4"
         },
         "HierarchyComponent": {
           "parentGuid": "7eaab91798495543b79cad6d7cefba2e",
@@ -12073,7 +12073,7 @@
           ]
         },
         "Material": {
-          "guid": "5484f6196e602144820929dd8c821fa3"
+          "guid": "f78c8529b5220247b68556890f21ce22"
         },
         "HierarchyComponent": {
           "parentGuid": "7eaab91798495543b79cad6d7cefba2e",
@@ -12150,7 +12150,7 @@
           ]
         },
         "Material": {
-          "guid": "5cb66fe3b6a93f4694a314eb2ee6aca0"
+          "guid": "f546fd4b32eed14ba383f6fa0e63af19"
         },
         "HierarchyComponent": {
           "parentGuid": "7eaab91798495543b79cad6d7cefba2e",
@@ -12270,7 +12270,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9990dfb8f5a99d4caf46506835b76f1c"
+          "guid": "e7b229ea879d144aae6fe804fc2d307f"
         },
         "HierarchyComponent": {
           "parentGuid": "eb8e94c79ff98b44992b89d971c937b4",
@@ -14948,7 +14948,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "5096af590f5f0647985f5c8e87f03539"
+          "guid": "ae9f28954076c24bbf374e5edd1b416f"
         },
         "HierarchyComponent": {
           "parentGuid": "b1ec829ca81d204cbc8ef6dede852ea2",
@@ -17818,7 +17818,7 @@
           ]
         },
         "Material": {
-          "guid": "c2521801ee9a9342b9ba12500423e033"
+          "guid": "7359462e1549274eaf8a9621c941a267"
         },
         "HierarchyComponent": {
           "parentGuid": "a3942a55ce3b6a4794fb1bb84a4ea892",
@@ -17981,7 +17981,7 @@
           ]
         },
         "Material": {
-          "guid": "966a09cbde1bb4468a8edaa9f8531c98"
+          "guid": "7359462e1549274eaf8a9621c941a267"
         },
         "HierarchyComponent": {
           "parentGuid": "60a5f246c8e7734e9cdad80574223704",
@@ -18368,7 +18368,7 @@
           ]
         },
         "Material": {
-          "guid": "d094fc91515a8d428284c5843cc09fbb"
+          "guid": "7359462e1549274eaf8a9621c941a267"
         },
         "HierarchyComponent": {
           "parentGuid": "85aa6c3ef535c24e818e87540dacb1d4",
@@ -18531,7 +18531,7 @@
           ]
         },
         "Material": {
-          "guid": "52a1cef01113c047ae2e2bff9711a6c9"
+          "guid": "7359462e1549274eaf8a9621c941a267"
         },
         "HierarchyComponent": {
           "parentGuid": "e3748c4c0361674db440340de8653bdd",
@@ -19499,7 +19499,7 @@
           ]
         },
         "Material": {
-          "guid": "766e04e23215a34b83277c90c5db21c2"
+          "guid": "f546fd4b32eed14ba383f6fa0e63af19"
         },
         "HierarchyComponent": {
           "parentGuid": "33fdb980be039149a798c3eb4184667a",
@@ -19576,7 +19576,7 @@
           ]
         },
         "Material": {
-          "guid": "9bccd062ef11764c80d286ac152af0c4"
+          "guid": "cae6558e6cbe3949af3215b0120b014a"
         },
         "HierarchyComponent": {
           "parentGuid": "33fdb980be039149a798c3eb4184667a",
@@ -22532,7 +22532,7 @@
           ]
         },
         "Material": {
-          "guid": "21bb90f6e66606498ff3929688c99ec0"
+          "guid": "7359462e1549274eaf8a9621c941a267"
         },
         "HierarchyComponent": {
           "parentGuid": "9355061758d78c41b253150cd387592e",
@@ -22690,7 +22690,7 @@
           ]
         },
         "Material": {
-          "guid": "f118ec36bda9be43bb5bd847e2e7202d"
+          "guid": "7359462e1549274eaf8a9621c941a267"
         },
         "HierarchyComponent": {
           "parentGuid": "b75b63e52d1b444696b5aff5574f8b3b",
@@ -24012,7 +24012,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9812a9f9f4569d4293b1d11f985803bd"
+          "guid": "e7b229ea879d144aae6fe804fc2d307f"
         },
         "HierarchyComponent": {
           "parentGuid": "235e7dff45a2ff4e99cce7a216f65d05",
@@ -26382,11 +26382,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -27214,11 +27214,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -28046,11 +28046,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -28878,11 +28878,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -29710,11 +29710,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -30542,11 +30542,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -30629,7 +30629,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "70c2f5b20c901144b67a175150d6c1a4"
+          "guid": "5db40fc50a18944e9cdd1c7af82a9586"
         },
         "HierarchyComponent": {
           "parentGuid": "ed07c8428ac6ce41966e007a0e4df576",
@@ -31374,11 +31374,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -32206,11 +32206,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -33038,11 +33038,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -33870,11 +33870,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -34934,7 +34934,7 @@
           ]
         },
         "Material": {
-          "guid": "66828359848705458d91bab1c79c0c6e"
+          "guid": "60a7ab2d8caa594486b1c863ebcb68a4"
         },
         "HierarchyComponent": {
           "parentGuid": "321b3e7c1d89db4498257e775f32e9d1",
@@ -35396,7 +35396,7 @@
           ]
         },
         "Material": {
-          "guid": "f75ed9b8e03dec459a7e4e47b9ee7768"
+          "guid": "60a7ab2d8caa594486b1c863ebcb68a4"
         },
         "HierarchyComponent": {
           "parentGuid": "321b3e7c1d89db4498257e775f32e9d1",
@@ -35516,7 +35516,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "2df4df8bd25db64d843ec0ac1088f35f"
+          "guid": "e7b229ea879d144aae6fe804fc2d307f"
         },
         "HierarchyComponent": {
           "parentGuid": "18f93d8591084b4dbd4a82eaba4ee25f",
@@ -35665,7 +35665,7 @@
           ]
         },
         "Material": {
-          "guid": "e1199d61d4a6114bb2b7eff5fc4f8e46"
+          "guid": "7359462e1549274eaf8a9621c941a267"
         },
         "HierarchyComponent": {
           "parentGuid": "b08fa7f0b67aa849b1aa418627dde8f1",
@@ -35832,7 +35832,7 @@
           ]
         },
         "Material": {
-          "guid": "9de1b9deeff68040b86cb430641644f9"
+          "guid": "7359462e1549274eaf8a9621c941a267"
         },
         "HierarchyComponent": {
           "parentGuid": "25069e014abb854bb0ca339f8b5a69f9",
@@ -35990,7 +35990,7 @@
           ]
         },
         "Material": {
-          "guid": "e0483676e133444b9e137fde7e7a4135"
+          "guid": "7359462e1549274eaf8a9621c941a267"
         },
         "HierarchyComponent": {
           "parentGuid": "2e52c6d6408b2247b85fa7ecad107bb2",
@@ -36148,7 +36148,7 @@
           ]
         },
         "Material": {
-          "guid": "38fa3078954a2947b30040ad70b67cc7"
+          "guid": "7359462e1549274eaf8a9621c941a267"
         },
         "HierarchyComponent": {
           "parentGuid": "1a19e02f2d687a4bb0be94e0462ca49d",
@@ -36306,7 +36306,7 @@
           ]
         },
         "Material": {
-          "guid": "3fd887923c40fa43bab86253fb715f05"
+          "guid": "7359462e1549274eaf8a9621c941a267"
         },
         "HierarchyComponent": {
           "parentGuid": "f09cbbcf7735794c9c57ad0f87be724a",
@@ -36464,7 +36464,7 @@
           ]
         },
         "Material": {
-          "guid": "de8dde8ffc3ce74787e8be6bed055158"
+          "guid": "7359462e1549274eaf8a9621c941a267"
         },
         "HierarchyComponent": {
           "parentGuid": "3cc4794f0bd89645aafd74276bebd3d9",
@@ -36622,7 +36622,7 @@
           ]
         },
         "Material": {
-          "guid": "0aced2994c873f4c9acf257e02e31fbb"
+          "guid": "7359462e1549274eaf8a9621c941a267"
         },
         "HierarchyComponent": {
           "parentGuid": "7a647fd21f65ae4bb6d1d40d5b5afa7c",
