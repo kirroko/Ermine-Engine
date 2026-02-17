@@ -2716,23 +2716,8 @@ void Renderer::UpdateDrawData()
 			}
 		}
 
-		// Get current entity transform (this is what changed!)
-		// Note: Use hierarchy-based world matrix unless we have valid skinning data.
-		glm::mat4 model;
-		if (cachedItem.useSkinning && cachedItem.hasSkinningData) {
-			// Animated models with skinning data: manually build matrix (fast path)
-			const auto& trans = ecs.GetComponent<Transform>(cachedItem.entity);
-			model = glm::mat4(1.0f);
-			model = glm::translate(model, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
-			glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
-			rotQuat = glm::normalize(rotQuat);
-			model *= glm::mat4_cast(rotQuat);
-			model = glm::scale(model, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
-		}
-		else {
-			// Static models and primitives: use world matrix (handles hierarchy)
-			model = GetEntityWorldMatrix(cachedItem.entity);
-		}
+		// Always use world matrix so parented skinned/static meshes are consistent.
+		glm::mat4 model = GetEntityWorldMatrix(cachedItem.entity);
 
 		glm::vec3 localAabbMin = cachedItem.aabbMin;
 		glm::vec3 localAabbMax = cachedItem.aabbMax;
@@ -4105,15 +4090,11 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
 
 	for (EntityID e : m_LightSystem->m_Entities)
 	{
-		const auto& trans = ecs.GetComponent<Transform>(e);
 		auto& light = ecs.GetComponent<Light>(e);
+		const glm::mat4 worldMatrix = GetEntityWorldMatrix(e);
 
 		// Get light position in world space
-		glm::vec3 lightPos(trans.position.x, trans.position.y, trans.position.z);
-
-		// Build rotation from quaternion for directional/spot lights
-		glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
-		rotQuat = glm::normalize(rotQuat);
+		glm::vec3 lightPos(worldMatrix[3].x, worldMatrix[3].y, worldMatrix[3].z);
 
 		// ========== FRUSTUM CULLING TEST ==========
 		bool isCulled = false;
@@ -4160,8 +4141,7 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
 		}
 
 		// Keep direction in WORLD SPACE
-		glm::vec3 fwd(0.0f, 0.0f, 1.0f);
-		glm::vec3 dirWorld = glm::normalize(rotQuat * fwd);
+		glm::vec3 dirWorld = glm::normalize(glm::vec3(worldMatrix[2]));
 
 		// Set spot angles
 		float innerCos = 1.0f, outerCos = 1.0f;
@@ -7057,16 +7037,16 @@ void Renderer::CalculateLightMatrix(const editor::EditorCamera& editorCamera)
 	}
 
 	for (EntityID e : m_ShadowCastingLights) {
-		if (!ecs.HasComponent<Light>(e) || !ecs.HasComponent<Transform>(e)) continue;
+		if (!ecs.HasComponent<Light>(e)) continue;
 		auto& light = ecs.GetComponent<Light>(e);
 		if (light.castsShadows == 0) continue;
 		int baseLayer = light.startOffset;
 		if (baseLayer < 0) continue;
 
 		// Get transform data
-		const auto& trans = ecs.GetComponent<Transform>(e);
-		glm::quat rotQuat = glm::normalize(glm::quat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z));
-		glm::vec3 lightPos = glm::vec3(trans.position.x, trans.position.y, trans.position.z);
+		const glm::mat4 worldMatrix = GetEntityWorldMatrix(e);
+		glm::vec3 lightForward = glm::normalize(glm::vec3(worldMatrix[2]));
+		glm::vec3 lightPos = glm::vec3(worldMatrix[3].x, worldMatrix[3].y, worldMatrix[3].z);
 
 		if (light.type == LightType::DIRECTIONAL) {
 			// DIRECTIONAL LIGHT PROCESSING (existing code)
@@ -7076,8 +7056,7 @@ void Renderer::CalculateLightMatrix(const editor::EditorCamera& editorCamera)
 			}
 
 			// Get light direction
-			glm::vec3 fwd = glm::normalize(rotQuat * glm::vec3(0.0f, 0.0f, 1.0f));
-			glm::vec3 lightDir = glm::normalize(-fwd); // from scene to light
+			glm::vec3 lightDir = glm::normalize(-lightForward); // from scene to light
 
 			// Setup up vector
 			glm::vec3 up(0.0f, 1.0f, 0.0f);
@@ -7229,7 +7208,7 @@ void Renderer::CalculateLightMatrix(const editor::EditorCamera& editorCamera)
 			}
 
 			// Get spotlight direction and parameters
-			glm::vec3 spotDir = glm::normalize(rotQuat * glm::vec3(0.0f, 0.0f, 1.0f));
+			glm::vec3 spotDir = lightForward;
 			float outerAngleRad = glm::radians(light.outerAngle);
 
 			// Calculate single shadow matrix for the spotlight
