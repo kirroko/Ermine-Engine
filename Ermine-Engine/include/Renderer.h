@@ -27,6 +27,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "shadow_config.h"
 #include "MeshManager.h"
 #include "HierarchySystem.h"
+#include <algorithm>
+#include <cmath>
 
 namespace Ermine::graphics
 {
@@ -1469,108 +1471,160 @@ namespace Ermine::graphics
                 hierarchySystem->SetParent(childEntity, parentEntity, true);
             }
 
-            // Get material index from aiScene using mesh index
+            // Get material index and mesh name from aiScene using mesh index
             uint32_t materialIndex = UINT32_MAX;
+            std::string meshName = meshID;
             if (scene && meshIndex < scene->mNumMeshes) {
                 aiMesh* aiMsh = scene->mMeshes[meshIndex];
                 if (aiMsh) {
+                    if (aiMsh->mName.length > 0) {
+                        meshName = aiMsh->mName.C_Str();
+                    }
                     materialIndex = aiMsh->mMaterialIndex;
                 }
             }
 
-            // Skip material creation if no valid material
-            if (materialIndex == UINT32_MAX || !scene || materialIndex >= scene->mNumMaterials) {
-                EE_CORE_WARN("Mesh '{}' has no valid material (index: {}), child created without material", meshID, materialIndex);
-                continue;
+            aiMaterial* aiMat = nullptr;
+            if (scene && materialIndex != UINT32_MAX && materialIndex < scene->mNumMaterials) {
+                aiMat = scene->mMaterials[materialIndex];
             }
 
-            // Create or load a shared material asset for this mesh
-            aiMaterial* aiMat = scene->mMaterials[materialIndex];
+            // Create or load a shared material asset for this mesh (mesh-name first, meshID fallback)
             Guid materialGuid{};
-            std::string materialName = AssetManager::SanitizeAssetName(meshID);
-            auto materialPtr = AssetManager::GetInstance().CreateMaterialAsset(
-                materialName,
-                [&](graphics::Material& material) {
-                    // Load textures using AssetManager
-                    aiString texPath;
+            auto& assets = AssetManager::GetInstance();
+            const std::string sanitizedMeshName = AssetManager::SanitizeAssetName(meshName);
+            const std::string sanitizedMeshID = AssetManager::SanitizeAssetName(meshID);
+            const bool hasMeshName = !sanitizedMeshName.empty();
+            const std::string primaryMaterialName = hasMeshName ? sanitizedMeshName : sanitizedMeshID;
+            const std::filesystem::path materialsDir = std::filesystem::absolute("../Resources/Materials/");
 
-                    // Albedo: Try BASE_COLOR first, fallback to DIFFUSE
-                    if (aiMat->GetTexture(aiTextureType_BASE_COLOR, 0, &texPath) == AI_SUCCESS ||
-                        aiMat->GetTexture(aiTextureType_DIFFUSE, 0, &texPath) == AI_SUCCESS) {
+            std::shared_ptr<graphics::Material> materialPtr;
+            if (hasMeshName) {
+                const std::filesystem::path meshNamePath = materialsDir / (sanitizedMeshName + ".mat");
+                if (std::filesystem::exists(meshNamePath)) {
+                    materialGuid = assets.GetMaterialGuidForPath(meshNamePath.string());
+                    materialPtr = assets.LoadMaterialAsset(meshNamePath.string(), false);
+                }
+            }
+
+            if (!materialPtr && !sanitizedMeshID.empty() && primaryMaterialName != sanitizedMeshID) {
+                const std::filesystem::path meshIDPath = materialsDir / (sanitizedMeshID + ".mat");
+                if (std::filesystem::exists(meshIDPath)) {
+                    materialGuid = assets.GetMaterialGuidForPath(meshIDPath.string());
+                    materialPtr = assets.LoadMaterialAsset(meshIDPath.string(), false);
+                }
+            }
+
+            if (!materialPtr) {
+                materialPtr = AssetManager::GetInstance().CreateMaterialAsset(
+                    primaryMaterialName,
+                    [&](graphics::Material& material) {
+                    auto tryLoadTexture = [&](aiTextureType type, const char* slot, const char* hasFlag) {
+                        if (!aiMat)
+                            return false;
+
+                        aiString texPath;
+                        if (aiMat->GetTexture(type, 0, &texPath) != AI_SUCCESS)
+                            return false;
+
                         std::string texPathStr = std::string(texPath.C_Str());
                         std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
-                        std::string fullTexPath = "../Resources/Textures/" + texPathStr;
-                        auto albedoTex = AssetManager::GetInstance().LoadTexture(fullTexPath);
-                        if (albedoTex && albedoTex->IsValid()) {
-                            material.SetTexture("materialAlbedoMap", albedoTex);
-                            material.SetTexture("material.albedoMap", albedoTex);
-                            material.SetBool("materialHasAlbedoMap", true);
+                        const auto lastSlash = texPathStr.find_last_of('/');
+                        const std::string filename = (lastSlash != std::string::npos) ? texPathStr.substr(lastSlash + 1) : texPathStr;
+                        auto tex = assets.LoadTexture("../Resources/Textures/" + filename);
+                        if (!tex || !tex->IsValid())
+                            return false;
+
+                        material.SetTexture(slot, tex);
+                        if (hasFlag)
+                            material.SetBool(hasFlag, true);
+                        return true;
+                    };
+
+                    if (!aiMat) {
+                        material.SetVec4("materialAlbedo", Vec4(1.0f, 1.0f, 1.0f, 1.0f));
+                        material.SetFloat("materialMetallic", 0.0f);
+                        material.SetFloat("materialRoughness", 0.5f);
+                        material.SetFloat("materialAo", 1.0f);
+                        material.SetVec3("materialEmissive", Vec3(0.0f, 0.0f, 0.0f));
+                        material.SetFloat("materialEmissiveIntensity", 0.0f);
+                        material.SetFloat("materialAlpha", 1.0f);
+                        material.SetFloat("materialTransparency", 0.0f);
+                        material.SetUVScale(Vec2(1.0f, 1.0f));
+                        material.SetUVOffset(Vec2(0.0f, 0.0f));
+                        return;
+                    }
+
+                    // Texture maps
+                    {
+                        aiString texPath;
+                        if (aiMat->GetTexture(aiTextureType_BASE_COLOR, 0, &texPath) == AI_SUCCESS ||
+                            aiMat->GetTexture(aiTextureType_DIFFUSE, 0, &texPath) == AI_SUCCESS) {
+                            std::string texPathStr = std::string(texPath.C_Str());
+                            std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
+                            const auto lastSlash = texPathStr.find_last_of('/');
+                            const std::string filename = (lastSlash != std::string::npos) ? texPathStr.substr(lastSlash + 1) : texPathStr;
+                            auto albedoTex = assets.LoadTexture("../Resources/Textures/" + filename);
+                            if (albedoTex && albedoTex->IsValid()) {
+                                material.SetTexture("materialAlbedoMap", albedoTex);
+                                material.SetBool("materialHasAlbedoMap", true);
+                            }
+                        }
+                    }
+                    tryLoadTexture(aiTextureType_NORMALS, "materialNormalMap", "materialHasNormalMap");
+                    tryLoadTexture(aiTextureType_SHININESS, "materialRoughnessMap", "materialHasRoughnessMap");
+                    tryLoadTexture(aiTextureType_METALNESS, "materialMetallicMap", "materialHasMetallicMap");
+                    if (!tryLoadTexture(aiTextureType_AMBIENT_OCCLUSION, "materialAoMap", "materialHasAoMap")) {
+                        tryLoadTexture(aiTextureType_LIGHTMAP, "materialAoMap", "materialHasAoMap");
+                    }
+                    tryLoadTexture(aiTextureType_EMISSIVE, "materialEmissiveMap", "materialHasEmissiveMap");
+
+                    // Scalar/color values
+                    aiColor4D baseColor(1.f, 1.f, 1.f, 1.f);
+                    if (aiMat->Get(AI_MATKEY_BASE_COLOR, baseColor) != AI_SUCCESS) {
+                        aiColor3D diffuse(1.f, 1.f, 1.f);
+                        if (aiMat->Get(AI_MATKEY_COLOR_DIFFUSE, diffuse) == AI_SUCCESS) {
+                            baseColor = aiColor4D(diffuse.r, diffuse.g, diffuse.b, 1.f);
                         }
                     }
 
-                    // Normal map
-                    if (aiMat->GetTexture(aiTextureType_NORMALS, 0, &texPath) == AI_SUCCESS) {
-                        std::string texPathStr = std::string(texPath.C_Str());
-                        std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
-                        std::string fullTexPath = "../Resources/Textures/" + texPathStr;
-                        auto normalTex = AssetManager::GetInstance().LoadTexture(fullTexPath);
-                        if (normalTex && normalTex->IsValid()) {
-                            material.SetTexture("materialNormalMap", normalTex);
-                            material.SetTexture("material.normalMap", normalTex);
-                            material.SetBool("materialHasNormalMap", true);
-                            material.SetBool("material.hasNormalMap", true);
-                        }
-                    }
+                    float opacity = 1.0f;
+                    if (aiMat->Get(AI_MATKEY_OPACITY, opacity) != AI_SUCCESS)
+                        opacity = baseColor.a;
+                    opacity = std::clamp(opacity, 0.0f, 1.0f);
+                    baseColor.a = opacity;
+                    material.SetVec4("materialAlbedo", Vec4(baseColor.r, baseColor.g, baseColor.b, baseColor.a));
+                    material.SetFloat("materialAlpha", baseColor.a);
+                    material.SetFloat("materialTransparency", 1.0f - baseColor.a);
 
-                    // Roughness map (SHININESS in Assimp)
-                    if (aiMat->GetTexture(aiTextureType_SHININESS, 0, &texPath) == AI_SUCCESS) {
-                        std::string texPathStr = std::string(texPath.C_Str());
-                        std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
-                        std::string fullTexPath = "../Resources/Textures/" + texPathStr;
-                        auto roughnessTex = AssetManager::GetInstance().LoadTexture(fullTexPath);
-                        if (roughnessTex && roughnessTex->IsValid()) {
-                            material.SetTexture("materialRoughnessMap", roughnessTex);
-                            material.SetBool("materialHasRoughnessMap", true);
-                        }
-                    }
+                    float metallic = 0.0f;
+                    if (aiMat->Get(AI_MATKEY_METALLIC_FACTOR, metallic) != AI_SUCCESS)
+                        metallic = 0.0f;
+                    material.SetFloat("materialMetallic", std::clamp(metallic, 0.0f, 1.0f));
 
-                    // Metallic map
-                    if (aiMat->GetTexture(aiTextureType_METALNESS, 0, &texPath) == AI_SUCCESS) {
-                        std::string texPathStr = std::string(texPath.C_Str());
-                        std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
-                        std::string fullTexPath = "../Resources/Textures/" + texPathStr;
-                        auto metallicTex = AssetManager::GetInstance().LoadTexture(fullTexPath);
-                        if (metallicTex && metallicTex->IsValid()) {
-                            material.SetTexture("materialMetallicMap", metallicTex);
-                            material.SetTexture("material.metallicMap", metallicTex);
-                            material.SetBool("materialHasMetallicMap", true);
+                    float roughness = 0.5f;
+                    if (aiMat->Get(AI_MATKEY_ROUGHNESS_FACTOR, roughness) != AI_SUCCESS) {
+                        float shininess = 32.0f;
+                        if (aiMat->Get(AI_MATKEY_SHININESS, shininess) == AI_SUCCESS) {
+                            shininess = std::max(shininess, 0.0f);
+                            roughness = std::sqrt(2.0f / (shininess + 2.0f));
                         }
                     }
+                    material.SetFloat("materialRoughness", std::clamp(roughness, 0.0f, 1.0f));
 
-                    // AO map
-                    if (aiMat->GetTexture(aiTextureType_LIGHTMAP, 0, &texPath) == AI_SUCCESS ||
-                        aiMat->GetTexture(aiTextureType_AMBIENT_OCCLUSION, 0, &texPath) == AI_SUCCESS) {
-                        std::string texPathStr = std::string(texPath.C_Str());
-                        std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
-                        std::string fullTexPath = "../Resources/Textures/" + texPathStr;
-                        auto aoTex = AssetManager::GetInstance().LoadTexture(fullTexPath);
-                        if (aoTex && aoTex->IsValid()) {
-                            material.SetTexture("materialAoMap", aoTex);
-                            material.SetBool("materialHasAoMap", true);
-                        }
+                    float ao = 1.0f;
+                    aiColor3D ambient(1.f, 1.f, 1.f);
+                    if (aiMat->Get(AI_MATKEY_COLOR_AMBIENT, ambient) == AI_SUCCESS) {
+                        ao = std::clamp((ambient.r + ambient.g + ambient.b) / 3.0f, 0.0f, 1.0f);
                     }
+                    material.SetFloat("materialAo", ao);
 
-                    // Emissive map
-                    if (aiMat->GetTexture(aiTextureType_EMISSIVE, 0, &texPath) == AI_SUCCESS) {
-                        std::string texPathStr = std::string(texPath.C_Str());
-                        std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
-                        std::string fullTexPath = "../Resources/Textures/" + texPathStr;
-                        auto emissiveTex = AssetManager::GetInstance().LoadTexture(fullTexPath);
-                        if (emissiveTex && emissiveTex->IsValid()) {
-                            material.SetTexture("materialEmissiveMap", emissiveTex);
-                            material.SetBool("materialHasEmissiveMap", true);
-                        }
-                    }
+                    aiColor3D emissive(0.f, 0.f, 0.f);
+                    if (aiMat->Get(AI_MATKEY_COLOR_EMISSIVE, emissive) != AI_SUCCESS)
+                        emissive = aiColor3D(0.f, 0.f, 0.f);
+                    material.SetVec3("materialEmissive", Vec3(emissive.r, emissive.g, emissive.b));
+                    const float emissiveIntensity = std::max({ emissive.r, emissive.g, emissive.b, 0.0f });
+                    material.SetFloat("materialEmissiveIntensity", emissiveIntensity);
 
                     // Fetch UV transform (UVs are already flipped at import)
                     aiUVTransform uvTransform;
@@ -1582,9 +1636,10 @@ namespace Ermine::graphics
                         material.SetUVScale(Vec2(1.0f, 1.0f));
                         material.SetUVOffset(Vec2(0.0f, 0.0f));
                     }
-                },
-                &materialGuid
-            );
+                    },
+                    &materialGuid
+                );
+            }
             if (!materialPtr) {
                 EE_CORE_WARN("Failed to create/load material asset for mesh '{}'", meshID);
                 continue;
