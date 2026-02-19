@@ -43,7 +43,7 @@
           "spawnRate": 0.0,
           "burstCountMin": 50,
           "burstCountMax": 100,
-          "burstInterval": 10.0,
+          "burstInterval": 0.0,
           "burstOnStart": true,
           "directionMode": 0,
           "direction": [
