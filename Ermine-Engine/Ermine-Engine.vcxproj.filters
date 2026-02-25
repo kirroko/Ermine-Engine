@@ -186,6 +186,9 @@
     <ClInclude Include="include\GISystem.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\GPUParticles.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\GPUProfiler.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -520,6 +523,9 @@
     </ClCompile>
     <ClCompile Include="src\Object\GameObjectFactory.cpp">
       <Filter>src\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Particles\GPUParticles.cpp">
+      <Filter>src\Particles</Filter>
     </ClCompile>
     <ClCompile Include="src\Particles\Particles.cpp">
       <Filter>src\Particles</Filter>

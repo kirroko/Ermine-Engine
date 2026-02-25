@@ -18,6 +18,12 @@ public class OrbTeleport : MonoBehaviour
 
     private float timeSinceLastDamage = 0f;
     public float regenDelay = 2.0f; // seconds before regen starts
+    public float teleportDashDuration = 0.2f;
+
+    private bool isTeleportDashing = false;
+    private float teleportDashElapsed = 0f;
+    private Vector3 teleportDashStart;
+    private Vector3 teleportDashTarget;
 
 
     // Name of the entity with UISkillsComponent (must match your scene)
@@ -77,11 +83,18 @@ public class OrbTeleport : MonoBehaviour
 
     void Update()
     {
+        if (isTeleportDashing)
+        {
+            UpdateTeleportDash();
+            return;
+        }
+
         timeSinceLastDamage += Time.deltaTime;
 
         // Check if orb disappeared on its own (hit something, traveled too far, etc.)
         if (orbShot && GameObject.Find("Sphere") == null)
         {
+            Debug.Log("OrbTeleport: Orb vanished, resetting state");
             orbShot = false;
             SetSkillsForReadyToShoot();
         }
@@ -170,11 +183,28 @@ public class OrbTeleport : MonoBehaviour
 
         GlobalAudio.PlaySFX("Teleport");
 
-        // Swap positions
-        gameObject.transform.position = sphere.transform.position;
-        Physics.SetPosition((ulong)gameObject.GetInstanceID(), sphere.transform.position);
+        // Snap explosion to ground for better visual accuracy
+        Vector3 explosionPos = sphere.transform.position;
+        RaycastHit hit;
+        if (Physics.Raycast(sphere.transform.position, Vector3.down, out hit, 5.0f))
+        {
+            explosionPos = hit.point + Vector3.up * 0.1f; // Slightly above ground
+        }
+
+        // Spawn explosion effect at teleport location
+        GameObject explosion = Prefab.Instantiate("../Resources/Prefabs/ParticleExplosion.prefab");
+        if (explosion != null)
+        {
+            explosion.transform.position = explosionPos;
+        }
+
+        teleportDashStart = gameObject.transform.position;
+        teleportDashTarget = sphere.transform.position;
+        teleportDashElapsed = 0f;
+        isTeleportDashing = true;
 
         // Remove orb
+        Debug.Log("OrbTeleport: Destroying orb after teleport: " + sphere.GetInstanceID());
         Physics.RemovePhysic((ulong)sphere.GetInstanceID());
         GameObject.Destroy(sphere);
 
@@ -230,6 +260,26 @@ public class OrbTeleport : MonoBehaviour
 
         float currentHealth = GameplayHUD.GetHealth(healthBar);
         return currentHealth >= damage;
+    }
+
+    void UpdateTeleportDash()
+    {
+        float duration = Math.Max(0.001f, teleportDashDuration);
+        teleportDashElapsed += Time.deltaTime;
+
+        float t = Math.Min(teleportDashElapsed / duration, 1.0f);
+        float easedT = t * t; // Ease-in only: accelerate into dash, then stop instantly at the end.
+        Vector3 dashPos = teleportDashStart + (teleportDashTarget - teleportDashStart) * easedT;
+
+        gameObject.transform.position = dashPos;
+        Physics.SetPosition((ulong)gameObject.GetInstanceID(), dashPos);
+
+        if (t >= 1.0f)
+        {
+            gameObject.transform.position = teleportDashTarget;
+            Physics.SetPosition((ulong)gameObject.GetInstanceID(), teleportDashTarget);
+            isTeleportDashing = false;
+        }
     }
 
 }

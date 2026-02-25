@@ -31,6 +31,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "ScriptEngine.h"
 #include "AudioSystem.h"
 #include "Particles.h"
+#include "GPUParticles.h"
 #include "Physics.h"
 #include "FiniteStateMachine.h"
 #include "Skybox.h"
@@ -239,6 +240,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	EE_AUTO_REGISTER_COMPONENT(NavJumpLink, "NavJumpLink")
 	EE_AUTO_REGISTER_COMPONENT(GlobalTransform, "GlobalTransform")
 	EE_AUTO_REGISTER_COMPONENT(ParticleEmitter, "ParticleEmitter")
+	EE_AUTO_REGISTER_COMPONENT(GPUParticleEmitter, "GPUParticleEmitter")
 	EE_AUTO_REGISTER_COMPONENT(CameraComponent, "CameraComponent");
 	EE_AUTO_REGISTER_COMPONENT(UIComponent, "UIComponent");
 	EE_AUTO_REGISTER_COMPONENT(UIHealthbarComponent, "UIHealthbarComponent");
@@ -293,6 +295,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().RegisterSystem<scripting::ScriptSystem>();
 	ECS::GetInstance().RegisterSystem<AudioSystem>();
 	ECS::GetInstance().RegisterSystem<ParticleSystem>();
+	ECS::GetInstance().RegisterSystem<GPUParticleSystem>();
 	ECS::GetInstance().RegisterSystem<graphics::LightSystem>();
 	ECS::GetInstance().RegisterSystem<graphics::AnimationManager>();
 	ECS::GetInstance().RegisterSystem<HierarchySystem>();
@@ -351,6 +354,12 @@ bool engine::Init(GLFWwindow* windowContext)
 	sig.set(ECS::GetInstance().GetComponentType<Transform>());
 	sig.set(ECS::GetInstance().GetComponentType<ParticleEmitter>());
 	ECS::GetInstance().SetSystemSignature<ParticleSystem>(sig);
+
+	// For GPU Orb Particles
+	sig.reset();
+	sig.set(ECS::GetInstance().GetComponentType<Transform>());
+	sig.set(ECS::GetInstance().GetComponentType<GPUParticleEmitter>());
+	ECS::GetInstance().SetSystemSignature<GPUParticleSystem>(sig);
 
 	// For Physics
 	sig.reset();
@@ -482,6 +491,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().GetSystem<NavMeshSystem>()->Init();
 	// initialize particles emitter
 	ECS::GetInstance().GetSystem<ParticleSystem>()->Init(shader);
+	ECS::GetInstance().GetSystem<GPUParticleSystem>()->Init();
 
 	EE_CORE_INFO("Total living entities after creation: {0}", ECS::GetInstance().GetLivingEntityCount());
 
@@ -686,6 +696,7 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 		ECS::GetInstance().GetSystem<NavMeshAgentSystem>()->Update(FrameController::GetFixedDeltaTime());	// AI NavMesh Agent update
 		ECS::GetInstance().GetSystem<graphics::AnimationManager>()->Update(FrameController::GetDeltaTime());// Animation Update
 		ECS::GetInstance().GetSystem<ParticleSystem>()->Update(FrameController::GetDeltaTime());
+		ECS::GetInstance().GetSystem<GPUParticleSystem>()->Update(FrameController::GetDeltaTime());
 
 		// Update video playback
 		ECS::GetInstance().GetSystem<VideoManager>()->Update(FrameController::GetDeltaTime());

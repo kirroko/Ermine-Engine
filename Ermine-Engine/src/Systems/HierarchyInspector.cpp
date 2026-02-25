@@ -27,10 +27,12 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <EditorGUI.h>
 #include "NavMesh.h"
 #include "Particles.h"
+#include "GPUParticles.h"
 #include "AnimationGUI.h"
 #include "CommandHistory.h"
 #include "GISystem.h"
 #include "Renderer.h"
+#include "Serialisation.h"
 
 #include "xcore/my_properties.h"
 #include "xproperty.h"
@@ -42,6 +44,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <unordered_map>
 #include <sstream>
 #include <iomanip>
+#include <cmath>
 
 namespace Ermine::editor {
 	// --- small helpers ---
@@ -83,81 +86,178 @@ namespace Ermine::editor {
 		return true;
 	}
 
+	static Ermine::Material BuildDefaultWhiteMaterialComponent()
+	{
+		auto& assets = AssetManager::GetInstance();
+		const std::filesystem::path defaultMaterialPath =
+			std::filesystem::absolute("../Resources/Materials/Default_White.mat");
+
+		if (std::filesystem::exists(defaultMaterialPath)) {
+			Guid guid = assets.GetMaterialGuidForPath(defaultMaterialPath.string());
+			auto material = assets.LoadMaterialAsset(defaultMaterialPath.string(), false);
+			if (material) {
+				return Ermine::Material(material, guid);
+			}
+		}
+
+		// Last-resort fallback if the default asset is missing or fails to load.
+		auto fallback = std::make_shared<graphics::Material>();
+		fallback->LoadTemplate(graphics::MaterialTemplates::PBR_WHITE());
+		auto defaultShader = assets.LoadShader(
+			"../Resources/Shaders/vertex.glsl",
+			"../Resources/Shaders/fragment_enhanced.glsl"
+		);
+		if (defaultShader && defaultShader->IsValid())
+			fallback->SetShader(defaultShader);
+
+		return Ermine::Material(fallback, {});
+	}
+
 	static std::shared_ptr<graphics::Material> BuildMeshMaterialAsset(
+		const std::string& meshName,
 		const std::string& meshID,
 		const aiMaterial* aiMat,
 		bool useCacheDefaults,
 		Guid& outGuid)
 	{
 		auto& assets = AssetManager::GetInstance();
-		std::string materialName = AssetManager::SanitizeAssetName(meshID);
+		const std::string sanitizedMeshName = AssetManager::SanitizeAssetName(meshName);
+		const std::string sanitizedMeshID = AssetManager::SanitizeAssetName(meshID);
+		const bool hasMeshName = !sanitizedMeshName.empty();
+		const std::string primaryName = hasMeshName ? sanitizedMeshName : sanitizedMeshID;
+		const std::filesystem::path materialsDir = std::filesystem::absolute("../Resources/Materials/");
+
+		if (hasMeshName) {
+			const std::filesystem::path meshNamePath = materialsDir / (sanitizedMeshName + ".mat");
+			if (std::filesystem::exists(meshNamePath)) {
+				Guid existingGuid = assets.GetMaterialGuidForPath(meshNamePath.string());
+				outGuid = existingGuid;
+				auto existingMaterial = assets.LoadMaterialAsset(meshNamePath.string(), false);
+				if (existingMaterial)
+					return existingMaterial;
+			}
+		}
+
+		if (!sanitizedMeshID.empty() && primaryName != sanitizedMeshID) {
+			const std::filesystem::path meshIdPath = materialsDir / (sanitizedMeshID + ".mat");
+			if (std::filesystem::exists(meshIdPath)) {
+				Guid existingGuid = assets.GetMaterialGuidForPath(meshIdPath.string());
+				outGuid = existingGuid;
+				auto existingMaterial = assets.LoadMaterialAsset(meshIdPath.string(), false);
+				if (existingMaterial)
+					return existingMaterial;
+			}
+		}
 
 		return assets.CreateMaterialAsset(
-			materialName,
+			primaryName,
 			[&](graphics::Material& material) {
+				auto tryLoadTexture = [&](aiTextureType type, const char* slot, const char* hasFlag) {
+					aiString texPath;
+					if (aiMat->GetTexture(type, 0, &texPath) != AI_SUCCESS)
+						return false;
+
+					std::string texPathStr = std::string(texPath.C_Str());
+					std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
+					const auto lastSlash = texPathStr.find_last_of('/');
+					const std::string filename = (lastSlash != std::string::npos) ? texPathStr.substr(lastSlash + 1) : texPathStr;
+					auto texture = assets.LoadTexture("../Resources/Textures/" + filename);
+					if (!texture || !texture->IsValid())
+						return false;
+
+					material.SetTexture(slot, texture);
+					if (hasFlag)
+						material.SetBool(hasFlag, true);
+					return true;
+				};
+
 				if (!aiMat) {
 					material.SetVec4("materialAlbedo", Vec4(1.0f, 1.0f, 1.0f, 1.0f));
 					material.SetFloat("materialRoughness", 0.5f);
 					material.SetFloat("materialMetallic", 0.0f);
+					material.SetFloat("materialAo", 1.0f);
+					material.SetVec3("materialEmissive", Vec3(0.0f, 0.0f, 0.0f));
+					material.SetFloat("materialEmissiveIntensity", 0.0f);
+					material.SetFloat("materialAlpha", 1.0f);
+					material.SetFloat("materialTransparency", 0.0f);
 					material.SetUVScale(useCacheDefaults ? Vec2(1.0f, -1.0f) : Vec2(1.0f, 1.0f));
 					material.SetUVOffset(useCacheDefaults ? Vec2(0.0f, 1.0f) : Vec2(0.0f, 0.0f));
 					return;
 				}
 
-				aiString texPath;
-
-				// Albedo
-				if (aiMat->GetTexture(aiTextureType_BASE_COLOR, 0, &texPath) == AI_SUCCESS ||
-					aiMat->GetTexture(aiTextureType_DIFFUSE, 0, &texPath) == AI_SUCCESS) {
-					std::string texPathStr = std::string(texPath.C_Str());
-					std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
-					auto lastSlash = texPathStr.find_last_of('/');
-					std::string filename = (lastSlash != std::string::npos) ? texPathStr.substr(lastSlash + 1) : texPathStr;
-					auto albedoTex = assets.LoadTexture("../Resources/Textures/" + filename);
-					if (albedoTex && albedoTex->IsValid()) {
-						material.SetTexture("materialAlbedoMap", albedoTex);
-						material.SetBool("materialHasAlbedoMap", true);
+				// Texture maps
+				{
+					aiString texPath;
+					if (aiMat->GetTexture(aiTextureType_BASE_COLOR, 0, &texPath) == AI_SUCCESS ||
+						aiMat->GetTexture(aiTextureType_DIFFUSE, 0, &texPath) == AI_SUCCESS) {
+						std::string texPathStr = std::string(texPath.C_Str());
+						std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
+						const auto lastSlash = texPathStr.find_last_of('/');
+						const std::string filename = (lastSlash != std::string::npos) ? texPathStr.substr(lastSlash + 1) : texPathStr;
+						auto albedoTex = assets.LoadTexture("../Resources/Textures/" + filename);
+						if (albedoTex && albedoTex->IsValid()) {
+							material.SetTexture("materialAlbedoMap", albedoTex);
+							material.SetBool("materialHasAlbedoMap", true);
+						}
 					}
 				}
+				tryLoadTexture(aiTextureType_NORMALS, "materialNormalMap", "materialHasNormalMap");
+				tryLoadTexture(aiTextureType_SHININESS, "materialRoughnessMap", "materialHasRoughnessMap");
+				tryLoadTexture(aiTextureType_METALNESS, "materialMetallicMap", "materialHasMetallicMap");
+				if (!tryLoadTexture(aiTextureType_AMBIENT_OCCLUSION, "materialAoMap", "materialHasAoMap")) {
+					tryLoadTexture(aiTextureType_LIGHTMAP, "materialAoMap", "materialHasAoMap");
+				}
+				tryLoadTexture(aiTextureType_EMISSIVE, "materialEmissiveMap", "materialHasEmissiveMap");
 
-				// Normal
-				if (aiMat->GetTexture(aiTextureType_NORMALS, 0, &texPath) == AI_SUCCESS) {
-					std::string texPathStr = std::string(texPath.C_Str());
-					std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
-					auto lastSlash = texPathStr.find_last_of('/');
-					std::string filename = (lastSlash != std::string::npos) ? texPathStr.substr(lastSlash + 1) : texPathStr;
-					auto normalTex = assets.LoadTexture("../Resources/Textures/" + filename);
-					if (normalTex && normalTex->IsValid()) {
-						material.SetTexture("materialNormalMap", normalTex);
-						material.SetBool("materialHasNormalMap", true);
+				// Scalar/color properties
+				{
+					aiColor4D baseColor(1.f, 1.f, 1.f, 1.f);
+					if (aiMat->Get(AI_MATKEY_BASE_COLOR, baseColor) != AI_SUCCESS) {
+						aiColor3D diffuse(1.f, 1.f, 1.f);
+						if (aiMat->Get(AI_MATKEY_COLOR_DIFFUSE, diffuse) == AI_SUCCESS) {
+							baseColor = aiColor4D(diffuse.r, diffuse.g, diffuse.b, 1.f);
+						}
 					}
+
+					float opacity = 1.0f;
+					if (aiMat->Get(AI_MATKEY_OPACITY, opacity) != AI_SUCCESS)
+						opacity = baseColor.a;
+					opacity = std::clamp(opacity, 0.0f, 1.0f);
+					baseColor.a = opacity;
+
+					material.SetVec4("materialAlbedo", Vec4(baseColor.r, baseColor.g, baseColor.b, baseColor.a));
+					material.SetFloat("materialAlpha", baseColor.a);
+					material.SetFloat("materialTransparency", 1.0f - baseColor.a);
 				}
 
-				// Roughness
-				if (aiMat->GetTexture(aiTextureType_SHININESS, 0, &texPath) == AI_SUCCESS) {
-					std::string texPathStr = std::string(texPath.C_Str());
-					std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
-					auto lastSlash = texPathStr.find_last_of('/');
-					std::string filename = (lastSlash != std::string::npos) ? texPathStr.substr(lastSlash + 1) : texPathStr;
-					auto roughnessTex = assets.LoadTexture("../Resources/Textures/" + filename);
-					if (roughnessTex && roughnessTex->IsValid()) {
-						material.SetTexture("materialRoughnessMap", roughnessTex);
-						material.SetBool("materialHasRoughnessMap", true);
-					}
-				}
+				float metallic = 0.0f;
+				if (aiMat->Get(AI_MATKEY_METALLIC_FACTOR, metallic) != AI_SUCCESS)
+					metallic = 0.0f;
+				material.SetFloat("materialMetallic", std::clamp(metallic, 0.0f, 1.0f));
 
-				// Metallic
-				if (aiMat->GetTexture(aiTextureType_METALNESS, 0, &texPath) == AI_SUCCESS) {
-					std::string texPathStr = std::string(texPath.C_Str());
-					std::replace(texPathStr.begin(), texPathStr.end(), '\\', '/');
-					auto lastSlash = texPathStr.find_last_of('/');
-					std::string filename = (lastSlash != std::string::npos) ? texPathStr.substr(lastSlash + 1) : texPathStr;
-					auto metallicTex = assets.LoadTexture("../Resources/Textures/" + filename);
-					if (metallicTex && metallicTex->IsValid()) {
-						material.SetTexture("materialMetallicMap", metallicTex);
-						material.SetBool("materialHasMetallicMap", true);
+				float roughness = 0.5f;
+				if (aiMat->Get(AI_MATKEY_ROUGHNESS_FACTOR, roughness) != AI_SUCCESS) {
+					float shininess = 32.0f;
+					if (aiMat->Get(AI_MATKEY_SHININESS, shininess) == AI_SUCCESS) {
+						shininess = std::max(shininess, 0.0f);
+						roughness = std::sqrt(2.0f / (shininess + 2.0f));
 					}
 				}
+				material.SetFloat("materialRoughness", std::clamp(roughness, 0.0f, 1.0f));
+
+				float ao = 1.0f;
+				aiColor3D ambient(1.f, 1.f, 1.f);
+				if (aiMat->Get(AI_MATKEY_COLOR_AMBIENT, ambient) == AI_SUCCESS) {
+					ao = std::clamp((ambient.r + ambient.g + ambient.b) / 3.0f, 0.0f, 1.0f);
+				}
+				material.SetFloat("materialAo", ao);
+
+				aiColor3D emissive(0.f, 0.f, 0.f);
+				if (aiMat->Get(AI_MATKEY_COLOR_EMISSIVE, emissive) != AI_SUCCESS)
+					emissive = aiColor3D(0.f, 0.f, 0.f);
+				material.SetVec3("materialEmissive", Vec3(emissive.r, emissive.g, emissive.b));
+				const float emissiveIntensity = std::max({ emissive.r, emissive.g, emissive.b, 0.0f });
+				material.SetFloat("materialEmissiveIntensity", emissiveIntensity);
 
 				// UV transform
 				aiUVTransform uvTransform;
@@ -258,7 +358,8 @@ namespace Ermine::editor {
 			case graphics::MaterialParamType::TEXTURE_2D:
 				oss << "t:";
 				if (param.texture) {
-					std::string path = param.texture->GetFilePath();
+					std::string path =
+						AssetManager::GetInstance().ResolveTexturePathForMaterialWrite(param.texture);
 					oss << normalizePath(path);
 				}
 				break;
@@ -548,6 +649,10 @@ namespace Ermine::editor {
 
 		if (ECS::GetInstance().HasComponent<ParticleEmitter>(selected)) {
 			DrawParticleEmitterComponent(selected);
+		}
+
+		if (ECS::GetInstance().HasComponent<GPUParticleEmitter>(selected)) {
+			DrawGPUParticleEmitterComponent(selected);
 		}
 
 		if (ECS::GetInstance().HasComponent<CameraComponent>(selected))
@@ -870,10 +975,9 @@ namespace Ermine::editor {
 
 		static std::vector<MaterialAssetEntry> materialAssets;
 		static bool materialAssetsScanned = false;
-		static auto lastMaterialScan = std::chrono::steady_clock::now();
 
 		auto refreshMaterialAssets = [&]() {
-			assetManager.ScanMaterialAssets();
+			assetManager.ScanMaterialAssets("../Resources/Materials/", false);
 			materialAssets.clear();
 			for (const auto& [guid, path] : assetManager.GetMaterialPathsByGuid()) {
 				MaterialAssetEntry entry;
@@ -889,14 +993,6 @@ namespace Ermine::editor {
 		if (!materialAssetsScanned) {
 			refreshMaterialAssets();
 			materialAssetsScanned = true;
-			lastMaterialScan = std::chrono::steady_clock::now();
-		}
-		else {
-			auto now = std::chrono::steady_clock::now();
-			if (now - lastMaterialScan > std::chrono::seconds(1)) {
-				refreshMaterialAssets();
-				lastMaterialScan = now;
-			}
 		}
 
 		if (matComp.materialGuid.IsValid()) {
@@ -1035,87 +1131,134 @@ namespace Ermine::editor {
 
 		if (ImGui::Button("Compile All Materials##MaterialAsset")) {
 			auto& ecs = ECS::GetInstance();
+			assetManager.ScanMaterialAssets("../Resources/Materials/", false);
+
+			struct ExistingMaterialEntry {
+				Guid guid;
+				std::string name;
+			};
+
+			std::unordered_map<std::string, std::vector<ExistingMaterialEntry>> signatureIndex;
+			signatureIndex.reserve(assetManager.GetMaterialPathsByGuid().size());
+			std::unordered_map<Guid, std::shared_ptr<graphics::Material>> boundByGuid;
+			std::vector<Ermine::EntityID> materialEntities;
+			materialEntities.reserve(256);
+
+			for (const auto& [guid, path] : assetManager.GetMaterialPathsByGuid()) {
+				auto existing = assetManager.LoadMaterialAsset(path, false);
+				if (!existing)
+					continue;
+				std::string frag;
+				if (const std::string* stored = assetManager.GetMaterialCustomFragmentShader(guid))
+					frag = *stored;
+				const std::string sig = BuildMaterialSignature(*existing, frag, {});
+				signatureIndex[sig].push_back({ guid, std::filesystem::path(path).stem().string() });
+				boundByGuid.try_emplace(guid, existing);
+			}
+
+			const std::filesystem::path materialsDir = std::filesystem::absolute("../Resources/Materials");
+
+			auto preferredMaterialName = [&](Ermine::EntityID id) {
+				std::string baseName = "Material";
+				if (ecs.HasComponent<ObjectMetaData>(id)) {
+					const auto& meta = ecs.GetComponent<ObjectMetaData>(id);
+					if (!meta.name.empty())
+						baseName = meta.name;
+					if (baseName.rfind("Mesh_", 0) == 0 && baseName.size() > 5)
+						baseName = baseName.substr(5);
+				}
+				return AssetManager::SanitizeAssetName(baseName);
+			};
 
 			for (Ermine::EntityID id = 0; id < Ermine::MAX_ENTITIES; ++id) {
 				if (!ecs.IsEntityValid(id) || !ecs.HasComponent<Ermine::Material>(id))
 					continue;
 
+				materialEntities.push_back(id);
 				auto& comp = ecs.GetComponent<Ermine::Material>(id);
 				auto matShared = comp.GetSharedMaterial();
 				if (!matShared)
 					continue;
 
-				std::string baseName = "Material";
-				if (ecs.HasComponent<ObjectMetaData>(id)) {
-					const auto& meta = ecs.GetComponent<ObjectMetaData>(id);
-					baseName = meta.name.empty() ? baseName : meta.name;
-					if (baseName.rfind("Mesh_", 0) == 0 && baseName.size() > 5)
-						baseName = baseName.substr(5);
+				const std::string preferredName = preferredMaterialName(id);
+				const std::string currentSig = BuildMaterialSignature(*matShared, comp.customFragmentShader, {});
+
+				Guid resolvedGuid{};
+				std::string resolvedName;
+				auto sigIt = signatureIndex.find(currentSig);
+				if (sigIt != signatureIndex.end() && !sigIt->second.empty()) {
+					auto matchIt = std::find_if(sigIt->second.begin(), sigIt->second.end(),
+						[&](const ExistingMaterialEntry& e) { return e.name == preferredName; });
+					if (matchIt != sigIt->second.end()) {
+						resolvedGuid = matchIt->guid;
+						resolvedName = matchIt->name;
+					}
+					else {
+						resolvedGuid = sigIt->second.front().guid;
+						resolvedName = sigIt->second.front().name;
+					}
+
+					// Force recompilation overwrite even when signature/name already matches.
+					resolvedGuid = assetManager.SaveMaterialAsset(resolvedName, *matShared, true, comp.customFragmentShader);
+				}
+				else {
+					std::string saveName = preferredName;
+					std::filesystem::path targetPath = materialsDir / (saveName + ".mat");
+					if (std::filesystem::exists(targetPath)) {
+						int suffix = 1;
+						do {
+							saveName = preferredName + "_Copy" + std::to_string(suffix++);
+							targetPath = materialsDir / (saveName + ".mat");
+						} while (std::filesystem::exists(targetPath));
+					}
+
+					resolvedName = saveName;
+					resolvedGuid = assetManager.SaveMaterialAsset(resolvedName, *matShared, true, comp.customFragmentShader);
+					if (resolvedGuid.IsValid()) {
+						signatureIndex[currentSig].push_back({ resolvedGuid, resolvedName });
+					}
 				}
 
-				baseName = AssetManager::SanitizeAssetName(baseName);
-				std::filesystem::path basePath = std::filesystem::absolute("../Resources/Materials") / (baseName + ".mat");
-				const std::string currentSig = BuildMaterialSignature(*matShared, comp.customFragmentShader, baseName);
+				if (!resolvedGuid.IsValid())
+					continue;
 
-				if (std::filesystem::exists(basePath)) {
-					auto existing = assetManager.LoadMaterialAsset(basePath.string(), false);
-					if (existing) {
-						Guid baseGuid = assetManager.GetMaterialGuidForPath(basePath.string());
-						std::string frag = "";
-						if (const std::string* stored = assetManager.GetMaterialCustomFragmentShader(baseGuid))
-							frag = *stored;
-						const std::string existingSig = BuildMaterialSignature(*existing, frag, baseName);
+				// Force-write/refresh .meta alongside recompiled .mat.
+				const std::string resolvedPath = assetManager.GetMaterialPathByGuid(resolvedGuid);
+				if (!resolvedPath.empty()) {
+					if (resolvedName.empty())
+						resolvedName = std::filesystem::path(resolvedPath).stem().string();
 
-						if (existingSig == currentSig) {
-							Guid guid = assetManager.SaveMaterialAsset(baseName, *matShared, true, comp.customFragmentShader);
-							auto shared = assetManager.GetMaterialByGuid(guid);
-							comp.SetMaterial(shared ? shared : matShared, guid);
-							if (shared) {
-								for (Ermine::EntityID other = 0; other < Ermine::MAX_ENTITIES; ++other) {
-									if (!ecs.IsEntityValid(other) || !ecs.HasComponent<Ermine::Material>(other))
-										continue;
-									auto& otherComp = ecs.GetComponent<Ermine::Material>(other);
-									if (otherComp.materialGuid == guid)
-										otherComp.SetMaterial(shared, guid);
-								}
-							}
-							continue;
-						}
-					}
+					std::filesystem::path metaPath = resolvedPath;
+					metaPath += ".meta";
+					SaveAssetMetaGuid(metaPath, resolvedGuid, "Material", 1, true);
+				}
 
-					std::string uniqueName = baseName;
-					int suffix = 1;
-					do {
-						uniqueName = baseName + "_Copy" + std::to_string(suffix++);
-					} while (std::filesystem::exists(std::filesystem::absolute("../Resources/Materials") / (uniqueName + ".mat")));
+				auto& bucket = signatureIndex[currentSig];
+				const bool alreadyIndexed = std::any_of(bucket.begin(), bucket.end(),
+					[&](const ExistingMaterialEntry& e) { return e.guid == resolvedGuid; });
+				if (!alreadyIndexed)
+					bucket.push_back({ resolvedGuid, resolvedName });
 
-					Guid guid = assetManager.SaveMaterialAsset(uniqueName, *matShared, true, comp.customFragmentShader);
-					auto shared = assetManager.GetMaterialByGuid(guid);
-					comp.SetMaterial(shared ? shared : matShared, guid);
-					if (shared) {
-						for (Ermine::EntityID other = 0; other < Ermine::MAX_ENTITIES; ++other) {
-							if (!ecs.IsEntityValid(other) || !ecs.HasComponent<Ermine::Material>(other))
-								continue;
-							auto& otherComp = ecs.GetComponent<Ermine::Material>(other);
-							if (otherComp.materialGuid == guid)
-								otherComp.SetMaterial(shared, guid);
-						}
-					}
+				auto boundIt = boundByGuid.find(resolvedGuid);
+				if (boundIt != boundByGuid.end() && boundIt->second) {
+					comp.SetMaterial(boundIt->second, resolvedGuid);
 					continue;
 				}
 
-				Guid guid = assetManager.SaveMaterialAsset(baseName, *matShared, true, comp.customFragmentShader);
-				auto shared = assetManager.GetMaterialByGuid(guid);
-				comp.SetMaterial(shared ? shared : matShared, guid);
-				if (shared) {
-					for (Ermine::EntityID other = 0; other < Ermine::MAX_ENTITIES; ++other) {
-						if (!ecs.IsEntityValid(other) || !ecs.HasComponent<Ermine::Material>(other))
-							continue;
-						auto& otherComp = ecs.GetComponent<Ermine::Material>(other);
-						if (otherComp.materialGuid == guid)
-							otherComp.SetMaterial(shared, guid);
-					}
-				}
+				auto shared = assetManager.GetMaterialByGuid(resolvedGuid);
+				if (!shared)
+					shared = matShared;
+				comp.SetMaterial(shared, resolvedGuid);
+				boundByGuid[resolvedGuid] = shared;
+			}
+
+			for (Ermine::EntityID id : materialEntities) {
+				auto& comp = ecs.GetComponent<Ermine::Material>(id);
+				if (!comp.materialGuid.IsValid())
+					continue;
+				auto it = boundByGuid.find(comp.materialGuid);
+				if (it != boundByGuid.end() && it->second)
+					comp.SetMaterial(it->second, comp.materialGuid);
 			}
 
 			refreshMaterialAssets();
@@ -2423,12 +2566,18 @@ namespace Ermine::editor {
 								// Get material index from aiScene (if available)
 								uint32_t matIndex = 0;
 								bool hasSceneMaterial = false;
+								std::string meshName = meshID;
 
 								if (scene && meshIndex < scene->mNumMeshes) {
 									aiMesh* aiMsh = scene->mMeshes[meshIndex];
-									if (aiMsh && aiMsh->mMaterialIndex < scene->mNumMaterials) {
-										matIndex = aiMsh->mMaterialIndex;
-										hasSceneMaterial = true;
+									if (aiMsh) {
+										if (aiMsh->mName.length > 0) {
+											meshName = aiMsh->mName.C_Str();
+										}
+										if (aiMsh->mMaterialIndex < scene->mNumMaterials) {
+											matIndex = aiMsh->mMaterialIndex;
+											hasSceneMaterial = true;
+										}
 									}
 								}
 
@@ -2478,6 +2627,7 @@ namespace Ermine::editor {
 								// Create or load a shared material asset (mesh-name based)
 								Guid materialGuid{};
 								auto materialPtr = BuildMeshMaterialAsset(
+									meshName,
 									meshID,
 									hasSceneMaterial ? scene->mMaterials[matIndex] : nullptr,
 									!hasSceneMaterial,
@@ -2581,12 +2731,18 @@ namespace Ermine::editor {
 							// Get material index from aiScene (if available)
 							uint32_t matIndex = 0;
 							bool hasSceneMaterial = false;
+							std::string meshName = meshID;
 
 							if (scene && meshIndex < scene->mNumMeshes) {
 								aiMesh* aiMsh = scene->mMeshes[meshIndex];
-								if (aiMsh && aiMsh->mMaterialIndex < scene->mNumMaterials) {
-									matIndex = aiMsh->mMaterialIndex;
-									hasSceneMaterial = true;
+								if (aiMsh) {
+									if (aiMsh->mName.length > 0) {
+										meshName = aiMsh->mName.C_Str();
+									}
+									if (aiMsh->mMaterialIndex < scene->mNumMaterials) {
+										matIndex = aiMsh->mMaterialIndex;
+										hasSceneMaterial = true;
+									}
 								}
 							}
 
@@ -2636,6 +2792,7 @@ namespace Ermine::editor {
 							// Create or load a shared material asset (mesh-name based)
 							Guid materialGuid{};
 							auto materialPtr = BuildMeshMaterialAsset(
+								meshName,
 								meshID,
 								hasSceneMaterial ? scene->mMaterials[matIndex] : nullptr,
 								!hasSceneMaterial,
@@ -2995,6 +3152,300 @@ namespace Ermine::editor {
 		// Display info
 		ImGui::Text("Emitter Active: %s", emitter.active ? "Yes" : "No");
 		ImGui::Text("Particles Alive: %d", alive);
+	}
+
+	void HierarchyInspector::DrawGPUParticleEmitterComponent(EntityID entity)
+	{
+		if (!ComponentHeaderWithRemove<GPUParticleEmitter>("Particle Emitter (GPU)", entity))
+			return;
+
+		auto& emitter = ECS::GetInstance().GetComponent<GPUParticleEmitter>(entity);
+
+		ImGui::Checkbox("Active", &emitter.active);
+		ImGui::SameLine();
+		ImGui::Checkbox("Show Debug Bounds", &emitter.showDebugBounds);
+
+		// Quick manipulation section
+		if (ImGui::CollapsingHeader("Quick Controls", ImGuiTreeNodeFlags_DefaultOpen)) {
+			
+			// Overall Scale
+			ImGui::Text("Overall Size");
+			ImGui::SetNextItemWidth(-1);
+			if (ImGui::SliderFloat("##OverallScale", &emitter.overallScale, 0.1f, 10.0f, "%.2fx")) {
+				emitter.overallScale = std::max(0.01f, emitter.overallScale);
+			}
+			if (ImGui::IsItemHovered()) {
+				ImGui::SetTooltip("Scales all size/radius/area parameters\nAffects: particle size, spawn area, bounds");
+			}
+
+			// Quick size buttons
+			ImGui::Text("Quick Sizes:");
+			if (ImGui::Button("Tiny##Size")) {
+				emitter.overallScale = 0.25f;
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Small##Size")) {
+				emitter.overallScale = 0.5f;
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Normal##Size")) {
+				emitter.overallScale = 1.0f;
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Large##Size")) {
+				emitter.overallScale = 2.0f;
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Huge##Size")) {
+				emitter.overallScale = 4.0f;
+			}
+
+			ImGui::Separator();
+			ImGui::Text("Particle Offset (relative to parent)");
+			ImGui::SetNextItemWidth(-1);
+			
+			// Local position offset controls
+			float offset[3] = { emitter.localPositionOffset.x, emitter.localPositionOffset.y, emitter.localPositionOffset.z };
+			if (ImGui::DragFloat3("Local Position", offset, 0.01f)) {
+				emitter.localPositionOffset = Vec3(offset[0], offset[1], offset[2]);
+			}
+			
+			if (ImGui::IsItemHovered()) {
+				ImGui::SetTooltip("Offset from parent object's position\nX=Right, Y=Up, Z=Forward in local space");
+			}
+
+			// Helper buttons for common offsets
+			ImGui::Text("Quick Offsets:");
+			if (ImGui::Button("Center")) {
+				emitter.localPositionOffset = Vec3(0.0f, 0.0f, 0.0f);
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Top")) {
+				emitter.localPositionOffset = Vec3(0.0f, 1.0f, 0.0f);
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Front")) {
+				emitter.localPositionOffset = Vec3(0.0f, 0.0f, 1.0f);
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Right")) {
+				emitter.localPositionOffset = Vec3(1.0f, 0.0f, 0.0f);
+			}
+
+			// Quick preset buttons
+			ImGui::Separator();
+			ImGui::Text("Quick Presets");
+			
+			if (ImGui::Button("Electric Door Lock")) {
+				// Gate (1) settings
+				emitter.maxParticles = 512;
+				emitter.emissionShape = 1;
+				emitter.overallScale = 1.0f;
+				emitter.spawnBoxExtents = Vec3(1.0f, 1.0f, 1.0f);
+				emitter.spawnRadius = 150.0f;
+				emitter.spawnRadiusInner = 50.0f;
+				emitter.spawnRate = 20.0f;
+				emitter.burstCountMin = 20;
+				emitter.burstCountMax = 40;
+				emitter.burstInterval = 1.5f;
+				emitter.burstOnStart = true;
+				emitter.directionMode = 0;
+				emitter.direction = Vec3(0.0f, 0.0f, 1.0f);
+				emitter.coneAngle = 25.0f;
+				emitter.coneInnerAngle = 0.0f;
+				emitter.speedMin = 0.5f;
+				emitter.speedMax = 3.0f;
+				emitter.gravity = Vec3(0.0f, 0.5f, 0.0f);
+				emitter.drag = 0.0f;
+				emitter.turbulenceStrength = 0.0f;
+				emitter.turbulenceScale = 1.0f;
+				emitter.boundsMode = 1;
+				emitter.boundsShape = 0;
+				emitter.boundsBoxExtents = Vec3(1.0f, 1.0f, 1.0f);
+				emitter.boundsRadius = 2.0f;
+				emitter.boundsRadiusInner = 0.0f;
+				emitter.renderMode = 2; // Electric
+				emitter.smokeOpacity = 0.6f;
+				emitter.smokeSoftness = 0.5f;
+				emitter.smokeNoiseScale = 0.15f;
+				emitter.smokeDistortScale = 0.25f;
+				emitter.smokeDistortStrength = 0.35f;
+				emitter.smokePuffScale = 0.35f;
+				emitter.smokePuffStrength = 0.6f;
+				emitter.smokeStretch = 0.5f;
+				emitter.smokeUpBias = 0.2f;
+				emitter.smokeDepthFade = 6.0f;
+				emitter.electricIntensity = 5.0f;
+				emitter.electricFrequency = 15.0f;
+				emitter.electricBoltThickness = 0.08f;
+				emitter.electricBoltVariation = 1.5f;
+				emitter.electricGlow = 2.0f;
+				emitter.electricBoltCount = 1;
+				emitter.colorStart = Vec3(0.3f, 0.6f, 1.0f);
+				emitter.colorEnd = Vec3(0.1f, 0.2f, 0.5f);
+				emitter.alphaStart = 1.0f;
+				emitter.alphaEnd = 0.0f;
+				emitter.sizeStartMin = 0.5f;
+				emitter.sizeStartMax = 1.0f;
+				emitter.sizeEndMin = 0.15f;
+				emitter.sizeEndMax = 2.0f;
+				emitter.lifetimeMin = 0.3f;
+				emitter.lifetimeMax = 0.6f;
+				emitter.sparkleShape = 0;
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Electric Hazard")) {
+				emitter.renderMode = 2;
+				emitter.electricIntensity = 1.5f;
+				emitter.electricFrequency = 25.0f;
+				emitter.electricBoltCount = 2;
+				emitter.electricBoltThickness = 0.06f;
+				emitter.electricBoltVariation = 2.5f;
+				emitter.electricGlow = 0.3f;
+				emitter.colorStart = Vec3(1.0f, 0.9f, 0.2f);
+				emitter.colorEnd = Vec3(1.0f, 0.5f, 0.0f);
+				emitter.burstOnStart = true;
+				emitter.burstInterval = 1.0f;
+				emitter.burstCountMin = 20;
+				emitter.burstCountMax = 40;
+			}
+			
+			if (ImGui::Button("Magic Glow")) {
+				emitter.renderMode = 0; // Glow
+				emitter.sparkleShape = 1; // Star
+				emitter.colorStart = Vec3(0.8f, 0.2f, 1.0f);
+				emitter.colorEnd = Vec3(0.2f, 0.1f, 0.5f);
+				emitter.spawnRate = 30.0f;
+				emitter.lifetimeMin = 0.8f;
+				emitter.lifetimeMax = 1.5f;
+				emitter.gravity = Vec3(0.0f, 0.5f, 0.0f);
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Smoke Puff")) {
+				emitter.renderMode = 1; // Smoke
+				emitter.smokeOpacity = 0.6f;
+				emitter.smokeSoftness = 0.5f;
+				emitter.colorStart = Vec3(0.3f, 0.3f, 0.3f);
+				emitter.colorEnd = Vec3(0.1f, 0.1f, 0.1f);
+				emitter.burstOnStart = true;
+				emitter.burstCountMin = 50;
+				emitter.burstCountMax = 100;
+				emitter.lifetimeMin = 1.5f;
+				emitter.lifetimeMax = 3.0f;
+			}
+		}
+
+		ImGui::Separator();
+		ImGui::Text("Particle Settings");
+
+		int maxParticles = emitter.maxParticles;
+		if (ImGui::DragInt("Max Particles", &maxParticles, 1.0f, 16, 4096)) {
+			emitter.maxParticles = maxParticles;
+			emitter.initialized = false; // Force reinit
+		}
+
+		ImGui::Separator();
+		ImGui::Text("Emission");
+
+		const char* emissionShapes[] = { "Point", "Sphere", "Box", "Disc (XZ)" };
+		ImGui::Combo("Emission Shape", &emitter.emissionShape, emissionShapes, 4);
+		ImGui::DragFloat("Spawn Radius", &emitter.spawnRadius, 0.01f, 0.0f, 50.0f);
+		ImGui::DragFloat("Spawn Inner Radius", &emitter.spawnRadiusInner, 0.01f, 0.0f, emitter.spawnRadius);
+		ImGui::DragFloat3("Spawn Box Extents", &emitter.spawnBoxExtents.x, 0.01f, 0.0f, 50.0f);
+		ImGui::DragFloat("Spawn Rate (per sec)", &emitter.spawnRate, 0.1f, 0.0f, 500.0f);
+		ImGui::DragInt("Burst Count Min", &emitter.burstCountMin, 1.0f, 0, 1024);
+		ImGui::DragInt("Burst Count Max", &emitter.burstCountMax, 1.0f, 0, 1024);
+		ImGui::DragFloat("Burst Interval (sec)", &emitter.burstInterval, 0.01f, 0.0f, 10.0f);
+		ImGui::Checkbox("Burst On Start", &emitter.burstOnStart);
+
+		ImGui::Separator();
+		ImGui::Text("Direction");
+
+		const char* directionModes[] = { "Fixed", "Cone", "From Spawn", "Random Sphere" };
+		ImGui::Combo("Direction Mode", &emitter.directionMode, directionModes, 4);
+		ImGui::DragFloat3("Direction", &emitter.direction.x, 0.01f, -1.0f, 1.0f);
+		ImGui::DragFloat("Cone Angle", &emitter.coneAngle, 0.1f, 0.0f, 180.0f);
+		ImGui::DragFloat("Cone Inner Angle", &emitter.coneInnerAngle, 0.1f, 0.0f, emitter.coneAngle);
+
+		ImGui::Separator();
+		ImGui::Text("Bounds");
+
+		const char* boundsModes[] = { "None", "Kill", "Clamp", "Bounce" };
+		const char* boundsShapes[] = { "Sphere", "Box", "Disc (XZ)" };
+		ImGui::Combo("Bounds Mode", &emitter.boundsMode, boundsModes, 4);
+		ImGui::Combo("Bounds Shape", &emitter.boundsShape, boundsShapes, 3);
+		ImGui::DragFloat("Bounds Radius", &emitter.boundsRadius, 0.01f, 0.0f, 100.0f);
+		ImGui::DragFloat("Bounds Inner Radius", &emitter.boundsRadiusInner, 0.01f, 0.0f, emitter.boundsRadius);
+		ImGui::DragFloat3("Bounds Box Extents", &emitter.boundsBoxExtents.x, 0.01f, 0.0f, 100.0f);
+
+		ImGui::Separator();
+		ImGui::Text("Forces");
+
+		ImGui::DragFloat("Speed Min", &emitter.speedMin, 0.01f, 0.0f, 50.0f);
+		ImGui::DragFloat("Speed Max", &emitter.speedMax, 0.01f, 0.0f, 50.0f);
+		ImGui::DragFloat3("Gravity", &emitter.gravity.x, 0.01f, -50.0f, 50.0f);
+		ImGui::DragFloat("Drag", &emitter.drag, 0.01f, 0.0f, 10.0f);
+		ImGui::DragFloat("Turbulence Strength", &emitter.turbulenceStrength, 0.01f, 0.0f, 10.0f);
+		ImGui::DragFloat("Turbulence Scale", &emitter.turbulenceScale, 0.01f, 0.01f, 10.0f);
+
+		ImGui::Separator();
+		ImGui::Text("Appearance");
+
+		const char* renderModes[] = { "Glow", "Smoke", "Electric" };
+		ImGui::Combo("Render Mode", &emitter.renderMode, renderModes, 3);
+		if (emitter.renderMode == 1) {
+			ImGui::DragFloat("Smoke Opacity", &emitter.smokeOpacity, 0.01f, 0.0f, 2.0f);
+			ImGui::DragFloat("Smoke Softness", &emitter.smokeSoftness, 0.01f, 0.01f, 2.0f);
+			ImGui::DragFloat("Smoke Noise Scale", &emitter.smokeNoiseScale, 0.01f, 0.01f, 5.0f);
+			ImGui::DragFloat("Smoke Distort Scale", &emitter.smokeDistortScale, 0.01f, 0.01f, 5.0f);
+			ImGui::DragFloat("Smoke Distort Strength", &emitter.smokeDistortStrength, 0.01f, 0.0f, 2.0f);
+			ImGui::DragFloat("Smoke Puff Scale", &emitter.smokePuffScale, 0.01f, 0.01f, 5.0f);
+			ImGui::DragFloat("Smoke Puff Strength", &emitter.smokePuffStrength, 0.01f, 0.0f, 1.0f);
+			ImGui::DragFloat("Smoke Stretch", &emitter.smokeStretch, 0.01f, 0.0f, 5.0f);
+			ImGui::DragFloat("Smoke Up Bias", &emitter.smokeUpBias, 0.01f, 0.0f, 2.0f);
+			ImGui::DragFloat("Smoke Depth Fade", &emitter.smokeDepthFade, 0.1f, 0.0f, 20.0f);
+		}
+		else if (emitter.renderMode == 2) { // Electric mode
+			ImGui::DragFloat("Electric Intensity", &emitter.electricIntensity, 0.01f, 0.0f, 5.0f);
+			ImGui::DragFloat("Electric Frequency", &emitter.electricFrequency, 0.1f, 1.0f, 50.0f);
+			ImGui::DragInt("Bolt Count", &emitter.electricBoltCount, 0.1f, 1, 10);
+			ImGui::DragFloat("Bolt Thickness", &emitter.electricBoltThickness, 0.01f, 0.01f, 0.5f);
+			ImGui::DragFloat("Bolt Variation", &emitter.electricBoltVariation, 0.01f, 0.0f, 5.0f);
+			ImGui::DragFloat("Electric Glow", &emitter.electricGlow, 0.01f, 0.0f, 2.0f);
+		}
+
+		float colorStart[3] = { emitter.colorStart.x, emitter.colorStart.y, emitter.colorStart.z };
+		if (ImGui::ColorEdit3("Color Start", colorStart)) {
+			emitter.colorStart = Vec3(colorStart[0], colorStart[1], colorStart[2]);
+		}
+		float colorEnd[3] = { emitter.colorEnd.x, emitter.colorEnd.y, emitter.colorEnd.z };
+		if (ImGui::ColorEdit3("Color End", colorEnd)) {
+			emitter.colorEnd = Vec3(colorEnd[0], colorEnd[1], colorEnd[2]);
+		}
+		ImGui::DragFloat("Alpha Start", &emitter.alphaStart, 0.01f, 0.0f, 1.0f);
+		ImGui::DragFloat("Alpha End", &emitter.alphaEnd, 0.01f, 0.0f, 1.0f);
+
+		ImGui::DragFloat("Size Start Min", &emitter.sizeStartMin, 0.001f, 0.001f, 5.0f);
+		ImGui::DragFloat("Size Start Max", &emitter.sizeStartMax, 0.001f, 0.001f, 5.0f);
+		ImGui::DragFloat("Size End Min", &emitter.sizeEndMin, 0.001f, 0.001f, 5.0f);
+		ImGui::DragFloat("Size End Max", &emitter.sizeEndMax, 0.001f, 0.001f, 5.0f);
+
+		ImGui::Separator();
+		ImGui::Text("Lifetime");
+
+		ImGui::DragFloat("Lifetime Min", &emitter.lifetimeMin, 0.1f, 0.1f, 10.0f);
+		ImGui::DragFloat("Lifetime Max", &emitter.lifetimeMax, 0.1f, 0.1f, 10.0f);
+
+		ImGui::Separator();
+		ImGui::Text("Sparkle Shape");
+
+		const char* shapes[] = { "Soft Circle", "Star", "Diamond" };
+		ImGui::Combo("Shape", &emitter.sparkleShape, shapes, 3);
+
+		// Status
+		ImGui::Separator();
+		ImGui::Text("Status: %s", emitter.initialized ? "Initialized" : "Not Initialized");
+		ImGui::Text("Particles: %d", emitter.maxParticles);
 	}
 
 	void HierarchyInspector::DrawCameraComponent(EntityID entity)
@@ -3638,12 +4089,12 @@ namespace Ermine::editor {
 			if (matchSearch("Mesh") && ImGui::MenuItem("Mesh") && !ecs.HasComponent<Mesh>(entity))
 			{
 				ecs.AddComponent(entity, graphics::GeometryFactory::CreateCube());
-				ecs.AddComponent(entity, Material());
+				ecs.AddComponent(entity, BuildDefaultWhiteMaterialComponent());
 				itemSelected = true;
 			}
 			if (matchSearch("Material") && ImGui::MenuItem("Material") && !ecs.HasComponent<Material>(entity))
 			{
-				ecs.AddComponent(entity, Material());
+				ecs.AddComponent(entity, BuildDefaultWhiteMaterialComponent());
 				itemSelected = true;
 			}
 			if (matchSearch("Model") && ImGui::MenuItem("Model") && !ecs.HasComponent<ModelComponent>(entity))
@@ -3762,11 +4213,16 @@ namespace Ermine::editor {
 		// =========================
 		// Particles
 		// =========================
-		if (shouldShowMenu("Particles", { "Particle Emitter" }) && ImGui::BeginMenu("Particles"))
+		if (shouldShowMenu("Particles", { "Particle Emitter", "GPU Particle Emitter" }) && ImGui::BeginMenu("Particles"))
 		{
 			if (matchSearch("Particle Emitter") && ImGui::MenuItem("Particle Emitter") && !ecs.HasComponent<ParticleEmitter>(entity))
 			{
 				ecs.AddComponent(entity, ParticleEmitter());
+				itemSelected = true;
+			}
+			if (matchSearch("GPU Particle Emitter") && ImGui::MenuItem("Particle Emitter (GPU)") && !ecs.HasComponent<GPUParticleEmitter>(entity))
+			{
+				ecs.AddComponent(entity, GPUParticleEmitter());
 				itemSelected = true;
 			}
 			ImGui::EndMenu();

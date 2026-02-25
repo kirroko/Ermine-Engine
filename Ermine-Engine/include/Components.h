@@ -2368,6 +2368,158 @@ namespace Ermine
 
 	/*!***********************************************************************
 	 \brief
+	  GPU-based particle emitter (standard emitter model).
+	*************************************************************************/
+	struct GPUParticleEmitter
+	{
+		bool active = true;
+		int maxParticles = 256;
+
+		// Emission
+		int emissionShape = 0; // 0 = point, 1 = sphere, 2 = box, 3 = disc (XZ)
+		Vec3 localPositionOffset = Vec3(0.0f, 0.0f, 0.0f);  // Offset from parent transform
+		float overallScale = 1.0f;  // Master scale for all size/radius properties
+		Vec3 spawnBoxExtents = Vec3(0.5f, 0.5f, 0.5f);
+		float spawnRadius = 0.5f;
+		float spawnRadiusInner = 0.0f;
+		float spawnRate = 20.0f; // particles/sec
+		int burstCountMin = 0;
+		int burstCountMax = 0;
+		float burstInterval = 0.0f;
+		bool burstOnStart = false;
+
+		// Direction
+		int directionMode = 0; // 0 = fixed, 1 = cone, 2 = from spawn, 3 = random sphere
+		Vec3 direction = Vec3(0.0f, 0.0f, 1.0f);
+		float coneAngle = 25.0f;
+		float coneInnerAngle = 0.0f;
+
+		// Forces & speed
+		float speedMin = 0.5f;
+		float speedMax = 3.0f;
+		Vec3 gravity = Vec3(0.0f, -2.0f, 0.0f);
+		float drag = 0.0f;
+		float turbulenceStrength = 0.0f;
+		float turbulenceScale = 1.0f;
+
+		// Bounds
+		int boundsMode = 0; // 0 = none, 1 = kill, 2 = clamp, 3 = bounce
+		int boundsShape = 0; // 0 = sphere, 1 = box, 2 = disc (XZ)
+		Vec3 boundsBoxExtents = Vec3(1.0f, 1.0f, 1.0f);
+		float boundsRadius = 2.0f;
+		float boundsRadiusInner = 0.0f;
+
+		// Appearance
+		int renderMode = 0; // 0 = glow, 1 = smoke, 2 = electric
+		float smokeOpacity = 0.6f;
+		float smokeSoftness = 0.5f;
+		float smokeNoiseScale = 0.15f;
+		float smokeDistortScale = 0.25f;
+		float smokeDistortStrength = 0.35f;
+		float smokePuffScale = 0.35f;
+		float smokePuffStrength = 0.6f;
+		float smokeStretch = 0.5f;
+		float smokeUpBias = 0.2f;
+		float smokeDepthFade = 6.0f;
+		float electricIntensity = 1.0f;
+		float electricFrequency = 8.0f;
+		float electricBoltThickness = 0.08f;
+		float electricBoltVariation = 1.5f;
+		float electricGlow = 0.5f;
+		int electricBoltCount = 3;
+		Vec3 colorStart = Vec3(1.0f, 0.85f, 0.2f);
+		Vec3 colorEnd = Vec3(0.1f, 0.1f, 0.1f);
+		float alphaStart = 1.0f;
+		float alphaEnd = 0.0f;
+		float sizeStartMin = 0.03f;
+		float sizeStartMax = 0.08f;
+		float sizeEndMin = 0.02f;
+		float sizeEndMax = 0.06f;
+		float lifetimeMin = 0.6f;
+		float lifetimeMax = 1.8f;
+		int sparkleShape = 0;  // 0 = soft circle, 1 = star, 2 = diamond
+
+		// Runtime state (not serialized)
+		float spawnAccumulator = 0.0f;
+		float burstTimer = 0.0f;
+		bool burstPrimed = false;
+		unsigned int particleBuffer = 0;
+		unsigned int spawnCounterBuffer = 0;
+		bool initialized = false;
+		bool showDebugBounds = false;  // Debug visualization toggle
+
+		template<typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
+			xprop_utils::SerializeToJson(*this, out, alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in) {
+			xprop_utils::DeserializeFromJson(*this, in);
+		}
+
+		XPROPERTY_DEF(
+			"GPUParticleEmitterComponent", GPUParticleEmitter,
+			xproperty::obj_member<"active", &GPUParticleEmitter::active>,
+			xproperty::obj_member<"maxParticles", &GPUParticleEmitter::maxParticles>,
+			xproperty::obj_member<"emissionShape", &GPUParticleEmitter::emissionShape>,
+			xproperty::obj_member<"localPositionOffset", &GPUParticleEmitter::localPositionOffset>,
+			xproperty::obj_member<"overallScale", &GPUParticleEmitter::overallScale>,
+			xproperty::obj_member<"spawnBoxExtents", &GPUParticleEmitter::spawnBoxExtents>,
+			xproperty::obj_member<"spawnRadius", &GPUParticleEmitter::spawnRadius>,
+			xproperty::obj_member<"spawnRadiusInner", &GPUParticleEmitter::spawnRadiusInner>,
+			xproperty::obj_member<"spawnRate", &GPUParticleEmitter::spawnRate>,
+			xproperty::obj_member<"burstCountMin", &GPUParticleEmitter::burstCountMin>,
+			xproperty::obj_member<"burstCountMax", &GPUParticleEmitter::burstCountMax>,
+			xproperty::obj_member<"burstInterval", &GPUParticleEmitter::burstInterval>,
+			xproperty::obj_member<"burstOnStart", &GPUParticleEmitter::burstOnStart>,
+			xproperty::obj_member<"directionMode", &GPUParticleEmitter::directionMode>,
+			xproperty::obj_member<"direction", &GPUParticleEmitter::direction>,
+			xproperty::obj_member<"coneAngle", &GPUParticleEmitter::coneAngle>,
+			xproperty::obj_member<"coneInnerAngle", &GPUParticleEmitter::coneInnerAngle>,
+			xproperty::obj_member<"speedMin", &GPUParticleEmitter::speedMin>,
+			xproperty::obj_member<"speedMax", &GPUParticleEmitter::speedMax>,
+			xproperty::obj_member<"gravity", &GPUParticleEmitter::gravity>,
+			xproperty::obj_member<"drag", &GPUParticleEmitter::drag>,
+			xproperty::obj_member<"turbulenceStrength", &GPUParticleEmitter::turbulenceStrength>,
+			xproperty::obj_member<"turbulenceScale", &GPUParticleEmitter::turbulenceScale>,
+			xproperty::obj_member<"boundsMode", &GPUParticleEmitter::boundsMode>,
+			xproperty::obj_member<"boundsShape", &GPUParticleEmitter::boundsShape>,
+			xproperty::obj_member<"boundsBoxExtents", &GPUParticleEmitter::boundsBoxExtents>,
+			xproperty::obj_member<"boundsRadius", &GPUParticleEmitter::boundsRadius>,
+			xproperty::obj_member<"boundsRadiusInner", &GPUParticleEmitter::boundsRadiusInner>,
+			xproperty::obj_member<"renderMode", &GPUParticleEmitter::renderMode>,
+			xproperty::obj_member<"smokeOpacity", &GPUParticleEmitter::smokeOpacity>,
+			xproperty::obj_member<"smokeSoftness", &GPUParticleEmitter::smokeSoftness>,
+			xproperty::obj_member<"smokeNoiseScale", &GPUParticleEmitter::smokeNoiseScale>,
+			xproperty::obj_member<"smokeDistortScale", &GPUParticleEmitter::smokeDistortScale>,
+			xproperty::obj_member<"smokeDistortStrength", &GPUParticleEmitter::smokeDistortStrength>,
+			xproperty::obj_member<"smokePuffScale", &GPUParticleEmitter::smokePuffScale>,
+			xproperty::obj_member<"smokePuffStrength", &GPUParticleEmitter::smokePuffStrength>,
+			xproperty::obj_member<"smokeStretch", &GPUParticleEmitter::smokeStretch>,
+			xproperty::obj_member<"smokeUpBias", &GPUParticleEmitter::smokeUpBias>,
+			xproperty::obj_member<"smokeDepthFade", &GPUParticleEmitter::smokeDepthFade>,
+			xproperty::obj_member<"electricIntensity", &GPUParticleEmitter::electricIntensity>,
+			xproperty::obj_member<"electricFrequency", &GPUParticleEmitter::electricFrequency>,
+			xproperty::obj_member<"electricBoltThickness", &GPUParticleEmitter::electricBoltThickness>,
+			xproperty::obj_member<"electricBoltVariation", &GPUParticleEmitter::electricBoltVariation>,
+			xproperty::obj_member<"electricGlow", &GPUParticleEmitter::electricGlow>,
+			xproperty::obj_member<"electricBoltCount", &GPUParticleEmitter::electricBoltCount>,
+			xproperty::obj_member<"colorStart", &GPUParticleEmitter::colorStart>,
+			xproperty::obj_member<"colorEnd", &GPUParticleEmitter::colorEnd>,
+			xproperty::obj_member<"alphaStart", &GPUParticleEmitter::alphaStart>,
+			xproperty::obj_member<"alphaEnd", &GPUParticleEmitter::alphaEnd>,
+			xproperty::obj_member<"sizeStartMin", &GPUParticleEmitter::sizeStartMin>,
+			xproperty::obj_member<"sizeStartMax", &GPUParticleEmitter::sizeStartMax>,
+			xproperty::obj_member<"sizeEndMin", &GPUParticleEmitter::sizeEndMin>,
+			xproperty::obj_member<"sizeEndMax", &GPUParticleEmitter::sizeEndMax>,
+			xproperty::obj_member<"lifetimeMin", &GPUParticleEmitter::lifetimeMin>,
+			xproperty::obj_member<"lifetimeMax", &GPUParticleEmitter::lifetimeMax>,
+			xproperty::obj_member<"sparkleShape", &GPUParticleEmitter::sparkleShape>
+		);
+	};
+
+	/*!***********************************************************************
+	 \brief
 	  Hierarchy component structure for parent-child relationships.
 	*************************************************************************/
 	struct HierarchyComponent

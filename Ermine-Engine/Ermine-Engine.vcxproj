@@ -337,6 +337,7 @@ copy /B /Y "$(SolutionDir)ThirdParty\DirectXTex\lib\DirectXTex.pdb" "$(SolutionD
     <ClInclude Include="include\FiniteStateMachine.h" />
     <ClInclude Include="include\FrameController.h" />
     <ClInclude Include="include\GISystem.h" />
+    <ClInclude Include="include\GPUParticles.h" />
     <ClInclude Include="include\GPUProfiler.h" />
     <ClInclude Include="include\GameObject.h" />
     <ClInclude Include="include\GameObjectFactory.h" />
@@ -450,6 +451,7 @@ copy /B /Y "$(SolutionDir)ThirdParty\DirectXTex\lib\DirectXTex.pdb" "$(SolutionD
     <ClCompile Include="src\NavMesh\NavMeshAgentSystem.cpp" />
     <ClCompile Include="src\Object\GameObject.cpp" />
     <ClCompile Include="src\Object\GameObjectFactory.cpp" />
+    <ClCompile Include="src\Particles\GPUParticles.cpp" />
     <ClCompile Include="src\Particles\Particles.cpp" />
     <ClCompile Include="src\Physics\PhysicDebugRenderer.cpp" />
     <ClCompile Include="src\Physics\Physics.cpp" />

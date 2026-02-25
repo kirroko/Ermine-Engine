@@ -42,6 +42,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Physics.h"
 #include "NavMesh.h"
 #include "GISystem.h"
+#include "GPUParticles.h"
 
 namespace {
 	constexpr uint32_t kProbeFileMagic = 0x49475245u; // 'ERGI'
@@ -118,6 +119,79 @@ GLenum glCheckError_(const char* file, int line)
 #define glCheckError() glCheckError_(__FILE__, __LINE__)
 
 namespace {
+	inline bool IsFiniteVec3(const glm::vec3& v)
+	{
+		return std::isfinite(v.x) && std::isfinite(v.y) && std::isfinite(v.z);
+	}
+
+	inline glm::vec3 ExtractWorldPosition(const glm::mat4& worldMatrix)
+	{
+		return glm::vec3(worldMatrix[3]);
+	}
+
+	inline glm::vec3 ExtractWorldForward(const glm::mat4& worldMatrix)
+	{
+		const glm::vec3 forward = glm::vec3(worldMatrix[2]);
+		const float lenSq = glm::dot(forward, forward);
+		if (!IsFiniteVec3(forward) || lenSq <= 1e-8f) {
+			return glm::vec3(0.0f, 0.0f, 1.0f);
+		}
+		return forward * glm::inversesqrt(lenSq);
+	}
+
+	inline glm::mat3 ExtractWorldRotationNoScale(const glm::mat4& worldMatrix)
+	{
+		glm::vec3 x = glm::vec3(worldMatrix[0]);
+		glm::vec3 y = glm::vec3(worldMatrix[1]);
+		glm::vec3 z = glm::vec3(worldMatrix[2]);
+
+		if (!IsFiniteVec3(x) || !IsFiniteVec3(y) || !IsFiniteVec3(z)) {
+			return glm::mat3(1.0f);
+		}
+
+		const float xLenSq = glm::dot(x, x);
+		const float yLenSq = glm::dot(y, y);
+		const float zLenSq = glm::dot(z, z);
+		if (xLenSq <= 1e-8f || yLenSq <= 1e-8f || zLenSq <= 1e-8f) {
+			return glm::mat3(1.0f);
+		}
+
+		x *= glm::inversesqrt(xLenSq);
+		y = y - x * glm::dot(y, x);
+		const float yOrthoLenSq = glm::dot(y, y);
+		if (yOrthoLenSq <= 1e-8f) {
+			return glm::mat3(1.0f);
+		}
+		y *= glm::inversesqrt(yOrthoLenSq);
+
+		glm::vec3 zOrtho = glm::cross(x, y);
+		const float zOrthoLenSq = glm::dot(zOrtho, zOrtho);
+		if (zOrthoLenSq <= 1e-8f) {
+			return glm::mat3(1.0f);
+		}
+		zOrtho *= glm::inversesqrt(zOrthoLenSq);
+
+		if (glm::dot(zOrtho, z) < 0.0f) {
+			zOrtho = -zOrtho;
+		}
+
+		return glm::mat3(x, y, zOrtho);
+	}
+
+	inline glm::mat4 BuildSkinnedModelMatrix(const glm::mat4& worldMatrix, const glm::vec3& localScale)
+	{
+		glm::vec3 safeScale = localScale;
+		if (!IsFiniteVec3(safeScale)) {
+			safeScale = glm::vec3(1.0f);
+		}
+
+		glm::mat4 model(1.0f);
+		model = glm::translate(model, ExtractWorldPosition(worldMatrix));
+		model *= glm::mat4(ExtractWorldRotationNoScale(worldMatrix));
+		model = glm::scale(model, safeScale);
+		return model;
+	}
+
 	bool ComputeSkinnedMeshAABB(const Ermine::graphics::MeshData& mesh,
 		const std::vector<glm::mat4>& boneTransforms,
 		glm::vec3& outMin,
@@ -160,6 +234,9 @@ namespace {
 			}
 
 			if (any) {
+				if (!IsFiniteVec3(aabbMin) || !IsFiniteVec3(aabbMax)) {
+					return false;
+				}
 				outMin = aabbMin;
 				outMax = aabbMax;
 				return true;
@@ -212,6 +289,10 @@ namespace {
 		}
 
 		if (!anyWeighted) {
+			return false;
+		}
+
+		if (!IsFiniteVec3(aabbMin) || !IsFiniteVec3(aabbMax)) {
 			return false;
 		}
 
@@ -2068,8 +2149,14 @@ void Renderer::RebuildDrawData()
 
 			if (animComp.boneTransformOffset < 0) continue; // Skip if no valid bone data
 
-			// Build entity transform
-			glm::mat4 modelMatrix = GetEntityWorldMatrix(entity);
+			// For skinned models: inherit parent world translation/rotation, but keep local scale only.
+			const glm::mat4 worldMatrix = GetEntityWorldMatrix(entity);
+			glm::vec3 localScale(1.0f);
+			if (ecs.HasComponent<Transform>(entity)) {
+				const auto& transform = ecs.GetComponent<Transform>(entity);
+				localScale = glm::vec3(transform.scale.x, transform.scale.y, transform.scale.z);
+			}
+			glm::mat4 modelMatrix = BuildSkinnedModelMatrix(worldMatrix, localScale);
 
 			// Get bone transform offset
 			uint32_t boneOffset = static_cast<uint32_t>(animComp.boneTransformOffset);
@@ -2715,21 +2802,18 @@ void Renderer::UpdateDrawData()
 			}
 		}
 
-		// Get current entity transform (this is what changed!)
-		// Note: Use hierarchy-based world matrix unless we have valid skinning data.
 		glm::mat4 model;
-		if (cachedItem.useSkinning && cachedItem.hasSkinningData) {
-			// Animated models with skinning data: manually build matrix (fast path)
-			const auto& trans = ecs.GetComponent<Transform>(cachedItem.entity);
-			model = glm::mat4(1.0f);
-			model = glm::translate(model, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
-			glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
-			rotQuat = glm::normalize(rotQuat);
-			model *= glm::mat4_cast(rotQuat);
-			model = glm::scale(model, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
+		if (cachedItem.useSkinning) {
+			// Skinned entities should follow parent translation/rotation but not inherit parent scale.
+			const glm::mat4 worldMatrix = GetEntityWorldMatrix(cachedItem.entity);
+			glm::vec3 localScale(1.0f);
+			if (ecs.HasComponent<Transform>(cachedItem.entity)) {
+				const auto& transform = ecs.GetComponent<Transform>(cachedItem.entity);
+				localScale = glm::vec3(transform.scale.x, transform.scale.y, transform.scale.z);
+			}
+			model = BuildSkinnedModelMatrix(worldMatrix, localScale);
 		}
 		else {
-			// Static models and primitives: use world matrix (handles hierarchy)
 			model = GetEntityWorldMatrix(cachedItem.entity);
 		}
 
@@ -2764,8 +2848,13 @@ void Renderer::UpdateDrawData()
 		glm::vec3 actualMin = worldCenter - worldExtent;
 		glm::vec3 actualMax = worldCenter + worldExtent;
 
-		// Test frustum culling
-		bool isCulled = !frustum.TestAABB(actualMin, actualMax);
+		// Test frustum culling.
+		// Skinned bounds can be unstable frame-to-frame under animation, so keep them visible.
+		bool isCulled = false;
+		if (!cachedItem.useSkinning) {
+			const bool hasFiniteAABB = IsFiniteVec3(actualMin) && IsFiniteVec3(actualMax);
+			isCulled = hasFiniteAABB ? !frustum.TestAABB(actualMin, actualMax) : false;
+		}
 
 		// Debug: Draw AABB if enabled
 		if (m_DebugDrawAABBs) {
@@ -3696,7 +3785,7 @@ void Renderer::RenderDeferredPipeline(const Mtx44& view, const Mtx44& projection
 
 		// Restore depth state
 		glDepthMask(GL_TRUE);
-		glDepthFunc(GL_LESS);
+		glDepthFunc(GL_LEQUAL);
 	}
 	else if (m_PostProcessBuffer && m_GBuffer) {
 		// No skybox, but set up framebuffer and depth state for forward pass
@@ -4104,15 +4193,12 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
 
 	for (EntityID e : m_LightSystem->m_Entities)
 	{
-		const auto& trans = ecs.GetComponent<Transform>(e);
 		auto& light = ecs.GetComponent<Light>(e);
+		const glm::mat4 lightWorld = GetEntityWorldMatrix(e);
 
-		// Get light position in world space
-		glm::vec3 lightPos(trans.position.x, trans.position.y, trans.position.z);
-
-		// Build rotation from quaternion for directional/spot lights
-		glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
-		rotQuat = glm::normalize(rotQuat);
+		// Derive light transform from world matrix so parenting is respected.
+		const glm::vec3 lightPos = ExtractWorldPosition(lightWorld);
+		const glm::vec3 dirWorld = ExtractWorldForward(lightWorld);
 
 		// ========== FRUSTUM CULLING TEST ==========
 		bool isCulled = false;
@@ -4157,10 +4243,6 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
 		} else {
 			light.startOffset = -1;
 		}
-
-		// Keep direction in WORLD SPACE
-		glm::vec3 fwd(0.0f, 0.0f, 1.0f);
-		glm::vec3 dirWorld = glm::normalize(rotQuat * fwd);
 
 		// Set spot angles
 		float innerCos = 1.0f, outerCos = 1.0f;
@@ -6382,8 +6464,12 @@ void Renderer::RenderForwardPass(const Mtx44& view, const Mtx44& projection)
 	bool hasTransparentCustom = !m_ForwardTransparentCustomStandardItems.empty() || !m_ForwardTransparentCustomSkinnedItems.empty();
 	bool hasTransparentStandard = !m_ForwardTransparentDefaultStandardItems.empty() || !m_ForwardTransparentDefaultSkinnedItems.empty();
 
+	auto& ecs = ECS::GetInstance();
+	auto gpuParticles = ecs.GetSystem<GPUParticleSystem>();
+	bool hasGpuParticles = gpuParticles && gpuParticles->HasActiveEmitters();
+
 	// Skip if nothing to render
-	if (!hasOpaqueCustom && !hasTransparentCustom && !hasTransparentStandard) {
+	if (!hasOpaqueCustom && !hasTransparentCustom && !hasTransparentStandard && !hasGpuParticles) {
 		return;
 	}
 
@@ -6392,6 +6478,10 @@ void Renderer::RenderForwardPass(const Mtx44& view, const Mtx44& projection)
 		EE_CORE_ERROR("Post-process buffer not initialized for forward pass!");
 		return;
 	}
+
+	glm::mat4 glmView = ToGlm(view);
+	glm::mat4 invView = glm::inverse(glmView);
+	Vec3 cameraPos = Vec3(invView[3][0], invView[3][1], invView[3][2]);
 
 	// ========== STEP 1: RENDER OPAQUE CUSTOM SHADERS ==========
 	// These render with depth writing ENABLED (before transparent objects)
@@ -6503,6 +6593,14 @@ void Renderer::RenderForwardPass(const Mtx44& view, const Mtx44& projection)
 				glBindVertexArray(0);
 			}
 		}
+
+	}
+
+	if (hasGpuParticles) {
+		glBindFramebuffer(GL_FRAMEBUFFER, m_PostProcessBuffer->FBO);
+		glViewport(0, 0, m_PostProcessBuffer->width, m_PostProcessBuffer->height);
+		gpuParticles->Render(view, projection, cameraPos);
+		gpuParticles->RenderDebug(view, projection);
 	}
 
 	// Restore render state
@@ -7040,16 +7138,16 @@ void Renderer::CalculateLightMatrix(const editor::EditorCamera& editorCamera)
 	}
 
 	for (EntityID e : m_ShadowCastingLights) {
-		if (!ecs.HasComponent<Light>(e) || !ecs.HasComponent<Transform>(e)) continue;
+		if (!ecs.HasComponent<Light>(e)) continue;
 		auto& light = ecs.GetComponent<Light>(e);
 		if (light.castsShadows == 0) continue;
 		int baseLayer = light.startOffset;
 		if (baseLayer < 0) continue;
 
-		// Get transform data
-		const auto& trans = ecs.GetComponent<Transform>(e);
-		glm::quat rotQuat = glm::normalize(glm::quat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z));
-		glm::vec3 lightPos = glm::vec3(trans.position.x, trans.position.y, trans.position.z);
+		// Use world transform so child lights track parent transforms.
+		const glm::mat4 lightWorld = GetEntityWorldMatrix(e);
+		const glm::vec3 lightPos = ExtractWorldPosition(lightWorld);
+		const glm::vec3 lightForward = ExtractWorldForward(lightWorld);
 
 		if (light.type == LightType::DIRECTIONAL) {
 			// DIRECTIONAL LIGHT PROCESSING (existing code)
@@ -7059,8 +7157,7 @@ void Renderer::CalculateLightMatrix(const editor::EditorCamera& editorCamera)
 			}
 
 			// Get light direction
-			glm::vec3 fwd = glm::normalize(rotQuat * glm::vec3(0.0f, 0.0f, 1.0f));
-			glm::vec3 lightDir = glm::normalize(-fwd); // from scene to light
+			glm::vec3 lightDir = glm::normalize(-lightForward); // from scene to light
 
 			// Setup up vector
 			glm::vec3 up(0.0f, 1.0f, 0.0f);
@@ -7212,7 +7309,7 @@ void Renderer::CalculateLightMatrix(const editor::EditorCamera& editorCamera)
 			}
 
 			// Get spotlight direction and parameters
-			glm::vec3 spotDir = glm::normalize(rotQuat * glm::vec3(0.0f, 0.0f, 1.0f));
+			glm::vec3 spotDir = lightForward;
 			float outerAngleRad = glm::radians(light.outerAngle);
 
 			// Calculate single shadow matrix for the spotlight

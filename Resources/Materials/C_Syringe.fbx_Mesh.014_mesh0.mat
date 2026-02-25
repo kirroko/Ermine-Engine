@@ -10,7 +10,7 @@
         },
         "materialAlbedoMap": {
             "type": "texture2d",
-            "value": "../Ermine-Game.lion_rcdbase/12345678-1234-1234-1234-123456789ABC/Windows.platform/Data/17540527093034598539.dds"
+            "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP6_csd3451\\Ermine-Engine\\Resources\\Textures\\C_Syringe_BaseColor.png"
         }
     },
     "uvTransform": {
