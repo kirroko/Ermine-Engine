@@ -21,6 +21,9 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Cubemap.h"
 #include "Model.h"
 #include "Serialisation.h"
+#include "Guid.h"
+#include <functional>
+#include <string_view>
 
 // Forward declaration to avoid circular includes
 namespace Ermine::graphics {
@@ -55,6 +58,10 @@ namespace Ermine
         std::unordered_map<std::string, std::shared_ptr<graphics::Cubemap>> m_cubemaps;
         std::unordered_map<std::string, std::shared_ptr<graphics::Material>> m_materials;
         std::unordered_map<std::string, std::shared_ptr<graphics::Model>> m_models;
+        std::unordered_map<Guid, std::shared_ptr<graphics::Material>> m_materialsByGuid;
+        std::unordered_map<Guid, std::string> m_materialPathsByGuid;
+        std::unordered_map<std::string, Guid> m_materialGuidsByPath;
+        std::unordered_map<Guid, std::string> m_materialCustomFragmentByGuid;
 
         // Resource database management
         std::unordered_map<std::string, ResourceEntry> m_resourceDatabase; // sourcePath -> ResourceEntry
@@ -118,6 +125,12 @@ public:
          * The key is the texture file path, and the value is the shared Texture.
          */
         const std::unordered_map<std::string, std::shared_ptr<graphics::Texture>>& GetLoadedTextures() const;
+        /**
+         * @brief Resolve the best source path to persist in .mat files for a texture.
+         * @param texture Texture reference currently bound to material parameter.
+         * @return Source path when resolvable, otherwise the texture's current file path.
+         */
+        std::string ResolveTexturePathForMaterialWrite(const std::shared_ptr<graphics::Texture>& texture) const;
 
         // ================== Shader Management ==================
         /**
@@ -221,6 +234,13 @@ public:
 
         // ================== Material management ==================
         /**
+         * @brief Sanitize a material/asset name for file-safe usage.
+         * @param name Raw name (e.g. mesh name)
+         * @return Sanitized name safe for filenames
+         */
+        static std::string SanitizeAssetName(std::string name);
+
+        /**
          * @brief Create and cache a material with the given name
          * @param name The name/key for the material
          * @param shader The shader to use for the material
@@ -248,6 +268,83 @@ public:
         std::shared_ptr<graphics::Material> CreateSharedMaterial(const std::string& materialType,
                                                                std::shared_ptr<graphics::Shader> shader,
                                                                std::shared_ptr<graphics::Texture> baseTexture = nullptr);
+
+        /**
+         * @brief Load a material asset from a .mat file (by path). Uses GUID meta for caching.
+         * @param materialPath Path to .mat file
+         * @param forceReload If true, reloads from disk even if cached
+         * @return Loaded material (shared)
+         */
+        std::shared_ptr<graphics::Material> LoadMaterialAsset(const std::string& materialPath, bool forceReload = false);
+
+        /**
+         * @brief Get a cached material by GUID (loads from disk if known but not loaded).
+         * @param guid Material GUID
+         * @return Loaded material or nullptr
+         */
+        std::shared_ptr<graphics::Material> GetMaterialByGuid(const Guid& guid);
+
+        /**
+         * @brief Find the GUID for a loaded material pointer.
+         * @param material Raw material pointer
+         * @return GUID if found, otherwise default/invalid
+         */
+        Guid FindMaterialGuid(const graphics::Material* material) const;
+
+        /**
+         * @brief Get or create a GUID for a material path and cache the mapping.
+         * @param materialPath Path to .mat file
+         * @return GUID for the material asset
+         */
+        Guid GetMaterialGuidForPath(const std::string& materialPath);
+
+        /**
+         * @brief Create or load a material asset by name. If missing, saves a new .mat.
+         * @param materialName Name (filename stem) for the material asset
+         * @param initializer Optional initializer to populate a new material
+         * @param outGuid Optional GUID out-parameter
+         * @param materialsDir Directory for material assets
+         * @return Loaded material (shared)
+         */
+        std::shared_ptr<graphics::Material> CreateMaterialAsset(
+            const std::string& materialName,
+            const std::function<void(graphics::Material&)>& initializer,
+            Guid* outGuid = nullptr,
+            const std::string& materialsDir = "../Resources/Materials/");
+
+        /**
+         * @brief Save a material asset to disk and register it (creates GUID meta if missing).
+         * @param materialName Name (filename stem) for the material asset
+         * @param material Material to save
+         * @param overwrite If true, overwrite existing file
+         * @param materialsDir Directory for material assets
+         * @return GUID for the saved asset
+         */
+        Guid SaveMaterialAsset(
+            const std::string& materialName,
+            const graphics::Material& material,
+            bool overwrite = false,
+            std::string_view customFragmentShader = {},
+            const std::string& materialsDir = "../Resources/Materials/");
+
+        /**
+         * @brief Scan the materials directory and cache GUID->path mappings.
+         * @param materialsDir Directory to scan
+         * @param createMissingMeta When true, generates missing .meta files for .mat assets.
+         */
+        void ScanMaterialAssets(const std::string& materialsDir = "../Resources/Materials/",
+            bool createMissingMeta = false);
+
+        /**
+         * @brief Get cached GUID->path mappings for material assets.
+         * @return Map of GUID to path
+         */
+        const std::unordered_map<Guid, std::string>& GetMaterialPathsByGuid() const { return m_materialPathsByGuid; }
+
+        std::string GetMaterialPathByGuid(const Guid& guid) const;
+        std::string GetMaterialNameByGuid(const Guid& guid) const;
+        const std::string* GetMaterialCustomFragmentShader(const Guid& guid) const;
+        void SetMaterialCustomFragmentShader(const Guid& guid, std::string_view fragmentPath);
 
         // Clear all loaded assets
         void Clear();

@@ -13,6 +13,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #include "PreCompile.h"
 #include "UIRenderSystem.h"
+#include "UIButtonSystem.h"
 #include "ECS.h"
 #include "AssetManager.h"
 #include "Logger.h"
@@ -151,44 +152,47 @@ namespace Ermine
             }
         }
 
-        // Update UIHealthbarComponent (new separate component)
+        // Update UIHealthbarComponent (new separate component, skip when paused)
         auto& ecs = ECS::GetInstance();
-        constexpr EntityID MAX_ENTITIES_UPDATE = 10000;
-        for (EntityID entity = 1; entity < MAX_ENTITIES_UPDATE; ++entity)
+        if (!UIButtonSystem::IsGamePaused())
         {
-            if (!ecs.IsEntityValid(entity))
-                continue;
-
-            if (!ecs.HasComponent<UIHealthbarComponent>(entity))
-                continue;
-
-            // Skip if entity is inactive
-            if (ecs.HasComponent<ObjectMetaData>(entity))
+            constexpr EntityID MAX_ENTITIES_UPDATE = 10000;
+            for (EntityID entity = 1; entity < MAX_ENTITIES_UPDATE; ++entity)
             {
-                const auto& meta = ecs.GetComponent<ObjectMetaData>(entity);
-                if (!meta.selfActive)
+                if (!ecs.IsEntityValid(entity))
                     continue;
-            }
 
-            auto& healthbar = ecs.GetComponent<UIHealthbarComponent>(entity);
+                if (!ecs.HasComponent<UIHealthbarComponent>(entity))
+                    continue;
 
-            // Health Regeneration System (Option A: regenerate independently)
-            if (healthbar.currentHealth < healthbar.maxHealth)
-            {
-                healthbar.healthRegenTimer += deltaTime;
-
-                // Only regenerate health after the delay
-                if (healthbar.healthRegenTimer >= healthbar.healthRegenDelay)
+                // Skip if entity is inactive
+                if (ecs.HasComponent<ObjectMetaData>(entity))
                 {
-                    healthbar.currentHealth += healthbar.healthRegenRate * deltaTime;
-                    if (healthbar.currentHealth > healthbar.maxHealth)
-                        healthbar.currentHealth = healthbar.maxHealth;
+                    const auto& meta = ecs.GetComponent<ObjectMetaData>(entity);
+                    if (!meta.selfActive)
+                        continue;
                 }
-            }
-            else
-            {
-                // Reset timer when at full health
-                healthbar.healthRegenTimer = 0.0f;
+
+                auto& healthbar = ecs.GetComponent<UIHealthbarComponent>(entity);
+
+                // Health Regeneration System (Option A: regenerate independently)
+                if (healthbar.currentHealth < healthbar.maxHealth)
+                {
+                    healthbar.healthRegenTimer += deltaTime;
+
+                    // Only regenerate health after the delay
+                    if (healthbar.healthRegenTimer >= healthbar.healthRegenDelay)
+                    {
+                        healthbar.currentHealth += healthbar.healthRegenRate * deltaTime;
+                        if (healthbar.currentHealth > healthbar.maxHealth)
+                            healthbar.currentHealth = healthbar.maxHealth;
+                    }
+                }
+                else
+                {
+                    // Reset timer when at full health
+                    healthbar.healthRegenTimer = 0.0f;
+                }
             }
         }
     }
@@ -341,10 +345,14 @@ namespace Ermine
                 RenderCrosshair(ui);
         }
 
-        // Render new separate UI components
+        // Render new separate UI components (skip when game is paused — pause background covers them)
+        if (!UIButtonSystem::IsGamePaused())
         for (EntityID entity = 1; entity < MAX_ENTITIES; ++entity)
         {
             if (!ecs.IsEntityValid(entity))
+                continue;
+
+            if (!IsEntityActiveInHierarchy(entity))
                 continue;
 
             // Render UIHealthbarComponent
@@ -403,6 +411,22 @@ namespace Ermine
 
             const auto& button = ecs.GetComponent<UIButtonComponent>(entity);
             RenderButton(button);
+        }
+
+        // Render UISliderComponent entities
+        for (EntityID entity = 1; entity < MAX_ENTITIES; ++entity)
+        {
+            if (!ecs.IsEntityValid(entity))
+                continue;
+
+            if (!ecs.HasComponent<UISliderComponent>(entity))
+                continue;
+
+            if (!IsEntityActiveInHierarchy(entity))
+                continue;
+
+            const auto& slider = ecs.GetComponent<UISliderComponent>(entity);
+            RenderSlider(slider);
         }
 
         // Re-enable depth test
@@ -1016,20 +1040,32 @@ namespace Ermine
             float centerX = skill.position.x;
             float centerY = skill.position.y;
 
+            // Determine which icon to use based on selection state
+            // Priority: selected/unselected icons > default iconTexturePath
+            std::string iconPath = skill.iconTexturePath;  // Default fallback
+            if (skill.isSelected && !skill.selectedIconPath.empty())
+            {
+                iconPath = skill.selectedIconPath;
+            }
+            else if (!skill.isSelected && !skill.unselectedIconPath.empty())
+            {
+                iconPath = skill.unselectedIconPath;
+            }
+
             // Load skill icon texture
             std::shared_ptr<graphics::Texture> skillTexture = nullptr;
-            if (!skill.iconTexturePath.empty())
+            if (!iconPath.empty())
             {
-                auto it = m_textureCache.find(skill.iconTexturePath);
+                auto it = m_textureCache.find(iconPath);
                 if (it != m_textureCache.end())
                 {
                     skillTexture = it->second;
                 }
                 else
                 {
-                    skillTexture = AssetManager::GetInstance().LoadTexture(skill.iconTexturePath);
+                    skillTexture = AssetManager::GetInstance().LoadTexture(iconPath);
                     if (skillTexture && skillTexture->IsValid())
-                        m_textureCache[skill.iconTexturePath] = skillTexture;
+                        m_textureCache[iconPath] = skillTexture;
                 }
             }
 
@@ -1453,9 +1489,9 @@ namespace Ermine
         // Render button background (textured or solid color)
         if (buttonTexture && buttonTexture->IsValid())
         {
-            // Render textured button without color tint (image handles its own appearance)
+            // Render textured button using button's size (matches hit detection area)
             Vec3 whiteTint = { 1.0f, 1.0f, 1.0f };
-            RenderTexturedSquare(button.position.x, button.position.y, button.size.y, buttonTexture, whiteTint, button.backgroundAlpha);
+            RenderTexturedRect(left, bottom, width, height, buttonTexture, whiteTint, button.backgroundAlpha);
         }
         else
         {
@@ -1480,6 +1516,170 @@ namespace Ermine
                 textY,
                 button.textScale,
                 button.textColor,
+                1.0f,
+                m_VAO,
+                m_VBO
+            );
+        }
+    }
+
+    void UIRenderSystem::RenderSlider(const UISliderComponent& slider)
+    {
+        // Calculate slider bounds with aspect ratio correction
+        float halfWidth = slider.size.x * 0.5f;
+        float halfHeight = slider.size.y * 0.5f;
+        float adjustedHalfWidth = halfWidth / m_aspectRatio;
+
+        float left = slider.position.x - adjustedHalfWidth;
+        float bottom = slider.position.y - halfHeight;
+        float width = adjustedHalfWidth * 2.0f;
+        float height = slider.size.y;
+
+        // Calculate value as normalized 0-1
+        float normalizedValue = (slider.value - slider.minValue) / (slider.maxValue - slider.minValue);
+        normalizedValue = std::max(0.0f, std::min(1.0f, normalizedValue));
+
+        // Try to load track texture
+        std::shared_ptr<graphics::Texture> trackTexture = nullptr;
+        if (!slider.trackImage.empty())
+        {
+            auto it = m_textureCache.find(slider.trackImage);
+            if (it != m_textureCache.end())
+                trackTexture = it->second;
+            else
+            {
+                trackTexture = AssetManager::GetInstance().LoadTexture(slider.trackImage);
+                if (trackTexture && trackTexture->IsValid())
+                    m_textureCache[slider.trackImage] = trackTexture;
+            }
+        }
+
+        // Render track (background)
+        if (trackTexture && trackTexture->IsValid())
+        {
+            Vec3 whiteTint = { 1.0f, 1.0f, 1.0f };
+            RenderTexturedRect(left, bottom, width, height, trackTexture, whiteTint, slider.trackAlpha);
+        }
+        else
+        {
+            RenderQuad(left, bottom, width, height, slider.trackColor, slider.trackAlpha);
+        }
+
+        // Try to load fill texture
+        std::shared_ptr<graphics::Texture> fillTexture = nullptr;
+        if (!slider.fillImage.empty())
+        {
+            auto it = m_textureCache.find(slider.fillImage);
+            if (it != m_textureCache.end())
+                fillTexture = it->second;
+            else
+            {
+                fillTexture = AssetManager::GetInstance().LoadTexture(slider.fillImage);
+                if (fillTexture && fillTexture->IsValid())
+                    m_textureCache[slider.fillImage] = fillTexture;
+            }
+        }
+
+        // Render fill (based on value)
+        float fillWidth = width * normalizedValue;
+        if (fillWidth > 0.0f)
+        {
+            if (fillTexture && fillTexture->IsValid())
+            {
+                RenderTexturedRectUV(left, bottom, fillWidth, height, fillTexture,
+                                     0.0f, 0.0f, normalizedValue, 1.0f,
+                                     { 1.0f, 1.0f, 1.0f }, 1.0f);
+            }
+            else
+            {
+                RenderQuad(left, bottom, fillWidth, height, slider.fillColor, 1.0f);
+            }
+        }
+
+        // Try to load handle texture
+        std::shared_ptr<graphics::Texture> handleTexture = nullptr;
+        if (!slider.handleImage.empty())
+        {
+            auto it = m_textureCache.find(slider.handleImage);
+            if (it != m_textureCache.end())
+                handleTexture = it->second;
+            else
+            {
+                handleTexture = AssetManager::GetInstance().LoadTexture(slider.handleImage);
+                if (handleTexture && handleTexture->IsValid())
+                    m_textureCache[slider.handleImage] = handleTexture;
+            }
+        }
+
+        // Calculate handle position
+        float handleX = left + (width * normalizedValue);
+        float handleY = slider.position.y;
+
+        // Choose handle color based on state
+        Vec3 currentHandleColor = slider.handleColor;
+        if (slider.isHovered || slider.isDragging)
+            currentHandleColor = slider.handleHoverColor;
+
+        // Render handle
+        if (handleTexture && handleTexture->IsValid())
+        {
+            Vec3 whiteTint = { 1.0f, 1.0f, 1.0f };
+            RenderTexturedSquare(handleX, handleY, slider.handleSize, handleTexture, whiteTint, 1.0f);
+        }
+        else
+        {
+            // Render circular handle as a square for simplicity
+            float handleHalfSize = slider.handleSize * 0.5f;
+            float adjustedHandleHalfWidth = handleHalfSize / m_aspectRatio;
+            RenderQuad(handleX - adjustedHandleHalfWidth, handleY - handleHalfSize,
+                      adjustedHandleHalfWidth * 2.0f, slider.handleSize,
+                      currentHandleColor, 1.0f);
+        }
+
+        // Render label image if present (swap between normal and active based on state)
+        std::string labelImageToUse = slider.isDragging && !slider.labelActiveImagePath.empty()
+            ? slider.labelActiveImagePath
+            : slider.labelImagePath;
+
+        if (!labelImageToUse.empty())
+        {
+            std::shared_ptr<graphics::Texture> labelTexture = nullptr;
+            auto it = m_textureCache.find(labelImageToUse);
+            if (it != m_textureCache.end())
+                labelTexture = it->second;
+            else
+            {
+                labelTexture = AssetManager::GetInstance().LoadTexture(labelImageToUse);
+                if (labelTexture && labelTexture->IsValid())
+                    m_textureCache[labelImageToUse] = labelTexture;
+            }
+
+            if (labelTexture && labelTexture->IsValid())
+            {
+                float labelImgX = slider.position.x + slider.labelOffset.x;
+                float labelImgY = slider.position.y + slider.labelOffset.y;
+                float labelImgSize = slider.labelScale * 0.1f;  // Scale based on labelScale
+
+                RenderTexturedSquare(labelImgX, labelImgY, labelImgSize, labelTexture, { 1.0f, 1.0f, 1.0f }, 1.0f);
+            }
+        }
+
+        // Render label text if present
+        if (m_textRenderer && !slider.label.empty())
+        {
+            float labelX = slider.position.x + slider.labelOffset.x;
+            float labelY = slider.position.y + slider.labelOffset.y;
+
+            float textWidth = m_textRenderer->GetTextWidth(slider.label, slider.labelScale);
+            labelX -= textWidth * 0.5f;  // Center the label
+
+            m_textRenderer->RenderText(
+                m_uiShader,
+                slider.label,
+                labelX,
+                labelY,
+                slider.labelScale,
+                slider.labelColor,
                 1.0f,
                 m_VAO,
                 m_VBO

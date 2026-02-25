@@ -3,7 +3,7 @@
 public class Sphere : MonoBehaviour
 {
     public Vector3 direction;
-    public float speed = 10.0f;
+    public float speed = 20.0f;
 
     private float timeAlive = 1.0f;
 
@@ -27,10 +27,29 @@ public class Sphere : MonoBehaviour
 
     void OnCollisionEnter(Collision col)
     {
-        
-        if (Physics.CheckMotionType((ulong)col.gameObject.GetInstanceID()) == 0 && !col.gameObject.name.Contains("Bars")) //static obj
+        if (Physics.CheckMotionType((ulong)col.gameObject.GetInstanceID()) == 0
+            && !col.gameObject.name.Contains("Bars")
+            && !col.gameObject.name.Contains("gate")) //static obj
         {
+            Debug.Log("Sphere: Hit static object " + col.gameObject.name + " (" + col.gameObject.GetInstanceID() + ")");
             Debug.Log(Physics.CheckMotionType((ulong)col.gameObject.GetInstanceID()));
+            
+            // Try to find the exact contact point via raycast for better accuracy
+            Vector3 explosionPos = transform.position;
+            RaycastHit hit;
+            // Raycast in the direction of movement to find the surface
+            if (Physics.Raycast(transform.position + direction * 2.0f, -direction, out hit, 4.0f))
+            {
+                explosionPos = hit.point;
+            }
+
+            // Spawn explosion effect on contact
+            GameObject explosion = Prefab.Instantiate("../Resources/Prefabs/ParticleExplosion.prefab");
+            if (explosion != null)
+            {
+                explosion.transform.position = explosionPos;
+            }
+
             timeAlive = 0f;
         }
         /*

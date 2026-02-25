@@ -104,14 +104,20 @@ namespace Ermine::ImguiUI
 		std::string renameTo;					// New name after renaming
 		char renameBuffer[256] = { 0 };			// Buffer for rename input
 
+		Ermine::ResourcePipeline* m_Pipeline = nullptr; // Pointer to the resource pipeline
 
-		Ermine::ResourcePipeline* m_Pipeline = nullptr;
+		std::atomic<bool> preloadInProgress{ false };
+		std::thread preloadThread;
 
 		/**
 		 * @brief Default constructor that initializes the asset browser state.
 		 */
 		Browser();
 
+		/**
+		 * @brief Initializes the asset browser with the given resource pipeline.
+		 * @param pipeline Pointer to the resource pipeline for asset management.
+		 */
 		void InitWithPipeline(Ermine::ResourcePipeline* pipeline);
 
 		/**
@@ -179,7 +185,6 @@ namespace Ermine::ImguiUI
 		void Draw(const char* title);
 
 		// Reference to functions for creating Game Objects with components using Asset Browser //
-
 		/*bool CreateObjectWithAsset(ImGuiID id) {
 			GameObject* newObj;
 			std::string name = "GameObject_" + std::to_string(GAMEOBJECTFACTORY.GetGameObjects().size());
@@ -221,7 +226,6 @@ namespace Ermine::ImguiUI
 
 			return false;
 		}*/
-
 		/*bool CreateComponentWithAsset(ImGuiID id, IObject* obj) {
 			if (!obj)
 				return false;
@@ -259,9 +263,31 @@ namespace Ermine::ImguiUI
 
 			return false;
 		}*/
-		private:
-			void CheckImportStatus(Asset& asset);
-			void HandleImportContextMenu(const std::filesystem::path& filePath);
+
+	private:
+		/**
+		 * @brief Preloads all texture assets from the specified directory.
+		 * @param dir Path to the directory containing texture assets.
+		 */
+		void PreloadAllTextureAssets(const std::filesystem::path& dir);
+
+		/**
+		 * @brief Preloads all texture assets from the specified directory asynchronously.
+		 * @param dir Path to the directory containing texture assets.
+		 */
+		void PreloadAllTextureAssetsAsync(const std::filesystem::path& dir);
+
+		/**
+		 * @brief Checks and updates the import status of the given asset.
+		 * @param asset Reference to the asset to check.
+		 */
+		void CheckImportStatus(Asset& asset);
+
+		/**
+		 * @brief Displays and processes right-click context menu for importing files.
+		 * @param filePath Path to the target file.
+		 */
+		void HandleImportContextMenu(const std::filesystem::path& filePath);
 	};
 
 	/**
@@ -279,9 +305,11 @@ namespace Ermine::ImguiUI
 		 */
 		AssetBrowser() : ImGUIWindow("Asset Browser") {}
 
-		void InitWithPipeline(Ermine::ResourcePipeline* pipeline) {
-			assets_browser.InitWithPipeline(pipeline);
-		}
+		/**
+		 * @brief Initialize the AssetBrowser with the given resource pipeline.
+		 * @param pipeline Pointer to the resource pipeline for asset management.
+		 */
+		void InitWithPipeline(Ermine::ResourcePipeline* pipeline) { assets_browser.InitWithPipeline(pipeline); }
 
 		/**
 		 * @brief Render the AssetBrowser window.
@@ -289,13 +317,17 @@ namespace Ermine::ImguiUI
 		 * including the directory tree, asset grid, and context menus.
 		 */
 		void Render() override;
-		
+
 		/**
 		 * @brief Static callback for handling external files dropped into the asset browser.
 		 * @param filePaths Vector of paths representing dropped files.
 		 */
 		static void OnExternalFilesDropped(const std::vector<std::string>& filePaths);
 
+		/**
+		 * @brief Get a reference to the underlying Browser instance.
+		 * @return Reference to the Browser instance.
+		 */
 		Browser& GetBrowser() { return assets_browser; }
 
 	private:

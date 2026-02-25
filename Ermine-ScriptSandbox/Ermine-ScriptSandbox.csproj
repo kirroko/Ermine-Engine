@@ -70,6 +70,11 @@
   <ItemGroup Condition=" '$(Configuration)|$(Platform)' == 'Game-Release|x64' ">
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AnimationExample.cs" />
+    <Compile Include="AttackState.cs" />
+    <Compile Include="EndElevator.cs" />
+    <Compile Include="MoveState.cs" />
+    <Compile Include="ChaseState.cs" />
     <Compile Include="CutscenePlayer.cs" />
     <Compile Include="DamagePlayer.cs" />
     <Compile Include="DisableLightCone.cs" />
@@ -80,7 +85,9 @@
     <Compile Include="LifeEssenceSkillController.cs" />
     <Compile Include="MainMenu.cs" />
     <Compile Include="MainMenuVideo.cs" />
+    <Compile Include="MoveState.cs" />
     <Compile Include="OrbTeleport.cs" />
+    <Compile Include="PatrolState.cs" />
     <Compile Include="PlayerController.cs" />
     <Compile Include="PlayerController2.cs" />
     <Compile Include="RotatingPlatform.cs" />
@@ -91,7 +98,6 @@
     <Compile Include="TemplateScript.cs" />
     <Compile Include="Test1.cs" />
     <Compile Include="Test2.cs" />
-    <Compile Include="Test3.cs" />
     <Compile Include="VerticalPlatform.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -8,9 +8,20 @@ public class DamagePlayer : MonoBehaviour
     public float damage = 10f;
     private bool playerInside = false;
 
+    // Name of the entity with UIHealthbarComponent (must match your scene)
+    public string healthBarName = "Healthbar";
+
+    //Health
+    private GameObject healthBar;
+
     private void Start()
     {
-        health = GameplayHUD.GetHealth(GameplayHUD.GetHealthBar());
+        // Find healthbar by name
+        healthBar = GameObject.Find(healthBarName);
+        if (healthBar != null)
+        {
+            health = GameplayHUD.GetHealth(healthBar);
+        }
     }
 
     private void Update()
@@ -29,11 +40,12 @@ public class DamagePlayer : MonoBehaviour
 
     void TakeDamage(float dmg)
     {
-        health = GameplayHUD.GetHealth(GameplayHUD.GetHealthBar());
+        if (healthBar == null) return;
+
+        health = GameplayHUD.GetHealth(healthBar);
         health = Math.Max(0, health - dmg);
 
-        GameObject bar = GameplayHUD.GetHealthBar();
-        GameplayHUD.SetHealth(bar, health);
+        GameplayHUD.SetHealth(healthBar, health);
     }
 
     void OnCollisionEnter(Collision col)

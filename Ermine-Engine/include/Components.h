@@ -1177,7 +1177,8 @@ namespace Ermine
 	struct Material
 	{
 		//material class
-		std::shared_ptr<graphics::Material> m_material;
+		mutable std::shared_ptr<graphics::Material> m_material;
+		Guid materialGuid{};
 
 		// ---- Minimal cached authoring values for serialization ----
 		std::string materialTemplate;       // optional
@@ -1199,7 +1200,7 @@ namespace Ermine
 		 * @brief Constructor taking a modular material.
 		 * @param material A shared pointer to a `graphics::Material` object that will be used to initialize the Material.
 		 */
-		Material(std::shared_ptr<graphics::Material> material) : m_material(std::move(material))
+		Material(std::shared_ptr<graphics::Material> material, Guid guid = {}) : m_material(std::move(material)), materialGuid(guid)
 		{
 		}
 
@@ -1227,7 +1228,7 @@ namespace Ermine
 		 * @brief Copy constructor for the Material class.
 		 * @param other The other Material object to copy from.
 		 */
-		Material(const Material& other) : m_material(other.m_material)
+		Material(const Material& other) : m_material(other.m_material), materialGuid(other.materialGuid)
 		{
 			// Shared ownership - multiple entities can share the same material
 		}
@@ -1242,6 +1243,7 @@ namespace Ermine
 			if (this != &other)
 			{
 				m_material = other.m_material; // Shared ownership
+				materialGuid = other.materialGuid;
 			}
 			return *this;
 		}
@@ -1250,7 +1252,7 @@ namespace Ermine
 		 * @brief Move constructor for the Material class.
 		 * @param other The Material object to move from.
 		 */
-		Material(Material&& other) noexcept : m_material(std::move(other.m_material))
+		Material(Material&& other) noexcept : m_material(std::move(other.m_material)), materialGuid(other.materialGuid)
 		{
 		}
 
@@ -1264,6 +1266,7 @@ namespace Ermine
 			if (this != &other)
 			{
 				m_material = std::move(other.m_material);
+				materialGuid = other.materialGuid;
 			}
 			return *this;
 		}
@@ -1273,6 +1276,9 @@ namespace Ermine
 		 * @return A pointer to the internal `graphics::Material` object.
 		 */
 		graphics::Material* GetMaterial() const {
+			if (!m_material && materialGuid.IsValid()) {
+				m_material = AssetManager::GetInstance().GetMaterialByGuid(materialGuid);
+			}
 			return m_material.get();
 		}
 
@@ -1281,7 +1287,15 @@ namespace Ermine
 		 * @return A shared pointer to the internal `graphics::Material` object.
 		 */
 		std::shared_ptr<graphics::Material> GetSharedMaterial() const {
+			if (!m_material && materialGuid.IsValid()) {
+				m_material = AssetManager::GetInstance().GetMaterialByGuid(materialGuid);
+			}
 			return m_material;
+		}
+
+		void SetMaterial(const std::shared_ptr<graphics::Material>& material, Guid guid) {
+			m_material = material;
+			materialGuid = guid;
 		}
 
 		/**
@@ -1347,176 +1361,117 @@ namespace Ermine
 			}
 		}
 
+		/**
+		* @brief Syncs cached values from the internal material for serialization.
+		* @details Call this before saving to ensure cached values match the actual material state.
+		*/
+		void SyncFromMaterial()
+		{
+			if (!m_material) return;
+
+			// Sync albedo
+			if (auto param = m_material->GetParameter("materialAlbedo"))
+			{
+				if (param->floatValues.size() >= 3)
+				{
+					hasAlbedo = true;
+					cacheAlbedo = Vec3(param->floatValues[0], param->floatValues[1], param->floatValues[2]);
+				}
+			}
+
+			// Sync roughness
+			if (auto param = m_material->GetParameter("materialRoughness"))
+			{
+				if (!param->floatValues.empty())
+				{
+					hasRough = true;
+					cacheRoughness = param->floatValues[0];
+				}
+			}
+
+			// Sync metallic
+			if (auto param = m_material->GetParameter("materialMetallic"))
+			{
+				if (!param->floatValues.empty())
+				{
+					hasMetal = true;
+					cacheMetallic = param->floatValues[0];
+				}
+			}
+
+			// Sync emissive
+			if (auto param = m_material->GetParameter("materialEmissive"))
+			{
+				if (param->floatValues.size() >= 3)
+				{
+					hasEmiss = true;
+					cacheEmissive = Vec3(param->floatValues[0], param->floatValues[1], param->floatValues[2]);
+				}
+			}
+
+			if (auto param = m_material->GetParameter("materialEmissiveIntensity"))
+			{
+				if (!param->floatValues.empty())
+				{
+					cacheEmissiveIntensity = param->floatValues[0];
+				}
+			}
+
+			// Sync shadows
+			if (auto param = m_material->GetParameter("materialCastsShadows"))
+			{
+				cacheCastsShadows = param->boolValue;
+			}
+		}
+
 		template <typename Alloc>
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
 			out.SetObject();
-
-			// No material => nothing to serialize
-			if (!m_material) {
-				out.AddMember("hasMaterial", false, alloc);
-				return;
-			}
-			out.AddMember("hasMaterial", true, alloc);
-
-			// Serialize selected scalar/vector params so UBO can be restored
-			rapidjson::Value params(rapidjson::kObjectType);
-
-			auto writeFloat = [&](const char* name) {
-				if (auto p = m_material->GetParameter(name)) {
-					if (!p->floatValues.empty()) {
-						rapidjson::Value v;
-						v.SetFloat(p->floatValues[0]);
-						params.AddMember(rapidjson::StringRef(name), v, alloc);
-					}
+			Guid guidToWrite = materialGuid;
+			if (!guidToWrite.IsValid() && m_material) {
+				auto& assets = AssetManager::GetInstance();
+				guidToWrite = assets.FindMaterialGuid(m_material.get());
+				if (!guidToWrite.IsValid()) {
+					std::string fallbackName = "Material_" + Guid::New().ToString();
+					guidToWrite = assets.SaveMaterialAsset(fallbackName, *m_material, true, customFragmentShader);
 				}
-				};
-
-			auto writeInt = [&](const char* name) {
-				if (auto p = m_material->GetParameter(name)) {
-					rapidjson::Value v;
-					v.SetInt(p->intValue);
-					params.AddMember(rapidjson::StringRef(name), v, alloc);
-				}
-				};
-
-			auto writeBool = [&](const char* name) {
-				if (auto p = m_material->GetParameter(name)) {
-					rapidjson::Value v;
-					v.SetBool(p->boolValue);
-					params.AddMember(rapidjson::StringRef(name), v, alloc);
-				}
-				};
-
-			auto writeVec3 = [&](const char* name) {
-				if (auto p = m_material->GetParameter(name); p && p->floatValues.size() >= 3) {
-					rapidjson::Value a(rapidjson::kArrayType);
-					a.PushBack(p->floatValues[0], alloc)
-						.PushBack(p->floatValues[1], alloc)
-						.PushBack(p->floatValues[2], alloc);
-					params.AddMember(rapidjson::StringRef(name), a, alloc);
-				}
-				};
-
-			auto writeVec4 = [&](const char* name) {
-				if (auto p = m_material->GetParameter(name); p && p->floatValues.size() >= 4) {
-					rapidjson::Value a(rapidjson::kArrayType);
-					a.PushBack(p->floatValues[0], alloc)
-						.PushBack(p->floatValues[1], alloc)
-						.PushBack(p->floatValues[2], alloc)
-						.PushBack(p->floatValues[3], alloc);
-					params.AddMember(rapidjson::StringRef(name), a, alloc);
-
-					// Also emit explicit alpha & transparency fields for compatibility
-					const float alpha = p->floatValues[3];
-					rapidjson::Value alphaVal; alphaVal.SetFloat(alpha);
-					params.AddMember("materialAlpha", alphaVal, alloc);
-
-					rapidjson::Value tVal; tVal.SetFloat(1.0f - alpha);
-					params.AddMember("materialTransparency", tVal, alloc);
-					return true;
-				}
-				return false;
-				};
-
-			// Core PBR parameters (prefer RGBA if available; fall back to RGB)
-			bool wroteRGBA = writeVec4("materialAlbedo");
-			if (!wroteRGBA) {
-				// Legacy RGB path
-				writeVec3("materialAlbedo");
-				// If an explicit alpha was authored as separate fields, preserve them too
-				writeFloat("materialAlpha");
-				writeFloat("materialTransparency");
-			}
-			writeFloat("materialMetallic");
-			writeFloat("materialRoughness");
-			writeFloat("materialAo");
-			writeVec3("materialEmissive");
-			writeFloat("materialEmissiveIntensity");
-			writeFloat("materialNormalStrength");
-			writeInt("materialShadingModel");
-			writeFloat("materialReflectance");
-			writeFloat("materialEnvironmentIntensity");
-
-			// Map presence flags
-			writeBool("materialHasAlbedoMap");
-			writeBool("materialHasNormalMap");
-			writeBool("materialHasRoughnessMap");
-			writeBool("materialHasMetallicMap");
-			writeBool("materialHasAoMap");
-			writeBool("materialHasEmissiveMap");
-			writeBool("materialHasEnvironmentMap");
-			writeBool("materialHasIrradianceMap");
-
-			out.AddMember("params", params, alloc);
-
-			// Serialize textures: store slot name and source file path
-			rapidjson::Value textures(rapidjson::kArrayType);
-
-			// Known slots across the codebase (support both dot and non-dot styles + fallback)
-			const char* slots[] = {
-				"materialAlbedoMap", "material.albedoMap",
-				"material.normalMap", "materialNormalMap",
-				"materialRoughnessMap", 
-				"material.metallicMap", "materialMetallicMap", 
-				"materialAoMap", "materialEmissiveMap",
-				"texture0" // fallback for legacy
-			};
-
-			// Helper: find file path for a given texture via AssetManager cache
-			auto findPathForTexture = [](const std::shared_ptr<graphics::Texture>& tex) -> std::string {
-				if (!tex) return {};
-				for (const auto& kv : AssetManager::GetInstance().GetLoadedTextures()) {
-					if (kv.second.get() == tex.get())
-						return kv.first;
-				}
-				return {};
-				};
-
-			for (const char* slot : slots) {
-				if (auto tex = m_material->GetTexture(slot)) {
-					if (tex && tex->IsValid()) {
-						std::string path = findPathForTexture(tex);
-						if (!path.empty()) {
-							rapidjson::Value texObj(rapidjson::kObjectType);
-							texObj.AddMember("slot", rapidjson::Value(slot, alloc), alloc);
-							texObj.AddMember("path", rapidjson::Value(path.c_str(), alloc), alloc);
-							textures.PushBack(texObj, alloc);
-						}
-					}
-				}
+				const_cast<Material*>(this)->materialGuid = guidToWrite;
 			}
 
-			out.AddMember("textures", textures, alloc);
-
-			if (auto gm = GetMaterial()) {
-				Ermine::Vec2 uvScale = gm->GetUVScale();
-				Ermine::Vec2 uvOffset = gm->GetUVOffset();
-
-				out.AddMember("uvScale", Vec2ToJson(uvScale, alloc), alloc);
-				out.AddMember("uvOffset", Vec2ToJson(uvOffset, alloc), alloc);
-			}
-
-			// Custom fragment shader + shadow flag
-			if (!customFragmentShader.empty()) {
-				rapidjson::Value fragPath;
-				fragPath.SetString(customFragmentShader.c_str(),
-					(rapidjson::SizeType)customFragmentShader.size(),
-					alloc);
-				out.AddMember("customFragmentShader", fragPath, alloc);
-			}
-
-			out.AddMember("castsShadows", cacheCastsShadows, alloc);
-
+			std::string guidStr = guidToWrite.IsValid() ? guidToWrite.ToString() : "";
+			out.AddMember("guid",
+				rapidjson::Value(guidStr.c_str(), (rapidjson::SizeType)guidStr.size(), alloc),
+				alloc);
 		}
 
 		void Deserialize(const rapidjson::Value& in) {
+			if (!in.IsObject()) return;
+			if (in.HasMember("guid") && in["guid"].IsString()) {
+				std::string guidStr = in["guid"].GetString();
+				if (!guidStr.empty()) {
+					materialGuid = Guid::FromString(guidStr);
+					m_material = AssetManager::GetInstance().GetMaterialByGuid(materialGuid);
+					if (!m_material) {
+						materialGuid = {};
+						m_material.reset();
+					}
+				}
+				else {
+					materialGuid = {};
+					m_material.reset();
+				}
+				return;
+			}
+
 			// Ensure material exists
 			if (!m_material) {
 				m_material = std::make_shared<graphics::Material>();
 			}
-			if (!in.IsObject()) return;
-			if (in.HasMember("hasMaterial") && in["hasMaterial"].IsBool() && !in["hasMaterial"].GetBool())
+			if (in.HasMember("hasMaterial") && in["hasMaterial"].IsBool() && !in["hasMaterial"].GetBool()) {
+				materialGuid = {};
+				m_material.reset();
 				return;
+			}
 
 			// Restore params
 			if (in.HasMember("params") && in["params"].IsObject()) {
@@ -1729,6 +1684,7 @@ namespace Ermine
 					gm->SetUVOffset(JsonToVec2(it->value));
 				}
 			}
+
 		}
 
 		XPROPERTY_DEF(
@@ -1798,6 +1754,13 @@ namespace Ermine
 		float vignetteIntensity = 0.3f;
 		float vignetteRadius = 0.8f;
 		float bloomStrength = 0.04f;
+
+		// Film grain and chromatic aberration
+		bool filmGrainEnabled = false;
+		float grainIntensity = 0.015f;
+		float grainScale = 1.5f;
+		bool chromaticAberrationEnabled = false;
+		float chromaticAmount = 0.003f;
 
 		// FXAA parameters
 		float fxaaSpanMax = 8.0f;
@@ -1874,6 +1837,13 @@ namespace Ermine
 			xproperty::obj_member<"vignetteIntensity", &GlobalGraphics::vignetteIntensity>,
 			xproperty::obj_member<"vignetteRadius", &GlobalGraphics::vignetteRadius>,
 			xproperty::obj_member<"bloomStrength", &GlobalGraphics::bloomStrength>,
+
+			// Film grain and chromatic aberration
+			xproperty::obj_member<"filmGrainEnabled", &GlobalGraphics::filmGrainEnabled>,
+			xproperty::obj_member<"grainIntensity", &GlobalGraphics::grainIntensity>,
+			xproperty::obj_member<"grainScale", &GlobalGraphics::grainScale>,
+			xproperty::obj_member<"chromaticAberrationEnabled", &GlobalGraphics::chromaticAberrationEnabled>,
+			xproperty::obj_member<"chromaticAmount", &GlobalGraphics::chromaticAmount>,
 
 			// FXAA
 			xproperty::obj_member<"fxaaSpanMax", &GlobalGraphics::fxaaSpanMax>,
@@ -2398,6 +2368,158 @@ namespace Ermine
 
 	/*!***********************************************************************
 	 \brief
+	  GPU-based particle emitter (standard emitter model).
+	*************************************************************************/
+	struct GPUParticleEmitter
+	{
+		bool active = true;
+		int maxParticles = 256;
+
+		// Emission
+		int emissionShape = 0; // 0 = point, 1 = sphere, 2 = box, 3 = disc (XZ)
+		Vec3 localPositionOffset = Vec3(0.0f, 0.0f, 0.0f);  // Offset from parent transform
+		float overallScale = 1.0f;  // Master scale for all size/radius properties
+		Vec3 spawnBoxExtents = Vec3(0.5f, 0.5f, 0.5f);
+		float spawnRadius = 0.5f;
+		float spawnRadiusInner = 0.0f;
+		float spawnRate = 20.0f; // particles/sec
+		int burstCountMin = 0;
+		int burstCountMax = 0;
+		float burstInterval = 0.0f;
+		bool burstOnStart = false;
+
+		// Direction
+		int directionMode = 0; // 0 = fixed, 1 = cone, 2 = from spawn, 3 = random sphere
+		Vec3 direction = Vec3(0.0f, 0.0f, 1.0f);
+		float coneAngle = 25.0f;
+		float coneInnerAngle = 0.0f;
+
+		// Forces & speed
+		float speedMin = 0.5f;
+		float speedMax = 3.0f;
+		Vec3 gravity = Vec3(0.0f, -2.0f, 0.0f);
+		float drag = 0.0f;
+		float turbulenceStrength = 0.0f;
+		float turbulenceScale = 1.0f;
+
+		// Bounds
+		int boundsMode = 0; // 0 = none, 1 = kill, 2 = clamp, 3 = bounce
+		int boundsShape = 0; // 0 = sphere, 1 = box, 2 = disc (XZ)
+		Vec3 boundsBoxExtents = Vec3(1.0f, 1.0f, 1.0f);
+		float boundsRadius = 2.0f;
+		float boundsRadiusInner = 0.0f;
+
+		// Appearance
+		int renderMode = 0; // 0 = glow, 1 = smoke, 2 = electric
+		float smokeOpacity = 0.6f;
+		float smokeSoftness = 0.5f;
+		float smokeNoiseScale = 0.15f;
+		float smokeDistortScale = 0.25f;
+		float smokeDistortStrength = 0.35f;
+		float smokePuffScale = 0.35f;
+		float smokePuffStrength = 0.6f;
+		float smokeStretch = 0.5f;
+		float smokeUpBias = 0.2f;
+		float smokeDepthFade = 6.0f;
+		float electricIntensity = 1.0f;
+		float electricFrequency = 8.0f;
+		float electricBoltThickness = 0.08f;
+		float electricBoltVariation = 1.5f;
+		float electricGlow = 0.5f;
+		int electricBoltCount = 3;
+		Vec3 colorStart = Vec3(1.0f, 0.85f, 0.2f);
+		Vec3 colorEnd = Vec3(0.1f, 0.1f, 0.1f);
+		float alphaStart = 1.0f;
+		float alphaEnd = 0.0f;
+		float sizeStartMin = 0.03f;
+		float sizeStartMax = 0.08f;
+		float sizeEndMin = 0.02f;
+		float sizeEndMax = 0.06f;
+		float lifetimeMin = 0.6f;
+		float lifetimeMax = 1.8f;
+		int sparkleShape = 0;  // 0 = soft circle, 1 = star, 2 = diamond
+
+		// Runtime state (not serialized)
+		float spawnAccumulator = 0.0f;
+		float burstTimer = 0.0f;
+		bool burstPrimed = false;
+		unsigned int particleBuffer = 0;
+		unsigned int spawnCounterBuffer = 0;
+		bool initialized = false;
+		bool showDebugBounds = false;  // Debug visualization toggle
+
+		template<typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
+			xprop_utils::SerializeToJson(*this, out, alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in) {
+			xprop_utils::DeserializeFromJson(*this, in);
+		}
+
+		XPROPERTY_DEF(
+			"GPUParticleEmitterComponent", GPUParticleEmitter,
+			xproperty::obj_member<"active", &GPUParticleEmitter::active>,
+			xproperty::obj_member<"maxParticles", &GPUParticleEmitter::maxParticles>,
+			xproperty::obj_member<"emissionShape", &GPUParticleEmitter::emissionShape>,
+			xproperty::obj_member<"localPositionOffset", &GPUParticleEmitter::localPositionOffset>,
+			xproperty::obj_member<"overallScale", &GPUParticleEmitter::overallScale>,
+			xproperty::obj_member<"spawnBoxExtents", &GPUParticleEmitter::spawnBoxExtents>,
+			xproperty::obj_member<"spawnRadius", &GPUParticleEmitter::spawnRadius>,
+			xproperty::obj_member<"spawnRadiusInner", &GPUParticleEmitter::spawnRadiusInner>,
+			xproperty::obj_member<"spawnRate", &GPUParticleEmitter::spawnRate>,
+			xproperty::obj_member<"burstCountMin", &GPUParticleEmitter::burstCountMin>,
+			xproperty::obj_member<"burstCountMax", &GPUParticleEmitter::burstCountMax>,
+			xproperty::obj_member<"burstInterval", &GPUParticleEmitter::burstInterval>,
+			xproperty::obj_member<"burstOnStart", &GPUParticleEmitter::burstOnStart>,
+			xproperty::obj_member<"directionMode", &GPUParticleEmitter::directionMode>,
+			xproperty::obj_member<"direction", &GPUParticleEmitter::direction>,
+			xproperty::obj_member<"coneAngle", &GPUParticleEmitter::coneAngle>,
+			xproperty::obj_member<"coneInnerAngle", &GPUParticleEmitter::coneInnerAngle>,
+			xproperty::obj_member<"speedMin", &GPUParticleEmitter::speedMin>,
+			xproperty::obj_member<"speedMax", &GPUParticleEmitter::speedMax>,
+			xproperty::obj_member<"gravity", &GPUParticleEmitter::gravity>,
+			xproperty::obj_member<"drag", &GPUParticleEmitter::drag>,
+			xproperty::obj_member<"turbulenceStrength", &GPUParticleEmitter::turbulenceStrength>,
+			xproperty::obj_member<"turbulenceScale", &GPUParticleEmitter::turbulenceScale>,
+			xproperty::obj_member<"boundsMode", &GPUParticleEmitter::boundsMode>,
+			xproperty::obj_member<"boundsShape", &GPUParticleEmitter::boundsShape>,
+			xproperty::obj_member<"boundsBoxExtents", &GPUParticleEmitter::boundsBoxExtents>,
+			xproperty::obj_member<"boundsRadius", &GPUParticleEmitter::boundsRadius>,
+			xproperty::obj_member<"boundsRadiusInner", &GPUParticleEmitter::boundsRadiusInner>,
+			xproperty::obj_member<"renderMode", &GPUParticleEmitter::renderMode>,
+			xproperty::obj_member<"smokeOpacity", &GPUParticleEmitter::smokeOpacity>,
+			xproperty::obj_member<"smokeSoftness", &GPUParticleEmitter::smokeSoftness>,
+			xproperty::obj_member<"smokeNoiseScale", &GPUParticleEmitter::smokeNoiseScale>,
+			xproperty::obj_member<"smokeDistortScale", &GPUParticleEmitter::smokeDistortScale>,
+			xproperty::obj_member<"smokeDistortStrength", &GPUParticleEmitter::smokeDistortStrength>,
+			xproperty::obj_member<"smokePuffScale", &GPUParticleEmitter::smokePuffScale>,
+			xproperty::obj_member<"smokePuffStrength", &GPUParticleEmitter::smokePuffStrength>,
+			xproperty::obj_member<"smokeStretch", &GPUParticleEmitter::smokeStretch>,
+			xproperty::obj_member<"smokeUpBias", &GPUParticleEmitter::smokeUpBias>,
+			xproperty::obj_member<"smokeDepthFade", &GPUParticleEmitter::smokeDepthFade>,
+			xproperty::obj_member<"electricIntensity", &GPUParticleEmitter::electricIntensity>,
+			xproperty::obj_member<"electricFrequency", &GPUParticleEmitter::electricFrequency>,
+			xproperty::obj_member<"electricBoltThickness", &GPUParticleEmitter::electricBoltThickness>,
+			xproperty::obj_member<"electricBoltVariation", &GPUParticleEmitter::electricBoltVariation>,
+			xproperty::obj_member<"electricGlow", &GPUParticleEmitter::electricGlow>,
+			xproperty::obj_member<"electricBoltCount", &GPUParticleEmitter::electricBoltCount>,
+			xproperty::obj_member<"colorStart", &GPUParticleEmitter::colorStart>,
+			xproperty::obj_member<"colorEnd", &GPUParticleEmitter::colorEnd>,
+			xproperty::obj_member<"alphaStart", &GPUParticleEmitter::alphaStart>,
+			xproperty::obj_member<"alphaEnd", &GPUParticleEmitter::alphaEnd>,
+			xproperty::obj_member<"sizeStartMin", &GPUParticleEmitter::sizeStartMin>,
+			xproperty::obj_member<"sizeStartMax", &GPUParticleEmitter::sizeStartMax>,
+			xproperty::obj_member<"sizeEndMin", &GPUParticleEmitter::sizeEndMin>,
+			xproperty::obj_member<"sizeEndMax", &GPUParticleEmitter::sizeEndMax>,
+			xproperty::obj_member<"lifetimeMin", &GPUParticleEmitter::lifetimeMin>,
+			xproperty::obj_member<"lifetimeMax", &GPUParticleEmitter::lifetimeMax>,
+			xproperty::obj_member<"sparkleShape", &GPUParticleEmitter::sparkleShape>
+		);
+	};
+
+	/*!***********************************************************************
+	 \brief
 	  Hierarchy component structure for parent-child relationships.
 	*************************************************************************/
 	struct HierarchyComponent
@@ -2650,6 +2772,8 @@ namespace Ermine
 		std::shared_ptr<graphics::Animator> m_animator;         // Per-entity animator (independent state)
 		int boneTransformOffset = -1;                           // Per-entity bone offset in SkeletalSSBO (allocated by AnimationManager)
 		std::shared_ptr<AnimationGraph> m_animationGraph;		// Handles animation states and transitions
+
+		bool initialized = false;								// Flag to initialize animation graph on first update
 
 		AnimationComponent() : m_animationGraph(std::make_shared<AnimationGraph>()) {}
 		explicit AnimationComponent(const std::shared_ptr<graphics::Model>& model)
@@ -3012,7 +3136,9 @@ namespace Ermine
 
 		std::deque<std::shared_ptr<ScriptNode>> m_Nodes;
 		std::vector<std::pair<int, int>> m_Links;
-		std::unordered_map<ScriptNode*, ScriptNode*> scriptTransitions;
+		//std::unordered_map<ScriptNode*, ScriptNode*> scriptTransitions;
+		std::unordered_map<int, int> scriptTransitions;
+		std::vector<int> m_History;
 	public:
 		/*!***********************************************************************
 		\brief
@@ -3053,6 +3179,9 @@ namespace Ermine
 			//{
 			//	EE_CORE_WARN("FSM: Init() called but no valid start node found for entity %d!", entity);
 			//}
+
+			m_History.clear();
+			m_PreviousScript = nullptr;
 		}
 		/*!***********************************************************************
 		\brief
@@ -3105,6 +3234,14 @@ namespace Ermine
 				m_CurrentScript->OnUpdate();
 		}
 
+		ScriptNode* FindNodeById(int id)
+		{
+			for (auto& n : m_Nodes)
+				if (n && n->id == id)
+					return n.get();
+			return nullptr;
+		}
+
 		template <typename Alloc>
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const
 		{
@@ -3149,6 +3286,9 @@ namespace Ermine
 				n.AddMember("isAttached", nodePtr->isAttached, alloc);
 				n.AddMember("isStartNode", nodePtr->isStartNode, alloc);
 
+				n.AddMember("posX", nodePtr->editorPosition.x, alloc);
+				n.AddMember("posY", nodePtr->editorPosition.y, alloc);
+
 				// NOTE: instance is runtime-only and NOT serialized.
 
 				nodes.PushBack(n, alloc);
@@ -3163,9 +3303,15 @@ namespace Ermine
 
 			for (const auto& link : m_Links)
 			{
+				// In your editor:
+				// output attr = nodeId*10
+				// input  attr = nodeId*10 + 1
+				const int fromNodeId = link.first / 10;
+				const int toNodeId = (link.second - 1) / 10;
+
 				Value l(kObjectType);
-				l.AddMember("fromId", link.first, alloc);
-				l.AddMember("toId", link.second, alloc);
+				l.AddMember("fromId", fromNodeId, alloc);
+				l.AddMember("toId", toNodeId, alloc);
 				links.PushBack(l, alloc);
 			}
 
@@ -3182,6 +3328,7 @@ namespace Ermine
 			scriptTransitions.clear();
 			m_CurrentScript = nullptr;
 			m_PreviousScript = nullptr;
+			m_History.clear();
 
 			if (!in.IsObject())
 				return;
@@ -3221,6 +3368,14 @@ namespace Ermine
 					if (nVal.HasMember("isStartNode") && nVal["isStartNode"].IsBool())
 						node->isStartNode = nVal["isStartNode"].GetBool();
 
+					if (nVal.HasMember("posX") && nVal["posX"].IsNumber())
+						node->editorPosition.x = nVal["posX"].GetFloat();
+
+					if (nVal.HasMember("posY") && nVal["posY"].IsNumber())
+						node->editorPosition.y = nVal["posY"].GetFloat();
+
+					node->positionInitialized = false;
+
 					// instance is runtime-only; will be created via CreateInstance(entity)
 					// when Init(entity) is called.
 
@@ -3234,8 +3389,7 @@ namespace Ermine
 			// =======================
 			if (in.HasMember("links") && in["links"].IsArray())
 			{
-				const auto& links = in["links"];
-				for (auto& lVal : links.GetArray())
+				for (auto& lVal : in["links"].GetArray())
 				{
 					if (!lVal.IsObject())
 						continue;
@@ -3246,21 +3400,49 @@ namespace Ermine
 					if (!lVal["fromId"].IsInt() || !lVal["toId"].IsInt())
 						continue;
 
-					int fromId = lVal["fromId"].GetInt();
-					int toId = lVal["toId"].GetInt();
+					int rawFrom = lVal["fromId"].GetInt();
+					int rawTo = lVal["toId"].GetInt();
 
-					m_Links.emplace_back(fromId, toId);
+					int fromNodeId = rawFrom;
+					int toNodeId = rawTo;
 
-					// Build scriptTransitions if both nodes exist
-					auto fromIt = idToNode.find(fromId);
-					auto toIt = idToNode.find(toId);
+					// --- Prefer interpreting as NODE ids ---
+					const bool rawAreNodeIds =
+						(idToNode.find(rawFrom) != idToNode.end()) &&
+						(idToNode.find(rawTo) != idToNode.end());
 
-					if (fromIt != idToNode.end() && toIt != idToNode.end())
+					if (!rawAreNodeIds)
 					{
-						// If you only expect one outgoing transition per node,
-						// this is fine. If multiple, you may want a multimap / vector instead.
-						scriptTransitions[fromIt->second] = toIt->second;
+						// --- Try old ATTR-id format ---
+						const bool couldBeAttr =
+							((rawFrom % 10) == 0) &&
+							((rawTo % 10) == 1);
+
+						if (!couldBeAttr)
+							continue;
+
+						int convFrom = rawFrom / 10;
+						int convTo = (rawTo - 1) / 10;
+
+						const bool convertedAreNodeIds =
+							(idToNode.find(convFrom) != idToNode.end()) &&
+							(idToNode.find(convTo) != idToNode.end());
+
+						if (!convertedAreNodeIds)
+							continue;
+
+						fromNodeId = convFrom;
+						toNodeId = convTo;
 					}
+
+					// --- Rebuild ImNodes attribute IDs ---
+					const int fromAttr = fromNodeId * 10;      // output
+					const int toAttr = toNodeId * 10 + 1;  // input
+
+					m_Links.emplace_back(fromAttr, toAttr);
+
+					// --- FSM transitions use NODE ids ---
+					scriptTransitions[fromNodeId] = toNodeId;
 				}
 			}
 
@@ -3305,6 +3487,85 @@ namespace Ermine
 			//dtTileRef tileRef = 0;
 		};
 		Runtime* runtime = nullptr;
+
+		// -----------------------------
+		// Persistent baked navmesh data
+		// -----------------------------
+		struct BakedTile
+		{
+			std::string dataB64;
+			int dataSize = 0;
+		};
+
+		float bakedOrig[3]{ 0.0f, 0.0f, 0.0f };
+		float bakedTileWidth = 0.0f;
+		float bakedTileHeight = 0.0f;
+		int bakedMaxTiles = 0;
+		int bakedMaxPolys = 0;
+		std::vector<BakedTile> bakedTiles;
+
+		bool HasBaked() const { return !bakedTiles.empty(); }
+
+		// Small header-only Base64 (so Serialize/Deserialize can use it without extra includes)
+		static std::string Base64Encode(const unsigned char* data, size_t len)
+		{
+			static const char* kB64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+			std::string out;
+			out.reserve(((len + 2) / 3) * 4);
+
+			size_t i = 0;
+			while (i < len)
+			{
+				uint32_t a = i < len ? data[i++] : 0;
+				uint32_t b = i < len ? data[i++] : 0;
+				uint32_t c = i < len ? data[i++] : 0;
+
+				uint32_t triple = (a << 16) | (b << 8) | c;
+
+				out.push_back(kB64[(triple >> 18) & 0x3F]);
+				out.push_back(kB64[(triple >> 12) & 0x3F]);
+				out.push_back(((i - 2) <= len) ? kB64[(triple >> 6) & 0x3F] : '=');
+				out.push_back(((i - 1) <= len) ? kB64[(triple) & 0x3F] : '=');
+			}
+
+			const size_t mod = len % 3;
+			if (mod == 1) { out[out.size() - 1] = '='; out[out.size() - 2] = '='; }
+			else if (mod == 2) { out[out.size() - 1] = '='; }
+
+			return out;
+		}
+
+		static bool Base64Decode(const char* b64, std::vector<unsigned char>& out)
+		{
+			if (!b64) return false;
+
+			static int rev[256];
+			static bool init = false;
+			if (!init)
+			{
+				for (int i = 0; i < 256; ++i) rev[i] = -1;
+				const char* kB64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+				for (int i = 0; i < 64; ++i) rev[(unsigned char)kB64[i]] = i;
+				rev[(unsigned char)'='] = 0;
+				init = true;
+			}
+
+			out.clear();
+			int val = 0, valb = -8;
+			for (const unsigned char* p = (const unsigned char*)b64; *p; ++p)
+			{
+				int d = rev[*p];
+				if (d == -1) continue; // skip whitespace/invalid
+				val = (val << 6) + d;
+				valb += 6;
+				if (valb >= 0)
+				{
+					out.push_back((unsigned char)((val >> valb) & 0xFF));
+					valb -= 8;
+				}
+			}
+			return !out.empty();
+		}
 		
 		template<typename Alloc>
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
@@ -3321,6 +3582,31 @@ namespace Ermine
 			out.AddMember("drawInputTri", drawInputTri, alloc);
 			out.AddMember("drawWalkable", drawWalkable, alloc);
 			out.AddMember("drawNavMesh", drawNavMesh, alloc);
+
+			rapidjson::Value bakedObj(rapidjson::kObjectType);
+
+			bakedObj.AddMember("origX", bakedOrig[0], alloc);
+			bakedObj.AddMember("origY", bakedOrig[1], alloc);
+			bakedObj.AddMember("origZ", bakedOrig[2], alloc);
+			bakedObj.AddMember("tileWidth", bakedTileWidth, alloc);
+			bakedObj.AddMember("tileHeight", bakedTileHeight, alloc);
+			bakedObj.AddMember("maxTiles", bakedMaxTiles, alloc);
+			bakedObj.AddMember("maxPolys", bakedMaxPolys, alloc);
+
+			rapidjson::Value tilesArr(rapidjson::kArrayType);
+			tilesArr.Reserve((rapidjson::SizeType)bakedTiles.size(), alloc);
+
+			for (auto const& t : bakedTiles)
+			{
+				rapidjson::Value tObj(rapidjson::kObjectType);
+				tObj.AddMember("size", t.dataSize, alloc);
+				tObj.AddMember("data", rapidjson::Value(t.dataB64.c_str(), alloc), alloc);
+				tilesArr.PushBack(tObj, alloc);
+			}
+
+			bakedObj.AddMember("tiles", tilesArr, alloc);
+			out.AddMember("bakedNav", bakedObj, alloc);
+
 		}
 
 		void Deserialize(const rapidjson::Value& in) {
@@ -3338,6 +3624,34 @@ namespace Ermine
 			if (in.HasMember("drawInputTri")) drawInputTri = in["drawInputTri"].GetBool();
 			if (in.HasMember("drawWalkable")) drawWalkable = in["drawWalkable"].GetBool();
 			if (in.HasMember("drawNavMesh")) drawNavMesh = in["drawNavMesh"].GetBool();
+
+			bakedTiles.clear();
+
+			if (in.HasMember("bakedNav") && in["bakedNav"].IsObject())
+			{
+				const auto& b = in["bakedNav"];
+
+				if (b.HasMember("origX")) bakedOrig[0] = b["origX"].GetFloat();
+				if (b.HasMember("origY")) bakedOrig[1] = b["origY"].GetFloat();
+				if (b.HasMember("origZ")) bakedOrig[2] = b["origZ"].GetFloat();
+				if (b.HasMember("tileWidth")) bakedTileWidth = b["tileWidth"].GetFloat();
+				if (b.HasMember("tileHeight")) bakedTileHeight = b["tileHeight"].GetFloat();
+				if (b.HasMember("maxTiles")) bakedMaxTiles = b["maxTiles"].GetInt();
+				if (b.HasMember("maxPolys")) bakedMaxPolys = b["maxPolys"].GetInt();
+
+				if (b.HasMember("tiles") && b["tiles"].IsArray())
+				{
+					for (auto& tv : b["tiles"].GetArray())
+					{
+						if (!tv.IsObject()) continue;
+
+						BakedTile t{};
+						if (tv.HasMember("size")) t.dataSize = tv["size"].GetInt();
+						if (tv.HasMember("data") && tv["data"].IsString()) t.dataB64 = tv["data"].GetString();
+						bakedTiles.push_back(std::move(t));
+					}
+				}
+			}
 
 			// reset runtime-only
 			build = nullptr;
@@ -3365,8 +3679,8 @@ namespace Ermine
 		bool didAutoFit = false;
 
 		bool hasPath = false;
-		Ermine::Vec3 destination{};
-		std::vector<Ermine::Vec3> path;
+		Vec3 destination{};
+		std::vector<Vec3> path;
 		size_t currentCorner = 0;
 
 		unsigned long long startPoly = 0;
@@ -3376,16 +3690,18 @@ namespace Ermine
 		bool navPaused = false;
 		bool isJumping = false;
 
-		Ermine::Vec3 jumpStart;
-		Ermine::Vec3 jumpTarget;
+		Vec3 jumpStart;
+		Vec3 jumpTarget;
 
 		float jumpTimer = 0.0f;
 		float jumpDuration = 0.4f;
 		float jumpHeight = 1.0f;
 
 		Vec3 lastDestination;
-		Ermine::Vec3 postJumpDestination = Ermine::Vec3{ 0.0f, 0.0f, 0.0f };
+		Vec3 postJumpDestination = Ermine::Vec3{ 0.0f, 0.0f, 0.0f };
 		bool hasPostJumpDestination = false;
+
+		EntityID lastJumpFromNavMesh = 0;
 
 		template<typename Alloc>
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
@@ -3435,8 +3751,9 @@ namespace Ermine
 			isJumping = false;
 			jumpTimer = 0.0f;
 
-			postJumpDestination = Ermine::Vec3{ 0.0f, 0.0f, 0.0f };
+			postJumpDestination = Vec3{ 0.0f, 0.0f, 0.0f };
 			hasPostJumpDestination = false;
+			lastJumpFromNavMesh = 0;
 		}
 	};
 
@@ -3826,6 +4143,180 @@ namespace Ermine
 		}
 
 		XPROPERTY_DEF("UIButtonComponent", UIButtonComponent)
+	};
+
+	/*!***********************************************************************
+	\brief
+	  UI Slider component for volume controls and other adjustable values
+	*************************************************************************/
+	struct UISliderComponent
+	{
+		enum class SliderTarget
+		{
+			None,
+			MasterVolume,
+			MusicVolume,
+			SFXVolume,
+			AmbienceVolume,
+			Custom
+		};
+
+		// Slider visual properties
+		Vec3 position = { 0.5f, 0.5f, 0.0f };  // Normalized screen position (center of slider)
+		Vec2 size = { 0.2f, 0.03f };           // Normalized screen size (width, height)
+
+		// Slider colors
+		Vec3 trackColor = { 0.2f, 0.2f, 0.2f };      // Background track color
+		Vec3 fillColor = { 0.4f, 0.6f, 0.9f };       // Filled portion color
+		Vec3 handleColor = { 1.0f, 1.0f, 1.0f };     // Handle/knob color
+		Vec3 handleHoverColor = { 0.9f, 0.9f, 0.5f }; // Handle color when hovered
+		float trackAlpha = 0.9f;
+		float handleSize = 0.04f;  // Handle diameter (normalized)
+
+		// Slider images (optional - overrides color-based rendering)
+		std::string trackImage = "";   // Background track image
+		std::string fillImage = "";    // Fill bar image
+		std::string handleImage = "";  // Handle/knob image
+
+		// Slider value
+		float value = 1.0f;      // Current value (0.0 - 1.0)
+		float minValue = 0.0f;   // Minimum value
+		float maxValue = 1.0f;   // Maximum value
+
+		// Slider target (what this slider controls)
+		SliderTarget target = SliderTarget::None;
+		std::string customTarget = "";  // For Custom target type
+
+		// Label
+		std::string label = "";
+		Vec3 labelColor = { 1.0f, 1.0f, 1.0f };
+		float labelScale = 0.8f;
+		Vec2 labelOffset = { 0.0f, 0.04f };  // Offset from slider center
+
+		// Label images (optional - shows image next to slider label)
+		std::string labelImagePath = "";        // Normal/unselected image
+		std::string labelActiveImagePath = "";  // Active/selected image (shown when dragging)
+
+		// State (runtime - don't serialize)
+		bool isHovered = false;
+		bool isDragging = false;
+
+		template<typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const
+		{
+			out.SetObject();
+			out.AddMember("position", Vec3ToJson(position, alloc), alloc);
+
+			rapidjson::Value sizeVal(rapidjson::kArrayType);
+			sizeVal.PushBack(size.x, alloc);
+			sizeVal.PushBack(size.y, alloc);
+			out.AddMember("size", sizeVal, alloc);
+
+			out.AddMember("trackColor", Vec3ToJson(trackColor, alloc), alloc);
+			out.AddMember("fillColor", Vec3ToJson(fillColor, alloc), alloc);
+			out.AddMember("handleColor", Vec3ToJson(handleColor, alloc), alloc);
+			out.AddMember("handleHoverColor", Vec3ToJson(handleHoverColor, alloc), alloc);
+			out.AddMember("trackAlpha", trackAlpha, alloc);
+			out.AddMember("handleSize", handleSize, alloc);
+
+			rapidjson::Value trackImageVal(trackImage.c_str(), alloc);
+			out.AddMember("trackImage", trackImageVal, alloc);
+			rapidjson::Value fillImageVal(fillImage.c_str(), alloc);
+			out.AddMember("fillImage", fillImageVal, alloc);
+			rapidjson::Value handleImageVal(handleImage.c_str(), alloc);
+			out.AddMember("handleImage", handleImageVal, alloc);
+
+			out.AddMember("value", value, alloc);
+			out.AddMember("minValue", minValue, alloc);
+			out.AddMember("maxValue", maxValue, alloc);
+
+			out.AddMember("target", static_cast<int>(target), alloc);
+			rapidjson::Value customTargetVal(customTarget.c_str(), alloc);
+			out.AddMember("customTarget", customTargetVal, alloc);
+
+			rapidjson::Value labelVal(label.c_str(), alloc);
+			out.AddMember("label", labelVal, alloc);
+			out.AddMember("labelColor", Vec3ToJson(labelColor, alloc), alloc);
+			out.AddMember("labelScale", labelScale, alloc);
+
+			rapidjson::Value labelOffsetVal(rapidjson::kArrayType);
+			labelOffsetVal.PushBack(labelOffset.x, alloc);
+			labelOffsetVal.PushBack(labelOffset.y, alloc);
+			out.AddMember("labelOffset", labelOffsetVal, alloc);
+
+			rapidjson::Value labelImagePathVal(labelImagePath.c_str(), alloc);
+			out.AddMember("labelImagePath", labelImagePathVal, alloc);
+			rapidjson::Value labelActiveImagePathVal(labelActiveImagePath.c_str(), alloc);
+			out.AddMember("labelActiveImagePath", labelActiveImagePathVal, alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in)
+		{
+			if (in.HasMember("position") && in["position"].IsArray())
+				position = JsonToVec3(in["position"]);
+			if (in.HasMember("size") && in["size"].IsArray())
+			{
+				const auto& arr = in["size"].GetArray();
+				if (arr.Size() >= 2)
+				{
+					size.x = arr[0].GetFloat();
+					size.y = arr[1].GetFloat();
+				}
+			}
+			if (in.HasMember("trackColor") && in["trackColor"].IsArray())
+				trackColor = JsonToVec3(in["trackColor"]);
+			if (in.HasMember("fillColor") && in["fillColor"].IsArray())
+				fillColor = JsonToVec3(in["fillColor"]);
+			if (in.HasMember("handleColor") && in["handleColor"].IsArray())
+				handleColor = JsonToVec3(in["handleColor"]);
+			if (in.HasMember("handleHoverColor") && in["handleHoverColor"].IsArray())
+				handleHoverColor = JsonToVec3(in["handleHoverColor"]);
+			if (in.HasMember("trackAlpha") && in["trackAlpha"].IsNumber())
+				trackAlpha = in["trackAlpha"].GetFloat();
+			if (in.HasMember("handleSize") && in["handleSize"].IsNumber())
+				handleSize = in["handleSize"].GetFloat();
+
+			if (in.HasMember("trackImage") && in["trackImage"].IsString())
+				trackImage = in["trackImage"].GetString();
+			if (in.HasMember("fillImage") && in["fillImage"].IsString())
+				fillImage = in["fillImage"].GetString();
+			if (in.HasMember("handleImage") && in["handleImage"].IsString())
+				handleImage = in["handleImage"].GetString();
+
+			if (in.HasMember("value") && in["value"].IsNumber())
+				value = in["value"].GetFloat();
+			if (in.HasMember("minValue") && in["minValue"].IsNumber())
+				minValue = in["minValue"].GetFloat();
+			if (in.HasMember("maxValue") && in["maxValue"].IsNumber())
+				maxValue = in["maxValue"].GetFloat();
+
+			if (in.HasMember("target") && in["target"].IsInt())
+				target = static_cast<SliderTarget>(in["target"].GetInt());
+			if (in.HasMember("customTarget") && in["customTarget"].IsString())
+				customTarget = in["customTarget"].GetString();
+
+			if (in.HasMember("label") && in["label"].IsString())
+				label = in["label"].GetString();
+			if (in.HasMember("labelColor") && in["labelColor"].IsArray())
+				labelColor = JsonToVec3(in["labelColor"]);
+			if (in.HasMember("labelScale") && in["labelScale"].IsNumber())
+				labelScale = in["labelScale"].GetFloat();
+			if (in.HasMember("labelOffset") && in["labelOffset"].IsArray())
+			{
+				const auto& arr = in["labelOffset"].GetArray();
+				if (arr.Size() >= 2)
+				{
+					labelOffset.x = arr[0].GetFloat();
+					labelOffset.y = arr[1].GetFloat();
+				}
+			}
+			if (in.HasMember("labelImagePath") && in["labelImagePath"].IsString())
+				labelImagePath = in["labelImagePath"].GetString();
+			if (in.HasMember("labelActiveImagePath") && in["labelActiveImagePath"].IsString())
+				labelActiveImagePath = in["labelActiveImagePath"].GetString();
+		}
+
+		XPROPERTY_DEF("UISliderComponent", UISliderComponent)
 	};
 
 	/*!***********************************************************************
@@ -4487,6 +4978,9 @@ namespace Ermine
 			Ermine::Vec3 cooldownColor = { 0.45f, 0.45f, 0.45f };
 			Ermine::Vec3 cooldownOverlayColor = { 0.15f, 0.15f, 0.15f };
 			std::string iconTexturePath = "";
+			std::string selectedIconPath = "";    // Icon when skill is selected/active
+			std::string unselectedIconPath = "";  // Icon when skill is not selected
+			bool isSelected = false;              // Current selection state
 			std::string skillName = "";
 			std::string keyBinding = "";
 			std::string description = "";
@@ -4531,6 +5025,11 @@ namespace Ermine
 				skillObj.AddMember("cooldownOverlayColor", Vec3ToJson(skill.cooldownOverlayColor, alloc), alloc);
 				rapidjson::Value iconPathVal(skill.iconTexturePath.c_str(), alloc);
 				skillObj.AddMember("iconTexturePath", iconPathVal, alloc);
+				rapidjson::Value selectedIconVal(skill.selectedIconPath.c_str(), alloc);
+				skillObj.AddMember("selectedIconPath", selectedIconVal, alloc);
+				rapidjson::Value unselectedIconVal(skill.unselectedIconPath.c_str(), alloc);
+				skillObj.AddMember("unselectedIconPath", unselectedIconVal, alloc);
+				skillObj.AddMember("isSelected", skill.isSelected, alloc);
 				rapidjson::Value skillNameVal(skill.skillName.c_str(), alloc);
 				skillObj.AddMember("skillName", skillNameVal, alloc);
 				rapidjson::Value keyBindingVal(skill.keyBinding.c_str(), alloc);
@@ -4617,6 +5116,12 @@ namespace Ermine
 						slot.cooldownOverlayColor = JsonToVec3(skillObj["cooldownOverlayColor"]);
 					if (skillObj.HasMember("iconTexturePath") && skillObj["iconTexturePath"].IsString())
 						slot.iconTexturePath = skillObj["iconTexturePath"].GetString();
+					if (skillObj.HasMember("selectedIconPath") && skillObj["selectedIconPath"].IsString())
+						slot.selectedIconPath = skillObj["selectedIconPath"].GetString();
+					if (skillObj.HasMember("unselectedIconPath") && skillObj["unselectedIconPath"].IsString())
+						slot.unselectedIconPath = skillObj["unselectedIconPath"].GetString();
+					if (skillObj.HasMember("isSelected") && skillObj["isSelected"].IsBool())
+						slot.isSelected = skillObj["isSelected"].GetBool();
 					if (skillObj.HasMember("skillName") && skillObj["skillName"].IsString())
 						slot.skillName = skillObj["skillName"].GetString();
 					if (skillObj.HasMember("keyBinding") && skillObj["keyBinding"].IsString())

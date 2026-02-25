@@ -43,21 +43,13 @@ namespace Ermine
 
 #ifdef EE_EDITOR
         // Set viewport info for editor mode (called from EditorGUI)
+        // NOTE: Only updates viewport position/size for mouse conversion.
+        // Aspect ratio must stay synced with UIRenderSystem (screen-based).
         void SetViewportInfo(const ImVec2& min, const ImVec2& size)
         {
-            // Only log if viewport actually changed
-            bool changed = (m_viewportMin.x != min.x || m_viewportMin.y != min.y ||
-                           m_viewportSize.x != size.x || m_viewportSize.y != size.y);
-
             m_viewportMin = min;
             m_viewportSize = size;
-            m_aspectRatio = (size.y > 0.0f) ? (size.x / size.y) : 1.0f;
-
-            if (changed)
-            {
-                EE_CORE_WARN("Viewport changed: Min=({:.0f},{:.0f}), Size=({:.0f},{:.0f}), Aspect={:.2f}",
-                    min.x, min.y, size.x, size.y, m_aspectRatio);
-            }
+            // Do NOT update m_aspectRatio here - it must match UIRenderSystem
         }
 #endif
 
@@ -71,9 +63,16 @@ namespace Ermine
         // Get normalized mouse position (0-1 range)
         void GetNormalizedMousePosition(float& outX, float& outY);
 
+        // Apply slider value to its target (audio volume, etc.)
+        void ApplySliderValue(const UISliderComponent& slider, EntityID globalAudioEntity);
+
         static inline bool s_isGamePaused = false;  // ADD THIS
         bool IsEntityActiveInHierarchy(EntityID entity);
+        bool IsEntityChildOf(EntityID entity, EntityID potentialParent);  // Check if entity is child of another
         void TogglePauseMenu();  // ADD THIS
+        void SetEntityActiveByName(const std::string& name, bool active);  // Show/hide entities by name
+        void ShowControlInfo(const std::string& infoToShow);
+        void CloseControlsScreen();
 
         EntityID GetGlobalAudioEntity();
         EntityID m_GlobalAudioEntity = MAX_ENTITIES;

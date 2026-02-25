@@ -38,6 +38,7 @@ namespace Ermine
 	XPROPERTY_REG(PhysicComponent)
 	XPROPERTY_REG(GlobalTransform)
 	XPROPERTY_REG(ParticleEmitter)
+	XPROPERTY_REG(GPUParticleEmitter)
 	XPROPERTY_REG(AABBComponent)
 	XPROPERTY_REG(HierarchyComponent)
 	XPROPERTY_REG(UIComponent)
@@ -46,6 +47,7 @@ namespace Ermine
 	XPROPERTY_REG(UISkillsComponent)
 	XPROPERTY_REG(UIManaBarComponent)
 	XPROPERTY_REG(UIBookCounterComponent)
+	XPROPERTY_REG(UISliderComponent)
 	XPROPERTY_REG(GlobalGraphics)
 	XPROPERTY_REG(LightProbeVolumeComponent)
 

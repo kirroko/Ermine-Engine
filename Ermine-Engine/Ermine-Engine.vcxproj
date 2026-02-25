@@ -336,6 +336,8 @@ copy /B /Y "$(SolutionDir)ThirdParty\DirectXTex\lib\DirectXTex.pdb" "$(SolutionD
     <ClInclude Include="include\FSMNode.h" />
     <ClInclude Include="include\FiniteStateMachine.h" />
     <ClInclude Include="include\FrameController.h" />
+    <ClInclude Include="include\GISystem.h" />
+    <ClInclude Include="include\GPUParticles.h" />
     <ClInclude Include="include\GPUProfiler.h" />
     <ClInclude Include="include\GameObject.h" />
     <ClInclude Include="include\GameObjectFactory.h" />
@@ -343,7 +345,6 @@ copy /B /Y "$(SolutionDir)ThirdParty\DirectXTex\lib\DirectXTex.pdb" "$(SolutionD
     <ClInclude Include="include\GraphicsDebugGUI.h" />
     <ClInclude Include="include\Guid.h" />
     <ClInclude Include="include\GuidRegistry.h" />
-    <ClInclude Include="include\GISystem.h" />
     <ClInclude Include="include\HierarchyInspector.h" />
     <ClInclude Include="include\HierarchyPanel.h" />
     <ClInclude Include="include\HierarchySystem.h" />
@@ -450,6 +451,7 @@ copy /B /Y "$(SolutionDir)ThirdParty\DirectXTex\lib\DirectXTex.pdb" "$(SolutionD
     <ClCompile Include="src\NavMesh\NavMeshAgentSystem.cpp" />
     <ClCompile Include="src\Object\GameObject.cpp" />
     <ClCompile Include="src\Object\GameObjectFactory.cpp" />
+    <ClCompile Include="src\Particles\GPUParticles.cpp" />
     <ClCompile Include="src\Particles\Particles.cpp" />
     <ClCompile Include="src\Physics\PhysicDebugRenderer.cpp" />
     <ClCompile Include="src\Physics\Physics.cpp" />
@@ -464,10 +466,10 @@ copy /B /Y "$(SolutionDir)ThirdParty\DirectXTex\lib\DirectXTex.pdb" "$(SolutionD
     <ClCompile Include="src\Serialisation\PrefabManager.cpp" />
     <ClCompile Include="src\Serialisation\SceneManager.cpp" />
     <ClCompile Include="src\Serialisation\Serialisation.cpp" />
+    <ClCompile Include="src\Systems\GISystem.cpp" />
     <ClCompile Include="src\Systems\HierarchyInspector.cpp" />
     <ClCompile Include="src\Systems\HierarchyPanel.cpp" />
     <ClCompile Include="src\Systems\HierarchySystem.cpp" />
-    <ClCompile Include="src\Systems\GISystem.cpp" />
     <ClCompile Include="src\Systems\TransformMode.cpp" />
     <ClCompile Include="src\Systems\VideoManager.cpp" />
     <ClCompile Include="src\Utility\AssetRegistry.cpp" />

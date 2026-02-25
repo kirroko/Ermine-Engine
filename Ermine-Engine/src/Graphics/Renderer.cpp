@@ -41,6 +41,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <fstream>
 #include "Physics.h"
 #include "NavMesh.h"
+#include "GISystem.h"
+#include "GPUParticles.h"
 
 namespace {
 	constexpr uint32_t kProbeFileMagic = 0x49475245u; // 'ERGI'
@@ -117,6 +119,79 @@ GLenum glCheckError_(const char* file, int line)
 #define glCheckError() glCheckError_(__FILE__, __LINE__)
 
 namespace {
+	inline bool IsFiniteVec3(const glm::vec3& v)
+	{
+		return std::isfinite(v.x) && std::isfinite(v.y) && std::isfinite(v.z);
+	}
+
+	inline glm::vec3 ExtractWorldPosition(const glm::mat4& worldMatrix)
+	{
+		return glm::vec3(worldMatrix[3]);
+	}
+
+	inline glm::vec3 ExtractWorldForward(const glm::mat4& worldMatrix)
+	{
+		const glm::vec3 forward = glm::vec3(worldMatrix[2]);
+		const float lenSq = glm::dot(forward, forward);
+		if (!IsFiniteVec3(forward) || lenSq <= 1e-8f) {
+			return glm::vec3(0.0f, 0.0f, 1.0f);
+		}
+		return forward * glm::inversesqrt(lenSq);
+	}
+
+	inline glm::mat3 ExtractWorldRotationNoScale(const glm::mat4& worldMatrix)
+	{
+		glm::vec3 x = glm::vec3(worldMatrix[0]);
+		glm::vec3 y = glm::vec3(worldMatrix[1]);
+		glm::vec3 z = glm::vec3(worldMatrix[2]);
+
+		if (!IsFiniteVec3(x) || !IsFiniteVec3(y) || !IsFiniteVec3(z)) {
+			return glm::mat3(1.0f);
+		}
+
+		const float xLenSq = glm::dot(x, x);
+		const float yLenSq = glm::dot(y, y);
+		const float zLenSq = glm::dot(z, z);
+		if (xLenSq <= 1e-8f || yLenSq <= 1e-8f || zLenSq <= 1e-8f) {
+			return glm::mat3(1.0f);
+		}
+
+		x *= glm::inversesqrt(xLenSq);
+		y = y - x * glm::dot(y, x);
+		const float yOrthoLenSq = glm::dot(y, y);
+		if (yOrthoLenSq <= 1e-8f) {
+			return glm::mat3(1.0f);
+		}
+		y *= glm::inversesqrt(yOrthoLenSq);
+
+		glm::vec3 zOrtho = glm::cross(x, y);
+		const float zOrthoLenSq = glm::dot(zOrtho, zOrtho);
+		if (zOrthoLenSq <= 1e-8f) {
+			return glm::mat3(1.0f);
+		}
+		zOrtho *= glm::inversesqrt(zOrthoLenSq);
+
+		if (glm::dot(zOrtho, z) < 0.0f) {
+			zOrtho = -zOrtho;
+		}
+
+		return glm::mat3(x, y, zOrtho);
+	}
+
+	inline glm::mat4 BuildSkinnedModelMatrix(const glm::mat4& worldMatrix, const glm::vec3& localScale)
+	{
+		glm::vec3 safeScale = localScale;
+		if (!IsFiniteVec3(safeScale)) {
+			safeScale = glm::vec3(1.0f);
+		}
+
+		glm::mat4 model(1.0f);
+		model = glm::translate(model, ExtractWorldPosition(worldMatrix));
+		model *= glm::mat4(ExtractWorldRotationNoScale(worldMatrix));
+		model = glm::scale(model, safeScale);
+		return model;
+	}
+
 	bool ComputeSkinnedMeshAABB(const Ermine::graphics::MeshData& mesh,
 		const std::vector<glm::mat4>& boneTransforms,
 		glm::vec3& outMin,
@@ -159,6 +234,9 @@ namespace {
 			}
 
 			if (any) {
+				if (!IsFiniteVec3(aabbMin) || !IsFiniteVec3(aabbMax)) {
+					return false;
+				}
 				outMin = aabbMin;
 				outMax = aabbMax;
 				return true;
@@ -211,6 +289,10 @@ namespace {
 		}
 
 		if (!anyWeighted) {
+			return false;
+		}
+
+		if (!IsFiniteVec3(aabbMin) || !IsFiniteVec3(aabbMax)) {
 			return false;
 		}
 
@@ -852,6 +934,11 @@ void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 			glDeleteFramebuffers(1, &m_MotionBlurMaskBuffer->FBO);
 			glDeleteTextures(1, &m_MotionBlurMaskBuffer->ColorTexture);
 		}
+		if (m_NoiseTexture != 0)
+		{
+			glDeleteTextures(1, &m_NoiseTexture);
+			m_NoiseTexture = 0;
+		}
 	}
 
 	// Create main post-process buffer with depth attachment for skybox rendering
@@ -1045,6 +1132,54 @@ void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 	MBMaskBuffer.width = width;
 	MBMaskBuffer.height = height;
 	m_MotionBlurMaskBuffer = std::make_shared<PostProcessBuffer>(MBMaskBuffer);
+
+	// Generate film grain noise texture (256x256, single channel)
+	{
+		constexpr int NOISE_SIZE = 256;
+		std::vector<unsigned char> noiseData(NOISE_SIZE * NOISE_SIZE);
+
+		// Use a better noise algorithm - blue noise approximation via void-and-cluster
+		std::mt19937 rng(42); // Fixed seed for reproducibility
+		std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+
+		// Generate base white noise
+		for (int i = 0; i < NOISE_SIZE * NOISE_SIZE; ++i)
+		{
+			noiseData[i] = static_cast<unsigned char>(dist(rng) * 255.0f);
+		}
+
+		// Apply simple low-pass filter to reduce harsh patterns (makes grain more filmic)
+		std::vector<unsigned char> filtered(NOISE_SIZE * NOISE_SIZE);
+		for (int y = 0; y < NOISE_SIZE; ++y)
+		{
+			for (int x = 0; x < NOISE_SIZE; ++x)
+			{
+				int sum = 0;
+				int count = 0;
+				for (int dy = -1; dy <= 1; ++dy)
+				{
+					for (int dx = -1; dx <= 1; ++dx)
+					{
+						int nx = (x + dx + NOISE_SIZE) % NOISE_SIZE;
+						int ny = (y + dy + NOISE_SIZE) % NOISE_SIZE;
+						sum += noiseData[ny * NOISE_SIZE + nx];
+						++count;
+					}
+				}
+				filtered[y * NOISE_SIZE + x] = static_cast<unsigned char>(sum / count);
+			}
+		}
+
+		glGenTextures(1, &m_NoiseTexture);
+		glBindTexture(GL_TEXTURE_2D, m_NoiseTexture);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, NOISE_SIZE, NOISE_SIZE, 0, GL_RED, GL_UNSIGNED_BYTE, filtered.data());
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		EE_CORE_INFO("Film grain noise texture created ({}x{})", NOISE_SIZE, NOISE_SIZE);
+	}
 
 	// Attach G-Buffer's depth texture to PostProcess FBO for shared depth testing
 	// This must happen AFTER PostProcess buffer is created and AFTER G-Buffer exists
@@ -2014,8 +2149,14 @@ void Renderer::RebuildDrawData()
 
 			if (animComp.boneTransformOffset < 0) continue; // Skip if no valid bone data
 
-			// Build entity transform
-			glm::mat4 modelMatrix = GetEntityWorldMatrix(entity);
+			// For skinned models: inherit parent world translation/rotation, but keep local scale only.
+			const glm::mat4 worldMatrix = GetEntityWorldMatrix(entity);
+			glm::vec3 localScale(1.0f);
+			if (ecs.HasComponent<Transform>(entity)) {
+				const auto& transform = ecs.GetComponent<Transform>(entity);
+				localScale = glm::vec3(transform.scale.x, transform.scale.y, transform.scale.z);
+			}
+			glm::mat4 modelMatrix = BuildSkinnedModelMatrix(worldMatrix, localScale);
 
 			// Get bone transform offset
 			uint32_t boneOffset = static_cast<uint32_t>(animComp.boneTransformOffset);
@@ -2661,21 +2802,18 @@ void Renderer::UpdateDrawData()
 			}
 		}
 
-		// Get current entity transform (this is what changed!)
-		// Note: Use hierarchy-based world matrix unless we have valid skinning data.
 		glm::mat4 model;
-		if (cachedItem.useSkinning && cachedItem.hasSkinningData) {
-			// Animated models with skinning data: manually build matrix (fast path)
-			const auto& trans = ecs.GetComponent<Transform>(cachedItem.entity);
-			model = glm::mat4(1.0f);
-			model = glm::translate(model, glm::vec3(trans.position.x, trans.position.y, trans.position.z));
-			glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
-			rotQuat = glm::normalize(rotQuat);
-			model *= glm::mat4_cast(rotQuat);
-			model = glm::scale(model, glm::vec3(trans.scale.x, trans.scale.y, trans.scale.z));
+		if (cachedItem.useSkinning) {
+			// Skinned entities should follow parent translation/rotation but not inherit parent scale.
+			const glm::mat4 worldMatrix = GetEntityWorldMatrix(cachedItem.entity);
+			glm::vec3 localScale(1.0f);
+			if (ecs.HasComponent<Transform>(cachedItem.entity)) {
+				const auto& transform = ecs.GetComponent<Transform>(cachedItem.entity);
+				localScale = glm::vec3(transform.scale.x, transform.scale.y, transform.scale.z);
+			}
+			model = BuildSkinnedModelMatrix(worldMatrix, localScale);
 		}
 		else {
-			// Static models and primitives: use world matrix (handles hierarchy)
 			model = GetEntityWorldMatrix(cachedItem.entity);
 		}
 
@@ -2710,8 +2848,13 @@ void Renderer::UpdateDrawData()
 		glm::vec3 actualMin = worldCenter - worldExtent;
 		glm::vec3 actualMax = worldCenter + worldExtent;
 
-		// Test frustum culling
-		bool isCulled = !frustum.TestAABB(actualMin, actualMax);
+		// Test frustum culling.
+		// Skinned bounds can be unstable frame-to-frame under animation, so keep them visible.
+		bool isCulled = false;
+		if (!cachedItem.useSkinning) {
+			const bool hasFiniteAABB = IsFiniteVec3(actualMin) && IsFiniteVec3(actualMax);
+			isCulled = hasFiniteAABB ? !frustum.TestAABB(actualMin, actualMax) : false;
+		}
 
 		// Debug: Draw AABB if enabled
 		if (m_DebugDrawAABBs) {
@@ -3533,6 +3676,19 @@ void Renderer::RenderPostProcessPass(const Mtx44& view, const Mtx44& projection)
 	m_PostProcessShader->SetUniform1f("u_VignetteRadius", m_VignetteRadius);
 	m_PostProcessShader->SetUniform1f("u_BloomStrength", m_BloomStrength);
 
+	// Film grain and chromatic aberration
+	m_PostProcessShader->SetUniform1i("u_FilmGrain", m_FilmGrainEnabled ? 1 : 0);
+	m_PostProcessShader->SetUniform1f("u_GrainIntensity", m_GrainIntensity);
+	m_PostProcessShader->SetUniform1f("u_GrainScale", m_GrainScale);
+	m_PostProcessShader->SetUniform1i("u_ChromaticAberration", m_ChromaticAberrationEnabled ? 1 : 0);
+	m_PostProcessShader->SetUniform1f("u_ChromaticAmount", m_ChromaticAmount);
+
+	// Bind noise texture for film grain (use texture unit 3 to avoid conflict with outline mask on unit 2)
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, m_NoiseTexture);
+	m_PostProcessShader->SetUniform1i("u_NoiseTexture", 3);
+	// Animate noise by offsetting UV based on time
+	m_PostProcessShader->SetUniform2f("u_NoiseOffset", std::fmod(m_ElapsedTime * 10.0f, 1.0f), std::fmod(m_ElapsedTime * 7.0f, 1.0f));
 
 	Draw(m_QuadMesh.vertex_array, m_QuadMesh.index_buffer);
 
@@ -3629,7 +3785,7 @@ void Renderer::RenderDeferredPipeline(const Mtx44& view, const Mtx44& projection
 
 		// Restore depth state
 		glDepthMask(GL_TRUE);
-		glDepthFunc(GL_LESS);
+		glDepthFunc(GL_LEQUAL);
 	}
 	else if (m_PostProcessBuffer && m_GBuffer) {
 		// No skybox, but set up framebuffer and depth state for forward pass
@@ -3675,31 +3831,31 @@ void Renderer::RenderDeferredPipeline(const Mtx44& view, const Mtx44& projection
 		// Light probe volume gizmos
 		{
 			auto& ecs = ECS::GetInstance();
-			for (EntityID entity = 0; entity < MAX_ENTITIES; ++entity) {
-				if (!ecs.HasComponent<LightProbeVolumeComponent>(entity)) continue;
-				if (!ecs.HasComponent<Transform>(entity)) continue;
+			auto giSystem = ecs.GetSystem<GISystem>();
+			if (giSystem) {
+				for (EntityID entity : giSystem->GetProbeEntities()) {
+					const auto& volume = ecs.GetComponent<LightProbeVolumeComponent>(entity);
+					if (!volume.showGizmos) continue;
 
-				const auto& volume = ecs.GetComponent<LightProbeVolumeComponent>(entity);
-				if (!volume.showGizmos) continue;
+					glm::mat4 model = GetEntityWorldMatrix(entity);
+					glm::vec3 localMin = volume.boundsMin;
+					glm::vec3 localMax = volume.boundsMax;
 
-				glm::mat4 model = GetEntityWorldMatrix(entity);
-				glm::vec3 localMin = volume.boundsMin;
-				glm::vec3 localMax = volume.boundsMax;
+					glm::vec3 center = (localMin + localMax) * 0.5f;
+					glm::vec3 extent = (localMax - localMin) * 0.5f;
 
-				glm::vec3 center = (localMin + localMax) * 0.5f;
-				glm::vec3 extent = (localMax - localMin) * 0.5f;
+					glm::vec3 worldCenter = glm::vec3(model * glm::vec4(center, 1.0f));
+					glm::mat3 upperLeft = glm::mat3(model);
+					glm::vec3 worldExtent = glm::abs(upperLeft[0]) * extent.x
+						+ glm::abs(upperLeft[1]) * extent.y
+						+ glm::abs(upperLeft[2]) * extent.z;
 
-				glm::vec3 worldCenter = glm::vec3(model * glm::vec4(center, 1.0f));
-				glm::mat3 upperLeft = glm::mat3(model);
-				glm::vec3 worldExtent = glm::abs(upperLeft[0]) * extent.x
-					+ glm::abs(upperLeft[1]) * extent.y
-					+ glm::abs(upperLeft[2]) * extent.z;
+					glm::vec3 actualMin = worldCenter - worldExtent;
+					glm::vec3 actualMax = worldCenter + worldExtent;
 
-				glm::vec3 actualMin = worldCenter - worldExtent;
-				glm::vec3 actualMax = worldCenter + worldExtent;
-
-				glm::vec3 color = volume.isActive ? glm::vec3(0.2f, 0.8f, 1.0f) : glm::vec3(0.5f, 0.5f, 0.5f);
-				SubmitDebugAABB(actualMin, actualMax, color);
+					glm::vec3 color = volume.isActive ? glm::vec3(0.2f, 0.8f, 1.0f) : glm::vec3(0.5f, 0.5f, 0.5f);
+					SubmitDebugAABB(actualMin, actualMax, color);
+				}
 			}
 		}
 
@@ -3949,6 +4105,13 @@ void Renderer::CleanupPostProcessBuffer()
 		m_MotionBlurMaskBuffer.reset();
 	}
 
+	// Clean up noise texture
+	if (m_NoiseTexture != 0)
+	{
+		glDeleteTextures(1, &m_NoiseTexture);
+		m_NoiseTexture = 0;
+	}
+
 }
 
 /**
@@ -4030,15 +4193,12 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
 
 	for (EntityID e : m_LightSystem->m_Entities)
 	{
-		const auto& trans = ecs.GetComponent<Transform>(e);
 		auto& light = ecs.GetComponent<Light>(e);
+		const glm::mat4 lightWorld = GetEntityWorldMatrix(e);
 
-		// Get light position in world space
-		glm::vec3 lightPos(trans.position.x, trans.position.y, trans.position.z);
-
-		// Build rotation from quaternion for directional/spot lights
-		glm::quat rotQuat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z);
-		rotQuat = glm::normalize(rotQuat);
+		// Derive light transform from world matrix so parenting is respected.
+		const glm::vec3 lightPos = ExtractWorldPosition(lightWorld);
+		const glm::vec3 dirWorld = ExtractWorldForward(lightWorld);
 
 		// ========== FRUSTUM CULLING TEST ==========
 		bool isCulled = false;
@@ -4083,10 +4243,6 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
 		} else {
 			light.startOffset = -1;
 		}
-
-		// Keep direction in WORLD SPACE
-		glm::vec3 fwd(0.0f, 0.0f, 1.0f);
-		glm::vec3 dirWorld = glm::normalize(rotQuat * fwd);
 
 		// Set spot angles
 		float innerCos = 1.0f, outerCos = 1.0f;
@@ -4247,13 +4403,26 @@ void Renderer::CaptureLightProbe(EntityID probeEntity)
 
 	// Ensure the probe has a unique index in the cubemap array
 	std::vector<bool> usedIndices(MAX_PROBES, false);
-	for (EntityID other = 0; other < MAX_ENTITIES; ++other) {
-		if (!ecs.HasComponent<LightProbeVolumeComponent>(other)) continue;
-		if (other == probeEntity) continue;
-		auto& otherProbe = ecs.GetComponent<LightProbeVolumeComponent>(other);
-		if (!otherProbe.isActive) continue;
-		if (otherProbe.probeIndex >= 0 && otherProbe.probeIndex < MAX_PROBES) {
-			usedIndices[otherProbe.probeIndex] = true;
+	auto giSystem = ecs.GetSystem<GISystem>();
+	if (giSystem) {
+		for (EntityID other : giSystem->GetProbeEntities()) {
+			if (other == probeEntity) continue;
+			auto& otherProbe = ecs.GetComponent<LightProbeVolumeComponent>(other);
+			if (!otherProbe.isActive) continue;
+			if (otherProbe.probeIndex >= 0 && otherProbe.probeIndex < MAX_PROBES) {
+				usedIndices[otherProbe.probeIndex] = true;
+			}
+		}
+	}
+	else {
+		for (EntityID other = 0; other < MAX_ENTITIES; ++other) {
+			if (!ecs.HasComponent<LightProbeVolumeComponent>(other)) continue;
+			if (other == probeEntity) continue;
+			auto& otherProbe = ecs.GetComponent<LightProbeVolumeComponent>(other);
+			if (!otherProbe.isActive) continue;
+			if (otherProbe.probeIndex >= 0 && otherProbe.probeIndex < MAX_PROBES) {
+				usedIndices[otherProbe.probeIndex] = true;
+			}
 		}
 	}
 	const bool needsIndex = (probe.probeIndex < 0 || probe.probeIndex >= MAX_PROBES || usedIndices[probe.probeIndex]);
@@ -4387,10 +4556,15 @@ void Renderer::CaptureLightProbe(EntityID probeEntity)
 		GLint locBaseVertex = glGetUniformLocation(program, "u_BaseVertex");
 		GLint locVertexStride = glGetUniformLocation(program, "u_VertexStride");
 		GLint locVertexPosOffset = glGetUniformLocation(program, "u_VertexPositionOffset");
+		GLint locVertexTexOffset = glGetUniformLocation(program, "u_VertexTexCoordOffset");
 		GLint locModelMatrix = glGetUniformLocation(program, "u_ModelMatrix");
 		GLint locMatAlbedo = glGetUniformLocation(program, "u_MaterialAlbedo");
 		GLint locMatEmissive = glGetUniformLocation(program, "u_MaterialEmissive");
 		GLint locMatEmissiveIntensity = glGetUniformLocation(program, "u_MaterialEmissiveIntensity");
+		GLint locMatUVScale = glGetUniformLocation(program, "u_MaterialUVScale");
+		GLint locMatUVOffset = glGetUniformLocation(program, "u_MaterialUVOffset");
+		GLint locMatTexFlags = glGetUniformLocation(program, "u_MaterialTextureFlags");
+		GLint locMatAlbedoMapIndex = glGetUniformLocation(program, "u_MaterialAlbedoMapIndex");
 
 		if (locVoxelMin != -1) glUniform3f(locVoxelMin, worldBoundsMin.x, worldBoundsMin.y, worldBoundsMin.z);
 		if (locVoxelMax != -1) glUniform3f(locVoxelMax, worldBoundsMax.x, worldBoundsMax.y, worldBoundsMax.z);
@@ -4402,6 +4576,10 @@ void Renderer::CaptureLightProbe(EntityID probeEntity)
 		if (locVertexPosOffset != -1) {
 			const int positionOffset = static_cast<int>(offsetof(graphics::Vertex, position) / sizeof(float));
 			glUniform1i(locVertexPosOffset, positionOffset);
+		}
+		if (locVertexTexOffset != -1) {
+			const int texCoordOffset = static_cast<int>(offsetof(graphics::Vertex, texCoord) / sizeof(float));
+			glUniform1i(locVertexTexOffset, texCoordOffset);
 		}
 
 		glBindImageTexture(0, m_ProbeVoxelAlbedoTexture, 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA8);
@@ -4462,10 +4640,15 @@ void Renderer::CaptureLightProbe(EntityID probeEntity)
 					if (locModelMatrix != -1 && i < drawInfos.size()) {
 						glUniformMatrix4fv(locModelMatrix, 1, GL_FALSE, &drawInfos[i].modelMatrix[0][0]);
 					}
-					if (locMatAlbedo != -1 || locMatEmissive != -1 || locMatEmissiveIntensity != -1) {
+					if (locMatAlbedo != -1 || locMatEmissive != -1 || locMatEmissiveIntensity != -1 ||
+						locMatUVScale != -1 || locMatUVOffset != -1 || locMatTexFlags != -1 || locMatAlbedoMapIndex != -1) {
 						glm::vec3 albedo(0.8f);
 						glm::vec3 emissive(0.0f);
 						float emissiveIntensity = 0.0f;
+						glm::vec2 uvScale(1.0f);
+						glm::vec2 uvOffset(0.0f);
+						uint32_t textureFlags = 0;
+						int albedoMapIndex = -1;
 						if (i < drawInfos.size()) {
 							const uint32_t matIndex = drawInfos[i].materialIndex;
 							if (matIndex < m_CompiledMaterials.size()) {
@@ -4473,11 +4656,19 @@ void Renderer::CaptureLightProbe(EntityID probeEntity)
 								albedo = glm::vec3(mat.albedo.x, mat.albedo.y, mat.albedo.z);
 								emissive = glm::vec3(mat.emissive.x, mat.emissive.y, mat.emissive.z);
 								emissiveIntensity = mat.emissiveIntensity;
+								uvScale = glm::vec2(mat.uvScale.x, mat.uvScale.y);
+								uvOffset = glm::vec2(mat.uvOffset.x, mat.uvOffset.y);
+								textureFlags = mat.textureFlags;
+								albedoMapIndex = mat.albedoMapIndex;
 							}
 						}
 						if (locMatAlbedo != -1) glUniform3f(locMatAlbedo, albedo.x, albedo.y, albedo.z);
 						if (locMatEmissive != -1) glUniform3f(locMatEmissive, emissive.x, emissive.y, emissive.z);
 						if (locMatEmissiveIntensity != -1) glUniform1f(locMatEmissiveIntensity, emissiveIntensity);
+						if (locMatUVScale != -1) glUniform2f(locMatUVScale, uvScale.x, uvScale.y);
+						if (locMatUVOffset != -1) glUniform2f(locMatUVOffset, uvOffset.x, uvOffset.y);
+						if (locMatTexFlags != -1) glUniform1ui(locMatTexFlags, textureFlags);
+						if (locMatAlbedoMapIndex != -1) glUniform1i(locMatAlbedoMapIndex, albedoMapIndex);
 					}
 
 					const GLuint triCount = cmd.count / 3;
@@ -4499,14 +4690,9 @@ void Renderer::CaptureLightProbe(EntityID probeEntity)
 		GLint locVoxelMin = glGetUniformLocation(program, "u_VoxelBoundsMin");
 		GLint locVoxelMax = glGetUniformLocation(program, "u_VoxelBoundsMax");
 		GLint locVoxelRes = glGetUniformLocation(program, "u_VoxelResolution");
-		GLint locView = glGetUniformLocation(program, "u_View");
 		if (locVoxelMin != -1) glUniform3f(locVoxelMin, worldBoundsMin.x, worldBoundsMin.y, worldBoundsMin.z);
 		if (locVoxelMax != -1) glUniform3f(locVoxelMax, worldBoundsMax.x, worldBoundsMax.y, worldBoundsMax.z);
 		if (locVoxelRes != -1) glUniform1i(locVoxelRes, m_ProbeVoxelResolution);
-		if (locView != -1) {
-			const glm::mat4 viewMat = ToGlm(editor::EditorCamera::GetInstance().GetViewMatrix());
-			glUniformMatrix4fv(locView, 1, GL_FALSE, &viewMat[0][0]);
-		}
 
 		glBindBufferBase(GL_UNIFORM_BUFFER, LightsBindingPoint, m_LightsUBO);
 		glBindImageTexture(0, m_ProbeVoxelAlbedoTexture, 0, GL_TRUE, 0, GL_READ_ONLY, GL_RGBA8);
@@ -4781,57 +4967,106 @@ void Renderer::UpdateLightProbesUBO()
 	}
 
 	auto& ecs = Ermine::ECS::GetInstance();
+	auto giSystem = ecs.GetSystem<GISystem>();
 	
 	std::vector<LightProbeGPU> probesGPU;
 	probesGPU.reserve(MAX_PROBES);
 
 	// Collect active probes
-	for (EntityID entity = 0; entity < MAX_ENTITIES; ++entity) {
-		if (!ecs.HasComponent<LightProbeVolumeComponent>(entity)) continue;
-		if (!ecs.HasComponent<Transform>(entity)) continue;
-		
-		auto& probe = ecs.GetComponent<LightProbeVolumeComponent>(entity);
-		const auto& trans = ecs.GetComponent<Transform>(entity);
+	if (giSystem) {
+		for (EntityID entity : giSystem->GetProbeEntities()) {
+			auto& probe = ecs.GetComponent<LightProbeVolumeComponent>(entity);
+			const auto& trans = ecs.GetComponent<Transform>(entity);
 
-		if (!probe.isActive) continue;
-		if (probesGPU.size() >= MAX_PROBES) break; // Limit to MAX_PROBES
+			if (!probe.isActive) continue;
+			if (probesGPU.size() >= MAX_PROBES) break; // Limit to MAX_PROBES
 
-		if (!probe.bakedDataLoaded && !probe.bakedProbePath.empty()) {
-			std::filesystem::path bakedPath(probe.bakedProbePath);
-			if (LoadProbeSHFromFile(bakedPath, probe.shCoefficients)) {
-				probe.bakedDataLoaded = true;
+			if (!probe.bakedDataLoaded && !probe.bakedProbePath.empty()) {
+				std::filesystem::path bakedPath(probe.bakedProbePath);
+				if (LoadProbeSHFromFile(bakedPath, probe.shCoefficients)) {
+					probe.bakedDataLoaded = true;
+				}
 			}
+
+			LightProbeGPU gpuProbe;
+			gpuProbe.position_radius = glm::vec4(trans.position.x, trans.position.y, trans.position.z, 0.0f);
+			
+			// Copy SH coefficients (convert vec3 array to vec4 for std140 alignment)
+			for (int i = 0; i < 9; ++i) {
+				gpuProbe.shCoefficients[i] = glm::vec4(probe.shCoefficients[i], 0.0f);
+			}
+
+			glm::mat4 model = GetEntityWorldMatrix(entity);
+			glm::vec3 localMin = probe.boundsMin;
+			glm::vec3 localMax = probe.boundsMax;
+
+			glm::vec3 center = (localMin + localMax) * 0.5f;
+			glm::vec3 extent = (localMax - localMin) * 0.5f;
+
+			glm::vec3 worldCenter = glm::vec3(model * glm::vec4(center, 1.0f));
+			glm::mat3 upperLeft = glm::mat3(model);
+			glm::vec3 worldExtent = glm::abs(upperLeft[0]) * extent.x
+				+ glm::abs(upperLeft[1]) * extent.y
+				+ glm::abs(upperLeft[2]) * extent.z;
+
+			glm::vec3 actualMin = worldCenter - worldExtent;
+			glm::vec3 actualMax = worldCenter + worldExtent;
+
+			gpuProbe.boundsMin = glm::vec4(actualMin, 0.0f);
+			gpuProbe.boundsMax = glm::vec4(actualMax, 0.0f);
+			gpuProbe.flags = glm::vec4(1.0f, static_cast<float>(probe.priority), 0.0f, 0.0f);
+
+			probesGPU.push_back(gpuProbe);
 		}
+	}
+	else {
+		for (EntityID entity = 0; entity < MAX_ENTITIES; ++entity) {
+			if (!ecs.HasComponent<LightProbeVolumeComponent>(entity)) continue;
+			if (!ecs.HasComponent<Transform>(entity)) continue;
 
-		LightProbeGPU gpuProbe;
-		gpuProbe.position_radius = glm::vec4(trans.position.x, trans.position.y, trans.position.z, 0.0f);
-		
-		// Copy SH coefficients (convert vec3 array to vec4 for std140 alignment)
-		for (int i = 0; i < 9; ++i) {
-			gpuProbe.shCoefficients[i] = glm::vec4(probe.shCoefficients[i], 0.0f);
+			auto& probe = ecs.GetComponent<LightProbeVolumeComponent>(entity);
+			const auto& trans = ecs.GetComponent<Transform>(entity);
+
+			if (!probe.isActive) continue;
+			if (probesGPU.size() >= MAX_PROBES) break; // Limit to MAX_PROBES
+
+			if (!probe.bakedDataLoaded && !probe.bakedProbePath.empty()) {
+				std::filesystem::path bakedPath(probe.bakedProbePath);
+				if (LoadProbeSHFromFile(bakedPath, probe.shCoefficients)) {
+					probe.bakedDataLoaded = true;
+				}
+			}
+
+			LightProbeGPU gpuProbe;
+			gpuProbe.position_radius = glm::vec4(trans.position.x, trans.position.y, trans.position.z, 0.0f);
+
+			// Copy SH coefficients (convert vec3 array to vec4 for std140 alignment)
+			for (int i = 0; i < 9; ++i) {
+				gpuProbe.shCoefficients[i] = glm::vec4(probe.shCoefficients[i], 0.0f);
+			}
+
+			glm::mat4 model = GetEntityWorldMatrix(entity);
+			glm::vec3 localMin = probe.boundsMin;
+			glm::vec3 localMax = probe.boundsMax;
+
+			glm::vec3 center = (localMin + localMax) * 0.5f;
+			glm::vec3 extent = (localMax - localMin) * 0.5f;
+
+			glm::vec3 worldCenter = glm::vec3(model * glm::vec4(center, 1.0f));
+			glm::mat3 upperLeft = glm::mat3(model);
+			glm::vec3 worldExtent = glm::abs(upperLeft[0]) * extent.x
+				+ glm::abs(upperLeft[1]) * extent.y
+				+ glm::abs(upperLeft[2]) * extent.z;
+
+			glm::vec3 actualMin = worldCenter - worldExtent;
+			glm::vec3 actualMax = worldCenter + worldExtent;
+
+			gpuProbe.boundsMin = glm::vec4(actualMin, 0.0f);
+			gpuProbe.boundsMax = glm::vec4(actualMax, 0.0f);
+			gpuProbe.flags = glm::vec4(1.0f, static_cast<float>(probe.priority), 0.0f, 0.0f);
+
+			probesGPU.push_back(gpuProbe);
 		}
-
-		glm::mat4 model = GetEntityWorldMatrix(entity);
-		glm::vec3 localMin = probe.boundsMin;
-		glm::vec3 localMax = probe.boundsMax;
-
-		glm::vec3 center = (localMin + localMax) * 0.5f;
-		glm::vec3 extent = (localMax - localMin) * 0.5f;
-
-		glm::vec3 worldCenter = glm::vec3(model * glm::vec4(center, 1.0f));
-		glm::mat3 upperLeft = glm::mat3(model);
-		glm::vec3 worldExtent = glm::abs(upperLeft[0]) * extent.x
-			+ glm::abs(upperLeft[1]) * extent.y
-			+ glm::abs(upperLeft[2]) * extent.z;
-
-		glm::vec3 actualMin = worldCenter - worldExtent;
-		glm::vec3 actualMax = worldCenter + worldExtent;
-
-		gpuProbe.boundsMin = glm::vec4(actualMin, 0.0f);
-		gpuProbe.boundsMax = glm::vec4(actualMax, 0.0f);
-		gpuProbe.flags = glm::vec4(1.0f, static_cast<float>(probe.priority), 0.0f, 0.0f);
-
-		probesGPU.push_back(gpuProbe);
 	}
 
 	// Upload to UBO
@@ -6229,8 +6464,12 @@ void Renderer::RenderForwardPass(const Mtx44& view, const Mtx44& projection)
 	bool hasTransparentCustom = !m_ForwardTransparentCustomStandardItems.empty() || !m_ForwardTransparentCustomSkinnedItems.empty();
 	bool hasTransparentStandard = !m_ForwardTransparentDefaultStandardItems.empty() || !m_ForwardTransparentDefaultSkinnedItems.empty();
 
+	auto& ecs = ECS::GetInstance();
+	auto gpuParticles = ecs.GetSystem<GPUParticleSystem>();
+	bool hasGpuParticles = gpuParticles && gpuParticles->HasActiveEmitters();
+
 	// Skip if nothing to render
-	if (!hasOpaqueCustom && !hasTransparentCustom && !hasTransparentStandard) {
+	if (!hasOpaqueCustom && !hasTransparentCustom && !hasTransparentStandard && !hasGpuParticles) {
 		return;
 	}
 
@@ -6239,6 +6478,10 @@ void Renderer::RenderForwardPass(const Mtx44& view, const Mtx44& projection)
 		EE_CORE_ERROR("Post-process buffer not initialized for forward pass!");
 		return;
 	}
+
+	glm::mat4 glmView = ToGlm(view);
+	glm::mat4 invView = glm::inverse(glmView);
+	Vec3 cameraPos = Vec3(invView[3][0], invView[3][1], invView[3][2]);
 
 	// ========== STEP 1: RENDER OPAQUE CUSTOM SHADERS ==========
 	// These render with depth writing ENABLED (before transparent objects)
@@ -6350,6 +6593,14 @@ void Renderer::RenderForwardPass(const Mtx44& view, const Mtx44& projection)
 				glBindVertexArray(0);
 			}
 		}
+
+	}
+
+	if (hasGpuParticles) {
+		glBindFramebuffer(GL_FRAMEBUFFER, m_PostProcessBuffer->FBO);
+		glViewport(0, 0, m_PostProcessBuffer->width, m_PostProcessBuffer->height);
+		gpuParticles->Render(view, projection, cameraPos);
+		gpuParticles->RenderDebug(view, projection);
 	}
 
 	// Restore render state
@@ -6887,16 +7138,16 @@ void Renderer::CalculateLightMatrix(const editor::EditorCamera& editorCamera)
 	}
 
 	for (EntityID e : m_ShadowCastingLights) {
-		if (!ecs.HasComponent<Light>(e) || !ecs.HasComponent<Transform>(e)) continue;
+		if (!ecs.HasComponent<Light>(e)) continue;
 		auto& light = ecs.GetComponent<Light>(e);
 		if (light.castsShadows == 0) continue;
 		int baseLayer = light.startOffset;
 		if (baseLayer < 0) continue;
 
-		// Get transform data
-		const auto& trans = ecs.GetComponent<Transform>(e);
-		glm::quat rotQuat = glm::normalize(glm::quat(trans.rotation.w, trans.rotation.x, trans.rotation.y, trans.rotation.z));
-		glm::vec3 lightPos = glm::vec3(trans.position.x, trans.position.y, trans.position.z);
+		// Use world transform so child lights track parent transforms.
+		const glm::mat4 lightWorld = GetEntityWorldMatrix(e);
+		const glm::vec3 lightPos = ExtractWorldPosition(lightWorld);
+		const glm::vec3 lightForward = ExtractWorldForward(lightWorld);
 
 		if (light.type == LightType::DIRECTIONAL) {
 			// DIRECTIONAL LIGHT PROCESSING (existing code)
@@ -6906,8 +7157,7 @@ void Renderer::CalculateLightMatrix(const editor::EditorCamera& editorCamera)
 			}
 
 			// Get light direction
-			glm::vec3 fwd = glm::normalize(rotQuat * glm::vec3(0.0f, 0.0f, 1.0f));
-			glm::vec3 lightDir = glm::normalize(-fwd); // from scene to light
+			glm::vec3 lightDir = glm::normalize(-lightForward); // from scene to light
 
 			// Setup up vector
 			glm::vec3 up(0.0f, 1.0f, 0.0f);
@@ -7059,7 +7309,7 @@ void Renderer::CalculateLightMatrix(const editor::EditorCamera& editorCamera)
 			}
 
 			// Get spotlight direction and parameters
-			glm::vec3 spotDir = glm::normalize(rotQuat * glm::vec3(0.0f, 0.0f, 1.0f));
+			glm::vec3 spotDir = lightForward;
 			float outerAngleRad = glm::radians(light.outerAngle);
 
 			// Calculate single shadow matrix for the spotlight
@@ -7609,6 +7859,12 @@ void Renderer::SyncToGlobalGraphics()
 	m_GlobalGraphics.vignetteRadius = m_VignetteRadius;
 	m_GlobalGraphics.bloomStrength = m_BloomStrength;
 
+	m_GlobalGraphics.filmGrainEnabled = m_FilmGrainEnabled;
+	m_GlobalGraphics.grainIntensity = m_GrainIntensity;
+	m_GlobalGraphics.grainScale = m_GrainScale;
+	m_GlobalGraphics.chromaticAberrationEnabled = m_ChromaticAberrationEnabled;
+	m_GlobalGraphics.chromaticAmount = m_ChromaticAmount;
+
 	m_GlobalGraphics.fxaaSpanMax = m_FXAASpanMax;
 	m_GlobalGraphics.fxaaReduceMin = m_FXAAReduceMin;
 	m_GlobalGraphics.fxaaReduceMul = m_FXAAReduceMul;
@@ -7671,6 +7927,12 @@ void Renderer::ApplyFromGlobalGraphics()
 	m_VignetteIntensity = m_GlobalGraphics.vignetteIntensity;
 	m_VignetteRadius = m_GlobalGraphics.vignetteRadius;
 	m_BloomStrength = m_GlobalGraphics.bloomStrength;
+
+	m_FilmGrainEnabled = m_GlobalGraphics.filmGrainEnabled;
+	m_GrainIntensity = m_GlobalGraphics.grainIntensity;
+	m_GrainScale = m_GlobalGraphics.grainScale;
+	m_ChromaticAberrationEnabled = m_GlobalGraphics.chromaticAberrationEnabled;
+	m_ChromaticAmount = m_GlobalGraphics.chromaticAmount;
 
 	m_FXAASpanMax = m_GlobalGraphics.fxaaSpanMax;
 	m_FXAAReduceMin = m_GlobalGraphics.fxaaReduceMin;
@@ -7907,10 +8169,7 @@ void Renderer::RenderOutlineMaskPass(const Mtx44& view, const Mtx44& projection)
 	const auto& selectedSet = Ermine::editor::Selection::All();
 	EntityID primary = 0;
 
-#ifdef EE_EDITOR
 	auto sceneMgr = SceneManager::GetInstance();
-#endif
-
 	primary = sceneMgr.GetActiveScene()->GetSelectedEntity();
 
 	glBindFramebuffer(GL_FRAMEBUFFER, m_OutlineMaskFBO);

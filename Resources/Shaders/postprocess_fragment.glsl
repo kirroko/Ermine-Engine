@@ -25,6 +25,15 @@ uniform float u_VignetteIntensity = 0.3;
 uniform float u_VignetteRadius = 0.8;
 uniform float u_BloomStrength = 0.04;
 
+// Film grain and chromatic aberration
+uniform int u_FilmGrain = 0;
+uniform float u_GrainIntensity = 0.015;
+uniform float u_GrainScale = 1.5;
+uniform sampler2D u_NoiseTexture;
+uniform vec2 u_NoiseOffset = vec2(0.0);
+uniform int u_ChromaticAberration = 0;
+uniform float u_ChromaticAmount = 0.003;
+
 // Post-processing outline
 uniform sampler2D u_OutlineMask;
 uniform int u_OutlineEnabled = 0;
@@ -102,7 +111,23 @@ float outlineEdge(vec2 uv, float thicknessPx)
 
 void main()
 {
-    vec3 color = texture(u_LightingTexture, TexCoord).rgb;
+    vec2 texel = 1.0 / vec2(textureSize(u_LightingTexture, 0));
+    vec2 dir = TexCoord - 0.5;
+    float radial = length(dir);
+    vec2 aberr = dir * u_ChromaticAmount * radial;
+
+    vec3 color;
+    if(u_ChromaticAberration == 1)
+    {
+        color.r = texture(u_LightingTexture, TexCoord + aberr).r;
+        color.g = texture(u_LightingTexture, TexCoord).g;
+        color.b = texture(u_LightingTexture, TexCoord - aberr).b;
+    }
+    else
+    {
+        color = texture(u_LightingTexture, TexCoord).rgb;
+    }
+
     sampler2D depthSampler = sampler2D(u_GBufferDepthHandle);
     float sceneDepth = texture(depthSampler, TexCoord).r;
     bool isSky = sceneDepth >= 1.0;
@@ -130,6 +155,14 @@ void main()
     if(u_Vignette == 1)
     {
         color = applyVignette(color, TexCoord);
+    }
+
+    if(u_FilmGrain == 1)
+    {
+        vec2 noiseUV = TexCoord * u_GrainScale + u_NoiseOffset;
+        float grain = texture(u_NoiseTexture, noiseUV).r;
+        grain = (grain - 0.5) * u_GrainIntensity;
+        color += grain;
     }
 
     if(u_OutlineEnabled == 1 && !isSky)

@@ -183,6 +183,12 @@
     <ClInclude Include="include\FrameController.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\GISystem.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\GPUParticles.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="include\GPUProfiler.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -202,9 +208,6 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\GuidRegistry.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\GISystem.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\HierarchyInspector.h">
@@ -521,6 +524,9 @@
     <ClCompile Include="src\Object\GameObjectFactory.cpp">
       <Filter>src\Object</Filter>
     </ClCompile>
+    <ClCompile Include="src\Particles\GPUParticles.cpp">
+      <Filter>src\Particles</Filter>
+    </ClCompile>
     <ClCompile Include="src\Particles\Particles.cpp">
       <Filter>src\Particles</Filter>
     </ClCompile>
@@ -557,6 +563,9 @@
     <ClCompile Include="src\Serialisation\Serialisation.cpp">
       <Filter>src\Serialisation</Filter>
     </ClCompile>
+    <ClCompile Include="src\Systems\GISystem.cpp">
+      <Filter>src\Systems</Filter>
+    </ClCompile>
     <ClCompile Include="src\Systems\HierarchyInspector.cpp">
       <Filter>src\Systems</Filter>
     </ClCompile>
@@ -564,9 +573,6 @@
       <Filter>src\Systems</Filter>
     </ClCompile>
     <ClCompile Include="src\Systems\HierarchySystem.cpp">
-      <Filter>src\Systems</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Systems\GISystem.cpp">
       <Filter>src\Systems</Filter>
     </ClCompile>
     <ClCompile Include="src\Systems\TransformMode.cpp">

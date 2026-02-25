@@ -22,8 +22,22 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include <assimp/Importer.hpp>  // for the importer class
 #include <assimp/scene.h>       // for the output data structure
 #include <assimp/postprocess.h> // for post processing flags
+#include <cctype>
 
 using namespace Ermine;
+
+/**
+ * @brief Normalize a material path to an absolute, normalized form
+ * @param materialPath The input material path
+ */
+std::string NormalizeMaterialPath(const std::string& materialPath)
+    {
+        std::filesystem::path p(materialPath);
+        if (!p.is_absolute())
+            p = std::filesystem::absolute(p);
+        p = p.lexically_normal();
+        return p.string();
+    }
 
 /**
  * @brief Initialize the asset manager with database path
@@ -272,6 +286,73 @@ std::string AssetManager::GetFullDDSPath(const ResourceEntry& entry) const
     std::string normalized = fullPath.string();
     std::replace(normalized.begin(), normalized.end(), '\\', '/');
     return normalized;
+}
+
+/**
+ * @brief Resolve the texture path for material writing, preferring source files over DDS
+ * @param texture The texture to resolve
+ * @return The resolved texture path
+ */
+std::string AssetManager::ResolveTexturePathForMaterialWrite(const std::shared_ptr<graphics::Texture>& texture) const
+{
+    if (!texture)
+        return {};
+
+    auto normalizePath = [](std::string path) {
+        std::replace(path.begin(), path.end(), '\\', '/');
+        for (char& c : path) {
+            c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+        }
+        return path;
+    };
+
+    auto normalizedExtension = [](const std::string& path) {
+        std::string ext = std::filesystem::path(path).extension().string();
+        std::transform(ext.begin(), ext.end(), ext.begin(),
+            [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+        return ext;
+    };
+
+    std::string texPath = texture->GetFilePath();
+    if (texPath.empty())
+        return texPath;
+
+    if (normalizedExtension(texPath) != ".dds")
+        return texPath;
+
+    // Prefer the key used by AssetManager cache when it already points to a source file.
+    for (const auto& [cachedPath, cachedTexture] : m_textures)
+    {
+        if (cachedTexture.get() != texture.get())
+            continue;
+
+        if (!cachedPath.empty() && normalizedExtension(cachedPath) != ".dds")
+            return cachedPath;
+    }
+
+    if (!m_databaseLoaded)
+        return texPath;
+
+    const std::string normalizedTexPath = normalizePath(texPath);
+    const std::string texFilename = normalizePath(std::filesystem::path(texPath).filename().string());
+
+    for (const auto& [_, entry] : m_resourceDatabase)
+    {
+        const std::string outputPath = normalizePath(entry.outputPath);
+        const std::string fullOutputPath = normalizePath(m_databasePath + "/" + m_projectGuid + "/" + entry.outputPath);
+        const std::string outputFilename = normalizePath(std::filesystem::path(entry.outputPath).filename().string());
+
+        if (normalizedTexPath == outputPath ||
+            normalizedTexPath == fullOutputPath ||
+            (!texFilename.empty() && texFilename == outputFilename))
+        {
+            if (!entry.sourcePath.empty())
+                return entry.sourcePath;
+            return texPath;
+        }
+    }
+
+    return texPath;
 }
 
 /**
@@ -657,6 +738,10 @@ void AssetManager::Clear()
     m_shaders.clear();
     m_cubemaps.clear();
     m_materials.clear();
+    m_materialsByGuid.clear();
+    m_materialPathsByGuid.clear();
+    m_materialGuidsByPath.clear();
+    m_materialCustomFragmentByGuid.clear();
     m_models.clear();
 }
 
@@ -737,6 +822,20 @@ std::shared_ptr<graphics::Cubemap> AssetManager::GetCubemap(const std::string& n
 {
     auto it = m_cubemaps.find(name);
     return it != m_cubemaps.end() ? it->second : nullptr;
+}
+
+std::string AssetManager::SanitizeAssetName(std::string name)
+{
+    if (name.empty())
+        return "Material";
+
+    for (char& ch : name)
+    {
+        const unsigned char uch = static_cast<unsigned char>(ch);
+        if (!(std::isalnum(uch) || ch == '_' || ch == '-' || ch == '.'))
+            ch = '_';
+    }
+    return name;
 }
 
 /**
@@ -874,4 +973,255 @@ std::shared_ptr<graphics::Material> AssetManager::CreateSharedMaterial(const std
     m_materials[materialName] = material;
     EE_CORE_INFO("Shared material created and cached: {0}", materialName);
     return material;
+}
+
+std::shared_ptr<graphics::Material> AssetManager::LoadMaterialAsset(const std::string& materialPath, bool forceReload)
+{
+    const std::string normalizedPath = NormalizeMaterialPath(materialPath);
+    if (!std::filesystem::exists(normalizedPath)) {
+        EE_CORE_WARN("Material asset not found: {}", normalizedPath);
+        return nullptr;
+    }
+
+    Guid guid = GetMaterialGuidForPath(normalizedPath);
+    if (!forceReload) {
+        auto it = m_materialsByGuid.find(guid);
+        if (it != m_materialsByGuid.end())
+            return it->second;
+    }
+
+    std::string customFragmentShader;
+    graphics::Material loaded = LoadMaterialFromFile(normalizedPath, &customFragmentShader);
+    auto material = std::make_shared<graphics::Material>(loaded);
+
+    // Ensure a valid shader is assigned
+    if (!material->GetShader() || !material->GetShader()->IsValid()) {
+        auto defaultShader = LoadShader(
+            "../Resources/Shaders/vertex.glsl",
+            "../Resources/Shaders/fragment_enhanced.glsl"
+        );
+        if (defaultShader && defaultShader->IsValid())
+            material->SetShader(defaultShader);
+    }
+
+    m_materialsByGuid[guid] = material;
+    m_materialPathsByGuid[guid] = normalizedPath;
+    m_materialGuidsByPath[normalizedPath] = guid;
+    if (!customFragmentShader.empty())
+        m_materialCustomFragmentByGuid[guid] = customFragmentShader;
+    return material;
+}
+
+std::shared_ptr<graphics::Material> AssetManager::GetMaterialByGuid(const Guid& guid)
+{
+    if (!guid.IsValid())
+        return nullptr;
+
+    auto it = m_materialsByGuid.find(guid);
+    if (it != m_materialsByGuid.end())
+        return it->second;
+
+    auto pathIt = m_materialPathsByGuid.find(guid);
+    if (pathIt != m_materialPathsByGuid.end())
+        return LoadMaterialAsset(pathIt->second, false);
+
+    ScanMaterialAssets("../Resources/Materials/", false);
+    pathIt = m_materialPathsByGuid.find(guid);
+    if (pathIt != m_materialPathsByGuid.end())
+        return LoadMaterialAsset(pathIt->second, false);
+
+    return nullptr;
+}
+
+Guid AssetManager::FindMaterialGuid(const graphics::Material* material) const
+{
+    if (!material)
+        return {};
+
+    for (const auto& [guid, mat] : m_materialsByGuid) {
+        if (mat.get() == material)
+            return guid;
+    }
+    return {};
+}
+
+Guid AssetManager::GetMaterialGuidForPath(const std::string& materialPath)
+{
+    const std::string normalizedPath = NormalizeMaterialPath(materialPath);
+    auto it = m_materialGuidsByPath.find(normalizedPath);
+    if (it != m_materialGuidsByPath.end())
+        return it->second;
+
+    if (!std::filesystem::exists(normalizedPath)) {
+        EE_CORE_WARN("GetMaterialGuidForPath skipped non-existent material path: {}", normalizedPath);
+        return {};
+    }
+
+    Guid guid = EnsureMetaForSource(normalizedPath, "Material");
+    m_materialGuidsByPath[normalizedPath] = guid;
+    m_materialPathsByGuid[guid] = normalizedPath;
+    return guid;
+}
+
+std::shared_ptr<graphics::Material> AssetManager::CreateMaterialAsset(
+    const std::string& materialName,
+    const std::function<void(graphics::Material&)>& initializer,
+    Guid* outGuid,
+    const std::string& materialsDir)
+{
+    std::filesystem::path dir = materialsDir;
+    if (!dir.is_absolute())
+        dir = std::filesystem::absolute(dir);
+
+    std::error_code ec;
+    std::filesystem::create_directories(dir, ec);
+    if (ec) {
+        EE_CORE_ERROR("Failed to create materials directory: {}", dir.string());
+        return nullptr;
+    }
+
+    std::string safeName = SanitizeAssetName(materialName);
+    std::filesystem::path path = dir / (safeName + ".mat");
+
+    if (std::filesystem::exists(path)) {
+        Guid guid = GetMaterialGuidForPath(path.string());
+        if (outGuid) *outGuid = guid;
+        return LoadMaterialAsset(path.string(), false);
+    }
+
+    graphics::Material material;
+    material.LoadTemplate(graphics::MaterialTemplates::PBR_WHITE());
+    if (initializer)
+        initializer(material);
+
+    SaveMaterialToFile(material, path.string(), true);
+
+    Guid guid = GetMaterialGuidForPath(path.string());
+    if (outGuid) *outGuid = guid;
+    return LoadMaterialAsset(path.string(), true);
+}
+
+Guid AssetManager::SaveMaterialAsset(
+    const std::string& materialName,
+    const graphics::Material& material,
+    bool overwrite,
+    std::string_view customFragmentShader,
+    const std::string& materialsDir)
+{
+    std::filesystem::path dir = materialsDir;
+    if (!dir.is_absolute())
+        dir = std::filesystem::absolute(dir);
+
+    std::error_code ec;
+    std::filesystem::create_directories(dir, ec);
+    if (ec) {
+        EE_CORE_ERROR("Failed to create materials directory: {}", dir.string());
+        return {};
+    }
+
+    std::string safeName = SanitizeAssetName(materialName);
+    std::filesystem::path path = dir / (safeName + ".mat");
+
+    if (!overwrite && std::filesystem::exists(path)) {
+        return GetMaterialGuidForPath(path.string());
+    }
+
+    SaveMaterialToFile(material, path.string(), true, customFragmentShader);
+    Guid guid = GetMaterialGuidForPath(path.string());
+    const std::string normalizedPath = NormalizeMaterialPath(path.string());
+
+    auto materialPtr = std::make_shared<graphics::Material>(material);
+    if (!materialPtr->GetShader() || !materialPtr->GetShader()->IsValid()) {
+        auto defaultShader = LoadShader(
+            "../Resources/Shaders/vertex.glsl",
+            "../Resources/Shaders/fragment_enhanced.glsl"
+        );
+        if (defaultShader && defaultShader->IsValid())
+            materialPtr->SetShader(defaultShader);
+    }
+
+    m_materialsByGuid[guid] = materialPtr;
+    m_materialPathsByGuid[guid] = normalizedPath;
+    m_materialGuidsByPath[normalizedPath] = guid;
+    if (!customFragmentShader.empty())
+        m_materialCustomFragmentByGuid[guid] = std::string(customFragmentShader);
+    else
+        m_materialCustomFragmentByGuid.erase(guid);
+    return guid;
+}
+
+void AssetManager::ScanMaterialAssets(const std::string& materialsDir, bool createMissingMeta)
+{
+    std::filesystem::path dir = materialsDir;
+    if (!dir.is_absolute())
+        dir = std::filesystem::absolute(dir);
+
+    if (!std::filesystem::exists(dir))
+        return;
+
+    m_materialGuidsByPath.clear();
+    m_materialPathsByGuid.clear();
+
+    std::size_t missingMetaCount = 0;
+    for (const auto& entry : std::filesystem::recursive_directory_iterator(dir)) {
+        if (!entry.is_regular_file())
+            continue;
+        if (entry.path().extension() != ".mat")
+            continue;
+
+        const std::string materialPath = NormalizeMaterialPath(entry.path().string());
+        std::filesystem::path metaPath = entry.path();
+        metaPath += ".meta";
+        Guid guid{};
+
+        if (LoadAssetMetaGuid(metaPath, guid)) {
+            m_materialGuidsByPath[materialPath] = guid;
+            m_materialPathsByGuid[guid] = materialPath;
+            continue;
+        }
+
+        if (createMissingMeta) {
+            guid = EnsureMetaForSource(materialPath, "Material");
+            m_materialGuidsByPath[materialPath] = guid;
+            m_materialPathsByGuid[guid] = materialPath;
+            continue;
+        }
+
+        ++missingMetaCount;
+    }
+
+    if (missingMetaCount > 0) {
+        EE_CORE_WARN("ScanMaterialAssets skipped {} .mat files without valid .meta in '{}'",
+            missingMetaCount, dir.string());
+    }
+}
+
+std::string AssetManager::GetMaterialPathByGuid(const Guid& guid) const
+{
+    auto it = m_materialPathsByGuid.find(guid);
+    return it != m_materialPathsByGuid.end() ? it->second : std::string();
+}
+
+std::string AssetManager::GetMaterialNameByGuid(const Guid& guid) const
+{
+    auto path = GetMaterialPathByGuid(guid);
+    if (path.empty())
+        return {};
+    return std::filesystem::path(path).stem().string();
+}
+
+const std::string* AssetManager::GetMaterialCustomFragmentShader(const Guid& guid) const
+{
+    auto it = m_materialCustomFragmentByGuid.find(guid);
+    return it != m_materialCustomFragmentByGuid.end() ? &it->second : nullptr;
+}
+
+void AssetManager::SetMaterialCustomFragmentShader(const Guid& guid, std::string_view fragmentPath)
+{
+    if (!guid.IsValid())
+        return;
+    if (fragmentPath.empty())
+        m_materialCustomFragmentByGuid.erase(guid);
+    else
+        m_materialCustomFragmentByGuid[guid] = std::string(fragmentPath);
 }

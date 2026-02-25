@@ -31,6 +31,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "ScriptEngine.h"
 #include "AudioSystem.h"
 #include "Particles.h"
+#include "GPUParticles.h"
 #include "Physics.h"
 #include "FiniteStateMachine.h"
 #include "Skybox.h"
@@ -49,12 +50,12 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "NavMesh.h"	 
 #include "NavMeshAgentSystem.h"
 #include "GISystem.h"
+#include "EditorGUI.h"
 
 #if defined(EE_EDITOR)
 #include "GraphicsDebugGUI.h"
 #include "AssetBrowser.h"
 #include "EditorCamera.h"
-#include "EditorGUI.h"
 #include "ViewPortGUI.h"
 #include "AudioImGUI.h"
 #include "SceneManager.h"
@@ -89,105 +90,105 @@ namespace
 
 	EntityID fbxEntity = 0;
 
-	/*!***********************************************************************
-	\brief
-	Creates a main menu scene dynamically with camera and menu script
-	\return
-	Shared pointer to the created scene
-	*************************************************************************/
-	std::shared_ptr<Ermine::Scene> CreateMainMenuScene()
-	{
-		auto scene = std::make_shared<Ermine::Scene>("Main Menu");
+	// /*!***********************************************************************
+	// \brief
+	// Creates a main menu scene dynamically with camera and menu script
+	// \return
+	// Shared pointer to the created scene
+	// *************************************************************************/
+	// std::shared_ptr<Ermine::Scene> CreateMainMenuScene()
+	// {
+	// 	auto scene = std::make_shared<Ermine::Scene>("Main Menu");
 
-		// Create main camera entity
-		Ermine::EntityID cameraEntity = scene->CreateEntity("MainCamera", true, true);
-		ECS::GetInstance().AddComponent(cameraEntity, CameraComponent(45.0f, 16.0f / 9.0f, 0.1f, 100.0f, true, false));
-		EE_CORE_INFO("Created main menu camera entity: {}", cameraEntity);
+	// 	// Create main camera entity
+	// 	Ermine::EntityID cameraEntity = scene->CreateEntity("MainCamera", true, true);
+	// 	ECS::GetInstance().AddComponent(cameraEntity, CameraComponent(45.0f, 16.0f / 9.0f, 0.1f, 100.0f, true, false));
+	// 	EE_CORE_INFO("Created main menu camera entity: {}", cameraEntity);
 
-		// Create menu script entity
-		Ermine::EntityID menuScriptEntity = scene->CreateEntity("MenuController", true, true);
-		ScriptsComponent scriptsComp;
-		scriptsComp.Add("MainMenu", menuScriptEntity, true);
-		ECS::GetInstance().AddComponent<ScriptsComponent>(menuScriptEntity, scriptsComp);
-		EE_CORE_INFO("Created menu script entity: {}", menuScriptEntity);
+	// 	// Create menu script entity
+	// 	Ermine::EntityID menuScriptEntity = scene->CreateEntity("MenuController", true, true);
+	// 	ScriptsComponent scriptsComp;
+	// 	scriptsComp.Add("MainMenu", menuScriptEntity, true);
+	// 	ECS::GetInstance().AddComponent<ScriptsComponent>(menuScriptEntity, scriptsComp);
+	// 	EE_CORE_INFO("Created menu script entity: {}", menuScriptEntity);
 
-		// Create UI entity for menu buttons/text - THIS IS THE MAIN MENU UI
-		Ermine::EntityID uiEntity = scene->CreateEntity("MenuUI", false, false);
-		UIComponent uiComp;
-		
-		// ===== CONFIGURE UI FOR MAIN MENU =====
-		// Enable all UI rendering
-		uiComp.showHealthbar = false;      // No health bar for main menu
-		uiComp.showManaBar = false;        // No mana bar for main menu
-		uiComp.showSkills = false;         // No skill slots for main menu
-		uiComp.showCrosshair = false;      // No crosshair for main menu
-		uiComp.showBookCounter = false;    // No book counter for main menu
-		
-		// Set initial health to render menu background/title
-		uiComp.currentHealth = uiComp.maxHealth;
-		uiComp.currentMana = uiComp.maxMana;
-		
-		// Position menu elements at center of screen
-		uiComp.healthbarPosition = Ermine::Vec3(0.35f, 0.6f, 0.0f);
-		uiComp.healthbarWidth = 0.3f;
-		uiComp.healthbarHeight = 0.15f;
-		
-		// Configure health bar as a background panel (solid color)
-		uiComp.healthbarBgColor = Ermine::Vec3(0.1f, 0.1f, 0.1f);  // Dark background
-		uiComp.healthbarColor = Ermine::Vec3(0.2f, 0.8f, 0.3f);    // Green (menu ready indicator)
-		
-		// Add dummy skills to render menu buttons
-		// Skill 0: Play Button
-		uiComp.skills[0].skillName = "Play Game";
-		uiComp.skills[0].keyBinding = "SPACE";
-		uiComp.skills[0].iconTexturePath = "../Resources/Textures/UI/Skills/play_icon.png";
-		uiComp.skills[0].description = "Start Game";
-		
-		// Skill 1: Settings Button
-		uiComp.skills[1].skillName = "Settings";
-		uiComp.skills[1].keyBinding = "S";
-		uiComp.skills[1].iconTexturePath = "../Resources/Textures/UI/Skills/settings_icon.png";
-		uiComp.skills[1].description = "Game Settings";
-		
-		// Skill 2: Credits Button
-		uiComp.skills[2].skillName = "Credits";
-		uiComp.skills[2].keyBinding = "C";
-		uiComp.skills[2].iconTexturePath = "../Resources/Textures/UI/Skills/credits_icon.png";
-		uiComp.skills[2].description = "View Credits";
-		
-		// Skill 3: Quit Button
-		uiComp.skills[3].skillName = "Quit";
-		uiComp.skills[3].keyBinding = "Q";
-		uiComp.skills[3].iconTexturePath = "../Resources/Textures/UI/Skills/quit_icon.png";
-		uiComp.skills[3].description = "Exit Game";
-		
-		// Position skill slots (menu buttons)
-		uiComp.skillsPosition = Ermine::Vec3(0.5f, 0.4f, 0.0f);
-		uiComp.skillSlotSize = 0.12f;
-		uiComp.skillSlotSpacing = 0.02f;
-		
-		// Show the health bar as background and skills as buttons
-		uiComp.showHealthbar = true;
-		uiComp.showSkills = true;
-		
-		ECS::GetInstance().AddComponent<UIComponent>(uiEntity, uiComp);
-		EE_CORE_INFO("Created menu UI entity with buttons: {}", uiEntity);
+	// 	// Create UI entity for menu buttons/text - THIS IS THE MAIN MENU UI
+	// 	Ermine::EntityID uiEntity = scene->CreateEntity("MenuUI", false, false);
+	// 	UIComponent uiComp;
 
-		// Create a main light
-		Ermine::EntityID lightEntity = scene->CreateEntity("MainLight", true, true);
-		ECS::GetInstance().AddComponent(
-			lightEntity,
-			Transform(
-				Ermine::Vec3(0, 5, 0),
-				FromEulerDegrees(50.0f, -30.0f, 0.0f),
-				Ermine::Vec3(1, 1, 1)));
-		ECS::GetInstance().AddComponent(lightEntity, ObjectMetaData("Main Light", "Light", true));
-		ECS::GetInstance().AddComponent(lightEntity, Light(Ermine::Vec3(1, 1, 1), 1.0f, LightType::DIRECTIONAL, true));
-		EE_CORE_INFO("Created menu light entity: {}", lightEntity);
+	// 	// ===== CONFIGURE UI FOR MAIN MENU =====
+	// 	// Enable all UI rendering
+	// 	uiComp.showHealthbar = false;      // No health bar for main menu
+	// 	uiComp.showManaBar = false;        // No mana bar for main menu
+	// 	uiComp.showSkills = false;         // No skill slots for main menu
+	// 	uiComp.showCrosshair = false;      // No crosshair for main menu
+	// 	uiComp.showBookCounter = false;    // No book counter for main menu
 
-		EE_CORE_INFO("Main Menu scene created successfully with {} entities", scene->GetEntityCount());
-		return scene;
-	}
+	// 	// Set initial health to render menu background/title
+	// 	uiComp.currentHealth = uiComp.maxHealth;
+	// 	uiComp.currentMana = uiComp.maxMana;
+
+	// 	// Position menu elements at center of screen
+	// 	uiComp.healthbarPosition = Ermine::Vec3(0.35f, 0.6f, 0.0f);
+	// 	uiComp.healthbarWidth = 0.3f;
+	// 	uiComp.healthbarHeight = 0.15f;
+
+	// 	// Configure health bar as a background panel (solid color)
+	// 	uiComp.healthbarBgColor = Ermine::Vec3(0.1f, 0.1f, 0.1f);  // Dark background
+	// 	uiComp.healthbarColor = Ermine::Vec3(0.2f, 0.8f, 0.3f);    // Green (menu ready indicator)
+
+	// 	// Add dummy skills to render menu buttons
+	// 	// Skill 0: Play Button
+	// 	uiComp.skills[0].skillName = "Play Game";
+	// 	uiComp.skills[0].keyBinding = "SPACE";
+	// 	uiComp.skills[0].iconTexturePath = "../Resources/Textures/UI/Skills/play_icon.png";
+	// 	uiComp.skills[0].description = "Start Game";
+
+	// 	// Skill 1: Settings Button
+	// 	uiComp.skills[1].skillName = "Settings";
+	// 	uiComp.skills[1].keyBinding = "S";
+	// 	uiComp.skills[1].iconTexturePath = "../Resources/Textures/UI/Skills/settings_icon.png";
+	// 	uiComp.skills[1].description = "Game Settings";
+
+	// 	// Skill 2: Credits Button
+	// 	uiComp.skills[2].skillName = "Credits";
+	// 	uiComp.skills[2].keyBinding = "C";
+	// 	uiComp.skills[2].iconTexturePath = "../Resources/Textures/UI/Skills/credits_icon.png";
+	// 	uiComp.skills[2].description = "View Credits";
+
+	// 	// Skill 3: Quit Button
+	// 	uiComp.skills[3].skillName = "Quit";
+	// 	uiComp.skills[3].keyBinding = "Q";
+	// 	uiComp.skills[3].iconTexturePath = "../Resources/Textures/UI/Skills/quit_icon.png";
+	// 	uiComp.skills[3].description = "Exit Game";
+
+	// 	// Position skill slots (menu buttons)
+	// 	uiComp.skillsPosition = Ermine::Vec3(0.5f, 0.4f, 0.0f);
+	// 	uiComp.skillSlotSize = 0.12f;
+	// 	uiComp.skillSlotSpacing = 0.02f;
+
+	// 	// Show the health bar as background and skills as buttons
+	// 	uiComp.showHealthbar = true;
+	// 	uiComp.showSkills = true;
+
+	// 	ECS::GetInstance().AddComponent<UIComponent>(uiEntity, uiComp);
+	// 	EE_CORE_INFO("Created menu UI entity with buttons: {}", uiEntity);
+
+	// 	// Create a main light
+	// 	Ermine::EntityID lightEntity = scene->CreateEntity("MainLight", true, true);
+	// 	ECS::GetInstance().AddComponent(
+	// 		lightEntity,
+	// 		Transform(
+	// 			Ermine::Vec3(0, 5, 0),
+	// 			FromEulerDegrees(50.0f, -30.0f, 0.0f),
+	// 			Ermine::Vec3(1, 1, 1)));
+	// 	ECS::GetInstance().AddComponent(lightEntity, ObjectMetaData("Main Light", "Light", true));
+	// 	ECS::GetInstance().AddComponent(lightEntity, Light(Ermine::Vec3(1, 1, 1), 1.0f, LightType::DIRECTIONAL, true));
+	// 	EE_CORE_INFO("Created menu light entity: {}", lightEntity);
+
+	// 	EE_CORE_INFO("Main Menu scene created successfully with {} entities", scene->GetEntityCount());
+	// 	return scene;
+	// }
 
 }
 
@@ -239,6 +240,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	EE_AUTO_REGISTER_COMPONENT(NavJumpLink, "NavJumpLink")
 	EE_AUTO_REGISTER_COMPONENT(GlobalTransform, "GlobalTransform")
 	EE_AUTO_REGISTER_COMPONENT(ParticleEmitter, "ParticleEmitter")
+	EE_AUTO_REGISTER_COMPONENT(GPUParticleEmitter, "GPUParticleEmitter")
 	EE_AUTO_REGISTER_COMPONENT(CameraComponent, "CameraComponent");
 	EE_AUTO_REGISTER_COMPONENT(UIComponent, "UIComponent");
 	EE_AUTO_REGISTER_COMPONENT(UIHealthbarComponent, "UIHealthbarComponent");
@@ -247,6 +249,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	EE_AUTO_REGISTER_COMPONENT(UIManaBarComponent, "UIManaBarComponent");
 	EE_AUTO_REGISTER_COMPONENT(UIBookCounterComponent, "UIBookCounterComponent");
 	EE_AUTO_REGISTER_COMPONENT(UIButtonComponent, "UIButtonComponent");
+	EE_AUTO_REGISTER_COMPONENT(UISliderComponent, "UISliderComponent");
 	EE_AUTO_REGISTER_COMPONENT(UIImageComponent, "UIImageComponent");
 
 	// NOTE : THESE ARE SPECIAL CASES DUE TO THE FACT THAT THEIR COMPONENTS ARE UNIQUE AND WOULDN'T WORK BY SHALLOW COPIED OR DEEP COPIED
@@ -292,6 +295,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().RegisterSystem<scripting::ScriptSystem>();
 	ECS::GetInstance().RegisterSystem<AudioSystem>();
 	ECS::GetInstance().RegisterSystem<ParticleSystem>();
+	ECS::GetInstance().RegisterSystem<GPUParticleSystem>();
 	ECS::GetInstance().RegisterSystem<graphics::LightSystem>();
 	ECS::GetInstance().RegisterSystem<graphics::AnimationManager>();
 	ECS::GetInstance().RegisterSystem<HierarchySystem>();
@@ -350,6 +354,12 @@ bool engine::Init(GLFWwindow* windowContext)
 	sig.set(ECS::GetInstance().GetComponentType<Transform>());
 	sig.set(ECS::GetInstance().GetComponentType<ParticleEmitter>());
 	ECS::GetInstance().SetSystemSignature<ParticleSystem>(sig);
+
+	// For GPU Orb Particles
+	sig.reset();
+	sig.set(ECS::GetInstance().GetComponentType<Transform>());
+	sig.set(ECS::GetInstance().GetComponentType<GPUParticleEmitter>());
+	ECS::GetInstance().SetSystemSignature<GPUParticleSystem>(sig);
 
 	// For Physics
 	sig.reset();
@@ -481,6 +491,7 @@ bool engine::Init(GLFWwindow* windowContext)
 	ECS::GetInstance().GetSystem<NavMeshSystem>()->Init();
 	// initialize particles emitter
 	ECS::GetInstance().GetSystem<ParticleSystem>()->Init(shader);
+	ECS::GetInstance().GetSystem<GPUParticleSystem>()->Init();
 
 	EE_CORE_INFO("Total living entities after creation: {0}", ECS::GetInstance().GetLivingEntityCount());
 
@@ -556,10 +567,10 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	// Load main menu scene on startup (scene-based approach)
 	EE_CORE_INFO("Loading main menu scene...");
-	SceneManager::GetInstance().OpenScene("../Resources/Scenes/mainmenu.scene");
+	SceneManager::GetInstance().OpenScene("../Resources/Scenes/mainmenu_video_bg.scene");
 	EE_CORE_INFO("Main menu scene loaded");
 #else
-	SceneManager::GetInstance().OpenScene("../Resources/Scenes/mainmenu.scene"); // Load mainmenu scene
+	SceneManager::GetInstance().OpenScene("../Resources/Scenes/mainmenu_video_bg.scene"); // Load mainmenu scene
 	editor::EditorGUI::s_state = editor::EditorGUI::SimState::playing;			 // Set to playing state
 #endif
 
@@ -590,7 +601,7 @@ void engine::Shutdown()
 	cfg.themeMode = SettingsGUI::GetMode();
 
 #if defined(EE_EDITOR)
-	cfg.title = "Ermine Editor 0.3";
+	cfg.title = "Ermine Editor 0.4";
 #else
 	cfg.title = "Machina";
 #endif
@@ -618,7 +629,16 @@ void engine::Shutdown()
 	}
 #endif
 
+	if (auto scriptSys = ECS::GetInstance().GetSystem<scripting::ScriptSystem>())
+		scriptSys->CleanupAllScripts();
+
 	job::Shutdown();
+
+	AssetManager::GetInstance().Clear();
+	ECS::GetInstance().GetSystem<Physics>()->Shutdown();
+	ECS::GetInstance().GetSystem<NavMeshSystem>()->Shutdown();
+	ECS::GetInstance().GetSystem<VideoManager>()->Shutdown();
+	graphics::GPUProfiler::Shutdown();
 
 	ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->m_ScriptEngine->Shutdown();
 	AudioSystem::Shutdown();
@@ -676,6 +696,7 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 		ECS::GetInstance().GetSystem<NavMeshAgentSystem>()->Update(FrameController::GetFixedDeltaTime());	// AI NavMesh Agent update
 		ECS::GetInstance().GetSystem<graphics::AnimationManager>()->Update(FrameController::GetDeltaTime());// Animation Update
 		ECS::GetInstance().GetSystem<ParticleSystem>()->Update(FrameController::GetDeltaTime());
+		ECS::GetInstance().GetSystem<GPUParticleSystem>()->Update(FrameController::GetDeltaTime());
 
 		// Update video playback
 		ECS::GetInstance().GetSystem<VideoManager>()->Update(FrameController::GetDeltaTime());

@@ -3,7 +3,7 @@ using ErmineEngine;
 
 public class RotatingPlatform : MonoBehaviour
 {
-    public float speed = 2.0f;
+    public float speed = .8f;
     public bool active = true;
 
     // Audio activation distance (slightly larger than maxDistance for smooth fade)

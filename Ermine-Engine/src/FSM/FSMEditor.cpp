@@ -42,9 +42,30 @@ namespace Ermine
 
         auto& fsm = ECS::GetInstance().GetComponent<StateMachine>(m_SelectedEntity);
 
+        // Sync next id to existing nodes, prevents collisions when loading a scene
+        int maxId = 0;
+        for (auto& n : fsm.m_Nodes)
+            if (n && n->id > maxId) maxId = n->id;
+
+        if (m_nextNodeId <= maxId)
+            m_nextNodeId = maxId + 1;
+
+        // ensure chosen id isn't already taken in case scene has duplicates
+        auto idExists = [&](int id)
+            {
+                for (auto& n : fsm.m_Nodes)
+                    if (n && n->id == id) return true;
+                return false;
+            };
+        while (idExists(m_nextNodeId))
+            ++m_nextNodeId;
+
         auto node = std::make_shared<ScriptNode>();
         node->id = m_nextNodeId++;
         node->name = name;
+        //node->editorPosition = ImVec2(40.0f + node->id * 30.0f, 40.0f + node->id * 20.0f);
+        node->editorPosition = ImVec2(0.0f, 0.0f);
+        node->positionInitialized = false;
         node->isAttached = false;
         node->scriptClassName = "";
         fsm.m_Nodes.push_back(node);
@@ -102,6 +123,14 @@ namespace Ermine
         {
             auto& snode = *nodePtr;
             ImNodes::BeginNode(snode.id);
+
+            // Restore saved position once
+            if (!snode.positionInitialized)
+            {
+                ImNodes::SetNodeGridSpacePos(snode.id, snode.editorPosition);
+                snode.positionInitialized = true;
+            }
+
             ImNodes::BeginNodeTitleBar();
             ImGui::TextUnformatted(snode.name.c_str());
             ImNodes::EndNodeTitleBar();
@@ -220,6 +249,13 @@ namespace Ermine
 
         ImNodes::EndNodeEditor();
 
+        // save current position
+        for (auto& nodePtr : fsm.m_Nodes)
+        {
+            auto& snode = *nodePtr;
+            snode.editorPosition = ImNodes::GetNodeGridSpacePos(snode.id);
+        }
+
         if (!nodesToDetachScript.empty())
         {
             for (int id : nodesToDetachScript)
@@ -284,8 +320,10 @@ namespace Ermine
                 // Remove transitions referencing this node
                 for (auto it = fsm.scriptTransitions.begin(); it != fsm.scriptTransitions.end();)
                 {
-                    if ((it->first && it->first->id == deleteId) ||
-                        (it->second && it->second->id == deleteId))
+                    int fromId = it->first;
+                    int toId = it->second;
+
+                    if (fromId == deleteId || toId == deleteId)
                         it = fsm.scriptTransitions.erase(it);
                     else
                         ++it;
@@ -326,8 +364,8 @@ namespace Ermine
                 if (sPtr->id == toId)   toScriptNode = sPtr.get();
             }
 
-            if (fromScriptNode && toScriptNode)
-                fsm.scriptTransitions[fromScriptNode] = toScriptNode;
+            if (fromId != 0 && toId != 0)
+                fsm.scriptTransitions[fromId] = toId;
 
             fsm.m_Links.emplace_back(fromAttr, toAttr);
         }

@@ -165,6 +165,12 @@ namespace Ermine::editor {
         */
         void DrawParticleEmitterComponent(EntityID entity);
 
+        /*!***********************************************************************
+        \brief Draws the GPU Orb Particle Emitter component inspector
+        \param entity The entity to inspect
+        *************************************************************************/
+        void DrawGPUParticleEmitterComponent(EntityID entity);
+
         /*!
         \brief Draws UI for Camera component
         \param entity The entity to add components to
@@ -178,6 +184,7 @@ namespace Ermine::editor {
         void DrawUIBookCounterComponent(EntityID entity);
         void DrawUIImageComponent(EntityID entity);
         void DrawUIButtonComponent(EntityID entity);
+        void DrawUISliderComponent(EntityID entity);
 
         Scene* m_ActiveScene = nullptr;  ///< Pointer to the currently active scene
         bool m_IsVisible = true;         ///< Inspector panel visibility state
