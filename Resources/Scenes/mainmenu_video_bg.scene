@@ -290,12 +290,12 @@
           ],
           "sfx": [
             {
-              "name": "Hover",
+              "name": "UIHover",
               "path": "../Resources/Audio/UI_Hover 5.wav",
               "volume": 1.0
             },
             {
-              "name": "Click",
+              "name": "UIClick",
               "path": "../Resources/Audio/UI_Confirm.wav",
               "volume": 1.0
             }
