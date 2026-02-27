@@ -444,104 +444,59 @@ namespace Ermine
                 TogglePauseMenu();
                 EE_CORE_INFO("Resume button clicked");
             }
-            else if (button.actionData == "OpenControls")
+            // ===== Settings Page Flow =====
+            // Main Menu -> Settings Page (3 category buttons)
+            else if (button.actionData == "OpenSettingsPage")
             {
-                // Show ControlsScreen, hide main menu buttons
-                SetEntityActiveByName("ControlsScreen", true);
+                // Hide main menu buttons
                 SetEntityActiveByName("Play Button", false);
-                SetEntityActiveByName("Controls", false);  // Use actual button name
-                SetEntityActiveByName("Audio", false);
+                SetEntityActiveByName("Settings", false);
                 SetEntityActiveByName("Quit Button", false);
+                SetEntityActiveByName("Title", false);
+
+                // Show settings page (Audio/Controls/Video buttons)
+                SetEntityActiveByName("SettingsPage", true);
             }
-            else if (button.actionData == "CloseControlsScreen")
+            // Settings Page -> Main Menu
+            else if (button.actionData == "CloseSettingsPage")
             {
-                // Hide ControlsScreen, show main menu buttons
-                SetEntityActiveByName("ControlsScreen", false);
+                // Hide settings page
+                SetEntityActiveByName("SettingsPage", false);
+
+                // Show main menu buttons
                 SetEntityActiveByName("Play Button", true);
-                SetEntityActiveByName("Controls", true);  // Use actual button name
-                SetEntityActiveByName("Audio", true);
+                SetEntityActiveByName("Settings", true);
                 SetEntityActiveByName("Quit Button", true);
+                SetEntityActiveByName("Title", true);
             }
-            else if (button.actionData == "OpenSettings")
+            // Settings Page -> Audio (existing SettingsMenu with sliders)
+            else if (button.actionData == "OpenSettingsAudio")
             {
-                auto& ecs = ECS::GetInstance();
-
-                // Show SettingsMenu
+                SetEntityActiveByName("SettingsPage", false);
                 SetEntityActiveByName("SettingsMenu", true);
-
-                // Hide all buttons EXCEPT Back Button (which is inside SettingsMenu)
-                for (EntityID e = 0; e < MAX_ENTITIES; ++e)
-                {
-                    if (!ecs.IsEntityValid(e)) continue;
-                    if (!ecs.HasComponent<ObjectMetaData>(e)) continue;
-                    if (!ecs.HasComponent<UIButtonComponent>(e)) continue;
-
-                    auto& meta = ecs.GetComponent<ObjectMetaData>(e);
-
-                    // Don't hide buttons that are inside SettingsMenu
-                    if (ecs.HasComponent<HierarchyComponent>(e))
-                    {
-                        auto& hierarchy = ecs.GetComponent<HierarchyComponent>(e);
-                        EntityID parent = hierarchy.parent;
-
-                        // Check if parent is SettingsMenu
-                        if (ecs.IsEntityValid(parent) && ecs.HasComponent<ObjectMetaData>(parent))
-                        {
-                            auto& parentMeta = ecs.GetComponent<ObjectMetaData>(parent);
-                            if (parentMeta.name == "SettingsMenu")
-                            {
-                                continue; // Skip hiding this button
-                            }
-                        }
-                    }
-
-                    // Hide all other buttons
-                    meta.selfActive = false;
-                }
-
-                // Also hide backgrounds
-                SetEntityActiveByName("PauseBackground", false);
-                //SetEntityActiveByName("MenuBackground", false);
             }
-            else if (button.actionData == "CloseSettings")
+            // Settings Page -> Controls
+            else if (button.actionData == "OpenSettingsControls")
             {
-                auto& ecs = ECS::GetInstance();
-
-                // Hide SettingsMenu
+                SetEntityActiveByName("SettingsPage", false);
+                SetEntityActiveByName("ControlsScreen", true);
+            }
+            // Settings Page -> Video (gamma, brightness, etc.)
+            else if (button.actionData == "OpenSettingsVideo")
+            {
+                SetEntityActiveByName("SettingsPage", false);
+                SetEntityActiveByName("VideoSettings", true);
+            }
+            // Back from any sub-page -> Settings Page
+            else if (button.actionData == "BackToSettingsPage")
+            {
+                // Hide all sub-pages
                 SetEntityActiveByName("SettingsMenu", false);
+                SetEntityActiveByName("ControlsScreen", false);
+                SetEntityActiveByName("VideoSettings", false);
 
-                // Show all buttons that were hidden
-                for (EntityID e = 0; e < MAX_ENTITIES; ++e)
-                {
-                    if (!ecs.IsEntityValid(e)) continue;
-                    if (!ecs.HasComponent<ObjectMetaData>(e)) continue;
-                    if (!ecs.HasComponent<UIButtonComponent>(e)) continue;
-
-                    auto& meta = ecs.GetComponent<ObjectMetaData>(e);
-
-                    // Don't show buttons that are inside SettingsMenu
-                    if (ecs.HasComponent<HierarchyComponent>(e))
-                    {
-                        auto& hierarchy = ecs.GetComponent<HierarchyComponent>(e);
-                        EntityID parent = hierarchy.parent;
-
-                        if (ecs.IsEntityValid(parent) && ecs.HasComponent<ObjectMetaData>(parent))
-                        {
-                            auto& parentMeta = ecs.GetComponent<ObjectMetaData>(parent);
-                            if (parentMeta.name == "SettingsMenu")
-                            {
-                                continue; // Skip showing this button
-                            }
-                        }
-                    }
-
-                    // Show all other buttons
-                    meta.selfActive = true;
-                }
-
-                // Show backgrounds
-                SetEntityActiveByName("PauseBackground", true);
-                //SetEntityActiveByName("MenuBackground", true);
+                // Show settings page
+                SetEntityActiveByName("SettingsPage", true);
             }
             else if (button.actionData == "ShowTeleportInfo")
             {
