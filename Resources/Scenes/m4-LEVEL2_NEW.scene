@@ -182,13 +182,13 @@
               "class": "PlayerController2",
               "enabled": true,
               "fields": {
-                "mouseHorSens": {
-                  "t": 0,
-                  "v": 0.30000001192092898
-                },
                 "jumpHeight": {
                   "t": 0,
                   "v": 2.0
+                },
+                "mouseHorSens": {
+                  "t": 0,
+                  "v": 0.30000001192092898
                 },
                 "mouseVertSens": {
                   "t": 0,
@@ -198,13 +198,13 @@
                   "t": 0,
                   "v": 5.0
                 },
-                "jumpspeed": {
-                  "t": 0,
-                  "v": 5.0
-                },
                 "camDefaultY": {
                   "t": 0,
                   "v": 4.5
+                },
+                "jumpspeed": {
+                  "t": 0,
+                  "v": 5.0
                 },
                 "crouchLerpSpeed": {
                   "t": 0,
@@ -216,11 +216,11 @@
               "class": "OrbTeleport",
               "enabled": true,
               "fields": {
-                "recallHealAmt": {
+                "damage": {
                   "t": 0,
                   "v": 10.0
                 },
-                "damage": {
+                "recallHealAmt": {
                   "t": 0,
                   "v": 10.0
                 }
@@ -1169,20 +1169,20 @@
         },
         "Transform": {
           "position": [
-            -7.175843238830566,
-            27.311443328857423,
-            113.93844604492188
+            -21.3886661529541,
+            0.30439984798431399,
+            51.81654357910156
           ],
           "rotation": [
             0.0,
+            0.7071068286895752,
             0.0,
-            0.0,
-            1.0
+            0.7071067094802856
           ],
           "scale": [
+            0.024999339133501054,
             0.02500000037252903,
-            0.02500000037252903,
-            0.02500000037252903
+            0.024999339133501054
           ]
         },
         "ObjectMetaData": {
@@ -14189,7 +14189,7 @@
       }
     },
     {
-      "id": 371,
+      "id": 332,
       "components": {
         "IDComponent": {
           "guid": "80d63cebbe342f45b3495432c8910792"
@@ -14228,7 +14228,7 @@
       }
     },
     {
-      "id": 372,
+      "id": 333,
       "components": {
         "IDComponent": {
           "guid": "9766cead05bbac49ad6f4846eebf0f25"
@@ -14267,7 +14267,7 @@
       }
     },
     {
-      "id": 373,
+      "id": 334,
       "components": {
         "IDComponent": {
           "guid": "333fce94eb215449adbef59c0cf2a219"
@@ -14306,7 +14306,7 @@
       }
     },
     {
-      "id": 374,
+      "id": 335,
       "components": {
         "IDComponent": {
           "guid": "002ed4239611044a8cdfe8723574b105"
@@ -14345,7 +14345,7 @@
       }
     },
     {
-      "id": 375,
+      "id": 336,
       "components": {
         "IDComponent": {
           "guid": "94ca90667e2ebf4686052fd420437c04"
@@ -14384,7 +14384,7 @@
       }
     },
     {
-      "id": 376,
+      "id": 337,
       "components": {
         "IDComponent": {
           "guid": "dd0999be8255f84bb462e5d97e709e18"
@@ -14423,7 +14423,7 @@
       }
     },
     {
-      "id": 377,
+      "id": 338,
       "components": {
         "IDComponent": {
           "guid": "ccad85a65a35114d9aa3626ad6ad2879"
@@ -14462,7 +14462,7 @@
       }
     },
     {
-      "id": 378,
+      "id": 339,
       "components": {
         "IDComponent": {
           "guid": "8e709744a1841142b3c4d8aa0ae9f7f1"
@@ -14501,7 +14501,7 @@
       }
     },
     {
-      "id": 379,
+      "id": 340,
       "components": {
         "IDComponent": {
           "guid": "6950136068145d46908cd72f3b3897ee"
@@ -14540,7 +14540,7 @@
       }
     },
     {
-      "id": 380,
+      "id": 341,
       "components": {
         "IDComponent": {
           "guid": "7e049a79db51dc4a988a79b320aa9bdd"
@@ -14579,7 +14579,7 @@
       }
     },
     {
-      "id": 381,
+      "id": 342,
       "components": {
         "IDComponent": {
           "guid": "da42ef9107181046ac95bae678e4a9fd"
@@ -14618,7 +14618,7 @@
       }
     },
     {
-      "id": 382,
+      "id": 343,
       "components": {
         "IDComponent": {
           "guid": "2770634395713249b3d805637a8e1a54"
@@ -14657,7 +14657,7 @@
       }
     },
     {
-      "id": 383,
+      "id": 344,
       "components": {
         "IDComponent": {
           "guid": "049ef724f9dd6047a84ded2502142e21"
@@ -14696,7 +14696,7 @@
       }
     },
     {
-      "id": 384,
+      "id": 345,
       "components": {
         "IDComponent": {
           "guid": "3bbdba9e4282f7458b78845a18dd3705"
@@ -14735,7 +14735,7 @@
       }
     },
     {
-      "id": 385,
+      "id": 346,
       "components": {
         "IDComponent": {
           "guid": "abc8292151ede5489d6ae738c4eee8eb"
@@ -14774,7 +14774,7 @@
       }
     },
     {
-      "id": 386,
+      "id": 347,
       "components": {
         "IDComponent": {
           "guid": "1a6c1b456313044aaab915b43fb30764"
@@ -14813,7 +14813,7 @@
       }
     },
     {
-      "id": 387,
+      "id": 348,
       "components": {
         "IDComponent": {
           "guid": "d957b0121d8a6042a5220f4d5d910e60"
@@ -14852,7 +14852,7 @@
       }
     },
     {
-      "id": 388,
+      "id": 349,
       "components": {
         "IDComponent": {
           "guid": "972af17a52b2d94687875cb6e8d471af"
@@ -14891,7 +14891,7 @@
       }
     },
     {
-      "id": 389,
+      "id": 350,
       "components": {
         "IDComponent": {
           "guid": "76d54be775074940a8fa8ac89dcef817"
@@ -14930,7 +14930,7 @@
       }
     },
     {
-      "id": 390,
+      "id": 351,
       "components": {
         "IDComponent": {
           "guid": "11313d6963471f49a8c5244c19e98cd6"
@@ -14969,7 +14969,7 @@
       }
     },
     {
-      "id": 391,
+      "id": 352,
       "components": {
         "IDComponent": {
           "guid": "d633cc42cddcc44395ffd6772f0b1df5"
@@ -15008,7 +15008,7 @@
       }
     },
     {
-      "id": 392,
+      "id": 353,
       "components": {
         "IDComponent": {
           "guid": "9e399c1d989f5243874a09390f28c575"
@@ -15047,7 +15047,7 @@
       }
     },
     {
-      "id": 393,
+      "id": 354,
       "components": {
         "IDComponent": {
           "guid": "7cee8bcb802bea4c97fa161e3f5a0ce4"
@@ -15086,7 +15086,7 @@
       }
     },
     {
-      "id": 394,
+      "id": 355,
       "components": {
         "IDComponent": {
           "guid": "a115e3499845a14d820a7ef9e0d4f1df"
@@ -15125,7 +15125,7 @@
       }
     },
     {
-      "id": 395,
+      "id": 356,
       "components": {
         "IDComponent": {
           "guid": "13e3b044b63fef49bd1bbd66a5120b52"
@@ -15164,7 +15164,7 @@
       }
     },
     {
-      "id": 396,
+      "id": 357,
       "components": {
         "IDComponent": {
           "guid": "6d9ad28425715c43ab57936bb65a6706"
@@ -15203,7 +15203,7 @@
       }
     },
     {
-      "id": 397,
+      "id": 358,
       "components": {
         "IDComponent": {
           "guid": "492eec299edd58468320ea923e8103d6"
@@ -15242,7 +15242,7 @@
       }
     },
     {
-      "id": 398,
+      "id": 359,
       "components": {
         "IDComponent": {
           "guid": "26783d83aab62c4c946d7008ba2cea70"
@@ -15281,7 +15281,7 @@
       }
     },
     {
-      "id": 399,
+      "id": 360,
       "components": {
         "IDComponent": {
           "guid": "f33e311ffa6c2c43b0f06378a73ce9b6"
@@ -15320,7 +15320,7 @@
       }
     },
     {
-      "id": 400,
+      "id": 361,
       "components": {
         "IDComponent": {
           "guid": "49eaec116001c94db6898a0410c7a938"
@@ -15359,7 +15359,7 @@
       }
     },
     {
-      "id": 401,
+      "id": 362,
       "components": {
         "IDComponent": {
           "guid": "33381145e07fdd46bda99f6cab8b7a67"
@@ -15398,7 +15398,7 @@
       }
     },
     {
-      "id": 402,
+      "id": 363,
       "components": {
         "IDComponent": {
           "guid": "fb289da66253a1489c81887dc0d0c031"
@@ -15437,7 +15437,7 @@
       }
     },
     {
-      "id": 403,
+      "id": 364,
       "components": {
         "IDComponent": {
           "guid": "b4f3b00739c79a4b916d2ab425dfcdb2"
@@ -15476,7 +15476,7 @@
       }
     },
     {
-      "id": 404,
+      "id": 365,
       "components": {
         "IDComponent": {
           "guid": "bd2a8220118d08479f3e7a31fa82a787"
@@ -15515,7 +15515,7 @@
       }
     },
     {
-      "id": 405,
+      "id": 366,
       "components": {
         "IDComponent": {
           "guid": "bf7dcec6cb706443965fb74e981200ee"
@@ -15554,7 +15554,7 @@
       }
     },
     {
-      "id": 406,
+      "id": 367,
       "components": {
         "IDComponent": {
           "guid": "b866e49abf451544b5a3619c73be434c"
@@ -15593,7 +15593,7 @@
       }
     },
     {
-      "id": 407,
+      "id": 368,
       "components": {
         "IDComponent": {
           "guid": "442eb068ac90d842b0d3e77beb63395e"
@@ -15632,7 +15632,7 @@
       }
     },
     {
-      "id": 408,
+      "id": 369,
       "components": {
         "IDComponent": {
           "guid": "1d5dbe7f61b66d43bf1db3aecce9e0bd"
@@ -15671,7 +15671,7 @@
       }
     },
     {
-      "id": 409,
+      "id": 370,
       "components": {
         "IDComponent": {
           "guid": "d9087f7a9df3f84588c0dc5b7569940e"
@@ -15710,7 +15710,7 @@
       }
     },
     {
-      "id": 410,
+      "id": 371,
       "components": {
         "IDComponent": {
           "guid": "e1f4e2e036191e45b27bfd625687c414"
@@ -15776,7 +15776,7 @@
       }
     },
     {
-      "id": 411,
+      "id": 372,
       "components": {
         "IDComponent": {
           "guid": "2f16e1f269acdf40a1e543b465469390"
@@ -15815,7 +15815,7 @@
       }
     },
     {
-      "id": 412,
+      "id": 373,
       "components": {
         "IDComponent": {
           "guid": "f3ef0f840bea5b47b96ed5dd3bf90db2"
@@ -15881,7 +15881,7 @@
       }
     },
     {
-      "id": 413,
+      "id": 374,
       "components": {
         "IDComponent": {
           "guid": "e945cc1b2c62284c96c1a497450006f6"
@@ -15920,7 +15920,7 @@
       }
     },
     {
-      "id": 414,
+      "id": 375,
       "components": {
         "IDComponent": {
           "guid": "88b143d28cfa604b826a756d6ffa737c"
@@ -15986,7 +15986,7 @@
       }
     },
     {
-      "id": 415,
+      "id": 376,
       "components": {
         "IDComponent": {
           "guid": "cdc48349649dce4386b634f22a32dfae"
@@ -16025,7 +16025,7 @@
       }
     },
     {
-      "id": 416,
+      "id": 377,
       "components": {
         "IDComponent": {
           "guid": "0e1eda847b6c754fab3a7dd85c54930e"
@@ -16091,7 +16091,7 @@
       }
     },
     {
-      "id": 417,
+      "id": 378,
       "components": {
         "IDComponent": {
           "guid": "ba9ad5b10aca5b47bf4729264038f77f"
@@ -16130,7 +16130,7 @@
       }
     },
     {
-      "id": 418,
+      "id": 379,
       "components": {
         "IDComponent": {
           "guid": "4379cc549326a34995f343d9654dd9e8"
@@ -16196,7 +16196,7 @@
       }
     },
     {
-      "id": 419,
+      "id": 380,
       "components": {
         "IDComponent": {
           "guid": "3839c47739375040adb303e3cce79507"
@@ -16235,7 +16235,7 @@
       }
     },
     {
-      "id": 420,
+      "id": 381,
       "components": {
         "IDComponent": {
           "guid": "c7c1448818239a4ba73a4cd58200a2c7"
@@ -16301,7 +16301,7 @@
       }
     },
     {
-      "id": 421,
+      "id": 382,
       "components": {
         "IDComponent": {
           "guid": "5ae6a51eea7d2f43b5473da6487457f5"
@@ -16340,7 +16340,7 @@
       }
     },
     {
-      "id": 422,
+      "id": 383,
       "components": {
         "IDComponent": {
           "guid": "0cea6255a8d4454c9a19892be65faac6"
@@ -16406,7 +16406,7 @@
       }
     },
     {
-      "id": 423,
+      "id": 384,
       "components": {
         "IDComponent": {
           "guid": "eba77ca945ef84408b2e7084af7f8f21"
@@ -16445,7 +16445,7 @@
       }
     },
     {
-      "id": 424,
+      "id": 385,
       "components": {
         "IDComponent": {
           "guid": "d74e89146822da45a674dff06396b277"
@@ -16511,7 +16511,7 @@
       }
     },
     {
-      "id": 425,
+      "id": 386,
       "components": {
         "IDComponent": {
           "guid": "7c4b7e2f51fbff42b545074804bc155a"
@@ -16550,7 +16550,7 @@
       }
     },
     {
-      "id": 426,
+      "id": 387,
       "components": {
         "IDComponent": {
           "guid": "abd402704c41c94b9215c7d92ad8349f"
@@ -16616,7 +16616,7 @@
       }
     },
     {
-      "id": 427,
+      "id": 388,
       "components": {
         "IDComponent": {
           "guid": "f8a7bd14960af3408fe9611674591729"
@@ -16655,7 +16655,7 @@
       }
     },
     {
-      "id": 428,
+      "id": 389,
       "components": {
         "IDComponent": {
           "guid": "02c6c6927a205b4b9bd99b38d7464726"
@@ -16721,7 +16721,7 @@
       }
     },
     {
-      "id": 429,
+      "id": 390,
       "components": {
         "IDComponent": {
           "guid": "004481fe1927d747a50e8889ed0eec9c"
@@ -16760,7 +16760,7 @@
       }
     },
     {
-      "id": 430,
+      "id": 391,
       "components": {
         "IDComponent": {
           "guid": "04fb08a1028ee84aa27ee0a105f58371"
@@ -16826,7 +16826,7 @@
       }
     },
     {
-      "id": 431,
+      "id": 392,
       "components": {
         "IDComponent": {
           "guid": "13fe7bd0d5457a4cbdd373f51340bfdd"
@@ -16865,7 +16865,7 @@
       }
     },
     {
-      "id": 432,
+      "id": 393,
       "components": {
         "IDComponent": {
           "guid": "57ab72a4f3d6d540bb3e7b65924357c9"
@@ -16904,7 +16904,7 @@
       }
     },
     {
-      "id": 433,
+      "id": 394,
       "components": {
         "IDComponent": {
           "guid": "b75b9fe79da3cc4b892009ac51414425"
@@ -16943,7 +16943,7 @@
       }
     },
     {
-      "id": 434,
+      "id": 395,
       "components": {
         "IDComponent": {
           "guid": "25336141d2b96d4a9c7bdb4ac85c926e"
@@ -16982,7 +16982,7 @@
       }
     },
     {
-      "id": 435,
+      "id": 396,
       "components": {
         "IDComponent": {
           "guid": "d8fa741bf4bb904b846b4feda29deb24"
@@ -17021,7 +17021,7 @@
       }
     },
     {
-      "id": 436,
+      "id": 397,
       "components": {
         "IDComponent": {
           "guid": "6246c2184522e24690b5ff0f954fb134"
@@ -17060,7 +17060,7 @@
       }
     },
     {
-      "id": 437,
+      "id": 398,
       "components": {
         "IDComponent": {
           "guid": "9973ec51a63f66479f263db43bd9192e"
@@ -17099,7 +17099,7 @@
       }
     },
     {
-      "id": 438,
+      "id": 399,
       "components": {
         "IDComponent": {
           "guid": "9b2268e2006ac14ca7579e3505da49a3"
@@ -17138,7 +17138,7 @@
       }
     },
     {
-      "id": 439,
+      "id": 400,
       "components": {
         "IDComponent": {
           "guid": "671d9039d7b6ef4f958a8ec709d26ff5"
@@ -17177,7 +17177,7 @@
       }
     },
     {
-      "id": 440,
+      "id": 401,
       "components": {
         "IDComponent": {
           "guid": "efbd1a712c5e964587c4f29a0d0a0990"
@@ -17216,7 +17216,7 @@
       }
     },
     {
-      "id": 441,
+      "id": 402,
       "components": {
         "IDComponent": {
           "guid": "84545afa9ee85843a361c077938907a9"
@@ -17255,7 +17255,7 @@
       }
     },
     {
-      "id": 442,
+      "id": 403,
       "components": {
         "IDComponent": {
           "guid": "4d48386b762e4d4fbea05ff0fd5f2a58"
@@ -17294,7 +17294,7 @@
       }
     },
     {
-      "id": 443,
+      "id": 404,
       "components": {
         "IDComponent": {
           "guid": "fda5cdc7d5d6694aa64da5ba1396d594"
@@ -17333,7 +17333,7 @@
       }
     },
     {
-      "id": 444,
+      "id": 405,
       "components": {
         "IDComponent": {
           "guid": "256b97caa3b39c4393cd29274a0a5db8"
@@ -17372,7 +17372,7 @@
       }
     },
     {
-      "id": 445,
+      "id": 406,
       "components": {
         "IDComponent": {
           "guid": "8b6f0b120265df4abfeba5f7ecd43ac0"
@@ -17411,7 +17411,7 @@
       }
     },
     {
-      "id": 446,
+      "id": 407,
       "components": {
         "IDComponent": {
           "guid": "3ee71f4f7d456246bffdf12dd13d2f4c"
@@ -17450,7 +17450,7 @@
       }
     },
     {
-      "id": 447,
+      "id": 408,
       "components": {
         "IDComponent": {
           "guid": "402197c4499dd249bf36ffa969e9577d"
@@ -17489,7 +17489,7 @@
       }
     },
     {
-      "id": 448,
+      "id": 409,
       "components": {
         "IDComponent": {
           "guid": "a24337313ef0494db0c618048d250c0b"
@@ -17528,7 +17528,7 @@
       }
     },
     {
-      "id": 449,
+      "id": 410,
       "components": {
         "IDComponent": {
           "guid": "00c82abf9a1ae6419261e8068721a297"
@@ -17567,7 +17567,7 @@
       }
     },
     {
-      "id": 450,
+      "id": 411,
       "components": {
         "IDComponent": {
           "guid": "680ef570b3941f478e252e63de7f7616"
@@ -17606,7 +17606,7 @@
       }
     },
     {
-      "id": 451,
+      "id": 412,
       "components": {
         "IDComponent": {
           "guid": "3a74c0326ecf1d46a210243893d9ef33"
@@ -17645,7 +17645,7 @@
       }
     },
     {
-      "id": 452,
+      "id": 413,
       "components": {
         "IDComponent": {
           "guid": "662aa532a2914e449892baf60758089a"
@@ -17684,7 +17684,7 @@
       }
     },
     {
-      "id": 453,
+      "id": 414,
       "components": {
         "IDComponent": {
           "guid": "fc296532ee7ca14f8baed2cdc9c1bf98"
@@ -17723,7 +17723,7 @@
       }
     },
     {
-      "id": 454,
+      "id": 415,
       "components": {
         "IDComponent": {
           "guid": "3cdac8558554084f85e219f546e81e3f"
@@ -17762,7 +17762,7 @@
       }
     },
     {
-      "id": 455,
+      "id": 416,
       "components": {
         "IDComponent": {
           "guid": "e76157dd6a864549b011af984bff2f73"
@@ -17801,7 +17801,7 @@
       }
     },
     {
-      "id": 456,
+      "id": 417,
       "components": {
         "IDComponent": {
           "guid": "7d5ee052f7e72549b7b125dbf82b4b65"
@@ -17840,7 +17840,7 @@
       }
     },
     {
-      "id": 457,
+      "id": 418,
       "components": {
         "IDComponent": {
           "guid": "e54e6ddff220b74886ad3f6bcdbfae1a"
@@ -17879,7 +17879,7 @@
       }
     },
     {
-      "id": 458,
+      "id": 419,
       "components": {
         "IDComponent": {
           "guid": "2c2e7ce634cadd40b94cff3be3759735"
@@ -17918,7 +17918,7 @@
       }
     },
     {
-      "id": 459,
+      "id": 420,
       "components": {
         "IDComponent": {
           "guid": "0260a6924af7524e9d1e2f9613a96ac9"
@@ -17957,7 +17957,7 @@
       }
     },
     {
-      "id": 460,
+      "id": 421,
       "components": {
         "IDComponent": {
           "guid": "d956f921cf1bf344b780c9e398af7c0b"
@@ -17996,7 +17996,7 @@
       }
     },
     {
-      "id": 461,
+      "id": 422,
       "components": {
         "IDComponent": {
           "guid": "b1bc6a239db6604a98dfc05958157d75"
@@ -18035,7 +18035,7 @@
       }
     },
     {
-      "id": 462,
+      "id": 423,
       "components": {
         "IDComponent": {
           "guid": "e0a07cf162715e4caf7fd06e31c63889"
@@ -18074,7 +18074,7 @@
       }
     },
     {
-      "id": 463,
+      "id": 424,
       "components": {
         "IDComponent": {
           "guid": "5819ed685719ca43be83ffd0e6cae0ea"
@@ -18113,7 +18113,7 @@
       }
     },
     {
-      "id": 464,
+      "id": 425,
       "components": {
         "IDComponent": {
           "guid": "bf14892b76fbf5408565bfe22fddfa86"
@@ -18152,7 +18152,7 @@
       }
     },
     {
-      "id": 465,
+      "id": 426,
       "components": {
         "IDComponent": {
           "guid": "c3bb4f0cd41cc84281fcb49a67a9cc0c"
@@ -18191,7 +18191,7 @@
       }
     },
     {
-      "id": 466,
+      "id": 427,
       "components": {
         "IDComponent": {
           "guid": "6f4557106cf50a439586c330e235857a"
@@ -18230,7 +18230,7 @@
       }
     },
     {
-      "id": 467,
+      "id": 428,
       "components": {
         "IDComponent": {
           "guid": "fe0c96a872ee09419eb78e86a9941fbe"
@@ -18269,7 +18269,7 @@
       }
     },
     {
-      "id": 468,
+      "id": 429,
       "components": {
         "IDComponent": {
           "guid": "ab3483f3adbdc749a6590415a7f8ff0b"
@@ -18308,7 +18308,7 @@
       }
     },
     {
-      "id": 469,
+      "id": 430,
       "components": {
         "IDComponent": {
           "guid": "17551694f106494f859f941af0ae5080"
@@ -18347,7 +18347,7 @@
       }
     },
     {
-      "id": 470,
+      "id": 431,
       "components": {
         "IDComponent": {
           "guid": "5fcb0b07b2f52745830ef3f64950fec8"
@@ -18386,7 +18386,7 @@
       }
     },
     {
-      "id": 471,
+      "id": 432,
       "components": {
         "IDComponent": {
           "guid": "598f5830a69a4844b4a65b5e22bbe1be"
@@ -18452,7 +18452,7 @@
       }
     },
     {
-      "id": 472,
+      "id": 433,
       "components": {
         "IDComponent": {
           "guid": "99aad67c5a6b9049af4cdd30818e4042"
@@ -18491,7 +18491,7 @@
       }
     },
     {
-      "id": 473,
+      "id": 434,
       "components": {
         "IDComponent": {
           "guid": "91026dede27bb540a5d3bce8c69bbcb7"
@@ -18530,7 +18530,7 @@
       }
     },
     {
-      "id": 474,
+      "id": 435,
       "components": {
         "IDComponent": {
           "guid": "0b5c23a7a13fdf4d83f9ae61f4d3bc97"
@@ -18569,7 +18569,7 @@
       }
     },
     {
-      "id": 475,
+      "id": 436,
       "components": {
         "IDComponent": {
           "guid": "a27f30e76e6b7d4d9cb3c6d6c7f8fe18"
@@ -18608,7 +18608,7 @@
       }
     },
     {
-      "id": 476,
+      "id": 437,
       "components": {
         "IDComponent": {
           "guid": "31fc293e806feb4f85115db687c0b57b"
@@ -18647,7 +18647,7 @@
       }
     },
     {
-      "id": 477,
+      "id": 438,
       "components": {
         "IDComponent": {
           "guid": "6675c33dad19df429d7ec57197f9e98b"
@@ -18713,7 +18713,7 @@
       }
     },
     {
-      "id": 478,
+      "id": 439,
       "components": {
         "IDComponent": {
           "guid": "5b5c8d4d402827449660b9fcb303d0b8"
@@ -18752,7 +18752,7 @@
       }
     },
     {
-      "id": 479,
+      "id": 440,
       "components": {
         "IDComponent": {
           "guid": "2be23fbca723184d8ab93217127fc428"
@@ -18791,7 +18791,7 @@
       }
     },
     {
-      "id": 480,
+      "id": 441,
       "components": {
         "IDComponent": {
           "guid": "86ecde9d3283eb4bbf8e5b482e08380b"
@@ -18830,7 +18830,7 @@
       }
     },
     {
-      "id": 481,
+      "id": 442,
       "components": {
         "IDComponent": {
           "guid": "3f038413eba1b44c8d03a4bb06fd8089"
@@ -18869,7 +18869,7 @@
       }
     },
     {
-      "id": 482,
+      "id": 443,
       "components": {
         "IDComponent": {
           "guid": "5046840f25d24843a98824c281f5f8bf"
@@ -18908,27 +18908,27 @@
       }
     },
     {
-      "id": 483,
+      "id": 444,
       "components": {
         "IDComponent": {
           "guid": "9a283988631ed44a96fdb4c581b23686"
         },
         "Transform": {
           "position": [
-            121.48674774169922,
-            61.67093276977539,
+            121.26533508300781,
+            61.67095184326172,
             135.38511657714845
           ],
           "rotation": [
             -0.4998946487903595,
             0.4999031722545624,
-            0.5000557899475098,
-            0.5001463890075684
+            0.5000632405281067,
+            0.5001389384269714
           ],
           "scale": [
-            0.010000684298574925,
+            0.010000800713896752,
             0.00999963004142046,
-            0.010000305250287056
+            0.010000421665608883
           ]
         },
         "ObjectMetaData": {
@@ -18947,83 +18947,7 @@
       }
     },
     {
-      "id": 484,
-      "components": {
-        "IDComponent": {
-          "guid": "41c9fdce4e5adc48ac0fd449ac76b1f9"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Mesh_C_Switch.fbx_Mesh.010_mesh0",
-          "tag": "Mesh",
-          "selfActive": true
-        },
-        "Material": {
-          "guid": "172f30ae7cf94045adc3ca3e63d8f0c1"
-        },
-        "HierarchyComponent": {
-          "depth": 0
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "id": 485,
-      "components": {
-        "IDComponent": {
-          "guid": "4fa76c53366f864187ad043469b0cba8"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Mesh_C_Switch.fbx_Mesh.009_mesh1",
-          "tag": "Mesh",
-          "selfActive": true
-        },
-        "Material": {
-          "guid": "085f7719b95ea84f8ba1bed572afd08e"
-        },
-        "HierarchyComponent": {
-          "depth": 0
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "id": 486,
+      "id": 447,
       "components": {
         "IDComponent": {
           "guid": "820111e8979f0846a3d166ba31731b0f"
@@ -19062,7 +18986,7 @@
       }
     },
     {
-      "id": 487,
+      "id": 448,
       "components": {
         "IDComponent": {
           "guid": "d53d7de6ca1be44098681900152375e4"
@@ -19101,7 +19025,7 @@
       }
     },
     {
-      "id": 488,
+      "id": 449,
       "components": {
         "IDComponent": {
           "guid": "789d58ec4ddca44fb012f24411107bca"
@@ -19140,7 +19064,7 @@
       }
     },
     {
-      "id": 489,
+      "id": 450,
       "components": {
         "IDComponent": {
           "guid": "a3f584b5b305d34bad6f159c0851e7b4"
@@ -19179,7 +19103,7 @@
       }
     },
     {
-      "id": 490,
+      "id": 451,
       "components": {
         "IDComponent": {
           "guid": "b4275132269d5f46bd709a125e6555ea"
@@ -19218,7 +19142,7 @@
       }
     },
     {
-      "id": 491,
+      "id": 452,
       "components": {
         "IDComponent": {
           "guid": "dc86be81277d7347ac0bd5c5ef9271f1"
@@ -19257,7 +19181,7 @@
       }
     },
     {
-      "id": 492,
+      "id": 453,
       "components": {
         "IDComponent": {
           "guid": "c34ea46b30271747811b6596410631c1"
@@ -19296,7 +19220,7 @@
       }
     },
     {
-      "id": 493,
+      "id": 454,
       "components": {
         "IDComponent": {
           "guid": "c4a862c48beef3498ee1608dfb5bc6e0"
@@ -19335,7 +19259,7 @@
       }
     },
     {
-      "id": 494,
+      "id": 455,
       "components": {
         "IDComponent": {
           "guid": "4a0d53fe0348824aa009499401e5805f"
@@ -19374,7 +19298,7 @@
       }
     },
     {
-      "id": 495,
+      "id": 456,
       "components": {
         "IDComponent": {
           "guid": "461dd4c6ace8b64592a8addf09007104"
@@ -19413,7 +19337,7 @@
       }
     },
     {
-      "id": 496,
+      "id": 457,
       "components": {
         "IDComponent": {
           "guid": "b1a4b2f30f7e454c84580208a116a9e8"
@@ -19452,7 +19376,7 @@
       }
     },
     {
-      "id": 497,
+      "id": 458,
       "components": {
         "IDComponent": {
           "guid": "1ed55725a5e4664ea39ef9fe47323217"
@@ -19491,7 +19415,7 @@
       }
     },
     {
-      "id": 498,
+      "id": 459,
       "components": {
         "IDComponent": {
           "guid": "623407b1b4ae2540bcc9d7f7f8658a5d"
@@ -19530,7 +19454,7 @@
       }
     },
     {
-      "id": 499,
+      "id": 460,
       "components": {
         "IDComponent": {
           "guid": "6456140de2077f40909e185bab6df27a"
@@ -19569,7 +19493,7 @@
       }
     },
     {
-      "id": 500,
+      "id": 461,
       "components": {
         "IDComponent": {
           "guid": "537bc6bde3f47a4289de107c9058338c"
@@ -19608,7 +19532,7 @@
       }
     },
     {
-      "id": 501,
+      "id": 462,
       "components": {
         "IDComponent": {
           "guid": "b50b6993b95f3a4b8e2a1385162954ee"
@@ -19647,7 +19571,7 @@
       }
     },
     {
-      "id": 502,
+      "id": 463,
       "components": {
         "IDComponent": {
           "guid": "5cb086559611cb48b47b7787fdc5eee3"
@@ -19686,7 +19610,7 @@
       }
     },
     {
-      "id": 503,
+      "id": 464,
       "components": {
         "IDComponent": {
           "guid": "3b24093bebe0434886be05beb0acf9dc"
@@ -19725,7 +19649,7 @@
       }
     },
     {
-      "id": 504,
+      "id": 465,
       "components": {
         "IDComponent": {
           "guid": "42caa6fe9251ba42b58897a0b0509bff"
@@ -19764,7 +19688,7 @@
       }
     },
     {
-      "id": 505,
+      "id": 466,
       "components": {
         "IDComponent": {
           "guid": "3d241b0a3482234689582bc82b202231"
@@ -19803,7 +19727,7 @@
       }
     },
     {
-      "id": 506,
+      "id": 467,
       "components": {
         "IDComponent": {
           "guid": "bac4e4f131de994e84101d14d41ad430"
@@ -19842,7 +19766,7 @@
       }
     },
     {
-      "id": 507,
+      "id": 468,
       "components": {
         "IDComponent": {
           "guid": "cb7eea020562f249918930ec51c7e8eb"
@@ -19881,7 +19805,7 @@
       }
     },
     {
-      "id": 508,
+      "id": 469,
       "components": {
         "IDComponent": {
           "guid": "2a81f86c74896d4bb138349136836e53"
@@ -19920,7 +19844,7 @@
       }
     },
     {
-      "id": 509,
+      "id": 470,
       "components": {
         "IDComponent": {
           "guid": "ab2746e3ebceb54f84a1e86f1488c715"
@@ -19959,7 +19883,7 @@
       }
     },
     {
-      "id": 510,
+      "id": 471,
       "components": {
         "IDComponent": {
           "guid": "a770512e41f9cb4c8da160df440bb689"
@@ -19998,7 +19922,7 @@
       }
     },
     {
-      "id": 511,
+      "id": 472,
       "components": {
         "IDComponent": {
           "guid": "5cfeaec41a7c9642a303e5c305f560a7"
@@ -20037,7 +19961,7 @@
       }
     },
     {
-      "id": 512,
+      "id": 473,
       "components": {
         "IDComponent": {
           "guid": "db72a11df1e2324ca20511f9b6a394e1"
@@ -20076,7 +20000,7 @@
       }
     },
     {
-      "id": 513,
+      "id": 474,
       "components": {
         "IDComponent": {
           "guid": "217a86314937b34fb1f8bbe1b4b2c93a"
@@ -20115,7 +20039,7 @@
       }
     },
     {
-      "id": 514,
+      "id": 475,
       "components": {
         "IDComponent": {
           "guid": "0893cac1df91734982a953a196a0ed61"
@@ -20154,7 +20078,7 @@
       }
     },
     {
-      "id": 515,
+      "id": 476,
       "components": {
         "IDComponent": {
           "guid": "bfead6dbc91d7046af22bd8e442b8b11"
@@ -20193,7 +20117,7 @@
       }
     },
     {
-      "id": 516,
+      "id": 477,
       "components": {
         "IDComponent": {
           "guid": "bcd368a868e57945bbce4f97ab7191ef"
@@ -20232,7 +20156,7 @@
       }
     },
     {
-      "id": 517,
+      "id": 478,
       "components": {
         "IDComponent": {
           "guid": "bcc6750cf31aea45aea9ff38acc672dd"
@@ -20271,7 +20195,7 @@
       }
     },
     {
-      "id": 518,
+      "id": 479,
       "components": {
         "IDComponent": {
           "guid": "0573b473b5cade4eb0dd27d8be79124d"
@@ -20310,7 +20234,7 @@
       }
     },
     {
-      "id": 519,
+      "id": 480,
       "components": {
         "IDComponent": {
           "guid": "e5fae722d580b04994b467f8e9738136"
@@ -20349,7 +20273,7 @@
       }
     },
     {
-      "id": 520,
+      "id": 481,
       "components": {
         "IDComponent": {
           "guid": "ffc6de557b93ed489ae08762baef374c"
@@ -20388,7 +20312,7 @@
       }
     },
     {
-      "id": 521,
+      "id": 482,
       "components": {
         "IDComponent": {
           "guid": "b842a71f4123114f8e8c14330499ebad"
@@ -20427,7 +20351,7 @@
       }
     },
     {
-      "id": 522,
+      "id": 483,
       "components": {
         "IDComponent": {
           "guid": "4601f5a066819e4e899827da4a84999a"
@@ -20466,7 +20390,7 @@
       }
     },
     {
-      "id": 523,
+      "id": 484,
       "components": {
         "IDComponent": {
           "guid": "0a130fa4ae272947b5e6464adb3673d1"
@@ -20505,7 +20429,7 @@
       }
     },
     {
-      "id": 524,
+      "id": 485,
       "components": {
         "IDComponent": {
           "guid": "93939a604573614682261806134d48fa"
@@ -20538,6 +20462,3126 @@
         },
         "HierarchyComponent": {
           "parentGuid": "820111e8979f0846a3d166ba31731b0f",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 486,
+      "components": {
+        "IDComponent": {
+          "guid": "22625e678dde99448753652a7738e931"
+        },
+        "Transform": {
+          "position": [
+            -7.175843238830566,
+            27.311443328857423,
+            113.93844604492188
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.02500000037252903,
+            0.02500000037252903,
+            0.02500000037252903
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "David_Scale (1)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "Guard.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 487,
+      "components": {
+        "IDComponent": {
+          "guid": "a8b37c50db526e429e15f7f07a556d1b"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__d3_mesh37",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "22625e678dde99448753652a7738e931",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 488,
+      "components": {
+        "IDComponent": {
+          "guid": "c2ba6e727dfa08418d8e3a5a2ac711e2"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Upper_Arm.002_mesh36",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "22625e678dde99448753652a7738e931",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 489,
+      "components": {
+        "IDComponent": {
+          "guid": "a59a89b874745844a444d26bbdcb02d9"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Torus.002_mesh35",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "22625e678dde99448753652a7738e931",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 490,
+      "components": {
+        "IDComponent": {
+          "guid": "01b436d8b7975f4a8c67a3ef86ffb22c"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Spikes.002_mesh34",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "22625e678dde99448753652a7738e931",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 491,
+      "components": {
+        "IDComponent": {
+          "guid": "81a62c734a1b4d48a6c03b8bd845d89c"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Sphere.007_mesh33",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "22625e678dde99448753652a7738e931",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 492,
+      "components": {
+        "IDComponent": {
+          "guid": "143025963cc58a4e9ce79fd77b07a851"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__ShoulderPads.002_mesh32",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "22625e678dde99448753652a7738e931",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 493,
+      "components": {
+        "IDComponent": {
+          "guid": "80d0c850ce24fb4780f7d47675923d95"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Plane.003_mesh31",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "22625e678dde99448753652a7738e931",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 494,
+      "components": {
+        "IDComponent": {
+          "guid": "ee23bfeb384ee24e9c637a7696d42a9e"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Pelvis.002_mesh30",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "22625e678dde99448753652a7738e931",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 495,
+      "components": {
+        "IDComponent": {
+          "guid": "9c90011f889dcf4799a9483c287eefd5"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__NurbsPath.005_mesh29",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "22625e678dde99448753652a7738e931",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 496,
+      "components": {
+        "IDComponent": {
+          "guid": "2d835307cf4a804bae8412ccd5db0514"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__NurbsPath.004_mesh28",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "22625e678dde99448753652a7738e931",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 497,
+      "components": {
+        "IDComponent": {
+          "guid": "da8182e15f47a740ac087397b2f2e14e"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Lantern rungs.005_mesh27",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "22625e678dde99448753652a7738e931",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 498,
+      "components": {
+        "IDComponent": {
+          "guid": "c5f4e97b7aba0c448e056b4f760ad7b0"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Lantern rungs.004_mesh26",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "22625e678dde99448753652a7738e931",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 499,
+      "components": {
+        "IDComponent": {
+          "guid": "d2c2e1d8ae52354aa6c824a1e3b2b5c7"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Knee_Joints.005_mesh25",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "22625e678dde99448753652a7738e931",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 500,
+      "components": {
+        "IDComponent": {
+          "guid": "13f017ba81acfb4e931fd2e638df5cff"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Knee_Joints.004_mesh24",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "22625e678dde99448753652a7738e931",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 501,
+      "components": {
+        "IDComponent": {
+          "guid": "db80715dece4a844aaf6a78bd380d35c"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Feet.002_mesh23",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "22625e678dde99448753652a7738e931",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 502,
+      "components": {
+        "IDComponent": {
+          "guid": "0349120401567f4f87fa9da953f070f6"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Cylinder.050_mesh22",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "22625e678dde99448753652a7738e931",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 503,
+      "components": {
+        "IDComponent": {
+          "guid": "e392ee5ae357694292f14a24d1dde1bf"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Cylinder.049_mesh21",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "22625e678dde99448753652a7738e931",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 504,
+      "components": {
+        "IDComponent": {
+          "guid": "2456196041fb1948a5f362b78451f23e"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Cylinder.048_mesh20",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "22625e678dde99448753652a7738e931",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 505,
+      "components": {
+        "IDComponent": {
+          "guid": "7902697db9f37a4dbd97609ea2d953ba"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Cylinder.047_mesh19",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "22625e678dde99448753652a7738e931",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 506,
+      "components": {
+        "IDComponent": {
+          "guid": "c0f4b6fa50edf3408166ef22d626be4e"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Cylinder.046_mesh18",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "22625e678dde99448753652a7738e931",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 507,
+      "components": {
+        "IDComponent": {
+          "guid": "aceedfe024c5524da787201727b9ad8e"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Cylinder.045_mesh17",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "22625e678dde99448753652a7738e931",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 508,
+      "components": {
+        "IDComponent": {
+          "guid": "63d50ce79c74f340b1afbd6a14fb93fd"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Cylinder.044_mesh16",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "22625e678dde99448753652a7738e931",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 509,
+      "components": {
+        "IDComponent": {
+          "guid": "1bdf44a9f5bbab439ae0a4d5b0d1c465"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Cylinder.043_mesh15",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "22625e678dde99448753652a7738e931",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 510,
+      "components": {
+        "IDComponent": {
+          "guid": "9655e1efa59548428603058f6c616ec1"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Cylinder.042_mesh14",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "22625e678dde99448753652a7738e931",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 511,
+      "components": {
+        "IDComponent": {
+          "guid": "a5872fbc77f84140a58ffbae43b0fde3"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Cylinder.041_mesh13",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "22625e678dde99448753652a7738e931",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 512,
+      "components": {
+        "IDComponent": {
+          "guid": "7990eeba98c2c2458cd6dad8484ff5e8"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Cylinder.040_mesh12",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "22625e678dde99448753652a7738e931",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 513,
+      "components": {
+        "IDComponent": {
+          "guid": "ff20d5223681744c872ccac732b18597"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Cylinder.039_mesh11",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "22625e678dde99448753652a7738e931",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 514,
+      "components": {
+        "IDComponent": {
+          "guid": "34522b0c28c9af40ac86fc7afc3d0b79"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Cylinder.038_mesh10",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "22625e678dde99448753652a7738e931",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 515,
+      "components": {
+        "IDComponent": {
+          "guid": "b698d1e3929b8c4b9acf8ae0aa9fe026"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Cylinder.037_mesh9",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "22625e678dde99448753652a7738e931",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 516,
+      "components": {
+        "IDComponent": {
+          "guid": "38217d5e8204f64b8a856431ccbfa5e7"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Cylinder.036_mesh8",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "22625e678dde99448753652a7738e931",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 517,
+      "components": {
+        "IDComponent": {
+          "guid": "bc02df743d3a4741b7311cb4b7aefd5d"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Cylinder.034_mesh7",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "22625e678dde99448753652a7738e931",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 518,
+      "components": {
+        "IDComponent": {
+          "guid": "169e5e15a80f3047be3d8c3a9c59d850"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Cube.005_mesh6",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "22625e678dde99448753652a7738e931",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 519,
+      "components": {
+        "IDComponent": {
+          "guid": "9f708118d5ef284ca72721c8c1d9ca82"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Cube.004_mesh5",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "22625e678dde99448753652a7738e931",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 520,
+      "components": {
+        "IDComponent": {
+          "guid": "20ed295d578cfd4b9e79e0776306c701"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Cone.002_mesh4",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "22625e678dde99448753652a7738e931",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 521,
+      "components": {
+        "IDComponent": {
+          "guid": "22f39814dd7c1944bcadc5537e72edb8"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Bottom Legs.002_mesh3",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "22625e678dde99448753652a7738e931",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 522,
+      "components": {
+        "IDComponent": {
+          "guid": "9254756a11692549848f3d2e44b114fc"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Belt.002_mesh2",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "22625e678dde99448753652a7738e931",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 523,
+      "components": {
+        "IDComponent": {
+          "guid": "c2adc093e392504196c8afc5f7022343"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Ankle_Joints.005_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "22625e678dde99448753652a7738e931",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 524,
+      "components": {
+        "IDComponent": {
+          "guid": "dcb97326e828c04091c7428ee5ad9f44"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Ankle_Joints.004_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "22625e678dde99448753652a7738e931",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 525,
+      "components": {
+        "IDComponent": {
+          "guid": "41e94de619a5a24fbb94c1b6a9d8f098"
+        },
+        "Transform": {
+          "position": [
+            -5.649893283843994,
+            0.3043754994869232,
+            25.688295364379884
+          ],
+          "rotation": [
+            -4.371138828673793e-8,
+            1.0,
+            -4.371138828673793e-8,
+            1.910685465164705e-15
+          ],
+          "scale": [
+            0.024998696520924569,
+            0.02500000037252903,
+            0.024998696520924569
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "David_Scale (5)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "Guard.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 526,
+      "components": {
+        "IDComponent": {
+          "guid": "7f401dd635764443bdcbc0b30beb02ff"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__d3_mesh37",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "41e94de619a5a24fbb94c1b6a9d8f098",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 527,
+      "components": {
+        "IDComponent": {
+          "guid": "1675581274531942ba78b12ced596649"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Upper_Arm.002_mesh36",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "41e94de619a5a24fbb94c1b6a9d8f098",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 528,
+      "components": {
+        "IDComponent": {
+          "guid": "fde11940ff8c114fa249c78fda00d302"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Torus.002_mesh35",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "41e94de619a5a24fbb94c1b6a9d8f098",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 529,
+      "components": {
+        "IDComponent": {
+          "guid": "dfe73559339334489df08969bc6fcbc1"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Spikes.002_mesh34",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "41e94de619a5a24fbb94c1b6a9d8f098",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 530,
+      "components": {
+        "IDComponent": {
+          "guid": "3cd6264c86827e4d8cc3783df7637b74"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Sphere.007_mesh33",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "41e94de619a5a24fbb94c1b6a9d8f098",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 531,
+      "components": {
+        "IDComponent": {
+          "guid": "29d0dc22d6805e4496c0d63bffc34aa4"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__ShoulderPads.002_mesh32",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "41e94de619a5a24fbb94c1b6a9d8f098",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 532,
+      "components": {
+        "IDComponent": {
+          "guid": "a52ae12bcb14fd4caf669b570b7f0b75"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Plane.003_mesh31",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "41e94de619a5a24fbb94c1b6a9d8f098",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 533,
+      "components": {
+        "IDComponent": {
+          "guid": "8b27f44ef07d2f4f8c1e232baa6f4def"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Pelvis.002_mesh30",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "41e94de619a5a24fbb94c1b6a9d8f098",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 534,
+      "components": {
+        "IDComponent": {
+          "guid": "40f9940477c88b45a38b09e43964d25c"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__NurbsPath.005_mesh29",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "41e94de619a5a24fbb94c1b6a9d8f098",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 535,
+      "components": {
+        "IDComponent": {
+          "guid": "8339cc91b748074297748d1b0a45fbe2"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__NurbsPath.004_mesh28",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "41e94de619a5a24fbb94c1b6a9d8f098",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 536,
+      "components": {
+        "IDComponent": {
+          "guid": "4390af86af3f6f44bb3f48c8258bef5c"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Lantern rungs.005_mesh27",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "41e94de619a5a24fbb94c1b6a9d8f098",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 537,
+      "components": {
+        "IDComponent": {
+          "guid": "7cd71b16296e364baa31b2527e72e4a7"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Lantern rungs.004_mesh26",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "41e94de619a5a24fbb94c1b6a9d8f098",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 538,
+      "components": {
+        "IDComponent": {
+          "guid": "54e98b6a21836543861d049ae47be7e9"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Knee_Joints.005_mesh25",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "41e94de619a5a24fbb94c1b6a9d8f098",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 539,
+      "components": {
+        "IDComponent": {
+          "guid": "d542dfb1634e0e46b548c8a86cb91435"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Knee_Joints.004_mesh24",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "41e94de619a5a24fbb94c1b6a9d8f098",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 540,
+      "components": {
+        "IDComponent": {
+          "guid": "2430d11e9f207e4389024af67b5b3f2d"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Feet.002_mesh23",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "41e94de619a5a24fbb94c1b6a9d8f098",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 541,
+      "components": {
+        "IDComponent": {
+          "guid": "c63135180032564c8295aa7c0880316e"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Cylinder.050_mesh22",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "41e94de619a5a24fbb94c1b6a9d8f098",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 542,
+      "components": {
+        "IDComponent": {
+          "guid": "9dab9c0cf08fe140b6fbae864e3ca452"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Cylinder.049_mesh21",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "41e94de619a5a24fbb94c1b6a9d8f098",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 543,
+      "components": {
+        "IDComponent": {
+          "guid": "697365b775ac2645afe65debd180412a"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Cylinder.048_mesh20",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "41e94de619a5a24fbb94c1b6a9d8f098",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 544,
+      "components": {
+        "IDComponent": {
+          "guid": "7b73a7fd8cd5b041b095e84c98e89d2a"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Cylinder.047_mesh19",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "41e94de619a5a24fbb94c1b6a9d8f098",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 545,
+      "components": {
+        "IDComponent": {
+          "guid": "7bc52221244d484fb4778e049364a37b"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Cylinder.046_mesh18",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "41e94de619a5a24fbb94c1b6a9d8f098",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 546,
+      "components": {
+        "IDComponent": {
+          "guid": "1b30b8aa5e00f44590cbaf0f4a51d735"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Cylinder.045_mesh17",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "41e94de619a5a24fbb94c1b6a9d8f098",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 547,
+      "components": {
+        "IDComponent": {
+          "guid": "d7429a942471774eadde37ec2590f9f7"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Cylinder.044_mesh16",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "41e94de619a5a24fbb94c1b6a9d8f098",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 548,
+      "components": {
+        "IDComponent": {
+          "guid": "ee41745b4296f34aa247f5e243d93174"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Cylinder.043_mesh15",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "41e94de619a5a24fbb94c1b6a9d8f098",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 549,
+      "components": {
+        "IDComponent": {
+          "guid": "145679139f62c84e8d228ff4f487ef78"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Cylinder.042_mesh14",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "41e94de619a5a24fbb94c1b6a9d8f098",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 550,
+      "components": {
+        "IDComponent": {
+          "guid": "a61edfb017774e43916c8cf4df3e767c"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Cylinder.041_mesh13",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "41e94de619a5a24fbb94c1b6a9d8f098",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 551,
+      "components": {
+        "IDComponent": {
+          "guid": "c9b0dffe9a866447b0ffc2d661cb559b"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Cylinder.040_mesh12",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "41e94de619a5a24fbb94c1b6a9d8f098",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 552,
+      "components": {
+        "IDComponent": {
+          "guid": "9fca66a69f873a4c9a006d584b7e1515"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Cylinder.039_mesh11",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "41e94de619a5a24fbb94c1b6a9d8f098",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 553,
+      "components": {
+        "IDComponent": {
+          "guid": "e3ac4c539381b14d964a93937bf3693c"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Cylinder.038_mesh10",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "41e94de619a5a24fbb94c1b6a9d8f098",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 554,
+      "components": {
+        "IDComponent": {
+          "guid": "5024b1ab13b6f347b5b56fbdeb93035d"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Cylinder.037_mesh9",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "41e94de619a5a24fbb94c1b6a9d8f098",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 555,
+      "components": {
+        "IDComponent": {
+          "guid": "d5f98281e9b8c544afc767824deccfd0"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Cylinder.036_mesh8",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "41e94de619a5a24fbb94c1b6a9d8f098",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 556,
+      "components": {
+        "IDComponent": {
+          "guid": "d1c278d632551c4386b680383f74aff6"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Cylinder.034_mesh7",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "41e94de619a5a24fbb94c1b6a9d8f098",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 557,
+      "components": {
+        "IDComponent": {
+          "guid": "3445342dec114b459c6d7918292b072f"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Cube.005_mesh6",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "41e94de619a5a24fbb94c1b6a9d8f098",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 558,
+      "components": {
+        "IDComponent": {
+          "guid": "01036d18cb56284d8a30c2ccc8f4255b"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Cube.004_mesh5",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "41e94de619a5a24fbb94c1b6a9d8f098",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 559,
+      "components": {
+        "IDComponent": {
+          "guid": "05d481c6c3167a4390bfc057f6b8309a"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Cone.002_mesh4",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "41e94de619a5a24fbb94c1b6a9d8f098",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 560,
+      "components": {
+        "IDComponent": {
+          "guid": "100956cb0e038d42ab2f4d26b9c2ba64"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Bottom Legs.002_mesh3",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "41e94de619a5a24fbb94c1b6a9d8f098",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 561,
+      "components": {
+        "IDComponent": {
+          "guid": "5c7e122db841574694b623bd17dbccbf"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Belt.002_mesh2",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "41e94de619a5a24fbb94c1b6a9d8f098",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 562,
+      "components": {
+        "IDComponent": {
+          "guid": "3ff411899a409b46a8f947156009418f"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Ankle_Joints.005_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "41e94de619a5a24fbb94c1b6a9d8f098",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 563,
+      "components": {
+        "IDComponent": {
+          "guid": "7309e861a8bb504cbc965be24d3754ce"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_Guard.fbx_pasted__Ankle_Joints.004_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "41e94de619a5a24fbb94c1b6a9d8f098",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 564,
+      "components": {
+        "IDComponent": {
+          "guid": "ec6da49e51fa0745bafebf87a6f3f18c"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_C_Switch.fbx_Mesh.010_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "172f30ae7cf94045adc3ca3e63d8f0c1"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "9a283988631ed44a96fdb4c581b23686",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 565,
+      "components": {
+        "IDComponent": {
+          "guid": "193aa2651784524bb17eeacec89fd171"
+        },
+        "Transform": {
+          "position": [
+            13534.091796875,
+            12149.6220703125,
+            -6173.5810546875
+          ],
+          "rotation": [
+            0.4998946487903595,
+            -0.4999031722545624,
+            -0.5000557899475098,
+            0.5001464486122131
+          ],
+          "scale": [
+            100.00370025634766,
+            99.99693298339844,
+            99.99314880371094
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_C_Switch.fbx_Mesh.009_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "085f7719b95ea84f8ba1bed572afd08e"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "9a283988631ed44a96fdb4c581b23686",
           "depth": 1
         },
         "GlobalTransform": {}
