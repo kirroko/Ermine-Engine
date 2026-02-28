@@ -17,6 +17,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "MathVector.h"
 #include "AudioManager.h" // Include the CAudioEngine
 #include "EditorGUI.h"
+#include "UIButtonSystem.h" // For IsGamePaused()
 
 class ECS;
 
@@ -313,6 +314,7 @@ void AudioSystem::Update()
     static bool s_HasAutoPlayed = false;
 
     bool isPlaying = (editor::EditorGUI::s_state == editor::EditorGUI::SimState::playing);
+    bool isGamePaused = UIButtonSystem::IsGamePaused();
 
     // Handle PAUSED state (different from STOPPED)
     if (editor::EditorGUI::s_state == editor::EditorGUI::SimState::paused)
@@ -323,6 +325,18 @@ void AudioSystem::Update()
         }
 
         CAudioEngine::Update(); // Still update FMOD (for pause state)
+        return;
+    }
+
+    // Handle game pause (pause menu) - pause all audio but keep updating FMOD for UI sounds
+    if (isGamePaused)
+    {
+        if (!s_isPaused)
+        {
+            PauseAll(); // Pause all game audio
+        }
+
+        CAudioEngine::Update(); // Still update FMOD (for UI sounds to work)
         return;
     }
 
@@ -699,6 +713,8 @@ void AudioSystem::PlayGlobalSFX(GlobalAudioComponent& globalAudio, int index)
 
     // Convert Vec3 to Vector3D for CAudioEngine compatibility
     Vector3D position(0.0f, 0.0f, 0.0f);
+    // PlaySounds() creates a new channel and explicitly unpauses it,
+    // so UI sounds will play even if other channels are paused
     CAudioEngine::PlaySounds(sfxSource.audioPath, position, finalVolume);
 }
 

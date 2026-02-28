@@ -176,7 +176,7 @@ namespace Ermine
 
                 if (globalAudio)
                 {
-                    AudioSystem::PlayGlobalSFX(*globalAudio, "Hover");
+                    AudioSystem::PlayGlobalSFX(*globalAudio, "UIHover");
                     EE_CORE_INFO("Playing hover sound");
                 }
             }
@@ -192,7 +192,7 @@ namespace Ermine
                 button.isPressed = true;
                 if (globalAudio)
                 {
-                    AudioSystem::PlayGlobalSFX(*globalAudio, "Click");
+                    AudioSystem::PlayGlobalSFX(*globalAudio, "UIClick");
                     EE_CORE_INFO("Playing click sound");
                 }
 
