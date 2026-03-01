@@ -2023,7 +2023,7 @@ namespace Ermine
 				// Stop current music if we're updating the currently playing track
 				if (currentMusicIndex == index && currentMusicChannelId != -1)
 				{
-					CAudioEngine::StopChannel(currentMusicChannelId);
+					CAudioEngine::StopChannel(currentMusicChannelId, true, 0.3f); // Fade out
 					currentMusicChannelId = -1;
 				}
 
@@ -2076,7 +2076,7 @@ namespace Ermine
 				// Stop current music if we're removing the currently playing track
 				if (currentMusicIndex == index && currentMusicChannelId != -1)
 				{
-					CAudioEngine::StopChannel(currentMusicChannelId);
+					CAudioEngine::StopChannel(currentMusicChannelId, true, 0.3f); // Fade out
 					currentMusicChannelId = -1;
 					currentMusicIndex = -1;
 				}
