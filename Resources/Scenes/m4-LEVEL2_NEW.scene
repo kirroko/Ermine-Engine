@@ -43918,7 +43918,7 @@
         "Transform": {
           "position": [
             -5.477286338806152,
-            12.82689380645752,
+            11.788653373718262,
             26.205699920654298
           ],
           "rotation": [
@@ -44347,8 +44347,8 @@
         },
         "Transform": {
           "position": [
-            0.0,
-            0.0,
+            -0.029999999329447748,
+            -1.899999976158142,
             0.0
           ],
           "rotation": [
@@ -44404,12 +44404,12 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_lantern_low.fbx_lantern1_mesh0",
+          "name": "Mesh_ART1_lantern_low.fbx_lantern_mesh0",
           "tag": "Mesh",
           "selfActive": true
         },
         "Material": {
-          "guid": "4f992f4d36179849a6c5749c4d7c74bb"
+          "guid": "44be7c47ae42be49b3067ecc7e496a72"
         },
         "HierarchyComponent": {
           "parentGuid": "c66f2086c32c7a4cb799d99d4b80ced3",
@@ -44420,45 +44420,6 @@
     },
     {
       "id": 1056,
-      "components": {
-        "IDComponent": {
-          "guid": "7c55a858525da84588ecc15f035d3bfc"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Mesh_ART1_lantern_low.fbx_lantern1_mesh1",
-          "tag": "Mesh",
-          "selfActive": true
-        },
-        "Material": {
-          "guid": "3f34107762bf264495c473ca62acb725"
-        },
-        "HierarchyComponent": {
-          "parentGuid": "c66f2086c32c7a4cb799d99d4b80ced3",
-          "depth": 2
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "id": 1057,
       "components": {
         "IDComponent": {
           "guid": "007b25f12ee30547b55014dd436b878c"
@@ -44498,7 +44459,7 @@
       }
     },
     {
-      "id": 1058,
+      "id": 1057,
       "components": {
         "IDComponent": {
           "guid": "8896b21d1d8b604eb8ebb5a6615f0484"
@@ -44537,7 +44498,7 @@
       }
     },
     {
-      "id": 1059,
+      "id": 1058,
       "components": {
         "IDComponent": {
           "guid": "73f38e2798f6984fa1fe1ea21e0e8fe4"
@@ -44587,7 +44548,7 @@
       }
     },
     {
-      "id": 1060,
+      "id": 1059,
       "components": {
         "IDComponent": {
           "guid": "d1fde7e221503f4eba44645ab79d30e4"
@@ -44622,7 +44583,7 @@
       }
     },
     {
-      "id": 1061,
+      "id": 1060,
       "components": {
         "IDComponent": {
           "guid": "5f2e837dd67d2e42856a427ab1c56d37"
@@ -44672,7 +44633,7 @@
       }
     },
     {
-      "id": 1062,
+      "id": 1061,
       "components": {
         "IDComponent": {
           "guid": "4d29ea33d65aa94ebd7dfd3f4be881dc"
@@ -44712,7 +44673,7 @@
       }
     },
     {
-      "id": 1063,
+      "id": 1062,
       "components": {
         "IDComponent": {
           "guid": "c5b610582e676a438ba7753ce8491cbd"
@@ -44751,7 +44712,7 @@
       }
     },
     {
-      "id": 1064,
+      "id": 1063,
       "components": {
         "IDComponent": {
           "guid": "0ee4d01d435fe047989aacb2c8ba6978"
@@ -44791,7 +44752,7 @@
       }
     },
     {
-      "id": 1065,
+      "id": 1064,
       "components": {
         "IDComponent": {
           "guid": "4ba1d232d0d1594e806e547076c48757"
@@ -44830,7 +44791,7 @@
       }
     },
     {
-      "id": 1066,
+      "id": 1065,
       "components": {
         "IDComponent": {
           "guid": "354cd9f3a04261479a2d559727ba9b89"
@@ -44869,7 +44830,7 @@
       }
     },
     {
-      "id": 1067,
+      "id": 1066,
       "components": {
         "IDComponent": {
           "guid": "73e406fe1bac3c4084a81a3e61417bbc"
@@ -44909,7 +44870,7 @@
       }
     },
     {
-      "id": 1068,
+      "id": 1067,
       "components": {
         "IDComponent": {
           "guid": "d12cb3c77e98f642b4aca5ad94e1ade8"
@@ -44948,7 +44909,7 @@
       }
     },
     {
-      "id": 1069,
+      "id": 1068,
       "components": {
         "IDComponent": {
           "guid": "312adb6d3492ce4299b1a0e655b9b098"
@@ -44988,7 +44949,7 @@
       }
     },
     {
-      "id": 1070,
+      "id": 1069,
       "components": {
         "IDComponent": {
           "guid": "5dea6b0be06f2c4580accc1d1ffc42d0"
@@ -45027,7 +44988,7 @@
       }
     },
     {
-      "id": 1071,
+      "id": 1070,
       "components": {
         "IDComponent": {
           "guid": "b70a6082d32c224d975ac7533c42b10e"
@@ -45067,7 +45028,7 @@
       }
     },
     {
-      "id": 1072,
+      "id": 1071,
       "components": {
         "IDComponent": {
           "guid": "2e63b305688c3140af3a19ddeb2a4e85"
@@ -45106,7 +45067,7 @@
       }
     },
     {
-      "id": 1073,
+      "id": 1072,
       "components": {
         "IDComponent": {
           "guid": "870317ef034bfb4fbd03ad24df0ed87f"
@@ -45146,7 +45107,7 @@
       }
     },
     {
-      "id": 1074,
+      "id": 1073,
       "components": {
         "IDComponent": {
           "guid": "cc5a107ee387cb40bd0f25b10d5333ae"
@@ -45185,7 +45146,7 @@
       }
     },
     {
-      "id": 1075,
+      "id": 1074,
       "components": {
         "IDComponent": {
           "guid": "d4936384a70ab848bf2a31d87c74ae02"
@@ -45225,7 +45186,7 @@
       }
     },
     {
-      "id": 1076,
+      "id": 1075,
       "components": {
         "IDComponent": {
           "guid": "5817b3ffcfd2be4887052f03571da827"
@@ -45264,7 +45225,7 @@
       }
     },
     {
-      "id": 1077,
+      "id": 1076,
       "components": {
         "IDComponent": {
           "guid": "f90fb21f58211e4db06a860b89c19d9f"
@@ -45299,7 +45260,7 @@
       }
     },
     {
-      "id": 1078,
+      "id": 1077,
       "components": {
         "IDComponent": {
           "guid": "5df7e65b131446458edad468ea0a9975"
@@ -45339,7 +45300,7 @@
       }
     },
     {
-      "id": 1079,
+      "id": 1078,
       "components": {
         "IDComponent": {
           "guid": "256f67ab887ef24984ad0b30067e0f20"
@@ -45378,7 +45339,7 @@
       }
     },
     {
-      "id": 1080,
+      "id": 1079,
       "components": {
         "IDComponent": {
           "guid": "d1a85925d5f6564894cbee7d72386b0b"
@@ -45418,7 +45379,7 @@
       }
     },
     {
-      "id": 1081,
+      "id": 1080,
       "components": {
         "IDComponent": {
           "guid": "c20d2461bc360b42ac91babe5d25bbc5"
@@ -45457,7 +45418,7 @@
       }
     },
     {
-      "id": 1082,
+      "id": 1081,
       "components": {
         "IDComponent": {
           "guid": "8f76ba098d73684095cf7120c7e30a8c"
@@ -45497,7 +45458,7 @@
       }
     },
     {
-      "id": 1083,
+      "id": 1082,
       "components": {
         "IDComponent": {
           "guid": "4120aadb94ccf1448bf74a3dfa167a05"
@@ -45536,7 +45497,7 @@
       }
     },
     {
-      "id": 1084,
+      "id": 1083,
       "components": {
         "IDComponent": {
           "guid": "97e26396f0f17246b88c6b002b325eaf"
@@ -45576,7 +45537,7 @@
       }
     },
     {
-      "id": 1085,
+      "id": 1084,
       "components": {
         "IDComponent": {
           "guid": "3a9d5db16530384e9e33451cfd94725c"
@@ -45615,7 +45576,7 @@
       }
     },
     {
-      "id": 1086,
+      "id": 1085,
       "components": {
         "IDComponent": {
           "guid": "63d59e5300f72f4faa58168b22f66849"
@@ -45655,7 +45616,7 @@
       }
     },
     {
-      "id": 1087,
+      "id": 1086,
       "components": {
         "IDComponent": {
           "guid": "891d3284f0fd67489d3aa19125abfb74"
@@ -45694,7 +45655,7 @@
       }
     },
     {
-      "id": 1088,
+      "id": 1087,
       "components": {
         "IDComponent": {
           "guid": "5e5d559a7eabe748b34e69397cc763f8"
@@ -45702,7 +45663,7 @@
         "Transform": {
           "position": [
             0.0,
-            0.0,
+            -1.899999976158142,
             0.0
           ],
           "rotation": [
@@ -45734,7 +45695,7 @@
       }
     },
     {
-      "id": 1089,
+      "id": 1088,
       "components": {
         "IDComponent": {
           "guid": "41917cf9a22c7f4b863ec1a9f248661a"
@@ -45758,12 +45719,12 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_lantern_low.fbx_lantern1_mesh0",
+          "name": "Mesh_ART1_lantern_low.fbx_lantern_mesh0",
           "tag": "Mesh",
           "selfActive": true
         },
         "Material": {
-          "guid": "4f992f4d36179849a6c5749c4d7c74bb"
+          "guid": "44be7c47ae42be49b3067ecc7e496a72"
         },
         "HierarchyComponent": {
           "parentGuid": "5e5d559a7eabe748b34e69397cc763f8",
@@ -45774,45 +45735,6 @@
     },
     {
       "id": 1090,
-      "components": {
-        "IDComponent": {
-          "guid": "9f0fd36c61bb884894874b4dc12af5e8"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Mesh_ART1_lantern_low.fbx_lantern1_mesh1",
-          "tag": "Mesh",
-          "selfActive": true
-        },
-        "Material": {
-          "guid": "3f34107762bf264495c473ca62acb725"
-        },
-        "HierarchyComponent": {
-          "parentGuid": "5e5d559a7eabe748b34e69397cc763f8",
-          "depth": 2
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "id": 1091,
       "components": {
         "IDComponent": {
           "guid": "bf2cb0e07ae2d149acf8896c94eefd6a"
@@ -45852,7 +45774,7 @@
       }
     },
     {
-      "id": 1092,
+      "id": 1091,
       "components": {
         "IDComponent": {
           "guid": "278ed0fa87ad10449550f1770bbad4a5"
@@ -45891,7 +45813,7 @@
       }
     },
     {
-      "id": 1093,
+      "id": 1092,
       "components": {
         "IDComponent": {
           "guid": "419db96156996247948e79e6968dbd7d"
@@ -45941,7 +45863,7 @@
       }
     },
     {
-      "id": 1094,
+      "id": 1093,
       "components": {
         "IDComponent": {
           "guid": "da2dfc3fa4bdbe48ac9c2318d052f003"
@@ -45976,7 +45898,7 @@
       }
     },
     {
-      "id": 1095,
+      "id": 1094,
       "components": {
         "IDComponent": {
           "guid": "5e3a63b4bb330d4f80b632d8e78c1248"
@@ -46026,7 +45948,7 @@
       }
     },
     {
-      "id": 1096,
+      "id": 1095,
       "components": {
         "IDComponent": {
           "guid": "75b845c9a9b79a4f858e3aade07eb238"
@@ -46066,7 +45988,7 @@
       }
     },
     {
-      "id": 1097,
+      "id": 1096,
       "components": {
         "IDComponent": {
           "guid": "9a8c3e1cfc4325459aa927b62eebc845"
@@ -46105,7 +46027,7 @@
       }
     },
     {
-      "id": 1098,
+      "id": 1097,
       "components": {
         "IDComponent": {
           "guid": "a82e6040d280524ea964a72307e3eb21"
@@ -46113,14 +46035,14 @@
         "Transform": {
           "position": [
             0.0,
-            0.0,
+            -1.899999976158142,
             0.0
           ],
           "rotation": [
             0.0,
-            -0.24192190170288087,
+            -0.2672383785247803,
             0.0,
-            0.9702957272529602
+            0.9636304378509522
           ],
           "scale": [
             0.03999999910593033,
@@ -46145,7 +46067,7 @@
       }
     },
     {
-      "id": 1099,
+      "id": 1098,
       "components": {
         "IDComponent": {
           "guid": "e2da7de682cac848b547def66be9192a"
@@ -46169,12 +46091,12 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_lantern_low.fbx_lantern1_mesh1",
+          "name": "Mesh_ART1_lantern_low.fbx_lantern_mesh0",
           "tag": "Mesh",
           "selfActive": true
         },
         "Material": {
-          "guid": "3f34107762bf264495c473ca62acb725"
+          "guid": "44be7c47ae42be49b3067ecc7e496a72"
         },
         "HierarchyComponent": {
           "parentGuid": "a82e6040d280524ea964a72307e3eb21",
@@ -46185,45 +46107,6 @@
     },
     {
       "id": 1100,
-      "components": {
-        "IDComponent": {
-          "guid": "22de2bcb4c148f4ca3df0a60bfac6816"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Mesh_ART1_lantern_low.fbx_lantern1_mesh0",
-          "tag": "Mesh",
-          "selfActive": true
-        },
-        "Material": {
-          "guid": "4f992f4d36179849a6c5749c4d7c74bb"
-        },
-        "HierarchyComponent": {
-          "parentGuid": "a82e6040d280524ea964a72307e3eb21",
-          "depth": 2
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "id": 1101,
       "components": {
         "IDComponent": {
           "guid": "3e6e4bf968e47142975a0d08fb53efef"
@@ -46263,7 +46146,7 @@
       }
     },
     {
-      "id": 1102,
+      "id": 1101,
       "components": {
         "IDComponent": {
           "guid": "e5d539697a9f4c4e98f081ab76dede36"
@@ -46302,7 +46185,7 @@
       }
     },
     {
-      "id": 1103,
+      "id": 1102,
       "components": {
         "IDComponent": {
           "guid": "826a978a59a7e34f863446168337df98"
@@ -46342,7 +46225,7 @@
       }
     },
     {
-      "id": 1104,
+      "id": 1103,
       "components": {
         "IDComponent": {
           "guid": "6bab27293de3d34ebb3827ae6023a159"
@@ -46381,7 +46264,7 @@
       }
     },
     {
-      "id": 1105,
+      "id": 1104,
       "components": {
         "IDComponent": {
           "guid": "ac261b2621c51348bc3f37623e979bae"
@@ -46421,7 +46304,7 @@
       }
     },
     {
-      "id": 1106,
+      "id": 1105,
       "components": {
         "IDComponent": {
           "guid": "61d514c56feb2c419ad2b9aa02a94524"
@@ -46460,7 +46343,7 @@
       }
     },
     {
-      "id": 1107,
+      "id": 1106,
       "components": {
         "IDComponent": {
           "guid": "e319a261d505044eaa8d1f71e783d007"
@@ -46500,7 +46383,7 @@
       }
     },
     {
-      "id": 1108,
+      "id": 1107,
       "components": {
         "IDComponent": {
           "guid": "e4a99d04a8203244ad0f7413a6f65430"
@@ -46539,7 +46422,7 @@
       }
     },
     {
-      "id": 1109,
+      "id": 1108,
       "components": {
         "IDComponent": {
           "guid": "e083397da3375d4d85b2b5e112edcf99"
@@ -46579,7 +46462,7 @@
       }
     },
     {
-      "id": 1110,
+      "id": 1109,
       "components": {
         "IDComponent": {
           "guid": "c6982386f51fc549986175d5d8d34e77"
@@ -46618,7 +46501,7 @@
       }
     },
     {
-      "id": 1111,
+      "id": 1110,
       "components": {
         "IDComponent": {
           "guid": "9c1ca26ff332f74c9e1a11d82b3f9ccd"
@@ -46657,7 +46540,7 @@
       }
     },
     {
-      "id": 1112,
+      "id": 1111,
       "components": {
         "IDComponent": {
           "guid": "33cf0472e3bed242b0273b6d4d09e742"
@@ -46697,7 +46580,7 @@
       }
     },
     {
-      "id": 1113,
+      "id": 1112,
       "components": {
         "IDComponent": {
           "guid": "130f1b17d931f342af3b28f990c29321"
@@ -46736,7 +46619,7 @@
       }
     },
     {
-      "id": 1114,
+      "id": 1113,
       "components": {
         "IDComponent": {
           "guid": "998b72f2e163b64ba44c4c22c485bd83"
@@ -46776,7 +46659,7 @@
       }
     },
     {
-      "id": 1115,
+      "id": 1114,
       "components": {
         "IDComponent": {
           "guid": "c915c7a18a1aeb4f8dc4bb98472aff72"
@@ -46815,7 +46698,7 @@
       }
     },
     {
-      "id": 1116,
+      "id": 1115,
       "components": {
         "IDComponent": {
           "guid": "109bc6ab60964341a63b9d497ec40f27"
@@ -46855,7 +46738,7 @@
       }
     },
     {
-      "id": 1117,
+      "id": 1116,
       "components": {
         "IDComponent": {
           "guid": "71cbfbc0c42ecd42a8f2619787e34fe0"
@@ -46894,7 +46777,7 @@
       }
     },
     {
-      "id": 1118,
+      "id": 1117,
       "components": {
         "IDComponent": {
           "guid": "2908c1dabb5dc449938a12300640d738"
@@ -46934,7 +46817,7 @@
       }
     },
     {
-      "id": 1119,
+      "id": 1118,
       "components": {
         "IDComponent": {
           "guid": "95c0ee54e7aaec419e6214d4f8270494"
@@ -46973,7 +46856,7 @@
       }
     },
     {
-      "id": 1120,
+      "id": 1119,
       "components": {
         "IDComponent": {
           "guid": "49a45fe8cd938941b7f94931be6f1316"
@@ -47012,7 +46895,7 @@
       }
     },
     {
-      "id": 1121,
+      "id": 1120,
       "components": {
         "IDComponent": {
           "guid": "d4ecf7f8d486ef48a75894031b4499c3"
@@ -47051,7 +46934,7 @@
       }
     },
     {
-      "id": 1122,
+      "id": 1121,
       "components": {
         "IDComponent": {
           "guid": "18ccb80c47f8ca4f84315be916597f18"
@@ -47090,7 +46973,7 @@
       }
     },
     {
-      "id": 1123,
+      "id": 1122,
       "components": {
         "IDComponent": {
           "guid": "c0a8f336786fbe478d6c23e140cbaa47"
@@ -47130,7 +47013,7 @@
       }
     },
     {
-      "id": 1124,
+      "id": 1123,
       "components": {
         "IDComponent": {
           "guid": "0f7f270f1299ad43a10794279ad67954"
@@ -47169,7 +47052,7 @@
       }
     },
     {
-      "id": 1125,
+      "id": 1124,
       "components": {
         "IDComponent": {
           "guid": "71dff7d0adb4204bb9036758429a059b"
@@ -47209,7 +47092,7 @@
       }
     },
     {
-      "id": 1126,
+      "id": 1125,
       "components": {
         "IDComponent": {
           "guid": "9c0f201fd5c68c4d9eb454a2cd34de11"
@@ -47248,7 +47131,7 @@
       }
     },
     {
-      "id": 1127,
+      "id": 1126,
       "components": {
         "IDComponent": {
           "guid": "0f76db7d8aa5d342a94d5c098d8a5da1"
@@ -47288,7 +47171,7 @@
       }
     },
     {
-      "id": 1128,
+      "id": 1127,
       "components": {
         "IDComponent": {
           "guid": "a76be170d3f1fc4bab8a309ba6e588bd"
@@ -47327,7 +47210,7 @@
       }
     },
     {
-      "id": 1129,
+      "id": 1128,
       "components": {
         "IDComponent": {
           "guid": "2153eacae6470947a7da1f8143418a29"
@@ -47367,7 +47250,7 @@
       }
     },
     {
-      "id": 1130,
+      "id": 1129,
       "components": {
         "IDComponent": {
           "guid": "642a8487d4f31345afbbf8ffcfdc31cd"
@@ -47406,7 +47289,7 @@
       }
     },
     {
-      "id": 1131,
+      "id": 1130,
       "components": {
         "IDComponent": {
           "guid": "bb37aadebceaf0468b955f399b60b85d"
@@ -47445,7 +47328,7 @@
       }
     },
     {
-      "id": 1132,
+      "id": 1131,
       "components": {
         "IDComponent": {
           "guid": "97c0c148e6ab3d44b742c979b78987b8"
@@ -47485,7 +47368,7 @@
       }
     },
     {
-      "id": 1133,
+      "id": 1132,
       "components": {
         "IDComponent": {
           "guid": "dd155ef590b5124c9dbb7910d262f50c"
@@ -47524,7 +47407,7 @@
       }
     },
     {
-      "id": 1134,
+      "id": 1133,
       "components": {
         "IDComponent": {
           "guid": "f3bfae08cfd4924896a2bd6452f5d6a7"
@@ -47564,7 +47447,7 @@
       }
     },
     {
-      "id": 1135,
+      "id": 1134,
       "components": {
         "IDComponent": {
           "guid": "7f57bf06f57eaf4199993061f96de626"
@@ -47603,7 +47486,7 @@
       }
     },
     {
-      "id": 1136,
+      "id": 1135,
       "components": {
         "IDComponent": {
           "guid": "9219e242dd1d714e82c190c33a031281"
@@ -47643,7 +47526,7 @@
       }
     },
     {
-      "id": 1137,
+      "id": 1136,
       "components": {
         "IDComponent": {
           "guid": "9dc4b369de02a149af0316ff687939b9"
@@ -47682,7 +47565,7 @@
       }
     },
     {
-      "id": 1138,
+      "id": 1137,
       "components": {
         "IDComponent": {
           "guid": "4a6b421bfc04c841ad4831a8f9c39dff"
@@ -47722,7 +47605,7 @@
       }
     },
     {
-      "id": 1139,
+      "id": 1138,
       "components": {
         "IDComponent": {
           "guid": "4bbd49fd002bc741a104ac37e8bc36ee"
@@ -47761,7 +47644,7 @@
       }
     },
     {
-      "id": 1140,
+      "id": 1139,
       "components": {
         "IDComponent": {
           "guid": "57d87ff701560941898991f894e40b64"
@@ -47800,7 +47683,7 @@
       }
     },
     {
-      "id": 1141,
+      "id": 1140,
       "components": {
         "IDComponent": {
           "guid": "777bde2b98066c4eac4d98d6f9861eb3"
@@ -47839,7 +47722,7 @@
       }
     },
     {
-      "id": 1142,
+      "id": 1141,
       "components": {
         "IDComponent": {
           "guid": "5eb5cabb8915b943b4a0fafd8359f78a"
@@ -47878,7 +47761,7 @@
       }
     },
     {
-      "id": 1143,
+      "id": 1142,
       "components": {
         "IDComponent": {
           "guid": "7f00dfecf93c8c4081e4d2621d1bba2c"
@@ -47918,7 +47801,7 @@
       }
     },
     {
-      "id": 1144,
+      "id": 1143,
       "components": {
         "IDComponent": {
           "guid": "28c5d7c6f081ea4f942fa195e8fdab56"
@@ -47957,7 +47840,7 @@
       }
     },
     {
-      "id": 1145,
+      "id": 1144,
       "components": {
         "IDComponent": {
           "guid": "8a30eb5f9bdcfc438c1588b9c5890243"
@@ -47997,7 +47880,7 @@
       }
     },
     {
-      "id": 1146,
+      "id": 1145,
       "components": {
         "IDComponent": {
           "guid": "10a167cd3c335c438452688ccad4545a"
@@ -48036,7 +47919,7 @@
       }
     },
     {
-      "id": 1147,
+      "id": 1146,
       "components": {
         "IDComponent": {
           "guid": "fb81d49069093e43bfd71e84188b3893"
@@ -48076,7 +47959,7 @@
       }
     },
     {
-      "id": 1148,
+      "id": 1147,
       "components": {
         "IDComponent": {
           "guid": "3b1da37e773fe94f8a395aa20a08f221"
@@ -48115,7 +47998,7 @@
       }
     },
     {
-      "id": 1149,
+      "id": 1148,
       "components": {
         "IDComponent": {
           "guid": "92506bf83926c44db83202f2f595ba88"
@@ -48155,7 +48038,7 @@
       }
     },
     {
-      "id": 1150,
+      "id": 1149,
       "components": {
         "IDComponent": {
           "guid": "463dfb998465ed46848b6eba285114b2"
@@ -48194,7 +48077,7 @@
       }
     },
     {
-      "id": 1151,
+      "id": 1150,
       "components": {
         "IDComponent": {
           "guid": "16a9859067311b409c504e11d3c0122f"
@@ -48260,7 +48143,7 @@
       }
     },
     {
-      "id": 1152,
+      "id": 1151,
       "components": {
         "IDComponent": {
           "guid": "3c764843f679a440a279e61ca705c91d"
@@ -48299,7 +48182,7 @@
       }
     },
     {
-      "id": 1153,
+      "id": 1152,
       "components": {
         "IDComponent": {
           "guid": "25ce4fc5ae10e94591c89b81d7f0af99"
@@ -48365,7 +48248,7 @@
       }
     },
     {
-      "id": 1154,
+      "id": 1153,
       "components": {
         "IDComponent": {
           "guid": "f6f7ff23095c644facf06ca9b257641f"
@@ -48404,7 +48287,7 @@
       }
     },
     {
-      "id": 1155,
+      "id": 1154,
       "components": {
         "IDComponent": {
           "guid": "10993a28fbd3d54aac1ec09f68ad4296"
@@ -48470,7 +48353,7 @@
       }
     },
     {
-      "id": 1156,
+      "id": 1155,
       "components": {
         "IDComponent": {
           "guid": "157f1c2ec23a7f488c2f810ca4cda7aa"
@@ -48509,7 +48392,7 @@
       }
     },
     {
-      "id": 1157,
+      "id": 1156,
       "components": {
         "IDComponent": {
           "guid": "6d44b45a568af7438f3036fd37e84816"
@@ -48575,7 +48458,7 @@
       }
     },
     {
-      "id": 1158,
+      "id": 1157,
       "components": {
         "IDComponent": {
           "guid": "2d201a8d21c86242a2d2c146ec2bc47f"
@@ -48614,7 +48497,7 @@
       }
     },
     {
-      "id": 1159,
+      "id": 1158,
       "components": {
         "IDComponent": {
           "guid": "311171308a72504696d7209a38468b99"
@@ -48649,7 +48532,7 @@
       }
     },
     {
-      "id": 1160,
+      "id": 1159,
       "components": {
         "IDComponent": {
           "guid": "140de8397b34bc46a0742da2344f6772"
@@ -48699,7 +48582,7 @@
       }
     },
     {
-      "id": 1161,
+      "id": 1160,
       "components": {
         "IDComponent": {
           "guid": "5367bb06bc49c5468fe89ae77f4f5c46"
@@ -48739,7 +48622,7 @@
       }
     },
     {
-      "id": 1162,
+      "id": 1161,
       "components": {
         "IDComponent": {
           "guid": "2bdc108f44cdab4eae8b7e91be2e372b"
@@ -48778,7 +48661,7 @@
       }
     },
     {
-      "id": 1163,
+      "id": 1162,
       "components": {
         "IDComponent": {
           "guid": "c5c25c1bfc124348a7e96e0b6e0a7188"
@@ -48786,7 +48669,7 @@
         "Transform": {
           "position": [
             0.0,
-            0.0,
+            -1.899999976158142,
             0.0
           ],
           "rotation": [
@@ -48818,7 +48701,7 @@
       }
     },
     {
-      "id": 1164,
+      "id": 1163,
       "components": {
         "IDComponent": {
           "guid": "558ea5af49412744b584ab645852db95"
@@ -48842,12 +48725,12 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_lantern_low.fbx_lantern1_mesh1",
+          "name": "Mesh_ART1_lantern_low.fbx_lantern_mesh0",
           "tag": "Mesh",
           "selfActive": true
         },
         "Material": {
-          "guid": "3f34107762bf264495c473ca62acb725"
+          "guid": "44be7c47ae42be49b3067ecc7e496a72"
         },
         "HierarchyComponent": {
           "parentGuid": "c5c25c1bfc124348a7e96e0b6e0a7188",
@@ -48858,45 +48741,6 @@
     },
     {
       "id": 1165,
-      "components": {
-        "IDComponent": {
-          "guid": "b4347ac29295e84490817c5241426368"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Mesh_ART1_lantern_low.fbx_lantern1_mesh0",
-          "tag": "Mesh",
-          "selfActive": true
-        },
-        "Material": {
-          "guid": "4f992f4d36179849a6c5749c4d7c74bb"
-        },
-        "HierarchyComponent": {
-          "parentGuid": "c5c25c1bfc124348a7e96e0b6e0a7188",
-          "depth": 2
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "id": 1166,
       "components": {
         "IDComponent": {
           "guid": "21d30cd78215e94da16dcaa2f97dff64"
@@ -48936,7 +48780,7 @@
       }
     },
     {
-      "id": 1167,
+      "id": 1166,
       "components": {
         "IDComponent": {
           "guid": "f40dad66fd03644c9465699bcdfd1808"
@@ -48975,7 +48819,7 @@
       }
     },
     {
-      "id": 1168,
+      "id": 1167,
       "components": {
         "IDComponent": {
           "guid": "37aad31944bb3f49821172511a9523fc"
@@ -49015,7 +48859,7 @@
       }
     },
     {
-      "id": 1169,
+      "id": 1168,
       "components": {
         "IDComponent": {
           "guid": "a21163ad8b2a8c4a99aad923753e3cb1"
@@ -49054,7 +48898,7 @@
       }
     },
     {
-      "id": 1170,
+      "id": 1169,
       "components": {
         "IDComponent": {
           "guid": "8fda0576865f9f47b394791d559c8502"
@@ -49094,7 +48938,7 @@
       }
     },
     {
-      "id": 1171,
+      "id": 1170,
       "components": {
         "IDComponent": {
           "guid": "cbc9da16fa2a2046b138c2e8a6898622"
@@ -49133,7 +48977,7 @@
       }
     },
     {
-      "id": 1172,
+      "id": 1171,
       "components": {
         "IDComponent": {
           "guid": "d55abb95065d2d4eb28bd983d1199063"
@@ -49173,7 +49017,7 @@
       }
     },
     {
-      "id": 1173,
+      "id": 1172,
       "components": {
         "IDComponent": {
           "guid": "9fa51acb68a7374caef217ba087254b4"
@@ -49212,7 +49056,7 @@
       }
     },
     {
-      "id": 1174,
+      "id": 1173,
       "components": {
         "IDComponent": {
           "guid": "ac67f72f1695d443a41f6a0419da77ea"
@@ -49252,7 +49096,7 @@
       }
     },
     {
-      "id": 1175,
+      "id": 1174,
       "components": {
         "IDComponent": {
           "guid": "f303aee091062542ba3d6ea605589a86"
@@ -49291,7 +49135,7 @@
       }
     },
     {
-      "id": 1176,
+      "id": 1175,
       "components": {
         "IDComponent": {
           "guid": "cad768303895f544a0d28915272e5dbc"
@@ -49326,7 +49170,7 @@
       }
     },
     {
-      "id": 1177,
+      "id": 1176,
       "components": {
         "IDComponent": {
           "guid": "a40ff0cdcfbeed44bc2a27def8659bc2"
@@ -49366,7 +49210,7 @@
       }
     },
     {
-      "id": 1178,
+      "id": 1177,
       "components": {
         "IDComponent": {
           "guid": "61e1d9fd01c15d4dbde82b4ce28a6081"
@@ -49405,7 +49249,7 @@
       }
     },
     {
-      "id": 1179,
+      "id": 1178,
       "components": {
         "IDComponent": {
           "guid": "c477c4d05a840a46bbe7e6ea4d8a647c"
@@ -49445,7 +49289,7 @@
       }
     },
     {
-      "id": 1180,
+      "id": 1179,
       "components": {
         "IDComponent": {
           "guid": "ea0827f7a6250f40a9fecdd291bd725e"
@@ -49484,7 +49328,7 @@
       }
     },
     {
-      "id": 1181,
+      "id": 1180,
       "components": {
         "IDComponent": {
           "guid": "e590d91e6ac3974faccb5a381547cc99"
@@ -49524,7 +49368,7 @@
       }
     },
     {
-      "id": 1182,
+      "id": 1181,
       "components": {
         "IDComponent": {
           "guid": "bcb01d3589fc3b479b2d587a462c1d74"
@@ -49563,7 +49407,7 @@
       }
     },
     {
-      "id": 1183,
+      "id": 1182,
       "components": {
         "IDComponent": {
           "guid": "9830efd9cc39c241a749b9fb3b80967b"
@@ -49603,7 +49447,7 @@
       }
     },
     {
-      "id": 1184,
+      "id": 1183,
       "components": {
         "IDComponent": {
           "guid": "4892ff0f3d933a4b9422aaca2523fdc9"
@@ -49642,7 +49486,7 @@
       }
     },
     {
-      "id": 1185,
+      "id": 1184,
       "components": {
         "IDComponent": {
           "guid": "49904a6855a74842b90e1bc76ece61bb"
@@ -49682,7 +49526,7 @@
       }
     },
     {
-      "id": 1186,
+      "id": 1185,
       "components": {
         "IDComponent": {
           "guid": "65c1d19146782c44baf97e5dce647d2e"
@@ -49721,7 +49565,7 @@
       }
     },
     {
-      "id": 1187,
+      "id": 1186,
       "components": {
         "IDComponent": {
           "guid": "ad3909231f49cd46bd8ede0087e313b5"
@@ -49729,7 +49573,7 @@
         "Transform": {
           "position": [
             0.0,
-            0.0,
+            -1.899999976158142,
             0.0
           ],
           "rotation": [
@@ -49761,7 +49605,7 @@
       }
     },
     {
-      "id": 1188,
+      "id": 1187,
       "components": {
         "IDComponent": {
           "guid": "98dae5ed46a5f743921e93fdeb7444b8"
@@ -49785,12 +49629,12 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_lantern_low.fbx_lantern1_mesh0",
+          "name": "Mesh_ART1_lantern_low.fbx_lantern_mesh0",
           "tag": "Mesh",
           "selfActive": true
         },
         "Material": {
-          "guid": "4f992f4d36179849a6c5749c4d7c74bb"
+          "guid": "44be7c47ae42be49b3067ecc7e496a72"
         },
         "HierarchyComponent": {
           "parentGuid": "ad3909231f49cd46bd8ede0087e313b5",
@@ -49801,45 +49645,6 @@
     },
     {
       "id": 1189,
-      "components": {
-        "IDComponent": {
-          "guid": "f98ac2095316b04b8f68bc4fa32f9941"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Mesh_ART1_lantern_low.fbx_lantern1_mesh1",
-          "tag": "Mesh",
-          "selfActive": true
-        },
-        "Material": {
-          "guid": "3f34107762bf264495c473ca62acb725"
-        },
-        "HierarchyComponent": {
-          "parentGuid": "ad3909231f49cd46bd8ede0087e313b5",
-          "depth": 2
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "id": 1190,
       "components": {
         "IDComponent": {
           "guid": "58d9755d1923e64698a17f8896d121b5"
@@ -49879,7 +49684,7 @@
       }
     },
     {
-      "id": 1191,
+      "id": 1190,
       "components": {
         "IDComponent": {
           "guid": "a7760d1e35a555469790bf197c55862d"
@@ -49918,7 +49723,7 @@
       }
     },
     {
-      "id": 1192,
+      "id": 1191,
       "components": {
         "IDComponent": {
           "guid": "fffb2c22a983e944b906d49ad6934ac3"
@@ -49968,7 +49773,7 @@
       }
     },
     {
-      "id": 1193,
+      "id": 1192,
       "components": {
         "IDComponent": {
           "guid": "320ff5276dae6340a30860906f60fd0c"
@@ -50007,7 +49812,7 @@
       }
     },
     {
-      "id": 1194,
+      "id": 1193,
       "components": {
         "IDComponent": {
           "guid": "709d3bde6711ec4581b7ebe831cc9038"
@@ -50046,7 +49851,7 @@
       }
     },
     {
-      "id": 1195,
+      "id": 1194,
       "components": {
         "IDComponent": {
           "guid": "fd9e745c1c67734da888aaacce6c9077"
@@ -50086,7 +49891,7 @@
       }
     },
     {
-      "id": 1196,
+      "id": 1195,
       "components": {
         "IDComponent": {
           "guid": "043c96df5fbd7545969df8bb7ca26a25"
@@ -50125,7 +49930,7 @@
       }
     },
     {
-      "id": 1197,
+      "id": 1196,
       "components": {
         "IDComponent": {
           "guid": "588d52afdb64614d8705dc19f245efdb"
@@ -50165,7 +49970,7 @@
       }
     },
     {
-      "id": 1198,
+      "id": 1197,
       "components": {
         "IDComponent": {
           "guid": "295972d94c2a6f449eb45ba395267927"
@@ -50204,7 +50009,7 @@
       }
     },
     {
-      "id": 1199,
+      "id": 1198,
       "components": {
         "IDComponent": {
           "guid": "a8061caa681f2f4f87ea54c3de67e2d3"
@@ -50244,7 +50049,7 @@
       }
     },
     {
-      "id": 1200,
+      "id": 1199,
       "components": {
         "IDComponent": {
           "guid": "5bd86680291dcb44925c66e3c695b3c5"
@@ -50283,7 +50088,7 @@
       }
     },
     {
-      "id": 1201,
+      "id": 1200,
       "components": {
         "IDComponent": {
           "guid": "6014e16aec78624396a3a95c1ec00fea"
@@ -50323,7 +50128,7 @@
       }
     },
     {
-      "id": 1202,
+      "id": 1201,
       "components": {
         "IDComponent": {
           "guid": "fd4ae9f85a904748b687273ae6f912b8"
@@ -50362,7 +50167,7 @@
       }
     },
     {
-      "id": 1203,
+      "id": 1202,
       "components": {
         "IDComponent": {
           "guid": "cbeb14ed05e4984abf154e68e92198b5"
@@ -50401,7 +50206,7 @@
       }
     },
     {
-      "id": 1204,
+      "id": 1203,
       "components": {
         "IDComponent": {
           "guid": "42beea08a3edb14da44e4f5eb819e76a"
@@ -50441,7 +50246,7 @@
       }
     },
     {
-      "id": 1205,
+      "id": 1204,
       "components": {
         "IDComponent": {
           "guid": "0a18a518fe28b941b4330b85120160cc"
@@ -50480,7 +50285,7 @@
       }
     },
     {
-      "id": 1206,
+      "id": 1205,
       "components": {
         "IDComponent": {
           "guid": "204fcef316077f44ad02cd84a3da7c83"
@@ -50520,7 +50325,7 @@
       }
     },
     {
-      "id": 1207,
+      "id": 1206,
       "components": {
         "IDComponent": {
           "guid": "475cdf001aace74a9c745b027fb73030"
@@ -50559,7 +50364,7 @@
       }
     },
     {
-      "id": 1208,
+      "id": 1207,
       "components": {
         "IDComponent": {
           "guid": "14a1ab5fe176f74b882ee22fb8737116"
@@ -50599,7 +50404,7 @@
       }
     },
     {
-      "id": 1209,
+      "id": 1208,
       "components": {
         "IDComponent": {
           "guid": "a7a508e1ccade040aad26974f4023ebc"
@@ -50638,7 +50443,7 @@
       }
     },
     {
-      "id": 1210,
+      "id": 1209,
       "components": {
         "IDComponent": {
           "guid": "906998b6d48de74cb0f31bf583349b0f"
@@ -50678,7 +50483,7 @@
       }
     },
     {
-      "id": 1211,
+      "id": 1210,
       "components": {
         "IDComponent": {
           "guid": "78dd2a9259cae7409688ea89dc640ab7"
@@ -50717,7 +50522,7 @@
       }
     },
     {
-      "id": 1212,
+      "id": 1211,
       "components": {
         "IDComponent": {
           "guid": "8c592a8c4c566646a51bb8a4a961cd53"
@@ -50756,7 +50561,7 @@
       }
     },
     {
-      "id": 1213,
+      "id": 1212,
       "components": {
         "IDComponent": {
           "guid": "e68bf2b272c62843b6d64ffe03bfec16"
@@ -50791,7 +50596,7 @@
       }
     },
     {
-      "id": 1214,
+      "id": 1213,
       "components": {
         "IDComponent": {
           "guid": "77e863f6d749f645a255955f02850905"
@@ -50841,7 +50646,7 @@
       }
     },
     {
-      "id": 1215,
+      "id": 1214,
       "components": {
         "IDComponent": {
           "guid": "d3b71bb584913a4a8e7bfa55ae799bb9"
@@ -50881,7 +50686,7 @@
       }
     },
     {
-      "id": 1216,
+      "id": 1215,
       "components": {
         "IDComponent": {
           "guid": "694a0d3b7212de49b7fbf35424197cd0"
@@ -50920,7 +50725,7 @@
       }
     },
     {
-      "id": 1217,
+      "id": 1216,
       "components": {
         "IDComponent": {
           "guid": "4a26575bddb6024ca81178be1eafb893"
@@ -50928,7 +50733,7 @@
         "Transform": {
           "position": [
             0.0,
-            0.0,
+            -1.899999976158142,
             0.0
           ],
           "rotation": [
@@ -50960,7 +50765,7 @@
       }
     },
     {
-      "id": 1218,
+      "id": 1217,
       "components": {
         "IDComponent": {
           "guid": "513771407e043e41995c56da0e2546a9"
@@ -50984,12 +50789,12 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_lantern_low.fbx_lantern1_mesh1",
+          "name": "Mesh_ART1_lantern_low.fbx_lantern_mesh0",
           "tag": "Mesh",
           "selfActive": true
         },
         "Material": {
-          "guid": "3f34107762bf264495c473ca62acb725"
+          "guid": "44be7c47ae42be49b3067ecc7e496a72"
         },
         "HierarchyComponent": {
           "parentGuid": "4a26575bddb6024ca81178be1eafb893",
@@ -51000,45 +50805,6 @@
     },
     {
       "id": 1219,
-      "components": {
-        "IDComponent": {
-          "guid": "79299b7ef257e740a60f7428d96588e4"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Mesh_ART1_lantern_low.fbx_lantern1_mesh0",
-          "tag": "Mesh",
-          "selfActive": true
-        },
-        "Material": {
-          "guid": "4f992f4d36179849a6c5749c4d7c74bb"
-        },
-        "HierarchyComponent": {
-          "parentGuid": "4a26575bddb6024ca81178be1eafb893",
-          "depth": 2
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "id": 1220,
       "components": {
         "IDComponent": {
           "guid": "dc2a19c9b51cd94a92c68c466e04eca6"
@@ -51078,7 +50844,7 @@
       }
     },
     {
-      "id": 1221,
+      "id": 1220,
       "components": {
         "IDComponent": {
           "guid": "929220e707e33b4eb2f5859faa554440"
@@ -51117,7 +50883,7 @@
       }
     },
     {
-      "id": 1222,
+      "id": 1221,
       "components": {
         "IDComponent": {
           "guid": "a2c390437b0f2645a7cf9f3fe5c21163"
@@ -51157,7 +50923,7 @@
       }
     },
     {
-      "id": 1223,
+      "id": 1222,
       "components": {
         "IDComponent": {
           "guid": "6ccf0f91e619534c9c70d8d43128cce7"
@@ -51196,7 +50962,7 @@
       }
     },
     {
-      "id": 1224,
+      "id": 1223,
       "components": {
         "IDComponent": {
           "guid": "e991e8985d583d4d98b4ed8bba5bfcdd"
@@ -51236,7 +51002,7 @@
       }
     },
     {
-      "id": 1225,
+      "id": 1224,
       "components": {
         "IDComponent": {
           "guid": "61ebe074c40eae428f1618cfbd4b0519"
@@ -51275,7 +51041,7 @@
       }
     },
     {
-      "id": 1226,
+      "id": 1225,
       "components": {
         "IDComponent": {
           "guid": "8df62ac40aadd44fb12ae9a6a28025a6"
@@ -51315,7 +51081,7 @@
       }
     },
     {
-      "id": 1227,
+      "id": 1226,
       "components": {
         "IDComponent": {
           "guid": "ec09c42f21b15d4b97ebf401318c1680"
@@ -51354,7 +51120,7 @@
       }
     },
     {
-      "id": 1228,
+      "id": 1227,
       "components": {
         "IDComponent": {
           "guid": "c33b4e9b706a7545b33507e11a64aadc"
@@ -51394,7 +51160,7 @@
       }
     },
     {
-      "id": 1229,
+      "id": 1228,
       "components": {
         "IDComponent": {
           "guid": "7b6c8b8bd0143545bc6fb2fd7a2cc371"
@@ -51433,7 +51199,7 @@
       }
     },
     {
-      "id": 1230,
+      "id": 1229,
       "components": {
         "IDComponent": {
           "guid": "63cb4264ea6460468321f36a1d8804b0"
@@ -51468,7 +51234,7 @@
       }
     },
     {
-      "id": 1231,
+      "id": 1230,
       "components": {
         "IDComponent": {
           "guid": "4547c6b304c49241b9a89d9a1f3d0f24"
@@ -51508,7 +51274,7 @@
       }
     },
     {
-      "id": 1232,
+      "id": 1231,
       "components": {
         "IDComponent": {
           "guid": "c4753ff981f62546bee3b53f21dfef5f"
@@ -51547,7 +51313,7 @@
       }
     },
     {
-      "id": 1233,
+      "id": 1232,
       "components": {
         "IDComponent": {
           "guid": "64a3a2b7de12eb41b08c89912d89aac2"
@@ -51587,7 +51353,7 @@
       }
     },
     {
-      "id": 1234,
+      "id": 1233,
       "components": {
         "IDComponent": {
           "guid": "e99d2a46808cfe469f5f41b30a1a58a7"
@@ -51626,7 +51392,7 @@
       }
     },
     {
-      "id": 1235,
+      "id": 1234,
       "components": {
         "IDComponent": {
           "guid": "eb01767229104c4987af66bae1f95085"
@@ -51666,7 +51432,7 @@
       }
     },
     {
-      "id": 1236,
+      "id": 1235,
       "components": {
         "IDComponent": {
           "guid": "fd330eeca0f69a4b93250dcc334f6f13"
@@ -51705,7 +51471,7 @@
       }
     },
     {
-      "id": 1237,
+      "id": 1236,
       "components": {
         "IDComponent": {
           "guid": "8793c874944c534b8385123316263f6a"
@@ -51745,7 +51511,7 @@
       }
     },
     {
-      "id": 1238,
+      "id": 1237,
       "components": {
         "IDComponent": {
           "guid": "0d63acb62202534c8c5b97d46ec752fe"
@@ -51784,7 +51550,7 @@
       }
     },
     {
-      "id": 1239,
+      "id": 1238,
       "components": {
         "IDComponent": {
           "guid": "efed68d9b8dc024abbb9d80920877f03"
@@ -51824,7 +51590,7 @@
       }
     },
     {
-      "id": 1240,
+      "id": 1239,
       "components": {
         "IDComponent": {
           "guid": "e8acfffe71200140a63ff0c4b622b7cb"
@@ -51863,7 +51629,7 @@
       }
     },
     {
-      "id": 1241,
+      "id": 1240,
       "components": {
         "IDComponent": {
           "guid": "c91dab20a1e5124687331213ebea946b"
@@ -51871,7 +51637,7 @@
         "Transform": {
           "position": [
             0.0,
-            0.0,
+            -1.899999976158142,
             0.0
           ],
           "rotation": [
@@ -51903,7 +51669,7 @@
       }
     },
     {
-      "id": 1242,
+      "id": 1241,
       "components": {
         "IDComponent": {
           "guid": "93d3ad38ed2f29478d50fcfd059ee1ea"
@@ -51927,12 +51693,12 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_lantern_low.fbx_lantern1_mesh0",
+          "name": "Mesh_ART1_lantern_low.fbx_lantern_mesh0",
           "tag": "Mesh",
           "selfActive": true
         },
         "Material": {
-          "guid": "4f992f4d36179849a6c5749c4d7c74bb"
+          "guid": "44be7c47ae42be49b3067ecc7e496a72"
         },
         "HierarchyComponent": {
           "parentGuid": "c91dab20a1e5124687331213ebea946b",
@@ -51943,45 +51709,6 @@
     },
     {
       "id": 1243,
-      "components": {
-        "IDComponent": {
-          "guid": "e864ac769fa9824f8c5a28d63e3b2f42"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Mesh_ART1_lantern_low.fbx_lantern1_mesh1",
-          "tag": "Mesh",
-          "selfActive": true
-        },
-        "Material": {
-          "guid": "3f34107762bf264495c473ca62acb725"
-        },
-        "HierarchyComponent": {
-          "parentGuid": "c91dab20a1e5124687331213ebea946b",
-          "depth": 2
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "id": 1244,
       "components": {
         "IDComponent": {
           "guid": "2b4aef1fa6cefc4cb974f46c70325ac1"
@@ -52021,7 +51748,7 @@
       }
     },
     {
-      "id": 1245,
+      "id": 1244,
       "components": {
         "IDComponent": {
           "guid": "29eb3ceedf16af409e0f5000e053d313"
@@ -52060,7 +51787,7 @@
       }
     },
     {
-      "id": 1246,
+      "id": 1245,
       "components": {
         "IDComponent": {
           "guid": "0e8a9996d61f604da2d4bc7362b12f9e"
@@ -52110,7 +51837,7 @@
       }
     },
     {
-      "id": 1247,
+      "id": 1246,
       "components": {
         "IDComponent": {
           "guid": "75da73a5fe65474b8f6859501fb34184"
@@ -52145,7 +51872,7 @@
       }
     },
     {
-      "id": 1248,
+      "id": 1247,
       "components": {
         "IDComponent": {
           "guid": "a2522ae0f75dff4a875d78d3ba13f969"
@@ -52185,7 +51912,7 @@
       }
     },
     {
-      "id": 1249,
+      "id": 1248,
       "components": {
         "IDComponent": {
           "guid": "12643807a0912941907ba87cdb2580c7"
@@ -52224,7 +51951,7 @@
       }
     },
     {
-      "id": 1250,
+      "id": 1249,
       "components": {
         "IDComponent": {
           "guid": "f0f1a8f25c386046a9bfe3997a61fb0e"
@@ -52264,7 +51991,7 @@
       }
     },
     {
-      "id": 1251,
+      "id": 1250,
       "components": {
         "IDComponent": {
           "guid": "f05166b102127242a5d7d0b0130bbad9"
@@ -52303,7 +52030,7 @@
       }
     },
     {
-      "id": 1252,
+      "id": 1251,
       "components": {
         "IDComponent": {
           "guid": "871788eaa5aad749a4be9e46675ddd8f"
@@ -52343,7 +52070,7 @@
       }
     },
     {
-      "id": 1253,
+      "id": 1252,
       "components": {
         "IDComponent": {
           "guid": "ae6129c8d0b1174484e0dc2312614a5a"
@@ -52382,7 +52109,7 @@
       }
     },
     {
-      "id": 1254,
+      "id": 1253,
       "components": {
         "IDComponent": {
           "guid": "53b28d31580ea64e90de5661082460ff"
@@ -52422,7 +52149,7 @@
       }
     },
     {
-      "id": 1255,
+      "id": 1254,
       "components": {
         "IDComponent": {
           "guid": "8d24938b95567f439bee8082ccafe9bb"
@@ -52461,7 +52188,7 @@
       }
     },
     {
-      "id": 1256,
+      "id": 1255,
       "components": {
         "IDComponent": {
           "guid": "068ab45117590e4db960dbb5c929ad70"
@@ -52501,7 +52228,7 @@
       }
     },
     {
-      "id": 1257,
+      "id": 1256,
       "components": {
         "IDComponent": {
           "guid": "26a131912697764ab957203f8dee3bdf"
@@ -52540,7 +52267,7 @@
       }
     },
     {
-      "id": 1258,
+      "id": 1257,
       "components": {
         "IDComponent": {
           "guid": "c16ce0666a9c3b419a3f4eefacee1986"
@@ -52548,7 +52275,7 @@
         "Transform": {
           "position": [
             0.0,
-            0.0,
+            -1.899999976158142,
             0.0
           ],
           "rotation": [
@@ -52580,7 +52307,7 @@
       }
     },
     {
-      "id": 1259,
+      "id": 1258,
       "components": {
         "IDComponent": {
           "guid": "3e32f9d41b6bdb4e96fe6af6d1ce4f12"
@@ -52604,12 +52331,12 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_lantern_low.fbx_lantern1_mesh0",
+          "name": "Mesh_ART1_lantern_low.fbx_lantern_mesh0",
           "tag": "Mesh",
           "selfActive": true
         },
         "Material": {
-          "guid": "4f992f4d36179849a6c5749c4d7c74bb"
+          "guid": "44be7c47ae42be49b3067ecc7e496a72"
         },
         "HierarchyComponent": {
           "parentGuid": "c16ce0666a9c3b419a3f4eefacee1986",
@@ -52620,45 +52347,6 @@
     },
     {
       "id": 1260,
-      "components": {
-        "IDComponent": {
-          "guid": "a57c41b205e82e4092aaf89d9d4429b1"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Mesh_ART1_lantern_low.fbx_lantern1_mesh1",
-          "tag": "Mesh",
-          "selfActive": true
-        },
-        "Material": {
-          "guid": "3f34107762bf264495c473ca62acb725"
-        },
-        "HierarchyComponent": {
-          "parentGuid": "c16ce0666a9c3b419a3f4eefacee1986",
-          "depth": 2
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "id": 1261,
       "components": {
         "IDComponent": {
           "guid": "a82008992bb92c44bbeaa29fd0e8daa1"
@@ -52698,7 +52386,7 @@
       }
     },
     {
-      "id": 1262,
+      "id": 1261,
       "components": {
         "IDComponent": {
           "guid": "a4362a511772b8448974fe21647d367a"
@@ -52737,7 +52425,7 @@
       }
     },
     {
-      "id": 1263,
+      "id": 1262,
       "components": {
         "IDComponent": {
           "guid": "41060405e02c1544a37c6d69c1f7efc7"
@@ -52782,6 +52470,644 @@
         "HierarchyComponent": {
           "parentGuid": "75da73a5fe65474b8f6859501fb34184",
           "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1263,
+      "components": {
+        "IDComponent": {
+          "guid": "3cfb4f98b0bb9c43a4cf935dfee4bb69"
+        },
+        "Transform": {
+          "position": [
+            -20.26585578918457,
+            18.39624786376953,
+            39.73295593261719
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Lantern-small-long-chain",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1264,
+      "components": {
+        "IDComponent": {
+          "guid": "80ac9f30ce72a64c89f6d990c2c3a1d5"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            -2.969273328781128,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "Light": {
+          "color": [
+            0.914814829826355,
+            0.8828904628753662,
+            0.19651579856872559
+          ],
+          "intensity": 0.5230000019073486,
+          "type": "Point",
+          "castsShadows": false,
+          "castsRays": false,
+          "innerAngle": -1.0,
+          "outerAngle": -1.0,
+          "radius": 5.699999809265137
+        },
+        "ObjectMetaData": {
+          "name": "LightSource",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "3cfb4f98b0bb9c43a4cf935dfee4bb69",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1265,
+      "components": {
+        "IDComponent": {
+          "guid": "a4d0476e65211849b6a28b0c36389402"
+        },
+        "Transform": {
+          "position": [
+            -0.08150321245193482,
+            1.4785642623901368,
+            0.0
+          ],
+          "rotation": [
+            2.7518811407389878e-7,
+            -0.6818707585334778,
+            2.7518811407389878e-7,
+            0.7314726710319519
+          ],
+          "scale": [
+            0.03999999910593033,
+            0.03999999910593033,
+            0.03999999910593033
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Chain",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_Chain_linked_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "3cfb4f98b0bb9c43a4cf935dfee4bb69",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1266,
+      "components": {
+        "IDComponent": {
+          "guid": "a0ad3e3f8b4d1443b9562887c9c7f0dc"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_Chain_linked_low.fbx_pCube19_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "13244f2856e23a47a55f515b01f2f6e0"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "a4d0476e65211849b6a28b0c36389402",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1267,
+      "components": {
+        "IDComponent": {
+          "guid": "0757c51aa17eba4ea821eebad9aad42a"
+        },
+        "Transform": {
+          "position": [
+            -0.029999999329447748,
+            -1.899999976158142,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.03999999910593033,
+            0.03999999910593033,
+            0.03999999910593033
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Lantern Head",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_lantern_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "3cfb4f98b0bb9c43a4cf935dfee4bb69",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1268,
+      "components": {
+        "IDComponent": {
+          "guid": "6ba547670efd49438c5ff70cf5c2caa0"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_lantern_low.fbx_lantern_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "44be7c47ae42be49b3067ecc7e496a72"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "0757c51aa17eba4ea821eebad9aad42a",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1269,
+      "components": {
+        "IDComponent": {
+          "guid": "5cf5b4d22c68e14cbc76152ec29c3f63"
+        },
+        "Transform": {
+          "position": [
+            -0.016939565539360048,
+            2.9505491256713869,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.03999585285782814,
+            0.03999999910593033,
+            0.03999585285782814
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Chain (2)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_Chain_linked_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "3cfb4f98b0bb9c43a4cf935dfee4bb69",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1270,
+      "components": {
+        "IDComponent": {
+          "guid": "0dadcd2bada47946ad0c8c83fee22cb5"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_Chain_linked_low.fbx_pCube19_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "13244f2856e23a47a55f515b01f2f6e0"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "5cf5b4d22c68e14cbc76152ec29c3f63",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1271,
+      "components": {
+        "IDComponent": {
+          "guid": "75a9077caa284743a58b04568073e5d7"
+        },
+        "Transform": {
+          "position": [
+            0.014124810695648194,
+            4.421530723571777,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.03999427333474159,
+            0.03999999910593033,
+            0.03999427333474159
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Chain (1)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_Chain_linked_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "3cfb4f98b0bb9c43a4cf935dfee4bb69",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1272,
+      "components": {
+        "IDComponent": {
+          "guid": "9bc66d0231c4d345883cd6ff475add50"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_Chain_linked_low.fbx_pCube19_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "13244f2856e23a47a55f515b01f2f6e0"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "75a9077caa284743a58b04568073e5d7",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1273,
+      "components": {
+        "IDComponent": {
+          "guid": "118b819f0eeb6248a3ca4d2728221835"
+        },
+        "Transform": {
+          "position": [
+            0.04049983620643616,
+            5.938615322113037,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.03999292477965355,
+            0.03999999910593033,
+            0.03999292477965355
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Chain (3)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_Chain_linked_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "3cfb4f98b0bb9c43a4cf935dfee4bb69",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1274,
+      "components": {
+        "IDComponent": {
+          "guid": "851a2a44ac119c44bdec9616d46bffe4"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_Chain_linked_low.fbx_pCube19_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "13244f2856e23a47a55f515b01f2f6e0"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "118b819f0eeb6248a3ca4d2728221835",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1275,
+      "components": {
+        "IDComponent": {
+          "guid": "478015890d38ab4ba99657ef8965db95"
+        },
+        "Transform": {
+          "position": [
+            0.062023043632507327,
+            7.406013011932373,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.03999190032482147,
+            0.03999999910593033,
+            0.03999190032482147
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Chain (4)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_Chain_linked_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "3cfb4f98b0bb9c43a4cf935dfee4bb69",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1276,
+      "components": {
+        "IDComponent": {
+          "guid": "5dda3ef589701545ab8e24265e966a40"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_Chain_linked_low.fbx_pCube19_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "13244f2856e23a47a55f515b01f2f6e0"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "478015890d38ab4ba99657ef8965db95",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1277,
+      "components": {
+        "IDComponent": {
+          "guid": "0cf1f7f74fc07049a457590e62f37b1c"
+        },
+        "Transform": {
+          "position": [
+            0.10098257660865784,
+            8.88762378692627,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.039988867938518527,
+            0.03999999910593033,
+            0.039988867938518527
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Chain (5)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_Chain_linked_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "3cfb4f98b0bb9c43a4cf935dfee4bb69",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1278,
+      "components": {
+        "IDComponent": {
+          "guid": "e66d63f230f2de48b280f6a1abccc8ba"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_Chain_linked_low.fbx_pCube19_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "13244f2856e23a47a55f515b01f2f6e0"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "0cf1f7f74fc07049a457590e62f37b1c",
+          "depth": 2
         },
         "GlobalTransform": {}
       }
